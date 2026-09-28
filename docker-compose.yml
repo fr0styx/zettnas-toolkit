@@ -1,0 +1,26 @@
+services:
+  zettnas-toolkit:
+    build: .
+    image: zettnas-toolkit:latest
+    container_name: zettnas-toolkit
+    restart: unless-stopped
+    ports:
+      - "${PORT:-8082}:8082"
+    volumes:
+      - ./app.py:/app/app.py
+      - ./static:/app/static
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:rw
+      - /dev:/host/dev:rw
+      - /dev/fb0:/dev/fb0
+      - ${STORAGE_POOL_PATH:-/mnt/user}:/mnt/user:ro
+    environment:
+      - LCD_FPS=5
+      - PORT=8082
+      - NAS_NAME=${NAS_NAME:-NAS}
+      - POOL_PATH=/mnt/user
+      - OS_NVME=${OS_NVME:-nvme1n1}
+      - HOST_PROC=/host/proc
+      - HOST_SYS=/host/sys
+      - HOST_DEV=/host/dev
+    privileged: true

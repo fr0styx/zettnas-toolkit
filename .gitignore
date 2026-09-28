@@ -1,0 +1,26 @@
+# Python artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.bak
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Editor & OS artifacts
+.DS_Store
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+
+# Local state & logs
+*.log
+/tmp/
+led_state.json
+fan_state.json
+dash_layout.json
+.env

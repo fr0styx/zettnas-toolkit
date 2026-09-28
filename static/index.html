@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ZettNAS Studio • Hardware Suite</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="studio-workbench">
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-disk" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/>
+      <circle cx="12" cy="12" r="3" fill="currentColor"/>
+      <circle cx="12" cy="6.2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.5"/>
+    </symbol>
+    <symbol id="i-cpu" viewBox="0 0 24 24">
+      <rect x="6" y="6" width="12" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
+      <rect x="9.5" y="9.5" width="5" height="5" rx="1" fill="currentColor"/>
+      <g stroke="currentColor" stroke-width="1.6">
+        <path d="M9 3v3M12 3v3M15 3v3M9 18v3M12 18v3M15 18v3M3 9h3M3 12h3M3 15h3M18 9h3M18 12h3M18 15h3"/>
+      </g>
+    </symbol>
+    <symbol id="i-mem" viewBox="0 0 24 24">
+      <rect x="3" y="7" width="18" height="10" rx="1.5" fill="none" stroke="currentColor" stroke-width="2"/>
+      <g stroke="currentColor" stroke-width="1.6"><path d="M7 17v3M11 17v3M13 17v3M17 17v3"/></g>
+      <g fill="currentColor" opacity="0.7"><rect x="6" y="10" width="2.5" height="4"/><rect x="10" y="10" width="2.5" height="4"/><rect x="15.5" y="10" width="2.5" height="4"/></g>
+    </symbol>
+    <symbol id="i-fan" viewBox="0 0 24 24">
+      <circle cx="12" cy="2" r="2" fill="currentColor"/>
+      <path fill="currentColor" d="M12 2c2 0 3 3 2.5 5.5C13 7 12.5 8 12 10c0-3-1-5-1-6.5C11 2.5 11.3 2 12 2z"/>
+      <path fill="currentColor" d="M22 12c0 2-3 3-5.5 2.5C17 13 16 12.5 14 12c3 0 5-1 6.5-1 .5 0 1 .3 1 1z"/>
+      <path fill="currentColor" d="M12 22c-2 0-3-3-2.5-5.5C11 17 11.5 16 12 14c0 3 1 5 1 6.5 0 .5-.3 1-1 1z"/>
+      <path fill="currentColor" d="M2 12c0-2 3-3 5.5-2.5C7 11 8 11.5 10 12c-3 0-5 1-6.5 1-.5 0-1-.3-1-1z"/>
+    </symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.6"/>
+      <path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18" fill="none" stroke="currentColor" stroke-width="1.4"/>
+    </symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.6"/>
+      <path d="M12 7v5l3 2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="i-nvme" viewBox="0 0 24 24">
+      <rect x="4" y="8" width="16" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="2"/>
+      <path d="M11 9.5l-2 3h3l-2 3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M17 10.5v3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="i-net" viewBox="0 0 24 24">
+      <path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.94 0M12 20h.01" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="i-chip" viewBox="0 0 24 24">
+      <rect x="5" y="5" width="14" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
+      <circle cx="12" cy="12" r="2.5" fill="currentColor"/>
+      <path d="M2 9h3M2 15h3M19 9h3M19 15h3M9 2v3M15 2v3M9 19v3M15 19v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="i-yak" viewBox="0 0 32 32">
+      <path d="M5 6 C3 12, 8 14, 11 14 C10 16, 9 18, 10 20 C8 21, 6 22, 6 25 C6 28, 10 29, 16 29 C22 29, 26 28, 26 25 C26 22, 24 21, 22 20 C23 18, 22 16, 21 14 C24 14, 29 12, 27 6 C24 6, 20 10, 18 12 C14 12, 12 12, 8 10 C7 8, 6 6, 5 6 Z" fill="currentColor"/>
+      <circle cx="13" cy="22" r="1.5" fill="#0b131a"/>
+      <circle cx="19" cy="22" r="1.5" fill="#0b131a"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="studio-viewport-wrapper">
+  <header class="suite-navbar">
+    <div class="suite-brand">
+      <svg class="ic" id="suite-brand-icon" style="width:16px;height:16px;"><use href="#i-chip"/></svg>
+      <span class="suite-title" id="suite-brand-title">ZETTNAS</span>
+      <span class="suite-badge" id="suite-brand-badge">HARDWARE TOOLKIT</span>
+    </div>
+
+    <div class="suite-telemetry-pills">
+      <div class="suite-pill"><span class="pulse-dot"></span> MCU: <strong>/dev/ttyACM0</strong></div>
+      <div class="suite-pill"><span class="pulse-dot"></span> FB: <strong>/dev/fb0 (640x172)</strong></div>
+      <button id="suite-zoom-btn" class="zoom-toggle-btn" title="Cycle Chassis Scale (1x, 1.25x, 1.5x, 2x) [Hot-key: Z / Wheel]">🔍 1x</button>
+      <button id="yak-easter-egg-btn" class="yak-egg-btn" title="Trust in the Yak [Easter Egg Hot-key: Y]">🐂</button>
+      <button id="drawer-toggle-btn" class="suite-toolkit-btn" title="Open Hardware Toolkit Settings [Hot-key: T]">
+        <span>⚙ TOOLKIT SETTINGS</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="chassis-workbench-stage">
+    <div class="chassis-hero-box">
+      <img id="chassis-hero-img" src="img/chassis-d6u.png" class="chassis-hero-img" alt="NAS Hardware Chassis">
+    </div>
+
+    <div class="chassis-front-panel">
+      <div class="chassis-screws screw-tl"></div>
+      <div class="chassis-screws screw-tr"></div>
+      <div class="chassis-screws screw-bl"></div>
+      <div class="chassis-screws screw-br"></div>
+
+      <div class="chassis-panel-header">
+        <span class="chassis-engraved-text" id="chassis-panel-engraved">ZETTNAS • SYSTEM CONSOLE</span>
+        <span class="chassis-screen-spec">640 × 172 IPS • STRIDE 704</span>
+      </div>
+
+      <div id="screen" class="hardware-screen-canvas">
+        <header>
+          <div class="h-left">
+            <span class="nas-name" id="nasName">NAS</span>
+            <span class="pill" id="statusPill"><span class="pill-dot"></span><span id="statusText">– OK</span></span>
+          </div>
+          <div class="clock" id="clock">--:--</div>
+          <div class="h-right">
+            <svg class="ic ic-sm"><use href="#i-globe"/></svg>
+            <span id="ip">0.0.0.0</span>
+          </div>
+        </header>
+
+        <section class="cards" id="dashboard-cards-container">
+          <div class="card card-storage" data-metric-id="metric-storage" title="Click to view Storage diagnostics">
+            <div class="card-title"><svg class="ic"><use href="#i-disk"/></svg><span class="card-title-txt">STORAGE</span></div>
+            <div class="storage-body">
+              <div class="donut" id="donut"><span id="storagePct">0%</span></div>
+              <div class="storage-nums">
+                <div><span class="lbl">USED</span><span class="val" id="stUsed">0GB</span></div>
+                <div><span class="lbl">TOTAL</span><span class="val" id="stTotal">0GB</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card card-cpu" data-metric-id="metric-cpu" title="Click to view CPU diagnostics">
+            <div class="card-title"><svg class="ic"><use href="#i-cpu"/></svg><span class="card-title-txt">CPU</span></div>
+            <div class="gauge-body">
+              <div class="arc" id="cpuArc"><div class="arc-val"><span id="cpuTemp">0</span><span class="u">°C</span></div></div>
+              <div class="side"><span class="lbl">UTIL</span><span class="val" id="cpuUtil">0%</span></div>
+            </div>
+          </div>
+
+          <div class="card card-mem" data-metric-id="metric-mem" title="Click to view Memory diagnostics">
+            <div class="card-title"><svg class="ic"><use href="#i-mem"/></svg><span class="card-title-txt">MEMORY</span></div>
+            <div class="gauge-body">
+              <div class="arc" id="memArc"><div class="arc-val"><span id="memPct">0</span><span class="u">%</span></div></div>
+              <div class="side"><span class="lbl" id="memUsed">0G</span><span class="val" id="memTotal">/0G</span></div>
+            </div>
+          </div>
+
+          <div class="card fans card-fans" data-metric-id="metric-fans" title="Click to view Fans & Telemetry">
+            <div class="card-title"><svg class="ic"><use href="#i-fan"/></svg><span class="card-title-txt">FANS</span></div>
+            <div class="fan-row" id="fanRow"></div>
+            <div class="uptime"><svg class="ic ic-sm"><use href="#i-clock"/></svg><span id="uptime">up --</span></div>
+          </div>
+
+          <div class="card card-net" data-metric-id="metric-net" title="Click to view Network diagnostics">
+            <div class="card-title"><svg class="ic"><use href="#i-net"/></svg><span class="card-title-txt">NETWORK I/O</span></div>
+            <div class="net-body">
+              <div class="net-row"><span>TX:</span><strong id="netTx">0.0 MB/s</strong></div>
+              <div class="net-row"><span>RX:</span><strong id="netRx">0.0 MB/s</strong></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="disks card-disks" id="diskRow" data-metric-id="metric-disks"></section>
+      </div>
+
+      <div class="chassis-led-fixture">
+        <div class="chassis-led-meta">
+          <span class="meta-tag">
+            <svg class="ic" style="width:9px;height:9px;color:currentColor;"><use href="#i-chip"/></svg>
+            ARGB LIGHT BAR // /dev/ttyACM0
+          </span>
+          <span class="meta-nodes">WS2812B • 38 NODES</span>
+        </div>
+        <div class="chassis-led-channel">
+          <div id="virtual-chassis-lightbar" class="chassis-lightbar-glow"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div id="smart-modal-overlay" class="smart-modal-backdrop">
+  <div class="smart-modal-window">
+    <div class="smart-modal-header">
+      <span class="smart-modal-title" id="smart-modal-title">
+        <svg class="ic"><use href="#i-disk"/></svg> S.M.A.R.T. Diagnostics
+      </span>
+      <button id="smart-modal-close" class="btn-icon">✕</button>
+    </div>
+    <div class="smart-modal-body">
+      <div class="smart-meta-grid" id="smart-modal-grid">
+        <div class="smart-meta-cell"><span class="lbl" id="smart-lbl-1">DEVICE & MODEL</span><span class="val" id="smart-meta-model">--</span></div>
+        <div class="smart-meta-cell"><span class="lbl" id="smart-lbl-2">SERIAL / METRIC</span><span class="val" id="smart-meta-serial">--</span></div>
+        <div class="smart-meta-cell"><span class="lbl" id="smart-lbl-3">HEALTH / STATUS</span><span class="val" id="smart-meta-health">--</span></div>
+        <div class="smart-meta-cell"><span class="lbl" id="smart-lbl-4">HOURS / READOUT</span><span class="val" id="smart-meta-hours">--</span></div>
+      </div>
+      <span style="font-size:9px; font-weight:800; color:var(--muted); letter-spacing:1px;" id="smart-modal-raw-title">RAW TELEMETRY ATTRIBUTES</span>
+      <pre class="smart-raw-pre" id="smart-raw-output">Querying telemetry...</pre>
+    </div>
+  </div>
+</div>
+
+<div id="drawer-overlay" class="drawer-backdrop"></div>
+<aside id="led-drawer" class="slide-drawer">
+  <div class="drawer-header">
+    <div>
+      <div class="drawer-sub"><span id="drawer-nas-name">NAS</span> • <span id="drawer-sub-badge">HARDWARE TOOLKIT</span></div>
+      <h2 class="drawer-title" id="drawer-dynamic-title">Dashboard Layout</h2>
+      <p class="drawer-subdesc" id="drawer-dynamic-desc">Configure dashboard sizes, visibility, and layout presets.</p>
+    </div>
+    <button id="drawer-close-btn" class="btn-icon">✕</button>
+  </div>
+
+  <div class="drawer-tabs-nav">
+    <button class="drawer-tab-btn active" data-tab="tab-layout">Dashboard Layout</button>
+    <button class="drawer-tab-btn" data-tab="tab-led">LED Strip bar</button>
+    <button class="drawer-tab-btn" data-tab="tab-fans">Fans</button>
+  </div>
+
+  <div id="tab-layout" class="drawer-tab-content active">
+    <div class="tab-sub-header">
+      <span class="sub-title">Layout Section Arrangement</span>
+      <button id="layout-cards-lock-btn" class="btn-lock-toggle" title="Lock or Unlock Section Order">🔒 Locked</button>
+    </div>
+
+    <div id="layout-sections-container" class="drawer-cards-flow locked">
+      <div class="draggable-card mini-preview-box" data-layout-card-id="sec-preview">
+        <div class="card-headline" style="margin-bottom:2px;">
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> LCD Live Canvas Preview & Rearrange</span>
+        </div>
+        <div id="mini-lcd-canvas" class="mini-lcd-canvas">
+          <div class="mini-preview-inner" id="mini-preview-inner"></div>
+        </div>
+      </div>
+
+      <div class="draggable-card drawer-card" data-layout-card-id="sec-clock">
+        <div class="card-headline">
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <svg class="ic ic-sm" style="margin: 0 4px 0 2px;"><use href="#i-clock"/></svg>Clock & Timezone</span>
+          <button id="clock-format-btn" class="btn-pill-toggle">24 Hours</button>
+        </div>
+        <div class="card-instruction">Override the screen time display and timezone / city.</div>
+        
+        <div class="tz-controls-row">
+          <select id="tz-select" class="tz-select-input">
+            <optgroup label="Americas">
+              <option value="America/New_York">New York / Eastern (EDT/EST)</option>
+              <option value="America/Chicago">Chicago / Central (CDT/CST)</option>
+              <option value="America/Denver">Denver / Mountain (MDT/MST)</option>
+              <option value="America/Los_Angeles">Los Angeles / Pacific (PDT/PST)</option>
+            </optgroup>
+            <optgroup label="Europe">
+              <option value="Europe/London">London / GMT / BST</option>
+              <option value="Europe/Madrid">Madrid / Paris / Berlin (CEST/CET)</option>
+            </optgroup>
+            <optgroup label="Asia">
+              <option value="Asia/Tokyo">Tokyo / Seoul (JST/KST)</option>
+              <option value="Asia/Singapore">Singapore / Hong Kong / Taipei (SGT/HKT)</option>
+              <option value="Asia/Bangkok">Bangkok / Jakarta / Hanoi (ICT)</option>
+              <option value="Asia/Dubai">Dubai / Gulf Standard Time (GST)</option>
+            </optgroup>
+            <optgroup label="Universal & Custom">
+              <option value="UTC">UTC - Universal Coordinated Time</option>
+              <option value="custom">Custom IANA Identifier...</option>
+            </optgroup>
+          </select>
+          <input type="text" id="tz-custom-input" class="tz-text-input" placeholder="e.g. Asia/Seoul" style="display:none;">
+        </div>
+      </div>
+
+      <div class="draggable-card drawer-card" data-layout-card-id="sec-presets">
+        <div class="card-headline">
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Preset Layouts</span>
+          <span id="preset-state-badge" class="preset-state-badge">DEFAULT ENGAGED</span>
+        </div>
+        <div class="card-instruction">1-click dashboard module arrangements.</div>
+        <div class="preset-grid-enhanced">
+          <button class="preset-btn-card active" data-preset="default">
+            <span class="preset-icon">🗂️</span>
+            <div class="preset-info">
+              <span class="preset-name">Default (All Active)</span>
+              <span class="preset-desc">Storage, CPU, RAM, Fans, Net, Disks</span>
+            </div>
+          </button>
+          <button class="preset-btn-card" data-preset="thermal">
+            <span class="preset-icon">🌡️</span>
+            <div class="preset-info">
+              <span class="preset-name">Thermal Focus</span>
+              <span class="preset-desc">CPU, Fans & Disks Only</span>
+            </div>
+          </button>
+          <button class="preset-btn-card" data-preset="storage">
+            <span class="preset-icon">💾</span>
+            <div class="preset-info">
+              <span class="preset-name">Storage Heavy</span>
+              <span class="preset-desc">Array capacity & Drives</span>
+            </div>
+          </button>
+          <button class="preset-btn-card" data-preset="disks-only">
+            <span class="preset-icon">💽</span>
+            <div class="preset-info">
+              <span class="preset-name">Disks Only</span>
+              <span class="preset-desc">Full screen storage expanse</span>
+            </div>
+          </button>
+        </div>
+        <div class="preset-footer-row">
+          <span style="font-size:10px; color:var(--muted); font-weight:700;">Custom layout storage</span>
+          <button id="btn-save-custom-preset" class="btn-save-preset">💾 Save as My Preset</button>
+        </div>
+      </div>
+
+      <div class="draggable-card drawer-card" data-layout-card-id="sec-modules">
+        <div class="card-headline">
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Screen Modules & Size Control</span>
+        </div>
+        <div class="card-instruction">Toggle visibility and select compact or full gauge scaling for each module. (Drag cards inside the Live Preview above to reorder).</div>
+
+        <div id="dash-reorder-container" class="dash-reorder-flow" style="margin-top:6px;">
+          
+          <div class="dash-module-item" data-metric-target="metric-storage">
+            <div class="dash-item-info">
+              <div class="dash-item-title-row">
+                <span class="dash-item-title" id="lbl-module-storage">Storage (Donut & Capacity)</span>
+                <span class="dash-live-badge" id="telemetry-badge-storage">--</span>
+              </div>
+            </div>
+            <div class="seg-size-selector">
+              <button class="seg-size-btn" data-metric-id="metric-storage" data-size="compact">Compact</button>
+              <button class="seg-size-btn active" data-metric-id="metric-storage" data-size="full">Full</button>
+            </div>
+            <label class="switch"><input type="checkbox" class="metric-vis-toggle" data-metric-id="metric-storage" checked><span class="toggle-slider"></span></label>
+          </div>
+
+          <div class="dash-module-item" data-metric-target="metric-cpu">
+            <div class="dash-item-info">
+              <div class="dash-item-title-row">
+                <span class="dash-item-title" id="lbl-module-cpu">CPU Gauge</span>
+                <span class="dash-live-badge" id="telemetry-badge-cpu">--</span>
+              </div>
+            </div>
+            <div class="seg-size-selector">
+              <button class="seg-size-btn" data-metric-id="metric-cpu" data-size="compact">Compact</button>
+              <button class="seg-size-btn active" data-metric-id="metric-cpu" data-size="full">Full</button>
+            </div>
+            <label class="switch"><input type="checkbox" class="metric-vis-toggle" data-metric-id="metric-cpu" checked><span class="toggle-slider"></span></label>
+          </div>
+
+          <div class="dash-module-item" data-metric-target="metric-mem">
+            <div class="dash-item-info">
+              <div class="dash-item-title-row">
+                <span class="dash-item-title" id="lbl-module-mem">Memory Gauge</span>
+                <span class="dash-live-badge" id="telemetry-badge-mem">--</span>
+              </div>
+            </div>
+            <div class="seg-size-selector">
+              <button class="seg-size-btn" data-metric-id="metric-mem" data-size="compact">Compact</button>
+              <button class="seg-size-btn active" data-metric-id="metric-mem" data-size="full">Full</button>
+            </div>
+            <label class="switch"><input type="checkbox" class="metric-vis-toggle" data-metric-id="metric-mem" checked><span class="toggle-slider"></span></label>
+          </div>
+
+          <div class="dash-module-item" data-metric-target="metric-fans">
+            <div class="dash-item-info">
+              <div class="dash-item-title-row">
+                <span class="dash-item-title" id="lbl-module-fans">Fans & Uptime</span>
+                <span class="dash-live-badge" id="telemetry-badge-fans">--</span>
+              </div>
+            </div>
+            <div class="seg-size-selector">
+              <button class="seg-size-btn" data-metric-id="metric-fans" data-size="compact">Compact</button>
+              <button class="seg-size-btn active" data-metric-id="metric-fans" data-size="full">Full</button>
+            </div>
+            <label class="switch"><input type="checkbox" class="metric-vis-toggle" data-metric-id="metric-fans" checked><span class="toggle-slider"></span></label>
+          </div>
+
+          <div class="dash-module-item" data-metric-target="metric-net">
+            <div class="dash-item-info">
+              <div class="dash-item-title-row">
+                <span class="dash-item-title" id="lbl-module-net">Network Throughput</span>
+                <span class="dash-live-badge" id="telemetry-badge-net">--</span>
+              </div>
+            </div>
+            <div class="seg-size-selector">
+              <button class="seg-size-btn" data-metric-id="metric-net" data-size="compact">Compact</button>
+              <button class="seg-size-btn active" data-metric-id="metric-net" data-size="full">Full</button>
+            </div>
+            <label class="switch"><input type="checkbox" class="metric-vis-toggle" data-metric-id="metric-net" checked><span class="toggle-slider"></span></label>
+          </div>
+
+          <div class="dash-module-item" data-metric-target="metric-disks">
+            <div class="dash-item-info">
+              <div class="dash-item-title-row">
+                <span class="dash-item-title" id="lbl-module-disks">Drives Tray (OS, Data, Cache)</span>
+                <span class="dash-live-badge" id="telemetry-badge-disks">--</span>
+              </div>
+            </div>
+            <div class="seg-size-selector">
+              <button class="seg-size-btn" data-metric-id="metric-disks" data-size="compact">Compact</button>
+              <button class="seg-size-btn active" data-metric-id="metric-disks" data-size="full">Full</button>
+            </div>
+            <label class="switch"><input type="checkbox" class="metric-vis-toggle" data-metric-id="metric-disks" checked><span class="toggle-slider"></span></label>
+          </div>
+        </div>
+      </div>
+
+      <div class="draggable-card drawer-card" data-layout-card-id="sec-backup">
+        <div class="card-headline">
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Suite Configuration Backup</span>
+        </div>
+        <div class="card-instruction">Export, import, or reset all dashboard layout, LED lighting, and fan settings in a single file.</div>
+        <div class="backup-row">
+          <button id="btn-export-layout" class="btn-pill-toggle">Export JSON</button>
+          <label class="btn-pill-toggle custom-file-upload">
+            Import JSON <input type="file" id="file-import-layout" accept=".json" style="display:none">
+          </label>
+          <button id="dashboard-reset-btn" class="btn-lock-toggle" title="Reset all settings">↺ Reset</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-led" class="drawer-tab-content">
+    <div class="tab-sub-header">
+      <span class="sub-title">Card arrangement</span>
+      <button id="drawer-lock-btn" class="btn-lock-toggle" title="Lock or Unlock Card Order">🔒 Locked</button>
+    </div>
+
+    <div id="drawer-cards-container" class="drawer-cards-flow locked">
+      <div class="draggable-card preview-container" data-card-id="card-preview">
+        <div class="preview-label-row">
+          <span class="drag-handle-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> LIVE BAR PREVIEW</span>
+          <span id="preview-state-txt">ON • SOLID</span>
+        </div>
+        <div class="preview-housing"><div id="preview-bar" class="preview-bar-element"></div></div>
+      </div>
+
+      <div class="draggable-card drawer-card" data-card-id="card-reactive">
+        <div class="card-headline">
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> System Reactive Alerts</span>
+          <label class="switch"><input type="checkbox" id="reactive-toggle" checked><span class="toggle-slider"></span></label>
+        </div>
+        <div class="card-instruction">Auto-flash red or pulse amber when drive errors, overheating, or fan faults occur.</div>
+      </div>
+
+      <div class="draggable-card drawer-card" data-card-id="card-brightness">
+        <div class="card-headline">
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Front LED brightness</span>
+          <span id="led-val-display" class="card-head-val">25%</span>
+        </div>
+        <div class="card-instruction">Adjust physical bar intensity. Changes apply automatically.</div>
+        <div class="slider-row"><input type="range" id="led-slider" min="0" max="100" value="25" step="1" class="custom-slider"></div>
+      </div>
+
+      <div class="draggable-card drawer-card" data-card-id="card-profiles">
+        <div class="card-headline"><span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Lighting Profiles</span></div>
+        <div class="card-instruction">1-click quick hardware presets.</div>
+        <div class="profiles-grid">
+          <button class="profile-pill" data-profile="clean">Clean (Teal)</button>
+          <button class="profile-pill" data-profile="cyberpunk">Cyberpunk</button>
+          <button class="profile-pill" data-profile="stealth">Stealth Night</button>
+          <button class="profile-pill" data-profile="rainbow">Spectrum</button>
+        </div>
+      </div>
+
+      <div class="draggable-card drawer-card" data-card-id="card-effects">
+        <div class="card-headline"><span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Lighting effects</span></div>
+        <div class="card-instruction">Choose an active dynamic animation for the light bar.</div>
+        <div class="effects-grid">
+          <button class="effect-btn active" data-effect="solid">Solid</button>
+          <button class="effect-btn" data-effect="breathe">Breathe</button>
+          <button class="effect-btn" data-effect="flow">Flow</button>
+          <button class="effect-btn" data-effect="chase">Chase</button>
+          <button class="effect-btn" data-effect="gradient">Gradient</button>
+          <button class="effect-btn" data-effect="rainbow">Rainbow</button>
+          <button class="effect-btn" data-effect="flashing">Flashing</button>
+        </div>
+      </div>
+
+      <div class="draggable-card drawer-card" id="speed-card" data-card-id="card-speed" style="display: none;">
+        <div class="card-headline">
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Effect speed</span>
+          <span id="speed-val-display" class="card-head-val">Medium (50%)</span>
+        </div>
+        <div class="card-instruction">Control animation rate (1%: Slowest, 100%: Fastest).</div>
+        <div class="slider-row"><input type="range" id="speed-slider" min="1" max="100" value="50" step="1" class="custom-slider"></div>
+      </div>
+
+      <div class="draggable-card drawer-card" id="primary-color-card" data-card-id="card-color1">
+        <div class="card-headline">
+          <span class="card-head-title" id="color1-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Primary Color</span>
+          <button id="btn-toggle-led" class="btn-pill-toggle">Turn Off</button>
+        </div>
+        <div class="card-instruction">Select illumination preset or pick a custom hex color.</div>
+        <div class="color-grid">
+          <button class="color-chip active" data-hex="25c2a0" style="background:#25c2a0; color:#0b1f1a;">Teal</button>
+          <button class="color-chip" data-hex="00ffff" style="background:#00ffff; color:#0b1f1a;">Cyan</button>
+          <button class="color-chip" data-hex="33d17a" style="background:#33d17a; color:#0b1f1a;">Green</button>
+          <button class="color-chip" data-hex="0064ff" style="background:#0064ff; color:#fff;">Blue</button>
+          <button class="color-chip" data-hex="c08cff" style="background:#c08cff; color:#0b1f1a;">Purple</button>
+          <button class="color-chip" data-hex="ff0000" style="background:#ff0000; color:#fff;">Red</button>
+          <button class="color-chip" data-hex="ff7800" style="background:#ff7800; color:#111;">Orange</button>
+          <button class="color-chip" data-hex="ffb464" style="background:#ffb464; color:#111;">Warm</button>
+          <button class="color-chip" data-hex="ffffff" style="background:#ffffff; color:#111;">White</button>
+          <label class="color-chip custom-picker-chip" id="custom-chip-label" title="Choose custom color">
+            <span id="custom-chip-text">Custom</span>
+            <input type="color" id="custom-color-picker" value="#25c2a0">
+          </label>
+        </div>
+      </div>
+
+      <div class="draggable-card drawer-card" id="secondary-color-card" data-card-id="card-color2" style="display: none;">
+        <div class="card-headline"><span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Secondary Color (Gradient End)</span></div>
+        <div class="card-instruction">Select the target tone that the primary color transitions toward.</div>
+        <div class="color-grid">
+          <button class="color-chip2" data-hex="ff0055" style="background:#ff0055; color:#fff;">Pink</button>
+          <button class="color-chip2" data-hex="0064ff" style="background:#0064ff; color:#fff;">Blue</button>
+          <button class="color-chip2" data-hex="ffaa00" style="background:#ffaa00; color:#111;">Gold</button>
+          <button class="color-chip2" data-hex="00ffff" style="background:#00ffff; color:#111;">Cyan</button>
+          <button class="color-chip2" data-hex="33d17a" style="background:#33d17a; color:#111;">Green</button>
+          <button class="color-chip2" data-hex="c08cff" style="background:#c08cff; color:#111;">Purple</button>
+          <button class="color-chip2" data-hex="ff0000" style="background:#ff0000; color:#fff;">Red</button>
+          <button class="color-chip2" data-hex="001428" style="background:#001428; color:#fff;">Deep</button>
+          <button class="color-chip2" data-hex="ffffff" style="background:#ffffff; color:#111;">White</button>
+          <label class="color-chip2 custom-picker-chip" id="custom-chip2-label" title="Choose custom secondary color">
+            <span>Custom</span>
+            <input type="color" id="custom-color-picker2" value="#ff0055">
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-fans" class="drawer-tab-content">
+    <div class="tab-sub-header">
+      <span class="sub-title">Fan Control Cards</span>
+      <button id="fan-cards-lock-btn" class="btn-lock-toggle" title="Lock or Unlock Card Order">🔒 Locked</button>
+    </div>
+
+    <div id="fan-cards-container" class="drawer-cards-flow locked">
+      <div class="draggable-card drawer-card" data-fan-card-id="fan-card-tach">
+        <div class="card-headline">
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <svg class="ic" style="margin-right:6px;"><use href="#i-fan"/></svg>Active Fan Tachometers</span>
+          <span class="suite-badge" id="fan-status-badge">ONLINE</span>
+        </div>
+        <div class="card-instruction">Click any zone column below to isolate and track that zone on the Dynamic Fan Curve above.</div>
+        
+        <div class="drawer-fans-unified-grid">
+          <div class="drawer-fan-unified-col" id="fan-col-zone1" data-zone-filter="zone1" title="Click to isolate Zone 1 on Fan Curve">
+            <div class="df-tach-box">
+              <svg class="fan-ic" id="df-ic-0"><use href="#i-fan"/></svg>
+              <span class="df-rpm" id="df-rpm-0">--</span>
+              <span class="df-label">D1</span>
+            </div>
+            <div class="df-zone-box">
+              <span class="zp-lbl">ZONE 1 (LEFT)</span>
+              <span class="zp-val" id="zp-z1-temp">--°C</span>
+              <span class="zp-pwm" id="zp-z1-pwm">PWM: --</span>
+            </div>
+          </div>
+
+          <div class="drawer-fan-unified-col" id="fan-col-zone2" data-zone-filter="zone2" title="Click to isolate Zone 2 on Fan Curve">
+            <div class="df-tach-box">
+              <svg class="fan-ic" id="df-ic-1"><use href="#i-fan"/></svg>
+              <span class="df-rpm" id="df-rpm-1">--</span>
+              <span class="df-label">D2</span>
+            </div>
+            <div class="df-zone-box">
+              <span class="zp-lbl">ZONE 2 (RIGHT)</span>
+              <span class="zp-val" id="zp-z2-temp">--°C</span>
+              <span class="zp-pwm" id="zp-z2-pwm">PWM: --</span>
+            </div>
+          </div>
+
+          <div class="drawer-fan-unified-col" id="fan-col-cpu" data-zone-filter="cpu" title="Click to isolate CPU Package on Fan Curve">
+            <div class="df-tach-box">
+              <svg class="fan-ic" id="df-ic-2"><use href="#i-fan"/></svg>
+              <span class="df-rpm" id="df-rpm-2">--</span>
+              <span class="df-label">CPU</span>
+            </div>
+            <div class="df-zone-box">
+              <span class="zp-lbl">CPU PACKAGE</span>
+              <span class="zp-val" id="zp-cpu-temp">--°C</span>
+              <span class="zp-pwm" id="zp-cpu-pwm">BIOS Auto</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="draggable-card drawer-card" data-fan-card-id="fan-card-curve">
+        <div class="card-headline">
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Dynamic Fan Curve • Thermal Map</span>
+          <span class="suite-badge" id="hysteresis-badge" style="background:rgba(51,209,122,0.15); color:var(--ok); border-color:rgba(51,209,122,0.35);">HOLD: READY</span>
+        </div>
+        <div class="card-instruction" id="curve-filter-instruction">Displaying all thermal zones. Click a zone tachometer above or below to isolate.</div>
+        
+        <div class="fan-curve-box">
+          <svg class="fan-curve-svg" viewBox="0 0 300 140" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="curveGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#25c2a0" stop-opacity="0.35"/>
+                <stop offset="100%" stop-color="#25c2a0" stop-opacity="0.0"/>
+              </linearGradient>
+            </defs>
+
+            <line x1="38" y1="20" x2="285" y2="20" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+            <line x1="38" y1="60" x2="285" y2="60" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+            <line x1="38" y1="100" x2="285" y2="100" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+            
+            <text x="32" y="24" fill="#78838f" font-size="8" text-anchor="end" font-weight="700">183</text>
+            <text x="32" y="64" fill="#78838f" font-size="8" text-anchor="end" font-weight="700">120</text>
+            <text x="32" y="104" fill="#78838f" font-size="8" text-anchor="end" font-weight="700">58</text>
+            <text x="38" y="128" fill="#78838f" font-size="8" text-anchor="start" font-weight="700">30°C</text>
+            <text x="160" y="128" fill="#78838f" font-size="8" text-anchor="middle" font-weight="700">40°C</text>
+            <text x="285" y="128" fill="#78838f" font-size="8" text-anchor="end" font-weight="700">50°C+</text>
+
+            <path id="curve-area-path" d="M 38 100 L 115 100 L 257 20 L 285 20 L 285 100 Z" fill="url(#curveGradient)"/>
+            <path id="curve-svg-path" d="M 38 100 L 115 100 L 257 20 L 285 20" fill="none" stroke="var(--ok2)" stroke-width="2.5" stroke-linecap="round"/>
+            
+            <circle id="curve-dot-z1" cx="38" cy="100" r="5" fill="#fff" stroke="#25c2a0" stroke-width="2.5" style="transition: cx 0.35s ease, cy 0.35s ease;"/>
+            <circle id="curve-dot-z2" cx="38" cy="100" r="5" fill="#fff" stroke="#38a2ff" stroke-width="2.5" style="transition: cx 0.35s ease, cy 0.35s ease;"/>
+            <circle id="curve-dot-cpu" cx="38" cy="100" r="4.5" fill="#fff" stroke="#ffaa00" stroke-width="2.5" style="transition: cx 0.35s ease, cy 0.35s ease;"/>
+          </svg>
+
+          <div class="curve-legend-row">
+            <div class="legend-item" id="leg-item-z1"><span class="legend-dot" style="background:#25c2a0;"></span> Zone 1</div>
+            <div class="legend-item" id="leg-item-z2"><span class="legend-dot" style="background:#38a2ff;"></span> Zone 2</div>
+            <div class="legend-item" id="leg-item-cpu"><span class="legend-dot" style="background:#ffaa00;"></span> CPU</div>
+            <button class="btn-reset-curve-view" id="btn-reset-curve" style="display:none;">↺ Show All Zones</button>
+            <div id="curve-readout-text" style="font-size:9px; font-weight:800; color:var(--ok2);">Active Mapping</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="draggable-card drawer-card" data-fan-card-id="fan-card-cpu-toggle">
+        <div class="card-headline">
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Control CPU Fan</span>
+          <label class="switch">
+            <input type="checkbox" id="cpu-fan-toggle">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="card-instruction">
+          When enabled, applies software thermal curve with a <strong>90-second upward hold timer</strong>. When disabled, returns `pwm3` to automatic BIOS/firmware control (`pwm3_enable = 2`).
+        </div>
+      </div>
+
+      <div class="draggable-card drawer-card" data-fan-card-id="fan-card-profiles">
+        <div class="card-headline">
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Cooling Duty Profiles</span>
+        </div>
+        <div class="card-instruction">Select dynamic thermal scaling or fixed duty presets mapped across disk fans.</div>
+        <div class="profiles-grid" style="grid-template-columns: repeat(5, 1fr);">
+          <button class="profile-pill fan-profile-btn active" data-fan-profile="auto">⚡ Auto Dynamic</button>
+          <button class="profile-pill fan-profile-btn" data-fan-profile="quiet">Quiet (92)</button>
+          <button class="profile-pill fan-profile-btn" data-fan-profile="balanced">Balanced (145)</button>
+          <button class="profile-pill fan-profile-btn" data-fan-profile="performance">Perf (183)</button>
+          <button class="profile-pill fan-profile-btn" data-fan-profile="full">Full (255)</button>
+        </div>
+      </div>
+
+      <div class="draggable-card drawer-card" data-fan-card-id="fan-card-inspector">
+        <div class="card-headline">
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Thermal Threshold Inspector</span>
+        </div>
+        <div class="thermal-inspector-box">
+          <div class="ti-row"><span>Cool Idle (&le; 38°C)</span><strong>58 – 67 PWM (~950 RPM)</strong></div>
+          <div class="ti-row"><span>Sustained Load (42–46°C)</span><strong>120 – 155 PWM (~1800 RPM)</strong></div>
+          <div class="ti-row"><span>Peak Emergency (&gt; 50°C)</span><strong>183 PWM (Full Speed)</strong></div>
+          <div class="ti-row"><span>CPU Thermal Ceiling (&gt; 85°C)</span><strong>183 PWM Override</strong></div>
+        </div>
+      </div>
+
+      <div class="draggable-card drawer-card" id="manual-pwm-card" data-fan-card-id="fan-card-override">
+        <div class="card-headline">
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Manual PWM Override</span>
+          <span id="fan-pwm-val-display" class="card-head-val">Auto Curve</span>
+        </div>
+        <div class="card-instruction">Directly commands `pwmX_enable = 1` and sets duty cycles `0-183`.</div>
+        <div class="slider-row">
+          <input type="range" id="fan-pwm-slider" min="10" max="100" value="60" step="1" class="custom-slider">
+        </div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<script src="app.js"></script>
+</body>
+</html>

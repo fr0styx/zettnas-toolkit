@@ -1,0 +1,1999 @@
+// Instant detection for headless Chromium renderer
+if (window.location.search.includes("mode=lcd")) {
+  document.body.classList.add("lcd-direct");
+}
+
+// Polls /api/stats and updates the 640x172 dashboard with gauges, icons,
+// color thresholds and RPM-driven fan animation.
+const $ = (id) => document.getElementById(id);
+const FAN_LABELS = ["D1", "D2", "CPU", "SYS"];
+
+// Shared local client state
+let clockFormat = "24";
+let currentTimezone = "America/New_York";
+let latestStats = null;
+let activeModalType = null;
+let activeLayoutVersion = 0;
+let isDraggingPreview = false;
+let currentTheme = localStorage.getItem("lcd_theme") || "cyber";
+
+// Zone isolation filter for Fan Curve ("all" | "zone1" | "zone2" | "cpu")
+let selectedZoneFilter = "all";
+
+function getLocalClock(tz, fmt) {
+  try {
+    const formatter = new Intl.DateTimeFormat([], {
+      timeZone: tz || "America/New_York",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: fmt === "12"
+    });
+    return formatter.format(new Date());
+  } catch (e) {
+    const d = new Date();
+    return d.toTimeString().slice(0, 5);
+  }
+}
+
+// ---- threshold helpers: return 'ok' | 'warn' | 'crit' ----
+const lvlDisk   = (t) => t == null ? "ok" : t >= 60 ? "crit" : t >= 50 ? "warn" : "ok";
+const lvlCpu    = (t) => t == null ? "ok" : t >= 85 ? "crit" : t >= 70 ? "warn" : "ok";
+const lvlUtil   = (u) => u >= 90 ? "crit" : u >= 75 ? "warn" : "ok";
+const lvlFull   = (p) => p >= 90 ? "crit" : p >= 75 ? "warn" : "ok";
+const cssVar    = (lvl) => lvl === "crit" ? "var(--crit)" : lvl === "warn" ? "var(--warn)" : "var(--ok)";
+
+function setArc(el, pct, lvl) {
+  if (!el) return;
+  el.style.setProperty("--pct", Math.max(0, Math.min(100, pct)));
+  el.style.setProperty("--c", cssVar(lvl));
+}
+
+function renderFans(fans) {
+  const row = $("fanRow");
+  if (row) row.innerHTML = "";
+
+  if (!fans || fans.length === 0) {
+    if (row) row.innerHTML = '<span class="fv" style="color:var(--muted);font-size:12px">n/a</span>';
+    return;
+  }
+
+  const max = Math.max(...fans, 1);
+  fans.forEach((rpm, i) => {
+    const dur = rpm > 0 ? Math.max(0.25, 2.0 - (rpm / max) * 1.7).toFixed(2) : 0;
+    const spin = rpm > 0 ? "spin" : "";
+    const label = FAN_LABELS[i] || ("F" + (i + 1));
+
+    if (row) {
+      const d = document.createElement("div");
+      d.className = "fan";
+      d.innerHTML =
+        `<svg class="fan-ic ${spin}" style="--dur:${dur}s"><use href="#i-fan"/></svg>` +
+        `<span class="fv">${rpm}</span>` +
+        `<span class="fl">${label}</span>`;
+      row.appendChild(d);
+    }
+
+    const dfRpm = $(`df-rpm-${i}`);
+    const dfIc = $(`df-ic-${i}`);
+    if (dfRpm) dfRpm.textContent = rpm;
+    if (dfIc) {
+      dfIc.style.setProperty("--dur", `${dur}s`);
+      dfIc.classList.toggle("spin", rpm > 0);
+    }
+  });
+}
+
+const ROLE_META = {
+  data:  { label: "DATA",  icon: "#i-disk", cls: "r-data" },
+  cache: { label: "CACHE", icon: "#i-nvme", cls: "r-cache" },
+  os:    { label: "OS",    icon: "#i-nvme", cls: "r-os" },
+};
+
+function diskTile(d) {
+  const lvl = d.health || lvlDisk(d.temp);
+  const t = d.temp;
+  const meta = ROLE_META[d.role] || ROLE_META.data;
+  const w = t == null ? 0 : Math.max(8, Math.min(100, ((t - 20) / 40) * 100));
+  const el = document.createElement("div");
+  el.className = "disk " + meta.cls + " h-" + lvl + (d.active ? " io-active" : "");
+  el.dataset.dev = d.dev || d.name;
+  el.title = `Click to inspect S.M.A.R.T. health for ${d.name}`;
+  el.innerHTML =
+    `<div class="dh"><svg class="disk-ic"><use href="${meta.icon}"/></svg>` +
+    `<span class="dn">${d.name}</span>` +
+    `<div class="disk-indicators">` +
+      `<span class="io-dot" title="Active I/O"></span>` +
+      `<span class="hdot ${"dot-" + lvl}"></span>` +
+    `</div></div>` +
+    `<div class="dt ${"s-" + lvl}">${t == null ? "--" : t}<span class="u">°C</span></div>` +
+    `<div class="db"><i class="${"bg-" + lvl}" style="width:${w}%"></i></div>`;
+  
+  el.addEventListener("click", () => openSmartModal(d.dev || d.name));
+  return el;
+}
+
+function renderDisks(disks) {
+  const row = $("diskRow");
+  if (!row) return;
+  row.innerHTML = "";
+  const total = disks.length || 1;
+  row.classList.toggle("compact", total >= 7);
+
+  const order = ["os", "data", "cache"];
+  const groups = order
+    .map((r) => ({ role: r, items: disks.filter((d) => d.role === r) }))
+    .filter((g) => g.items.length);
+
+  const isYak = (currentTheme === "yak");
+
+  groups.forEach((g, gi) => {
+    const meta = ROLE_META[g.role];
+    const grp = document.createElement("div");
+    grp.className = "disk-group " + meta.cls;
+    grp.style.setProperty("--n", g.items.length);
+    const lab = document.createElement("div");
+    lab.className = "group-label";
+    
+    let roleLabel = meta.label;
+    if (isYak) {
+      if (g.role === "data") roleLabel = "PARCELS";
+      else if (g.role === "cache") roleLabel = "EXPRESS";
+      else if (g.role === "os") roleLabel = "LOGISTICS";
+    }
+
+    lab.innerHTML = `<svg class="grp-ic"><use href="${meta.icon}"/></svg>${roleLabel}`;
+    grp.appendChild(lab);
+    const tiles = document.createElement("div");
+    tiles.className = "group-tiles";
+    tiles.style.setProperty("--n", g.items.length);
+    g.items.forEach((d) => tiles.appendChild(diskTile(d)));
+    grp.appendChild(tiles);
+    row.appendChild(grp);
+    if (gi < groups.length - 1) {
+      const div = document.createElement("div");
+      div.className = "group-div";
+      row.appendChild(div);
+    }
+  });
+}
+
+// S.M.A.R.T. & INTERACTIVE METRIC DIAGNOSTIC MODAL CONTROLLER
+const smartOverlay = $("smart-modal-overlay");
+const smartCloseBtn = $("smart-modal-close");
+const smartTitle = $("smart-modal-title");
+const smartModel = $("smart-meta-model");
+const smartSerial = $("smart-meta-serial");
+const smartHealth = $("smart-meta-health");
+const smartHours = $("smart-meta-hours");
+const smartRaw = $("smart-raw-output");
+const smartLbl1 = $("smart-lbl-1");
+const smartLbl2 = $("smart-lbl-2");
+const smartLbl3 = $("smart-lbl-3");
+const smartLbl4 = $("smart-lbl-4");
+const smartRawTitle = $("smart-modal-raw-title");
+
+async function openSmartModal(devName) {
+  if (!smartOverlay) return;
+  activeModalType = "disk_" + devName;
+  smartOverlay.classList.add("open");
+  if (smartTitle) smartTitle.innerHTML = `<svg class="ic"><use href="#i-disk"/></svg> S.M.A.R.T. Diagnostics • /dev/${devName}`;
+  if (smartLbl1) smartLbl1.textContent = "DEVICE & MODEL";
+  if (smartLbl2) smartLbl2.textContent = "SERIAL NUMBER";
+  if (smartLbl3) smartLbl3.textContent = "HEALTH STATUS";
+  if (smartLbl4) smartLbl4.textContent = "POWER-ON HOURS";
+  if (smartRawTitle) smartRawTitle.textContent = "RAW SMART ATTRIBUTES";
+
+  if (smartModel) smartModel.textContent = "Loading...";
+  if (smartSerial) smartSerial.textContent = "Loading...";
+  if (smartHealth) smartHealth.textContent = "Loading...";
+  if (smartHours) smartHours.textContent = "Loading...";
+  if (smartRaw) smartRaw.textContent = "Querying drive controller via smartctl...";
+
+  try {
+    const res = await fetch(`/api/disk_detail?dev=${encodeURIComponent(devName)}`);
+    if (res.ok) {
+      const data = await res.json();
+      if (smartModel) smartModel.textContent = data.model || "Unknown";
+      if (smartSerial) smartSerial.textContent = data.serial || "Unknown";
+      if (smartHealth) {
+        smartHealth.textContent = data.health || "PASSED";
+        smartHealth.style.color = (data.health === "PASSED") ? "var(--ok)" : "var(--crit)";
+      }
+      if (smartHours) smartHours.textContent = data.power_on_hours || "Unknown";
+      if (smartRaw) smartRaw.textContent = data.raw || "No raw output.";
+    }
+  } catch (err) {
+    if (smartRaw) smartRaw.textContent = `Error querying disk details: ${err}`;
+  }
+}
+
+function updateMetricModalLive() {
+  if (!smartOverlay || !smartOverlay.classList.contains("open") || !latestStats || !activeModalType) return;
+  
+  if (activeModalType === "storage") {
+    smartModel.textContent = latestStats.storage.used;
+    smartSerial.textContent = latestStats.storage.total;
+    smartHealth.textContent = `${latestStats.storage.pct}%`;
+    smartHealth.style.color = latestStats.storage.pct >= 90 ? "var(--crit)" : "var(--ok)";
+    smartRaw.textContent = JSON.stringify(latestStats.disks, null, 2);
+  } else if (activeModalType === "cpu") {
+    smartModel.textContent = `${latestStats.cpu.temp}°C`;
+    smartSerial.textContent = `${latestStats.cpu.util}%`;
+    smartHealth.textContent = latestStats.cpu.temp >= 75 ? "ELEVATED" : "OPTIMAL";
+    smartHealth.style.color = latestStats.cpu.temp >= 75 ? "var(--warn)" : "var(--ok)";
+    smartHours.textContent = latestStats.uptime;
+    smartRaw.textContent = `Host: ${latestStats.name}\nIP: ${latestStats.ip}\nCPU Temp: ${latestStats.cpu.temp}°C\nCPU Util: ${latestStats.cpu.util}%\nUptime: ${latestStats.uptime}`;
+  } else if (activeModalType === "mem") {
+    smartModel.textContent = `${latestStats.mem.used_gb} GB`;
+    smartSerial.textContent = `${latestStats.mem.total_gb} GB`;
+    smartHealth.textContent = `${latestStats.mem.pct}%`;
+    smartHealth.style.color = latestStats.mem.pct >= 90 ? "var(--crit)" : "var(--ok)";
+    smartHours.textContent = `${(latestStats.mem.total_gb - latestStats.mem.used_gb).toFixed(1)} GB`;
+    smartRaw.textContent = JSON.stringify(latestStats.mem, null, 2);
+  } else if (activeModalType === "fans") {
+    const f = latestStats.fans || [];
+    smartModel.textContent = f[0] ? `${f[0]} RPM` : "N/A";
+    smartSerial.textContent = f[1] ? `${f[1]} RPM` : "N/A";
+    smartHealth.textContent = f[2] ? `${f[2]} RPM` : "N/A";
+    smartRaw.textContent = `Tachometer Inputs:\n- Fan 1 (Disks 1): ${f[0] || 0} RPM\n- Fan 2 (Disks 2): ${f[1] || 0} RPM\n- Fan 3 (CPU): ${f[2] || 0} RPM\n- Sysfs Path: /sys/class/hwmon\n- Native Duty Range: 0-183`;
+  } else if (activeModalType === "net") {
+    smartModel.textContent = latestStats.net ? latestStats.net.tx : "0 KB/s";
+    smartSerial.textContent = latestStats.net ? latestStats.net.rx : "0 KB/s";
+    smartHealth.textContent = "CONNECTED";
+    smartHealth.style.color = "var(--ok)";
+    smartHours.textContent = latestStats.ip;
+    smartRaw.textContent = `Network Subsystem Telemetry:\n- Host IP: ${latestStats.ip}\n- Interface Transmit Rate (TX): ${latestStats.net ? latestStats.net.tx : "0 KB/s"}\n- Interface Receive Rate (RX): ${latestStats.net ? latestStats.net.rx : "0 KB/s"}\n- Host Source: /proc/net/dev`;
+  }
+}
+
+function openMetricModal(type) {
+  if (!smartOverlay || !latestStats) return;
+  activeModalType = type;
+  smartOverlay.classList.add("open");
+
+  if (type === "storage") {
+    smartTitle.innerHTML = `<svg class="ic"><use href="#i-disk"/></svg> Storage Array Diagnostics`;
+    smartLbl1.textContent = "USED SPACE";
+    smartLbl2.textContent = "TOTAL CAPACITY";
+    smartLbl3.textContent = "UTILIZATION";
+    smartLbl4.textContent = "TARGET POOL";
+    smartHours.textContent = "/mnt/user";
+    smartRawTitle.textContent = "ACTIVE DISK INVENTORY";
+  } else if (type === "cpu") {
+    smartTitle.innerHTML = `<svg class="ic"><use href="#i-cpu"/></svg> Processor Diagnostics`;
+    smartLbl1.textContent = "CORE TEMP";
+    smartLbl2.textContent = "ACTIVE UTILIZATION";
+    smartLbl3.textContent = "THERMAL STATE";
+    smartLbl4.textContent = "SYSTEM UPTIME";
+    smartRawTitle.textContent = "CPU TOPOLOGY & DELTAS";
+  } else if (type === "mem") {
+    smartTitle.innerHTML = `<svg class="ic"><use href="#i-mem"/></svg> Memory Distribution`;
+    smartLbl1.textContent = "RAM USED";
+    smartLbl2.textContent = "RAM TOTAL";
+    smartLbl3.textContent = "USAGE";
+    smartLbl4.textContent = "FREE MEMORY";
+    smartRawTitle.textContent = "HOST MEMINFO SNAPSHOT";
+  } else if (type === "fans") {
+    smartTitle.innerHTML = `<svg class="ic"><use href="#i-fan"/></svg> Cooling & Fan Tachometers`;
+    smartLbl1.textContent = "REAR FAN 1 (D1)";
+    smartLbl2.textContent = "REAR FAN 2 (D2)";
+    smartLbl3.textContent = "CPU FAN";
+    smartHealth.style.color = "var(--ok2)";
+    smartLbl4.textContent = "HWMON CHIP";
+    smartHours.textContent = "zettlab_d8_fans";
+    smartRawTitle.textContent = "LIVE FAN SENSOR TELEMETRY";
+  } else if (type === "net") {
+    smartTitle.innerHTML = `<svg class="ic"><use href="#i-net"/></svg> Network Throughput Diagnostics`;
+    smartLbl1.textContent = "CURRENT TX";
+    smartLbl2.textContent = "CURRENT RX";
+    smartLbl3.textContent = "LINK STATE";
+    smartLbl4.textContent = "PRIMARY IP";
+    smartRawTitle.textContent = "NETWORK INTERFACE TELEMETRY";
+  }
+  updateMetricModalLive();
+}
+
+function closeSmartModal() {
+  activeModalType = null;
+  if (smartOverlay) smartOverlay.classList.remove("open");
+}
+
+if (smartCloseBtn) smartCloseBtn.addEventListener("click", closeSmartModal);
+if (smartOverlay) {
+  smartOverlay.addEventListener("click", (e) => {
+    if (e.target === smartOverlay) closeSmartModal();
+  });
+}
+
+// Bind click handlers ONLY on the main dashboard console screen
+$("screen").querySelectorAll(".card-storage").forEach((el) => el.addEventListener("click", () => openMetricModal("storage")));
+$("screen").querySelectorAll(".card-cpu").forEach((el) => el.addEventListener("click", () => openMetricModal("cpu")));
+$("screen").querySelectorAll(".card-mem").forEach((el) => el.addEventListener("click", () => openMetricModal("mem")));
+$("screen").querySelectorAll(".card-fans").forEach((el) => el.addEventListener("click", () => openMetricModal("fans")));
+$("screen").querySelectorAll(".card-net").forEach((el) => el.addEventListener("click", () => openMetricModal("net")));
+
+let anyWarn = false;
+
+function updateRowTelemetryBadges(s) {
+  if (!s) return;
+  const stBadge = $("telemetry-badge-storage");
+  const cpuBadge = $("telemetry-badge-cpu");
+  const memBadge = $("telemetry-badge-mem");
+  const fanBadge = $("telemetry-badge-fans");
+  const netBadge = $("telemetry-badge-net");
+  const dskBadge = $("telemetry-badge-disks");
+
+  if (stBadge && s.storage) stBadge.textContent = `${s.storage.pct}% • ${s.storage.used}`;
+  if (cpuBadge && s.cpu) cpuBadge.textContent = `${s.cpu.temp}°C • ${s.cpu.util}%`;
+  if (memBadge && s.mem) memBadge.textContent = `${s.mem.pct}% • ${s.mem.used_gb}G`;
+  if (fanBadge && s.fans && s.fans.length) fanBadge.textContent = `${s.fans[0] || 0} / ${s.fans[1] || 0} RPM`;
+  if (netBadge && s.net) netBadge.textContent = `${s.net.tx} / ${s.net.rx}`;
+  if (dskBadge && s.disks) dskBadge.textContent = `${s.disks.length} Drives Online`;
+}
+
+function updateFanCurveWorkstation(s) {
+  if (!s || !s.fan_control) return;
+  const fc = s.fan_control;
+
+  if ($("zp-z1-temp")) $("zp-z1-temp").textContent = `${fc.zone1_temp}°C`;
+  if ($("zp-z1-pwm")) $("zp-z1-pwm").textContent = `PWM: ${fc.zone1_pwm}`;
+  if ($("zp-z2-temp")) $("zp-z2-temp").textContent = `${fc.zone2_temp}°C`;
+  if ($("zp-z2-pwm")) $("zp-z2-pwm").textContent = `PWM: ${fc.zone2_pwm}`;
+  if ($("zp-cpu-temp")) $("zp-cpu-temp").textContent = `${fc.cpu_temp}°C`;
+  if ($("zp-cpu-pwm")) $("zp-cpu-pwm").textContent = fc.ctrl_cpu_fan ? `PWM: ${fc.cpu_pwm}` : `BIOS Auto`;
+
+  const hBadge = $("hysteresis-badge");
+  if (hBadge) {
+    if (fc.disk_hold_remaining > 0) {
+      hBadge.textContent = `HOLD: ACTIVE (${fc.disk_hold_remaining}s)`;
+      hBadge.style.background = "rgba(245,183,49,0.15)";
+      hBadge.style.color = "var(--warn)";
+      hBadge.style.borderColor = "rgba(245,183,49,0.4)";
+    } else if (fc.ctrl_cpu_fan && fc.cpu_hold_remaining > 0) {
+      hBadge.textContent = `CPU HOLD (${fc.cpu_hold_remaining}s)`;
+      hBadge.style.background = "rgba(245,183,49,0.15)";
+      hBadge.style.color = "var(--warn)";
+      hBadge.style.borderColor = "rgba(245,183,49,0.4)";
+    } else {
+      hBadge.textContent = `HOLD: READY`;
+      hBadge.style.background = "rgba(51,209,122,0.15)";
+      hBadge.style.color = "var(--ok)";
+      hBadge.style.borderColor = "rgba(51,209,122,0.35)";
+    }
+  }
+
+  const normZ1X = Math.max(30, Math.min(50, fc.zone1_temp));
+  const svgZ1X = 38 + ((normZ1X - 30) / 20.0) * (285 - 38);
+  const normZ1Pwm = Math.max(58, Math.min(183, fc.zone1_pwm));
+  const svgZ1Y = 100 - ((normZ1Pwm - 58) / (183 - 58)) * (100 - 20);
+
+  const normZ2X = Math.max(30, Math.min(50, fc.zone2_temp));
+  const svgZ2X = 38 + ((normZ2X - 30) / 20.0) * (285 - 38);
+  const normZ2Pwm = Math.max(58, Math.min(183, fc.zone2_pwm));
+  const svgZ2Y = 100 - ((normZ2Pwm - 58) / (183 - 58)) * (100 - 20);
+
+  const normCpuX = Math.max(30, Math.min(85, fc.cpu_temp));
+  const svgCpuX = 38 + ((normCpuX - 30) / (85 - 30)) * (285 - 38);
+  const normCpuPwm = Math.max(58, Math.min(183, fc.cpu_pwm || 85));
+  const svgCpuY = 100 - ((normCpuPwm - 58) / (183 - 58)) * (100 - 20);
+
+  const dotZ1 = $("curve-dot-z1");
+  const dotZ2 = $("curve-dot-z2");
+  const dotCpu = $("curve-dot-cpu");
+
+  if (dotZ1) {
+    dotZ1.setAttribute("cx", svgZ1X);
+    dotZ1.setAttribute("cy", svgZ1Y);
+    dotZ1.style.display = (selectedZoneFilter === "all" || selectedZoneFilter === "zone1") ? "block" : "none";
+  }
+
+  if (dotZ2) {
+    dotZ2.setAttribute("cx", svgZ2X);
+    dotZ2.setAttribute("cy", svgZ2Y);
+    dotZ2.style.display = (selectedZoneFilter === "all" || selectedZoneFilter === "zone2") ? "block" : "none";
+  }
+
+  if (dotCpu) {
+    dotCpu.setAttribute("cx", svgCpuX);
+    dotCpu.setAttribute("cy", svgCpuY);
+    dotCpu.style.display = (selectedZoneFilter === "all" || selectedZoneFilter === "cpu") ? "block" : "none";
+  }
+
+  const readout = $("curve-readout-text");
+  if (readout) {
+    if (selectedZoneFilter === "zone1") {
+      readout.textContent = `Zone 1 Isolated: ${fc.zone1_temp}°C (${fc.zone1_pwm} PWM)`;
+    } else if (selectedZoneFilter === "zone2") {
+      readout.textContent = `Zone 2 Isolated: ${fc.zone2_temp}°C (${fc.zone2_pwm} PWM)`;
+    } else if (selectedZoneFilter === "cpu") {
+      readout.textContent = `CPU Isolated: ${fc.cpu_temp}°C (${fc.cpu_pwm || 'Auto'} PWM)`;
+    } else {
+      const maxDisk = Math.max(fc.zone1_temp, fc.zone2_temp);
+      readout.textContent = `All Zones: Max Bay ${maxDisk}°C`;
+    }
+  }
+}
+
+function setZoneFilter(filterKey) {
+  selectedZoneFilter = filterKey;
+
+  const colZ1 = $("fan-col-zone1");
+  const colZ2 = $("fan-col-zone2");
+  const colCpu = $("fan-col-cpu");
+  const btnReset = $("btn-reset-curve");
+  const instruction = $("curve-filter-instruction");
+
+  if (colZ1) colZ1.classList.toggle("active-zone-filter", filterKey === "zone1");
+  if (colZ2) colZ2.classList.toggle("active-zone-filter", filterKey === "zone2");
+  if (colCpu) colCpu.classList.toggle("active-zone-filter", filterKey === "cpu");
+
+  if (btnReset) {
+    btnReset.style.display = (filterKey !== "all") ? "inline-block" : "none";
+  }
+
+  if (instruction) {
+    if (filterKey === "all") {
+      instruction.textContent = "Displaying all thermal zones. Click a zone tachometer above or below to isolate.";
+    } else {
+      const nameMap = { zone1: "Zone 1 (Left Bays)", zone2: "Zone 2 (Right Bays)", cpu: "CPU Package" };
+      instruction.textContent = `Filtered to ${nameMap[filterKey]}. Only this zone is active on the graph.`;
+    }
+  }
+
+  if (latestStats) updateFanCurveWorkstation(latestStats);
+}
+
+function initFanCurveInteractivity() {
+  const colZ1 = $("fan-col-zone1");
+  const colZ2 = $("fan-col-zone2");
+  const colCpu = $("fan-col-cpu");
+  const legZ1 = $("leg-item-z1");
+  const legZ2 = $("leg-item-z2");
+  const legCpu = $("leg-item-cpu");
+  const btnReset = $("btn-reset-curve");
+
+  const toggleFilter = (key) => {
+    setZoneFilter(selectedZoneFilter === key ? "all" : key);
+  };
+
+  if (colZ1) colZ1.addEventListener("click", () => toggleFilter("zone1"));
+  if (colZ2) colZ2.addEventListener("click", () => toggleFilter("zone2"));
+  if (colCpu) colCpu.addEventListener("click", () => toggleFilter("cpu"));
+
+  if (legZ1) legZ1.addEventListener("click", () => toggleFilter("zone1"));
+  if (legZ2) legZ2.addEventListener("click", () => toggleFilter("zone2"));
+  if (legCpu) legCpu.addEventListener("click", () => toggleFilter("cpu"));
+
+  if (btnReset) btnReset.addEventListener("click", () => setZoneFilter("all"));
+}
+
+function updateChassisImageForTheme() {
+  const chassisImg = $("chassis-hero-img");
+  if (!chassisImg) return;
+
+  if (currentTheme === "yak") {
+    chassisImg.src = "img/yak.png";
+  } else if (latestStats && latestStats.chassis) {
+    const modelMap = {
+      "d4": "img/chassis-d4.png",
+      "d8u": "img/chassis-d8u.png",
+      "d6u": "img/chassis-d6u.png"
+    };
+    chassisImg.src = modelMap[latestStats.chassis] || "img/chassis-d6u.png";
+  }
+}
+
+function applyTheme(themeName) {
+  currentTheme = themeName;
+  localStorage.setItem("lcd_theme", currentTheme);
+  const isYak = (themeName === "yak");
+
+  document.body.classList.toggle("theme-yak", isYak);
+
+  const yakEggBtn = $("yak-easter-egg-btn");
+  if (yakEggBtn) {
+    yakEggBtn.title = isYak ? "Yak Express Active! [Press Y or click to toggle]" : "Trust in the Yak [Easter Egg Hot-key: Y]";
+  }
+
+  const title = $("suite-brand-title");
+  const badge = $("suite-brand-badge");
+  const engraved = $("chassis-panel-engraved");
+  const drawerSub = $("drawer-sub-badge");
+  const icon = $("suite-brand-icon");
+
+  if (title) title.textContent = isYak ? "YAK EXPRESS" : "ZETTNAS";
+  if (badge) badge.textContent = isYak ? "RELIABILITY CULT" : "HARDWARE TOOLKIT";
+  if (engraved) engraved.textContent = isYak ? "YAK EXPRESS • TOASTIE LOGISTICS LAB" : "ZETTNAS • SYSTEM CONSOLE";
+  if (drawerSub) drawerSub.textContent = isYak ? "LOGISTICS LAB" : "HARDWARE TOOLKIT";
+  if (icon) icon.innerHTML = isYak ? '<use href="#i-yak"/>' : '<use href="#i-chip"/>';
+
+  if ($("lbl-module-storage")) $("lbl-module-storage").textContent = isYak ? "Cargo Hold (Capacity & Donut)" : "Storage (Donut & Capacity)";
+  if ($("lbl-module-cpu")) $("lbl-module-cpu").textContent = isYak ? "YAK64 Toastie CPU" : "CPU Gauge";
+  if ($("lbl-module-fans")) $("lbl-module-fans").textContent = isYak ? "Asthmatic Yak Airflow & Fans" : "Fans & Uptime";
+  if ($("lbl-module-disks")) $("lbl-module-disks").textContent = isYak ? "Yak Parcel Bays (OS, Data, Cache)" : "Drives Tray (OS, Data, Cache)";
+  if ($("lbl-module-net")) $("lbl-module-net").textContent = isYak ? "Transit Courier Throughput" : "Network Throughput";
+
+  const storageTitle = document.querySelector(".card-storage .card-title-txt");
+  const cpuTitle = document.querySelector(".card-cpu .card-title-txt");
+  const fansTitle = document.querySelector(".card-fans .card-title-txt");
+  const netTitle = document.querySelector(".card-net .card-title-txt");
+  if (storageTitle) storageTitle.textContent = isYak ? "CARGO HOLD" : "STORAGE";
+  if (cpuTitle) cpuTitle.textContent = isYak ? "YAK64 CPU" : "CPU";
+  if (fansTitle) fansTitle.textContent = isYak ? "YAK AIRFLOW" : "FANS";
+  if (netTitle) netTitle.textContent = isYak ? "TRANSIT I/O" : "NETWORK I/O";
+
+  if (latestStats && latestStats.disks) {
+    renderDisks(latestStats.disks);
+  }
+
+  updateChassisImageForTheme();
+
+  if (isYak) {
+    const stageGlow = $("virtual-chassis-lightbar");
+    if (stageGlow) {
+      stageGlow.style.background = "linear-gradient(90deg, #1b68b8 0%, #e07a38 50%, #1b68b8 100%)";
+      stageGlow.style.boxShadow = "0 0 16px rgba(224, 122, 56, 0.5)";
+    }
+  }
+}
+
+const defaultDashOrder = ["metric-storage", "metric-cpu", "metric-mem", "metric-fans", "metric-net", "metric-disks"];
+const defaultVis = {
+  "metric-storage": true,
+  "metric-cpu": true,
+  "metric-mem": true,
+  "metric-fans": true,
+  "metric-net": true,
+  "metric-disks": true
+};
+const defaultSizes = {
+  "metric-storage": "full",
+  "metric-cpu": "full",
+  "metric-mem": "full",
+  "metric-fans": "full",
+  "metric-net": "full",
+  "metric-disks": "full"
+};
+
+let dashOrder = [...defaultDashOrder];
+let dashVis = { ...defaultVis };
+let dashSizes = { ...defaultSizes };
+
+function applyDashboardLayout() {
+  const screenCanvasEl = $("screen");
+  const dashCardsContainer = $("dashboard-cards-container");
+  const diskRowEl = $("diskRow");
+  if (!dashCardsContainer || !screenCanvasEl) return;
+
+  const cardMap = {};
+  dashCardsContainer.querySelectorAll(".card").forEach((c) => {
+    cardMap[c.dataset.metricId] = c;
+  });
+
+  dashOrder.forEach((id) => {
+    if (cardMap[id]) dashCardsContainer.appendChild(cardMap[id]);
+  });
+
+  if (diskRowEl) {
+    const disksIdx = dashOrder.indexOf("metric-disks");
+    const firstCardIdx = dashOrder.findIndex((id) => id !== "metric-disks" && cardMap[id]);
+    if (disksIdx !== -1 && firstCardIdx !== -1 && disksIdx < firstCardIdx) {
+      screenCanvasEl.insertBefore(diskRowEl, dashCardsContainer);
+    } else {
+      screenCanvasEl.appendChild(diskRowEl);
+    }
+  }
+
+  let allTopHidden = true;
+  Object.keys(dashVis).forEach((id) => {
+    if (id !== "metric-disks" && cardMap[id]) {
+      const isHidden = !dashVis[id];
+      cardMap[id].classList.toggle("card-hidden", isHidden);
+      if (!isHidden) allTopHidden = false;
+      cardMap[id].classList.toggle("card-compact", dashSizes[id] === "compact");
+    }
+  });
+
+  dashCardsContainer.classList.toggle("card-hidden", allTopHidden);
+
+  if (diskRowEl) {
+    diskRowEl.classList.toggle("card-hidden", dashVis["metric-disks"] === false);
+    diskRowEl.classList.toggle("compact", dashSizes["metric-disks"] === "compact");
+  }
+
+  screenCanvasEl.classList.toggle("no-disks", dashVis["metric-disks"] === false);
+  screenCanvasEl.classList.toggle("no-cards", allTopHidden);
+
+  document.querySelectorAll(".dash-module-item").forEach((item) => {
+    const id = item.dataset.metricTarget;
+    const isEnabled = dashVis[id] !== false;
+    item.classList.toggle("disabled", !isEnabled);
+
+    const toggle = item.querySelector(".metric-vis-toggle");
+    if (toggle) toggle.checked = isEnabled;
+
+    const currentSize = dashSizes[id] || "full";
+    item.querySelectorAll(".seg-size-btn").forEach((sBtn) => {
+      sBtn.classList.toggle("active", sBtn.dataset.size === currentSize);
+    });
+  });
+
+  if ($("clock-format-btn")) {
+    $("clock-format-btn").textContent = clockFormat === "12" ? "12 Hours" : "24 Hours";
+  }
+
+  if ($("clock")) $("clock").textContent = getLocalClock(currentTimezone, clockFormat);
+
+  evaluateActivePreset();
+  syncMiniPreviewStructure();
+}
+
+function evaluateActivePreset() {
+  const presetCardBtns = document.querySelectorAll(".preset-btn-card");
+  const presetBadge = $("preset-state-badge");
+  const isVisMatch = (v) => Object.keys(v).every((k) => dashVis[k] === v[k]);
+
+  const isDefault = isVisMatch(defaultVis);
+  const isThermal = isVisMatch({ "metric-storage": false, "metric-cpu": true, "metric-mem": false, "metric-fans": true, "metric-net": false, "metric-disks": true });
+  const isStorage = isVisMatch({ "metric-storage": true, "metric-cpu": false, "metric-mem": false, "metric-fans": false, "metric-net": false, "metric-disks": true });
+  const isDisksOnly = isVisMatch({ "metric-storage": false, "metric-cpu": false, "metric-mem": false, "metric-fans": false, "metric-net": false, "metric-disks": true });
+
+  let activeKey = null;
+  if (isDefault) activeKey = "default";
+  else if (isThermal) activeKey = "thermal";
+  else if (isStorage) activeKey = "storage";
+  else if (isDisksOnly) activeKey = "disks-only";
+
+  presetCardBtns.forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.preset === activeKey);
+  });
+
+  if (presetBadge) {
+    if (activeKey) {
+      presetBadge.textContent = `${activeKey.toUpperCase()} ENGAGED`;
+      presetBadge.classList.remove("custom");
+    } else {
+      presetBadge.textContent = "CUSTOM CONFIGURATION";
+      presetBadge.classList.add("custom");
+    }
+  }
+}
+
+async function persistDashboardLayout() {
+  try {
+    const res = await fetch("/api/layout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        order: dashOrder,
+        vis: dashVis,
+        sizes: dashSizes,
+        clock_format: clockFormat,
+        timezone: currentTimezone
+      })
+    });
+    if (res.ok) {
+      const resp = await res.json();
+      if (resp.layout && resp.layout.version) {
+        activeLayoutVersion = resp.layout.version;
+      }
+    }
+  } catch (err) {}
+}
+
+async function fetchDashboardLayout() {
+  try {
+    const res = await fetch("/api/layout", { cache: "no-store" });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.version) activeLayoutVersion = data.version;
+      if (data.order) dashOrder = data.order;
+      if (data.vis) dashVis = data.vis;
+      if (data.sizes) dashSizes = data.sizes;
+      if (data.clock_format) clockFormat = data.clock_format;
+      if (data.timezone) currentTimezone = data.timezone;
+    }
+  } catch (err) {}
+  applyDashboardLayout();
+}
+
+function syncMiniPreviewStructure() {
+  const miniInner = $("mini-preview-inner");
+  const screenEl = $("screen");
+  if (!miniInner || !screenEl) return;
+
+  let miniCardsContainer = miniInner.querySelector(".cards");
+  let miniDiskRow = miniInner.querySelector(".disks");
+  const screenDiskRow = screenEl.querySelector("#diskRow");
+
+  if (!miniCardsContainer || !miniDiskRow) {
+    miniInner.innerHTML = screenEl.innerHTML;
+    miniCardsContainer = miniInner.querySelector(".cards");
+    miniDiskRow = miniInner.querySelector(".disks");
+    miniInner.className = "mini-preview-inner " + screenEl.className;
+    setupMiniPreviewInteractivity();
+    return;
+  }
+
+  if (screenDiskRow && screenDiskRow.children.length > 0 && miniDiskRow.children.length === 0) {
+    miniDiskRow.innerHTML = screenDiskRow.innerHTML;
+  }
+
+  const cardMap = {};
+  miniCardsContainer.querySelectorAll(".card").forEach((c) => {
+    cardMap[c.dataset.metricId] = c;
+  });
+
+  dashOrder.forEach((id) => {
+    if (cardMap[id]) miniCardsContainer.appendChild(cardMap[id]);
+  });
+
+  const disksIdx = dashOrder.indexOf("metric-disks");
+  const firstCardIdx = dashOrder.findIndex((id) => id !== "metric-disks" && cardMap[id]);
+  if (disksIdx !== -1 && firstCardIdx !== -1 && disksIdx < firstCardIdx) {
+    miniInner.insertBefore(miniDiskRow, miniCardsContainer);
+  } else {
+    miniInner.appendChild(miniDiskRow);
+  }
+
+  Object.keys(dashVis).forEach((id) => {
+    if (id !== "metric-disks" && cardMap[id]) {
+      cardMap[id].classList.toggle("card-hidden", !dashVis[id]);
+      cardMap[id].classList.toggle("card-compact", dashSizes[id] === "compact");
+    }
+  });
+
+  miniDiskRow.classList.toggle("card-hidden", dashVis["metric-disks"] === false);
+  miniDiskRow.classList.toggle("compact", dashSizes["metric-disks"] === "compact");
+
+  miniInner.className = "mini-preview-inner " + screenEl.className;
+}
+
+function syncMiniPreviewTelemetry() {
+  const miniInner = $("mini-preview-inner");
+  const screenEl = $("screen");
+  if (!miniInner || !screenEl || isDraggingPreview) return;
+
+  const copyEl = (id) => {
+    const src = screenEl.querySelector("#" + id);
+    const dst = miniInner.querySelector("#" + id);
+    if (src && dst) {
+      dst.textContent = src.textContent;
+      dst.className = src.className;
+    }
+  };
+
+  ["clock", "storagePct", "stUsed", "stTotal", "cpuTemp", "cpuUtil", "memPct", "memUsed", "memTotal", "uptime", "netTx", "netRx", "statusText", "ip"].forEach(copyEl);
+
+  const sDonut = screenEl.querySelector("#donut");
+  const dDonut = miniInner.querySelector("#donut");
+  if (sDonut && dDonut) dDonut.style.cssText = sDonut.style.cssText;
+
+  const sCpuArc = screenEl.querySelector("#cpuArc");
+  const dCpuArc = miniInner.querySelector("#cpuArc");
+  if (sCpuArc && dCpuArc) dCpuArc.style.cssText = sCpuArc.style.cssText;
+
+  const sMemArc = screenEl.querySelector("#memArc");
+  const dMemArc = miniInner.querySelector("#memArc");
+  if (sMemArc && dMemArc) dMemArc.style.cssText = sMemArc.style.cssText;
+
+  const sFans = screenEl.querySelectorAll("#fanRow .fan");
+  const dFans = miniInner.querySelectorAll("#fanRow .fan");
+  sFans.forEach((sf, i) => {
+    if (dFans[i]) {
+      const sfVal = sf.querySelector(".fv");
+      const dfVal = dFans[i].querySelector(".fv");
+      if (sfVal && dfVal) dfVal.textContent = sfVal.textContent;
+      const sfIc = sf.querySelector(".fan-ic");
+      const dfIc = dFans[i].querySelector(".fan-ic");
+      if (sfIc && dfIc) dfIc.style.cssText = sfIc.style.cssText;
+    }
+  });
+
+  const screenDiskRow = screenEl.querySelector("#diskRow");
+  const miniDiskRow = miniInner.querySelector(".disks");
+  if (screenDiskRow && miniDiskRow) {
+    if (miniDiskRow.children.length !== screenDiskRow.children.length || miniDiskRow.children.length === 0) {
+      miniDiskRow.innerHTML = screenDiskRow.innerHTML;
+    } else {
+      const sDisks = screenDiskRow.querySelectorAll(".disk");
+      const dDisks = miniDiskRow.querySelectorAll(".disk");
+      sDisks.forEach((sd, i) => {
+        if (dDisks[i]) {
+          dDisks[i].className = sd.className;
+          const sdTemp = sd.querySelector(".dt");
+          const ddTemp = dDisks[i].querySelector(".dt");
+          if (sdTemp && ddTemp) ddTemp.innerHTML = sdTemp.innerHTML;
+          const sdBar = sd.querySelector(".db i");
+          const ddBar = dDisks[i].querySelector(".db i");
+          if (sdBar && ddBar) ddBar.style.cssText = sdBar.style.cssText;
+        }
+      });
+    }
+  }
+}
+
+function setupMiniPreviewInteractivity() {
+  const miniInner = $("mini-preview-inner");
+  if (!miniInner) return;
+
+  let draggedMetricId = null;
+
+  miniInner.querySelectorAll(".card, .disks").forEach((el) => {
+    const metricId = el.dataset.metricId;
+    if (!metricId) return;
+
+    el.setAttribute("draggable", "true");
+
+    el.addEventListener("dragstart", (e) => {
+      e.stopPropagation();
+      isDraggingPreview = true;
+      draggedMetricId = metricId;
+      el.classList.add("mini-dragging");
+      e.dataTransfer.effectAllowed = "move";
+      e.dataTransfer.setData("text/plain", metricId);
+    });
+
+    el.addEventListener("dragend", (e) => {
+      e.stopPropagation();
+      isDraggingPreview = false;
+      draggedMetricId = null;
+      el.classList.remove("mini-dragging");
+      miniInner.querySelectorAll(".card, .disks").forEach((c) => c.classList.remove("mini-drag-over"));
+    });
+
+    el.addEventListener("dragover", (e) => {
+      if (!draggedMetricId || draggedMetricId === metricId) return;
+      e.preventDefault();
+      e.stopPropagation();
+      e.dataTransfer.dropEffect = "move";
+      el.classList.add("mini-drag-over");
+    });
+
+    el.addEventListener("dragleave", (e) => {
+      e.stopPropagation();
+      el.classList.remove("mini-drag-over");
+    });
+
+    el.addEventListener("drop", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      el.classList.remove("mini-drag-over");
+      if (!draggedMetricId) return;
+
+      const miniRect = miniInner.getBoundingClientRect();
+      const isLowerHalf = (e.clientY - miniRect.top) / miniRect.height > 0.5;
+
+      if (draggedMetricId === "metric-disks") {
+        const newOrder = dashOrder.filter(x => x !== "metric-disks");
+        if (isLowerHalf) {
+          newOrder.push("metric-disks");
+        } else {
+          newOrder.unshift("metric-disks");
+        }
+        dashOrder = newOrder;
+      } else if (metricId === "metric-disks") {
+        const cardId = draggedMetricId;
+        const cardsOnly = dashOrder.filter(x => x !== "metric-disks");
+        const oldIdx = cardsOnly.indexOf(cardId);
+        if (oldIdx !== -1) cardsOnly.splice(oldIdx, 1);
+        if (isLowerHalf) {
+          cardsOnly.push(cardId);
+        } else {
+          cardsOnly.unshift(cardId);
+        }
+        const disksWasFirst = dashOrder.indexOf("metric-disks") === 0;
+        dashOrder = disksWasFirst ? ["metric-disks", ...cardsOnly] : [...cardsOnly, "metric-disks"];
+      } else {
+        const oldIdx = dashOrder.indexOf(draggedMetricId);
+        let targetIdx = dashOrder.indexOf(metricId);
+        if (oldIdx !== -1 && targetIdx !== -1) {
+          const rect = el.getBoundingClientRect();
+          const isRight = (e.clientX - rect.left) / rect.width > 0.5;
+          if (isRight && targetIdx <= oldIdx) targetIdx++;
+          else if (!isRight && targetIdx >= oldIdx) targetIdx--;
+          targetIdx = Math.max(0, Math.min(dashOrder.length - 1, targetIdx));
+
+          const newOrder = [...dashOrder];
+          newOrder.splice(oldIdx, 1);
+          newOrder.splice(targetIdx, 0, draggedMetricId);
+          dashOrder = newOrder;
+        }
+      }
+
+      isDraggingPreview = false;
+      draggedMetricId = null;
+
+      applyDashboardLayout();
+      persistDashboardLayout();
+    });
+  });
+
+  miniInner.addEventListener("dragover", (e) => {
+    if (!draggedMetricId) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  });
+
+  miniInner.addEventListener("drop", (e) => {
+    if (!draggedMetricId) return;
+    const rect = miniInner.getBoundingClientRect();
+    const isLowerHalf = (e.clientY - rect.top) / rect.height > 0.5;
+    
+    if (draggedMetricId === "metric-disks") {
+      const newOrder = dashOrder.filter(x => x !== "metric-disks");
+      if (isLowerHalf) {
+        newOrder.push("metric-disks");
+      } else {
+        newOrder.unshift("metric-disks");
+      }
+      dashOrder = newOrder;
+      isDraggingPreview = false;
+      draggedMetricId = null;
+      applyDashboardLayout();
+      persistDashboardLayout();
+    }
+  });
+}
+
+async function tick() {
+  try {
+    const s = await (await fetch("/api/stats", { cache: "no-store" })).json();
+    latestStats = s;
+    anyWarn = false;
+
+    if (s.layout && s.layout.version && s.layout.version !== activeLayoutVersion) {
+      activeLayoutVersion = s.layout.version;
+      if (s.layout.order) dashOrder = s.layout.order;
+      if (s.layout.vis) dashVis = s.layout.vis;
+      if (s.layout.sizes) dashSizes = s.layout.sizes;
+      if (s.layout.clock_format) clockFormat = s.layout.clock_format;
+      if (s.layout.timezone) currentTimezone = s.layout.timezone;
+      applyDashboardLayout();
+    }
+
+    if ($("nasName")) $("nasName").textContent = s.name;
+    if ($("drawer-nas-name")) $("drawer-nas-name").textContent = s.name.toUpperCase();
+
+    if ($("statusText")) {
+      if (currentTheme === "yak" && !s.status.includes("ALERT") && !s.status.includes("WARN")) {
+        $("statusText").textContent = "YAK OK";
+      } else {
+        $("statusText").textContent = s.status;
+      }
+    }
+
+    if ($("clock")) $("clock").textContent = getLocalClock(currentTimezone, clockFormat);
+    if ($("ip")) $("ip").textContent = s.ip;
+
+    updateChassisImageForTheme();
+
+    const stLvl = lvlFull(s.storage.pct);
+    if ($("storagePct")) $("storagePct").textContent = s.storage.pct + "%";
+    if ($("stUsed")) $("stUsed").textContent = s.storage.used;
+    if ($("stTotal")) $("stTotal").textContent = s.storage.total;
+    const donut = $("donut");
+    if (donut) {
+      donut.style.setProperty("--pct", s.storage.pct);
+      donut.style.setProperty("--c", cssVar(stLvl));
+    }
+
+    const cpuLvl = lvlCpu(s.cpu.temp);
+    const utilLvl = lvlUtil(s.cpu.util);
+    if ($("cpuTemp")) $("cpuTemp").textContent = s.cpu.temp;
+    if ($("cpuTemp") && $("cpuTemp").parentElement) $("cpuTemp").parentElement.className = "arc-val " + "s-" + cpuLvl;
+    if ($("cpuUtil")) {
+      $("cpuUtil").textContent = s.cpu.util + "%";
+      $("cpuUtil").className = "val s-" + utilLvl;
+    }
+    if ($("cpuArc")) setArc($("cpuArc"), (s.cpu.temp / 100) * 100, cpuLvl);
+
+    const memLvl = lvlUtil(s.mem.pct);
+    if ($("memPct")) $("memPct").textContent = s.mem.pct;
+    if ($("memPct") && $("memPct").parentElement) $("memPct").parentElement.className = "arc-val s-" + memLvl;
+    if ($("memUsed")) $("memUsed").textContent = s.mem.used_gb.toFixed(1) + "G";
+    if ($("memTotal")) $("memTotal").textContent = "/" + s.mem.total_gb.toFixed(0) + "G";
+    if ($("memArc")) setArc($("memArc"), s.mem.pct, memLvl);
+
+    renderFans(s.fans);
+    renderDisks(s.disks);
+    if ($("uptime")) $("uptime").textContent = "up " + s.uptime;
+
+    if (s.net) {
+      if ($("netTx")) $("netTx").textContent = s.net.tx;
+      if ($("netRx")) $("netRx").textContent = s.net.rx;
+    }
+
+    updateMetricModalLive();
+    updateRowTelemetryBadges(s);
+    updateFanCurveWorkstation(s);
+    syncMiniPreviewTelemetry();
+
+    if ([stLvl, cpuLvl, utilLvl, memLvl].includes("crit") ||
+        s.disks.some((d) => (d.health || lvlDisk(d.temp)) !== "ok")) anyWarn = true;
+    if ($("statusPill")) $("statusPill").className = "pill" + (anyWarn ? " warn" : "");
+
+  } catch (e) {}
+}
+
+tick();
+setInterval(tick, 1000);
+
+(function initHardwareBuilder() {
+  const toggleBtn = $("drawer-toggle-btn");
+  const suiteBtn = $("suite-toolkit-btn");
+  const closeBtn = $("drawer-close-btn");
+  const drawer = $("led-drawer");
+  const overlay = $("drawer-overlay");
+  const dynamicTitle = $("drawer-dynamic-title");
+  const dynamicDesc = $("drawer-dynamic-desc");
+
+  const tabBtns = document.querySelectorAll(".drawer-tab-btn");
+  const tabContents = document.querySelectorAll(".drawer-tab-content");
+
+  tabBtns.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      tabBtns.forEach((b) => b.classList.remove("active"));
+      tabContents.forEach((c) => c.classList.remove("active"));
+      btn.classList.add("active");
+      const targetId = btn.dataset.tab;
+      const targetContent = $(targetId);
+      if (targetContent) targetContent.classList.add("active");
+
+      if (targetId === "tab-layout") {
+        if (dynamicTitle) dynamicTitle.textContent = "Dashboard Layout";
+        if (dynamicDesc) dynamicDesc.textContent = "Configure dashboard sizes, visibility, and layout presets.";
+      } else if (targetId === "tab-led") {
+        if (dynamicTitle) dynamicTitle.textContent = "LED Strip bar";
+        if (dynamicDesc) dynamicDesc.textContent = "Adjust physical lighting and reactive hardware alerts.";
+      } else if (targetId === "tab-fans") {
+        if (dynamicTitle) dynamicTitle.textContent = "Fans";
+        if (dynamicDesc) dynamicDesc.textContent = "Configure cooling thresholds and dynamic thermal curves.";
+      }
+    });
+  });
+
+  function openDrawer() {
+    if (drawer && overlay) {
+      drawer.classList.add("open");
+      overlay.classList.add("open");
+      document.body.classList.add("drawer-is-open");
+    }
+  }
+  function closeDrawer() {
+    if (drawer && overlay) {
+      drawer.classList.remove("open");
+      overlay.classList.remove("open");
+      document.body.classList.remove("drawer-is-open");
+    }
+  }
+
+  if (toggleBtn) toggleBtn.addEventListener("click", openDrawer);
+  if (suiteBtn) suiteBtn.addEventListener("click", openDrawer);
+  if (closeBtn) closeBtn.addEventListener("click", closeDrawer);
+  if (overlay) overlay.addEventListener("click", closeDrawer);
+
+  const zoomBtn = $("suite-zoom-btn");
+  const ZOOM_PROFILES = [
+    { label: "1x",    zoom: 1.0,   chassis: 1.0,   opacity: 1.0,  gap: "24px", offsetY: "0px" },
+    { label: "1.25x", zoom: 1.18,  chassis: 0.72,  opacity: 0.65, gap: "18px", offsetY: "-15px" },
+    { label: "1.5x",  zoom: 1.35,  chassis: 0.42,  opacity: 0.25, gap: "12px", offsetY: "-30px" },
+    { label: "2x",    zoom: 1.55,  chassis: 0.0,   opacity: 0.0,  gap: "0px",  offsetY: "-90px" }
+  ];
+
+  let currentZoomIdx = parseInt(localStorage.getItem("lcd_stage_zoom_idx") || "0", 10);
+  if (isNaN(currentZoomIdx) || currentZoomIdx < 0 || currentZoomIdx >= ZOOM_PROFILES.length) {
+    currentZoomIdx = 0;
+  }
+
+  function applyStageZoom() {
+    const prof = ZOOM_PROFILES[currentZoomIdx];
+    const root = document.documentElement;
+    root.style.setProperty("--stage-zoom", prof.zoom);
+    root.style.setProperty("--chassis-scale", prof.chassis);
+    root.style.setProperty("--chassis-opacity", prof.opacity);
+    root.style.setProperty("--stage-gap", prof.gap);
+    root.style.setProperty("--stage-offset-y", prof.offsetY);
+    if (zoomBtn) zoomBtn.textContent = `🔍 ${prof.label}`;
+    localStorage.setItem("lcd_stage_zoom_idx", currentZoomIdx);
+  }
+
+  function cycleZoom() {
+    currentZoomIdx = (currentZoomIdx + 1) % ZOOM_PROFILES.length;
+    applyStageZoom();
+  }
+
+  if (zoomBtn) {
+    zoomBtn.addEventListener("click", cycleZoom);
+    applyStageZoom();
+  }
+
+  let wheelZoomCooldown = 0;
+  window.addEventListener("wheel", (e) => {
+    if (e.target.closest(".slide-drawer") || e.target.closest(".smart-modal-window") || e.target.closest("#mini-lcd-canvas")) {
+      return;
+    }
+    const now = Date.now();
+    if (now - wheelZoomCooldown < 150) return;
+
+    if (e.deltaY < 0 && currentZoomIdx < ZOOM_PROFILES.length - 1) {
+      currentZoomIdx++;
+      applyStageZoom();
+      wheelZoomCooldown = now;
+    } else if (e.deltaY > 0 && currentZoomIdx > 0) {
+      currentZoomIdx--;
+      applyStageZoom();
+      wheelZoomCooldown = now;
+    }
+  }, { passive: true });
+
+  const yakEggBtn = $("yak-easter-egg-btn");
+  if (yakEggBtn) {
+    yakEggBtn.addEventListener("click", () => {
+      applyTheme(currentTheme === "yak" ? "cyber" : "yak");
+    });
+  }
+  applyTheme(currentTheme);
+
+  initFanCurveInteractivity();
+
+  const layoutSectionsContainer = $("layout-sections-container");
+  const layoutLockBtn = $("layout-cards-lock-btn");
+  const LAYOUT_SECTIONS_STORAGE_KEY = "lcd_dash_card_order";
+  const LAYOUT_LOCK_KEY = "lcd_dash_cards_locked";
+  let isLayoutLocked = localStorage.getItem(LAYOUT_LOCK_KEY) !== "false";
+
+  function setLayoutLockState(locked) {
+    isLayoutLocked = locked;
+    localStorage.setItem(LAYOUT_LOCK_KEY, isLayoutLocked);
+    if (layoutSectionsContainer) layoutSectionsContainer.classList.toggle("locked", isLayoutLocked);
+    if (layoutLockBtn) {
+      layoutLockBtn.textContent = isLayoutLocked ? "🔒 Locked" : "🔓 Reorder";
+      layoutLockBtn.classList.toggle("unlocked", !isLayoutLocked);
+    }
+    if (layoutSectionsContainer) {
+      layoutSectionsContainer.querySelectorAll(".draggable-card").forEach((card) => {
+        card.setAttribute("draggable", !isLayoutLocked);
+      });
+    }
+  }
+
+  function initLayoutSectionReordering() {
+    if (!layoutSectionsContainer) return;
+    const savedOrder = JSON.parse(localStorage.getItem(LAYOUT_SECTIONS_STORAGE_KEY) || "[]");
+    if (savedOrder.length > 0) {
+      const cardMap = {};
+      layoutSectionsContainer.querySelectorAll(".draggable-card").forEach((c) => { 
+        cardMap[c.dataset.layoutCardId] = c; 
+      });
+      savedOrder.forEach((id) => { 
+        if (cardMap[id]) layoutSectionsContainer.appendChild(cardMap[id]); 
+      });
+    }
+
+    let draggedLayoutCard = null;
+    let allowLayoutDrag = false;
+
+    layoutSectionsContainer.addEventListener("mousedown", (e) => {
+      if (e.target.closest("#mini-lcd-canvas") || e.target.closest(".dash-reorder-flow")) {
+        allowLayoutDrag = false;
+        return;
+      }
+      allowLayoutDrag = !isLayoutLocked && !!e.target.closest(".drag-handle");
+    });
+
+    layoutSectionsContainer.querySelectorAll(".draggable-card").forEach((card) => {
+      card.addEventListener("dragstart", (e) => {
+        if (isLayoutLocked || !allowLayoutDrag || e.target.closest("#mini-lcd-canvas")) {
+          e.preventDefault();
+          return false;
+        }
+        draggedLayoutCard = card;
+        card.classList.add("dragging");
+        e.dataTransfer.effectAllowed = "move";
+        e.dataTransfer.setData("text/plain", card.dataset.layoutCardId);
+      });
+
+      card.addEventListener("dragend", () => {
+        allowLayoutDrag = false;
+        if (draggedLayoutCard) draggedLayoutCard.classList.remove("dragging");
+        layoutSectionsContainer.querySelectorAll(".draggable-card").forEach((c) => c.classList.remove("drag-over"));
+        const order = Array.from(layoutSectionsContainer.querySelectorAll(".draggable-card")).map((c) => c.dataset.layoutCardId);
+        localStorage.setItem(LAYOUT_SECTIONS_STORAGE_KEY, JSON.stringify(order));
+      });
+
+      card.addEventListener("dragover", (e) => {
+        if (isLayoutLocked || !draggedLayoutCard) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "move";
+        const targetCard = e.target.closest(".draggable-card");
+        if (targetCard && targetCard !== draggedLayoutCard && targetCard.parentElement === layoutSectionsContainer) {
+          const rect = targetCard.getBoundingClientRect();
+          const next = (e.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
+          layoutSectionsContainer.insertBefore(draggedLayoutCard, next && targetCard.nextSibling || targetCard);
+        }
+      });
+    });
+
+    if (layoutLockBtn) layoutLockBtn.addEventListener("click", () => setLayoutLockState(!isLayoutLocked));
+    setLayoutLockState(isLayoutLocked);
+  }
+
+  initLayoutSectionReordering();
+
+  if ($("clock-format-btn")) {
+    $("clock-format-btn").addEventListener("click", () => {
+      clockFormat = (clockFormat === "24") ? "12" : "24";
+      applyDashboardLayout();
+      persistDashboardLayout();
+    });
+  }
+
+  const tzSelect = $("tz-select");
+  const tzCustomInput = $("tz-custom-input");
+  if (tzSelect) {
+    tzSelect.addEventListener("change", (e) => {
+      const val = e.target.value;
+      if (val === "custom") {
+        if (tzCustomInput) {
+          tzCustomInput.style.display = "block";
+          tzCustomInput.focus();
+        }
+      } else {
+        if (tzCustomInput) tzCustomInput.style.display = "none";
+        currentTimezone = val;
+        applyDashboardLayout();
+        persistDashboardLayout();
+      }
+    });
+  }
+
+  if (tzCustomInput) {
+    let tzTimeout = null;
+    tzCustomInput.addEventListener("input", (e) => {
+      clearTimeout(tzTimeout);
+      tzTimeout = setTimeout(() => {
+        const val = e.target.value.trim();
+        if (val) {
+          currentTimezone = val;
+          persistDashboardLayout();
+        }
+      }, 500);
+    });
+  }
+
+  document.querySelectorAll(".seg-size-btn").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      const metricId = e.target.dataset.metricId;
+      const targetSize = e.target.dataset.size;
+      dashSizes[metricId] = targetSize;
+      applyDashboardLayout();
+      persistDashboardLayout();
+    });
+  });
+
+  document.querySelectorAll(".metric-vis-toggle").forEach((toggle) => {
+    toggle.addEventListener("change", (e) => {
+      const id = e.target.dataset.metricId;
+      dashVis[id] = e.target.checked;
+      applyDashboardLayout();
+      persistDashboardLayout();
+    });
+  });
+
+  document.querySelectorAll(".preset-btn-card").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const pr = btn.dataset.preset;
+      if (pr === "thermal") {
+        dashVis = { "metric-storage": false, "metric-cpu": true, "metric-mem": false, "metric-fans": true, "metric-net": false, "metric-disks": true };
+      } else if (pr === "storage") {
+        dashVis = { "metric-storage": true, "metric-cpu": false, "metric-mem": false, "metric-fans": false, "metric-net": false, "metric-disks": true };
+      } else if (pr === "disks-only") {
+        dashVis = { "metric-storage": false, "metric-cpu": false, "metric-mem": false, "metric-fans": false, "metric-net": false, "metric-disks": true };
+      } else {
+        dashVis = {
+          "metric-storage": true,
+          "metric-cpu": true,
+          "metric-mem": true,
+          "metric-fans": true,
+          "metric-net": true,
+          "metric-disks": true
+        };
+      }
+      applyDashboardLayout();
+      persistDashboardLayout();
+    });
+  });
+
+  const btnSaveCustom = $("btn-save-custom-preset");
+  if (btnSaveCustom) {
+    btnSaveCustom.addEventListener("click", () => {
+      localStorage.setItem("lcd_user_preset", JSON.stringify({
+        order: dashOrder,
+        vis: dashVis,
+        sizes: dashSizes
+      }));
+      btnSaveCustom.textContent = "✓ Saved!";
+      setTimeout(() => { btnSaveCustom.textContent = "💾 Save as My Preset"; }, 1500);
+    });
+  }
+
+  const exportBtn = $("btn-export-layout");
+  if (exportBtn) {
+    exportBtn.addEventListener("click", async () => {
+      let ledState = {};
+      try {
+        const r = await fetch("/api/led", { cache: "no-store" });
+        if (r.ok) ledState = await r.json();
+      } catch (e) {}
+
+      let fanState = {};
+      try {
+        const r = await fetch("/api/fans", { cache: "no-store" });
+        if (r.ok) fanState = await r.json();
+      } catch (e) {}
+
+      const drawerCardOrder = JSON.parse(localStorage.getItem("lcd_drawer_card_order") || "[]");
+      const fanCardOrder = JSON.parse(localStorage.getItem("lcd_fan_card_order") || "[]");
+      const dashSectionOrder = JSON.parse(localStorage.getItem(LAYOUT_SECTIONS_STORAGE_KEY) || "[]");
+
+      const suiteConfig = {
+        version: "2.0",
+        timestamp: new Date().toISOString(),
+        theme: currentTheme,
+        dashboard_layout: {
+          order: dashOrder,
+          vis: dashVis,
+          sizes: dashSizes,
+          clock_format: clockFormat,
+          timezone: currentTimezone
+        },
+        led_strip: ledState,
+        fan_control: fanState,
+        drawer_orders: {
+          sections: dashSectionOrder,
+          led_cards: drawerCardOrder,
+          fan_cards: fanCardOrder
+        }
+      };
+
+      const blob = new Blob([JSON.stringify(suiteConfig, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `zettnas_suite_backup_${Math.floor(Date.now() / 1000)}.json`;
+      a.click();
+    });
+  }
+
+  const importInput = $("file-import-layout");
+  if (importInput) {
+    importInput.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async (evt) => {
+        try {
+          const cfg = JSON.parse(evt.target.result);
+
+          if (cfg.theme) {
+            applyTheme(cfg.theme);
+          }
+
+          const dl = cfg.dashboard_layout || cfg;
+          if (dl.order) dashOrder = dl.order;
+          if (dl.vis) dashVis = dl.vis;
+          if (dl.sizes) dashSizes = dl.sizes;
+          if (dl.clock_format) clockFormat = dl.clock_format;
+          if (dl.timezone) currentTimezone = dl.timezone;
+
+          applyDashboardLayout();
+          await persistDashboardLayout();
+
+          if (cfg.led_strip) {
+            await fetch("/api/led", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(cfg.led_strip)
+            });
+            fetchLedState();
+          }
+
+          if (cfg.fan_control) {
+            await fetch("/api/fans", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(cfg.fan_control)
+            });
+            fetchFanState();
+          }
+
+          if (cfg.drawer_orders) {
+            if (cfg.drawer_orders.sections) localStorage.setItem(LAYOUT_SECTIONS_STORAGE_KEY, JSON.stringify(cfg.drawer_orders.sections));
+            if (cfg.drawer_orders.led_cards) localStorage.setItem("lcd_drawer_card_order", JSON.stringify(cfg.drawer_orders.led_cards));
+            if (cfg.drawer_orders.fan_cards) localStorage.setItem("lcd_fan_card_order", JSON.stringify(cfg.drawer_orders.fan_cards));
+            initLayoutSectionReordering();
+            initDragAndDrop();
+            initFanCardReordering();
+          }
+
+          alert("✓ Suite configuration restored successfully!");
+        } catch (err) {
+          alert("Error importing suite configuration: " + err.message);
+        }
+      };
+      reader.readAsText(file);
+    });
+  }
+
+  const resetBtn = $("dashboard-reset-btn");
+  if (resetBtn) {
+    resetBtn.addEventListener("click", () => {
+      dashOrder = [...defaultDashOrder];
+      dashVis = { ...defaultVis };
+      dashSizes = { ...defaultSizes };
+      clockFormat = "24";
+      currentTimezone = "America/New_York";
+      applyTheme("cyber");
+      applyDashboardLayout();
+      persistDashboardLayout();
+    });
+  }
+
+  fetchDashboardLayout();
+
+  const lockBtn = $("drawer-lock-btn");
+  const cardsContainer = $("drawer-cards-container");
+  const slider = $("led-slider");
+  const valDisplay = $("led-val-display");
+  const speedCard = $("speed-card");
+  const speedSlider = $("speed-slider");
+  const speedValDisplay = $("speed-val-display");
+  const secColorCard = $("secondary-color-card");
+  const priColorCard = $("primary-color-card");
+  const powerBtn = $("btn-toggle-led");
+  const reactiveToggle = $("reactive-toggle");
+
+  const previewBar = $("preview-bar");
+  const previewTxt = $("preview-state-txt");
+
+  const colorChips1 = document.querySelectorAll(".color-chip:not(.custom-picker-chip)");
+  const customChip1Label = $("custom-chip-label");
+  const customColorPicker1 = $("custom-color-picker");
+
+  const colorChips2 = document.querySelectorAll(".color-chip2:not(.custom-picker-chip)");
+  const customChip2Label = $("custom-chip2-label");
+  const customColorPicker2 = $("custom-color-picker2");
+
+  const effectBtns = document.querySelectorAll(".effect-btn");
+  const profilePills = document.querySelectorAll(".profile-pill:not(.fan-profile-btn)");
+
+  let currentColor = "25c2a0";
+  let currentColor2 = "ff0055";
+  let currentMode = "solid";
+  let currentPower = "on";
+  let briDebounce = null;
+  let speedDebounce = null;
+  let colorDebounce = null;
+
+  const STORAGE_KEY = "lcd_drawer_card_order";
+  const LOCK_KEY = "lcd_drawer_locked";
+  let isLocked = localStorage.getItem(LOCK_KEY) !== "false";
+
+  function setLockState(locked) {
+    isLocked = locked;
+    localStorage.setItem(LOCK_KEY, isLocked);
+    if (cardsContainer) cardsContainer.classList.toggle("locked", isLocked);
+    if (lockBtn) {
+      lockBtn.textContent = isLocked ? "🔒 Locked" : "🔓 Reorder";
+      lockBtn.classList.toggle("unlocked", !isLocked);
+    }
+    cardsContainer.querySelectorAll(".draggable-card").forEach((card) => {
+      card.setAttribute("draggable", !isLocked);
+    });
+  }
+
+  function initDragAndDrop() {
+    if (!cardsContainer) return;
+    const savedOrder = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+    if (savedOrder.length > 0) {
+      const cardMap = {};
+      cardsContainer.querySelectorAll(".draggable-card").forEach((c) => { cardMap[c.dataset.cardId] = c; });
+      savedOrder.forEach((id) => { if (cardMap[id]) cardsContainer.appendChild(cardMap[id]); });
+    }
+
+    let draggedItem = null;
+    let allowDrag = false;
+
+    cardsContainer.addEventListener("mousedown", (e) => {
+      allowDrag = !isLocked && !!e.target.closest(".drag-handle");
+    });
+
+    cardsContainer.querySelectorAll(".draggable-card").forEach((card) => {
+      card.addEventListener("dragstart", (e) => {
+        if (isLocked || !allowDrag) { e.preventDefault(); return false; }
+        draggedItem = card;
+        card.classList.add("dragging");
+        e.dataTransfer.effectAllowed = "move";
+        e.dataTransfer.setData("text/plain", card.dataset.cardId);
+      });
+
+      card.addEventListener("dragend", () => {
+        allowDrag = false;
+        card.classList.remove("dragging");
+        cardsContainer.querySelectorAll(".draggable-card").forEach((c) => c.classList.remove("drag-over"));
+        const order = Array.from(cardsContainer.querySelectorAll(".draggable-card")).map((c) => c.dataset.cardId);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(order));
+      });
+
+      card.addEventListener("dragover", (e) => {
+        if (isLocked) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "move";
+        const targetCard = e.target.closest(".draggable-card");
+        if (targetCard && targetCard !== draggedItem) {
+          const rect = targetCard.getBoundingClientRect();
+          const next = (e.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
+          cardsContainer.insertBefore(draggedItem, next && targetCard.nextSibling || targetCard);
+        }
+      });
+    });
+
+    if (lockBtn) lockBtn.addEventListener("click", () => setLockState(!isLocked));
+    setLockState(isLocked);
+  }
+
+  initDragAndDrop();
+
+  function formatSpeedText(val) {
+    const v = parseInt(val, 10);
+    if (v <= 20) return `Slow (${v}%)`;
+    if (v <= 60) return `Medium (${v}%)`;
+    if (v <= 85) return `Fast (${v}%)`;
+    return `Ultra Fast (${v}%)`;
+  }
+
+  function updateLivePreview() {
+    const stageGlow = $("virtual-chassis-lightbar");
+
+    if (currentPower === "off") {
+      if (previewTxt) previewTxt.textContent = "OFF";
+      if (previewBar) {
+        previewBar.style.background = "#1a2330";
+        previewBar.style.boxShadow = "none";
+        previewBar.style.animation = "none";
+        previewBar.style.opacity = "0.2";
+      }
+      if (stageGlow) {
+        stageGlow.style.background = "#1a2330";
+        stageGlow.style.boxShadow = "none";
+        stageGlow.style.animation = "none";
+        stageGlow.style.opacity = "0.15";
+      }
+      return;
+    }
+
+    const c1 = "#" + currentColor;
+    const c2 = "#" + currentColor2;
+    const bri = parseInt(slider ? slider.value : 25, 10) / 100;
+    const spd = parseInt(speedSlider ? speedSlider.value : 50, 10);
+    const dur = Math.max(0.3, 4.0 - (spd / 100.0) * 3.7).toFixed(2) + "s";
+
+    let bgStyle = c1;
+    let shadowStyle = `0 0 10px ${c1}`;
+    let animStyle = "none";
+    let bgSize = "auto";
+
+    if (currentMode === "solid") {
+      bgStyle = c1;
+      shadowStyle = `0 0 14px ${c1}`;
+      animStyle = "none";
+    } else if (currentMode === "breathe") {
+      bgStyle = c1;
+      shadowStyle = `0 0 16px ${c1}`;
+      animStyle = `barBreathe ${dur} infinite ease-in-out`;
+    } else if (currentMode === "flow" || currentMode === "chase") {
+      bgStyle = `linear-gradient(90deg, ${c1} 0%, rgba(0,0,0,0.2) 50%, ${c1} 100%)`;
+      bgSize = "200% 100%";
+      shadowStyle = `0 0 12px ${c1}`;
+      animStyle = `barFlow ${dur} infinite linear`;
+    } else if (currentMode === "gradient") {
+      bgStyle = `linear-gradient(90deg, ${c1} 0%, ${c2} 50%, ${c1} 100%)`;
+      bgSize = "200% 100%";
+      shadowStyle = `0 0 14px ${c1}`;
+      animStyle = `barFlow ${dur} infinite linear`;
+    } else if (currentMode === "rainbow") {
+      bgStyle = `linear-gradient(90deg, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000)`;
+      bgSize = "200% 100%";
+      shadowStyle = `0 0 16px rgba(255,255,255,0.4)`;
+      animStyle = `barRainbow ${dur} infinite linear`;
+    } else if (currentMode === "flashing") {
+      bgStyle = c1;
+      shadowStyle = `0 0 14px ${c1}`;
+      animStyle = `barFlash ${dur} infinite steps(1)`;
+    }
+
+    if (previewTxt) previewTxt.textContent = `${currentPower.toUpperCase()} • ${currentMode.toUpperCase()}`;
+    if (previewBar) {
+      previewBar.style.background = bgStyle;
+      previewBar.style.backgroundSize = bgSize;
+      previewBar.style.boxShadow = shadowStyle;
+      previewBar.style.animation = animStyle;
+      previewBar.style.opacity = Math.max(0.2, bri);
+    }
+
+    if (stageGlow) {
+      stageGlow.style.background = bgStyle;
+      stageGlow.style.backgroundSize = bgSize;
+      stageGlow.style.boxShadow = shadowStyle;
+      stageGlow.style.animation = animStyle;
+      stageGlow.style.opacity = Math.max(0.2, bri);
+    }
+  }
+
+  function updateDynamicCards() {
+    if (speedCard) speedCard.style.display = currentMode === "solid" ? "none" : "flex";
+    if (secColorCard) secColorCard.style.display = currentMode === "gradient" ? "flex" : "none";
+    if (priColorCard) priColorCard.style.display = currentMode === "rainbow" ? "none" : "flex";
+    updateLivePreview();
+  }
+
+  async function postLed(powerState) {
+    updateLivePreview();
+    const payload = {
+      power: powerState,
+      brightness: parseInt(slider ? slider.value : 25, 10),
+      color: currentColor,
+      color2: currentColor2,
+      mode: currentMode,
+      speed: parseInt(speedSlider ? speedSlider.value : 50, 10),
+      reactive: reactiveToggle ? reactiveToggle.checked : true
+    };
+    try {
+      const res = await fetch("/api/led", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) {
+        currentPower = powerState;
+        if (powerBtn) powerBtn.textContent = currentPower === "on" ? "Turn Off" : "Turn On";
+        updateLivePreview();
+      }
+    } catch (err) {}
+  }
+
+  async function fetchLedState() {
+    try {
+      const res = await fetch("/api/led", { cache: "no-store" });
+      if (res.ok) {
+        const data = await res.json();
+        currentPower = data.power || "on";
+        currentColor = (data.color || "25c2a0").replace("#", "");
+        currentColor2 = (data.color2 || "ff0055").replace("#", "");
+        currentMode = data.mode || "solid";
+
+        if (slider) slider.value = data.brightness !== undefined ? data.brightness : 25;
+        if (valDisplay && slider) valDisplay.textContent = slider.value + "%";
+
+        if (speedSlider) speedSlider.value = data.speed !== undefined ? data.speed : 50;
+        if (speedValDisplay && speedSlider) speedValDisplay.textContent = formatSpeedText(speedSlider.value);
+
+        if (powerBtn) powerBtn.textContent = currentPower === "on" ? "Turn Off" : "Turn On";
+        if (reactiveToggle) reactiveToggle.checked = data.reactive !== false;
+
+        effectBtns.forEach((b) => b.classList.toggle("active", b.dataset.effect === currentMode));
+        colorChips1.forEach((c) => c.classList.toggle("active", c.dataset.hex.toLowerCase() === currentColor.toLowerCase()));
+        colorChips2.forEach((c) => c.classList.toggle("active", c.dataset.hex.toLowerCase() === currentColor2.toLowerCase()));
+
+        profilePills.forEach((pill) => {
+          const pr = pill.dataset.profile;
+          let match = false;
+          if (pr === "clean" && currentMode === "solid" && currentColor.toLowerCase() === "25c2a0") match = true;
+          else if (pr === "cyberpunk" && currentMode === "gradient" && currentColor.toLowerCase() === "00ffff" && currentColor2.toLowerCase() === "ff0055") match = true;
+          else if (pr === "stealth" && currentMode === "solid" && currentColor.toLowerCase() === "001428") match = true;
+          else if (pr === "rainbow" && currentMode === "rainbow") match = true;
+          pill.classList.toggle("active", match);
+        });
+
+        updateDynamicCards();
+        updateLivePreview();
+      }
+    } catch (e) {}
+  }
+
+  fetchLedState();
+
+  profilePills.forEach((p) => {
+    p.addEventListener("click", () => {
+      const pr = p.dataset.profile;
+      profilePills.forEach((pill) => pill.classList.toggle("active", pill === p));
+
+      if (pr === "clean") { currentMode = "solid"; currentColor = "25c2a0"; if (slider) slider.value = 25; }
+      else if (pr === "cyberpunk") { currentMode = "gradient"; currentColor = "00ffff"; currentColor2 = "ff0055"; if (slider) slider.value = 40; if (speedSlider) speedSlider.value = 65; }
+      else if (pr === "stealth") { currentMode = "solid"; currentColor = "001428"; if (slider) slider.value = 8; }
+      else if (pr === "rainbow") { currentMode = "rainbow"; if (slider) slider.value = 35; if (speedSlider) speedSlider.value = 70; }
+      if (valDisplay && slider) valDisplay.textContent = slider.value + "%";
+      if (speedValDisplay && speedSlider) speedValDisplay.textContent = formatSpeedText(speedSlider.value);
+      effectBtns.forEach((b) => b.classList.toggle("active", b.dataset.effect === currentMode));
+      colorChips1.forEach((c) => c.classList.toggle("active", c.dataset.hex.toLowerCase() === currentColor.toLowerCase()));
+      colorChips2.forEach((c) => c.classList.toggle("active", c.dataset.hex.toLowerCase() === currentColor2.toLowerCase()));
+      updateDynamicCards();
+      postLed("on");
+    });
+  });
+
+  if (reactiveToggle) reactiveToggle.addEventListener("change", () => postLed(currentPower));
+
+  if (slider) {
+    slider.addEventListener("input", (e) => {
+      profilePills.forEach((pill) => pill.classList.remove("active"));
+      if (valDisplay) valDisplay.textContent = e.target.value + "%";
+      updateLivePreview();
+      clearTimeout(briDebounce);
+      briDebounce = setTimeout(() => postLed("on"), 75);
+    });
+  }
+
+  if (speedSlider) {
+    speedSlider.addEventListener("input", (e) => {
+      profilePills.forEach((pill) => pill.classList.remove("active"));
+      if (speedValDisplay) speedValDisplay.textContent = formatSpeedText(e.target.value);
+      updateLivePreview();
+      clearTimeout(speedDebounce);
+      speedDebounce = setTimeout(() => postLed("on"), 75);
+    });
+  }
+
+  effectBtns.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      profilePills.forEach((pill) => pill.classList.remove("active"));
+      effectBtns.forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      currentMode = btn.dataset.effect;
+      updateDynamicCards();
+      postLed("on");
+    });
+  });
+
+  colorChips1.forEach((chip) => {
+    chip.addEventListener("click", () => {
+      profilePills.forEach((pill) => pill.classList.remove("active"));
+      colorChips1.forEach((c) => c.classList.remove("active"));
+      if (customChip1Label) customChip1Label.classList.remove("active");
+      chip.classList.add("active");
+      currentColor = chip.dataset.hex;
+      postLed("on");
+    });
+  });
+
+  if (customColorPicker1) {
+    customColorPicker1.addEventListener("input", (e) => {
+      profilePills.forEach((pill) => pill.classList.remove("active"));
+      colorChips1.forEach((c) => c.classList.remove("active"));
+      if (customChip1Label) customChip1Label.classList.add("active");
+      currentColor = e.target.value.replace("#", "");
+      clearTimeout(colorDebounce);
+      colorDebounce = setTimeout(() => postLed("on"), 75);
+    });
+  }
+
+  colorChips2.forEach((chip) => {
+    chip.addEventListener("click", () => {
+      profilePills.forEach((pill) => pill.classList.remove("active"));
+      colorChips2.forEach((c) => c.classList.remove("active"));
+      if (customChip2Label) customChip2Label.classList.remove("active");
+      chip.classList.add("active");
+      currentColor2 = chip.dataset.hex;
+      postLed("on");
+    });
+  });
+
+  if (customColorPicker2) {
+    customColorPicker2.addEventListener("input", (e) => {
+      profilePills.forEach((pill) => pill.classList.remove("active"));
+      colorChips2.forEach((c) => c.classList.remove("active"));
+      if (customChip2Label) customChip2Label.classList.add("active");
+      currentColor2 = e.target.value.replace("#", "");
+      clearTimeout(colorDebounce);
+      colorDebounce = setTimeout(() => postLed("on"), 75);
+    });
+  }
+
+  if (powerBtn) {
+    powerBtn.addEventListener("click", () => {
+      postLed(currentPower === "on" ? "off" : "on");
+    });
+  }
+
+  const fanCardsContainer = $("fan-cards-container");
+  const fanCardsLockBtn = $("fan-cards-lock-btn");
+  const fanPwmSlider = $("fan-pwm-slider");
+  const fanPwmValDisplay = $("fan-pwm-val-display");
+  const fanProfileBtns = document.querySelectorAll(".fan-profile-btn");
+  const manualPwmCard = $("manual-pwm-card");
+  const cpuFanToggle = $("cpu-fan-toggle");
+
+  const FAN_STORAGE_KEY = "lcd_fan_card_order";
+  const FAN_LOCK_KEY = "lcd_fan_cards_locked";
+  let isFanLocked = localStorage.getItem(FAN_LOCK_KEY) !== "false";
+
+  let currentFanProfile = "auto";
+  let fanPwmDebounce = null;
+
+  function setFanLockState(locked) {
+    isFanLocked = locked;
+    localStorage.setItem(FAN_LOCK_KEY, isFanLocked);
+    if (fanCardsContainer) fanCardsContainer.classList.toggle("locked", isFanLocked);
+    if (fanCardsLockBtn) {
+      fanCardsLockBtn.textContent = isFanLocked ? "🔒 Locked" : "🔓 Reorder";
+      fanCardsLockBtn.classList.toggle("unlocked", !isFanLocked);
+    }
+    if (fanCardsContainer) {
+      fanCardsContainer.querySelectorAll(".draggable-card").forEach((card) => {
+        card.setAttribute("draggable", !isFanLocked);
+      });
+    }
+  }
+
+  function initFanCardReordering() {
+    if (!fanCardsContainer) return;
+    const savedOrder = JSON.parse(localStorage.getItem(FAN_STORAGE_KEY) || "[]");
+    if (savedOrder.length > 0) {
+      const cardMap = {};
+      fanCardsContainer.querySelectorAll(".draggable-card").forEach((c) => { 
+        cardMap[c.dataset.fanCardId] = c; 
+      });
+      savedOrder.forEach((id) => { 
+        if (cardMap[id]) fanCardsContainer.appendChild(cardMap[id]); 
+      });
+    }
+
+    let draggedFanCard = null;
+    let allowFanDrag = false;
+
+    fanCardsContainer.addEventListener("mousedown", (e) => {
+      allowFanDrag = !isFanLocked && !!e.target.closest(".drag-handle");
+    });
+
+    fanCardsContainer.querySelectorAll(".draggable-card").forEach((card) => {
+      card.addEventListener("dragstart", (e) => {
+        if (isFanLocked || !allowFanDrag) { e.preventDefault(); return false; }
+        draggedFanCard = card;
+        card.classList.add("dragging");
+        e.dataTransfer.effectAllowed = "move";
+        e.dataTransfer.setData("text/plain", card.dataset.fanCardId);
+      });
+
+      card.addEventListener("dragend", () => {
+        allowFanDrag = false;
+        card.classList.remove("dragging");
+        fanCardsContainer.querySelectorAll(".draggable-card").forEach((c) => c.classList.remove("drag-over"));
+        const order = Array.from(fanCardsContainer.querySelectorAll(".draggable-card")).map((c) => c.dataset.fanCardId);
+        localStorage.setItem(FAN_STORAGE_KEY, JSON.stringify(order));
+      });
+
+      card.addEventListener("dragover", (e) => {
+        if (isFanLocked) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "move";
+        const targetCard = e.target.closest(".draggable-card");
+        if (targetCard && targetCard !== draggedFanCard) {
+          const rect = targetCard.getBoundingClientRect();
+          const next = (e.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
+          fanCardsContainer.insertBefore(draggedFanCard, next && targetCard.nextSibling || targetCard);
+        }
+      });
+    });
+
+    if (fanCardsLockBtn) fanCardsLockBtn.addEventListener("click", () => setFanLockState(!isFanLocked));
+    setFanLockState(isFanLocked);
+  }
+
+  initFanCardReordering();
+
+  function updateFanUiState(profile, pct) {
+    currentFanProfile = profile;
+    fanProfileBtns.forEach((b) => b.classList.toggle("active", b.dataset.fanProfile === profile));
+    
+    if (manualPwmCard) {
+      manualPwmCard.classList.toggle("manual-override-disabled", profile === "auto");
+    }
+    if (fanPwmValDisplay) {
+      fanPwmValDisplay.textContent = (profile === "auto") ? "Auto Curve" : (pct + "%");
+    }
+    if (fanPwmSlider && profile !== "auto") {
+      fanPwmSlider.value = pct;
+    }
+  }
+
+  async function postFanPwm(profile, manualPct, ctrlCpu) {
+    try {
+      const res = await fetch("/api/fans", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          profile: profile, 
+          manual_pct: manualPct, 
+          ctrl_cpu_fan: ctrlCpu !== undefined ? ctrlCpu : (cpuFanToggle ? cpuFanToggle.checked : false)
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        updateFanUiState(data.profile, data.manual_pct);
+        tick();
+      }
+    } catch (e) {}
+  }
+
+  async function fetchFanState() {
+    try {
+      const res = await fetch("/api/fans", { cache: "no-store" });
+      if (res.ok) {
+        const data = await res.json();
+        const prof = data.profile || "auto";
+        const pct = data.manual_pct !== undefined ? data.manual_pct : 60;
+        if (cpuFanToggle) cpuFanToggle.checked = !!data.ctrl_cpu_fan;
+        updateFanUiState(prof, pct);
+      }
+    } catch (e) {}
+  }
+
+  fetchFanState();
+
+  if (cpuFanToggle) {
+    cpuFanToggle.addEventListener("change", (e) => {
+      postFanPwm(currentFanProfile, parseInt(fanPwmSlider ? fanPwmSlider.value : 60, 10), e.target.checked);
+    });
+  }
+
+  fanProfileBtns.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const pr = btn.dataset.fanProfile;
+      const map = { auto: 60, quiet: 36, balanced: 57, performance: 72, full: 100 };
+      const pct = map[pr] || 60;
+      updateFanUiState(pr, pct);
+      postFanPwm(pr, pct);
+    });
+  });
+
+  if (fanPwmSlider) {
+    fanPwmSlider.addEventListener("input", (e) => {
+      const val = parseInt(e.target.value, 10);
+      updateFanUiState("manual", val);
+      clearTimeout(fanPwmDebounce);
+      fanPwmDebounce = setTimeout(() => postFanPwm("manual", val), 120);
+    });
+  }
+
+  window.addEventListener("keydown", (e) => {
+    const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : "";
+    if (activeTag === "input" || activeTag === "select" || activeTag === "textarea") {
+      if (e.key === "Escape") document.activeElement.blur();
+      return;
+    }
+
+    if (e.key === "Escape") {
+      closeSmartModal();
+      closeDrawer();
+    } else if (e.key === "z" || e.key === "Z") {
+      cycleZoom();
+    } else if (e.key === "y" || e.key === "Y") {
+      applyTheme(currentTheme === "yak" ? "cyber" : "yak");
+    } else if (e.key === "t" || e.key === "T") {
+      if (drawer && drawer.classList.contains("open")) {
+        closeDrawer();
+      } else {
+        openDrawer();
+      }
+    } else if (e.key === "l" || e.key === "L") {
+      const chips = Array.from(colorChips1);
+      if (chips.length > 0) {
+        let activeIdx = chips.findIndex((c) => c.classList.contains("active"));
+        let nextIdx = (activeIdx + 1) % chips.length;
+        chips[nextIdx].click();
+      }
+    }
+  });
+
+})();
