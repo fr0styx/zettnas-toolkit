@@ -13,6 +13,7 @@ import time
 import glob
 import json
 import mmap
+import base64
 import shutil
 import socket
 import colorsys
@@ -70,6 +71,64 @@ LED_PORT = os.environ.get("LED_PORT", "/dev/ttyACM0" if os.path.exists("/dev/tty
 LED_STATE_FILE = "/tmp/led_state.json"
 DASH_LAYOUT_FILE = "/tmp/dash_layout.json"
 FAN_STATE_FILE = "/tmp/fan_state.json"
+SCREEN_STATE_FILE = "/tmp/screen_state.json"
+
+_cached_hwmon = None
+_cached_cpu_temp_path = None
+_known_active_fans = set()
+
+def is_in_time_window(start_str, end_str):
+    try:
+        now = time.localtime()
+        curr_min = now.tm_hour * 60 + now.tm_min
+        s_h, s_m = map(int, start_str.split(":"))
+        e_h, e_m = map(int, end_str.split(":"))
+        s_val = s_h * 60 + s_m
+        e_val = e_h * 60 + e_m
+        if s_val <= e_val:
+            return s_val <= curr_min < e_val
+        else:
+            return curr_min >= s_val or curr_min < e_val
+    except Exception:
+        return False
+
+def get_screen_state():
+    state = {
+        "brightness": 100,
+        "night_mode": False,
+        "night_start": "23:00",
+        "night_end": "07:00",
+        "night_brightness": 10
+    }
+    if os.path.exists(SCREEN_STATE_FILE):
+        try:
+            with open(SCREEN_STATE_FILE, "r") as f:
+                state.update(json.load(f))
+        except Exception:
+            pass
+    return state
+
+def set_screen_brightness(pct):
+    pct = max(0, min(100, int(pct)))
+    backlight_dir = "/sys/class/backlight/intel_backlight"
+    if not os.path.exists(backlight_dir):
+        for bl in sorted(glob.glob("/sys/class/backlight/*")):
+            if os.path.exists(os.path.join(bl, "brightness")):
+                backlight_dir = bl
+                break
+    if not os.path.exists(backlight_dir):
+        return False
+    try:
+        max_val = 192000
+        max_path = os.path.join(backlight_dir, "max_brightness")
+        if os.path.exists(max_path):
+            max_val = int(open(max_path).read().strip() or 192000)
+        target = int((pct / 100.0) * max_val)
+        with open(os.path.join(backlight_dir, "brightness"), "w") as f:
+            f.write(f"{target}\n")
+        return True
+    except Exception:
+        return False
 
 CRC_TABLE = [
     0x00, 0x07, 0x0e, 0x09, 0x1c, 0x1b, 0x12, 0x15, 0x38, 0x3f, 0x36, 0x31, 0x24, 0x23, 0x2a, 0x2d,
@@ -261,28 +320,43 @@ def read_mem():
 
 
 def _find_hwmon():
+    global _cached_hwmon
+    if _cached_hwmon and os.path.exists(_cached_hwmon):
+        return _cached_hwmon
     for h in sorted(glob.glob(os.path.join(HOST_SYS, "class/hwmon/hwmon*"))):
         try:
             with open(os.path.join(h, "name")) as f:
                 n = f.read().strip()
                 if n in ("zettlab_d8_fans", "zettos_pwm_fan", "nct6775", "it87"):
+                    _cached_hwmon = h
                     return h
         except Exception:
             continue
     for h in sorted(glob.glob(os.path.join(HOST_SYS, "class/hwmon/hwmon*"))):
         if glob.glob(os.path.join(h, "pwm*")):
+            _cached_hwmon = h
             return h
     return None
 
 
 def read_cpu_temp():
+    global _cached_cpu_temp_path
+    if _cached_cpu_temp_path and os.path.exists(_cached_cpu_temp_path):
+        try:
+            val = int(open(_cached_cpu_temp_path).read().strip() or 0) / 1000
+            if val > 0:
+                return round(val)
+        except Exception:
+            _cached_cpu_temp_path = None
+
     for h in sorted(glob.glob(os.path.join(HOST_SYS, "class/hwmon/hwmon*"))):
         try:
             name = open(os.path.join(h, "name")).read().strip()
             if name in ("coretemp", "k10temp", "zenpower", "cpu_thermal"):
                 for t in sorted(glob.glob(os.path.join(h, "temp*_input"))):
-                    val = int(open(t).read()) / 1000
+                    val = int(open(t).read().strip() or 0) / 1000
                     if val > 0:
+                        _cached_cpu_temp_path = t
                         return round(val)
         except Exception:
             continue
@@ -290,6 +364,7 @@ def read_cpu_temp():
 
 
 def read_fans():
+    global _known_active_fans
     hw = _find_hwmon()
     fans = []
     if hw:
@@ -308,6 +383,9 @@ def read_fans():
                         fans.append(rpm)
                 except Exception:
                     pass
+    for idx, rpm in enumerate(fans):
+        if rpm > 300:
+            _known_active_fans.add(idx)
     return fans
 
 
@@ -331,14 +409,15 @@ def detect_chassis_model():
     return "d6u"
 
 
-def calc_curve_pwm(temp, min_pwm=58, max_pwm=183):
+def calc_curve_pwm(temp, min_pwm=58, max_pwm=183, temp_min=37, temp_max=50):
     if temp is None or temp <= 0:
         return min_pwm
-    if temp >= 50:
+    if temp >= temp_max:
         return max_pwm
-    if temp <= 37:
+    if temp <= temp_min:
         return min_pwm
-    ratio = (temp - 37) / (50 - 37)
+    span = max(1, temp_max - temp_min)
+    ratio = (temp - temp_min) / float(span)
     val = int(min_pwm + ratio * (max_pwm - min_pwm))
     return max(min_pwm, min(max_pwm, val))
 
@@ -546,16 +625,30 @@ def read_disk_temps_and_io():
         is_nvme = dev_name.startswith("nvme")
         dtype = "nvme" if is_nvme else "sat"
 
+        is_standby = False
         if should_poll_smart or dev_name not in _cached_smart_data:
             try:
-                r = subprocess.run(["smartctl", "-H", "-A", "-d", dtype, dev],
-                                   capture_output=True, text=True, timeout=8)
-                temp, health = _parse_smart(r.stdout, is_nvme)
-                _cached_smart_data[dev_name] = (temp, health)
+                cmd = ["smartctl"]
+                if not is_nvme:
+                    cmd.extend(["-n", "standby"])
+                cmd.extend(["-H", "-A", "-d", dtype, dev])
+
+                r = subprocess.run(cmd, capture_output=True, text=True, timeout=8)
+
+                if not is_nvme and (r.returncode == 2 or "STANDBY" in r.stdout.upper() or "SLEEP" in r.stdout.upper()):
+                    is_standby = True
+                    prev_t, _ = _cached_smart_data.get(dev_name, (None, "standby"))
+                    temp = prev_t
+                    health = "standby"
+                    _cached_smart_data[dev_name] = (temp, health)
+                else:
+                    temp, health = _parse_smart(r.stdout, is_nvme)
+                    _cached_smart_data[dev_name] = (temp, health)
             except Exception:
                 temp, health = _cached_smart_data.get(dev_name, (None, "ok"))
         else:
             temp, health = _cached_smart_data.get(dev_name, (None, "ok"))
+            is_standby = (health == "standby")
 
         prev_count = _prev_disk_io.get(dev_name, 0)
         curr_count = curr_io.get(dev_name, 0)
@@ -567,6 +660,7 @@ def read_disk_temps_and_io():
             "temp": temp,
             "role": role,
             "health": health,
+            "standby": is_standby,
             "active": io_active
         })
 
@@ -727,16 +821,18 @@ def stats_collector_daemon():
             cpu_temp = read_cpu_temp()
             fans = read_fans()
 
-            fan_cfg = {"profile": "auto", "manual_pct": 60, "ctrl_cpu_fan": False}
+            fan_cfg = {"profile": "auto", "manual_pct": 60, "ctrl_cpu_fan": False, "temp_min": 37, "temp_max": 50}
             if os.path.exists(FAN_STATE_FILE):
                 try:
                     with open(FAN_STATE_FILE, "r") as f:
-                        fan_cfg = json.load(f)
+                        fan_cfg.update(json.load(f))
                 except Exception:
                     pass
 
             profile = fan_cfg.get("profile", "auto")
             ctrl_cpu_fan = fan_cfg.get("ctrl_cpu_fan", False)
+            temp_min = fan_cfg.get("temp_min", 37)
+            temp_max = fan_cfg.get("temp_max", 50)
 
             sata_disks = [d for d in disks if d.get("role") == "data" or d.get("dev", "").startswith("sd")]
             midpoint = max(1, len(sata_disks) // 2)
@@ -744,11 +840,15 @@ def stats_collector_daemon():
             zone1_disks = sata_disks[:midpoint]
             zone2_disks = sata_disks[midpoint:]
 
-            t_zone1 = max([d["temp"] for d in zone1_disks if d.get("temp") is not None], default=35)
-            t_zone2 = max([d["temp"] for d in zone2_disks if d.get("temp") is not None], default=35)
+            # Only calculate zone max temps from active/awake drives so sleeping drives stay quiet
+            active_z1 = [d["temp"] for d in zone1_disks if d.get("temp") is not None and not d.get("standby", False)]
+            active_z2 = [d["temp"] for d in zone2_disks if d.get("temp") is not None and not d.get("standby", False)]
 
-            raw_pwm1 = calc_curve_pwm(t_zone1, min_pwm=58, max_pwm=183)
-            raw_pwm2 = calc_curve_pwm(t_zone2, min_pwm=58, max_pwm=183)
+            t_zone1 = max(active_z1, default=32)
+            t_zone2 = max(active_z2, default=32)
+
+            raw_pwm1 = calc_curve_pwm(t_zone1, min_pwm=58, max_pwm=183, temp_min=temp_min, temp_max=temp_max)
+            raw_pwm2 = calc_curve_pwm(t_zone2, min_pwm=58, max_pwm=183, temp_min=temp_min, temp_max=temp_max)
 
             if cpu_temp >= 85:
                 raw_pwm3 = 183
@@ -780,6 +880,13 @@ def stats_collector_daemon():
                 active_pwm3 = man_pwm if ctrl_cpu_fan else 0
                 set_fan_pwm(profile, manual_pct=fan_cfg.get("manual_pct", 60), ctrl_cpu_fan=ctrl_cpu_fan)
 
+            # Screen Backlight Management & Schedule
+            screen_cfg = get_screen_state()
+            in_screen_night = screen_cfg.get("night_mode", False) and is_in_time_window(screen_cfg.get("night_start", "23:00"), screen_cfg.get("night_end", "07:00"))
+            target_bl = screen_cfg.get("night_brightness", 10) if in_screen_night else screen_cfg.get("brightness", 100)
+            set_screen_brightness(target_bl)
+
+            # LED Lighting & Night Schedule
             cfg = {}
             if os.path.exists(LED_STATE_FILE):
                 try:
@@ -788,8 +895,10 @@ def stats_collector_daemon():
                 except Exception:
                     pass
 
+            in_led_night = cfg.get("night_mode", False) and is_in_time_window(cfg.get("night_start", "23:00"), cfg.get("night_end", "07:00"))
+
             if cfg.get("reactive", True):
-                is_failing_fan = any(rpm == 0 for rpm in fans) if fans else False
+                is_failing_fan = any(fans[i] == 0 for i in _known_active_fans if i < len(fans)) if _known_active_fans else False
                 is_crit = has_crit or (cpu_temp >= 85) or is_failing_fan
                 is_warn = (len(bad) > 0) or (cpu_temp >= 70)
 
@@ -799,9 +908,14 @@ def stats_collector_daemon():
                 elif is_warn:
                     _alert_active = True
                     send_led_packet(1, 255, 120, 0, 0, 0, 0, speed=18)
+                elif in_led_night:
+                    _alert_active = False
+                    send_led_packet(0, 0, 0, 0, 0, 0, 0, 0)
                 elif _alert_active:
                     _alert_active = False
                     apply_led_state(cfg)
+            elif in_led_night:
+                send_led_packet(0, 0, 0, 0, 0, 0, 0, 0)
 
             disk_hold_rem = max(get_hold_remaining("pwm1", 120), get_hold_remaining("pwm2", 120))
             cpu_hold_rem = get_hold_remaining("pwm3", 90)
@@ -824,7 +938,9 @@ def stats_collector_daemon():
                     "disk_hold_remaining": disk_hold_rem,
                     "cpu_hold_remaining": cpu_hold_rem,
                     "ctrl_cpu_fan": ctrl_cpu_fan,
-                    "profile": profile
+                    "profile": profile,
+                    "temp_min": temp_min,
+                    "temp_max": temp_max
                 },
                 "net": net,
                 "uptime": read_uptime(),
@@ -899,26 +1015,45 @@ def render_lcd_loop():
     fb_width = 172
     row_bytes = fb_width * 4
     total_fb_bytes = fb_height * stride
-    line_padding = b"\x00" * (stride - row_bytes)
     
     target_fps = max(1, LCD_FPS)
     frame_interval = 1.0 / target_fps
+    lcd_format = os.environ.get("LCD_FORMAT", "png").lower()
 
-    print(f"[LCD] Starting active renderer: {fb_width}x{fb_height} @ {target_fps} FPS -> /dev/fb0 (stride {stride})", flush=True)
+    print(f"[LCD] Starting active renderer: {fb_width}x{fb_height} @ {target_fps} FPS -> /dev/fb0 (stride {stride}, format {lcd_format})", flush=True)
+
+    chromium_args = [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-background-networking",
+        "--disable-background-timer-throttling",
+        "--disable-renderer-backgrounding",
+        "--disable-backgrounding-occluded-windows",
+        "--disable-extensions",
+        "--disable-component-update",
+        "--disable-sync",
+        "--disable-translate",
+        "--mute-audio",
+        "--no-first-run",
+        "--disable-default-apps",
+        "--hide-scrollbars",
+        "--disable-breakpad",
+        "--disable-features=Translate,OptimizationHints,MediaRouter",
+        "--enable-gpu-rasterization",
+        "--enable-zero-copy",
+        "--ignore-gpu-blocklist",
+        "--js-flags=--max-old-space-size=64",
+        "--disk-cache-size=1",
+        "--media-cache-size=1",
+    ]
 
     while True:
         try:
             with sync_playwright() as p:
                 browser = p.chromium.launch(
                     headless=True,
-                    args=[
-                        "--no-sandbox",
-                        "--disable-setuid-sandbox",
-                        "--disable-dev-shm-usage",
-                        "--disable-background-timer-throttling",
-                        "--disable-renderer-backgrounding",
-                        "--disable-backgrounding-occluded-windows",
-                    ]
+                    args=chromium_args
                 )
                 context = browser.new_context(
                     viewport={"width": fb_width, "height": fb_height},
@@ -927,26 +1062,47 @@ def render_lcd_loop():
                 page = context.new_page()
                 page.goto(url, wait_until="domcontentloaded", timeout=15000)
 
+                cdp = context.new_cdp_session(page)
+                shot_params = {
+                    "format": "jpeg" if lcd_format == "jpeg" else "png",
+                    "optimizeForSpeed": True
+                }
+                if lcd_format == "jpeg":
+                    shot_params["quality"] = 95
+
                 with open("/dev/fb0", "r+b") as fb_file:
                     fb_mem = mmap.mmap(fb_file.fileno(), total_fb_bytes, mmap.MAP_SHARED, mmap.PROT_WRITE)
-                    frame_buffer = bytearray(total_fb_bytes)
+                    # Pre-fill line padding once
+                    fb_mem[:total_fb_bytes] = b"\x00" * total_fb_bytes
+                    prev_raw_b64 = None
 
                     while True:
                         t0 = time.time()
 
-                        raw_bytes = page.screenshot(type="png")
+                        try:
+                            res = cdp.send("Page.captureScreenshot", shot_params)
+                            raw_b64 = res.get("data")
+                            if raw_b64 and raw_b64 == prev_raw_b64:
+                                elapsed = time.time() - t0
+                                sleep_time = max(0.01, frame_interval - elapsed)
+                                time.sleep(sleep_time)
+                                continue
+                            prev_raw_b64 = raw_b64
+                            raw_bytes = base64.b64decode(raw_b64)
+                        except Exception:
+                            # Fallback if CDP session encounters an issue
+                            raw_bytes = page.screenshot(type="png")
+
                         img = Image.open(io.BytesIO(raw_bytes)).convert("RGBA")
                         raw_pixels = img.tobytes("raw", "BGRA")
+                        mv = memoryview(raw_pixels)
 
-                        pos = 0
-                        for y in range(fb_height):
-                            frame_buffer[pos : pos + row_bytes] = raw_pixels[y * row_bytes : (y + 1) * row_bytes]
-                            pos += row_bytes
-                            if line_padding:
-                                frame_buffer[pos : pos + len(line_padding)] = line_padding
-                                pos += len(line_padding)
-
-                        fb_mem[:total_fb_bytes] = frame_buffer
+                        src_pos = 0
+                        dst_pos = 0
+                        for _ in range(fb_height):
+                            fb_mem[dst_pos : dst_pos + row_bytes] = mv[src_pos : src_pos + row_bytes]
+                            src_pos += row_bytes
+                            dst_pos += stride
 
                         elapsed = time.time() - t0
                         sleep_time = max(0.01, frame_interval - elapsed)
@@ -965,6 +1121,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_response(code)
         self.send_header("Content-Type", ctype)
         self.send_header("Content-Length", str(len(body)))
+        self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
         self.end_headers()
         self.wfile.write(body)
 
@@ -1002,12 +1159,16 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(detail).encode(), "application/json")
             return
 
+        if clean_path == "/api/screen":
+            self._send(200, json.dumps(get_screen_state()).encode(), "application/json")
+            return
+
         if clean_path == "/api/fans":
-            fan_cfg = {"profile": "auto", "manual_pct": 60, "ctrl_cpu_fan": False}
+            fan_cfg = {"profile": "auto", "manual_pct": 60, "ctrl_cpu_fan": False, "temp_min": 37, "temp_max": 50}
             if os.path.exists(FAN_STATE_FILE):
                 try:
                     with open(FAN_STATE_FILE, "r") as f:
-                        fan_cfg = json.load(f)
+                        fan_cfg.update(json.load(f))
                 except Exception:
                     pass
             self._send(200, json.dumps(fan_cfg).encode(), "application/json")
@@ -1021,12 +1182,15 @@ class Handler(BaseHTTPRequestHandler):
                 "color2": "ff0055",
                 "mode": "solid",
                 "speed": 50,
-                "reactive": True
+                "reactive": True,
+                "night_mode": False,
+                "night_start": "23:00",
+                "night_end": "07:00"
             }
             if os.path.exists(LED_STATE_FILE):
                 try:
                     with open(LED_STATE_FILE, "r") as f:
-                        state = json.load(f)
+                        state.update(json.load(f))
                 except Exception:
                     pass
             self._send(200, json.dumps(state).encode(), "application/json")
@@ -1076,6 +1240,35 @@ class Handler(BaseHTTPRequestHandler):
         parsed = urlparse(self.path)
         clean_path = parsed.path
 
+        if clean_path == "/api/screen":
+            length = int(self.headers.get("Content-Length", 0))
+            raw = self.rfile.read(length)
+            try:
+                data = json.loads(raw)
+                cur = get_screen_state()
+                if "brightness" in data:
+                    cur["brightness"] = max(5, min(100, int(data["brightness"])))
+                if "night_mode" in data:
+                    cur["night_mode"] = bool(data["night_mode"])
+                if "night_brightness" in data:
+                    cur["night_brightness"] = max(0, min(100, int(data["night_brightness"])))
+                if "night_start" in data:
+                    cur["night_start"] = str(data["night_start"])
+                if "night_end" in data:
+                    cur["night_end"] = str(data["night_end"])
+
+                with open(SCREEN_STATE_FILE, "w") as f:
+                    json.dump(cur, f)
+
+                in_screen_night = cur.get("night_mode", False) and is_in_time_window(cur.get("night_start", "23:00"), cur.get("night_end", "07:00"))
+                target_bl = cur.get("night_brightness", 10) if in_screen_night else cur.get("brightness", 100)
+                set_screen_brightness(target_bl)
+
+                self._send(200, json.dumps({"status": "ok", **cur}).encode(), "application/json")
+            except Exception as e:
+                self._send(400, json.dumps({"error": str(e)}).encode(), "application/json")
+            return
+
         if clean_path == "/api/fans":
             length = int(self.headers.get("Content-Length", 0))
             raw = self.rfile.read(length)
@@ -1084,6 +1277,8 @@ class Handler(BaseHTTPRequestHandler):
                 profile = data.get("profile", "auto")
                 manual_pct = int(data.get("manual_pct", 60))
                 ctrl_cpu_fan = bool(data.get("ctrl_cpu_fan", False))
+                temp_min = max(25, min(50, int(data.get("temp_min", 37))))
+                temp_max = max(temp_min + 5, min(75, int(data.get("temp_max", 50))))
 
                 if profile == "auto":
                     for k in _fan_state_tracker:
@@ -1094,7 +1289,13 @@ class Handler(BaseHTTPRequestHandler):
                     ok = set_fan_pwm(profile, manual_pct, ctrl_cpu_fan=ctrl_cpu_fan)
                     pct = manual_pct
 
-                state_to_save = {"profile": profile, "manual_pct": pct, "ctrl_cpu_fan": ctrl_cpu_fan}
+                state_to_save = {
+                    "profile": profile,
+                    "manual_pct": pct,
+                    "ctrl_cpu_fan": ctrl_cpu_fan,
+                    "temp_min": temp_min,
+                    "temp_max": temp_max
+                }
                 with open(FAN_STATE_FILE, "w") as f:
                     json.dump(state_to_save, f)
                 self._send(200, json.dumps({"status": "ok" if ok else "unsupported", **state_to_save}).encode(), "application/json")
@@ -1107,10 +1308,18 @@ class Handler(BaseHTTPRequestHandler):
             raw = self.rfile.read(length)
             try:
                 data = json.loads(raw)
-                ok, msg = apply_led_state(data)
+                cur_led = {}
+                if os.path.exists(LED_STATE_FILE):
+                    try:
+                        with open(LED_STATE_FILE, "r") as f:
+                            cur_led = json.load(f)
+                    except Exception:
+                        pass
+                cur_led.update(data)
+                ok, msg = apply_led_state(cur_led)
                 with open(LED_STATE_FILE, "w") as f:
-                    json.dump(data, f)
-                self._send(200, json.dumps({"status": "ok" if ok else "error", "message": msg}).encode(), "application/json")
+                    json.dump(cur_led, f)
+                self._send(200, json.dumps({"status": "ok" if ok else "error", "message": msg, **cur_led}).encode(), "application/json")
             except Exception as e:
                 self._send(400, json.dumps({"error": str(e)}).encode(), "application/json")
             return

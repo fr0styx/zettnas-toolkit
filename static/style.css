@@ -472,7 +472,7 @@ body.drawer-is-open .chassis-workbench-stage {
   display:flex;
   flex-direction:column;
   justify-content:space-between;
-  padding:5px 9px 6px 9px;
+  padding:5px 12px 6px 12px;
   gap:6px;
   overflow:hidden;
   box-sizing:border-box;
@@ -614,7 +614,7 @@ body.drawer-is-open .chassis-workbench-stage {
 
 .cards{
   display:flex;
-  gap:7px;
+  gap:5px;
   flex: 1 1 0;
   min-height: 0;
   align-items:stretch;
@@ -625,13 +625,13 @@ body.drawer-is-open .chassis-workbench-stage {
 /* Interactive Clickable Dash Cards */
 .card{
   background:linear-gradient(160deg,var(--card-hi),var(--card));
-  border-radius:9px;
-  padding:6px 9px;
+  border-radius:8px;
+  padding:4px 6px;
   display:flex;
   flex-direction:column;
-  gap:4px;
+  gap:3px;
   position:relative;
-  border:1px solid rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.05);
   flex: 1 1 0;
   min-width: 0;
   cursor: pointer;
@@ -657,22 +657,22 @@ body.drawer-is-open .chassis-workbench-stage {
 .card.card-compact .storage-nums .val { font-size: 11px; }
 
 .card.card-hidden { display: none !important; }
-.card-title{font-size:9px;color:var(--muted);font-weight:800;letter-spacing:1.2px;display:flex;align-items:center;gap:5px}
+.card-title{font-size:9.5px;color:#8fa0b2;font-weight:800;letter-spacing:1.1px;display:flex;align-items:center;gap:4px}
 
 /* Storage donut */
-.storage-body{display:flex;align-items:center;gap:9px;flex:1}
-.donut{--pct:0;--c:var(--ok);width:46px;height:46px;border-radius:50%;flex:none;
+.storage-body{display:flex;align-items:center;gap:6px;flex:1;min-width:0}
+.donut{--pct:0;--c:var(--ok);width:42px;height:42px;border-radius:50%;flex:none;
   background:conic-gradient(var(--c) calc(var(--pct)*1%),var(--track) 0);
   display:flex;align-items:center;justify-content:center;position:relative;transition:--pct .6s}
-.donut::before{content:"";position:absolute;width:35px;height:35px;border-radius:50%;background:var(--card)}
-.donut span{position:relative;font-size:12px;font-weight:800}
-.storage-nums{display:flex;flex-direction:column;gap:5px;flex:1}
-.storage-nums div{display:flex;justify-content:space-between;align-items:baseline}
-.storage-nums .lbl{font-size:8px;color:var(--muted);letter-spacing:.5px}
-.storage-nums .val{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+.donut::before{content:"";position:absolute;width:31px;height:31px;border-radius:50%;background:var(--card)}
+.donut span{position:relative;font-size:11.5px;font-weight:800}
+.storage-nums{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0;justify-content:center}
+.storage-nums div{display:flex;justify-content:space-between;align-items:baseline;gap:3px;min-width:0}
+.storage-nums .lbl{font-size:7.5px;color:#8fa0b2;letter-spacing:.3px;font-weight:700;flex-shrink:0}
+.storage-nums .val{font-size:12px;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
 
 /* Arc gauges */
-.gauge-body{display:flex;align-items:center;gap:11px;flex:1}
+.gauge-body{display:flex;align-items:center;gap:7px;flex:1}
 .arc{--pct:0;--c:var(--ok);width:52px;height:52px;flex:none;border-radius:50%;position:relative;
   background:conic-gradient(from 135deg,var(--c) calc(var(--pct)*2.7deg),var(--track) 0 270deg,transparent 270deg);
   transition:--pct .6s}
@@ -680,20 +680,93 @@ body.drawer-is-open .chassis-workbench-stage {
 .arc-val{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
   font-size:17px;font-weight:800;font-variant-numeric:tabular-nums}
 .arc-val .u{font-size:9px;color:var(--muted);font-weight:600;margin-left:1px}
-.side{display:flex;flex-direction:column;gap:2px;line-height:1.1}
-.side .lbl{font-size:8px;color:var(--muted);letter-spacing:.5px}
-.side .val{font-size:14px;font-weight:700;font-variant-numeric:tabular-nums}
+.side{display:flex;flex-direction:column;gap:2px;line-height:1.1;flex:1;min-width:0}
+.side .lbl{font-size:8px;color:#8fa0b2;letter-spacing:.5px;font-weight:700}
+.side .val{font-size:13.5px;font-weight:800;font-variant-numeric:tabular-nums}
 
 /* Fans */
-.fans{gap:2px}
-.fan-row{display:flex;justify-content:space-around;flex:1;align-items:center}
-.fan{display:flex;flex-direction:column;align-items:center;gap:0}
-.fan .fan-ic{width:14px;height:14px;color:var(--ok2)}
-.fan .fan-ic.spin{animation:spin var(--dur,2s) linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-.fan .fv{font-size:13px;font-weight:800;color:var(--fg);font-variant-numeric:tabular-nums}
-.fan .fl{font-size:8px;color:var(--muted);letter-spacing:.5px}
-.uptime{font-size:8px;color:var(--muted);display:flex;align-items:center;gap:4px}
+.fans {
+  gap: 2px;
+}
+.fan-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex: 1;
+  width: 100%;
+  gap: 2px;
+  min-width: 0;
+}
+.fan {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1 1 0;
+  min-width: 0;
+  text-align: center;
+  gap: 1px;
+}
+.fan .fan-ic {
+  width: 13px;
+  height: 13px;
+  color: var(--ok2);
+  flex-shrink: 0;
+}
+.fan .fan-ic.spin {
+  animation: spin var(--dur, 2s) linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.fan .fv {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--fg);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.3px;
+  white-space: nowrap;
+  line-height: 1.1;
+}
+.fan-row.three-fans .fan .fv {
+  font-size: 10px;
+  letter-spacing: -0.4px;
+}
+.fan-row.four-fans .fan .fv {
+  font-size: 8.5px;
+  letter-spacing: -0.5px;
+}
+.fan .fl {
+  font-size: 7.5px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0.5px;
+  line-height: 1;
+  text-transform: uppercase;
+}
+.uptime {
+  font-size: 8px;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: auto;
+}
+
+.card.card-compact.fans .fan-row {
+  gap: 1px;
+}
+.card.card-compact.fans .fan .fan-ic {
+  width: 10px;
+  height: 10px;
+}
+.card.card-compact.fans .fan .fv {
+  font-size: 8.5px;
+  letter-spacing: -0.5px;
+}
+.card.card-compact.fans .fan .fl {
+  font-size: 6.5px;
+}
 
 /* Network Card */
 .card-net .net-body {
@@ -816,6 +889,33 @@ body.drawer-is-open .chassis-workbench-stage {
 .s-ok{color:var(--ok)}    .bg-ok{background:var(--ok)}    .dot-ok{background:var(--ok)}
 .s-warn{color:var(--warn)}.bg-warn{background:var(--warn)}.dot-warn{background:var(--warn)}
 .s-crit{color:var(--crit)}.bg-crit{background:var(--crit)}.dot-crit{background:var(--crit)}
+.s-standby{color:var(--muted)}.bg-standby{background:var(--track)}.dot-standby{background:#4a5568}
+
+.disk.disk-standby {
+  opacity: 0.65;
+  filter: saturate(0.6);
+}
+.disk.disk-standby:hover {
+  opacity: 1;
+  filter: none;
+}
+.standby-badge {
+  font-size: 9px;
+  font-weight: 800;
+  color: var(--muted);
+  letter-spacing: 0.8px;
+}
+.standby-zzz {
+  font-size: 8px;
+  font-weight: 800;
+  color: #7aa2ff;
+  letter-spacing: -0.5px;
+  animation: zzzFloat 2.5s ease-in-out infinite;
+}
+@keyframes zzzFloat {
+  0%, 100% { opacity: 0.4; transform: translateY(0); }
+  50% { opacity: 1; transform: translateY(-1.5px); }
+}
 
 /* =========================================================================
    TOOLKIT SLIDE DRAWER (520PX WIDTH & STABLE SCROLLBAR GUTTER)
@@ -1124,7 +1224,7 @@ input:checked + .toggle-slider:before { transform: translateX(18px); background-
   background: #080c10; 
   border: 1px solid rgba(255,255,255,0.08); 
   border-radius: 10px; 
-  padding: 12px; 
+  padding: 10px; 
   display: flex; 
   flex-direction: column; 
   gap: 8px; 
@@ -1138,13 +1238,13 @@ input:checked + .toggle-slider:before { transform: translateX(18px); background-
 }
 .mini-lcd-canvas {
   width: 100%; 
-  height: 110px; 
+  height: 126px; 
   background: #040608; 
   border-radius: 8px; 
   position: relative; 
   overflow: hidden; 
-  border: 1px solid rgba(37,194,160,0.35);
-  box-shadow: inset 0 0 14px rgba(0,0,0,0.85);
+  border: 1px solid rgba(37,194,160,0.4);
+  box-shadow: inset 0 0 16px rgba(0,0,0,0.85);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1162,13 +1262,13 @@ body.theme-yak .mini-lcd-canvas {
   position: absolute !important; 
   top: 50% !important; 
   left: 50% !important; 
-  transform: translate(-50%, -50%) scale(0.60) !important; 
+  transform: translate(-50%, -50%) scale(var(--mini-scale, 0.70)) !important; 
   transform-origin: center center !important; 
   background: var(--bg) !important; 
   display: flex !important; 
   flex-direction: column !important; 
   justify-content: space-between !important; 
-  padding: 5px 9px 6px 9px !important; 
+  padding: 5px 12px 6px 12px !important; 
   gap: 6px !important; 
   box-sizing: border-box !important; 
   pointer-events: auto !important;
@@ -1185,7 +1285,7 @@ body.theme-yak .mini-lcd-canvas {
 }
 .mini-preview-inner .cards {
   display: flex;
-  gap: 7px;
+  gap: 5px;
   flex: 1 1 0;
   min-height: 0;
   align-items: stretch;
@@ -1503,6 +1603,8 @@ body.lcd-direct #screen.hardware-screen-canvas {
   height: 172px !important;
   min-width: 640px !important;
   min-height: 172px !important;
+  padding: 5px 12px 6px 12px !important;
+  box-sizing: border-box !important;
   border: none !important;
   outline: none !important;
   border-radius: 0 !important;

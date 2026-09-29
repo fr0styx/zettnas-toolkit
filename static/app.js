@@ -1,5 +1,6 @@
 // Instant detection for headless Chromium renderer
-if (window.location.search.includes("mode=lcd")) {
+const isLcdDirect = window.location.search.includes("mode=lcd") || document.body.classList.contains("lcd-direct");
+if (isLcdDirect) {
   document.body.classList.add("lcd-direct");
 }
 
@@ -49,30 +50,39 @@ function setArc(el, pct, lvl) {
 }
 
 function renderFans(fans) {
-  const row = $("fanRow");
-  if (row) row.innerHTML = "";
+  const rows = document.querySelectorAll(".fan-row");
+  if (rows.length === 0) return;
 
   if (!fans || fans.length === 0) {
-    if (row) row.innerHTML = '<span class="fv" style="color:var(--muted);font-size:12px">n/a</span>';
+    rows.forEach((r) => {
+      r.innerHTML = '<span class="fv" style="color:var(--muted);font-size:11px">n/a</span>';
+    });
     return;
   }
 
   const max = Math.max(...fans, 1);
-  fans.forEach((rpm, i) => {
+  const count = fans.length;
+  const html = fans.map((rpm, i) => {
     const dur = rpm > 0 ? Math.max(0.25, 2.0 - (rpm / max) * 1.7).toFixed(2) : 0;
     const spin = rpm > 0 ? "spin" : "";
     const label = FAN_LABELS[i] || ("F" + (i + 1));
+    return (
+      `<div class="fan">` +
+      `<svg class="fan-ic ${spin}" style="--dur:${dur}s"><use href="#i-fan"/></svg>` +
+      `<span class="fv">${rpm}</span>` +
+      `<span class="fl">${label}</span>` +
+      `</div>`
+    );
+  }).join("");
 
-    if (row) {
-      const d = document.createElement("div");
-      d.className = "fan";
-      d.innerHTML =
-        `<svg class="fan-ic ${spin}" style="--dur:${dur}s"><use href="#i-fan"/></svg>` +
-        `<span class="fv">${rpm}</span>` +
-        `<span class="fl">${label}</span>`;
-      row.appendChild(d);
-    }
+  rows.forEach((r) => {
+    r.classList.toggle("three-fans", count >= 3);
+    r.classList.toggle("four-fans", count >= 4);
+    r.innerHTML = html;
+  });
 
+  fans.forEach((rpm, i) => {
+    const dur = rpm > 0 ? Math.max(0.25, 2.0 - (rpm / max) * 1.7).toFixed(2) : 0;
     const dfRpm = $(`df-rpm-${i}`);
     const dfIc = $(`df-ic-${i}`);
     if (dfRpm) dfRpm.textContent = rpm;
@@ -90,22 +100,28 @@ const ROLE_META = {
 };
 
 function diskTile(d) {
-  const lvl = d.health || lvlDisk(d.temp);
+  const isStandby = Boolean(d.standby || d.health === "standby");
+  const lvl = isStandby ? "standby" : (d.health || lvlDisk(d.temp));
   const t = d.temp;
   const meta = ROLE_META[d.role] || ROLE_META.data;
-  const w = t == null ? 0 : Math.max(8, Math.min(100, ((t - 20) / 40) * 100));
+  const w = isStandby ? 0 : (t == null ? 0 : Math.max(8, Math.min(100, ((t - 20) / 40) * 100)));
   const el = document.createElement("div");
-  el.className = "disk " + meta.cls + " h-" + lvl + (d.active ? " io-active" : "");
+  el.className = "disk " + meta.cls + " h-" + lvl + (d.active ? " io-active" : "") + (isStandby ? " disk-standby" : "");
   el.dataset.dev = d.dev || d.name;
-  el.title = `Click to inspect S.M.A.R.T. health for ${d.name}`;
+  el.title = isStandby ? `${d.name} is in standby (spun-down)` : `Click to inspect S.M.A.R.T. health for ${d.name}`;
+  
+  const tempHtml = isStandby
+    ? `<div class="dt s-standby"><span class="standby-badge">STANDBY</span></div>`
+    : `<div class="dt ${"s-" + lvl}">${t == null ? "--" : t}<span class="u">°C</span></div>`;
+
   el.innerHTML =
     `<div class="dh"><svg class="disk-ic"><use href="${meta.icon}"/></svg>` +
     `<span class="dn">${d.name}</span>` +
     `<div class="disk-indicators">` +
-      `<span class="io-dot" title="Active I/O"></span>` +
+      (isStandby ? `<span class="standby-zzz" title="Spun-down / Standby">zZz</span>` : `<span class="io-dot" title="Active I/O"></span>`) +
       `<span class="hdot ${"dot-" + lvl}"></span>` +
     `</div></div>` +
-    `<div class="dt ${"s-" + lvl}">${t == null ? "--" : t}<span class="u">°C</span></div>` +
+    tempHtml +
     `<div class="db"><i class="${"bg-" + lvl}" style="width:${w}%"></i></div>`;
   
   el.addEventListener("click", () => openSmartModal(d.dev || d.name));
@@ -362,13 +378,30 @@ function updateFanCurveWorkstation(s) {
     }
   }
 
-  const normZ1X = Math.max(30, Math.min(50, fc.zone1_temp));
-  const svgZ1X = 38 + ((normZ1X - 30) / 20.0) * (285 - 38);
+  const tMin = fc.temp_min || 37;
+  const tMax = fc.temp_max || 50;
+  const graphMinT = Math.min(30, tMin - 5);
+  const graphMaxT = Math.max(50, tMax);
+  const tSpan = Math.max(1, graphMaxT - graphMinT);
+
+  const knee1X = 38 + ((tMin - graphMinT) / tSpan) * (285 - 38);
+  const knee2X = 38 + ((tMax - graphMinT) / tSpan) * (285 - 38);
+  const curveArea = $("curve-area-path");
+  const curveLine = $("curve-svg-path");
+  if (curveArea && curveLine) {
+    const areaD = `M 38 100 L ${knee1X.toFixed(1)} 100 L ${knee2X.toFixed(1)} 20 L 285 20 L 285 100 Z`;
+    const lineD = `M 38 100 L ${knee1X.toFixed(1)} 100 L ${knee2X.toFixed(1)} 20 L 285 20`;
+    curveArea.setAttribute("d", areaD);
+    curveLine.setAttribute("d", lineD);
+  }
+
+  const normZ1X = Math.max(graphMinT, Math.min(graphMaxT, fc.zone1_temp));
+  const svgZ1X = 38 + ((normZ1X - graphMinT) / tSpan) * (285 - 38);
   const normZ1Pwm = Math.max(58, Math.min(183, fc.zone1_pwm));
   const svgZ1Y = 100 - ((normZ1Pwm - 58) / (183 - 58)) * (100 - 20);
 
-  const normZ2X = Math.max(30, Math.min(50, fc.zone2_temp));
-  const svgZ2X = 38 + ((normZ2X - 30) / 20.0) * (285 - 38);
+  const normZ2X = Math.max(graphMinT, Math.min(graphMaxT, fc.zone2_temp));
+  const svgZ2X = 38 + ((normZ2X - graphMinT) / tSpan) * (285 - 38);
   const normZ2Pwm = Math.max(58, Math.min(183, fc.zone2_pwm));
   const svgZ2Y = 100 - ((normZ2Pwm - 58) / (183 - 58)) * (100 - 20);
 
@@ -719,6 +752,13 @@ function syncMiniPreviewStructure() {
     miniDiskRow.innerHTML = screenDiskRow.innerHTML;
   }
 
+  const sFanRowStruct = screenEl.querySelector(".fan-row");
+  const dFanRowStruct = miniInner.querySelector(".fan-row");
+  if (sFanRowStruct && dFanRowStruct && sFanRowStruct.children.length > 0 && dFanRowStruct.children.length === 0) {
+    dFanRowStruct.innerHTML = sFanRowStruct.innerHTML;
+    dFanRowStruct.className = sFanRowStruct.className;
+  }
+
   const cardMap = {};
   miniCardsContainer.querySelectorAll(".card").forEach((c) => {
     cardMap[c.dataset.metricId] = c;
@@ -747,6 +787,21 @@ function syncMiniPreviewStructure() {
   miniDiskRow.classList.toggle("compact", dashSizes["metric-disks"] === "compact");
 
   miniInner.className = "mini-preview-inner " + screenEl.className;
+  fitMiniPreviewScale();
+}
+
+function fitMiniPreviewScale() {
+  const canvas = $("mini-lcd-canvas");
+  const inner = $("mini-preview-inner");
+  if (!canvas || !inner) return;
+  const cw = canvas.clientWidth;
+  const ch = canvas.clientHeight;
+  if (!cw || !ch) return;
+  const sW = (cw - 4) / 640;
+  const sH = (ch - 4) / 172;
+  const s = Math.min(sW, sH, 0.78);
+  inner.style.setProperty("--mini-scale", s.toFixed(3));
+  inner.style.transform = `translate(-50%, -50%) scale(${s.toFixed(3)})`;
 }
 
 function syncMiniPreviewTelemetry() {
@@ -777,18 +832,27 @@ function syncMiniPreviewTelemetry() {
   const dMemArc = miniInner.querySelector("#memArc");
   if (sMemArc && dMemArc) dMemArc.style.cssText = sMemArc.style.cssText;
 
-  const sFans = screenEl.querySelectorAll("#fanRow .fan");
-  const dFans = miniInner.querySelectorAll("#fanRow .fan");
-  sFans.forEach((sf, i) => {
-    if (dFans[i]) {
-      const sfVal = sf.querySelector(".fv");
-      const dfVal = dFans[i].querySelector(".fv");
-      if (sfVal && dfVal) dfVal.textContent = sfVal.textContent;
-      const sfIc = sf.querySelector(".fan-ic");
-      const dfIc = dFans[i].querySelector(".fan-ic");
-      if (sfIc && dfIc) dfIc.style.cssText = sfIc.style.cssText;
+  const sFanRow = screenEl.querySelector(".fan-row");
+  const dFanRow = miniInner.querySelector(".fan-row");
+  if (sFanRow && dFanRow) {
+    if (dFanRow.children.length !== sFanRow.children.length || dFanRow.children.length === 0) {
+      dFanRow.innerHTML = sFanRow.innerHTML;
+      dFanRow.className = sFanRow.className;
+    } else {
+      const sFans = sFanRow.querySelectorAll(".fan");
+      const dFans = dFanRow.querySelectorAll(".fan");
+      sFans.forEach((sf, i) => {
+        if (dFans[i]) {
+          const sfVal = sf.querySelector(".fv");
+          const dfVal = dFans[i].querySelector(".fv");
+          if (sfVal && dfVal) dfVal.textContent = sfVal.textContent;
+          const sfIc = sf.querySelector(".fan-ic");
+          const dfIc = dFans[i].querySelector(".fan-ic");
+          if (sfIc && dfIc) dfIc.style.cssText = sfIc.style.cssText;
+        }
+      });
     }
-  });
+  }
 
   const screenDiskRow = screenEl.querySelector("#diskRow");
   const miniDiskRow = miniInner.querySelector(".disks");
@@ -886,14 +950,8 @@ function setupMiniPreviewInteractivity() {
         dashOrder = disksWasFirst ? ["metric-disks", ...cardsOnly] : [...cardsOnly, "metric-disks"];
       } else {
         const oldIdx = dashOrder.indexOf(draggedMetricId);
-        let targetIdx = dashOrder.indexOf(metricId);
-        if (oldIdx !== -1 && targetIdx !== -1) {
-          const rect = el.getBoundingClientRect();
-          const isRight = (e.clientX - rect.left) / rect.width > 0.5;
-          if (isRight && targetIdx <= oldIdx) targetIdx++;
-          else if (!isRight && targetIdx >= oldIdx) targetIdx--;
-          targetIdx = Math.max(0, Math.min(dashOrder.length - 1, targetIdx));
-
+        const targetIdx = dashOrder.indexOf(metricId);
+        if (oldIdx !== -1 && targetIdx !== -1 && oldIdx !== targetIdx) {
           const newOrder = [...dashOrder];
           newOrder.splice(oldIdx, 1);
           newOrder.splice(targetIdx, 0, draggedMetricId);
@@ -908,6 +966,49 @@ function setupMiniPreviewInteractivity() {
       persistDashboardLayout();
     });
   });
+
+  const miniCardsContainer = miniInner.querySelector(".cards");
+  if (miniCardsContainer) {
+    miniCardsContainer.addEventListener("dragover", (e) => {
+      if (!draggedMetricId || draggedMetricId === "metric-disks") return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "move";
+    });
+
+    miniCardsContainer.addEventListener("drop", (e) => {
+      if (!draggedMetricId || draggedMetricId === "metric-disks") return;
+      if (e.target === miniCardsContainer) {
+        e.preventDefault();
+        const dropX = e.clientX;
+        const cards = Array.from(miniCardsContainer.querySelectorAll(".card"));
+        let closestCardId = null;
+        let minDiff = Infinity;
+        cards.forEach((c) => {
+          const cr = c.getBoundingClientRect();
+          const cardCenter = cr.left + cr.width / 2;
+          const diff = Math.abs(dropX - cardCenter);
+          if (diff < minDiff) {
+            minDiff = diff;
+            closestCardId = c.dataset.metricId;
+          }
+        });
+        if (closestCardId && closestCardId !== draggedMetricId) {
+          const oldIdx = dashOrder.indexOf(draggedMetricId);
+          const targetIdx = dashOrder.indexOf(closestCardId);
+          if (oldIdx !== -1 && targetIdx !== -1 && oldIdx !== targetIdx) {
+            const newOrder = [...dashOrder];
+            newOrder.splice(oldIdx, 1);
+            newOrder.splice(targetIdx, 0, draggedMetricId);
+            dashOrder = newOrder;
+            applyDashboardLayout();
+            persistDashboardLayout();
+          }
+        }
+        isDraggingPreview = false;
+        draggedMetricId = null;
+      }
+    });
+  }
 
   miniInner.addEventListener("dragover", (e) => {
     if (!draggedMetricId) return;
@@ -1004,10 +1105,12 @@ async function tick() {
       if ($("netRx")) $("netRx").textContent = s.net.rx;
     }
 
-    updateMetricModalLive();
-    updateRowTelemetryBadges(s);
-    updateFanCurveWorkstation(s);
-    syncMiniPreviewTelemetry();
+    if (!isLcdDirect) {
+      updateMetricModalLive();
+      updateRowTelemetryBadges(s);
+      updateFanCurveWorkstation(s);
+      syncMiniPreviewTelemetry();
+    }
 
     if ([stLvl, cpuLvl, utilLvl, memLvl].includes("crit") ||
         s.disks.some((d) => (d.health || lvlDisk(d.temp)) !== "ok")) anyWarn = true;
@@ -1020,6 +1123,7 @@ tick();
 setInterval(tick, 1000);
 
 (function initHardwareBuilder() {
+  if (isLcdDirect) return;
   const toggleBtn = $("drawer-toggle-btn");
   const suiteBtn = $("suite-toolkit-btn");
   const closeBtn = $("drawer-close-btn");
@@ -1058,6 +1162,7 @@ setInterval(tick, 1000);
       drawer.classList.add("open");
       overlay.classList.add("open");
       document.body.classList.add("drawer-is-open");
+      setTimeout(fitMiniPreviewScale, 100);
     }
   }
   function closeDrawer() {
@@ -1453,6 +1558,64 @@ setInterval(tick, 1000);
   const priColorCard = $("primary-color-card");
   const powerBtn = $("btn-toggle-led");
   const reactiveToggle = $("reactive-toggle");
+  const ledNightToggle = $("led-night-toggle");
+  const ledNightStart = $("led-night-start");
+  const ledNightEnd = $("led-night-end");
+
+  // Screen Backlight & Night Dimming Controller
+  const screenBriSlider = $("screen-bri-slider");
+  const screenBriVal = $("screen-bri-val");
+  const screenNightToggle = $("screen-night-toggle");
+  const screenNightStart = $("screen-night-start");
+  const screenNightEnd = $("screen-night-end");
+  const screenNightBri = $("screen-night-bri");
+  let screenDebounce = null;
+
+  async function postScreenState() {
+    const payload = {
+      brightness: parseInt(screenBriSlider ? screenBriSlider.value : 100, 10),
+      night_mode: screenNightToggle ? screenNightToggle.checked : false,
+      night_start: screenNightStart ? screenNightStart.value : "23:00",
+      night_end: screenNightEnd ? screenNightEnd.value : "07:00",
+      night_brightness: parseInt(screenNightBri ? screenNightBri.value : 10, 10)
+    };
+    try {
+      await fetch("/api/screen", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+    } catch (e) {}
+  }
+
+  async function fetchScreenState() {
+    try {
+      const res = await fetch("/api/screen", { cache: "no-store" });
+      if (res.ok) {
+        const data = await res.json();
+        if (screenBriSlider && data.brightness !== undefined) screenBriSlider.value = data.brightness;
+        if (screenBriVal && screenBriSlider) screenBriVal.textContent = screenBriSlider.value + "%";
+        if (screenNightToggle) screenNightToggle.checked = Boolean(data.night_mode);
+        if (screenNightStart && data.night_start) screenNightStart.value = data.night_start;
+        if (screenNightEnd && data.night_end) screenNightEnd.value = data.night_end;
+        if (screenNightBri && data.night_brightness !== undefined) screenNightBri.value = data.night_brightness;
+      }
+    } catch (e) {}
+  }
+
+  fetchScreenState();
+
+  if (screenBriSlider) {
+    screenBriSlider.addEventListener("input", (e) => {
+      if (screenBriVal) screenBriVal.textContent = e.target.value + "%";
+      clearTimeout(screenDebounce);
+      screenDebounce = setTimeout(postScreenState, 100);
+    });
+  }
+  if (screenNightToggle) screenNightToggle.addEventListener("change", postScreenState);
+  if (screenNightStart) screenNightStart.addEventListener("change", postScreenState);
+  if (screenNightEnd) screenNightEnd.addEventListener("change", postScreenState);
+  if (screenNightBri) screenNightBri.addEventListener("change", postScreenState);
 
   const previewBar = $("preview-bar");
   const previewTxt = $("preview-state-txt");
@@ -1647,7 +1810,10 @@ setInterval(tick, 1000);
       color2: currentColor2,
       mode: currentMode,
       speed: parseInt(speedSlider ? speedSlider.value : 50, 10),
-      reactive: reactiveToggle ? reactiveToggle.checked : true
+      reactive: reactiveToggle ? reactiveToggle.checked : true,
+      night_mode: ledNightToggle ? ledNightToggle.checked : false,
+      night_start: ledNightStart ? ledNightStart.value : "23:00",
+      night_end: ledNightEnd ? ledNightEnd.value : "07:00"
     };
     try {
       const res = await fetch("/api/led", {
@@ -1681,6 +1847,9 @@ setInterval(tick, 1000);
 
         if (powerBtn) powerBtn.textContent = currentPower === "on" ? "Turn Off" : "Turn On";
         if (reactiveToggle) reactiveToggle.checked = data.reactive !== false;
+        if (ledNightToggle) ledNightToggle.checked = Boolean(data.night_mode);
+        if (ledNightStart && data.night_start) ledNightStart.value = data.night_start;
+        if (ledNightEnd && data.night_end) ledNightEnd.value = data.night_end;
 
         effectBtns.forEach((b) => b.classList.toggle("active", b.dataset.effect === currentMode));
         colorChips1.forEach((c) => c.classList.toggle("active", c.dataset.hex.toLowerCase() === currentColor.toLowerCase()));
@@ -1724,6 +1893,9 @@ setInterval(tick, 1000);
   });
 
   if (reactiveToggle) reactiveToggle.addEventListener("change", () => postLed(currentPower));
+  if (ledNightToggle) ledNightToggle.addEventListener("change", () => postLed(currentPower));
+  if (ledNightStart) ledNightStart.addEventListener("change", () => postLed(currentPower));
+  if (ledNightEnd) ledNightEnd.addEventListener("change", () => postLed(currentPower));
 
   if (slider) {
     slider.addEventListener("input", (e) => {
@@ -1907,7 +2079,16 @@ setInterval(tick, 1000);
     }
   }
 
-  async function postFanPwm(profile, manualPct, ctrlCpu) {
+  const fanTempMinSlider = $("fan-temp-min-slider");
+  const fanTempMaxSlider = $("fan-temp-max-slider");
+  const valTempMin = $("val-temp-min");
+  const valTempMax = $("val-temp-max");
+  const fanCurveRangeVal = $("fan-curve-range-val");
+  let fanThreshDebounce = null;
+
+  async function postFanPwm(profile, manualPct, ctrlCpu, tMin, tMax) {
+    const curMin = tMin !== undefined ? tMin : parseInt(fanTempMinSlider ? fanTempMinSlider.value : 37, 10);
+    const curMax = tMax !== undefined ? tMax : parseInt(fanTempMaxSlider ? fanTempMaxSlider.value : 50, 10);
     try {
       const res = await fetch("/api/fans", {
         method: "POST",
@@ -1915,7 +2096,9 @@ setInterval(tick, 1000);
         body: JSON.stringify({ 
           profile: profile, 
           manual_pct: manualPct, 
-          ctrl_cpu_fan: ctrlCpu !== undefined ? ctrlCpu : (cpuFanToggle ? cpuFanToggle.checked : false)
+          ctrl_cpu_fan: ctrlCpu !== undefined ? ctrlCpu : (cpuFanToggle ? cpuFanToggle.checked : false),
+          temp_min: curMin,
+          temp_max: curMax
         })
       });
       if (res.ok) {
@@ -1933,13 +2116,42 @@ setInterval(tick, 1000);
         const data = await res.json();
         const prof = data.profile || "auto";
         const pct = data.manual_pct !== undefined ? data.manual_pct : 60;
+        const tMin = data.temp_min !== undefined ? data.temp_min : 37;
+        const tMax = data.temp_max !== undefined ? data.temp_max : 50;
+
         if (cpuFanToggle) cpuFanToggle.checked = !!data.ctrl_cpu_fan;
+        if (fanTempMinSlider) fanTempMinSlider.value = tMin;
+        if (fanTempMaxSlider) fanTempMaxSlider.value = tMax;
+        if (valTempMin) valTempMin.textContent = `${tMin}°C`;
+        if (valTempMax) valTempMax.textContent = `${tMax}°C`;
+        if (fanCurveRangeVal) fanCurveRangeVal.textContent = `${tMin}°C – ${tMax}°C`;
+
         updateFanUiState(prof, pct);
       }
     } catch (e) {}
   }
 
   fetchFanState();
+
+  function onThreshChange() {
+    let tMin = parseInt(fanTempMinSlider ? fanTempMinSlider.value : 37, 10);
+    let tMax = parseInt(fanTempMaxSlider ? fanTempMaxSlider.value : 50, 10);
+    if (tMax <= tMin) {
+      tMax = tMin + 5;
+      if (fanTempMaxSlider) fanTempMaxSlider.value = tMax;
+    }
+    if (valTempMin) valTempMin.textContent = `${tMin}°C`;
+    if (valTempMax) valTempMax.textContent = `${tMax}°C`;
+    if (fanCurveRangeVal) fanCurveRangeVal.textContent = `${tMin}°C – ${tMax}°C`;
+
+    clearTimeout(fanThreshDebounce);
+    fanThreshDebounce = setTimeout(() => {
+      postFanPwm(currentFanProfile, parseInt(fanPwmSlider ? fanPwmSlider.value : 60, 10), undefined, tMin, tMax);
+    }, 120);
+  }
+
+  if (fanTempMinSlider) fanTempMinSlider.addEventListener("input", onThreshChange);
+  if (fanTempMaxSlider) fanTempMaxSlider.addEventListener("input", onThreshChange);
 
   if (cpuFanToggle) {
     cpuFanToggle.addEventListener("change", (e) => {
@@ -1995,5 +2207,7 @@ setInterval(tick, 1000);
       }
     }
   });
+
+  window.addEventListener("resize", fitMiniPreviewScale);
 
 })();

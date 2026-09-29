@@ -20,6 +20,7 @@ env/
 # Local state & logs
 *.log
 /tmp/
+.backup*/
 led_state.json
 fan_state.json
 dash_layout.json

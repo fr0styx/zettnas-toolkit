@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ZettNAS Studio • Hardware Suite</title>
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=4">
 </head>
 <body class="studio-workbench">
 
@@ -220,7 +220,7 @@
     <div id="layout-sections-container" class="drawer-cards-flow locked">
       <div class="draggable-card mini-preview-box" data-layout-card-id="sec-preview">
         <div class="card-headline" style="margin-bottom:2px;">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> LCD Live Canvas Preview & Rearrange</span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> LCD Live Canvas Re-arrange & Preview</span>
         </div>
         <div id="mini-lcd-canvas" class="mini-lcd-canvas">
           <div class="mini-preview-inner" id="mini-preview-inner"></div>
@@ -258,6 +258,31 @@
             </optgroup>
           </select>
           <input type="text" id="tz-custom-input" class="tz-text-input" placeholder="e.g. Asia/Seoul" style="display:none;">
+        </div>
+      </div>
+
+      <div class="draggable-card drawer-card" data-layout-card-id="sec-backlight">
+        <div class="card-headline">
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <svg class="ic ic-sm" style="margin: 0 4px 0 2px;"><use href="#i-chip"/></svg>LCD Backlight & Night Dimming</span>
+          <span id="screen-bri-val" class="card-head-val">100%</span>
+        </div>
+        <div class="card-instruction">Control the physical front LCD display brightness and scheduled nighttime dimming.</div>
+        <div class="slider-row">
+          <input type="range" id="screen-bri-slider" min="5" max="100" value="100" step="1" class="custom-slider">
+        </div>
+        <div class="schedule-controls-row" style="margin-top:10px; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <label class="switch"><input type="checkbox" id="screen-night-toggle"><span class="toggle-slider"></span></label>
+            <span style="font-size:11px; font-weight:700; color:var(--text);">Night Dimming</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:6px; font-size:11px;">
+            <input type="time" id="screen-night-start" value="23:00" class="tz-text-input" style="width:72px; padding:3px 6px;">
+            <span style="color:var(--muted); font-size:10px;">to</span>
+            <input type="time" id="screen-night-end" value="07:00" class="tz-text-input" style="width:72px; padding:3px 6px;">
+            <span style="color:var(--muted); font-size:10px;">@</span>
+            <input type="number" id="screen-night-bri" min="0" max="50" value="10" class="tz-text-input" style="width:48px; padding:3px 6px;" title="Night Brightness %">
+            <span style="color:var(--muted); font-size:10px;">%</span>
+          </div>
         </div>
       </div>
 
@@ -443,6 +468,20 @@
         </div>
         <div class="card-instruction">Adjust physical bar intensity. Changes apply automatically.</div>
         <div class="slider-row"><input type="range" id="led-slider" min="0" max="100" value="25" step="1" class="custom-slider"></div>
+      </div>
+
+      <div class="draggable-card drawer-card" data-card-id="card-led-schedule">
+        <div class="card-headline">
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Night Mode & Blackout Schedule</span>
+          <label class="switch"><input type="checkbox" id="led-night-toggle"><span class="toggle-slider"></span></label>
+        </div>
+        <div class="card-instruction">Automatically extinguish the ARGB light bar during nighttime hours to prevent room glare.</div>
+        <div class="schedule-controls-row" style="margin-top:6px; display:flex; align-items:center; gap:8px; font-size:11px;">
+          <span style="color:var(--muted); font-size:10px; font-weight:700;">BLACKOUT:</span>
+          <input type="time" id="led-night-start" value="23:00" class="tz-text-input" style="width:75px; padding:3px 6px;">
+          <span style="color:var(--muted); font-size:10px;">to</span>
+          <input type="time" id="led-night-end" value="07:00" class="tz-text-input" style="width:75px; padding:3px 6px;">
+        </div>
       </div>
 
       <div class="draggable-card drawer-card" data-card-id="card-profiles">
@@ -664,6 +703,30 @@
         </div>
       </div>
 
+      <div class="draggable-card drawer-card" data-fan-card-id="fan-card-thresholds">
+        <div class="card-headline">
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Custom Ramp Temperatures</span>
+          <span id="fan-curve-range-val" class="suite-badge" style="background:rgba(37,194,160,0.15); color:var(--ok2); border-color:rgba(37,194,160,0.35);">37°C – 50°C</span>
+        </div>
+        <div class="card-instruction">Adjust the temperature window where fan PWM dynamically scales from minimum silent RPM to 100% duty cycle. Spun-down drives are excluded from heating calculations.</div>
+        <div style="display:flex; flex-direction:column; gap:8px; margin-top:8px;">
+          <div>
+            <div style="display:flex; justify-content:space-between; font-size:10px; margin-bottom:2px; color:var(--muted); font-weight:700;">
+              <span>Ramp Start Temp (Min PWM / Silent):</span>
+              <strong id="val-temp-min" style="color:var(--text);">37°C</strong>
+            </div>
+            <input type="range" id="fan-temp-min-slider" min="25" max="45" value="37" step="1" class="custom-slider">
+          </div>
+          <div>
+            <div style="display:flex; justify-content:space-between; font-size:10px; margin-bottom:2px; color:var(--muted); font-weight:700;">
+              <span>Full Speed Temp (Max PWM / Cooling):</span>
+              <strong id="val-temp-max" style="color:var(--text);">50°C</strong>
+            </div>
+            <input type="range" id="fan-temp-max-slider" min="45" max="70" value="50" step="1" class="custom-slider">
+          </div>
+        </div>
+      </div>
+
       <div class="draggable-card drawer-card" id="manual-pwm-card" data-fan-card-id="fan-card-override">
         <div class="card-headline">
           <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Manual PWM Override</span>
@@ -678,6 +741,6 @@
   </div>
 </aside>
 
-<script src="app.js"></script>
+<script src="app.js?v=7"></script>
 </body>
 </html>

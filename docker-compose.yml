@@ -13,9 +13,10 @@ services:
       - /sys:/host/sys:rw
       - /dev:/host/dev:rw
       - /dev/fb0:/dev/fb0
+      - /dev/dri:/dev/dri
       - ${STORAGE_POOL_PATH:-/mnt/user}:/mnt/user:ro
     environment:
-      - LCD_FPS=5
+      - LCD_FPS=${LCD_FPS:-10}
       - PORT=8082
       - NAS_NAME=${NAS_NAME:-NAS}
       - POOL_PATH=/mnt/user
@@ -24,3 +25,8 @@ services:
       - HOST_SYS=/host/sys
       - HOST_DEV=/host/dev
     privileged: true
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
