@@ -3,6 +3,11 @@ FROM python:3.12-slim
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1
 
+LABEL net.unraid.docker.managed="dockerman"
+LABEL net.unraid.docker.webui="http://[IP]:[PORT:8082]/"
+LABEL net.unraid.docker.icon="https://raw.githubusercontent.com/fr0styx/zettnas-toolkit/main/static/img/icon.png"
+LABEL net.unraid.docker.shell="bash"
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
     smartmontools \
     udev \

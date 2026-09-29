@@ -4,6 +4,11 @@ services:
     image: zettnas-toolkit:latest
     container_name: zettnas-toolkit
     restart: unless-stopped
+    labels:
+      net.unraid.docker.managed: "dockerman"
+      net.unraid.docker.webui: "http://[IP]:[PORT:8082]/"
+      net.unraid.docker.icon: "https://raw.githubusercontent.com/fr0styx/zettnas-toolkit/main/static/img/icon.png"
+      net.unraid.docker.shell: "bash"
     ports:
       - "${PORT:-8082}:8082"
     volumes:

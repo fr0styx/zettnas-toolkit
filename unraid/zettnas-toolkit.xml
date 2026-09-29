@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<Container version="2">
+  <Name>zettnas-toolkit</Name>
+  <Repository>zettnas-toolkit:latest</Repository>
+  <Registry/>
+  <Network>bridge</Network>
+  <MyIP/>
+  <Shell>bash</Shell>
+  <Privileged>true</Privileged>
+  <Support>https://github.com/fr0styx/zettnas-toolkit/issues</Support>
+  <Project>https://github.com/fr0styx/zettnas-toolkit</Project>
+  <Overview>ZettNAS hardware controller, LCD dashboard (direct framebuffer renderer), ARGB lightbar effects &amp; active thermal fan curve daemon.</Overview>
+  <Category>Tools:Utilities Status:Information</Category>
+  <WebUI>http://[IP]:[PORT:8082]/</WebUI>
+  <TemplateURL>https://raw.githubusercontent.com/fr0styx/zettnas-toolkit/main/unraid/zettnas-toolkit.xml</TemplateURL>
+  <Icon>https://raw.githubusercontent.com/fr0styx/zettnas-toolkit/main/static/img/icon.png</Icon>
+  <ExtraParams>--restart=unless-stopped --device=/dev/fb0:/dev/fb0 --device=/dev/dri:/dev/dri</ExtraParams>
+  <PostArgs/>
+  <CPUset/>
+  <Config Name="WebUI Port" Target="8082" Default="8082" Mode="tcp" Description="Web interface &amp; telemetry API port" Type="Port" Display="always" Required="true" Mask="false">8082</Config>
+  <Config Name="App Directory" Target="/app" Default="/mnt/user/appdata/zettnas-toolkit" Mode="rw" Description="Application code and state data" Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/zettnas-toolkit</Config>
+  <Config Name="Host Proc" Target="/host/proc" Default="/proc" Mode="ro" Description="Host process metrics" Type="Path" Display="advanced" Required="true" Mask="false">/proc</Config>
+  <Config Name="Host Sys" Target="/host/sys" Default="/sys" Mode="rw" Description="Host sysfs hwmon &amp; thermal paths" Type="Path" Display="advanced" Required="true" Mask="false">/sys</Config>
+  <Config Name="Host Dev" Target="/host/dev" Default="/dev" Mode="rw" Description="Host devices (disks &amp; serial RGB controller)" Type="Path" Display="advanced" Required="true" Mask="false">/dev</Config>
+  <Config Name="Storage Pool" Target="/mnt/user" Default="/mnt/user" Mode="ro" Description="Target user array pool for disk usage calculation" Type="Path" Display="always" Required="true" Mask="false">/mnt/user</Config>
+  <Config Name="LCD Refresh FPS" Target="LCD_FPS" Default="10" Mode="" Description="Target LCD display frame rate" Type="Variable" Display="always" Required="false" Mask="false">10</Config>
+  <Config Name="NAS Name" Target="NAS_NAME" Default="NAS" Mode="" Description="Server display name on LCD" Type="Variable" Display="always" Required="false" Mask="false">NAS</Config>
+</Container>
