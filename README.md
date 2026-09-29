@@ -1,98 +1,146 @@
-# ZettNAS Toolkit
+<div align="center">
+  <img src="static/img/icon.png" width="128" height="128" alt="ZettNAS Toolkit Icon" style="border-radius: 24px;">
+  <h1>ZettNAS Toolkit</h1>
+  <p><strong>All-in-one chassis management suite and live front-panel LCD dashboard for Zettlab NAS enclosures (D4, D6, D8).</strong></p>
 
-An all-in-one chassis management suite and live front-panel LCD dashboard designed for Zettlab NAS enclosures (D4, D6, and D8 models) running Unraid or Debian/Docker environments.
-
-This toolkit provides zero-overhead, direct-to-framebuffer rendering for the front display, intelligent thermal curve fan controls, dynamic RGB LED strip management with error-reactive lighting, and a web workbench for real-time monitoring and configuration.
+  <p>
+    <a href="https://github.com/fr0styx/zettnas-toolkit/releases"><img src="https://img.shields.io/github/v/release/fr0styx/zettnas-toolkit?color=25c2a0&style=flat-square" alt="GitHub Release"></a>
+    <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" alt="License: MIT"></a>
+    <img src="https://img.shields.io/badge/Platform-Unraid%20%7C%20Linux%20%7C%20Docker-orange?style=flat-square" alt="Platform">
+    <img src="https://img.shields.io/badge/Display-640x172%20IPS%20%28%2Fdev%2Ffb0%29-informational?style=flat-square" alt="Display">
+  </p>
+</div>
 
 ---
 
-## Features
+## Overview
 
-- **Direct Framebuffer LCD Dashboard (/dev/fb0):**
-  - Ultra-crisp 640x172 display output oriented specifically for the front panel via zero-overhead CSS orientation transforms and direct memory-mapped (mmap) writes.
-  - Optimized active render loop delivering smooth animations (up to 30 FPS) with low sustained CPU overhead.
-  - Live readout of storage pools, CPU utilization, thermals, memory, dual network throughput (RX/TX), active fan tachometers, and drive temperatures.
-  - Per-drive health tracking (S.M.A.R.T. status) with visual I/O activity indicators.
+**ZettNAS Toolkit** is a comprehensive hardware management suite engineered specifically for Zettlab NAS chassis (D4, D6, and D8 models) running Unraid or Debian/Docker environments.
 
-- **Intelligent Thermal Fan Automation:**
-  - Dual-zone SATA backplane fan regulation mapped to individual drive temperatures.
-  - Optional CPU fan takeover with smooth step-up and temperature hysteresis hold timers to prevent annoying fan cycling.
-  - Multiple presets: Auto (dynamic curve), Quiet, Balanced, Performance, and direct manual PWM control.
+It delivers **zero-overhead, direct-to-framebuffer rendering** for the 640×172 front-panel IPS display, **intelligent dual-zone thermal fan curve regulation**, **dynamic ARGB LED lightbar effects** with error-reactive lighting, and a **real-time web studio** with drag-and-drop live canvas arrangement.
 
-- **Chassis RGB Lightbar Control:**
-  - Direct serial communication (/dev/ttyACM0 / CRC-validated protocol) with onboard chassis controllers.
-  - Modes: Solid, Breathe, Flow, Chase, Gradient, Flashing, and smooth real-time Rainbow.
-  - **Reactive Alerting:** Automatically overrides the lightbar with warning (amber breathe) or critical (red pulse) states if a drive reports S.M.A.R.T. degradation, CPU temp breaches 70C/85C, or a cooling fan stalls.
+<div align="center">
+  <img src="static/img/chassis-d6u.png" width="85%" alt="ZettNAS Chassis Front Panel">
+</div>
 
-- **Interactive Web Studio & Workbench (Port 8082):**
-  - Full-featured web interface mirroring the physical display.
-  - Drag-and-drop module layout customization, component visibility toggles, and timezone configuration saved persistently.
-  - Detailed S.M.A.R.T. inspection modal with raw attribute dumps.
+---
+
+## Key Features
+
+### 🖥️ Direct Framebuffer LCD Dashboard (`/dev/fb0`)
+* **Zero-Overhead Active Rendering**: Renders natively at 640×172 using hardware-accelerated CSS orientation transforms (`rotate(90deg) translate(0, -172px)`) and single-pass memory-mapped (`mmap`) framebuffer streaming to `/dev/fb0` without CPU matrix rotation overhead.
+* **Bezel-Safe Geometry**: Balanced 12px bezel margins and optimized typography to prevent edge occlusion or pixel loss on physical front-panel bezels.
+* **Real-Time Telemetry**: Storage pool capacity donut, CPU utilization arc, core thermals, RAM gauge, dual network throughput (TX/RX), active fan tachometers, and per-drive status.
+* **Drive Standby Awareness**: Detects spun-down drives (`standby`) with sleep preservation and visual `zZz` indicators—never unnecessarily wakes sleeping disks.
+
+### 🎛️ Interactive Web Studio & Live Canvas Re-arrange (Port `8082`)
+* **LCD Live Canvas Re-arrange & Preview**: Drag-and-drop module reordering in the toolkit drawer with bidirectional adjacent swapping, container gap-snapping, and persistent layout saving (`/tmp/dash_layout.json`).
+* **S.M.A.R.T. Health Inspector**: Click any disk card to view full S.M.A.R.T. diagnostic attributes, model numbers, power-on hours, and raw telemetry in an interactive modal.
+* **Module Customization**: Toggle visibility of individual metric cards or disk rows, switch between Full and Compact card sizes, and choose 12-hour or 24-hour clock formats.
+* **Chassis Workbench**: Front-panel simulator with scalable chassis zoom (1x, 1.25x, 1.5x, 2x) and interactive LED lighting preview.
+
+### ❄️ Intelligent Thermal Fan Automation
+* **Dual-Zone Drive Cooling**: Automatic SATA backplane fan regulation mapped directly to drive temperatures.
+* **Interactive SVG Fan Curve Workstation**: Visual thermal curve editor with draggable inflection points for precise PWM ramp-up tuning.
+* **Manual PWM Override**: Direct hardware duty-cycle command (`0–183` / 0–100%) for diagnostic testing and airflow verification.
+* **Active Rotor Animations**: Browser and LCD fan icons spin dynamically at rates proportional to real-time tachometer RPM.
+
+### 💡 Chassis ARGB Lightbar Control (`/dev/ttyACM0`)
+* **Serial Protocol Integration**: Direct communication with the onboard microcontroller using CRC-validated packets.
+* **Lighting Modes**: Solid, Breathe, Flow, Chase, Gradient, Flashing, and real-time Rainbow.
+* **Error-Reactive Safeguards**: Automatically overrides lighting with an amber warning breathe or pulsing red alert if a drive reports S.M.A.R.T. degradation, CPU breaches 70°C/85°C, or a fan stalls.
 
 ---
 
 ## Hardware Compatibility
 
-- **Zettlab Enclosures:** D4, D6, D8 (auto-detected via DMI product name or discovered drive topology).
-- **Display:** Internal 640x172 LCD interfaced through /dev/fb0.
-- **Fan Controller:** Motherboard hwmon supporting nct6775, it87, zettlab_d8_fans, or standard Linux PWM channels (pwm1-pwm3).
-- **RGB Strip:** Built-in USB-to-serial microcontroller (ZettOS_RGB or /dev/ttyACM0).
+| Component | Target Hardware | Notes |
+| :--- | :--- | :--- |
+| **Enclosures** | Zettlab D4, D6, D8 | Auto-detected via DMI product name or discovered drive topology |
+| **Display** | Internal 640×172 IPS LCD | Interfaced directly via `/dev/fb0` (stride 704) |
+| **Fan Controller** | Motherboard `hwmon` | Supports `nct6775`, `it87`, `zettlab_d8_fans`, or standard Linux PWM (`pwm1`–`pwm3`) |
+| **ARGB Strip** | Built-in USB microcontroller | Recognized as `ZettOS_RGB` or `/dev/ttyACM0` (38 WS2812B nodes) |
 
 ---
 
 ## Installation & Deployment
 
-### 1. Prerequisites (Unraid / Docker)
+### Option A: Unraid Docker Template (Recommended for Unraid)
 
-Ensure the front panel framebuffer device exists on your host:
-```bash
-ls -l /dev/fb0
-```
-
-Verify access to the chassis RGB controller:
-```bash
-ls -l /dev/ttyACM0
-```
-
-### 2. Clone the Repository
-
-```bash
-cd /mnt/user/appdata
-git clone https://github.com/fr0styx/zettnas-toolkit.git
-cd zettnas-toolkit
-```
-
-### 3. Configure Environment
-
-```bash
-cp .env.example .env
-```
-
-Edit `.env` to match your local setup:
-```ini
-NAS_NAME=Ark
-PORT=8082
-STORAGE_POOL_PATH=/mnt/user
-OS_NVME=nvme1n1
-LCD_FPS=30
-```
-
-### 4. Deploy via Docker Compose
-
-```bash
-docker-compose up -d --build
-```
+1. On your Unraid server, place [`unraid/zettnas-toolkit.xml`](unraid/zettnas-toolkit.xml) into:
+   ```bash
+   /boot/config/plugins/dockerMan/templates-user/my-zettnas-toolkit.xml
+   ```
+2. Navigate to the **Docker** tab in the Unraid web interface.
+3. Click **Add Container**, select **zettnas-toolkit** from the template dropdown, verify device paths (`/dev/fb0`, `/dev/dri`), and click **Apply**.
+4. The container will automatically appear with the official icon, WebUI button, and full Unraid management features.
 
 ---
 
-## Acknowledgments & Credits
+### Option B: Docker Compose
 
-This project builds upon the foundational reverse-engineering, hardware discoveries, and utility scripts established by members of the community:
+1. **Verify Prerequisites**:
+   Ensure `/dev/fb0` and `/dev/ttyACM0` exist on your host:
+   ```bash
+   ls -l /dev/fb0 /dev/ttyACM0
+   ```
 
-- **[torharrington/zettlab-display](https://github.com/torharrington/zettlab-display)** - Early framebuffer display proof-of-concepts, layout experiments, and initialization routines for Zettlab front-panel LCD screens.
-- **[henryxwong/zettlab-ubuntu](https://github.com/henryxwong/zettlab-ubuntu)** - Detailed documentation on Zettlab hardware interfaces, fan controller registers (hwmon), LED serial packet structures, and Linux kernel integration.
+2. **Clone the Repository**:
+   ```bash
+   cd /mnt/user/appdata
+   git clone https://github.com/fr0styx/zettnas-toolkit.git
+   cd zettnas-toolkit
+   ```
 
-Thank you for paving the way and making custom OS deployments on these chassis possible.
+3. **Configure Environment**:
+   ```bash
+   cp .env.example .env
+   ```
+   Edit `.env` to match your server configuration:
+   ```ini
+   NAS_NAME=Ark
+   PORT=8082
+   STORAGE_POOL_PATH=/mnt/user
+   OS_NVME=nvme1n1
+   LCD_FPS=10
+   LCD_FORMAT=png
+   ```
+
+4. **Launch the Container**:
+   ```bash
+   docker compose up -d --build
+   ```
+
+---
+
+## Keyboard Shortcuts & Easter Eggs
+
+When accessing the Web Studio (`http://<server-ip>:8082`):
+* `T` — Toggle the Hardware Toolkit Settings Drawer.
+* `Z` or `Mouse Wheel` — Cycle Chassis Zoom scale (1x, 1.25x, 1.5x, 2x).
+* `Y` — *Trust in the Yak* (Theme & Easter Egg).
+* `Esc` — Close open modals and drawers.
+
+---
+
+## REST API Endpoints
+
+| Endpoint | Method | Description |
+| :--- | :--- | :--- |
+| `/api/stats` | `GET` | Complete real-time system metrics (CPU, memory, storage, fans, disks, lightbar, layout version) |
+| `/api/layout` | `GET` / `POST` | Retrieve or persist dashboard layout, card ordering, visibility, and clock settings |
+| `/api/fans` | `GET` / `POST` | Inspect tachometer RPMs and set fan presets or manual PWM duty cycles |
+| `/api/leds` | `GET` / `POST` | Query current lightbar status or command modes, colors, brightness, and speeds |
+| `/api/screen/brightness` | `POST` | Dynamically adjust front-panel LCD backlight brightness (0–100%) |
+
+---
+
+## Acknowledgments & Community Credits
+
+This project builds upon the foundational reverse-engineering and hardware discoveries established by the community:
+
+* **[torharrington/zettlab-display](https://github.com/torharrington/zettlab-display)** — Early framebuffer display proof-of-concepts, layout experiments, and initialization routines for Zettlab front-panel LCD screens.
+* **[henryxwong/zettlab-ubuntu](https://github.com/henryxwong/zettlab-ubuntu)** — Detailed documentation on Zettlab hardware interfaces, fan controller registers (`hwmon`), LED serial packet structures, and Linux kernel integration.
 
 ---
 
