@@ -62,23 +62,48 @@ function renderFans(fans) {
 
   const max = Math.max(...fans, 1);
   const count = fans.length;
-  const html = fans.map((rpm, i) => {
-    const dur = rpm > 0 ? Math.max(0.25, 2.0 - (rpm / max) * 1.7).toFixed(2) : 0;
-    const spin = rpm > 0 ? "spin" : "";
-    const label = FAN_LABELS[i] || ("F" + (i + 1));
-    return (
-      `<div class="fan">` +
-      `<svg class="fan-ic ${spin}" style="--dur:${dur}s"><use href="#i-fan"/></svg>` +
-      `<span class="fv">${rpm}</span>` +
-      `<span class="fl">${label}</span>` +
-      `</div>`
-    );
-  }).join("");
 
   rows.forEach((r) => {
     r.classList.toggle("three-fans", count >= 3);
     r.classList.toggle("four-fans", count >= 4);
-    r.innerHTML = html;
+
+    const existing = r.querySelectorAll(".fan");
+
+    // Rebuild only if fan count changed
+    if (existing.length !== count) {
+      const html = fans.map((rpm, i) => {
+        const dur = rpm > 0 ? Math.max(0.25, 2.0 - (rpm / max) * 1.7).toFixed(2) : 0;
+        const label = FAN_LABELS[i] || ("F" + (i + 1));
+        return (
+          `<div class="fan">` +
+          `<svg class="fan-ic${rpm > 0 ? " spin" : ""}" style="--dur:${dur}s"><use href="#i-fan"/></svg>` +
+          `<span class="fv">${rpm}</span>` +
+          `<span class="fl">${label}</span>` +
+          `</div>`
+        );
+      }).join("");
+      r.innerHTML = html;
+    } else {
+      // Keyed diff: update only changed values, preserve animation continuity
+      fans.forEach((rpm, i) => {
+        const fanEl = existing[i];
+        if (!fanEl) return;
+        const dur = rpm > 0 ? Math.max(0.25, 2.0 - (rpm / max) * 1.7).toFixed(2) : 0;
+        const ic = fanEl.querySelector(".fan-ic");
+        const fv = fanEl.querySelector(".fv");
+        if (fv && fv.textContent !== String(rpm)) fv.textContent = rpm;
+        if (ic) {
+          const wantSpin = rpm > 0;
+          const hasSpin = ic.classList.contains("spin");
+          if (wantSpin !== hasSpin) ic.classList.toggle("spin", wantSpin);
+          // Only update --dur when it changes meaningfully (>5% change)
+          const curDur = parseFloat(ic.style.getPropertyValue("--dur") || "0");
+          if (Math.abs(curDur - parseFloat(dur)) > 0.03) {
+            ic.style.setProperty("--dur", `${dur}s`);
+          }
+        }
+      });
+    }
   });
 
   fans.forEach((rpm, i) => {
@@ -92,6 +117,7 @@ function renderFans(fans) {
     }
   });
 }
+
 
 const ROLE_META = {
   data:  { label: "DATA",  icon: "#i-disk", cls: "r-data" },
@@ -314,6 +340,16 @@ function closeSmartModal() {
   if (smartOverlay) smartOverlay.classList.remove("open");
 }
 
+const smartRefreshBtn = $("smart-modal-refresh");
+if (smartRefreshBtn) {
+  smartRefreshBtn.addEventListener("click", () => {
+    if (activeModalType && activeModalType.startsWith("disk_")) {
+      openSmartModal(activeModalType.replace("disk_", ""));
+    } else if (activeModalType) {
+      openMetricModal(activeModalType);
+    }
+  });
+}
 if (smartCloseBtn) smartCloseBtn.addEventListener("click", closeSmartModal);
 if (smartOverlay) {
   smartOverlay.addEventListener("click", (e) => {
@@ -1037,9 +1073,12 @@ function setupMiniPreviewInteractivity() {
   });
 }
 
-async function tick() {
+// ---- Live update via Server-Sent Events (SSE) ----
+// Falls back to 2-second polling if SSE is unavailable.
+let _sseRetryCount = 0;
+
+function applyStats(s) {
   try {
-    const s = await (await fetch("/api/stats", { cache: "no-store" })).json();
     latestStats = s;
     anyWarn = false;
 
@@ -1109,7 +1148,10 @@ async function tick() {
       updateMetricModalLive();
       updateRowTelemetryBadges(s);
       updateFanCurveWorkstation(s);
-      syncMiniPreviewTelemetry();
+      // Only sync mini preview when drawer is open (saves DOM queries when hidden)
+      if (document.body.classList.contains("drawer-is-open")) {
+        syncMiniPreviewTelemetry();
+      }
     }
 
     if ([stLvl, cpuLvl, utilLvl, memLvl].includes("crit") ||
@@ -1119,8 +1161,78 @@ async function tick() {
   } catch (e) {}
 }
 
-tick();
-setInterval(tick, 1000);
+async function tick() {
+  try {
+    const s = await (await fetch("/api/stats", { cache: "no-store" })).json();
+    applyStats(s);
+  } catch (e) {}
+}
+
+function startSSE() {
+  if (isLcdDirect) {
+    // LCD renderer: just poll (no SSE overhead needed for headless)
+    tick();
+    setInterval(tick, 2000);
+    return;
+  }
+
+  const es = new EventSource("/api/stats/stream");
+  es.onmessage = (e) => {
+    try {
+      _sseRetryCount = 0;
+      applyStats(JSON.parse(e.data));
+    } catch (err) {}
+  };
+  es.onerror = () => {
+    _sseRetryCount++;
+    es.close();
+    // Fall back to polling after 3 consecutive SSE failures
+    if (_sseRetryCount >= 3) {
+      console.warn("[ZettNAS] SSE unavailable, falling back to 2s polling");
+      tick();
+      setInterval(tick, 2000);
+    } else {
+      // Retry SSE after a short delay
+      setTimeout(startSSE, 3000);
+    }
+  };
+}
+
+async function fetchLcdStatus() {
+  if (isLcdDirect) return;
+  try {
+    const res = await fetch("/api/lcd_status", { cache: "no-store" });
+    const badge = $("lcd-renderer-badge");
+    if (res.ok && badge) {
+      const data = await res.json();
+      badge.className = "lcd-status-badge";
+      if (!data.enabled) {
+        badge.classList.add("lcd-status-disabled");
+        badge.innerHTML = "&#x2B24; Disabled";
+      } else if (data.active) {
+        badge.classList.add("lcd-status-active");
+        badge.innerHTML = `&#x2B24; Active (${data.fps} FPS)`;
+      } else {
+        badge.classList.add("lcd-status-offline");
+        badge.innerHTML = "&#x2B24; Offline / Restarting";
+      }
+    }
+  } catch (e) {
+    const badge = $("lcd-renderer-badge");
+    if (badge) {
+      badge.className = "lcd-status-badge lcd-status-offline";
+      badge.innerHTML = "&#x2B24; Unreachable";
+    }
+  }
+}
+
+fetchDashboardLayout().then(() => {
+  startSSE();
+  if (!isLcdDirect) {
+    fetchLcdStatus();
+    setInterval(fetchLcdStatus, 5000);
+  }
+});
 
 (function initHardwareBuilder() {
   if (isLcdDirect) return;
@@ -2192,7 +2304,7 @@ setInterval(tick, 1000);
       cycleZoom();
     } else if (e.key === "y" || e.key === "Y") {
       applyTheme(currentTheme === "yak" ? "cyber" : "yak");
-    } else if (e.key === "t" || e.key === "T") {
+    } else if (e.key === "t" || e.key === "T" || e.key === "d" || e.key === "D") {
       if (drawer && drawer.classList.contains("open")) {
         closeDrawer();
       } else {

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ZettNAS Studio • Hardware Suite</title>
-<link rel="stylesheet" href="style.css?v=4">
+<link rel="stylesheet" href="style.css?v=5">
 </head>
 <body class="studio-workbench">
 
@@ -179,6 +179,7 @@
       <span class="smart-modal-title" id="smart-modal-title">
         <svg class="ic"><use href="#i-disk"/></svg> S.M.A.R.T. Diagnostics
       </span>
+      <button id="smart-modal-refresh" class="btn-icon" title="Refresh SMART data" style="margin-right:4px;">↻</button>
       <button id="smart-modal-close" class="btn-icon">✕</button>
     </div>
     <div class="smart-modal-body">
@@ -221,6 +222,7 @@
       <div class="draggable-card mini-preview-box" data-layout-card-id="sec-preview">
         <div class="card-headline" style="margin-bottom:2px;">
           <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> LCD Live Canvas Re-arrange & Preview</span>
+          <span id="lcd-renderer-badge" class="lcd-status-badge lcd-status-checking" title="LCD Framebuffer Renderer Status">&#x2B24; Checking…</span>
         </div>
         <div id="mini-lcd-canvas" class="mini-lcd-canvas">
           <div class="mini-preview-inner" id="mini-preview-inner"></div>
@@ -741,6 +743,6 @@
   </div>
 </aside>
 
-<script src="app.js?v=7"></script>
+<script src="app.js?v=8"></script>
 </body>
 </html>

@@ -18,6 +18,7 @@ import shutil
 import socket
 import colorsys
 import subprocess
+import gzip
 import threading
 from urllib.parse import urlparse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -36,7 +37,8 @@ STATIC_DIR = os.path.realpath(os.path.join(os.path.dirname(__file__), "static"))
 # LCD & Hardware Tuning
 ENABLE_FB = os.environ.get("ENABLE_FB", "1") == "1"
 LCD_FPS = int(float(os.environ.get("LCD_FPS", "5")))
-SMART_POLL_INTERVAL = int(os.environ.get("SMART_POLL_INTERVAL", "45"))
+SMART_POLL_INTERVAL_HDD = int(os.environ.get("SMART_POLL_HDD", "45"))  # seconds for HDDs
+SMART_POLL_INTERVAL_NVME = int(os.environ.get("SMART_POLL_NVME", "15"))  # seconds for NVMe
 
 def get_server_hostname():
     env_name = os.environ.get("NAS_NAME", "").strip()
@@ -69,13 +71,21 @@ _prev_disk_io = {}
 # ---- Hardware Drivers & State Files ----
 LED_PORT = os.environ.get("LED_PORT", "/dev/ttyACM0" if os.path.exists("/dev/ttyACM0") else "/host/dev/ttyACM0")
 LED_STATE_FILE = "/tmp/led_state.json"
-DASH_LAYOUT_FILE = "/tmp/dash_layout.json"
+DASH_LAYOUT_FILE = os.environ.get("LAYOUT_PATH", "/app/data/dash_layout.json")
 FAN_STATE_FILE = "/tmp/fan_state.json"
 SCREEN_STATE_FILE = "/tmp/screen_state.json"
 
 _cached_hwmon = None
 _cached_cpu_temp_path = None
 _known_active_fans = set()
+
+_cached_disk_list = None
+_cached_disk_list_time = 0.0
+_DISK_LIST_TTL = 60.0  # seconds
+
+_cached_chassis_model = None
+
+_lcd_renderer_active = False
 
 def is_in_time_window(start_str, end_str):
     try:
@@ -390,23 +400,34 @@ def read_fans():
 
 
 def detect_chassis_model():
+    global _cached_chassis_model
+    if _cached_chassis_model is not None:
+        return _cached_chassis_model
     dmi_path = os.path.join(HOST_SYS, "class/dmi/id/product_name")
     if os.path.exists(dmi_path):
         try:
             prod = open(dmi_path).read().strip().lower()
-            if "d8" in prod: return "d8u"
-            if "d6" in prod: return "d6u"
-            if "d4" in prod: return "d4"
+            if "d8" in prod:
+                _cached_chassis_model = "d8u"
+                return _cached_chassis_model
+            if "d6" in prod:
+                _cached_chassis_model = "d6u"
+                return _cached_chassis_model
+            if "d4" in prod:
+                _cached_chassis_model = "d4"
+                return _cached_chassis_model
         except Exception:
             pass
 
     disks = _discover_disks()
     count = len(disks)
     if count > 6:
-        return "d8u"
+        _cached_chassis_model = "d8u"
     elif count <= 4 and count > 0:
-        return "d4"
-    return "d6u"
+        _cached_chassis_model = "d4"
+    else:
+        _cached_chassis_model = "d6u"
+    return _cached_chassis_model
 
 
 def calc_curve_pwm(temp, min_pwm=58, max_pwm=183, temp_min=37, temp_max=50):
@@ -492,6 +513,11 @@ def set_fan_pwm(profile, manual_pct=60, custom_pwms=None, ctrl_cpu_fan=False):
 
 
 def _discover_disks():
+    global _cached_disk_list, _cached_disk_list_time
+    now = time.time()
+    if _cached_disk_list is not None and (now - _cached_disk_list_time) < _DISK_LIST_TTL:
+        return _cached_disk_list
+
     def rota(name):
         try:
             with open(os.path.join(HOST_SYS, "block", name, "queue/rotational")) as f:
@@ -506,7 +532,10 @@ def _discover_disks():
 
     override = DISKS.strip()
     if override:
-        return [{"dev": d, "role": classify(d)} for d in override.split(",")]
+        result = [{"dev": d, "role": classify(d)} for d in override.split(",")]
+        _cached_disk_list = result
+        _cached_disk_list_time = now
+        return result
     disks = []
     try:
         names = sorted(os.listdir(os.path.join(HOST_SYS, "block")))
@@ -518,6 +547,8 @@ def _discover_disks():
                 disks.append({"dev": name, "role": classify(name)})
     except Exception:
         pass
+    _cached_disk_list = disks
+    _cached_disk_list_time = now
     return disks
 
 
@@ -594,7 +625,7 @@ def _parse_smart(text, is_nvme):
 
 
 _cached_smart_data = {}
-_last_smart_scan = 0.0
+_last_smart_scan = {}  # {dev_name: float}
 
 def read_disk_temps_and_io():
     global _prev_disk_io, _cached_smart_data, _last_smart_scan
@@ -610,10 +641,6 @@ def read_disk_temps_and_io():
     except Exception:
         pass
 
-    should_poll_smart = (now - _last_smart_scan) >= SMART_POLL_INTERVAL
-    if should_poll_smart:
-        _last_smart_scan = now
-
     out = []
     show_os = os.environ.get("SHOW_OS_DISK", "1") == "1"
     for d in _discover_disks():
@@ -625,8 +652,13 @@ def read_disk_temps_and_io():
         is_nvme = dev_name.startswith("nvme")
         dtype = "nvme" if is_nvme else "sat"
 
+        poll_interval = SMART_POLL_INTERVAL_NVME if is_nvme else SMART_POLL_INTERVAL_HDD
+        last_scan = _last_smart_scan.get(dev_name, 0.0)
+        should_poll_smart = (now - last_scan) >= poll_interval
+
         is_standby = False
         if should_poll_smart or dev_name not in _cached_smart_data:
+            _last_smart_scan[dev_name] = now
             try:
                 cmd = ["smartctl"]
                 if not is_nvme:
@@ -1061,6 +1093,7 @@ def render_lcd_loop():
                 )
                 page = context.new_page()
                 page.goto(url, wait_until="domcontentloaded", timeout=15000)
+                _lcd_renderer_active = True
 
                 cdp = context.new_cdp_session(page)
                 shot_params = {
@@ -1109,8 +1142,36 @@ def render_lcd_loop():
                         time.sleep(sleep_time)
 
         except Exception as e:
+            _lcd_renderer_active = False
             print(f"[LCD] Active render loop error: {e}", flush=True)
             time.sleep(2)
+
+
+_static_cache = {}  # {filepath: (bytes, etag, gzip_bytes)}
+_static_cache_lock = threading.Lock()
+
+def _load_static_file(fp):
+    """Load a static file into cache with ETag and optional gzip."""
+    with _static_cache_lock:
+        if fp in _static_cache:
+            return _static_cache[fp]
+        try:
+            with open(fp, "rb") as f:
+                content = f.read()
+        except Exception:
+            return None
+        import hashlib
+        etag = '"' + hashlib.md5(content).hexdigest()[:16] + '"'
+        # Pre-compress if worth it (>1KB)
+        gz_content = None
+        if len(content) > 1024:
+            buf = io.BytesIO()
+            with gzip.GzipFile(fileobj=buf, mode='wb', compresslevel=6) as gz:
+                gz.write(content)
+            gz_content = buf.getvalue()
+        entry = (content, etag, gz_content)
+        _static_cache[fp] = entry
+        return entry
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -1142,6 +1203,37 @@ class Handler(BaseHTTPRequestHandler):
         parsed = urlparse(self.path)
         clean_path = parsed.path
         query = parsed.query
+
+        if clean_path == "/api/stats/stream":
+            self.send_response(200)
+            self.send_header("Content-Type", "text/event-stream")
+            self.send_header("Cache-Control", "no-cache")
+            self.send_header("Connection", "keep-alive")
+            self.send_header("X-Accel-Buffering", "no")
+            self.end_headers()
+            last_version = None
+            try:
+                while True:
+                    data = collect()
+                    ver = data.get("layout", {}).get("version", 0)
+                    payload = json.dumps(data)
+                    msg = f"data: {payload}\n\n"
+                    self.wfile.write(msg.encode())
+                    self.wfile.flush()
+                    time.sleep(2.0)
+            except Exception:
+                pass
+            return
+
+        if clean_path == "/api/lcd_status":
+            body = json.dumps({
+                "enabled": ENABLE_FB,
+                "fb_present": os.path.exists("/dev/fb0"),
+                "fps": LCD_FPS,
+                "active": _lcd_renderer_active
+            }).encode()
+            self._send(200, body, "application/json")
+            return
 
         if clean_path == "/api/stats":
             body = json.dumps(collect()).encode()
@@ -1223,16 +1315,54 @@ class Handler(BaseHTTPRequestHandler):
             else:
                 ctype = "application/octet-stream"
 
-            with open(fp, "rb") as f:
-                content = f.read()
+            entry = _load_static_file(fp)
+            if entry is None:
+                self._send(404, b"not found", "text/plain")
+                return
+            content, etag, gz_content = entry
 
             if fp.endswith("index.html"):
                 html_str = content.decode("utf-8")
                 if "mode=lcd" in query:
                     html_str = html_str.replace('<body class="studio-workbench">', '<body class="studio-workbench lcd-direct">')
                 content = html_str.encode("utf-8")
+                etag = None  # Don't cache dynamic HTML
+                gz_content = None
 
-            self._send(200, content, ctype)
+            # ETag check (skip for dynamic index.html)
+            if etag:
+                if_none_match = self.headers.get("If-None-Match", "")
+                if if_none_match == etag:
+                    self.send_response(304)
+                    self.send_header("ETag", etag)
+                    self.send_header("Cache-Control", "max-age=3600")
+                    self.end_headers()
+                    return
+
+            accept_enc = self.headers.get("Accept-Encoding", "")
+            if gz_content and "gzip" in accept_enc:
+                self.send_response(200)
+                self.send_header("Content-Type", ctype)
+                self.send_header("Content-Encoding", "gzip")
+                self.send_header("Content-Length", str(len(gz_content)))
+                if etag:
+                    self.send_header("ETag", etag)
+                    self.send_header("Cache-Control", "max-age=3600")
+                else:
+                    self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
+                self.end_headers()
+                self.wfile.write(gz_content)
+            else:
+                if etag:
+                    self.send_response(200)
+                    self.send_header("Content-Type", ctype)
+                    self.send_header("Content-Length", str(len(content)))
+                    self.send_header("ETag", etag)
+                    self.send_header("Cache-Control", "max-age=3600")
+                    self.end_headers()
+                    self.wfile.write(content)
+                else:
+                    self._send(200, content, ctype)
         else:
             self._send(404, b"not found", "text/plain")
 
@@ -1347,8 +1477,13 @@ class Handler(BaseHTTPRequestHandler):
 
 if __name__ == "__main__":
     read_cpu_util()
+    _layout_dir = os.path.dirname(DASH_LAYOUT_FILE)
+    if _layout_dir:
+        os.makedirs(_layout_dir, exist_ok=True)
     port = int(os.environ.get("PORT", "8082"))
     print(f"ZettNAS LCD dashboard on :{port}", flush=True)
+    read_ip()  # Pre-populate IP cache at startup
+    detect_chassis_model()  # Pre-populate chassis model cache
 
     if os.path.exists(LED_STATE_FILE):
         try:

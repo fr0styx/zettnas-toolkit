@@ -1614,3 +1614,39 @@ body.lcd-direct #screen.hardware-screen-canvas {
   transform-origin: 0 0 !important;
   transform: rotate(90deg) translate(0, -172px) !important;
 }
+
+/* =========================================================================
+   LCD RENDERER STATUS BADGE
+   ========================================================================= */
+.lcd-status-badge {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  padding: 2px 7px;
+  border-radius: 20px;
+  border: 1px solid transparent;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.3s, color 0.3s, border-color 0.3s;
+}
+.lcd-status-checking {
+  background: rgba(120,131,143,0.12);
+  color: var(--muted);
+  border-color: rgba(120,131,143,0.25);
+}
+.lcd-status-active {
+  background: rgba(51,209,122,0.12);
+  color: var(--ok);
+  border-color: rgba(51,209,122,0.3);
+}
+.lcd-status-offline {
+  background: rgba(240,85,59,0.12);
+  color: var(--crit);
+  border-color: rgba(240,85,59,0.3);
+}
+.lcd-status-disabled {
+  background: rgba(120,131,143,0.08);
+  color: var(--muted);
+  border-color: rgba(120,131,143,0.15);
+}
+

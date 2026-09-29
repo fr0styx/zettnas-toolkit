@@ -20,6 +20,7 @@ services:
       - /dev/fb0:/dev/fb0
       - /dev/dri:/dev/dri
       - ${STORAGE_POOL_PATH:-/mnt/user}:/mnt/user:ro
+      - ./data:/app/data
     environment:
       - LCD_FPS=${LCD_FPS:-10}
       - PORT=8082
