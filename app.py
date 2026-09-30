@@ -1020,6 +1020,7 @@ def collect():
 
 
 def render_lcd_loop():
+    global _lcd_renderer_active
     """
     Active Framebuffer Streamer to /dev/fb0:
     - Viewport oriented 172x640 via CSS 90deg rotation (No CPU matrix rotate overhead).
