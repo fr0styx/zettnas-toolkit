@@ -19,6 +19,7 @@ services:
       - /dev:/host/dev:rw
       - /dev/fb0:/dev/fb0
       - /dev/dri:/dev/dri
+      - /etc/localtime:/etc/localtime:ro
       - ${STORAGE_POOL_PATH:-/mnt/user}:/mnt/user:ro
       - ./data:/app/data
     environment:
