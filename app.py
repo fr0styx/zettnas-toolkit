@@ -70,10 +70,11 @@ _prev_disk_io = {}
 
 # ---- Hardware Drivers & State Files ----
 LED_PORT = os.environ.get("LED_PORT", "/dev/ttyACM0" if os.path.exists("/dev/ttyACM0") else "/host/dev/ttyACM0")
-LED_STATE_FILE = "/tmp/led_state.json"
-DASH_LAYOUT_FILE = os.environ.get("LAYOUT_PATH", "/app/data/dash_layout.json")
-FAN_STATE_FILE = "/tmp/fan_state.json"
-SCREEN_STATE_FILE = "/tmp/screen_state.json"
+DATA_DIR = os.environ.get("DATA_DIR", "/app/data")
+LED_STATE_FILE = os.path.join(DATA_DIR, "led_state.json")
+DASH_LAYOUT_FILE = os.environ.get("LAYOUT_PATH", os.path.join(DATA_DIR, "dash_layout.json"))
+FAN_STATE_FILE = os.path.join(DATA_DIR, "fan_state.json")
+SCREEN_STATE_FILE = os.path.join(DATA_DIR, "screen_state.json")
 
 _cached_hwmon = None
 _cached_cpu_temp_path = None
