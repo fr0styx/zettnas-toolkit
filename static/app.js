@@ -827,6 +827,10 @@ function syncMiniPreviewStructure() {
 }
 
 function fitMiniPreviewScale() {
+  if (window.innerWidth <= 720) {
+    if (screenContainer) screenContainer.style.transform = "";
+    return;
+  }
   const canvas = $("mini-lcd-canvas");
   const inner = $("mini-preview-inner");
   if (!canvas || !inner) return;

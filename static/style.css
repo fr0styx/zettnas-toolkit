@@ -1650,3 +1650,42 @@ body.lcd-direct #screen.hardware-screen-canvas {
   border-color: rgba(120,131,143,0.15);
 }
 
+
+/* =========================================================================
+   MOBILE RESPONSIVE VIEW (STUDIO ONLY)
+   ========================================================================= */
+@media (max-width: 720px) {
+  body.studio-workbench #screen-container {
+    transform: none !important;
+    width: 100% !important;
+    padding: 15px !important;
+  }
+  body.studio-workbench #screen {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 172px;
+    gap: 12px;
+    padding: 12px !important;
+    border-radius: 12px;
+  }
+  body.studio-workbench .cards {
+    flex-wrap: wrap;
+    height: auto;
+    gap: 10px;
+  }
+  body.studio-workbench .card {
+    flex: 1 1 140px;
+    height: 75px;
+  }
+  body.studio-workbench .disks {
+    flex-wrap: wrap;
+    height: auto;
+    gap: 10px;
+  }
+  body.studio-workbench .disk-group {
+    flex: 1 1 100%;
+  }
+  body.studio-workbench .group-tiles {
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  }
+}

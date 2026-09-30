@@ -935,12 +935,18 @@ def stats_collector_daemon():
                 is_crit = has_crit or (cpu_temp >= 85) or is_failing_fan
                 is_warn = (len(bad) > 0) or (cpu_temp >= 70)
 
+                is_disk_active = any(d.get("active", False) for d in disks)
+                
                 if is_crit:
                     _alert_active = True
                     send_led_packet(5, 255, 0, 0, 0, 0, 0, speed=10)
                 elif is_warn:
                     _alert_active = True
                     send_led_packet(1, 255, 120, 0, 0, 0, 0, speed=18)
+                elif is_disk_active and not in_led_night:
+                    _alert_active = True
+                    # Cylon / Scanning effect for active disk IO (Cyan/Blue flow)
+                    send_led_packet(2, 0, 200, 255, 0, 0, 0, speed=40)
                 elif in_led_night:
                     _alert_active = False
                     send_led_packet(0, 0, 0, 0, 0, 0, 0, 0)
