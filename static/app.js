@@ -2307,9 +2307,9 @@ fetchDashboardLayout().then(() => {
 })();
 
 
+  
   // Interactive Fan Curve Logic
   let curvePoints = [[30, 32], [37, 32], [50, 100], [60, 100]];
-  setTimeout(renderCurveLines, 500);
   let isDraggingCurve = false;
   let dragIndex = -1;
 
@@ -2319,72 +2319,85 @@ fetchDashboardLayout().then(() => {
   function yToPct(y) { return Math.round(100 - ((y - 20) / (100 - 20)) * 100); }
 
   function renderCurveLines() {
-    const curveArea = $("curve-area-path");
-    const curveLine = $("curve-svg-path");
-    if (!curveArea || !curveLine) return;
+    try {
+      const curveArea = document.getElementById("curve-area-path");
+      const curveLine = document.getElementById("curve-svg-path");
+      if (!curveArea || !curveLine) return;
 
-    let pts = curvePoints.slice().sort((a,b)=>a[0]-b[0]);
-    let d = `M 38 100 L 38 ${pctToY(pts[0][1])}`;
-    for (let p of pts) {
-      d += ` L ${tempToX(p[0]).toFixed(1)} ${pctToY(p[1]).toFixed(1)}`;
-    }
-    d += ` L 285 ${pctToY(pts[pts.length-1][1]).toFixed(1)}`;
-
-    if (curveLine) curveLine.setAttribute("d", d);
-    if (curveArea) curveArea.setAttribute("d", d + " L 285 100 Z");
-
-    for (let i=0; i<4; i++) {
-      let h = $("ch-"+i);
-      if (h && pts[i]) {
-        h.setAttribute("cx", tempToX(pts[i][0]));
-        h.setAttribute("cy", pctToY(pts[i][1]));
+      let pts = curvePoints.slice().sort((a,b)=>a[0]-b[0]);
+      let d = `M 38 100 L 38 ${pctToY(pts[0][1]).toFixed(1)}`;
+      for (let p of pts) {
+        d += ` L ${tempToX(p[0]).toFixed(1)} ${pctToY(p[1]).toFixed(1)}`;
       }
+      d += ` L 285 ${pctToY(pts[pts.length-1][1]).toFixed(1)}`;
+
+      curveLine.setAttribute("d", d);
+      curveArea.setAttribute("d", d + " L 285 100 Z");
+
+      for (let i=0; i<4; i++) {
+        let h = document.getElementById("ch-"+i);
+        if (h) {
+          h.setAttribute("cx", tempToX(pts[i][0]).toString());
+          h.setAttribute("cy", pctToY(pts[i][1]).toString());
+        }
+      }
+    } catch(e) {
+      console.error("Curve render error: ", e);
     }
   }
 
   const svgElem = document.querySelector(".fan-curve-svg");
   if (svgElem) {
-    svgElem.addEventListener("mousedown", (e) => {
-      if (e.target.classList.contains("curve-handle")) {
+    function startDrag(e) {
+      let target = e.target;
+      if (target.classList.contains("curve-handle")) {
         isDraggingCurve = true;
-        dragIndex = parseInt(e.target.id.replace("ch-", ""), 10);
-        // Disable regular polling while dragging
+        dragIndex = parseInt(target.id.replace("ch-", ""), 10);
       }
-    });
-
-    window.addEventListener("mousemove", (e) => {
+    }
+    
+    function moveDrag(e) {
       if (!isDraggingCurve || dragIndex < 0) return;
+      e.preventDefault(); // prevent scrolling while dragging
+      let clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      let clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      
       let rect = svgElem.getBoundingClientRect();
-      // Calculate normalized x,y in SVG viewBox (300x140)
-      // Wait, screen might be scaled. Use simple bounding box mapping.
       let scaleX = 300 / rect.width;
       let scaleY = 140 / rect.height;
-      let svgX = (e.clientX - rect.left) * scaleX;
-      let svgY = (e.clientY - rect.top) * scaleY;
+      let svgX = (clientX - rect.left) * scaleX;
+      let svgY = (clientY - rect.top) * scaleY;
       
       let t = xToTemp(svgX);
       let p = yToPct(svgY);
       
-      // Constrain point
       t = Math.max(30, Math.min(60, t));
       p = Math.max(0, Math.min(100, p));
       
-      // Prevent crossing neighbors
       if (dragIndex > 0) t = Math.max(t, curvePoints[dragIndex-1][0] + 1);
       if (dragIndex < curvePoints.length - 1) t = Math.min(t, curvePoints[dragIndex+1][0] - 1);
       
       curvePoints[dragIndex] = [t, p];
       renderCurveLines();
-    });
-
-    window.addEventListener("mouseup", () => {
+    }
+    
+    function stopDrag() {
       if (isDraggingCurve) {
         isDraggingCurve = false;
         dragIndex = -1;
-        // Save curve to backend
-        postFanPwm(currentFanProfile, null, undefined, undefined, undefined, curvePoints);
+        if (typeof postFanPwm === 'function') {
+           postFanPwm(currentFanProfile, null, undefined, undefined, undefined, curvePoints);
+        }
       }
-    });
+    }
+
+    svgElem.addEventListener("mousedown", startDrag);
+    svgElem.addEventListener("touchstart", startDrag, {passive: false});
+    window.addEventListener("mousemove", moveDrag);
+    window.addEventListener("touchmove", moveDrag, {passive: false});
+    window.addEventListener("mouseup", stopDrag);
+    window.addEventListener("touchend", stopDrag);
   }
 
-  // Inject logic into postFanPwm
+  // Force an initial render slightly after load
+  setTimeout(renderCurveLines, 600);
