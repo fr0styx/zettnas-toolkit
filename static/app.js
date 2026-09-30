@@ -419,8 +419,14 @@ function updateFanCurveWorkstation(s) {
   const graphMaxT = 60;
   const tSpan = 30;
 
-  if (fc.curve_points && !isDraggingCurve) {
-    curvePoints = fc.curve_points;
+  if (!isDraggingCurve) {
+    if (fc.curve_points && fc.curve_points.length > 0) {
+      curvePoints = fc.curve_points;
+    } else {
+      let tMin = fc.temp_min || 37;
+      let tMax = fc.temp_max || 50;
+      curvePoints = [[30, 32], [tMin, 32], [tMax, 100], [60, 100]];
+    }
     renderCurveLines();
   }
 
@@ -2302,7 +2308,8 @@ fetchDashboardLayout().then(() => {
 
 
   // Interactive Fan Curve Logic
-  let curvePoints = [[30, 20], [35, 30], [40, 50], [50, 100]]; // default
+  let curvePoints = [[30, 32], [37, 32], [50, 100], [60, 100]];
+  setTimeout(renderCurveLines, 500);
   let isDraggingCurve = false;
   let dragIndex = -1;
 
