@@ -11,7 +11,7 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 
-body, body.studio-workbench {
+body, body.studio-workbench:not(.lcd-direct) {
   font-family:-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
   color:var(--fg);
   background:radial-gradient(circle at 50% 20%, #151d29 0%, #080c10 70%);
@@ -1655,12 +1655,12 @@ body.lcd-direct #screen.hardware-screen-canvas {
    MOBILE RESPONSIVE VIEW (STUDIO ONLY)
    ========================================================================= */
 @media (max-width: 720px) {
-  body.studio-workbench #screen-container {
+  body.studio-workbench:not(.lcd-direct) #screen-container {
     transform: none !important;
     width: 100% !important;
     padding: 15px !important;
   }
-  body.studio-workbench #screen {
+  body.studio-workbench:not(.lcd-direct) #screen {
     width: 100% !important;
     height: auto !important;
     min-height: 172px;
@@ -1668,24 +1668,24 @@ body.lcd-direct #screen.hardware-screen-canvas {
     padding: 12px !important;
     border-radius: 12px;
   }
-  body.studio-workbench .cards {
+  body.studio-workbench:not(.lcd-direct) .cards {
     flex-wrap: wrap;
     height: auto;
     gap: 10px;
   }
-  body.studio-workbench .card {
+  body.studio-workbench:not(.lcd-direct) .card {
     flex: 1 1 140px;
     height: 75px;
   }
-  body.studio-workbench .disks {
+  body.studio-workbench:not(.lcd-direct) .disks {
     flex-wrap: wrap;
     height: auto;
     gap: 10px;
   }
-  body.studio-workbench .disk-group {
+  body.studio-workbench:not(.lcd-direct) .disk-group {
     flex: 1 1 100%;
   }
-  body.studio-workbench .group-tiles {
+  body.studio-workbench:not(.lcd-direct) .group-tiles {
     grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
   }
 }
