@@ -43,6 +43,14 @@ It delivers **zero-overhead, direct-to-framebuffer rendering** for the 640×172 
 * **Real-Time SSE Engine**: Fast Server-Sent Events (`/api/stats/stream`) push architecture delivers ultra-low latency telemetry updates to the browser.
 * **LCD Health & FPS Badge**: Live studio badge tracking the headless Chromium renderer's health, actual rendering FPS, and `/dev/fb0` framebuffer status.
 
+
+### 💾 Hardware Media Ingestion Engine
+* **Physical Front-Panel "Copy" Binding**: Mount and ingest contents from inserted SD or TF cards directly to your array at the push of a button.
+* **Zero-Latency Telemetry**: Instant 0ms UI reactions to physical button presses, completely eliminating polling delays via Server-Sent Events.
+* **File Collision Intelligence**: Pre-scans for duplicates before transferring, invoking an inline WebUI dialog to Skip, Overwrite, or safely Cancel the ingest.
+* **Kernel-Level I/O Tuning**: Unlocks maximum USB 4.0 read bandwidth (~1000+ MB/s routing throughput) by actively dropping `noatime,nodiratime` kernel flags on media mounts.
+* **Secure Abort Protocol**: Instantly kill active ingestion threads from the web dashboard while automatically purging partially-written media to prevent corruption.
+
 ### ❄️ Intelligent Thermal Fan Automation
 * **Dual-Zone Drive Cooling**: Automatic SATA backplane fan regulation mapped directly to drive temperatures.
 * **Interactive SVG Fan Curve Workstation**: Complete visual thermal curve editor with 4 draggable inflection points for precise, multi-stage PWM ramp-up tuning.
@@ -58,22 +66,6 @@ It delivers **zero-overhead, direct-to-framebuffer rendering** for the 640×172 
 
 ---
 
-
-## Recent Changes (Changelog)
-
-**Hardware Copy Ingestion System**
-- **Physical "Copy" Button Integration**: The front panel "Copy" button can now be configured to instantly mount, read, and ingest contents from an inserted SD or TF card directly to your array.
-- **Interactive Copy Progress UI**: Real-time copy progress is seamlessly streamed to a centered, blurred-backdrop Toast UI on the web dashboard.
-- **File Collision Handling**: The ingestion engine now detects pre-existing files and gracefully prompts the user in the UI to "Skip Existing", "Overwrite All", or "Cancel".
-- **Secure Abort Mechanism**: Added a "Cancel Transfer" UI drawer (Red `×`) to safely kill the ingestion thread and purge partially written files to prevent corruption.
-- **Dynamic Slot Capacity Detection**: The copy configuration menu now actively queries Linux `sysfs` to report the live capacity of inserted SD/TF media cards.
-- **Zero-Latency Telemetry**: Upgraded the backend from standard polling to `threading.Event()` waking, giving the front panel Copy button 0ms latency when physically pressed.
-- **Kernel I/O Optimization**: Ingestion mounts now leverage `-o noatime,nodiratime` kernel flags, maximizing USB 4.0 read bandwidth (capable of 1000+ MB/s internal throughput).
-
-**Core System Enhancements**
-- **SSE Engine & Caching**: Upgraded backend from manual polling to Server-Sent Events (`/api/stats/stream`) and added aggressive memory caching with `gzip` & `ETag` generation.
-- **I2C Tachometer Filtering**: Patched a hardware bug causing spurious 8000+ RPM spikes from the `hwmon` sensor by hard-clamping out-of-range tachometer bounds.
-- **Scope Integrity Fix**: Hardened the Python daemon's thread-safety and scoped global variables to prevent syntax crashes across asynchronous endpoints.
 
 ## Hardware Compatibility
 
