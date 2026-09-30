@@ -20,7 +20,7 @@ services:
       - /dev/fb0:/dev/fb0
       - /dev/dri:/dev/dri
       - /etc/localtime:/etc/localtime:ro
-      - ${STORAGE_POOL_PATH:-/mnt/user}:/mnt/user:ro
+      - ${STORAGE_POOL_PATH:-/mnt/user}:/mnt/user:rw
       - ./data:/app/data
     environment:
       - LCD_FPS=${LCD_FPS:-10}

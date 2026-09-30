@@ -12,6 +12,8 @@ import re
 import time
 import glob
 import json
+import struct
+import mmap
 import mmap
 import base64
 import shutil
@@ -20,6 +22,7 @@ import colorsys
 import subprocess
 import gzip
 import threading
+_ui_wake = threading.Event()
 from urllib.parse import urlparse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from PIL import Image
@@ -394,6 +397,11 @@ def read_fans():
                         fans.append(rpm)
                 except Exception:
                     pass
+    # Sanitize fan readings (e.g. spurious 8000 RPM or 65535 spikes from I2C bugs)
+    for i in range(len(fans)):
+        if fans[i] >= 6000:
+            fans[i] = 0
+            
     for idx, rpm in enumerate(fans):
         if rpm > 300:
             _known_active_fans.add(idx)
@@ -853,8 +861,230 @@ def read_ip():
     return "?"
 
 
+
+_copy_active = False
+_copy_status = "idle"
+_copy_confirm_event = threading.Event()
+_copy_abort_flag = False
+_copy_overwrite_choice = 'skip'
+_copy_progress = {"total": 0, "copied": 0, "start": 0, "file": ""}
+BUTTON_CFG_FILE = os.path.join(DATA_DIR, "button_state.json")
+
+def button_listener_daemon():
+    global _copy_active, _copy_status
+    MMIO_BASE = 0xE0D20000
+    COPY_OFFSET = 0x6C0
+
+    try:
+        fd = os.open("/dev/mem", os.O_RDWR | os.O_SYNC)
+        mem = mmap.mmap(fd, 4096, offset=MMIO_BASE)
+    except Exception as e:
+        print(f"[ZettNAS] Hardware button mapping failed: {e}")
+        return
+
+    last_state = 1
+    while True:
+        try:
+            copy_val = struct.unpack("<I", mem[COPY_OFFSET:COPY_OFFSET+4])[0]
+            current_state = (copy_val & 2) >> 1
+            
+            if current_state == 0 and last_state == 1:
+                cfg = {"enabled": False, "source": "/mnt/disks/", "dest": "/mnt/user/Media/"}
+                if os.path.exists(BUTTON_CFG_FILE):
+                    try:
+                        with open(BUTTON_CFG_FILE, "r") as f:
+                            cfg.update(json.load(f))
+                    except: pass
+                
+                if cfg.get("enabled") and not _copy_active:
+                    _copy_active = True
+                    _copy_status = "copying"
+                    _ui_wake.set()
+                    threading.Thread(target=_do_copy, args=(cfg,), daemon=True).start()
+            
+            last_state = current_state
+        except Exception:
+            pass
+        time.sleep(0.1)
+
+def _do_copy(cfg):
+    global _copy_active, _copy_status, _copy_progress, _copy_confirm_event, _copy_overwrite_choice
+    src_mode = cfg.get("source", "sd").strip()
+    dst = cfg.get("dest", "/mnt/user/").strip()
+    
+    _copy_progress = {"total": 0, "copied": 0, "start": time.time(), "file": "Initializing...", "files_total": 0, "files_done": 0}
+    tmp_mount = False
+    mounted_path = None
+    try:
+        target_lun = "1" if src_mode == "sd" else "0"
+        found_dev = None
+        import glob
+        for p in glob.glob(os.path.join(HOST_SYS, "block/sd*")):
+            try:
+                target = os.readlink(p)
+                if "usb" in target:
+                    if target.split("/")[-3].endswith(f":{target_lun}"):
+                        dev = os.path.basename(p)
+                        size = int(open(os.path.join(HOST_SYS, f"block/{dev}/size")).read().strip())
+                        if size > 0:
+                            found_dev = dev
+                            break
+            except: pass
+            
+        if not found_dev:
+            raise Exception(f"No media detected in {src_mode.upper()} slot.")
+            
+        part_dev = f"{found_dev}1"
+        if not os.path.exists(os.path.join(HOST_DEV, part_dev)):
+            part_dev = found_dev
+            
+        try:
+            with open(os.path.join(HOST_PROC, "mounts")) as f:
+                for line in f:
+                    if f"/{part_dev}" in line or f"/{found_dev}" in line:
+                        mounted_path = line.split()[1]
+                        break
+        except: pass
+        
+        if not mounted_path:
+            mounted_path = "/tmp/sd_copy_mount"
+            os.makedirs(mounted_path, exist_ok=True)
+            cmd = ["mount", "-r", "-o", "noatime,nodiratime", os.path.join(HOST_DEV, part_dev), mounted_path]
+            r = subprocess.run(cmd, capture_output=True)
+            if r.returncode != 0:
+                raise Exception(f"Failed to mount {part_dev}")
+            tmp_mount = True
+
+        src_path = mounted_path.rstrip("/") + "/"
+        dst_path = dst.rstrip("/") + "/"
+        
+        if not os.path.exists(dst_path):
+            os.makedirs(dst_path, exist_ok=True)
+
+        _copy_progress["file"] = "Scanning for collisions..."
+        _ui_wake.set()
+        
+        collisions = []
+        for dirpath, _, filenames in os.walk(src_path):
+            for f in filenames:
+                src_file = os.path.join(dirpath, f)
+                rel_path = os.path.relpath(src_file, src_path)
+                dst_file = os.path.join(dst_path, rel_path)
+                if os.path.exists(dst_file):
+                    collisions.append(rel_path)
+
+        if collisions:
+            _copy_status = "awaiting_confirmation"
+            _copy_progress["file"] = f"{len(collisions)} files already exist in destination."
+            _ui_wake.set()
+            
+            _copy_confirm_event.clear()
+            _copy_confirm_event.wait(timeout=300.0)
+            
+            if not _copy_confirm_event.is_set():
+                raise Exception("Aborted: Timed out waiting for overwrite confirmation.")
+            
+            if _copy_overwrite_choice == "cancel":
+                raise Exception("Aborted by user.")
+
+        _copy_progress["file"] = "Calculating total size..."
+        _ui_wake.set()
+        total_size = 0
+        files_to_copy = []
+        
+        for dirpath, _, filenames in os.walk(src_path):
+            for f in filenames:
+                src_file = os.path.join(dirpath, f)
+                rel_path = os.path.relpath(src_file, src_path)
+                dst_file = os.path.join(dst_path, rel_path)
+                
+                if os.path.exists(dst_file) and collisions:
+                    if _copy_overwrite_choice == "skip":
+                        continue
+                        
+                if not os.path.islink(src_file):
+                    total_size += os.path.getsize(src_file)
+                    files_to_copy.append((src_file, dst_file))
+
+        _copy_progress["total"] = total_size
+        _copy_progress["files_total"] = len(files_to_copy)
+        _copy_progress["files_done"] = 0
+        global _copy_abort_flag
+        _copy_abort_flag = False
+        _copy_progress["start"] = time.time()
+        _copy_status = "copying"
+        _ui_wake.set()
+        
+        for src_f, dst_f in files_to_copy:
+            if _copy_abort_flag:
+                break
+            os.makedirs(os.path.dirname(dst_f), exist_ok=True)
+            _copy_progress["file"] = os.path.basename(src_f)
+            length = 1024 * 1024 * 4
+            try:
+                with open(src_f, 'rb') as fsrc, open(dst_f, 'wb') as fdst:
+                    while True:
+                        if _copy_abort_flag: break
+                        buf = fsrc.read(length)
+                        if not buf:
+                            break
+                        fdst.write(buf)
+                        _copy_progress["copied"] += len(buf)
+                if _copy_abort_flag: os.remove(dst_f); break
+                import shutil
+                shutil.copystat(src_f, dst_f)
+                _copy_progress['files_done'] += 1
+            except Exception as e:
+                print(f"[ZettNAS] Error copying {src_f}: {e}")
+
+        if _copy_abort_flag: _copy_status = "aborted"; _copy_progress["file"] = "Aborted."; raise Exception("Aborted by user.")
+        else: _copy_status = "success"
+        _copy_progress["file"] = "Finished successfully."
+        
+    except Exception as e:
+        print(f"[ZettNAS] Copy failed: {e}")
+        _copy_status = "error"
+        _copy_progress["file"] = f"Error: {e}"
+    finally:
+        if tmp_mount and mounted_path:
+            subprocess.run(["umount", mounted_path])
+        _copy_active = False
+        _ui_wake.set()
+        time.sleep(4)
+        _copy_status = "idle"
+        _ui_wake.set()
+
+
+
 _cached_stats = None
+
 _cached_stats_lock = threading.Lock()
+
+
+def read_media_slots():
+    slots = {"sd": {"size": 0, "dev": None}, "tf": {"size": 0, "dev": None}}
+    try:
+        import glob
+        for p in glob.glob(os.path.join(HOST_SYS, "block/sd*")):
+            try:
+                target = os.readlink(p)
+                if "usb" in target:
+                    lun_str = target.split("/")[-3]
+                    if lun_str.endswith(":1"):
+                        dev = os.path.basename(p)
+                        size = int(open(os.path.join(p, "size")).read().strip()) * 512
+                        slots["sd"]["size"] = size
+                        slots["sd"]["dev"] = dev
+                    elif lun_str.endswith(":0"):
+                        dev = os.path.basename(p)
+                        size = int(open(os.path.join(p, "size")).read().strip()) * 512
+                        slots["tf"]["size"] = size
+                        slots["tf"]["dev"] = dev
+            except Exception:
+                pass
+    except Exception:
+        pass
+    return slots
 
 def stats_collector_daemon():
     global _cached_stats, _alert_active
@@ -957,10 +1187,17 @@ def stats_collector_daemon():
                 is_warn = (len(bad) > 0) or (cpu_temp >= 70)
 
                 is_disk_active = any(d.get("active", False) for d in disks)
-                
                 if is_crit:
                     _alert_active = True
                     send_led_packet(5, 255, 0, 0, 0, 0, 0, speed=10)
+                elif _copy_active:
+                    _alert_active = True
+                    if _copy_status == "copying":
+                        send_led_packet(2, 0, 100, 255, 0, 0, 0, speed=20)
+                    elif _copy_status == "success":
+                        send_led_packet(1, 0, 255, 0, 0, 0, 0, speed=10)
+                    elif _copy_status == "error":
+                        send_led_packet(5, 255, 0, 0, 0, 0, 0, speed=10)
                 elif is_warn:
                     _alert_active = True
                     send_led_packet(1, 255, 120, 0, 0, 0, 0, speed=18)
@@ -988,7 +1225,9 @@ def stats_collector_daemon():
                 "cpu": {"temp": cpu_temp, "util": read_cpu_util()},
                 "mem": read_mem(),
                 "fans": fans,
-                "fan_control": {
+                "copy_state": {"active": _copy_active, "status": _copy_status, "progress": _copy_progress},
+                "media_slots": read_media_slots(),
+        "fan_control": {
                     "zone1_temp": t_zone1,
                     "zone1_pwm": active_pwm1,
                     "zone2_temp": t_zone2,
@@ -1007,13 +1246,16 @@ def stats_collector_daemon():
                 "uptime": read_uptime(),
                 "disks": disks,
                 "chassis": detect_chassis_model(),
-                "layout": get_current_layout()
+                "layout": get_current_layout(), "copy_status": _copy_status
             }
             with _cached_stats_lock:
                 _cached_stats = data
-        except Exception:
-            pass
-        time.sleep(2.0)
+        except Exception as e:
+            import traceback
+            print('CRASH:', e)
+            traceback.print_exc()
+        if _ui_wake.wait(2.0):
+                        _ui_wake.clear()
 
 
 def collect():
@@ -1028,6 +1270,8 @@ def collect():
         "cpu": {"temp": 0, "util": 0},
         "mem": {"used_gb": 0, "total_gb": 0, "pct": 0},
         "fans": [],
+        "media_slots": {"sd": {"size": 0, "dev": None}, "tf": {"size": 0, "dev": None}},
+        "copy_state": {"active": _copy_active, "status": _copy_status, "progress": _copy_progress},
         "fan_control": {
             "zone1_temp": 35,
             "zone1_pwm": 67,
@@ -1044,7 +1288,7 @@ def collect():
         "uptime": "--",
         "disks": [],
         "chassis": "d6u",
-        "layout": get_current_layout()
+        "layout": get_current_layout(), "copy_status": _copy_status
     }
 
 
@@ -1221,6 +1465,7 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self):
+        global _copy_abort_flag, _copy_confirm_event, _copy_overwrite_choice
         global _discovered_host_ip
 
         host_header = self.headers.get("Host", "")
@@ -1250,7 +1495,8 @@ class Handler(BaseHTTPRequestHandler):
                     msg = f"data: {payload}\n\n"
                     self.wfile.write(msg.encode())
                     self.wfile.flush()
-                    time.sleep(2.0)
+                    if _ui_wake.wait(2.0):
+                        _ui_wake.clear()
             except Exception:
                 pass
             return
@@ -1283,6 +1529,83 @@ class Handler(BaseHTTPRequestHandler):
 
         if clean_path == "/api/screen":
             self._send(200, json.dumps(get_screen_state()).encode(), "application/json")
+            return
+
+
+        if clean_path.startswith("/api/browse"):
+            from urllib.parse import parse_qs
+            qs = parse_qs(parsed.query)
+            target = qs.get("path", ["/mnt/user/"])[0]
+            # Ensure it resolves and restricts to /mnt/ for basic safety
+            abs_target = os.path.abspath(target)
+            if not abs_target.startswith("/mnt/"):
+                abs_target = "/mnt/"
+            
+            if not abs_target.endswith("/"):
+                abs_target += "/"
+                
+            dirs = []
+            try:
+                if abs_target != "/mnt/":
+                    dirs.append({"name": "..", "path": os.path.abspath(os.path.join(abs_target, "..")) + "/"})
+                for entry in os.scandir(abs_target):
+                    if entry.is_dir():
+                        dirs.append({"name": entry.name, "path": os.path.join(abs_target, entry.name) + "/"})
+            except Exception:
+                pass
+                
+            dirs = sorted(dirs, key=lambda d: (d["name"] != "..", d["name"].lower()))
+            
+            self._send(200, json.dumps({"current": abs_target, "dirs": dirs}).encode(), "application/json")
+            return
+
+
+        if clean_path.startswith("/api/mkdir"):
+            from urllib.parse import parse_qs
+            qs = parse_qs(parsed.query)
+            target = qs.get("path", [""])[0]
+            if target:
+                abs_target = os.path.abspath(target)
+                if abs_target.startswith("/mnt/"):
+                    try:
+                        os.makedirs(abs_target, exist_ok=True)
+                        self._send(200, b'{"status": "ok"}', "application/json")
+                        return
+                    except Exception as e:
+                        self._send(400, b'{"error": "creation failed"}', "application/json")
+                        return
+            self._send(400, b'{"error": "invalid path"}', "application/json")
+            return
+
+
+        if clean_path == "/api/copy/cancel":
+            _copy_abort_flag = True
+            _copy_confirm_event.set() # Release the lock if it's waiting for overwrite confirmation
+            self._send(200, b'{"status":"ok"}', "application/json")
+            return
+
+        if clean_path == "/api/copy/confirm":
+            length = int(self.headers.get("Content-Length", 0))
+            raw = self.rfile.read(length)
+            try:
+                data = json.loads(raw)
+                _copy_overwrite_choice = data.get("action", "skip")
+                _copy_confirm_event.set()
+                self._send(200, b'{"status":"ok"}', "application/json")
+            except Exception:
+                self._send(400, b'{"error":"invalid"}', "application/json")
+            return
+
+        if clean_path == "/api/buttons":
+
+
+            state = {"enabled": False, "source": "/mnt/disks/", "dest": "/mnt/user/Media/"}
+            if os.path.exists(BUTTON_CFG_FILE):
+                try:
+                    with open(BUTTON_CFG_FILE, "r") as f:
+                        state.update(json.load(f))
+                except Exception: pass
+            self._send(200, json.dumps(state).encode(), "application/json")
             return
 
         if clean_path == "/api/fans":
@@ -1397,6 +1720,7 @@ class Handler(BaseHTTPRequestHandler):
             self._send(404, b"not found", "text/plain")
 
     def do_POST(self):
+        global _copy_abort_flag, _copy_confirm_event, _copy_overwrite_choice
         parsed = urlparse(self.path)
         clean_path = parsed.path
 
@@ -1425,6 +1749,96 @@ class Handler(BaseHTTPRequestHandler):
                 set_screen_brightness(target_bl)
 
                 self._send(200, json.dumps({"status": "ok", **cur}).encode(), "application/json")
+            except Exception as e:
+                self._send(400, json.dumps({"error": str(e)}).encode(), "application/json")
+            return
+
+
+        if clean_path.startswith("/api/browse"):
+            from urllib.parse import parse_qs
+            qs = parse_qs(parsed.query)
+            target = qs.get("path", ["/mnt/user/"])[0]
+            # Ensure it resolves and restricts to /mnt/ for basic safety
+            abs_target = os.path.abspath(target)
+            if not abs_target.startswith("/mnt/"):
+                abs_target = "/mnt/"
+            
+            if not abs_target.endswith("/"):
+                abs_target += "/"
+                
+            dirs = []
+            try:
+                if abs_target != "/mnt/":
+                    dirs.append({"name": "..", "path": os.path.abspath(os.path.join(abs_target, "..")) + "/"})
+                for entry in os.scandir(abs_target):
+                    if entry.is_dir():
+                        dirs.append({"name": entry.name, "path": os.path.join(abs_target, entry.name) + "/"})
+            except Exception:
+                pass
+                
+            dirs = sorted(dirs, key=lambda d: (d["name"] != "..", d["name"].lower()))
+            
+            self._send(200, json.dumps({"current": abs_target, "dirs": dirs}).encode(), "application/json")
+            return
+
+
+        if clean_path.startswith("/api/mkdir"):
+            from urllib.parse import parse_qs
+            qs = parse_qs(parsed.query)
+            target = qs.get("path", [""])[0]
+            if target:
+                abs_target = os.path.abspath(target)
+                if abs_target.startswith("/mnt/"):
+                    try:
+                        os.makedirs(abs_target, exist_ok=True)
+                        self._send(200, b'{"status": "ok"}', "application/json")
+                        return
+                    except Exception as e:
+                        self._send(400, b'{"error": "creation failed"}', "application/json")
+                        return
+            self._send(400, b'{"error": "invalid path"}', "application/json")
+            return
+
+
+        if clean_path == "/api/copy/cancel":
+            _copy_abort_flag = True
+            _copy_confirm_event.set() # Release the lock if it's waiting for overwrite confirmation
+            self._send(200, b'{"status":"ok"}', "application/json")
+            return
+
+        if clean_path == "/api/copy/confirm":
+            length = int(self.headers.get("Content-Length", 0))
+            raw = self.rfile.read(length)
+            try:
+                data = json.loads(raw)
+                _copy_overwrite_choice = data.get("action", "skip")
+                _copy_confirm_event.set()
+                self._send(200, b'{"status":"ok"}', "application/json")
+            except Exception:
+                self._send(400, b'{"error":"invalid"}', "application/json")
+            return
+
+        if clean_path == "/api/buttons":
+
+
+            length = int(self.headers.get("Content-Length", 0))
+            raw = self.rfile.read(length)
+            try:
+                data = json.loads(raw)
+                state = {"enabled": False, "source": "/mnt/disks/", "dest": "/mnt/user/Media/"}
+                if os.path.exists(BUTTON_CFG_FILE):
+                    try:
+                        with open(BUTTON_CFG_FILE, "r") as f:
+                            state.update(json.load(f))
+                    except Exception: pass
+                
+                if "enabled" in data: state["enabled"] = bool(data["enabled"])
+                if "source" in data: state["source"] = str(data["source"]).strip()
+                if "dest" in data: state["dest"] = str(data["dest"]).strip()
+                
+                with open(BUTTON_CFG_FILE, "w") as f:
+                    json.dump(state, f)
+                self._send(200, json.dumps({"status": "ok", **state}).encode(), "application/json")
             except Exception as e:
                 self._send(400, json.dumps({"error": str(e)}).encode(), "application/json")
             return
@@ -1526,5 +1940,6 @@ if __name__ == "__main__":
             pass
 
     threading.Thread(target=stats_collector_daemon, daemon=True).start()
+    threading.Thread(target=button_listener_daemon, daemon=True).start()
     threading.Thread(target=render_lcd_loop, daemon=True).start()
     ThreadingHTTPServer(("0.0.0.0", port), Handler).serve_forever()

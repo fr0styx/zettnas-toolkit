@@ -1,3 +1,4 @@
+let copyToastMinimized = false;
 // Instant detection for headless Chromium renderer
 const isLcdDirect = window.location.search.includes("mode=lcd") || document.body.classList.contains("lcd-direct");
 if (isLcdDirect) {
@@ -1144,6 +1145,177 @@ function applyStats(s) {
     latestStats = s;
     anyWarn = false;
 
+  if (s.copy_state) {
+    const toast = $("copy-toast");
+    if (toast) {
+      const state = s.copy_state;
+      if (state.active || state.status !== "idle") {
+        toast.style.opacity = "1";
+        toast.style.pointerEvents = "auto";
+        
+        const backdrop = $("copy-toast-backdrop");
+        if (backdrop) {
+          if (!copyToastMinimized && state.active && state.status !== "success" && state.status !== "error") {
+            backdrop.style.opacity = "1";
+            backdrop.style.pointerEvents = "auto";
+            toast.style.boxShadow = "0 0 40px rgba(0,0,0,0.8)";
+            toast.style.bottom = "50%";
+            toast.style.right = "50%";
+            toast.style.transform = "translate(50%, 50%) scale(1.2)";
+          } else {
+            backdrop.style.opacity = "0";
+            backdrop.style.pointerEvents = "none";
+            toast.style.boxShadow = "none";
+            toast.style.bottom = "20px";
+            toast.style.right = "20px";
+            toast.style.transform = "translate(0, 0) scale(1)";
+          }
+        } else {
+            toast.style.transform = "translateY(0)";
+        }
+        
+        const prog = state.progress || {};
+        const total = prog.total || 0;
+        const copied = prog.copied || 0;
+        const pct = total > 0 ? Math.min(100, Math.round((copied / total) * 100)) : 0;
+        
+        if ($("copy-toast-pct")) $("copy-toast-pct").textContent = pct + "%";
+        if ($("copy-toast-bar")) $("copy-toast-bar").style.width = pct + "%";
+        if ($("copy-toast-file")) $("copy-toast-file").textContent = prog.file || "";
+        
+        let statusText = "Copying...";
+        let barColor = "var(--ok2)";
+        if (state.status === "success") {
+          statusText = "Success!";
+          barColor = "#2ecc71";
+          if ($("copy-toast-bar")) $("copy-toast-bar").style.width = "100%";
+          if ($("copy-toast-pct")) $("copy-toast-pct").textContent = "100%";
+        } else if (state.status === "error") {
+          statusText = "Failed!";
+          barColor = "#e74c3c";
+        }
+        if ($("copy-toast-status")) $("copy-toast-status").textContent = statusText;
+        if ($("copy-toast-bar")) $("copy-toast-bar").style.background = barColor;
+        
+        if (state.status === "copying" && total > 0 && prog.start > 0) {
+          const elapsed = (Date.now() / 1000) - prog.start;
+          if (elapsed > 3 && copied > 0) {
+            const rate = copied / elapsed;
+            const remaining = (total - copied) / rate;
+            const mins = Math.floor(remaining / 60);
+            const secs = Math.floor(remaining % 60);
+            const mbps = (rate / 1024 / 1024).toFixed(1);
+            let filesLeftStr = "";
+            if (prog.files_total) {
+                const left = Math.max(0, prog.files_total - (prog.files_done || 0));
+                filesLeftStr = `${left} file${left === 1 ? '' : 's'} left • `;
+            }
+            if ($("copy-toast-time")) $("copy-toast-time").textContent = `${filesLeftStr}${mbps} MB/s • ~${mins}m ${secs}s`;
+          } else {
+            if ($("copy-toast-time")) $("copy-toast-time").textContent = "Estimating time...";
+          }
+        } else {
+          if ($("copy-toast-time")) $("copy-toast-time").textContent = "";
+        }
+        
+        if (state.status === "awaiting_confirmation") {
+          if (!$("copy-toast-actions")) {
+            const actionsDiv = document.createElement("div");
+            actionsDiv.id = "copy-toast-actions";
+            actionsDiv.style.display = "flex";
+            actionsDiv.style.gap = "8px";
+            actionsDiv.style.marginTop = "10px";
+            actionsDiv.innerHTML = `
+              <button class="btn-save-preset" style="flex:1; padding:6px;" onclick="window.confirmCopy('skip')">Skip Existing</button>
+              <button class="btn-save-preset" style="flex:1; padding:6px;" onclick="window.confirmCopy('overwrite')">Overwrite All</button>
+              <button class="btn-save-preset" style="flex:1; padding:6px; border-color: rgba(240,85,59,0.5); color: var(--crit);" onclick="window.confirmCopy('cancel')" onmouseenter="this.style.background='var(--crit)'; this.style.color='#fff'; this.style.borderColor='var(--crit)';" onmouseleave="this.style.background='#1c2736'; this.style.color='var(--crit)'; this.style.borderColor='rgba(240,85,59,0.5)';">Cancel</button>
+            `;
+            $("copy-toast").querySelector(".smart-modal-body").appendChild(actionsDiv);
+            
+            window.confirmCopy = async (action) => {
+              try {
+                $("copy-toast-actions").style.opacity = "0.5";
+                $("copy-toast-actions").style.pointerEvents = "none";
+                await fetch("/api/copy/confirm", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ action })
+                });
+              } catch(e) {}
+            };
+          } else {
+            $("copy-toast-actions").style.display = "flex";
+            $("copy-toast-actions").style.opacity = "1";
+            $("copy-toast-actions").style.pointerEvents = "auto";
+          }
+          if ($("copy-toast-pct")) $("copy-toast-pct").textContent = "WAIT";
+        } else {
+          if ($("copy-toast-actions")) $("copy-toast-actions").style.display = "none";
+        }
+        if (state.status === "idle" || state.status === "success" || state.status === "aborted" || state.status === "error") {
+            if ($("copy-toast-abort-actions")) $("copy-toast-abort-actions").style.display = "none";
+        }
+        
+        
+  const btnToastCancel = $("copy-toast-cancel");
+  if (btnToastCancel && !btnToastCancel.dataset.listening) {
+    btnToastCancel.dataset.listening = "true";
+    btnToastCancel.addEventListener("click", () => {
+      if (!$("copy-toast-abort-actions")) {
+        const actionsDiv = document.createElement("div");
+        actionsDiv.id = "copy-toast-abort-actions";
+        actionsDiv.style.marginTop = "10px";
+        actionsDiv.style.paddingTop = "10px";
+        actionsDiv.style.borderTop = "1px solid rgba(255,255,255,0.05)";
+        actionsDiv.innerHTML = `
+          <div style="font-size: 11px; color: #cbd5e1; margin-bottom: 8px; font-weight: 500;">Are you sure you want to completely abort the transfer? All incomplete files will be deleted.</div>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn-save-preset" style="flex:1; padding:6px; border-color: rgba(240,85,59,0.5); color: var(--crit);" onclick="window.abortCopyConfirm(true)" onmouseenter="this.style.background='var(--crit)'; this.style.color='#fff'; this.style.borderColor='var(--crit)';" onmouseleave="this.style.background='#1c2736'; this.style.color='var(--crit)'; this.style.borderColor='rgba(240,85,59,0.5)';">Yes, Abort</button>
+            <button class="btn-save-preset" style="flex:1; padding:6px;" onclick="window.abortCopyConfirm(false)">Resume</button>
+          </div>
+        `;
+        $("copy-toast").querySelector(".smart-modal-body").appendChild(actionsDiv);
+        
+        window.abortCopyConfirm = async (yes) => {
+          if (yes) {
+            $("copy-toast-abort-actions").style.opacity = "0.5";
+            $("copy-toast-abort-actions").style.pointerEvents = "none";
+            fetch("/api/copy/cancel", { method: "POST" });
+          } else {
+            $("copy-toast-abort-actions").style.display = "none";
+          }
+        };
+      } else {
+        $("copy-toast-abort-actions").style.display = "block";
+        $("copy-toast-abort-actions").style.opacity = "1";
+        $("copy-toast-abort-actions").style.pointerEvents = "auto";
+      }
+    });
+  }
+
+  const btnMin = $("copy-toast-min");
+        if (btnMin && !btnMin.dataset.listening) {
+          btnMin.dataset.listening = "true";
+          btnMin.addEventListener("click", () => {
+            copyToastMinimized = !copyToastMinimized;
+            btnMin.textContent = copyToastMinimized ? "□" : "–";
+            if (latestStats) applyStats(latestStats);
+          });
+        }
+      } else {
+        toast.style.opacity = "0";
+        toast.style.pointerEvents = "none";
+        toast.style.transform = "translateY(20px)";
+        const backdrop = $("copy-toast-backdrop");
+        if (backdrop) {
+            backdrop.style.opacity = "0";
+            backdrop.style.pointerEvents = "none";
+        }
+        copyToastMinimized = false;
+      }
+    }
+  }
+
     if (s.layout && s.layout.version && s.layout.version !== activeLayoutVersion) {
       activeLayoutVersion = s.layout.version;
       if (s.layout.order) dashOrder = s.layout.order;
@@ -1152,6 +1324,61 @@ function applyStats(s) {
       if (s.layout.clock_format) clockFormat = s.layout.clock_format;
       if (s.layout.timezone) currentTimezone = s.layout.timezone;
       applyDashboardLayout();
+    }
+
+
+    // Media Slots Labeling
+    if (s.media_slots) {
+      const srcSelect = $("btn-copy-src");
+      if (srcSelect) {
+        const sdSize = s.media_slots.sd.size;
+        let sdText = "SD 4.0 Slot";
+        if (sdSize > 0) sdText += ` [${(sdSize / 1e9).toFixed(1)} GB]`;
+        else sdText += " [Empty]";
+        
+        const tfSize = s.media_slots.tf.size;
+        let tfText = "TF 4.0 Slot (MicroSD)";
+        if (tfSize > 0) tfText += ` [${(tfSize / 1e9).toFixed(1)} GB]`;
+        else tfText += " [Empty]";
+
+        for (let i = 0; i < srcSelect.options.length; i++) {
+          const opt = srcSelect.options[i];
+          if (opt.value === "sd" && opt.text !== sdText) opt.text = sdText;
+          if (opt.value === "tf" && opt.text !== tfText) opt.text = tfText;
+        }
+      }
+    }
+
+    // Copy Status Badge
+    let copyBadge = $("copy-badge");
+    if (s.copy_status && s.copy_status !== "idle") {
+      if (!copyBadge) {
+        copyBadge = document.createElement("span");
+        copyBadge.id = "copy-badge";
+        copyBadge.className = "header-badge";
+        copyBadge.style.marginLeft = "10px";
+        const titleArea = document.querySelector(".header-title");
+        if (titleArea) titleArea.appendChild(copyBadge);
+      }
+      
+      if (s.copy_status === "copying") {
+        copyBadge.textContent = "COPYING MEDIA...";
+        copyBadge.style.background = "rgba(41, 128, 185, 0.2)";
+        copyBadge.style.color = "#3498db";
+        copyBadge.style.borderColor = "rgba(41, 128, 185, 0.4)";
+      } else if (s.copy_status === "success") {
+        copyBadge.textContent = "COPY SUCCESS";
+        copyBadge.style.background = "rgba(46, 204, 113, 0.2)";
+        copyBadge.style.color = "#2ecc71";
+        copyBadge.style.borderColor = "rgba(46, 204, 113, 0.4)";
+      } else if (s.copy_status === "error") {
+        copyBadge.textContent = "COPY FAILED";
+        copyBadge.style.background = "rgba(231, 76, 60, 0.2)";
+        copyBadge.style.color = "#e74c3c";
+        copyBadge.style.borderColor = "rgba(231, 76, 60, 0.4)";
+      }
+    } else if (copyBadge) {
+      copyBadge.remove();
     }
 
     if ($("nasName")) $("nasName").textContent = s.name;
@@ -1694,6 +1921,10 @@ fetchDashboardLayout().then(() => {
             initLayoutSectionReordering();
             initDragAndDrop();
             initFanCardReordering();
+
+
+
+  loadButtonConfig();
           }
 
           alert("✓ Suite configuration restored successfully!");
@@ -2238,6 +2469,9 @@ fetchDashboardLayout().then(() => {
 
   initFanCardReordering();
 
+
+  loadButtonConfig();
+
   function updateFanUiState(profile, pct) {
     currentFanProfile = profile;
     fanProfileBtns.forEach((b) => b.classList.toggle("active", b.dataset.fanProfile === profile));
@@ -2432,4 +2666,212 @@ fetchDashboardLayout().then(() => {
   // ---- END INTERACTIVE FAN CURVE EDITOR ----
 
 
+
+// Hardware Buttons UI
+  const btnCopyToggle = $("btn-copy-toggle");
+  const btnCopyOptions = $("btn-copy-options");
+  const btnCopySrc = $("btn-copy-src");
+  const btnCopyDst = $("btn-copy-dst");
+  const btnCopySave = $("btn-copy-save");
+
+  async function loadButtonConfig() {
+    try {
+      const res = await fetch("/api/buttons");
+      if (res.ok) {
+        const data = await res.json();
+        if (btnCopyToggle) btnCopyToggle.checked = !!data.enabled;
+        if (btnCopySrc) btnCopySrc.value = data.source || "sd";
+        if (btnCopyDst) btnCopyDst.value = data.dest || "/mnt/user/";
+        
+        if (btnCopyOptions) {
+          btnCopyOptions.style.opacity = data.enabled ? "1" : "0.3";
+          btnCopyOptions.style.pointerEvents = data.enabled ? "auto" : "none";
+          btnCopyOptions.style.transition = "opacity 0.2s ease";
+        }
+        const statusText = $("btn-copy-status-text");
+        if (statusText) {
+          statusText.textContent = data.enabled ? "ENABLED" : "DISABLED";
+          statusText.style.color = data.enabled ? "#2ecc71" : "inherit";
+        }
+      }
+    } catch (e) {}
+  }
+
+  if (btnCopyToggle) {
+    btnCopyToggle.addEventListener("change", (e) => {
+      const isEnabled = e.target.checked;
+      if (btnCopyOptions) {
+        btnCopyOptions.style.opacity = isEnabled ? "1" : "0.3";
+        btnCopyOptions.style.pointerEvents = isEnabled ? "auto" : "none";
+      }
+      const statusText = $("btn-copy-status-text");
+      if (statusText) {
+        statusText.textContent = isEnabled ? "ENABLED" : "DISABLED";
+        statusText.style.color = isEnabled ? "#2ecc71" : "inherit";
+      }
+      saveButtonConfig();
+    });
+  }
+
+  if (btnCopySave) {
+    btnCopySave.addEventListener("click", () => {
+      btnCopySave.textContent = "Saved!";
+      setTimeout(() => { if (btnCopySave) btnCopySave.textContent = "💾 Save Configuration"; }, 2000);
+      saveButtonConfig();
+    });
+  }
+
+  
+  if (btnCopySrc) btnCopySrc.addEventListener("change", saveButtonConfig);
+  if (btnCopyDst) {
+    btnCopyDst.addEventListener("change", saveButtonConfig);
+    btnCopyDst.addEventListener("input", () => {
+      clearTimeout(window._btnCopyTimer);
+      window._btnCopyTimer = setTimeout(saveButtonConfig, 1000);
+    });
+  }
+
+  async function saveButtonConfig() {
+    try {
+      await fetch("/api/buttons", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          enabled: btnCopyToggle ? btnCopyToggle.checked : false,
+          source: btnCopySrc ? btnCopySrc.value : "sd",
+          dest: btnCopyDst ? btnCopyDst.value : "/mnt/user/"
+        })
+      });
+    } catch (e) {}
+  }
+
+  loadButtonConfig();
+
+
+    // Folder Browser Modal Logic
+  const btnBrowseDst = $("btn-browse-dst");
+  const fbModal = $("folder-browser-modal");
+  const fbCurrentPath = $("fb-current-path");
+  const fbList = $("fb-list");
+  const fbCancel = $("fb-cancel");
+  const fbClose = $("fb-close");
+  const fbSelect = $("fb-select");
+  const fbCreateFolderBtn = $("fb-create-folder");
+  const fbNewFolderName = $("fb-new-folder-name");
+
+  let currentBrowsePath = "/mnt/user/";
+
+  async function loadBrowsePath(targetPath) {
+    try {
+      const res = await fetch(`/api/browse?path=${encodeURIComponent(targetPath)}`);
+      if (res.ok) {
+        const data = await res.json();
+        currentBrowsePath = data.current;
+        if (fbCurrentPath) fbCurrentPath.textContent = currentBrowsePath;
+        if (fbList) {
+          fbList.innerHTML = "";
+          data.dirs.forEach(d => {
+            const div = document.createElement("div");
+            div.style.padding = "10px 14px";
+            div.style.borderBottom = "1px solid rgba(255,255,255,0.05)";
+            div.style.cursor = "pointer";
+            div.style.display = "flex";
+            div.style.alignItems = "center";
+            div.style.gap = "10px";
+            div.onmouseover = () => div.style.background = "rgba(255,255,255,0.03)";
+            div.onmouseout = () => div.style.background = "transparent";
+            
+            const icon = document.createElement("span");
+            icon.textContent = d.name === ".." ? "⤴️" : "📁";
+            icon.style.fontSize = "14px";
+            icon.style.opacity = d.name === ".." ? "0.6" : "1";
+            
+            const text = document.createElement("span");
+            text.textContent = d.name;
+            text.style.fontSize = "12px";
+            text.style.color = d.name === ".." ? "var(--muted)" : "#fff";
+            
+            div.appendChild(icon);
+            div.appendChild(text);
+            
+            div.addEventListener("click", () => {
+              loadBrowsePath(d.path);
+            });
+            fbList.appendChild(div);
+          });
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  function closeFbModal() {
+    if (fbModal) fbModal.classList.remove("open");
+  }
+
+  if (btnBrowseDst) {
+    btnBrowseDst.addEventListener("click", (e) => {
+      e.preventDefault();
+      const currentDst = (btnCopyDst && btnCopyDst.value) ? btnCopyDst.value : "/mnt/user/";
+      loadBrowsePath(currentDst || "/mnt/user/");
+      if (fbModal) fbModal.classList.add("open");
+    });
+  }
+
+  if (fbCancel) fbCancel.addEventListener("click", closeFbModal);
+  if (fbClose) fbClose.addEventListener("click", closeFbModal);
+
+  if (fbSelect) {
+    fbSelect.addEventListener("click", () => {
+      if (btnCopyDst) {
+        btnCopyDst.value = currentBrowsePath;
+      }
+      closeFbModal();
+      saveButtonConfig(); // AUTO SAVE
+      
+      const btnCopySave = $("btn-copy-save");
+      if (btnCopySave) {
+        btnCopySave.textContent = "Saved!";
+        setTimeout(() => { btnCopySave.textContent = "💾 Save Configuration"; }, 2000);
+      }
+    });
+  }
+
+  if (fbCreateFolderBtn && fbNewFolderName) {
+    fbCreateFolderBtn.addEventListener("click", async () => {
+      const folderName = fbNewFolderName.value.trim();
+      if (!folderName) return;
+      if (folderName.includes("/") || folderName.includes("..")) return;
+      
+      const newPath = currentBrowsePath + folderName;
+      try {
+        fbCreateFolderBtn.textContent = "...";
+        const res = await fetch(`/api/mkdir?path=${encodeURIComponent(newPath)}`);
+        if (res.ok) {
+          fbNewFolderName.value = "";
+          fbNewFolderName.placeholder = "New folder name...";
+          loadBrowsePath(currentBrowsePath); // Reload current path to show the new folder in the list
+        } else {
+          const errData = await res.json();
+          fbNewFolderName.value = "";
+          fbNewFolderName.placeholder = "Error: " + (errData.error || "Failed");
+        }
+      } catch(e) {
+        fbNewFolderName.value = "";
+        fbNewFolderName.placeholder = "Network Error";
+      } finally {
+        fbCreateFolderBtn.textContent = "+ Create";
+      }
+    });
+    
+    // allow enter key
+    fbNewFolderName.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        fbCreateFolderBtn.click();
+      }
+    });
+  }
 })();
+

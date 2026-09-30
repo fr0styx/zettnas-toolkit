@@ -210,6 +210,7 @@
     <button class="drawer-tab-btn active" data-tab="tab-layout">Dashboard Layout</button>
     <button class="drawer-tab-btn" data-tab="tab-led">LED Strip bar</button>
     <button class="drawer-tab-btn" data-tab="tab-fans">Fans</button>
+    <button class="drawer-tab-btn" data-tab="tab-buttons">Copy Button</button>
   </div>
 
   <div id="tab-layout" class="drawer-tab-content active">
@@ -262,6 +263,8 @@
           <input type="text" id="tz-custom-input" class="tz-text-input" placeholder="e.g. Asia/Seoul" style="display:none;">
         </div>
       </div>
+
+
 
       <div class="draggable-card drawer-card" data-layout-card-id="sec-backlight">
         <div class="card-headline">
@@ -655,13 +658,13 @@
             <circle class="curve-handle" id="ch-1" cx="0" cy="0" r="7" fill="#fff" stroke="var(--ok2)" stroke-width="2" style="cursor:pointer;" />
             <circle class="curve-handle" id="ch-2" cx="0" cy="0" r="7" fill="#fff" stroke="var(--ok2)" stroke-width="2" style="cursor:pointer;" />
             <circle class="curve-handle" id="ch-3" cx="0" cy="0" r="7" fill="#fff" stroke="var(--ok2)" stroke-width="2" style="cursor:pointer;" />
-            <circle id="curve-dot-z1" cx="38" cy="100" r="5" fill="#fff" stroke="#25c2a0" stroke-width="2.5" style="transition: cx 0.35s ease, cy 0.35s ease; pointer-events: none;"/>
+            <circle id="curve-dot-z1" cx="38" cy="100" r="5" fill="#fff" stroke="#6b8e23" stroke-width="2.5" style="transition: cx 0.35s ease, cy 0.35s ease; pointer-events: none;"/>
             <circle id="curve-dot-z2" cx="38" cy="100" r="5" fill="#fff" stroke="#38a2ff" stroke-width="2.5" style="transition: cx 0.35s ease, cy 0.35s ease; pointer-events: none;"/>
             <circle id="curve-dot-cpu" cx="38" cy="100" r="4.5" fill="#fff" stroke="#ffaa00" stroke-width="2.5" style="transition: cx 0.35s ease, cy 0.35s ease; pointer-events: none;"/>
           </svg>
 
           <div class="curve-legend-row">
-            <div class="legend-item" id="leg-item-z1"><span class="legend-dot" style="background:#25c2a0;"></span> Zone 1</div>
+            <div class="legend-item" id="leg-item-z1"><span class="legend-dot" style="background:#6b8e23;"></span> Zone 1</div>
             <div class="legend-item" id="leg-item-z2"><span class="legend-dot" style="background:#38a2ff;"></span> Zone 2</div>
             <div class="legend-item" id="leg-item-cpu"><span class="legend-dot" style="background:#ffaa00;"></span> CPU</div>
             <button class="btn-reset-curve-view" id="btn-reset-curve" style="display:none;">↺ Show All Zones</button>
@@ -676,7 +679,8 @@
           <label class="switch">
             <input type="checkbox" id="cpu-fan-toggle">
             <span class="toggle-slider"></span>
-          </label>
+            </label>
+          </div>
         </div>
         <div class="card-instruction">
           When enabled, applies software thermal curve with a <strong>90-second upward hold timer</strong>. When disabled, returns `pwm3` to automatic BIOS/firmware control (`pwm3_enable = 2`).
@@ -732,8 +736,104 @@
       </div>
     </div>
   </div>
+
+  <div id="tab-buttons" class="drawer-tab-content">
+    <div class="tab-sub-header">
+      <span class="sub-title">Chassis Hardware Bindings</span>
+    </div>
+    
+    <div class="drawer-cards-flow">
+      <div class="draggable-card drawer-card" style="cursor: default;">
+        <div class="card-headline">
+          <span class="card-head-title"><svg class="ic ic-sm" style="margin: 0 4px 0 2px;"><use href="#i-storage"/></svg>Front-Panel COPY Button</span>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span id="btn-copy-status-text" style="font-size:11px; font-weight:700; text-transform:uppercase; opacity:0.8;">ENABLED</span>
+            <label class="switch">
+            <input type="checkbox" id="btn-copy-toggle">
+            <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+        <div class="card-instruction">Bind the physical COPY button on the chassis front to automatically ingest media from an inserted SD card.</div>
+        
+        <div id="btn-copy-options" style="margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;">
+          <div class="slider-row" style="flex-direction: column; align-items: flex-start; gap: 6px;">
+            <span class="slider-label" style="opacity: 0.8; font-size: 11px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Source Media Slot</span>
+            <select id="btn-copy-src" class="tz-text-input" style="width: 100%; box-sizing: border-box; appearance: auto;">
+              <option value="sd">SD 4.0 Slot</option>
+              <option value="tf">TF 4.0 Slot (MicroSD)</option>
+            </select>
+          </div>
+          
+          <div class="slider-row" style="flex-direction: column; align-items: flex-start; gap: 6px; margin-top: 12px;">
+            <span class="slider-label" style="opacity: 0.8; font-size: 11px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Destination Path (Ingest Target)</span>
+            <div style="display: flex; gap: 8px; width: 100%;">
+              <input type="text" id="btn-copy-dst" class="tz-text-input" placeholder="/mnt/user/" style="width: 100%; box-sizing: border-box; font-family: monospace;">
+              <button id="btn-browse-dst" class="btn-pill-toggle" style="padding: 0 16px; white-space: nowrap; font-size: 11px; text-transform: uppercase; margin: 0; height: auto;">📁 Browse</button>
+            </div>
+          </div>
+          
+          <div class="slider-row" style="margin-top: 15px; justify-content: flex-end;">
+            <button id="btn-copy-save" class="btn-save-preset" style="width: 100%; justify-content: center;">💾 Save Configuration</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+<div id="folder-browser-modal" class="smart-modal-backdrop">
+  <div class="smart-modal-window" style="width: 480px;">
+    <div class="smart-modal-header">
+      <div class="smart-modal-title"><svg class="ic ic-sm" style="margin-right:4px;"><use href="#i-storage"/></svg> Select Destination Folder</div>
+      <button id="fb-close" class="btn-icon">✕</button>
+    </div>
+    <div class="smart-modal-body" style="padding-bottom: 20px;">
+      <div id="fb-current-path" style="font-family: monospace; font-size: 11px; padding: 10px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); border-radius: 6px; color: var(--ok2, #3498db); word-break: break-all;">/mnt/user/</div>
+      
+      <div style="display: flex; gap: 8px; margin-top: 5px;">
+        <input type="text" id="fb-new-folder-name" class="tz-text-input" placeholder="New folder name..." style="flex-grow: 1; font-size: 11px;">
+        <button id="fb-create-folder" class="btn-pill-toggle" style="padding: 0 12px; white-space: nowrap;">+ Create</button>
+      </div>
+
+      <div id="fb-list" style="max-height: 250px; overflow-y: auto; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.05); border-radius: 6px; margin-top: 10px; margin-bottom: 10px;">
+        <!-- populated via js -->
+      </div>
+      
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+        <button id="fb-cancel" class="btn-pill-toggle">Cancel</button>
+        <button id="fb-select" class="btn-save-preset" style="padding: 8px 16px;">💾 Select Current Folder</button>
+      </div>
+    </div>
+  </div>
+</div>
 </aside>
 
-<script src="app.js?v=17"></script>
+<script src="app.js?v=48"></script>
+<div id="copy-toast-backdrop" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 10000; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;"></div>
+
+<div id="copy-toast" class="smart-modal-window" style="position: fixed; bottom: 20px; right: 20px; width: 350px; z-index: 10001; opacity: 0; pointer-events: none; transition: opacity 0.3s ease, transform 0.3s ease; transform: translateY(20px); border-color: rgba(255,255,255,0.1);">
+  <div class="smart-modal-header" style="padding: 10px 15px; display: flex; justify-content: space-between; align-items: center;">
+    <div class="smart-modal-title" style="display:flex; align-items:center;"><svg class="ic ic-sm" style="margin-right:4px;"><use href="#i-storage"/></svg> Media card ingest</div>
+    <div style="display:flex; gap:8px;">
+      <button id="copy-toast-min" class="btn-icon" style="opacity: 0.5; cursor: pointer; border:none; background:none; color:white;">–</button>
+      <button id="copy-toast-cancel" class="btn-icon" style="opacity: 0.8; cursor: pointer; border:none; background:none; color:var(--crit); font-weight:bold;">×</button>
+    </div>
+  </div>
+  <div class="smart-modal-body" style="padding: 15px; gap: 8px;">
+    <div style="display:flex; justify-content: space-between;">
+      <span id="copy-toast-status" style="font-size: 11px; font-weight: 700; color: #fff; text-transform: uppercase;">Copying...</span>
+      <span id="copy-toast-pct" style="font-size: 11px; font-weight: 700; color: var(--ok2);">0%</span>
+    </div>
+    <div style="background: rgba(255,255,255,0.1); height: 6px; border-radius: 3px; overflow: hidden;">
+      <div id="copy-toast-bar" style="background: var(--ok2); height: 100%; width: 0%; transition: width 0.5s ease;"></div>
+    </div>
+    <div id="copy-toast-file" style="font-size: 10px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Preparing files...</div>
+    <div id="copy-toast-time" style="font-size: 10px; color: var(--muted); text-align: right;">Estimating time...</div>
+  </div>
+</div>
+
+
 </body>
 </html>
