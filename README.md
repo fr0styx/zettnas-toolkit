@@ -38,10 +38,14 @@ It delivers **zero-overhead, direct-to-framebuffer rendering** for the 640×172 
 * **S.M.A.R.T. Health Inspector**: Click any disk card to view full S.M.A.R.T. diagnostic attributes, model numbers, power-on hours, and raw telemetry in an interactive modal.
 * **Module Customization**: Toggle visibility of individual metric cards or disk rows, switch between Full and Compact card sizes, and choose 12-hour or 24-hour clock formats.
 * **Chassis Workbench**: Front-panel simulator with scalable chassis zoom (1x, 1.25x, 1.5x, 2x) and interactive LED lighting preview.
+* **Mobile-Responsive Design**: Full `@media` query layout adaptation for monitoring the dashboard from smartphones and tablets on the go.
+* **Persistent State Management**: Fan configs, LED lighting preferences, and dashboard layouts are now saved safely to the `/app/data/` volume and survive container reboots.
+* **Real-Time SSE Engine**: Fast Server-Sent Events (`/api/stats/stream`) push architecture delivers ultra-low latency telemetry updates to the browser.
+* **LCD Health & FPS Badge**: Live studio badge tracking the headless Chromium renderer's health, actual rendering FPS, and `/dev/fb0` framebuffer status.
 
 ### ❄️ Intelligent Thermal Fan Automation
 * **Dual-Zone Drive Cooling**: Automatic SATA backplane fan regulation mapped directly to drive temperatures.
-* **Interactive SVG Fan Curve Workstation**: Visual thermal curve editor with draggable inflection points for precise PWM ramp-up tuning.
+* **Interactive SVG Fan Curve Workstation**: Complete visual thermal curve editor with 4 draggable inflection points for precise, multi-stage PWM ramp-up tuning.
 * **Manual PWM Override**: Direct hardware duty-cycle command (`0–183` / 0–100%) for diagnostic testing and airflow verification.
 * **Active Rotor Animations**: Browser and LCD fan icons spin dynamically at rates proportional to real-time tachometer RPM.
 
@@ -49,6 +53,8 @@ It delivers **zero-overhead, direct-to-framebuffer rendering** for the 640×172 
 * **Serial Protocol Integration**: Direct communication with the onboard microcontroller using CRC-validated packets.
 * **Lighting Modes**: Solid, Breathe, Flow, Chase, Gradient, Flashing, and real-time Rainbow.
 * **Error-Reactive Safeguards**: Automatically overrides lighting with an amber warning breathe or pulsing red alert if a drive reports S.M.A.R.T. degradation, CPU breaches 70°C/85°C, or a fan stalls.
+* **Disk IO "Cylon" Effect**: Active drive read/write operations can visually translate to a scanning Cylon animation on the front LEDs.
+* **Accurate Night Dimming**: Timezone-aware logic guarantees the LCD display and LEDs dim reliably during your configured night hours.
 
 ---
 

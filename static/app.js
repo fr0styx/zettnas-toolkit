@@ -6,6 +6,48 @@ if (isLcdDirect) {
 
 // Polls /api/stats and updates the 640x172 dashboard with gauges, icons,
 // color thresholds and RPM-driven fan animation.
+
+// ---- FAN CURVE SHARED STATE (accessible by both top-level and IIFE functions) ----
+let curvePoints = [[30, 32], [37, 32], [50, 100], [60, 100]];
+let isDraggingCurve = false;
+let dragIndex = -1;
+let _curveInitialized = false;
+let _lastCurveSaveTime = 0; // timestamp: ignore server curve updates for 5s after user edit
+
+function tempToX(t) { return 38 + ((Math.max(30, Math.min(60, t)) - 30) / 30) * (285 - 38); }
+function xToTemp(x) { return Math.round(30 + ((x - 38) / (285 - 38)) * 30); }
+function pctToY(p) { return 100 - (Math.max(0, Math.min(100, p)) / 100) * (100 - 20); }
+function yToPct(y) { return Math.round(100 - ((y - 20) / (100 - 20)) * 100); }
+
+function renderCurveLines() {
+  try {
+    const curveArea = document.getElementById("curve-area-path");
+    const curveLine = document.getElementById("curve-svg-path");
+    if (!curveArea || !curveLine) return;
+
+    const pts = curvePoints.slice().sort((a, b) => a[0] - b[0]);
+    let d = `M 38 100 L 38 ${pctToY(pts[0][1]).toFixed(1)}`;
+    for (const p of pts) {
+      d += ` L ${tempToX(p[0]).toFixed(1)} ${pctToY(p[1]).toFixed(1)}`;
+    }
+    d += ` L 285 ${pctToY(pts[pts.length - 1][1]).toFixed(1)}`;
+
+    curveLine.setAttribute("d", d);
+    curveArea.setAttribute("d", d + " L 285 100 Z");
+
+    for (let i = 0; i < 4; i++) {
+      const h = document.getElementById("ch-" + i);
+      if (h && pts[i]) {
+        h.setAttribute("cx", tempToX(pts[i][0]).toFixed(1));
+        h.setAttribute("cy", pctToY(pts[i][1]).toFixed(1));
+      }
+    }
+  } catch (err) {
+    console.error("renderCurveLines error:", err);
+  }
+}
+// ---- END FAN CURVE SHARED STATE ----
+
 const $ = (id) => document.getElementById(id);
 const FAN_LABELS = ["D1", "D2", "CPU", "SYS"];
 
@@ -419,16 +461,32 @@ function updateFanCurveWorkstation(s) {
   const graphMaxT = 60;
   const tSpan = 30;
 
-  if (!isDraggingCurve) {
+
+  // Skip curve updates while user is actively dragging, or within 5s of a save
+  // (the backend daemon may still be serving stale cached curve_points)
+  const curveUpdateCooldown = (Date.now() - _lastCurveSaveTime) < 5000;
+  
+  if (!isDraggingCurve && !curveUpdateCooldown) {
+    console.log("[ZettNAS] Checking curve update. server points:", fc.curve_points, "local points:", JSON.stringify(curvePoints), "_curveInitialized:", _curveInitialized);
     if (fc.curve_points && fc.curve_points.length > 0) {
-      curvePoints = fc.curve_points;
-    } else {
-      let tMin = fc.temp_min || 37;
-      let tMax = fc.temp_max || 50;
+      if (JSON.stringify(curvePoints) !== JSON.stringify(fc.curve_points)) {
+        console.log("[ZettNAS] Overwriting local curve with server curve:", fc.curve_points);
+        curvePoints = fc.curve_points;
+      }
+      _curveInitialized = true;
+    } else if (!_curveInitialized) {
+      const tMin = fc.temp_min || 37;
+      const tMax = fc.temp_max || 50;
       curvePoints = [[30, 32], [tMin, 32], [tMax, 100], [60, 100]];
+      console.log("[ZettNAS] Initialized default curve:", curvePoints);
+      _curveInitialized = true;
     }
-    renderCurveLines();
+  } else if (curveUpdateCooldown) {
+      console.log("[ZettNAS] In cooldown. Ignoring server curve.");
   }
+  
+  renderCurveLines();
+
 
 
   const normZ1X = Math.max(graphMinT, Math.min(graphMaxT, fc.zone1_temp));
@@ -2198,15 +2256,16 @@ fetchDashboardLayout().then(() => {
             let fanThreshDebounce = null;
 
   async function postFanPwm(profile, manualPct, ctrlCpu, tMin, tMax, cPoints) {
-    const curMin = tMin !== undefined ? tMin : parseInt(fanTempMinSlider ? fanTempMinSlider.value : 37, 10);
-    const curMax = tMax !== undefined ? tMax : parseInt(fanTempMaxSlider ? fanTempMaxSlider.value : 50, 10);
+    const curMin = tMin !== undefined ? tMin : 37;
+    const curMax = tMax !== undefined ? tMax : 50;
+    const mPct = (manualPct === null || manualPct === undefined) ? (fanPwmSlider ? fanPwmSlider.value : 60) : manualPct;
     try {
       const res = await fetch("/api/fans", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           profile: profile, 
-          manual_pct: manualPct, 
+          manual_pct: mPct, 
           ctrl_cpu_fan: ctrlCpu !== undefined ? ctrlCpu : (cpuFanToggle ? cpuFanToggle.checked : false),
           temp_min: curMin,
           temp_max: curMax,
@@ -2232,11 +2291,16 @@ fetchDashboardLayout().then(() => {
         const tMax = data.temp_max !== undefined ? data.temp_max : 50;
 
         if (cpuFanToggle) cpuFanToggle.checked = !!data.ctrl_cpu_fan;
-        if (fanTempMinSlider) fanTempMinSlider.value = tMin;
-        if (fanTempMaxSlider) fanTempMaxSlider.value = tMax;
-        if (valTempMin) valTempMin.textContent = `${tMin}°C`;
-        if (valTempMax) valTempMax.textContent = `${tMax}°C`;
-        if (fanCurveRangeVal) fanCurveRangeVal.textContent = `${tMin}°C – ${tMax}°C`;
+        // Load curve points if saved
+        if (data.curve_points && data.curve_points.length > 0) {
+          curvePoints = data.curve_points;
+        } else {
+          curvePoints = [[30, 32], [tMin, 32], [tMax, 100], [60, 100]];
+        }
+        renderCurveLines();
+        // Update the badge showing temp range
+        const crv = document.getElementById("fan-curve-range-val");
+        if (crv) crv.textContent = `${tMin}°C – ${tMax}°C`;
 
         updateFanUiState(prof, pct);
       }
@@ -2245,7 +2309,7 @@ fetchDashboardLayout().then(() => {
 
   fetchFanState();
 
-    if (fanTempMaxSlider) fanTempMaxSlider.addEventListener("input", onThreshChange);
+
 
   if (cpuFanToggle) {
     cpuFanToggle.addEventListener("change", (e) => {
@@ -2304,100 +2368,68 @@ fetchDashboardLayout().then(() => {
 
   window.addEventListener("resize", fitMiniPreviewScale);
 
-})();
 
+  // ---- INTERACTIVE FAN CURVE EDITOR EVENTS ----
+  // renderCurveLines, curvePoints, isDraggingCurve are defined at top-level
 
-  
-  // Interactive Fan Curve Logic
-  let curvePoints = [[30, 32], [37, 32], [50, 100], [60, 100]];
-  let isDraggingCurve = false;
-  let dragIndex = -1;
+  // Initial render after DOM is settled
+  setTimeout(renderCurveLines, 400);
 
-  function tempToX(t) { return 38 + ((Math.max(30, Math.min(60, t)) - 30) / 30) * (285 - 38); }
-  function xToTemp(x) { return Math.round(30 + ((x - 38) / (285 - 38)) * 30); }
-  function pctToY(p) { return 100 - (Math.max(0, Math.min(100, p)) / 100) * (100 - 20); }
-  function yToPct(y) { return Math.round(100 - ((y - 20) / (100 - 20)) * 100); }
-
-  function renderCurveLines() {
-    try {
-      const curveArea = document.getElementById("curve-area-path");
-      const curveLine = document.getElementById("curve-svg-path");
-      if (!curveArea || !curveLine) return;
-
-      let pts = curvePoints.slice().sort((a,b)=>a[0]-b[0]);
-      let d = `M 38 100 L 38 ${pctToY(pts[0][1]).toFixed(1)}`;
-      for (let p of pts) {
-        d += ` L ${tempToX(p[0]).toFixed(1)} ${pctToY(p[1]).toFixed(1)}`;
-      }
-      d += ` L 285 ${pctToY(pts[pts.length-1][1]).toFixed(1)}`;
-
-      curveLine.setAttribute("d", d);
-      curveArea.setAttribute("d", d + " L 285 100 Z");
-
-      for (let i=0; i<4; i++) {
-        let h = document.getElementById("ch-"+i);
-        if (h) {
-          h.setAttribute("cx", tempToX(pts[i][0]).toString());
-          h.setAttribute("cy", pctToY(pts[i][1]).toString());
-        }
-      }
-    } catch(e) {
-      console.error("Curve render error: ", e);
-    }
-  }
-
-  const svgElem = document.querySelector(".fan-curve-svg");
-  if (svgElem) {
-    function startDrag(e) {
-      let target = e.target;
-      if (target.classList.contains("curve-handle")) {
+  const fanCurveSvg = document.querySelector(".fan-curve-svg");
+  if (fanCurveSvg) {
+    fanCurveSvg.addEventListener("mousedown", (e) => {
+      if (e.target.classList.contains("curve-handle")) {
         isDraggingCurve = true;
-        dragIndex = parseInt(target.id.replace("ch-", ""), 10);
+        dragIndex = parseInt(e.target.id.replace("ch-", ""), 10);
       }
-    }
-    
-    function moveDrag(e) {
+    });
+
+    fanCurveSvg.addEventListener("touchstart", (e) => {
+      const touch = e.target;
+      if (touch.classList.contains("curve-handle")) {
+        isDraggingCurve = true;
+        dragIndex = parseInt(touch.id.replace("ch-", ""), 10);
+      }
+    }, { passive: false });
+
+    function onCurveMove(e) {
       if (!isDraggingCurve || dragIndex < 0) return;
-      e.preventDefault(); // prevent scrolling while dragging
-      let clientX = e.touches ? e.touches[0].clientX : e.clientX;
-      let clientY = e.touches ? e.touches[0].clientY : e.clientY;
-      
-      let rect = svgElem.getBoundingClientRect();
-      let scaleX = 300 / rect.width;
-      let scaleY = 140 / rect.height;
-      let svgX = (clientX - rect.left) * scaleX;
-      let svgY = (clientY - rect.top) * scaleY;
-      
-      let t = xToTemp(svgX);
-      let p = yToPct(svgY);
-      
-      t = Math.max(30, Math.min(60, t));
-      p = Math.max(0, Math.min(100, p));
-      
-      if (dragIndex > 0) t = Math.max(t, curvePoints[dragIndex-1][0] + 1);
-      if (dragIndex < curvePoints.length - 1) t = Math.min(t, curvePoints[dragIndex+1][0] - 1);
-      
+      e.preventDefault();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      const rect = fanCurveSvg.getBoundingClientRect();
+      const svgX = (clientX - rect.left) * (300 / rect.width);
+      const svgY = (clientY - rect.top) * (140 / rect.height);
+
+      let t = Math.max(30, Math.min(60, xToTemp(svgX)));
+      let p = Math.max(0, Math.min(100, yToPct(svgY)));
+
+      // prevent crossing neighbours
+      if (dragIndex > 0) t = Math.max(t, curvePoints[dragIndex - 1][0] + 1);
+      if (dragIndex < curvePoints.length - 1) t = Math.min(t, curvePoints[dragIndex + 1][0] - 1);
+
       curvePoints[dragIndex] = [t, p];
       renderCurveLines();
     }
-    
-    function stopDrag() {
-      if (isDraggingCurve) {
-        isDraggingCurve = false;
-        dragIndex = -1;
-        if (typeof postFanPwm === 'function') {
-           postFanPwm(currentFanProfile, null, undefined, undefined, undefined, curvePoints);
-        }
-      }
+
+    window.addEventListener("mousemove", onCurveMove);
+    window.addEventListener("touchmove", onCurveMove, { passive: false });
+
+    function onCurveUp() {
+      if (!isDraggingCurve) return;
+      dragIndex = -1;
+      _lastCurveSaveTime = Date.now(); // start 5s cooldown against stale server data
+      const savedPoints = curvePoints.map(p => [...p]);
+      postFanPwm(currentFanProfile, null, undefined, undefined, undefined, savedPoints)
+        .finally(() => {
+          curvePoints = savedPoints;
+          isDraggingCurve = false;
+        });
     }
-
-    svgElem.addEventListener("mousedown", startDrag);
-    svgElem.addEventListener("touchstart", startDrag, {passive: false});
-    window.addEventListener("mousemove", moveDrag);
-    window.addEventListener("touchmove", moveDrag, {passive: false});
-    window.addEventListener("mouseup", stopDrag);
-    window.addEventListener("touchend", stopDrag);
+    window.addEventListener("mouseup", onCurveUp);
+    window.addEventListener("touchend", onCurveUp);
   }
+  // ---- END INTERACTIVE FAN CURVE EDITOR ----
 
-  // Force an initial render slightly after load
-  setTimeout(renderCurveLines, 600);
+
+})();
