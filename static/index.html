@@ -651,9 +651,13 @@
             <path id="curve-area-path" d="M 38 100 L 115 100 L 257 20 L 285 20 L 285 100 Z" fill="url(#curveGradient)"/>
             <path id="curve-svg-path" d="M 38 100 L 115 100 L 257 20 L 285 20" fill="none" stroke="var(--ok2)" stroke-width="2.5" stroke-linecap="round"/>
             
-            <circle id="curve-dot-z1" cx="38" cy="100" r="5" fill="#fff" stroke="#25c2a0" stroke-width="2.5" style="transition: cx 0.35s ease, cy 0.35s ease;"/>
-            <circle id="curve-dot-z2" cx="38" cy="100" r="5" fill="#fff" stroke="#38a2ff" stroke-width="2.5" style="transition: cx 0.35s ease, cy 0.35s ease;"/>
-            <circle id="curve-dot-cpu" cx="38" cy="100" r="4.5" fill="#fff" stroke="#ffaa00" stroke-width="2.5" style="transition: cx 0.35s ease, cy 0.35s ease;"/>
+            <circle class="curve-handle" id="ch-0" cx="0" cy="0" r="7" fill="#fff" stroke="var(--ok2)" stroke-width="2" style="cursor:pointer;" />
+            <circle class="curve-handle" id="ch-1" cx="0" cy="0" r="7" fill="#fff" stroke="var(--ok2)" stroke-width="2" style="cursor:pointer;" />
+            <circle class="curve-handle" id="ch-2" cx="0" cy="0" r="7" fill="#fff" stroke="var(--ok2)" stroke-width="2" style="cursor:pointer;" />
+            <circle class="curve-handle" id="ch-3" cx="0" cy="0" r="7" fill="#fff" stroke="var(--ok2)" stroke-width="2" style="cursor:pointer;" />
+            <circle id="curve-dot-z1" cx="38" cy="100" r="5" fill="#fff" stroke="#25c2a0" stroke-width="2.5" style="transition: cx 0.35s ease, cy 0.35s ease; pointer-events: none;"/>
+            <circle id="curve-dot-z2" cx="38" cy="100" r="5" fill="#fff" stroke="#38a2ff" stroke-width="2.5" style="transition: cx 0.35s ease, cy 0.35s ease; pointer-events: none;"/>
+            <circle id="curve-dot-cpu" cx="38" cy="100" r="4.5" fill="#fff" stroke="#ffaa00" stroke-width="2.5" style="transition: cx 0.35s ease, cy 0.35s ease; pointer-events: none;"/>
           </svg>
 
           <div class="curve-legend-row">
@@ -711,21 +715,8 @@
           <span id="fan-curve-range-val" class="suite-badge" style="background:rgba(37,194,160,0.15); color:var(--ok2); border-color:rgba(37,194,160,0.35);">37°C – 50°C</span>
         </div>
         <div class="card-instruction">Adjust the temperature window where fan PWM dynamically scales from minimum silent RPM to 100% duty cycle. Spun-down drives are excluded from heating calculations.</div>
-        <div style="display:flex; flex-direction:column; gap:8px; margin-top:8px;">
-          <div>
-            <div style="display:flex; justify-content:space-between; font-size:10px; margin-bottom:2px; color:var(--muted); font-weight:700;">
-              <span>Ramp Start Temp (Min PWM / Silent):</span>
-              <strong id="val-temp-min" style="color:var(--text);">37°C</strong>
-            </div>
-            <input type="range" id="fan-temp-min-slider" min="25" max="45" value="37" step="1" class="custom-slider">
-          </div>
-          <div>
-            <div style="display:flex; justify-content:space-between; font-size:10px; margin-bottom:2px; color:var(--muted); font-weight:700;">
-              <span>Full Speed Temp (Max PWM / Cooling):</span>
-              <strong id="val-temp-max" style="color:var(--text);">50°C</strong>
-            </div>
-            <input type="range" id="fan-temp-max-slider" min="45" max="70" value="50" step="1" class="custom-slider">
-          </div>
+        <div style="margin-top:8px; font-size:11px; color:var(--muted);">
+          <em>Use the interactive graph above to drag and plot your custom fan curve points.</em>
         </div>
       </div>
 

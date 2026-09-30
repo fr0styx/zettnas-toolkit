@@ -431,9 +431,29 @@ def detect_chassis_model():
     return _cached_chassis_model
 
 
-def calc_curve_pwm(temp, min_pwm=58, max_pwm=183, temp_min=37, temp_max=50):
+def calc_curve_pwm(temp, min_pwm=58, max_pwm=183, temp_min=37, temp_max=50, curve_points=None):
     if temp is None or temp <= 0:
         return min_pwm
+
+    if curve_points and len(curve_points) >= 2:
+        pts = sorted(curve_points, key=lambda x: x[0])
+        if temp <= pts[0][0]:
+            pct = pts[0][1]
+        elif temp >= pts[-1][0]:
+            pct = pts[-1][1]
+        else:
+            pct = pts[0][1]
+            for i in range(len(pts)-1):
+                t1, p1 = pts[i]
+                t2, p2 = pts[i+1]
+                if t1 <= temp <= t2:
+                    span = max(1, t2 - t1)
+                    ratio = (temp - t1) / float(span)
+                    pct = p1 + ratio * (p2 - p1)
+                    break
+        val = int((pct / 100.0) * max_pwm)
+        return max(0, min(max_pwm, val))
+
     if temp >= temp_max:
         return max_pwm
     if temp <= temp_min:
@@ -880,8 +900,9 @@ def stats_collector_daemon():
             t_zone1 = max(active_z1, default=32)
             t_zone2 = max(active_z2, default=32)
 
-            raw_pwm1 = calc_curve_pwm(t_zone1, min_pwm=58, max_pwm=183, temp_min=temp_min, temp_max=temp_max)
-            raw_pwm2 = calc_curve_pwm(t_zone2, min_pwm=58, max_pwm=183, temp_min=temp_min, temp_max=temp_max)
+            curve_points = fan_cfg.get("curve_points", None)
+            raw_pwm1 = calc_curve_pwm(t_zone1, min_pwm=58, max_pwm=183, temp_min=temp_min, temp_max=temp_max, curve_points=curve_points)
+            raw_pwm2 = calc_curve_pwm(t_zone2, min_pwm=58, max_pwm=183, temp_min=temp_min, temp_max=temp_max, curve_points=curve_points)
 
             if cpu_temp >= 85:
                 raw_pwm3 = 183
@@ -979,7 +1000,8 @@ def stats_collector_daemon():
                     "ctrl_cpu_fan": ctrl_cpu_fan,
                     "profile": profile,
                     "temp_min": temp_min,
-                    "temp_max": temp_max
+                    "temp_max": temp_max,
+                    "curve_points": fan_cfg.get("curve_points", None)
                 },
                 "net": net,
                 "uptime": read_uptime(),
@@ -1417,6 +1439,7 @@ class Handler(BaseHTTPRequestHandler):
                 ctrl_cpu_fan = bool(data.get("ctrl_cpu_fan", False))
                 temp_min = max(25, min(50, int(data.get("temp_min", 37))))
                 temp_max = max(temp_min + 5, min(75, int(data.get("temp_max", 50))))
+                curve_points = data.get("curve_points", None)
 
                 if profile == "auto":
                     for k in _fan_state_tracker:
@@ -1434,6 +1457,8 @@ class Handler(BaseHTTPRequestHandler):
                     "temp_min": temp_min,
                     "temp_max": temp_max
                 }
+                if curve_points:
+                    state_to_save["curve_points"] = curve_points
                 with open(FAN_STATE_FILE, "w") as f:
                     json.dump(state_to_save, f)
                 self._send(200, json.dumps({"status": "ok" if ok else "unsupported", **state_to_save}).encode(), "application/json")
