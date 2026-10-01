@@ -50,6 +50,55 @@ function renderCurveLines() {
 // ---- END FAN CURVE SHARED STATE ----
 
 const $ = (id) => document.getElementById(id);
+
+
+function showToast(msg, type="error") {
+  let container = document.getElementById("global-toast-container");
+  if (!container) {
+    container = document.createElement("div");
+    container.id = "global-toast-container";
+    container.style.cssText = "position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:10005;display:flex;flex-direction:column;gap:8px;";
+    document.body.appendChild(container);
+  }
+  const el = document.createElement("div");
+  el.style.cssText = `background: ${type === 'error' ? 'var(--crit)' : 'var(--ok)'}; color: #fff; padding: 10px 20px; border-radius: 6px; font-size: 13px; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.3); opacity: 0; transform: translateY(10px); transition: all 0.3s ease; display:flex; align-items:center; gap:8px;`;
+  el.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg> ${msg}`;
+  container.appendChild(el);
+  requestAnimationFrame(() => { el.style.opacity = "1"; el.style.transform = "translateY(0)"; });
+  setTimeout(() => {
+    el.style.opacity = "0"; el.style.transform = "translateY(10px)";
+    setTimeout(() => el.remove(), 300);
+  }, 4000);
+}
+
+
+function showToast(msg, type="error") {
+  let container = document.getElementById("global-toast-container");
+  if (!container) {
+    container = document.createElement("div");
+    container.id = "global-toast-container";
+    container.style.cssText = "position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:10005;display:flex;flex-direction:column;gap:8px;";
+    document.body.appendChild(container);
+  }
+  const el = document.createElement("div");
+  el.style.cssText = `background: ${type === 'error' ? 'var(--crit)' : 'var(--ok)'}; color: #fff; padding: 10px 20px; border-radius: 6px; font-size: 13px; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.3); opacity: 0; transform: translateY(10px); transition: all 0.3s ease; display:flex; align-items:center; gap:8px;`;
+  el.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg> ${msg}`;
+  container.appendChild(el);
+  
+  // Animate in
+  requestAnimationFrame(() => {
+    el.style.opacity = "1";
+    el.style.transform = "translateY(0)";
+  });
+  
+  // Animate out
+  setTimeout(() => {
+    el.style.opacity = "0";
+    el.style.transform = "translateY(10px)";
+    setTimeout(() => el.remove(), 300);
+  }, 4000);
+}
+
 const FAN_LABELS = ["D1", "D2", "CPU", "SYS"];
 
 // Shared local client state
@@ -859,7 +908,7 @@ async function fetchDashboardLayout() {
       if (data.clock_format) clockFormat = data.clock_format;
       if (data.timezone) currentTimezone = data.timezone;
     }
-  } catch (err) {}
+  } catch (err) { showToast("Failed to load layout: " + err, "error");  showToast("Failed to load layout: " + err, "error"); }
   applyDashboardLayout();
 }
 
@@ -1509,7 +1558,7 @@ function startSSE() {
     try {
       _sseRetryCount = 0;
       applyStats(JSON.parse(e.data));
-    } catch (err) {}
+    } catch (err) { showToast("Failed to load layout: " + err, "error"); }
   };
   es.onerror = () => {
     _sseRetryCount++;
@@ -1678,6 +1727,8 @@ fetchDashboardLayout().then(() => {
       applyTheme(currentTheme === "yak" ? "cyber" : "yak");
     });
   }
+
+
   applyTheme(currentTheme);
 
   initFanCurveInteractivity();

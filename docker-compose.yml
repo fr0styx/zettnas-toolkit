@@ -31,7 +31,13 @@ services:
       - HOST_PROC=/host/proc
       - HOST_SYS=/host/sys
       - HOST_DEV=/host/dev
-    privileged: true
+    # privileged: true  # Replaced with explicit capabilities + device rules
+    cap_add:
+      - SYS_RAWIO
+      - SYS_ADMIN
+    device_cgroup_rules:
+      - 'c *:* rwm'
+      - 'b *:* rwm'
     logging:
       driver: "json-file"
       options:

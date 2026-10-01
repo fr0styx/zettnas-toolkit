@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ZettNAS Studio • Hardware Suite</title>
-<link rel="stylesheet" href="style.css?v=5">
+<link rel="stylesheet" href="style.css?v=11">
 </head>
 <body class="studio-workbench">
 
@@ -78,7 +78,7 @@
       <div class="suite-pill"><span class="pulse-dot"></span> MCU: <strong>/dev/ttyACM0</strong></div>
       <div class="suite-pill"><span class="pulse-dot"></span> FB: <strong>/dev/fb0 (640x172)</strong></div>
       <button id="suite-zoom-btn" class="zoom-toggle-btn" title="Cycle Chassis Scale (1x, 1.25x, 1.5x, 2x) [Hot-key: Z / Wheel]">🔍 1x</button>
-      <button id="yak-easter-egg-btn" class="yak-egg-btn" title="Trust in the Yak [Easter Egg Hot-key: Y]">🐂</button>
+            <button id="yak-easter-egg-btn" class="yak-egg-btn" title="Trust in the Yak [Easter Egg Hot-key: Y]">🐂</button>
       <button id="drawer-toggle-btn" class="suite-toolkit-btn" title="Open Hardware Toolkit Settings [Hot-key: T]">
         <span>⚙ TOOLKIT SETTINGS</span>
       </button>
@@ -176,14 +176,14 @@
   </main>
 </div>
 
-<div id="smart-modal-overlay" class="smart-modal-backdrop">
+<div id="smart-modal-overlay" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="smart-modal-title">
   <div class="smart-modal-window">
     <div class="smart-modal-header">
       <span class="smart-modal-title" id="smart-modal-title">
         <svg class="ic"><use href="#i-disk"/></svg> S.M.A.R.T. Diagnostics
       </span>
       <button id="smart-modal-refresh" class="btn-icon" title="Refresh SMART data" style="margin-right:4px;">↻</button>
-      <button id="smart-modal-close" class="btn-icon">✕</button>
+      <button id="smart-modal-close" class="btn-icon" aria-label="Close dialog">✕</button>
     </div>
     <div class="smart-modal-body">
       <div class="smart-meta-grid" id="smart-modal-grid">
@@ -785,11 +785,11 @@
 
 
 
-<div id="folder-browser-modal" class="smart-modal-backdrop">
+<div id="folder-browser-modal" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="folder-browser-title">
   <div class="smart-modal-window" style="width: 480px;">
     <div class="smart-modal-header">
-      <div class="smart-modal-title"><svg class="ic ic-sm" style="margin-right:4px;"><use href="#i-storage"/></svg> Select Destination Folder</div>
-      <button id="fb-close" class="btn-icon">✕</button>
+      <div class="smart-modal-title" id="folder-browser-title"><svg class="ic ic-sm" style="margin-right:4px;"><use href="#i-storage"/></svg> Select Destination Folder</div>
+      <button id="fb-close" class="btn-icon" aria-label="Close dialog">✕</button>
     </div>
     <div class="smart-modal-body" style="padding-bottom: 20px;">
       <div id="fb-current-path" style="font-family: monospace; font-size: 11px; padding: 10px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); border-radius: 6px; color: var(--ok2, #3498db); word-break: break-all;">/mnt/user/</div>
@@ -812,15 +812,15 @@
 </div>
 </aside>
 
-<script src="app.js?v=50"></script>
+<script src="app.js?v=53"></script>
 <div id="copy-toast-backdrop" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 10000; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;"></div>
 
-<div id="copy-toast" class="smart-modal-window" style="position: fixed; bottom: 20px; right: 20px; width: 350px; z-index: 10001; opacity: 0; pointer-events: none; transition: opacity 0.3s ease, transform 0.3s ease; transform: translateY(20px); border-color: rgba(255,255,255,0.1);">
+<div id="copy-toast" class="smart-modal-window" style="position: fixed; bottom: 20px; right: 20px; width: 350px; z-index: 10001; opacity: 0; pointer-events: none; transition: opacity 0.3s ease, transform 0.3s ease; transform: translateY(20px); border-color: rgba(255,255,255,0.1);" role="alertdialog" aria-modal="true">
   <div class="smart-modal-header" style="padding: 10px 15px; display: flex; justify-content: space-between; align-items: center;">
     <div class="smart-modal-title" style="display:flex; align-items:center;"><svg class="ic ic-sm" style="margin-right:4px;"><use href="#i-storage"/></svg> Media card ingest</div>
     <div style="display:flex; gap:8px;">
-      <button id="copy-toast-min" class="btn-icon" style="opacity: 0.5; cursor: pointer; border:none; background:none; color:white;">–</button>
-      <button id="copy-toast-cancel" class="btn-icon" style="opacity: 0.8; cursor: pointer; border:none; background:none; color:var(--crit); font-weight:bold;">×</button>
+      <button id="copy-toast-min" class="btn-icon" style="opacity: 0.5; cursor: pointer; border:none; background:none; color:white;" aria-label="Minimize">–</button>
+      <button id="copy-toast-cancel" class="btn-icon" style="opacity: 0.8; cursor: pointer; border:none; background:none; color:var(--crit); font-weight:bold;" aria-label="Cancel copy">×</button>
     </div>
   </div>
   <div class="smart-modal-body" style="padding: 15px; gap: 8px;">

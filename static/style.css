@@ -25,6 +25,7 @@ body, body.studio-workbench:not(.lcd-direct) {
   transition: background 0.35s ease, color 0.35s ease;
 }
 
+
 /* =========================================================================
    YAK EXPRESS CULT THEME: ROOT-PINNED YAK & GRASS (IMMUNE TO STAGE ZOOM)
    ========================================================================= */
@@ -108,7 +109,7 @@ body.theme-yak .chassis-front-panel {
   z-index: 2;
 }
 
-.chassis-front-panel::after {
+body.theme-yak .chassis-front-panel::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -1653,6 +1654,15 @@ body.lcd-direct #screen.hardware-screen-canvas {
   border-color: rgba(120,131,143,0.15);
 }
 
+
+/* =========================================================================
+   TABLET OVERLAY MODE (721px - 1100px)
+   ========================================================================= */
+@media (max-width: 1100px) {
+  body.drawer-is-open .chassis-workbench-stage {
+    margin-right: 0 !important;
+  }
+}
 
 /* =========================================================================
    MOBILE RESPONSIVE VIEW (STUDIO ONLY)
