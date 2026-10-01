@@ -23,7 +23,13 @@ import colorsys
 import subprocess
 import gzip
 import threading
-_ui_wake = threading.Event()
+
+class ZettState:
+    def __init__(self):
+        self.lock = threading.RLock()
+
+Z_STATE = ZettState()
+Z_STATE.ui_wake = threading.Event()
 from urllib.parse import urlparse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from PIL import Image
@@ -68,9 +74,9 @@ def get_server_hostname():
     return "Server"
 
 # ---- Deltas for CPU, Network, Disk I/O ----
-_prev = {"idle": 0, "total": 0}
-_prev_net = {"time": 0.0, "rx": 0, "tx": 0}
-_prev_disk_io = {}
+Z_STATE.prev = {"idle": 0, "total": 0}
+Z_STATE.prev_net = {"time": 0.0, "rx": 0, "tx": 0}
+Z_STATE.prev_disk_io = {}
 
 # ---- Hardware Drivers & State Files ----
 LED_PORT = os.environ.get("LED_PORT", "/dev/ttyACM0" if os.path.exists("/dev/ttyACM0") else "/host/dev/ttyACM0")
@@ -102,46 +108,46 @@ DASH_LAYOUT_FILE = os.environ.get("LAYOUT_PATH", os.path.join(DATA_DIR, "dash_la
 FAN_STATE_FILE = os.path.join(DATA_DIR, "fan_state.json")
 SCREEN_STATE_FILE = os.path.join(DATA_DIR, "screen_state.json")
 
-_cached_hwmon = None
-_cached_cpu_temp_path = None
-_known_active_fans = set()
+Z_STATE.cached_hwmon = None
+Z_STATE.cached_cpu_temp_path = None
+Z_STATE.known_active_fans = set()
 
-_cached_disk_list = None
-_cached_disk_list_time = 0.0
+Z_STATE.cached_disk_list = None
+Z_STATE.cached_disk_list_time = 0.0
 _DISK_LIST_TTL = 60.0  # seconds
 
-_cached_chassis_model = None
+Z_STATE.cached_chassis_model = None
 
-_lcd_renderer_active = False
+Z_STATE.lcd_renderer_active = False
 
 EVENTS_FILE = os.path.join(DATA_DIR, "events.json")
-_event_log = []
-_event_log_lock = threading.Lock()
+Z_STATE.event_log = []
+Z_STATE.lock = threading.Lock()
 
 def _load_events():
-    global _event_log
+    pass
     try:
         if os.path.exists(EVENTS_FILE):
             import json
             with open(EVENTS_FILE, "r") as f:
-                _event_log = json.load(f)
+                Z_STATE.event_log = json.load(f)
     except Exception:
         pass
 
 def add_event(level, title, message, details=None):
-    global _event_log
+    pass
     now = int(time.time())
-    with _event_log_lock:
-        if _event_log and _event_log[0].get("title") == title and _event_log[0].get("message") == message and (now - _event_log[0].get("ts", 0) < 3600):
+    with Z_STATE.lock:
+        if Z_STATE.event_log and Z_STATE.event_log[0].get("title") == title and Z_STATE.event_log[0].get("message") == message and (now - Z_STATE.event_log[0].get("ts", 0) < 3600):
             return
         entry = {"ts": now, "level": level, "title": title, "message": message}
         if details is not None:
             entry["details"] = details
-        _event_log.insert(0, entry)
-        _event_log = _event_log[:100]
+        Z_STATE.event_log.insert(0, entry)
+        Z_STATE.event_log = Z_STATE.event_log[:100]
         try:
             with open(EVENTS_FILE, "w") as f:
-                json.dump(_event_log, f)
+                json.dump(Z_STATE.event_log, f)
         except Exception:
             pass
 
@@ -218,11 +224,11 @@ CRC_TABLE = [
     0xde, 0xd9, 0xd0, 0xd7, 0xc2, 0xc5, 0xcc, 0xcb, 0xe6, 0xe1, 0xe8, 0xef, 0xfa, 0xfd, 0xf4, 0xf3
 ]
 
-_alert_active = False
-_rainbow_thread = None
-_rainbow_stop = threading.Event()
+Z_STATE.alert_active = False
+Z_STATE.rainbow_thread = None
+Z_STATE.rainbow_stop = threading.Event()
 
-_fan_state_tracker = {
+Z_STATE.fan_state_tracker = {
     "pwm1": {"current": 67, "last_up_time": 0.0},
     "pwm2": {"current": 67, "last_up_time": 0.0},
     "pwm3": {"current": 85, "last_up_time": 0.0},
@@ -286,7 +292,7 @@ def send_led_packet(mode, r1, g1, b1, r2=0, g2=0, b2=0, speed=5):
 def _rainbow_worker(brightness, slider_speed):
     hue = 0.0
     interval = max(0.04, 0.16 - (slider_speed / 100.0) * 0.12)
-    while not _rainbow_stop.is_set():
+    while not Z_STATE.rainbow_stop.is_set():
         r_f, g_f, b_f = colorsys.hsv_to_rgb(hue, 1.0, 1.0)
         scale = brightness / 100.0
         r = int(r_f * 255 * scale)
@@ -298,10 +304,10 @@ def _rainbow_worker(brightness, slider_speed):
 
 
 def apply_led_state(data):
-    global _rainbow_thread, _rainbow_stop
-    _rainbow_stop.set()
-    if _rainbow_thread and _rainbow_thread.is_alive():
-        _rainbow_thread.join(timeout=0.4)
+    pass
+    Z_STATE.rainbow_stop.set()
+    if Z_STATE.rainbow_thread and Z_STATE.rainbow_thread.is_alive():
+        Z_STATE.rainbow_thread.join(timeout=0.4)
 
     power = data.get("power", "on")
     brightness = int(data.get("brightness", 25))
@@ -314,9 +320,9 @@ def apply_led_state(data):
         return send_led_packet(0, 0, 0, 0, 0, 0, 0, 0)
 
     if effect == "rainbow":
-        _rainbow_stop.clear()
-        _rainbow_thread = threading.Thread(target=_rainbow_worker, args=(brightness, slider_speed), daemon=True)
-        _rainbow_thread.start()
+        Z_STATE.rainbow_stop.clear()
+        Z_STATE.rainbow_thread = threading.Thread(target=_rainbow_worker, args=(brightness, slider_speed), daemon=True)
+        Z_STATE.rainbow_thread.start()
         return True, "Rainbow Active"
 
     factor = (100 - slider_speed) / 99.0
@@ -362,9 +368,9 @@ def read_cpu_util():
         vals = list(map(int, parts))
         idle = vals[3] + (vals[4] if len(vals) > 4 else 0)
         total = sum(vals)
-        d_idle = idle - _prev["idle"]
-        d_total = total - _prev["total"]
-        _prev["idle"], _prev["total"] = idle, total
+        d_idle = idle - Z_STATE.prev["idle"]
+        d_total = total - Z_STATE.prev["total"]
+        Z_STATE.prev["idle"], Z_STATE.prev["total"] = idle, total
         if d_total <= 0:
             return 0
         return round(100 * (1 - d_idle / d_total))
@@ -389,34 +395,34 @@ def read_mem():
 
 
 def _find_hwmon():
-    global _cached_hwmon
-    if _cached_hwmon and os.path.exists(_cached_hwmon):
-        return _cached_hwmon
+    pass
+    if Z_STATE.cached_hwmon and os.path.exists(Z_STATE.cached_hwmon):
+        return Z_STATE.cached_hwmon
     for h in sorted(glob.glob(os.path.join(HOST_SYS, "class/hwmon/hwmon*"))):
         try:
             with open(os.path.join(h, "name")) as f:
                 n = f.read().strip()
                 if n in ("zettlab_d8_fans", "zettos_pwm_fan", "nct6775", "it87"):
-                    _cached_hwmon = h
+                    Z_STATE.cached_hwmon = h
                     return h
         except Exception:
             continue
     for h in sorted(glob.glob(os.path.join(HOST_SYS, "class/hwmon/hwmon*"))):
         if glob.glob(os.path.join(h, "pwm*")):
-            _cached_hwmon = h
+            Z_STATE.cached_hwmon = h
             return h
     return None
 
 
 def read_cpu_temp():
-    global _cached_cpu_temp_path
-    if _cached_cpu_temp_path and os.path.exists(_cached_cpu_temp_path):
+    pass
+    if Z_STATE.cached_cpu_temp_path and os.path.exists(Z_STATE.cached_cpu_temp_path):
         try:
-            val = int(open(_cached_cpu_temp_path).read().strip() or 0) / 1000
+            val = int(open(Z_STATE.cached_cpu_temp_path).read().strip() or 0) / 1000
             if val > 0:
                 return round(val)
         except Exception:
-            _cached_cpu_temp_path = None
+            Z_STATE.cached_cpu_temp_path = None
 
     for h in sorted(glob.glob(os.path.join(HOST_SYS, "class/hwmon/hwmon*"))):
         try:
@@ -425,7 +431,7 @@ def read_cpu_temp():
                 for t in sorted(glob.glob(os.path.join(h, "temp*_input"))):
                     val = int(open(t).read().strip() or 0) / 1000
                     if val > 0:
-                        _cached_cpu_temp_path = t
+                        Z_STATE.cached_cpu_temp_path = t
                         return round(val)
         except Exception:
             continue
@@ -433,7 +439,7 @@ def read_cpu_temp():
 
 
 def read_fans():
-    global _known_active_fans
+    pass
     hw = _find_hwmon()
     fans = []
     if hw:
@@ -459,39 +465,39 @@ def read_fans():
             
     for idx, rpm in enumerate(fans):
         if rpm > 300:
-            _known_active_fans.add(idx)
+            Z_STATE.known_active_fans.add(idx)
     return fans
 
 
 def detect_chassis_model():
-    global _cached_chassis_model
-    if _cached_chassis_model is not None:
-        return _cached_chassis_model
+    pass
+    if Z_STATE.cached_chassis_model is not None:
+        return Z_STATE.cached_chassis_model
     dmi_path = os.path.join(HOST_SYS, "class/dmi/id/product_name")
     if os.path.exists(dmi_path):
         try:
             prod = open(dmi_path).read().strip().lower()
             if "d8" in prod:
-                _cached_chassis_model = "d8u"
-                return _cached_chassis_model
+                Z_STATE.cached_chassis_model = "d8u"
+                return Z_STATE.cached_chassis_model
             if "d6" in prod:
-                _cached_chassis_model = "d6u"
-                return _cached_chassis_model
+                Z_STATE.cached_chassis_model = "d6u"
+                return Z_STATE.cached_chassis_model
             if "d4" in prod:
-                _cached_chassis_model = "d4"
-                return _cached_chassis_model
+                Z_STATE.cached_chassis_model = "d4"
+                return Z_STATE.cached_chassis_model
         except Exception:
             pass
 
     disks = _discover_disks()
     count = len(disks)
     if count > 6:
-        _cached_chassis_model = "d8u"
+        Z_STATE.cached_chassis_model = "d8u"
     elif count <= 4 and count > 0:
-        _cached_chassis_model = "d4"
+        Z_STATE.cached_chassis_model = "d4"
     else:
-        _cached_chassis_model = "d6u"
-    return _cached_chassis_model
+        Z_STATE.cached_chassis_model = "d6u"
+    return Z_STATE.cached_chassis_model
 
 
 def calc_curve_pwm(temp, min_pwm=58, max_pwm=183, temp_min=37, temp_max=50, curve_points=None):
@@ -530,9 +536,9 @@ def calc_curve_pwm(temp, min_pwm=58, max_pwm=183, temp_min=37, temp_max=50, curv
 def apply_zone_pwm(pwm_index, target_pwm, hold_secs=120):
     now = time.time()
     pwm_key = f"pwm{pwm_index}"
-    if pwm_key not in _fan_state_tracker:
-        _fan_state_tracker[pwm_key] = {"current": 67, "last_up_time": 0.0}
-    state = _fan_state_tracker[pwm_key]
+    if pwm_key not in Z_STATE.fan_state_tracker:
+        Z_STATE.fan_state_tracker[pwm_key] = {"current": 67, "last_up_time": 0.0}
+    state = Z_STATE.fan_state_tracker[pwm_key]
     current = state["current"]
 
     if target_pwm > current:
@@ -549,7 +555,7 @@ def apply_zone_pwm(pwm_index, target_pwm, hold_secs=120):
 
 
 def get_hold_remaining(pwm_key, hold_secs=120):
-    state = _fan_state_tracker.get(pwm_key, {})
+    state = Z_STATE.fan_state_tracker.get(pwm_key, {})
     last_up = state.get("last_up_time", 0.0)
     rem = hold_secs - (time.time() - last_up)
     return max(0, int(rem))
@@ -597,10 +603,10 @@ def set_fan_pwm(profile, manual_pct=60, custom_pwms=None, ctrl_cpu_fan=False):
 
 
 def _discover_disks():
-    global _cached_disk_list, _cached_disk_list_time
+    pass
     now = time.time()
-    if _cached_disk_list is not None and (now - _cached_disk_list_time) < _DISK_LIST_TTL:
-        return _cached_disk_list
+    if Z_STATE.cached_disk_list is not None and (now - Z_STATE.cached_disk_list_time) < _DISK_LIST_TTL:
+        return Z_STATE.cached_disk_list
 
     def rota(name):
         try:
@@ -617,8 +623,8 @@ def _discover_disks():
     override = DISKS.strip()
     if override:
         result = [{"dev": d, "role": classify(d)} for d in override.split(",")]
-        _cached_disk_list = result
-        _cached_disk_list_time = now
+        Z_STATE.cached_disk_list = result
+        Z_STATE.cached_disk_list_time = now
         return result
     disks = []
     try:
@@ -631,8 +637,8 @@ def _discover_disks():
                 disks.append({"dev": name, "role": classify(name)})
     except Exception:
         pass
-    _cached_disk_list = disks
-    _cached_disk_list_time = now
+    Z_STATE.cached_disk_list = disks
+    Z_STATE.cached_disk_list_time = now
     return disks
 
 
@@ -708,11 +714,11 @@ def _parse_smart(text, is_nvme):
     return temp, health
 
 
-_cached_smart_data = {}
-_last_smart_scan = {}  # {dev_name: float}
+Z_STATE.cached_smart_data = {}
+Z_STATE.last_smart_scan = {}  # {dev_name: float}
 
 def read_disk_temps_and_io():
-    global _prev_disk_io, _cached_smart_data, _last_smart_scan
+    pass
     now = time.time()
     curr_io = {}
     try:
@@ -737,12 +743,12 @@ def read_disk_temps_and_io():
         dtype = "nvme" if is_nvme else "sat"
 
         poll_interval = SMART_POLL_INTERVAL_NVME if is_nvme else SMART_POLL_INTERVAL_HDD
-        last_scan = _last_smart_scan.get(dev_name, 0.0)
+        last_scan = Z_STATE.last_smart_scan.get(dev_name, 0.0)
         should_poll_smart = (now - last_scan) >= poll_interval
 
         is_standby = False
-        if should_poll_smart or dev_name not in _cached_smart_data:
-            _last_smart_scan[dev_name] = now
+        if should_poll_smart or dev_name not in Z_STATE.cached_smart_data:
+            Z_STATE.last_smart_scan[dev_name] = now
             try:
                 cmd = ["smartctl"]
                 if not is_nvme:
@@ -753,20 +759,20 @@ def read_disk_temps_and_io():
 
                 if not is_nvme and (r.returncode == 2 or "STANDBY" in r.stdout.upper() or "SLEEP" in r.stdout.upper()):
                     is_standby = True
-                    prev_t, _ = _cached_smart_data.get(dev_name, (None, "standby"))
+                    prev_t, _ = Z_STATE.cached_smart_data.get(dev_name, (None, "standby"))
                     temp = prev_t
                     health = "standby"
-                    _cached_smart_data[dev_name] = (temp, health)
+                    Z_STATE.cached_smart_data[dev_name] = (temp, health)
                 else:
                     temp, health = _parse_smart(r.stdout, is_nvme)
-                    _cached_smart_data[dev_name] = (temp, health)
+                    Z_STATE.cached_smart_data[dev_name] = (temp, health)
             except Exception:
-                temp, health = _cached_smart_data.get(dev_name, (None, "ok"))
+                temp, health = Z_STATE.cached_smart_data.get(dev_name, (None, "ok"))
         else:
-            temp, health = _cached_smart_data.get(dev_name, (None, "ok"))
+            temp, health = Z_STATE.cached_smart_data.get(dev_name, (None, "ok"))
             is_standby = (health == "standby")
 
-        prev_count = _prev_disk_io.get(dev_name, 0)
+        prev_count = Z_STATE.prev_disk_io.get(dev_name, 0)
         curr_count = curr_io.get(dev_name, 0)
         io_active = (curr_count > prev_count) if prev_count > 0 else False
 
@@ -780,7 +786,7 @@ def read_disk_temps_and_io():
             "active": io_active
         })
 
-    _prev_disk_io = curr_io
+    Z_STATE.prev_disk_io = curr_io
     return out
 
 
@@ -827,7 +833,7 @@ def fetch_disk_smart_detail(dev_name):
 
 
 def read_network_rates():
-    global _prev_net
+    pass
     now = time.time()
     rx_bytes = 0
     tx_bytes = 0
@@ -846,14 +852,14 @@ def read_network_rates():
     except Exception:
         pass
 
-    dt = max(0.1, now - _prev_net["time"])
+    dt = max(0.1, now - Z_STATE.prev_net["time"])
     rx_rate = 0.0
     tx_rate = 0.0
-    if _prev_net["time"] > 0:
-        rx_rate = max(0.0, (rx_bytes - _prev_net["rx"]) / dt)
-        tx_rate = max(0.0, (tx_bytes - _prev_net["tx"]) / dt)
+    if Z_STATE.prev_net["time"] > 0:
+        rx_rate = max(0.0, (rx_bytes - Z_STATE.prev_net["rx"]) / dt)
+        tx_rate = max(0.0, (tx_bytes - Z_STATE.prev_net["tx"]) / dt)
 
-    _prev_net = {"time": now, "rx": rx_bytes, "tx": tx_bytes}
+    Z_STATE.prev_net = {"time": now, "rx": rx_bytes, "tx": tx_bytes}
 
     def fmt_speed(b):
         if b >= 1024 * 1024:
@@ -888,17 +894,17 @@ def read_uptime():
         return "?"
 
 
-_discovered_host_ip = None
+Z_STATE.discovered_host_ip = None
 
 def read_ip():
-    global _discovered_host_ip
+    pass
 
     env_ip = os.environ.get("HOST_IP", "").strip()
     if env_ip:
         return env_ip
 
-    if _discovered_host_ip:
-        return _discovered_host_ip
+    if Z_STATE.discovered_host_ip:
+        return Z_STATE.discovered_host_ip
 
     for p in ["/boot/config/network.cfg", "/host/etc/network/interfaces"]:
         if os.path.exists(p):
@@ -911,14 +917,14 @@ def read_ip():
                     ip_match = re.search(r'address\s+(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})', content)
                 
                 if ip_match:
-                    _discovered_host_ip = ip_match.group(1)
-                    return _discovered_host_ip
+                    Z_STATE.discovered_host_ip = ip_match.group(1)
+                    return Z_STATE.discovered_host_ip
 
                 # Fallback to the old greedy matching if explicit keys aren't found
                 matches = re.findall(r'(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})', content)
                 for ip in matches:
                     if not (ip.startswith("127.") or ip.startswith("172.") or ip.endswith(".255") or ip == "0.0.0.0"):
-                        _discovered_host_ip = ip
+                        Z_STATE.discovered_host_ip = ip
                         return ip
             except Exception:
                 pass
@@ -927,16 +933,16 @@ def read_ip():
 
 
 
-_copy_active = False
-_copy_status = "idle"
-_copy_confirm_event = threading.Event()
-_copy_abort_flag = False
-_copy_overwrite_choice = 'skip'
-_copy_progress = {"total": 0, "copied": 0, "start": 0, "file": ""}
+Z_STATE.copy_active = False
+Z_STATE.copy_status = "idle"
+Z_STATE.copy_confirm_event = threading.Event()
+Z_STATE.copy_abort_flag = False
+Z_STATE.copy_overwrite_choice = 'skip'
+Z_STATE.copy_progress = {"total": 0, "copied": 0, "start": 0, "file": ""}
 BUTTON_CFG_FILE = os.path.join(DATA_DIR, "button_state.json")
 
 def button_listener_daemon():
-    global _copy_active, _copy_status
+    pass
     MMIO_BASE = 0xE0D20000
     COPY_OFFSET = 0x6C0
 
@@ -961,10 +967,10 @@ def button_listener_daemon():
                             cfg.update(json.load(f))
                     except: pass
                 
-                if cfg.get("enabled") and not _copy_active:
-                    _copy_active = True
-                    _copy_status = "copying"
-                    _ui_wake.set()
+                if cfg.get("enabled") and not Z_STATE.copy_active:
+                    Z_STATE.copy_active = True
+                    Z_STATE.copy_status = "copying"
+                    Z_STATE.ui_wake.set()
                     add_event("info", "Copy Started", "Starting ingest from SD Card reader...")
                     threading.Thread(target=_do_copy, args=(cfg,), daemon=True).start()
             
@@ -994,11 +1000,11 @@ def _get_exif_date(filepath):
     return None
 
 def _do_copy(cfg):
-    global _copy_active, _copy_status, _copy_progress, _copy_confirm_event, _copy_overwrite_choice
+    pass
     src_mode = cfg.get("source", "sd").strip()
     dst = cfg.get("dest", "/mnt/user/").strip()
     
-    _copy_progress = {"total": 0, "copied": 0, "start": time.time(), "file": "Initializing...", "files_total": 0, "files_done": 0}
+    Z_STATE.copy_progress = {"total": 0, "copied": 0, "start": time.time(), "file": "Initializing...", "files_total": 0, "files_done": 0}
     tmp_mount = False
     mounted_path = None
     try:
@@ -1047,8 +1053,8 @@ def _do_copy(cfg):
         if not os.path.exists(dst_path):
             raise Exception(f"Destination path {dst_path} does not exist.")
 
-        _copy_progress["file"] = "Scanning media and EXIF metadata..."
-        _ui_wake.set()
+        Z_STATE.copy_progress["file"] = "Scanning media and EXIF metadata..."
+        Z_STATE.ui_wake.set()
         
         collisions = []
         all_files = []
@@ -1075,91 +1081,91 @@ def _do_copy(cfg):
                 all_files.append((src_file, dst_file, file_size, is_collision))
 
         if collisions:
-            _copy_status = "awaiting_confirmation"
-            _copy_progress["file"] = f"{len(collisions)} files already exist in destination."
+            Z_STATE.copy_status = "awaiting_confirmation"
+            Z_STATE.copy_progress["file"] = f"{len(collisions)} files already exist in destination."
             add_event("warning", "Copy Collision", f"{len(collisions)} files already exist. Waiting for confirmation.")
-            _ui_wake.set()
+            Z_STATE.ui_wake.set()
             
-            _copy_confirm_event.clear()
-            _copy_confirm_event.wait(timeout=300.0)
+            Z_STATE.copy_confirm_event.clear()
+            Z_STATE.copy_confirm_event.wait(timeout=300.0)
             
-            if not _copy_confirm_event.is_set():
+            if not Z_STATE.copy_confirm_event.is_set():
                 raise Exception("Aborted: Timed out waiting for overwrite confirmation.")
             
-            if _copy_overwrite_choice == "cancel":
+            if Z_STATE.copy_overwrite_choice == "cancel":
                 raise Exception("Aborted by user.")
 
         files_to_copy = []
         total_size = 0
         for src_file, dst_file, file_size, is_collision in all_files:
-            if is_collision and collisions and _copy_overwrite_choice == "skip":
+            if is_collision and collisions and Z_STATE.copy_overwrite_choice == "skip":
                 continue
             if file_size > 0:
                 total_size += file_size
                 files_to_copy.append((src_file, dst_file))
 
-        _copy_progress["total"] = total_size
-        _copy_progress["files_total"] = len(files_to_copy)
-        _copy_progress["files_done"] = 0
-        global _copy_abort_flag
-        _copy_abort_flag = False
-        _copy_progress["start"] = time.time()
-        _copy_status = "copying"
-        _ui_wake.set()
+        Z_STATE.copy_progress["total"] = total_size
+        Z_STATE.copy_progress["files_total"] = len(files_to_copy)
+        Z_STATE.copy_progress["files_done"] = 0
+        pass
+        Z_STATE.copy_abort_flag = False
+        Z_STATE.copy_progress["start"] = time.time()
+        Z_STATE.copy_status = "copying"
+        Z_STATE.ui_wake.set()
         
         for src_f, dst_f in files_to_copy:
-            if _copy_abort_flag:
+            if Z_STATE.copy_abort_flag:
                 break
             os.makedirs(os.path.dirname(dst_f), exist_ok=True)
-            _copy_progress["file"] = os.path.basename(src_f)
+            Z_STATE.copy_progress["file"] = os.path.basename(src_f)
             length = 1024 * 1024 * 4
             try:
                 with open(src_f, 'rb') as fsrc, open(dst_f, 'wb') as fdst:
                     while True:
-                        if _copy_abort_flag: break
+                        if Z_STATE.copy_abort_flag: break
                         buf = fsrc.read(length)
                         if not buf:
                             break
                         fdst.write(buf)
-                        _copy_progress["copied"] += len(buf)
-                if _copy_abort_flag: os.remove(dst_f); break
+                        Z_STATE.copy_progress["copied"] += len(buf)
+                if Z_STATE.copy_abort_flag: os.remove(dst_f); break
                 import shutil
                 shutil.copystat(src_f, dst_f)
-                _copy_progress['files_done'] += 1
+                Z_STATE.copy_progress['files_done'] += 1
             except Exception as e:
                 print(f"[ZettNAS] Error copying {src_f}: {e}")
 
-        if _copy_abort_flag:
-            _copy_status = "aborted"
-            _copy_progress["file"] = "Aborted."
+        if Z_STATE.copy_abort_flag:
+            Z_STATE.copy_status = "aborted"
+            Z_STATE.copy_progress["file"] = "Aborted."
             add_event("warning", "Copy Aborted", "User aborted the copy operation.")
             raise Exception("Aborted by user.")
         else:
-            _copy_status = "success"
-            add_event("success", "Copy Completed", f"Successfully copied {_copy_progress['files_done']} files.")
-        _copy_progress["file"] = "Finished successfully." 
+            Z_STATE.copy_status = "success"
+            add_event("success", "Copy Completed", f"Successfully copied {Z_STATE.copy_progress['files_done']} files.")
+        Z_STATE.copy_progress["file"] = "Finished successfully." 
         
     except Exception as e:
         print(f"[ZettNAS] Copy failed: {e}")
-        _copy_status = "error"
-        _copy_progress["file"] = f"Error: {e}"
+        Z_STATE.copy_status = "error"
+        Z_STATE.copy_progress["file"] = f"Error: {e}"
         add_event("error", "Copy Failed", str(e))
         try: send_led_packet(5, 255, 0, 0, 0, 0, 0, speed=10)
         except: pass
     finally:
         if tmp_mount and mounted_path:
             subprocess.run(["umount", mounted_path])
-        _copy_active = False
-        _ui_wake.set()
+        Z_STATE.copy_active = False
+        Z_STATE.ui_wake.set()
         time.sleep(8)
-        _copy_status = "idle"
-        _ui_wake.set()
+        Z_STATE.copy_status = "idle"
+        Z_STATE.ui_wake.set()
 
 
 
-_cached_stats = None
+Z_STATE.cached_stats = None
 
-_cached_stats_lock = threading.Lock()
+Z_STATE.lock = threading.Lock()
 
 
 def read_media_slots():
@@ -1188,7 +1194,7 @@ def read_media_slots():
     return slots
 
 def stats_collector_daemon():
-    global _cached_stats, _alert_active
+    pass
     _prev_crit = False
     _prev_warn = False
     _prev_throttle = False
@@ -1287,7 +1293,7 @@ def stats_collector_daemon():
             in_led_night = cfg.get("night_mode", False) and is_in_time_window(cfg.get("night_start", "23:00"), cfg.get("night_end", "07:00"))
 
             if cfg.get("reactive", True):
-                is_failing_fan = any(fans[i] == 0 for i in _known_active_fans if i < len(fans)) if _known_active_fans else False
+                is_failing_fan = any(fans[i] == 0 for i in Z_STATE.known_active_fans if i < len(fans)) if Z_STATE.known_active_fans else False
                 is_crit = has_crit or (cpu_temp >= 85) or is_failing_fan
                 is_warn = (len(bad) > 0) or (cpu_temp >= 70)
 
@@ -1311,28 +1317,28 @@ def stats_collector_daemon():
 
                 is_disk_active = any(d.get("active", False) for d in disks)
                 if is_crit:
-                    _alert_active = True
+                    Z_STATE.alert_active = True
                     send_led_packet(5, 255, 0, 0, 0, 0, 0, speed=10)
-                elif _copy_active:
-                    _alert_active = True
-                    if _copy_status == "copying":
+                elif Z_STATE.copy_active:
+                    Z_STATE.alert_active = True
+                    if Z_STATE.copy_status == "copying":
                         send_led_packet(2, 0, 100, 255, 0, 0, 0, speed=20)
-                    elif _copy_status == "success":
+                    elif Z_STATE.copy_status == "success":
                         send_led_packet(1, 0, 255, 0, 0, 0, 0, speed=10)
-                    elif _copy_status == "error":
+                    elif Z_STATE.copy_status == "error":
                         send_led_packet(5, 255, 0, 0, 0, 0, 0, speed=10)
                 elif is_warn:
-                    _alert_active = True
+                    Z_STATE.alert_active = True
                     send_led_packet(1, 255, 120, 0, 0, 0, 0, speed=18)
                 elif is_disk_active and not in_led_night:
-                    _alert_active = True
+                    Z_STATE.alert_active = True
                     # Cylon / Scanning effect for active disk IO (Cyan/Blue flow)
                     send_led_packet(2, 0, 200, 255, 0, 0, 0, speed=40)
                 elif in_led_night:
-                    _alert_active = False
+                    Z_STATE.alert_active = False
                     send_led_packet(0, 0, 0, 0, 0, 0, 0, 0)
-                elif _alert_active:
-                    _alert_active = False
+                elif Z_STATE.alert_active:
+                    Z_STATE.alert_active = False
                     apply_led_state(cfg)
             elif in_led_night:
                 send_led_packet(0, 0, 0, 0, 0, 0, 0, 0)
@@ -1348,7 +1354,7 @@ def stats_collector_daemon():
                 "cpu": {"temp": cpu_temp, "util": read_cpu_util()},
                 "mem": read_mem(),
                 "fans": fans,
-                "copy_state": {"active": _copy_active, "status": _copy_status, "progress": _copy_progress},
+                "copy_state": {"active": Z_STATE.copy_active, "status": Z_STATE.copy_status, "progress": Z_STATE.copy_progress},
                 "media_slots": read_media_slots(),
         "fan_control": {
                     "zone1_temp": t_zone1,
@@ -1369,11 +1375,11 @@ def stats_collector_daemon():
                 "uptime": read_uptime(),
                 "disks": disks,
                 "chassis": detect_chassis_model(),
-                "layout": get_current_layout(), "copy_status": _copy_status
+                "layout": get_current_layout(), "copy_status": Z_STATE.copy_status
             }
             
-            with _cached_stats_lock:
-                _cached_stats = data
+            with Z_STATE.lock:
+                Z_STATE.cached_stats = data
                 
             now_ts = int(time.time())
             if not hasattr(stats_collector_daemon, 'last_log'):
@@ -1393,20 +1399,20 @@ def stats_collector_daemon():
             import traceback
             print('CRASH:', e)
             traceback.print_exc()
-        if _ui_wake.wait(2.0):
-                        _ui_wake.clear()
+        if Z_STATE.ui_wake.wait(2.0):
+                        Z_STATE.ui_wake.clear()
 
 
 def collect():
-    with _cached_stats_lock:
-        data = dict(_cached_stats) if _cached_stats else {
+    with Z_STATE.lock:
+        data = dict(Z_STATE.cached_stats) if Z_STATE.cached_stats else {
             "name": get_server_hostname(), "status": "-- OK", "ip": read_ip(),
             "storage": {"used": "0GB", "total": "0GB", "pct": 0}, "cpu": {"temp": 0, "util": 0}, "mem": {"used_gb": 0, "total_gb": 0, "pct": 0},
             "fans": [], "copy_state": {"active": False, "status": "idle", "progress": {}},
             "net": {"tx": "0 B/s", "rx": "0 B/s"}, "uptime": "0s", "disks": []
         }
-    with _event_log_lock:
-        data["events"] = list(_event_log)
+    with Z_STATE.lock:
+        data["events"] = list(Z_STATE.event_log)
     return data
 
 def _old_collect_wrapper():
@@ -1419,7 +1425,7 @@ def _old_collect_wrapper():
         "mem": {"used_gb": 0, "total_gb": 0, "pct": 0},
         "fans": [],
         "media_slots": {"sd": {"size": 0, "dev": None}, "tf": {"size": 0, "dev": None}},
-        "copy_state": {"active": _copy_active, "status": _copy_status, "progress": _copy_progress},
+        "copy_state": {"active": Z_STATE.copy_active, "status": Z_STATE.copy_status, "progress": Z_STATE.copy_progress},
         "fan_control": {
             "zone1_temp": 35,
             "zone1_pwm": 67,
@@ -1436,12 +1442,12 @@ def _old_collect_wrapper():
         "uptime": "--",
         "disks": [],
         "chassis": "d6u",
-        "layout": get_current_layout(), "copy_status": _copy_status
+        "layout": get_current_layout(), "copy_status": Z_STATE.copy_status
     }
 
 
 def render_lcd_loop():
-    global _lcd_renderer_active
+    pass
     """
     Active Framebuffer Streamer to /dev/fb0:
     - Viewport oriented 172x640 via CSS 90deg rotation (No CPU matrix rotate overhead).
@@ -1515,7 +1521,7 @@ def render_lcd_loop():
                 )
                 page = context.new_page()
                 page.goto(url, wait_until="domcontentloaded", timeout=15000)
-                _lcd_renderer_active = True
+                Z_STATE.lcd_renderer_active = True
 
                 cdp = context.new_cdp_session(page)
                 shot_params = {
@@ -1564,36 +1570,36 @@ def render_lcd_loop():
                         time.sleep(sleep_time)
 
         except Exception as e:
-            _lcd_renderer_active = False
+            Z_STATE.lcd_renderer_active = False
 
 EVENTS_FILE = os.path.join(DATA_DIR, "events.json")
-_event_log = []
-_event_log_lock = threading.Lock()
+Z_STATE.event_log = []
+Z_STATE.lock = threading.Lock()
 
 def _load_events():
-    global _event_log
+    pass
     try:
         if os.path.exists(EVENTS_FILE):
             import json
             with open(EVENTS_FILE, "r") as f:
-                _event_log = json.load(f)
+                Z_STATE.event_log = json.load(f)
     except Exception:
         pass
 
 def add_event(level, title, message, details=None):
-    global _event_log
+    pass
     now = int(time.time())
-    with _event_log_lock:
-        if _event_log and _event_log[0].get("title") == title and _event_log[0].get("message") == message and (now - _event_log[0].get("ts", 0) < 3600):
+    with Z_STATE.lock:
+        if Z_STATE.event_log and Z_STATE.event_log[0].get("title") == title and Z_STATE.event_log[0].get("message") == message and (now - Z_STATE.event_log[0].get("ts", 0) < 3600):
             return
         entry = {"ts": now, "level": level, "title": title, "message": message}
         if details is not None:
             entry["details"] = details
-        _event_log.insert(0, entry)
-        _event_log = _event_log[:100]
+        Z_STATE.event_log.insert(0, entry)
+        Z_STATE.event_log = Z_STATE.event_log[:100]
         try:
             with open(EVENTS_FILE, "w") as f:
-                json.dump(_event_log, f)
+                json.dump(Z_STATE.event_log, f)
         except Exception:
             pass
 
@@ -1601,18 +1607,18 @@ def add_event(level, title, message, details=None):
             time.sleep(2)
 
 
-_static_cache = {}  # {filepath: (bytes, etag, gzip_bytes)}
-_static_cache_lock = threading.Lock()
+Z_STATE.static_cache = {}  # {filepath: (bytes, etag, gzip_bytes)}
+Z_STATE.lock = threading.Lock()
 
 def _load_static_file(fp):
     """Load a static file into cache with ETag and mtime validation."""
-    with _static_cache_lock:
+    with Z_STATE.lock:
         try:
             mtime = __import__('os').path.getmtime(fp)
         except Exception:
             return None
-        if fp in _static_cache:
-            entry = _static_cache[fp]
+        if fp in Z_STATE.static_cache:
+            entry = Z_STATE.static_cache[fp]
             if len(entry) == 4 and entry[3] == mtime:
                 return entry
         try:
@@ -1631,7 +1637,7 @@ def _load_static_file(fp):
                 gz.write(content)
             gz_content = buf.getvalue()
         entry = (content, etag, gz_content, mtime)
-        _static_cache[fp] = entry
+        Z_STATE.static_cache[fp] = entry
         return entry
 
 
@@ -1651,7 +1657,7 @@ async def get_lcd_status():
         "enabled": ENABLE_FB,
         "fb_present": os.path.exists("/dev/fb0"),
         "fps": LCD_FPS,
-        "active": _lcd_renderer_active
+        "active": Z_STATE.lcd_renderer_active
     }
 
 @app.get("/api/stats")
@@ -1736,21 +1742,21 @@ async def mkdir(request: Request, path: str = None):
 
 @app.post("/api/copy/cancel")
 async def copy_cancel():
-    global _copy_abort_flag, _copy_overwrite_choice, _copy_confirm_event, _copy_status, _copy_active, _ui_wake
-    _copy_abort_flag = True
-    _copy_overwrite_choice = "cancel"
-    _copy_confirm_event.set()
-    if not _copy_active:
-        _copy_status = "idle"
-        _ui_wake.set()
+    pass
+    Z_STATE.copy_abort_flag = True
+    Z_STATE.copy_overwrite_choice = "cancel"
+    Z_STATE.copy_confirm_event.set()
+    if not Z_STATE.copy_active:
+        Z_STATE.copy_status = "idle"
+        Z_STATE.ui_wake.set()
     return {"status": "ok"}
 
 @app.post("/api/copy/confirm")
 async def copy_confirm(request: Request):
-    global _copy_overwrite_choice, _copy_confirm_event
+    pass
     data = await request.json()
-    _copy_overwrite_choice = data.get("action", "skip")
-    _copy_confirm_event.set()
+    Z_STATE.copy_overwrite_choice = data.get("action", "skip")
+    Z_STATE.copy_confirm_event.set()
     return {"status": "ok"}
 
 @app.get("/api/buttons")
@@ -1784,9 +1790,9 @@ async def post_buttons(request: Request):
 
 @app.get("/api/events/clear")
 async def clear_events():
-    global _event_log
-    with _event_log_lock:
-        _event_log = []
+    pass
+    with Z_STATE.lock:
+        Z_STATE.event_log = []
     if os.path.exists(EVENTS_LOG_FILE):
         os.remove(EVENTS_LOG_FILE)
     return {"status": "ok"}
@@ -1836,15 +1842,15 @@ async def post_layout(request: Request):
     data["version"] = int(time.time() * 1000)
     with open(DASH_LAYOUT_FILE, "w") as f:
         json.dump(data, f)
-    with _cached_stats_lock:
-        if _cached_stats:
-            _cached_stats["layout"] = data
+    with Z_STATE.lock:
+        if Z_STATE.cached_stats:
+            Z_STATE.cached_stats["layout"] = data
     return {"status": "ok", "layout": data}
 
 @app.post("/api/state")
 async def post_state(request: Request):
     data = await request.json()
-    global ENABLE_FB
+    pass
     if "fb" in data:
         ENABLE_FB = bool(data["fb"])
     return {"status": "ok"}
