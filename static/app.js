@@ -3107,12 +3107,9 @@ function renderEventLog(events) {
     const row = document.createElement("div");
     row.style.cssText = "padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column; gap: 8px;";
     
-    const hasDetails = !!e.details;
-    if (hasDetails) {
-      row.style.cursor = "pointer";
-      row.onmouseover = () => row.style.background = "rgba(255,255,255,0.02)";
-      row.onmouseout = () => row.style.background = "transparent";
-    }
+    row.style.cursor = "pointer";
+    row.onmouseover = () => row.style.background = "rgba(255,255,255,0.02)";
+    row.onmouseout = () => row.style.background = "transparent";
 
     let topHtml = `
       <div style="display: flex; gap: 10px; align-items: flex-start;">
@@ -3122,23 +3119,21 @@ function renderEventLog(events) {
           <div style="font-size: 12px; color: #fff;">${e.message}</div>
           <div style="font-size: 10px; color: var(--muted);">${timeStr}</div>
         </div>
-        ${hasDetails ? '<span style="font-size: 10px; color: var(--muted); padding-top: 4px;">▼ Details</span>' : ''}
+        <span style="font-size: 10px; color: var(--muted); padding-top: 4px;">▼ Details</span>
       </div>
     `;
     
     row.innerHTML = topHtml;
     
-    if (hasDetails) {
-      const detailsBox = document.createElement("pre");
-      detailsBox.style.cssText = "display: none; margin: 0; padding: 10px; background: rgba(0,0,0,0.4); border-radius: 6px; font-size: 10px; color: #a0aec0; border: 1px solid rgba(255,255,255,0.05); white-space: pre-wrap; word-break: break-all;";
-      detailsBox.textContent = JSON.stringify(e.details, null, 2);
-      row.appendChild(detailsBox);
-      
-      row.addEventListener("click", () => {
-        const isHidden = detailsBox.style.display === "none";
-        detailsBox.style.display = isHidden ? "block" : "none";
-      });
-    }
+    const detailsBox = document.createElement("pre");
+    detailsBox.style.cssText = "display: none; margin: 0; padding: 10px; background: rgba(0,0,0,0.4); border-radius: 6px; font-size: 10px; color: #a0aec0; border: 1px solid rgba(255,255,255,0.05); white-space: pre-wrap; word-break: break-all;";
+    detailsBox.textContent = JSON.stringify(e, null, 2);
+    row.appendChild(detailsBox);
+    
+    row.addEventListener("click", () => {
+      const isHidden = detailsBox.style.display === "none";
+      detailsBox.style.display = isHidden ? "block" : "none";
+    });
     
     list.appendChild(row);
   });
