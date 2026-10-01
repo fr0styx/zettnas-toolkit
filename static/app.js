@@ -104,16 +104,6 @@ function showToast(msg, type="error") {
       }, 300);
   }, 4000);
 }
-
-
-
-
-}
-
-
-
-}
-
 const FAN_LABELS = ["D1", "D2", "CPU", "SYS"];
 
 // Shared local client state
