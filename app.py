@@ -908,7 +908,7 @@ def button_listener_daemon():
     COPY_OFFSET = 0x6C0
 
     try:
-        fd = os.open("/dev/mem", os.O_RDWR | os.O_SYNC)
+        fd = os.open(os.path.join(HOST_DEV, "mem"), os.O_RDWR | os.O_SYNC)
         mem = mmap.mmap(fd, 4096, offset=MMIO_BASE)
     except Exception as e:
         print(f"[ZettNAS] Hardware button mapping failed: {e}")
@@ -1093,7 +1093,7 @@ def _do_copy(cfg):
             subprocess.run(["umount", mounted_path])
         _copy_active = False
         _ui_wake.set()
-        time.sleep(6)
+        time.sleep(8)
         _copy_status = "idle"
         _ui_wake.set()
 

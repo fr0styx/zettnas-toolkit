@@ -105,7 +105,7 @@ function showToast(msg, type="error") {
           if (titleEl) titleEl.innerHTML = `<svg class="ic ic-sm" style="margin-right:4px;"><use href="#i-storage"/></svg> Media card ingest`;
           window._customToastActive = false;
       }, 300);
-  }, 4000);
+  }, 8000);
 }
 const FAN_LABELS = ["D1", "D2", "CPU", "SYS"];
 
