@@ -1538,7 +1538,25 @@ function applyStats(s) {
   const btnToastCancel = $("copy-toast-cancel");
   if (btnToastCancel && !btnToastCancel.dataset.listening) {
     btnToastCancel.dataset.listening = "true";
-    btnToastCancel.addEventListener("click", () => {
+    btnToastCancel.addEventListener("click", (e) => {
+      if (window._customToastActive) return; // handled by custom onclick
+      const statusText = ($("copy-toast-status")?.textContent || "").toUpperCase();
+      if (statusText === "FAILED!" || statusText === "SUCCESS!" || statusText === "ERROR!" || statusText === "DONE!") {
+        const toast = $("copy-toast");
+        if (toast) {
+          toast.style.opacity = "0";
+          toast.style.pointerEvents = "none";
+          toast.style.transform = "translateY(20px)";
+          const backdrop = $("copy-toast-backdrop");
+          if (backdrop) {
+            backdrop.style.opacity = "0";
+            backdrop.style.pointerEvents = "none";
+          }
+        }
+        fetch("/api/copy/cancel", { method: "POST" });
+        return;
+      }
+      
       if (!$("copy-toast-abort-actions")) {
         const actionsDiv = document.createElement("div");
         actionsDiv.id = "copy-toast-abort-actions";
