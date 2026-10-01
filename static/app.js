@@ -51,7 +51,9 @@ function renderCurveLines() {
 
 const $ = (id) => document.getElementById(id);
 
+window._customToastActive = false;
 function showToast(msg, type="error") {
+  window._customToastActive = true;
   const toast = document.getElementById("copy-toast");
   const backdrop = document.getElementById("copy-toast-backdrop");
   if (!toast) return;
@@ -101,6 +103,7 @@ function showToast(msg, type="error") {
       }
       setTimeout(() => {
           if (titleEl) titleEl.innerHTML = `<svg class="ic ic-sm" style="margin-right:4px;"><use href="#i-storage"/></svg> Media card ingest`;
+          window._customToastActive = false;
       }, 300);
   }, 4000);
 }
@@ -1396,7 +1399,7 @@ function applyStats(s) {
             if (latestStats) applyStats(latestStats);
           });
         }
-      } else {
+      } else if (!window._customToastActive) {
         toast.style.opacity = "0";
         toast.style.pointerEvents = "none";
         toast.style.transform = "translateY(20px)";
