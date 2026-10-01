@@ -1,2 +1,5 @@
 Pillow==10.2.0
 playwright==1.42.0
+fastapi
+uvicorn
+sse-starlette

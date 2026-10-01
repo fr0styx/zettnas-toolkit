@@ -7,6 +7,7 @@ Renders directly to /dev/fb0 via memory-mapped framebuffer streaming.
 Optimized for low sustained CPU usage and hardware-agnostic operation.
 """
 import os
+import sqlite3
 import io
 import re
 import time
@@ -75,7 +76,7 @@ _prev_disk_io = {}
 LED_PORT = os.environ.get("LED_PORT", "/dev/ttyACM0" if os.path.exists("/dev/ttyACM0") else "/host/dev/ttyACM0")
 DATA_DIR = os.environ.get("DATA_DIR", "/app/data")
 
-DB_PATH = os.path.join(os.path.dirname(DASH_LAYOUT_FILE), "history.db")
+DB_PATH = os.path.join(DATA_DIR, "history.db")
 
 def init_db():
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
@@ -1347,7 +1348,7 @@ def stats_collector_daemon():
                 try:
                     with sqlite3.connect(DB_PATH) as conn:
                         conn.execute("INSERT INTO metrics (ts, cpu_temp, cpu_util, mem_pct, disks_json, fans_json) VALUES (?, ?, ?, ?, ?, ?)", (
-                            now_ts, cpu.get("temp", 0), cpu.get("util", 0), mem.get("pct", 0), json.dumps(disks), json.dumps(fans)
+                            now_ts, data["cpu"].get("temp", 0), data["cpu"].get("util", 0), data["mem"].get("pct", 0), json.dumps(disks), json.dumps(fans)
                         ))
                         conn.execute("DELETE FROM metrics WHERE ts < ?", (now_ts - 86400,))
                 except Exception as db_e:
@@ -1599,490 +1600,271 @@ def _load_static_file(fp):
         return entry
 
 
-class Handler(BaseHTTPRequestHandler):
 
-    def _handle_browse(self, query):
-        from urllib.parse import parse_qs
-        qs = parse_qs(query)
-        target = qs.get("path", ["/mnt/user/"])[0]
-        abs_target = os.path.abspath(target)
-        if not abs_target.startswith("/mnt/"):
-            abs_target = "/mnt/"
-        if not abs_target.endswith("/"):
-            abs_target += "/"
-        dirs = []
+from fastapi import FastAPI, Request, Response, HTTPException
+from fastapi.responses import JSONResponse, StreamingResponse, FileResponse
+import uvicorn
+import asyncio
+from typing import Any
+import mimetypes
+
+app = FastAPI()
+
+@app.get("/api/lcd_status")
+async def get_lcd_status():
+    return {
+        "enabled": ENABLE_FB,
+        "fb_present": os.path.exists("/dev/fb0"),
+        "fps": LCD_FPS,
+        "active": _lcd_renderer_active
+    }
+
+@app.get("/api/stats")
+async def get_stats():
+    return collect()
+
+@app.get("/api/stats/stream")
+async def stats_stream(request: Request):
+    async def event_generator():
+        while True:
+            if await request.is_disconnected():
+                break
+            data = collect()
+            payload = json.dumps(data)
+            yield f"data: {payload}\n\n"
+            await asyncio.sleep(2.0)
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
+
+@app.get("/api/history")
+async def get_history():
+    try:
+        with sqlite3.connect(DB_PATH) as conn:
+            conn.row_factory = sqlite3.Row
+            rows = conn.execute("SELECT * FROM metrics ORDER BY ts ASC").fetchall()
+            data = []
+            for r in rows:
+                data.append({
+                    "ts": r["ts"],
+                    "cpu_temp": r["cpu_temp"],
+                    "cpu_util": r["cpu_util"],
+                    "mem_pct": r["mem_pct"],
+                    "disks": json.loads(r["disks_json"]),
+                    "fans": json.loads(r["fans_json"])
+                })
+            return JSONResponse(data)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/disk_detail")
+async def disk_detail(dev: str = "sda"):
+    if not re.fullmatch(r"^(sd[a-z]{1,2}|nvme[0-9]+n[0-9]+)$", dev):
+        raise HTTPException(status_code=400, detail="Invalid device parameter.")
+    return fetch_disk_smart_detail(dev)
+
+@app.get("/api/screen")
+async def screen_state():
+    return get_screen_state()
+
+@app.get("/api/browse")
+async def browse(path: str = "/mnt/user", dirs_only: str = "0"):
+    d_only = (dirs_only == "1")
+    return _handle_browse_logic(path, d_only)
+
+@app.post("/api/mkdir")
+async def mkdir(request: Request):
+    try:
+        data = await request.json()
+        path = str(data.get("path", "")).strip()
+        if not path.startswith("/mnt/user/") or ".." in path:
+            raise HTTPException(status_code=400, detail="Invalid path")
+        os.makedirs(path, exist_ok=True)
+        return {"status": "ok"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.post("/api/copy/cancel")
+async def copy_cancel():
+    global _copy_abort_flag, _copy_overwrite_choice, _copy_confirm_event
+    _copy_abort_flag = True
+    _copy_overwrite_choice = "cancel"
+    _copy_confirm_event.set()
+    return {"status": "ok"}
+
+@app.post("/api/copy/confirm")
+async def copy_confirm(request: Request):
+    global _copy_overwrite_choice, _copy_confirm_event
+    data = await request.json()
+    _copy_overwrite_choice = data.get("action", "skip")
+    _copy_confirm_event.set()
+    return {"status": "ok"}
+
+@app.get("/api/buttons")
+async def get_buttons():
+    if os.path.exists(BUTTON_CFG_FILE):
         try:
-            if abs_target != "/mnt/":
-                dirs.append({"name": "..", "path": os.path.abspath(os.path.join(abs_target, "..")) + "/"})
-            for entry in os.scandir(abs_target):
-                if entry.is_dir():
-                    dirs.append({"name": entry.name, "path": os.path.join(abs_target, entry.name) + "/"})
-        except Exception:
-            pass
-        dirs = sorted(dirs, key=lambda d: (d["name"] != "..", d["name"].lower()))
-        self._send(200, json.dumps({"current": abs_target, "dirs": dirs}).encode(), "application/json")
+            with open(BUTTON_CFG_FILE, "r") as f:
+                return json.load(f)
+        except: pass
+    return {"enabled": False, "source": "sd", "dest": "/mnt/user/"}
 
-    def _handle_mkdir(self, query):
-        from urllib.parse import parse_qs
-        qs = parse_qs(query)
-        target = qs.get("path", [""])[0]
-        if target:
-            abs_target = os.path.abspath(target)
-            if abs_target.startswith("/mnt/"):
-                try:
-                    os.makedirs(abs_target, exist_ok=True)
-                    self._send(200, b'{"status": "ok"}', "application/json")
-                    return
-                except Exception as e:
-                    self._send(400, b'{"error": "creation failed"}', "application/json")
-                    return
-        self._send(400, b'{"error": "invalid path"}', "application/json")
-
-    def _handle_copy_cancel(self):
-        global _copy_abort_flag, _copy_confirm_event
-        _copy_abort_flag = True
-        _copy_confirm_event.set()
-        self._send(200, b'{"status":"ok"}', "application/json")
-
-    def _handle_copy_confirm(self, body=None):
-        global _copy_overwrite_choice, _copy_confirm_event
-        if body is None:
-            length = int(self.headers.get("Content-Length", 0))
-            if length > 0:
-                body = self.rfile.read(length)
-        if body:
-            try:
-                import json
-                data = json.loads(body)
-                _copy_overwrite_choice = data.get("action", "skip")
-                _copy_confirm_event.set()
-                self._send(200, b'{"status":"ok"}', "application/json")
-                return
-            except Exception:
-                pass
-        self._send(400, b'{"error":"invalid"}', "application/json")
-
-    def _handle_buttons(self, body=None):
-        import json
-        state = {"enabled": False, "source": "/mnt/disks/", "dest": "/mnt/user/Media/"}
-        if os.path.exists(BUTTON_CFG_FILE):
-            try:
-                with open(BUTTON_CFG_FILE, "r") as f:
-                    state.update(json.load(f))
-            except Exception: pass
+@app.post("/api/buttons")
+async def post_buttons(request: Request):
+    data = await request.json()
+    state = {"enabled": False, "source": "sd", "dest": "/mnt/user/"}
+    if os.path.exists(BUTTON_CFG_FILE):
+        try:
+            with open(BUTTON_CFG_FILE, "r") as f:
+                state.update(json.load(f))
+        except: pass
+    state.update(data)
+    
+    dest_val = str(data.get("dest", state["dest"])).strip()
+    if "dest" in data:
+        if not os.path.exists(dest_val):
+            raise HTTPException(status_code=400, detail=f"Path does not exist: {dest_val}")
             
-        if body:
-            try:
-                data = json.loads(body)
-                dest_val = str(data.get("dest", state["dest"])).strip()
-                
-                if "dest" in data:
-                    if not os.path.exists(dest_val):
-                        self._send(400, json.dumps({"error": f"Path does not exist: {dest_val}"}).encode(), "application/json")
-                        return
-                    if not dest_val.startswith("/mnt/"):
-                        self._send(400, json.dumps({"error": "Path must be within /mnt/"}).encode(), "application/json")
-                        return
-                
-                if "enabled" in data: state["enabled"] = bool(data["enabled"])
-                if "source" in data: state["source"] = str(data["source"]).strip()
-                if "dest" in data: state["dest"] = dest_val
-                with open(BUTTON_CFG_FILE, "w") as f:
-                    json.dump(state, f)
-            except Exception as e:
-                self._send(400, json.dumps({"error": str(e)}).encode(), "application/json")
-                return
-            
-        self._send(200, json.dumps(state).encode(), "application/json")
+    with open(BUTTON_CFG_FILE, "w") as f:
+        json.dump(state, f)
+    return state
 
-    def log_message(self, *a):
-        pass
+@app.get("/api/events/clear")
+async def clear_events():
+    global _event_log
+    with _event_log_lock:
+        _event_log = []
+    if os.path.exists(EVENTS_LOG_FILE):
+        os.remove(EVENTS_LOG_FILE)
+    return {"status": "ok"}
 
-    def _send(self, code, body, ctype):
-        self.send_response(code)
-        self.send_header("Content-Type", ctype)
-        self.send_header("Content-Length", str(len(body)))
-        self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
-        self.end_headers()
-        self.wfile.write(body)
+@app.post("/api/fans")
+async def post_fans(request: Request):
+    data = await request.json()
+    fan_cfg = {"profile": "auto", "manual_pct": 60, "ctrl_cpu_fan": False, "temp_min": 37, "temp_max": 50}
+    if os.path.exists(FAN_STATE_FILE):
+        try:
+            with open(FAN_STATE_FILE, "r") as f:
+                fan_cfg.update(json.load(f))
+        except: pass
+    fan_cfg.update(data)
+    with open(FAN_STATE_FILE, "w") as f:
+        json.dump(fan_cfg, f)
+    return fan_cfg
 
-    def do_HEAD(self):
-        self.send_response(200)
-        self.end_headers()
+@app.get("/api/fans")
+async def get_fans():
+    fan_cfg = {"profile": "auto", "manual_pct": 60, "ctrl_cpu_fan": False, "temp_min": 37, "temp_max": 50}
+    if os.path.exists(FAN_STATE_FILE):
+        try:
+            with open(FAN_STATE_FILE, "r") as f:
+                fan_cfg.update(json.load(f))
+        except: pass
+    return fan_cfg
 
-    def do_GET(self):
-        global _copy_abort_flag, _copy_confirm_event, _copy_overwrite_choice
-        global _discovered_host_ip
+@app.post("/api/led")
+async def post_led(request: Request):
+    data = await request.json()
+    cur_led = {}
+    if os.path.exists(LED_STATE_FILE):
+        try:
+            with open(LED_STATE_FILE, "r") as f:
+                cur_led = json.load(f)
+        except: pass
+    cur_led.update(data)
+    ok, msg = apply_led_state(cur_led)
+    with open(LED_STATE_FILE, "w") as f:
+        json.dump(cur_led, f)
+    return {"status": "ok" if ok else "error", "message": msg, **cur_led}
 
-        host_header = self.headers.get("Host", "")
-        if host_header:
-            client_ip = host_header.split(":")[0].strip()
-            if re.fullmatch(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", client_ip):
-                if not (client_ip.startswith("127.") or client_ip.startswith("172.") or client_ip == "0.0.0.0"):
-                    _discovered_host_ip = client_ip
+@app.post("/api/layout")
+async def post_layout(request: Request):
+    data = await request.json()
+    data["version"] = int(time.time() * 1000)
+    with open(DASH_LAYOUT_FILE, "w") as f:
+        json.dump(data, f)
+    with _cached_stats_lock:
+        if _cached_stats:
+            _cached_stats["layout"] = data
+    return {"status": "ok", "layout": data}
 
-        parsed = urlparse(self.path)
-        clean_path = parsed.path
-        query = parsed.query
+@app.post("/api/state")
+async def post_state(request: Request):
+    data = await request.json()
+    global ENABLE_FB
+    if "fb" in data:
+        ENABLE_FB = bool(data["fb"])
+    return {"status": "ok"}
 
-        if clean_path == "/api/stats/stream":
-            self.send_response(200)
-            self.send_header("Content-Type", "text/event-stream")
-            self.send_header("Cache-Control", "no-cache")
-            self.send_header("Connection", "keep-alive")
-            self.send_header("X-Accel-Buffering", "no")
-            self.end_headers()
-            last_version = None
-            try:
-                while True:
-                    data = collect()
-                    ver = data.get("layout", {}).get("version", 0)
-                    payload = json.dumps(data)
-                    msg = f"data: {payload}\n\n"
-                    self.wfile.write(msg.encode())
-                    self.wfile.flush()
-                    if _ui_wake.wait(2.0):
-                        _ui_wake.clear()
-            except Exception:
-                pass
-            return
+@app.get("/{path:path}")
+async def serve_static(request: Request, path: str):
+    if not path or path == "":
+        path = "index.html"
+        
+    base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "static"))
+    fp = os.path.abspath(os.path.join(base_dir, path))
+    if not fp.startswith(base_dir) or not os.path.exists(fp):
+        raise HTTPException(status_code=404, detail="not found")
+        
+    entry = _load_static_file(fp)
+    if not entry:
+        raise HTTPException(status_code=404, detail="not found")
+        
+    content, etag, gz_content, _mtime = entry
+    
+    ctype, _ = mimetypes.guess_type(fp)
+    if not ctype:
+        ctype = "application/octet-stream"
+        
+    if fp.endswith("index.html"):
+        html_str = content.decode("utf-8")
+        if "mode=lcd" in request.query_params:
+            html_str = html_str.replace('<body class="studio-workbench">', '<body class="studio-workbench lcd-direct">')
+        content = html_str.encode("utf-8")
+        etag = None
+        gz_content = None
 
-        if clean_path == "/api/events/clear":
-            global _event_log
-            with _event_log_lock:
-                _event_log = []
-                try:
-                    with open(EVENTS_FILE, "w") as fw:
-                        fw.write("[]")
+    headers = {}
+    if etag:
+        if request.headers.get("if-none-match") == etag:
+            return Response(status_code=304, headers={"ETag": etag, "Cache-Control": "max-age=3600"})
+        headers["ETag"] = etag
+        headers["Cache-Control"] = "max-age=3600"
+    else:
+        headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        
+    if gz_content and "gzip" in request.headers.get("accept-encoding", ""):
+        headers["Content-Encoding"] = "gzip"
+        return Response(content=gz_content, media_type=ctype, headers=headers)
+        
+    return Response(content=content, media_type=ctype, headers=headers)
+
+
+def _handle_browse_logic(path, dirs_only):
+    if not os.path.exists(path):
+        raise HTTPException(status_code=404, detail="Path does not exist.")
+    out = []
+    if path != "/":
+        parent = os.path.dirname(path.rstrip("/"))
+        if not parent: parent = "/"
+        out.append({"name": "..", "path": parent, "is_dir": True, "size": 0})
+    try:
+        entries = os.listdir(path)
+        for e in sorted(entries):
+            full = os.path.join(path, e)
+            is_dir = os.path.isdir(full)
+            if dirs_only and not is_dir:
+                continue
+            sz = 0
+            if not is_dir and not os.path.islink(full):
+                try: sz = os.path.getsize(full)
                 except: pass
-            self._send(200, b'{"status":"ok"}', "application/json")
-            return
-        if clean_path == "/api/lcd_status":
-            body = json.dumps({
-                "enabled": ENABLE_FB,
-                "fb_present": os.path.exists("/dev/fb0"),
-                "fps": LCD_FPS,
-                "active": _lcd_renderer_active
-            }).encode()
-            self._send(200, body, "application/json")
-            return
-
-
-        if clean_path == "/api/history":
-            try:
-                with sqlite3.connect(DB_PATH) as conn:
-                    conn.row_factory = sqlite3.Row
-                    rows = conn.execute("SELECT * FROM metrics ORDER BY ts ASC").fetchall()
-                    data = []
-                    for r in rows:
-                        data.append({
-                            "ts": r["ts"],
-                            "cpu_temp": r["cpu_temp"],
-                            "cpu_util": r["cpu_util"],
-                            "mem_pct": r["mem_pct"],
-                            "disks": json.loads(r["disks_json"]),
-                            "fans": json.loads(r["fans_json"])
-                        })
-                    self._send(200, json.dumps(data).encode(), "application/json")
-            except Exception as e:
-                self._send(500, json.dumps({"error": str(e)}).encode(), "application/json")
-            return
-
-        if clean_path == "/api/stats":
-            body = json.dumps(collect()).encode()
-            self._send(200, body, "application/json")
-            return
-
-        if clean_path == "/api/disk_detail":
-            query_params = dict(qc.split("=") for qc in query.split("&") if "=" in qc)
-            dev_name = query_params.get("dev", "sda")
-            if not re.fullmatch(r"^(sd[a-z]{1,2}|nvme[0-9]+n[0-9]+)$", dev_name):
-                self._send(400, b"Invalid device parameter.", "text/plain")
-                return
-
-            detail = fetch_disk_smart_detail(dev_name)
-            self._send(200, json.dumps(detail).encode(), "application/json")
-            return
-
-        if clean_path == "/api/screen":
-            self._send(200, json.dumps(get_screen_state()).encode(), "application/json")
-            return
-
-
-        if clean_path.startswith("/api/browse"):
-            self._handle_browse(parsed.query)
-            return
-
-
-        if clean_path.startswith("/api/mkdir"):
-            self._handle_mkdir(parsed.query)
-            return
-
-
-        if clean_path == "/api/copy/cancel":
-            self._handle_copy_cancel()
-            return
-
-        if clean_path == "/api/copy/confirm":
-            self._handle_copy_confirm(None)
-            return
-
-        if clean_path == "/api/buttons":
-            self._handle_buttons(None)
-            return
-
-        if clean_path == "/api/fans":
-            fan_cfg = {"profile": "auto", "manual_pct": 60, "ctrl_cpu_fan": False, "temp_min": 37, "temp_max": 50}
-            if os.path.exists(FAN_STATE_FILE):
-                try:
-                    with open(FAN_STATE_FILE, "r") as f:
-                        fan_cfg.update(json.load(f))
-                except Exception:
-                    pass
-            self._send(200, json.dumps(fan_cfg).encode(), "application/json")
-            return
-
-        if clean_path == "/api/led":
-            state = {
-                "power": "on",
-                "brightness": 25,
-                "color": "25c2a0",
-                "color2": "ff0055",
-                "mode": "solid",
-                "speed": 50,
-                "reactive": True,
-                "night_mode": False,
-                "night_start": "23:00",
-                "night_end": "07:00"
-            }
-            if os.path.exists(LED_STATE_FILE):
-                try:
-                    with open(LED_STATE_FILE, "r") as f:
-                        state.update(json.load(f))
-                except Exception:
-                    pass
-            self._send(200, json.dumps(state).encode(), "application/json")
-            return
-
-        if clean_path == "/api/layout":
-            self._send(200, json.dumps(get_current_layout()).encode(), "application/json")
-            return
-
-        rel_path = "index.html" if clean_path in ("/", "") else clean_path.lstrip("/")
-        fp = os.path.realpath(os.path.join(STATIC_DIR, rel_path))
-
-        if not fp.startswith(STATIC_DIR + os.sep) and fp != os.path.join(STATIC_DIR, "index.html"):
-            self._send(403, b"forbidden", "text/plain")
-            return
-
-        if os.path.isfile(fp):
-            if fp.endswith(".html"):
-                ctype = "text/html; charset=utf-8"
-            elif fp.endswith(".css"):
-                ctype = "text/css; charset=utf-8"
-            elif fp.endswith(".js"):
-                ctype = "application/javascript; charset=utf-8"
-            elif fp.endswith(".png"):
-                ctype = "image/png"
-            elif fp.endswith(".jpg") or fp.endswith(".jpeg"):
-                ctype = "image/jpeg"
-            elif fp.endswith(".svg"):
-                ctype = "image/svg+xml"
-            else:
-                ctype = "application/octet-stream"
-
-            entry = _load_static_file(fp)
-            if entry is None:
-                self._send(404, b"not found", "text/plain")
-                return
-            content, etag, gz_content = entry[:3]
-
-            if fp.endswith("index.html"):
-                html_str = content.decode("utf-8")
-                if "mode=lcd" in query:
-                    html_str = html_str.replace('<body class="studio-workbench">', '<body class="studio-workbench lcd-direct">')
-                content = html_str.encode("utf-8")
-                etag = None  # Don't cache dynamic HTML
-                gz_content = None
-
-            # ETag check (skip for dynamic index.html)
-            if etag:
-                if_none_match = self.headers.get("If-None-Match", "")
-                if if_none_match == etag:
-                    self.send_response(304)
-                    self.send_header("ETag", etag)
-                    self.send_header("Cache-Control", "max-age=3600")
-                    self.end_headers()
-                    return
-
-            accept_enc = self.headers.get("Accept-Encoding", "")
-            if gz_content and "gzip" in accept_enc:
-                self.send_response(200)
-                self.send_header("Content-Type", ctype)
-                self.send_header("Content-Encoding", "gzip")
-                self.send_header("Content-Length", str(len(gz_content)))
-                if etag:
-                    self.send_header("ETag", etag)
-                    self.send_header("Cache-Control", "max-age=3600")
-                else:
-                    self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
-                self.end_headers()
-                self.wfile.write(gz_content)
-            else:
-                if etag:
-                    self.send_response(200)
-                    self.send_header("Content-Type", ctype)
-                    self.send_header("Content-Length", str(len(content)))
-                    self.send_header("ETag", etag)
-                    self.send_header("Cache-Control", "max-age=3600")
-                    self.end_headers()
-                    self.wfile.write(content)
-                else:
-                    self._send(200, content, ctype)
-        else:
-            self._send(404, b"not found", "text/plain")
-
-    def do_POST(self):
-        global _copy_abort_flag, _copy_confirm_event, _copy_overwrite_choice
-        parsed = urlparse(self.path)
-        clean_path = parsed.path
-
-        if clean_path == "/api/screen":
-            length = int(self.headers.get("Content-Length", 0))
-            raw = self.rfile.read(length)
-            try:
-                data = json.loads(raw)
-                cur = get_screen_state()
-                if "brightness" in data:
-                    cur["brightness"] = max(5, min(100, int(data["brightness"])))
-                if "night_mode" in data:
-                    cur["night_mode"] = bool(data["night_mode"])
-                if "night_brightness" in data:
-                    cur["night_brightness"] = max(0, min(100, int(data["night_brightness"])))
-                if "night_start" in data:
-                    cur["night_start"] = str(data["night_start"])
-                if "night_end" in data:
-                    cur["night_end"] = str(data["night_end"])
-
-                with open(SCREEN_STATE_FILE, "w") as f:
-                    json.dump(cur, f)
-
-                in_screen_night = cur.get("night_mode", False) and is_in_time_window(cur.get("night_start", "23:00"), cur.get("night_end", "07:00"))
-                target_bl = cur.get("night_brightness", 10) if in_screen_night else cur.get("brightness", 100)
-                set_screen_brightness(target_bl)
-
-                self._send(200, json.dumps({"status": "ok", **cur}).encode(), "application/json")
-            except Exception as e:
-                self._send(400, json.dumps({"error": str(e)}).encode(), "application/json")
-            return
-
-
-        if clean_path.startswith("/api/browse"):
-            self._handle_browse(parsed.query)
-            return
-
-
-        if clean_path.startswith("/api/mkdir"):
-            self._handle_mkdir(parsed.query)
-            return
-
-
-        if clean_path == "/api/copy/cancel":
-            self._handle_copy_cancel()
-            return
-
-        if clean_path == "/api/copy/confirm":
-            self._handle_copy_confirm(None)
-            return
-
-        if clean_path == "/api/buttons":
-            length = int(self.headers.get("Content-Length", 0))
-            raw = self.rfile.read(length)
-            self._handle_buttons(raw)
-            return
-
-        if clean_path == "/api/fans":
-            length = int(self.headers.get("Content-Length", 0))
-            raw = self.rfile.read(length)
-            try:
-                data = json.loads(raw)
-                profile = data.get("profile", "auto")
-                manual_pct = int(data.get("manual_pct", 60))
-                ctrl_cpu_fan = bool(data.get("ctrl_cpu_fan", False))
-                temp_min = max(25, min(50, int(data.get("temp_min", 37))))
-                temp_max = max(temp_min + 5, min(75, int(data.get("temp_max", 50))))
-                curve_points = data.get("curve_points", None)
-
-                if profile == "auto":
-                    for k in _fan_state_tracker:
-                        _fan_state_tracker[k]["last_up_time"] = 0.0
-                    ok = True
-                    pct = 60
-                else:
-                    ok = set_fan_pwm(profile, manual_pct, ctrl_cpu_fan=ctrl_cpu_fan)
-                    pct = manual_pct
-
-                state_to_save = {
-                    "profile": profile,
-                    "manual_pct": pct,
-                    "ctrl_cpu_fan": ctrl_cpu_fan,
-                    "temp_min": temp_min,
-                    "temp_max": temp_max
-                }
-                if curve_points:
-                    state_to_save["curve_points"] = curve_points
-                with open(FAN_STATE_FILE, "w") as f:
-                    json.dump(state_to_save, f)
-                self._send(200, json.dumps({"status": "ok" if ok else "unsupported", **state_to_save}).encode(), "application/json")
-            except Exception as e:
-                self._send(400, json.dumps({"error": str(e)}).encode(), "application/json")
-            return
-
-        if clean_path == "/api/led":
-            length = int(self.headers.get("Content-Length", 0))
-            raw = self.rfile.read(length)
-            try:
-                data = json.loads(raw)
-                cur_led = {}
-                if os.path.exists(LED_STATE_FILE):
-                    try:
-                        with open(LED_STATE_FILE, "r") as f:
-                            cur_led = json.load(f)
-                    except Exception:
-                        pass
-                cur_led.update(data)
-                ok, msg = apply_led_state(cur_led)
-                with open(LED_STATE_FILE, "w") as f:
-                    json.dump(cur_led, f)
-                self._send(200, json.dumps({"status": "ok" if ok else "error", "message": msg, **cur_led}).encode(), "application/json")
-            except Exception as e:
-                self._send(400, json.dumps({"error": str(e)}).encode(), "application/json")
-            return
-
-        if clean_path == "/api/layout":
-            length = int(self.headers.get("Content-Length", 0))
-            raw = self.rfile.read(length)
-            try:
-                data = json.loads(raw)
-                data["version"] = int(time.time() * 1000)
-                with open(DASH_LAYOUT_FILE, "w") as f:
-                    json.dump(data, f)
-
-                with _cached_stats_lock:
-                    if _cached_stats:
-                        _cached_stats["layout"] = data
-
-                self._send(200, json.dumps({"status": "ok", "layout": data}).encode(), "application/json")
-            except Exception as e:
-                self._send(400, json.dumps({"error": str(e)}).encode(), "application/json")
-            return
-
-        self._send(404, b"not found", "text/plain")
-
+            out.append({"name": e, "path": full, "is_dir": is_dir, "size": sz})
+        return {"current": path, "items": out}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
     read_cpu_util()
-    _layout_dir = os.path.dirname(DASH_LAYOUT_FILE)
+    _layout_dir = DATA_DIR
     if _layout_dir:
         os.makedirs(_layout_dir, exist_ok=True)
     port = int(os.environ.get("PORT", "8082"))
@@ -2101,4 +1883,4 @@ if __name__ == "__main__":
     threading.Thread(target=stats_collector_daemon, daemon=True).start()
     threading.Thread(target=button_listener_daemon, daemon=True).start()
     threading.Thread(target=render_lcd_loop, daemon=True).start()
-    ThreadingHTTPServer(("0.0.0.0", port), Handler).serve_forever()
+    uvicorn.run(app, host="0.0.0.0", port=port, log_level="warning")
