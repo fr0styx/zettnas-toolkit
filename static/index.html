@@ -216,6 +216,18 @@
     <button class="drawer-tab-btn" data-tab="tab-fans">Fans</button>
     <button class="drawer-tab-btn" data-tab="tab-buttons">Copy Button</button>
     <button class="drawer-tab-btn" data-tab="tab-events">Event Log</button>
+    <button class="drawer-tab-btn" data-tab="tab-metrics">Metrics</button>
+  </div>
+
+  
+  <!-- METRICS TAB -->
+  <div id="tab-metrics" class="drawer-tab-content">
+    <div class="card-headline" style="margin-bottom: 20px;">
+      <span class="card-head-title"><svg class="ic ic-sm" style="margin-right:6px;"><use href="#i-cpu"/></svg>24-Hour Metrics</span>
+    </div>
+    <div style="flex-grow: 1; position: relative; min-height: 250px; width: 100%;">
+      <canvas id="metricsChart"></canvas>
+    </div>
   </div>
 
   <div id="tab-events" class="drawer-tab-content">
@@ -833,7 +845,7 @@
 </div>
 </aside>
 
-<script src="app.js?v=66"></script>
+<script src="app.js?v=67"></script>
 <div id="copy-toast-backdrop" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 10000; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;"></div>
 
 <div id="copy-toast" class="smart-modal-window" style="position: fixed; bottom: 20px; right: 20px; width: 350px; z-index: 10001; opacity: 0; pointer-events: none; transition: opacity 0.3s ease, transform 0.3s ease; transform: translateY(20px); border-color: rgba(255,255,255,0.1);" role="alertdialog" aria-modal="true">

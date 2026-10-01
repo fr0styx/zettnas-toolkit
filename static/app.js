@@ -1,3 +1,77 @@
+
+let _metricsChart = null;
+async function fetchAndRenderMetrics() {
+  if (_metricsChart) _metricsChart.destroy();
+  try {
+    const res = await fetch("/api/history");
+    const data = await res.json();
+    if (!data || data.length === 0) return;
+    
+    const labels = data.map(d => {
+      const dt = new Date(d.ts * 1000);
+      return dt.getHours().toString().padStart(2, '0') + ':' + dt.getMinutes().toString().padStart(2, '0');
+    });
+    
+    const cpuTemps = data.map(d => d.cpu_temp);
+    const cpuUtils = data.map(d => d.cpu_util);
+    const memPcts = data.map(d => d.mem_pct);
+    
+    const ctx = document.getElementById("metricsChart").getContext("2d");
+    
+    Chart.defaults.color = "#a0aec0";
+    Chart.defaults.font.family = "Inter, sans-serif";
+    
+    _metricsChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: 'CPU Temp (°C)',
+            data: cpuTemps,
+            borderColor: '#e74c3c',
+            backgroundColor: 'rgba(231, 76, 60, 0.1)',
+            borderWidth: 2,
+            tension: 0.3,
+            fill: true,
+            pointRadius: 0
+          },
+          {
+            label: 'CPU Util (%)',
+            data: cpuUtils,
+            borderColor: '#3498db',
+            borderWidth: 2,
+            tension: 0.3,
+            pointRadius: 0
+          },
+          {
+            label: 'Mem (%)',
+            data: memPcts,
+            borderColor: '#9b59b6',
+            borderWidth: 2,
+            tension: 0.3,
+            pointRadius: 0
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { position: 'top', labels: { boxWidth: 10, usePointStyle: true, font: { size: 10 } } }
+        },
+        scales: {
+          x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { maxTicksLimit: 8 } },
+          y: { grid: { color: 'rgba(255,255,255,0.05)' }, beginAtZero: true, max: 100 }
+        }
+      }
+    });
+  } catch (e) {
+    console.error("Failed to load metrics:", e);
+  }
+}
+
 let copyToastMinimized = false;
 // Instant detection for headless Chromium renderer
 const isLcdDirect = window.location.search.includes("mode=lcd") || document.body.classList.contains("lcd-direct");
@@ -1654,6 +1728,12 @@ fetchDashboardLayout().then(() => {
       } else if (targetId === "tab-buttons") {
         if (dynamicTitle) dynamicTitle.textContent = "Copy Button";
         if (dynamicDesc) dynamicDesc.textContent = "Assign SD card copy rules to the physical hardware button.";
+
+      } else if (targetId === "tab-metrics") {
+        if (dynamicTitle) dynamicTitle.textContent = "Metrics History";
+        if (dynamicDesc) dynamicDesc.textContent = "Historical 24-hour thermal and usage data.";
+        fetchAndRenderMetrics();
+
       } else if (targetId === "tab-events") {
         if (dynamicTitle) dynamicTitle.textContent = "Event Log";
         if (dynamicDesc) dynamicDesc.textContent = "Timeline of system events, hardware alerts, and background operations.";
