@@ -14,6 +14,7 @@ import glob
 import json
 import struct
 import mmap
+import mmap
 import base64
 import shutil
 import socket
@@ -1448,6 +1449,89 @@ def _load_static_file(fp):
 
 
 class Handler(BaseHTTPRequestHandler):
+
+    def _handle_browse(self, query):
+        from urllib.parse import parse_qs
+        qs = parse_qs(query)
+        target = qs.get("path", ["/mnt/user/"])[0]
+        abs_target = os.path.abspath(target)
+        if not abs_target.startswith("/mnt/"):
+            abs_target = "/mnt/"
+        if not abs_target.endswith("/"):
+            abs_target += "/"
+        dirs = []
+        try:
+            if abs_target != "/mnt/":
+                dirs.append({"name": "..", "path": os.path.abspath(os.path.join(abs_target, "..")) + "/"})
+            for entry in os.scandir(abs_target):
+                if entry.is_dir():
+                    dirs.append({"name": entry.name, "path": os.path.join(abs_target, entry.name) + "/"})
+        except Exception:
+            pass
+        dirs = sorted(dirs, key=lambda d: (d["name"] != "..", d["name"].lower()))
+        self._send(200, json.dumps({"current": abs_target, "dirs": dirs}).encode(), "application/json")
+
+    def _handle_mkdir(self, query):
+        from urllib.parse import parse_qs
+        qs = parse_qs(query)
+        target = qs.get("path", [""])[0]
+        if target:
+            abs_target = os.path.abspath(target)
+            if abs_target.startswith("/mnt/"):
+                try:
+                    os.makedirs(abs_target, exist_ok=True)
+                    self._send(200, b'{"status": "ok"}', "application/json")
+                    return
+                except Exception as e:
+                    self._send(400, b'{"error": "creation failed"}', "application/json")
+                    return
+        self._send(400, b'{"error": "invalid path"}', "application/json")
+
+    def _handle_copy_cancel(self):
+        global _copy_abort_flag, _copy_confirm_event
+        _copy_abort_flag = True
+        _copy_confirm_event.set()
+        self._send(200, b'{"status":"ok"}', "application/json")
+
+    def _handle_copy_confirm(self, body=None):
+        global _copy_overwrite_choice, _copy_confirm_event
+        if body is None:
+            length = int(self.headers.get("Content-Length", 0))
+            if length > 0:
+                body = self.rfile.read(length)
+        if body:
+            try:
+                import json
+                data = json.loads(body)
+                _copy_overwrite_choice = data.get("action", "skip")
+                _copy_confirm_event.set()
+                self._send(200, b'{"status":"ok"}', "application/json")
+                return
+            except Exception:
+                pass
+        self._send(400, b'{"error":"invalid"}', "application/json")
+
+    def _handle_buttons(self, body=None):
+        import json
+        state = {"enabled": False, "source": "/mnt/disks/", "dest": "/mnt/user/Media/"}
+        if os.path.exists(BUTTON_CFG_FILE):
+            try:
+                with open(BUTTON_CFG_FILE, "r") as f:
+                    state.update(json.load(f))
+            except Exception: pass
+            
+        if body:
+            try:
+                data = json.loads(body)
+                if "enabled" in data: state["enabled"] = bool(data["enabled"])
+                if "source" in data: state["source"] = str(data["source"]).strip()
+                if "dest" in data: state["dest"] = str(data["dest"]).strip()
+                with open(BUTTON_CFG_FILE, "w") as f:
+                    json.dump(state, f)
+            except Exception: pass
+            
+        self._send(200, json.dumps(state).encode(), "application/json")
+
     def log_message(self, *a):
         pass
 
@@ -1532,79 +1616,25 @@ class Handler(BaseHTTPRequestHandler):
 
 
         if clean_path.startswith("/api/browse"):
-            from urllib.parse import parse_qs
-            qs = parse_qs(parsed.query)
-            target = qs.get("path", ["/mnt/user/"])[0]
-            # Ensure it resolves and restricts to /mnt/ for basic safety
-            abs_target = os.path.abspath(target)
-            if not abs_target.startswith("/mnt/"):
-                abs_target = "/mnt/"
-            
-            if not abs_target.endswith("/"):
-                abs_target += "/"
-                
-            dirs = []
-            try:
-                if abs_target != "/mnt/":
-                    dirs.append({"name": "..", "path": os.path.abspath(os.path.join(abs_target, "..")) + "/"})
-                for entry in os.scandir(abs_target):
-                    if entry.is_dir():
-                        dirs.append({"name": entry.name, "path": os.path.join(abs_target, entry.name) + "/"})
-            except Exception:
-                pass
-                
-            dirs = sorted(dirs, key=lambda d: (d["name"] != "..", d["name"].lower()))
-            
-            self._send(200, json.dumps({"current": abs_target, "dirs": dirs}).encode(), "application/json")
+            self._handle_browse(parsed.query)
             return
 
 
         if clean_path.startswith("/api/mkdir"):
-            from urllib.parse import parse_qs
-            qs = parse_qs(parsed.query)
-            target = qs.get("path", [""])[0]
-            if target:
-                abs_target = os.path.abspath(target)
-                if abs_target.startswith("/mnt/"):
-                    try:
-                        os.makedirs(abs_target, exist_ok=True)
-                        self._send(200, b'{"status": "ok"}', "application/json")
-                        return
-                    except Exception as e:
-                        self._send(400, b'{"error": "creation failed"}', "application/json")
-                        return
-            self._send(400, b'{"error": "invalid path"}', "application/json")
+            self._handle_mkdir(parsed.query)
             return
 
 
         if clean_path == "/api/copy/cancel":
-            _copy_abort_flag = True
-            _copy_confirm_event.set() # Release the lock if it's waiting for overwrite confirmation
-            self._send(200, b'{"status":"ok"}', "application/json")
+            self._handle_copy_cancel()
             return
 
         if clean_path == "/api/copy/confirm":
-            length = int(self.headers.get("Content-Length", 0))
-            raw = self.rfile.read(length)
-            try:
-                data = json.loads(raw)
-                _copy_overwrite_choice = data.get("action", "skip")
-                _copy_confirm_event.set()
-                self._send(200, b'{"status":"ok"}', "application/json")
-            except Exception:
-                self._send(400, b'{"error":"invalid"}', "application/json")
+            self._handle_copy_confirm(None)
             return
 
         if clean_path == "/api/buttons":
-
-
-            state = {"enabled": False, "source": "/mnt/disks/", "dest": "/mnt/user/Media/"}
-            if os.path.exists(BUTTON_CFG_FILE):
-                try:
-                    with open(BUTTON_CFG_FILE, "r") as f:
-                        state.update(json.load(f))
-                except Exception: pass
-            self._send(200, json.dumps(state).encode(), "application/json")
+            self._handle_buttons(None)
             return
 
         if clean_path == "/api/fans":
@@ -1754,92 +1784,27 @@ class Handler(BaseHTTPRequestHandler):
 
 
         if clean_path.startswith("/api/browse"):
-            from urllib.parse import parse_qs
-            qs = parse_qs(parsed.query)
-            target = qs.get("path", ["/mnt/user/"])[0]
-            # Ensure it resolves and restricts to /mnt/ for basic safety
-            abs_target = os.path.abspath(target)
-            if not abs_target.startswith("/mnt/"):
-                abs_target = "/mnt/"
-            
-            if not abs_target.endswith("/"):
-                abs_target += "/"
-                
-            dirs = []
-            try:
-                if abs_target != "/mnt/":
-                    dirs.append({"name": "..", "path": os.path.abspath(os.path.join(abs_target, "..")) + "/"})
-                for entry in os.scandir(abs_target):
-                    if entry.is_dir():
-                        dirs.append({"name": entry.name, "path": os.path.join(abs_target, entry.name) + "/"})
-            except Exception:
-                pass
-                
-            dirs = sorted(dirs, key=lambda d: (d["name"] != "..", d["name"].lower()))
-            
-            self._send(200, json.dumps({"current": abs_target, "dirs": dirs}).encode(), "application/json")
+            self._handle_browse(parsed.query)
             return
 
 
         if clean_path.startswith("/api/mkdir"):
-            from urllib.parse import parse_qs
-            qs = parse_qs(parsed.query)
-            target = qs.get("path", [""])[0]
-            if target:
-                abs_target = os.path.abspath(target)
-                if abs_target.startswith("/mnt/"):
-                    try:
-                        os.makedirs(abs_target, exist_ok=True)
-                        self._send(200, b'{"status": "ok"}', "application/json")
-                        return
-                    except Exception as e:
-                        self._send(400, b'{"error": "creation failed"}', "application/json")
-                        return
-            self._send(400, b'{"error": "invalid path"}', "application/json")
+            self._handle_mkdir(parsed.query)
             return
 
 
         if clean_path == "/api/copy/cancel":
-            _copy_abort_flag = True
-            _copy_confirm_event.set() # Release the lock if it's waiting for overwrite confirmation
-            self._send(200, b'{"status":"ok"}', "application/json")
+            self._handle_copy_cancel()
             return
 
         if clean_path == "/api/copy/confirm":
-            length = int(self.headers.get("Content-Length", 0))
-            raw = self.rfile.read(length)
-            try:
-                data = json.loads(raw)
-                _copy_overwrite_choice = data.get("action", "skip")
-                _copy_confirm_event.set()
-                self._send(200, b'{"status":"ok"}', "application/json")
-            except Exception:
-                self._send(400, b'{"error":"invalid"}', "application/json")
+            self._handle_copy_confirm(None)
             return
 
         if clean_path == "/api/buttons":
-
-
             length = int(self.headers.get("Content-Length", 0))
             raw = self.rfile.read(length)
-            try:
-                data = json.loads(raw)
-                state = {"enabled": False, "source": "/mnt/disks/", "dest": "/mnt/user/Media/"}
-                if os.path.exists(BUTTON_CFG_FILE):
-                    try:
-                        with open(BUTTON_CFG_FILE, "r") as f:
-                            state.update(json.load(f))
-                    except Exception: pass
-                
-                if "enabled" in data: state["enabled"] = bool(data["enabled"])
-                if "source" in data: state["source"] = str(data["source"]).strip()
-                if "dest" in data: state["dest"] = str(data["dest"]).strip()
-                
-                with open(BUTTON_CFG_FILE, "w") as f:
-                    json.dump(state, f)
-                self._send(200, json.dumps({"status": "ok", **state}).encode(), "application/json")
-            except Exception as e:
-                self._send(400, json.dumps({"error": str(e)}).encode(), "application/json")
+            self._handle_buttons(raw)
             return
 
         if clean_path == "/api/fans":

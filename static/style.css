@@ -105,25 +105,28 @@ body.theme-yak .chassis-front-panel {
     0 0 25px rgba(224, 122, 56, 0.25),
     inset 0 0 40px rgba(224, 85, 30, 0.2),
     inset 0 1px 2px rgba(255, 180, 100, 0.3);
-  animation: boxEmber 4s ease-in-out infinite alternate;
   z-index: 2;
 }
 
+.chassis-front-panel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow:
+    0 25px 60px rgba(0, 0, 0, 0.95),
+    0 0 35px rgba(240, 95, 35, 0.4),
+    inset 0 0 50px rgba(240, 110, 40, 0.3);
+  border: 1px solid #944b1c;
+  opacity: 0;
+  animation: boxEmber 4s ease-in-out infinite alternate;
+  pointer-events: none;
+  z-index: -1;
+}
+
 @keyframes boxEmber {
-  0% {
-    box-shadow: 
-      0 25px 60px rgba(0, 0, 0, 0.95),
-      0 0 20px rgba(224, 122, 56, 0.2),
-      inset 0 0 30px rgba(224, 85, 30, 0.15);
-    border-color: #633617;
-  }
-  100% {
-    box-shadow: 
-      0 25px 60px rgba(0, 0, 0, 0.95),
-      0 0 35px rgba(240, 95, 35, 0.4),
-      inset 0 0 50px rgba(240, 110, 40, 0.3);
-    border-color: #944b1c;
-  }
+  0% { opacity: 0; }
+  100% { opacity: 1; }
 }
 
 body.theme-yak .chassis-front-panel::before {

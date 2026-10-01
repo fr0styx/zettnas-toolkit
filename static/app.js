@@ -200,46 +200,80 @@ function diskTile(d) {
 function renderDisks(disks) {
   const row = $("diskRow");
   if (!row) return;
-  row.innerHTML = "";
   const total = disks.length || 1;
   row.classList.toggle("compact", total >= 7);
 
-  const order = ["os", "data", "cache"];
-  const groups = order
-    .map((r) => ({ role: r, items: disks.filter((d) => d.role === r) }))
-    .filter((g) => g.items.length);
+  // Check if structure changed (different disk count or devs)
+  const existingDevs = Array.from(row.querySelectorAll("[data-dev]")).map(el => el.dataset.dev);
+  const newDevs = disks.map(d => d.dev || d.name);
+  const structureChanged = existingDevs.length !== newDevs.length || existingDevs.some((d, i) => d !== newDevs[i]);
 
-  const isYak = (currentTheme === "yak");
-
-  groups.forEach((g, gi) => {
-    const meta = ROLE_META[g.role];
-    const grp = document.createElement("div");
-    grp.className = "disk-group " + meta.cls;
-    grp.style.setProperty("--n", g.items.length);
-    const lab = document.createElement("div");
-    lab.className = "group-label";
-    
-    let roleLabel = meta.label;
-    if (isYak) {
-      if (g.role === "data") roleLabel = "PARCELS";
-      else if (g.role === "cache") roleLabel = "EXPRESS";
-      else if (g.role === "os") roleLabel = "LOGISTICS";
-    }
-
-    lab.innerHTML = `<svg class="grp-ic"><use href="${meta.icon}"/></svg>${roleLabel}`;
-    grp.appendChild(lab);
-    const tiles = document.createElement("div");
-    tiles.className = "group-tiles";
-    tiles.style.setProperty("--n", g.items.length);
-    g.items.forEach((d) => tiles.appendChild(diskTile(d)));
-    grp.appendChild(tiles);
-    row.appendChild(grp);
-    if (gi < groups.length - 1) {
-      const div = document.createElement("div");
-      div.className = "group-div";
-      row.appendChild(div);
-    }
-  });
+  if (structureChanged) {
+    // Full rebuild needed
+    row.innerHTML = "";
+    const order = ["os", "data", "cache"];
+    const groups = order
+      .map((r) => ({ role: r, items: disks.filter((d) => d.role === r) }))
+      .filter((g) => g.items.length);
+    const isYak = (currentTheme === "yak");
+    groups.forEach((g, gi) => {
+      const meta = ROLE_META[g.role];
+      const grp = document.createElement("div");
+      grp.className = "disk-group " + meta.cls;
+      grp.dataset.role = g.role;
+      grp.style.setProperty("--n", g.items.length);
+      const lab = document.createElement("div");
+      lab.className = "group-label";
+      let roleLabel = meta.label;
+      if (isYak) {
+        if (g.role === "data") roleLabel = "PARCELS";
+        else if (g.role === "cache") roleLabel = "EXPRESS";
+        else if (g.role === "os") roleLabel = "LOGISTICS";
+      }
+      lab.innerHTML = `<svg class="grp-ic"><use href="${meta.icon}"/></svg>${roleLabel}`;
+      grp.appendChild(lab);
+      const tiles = document.createElement("div");
+      tiles.className = "group-tiles";
+      tiles.style.setProperty("--n", g.items.length);
+      g.items.forEach((d) => tiles.appendChild(diskTile(d)));
+      grp.appendChild(tiles);
+      row.appendChild(grp);
+      if (gi < groups.length - 1) {
+        const div = document.createElement("div");
+        div.className = "group-div";
+        row.appendChild(div);
+      }
+    });
+  } else {
+    // Fast path: update existing tiles in place
+    disks.forEach((d) => {
+      const devId = d.dev || d.name;
+      const tile = row.querySelector(`[data-dev="${devId}"]`);
+      if (!tile) return;
+      const nameEl = tile.querySelector(".disk-name");
+      const tempEl = tile.querySelector(".disk-temp");
+      if (nameEl) nameEl.textContent = d.name;
+      if (tempEl) {
+        if (d.standby) {
+          tempEl.textContent = "zZz";
+          tempEl.style.color = "#78838f";
+        } else if (d.temp !== null && d.temp !== undefined) {
+          tempEl.textContent = d.temp + "°";
+          tempEl.style.color = "";
+        } else {
+          tempEl.textContent = "--";
+          tempEl.style.color = "";
+        }
+      }
+      // Update health class
+      tile.classList.toggle("h-warn", d.health === "warn");
+      tile.classList.toggle("h-crit", d.health === "crit");
+      tile.classList.toggle("standby", !!d.standby);
+      // Update active IO indicator
+      const ioEl = tile.querySelector(".disk-io");
+      if (ioEl) ioEl.classList.toggle("io-active", !!d.active);
+    });
+  }
 }
 
 // S.M.A.R.T. & INTERACTIVE METRIC DIAGNOSTIC MODAL CONTROLLER
@@ -257,7 +291,11 @@ const smartLbl3 = $("smart-lbl-3");
 const smartLbl4 = $("smart-lbl-4");
 const smartRawTitle = $("smart-modal-raw-title");
 
+let _smartFetchController = null;
+
 async function openSmartModal(devName) {
+  if (_smartFetchController) _smartFetchController.abort();
+  _smartFetchController = new AbortController();
   if (!smartOverlay) return;
   activeModalType = "disk_" + devName;
   smartOverlay.classList.add("open");
@@ -275,7 +313,7 @@ async function openSmartModal(devName) {
   if (smartRaw) smartRaw.textContent = "Querying drive controller via smartctl...";
 
   try {
-    const res = await fetch(`/api/disk_detail?dev=${encodeURIComponent(devName)}`);
+    const res = await fetch(`/api/disk_detail?dev=${encodeURIComponent(devName)}`, { signal: _smartFetchController.signal });
     if (res.ok) {
       const data = await res.json();
       if (smartModel) smartModel.textContent = data.model || "Unknown";
@@ -2627,24 +2665,30 @@ fetchDashboardLayout().then(() => {
       }
     }, { passive: false });
 
+    let _curveRafPending = false;
     function onCurveMove(e) {
       if (!isDraggingCurve || dragIndex < 0) return;
       e.preventDefault();
-      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-      const rect = fanCurveSvg.getBoundingClientRect();
-      const svgX = (clientX - rect.left) * (300 / rect.width);
-      const svgY = (clientY - rect.top) * (140 / rect.height);
+      if (_curveRafPending) return;
+      _curveRafPending = true;
+      requestAnimationFrame(() => {
+        _curveRafPending = false;
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        const rect = fanCurveSvg.getBoundingClientRect();
+        const svgX = (clientX - rect.left) * (300 / rect.width);
+        const svgY = (clientY - rect.top) * (140 / rect.height);
 
-      let t = Math.max(30, Math.min(60, xToTemp(svgX)));
-      let p = Math.max(0, Math.min(100, yToPct(svgY)));
+        let t = Math.max(30, Math.min(60, xToTemp(svgX)));
+        let p = Math.max(0, Math.min(100, yToPct(svgY)));
 
-      // prevent crossing neighbours
-      if (dragIndex > 0) t = Math.max(t, curvePoints[dragIndex - 1][0] + 1);
-      if (dragIndex < curvePoints.length - 1) t = Math.min(t, curvePoints[dragIndex + 1][0] - 1);
+        // prevent crossing neighbours
+        if (dragIndex > 0) t = Math.max(t, curvePoints[dragIndex - 1][0] + 1);
+        if (dragIndex < curvePoints.length - 1) t = Math.min(t, curvePoints[dragIndex + 1][0] - 1);
 
-      curvePoints[dragIndex] = [t, p];
-      renderCurveLines();
+        curvePoints[dragIndex] = [t, p];
+        renderCurveLines();
+      });
     }
 
     window.addEventListener("mousemove", onCurveMove);
