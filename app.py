@@ -992,7 +992,7 @@ def _do_copy(cfg):
         dst_path = dst.rstrip("/") + "/"
         
         if not os.path.exists(dst_path):
-            os.makedirs(dst_path, exist_ok=True)
+            raise Exception(f"Destination path {dst_path} does not exist.")
 
         _copy_progress["file"] = "Scanning for collisions..."
         _ui_wake.set()
@@ -1086,12 +1086,14 @@ def _do_copy(cfg):
         _copy_status = "error"
         _copy_progress["file"] = f"Error: {e}"
         add_event("error", "Copy Failed", str(e))
+        try: send_led_packet(5, 255, 0, 0, 0, 0, 0, speed=10)
+        except: pass
     finally:
         if tmp_mount and mounted_path:
             subprocess.run(["umount", mounted_path])
         _copy_active = False
         _ui_wake.set()
-        time.sleep(4)
+        time.sleep(6)
         _copy_status = "idle"
         _ui_wake.set()
 
@@ -1627,12 +1629,24 @@ class Handler(BaseHTTPRequestHandler):
         if body:
             try:
                 data = json.loads(body)
+                dest_val = str(data.get("dest", state["dest"])).strip()
+                
+                if "dest" in data:
+                    if not os.path.exists(dest_val):
+                        self._send(400, json.dumps({"error": f"Path does not exist: {dest_val}"}).encode(), "application/json")
+                        return
+                    if not dest_val.startswith("/mnt/"):
+                        self._send(400, json.dumps({"error": "Path must be within /mnt/"}).encode(), "application/json")
+                        return
+                
                 if "enabled" in data: state["enabled"] = bool(data["enabled"])
                 if "source" in data: state["source"] = str(data["source"]).strip()
-                if "dest" in data: state["dest"] = str(data["dest"]).strip()
+                if "dest" in data: state["dest"] = dest_val
                 with open(BUTTON_CFG_FILE, "w") as f:
                     json.dump(state, f)
-            except Exception: pass
+            except Exception as e:
+                self._send(400, json.dumps({"error": str(e)}).encode(), "application/json")
+                return
             
         self._send(200, json.dumps(state).encode(), "application/json")
 

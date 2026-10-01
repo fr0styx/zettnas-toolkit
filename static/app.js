@@ -2817,10 +2817,13 @@ fetchDashboardLayout().then(() => {
   }
 
   if (btnCopySave) {
-    btnCopySave.addEventListener("click", () => {
-      btnCopySave.textContent = "Saved!";
-      setTimeout(() => { if (btnCopySave) btnCopySave.textContent = "💾 Save Configuration"; }, 2000);
-      saveButtonConfig();
+    btnCopySave.addEventListener("click", async (e) => {
+      btnCopySave.textContent = "Saving...";
+      await saveButtonConfig(e);
+      if (btnCopySave.textContent === "Saving...") {
+        btnCopySave.textContent = "Saved!";
+        setTimeout(() => { if (btnCopySave) btnCopySave.textContent = "💾 Save Configuration"; }, 2000);
+      }
     });
   }
 
@@ -2834,9 +2837,9 @@ fetchDashboardLayout().then(() => {
     });
   }
 
-  async function saveButtonConfig() {
+  async function saveButtonConfig(e) {
     try {
-      await fetch("/api/buttons", {
+      const res = await fetch("/api/buttons", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -2845,7 +2848,21 @@ fetchDashboardLayout().then(() => {
           dest: btnCopyDst ? btnCopyDst.value : "/mnt/user/"
         })
       });
-    } catch (e) {}
+      if (!res.ok) {
+        const err = await res.json();
+        showToast("Config Error: " + (err.error || "Invalid path"), "error");
+        
+        // Re-load the last valid config from the server to reset the UI
+        loadButtonConfig();
+        
+        // If triggered by the Save Button click (has target), reset button text
+        if (e && e.target && e.target.id === "copy-save-btn") {
+            e.target.textContent = "💾 Save Configuration";
+        }
+      }
+    } catch (e) {
+      showToast("Network Error: " + e, "error");
+    }
   }
 
   loadButtonConfig();
