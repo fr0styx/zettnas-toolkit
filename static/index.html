@@ -792,8 +792,13 @@
       <button id="fb-close" class="btn-icon" aria-label="Close dialog">✕</button>
     </div>
     <div class="smart-modal-body" style="padding-bottom: 20px;">
-      <div id="fb-current-path" style="font-family: monospace; font-size: 11px; padding: 10px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); border-radius: 6px; color: var(--ok2, #3498db); word-break: break-all;">/mnt/user/</div>
+      <div id="fb-current-path" style="font-family: monospace; font-size: 11px; padding: 10px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); border-radius: 6px; color: var(--ok2, #3498db); word-break: break-all; display: flex; flex-wrap: wrap; gap: 2px; align-items: center;"></div>
       
+      <div style="display: flex; gap: 8px; margin-top: 5px;">
+        <input type="text" id="fb-search-bar" class="tz-text-input" placeholder="🔍 Filter folders..." style="flex-grow: 1; font-size: 11px;">
+        <button id="fb-sort-btn" class="btn-pill-toggle" style="padding: 0 10px; white-space: nowrap; font-size: 10px;" title="Toggle Sort">A-Z</button>
+      </div>
+
       <div style="display: flex; gap: 8px; margin-top: 5px;">
         <input type="text" id="fb-new-folder-name" class="tz-text-input" placeholder="New folder name..." style="flex-grow: 1; font-size: 11px;">
         <button id="fb-create-folder" class="btn-pill-toggle" style="padding: 0 12px; white-space: nowrap;">+ Create</button>
@@ -812,7 +817,7 @@
 </div>
 </aside>
 
-<script src="app.js?v=53"></script>
+<script src="app.js?v=54"></script>
 <div id="copy-toast-backdrop" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 10000; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;"></div>
 
 <div id="copy-toast" class="smart-modal-window" style="position: fixed; bottom: 20px; right: 20px; width: 350px; z-index: 10001; opacity: 0; pointer-events: none; transition: opacity 0.3s ease, transform 0.3s ease; transform: translateY(20px); border-color: rgba(255,255,255,0.1);" role="alertdialog" aria-modal="true">
