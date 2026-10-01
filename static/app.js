@@ -1643,6 +1643,12 @@ fetchDashboardLayout().then(() => {
       } else if (targetId === "tab-fans") {
         if (dynamicTitle) dynamicTitle.textContent = "Fans";
         if (dynamicDesc) dynamicDesc.textContent = "Configure cooling thresholds and dynamic thermal curves.";
+      } else if (targetId === "tab-buttons") {
+        if (dynamicTitle) dynamicTitle.textContent = "Copy Button";
+        if (dynamicDesc) dynamicDesc.textContent = "Assign SD card copy rules to the physical hardware button.";
+      } else if (targetId === "tab-events") {
+        if (dynamicTitle) dynamicTitle.textContent = "Event Log";
+        if (dynamicDesc) dynamicDesc.textContent = "Timeline of system events, hardware alerts, and background operations.";
       }
     });
   });
