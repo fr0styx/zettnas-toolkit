@@ -1531,10 +1531,16 @@ _static_cache = {}  # {filepath: (bytes, etag, gzip_bytes)}
 _static_cache_lock = threading.Lock()
 
 def _load_static_file(fp):
-    """Load a static file into cache with ETag and optional gzip."""
+    """Load a static file into cache with ETag and mtime validation."""
     with _static_cache_lock:
+        try:
+            mtime = __import__('os').path.getmtime(fp)
+        except Exception:
+            return None
         if fp in _static_cache:
-            return _static_cache[fp]
+            entry = _static_cache[fp]
+            if len(entry) == 4 and entry[3] == mtime:
+                return entry
         try:
             with open(fp, "rb") as f:
                 content = f.read()
@@ -1545,11 +1551,12 @@ def _load_static_file(fp):
         # Pre-compress if worth it (>1KB)
         gz_content = None
         if len(content) > 1024:
+            import io, gzip
             buf = io.BytesIO()
             with gzip.GzipFile(fileobj=buf, mode='wb', compresslevel=6) as gz:
                 gz.write(content)
             gz_content = buf.getvalue()
-        entry = (content, etag, gz_content)
+        entry = (content, etag, gz_content, mtime)
         _static_cache[fp] = entry
         return entry
 
@@ -1829,7 +1836,7 @@ class Handler(BaseHTTPRequestHandler):
             if entry is None:
                 self._send(404, b"not found", "text/plain")
                 return
-            content, etag, gz_content = entry
+            content, etag, gz_content = entry[:3]
 
             if fp.endswith("index.html"):
                 html_str = content.decode("utf-8")
