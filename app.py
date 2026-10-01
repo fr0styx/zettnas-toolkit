@@ -1698,10 +1698,13 @@ async def mkdir(request: Request, path: str = None):
 
 @app.post("/api/copy/cancel")
 async def copy_cancel():
-    global _copy_abort_flag, _copy_overwrite_choice, _copy_confirm_event
+    global _copy_abort_flag, _copy_overwrite_choice, _copy_confirm_event, _copy_status, _copy_active, _ui_wake
     _copy_abort_flag = True
     _copy_overwrite_choice = "cancel"
     _copy_confirm_event.set()
+    if not _copy_active:
+        _copy_status = "idle"
+        _ui_wake.set()
     return {"status": "ok"}
 
 @app.post("/api/copy/confirm")
