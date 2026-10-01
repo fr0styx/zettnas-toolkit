@@ -22,6 +22,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ${STORAGE_POOL_PATH:-/mnt/user}:/mnt/user:rw
       - ./data:/app/data
+      - /boot/config/network.cfg:/boot/config/network.cfg:ro
     environment:
       - LCD_FPS=${LCD_FPS:-10}
       - PORT=8082

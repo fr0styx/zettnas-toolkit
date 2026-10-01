@@ -905,6 +905,16 @@ def read_ip():
             try:
                 with open(p, "r") as f:
                     content = f.read()
+                # Try to find explicit IPADDR= or address
+                ip_match = re.search(r'IPADDR(?:.*?)="?(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"?', content)
+                if not ip_match:
+                    ip_match = re.search(r'address\s+(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})', content)
+                
+                if ip_match:
+                    _discovered_host_ip = ip_match.group(1)
+                    return _discovered_host_ip
+
+                # Fallback to the old greedy matching if explicit keys aren't found
                 matches = re.findall(r'(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})', content)
                 for ip in matches:
                     if not (ip.startswith("127.") or ip.startswith("172.") or ip.endswith(".255") or ip == "0.0.0.0"):
