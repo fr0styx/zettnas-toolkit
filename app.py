@@ -74,6 +74,28 @@ _prev_disk_io = {}
 # ---- Hardware Drivers & State Files ----
 LED_PORT = os.environ.get("LED_PORT", "/dev/ttyACM0" if os.path.exists("/dev/ttyACM0") else "/host/dev/ttyACM0")
 DATA_DIR = os.environ.get("DATA_DIR", "/app/data")
+
+DB_PATH = os.path.join(os.path.dirname(DASH_LAYOUT_FILE), "history.db")
+
+def init_db():
+    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+    try:
+        with sqlite3.connect(DB_PATH) as conn:
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS metrics (
+                    ts INTEGER PRIMARY KEY,
+                    cpu_temp REAL,
+                    cpu_util REAL,
+                    mem_pct REAL,
+                    disks_json TEXT,
+                    fans_json TEXT
+                )
+            """)
+    except Exception as e:
+        print(f"[ZettNAS] DB Init Error: {e}")
+
+init_db()
+
 LED_STATE_FILE = os.path.join(DATA_DIR, "led_state.json")
 DASH_LAYOUT_FILE = os.environ.get("LAYOUT_PATH", os.path.join(DATA_DIR, "dash_layout.json"))
 FAN_STATE_FILE = os.path.join(DATA_DIR, "fan_state.json")
@@ -1313,8 +1335,24 @@ def stats_collector_daemon():
                 "chassis": detect_chassis_model(),
                 "layout": get_current_layout(), "copy_status": _copy_status
             }
+            
             with _cached_stats_lock:
                 _cached_stats = data
+                
+            now_ts = int(time.time())
+            if not hasattr(stats_collector_daemon, 'last_log'):
+                stats_collector_daemon.last_log = 0
+            if now_ts - stats_collector_daemon.last_log >= 300:
+                stats_collector_daemon.last_log = now_ts
+                try:
+                    with sqlite3.connect(DB_PATH) as conn:
+                        conn.execute("INSERT INTO metrics (ts, cpu_temp, cpu_util, mem_pct, disks_json, fans_json) VALUES (?, ?, ?, ?, ?, ?)", (
+                            now_ts, cpu.get("temp", 0), cpu.get("util", 0), mem.get("pct", 0), json.dumps(disks), json.dumps(fans)
+                        ))
+                        conn.execute("DELETE FROM metrics WHERE ts < ?", (now_ts - 86400,))
+                except Exception as db_e:
+                    print(f"[ZettNAS] DB Log Error: {db_e}")
+
         except Exception as e:
             import traceback
             print('CRASH:', e)
@@ -1727,6 +1765,27 @@ class Handler(BaseHTTPRequestHandler):
                 "active": _lcd_renderer_active
             }).encode()
             self._send(200, body, "application/json")
+            return
+
+
+        if clean_path == "/api/history":
+            try:
+                with sqlite3.connect(DB_PATH) as conn:
+                    conn.row_factory = sqlite3.Row
+                    rows = conn.execute("SELECT * FROM metrics ORDER BY ts ASC").fetchall()
+                    data = []
+                    for r in rows:
+                        data.append({
+                            "ts": r["ts"],
+                            "cpu_temp": r["cpu_temp"],
+                            "cpu_util": r["cpu_util"],
+                            "mem_pct": r["mem_pct"],
+                            "disks": json.loads(r["disks_json"]),
+                            "fans": json.loads(r["fans_json"])
+                        })
+                    self._send(200, json.dumps(data).encode(), "application/json")
+            except Exception as e:
+                self._send(500, json.dumps({"error": str(e)}).encode(), "application/json")
             return
 
         if clean_path == "/api/stats":
