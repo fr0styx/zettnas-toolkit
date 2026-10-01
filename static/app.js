@@ -1,15 +1,21 @@
 
 let _metricsChart = null;
+let _metricsRange = "24h";
+
 async function fetchAndRenderMetrics() {
   if (_metricsChart) _metricsChart.destroy();
   try {
-    const res = await fetch("/api/history");
+    const res = await fetch("/api/history?range=" + _metricsRange);
     const data = await res.json();
     if (!data || data.length === 0) return;
     
     const labels = data.map(d => {
       const dt = new Date(d.ts * 1000);
-      return dt.getHours().toString().padStart(2, '0') + ':' + dt.getMinutes().toString().padStart(2, '0');
+      if (_metricsRange === "24h") {
+          return dt.getHours().toString().padStart(2, '0') + ':' + dt.getMinutes().toString().padStart(2, '0');
+      } else {
+          return (dt.getMonth()+1) + '/' + dt.getDate() + ' ' + dt.getHours().toString().padStart(2, '0') + ':00';
+      }
     });
     
     const cpuTemps = data.map(d => d.cpu_temp);
@@ -3357,3 +3363,13 @@ function renderEventLog(events) {
     list.appendChild(row);
   });
 }
+
+window.addEventListener("DOMContentLoaded", () => {
+  const rs = document.getElementById("metrics-range-select");
+  if (rs) {
+    rs.addEventListener("change", (e) => {
+      _metricsRange = e.target.value;
+      fetchAndRenderMetrics();
+    });
+  }
+});

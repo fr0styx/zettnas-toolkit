@@ -1385,7 +1385,7 @@ def stats_collector_daemon():
                         conn.execute("INSERT INTO metrics (ts, cpu_temp, cpu_util, mem_pct, disks_json, fans_json) VALUES (?, ?, ?, ?, ?, ?)", (
                             now_ts, data["cpu"].get("temp", 0), data["cpu"].get("util", 0), data["mem"].get("pct", 0), json.dumps(disks), json.dumps(fans)
                         ))
-                        conn.execute("DELETE FROM metrics WHERE ts < ?", (now_ts - 86400,))
+                        conn.execute("DELETE FROM metrics WHERE ts < ?", (now_ts - 2592000,))
                 except Exception as db_e:
                     print(f"[ZettNAS] DB Log Error: {db_e}")
 
@@ -1671,20 +1671,33 @@ async def stats_stream(request: Request):
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 
 @app.get("/api/history")
-async def get_history():
+async def get_history(range: str = "24h"):
+    import time
+    now_ts = int(time.time())
+    
+    if range == "7d":
+        cutoff = now_ts - (86400 * 7)
+        group_sql = "SELECT CAST(strftime('%s', strftime('%Y-%m-%d %H:00:00', datetime(ts, 'unixepoch', 'localtime'))) AS INTEGER) as ts, avg(cpu_temp) as cpu_temp, avg(cpu_util) as cpu_util, avg(mem_pct) as mem_pct FROM metrics WHERE ts > ? GROUP BY strftime('%Y-%m-%d %H:00:00', datetime(ts, 'unixepoch', 'localtime')) ORDER BY ts ASC"
+    elif range == "30d":
+        cutoff = now_ts - (86400 * 30)
+        group_sql = "SELECT CAST(strftime('%s', strftime('%Y-%m-%d 00:00:00', datetime(ts, 'unixepoch', 'localtime'))) AS INTEGER) as ts, avg(cpu_temp) as cpu_temp, avg(cpu_util) as cpu_util, avg(mem_pct) as mem_pct FROM metrics WHERE ts > ? GROUP BY strftime('%Y-%m-%d 00:00:00', datetime(ts, 'unixepoch', 'localtime')) ORDER BY ts ASC"
+    else: # 24h
+        cutoff = now_ts - 86400
+        group_sql = "SELECT ts, cpu_temp, cpu_util, mem_pct FROM metrics WHERE ts > ? ORDER BY ts ASC"
+
     try:
         with sqlite3.connect(DB_PATH) as conn:
             conn.row_factory = sqlite3.Row
-            rows = conn.execute("SELECT * FROM metrics ORDER BY ts ASC").fetchall()
+            rows = conn.execute(group_sql, (cutoff,)).fetchall()
             data = []
             for r in rows:
                 data.append({
                     "ts": r["ts"],
-                    "cpu_temp": r["cpu_temp"],
-                    "cpu_util": r["cpu_util"],
-                    "mem_pct": r["mem_pct"],
-                    "disks": json.loads(r["disks_json"]),
-                    "fans": json.loads(r["fans_json"])
+                    "cpu_temp": round(r["cpu_temp"], 1) if r["cpu_temp"] else 0,
+                    "cpu_util": round(r["cpu_util"], 1) if r["cpu_util"] else 0,
+                    "mem_pct": round(r["mem_pct"], 1) if r["mem_pct"] else 0,
+                    "disks": [],
+                    "fans": []
                 })
             return JSONResponse(data)
     except Exception as e:
