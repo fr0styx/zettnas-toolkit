@@ -973,6 +973,26 @@ def button_listener_daemon():
             pass
         time.sleep(0.1)
 
+
+import exifread
+def _get_exif_date(filepath):
+    try:
+        if not filepath.lower().endswith(('.jpg', '.jpeg', '.tiff', '.tif', '.cr2', '.nef', '.arw', '.dng')):
+            return None
+        with open(filepath, 'rb') as f:
+            tags = exifread.process_file(f, details=False)
+            date_str = str(tags.get('EXIF DateTimeOriginal', ''))
+            if not date_str:
+                date_str = str(tags.get('Image DateTime', ''))
+            if date_str:
+                parts = date_str.split(' ')
+                if len(parts) > 0:
+                    y, m, d = parts[0].split(':')
+                    return f"{y}/{m}/{d}"
+    except Exception:
+        pass
+    return None
+
 def _do_copy(cfg):
     global _copy_active, _copy_status, _copy_progress, _copy_confirm_event, _copy_overwrite_choice
     src_mode = cfg.get("source", "sd").strip()
@@ -1027,17 +1047,32 @@ def _do_copy(cfg):
         if not os.path.exists(dst_path):
             raise Exception(f"Destination path {dst_path} does not exist.")
 
-        _copy_progress["file"] = "Scanning for collisions..."
+        _copy_progress["file"] = "Scanning media and EXIF metadata..."
         _ui_wake.set()
         
         collisions = []
+        all_files = []
         for dirpath, _, filenames in os.walk(src_path):
             for f in filenames:
                 src_file = os.path.join(dirpath, f)
                 rel_path = os.path.relpath(src_file, src_path)
-                dst_file = os.path.join(dst_path, rel_path)
-                if os.path.exists(dst_file):
+                
+                # Smart Ingest EXIF check
+                date_subpath = _get_exif_date(src_file)
+                if date_subpath:
+                    dst_file = os.path.join(dst_path, date_subpath, os.path.basename(f))
+                    rel_path = os.path.join(date_subpath, os.path.basename(f))
+                else:
+                    dst_file = os.path.join(dst_path, rel_path)
+                    
+                is_collision = os.path.exists(dst_file)
+                if is_collision:
                     collisions.append(rel_path)
+                file_size = 0
+                if not os.path.islink(src_file):
+                    try: file_size = os.path.getsize(src_file)
+                    except: pass
+                all_files.append((src_file, dst_file, file_size, is_collision))
 
         if collisions:
             _copy_status = "awaiting_confirmation"
@@ -1054,24 +1089,14 @@ def _do_copy(cfg):
             if _copy_overwrite_choice == "cancel":
                 raise Exception("Aborted by user.")
 
-        _copy_progress["file"] = "Calculating total size..."
-        _ui_wake.set()
-        total_size = 0
         files_to_copy = []
-        
-        for dirpath, _, filenames in os.walk(src_path):
-            for f in filenames:
-                src_file = os.path.join(dirpath, f)
-                rel_path = os.path.relpath(src_file, src_path)
-                dst_file = os.path.join(dst_path, rel_path)
-                
-                if os.path.exists(dst_file) and collisions:
-                    if _copy_overwrite_choice == "skip":
-                        continue
-                        
-                if not os.path.islink(src_file):
-                    total_size += os.path.getsize(src_file)
-                    files_to_copy.append((src_file, dst_file))
+        total_size = 0
+        for src_file, dst_file, file_size, is_collision in all_files:
+            if is_collision and collisions and _copy_overwrite_choice == "skip":
+                continue
+            if file_size > 0:
+                total_size += file_size
+                files_to_copy.append((src_file, dst_file))
 
         _copy_progress["total"] = total_size
         _copy_progress["files_total"] = len(files_to_copy)
