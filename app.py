@@ -105,13 +105,15 @@ def _load_events():
     except Exception:
         pass
 
-def add_event(level, title, message):
+def add_event(level, title, message, details=None):
     global _event_log
     now = int(time.time())
     with _event_log_lock:
-        if _event_log and _event_log[0].get("title") == title and _event_log[0].get("message") == message and (now - _event_log[0].get("ts", 0) < 60):
+        if _event_log and _event_log[0].get("title") == title and _event_log[0].get("message") == message and (now - _event_log[0].get("ts", 0) < 3600):
             return
         entry = {"ts": now, "level": level, "title": title, "message": message}
+        if details is not None:
+            entry["details"] = details
         _event_log.insert(0, entry)
         _event_log = _event_log[:100]
         try:
@@ -1229,21 +1231,23 @@ def stats_collector_daemon():
                 is_crit = has_crit or (cpu_temp >= 85) or is_failing_fan
                 is_warn = (len(bad) > 0) or (cpu_temp >= 70)
 
-                if is_failing_fan and not _prev_fan_stall:
-                    add_event("error", "Fan Stall Detected", "One or more fans have reported 0 RPM while active.")
-                _prev_fan_stall = is_failing_fan
+                if is_failing_fan:
+                    add_event("error", "Fan Stall Detected", "One or more cooling fans have stalled (0 RPM).", details={"fans": fans})
 
-                if cpu_temp >= 85 and not _prev_throttle:
-                    add_event("error", "CPU Thermal Critical", f"CPU temperature reached {cpu_temp}°C. Throttling active.")
-                _prev_throttle = cpu_temp >= 85
+                if cpu_temp >= 85:
+                    add_event("error", "CPU Thermal Critical", f"CPU temperature reached {cpu_temp}°C. Hardware throttling active.", details={"cpu_temp": cpu_temp})
+                elif cpu_temp >= 75:
+                    add_event("warning", "CPU Thermal Warning", f"CPU temperature is elevated ({cpu_temp}°C).", details={"cpu_temp": cpu_temp})
 
-                if has_crit and not _prev_crit:
-                    add_event("error", "Storage Critical", "One or more drives have entered a critical health state.")
-                _prev_crit = has_crit
+                for d in bad:
+                    d_name = d.get("name", "Unknown")
+                    d_health = d.get("health", "warn")
+                    d_temp = d.get("temp", 0)
+                    if d_health == "crit":
+                        add_event("error", f"Drive Critical: {d_name}", f"Drive reached critical health or extreme temp ({d_temp}°C)", details=d)
+                    elif d_health == "warn":
+                        add_event("warning", f"Drive Warning: {d_name}", f"Drive is running hot or has warnings ({d_temp}°C)", details=d)
 
-                if is_warn and not is_crit and not _prev_warn:
-                    add_event("warning", "System Warning", "Elevated temperatures or SMART warnings detected.")
-                _prev_warn = is_warn
 
                 is_disk_active = any(d.get("active", False) for d in disks)
                 if is_crit:
@@ -1500,13 +1504,15 @@ def _load_events():
     except Exception:
         pass
 
-def add_event(level, title, message):
+def add_event(level, title, message, details=None):
     global _event_log
     now = int(time.time())
     with _event_log_lock:
-        if _event_log and _event_log[0].get("title") == title and _event_log[0].get("message") == message and (now - _event_log[0].get("ts", 0) < 60):
+        if _event_log and _event_log[0].get("title") == title and _event_log[0].get("message") == message and (now - _event_log[0].get("ts", 0) < 3600):
             return
         entry = {"ts": now, "level": level, "title": title, "message": message}
+        if details is not None:
+            entry["details"] = details
         _event_log.insert(0, entry)
         _event_log = _event_log[:100]
         try:
