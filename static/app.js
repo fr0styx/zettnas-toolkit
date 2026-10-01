@@ -887,7 +887,8 @@ function syncMiniPreviewStructure() {
 
 function fitMiniPreviewScale() {
   if (window.innerWidth <= 720) {
-    if (screenContainer) screenContainer.style.transform = "";
+    const inner = $("mini-preview-inner");
+    if (inner) inner.style.transform = "";
     return;
   }
   const canvas = $("mini-lcd-canvas");

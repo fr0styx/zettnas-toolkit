@@ -14,7 +14,6 @@ import glob
 import json
 import struct
 import mmap
-import mmap
 import base64
 import shutil
 import socket
