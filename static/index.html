@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ZettNAS Studio • Hardware Suite</title>
-<link rel="stylesheet" href="style.css?v=72">
+<link rel="stylesheet" href="style.css?v=73">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="studio-workbench">
@@ -183,8 +183,10 @@
       <span class="smart-modal-title" id="smart-modal-title">
         <svg class="ic"><use href="#i-disk"/></svg> S.M.A.R.T. Diagnostics
       </span>
-      <button id="smart-modal-refresh" class="btn-icon" title="Refresh SMART data" style="margin-right:4px;">↻</button>
-      <button id="smart-modal-close" class="btn-icon" aria-label="Close dialog">✕</button>
+      <div style="display:flex; gap:12px; align-items:center;">
+        <button id="smart-modal-refresh" class="btn-icon" title="Refresh SMART data" style="font-size: 20px; padding: 2px;">↻</button>
+        <button id="smart-modal-close" class="btn-icon" aria-label="Close dialog">✕</button>
+      </div>
     </div>
     <div class="smart-modal-body">
       <div class="smart-meta-grid" id="smart-modal-grid">
