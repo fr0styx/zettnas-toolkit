@@ -3084,9 +3084,17 @@ fetchDashboardLayout().then(() => {
 
 
 
+let _lastEventHash = "";
+let _expandedEvents = new Set();
+
 function renderEventLog(events) {
   const list = $("events-list");
   if (!list) return;
+  
+  const currentHash = events ? (events.length + "-" + (events[0] ? events[0].ts : 0)) : "empty";
+  if (_lastEventHash === currentHash) return; // Skip DOM rebuild if data hasn't changed
+  _lastEventHash = currentHash;
+
   if (!events || events.length === 0) {
     list.innerHTML = `<div style="padding: 14px; text-align: center; color: var(--muted); font-size: 11px;">No events logged yet.</div>`;
     return;
@@ -3130,9 +3138,19 @@ function renderEventLog(events) {
     detailsBox.textContent = JSON.stringify(e, null, 2);
     row.appendChild(detailsBox);
     
+    const evKey = e.ts + "_" + e.title;
+    if (_expandedEvents.has(evKey)) {
+      detailsBox.style.display = "block";
+    }
+
     row.addEventListener("click", () => {
       const isHidden = detailsBox.style.display === "none";
       detailsBox.style.display = isHidden ? "block" : "none";
+      if (isHidden) {
+        _expandedEvents.add(evKey);
+      } else {
+        _expandedEvents.delete(evKey);
+      }
     });
     
     list.appendChild(row);
