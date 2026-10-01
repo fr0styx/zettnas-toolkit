@@ -1868,7 +1868,7 @@ def _handle_browse_logic(path, dirs_only):
                 try: sz = os.path.getsize(full)
                 except: pass
             out.append({"name": e, "path": full, "is_dir": is_dir, "size": sz})
-        return {"current": path, "items": out}
+        return {"current": path, "dirs": out}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
