@@ -1729,14 +1729,10 @@ fetchDashboardLayout().then(() => {
         if (dynamicTitle) dynamicTitle.textContent = "Copy Button";
         if (dynamicDesc) dynamicDesc.textContent = "Assign SD card copy rules to the physical hardware button.";
 
-      } else if (targetId === "tab-metrics") {
-        if (dynamicTitle) dynamicTitle.textContent = "Metrics History";
-        if (dynamicDesc) dynamicDesc.textContent = "Historical 24-hour thermal and usage data.";
+      } else if (targetId === "tab-misc") {
+        if (dynamicTitle) dynamicTitle.textContent = "Misc & Event Log";
+        if (dynamicDesc) dynamicDesc.textContent = "Historical metrics, background operations, and hardware alerts.";
         fetchAndRenderMetrics();
-
-      } else if (targetId === "tab-events") {
-        if (dynamicTitle) dynamicTitle.textContent = "Event Log";
-        if (dynamicDesc) dynamicDesc.textContent = "Timeline of system events, hardware alerts, and background operations.";
       }
     });
   });
