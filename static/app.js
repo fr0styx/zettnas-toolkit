@@ -1231,6 +1231,7 @@ let _sseRetryCount = 0;
 function applyStats(s) {
   try {
     latestStats = s;
+    if (s.events) renderEventLog(s.events);
     anyWarn = false;
 
   if (s.copy_state) {
@@ -3050,3 +3051,37 @@ fetchDashboardLayout().then(() => {
   }
 })();
 
+
+
+function renderEventLog(events) {
+  const list = $("events-list");
+  if (!list) return;
+  if (!events || events.length === 0) {
+    list.innerHTML = `<div style="padding: 14px; text-align: center; color: var(--muted); font-size: 11px;">No events logged yet.</div>`;
+    return;
+  }
+  
+  // Format event row
+  let html = "";
+  events.forEach(e => {
+    const dt = new Date(e.ts * 1000);
+    const timeStr = dt.toLocaleString();
+    let color = "#e2e8f0";
+    let icon = "ℹ️";
+    if (e.level === "error") { color = "var(--crit)"; icon = "❌"; }
+    else if (e.level === "warning") { color = "var(--warn)"; icon = "⚠️"; }
+    else if (e.level === "success") { color = "var(--ok2)"; icon = "✅"; }
+    
+    html += `
+      <div style="padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; gap: 10px; align-items: flex-start;">
+        <span style="font-size: 14px; margin-top: 2px;">${icon}</span>
+        <div style="display: flex; flex-direction: column; gap: 4px;">
+          <div style="font-size: 11px; color: ${color}; font-weight: 700; letter-spacing: 0.3px;">${e.title}</div>
+          <div style="font-size: 12px; color: #fff;">${e.message}</div>
+          <div style="font-size: 10px; color: var(--muted);">${timeStr}</div>
+        </div>
+      </div>
+    `;
+  });
+  list.innerHTML = html;
+}

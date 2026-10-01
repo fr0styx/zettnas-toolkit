@@ -91,6 +91,36 @@ _cached_chassis_model = None
 
 _lcd_renderer_active = False
 
+EVENTS_FILE = os.path.join(DATA_DIR, "events.json")
+_event_log = []
+_event_log_lock = threading.Lock()
+
+def _load_events():
+    global _event_log
+    try:
+        if os.path.exists(EVENTS_FILE):
+            import json
+            with open(EVENTS_FILE, "r") as f:
+                _event_log = json.load(f)
+    except Exception:
+        pass
+
+def add_event(level, title, message):
+    global _event_log
+    now = int(time.time())
+    with _event_log_lock:
+        if _event_log and _event_log[0].get("title") == title and _event_log[0].get("message") == message and (now - _event_log[0].get("ts", 0) < 60):
+            return
+        entry = {"ts": now, "level": level, "title": title, "message": message}
+        _event_log.insert(0, entry)
+        _event_log = _event_log[:100]
+        try:
+            with open(EVENTS_FILE, "w") as f:
+                json.dump(_event_log, f)
+        except Exception:
+            pass
+
+
 def is_in_time_window(start_str, end_str):
     try:
         now = time.localtime()
@@ -900,6 +930,7 @@ def button_listener_daemon():
                     _copy_active = True
                     _copy_status = "copying"
                     _ui_wake.set()
+                    add_event("info", "Copy Started", "Starting ingest from SD Card reader...")
                     threading.Thread(target=_do_copy, args=(cfg,), daemon=True).start()
             
             last_state = current_state
@@ -976,6 +1007,7 @@ def _do_copy(cfg):
         if collisions:
             _copy_status = "awaiting_confirmation"
             _copy_progress["file"] = f"{len(collisions)} files already exist in destination."
+            add_event("warning", "Copy Collision", f"{len(collisions)} files already exist. Waiting for confirmation.")
             _ui_wake.set()
             
             _copy_confirm_event.clear()
@@ -1037,14 +1069,21 @@ def _do_copy(cfg):
             except Exception as e:
                 print(f"[ZettNAS] Error copying {src_f}: {e}")
 
-        if _copy_abort_flag: _copy_status = "aborted"; _copy_progress["file"] = "Aborted."; raise Exception("Aborted by user.")
-        else: _copy_status = "success"
-        _copy_progress["file"] = "Finished successfully."
+        if _copy_abort_flag:
+            _copy_status = "aborted"
+            _copy_progress["file"] = "Aborted."
+            add_event("warning", "Copy Aborted", "User aborted the copy operation.")
+            raise Exception("Aborted by user.")
+        else:
+            _copy_status = "success"
+            add_event("success", "Copy Completed", f"Successfully copied {_copy_progress['files_done']} files.")
+        _copy_progress["file"] = "Finished successfully." 
         
     except Exception as e:
         print(f"[ZettNAS] Copy failed: {e}")
         _copy_status = "error"
         _copy_progress["file"] = f"Error: {e}"
+        add_event("error", "Copy Failed", str(e))
     finally:
         if tmp_mount and mounted_path:
             subprocess.run(["umount", mounted_path])
@@ -1088,6 +1127,10 @@ def read_media_slots():
 
 def stats_collector_daemon():
     global _cached_stats, _alert_active
+    _prev_crit = False
+    _prev_warn = False
+    _prev_throttle = False
+    _prev_fan_stall = False
     while True:
         try:
             disks = read_disk_temps_and_io()
@@ -1186,6 +1229,22 @@ def stats_collector_daemon():
                 is_crit = has_crit or (cpu_temp >= 85) or is_failing_fan
                 is_warn = (len(bad) > 0) or (cpu_temp >= 70)
 
+                if is_failing_fan and not _prev_fan_stall:
+                    add_event("error", "Fan Stall Detected", "One or more fans have reported 0 RPM while active.")
+                _prev_fan_stall = is_failing_fan
+
+                if cpu_temp >= 85 and not _prev_throttle:
+                    add_event("error", "CPU Thermal Critical", f"CPU temperature reached {cpu_temp}°C. Throttling active.")
+                _prev_throttle = cpu_temp >= 85
+
+                if has_crit and not _prev_crit:
+                    add_event("error", "Storage Critical", "One or more drives have entered a critical health state.")
+                _prev_crit = has_crit
+
+                if is_warn and not is_crit and not _prev_warn:
+                    add_event("warning", "System Warning", "Elevated temperatures or SMART warnings detected.")
+                _prev_warn = is_warn
+
                 is_disk_active = any(d.get("active", False) for d in disks)
                 if is_crit:
                     _alert_active = True
@@ -1260,8 +1319,17 @@ def stats_collector_daemon():
 
 def collect():
     with _cached_stats_lock:
-        if _cached_stats:
-            return dict(_cached_stats)
+        data = dict(_cached_stats) if _cached_stats else {
+            "name": get_server_hostname(), "status": "-- OK", "ip": read_ip(),
+            "storage": {"used": "0GB", "total": "0GB", "pct": 0}, "cpu": {"temp": 0, "util": 0}, "mem": {"used_gb": 0, "total_gb": 0, "pct": 0},
+            "fans": [], "copy_state": {"active": False, "status": "idle", "progress": {}},
+            "net": {"tx": "0 B/s", "rx": "0 B/s"}, "uptime": "0s", "disks": []
+        }
+    with _event_log_lock:
+        data["events"] = list(_event_log)
+    return data
+
+def _old_collect_wrapper():
     return {
         "name": get_server_hostname(),
         "status": "-- OK",
@@ -1417,6 +1485,36 @@ def render_lcd_loop():
 
         except Exception as e:
             _lcd_renderer_active = False
+
+EVENTS_FILE = os.path.join(DATA_DIR, "events.json")
+_event_log = []
+_event_log_lock = threading.Lock()
+
+def _load_events():
+    global _event_log
+    try:
+        if os.path.exists(EVENTS_FILE):
+            import json
+            with open(EVENTS_FILE, "r") as f:
+                _event_log = json.load(f)
+    except Exception:
+        pass
+
+def add_event(level, title, message):
+    global _event_log
+    now = int(time.time())
+    with _event_log_lock:
+        if _event_log and _event_log[0].get("title") == title and _event_log[0].get("message") == message and (now - _event_log[0].get("ts", 0) < 60):
+            return
+        entry = {"ts": now, "level": level, "title": title, "message": message}
+        _event_log.insert(0, entry)
+        _event_log = _event_log[:100]
+        try:
+            with open(EVENTS_FILE, "w") as f:
+                json.dump(_event_log, f)
+        except Exception:
+            pass
+
             print(f"[LCD] Active render loop error: {e}", flush=True)
             time.sleep(2)
 
@@ -1584,6 +1682,16 @@ class Handler(BaseHTTPRequestHandler):
                 pass
             return
 
+        if clean_path == "/api/events/clear":
+            global _event_log
+            with _event_log_lock:
+                _event_log = []
+                try:
+                    with open(EVENTS_FILE, "w") as fw:
+                        fw.write("[]")
+                except: pass
+            self._send(200, b'{"status":"ok"}', "application/json")
+            return
         if clean_path == "/api/lcd_status":
             body = json.dumps({
                 "enabled": ENABLE_FB,
@@ -1893,6 +2001,7 @@ if __name__ == "__main__":
         os.makedirs(_layout_dir, exist_ok=True)
     port = int(os.environ.get("PORT", "8082"))
     print(f"ZettNAS LCD dashboard on :{port}", flush=True)
+    _load_events()
     read_ip()  # Pre-populate IP cache at startup
     detect_chassis_model()  # Pre-populate chassis model cache
 
