@@ -51,52 +51,67 @@ function renderCurveLines() {
 
 const $ = (id) => document.getElementById(id);
 
-
 function showToast(msg, type="error") {
-  let container = document.getElementById("global-toast-container");
-  if (!container) {
-    container = document.createElement("div");
-    container.id = "global-toast-container";
-    container.style.cssText = "position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:10005;display:flex;flex-direction:column;gap:8px;";
-    document.body.appendChild(container);
+  const toast = document.getElementById("copy-toast");
+  const backdrop = document.getElementById("copy-toast-backdrop");
+  if (!toast) return;
+  
+  toast.style.opacity = "1";
+  toast.style.pointerEvents = "auto";
+  toast.style.transition = "none";
+  
+  if (backdrop) {
+      backdrop.style.opacity = "1";
+      backdrop.style.pointerEvents = "auto";
   }
-  const el = document.createElement("div");
-  el.style.cssText = `background: ${type === 'error' ? 'var(--crit)' : 'var(--ok)'}; color: #fff; padding: 10px 20px; border-radius: 6px; font-size: 13px; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.3); opacity: 0; transform: translateY(10px); transition: all 0.3s ease; display:flex; align-items:center; gap:8px;`;
-  el.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg> ${msg}`;
-  container.appendChild(el);
-  requestAnimationFrame(() => { el.style.opacity = "1"; el.style.transform = "translateY(0)"; });
+  
+  toast.style.boxShadow = "0 0 40px rgba(0,0,0,0.8)";
+  toast.style.bottom = "50%";
+  toast.style.right = "50%";
+  toast.style.transform = "translate(50%, 50%) scale(1.2)";
+  
+  const titleEl = toast.querySelector(".smart-modal-title");
+  if (titleEl) titleEl.innerHTML = `<svg class="ic ic-sm" style="margin-right:4px;"><use href="#i-storage"/></svg> System Notification`;
+  
+  const statusEl = document.getElementById("copy-toast-status");
+  if (statusEl) statusEl.textContent = type === "error" ? "Error!" : "Success!";
+  
+  const barEl = document.getElementById("copy-toast-bar");
+  if (barEl) {
+      barEl.style.width = "100%";
+      barEl.style.background = type === "error" ? "#e74c3c" : "#2ecc71";
+  }
+  
+  const fileEl = document.getElementById("copy-toast-file");
+  if (fileEl) fileEl.textContent = msg;
+  
+  const timeEl = document.getElementById("copy-toast-time");
+  if (timeEl) timeEl.textContent = "Closing automatically...";
+  
+  const pctEl = document.getElementById("copy-toast-pct");
+  if (pctEl) pctEl.textContent = "";
+  
   setTimeout(() => {
-    el.style.opacity = "0"; el.style.transform = "translateY(10px)";
-    setTimeout(() => el.remove(), 300);
+      toast.style.transition = "opacity 0.3s ease, transform 0.3s ease";
+      toast.style.opacity = "0";
+      toast.style.pointerEvents = "none";
+      if (backdrop) {
+          backdrop.style.opacity = "0";
+          backdrop.style.pointerEvents = "none";
+      }
+      setTimeout(() => {
+          if (titleEl) titleEl.innerHTML = `<svg class="ic ic-sm" style="margin-right:4px;"><use href="#i-storage"/></svg> Media card ingest`;
+      }, 300);
   }, 4000);
 }
 
 
-function showToast(msg, type="error") {
-  let container = document.getElementById("global-toast-container");
-  if (!container) {
-    container = document.createElement("div");
-    container.id = "global-toast-container";
-    container.style.cssText = "position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:10005;display:flex;flex-direction:column;gap:8px;";
-    document.body.appendChild(container);
-  }
-  const el = document.createElement("div");
-  el.style.cssText = `background: ${type === 'error' ? 'var(--crit)' : 'var(--ok)'}; color: #fff; padding: 10px 20px; border-radius: 6px; font-size: 13px; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.3); opacity: 0; transform: translateY(10px); transition: all 0.3s ease; display:flex; align-items:center; gap:8px;`;
-  el.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg> ${msg}`;
-  container.appendChild(el);
-  
-  // Animate in
-  requestAnimationFrame(() => {
-    el.style.opacity = "1";
-    el.style.transform = "translateY(0)";
-  });
-  
-  // Animate out
-  setTimeout(() => {
-    el.style.opacity = "0";
-    el.style.transform = "translateY(10px)";
-    setTimeout(() => el.remove(), 300);
-  }, 4000);
+
+
+}
+
+
+
 }
 
 const FAN_LABELS = ["D1", "D2", "CPU", "SYS"];
@@ -1244,7 +1259,7 @@ function applyStats(s) {
         
         const backdrop = $("copy-toast-backdrop");
         if (backdrop) {
-          if (!copyToastMinimized && state.active && state.status !== "success" && state.status !== "error") {
+          if (!copyToastMinimized && (state.active || state.status === "error" || state.status === "success" || state.status === "awaiting_confirmation")) {
             backdrop.style.opacity = "1";
             backdrop.style.pointerEvents = "auto";
             toast.style.boxShadow = "0 0 40px rgba(0,0,0,0.8)";
