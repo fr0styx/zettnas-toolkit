@@ -1680,11 +1680,15 @@ async def browse(path: str = "/mnt/user", dirs_only: str = "0"):
     d_only = (dirs_only == "1")
     return _handle_browse_logic(path, d_only)
 
-@app.post("/api/mkdir")
-async def mkdir(request: Request):
+@app.api_route("/api/mkdir", methods=["GET", "POST"])
+async def mkdir(request: Request, path: str = None):
     try:
-        data = await request.json()
-        path = str(data.get("path", "")).strip()
+        if request.method == "POST":
+            data = await request.json()
+            path = str(data.get("path", path or "")).strip()
+        else:
+            path = str(path or "").strip()
+            
         if not path.startswith("/mnt/user/") or ".." in path:
             raise HTTPException(status_code=400, detail="Invalid path")
         os.makedirs(path, exist_ok=True)

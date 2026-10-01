@@ -3234,7 +3234,7 @@ fetchDashboardLayout().then(() => {
       if (!folderName) return;
       if (folderName.includes("/") || folderName.includes("..")) return;
       
-      const newPath = currentBrowsePath + folderName;
+      const newPath = currentBrowsePath + (currentBrowsePath.endsWith("/") ? "" : "/") + folderName;
       try {
         fbCreateFolderBtn.textContent = "...";
         const res = await fetch(`/api/mkdir?path=${encodeURIComponent(newPath)}`);
@@ -3245,7 +3245,7 @@ fetchDashboardLayout().then(() => {
         } else {
           const errData = await res.json();
           fbNewFolderName.value = "";
-          fbNewFolderName.placeholder = "Error: " + (errData.error || "Failed");
+          fbNewFolderName.placeholder = "Error: " + (errData.detail || errData.error || "Failed");
         }
       } catch(e) {
         fbNewFolderName.value = "";
