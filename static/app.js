@@ -126,6 +126,103 @@ function renderCurveLines() {
 const $ = (id) => document.getElementById(id);
 
 window._customToastActive = false;
+
+function showConfirmToast(title, msg, onConfirm) {
+  window._customToastActive = true;
+  const toast = document.getElementById("copy-toast");
+  const backdrop = document.getElementById("copy-toast-backdrop");
+  if (!toast) return;
+  
+  toast.style.opacity = "1";
+  toast.style.pointerEvents = "auto";
+  toast.style.transition = "none";
+  
+  if (backdrop) {
+      backdrop.style.opacity = "1";
+      backdrop.style.pointerEvents = "auto";
+  }
+  
+  toast.style.boxShadow = "0 0 40px rgba(0,0,0,0.8)";
+  toast.style.bottom = "50%";
+  toast.style.right = "50%";
+  toast.style.transform = "translate(50%, 50%) scale(1.2)";
+  
+  const titleEl = toast.querySelector(".smart-modal-title");
+  if (titleEl) titleEl.innerHTML = `<svg class="ic ic-sm" style="margin-right:4px;"><use href="#i-storage"/></svg> ${title}`;
+  
+  const statusEl = document.getElementById("copy-toast-status");
+  if (statusEl) statusEl.textContent = "Action Required";
+  
+  const barEl = document.getElementById("copy-toast-bar");
+  if (barEl) {
+      barEl.style.width = "100%";
+      barEl.style.background = "var(--warn)";
+  }
+  
+  const fileEl = document.getElementById("copy-toast-file");
+  if (fileEl) {
+      fileEl.style.whiteSpace = "normal";
+      fileEl.style.marginTop = "8px";
+      fileEl.textContent = msg;
+  }
+  
+  const timeEl = document.getElementById("copy-toast-time");
+  if (timeEl) timeEl.textContent = "";
+  
+  const pctEl = document.getElementById("copy-toast-pct");
+  if (pctEl) pctEl.textContent = "";
+
+  const oldActions = document.getElementById("custom-confirm-actions");
+  if (oldActions) oldActions.remove();
+
+  const actionsDiv = document.createElement("div");
+  actionsDiv.id = "custom-confirm-actions";
+  actionsDiv.style.display = "flex";
+  actionsDiv.style.gap = "8px";
+  actionsDiv.style.marginTop = "15px";
+  actionsDiv.innerHTML = `
+    <button class="btn-save-preset" id="confirm-yes-btn" style="flex:1; padding:6px; border-color: rgba(240,85,59,0.5); color: var(--warn);" onmouseenter="this.style.background='var(--warn)'; this.style.color='#fff'; this.style.borderColor='var(--warn)';" onmouseleave="this.style.background='#1c2736'; this.style.color='var(--warn)'; this.style.borderColor='rgba(240,85,59,0.5)';">Wake Drive</button>
+    <button class="btn-save-preset" id="confirm-no-btn" style="flex:1; padding:6px;">Cancel</button>
+  `;
+  
+  toast.querySelector(".smart-modal-body").appendChild(actionsDiv);
+
+  function closeConfirm() {
+      if (fileEl) {
+          fileEl.style.whiteSpace = "nowrap";
+          fileEl.style.marginTop = "0";
+      }
+      const acts = document.getElementById("custom-confirm-actions");
+      if (acts) acts.remove();
+      toast.style.transition = "opacity 0.3s ease, transform 0.3s ease";
+      toast.style.opacity = "0";
+      toast.style.pointerEvents = "none";
+      if (backdrop) {
+          backdrop.style.opacity = "0";
+          backdrop.style.pointerEvents = "none";
+      }
+      setTimeout(() => {
+          if (titleEl) titleEl.innerHTML = `<svg class="ic ic-sm" style="margin-right:4px;"><use href="#i-storage"/></svg> Media card ingest`;
+          window._customToastActive = false;
+      }, 300);
+  }
+
+  document.getElementById("confirm-yes-btn").onclick = () => {
+      closeConfirm();
+      if (onConfirm) onConfirm();
+  };
+  document.getElementById("confirm-no-btn").onclick = closeConfirm;
+  
+  // Need to temporarily override the cancel button
+  const cancelBtn = document.getElementById("copy-toast-cancel");
+  if (cancelBtn) {
+      // Store old handler if needed? In this code base it has no onclick inline, it is handled via event listener in app.js or similar?
+      // Actually, wait, let's just add an onclick
+      cancelBtn.onclick = closeConfirm;
+  }
+}
+
+
 function showToast(msg, type="error") {
   window._customToastActive = true;
   const toast = document.getElementById("copy-toast");
@@ -324,7 +421,17 @@ function diskTile(d) {
     tempHtml +
     `<div class="db"><i class="${"bg-" + lvl}" style="width:${w}%"></i></div>`;
   
-  el.addEventListener("click", () => openSmartModal(d.dev || d.name));
+  el.addEventListener("click", () => {
+    if (isStandby) {
+      showConfirmToast(
+        "Drive in Standby Mode", 
+        `Disk ${d.name} is currently sleeping. Querying S.M.A.R.T. data will wake it up, causing mechanical wear and consuming power. Are you sure you want to wake it?`,
+        () => openSmartModal(d.dev || d.name)
+      );
+    } else {
+      openSmartModal(d.dev || d.name);
+    }
+  });
   return el;
 }
 
