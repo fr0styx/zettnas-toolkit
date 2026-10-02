@@ -46,7 +46,8 @@ It delivers **zero-overhead, direct-to-framebuffer rendering** for the 640×172 
 
 ### 💾 Hardware Media Ingestion Engine
 * **Physical Front-Panel "Copy" Binding**: Mount and ingest contents from inserted SD or TF cards directly to your array at the push of a button.
-* **Zero-Latency Telemetry**: Instant 0ms UI reactions to physical button presses, completely eliminating polling delays via Server-Sent Events.
+* **Zero-Latency Telemetry**: Instant 0ms UI reactions to physical button presses, completely eliminating polling delays via Server-Sent Events (`/api/stats/stream`).
+* **Asynchronous Chunked Reading**: Powered by `aiofiles`, transfers don't block the backend event loop, allowing for real-time `⏸ Pause` and `▶ Resume` functionality directly from the WebUI.
 * **File Collision Intelligence**: Pre-scans for duplicates before transferring, invoking an inline WebUI dialog to Skip, Overwrite, or safely Cancel the ingest.
 * **Kernel-Level I/O Tuning**: Unlocks maximum USB 4.0 read bandwidth (~1000+ MB/s routing throughput) by actively dropping `noatime,nodiratime` kernel flags on media mounts.
 * **Secure Abort Protocol**: Instantly kill active ingestion threads from the web dashboard while automatically purging partially-written media to prevent corruption.
@@ -161,10 +162,16 @@ When accessing the Web Studio (`http://<server-ip>:8082`):
 | Endpoint | Method | Description |
 | :--- | :--- | :--- |
 | `/api/stats` | `GET` | Complete real-time system metrics (CPU, memory, storage, fans, disks, lightbar, layout version) |
+| `/api/stats/stream` | `GET` | Server-Sent Events (SSE) endpoint for 0ms latency real-time telemetry updates |
+| `/api/history` | `GET` | Retrieve SQLite 30-day historical time-series data for temperatures and metrics |
+| `/api/lcd_status` | `GET` | Inspect the health, FPS, and `/dev/fb0` target of the active headless renderer |
 | `/api/layout` | `GET` / `POST` | Retrieve or persist dashboard layout, card ordering, visibility, and clock settings |
 | `/api/fans` | `GET` / `POST` | Inspect tachometer RPMs and set fan presets or manual PWM duty cycles |
 | `/api/leds` | `GET` / `POST` | Query current lightbar status or command modes, colors, brightness, and speeds |
 | `/api/screen/brightness` | `POST` | Dynamically adjust front-panel LCD backlight brightness (0–100%) |
+| `/api/disk_detail` | `GET` | Fetch detailed S.M.A.R.T. attributes, identity info, and standby states for a drive |
+| `/api/browse` | `GET` | Navigate the Unraid filesystem (`/mnt/`) to set ingest destinations |
+| `/api/copy/*` | `POST` | Media ingest controls: `/pause`, `/resume`, `/cancel`, `/confirm` |
 
 ---
 
