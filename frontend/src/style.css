@@ -1668,10 +1668,21 @@ body.lcd-direct #screen.hardware-screen-canvas {
    MOBILE RESPONSIVE VIEW (STUDIO ONLY)
    ========================================================================= */
 @media (max-width: 720px) {
+  .suite-navbar { padding: 0 12px; }
+  .suite-telemetry-pills { gap: 8px; }
+  .suite-pill, .suite-badge { display: none !important; }
+  .suite-toolkit-btn .btn-txt { display: none; }
+  .suite-toolkit-btn { padding: 8px 10px; }
+  
+  .chassis-front-panel {
+    padding: 16px 12px !important;
+    border-radius: 14px !important;
+  }
+  
   body.studio-workbench:not(.lcd-direct) #screen-container {
     transform: none !important;
     width: 100% !important;
-    padding: 15px !important;
+    padding: 0 !important;
   }
   body.studio-workbench:not(.lcd-direct) #screen {
     width: 100% !important;
@@ -1681,24 +1692,33 @@ body.lcd-direct #screen.hardware-screen-canvas {
     padding: 12px !important;
     border-radius: 12px;
   }
-  body.studio-workbench:not(.lcd-direct) .cards {
+  body.studio-workbench:not(.lcd-direct) #screen .cards {
+    flex: none !important;
     flex-wrap: wrap;
-    height: auto;
+    height: auto !important;
     gap: 10px;
   }
-  body.studio-workbench:not(.lcd-direct) .card {
+  body.studio-workbench:not(.lcd-direct) #screen .card {
     flex: 1 1 140px;
     height: 75px;
   }
-  body.studio-workbench:not(.lcd-direct) .disks {
+  body.studio-workbench:not(.lcd-direct) #screen .disks {
+    flex: none !important;
     flex-wrap: wrap;
-    height: auto;
+    height: auto !important;
     gap: 10px;
   }
-  body.studio-workbench:not(.lcd-direct) .disk-group {
+  body.studio-workbench:not(.lcd-direct) #screen .disk-group {
     flex: 1 1 100%;
+    margin-bottom: 4px;
   }
-  body.studio-workbench:not(.lcd-direct) .group-tiles {
+  body.studio-workbench:not(.lcd-direct) #screen .group-tiles {
     grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
   }
+  
+  .mini-lcd-canvas {
+    --mini-scale: 0.46;
+    height: 90px;
+  }
+
 }

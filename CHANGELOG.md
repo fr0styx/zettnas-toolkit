@@ -1,5 +1,15 @@
 # ZettNAS Toolkit - Release Changelog
 
+## v0.4.1 (2026-10-02)
+### 📱 Mobile UI/UX Optimization
+- **Dashboard Z-Overlap Fix**: Overrode flex-basis collapse issues on mobile viewports. Upper dashboard cards and lower disk groups now correctly stack in a column on narrow screens instead of overlapping.
+- **Top Navigation Compaction**: Dynamically hides the `/dev/ttyACM0` and `/dev/fb0` telemetry pills on screens under 720px to prevent layout squishing.
+- **Iconographic Toolkit Settings**: Compresses the "TOOLKIT SETTINGS" drawer button into a sleek, center-aligned `⚙` icon-only button on mobile to preserve critical header space.
+- **Chassis Touch Targets**: Slashed the excessive side padding on the physical `.chassis-front-panel` box specifically for mobile, expanding the interactive dashboard closer to screen edges for easier tapping.
+- **LCD Preview Responsiveness**: Protected the 640x172 "Live Canvas Re-arrange" mini-preview from inheriting the mobile dashboard's vertical column wrapping, keeping the drag-and-drop tiles perfectly aligned.
+- **Dynamic Mini-Canvas Downscaling**: Added a `--mini-scale: 0.46` hook to the mobile layout. The preview canvas now perfectly fits within the mobile settings drawer without horizontal compression or text clipping.
+
+
 ## v0.4.0 (2026-10-01)
 ### 🏗️ Major Architectural & Decoupling Upgrades
 - **Frontend Modularization (Vite ES6)**: Eradicated the monolithic `app.js` file. The frontend has been entirely decoupled into strictly scoped ES6 modules (`api.js`, `state.js`, `ui-layout.js`, `hardware-events.js`, `modals.js`, `toast.js`, `folder-browser.js`, `event-bus.js`).
