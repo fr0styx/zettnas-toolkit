@@ -20,7 +20,7 @@
 It delivers **zero-overhead, direct-to-framebuffer rendering** for the 640×172 front-panel IPS display, **intelligent dual-zone thermal fan curve regulation**, **dynamic ARGB LED lightbar effects** with error-reactive lighting, and a **real-time web studio** with drag-and-drop live canvas arrangement.
 
 <div align="center">
-  <img src="static/img/chassis-d6u.png" width="85%" alt="ZettNAS Chassis Front Panel">
+  <img src="static/img/ui-screenshot.png" width="85%" alt="ZettNAS Web Dashboard UI">
 </div>
 
 ---
@@ -80,6 +80,11 @@ It delivers **zero-overhead, direct-to-framebuffer rendering** for the 640×172 
 ---
 
 ## Installation & Deployment
+
+> [!IMPORTANT]  
+> **Default Admin Password**: `admin`  
+> *(You can change this anytime from the "Account & Security" section in the web dashboard's Toolkit Settings).*
+
 
 ### Option A: Unraid Docker Template (Recommended for Unraid)
 

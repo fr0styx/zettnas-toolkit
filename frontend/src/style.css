@@ -72,6 +72,8 @@ body.theme-yak::after {
 }
 
 body.theme-yak .chassis-hero-box {
+  position: relative;
+  z-index: 50;
   display: none !important;
 }
 
@@ -94,12 +96,13 @@ body.theme-yak .pulse-dot {
 }
 
 body.theme-yak .chassis-front-panel {
+  z-index: 50;
   position: relative;
   background: 
     linear-gradient(180deg, rgba(20, 14, 8, 0.94) 0%, rgba(35, 23, 14, 0.96) 60%, rgba(15, 10, 6, 0.98) 100%),
     repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(0,0,0,0.15) 40px, rgba(0,0,0,0.15) 42px);
   border-radius: 18px;
-  padding: 34px 38px 28px 38px;
+  padding: 28px 38px 28px 38px;
   border: 2px solid #5a3418;
   box-shadow: 
     0 25px 60px rgba(0, 0, 0, 0.95),
@@ -213,6 +216,7 @@ body.theme-yak .drawer-fan-unified-col {
   border-color: rgba(212, 138, 55, 0.15);
 }
 body.theme-yak .smart-modal-window {
+  pointer-events: auto;
   background: #0d1711;
   border-color: rgba(212, 138, 55, 0.25);
 }
@@ -365,6 +369,8 @@ body.theme-yak .suite-toolkit-btn {
    DYNAMIC SCALING WORKBENCH STAGE & FOCUS SHIFT
    ========================================================================= */
 .chassis-workbench-stage {
+  
+  
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -379,19 +385,20 @@ body.theme-yak .suite-toolkit-btn {
 }
 
 body.drawer-is-open .chassis-workbench-stage {
+  
+  
   margin-right: 260px;
 }
 
 .chassis-hero-box {
+  position: relative;
+  z-index: 50;
   width: 100%;
   max-width: 680px;
   display: flex;
   justify-content: center;
   filter: drop-shadow(0 20px 35px rgba(0, 0, 0, 0.85));
-  transform: scale(var(--chassis-scale));
-  transform-origin: center bottom;
-  opacity: var(--chassis-opacity);
-  max-height: calc(520px * var(--chassis-scale));
+    max-height: calc(520px * var(--chassis-scale));
   overflow: hidden;
   transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), 
               max-height 0.35s cubic-bezier(0.16, 1, 0.3, 1), 
@@ -407,10 +414,11 @@ body.drawer-is-open .chassis-workbench-stage {
 }
 
 .chassis-front-panel {
+  z-index: 50;
   position: relative;
   background: linear-gradient(180deg, #1b2430 0%, #121922 60%, #0d121a 100%);
   border-radius: 18px;
-  padding: 30px 36px 26px 36px;
+  padding: 26px 36px 26px 36px;
   box-shadow: 
     0 25px 60px rgba(0, 0, 0, 0.8),
     0 0 0 1px rgba(255, 255, 255, 0.1),
@@ -450,7 +458,18 @@ body.drawer-is-open .chassis-workbench-stage {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 4px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 26px;
+  padding: 0 40px;
+  margin: 0;
+  z-index: 10;
+  cursor: grab;
+}
+.chassis-panel-header:active {
+  cursor: grabbing;
 }
 .chassis-engraved-text {
   font-size: 10px;
@@ -1517,13 +1536,17 @@ body.theme-yak .mini-lcd-canvas {
    DIAGNOSTIC S.M.A.R.T. MODAL
    ========================================================================= */
 .smart-modal-backdrop {
-  position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(8px);
+  position: fixed; inset: 0; 
   opacity: 0; pointer-events: none; transition: opacity 0.2s ease; z-index: 10000;
   display: flex; align-items: center; justify-content: center; padding: 20px;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
-.smart-modal-backdrop.open { opacity: 1; pointer-events: auto; }
+.smart-modal-backdrop.open { opacity: 1; pointer-events: none; }
 
 .smart-modal-window {
+  pointer-events: auto;
   background: #0f1620; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 14px;
   width: 580px; max-width: 95vw; max-height: 85vh; display: flex; flex-direction: column;
   box-shadow: 0 25px 60px rgba(0,0,0,0.9); overflow: hidden;
@@ -1581,6 +1604,7 @@ body.lcd-direct .smart-modal-backdrop {
 body.lcd-direct .studio-viewport-wrapper,
 body.lcd-direct .chassis-workbench-stage,
 body.lcd-direct .chassis-front-panel {
+  z-index: 50;
   display: block !important;
   position: static !important;
   margin: 0 !important;
@@ -1660,6 +1684,8 @@ body.lcd-direct #screen.hardware-screen-canvas {
    ========================================================================= */
 @media (max-width: 1100px) {
   body.drawer-is-open .chassis-workbench-stage {
+  
+  
     margin-right: 0 !important;
   }
 }
@@ -1675,6 +1701,7 @@ body.lcd-direct #screen.hardware-screen-canvas {
   .suite-toolkit-btn { padding: 8px 10px; }
   
   .chassis-front-panel {
+  z-index: 50;
     padding: 16px 12px !important;
     border-radius: 14px !important;
   }
@@ -1721,4 +1748,159 @@ body.lcd-direct #screen.hardware-screen-canvas {
     height: 90px;
   }
 
+}
+
+/* Minimize / Collapse Card Support */
+.btn-minimize {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-size: 10px;
+  cursor: pointer;
+  padding: 4px;
+  margin-left: 8px;
+  transition: transform 0.2s ease, color 0.2s ease;
+  vertical-align: middle;
+}
+.btn-minimize:hover {
+  color: var(--fg);
+}
+.draggable-card.card-collapsed .btn-minimize {
+  transform: rotate(-90deg);
+}
+.draggable-card.card-collapsed > *:not(.card-headline) {
+  display: none !important;
+}
+.draggable-card {
+  transition: padding 0.2s ease;
+}
+
+
+
+
+/* =========================================================================
+   OS DOCK (MACOS STYLE)
+   ========================================================================= */
+.os-dock-container {
+  position: fixed;
+  bottom: 12px;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 2147483647 !important;
+}
+
+.os-dock {
+  display: flex;
+  gap: 10px;
+  padding: 6px 10px;
+  background: rgba(18, 25, 35, 0.65);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 18px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255,255,255,0.05);
+  pointer-events: auto;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s;
+  transform: translateY(100px);
+  opacity: 0;
+}
+
+.os-dock.active {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.dock-item {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.dock-item:hover {
+  transform: scale(1.15) translateY(-6px);
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.2);
+  z-index: 10;
+}
+
+.dock-item:active {
+  transform: scale(0.95);
+}
+
+.dock-item.minimized {
+  opacity: 0.6;
+}
+
+/* Active dot indicator */
+.dock-item::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  width: 4px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  transition: opacity 0.2s;
+}
+
+.dock-item.minimized::after {
+  opacity: 0.3;
+}
+
+.dock-item svg {
+  width: 24px;
+  height: 24px;
+  color: white;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+}
+
+.window-minimized {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transform: scale(0.6) translateY(200px) !important;
+  transition: opacity 0.3s ease, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.smart-modal-backdrop.window-minimized {
+  /* For backdrop, we just fade it out if it is minimized. 
+     Wait, if the modal window has .window-minimized, that's enough. */
+}
+
+
+body.lcd-direct #console-modal-overlay { display: block !important; background: transparent !important; opacity: 1 !important; transform: none !important; }
+
+body.lcd-direct #os-dock-container {
+  display: none !important;
+}
+
+#console-window { pointer-events: auto !important; }
+
+body.lcd-direct #console-window { position: static !important; bottom: auto !important; left: auto !important; transform: none !important; }
+
+
+
+.dock-item.active-window {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: #ffffff;
+  box-shadow: 0 4px 15px rgba(255, 255, 255, 0.25), 0 8px 24px rgba(0, 0, 0, 0.6);
+  transform: translateY(-4px) scale(1.05);
+}
+.dock-item.active-window svg {
+  color: #0a0e13 !important;
+  filter: none !important;
+}
+.dock-item.active-window::after {
+  background: #0a0e13 !important;
 }

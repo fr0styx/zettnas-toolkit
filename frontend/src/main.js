@@ -5,6 +5,176 @@ import './folder-browser.js';
 import './modals.js';
 
 
+// --- OS Dock Manager ---
+const DockManager = {
+  windows: {},
+  activeId: null,
+  
+  register(id, el, icon, title) {
+    if (!this.windows[id]) {
+      this.windows[id] = { el, icon, title, minimized: false };
+    }
+    this.windows[id].minimized = false;
+    el.classList.remove("window-minimized");
+    el.style.removeProperty("display");
+    this.render();
+  },
+  
+  unregister(id) {
+    if (this.windows[id]) {
+      delete this.windows[id];
+      this.render();
+    }
+  },
+  
+  minimize(id) {
+    if (this.windows[id]) {
+      this.windows[id].minimized = true;
+      this.windows[id].el.classList.add("window-minimized");
+      this.windows[id].el.style.setProperty("display", "none", "important");
+      this.render();
+    }
+  },
+  
+  restore(id) {
+    if (this.windows[id]) {
+      this.windows[id].minimized = false;
+      this.windows[id].el.classList.remove("window-minimized");
+      this.windows[id].el.style.removeProperty("display");
+      
+            let winEl = this.windows[id].el.classList.contains("smart-modal-window") || this.windows[id].el.classList.contains("chassis-front-panel")
+                      ? this.windows[id].el 
+                      : this.windows[id].el.querySelector(".smart-modal-window, .chassis-front-panel");
+      if (winEl && typeof bringToFront === 'function') {
+        bringToFront(winEl);
+      }
+      this.render();
+    }
+  },
+  
+  toggle(id) {
+    if (this.windows[id]) {
+      if (this.windows[id].minimized) {
+        this.restore(id);
+      } else {
+              let winEl = this.windows[id].el.classList.contains("smart-modal-window") || this.windows[id].el.classList.contains("chassis-front-panel")
+                      ? this.windows[id].el 
+                      : this.windows[id].el.querySelector(".smart-modal-window, .chassis-front-panel");
+        if (winEl && typeof bringToFront === 'function') {
+          bringToFront(winEl);
+        }
+      }
+    }
+  },
+  
+  render() {
+    const dockContainer = document.getElementById("os-dock-container");
+    const dock = document.getElementById("os-dock");
+    if (!dock || !dockContainer) return;
+    
+    dock.classList.add("active");
+    dock.innerHTML = "";
+    
+    const dashItem = document.createElement("div");
+    dashItem.className = "dock-item";
+    dashItem.title = "Dashboard Home";
+    dashItem.innerHTML = `<svg><use href="#i-globe"/></svg>`;
+    dashItem.addEventListener("click", () => {
+      const allModals = document.querySelectorAll(".smart-modal-backdrop, .smart-modal-window, #console-window");
+      allModals.forEach(m => {
+        if (m.classList.contains("smart-modal-backdrop") && m.classList.contains("open")) {
+          m.style.setProperty("z-index", "40", "important");
+        } else if (m.id === "copy-toast" && m.style.opacity === "1") {
+          m.style.setProperty("z-index", "40", "important");
+        }
+      });
+    });
+    dock.appendChild(dashItem);
+    
+    Object.keys(this.windows).forEach(id => {
+      const win = this.windows[id];
+      const item = document.createElement("div");
+      let cls = "dock-item";
+      if (win.minimized) cls += " minimized";
+      if (this.activeId === id && !win.minimized) cls += " active-window";
+      item.className = cls;
+      item.title = win.title;
+      item.innerHTML = `<svg><use href="${win.icon}"/></svg>`;
+      
+      item.addEventListener("mousedown", (e) => e.stopPropagation());
+      item.addEventListener("click", () => this.toggle(id));
+      
+      dock.appendChild(item);
+    });
+  }
+};
+window.DockManager = DockManager;
+
+
+
+// --- AUTHENTICATION INTERCEPTOR ---
+const originalFetch = window.fetch;
+window.fetch = async function() {
+  let [resource, config] = arguments;
+  if (!config) config = {};
+  
+  const token = localStorage.getItem("zettnas_token");
+  if (token) {
+    if (!config.headers) config.headers = {};
+    config.headers["Authorization"] = "Bearer " + token;
+  }
+  
+  const res = await originalFetch(resource, config);
+  if (res.status === 401) {
+    const overlay = document.getElementById("login-overlay");
+    if (overlay) overlay.style.display = "flex";
+    const dock = document.getElementById("os-dock-container");
+    if (dock) dock.style.display = "none";
+  }
+  return res;
+};
+
+document.addEventListener("DOMContentLoaded", () => {
+  const loginBtn = document.getElementById("login-btn");
+  const loginPwd = document.getElementById("login-password");
+  
+  if (loginBtn && loginPwd) {
+    const doLogin = async () => {
+      loginBtn.textContent = "AUTHENTICATING...";
+      try {
+        const res = await originalFetch("/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ password: loginPwd.value }), credentials: "include"
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.token) localStorage.setItem("zettnas_token", data.token);
+          document.getElementById("login-overlay").style.display = "none";
+          loginBtn.textContent = "SECURE LOGIN";
+          loginPwd.value = "";
+          window.location.reload();
+        } else {
+          loginBtn.textContent = "INVALID PASSWORD";
+          loginBtn.style.borderColor = "var(--crit)";
+          setTimeout(() => {
+            loginBtn.textContent = "SECURE LOGIN";
+            loginBtn.style.borderColor = "";
+          }, 2000);
+        }
+      } catch(e) {
+        loginBtn.textContent = "ERROR";
+      }
+    };
+    
+    loginBtn.addEventListener("click", doLogin);
+    loginPwd.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") doLogin();
+    });
+  }
+});
+
+
 let _metricsChart = null;
 let _metricsRange = "24h";
 
@@ -813,7 +983,7 @@ function syncMiniPreviewStructure() {
   const screenDiskRow = screenEl.querySelector("#diskRow");
 
   if (!miniCardsContainer || !miniDiskRow) {
-    miniInner.innerHTML = screenEl.innerHTML;
+    miniInner.innerHTML = screenEl.innerHTML.replace(/\s+id="[^"]*"/g, "");
     miniCardsContainer = miniInner.querySelector(".cards");
     miniDiskRow = miniInner.querySelector(".disks");
     miniInner.className = "mini-preview-inner " + screenEl.className;
@@ -821,7 +991,7 @@ function syncMiniPreviewStructure() {
   }
 
   if (screenDiskRow && screenDiskRow.children.length > 0 && miniDiskRow.children.length === 0) {
-    miniDiskRow.innerHTML = screenDiskRow.innerHTML;
+    miniDiskRow.innerHTML = screenDiskRow.innerHTML.replace(/\s+id="[^"]*"/g, "");
   }
 
   const sFanRowStruct = screenEl.querySelector(".fan-row");
@@ -861,12 +1031,13 @@ function syncMiniPreviewStructure() {
   // Live sync inner content so numbers match the main dashboard
   const sHeader = screenEl.querySelector("header");
   const mHeader = miniInner.querySelector("header");
-  if (sHeader && mHeader) mHeader.innerHTML = sHeader.innerHTML;
+  const stripIds = (html) => html.replace(/\s+id="[^"]*"/g, "");
+  if (sHeader && mHeader) mHeader.innerHTML = stripIds(sHeader.innerHTML);
 
   Object.keys(cardMap).forEach((id) => {
     const sCard = screenEl.querySelector(`[data-metric-id="${id}"]`);
     if (sCard && cardMap[id]) {
-      cardMap[id].innerHTML = sCard.innerHTML;
+      cardMap[id].innerHTML = stripIds(sCard.innerHTML);
     }
   });
 
@@ -895,14 +1066,16 @@ function fitMiniPreviewScale() {
 }
 
 function syncMiniPreviewTelemetry() {
-  const miniInner = $("mini-preview-inner");
-  const screenEl = $("screen");
-  if (!miniInner || !screenEl || isDraggingPreview) return;
+  const miniInner = document.getElementById("mini-preview-inner");
+  const screenEl = document.getElementById("screen");
+  if (!miniInner || !screenEl || typeof isDraggingPreview !== 'undefined' && isDraggingPreview) return;
+
+  const stripIds = (html) => html.replace(/\s+id="[^"]*"/g, "");
 
   // Sync header
   const sHeader = screenEl.querySelector("header");
   const mHeader = miniInner.querySelector("header");
-  if (sHeader && mHeader) mHeader.innerHTML = sHeader.innerHTML;
+  if (sHeader && mHeader) mHeader.innerHTML = stripIds(sHeader.innerHTML);
 
   // Sync cards
   const miniCardsContainer = miniInner.querySelector(".cards");
@@ -911,7 +1084,7 @@ function syncMiniPreviewTelemetry() {
       const id = c.dataset.metricId;
       if (id) {
         const sCard = screenEl.querySelector(`[data-metric-id="${id}"]`);
-        if (sCard) c.innerHTML = sCard.innerHTML;
+        if (sCard) c.innerHTML = stripIds(sCard.innerHTML);
       }
     });
   }
@@ -920,7 +1093,7 @@ function syncMiniPreviewTelemetry() {
   const screenDiskRow = screenEl.querySelector("#diskRow");
   const miniDiskRow = miniInner.querySelector(".disks");
   if (screenDiskRow && miniDiskRow) {
-    miniDiskRow.innerHTML = screenDiskRow.innerHTML;
+    miniDiskRow.innerHTML = stripIds(screenDiskRow.innerHTML);
   }
 }
 
@@ -1466,8 +1639,10 @@ function startSSE() {
     setInterval(tick, 2000);
     return;
   }
+  tick(); // Pre-fetch data instantly while SSE connects
 
-  const es = new EventSource("/api/stats/stream");
+  const token = localStorage.getItem("zettnas_token") || "";
+  const es = new EventSource("/api/stats/stream?token=" + token);
   es.onmessage = (e) => {
     try {
       _sseRetryCount = 0;
@@ -1591,45 +1766,9 @@ fetchDashboardLayout().then(() => {
   if (suiteBtn) suiteBtn.addEventListener("click", openDrawer);
   if (closeBtn) closeBtn.addEventListener("click", closeDrawer);
   if (overlay) overlay.addEventListener("click", closeDrawer);
-
-  const zoomBtn = $("suite-zoom-btn");
-  const ZOOM_PROFILES = [
-    { label: "1x",    zoom: 1.0,   chassis: 1.0,   opacity: 1.0,  gap: "24px", offsetY: "0px" },
-    { label: "1.25x", zoom: 1.18,  chassis: 0.72,  opacity: 0.65, gap: "18px", offsetY: "-15px" },
-    { label: "1.5x",  zoom: 1.35,  chassis: 0.42,  opacity: 0.25, gap: "12px", offsetY: "-30px" },
-    { label: "2x",    zoom: 1.55,  chassis: 0.0,   opacity: 0.0,  gap: "0px",  offsetY: "-90px" }
-  ];
-
-  let currentZoomIdx = parseInt(localStorage.getItem("lcd_stage_zoom_idx") || "0", 10);
-  if (isNaN(currentZoomIdx) || currentZoomIdx < 0 || currentZoomIdx >= ZOOM_PROFILES.length) {
-    currentZoomIdx = 0;
-  }
-
-  function applyStageZoom() {
-    const prof = ZOOM_PROFILES[currentZoomIdx];
-    const root = document.documentElement;
-    root.style.setProperty("--stage-zoom", prof.zoom);
-    root.style.setProperty("--chassis-scale", prof.chassis);
-    root.style.setProperty("--chassis-opacity", prof.opacity);
-    root.style.setProperty("--stage-gap", prof.gap);
-    root.style.setProperty("--stage-offset-y", prof.offsetY);
-    if (zoomBtn) zoomBtn.textContent = `🔍 ${prof.label}`;
-    localStorage.setItem("lcd_stage_zoom_idx", currentZoomIdx);
-  }
-
-  function cycleZoom() {
-    currentZoomIdx = (currentZoomIdx + 1) % ZOOM_PROFILES.length;
-    applyStageZoom();
-  }
-
-  if (zoomBtn) {
-    zoomBtn.addEventListener("click", cycleZoom);
-    applyStageZoom();
-  }
-
-  let wheelZoomCooldown = 0;
+let wheelZoomCooldown = 0;
   window.addEventListener("wheel", (e) => {
-    if (e.target.closest(".slide-drawer") || e.target.closest(".smart-modal-window") || e.target.closest("#mini-lcd-canvas")) {
+    if (e.target.closest(".slide-drawer") || e.target.closest(".smart-modal-window, #console-window") || e.target.closest("#mini-lcd-canvas")) {
       return;
     }
     const now = Date.now();
@@ -1637,12 +1776,10 @@ fetchDashboardLayout().then(() => {
 
     if (e.deltaY < 0 && currentZoomIdx < ZOOM_PROFILES.length - 1) {
       currentZoomIdx++;
-      applyStageZoom();
-      wheelZoomCooldown = now;
+            wheelZoomCooldown = now;
     } else if (e.deltaY > 0 && currentZoomIdx > 0) {
       currentZoomIdx--;
-      applyStageZoom();
-      wheelZoomCooldown = now;
+            wheelZoomCooldown = now;
     }
   }, { passive: true });
 
@@ -2024,6 +2161,7 @@ fetchDashboardLayout().then(() => {
   }
 
   fetchScreenState();
+  fetchSecurity();
 
   if (screenBriSlider) {
     screenBriSlider.addEventListener("input", (e) => {
@@ -2595,8 +2733,6 @@ fetchDashboardLayout().then(() => {
     if (e.key === "Escape") {
       ZettEventBus.dispatchEvent(new CustomEvent('modal:smart:close'));
       closeDrawer();
-    } else if (e.key === "z" || e.key === "Z") {
-      cycleZoom();
     } else if (e.key === "y" || e.key === "Y") {
       applyTheme(currentTheme === "yak" ? "cyber" : "yak");
     } else if (e.key === "t" || e.key === "T" || e.key === "d" || e.key === "D") {
@@ -2891,3 +3027,564 @@ ZettEventBus.addEventListener('folder_selected', (e) => {
 });
 
 
+
+
+// --- Security & Account Logic ---
+async function fetchSecurity() {
+  try {
+    const res = await fetch("/api/security");
+    if (res.ok) {
+      const data = await res.json();
+      const uEl = document.getElementById("sec-username");
+      const eEl = document.getElementById("sec-email");
+      const idEl = document.getElementById("login-identity-txt");
+      
+      if (uEl) uEl.value = data.username || "";
+      if (eEl) eEl.value = data.email || "";
+      
+      if (idEl) {
+        if (data.username) {
+           idEl.innerHTML = `Welcome back, <b style="color:#fff;">${data.username}</b>`;
+        } else {
+           idEl.textContent = "Authentication Required";
+        }
+      }
+    }
+  } catch (e) {}
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const saveBtn = document.getElementById("sec-save-btn");
+  if (saveBtn) {
+    saveBtn.addEventListener("click", async () => {
+      const curPwd = document.getElementById("sec-cur-pwd").value;
+      if (!curPwd) {
+        showToast("Current password is required to save changes", "error");
+        return;
+      }
+      
+      const payload = {
+        current_password: curPwd,
+        new_password: document.getElementById("sec-new-pwd").value,
+        username: document.getElementById("sec-username").value,
+        email: document.getElementById("sec-email").value
+      };
+      
+      saveBtn.textContent = "SAVING...";
+      try {
+        const res = await fetch("/api/security", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        
+        if (res.ok) {
+          showToast("Security settings updated successfully", "success");
+          document.getElementById("sec-cur-pwd").value = "";
+          document.getElementById("sec-new-pwd").value = "";
+          fetchSecurity();
+          
+          if (payload.new_password) {
+            // Password changed, token is invalid. Log out.
+            localStorage.removeItem("zettnas_token");
+            setTimeout(() => window.location.reload(), 1000);
+          }
+        } else {
+          const err = await res.json();
+          showToast(err.detail || "Failed to update settings", "error");
+        }
+      } catch (e) {
+        showToast("Network error", "error");
+      }
+      saveBtn.textContent = "SAVE CHANGES";
+    });
+  }
+  const logoutBtn = document.getElementById("sec-logout-btn");
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", () => {
+      localStorage.removeItem("zettnas_token");
+      document.cookie = "zettnas_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      window.location.reload();
+    });
+  }
+
+});
+
+
+// --- Minimize Cards Logic ---
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest(".btn-minimize");
+  if (!btn) return;
+  const card = btn.closest(".draggable-card");
+  if (!card) return;
+  card.classList.toggle("card-collapsed");
+  
+  // Save state
+  const collapsed = [];
+  document.querySelectorAll(".draggable-card.card-collapsed").forEach(c => {
+    const id = c.dataset.layoutCardId || c.dataset.ledCardId || c.dataset.fanCardId || c.dataset.btnCardId || c.dataset.miscCardId;
+    if (id) collapsed.push(id);
+  });
+  localStorage.setItem("zettnas_collapsed_cards", JSON.stringify(collapsed));
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+  // Restore collapsed state
+  try {
+    const collapsed = JSON.parse(localStorage.getItem("zettnas_collapsed_cards") || "[]");
+    document.querySelectorAll(".draggable-card").forEach(c => {
+      const id = c.dataset.layoutCardId || c.dataset.ledCardId || c.dataset.fanCardId || c.dataset.btnCardId || c.dataset.miscCardId;
+      if (id && collapsed.includes(id)) {
+        c.classList.add("card-collapsed");
+      }
+    });
+  } catch (e) {}
+});
+
+// --- Copy Button Tab Drag & Drop ---
+document.addEventListener("DOMContentLoaded", () => {
+  const btnCardsContainer = document.getElementById("btn-sections-container");
+  const btnCardsLockBtn = document.getElementById("btn-cards-lock-btn");
+  if (!btnCardsContainer || !btnCardsLockBtn) return;
+  
+  let isBtnLocked = true;
+  btnCardsLockBtn.addEventListener("click", () => {
+    isBtnLocked = !isBtnLocked;
+    btnCardsLockBtn.innerHTML = isBtnLocked ? "🔒 Locked" : "🔓 Unlocked";
+    btnCardsLockBtn.classList.toggle("unlocked", !isBtnLocked);
+    btnCardsContainer.classList.toggle("locked", isBtnLocked);
+    btnCardsContainer.querySelectorAll(".draggable-card").forEach(c => c.setAttribute("draggable", !isBtnLocked));
+  });
+
+  let draggedBtnCard = null;
+  let allowBtnDrag = false;
+  try {
+    const order = JSON.parse(localStorage.getItem("zettnas_btn_order") || "[]");
+    order.reverse().forEach(id => {
+      const el = btnCardsContainer.querySelector(`[data-btn-card-id="${id}"]`);
+      if (el) btnCardsContainer.prepend(el);
+    });
+  } catch(e) {}
+
+  btnCardsContainer.addEventListener("mousedown", (e) => {
+    allowBtnDrag = !isBtnLocked && !!e.target.closest(".drag-handle");
+  });
+
+  btnCardsContainer.querySelectorAll(".draggable-card").forEach((card) => {
+    card.addEventListener("dragstart", (e) => {
+      if (isBtnLocked || !allowBtnDrag) { e.preventDefault(); return false; }
+      draggedBtnCard = card;
+      card.classList.add("dragging");
+    });
+    card.addEventListener("dragend", () => {
+      allowBtnDrag = false;
+      if (draggedBtnCard) draggedBtnCard.classList.remove("dragging");
+      btnCardsContainer.querySelectorAll(".draggable-card").forEach((c) => c.classList.remove("drag-over"));
+      const order = Array.from(btnCardsContainer.querySelectorAll(".draggable-card")).map(c => c.dataset.btnCardId);
+      localStorage.setItem("zettnas_btn_order", JSON.stringify(order));
+    });
+    card.addEventListener("dragover", (e) => {
+      if (isBtnLocked || !draggedBtnCard) return;
+      e.preventDefault();
+      const targetCard = e.target.closest(".draggable-card");
+      if (targetCard && targetCard !== draggedBtnCard && targetCard.parentElement === btnCardsContainer) {
+        const bounding = targetCard.getBoundingClientRect();
+        const offset = bounding.y + bounding.height / 2;
+        const next = e.clientY - offset > 0;
+        btnCardsContainer.insertBefore(draggedBtnCard, next ? targetCard.nextSibling : targetCard);
+      }
+    });
+  });
+});
+
+// --- Misc Tab Drag & Drop ---
+document.addEventListener("DOMContentLoaded", () => {
+  const miscCardsContainer = document.getElementById("misc-sections-container");
+  const miscCardsLockBtn = document.getElementById("misc-cards-lock-btn");
+  if (!miscCardsContainer || !miscCardsLockBtn) return;
+  
+  let isMiscLocked = true;
+  miscCardsLockBtn.addEventListener("click", () => {
+    isMiscLocked = !isMiscLocked;
+    miscCardsLockBtn.innerHTML = isMiscLocked ? "🔒 Locked" : "🔓 Unlocked";
+    miscCardsLockBtn.classList.toggle("unlocked", !isMiscLocked);
+    miscCardsContainer.classList.toggle("locked", isMiscLocked);
+    miscCardsContainer.querySelectorAll(".draggable-card").forEach(c => c.setAttribute("draggable", !isMiscLocked));
+  });
+
+  let draggedMiscCard = null;
+  let allowMiscDrag = false;
+  try {
+    const order = JSON.parse(localStorage.getItem("zettnas_misc_order") || "[]");
+    order.reverse().forEach(id => {
+      const el = miscCardsContainer.querySelector(`[data-misc-card-id="${id}"]`);
+      if (el) miscCardsContainer.prepend(el);
+    });
+  } catch(e) {}
+
+  miscCardsContainer.addEventListener("mousedown", (e) => {
+    allowMiscDrag = !isMiscLocked && !!e.target.closest(".drag-handle");
+  });
+
+  miscCardsContainer.querySelectorAll(".draggable-card").forEach((card) => {
+    card.addEventListener("dragstart", (e) => {
+      if (isMiscLocked || !allowMiscDrag) { e.preventDefault(); return false; }
+      draggedMiscCard = card;
+      card.classList.add("dragging");
+    });
+    card.addEventListener("dragend", () => {
+      allowMiscDrag = false;
+      if (draggedMiscCard) draggedMiscCard.classList.remove("dragging");
+      miscCardsContainer.querySelectorAll(".draggable-card").forEach((c) => c.classList.remove("drag-over"));
+      const order = Array.from(miscCardsContainer.querySelectorAll(".draggable-card")).map(c => c.dataset.miscCardId);
+      localStorage.setItem("zettnas_misc_order", JSON.stringify(order));
+    });
+    card.addEventListener("dragover", (e) => {
+      if (isMiscLocked || !draggedMiscCard) return;
+      e.preventDefault();
+      const targetCard = e.target.closest(".draggable-card");
+      if (targetCard && targetCard !== draggedMiscCard && targetCard.parentElement === miscCardsContainer) {
+        const bounding = targetCard.getBoundingClientRect();
+        const offset = bounding.y + bounding.height / 2;
+        const next = e.clientY - offset > 0;
+        miscCardsContainer.insertBefore(draggedMiscCard, next ? targetCard.nextSibling : targetCard);
+      }
+    });
+  });
+});
+
+
+// --- Universal Popup Draggable Logic ---
+function makeDraggable(dragEl, handleEl) {
+  if (!dragEl) return;
+  handleEl = handleEl || dragEl;
+  handleEl.style.cursor = "move";
+
+  let startX = 0, startY = 0, initialMouseX = 0, initialMouseY = 0;
+  
+  handleEl.addEventListener("mousedown", (e) => {
+    // Only accept left clicks, ignore buttons/inputs
+    if (e.button !== 0 || e.target.closest("button") || e.target.closest("input")) return;
+    e.preventDefault();
+    
+    const rect = dragEl.getBoundingClientRect();
+    
+    // Convert to absolute to break out of flex layouts (like the modal backdrops)
+    dragEl.style.transition = "none";
+    dragEl.style.position = "fixed";
+    dragEl.style.transform = "none";
+    dragEl.style.margin = "0";
+    dragEl.style.bottom = "auto";
+    dragEl.style.right = "auto";
+    dragEl.style.left = rect.left + "px";
+    dragEl.style.top = rect.top + "px";
+
+    startX = rect.left;
+    startY = rect.top;
+    initialMouseX = e.clientX;
+    initialMouseY = e.clientY;
+
+    const drag = (eMove) => {
+      eMove.preventDefault();
+      const dx = eMove.clientX - initialMouseX;
+      const dy = eMove.clientY - initialMouseY;
+      dragEl.style.left = (startX + dx) + "px";
+      dragEl.style.top = (startY + dy) + "px";
+    };
+
+    const stopDrag = () => {
+      document.removeEventListener("mousemove", drag);
+      document.removeEventListener("mouseup", stopDrag);
+    };
+
+    document.addEventListener("mousemove", drag);
+    document.addEventListener("mouseup", stopDrag);
+  });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    // Console Window
+  const consoleModal = document.getElementById("console-window");
+  const consoleHeader = document.querySelector("#console-window .chassis-panel-header");
+  makeDraggable(consoleModal, consoleHeader);
+  
+  // Register console in dock
+  const consoleOverlay = document.getElementById("console-modal-overlay");
+  if (consoleOverlay && window.DockManager) {
+    window.DockManager.register("console", consoleOverlay, "#i-chip", "System Console");
+    if (window.bringToFront) window.bringToFront(consoleModal);
+  }
+  
+  // Console minimize button
+  const consoleMin = document.getElementById("console-min");
+  if (consoleMin) {
+    consoleMin.addEventListener("click", () => {
+      if (window.DockManager) window.DockManager.minimize("console");
+    });
+  }
+
+  // SMART Modal
+  const smartModal = document.querySelector("#smart-modal-overlay .smart-modal-window");
+  const smartHeader = document.querySelector("#smart-modal-overlay .smart-modal-header");
+  makeDraggable(smartModal, smartHeader);
+  
+  // Folder Browser Modal
+  const fbModal = document.querySelector("#folder-browser-modal .smart-modal-window");
+  const fbHeader = document.querySelector("#folder-browser-modal .smart-modal-header");
+  makeDraggable(fbModal, fbHeader);
+  
+  // Copy Progress Toast
+  const copyToast = document.getElementById("copy-toast");
+  const copyToastHeader = document.querySelector("#copy-toast .smart-modal-header");
+  makeDraggable(copyToast, copyToastHeader);
+  
+  // Global Toast Container
+  const toastContainer = document.getElementById("global-toast-container");
+  if (!toastContainer) {
+    // Inject the container on load so we can make it draggable right away
+    const c = document.createElement("div");
+    c.id = "global-toast-container";
+    c.style.cssText = "position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:10005;display:flex;flex-direction:column;gap:8px;";
+    document.body.appendChild(c);
+  }
+  // For global toast, let's make the container draggable using itself as handle
+  setTimeout(() => {
+    const tC = document.getElementById("global-toast-container");
+    makeDraggable(tC, tC);
+  }, 100);
+});
+
+
+
+
+
+// --- Window Depth Manager ---
+let activeWindowZIndex = 10000;
+
+window.bringToFront = function bringToFront(windowEl) {
+  activeWindowZIndex++;
+  const backdrop = windowEl.closest(".smart-modal-backdrop");
+  if (backdrop) {
+    backdrop.style.setProperty("z-index", activeWindowZIndex.toString(), "important");
+  }
+  windowEl.style.setProperty("z-index", activeWindowZIndex.toString(), "important");
+  
+  if (window.DockManager) {
+    let foundId = null;
+    Object.keys(window.DockManager.windows).forEach(id => {
+      const wEl = window.DockManager.windows[id].el;
+      if (wEl === backdrop || wEl === windowEl || wEl.contains(windowEl)) {
+        foundId = id;
+      }
+    });
+    if (foundId) {
+      window.DockManager.activeId = foundId;
+      window.DockManager.render();
+    }
+  }
+}
+
+// 1. Direct listeners on all modal windows
+document.querySelectorAll(".smart-modal-window, #console-window").forEach(win => {
+  win.addEventListener("mousedown", (e) => {
+    // Bring this window to front immediately
+    bringToFront(win);
+    // DO NOT stopPropagation, because makeDraggable might need it, or other things.
+    // Instead, just set a flag on the event object!
+    e._handledAsWindowClick = true;
+  });
+});
+
+// 2. Global listener for background clicks
+document.addEventListener("mousedown", (e) => {
+  if (e._handledAsWindowClick) return; // Ignore clicks that originated inside a window
+  
+  // Also check if we somehow clicked a window directly without the flag (e.g. dynamically added)
+  const windowEl = e.target.closest(".smart-modal-window, #console-window");
+  if (windowEl) {
+    bringToFront(windowEl);
+    return;
+  }
+  
+  // Clicked the background/dashboard. Push all floating windows to the background!
+  const allModals = document.querySelectorAll(".smart-modal-backdrop, .smart-modal-window, #console-window");
+  allModals.forEach(m => {
+    if (m.classList.contains("smart-modal-backdrop") && m.classList.contains("open")) {
+      m.style.setProperty("z-index", "40", "important");
+    } else if (m.id === "copy-toast" && m.style.opacity === "1") {
+      m.style.setProperty("z-index", "40", "important");
+    }
+  });
+});
+
+
+
+// --- WALLPAPER LOGIC ---
+document.addEventListener("DOMContentLoaded", () => {
+  const fileInput = document.getElementById("wallpaper-upload");
+  const clearBtn = document.getElementById("wallpaper-clear-btn");
+  const previewImg = document.getElementById("wallpaper-preview");
+  const noImgTxt = document.getElementById("wallpaper-no-img");
+  const selectDropdown = document.getElementById("wallpaper-select");
+  const deleteBtn = document.getElementById("wallpaper-delete-btn");
+  const renameBtn = document.getElementById("wallpaper-rename-btn");
+
+  let currentWallpapers = [];
+
+  function setWallpaper(url) {
+    if (url) {
+      document.body.style.backgroundImage = `url('${url}')`;
+      document.body.style.backgroundSize = "cover";
+      document.body.style.backgroundPosition = "center";
+      document.body.style.backgroundRepeat = "no-repeat";
+      document.body.style.backgroundAttachment = "fixed";
+      if (previewImg) {
+        previewImg.src = url;
+        previewImg.style.display = "block";
+      }
+      if (noImgTxt) noImgTxt.style.display = "none";
+    } else {
+      document.body.style.backgroundImage = "";
+      document.body.style.backgroundSize = "";
+      document.body.style.backgroundPosition = "";
+      document.body.style.backgroundRepeat = "";
+      document.body.style.backgroundAttachment = "";
+      if (previewImg) {
+        previewImg.src = "";
+        previewImg.style.display = "none";
+      }
+      if (noImgTxt) noImgTxt.style.display = "block";
+    }
+  }
+  
+  async function loadWallpapers() {
+    try {
+      const res = await fetch("/api/wallpapers");
+      const data = await res.json();
+      currentWallpapers = data.files || [];
+      
+      if (selectDropdown) {
+        selectDropdown.innerHTML = '<option value="">Default Gradient</option>';
+        currentWallpapers.forEach(f => {
+          const opt = document.createElement("option");
+          opt.value = f;
+          opt.textContent = f;
+          selectDropdown.appendChild(opt);
+        });
+        if (data.active) {
+          selectDropdown.value = data.active;
+          setWallpaper("/api/wallpapers/download/" + data.active + "?t=" + Date.now());
+        } else {
+          selectDropdown.value = "";
+          setWallpaper(null);
+        }
+      }
+    } catch (err) {}
+  }
+
+  loadWallpapers();
+
+  if (selectDropdown) {
+    selectDropdown.addEventListener("change", (e) => {
+      const val = e.target.value;
+      if (val) {
+        setWallpaper("/api/wallpapers/download/" + val);
+      } else {
+        setWallpaper(null);
+      }
+    });
+  }
+
+  if (fileInput) {
+    fileInput.addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = async (ev) => {
+        const base64data = ev.target.result;
+        try {
+          const res = await fetch("/api/wallpapers/upload", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ image: base64data, filename: file.name })
+          });
+          const data = await res.json();
+          if (data.success) {
+            await loadWallpapers();
+            if (window.showToast) window.showToast("Wallpaper uploaded");
+          } else {
+            if (window.showToast) window.showToast("Failed: " + data.error, "error");
+          }
+        } catch (err) {
+          if (window.showToast) window.showToast("Upload failed", "error");
+        }
+      };
+      reader.readAsDataURL(file);
+      fileInput.value = "";
+    });
+  }
+
+  if (clearBtn) {
+    clearBtn.addEventListener("click", async () => {
+      const val = selectDropdown ? selectDropdown.value : "";
+      try {
+        const res = await fetch("/api/wallpapers/select", { 
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ filename: val || null })
+        });
+        if (res.ok) {
+          if (window.showToast) window.showToast("Active wallpaper saved");
+        }
+      } catch (err) {
+        if (window.showToast) window.showToast("Failed to save", "error");
+      }
+    });
+  }
+  
+
+  if (renameBtn) {
+    renameBtn.addEventListener("click", async () => {
+      const val = selectDropdown ? selectDropdown.value : "";
+      if (!val) return;
+      
+      const newName = prompt("Enter new name for " + val + ":", val);
+      if (!newName || newName === val) return;
+      
+      try {
+        const res = await fetch("/api/wallpapers/rename", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ old_name: val, new_name: newName })
+        });
+        const data = await res.json();
+        if (data.success) {
+          if (window.showToast) window.showToast("Wallpaper renamed to " + data.new_name);
+          await loadWallpapers();
+          if (selectDropdown) selectDropdown.value = data.new_name;
+        } else {
+          if (window.showToast) window.showToast("Rename failed: " + data.error, "error");
+        }
+      } catch (err) {
+        if (window.showToast) window.showToast("Rename request failed", "error");
+      }
+    });
+  }
+
+  if (deleteBtn) {
+    deleteBtn.addEventListener("click", async () => {
+      const val = selectDropdown ? selectDropdown.value : "";
+      if (!val) return;
+      try {
+        const res = await fetch("/api/wallpapers/" + encodeURIComponent(val), { method: "DELETE" });
+        if (res.ok) {
+          if (window.showToast) window.showToast("Wallpaper deleted");
+          await loadWallpapers();
+        }
+      } catch (err) {
+        if (window.showToast) window.showToast("Delete failed", "error");
+      }
+    });
+  }
+});

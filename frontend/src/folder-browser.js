@@ -142,6 +142,7 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   function closeFbModal() {
+  if (window.DockManager) window.DockManager.unregister("fb");
     if (fbModal) fbModal.classList.remove("open");
   }
 
@@ -150,12 +151,14 @@ window.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       const currentDst = (btnCopyDst && btnCopyDst.value) ? btnCopyDst.value : "/mnt/user/";
       loadBrowsePath(currentDst || "/mnt/user/");
-      if (fbModal) fbModal.classList.add("open");
+      if (fbModal) { fbModal.classList.add("open"); if (window.DockManager) window.DockManager.register("fb", fbModal, "#i-storage", "Folder Browser"); if (window.bringToFront) window.bringToFront(fbModal.querySelector(".smart-modal-window")); }
     });
   }
 
   if (fbCancel) fbCancel.addEventListener("click", closeFbModal);
   if (fbClose) fbClose.addEventListener("click", closeFbModal);
+  const minBtn = document.getElementById("fb-min");
+  if (minBtn) minBtn.addEventListener("click", () => { if (window.DockManager) window.DockManager.minimize("fb"); });
 
   if (fbSelect) {
     fbSelect.addEventListener("click", () => {

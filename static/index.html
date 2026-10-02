@@ -5,10 +5,21 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ZettNAS Studio • Hardware Suite</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script type="module" crossorigin src="/assets/index-DnEXttTN.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-Bi_7AiHX.css">
+  <script type="module" crossorigin src="/assets/index-CRvE5NgA.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-Ds5s3Mte.css">
 </head>
 <body class="studio-workbench">
+
+<div id="login-overlay" style="display: none; position: fixed; inset: 0; z-index: 999999; background: var(--bg); align-items: center; justify-content: center; align-items: center; justify-content: center;">
+  <div style="background: var(--card); padding: 40px; border-radius: 12px; text-align: center; border: 1px solid rgba(255,255,255,0.1); width: 320px; box-shadow: 0 25px 60px rgba(0,0,0,0.8);">
+    <svg class="ic" style="width: 48px; height: 48px; color: var(--ok2); margin-bottom: 20px;"><use href="#i-chip"/></svg>
+    <h2 style="margin: 0 0 8px 0; font-size: 16px; letter-spacing: 2px; color: #fff;">ZETTNAS TOOLKIT</h2>
+    <p id="login-identity-txt" style="margin: 0 0 24px 0; font-size: 13px; color: var(--muted);">Authentication Required</p>
+    <input type="password" id="login-password" placeholder="Admin Password" style="width: 100%; padding: 12px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 6px; margin-bottom: 20px; box-sizing: border-box; text-align: center; font-size: 16px; outline: none;">
+    <button id="login-btn" class="suite-toolkit-btn" style="width: 100%; padding: 12px; font-size: 14px;">SECURE LOGIN</button>
+  </div>
+</div>
+
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
@@ -79,10 +90,9 @@
     <div class="suite-telemetry-pills">
       <div class="suite-pill"><span class="pulse-dot"></span> MCU: <strong>/dev/ttyACM0</strong></div>
       <div class="suite-pill"><span class="pulse-dot"></span> FB: <strong>/dev/fb0 (640x172)</strong></div>
-      <button id="suite-zoom-btn" class="zoom-toggle-btn" title="Cycle Chassis Scale (1x, 1.25x, 1.5x, 2x) [Hot-key: Z / Wheel]">🔍 1x</button>
-            <button id="yak-easter-egg-btn" class="yak-egg-btn" title="Trust in the Yak [Easter Egg Hot-key: Y]">🐂</button>
+                  <button id="yak-easter-egg-btn" class="yak-egg-btn" title="Trust in the Yak [Easter Egg Hot-key: Y]">🐂</button>
       <button id="drawer-toggle-btn" class="suite-toolkit-btn" title="Open Hardware Toolkit Settings [Hot-key: T]">
-        <span>⚙ TOOLKIT SETTINGS</span>
+        <span class="btn-ic">⚙</span><span class="btn-txt"> TOOLKIT SETTINGS</span>
       </button>
     </div>
   </header>
@@ -92,89 +102,7 @@
       <img id="chassis-hero-img" src="img/chassis-d6u.png" class="chassis-hero-img" alt="NAS Hardware Chassis">
     </div>
 
-    <div class="chassis-front-panel">
-      <div class="chassis-screws screw-tl"></div>
-      <div class="chassis-screws screw-tr"></div>
-      <div class="chassis-screws screw-bl"></div>
-      <div class="chassis-screws screw-br"></div>
-
-      <div class="chassis-panel-header">
-        <span class="chassis-engraved-text" id="chassis-panel-engraved">ZETTNAS • SYSTEM CONSOLE</span>
-        <span class="chassis-screen-spec">640 × 172 IPS • STRIDE 704</span>
-      </div>
-
-      <div id="screen" class="hardware-screen-canvas">
-        <header>
-          <div class="h-left">
-            <span class="nas-name" id="nasName">NAS</span>
-            <span class="pill" id="statusPill"><span class="pill-dot"></span><span id="statusText">– OK</span></span>
-          </div>
-          <div class="clock" id="clock">--:--</div>
-          <div class="h-right">
-            <svg class="ic ic-sm"><use href="#i-globe"/></svg>
-            <span id="ip">0.0.0.0</span>
-          </div>
-        </header>
-
-        <section class="cards" id="dashboard-cards-container">
-          <div class="card card-storage" data-metric-id="metric-storage" title="Click to view Storage diagnostics">
-            <div class="card-title"><svg class="ic"><use href="#i-disk"/></svg><span class="card-title-txt">STORAGE</span></div>
-            <div class="storage-body">
-              <div class="donut" id="donut"><span id="storagePct">0%</span></div>
-              <div class="storage-nums">
-                <div><span class="lbl">USED</span><span class="val" id="stUsed">0GB</span></div>
-                <div><span class="lbl">TOTAL</span><span class="val" id="stTotal">0GB</span></div>
-              </div>
-            </div>
-          </div>
-
-          <div class="card card-cpu" data-metric-id="metric-cpu" title="Click to view CPU diagnostics">
-            <div class="card-title"><svg class="ic"><use href="#i-cpu"/></svg><span class="card-title-txt">CPU</span></div>
-            <div class="gauge-body">
-              <div class="arc" id="cpuArc"><div class="arc-val"><span id="cpuTemp">0</span><span class="u">°C</span></div></div>
-              <div class="side"><span class="lbl">UTIL</span><span class="val" id="cpuUtil">0%</span></div>
-            </div>
-          </div>
-
-          <div class="card card-mem" data-metric-id="metric-mem" title="Click to view Memory diagnostics">
-            <div class="card-title"><svg class="ic"><use href="#i-mem"/></svg><span class="card-title-txt">MEMORY</span></div>
-            <div class="gauge-body">
-              <div class="arc" id="memArc"><div class="arc-val"><span id="memPct">0</span><span class="u">%</span></div></div>
-              <div class="side"><span class="lbl" id="memUsed">0G</span><span class="val" id="memTotal">/0G</span></div>
-            </div>
-          </div>
-
-          <div class="card fans card-fans" data-metric-id="metric-fans" title="Click to view Fans & Telemetry">
-            <div class="card-title"><svg class="ic"><use href="#i-fan"/></svg><span class="card-title-txt">FANS</span></div>
-            <div class="fan-row" id="fanRow"></div>
-            <div class="uptime"><svg class="ic ic-sm"><use href="#i-clock"/></svg><span id="uptime">up --</span></div>
-          </div>
-
-          <div class="card card-net" data-metric-id="metric-net" title="Click to view Network diagnostics">
-            <div class="card-title"><svg class="ic"><use href="#i-net"/></svg><span class="card-title-txt">NETWORK I/O</span></div>
-            <div class="net-body">
-              <div class="net-row"><span>TX:</span><strong id="netTx">0.0 MB/s</strong></div>
-              <div class="net-row"><span>RX:</span><strong id="netRx">0.0 MB/s</strong></div>
-            </div>
-          </div>
-        </section>
-
-        <section class="disks card-disks" id="diskRow" data-metric-id="metric-disks"></section>
-      </div>
-
-      <div class="chassis-led-fixture">
-        <div class="chassis-led-meta">
-          <span class="meta-tag">
-            <svg class="ic" style="width:9px;height:9px;color:currentColor;"><use href="#i-chip"/></svg>
-            ARGB LIGHT BAR // /dev/ttyACM0
-          </span>
-          <span class="meta-nodes">WS2812B • 38 NODES</span>
-        </div>
-        <div class="chassis-led-channel">
-          <div id="virtual-chassis-lightbar" class="chassis-lightbar-glow"></div>
-        </div>
-      </div>
-    </div>
+    
   </main>
 </div>
 
@@ -186,6 +114,7 @@
       </span>
       <div style="display:flex; gap:12px; align-items:center;">
         <button id="smart-modal-refresh" class="btn-icon" title="Refresh SMART data" style="font-size: 20px; padding: 2px;">↻</button>
+        <button id="smart-modal-min" class="btn-icon" aria-label="Minimize" style="font-size:18px;">–</button>
         <button id="smart-modal-close" class="btn-icon" aria-label="Close dialog">✕</button>
       </div>
     </div>
@@ -224,34 +153,105 @@
   
   <!-- MISC TAB -->
   <div id="tab-misc" class="drawer-tab-content">
-    <div style="display:flex; flex-direction:column; gap:30px;">
+    <div class="tab-sub-header">
+      <span class="sub-title">Misc & Event Log Arrangement</span>
+      <button id="misc-cards-lock-btn" class="btn-lock-toggle" title="Lock or Unlock Section Order">🔒 Locked</button>
+    </div>
+    <div id="misc-sections-container" class="drawer-cards-flow locked">
     
+    
+    
+    <!-- Wallpaper Section -->
+    <div class="draggable-card drawer-card" data-misc-card-id="sec-wallpaper">
+      <div class="card-headline">
+        <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <svg class="ic ic-sm" style="margin-right:6px;"><use href="#i-globe"/></svg>Custom Wallpaper<button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
+      </div>
+      <div class="card-instruction">Upload a custom background image for the dashboard.</div>
+      
+      <div class="card-body-collapsible" style="margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;">
+        <div style="display:flex; flex-direction:column; gap: 12px;">
+          <div style="display:flex; gap: 8px;">
+            <select id="wallpaper-select" style="flex:1; background: rgba(0,0,0,0.2); color: #fff; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; padding: 6px;">
+               <option value="">Default Gradient</option>
+            </select>
+            <button class="btn-pill-toggle" id="wallpaper-rename-btn" title="Rename selected image" style="padding: 0 10px;">Rename</button>
+            <button class="btn-pill-toggle" id="wallpaper-delete-btn" title="Delete selected image" style="background: rgba(240, 85, 59, 0.1); color: var(--crit); border-color: rgba(240, 85, 59, 0.2); padding: 0 10px;">Delete</button>
+          </div>
+          <div style="display:flex; gap: 12px; align-items: stretch;">
+            <div style="flex: 1; display:flex; flex-direction:column; gap: 8px;">
+              <input type="file" id="wallpaper-upload" accept="image/*" style="display:none;">
+              <button class="btn-pill-toggle" style="width:100%; justify-content:center; padding: 10px;" onclick="document.getElementById('wallpaper-upload').click()">Upload New Image</button>
+              <button class="btn-pill-toggle" id="wallpaper-clear-btn" style="width:100%; justify-content:center; padding: 10px;">Set Active</button>
+            </div>
+            <div style="flex: 1; background: rgba(0,0,0,0.3); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); overflow: hidden; position: relative; min-height: 80px; display:flex; align-items:center; justify-content:center;">
+               <img id="wallpaper-preview" src="" style="width:100%; height:100%; object-fit:cover; display:none;">
+               <span id="wallpaper-no-img" style="color:var(--muted); font-size:10px;">Default</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Metrics Section -->
-    <div>
+    <div class="draggable-card drawer-card" data-misc-card-id="sec-metrics">
       <div class="card-headline" style="margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
-        <span class="card-head-title"><svg class="ic ic-sm" style="margin-right:6px;"><use href="#i-cpu"/></svg>Historical Metrics</span>
+        <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <svg class="ic ic-sm" style="margin-right:6px;"><use href="#i-cpu"/></svg>Historical Metrics<button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
         <select id="metrics-range-select" style="background: var(--card-hi); color: var(--fg); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; padding: 2px 6px; font-size: 11px;">
           <option value="24h" selected>Last 24 Hours</option>
           <option value="7d">Last 7 Days</option>
           <option value="30d">Last 30 Days</option>
         </select>
       </div>
-      <div style="position: relative; height: 200px; width: 100%;">
+      <div style="position: relative; height: 200px; width: 100%; margin-top: 15px;">
         <canvas id="metricsChart"></canvas>
       </div>
     </div>
 
     <!-- Events Section -->
-    <div>
+    <div class="draggable-card drawer-card" data-misc-card-id="sec-events">
       <div class="card-headline">
-        <span class="card-head-title"><svg class="ic ic-sm" style="margin-right:6px;"><use href="#i-storage"/></svg>System Event Log</span>
+        <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <svg class="ic ic-sm" style="margin-right:6px;"><use href="#i-storage"/></svg>System Event Log<button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
         <button class="btn-pill-toggle" onclick="fetch('/api/events/clear')" title="Clear Logs">Clear</button>
       </div>
       <div class="card-instruction">Persistent timeline of system events, warnings, and alerts.</div>
       
-      <div class="drawer-card" style="padding:0; overflow:hidden;">
-        <div id="events-list" style="max-height: 400px; overflow-y: auto;">
+      <div style="margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px;">
+        <div id="events-list" style="max-height: 400px; overflow-y: auto; margin: 0 -8px; padding: 0 8px;">
           <div style="padding: 14px; text-align: center; color: var(--muted); font-size: 11px;">Loading events...</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Security Section -->
+    <div class="draggable-card drawer-card" data-misc-card-id="sec-security">
+      <div class="card-headline">
+        <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <svg class="ic ic-sm" style="margin-right:6px;"><use href="#i-chip"/></svg>Account & Security<button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
+      </div>
+      <div class="card-instruction">Manage your dashboard credentials and identity.</div>
+      
+      <div style="margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;">
+        <div style="display:flex; flex-direction:column; gap: 12px;">
+          <div>
+            <label style="display:block; font-size:11px; color:var(--muted); margin-bottom:4px;">USERNAME</label>
+            <input type="text" id="sec-username" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.2); padding:8px; color:#fff;" placeholder="admin">
+          </div>
+          <div>
+            <label style="display:block; font-size:11px; color:var(--muted); margin-bottom:4px;">EMAIL ADDRESS</label>
+            <input type="email" id="sec-email" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.2); padding:8px; color:#fff;" placeholder="admin@zettnas.local">
+          </div>
+          <div style="border-top: 1px solid rgba(255,255,255,0.05); margin-top: 4px; padding-top: 12px;">
+            <label style="display:block; font-size:11px; color:var(--warn); margin-bottom:4px;">CHANGE PASSWORD (Optional)</label>
+            <input type="password" id="sec-new-pwd" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.2); padding:8px; color:#fff;" placeholder="Enter new password">
+          </div>
+          <div style="border-top: 1px solid rgba(255,255,255,0.05); margin-top: 4px; padding-top: 12px;">
+            <label style="display:block; font-size:11px; color:var(--ok2); margin-bottom:4px;">CURRENT PASSWORD (Required to save)</label>
+            <input type="password" id="sec-cur-pwd" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.2); padding:8px; color:#fff;" placeholder="Enter current password">
+          </div>
+          <div style="display:flex; gap: 8px; margin-top: 8px;">
+            <button id="sec-save-btn" class="suite-toolkit-btn" style="flex:1;">SAVE CHANGES</button>
+            <button id="sec-logout-btn" class="suite-toolkit-btn" style="flex:1; background: rgba(220,50,50,0.1); color: var(--crit); border-color: rgba(220,50,50,0.3);">LOG OUT</button>
+          </div>
         </div>
       </div>
     </div>
@@ -268,7 +268,7 @@
     <div id="layout-sections-container" class="drawer-cards-flow locked">
       <div class="draggable-card mini-preview-box" data-layout-card-id="sec-preview">
         <div class="card-headline" style="margin-bottom:2px;">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> LCD Live Canvas Re-arrange & Preview</span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> LCD Live Canvas Re-arrange & Preview<button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
           <span id="lcd-renderer-badge" class="lcd-status-badge lcd-status-checking" title="LCD Framebuffer Renderer Status">&#x2B24; Checking…</span>
         </div>
         <div id="mini-lcd-canvas" class="mini-lcd-canvas">
@@ -278,7 +278,7 @@
 
       <div class="draggable-card drawer-card" data-layout-card-id="sec-clock">
         <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <svg class="ic ic-sm" style="margin: 0 4px 0 2px;"><use href="#i-clock"/></svg>Clock & Timezone</span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <svg class="ic ic-sm" style="margin: 0 4px 0 2px;"><use href="#i-clock"/></svg>Clock & Timezone<button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
           <button id="clock-format-btn" class="btn-pill-toggle">24 Hours</button>
         </div>
         <div class="card-instruction">Override the screen time display and timezone / city.</div>
@@ -314,7 +314,7 @@
 
       <div class="draggable-card drawer-card" data-layout-card-id="sec-backlight">
         <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <svg class="ic ic-sm" style="margin: 0 4px 0 2px;"><use href="#i-chip"/></svg>LCD Backlight & Night Dimming</span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <svg class="ic ic-sm" style="margin: 0 4px 0 2px;"><use href="#i-chip"/></svg>LCD Backlight & Night Dimming<button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
           <span id="screen-bri-val" class="card-head-val">100%</span>
         </div>
         <div class="card-instruction">Control the physical front LCD display brightness and scheduled nighttime dimming.</div>
@@ -339,7 +339,7 @@
 
       <div class="draggable-card drawer-card" data-layout-card-id="sec-presets">
         <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Preset Layouts</span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Preset Layouts<button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
           <span id="preset-state-badge" class="preset-state-badge">DEFAULT ENGAGED</span>
         </div>
         <div class="card-instruction">1-click dashboard module arrangements.</div>
@@ -381,7 +381,7 @@
 
       <div class="draggable-card drawer-card" data-layout-card-id="sec-modules">
         <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Screen Modules & Size Control</span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Screen Modules & Size Control<button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
         </div>
         <div class="card-instruction">Toggle visibility and select compact or full gauge scaling for each module. (Drag cards inside the Live Preview above to reorder).</div>
 
@@ -475,7 +475,7 @@
 
       <div class="draggable-card drawer-card" data-layout-card-id="sec-backup">
         <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Suite Configuration Backup</span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Suite Configuration Backup<button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
         </div>
         <div class="card-instruction">Export, import, or reset all dashboard layout, LED lighting, and fan settings in a single file.</div>
         <div class="backup-row">
@@ -506,7 +506,7 @@
 
       <div class="draggable-card drawer-card" data-card-id="card-reactive">
         <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> System Reactive Alerts</span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> System Reactive Alerts<button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
           <label class="switch"><input type="checkbox" id="reactive-toggle" checked><span class="toggle-slider"></span></label>
         </div>
         <div class="card-instruction">Auto-flash red or pulse amber when drive errors, overheating, or fan faults occur.</div>
@@ -514,7 +514,7 @@
 
       <div class="draggable-card drawer-card" data-card-id="card-brightness">
         <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Front LED brightness</span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Front LED brightness<button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
           <span id="led-val-display" class="card-head-val">25%</span>
         </div>
         <div class="card-instruction">Adjust physical bar intensity. Changes apply automatically.</div>
@@ -523,7 +523,7 @@
 
       <div class="draggable-card drawer-card" data-card-id="card-led-schedule">
         <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Night Mode & Blackout Schedule</span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Night Mode & Blackout Schedule<button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
           <label class="switch"><input type="checkbox" id="led-night-toggle"><span class="toggle-slider"></span></label>
         </div>
         <div class="card-instruction">Automatically extinguish the ARGB light bar during nighttime hours to prevent room glare.</div>
@@ -536,7 +536,7 @@
       </div>
 
       <div class="draggable-card drawer-card" data-card-id="card-profiles">
-        <div class="card-headline"><span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Lighting Profiles</span></div>
+        <div class="card-headline"><span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Lighting Profiles<button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span></div>
         <div class="card-instruction">1-click quick hardware presets.</div>
         <div class="profiles-grid">
           <button class="profile-pill" data-profile="clean">Clean (Teal)</button>
@@ -547,7 +547,7 @@
       </div>
 
       <div class="draggable-card drawer-card" data-card-id="card-effects">
-        <div class="card-headline"><span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Lighting effects</span></div>
+        <div class="card-headline"><span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Lighting effects<button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span></div>
         <div class="card-instruction">Choose an active dynamic animation for the light bar.</div>
         <div class="effects-grid">
           <button class="effect-btn active" data-effect="solid">Solid</button>
@@ -562,7 +562,7 @@
 
       <div class="draggable-card drawer-card" id="speed-card" data-card-id="card-speed" style="display: none;">
         <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Effect speed</span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Effect speed<button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
           <span id="speed-val-display" class="card-head-val">Medium (50%)</span>
         </div>
         <div class="card-instruction">Control animation rate (1%: Slowest, 100%: Fastest).</div>
@@ -593,7 +593,7 @@
       </div>
 
       <div class="draggable-card drawer-card" id="secondary-color-card" data-card-id="card-color2" style="display: none;">
-        <div class="card-headline"><span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Secondary Color (Gradient End)</span></div>
+        <div class="card-headline"><span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Secondary Color (Gradient End)<button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span></div>
         <div class="card-instruction">Select the target tone that the primary color transitions toward.</div>
         <div class="color-grid">
           <button class="color-chip2" data-hex="ff0055" style="background:#ff0055; color:#fff;">Pink</button>
@@ -623,7 +623,7 @@
     <div id="fan-cards-container" class="drawer-cards-flow locked">
       <div class="draggable-card drawer-card" data-fan-card-id="fan-card-tach">
         <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <svg class="ic" style="margin-right:6px;"><use href="#i-fan"/></svg>Active Fan Tachometers</span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <svg class="ic" style="margin-right:6px;"><use href="#i-fan"/></svg>Active Fan Tachometers<button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
           <span class="suite-badge" id="fan-status-badge">ONLINE</span>
         </div>
         <div class="card-instruction">Click any zone column below to isolate and track that zone on the Dynamic Fan Curve above.</div>
@@ -672,7 +672,7 @@
 
       <div class="draggable-card drawer-card" data-fan-card-id="fan-card-curve">
         <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Dynamic Fan Curve • Thermal Map</span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Dynamic Fan Curve • Thermal Map<button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
           <span class="suite-badge" id="hysteresis-badge" style="background:rgba(51,209,122,0.15); color:var(--ok); border-color:rgba(51,209,122,0.35);">HOLD: READY</span>
         </div>
         <div class="card-instruction" id="curve-filter-instruction">Displaying all thermal zones. Click a zone tachometer above or below to isolate.</div>
@@ -721,7 +721,7 @@
 
       <div class="draggable-card drawer-card" data-fan-card-id="fan-card-cpu-toggle">
         <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Control CPU Fan</span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Control CPU Fan<button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
           <label class="switch">
             <input type="checkbox" id="cpu-fan-toggle">
             <span class="toggle-slider"></span>
@@ -734,7 +734,7 @@
 
       <div class="draggable-card drawer-card" data-fan-card-id="fan-card-profiles">
         <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Cooling Duty Profiles</span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Cooling Duty Profiles<button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
         </div>
         <div class="card-instruction">Select dynamic thermal scaling or fixed duty presets mapped across disk fans.</div>
         <div class="profiles-grid" style="grid-template-columns: repeat(5, 1fr);">
@@ -748,7 +748,7 @@
 
       <div class="draggable-card drawer-card" data-fan-card-id="fan-card-inspector">
         <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Thermal Threshold Inspector</span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Thermal Threshold Inspector<button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
         </div>
         <div class="thermal-inspector-box">
           <div class="ti-row"><span>Cool Idle (&le; 38°C)</span><strong>58 – 67 PWM (~950 RPM)</strong></div>
@@ -760,7 +760,7 @@
 
       <div class="draggable-card drawer-card" data-fan-card-id="fan-card-thresholds">
         <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Custom Ramp Temperatures</span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Custom Ramp Temperatures<button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
           <span id="fan-curve-range-val" class="suite-badge" style="background:rgba(37,194,160,0.15); color:var(--ok2); border-color:rgba(37,194,160,0.35);">37°C – 50°C</span>
         </div>
         <div class="card-instruction">Adjust the temperature window where fan PWM dynamically scales from minimum silent RPM to 100% duty cycle. Spun-down drives are excluded from heating calculations.</div>
@@ -771,7 +771,7 @@
 
       <div class="draggable-card drawer-card" id="manual-pwm-card" data-fan-card-id="fan-card-override">
         <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Manual PWM Override</span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Manual PWM Override<button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
           <span id="fan-pwm-val-display" class="card-head-val">Auto Curve</span>
         </div>
         <div class="card-instruction">Directly commands `pwmX_enable = 1` and sets duty cycles `0-183`.</div>
@@ -785,12 +785,13 @@
   <div id="tab-buttons" class="drawer-tab-content">
     <div class="tab-sub-header">
       <span class="sub-title">Chassis Hardware Bindings</span>
+      <button id="btn-cards-lock-btn" class="btn-lock-toggle" title="Lock or Unlock Section Order">🔒 Locked</button>
     </div>
     
-    <div class="drawer-cards-flow">
-      <div class="draggable-card drawer-card" style="cursor: default;">
+    <div id="btn-sections-container" class="drawer-cards-flow locked">
+      <div class="draggable-card drawer-card" data-btn-card-id="sec-copybtn" style="cursor: default;">
         <div class="card-headline">
-          <span class="card-head-title"><svg class="ic ic-sm" style="margin: 0 4px 0 2px;"><use href="#i-storage"/></svg>Front-Panel COPY Button</span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <svg class="ic ic-sm" style="margin: 0 4px 0 2px;"><use href="#i-storage"/></svg>Front-Panel COPY Button<button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
           <div style="display:flex; align-items:center; gap:8px;">
             <span id="btn-copy-status-text" style="font-size:11px; font-weight:700; text-transform:uppercase; opacity:0.8;">ENABLED</span>
             <label class="switch">
@@ -838,10 +839,13 @@
 
 
 
+</aside>
+
 <div id="folder-browser-modal" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="folder-browser-title">
   <div class="smart-modal-window" style="width: 480px;">
     <div class="smart-modal-header">
       <div class="smart-modal-title" id="folder-browser-title"><svg class="ic ic-sm" style="margin-right:4px;"><use href="#i-storage"/></svg> Select Destination Folder</div>
+      <button id="fb-min" class="btn-icon" aria-label="Minimize" style="font-size:18px;">–</button>
       <button id="fb-close" class="btn-icon" aria-label="Close dialog">✕</button>
     </div>
     <div class="smart-modal-body" style="padding-bottom: 20px;">
@@ -868,7 +872,7 @@
     </div>
   </div>
 </div>
-</aside>
+
 
         
   
@@ -898,6 +902,98 @@
   </div>
 </div>
 
+
+
+<div id="console-modal-overlay" class="smart-modal-backdrop open">
+<div class="chassis-front-panel" id="console-window" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+      <div class="chassis-screws screw-tl"></div>
+      <div class="chassis-screws screw-tr"></div>
+      <div class="chassis-screws screw-bl"></div>
+      <div class="chassis-screws screw-br"></div>
+
+      <div class="chassis-panel-header">
+        <span class="chassis-engraved-text" id="chassis-panel-engraved">ZETTNAS • SYSTEM CONSOLE</span>
+        <div style="display:flex; gap:12px; align-items:center;"><span class="chassis-screen-spec">640 × 172 IPS</span><button id="console-min" class="btn-icon" aria-label="Minimize" style="font-size:18px;">–</button></div>
+      </div>
+
+      <div id="screen" class="hardware-screen-canvas">
+        <header>
+          <div class="h-left">
+            <span class="nas-name" id="nasName">NAS</span>
+            <span class="pill" id="statusPill"><span class="pill-dot"></span><span id="statusText">– OK</span></span>
+          </div>
+          <div class="clock" id="clock">--:--</div>
+          <div class="h-right">
+            <svg class="ic ic-sm"><use href="#i-globe"/></svg>
+            <span id="ip">0.0.0.0</span>
+          </div>
+        </header>
+
+        <section class="cards" id="dashboard-cards-container">
+          <div class="card card-storage" data-metric-id="metric-storage" title="Click to view Storage diagnostics">
+            <div class="card-title"><svg class="ic"><use href="#i-disk"/></svg><span class="card-title-txt">STORAGE</span></div>
+            <div class="storage-body">
+              <div class="donut" id="donut"><span id="storagePct">0%</span></div>
+              <div class="storage-nums">
+                <div><span class="lbl">USED</span><span class="val" id="stUsed">0GB</span></div>
+                <div><span class="lbl">TOTAL</span><span class="val" id="stTotal">0GB</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card card-cpu" data-metric-id="metric-cpu" title="Click to view CPU diagnostics">
+            <div class="card-title"><svg class="ic"><use href="#i-cpu"/></svg><span class="card-title-txt">CPU</span></div>
+            <div class="gauge-body">
+              <div class="arc" id="cpuArc"><div class="arc-val"><span id="cpuTemp">0</span><span class="u">°C</span></div></div>
+              <div class="side"><span class="lbl">UTIL</span><span class="val" id="cpuUtil">0%</span></div>
+            </div>
+          </div>
+
+          <div class="card card-mem" data-metric-id="metric-mem" title="Click to view Memory diagnostics">
+            <div class="card-title"><svg class="ic"><use href="#i-mem"/></svg><span class="card-title-txt">MEMORY</span></div>
+            <div class="gauge-body">
+              <div class="arc" id="memArc"><div class="arc-val"><span id="memPct">0</span><span class="u">%</span></div></div>
+              <div class="side"><span class="lbl" id="memUsed">0G</span><span class="val" id="memTotal">/0G</span></div>
+            </div>
+          </div>
+
+          <div class="card fans card-fans" data-metric-id="metric-fans" title="Click to view Fans & Telemetry">
+            <div class="card-title"><svg class="ic"><use href="#i-fan"/></svg><span class="card-title-txt">FANS</span></div>
+            <div class="fan-row" id="fanRow"></div>
+            <div class="uptime"><svg class="ic ic-sm"><use href="#i-clock"/></svg><span id="uptime">up --</span></div>
+          </div>
+
+          <div class="card card-net" data-metric-id="metric-net" title="Click to view Network diagnostics">
+            <div class="card-title"><svg class="ic"><use href="#i-net"/></svg><span class="card-title-txt">NETWORK I/O</span></div>
+            <div class="net-body">
+              <div class="net-row"><span>TX:</span><strong id="netTx">0.0 MB/s</strong></div>
+              <div class="net-row"><span>RX:</span><strong id="netRx">0.0 MB/s</strong></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="disks card-disks" id="diskRow" data-metric-id="metric-disks"></section>
+      </div>
+
+      <div class="chassis-led-fixture">
+        <div class="chassis-led-meta">
+          <span class="meta-tag">
+            <svg class="ic" style="width:9px;height:9px;color:currentColor;"><use href="#i-chip"/></svg>
+            ARGB LIGHT BAR // /dev/ttyACM0
+          </span>
+          <span class="meta-nodes">WS2812B • 38 NODES</span>
+        </div>
+        <div class="chassis-led-channel">
+          <div id="virtual-chassis-lightbar" class="chassis-lightbar-glow"></div>
+        </div>
+      </div>
+    </div>
+</div>
+<div id="os-dock-container" class="os-dock-container">
+  <div class="os-dock" id="os-dock">
+    <!-- Dock items injected via JS -->
+  </div>
+</div>
 
 </body>
 </html>

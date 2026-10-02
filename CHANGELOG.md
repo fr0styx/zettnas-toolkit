@@ -1,5 +1,21 @@
 # ZettNAS Toolkit - Release Changelog
 
+## v0.5.0 (2026-10-02)
+### 🖼️ Wallpaper Gallery & UI Polish
+- **Custom Wallpaper Engine**: Upload custom images from your device to instantly overwrite the default studio background. Wallpapers are permanently saved in the Unraid `appdata` directory.
+- **Wallpaper Gallery Management**: Added a dropdown gallery to browse, switch between, rename, and selectively delete past wallpaper uploads without needing to re-upload.
+- **Zero-Latency Authentication Exception**: Added a precise middleware exception allowing the browser to natively GET and render wallpaper images seamlessly without triggering API authentication `401 Unauthorized` blocks.
+
+### 🪟 Windows Depth & Dock Management
+- **MacOS-Style Persistent Dock**: Pinned the ZettNAS dock `z-index` to absolute foreground. The dock now intelligently tracks active windows via depth tracking and brightly highlights the icon of whichever application currently holds foreground focus.
+- **System Console Refinements**: 
+  - The System Console now perfectly centers itself on the dashboard viewport upon initial page load.
+  - The draggable hitbox has been expanded to encompass the entire top bezel.
+  - The console bezel geometry has been re-architected with absolute positioning to perfectly match the top and bottom padding for symmetrical hardware aesthetics.
+  - Fixed a collision bug between Javascript position dragging and CSS `transform` animations that caused the console to rapidly slingshot across the screen when first grabbed.
+  - Eliminated `.card-collapsed` CSS padding stripping, restoring cohesive 14px padding to all minimizable toolkit sections.
+
+
 ## v0.4.1 (2026-10-02)
 ### 📱 Mobile UI/UX Optimization
 - **Dashboard Z-Overlap Fix**: Overrode flex-basis collapse issues on mobile viewports. Upper dashboard cards and lower disk groups now correctly stack in a column on narrow screens instead of overlapping.

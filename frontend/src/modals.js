@@ -31,6 +31,8 @@ window.addEventListener('DOMContentLoaded', () => {
       });
     }
     if (smartCloseBtn) smartCloseBtn.addEventListener("click", closeSmartModal);
+    const minBtn = document.getElementById("smart-modal-min");
+    if (minBtn) minBtn.addEventListener("click", () => { if (window.DockManager) window.DockManager.minimize("smart"); import("./toast.js").then(m => m.showToast("Minimize clicked")); });
     if (smartOverlay) {
       smartOverlay.addEventListener("click", (e) => {
         if (e.target === smartOverlay) closeSmartModal();
@@ -47,6 +49,8 @@ async function openSmartModal(devName) {
   if (!smartOverlay) return;
   activeModalType = "disk_" + devName;
   smartOverlay.classList.add("open");
+  if (window.DockManager) window.DockManager.register("smart", smartOverlay, "#i-disk", "Diagnostics");
+  if (window.bringToFront) window.bringToFront(smartOverlay.querySelector(".smart-modal-window"));
   if (smartTitle) smartTitle.innerHTML = `<svg class="ic"><use href="#i-disk"/></svg> S.M.A.R.T. Diagnostics • /dev/${devName}`;
   if (smartLbl1) smartLbl1.textContent = "DEVICE & MODEL";
   if (smartLbl2) smartLbl2.textContent = "SERIAL NUMBER";
@@ -121,6 +125,8 @@ function openMetricModal(type) {
   if (!smartOverlay || !latestStats) return;
   activeModalType = type;
   smartOverlay.classList.add("open");
+  if (window.DockManager) window.DockManager.register("smart", smartOverlay, "#i-disk", "Diagnostics");
+  if (window.bringToFront) window.bringToFront(smartOverlay.querySelector(".smart-modal-window"));
 
   if (type === "storage") {
     smartTitle.innerHTML = `<svg class="ic"><use href="#i-disk"/></svg> Storage Array Diagnostics`;
@@ -167,6 +173,7 @@ function openMetricModal(type) {
 function closeSmartModal() {
   activeModalType = null;
   if (smartOverlay) smartOverlay.classList.remove("open");
+  if (window.DockManager) window.DockManager.unregister("smart");
 }
 
 

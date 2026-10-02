@@ -61,15 +61,15 @@ def get_server_hostname():
                 name = open(p).read().strip()
                 if name:
                     return name
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"Silenced exception: {e}")
 
     try:
         name = socket.gethostname().strip()
         if name:
             return name
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug(f"Silenced exception: {e}")
 
     return "Server"
 
@@ -99,7 +99,7 @@ def init_db():
                 )
             """)
     except Exception as e:
-        print(f"[ZettNAS] DB Init Error: {e}")
+        logger.info(f"[ZettNAS] DB Init Error: {e}")
 
 init_db()
 
@@ -131,8 +131,8 @@ def _load_events():
             import json
             with open(EVENTS_FILE, "r") as f:
                 Z_STATE.event_log = json.load(f)
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug(f"Silenced exception: {e}")
 
 def add_event(level, title, message, details=None):
     pass
@@ -148,8 +148,8 @@ def add_event(level, title, message, details=None):
         try:
             with open(EVENTS_FILE, "w") as f:
                 json.dump(Z_STATE.event_log, f)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"Silenced exception: {e}")
 
 
 def is_in_time_window(start_str, end_str):
@@ -179,8 +179,8 @@ def get_screen_state():
         try:
             with open(SCREEN_STATE_FILE, "r") as f:
                 state.update(json.load(f))
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"Silenced exception: {e}")
     return state
 
 def set_screen_brightness(pct):
@@ -254,8 +254,8 @@ def get_current_layout():
         try:
             with open(DASH_LAYOUT_FILE, "r") as f:
                 layout = json.load(f)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"Silenced exception: {e}")
     return layout
 
 def send_led_packet(mode, r1, g1, b1, r2=0, g2=0, b2=0, speed=5):
@@ -486,8 +486,8 @@ def detect_chassis_model():
             if "d4" in prod:
                 Z_STATE.cached_chassis_model = "d4"
                 return Z_STATE.cached_chassis_model
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"Silenced exception: {e}")
 
     disks = _discover_disks()
     count = len(disks)
@@ -587,8 +587,8 @@ def set_fan_pwm(profile, manual_pct=60, custom_pwms=None, ctrl_cpu_fan=False):
         try:
             with open(pwm3_enable_file, "w") as f:
                 f.write("1\n" if ctrl_cpu_fan else "2\n")
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"Silenced exception: {e}")
 
     for path, val in targets.items():
         if os.path.exists(path):
@@ -596,8 +596,8 @@ def set_fan_pwm(profile, manual_pct=60, custom_pwms=None, ctrl_cpu_fan=False):
                 with open(path, "w") as f:
                     f.write(f"{val}\n")
                 applied += 1
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"Silenced exception: {e}")
 
     return applied > 0
 
@@ -635,8 +635,8 @@ def _discover_disks():
         for name in names:
             if name.startswith("nvme") and name.endswith("n1"):
                 disks.append({"dev": name, "role": classify(name)})
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug(f"Silenced exception: {e}")
     Z_STATE.cached_disk_list = disks
     Z_STATE.cached_disk_list_time = now
     return disks
@@ -728,8 +728,8 @@ def read_disk_temps_and_io():
                 if len(parts) >= 14:
                     dev = parts[2]
                     curr_io[dev] = int(parts[3]) + int(parts[7])
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug(f"Silenced exception: {e}")
 
     out = []
     show_os = os.environ.get("SHOW_OS_DISK", "1") == "1"
@@ -849,8 +849,8 @@ def read_network_rates():
                     if len(fields) >= 9:
                         rx_bytes += int(fields[0])
                         tx_bytes += int(fields[8])
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug(f"Silenced exception: {e}")
 
     dt = max(0.1, now - Z_STATE.prev_net["time"])
     rx_rate = 0.0
@@ -926,8 +926,8 @@ def read_ip():
                     if not (ip.startswith("127.") or ip.startswith("172.") or ip.endswith(".255") or ip == "0.0.0.0"):
                         Z_STATE.discovered_host_ip = ip
                         return ip
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"Silenced exception: {e}")
 
     return "?"
 
@@ -950,7 +950,7 @@ def button_listener_daemon():
         fd = os.open(os.path.join(HOST_DEV, "mem"), os.O_RDWR | os.O_SYNC)
         mem = mmap.mmap(fd, 4096, offset=MMIO_BASE)
     except Exception as e:
-        print(f"[ZettNAS] Hardware button mapping failed: {e}")
+        logger.info(f"[ZettNAS] Hardware button mapping failed: {e}")
         return
 
     last_state = 1
@@ -975,8 +975,8 @@ def button_listener_daemon():
                     threading.Thread(target=lambda c: __import__("asyncio").run(_do_copy(c)), args=(cfg,), daemon=True).start()
             
             last_state = current_state
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"Silenced exception: {e}")
         time.sleep(0.1)
 
 
@@ -995,8 +995,8 @@ def _get_exif_date(filepath):
                     if len(parts) > 0:
                         y, m, d = parts[0].split(':')
                         return f"{y}/{m}/{d}"
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug(f"Silenced exception: {e}")
         
     try:
         mtime = os.path.getmtime(filepath)
@@ -1152,7 +1152,7 @@ async def _do_copy(cfg):
                 shutil.copystat(src_f, dst_f)
                 Z_STATE.copy_progress['files_done'] += 1
             except Exception as e:
-                print(f"[ZettNAS] Error copying {src_f}: {e}")
+                logger.info(f"[ZettNAS] Error copying {src_f}: {e}")
 
         if Z_STATE.copy_abort_flag:
             Z_STATE.copy_status = "aborted"
@@ -1165,7 +1165,7 @@ async def _do_copy(cfg):
         Z_STATE.copy_progress["file"] = "Finished successfully." 
         
     except Exception as e:
-        print(f"[ZettNAS] Copy failed: {e}")
+        logger.info(f"[ZettNAS] Copy failed: {e}")
         Z_STATE.copy_status = "error"
         Z_STATE.copy_progress["file"] = f"Error: {e}"
         add_event("error", "Copy Failed", str(e))
@@ -1207,10 +1207,10 @@ def read_media_slots():
                         size = int(open(os.path.join(p, "size")).read().strip()) * 512
                         slots["tf"]["size"] = size
                         slots["tf"]["dev"] = dev
-            except Exception:
-                pass
-    except Exception:
-        pass
+            except Exception as e:
+                logger.debug(f"Silenced exception: {e}")
+    except Exception as e:
+        logger.debug(f"Silenced exception: {e}")
     return slots
 
 def stats_collector_daemon():
@@ -1413,11 +1413,11 @@ def stats_collector_daemon():
                         ))
                         conn.execute("DELETE FROM metrics WHERE ts < ?", (now_ts - 2592000,))
                 except Exception as db_e:
-                    print(f"[ZettNAS] DB Log Error: {db_e}")
+                    logger.info(f"[ZettNAS] DB Log Error: {db_e}")
 
         except Exception as e:
             import traceback
-            print('CRASH:', e)
+            logger.error(f"CRASH: {e}")
             traceback.print_exc()
         if Z_STATE.ui_wake.wait(2.0):
                         Z_STATE.ui_wake.clear()
@@ -1475,7 +1475,7 @@ def render_lcd_loop():
     - Single mmap memory block write into video memory per frame.
     """
     if not ENABLE_FB or not os.path.exists("/dev/fb0"):
-        print("[LCD] Framebuffer /dev/fb0 not present or disabled. Running web-only.", flush=True)
+        logger.info("[LCD] Framebuffer /dev/fb0 not present or disabled. Running web-only.")
         return
 
     time.sleep(2)
@@ -1500,7 +1500,7 @@ def render_lcd_loop():
     frame_interval = 1.0 / target_fps
     lcd_format = os.environ.get("LCD_FORMAT", "png").lower()
 
-    print(f"[LCD] Starting active renderer: {fb_width}x{fb_height} @ {target_fps} FPS -> /dev/fb0 (stride {stride}, format {lcd_format})", flush=True)
+    logger.info(f"[LCD] Starting active renderer: {fb_width}x{fb_height} @ {target_fps} FPS -> /dev/fb0 (stride {stride}, format {lcd_format})")
 
     chromium_args = [
         "--no-sandbox",
@@ -1603,8 +1603,8 @@ def _load_events():
             import json
             with open(EVENTS_FILE, "r") as f:
                 Z_STATE.event_log = json.load(f)
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug(f"Silenced exception: {e}")
 
 def add_event(level, title, message, details=None):
     pass
@@ -1620,10 +1620,10 @@ def add_event(level, title, message, details=None):
         try:
             with open(EVENTS_FILE, "w") as f:
                 json.dump(Z_STATE.event_log, f)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"Silenced exception: {e}")
 
-            print(f"[LCD] Active render loop error: {e}", flush=True)
+            logger.info(f"[LCD] Active render loop error: {e}")
             time.sleep(2)
 
 
@@ -1669,7 +1669,271 @@ import asyncio
 from typing import Any
 import mimetypes
 
+# Security
+import hashlib
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger("ZettNAS")
+
+WEB_PASSWORD = os.environ.get("WEB_PASSWORD", "admin")
+AUTH_TOKEN_HASH = hashlib.sha256(WEB_PASSWORD.encode()).hexdigest()
+SECURITY_FILE = os.path.join(DATA_DIR, "security.json")
+ZETTNAS_USERNAME = "admin"
+ZETTNAS_EMAIL = ""
+
+if os.path.exists(SECURITY_FILE):
+    try:
+        with open(SECURITY_FILE, "r") as f:
+            _sec = json.load(f)
+            if "password_hash" in _sec:
+                AUTH_TOKEN_HASH = _sec["password_hash"]
+            if "username" in _sec:
+                ZETTNAS_USERNAME = _sec["username"]
+            if "email" in _sec:
+                ZETTNAS_EMAIL = _sec["email"]
+    except Exception as e:
+        logger.error(f"Failed to load security.json: {e}")
+
+
+
 app = FastAPI()
+
+DATA_DIR = os.environ.get("DATA_DIR", "/mnt/user/appdata/zettnas-toolkit/data")
+
+@app.get("/api/wallpaper_url")
+async def get_wallpaper_url():
+    config_path = os.path.join(DATA_DIR, "wallpaper_config.json")
+    active = None
+    if os.path.exists(config_path):
+        with open(config_path, "r") as f:
+            try:
+                active = json.load(f).get("active")
+            except: pass
+    if active:
+        return {"url": f"/api/wallpapers/download/{active}"}
+    return {"url": None}
+
+@app.get("/api/wallpapers")
+async def list_wallpapers():
+    wp_dir = os.path.join(DATA_DIR, "wallpapers")
+    os.makedirs(wp_dir, exist_ok=True)
+    files = []
+    for f in os.listdir(wp_dir):
+        if f.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.webp')):
+            files.append(f)
+            
+    config_path = os.path.join(DATA_DIR, "wallpaper_config.json")
+    active = None
+    if os.path.exists(config_path):
+        with open(config_path, "r") as f:
+            try: active = json.load(f).get("active")
+            except: pass
+            
+    return {"files": sorted(files), "active": active}
+
+@app.get("/api/wallpapers/download/{filename}")
+async def download_wallpaper(filename: str):
+    wp_path = os.path.join(DATA_DIR, "wallpapers", filename)
+    if os.path.exists(wp_path):
+        return FileResponse(wp_path)
+    return JSONResponse(status_code=404, content={"error": "Not found"})
+
+@app.post("/api/wallpapers/upload")
+async def upload_wallpaper(request: Request):
+    try:
+        body = await request.json()
+        image_data = body.get("image")
+        filename = body.get("filename", "upload.jpg")
+        
+        # basic sanitization
+        filename = re.sub(r'[^a-zA-Z0-9_.-]', '_', filename)
+        
+        if not image_data:
+            return {"success": False, "error": "No image provided"}
+        
+        if "," in image_data:
+            image_data = image_data.split(",")[1]
+            
+        import base64
+        binary_data = base64.b64decode(image_data)
+        
+        wp_dir = os.path.join(DATA_DIR, "wallpapers")
+        os.makedirs(wp_dir, exist_ok=True)
+        
+        # ensure unique filename
+        base, ext = os.path.splitext(filename)
+        counter = 1
+        final_name = filename
+        while os.path.exists(os.path.join(wp_dir, final_name)):
+            final_name = f"{base}_{counter}{ext}"
+            counter += 1
+            
+        with open(os.path.join(wp_dir, final_name), "wb") as f:
+            f.write(binary_data)
+            
+        # automatically set as active
+        config_path = os.path.join(DATA_DIR, "wallpaper_config.json")
+        with open(config_path, "w") as f:
+            json.dump({"active": final_name}, f)
+            
+        return {"success": True, "url": f"/api/wallpapers/download/{final_name}", "filename": final_name}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+@app.post("/api/wallpapers/select")
+async def select_wallpaper(request: Request):
+    try:
+        body = await request.json()
+        filename = body.get("filename")
+        if not filename:
+            # Clear wallpaper
+            config_path = os.path.join(DATA_DIR, "wallpaper_config.json")
+            with open(config_path, "w") as f:
+                json.dump({"active": None}, f)
+            return {"success": True}
+            
+        wp_path = os.path.join(DATA_DIR, "wallpapers", filename)
+        if not os.path.exists(wp_path):
+            return {"success": False, "error": "File not found"}
+            
+        config_path = os.path.join(DATA_DIR, "wallpaper_config.json")
+        with open(config_path, "w") as f:
+            json.dump({"active": filename}, f)
+            
+        return {"success": True, "url": f"/api/wallpapers/download/{filename}"}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
+@app.post("/api/wallpapers/rename")
+async def rename_wallpaper(request: Request):
+    try:
+        body = await request.json()
+        old_name = body.get("old_name")
+        new_name = body.get("new_name")
+        
+        if not old_name or not new_name:
+            return {"success": False, "error": "Missing parameters"}
+            
+        import re
+        new_name = re.sub(r'[^a-zA-Z0-9_.-]', '_', new_name)
+        if not new_name.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.webp')):
+            _, ext = os.path.splitext(old_name)
+            new_name += ext
+            
+        wp_dir = os.path.join(DATA_DIR, "wallpapers")
+        old_path = os.path.join(wp_dir, old_name)
+        new_path = os.path.join(wp_dir, new_name)
+        
+        if not os.path.exists(old_path):
+            return {"success": False, "error": "File not found"}
+            
+        if os.path.exists(new_path) and old_path != new_path:
+            return {"success": False, "error": "A file with that name already exists"}
+            
+        os.rename(old_path, new_path)
+        
+        config_path = os.path.join(DATA_DIR, "wallpaper_config.json")
+        active = None
+        if os.path.exists(config_path):
+            with open(config_path, "r") as f:
+                try: active = json.load(f).get("active")
+                except: pass
+        if active == old_name:
+            with open(config_path, "w") as f:
+                json.dump({"active": new_name}, f)
+                
+        return {"success": True, "new_name": new_name}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+@app.delete("/api/wallpapers/{filename}")
+async def delete_wallpaper(filename: str):
+    wp_path = os.path.join(DATA_DIR, "wallpapers", filename)
+    if os.path.exists(wp_path):
+        os.remove(wp_path)
+        
+        # if it was active, clear active
+        config_path = os.path.join(DATA_DIR, "wallpaper_config.json")
+        active = None
+        if os.path.exists(config_path):
+            with open(config_path, "r") as f:
+                try: active = json.load(f).get("active")
+                except: pass
+        if active == filename:
+            with open(config_path, "w") as f:
+                json.dump({"active": None}, f)
+                
+    return {"success": True}
+
+
+@app.middleware("http")
+async def auth_middleware(request: Request, call_next):
+    if request.url.path.startswith("/api/") and request.url.path != "/api/auth/login" and not request.url.path.startswith("/api/wallpapers/download/"):
+        client_host = request.client.host if request.client else ""
+        if client_host not in ["127.0.0.1", "localhost", "::1"]:
+            token = request.headers.get("Authorization", "").replace("Bearer ", "") or request.query_params.get("token")
+            if token != AUTH_TOKEN_HASH:
+                logger.warning(f"Auth failed. Token: {token} | URL: {request.url} | Headers: {request.headers}")
+                return JSONResponse(status_code=401, content={"detail": "Unauthorized. Please log in."})
+    return await call_next(request)
+
+@app.post("/api/auth/login")
+async def login(request: Request):
+    try:
+        body = await request.json()
+        pwd = body.get("password", "")
+        if hashlib.sha256(pwd.encode()).hexdigest() == AUTH_TOKEN_HASH:
+            logger.info("Successful login to WebUI.")
+            return JSONResponse(content={"status": "ok", "token": AUTH_TOKEN_HASH})
+        else:
+            logger.warning("Failed login attempt.")
+            return JSONResponse(status_code=401, content={"detail": "Invalid password"})
+    except Exception as e:
+        return JSONResponse(status_code=400, content={"detail": "Invalid payload"})
+
+
+
+@app.get("/api/security")
+async def get_security():
+    return {
+        "username": ZETTNAS_USERNAME,
+        "email": ZETTNAS_EMAIL
+    }
+
+@app.post("/api/security")
+async def post_security(request: Request):
+    global AUTH_TOKEN_HASH, ZETTNAS_USERNAME, ZETTNAS_EMAIL
+    try:
+        data = await request.json()
+        current_pwd = data.get("current_password", "")
+        if hashlib.sha256(current_pwd.encode()).hexdigest() != AUTH_TOKEN_HASH:
+            return JSONResponse(status_code=403, content={"detail": "Invalid current password"})
+            
+        new_pwd = data.get("new_password", "")
+        if new_pwd:
+            AUTH_TOKEN_HASH = hashlib.sha256(new_pwd.encode()).hexdigest()
+            
+        if "username" in data:
+            ZETTNAS_USERNAME = data["username"].strip()
+        if "email" in data:
+            ZETTNAS_EMAIL = data["email"].strip()
+            
+        with open(SECURITY_FILE, "w") as f:
+            json.dump({
+                "password_hash": AUTH_TOKEN_HASH,
+                "username": ZETTNAS_USERNAME,
+                "email": ZETTNAS_EMAIL
+            }, f)
+            
+        return {"status": "ok"}
+    except Exception as e:
+        return JSONResponse(status_code=400, content={"detail": str(e)})
+
 
 @app.get("/api/lcd_status")
 async def get_lcd_status():
@@ -1960,7 +2224,7 @@ if __name__ == "__main__":
     if _layout_dir:
         os.makedirs(_layout_dir, exist_ok=True)
     port = int(os.environ.get("PORT", "8082"))
-    print(f"ZettNAS LCD dashboard on :{port}", flush=True)
+    logger.info(f"ZettNAS LCD dashboard on :{port}")
     _load_events()
     read_ip()  # Pre-populate IP cache at startup
     detect_chassis_model()  # Pre-populate chassis model cache
@@ -1969,8 +2233,8 @@ if __name__ == "__main__":
         try:
             with open(LED_STATE_FILE, "r") as f:
                 apply_led_state(json.load(f))
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"Silenced exception: {e}")
 
     threading.Thread(target=stats_collector_daemon, daemon=True).start()
     threading.Thread(target=button_listener_daemon, daemon=True).start()
