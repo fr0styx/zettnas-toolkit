@@ -1,0 +1,25 @@
+{
+  "name": "zettnas-toolkit",
+  "version": "1.0.0",
+  "description": "<div align=\"center\">   <img src=\"static/img/icon.png\" width=\"128\" height=\"128\" alt=\"ZettNAS Toolkit Icon\" style=\"border-radius: 24px;\">   <h1>ZettNAS Toolkit</h1>   <p><strong>All-in-one chassis management suite and live front-panel LCD dashboard for Zettlab NAS enclosures (D4, D6, D8).</strong></p>",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "vite build",
+    "dev": "vite"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fr0styx/zettnas-toolkit.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/fr0styx/zettnas-toolkit/issues"
+  },
+  "homepage": "https://github.com/fr0styx/zettnas-toolkit#readme",
+  "devDependencies": {
+    "vite": "^8.3.2"
+  }
+}

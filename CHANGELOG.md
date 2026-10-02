@@ -1,5 +1,30 @@
 # ZettNAS Toolkit - Release Changelog
 
+## v0.4.0 (2026-10-01)
+### 🏗️ Major Architectural & Decoupling Upgrades
+- **Frontend Modularization (Vite ES6)**: Eradicated the monolithic `app.js` file. The frontend has been entirely decoupled into strictly scoped ES6 modules (`api.js`, `state.js`, `ui-layout.js`, `hardware-events.js`, `modals.js`, `toast.js`, `folder-browser.js`, `event-bus.js`).
+- **Vite Build Pipeline**: Transitioned from raw static files to a modern Vite build pipeline (`npm run build`), delivering minified, hashed, and optimized assets directly to the Python backend.
+- **ZettEventBus Custom Event System**: Implemented a native Javascript `CustomEvent` bus to completely decouple the layout engine, modals, and hardware telemetry events.
+- **Backend Thread-Safety & Optimization**: 
+  - Restructured `app.py` to decouple global state into a thread-safe `ZettState` manager.
+  - Implemented dynamic `ETag` and `gzip` compression caching for static assets.
+  - Reduced Python `os.walk` passes during SD card ingestion from O(2n) to O(n).
+  - Stopped spawning `stty` subprocesses on every single LED packet transmission, drastically reducing CPU overhead during smooth lighting animations.
+  - Extracted repetitive GET/POST routing logic into DRY helper methods.
+
+### 🐛 Bug Fixes & Refinements
+- **LCD Preview Sync Issues**: Fixed a race condition where the mini-preview canvas structure would trap the disk row inside a restricted flexbox container, causing it to render as 0 pixels high until dragged. 
+- **Telemetry Live-Sync Re-Write**: Replaced fragile `querySelector` ID polling for the preview canvas with robust 10 FPS `innerHTML` cloning, fixing an issue where preview numbers remained stuck at 0GB.
+- **Cooling Duty Profile Calibration**: Fixed a UI bug where Fan PWM sliders and presets misleadingly presented the 8-bit limit as `255`. The interface now correctly scales and displays the true hardware limits (67, 120, 155, 183 PWM).
+- **Modal Event Crashes**: Fixed silent `ReferenceError` crashes in the main update loop that occurred after decoupling modal functions.
+- **AbortControllers**: Added `AbortController` signals to S.M.A.R.T. modal fetches to gracefully cancel obsolete disk queries.
+
+### 🎨 UI / UX Enhancements
+- **Light / Dark Mode**: Introduced a new `theme-light` toggle on the web studio for high-contrast viewing.
+- **Responsive Tablet Overlay**: Added a `max-width: 1100px` breakpoint so the dashboard elegantly scales on tablets without clipping into the sliding settings drawer.
+- **GPU-Accelerated Animations**: Replaced expensive CSS `box-shadow` animations with pseudo-element `opacity` transitions (`boxEmber`), eliminating continuous browser repaints.
+- **Accessibility (A11y)**: Fortified all modals and toasts with proper `role="dialog"`, `aria-modal`, and `aria-label` tags for screen readers.
+
 ## v0.3.1 (2026-10-01)
 - **Fix:** Fixed hardware mapping issue where the container lost access to `/dev/mem` due to stripped `privileged` mode, preventing the physical Copy button from functioning.
 - **Fix:** Unified the UI alert system to use the native, centered Modal UI for all frontend and validation errors, ensuring critical config errors are visible.

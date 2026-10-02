@@ -1,3 +1,9 @@
+import './style.css';
+import { ZettEventBus } from './event-bus.js';
+import { showToast, showConfirmToast } from './toast.js';
+import './folder-browser.js';
+import './modals.js';
+
 
 let _metricsChart = null;
 let _metricsRange = "24h";
@@ -131,166 +137,15 @@ function renderCurveLines() {
 
 const $ = (id) => document.getElementById(id);
 
-window._customToastActive = false;
-
-function showConfirmToast(title, msg, onConfirm) {
-  window._customToastActive = true;
-  const toast = document.getElementById("copy-toast");
-  const backdrop = document.getElementById("copy-toast-backdrop");
-  if (!toast) return;
-  
-  toast.style.opacity = "1";
-  toast.style.pointerEvents = "auto";
-  toast.style.transition = "none";
-  
-  if (backdrop) {
-      backdrop.style.opacity = "1";
-      backdrop.style.pointerEvents = "auto";
-  }
-  
-  toast.style.boxShadow = "0 0 40px rgba(0,0,0,0.8)";
-  toast.style.bottom = "50%";
-  toast.style.right = "50%";
-  toast.style.transform = "translate(50%, 50%) scale(1.2)";
-  
-  const titleEl = toast.querySelector(".smart-modal-title");
-  if (titleEl) titleEl.innerHTML = `<svg class="ic ic-sm" style="margin-right:4px;"><use href="#i-storage"/></svg> ${title}`;
-  
-  const statusEl = document.getElementById("copy-toast-status");
-  if (statusEl) statusEl.textContent = "Action Required";
-  
-  const barEl = document.getElementById("copy-toast-bar");
-  if (barEl) {
-      barEl.style.width = "100%";
-      barEl.style.background = "var(--warn)";
-  }
-  
-  const fileEl = document.getElementById("copy-toast-file");
-  if (fileEl) {
-      fileEl.style.whiteSpace = "normal";
-      fileEl.style.marginTop = "8px";
-      fileEl.textContent = msg;
-  }
-  
-  const timeEl = document.getElementById("copy-toast-time");
-  if (timeEl) timeEl.textContent = "";
-  
-  const pctEl = document.getElementById("copy-toast-pct");
-  if (pctEl) pctEl.textContent = "";
-
-  const oldActions = document.getElementById("custom-confirm-actions");
-  if (oldActions) oldActions.remove();
-
-  const actionsDiv = document.createElement("div");
-  actionsDiv.id = "custom-confirm-actions";
-  actionsDiv.style.display = "flex";
-  actionsDiv.style.gap = "8px";
-  actionsDiv.style.marginTop = "15px";
-  actionsDiv.innerHTML = `
-    <button class="btn-save-preset" id="confirm-yes-btn" style="flex:1; padding:6px; border-color: rgba(240,85,59,0.5); color: var(--warn);" onmouseenter="this.style.background='var(--warn)'; this.style.color='#fff'; this.style.borderColor='var(--warn)';" onmouseleave="this.style.background='#1c2736'; this.style.color='var(--warn)'; this.style.borderColor='rgba(240,85,59,0.5)';">Wake Drive</button>
-    <button class="btn-save-preset" id="confirm-no-btn" style="flex:1; padding:6px;">Cancel</button>
-  `;
-  
-  toast.querySelector(".smart-modal-body").appendChild(actionsDiv);
-
-  function closeConfirm() {
-      if (fileEl) {
-          fileEl.style.whiteSpace = "nowrap";
-          fileEl.style.marginTop = "0";
-      }
-      const acts = document.getElementById("custom-confirm-actions");
-      if (acts) acts.remove();
-      toast.style.transition = "opacity 0.3s ease, transform 0.3s ease";
-      toast.style.opacity = "0";
-      toast.style.pointerEvents = "none";
-      if (backdrop) {
-          backdrop.style.opacity = "0";
-          backdrop.style.pointerEvents = "none";
-      }
-      setTimeout(() => {
-          if (titleEl) titleEl.innerHTML = `<svg class="ic ic-sm" style="margin-right:4px;"><use href="#i-storage"/></svg> Media card ingest`;
-          window._customToastActive = false;
-      }, 300);
-  }
-
-  document.getElementById("confirm-yes-btn").onclick = () => {
-      closeConfirm();
-      if (onConfirm) onConfirm();
-  };
-  document.getElementById("confirm-no-btn").onclick = closeConfirm;
-  
-  // Need to temporarily override the cancel button
-  const cancelBtn = document.getElementById("copy-toast-cancel");
-  if (cancelBtn) {
-      // Store old handler if needed? In this code base it has no onclick inline, it is handled via event listener in app.js or similar?
-      // Actually, wait, let's just add an onclick
-      cancelBtn.onclick = closeConfirm;
-  }
-}
 
 
-function showToast(msg, type="error") {
-  window._customToastActive = true;
-  const toast = document.getElementById("copy-toast");
-  const backdrop = document.getElementById("copy-toast-backdrop");
-  if (!toast) return;
-  
-  toast.style.opacity = "1";
-  toast.style.pointerEvents = "auto";
-  toast.style.transition = "none";
-  
-  if (backdrop) {
-      backdrop.style.opacity = "1";
-      backdrop.style.pointerEvents = "auto";
-  }
-  
-  toast.style.boxShadow = "0 0 40px rgba(0,0,0,0.8)";
-  toast.style.bottom = "50%";
-  toast.style.right = "50%";
-  toast.style.transform = "translate(50%, 50%) scale(1.2)";
-  
-  const titleEl = toast.querySelector(".smart-modal-title");
-  if (titleEl) titleEl.innerHTML = `<svg class="ic ic-sm" style="margin-right:4px;"><use href="#i-storage"/></svg> System Notification`;
-  
-  const statusEl = document.getElementById("copy-toast-status");
-  if (statusEl) statusEl.textContent = type === "error" ? "Error!" : "Success!";
-  
-  const barEl = document.getElementById("copy-toast-bar");
-  if (barEl) {
-      barEl.style.width = "100%";
-      barEl.style.background = type === "error" ? "#e74c3c" : "#2ecc71";
-  }
-  
-  const fileEl = document.getElementById("copy-toast-file");
-  if (fileEl) fileEl.textContent = msg;
-  
-  const timeEl = document.getElementById("copy-toast-time");
-  if (timeEl) timeEl.textContent = "Closing automatically...";
-  
-  const pctEl = document.getElementById("copy-toast-pct");
-  if (pctEl) pctEl.textContent = "";
-  
-  setTimeout(() => {
-      toast.style.transition = "opacity 0.3s ease, transform 0.3s ease";
-      toast.style.opacity = "0";
-      toast.style.pointerEvents = "none";
-      if (backdrop) {
-          backdrop.style.opacity = "0";
-          backdrop.style.pointerEvents = "none";
-      }
-      setTimeout(() => {
-          if (titleEl) titleEl.innerHTML = `<svg class="ic ic-sm" style="margin-right:4px;"><use href="#i-storage"/></svg> Media card ingest`;
-          window._customToastActive = false;
-      }, 300);
-  }, 8000);
-}
 const FAN_LABELS = ["D1", "D2", "CPU", "SYS"];
 
 // Shared local client state
 let clockFormat = "24";
 let currentTimezone = "America/New_York";
 let latestStats = null;
-let activeModalType = null;
+
 let activeLayoutVersion = 0;
 let isDraggingPreview = false;
 let currentTheme = localStorage.getItem("lcd_theme") || "cyber";
@@ -432,10 +287,10 @@ function diskTile(d) {
       showConfirmToast(
         "Drive in Standby Mode", 
         `Disk ${d.name} is currently sleeping. Querying S.M.A.R.T. data will wake it up, causing mechanical wear and consuming power. Are you sure you want to wake it?`,
-        () => openSmartModal(d.dev || d.name)
+        () => ZettEventBus.dispatchEvent(new CustomEvent('modal:smart:open', {detail: d.dev || d.name}))
       );
     } else {
-      openSmartModal(d.dev || d.name);
+      ZettEventBus.dispatchEvent(new CustomEvent('modal:smart:open', {detail: d.dev || d.name}));
     }
   });
   return el;
@@ -521,173 +376,14 @@ function renderDisks(disks) {
 }
 
 // S.M.A.R.T. & INTERACTIVE METRIC DIAGNOSTIC MODAL CONTROLLER
-const smartOverlay = $("smart-modal-overlay");
-const smartCloseBtn = $("smart-modal-close");
-const smartTitle = $("smart-modal-title");
-const smartModel = $("smart-meta-model");
-const smartSerial = $("smart-meta-serial");
-const smartHealth = $("smart-meta-health");
-const smartHours = $("smart-meta-hours");
-const smartRaw = $("smart-raw-output");
-const smartLbl1 = $("smart-lbl-1");
-const smartLbl2 = $("smart-lbl-2");
-const smartLbl3 = $("smart-lbl-3");
-const smartLbl4 = $("smart-lbl-4");
-const smartRawTitle = $("smart-modal-raw-title");
 
-let _smartFetchController = null;
+// Bind click handlers ONLY on the main dashboard console screen via EventBus
+$("screen").querySelectorAll(".card-storage").forEach((el) => el.addEventListener("click", () => ZettEventBus.dispatchEvent(new CustomEvent('modal:metric:open', {detail: "storage"}))));
+$("screen").querySelectorAll(".card-cpu").forEach((el) => el.addEventListener("click", () => ZettEventBus.dispatchEvent(new CustomEvent('modal:metric:open', {detail: "cpu"}))));
+$("screen").querySelectorAll(".card-mem").forEach((el) => el.addEventListener("click", () => ZettEventBus.dispatchEvent(new CustomEvent('modal:metric:open', {detail: "mem"}))));
+$("screen").querySelectorAll(".card-fans").forEach((el) => el.addEventListener("click", () => ZettEventBus.dispatchEvent(new CustomEvent('modal:metric:open', {detail: "fans"}))));
 
-async function openSmartModal(devName) {
-  if (_smartFetchController) _smartFetchController.abort();
-  _smartFetchController = new AbortController();
-  if (!smartOverlay) return;
-  activeModalType = "disk_" + devName;
-  smartOverlay.classList.add("open");
-  if (smartTitle) smartTitle.innerHTML = `<svg class="ic"><use href="#i-disk"/></svg> S.M.A.R.T. Diagnostics • /dev/${devName}`;
-  if (smartLbl1) smartLbl1.textContent = "DEVICE & MODEL";
-  if (smartLbl2) smartLbl2.textContent = "SERIAL NUMBER";
-  if (smartLbl3) smartLbl3.textContent = "HEALTH STATUS";
-  if (smartLbl4) smartLbl4.textContent = "POWER-ON HOURS";
-  if (smartRawTitle) smartRawTitle.textContent = "RAW SMART ATTRIBUTES";
-
-  if (smartModel) smartModel.textContent = "Loading...";
-  if (smartSerial) smartSerial.textContent = "Loading...";
-  if (smartHealth) smartHealth.textContent = "Loading...";
-  if (smartHours) smartHours.textContent = "Loading...";
-  if (smartRaw) smartRaw.textContent = "Querying drive controller via smartctl...";
-
-  try {
-    const res = await fetch(`/api/disk_detail?dev=${encodeURIComponent(devName)}`, { signal: _smartFetchController.signal });
-    if (res.ok) {
-      const data = await res.json();
-      if (smartModel) smartModel.textContent = data.model || "Unknown";
-      if (smartSerial) smartSerial.textContent = data.serial || "Unknown";
-      if (smartHealth) {
-        smartHealth.textContent = data.health || "PASSED";
-        smartHealth.style.color = (data.health === "PASSED") ? "var(--ok)" : "var(--crit)";
-      }
-      if (smartHours) smartHours.textContent = data.power_on_hours || "Unknown";
-      if (smartRaw) smartRaw.textContent = data.raw || "No raw output.";
-    }
-  } catch (err) {
-    if (smartRaw) smartRaw.textContent = `Error querying disk details: ${err}`;
-  }
-}
-
-function updateMetricModalLive() {
-  if (!smartOverlay || !smartOverlay.classList.contains("open") || !latestStats || !activeModalType) return;
-  
-  if (activeModalType === "storage") {
-    smartModel.textContent = latestStats.storage.used;
-    smartSerial.textContent = latestStats.storage.total;
-    smartHealth.textContent = `${latestStats.storage.pct}%`;
-    smartHealth.style.color = latestStats.storage.pct >= 90 ? "var(--crit)" : "var(--ok)";
-    smartRaw.textContent = JSON.stringify(latestStats.disks, null, 2);
-  } else if (activeModalType === "cpu") {
-    smartModel.textContent = `${latestStats.cpu.temp}°C`;
-    smartSerial.textContent = `${latestStats.cpu.util}%`;
-    smartHealth.textContent = latestStats.cpu.temp >= 75 ? "ELEVATED" : "OPTIMAL";
-    smartHealth.style.color = latestStats.cpu.temp >= 75 ? "var(--warn)" : "var(--ok)";
-    smartHours.textContent = latestStats.uptime;
-    smartRaw.textContent = `Host: ${latestStats.name}\nIP: ${latestStats.ip}\nCPU Temp: ${latestStats.cpu.temp}°C\nCPU Util: ${latestStats.cpu.util}%\nUptime: ${latestStats.uptime}`;
-  } else if (activeModalType === "mem") {
-    smartModel.textContent = `${latestStats.mem.used_gb} GB`;
-    smartSerial.textContent = `${latestStats.mem.total_gb} GB`;
-    smartHealth.textContent = `${latestStats.mem.pct}%`;
-    smartHealth.style.color = latestStats.mem.pct >= 90 ? "var(--crit)" : "var(--ok)";
-    smartHours.textContent = `${(latestStats.mem.total_gb - latestStats.mem.used_gb).toFixed(1)} GB`;
-    smartRaw.textContent = JSON.stringify(latestStats.mem, null, 2);
-  } else if (activeModalType === "fans") {
-    const f = latestStats.fans || [];
-    smartModel.textContent = f[0] ? `${f[0]} RPM` : "N/A";
-    smartSerial.textContent = f[1] ? `${f[1]} RPM` : "N/A";
-    smartHealth.textContent = f[2] ? `${f[2]} RPM` : "N/A";
-    smartRaw.textContent = `Tachometer Inputs:\n- Fan 1 (Disks 1): ${f[0] || 0} RPM\n- Fan 2 (Disks 2): ${f[1] || 0} RPM\n- Fan 3 (CPU): ${f[2] || 0} RPM\n- Sysfs Path: /sys/class/hwmon\n- Native Duty Range: 0-183`;
-  } else if (activeModalType === "net") {
-    smartModel.textContent = latestStats.net ? latestStats.net.tx : "0 KB/s";
-    smartSerial.textContent = latestStats.net ? latestStats.net.rx : "0 KB/s";
-    smartHealth.textContent = "CONNECTED";
-    smartHealth.style.color = "var(--ok)";
-    smartHours.textContent = latestStats.ip;
-    smartRaw.textContent = `Network Subsystem Telemetry:\n- Host IP: ${latestStats.ip}\n- Interface Transmit Rate (TX): ${latestStats.net ? latestStats.net.tx : "0 KB/s"}\n- Interface Receive Rate (RX): ${latestStats.net ? latestStats.net.rx : "0 KB/s"}\n- Host Source: /proc/net/dev`;
-  }
-}
-
-function openMetricModal(type) {
-  if (!smartOverlay || !latestStats) return;
-  activeModalType = type;
-  smartOverlay.classList.add("open");
-
-  if (type === "storage") {
-    smartTitle.innerHTML = `<svg class="ic"><use href="#i-disk"/></svg> Storage Array Diagnostics`;
-    smartLbl1.textContent = "USED SPACE";
-    smartLbl2.textContent = "TOTAL CAPACITY";
-    smartLbl3.textContent = "UTILIZATION";
-    smartLbl4.textContent = "TARGET POOL";
-    smartHours.textContent = "/mnt/user";
-    smartRawTitle.textContent = "ACTIVE DISK INVENTORY";
-  } else if (type === "cpu") {
-    smartTitle.innerHTML = `<svg class="ic"><use href="#i-cpu"/></svg> Processor Diagnostics`;
-    smartLbl1.textContent = "CORE TEMP";
-    smartLbl2.textContent = "ACTIVE UTILIZATION";
-    smartLbl3.textContent = "THERMAL STATE";
-    smartLbl4.textContent = "SYSTEM UPTIME";
-    smartRawTitle.textContent = "CPU TOPOLOGY & DELTAS";
-  } else if (type === "mem") {
-    smartTitle.innerHTML = `<svg class="ic"><use href="#i-mem"/></svg> Memory Distribution`;
-    smartLbl1.textContent = "RAM USED";
-    smartLbl2.textContent = "RAM TOTAL";
-    smartLbl3.textContent = "USAGE";
-    smartLbl4.textContent = "FREE MEMORY";
-    smartRawTitle.textContent = "HOST MEMINFO SNAPSHOT";
-  } else if (type === "fans") {
-    smartTitle.innerHTML = `<svg class="ic"><use href="#i-fan"/></svg> Cooling & Fan Tachometers`;
-    smartLbl1.textContent = "REAR FAN 1 (D1)";
-    smartLbl2.textContent = "REAR FAN 2 (D2)";
-    smartLbl3.textContent = "CPU FAN";
-    smartHealth.style.color = "var(--ok2)";
-    smartLbl4.textContent = "HWMON CHIP";
-    smartHours.textContent = "zettlab_d8_fans";
-    smartRawTitle.textContent = "LIVE FAN SENSOR TELEMETRY";
-  } else if (type === "net") {
-    smartTitle.innerHTML = `<svg class="ic"><use href="#i-net"/></svg> Network Throughput Diagnostics`;
-    smartLbl1.textContent = "CURRENT TX";
-    smartLbl2.textContent = "CURRENT RX";
-    smartLbl3.textContent = "LINK STATE";
-    smartLbl4.textContent = "PRIMARY IP";
-    smartRawTitle.textContent = "NETWORK INTERFACE TELEMETRY";
-  }
-  updateMetricModalLive();
-}
-
-function closeSmartModal() {
-  activeModalType = null;
-  if (smartOverlay) smartOverlay.classList.remove("open");
-}
-
-const smartRefreshBtn = $("smart-modal-refresh");
-if (smartRefreshBtn) {
-  smartRefreshBtn.addEventListener("click", () => {
-    if (activeModalType && activeModalType.startsWith("disk_")) {
-      openSmartModal(activeModalType.replace("disk_", ""));
-    } else if (activeModalType) {
-      openMetricModal(activeModalType);
-    }
-  });
-}
-if (smartCloseBtn) smartCloseBtn.addEventListener("click", closeSmartModal);
-if (smartOverlay) {
-  smartOverlay.addEventListener("click", (e) => {
-    if (e.target === smartOverlay) closeSmartModal();
-  });
-}
-
-// Bind click handlers ONLY on the main dashboard console screen
-$("screen").querySelectorAll(".card-storage").forEach((el) => el.addEventListener("click", () => openMetricModal("storage")));
-$("screen").querySelectorAll(".card-cpu").forEach((el) => el.addEventListener("click", () => openMetricModal("cpu")));
-$("screen").querySelectorAll(".card-mem").forEach((el) => el.addEventListener("click", () => openMetricModal("mem")));
-$("screen").querySelectorAll(".card-fans").forEach((el) => el.addEventListener("click", () => openMetricModal("fans")));
-$("screen").querySelectorAll(".card-net").forEach((el) => el.addEventListener("click", () => openMetricModal("net")));
+$("screen").querySelectorAll(".card-net").forEach((el) => el.addEventListener("click", () => ZettEventBus.dispatchEvent(new CustomEvent('modal:metric:open', {detail: "net"}))));
 
 let anyWarn = false;
 
@@ -1122,7 +818,6 @@ function syncMiniPreviewStructure() {
     miniDiskRow = miniInner.querySelector(".disks");
     miniInner.className = "mini-preview-inner " + screenEl.className;
     setupMiniPreviewInteractivity();
-    return;
   }
 
   if (screenDiskRow && screenDiskRow.children.length > 0 && miniDiskRow.children.length === 0) {
@@ -1131,7 +826,7 @@ function syncMiniPreviewStructure() {
 
   const sFanRowStruct = screenEl.querySelector(".fan-row");
   const dFanRowStruct = miniInner.querySelector(".fan-row");
-  if (sFanRowStruct && dFanRowStruct && sFanRowStruct.children.length > 0 && dFanRowStruct.children.length === 0) {
+  if (sFanRowStruct && dFanRowStruct) {
     dFanRowStruct.innerHTML = sFanRowStruct.innerHTML;
     dFanRowStruct.className = sFanRowStruct.className;
   }
@@ -1163,6 +858,19 @@ function syncMiniPreviewStructure() {
   miniDiskRow.classList.toggle("card-hidden", dashVis["metric-disks"] === false);
   miniDiskRow.classList.toggle("compact", dashSizes["metric-disks"] === "compact");
 
+  // Live sync inner content so numbers match the main dashboard
+  const sHeader = screenEl.querySelector("header");
+  const mHeader = miniInner.querySelector("header");
+  if (sHeader && mHeader) mHeader.innerHTML = sHeader.innerHTML;
+
+  Object.keys(cardMap).forEach((id) => {
+    const sCard = screenEl.querySelector(`[data-metric-id="${id}"]`);
+    if (sCard && cardMap[id]) {
+      cardMap[id].innerHTML = sCard.innerHTML;
+    }
+  });
+
+
   miniInner.className = "mini-preview-inner " + screenEl.className;
   fitMiniPreviewScale();
 }
@@ -1191,73 +899,31 @@ function syncMiniPreviewTelemetry() {
   const screenEl = $("screen");
   if (!miniInner || !screenEl || isDraggingPreview) return;
 
-  const copyEl = (id) => {
-    const src = screenEl.querySelector("#" + id);
-    const dst = miniInner.querySelector("#" + id);
-    if (src && dst) {
-      dst.textContent = src.textContent;
-      dst.className = src.className;
-    }
-  };
+  // Sync header
+  const sHeader = screenEl.querySelector("header");
+  const mHeader = miniInner.querySelector("header");
+  if (sHeader && mHeader) mHeader.innerHTML = sHeader.innerHTML;
 
-  ["clock", "storagePct", "stUsed", "stTotal", "cpuTemp", "cpuUtil", "memPct", "memUsed", "memTotal", "uptime", "netTx", "netRx", "statusText", "ip"].forEach(copyEl);
-
-  const sDonut = screenEl.querySelector("#donut");
-  const dDonut = miniInner.querySelector("#donut");
-  if (sDonut && dDonut) dDonut.style.cssText = sDonut.style.cssText;
-
-  const sCpuArc = screenEl.querySelector("#cpuArc");
-  const dCpuArc = miniInner.querySelector("#cpuArc");
-  if (sCpuArc && dCpuArc) dCpuArc.style.cssText = sCpuArc.style.cssText;
-
-  const sMemArc = screenEl.querySelector("#memArc");
-  const dMemArc = miniInner.querySelector("#memArc");
-  if (sMemArc && dMemArc) dMemArc.style.cssText = sMemArc.style.cssText;
-
-  const sFanRow = screenEl.querySelector(".fan-row");
-  const dFanRow = miniInner.querySelector(".fan-row");
-  if (sFanRow && dFanRow) {
-    if (dFanRow.children.length !== sFanRow.children.length || dFanRow.children.length === 0) {
-      dFanRow.innerHTML = sFanRow.innerHTML;
-      dFanRow.className = sFanRow.className;
-    } else {
-      const sFans = sFanRow.querySelectorAll(".fan");
-      const dFans = dFanRow.querySelectorAll(".fan");
-      sFans.forEach((sf, i) => {
-        if (dFans[i]) {
-          const sfVal = sf.querySelector(".fv");
-          const dfVal = dFans[i].querySelector(".fv");
-          if (sfVal && dfVal) dfVal.textContent = sfVal.textContent;
-          const sfIc = sf.querySelector(".fan-ic");
-          const dfIc = dFans[i].querySelector(".fan-ic");
-          if (sfIc && dfIc) dfIc.style.cssText = sfIc.style.cssText;
-        }
-      });
-    }
+  // Sync cards
+  const miniCardsContainer = miniInner.querySelector(".cards");
+  if (miniCardsContainer) {
+    miniCardsContainer.querySelectorAll(".card").forEach(c => {
+      const id = c.dataset.metricId;
+      if (id) {
+        const sCard = screenEl.querySelector(`[data-metric-id="${id}"]`);
+        if (sCard) c.innerHTML = sCard.innerHTML;
+      }
+    });
   }
 
+  // Sync disks
   const screenDiskRow = screenEl.querySelector("#diskRow");
   const miniDiskRow = miniInner.querySelector(".disks");
   if (screenDiskRow && miniDiskRow) {
-    if (miniDiskRow.children.length !== screenDiskRow.children.length || miniDiskRow.children.length === 0) {
-      miniDiskRow.innerHTML = screenDiskRow.innerHTML;
-    } else {
-      const sDisks = screenDiskRow.querySelectorAll(".disk");
-      const dDisks = miniDiskRow.querySelectorAll(".disk");
-      sDisks.forEach((sd, i) => {
-        if (dDisks[i]) {
-          dDisks[i].className = sd.className;
-          const sdTemp = sd.querySelector(".dt");
-          const ddTemp = dDisks[i].querySelector(".dt");
-          if (sdTemp && ddTemp) ddTemp.innerHTML = sdTemp.innerHTML;
-          const sdBar = sd.querySelector(".db i");
-          const ddBar = dDisks[i].querySelector(".db i");
-          if (sdBar && ddBar) ddBar.style.cssText = sdBar.style.cssText;
-        }
-      });
-    }
+    miniDiskRow.innerHTML = screenDiskRow.innerHTML;
   }
 }
+
 
 function setupMiniPreviewInteractivity() {
   const miniInner = $("mini-preview-inner");
@@ -1736,7 +1402,7 @@ function applyStats(s) {
     }
 
     if (!isLcdDirect) {
-      updateMetricModalLive();
+      ZettEventBus.dispatchEvent(new CustomEvent('stats_tick', { detail: s }));
       updateRowTelemetryBadges(s);
       updateFanCurveWorkstation(s);
       // Only sync mini preview when drawer is open (saves DOM queries when hidden)
@@ -1873,7 +1539,10 @@ fetchDashboardLayout().then(() => {
       drawer.classList.add("open");
       overlay.classList.add("open");
       document.body.classList.add("drawer-is-open");
-      setTimeout(fitMiniPreviewScale, 100);
+      setTimeout(() => {
+        fitMiniPreviewScale();
+        if (typeof syncMiniPreviewTelemetry === 'function') syncMiniPreviewTelemetry();
+      }, 100);
     }
   }
   function closeDrawer() {
@@ -2866,7 +2535,7 @@ fetchDashboardLayout().then(() => {
   fanProfileBtns.forEach((btn) => {
     btn.addEventListener("click", () => {
       const pr = btn.dataset.fanProfile;
-      const map = { auto: 60, quiet: 36, balanced: 57, performance: 72, full: 100 };
+      const map = { auto: 60, quiet: 37, balanced: 66, performance: 85, full: 100 };
       const pct = map[pr] || 60;
       updateFanUiState(pr, pct);
       postFanPwm(pr, pct);
@@ -2890,7 +2559,7 @@ fetchDashboardLayout().then(() => {
     }
 
     if (e.key === "Escape") {
-      closeSmartModal();
+      ZettEventBus.dispatchEvent(new CustomEvent('modal:smart:close'));
       closeDrawer();
     } else if (e.key === "z" || e.key === "Z") {
       cycleZoom();
@@ -3083,210 +2752,7 @@ fetchDashboardLayout().then(() => {
   loadButtonConfig();
 
 
-    // Folder Browser Modal Logic
-  const btnBrowseDst = $("btn-browse-dst");
-  const fbModal = $("folder-browser-modal");
-  const fbCurrentPath = $("fb-current-path");
-  const fbList = $("fb-list");
-  const fbCancel = $("fb-cancel");
-  const fbClose = $("fb-close");
-  const fbSelect = $("fb-select");
-  const fbCreateFolderBtn = $("fb-create-folder");
-  const fbNewFolderName = $("fb-new-folder-name");
-
-  let currentBrowsePath = "/mnt/user/";
-  let currentBrowseDirs = [];
-  let fbSortReverse = false;
-
-  const fbSearchBar = $("fb-search-bar");
-  const fbSortBtn = $("fb-sort-btn");
-
-  if (fbSearchBar) fbSearchBar.addEventListener("input", renderBrowseList);
-  if (fbSortBtn) {
-    fbSortBtn.addEventListener("click", () => {
-      fbSortReverse = !fbSortReverse;
-      fbSortBtn.textContent = fbSortReverse ? "Z-A" : "A-Z";
-      renderBrowseList();
-    });
-  }
-
-  function renderBrowseBreadcrumbs(fullPath) {
-    if (!fbCurrentPath) return;
-    fbCurrentPath.innerHTML = "";
-    const parts = fullPath.split("/").filter(p => p.length > 0);
-    let builtPath = "/";
-    
-    const rootLink = document.createElement("span");
-    rootLink.textContent = "/";
-    rootLink.style.cursor = "pointer";
-    rootLink.style.padding = "2px 4px";
-    rootLink.style.borderRadius = "4px";
-    rootLink.onmouseover = () => rootLink.style.background = "rgba(255,255,255,0.1)";
-    rootLink.onmouseout = () => rootLink.style.background = "transparent";
-    rootLink.onclick = () => loadBrowsePath("/");
-    fbCurrentPath.appendChild(rootLink);
-
-    parts.forEach((part, i) => {
-      builtPath += part + "/";
-      const p = builtPath;
-      const span = document.createElement("span");
-      span.textContent = part;
-      span.style.cursor = "pointer";
-      span.style.padding = "2px 4px";
-      span.style.borderRadius = "4px";
-      span.onmouseover = () => span.style.background = "rgba(255,255,255,0.1)";
-      span.onmouseout = () => span.style.background = "transparent";
-      span.onclick = () => loadBrowsePath(p);
-      
-      fbCurrentPath.appendChild(span);
-      
-      if (i < parts.length - 1) {
-        const sep = document.createElement("span");
-        sep.textContent = "/";
-        sep.style.color = "var(--muted)";
-        fbCurrentPath.appendChild(sep);
-      }
-    });
-  }
-
-  function renderBrowseList() {
-    if (!fbList) return;
-    fbList.innerHTML = "";
-    const filterText = (fbSearchBar ? fbSearchBar.value.toLowerCase() : "");
-    let upDir = currentBrowseDirs.find(d => d.name === "..");
-    let otherDirs = currentBrowseDirs.filter(d => d.name !== "..");
-    
-    if (filterText) {
-      otherDirs = otherDirs.filter(d => d.name.toLowerCase().includes(filterText));
-    }
-    if (fbSortReverse) {
-      otherDirs.reverse();
-    }
-    
-    let displayDirs = [];
-    if (upDir && !filterText) displayDirs.push(upDir);
-    displayDirs = displayDirs.concat(otherDirs);
-
-    if (displayDirs.length === 0) {
-      fbList.innerHTML = `<div style="padding: 10px 14px; color: var(--muted); font-size: 11px;">No folders found.</div>`;
-      return;
-    }
-
-    displayDirs.forEach(d => {
-      const div = document.createElement("div");
-      div.style.padding = "10px 14px";
-      div.style.borderBottom = "1px solid rgba(255,255,255,0.05)";
-      div.style.cursor = "pointer";
-      div.style.display = "flex";
-      div.style.alignItems = "center";
-      div.style.gap = "10px";
-      div.onmouseover = () => div.style.background = "rgba(255,255,255,0.03)";
-      div.onmouseout = () => div.style.background = "transparent";
-      
-      const icon = document.createElement("span");
-      icon.textContent = d.name === ".." ? "⤴️" : "📁";
-      icon.style.fontSize = "14px";
-      icon.style.opacity = d.name === ".." ? "0.6" : "1";
-      
-      const text = document.createElement("span");
-      text.textContent = d.name;
-      text.style.fontSize = "12px";
-      text.style.color = d.name === ".." ? "var(--muted)" : "#fff";
-      
-      div.appendChild(icon);
-      div.appendChild(text);
-      
-      div.addEventListener("click", () => {
-        if (fbSearchBar) fbSearchBar.value = "";
-        loadBrowsePath(d.path);
-      });
-      fbList.appendChild(div);
-    });
-  }
-
-  async function loadBrowsePath(targetPath) {
-    try {
-      const res = await fetch(`/api/browse?path=${encodeURIComponent(targetPath)}`);
-      if (res.ok) {
-        const data = await res.json();
-        currentBrowsePath = data.current;
-        currentBrowseDirs = data.dirs;
-        renderBrowseBreadcrumbs(currentBrowsePath);
-        renderBrowseList();
-      }
-    } catch (e) {
-      if (typeof showToast === "function") showToast("Failed to load folder: " + e, "error");
-      else console.error(e);
-    }
-  }
-
-  function closeFbModal() {
-    if (fbModal) fbModal.classList.remove("open");
-  }
-
-  if (btnBrowseDst) {
-    btnBrowseDst.addEventListener("click", (e) => {
-      e.preventDefault();
-      const currentDst = (btnCopyDst && btnCopyDst.value) ? btnCopyDst.value : "/mnt/user/";
-      loadBrowsePath(currentDst || "/mnt/user/");
-      if (fbModal) fbModal.classList.add("open");
-    });
-  }
-
-  if (fbCancel) fbCancel.addEventListener("click", closeFbModal);
-  if (fbClose) fbClose.addEventListener("click", closeFbModal);
-
-  if (fbSelect) {
-    fbSelect.addEventListener("click", () => {
-      if (btnCopyDst) {
-        btnCopyDst.value = currentBrowsePath;
-      }
-      closeFbModal();
-      saveButtonConfig(); // AUTO SAVE
-      
-      const btnCopySave = $("btn-copy-save");
-      if (btnCopySave) {
-        btnCopySave.textContent = "Saved!";
-        setTimeout(() => { btnCopySave.textContent = "💾 Save Configuration"; }, 2000);
-      }
-    });
-  }
-
-  if (fbCreateFolderBtn && fbNewFolderName) {
-    fbCreateFolderBtn.addEventListener("click", async () => {
-      const folderName = fbNewFolderName.value.trim();
-      if (!folderName) return;
-      if (folderName.includes("/") || folderName.includes("..")) return;
-      
-      const newPath = currentBrowsePath + (currentBrowsePath.endsWith("/") ? "" : "/") + folderName;
-      try {
-        fbCreateFolderBtn.textContent = "...";
-        const res = await fetch(`/api/mkdir?path=${encodeURIComponent(newPath)}`);
-        if (res.ok) {
-          fbNewFolderName.value = "";
-          fbNewFolderName.placeholder = "New folder name...";
-          loadBrowsePath(currentBrowsePath); // Reload current path to show the new folder in the list
-        } else {
-          const errData = await res.json();
-          fbNewFolderName.value = "";
-          fbNewFolderName.placeholder = "Error: " + (errData.detail || errData.error || "Failed");
-        }
-      } catch(e) {
-        fbNewFolderName.value = "";
-        fbNewFolderName.placeholder = "Network Error";
-      } finally {
-        fbCreateFolderBtn.textContent = "+ Create";
-      }
-    });
-    
-    // allow enter key
-    fbNewFolderName.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        fbCreateFolderBtn.click();
-      }
-    });
-  }
+  // Folder browser extracted to js/folder-browser.js
 })();
 
 
@@ -3373,3 +2839,17 @@ window.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
+
+
+
+ZettEventBus.addEventListener('folder_selected', (e) => { 
+    const el = document.getElementById('btn-copy-dst'); 
+    if(el) {
+        el.value = e.detail;
+        // Trigger save automatically
+        const saveBtn = document.getElementById('btn-copy-save');
+        if (saveBtn) saveBtn.click();
+    }
+});
+
+
