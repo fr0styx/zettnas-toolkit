@@ -51,7 +51,7 @@ body.theme-yak::before {
   background: 
     linear-gradient(180deg, rgba(6, 11, 9, 0.52) 0%, rgba(6, 11, 9, 0.80) 100%),
     radial-gradient(ellipse at 50% 50%, transparent 35%, rgba(6, 11, 9, 0.92) 100%),
-    url("img/yak.png") no-repeat center center;
+    url("/img/yak.png") no-repeat center center;
   background-size: cover;
   pointer-events: none;
   z-index: 0;

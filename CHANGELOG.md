@@ -20,7 +20,6 @@
 - **AbortControllers**: Added `AbortController` signals to S.M.A.R.T. modal fetches to gracefully cancel obsolete disk queries.
 
 ### 🎨 UI / UX Enhancements
-- **Light / Dark Mode**: Introduced a new `theme-light` toggle on the web studio for high-contrast viewing.
 - **Responsive Tablet Overlay**: Added a `max-width: 1100px` breakpoint so the dashboard elegantly scales on tablets without clipping into the sliding settings drawer.
 - **GPU-Accelerated Animations**: Replaced expensive CSS `box-shadow` animations with pseudo-element `opacity` transitions (`boxEmber`), eliminating continuous browser repaints.
 - **Accessibility (A11y)**: Fortified all modals and toasts with proper `role="dialog"`, `aria-modal`, and `aria-label` tags for screen readers.

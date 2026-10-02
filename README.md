@@ -38,7 +38,7 @@ It delivers **zero-overhead, direct-to-framebuffer rendering** for the 640×172 
 * **S.M.A.R.T. Health Inspector**: Click any disk card to view full S.M.A.R.T. diagnostic attributes, model numbers, power-on hours, and raw telemetry in an interactive modal.
 * **Module Customization**: Toggle visibility of individual metric cards or disk rows, switch between Full and Compact card sizes, and choose 12-hour or 24-hour clock formats.
 * **Chassis Workbench**: Front-panel simulator with scalable chassis zoom (1x, 1.25x, 1.5x, 2x) and interactive LED lighting preview.
-* **Mobile-Responsive Design**: Full `@media` query layout adaptation for monitoring the dashboard from smartphones and tablets on the go, complete with a built-in Light/Dark mode toggle.
+* **Mobile-Responsive Design**: Full `@media` query layout adaptation for monitoring the dashboard from smartphones and tablets on the go.
 * **Persistent State Management**: Fan configs, LED lighting preferences, and dashboard layouts are now saved safely to the `/app/data/` volume and survive container reboots.
 * **Real-Time SSE Engine**: Fast Server-Sent Events (`/api/stats/stream`) push architecture delivers ultra-low latency telemetry updates to the browser.
 * **LCD Health & FPS Badge**: Live studio badge tracking the headless Chromium renderer's health, actual rendering FPS, and `/dev/fb0` framebuffer status.
