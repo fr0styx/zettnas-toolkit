@@ -2659,6 +2659,7 @@ fetchDashboardLayout().then(() => {
   const btnCopyOptions = $("btn-copy-options");
   const btnCopySrc = $("btn-copy-src");
   const btnCopyDst = $("btn-copy-dst");
+  const btnCopyExif = $("btn-copy-exif");
   const btnCopySave = $("btn-copy-save");
 
   async function loadButtonConfig() {
@@ -2669,6 +2670,7 @@ fetchDashboardLayout().then(() => {
         if (btnCopyToggle) btnCopyToggle.checked = !!data.enabled;
         if (btnCopySrc) btnCopySrc.value = data.source || "sd";
         if (btnCopyDst) btnCopyDst.value = data.dest || "/mnt/user/";
+        if (btnCopyExif) btnCopyExif.checked = data.use_exif !== false;
         
         if (btnCopyOptions) {
           btnCopyOptions.style.opacity = data.enabled ? "1" : "0.3";
@@ -2696,7 +2698,7 @@ fetchDashboardLayout().then(() => {
         statusText.textContent = isEnabled ? "ENABLED" : "DISABLED";
         statusText.style.color = isEnabled ? "#2ecc71" : "inherit";
       }
-      saveButtonConfig();
+      if (btnCopySave) { btnCopySave.click(); } else { saveButtonConfig(); }
     });
   }
 
@@ -2712,12 +2714,13 @@ fetchDashboardLayout().then(() => {
   }
 
   
-  if (btnCopySrc) btnCopySrc.addEventListener("change", saveButtonConfig);
+  if (btnCopySrc) btnCopySrc.addEventListener("change", () => { if (btnCopySave) btnCopySave.click(); else saveButtonConfig(); });
+  if (btnCopyExif) btnCopyExif.addEventListener("change", () => { if (btnCopySave) btnCopySave.click(); else saveButtonConfig(); });
   if (btnCopyDst) {
     btnCopyDst.addEventListener("change", saveButtonConfig);
     btnCopyDst.addEventListener("input", () => {
       clearTimeout(window._btnCopyTimer);
-      window._btnCopyTimer = setTimeout(saveButtonConfig, 1000);
+      window._btnCopyTimer = setTimeout(() => { if (btnCopySave) btnCopySave.click(); else saveButtonConfig(); }, 1000);
     });
   }
 
@@ -2729,7 +2732,8 @@ fetchDashboardLayout().then(() => {
         body: JSON.stringify({
           enabled: btnCopyToggle ? btnCopyToggle.checked : false,
           source: btnCopySrc ? btnCopySrc.value : "sd",
-          dest: btnCopyDst ? btnCopyDst.value : "/mnt/user/"
+          dest: btnCopyDst ? btnCopyDst.value : "/mnt/user/",
+          use_exif: btnCopyExif ? btnCopyExif.checked : true
         })
       });
       if (!res.ok) {

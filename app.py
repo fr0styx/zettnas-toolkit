@@ -960,7 +960,7 @@ def button_listener_daemon():
             current_state = (copy_val & 2) >> 1
             
             if current_state == 0 and last_state == 1:
-                cfg = {"enabled": False, "source": "/mnt/disks/", "dest": "/mnt/user/Media/"}
+                cfg = {"enabled": False, "source": "/mnt/disks/", "dest": "/mnt/user/Media/", "use_exif": True}
                 if os.path.exists(BUTTON_CFG_FILE):
                     try:
                         with open(BUTTON_CFG_FILE, "r") as f:
@@ -982,27 +982,34 @@ def button_listener_daemon():
 
 import exifread
 def _get_exif_date(filepath):
+    import os, datetime
     try:
-        if not filepath.lower().endswith(('.jpg', '.jpeg', '.tiff', '.tif', '.cr2', '.nef', '.arw', '.dng')):
-            return None
-        with open(filepath, 'rb') as f:
-            tags = exifread.process_file(f, details=False)
-            date_str = str(tags.get('EXIF DateTimeOriginal', ''))
-            if not date_str:
-                date_str = str(tags.get('Image DateTime', ''))
-            if date_str:
-                parts = date_str.split(' ')
-                if len(parts) > 0:
-                    y, m, d = parts[0].split(':')
-                    return f"{y}/{m}/{d}"
+        if filepath.lower().endswith(('.jpg', '.jpeg', '.tiff', '.tif', '.cr2', '.nef', '.arw', '.dng')):
+            with open(filepath, 'rb') as f:
+                tags = exifread.process_file(f, details=False)
+                date_str = str(tags.get('EXIF DateTimeOriginal', ''))
+                if not date_str:
+                    date_str = str(tags.get('Image DateTime', ''))
+                if date_str:
+                    parts = date_str.split(' ')
+                    if len(parts) > 0:
+                        y, m, d = parts[0].split(':')
+                        return f"{y}/{m}/{d}"
     except Exception:
         pass
-    return None
+        
+    try:
+        mtime = os.path.getmtime(filepath)
+        dt = datetime.datetime.fromtimestamp(mtime)
+        return dt.strftime("%Y/%m/%d")
+    except Exception:
+        return None
 
 def _do_copy(cfg):
     pass
     src_mode = cfg.get("source", "sd").strip()
     dst = cfg.get("dest", "/mnt/user/").strip()
+    use_exif = cfg.get("use_exif", True)
     
     Z_STATE.copy_progress = {"total": 0, "copied": 0, "start": time.time(), "file": "Initializing...", "files_total": 0, "files_done": 0}
     tmp_mount = False
@@ -1064,7 +1071,7 @@ def _do_copy(cfg):
                 rel_path = os.path.relpath(src_file, src_path)
                 
                 # Smart Ingest EXIF check
-                date_subpath = _get_exif_date(src_file)
+                date_subpath = _get_exif_date(src_file) if use_exif else None
                 if date_subpath:
                     dst_file = os.path.join(dst_path, date_subpath, os.path.basename(f))
                     rel_path = os.path.join(date_subpath, os.path.basename(f))
