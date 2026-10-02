@@ -3,3 +3,5 @@ playwright==1.42.0
 fastapi
 uvicorn
 sse-starlette
+aiofiles
+exifread

@@ -25,3 +25,4 @@ led_state.json
 fan_state.json
 dash_layout.json
 .env
+data/

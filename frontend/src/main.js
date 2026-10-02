@@ -1133,9 +1133,20 @@ function applyStats(s) {
         if ($("copy-toast-bar")) $("copy-toast-bar").style.width = pct + "%";
         if ($("copy-toast-file")) $("copy-toast-file").textContent = prog.file || "";
         
-        let statusText = "Copying...";
+        let statusText = state.status ? state.status.toUpperCase() + "..." : "COPYING...";
         let barColor = "var(--ok2)";
-        if (state.status === "success") {
+        if (state.status === "copying") {
+            statusText = "COPYING...";
+            barColor = "var(--ok2)";
+            if ($("copy-toast-pause")) $("copy-toast-pause").textContent = "⏸";
+        } else if (state.status === "paused") {
+            statusText = "PAUSED...";
+            barColor = "var(--warn)";
+            if ($("copy-toast-pause")) $("copy-toast-pause").textContent = "▶";
+        } else if (state.status === "awaiting_confirmation") {
+            statusText = "WAITING...";
+            barColor = "var(--warn)";
+        } else if (state.status === "success") {
           statusText = "Success!";
           barColor = "#2ecc71";
           if ($("copy-toast-bar")) $("copy-toast-bar").style.width = "100%";
@@ -1143,6 +1154,8 @@ function applyStats(s) {
         } else if (state.status === "error") {
           statusText = "Failed!";
           barColor = "#e74c3c";
+        } else if (state.status === "idle") {
+          statusText = "IDLE";
         }
         if ($("copy-toast-status")) $("copy-toast-status").textContent = statusText;
         if ($("copy-toast-bar")) $("copy-toast-bar").style.background = barColor;
@@ -1207,7 +1220,28 @@ function applyStats(s) {
         }
         
         
+
+  const btnToastPause = $("copy-toast-pause");
+  if (btnToastPause && !btnToastPause.dataset.listening) {
+    btnToastPause.dataset.listening = "true";
+    btnToastPause.addEventListener("click", async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const isPaused = btnToastPause.textContent === "▶";
+      const endpoint = isPaused ? "/api/copy/resume" : "/api/copy/pause";
+      try {
+          const res = await fetch(endpoint, { method: "POST" });
+          if (res.ok) {
+              btnToastPause.textContent = isPaused ? "⏸" : "▶";
+          }
+      } catch (err) {
+          console.error("Failed to toggle pause", err);
+      }
+    });
+  }
+  
   const btnToastCancel = $("copy-toast-cancel");
+
   if (btnToastCancel && !btnToastCancel.dataset.listening) {
     btnToastCancel.dataset.listening = "true";
     btnToastCancel.addEventListener("click", (e) => {

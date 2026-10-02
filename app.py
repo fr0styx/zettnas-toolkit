@@ -972,7 +972,7 @@ def button_listener_daemon():
                     Z_STATE.copy_status = "copying"
                     Z_STATE.ui_wake.set()
                     add_event("info", "Copy Started", "Starting ingest from SD Card reader...")
-                    threading.Thread(target=_do_copy, args=(cfg,), daemon=True).start()
+                    threading.Thread(target=lambda c: __import__("asyncio").run(_do_copy(c)), args=(cfg,), daemon=True).start()
             
             last_state = current_state
         except Exception:
@@ -1005,7 +1005,9 @@ def _get_exif_date(filepath):
     except Exception:
         return None
 
-def _do_copy(cfg):
+async def _do_copy(cfg):
+    import asyncio
+    import aiofiles
     pass
     src_mode = cfg.get("source", "sd").strip()
     dst = cfg.get("dest", "/mnt/user/").strip()
@@ -1127,13 +1129,23 @@ def _do_copy(cfg):
             Z_STATE.copy_progress["file"] = os.path.basename(src_f)
             length = 1024 * 1024 * 4
             try:
-                with open(src_f, 'rb') as fsrc, open(dst_f, 'wb') as fdst:
+                async with aiofiles.open(src_f, 'rb') as fsrc, aiofiles.open(dst_f, 'wb') as fdst:
                     while True:
                         if Z_STATE.copy_abort_flag: break
-                        buf = fsrc.read(length)
+                        while getattr(Z_STATE, 'copy_paused', False):
+                            if Z_STATE.copy_status != "paused":
+                                Z_STATE.copy_status = "paused"
+                                Z_STATE.ui_wake.set()
+                            await asyncio.sleep(0.5)
+                        
+                        if Z_STATE.copy_status != "copying" and not Z_STATE.copy_abort_flag:
+                            Z_STATE.copy_status = "copying"
+                            Z_STATE.ui_wake.set()
+                            
+                        buf = await fsrc.read(length)
                         if not buf:
                             break
-                        fdst.write(buf)
+                        await fdst.write(buf)
                         Z_STATE.copy_progress["copied"] += len(buf)
                 if Z_STATE.copy_abort_flag: os.remove(dst_f); break
                 import shutil
@@ -1165,8 +1177,9 @@ def _do_copy(cfg):
         Z_STATE.copy_active = False
         Z_STATE.ui_wake.set()
         time.sleep(8)
-        Z_STATE.copy_status = "idle"
-        Z_STATE.ui_wake.set()
+        if not getattr(Z_STATE, 'copy_active', False):
+            Z_STATE.copy_status = "idle"
+            Z_STATE.ui_wake.set()
 
 
 
@@ -1929,6 +1942,17 @@ def _handle_browse_logic(path, dirs_only):
         return {"current": path, "dirs": out}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/copy/pause")
+async def pause_copy():
+    Z_STATE.copy_paused = True
+    return {"status": "paused"}
+
+@app.post("/api/copy/resume")
+async def resume_copy():
+    Z_STATE.copy_paused = False
+    return {"status": "resumed"}
 
 if __name__ == "__main__":
     read_cpu_util()
