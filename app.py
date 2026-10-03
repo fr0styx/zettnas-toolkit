@@ -2163,6 +2163,8 @@ async def serve_static(request: Request, path: str):
         html_str = content.decode("utf-8")
         if "mode=lcd" in request.query_params:
             html_str = html_str.replace('<body class="studio-workbench">', '<body class="studio-workbench lcd-direct">')
+        fix_css = "<style>@media(max-width:720px){.chassis-front-panel{max-height:85vh!important;overflow-y:auto!important;width:95vw!important;box-sizing:border-box!important;}}</style></head>"
+        html_str = html_str.replace("</head>", fix_css)
         content = html_str.encode("utf-8")
         etag = None
         gz_content = None
@@ -2240,3 +2242,4 @@ if __name__ == "__main__":
     threading.Thread(target=button_listener_daemon, daemon=True).start()
     threading.Thread(target=render_lcd_loop, daemon=True).start()
     uvicorn.run(app, host="0.0.0.0", port=port, log_level="warning")
+# test
