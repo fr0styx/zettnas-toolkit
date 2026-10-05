@@ -31,6 +31,7 @@ class ZettState:
             "zone3": {"target": 85, "active": 85, "hold_until": 0},
         }
         self.cached_smart_data = {}
+        self.last_smart_scan = {}
         self.copy_active = False
         self.copy_status = "idle"
         self.copy_progress = {}

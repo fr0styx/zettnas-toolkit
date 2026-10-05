@@ -1,3 +1,4 @@
+import asyncio
 import os
 import re
 import time
@@ -55,7 +56,21 @@ async def disk_detail(dev: str = "sda"):
         dev = f"nvme{m.group(1)}n1"
     if not re.fullmatch(r"^(sd[a-z]{1,2}|nvme[0-9]+n[0-9]+)$", dev):
         raise HTTPException(status_code=400, detail="Invalid device parameter.")
-    return fetch_disk_smart_detail(dev)
+    return await asyncio.to_thread(fetch_disk_smart_detail, dev)
+
+
+@router.post("/disk_wake")
+async def disk_wake(payload: dict):
+    dev = str(payload.get("dev", "sda"))
+    if dev.startswith("/dev/"):
+        dev = dev.replace("/dev/", "")
+    m = re.match(r"^nv([0-9]+)$", dev)
+    if m:
+        dev = f"nvme{m.group(1)}n1"
+    if not re.fullmatch(r"^(sd[a-z]{1,2}|nvme[0-9]+n[0-9]+)$", dev):
+        raise HTTPException(status_code=400, detail="Invalid device parameter.")
+    detail = await asyncio.to_thread(fetch_disk_smart_detail, dev)
+    return {"success": True, "dev": dev, "detail": detail}
 
 
 @router.get("/screen")

@@ -190,6 +190,22 @@ def test_disk_detail_rejects_injection(client, auth_headers):
     assert_error(client.get("/api/disk_detail", params={"dev": "sda;reboot"}, headers=auth_headers), 400)
 
 
+def test_disk_wake_rejects_injection(client, auth_headers):
+    assert_error(client.post("/api/disk_wake", json={"dev": "sda;reboot"}, headers=auth_headers), 400)
+
+
+def test_disk_wake_valid_param(client, auth_headers, monkeypatch):
+    import backend.hardware.disks as disks_mod
+
+    monkeypatch.setattr(
+        disks_mod, "fetch_disk_smart_detail", lambda dev: {"dev": dev, "model": "Mock", "health": "PASSED"}
+    )
+    res = client.post("/api/disk_wake", json={"dev": "sda"}, headers=auth_headers)
+    assert res.status_code == 200
+    assert res.json()["success"] is True
+    assert res.json()["dev"] == "sda"
+
+
 def test_unknown_api_route_uses_error_schema(client, auth_headers):
     assert_error(client.get("/api/does-not-exist", headers=auth_headers), 404, "not_found")
 

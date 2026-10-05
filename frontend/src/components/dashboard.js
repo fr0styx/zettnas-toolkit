@@ -158,7 +158,10 @@ export function renderDisks(disks) {
         showConfirmToast(
           'Drive in Standby Mode',
           `Disk ${diskName} is currently sleeping. Querying S.M.A.R.T. data will wake it up, causing mechanical wear and consuming power. Are you sure you want to wake it?`,
-          () => ZettEventBus.emit('modal:smart:open', dev)
+          () => {
+            showToast(`Waking disk ${diskName}...`, 'info');
+            ZettEventBus.emit('modal:smart:open', dev);
+          }
         );
       } else {
         ZettEventBus.emit('modal:smart:open', dev);

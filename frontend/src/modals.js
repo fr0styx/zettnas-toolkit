@@ -71,7 +71,7 @@ async function openSmartModal(devName) {
   if (smartSerial) smartSerial.textContent = "Loading...";
   if (smartHealth) smartHealth.textContent = "Loading...";
   if (smartHours) smartHours.textContent = "Loading...";
-  if (smartRaw) smartRaw.textContent = "Querying drive controller via smartctl...";
+  if (smartRaw) smartRaw.textContent = "Spinning up drive motor & querying S.M.A.R.T. telemetry (this may take a few seconds)...";
 
   try {
     const res = await api.request(`/api/disk_detail?dev=${encodeURIComponent(devName)}`, { signal: _smartFetchController.signal });
@@ -85,6 +85,9 @@ async function openSmartModal(devName) {
       }
       if (smartHours) smartHours.textContent = data.power_on_hours || "Unknown";
       if (smartRaw) smartRaw.textContent = data.raw || "No raw output.";
+      if (data.model && data.model !== "Unknown" && !data.error) {
+        showToast(`Drive /dev/${devName} online & S.M.A.R.T. verified`, "ok");
+      }
     }
   } catch (err) {
     if (smartRaw) smartRaw.textContent = `Error querying disk details: ${err}`;

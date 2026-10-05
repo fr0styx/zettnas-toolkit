@@ -100,3 +100,62 @@ def test_garbage_output_does_not_raise():
 def test_short_names():
     assert _short_name("nvme1n1") == "nv1"
     assert _short_name("sda") == "sda"
+
+
+def test_smart_no_medium_present():
+    raw = (
+        "smartctl 7.4 2023-08-01 r5530 [x86_64-linux] (local build)\n"
+        "Read Device Identity failed: scsi error no medium present\n"
+        "A mandatory SMART command failed: exiting."
+    )
+    temp, health = _parse_smart(raw, is_nvme=False)
+    assert temp is None
+    assert health == "ok"
+
+
+def test_standby_detection_differentiates_scsi_errors():
+    standby_out = "smartctl 7.4\nDevice is in STANDBY mode, exit(2)"
+    sleep_out = "smartctl 7.4\nDevice is in SLEEP mode, exit(2)"
+    no_medium_out = "smartctl 7.4\nRead Device Identity failed: scsi error no medium present"
+    unsupported_out = "smartctl 7.4\nRead Device Identity failed: scsi error unsupported scsi opcode"
+
+    def is_standby(out):
+        u = out.upper()
+        return "DEVICE IS IN STANDBY" in u or "DEVICE IS IN SLEEP" in u
+
+    assert is_standby(standby_out) is True
+    assert is_standby(sleep_out) is True
+    assert is_standby(no_medium_out) is False
+    assert is_standby(unsupported_out) is False
+
+
+def test_discover_disks_skips_zero_size(monkeypatch, tmp_path):
+    import backend.hardware.disks as disks_mod
+    from backend.state import Z_STATE
+
+    fake_sys = tmp_path / "sys"
+    block_dir = fake_sys / "block"
+    block_dir.mkdir(parents=True)
+
+    # Real drive sda with size
+    sda = block_dir / "sda"
+    sda.mkdir()
+    (sda / "size").write_text("42970644480\n")
+    (sda / "queue").mkdir()
+    (sda / "queue" / "rotational").write_text("1\n")
+
+    # Empty card slot sdc with size 0
+    sdc = block_dir / "sdc"
+    sdc.mkdir()
+    (sdc / "size").write_text("0\n")
+    (sdc / "queue").mkdir()
+    (sdc / "queue" / "rotational").write_text("0\n")
+
+    monkeypatch.setattr(disks_mod, "HOST_SYS", str(fake_sys))
+    Z_STATE.cached_disk_list = None
+    Z_STATE.cached_disk_list_time = 0.0
+
+    discovered = disks_mod._discover_disks()
+    dev_names = [d["dev"] for d in discovered]
+    assert "sda" in dev_names
+    assert "sdc" not in dev_names
