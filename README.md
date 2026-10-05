@@ -20,50 +20,18 @@
 It delivers **zero-overhead, direct-to-framebuffer rendering** for the 640×172 front-panel IPS display, **intelligent dual-zone thermal fan curve regulation**, **dynamic ARGB LED lightbar effects** with error-reactive lighting, and a **real-time web studio** with drag-and-drop live canvas arrangement.
 
 <div align="center">
-  <img src="static/img/ui-screenshot.png" width="85%" alt="ZettNAS Web Dashboard UI">
+  <img src="static/img/ui-screenshot.png" width="90%" alt="ZettNAS Web Studio & Desktop UI" style="border-radius: 8px; box-shadow: 0 12px 36px rgba(0,0,0,0.5);">
 </div>
 
 ---
 
 ## Key Features
 
-### 🖥️ Direct Framebuffer LCD Dashboard (`/dev/fb0`)
-* **Zero-Overhead Active Rendering**: Renders natively at 640×172 using hardware-accelerated CSS orientation transforms (`rotate(90deg) translate(0, -172px)`) and single-pass memory-mapped (`mmap`) framebuffer streaming to `/dev/fb0` without CPU matrix rotation overhead.
-* **Bezel-Safe Geometry**: Balanced 12px bezel margins and optimized typography to prevent edge occlusion or pixel loss on physical front-panel bezels.
-* **Real-Time Telemetry**: Storage pool capacity donut, CPU utilization arc, core thermals, RAM gauge, dual network throughput (TX/RX), active fan tachometers, and per-drive status.
-* **Drive Standby Awareness**: Detects spun-down drives (`standby`) with sleep preservation and visual `zZz` indicators—never unnecessarily wakes sleeping disks.
-
-### 🎛️ Interactive Web Studio & Live Canvas Re-arrange (Port `8082`)
-* **LCD Live Canvas Re-arrange & Preview**: Drag-and-drop module reordering in the toolkit drawer with bidirectional adjacent swapping, container gap-snapping, and persistent layout saving (`/tmp/dash_layout.json`).
-* **S.M.A.R.T. Health Inspector**: Click any disk card to view full S.M.A.R.T. diagnostic attributes, model numbers, power-on hours, and raw telemetry in an interactive modal.
-* **Module Customization**: Toggle visibility of individual metric cards or disk rows, switch between Full and Compact card sizes, and choose 12-hour or 24-hour clock formats.
-* **Chassis Workbench**: Front-panel simulator with scalable chassis zoom (1x, 1.25x, 1.5x, 2x) and interactive LED lighting preview.
-* **Mobile-Responsive Design**: Full `@media` query layout adaptation for monitoring the dashboard from smartphones and tablets on the go.
-* **Persistent State Management**: Fan configs, LED lighting preferences, and dashboard layouts are now saved safely to the `/app/data/` volume and survive container reboots.
-* **Real-Time SSE Engine**: Fast Server-Sent Events (`/api/stats/stream`) push architecture delivers ultra-low latency telemetry updates to the browser.
-* **LCD Health & FPS Badge**: Live studio badge tracking the headless Chromium renderer's health, actual rendering FPS, and `/dev/fb0` framebuffer status.
-
-
-### 💾 Hardware Media Ingestion Engine
-* **Physical Front-Panel "Copy" Binding**: Mount and ingest contents from inserted SD or TF cards directly to your array at the push of a button.
-* **Zero-Latency Telemetry**: Instant 0ms UI reactions to physical button presses, completely eliminating polling delays via Server-Sent Events (`/api/stats/stream`).
-* **Asynchronous Chunked Reading**: Powered by `aiofiles`, transfers don't block the backend event loop, allowing for real-time `⏸ Pause` and `▶ Resume` functionality directly from the WebUI.
-* **File Collision Intelligence**: Pre-scans for duplicates before transferring, invoking an inline WebUI dialog to Skip, Overwrite, or safely Cancel the ingest.
-* **Kernel-Level I/O Tuning**: Unlocks maximum USB 4.0 read bandwidth (~1000+ MB/s routing throughput) by actively dropping `noatime,nodiratime` kernel flags on media mounts.
-* **Secure Abort Protocol**: Instantly kill active ingestion threads from the web dashboard while automatically purging partially-written media to prevent corruption.
-
-### ❄️ Intelligent Thermal Fan Automation
-* **Dual-Zone Drive Cooling**: Automatic SATA backplane fan regulation mapped directly to drive temperatures.
-* **Interactive SVG Fan Curve Workstation**: Complete visual thermal curve editor with 4 draggable inflection points for precise, multi-stage PWM ramp-up tuning.
-* **Manual PWM Override**: Direct hardware duty-cycle command (`0–183` / 0–100%) for diagnostic testing and airflow verification.
-* **Active Rotor Animations**: Browser and LCD fan icons spin dynamically at rates proportional to real-time tachometer RPM.
-
-### 💡 Chassis ARGB Lightbar Control (`/dev/ttyACM0`)
-* **Serial Protocol Integration**: Direct communication with the onboard microcontroller using CRC-validated packets.
-* **Lighting Modes**: Solid, Breathe, Flow, Chase, Gradient, Flashing, and real-time Rainbow.
-* **Error-Reactive Safeguards**: Automatically overrides lighting with an amber warning breathe or pulsing red alert if a drive reports S.M.A.R.T. degradation, CPU breaches 70°C/85°C, or a fan stalls.
-* **Disk IO "Cylon" Effect**: Active drive read/write operations can visually translate to a scanning Cylon animation on the front LEDs.
-* **Accurate Night Dimming**: Timezone-aware logic guarantees the LCD display and LEDs dim reliably during your configured night hours.
+* **🖥️ Direct Framebuffer LCD (`/dev/fb0`)** — Zero-overhead 640×172 native rendering via hardware-accelerated CSS orientation transforms and single-pass memory-mapped (`mmap`) streaming (704 stride). Features bezel-safe geometry, real-time gauges, and drive spin-down sleep preservation (`zZz`).
+* **🎛️ Modern Web Studio & OS Desktop (Port `8082`)** — Windowed desktop OS experience with draggable, minimizable windows, interactive dock bar with hover previews, top-left chassis console launcher, S.M.A.R.T. health diagnostics modal, and live layout reordering.
+* **❄️ Intelligent Dual-Zone Fan Control** — Automated SATA backplane cooling mapped to drive thermals with an interactive visual SVG fan curve editor (4 inflection points) and manual PWM override.
+* **💡 Chassis ARGB Lightbar (`/dev/ttyACM0`)** — Microcontroller integration for 38 WS2812B LEDs featuring Solid, Breathe, Flow, Rainbow, disk I/O Cylon animations, error-reactive alerts (red/amber), and schedule-aware night dimming.
+* **💾 Hardware Media Ingestion** — One-touch front-panel SD/TF card ingestion directly to array storage with chunked async I/O (`aiofiles`), real-time pause/resume, duplicate pre-scanning, and clean abort handling.
 
 ---
 

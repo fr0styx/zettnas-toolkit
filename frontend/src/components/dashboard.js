@@ -278,16 +278,13 @@ export function updateChassisImageForTheme() {
   const chassisImg = $('chassis-hero-img');
   if (!chassisImg) return;
 
-  if (state.currentTheme === 'yak') {
-    chassisImg.src = 'img/yak.png';
-  } else if (state.latestStats && state.latestStats.chassis) {
-    const modelMap = {
-      'd4': 'img/chassis-d4.png',
-      'd8u': 'img/chassis-d8u.png',
-      'd6u': 'img/chassis-d6u.png'
-    };
-    chassisImg.src = modelMap[state.latestStats.chassis] || 'img/chassis-d6u.png';
-  }
+  const modelMap = {
+    'd4': 'img/chassis-d4.png',
+    'd8u': 'img/chassis-d8u.png',
+    'd6u': 'img/chassis-d6u.png'
+  };
+  const chassis = (state.latestStats && state.latestStats.chassis) ? state.latestStats.chassis : 'd6u';
+  chassisImg.src = modelMap[chassis] || 'img/chassis-d6u.png';
 }
 
 export function applyTheme(themeName) {
