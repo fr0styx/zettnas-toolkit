@@ -1,3 +1,5 @@
+@import "./lcd-direct.css";
+
 :root{
   --bg:#0a0e13; --card:#141b24; --card-hi:#1b2430;
   --fg:#eaf1f8; --muted:#78838f;
@@ -74,7 +76,7 @@ body.theme-yak::after {
 body.theme-yak .chassis-hero-box {
   position: relative;
   z-index: 50;
-  display: none !important;
+  display: none;
 }
 
 body.theme-yak .suite-navbar {
@@ -669,7 +671,7 @@ body.drawer-is-open .chassis-workbench-stage {
   transform: scale(0.98);
 }
 
-.card.card-compact { flex: 0.55 1 0 !important; }
+.cards .card.card-compact { flex: 0.55 1 0; }
 .card.card-compact .card-title { font-size: 8px; letter-spacing: 0.5px; }
 .card.card-compact .arc { width: 44px; height: 44px; }
 .card.card-compact .donut { width: 40px; height: 40px; }
@@ -821,7 +823,7 @@ body.drawer-is-open .chassis-workbench-stage {
 /* Expansion States */
 #screen.no-disks .cards { flex: 1 1 0; }
 #screen.no-cards .cards { display: none !important; }
-#screen.no-cards .disks { flex: 1 1 0; height: auto !important; max-height: none !important; }
+#screen.no-cards .disks { flex: 1 1 0; height: auto; max-height: none; }
 
 /* Lower Deck Drives */
 .disks{display:flex;align-items:stretch;gap:6px;height:44px;flex-shrink:0;transition:all 0.25s ease;}
@@ -1160,15 +1162,15 @@ body.drawer-is-open .chassis-workbench-stage {
    ========================================================================= */
 .drawer-cards-flow { display: flex; flex-direction: column; gap: 12px; width: 100%; }
 .draggable-card { user-select: auto; transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.15s ease; width: 100%; }
-.draggable-card.dragging { opacity: 0.35; transform: scale(0.98); border: 1px dashed var(--ok2) !important; }
-.draggable-card.drag-over { border-top: 2px solid var(--ok2) !important; transform: translateY(2px); }
+.draggable-card.dragging { opacity: 0.35; transform: scale(0.98); border: 1px dashed var(--ok2); }
+.draggable-card.drag-over { border-top: 2px solid var(--ok2); transform: translateY(2px); }
 
 .drag-handle {
   display: inline-flex; align-items: center; justify-content: center; font-size: 13px;
   color: var(--muted); cursor: grab; padding: 2px 6px 2px 0; letter-spacing: -1px; transition: color 0.15s ease;
 }
 .drag-handle:hover { color: var(--ok2); }
-.drawer-cards-flow.locked .drag-handle { display: none !important; }
+.drawer-cards-flow.locked .drag-handle { display: none; }
 
 .preview-container {
   background: #080c10; border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 10px; padding: 10px 14px; display: flex; flex-direction: column; gap: 8px;
@@ -1184,11 +1186,11 @@ body.drawer-is-open .chassis-workbench-stage {
 .profile-pill:hover { background: #253547; color: #fff; }
 
 .profile-pill.active {
-  background: rgba(37, 194, 160, 0.15) !important;
-  color: var(--ok2) !important;
-  font-weight: 800 !important;
-  border-color: var(--ok2) !important;
-  box-shadow: 0 0 8px rgba(37, 194, 160, 0.25) !important;
+  background: rgba(37, 194, 160, 0.15);
+  color: var(--ok2);
+  font-weight: 800;
+  border-color: var(--ok2);
+  box-shadow: 0 0 8px rgba(37, 194, 160, 0.25);
 }
 
 .drawer-card { background: #151f2b; border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 10px; transition: opacity 0.25s ease, filter 0.25s ease; width: 100%; }
@@ -1198,8 +1200,8 @@ body.drawer-is-open .chassis-workbench-stage {
 .card-instruction { font-size: 11px; color: var(--muted); line-height: 1.35; }
 
 .drawer-card.manual-override-disabled {
-  opacity: 0.38 !important;
-  pointer-events: none !important;
+  opacity: 0.38;
+  pointer-events: none;
   filter: grayscale(0.4);
 }
 
@@ -1276,25 +1278,25 @@ body.theme-yak .mini-lcd-canvas {
   border-color: rgba(212, 138, 55, 0.45);
 }
 .mini-preview-inner {
-  width: 640px !important; 
-  height: 172px !important; 
-  min-width: 640px !important;
-  min-height: 172px !important;
-  max-width: 640px !important;
-  max-height: 172px !important;
-  position: absolute !important; 
-  top: 50% !important; 
-  left: 50% !important; 
-  transform: translate(-50%, -50%) scale(var(--mini-scale, 0.70)) !important; 
-  transform-origin: center center !important; 
-  background: var(--bg) !important; 
-  display: flex !important; 
-  flex-direction: column !important; 
-  justify-content: space-between !important; 
-  padding: 5px 12px 6px 12px !important; 
-  gap: 6px !important; 
-  box-sizing: border-box !important; 
-  pointer-events: auto !important;
+  width: 640px; 
+  height: 172px; 
+  min-width: 640px;
+  min-height: 172px;
+  max-width: 640px;
+  max-height: 172px;
+  position: absolute; 
+  top: 50%; 
+  left: 50%; 
+  transform: translate(-50%, -50%) scale(var(--mini-scale, 0.70)); 
+  transform-origin: center center; 
+  background: var(--bg); 
+  display: flex; 
+  flex-direction: column; 
+  justify-content: space-between; 
+  padding: 5px 12px 6px 12px; 
+  gap: 6px; 
+  box-sizing: border-box; 
+  pointer-events: auto;
   border-radius: 6px;
   user-select: none;
 }
@@ -1322,7 +1324,7 @@ body.theme-yak .mini-lcd-canvas {
 }
 .mini-preview-inner.no-disks .cards { flex: 1 1 0; }
 .mini-preview-inner.no-cards .cards { display: none !important; }
-.mini-preview-inner.no-cards .disks { flex: 1 1 0; height: auto !important; max-height: none !important; }
+.mini-preview-inner.no-cards .disks { flex: 1 1 0; height: auto; max-height: none; }
 
 .mini-preview-inner .card,
 .mini-preview-inner .disks {
@@ -1335,13 +1337,13 @@ body.theme-yak .mini-lcd-canvas {
 }
 .mini-preview-inner .card.mini-dragging,
 .mini-preview-inner .disks.mini-dragging {
-  opacity: 0.35 !important;
+  opacity: 0.35;
   transform: scale(0.96);
-  border: 1px dashed var(--ok2) !important;
+  border: 1px dashed var(--ok2);
 }
 .mini-preview-inner .card.mini-drag-over,
 .mini-preview-inner .disks.mini-drag-over {
-  border: 2px solid var(--ok2) !important;
+  border: 2px solid var(--ok2);
 }
 
 .tz-controls-row { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
@@ -1381,9 +1383,9 @@ body.theme-yak .mini-lcd-canvas {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 .drawer-fan-unified-col.active-zone-filter {
-  background: rgba(37, 194, 160, 0.15) !important;
-  border-color: var(--ok2) !important;
-  box-shadow: 0 0 12px rgba(37, 194, 160, 0.35) !important;
+  background: rgba(37, 194, 160, 0.15);
+  border-color: var(--ok2);
+  box-shadow: 0 0 12px rgba(37, 194, 160, 0.35);
 }
 
 .df-tach-box {
@@ -1574,76 +1576,6 @@ body.theme-yak .mini-lcd-canvas {
 }
 
 /* =========================================================================
-   ZERO-OVERHEAD HEADLESS CAPTURE ISOLATION (Native 172x640 Hardware Orientation)
-   ========================================================================= */
-body.lcd-direct,
-html:has(body.lcd-direct) {
-  margin: 0 !important;
-  padding: 0 !important;
-  width: 172px !important;
-  height: 640px !important;
-  max-width: 172px !important;
-  max-height: 640px !important;
-  min-height: 0 !important;
-  overflow: hidden !important;
-  background: #0a0e13 !important;
-  display: block !important;
-}
-
-body.lcd-direct .suite-navbar,
-body.lcd-direct .chassis-hero-box,
-body.lcd-direct .chassis-panel-header,
-body.lcd-direct .chassis-screws,
-body.lcd-direct .chassis-led-fixture,
-body.lcd-direct .drawer-backdrop,
-body.lcd-direct .slide-drawer,
-body.lcd-direct .smart-modal-backdrop {
-  display: none !important;
-}
-
-body.lcd-direct .studio-viewport-wrapper,
-body.lcd-direct .chassis-workbench-stage,
-body.lcd-direct .chassis-front-panel {
-  z-index: 50;
-  display: block !important;
-  position: static !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  width: 172px !important;
-  height: 640px !important;
-  min-height: 0 !important;
-  max-height: 640px !important;
-  border: none !important;
-  outline: none !important;
-  box-shadow: none !important;
-  background: transparent !important;
-  border-radius: 0 !important;
-  transform: none !important;
-}
-
-body.lcd-direct #screen,
-body.lcd-direct #screen.hardware-screen-canvas {
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  margin: 0 !important;
-  width: 640px !important;
-  height: 172px !important;
-  min-width: 640px !important;
-  min-height: 172px !important;
-  padding: 5px 12px 6px 12px !important;
-  box-sizing: border-box !important;
-  border: none !important;
-  outline: none !important;
-  border-radius: 0 !important;
-  box-shadow: none !important;
-  overflow: hidden !important;
-  z-index: 999999 !important;
-  transform-origin: 0 0 !important;
-  transform: rotate(90deg) translate(0, -172px) !important;
-}
-
-/* =========================================================================
    LCD RENDERER STATUS BADGE
    ========================================================================= */
 .lcd-status-badge {
@@ -1684,9 +1616,7 @@ body.lcd-direct #screen.hardware-screen-canvas {
    ========================================================================= */
 @media (max-width: 1100px) {
   body.drawer-is-open .chassis-workbench-stage {
-  
-  
-    margin-right: 0 !important;
+    margin-right: 0;
   }
 }
 
@@ -1769,7 +1699,7 @@ body.lcd-direct #screen.hardware-screen-canvas {
   transform: rotate(-90deg);
 }
 .draggable-card.card-collapsed > *:not(.card-headline) {
-  display: none !important;
+  display: none;
 }
 .draggable-card {
   transition: padding 0.2s ease;
@@ -1789,7 +1719,7 @@ body.lcd-direct #screen.hardware-screen-canvas {
   display: flex;
   justify-content: center;
   pointer-events: none;
-  z-index: 2147483647 !important;
+  z-index: 2147483647;
 }
 
 .os-dock {
@@ -1867,10 +1797,10 @@ body.lcd-direct #screen.hardware-screen-canvas {
 }
 
 .window-minimized {
-  opacity: 0 !important;
-  pointer-events: none !important;
-  transform: scale(0.6) translateY(200px) !important;
-  transition: opacity 0.3s ease, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.6) translateY(200px);
+  transition: opacity 0.3s ease, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .smart-modal-backdrop.window-minimized {
@@ -1879,15 +1809,13 @@ body.lcd-direct #screen.hardware-screen-canvas {
 }
 
 
-body.lcd-direct #console-modal-overlay { display: block !important; background: transparent !important; opacity: 1 !important; transform: none !important; }
 
-body.lcd-direct #os-dock-container {
-  display: none !important;
-}
 
-#console-window { pointer-events: auto !important; }
 
-body.lcd-direct #console-window { position: static !important; bottom: auto !important; left: auto !important; transform: none !important; }
+
+#console-window { pointer-events: auto; }
+
+
 
 
 
@@ -1898,9 +1826,9 @@ body.lcd-direct #console-window { position: static !important; bottom: auto !imp
   transform: translateY(-4px) scale(1.05);
 }
 .dock-item.active-window svg {
-  color: #0a0e13 !important;
-  filter: none !important;
+  color: #0a0e13;
+  filter: none;
 }
 .dock-item.active-window::after {
-  background: #0a0e13 !important;
+  background: #0a0e13;
 }

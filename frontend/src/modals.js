@@ -1,3 +1,4 @@
+import { showToast } from "./toast.js";
 import { ZettEventBus } from './event-bus.js';
 // S.M.A.R.T. & INTERACTIVE METRIC DIAGNOSTIC MODAL CONTROLLER
 
@@ -32,7 +33,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
     if (smartCloseBtn) smartCloseBtn.addEventListener("click", closeSmartModal);
     const minBtn = document.getElementById("smart-modal-min");
-    if (minBtn) minBtn.addEventListener("click", () => { if (window.DockManager) window.DockManager.minimize("smart"); import("./toast.js").then(m => m.showToast("Minimize clicked")); });
+    if (minBtn) minBtn.addEventListener("click", () => { if (window.DockManager) window.DockManager.minimize("smart"); showToast("Minimize clicked"); });
     if (smartOverlay) {
       smartOverlay.addEventListener("click", (e) => {
         if (e.target === smartOverlay) closeSmartModal();

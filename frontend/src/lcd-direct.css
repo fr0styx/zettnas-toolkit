@@ -1,0 +1,84 @@
+/* =========================================================================
+   ZERO-OVERHEAD HEADLESS CAPTURE ISOLATION (Native 172x640 Hardware Orientation)
+   ========================================================================= */
+body.lcd-direct,
+html:has(body.lcd-direct) {
+  margin: 0;
+  padding: 0;
+  width: 172px;
+  height: 640px;
+  max-width: 172px;
+  max-height: 640px;
+  min-height: 0;
+  overflow: hidden;
+  background: #0a0e13;
+  display: block;
+}
+
+body.lcd-direct .suite-navbar,
+body.lcd-direct .chassis-hero-box,
+body.lcd-direct .chassis-panel-header,
+body.lcd-direct .chassis-screws,
+body.lcd-direct .chassis-led-fixture,
+body.lcd-direct .drawer-backdrop,
+body.lcd-direct .slide-drawer,
+body.lcd-direct .smart-modal-backdrop,
+body.lcd-direct #os-dock-container {
+  display: none !important;
+}
+
+body.lcd-direct .studio-viewport-wrapper,
+body.lcd-direct .chassis-workbench-stage,
+body.lcd-direct .chassis-front-panel {
+  z-index: 50;
+  display: block;
+  position: static;
+  margin: 0;
+  padding: 0;
+  width: 172px;
+  height: 640px;
+  min-height: 0;
+  max-height: 640px;
+  border: none;
+  outline: none;
+  box-shadow: none;
+  background: transparent;
+  border-radius: 0;
+  transform: none;
+}
+
+body.lcd-direct #screen,
+body.lcd-direct #screen.hardware-screen-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  margin: 0;
+  width: 640px;
+  height: 172px;
+  min-width: 640px;
+  min-height: 172px;
+  padding: 5px 12px 6px 12px;
+  box-sizing: border-box;
+  border: none;
+  outline: none;
+  border-radius: 0;
+  box-shadow: none;
+  overflow: hidden;
+  z-index: 999999;
+  transform-origin: 0 0;
+  transform: rotate(90deg) translate(0, -172px);
+}
+
+body.lcd-direct #console-modal-overlay {
+  display: block;
+  background: transparent;
+  opacity: 1;
+  transform: none;
+}
+
+body.lcd-direct #console-window {
+  position: static;
+  bottom: auto;
+  left: auto;
+  transform: none;
+}

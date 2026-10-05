@@ -1,5 +1,25 @@
 # ZettNAS Toolkit - Release Changelog
 
+## v0.8.0 (2026-10-05)
+### 🎨 Frontend Modularization & Component Architecture (Phase 3)
+- **Monolithic main.js Deconstruction**: Decomposed the monolithic 3,604-line `main.js` into focused, reusable ES modules under `frontend/src/`:
+  - `api.js`: Centralized API client managing Bearer token auth, 401 Unauthorized handling, and JSON serialization.
+  - `event-bus.js`: Reactive pub-sub event bus supporting `.on()`, `.off()`, `.emit()`, and `.once()` while retaining backward compatibility with the `EventTarget` DOM API.
+  - `state.js`: Centralized reactive state store maintaining active layout, telemetry cache, theme, fan curve points, and view preferences.
+  - `components/dashboard.js`: Hardware telemetry renderers, radial gauges, fan tachometers, and dynamic drive trays.
+  - `components/dock.js`: MacOS-style dock manager, active window depth stack (`bringToFront`), modal minimize/restore, and universal window dragging (`makeDraggable`).
+  - `components/fan-control.js`: Interactive SVG fan curve editor with drag-and-drop thermal nodes, zone isolation filters, and PWM profile management.
+  - `components/led-control.js`: Physical and virtual ARGB lightbar effects, color hex palettes, speed, and night schedule.
+  - `components/mini-preview.js`: 640x172 mini LCD canvas preview, drag-and-drop card rearrangement, scaling, and layout persistence.
+  - `components/wallpapers.js`: Custom wallpaper gallery, upload, selection, rename, and deletion.
+  - `components/events.js`: Hardware alert and diagnostic event logger with log filtering and clearing.
+  - `components/settings.js`: Toolkit settings drawer, auto-copy button options, screen backlight dimming, and security forms.
+  - `components/metrics-chart.js`: Chart.js telemetry line graphs across historical ranges (1h, 6h, 24h, 7d, 30d).
+  - `components/auth.js`: Login dialog controller, credential verification, and token storage.
+- **Dedicated Framebuffer Isolation (`lcd-direct.css`)**: Extracted all headless LCD framebuffer (`172x640`) rendering rules out of `style.css` into a dedicated stylesheet.
+- **CSS Specificity Overhaul**: Slashed `!important` declarations by **84%** (from 114 down to 18), eliminating specificity wars while preserving responsive layout integrity.
+- **Robust Error Handling**: Added modal confirmation dialogs for drive wakeups and error-handled API requests across all user interactions.
+
 ## v0.7.0 (2026-10-05)
 ### 🏛️ Backend Modularization & API Architecture (Phase 2)
 - **Monolithic Deconstruction**: Refactored the monolithic ~2,300-line `app.py` into a clean, maintainable `backend/` Python package with clear separation of concerns across configuration, state management, database telemetry, hardware interfaces, background daemons, and route handlers.

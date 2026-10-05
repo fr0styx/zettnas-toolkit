@@ -32,6 +32,9 @@ class ZettState:
         self.copy_status = "idle"
         self.copy_progress = {}
         self.copy_paused = False
+        self.copy_confirm_event = threading.Event()
+        self.copy_overwrite_choice = "cancel"
+        self.copy_abort_flag = False
         self.cached_stats = None
         self.static_cache = {}
 
