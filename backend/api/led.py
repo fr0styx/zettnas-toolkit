@@ -1,8 +1,9 @@
 from fastapi import APIRouter
+
 from backend.config import LED_STATE_FILE
 from backend.fsutil import atomic_write_json, read_json
-from backend.models.schemas import LedConfigRequest
 from backend.hardware.led import apply_led_state
+from backend.models.schemas import LedConfigRequest
 
 router = APIRouter(tags=["ARGB Lighting"])
 

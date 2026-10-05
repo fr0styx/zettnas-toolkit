@@ -2,38 +2,44 @@
 ZettNAS Toolkit - Application Entrypoint
 Modular Backend Architecture
 """
-import os
-import io
-import gzip
-import json
-import time
-import hashlib
-import mimetypes
+
 import atexit
+import gzip
+import hashlib
+import io
+import mimetypes
+import os
 import threading
+import time
 from contextlib import asynccontextmanager
 
 import uvicorn
-from fastapi import FastAPI, Request, Response, HTTPException
+from fastapi import FastAPI, HTTPException, Request, Response
 
 from backend import __version__
-from backend.config import (
-    logger, DATA_DIR, STATIC_DIR, LED_STATE_FILE,
-    _load_security, is_using_default_password, COLLECTOR_WATCHDOG_SECS
-)
-from backend.fsutil import read_json
-from backend.state import Z_STATE, _load_events, add_event
+from backend.api import api_router
 from backend.auth import _load_sessions, auth_middleware
+from backend.config import (
+    COLLECTOR_WATCHDOG_SECS,
+    DATA_DIR,
+    LED_STATE_FILE,
+    STATIC_DIR,
+    _load_security,
+    is_using_default_password,
+    logger,
+)
 from backend.db import init_db
+from backend.errors import register_error_handlers
+from backend.fsutil import read_json
 from backend.hardware.cpu import read_cpu_util
+from backend.hardware.fans import failsafe_release_fans
+from backend.hardware.led import apply_led_state
 from backend.hardware.network import read_ip
 from backend.hardware.storage import detect_chassis_model
-from backend.hardware.led import apply_led_state
-from backend.hardware.fans import failsafe_release_fans
-from backend.services.stats_collector import stats_collector_daemon
 from backend.services.button_listener import button_listener_daemon
 from backend.services.lcd_renderer import render_lcd_loop
-from backend.api import api_router
+from backend.services.stats_collector import stats_collector_daemon
+from backend.state import Z_STATE, _load_events, add_event
 
 
 def _load_static_file(fp: str):
@@ -75,8 +81,8 @@ def startup_system():
     _load_security()
     _load_sessions()
     _load_events()
-    read_ip()              # Pre-populate IP cache at startup
-    detect_chassis_model() # Pre-populate chassis model cache
+    read_ip()  # Pre-populate IP cache at startup
+    detect_chassis_model()  # Pre-populate chassis model cache
 
     if is_using_default_password():
         logger.warning("=" * 60)
@@ -86,7 +92,7 @@ def startup_system():
         add_event(
             "warning",
             "Default Password In Use",
-            "The system is using the default password 'admin'. Please change it in Settings."
+            "The system is using the default password 'admin'. Please change it in Settings.",
         )
 
     led_cfg = read_json(LED_STATE_FILE, None)
@@ -122,8 +128,11 @@ def fan_watchdog_daemon():
         if stale > COLLECTOR_WATCHDOG_SECS and not Z_STATE.fans_released:
             logger.error(f"[WATCHDOG] Stats collector unresponsive for {int(stale)}s.")
             failsafe_release_fans("watchdog")
-            add_event("error", "Fan Watchdog Triggered",
-                      f"Stats collector stalled for {int(stale)}s; fans returned to firmware control.")
+            add_event(
+                "error",
+                "Fan Watchdog Triggered",
+                f"Stats collector stalled for {int(stale)}s; fans returned to firmware control.",
+            )
 
 
 def _shutdown_fans(reason: str):
@@ -144,13 +153,10 @@ async def lifespan(app: FastAPI):
             _shutdown_fans("shutdown")
 
 
-app = FastAPI(
-    title="ZettNAS Toolkit",
-    version=__version__,
-    docs_url="/docs",
-    redoc_url="/redoc",
-    lifespan=lifespan
-)
+app = FastAPI(title="ZettNAS Toolkit", version=__version__, docs_url="/docs", redoc_url="/redoc", lifespan=lifespan)
+
+# Consistent {error, detail, code} error responses
+register_error_handlers(app)
 
 # Authentication middleware
 app.middleware("http")(auth_middleware)
@@ -222,7 +228,10 @@ if __name__ == "__main__":
     port = int(os.environ.get("PORT", "8082"))
     logger.info(f"ZettNAS dashboard starting on :{port} (version {__version__})")
     server_config = uvicorn.Config(
-        app, host="0.0.0.0", port=port, log_level="warning",
+        app,
+        host="0.0.0.0",
+        port=port,
+        log_level="warning",
         timeout_graceful_shutdown=3,
     )
     ZettServer(server_config).run()

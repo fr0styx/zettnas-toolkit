@@ -1,10 +1,12 @@
 """
 Filesystem helpers: crash-safe JSON persistence and path containment checks.
 """
-import os
+
 import json
+import os
 import tempfile
-from typing import Any, Iterable, Optional
+from collections.abc import Iterable
+from typing import Any
 
 
 def atomic_write_json(path: str, data: Any) -> None:
@@ -33,13 +35,13 @@ def atomic_write_json(path: str, data: Any) -> None:
 def read_json(path: str, default: Any = None) -> Any:
     """Read JSON from `path`, returning `default` if missing or unreadable."""
     try:
-        with open(path, "r") as f:
+        with open(path) as f:
             return json.load(f)
     except (OSError, json.JSONDecodeError):
         return default
 
 
-def resolve_within(path: str, roots: Iterable[str]) -> Optional[str]:
+def resolve_within(path: str, roots: Iterable[str]) -> str | None:
     """Return the canonical (symlink-resolved) path if it lies inside one of
     `roots`, otherwise None. Defeats `..` segments and symlink escapes."""
     if not path:
@@ -52,7 +54,7 @@ def resolve_within(path: str, roots: Iterable[str]) -> Optional[str]:
     return None
 
 
-def root_for(path: str, roots: Iterable[str]) -> Optional[str]:
+def root_for(path: str, roots: Iterable[str]) -> str | None:
     """Return the canonical root that contains `path` (already canonical)."""
     for root in roots:
         real_root = os.path.realpath(root)

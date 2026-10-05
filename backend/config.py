@@ -1,13 +1,10 @@
-import os
 import json
-import socket
-import secrets
 import logging
+import os
+import secrets
+import socket
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("ZettNAS")
 
 # ---- Host paths & mounts ----
@@ -22,7 +19,7 @@ STATIC_DIR = os.path.realpath(os.path.join(os.path.dirname(os.path.dirname(__fil
 # ---- Runtime & tuning ----
 ENABLE_FB = os.environ.get("ENABLE_FB", "1") == "1"
 LCD_FPS = int(float(os.environ.get("LCD_FPS", "5")))
-SMART_POLL_INTERVAL_HDD = int(os.environ.get("SMART_POLL_HDD", "45"))  
+SMART_POLL_INTERVAL_HDD = int(os.environ.get("SMART_POLL_HDD", "45"))
 SMART_POLL_INTERVAL_NVME = int(os.environ.get("SMART_POLL_NVME", "15"))
 LCD_FORMAT = os.environ.get("LCD_FORMAT", "png").lower()
 PORT = int(os.environ.get("PORT", "8082"))
@@ -57,9 +54,7 @@ MIN_PASSWORD_LENGTH = 8
 LCD_INTERNAL_TOKEN = secrets.token_urlsafe(32)
 
 # Folder browser / mkdir / copy destination are confined to these roots.
-ALLOWED_BROWSE_ROOTS = [
-    p.strip() for p in os.environ.get("BROWSE_ROOTS", POOL_PATH).split(",") if p.strip()
-]
+ALLOWED_BROWSE_ROOTS = [p.strip() for p in os.environ.get("BROWSE_ROOTS", POOL_PATH).split(",") if p.strip()]
 
 # OpenAPI docs (/docs, /redoc, /openapi.json): disabled unless explicitly enabled,
 # and always require authentication when enabled.
@@ -70,13 +65,14 @@ MAX_BODY_BYTES = int(os.environ.get("MAX_BODY_MB", "16")) * 1024 * 1024
 MAX_WALLPAPER_BYTES = int(os.environ.get("MAX_WALLPAPER_MB", "10")) * 1024 * 1024
 
 # ---- Fan safety ----
-FAN_MIN_PWM = 58          # Lowest PWM the chassis fans reliably spin at
-FAN_MAX_PWM = 183         # Chassis maximum
+FAN_MIN_PWM = 58  # Lowest PWM the chassis fans reliably spin at
+FAN_MAX_PWM = 183  # Chassis maximum
 FAN_FAILSAFE_PWM = int(os.environ.get("FAN_FAILSAFE_PWM", "150"))
 HDD_CRITICAL_TEMP = int(os.environ.get("HDD_CRITICAL_TEMP", "55"))
 COLLECTOR_WATCHDOG_SECS = int(os.environ.get("COLLECTOR_WATCHDOG_SECS", "20"))
 
 _default_pw_cache = {"hash": None, "value": False}
+
 
 def is_using_default_password() -> bool:
     """True if the stored hash matches 'admin'. Cached per hash (scrypt is slow by design)."""
@@ -85,11 +81,12 @@ def is_using_default_password() -> bool:
         _default_pw_cache["value"] = verify_password("admin", STORED_PASSWORD_HASH)
     return _default_pw_cache["value"]
 
+
 def _load_security():
     global STORED_PASSWORD_HASH, ZETTNAS_USERNAME, ZETTNAS_EMAIL
     if os.path.exists(SECURITY_FILE):
         try:
-            with open(SECURITY_FILE, "r") as f:
+            with open(SECURITY_FILE) as f:
                 sec = json.load(f)
                 if "password_hash" in sec:
                     STORED_PASSWORD_HASH = sec["password_hash"]
@@ -100,6 +97,7 @@ def _load_security():
         except (json.JSONDecodeError, OSError) as e:
             logger.error(f"Failed to load security.json: {e}")
 
+
 def get_server_hostname():
     name = os.environ.get("NAS_NAME")
     if name:
@@ -107,7 +105,7 @@ def get_server_hostname():
     try:
         ident_file = "/etc/unraid-ident.cfg"
         if os.path.exists(ident_file):
-            with open(ident_file, "r") as f:
+            with open(ident_file) as f:
                 for line in f:
                     if line.startswith("NAME="):
                         return line.split("=", 1)[1].strip().strip('"')

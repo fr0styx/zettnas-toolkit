@@ -1,14 +1,23 @@
 import os
 import re
-import time
 import subprocess
+import time
+
 from backend.config import (
-    logger, HOST_SYS, HOST_DEV, HOST_PROC, DISKS, OS_NVME,
-    SMART_POLL_INTERVAL_HDD, SMART_POLL_INTERVAL_NVME, SHOW_OS_DISK
+    DISKS,
+    HOST_DEV,
+    HOST_PROC,
+    HOST_SYS,
+    OS_NVME,
+    SHOW_OS_DISK,
+    SMART_POLL_INTERVAL_HDD,
+    SMART_POLL_INTERVAL_NVME,
+    logger,
 )
 from backend.state import Z_STATE
 
 _DISK_LIST_TTL = 60.0  # seconds
+
 
 def _discover_disks():
     now = time.time()
@@ -48,10 +57,12 @@ def _discover_disks():
     Z_STATE.cached_disk_list_time = now
     return disks
 
+
 def _short_name(dev, idx_nvme=0):
     if dev.startswith("nvme"):
         return "nv" + dev[4]
     return dev
+
 
 def _parse_smart(text, is_nvme):
     temp = None
@@ -89,20 +100,26 @@ def _parse_smart(text, is_nvme):
             crc = raw(s.split())
 
         if is_nvme:
+
             def pct_val(txt):
                 return [int(x.rstrip("%")) for x in txt.split() if x.rstrip("%").isdigit()]
+
             if low.startswith("available spare:"):
                 v = pct_val(s)
-                if v: nvme_spare = v[0]
+                if v:
+                    nvme_spare = v[0]
             elif low.startswith("available spare threshold:"):
                 v = pct_val(s)
-                if v: nvme_spare_thresh = v[0]
+                if v:
+                    nvme_spare_thresh = v[0]
             elif low.startswith("percentage used:"):
                 v = pct_val(s)
-                if v: nvme_used = v[0]
+                if v:
+                    nvme_used = v[0]
             elif "media and data integrity errors" in low:
                 v = [int(x.replace(",", "")) for x in s.split() if x.replace(",", "").isdigit()]
-                if v: nvme_media_err = v[-1]
+                if v:
+                    nvme_media_err = v[-1]
 
     health = "ok"
     if passed is False or pending > 0 or offline > 0 or nvme_media_err > 0:
@@ -118,8 +135,10 @@ def _parse_smart(text, is_nvme):
             health = "warn"
     return temp, health
 
+
 if not hasattr(Z_STATE, "last_smart_scan"):
     Z_STATE.last_smart_scan = {}
+
 
 def read_disk_temps_and_io():
     now = time.time()
@@ -173,24 +192,27 @@ def read_disk_temps_and_io():
                 temp, health = Z_STATE.cached_smart_data.get(dev_name, (None, "ok"))
         else:
             temp, health = Z_STATE.cached_smart_data.get(dev_name, (None, "ok"))
-            is_standby = (health == "standby")
+            is_standby = health == "standby"
 
         prev_count = Z_STATE.prev_disk_io.get(dev_name, 0)
         curr_count = curr_io.get(dev_name, 0)
         io_active = (curr_count > prev_count) if prev_count > 0 else False
 
-        out.append({
-            "name": _short_name(dev_name, 0),
-            "dev": dev_name,
-            "temp": temp,
-            "role": role,
-            "health": health,
-            "standby": is_standby,
-            "active": io_active
-        })
+        out.append(
+            {
+                "name": _short_name(dev_name, 0),
+                "dev": dev_name,
+                "temp": temp,
+                "role": role,
+                "health": health,
+                "standby": is_standby,
+                "active": io_active,
+            }
+        )
 
     Z_STATE.prev_disk_io = curr_io
     return out
+
 
 def fetch_disk_smart_detail(dev_name):
     if not re.fullmatch(r"^(sd[a-z]{1,2}|nvme[0-9]+n[0-9]+)$", dev_name):
@@ -200,8 +222,7 @@ def fetch_disk_smart_detail(dev_name):
     is_nvme = dev_name.startswith("nvme")
     dtype = "nvme" if is_nvme else "sat"
     try:
-        r = subprocess.run(["smartctl", "-x", "-d", dtype, dev],
-                           capture_output=True, text=True, timeout=20)
+        r = subprocess.run(["smartctl", "-x", "-d", dtype, dev], capture_output=True, text=True, timeout=20)
         raw_text = r.stdout
     except Exception as e:
         raw_text = f"Error querying device: {e}"
@@ -230,5 +251,5 @@ def fetch_disk_smart_detail(dev_name):
         "serial": serial,
         "power_on_hours": power_hours,
         "health": health_verdict,
-        "raw": raw_text[:4000]
+        "raw": raw_text[:4000],
     }

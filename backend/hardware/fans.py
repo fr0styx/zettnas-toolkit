@@ -1,9 +1,11 @@
-import os
 import glob
+import os
 import time
-from backend.config import logger, HOST_SYS, FAN_MIN_PWM, FAN_MAX_PWM, FAN_FAILSAFE_PWM
-from backend.state import Z_STATE
+
+from backend.config import FAN_FAILSAFE_PWM, FAN_MAX_PWM, FAN_MIN_PWM, HOST_SYS, logger
 from backend.hardware.cpu import _find_hwmon
+from backend.state import Z_STATE
+
 
 def read_fans():
     hw = _find_hwmon()
@@ -28,11 +30,12 @@ def read_fans():
     for i in range(len(fans)):
         if fans[i] >= 6000:
             fans[i] = 0
-            
+
     for idx, rpm in enumerate(fans):
         if rpm > 300:
             Z_STATE.known_active_fans.add(idx)
     return fans
+
 
 def sanitize_curve_points(points):
     """Normalize user curve points to a safe, monotonic, bounded curve.
@@ -95,6 +98,7 @@ def calc_curve_pwm(temp, min_pwm=FAN_MIN_PWM, max_pwm=FAN_MAX_PWM, temp_min=37, 
     val = int(min_pwm + ratio * (max_pwm - min_pwm))
     return max(min_pwm, min(max_pwm, val))
 
+
 def apply_zone_pwm(pwm_index, target_pwm, hold_secs=120):
     now = time.time()
     pwm_key = f"pwm{pwm_index}"
@@ -115,11 +119,13 @@ def apply_zone_pwm(pwm_index, target_pwm, hold_secs=120):
             return current
     return current
 
+
 def get_hold_remaining(pwm_key, hold_secs=120):
     state = Z_STATE.fan_state_tracker.get(pwm_key, {})
     last_up = state.get("last_up_time", 0.0)
     rem = hold_secs - (time.time() - last_up)
     return max(0, int(rem))
+
 
 def _write_sysfs(path, value):
     try:

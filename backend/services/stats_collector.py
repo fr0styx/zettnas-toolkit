@@ -1,24 +1,31 @@
-import os
 import json
-import time
 import sqlite3
+import time
 import traceback
+
 from backend.config import (
-    logger, DB_PATH, FAN_STATE_FILE, LED_STATE_FILE,
-    get_server_hostname, is_using_default_password,
-    FAN_MIN_PWM, FAN_MAX_PWM, HDD_CRITICAL_TEMP
+    DB_PATH,
+    FAN_MAX_PWM,
+    FAN_MIN_PWM,
+    FAN_STATE_FILE,
+    HDD_CRITICAL_TEMP,
+    LED_STATE_FILE,
+    get_server_hostname,
+    is_using_default_password,
+    logger,
 )
 from backend.fsutil import read_json
-from backend.state import Z_STATE, add_event
 from backend.hardware.cpu import read_cpu_temp, read_cpu_util
-from backend.hardware.memory import read_mem
 from backend.hardware.disks import read_disk_temps_and_io
-from backend.hardware.fans import read_fans, calc_curve_pwm, apply_zone_pwm, get_hold_remaining, set_fan_pwm
-from backend.hardware.led import send_led_packet, apply_led_state
-from backend.hardware.screen import get_screen_state, set_screen_brightness, is_in_time_window
-from backend.hardware.network import read_network_rates, read_ip
-from backend.hardware.storage import read_storage, read_uptime, detect_chassis_model, get_current_layout
+from backend.hardware.fans import apply_zone_pwm, calc_curve_pwm, get_hold_remaining, read_fans, set_fan_pwm
+from backend.hardware.led import apply_led_state, send_led_packet
+from backend.hardware.memory import read_mem
+from backend.hardware.network import read_ip, read_network_rates
+from backend.hardware.screen import get_screen_state, is_in_time_window, set_screen_brightness
+from backend.hardware.storage import detect_chassis_model, get_current_layout, read_storage, read_uptime
 from backend.services.copy_engine import read_media_slots
+from backend.state import Z_STATE, add_event
+
 
 def stats_collector_daemon():
     while True:
@@ -61,8 +68,22 @@ def stats_collector_daemon():
             t_zone2 = max(active_z2, default=32)
 
             curve_points = fan_cfg.get("curve_points", None)
-            raw_pwm1 = calc_curve_pwm(t_zone1, min_pwm=FAN_MIN_PWM, max_pwm=FAN_MAX_PWM, temp_min=temp_min, temp_max=temp_max, curve_points=curve_points)
-            raw_pwm2 = calc_curve_pwm(t_zone2, min_pwm=FAN_MIN_PWM, max_pwm=FAN_MAX_PWM, temp_min=temp_min, temp_max=temp_max, curve_points=curve_points)
+            raw_pwm1 = calc_curve_pwm(
+                t_zone1,
+                min_pwm=FAN_MIN_PWM,
+                max_pwm=FAN_MAX_PWM,
+                temp_min=temp_min,
+                temp_max=temp_max,
+                curve_points=curve_points,
+            )
+            raw_pwm2 = calc_curve_pwm(
+                t_zone2,
+                min_pwm=FAN_MIN_PWM,
+                max_pwm=FAN_MAX_PWM,
+                temp_min=temp_min,
+                temp_max=temp_max,
+                curve_points=curve_points,
+            )
 
             if cpu_temp >= 85:
                 raw_pwm3 = FAN_MAX_PWM
@@ -75,12 +96,21 @@ def stats_collector_daemon():
 
             # Safety override: any spinning disk at/above the critical temperature
             # forces every disk fan to 100% regardless of profile or curve.
-            hot_disks = [d for d in disks if d.get("temp") is not None and not d.get("standby", False) and d["temp"] >= HDD_CRITICAL_TEMP]
+            hot_disks = [
+                d
+                for d in disks
+                if d.get("temp") is not None and not d.get("standby", False) and d["temp"] >= HDD_CRITICAL_TEMP
+            ]
             critical_override = bool(hot_disks)
             if critical_override and not Z_STATE.critical_temp_active:
                 names = ", ".join(f"{d.get('name', d.get('dev', '?'))} ({d['temp']}°C)" for d in hot_disks)
                 logger.warning(f"[FANS] Critical disk temperature: {names}. Forcing fans to 100%.")
-                add_event("error", "Disk Temperature Critical", f"{names} at or above {HDD_CRITICAL_TEMP}°C. Fans forced to 100%.", details={"disks": [d.get("dev") for d in hot_disks]})
+                add_event(
+                    "error",
+                    "Disk Temperature Critical",
+                    f"{names} at or above {HDD_CRITICAL_TEMP}°C. Fans forced to 100%.",
+                    details={"disks": [d.get("dev") for d in hot_disks]},
+                )
             elif not critical_override and Z_STATE.critical_temp_active:
                 logger.info("[FANS] Disk temperatures back below critical threshold.")
             Z_STATE.critical_temp_active = critical_override
@@ -120,7 +150,9 @@ def stats_collector_daemon():
 
             # Screen Backlight Management
             screen_cfg = get_screen_state()
-            in_screen_night = screen_cfg.get("night_mode", False) and is_in_time_window(screen_cfg.get("night_start", "23:00"), screen_cfg.get("night_end", "07:00"))
+            in_screen_night = screen_cfg.get("night_mode", False) and is_in_time_window(
+                screen_cfg.get("night_start", "23:00"), screen_cfg.get("night_end", "07:00")
+            )
             target_bl = screen_cfg.get("night_brightness", 10) if in_screen_night else screen_cfg.get("brightness", 100)
             set_screen_brightness(target_bl)
 
@@ -129,31 +161,61 @@ def stats_collector_daemon():
             if not isinstance(cfg, dict):
                 cfg = {}
 
-            in_led_night = cfg.get("night_mode", False) and is_in_time_window(cfg.get("night_start", "23:00"), cfg.get("night_end", "07:00"))
+            in_led_night = cfg.get("night_mode", False) and is_in_time_window(
+                cfg.get("night_start", "23:00"), cfg.get("night_end", "07:00")
+            )
 
             if cfg.get("reactive", True):
-                is_failing_fan = any(fans[i] == 0 for i in Z_STATE.known_active_fans if i < len(fans)) if Z_STATE.known_active_fans else False
+                is_failing_fan = (
+                    any(fans[i] == 0 for i in Z_STATE.known_active_fans if i < len(fans))
+                    if Z_STATE.known_active_fans
+                    else False
+                )
                 is_crit = has_crit or (cpu_temp >= 85) or is_failing_fan
                 is_warn = (len(bad) > 0) or (cpu_temp >= 70)
 
                 if is_failing_fan:
-                    add_event("error", "Fan Stall Detected", "One or more cooling fans have stalled (0 RPM).", details={"fans": fans})
+                    add_event(
+                        "error",
+                        "Fan Stall Detected",
+                        "One or more cooling fans have stalled (0 RPM).",
+                        details={"fans": fans},
+                    )
 
                 if cpu_temp >= 85:
-                    add_event("error", "CPU Thermal Critical", f"CPU temperature reached {cpu_temp}°C. Hardware throttling active.", details={"cpu_temp": cpu_temp})
+                    add_event(
+                        "error",
+                        "CPU Thermal Critical",
+                        f"CPU temperature reached {cpu_temp}°C. Hardware throttling active.",
+                        details={"cpu_temp": cpu_temp},
+                    )
                 elif cpu_temp >= 75:
-                    add_event("warning", "CPU Thermal Warning", f"CPU temperature is elevated ({cpu_temp}°C).", details={"cpu_temp": cpu_temp})
+                    add_event(
+                        "warning",
+                        "CPU Thermal Warning",
+                        f"CPU temperature is elevated ({cpu_temp}°C).",
+                        details={"cpu_temp": cpu_temp},
+                    )
 
                 for d in bad:
                     d_name = d.get("name", "Unknown")
                     d_health = d.get("health", "warn")
                     d_temp = d.get("temp", 0)
                     if d_health == "crit":
-                        add_event("error", f"Drive Critical: {d_name}", f"Drive reached critical health or extreme temp ({d_temp}°C)", details=d)
+                        add_event(
+                            "error",
+                            f"Drive Critical: {d_name}",
+                            f"Drive reached critical health or extreme temp ({d_temp}°C)",
+                            details=d,
+                        )
                     elif d_health == "warn":
-                        add_event("warning", f"Drive Warning: {d_name}", f"Drive is running hot or has warnings ({d_temp}°C)", details=d)
+                        add_event(
+                            "warning",
+                            f"Drive Warning: {d_name}",
+                            f"Drive is running hot or has warnings ({d_temp}°C)",
+                            details=d,
+                        )
 
-                is_disk_active = any(d.get("active", False) for d in disks)
                 if is_crit:
                     Z_STATE.alert_active = True
                     send_led_packet(5, 255, 0, 0, 0, 0, 0, speed=10)
@@ -188,7 +250,11 @@ def stats_collector_daemon():
                 "cpu": {"temp": cpu_temp, "util": read_cpu_util()},
                 "mem": read_mem(),
                 "fans": fans,
-                "copy_state": {"active": Z_STATE.copy_active, "status": Z_STATE.copy_status, "progress": Z_STATE.copy_progress},
+                "copy_state": {
+                    "active": Z_STATE.copy_active,
+                    "status": Z_STATE.copy_status,
+                    "progress": Z_STATE.copy_progress,
+                },
                 "media_slots": read_media_slots(),
                 "fan_control": {
                     "zone1_temp": t_zone1,
@@ -203,7 +269,7 @@ def stats_collector_daemon():
                     "profile": profile,
                     "temp_min": temp_min,
                     "temp_max": temp_max,
-                    "curve_points": fan_cfg.get("curve_points", None)
+                    "curve_points": fan_cfg.get("curve_points", None),
                 },
                 "net": net,
                 "uptime": read_uptime(),
@@ -212,22 +278,30 @@ def stats_collector_daemon():
                 "layout": get_current_layout(),
                 "copy_status": Z_STATE.copy_status,
                 "events": list(Z_STATE.event_log),
-                "security": {"is_default_password": is_using_default_password()}
+                "security": {"is_default_password": is_using_default_password()},
             }
-            
+
             with Z_STATE.lock:
                 Z_STATE.cached_stats = data
-                
+
             now_ts = int(time.time())
-            if not hasattr(stats_collector_daemon, 'last_log'):
+            if not hasattr(stats_collector_daemon, "last_log"):
                 stats_collector_daemon.last_log = 0
             if now_ts - stats_collector_daemon.last_log >= 300:
                 stats_collector_daemon.last_log = now_ts
                 try:
                     with sqlite3.connect(DB_PATH) as conn:
-                        conn.execute("INSERT INTO metrics (ts, cpu_temp, cpu_util, mem_pct, disks_json, fans_json) VALUES (?, ?, ?, ?, ?, ?)", (
-                            now_ts, data["cpu"].get("temp", 0), data["cpu"].get("util", 0), data["mem"].get("pct", 0), json.dumps(disks), json.dumps(fans)
-                        ))
+                        conn.execute(
+                            "INSERT INTO metrics (ts, cpu_temp, cpu_util, mem_pct, disks_json, fans_json) VALUES (?, ?, ?, ?, ?, ?)",
+                            (
+                                now_ts,
+                                data["cpu"].get("temp", 0),
+                                data["cpu"].get("util", 0),
+                                data["mem"].get("pct", 0),
+                                json.dumps(disks),
+                                json.dumps(fans),
+                            ),
+                        )
                         conn.execute("DELETE FROM metrics WHERE ts < ?", (now_ts - 2592000,))
                 except Exception as db_e:
                     logger.info(f"[ZettNAS] DB Log Error: {db_e}")
@@ -239,14 +313,26 @@ def stats_collector_daemon():
         if Z_STATE.ui_wake.wait(2.0):
             Z_STATE.ui_wake.clear()
 
+
 def collect():
     with Z_STATE.lock:
-        data = dict(Z_STATE.cached_stats) if Z_STATE.cached_stats else {
-            "name": get_server_hostname(), "status": "-- OK", "ip": read_ip(),
-            "storage": {"used": "0GB", "total": "0GB", "pct": 0}, "cpu": {"temp": 0, "util": 0}, "mem": {"used_gb": 0, "total_gb": 0, "pct": 0},
-            "fans": [], "copy_state": {"active": False, "status": "idle", "progress": {}},
-            "net": {"tx": "0 B/s", "rx": "0 B/s"}, "uptime": "0s", "disks": []
-        }
+        data = (
+            dict(Z_STATE.cached_stats)
+            if Z_STATE.cached_stats
+            else {
+                "name": get_server_hostname(),
+                "status": "-- OK",
+                "ip": read_ip(),
+                "storage": {"used": "0GB", "total": "0GB", "pct": 0},
+                "cpu": {"temp": 0, "util": 0},
+                "mem": {"used_gb": 0, "total_gb": 0, "pct": 0},
+                "fans": [],
+                "copy_state": {"active": False, "status": "idle", "progress": {}},
+                "net": {"tx": "0 B/s", "rx": "0 B/s"},
+                "uptime": "0s",
+                "disks": [],
+            }
+        )
         data["events"] = list(Z_STATE.event_log)
         data["security"] = {"is_default_password": is_using_default_password()}
     return data

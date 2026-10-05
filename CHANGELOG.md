@@ -1,5 +1,36 @@
 # ZettNAS Toolkit - Release Changelog
 
+## v0.9.5 (2026-10-05)
+### 🧪 Tests, CI & Observability
+- **Pytest Suite (144 tests, 100% passing)**:
+  - Added comprehensive automated test suite in `tests/`:
+    - `test_fan_curves.py`: Monotonic sorting, bounds clamping, curve interpolation, PWM floor/ceiling, and zone ramp/hold timing.
+    - `test_fan_sysfs.py`: Hardware sysfs writes against simulated `zettlab_d8_fans`, firmware handover of CPU fan, failsafe pin on shutdown, and watchdog resumption.
+    - `test_smart_parsing.py`: SMART attribute parsing for both ATA HDDs and NVMe SSDs, wear warnings, pending sectors, offline uncorrectable, and health alerts.
+    - `test_core_utils.py`: Salted scrypt hashing, legacy SHA-256 transparent upgrade, atomic JSON file writes, path containment checks, and night-window calculation.
+    - `test_copy_policy.py`: Media ingest file discovery, EXIF date folder grouping, symlink filtering, and collision policies (skip vs overwrite).
+    - `test_api_auth.py`: Authentication, bearer/query token validation, rate-limiting lockout backoff, password validation rules, and docs gating.
+    - `test_api_guards.py`: Allowed root containment on `/api/browse` and `/api/mkdir`, wallpaper type verification, upload size caps, traversal rejection, and Pydantic schema validation.
+- **Continuous Integration Workflow (`ci/github-actions-ci.yml`)**:
+  - Full CI pipeline configuration ready for GitHub Actions:
+    - Ruff linting and format verification.
+    - Pytest test suite execution (144 tests).
+    - Frontend Vite production compilation.
+    - Docker container build verification.
+  - Ready to be activated into `.github/workflows/` (requires PAT with `workflow` scope).
+- **Docker Container HEALTHCHECK**:
+  - Added dynamic `HEALTHCHECK` directive in `Dockerfile` testing `GET /api/health` against `$PORT`. Unraid Dockerman now natively reports container health status (`healthy`).
+- **Unified API Error Schema (`backend/errors.py`)**:
+  - Standardized all error responses to `{ "error": "<slug>", "detail": "<message>", "code": <status> }`.
+  - Integrated FastAPI exception handlers for `HTTPException`, `RequestValidationError`, and unhandled exceptions.
+  - Upgraded frontend API client (`frontend/src/api.js`) with an `ApiError` class that preserves response details.
+- **Legacy Route Deprecation**:
+  - Deprecated and removed legacy state-mutating GET routes (`GET /api/mkdir`, `GET /api/events/clear`).
+  - Updated frontend to use standard `DELETE /api/events/clear` and `POST /api/mkdir`.
+- **Dependency Security & Dependabot**:
+  - Bumped Pillow to `10.4.0` (resolving security advisories) and Playwright to `1.47.0`.
+  - Added `.github/dependabot.yml` tracking `pip`, `npm`, and `github-actions` updates weekly.
+
 ## v0.9.0 (2026-10-05)
 ### 🛡️ Safety & Security
 - **Fan failsafe**:

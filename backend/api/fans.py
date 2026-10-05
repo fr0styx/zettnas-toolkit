@@ -1,8 +1,9 @@
 from fastapi import APIRouter, HTTPException
+
 from backend.config import FAN_STATE_FILE
 from backend.fsutil import atomic_write_json, read_json
-from backend.models.schemas import FanConfigRequest
 from backend.hardware.fans import sanitize_curve_points
+from backend.models.schemas import FanConfigRequest
 
 router = APIRouter(tags=["Thermal & Fan Control"])
 

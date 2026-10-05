@@ -1,8 +1,10 @@
-import os
-import time
 import json
+import os
 import sqlite3
-from backend.config import logger, DB_PATH
+import time
+
+from backend.config import DB_PATH, logger
+
 
 def init_db():
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
@@ -22,17 +24,19 @@ def init_db():
     except Exception as e:
         logger.error(f"Failed to initialize database: {e}")
 
+
 def log_metrics(ts: int, cpu_temp: float, cpu_util: float, mem_pct: float, disks: list, fans: list):
     try:
         with sqlite3.connect(DB_PATH) as conn:
             conn.execute(
                 "INSERT INTO metrics (ts, cpu_temp, cpu_util, mem_pct, disks_json, fans_json) VALUES (?, ?, ?, ?, ?, ?)",
-                (ts, cpu_temp, cpu_util, mem_pct, json.dumps(disks), json.dumps(fans))
+                (ts, cpu_temp, cpu_util, mem_pct, json.dumps(disks), json.dumps(fans)),
             )
             # Prune records older than 30 days (2,592,000 seconds)
             conn.execute("DELETE FROM metrics WHERE ts < ?", (ts - 2592000,))
     except Exception as db_e:
         logger.info(f"[ZettNAS] DB Log Error: {db_e}")
+
 
 def query_history(range_str: str = "24h"):
     now_ts = int(time.time())
@@ -52,12 +56,14 @@ def query_history(range_str: str = "24h"):
         rows = conn.execute(group_sql, (cutoff,)).fetchall()
         data = []
         for r in rows:
-            data.append({
-                "ts": r["ts"],
-                "cpu_temp": round(r["cpu_temp"], 1) if r["cpu_temp"] else 0,
-                "cpu_util": round(r["cpu_util"], 1) if r["cpu_util"] else 0,
-                "mem_pct": round(r["mem_pct"], 1) if r["mem_pct"] else 0,
-                "disks": [],
-                "fans": []
-            })
+            data.append(
+                {
+                    "ts": r["ts"],
+                    "cpu_temp": round(r["cpu_temp"], 1) if r["cpu_temp"] else 0,
+                    "cpu_util": round(r["cpu_util"], 1) if r["cpu_util"] else 0,
+                    "mem_pct": round(r["mem_pct"], 1) if r["mem_pct"] else 0,
+                    "disks": [],
+                    "fans": [],
+                }
+            )
         return data

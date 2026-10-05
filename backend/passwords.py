@@ -5,11 +5,12 @@ migration from the legacy unsalted SHA-256 format.
 Stored format:  scrypt$<n>$<r>$<p>$<salt_hex>$<hash_hex>
 Legacy format:  <64 hex chars>  (sha256(password))
 """
-import hmac
+
 import hashlib
+import hmac
 import secrets
 
-_N, _R, _P = 2 ** 14, 8, 1
+_N, _R, _P = 2**14, 8, 1
 _DKLEN = 32
 
 
@@ -31,8 +32,7 @@ def verify_password(password: str, stored: str) -> bool:
         try:
             _, n, r, p, salt_hex, hash_hex = stored.split("$")
             dk = hashlib.scrypt(
-                password.encode(), salt=bytes.fromhex(salt_hex),
-                n=int(n), r=int(r), p=int(p), dklen=len(hash_hex) // 2
+                password.encode(), salt=bytes.fromhex(salt_hex), n=int(n), r=int(r), p=int(p), dklen=len(hash_hex) // 2
             )
             return hmac.compare_digest(dk.hex(), hash_hex)
         except (ValueError, TypeError):

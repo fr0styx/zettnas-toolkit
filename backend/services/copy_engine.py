@@ -1,15 +1,19 @@
-import os
-import glob
-import time
-import datetime
 import asyncio
-import aiofiles
+import datetime
+import glob
+import os
 import shutil
 import subprocess
+import time
+
+import aiofiles
 import exifread
-from backend.config import logger, HOST_SYS, HOST_DEV, HOST_PROC
-from backend.state import Z_STATE, add_event
+
+from backend.config import ALLOWED_BROWSE_ROOTS, HOST_DEV, HOST_PROC, HOST_SYS, logger
+from backend.fsutil import resolve_within
 from backend.hardware.led import send_led_packet
+from backend.state import Z_STATE, add_event
+
 
 def read_media_slots():
     slots = {"sd": {"size": 0, "dev": None}, "tf": {"size": 0, "dev": None}}
@@ -35,22 +39,23 @@ def read_media_slots():
         logger.debug(f"Silenced exception: {e}")
     return slots
 
+
 def _get_exif_date(filepath):
     try:
-        if filepath.lower().endswith(('.jpg', '.jpeg', '.tiff', '.tif', '.cr2', '.nef', '.arw', '.dng')):
-            with open(filepath, 'rb') as f:
+        if filepath.lower().endswith((".jpg", ".jpeg", ".tiff", ".tif", ".cr2", ".nef", ".arw", ".dng")):
+            with open(filepath, "rb") as f:
                 tags = exifread.process_file(f, details=False)
-                date_str = str(tags.get('EXIF DateTimeOriginal', ''))
+                date_str = str(tags.get("EXIF DateTimeOriginal", ""))
                 if not date_str:
-                    date_str = str(tags.get('Image DateTime', ''))
+                    date_str = str(tags.get("Image DateTime", ""))
                 if date_str:
-                    parts = date_str.split(' ')
+                    parts = date_str.split(" ")
                     if len(parts) > 0:
-                        y, m, d = parts[0].split(':')
+                        y, m, d = parts[0].split(":")
                         return f"{y}/{m}/{d}"
     except Exception as e:
         logger.debug(f"Silenced exception: {e}")
-        
+
     try:
         mtime = os.path.getmtime(filepath)
         dt = datetime.datetime.fromtimestamp(mtime)
@@ -58,12 +63,72 @@ def _get_exif_date(filepath):
     except Exception:
         return None
 
+
+def resolve_copy_destination(dst):
+    """Canonical destination directory if it exists inside an allowed root, else None."""
+    real = resolve_within(str(dst or "").strip(), ALLOWED_BROWSE_ROOTS)
+    if real is None or not os.path.isdir(real):
+        return None
+    return real
+
+
+def build_copy_plan(src_path, dst_path, use_exif, date_func=None):
+    """Map every regular file under `src_path` to its destination.
+
+    With `use_exif`, files land in ``<dst>/YYYY/MM/DD/<name>`` (EXIF capture
+    date, falling back to mtime); otherwise the source tree is mirrored.
+    Returns ``(entries, collisions)`` where each entry is
+    ``(src_file, dst_file, size, is_collision)`` and `collisions` lists the
+    destination-relative paths that already exist.
+    """
+    date_func = date_func or _get_exif_date
+    entries, collisions = [], []
+    for dirpath, _, filenames in os.walk(src_path):
+        for name in sorted(filenames):
+            src_file = os.path.join(dirpath, name)
+            if os.path.islink(src_file):
+                continue  # never follow symlinks off the card
+            date_subpath = date_func(src_file) if use_exif else None
+            if date_subpath:
+                rel_path = os.path.join(date_subpath, os.path.basename(name))
+            else:
+                rel_path = os.path.relpath(src_file, src_path)
+            dst_file = os.path.join(dst_path, rel_path)
+            is_collision = os.path.exists(dst_file)
+            if is_collision:
+                collisions.append(rel_path)
+            try:
+                size = os.path.getsize(src_file)
+            except OSError:
+                size = 0
+            entries.append((src_file, dst_file, size, is_collision))
+    return entries, collisions
+
+
+def select_files_to_copy(entries, skip_existing):
+    """Apply the collision policy. Returns ``([(src, dst), ...], total_bytes)``."""
+    files, total = [], 0
+    for src_file, dst_file, size, is_collision in entries:
+        if is_collision and skip_existing:
+            continue
+        files.append((src_file, dst_file))
+        total += size
+    return files, total
+
+
 async def _do_copy(cfg):
     src_mode = cfg.get("source", "sd").strip()
     dst = cfg.get("dest", "/mnt/user/").strip()
     use_exif = cfg.get("use_exif", True)
-    
-    Z_STATE.copy_progress = {"total": 0, "copied": 0, "start": time.time(), "file": "Initializing...", "files_total": 0, "files_done": 0}
+
+    Z_STATE.copy_progress = {
+        "total": 0,
+        "copied": 0,
+        "start": time.time(),
+        "file": "Initializing...",
+        "files_total": 0,
+        "files_done": 0,
+    }
     tmp_mount = False
     mounted_path = None
     try:
@@ -79,23 +144,25 @@ async def _do_copy(cfg):
                         if size > 0:
                             found_dev = dev
                             break
-            except (OSError, ValueError): pass
-            
+            except (OSError, ValueError):
+                pass
+
         if not found_dev:
             raise Exception(f"No media detected in {src_mode.upper()} slot.")
-            
+
         part_dev = f"{found_dev}1"
         if not os.path.exists(os.path.join(HOST_DEV, part_dev)):
             part_dev = found_dev
-            
+
         try:
             with open(os.path.join(HOST_PROC, "mounts")) as f:
                 for line in f:
                     if f"/{part_dev}" in line or f"/{found_dev}" in line:
                         mounted_path = line.split()[1]
                         break
-        except (OSError, IndexError): pass
-        
+        except (OSError, IndexError):
+            pass
+
         if not mounted_path:
             mounted_path = "/tmp/sd_copy_mount"
             os.makedirs(mounted_path, exist_ok=True)
@@ -106,36 +173,15 @@ async def _do_copy(cfg):
             tmp_mount = True
 
         src_path = mounted_path.rstrip("/") + "/"
-        dst_path = dst.rstrip("/") + "/"
-        
-        if not os.path.exists(dst_path):
-            raise Exception(f"Destination path {dst_path} does not exist.")
+        real_dst = resolve_copy_destination(dst)
+        if real_dst is None:
+            raise Exception(f"Destination {dst} is missing or outside the allowed folders.")
+        dst_path = real_dst.rstrip("/") + "/"
 
         Z_STATE.copy_progress["file"] = "Scanning media and EXIF metadata..."
         Z_STATE.ui_wake.set()
-        
-        collisions = []
-        all_files = []
-        for dirpath, _, filenames in os.walk(src_path):
-            for f in filenames:
-                src_file = os.path.join(dirpath, f)
-                rel_path = os.path.relpath(src_file, src_path)
-                
-                date_subpath = _get_exif_date(src_file) if use_exif else None
-                if date_subpath:
-                    dst_file = os.path.join(dst_path, date_subpath, os.path.basename(f))
-                    rel_path = os.path.join(date_subpath, os.path.basename(f))
-                else:
-                    dst_file = os.path.join(dst_path, rel_path)
-                    
-                is_collision = os.path.exists(dst_file)
-                if is_collision:
-                    collisions.append(rel_path)
-                file_size = 0
-                if not os.path.islink(src_file):
-                    try: file_size = os.path.getsize(src_file)
-                    except OSError: pass
-                all_files.append((src_file, dst_file, file_size, is_collision))
+
+        all_files, collisions = build_copy_plan(src_path, dst_path, use_exif)
 
         if collisions:
             collision_rule = cfg.get("on_collision", "skip")
@@ -144,26 +190,22 @@ async def _do_copy(cfg):
             else:
                 Z_STATE.copy_status = "awaiting_confirmation"
                 Z_STATE.copy_progress["file"] = f"{len(collisions)} files already exist in destination."
-                add_event("warning", "Copy Collision", f"{len(collisions)} files already exist. Waiting for confirmation.")
+                add_event(
+                    "warning", "Copy Collision", f"{len(collisions)} files already exist. Waiting for confirmation."
+                )
                 Z_STATE.ui_wake.set()
-                
+
                 Z_STATE.copy_confirm_event.clear()
                 Z_STATE.copy_confirm_event.wait(timeout=300.0)
-                
+
                 if not Z_STATE.copy_confirm_event.is_set():
                     raise Exception("Aborted: Timed out waiting for overwrite confirmation.")
-                
+
                 if Z_STATE.copy_overwrite_choice == "cancel":
                     raise Exception("Aborted by user.")
 
-        files_to_copy = []
-        total_size = 0
-        for src_file, dst_file, file_size, is_collision in all_files:
-            if is_collision and collisions and Z_STATE.copy_overwrite_choice == "skip":
-                continue
-            if file_size > 0:
-                total_size += file_size
-                files_to_copy.append((src_file, dst_file))
+        skip_existing = bool(collisions) and Z_STATE.copy_overwrite_choice == "skip"
+        files_to_copy, total_size = select_files_to_copy(all_files, skip_existing)
 
         Z_STATE.copy_progress["total"] = total_size
         Z_STATE.copy_progress["files_total"] = len(files_to_copy)
@@ -172,7 +214,7 @@ async def _do_copy(cfg):
         Z_STATE.copy_progress["start"] = time.time()
         Z_STATE.copy_status = "copying"
         Z_STATE.ui_wake.set()
-        
+
         for src_f, dst_f in files_to_copy:
             if Z_STATE.copy_abort_flag:
                 break
@@ -180,27 +222,30 @@ async def _do_copy(cfg):
             Z_STATE.copy_progress["file"] = os.path.basename(src_f)
             length = 1024 * 1024 * 4
             try:
-                async with aiofiles.open(src_f, 'rb') as fsrc, aiofiles.open(dst_f, 'wb') as fdst:
+                async with aiofiles.open(src_f, "rb") as fsrc, aiofiles.open(dst_f, "wb") as fdst:
                     while True:
-                        if Z_STATE.copy_abort_flag: break
-                        while getattr(Z_STATE, 'copy_paused', False):
+                        if Z_STATE.copy_abort_flag:
+                            break
+                        while getattr(Z_STATE, "copy_paused", False):
                             if Z_STATE.copy_status != "paused":
                                 Z_STATE.copy_status = "paused"
                                 Z_STATE.ui_wake.set()
                             await asyncio.sleep(0.5)
-                        
+
                         if Z_STATE.copy_status != "copying" and not Z_STATE.copy_abort_flag:
                             Z_STATE.copy_status = "copying"
                             Z_STATE.ui_wake.set()
-                            
+
                         buf = await fsrc.read(length)
                         if not buf:
                             break
                         await fdst.write(buf)
                         Z_STATE.copy_progress["copied"] += len(buf)
-                if Z_STATE.copy_abort_flag: os.remove(dst_f); break
+                if Z_STATE.copy_abort_flag:
+                    os.remove(dst_f)
+                    break
                 shutil.copystat(src_f, dst_f)
-                Z_STATE.copy_progress['files_done'] += 1
+                Z_STATE.copy_progress["files_done"] += 1
             except Exception as e:
                 logger.info(f"[ZettNAS] Error copying {src_f}: {e}")
 
@@ -212,21 +257,23 @@ async def _do_copy(cfg):
         else:
             Z_STATE.copy_status = "success"
             add_event("success", "Copy Completed", f"Successfully copied {Z_STATE.copy_progress['files_done']} files.")
-        Z_STATE.copy_progress["file"] = "Finished successfully." 
-        
+        Z_STATE.copy_progress["file"] = "Finished successfully."
+
     except Exception as e:
         logger.info(f"[ZettNAS] Copy failed: {e}")
         Z_STATE.copy_status = "error"
         Z_STATE.copy_progress["file"] = f"Error: {e}"
         add_event("error", "Copy Failed", str(e))
-        try: send_led_packet(5, 255, 0, 0, 0, 0, 0, speed=10)
-        except (OSError, ValueError): pass
+        try:
+            send_led_packet(5, 255, 0, 0, 0, 0, 0, speed=10)
+        except (OSError, ValueError):
+            pass
     finally:
         if tmp_mount and mounted_path:
             subprocess.run(["umount", mounted_path])
         Z_STATE.copy_active = False
         Z_STATE.ui_wake.set()
         time.sleep(8)
-        if not getattr(Z_STATE, 'copy_active', False):
+        if not getattr(Z_STATE, "copy_active", False):
             Z_STATE.copy_status = "idle"
             Z_STATE.ui_wake.set()

@@ -1,9 +1,11 @@
-import os
 import json
-import time
+import os
 import threading
-from backend.config import logger, EVENTS_FILE
+import time
+
+from backend.config import EVENTS_FILE, logger
 from backend.fsutil import atomic_write_json
+
 
 class ZettState:
     def __init__(self):
@@ -26,7 +28,7 @@ class ZettState:
         self.fan_state_tracker = {
             "zone1": {"target": 120, "active": 120, "hold_until": 0},
             "zone2": {"target": 120, "active": 120, "hold_until": 0},
-            "zone3": {"target": 85, "active": 85, "hold_until": 0}
+            "zone3": {"target": 85, "active": 85, "hold_until": 0},
         }
         self.cached_smart_data = {}
         self.copy_active = False
@@ -44,20 +46,28 @@ class ZettState:
         self.collector_heartbeat = 0.0
         self.critical_temp_active = False
 
+
 Z_STATE = ZettState()
+
 
 def _load_events():
     try:
         if os.path.exists(EVENTS_FILE):
-            with open(EVENTS_FILE, "r") as f:
+            with open(EVENTS_FILE) as f:
                 Z_STATE.event_log = json.load(f)
     except (json.JSONDecodeError, OSError) as e:
         logger.warning(f"Failed to load events: {e}")
 
+
 def add_event(level, title, message, details=None):
     now = int(time.time())
     with Z_STATE.lock:
-        if Z_STATE.event_log and Z_STATE.event_log[0].get("title") == title and Z_STATE.event_log[0].get("message") == message and (now - Z_STATE.event_log[0].get("ts", 0) < 3600):
+        if (
+            Z_STATE.event_log
+            and Z_STATE.event_log[0].get("title") == title
+            and Z_STATE.event_log[0].get("message") == message
+            and (now - Z_STATE.event_log[0].get("ts", 0) < 3600)
+        ):
             return
         entry = {"ts": now, "level": level, "title": title, "message": message}
         if details is not None:

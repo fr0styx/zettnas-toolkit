@@ -1,14 +1,17 @@
-import time
 import threading
+import time
+
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 from starlette.concurrency import run_in_threadpool
-from backend.config import logger, SECURITY_FILE, is_using_default_password
+
 import backend.config as config
-from backend.auth import create_session, invalidate_all_sessions, revoke_session, extract_token
+from backend.auth import create_session, extract_token, invalidate_all_sessions, revoke_session
+from backend.config import SECURITY_FILE, is_using_default_password, logger
+from backend.errors import error_response
 from backend.fsutil import atomic_write_json
-from backend.passwords import hash_password, verify_password, is_legacy_hash
 from backend.models.schemas import LoginRequest, SecurityUpdateRequest
+from backend.passwords import hash_password, is_legacy_hash, verify_password
 
 router = APIRouter(tags=["Authentication & Security"])
 
@@ -37,7 +40,7 @@ def _register_failure(ip: str) -> None:
         entry["count"] += 1
         over = entry["count"] - _FREE_ATTEMPTS
         if over >= 0:
-            entry["locked_until"] = time.time() + min(_MAX_LOCKOUT_SECS, 2 ** over * 5)
+            entry["locked_until"] = time.time() + min(_MAX_LOCKOUT_SECS, 2**over * 5)
 
 
 def _clear_failures(ip: str) -> None:
@@ -45,12 +48,24 @@ def _clear_failures(ip: str) -> None:
         _failures.pop(ip, None)
 
 
+def _rate_limited(remaining: int):
+    return error_response(
+        429,
+        f"Too many failed attempts. Try again in {remaining}s.",
+        headers={"Retry-After": str(remaining)},
+        retry_after=remaining,
+    )
+
+
 def _persist_security() -> None:
-    atomic_write_json(SECURITY_FILE, {
-        "password_hash": config.STORED_PASSWORD_HASH,
-        "username": config.ZETTNAS_USERNAME,
-        "email": config.ZETTNAS_EMAIL
-    })
+    atomic_write_json(
+        SECURITY_FILE,
+        {
+            "password_hash": config.STORED_PASSWORD_HASH,
+            "username": config.ZETTNAS_USERNAME,
+            "email": config.ZETTNAS_EMAIL,
+        },
+    )
 
 
 @router.post("/auth/login")
@@ -58,17 +73,13 @@ async def login(req: LoginRequest, request: Request):
     ip = _client_ip(request)
     remaining = _lockout_remaining(ip)
     if remaining > 0:
-        return JSONResponse(
-            status_code=429,
-            headers={"Retry-After": str(remaining)},
-            content={"detail": f"Too many failed attempts. Try again in {remaining}s."}
-        )
+        return _rate_limited(remaining)
 
     ok = await run_in_threadpool(verify_password, req.password, config.STORED_PASSWORD_HASH)
     if not ok:
         _register_failure(ip)
         logger.warning(f"Failed login attempt from {ip}.")
-        return JSONResponse(status_code=401, content={"detail": "Invalid password"})
+        return error_response(401, "Invalid password.", error="invalid_credentials")
 
     _clear_failures(ip)
 
@@ -83,11 +94,7 @@ async def login(req: LoginRequest, request: Request):
 
     logger.info(f"Successful login to WebUI from {ip}.")
     token = create_session(config.ZETTNAS_USERNAME)
-    return JSONResponse(content={
-        "status": "ok",
-        "token": token,
-        "is_default_password": is_using_default_password()
-    })
+    return JSONResponse(content={"status": "ok", "token": token, "is_default_password": is_using_default_password()})
 
 
 @router.post("/auth/logout")
@@ -102,7 +109,7 @@ async def get_security():
         "username": config.ZETTNAS_USERNAME,
         "email": config.ZETTNAS_EMAIL,
         "is_default_password": is_using_default_password(),
-        "min_password_length": config.MIN_PASSWORD_LENGTH
+        "min_password_length": config.MIN_PASSWORD_LENGTH,
     }
 
 
@@ -111,23 +118,22 @@ async def post_security(data: SecurityUpdateRequest, request: Request):
     ip = _client_ip(request)
     remaining = _lockout_remaining(ip)
     if remaining > 0:
-        return JSONResponse(status_code=429, headers={"Retry-After": str(remaining)},
-                            content={"detail": f"Too many failed attempts. Try again in {remaining}s."})
+        return _rate_limited(remaining)
 
     current_ok = await run_in_threadpool(verify_password, data.current_password or "", config.STORED_PASSWORD_HASH)
     if not current_ok:
         _register_failure(ip)
-        return JSONResponse(status_code=403, content={"detail": "Invalid current password"})
+        return error_response(403, "Invalid current password.", error="invalid_credentials")
     _clear_failures(ip)
 
     new_pwd = data.new_password
     if new_pwd:
         if len(new_pwd) < config.MIN_PASSWORD_LENGTH:
-            return JSONResponse(status_code=400, content={
-                "detail": f"Password must be at least {config.MIN_PASSWORD_LENGTH} characters."
-            })
-        if new_pwd == "admin":
-            return JSONResponse(status_code=400, content={"detail": "Please choose a password other than the default."})
+            return error_response(
+                400, f"Password must be at least {config.MIN_PASSWORD_LENGTH} characters.", error="weak_password"
+            )
+        if new_pwd.lower() == "admin":
+            return error_response(400, "Please choose a password other than the default.", error="weak_password")
         config.STORED_PASSWORD_HASH = await run_in_threadpool(hash_password, new_pwd)
         invalidate_all_sessions()
 
@@ -141,7 +147,4 @@ async def post_security(data: SecurityUpdateRequest, request: Request):
     except OSError as e:
         logger.error(f"Failed to write security.json: {e}")
 
-    return {
-        "status": "ok",
-        "is_default_password": is_using_default_password()
-    }
+    return {"status": "ok", "is_default_password": is_using_default_password()}

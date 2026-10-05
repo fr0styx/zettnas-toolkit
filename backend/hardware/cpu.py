@@ -1,7 +1,9 @@
-import os
 import glob
+import os
+
 from backend.config import HOST_PROC, HOST_SYS
 from backend.state import Z_STATE
+
 
 def read_cpu_util():
     try:
@@ -18,6 +20,7 @@ def read_cpu_util():
         return round(100 * (1 - d_idle / d_total))
     except Exception:
         return 0
+
 
 def _find_hwmon():
     if Z_STATE.cached_hwmon and os.path.exists(Z_STATE.cached_hwmon):
@@ -36,6 +39,7 @@ def _find_hwmon():
             Z_STATE.cached_hwmon = h
             return h
     return None
+
 
 def read_cpu_temp():
     if Z_STATE.cached_cpu_temp_path and os.path.exists(Z_STATE.cached_cpu_temp_path):

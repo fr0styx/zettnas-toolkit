@@ -1,5 +1,7 @@
 import os
+
 from backend.config import HOST_PROC
+
 
 def read_mem():
     info = {}

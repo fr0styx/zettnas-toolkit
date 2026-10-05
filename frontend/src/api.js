@@ -29,6 +29,27 @@ export const auth = {
   } catch (e) { /* non-browser context */ }
 })();
 
+/**
+ * Error thrown for non-2xx responses. The backend answers with
+ * {error, detail, code}; `message` is the human-readable `detail`.
+ */
+export class ApiError extends Error {
+  constructor(message, { status = 0, error = 'error', body = null } = {}) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+    this.error = error;
+    this.body = body;
+  }
+
+  static async from(res) {
+    let body = null;
+    try { body = await res.json(); } catch (e) { /* non-JSON body */ }
+    const detail = body && typeof body.detail === 'string' ? body.detail : `HTTP ${res.status}: ${res.statusText}`;
+    return new ApiError(detail, { status: res.status, error: (body && body.error) || 'error', body });
+  }
+}
+
 async function request(endpoint, options = {}) {
   const url = endpoint;
   const config = { ...options };
@@ -68,17 +89,17 @@ export const api = {
   request,
   async get(url, options = {}) {
     const res = await request(url, { method: 'GET', ...options });
-    if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+    if (!res.ok) throw await ApiError.from(res);
     return res.json();
   },
   async post(url, body = {}, options = {}) {
     const res = await request(url, { method: 'POST', body, ...options });
-    if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+    if (!res.ok) throw await ApiError.from(res);
     return res.json();
   },
   async delete(url, options = {}) {
     const res = await request(url, { method: 'DELETE', ...options });
-    if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+    if (!res.ok) throw await ApiError.from(res);
     return res.json();
   }
 };

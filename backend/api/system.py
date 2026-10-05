@@ -1,18 +1,18 @@
 import os
 import re
 import time
+
 from fastapi import APIRouter, HTTPException
-from backend import __version__
-from backend.config import logger, BUTTON_CFG_FILE, DASH_LAYOUT_FILE, EVENTS_FILE, ALLOWED_BROWSE_ROOTS
+
 import backend.config as config
-from backend.state import Z_STATE
+from backend import __version__
+from backend.config import ALLOWED_BROWSE_ROOTS, BUTTON_CFG_FILE, DASH_LAYOUT_FILE, EVENTS_FILE, logger
 from backend.fsutil import atomic_write_json, read_json, resolve_within, root_for
 from backend.hardware.disks import fetch_disk_smart_detail
 from backend.hardware.screen import get_screen_state
-from backend.models.schemas import (
-    ButtonConfigRequest, CopyConfirmRequest, MkdirRequest, LayoutRequest, StateRequest
-)
 from backend.hardware.storage import get_current_layout
+from backend.models.schemas import ButtonConfigRequest, CopyConfirmRequest, LayoutRequest, MkdirRequest, StateRequest
+from backend.state import Z_STATE
 
 router = APIRouter(tags=["System & Storage"])
 
@@ -45,6 +45,7 @@ def _contained(path, must_exist=True):
         raise HTTPException(status_code=404, detail="Path does not exist.")
     return real
 
+
 @router.get("/disk_detail")
 async def disk_detail(dev: str = "sda"):
     if dev.startswith("/dev/"):
@@ -56,9 +57,11 @@ async def disk_detail(dev: str = "sda"):
         raise HTTPException(status_code=400, detail="Invalid device parameter.")
     return fetch_disk_smart_detail(dev)
 
+
 @router.get("/screen")
 async def screen_state():
     return get_screen_state()
+
 
 def _handle_browse_logic(path: str, dirs_only: bool):
     real = _contained(path or ALLOWED_BROWSE_ROOTS[0])
@@ -85,8 +88,10 @@ def _handle_browse_logic(path: str, dirs_only: bool):
             continue
         sz = 0
         if not is_dir and not os.path.islink(full):
-            try: sz = os.path.getsize(full)
-            except OSError: pass
+            try:
+                sz = os.path.getsize(full)
+            except OSError:
+                pass
         out.append({"name": e, "path": full, "is_dir": is_dir, "size": sz})
     return {"current": real, "roots": list(ALLOWED_BROWSE_ROOTS), "dirs": out}
 
@@ -118,10 +123,6 @@ async def mkdir(req: MkdirRequest):
     return _do_mkdir(req.path)
 
 
-@router.get("/mkdir", include_in_schema=False)
-async def mkdir_legacy_get(path: str = ""):
-    return _do_mkdir(path)
-
 @router.post("/copy/cancel")
 async def copy_cancel():
     Z_STATE.copy_abort_flag = True
@@ -132,21 +133,25 @@ async def copy_cancel():
         Z_STATE.ui_wake.set()
     return {"status": "ok"}
 
+
 @router.post("/copy/confirm")
 async def copy_confirm(req: CopyConfirmRequest):
     Z_STATE.copy_overwrite_choice = req.action
     Z_STATE.copy_confirm_event.set()
     return {"status": "ok"}
 
+
 @router.post("/copy/pause")
 async def pause_copy():
     Z_STATE.copy_paused = True
     return {"status": "paused"}
 
+
 @router.post("/copy/resume")
 async def resume_copy():
     Z_STATE.copy_paused = False
     return {"status": "resumed"}
+
 
 BUTTON_DEFAULTS = {"enabled": False, "source": "sd", "dest": "/mnt/user/"}
 
@@ -177,6 +182,7 @@ async def post_buttons(req: ButtonConfigRequest):
     atomic_write_json(BUTTON_CFG_FILE, state)
     return state
 
+
 @router.delete("/events/clear")
 async def clear_events():
     with Z_STATE.lock:
@@ -188,14 +194,11 @@ async def clear_events():
             pass
     return {"status": "ok"}
 
-@router.post("/events/clear", include_in_schema=False)
-@router.get("/events/clear", include_in_schema=False)
-async def clear_events_compat():
-    return await clear_events()
 
 @router.get("/layout")
 async def get_layout():
     return get_current_layout()
+
 
 @router.post("/layout")
 async def post_layout(req: LayoutRequest):

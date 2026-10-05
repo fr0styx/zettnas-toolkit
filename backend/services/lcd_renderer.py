@@ -1,13 +1,16 @@
-import os
-import io
-import time
-import mmap
 import base64
+import io
+import mmap
+import os
+import time
+
 from PIL import Image
 from playwright.sync_api import sync_playwright
+
 from backend import config
-from backend.config import logger, ENABLE_FB, LCD_FPS, LCD_FORMAT, PORT
+from backend.config import ENABLE_FB, LCD_FORMAT, LCD_FPS, PORT, logger
 from backend.state import Z_STATE
+
 
 def render_lcd_loop():
     """
@@ -36,12 +39,14 @@ def render_lcd_loop():
     fb_width = 172
     row_bytes = fb_width * 4
     total_fb_bytes = fb_height * stride
-    
+
     target_fps = max(1, LCD_FPS)
     frame_interval = 1.0 / target_fps
     lcd_format = LCD_FORMAT
 
-    logger.info(f"[LCD] Starting active renderer: {fb_width}x{fb_height} @ {target_fps} FPS -> /dev/fb0 (stride {stride}, format {lcd_format})")
+    logger.info(
+        f"[LCD] Starting active renderer: {fb_width}x{fb_height} @ {target_fps} FPS -> /dev/fb0 (stride {stride}, format {lcd_format})"
+    )
 
     chromium_args = [
         "--no-sandbox",
@@ -72,23 +77,14 @@ def render_lcd_loop():
     while True:
         try:
             with sync_playwright() as p:
-                browser = p.chromium.launch(
-                    headless=True,
-                    args=chromium_args
-                )
-                context = browser.new_context(
-                    viewport={"width": fb_width, "height": fb_height},
-                    device_scale_factor=1
-                )
+                browser = p.chromium.launch(headless=True, args=chromium_args)
+                context = browser.new_context(viewport={"width": fb_width, "height": fb_height}, device_scale_factor=1)
                 page = context.new_page()
                 page.goto(url, wait_until="domcontentloaded", timeout=15000)
                 Z_STATE.lcd_renderer_active = True
 
                 cdp = context.new_cdp_session(page)
-                shot_params = {
-                    "format": "jpeg" if lcd_format == "jpeg" else "png",
-                    "optimizeForSpeed": True
-                }
+                shot_params = {"format": "jpeg" if lcd_format == "jpeg" else "png", "optimizeForSpeed": True}
                 if lcd_format == "jpeg":
                     shot_params["quality"] = 95
 

@@ -211,7 +211,7 @@
     <div class="draggable-card drawer-card" data-misc-card-id="sec-events">
       <div class="card-headline">
         <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <svg class="ic ic-sm" style="margin-right:6px;"><use href="#i-storage"/></svg>System Event Log<button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
-        <button class="btn-pill-toggle" onclick="fetch('/api/events/clear')" title="Clear Logs">Clear</button>
+        <button class="btn-pill-toggle" onclick="fetch('/api/events/clear', {method: 'DELETE'})" title="Clear Logs">Clear</button>
       </div>
       <div class="card-instruction">Persistent timeline of system events, warnings, and alerts.</div>
       

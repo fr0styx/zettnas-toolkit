@@ -1,13 +1,15 @@
-import os
+import asyncio
 import json
 import mmap
+import os
 import struct
-import time
-import asyncio
 import threading
-from backend.config import logger, HOST_DEV, BUTTON_CFG_FILE
-from backend.state import Z_STATE, add_event
+import time
+
+from backend.config import BUTTON_CFG_FILE, HOST_DEV, logger
 from backend.services.copy_engine import _do_copy
+from backend.state import Z_STATE, add_event
+
 
 def button_listener_daemon():
     MMIO_BASE = 0xE0D20000
@@ -23,24 +25,25 @@ def button_listener_daemon():
     last_state = 1
     while True:
         try:
-            copy_val = struct.unpack("<I", mem[COPY_OFFSET:COPY_OFFSET+4])[0]
+            copy_val = struct.unpack("<I", mem[COPY_OFFSET : COPY_OFFSET + 4])[0]
             current_state = (copy_val & 2) >> 1
-            
+
             if current_state == 0 and last_state == 1:
                 cfg = {"enabled": False, "source": "sd", "dest": "/mnt/user/", "use_exif": True, "on_collision": "skip"}
                 if os.path.exists(BUTTON_CFG_FILE):
                     try:
-                        with open(BUTTON_CFG_FILE, "r") as f:
+                        with open(BUTTON_CFG_FILE) as f:
                             cfg.update(json.load(f))
-                    except (json.JSONDecodeError, OSError): pass
-                
+                    except (json.JSONDecodeError, OSError):
+                        pass
+
                 if cfg.get("enabled") and not Z_STATE.copy_active:
                     Z_STATE.copy_active = True
                     Z_STATE.copy_status = "copying"
                     Z_STATE.ui_wake.set()
                     add_event("info", "Copy Started", "Starting ingest from SD Card reader...")
                     threading.Thread(target=lambda c: asyncio.run(_do_copy(c)), args=(cfg,), daemon=True).start()
-            
+
             last_state = current_state
         except Exception as e:
             logger.debug(f"Silenced exception: {e}")

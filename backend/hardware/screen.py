@@ -1,13 +1,20 @@
-import os
 import glob
 import json
+import os
 import time
-from backend.config import logger, SCREEN_STATE_FILE
 
-def is_in_time_window(start_str, end_str):
+from backend.config import SCREEN_STATE_FILE
+
+
+def is_in_time_window(start_str, end_str, now_minutes=None):
+    """True if the current local time (or `now_minutes` since midnight) falls
+    inside [start, end). Windows may wrap past midnight (e.g. 23:00-07:00)."""
     try:
-        now = time.localtime()
-        curr_min = now.tm_hour * 60 + now.tm_min
+        if now_minutes is None:
+            now = time.localtime()
+            curr_min = now.tm_hour * 60 + now.tm_min
+        else:
+            curr_min = int(now_minutes)
         s_h, s_m = map(int, start_str.split(":"))
         e_h, e_m = map(int, end_str.split(":"))
         s_val = s_h * 60 + s_m
@@ -19,21 +26,23 @@ def is_in_time_window(start_str, end_str):
     except Exception:
         return False
 
+
 def get_screen_state():
     state = {
         "brightness": 100,
         "night_mode": False,
         "night_start": "23:00",
         "night_end": "07:00",
-        "night_brightness": 10
+        "night_brightness": 10,
     }
     if os.path.exists(SCREEN_STATE_FILE):
         try:
-            with open(SCREEN_STATE_FILE, "r") as f:
+            with open(SCREEN_STATE_FILE) as f:
                 state.update(json.load(f))
         except (json.JSONDecodeError, OSError):
             pass
     return state
+
 
 def set_screen_brightness(pct):
     pct = max(0, min(100, int(pct)))
