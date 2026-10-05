@@ -148,9 +148,6 @@ def stats_collector_daemon():
                 elif is_warn:
                     Z_STATE.alert_active = True
                     send_led_packet(1, 255, 120, 0, 0, 0, 0, speed=18)
-                elif is_disk_active and not in_led_night:
-                    Z_STATE.alert_active = True
-                    send_led_packet(2, 0, 200, 255, 0, 0, 0, speed=40)
                 elif in_led_night:
                     Z_STATE.alert_active = False
                     send_led_packet(0, 0, 0, 0, 0, 0, 0, 0)

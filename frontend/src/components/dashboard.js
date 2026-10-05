@@ -3,10 +3,11 @@
  * Renders hardware gauges, disk trays, fan tachometers, and live telemetry badges.
  */
 import { state } from '../state.js';
+import { api } from '../api.js';
 import { ZettEventBus } from '../event-bus.js';
 import { showConfirmToast, showToast } from '../toast.js';
 import { updateFanCurveWorkstation } from './fan-control.js';
-import { syncMiniPreviewTelemetry } from './mini-preview.js';
+import { syncMiniPreviewTelemetry, applyDashboardLayout } from './mini-preview.js';
 import { renderEventLog } from './events.js';
 
 const $ = (id) => document.getElementById(id);
@@ -404,6 +405,21 @@ export function applyStats(s) {
       if ($('netRx')) $('netRx').textContent = s.net.rx;
     }
 
+    if (s.layout && s.layout.version && s.layout.version !== state.activeLayoutVersion) {
+      state.activeLayoutVersion = s.layout.version;
+      if (s.layout.order) state.dashOrder = s.layout.order;
+      if (s.layout.vis) state.dashVis = s.layout.vis;
+      if (s.layout.sizes) state.dashSizes = s.layout.sizes;
+      if (s.layout.clock_format) state.clockFormat = s.layout.clock_format;
+      if (s.layout.timezone) state.currentTimezone = s.layout.timezone;
+      applyDashboardLayout();
+    }
+
+    updateMediaSlots(s.media_slots);
+    if (!state.isLcdDirect) {
+      updateCopyToast(s.copy_state);
+    }
+
     if (!state.isLcdDirect) {
       ZettEventBus.emit('stats_tick', s);
       updateRowTelemetryBadges(s);
@@ -419,6 +435,264 @@ export function applyStats(s) {
 
   } catch (e) {
     console.error('Error applying stats:', e);
+  }
+}
+
+let copyToastMinimized = false;
+let copyToastInitialized = false;
+
+function initCopyToastControls() {
+  if (copyToastInitialized) return;
+  copyToastInitialized = true;
+
+  window.confirmCopy = async (action) => {
+    try {
+      const actionsDiv = $('copy-toast-actions');
+      if (actionsDiv) {
+        actionsDiv.style.opacity = '0.5';
+        actionsDiv.style.pointerEvents = 'none';
+      }
+      await api.post('/api/copy/confirm', { action });
+    } catch (e) {
+      console.warn('Confirm copy failed', e);
+    }
+  };
+
+  window.abortCopyConfirm = async (yes) => {
+    const abortDiv = $('copy-toast-abort-actions');
+    if (yes) {
+      if (abortDiv) {
+        abortDiv.style.opacity = '0.5';
+        abortDiv.style.pointerEvents = 'none';
+      }
+      try {
+        await api.post('/api/copy/cancel');
+      } catch (e) {
+        console.warn('Cancel copy failed', e);
+      }
+    } else {
+      if (abortDiv) abortDiv.style.display = 'none';
+    }
+  };
+
+  const btnPause = $('copy-toast-pause');
+  if (btnPause) {
+    btnPause.addEventListener('click', async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const isPaused = btnPause.textContent === '▶';
+      const endpoint = isPaused ? '/api/copy/resume' : '/api/copy/pause';
+      try {
+        await api.post(endpoint);
+        btnPause.textContent = isPaused ? '⏸' : '▶';
+      } catch (err) {
+        console.warn('Toggle copy pause failed', err);
+      }
+    });
+  }
+
+  const btnCancel = $('copy-toast-cancel');
+  if (btnCancel) {
+    btnCancel.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const statusText = ($('copy-toast-status')?.textContent || '').toUpperCase();
+      if (statusText === 'FAILED!' || statusText === 'SUCCESS!' || statusText === 'ERROR!' || statusText === 'DONE!') {
+        const toast = $('copy-toast');
+        if (toast) {
+          toast.style.opacity = '0';
+          toast.style.pointerEvents = 'none';
+        }
+        api.post('/api/copy/cancel').catch(() => {});
+        return;
+      }
+
+      let abortDiv = $('copy-toast-abort-actions');
+      if (!abortDiv) {
+        abortDiv = document.createElement('div');
+        abortDiv.id = 'copy-toast-abort-actions';
+        abortDiv.style.cssText = 'margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.05);';
+        abortDiv.innerHTML = `
+          <div style="font-size:11px; color:#cbd5e1; margin-bottom:8px; font-weight:500;">Are you sure you want to completely abort the transfer? All incomplete files will be deleted.</div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn-save-preset" style="flex:1; padding:6px; border-color:rgba(240,85,59,0.5); color:var(--crit);" onclick="window.abortCopyConfirm(true)">Yes, Abort</button>
+            <button class="btn-save-preset" style="flex:1; padding:6px;" onclick="window.abortCopyConfirm(false)">Resume</button>
+          </div>
+        `;
+        $('copy-toast')?.querySelector('.smart-modal-body')?.appendChild(abortDiv);
+      } else {
+        abortDiv.style.display = 'block';
+        abortDiv.style.opacity = '1';
+        abortDiv.style.pointerEvents = 'auto';
+      }
+    });
+  }
+
+  const btnMin = $('copy-toast-min');
+  if (btnMin) {
+    btnMin.addEventListener('click', () => {
+      copyToastMinimized = !copyToastMinimized;
+      btnMin.textContent = copyToastMinimized ? '□' : '–';
+      const toast = $('copy-toast');
+      if (toast) toast.style.transform = copyToastMinimized ? 'translateY(160px)' : 'translateY(0)';
+    });
+  }
+}
+
+export function updateCopyToast(copyState) {
+  const toast = $('copy-toast');
+  const backdrop = $('copy-toast-backdrop');
+  if (!toast) return;
+
+  initCopyToastControls();
+
+  const active = copyState && (copyState.active || (copyState.status && copyState.status !== 'idle'));
+  if (active) {
+    toast.style.opacity = '1';
+    toast.style.pointerEvents = 'auto';
+    toast.style.transform = copyToastMinimized ? 'translateY(160px)' : 'translateY(0)';
+    if (backdrop && !copyToastMinimized && copyState.status === 'awaiting_confirmation') {
+      backdrop.style.opacity = '1';
+      backdrop.style.pointerEvents = 'auto';
+    } else if (backdrop) {
+      backdrop.style.opacity = '0';
+      backdrop.style.pointerEvents = 'none';
+    }
+
+    const prog = copyState.progress || {};
+    const total = prog.total || 0;
+    const copied = prog.copied || 0;
+    const pct = total > 0 ? Math.min(100, Math.round((copied / total) * 100)) : (copyState.status === 'success' ? 100 : 0);
+
+    if ($('copy-toast-pct')) $('copy-toast-pct').textContent = copyState.status === 'awaiting_confirmation' ? 'WAIT' : `${pct}%`;
+    if ($('copy-toast-bar')) $('copy-toast-bar').style.width = `${pct}%`;
+    if ($('copy-toast-file')) $('copy-toast-file').textContent = prog.file || 'Preparing files...';
+
+    let statusText = 'COPYING...';
+    let barColor = 'var(--ok2)';
+    if (copyState.status === 'copying') {
+      statusText = 'COPYING...';
+      barColor = 'var(--ok2)';
+      if ($('copy-toast-pause')) $('copy-toast-pause').textContent = '⏸';
+    } else if (copyState.status === 'paused') {
+      statusText = 'PAUSED';
+      barColor = 'var(--warn)';
+      if ($('copy-toast-pause')) $('copy-toast-pause').textContent = '▶';
+    } else if (copyState.status === 'awaiting_confirmation') {
+      statusText = 'WAITING CONFIRMATION';
+      barColor = 'var(--warn)';
+    } else if (copyState.status === 'success') {
+      statusText = 'SUCCESS!';
+      barColor = 'var(--ok)';
+      if ($('copy-toast-bar')) $('copy-toast-bar').style.width = '100%';
+      if ($('copy-toast-pct')) $('copy-toast-pct').textContent = '100%';
+    } else if (copyState.status === 'error') {
+      statusText = 'FAILED!';
+      barColor = 'var(--crit)';
+    }
+
+    if ($('copy-toast-status')) $('copy-toast-status').textContent = statusText;
+    if ($('copy-toast-bar')) $('copy-toast-bar').style.background = barColor;
+
+    if (copyState.status === 'copying' && total > 0 && prog.start > 0) {
+      const elapsed = (Date.now() / 1000) - prog.start;
+      if (elapsed > 2 && copied > 0) {
+        const rate = copied / elapsed;
+        const remaining = Math.max(0, total - copied) / rate;
+        const mins = Math.floor(remaining / 60);
+        const secs = Math.floor(remaining % 60);
+        const mbps = (rate / 1024 / 1024).toFixed(1);
+        let filesLeftStr = '';
+        if (prog.files_total) {
+          const left = Math.max(0, prog.files_total - (prog.files_done || 0));
+          filesLeftStr = `${left} file${left === 1 ? '' : 's'} left • `;
+        }
+        if ($('copy-toast-time')) $('copy-toast-time').textContent = `${filesLeftStr}${mbps} MB/s • ~${mins}m ${secs}s`;
+      } else {
+        if ($('copy-toast-time')) $('copy-toast-time').textContent = 'Estimating time...';
+      }
+    } else {
+      if ($('copy-toast-time')) $('copy-toast-time').textContent = '';
+    }
+
+    if (copyState.status === 'awaiting_confirmation') {
+      let actionsDiv = $('copy-toast-actions');
+      if (!actionsDiv) {
+        actionsDiv = document.createElement('div');
+        actionsDiv.id = 'copy-toast-actions';
+        actionsDiv.style.cssText = 'display:flex; gap:8px; margin-top:10px;';
+        actionsDiv.innerHTML = `
+          <button class="btn-save-preset" style="flex:1; padding:6px; font-size:11px;" id="copy-btn-skip">Skip</button>
+          <button class="btn-save-preset" style="flex:1; padding:6px; font-size:11px;" id="copy-btn-overwrite">Overwrite</button>
+          <button class="btn-save-preset" style="flex:1; padding:6px; font-size:11px; border-color:rgba(240,85,59,0.5); color:var(--crit);" id="copy-btn-cancel">Cancel</button>
+        `;
+        toast.querySelector('.smart-modal-body')?.appendChild(actionsDiv);
+
+        $('copy-btn-skip')?.addEventListener('click', () => window.confirmCopy('skip'));
+        $('copy-btn-overwrite')?.addEventListener('click', () => window.confirmCopy('overwrite'));
+        $('copy-btn-cancel')?.addEventListener('click', () => window.confirmCopy('cancel'));
+      }
+      actionsDiv.style.display = 'flex';
+      actionsDiv.style.opacity = '1';
+      actionsDiv.style.pointerEvents = 'auto';
+    } else {
+      const actionsDiv = $('copy-toast-actions');
+      if (actionsDiv) actionsDiv.style.display = 'none';
+    }
+  } else {
+    toast.style.opacity = '0';
+    toast.style.pointerEvents = 'none';
+    toast.style.transform = 'translateY(20px)';
+    if (backdrop) {
+      backdrop.style.opacity = '0';
+      backdrop.style.pointerEvents = 'none';
+    }
+    copyToastMinimized = false;
+  }
+}
+
+export function updateMediaSlots(mediaSlots) {
+  if (!mediaSlots) return;
+  const srcSelect = $('btn-copy-src');
+  const sd = mediaSlots.sd || {};
+  const tf = mediaSlots.tf || {};
+  const sdSize = sd.size || 0;
+  const tfSize = tf.size || 0;
+
+  let sdText = 'SD 4.0 Slot';
+  if (sdSize > 0) sdText += ` [${(sdSize / 1e9).toFixed(1)} GB]`;
+  else sdText += ' [Empty]';
+
+  let tfText = 'TF 4.0 Slot (MicroSD)';
+  if (tfSize > 0) tfText += ` [${(tfSize / 1e9).toFixed(1)} GB]`;
+  else tfText += ' [Empty]';
+
+  if (srcSelect) {
+    for (let i = 0; i < srcSelect.options.length; i++) {
+      const opt = srcSelect.options[i];
+      if (opt.value === 'sd' && opt.text !== sdText) opt.text = sdText;
+      if (opt.value === 'tf' && opt.text !== tfText) opt.text = tfText;
+    }
+  }
+
+  const slotBadge = $('media-slot-info-badge');
+  if (slotBadge) {
+    if (sdSize > 0) {
+      slotBadge.textContent = `SD: ${(sdSize / 1e9).toFixed(1)} GB`;
+      slotBadge.style.background = 'rgba(37,194,160,0.15)';
+      slotBadge.style.color = 'var(--ok2)';
+      slotBadge.style.borderColor = 'rgba(37,194,160,0.35)';
+    } else if (tfSize > 0) {
+      slotBadge.textContent = `TF: ${(tfSize / 1e9).toFixed(1)} GB`;
+      slotBadge.style.background = 'rgba(37,194,160,0.15)';
+      slotBadge.style.color = 'var(--ok2)';
+      slotBadge.style.borderColor = 'rgba(37,194,160,0.35)';
+    } else {
+      slotBadge.textContent = 'SLOTS EMPTY';
+      slotBadge.style.background = 'rgba(255,255,255,0.05)';
+      slotBadge.style.color = 'var(--muted)';
+      slotBadge.style.borderColor = 'rgba(255,255,255,0.1)';
+    }
   }
 }
 

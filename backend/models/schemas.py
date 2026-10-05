@@ -35,6 +35,7 @@ class ButtonConfigRequest(BaseModel):
     source: Optional[str] = None
     dest: Optional[str] = None
     use_exif: Optional[bool] = None
+    on_collision: Optional[str] = None
 
 class CopyConfirmRequest(BaseModel):
     action: str = Field(..., description="'skip', 'overwrite', or 'cancel'")

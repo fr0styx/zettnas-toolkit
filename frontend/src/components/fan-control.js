@@ -21,8 +21,8 @@ export function yToPct(y) { return Math.round(100 - ((y - 20) / (100 - 20)) * 10
 
 export function renderCurveLines() {
   const pts = state.curvePoints;
-  const path = $('fan-curve-path');
-  const area = $('fan-curve-area');
+  const path = $('curve-svg-path') || $('fan-curve-path');
+  const area = $('curve-area-path') || $('fan-curve-area');
   if (!path || !area) return;
 
   const svgCoords = pts.map((p) => [tempToX(p[0]), pctToY(p[1])]);
@@ -193,8 +193,8 @@ export function initFanControl() {
   const btnReset = $('btn-reset-curve');
   const fanProfileBtns = document.querySelectorAll('.fan-profile-btn');
   const fanPwmSlider = $('fan-pwm-slider');
-  const fanPwmVal = $('fan-pwm-val');
-  const cpuFanToggle = $('fan-ctrl-cpu');
+  const fanPwmVal = $('fan-pwm-val-display') || $('fan-pwm-val');
+  const cpuFanToggle = $('cpu-fan-toggle') || $('fan-ctrl-cpu');
   const fanCurveSvg = document.querySelector('.fan-curve-svg');
 
   let fanPwmDebounce = null;
@@ -218,7 +218,20 @@ export function initFanControl() {
     fanProfileBtns.forEach((b) => b.classList.toggle('active', b.dataset.fanProfile === profile));
     if (fanPwmSlider && pct !== undefined) {
       fanPwmSlider.value = pct;
-      if (fanPwmVal) fanPwmVal.textContent = pct + '%';
+    }
+    if (fanPwmVal) {
+      if (profile === 'manual') {
+        const val = pct !== undefined ? pct : (fanPwmSlider ? fanPwmSlider.value : 60);
+        fanPwmVal.textContent = `${val}% (Manual Active)`;
+        fanPwmVal.style.color = 'var(--ok2)';
+        fanPwmVal.style.opacity = '1';
+        fanPwmVal.style.fontWeight = '700';
+      } else {
+        fanPwmVal.textContent = 'Auto Curve';
+        fanPwmVal.style.color = 'var(--muted)';
+        fanPwmVal.style.opacity = '0.5';
+        fanPwmVal.style.fontWeight = '500';
+      }
     }
   }
 

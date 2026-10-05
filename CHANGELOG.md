@@ -1,5 +1,31 @@
 # ZettNAS Toolkit - Release Changelog
 
+## v0.8.4 (2026-10-05)
+### 🛠️ Hardware Integration & WebUI Controls Restoration
+- **ARGB LED Strip Control & Stability**:
+  - Realigned all component IDs and classes in `led-control.js` (`#led-slider`, `#led-val-display`, `#speed-slider`, `#btn-toggle-led`, `#reactive-toggle`, `.color-chip`, `.color-chip2`, `.effect-btn`, `.profile-pill`) to match the HTML structure, restoring click actions across all colors, effects, brightness sliders, and preset pills.
+  - Added `-hupcl` (disable hangup on close) serial configuration in `backend/hardware/led.py` to prevent CDC-ACM microcontrollers from dropping DTR and rebooting upon packet transmission.
+  - Prevented routine background disk I/O in `stats_collector.py` from repeatedly overriding manual user lighting preferences.
+- **Dynamic Fan Curve Custom Points & Drag Controls**:
+  - Corrected SVG curve path element selector IDs (`curve-svg-path` and `curve-area-path`) in `fan-control.js`, resolving an issue where control point handles (`ch-0`, `ch-1`, `ch-2`, `ch-3`) defaulted to `(0, 0)` in the top-left corner.
+  - Enabled smooth interactive mouse and touch drag handles across the thermal gradient map.
+- **CPU Fan Software Control**:
+  - Reconnected the `cpu-fan-toggle` switch in `fan-control.js` to control `pwm3` and `pwm3_enable` (1 for manual curve with 90s hold timer, 2 for firmware/BIOS auto).
+- **Manual PWM Override Status Indicator**:
+  - Updated `#fan-pwm-val-display` so that when automatic curve control is engaged, "Auto Curve" is displayed in a grayed-out, dimmed state (`color: var(--muted); opacity: 0.5`). When the manual override slider is actively used, the badge updates dynamically to `${pct}% (Manual Active)` in bright accent styling.
+- **Chassis Media Slots & Capacity Badges**:
+  - Added live capacity formatting to the Source Media Slot dropdown (`SD 4.0 Slot [125.3 GB]` or `[Empty]`).
+  - Added a dedicated `#media-slot-info-badge` indicator badge in the Copy Button drawer tab showing current inserted media status (`SD: 125.3 GB` or `SLOTS EMPTY`).
+- **Hardware Copy Button & Collision Rule Handling**:
+  - Restored full copy toast lifecycle (`#copy-toast`) in `dashboard.js`, providing live transfer progress, file counts, transfer rate (MB/s), ETA estimations, pause/resume, and abort confirmation.
+  - Added an "Existing File Collision Rule" setting in the Copy Button tab (`skip`, `overwrite`, or `ask`), defaulting to automatic skipping so that front-panel copy button presses never hang indefinitely on file collisions.
+  - Added interactive collision action buttons (`Skip Existing`, `Overwrite All`, `Cancel`) to the copy toast modal for manual confirmation when configured.
+- **Physical LCD Real-Time Layout & Timezone Synchronization**:
+  - Added layout version detection and `applyDashboardLayout()` trigger directly inside `applyStats()` in `dashboard.js`.
+  - Reordering cards, toggling card visibility, resizing modules, or updating timezones and clock formats (12h/24h) on the Live Canvas or Settings drawer now immediately synchronizes to the physical `/dev/fb0` LCD screen in real time.
+- **Console Overlay Pointer-Events Fix**:
+  - Set `pointer-events: none` on `#console-modal-overlay` while keeping `#console-window` interactive, eliminating invisible fullscreen click interception over the top bar and Toolkit Settings button.
+
 ## v0.8.3 (2026-10-05)
 ### 🔔 Toast System Refactor & Standby Confirmation
 - **Top-Centered Notification Toasts**: Re-engineered system notification toasts to always render centered at the top of the browser window below the top navigation bar (`top: 64px`, `z-index: 100000`). Solved the issue where default password security warnings and system alerts were hidden behind the ZETTNAS System Console window.

@@ -7,31 +7,31 @@ import { api } from '../api.js';
 const $ = (id) => document.getElementById(id);
 
 export function initLedControl() {
-  const previewBar = $('led-live-preview-bar');
-  const previewTxt = $('led-preview-mode-txt');
-  const slider = $('led-brightness-slider');
-  const valDisplay = $('led-brightness-val');
-  const speedSlider = $('led-speed-slider');
-  const speedValDisplay = $('led-speed-val');
-  const powerBtn = $('led-power-btn');
-  const reactiveToggle = $('led-reactive-toggle');
+  const previewBar = $('preview-bar') || $('led-live-preview-bar');
+  const previewTxt = $('preview-state-txt') || $('led-preview-mode-txt');
+  const slider = $('led-slider') || $('led-brightness-slider');
+  const valDisplay = $('led-val-display') || $('led-brightness-val');
+  const speedSlider = $('speed-slider') || $('led-speed-slider');
+  const speedValDisplay = $('speed-val-display') || $('led-speed-val');
+  const powerBtn = $('btn-toggle-led') || $('led-power-btn');
+  const reactiveToggle = $('reactive-toggle') || $('led-reactive-toggle');
   const ledNightToggle = $('led-night-toggle');
   const ledNightStart = $('led-night-start');
   const ledNightEnd = $('led-night-end');
 
-  const effectBtns = document.querySelectorAll('.led-effect-btn');
-  const colorChips1 = document.querySelectorAll('.led-color-chip');
+  const effectBtns = document.querySelectorAll('#tab-led .effect-btn, .led-effect-btn');
+  const colorChips1 = document.querySelectorAll('#tab-led .color-chip, .led-color-chip');
   const customColorPicker1 = $('custom-color-picker');
-  const customChip1Label = $('custom-color-chip-label');
+  const customChip1Label = $('custom-chip-label') || $('custom-color-chip-label');
 
-  const colorChips2 = document.querySelectorAll('.led-sec-color-chip');
-  const customColorPicker2 = $('custom-sec-color-picker');
-  const customChip2Label = $('custom-sec-color-chip-label');
+  const colorChips2 = document.querySelectorAll('#tab-led .color-chip2, .led-sec-color-chip');
+  const customColorPicker2 = $('custom-color-picker2') || $('custom-sec-color-picker');
+  const customChip2Label = $('custom-chip2-label') || $('custom-sec-color-chip-label');
 
-  const profilePills = document.querySelectorAll('.led-profile-pill');
-  const speedCard = $('led-card-speed');
-  const priColorCard = $('led-card-color');
-  const secColorCard = $('led-card-color2');
+  const profilePills = document.querySelectorAll('#tab-led .profile-pill, .led-profile-pill');
+  const speedCard = $('speed-card') || $('led-card-speed');
+  const priColorCard = $('primary-color-card') || $('led-card-color');
+  const secColorCard = $('secondary-color-card') || $('led-card-color2');
 
   let currentPower = 'on';
   let currentColor = '25c2a0';

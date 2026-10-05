@@ -27,7 +27,7 @@ def button_listener_daemon():
             current_state = (copy_val & 2) >> 1
             
             if current_state == 0 and last_state == 1:
-                cfg = {"enabled": False, "source": "/mnt/disks/", "dest": "/mnt/user/Media/", "use_exif": True}
+                cfg = {"enabled": False, "source": "sd", "dest": "/mnt/user/", "use_exif": True, "on_collision": "skip"}
                 if os.path.exists(BUTTON_CFG_FILE):
                     try:
                         with open(BUTTON_CFG_FILE, "r") as f:

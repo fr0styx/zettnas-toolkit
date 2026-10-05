@@ -138,19 +138,23 @@ async def _do_copy(cfg):
                 all_files.append((src_file, dst_file, file_size, is_collision))
 
         if collisions:
-            Z_STATE.copy_status = "awaiting_confirmation"
-            Z_STATE.copy_progress["file"] = f"{len(collisions)} files already exist in destination."
-            add_event("warning", "Copy Collision", f"{len(collisions)} files already exist. Waiting for confirmation.")
-            Z_STATE.ui_wake.set()
-            
-            Z_STATE.copy_confirm_event.clear()
-            Z_STATE.copy_confirm_event.wait(timeout=300.0)
-            
-            if not Z_STATE.copy_confirm_event.is_set():
-                raise Exception("Aborted: Timed out waiting for overwrite confirmation.")
-            
-            if Z_STATE.copy_overwrite_choice == "cancel":
-                raise Exception("Aborted by user.")
+            collision_rule = cfg.get("on_collision", "skip")
+            if collision_rule in ["skip", "overwrite"]:
+                Z_STATE.copy_overwrite_choice = collision_rule
+            else:
+                Z_STATE.copy_status = "awaiting_confirmation"
+                Z_STATE.copy_progress["file"] = f"{len(collisions)} files already exist in destination."
+                add_event("warning", "Copy Collision", f"{len(collisions)} files already exist. Waiting for confirmation.")
+                Z_STATE.ui_wake.set()
+                
+                Z_STATE.copy_confirm_event.clear()
+                Z_STATE.copy_confirm_event.wait(timeout=300.0)
+                
+                if not Z_STATE.copy_confirm_event.is_set():
+                    raise Exception("Aborted: Timed out waiting for overwrite confirmation.")
+                
+                if Z_STATE.copy_overwrite_choice == "cancel":
+                    raise Exception("Aborted by user.")
 
         files_to_copy = []
         total_size = 0

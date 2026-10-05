@@ -28,24 +28,38 @@ CRC_TABLE = [
     0xde, 0xd9, 0xd0, 0xd7, 0xc2, 0xc5, 0xcc, 0xcb, 0xe6, 0xe1, 0xe8, 0xef, 0xfa, 0xfd, 0xf4, 0xf3
 ]
 
+_configured_ports = set()
+
+def find_led_port():
+    env_port = os.environ.get("LED_PORT")
+    if env_port and os.path.exists(env_port):
+        return env_port
+    by_ids = glob.glob("/dev/serial/by-id/*ZettOS_RGB*") + glob.glob("/host/dev/serial/by-id/*ZettOS_RGB*")
+    for b in by_ids:
+        if os.path.exists(b):
+            try:
+                real = os.path.realpath(b)
+                if os.path.exists(real):
+                    return real
+            except Exception:
+                pass
+            return b
+    for p in ["/dev/ttyACM0", "/host/dev/ttyACM0", LED_PORT]:
+        if p and os.path.exists(p):
+            return p
+    return None
+
 def send_led_packet(mode, r1, g1, b1, r2=0, g2=0, b2=0, speed=5):
-    port = LED_PORT
-    by_id = glob.glob("/dev/serial/by-id/*ZettOS_RGB*")
-    if by_id and os.path.exists(by_id[0]):
-        port = by_id[0]
-    elif os.path.exists(LED_PORT):
-        port = LED_PORT
-    elif os.path.exists("/dev/ttyACM0"):
-        port = "/dev/ttyACM0"
-    elif os.path.exists("/host/dev/ttyACM0"):
-        port = "/host/dev/ttyACM0"
+    port = find_led_port()
+    if not port or not os.path.exists(port):
+        return False, f"Device {port or 'ttyACM0'} not found"
 
-    if not os.path.exists(port):
-        return False, f"Device {port} not found"
+    if port not in _configured_ports:
+        subprocess.run(["stty", "-F", port, "115200", "cs8", "-cstopb", "-parenb", "raw", "-echo", "-hupcl"],
+                       check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        _configured_ports.add(port)
 
-    subprocess.run(["stty", "-F", port, "115200", "cs8", "-cstopb", "-parenb", "raw", "-echo"],
-                   check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    raw_delay = max(1, min(255, int(speed))) & 0xFF
+    raw_delay = (-speed) & 0xFF if speed is not None else 0xFB
     payload = bytes([mode, r1, g1, b1, r2, g2, b2, raw_delay])
     crc = 0
     for byte in payload:
@@ -56,6 +70,7 @@ def send_led_packet(mode, r1, g1, b1, r2=0, g2=0, b2=0, speed=5):
             f.write(frame)
         return True, "OK"
     except Exception as e:
+        _configured_ports.discard(port)
         return False, str(e)
 
 def _rainbow_worker(brightness, slider_speed):
