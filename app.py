@@ -1,6 +1,6 @@
 """
 ZettNAS Toolkit - Application Entrypoint
-Modular Backend Architecture (v0.7.0)
+Modular Backend Architecture
 """
 import os
 import io
@@ -9,6 +9,7 @@ import json
 import time
 import hashlib
 import mimetypes
+import atexit
 import threading
 from contextlib import asynccontextmanager
 
@@ -18,8 +19,9 @@ from fastapi import FastAPI, Request, Response, HTTPException
 from backend import __version__
 from backend.config import (
     logger, DATA_DIR, STATIC_DIR, LED_STATE_FILE,
-    _load_security, is_using_default_password
+    _load_security, is_using_default_password, COLLECTOR_WATCHDOG_SECS
 )
+from backend.fsutil import read_json
 from backend.state import Z_STATE, _load_events, add_event
 from backend.auth import _load_sessions, auth_middleware
 from backend.db import init_db
@@ -27,6 +29,7 @@ from backend.hardware.cpu import read_cpu_util
 from backend.hardware.network import read_ip
 from backend.hardware.storage import detect_chassis_model
 from backend.hardware.led import apply_led_state
+from backend.hardware.fans import failsafe_release_fans
 from backend.services.stats_collector import stats_collector_daemon
 from backend.services.button_listener import button_listener_daemon
 from backend.services.lcd_renderer import render_lcd_loop
@@ -86,22 +89,59 @@ def startup_system():
             "The system is using the default password 'admin'. Please change it in Settings."
         )
 
-    if os.path.exists(LED_STATE_FILE):
+    led_cfg = read_json(LED_STATE_FILE, None)
+    if isinstance(led_cfg, dict):
         try:
-            with open(LED_STATE_FILE, "r") as f:
-                apply_led_state(json.load(f))
-        except (json.JSONDecodeError, OSError) as e:
+            apply_led_state(led_cfg)
+        except OSError as e:
             logger.warning(f"Failed to apply initial LED state: {e}")
 
     threading.Thread(target=stats_collector_daemon, daemon=True, name="StatsCollector").start()
     threading.Thread(target=button_listener_daemon, daemon=True, name="ButtonListener").start()
     threading.Thread(target=render_lcd_loop, daemon=True, name="LcdRenderer").start()
+    threading.Thread(target=fan_watchdog_daemon, daemon=True, name="FanWatchdog").start()
+    # Backup in case the server exits without running the lifespan shutdown.
+    # Registered here (not at import) so tooling that imports app.py is inert.
+    atexit.register(lambda: Z_STATE.fans_locked or _shutdown_fans("exit"))
+
+
+def fan_watchdog_daemon():
+    """Hand fans back to firmware if the stats collector stops updating.
+
+    The collector is the only thing driving PWM. If it hangs (e.g. a blocked
+    smartctl call) the fans would stay frozen at their last value, so after
+    COLLECTOR_WATCHDOG_SECS without a heartbeat we engage the failsafe. The
+    collector automatically reclaims control once it recovers.
+    """
+    while True:
+        time.sleep(5)
+        hb = Z_STATE.collector_heartbeat
+        if not hb or Z_STATE.fans_locked:
+            continue
+        stale = time.time() - hb
+        if stale > COLLECTOR_WATCHDOG_SECS and not Z_STATE.fans_released:
+            logger.error(f"[WATCHDOG] Stats collector unresponsive for {int(stale)}s.")
+            failsafe_release_fans("watchdog")
+            add_event("error", "Fan Watchdog Triggered",
+                      f"Stats collector stalled for {int(stale)}s; fans returned to firmware control.")
+
+
+def _shutdown_fans(reason: str):
+    try:
+        failsafe_release_fans(reason, lock=True)
+    except Exception as e:  # never block shutdown
+        logger.error(f"[FANS] Failsafe on {reason} failed: {e}")
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     startup_system()
-    yield
+    try:
+        yield
+    finally:
+        Z_STATE.shutting_down = True
+        if not Z_STATE.fans_locked:
+            _shutdown_fans("shutdown")
 
 
 app = FastAPI(
@@ -127,7 +167,7 @@ async def serve_static(request: Request, path: str):
 
     base_dir = os.path.abspath(STATIC_DIR)
     fp = os.path.abspath(os.path.join(base_dir, path))
-    if not fp.startswith(base_dir) or not os.path.exists(fp):
+    if not (fp == base_dir or fp.startswith(base_dir + os.sep)) or not os.path.isfile(fp):
         raise HTTPException(status_code=404, detail="not found")
 
     entry = _load_static_file(fp)
@@ -143,8 +183,6 @@ async def serve_static(request: Request, path: str):
         html_str = content.decode("utf-8")
         if request.query_params.get("mode") == "lcd" or "mode=lcd" in str(request.query_params):
             html_str = html_str.replace('<body class="studio-workbench">', '<body class="studio-workbench lcd-direct">')
-        fix_css = "<style>@media(max-width:720px){.chassis-front-panel{max-height:85vh!important;overflow-y:auto!important;width:95vw!important;box-sizing:border-box!important;}}</style></head>"
-        html_str = html_str.replace("</head>", fix_css)
         content = html_str.encode("utf-8")
         etag = None
         gz_content = None
@@ -165,7 +203,26 @@ async def serve_static(request: Request, path: str):
     return Response(content=content, media_type=ctype, headers=headers)
 
 
+class ZettServer(uvicorn.Server):
+    """Engage the fan failsafe as soon as a stop signal arrives.
+
+    uvicorn runs the lifespan shutdown only after open connections drain; the
+    long-lived SSE streams (incl. the LCD renderer) can keep that from ever
+    happening before Docker's SIGKILL, so we don't rely on it alone.
+    """
+
+    def handle_exit(self, sig, frame):
+        Z_STATE.shutting_down = True
+        if not Z_STATE.fans_locked:
+            _shutdown_fans(f"signal {sig}")
+        super().handle_exit(sig, frame)
+
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", "8082"))
     logger.info(f"ZettNAS dashboard starting on :{port} (version {__version__})")
-    uvicorn.run(app, host="0.0.0.0", port=port, log_level="warning")
+    server_config = uvicorn.Config(
+        app, host="0.0.0.0", port=port, log_level="warning",
+        timeout_graceful_shutdown=3,
+    )
+    ZettServer(server_config).run()

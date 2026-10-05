@@ -17,6 +17,16 @@ window.addEventListener('DOMContentLoaded', () => {
 
   let currentBrowsePath = "/mnt/user/";
   let currentBrowseDirs = [];
+  let browseRoots = ["/mnt/user"];
+
+  // Only paths inside an allowed root (enforced server-side) are navigable.
+  const isWithinRoots = (p) => {
+    const norm = p.replace(/\/+$/, "") || "/";
+    return browseRoots.some(r => {
+      const root = r.replace(/\/+$/, "") || "/";
+      return norm === root || norm.startsWith(root + "/");
+    });
+  };
   let fbSortReverse = false;
 
   const fbSearchBar = $("fb-search-bar");
@@ -39,12 +49,9 @@ window.addEventListener('DOMContentLoaded', () => {
     
     const rootLink = document.createElement("span");
     rootLink.textContent = "/";
-    rootLink.style.cursor = "pointer";
     rootLink.style.padding = "2px 4px";
     rootLink.style.borderRadius = "4px";
-    rootLink.onmouseover = () => rootLink.style.background = "rgba(255,255,255,0.1)";
-    rootLink.onmouseout = () => rootLink.style.background = "transparent";
-    rootLink.onclick = () => loadBrowsePath("/");
+    rootLink.style.color = "var(--muted)";
     fbCurrentPath.appendChild(rootLink);
 
     parts.forEach((part, i) => {
@@ -52,12 +59,16 @@ window.addEventListener('DOMContentLoaded', () => {
       const p = builtPath;
       const span = document.createElement("span");
       span.textContent = part;
-      span.style.cursor = "pointer";
       span.style.padding = "2px 4px";
       span.style.borderRadius = "4px";
-      span.onmouseover = () => span.style.background = "rgba(255,255,255,0.1)";
-      span.onmouseout = () => span.style.background = "transparent";
-      span.onclick = () => loadBrowsePath(p);
+      if (isWithinRoots(p)) {
+        span.style.cursor = "pointer";
+        span.onmouseover = () => span.style.background = "rgba(255,255,255,0.1)";
+        span.onmouseout = () => span.style.background = "transparent";
+        span.onclick = () => loadBrowsePath(p);
+      } else {
+        span.style.color = "var(--muted)";
+      }
       
       fbCurrentPath.appendChild(span);
       
@@ -125,15 +136,22 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  async function loadBrowsePath(targetPath) {
+  async function loadBrowsePath(targetPath, isFallback = false) {
     try {
-      const res = await fetch(`/api/browse?path=${encodeURIComponent(targetPath)}`);
+      const res = await fetch(`/api/browse?path=${encodeURIComponent(targetPath || "")}`);
       if (res.ok) {
         const data = await res.json();
+        if (Array.isArray(data.roots) && data.roots.length) browseRoots = data.roots;
         currentBrowsePath = data.current;
         currentBrowseDirs = data.dirs;
         renderBrowseBreadcrumbs(currentBrowsePath);
         renderBrowseList();
+      } else if (!isFallback) {
+        // Path missing or outside the allowed folders: fall back to the default root.
+        loadBrowsePath("", true);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        showToast("Failed to load folder: " + (err.detail || res.status), "error");
       }
     } catch (e) {
       if (typeof showToast === "function") showToast("Failed to load folder: " + e, "error");
@@ -190,7 +208,11 @@ window.addEventListener('DOMContentLoaded', () => {
       const newPath = currentBrowsePath + (currentBrowsePath.endsWith("/") ? "" : "/") + folderName;
       try {
         fbCreateFolderBtn.textContent = "...";
-        const res = await fetch(`/api/mkdir?path=${encodeURIComponent(newPath)}`);
+        const res = await fetch("/api/mkdir", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ path: newPath })
+        });
         if (res.ok) {
           fbNewFolderName.value = "";
           fbNewFolderName.placeholder = "New folder name...";

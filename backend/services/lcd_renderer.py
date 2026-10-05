@@ -5,6 +5,7 @@ import mmap
 import base64
 from PIL import Image
 from playwright.sync_api import sync_playwright
+from backend import config
 from backend.config import logger, ENABLE_FB, LCD_FPS, LCD_FORMAT, PORT
 from backend.state import Z_STATE
 
@@ -20,7 +21,7 @@ def render_lcd_loop():
         return
 
     time.sleep(2)
-    url = f"http://127.0.0.1:{PORT}/?mode=lcd"
+    url = f"http://127.0.0.1:{PORT}/?mode=lcd&lcd_token={config.LCD_INTERNAL_TOKEN}"
 
     backlight_path = "/sys/class/backlight/intel_backlight/brightness"
     if os.path.exists(backlight_path):

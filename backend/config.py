@@ -1,7 +1,7 @@
 import os
 import json
 import socket
-import hashlib
+import secrets
 import logging
 
 logging.basicConfig(
@@ -43,15 +43,47 @@ WALLPAPER_CONFIG_FILE = os.path.join(DATA_DIR, "wallpaper_config.json")
 WALLPAPERS_DIR = os.path.join(DATA_DIR, "wallpapers")
 
 # ---- Security & Auth ----
+from backend.passwords import hash_password, verify_password  # noqa: E402
+
 WEB_PASSWORD = os.environ.get("WEB_PASSWORD", "admin")
-STORED_PASSWORD_HASH = hashlib.sha256(WEB_PASSWORD.encode()).hexdigest()
+STORED_PASSWORD_HASH = hash_password(WEB_PASSWORD)
 ZETTNAS_USERNAME = "admin"
 ZETTNAS_EMAIL = ""
 SESSION_TTL = 30 * 86400  # 30 days
+MIN_PASSWORD_LENGTH = 8
+
+# Random per-process token handed only to the headless LCD renderer.
+# Replaces the old "trust every request from 127.0.0.1" bypass.
+LCD_INTERNAL_TOKEN = secrets.token_urlsafe(32)
+
+# Folder browser / mkdir / copy destination are confined to these roots.
+ALLOWED_BROWSE_ROOTS = [
+    p.strip() for p in os.environ.get("BROWSE_ROOTS", POOL_PATH).split(",") if p.strip()
+]
+
+# OpenAPI docs (/docs, /redoc, /openapi.json): disabled unless explicitly enabled,
+# and always require authentication when enabled.
+ENABLE_API_DOCS = os.environ.get("ENABLE_API_DOCS", "0") == "1"
+
+# Reject request bodies larger than this (wallpaper uploads are base64 JSON).
+MAX_BODY_BYTES = int(os.environ.get("MAX_BODY_MB", "16")) * 1024 * 1024
+MAX_WALLPAPER_BYTES = int(os.environ.get("MAX_WALLPAPER_MB", "10")) * 1024 * 1024
+
+# ---- Fan safety ----
+FAN_MIN_PWM = 58          # Lowest PWM the chassis fans reliably spin at
+FAN_MAX_PWM = 183         # Chassis maximum
+FAN_FAILSAFE_PWM = int(os.environ.get("FAN_FAILSAFE_PWM", "150"))
+HDD_CRITICAL_TEMP = int(os.environ.get("HDD_CRITICAL_TEMP", "55"))
+COLLECTOR_WATCHDOG_SECS = int(os.environ.get("COLLECTOR_WATCHDOG_SECS", "20"))
+
+_default_pw_cache = {"hash": None, "value": False}
 
 def is_using_default_password() -> bool:
-    default_hash = hashlib.sha256(b"admin").hexdigest()
-    return STORED_PASSWORD_HASH == default_hash
+    """True if the stored hash matches 'admin'. Cached per hash (scrypt is slow by design)."""
+    if _default_pw_cache["hash"] != STORED_PASSWORD_HASH:
+        _default_pw_cache["hash"] = STORED_PASSWORD_HASH
+        _default_pw_cache["value"] = verify_password("admin", STORED_PASSWORD_HASH)
+    return _default_pw_cache["value"]
 
 def _load_security():
     global STORED_PASSWORD_HASH, ZETTNAS_USERNAME, ZETTNAS_EMAIL

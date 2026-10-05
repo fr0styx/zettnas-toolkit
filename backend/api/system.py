@@ -1,19 +1,49 @@
 import os
 import re
-import json
 import time
-from fastapi import APIRouter, Request, HTTPException
-from backend.config import logger, BUTTON_CFG_FILE, DASH_LAYOUT_FILE, EVENTS_FILE
+from fastapi import APIRouter, HTTPException
+from backend import __version__
+from backend.config import logger, BUTTON_CFG_FILE, DASH_LAYOUT_FILE, EVENTS_FILE, ALLOWED_BROWSE_ROOTS
 import backend.config as config
 from backend.state import Z_STATE
+from backend.fsutil import atomic_write_json, read_json, resolve_within, root_for
 from backend.hardware.disks import fetch_disk_smart_detail
 from backend.hardware.screen import get_screen_state
 from backend.models.schemas import (
-    ButtonConfigRequest, CopyConfirmRequest, MkdirRequest
+    ButtonConfigRequest, CopyConfirmRequest, MkdirRequest, LayoutRequest, StateRequest
 )
 from backend.hardware.storage import get_current_layout
 
 router = APIRouter(tags=["System & Storage"])
+
+
+@router.get("/health")
+async def health():
+    """Public liveness probe (no secrets): used by Docker HEALTHCHECK/monitoring."""
+    hb = Z_STATE.collector_heartbeat
+    hb_age = round(time.time() - hb, 1) if hb else None
+    collector_ok = hb_age is not None and hb_age <= config.COLLECTOR_WATCHDOG_SECS
+    return {
+        "status": "ok" if collector_ok else "degraded",
+        "version": __version__,
+        "collector_heartbeat_age": hb_age,
+        "lcd_renderer_active": bool(Z_STATE.lcd_renderer_active),
+        "fans_released": bool(Z_STATE.fans_released),
+        "critical_temp_active": bool(Z_STATE.critical_temp_active),
+    }
+
+
+def _contained(path, must_exist=True):
+    """Resolve `path` inside an allowed browse root or raise 403/404."""
+    path = str(path or "").strip()
+    if not path or "\x00" in path:
+        raise HTTPException(status_code=400, detail="Invalid path")
+    real = resolve_within(path, ALLOWED_BROWSE_ROOTS)
+    if real is None:
+        raise HTTPException(status_code=403, detail="Path is outside the allowed folders.")
+    if must_exist and not os.path.exists(real):
+        raise HTTPException(status_code=404, detail="Path does not exist.")
+    return real
 
 @router.get("/disk_detail")
 async def disk_detail(dev: str = "sda"):
@@ -31,49 +61,66 @@ async def screen_state():
     return get_screen_state()
 
 def _handle_browse_logic(path: str, dirs_only: bool):
-    if not os.path.exists(path):
-        raise HTTPException(status_code=404, detail="Path does not exist.")
+    real = _contained(path or ALLOWED_BROWSE_ROOTS[0])
+    if not os.path.isdir(real):
+        raise HTTPException(status_code=400, detail="Not a directory.")
     out = []
-    if path != "/":
-        parent = os.path.dirname(path.rstrip("/"))
-        if not parent: parent = "/"
-        out.append({"name": "..", "path": parent, "is_dir": True, "size": 0})
+    root = root_for(real, ALLOWED_BROWSE_ROOTS)
+    if root and real != root:
+        out.append({"name": "..", "path": os.path.dirname(real), "is_dir": True, "size": 0})
     try:
-        entries = os.listdir(path)
-        for e in sorted(entries):
-            full = os.path.join(path, e)
-            is_dir = os.path.isdir(full)
-            if dirs_only and not is_dir:
-                continue
-            sz = 0
-            if not is_dir and not os.path.islink(full):
-                try: sz = os.path.getsize(full)
-                except OSError: pass
-            out.append({"name": e, "path": full, "is_dir": is_dir, "size": sz})
-        return {"current": path, "dirs": out}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        entries = os.listdir(real)
+    except PermissionError:
+        raise HTTPException(status_code=403, detail="Permission denied.")
+    except OSError as e:
+        logger.warning(f"[BROWSE] listdir failed for {real}: {e}")
+        raise HTTPException(status_code=500, detail="Unable to read directory.")
+    for e in sorted(entries):
+        full = os.path.join(real, e)
+        is_dir = os.path.isdir(full)
+        if dirs_only and not is_dir:
+            continue
+        # Hide symlinks that point outside the allowed roots.
+        if os.path.islink(full) and resolve_within(full, ALLOWED_BROWSE_ROOTS) is None:
+            continue
+        sz = 0
+        if not is_dir and not os.path.islink(full):
+            try: sz = os.path.getsize(full)
+            except OSError: pass
+        out.append({"name": e, "path": full, "is_dir": is_dir, "size": sz})
+    return {"current": real, "roots": list(ALLOWED_BROWSE_ROOTS), "dirs": out}
+
 
 @router.get("/browse")
-async def browse(path: str = "/mnt/user", dirs_only: str = "0"):
-    d_only = (dirs_only == "1")
-    return _handle_browse_logic(path, d_only)
+async def browse(path: str = "", dirs_only: str = "0"):
+    return _handle_browse_logic(path, dirs_only == "1")
+
+
+def _do_mkdir(path: str):
+    path = str(path or "").strip()
+    parent = _contained(os.path.dirname(path.rstrip("/")) or "/", must_exist=True)
+    name = os.path.basename(path.rstrip("/"))
+    if not name or name in (".", "..") or "/" in name:
+        raise HTTPException(status_code=400, detail="Invalid folder name")
+    target = os.path.join(parent, name)
+    if resolve_within(target, ALLOWED_BROWSE_ROOTS) is None:
+        raise HTTPException(status_code=403, detail="Path is outside the allowed folders.")
+    try:
+        os.makedirs(target, exist_ok=True)
+    except OSError as e:
+        logger.warning(f"[MKDIR] Failed to create {target}: {e}")
+        raise HTTPException(status_code=500, detail="Unable to create folder.")
+    return {"status": "ok", "path": target}
+
 
 @router.post("/mkdir")
 async def mkdir(req: MkdirRequest):
-    path = str(req.path).strip()
-    if not path.startswith("/mnt/user/") or ".." in path:
-        raise HTTPException(status_code=400, detail="Invalid path")
-    os.makedirs(path, exist_ok=True)
-    return {"status": "ok"}
+    return _do_mkdir(req.path)
+
 
 @router.get("/mkdir", include_in_schema=False)
 async def mkdir_legacy_get(path: str = ""):
-    path = str(path).strip()
-    if not path.startswith("/mnt/user/") or ".." in path:
-        raise HTTPException(status_code=400, detail="Invalid path")
-    os.makedirs(path, exist_ok=True)
-    return {"status": "ok"}
+    return _do_mkdir(path)
 
 @router.post("/copy/cancel")
 async def copy_cancel():
@@ -101,33 +148,33 @@ async def resume_copy():
     Z_STATE.copy_paused = False
     return {"status": "resumed"}
 
+BUTTON_DEFAULTS = {"enabled": False, "source": "sd", "dest": "/mnt/user/"}
+
+
+def _load_buttons():
+    state = dict(BUTTON_DEFAULTS)
+    saved = read_json(BUTTON_CFG_FILE, {})
+    if isinstance(saved, dict):
+        state.update(saved)
+    return state
+
+
 @router.get("/buttons")
 async def get_buttons():
-    if os.path.exists(BUTTON_CFG_FILE):
-        try:
-            with open(BUTTON_CFG_FILE, "r") as f:
-                return json.load(f)
-        except (json.JSONDecodeError, OSError): pass
-    return {"enabled": False, "source": "sd", "dest": "/mnt/user/"}
+    return _load_buttons()
+
 
 @router.post("/buttons")
 async def post_buttons(req: ButtonConfigRequest):
     data = req.model_dump(exclude_unset=True)
-    state = {"enabled": False, "source": "sd", "dest": "/mnt/user/"}
-    if os.path.exists(BUTTON_CFG_FILE):
-        try:
-            with open(BUTTON_CFG_FILE, "r") as f:
-                state.update(json.load(f))
-        except (json.JSONDecodeError, OSError): pass
-    state.update(data)
-
-    dest_val = str(data.get("dest", state["dest"])).strip()
+    state = _load_buttons()
     if "dest" in data:
-        if not os.path.exists(dest_val):
-            raise HTTPException(status_code=400, detail=f"Path does not exist: {dest_val}")
-
-    with open(BUTTON_CFG_FILE, "w") as f:
-        json.dump(state, f)
+        real = _contained(data["dest"])
+        if not os.path.isdir(real):
+            raise HTTPException(status_code=400, detail="Destination must be a folder.")
+        data["dest"] = real
+    state.update(data)
+    atomic_write_json(BUTTON_CFG_FILE, state)
     return state
 
 @router.delete("/events/clear")
@@ -151,19 +198,20 @@ async def get_layout():
     return get_current_layout()
 
 @router.post("/layout")
-async def post_layout(request: Request):
-    data = await request.json()
+async def post_layout(req: LayoutRequest):
+    data = req.model_dump()
+    data["sizes"] = {k: v for k, v in data["sizes"].items() if v in ("full", "compact")}
     data["version"] = int(time.time() * 1000)
-    with open(DASH_LAYOUT_FILE, "w") as f:
-        json.dump(data, f)
+    atomic_write_json(DASH_LAYOUT_FILE, data)
     with Z_STATE.lock:
         if Z_STATE.cached_stats:
             Z_STATE.cached_stats["layout"] = data
+    Z_STATE.ui_wake.set()
     return {"status": "ok", "layout": data}
 
+
 @router.post("/state")
-async def post_state(request: Request):
-    data = await request.json()
-    if "fb" in data:
-        config.ENABLE_FB = bool(data["fb"])
+async def post_state(req: StateRequest):
+    if req.fb is not None:
+        config.ENABLE_FB = bool(req.fb)
     return {"status": "ok"}

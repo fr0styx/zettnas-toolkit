@@ -13,6 +13,22 @@ export const auth = {
   hasToken: () => !!localStorage.getItem(TOKEN_KEY)
 };
 
+// The on-device LCD renderer (headless Chromium) authenticates with an
+// internal token passed as ?lcd_token=. Adopt it before any request is made
+// and remove it from the visible URL.
+(() => {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const lcdToken = params.get('lcd_token');
+    if (lcdToken) {
+      auth.setToken(lcdToken);
+      params.delete('lcd_token');
+      const qs = params.toString();
+      history.replaceState(null, '', window.location.pathname + (qs ? `?${qs}` : '') + window.location.hash);
+    }
+  } catch (e) { /* non-browser context */ }
+})();
+
 async function request(endpoint, options = {}) {
   const url = endpoint;
   const config = { ...options };

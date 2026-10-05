@@ -1,7 +1,7 @@
 import os
 import glob
 import time
-from backend.config import logger, HOST_SYS
+from backend.config import logger, HOST_SYS, FAN_MIN_PWM, FAN_MAX_PWM, FAN_FAILSAFE_PWM
 from backend.state import Z_STATE
 from backend.hardware.cpu import _find_hwmon
 
@@ -34,28 +34,57 @@ def read_fans():
             Z_STATE.known_active_fans.add(idx)
     return fans
 
-def calc_curve_pwm(temp, min_pwm=58, max_pwm=183, temp_min=37, temp_max=50, curve_points=None):
+def sanitize_curve_points(points):
+    """Normalize user curve points to a safe, monotonic, bounded curve.
+
+    - temps clamped to 0..100 °C, percentages to 0..100
+    - sorted by temperature, duplicate temperatures collapsed
+    - fan % made non-decreasing (a hotter point can never be slower)
+    Returns None when fewer than 2 valid points remain.
+    """
+    if not points:
+        return None
+    cleaned = {}
+    for pt in points:
+        try:
+            t, p = int(pt[0]), int(pt[1])
+        except (TypeError, ValueError, IndexError):
+            continue
+        t = max(0, min(100, t))
+        p = max(0, min(100, p))
+        cleaned[t] = max(p, cleaned.get(t, 0))
+    if len(cleaned) < 2:
+        return None
+    out, running = [], 0
+    for t in sorted(cleaned):
+        running = max(running, cleaned[t])
+        out.append([t, running])
+    return out
+
+
+def calc_curve_pwm(temp, min_pwm=FAN_MIN_PWM, max_pwm=FAN_MAX_PWM, temp_min=37, temp_max=50, curve_points=None):
     if temp is None or temp <= 0:
         return min_pwm
 
-    if curve_points and len(curve_points) >= 2:
-        pts = sorted(curve_points, key=lambda x: x[0])
+    pts = sanitize_curve_points(curve_points)
+    if pts:
         if temp <= pts[0][0]:
             pct = pts[0][1]
         elif temp >= pts[-1][0]:
             pct = pts[-1][1]
         else:
             pct = pts[0][1]
-            for i in range(len(pts)-1):
+            for i in range(len(pts) - 1):
                 t1, p1 = pts[i]
-                t2, p2 = pts[i+1]
+                t2, p2 = pts[i + 1]
                 if t1 <= temp <= t2:
                     span = max(1, t2 - t1)
                     ratio = (temp - t1) / float(span)
                     pct = p1 + ratio * (p2 - p1)
                     break
         val = int((pct / 100.0) * max_pwm)
-        return max(0, min(max_pwm, val))
+        # Never below the minimum reliable spin speed.
+        return max(min_pwm, min(max_pwm, val))
 
     if temp >= temp_max:
         return max_pwm
@@ -92,7 +121,19 @@ def get_hold_remaining(pwm_key, hold_secs=120):
     rem = hold_secs - (time.time() - last_up)
     return max(0, int(rem))
 
+def _write_sysfs(path, value):
+    try:
+        with open(path, "w") as f:
+            f.write(f"{value}\n")
+        return True
+    except OSError as e:
+        logger.warning(f"[FANS] Failed writing {value} to {path}: {e}")
+        return False
+
+
 def set_fan_pwm(profile, manual_pct=60, custom_pwms=None, ctrl_cpu_fan=False):
+    if Z_STATE.fans_locked:
+        return False
     hw = _find_hwmon()
     if not hw:
         return False
@@ -108,26 +149,72 @@ def set_fan_pwm(profile, manual_pct=60, custom_pwms=None, ctrl_cpu_fan=False):
                 continue
             targets[p] = custom_pwms.get(key, 67)
     else:
-        pct_map = {"quiet": 67, "balanced": 120, "performance": 155, "full": 183}
-        raw = pct_map.get(profile, int((manual_pct / 100.0) * 183))
-        raw = max(58, min(183, raw))
+        pct_map = {"quiet": 67, "balanced": 120, "performance": 155, "full": FAN_MAX_PWM}
+        raw = pct_map.get(profile, int((manual_pct / 100.0) * FAN_MAX_PWM))
         targets = {p: raw for p in available_pwms if not (os.path.basename(p) == "pwm3" and not ctrl_cpu_fan)}
 
+    # CPU fan: hand back to firmware when we are not controlling it.
     pwm3_enable_file = os.path.join(hw, "pwm3_enable")
-    if os.path.exists(pwm3_enable_file):
-        try:
-            with open(pwm3_enable_file, "w") as f:
-                f.write("1\n" if ctrl_cpu_fan else "2\n")
-        except Exception as e:
-            logger.debug(f"Silenced exception: {e}")
+    if not ctrl_cpu_fan and _read_sysfs(pwm3_enable_file) not in (None, "2"):
+        _write_sysfs(pwm3_enable_file, 2)
 
     for path, val in targets.items():
-        if os.path.exists(path):
-            try:
-                with open(path, "w") as f:
-                    f.write(f"{val}\n")
-                applied += 1
-            except Exception as e:
-                logger.debug(f"Silenced exception: {e}")
+        val = max(FAN_MIN_PWM, min(FAN_MAX_PWM, int(val)))
+        # Claim manual mode for channels we drive (pwm3 may have been handed to
+        # firmware). On this driver pwm1/2_enable are read-only and always 1.
+        enable_file = f"{path}_enable"
+        if _read_sysfs(enable_file) not in (None, "1") and _is_writable(enable_file):
+            _write_sysfs(enable_file, 1)
+        if os.path.exists(path) and _write_sysfs(path, val):
+            applied += 1
 
+    if applied:
+        if Z_STATE.fans_released:
+            logger.info("[FANS] Software fan control resumed.")
+        Z_STATE.fans_released = False
     return applied > 0
+
+
+def _read_sysfs(path):
+    try:
+        with open(path) as f:
+            return f.read().strip()
+    except OSError:
+        return None
+
+
+def _is_writable(path):
+    """sysfs enforces mode bits even for root, so check them directly."""
+    try:
+        return bool(os.stat(path).st_mode & 0o222)
+    except OSError:
+        return False
+
+
+def failsafe_release_fans(reason="shutdown", lock=False):
+    """Put every fan channel in a safe state.
+
+    - Channels that support firmware/EC automatic control (writable
+      pwmN_enable, e.g. the CPU fan) are handed back to it (enable = 2).
+    - Channels without a firmware mode (the ZettLab disk fans: pwm1/2_enable
+      are read-only) are pinned at FAN_FAILSAFE_PWM, which the driver keeps
+      after the container exits.
+    Safe to call repeatedly. With lock=True (shutdown) software control is
+    not reclaimed afterwards.
+    """
+    if lock:
+        Z_STATE.fans_locked = True
+    hw = _find_hwmon()
+    if not hw:
+        return False
+    failsafe = max(FAN_MIN_PWM, min(FAN_MAX_PWM, FAN_FAILSAFE_PWM))
+    logger.warning(f"[FANS] Failsafe engaged ({reason}): disk fans -> PWM {failsafe}, CPU fan -> firmware auto.")
+    for path in sorted(glob.glob(os.path.join(hw, "pwm[1-9]"))):
+        enable_file = f"{path}_enable"
+        if _is_writable(enable_file):
+            if _read_sysfs(enable_file) != "2":
+                _write_sysfs(enable_file, 2)
+        else:
+            _write_sysfs(path, failsafe)
+    Z_STATE.fans_released = True
+    return True

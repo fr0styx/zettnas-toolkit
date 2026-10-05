@@ -34,12 +34,19 @@ export function initAuth() {
           loginPwd.value = '';
           window.location.reload();
         } else {
-          loginBtn.textContent = 'INVALID PASSWORD';
+          let msg = 'INVALID PASSWORD';
+          let holdMs = 2000;
+          if (res.status === 429) {
+            const retry = parseInt(res.headers.get('Retry-After') || '0', 10);
+            msg = retry > 0 ? `TOO MANY ATTEMPTS — WAIT ${retry}s` : 'TOO MANY ATTEMPTS';
+            holdMs = Math.min(Math.max(retry, 2), 15) * 1000;
+          }
+          loginBtn.textContent = msg;
           loginBtn.style.borderColor = 'var(--crit)';
           setTimeout(() => {
             loginBtn.textContent = 'SECURE LOGIN';
             loginBtn.style.borderColor = '';
-          }, 2000);
+          }, holdMs);
         }
       } catch (e) {
         loginBtn.textContent = 'ERROR';

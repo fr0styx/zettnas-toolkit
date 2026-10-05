@@ -16,7 +16,7 @@ class FanConfigRequest(BaseModel):
     ctrl_cpu_fan: Optional[bool] = None
     temp_min: Optional[int] = None
     temp_max: Optional[int] = None
-    curve_points: Optional[List[List[int]]] = None
+    curve_points: Optional[List[List[int]]] = Field(default=None, max_length=12)
 
 class LedConfigRequest(BaseModel):
     power: Optional[str] = None
@@ -48,4 +48,16 @@ class WallpaperRenameRequest(BaseModel):
     new_name: str
 
 class MkdirRequest(BaseModel):
-    path: str
+    path: str = Field(..., max_length=4096)
+
+
+class LayoutRequest(BaseModel):
+    order: List[str] = Field(default_factory=list, max_length=32)
+    vis: Dict[str, bool] = Field(default_factory=dict)
+    sizes: Dict[str, str] = Field(default_factory=dict)
+    clock_format: str = Field(default="24", pattern=r"^(12|24)$")
+    timezone: str = Field(default="America/New_York", max_length=64, pattern=r"^[A-Za-z0-9_+\-/]+$")
+
+
+class StateRequest(BaseModel):
+    fb: Optional[bool] = None

@@ -3,6 +3,7 @@ import json
 import time
 import threading
 from backend.config import logger, EVENTS_FILE
+from backend.fsutil import atomic_write_json
 
 class ZettState:
     def __init__(self):
@@ -37,6 +38,11 @@ class ZettState:
         self.copy_abort_flag = False
         self.cached_stats = None
         self.static_cache = {}
+        self.fans_released = False
+        self.fans_locked = False
+        self.shutting_down = False
+        self.collector_heartbeat = 0.0
+        self.critical_temp_active = False
 
 Z_STATE = ZettState()
 
@@ -59,7 +65,6 @@ def add_event(level, title, message, details=None):
         Z_STATE.event_log.insert(0, entry)
         Z_STATE.event_log = Z_STATE.event_log[:100]
         try:
-            with open(EVENTS_FILE, "w") as f:
-                json.dump(Z_STATE.event_log, f)
+            atomic_write_json(EVENTS_FILE, Z_STATE.event_log)
         except OSError as e:
             logger.warning(f"Failed to save events: {e}")

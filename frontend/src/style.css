@@ -2132,3 +2132,8 @@ body.theme-yak .mini-lcd-canvas {
   pointer-events: auto !important;
   transform: translate(-50%, 0) !important;
 }
+
+/* Mobile: keep the chassis panel scrollable on narrow screens (moved from app.py HTML injection) */
+@media (max-width: 720px) {
+  .chassis-front-panel { max-height: 85vh !important; overflow-y: auto !important; width: 95vw !important; box-sizing: border-box !important; }
+}

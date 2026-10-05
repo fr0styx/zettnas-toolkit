@@ -1,10 +1,13 @@
 import os
 import json
 import time
+import hmac
 import secrets
 from fastapi import Request
 from fastapi.responses import JSONResponse
+from backend import config
 from backend.config import logger, SESSIONS_FILE, SESSION_TTL
+from backend.fsutil import atomic_write_json
 
 SESSIONS = {}
 
@@ -24,8 +27,7 @@ def _save_sessions():
     try:
         now = time.time()
         valid = {t: data for t, data in SESSIONS.items() if data.get("expires", 0) > now}
-        with open(SESSIONS_FILE, "w") as f:
-            json.dump(valid, f)
+        atomic_write_json(SESSIONS_FILE, valid)
     except OSError as e:
         logger.warning(f"Failed to save sessions.json: {e}")
 
@@ -40,8 +42,19 @@ def create_session(username: str) -> str:
     _save_sessions()
     return token
 
+def revoke_session(token: str) -> None:
+    if token and SESSIONS.pop(token, None) is not None:
+        _save_sessions()
+
+def is_internal_token(token: str) -> bool:
+    return bool(token) and hmac.compare_digest(token, config.LCD_INTERNAL_TOKEN)
+
 def validate_session(token: str) -> bool:
-    if not token or token not in SESSIONS:
+    if not token:
+        return False
+    if is_internal_token(token):
+        return True
+    if token not in SESSIONS:
         return False
     session = SESSIONS[token]
     if session.get("expires", 0) <= time.time():
@@ -55,22 +68,46 @@ def invalidate_all_sessions():
     SESSIONS = {}
     _save_sessions()
 
+def extract_token(request: Request) -> str:
+    header = request.headers.get("Authorization", "")
+    if header.startswith("Bearer "):
+        return header[7:].strip()
+    # Query-string token is still accepted for EventSource (SSE) and /docs,
+    # which cannot send custom headers.
+    return request.query_params.get("token", "").strip()
+
+_PUBLIC_API_PATHS = {"/api/auth/login", "/api/v1/auth/login", "/api/health", "/api/v1/health"}
+_DOCS_PATHS = {"/docs", "/redoc", "/openapi.json", "/docs/oauth2-redirect"}
+
 async def auth_middleware(request: Request, call_next):
-    # Allow public static paths, login, and wallpaper downloads without token
     path = request.url.path
-    is_api = path.startswith("/api/") or path.startswith("/api/v1/")
+
+    # Reject oversized bodies early (before the route reads them into memory).
+    content_length = request.headers.get("content-length")
+    if content_length and content_length.isdigit() and int(content_length) > config.MAX_BODY_BYTES:
+        return JSONResponse(status_code=413, content={"detail": "Request body too large."})
+
+    is_api = path.startswith("/api/")
+    is_docs = path in _DOCS_PATHS
     is_exempt = (
-        path in ["/api/auth/login", "/api/v1/auth/login"] or
+        path in _PUBLIC_API_PATHS or
         path.startswith("/api/wallpapers/download/") or
         path.startswith("/api/v1/wallpapers/download/")
     )
 
-    if is_api and not is_exempt:
-        client_host = request.client.host if request.client else ""
-        if client_host not in ["127.0.0.1", "localhost", "::1"]:
-            token = request.headers.get("Authorization", "").replace("Bearer ", "").strip() or request.query_params.get("token", "").strip()
-            if not validate_session(token):
-                logger.warning(f"Auth failed for client {client_host} accessing {path}")
-                return JSONResponse(status_code=401, content={"detail": "Unauthorized. Please log in."})
+    if is_docs and not config.ENABLE_API_DOCS:
+        return JSONResponse(status_code=404, content={"detail": "not found"})
+
+    if (is_api and not is_exempt) or is_docs:
+        token = extract_token(request)
+        if not token and is_docs:
+            # Swagger UI fetches /openapi.json without our token; inherit it from /docs?token=...
+            from urllib.parse import urlparse, parse_qs
+            ref_qs = parse_qs(urlparse(request.headers.get("referer", "")).query)
+            token = (ref_qs.get("token") or [""])[0]
+        if not validate_session(token):
+            client_host = request.client.host if request.client else "unknown"
+            logger.warning(f"Auth failed for client {client_host} accessing {path}")
+            return JSONResponse(status_code=401, content={"detail": "Unauthorized. Please log in."})
 
     return await call_next(request)

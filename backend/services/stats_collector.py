@@ -5,8 +5,10 @@ import sqlite3
 import traceback
 from backend.config import (
     logger, DB_PATH, FAN_STATE_FILE, LED_STATE_FILE,
-    get_server_hostname, is_using_default_password
+    get_server_hostname, is_using_default_password,
+    FAN_MIN_PWM, FAN_MAX_PWM, HDD_CRITICAL_TEMP
 )
+from backend.fsutil import read_json
 from backend.state import Z_STATE, add_event
 from backend.hardware.cpu import read_cpu_temp, read_cpu_util
 from backend.hardware.memory import read_mem
@@ -20,6 +22,7 @@ from backend.services.copy_engine import read_media_slots
 
 def stats_collector_daemon():
     while True:
+        Z_STATE.collector_heartbeat = time.time()
         try:
             disks = read_disk_temps_and_io()
             net = read_network_rates()
@@ -36,12 +39,9 @@ def stats_collector_daemon():
             fans = read_fans()
 
             fan_cfg = {"profile": "auto", "manual_pct": 60, "ctrl_cpu_fan": False, "temp_min": 37, "temp_max": 50}
-            if os.path.exists(FAN_STATE_FILE):
-                try:
-                    with open(FAN_STATE_FILE, "r") as f:
-                        fan_cfg.update(json.load(f))
-                except Exception:
-                    pass
+            loaded_fan_cfg = read_json(FAN_STATE_FILE, {})
+            if isinstance(loaded_fan_cfg, dict):
+                fan_cfg.update(loaded_fan_cfg)
 
             profile = fan_cfg.get("profile", "auto")
             ctrl_cpu_fan = fan_cfg.get("ctrl_cpu_fan", False)
@@ -61,11 +61,11 @@ def stats_collector_daemon():
             t_zone2 = max(active_z2, default=32)
 
             curve_points = fan_cfg.get("curve_points", None)
-            raw_pwm1 = calc_curve_pwm(t_zone1, min_pwm=58, max_pwm=183, temp_min=temp_min, temp_max=temp_max, curve_points=curve_points)
-            raw_pwm2 = calc_curve_pwm(t_zone2, min_pwm=58, max_pwm=183, temp_min=temp_min, temp_max=temp_max, curve_points=curve_points)
+            raw_pwm1 = calc_curve_pwm(t_zone1, min_pwm=FAN_MIN_PWM, max_pwm=FAN_MAX_PWM, temp_min=temp_min, temp_max=temp_max, curve_points=curve_points)
+            raw_pwm2 = calc_curve_pwm(t_zone2, min_pwm=FAN_MIN_PWM, max_pwm=FAN_MAX_PWM, temp_min=temp_min, temp_max=temp_max, curve_points=curve_points)
 
             if cpu_temp >= 85:
-                raw_pwm3 = 183
+                raw_pwm3 = FAN_MAX_PWM
             elif cpu_temp >= 70:
                 raw_pwm3 = 145
             elif cpu_temp >= 55:
@@ -73,7 +73,30 @@ def stats_collector_daemon():
             else:
                 raw_pwm3 = 85
 
-            if profile == "auto":
+            # Safety override: any spinning disk at/above the critical temperature
+            # forces every disk fan to 100% regardless of profile or curve.
+            hot_disks = [d for d in disks if d.get("temp") is not None and not d.get("standby", False) and d["temp"] >= HDD_CRITICAL_TEMP]
+            critical_override = bool(hot_disks)
+            if critical_override and not Z_STATE.critical_temp_active:
+                names = ", ".join(f"{d.get('name', d.get('dev', '?'))} ({d['temp']}°C)" for d in hot_disks)
+                logger.warning(f"[FANS] Critical disk temperature: {names}. Forcing fans to 100%.")
+                add_event("error", "Disk Temperature Critical", f"{names} at or above {HDD_CRITICAL_TEMP}°C. Fans forced to 100%.", details={"disks": [d.get("dev") for d in hot_disks]})
+            elif not critical_override and Z_STATE.critical_temp_active:
+                logger.info("[FANS] Disk temperatures back below critical threshold.")
+            Z_STATE.critical_temp_active = critical_override
+
+            if critical_override:
+                raw_pwm1 = raw_pwm2 = FAN_MAX_PWM
+                active_pwm1 = apply_zone_pwm(1, FAN_MAX_PWM, hold_secs=120)
+                active_pwm2 = apply_zone_pwm(2, FAN_MAX_PWM, hold_secs=120)
+                custom_pwms = {"pwm1": active_pwm1, "pwm2": active_pwm2}
+                if ctrl_cpu_fan:
+                    active_pwm3 = apply_zone_pwm(3, raw_pwm3, hold_secs=90)
+                    custom_pwms["pwm3"] = active_pwm3
+                else:
+                    active_pwm3 = 0
+                set_fan_pwm("auto", custom_pwms=custom_pwms, ctrl_cpu_fan=ctrl_cpu_fan)
+            elif profile == "auto":
                 active_pwm1 = apply_zone_pwm(1, raw_pwm1, hold_secs=120)
                 active_pwm2 = apply_zone_pwm(2, raw_pwm2, hold_secs=120)
 
@@ -87,8 +110,9 @@ def stats_collector_daemon():
 
                 set_fan_pwm("auto", custom_pwms=custom_pwms, ctrl_cpu_fan=ctrl_cpu_fan)
             else:
-                pct_map = {"quiet": 67, "balanced": 120, "performance": 155, "full": 183}
-                man_pwm = pct_map.get(profile, int((fan_cfg.get("manual_pct", 60) / 100.0) * 183))
+                pct_map = {"quiet": 67, "balanced": 120, "performance": 155, "full": FAN_MAX_PWM}
+                man_pwm = pct_map.get(profile, int((fan_cfg.get("manual_pct", 60) / 100.0) * FAN_MAX_PWM))
+                man_pwm = max(FAN_MIN_PWM, min(FAN_MAX_PWM, man_pwm))
                 active_pwm1 = man_pwm
                 active_pwm2 = man_pwm
                 active_pwm3 = man_pwm if ctrl_cpu_fan else 0
@@ -101,13 +125,9 @@ def stats_collector_daemon():
             set_screen_brightness(target_bl)
 
             # LED Lighting & Schedule
-            cfg = {}
-            if os.path.exists(LED_STATE_FILE):
-                try:
-                    with open(LED_STATE_FILE, "r") as f:
-                        cfg = json.load(f)
-                except Exception:
-                    pass
+            cfg = read_json(LED_STATE_FILE, {})
+            if not isinstance(cfg, dict):
+                cfg = {}
 
             in_led_night = cfg.get("night_mode", False) and is_in_time_window(cfg.get("night_start", "23:00"), cfg.get("night_end", "07:00"))
 
@@ -230,20 +250,3 @@ def collect():
         data["events"] = list(Z_STATE.event_log)
         data["security"] = {"is_default_password": is_using_default_password()}
     return data
-
-def _old_collect_wrapper():
-    return {
-        "name": get_server_hostname(),
-        "status": "-- OK",
-        "ip": read_ip(),
-        "storage": {"used": "0GB", "total": "0GB", "pct": 0},
-        "cpu": {"temp": 0, "util": 0},
-        "mem": {"used_gb": 0, "total_gb": 0, "pct": 0},
-        "fans": [],
-        "net": {"tx": "0 B/s", "rx": "0 B/s"},
-        "uptime": "0s",
-        "disks": [],
-        "chassis": "D6",
-        "layout": None,
-        "copy_status": "idle"
-    }

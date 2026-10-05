@@ -469,6 +469,15 @@ export function initSettings() {
         email: $('sec-email') ? $('sec-email').value : ''
       };
 
+      if (payload.new_password && payload.new_password.length < 8) {
+        showToast('New password must be at least 8 characters', 'error');
+        return;
+      }
+      if (payload.new_password && payload.new_password.toLowerCase() === 'admin') {
+        showToast('Choose a password other than the default', 'error');
+        return;
+      }
+
       secSaveBtn.textContent = 'SAVING...';
       try {
         await api.post('/api/security', payload);
@@ -490,7 +499,8 @@ export function initSettings() {
 
   const logoutBtn = $('sec-logout-btn');
   if (logoutBtn) {
-    logoutBtn.addEventListener('click', () => {
+    logoutBtn.addEventListener('click', async () => {
+      try { await api.post('/api/auth/logout', {}); } catch (e) { /* session may already be gone */ }
       localStorage.removeItem('zettnas_token');
       document.cookie = 'zettnas_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
       window.location.reload();

@@ -3,7 +3,7 @@ import json
 import asyncio
 from fastapi import APIRouter, Request, HTTPException
 from fastapi.responses import JSONResponse, StreamingResponse
-from backend.config import ENABLE_FB, LCD_FPS
+from backend.config import logger, ENABLE_FB, LCD_FPS
 from backend.state import Z_STATE
 from backend.services.stats_collector import collect
 from backend.db import query_history
@@ -26,7 +26,8 @@ async def get_stats():
 @router.get("/stats/stream")
 async def stats_stream(request: Request):
     async def event_generator():
-        while True:
+        # End the stream on server shutdown so uvicorn can exit cleanly.
+        while not Z_STATE.shutting_down:
             if await request.is_disconnected():
                 break
             data = collect()
@@ -41,4 +42,5 @@ async def get_history(range: str = "24h"):
         data = query_history(range)
         return JSONResponse(data)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"[HISTORY] Query failed: {e}")
+        raise HTTPException(status_code=500, detail="Failed to load history")

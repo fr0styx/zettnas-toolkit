@@ -1,5 +1,38 @@
 # ZettNAS Toolkit - Release Changelog
 
+## v0.9.0 (2026-10-05)
+### 🛡️ Safety & Security
+- **Fan failsafe**:
+  - On shutdown or `docker stop`, the disk fans are pinned at PWM 150 (~82%) and the CPU fan goes back to firmware auto. The disk-fan channels have no firmware mode on this driver (`pwm1/2_enable` are read-only), so they hold that value after the container exits.
+  - A new watchdog thread engages the same failsafe if the stats collector stops updating for 20 s. Software control resumes automatically once the collector recovers.
+- **Fan curve safety**:
+  - Curve points are clamped, de-duplicated and made non-decreasing.
+  - Fan output never drops below the 58 PWM floor. It used to be able to reach 0, which once left a fan at PWM 35.
+  - Any spinning disk at or above **55°C** forces the disk fans to 100% regardless of profile, and logs an event.
+- **Passwords & login**:
+  - Passwords are hashed with salted **scrypt**. Old SHA-256 hashes are upgraded automatically on the next login.
+  - Repeated failed logins are rate-limited per IP with exponential backoff (HTTP 429 + `Retry-After`).
+  - New passwords need at least 8 characters, and `admin` is rejected.
+  - New `POST /api/auth/logout` revokes the session.
+- **No more localhost bypass**: the physical LCD renderer now uses a random internal token generated each time the server starts. Requests from inside the container without credentials now get 401.
+- **Wallpaper uploads**:
+  - The file content is checked with Pillow; only PNG, JPEG, GIF and WEBP are accepted, up to 10 MB.
+  - The stored file's extension comes from its detected type, not the uploaded name.
+  - Filenames are reduced to a bare name, so paths can't be smuggled in.
+  - Downloads send an explicit content type with `nosniff`.
+- **Filesystem containment**:
+  - `/api/browse`, `/api/mkdir` and the copy-button destination only accept paths inside `BROWSE_ROOTS` (default `/mnt/user`).
+  - Paths are fully resolved first, so `..` tricks and symlinks can't escape.
+  - The folder browser only lets you navigate within those folders.
+- **API hardening**:
+  - `/docs`, `/redoc` and `/openapi.json` are off unless `ENABLE_API_DOCS=1`, and need a login when on.
+  - `/layout`, `/state` and `/fans` requests are validated against typed schemas.
+  - Request bodies over 16 MB are rejected (HTTP 413).
+  - Error responses no longer include raw exception text.
+- **Crash-safe config**: all JSON state (sessions, events, fans, LED, layout, buttons, wallpapers, security) is written atomically (temp file → fsync → rename).
+- **New `GET /api/health`** (no login needed): reports version, collector heartbeat age, LCD renderer status, failsafe state and critical-temperature state.
+- Cleanup: removed the dead `_old_collect_wrapper`, and moved the mobile CSS fix from an HTML injection in `app.py` into `style.css`.
+
 ## v0.8.6 (2026-10-05)
 ### 🪟 Dock Hover Previews & Alert Cleanup
 - **Dock Hover Preview Cards & Live Thumbnails**:
