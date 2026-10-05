@@ -1,5 +1,19 @@
 # ZettNAS Toolkit - Release Changelog
 
+## v0.8.6 (2026-10-05)
+### 🪟 Dock Hover Previews & Alert Cleanup
+- **Dock Hover Preview Cards & Live Thumbnails**:
+  - Implemented an interactive mouse-over hover preview card for all OS dock items (`#dock-hover-tooltip`).
+  - Displays the target window title, icon, and dynamic status pill (`ACTIVE`, `MINIMIZED`, or `WORKSPACE`).
+  - Renders a live miniature visual thumbnail preview:
+    - **System Console**: A scaled replica of the live 640×172 hardware LCD display with real-time gauges, dials, temperatures, and disks.
+    - **S.M.A.R.T. Diagnostics**: Disk model, health status indicator, and power-on hours summary.
+    - **Media Card Ingest**: Live copy status, progress bar percentage, and active filename.
+    - **Destination Folder**: Target storage filesystem path.
+    - **Dashboard Home**: NAS chassis thumbnail with workspace shortcut hint.
+- **Removed Debug Minimize Toast Alert**:
+  - Removed accidental `showToast("Minimize clicked")` call from `modals.js`, preventing spurious red alert notifications from appearing when minimizing diagnostic windows.
+
 ## v0.8.5 (2026-10-05)
 ### 🖥️ Desktop Workspace Icon & Console Window Enhancements
 - **Top-Left Scaled Chassis Desktop Icon**:

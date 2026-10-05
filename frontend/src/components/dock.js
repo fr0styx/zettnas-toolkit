@@ -143,11 +143,165 @@ export const DockManager = {
     dock.classList.add('active');
     dock.innerHTML = '';
 
+    let hoverTimeout = null;
+
+    function ensureDockTooltip() {
+      let tooltip = document.getElementById('dock-hover-tooltip');
+      if (!tooltip) {
+        tooltip = document.createElement('div');
+        tooltip.id = 'dock-hover-tooltip';
+        tooltip.className = 'dock-hover-tooltip';
+        tooltip.innerHTML = `
+          <div class="dock-tooltip-header">
+            <div class="dock-tooltip-title">
+              <svg class="ic ic-sm" id="dock-tooltip-icon"><use href="#i-chip"/></svg>
+              <span id="dock-tooltip-text">Window</span>
+            </div>
+            <span class="dock-tooltip-status" id="dock-tooltip-badge">Active</span>
+          </div>
+          <div class="dock-tooltip-preview" id="dock-tooltip-preview-content"></div>
+        `;
+        document.body.appendChild(tooltip);
+
+        tooltip.addEventListener('mouseenter', () => clearTimeout(hoverTimeout));
+        tooltip.addEventListener('mouseleave', () => hideDockTooltip());
+      }
+      return tooltip;
+    }
+
+    function generatePreviewForWindow(id) {
+      if (id === 'console') {
+        const screenEl = document.getElementById('screen');
+        if (screenEl) {
+          const container = document.createElement('div');
+          container.className = 'mini-screen-scaler';
+          const clone = screenEl.cloneNode(true);
+          clone.removeAttribute('id');
+          clone.querySelectorAll('[id]').forEach((el) => el.removeAttribute('id'));
+          container.appendChild(clone);
+          return container;
+        }
+      } else if (id === 'smart') {
+        const container = document.createElement('div');
+        container.className = 'dock-preview-summary';
+        const model = document.getElementById('smart-meta-model')?.textContent || 'Drive Health';
+        const health = document.getElementById('smart-meta-health')?.textContent || 'PASSED';
+        const hours = document.getElementById('smart-meta-hours')?.textContent || '--';
+        const devTitle = document.getElementById('smart-modal-title')?.textContent || 'Diagnostics';
+        container.innerHTML = `
+          <div style="font-size:10px; font-weight:700; color:#fff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${devTitle}</div>
+          <div style="display:flex; justify-content:space-between; align-items:center; font-size:9px;">
+            <span style="color:var(--muted);">Status:</span>
+            <strong style="color:${health.includes('PASS') ? 'var(--ok)' : 'var(--crit)'}; font-weight:800;">${health}</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; font-size:9px;">
+            <span style="color:var(--muted);">Power-on:</span>
+            <span style="color:#cbd5e1;">${hours} hrs</span>
+          </div>
+        `;
+        return container;
+      } else if (id === 'copy') {
+        const container = document.createElement('div');
+        container.className = 'dock-preview-summary';
+        const status = document.getElementById('copy-toast-status')?.textContent || 'Ingest';
+        const pct = document.getElementById('copy-toast-pct')?.textContent || '0%';
+        const file = document.getElementById('copy-toast-file')?.textContent || 'Preparing...';
+        container.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:center; font-size:9px;">
+            <strong style="color:#fff;">${status}</strong>
+            <strong style="color:var(--ok2);">${pct}</strong>
+          </div>
+          <div style="background:rgba(255,255,255,0.12); height:4px; border-radius:2px; overflow:hidden; margin:4px 0;">
+            <div style="background:var(--ok2); height:100%; width:${pct};"></div>
+          </div>
+          <div style="font-size:8px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${file}</div>
+        `;
+        return container;
+      } else if (id === 'fb' || id === 'folder') {
+        const container = document.createElement('div');
+        container.className = 'dock-preview-summary';
+        const path = document.getElementById('fb-current-path')?.textContent || '/mnt/user';
+        container.innerHTML = `
+          <div style="font-size:9px; font-weight:700; color:#fff;">Folder Destination</div>
+          <div style="font-family:monospace; font-size:8px; color:var(--ok2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-top:3px;">${path}</div>
+        `;
+        return container;
+      } else if (id === 'home') {
+        const container = document.createElement('div');
+        container.className = 'dock-preview-summary';
+        container.style.cssText = 'display:flex; align-items:center; gap:8px; height:100%;';
+        container.innerHTML = `
+          <img src="img/chassis-d6u.png" style="width:42px; height:auto; border-radius:4px; filter:drop-shadow(0 2px 5px rgba(0,0,0,0.5));" alt="Chassis">
+          <div style="display:flex; flex-direction:column; gap:2px;">
+            <span style="font-size:10px; font-weight:700; color:#fff;">Desktop Home</span>
+            <span style="font-size:8px; color:var(--muted);">Click to clear / minimize all</span>
+          </div>
+        `;
+        return container;
+      }
+      return null;
+    }
+
+    function showDockTooltip(dockItem, id, title, icon, isMinimized) {
+      clearTimeout(hoverTimeout);
+      const tooltip = ensureDockTooltip();
+      const textEl = document.getElementById('dock-tooltip-text');
+      const iconEl = document.getElementById('dock-tooltip-icon');
+      const badgeEl = document.getElementById('dock-tooltip-badge');
+      const previewEl = document.getElementById('dock-tooltip-preview-content');
+
+      if (textEl) textEl.textContent = title;
+      if (iconEl) iconEl.innerHTML = `<use href="${icon}"/>`;
+      if (badgeEl) {
+        if (id === 'home') {
+          badgeEl.textContent = 'Workspace';
+          badgeEl.className = 'dock-tooltip-status active';
+        } else {
+          badgeEl.textContent = isMinimized ? 'Minimized' : 'Active';
+          badgeEl.className = 'dock-tooltip-status ' + (isMinimized ? 'minimized' : 'active');
+        }
+      }
+
+      if (previewEl) {
+        previewEl.innerHTML = '';
+        const previewContent = generatePreviewForWindow(id);
+        if (previewContent) {
+          previewEl.appendChild(previewContent);
+          previewEl.style.display = 'flex';
+        } else {
+          previewEl.style.display = 'none';
+        }
+      }
+
+      const rect = dockItem.getBoundingClientRect();
+      const tooltipW = 210;
+      const tooltipH = 92;
+
+      let leftPos = rect.left + (rect.width / 2) - (tooltipW / 2);
+      leftPos = Math.max(10, Math.min(window.innerWidth - tooltipW - 10, leftPos));
+      const topPos = rect.top - tooltipH - 10;
+
+      tooltip.style.left = `${leftPos}px`;
+      tooltip.style.top = `${topPos}px`;
+      tooltip.classList.add('visible');
+    }
+
+    function hideDockTooltip() {
+      clearTimeout(hoverTimeout);
+      hoverTimeout = setTimeout(() => {
+        const tooltip = document.getElementById('dock-hover-tooltip');
+        if (tooltip) tooltip.classList.remove('visible');
+      }, 120);
+    }
+
     const dashItem = document.createElement('div');
     dashItem.className = 'dock-item';
-    dashItem.title = 'Dashboard Home';
+    dashItem.setAttribute('aria-label', 'Dashboard Home');
     dashItem.innerHTML = `<svg><use href="#i-globe"/></svg>`;
+    dashItem.addEventListener('mouseenter', () => showDockTooltip(dashItem, 'home', 'Dashboard Home', '#i-globe', false));
+    dashItem.addEventListener('mouseleave', hideDockTooltip);
     dashItem.addEventListener('click', () => {
+      hideDockTooltip();
       const allModals = document.querySelectorAll('.smart-modal-backdrop, .smart-modal-window, #console-window');
       allModals.forEach((m) => {
         if (m.classList.contains('smart-modal-backdrop') && m.classList.contains('open')) {
@@ -166,11 +320,16 @@ export const DockManager = {
       if (win.minimized) cls += ' minimized';
       if (this.activeId === id && !win.minimized) cls += ' active-window';
       item.className = cls;
-      item.title = win.title;
+      item.setAttribute('aria-label', win.title);
       item.innerHTML = `<svg><use href="${win.icon}"/></svg>`;
 
       item.addEventListener('mousedown', (e) => e.stopPropagation());
-      item.addEventListener('click', () => this.toggle(id));
+      item.addEventListener('mouseenter', () => showDockTooltip(item, id, win.title, win.icon, win.minimized));
+      item.addEventListener('mouseleave', hideDockTooltip);
+      item.addEventListener('click', () => {
+        hideDockTooltip();
+        this.toggle(id);
+      });
 
       dock.appendChild(item);
     });

@@ -32,8 +32,7 @@ window.addEventListener('DOMContentLoaded', () => {
       });
     }
     if (smartCloseBtn) smartCloseBtn.addEventListener("click", closeSmartModal);
-    const minBtn = document.getElementById("smart-modal-min");
-    if (minBtn) minBtn.addEventListener("click", () => { if (window.DockManager) window.DockManager.minimize("smart"); showToast("Minimize clicked"); });
+    if (minBtn) minBtn.addEventListener("click", () => { if (window.DockManager) window.DockManager.minimize("smart"); });
     if (smartOverlay) {
       smartOverlay.addEventListener("click", (e) => {
         if (e.target === smartOverlay) closeSmartModal();
