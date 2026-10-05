@@ -199,6 +199,56 @@ export function initDockSystem() {
     });
   }
 
+  const consoleClose = document.getElementById('console-close');
+  if (consoleClose) {
+    consoleClose.addEventListener('click', () => {
+      DockManager.minimize('console');
+    });
+  }
+
+  const consolePopout = document.getElementById('console-popout');
+  if (consolePopout) {
+    consolePopout.addEventListener('click', () => {
+      const popupW = 680;
+      const popupH = 240;
+      const left = Math.max(0, Math.round((window.screen.width - popupW) / 2));
+      const top = Math.max(0, Math.round((window.screen.height - popupH) / 2));
+      window.open(
+        `${window.location.origin}/?mode=lcd`,
+        'ZettNAS_Dashboard_Popup',
+        `width=${popupW},height=${popupH},top=${top},left=${left},status=no,menubar=no,toolbar=no,location=no,resizable=yes`
+      );
+    });
+  }
+
+  const chassisDesktopIcon = document.getElementById('chassis-desktop-icon');
+  if (chassisDesktopIcon) {
+    const openOrFocusDashboard = () => {
+      if (consoleOverlay) {
+        if (DockManager.windows['console']?.minimized || consoleOverlay.style.display === 'none' || !consoleOverlay.classList.contains('open')) {
+          DockManager.restore('console');
+          consoleOverlay.style.removeProperty('display');
+          consoleOverlay.classList.add('open');
+          consoleModal?.classList.remove('window-minimized');
+        }
+        if (consoleModal) {
+          bringToFront(consoleModal);
+          consoleModal.classList.remove('window-focus-pulse');
+          void consoleModal.offsetWidth; // trigger reflow
+          consoleModal.classList.add('window-focus-pulse');
+          setTimeout(() => consoleModal.classList.remove('window-focus-pulse'), 850);
+        }
+      }
+    };
+    chassisDesktopIcon.addEventListener('click', openOrFocusDashboard);
+    chassisDesktopIcon.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        openOrFocusDashboard();
+      }
+    });
+  }
+
   const smartModal = document.querySelector('#smart-modal-overlay .smart-modal-window');
   const smartHeader = document.querySelector('#smart-modal-overlay .smart-modal-header');
   if (smartModal) makeDraggable(smartModal, smartHeader);

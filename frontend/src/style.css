@@ -371,48 +371,90 @@ body.theme-yak .suite-toolkit-btn {
    DYNAMIC SCALING WORKBENCH STAGE & FOCUS SHIFT
    ========================================================================= */
 .chassis-workbench-stage {
-  
-  
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--stage-gap);
+  position: relative;
+  display: block;
   padding: 15px 20px 40px 20px;
-  transform: translateY(var(--stage-offset-y));
-  transition: gap 0.35s cubic-bezier(0.16, 1, 0.3, 1), 
-              transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-              margin-right 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+  transition: margin-right 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 body.drawer-is-open .chassis-workbench-stage {
-  
-  
   margin-right: 260px;
 }
 
-.chassis-hero-box {
-  position: relative;
-  z-index: 50;
-  width: 100%;
-  max-width: 680px;
+.chassis-hero-box.chassis-desktop-icon,
+.chassis-desktop-icon {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  z-index: 30;
+  width: 136px;
+  max-width: 136px;
   display: flex;
-  justify-content: center;
-  filter: drop-shadow(0 20px 35px rgba(0, 0, 0, 0.85));
-    max-height: calc(520px * var(--chassis-scale));
-  overflow: hidden;
-  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), 
-              max-height 0.35s cubic-bezier(0.16, 1, 0.3, 1), 
-              opacity 0.3s ease;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 8px 6px 8px;
+  border-radius: 12px;
+  background: rgba(14, 21, 30, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  cursor: pointer;
+  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.2s ease,
+              border-color 0.2s ease,
+              background 0.2s ease;
+  user-select: none;
+  overflow: visible;
+  max-height: none;
 }
 
-.chassis-hero-img {
+.chassis-hero-box.chassis-desktop-icon:hover,
+.chassis-desktop-icon:hover {
+  transform: translateY(-3px) scale(1.04);
+  background: rgba(20, 30, 42, 0.75);
+  border-color: rgba(37, 194, 160, 0.55);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.65), 0 0 16px rgba(37, 194, 160, 0.3);
+}
+
+.chassis-hero-box.chassis-desktop-icon:active,
+.chassis-desktop-icon:active {
+  transform: scale(0.96);
+}
+
+.chassis-desktop-icon .chassis-hero-img {
   width: 100%;
   height: auto;
   display: block;
+  border-radius: 6px;
   pointer-events: none;
-  border-radius: 12px;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.6));
+}
+
+.desktop-icon-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #eaf1f8;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+  white-space: nowrap;
+}
+
+.desktop-icon-label .icon-dot-status {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ok2, #25c2a0);
+  box-shadow: 0 0 6px var(--ok2, #25c2a0);
+  animation: pulseDot 2s infinite ease-in-out;
+  flex-shrink: 0;
 }
 
 .chassis-front-panel {
@@ -485,6 +527,32 @@ body.drawer-is-open .chassis-workbench-stage {
   font-weight: 700;
   letter-spacing: 1px;
   color: #3b4654;
+}
+
+.chassis-panel-header .btn-icon {
+  font-size: 14px;
+  line-height: 1;
+  padding: 3px 6px;
+  border-radius: 4px;
+  color: #78838f;
+  transition: all 0.2s ease;
+}
+.chassis-panel-header .btn-icon:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.12);
+}
+.chassis-panel-header #console-close:hover {
+  color: #fff;
+  background: rgba(240, 85, 59, 0.4);
+}
+
+@keyframes windowFocusPulse {
+  0% { box-shadow: 0 0 0 0 rgba(37, 194, 160, 0.7); }
+  40% { box-shadow: 0 0 35px rgba(37, 194, 160, 0.8), 0 25px 60px rgba(0, 0, 0, 0.85); }
+  100% { box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8); }
+}
+.window-focus-pulse {
+  animation: windowFocusPulse 0.8s ease-out !important;
 }
 
 /* =========================================================================

@@ -96,11 +96,13 @@
   </header>
 
   <main class="chassis-workbench-stage">
-    <div class="chassis-hero-box">
+    <div class="chassis-hero-box chassis-desktop-icon" id="chassis-desktop-icon" role="button" tabindex="0" title="Click to open System Dashboard">
       <img id="chassis-hero-img" src="img/chassis-d6u.png" class="chassis-hero-img" alt="NAS Hardware Chassis">
+      <div class="desktop-icon-label">
+        <span class="icon-dot-status"></span>
+        <span class="icon-text">ZettNAS Console</span>
+      </div>
     </div>
-
-    
   </main>
 </div>
 
@@ -927,7 +929,12 @@
 
       <div class="chassis-panel-header">
         <span class="chassis-engraved-text" id="chassis-panel-engraved">ZETTNAS • SYSTEM CONSOLE</span>
-        <div style="display:flex; gap:12px; align-items:center;"><span class="chassis-screen-spec">640 × 172 IPS</span><button id="console-min" class="btn-icon" aria-label="Minimize" style="font-size:18px;">–</button></div>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <span class="chassis-screen-spec">640 × 172 IPS</span>
+          <button id="console-popout" class="btn-icon" title="Open in standalone window" aria-label="Pop out" style="font-size:14px; opacity:0.75;">↗</button>
+          <button id="console-min" class="btn-icon" title="Minimize to dock" aria-label="Minimize" style="font-size:18px;">–</button>
+          <button id="console-close" class="btn-icon" title="Close console window" aria-label="Close" style="font-size:14px;">✕</button>
+        </div>
       </div>
 
       <div id="screen" class="hardware-screen-canvas">

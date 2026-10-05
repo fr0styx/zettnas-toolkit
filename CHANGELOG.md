@@ -1,5 +1,18 @@
 # ZettNAS Toolkit - Release Changelog
 
+## v0.8.5 (2026-10-05)
+### 🖥️ Desktop Workspace Icon & Console Window Enhancements
+- **Top-Left Scaled Chassis Desktop Icon**:
+  - Relocated the NAS chassis hero image from the center stage to the top-left corner of the desktop workspace (`top: 24px, left: 24px`).
+  - Scaled down to 20% width (`136px`) and encapsulated it in a sleek interactive desktop card (`.chassis-desktop-icon`) featuring glassmorphism backdrop blur, live telemetry pulse indicator dot, and tactile hover elevation.
+- **Click-to-Open Dashboard Window Management**:
+  - Clicking the top-left chassis desktop icon immediately restores and brings the System Console window (`#console-window`) to the front, complete with a focus-pulse animation.
+- **Window Controls (Close & Standalone Pop-out)**:
+  - Added a dedicated Close button (`✕`) to `#console-window` header alongside the Minimize button (`–`), allowing users to close the dashboard window and enjoy an unobstructed desktop wallpaper.
+  - Added a Pop-out button (`↗`) allowing users to launch the LCD dashboard into a dedicated standalone popup window (`/?mode=lcd`) for secondary displays.
+- **Physical LCD Isolation Guarantee**:
+  - Explicitly added `.chassis-desktop-icon` to [lcd-direct.css](file:///Volumes/appdata/zettnas-toolkit/frontend/src/lcd-direct.css) to ensure the physical 172×640 LCD display (`/dev/fb0`) remains 100% untouched and renders pure hardware telemetry without desktop shortcut elements.
+
 ## v0.8.4 (2026-10-05)
 ### 🛠️ Hardware Integration & WebUI Controls Restoration
 - **ARGB LED Strip Control & Stability**:

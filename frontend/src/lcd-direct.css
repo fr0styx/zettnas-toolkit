@@ -18,6 +18,7 @@ html:has(body.lcd-direct) {
 
 body.lcd-direct .suite-navbar,
 body.lcd-direct .chassis-hero-box,
+body.lcd-direct .chassis-desktop-icon,
 body.lcd-direct .chassis-panel-header,
 body.lcd-direct .chassis-screws,
 body.lcd-direct .chassis-led-fixture,
