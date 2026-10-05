@@ -1,0 +1,36 @@
+# Version control & dev
+.git/
+.gitignore
+.github/
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.bak
+.pytest_cache/
+
+# Node / Frontend development (Vite outputs to static/)
+node_modules/
+frontend/
+package.json
+package-lock.json
+vite.config.mjs
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Local state & runtime data
+data/
+*.log
+/tmp/
+.backup*/
+led_state.json
+fan_state.json
+dash_layout.json
+
+# OS artifacts
+.DS_Store
+Thumbs.db

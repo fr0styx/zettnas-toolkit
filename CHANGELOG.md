@@ -1,5 +1,20 @@
 # ZettNAS Toolkit - Release Changelog
 
+## v0.6.0 (2026-10-05)
+### 🛡️ Security & Stability Hardening (Phase 1)
+- **Session-Based Authentication Engine**: Eliminated critical auth token leak where raw SHA-256 password hashes were returned to the client and accepted as bearer tokens. Implemented cryptographically secure, random session tokens via `secrets.token_urlsafe(32)` with 30-day TTL expiration, active session pruning, and server-side persistence in `sessions.json`.
+- **Default Password Audit & Alerts**: Added proactive default credential detection (`is_using_default_password()`). The system now displays prominent startup console warnings, exposes password health via `/api/security`, and automatically logs a warning alert to the dashboard Event Log if the default `"admin"` password is still in use.
+- **Thread Lock Integrity (RLock)**: Resolved a critical race condition where `Z_STATE.lock` was reassigned 4 separate times across module load, breaking mutual exclusion. Consolidated all state initialization inside `ZettState.__init__` with a single, persistent `threading.RLock()`.
+- **Deduplication & Error Recovery**: Removed redundant duplicate definitions of `_load_events()` and `add_event()` (lines 1599/1609). Fixed an interrupted `except Exception as e:` handler in `render_lcd_loop()` to ensure the LCD framebuffer streamer can cleanly recover from frame capture errors.
+- **Robust Exception Handling**: Replaced all 15 bare `except: pass` blocks across file operations, hardware sysfs reads, and JSON loading with explicit, targeted exception tuples (`json.JSONDecodeError`, `OSError`, `ValueError`, `IndexError`), preventing suppression of critical system signals (`KeyboardInterrupt`, `SystemExit`).
+- **Container Build Hardening**: Added `.dockerignore` to keep development dependencies (`node_modules/`, ~25MB+), `.git/`, `.env`, and local `data/` out of production Docker container builds.
+- **Pinned Dependencies**: Explicitly pinned all runtime packages in `requirements.txt` (`fastapi==0.115.0`, `uvicorn==0.32.0`, `sse-starlette==2.1.3`, `aiofiles==24.1.0`, `exifread==3.0.0`, `Pillow==10.2.0`, `playwright==1.42.0`).
+
+## v0.5.1 (2026-10-02)
+### 📱 Mobile UI Viewport Constraint Fix
+- **System Console Clipping Fix**: Constrained the physical `.chassis-front-panel` modal to `max-height: 85vh` with `overflow-y: auto` in mobile responsive views (<= 720px). This prevents the vertically centered fixed modal from getting pushed off the top edge of mobile browser viewports.
+
+
 ## v0.5.0 (2026-10-02)
 ### 🖼️ Wallpaper Gallery & UI Polish
 - **Custom Wallpaper Engine**: Upload custom images from your device to instantly overwrite the default studio background. Wallpapers are permanently saved in the Unraid `appdata` directory.

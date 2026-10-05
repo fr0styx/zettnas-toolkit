@@ -15,7 +15,6 @@ import glob
 import json
 import struct
 import mmap
-import mmap
 import base64
 import shutil
 import socket
@@ -23,13 +22,48 @@ import colorsys
 import subprocess
 import gzip
 import threading
+import secrets
+import hashlib
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger("ZettNAS")
 
 class ZettState:
     def __init__(self):
         self.lock = threading.RLock()
+        self.ui_wake = threading.Event()
+        self.prev = {"idle": 0, "total": 0}
+        self.prev_net = {"time": 0.0, "rx": 0, "tx": 0}
+        self.prev_disk_io = {}
+        self.cached_hwmon = None
+        self.cached_cpu_temp_path = None
+        self.known_active_fans = set()
+        self.cached_disk_list = None
+        self.cached_disk_list_time = 0.0
+        self.cached_chassis_model = None
+        self.lcd_renderer_active = False
+        self.event_log = []
+        self.alert_active = False
+        self.rainbow_thread = None
+        self.rainbow_stop = threading.Event()
+        self.fan_state_tracker = {
+            "zone1": {"target": 120, "active": 120, "hold_until": 0},
+            "zone2": {"target": 120, "active": 120, "hold_until": 0},
+            "zone3": {"target": 85, "active": 85, "hold_until": 0}
+        }
+        self.cached_smart_data = {}
+        self.copy_active = False
+        self.copy_status = "idle"
+        self.copy_progress = {}
+        self.copy_paused = False
+        self.cached_stats = None
+        self.static_cache = {}
 
 Z_STATE = ZettState()
-Z_STATE.ui_wake = threading.Event()
 from urllib.parse import urlparse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from PIL import Image
@@ -121,21 +155,16 @@ Z_STATE.cached_chassis_model = None
 Z_STATE.lcd_renderer_active = False
 
 EVENTS_FILE = os.path.join(DATA_DIR, "events.json")
-Z_STATE.event_log = []
-Z_STATE.lock = threading.Lock()
 
 def _load_events():
-    pass
     try:
         if os.path.exists(EVENTS_FILE):
-            import json
             with open(EVENTS_FILE, "r") as f:
                 Z_STATE.event_log = json.load(f)
-    except Exception as e:
-        logger.debug(f"Silenced exception: {e}")
+    except (json.JSONDecodeError, OSError) as e:
+        logger.warning(f"Failed to load events: {e}")
 
 def add_event(level, title, message, details=None):
-    pass
     now = int(time.time())
     with Z_STATE.lock:
         if Z_STATE.event_log and Z_STATE.event_log[0].get("title") == title and Z_STATE.event_log[0].get("message") == message and (now - Z_STATE.event_log[0].get("ts", 0) < 3600):
@@ -148,8 +177,8 @@ def add_event(level, title, message, details=None):
         try:
             with open(EVENTS_FILE, "w") as f:
                 json.dump(Z_STATE.event_log, f)
-        except Exception as e:
-            logger.debug(f"Silenced exception: {e}")
+        except OSError as e:
+            logger.warning(f"Failed to save events: {e}")
 
 
 def is_in_time_window(start_str, end_str):
@@ -965,7 +994,7 @@ def button_listener_daemon():
                     try:
                         with open(BUTTON_CFG_FILE, "r") as f:
                             cfg.update(json.load(f))
-                    except: pass
+                    except (json.JSONDecodeError, OSError): pass
                 
                 if cfg.get("enabled") and not Z_STATE.copy_active:
                     Z_STATE.copy_active = True
@@ -1030,7 +1059,7 @@ async def _do_copy(cfg):
                         if size > 0:
                             found_dev = dev
                             break
-            except: pass
+            except (OSError, ValueError): pass
             
         if not found_dev:
             raise Exception(f"No media detected in {src_mode.upper()} slot.")
@@ -1045,7 +1074,7 @@ async def _do_copy(cfg):
                     if f"/{part_dev}" in line or f"/{found_dev}" in line:
                         mounted_path = line.split()[1]
                         break
-        except: pass
+        except (OSError, IndexError): pass
         
         if not mounted_path:
             mounted_path = "/tmp/sd_copy_mount"
@@ -1086,7 +1115,7 @@ async def _do_copy(cfg):
                 file_size = 0
                 if not os.path.islink(src_file):
                     try: file_size = os.path.getsize(src_file)
-                    except: pass
+                    except OSError: pass
                 all_files.append((src_file, dst_file, file_size, is_collision))
 
         if collisions:
@@ -1170,7 +1199,7 @@ async def _do_copy(cfg):
         Z_STATE.copy_progress["file"] = f"Error: {e}"
         add_event("error", "Copy Failed", str(e))
         try: send_led_packet(5, 255, 0, 0, 0, 0, 0, speed=10)
-        except: pass
+        except (OSError, ValueError): pass
     finally:
         if tmp_mount and mounted_path:
             subprocess.run(["umount", mounted_path])
@@ -1184,8 +1213,6 @@ async def _do_copy(cfg):
 
 
 Z_STATE.cached_stats = None
-
-Z_STATE.lock = threading.Lock()
 
 
 def read_media_slots():
@@ -1591,44 +1618,11 @@ def render_lcd_loop():
 
         except Exception as e:
             Z_STATE.lcd_renderer_active = False
-
-EVENTS_FILE = os.path.join(DATA_DIR, "events.json")
-Z_STATE.event_log = []
-Z_STATE.lock = threading.Lock()
-
-def _load_events():
-    pass
-    try:
-        if os.path.exists(EVENTS_FILE):
-            import json
-            with open(EVENTS_FILE, "r") as f:
-                Z_STATE.event_log = json.load(f)
-    except Exception as e:
-        logger.debug(f"Silenced exception: {e}")
-
-def add_event(level, title, message, details=None):
-    pass
-    now = int(time.time())
-    with Z_STATE.lock:
-        if Z_STATE.event_log and Z_STATE.event_log[0].get("title") == title and Z_STATE.event_log[0].get("message") == message and (now - Z_STATE.event_log[0].get("ts", 0) < 3600):
-            return
-        entry = {"ts": now, "level": level, "title": title, "message": message}
-        if details is not None:
-            entry["details"] = details
-        Z_STATE.event_log.insert(0, entry)
-        Z_STATE.event_log = Z_STATE.event_log[:100]
-        try:
-            with open(EVENTS_FILE, "w") as f:
-                json.dump(Z_STATE.event_log, f)
-        except Exception as e:
-            logger.debug(f"Silenced exception: {e}")
-
             logger.info(f"[LCD] Active render loop error: {e}")
             time.sleep(2)
 
 
 Z_STATE.static_cache = {}  # {filepath: (bytes, etag, gzip_bytes)}
-Z_STATE.lock = threading.Lock()
 
 def _load_static_file(fp):
     """Load a static file into cache with ETag and mtime validation."""
@@ -1669,40 +1663,86 @@ import asyncio
 from typing import Any
 import mimetypes
 
-# Security
-import hashlib
-import logging
-
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger("ZettNAS")
-
+# Security & Session Architecture
 WEB_PASSWORD = os.environ.get("WEB_PASSWORD", "admin")
-AUTH_TOKEN_HASH = hashlib.sha256(WEB_PASSWORD.encode()).hexdigest()
+STORED_PASSWORD_HASH = hashlib.sha256(WEB_PASSWORD.encode()).hexdigest()
 SECURITY_FILE = os.path.join(DATA_DIR, "security.json")
+SESSIONS_FILE = os.path.join(DATA_DIR, "sessions.json")
 ZETTNAS_USERNAME = "admin"
 ZETTNAS_EMAIL = ""
+SESSION_TTL = 30 * 86400  # 30 days
+SESSIONS = {}  # token -> {"user": str, "created": float, "expires": float}
 
-if os.path.exists(SECURITY_FILE):
+def is_using_default_password() -> bool:
+    default_hash = hashlib.sha256(b"admin").hexdigest()
+    return STORED_PASSWORD_HASH == default_hash
+
+def _load_security():
+    global STORED_PASSWORD_HASH, ZETTNAS_USERNAME, ZETTNAS_EMAIL
+    if os.path.exists(SECURITY_FILE):
+        try:
+            with open(SECURITY_FILE, "r") as f:
+                _sec = json.load(f)
+                if "password_hash" in _sec:
+                    STORED_PASSWORD_HASH = _sec["password_hash"]
+                if "username" in _sec:
+                    ZETTNAS_USERNAME = _sec["username"]
+                if "email" in _sec:
+                    ZETTNAS_EMAIL = _sec["email"]
+        except (json.JSONDecodeError, OSError) as e:
+            logger.error(f"Failed to load security.json: {e}")
+
+def _load_sessions():
+    global SESSIONS
     try:
-        with open(SECURITY_FILE, "r") as f:
-            _sec = json.load(f)
-            if "password_hash" in _sec:
-                AUTH_TOKEN_HASH = _sec["password_hash"]
-            if "username" in _sec:
-                ZETTNAS_USERNAME = _sec["username"]
-            if "email" in _sec:
-                ZETTNAS_EMAIL = _sec["email"]
-    except Exception as e:
-        logger.error(f"Failed to load security.json: {e}")
+        if os.path.exists(SESSIONS_FILE):
+            with open(SESSIONS_FILE, "r") as f:
+                raw = json.load(f)
+                now = time.time()
+                SESSIONS = {t: data for t, data in raw.items() if data.get("expires", 0) > now}
+    except (json.JSONDecodeError, OSError) as e:
+        logger.warning(f"Failed to load sessions.json: {e}")
+        SESSIONS = {}
 
+def _save_sessions():
+    try:
+        now = time.time()
+        valid = {t: data for t, data in SESSIONS.items() if data.get("expires", 0) > now}
+        with open(SESSIONS_FILE, "w") as f:
+            json.dump(valid, f)
+    except OSError as e:
+        logger.warning(f"Failed to save sessions.json: {e}")
 
+def create_session(username: str) -> str:
+    token = secrets.token_urlsafe(32)
+    now = time.time()
+    SESSIONS[token] = {
+        "user": username,
+        "created": now,
+        "expires": now + SESSION_TTL
+    }
+    _save_sessions()
+    return token
+
+def validate_session(token: str) -> bool:
+    if not token or token not in SESSIONS:
+        return False
+    session = SESSIONS[token]
+    if session.get("expires", 0) <= time.time():
+        del SESSIONS[token]
+        _save_sessions()
+        return False
+    return True
+
+def invalidate_all_sessions():
+    global SESSIONS
+    SESSIONS = {}
+    _save_sessions()
+
+_load_security()
+_load_sessions()
 
 app = FastAPI()
-
-DATA_DIR = os.environ.get("DATA_DIR", "/mnt/user/appdata/zettnas-toolkit/data")
 
 @app.get("/api/wallpaper_url")
 async def get_wallpaper_url():
@@ -1712,7 +1752,7 @@ async def get_wallpaper_url():
         with open(config_path, "r") as f:
             try:
                 active = json.load(f).get("active")
-            except: pass
+            except (json.JSONDecodeError, OSError): pass
     if active:
         return {"url": f"/api/wallpapers/download/{active}"}
     return {"url": None}
@@ -1731,7 +1771,7 @@ async def list_wallpapers():
     if os.path.exists(config_path):
         with open(config_path, "r") as f:
             try: active = json.load(f).get("active")
-            except: pass
+            except (json.JSONDecodeError, OSError): pass
             
     return {"files": sorted(files), "active": active}
 
@@ -1842,7 +1882,7 @@ async def rename_wallpaper(request: Request):
         if os.path.exists(config_path):
             with open(config_path, "r") as f:
                 try: active = json.load(f).get("active")
-                except: pass
+                except (json.JSONDecodeError, OSError): pass
         if active == old_name:
             with open(config_path, "w") as f:
                 json.dump({"active": new_name}, f)
@@ -1863,7 +1903,7 @@ async def delete_wallpaper(filename: str):
         if os.path.exists(config_path):
             with open(config_path, "r") as f:
                 try: active = json.load(f).get("active")
-                except: pass
+                except (json.JSONDecodeError, OSError): pass
         if active == filename:
             with open(config_path, "w") as f:
                 json.dump({"active": None}, f)
@@ -1876,9 +1916,9 @@ async def auth_middleware(request: Request, call_next):
     if request.url.path.startswith("/api/") and request.url.path != "/api/auth/login" and not request.url.path.startswith("/api/wallpapers/download/"):
         client_host = request.client.host if request.client else ""
         if client_host not in ["127.0.0.1", "localhost", "::1"]:
-            token = request.headers.get("Authorization", "").replace("Bearer ", "") or request.query_params.get("token")
-            if token != AUTH_TOKEN_HASH:
-                logger.warning(f"Auth failed. Token: {token} | URL: {request.url} | Headers: {request.headers}")
+            token = request.headers.get("Authorization", "").replace("Bearer ", "").strip() or request.query_params.get("token", "").strip()
+            if not validate_session(token):
+                logger.warning(f"Auth failed for client {client_host} accessing {request.url.path}")
                 return JSONResponse(status_code=401, content={"detail": "Unauthorized. Please log in."})
     return await call_next(request)
 
@@ -1887,13 +1927,18 @@ async def login(request: Request):
     try:
         body = await request.json()
         pwd = body.get("password", "")
-        if hashlib.sha256(pwd.encode()).hexdigest() == AUTH_TOKEN_HASH:
+        if hashlib.sha256(pwd.encode()).hexdigest() == STORED_PASSWORD_HASH:
             logger.info("Successful login to WebUI.")
-            return JSONResponse(content={"status": "ok", "token": AUTH_TOKEN_HASH})
+            token = create_session(ZETTNAS_USERNAME)
+            return JSONResponse(content={
+                "status": "ok",
+                "token": token,
+                "is_default_password": is_using_default_password()
+            })
         else:
             logger.warning("Failed login attempt.")
             return JSONResponse(status_code=401, content={"detail": "Invalid password"})
-    except Exception as e:
+    except Exception:
         return JSONResponse(status_code=400, content={"detail": "Invalid payload"})
 
 
@@ -1902,35 +1947,42 @@ async def login(request: Request):
 async def get_security():
     return {
         "username": ZETTNAS_USERNAME,
-        "email": ZETTNAS_EMAIL
+        "email": ZETTNAS_EMAIL,
+        "is_default_password": is_using_default_password()
     }
 
 @app.post("/api/security")
 async def post_security(request: Request):
-    global AUTH_TOKEN_HASH, ZETTNAS_USERNAME, ZETTNAS_EMAIL
+    global STORED_PASSWORD_HASH, ZETTNAS_USERNAME, ZETTNAS_EMAIL
     try:
         data = await request.json()
         current_pwd = data.get("current_password", "")
-        if hashlib.sha256(current_pwd.encode()).hexdigest() != AUTH_TOKEN_HASH:
+        if hashlib.sha256(current_pwd.encode()).hexdigest() != STORED_PASSWORD_HASH:
             return JSONResponse(status_code=403, content={"detail": "Invalid current password"})
             
         new_pwd = data.get("new_password", "")
         if new_pwd:
-            AUTH_TOKEN_HASH = hashlib.sha256(new_pwd.encode()).hexdigest()
+            if len(new_pwd) < 4:
+                return JSONResponse(status_code=400, content={"detail": "Password must be at least 4 characters."})
+            STORED_PASSWORD_HASH = hashlib.sha256(new_pwd.encode()).hexdigest()
+            invalidate_all_sessions()
             
-        if "username" in data:
+        if "username" in data and data["username"]:
             ZETTNAS_USERNAME = data["username"].strip()
-        if "email" in data:
+        if "email" in data and data["email"] is not None:
             ZETTNAS_EMAIL = data["email"].strip()
             
         with open(SECURITY_FILE, "w") as f:
             json.dump({
-                "password_hash": AUTH_TOKEN_HASH,
+                "password_hash": STORED_PASSWORD_HASH,
                 "username": ZETTNAS_USERNAME,
                 "email": ZETTNAS_EMAIL
             }, f)
             
-        return {"status": "ok"}
+        return {
+            "status": "ok",
+            "is_default_password": is_using_default_password()
+        }
     except Exception as e:
         return JSONResponse(status_code=400, content={"detail": str(e)})
 
@@ -2049,7 +2101,7 @@ async def get_buttons():
         try:
             with open(BUTTON_CFG_FILE, "r") as f:
                 return json.load(f)
-        except: pass
+        except (json.JSONDecodeError, OSError): pass
     return {"enabled": False, "source": "sd", "dest": "/mnt/user/"}
 
 @app.post("/api/buttons")
@@ -2060,7 +2112,7 @@ async def post_buttons(request: Request):
         try:
             with open(BUTTON_CFG_FILE, "r") as f:
                 state.update(json.load(f))
-        except: pass
+        except (json.JSONDecodeError, OSError): pass
     state.update(data)
     
     dest_val = str(data.get("dest", state["dest"])).strip()
@@ -2089,7 +2141,7 @@ async def post_fans(request: Request):
         try:
             with open(FAN_STATE_FILE, "r") as f:
                 fan_cfg.update(json.load(f))
-        except: pass
+        except (json.JSONDecodeError, OSError): pass
     fan_cfg.update(data)
     with open(FAN_STATE_FILE, "w") as f:
         json.dump(fan_cfg, f)
@@ -2102,7 +2154,7 @@ async def get_fans():
         try:
             with open(FAN_STATE_FILE, "r") as f:
                 fan_cfg.update(json.load(f))
-        except: pass
+        except (json.JSONDecodeError, OSError): pass
     return fan_cfg
 
 @app.post("/api/led")
@@ -2113,7 +2165,7 @@ async def post_led(request: Request):
         try:
             with open(LED_STATE_FILE, "r") as f:
                 cur_led = json.load(f)
-        except: pass
+        except (json.JSONDecodeError, OSError): pass
     cur_led.update(data)
     ok, msg = apply_led_state(cur_led)
     with open(LED_STATE_FILE, "w") as f:
@@ -2203,7 +2255,7 @@ def _handle_browse_logic(path, dirs_only):
             sz = 0
             if not is_dir and not os.path.islink(full):
                 try: sz = os.path.getsize(full)
-                except: pass
+                except OSError: pass
             out.append({"name": e, "path": full, "is_dir": is_dir, "size": sz})
         return {"current": path, "dirs": out}
     except Exception as e:
@@ -2227,16 +2279,25 @@ if __name__ == "__main__":
         os.makedirs(_layout_dir, exist_ok=True)
     port = int(os.environ.get("PORT", "8082"))
     logger.info(f"ZettNAS LCD dashboard on :{port}")
+    _load_security()
+    _load_sessions()
     _load_events()
     read_ip()  # Pre-populate IP cache at startup
     detect_chassis_model()  # Pre-populate chassis model cache
+
+    if is_using_default_password():
+        logger.warning("=" * 60)
+        logger.warning("[SECURITY WARNING] Default password ('admin') is active!")
+        logger.warning("[SECURITY WARNING] Change password in Toolkit Settings.")
+        logger.warning("=" * 60)
+        add_event("warning", "Default Password In Use", "The system is using the default password 'admin'. Please change it in Settings.")
 
     if os.path.exists(LED_STATE_FILE):
         try:
             with open(LED_STATE_FILE, "r") as f:
                 apply_led_state(json.load(f))
-        except Exception as e:
-            logger.debug(f"Silenced exception: {e}")
+        except (json.JSONDecodeError, OSError) as e:
+            logger.warning(f"Failed to apply initial LED state: {e}")
 
     threading.Thread(target=stats_collector_daemon, daemon=True).start()
     threading.Thread(target=button_listener_daemon, daemon=True).start()
