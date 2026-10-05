@@ -1,5 +1,31 @@
 # ZettNAS Toolkit - Release Changelog
 
+## v0.7.0 (2026-10-05)
+### 🏛️ Backend Modularization & API Architecture (Phase 2)
+- **Monolithic Deconstruction**: Refactored the monolithic ~2,300-line `app.py` into a clean, maintainable `backend/` Python package with clear separation of concerns across configuration, state management, database telemetry, hardware interfaces, background daemons, and route handlers.
+- **Dedicated Hardware Layer (`backend/hardware/`)**:
+  - `cpu.py`: CPU core telemetry, thermal readings with fallback across sysfs hwmon sensors.
+  - `memory.py`: `/proc/meminfo` RAM parser.
+  - `fans.py`: PWM fan curves, fan speed reading, zone-based thermal holds.
+  - `led.py`: ARGB LED protocol, CRC table calculation, rainbow effect worker.
+  - `screen.py`: Screen brightness controls and scheduled night mode logic.
+  - `network.py`: Network interface traffic calculation and IP resolution.
+  - `storage.py` & `disks.py`: Storage pool capacity metrics, SMART health attributes, chassis model detection.
+- **Background Daemon Services (`backend/services/`)**:
+  - `stats_collector.py`: Continuous hardware telemetry collector and 5-minute SQLite metric logger.
+  - `lcd_renderer.py`: Low-latency Playwright Chromium framebuffer (`/dev/fb0`) renderer.
+  - `button_listener.py`: Hardware button interrupt and SD/TF media copy trigger listener.
+  - `copy_engine.py`: High-speed multi-threaded media backup engine with EXIF metadata parsing.
+- **Validated Data Models (`backend/models/schemas.py`)**: Implemented strict Pydantic v2 schemas for all API inputs (`LoginRequest`, `SecurityUpdateRequest`, `FanConfigRequest`, `LedConfigRequest`, `WallpaperSelectRequest`, `WallpaperRenameRequest`, `ButtonConfigRequest`, `CopyConfirmRequest`, `MkdirRequest`).
+- **Modular API Routers & Versioning (`backend/api/`)**:
+  - Segmented routes into dedicated domain routers: `auth`, `stats`, `fans`, `led`, `wallpapers`, and `system`.
+  - Added modern `/api/v1/*` routes alongside 100% backwards-compatible `/api/*` aliases for frontend stability.
+  - Standardized REST compliance for event clearing (`GET`, `POST`, and `DELETE` on `/api/events/clear`).
+  - Auto-generated interactive OpenAPI / Swagger docs at `/docs` and `/redoc`.
+- **Slim Entrypoint & Docker Compose Mount**:
+  - Root `app.py` reduced from 2,300+ lines to ~140 lines using FastAPI `lifespan` lifecycle management.
+  - Updated `docker-compose.yml` to bind-mount `./backend:/app/backend` for hot code changes without full container rebuilds.
+
 ## v0.6.0 (2026-10-05)
 ### 🛡️ Security & Stability Hardening (Phase 1)
 - **Session-Based Authentication Engine**: Eliminated critical auth token leak where raw SHA-256 password hashes were returned to the client and accepted as bearer tokens. Implemented cryptographically secure, random session tokens via `secrets.token_urlsafe(32)` with 30-day TTL expiration, active session pruning, and server-side persistence in `sessions.json`.

@@ -13,6 +13,7 @@ services:
       - "${PORT:-8082}:8082"
     volumes:
       - ./app.py:/app/app.py
+      - ./backend:/app/backend
       - ./static:/app/static
       - /proc:/host/proc:ro
       - /sys:/host/sys:rw
