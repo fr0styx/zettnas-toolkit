@@ -27,9 +27,11 @@ It delivers **zero-overhead, direct-to-framebuffer rendering** for the 640×172 
 
 ## Key Features
 
-* **🖥️ Direct Framebuffer LCD (`/dev/fb0`)** — Zero-overhead 640×172 native rendering via hardware-accelerated CSS orientation transforms and single-pass memory-mapped (`mmap`) streaming (704 stride). Features bezel-safe geometry, real-time gauges, and drive spin-down sleep preservation (`zZz`).
+* **🖥️ Direct Framebuffer LCD (`/dev/fb0`)** — Zero-overhead 640×172 native rendering via hardware-accelerated CSS orientation transforms and single-pass memory-mapped (`mmap`) streaming (704 stride). Dynamic backlight discovery, screen-off pause (0 FPS), and adaptive FPS (1 FPS idle → target FPS).
 * **🎛️ Modern Web Studio & OS Desktop (Port `8082`)** — Windowed desktop OS experience with draggable, minimizable windows, interactive dock bar with hover previews, top-left chassis console launcher, S.M.A.R.T. health diagnostics modal, and live layout reordering.
-* **❄️ Intelligent Dual-Zone Fan Control** — Automated SATA backplane cooling mapped to drive thermals with an interactive visual SVG fan curve editor (4 inflection points) and manual PWM override.
+* **❄️ Intelligent Per-Zone Fan Control** — Independent multi-point fan curves for HDD backplanes, NVMe cache, and CPU cooling with hysteresis hold protection and safety overrides.
+* **🔔 Multi-Channel Notifications** — Native Unraid alerts (`notify`), ntfy.sh push messages, and Generic/Discord webhooks for fan stalls, CPU thermals, drive S.M.A.R.T. health, and media copy events.
+* **📡 Zero-Latency SSE Broadcaster** — Centralized fan-out streaming daemon delivers instantaneous telemetry with 0ms reaction time and zero redundant polling.
 * **💡 Chassis ARGB Lightbar (`/dev/ttyACM0`)** — Microcontroller integration for 38 WS2812B LEDs featuring Solid, Breathe, Flow, Rainbow, disk I/O Cylon animations, error-reactive alerts (red/amber), and schedule-aware night dimming.
 * **💾 Hardware Media Ingestion** — One-touch front-panel SD/TF card ingestion directly to array storage with chunked async I/O (`aiofiles`), real-time pause/resume, duplicate pre-scanning, and clean abort handling.
 

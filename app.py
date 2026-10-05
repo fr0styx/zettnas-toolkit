@@ -144,6 +144,11 @@ def _shutdown_fans(reason: str):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    import asyncio
+
+    from backend.services.broadcaster import broadcaster
+
+    broadcaster.set_loop(asyncio.get_running_loop())
     startup_system()
     try:
         yield

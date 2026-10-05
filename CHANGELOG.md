@@ -1,5 +1,34 @@
 # ZettNAS Toolkit - Release Changelog
 
+## v1.1.0 (2026-10-05)
+### ⚡ Performance, Telemetry Broadcaster & Multi-Channel Alerting
+- **Multi-Channel Notifications Engine**:
+  - Unraid native notification subsystem integration (`/usr/local/emhttp/webGui/scripts/notify` with host fallback).
+  - ntfy.sh push notification dispatcher with priority levels, custom topics, tags, and Bearer token authentication.
+  - Generic Webhook and Discord webhook dispatcher with rich embeds and severity coloring.
+  - Automated alerting for fan stall events, CPU thermal warnings/critical throttling, drive S.M.A.R.T. health failures/overheats, and media ingest completion/error.
+  - Per-event deduplication and rate-limiting cooldown with critical-level bypass.
+  - REST API configuration management (`GET/POST /api/notifications/config`) and test dispatch endpoint (`POST /api/notifications/test`).
+- **Centralized SSE Stats Broadcaster**:
+  - High-performance fan-out broadcaster (`StatsBroadcaster`) with bounded subscriber queues and instant initial state delivery.
+  - Thread-safe serialization and dispatch from the background collector daemon to asyncio clients via `loop.call_soon_threadsafe`.
+  - Replaced per-client polling loops in `/api/stats/stream` for 0ms telemetry reaction times and zero redundant sysfs polling.
+  - Added periodic keepalive SSE comments (`: keepalive\n\n`) on 15s intervals to keep idle reverse proxy connections alive.
+- **LCD Renderer Performance & Dynamic Hardware Discovery**:
+  - Dynamic discovery of backlight sysfs paths (`/sys/class/backlight/*/brightness`, `/host/sys/class/backlight/...`), gracefully adapting to GPU variations.
+  - Dynamic discovery of framebuffer resolution and stride via sysfs (`stride`, `virtual_size`), falling back to 704 stride.
+  - Screen-off pause: drops render loop to 0 FPS (0% CPU) when screen brightness is 0 or night mode is blanked.
+  - Adaptive FPS backoff: incrementally scales idle rendering down to 1 FPS when display is static, bursting back to target FPS instantly on frame change or `ui_wake` event.
+- **Per-Zone Fan Curves**:
+  - Extended fan curve configuration to support independent multi-point curves for HDD backplanes (`zone1_curve_points`, `zone2_curve_points`), NVMe cache drives (`nvme_curve_points`), and CPU cooling (`cpu_curve_points`).
+  - Thermal monitoring and telemetry tracking for NVMe cache drives with airflow boost logic.
+- **CSS Modularization & Frontend Sanitization**:
+  - CSS `@layer reset, base, layout, components, themes;` established in `style.css`.
+  - Centralized `escapeHtml` utility in `frontend/src/utils.js` for safe user string rendering.
+- **Quality Assurance & Verification**:
+  - 171 automated unit tests passing (100% pass rate).
+  - Verified live physical `/dev/fb0` LCD display (640x172, 704 stride) with zero visual regressions.
+
 ## v1.0.0 (2026-10-05)
 ### 🚀 Release Engineering & Production Readiness
 - **Offline-First Frontend & Local Chart.js Bundling**:

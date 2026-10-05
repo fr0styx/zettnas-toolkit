@@ -12,6 +12,7 @@ import exifread
 from backend.config import ALLOWED_BROWSE_ROOTS, HOST_DEV, HOST_PROC, HOST_SYS, logger
 from backend.fsutil import resolve_within
 from backend.hardware.led import send_led_packet
+from backend.services.notifications import send_notification
 from backend.state import Z_STATE, add_event
 
 
@@ -256,7 +257,15 @@ async def _do_copy(cfg):
             raise Exception("Aborted by user.")
         else:
             Z_STATE.copy_status = "success"
-            add_event("success", "Copy Completed", f"Successfully copied {Z_STATE.copy_progress['files_done']} files.")
+            done_cnt = Z_STATE.copy_progress.get("files_done", 0)
+            add_event("success", "Copy Completed", f"Successfully copied {done_cnt} files.")
+            send_notification(
+                title="ZettNAS: Media Ingest Complete",
+                message=f"Successfully copied {done_cnt} files to array storage.",
+                level="normal",
+                event_type="copy",
+                dedup_key="copy_finished",
+            )
         Z_STATE.copy_progress["file"] = "Finished successfully."
 
     except Exception as e:
@@ -264,6 +273,13 @@ async def _do_copy(cfg):
         Z_STATE.copy_status = "error"
         Z_STATE.copy_progress["file"] = f"Error: {e}"
         add_event("error", "Copy Failed", str(e))
+        send_notification(
+            title="ZettNAS Alert: Media Ingest Failed",
+            message=f"Media copy operation failed: {e}",
+            level="warning",
+            event_type="copy",
+            dedup_key="copy_failed",
+        )
         try:
             send_led_packet(5, 255, 0, 0, 0, 0, 0, speed=10)
         except (OSError, ValueError):

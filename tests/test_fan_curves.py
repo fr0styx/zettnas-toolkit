@@ -136,3 +136,32 @@ def test_zone_ramps_down_after_hold(fresh_zone):
     Z_STATE.fan_state_tracker["pwm9"]["last_up_time"] -= 121
     assert apply_zone_pwm(fresh_zone, 80, hold_secs=120) == 80
     assert get_hold_remaining("pwm9", 120) == 0
+
+
+# ---- Per-Zone Curves ----
+
+
+def test_per_zone_independent_curves():
+    # Zone 1 aggressive curve for hot disks
+    z1_curve = [[30, 20], [40, 60], [50, 100]]
+    # Zone 2 relaxed curve for cool disks
+    z2_curve = [[30, 10], [45, 30], [55, 100]]
+
+    pwm1 = calc_curve_pwm(40, curve_points=z1_curve)
+    pwm2 = calc_curve_pwm(40, curve_points=z2_curve)
+
+    assert pwm1 > pwm2
+
+
+def test_cpu_curve_higher_thresholds():
+    # CPU operates at 50-85C
+    cpu_curve = [[50, 30], [70, 70], [85, 100]]
+
+    # At 45C (below min), fan runs at minimum
+    assert calc_curve_pwm(45, curve_points=cpu_curve) == FAN_MIN_PWM
+    # At 70C, fan runs at 70%
+    val = calc_curve_pwm(70, curve_points=cpu_curve)
+    assert abs(val - int(0.70 * FAN_MAX_PWM)) <= 1
+    # At 85C+, fan runs at 100%
+    assert calc_curve_pwm(85, curve_points=cpu_curve) == FAN_MAX_PWM
+    assert calc_curve_pwm(95, curve_points=cpu_curve) == FAN_MAX_PWM

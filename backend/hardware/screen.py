@@ -44,21 +44,41 @@ def get_screen_state():
     return state
 
 
+def discover_backlight_dir():
+    candidates = [
+        "/sys/class/backlight/intel_backlight",
+        "/host/sys/class/backlight/intel_backlight",
+    ]
+    for c in candidates:
+        if os.path.exists(os.path.join(c, "brightness")):
+            return c
+    for base in ["/sys/class/backlight", "/host/sys/class/backlight"]:
+        if os.path.isdir(base):
+            for bl in sorted(glob.glob(f"{base}/*")):
+                if os.path.exists(os.path.join(bl, "brightness")):
+                    return bl
+    return None
+
+
+def get_effective_brightness():
+    cfg = get_screen_state()
+    brightness = cfg.get("brightness", 100)
+    if cfg.get("night_mode") and is_in_time_window(cfg.get("night_start", "23:00"), cfg.get("night_end", "07:00")):
+        return int(cfg.get("night_brightness", 10))
+    return int(brightness)
+
+
 def set_screen_brightness(pct):
     pct = max(0, min(100, int(pct)))
-    backlight_dir = "/sys/class/backlight/intel_backlight"
-    if not os.path.exists(backlight_dir):
-        for bl in sorted(glob.glob("/sys/class/backlight/*")):
-            if os.path.exists(os.path.join(bl, "brightness")):
-                backlight_dir = bl
-                break
-    if not os.path.exists(backlight_dir):
+    backlight_dir = discover_backlight_dir()
+    if not backlight_dir:
         return False
     try:
         max_val = 192000
         max_path = os.path.join(backlight_dir, "max_brightness")
         if os.path.exists(max_path):
-            max_val = int(open(max_path).read().strip() or 192000)
+            with open(max_path) as mf:
+                max_val = int(mf.read().strip() or 192000)
         target = int((pct / 100.0) * max_val)
         with open(os.path.join(backlight_dir, "brightness"), "w") as f:
             f.write(f"{target}\n")

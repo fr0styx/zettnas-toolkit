@@ -23,7 +23,9 @@ from backend.hardware.memory import read_mem
 from backend.hardware.network import read_ip, read_network_rates
 from backend.hardware.screen import get_screen_state, is_in_time_window, set_screen_brightness
 from backend.hardware.storage import detect_chassis_model, get_current_layout, read_storage, read_uptime
+from backend.services.broadcaster import broadcaster
 from backend.services.copy_engine import read_media_slots
+from backend.services.notifications import send_notification
 from backend.state import Z_STATE, add_event
 
 
@@ -67,14 +69,23 @@ def stats_collector_daemon():
             t_zone1 = max(active_z1, default=32)
             t_zone2 = max(active_z2, default=32)
 
+            nvme_disks = [d for d in disks if d.get("role") == "cache" or "nvme" in d.get("dev", "")]
+            active_nvme = [d["temp"] for d in nvme_disks if d.get("temp") is not None and not d.get("standby", False)]
+            t_nvme = max(active_nvme, default=None)
+
             curve_points = fan_cfg.get("curve_points", None)
+            zone1_curve = fan_cfg.get("zone1_curve_points") or curve_points
+            zone2_curve = fan_cfg.get("zone2_curve_points") or curve_points
+            nvme_curve = fan_cfg.get("nvme_curve_points", None)
+            cpu_curve = fan_cfg.get("cpu_curve_points", None)
+
             raw_pwm1 = calc_curve_pwm(
                 t_zone1,
                 min_pwm=FAN_MIN_PWM,
                 max_pwm=FAN_MAX_PWM,
                 temp_min=temp_min,
                 temp_max=temp_max,
-                curve_points=curve_points,
+                curve_points=zone1_curve,
             )
             raw_pwm2 = calc_curve_pwm(
                 t_zone2,
@@ -82,10 +93,31 @@ def stats_collector_daemon():
                 max_pwm=FAN_MAX_PWM,
                 temp_min=temp_min,
                 temp_max=temp_max,
-                curve_points=curve_points,
+                curve_points=zone2_curve,
             )
 
-            if cpu_temp >= 85:
+            if nvme_curve and t_nvme is not None:
+                raw_nvme_pwm = calc_curve_pwm(
+                    t_nvme,
+                    min_pwm=FAN_MIN_PWM,
+                    max_pwm=FAN_MAX_PWM,
+                    temp_min=temp_min,
+                    temp_max=temp_max,
+                    curve_points=nvme_curve,
+                )
+                raw_pwm1 = max(raw_pwm1, raw_nvme_pwm)
+                raw_pwm2 = max(raw_pwm2, raw_nvme_pwm)
+
+            if cpu_curve:
+                raw_pwm3 = calc_curve_pwm(
+                    cpu_temp,
+                    min_pwm=FAN_MIN_PWM,
+                    max_pwm=FAN_MAX_PWM,
+                    temp_min=50,
+                    temp_max=85,
+                    curve_points=cpu_curve,
+                )
+            elif cpu_temp >= 85:
                 raw_pwm3 = FAN_MAX_PWM
             elif cpu_temp >= 70:
                 raw_pwm3 = 145
@@ -181,6 +213,13 @@ def stats_collector_daemon():
                         "One or more cooling fans have stalled (0 RPM).",
                         details={"fans": fans},
                     )
+                    send_notification(
+                        title="ZettNAS Alert: Fan Stall Detected",
+                        message="One or more chassis cooling fans have stalled or dropped to 0 RPM.",
+                        level="critical",
+                        event_type="fan",
+                        dedup_key="fan_stall",
+                    )
 
                 if cpu_temp >= 85:
                     add_event(
@@ -189,12 +228,26 @@ def stats_collector_daemon():
                         f"CPU temperature reached {cpu_temp}°C. Hardware throttling active.",
                         details={"cpu_temp": cpu_temp},
                     )
+                    send_notification(
+                        title="ZettNAS Alert: CPU Thermal Critical",
+                        message=f"CPU temperature reached critical level: {cpu_temp}°C!",
+                        level="critical",
+                        event_type="temp",
+                        dedup_key="cpu_temp_crit",
+                    )
                 elif cpu_temp >= 75:
                     add_event(
                         "warning",
                         "CPU Thermal Warning",
                         f"CPU temperature is elevated ({cpu_temp}°C).",
                         details={"cpu_temp": cpu_temp},
+                    )
+                    send_notification(
+                        title="ZettNAS Warning: CPU Thermal Elevated",
+                        message=f"CPU temperature is elevated at {cpu_temp}°C.",
+                        level="warning",
+                        event_type="temp",
+                        dedup_key="cpu_temp_warn",
                     )
 
                 for d in bad:
@@ -208,12 +261,26 @@ def stats_collector_daemon():
                             f"Drive reached critical health or extreme temp ({d_temp}°C)",
                             details=d,
                         )
+                        send_notification(
+                            title=f"ZettNAS Alert: Drive Critical ({d_name})",
+                            message=f"Drive {d_name} has entered CRITICAL state ({d_temp}°C). Inspect S.M.A.R.T. health immediately.",
+                            level="critical",
+                            event_type="smart",
+                            dedup_key=f"drive_crit_{d_name}",
+                        )
                     elif d_health == "warn":
                         add_event(
                             "warning",
                             f"Drive Warning: {d_name}",
                             f"Drive is running hot or has warnings ({d_temp}°C)",
                             details=d,
+                        )
+                        send_notification(
+                            title=f"ZettNAS Warning: Drive Alert ({d_name})",
+                            message=f"Drive {d_name} is running hot or reported S.M.A.R.T. warnings ({d_temp}°C).",
+                            level="warning",
+                            event_type="smart",
+                            dedup_key=f"drive_warn_{d_name}",
                         )
 
                 if is_crit:
@@ -261,6 +328,7 @@ def stats_collector_daemon():
                     "zone1_pwm": active_pwm1,
                     "zone2_temp": t_zone2,
                     "zone2_pwm": active_pwm2,
+                    "nvme_temp": t_nvme,
                     "cpu_temp": cpu_temp,
                     "cpu_pwm": active_pwm3,
                     "disk_hold_remaining": disk_hold_rem,
@@ -270,6 +338,10 @@ def stats_collector_daemon():
                     "temp_min": temp_min,
                     "temp_max": temp_max,
                     "curve_points": fan_cfg.get("curve_points", None),
+                    "nvme_curve_points": fan_cfg.get("nvme_curve_points", None),
+                    "cpu_curve_points": fan_cfg.get("cpu_curve_points", None),
+                    "zone1_curve_points": fan_cfg.get("zone1_curve_points", None),
+                    "zone2_curve_points": fan_cfg.get("zone2_curve_points", None),
                 },
                 "net": net,
                 "uptime": read_uptime(),
@@ -283,6 +355,8 @@ def stats_collector_daemon():
 
             with Z_STATE.lock:
                 Z_STATE.cached_stats = data
+
+            broadcaster.broadcast(data)
 
             now_ts = int(time.time())
             if not hasattr(stats_collector_daemon, "last_log"):

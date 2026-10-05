@@ -35,9 +35,15 @@ async def post_fans(req: FanConfigRequest):
     for key in ("temp_min", "temp_max"):
         if data.get(key) is not None:
             data[key] = max(0, min(100, int(data[key])))
-    if "curve_points" in data:
-        # Monotonic, bounded, deduplicated — or None (falls back to linear curve).
-        data["curve_points"] = sanitize_curve_points(data["curve_points"])
+    for curve_field in (
+        "curve_points",
+        "nvme_curve_points",
+        "cpu_curve_points",
+        "zone1_curve_points",
+        "zone2_curve_points",
+    ):
+        if curve_field in data:
+            data[curve_field] = sanitize_curve_points(data[curve_field])
 
     fan_cfg = _load_fans()
     fan_cfg.update(data)

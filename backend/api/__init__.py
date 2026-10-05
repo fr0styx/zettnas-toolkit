@@ -8,6 +8,7 @@ from fastapi import APIRouter
 from backend.api.auth import router as auth_router
 from backend.api.fans import router as fans_router
 from backend.api.led import router as led_router
+from backend.api.notifications import router as notifications_router
 from backend.api.stats import router as stats_router
 from backend.api.system import router as system_router
 from backend.api.wallpapers import router as wallpapers_router
@@ -19,6 +20,7 @@ api_router.include_router(fans_router)
 api_router.include_router(led_router)
 api_router.include_router(wallpapers_router)
 api_router.include_router(system_router)
+api_router.include_router(notifications_router)
 
 __all__ = [
     "api_router",
@@ -26,6 +28,7 @@ __all__ = [
     "stats_router",
     "fans_router",
     "led_router",
+    "notifications_router",
     "wallpapers_router",
     "system_router",
 ]

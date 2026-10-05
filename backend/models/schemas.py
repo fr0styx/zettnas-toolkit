@@ -19,6 +19,10 @@ class FanConfigRequest(BaseModel):
     temp_min: int | None = None
     temp_max: int | None = None
     curve_points: list[list[int]] | None = Field(default=None, max_length=12)
+    nvme_curve_points: list[list[int]] | None = Field(default=None, max_length=12)
+    cpu_curve_points: list[list[int]] | None = Field(default=None, max_length=12)
+    zone1_curve_points: list[list[int]] | None = Field(default=None, max_length=12)
+    zone2_curve_points: list[list[int]] | None = Field(default=None, max_length=12)
 
 
 class LedConfigRequest(BaseModel):
