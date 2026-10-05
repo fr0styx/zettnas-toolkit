@@ -1266,6 +1266,14 @@ function applyStats(s) {
   try {
     latestStats = s;
     if (s.events) renderEventLog(s.events);
+    if (s.security && s.security.is_default_password) {
+      const warnEl = document.getElementById("sec-default-pwd-warning");
+      if (warnEl) warnEl.style.display = "block";
+      if (!window._defaultPwdWarned) {
+        window._defaultPwdWarned = true;
+        showToast("⚠️ Security Warning: Default password 'admin' is active! Please change it in Settings.", "error");
+      }
+    }
     anyWarn = false;
 
   if (s.copy_state) {
@@ -3048,6 +3056,12 @@ async function fetchSecurity() {
         } else {
            idEl.textContent = "Authentication Required";
         }
+      }
+      const warnEl = document.getElementById("sec-default-pwd-warning");
+      if (warnEl) warnEl.style.display = data.is_default_password ? "block" : "none";
+      if (data.is_default_password && !window._defaultPwdWarned) {
+        window._defaultPwdWarned = true;
+        showToast("⚠️ Security Warning: Default password 'admin' is active! Please change it in Settings.", "error");
       }
     }
   } catch (e) {}

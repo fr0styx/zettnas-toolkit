@@ -1422,7 +1422,9 @@ def stats_collector_daemon():
                 "uptime": read_uptime(),
                 "disks": disks,
                 "chassis": detect_chassis_model(),
-                "layout": get_current_layout(), "copy_status": Z_STATE.copy_status
+                "layout": get_current_layout(), "copy_status": Z_STATE.copy_status,
+                "events": list(Z_STATE.event_log),
+                "security": {"is_default_password": is_using_default_password()}
             }
             
             with Z_STATE.lock:
@@ -1460,6 +1462,7 @@ def collect():
         }
     with Z_STATE.lock:
         data["events"] = list(Z_STATE.event_log)
+        data["security"] = {"is_default_password": is_using_default_password()}
     return data
 
 def _old_collect_wrapper():
