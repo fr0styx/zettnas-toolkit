@@ -1,138 +1,167 @@
+/**
+ * ZettNAS Toolkit Notification & Confirmation Toast System
+ * Displays top-centered notifications below the top navbar (z-index 100000).
+ */
 import { ZettEventBus } from './event-bus.js';
 import { state } from './state.js';
 
-export function showConfirmToast(title, msg, onConfirm) {
-  ZettEventBus.emit('toast:confirm', { title, msg, onConfirm });
-}
+let _toastTimeout = null;
 
 export function showToast(msg, type = "error") {
+  if (state.isLcdDirect || (typeof window !== 'undefined' && window.location.search.includes('mode=lcd')) || (document.body && document.body.classList.contains('lcd-direct'))) return;
+  _showTopNotification(msg, type);
   ZettEventBus.emit('toast:show', { msg, type });
+}
+
+export function showConfirmToast(title, msg, onConfirm) {
+  if (state.isLcdDirect || (typeof window !== 'undefined' && window.location.search.includes('mode=lcd')) || (document.body && document.body.classList.contains('lcd-direct'))) return;
+  _showTopConfirm(title, msg, onConfirm);
+  ZettEventBus.emit('toast:confirm', { title, msg, onConfirm });
 }
 
 window.showToast = showToast;
 window.showConfirmToast = showConfirmToast;
 
-window.addEventListener('DOMContentLoaded', () => {
-  let _customToastActive = false;
+// --- Notification Toast (Top-centered below navbar) ---
+function _showTopNotification(msg, type = "error") {
+  if (!document.body) return;
 
-  function _showConfirmToast(title, msg, onConfirm) {
-    if (state.isLcdDirect || (typeof window !== 'undefined' && window.location.search.includes('mode=lcd')) || (document.body && document.body.classList.contains('lcd-direct'))) return;
-    let modal = document.getElementById("confirm-toast-modal");
-    if (!modal) {
-      modal = document.createElement("div");
-      modal.id = "confirm-toast-modal";
-      modal.className = "smart-modal-backdrop";
-      modal.style.zIndex = "10006";
-      modal.style.display = "none";
-      modal.innerHTML = `
-        <div class="smart-modal-window" style="width: 440px; max-width: 90vw;">
-          <div class="smart-modal-header">
-            <div class="smart-modal-title" id="confirm-toast-title">Confirm Action</div>
-            <button class="btn-tool-close" id="confirm-toast-close">&times;</button>
-          </div>
-          <div class="smart-modal-body" style="padding: 16px 20px;">
-            <div id="confirm-toast-msg" style="font-size: 12px; color: #cbd5e1; line-height: 1.5;"></div>
-            <div style="display: flex; gap: 10px; margin-top: 16px; justify-content: flex-end;">
-              <button class="btn-save-preset" id="confirm-toast-cancel" style="padding: 6px 14px; background: transparent; border-color: rgba(255,255,255,0.15);">Cancel</button>
-              <button class="btn-save-preset" id="confirm-toast-ok" style="padding: 6px 14px; background: var(--ok2); color: #0a0e13; border-color: var(--ok2); font-weight: 700;">Confirm</button>
-            </div>
-          </div>
+  let toast = document.getElementById("top-notification-toast");
+  if (!toast) {
+    toast = document.createElement("div");
+    toast.id = "top-notification-toast";
+    toast.innerHTML = `
+      <div id="top-toast-icon" style="font-size: 20px; line-height: 1; flex-shrink: 0;"></div>
+      <div style="flex: 1; min-width: 0;">
+        <div id="top-toast-tag" style="font-size: 10px; font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 2px;"></div>
+        <div id="top-toast-msg" style="font-size: 12.5px; color: #f1f5f9; line-height: 1.4; word-break: break-word;"></div>
+      </div>
+      <button id="top-toast-close" style="background: transparent; border: none; color: #94a3b8; font-size: 18px; cursor: pointer; padding: 2px 6px; line-height: 1; border-radius: 4px;" title="Dismiss">&times;</button>
+    `;
+    document.body.appendChild(toast);
+
+    const closeBtn = document.getElementById("top-toast-close");
+    if (closeBtn) {
+      closeBtn.onmouseover = () => { closeBtn.style.color = "#fff"; closeBtn.style.background = "rgba(255,255,255,0.1)"; };
+      closeBtn.onmouseout = () => { closeBtn.style.color = "#94a3b8"; closeBtn.style.background = "transparent"; };
+      closeBtn.onclick = () => _dismissTopNotification();
+    }
+  }
+
+  const iconEl = document.getElementById("top-toast-icon");
+  const tagEl = document.getElementById("top-toast-tag");
+  const msgEl = document.getElementById("top-toast-msg");
+
+  const isErr = (type === "error" || type === "crit");
+  const isWarn = (type === "warn" || type === "warning");
+  const isSucc = (type === "success" || type === "ok");
+
+  if (isErr) {
+    toast.style.borderLeft = "4px solid #ef4444";
+    if (iconEl) iconEl.textContent = "⚠️";
+    if (tagEl) { tagEl.textContent = "SECURITY / SYSTEM ALERT"; tagEl.style.color = "#ef4444"; }
+  } else if (isWarn) {
+    toast.style.borderLeft = "4px solid #f59e0b";
+    if (iconEl) iconEl.textContent = "⚠️";
+    if (tagEl) { tagEl.textContent = "WARNING"; tagEl.style.color = "#f59e0b"; }
+  } else if (isSucc) {
+    toast.style.borderLeft = "4px solid #22c55e";
+    if (iconEl) iconEl.textContent = "✅";
+    if (tagEl) { tagEl.textContent = "SUCCESS"; tagEl.style.color = "#22c55e"; }
+  } else {
+    toast.style.borderLeft = "4px solid #38bdf8";
+    if (iconEl) iconEl.textContent = "ℹ️";
+    if (tagEl) { tagEl.textContent = "INFORMATION"; tagEl.style.color = "#38bdf8"; }
+  }
+
+  if (msgEl) msgEl.textContent = msg;
+
+  if (_toastTimeout) clearTimeout(_toastTimeout);
+
+  toast.classList.add("show");
+
+  _toastTimeout = setTimeout(() => {
+    _dismissTopNotification();
+  }, 6500);
+}
+
+function _dismissTopNotification() {
+  const toast = document.getElementById("top-notification-toast");
+  if (!toast) return;
+  toast.classList.remove("show");
+}
+
+// --- Confirm Toast (Top-centered below navbar with backdrop) ---
+function _showTopConfirm(title, msg, onConfirm) {
+  if (!document.body) return;
+
+  let backdrop = document.getElementById("confirm-toast-backdrop");
+  if (!backdrop) {
+    backdrop = document.createElement("div");
+    backdrop.id = "confirm-toast-backdrop";
+    document.body.appendChild(backdrop);
+  }
+
+  let card = document.getElementById("confirm-toast-modal");
+  if (!card) {
+    card = document.createElement("div");
+    card.id = "confirm-toast-modal";
+    card.innerHTML = `
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; border-bottom: 1px solid rgba(255,255,255,0.08); background: rgba(245, 158, 11, 0.08);">
+        <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: #fbbf24;" id="confirm-toast-title">
+          <span>💤</span> Drive in Standby Mode
         </div>
-      `;
-      document.body.appendChild(modal);
-    }
-
-    const titleEl = document.getElementById("confirm-toast-title");
-    const msgEl = document.getElementById("confirm-toast-msg");
-    const closeBtn = document.getElementById("confirm-toast-close");
-    const cancelBtn = document.getElementById("confirm-toast-cancel");
-    const okBtn = document.getElementById("confirm-toast-ok");
-
-    if (titleEl) titleEl.textContent = title || "Confirm Action";
-    if (msgEl) msgEl.textContent = msg || "Are you sure you want to proceed?";
-
-    const close = () => {
-      modal.classList.remove("open");
-      modal.style.opacity = "0";
-      modal.style.pointerEvents = "none";
-      modal.style.display = "none";
-    };
-
-    closeBtn.onclick = close;
-    cancelBtn.onclick = close;
-    modal.onclick = (e) => {
-      if (e.target === modal) close();
-    };
-    okBtn.onclick = () => {
-      close();
-      if (typeof onConfirm === "function") onConfirm();
-    };
-
-    modal.style.display = "flex";
-    modal.classList.add("open");
-    modal.style.opacity = "1";
-    modal.style.pointerEvents = "auto";
+        <button id="confirm-toast-close" style="background: transparent; border: none; color: #94a3b8; font-size: 18px; cursor: pointer; padding: 2px 6px; line-height: 1; border-radius: 4px;" title="Cancel">&times;</button>
+      </div>
+      <div style="padding: 16px 20px;">
+        <div id="confirm-toast-msg" style="font-size: 12.5px; color: #cbd5e1; line-height: 1.55; word-break: break-word;"></div>
+        <div style="display: flex; gap: 10px; margin-top: 16px; justify-content: flex-end;">
+          <button id="confirm-toast-cancel" style="padding: 7px 16px; background: transparent; border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: #cbd5e1; font-size: 12px; font-weight: 600; cursor: pointer;">Cancel</button>
+          <button id="confirm-toast-ok" style="padding: 7px 18px; background: #fbbf24; border: 1px solid #f59e0b; border-radius: 6px; color: #0a0e13; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px;">⚡ Wake & Inspect</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(card);
   }
 
-  function _showToast(msg, type = "error") {
-    if (state.isLcdDirect || (typeof window !== 'undefined' && window.location.search.includes('mode=lcd')) || (document.body && document.body.classList.contains('lcd-direct'))) return;
-    _customToastActive = true;
-    window._customToastActive = true;
-    const toast = document.getElementById("copy-toast");
-    const backdrop = document.getElementById("copy-toast-backdrop");
-    if (!toast) return;
+  const titleEl = document.getElementById("confirm-toast-title");
+  const msgEl = document.getElementById("confirm-toast-msg");
+  const closeBtn = document.getElementById("confirm-toast-close");
+  const cancelBtn = document.getElementById("confirm-toast-cancel");
+  const okBtn = document.getElementById("confirm-toast-ok");
 
-    toast.style.opacity = "1";
-    toast.style.pointerEvents = "auto";
-    toast.style.transition = "none";
-
-    if (backdrop) {
-      backdrop.style.opacity = "1";
-      backdrop.style.pointerEvents = "auto";
-    }
-
-    toast.style.boxShadow = "0 0 40px rgba(0,0,0,0.8)";
-    toast.style.bottom = "50%";
-    toast.style.right = "50%";
-    toast.style.transform = "translate(50%, 50%) scale(1.2)";
-
-    const titleEl = toast.querySelector(".smart-modal-title");
-    if (titleEl) titleEl.innerHTML = `<svg class="ic ic-sm" style="margin-right:4px;"><use href="#i-storage"/></svg> System Notification`;
-
-    const statusEl = document.getElementById("copy-toast-status");
-    if (statusEl) statusEl.textContent = type === "error" ? "Error!" : "Success!";
-
-    const barEl = document.getElementById("copy-toast-bar");
-    if (barEl) {
-      barEl.style.width = "100%";
-      barEl.style.background = type === "error" ? "#e74c3c" : "#2ecc71";
-    }
-
-    const fileEl = document.getElementById("copy-toast-file");
-    if (fileEl) fileEl.textContent = msg;
-
-    const timeEl = document.getElementById("copy-toast-time");
-    if (timeEl) timeEl.textContent = "Closing automatically...";
-
-    const pctEl = document.getElementById("copy-toast-pct");
-    if (pctEl) pctEl.textContent = "";
-
-    setTimeout(() => {
-      toast.style.transition = "opacity 0.3s ease, transform 0.3s ease";
-      toast.style.opacity = "0";
-      toast.style.pointerEvents = "none";
-      if (backdrop) {
-        backdrop.style.opacity = "0";
-        backdrop.style.pointerEvents = "none";
-      }
-      setTimeout(() => {
-        if (titleEl) titleEl.innerHTML = `<svg class="ic ic-sm" style="margin-right:4px;"><use href="#i-storage"/></svg> Media card ingest`;
-        _customToastActive = false;
-        window._customToastActive = false;
-      }, 300);
-    }, 5000);
+  if (titleEl) {
+    titleEl.innerHTML = `<span>💤</span> ${title || "Confirm Action"}`;
+  }
+  if (msgEl) {
+    msgEl.textContent = msg || "Are you sure you want to proceed?";
   }
 
-  ZettEventBus.on('toast:confirm', (detail) => _showConfirmToast(detail.title, detail.msg, detail.onConfirm));
-  ZettEventBus.on('toast:show', (detail) => _showToast(detail.msg, detail.type));
+  const close = () => {
+    backdrop.classList.remove("open");
+    card.classList.remove("open");
+  };
+
+  closeBtn.onclick = close;
+  cancelBtn.onclick = close;
+  backdrop.onclick = close;
+
+  okBtn.onclick = () => {
+    close();
+    if (typeof onConfirm === "function") {
+      onConfirm();
+    }
+  };
+
+  // Open confirm card
+  backdrop.classList.add("open");
+  card.classList.add("open");
+}
+
+// Global EventBus listeners registered immediately (no DOMContentLoaded dependency)
+ZettEventBus.on('toast:show', (detail) => {
+  if (detail && detail.msg) _showTopNotification(detail.msg, detail.type);
+});
+ZettEventBus.on('toast:confirm', (detail) => {
+  if (detail) _showTopConfirm(detail.title, detail.msg, detail.onConfirm);
 });

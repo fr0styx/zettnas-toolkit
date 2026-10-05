@@ -1,5 +1,12 @@
 # ZettNAS Toolkit - Release Changelog
 
+## v0.8.3 (2026-10-05)
+### 🔔 Toast System Refactor & Standby Confirmation
+- **Top-Centered Notification Toasts**: Re-engineered system notification toasts to always render centered at the top of the browser window below the top navigation bar (`top: 64px`, `z-index: 100000`). Solved the issue where default password security warnings and system alerts were hidden behind the ZETTNAS System Console window.
+- **Standby Drive Confirmation Toast**: Fixed confirmation prompt for sleeping/standby drives, rendering a focused dialog below the top bar (`z-index: 100002`) with a subtle backdrop. Users can choose to cancel (leaving the disk asleep) or confirm (`⚡ Wake & Inspect`) to spin up the drive and retrieve SMART health details.
+- **Robust Standby Drive Detection**: Enhanced click delegation in `dashboard.js` to cross-reference both DOM classes and reactive telemetry data (`stats.disks`), guaranteeing standby drives are accurately identified.
+- **Separation from Media Card Ingest**: Decoupled general system alerts from the media card copy-engine UI (`#copy-toast`), eliminating unnecessary full-screen backdrops and copy progress artifacts during system notifications.
+
 ## v0.8.2 (2026-10-05)
 ### 🐛 Bug Fixes & Drive Interaction Reliability
 - **Invisible Modal Click Interception**: Resolved an issue where closed diagnostic modals (SMART diagnostics, metrics, confirm dialogs) remained present in the DOM over `#diskRow` with `pointer-events: auto` at zero opacity. Added explicit `display: none !important`, `pointer-events: none !important`, and `visibility: hidden !important` to all inactive modal backdrops and child windows.

@@ -149,9 +149,9 @@ export function renderDisks(disks) {
       const tile = e.target.closest('.disk');
       if (!tile) return;
       const dev = tile.dataset.dev;
-      if (!dev) return;
-      const isStandby = tile.classList.contains('disk-standby');
-      const diskName = tile.querySelector('.dn')?.textContent || dev;
+      const diskData = state.latestStats?.disks?.find((d) => (d.dev || d.name) === dev || d.name === dev || d.dev === dev);
+      const isStandby = tile.classList.contains('disk-standby') || Boolean(diskData?.standby || diskData?.health === 'standby');
+      const diskName = tile.querySelector('.dn')?.textContent || diskData?.name || dev;
       if (isStandby) {
         showConfirmToast(
           'Drive in Standby Mode',

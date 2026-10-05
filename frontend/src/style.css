@@ -1847,3 +1847,83 @@ body.theme-yak .mini-lcd-canvas {
 .dock-item.active-window::after {
   background: #0a0e13;
 }
+
+/* =========================================================================
+   TOP-CENTERED TOAST NOTIFICATIONS & CONFIRM DIALOGS
+   ========================================================================= */
+#top-notification-toast {
+  position: fixed;
+  top: 64px;
+  left: 50%;
+  transform: translate(-50%, -15px);
+  z-index: 100000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  min-width: 360px;
+  max-width: 620px;
+  width: max-content;
+  background: rgba(13, 20, 30, 0.96);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8), 0 0 1px rgba(255, 255, 255, 0.2);
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-family: inherit;
+}
+#top-notification-toast.show {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  transform: translate(-50%, 0) !important;
+}
+
+#confirm-toast-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 100001;
+  opacity: 0;
+  pointer-events: none;
+  display: none;
+  transition: opacity 0.2s ease;
+}
+#confirm-toast-backdrop.open {
+  display: block !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+#confirm-toast-modal {
+  position: fixed;
+  top: 64px;
+  left: 50%;
+  transform: translate(-50%, -15px);
+  z-index: 100002;
+  opacity: 0;
+  pointer-events: none;
+  display: none;
+  transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  width: 480px;
+  max-width: 92vw;
+  background: rgba(15, 23, 34, 0.98);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(245, 158, 11, 0.5);
+  border-radius: 12px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.9), 0 0 30px rgba(245, 158, 11, 0.2);
+  flex-direction: column;
+  overflow: hidden;
+  font-family: inherit;
+}
+#confirm-toast-modal.open {
+  display: flex !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  transform: translate(-50%, 0) !important;
+}
