@@ -23,6 +23,7 @@ window.addEventListener('DOMContentLoaded', () => {
       modal.id = "confirm-toast-modal";
       modal.className = "smart-modal-backdrop";
       modal.style.zIndex = "10006";
+      modal.style.display = "none";
       modal.innerHTML = `
         <div class="smart-modal-window" style="width: 440px; max-width: 90vw;">
           <div class="smart-modal-header">
@@ -54,15 +55,20 @@ window.addEventListener('DOMContentLoaded', () => {
       modal.classList.remove("open");
       modal.style.opacity = "0";
       modal.style.pointerEvents = "none";
+      modal.style.display = "none";
     };
 
     closeBtn.onclick = close;
     cancelBtn.onclick = close;
+    modal.onclick = (e) => {
+      if (e.target === modal) close();
+    };
     okBtn.onclick = () => {
       close();
       if (typeof onConfirm === "function") onConfirm();
     };
 
+    modal.style.display = "flex";
     modal.classList.add("open");
     modal.style.opacity = "1";
     modal.style.pointerEvents = "auto";

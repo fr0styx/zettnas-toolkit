@@ -1545,7 +1545,22 @@ body.theme-yak .mini-lcd-canvas {
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 }
-.smart-modal-backdrop.open { opacity: 1; pointer-events: none; }
+.smart-modal-backdrop:not(#console-modal-overlay):not(.open) {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+}
+.smart-modal-backdrop:not(#console-modal-overlay):not(.open) * {
+  pointer-events: none !important;
+}
+.smart-modal-backdrop:not(#console-modal-overlay).open {
+  display: flex !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  visibility: visible !important;
+}
+.smart-modal-backdrop.open { opacity: 1; pointer-events: auto; }
 
 .smart-modal-window {
   pointer-events: auto;

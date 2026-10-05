@@ -201,7 +201,7 @@ def fetch_disk_smart_detail(dev_name):
     dtype = "nvme" if is_nvme else "sat"
     try:
         r = subprocess.run(["smartctl", "-x", "-d", dtype, dev],
-                           capture_output=True, text=True, timeout=12)
+                           capture_output=True, text=True, timeout=20)
         raw_text = r.stdout
     except Exception as e:
         raw_text = f"Error querying device: {e}"

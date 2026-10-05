@@ -136,29 +136,42 @@ export function diskTile(d) {
     tempHtml +
     `<div class="db"><i class="${'bg-' + lvl}" style="width:${w}%"></i></div>`;
 
-  el.addEventListener('click', () => {
-    if (isStandby) {
-      showConfirmToast(
-        'Drive in Standby Mode',
-        `Disk ${d.name} is currently sleeping. Querying S.M.A.R.T. data will wake it up, causing mechanical wear and consuming power. Are you sure you want to wake it?`,
-        () => ZettEventBus.emit('modal:smart:open', d.dev || d.name)
-      );
-    } else {
-      ZettEventBus.emit('modal:smart:open', d.dev || d.name);
-    }
-  });
   return el;
 }
 
 export function renderDisks(disks) {
   const row = $('diskRow');
   if (!row) return;
+
+  if (!row._hasDelegatedClicks) {
+    row._hasDelegatedClicks = true;
+    row.addEventListener('click', (e) => {
+      const tile = e.target.closest('.disk');
+      if (!tile) return;
+      const dev = tile.dataset.dev;
+      if (!dev) return;
+      const isStandby = tile.classList.contains('disk-standby');
+      const diskName = tile.querySelector('.dn')?.textContent || dev;
+      if (isStandby) {
+        showConfirmToast(
+          'Drive in Standby Mode',
+          `Disk ${diskName} is currently sleeping. Querying S.M.A.R.T. data will wake it up, causing mechanical wear and consuming power. Are you sure you want to wake it?`,
+          () => ZettEventBus.emit('modal:smart:open', dev)
+        );
+      } else {
+        ZettEventBus.emit('modal:smart:open', dev);
+      }
+    });
+  }
+
   const total = disks.length || 1;
   row.classList.toggle('compact', total >= 7);
 
   const existingDevs = Array.from(row.querySelectorAll('[data-dev]')).map((el) => el.dataset.dev);
   const newDevs = disks.map((d) => d.dev || d.name);
-  const structureChanged = existingDevs.length !== newDevs.length || existingDevs.some((d, i) => d !== newDevs[i]);
+  const existingSorted = [...existingDevs].sort().join(',');
+  const newSorted = [...newDevs].sort().join(',');
+  const structureChanged = existingSorted !== newSorted;
 
   if (structureChanged) {
     row.innerHTML = '';
@@ -169,7 +182,7 @@ export function renderDisks(disks) {
     const isYak = (state.currentTheme === 'yak');
 
     groups.forEach((g, gi) => {
-      const meta = ROLE_META[g.role];
+      const meta = ROLE_META[g.role] || ROLE_META.data;
       const grp = document.createElement('div');
       grp.className = 'disk-group ' + meta.cls;
       grp.dataset.role = g.role;
@@ -204,26 +217,37 @@ export function renderDisks(disks) {
       const devId = d.dev || d.name;
       const tile = row.querySelector(`[data-dev="${devId}"]`);
       if (!tile) return;
-      const nameEl = tile.querySelector('.disk-name');
-      const tempEl = tile.querySelector('.disk-temp');
+      const isStandby = Boolean(d.standby || d.health === 'standby');
+      const lvl = isStandby ? 'standby' : (d.health || lvlDisk(d.temp));
+      const t = d.temp;
+      const meta = ROLE_META[d.role] || ROLE_META.data;
+      const w = isStandby ? 0 : (t == null ? 0 : Math.max(8, Math.min(100, ((t - 20) / 40) * 100)));
+
+      tile.className = 'disk ' + meta.cls + ' h-' + lvl + (d.active ? ' io-active' : '') + (isStandby ? ' disk-standby' : '');
+      tile.title = isStandby ? `${d.name} is in standby (spun-down)` : `Click to inspect S.M.A.R.T. health for ${d.name}`;
+
+      const nameEl = tile.querySelector('.dn');
       if (nameEl) nameEl.textContent = d.name;
+
+      const tempEl = tile.querySelector('.dt');
       if (tempEl) {
-        if (d.standby) {
-          tempEl.textContent = 'zZz';
-          tempEl.style.color = '#78838f';
-        } else if (d.temp !== null && d.temp !== undefined) {
-          tempEl.textContent = d.temp + '°';
-          tempEl.style.color = '';
-        } else {
-          tempEl.textContent = '--';
-          tempEl.style.color = '';
-        }
+        tempEl.className = 'dt ' + (isStandby ? 's-standby' : 's-' + lvl);
+        tempEl.innerHTML = isStandby
+          ? `<span class="standby-badge">STANDBY</span>`
+          : `${t == null ? '--' : t}<span class="u">°C</span>`;
       }
-      tile.classList.toggle('h-warn', d.health === 'warn');
-      tile.classList.toggle('h-crit', d.health === 'crit');
-      tile.classList.toggle('standby', !!d.standby);
-      const ioEl = tile.querySelector('.disk-io');
-      if (ioEl) ioEl.classList.toggle('io-active', !!d.active);
+
+      const indEl = tile.querySelector('.disk-indicators');
+      if (indEl) {
+        indEl.innerHTML = (isStandby ? `<span class="standby-zzz" title="Spun-down / Standby">zZz</span>` : `<span class="io-dot" title="Active I/O"></span>`) +
+          `<span class="hdot dot-${lvl}"></span>`;
+      }
+
+      const barEl = tile.querySelector('.db i');
+      if (barEl) {
+        barEl.className = 'bg-' + lvl;
+        barEl.style.width = `${w}%`;
+      }
     });
   }
 }

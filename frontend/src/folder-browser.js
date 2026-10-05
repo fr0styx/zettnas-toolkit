@@ -157,6 +157,11 @@ window.addEventListener('DOMContentLoaded', () => {
 
   if (fbCancel) fbCancel.addEventListener("click", closeFbModal);
   if (fbClose) fbClose.addEventListener("click", closeFbModal);
+  if (fbModal) {
+    fbModal.addEventListener("click", (e) => {
+      if (e.target === fbModal) closeFbModal();
+    });
+  }
   const minBtn = document.getElementById("fb-min");
   if (minBtn) minBtn.addEventListener("click", () => { if (window.DockManager) window.DockManager.minimize("fb"); });
 

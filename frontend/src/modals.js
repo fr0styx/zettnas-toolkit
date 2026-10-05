@@ -47,11 +47,18 @@ let _smartFetchController = null;
 async function openSmartModal(devName) {
   if (_smartFetchController) _smartFetchController.abort();
   _smartFetchController = new AbortController();
+  if (!smartOverlay) smartOverlay = document.getElementById("smart-modal-overlay");
   if (!smartOverlay) return;
   activeModalType = "disk_" + devName;
+  smartOverlay.style.display = "flex";
+  smartOverlay.classList.remove("window-minimized");
   smartOverlay.classList.add("open");
-  if (window.DockManager) window.DockManager.register("smart", smartOverlay, "#i-disk", "Diagnostics");
-  if (window.bringToFront) window.bringToFront(smartOverlay.querySelector(".smart-modal-window"));
+  if (window.DockManager) {
+    window.DockManager.register("smart", smartOverlay, "#i-disk", "Diagnostics");
+    window.DockManager.restore("smart");
+  }
+  const modalWin = smartOverlay.querySelector(".smart-modal-window");
+  if (modalWin && window.bringToFront) window.bringToFront(modalWin);
   if (smartTitle) smartTitle.innerHTML = `<svg class="ic"><use href="#i-disk"/></svg> S.M.A.R.T. Diagnostics • /dev/${devName}`;
   if (smartLbl1) smartLbl1.textContent = "DEVICE & MODEL";
   if (smartLbl2) smartLbl2.textContent = "SERIAL NUMBER";
@@ -84,50 +91,58 @@ async function openSmartModal(devName) {
 }
 
 function updateMetricModalLive() {
-  if (!smartOverlay || !smartOverlay.classList.contains("open") || !latestStats || !activeModalType) return;
+  const s = _latestStats || window.latestStats; if (!smartOverlay || !smartOverlay.classList.contains("open") || !s || !activeModalType) return;
   
   if (activeModalType === "storage") {
-    smartModel.textContent = latestStats.storage.used;
-    smartSerial.textContent = latestStats.storage.total;
-    smartHealth.textContent = `${latestStats.storage.pct}%`;
-    smartHealth.style.color = latestStats.storage.pct >= 90 ? "var(--crit)" : "var(--ok)";
-    smartRaw.textContent = JSON.stringify(latestStats.disks, null, 2);
+    smartModel.textContent = s.storage.used;
+    smartSerial.textContent = s.storage.total;
+    smartHealth.textContent = `${s.storage.pct}%`;
+    smartHealth.style.color = s.storage.pct >= 90 ? "var(--crit)" : "var(--ok)";
+    smartRaw.textContent = JSON.stringify(s.disks, null, 2);
   } else if (activeModalType === "cpu") {
-    smartModel.textContent = `${latestStats.cpu.temp}°C`;
-    smartSerial.textContent = `${latestStats.cpu.util}%`;
-    smartHealth.textContent = latestStats.cpu.temp >= 75 ? "ELEVATED" : "OPTIMAL";
-    smartHealth.style.color = latestStats.cpu.temp >= 75 ? "var(--warn)" : "var(--ok)";
-    smartHours.textContent = latestStats.uptime;
-    smartRaw.textContent = `Host: ${latestStats.name}\nIP: ${latestStats.ip}\nCPU Temp: ${latestStats.cpu.temp}°C\nCPU Util: ${latestStats.cpu.util}%\nUptime: ${latestStats.uptime}`;
+    smartModel.textContent = `${s.cpu.temp}°C`;
+    smartSerial.textContent = `${s.cpu.util}%`;
+    smartHealth.textContent = s.cpu.temp >= 75 ? "ELEVATED" : "OPTIMAL";
+    smartHealth.style.color = s.cpu.temp >= 75 ? "var(--warn)" : "var(--ok)";
+    smartHours.textContent = s.uptime;
+    smartRaw.textContent = `Host: ${s.name}\nIP: ${s.ip}\nCPU Temp: ${s.cpu.temp}°C\nCPU Util: ${s.cpu.util}%\nUptime: ${s.uptime}`;
   } else if (activeModalType === "mem") {
-    smartModel.textContent = `${latestStats.mem.used_gb} GB`;
-    smartSerial.textContent = `${latestStats.mem.total_gb} GB`;
-    smartHealth.textContent = `${latestStats.mem.pct}%`;
-    smartHealth.style.color = latestStats.mem.pct >= 90 ? "var(--crit)" : "var(--ok)";
-    smartHours.textContent = `${(latestStats.mem.total_gb - latestStats.mem.used_gb).toFixed(1)} GB`;
-    smartRaw.textContent = JSON.stringify(latestStats.mem, null, 2);
+    smartModel.textContent = `${s.mem.used_gb} GB`;
+    smartSerial.textContent = `${s.mem.total_gb} GB`;
+    smartHealth.textContent = `${s.mem.pct}%`;
+    smartHealth.style.color = s.mem.pct >= 90 ? "var(--crit)" : "var(--ok)";
+    smartHours.textContent = `${(s.mem.total_gb - s.mem.used_gb).toFixed(1)} GB`;
+    smartRaw.textContent = JSON.stringify(s.mem, null, 2);
   } else if (activeModalType === "fans") {
-    const f = latestStats.fans || [];
+    const f = s.fans || [];
     smartModel.textContent = f[0] ? `${f[0]} RPM` : "N/A";
     smartSerial.textContent = f[1] ? `${f[1]} RPM` : "N/A";
     smartHealth.textContent = f[2] ? `${f[2]} RPM` : "N/A";
     smartRaw.textContent = `Tachometer Inputs:\n- Fan 1 (Disks 1): ${f[0] || 0} RPM\n- Fan 2 (Disks 2): ${f[1] || 0} RPM\n- Fan 3 (CPU): ${f[2] || 0} RPM\n- Sysfs Path: /sys/class/hwmon\n- Native Duty Range: 0-183`;
   } else if (activeModalType === "net") {
-    smartModel.textContent = latestStats.net ? latestStats.net.tx : "0 KB/s";
-    smartSerial.textContent = latestStats.net ? latestStats.net.rx : "0 KB/s";
+    smartModel.textContent = s.net ? s.net.tx : "0 KB/s";
+    smartSerial.textContent = s.net ? s.net.rx : "0 KB/s";
     smartHealth.textContent = "CONNECTED";
     smartHealth.style.color = "var(--ok)";
-    smartHours.textContent = latestStats.ip;
-    smartRaw.textContent = `Network Subsystem Telemetry:\n- Host IP: ${latestStats.ip}\n- Interface Transmit Rate (TX): ${latestStats.net ? latestStats.net.tx : "0 KB/s"}\n- Interface Receive Rate (RX): ${latestStats.net ? latestStats.net.rx : "0 KB/s"}\n- Host Source: /proc/net/dev`;
+    smartHours.textContent = s.ip;
+    smartRaw.textContent = `Network Subsystem Telemetry:\n- Host IP: ${s.ip}\n- Interface Transmit Rate (TX): ${s.net ? s.net.tx : "0 KB/s"}\n- Interface Receive Rate (RX): ${s.net ? s.net.rx : "0 KB/s"}\n- Host Source: /proc/net/dev`;
   }
 }
 
 function openMetricModal(type) {
-  if (!smartOverlay || !latestStats) return;
+  const s = _latestStats || window.latestStats;
+  if (!smartOverlay) smartOverlay = document.getElementById("smart-modal-overlay");
+  if (!smartOverlay || !s) return;
   activeModalType = type;
+  smartOverlay.style.display = "flex";
+  smartOverlay.classList.remove("window-minimized");
   smartOverlay.classList.add("open");
-  if (window.DockManager) window.DockManager.register("smart", smartOverlay, "#i-disk", "Diagnostics");
-  if (window.bringToFront) window.bringToFront(smartOverlay.querySelector(".smart-modal-window"));
+  if (window.DockManager) {
+    window.DockManager.register("smart", smartOverlay, "#i-disk", "Diagnostics");
+    window.DockManager.restore("smart");
+  }
+  const modalWin = smartOverlay.querySelector(".smart-modal-window");
+  if (modalWin && window.bringToFront) window.bringToFront(modalWin);
 
   if (type === "storage") {
     smartTitle.innerHTML = `<svg class="ic"><use href="#i-disk"/></svg> Storage Array Diagnostics`;
@@ -173,7 +188,14 @@ function openMetricModal(type) {
 
 function closeSmartModal() {
   activeModalType = null;
-  if (smartOverlay) smartOverlay.classList.remove("open");
+  if (_smartFetchController) {
+    _smartFetchController.abort();
+    _smartFetchController = null;
+  }
+  if (smartOverlay) {
+    smartOverlay.classList.remove("open");
+    smartOverlay.style.display = "none";
+  }
   if (window.DockManager) window.DockManager.unregister("smart");
 }
 

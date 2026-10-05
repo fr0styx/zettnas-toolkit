@@ -1,5 +1,14 @@
 # ZettNAS Toolkit - Release Changelog
 
+## v0.8.2 (2026-10-05)
+### 🐛 Bug Fixes & Drive Interaction Reliability
+- **Invisible Modal Click Interception**: Resolved an issue where closed diagnostic modals (SMART diagnostics, metrics, confirm dialogs) remained present in the DOM over `#diskRow` with `pointer-events: auto` at zero opacity. Added explicit `display: none !important`, `pointer-events: none !important`, and `visibility: hidden !important` to all inactive modal backdrops and child windows.
+- **Disk Row DOM Preservation & In-Place Updates**: Fixed `renderDisks()` continually destroying and recreating the entire `#diskRow` DOM every 2 seconds caused by comparing role-ordered arrays against raw hardware-ordered arrays. Switched to sorted device comparison and smooth in-place updates of temperatures, standby states, activity dots, and bar gauges.
+- **Event Delegation on Disk Tray**: Implemented robust event delegation on `#diskRow` for disk selection, guaranteeing click events are never dropped or detached during stats polling cycles.
+- **Device Parameter Normalization & SMART Detail**: Updated `/api/disk_detail` to automatically strip `/dev/` prefixes and translate device aliases (e.g., `nv0` -> `nvme0n1`), eliminating 400 "Invalid device parameter" errors.
+- **Standby Drive Wakeup Timeout**: Increased `smartctl` execution timeout in `backend/hardware/disks.py` from 12s to 20s, allowing high-capacity mechanical hard drives sufficient time to spin up from standby sleep mode without timing out.
+- **Modal Dismissal Enhancements**: Added click-outside backdrop dismissal to confirmation dialogs and the folder browser modal.
+
 ## v0.8.1 (2026-10-05)
 ### 🐛 Bug Fixes & Hardware Display Restoration
 - **Physical LCD Hardware Rendering**: Fixed display cutoff in headless framebuffer output (`lcd-direct.css`) by ensuring `.smart-modal-backdrop` does not hide `#console-modal-overlay` and restoring hardware orientation transforms (`rotate(90deg) translate(0, -172px)`).
