@@ -1,4 +1,5 @@
 import { ZettEventBus } from './event-bus.js';
+import { state } from './state.js';
 
 export function showConfirmToast(title, msg, onConfirm) {
   ZettEventBus.emit('toast:confirm', { title, msg, onConfirm });
@@ -15,6 +16,7 @@ window.addEventListener('DOMContentLoaded', () => {
   let _customToastActive = false;
 
   function _showConfirmToast(title, msg, onConfirm) {
+    if (state.isLcdDirect || (typeof window !== 'undefined' && window.location.search.includes('mode=lcd')) || (document.body && document.body.classList.contains('lcd-direct'))) return;
     let modal = document.getElementById("confirm-toast-modal");
     if (!modal) {
       modal = document.createElement("div");
@@ -67,6 +69,7 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   function _showToast(msg, type = "error") {
+    if (state.isLcdDirect || (typeof window !== 'undefined' && window.location.search.includes('mode=lcd')) || (document.body && document.body.classList.contains('lcd-direct'))) return;
     _customToastActive = true;
     window._customToastActive = true;
     const toast = document.getElementById("copy-toast");

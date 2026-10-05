@@ -1,3 +1,4 @@
+import { state } from '../state.js';
 /**
  * ZettNAS Toolkit Custom Wallpaper Engine
  * Handles wallpaper uploading, gallery dropdown, renaming, and desktop styling.
@@ -17,6 +18,7 @@ export function initWallpapers() {
   let currentWallpapers = [];
 
   function setWallpaper(url) {
+    if (state.isLcdDirect || (typeof window !== 'undefined' && window.location.search.includes('mode=lcd')) || (document.body && document.body.classList.contains('lcd-direct'))) return;
     if (url) {
       document.body.style.backgroundImage = `url('${url}')`;
       document.body.style.backgroundSize = 'cover';

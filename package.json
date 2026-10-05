@@ -1,6 +1,6 @@
 {
   "name": "zettnas-toolkit",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "<div align=\"center\">   <img src=\"static/img/icon.png\" width=\"128\" height=\"128\" alt=\"ZettNAS Toolkit Icon\" style=\"border-radius: 24px;\">   <h1>ZettNAS Toolkit</h1>   <p><strong>All-in-one chassis management suite and live front-panel LCD dashboard for Zettlab NAS enclosures (D4, D6, D8).</strong></p>",
   "main": "index.js",
   "scripts": {

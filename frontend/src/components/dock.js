@@ -1,3 +1,4 @@
+import { state } from '../state.js';
 /**
  * ZettNAS Toolkit Dock & Window Manager
  * Handles floating modal registration, minimize/restore, dragging, and z-index depth stacking.
@@ -180,6 +181,7 @@ window.DockManager = DockManager;
 window.bringToFront = bringToFront;
 
 export function initDockSystem() {
+  if (state.isLcdDirect || (typeof window !== 'undefined' && window.location.search.includes('mode=lcd')) || (document.body && document.body.classList.contains('lcd-direct'))) return;
   const consoleModal = document.getElementById('console-window');
   const consoleHeader = document.querySelector('#console-window .chassis-panel-header');
   if (consoleModal) makeDraggable(consoleModal, consoleHeader);

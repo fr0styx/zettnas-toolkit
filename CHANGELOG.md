@@ -1,5 +1,12 @@
 # ZettNAS Toolkit - Release Changelog
 
+## v0.8.1 (2026-10-05)
+### 🐛 Bug Fixes & Hardware Display Restoration
+- **Physical LCD Hardware Rendering**: Fixed display cutoff in headless framebuffer output (`lcd-direct.css`) by ensuring `.smart-modal-backdrop` does not hide `#console-modal-overlay` and restoring hardware orientation transforms (`rotate(90deg) translate(0, -172px)`).
+- **Physical LCD Output Isolation**: Suppressed WebUI toast alerts, confirm dialogs, and desktop background wallpapers in direct LCD mode (`mode=lcd`), ensuring clean, distraction-free hardware telemetry.
+- **Toolkit Settings Drawer Restoration**: Corrected drawer element selectors (`#led-drawer`, `#drawer-overlay`), reconnected tab navigation (Dashboard Layout, LED Strip bar, Fans, Copy Button, Misc), and restored settings keyboard shortcuts.
+- **Dashboard Layout Persistence**: Added missing `GET /api/layout` endpoint in `backend/api/system.py` to prevent 404 errors when loading dashboard arrangements.
+
 ## v0.8.0 (2026-10-05)
 ### 🎨 Frontend Modularization & Component Architecture (Phase 3)
 - **Monolithic main.js Deconstruction**: Decomposed the monolithic 3,604-line `main.js` into focused, reusable ES modules under `frontend/src/`:

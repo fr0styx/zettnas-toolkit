@@ -11,6 +11,7 @@ from backend.hardware.screen import get_screen_state
 from backend.models.schemas import (
     ButtonConfigRequest, CopyConfirmRequest, MkdirRequest
 )
+from backend.hardware.storage import get_current_layout
 
 router = APIRouter(tags=["System & Storage"])
 
@@ -139,6 +140,10 @@ async def clear_events():
 @router.get("/events/clear", include_in_schema=False)
 async def clear_events_compat():
     return await clear_events()
+
+@router.get("/layout")
+async def get_layout():
+    return get_current_layout()
 
 @router.post("/layout")
 async def post_layout(request: Request):

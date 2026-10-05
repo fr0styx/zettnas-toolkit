@@ -3,16 +3,17 @@
    ========================================================================= */
 body.lcd-direct,
 html:has(body.lcd-direct) {
-  margin: 0;
-  padding: 0;
-  width: 172px;
-  height: 640px;
-  max-width: 172px;
-  max-height: 640px;
-  min-height: 0;
-  overflow: hidden;
-  background: #0a0e13;
-  display: block;
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 172px !important;
+  height: 640px !important;
+  max-width: 172px !important;
+  max-height: 640px !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  background: #0a0e13 !important;
+  background-image: none !important;
+  display: block !important;
 }
 
 body.lcd-direct .suite-navbar,
@@ -22,63 +23,93 @@ body.lcd-direct .chassis-screws,
 body.lcd-direct .chassis-led-fixture,
 body.lcd-direct .drawer-backdrop,
 body.lcd-direct .slide-drawer,
-body.lcd-direct .smart-modal-backdrop,
-body.lcd-direct #os-dock-container {
+body.lcd-direct .smart-modal-backdrop:not(#console-modal-overlay),
+body.lcd-direct #os-dock-container,
+body.lcd-direct #copy-toast,
+body.lcd-direct #copy-toast-backdrop,
+body.lcd-direct #confirm-toast-modal,
+body.lcd-direct #login-overlay {
   display: none !important;
 }
 
 body.lcd-direct .studio-viewport-wrapper,
 body.lcd-direct .chassis-workbench-stage,
 body.lcd-direct .chassis-front-panel {
-  z-index: 50;
-  display: block;
-  position: static;
-  margin: 0;
-  padding: 0;
-  width: 172px;
-  height: 640px;
-  min-height: 0;
-  max-height: 640px;
-  border: none;
-  outline: none;
-  box-shadow: none;
-  background: transparent;
-  border-radius: 0;
-  transform: none;
+  z-index: 50 !important;
+  display: block !important;
+  position: static !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 172px !important;
+  height: 640px !important;
+  min-height: 0 !important;
+  max-height: 640px !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  transform: none !important;
+}
+
+body.lcd-direct #console-modal-overlay {
+  display: block !important;
+  background: transparent !important;
+  opacity: 1 !important;
+  transform: none !important;
+  position: static !important;
+  inset: auto !important;
+  width: 172px !important;
+  height: 640px !important;
+  pointer-events: auto !important;
+}
+
+body.lcd-direct #console-modal-overlay.window-minimized {
+  display: block !important;
+  opacity: 1 !important;
+}
+
+body.lcd-direct #console-window {
+  display: block !important;
+  position: static !important;
+  bottom: auto !important;
+  left: auto !important;
+  top: auto !important;
+  transform: none !important;
+  pointer-events: auto !important;
+  width: 172px !important;
+  height: 640px !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+body.lcd-direct #console-window.window-minimized {
+  opacity: 1 !important;
+  transform: none !important;
+  pointer-events: auto !important;
 }
 
 body.lcd-direct #screen,
 body.lcd-direct #screen.hardware-screen-canvas {
-  position: fixed;
-  top: 0;
-  left: 0;
-  margin: 0;
-  width: 640px;
-  height: 172px;
-  min-width: 640px;
-  min-height: 172px;
-  padding: 5px 12px 6px 12px;
-  box-sizing: border-box;
-  border: none;
-  outline: none;
-  border-radius: 0;
-  box-shadow: none;
-  overflow: hidden;
-  z-index: 999999;
-  transform-origin: 0 0;
-  transform: rotate(90deg) translate(0, -172px);
-}
-
-body.lcd-direct #console-modal-overlay {
-  display: block;
-  background: transparent;
-  opacity: 1;
-  transform: none;
-}
-
-body.lcd-direct #console-window {
-  position: static;
-  bottom: auto;
-  left: auto;
-  transform: none;
+  display: flex !important;
+  flex-direction: column !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  margin: 0 !important;
+  width: 640px !important;
+  height: 172px !important;
+  min-width: 640px !important;
+  min-height: 172px !important;
+  padding: 5px 12px 6px 12px !important;
+  box-sizing: border-box !important;
+  border: none !important;
+  outline: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  overflow: hidden !important;
+  z-index: 999999 !important;
+  transform-origin: 0 0 !important;
+  transform: rotate(90deg) translate(0, -172px) !important;
 }

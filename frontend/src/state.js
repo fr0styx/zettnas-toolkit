@@ -34,7 +34,7 @@ export const defaultSizes = {
 export const ZOOM_PROFILES = [0.75, 0.85, 1.0, 1.15, 1.25, 1.5];
 
 export const state = {
-  isLcdDirect: window.location.search.includes('mode=lcd') || document.body.classList.contains('lcd-direct'),
+  isLcdDirect: typeof window !== 'undefined' && (window.location.search.includes('mode=lcd') || (typeof document !== 'undefined' && document.body && document.body.classList.contains('lcd-direct'))),
   currentTheme: localStorage.getItem('lcd_theme') || 'cyber',
   clockFormat: '24',
   currentTimezone: 'America/New_York',

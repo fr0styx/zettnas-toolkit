@@ -20,7 +20,7 @@ import { initLedControl } from './components/led-control.js';
 import { fetchDashboardLayout, fitMiniPreviewScale } from './components/mini-preview.js';
 import { initWallpapers } from './components/wallpapers.js';
 import { initEvents } from './components/events.js';
-import { initSettings } from './components/settings.js';
+import { initSettings, openDrawer, closeDrawer } from './components/settings.js';
 import { initMetricsChart, fetchAndRenderMetrics } from './components/metrics-chart.js';
 
 let _sseRetryCount = 0;
@@ -109,8 +109,14 @@ window.bringToFront = bringToFront;
 window.showToast = showToast;
 window.showConfirmToast = showConfirmToast;
 window.fetchAndRenderMetrics = fetchAndRenderMetrics;
+window.openDrawer = openDrawer;
+window.closeDrawer = closeDrawer;
 
 document.addEventListener('DOMContentLoaded', () => {
+  if (window.location.search.includes('mode=lcd') || document.body.classList.contains('lcd-direct')) {
+    state.isLcdDirect = true;
+    document.body.classList.add('lcd-direct');
+  }
   initDockSystem();
   initAuth();
   initDashboardClicks();

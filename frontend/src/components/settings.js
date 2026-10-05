@@ -1,38 +1,89 @@
 /**
  * ZettNAS Toolkit Settings & Preferences Controller
- * Handles settings drawer, screen backlight, timezone, hardware buttons, card layout locks, and security credentials.
+ * Handles settings drawer, tabs, screen backlight, timezone, hardware buttons, card layout locks, and security credentials.
  */
 import { api } from '../api.js';
 import { state, ZOOM_PROFILES } from '../state.js';
 import { ZettEventBus } from '../event-bus.js';
 import { showToast } from '../toast.js';
 import { applyTheme } from './dashboard.js';
-import { applyDashboardLayout, persistDashboardLayout } from './mini-preview.js';
+import { applyDashboardLayout, persistDashboardLayout, fitMiniPreviewScale, syncMiniPreviewTelemetry } from './mini-preview.js';
+import { fetchAndRenderMetrics } from './metrics-chart.js';
 
 const $ = (id) => document.getElementById(id);
 
 export function openDrawer() {
-  const drawer = $('slide-drawer');
-  const overlay = $('drawer-backdrop');
-  if (drawer) drawer.classList.add('open');
-  if (overlay) overlay.classList.add('open');
-  document.body.classList.add('drawer-is-open');
+  const drawer = $('led-drawer') || document.querySelector('.slide-drawer');
+  const overlay = $('drawer-overlay') || document.querySelector('.drawer-backdrop');
+  if (drawer && overlay) {
+    drawer.classList.add('open');
+    overlay.classList.add('open');
+    document.body.classList.add('drawer-is-open');
+    setTimeout(() => {
+      fitMiniPreviewScale();
+      syncMiniPreviewTelemetry();
+    }, 100);
+  }
 }
 
 export function closeDrawer() {
-  const drawer = $('slide-drawer');
-  const overlay = $('drawer-backdrop');
-  if (drawer) drawer.classList.remove('open');
-  if (overlay) overlay.classList.remove('open');
-  document.body.classList.remove('drawer-is-open');
+  const drawer = $('led-drawer') || document.querySelector('.slide-drawer');
+  const overlay = $('drawer-overlay') || document.querySelector('.drawer-backdrop');
+  if (drawer && overlay) {
+    drawer.classList.remove('open');
+    overlay.classList.remove('open');
+    document.body.classList.remove('drawer-is-open');
+  }
 }
 
+window.openDrawer = openDrawer;
+window.closeDrawer = closeDrawer;
+
 export function initSettings() {
+  if (state.isLcdDirect || (typeof window !== 'undefined' && window.location.search.includes('mode=lcd')) || (document.body && document.body.classList.contains('lcd-direct'))) {
+    return;
+  }
+
   const toggleBtn = $('drawer-toggle-btn');
-  const suiteBtn = $('toolkit-suite-btn');
+  const suiteBtn = $('suite-toolkit-btn') || $('toolkit-suite-btn');
   const closeBtn = $('drawer-close-btn');
-  const overlay = $('drawer-backdrop');
-  const drawer = $('slide-drawer');
+  const overlay = $('drawer-overlay') || document.querySelector('.drawer-backdrop');
+  const drawer = $('led-drawer') || document.querySelector('.slide-drawer');
+
+  // --- Drawer Tabs Switching ---
+  const dynamicTitle = $('drawer-dynamic-title');
+  const dynamicDesc = $('drawer-dynamic-desc');
+  const tabBtns = document.querySelectorAll('.drawer-tab-btn');
+  const tabContents = document.querySelectorAll('.drawer-tab-content');
+
+  tabBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      tabBtns.forEach((b) => b.classList.remove('active'));
+      tabContents.forEach((c) => c.classList.remove('active'));
+      btn.classList.add('active');
+      const targetId = btn.dataset.tab;
+      const targetContent = $(targetId);
+      if (targetContent) targetContent.classList.add('active');
+
+      if (targetId === 'tab-layout') {
+        if (dynamicTitle) dynamicTitle.textContent = 'Dashboard Layout';
+        if (dynamicDesc) dynamicDesc.textContent = 'Configure dashboard sizes, visibility, and layout presets.';
+      } else if (targetId === 'tab-led') {
+        if (dynamicTitle) dynamicTitle.textContent = 'LED Strip bar';
+        if (dynamicDesc) dynamicDesc.textContent = 'Adjust physical lighting and reactive hardware alerts.';
+      } else if (targetId === 'tab-fans') {
+        if (dynamicTitle) dynamicTitle.textContent = 'Fans';
+        if (dynamicDesc) dynamicDesc.textContent = 'Configure cooling thresholds and dynamic thermal curves.';
+      } else if (targetId === 'tab-buttons') {
+        if (dynamicTitle) dynamicTitle.textContent = 'Copy Button';
+        if (dynamicDesc) dynamicDesc.textContent = 'Assign SD card copy rules to the physical hardware button.';
+      } else if (targetId === 'tab-misc') {
+        if (dynamicTitle) dynamicTitle.textContent = 'Misc & Event Log';
+        if (dynamicDesc) dynamicDesc.textContent = 'Historical metrics, background operations, and hardware alerts.';
+        fetchAndRenderMetrics();
+      }
+    });
+  });
 
   if (toggleBtn) toggleBtn.addEventListener('click', openDrawer);
   if (suiteBtn) suiteBtn.addEventListener('click', openDrawer);
@@ -74,13 +125,37 @@ export function initSettings() {
     });
   }
 
-  const tzSelect = $('tz-select-input');
+  const tzSelect = $('tz-select') || $('tz-select-input');
+  const tzCustomInput = $('tz-custom-input');
   if (tzSelect) {
-    tzSelect.value = state.currentTimezone;
+    if (state.currentTimezone) tzSelect.value = state.currentTimezone;
     tzSelect.addEventListener('change', (e) => {
-      state.currentTimezone = e.target.value;
-      applyDashboardLayout();
-      persistDashboardLayout();
+      const val = e.target.value;
+      if (val === 'custom') {
+        if (tzCustomInput) {
+          tzCustomInput.style.display = 'block';
+          tzCustomInput.focus();
+        }
+      } else {
+        if (tzCustomInput) tzCustomInput.style.display = 'none';
+        state.currentTimezone = val;
+        applyDashboardLayout();
+        persistDashboardLayout();
+      }
+    });
+  }
+
+  if (tzCustomInput) {
+    let tzTimeout = null;
+    tzCustomInput.addEventListener('input', (e) => {
+      clearTimeout(tzTimeout);
+      tzTimeout = setTimeout(() => {
+        if (e.target.value.trim()) {
+          state.currentTimezone = e.target.value.trim();
+          applyDashboardLayout();
+          persistDashboardLayout();
+        }
+      }, 500);
     });
   }
 
@@ -141,18 +216,18 @@ export function initSettings() {
 
       card.addEventListener('dragend', () => {
         allowLayoutDrag = false;
-        card.classList.remove('dragging');
+        if (draggedLayoutCard) draggedLayoutCard.classList.remove('dragging');
         layoutSectionsContainer.querySelectorAll('.draggable-card').forEach((c) => c.classList.remove('drag-over'));
         const order = Array.from(layoutSectionsContainer.querySelectorAll('.draggable-card')).map((c) => c.dataset.layoutCardId);
         localStorage.setItem(LAYOUT_SECTIONS_STORAGE_KEY, JSON.stringify(order));
       });
 
       card.addEventListener('dragover', (e) => {
-        if (isLayoutLocked) return;
+        if (isLayoutLocked || !draggedLayoutCard) return;
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
         const targetCard = e.target.closest('.draggable-card');
-        if (targetCard && targetCard !== draggedLayoutCard) {
+        if (targetCard && targetCard !== draggedLayoutCard && targetCard.parentElement === layoutSectionsContainer) {
           const rect = targetCard.getBoundingClientRect();
           const next = (e.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
           layoutSectionsContainer.insertBefore(draggedLayoutCard, next && targetCard.nextSibling || targetCard);
@@ -165,6 +240,59 @@ export function initSettings() {
   }
 
   initLayoutSectionReordering();
+
+  // --- Misc Tab Section Reordering ---
+  const miscCardsContainer = $('misc-sections-container');
+  const miscCardsLockBtn = $('misc-cards-lock-btn');
+  if (miscCardsContainer && miscCardsLockBtn) {
+    let isMiscLocked = true;
+    miscCardsLockBtn.addEventListener('click', () => {
+      isMiscLocked = !isMiscLocked;
+      miscCardsLockBtn.textContent = isMiscLocked ? '🔒 Locked' : '🔓 Unlocked';
+      miscCardsLockBtn.classList.toggle('unlocked', !isMiscLocked);
+      miscCardsContainer.classList.toggle('locked', isMiscLocked);
+      miscCardsContainer.querySelectorAll('.draggable-card').forEach(c => c.setAttribute('draggable', !isMiscLocked));
+    });
+
+    let draggedMiscCard = null;
+    let allowMiscDrag = false;
+    try {
+      const order = JSON.parse(localStorage.getItem('zettnas_misc_order') || '[]');
+      order.reverse().forEach(id => {
+        const el = miscCardsContainer.querySelector(`[data-misc-card-id="${id}"]`);
+        if (el) miscCardsContainer.prepend(el);
+      });
+    } catch (e) {}
+
+    miscCardsContainer.addEventListener('mousedown', (e) => {
+      allowMiscDrag = !isMiscLocked && !!e.target.closest('.drag-handle');
+    });
+
+    miscCardsContainer.querySelectorAll('.draggable-card').forEach((card) => {
+      card.addEventListener('dragstart', (e) => {
+        if (isMiscLocked || !allowMiscDrag) { e.preventDefault(); return false; }
+        draggedMiscCard = card;
+        card.classList.add('dragging');
+      });
+      card.addEventListener('dragend', () => {
+        allowMiscDrag = false;
+        if (draggedMiscCard) draggedMiscCard.classList.remove('dragging');
+        miscCardsContainer.querySelectorAll('.draggable-card').forEach((c) => c.classList.remove('drag-over'));
+        const order = Array.from(miscCardsContainer.querySelectorAll('.draggable-card')).map(c => c.dataset.miscCardId);
+        localStorage.setItem('zettnas_misc_order', JSON.stringify(order));
+      });
+      card.addEventListener('dragover', (e) => {
+        if (isMiscLocked || !draggedMiscCard) return;
+        e.preventDefault();
+        const targetCard = e.target.closest('.draggable-card');
+        if (targetCard && targetCard !== draggedMiscCard && targetCard.parentElement === miscCardsContainer) {
+          const rect = targetCard.getBoundingClientRect();
+          const next = (e.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
+          miscCardsContainer.insertBefore(draggedMiscCard, next && targetCard.nextSibling || targetCard);
+        }
+      });
+    });
+  }
 
   // --- Screen Backlight & Night Dimming ---
   const screenBriSlider = $('screen-bri-slider');
