@@ -1,12 +1,12 @@
 <?xml version="1.0"?>
 <Container version="2">
   <Name>zettnas-toolkit</Name>
-  <Repository>zettnas-toolkit:latest</Repository>
-  <Registry/>
+  <Repository>ghcr.io/fr0styx/zettnas-toolkit:latest</Repository>
+  <Registry>https://ghcr.io/v2/fr0styx/zettnas-toolkit</Registry>
   <Network>bridge</Network>
   <MyIP/>
   <Shell>bash</Shell>
-  <Privileged>true</Privileged>
+  <Privileged>false</Privileged>
   <Support>https://github.com/fr0styx/zettnas-toolkit/issues</Support>
   <Project>https://github.com/fr0styx/zettnas-toolkit</Project>
   <Overview>ZettNAS hardware controller, LCD dashboard (direct framebuffer renderer), ARGB lightbar effects &amp; active thermal fan curve daemon.</Overview>
@@ -14,11 +14,11 @@
   <WebUI>http://[IP]:[PORT:8082]/</WebUI>
   <TemplateURL>https://raw.githubusercontent.com/fr0styx/zettnas-toolkit/main/unraid/zettnas-toolkit.xml</TemplateURL>
   <Icon>https://raw.githubusercontent.com/fr0styx/zettnas-toolkit/main/static/img/icon.png</Icon>
-  <ExtraParams>--restart=unless-stopped --device=/dev/fb0:/dev/fb0 --device=/dev/dri:/dev/dri</ExtraParams>
+  <ExtraParams>--restart=unless-stopped --device=/dev/fb0:/dev/fb0 --device=/dev/dri:/dev/dri --cap-add=SYS_RAWIO --cap-add=SYS_ADMIN --device-cgroup-rule="c 29:* rwm" --device-cgroup-rule="c 226:* rwm" --device-cgroup-rule="c 188:* rwm" --device-cgroup-rule="c 166:* rwm" --device-cgroup-rule="b 8:* rwm" --device-cgroup-rule="b 259:* rwm"</ExtraParams>
   <PostArgs/>
   <CPUset/>
   <Config Name="WebUI Port" Target="8082" Default="8082" Mode="tcp" Description="Web interface &amp; telemetry API port" Type="Port" Display="always" Required="true" Mask="false">8082</Config>
-  <Config Name="App Directory" Target="/app" Default="/mnt/user/appdata/zettnas-toolkit" Mode="rw" Description="Application code and state data" Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/zettnas-toolkit</Config>
+  <Config Name="Persistent State &amp; Data" Target="/app/data" Default="/mnt/user/appdata/zettnas-toolkit/data" Mode="rw" Description="Persistent state, sqlite database, configurations, and wallpapers" Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/zettnas-toolkit/data</Config>
   <Config Name="Host Proc" Target="/host/proc" Default="/proc" Mode="ro" Description="Host process metrics" Type="Path" Display="advanced" Required="true" Mask="false">/proc</Config>
   <Config Name="Host Sys" Target="/host/sys" Default="/sys" Mode="rw" Description="Host sysfs hwmon &amp; thermal paths" Type="Path" Display="advanced" Required="true" Mask="false">/sys</Config>
   <Config Name="Host Dev" Target="/host/dev" Default="/dev" Mode="rw" Description="Host devices (disks &amp; serial RGB controller)" Type="Path" Display="advanced" Required="true" Mask="false">/dev</Config>

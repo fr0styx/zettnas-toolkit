@@ -9,6 +9,7 @@ import { showConfirmToast, showToast } from '../toast.js';
 import { updateFanCurveWorkstation } from './fan-control.js';
 import { syncMiniPreviewTelemetry, applyDashboardLayout } from './mini-preview.js';
 import { renderEventLog } from './events.js';
+import { checkAndTriggerSetupWizard } from './setup-wizard.js';
 
 const $ = (id) => document.getElementById(id);
 const FAN_LABELS = ['D1', 'D2', 'CPU', 'SYS'];
@@ -339,6 +340,8 @@ export function applyTheme(themeName) {
   }
 }
 
+let _defaultPwdWarned = false;
+
 export function applyStats(s) {
   try {
     state.setStats(s);
@@ -347,10 +350,11 @@ export function applyStats(s) {
     if (s.security && s.security.is_default_password) {
       const warnEl = document.getElementById('sec-default-pwd-warning');
       if (warnEl) warnEl.style.display = 'block';
-      if (!window._defaultPwdWarned) {
-        window._defaultPwdWarned = true;
+      if (!_defaultPwdWarned) {
+        _defaultPwdWarned = true;
         showToast("⚠️ Security Warning: Default password 'admin' is active! Please change it in Settings.", 'error');
       }
+      checkAndTriggerSetupWizard(s);
     }
 
     if ($('nasName')) $('nasName').textContent = s.name;
@@ -441,39 +445,39 @@ export function applyStats(s) {
 let copyToastMinimized = false;
 let copyToastInitialized = false;
 
+const confirmCopy = async (action) => {
+  try {
+    const actionsDiv = $('copy-toast-actions');
+    if (actionsDiv) {
+      actionsDiv.style.opacity = '0.5';
+      actionsDiv.style.pointerEvents = 'none';
+    }
+    await api.post('/api/copy/confirm', { action });
+  } catch (e) {
+    console.warn('Confirm copy failed', e);
+  }
+};
+
+const abortCopyConfirm = async (yes) => {
+  const abortDiv = $('copy-toast-abort-actions');
+  if (yes) {
+    if (abortDiv) {
+      abortDiv.style.opacity = '0.5';
+      abortDiv.style.pointerEvents = 'none';
+    }
+    try {
+      await api.post('/api/copy/cancel');
+    } catch (e) {
+      console.warn('Cancel copy failed', e);
+    }
+  } else {
+    if (abortDiv) abortDiv.style.display = 'none';
+  }
+};
+
 function initCopyToastControls() {
   if (copyToastInitialized) return;
   copyToastInitialized = true;
-
-  window.confirmCopy = async (action) => {
-    try {
-      const actionsDiv = $('copy-toast-actions');
-      if (actionsDiv) {
-        actionsDiv.style.opacity = '0.5';
-        actionsDiv.style.pointerEvents = 'none';
-      }
-      await api.post('/api/copy/confirm', { action });
-    } catch (e) {
-      console.warn('Confirm copy failed', e);
-    }
-  };
-
-  window.abortCopyConfirm = async (yes) => {
-    const abortDiv = $('copy-toast-abort-actions');
-    if (yes) {
-      if (abortDiv) {
-        abortDiv.style.opacity = '0.5';
-        abortDiv.style.pointerEvents = 'none';
-      }
-      try {
-        await api.post('/api/copy/cancel');
-      } catch (e) {
-        console.warn('Cancel copy failed', e);
-      }
-    } else {
-      if (abortDiv) abortDiv.style.display = 'none';
-    }
-  };
 
   const btnPause = $('copy-toast-pause');
   if (btnPause) {
@@ -515,10 +519,12 @@ function initCopyToastControls() {
         abortDiv.innerHTML = `
           <div style="font-size:11px; color:#cbd5e1; margin-bottom:8px; font-weight:500;">Are you sure you want to completely abort the transfer? All incomplete files will be deleted.</div>
           <div style="display:flex; gap:8px;">
-            <button class="btn-save-preset" style="flex:1; padding:6px; border-color:rgba(240,85,59,0.5); color:var(--crit);" onclick="window.abortCopyConfirm(true)">Yes, Abort</button>
-            <button class="btn-save-preset" style="flex:1; padding:6px;" onclick="window.abortCopyConfirm(false)">Resume</button>
+            <button id="copy-abort-btn-yes" class="btn-save-preset" style="flex:1; padding:6px; border-color:rgba(240,85,59,0.5); color:var(--crit);">Yes, Abort</button>
+            <button id="copy-abort-btn-no" class="btn-save-preset" style="flex:1; padding:6px;">Resume</button>
           </div>
         `;
+        abortDiv.querySelector('#copy-abort-btn-yes')?.addEventListener('click', () => abortCopyConfirm(true));
+        abortDiv.querySelector('#copy-abort-btn-no')?.addEventListener('click', () => abortCopyConfirm(false));
         $('copy-toast')?.querySelector('.smart-modal-body')?.appendChild(abortDiv);
       } else {
         abortDiv.style.display = 'block';
@@ -628,9 +634,9 @@ export function updateCopyToast(copyState) {
         `;
         toast.querySelector('.smart-modal-body')?.appendChild(actionsDiv);
 
-        $('copy-btn-skip')?.addEventListener('click', () => window.confirmCopy('skip'));
-        $('copy-btn-overwrite')?.addEventListener('click', () => window.confirmCopy('overwrite'));
-        $('copy-btn-cancel')?.addEventListener('click', () => window.confirmCopy('cancel'));
+        $('copy-btn-skip')?.addEventListener('click', () => confirmCopy('skip'));
+        $('copy-btn-overwrite')?.addEventListener('click', () => confirmCopy('overwrite'));
+        $('copy-btn-cancel')?.addEventListener('click', () => confirmCopy('cancel'));
       }
       actionsDiv.style.display = 'flex';
       actionsDiv.style.opacity = '1';

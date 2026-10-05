@@ -76,7 +76,7 @@ async function request(endpoint, options = {}) {
       if (overlay) overlay.style.display = 'flex';
       const dock = document.getElementById('os-dock-container');
       if (dock) dock.style.display = 'none';
-      throw new Error('Unauthorized');
+      throw new ApiError('Unauthorized', { status: 401, error: 'unauthorized' });
     }
 
     return res;
@@ -97,6 +97,11 @@ export const api = {
     if (!res.ok) throw await ApiError.from(res);
     return res.json();
   },
+  async put(url, body = {}, options = {}) {
+    const res = await request(url, { method: 'PUT', body, ...options });
+    if (!res.ok) throw await ApiError.from(res);
+    return res.json();
+  },
   async delete(url, options = {}) {
     const res = await request(url, { method: 'DELETE', ...options });
     if (!res.ok) throw await ApiError.from(res);
@@ -104,32 +109,6 @@ export const api = {
   }
 };
 
-// Global fetch interceptor ensuring any standard fetch calls attach authorization headers
-const _originalFetch = window.fetch;
-window.fetch = async function(resource, config = {}) {
-  const token = auth.getToken();
-  if (token) {
-    if (!config.headers) config.headers = {};
-    if (config.headers instanceof Headers) {
-      if (!config.headers.has('Authorization')) {
-        config.headers.set('Authorization', 'Bearer ' + token);
-      }
-    } else if (typeof config.headers === 'object') {
-      if (!config.headers['Authorization']) {
-        config.headers['Authorization'] = 'Bearer ' + token;
-      }
-    }
-  }
-
-  const res = await _originalFetch(resource, config);
-  if (res.status === 401) {
-    ZettEventBus.emit('auth:required', { resource });
-    const overlay = document.getElementById('login-overlay');
-    if (overlay) overlay.style.display = 'flex';
-    const dock = document.getElementById('os-dock-container');
-    if (dock) dock.style.display = 'none';
-  }
-  return res;
-};
-
+export { request };
 export default api;
+

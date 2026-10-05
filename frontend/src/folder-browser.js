@@ -1,5 +1,7 @@
 import { ZettEventBus } from './event-bus.js';
 import { showToast } from './toast.js';
+import { api } from './api.js';
+import { DockManager, bringToFront } from './components/dock.js';
 
 window.addEventListener('DOMContentLoaded', () => {
     const $ = (id) => document.getElementById(id);
@@ -138,7 +140,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
   async function loadBrowsePath(targetPath, isFallback = false) {
     try {
-      const res = await fetch(`/api/browse?path=${encodeURIComponent(targetPath || "")}`);
+      const res = await api.request(`/api/browse?path=${encodeURIComponent(targetPath || "")}`);
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data.roots) && data.roots.length) browseRoots = data.roots;
@@ -160,7 +162,7 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   function closeFbModal() {
-  if (window.DockManager) window.DockManager.unregister("fb");
+    if (DockManager) DockManager.unregister("fb");
     if (fbModal) fbModal.classList.remove("open");
   }
 
@@ -169,7 +171,11 @@ window.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       const currentDst = (btnCopyDst && btnCopyDst.value) ? btnCopyDst.value : "/mnt/user/";
       loadBrowsePath(currentDst || "/mnt/user/");
-      if (fbModal) { fbModal.classList.add("open"); if (window.DockManager) window.DockManager.register("fb", fbModal, "#i-storage", "Folder Browser"); if (window.bringToFront) window.bringToFront(fbModal.querySelector(".smart-modal-window")); }
+      if (fbModal) {
+        fbModal.classList.add("open");
+        if (DockManager) DockManager.register("fb", fbModal, "#i-storage", "Folder Browser");
+        if (bringToFront) bringToFront(fbModal.querySelector(".smart-modal-window"));
+      }
     });
   }
 
@@ -181,7 +187,7 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   }
   const minBtn = document.getElementById("fb-min");
-  if (minBtn) minBtn.addEventListener("click", () => { if (window.DockManager) window.DockManager.minimize("fb"); });
+  if (minBtn) minBtn.addEventListener("click", () => { if (DockManager) DockManager.minimize("fb"); });
 
   if (fbSelect) {
     fbSelect.addEventListener("click", () => {
@@ -208,17 +214,17 @@ window.addEventListener('DOMContentLoaded', () => {
       const newPath = currentBrowsePath + (currentBrowsePath.endsWith("/") ? "" : "/") + folderName;
       try {
         fbCreateFolderBtn.textContent = "...";
-        const res = await fetch("/api/mkdir", {
+        const res = await api.request("/api/mkdir", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ path: newPath })
+          body: { path: newPath }
         });
         if (res.ok) {
           fbNewFolderName.value = "";
           fbNewFolderName.placeholder = "New folder name...";
           loadBrowsePath(currentBrowsePath); // Reload current path to show the new folder in the list
         } else {
-          const errData = await res.json();
+          const errData = await res.json().catch(() => ({}));
           fbNewFolderName.value = "";
           fbNewFolderName.placeholder = "Error: " + (errData.detail || errData.error || "Failed");
         }

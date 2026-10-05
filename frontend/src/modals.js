@@ -1,7 +1,8 @@
 import { showToast } from "./toast.js";
 import { ZettEventBus } from './event-bus.js';
+import { api } from './api.js';
+import { DockManager, bringToFront } from './components/dock.js';
 // S.M.A.R.T. & INTERACTIVE METRIC DIAGNOSTIC MODAL CONTROLLER
-
 
 let activeModalType = null;
 let smartOverlay, smartCloseBtn, smartTitle, smartModel, smartSerial, smartHealth, smartHours, smartRaw, smartLbl1, smartLbl2, smartLbl3, smartLbl4, smartRawTitle, smartRefreshBtn;
@@ -21,6 +22,7 @@ window.addEventListener('DOMContentLoaded', () => {
     smartLbl4 = document.getElementById("smart-lbl-4");
     smartRawTitle = document.getElementById("smart-modal-raw-title");
     smartRefreshBtn = document.getElementById("smart-modal-refresh");
+    const minBtn = document.getElementById("smart-min");
     
     if (smartRefreshBtn) {
       smartRefreshBtn.addEventListener("click", () => {
@@ -32,7 +34,7 @@ window.addEventListener('DOMContentLoaded', () => {
       });
     }
     if (smartCloseBtn) smartCloseBtn.addEventListener("click", closeSmartModal);
-    if (minBtn) minBtn.addEventListener("click", () => { if (window.DockManager) window.DockManager.minimize("smart"); });
+    if (minBtn) minBtn.addEventListener("click", () => { if (DockManager) DockManager.minimize("smart"); });
     if (smartOverlay) {
       smartOverlay.addEventListener("click", (e) => {
         if (e.target === smartOverlay) closeSmartModal();
@@ -52,12 +54,12 @@ async function openSmartModal(devName) {
   smartOverlay.style.display = "flex";
   smartOverlay.classList.remove("window-minimized");
   smartOverlay.classList.add("open");
-  if (window.DockManager) {
-    window.DockManager.register("smart", smartOverlay, "#i-disk", "Diagnostics");
-    window.DockManager.restore("smart");
+  if (DockManager) {
+    DockManager.register("smart", smartOverlay, "#i-disk", "Diagnostics");
+    DockManager.restore("smart");
   }
   const modalWin = smartOverlay.querySelector(".smart-modal-window");
-  if (modalWin && window.bringToFront) window.bringToFront(modalWin);
+  if (modalWin && bringToFront) bringToFront(modalWin);
   if (smartTitle) smartTitle.innerHTML = `<svg class="ic"><use href="#i-disk"/></svg> S.M.A.R.T. Diagnostics • /dev/${devName}`;
   if (smartLbl1) smartLbl1.textContent = "DEVICE & MODEL";
   if (smartLbl2) smartLbl2.textContent = "SERIAL NUMBER";
@@ -72,7 +74,7 @@ async function openSmartModal(devName) {
   if (smartRaw) smartRaw.textContent = "Querying drive controller via smartctl...";
 
   try {
-    const res = await fetch(`/api/disk_detail?dev=${encodeURIComponent(devName)}`, { signal: _smartFetchController.signal });
+    const res = await api.request(`/api/disk_detail?dev=${encodeURIComponent(devName)}`, { signal: _smartFetchController.signal });
     if (res.ok) {
       const data = await res.json();
       if (smartModel) smartModel.textContent = data.model || "Unknown";
@@ -90,7 +92,7 @@ async function openSmartModal(devName) {
 }
 
 function updateMetricModalLive() {
-  const s = _latestStats || window.latestStats; if (!smartOverlay || !smartOverlay.classList.contains("open") || !s || !activeModalType) return;
+  const s = _latestStats; if (!smartOverlay || !smartOverlay.classList.contains("open") || !s || !activeModalType) return;
   
   if (activeModalType === "storage") {
     smartModel.textContent = s.storage.used;
@@ -129,19 +131,19 @@ function updateMetricModalLive() {
 }
 
 function openMetricModal(type) {
-  const s = _latestStats || window.latestStats;
+  const s = _latestStats;
   if (!smartOverlay) smartOverlay = document.getElementById("smart-modal-overlay");
   if (!smartOverlay || !s) return;
   activeModalType = type;
   smartOverlay.style.display = "flex";
   smartOverlay.classList.remove("window-minimized");
   smartOverlay.classList.add("open");
-  if (window.DockManager) {
-    window.DockManager.register("smart", smartOverlay, "#i-disk", "Diagnostics");
-    window.DockManager.restore("smart");
+  if (DockManager) {
+    DockManager.register("smart", smartOverlay, "#i-disk", "Diagnostics");
+    DockManager.restore("smart");
   }
   const modalWin = smartOverlay.querySelector(".smart-modal-window");
-  if (modalWin && window.bringToFront) window.bringToFront(modalWin);
+  if (modalWin && bringToFront) bringToFront(modalWin);
 
   if (type === "storage") {
     smartTitle.innerHTML = `<svg class="ic"><use href="#i-disk"/></svg> Storage Array Diagnostics`;
@@ -195,7 +197,7 @@ function closeSmartModal() {
     smartOverlay.classList.remove("open");
     smartOverlay.style.display = "none";
   }
-  if (window.DockManager) window.DockManager.unregister("smart");
+  if (DockManager) DockManager.unregister("smart");
 }
 
 
@@ -206,7 +208,6 @@ let _latestStats = null;
 ZettEventBus.addEventListener('stats_tick', (e) => {
     _latestStats = e.detail;
     if (typeof updateMetricModalLive === 'function') {
-        window.latestStats = _latestStats; 
         updateMetricModalLive();
     }
 });

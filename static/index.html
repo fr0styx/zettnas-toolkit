@@ -4,8 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ZettNAS Studio • Hardware Suite</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script type="module" crossorigin src="/assets/index-DpyU1c4L.js"></script>
+  <script type="module" crossorigin src="/assets/index-GT8BYOze.js"></script>
   <link rel="stylesheet" crossorigin href="/assets/index-BMXMQY-5.css">
 </head>
 <body class="studio-workbench">
@@ -129,6 +128,59 @@
       </div>
       <span style="font-size:9px; font-weight:800; color:var(--muted); letter-spacing:1px;" id="smart-modal-raw-title">RAW TELEMETRY ATTRIBUTES</span>
       <pre class="smart-raw-pre" id="smart-raw-output">Querying telemetry...</pre>
+    </div>
+  </div>
+</div>
+
+<div id="setup-wizard-modal" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="setup-wizard-title">
+  <div class="smart-modal-window" style="width: 540px; border-color: rgba(224, 122, 56, 0.4); box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(224, 122, 56, 0.15);">
+    <div class="smart-modal-header" style="background: linear-gradient(90deg, #182332 0%, #1a1e29 100%); border-bottom: 1px solid rgba(224, 122, 56, 0.25);">
+      <span class="smart-modal-title" id="setup-wizard-title" style="color: #f1f5f9;">
+        <span style="font-size: 18px;">⚡</span> ZettNAS Setup Wizard
+      </span>
+      <button id="setup-wizard-close" class="btn-icon" aria-label="Close dialog">✕</button>
+    </div>
+    <div class="smart-modal-body" style="padding: 24px; gap: 18px;">
+      <div style="background: rgba(224, 122, 56, 0.08); border: 1px solid rgba(224, 122, 56, 0.2); border-radius: 8px; padding: 12px 14px;">
+        <div style="font-size: 13px; font-weight: 700; color: #f8fafc; margin-bottom: 4px;">Welcome to your ZettNAS Toolkit!</div>
+        <div style="font-size: 11.5px; color: #94a3b8; line-height: 1.45;">Your NAS hardware environment has been initialized. Complete this initial setup to secure your console and review connected peripherals.</div>
+      </div>
+
+      <div>
+        <div style="font-size: 11px; font-weight: 800; letter-spacing: 0.8px; color: #94a3b8; text-transform: uppercase; margin-bottom: 8px;">1. Hardware Subsystem Health</div>
+        <div class="smart-meta-grid" style="grid-template-columns: repeat(2, 1fr); gap: 8px;">
+          <div class="smart-meta-cell" style="padding: 10px 12px;"><span class="lbl">CHASSIS MODEL</span><span class="val" id="setup-hw-chassis" style="font-size: 12px; color: #38bdf8;">Detecting...</span></div>
+          <div class="smart-meta-cell" style="padding: 10px 12px;"><span class="lbl">LCD SCREEN</span><span class="val" id="setup-hw-fb" style="font-size: 12px; color: #4ade80;">Active (/dev/fb0)</span></div>
+          <div class="smart-meta-cell" style="padding: 10px 12px;"><span class="lbl">FANS CONTROLLER</span><span class="val" id="setup-hw-fans" style="font-size: 12px; color: #4ade80;">Active (hwmon)</span></div>
+          <div class="smart-meta-cell" style="padding: 10px 12px;"><span class="lbl">ARGB LIGHTBAR</span><span class="val" id="setup-hw-leds" style="font-size: 12px; color: #4ade80;">WS2812B Ready</span></div>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size: 11px; font-weight: 800; letter-spacing: 0.8px; color: #94a3b8; text-transform: uppercase; margin-bottom: 8px;">2. Set Administrator Password</div>
+        <div style="font-size: 11.5px; color: #cbd5e1; margin-bottom: 10px;">The default password (<code style="background:rgba(255,255,255,0.1); padding:2px 4px; border-radius:3px;">admin</code>) is currently active. Replace it with a secure password (minimum 8 characters).</div>
+
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <div>
+            <label style="display:block; font-size: 10.5px; font-weight: 700; color: #94a3b8; margin-bottom: 4px;">CURRENT PASSWORD</label>
+            <input id="setup-current-pwd" type="password" value="admin" class="input-text" style="width: 100%; font-size: 12px; padding: 8px 10px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: #fff;">
+          </div>
+          <div>
+            <label style="display:block; font-size: 10.5px; font-weight: 700; color: #94a3b8; margin-bottom: 4px;">NEW PASSWORD</label>
+            <input id="setup-new-pwd" type="password" placeholder="At least 8 characters..." class="input-text" style="width: 100%; font-size: 12px; padding: 8px 10px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: #fff;">
+          </div>
+          <div>
+            <label style="display:block; font-size: 10.5px; font-weight: 700; color: #94a3b8; margin-bottom: 4px;">CONFIRM NEW PASSWORD</label>
+            <input id="setup-confirm-pwd" type="password" placeholder="Repeat new password..." class="input-text" style="width: 100%; font-size: 12px; padding: 8px 10px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: #fff;">
+          </div>
+        </div>
+        <div id="setup-wizard-err" style="display: none; margin-top: 8px; font-size: 11.5px; color: var(--crit); font-weight: 600;"></div>
+      </div>
+
+      <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 6px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 16px;">
+        <button id="setup-wizard-skip" class="btn-cancel" style="padding: 8px 16px; font-size: 12px;">Remind Me Later</button>
+        <button id="setup-wizard-submit" class="btn-save-preset" style="padding: 8px 20px; font-size: 12px; background: #e07a38; border-color: #d06d2d; color: #fff; font-weight: 700;">Complete Setup & Save</button>
+      </div>
     </div>
   </div>
 </div>
@@ -257,6 +309,7 @@
             <button id="sec-save-btn" class="suite-toolkit-btn" style="flex:1;">SAVE CHANGES</button>
             <button id="sec-logout-btn" class="suite-toolkit-btn" style="flex:1; background: rgba(220,50,50,0.1); color: var(--crit); border-color: rgba(220,50,50,0.3);">LOG OUT</button>
           </div>
+          <button id="btn-launch-setup-wizard" class="btn-save-preset" style="margin-top: 4px; width: 100%; padding: 8px; font-size: 11px; background: rgba(224, 122, 56, 0.15); border-color: rgba(224, 122, 56, 0.4); color: #f8fafc;">🚀 Launch Setup Wizard</button>
         </div>
       </div>
     </div>

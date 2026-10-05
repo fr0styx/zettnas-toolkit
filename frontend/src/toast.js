@@ -19,9 +19,6 @@ export function showConfirmToast(title, msg, onConfirm) {
   ZettEventBus.emit('toast:confirm', { title, msg, onConfirm });
 }
 
-window.showToast = showToast;
-window.showConfirmToast = showConfirmToast;
-
 // --- Notification Toast (Top-centered below navbar) ---
 function _showTopNotification(msg, type = "error") {
   if (!document.body) return;

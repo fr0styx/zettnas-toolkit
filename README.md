@@ -180,6 +180,17 @@ When accessing the Web Studio (`http://<server-ip>:8082`):
 
 ---
 
+## 📚 Documentation & Guides
+
+Comprehensive guides and architectural references are available in the [`docs/`](docs/) directory:
+
+* **[System Architecture](docs/ARCHITECTURE.md)** — Daemon threading model (`StatsCollector`, `LcdRenderer`, `ButtonListener`, `FanWatchdog`), data persistence, and frontend architecture.
+* **[Hardware Protocol Reference](docs/HARDWARE_PROTOCOL.md)** — WS2812B serial packet protocol, sysfs thermal and PWM fan paths, direct `/dev/fb0` framebuffer memory mapping, and chassis button events.
+* **[Reverse Proxy & TLS Guide](docs/REVERSE_PROXY.md)** — Production configurations for Nginx, Caddy, Traefik, and Nginx Proxy Manager with SSE stream buffering disabled.
+* **[Contributing Guidelines](CONTRIBUTING.md)** — Development workflow, local compose environment, automated test execution, and PR standards.
+
+---
+
 ## Acknowledgments & Community Credits
 
 This project builds upon the foundational reverse-engineering and hardware discoveries established by the community:

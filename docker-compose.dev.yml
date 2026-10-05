@@ -1,0 +1,15 @@
+# =========================================================================
+# ZettNAS Toolkit - Local Development Docker Compose Override
+# Usage: docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+# =========================================================================
+services:
+  zettnas-toolkit:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: zettnas-toolkit:dev
+    volumes:
+      - ./app.py:/app/app.py:ro
+      - ./backend:/app/backend:ro
+      - ./static:/app/static:ro
+      - ./data:/app/data:rw

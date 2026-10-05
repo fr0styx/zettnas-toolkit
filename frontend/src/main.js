@@ -22,6 +22,7 @@ import { initWallpapers } from './components/wallpapers.js';
 import { initEvents } from './components/events.js';
 import { initSettings, openDrawer, closeDrawer } from './components/settings.js';
 import { initMetricsChart, fetchAndRenderMetrics } from './components/metrics-chart.js';
+import { initSetupWizard } from './components/setup-wizard.js';
 
 let _sseRetryCount = 0;
 let _sse = null;
@@ -101,17 +102,6 @@ export function startSSE() {
   };
 }
 
-// Global exports for backwards compatibility and HTML attribute handlers
-window.ZettEventBus = ZettEventBus;
-window.DockManager = DockManager;
-window.makeDraggable = makeDraggable;
-window.bringToFront = bringToFront;
-window.showToast = showToast;
-window.showConfirmToast = showConfirmToast;
-window.fetchAndRenderMetrics = fetchAndRenderMetrics;
-window.openDrawer = openDrawer;
-window.closeDrawer = closeDrawer;
-
 document.addEventListener('DOMContentLoaded', () => {
   if (window.location.search.includes('mode=lcd') || document.body.classList.contains('lcd-direct')) {
     state.isLcdDirect = true;
@@ -126,6 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initEvents();
   initSettings();
   initMetricsChart();
+  initSetupWizard();
 
   applyTheme(state.currentTheme);
   fetchDashboardLayout();

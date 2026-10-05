@@ -1,5 +1,40 @@
 # ZettNAS Toolkit - Release Changelog
 
+## v1.0.0 (2026-10-05)
+### 🚀 Release Engineering & Production Readiness
+- **Offline-First Frontend & Local Chart.js Bundling**:
+  - Eliminated all external CDN dependencies (including `cdn.jsdelivr.net` for Chart.js).
+  - Bundled Chart.js (`^4.5.1`) directly into the production asset bundle via Vite (`import Chart from 'chart.js/auto'`).
+  - ZettNAS Toolkit is now 100% offline-first and runs cleanly on air-gapped or isolated homelab networks.
+- **Frontend Architecture & API Client Refactor**:
+  - Eliminated the global `window.fetch` monkey-patch in `frontend/src/api.js`.
+  - Refactored all network calls across `folder-browser.js`, `modals.js`, and components to use the centralized `api` client (`api.get`, `api.post`, `api.request`).
+  - Purged legacy `window.` global variable pollution (`window.DockManager`, `window.showToast`, `window.confirmCopy`, `window.abortCopyConfirm`, `window.openDrawer`, etc.), migrating to direct ES module imports and `ZettEventBus`.
+- **First-Run Setup Wizard**:
+  - Built an interactive, dark glass initial onboarding wizard (`setup-wizard.js`).
+  - Prompts the user on initial startup to change the factory default password (`admin` -> secure password, min 8 characters) with confirmation and validation.
+  - Displays hardware detection summary (Chassis model, `/dev/fb0` LCD status, hwmon cooling fans, ARGB lightbar).
+  - Includes a manual launcher button in Settings so users can revisit the wizard anytime.
+- **Static File Serving & Immutable Caching**:
+  - Configured `Cache-Control: public, max-age=31536000, immutable` for all Vite hashed assets in `/assets/*`.
+  - Configured `Cache-Control: no-cache, no-store, must-revalidate` for `index.html` to guarantee instant pickup of frontend upgrades.
+  - Preserved dynamic `mode=lcd` body class injection for the physical LCD screen.
+- **Multi-Stage Dockerfile & Container Permissions**:
+  - Re-architected `Dockerfile` with a multi-stage build:
+    - Stage 1: `node:20-alpine AS frontend-builder` compiles the Vite frontend from source.
+    - Stage 2: `python:3.12-slim` runs the backend with minimal runtime footprint.
+  - Created `docker-compose.dev.yml` for local bind-mount development (`./app.py`, `./backend`, `./static`, `./data`).
+  - Standardized `docker-compose.yml` for production image deployments, targeting persistent data in `./data:/app/data`.
+  - Tightened container device permissions (`SYS_RAWIO`, `SYS_ADMIN`, and specific major numbers for fb0, DRI, serial, and block devices).
+  - Updated `unraid/zettnas-toolkit.xml` to pull from `ghcr.io/fr0styx/zettnas-toolkit:latest`.
+- **GitHub Container Registry (GHCR) Publishing Workflow**:
+  - Updated CI configuration in `ci/github-actions-ci.yml` with automated Docker Buildx and GHCR publishing on version tags (`v*`).
+- **Comprehensive Documentation Suite**:
+  - Created `docs/ARCHITECTURE.md`: High-level system architecture, threading model (`StatsCollector`, `LcdRenderer`, `ButtonListener`, `FanWatchdog`), data persistence, and frontend design.
+  - Created `docs/HARDWARE_PROTOCOL.md`: Physical hardware interfaces, WS2812B serial packet protocol, sysfs thermal and PWM fan paths, direct `/dev/fb0` framebuffer memory mapping, and chassis button events.
+  - Created `docs/REVERSE_PROXY.md`: Production reverse proxy configuration guides for Nginx, Caddy, Traefik, and Nginx Proxy Manager with SSE buffering disabled.
+  - Created `CONTRIBUTING.md`: Development guidelines, local setup, running tests (`pytest`), and PR standards.
+
 ## v0.9.5 (2026-10-05)
 ### 🧪 Tests, CI & Observability
 - **Pytest Suite (144 tests, 100% passing)**:

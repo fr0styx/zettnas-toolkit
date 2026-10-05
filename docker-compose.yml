@@ -1,7 +1,7 @@
 services:
   zettnas-toolkit:
     build: .
-    image: zettnas-toolkit:latest
+    image: ghcr.io/fr0styx/zettnas-toolkit:latest
     container_name: zettnas-toolkit
     restart: unless-stopped
     labels:
@@ -12,9 +12,6 @@ services:
     ports:
       - "${PORT:-8082}:8082"
     volumes:
-      - ./app.py:/app/app.py
-      - ./backend:/app/backend
-      - ./static:/app/static
       - /proc:/host/proc:ro
       - /sys:/host/sys:rw
       - /dev:/host/dev:rw
@@ -33,13 +30,18 @@ services:
       - HOST_PROC=/host/proc
       - HOST_SYS=/host/sys
       - HOST_DEV=/host/dev
-    # privileged: true  # Replaced with explicit capabilities + device rules
     cap_add:
       - SYS_RAWIO
       - SYS_ADMIN
     device_cgroup_rules:
-      - 'c *:* rwm'
-      - 'b *:* rwm'
+      - 'c 29:* rwm'    # Framebuffer (/dev/fb0)
+      - 'c 226:* rwm'   # DRI / GPU rendering (/dev/dri/*)
+      - 'c 188:* rwm'   # USB Serial (/dev/ttyUSB0)
+      - 'c 166:* rwm'   # ACM Serial (/dev/ttyACM0)
+      - 'b 8:* rwm'     # SCSI/SATA block devices (/dev/sd*)
+      - 'b 259:* rwm'   # NVMe block devices (/dev/nvme*)
+      - 'c *:* rwm'     # General dynamic character devices
+      - 'b *:* rwm'     # General dynamic block devices
     logging:
       driver: "json-file"
       options:

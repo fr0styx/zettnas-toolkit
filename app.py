@@ -194,13 +194,17 @@ async def serve_static(request: Request, path: str):
         gz_content = None
 
     headers = {}
+    if fp.endswith("index.html"):
+        headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    elif path.startswith("assets/"):
+        headers["Cache-Control"] = "public, max-age=31536000, immutable"
+    else:
+        headers["Cache-Control"] = "public, max-age=86400"
+
     if etag:
         if request.headers.get("if-none-match") == etag:
-            return Response(status_code=304, headers={"ETag": etag, "Cache-Control": "max-age=3600"})
+            return Response(status_code=304, headers={"ETag": etag, "Cache-Control": headers["Cache-Control"]})
         headers["ETag"] = etag
-        headers["Cache-Control"] = "max-age=3600"
-    else:
-        headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
 
     if gz_content and "gzip" in request.headers.get("accept-encoding", ""):
         headers["Content-Encoding"] = "gzip"

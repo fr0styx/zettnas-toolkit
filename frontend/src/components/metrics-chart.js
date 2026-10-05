@@ -3,6 +3,7 @@
  * Renders Chart.js line graphs for CPU temperature, utilization, and memory usage over time.
  */
 import { api } from '../api.js';
+import Chart from 'chart.js/auto';
 
 let _metricsChart = null;
 let _metricsRange = '24h';
