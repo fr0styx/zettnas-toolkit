@@ -85,3 +85,13 @@ def set_screen_brightness(pct):
         return True
     except Exception:
         return False
+
+
+def save_screen_state(updates: dict):
+    from backend.fsutil import atomic_write_json
+    state = get_screen_state()
+    state.update(updates)
+    atomic_write_json(SCREEN_STATE_FILE, state)
+    eff_bri = get_effective_brightness()
+    set_screen_brightness(eff_bri)
+    return state

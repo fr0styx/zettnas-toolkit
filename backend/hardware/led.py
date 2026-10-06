@@ -324,6 +324,9 @@ def _rainbow_worker(brightness, slider_speed):
     hue = 0.0
     interval = max(0.04, 0.16 - (slider_speed / 100.0) * 0.12)
     while not Z_STATE.rainbow_stop.is_set():
+        if Z_STATE.alert_active or Z_STATE.copy_active:
+            time.sleep(0.5)
+            continue
         r_f, g_f, b_f = colorsys.hsv_to_rgb(hue, 1.0, 1.0)
         scale = brightness / 100.0
         r = int(r_f * 255 * scale)

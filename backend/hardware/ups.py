@@ -17,7 +17,21 @@ _LAST_UPS_POLL = 0.0
 _UPS_CACHE_TTL = 3.0
 
 
-def _query_apcupsd_socket(host: str = "127.0.0.1", port: int = 3551, timeout: float = 2.0) -> Dict[str, str]:
+def _get_docker_gateway() -> str | None:
+    """Detects Docker bridge gateway (which points to the host) if running in container."""
+    try:
+        with open("/proc/net/route") as f:
+            for line in f:
+                fields = line.strip().split()
+                if len(fields) >= 3 and (fields[1] == "00000000" or fields[1] == "0"):
+                    gw_hex = fields[2]
+                    return socket.inet_ntoa(bytes.fromhex(gw_hex)[::-1])
+    except Exception:
+        pass
+    return None
+
+
+def _query_apcupsd_socket(host: str = "127.0.0.1", port: int = 3551, timeout: float = 1.0) -> Dict[str, str]:
     """Queries apcupsd NIS server via 2-byte length prefixed NIS protocol."""
     out: Dict[str, str] = {}
     try:
@@ -37,7 +51,7 @@ def _query_apcupsd_socket(host: str = "127.0.0.1", port: int = 3551, timeout: fl
                     break
                 line_bytes = b""
                 while len(line_bytes) < length:
-                    chunk = s.recv(length - len_bytes)
+                    chunk = s.recv(length - len(line_bytes))
                     if not chunk:
                         break
                     line_bytes += chunk
@@ -66,6 +80,42 @@ def _query_apcaccess_cli() -> Dict[str, str]:
     return {}
 
 
+def _query_nut_cli() -> dict[str, str]:
+    for bin_path in ("/usr/bin/upsc", "/bin/upsc", "upsc"):
+        try:
+            ups_name = os.getenv("NUT_UPS_NAME", "ups")
+            r = subprocess.run([bin_path, ups_name], capture_output=True, text=True, timeout=2.5)
+            if r.returncode == 0 and r.stdout:
+                out = {}
+                for line in r.stdout.splitlines():
+                    if ":" in line:
+                        k, v = line.split(":", 1)
+                        # Map NUT keys to apcupsd equivalent keys
+                        k_clean = k.strip()
+                        v_clean = v.strip()
+                        if k_clean == "battery.charge":
+                            out["BCHARGE"] = v_clean
+                        elif k_clean == "battery.runtime":
+                            try:
+                                # NUT returns runtime in seconds, convert to minutes
+                                out["TIMELEFT"] = str(round(float(v_clean) / 60, 1))
+                            except ValueError:
+                                pass
+                        elif k_clean == "ups.load":
+                            out["LOADPCT"] = v_clean
+                        elif k_clean == "input.voltage":
+                            out["LINEV"] = v_clean
+                        elif k_clean == "battery.voltage":
+                            out["BATTV"] = v_clean
+                        elif k_clean == "ups.status":
+                            out["STATUS"] = v_clean
+                        elif k_clean == "ups.model":
+                            out["MODEL"] = v_clean
+                return out
+        except Exception:
+            continue
+    return {}
+
 def read_ups_status(force: bool = False) -> Dict[str, Any]:
     global _CACHED_UPS, _LAST_UPS_POLL
     now = time.time()
@@ -76,8 +126,15 @@ def read_ups_status(force: bool = False) -> Dict[str, Any]:
     ups_port = int(os.getenv("UPS_PORT", "3551"))
 
     raw = _query_apcupsd_socket(ups_host, ups_port)
+    if not raw and ups_host in ("127.0.0.1", "localhost"):
+        gw = _get_docker_gateway()
+        if gw and gw != ups_host:
+            raw = _query_apcupsd_socket(gw, ups_port)
+
     if not raw:
         raw = _query_apcaccess_cli()
+    if not raw:
+        raw = _query_nut_cli()
 
     if not raw:
         status_obj = {
@@ -91,7 +148,7 @@ def read_ups_status(force: bool = False) -> Dict[str, Any]:
             "battery_volts": None,
         }
         _CACHED_UPS = status_obj
-        _LAST_UPS_POLL = now
+        _LAST_UPS_POLL = now + 12.0  # Effective 15s cache when offline
         return status_obj
 
     # Extract parsed fields

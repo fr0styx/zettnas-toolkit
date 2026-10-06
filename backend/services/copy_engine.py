@@ -54,8 +54,10 @@ def _get_exif_date(filepath):
                 if date_str:
                     parts = date_str.split(" ")
                     if len(parts) > 0:
-                        y, m, d = parts[0].split(":")
-                        return f"{y}/{m}/{d}"
+                        date_part = parts[0]
+                        if re.match(r"^\d{4}:\d{2}:\d{2}$", date_part):
+                            y, m, d = date_part.split(":")
+                            return f"{y}/{m}/{d}"
     except Exception as e:
         logger.debug(f"Silenced exception: {e}")
 
@@ -96,7 +98,9 @@ def build_copy_plan(src_path, dst_path, use_exif, date_func=None):
                 rel_path = os.path.join(date_subpath, os.path.basename(name))
             else:
                 rel_path = os.path.relpath(src_file, src_path)
-            dst_file = os.path.join(dst_path, rel_path)
+            dst_file = os.path.normpath(os.path.join(dst_path, rel_path))
+            if not dst_file.startswith(dst_path):
+                continue
             is_collision = os.path.exists(dst_file)
             if is_collision:
                 collisions.append(rel_path)
@@ -250,19 +254,27 @@ async def _do_copy(cfg):
                         if verify_checksum:
                             hasher_src.update(buf)
                         await fdst.write(buf)
-                        if verify_checksum:
-                            hasher_dst.update(buf)
                         Z_STATE.copy_progress["copied"] += len(buf)
+                    await fdst.flush()
 
                 if Z_STATE.copy_abort_flag:
                     if os.path.exists(dst_f):
                         os.remove(dst_f)
                     break
 
-                if verify_checksum and (hasher_src.hexdigest() != hasher_dst.hexdigest()):
-                    if os.path.exists(dst_f):
-                        os.remove(dst_f)
-                    raise IOError(f"Checksum mismatch for {os.path.basename(src_f)}")
+                # Genuine post-write destination verification
+                if verify_checksum:
+                    hasher_dst = hashlib.sha256()
+                    async with aiofiles.open(dst_f, "rb") as fdst_check:
+                        while True:
+                            cbuf = await fdst_check.read(length)
+                            if not cbuf:
+                                break
+                            hasher_dst.update(cbuf)
+                    if hasher_src.hexdigest() != hasher_dst.hexdigest():
+                        if os.path.exists(dst_f):
+                            os.remove(dst_f)
+                        raise IOError(f"Checksum mismatch for {os.path.basename(src_f)}")
 
                 shutil.copystat(src_f, dst_f)
                 Z_STATE.copy_progress["files_done"] += 1
@@ -279,7 +291,8 @@ async def _do_copy(cfg):
         else:
             Z_STATE.copy_status = "success"
             done_cnt = Z_STATE.copy_progress.get("files_done", 0)
-            add_event("success", "Copy Completed", f"Successfully copied {done_cnt} files (SHA-256 verified).")
+            verified_note = " (SHA-256 verified)" if verify_checksum else ""
+            add_event("success", "Copy Completed", f"Successfully copied {done_cnt} files{verified_note}.")
             send_notification(
                 title="ZettNAS: Media Ingest Complete",
                 message=f"Successfully copied {done_cnt} files to array storage.",

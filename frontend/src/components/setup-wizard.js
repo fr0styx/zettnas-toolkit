@@ -133,24 +133,63 @@ export function openSetupWizard(stats = null) {
   const modal = document.getElementById('setup-wizard-modal');
   if (!modal) return;
 
-  const currentStats = stats || state.stats;
+  const currentStats = stats || state.stats || state.latestStats;
+  const isDefaultPwd = currentStats?.security?.is_default_password === true;
+  const skipBtn = document.getElementById('setup-wizard-skip');
+  const closeBtn = document.getElementById('setup-wizard-close');
+
+  if (isDefaultPwd) {
+    if (skipBtn) skipBtn.style.display = 'none';
+    if (closeBtn) closeBtn.title = 'Security setup required: please change default admin password';
+  } else {
+    if (skipBtn) skipBtn.style.display = 'inline-block';
+    if (closeBtn) closeBtn.title = 'Close dialog';
+  }
+
   if (currentStats) {
     const hwModel = document.getElementById('setup-hw-chassis');
     const hwFb = document.getElementById('setup-hw-fb');
     const hwFans = document.getElementById('setup-hw-fans');
     const hwLeds = document.getElementById('setup-hw-leds');
 
-    if (hwModel) hwModel.textContent = currentStats.model || currentStats.name || 'ZettNAS Hardware';
-    if (hwFb) hwFb.textContent = currentStats.lcd_active !== false ? 'Active (/dev/fb0)' : 'Not detected';
-    if (hwFans) {
-      const fanCount = Array.isArray(currentStats.fans) ? currentStats.fans.length : 3;
-      hwFans.textContent = `Online (${fanCount} Fans Managed)`;
+    if (hwModel) hwModel.textContent = currentStats.chassis || currentStats.model || currentStats.name || 'ZettNAS Hardware';
+
+    if (hwFb) {
+      const fbActive = currentStats?.peripherals?.fb_active ?? (currentStats?.lcd_active && currentStats?.lcd?.page !== undefined);
+      hwFb.textContent = fbActive ? 'Active (/dev/fb0)' : 'Not detected (Headless)';
+      hwFb.style.color = fbActive ? 'var(--ok2)' : 'var(--muted)';
     }
-    if (hwLeds) hwLeds.textContent = 'WS2812B Controller Ready';
+
+    if (hwFans) {
+      const fanList = Array.isArray(currentStats.fans) ? currentStats.fans : [];
+      const spinningCount = fanList.filter(r => r > 0).length;
+      if (spinningCount > 0) {
+        hwFans.textContent = `Online (${spinningCount}/${fanList.length} Fans Spinning)`;
+        hwFans.style.color = 'var(--ok2)';
+      } else if (fanList.length > 0) {
+        hwFans.textContent = `Managed (${fanList.length} Fans Idle / 0 RPM)`;
+        hwFans.style.color = 'var(--warn)';
+      } else {
+        hwFans.textContent = 'Hardware tachometers unavailable';
+        hwFans.style.color = 'var(--muted)';
+      }
+    }
+
+    if (hwLeds) {
+      const ledReady = currentStats?.peripherals?.led_ready;
+      const ledPort = currentStats?.peripherals?.led_port;
+      if (ledReady) {
+        hwLeds.textContent = `WS2812B Controller Online (${ledPort || 'Serial'})`;
+        hwLeds.style.color = 'var(--ok2)';
+      } else {
+        hwLeds.textContent = 'WS2812B Controller Not Detected';
+        hwLeds.style.color = 'var(--muted)';
+      }
+    }
   }
 
   modal.classList.add('open');
-  modal.style.zIndex = '10005';
+  modal.style.zIndex = 'var(--z-modal, 9100)';
   const win = modal.querySelector('.smart-modal-window');
   if (win) bringToFront(win);
 }

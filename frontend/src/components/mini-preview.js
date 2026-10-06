@@ -168,12 +168,15 @@ export function syncMiniPreviewStructure() {
     if (cardMap[id]) miniCardsContainer.appendChild(cardMap[id]);
   });
 
+  const miniParent = (miniCardsContainer && miniCardsContainer.parentElement) || miniInner;
   const disksIdx = state.dashOrder.indexOf('metric-disks');
   const firstCardIdx = state.dashOrder.findIndex((id) => id !== 'metric-disks' && cardMap[id]);
-  if (disksIdx !== -1 && firstCardIdx !== -1 && disksIdx < firstCardIdx) {
-    miniInner.insertBefore(miniDiskRow, miniCardsContainer);
-  } else {
-    miniInner.appendChild(miniDiskRow);
+  if (miniDiskRow && miniParent) {
+    if (disksIdx !== -1 && firstCardIdx !== -1 && disksIdx < firstCardIdx) {
+      miniParent.insertBefore(miniDiskRow, miniCardsContainer);
+    } else {
+      miniParent.appendChild(miniDiskRow);
+    }
   }
 
   Object.keys(state.dashVis).forEach((id) => {
@@ -298,23 +301,24 @@ export function setupMiniPreviewInteractivity() {
       el.classList.remove('mini-drag-over');
       if (!draggedMetricId) return;
 
-      const miniRect = miniInner.getBoundingClientRect();
-      const isLowerHalf = (e.clientY - miniRect.top) / miniRect.height > 0.5;
+      const cardsEl = miniInner.querySelector('.cards');
+      const refRect = cardsEl ? cardsEl.getBoundingClientRect() : miniInner.getBoundingClientRect();
+      const isLowerHalf = e.clientY > (refRect.top + refRect.height / 2);
 
       if (draggedMetricId === 'metric-disks') {
+        // Just swap the position of disks!
+        const wasFirst = state.dashOrder.indexOf('metric-disks') === 0;
         const newOrder = state.dashOrder.filter((x) => x !== 'metric-disks');
-        if (isLowerHalf) newOrder.push('metric-disks');
+        if (wasFirst) newOrder.push('metric-disks');
         else newOrder.unshift('metric-disks');
         state.dashOrder = newOrder;
       } else if (metricId === 'metric-disks') {
-        const cardId = draggedMetricId;
-        const cardsOnly = state.dashOrder.filter((x) => x !== 'metric-disks');
-        const oldIdx = cardsOnly.indexOf(cardId);
-        if (oldIdx !== -1) cardsOnly.splice(oldIdx, 1);
-        if (isLowerHalf) cardsOnly.push(cardId);
-        else cardsOnly.unshift(cardId);
-        const disksWasFirst = state.dashOrder.indexOf('metric-disks') === 0;
-        state.dashOrder = disksWasFirst ? ['metric-disks', ...cardsOnly] : [...cardsOnly, 'metric-disks'];
+        // Dragging a card onto the disks deck -> swap the decks too!
+        const wasFirst = state.dashOrder.indexOf('metric-disks') === 0;
+        const newOrder = state.dashOrder.filter((x) => x !== 'metric-disks');
+        if (wasFirst) newOrder.push('metric-disks');
+        else newOrder.unshift('metric-disks');
+        state.dashOrder = newOrder;
       } else {
         const oldIdx = state.dashOrder.indexOf(draggedMetricId);
         const targetIdx = state.dashOrder.indexOf(metricId);
@@ -329,7 +333,11 @@ export function setupMiniPreviewInteractivity() {
       isDraggingPreview = false;
       draggedMetricId = null;
 
-      applyDashboardLayout();
+      try {
+        applyDashboardLayout();
+      } catch (err) {
+        console.error('applyDashboardLayout failed:', err);
+      }
       persistDashboardLayout();
     });
   });
@@ -337,13 +345,34 @@ export function setupMiniPreviewInteractivity() {
   const miniCardsContainer = miniInner.querySelector('.cards');
   if (miniCardsContainer) {
     miniCardsContainer.addEventListener('dragover', (e) => {
-      if (!draggedMetricId || draggedMetricId === 'metric-disks') return;
+      if (!draggedMetricId) return;
       e.preventDefault();
       e.dataTransfer.dropEffect = 'move';
     });
 
     miniCardsContainer.addEventListener('drop', (e) => {
-      if (!draggedMetricId || draggedMetricId === 'metric-disks') return;
+      if (!draggedMetricId) return;
+      if (draggedMetricId === 'metric-disks') {
+        e.preventDefault();
+        e.stopPropagation();
+        // Just swap the position of disks! If it was first, put it last. If it was last, put it first.
+        const wasFirst = state.dashOrder.indexOf('metric-disks') === 0;
+        const newOrder = state.dashOrder.filter((x) => x !== 'metric-disks');
+        if (wasFirst) newOrder.push('metric-disks'); // move to bottom
+        else newOrder.unshift('metric-disks'); // move to top
+        state.dashOrder = newOrder;
+        
+        isDraggingPreview = false;
+        draggedMetricId = null;
+        try {
+          applyDashboardLayout();
+        } catch (err) {
+          console.error('applyDashboardLayout failed:', err);
+        }
+        persistDashboardLayout();
+        return;
+      }
+      
       if (e.target === miniCardsContainer) {
         e.preventDefault();
         const dropX = e.clientX;
@@ -367,7 +396,11 @@ export function setupMiniPreviewInteractivity() {
             newOrder.splice(oldIdx, 1);
             newOrder.splice(targetIdx, 0, draggedMetricId);
             state.dashOrder = newOrder;
-            applyDashboardLayout();
+            try {
+              applyDashboardLayout();
+            } catch (err) {
+              console.error('applyDashboardLayout failed:', err);
+            }
             persistDashboardLayout();
           }
         }
@@ -385,17 +418,23 @@ export function setupMiniPreviewInteractivity() {
 
   miniInner.addEventListener('drop', (e) => {
     if (!draggedMetricId) return;
-    const rect = miniInner.getBoundingClientRect();
-    const isLowerHalf = (e.clientY - rect.top) / rect.height > 0.5;
+    const cardsEl = miniInner.querySelector('.cards');
+    const refRect = cardsEl ? cardsEl.getBoundingClientRect() : miniInner.getBoundingClientRect();
+    const isLowerHalf = e.clientY > (refRect.top + refRect.height / 2);
 
     if (draggedMetricId === 'metric-disks') {
+      const wasFirst = state.dashOrder.indexOf('metric-disks') === 0;
       const newOrder = state.dashOrder.filter((x) => x !== 'metric-disks');
-      if (isLowerHalf) newOrder.push('metric-disks');
+      if (wasFirst) newOrder.push('metric-disks');
       else newOrder.unshift('metric-disks');
       state.dashOrder = newOrder;
       isDraggingPreview = false;
       draggedMetricId = null;
-      applyDashboardLayout();
+      try {
+        applyDashboardLayout();
+      } catch (err) {
+        console.error('applyDashboardLayout failed:', err);
+      }
       persistDashboardLayout();
     }
   });

@@ -69,6 +69,9 @@ FAN_MIN_PWM = 58  # Lowest PWM the chassis fans reliably spin at
 FAN_MAX_PWM = 183  # Chassis maximum
 FAN_FAILSAFE_PWM = int(os.environ.get("FAN_FAILSAFE_PWM", "150"))
 HDD_CRITICAL_TEMP = int(os.environ.get("HDD_CRITICAL_TEMP", "55"))
+NVME_CRITICAL_TEMP = int(os.environ.get("NVME_CRITICAL_TEMP", "75"))
+HDD_WARN_TEMP = int(os.environ.get("HDD_WARN_TEMP", "50"))
+NVME_WARN_TEMP = int(os.environ.get("NVME_WARN_TEMP", "70"))
 COLLECTOR_WATCHDOG_SECS = int(os.environ.get("COLLECTOR_WATCHDOG_SECS", "20"))
 
 _default_pw_cache = {"hash": None, "value": False}

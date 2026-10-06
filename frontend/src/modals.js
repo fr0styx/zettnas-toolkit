@@ -36,8 +36,22 @@ window.addEventListener('DOMContentLoaded', () => {
         }
       });
     }
-    if (smartCloseBtn) smartCloseBtn.addEventListener("click", closeSmartModal);
-    if (minBtn) minBtn.addEventListener("click", () => { if (DockManager) DockManager.minimize("smart"); });
+    if (smartCloseBtn) {
+      const handleClose = (e) => {
+        if (e && e.type === 'touchend') { e.preventDefault(); e.stopPropagation(); }
+        closeSmartModal();
+      };
+      smartCloseBtn.addEventListener("click", handleClose);
+      smartCloseBtn.addEventListener("touchend", handleClose);
+    }
+    if (minBtn) {
+      const handleMin = (e) => {
+        if (e && e.type === 'touchend') { e.preventDefault(); e.stopPropagation(); }
+        if (DockManager) DockManager.minimize("smart");
+      };
+      minBtn.addEventListener("click", handleMin);
+      minBtn.addEventListener("touchend", handleMin);
+    }
     if (smartOverlay) {
       smartOverlay.addEventListener("click", (e) => {
         if (e.target === smartOverlay) closeSmartModal();
@@ -46,20 +60,28 @@ window.addEventListener('DOMContentLoaded', () => {
 
     const shortTestBtn = document.getElementById("smart-btn-short-test");
     const extTestBtn = document.getElementById("smart-btn-extended-test");
+    const abortTestBtn = document.getElementById("smart-btn-abort-test");
     const testStatus = document.getElementById("smart-test-status");
 
     async function triggerTest(type) {
       if (!activeModalType || !activeModalType.startsWith("disk_")) return;
       const dev = activeModalType.replace("disk_", "");
-      if (testStatus) testStatus.textContent = `Starting ${type} test...`;
+      if (testStatus) testStatus.textContent = type === 'abort' ? 'Aborting test...' : `Starting ${type} test...`;
       try {
         const res = await api.post("/api/disk/smart_test", { dev, test_type: type });
         if (res && res.success) {
-          showToast(`${type.toUpperCase()} self-test started on /dev/${dev}`, "ok");
-          if (testStatus) testStatus.textContent = `Running ${type} test`;
-          if (smartRaw) smartRaw.textContent = `[S.M.A.R.T. Self-Test Triggered]\nType: ${type}\n${res.output}\n\n` + smartRaw.textContent;
+          if (type === 'abort') {
+            showToast(`Self-test aborted on /dev/${dev}`, "ok");
+            if (testStatus) testStatus.textContent = "Test Aborted";
+            if (abortTestBtn) abortTestBtn.style.display = "none";
+          } else {
+            showToast(`${type.toUpperCase()} self-test started on /dev/${dev}`, "ok");
+            if (testStatus) testStatus.textContent = `Running ${type} test`;
+            if (abortTestBtn) abortTestBtn.style.display = "inline-block";
+          }
+          if (smartRaw) smartRaw.textContent = `[S.M.A.R.T. Self-Test Action: ${type}]\n${res.output}\n\n` + smartRaw.textContent;
         } else {
-          showToast(`Failed to trigger test: ${res?.error || 'Unknown error'}`, "error");
+          showToast(`Failed: ${res?.error || 'Unknown error'}`, "error");
           if (testStatus) testStatus.textContent = `Failed: ${res?.error || 'Error'}`;
         }
       } catch (err) {
@@ -70,6 +92,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
     if (shortTestBtn) shortTestBtn.addEventListener("click", () => triggerTest("short"));
     if (extTestBtn) extTestBtn.addEventListener("click", () => triggerTest("long"));
+    if (abortTestBtn) abortTestBtn.addEventListener("click", () => triggerTest("abort"));
 });
 
 
@@ -116,14 +139,28 @@ async function openSmartModal(devName) {
       if (smartModel) smartModel.textContent = data.model || "Unknown";
       if (smartSerial) smartSerial.textContent = data.serial || "Unknown";
       if (smartHealth) {
-        smartHealth.textContent = data.health || "PASSED";
-        smartHealth.style.color = (data.health === "PASSED") ? "var(--ok)" : "var(--crit)";
+        smartHealth.textContent = data.health || "UNKNOWN";
+        if (data.health === "PASSED") {
+          smartHealth.style.color = "var(--ok)";
+        } else if (data.health === "UNKNOWN") {
+          smartHealth.style.color = "var(--muted)";
+        } else {
+          smartHealth.style.color = "var(--crit)";
+        }
+      }
+      const abortTestBtn = document.getElementById("smart-btn-abort-test");
+      const testStatus = document.getElementById("smart-test-status");
+      if (data.self_test_status) {
+        if (testStatus) testStatus.textContent = data.self_test_status;
+        const low = data.self_test_status.toLowerCase();
+        const inProg = low.includes("in progress") || low.includes("remaining") || low.includes("started");
+        if (abortTestBtn) abortTestBtn.style.display = inProg ? "inline-block" : "none";
+      } else {
+        if (testStatus) testStatus.textContent = "";
+        if (abortTestBtn) abortTestBtn.style.display = "none";
       }
       if (smartHours) smartHours.textContent = data.power_on_hours || "Unknown";
       if (smartRaw) smartRaw.textContent = data.raw || "No raw output.";
-      if (data.model && data.model !== "Unknown" && !data.error) {
-        showToast(`Drive /dev/${devName} online & S.M.A.R.T. verified`, "ok");
-      }
     }
   } catch (err) {
     if (smartRaw) smartRaw.textContent = `Error querying disk details: ${err}`;

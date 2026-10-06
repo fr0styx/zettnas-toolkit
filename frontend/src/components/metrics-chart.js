@@ -1,3 +1,4 @@
+import { escapeHtml } from '../utils.js';
 /**
  * ZettNAS Toolkit Historical Metrics Chart
  * Multi-device time-series telemetry for CPU, RAM, individual Disks, and Fans.
@@ -10,6 +11,7 @@ let _metricsRange = '24h';
 let _metricsGroup = 'all'; // 'all' | 'system' | 'disks' | 'fans'
 let _cachedData = null;
 let _ChartLib = null;
+let _renderRequestId = 0;
 
 const DISK_COLORS = [
   '#00f0ff', // cyan
@@ -72,7 +74,7 @@ function updateSummaryStrip(data) {
       const tempColor = d.temp != null && d.temp > 50 ? 'var(--crit)' : d.standby ? 'var(--muted)' : 'var(--ok2)';
       pills.push(`
         <div class="device-metric-pill">
-          <span class="dmp-name">${d.name}:</span>
+          <span class="dmp-name">${escapeHtml(d.name)}:</span>
           <span class="dmp-val" style="color:${tempColor};">${tempStr}</span>
         </div>
       `);
@@ -97,6 +99,7 @@ function updateSummaryStrip(data) {
 }
 
 export async function fetchAndRenderMetrics(skipFetch = false) {
+  const reqId = ++_renderRequestId;
   if (_metricsChart) {
     _metricsChart.destroy();
     _metricsChart = null;
@@ -109,13 +112,14 @@ export async function fetchAndRenderMetrics(skipFetch = false) {
     if (!skipFetch || !_cachedData) {
       _cachedData = await api.get(`/api/history?range=${_metricsRange}`);
     }
+    if (reqId !== _renderRequestId) return;
     const data = _cachedData;
     if (!data || data.length === 0) return;
 
     updateSummaryStrip(data);
 
     const Chart = await getChart();
-    if (!Chart) return;
+    if (!Chart || reqId !== _renderRequestId) return;
 
     const labels = data.map((d) => {
       const dt = new Date(d.ts * 1000);
@@ -325,6 +329,16 @@ export async function fetchAndRenderMetrics(skipFetch = false) {
         title: { display: true, text: 'Fan RPM', font: { size: 9 }, color: '#94a3b8' },
         ticks: { color: '#94a3b8', font: { size: 9 } }
       };
+    }
+
+    if (reqId !== _renderRequestId) return;
+    if (_metricsChart) {
+      _metricsChart.destroy();
+      _metricsChart = null;
+    }
+    const existingChart = Chart.getChart ? Chart.getChart(canvas) : null;
+    if (existingChart) {
+      existingChart.destroy();
     }
 
     const ctx = canvas.getContext('2d');

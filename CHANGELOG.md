@@ -1,5 +1,34 @@
 # ZettNAS Toolkit - Release Changelog
 
+## v1.3.0 (2026-10-06)
+### 🚀 Desktop Web OS, Mobile Optimizations, File Explorer & Architecture Audit
+
+- **Desktop OS Metaphor & Window Management**:
+  - Halved the vertical spacing between desktop icons (from 48px to 20px) for a tighter, cleaner aesthetic.
+  - Reordered desktop icons to match a logical visual flow: *Management* → *ZettNAS* → *File Explorer* → *Recycle Bin*.
+  - Standardized window controls across all UI panels to a clean 3-button layout (`Minimize`, `Maximize`, `Close`), replacing convoluted multiple close buttons.
+  - Implemented the Command Palette (`Cmd+K` / `Ctrl+K`) for rapid keyboard-driven navigation across the toolkit.
+  - Initial startup now boots with the ZettNAS console window minimized by default, presenting a clean desktop workspace.
+
+- **File Explorer & Recycle Bin**:
+  - Introduced a fully featured floating File Explorer window with robust drag-and-drop file support, interactive breadcrumbs, and row-level sorting.
+  - Added a functional Recycle Bin directly onto the desktop.
+
+- **Mobile & Touch UI Overhaul**:
+  - Fixed mobile UI viewport issues where windows would overflow past the top navigation bar and dock. Windows are now strictly clamped to the screen constraints with internal scrolling.
+  - Prevented background body scrolling on mobile while floating windows are active, preserving the top navigation bar visibility.
+  - Replaced the convoluted default mobile view with a streamlined, minimized-first experience.
+
+- **UI & Widget Enhancements**:
+  - Changed the primary management label to simply "**HUB**".
+  - Enhanced the Calendar widget to automatically highlight country official holidays, complete with a glanceable hover tooltip displaying the holiday name.
+  - Upgraded the Weather/Location widget with a dynamic auto-complete dropdown for major cities, automatically saving the user's selection and instantly updating weather telemetry.
+
+- **Production Readiness & DevOps Audit**:
+  - Removed source code volume mounts (`./backend`, etc.) from the production `docker-compose.yml`, preventing host directories from overwriting built production assets.
+  - Resolved Python backend test suite issues, successfully expanding and passing 189 `pytest` cases.
+  - Performed a full Enterprise-Grade System Audit resulting in a batched strategic roadmap (`master_audit_plan.md`) for stability, security, and performance optimizations.
+
 ## v1.2.0 (2026-10-05)
 ### 🚀 Major Upgrade: Full Internationalization (i18n), System Management Hub, Unraid & Docker Controls, UPS Monitoring, Interactive Charts & Ingest v2
 

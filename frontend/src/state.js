@@ -51,8 +51,13 @@ export const state = {
   copyToastMinimized: false,
 
   setStats(s) {
-    this.latestStats = s;
-    ZettEventBus.emit('stats:updated', s);
+    if (!s) return;
+    if (!this.latestStats) {
+      this.latestStats = s;
+    } else {
+      this.latestStats = { ...this.latestStats, ...s };
+    }
+    ZettEventBus.emit('stats:updated', this.latestStats);
   },
 
   setTheme(theme) {

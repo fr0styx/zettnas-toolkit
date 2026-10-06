@@ -93,7 +93,7 @@ export function initSettings() {
 
   let wheelZoomCooldown = 0;
   window.addEventListener('wheel', (e) => {
-    if (e.target.closest('.slide-drawer') || e.target.closest('.smart-modal-window, #console-window') || e.target.closest('#mini-lcd-canvas')) {
+    if (e.target.closest('.slide-drawer') || e.target.closest('.smart-modal-window, #console-window') || e.target.closest('#mini-lcd-canvas') || e.target.closest('.file-manager-window, .os-window, .cmd-palette-modal, .mgmt-detail-card')) {
       return;
     }
     const now = Date.now();
@@ -423,37 +423,100 @@ export function initSettings() {
 
   fetchSecurity();
 
+  const newPwdEl = $('sec-new-pwd');
+  const confirmPwdEl = $('sec-confirm-pwd');
+  const mismatchMsg = $('sec-pwd-mismatch-msg');
+
+  function checkPwdMatch() {
+    if (!newPwdEl || !confirmPwdEl) return;
+    const newPwd = newPwdEl.value;
+    const confirmPwd = confirmPwdEl.value;
+
+    if (!newPwd && !confirmPwd) {
+      if (mismatchMsg) mismatchMsg.style.display = 'none';
+      newPwdEl.style.borderColor = 'rgba(255,255,255,0.12)';
+      confirmPwdEl.style.borderColor = 'rgba(255,255,255,0.12)';
+      return;
+    }
+
+    if (confirmPwd.length > 0) {
+      if (newPwd !== confirmPwd) {
+        if (mismatchMsg) mismatchMsg.style.display = 'flex';
+        confirmPwdEl.style.borderColor = 'var(--crit, #ff6b6b)';
+      } else {
+        if (mismatchMsg) mismatchMsg.style.display = 'none';
+        confirmPwdEl.style.borderColor = 'var(--ok2, #10b981)';
+      }
+    } else {
+      if (mismatchMsg) mismatchMsg.style.display = 'none';
+      confirmPwdEl.style.borderColor = 'rgba(255,255,255,0.12)';
+    }
+  }
+
+  if (newPwdEl) newPwdEl.addEventListener('input', checkPwdMatch);
+  if (confirmPwdEl) confirmPwdEl.addEventListener('input', checkPwdMatch);
+
   const secSaveBtn = $('sec-save-btn');
   if (secSaveBtn) {
     secSaveBtn.addEventListener('click', async () => {
       const curPwd = $('sec-cur-pwd') ? $('sec-cur-pwd').value : '';
       if (!curPwd) {
-        showToast('Current password is required to save changes', 'error');
+        showToast(t('mgmt.sec_err_cur_pwd_required', 'Current password is required to save changes'), 'error');
+        if ($('sec-cur-pwd')) $('sec-cur-pwd').focus();
         return;
+      }
+
+      const newPwd = newPwdEl ? newPwdEl.value : '';
+      const confirmPwd = confirmPwdEl ? confirmPwdEl.value : '';
+
+      if (newPwd) {
+        if (!confirmPwd) {
+          showToast(t('mgmt.sec_err_confirm_required', 'Please confirm your new password.'), 'error');
+          if (confirmPwdEl) confirmPwdEl.focus();
+          return;
+        }
+        if (newPwd !== confirmPwd) {
+          showToast(t('mgmt.sec_err_pwd_mismatch', 'New passwords do not match. Please verify and try again.'), 'error');
+          if (mismatchMsg) mismatchMsg.style.display = 'flex';
+          if (confirmPwdEl) {
+            confirmPwdEl.style.borderColor = 'var(--crit, #ff6b6b)';
+            confirmPwdEl.focus();
+          }
+          return;
+        }
+        if (newPwd.length < 8) {
+          showToast(t('mgmt.sec_err_min_8', 'New password must be at least 8 characters.'), 'error');
+          if (newPwdEl) newPwdEl.focus();
+          return;
+        }
+        if (newPwd.toLowerCase() === 'admin') {
+          showToast(t('mgmt.sec_err_not_admin', 'Please choose a password other than the default.'), 'error');
+          if (newPwdEl) newPwdEl.focus();
+          return;
+        }
       }
 
       const payload = {
         current_password: curPwd,
-        new_password: $('sec-new-pwd') ? $('sec-new-pwd').value : '',
+        new_password: newPwd,
         username: $('sec-username') ? $('sec-username').value : '',
         email: $('sec-email') ? $('sec-email').value : ''
       };
 
-      if (payload.new_password && payload.new_password.length < 8) {
-        showToast('New password must be at least 8 characters', 'error');
-        return;
-      }
-      if (payload.new_password && payload.new_password.toLowerCase() === 'admin') {
-        showToast('Choose a password other than the default', 'error');
-        return;
-      }
-
       secSaveBtn.textContent = 'SAVING...';
       try {
         await api.post('/api/security', payload);
-        showToast('Security settings updated successfully', 'success');
+        showToast(t('mgmt.sec_saved', 'Security settings updated successfully.'), 'success');
         if ($('sec-cur-pwd')) $('sec-cur-pwd').value = '';
-        if ($('sec-new-pwd')) $('sec-new-pwd').value = '';
+        if (newPwdEl) {
+          newPwdEl.value = '';
+          newPwdEl.style.borderColor = 'rgba(255,255,255,0.12)';
+        }
+        if (confirmPwdEl) {
+          confirmPwdEl.value = '';
+          confirmPwdEl.style.borderColor = 'rgba(255,255,255,0.12)';
+        }
+        if (mismatchMsg) mismatchMsg.style.display = 'none';
         fetchSecurity();
 
         if (payload.new_password) {
@@ -463,7 +526,7 @@ export function initSettings() {
       } catch (err) {
         showToast(err.message || 'Failed to update settings', 'error');
       }
-      secSaveBtn.textContent = 'SAVE CHANGES';
+      secSaveBtn.textContent = 'SAVE CREDENTIALS';
     });
   }
 
@@ -505,8 +568,9 @@ export function initSettings() {
 
   // --- Global Keyboard Shortcuts ---
   window.addEventListener('keydown', (e) => {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
     const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
-    if (activeTag === 'input' || activeTag === 'select' || activeTag === 'textarea') {
+    if (activeTag === 'input' || activeTag === 'select' || activeTag === 'textarea' || document.activeElement?.isContentEditable) {
       if (e.key === 'Escape') document.activeElement.blur();
       return;
     }
@@ -537,3 +601,124 @@ export function initSettings() {
   });
 }
 
+
+
+export function initSystemTab() {
+  if(typeof renderApiTokens !== 'undefined') renderApiTokens();
+  const btnDownload = document.getElementById('btn-backup-download');
+  if (btnDownload) {
+    btnDownload.addEventListener('click', () => {
+      window.location.href = '/api/system/backup';
+    });
+  }
+
+  const uploadInput = document.getElementById('backup-upload-input');
+  if (uploadInput) {
+    uploadInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      if (!file.name.endsWith('.zip')) {
+        import('../toast.js').then(m => m.showToast('Please upload a .zip backup file.', 'error'));
+        uploadInput.value = '';
+        return;
+      }
+      import('../toast.js').then(m => {
+        m.showConfirmToast('Restore Backup', 'Are you sure you want to restore this configuration? This will overwrite your current settings.', async () => {
+          try {
+            const { auth, ApiError } = await import('../api.js');
+            const token = auth.getToken();
+            const res = await window.fetch('/api/system/restore', {
+              method: 'POST',
+              headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+              body: file
+            });
+            if (!res.ok) throw await ApiError.from(res);
+            m.showToast('Restore successful. You should restart the backend for all changes to apply.', 'success');
+          } catch (err) {
+            m.showToast('Restore failed: ' + err.message, 'error');
+          } finally {
+            uploadInput.value = '';
+          }
+        });
+      });
+    });
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  initSystemTab();
+});
+
+
+async function renderApiTokens() {
+  const list = document.getElementById('api-tokens-list');
+  if (!list) return;
+  
+  try {
+    const { api } = await import('../api.js');
+    const tokens = await api.get('/api/tokens');
+    
+    if (tokens.length === 0) {
+      list.innerHTML = `<div style="font-size:11px; color:var(--muted); text-align:center;">No API tokens generated.</div>`;
+      return;
+    }
+    
+    list.innerHTML = '';
+    tokens.forEach(t => {
+      const row = document.createElement('div');
+      row.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 8px; background: rgba(0,0,0,0.2); border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);';
+      row.innerHTML = `
+        <div style="display:flex; flex-direction:column; gap:2px;">
+          <div style="font-size:11px; font-weight:700; color:#fff;">${t.name}</div>
+          <div style="font-size:10px; color:var(--muted); font-family:monospace;">${t.masked_token}</div>
+        </div>
+        <button class="btn-rect danger" style="padding:4px 8px; font-size:10px;" data-id="${t.id}">Revoke</button>
+      `;
+      
+      row.querySelector('button').addEventListener('click', async () => {
+        import('../toast.js').then(m => {
+          m.showConfirmToast('Revoke Token', `Revoke token "${t.name}"?`, async () => {
+            try {
+              await api.delete(`/api/tokens/${t.id}`);
+              renderApiTokens();
+            } catch (err) {
+              m.showToast(err.message, 'error');
+            }
+          });
+        });
+      });
+      list.appendChild(row);
+    });
+  } catch (err) {
+    list.innerHTML = `<div style="font-size:11px; color:var(--crit); text-align:center;">Failed to load tokens</div>`;
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const btnGen = document.getElementById('btn-generate-token');
+  const inputName = document.getElementById('new-token-name');
+  
+  if (btnGen && inputName) {
+    btnGen.addEventListener('click', async () => {
+      const name = inputName.value.trim();
+      if (!name) return;
+      
+      try {
+        const { api } = await import('../api.js');
+        const res = await api.post('/api/tokens', { name });
+        inputName.value = '';
+        renderApiTokens();
+        
+        import('../toast.js').then(m => {
+          m.showConfirmToast('Token Generated', `Your new token is:
+
+${res.token}
+
+Copy it now. You won't be able to see it again!`, () => {});
+        });
+      } catch (err) {
+        import('../toast.js').then(m => m.showToast(err.message, 'error'));
+      }
+    });
+  }
+});

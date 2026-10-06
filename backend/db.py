@@ -72,12 +72,12 @@ def query_history(range_str: str = "24h"):
         group_sql = "SELECT ts, cpu_temp, cpu_util, mem_pct, disks_json, fans_json FROM metrics WHERE ts > ? ORDER BY ts ASC"
     elif range_str == "7d":
         cutoff = now_ts - (86400 * 7)
-        # Sample every ~30 minutes for 7-day range to keep payload fast and preserve drive/fan telemetry
-        group_sql = "SELECT ts, cpu_temp, cpu_util, mem_pct, disks_json, fans_json FROM metrics WHERE ts > ? AND (ts % 1800 < 30) ORDER BY ts ASC"
+        # Downsample to 30-minute buckets for 7-day range to keep payload fast and preserve accuracy
+        group_sql = "SELECT (ts / 1800) * 1800 AS ts, ROUND(AVG(cpu_temp), 1) AS cpu_temp, ROUND(AVG(cpu_util), 1) AS cpu_util, ROUND(AVG(mem_pct), 1) AS mem_pct, disks_json, fans_json FROM metrics WHERE ts > ? GROUP BY (ts / 1800) ORDER BY ts ASC"
     elif range_str == "30d":
         cutoff = now_ts - (86400 * 30)
-        # Sample every ~2 hours for 30-day range
-        group_sql = "SELECT ts, cpu_temp, cpu_util, mem_pct, disks_json, fans_json FROM metrics WHERE ts > ? AND (ts % 7200 < 30) ORDER BY ts ASC"
+        # Downsample to 2-hour buckets for 30-day range
+        group_sql = "SELECT (ts / 7200) * 7200 AS ts, ROUND(AVG(cpu_temp), 1) AS cpu_temp, ROUND(AVG(cpu_util), 1) AS cpu_util, ROUND(AVG(mem_pct), 1) AS mem_pct, disks_json, fans_json FROM metrics WHERE ts > ? GROUP BY (ts / 7200) ORDER BY ts ASC"
     else:  # default 24h
         cutoff = now_ts - 86400
         group_sql = "SELECT ts, cpu_temp, cpu_util, mem_pct, disks_json, fans_json FROM metrics WHERE ts > ? ORDER BY ts ASC"

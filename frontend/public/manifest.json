@@ -1,0 +1,16 @@
+{
+  "name": "ZettNAS Toolkit",
+  "short_name": "ZettNAS",
+  "description": "Hardware telemetry and dashboard for ZettNAS",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0ea5e9",
+  "icons": [
+    {
+      "src": "/img/icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}

@@ -41,7 +41,14 @@ class EventBus extends EventTarget {
       this.off(event, handler);
       handler(e.detail, e);
     };
-    this.on(event, wrapped);
+    let handlers = this._handlerMap.get(handler);
+    if (!handlers) {
+      handlers = new Map();
+      this._handlerMap.set(handler, handlers);
+    }
+    handlers.set(event, wrapped);
+    this.addEventListener(event, wrapped, { once: true });
+    return () => this.off(event, handler);
   }
 
   emit(event, detail = null) {

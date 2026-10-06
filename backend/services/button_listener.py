@@ -45,7 +45,7 @@ def button_listener_daemon():
                         pass
 
                 btn_action = cfg.get("action", "cycle_lcd")
-                if cfg.get("enabled") and not Z_STATE.copy_active and btn_action == "copy":
+                if cfg.get("enabled") and not Z_STATE.copy_active and btn_action in ("copy", None):
                     Z_STATE.copy_active = True
                     Z_STATE.copy_status = "copying"
                     Z_STATE.ui_wake.set()

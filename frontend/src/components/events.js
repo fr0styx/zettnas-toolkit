@@ -3,7 +3,8 @@
  * Renders system alerts, diagnostic events, and handles event log clearing.
  */
 import { api } from '../api.js';
-import { showToast } from '../toast.js';
+import { showToast, showConfirmToast } from '../toast.js';
+import { escapeHtml } from '../utils.js';
 
 let _lastEventHash = '';
 let _expandedEvents = new Set();
@@ -52,9 +53,9 @@ export function renderEventLog(events) {
       <div style="display: flex; gap: 10px; align-items: flex-start;">
         <span style="font-size: 14px; margin-top: 2px;">${icon}</span>
         <div style="display: flex; flex-direction: column; gap: 4px; flex-grow: 1;">
-          <div style="font-size: 11px; color: ${color}; font-weight: 700; letter-spacing: 0.3px;">${e.title}</div>
-          <div style="font-size: 12px; color: #fff;">${e.message}</div>
-          <div style="font-size: 10px; color: var(--muted);">${timeStr}</div>
+          <div style="font-size: 11px; color: ${color}; font-weight: 700; letter-spacing: 0.3px;">${escapeHtml(e.title)}</div>
+          <div style="font-size: 12px; color: #fff;">${escapeHtml(e.message)}</div>
+          <div style="font-size: 10px; color: var(--muted);">${escapeHtml(timeStr)}</div>
         </div>
         <span style="font-size: 10px; color: var(--muted); padding-top: 4px;">▼ Details</span>
       </div>
@@ -89,16 +90,18 @@ export function renderEventLog(events) {
 export function initEvents() {
   const clearBtn = document.querySelector('.btn-pill-toggle[title="Clear Logs"]') || document.getElementById('btn-clear-events');
   if (clearBtn) {
-    clearBtn.addEventListener('click', async (e) => {
+    clearBtn.addEventListener('click', (e) => {
       e.preventDefault();
-      try {
-        await api.delete('/api/events/clear');
-        _lastEventHash = '';
-        renderEventLog([]);
-        showToast('Event log cleared', 'success');
-      } catch (err) {
-        showToast('Failed to clear events: ' + err.message, 'error');
-      }
+      showConfirmToast('Clear Event Log', 'Are you sure you want to clear all logged events?', async () => {
+        try {
+          await api.delete('/api/events/clear');
+          _lastEventHash = '';
+          renderEventLog([]);
+          showToast('Event log cleared', 'success');
+        } catch (err) {
+          showToast('Failed to clear events: ' + err.message, 'error');
+        }
+      });
     });
   }
 }

@@ -163,31 +163,52 @@ window.addEventListener('DOMContentLoaded', () => {
 
   function closeFbModal() {
     if (DockManager) DockManager.unregister("fb");
-    if (fbModal) fbModal.classList.remove("open");
+    if (fbModal) {
+      fbModal.classList.remove("open");
+      fbModal.classList.add("window-minimized");
+      fbModal.style.setProperty("display", "none", "important");
+    }
   }
 
   if (btnBrowseDst) {
-    btnBrowseDst.addEventListener("click", (e) => {
-      e.preventDefault();
+    const handleBrowse = (e) => {
+      if (e) e.preventDefault();
       const currentDst = (btnCopyDst && btnCopyDst.value) ? btnCopyDst.value : "/mnt/user/";
       loadBrowsePath(currentDst || "/mnt/user/");
       if (fbModal) {
+        fbModal.classList.remove("window-minimized");
+        fbModal.style.removeProperty("display");
         fbModal.classList.add("open");
         if (DockManager) DockManager.register("fb", fbModal, "#i-storage", "Folder Browser");
         if (bringToFront) bringToFront(fbModal.querySelector(".smart-modal-window"));
       }
-    });
+    };
+    btnBrowseDst.addEventListener("click", handleBrowse);
+    btnBrowseDst.addEventListener("touchend", handleBrowse);
   }
 
-  if (fbCancel) fbCancel.addEventListener("click", closeFbModal);
-  if (fbClose) fbClose.addEventListener("click", closeFbModal);
+  if (fbCancel) {
+    fbCancel.addEventListener("click", closeFbModal);
+    fbCancel.addEventListener("touchend", (e) => { e.preventDefault(); closeFbModal(); });
+  }
+  if (fbClose) {
+    fbClose.addEventListener("click", closeFbModal);
+    fbClose.addEventListener("touchend", (e) => { e.preventDefault(); closeFbModal(); });
+  }
   if (fbModal) {
     fbModal.addEventListener("click", (e) => {
       if (e.target === fbModal) closeFbModal();
     });
   }
   const minBtn = document.getElementById("fb-min");
-  if (minBtn) minBtn.addEventListener("click", () => { if (DockManager) DockManager.minimize("fb"); });
+  if (minBtn) {
+    const handleMin = (e) => {
+      if (e && e.type === "touchend") e.preventDefault();
+      if (DockManager) DockManager.minimize("fb");
+    };
+    minBtn.addEventListener("click", handleMin);
+    minBtn.addEventListener("touchend", handleMin);
+  }
 
   if (fbSelect) {
     fbSelect.addEventListener("click", () => {

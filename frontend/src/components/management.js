@@ -1,3 +1,4 @@
+import { syncWidgetSettingsUI } from './widgets.js';
 /**
  * ZettNAS Toolkit - System Management Window Controller
  * Manages the dedicated System Management desktop window, hub app grid,
@@ -16,6 +17,10 @@ let _unbindMgmtTrap = null;
 
 export function updateManagementTelemetry(stats) {
   if (!stats) return;
+  const overlay = document.getElementById('management-modal-overlay');
+  if (overlay && (!overlay.classList.contains('open') || overlay.classList.contains('window-minimized') || overlay.style.display === 'none')) {
+    return;
+  }
   const unraid = stats.unraid;
   if (unraid && unraid.available) {
     const stateEl = document.getElementById('mgmt-unraid-state');
@@ -239,19 +244,19 @@ export async function fetchAndRenderCopyHistory() {
         <tr>
           <td style="font-family:var(--font-mono, monospace); font-size:10px; color:var(--muted);">${timeStr}</td>
           <td><strong>${(item.source || 'sd').toUpperCase()}</strong></td>
-          <td title="${item.dest}" style="max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${destName}</td>
+          <td title="${escapeHtml(item.dest)}" style="max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(destName)}</td>
           <td>${item.files_count || 0}</td>
           <td>${sizeMB} MB</td>
           <td>${durStr}</td>
           <td>
-            <span style="font-weight:700; color:${statusColor}; text-transform:uppercase; margin-right:6px;">${item.status}</span>
+            <span style="font-weight:700; color:${statusColor}; text-transform:uppercase; margin-right:6px;">${escapeHtml(item.status)}</span>
             ${checksumBadge}
           </td>
         </tr>
       `;
     }).join('');
   } catch (e) {
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--crit); padding:16px;">Failed to load history: ${e.message}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--crit); padding:16px;">Failed to load history: ${escapeHtml(e.message)}</td></tr>`;
   }
 }
 
@@ -281,24 +286,73 @@ export function initManagement() {
   // Minimize button
   const minBtn = document.getElementById('management-min');
   if (minBtn) {
-    minBtn.addEventListener('click', () => {
+    const handleMin = (e) => {
+      if (e && e.type === 'touchend') { e.preventDefault(); e.stopPropagation(); }
       DockManager.minimize('management');
-    });
+    };
+    minBtn.addEventListener('click', handleMin);
+    minBtn.addEventListener('touchend', handleMin);
+  }
+
+  // Maximize button
+  const maxBtn = document.getElementById('management-max');
+  let _isMaximized = false;
+  let _preMaxBounds = null;
+  if (maxBtn) {
+    const handleMax = (e) => {
+      if (e) { e.preventDefault(); e.stopPropagation(); }
+      if (!_isMaximized) {
+        _preMaxBounds = {
+          left: win.style.left,
+          top: win.style.top,
+          transform: win.style.transform,
+          width: win.style.width,
+          height: win.style.height
+        };
+        win.style.left = '16px';
+        win.style.top = '56px';
+        win.style.transform = 'none';
+        win.style.width = 'calc(100vw - 32px)';
+        win.style.height = 'calc(100vh - 128px)';
+        _isMaximized = true;
+      } else {
+        if (_preMaxBounds) {
+          win.style.left = _preMaxBounds.left;
+          win.style.top = _preMaxBounds.top;
+          win.style.transform = _preMaxBounds.transform;
+          win.style.width = _preMaxBounds.width;
+          win.style.height = _preMaxBounds.height;
+        } else {
+          win.style.left = '50%';
+          win.style.top = '50%';
+          win.style.transform = 'translate(-50%, -50%)';
+          win.style.width = '';
+          win.style.height = '';
+        }
+        _isMaximized = false;
+      }
+    };
+    maxBtn.addEventListener('click', handleMax);
+    maxBtn.addEventListener('touchend', handleMax);
   }
 
   // Close button
   const closeBtn = document.getElementById('management-close');
   if (closeBtn) {
-    closeBtn.addEventListener('click', () => {
+    const handleClose = (e) => {
+      if (e && e.type === 'touchend') { e.preventDefault(); e.stopPropagation(); }
       overlay.classList.remove('open');
       overlay.style.setProperty('display', 'none', 'important');
       win.classList.remove('window-focus-pulse');
+      win.classList.add('window-minimized');
       if (_unbindMgmtTrap) {
         _unbindMgmtTrap();
         _unbindMgmtTrap = null;
       }
       DockManager.unregister('management');
-    });
+    };
+    closeBtn.addEventListener('click', handleClose);
+    closeBtn.addEventListener('touchend', handleClose);
   }
 
   function showHub() {
@@ -314,7 +368,59 @@ export function initManagement() {
     document.querySelectorAll('.mgmt-detail-card').forEach((c) => (c.style.display = 'none'));
   }
 
+  
+  const SUBPANE_MAP = {
+    'mgmt-pane-wallpaper': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-wallpaper' },
+    'mgmt-pane-widgets': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-widgets' },
+    'mgmt-sec-metrics': { section: 'mgmt-sec-activity', pane: 'mgmt-pane-metrics' },
+    'mgmt-pane-metrics': { section: 'mgmt-sec-activity', pane: 'mgmt-pane-metrics' },
+    'mgmt-sec-copy': { section: 'mgmt-sec-activity', pane: 'mgmt-pane-copy' },
+    'mgmt-pane-copy': { section: 'mgmt-sec-activity', pane: 'mgmt-pane-copy' },
+    'mgmt-sec-unraid': { section: 'mgmt-sec-services', pane: 'mgmt-pane-unraid' },
+    'mgmt-pane-unraid': { section: 'mgmt-sec-services', pane: 'mgmt-pane-unraid' },
+    'mgmt-sec-docker': { section: 'mgmt-sec-services', pane: 'mgmt-pane-docker' },
+    'mgmt-pane-docker': { section: 'mgmt-sec-services', pane: 'mgmt-pane-docker' },
+    'mgmt-sec-security': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-security' },
+    'mgmt-pane-security': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-security' },
+    'mgmt-sec-events': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-events' },
+    'mgmt-pane-events': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-events' },
+    'mgmt-sec-system': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-system' },
+    'mgmt-pane-system': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-system' },
+  };
+
+  function triggerActiveSubTab(parentId) {
+    const parent = document.getElementById(parentId);
+    if (!parent) return;
+    const activeTabBtn = parent.querySelector('.mgmt-inner-tab.active');
+    if (activeTabBtn) {
+      const paneId = activeTabBtn.dataset.tabTarget;
+      triggerSubTabLoad(paneId);
+    }
+  }
+
+  function triggerSubTabLoad(paneId) {
+    if (paneId === 'mgmt-pane-widgets') {
+      if (typeof syncWidgetSettingsUI === 'function') syncWidgetSettingsUI();
+    } else if (paneId === 'mgmt-pane-metrics') {
+      setTimeout(fetchAndRenderMetrics, 50);
+    } else if (paneId === 'mgmt-pane-copy') {
+      fetchAndRenderCopyHistory();
+    } else if (paneId === 'mgmt-pane-unraid') {
+      if (state.lastStats) updateManagementTelemetry(state.lastStats);
+    } else if (paneId === 'mgmt-pane-docker') {
+      fetchAndRenderDockerContainers();
+    } else if (paneId === 'mgmt-pane-system') {
+      fetchAPITokens();
+    }
+  }
+
   function showSection(targetId) {
+    let desiredSubPane = null;
+    if (SUBPANE_MAP[targetId]) {
+      desiredSubPane = SUBPANE_MAP[targetId].pane;
+      targetId = SUBPANE_MAP[targetId].section;
+    }
+
     if (hubView) hubView.style.display = 'none';
     if (detailContainer) detailContainer.style.display = 'block';
     if (headerNav) headerNav.style.display = 'flex';
@@ -338,32 +444,63 @@ export function initManagement() {
 
     let sectionName = t('mgmt.title', 'System Management');
     if (targetId === 'mgmt-sec-wallpaper') {
-      sectionName = t('mgmt.wallpaper_title', 'Custom Desktop Wallpaper');
-    } else if (targetId === 'mgmt-sec-metrics') {
-      sectionName = t('mgmt.telemetry_title', 'Historical System Telemetry');
-      setTimeout(fetchAndRenderMetrics, 50);
-    } else if (targetId === 'mgmt-sec-events') {
-      sectionName = t('mgmt.events_title', 'System Event & Audit Log');
-    } else if (targetId === 'mgmt-sec-security') {
-      sectionName = t('mgmt.sec_title', 'Account Security & Credentials');
-    } else if (targetId === 'mgmt-sec-unraid') {
-      sectionName = t('mgmt.unraid_sec_title', 'Unraid Subsystem & Acoustic Profiles');
-      if (state.lastStats) updateManagementTelemetry(state.lastStats);
-    } else if (targetId === 'mgmt-sec-copy') {
-      sectionName = t('mgmt.copy_sec_title', 'Media Ingest & Checksum History');
-      fetchAndRenderCopyHistory();
-    } else if (targetId === 'mgmt-sec-docker') {
-      sectionName = t('mgmt.docker_sec_title', 'Docker Containers & Services');
-      fetchAndRenderDockerContainers();
+      sectionName = t('mgmt.appearance_title', 'Appearance');
+      triggerActiveSubTab(targetId);
+    } else if (targetId === 'mgmt-sec-activity') {
+      sectionName = t('mgmt.activity_title', 'Activity Monitor');
+    } else if (targetId === 'mgmt-sec-services') {
+      sectionName = t('mgmt.services_title', 'Services');
     } else if (targetId === 'mgmt-sec-ups') {
-      sectionName = t('mgmt.ups_sec_title', 'UPS & Power Integrity Telemetry');
-      fetchAndRenderUpsTelemetry();
+      sectionName = t('mgmt.sidebar_ups', 'UPS & Power');
+      if (typeof fetchAndRenderUpsTelemetry === 'function') fetchAndRenderUpsTelemetry();
+      else if (typeof fetchAndRenderUPS === 'function') fetchAndRenderUPS();
+    } else if (targetId === 'mgmt-sec-system-group') {
+      sectionName = t('mgmt.system_title', 'System');
     }
 
     if (titleText) titleText.textContent = sectionName;
+
+    if (desiredSubPane) {
+      const parentCard = document.getElementById(targetId);
+      if (parentCard) {
+        parentCard.querySelectorAll('.mgmt-inner-tab').forEach((t) => {
+          t.classList.toggle('active', t.dataset.tabTarget === desiredSubPane);
+        });
+        parentCard.querySelectorAll('.mgmt-tab-pane').forEach((p) => {
+          p.style.display = p.id === desiredSubPane ? 'block' : 'none';
+        });
+        triggerSubTabLoad(desiredSubPane);
+      }
+    } else {
+      triggerActiveSubTab(targetId);
+    }
   }
 
   // Left sidebar items click listener
+
+  document.querySelectorAll('.mgmt-inner-tab').forEach((tab) => {
+    tab.addEventListener('click', () => {
+      const parentCard = tab.closest('.mgmt-detail-card');
+      if (!parentCard) return;
+      
+      // Update tab buttons
+      parentCard.querySelectorAll('.mgmt-inner-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      
+      // Update tab panes
+      const targetPaneId = tab.dataset.tabTarget;
+      parentCard.querySelectorAll('.mgmt-tab-pane').forEach(p => {
+        if (p.id === targetPaneId) {
+          p.style.display = 'block';
+        } else {
+          p.style.display = 'none';
+        }
+      });
+      
+      triggerSubTabLoad(targetPaneId);
+    });
+  });
+
   document.querySelectorAll('.mgmt-sidebar-item').forEach((item) => {
     item.addEventListener('click', () => {
       const targetId = item.dataset.mgmtTarget;
@@ -413,6 +550,7 @@ export function initManagement() {
       overlay.style.removeProperty('display');
       overlay.classList.add('open');
       win.classList.remove('window-minimized');
+      if (state.latestStats) updateManagementTelemetry(state.latestStats);
     }
     bringToFront(win);
     win.classList.remove('window-focus-pulse');

@@ -12,7 +12,7 @@ class ZettState:
         self.lock = threading.RLock()
         self.ui_wake = threading.Event()
         self.prev = {"idle": 0, "total": 0}
-        self.prev_net = {"time": 0.0, "rx": 0, "tx": 0}
+        self.prev_net = {"time": 0.0, "rx": 0, "tx": 0, "iface": "bond0"}
         self.prev_disk_io = {}
         self.cached_hwmon = None
         self.cached_cpu_temp_path = None
@@ -31,6 +31,7 @@ class ZettState:
             "zone3": {"target": 85, "active": 85, "hold_until": 0},
         }
         self.cached_smart_data = {}
+        self.cached_smart_time = {}
         self.last_smart_scan = {}
         self.copy_active = False
         self.copy_status = "idle"
@@ -77,16 +78,21 @@ def _load_events():
         logger.warning(f"Failed to load events: {e}")
 
 
+_event_dedup_cache = {}
+
+
 def add_event(level, title, message, details=None):
+    global _event_dedup_cache
     now = int(time.time())
     with Z_STATE.lock:
-        if (
-            Z_STATE.event_log
-            and Z_STATE.event_log[0].get("title") == title
-            and Z_STATE.event_log[0].get("message") == message
-            and (now - Z_STATE.event_log[0].get("ts", 0) < 3600)
-        ):
+        dedup_key = (level, title)
+        last_seen = _event_dedup_cache.get(dedup_key, 0)
+        if now - last_seen < 60:
             return
+        _event_dedup_cache[dedup_key] = now
+        if len(_event_dedup_cache) > 200:
+            _event_dedup_cache = {k: v for k, v in _event_dedup_cache.items() if now - v < 300}
+
         entry = {"ts": now, "level": level, "title": title, "message": message}
         if details is not None:
             entry["details"] = details

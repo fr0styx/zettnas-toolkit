@@ -1,3 +1,4 @@
+import { escapeHtml } from '../utils.js';
 /**
  * ZettNAS Toolkit Telemetry Dashboard
  * Renders hardware gauges, disk trays, fan tachometers, and live telemetry badges.
@@ -132,7 +133,7 @@ export function diskTile(d) {
 
   el.innerHTML =
     `<div class="dh"><svg class="disk-ic"><use href="${meta.icon}"/></svg>` +
-    `<span class="dn">${d.name}</span>` +
+    `<span class="dn">${escapeHtml(d.name)}</span>` +
     `<div class="disk-indicators">` +
       (isStandby ? `<span class="standby-zzz" title="Spun-down / Standby">zZz</span>` : `<span class="io-dot" title="Active I/O"></span>`) +
       `<span class="hdot ${'dot-' + lvl}"></span>` +
@@ -283,12 +284,12 @@ export function updateChassisImageForTheme() {
   if (!chassisImg) return;
 
   const modelMap = {
-    'd4': 'img/chassis-d4.png',
-    'd8u': 'img/chassis-d8u.png',
-    'd6u': 'img/chassis-d6u.png'
+    'd4': 'img/chassis-d4.webp',
+    'd8u': 'img/chassis-d8u.webp',
+    'd6u': 'img/chassis-d6u.webp'
   };
   const chassis = (state.latestStats && state.latestStats.chassis) ? state.latestStats.chassis : 'd6u';
-  chassisImg.src = modelMap[chassis] || 'img/chassis-d6u.png';
+  chassisImg.src = modelMap[chassis] || 'img/chassis-d6u.webp';
 }
 
 let _systemThemeMatcher = null;
@@ -364,9 +365,20 @@ export function applyTheme(themeName) {
 
 let _defaultPwdWarned = false;
 
+if (typeof document !== 'undefined') {
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && state.latestStats) {
+      applyStats(state.latestStats);
+    }
+  });
+}
+
 export function applyStats(s) {
   try {
     state.setStats(s);
+    if (typeof document !== 'undefined' && document.hidden && !state.isLcdDirect) {
+      return;
+    }
     if (s.events) renderEventLog(s.events);
 
     if (s.security && s.security.is_default_password) {
@@ -374,7 +386,7 @@ export function applyStats(s) {
       if (warnEl) warnEl.style.display = 'block';
       if (!_defaultPwdWarned) {
         _defaultPwdWarned = true;
-        showToast(t('toast.default_pwd_alert', "⚠️ Security Warning: Default password 'admin' is active! Please change it in Settings."), 'error');
+        showToast(t('toast.default_pwd_alert', "Security Warning: Default password 'admin' is active! Please change it in Settings."), 'error');
       }
       checkAndTriggerSetupWizard(s);
     }
@@ -580,6 +592,14 @@ export function initLcdPageDots() {
 
 export function updateLcdPages(s) {
   initLcdPageDots();
+  if (typeof window !== 'undefined') window.updateLcdPages = updateLcdPages;
+
+  // Skip DOM reconstruction if console window is minimized or closed (unless in lcd-direct hardware mode)
+  if (!state.isLcdDirect) {
+    const consoleOverlay = $('console-modal-overlay');
+    const isVisible = consoleOverlay && consoleOverlay.classList.contains('open') && !consoleOverlay.classList.contains('window-minimized') && consoleOverlay.style.display !== 'none';
+    if (!isVisible) return;
+  }
 
   // Sync active page from server if changed
   if (s.lcd && typeof s.lcd.page === 'number' && s.lcd.page !== _currentLcdPageIndex) {
@@ -617,7 +637,7 @@ export function updateLcdPages(s) {
           <div class="bay-matrix-card ${hClass}">
             <span class="bmc-num">BAY ${i + 1}</span>
             <svg class="bmc-icon"><use href="#i-disk"/></svg>
-            <span class="bmc-dev" title="${d.model || devName}">${modelStr}</span>
+            <span class="bmc-dev" title="${escapeHtml(d.model || devName)}">${escapeHtml(modelStr)}</span>
             <div class="bmc-pills">
               <span class="bmc-temp">${temp}</span>
               <span class="bmc-health ${hClass}">${hText}</span>

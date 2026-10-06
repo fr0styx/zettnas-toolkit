@@ -17,6 +17,7 @@ class StatsBroadcaster:
     def __init__(self):
         self._subscribers: set[asyncio.Queue] = set()
         self._latest_payload: str | None = None
+        self._latest_full_data: dict[str, Any] | None = None
         self._loop: asyncio.AbstractEventLoop | None = None
 
     def set_loop(self, loop: asyncio.AbstractEventLoop) -> None:
@@ -29,13 +30,13 @@ class StatsBroadcaster:
         q: asyncio.Queue = asyncio.Queue(maxsize=10)
         self._subscribers.add(q)
 
-        # Immediately send current state if available so client does not wait
-        if self._latest_payload is not None:
-            await q.put(self._latest_payload)
-        elif initial_data is not None:
-            payload = f"data: {json.dumps(initial_data)}\n\n"
-            self._latest_payload = payload
+        # Immediately send complete snapshot to newly connected client so nothing is missing
+        full_data = initial_data or self._latest_full_data
+        if full_data is not None:
+            payload = f"data: {json.dumps(full_data)}\n\n"
             await q.put(payload)
+        elif self._latest_payload is not None:
+            await q.put(self._latest_payload)
 
         return q
 
@@ -61,8 +62,13 @@ class StatsBroadcaster:
         for q in dead_queues:
             self._subscribers.discard(q)
 
-    def broadcast(self, data: dict[str, Any]) -> None:
+    def broadcast(self, data: dict[str, Any], full_data: dict[str, Any] | None = None) -> None:
         """Broadcast data to all connected clients. Thread-safe."""
+        if full_data is not None:
+            self._latest_full_data = full_data
+        elif self._latest_full_data is None:
+            self._latest_full_data = data
+
         try:
             payload = f"data: {json.dumps(data)}\n\n"
         except (TypeError, ValueError) as e:

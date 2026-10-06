@@ -25,6 +25,8 @@ import { initMetricsChart, fetchAndRenderMetrics } from './components/metrics-ch
 import { initSetupWizard } from './components/setup-wizard.js';
 import { initManagement } from './components/management.js';
 import { initCommandPalette } from './components/command-palette.js';
+import { initWidgets } from './components/widgets.js';
+import { initFileManager } from './components/file-manager.js';
 import { initI18n } from './i18n.js';
 
 let _sseRetryCount = 0;
@@ -123,6 +125,8 @@ document.addEventListener('DOMContentLoaded', () => {
   initSetupWizard();
   initManagement();
   initCommandPalette();
+  initWidgets();
+  initFileManager();
 
   applyTheme(state.currentTheme);
   fetchDashboardLayout();
@@ -134,4 +138,20 @@ document.addEventListener('DOMContentLoaded', () => {
   setInterval(checkLcdStatus, 10000);
 
   window.addEventListener('resize', fitMiniPreviewScale);
+
+  // Prevent background drag/bounce from scrolling the page and losing the navbar on mobile
+  document.addEventListener('touchmove', (e) => {
+    const isMobile = document.body.classList.contains('mobile-mode') || window.innerWidth <= 768;
+    if (!isMobile) return;
+
+    // Allow scrolling only within designated scrollable containers
+    const scrollable = e.target.closest(
+      '.mgmt-content-pane, .fm-viewport, #console-window, .smart-modal-body, ' +
+      '.smart-modal-window, .slide-drawer, #desktop-widgets-container, .os-dock, ' +
+      'input, select, textarea, .mgmt-sidebar, .mgmt-inner-tabs, .drawer-tabs-nav, .smart-raw-pre'
+    );
+    if (!scrollable) {
+      e.preventDefault();
+    }
+  }, { passive: false });
 });

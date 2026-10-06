@@ -4,6 +4,6 @@ export default defineConfig({
   root: 'frontend',
   build: {
     outDir: '../static',
-    emptyOutDir: false
+    emptyOutDir: true
   }
 });

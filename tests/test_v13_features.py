@@ -61,6 +61,19 @@ class TestV13Features(unittest.TestCase):
         inv2 = run_disk_smart_test("/dev/sda; rm -rf")
         self.assertFalse(inv2["success"])
 
+        from unittest.mock import patch, MagicMock
+        with patch("subprocess.run") as mock_run:
+            mock_res = MagicMock()
+            mock_res.returncode = 0
+            mock_res.stdout = "Self-test routine aborted"
+            mock_res.stderr = ""
+            mock_run.return_value = mock_res
+            res = run_disk_smart_test("sda", test_type="abort")
+            self.assertTrue(res["success"])
+            self.assertEqual(res["test_type"], "abort")
+            mock_run.assert_called_once()
+            self.assertIn("-X", mock_run.call_args[0][0])
+
     def test_docker_introspection(self):
         containers = read_docker_containers()
         self.assertIsInstance(containers, list)

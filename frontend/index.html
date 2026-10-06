@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>ZettNAS Studio • Hardware Suite</title>
 </head>
 <body class="studio-workbench">
@@ -20,6 +20,9 @@
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
+    <symbol id="i-trash" viewBox="0 0 24 24">
+      <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
     <symbol id="i-disk" viewBox="0 0 24 24">
       <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/>
       <circle cx="12" cy="12" r="3" fill="currentColor"/>
@@ -52,6 +55,21 @@
       <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.6"/>
       <path d="M12 7v5l3 2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
     </symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24">
+      <rect x="3" y="4" width="18" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/>
+      <line x1="3" y1="9" x2="21" y2="9" stroke="currentColor" stroke-width="1.8"/>
+      <line x1="8" y1="2" x2="8" y2="5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      <line x1="16" y1="2" x2="16" y2="5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="8" cy="14" r="1.2" fill="currentColor"/>
+      <circle cx="12" cy="14" r="1.2" fill="currentColor"/>
+      <circle cx="16" cy="14" r="1.2" fill="currentColor"/>
+      <circle cx="8" cy="18" r="1.2" fill="currentColor"/>
+      <circle cx="12" cy="18" r="1.2" fill="currentColor"/>
+    </symbol>
+    <symbol id="i-weather" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.8"/>
+      <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+    </symbol>
     <symbol id="i-nvme" viewBox="0 0 24 24">
       <rect x="4" y="8" width="16" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="2"/>
       <path d="M11 9.5l-2 3h3l-2 3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
@@ -82,6 +100,10 @@
       <circle cx="17.5" cy="6.5" r="1.5" fill="currentColor"/>
       <circle cx="6.5" cy="17.5" r="1.5" fill="currentColor"/>
       <circle cx="17.5" cy="17.5" r="1.5" fill="currentColor"/>
+    </symbol>
+        <symbol id="i-bell" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M13.73 21a2 2 0 0 1-3.46 0"></path>
     </symbol>
     <symbol id="i-grid" viewBox="0 0 24 24">
       <rect x="3" y="3" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/>
@@ -127,9 +149,144 @@
   </header>
 
   <main class="chassis-workbench-stage">
+    
+    <!-- Desktop Widgets Layer -->
+        <!-- Desktop Widgets Layer -->
+    <div id="desktop-widgets-container" class="pos-top-right glass-standard scale-normal">
+      <!-- 1. System Widget -->
+      <div class="desktop-widget" id="widget-system">
+        <div class="widget-header">
+          <span class="widget-title"><svg class="ic" style="width:12px;height:12px;"><use href="#i-cpu"/></svg> <span data-i18n="widget.system">System Status</span></span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 12px; color: var(--muted);">CPU</span>
+            <span style="font-size: 12.5px; font-weight: 700; font-family: var(--font-mono, monospace);" id="w-cpu-val">0%</span>
+          </div>
+          <div style="width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden;">
+            <div id="w-cpu-bar" style="height: 100%; background: var(--brand, #00f0ff); width: 0%; transition: width 0.3s ease;"></div>
+          </div>
+          
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
+            <span style="font-size: 12px; color: var(--muted);">RAM</span>
+            <span style="font-size: 12.5px; font-weight: 700; font-family: var(--font-mono, monospace);" id="w-ram-val">0%</span>
+          </div>
+          <div style="width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden;">
+            <div id="w-ram-bar" style="height: 100%; background: var(--ok2, #25c2a0); width: 0%; transition: width 0.3s ease;"></div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 2. Network Widget -->
+      <div class="desktop-widget" id="widget-network">
+        <div class="widget-header">
+          <span class="widget-title"><svg class="ic" style="width:12px;height:12px;"><use href="#i-net"/></svg> <span data-i18n="widget.network">Network IO</span></span>
+          <span class="widget-badge" id="w-net-iface">bond0</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+          <div style="display: flex; flex-direction: column;">
+            <span style="font-size: 10px; color: var(--muted); text-transform: uppercase;">Download</span>
+            <span style="font-size: 14.5px; font-weight: 700; color: var(--brand, #00f0ff); font-family: var(--font-mono, monospace);" id="w-net-rx">0 B/s</span>
+          </div>
+          <div style="display: flex; flex-direction: column; text-align: right;">
+            <span style="font-size: 10px; color: var(--muted); text-transform: uppercase;">Upload</span>
+            <span style="font-size: 14.5px; font-weight: 700; color: var(--warn, #f5a623); font-family: var(--font-mono, monospace);" id="w-net-tx">0 B/s</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Storage Pool Widget -->
+      <div class="desktop-widget" id="widget-storage">
+        <div class="widget-header">
+          <span class="widget-title"><svg class="ic" style="width:12px;height:12px;"><use href="#i-storage"/></svg> <span data-i18n="widget.storage">Storage Pool</span></span>
+          <span class="widget-badge" id="w-storage-status">ONLINE</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 4px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 12px; color: var(--muted);">Capacity</span>
+            <span style="font-size: 12.5px; font-weight: 700; font-family: var(--font-mono, monospace);" id="w-storage-val">-- / --</span>
+          </div>
+          <div style="width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; margin-top: 2px;">
+            <div id="w-storage-bar" style="height: 100%; background: linear-gradient(90deg, var(--ok2, #25c2a0), var(--brand, #00f0ff)); width: 0%; transition: width 0.3s ease;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. Host Info & Uptime Widget -->
+      <div class="desktop-widget" id="widget-uptime" style="display: none;">
+        <div class="widget-header">
+          <span class="widget-title"><svg class="ic" style="width:12px;height:12px;"><use href="#i-chip"/></svg> <span data-i18n="widget.host">Host Info</span></span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+          <span style="font-size: 12px; color: var(--muted);">Host</span>
+          <span style="font-size: 12.5px; font-weight: 700; color: var(--accent-cyan, #00f0ff);" id="w-host-name">NAS</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size: 12px; color: var(--muted);">Uptime</span>
+          <span style="font-size: 12px; font-weight: 600; font-family: var(--font-mono, monospace); color: #cbd5e1;" id="w-host-uptime">--</span>
+        </div>
+      </div>
+
+      <!-- 5. Time Clock Widget -->
+      <div class="desktop-widget" id="widget-clock" style="display: none;">
+        <div class="widget-header">
+          <span class="widget-title"><svg class="ic" style="width:12px;height:12px;"><use href="#i-clock"/></svg> <span data-i18n="widget.clock">Time Clock</span></span>
+          <span class="widget-badge" id="w-clock-tz" title="Click to toggle 12h/24h" style="cursor: pointer; user-select: none;">24H</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 4px;">
+          <div style="display: flex; align-items: baseline; justify-content: space-between;">
+            <div style="font-size: 24px; font-weight: 800; font-family: var(--font-mono, monospace); letter-spacing: 0.5px; color: #fff; line-height: 1;" id="w-clock-time">
+              00:00<span style="font-size: 14px; opacity: 0.65; margin-left: 1px;" id="w-clock-sec">:00</span>
+            </div>
+            <span style="font-size: 11px; font-weight: 700; color: var(--brand, #00f0ff);" id="w-clock-ampm"></span>
+          </div>
+          <div style="font-size: 11.5px; color: var(--muted); font-weight: 500;" id="w-clock-date">--</div>
+        </div>
+      </div>
+
+      <!-- 6. Calendar Widget -->
+      <div class="desktop-widget" id="widget-calendar" style="display: none;">
+        <div class="widget-header">
+          <span class="widget-title">
+            <svg class="ic" style="width:12px;height:12px;"><use href="#i-calendar"/></svg>
+            <span data-i18n="widget.calendar">Calendar</span>
+            <span class="widget-badge" id="w-cal-country-badge" style="margin-left: 5px; font-size: 8.5px; opacity: 0.85; cursor: pointer;" title="Official Holidays Country">US</span>
+          </span>
+          <div style="display: flex; align-items: center; gap: 4px;">
+            <button id="w-cal-prev" class="btn-icon" style="padding: 1px 5px; font-size: 9px; background: rgba(255,255,255,0.08); border: none; border-radius: 3px; color: #cbd5e1; cursor: pointer;" title="Previous Month">◀</button>
+            <span class="widget-badge" id="w-cal-month" style="font-size: 9.5px; cursor: pointer;" title="Click to jump to current month">OCT 2026</span>
+            <button id="w-cal-next" class="btn-icon" style="padding: 1px 5px; font-size: 9px; background: rgba(255,255,255,0.08); border: none; border-radius: 3px; color: #cbd5e1; cursor: pointer;" title="Next Month">▶</button>
+          </div>
+        </div>
+        <div id="w-calendar-grid" class="widget-calendar-grid"></div>
+        <div id="w-cal-glance-bar" class="cal-glance-bar"></div>
+      </div>
+
+      <!-- 7. Weather Widget -->
+      <div class="desktop-widget" id="widget-weather" style="display: none;">
+        <div class="widget-header">
+          <span class="widget-title"><svg class="ic" style="width:12px;height:12px;"><use href="#i-weather"/></svg> <span data-i18n="widget.weather">Local Weather</span></span>
+          <span class="widget-badge" id="w-weather-city" title="Detected location">--</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span id="w-weather-icon" style="font-size: 24px; line-height: 1;">⛅</span>
+            <div style="display: flex; flex-direction: column;">
+              <span id="w-weather-temp" style="font-size: 20px; font-weight: 800; font-family: var(--font-mono, monospace); line-height: 1.1; cursor: pointer; user-select: none;" title="Click to toggle °C / °F">--°</span>
+              <span id="w-weather-desc" style="font-size: 10.5px; color: var(--muted); font-weight: 500;">Loading…</span>
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column; text-align: right; gap: 2px;">
+            <span id="w-weather-range" style="font-size: 11px; font-weight: 600; color: #cbd5e1; font-family: var(--font-mono, monospace);">H: --° L: --°</span>
+            <span id="w-weather-details" style="font-size: 9.5px; color: var(--muted);">💧 --% • 💨 --</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="desktop-icons-container" id="desktop-icons-container">
       <div class="chassis-hero-box management-desktop-icon" id="management-desktop-icon" role="button" tabindex="0" title="Click to open System Management" data-i18n-title="dock.management">
-        <img id="chassis-hero-img" src="img/chassis-d6u.png" class="chassis-hero-img" alt="NAS Hardware Management">
+        <img id="chassis-hero-img" src="img/chassis-d6u.webp" class="chassis-hero-img" alt="NAS Hardware Management">
         <div class="desktop-icon-label">
           <span class="icon-dot-status icon-dot-mgmt"></span>
           <span class="icon-text" data-i18n="dock.management">Management</span>
@@ -145,6 +302,26 @@
           <span class="icon-text" data-i18n="dock.zettnas">ZettNAS</span>
         </div>
       </div>
+
+      <div class="chassis-hero-box chassis-desktop-icon fm-desktop-icon" id="fm-desktop-icon" role="button" tabindex="0" title="Click to open File Explorer">
+        <div class="console-hero-box">
+          <svg class="console-hero-icon"><use href="#i-storage"/></svg>
+        </div>
+        <div class="desktop-icon-label">
+          <span class="icon-dot-status"></span>
+          <span class="icon-text">File Explorer</span>
+        </div>
+      </div>
+
+      <div class="chassis-hero-box chassis-desktop-icon rb-desktop-icon" id="rb-desktop-icon" role="button" tabindex="0" title="Click to open Recycle Bin" onclick="if(window.openRecycleBin) window.openRecycleBin()">
+        <div class="console-hero-box">
+          <svg class="console-hero-icon"><use href="#i-trash"/></svg>
+        </div>
+        <div class="desktop-icon-label">
+          <span class="icon-dot-status"></span>
+          <span class="icon-text" data-i18n="dock.recycle_bin">Recycle Bin</span>
+        </div>
+      </div>
     </div>
   </main>
 </div>
@@ -156,9 +333,12 @@
         <svg class="ic"><use href="#i-disk"/></svg> <span data-i18n="modal.smart_title">S.M.A.R.T. Diagnostics</span>
       </span>
       <div style="display:flex; gap:12px; align-items:center;">
-        <button id="smart-modal-refresh" class="btn-icon" title="Refresh SMART data" style="font-size: 20px; padding: 2px;">↻</button>
-        <button id="smart-modal-min" class="btn-icon" aria-label="Minimize" style="font-size:18px;">–</button>
-        <button id="smart-modal-close" class="btn-icon" aria-label="Close dialog">✕</button>
+        <button id="smart-modal-refresh" class="btn-icon" title="Refresh SMART data" style="font-size: 20px; padding: 2px; margin-right: 8px;">↻</button>
+        <div class="os-window-controls">
+          <button class="win-btn min-btn" id="smart-modal-min" title="Minimize" aria-label="Minimize"></button>
+          <button class="win-btn max-btn" id="smart-modal-max" title="Maximize" aria-label="Maximize"></button>
+          <button class="win-btn close-btn" id="smart-modal-close" title="Close" aria-label="Close"></button>
+        </div>
       </div>
     </div>
     <div class="smart-modal-body">
@@ -172,6 +352,7 @@
         <span style="font-size: 9.5px; font-weight: 800; color: var(--muted); letter-spacing: 0.8px;" data-i18n="modal.smart_self_tests">SELF-TESTS:</span>
         <button id="smart-btn-short-test" class="smart-test-action-btn" style="background: rgba(37,194,160,0.15); border: 1px solid var(--accent); color: var(--accent); font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 4px; cursor: pointer;" data-i18n="modal.smart_short_test">▶ Run Short Test (~2m)</button>
         <button id="smart-btn-extended-test" class="smart-test-action-btn" style="background: rgba(52,152,219,0.15); border: 1px solid #3498db; color: #38bdf8; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 4px; cursor: pointer;" data-i18n="modal.smart_extended_test">▶ Run Extended Test</button>
+        <button id="smart-btn-abort-test" class="smart-test-action-btn" style="display: none; background: rgba(231,76,60,0.15); border: 1px solid #e74c3c; color: #ff6b6b; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 4px; cursor: pointer;" data-i18n="modal.smart_abort_test">⏹ Abort Test</button>
         <span id="smart-test-status" style="font-size: 10px; color: var(--muted); margin-left: auto;"></span>
       </div>
       <span style="font-size:9px; font-weight:800; color:var(--muted); letter-spacing:1px;" id="smart-modal-raw-title" data-i18n="modal.smart_raw_telemetry">RAW TELEMETRY ATTRIBUTES</span>
@@ -186,7 +367,11 @@
       <span class="smart-modal-title" id="setup-wizard-title" style="color: #f1f5f9;">
         <span style="font-size: 18px;">⚡</span> <span data-i18n="setup.title">ZettNAS Setup Wizard</span>
       </span>
-      <button id="setup-wizard-close" class="btn-icon" aria-label="Close dialog">✕</button>
+      <div class="os-window-controls">
+        <button class="win-btn min-btn" id="setup-wizard-min" title="Minimize" aria-label="Minimize"></button>
+        <button class="win-btn max-btn" id="setup-wizard-max" title="Maximize" aria-label="Maximize"></button>
+        <button class="win-btn close-btn" id="setup-wizard-close" title="Close" aria-label="Close"></button>
+      </div>
     </div>
     <div class="smart-modal-body" style="padding: 24px; gap: 18px;">
       <div style="background: rgba(224, 122, 56, 0.08); border: 1px solid rgba(224, 122, 56, 0.2); border-radius: 8px; padding: 12px 14px;">
@@ -249,7 +434,7 @@
     <button class="drawer-tab-btn" data-tab="tab-led" data-i18n="settings.tab_led">LED Strip bar</button>
     <button class="drawer-tab-btn" data-tab="tab-fans" data-i18n="settings.tab_fans">Fans</button>
     <button class="drawer-tab-btn" data-tab="tab-buttons" data-i18n="settings.tab_buttons">Copy Button</button>
-  </div>
+    </div>
 
   <div id="tab-layout" class="drawer-tab-content active">
     <div class="tab-sub-header">
@@ -871,14 +1056,22 @@
 
 
 
+
+  
+  
+
+
 </aside>
 
 <div id="folder-browser-modal" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="folder-browser-title">
   <div class="smart-modal-window" style="width: 480px;">
     <div class="smart-modal-header">
       <div class="smart-modal-title" id="folder-browser-title"><svg class="ic ic-sm" style="margin-right:4px;"><use href="#i-storage"/></svg> <span data-i18n="modal.fb_title">Select Destination Folder</span></div>
-      <button id="fb-min" class="btn-icon" aria-label="Minimize" style="font-size:18px;">–</button>
-      <button id="fb-close" class="btn-icon" aria-label="Close dialog">✕</button>
+      <div class="os-window-controls">
+        <button class="win-btn min-btn" id="fb-min" title="Minimize" aria-label="Minimize"></button>
+        <button class="win-btn max-btn" id="fb-max" title="Maximize" aria-label="Maximize"></button>
+        <button class="win-btn close-btn" id="fb-close" title="Close" aria-label="Close"></button>
+      </div>
     </div>
     <div class="smart-modal-body" style="padding-bottom: 20px;">
       <div id="fb-current-path" style="font-family: monospace; font-size: 11px; padding: 10px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); border-radius: 6px; color: var(--ok2, #3498db); word-break: break-all; display: flex; flex-wrap: wrap; gap: 2px; align-items: center;"></div>
@@ -916,10 +1109,13 @@
 <div id="copy-toast" class="smart-modal-window" style="position: fixed; bottom: 20px; right: 20px; width: 350px; z-index: 10001; opacity: 0; pointer-events: none; transition: opacity 0.3s ease, transform 0.3s ease; transform: translateY(20px); border-color: rgba(255,255,255,0.1);" role="alertdialog" aria-modal="true">
   <div class="smart-modal-header" style="padding: 10px 15px; display: flex; justify-content: space-between; align-items: center;">
     <div class="smart-modal-title" style="display:flex; align-items:center;"><svg class="ic ic-sm" style="margin-right:4px;"><use href="#i-storage"/></svg> <span data-i18n="modal.copy_title">Media card ingest</span></div>
-    <div style="display:flex; gap:8px;">
-      <button id="copy-toast-min" class="btn-icon" style="opacity: 0.5; cursor: pointer; border:none; background:none; color:white;" aria-label="Minimize">–</button>
-      <button id="copy-toast-pause" class="btn-icon" style="opacity: 0.8; cursor: pointer; border:none; background:none; color:var(--warn); font-weight:bold; font-size: 14px;" aria-label="Pause copy">⏸</button>
-      <button id="copy-toast-cancel" class="btn-icon" style="opacity: 0.8; cursor: pointer; border:none; background:none; color:var(--crit); font-weight:bold;" aria-label="Cancel copy">×</button>
+    <div style="display:flex; gap:12px; align-items:center;">
+      <button id="copy-toast-pause" class="btn-icon" style="opacity: 0.8; cursor: pointer; border:none; background:none; color:var(--warn); font-weight:bold; font-size: 14px; margin-right: 4px;" aria-label="Pause copy">⏸</button>
+      <div class="os-window-controls">
+        <button class="win-btn min-btn" id="copy-toast-min" title="Minimize" aria-label="Minimize"></button>
+        <button class="win-btn max-btn" id="copy-toast-max" title="Maximize" aria-label="Maximize"></button>
+        <button class="win-btn close-btn" id="copy-toast-cancel" title="Close" aria-label="Close"></button>
+      </div>
     </div>
   </div>
   <div class="smart-modal-body" style="padding: 15px; gap: 8px;">
@@ -950,53 +1146,42 @@
         </span>
       </div>
 
-      <div class="mgmt-header-right">
-        <button id="management-min" class="btn-icon" aria-label="Minimize" style="font-size:18px;">–</button>
-        <button id="management-close" class="btn-icon" aria-label="Close dialog">✕</button>
+      <div class="mgmt-header-right os-window-controls" style="display: flex;">
+        <button class="win-btn min-btn" id="management-min" title="Minimize" aria-label="Minimize"></button>
+        <button class="win-btn max-btn" id="management-max" title="Maximize" aria-label="Maximize"></button>
+        <button class="win-btn close-btn" id="management-close" title="Close" aria-label="Close"></button>
       </div>
     </div>
 
     <div class="smart-modal-body management-window-body">
-      <!-- LEFT SIDEBAR -->
+            <!-- LEFT SIDEBAR -->
       <aside class="mgmt-sidebar" id="mgmt-sidebar" aria-label="Management Navigation">
         <div class="mgmt-sidebar-nav">
-          <button class="mgmt-sidebar-item active" data-mgmt-target="management-hub-view" title="Overview & All Categories">
+          <button class="mgmt-sidebar-item active" data-mgmt-target="management-hub-view" title="HUB">
             <svg class="mgmt-sidebar-svg"><use href="#i-grid"/></svg>
-            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_overview">Overview & Hub</span>
+            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_overview">HUB</span>
           </button>
           <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-wallpaper" title="Desktop Themes & Wallpapers">
             <svg class="mgmt-sidebar-svg"><use href="#i-globe"/></svg>
-            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_wallpaper">Wallpaper</span>
+            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_appearance">Appearance</span>
           </button>
-          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-metrics" title="Hardware Telemetry & Metrics">
+          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-activity" title="Metrics & History">
             <svg class="mgmt-sidebar-svg"><use href="#i-cpu"/></svg>
-            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_metrics">Metrics</span>
+            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_activity">Activity Monitor</span>
           </button>
-          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-events" title="System Event Log">
-            <svg class="mgmt-sidebar-svg"><use href="#i-storage"/></svg>
-            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_events">Event Log</span>
-          </button>
-          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-unraid" title="Unraid Array & Acoustic Profiles">
+          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-services" title="Apps & Integrations">
             <svg class="mgmt-sidebar-svg"><use href="#i-chip"/></svg>
-            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_unraid">Unraid & Profiles</span>
-          </button>
-          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-copy" title="Media Ingest History">
-            <svg class="mgmt-sidebar-svg"><use href="#i-storage"/></svg>
-            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_copy">Ingest History</span>
-          </button>
-          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-docker" title="Docker Containers & Services">
-            <svg class="mgmt-sidebar-svg"><use href="#i-chip"/></svg>
-            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_docker">Containers</span>
-            <span class="mgmt-sidebar-badge" id="mgmt-sidebar-docker-badge">Docker</span>
+            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_services">Services</span>
+            <span class="mgmt-sidebar-badge" id="mgmt-sidebar-docker-badge" style="display:none;">Docker</span>
           </button>
           <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-ups" title="UPS & Power Integrity">
             <svg class="mgmt-sidebar-svg"><use href="#i-storage"/></svg>
             <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_ups">UPS & Power</span>
-            <span class="mgmt-sidebar-badge" id="mgmt-sidebar-ups-badge">Power</span>
+            <span class="mgmt-sidebar-badge" id="mgmt-sidebar-ups-badge" style="display:none;">Power</span>
           </button>
-          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-security" title="Account & Master Password">
+          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-system-group" title="System Settings & API">
             <svg class="mgmt-sidebar-svg"><use href="#i-chip"/></svg>
-            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_security">Security</span>
+            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_system">System</span>
             <span class="mgmt-sidebar-badge alert-badge" id="mgmt-sidebar-sec-badge" style="display:none;">!</span>
           </button>
         </div>
@@ -1006,149 +1191,112 @@
       <section class="mgmt-content-pane" id="mgmt-content-pane">
         <!-- HUB GRID VIEW (Shown by default) -->
         <div id="management-hub-view" class="management-hub-grid">
-        <!-- 1. Custom Wallpaper -->
-        <div class="mgmt-app-card" data-mgmt-target="mgmt-sec-wallpaper" role="button" tabindex="0">
-          <div class="mgmt-app-icon-wrap mgmt-icon-wallpaper">
-            <svg class="mgmt-app-svg"><use href="#i-globe"/></svg>
-          </div>
-          <div class="mgmt-app-info">
-            <div class="mgmt-app-title-row">
-              <span class="mgmt-app-title" data-i18n="mgmt.hub_wallpaper_title">Custom Wallpaper</span>
-              <span class="mgmt-app-pill" data-i18n="mgmt.hub_wallpaper_pill">Themes</span>
+          <!-- 1. Appearance -->
+          <div class="mgmt-app-card" data-mgmt-target="mgmt-sec-wallpaper" role="button" tabindex="0">
+            <div class="mgmt-app-icon-wrap mgmt-icon-wallpaper">
+              <svg class="mgmt-app-svg"><use href="#i-globe"/></svg>
             </div>
-            <p class="mgmt-app-desc" data-i18n="mgmt.hub_wallpaper_desc">Upload, manage, and customize desktop wallpapers and visual aesthetics.</p>
+            <div class="mgmt-app-info">
+              <div class="mgmt-app-title-row">
+                <span class="mgmt-app-title" data-i18n="mgmt.hub_appearance_title">Appearance</span>
+                <span class="mgmt-app-pill" data-i18n="mgmt.hub_appearance_pill">Themes</span>
+              </div>
+              <p class="mgmt-app-desc" data-i18n="mgmt.hub_appearance_desc">Upload, manage, and customize desktop wallpapers and visual aesthetics.</p>
+            </div>
+            <div class="mgmt-app-footer">
+              <span class="mgmt-app-action" data-i18n="mgmt.hub_appearance_action">Configure ➔</span>
+            </div>
           </div>
-          <div class="mgmt-app-footer">
-            <span class="mgmt-app-action" data-i18n="mgmt.hub_wallpaper_action">Configure ➔</span>
+
+          <!-- 2. Activity Monitor -->
+          <div class="mgmt-app-card" data-mgmt-target="mgmt-sec-activity" role="button" tabindex="0">
+            <div class="mgmt-app-icon-wrap mgmt-icon-metrics">
+              <svg class="mgmt-app-svg"><use href="#i-cpu"/></svg>
+            </div>
+            <div class="mgmt-app-info">
+              <div class="mgmt-app-title-row">
+                <span class="mgmt-app-title" data-i18n="mgmt.hub_activity_title">Activity Monitor</span>
+                <span class="mgmt-app-pill" data-i18n="mgmt.hub_activity_pill">Telemetry</span>
+              </div>
+              <p class="mgmt-app-desc" data-i18n="mgmt.hub_activity_desc">Interactive hardware performance metrics and media ingest transfer history.</p>
+            </div>
+            <div class="mgmt-app-footer">
+              <span class="mgmt-app-action" data-i18n="mgmt.hub_activity_action">View Activity ➔</span>
+            </div>
+          </div>
+
+          <!-- 3. Services -->
+          <div class="mgmt-app-card" data-mgmt-target="mgmt-sec-services" role="button" tabindex="0">
+            <div class="mgmt-app-icon-wrap" style="background:rgba(52,152,219,0.12); color:#38bdf8; border-color:rgba(52,152,219,0.3);">
+              <svg class="mgmt-app-svg"><use href="#i-chip"/></svg>
+            </div>
+            <div class="mgmt-app-info">
+              <div class="mgmt-app-title-row">
+                <span class="mgmt-app-title" data-i18n="mgmt.hub_services_title">Services</span>
+                <span class="mgmt-app-pill" style="background:rgba(52,152,219,0.15); color:#38bdf8;" data-i18n="mgmt.hub_services_pill">Apps</span>
+              </div>
+              <p class="mgmt-app-desc" data-i18n="mgmt.hub_services_desc">Unraid array subsystem status, acoustic performance profiles, and Docker containers.</p>
+            </div>
+            <div class="mgmt-app-footer">
+              <span class="mgmt-app-action" data-i18n="mgmt.hub_services_action">View Services ➔</span>
+            </div>
+          </div>
+
+          <!-- 4. UPS & Power Integrity -->
+          <div class="mgmt-app-card" data-mgmt-target="mgmt-sec-ups" role="button" tabindex="0">
+            <div class="mgmt-app-icon-wrap" style="background:rgba(245,166,35,0.12); color:var(--warn,#f5a623); border-color:rgba(245,166,35,0.3);">
+              <svg class="mgmt-app-svg"><use href="#i-storage"/></svg>
+            </div>
+            <div class="mgmt-app-info">
+              <div class="mgmt-app-title-row">
+                <span class="mgmt-app-title" data-i18n="mgmt.hub_ups_title">UPS & Power</span>
+                <span class="mgmt-app-pill" style="background:rgba(245,166,35,0.15); color:var(--warn,#f5a623);" id="mgmt-hub-ups-pill" data-i18n="mgmt.hub_ups_pill">Battery</span>
+              </div>
+              <p class="mgmt-app-desc" data-i18n="mgmt.hub_ups_desc">Monitor battery health, line voltage, estimated runtime, and power integrity status.</p>
+            </div>
+            <div class="mgmt-app-footer">
+              <span class="mgmt-app-action" data-i18n="mgmt.hub_ups_action">Inspect Power ➔</span>
+            </div>
+          </div>
+
+          <!-- 5. System -->
+          <div class="mgmt-app-card" data-mgmt-target="mgmt-sec-system-group" role="button" tabindex="0">
+            <div class="mgmt-app-icon-wrap mgmt-icon-security">
+              <svg class="mgmt-app-svg"><use href="#i-chip"/></svg>
+              <span id="mgmt-hub-sec-badge" class="mgmt-hub-alert-badge" title="Default password active!" style="display: none;">!</span>
+            </div>
+            <div class="mgmt-app-info">
+              <div class="mgmt-app-title-row">
+                <span class="mgmt-app-title" data-i18n="mgmt.hub_system_title">System</span>
+                <span class="mgmt-app-pill mgmt-pill-sec" data-i18n="mgmt.hub_system_pill">Admin</span>
+              </div>
+              <p class="mgmt-app-desc" data-i18n="mgmt.hub_system_desc">Manage security, master password, event logs, configuration backups, and API tokens.</p>
+            </div>
+            <div class="mgmt-app-footer">
+              <span class="mgmt-app-action" data-i18n="mgmt.hub_system_action">Manage System ➔</span>
+            </div>
           </div>
         </div>
 
-        <!-- 2. Historical Metrics -->
-        <div class="mgmt-app-card" data-mgmt-target="mgmt-sec-metrics" role="button" tabindex="0">
-          <div class="mgmt-app-icon-wrap mgmt-icon-metrics">
-            <svg class="mgmt-app-svg"><use href="#i-cpu"/></svg>
-          </div>
-          <div class="mgmt-app-info">
-            <div class="mgmt-app-title-row">
-              <span class="mgmt-app-title" data-i18n="mgmt.hub_metrics_title">Historical Metrics</span>
-              <span class="mgmt-app-pill" data-i18n="mgmt.hub_metrics_pill">Telemetry</span>
-            </div>
-            <p class="mgmt-app-desc" data-i18n="mgmt.hub_metrics_desc">Interactive time-series charts for CPU load, RAM usage, thermals, and fan RPM.</p>
-          </div>
-          <div class="mgmt-app-footer">
-            <span class="mgmt-app-action" data-i18n="mgmt.hub_metrics_action">View Charts ➔</span>
-          </div>
-        </div>
-
-        <!-- 3. System Event Log -->
-        <div class="mgmt-app-card" data-mgmt-target="mgmt-sec-events" role="button" tabindex="0">
-          <div class="mgmt-app-icon-wrap mgmt-icon-events">
-            <svg class="mgmt-app-svg"><use href="#i-storage"/></svg>
-          </div>
-          <div class="mgmt-app-info">
-            <div class="mgmt-app-title-row">
-              <span class="mgmt-app-title" data-i18n="mgmt.hub_events_title">System Event Log</span>
-              <span class="mgmt-app-pill" data-i18n="mgmt.hub_events_pill">Audit</span>
-            </div>
-            <p class="mgmt-app-desc" data-i18n="mgmt.hub_events_desc">Real-time audit log of hardware notifications, alerts, and operational events.</p>
-          </div>
-          <div class="mgmt-app-footer">
-            <span class="mgmt-app-action" data-i18n="mgmt.hub_events_action">Inspect Logs ➔</span>
-          </div>
-        </div>
-
-        <!-- 4. Account & Security -->
-        <div class="mgmt-app-card" data-mgmt-target="mgmt-sec-security" role="button" tabindex="0">
-          <div class="mgmt-app-icon-wrap mgmt-icon-security">
-            <svg class="mgmt-app-svg"><use href="#i-chip"/></svg>
-            <span id="mgmt-hub-sec-badge" class="mgmt-hub-alert-badge" title="Default password active!" style="display: none;">!</span>
-          </div>
-          <div class="mgmt-app-info">
-            <div class="mgmt-app-title-row">
-              <span class="mgmt-app-title" data-i18n="mgmt.hub_security_title">Account & Security</span>
-              <span class="mgmt-app-pill mgmt-pill-sec" data-i18n="mgmt.hub_security_pill">Admin</span>
-            </div>
-            <p class="mgmt-app-desc" data-i18n="mgmt.hub_security_desc">Manage credentials, change master password, or re-run the Initial Setup Wizard.</p>
-          </div>
-          <div class="mgmt-app-footer">
-            <span class="mgmt-app-action" data-i18n="mgmt.hub_security_action">Manage Security ➔</span>
-          </div>
-        </div>
-
-        <!-- 5. Unraid & System Profiles -->
-        <div class="mgmt-app-card" data-mgmt-target="mgmt-sec-unraid" role="button" tabindex="0">
-          <div class="mgmt-app-icon-wrap" style="background:rgba(0,240,255,0.12); color:var(--accent-cyan,#00f0ff); border-color:rgba(0,240,255,0.3);">
-            <svg class="mgmt-app-svg"><use href="#i-chip"/></svg>
-          </div>
-          <div class="mgmt-app-info">
-            <div class="mgmt-app-title-row">
-              <span class="mgmt-app-title" data-i18n="mgmt.hub_unraid_title">Unraid & Profiles</span>
-              <span class="mgmt-app-pill" style="background:rgba(0,240,255,0.15); color:var(--accent-cyan,#00f0ff);" data-i18n="mgmt.hub_unraid_pill">Subsystem</span>
-            </div>
-            <p class="mgmt-app-desc" data-i18n="mgmt.hub_unraid_desc">Array status, parity checks, mover telemetry, and 1-click acoustic performance profiles.</p>
-          </div>
-          <div class="mgmt-app-footer">
-            <span class="mgmt-app-action" data-i18n="mgmt.hub_unraid_action">View Telemetry ➔</span>
-          </div>
-        </div>
-
-        <!-- 6. Media Ingest History -->
-        <div class="mgmt-app-card" data-mgmt-target="mgmt-sec-copy" role="button" tabindex="0">
-          <div class="mgmt-app-icon-wrap" style="background:rgba(37,194,160,0.12); color:var(--ok2); border-color:rgba(37,194,160,0.3);">
-            <svg class="mgmt-app-svg"><use href="#i-storage"/></svg>
-          </div>
-          <div class="mgmt-app-info">
-            <div class="mgmt-app-title-row">
-              <span class="mgmt-app-title" data-i18n="mgmt.hub_copy_title">Ingest History</span>
-              <span class="mgmt-app-pill" style="background:rgba(37,194,160,0.15); color:var(--ok2);" data-i18n="mgmt.hub_copy_pill">Integrity</span>
-            </div>
-            <p class="mgmt-app-desc" data-i18n="mgmt.hub_copy_desc">Audit persistent transfer logs, SHA-256 integrity verification, and media slot health.</p>
-          </div>
-          <div class="mgmt-app-footer">
-            <span class="mgmt-app-action" data-i18n="mgmt.hub_copy_action">Audit History ➔</span>
-          </div>
-        </div>
-
-        <!-- 7. Docker Containers & Services -->
-        <div class="mgmt-app-card" data-mgmt-target="mgmt-sec-docker" role="button" tabindex="0">
-          <div class="mgmt-app-icon-wrap" style="background:rgba(52,152,219,0.12); color:#38bdf8; border-color:rgba(52,152,219,0.3);">
-            <svg class="mgmt-app-svg"><use href="#i-chip"/></svg>
-          </div>
-          <div class="mgmt-app-info">
-            <div class="mgmt-app-title-row">
-              <span class="mgmt-app-title" data-i18n="mgmt.hub_docker_title">Containers</span>
-              <span class="mgmt-app-pill" style="background:rgba(52,152,219,0.15); color:#38bdf8;" id="mgmt-hub-docker-pill" data-i18n="mgmt.hub_docker_pill">Docker</span>
-            </div>
-            <p class="mgmt-app-desc" data-i18n="mgmt.hub_docker_desc">Inspect running Docker containers, images, runtime uptime, and service health status.</p>
-          </div>
-          <div class="mgmt-app-footer">
-            <span class="mgmt-app-action" data-i18n="mgmt.hub_docker_action">View Containers ➔</span>
-          </div>
-        </div>
-
-        <!-- 8. UPS & Power Integrity -->
-        <div class="mgmt-app-card" data-mgmt-target="mgmt-sec-ups" role="button" tabindex="0">
-          <div class="mgmt-app-icon-wrap" style="background:rgba(245,166,35,0.12); color:var(--warn,#f5a623); border-color:rgba(245,166,35,0.3);">
-            <svg class="mgmt-app-svg"><use href="#i-storage"/></svg>
-          </div>
-          <div class="mgmt-app-info">
-            <div class="mgmt-app-title-row">
-              <span class="mgmt-app-title" data-i18n="mgmt.hub_ups_title">UPS & Power</span>
-              <span class="mgmt-app-pill" style="background:rgba(245,166,35,0.15); color:var(--warn,#f5a623);" id="mgmt-hub-ups-pill" data-i18n="mgmt.hub_ups_pill">Battery</span>
-            </div>
-            <p class="mgmt-app-desc" data-i18n="mgmt.hub_ups_desc">Monitor battery health, line voltage, estimated runtime, and power integrity status.</p>
-          </div>
-          <div class="mgmt-app-footer">
-            <span class="mgmt-app-action" data-i18n="mgmt.hub_ups_action">Inspect Power ➔</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- DETAIL CONTAINER (Shown when a card is selected) -->
-      <div id="management-detail-container" style="display: none;">
-        <!-- Card 1: Wallpaper -->
+        <!-- DETAIL CONTAINER (Shown when a card is selected) -->
+        <div id="management-detail-container" style="display: none;">
+          <!-- 1. Appearance -->
+                  <!-- 1. Appearance -->
         <div id="mgmt-sec-wallpaper" class="mgmt-detail-card" style="display: none;">
-          <div class="mgmt-card-intro">
+          <div class="mgmt-inner-tabs">
+            <button class="mgmt-inner-tab active" data-tab-target="mgmt-pane-wallpaper">
+              <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-globe"/></svg>
+              <span data-i18n="mgmt.subtab_wallpaper">Wallpaper</span>
+            </button>
+            <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-widgets">
+              <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-grid"/></svg>
+              <span data-i18n="mgmt.subtab_widgets">Widgets</span>
+            </button>
+          </div>
+
+          <!-- Sub-tab 1: Wallpaper -->
+          <div id="mgmt-pane-wallpaper" class="mgmt-tab-pane" style="display: block;">
+            <div class="mgmt-card-intro">
             <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-globe"/></svg> <span data-i18n="mgmt.wallpaper_title">Custom Desktop Wallpaper</span></div>
             <div class="mgmt-card-intro-desc" data-i18n="mgmt.wallpaper_desc">Upload a high-resolution background image to customize the ZettNAS desktop environment.</div>
           </div>
@@ -1174,10 +1322,292 @@
               </div>
             </div>
           </div>
+          </div>
+
+          <!-- Sub-tab 2: Desktop Widgets -->
+          <div id="mgmt-pane-widgets" class="mgmt-tab-pane" style="display: none;">
+            <div class="mgmt-card-intro">
+              <div class="mgmt-card-intro-title">
+                <svg class="ic"><use href="#i-grid"/></svg>
+                <span data-i18n="mgmt.widgets_sec_title">Desktop Telemetry Widgets</span>
+              </div>
+              <div class="mgmt-card-intro-desc" data-i18n="mgmt.widgets_sec_desc">
+                Configure which live telemetry tiles appear on the desktop background, their screen position, and glass styling.
+              </div>
+            </div>
+
+            <div class="mgmt-detail-body">
+              <div style="display:flex; flex-direction:column; gap: 16px;">
+                
+                <!-- Card 1: Global Overlay Control -->
+                <div class="drawer-card" style="padding: 16px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 14px;">
+                    <div>
+                      <div style="font-size: 13.5px; font-weight: 700; color: #fff;">Desktop Widget Overlay</div>
+                      <div style="font-size: 11.5px; color: var(--muted); margin-top: 2px;">Display floating live telemetry status cards on the desktop workspace.</div>
+                    </div>
+                    <label class="switch-toggle" style="position:relative; display:inline-block; width:44px; height:24px; cursor:pointer;">
+                      <input type="checkbox" id="widget-toggle-master" checked style="opacity:0; width:0; height:0;">
+                      <span class="slider-round" style="position:absolute; inset:0; background:rgba(255,255,255,0.15); border-radius:24px; transition:0.3s;"></span>
+                    </label>
+                  </div>
+
+                  <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 14px;">
+                    <div>
+                      <label style="display:block; font-size:10.5px; font-weight:700; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px;">DESKTOP POSITION</label>
+                      <select id="widget-pos-select" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff; border-radius:6px; font-size:12px;">
+                        <option value="pos-top-right">Top Right (Default)</option>
+                        <option value="pos-top-left">Top Left</option>
+                        <option value="pos-bottom-right">Bottom Right</option>
+                        <option value="pos-bottom-left">Bottom Left</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label style="display:block; font-size:10.5px; font-weight:700; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px;">GLASS TRANSPARENCY</label>
+                      <select id="widget-opacity-select" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff; border-radius:6px; font-size:12px;">
+                        <option value="glass-subtle">Subtle Glass (40%)</option>
+                        <option value="glass-standard" selected>Standard Glass (65%)</option>
+                        <option value="glass-solid">Solid Dark (88%)</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label style="display:block; font-size:10.5px; font-weight:700; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px;">SCALE / SIZE</label>
+                      <select id="widget-scale-select" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff; border-radius:6px; font-size:12px;">
+                        <option value="scale-compact">Compact (88%)</option>
+                        <option value="scale-normal" selected>Normal (100%)</option>
+                        <option value="scale-large">Large (110%)</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Card 2: What Widgets to Show -->
+                <div class="drawer-card" style="padding: 16px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
+                  <div style="font-size: 13.5px; font-weight: 700; color: #fff; margin-bottom: 4px;">Available Widgets</div>
+                  <div style="font-size: 11.5px; color: var(--muted); margin-bottom: 14px;">Toggle individual widgets on and off to customize your desktop layout. Drag options up or down to reorder them on your desktop.</div>
+
+                  <div id="widget-sortable-list" style="display: flex; flex-direction: column; gap: 10px;">
+                    <!-- Widget 1: System Status -->
+                    <div class="widget-sortable-item" data-widget-id="system" draggable="true">
+                      <div class="widget-sortable-left">
+                        <div class="widget-drag-handle" title="Drag to reorder" aria-label="Drag to reorder">
+                          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                            <circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/>
+                            <circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/>
+                            <circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/>
+                          </svg>
+                        </div>
+                        <span style="font-size: 18px; margin: 0 4px;">🧠</span>
+                        <div>
+                          <div style="font-size: 12.5px; font-weight: 700; color: #fff;">System Status (CPU & RAM)</div>
+                          <div style="font-size: 11px; color: var(--muted);">Real-time CPU processor load and RAM memory utilization meters.</div>
+                        </div>
+                      </div>
+                      <input type="checkbox" id="w-cfg-system" checked style="width: 16px; height: 16px; cursor: pointer; accent-color: var(--ok2);">
+                    </div>
+
+                    <!-- Widget 2: Network IO -->
+                    <div class="widget-sortable-item" data-widget-id="network" draggable="true">
+                      <div class="widget-sortable-left">
+                        <div class="widget-drag-handle" title="Drag to reorder" aria-label="Drag to reorder">
+                          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                            <circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/>
+                            <circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/>
+                            <circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/>
+                          </svg>
+                        </div>
+                        <span style="font-size: 18px; margin: 0 4px;">🌐</span>
+                        <div>
+                          <div style="font-size: 12.5px; font-weight: 700; color: #fff;">Network IO (Bandwidth)</div>
+                          <div style="font-size: 11px; color: var(--muted);">Live network download (Rx) and upload (Tx) bandwidth throughput.</div>
+                        </div>
+                      </div>
+                      <input type="checkbox" id="w-cfg-network" checked style="width: 16px; height: 16px; cursor: pointer; accent-color: var(--ok2);">
+                    </div>
+
+                    <!-- Widget 3: Storage Pool -->
+                    <div class="widget-sortable-item" data-widget-id="storage" draggable="true">
+                      <div class="widget-sortable-left">
+                        <div class="widget-drag-handle" title="Drag to reorder" aria-label="Drag to reorder">
+                          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                            <circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/>
+                            <circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/>
+                            <circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/>
+                          </svg>
+                        </div>
+                        <span style="font-size: 18px; margin: 0 4px;">💾</span>
+                        <div>
+                          <div style="font-size: 12.5px; font-weight: 700; color: #fff;">Storage Capacity & Pool Health</div>
+                          <div style="font-size: 11px; color: var(--muted);">Main data pool allocated storage, free capacity, and health status.</div>
+                        </div>
+                      </div>
+                      <input type="checkbox" id="w-cfg-storage" checked style="width: 16px; height: 16px; cursor: pointer; accent-color: var(--ok2);">
+                    </div>
+
+                    <!-- Widget 4: Host Info & Uptime -->
+                    <div class="widget-sortable-item" data-widget-id="uptime" draggable="true">
+                      <div class="widget-sortable-left">
+                        <div class="widget-drag-handle" title="Drag to reorder" aria-label="Drag to reorder">
+                          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                            <circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/>
+                            <circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/>
+                            <circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/>
+                          </svg>
+                        </div>
+                        <span style="font-size: 18px; margin: 0 4px;">⏱️</span>
+                        <div>
+                          <div style="font-size: 12.5px; font-weight: 700; color: #fff;">Host Name & System Uptime</div>
+                          <div style="font-size: 11px; color: var(--muted);">Server hostname identity and cumulative uninterrupted system uptime.</div>
+                        </div>
+                      </div>
+                      <input type="checkbox" id="w-cfg-uptime" style="width: 16px; height: 16px; cursor: pointer; accent-color: var(--ok2);">
+                    </div>
+
+                    <!-- Widget 5: Time Clock -->
+                    <div class="widget-sortable-item" data-widget-id="clock" draggable="true">
+                      <div class="widget-sortable-left">
+                        <div class="widget-drag-handle" title="Drag to reorder" aria-label="Drag to reorder">
+                          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                            <circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/>
+                            <circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/>
+                            <circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/>
+                          </svg>
+                        </div>
+                        <span style="font-size: 18px; margin: 0 4px;">⏰</span>
+                        <div>
+                          <div style="font-size: 12.5px; font-weight: 700; color: #fff;" data-i18n="widget.clock">Time Clock</div>
+                          <div style="font-size: 11px; color: var(--muted);" data-i18n="widget.clock_desc">Real-time digital clock with seconds, 12h/24h format, and timezone.</div>
+                        </div>
+                      </div>
+                      <input type="checkbox" id="w-cfg-clock" checked style="width: 16px; height: 16px; cursor: pointer; accent-color: var(--ok2);">
+                    </div>
+
+                    <!-- Widget 6: Calendar -->
+                    <div class="widget-sortable-item" data-widget-id="calendar" draggable="true">
+                      <div class="widget-sortable-left">
+                        <div class="widget-drag-handle" title="Drag to reorder" aria-label="Drag to reorder">
+                          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                            <circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/>
+                            <circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/>
+                            <circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/>
+                          </svg>
+                        </div>
+                        <span style="font-size: 18px; margin: 0 4px;">📅</span>
+                        <div>
+                          <div style="font-size: 12.5px; font-weight: 700; color: #fff;" data-i18n="widget.calendar">Calendar</div>
+                          <div style="font-size: 11px; color: var(--muted);" data-i18n="widget.calendar_desc">Interactive monthly calendar with today's date and month navigation.</div>
+                        </div>
+                      </div>
+                      <input type="checkbox" id="w-cfg-calendar" style="width: 16px; height: 16px; cursor: pointer; accent-color: var(--ok2);">
+                    </div>
+
+                    <!-- Widget 7: Weather -->
+                    <div class="widget-sortable-item" data-widget-id="weather" draggable="true">
+                      <div class="widget-sortable-left">
+                        <div class="widget-drag-handle" title="Drag to reorder" aria-label="Drag to reorder">
+                          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                            <circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/>
+                            <circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/>
+                            <circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/>
+                          </svg>
+                        </div>
+                        <span style="font-size: 18px; margin: 0 4px;">⛅</span>
+                        <div>
+                          <div style="font-size: 12.5px; font-weight: 700; color: #fff;" data-i18n="widget.weather">Local Weather</div>
+                          <div style="font-size: 11px; color: var(--muted);" data-i18n="widget.weather_desc">Current temperature, weather condition, high/low, and humidity.</div>
+                        </div>
+                      </div>
+                      <input type="checkbox" id="w-cfg-weather" checked style="width: 16px; height: 16px; cursor: pointer; accent-color: var(--ok2);">
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Card 3: Weather Configuration -->
+                <div class="drawer-card" style="padding: 16px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); margin-top: 14px;">
+                  <div style="font-size: 13.5px; font-weight: 700; color: #fff; margin-bottom: 4px;" data-i18n="widget.weather_cfg_title">Weather Settings</div>
+                  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 10px;">
+                    <div style="position: relative;">
+                      <label style="display:block; font-size:10.5px; font-weight:700; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px;" data-i18n="widget.weather_city_label">CITY / LOCATION</label>
+                      <div style="position: relative;">
+                        <input type="text" id="widget-weather-city-input" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 28px 8px 10px; color:#fff; border-radius:6px; font-size:12px;" placeholder="Auto-detect (Local IP / Timezone)" data-i18n-placeholder="widget.weather_city_placeholder" autocomplete="off">
+                        <span id="widget-weather-city-spinner" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); display: none; font-size: 11px; opacity: 0.8;" title="Searching cities...">⏳</span>
+                      </div>
+                      <div id="widget-weather-city-dropdown" class="weather-city-dropdown" style="display: none;"></div>
+                    </div>
+                    <div>
+                      <label style="display:block; font-size:10.5px; font-weight:700; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px;" data-i18n="widget.weather_unit_label">TEMPERATURE UNIT</label>
+                      <select id="widget-weather-unit-select" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff; border-radius:6px; font-size:12px;">
+                        <option value="c">Celsius (°C)</option>
+                        <option value="f">Fahrenheit (°F)</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Card 4: Calendar & Holiday Settings -->
+                <div class="drawer-card" style="padding: 16px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); margin-top: 14px;">
+                  <div style="font-size: 13.5px; font-weight: 700; color: #fff; margin-bottom: 4px;" data-i18n="widget.cal_cfg_title">Calendar & Holiday Settings</div>
+                  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 10px;">
+                    <div>
+                      <label style="display:block; font-size:10.5px; font-weight:700; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px;" data-i18n="widget.cal_country_label">OFFICIAL HOLIDAYS COUNTRY</label>
+                      <select id="widget-calendar-country-select" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff; border-radius:6px; font-size:12px;">
+                        <option value="auto" data-i18n="widget.cal_country_auto">Auto-detect (from Location / Locale)</option>
+                        <option value="US">United States (US)</option>
+                        <option value="GB">United Kingdom (GB)</option>
+                        <option value="DE">Germany (DE)</option>
+                        <option value="FR">France (FR)</option>
+                        <option value="ES">Spain (ES)</option>
+                        <option value="IT">Italy (IT)</option>
+                        <option value="CA">Canada (CA)</option>
+                        <option value="AU">Australia (AU)</option>
+                        <option value="JP">Japan (JP)</option>
+                        <option value="CN">China (CN)</option>
+                        <option value="CH">Switzerland (CH)</option>
+                        <option value="AT">Austria (AT)</option>
+                        <option value="NL">Netherlands (NL)</option>
+                        <option value="SE">Sweden (SE)</option>
+                        <option value="NO">Norway (NO)</option>
+                        <option value="DK">Denmark (DK)</option>
+                        <option value="PL">Poland (PL)</option>
+                        <option value="BR">Brazil (BR)</option>
+                        <option value="MX">Mexico (MX)</option>
+                        <option value="IN">India (IN)</option>
+                      </select>
+                    </div>
+                    <div style="display: flex; flex-direction: column; justify-content: flex-end;">
+                      <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: #fff; cursor: pointer; padding-bottom: 8px;">
+                        <input type="checkbox" id="w-cfg-holiday-toggle" checked style="width: 16px; height: 16px; cursor: pointer; accent-color: var(--ok2);">
+                        <span data-i18n="widget.cal_holidays_toggle">Highlight official country holidays on calendar</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Card 4: Reset Actions -->
+                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 14px;">
+                  <button id="widget-reset-defaults-btn" class="btn-pill-toggle" style="padding: 8px 16px; font-size: 11.5px;">↺ Reset to Defaults</button>
+                </div>
+
+              </div>
+            </div>
+          </div>
         </div>
 
-        <!-- Card 2: Metrics -->
-        <div id="mgmt-sec-metrics" class="mgmt-detail-card" style="display: none;">
+          <!-- 2. Activity Monitor -->
+          <div id="mgmt-sec-activity" class="mgmt-detail-card" style="display: none;">
+            <div class="mgmt-inner-tabs">
+              <button class="mgmt-inner-tab active" data-tab-target="mgmt-pane-metrics">
+                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-cpu"/></svg>
+                <span data-i18n="mgmt.subtab_metrics">Metrics</span>
+              </button>
+              <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-copy">
+                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-storage"/></svg>
+                <span data-i18n="mgmt.subtab_copy">Ingest History</span>
+              </button>
+            </div>
+            <div id="mgmt-pane-metrics" class="mgmt-tab-pane" style="display: block;">
           <div class="mgmt-card-intro" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
             <div>
               <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-cpu"/></svg> <span data-i18n="mgmt.telemetry_title">Historical System Telemetry</span></div>
@@ -1213,69 +1643,50 @@
             </div>
           </div>
         </div>
-
-        <!-- Card 3: Events -->
-        <div id="mgmt-sec-events" class="mgmt-detail-card" style="display: none;">
-          <div class="mgmt-card-intro" style="display: flex; justify-content: space-between; align-items: center;">
+            <div id="mgmt-pane-copy" class="mgmt-tab-pane" style="display: none;">
+          <div class="mgmt-card-intro" style="display:flex; justify-content:space-between; align-items:center;">
             <div>
-              <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-storage"/></svg> <span data-i18n="mgmt.events_title">System Event & Audit Log</span></div>
-              <div class="mgmt-card-intro-desc" data-i18n="mgmt.events_desc">Chronological log of alerts, drive wakeups, copy jobs, and hardware events.</div>
+              <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-storage"/></svg> <span data-i18n="mgmt.copy_sec_title">Media Ingest & Checksum History</span></div>
+              <div class="mgmt-card-intro-desc" data-i18n="mgmt.copy_sec_desc">Persistent audit logs of card reader imports with SHA-256 integrity verification.</div>
             </div>
-            <button class="btn-pill-toggle" onclick="fetch('/api/events/clear', {method: 'DELETE'})" title="Clear Logs" data-i18n="mgmt.clear_logs">🗑️ Clear Event Log</button>
+            <button class="btn-pill-toggle" id="btn-refresh-copy-history" title="Refresh Ingest History" data-i18n="mgmt.refresh">🔄 Refresh</button>
           </div>
           <div class="mgmt-detail-body">
-            <div id="events-list" style="max-height: 420px; overflow-y: auto; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 8px;">
-              <div style="padding: 16px; text-align: center; color: var(--muted); font-size: 11px;">Loading events...</div>
+            <div style="overflow-x:auto; max-height:400px; background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.06); border-radius:8px;">
+              <table class="copy-history-table">
+                <thead>
+                  <tr>
+                    <th data-i18n="mgmt.tbl_datetime">Date / Time</th>
+                    <th data-i18n="mgmt.tbl_source">Source</th>
+                    <th data-i18n="mgmt.tbl_dest">Destination</th>
+                    <th data-i18n="mgmt.tbl_files">Files</th>
+                    <th data-i18n="mgmt.tbl_size">Size</th>
+                    <th data-i18n="mgmt.tbl_duration">Duration</th>
+                    <th data-i18n="mgmt.tbl_status">Status & Checksum</th>
+                  </tr>
+                </thead>
+                <tbody id="copy-history-tbody">
+                  <tr><td colspan="7" style="text-align:center; color:var(--muted); padding:16px;">Loading copy history...</td></tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
-
-        <!-- Card 4: Security -->
-        <div id="mgmt-sec-security" class="mgmt-detail-card" style="display: none;">
-          <div class="mgmt-card-intro">
-            <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-chip"/></svg> <span data-i18n="mgmt.sec_title">Account Security & Credentials</span></div>
-            <div class="mgmt-card-intro-desc" data-i18n="mgmt.sec_desc">Manage administrator login credentials, security preferences, and system provisioning.</div>
           </div>
-          <div id="sec-default-pwd-warning" style="display:none; margin: 12px 0; padding: 12px 14px; background: rgba(235,87,87,0.18); border: 1px solid rgba(235,87,87,0.5); border-radius: 8px; color: #ff6b6b; font-size: 11.5px; font-weight: 600; line-height: 1.45;" data-i18n="mgmt.sec_default_warning">
-            ⚠️ DEFAULT PASSWORD ACTIVE: Your server is using the default password ("admin"). Please set a custom password below immediately.
-          </div>
-          <div class="mgmt-detail-body">
-            <div style="display:flex; flex-direction:column; gap: 14px;">
-              <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
-                <div>
-                  <label style="display:block; font-size:10.5px; font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="mgmt.sec_admin_user">ADMIN USERNAME</label>
-                  <input type="text" id="sec-username" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.25); padding:8px 10px; color:#fff;" placeholder="admin">
-                </div>
-                <div>
-                  <label style="display:block; font-size:10.5px; font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="mgmt.sec_email">NOTIFICATION EMAIL</label>
-                  <input type="email" id="sec-email" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.25); padding:8px 10px; color:#fff;" placeholder="admin@zettnas.local">
-                </div>
-              </div>
 
-              <div style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px;">
-                <label style="display:block; font-size:10.5px; font-weight:700; color:var(--warn); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="mgmt.sec_new_pwd">NEW PASSWORD (Optional)</label>
-                <input type="password" id="sec-new-pwd" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.25); padding:8px 10px; color:#fff;" placeholder="New password (min. 8 characters)" minlength="8" autocomplete="new-password">
-              </div>
-
-              <div style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px;">
-                <label style="display:block; font-size:10.5px; font-weight:700; color:var(--ok2); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="mgmt.sec_cur_pwd">CURRENT PASSWORD (Required to commit changes)</label>
-                <input type="password" id="sec-cur-pwd" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.25); padding:8px 10px; color:#fff;" placeholder="Enter current password">
-              </div>
-
-              <div style="display:flex; gap: 10px; margin-top: 6px;">
-                <button id="sec-save-btn" class="suite-toolkit-btn" style="flex:1; justify-content:center; padding:10px;" data-i18n="mgmt.sec_save">💾 SAVE CREDENTIALS</button>
-                <button id="sec-logout-btn" class="suite-toolkit-btn" style="flex:1; justify-content:center; padding:10px; background: rgba(220,50,50,0.12); color: var(--crit); border-color: rgba(220,50,50,0.3);" data-i18n="mgmt.sec_logout">LOG OUT</button>
-              </div>
-
-              <div style="border-top: 1px solid rgba(255,255,255,0.06); margin-top: 4px; padding-top: 14px;">
-                <button id="btn-launch-setup-wizard" class="btn-save-preset" style="width: 100%; justify-content:center; padding: 10px; font-size: 11.5px; background: rgba(224, 122, 56, 0.15); border-color: rgba(224, 122, 56, 0.4); color: #f8fafc;" data-i18n="mgmt.sec_wizard">🚀 Launch Initial Hardware Setup Wizard</button>
-              </div>
+          <!-- 3. Services -->
+          <div id="mgmt-sec-services" class="mgmt-detail-card" style="display: none;">
+            <div class="mgmt-inner-tabs">
+              <button class="mgmt-inner-tab active" data-tab-target="mgmt-pane-unraid">
+                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-chip"/></svg>
+                <span data-i18n="mgmt.subtab_unraid">Unraid & Profiles</span>
+              </button>
+              <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-docker">
+                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-chip"/></svg>
+                <span data-i18n="mgmt.subtab_docker">Containers</span>
+              </button>
             </div>
-          </div>
-        </div>
-
-        <!-- Card 5: Unraid & Profiles -->
-        <div id="mgmt-sec-unraid" class="mgmt-detail-card" style="display: none;">
+            <div id="mgmt-pane-unraid" class="mgmt-tab-pane" style="display: block;">
           <div class="mgmt-card-intro">
             <div style="display:flex; justify-content:space-between; align-items:center;">
               <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-chip"/></svg> <span data-i18n="mgmt.unraid_sec_title">Unraid Subsystem & Acoustic Profiles</span></div>
@@ -1339,40 +1750,7 @@
             </div>
           </div>
         </div>
-
-        <!-- Card 6: Ingest History -->
-        <div id="mgmt-sec-copy" class="mgmt-detail-card" style="display: none;">
-          <div class="mgmt-card-intro" style="display:flex; justify-content:space-between; align-items:center;">
-            <div>
-              <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-storage"/></svg> <span data-i18n="mgmt.copy_sec_title">Media Ingest & Checksum History</span></div>
-              <div class="mgmt-card-intro-desc" data-i18n="mgmt.copy_sec_desc">Persistent audit logs of card reader imports with SHA-256 integrity verification.</div>
-            </div>
-            <button class="btn-pill-toggle" id="btn-refresh-copy-history" title="Refresh Ingest History" data-i18n="mgmt.refresh">🔄 Refresh</button>
-          </div>
-          <div class="mgmt-detail-body">
-            <div style="overflow-x:auto; max-height:400px; background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.06); border-radius:8px;">
-              <table class="copy-history-table">
-                <thead>
-                  <tr>
-                    <th data-i18n="mgmt.tbl_datetime">Date / Time</th>
-                    <th data-i18n="mgmt.tbl_source">Source</th>
-                    <th data-i18n="mgmt.tbl_dest">Destination</th>
-                    <th data-i18n="mgmt.tbl_files">Files</th>
-                    <th data-i18n="mgmt.tbl_size">Size</th>
-                    <th data-i18n="mgmt.tbl_duration">Duration</th>
-                    <th data-i18n="mgmt.tbl_status">Status & Checksum</th>
-                  </tr>
-                </thead>
-                <tbody id="copy-history-tbody">
-                  <tr><td colspan="7" style="text-align:center; color:var(--muted); padding:16px;">Loading copy history...</td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        <!-- Card 7: Docker Containers -->
-        <div id="mgmt-sec-docker" class="mgmt-detail-card" style="display: none;">
+            <div id="mgmt-pane-docker" class="mgmt-tab-pane" style="display: none;">
           <div class="mgmt-card-intro" style="display:flex; justify-content:space-between; align-items:center;">
             <div>
               <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-chip"/></svg> <span data-i18n="mgmt.docker_sec_title">Docker Containers & Services</span></div>
@@ -1399,9 +1777,10 @@
             </div>
           </div>
         </div>
+          </div>
 
-        <!-- Card 8: UPS & Power Integrity -->
-        <div id="mgmt-sec-ups" class="mgmt-detail-card" style="display: none;">
+          <!-- 4. UPS & Power -->
+          <div id="mgmt-sec-ups" class="mgmt-detail-card" style="display: none;">
           <div class="mgmt-card-intro" style="display:flex; justify-content:space-between; align-items:center;">
             <div>
               <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-storage"/></svg> <span data-i18n="mgmt.ups_sec_title">UPS & Power Integrity Telemetry</span></div>
@@ -1438,14 +1817,145 @@
             </div>
           </div>
         </div>
-      </div>
+
+          <!-- 5. System -->
+          <div id="mgmt-sec-system-group" class="mgmt-detail-card" style="display: none;">
+            <div class="mgmt-inner-tabs">
+              <button class="mgmt-inner-tab active" data-tab-target="mgmt-pane-security">
+                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-chip"/></svg>
+                <span data-i18n="mgmt.subtab_security">Security</span>
+              </button>
+              <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-events">
+                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-storage"/></svg>
+                <span data-i18n="mgmt.subtab_events">Event Log</span>
+              </button>
+              <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-system">
+                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-chip"/></svg>
+                <span data-i18n="mgmt.subtab_system">System & API</span>
+              </button>
+            </div>
+            <div id="mgmt-pane-security" class="mgmt-tab-pane" style="display: block;">
+          <div class="mgmt-card-intro">
+            <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-chip"/></svg> <span data-i18n="mgmt.sec_title">Account Security & Credentials</span></div>
+            <div class="mgmt-card-intro-desc" data-i18n="mgmt.sec_desc">Manage administrator login credentials, security preferences, and system provisioning.</div>
+          </div>
+          <div id="sec-default-pwd-warning" style="display:none; margin: 12px 0; padding: 12px 14px; background: rgba(235,87,87,0.18); border: 1px solid rgba(235,87,87,0.5); border-radius: 8px; color: #ff6b6b; font-size: 11.5px; font-weight: 600; line-height: 1.45;" data-i18n="mgmt.sec_default_warning">
+            ⚠️ DEFAULT PASSWORD ACTIVE: Your server is using the default password ("admin"). Please set a custom password below immediately.
+          </div>
+          <div class="mgmt-detail-body">
+            <div style="display:flex; flex-direction:column; gap: 14px;">
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
+                <div>
+                  <label style="display:block; font-size:10.5px; font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="mgmt.sec_admin_user">ADMIN USERNAME</label>
+                  <input type="text" id="sec-username" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.25); padding:8px 10px; color:#fff;" placeholder="admin">
+                </div>
+                <div>
+                  <label style="display:block; font-size:10.5px; font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="mgmt.sec_email">NOTIFICATION EMAIL</label>
+                  <input type="email" id="sec-email" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.25); padding:8px 10px; color:#fff;" placeholder="admin@zettnas.local">
+                </div>
+              </div>
+
+              <div style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
+                  <div>
+                    <label style="display:block; font-size:10.5px; font-weight:700; color:var(--warn); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="mgmt.sec_new_pwd">NEW PASSWORD (Optional)</label>
+                    <input type="password" id="sec-new-pwd" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.25); padding:8px 10px; color:#fff;" placeholder="New password (min. 8 characters)" minlength="8" autocomplete="new-password">
+                  </div>
+                  <div>
+                    <label style="display:block; font-size:10.5px; font-weight:700; color:var(--warn); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="mgmt.sec_confirm_pwd">CONFIRM NEW PASSWORD</label>
+                    <input type="password" id="sec-confirm-pwd" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.25); padding:8px 10px; color:#fff;" placeholder="Repeat new password" data-i18n-placeholder="mgmt.sec_confirm_placeholder" minlength="8" autocomplete="new-password">
+                  </div>
+                </div>
+                <div id="sec-pwd-mismatch-msg" style="display:none; color:var(--crit, #ff6b6b); font-size:11px; font-weight:600; margin-top:6px; align-items:center; gap:4px;">
+                  <span>⚠️</span> <span data-i18n="mgmt.sec_err_pwd_mismatch">New passwords do not match. Please verify and try again.</span>
+                </div>
+              </div>
+
+              <div style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px;">
+                <label style="display:block; font-size:10.5px; font-weight:700; color:var(--ok2); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="mgmt.sec_cur_pwd">CURRENT PASSWORD (Required to commit changes)</label>
+                <input type="password" id="sec-cur-pwd" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.25); padding:8px 10px; color:#fff;" placeholder="Enter current password">
+              </div>
+
+              <div style="display:flex; gap: 10px; margin-top: 6px;">
+                <button id="sec-save-btn" class="suite-toolkit-btn" style="flex:1; justify-content:center; padding:10px;" data-i18n="mgmt.sec_save">💾 SAVE CREDENTIALS</button>
+                <button id="sec-logout-btn" class="suite-toolkit-btn" style="flex:1; justify-content:center; padding:10px; background: rgba(220,50,50,0.12); color: var(--crit); border-color: rgba(220,50,50,0.3);" data-i18n="mgmt.sec_logout">LOG OUT</button>
+              </div>
+
+              <div style="border-top: 1px solid rgba(255,255,255,0.06); margin-top: 4px; padding-top: 14px;">
+                <button id="btn-launch-setup-wizard" class="btn-save-preset" style="width: 100%; justify-content:center; padding: 10px; font-size: 11.5px; background: rgba(224, 122, 56, 0.15); border-color: rgba(224, 122, 56, 0.4); color: #f8fafc;" data-i18n="mgmt.sec_wizard">🚀 Launch Initial Hardware Setup Wizard</button>
+              </div>
+            </div>
+          </div>
+        </div>
+            <div id="mgmt-pane-events" class="mgmt-tab-pane" style="display: none;">
+          <div class="mgmt-card-intro" style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-storage"/></svg> <span data-i18n="mgmt.events_title">System Event & Audit Log</span></div>
+              <div class="mgmt-card-intro-desc" data-i18n="mgmt.events_desc">Chronological log of alerts, drive wakeups, copy jobs, and hardware events.</div>
+            </div>
+            <button class="btn-pill-toggle" id="btn-clear-events" title="Clear Logs" data-i18n="mgmt.clear_logs">🗑️ Clear Event Log</button>
+          </div>
+          <div class="mgmt-detail-body">
+            <div id="events-list" style="max-height: 420px; overflow-y: auto; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 8px;">
+              <div style="padding: 16px; text-align: center; color: var(--muted); font-size: 11px;">Loading events...</div>
+            </div>
+          </div>
+        </div>
+            <div id="mgmt-pane-system" class="mgmt-tab-pane" style="display: none;">
+          <div class="mgmt-card-intro">
+            <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-chip"/></svg> <span data-i18n="mgmt.sys_title">System Settings & API</span></div>
+            <div class="mgmt-card-intro-desc" data-i18n="mgmt.sys_desc">Manage configuration backups, restore settings, and generate API tokens for third-party integrations.</div>
+          </div>
+          
+          <div class="mgmt-detail-body">
+            <div class="drawer-card" style="margin-bottom: 24px; padding: 16px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
+              <div class="card-headline">
+                <span class="card-head-title" data-i18n="settings.backup_restore" style="font-weight: 700; font-size: 14px; margin-bottom: 8px; display: block;">Configuration Backup & Restore</span>
+              </div>
+              <div style="font-size: 12px; color: var(--muted); margin-bottom: 16px; line-height: 1.4;">
+                Download a backup of your configuration (fan curves, layouts, dashboards). Restoring will overwrite current settings and requires a restart.
+              </div>
+              <div style="display: flex; gap: 10px; align-items: center;">
+                <button id="btn-backup-download" class="btn-rect primary" style="flex:1;">
+                  <svg class="ic"><use href="#i-disk"/></svg> <span data-i18n="settings.btn_download_backup">Download Backup</span>
+                </button>
+                <div style="flex:1; position: relative;">
+                  <input type="file" id="backup-upload-input" accept=".zip" style="opacity:0; position:absolute; inset:0; cursor:pointer;" title="Upload backup file">
+                  <button class="btn-rect danger" style="width:100%; pointer-events:none;">
+                     <span data-i18n="settings.btn_restore_backup">Restore Backup</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="drawer-card" style="padding: 16px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
+              <div class="card-headline">
+                <span class="card-head-title" data-i18n="settings.api_tokens" style="font-weight: 700; font-size: 14px; margin-bottom: 8px; display: block;">API Tokens</span>
+              </div>
+              <div style="font-size: 12px; color: var(--muted); margin-bottom: 16px; line-height: 1.4;">
+                Generate scoped API tokens for third-party integrations (e.g., Home Assistant) or scripts.
+              </div>
+              
+              <div id="api-tokens-list" style="margin-bottom: 16px; display: flex; flex-direction: column; gap: 8px;">
+                <div style="font-size:12px; color:var(--muted); text-align:center;">Loading...</div>
+              </div>
+              
+              <div style="display: flex; gap: 8px;">
+                <input type="text" id="new-token-name" placeholder="Token Name (e.g. Home Assistant)" style="flex:1; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 8px 12px; font-size: 12px; border-radius: 6px;">
+                <button id="btn-generate-token" class="btn-rect">Generate</button>
+              </div>
+            </div>
+          </div>
+        </div>
+          </div>
+        </div>
       </section>
     </div>
   </div>
 </div>
 
-<div id="console-modal-overlay" class="smart-modal-backdrop open">
-<div class="chassis-front-panel" id="console-window" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+<div id="console-modal-overlay" class="smart-modal-backdrop window-minimized" style="display: none !important;">
+<div class="chassis-front-panel window-minimized" id="console-window" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); display: none !important;">
       <div class="chassis-screws screw-tl"></div>
       <div class="chassis-screws screw-tr"></div>
       <div class="chassis-screws screw-bl"></div>
@@ -1453,11 +1963,14 @@
 
       <div class="chassis-panel-header">
         <span class="chassis-engraved-text" id="chassis-panel-engraved" data-i18n="console.engraved_title">ZETTNAS • SYSTEM CONSOLE</span>
-        <div style="display:flex; gap:8px; align-items:center;">
+        <div style="display:flex; gap:12px; align-items:center;">
           <span class="chassis-screen-spec">640 × 172 IPS</span>
-          <button id="console-popout" class="btn-icon" title="Open in standalone window" aria-label="Pop out" style="font-size:14px; opacity:0.75;">↗</button>
-          <button id="console-min" class="btn-icon" title="Minimize to dock" aria-label="Minimize" style="font-size:18px;">–</button>
-          <button id="console-close" class="btn-icon" title="Close console window" aria-label="Close" style="font-size:14px;">✕</button>
+          <button id="console-popout" class="btn-icon" title="Open in standalone window" aria-label="Pop out" style="font-size:14px; opacity:0.75; margin-right: 4px;">↗</button>
+          <div class="os-window-controls">
+            <button class="win-btn min-btn" id="console-min" title="Minimize to dock" aria-label="Minimize"></button>
+            <button class="win-btn max-btn" id="console-max" title="Maximize" aria-label="Maximize"></button>
+            <button class="win-btn close-btn" id="console-close" title="Close console window" aria-label="Close"></button>
+          </div>
         </div>
       </div>
 
@@ -1628,6 +2141,19 @@
       </div>
     </div>
 </div>
+
+<div id="notif-center-panel" style="display:none; position:fixed; bottom:64px; right:24px; width:340px; max-height:400px; background:rgba(20,24,32,0.95); backdrop-filter:blur(20px); border:1px solid rgba(255,255,255,0.1); border-radius:12px; z-index:9999; flex-direction:column; box-shadow:0 10px 30px rgba(0,0,0,0.8); overflow:hidden;">
+  <div style="padding:12px 16px; border-bottom:1px solid rgba(255,255,255,0.05); display:flex; justify-content:space-between; align-items:center;">
+    <div style="font-size:12px; font-weight:800; color:#fff;" data-i18n="notif.title">Notification Center</div>
+    <div style="display:flex; gap:8px;">
+      <button id="notif-mark-read" style="background:none; border:none; color:var(--brand); cursor:pointer; font-size:11px; font-weight:600; padding:0;">Mark all as read</button>
+    </div>
+  </div>
+  <div id="notif-center-list" style="flex:1; overflow-y:auto; padding:8px 0;">
+    <div style="padding:20px; text-align:center; color:var(--muted); font-size:11px;" data-i18n="notif.empty">No recent notifications.</div>
+  </div>
+</div>
+
 <div id="os-dock-container" class="os-dock-container">
   <div class="os-dock" id="os-dock">
     <!-- Dock items injected via JS -->

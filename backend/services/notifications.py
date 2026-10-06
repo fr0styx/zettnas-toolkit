@@ -2,8 +2,9 @@ import json
 import os
 import subprocess
 import time
-import urllib.request
 from typing import Any
+
+import apprise
 
 from backend.config import DATA_DIR, logger
 from backend.fsutil import atomic_write_json, read_json
@@ -14,6 +15,8 @@ DEFAULT_NOTIFICATION_CONFIG = {
     "enabled": False,
     # Channels
     "unraid_notify": True,
+    "apprise_urls": [],  # List of apprise URLs (e.g. 'discord://...', 'slack://...', 'tgram://...')
+    # Legacy fields (kept for compatibility with old UI temporarily if needed)
     "ntfy_enabled": False,
     "ntfy_url": "https://ntfy.sh",
     "ntfy_topic": "",
@@ -81,7 +84,9 @@ def _dispatch_unraid(script: str, title: str, message: str, level: str) -> bool:
         return False
 
 
+
 def _dispatch_ntfy(cfg: dict[str, Any], title: str, message: str, level: str) -> bool:
+    import urllib.request
     topic = cfg.get("ntfy_topic", "").strip()
     if not topic:
         return False
@@ -128,17 +133,17 @@ def _dispatch_ntfy(cfg: dict[str, Any], title: str, message: str, level: str) ->
 
 
 def _dispatch_webhook(cfg: dict[str, Any], title: str, message: str, level: str) -> bool:
+    import urllib.request
     url = cfg.get("webhook_url", "").strip()
     if not url:
         return False
 
-    # Check for Discord webhook format
     if "discord.com/api/webhooks" in url or "discordapp.com/api/webhooks" in url:
         color_map = {
-            "normal": 0x25C2A0,  # Teal
-            "warning": 0xF59E0B,  # Amber
+            "normal": 0x25C2A0,
+            "warning": 0xF59E0B,
             "warn": 0xF59E0B,
-            "critical": 0xEF4444,  # Red
+            "critical": 0xEF4444,
             "alert": 0xEF4444,
             "error": 0xEF4444,
         }
@@ -171,6 +176,59 @@ def _dispatch_webhook(cfg: dict[str, Any], title: str, message: str, level: str)
             return resp.status in (200, 201, 204)
     except Exception as e:
         logger.warning(f"[NOTIFY] Webhook POST failed: {e}")
+        return False
+
+def _dispatch_apprise(cfg: dict[str, Any], title: str, message: str, level: str) -> bool:
+    # Build Apprise instance
+    apobj = apprise.Apprise()
+    
+    # 1. Add explicitly configured Apprise URLs
+    urls = cfg.get("apprise_urls", [])
+    if isinstance(urls, str):
+        urls = [urls]
+        
+    for url in urls:
+        if url.strip():
+            apobj.add(url.strip())
+            
+    # 2. Translate legacy configuration into Apprise URLs
+    if cfg.get("ntfy_enabled") and cfg.get("ntfy_topic"):
+        topic = cfg.get("ntfy_topic", "").strip()
+        base_url = cfg.get("ntfy_url", "https://ntfy.sh").rstrip("/").replace("https://", "ntfys://").replace("http://", "ntfy://")
+        url = f"{base_url}/{topic}"
+        token = cfg.get("ntfy_token", "").strip()
+        if token:
+            url += f"?token={token}"
+        apobj.add(url)
+        
+    if cfg.get("webhook_enabled") and cfg.get("webhook_url"):
+        wb_url = cfg.get("webhook_url", "").strip()
+        # Very basic apprise webhook mapping or rely on apprise parsing discord directly
+        if "discord.com" in wb_url or "discordapp.com" in wb_url:
+            # apprise handles discord webhooks automatically if prefixed with discord://
+            # but natively discord webhooks are http URLs, let's just pass it to apprise
+            pass
+        apobj.add(wb_url)
+
+    if not len(apobj):
+        return False
+
+    # Map our level to Apprise NotifyType
+    notify_type = apprise.NotifyType.INFO
+    if level in ("warning", "warn"):
+        notify_type = apprise.NotifyType.WARNING
+    elif level in ("critical", "alert", "error"):
+        notify_type = apprise.NotifyType.FAILURE
+
+    try:
+        result = apobj.notify(
+            body=message,
+            title=title,
+            notify_type=notify_type,
+        )
+        return result
+    except Exception as e:
+        logger.warning(f"[NOTIFY] Apprise push failed: {e}")
         return False
 
 
@@ -223,13 +281,15 @@ def send_notification(
         if unraid_script:
             results["unraid"] = _dispatch_unraid(unraid_script, title, message, level)
 
-    # 2. ntfy.sh notification
+    # 2. Native ntfy & Webhook dispatch if configured
     if cfg.get("ntfy_enabled", False):
         results["ntfy"] = _dispatch_ntfy(cfg, title, message, level)
-
-    # 3. Webhook / Discord notification
     if cfg.get("webhook_enabled", False):
         results["webhook"] = _dispatch_webhook(cfg, title, message, level)
+
+    # 3. Apprise notifications (for explicitly configured Apprise URLs or multi-channel)
+    if cfg.get("apprise_urls"):
+        results["apprise"] = _dispatch_apprise(cfg, title, message, level)
 
     return {"dispatched": any(results.values()), "channels": results}
 
@@ -249,8 +309,9 @@ def test_notification(custom_cfg: dict[str, Any] | None = None) -> dict[str, Any
 
     if cfg.get("ntfy_enabled", False):
         results["ntfy"] = _dispatch_ntfy(cfg, title, message, level)
-
     if cfg.get("webhook_enabled", False):
         results["webhook"] = _dispatch_webhook(cfg, title, message, level)
+    if cfg.get("apprise_urls"):
+        results["apprise"] = _dispatch_apprise(cfg, title, message, level)
 
     return {"status": "ok", "tested_channels": results}

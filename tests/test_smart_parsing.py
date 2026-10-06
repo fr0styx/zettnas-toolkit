@@ -37,16 +37,16 @@ Media and Data Integrity Errors:    {media_err:,}
 
 
 def test_healthy_hdd():
-    assert _parse_smart(ata_report(temp=35), is_nvme=False) == (35, "ok")
+    assert _parse_smart(ata_report(temp=35), is_nvme=False)[:2] == (35, "ok")
 
 
 def test_hdd_temperature_from_raw_column_ignores_min_max_suffix():
-    temp, _ = _parse_smart(ata_report(temp=41), is_nvme=False)
+    temp, _, _ = _parse_smart(ata_report(temp=41), is_nvme=False)
     assert temp == 41
 
 
 def test_hdd_warm_is_warning():
-    assert _parse_smart(ata_report(temp=52), is_nvme=False) == (52, "warn")
+    assert _parse_smart(ata_report(temp=52), is_nvme=False)[:2] == (52, "warn")
 
 
 def test_hdd_hot_is_critical():
@@ -74,7 +74,20 @@ def test_failed_self_assessment_critical():
 
 
 def test_healthy_nvme():
-    assert _parse_smart(nvme_report(temp=40), is_nvme=True) == (40, "ok")
+    assert _parse_smart(nvme_report(temp=40), is_nvme=True)[:2] == (40, "ok")
+
+
+def test_nvme_normal_load_temp_not_warning():
+    # 55°C triggers warning on HDD, but is normal operating range for NVMe
+    assert _parse_smart(nvme_report(temp=55), is_nvme=True)[1] == "ok"
+
+
+def test_nvme_high_temp_warning():
+    assert _parse_smart(nvme_report(temp=71), is_nvme=True)[1] == "warn"
+
+
+def test_nvme_critical_temp():
+    assert _parse_smart(nvme_report(temp=76), is_nvme=True)[1] == "crit"
 
 
 def test_nvme_wear_warning():
@@ -90,7 +103,7 @@ def test_nvme_media_errors_with_thousands_separator_critical():
 
 
 def test_empty_output_is_unknown_but_ok():
-    assert _parse_smart("", is_nvme=False) == (None, "ok")
+    assert _parse_smart("", is_nvme=False)[:2] == (None, "ok")
 
 
 def test_garbage_output_does_not_raise():
@@ -108,7 +121,7 @@ def test_smart_no_medium_present():
         "Read Device Identity failed: scsi error no medium present\n"
         "A mandatory SMART command failed: exiting."
     )
-    temp, health = _parse_smart(raw, is_nvme=False)
+    temp, health, _ = _parse_smart(raw, is_nvme=False)
     assert temp is None
     assert health == "ok"
 

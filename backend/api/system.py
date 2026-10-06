@@ -1,3 +1,6 @@
+from pydantic import BaseModel
+import shutil
+from fastapi.responses import FileResponse
 import asyncio
 import os
 import re
@@ -21,13 +24,14 @@ from backend.fsutil import atomic_write_json, read_json, resolve_within, root_fo
 from backend.hardware.disks import fetch_disk_smart_detail, run_disk_smart_test
 from backend.hardware.fans import set_fan_pwm
 from backend.hardware.led import apply_led_state
-from backend.hardware.screen import get_screen_state
+from backend.hardware.screen import get_screen_state, save_screen_state
 from backend.hardware.storage import get_current_layout
 from backend.hardware.unraid import read_unraid_status
 from backend.hardware.docker_stats import container_action, read_docker_containers
 from backend.hardware.ups import read_ups_status
 from backend.models.schemas import (
     ButtonConfigRequest,
+    ScreenConfigRequest,
     CopyConfirmRequest,
     DockerActionRequest,
     LayoutRequest,
@@ -113,6 +117,12 @@ async def disk_smart_test(payload: dict):
 @router.get("/screen")
 async def screen_state():
     return get_screen_state()
+
+@router.post("/screen")
+async def post_screen_state(req: ScreenConfigRequest):
+    data = req.model_dump(exclude_unset=True)
+    return await asyncio.to_thread(save_screen_state, data)
+
 
 
 def _handle_browse_logic(path: str, dirs_only: bool):
@@ -203,6 +213,20 @@ async def pause_copy():
 async def resume_copy():
     Z_STATE.copy_paused = False
     return {"status": "resumed"}
+
+@router.post("/copy/start")
+async def start_copy():
+    if Z_STATE.copy_active:
+        raise HTTPException(status_code=409, detail="Copy operation already in progress")
+    cfg = _load_buttons()
+    Z_STATE.copy_active = True
+    Z_STATE.copy_status = "copying"
+    Z_STATE.ui_wake.set()
+    add_event("info", "Copy Started", "Starting ingest from media slot...")
+    from backend.services.copy_engine import _do_copy
+    threading.Thread(target=lambda c: asyncio.run(_do_copy(c)), args=(cfg,), daemon=True).start()
+    return {"status": "started"}
+
 
 
 BUTTON_DEFAULTS = {"enabled": False, "source": "sd", "dest": "/mnt/user/"}
@@ -366,3 +390,164 @@ async def post_docker_container_action(container_id: str, req: DockerActionReque
 async def get_ups_telemetry():
     return await asyncio.to_thread(read_ups_status)
 
+
+
+class RenameRequest(BaseModel):
+    path: str
+    new_name: str
+
+class DeleteRequest(BaseModel):
+    path: str
+
+def _safe_fs_target(req_path: str):
+    raw = str(req_path or "").strip()
+    if not raw or "\x00" in raw:
+        raise HTTPException(status_code=400, detail="Invalid path")
+    # Disallow root paths
+    canonical_roots = {os.path.realpath(r) for r in ALLOWED_BROWSE_ROOTS}
+    norm = os.path.normpath(raw)
+    parent_raw = os.path.dirname(norm)
+    parent_canonical = resolve_within(parent_raw, ALLOWED_BROWSE_ROOTS)
+    if parent_canonical is None:
+        raise HTTPException(status_code=403, detail="Path is outside allowed folders.")
+    
+    base = os.path.basename(norm)
+    if not base or base in (".", ".."):
+        raise HTTPException(status_code=400, detail="Invalid path element")
+        
+    target_unresolved = os.path.join(parent_canonical, base)
+    if os.path.realpath(target_unresolved) in canonical_roots:
+        raise HTTPException(status_code=403, detail="Cannot operate on browse root")
+        
+    if not os.path.lexists(target_unresolved):
+        raise HTTPException(status_code=404, detail="Item does not exist")
+        
+    return target_unresolved, parent_canonical, base
+
+@router.post("/fs/rename")
+async def fs_rename(req: RenameRequest):
+    target_unresolved, parent_canonical, _ = _safe_fs_target(req.path)
+    new_name = str(req.new_name or "").strip()
+    if not new_name or "/" in new_name or "\\" in new_name or new_name in (".", ".."):
+        raise HTTPException(status_code=400, detail="Invalid new name")
+        
+    dst = os.path.join(parent_canonical, new_name)
+    if os.path.lexists(dst):
+        raise HTTPException(status_code=400, detail="Destination already exists")
+    try:
+        await asyncio.to_thread(os.rename, target_unresolved, dst)
+        return {"status": "ok"}
+    except Exception as e:
+        logger.error(f"[FS] Rename failed: {e}")
+        raise HTTPException(status_code=500, detail="Failed to rename item")
+
+@router.post("/fs/delete")
+async def fs_delete(req: DeleteRequest):
+    target_unresolved, _, _ = _safe_fs_target(req.path)
+    try:
+        if "/.RecycleBin/" in target_unresolved.replace("\\", "/") or target_unresolved.endswith(".RecycleBin"):
+            # Hard delete if already in recycle bin
+            if os.path.islink(target_unresolved):
+                await asyncio.to_thread(os.unlink, target_unresolved)
+            elif os.path.isdir(target_unresolved):
+                await asyncio.to_thread(shutil.rmtree, target_unresolved)
+            else:
+                await asyncio.to_thread(os.remove, target_unresolved)
+            return {"status": "ok", "message": "Item permanently deleted"}
+
+        # Recycle Bin logic instead of hard delete
+        import time
+        from backend.state import add_event
+        
+        # Find which root this belongs to
+        real_root = root_for(target_unresolved, ALLOWED_BROWSE_ROOTS)
+        if not real_root:
+            real_root = ALLOWED_BROWSE_ROOTS[0] # Fallback
+            
+        recycle_dir = os.path.join(real_root, ".RecycleBin")
+        if not os.path.exists(recycle_dir):
+            os.makedirs(recycle_dir, exist_ok=True)
+            
+        base_name = os.path.basename(target_unresolved)
+        ts = int(time.time())
+        dest_name = f"{ts}_{base_name}"
+        dest_path = os.path.join(recycle_dir, dest_name)
+        
+        await asyncio.to_thread(shutil.move, target_unresolved, dest_path)
+        add_event("info", "File Explorer", f"Moved {base_name} to Recycle Bin")
+        
+        return {"status": "ok", "message": "Item moved to Recycle Bin"}
+    except Exception as e:
+        logger.error(f"[FS] Delete/Recycle failed: {e}")
+        raise HTTPException(status_code=500, detail="Failed to process delete request")
+
+@router.get("/fs/download")
+async def fs_download(path: str):
+    target = _contained(path, must_exist=True)
+    if os.path.isdir(target):
+        raise HTTPException(status_code=400, detail="Cannot download a directory")
+    return FileResponse(target, filename=os.path.basename(target))
+
+
+from fastapi import Request
+
+@router.post("/fs/upload")
+async def fs_upload(request: Request, path: str, filename: str):
+    target_unresolved, _, _ = _safe_fs_target(path)
+    if not os.path.isdir(target_unresolved):
+        raise HTTPException(status_code=400, detail="Target path is not a directory")
+    
+    # Secure filename against traversal
+    filename = os.path.basename(filename)
+    if not filename:
+        raise HTTPException(status_code=400, detail="Invalid filename")
+        
+    file_path = os.path.join(target_unresolved, filename)
+    try:
+        content = await request.body()
+        with open(file_path, "wb") as f_out:
+            f_out.write(content)
+        
+        from backend.state import add_event
+        add_event("success", "File Explorer", f"Uploaded {filename} to {path}")
+        return {"status": "ok", "message": "File uploaded"}
+    except Exception as e:
+        logger.error(f"[FS] Upload failed: {e}")
+        raise HTTPException(status_code=500, detail="Failed to upload file")
+
+
+from pydantic import BaseModel
+class TokenCreateRequest(BaseModel):
+    name: str
+
+@router.get("/tokens")
+async def list_tokens():
+    from backend.api_tokens import load_tokens
+    tokens = load_tokens()
+    # Mask the token for security when listing
+    res = []
+    for t, data in tokens.items():
+        res.append({
+            "masked_token": t[:8] + "..." + t[-4:],
+            "name": data.get("name"),
+            "created": data.get("created"),
+            "id": t # we need the ID to revoke it
+        })
+    return res
+
+@router.post("/tokens")
+async def create_token(req: TokenCreateRequest):
+    from backend.api_tokens import generate_token
+    from backend.state import add_event
+    token = generate_token(req.name)
+    add_event("success", "Security", f"Generated new API token: {req.name}")
+    return {"token": token, "name": req.name}
+
+@router.delete("/tokens/{token_id}")
+async def delete_token(token_id: str):
+    from backend.api_tokens import revoke_token
+    from backend.state import add_event
+    if revoke_token(token_id):
+        add_event("info", "Security", "Revoked an API token")
+        return {"status": "ok"}
+    raise HTTPException(status_code=404, detail="Token not found")

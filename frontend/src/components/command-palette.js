@@ -31,10 +31,11 @@ export function initCommandPalette() {
   let filteredCommands = [];
 
   const COMMANDS = [
-    { id: 'nav-mgmt', title: 'Open System Management', icon: '<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>', action: () => ZettEventBus.emit('window:open', {id: 'management-window'}) },
-    { id: 'nav-console', title: 'Open ZettNAS Console', icon: '<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>', action: () => ZettEventBus.emit('window:open', {id: 'console-window'}) },
+        { id: 'nav-fm', title: 'Open File Explorer', icon: '<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>', action: () => ZettEventBus.emit('window:open', {id: 'file-manager-window'}) },
+    { id: 'nav-mgmt', title: 'Open System Management', icon: '<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>', action: () => { if(window.openManagementWindow) window.openManagementWindow(); else document.getElementById('management-desktop-icon')?.click(); } },
+    { id: 'nav-console', title: 'Open ZettNAS Console', icon: '<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>', action: () => document.getElementById('chassis-desktop-icon')?.click() },
     { id: 'nav-settings', title: 'Open Toolkit Settings', icon: '<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>', action: () => openDrawer() },
-    { id: 'nav-wizard', title: 'Open Setup Wizard', icon: '<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>', action: () => ZettEventBus.emit('modal:wizard:open') },
+    { id: 'nav-wizard', title: 'Open Setup Wizard', icon: '<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>', action: () => document.getElementById('btn-launch-setup-wizard')?.click() },
     { id: 'action-mobile', title: 'Toggle Mobile Stacked Mode', icon: '<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>', action: () => document.getElementById('mobile-view-toggle-btn')?.click() },
     { id: 'theme-yak', title: 'Toggle Theme (Cyber / Yak)', icon: '<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M2 12h4l3-9 5 18 3-9h5"></path></svg>', action: () => applyTheme(state.currentTheme === 'yak' ? 'cyber' : 'yak') },
     { id: 'profile-auto', title: 'Set Acoustic Profile: Auto Dynamic', icon: '<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>', action: () => setProfile('auto') },
@@ -52,9 +53,9 @@ export function initCommandPalette() {
   async function setProfile(mode) {
     try {
       await api.post('/api/system/profile', { profile: mode });
-      showToast(t('action_success') || 'Profile applied.');
+      showToast(t('action_success', 'Profile applied.'));
     } catch (e) {
-      showToast(t('err_general') || 'Error applying profile.', 'error');
+      showToast(t('err_general', 'Error applying profile.'), 'error');
     }
   }
 

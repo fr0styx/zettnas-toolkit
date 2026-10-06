@@ -38,8 +38,17 @@ class LedConfigRequest(BaseModel):
     night_end: str | None = None
 
 
+
+class ScreenConfigRequest(BaseModel):
+    brightness: int | None = Field(default=None, ge=0, le=100)
+    night_mode: bool | None = None
+    night_start: str | None = Field(default=None, pattern=r"^\d{1,2}:\d{2}$")
+    night_end: str | None = Field(default=None, pattern=r"^\d{1,2}:\d{2}$")
+    night_brightness: int | None = Field(default=None, ge=0, le=100)
+
 class ButtonConfigRequest(BaseModel):
     enabled: bool | None = None
+    action: str | None = None
     source: str | None = None
     dest: str | None = None
     use_exif: bool | None = None

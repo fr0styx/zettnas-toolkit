@@ -1,24 +1,28 @@
+import concurrent.futures
 import json
+import os
 import sqlite3
 import time
 import traceback
 
 from backend.config import (
     DB_PATH,
+    ENABLE_FB,
     FAN_MAX_PWM,
     FAN_MIN_PWM,
     FAN_STATE_FILE,
     HDD_CRITICAL_TEMP,
     LED_STATE_FILE,
+    NVME_CRITICAL_TEMP,
     get_server_hostname,
     is_using_default_password,
     logger,
 )
 from backend.fsutil import read_json
 from backend.hardware.cpu import read_cpu_temp, read_cpu_util
-from backend.hardware.disks import read_disk_temps_and_io
+from backend.hardware.disks import poll_all_disks_smart, read_disk_temps_and_io
 from backend.hardware.fans import apply_zone_pwm, calc_curve_pwm, get_hold_remaining, read_fans, set_fan_pwm
-from backend.hardware.led import apply_led_state, send_led_packet
+from backend.hardware.led import apply_led_state, find_led_port, send_led_packet
 from backend.hardware.memory import read_mem
 from backend.hardware.network import read_ip, read_network_rates
 from backend.hardware.screen import get_screen_state, is_in_time_window, set_screen_brightness
@@ -30,6 +34,17 @@ from backend.services.broadcaster import broadcaster
 from backend.services.copy_engine import read_media_slots
 from backend.services.notifications import send_notification
 from backend.state import Z_STATE, add_event
+from backend.services.alert_rules import evaluate_system_alerts
+
+_notify_executor = concurrent.futures.ThreadPoolExecutor(max_workers=2, thread_name_prefix="zett_notify")
+
+
+def _async_notify(**kwargs):
+    """Dispatches notifications on a worker thread so slow webhooks never stall PWM fan loop updates."""
+    try:
+        _notify_executor.submit(send_notification, **kwargs)
+    except Exception as e:
+        logger.warning(f"[NOTIFY] Failed to queue async notification: {e}")
 
 
 def stats_collector_daemon():
@@ -135,22 +150,26 @@ def stats_collector_daemon():
             else:
                 raw_pwm3 = 85
 
-            # Safety override: any spinning disk at/above the critical temperature
+            # Safety override: any spinning or solid state disk at/above its critical temperature
             # forces every disk fan to 100% regardless of profile or curve.
-            hot_disks = [
-                d
-                for d in disks
-                if d.get("temp") is not None and not d.get("standby", False) and d["temp"] >= HDD_CRITICAL_TEMP
-            ]
+            hot_disks = []
+            for d in disks:
+                t = d.get("temp")
+                if t is not None and not d.get("standby", False):
+                    is_nvme = d.get("is_nvme", False) or d.get("dev", "").startswith("nvme") or d.get("name", "").startswith("nv")
+                    crit_thresh = NVME_CRITICAL_TEMP if is_nvme else HDD_CRITICAL_TEMP
+                    if t >= crit_thresh:
+                        hot_disks.append((d, crit_thresh))
+
             critical_override = bool(hot_disks)
             if critical_override and not Z_STATE.critical_temp_active:
-                names = ", ".join(f"{d.get('name', d.get('dev', '?'))} ({d['temp']}°C)" for d in hot_disks)
+                names = ", ".join(f"{d.get('name', d.get('dev', '?'))} ({d['temp']}°C >= {thresh}°C)" for d, thresh in hot_disks)
                 logger.warning(f"[FANS] Critical disk temperature: {names}. Forcing fans to 100%.")
                 add_event(
                     "error",
                     "Disk Temperature Critical",
-                    f"{names} at or above {HDD_CRITICAL_TEMP}°C. Fans forced to 100%.",
-                    details={"disks": [d.get("dev") for d in hot_disks]},
+                    f"{names}. Fans forced to 100%.",
+                    details={"disks": [d.get("dev") for d, _ in hot_disks]},
                 )
             elif not critical_override and Z_STATE.critical_temp_active:
                 logger.info("[FANS] Disk temperatures back below critical threshold.")
@@ -222,7 +241,7 @@ def stats_collector_daemon():
                         "One or more cooling fans have stalled (0 RPM).",
                         details={"fans": fans},
                     )
-                    send_notification(
+                    _async_notify(
                         title="ZettNAS Alert: Fan Stall Detected",
                         message="One or more chassis cooling fans have stalled or dropped to 0 RPM.",
                         level="critical",
@@ -237,7 +256,7 @@ def stats_collector_daemon():
                         f"CPU temperature reached {cpu_temp}°C. Hardware throttling active.",
                         details={"cpu_temp": cpu_temp},
                     )
-                    send_notification(
+                    _async_notify(
                         title="ZettNAS Alert: CPU Thermal Critical",
                         message=f"CPU temperature reached critical level: {cpu_temp}°C!",
                         level="critical",
@@ -251,7 +270,7 @@ def stats_collector_daemon():
                         f"CPU temperature is elevated ({cpu_temp}°C).",
                         details={"cpu_temp": cpu_temp},
                     )
-                    send_notification(
+                    _async_notify(
                         title="ZettNAS Warning: CPU Thermal Elevated",
                         message=f"CPU temperature is elevated at {cpu_temp}°C.",
                         level="warning",
@@ -270,7 +289,7 @@ def stats_collector_daemon():
                             f"Drive reached critical health or extreme temp ({d_temp}°C)",
                             details=d,
                         )
-                        send_notification(
+                        _async_notify(
                             title=f"ZettNAS Alert: Drive Critical ({d_name})",
                             message=f"Drive {d_name} has entered CRITICAL state ({d_temp}°C). Inspect S.M.A.R.T. health immediately.",
                             level="critical",
@@ -284,7 +303,7 @@ def stats_collector_daemon():
                             f"Drive is running hot or has warnings ({d_temp}°C)",
                             details=d,
                         )
-                        send_notification(
+                        _async_notify(
                             title=f"ZettNAS Warning: Drive Alert ({d_name})",
                             message=f"Drive {d_name} is running hot or reported S.M.A.R.T. warnings ({d_temp}°C).",
                             level="warning",
@@ -317,6 +336,26 @@ def stats_collector_daemon():
 
             disk_hold_rem = max(get_hold_remaining("pwm1", 120), get_hold_remaining("pwm2", 120))
             cpu_hold_rem = get_hold_remaining("pwm3", 90)
+
+            events_list = list(Z_STATE.event_log)
+            docker_list = read_docker_containers()
+
+            if not hasattr(stats_collector_daemon, "_last_events_ts"):
+                stats_collector_daemon._last_events_ts = 0
+                stats_collector_daemon._last_events_count = -1
+                stats_collector_daemon._last_docker_summary = None
+
+            top_event_ts = events_list[0].get("ts", 0) if events_list else 0
+            events_count = len(events_list)
+            events_changed = (top_event_ts != stats_collector_daemon._last_events_ts or events_count != stats_collector_daemon._last_events_count)
+            if events_changed:
+                stats_collector_daemon._last_events_ts = top_event_ts
+                stats_collector_daemon._last_events_count = events_count
+
+            docker_summary = tuple((c.get("id"), c.get("state")) for c in docker_list)
+            docker_changed = (docker_summary != stats_collector_daemon._last_docker_summary)
+            if docker_changed:
+                stats_collector_daemon._last_docker_summary = docker_summary
 
             data = {
                 "name": get_server_hostname(),
@@ -358,21 +397,39 @@ def stats_collector_daemon():
                 "chassis": detect_chassis_model(),
                 "layout": get_current_layout(),
                 "copy_status": Z_STATE.copy_status,
-                "events": list(Z_STATE.event_log),
+                "events": events_list,
                 "security": {"is_default_password": is_using_default_password()},
                 "unraid": read_unraid_status(),
-                "docker": read_docker_containers(),
+                "docker": docker_list,
                 "ups": read_ups_status(),
                 "lcd": {
                     "page": Z_STATE.current_lcd_page,
                     "cycle_seconds": Z_STATE.lcd_cycle_seconds,
                 },
+                "peripherals": {
+                    "fb_active": bool(ENABLE_FB and os.path.exists("/dev/fb0")),
+                    "led_port": find_led_port(),
+                    "led_ready": bool(find_led_port() is not None),
+                    "fan_count": len([f for f in fans if f > 0]) if fans else 0,
+                    "fans_online": bool(fans and any(f > 0 for f in fans)),
+                },
             }
+
+            # Evaluate alerts
+            evaluate_system_alerts(data['unraid'], data['ups'])
 
             with Z_STATE.lock:
                 Z_STATE.cached_stats = data
 
-            broadcaster.broadcast(data)
+            broadcast_data = data
+            if not events_changed or not docker_changed:
+                broadcast_data = dict(data)
+                if not events_changed:
+                    del broadcast_data["events"]
+                if not docker_changed:
+                    del broadcast_data["docker"]
+
+            broadcaster.broadcast(broadcast_data, full_data=data)
 
             now_ts = int(time.time())
             if not hasattr(stats_collector_daemon, "last_log"):
@@ -418,7 +475,7 @@ def collect():
                 "mem": {"used_gb": 0, "total_gb": 0, "pct": 0},
                 "fans": [],
                 "copy_state": {"active": False, "status": "idle", "progress": {}},
-                "net": {"tx": "0 B/s", "rx": "0 B/s"},
+                "net": {"tx": "0 B/s", "rx": "0 B/s", "iface": "bond0"},
                 "uptime": "0s",
                 "disks": [],
                 "unraid": read_unraid_status(),
@@ -432,3 +489,25 @@ def collect():
         if "unraid" not in data:
             data["unraid"] = read_unraid_status()
     return data
+
+
+def smart_poller_daemon():
+    """
+    Dedicated worker thread: decouples slow smartctl disk inspection and
+    UPS polling from the high-frequency 2s fan PWM loop.
+    """
+    logger.info("[SMART/UPS Poller] Background telemetry poller thread started.")
+    try:
+        poll_all_disks_smart(force=True)
+        read_ups_status(force=True)
+    except Exception as e:
+        logger.debug(f"[SMART/UPS Poller] Initial scan error: {e}")
+
+    while True:
+        try:
+            time.sleep(4.0)
+            poll_all_disks_smart()
+            read_ups_status()
+        except Exception as e:
+            logger.error(f"[SMART/UPS Poller] Polling cycle error: {e}")
+
