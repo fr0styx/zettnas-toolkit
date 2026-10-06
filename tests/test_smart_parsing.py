@@ -37,7 +37,8 @@ Media and Data Integrity Errors:    {media_err:,}
 
 
 def test_healthy_hdd():
-    assert _parse_smart(ata_report(temp=35), is_nvme=False)[:2] == (35, "ok")
+    temp, health, _ = _parse_smart(ata_report(temp=35), is_nvme=False)
+    assert (temp, health) == (35, "ok")
 
 
 def test_hdd_temperature_from_raw_column_ignores_min_max_suffix():
@@ -46,68 +47,84 @@ def test_hdd_temperature_from_raw_column_ignores_min_max_suffix():
 
 
 def test_hdd_warm_is_warning():
-    assert _parse_smart(ata_report(temp=52), is_nvme=False)[:2] == (52, "warn")
+    temp, health, _ = _parse_smart(ata_report(temp=52), is_nvme=False)
+    assert (temp, health) == (52, "warn")
 
 
 def test_hdd_hot_is_critical():
-    assert _parse_smart(ata_report(temp=61), is_nvme=False)[1] == "crit"
+    _, health, _ = _parse_smart(ata_report(temp=61), is_nvme=False)
+    assert health == "crit"
 
 
 def test_reallocated_sectors_warn():
-    assert _parse_smart(ata_report(realloc=8), is_nvme=False)[1] == "warn"
+    _, health, _ = _parse_smart(ata_report(realloc=8), is_nvme=False)
+    assert health == "warn"
 
 
 def test_crc_errors_warn():
-    assert _parse_smart(ata_report(crc=3), is_nvme=False)[1] == "warn"
+    _, health, _ = _parse_smart(ata_report(crc=3), is_nvme=False)
+    assert health == "warn"
 
 
 def test_pending_sectors_critical():
-    assert _parse_smart(ata_report(pending=1), is_nvme=False)[1] == "crit"
+    _, health, _ = _parse_smart(ata_report(pending=1), is_nvme=False)
+    assert health == "crit"
 
 
 def test_offline_uncorrectable_critical():
-    assert _parse_smart(ata_report(offline=2), is_nvme=False)[1] == "crit"
+    _, health, _ = _parse_smart(ata_report(offline=2), is_nvme=False)
+    assert health == "crit"
 
 
 def test_failed_self_assessment_critical():
-    assert _parse_smart(ata_report(passed=False), is_nvme=False)[1] == "crit"
+    _, health, _ = _parse_smart(ata_report(passed=False), is_nvme=False)
+    assert health == "crit"
 
 
 def test_healthy_nvme():
-    assert _parse_smart(nvme_report(temp=40), is_nvme=True)[:2] == (40, "ok")
+    temp, health, _ = _parse_smart(nvme_report(temp=40), is_nvme=True)
+    assert (temp, health) == (40, "ok")
 
 
 def test_nvme_normal_load_temp_not_warning():
     # 55°C triggers warning on HDD, but is normal operating range for NVMe
-    assert _parse_smart(nvme_report(temp=55), is_nvme=True)[1] == "ok"
+    _, health, _ = _parse_smart(nvme_report(temp=55), is_nvme=True)
+    assert health == "ok"
 
 
 def test_nvme_high_temp_warning():
-    assert _parse_smart(nvme_report(temp=71), is_nvme=True)[1] == "warn"
+    _, health, _ = _parse_smart(nvme_report(temp=71), is_nvme=True)
+    assert health == "warn"
 
 
 def test_nvme_critical_temp():
-    assert _parse_smart(nvme_report(temp=76), is_nvme=True)[1] == "crit"
+    _, health, _ = _parse_smart(nvme_report(temp=76), is_nvme=True)
+    assert health == "crit"
 
 
 def test_nvme_wear_warning():
-    assert _parse_smart(nvme_report(used=85), is_nvme=True)[1] == "warn"
+    _, health, _ = _parse_smart(nvme_report(used=85), is_nvme=True)
+    assert health == "warn"
 
 
 def test_nvme_spare_below_threshold_critical():
-    assert _parse_smart(nvme_report(spare=5, spare_thresh=10), is_nvme=True)[1] == "crit"
+    _, health, _ = _parse_smart(nvme_report(spare=5, spare_thresh=10), is_nvme=True)
+    assert health == "crit"
 
 
 def test_nvme_media_errors_with_thousands_separator_critical():
-    assert _parse_smart(nvme_report(media_err=1234), is_nvme=True)[1] == "crit"
+    _, health, _ = _parse_smart(nvme_report(media_err=1234), is_nvme=True)
+    assert health == "crit"
 
 
 def test_empty_output_is_unknown_but_ok():
-    assert _parse_smart("", is_nvme=False)[:2] == (None, "ok")
+    temp, health, _ = _parse_smart("", is_nvme=False)
+    assert (temp, health) == (None, "ok")
 
 
 def test_garbage_output_does_not_raise():
-    assert _parse_smart("Temperature_Celsius ???\n\x00\x01 junk", is_nvme=False)[0] is None
+    temp, _, _ = _parse_smart("Temperature_Celsius ???\n\x00\x01 junk", is_nvme=False)
+    assert temp is None
 
 
 def test_short_names():
