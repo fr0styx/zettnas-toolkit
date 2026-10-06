@@ -24,6 +24,7 @@ import { initSettings, openDrawer, closeDrawer } from './components/settings.js'
 import { initMetricsChart, fetchAndRenderMetrics } from './components/metrics-chart.js';
 import { initSetupWizard } from './components/setup-wizard.js';
 import { initManagement } from './components/management.js';
+import { initCommandPalette } from './components/command-palette.js';
 import { initI18n } from './i18n.js';
 
 let _sseRetryCount = 0;
@@ -121,6 +122,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initMetricsChart();
   initSetupWizard();
   initManagement();
+  initCommandPalette();
 
   applyTheme(state.currentTheme);
   fetchDashboardLayout();
