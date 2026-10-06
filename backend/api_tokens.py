@@ -1,7 +1,6 @@
-import json
 import os
+import json
 import secrets
-
 from backend.config import DATA_DIR, logger
 
 TOKENS_FILE = os.path.join(DATA_DIR, "api_tokens.json")

@@ -5,13 +5,8 @@ from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 from starlette.concurrency import run_in_threadpool
 
-from backend import config
-from backend.auth import (
-    create_session,
-    extract_token,
-    invalidate_all_sessions,
-    revoke_session,
-)
+import backend.config as config
+from backend.auth import create_session, extract_token, invalidate_all_sessions, revoke_session
 from backend.config import SECURITY_FILE, is_using_default_password, logger
 from backend.errors import error_response
 from backend.fsutil import atomic_write_json

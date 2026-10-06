@@ -40,7 +40,7 @@ WALLPAPER_CONFIG_FILE = os.path.join(DATA_DIR, "wallpaper_config.json")
 WALLPAPERS_DIR = os.path.join(DATA_DIR, "wallpapers")
 
 # ---- Security & Auth ----
-from backend.passwords import hash_password, verify_password
+from backend.passwords import hash_password, verify_password  # noqa: E402
 
 WEB_PASSWORD = os.environ.get("WEB_PASSWORD", "admin")
 STORED_PASSWORD_HASH = hash_password(WEB_PASSWORD)

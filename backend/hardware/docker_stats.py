@@ -8,11 +8,11 @@ import json
 import os
 import socket
 import time
-from typing import Any
+from typing import Any, Dict, List
 
 from backend.config import logger
 
-_CACHED_CONTAINERS: list[dict[str, Any]] = []
+_CACHED_CONTAINERS: List[Dict[str, Any]] = []
 _LAST_DOCKER_POLL = 0.0
 _DOCKER_CACHE_TTL = 3.0
 
@@ -28,7 +28,7 @@ class UnixHTTPConnection(http.client.HTTPConnection):
         self.sock.connect(self.socket_path)
 
 
-def read_docker_containers(force: bool = False) -> list[dict[str, Any]]:
+def read_docker_containers(force: bool = False) -> List[Dict[str, Any]]:
     global _CACHED_CONTAINERS, _LAST_DOCKER_POLL
     now = time.time()
     if not force and _CACHED_CONTAINERS and (now - _LAST_DOCKER_POLL) < _DOCKER_CACHE_TTL:
@@ -67,7 +67,7 @@ def read_docker_containers(force: bool = False) -> list[dict[str, Any]]:
         return _CACHED_CONTAINERS
 
 
-def container_action(container_id: str, action: str) -> dict[str, Any]:
+def container_action(container_id: str, action: str) -> Dict[str, Any]:
     global _CACHED_CONTAINERS, _LAST_DOCKER_POLL
     # Sanitize container_id: alphanumeric only, 1-64 chars
     if not container_id or not container_id.isalnum() or len(container_id) > 64:

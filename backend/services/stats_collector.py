@@ -21,35 +21,20 @@ from backend.config import (
 from backend.fsutil import read_json
 from backend.hardware.cpu import read_cpu_temp, read_cpu_util
 from backend.hardware.disks import poll_all_disks_smart, read_disk_temps_and_io
-from backend.hardware.docker_stats import read_docker_containers
-from backend.hardware.fans import (
-    apply_zone_pwm,
-    calc_curve_pwm,
-    get_hold_remaining,
-    read_fans,
-    set_fan_pwm,
-)
+from backend.hardware.fans import apply_zone_pwm, calc_curve_pwm, get_hold_remaining, read_fans, set_fan_pwm
 from backend.hardware.led import apply_led_state, find_led_port, send_led_packet
 from backend.hardware.memory import read_mem
 from backend.hardware.network import read_ip, read_network_rates
-from backend.hardware.screen import (
-    get_screen_state,
-    is_in_time_window,
-    set_screen_brightness,
-)
-from backend.hardware.storage import (
-    detect_chassis_model,
-    get_current_layout,
-    read_storage,
-    read_uptime,
-)
+from backend.hardware.screen import get_screen_state, is_in_time_window, set_screen_brightness
+from backend.hardware.storage import detect_chassis_model, get_current_layout, read_storage, read_uptime
 from backend.hardware.unraid import read_unraid_status
+from backend.hardware.docker_stats import read_docker_containers
 from backend.hardware.ups import read_ups_status
-from backend.services.alert_rules import evaluate_system_alerts
 from backend.services.broadcaster import broadcaster
 from backend.services.copy_engine import read_media_slots
 from backend.services.notifications import send_notification
 from backend.state import Z_STATE, add_event
+from backend.services.alert_rules import evaluate_system_alerts
 
 _notify_executor = concurrent.futures.ThreadPoolExecutor(max_workers=2, thread_name_prefix="zett_notify")
 

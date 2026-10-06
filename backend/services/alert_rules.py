@@ -1,5 +1,4 @@
 import time
-
 from backend.state import add_event
 
 _active_alerts = {}
