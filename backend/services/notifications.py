@@ -84,9 +84,9 @@ def _dispatch_unraid(script: str, title: str, message: str, level: str) -> bool:
         return False
 
 
-
 def _dispatch_ntfy(cfg: dict[str, Any], title: str, message: str, level: str) -> bool:
     import urllib.request
+
     topic = cfg.get("ntfy_topic", "").strip()
     if not topic:
         return False
@@ -134,6 +134,7 @@ def _dispatch_ntfy(cfg: dict[str, Any], title: str, message: str, level: str) ->
 
 def _dispatch_webhook(cfg: dict[str, Any], title: str, message: str, level: str) -> bool:
     import urllib.request
+
     url = cfg.get("webhook_url", "").strip()
     if not url:
         return False
@@ -178,29 +179,35 @@ def _dispatch_webhook(cfg: dict[str, Any], title: str, message: str, level: str)
         logger.warning(f"[NOTIFY] Webhook POST failed: {e}")
         return False
 
+
 def _dispatch_apprise(cfg: dict[str, Any], title: str, message: str, level: str) -> bool:
     # Build Apprise instance
     apobj = apprise.Apprise()
-    
+
     # 1. Add explicitly configured Apprise URLs
     urls = cfg.get("apprise_urls", [])
     if isinstance(urls, str):
         urls = [urls]
-        
+
     for url in urls:
         if url.strip():
             apobj.add(url.strip())
-            
+
     # 2. Translate legacy configuration into Apprise URLs
     if cfg.get("ntfy_enabled") and cfg.get("ntfy_topic"):
         topic = cfg.get("ntfy_topic", "").strip()
-        base_url = cfg.get("ntfy_url", "https://ntfy.sh").rstrip("/").replace("https://", "ntfys://").replace("http://", "ntfy://")
+        base_url = (
+            cfg.get("ntfy_url", "https://ntfy.sh")
+            .rstrip("/")
+            .replace("https://", "ntfys://")
+            .replace("http://", "ntfy://")
+        )
         url = f"{base_url}/{topic}"
         token = cfg.get("ntfy_token", "").strip()
         if token:
             url += f"?token={token}"
         apobj.add(url)
-        
+
     if cfg.get("webhook_enabled") and cfg.get("webhook_url"):
         wb_url = cfg.get("webhook_url", "").strip()
         # Very basic apprise webhook mapping or rely on apprise parsing discord directly

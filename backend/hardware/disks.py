@@ -22,29 +22,31 @@ from backend.state import Z_STATE
 
 import json
 from backend.config import DATA_DIR
+
 TRENDS_FILE = os.path.join(DATA_DIR, "smart_trends.json")
 _smart_trends = None
+
 
 def _evaluate_smart_trends(dev_name, metrics):
     global _smart_trends
     from backend.state import add_event
     from backend.services.notifications import send_notification
     from backend.fsutil import atomic_write_json
-    
+
     if _smart_trends is None:
         if os.path.exists(TRENDS_FILE):
             try:
-                with open(TRENDS_FILE, 'r') as f:
+                with open(TRENDS_FILE, "r") as f:
                     _smart_trends = json.load(f)
             except Exception:
                 _smart_trends = {}
         else:
             _smart_trends = {}
-            
+
     baseline = _smart_trends.get(dev_name, {})
     changed = False
     alerts = []
-    
+
     def check_metric(key, friendly_name, crit=False):
         nonlocal changed
         val = metrics.get(key)
@@ -52,17 +54,19 @@ def _evaluate_smart_trends(dev_name, metrics):
             return
         base_val = baseline.get(key, 0)
         if val > base_val:
-            if base_val > 0: # Only alert if it's not the first time we see it > 0 to avoid noise on first boot if it was already >0
+            if (
+                base_val > 0
+            ):  # Only alert if it's not the first time we see it > 0 to avoid noise on first boot if it was already >0
                 alerts.append(f"{friendly_name} increased from {base_val} to {val}")
             baseline[key] = val
             changed = True
-            
+
     check_metric("realloc", "Reallocated Sectors", crit=True)
     check_metric("pending", "Pending Sectors", crit=True)
     check_metric("offline", "Offline Uncorrectable Sectors", crit=True)
     check_metric("crc", "UDMA CRC Errors")
     check_metric("nvme_media_err", "NVMe Media Errors", crit=True)
-    
+
     # Check wear specifically (nvme_used)
     used = metrics.get("nvme_used")
     if used is not None:
@@ -72,14 +76,15 @@ def _evaluate_smart_trends(dev_name, metrics):
             # Actually, just storing it is fine. Alert if it hits 80, 90, 95
             baseline["nvme_used"] = used
             changed = True
-    
+
     if changed:
         _smart_trends[dev_name] = baseline
         atomic_write_json(TRENDS_FILE, _smart_trends)
         for msg in alerts:
             add_event("warning", f"SMART Degradation: {dev_name}", msg)
-            send_notification({"type": "hardware", "title": f"SMART Degradation: {dev_name}", "message": msg, "level": "warning"})
-
+            send_notification(
+                {"type": "hardware", "title": f"SMART Degradation: {dev_name}", "message": msg, "level": "warning"}
+            )
 
 
 _DISK_LIST_TTL = 15.0  # seconds
@@ -225,13 +230,13 @@ def _parse_smart(text, is_nvme):
         elif temp is not None and temp >= warn_temp:
             health = "warn"
     metrics = {
-        'realloc': realloc,
-        'pending': pending,
-        'offline': offline,
-        'crc': crc,
-        'nvme_spare': nvme_spare,
-        'nvme_used': nvme_used,
-        'nvme_media_err': nvme_media_err
+        "realloc": realloc,
+        "pending": pending,
+        "offline": offline,
+        "crc": crc,
+        "nvme_spare": nvme_spare,
+        "nvme_used": nvme_used,
+        "nvme_media_err": nvme_media_err,
     }
     return temp, health, metrics
 
@@ -258,6 +263,8 @@ def read_disk_temps_and_io():
             continue
         dev = HOST_DEV.rstrip("/") + "/" + dev_name
         is_nvme = dev_name.startswith("nvme")
+
+
 def poll_disk_smart(dev_name: str, is_nvme: bool):
     """Executes smartctl for a single disk in background and updates cached SMART data."""
     now = time.time()
@@ -370,7 +377,7 @@ def read_disk_temps_and_io(allow_sync_poll: bool = False):
             temp = prev_t
             health = prev_h
 
-        is_standby = (health == "standby")
+        is_standby = health == "standby"
         prev_count = Z_STATE.prev_disk_io.get(dev_name, 0)
         curr_count = curr_io.get(dev_name, 0)
         io_active = (curr_count > prev_count) if prev_count > 0 else False

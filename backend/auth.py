@@ -58,11 +58,12 @@ def validate_session(token: str) -> bool:
         return False
     if is_internal_token(token):
         return True
-        
+
     # Check if it's a persistent API token
     if token.startswith("zat_"):
         try:
             from backend.api_tokens import validate_api_token
+
             if validate_api_token(token):
                 return True
         except ImportError:
@@ -93,7 +94,14 @@ def extract_token(request: Request) -> str:
     return request.query_params.get("token", "").strip()
 
 
-_PUBLIC_API_PATHS = {"/api/auth/login", "/api/v1/auth/login", "/api/health", "/api/v1/health", "/api/metrics", "/api/v1/metrics"}
+_PUBLIC_API_PATHS = {
+    "/api/auth/login",
+    "/api/v1/auth/login",
+    "/api/health",
+    "/api/v1/health",
+    "/api/metrics",
+    "/api/v1/metrics",
+}
 _DOCS_PATHS = {"/docs", "/redoc", "/openapi.json", "/docs/oauth2-redirect"}
 
 

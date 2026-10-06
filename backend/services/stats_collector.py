@@ -156,14 +156,20 @@ def stats_collector_daemon():
             for d in disks:
                 t = d.get("temp")
                 if t is not None and not d.get("standby", False):
-                    is_nvme = d.get("is_nvme", False) or d.get("dev", "").startswith("nvme") or d.get("name", "").startswith("nv")
+                    is_nvme = (
+                        d.get("is_nvme", False)
+                        or d.get("dev", "").startswith("nvme")
+                        or d.get("name", "").startswith("nv")
+                    )
                     crit_thresh = NVME_CRITICAL_TEMP if is_nvme else HDD_CRITICAL_TEMP
                     if t >= crit_thresh:
                         hot_disks.append((d, crit_thresh))
 
             critical_override = bool(hot_disks)
             if critical_override and not Z_STATE.critical_temp_active:
-                names = ", ".join(f"{d.get('name', d.get('dev', '?'))} ({d['temp']}°C >= {thresh}°C)" for d, thresh in hot_disks)
+                names = ", ".join(
+                    f"{d.get('name', d.get('dev', '?'))} ({d['temp']}°C >= {thresh}°C)" for d, thresh in hot_disks
+                )
                 logger.warning(f"[FANS] Critical disk temperature: {names}. Forcing fans to 100%.")
                 add_event(
                     "error",
@@ -347,13 +353,16 @@ def stats_collector_daemon():
 
             top_event_ts = events_list[0].get("ts", 0) if events_list else 0
             events_count = len(events_list)
-            events_changed = (top_event_ts != stats_collector_daemon._last_events_ts or events_count != stats_collector_daemon._last_events_count)
+            events_changed = (
+                top_event_ts != stats_collector_daemon._last_events_ts
+                or events_count != stats_collector_daemon._last_events_count
+            )
             if events_changed:
                 stats_collector_daemon._last_events_ts = top_event_ts
                 stats_collector_daemon._last_events_count = events_count
 
             docker_summary = tuple((c.get("id"), c.get("state")) for c in docker_list)
-            docker_changed = (docker_summary != stats_collector_daemon._last_docker_summary)
+            docker_changed = docker_summary != stats_collector_daemon._last_docker_summary
             if docker_changed:
                 stats_collector_daemon._last_docker_summary = docker_summary
 
@@ -416,7 +425,7 @@ def stats_collector_daemon():
             }
 
             # Evaluate alerts
-            evaluate_system_alerts(data['unraid'], data['ups'])
+            evaluate_system_alerts(data["unraid"], data["ups"])
 
             with Z_STATE.lock:
                 Z_STATE.cached_stats = data
@@ -510,4 +519,3 @@ def smart_poller_daemon():
             read_ups_status()
         except Exception as e:
             logger.error(f"[SMART/UPS Poller] Polling cycle error: {e}")
-

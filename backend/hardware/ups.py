@@ -3,6 +3,7 @@ ZettNAS Toolkit - UPS & Power Integrity Telemetry Subsystem
 Monitors battery health, load, runtime, and power status via apcupsd (port 3551 / apcaccess)
 or Network UPS Tools (NUT).
 """
+
 import os
 import re
 import socket
@@ -115,6 +116,7 @@ def _query_nut_cli() -> dict[str, str]:
         except Exception:
             continue
     return {}
+
 
 def read_ups_status(force: bool = False) -> Dict[str, Any]:
     global _CACHED_UPS, _LAST_UPS_POLL

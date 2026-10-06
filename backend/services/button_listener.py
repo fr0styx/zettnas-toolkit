@@ -53,7 +53,9 @@ def button_listener_daemon():
                     threading.Thread(target=lambda c: asyncio.run(_do_copy(c)), args=(cfg,), daemon=True).start()
                 else:
                     new_page = Z_STATE.cycle_lcd_page()
-                    add_event("info", "LCD Page Switched", f"Display cycled to Page {new_page} via front hardware button.")
+                    add_event(
+                        "info", "LCD Page Switched", f"Display cycled to Page {new_page} via front hardware button."
+                    )
 
             last_state = current_state
         except Exception as e:

@@ -3,6 +3,7 @@ ZettNAS Toolkit - Docker Introspection Subsystem
 Queries local Docker daemon Unix socket (/var/run/docker.sock) for container
 health, status, image tags, and uptime.
 """
+
 import http.client
 import json
 import os
@@ -50,14 +51,16 @@ def read_docker_containers(force: bool = False) -> List[Dict[str, Any]]:
         for c in raw:
             names = c.get("Names", [])
             name = names[0].lstrip("/") if names else "unnamed"
-            out.append({
-                "id": c.get("Id", "")[:12],
-                "name": name,
-                "image": c.get("Image", ""),
-                "state": c.get("State", "unknown"),
-                "status": c.get("Status", ""),
-                "created": c.get("Created", 0),
-            })
+            out.append(
+                {
+                    "id": c.get("Id", "")[:12],
+                    "name": name,
+                    "image": c.get("Image", ""),
+                    "state": c.get("State", "unknown"),
+                    "status": c.get("Status", ""),
+                    "created": c.get("Created", 0),
+                }
+            )
         out.sort(key=lambda x: (x["state"] != "running", x["name"]))
         _CACHED_CONTAINERS = out
         _LAST_DOCKER_POLL = now

@@ -66,10 +66,14 @@ def query_history(range_str: str = "24h"):
 
     if range_str == "1h":
         cutoff = now_ts - 3600
-        group_sql = "SELECT ts, cpu_temp, cpu_util, mem_pct, disks_json, fans_json FROM metrics WHERE ts > ? ORDER BY ts ASC"
+        group_sql = (
+            "SELECT ts, cpu_temp, cpu_util, mem_pct, disks_json, fans_json FROM metrics WHERE ts > ? ORDER BY ts ASC"
+        )
     elif range_str == "6h":
         cutoff = now_ts - 21600
-        group_sql = "SELECT ts, cpu_temp, cpu_util, mem_pct, disks_json, fans_json FROM metrics WHERE ts > ? ORDER BY ts ASC"
+        group_sql = (
+            "SELECT ts, cpu_temp, cpu_util, mem_pct, disks_json, fans_json FROM metrics WHERE ts > ? ORDER BY ts ASC"
+        )
     elif range_str == "7d":
         cutoff = now_ts - (86400 * 7)
         # Downsample to 30-minute buckets for 7-day range to keep payload fast and preserve accuracy
@@ -80,7 +84,9 @@ def query_history(range_str: str = "24h"):
         group_sql = "SELECT (ts / 7200) * 7200 AS ts, ROUND(AVG(cpu_temp), 1) AS cpu_temp, ROUND(AVG(cpu_util), 1) AS cpu_util, ROUND(AVG(mem_pct), 1) AS mem_pct, disks_json, fans_json FROM metrics WHERE ts > ? GROUP BY (ts / 7200) ORDER BY ts ASC"
     else:  # default 24h
         cutoff = now_ts - 86400
-        group_sql = "SELECT ts, cpu_temp, cpu_util, mem_pct, disks_json, fans_json FROM metrics WHERE ts > ? ORDER BY ts ASC"
+        group_sql = (
+            "SELECT ts, cpu_temp, cpu_util, mem_pct, disks_json, fans_json FROM metrics WHERE ts > ? ORDER BY ts ASC"
+        )
 
     with get_db_connection() as conn:
         conn.row_factory = sqlite3.Row

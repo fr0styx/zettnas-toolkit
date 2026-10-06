@@ -62,6 +62,7 @@ class TestV13Features(unittest.TestCase):
         self.assertFalse(inv2["success"])
 
         from unittest.mock import patch, MagicMock
+
         with patch("subprocess.run") as mock_run:
             mock_res = MagicMock()
             mock_res.returncode = 0
@@ -136,7 +137,9 @@ class TestV13Features(unittest.TestCase):
             self.assertEqual(resp_inv.status_code, 422)
 
             # Test docker action invalid payload
-            resp_dock = client.post("/api/docker/containers/invalid!id/action", json={"action": "start"}, headers=headers)
+            resp_dock = client.post(
+                "/api/docker/containers/invalid!id/action", json={"action": "start"}, headers=headers
+            )
             self.assertEqual(resp_dock.status_code, 400)
         finally:
             config.STORED_PASSWORD_HASH = saved_hash
@@ -150,11 +153,15 @@ class TestV13Features(unittest.TestCase):
             "/mnt/user/appdata/zettnas-toolkit/frontend/src/i18n.js",
         ]
         i18n_file = next((f for f in candidates if os.path.exists(f)), None)
-        if i18n_file is None: return
+        if i18n_file is None:
+            return
 
         content = open(i18n_file, "r", encoding="utf-8").read()
         for lang in ("en", "de", "zh", "fr", "es"):
-            self.assertTrue(f'"{lang}": {{' in content or f'{lang}: {{' in content, f"Language {lang} should be defined in TRANSLATIONS")
+            self.assertTrue(
+                f'"{lang}": {{' in content or f"{lang}: {{" in content,
+                f"Language {lang} should be defined in TRANSLATIONS",
+            )
             # Ensure major translation keys are present in each language section
             self.assertTrue('"dock.management":' in content or "'dock.management':" in content)
             self.assertTrue('"mgmt.telemetry_title":' in content or "'mgmt.telemetry_title':" in content)
@@ -163,4 +170,3 @@ class TestV13Features(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
