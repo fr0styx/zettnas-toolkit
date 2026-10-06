@@ -5,7 +5,7 @@ requires-python = ">=3.12"
 dependencies = [
     "aiofiles==24.1.0",
     "exifread==3.0.0",
-    "fastapi==0.115.0",
+    "fastapi==0.142.2",
     "apprise>=1.9.0",
     "Pillow>=10.4.0",
     "playwright>=1.47.0",
