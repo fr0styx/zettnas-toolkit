@@ -345,3 +345,31 @@ def fetch_disk_smart_detail(dev_name):
         "temp": temp,
         "raw": raw_text[:4000],
     }
+
+
+def run_disk_smart_test(dev_name: str, test_type: str = "short"):
+    """
+    Triggers an active S.M.A.R.T. self-test on the target disk via smartctl.
+    Supported types: 'short', 'long' (extended).
+    """
+    if not re.fullmatch(r"^(sd[a-z]{1,2}|nvme[0-9]+n[0-9]+)$", dev_name):
+        return {"success": False, "error": "Invalid device name format."}
+
+    test_type = "long" if test_type == "long" else "short"
+    dev = HOST_DEV.rstrip("/") + "/" + dev_name
+    is_nvme = dev_name.startswith("nvme")
+    dtype = "nvme" if is_nvme else "sat"
+
+    try:
+        r = subprocess.run(["smartctl", "-t", test_type, "-d", dtype, dev], capture_output=True, text=True, timeout=15)
+        out = (r.stdout or "") + ("\n" + r.stderr if r.stderr else "")
+        success = (r.returncode == 0) or ("testing has begun" in out.lower()) or ("test routine started" in out.lower())
+        return {
+            "success": success,
+            "dev": dev_name,
+            "test_type": test_type,
+            "output": out.strip()[:1000],
+        }
+    except Exception as e:
+        logger.error(f"[SMART] Failed to start self-test on {dev_name}: {e}")
+        return {"success": False, "error": str(e)}

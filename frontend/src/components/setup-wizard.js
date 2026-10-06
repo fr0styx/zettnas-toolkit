@@ -7,6 +7,7 @@ import { api, auth } from '../api.js';
 import { state } from '../state.js';
 import { showToast } from '../toast.js';
 import { bringToFront } from './dock.js';
+import { t } from '../i18n.js';
 
 let _wizardInitialized = false;
 let _wizardShown = false;
@@ -57,24 +58,24 @@ export function initSetupWizard() {
       };
 
       if (!newPwd) {
-        setErr('Please enter a new password.');
+        setErr(t('setup.err_enter_pwd', 'Please enter a new password.'));
         return;
       }
       if (newPwd.length < 8) {
-        setErr('Password must be at least 8 characters long.');
+        setErr(t('setup.err_min_8', 'Password must be at least 8 characters long.'));
         return;
       }
       if (newPwd.toLowerCase() === 'admin') {
-        setErr("Please choose a secure password other than 'admin'.");
+        setErr(t('setup.err_not_admin', "Please choose a secure password other than 'admin'."));
         return;
       }
       if (newPwd !== confirmPwd) {
-        setErr('New password and confirmation do not match.');
+        setErr(t('setup.err_no_match', 'New password and confirmation do not match.'));
         return;
       }
 
       setErr('');
-      btnSubmit.textContent = 'SAVING...';
+      btnSubmit.textContent = t('setup.saving', 'SAVING...');
       btnSubmit.disabled = true;
 
       try {
@@ -99,11 +100,11 @@ export function initSetupWizard() {
         const warnEl = document.getElementById('sec-default-pwd-warning');
         if (warnEl) warnEl.style.display = 'none';
 
-        showToast('🚀 Setup completed! Your new administrator password is now active.', 'success');
+        showToast(t('setup.success_toast', '🚀 Setup completed! Your new administrator password is now active.'), 'success');
       } catch (err) {
         setErr(err.message || 'Failed to update password. Check current password.');
       } finally {
-        btnSubmit.textContent = 'COMPLETE SETUP & SAVE';
+        btnSubmit.textContent = t('setup.submit', 'Complete Setup & Save');
         btnSubmit.disabled = false;
       }
     });

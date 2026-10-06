@@ -24,13 +24,14 @@ export function applyDashboardLayout() {
     if (cardMap[id]) dashCardsContainer.appendChild(cardMap[id]);
   });
 
-  if (diskRowEl) {
+  const parentContainer = dashCardsContainer.parentElement || screenCanvasEl;
+  if (diskRowEl && parentContainer) {
     const disksIdx = state.dashOrder.indexOf('metric-disks');
     const firstCardIdx = state.dashOrder.findIndex((id) => id !== 'metric-disks' && cardMap[id]);
     if (disksIdx !== -1 && firstCardIdx !== -1 && disksIdx < firstCardIdx) {
-      screenCanvasEl.insertBefore(diskRowEl, dashCardsContainer);
+      parentContainer.insertBefore(diskRowEl, dashCardsContainer);
     } else {
-      screenCanvasEl.appendChild(diskRowEl);
+      parentContainer.appendChild(diskRowEl);
     }
   }
 

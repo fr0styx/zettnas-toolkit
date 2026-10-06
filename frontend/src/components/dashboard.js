@@ -10,6 +10,8 @@ import { updateFanCurveWorkstation } from './fan-control.js';
 import { syncMiniPreviewTelemetry, applyDashboardLayout } from './mini-preview.js';
 import { renderEventLog } from './events.js';
 import { checkAndTriggerSetupWizard } from './setup-wizard.js';
+import { updateManagementTelemetry } from './management.js';
+import { t } from '../i18n.js';
 
 const $ = (id) => document.getElementById(id);
 const FAN_LABELS = ['D1', 'D2', 'CPU', 'SYS'];
@@ -200,6 +202,8 @@ export function renderDisks(disks) {
         if (g.role === 'data') roleLabel = 'PARCELS';
         else if (g.role === 'cache') roleLabel = 'EXPRESS';
         else if (g.role === 'os') roleLabel = 'LOGISTICS';
+      } else {
+        roleLabel = t(`console.role_${g.role}`, meta.label);
       }
       lab.innerHTML = `<svg class="grp-ic"><use href="${meta.icon}"/></svg>${roleLabel}`;
       grp.appendChild(lab);
@@ -287,12 +291,30 @@ export function updateChassisImageForTheme() {
   chassisImg.src = modelMap[chassis] || 'img/chassis-d6u.png';
 }
 
+let _systemThemeMatcher = null;
+
 export function applyTheme(themeName) {
   state.setTheme(themeName);
+
+  if (themeName === 'auto' || themeName === 'system') {
+    if (!_systemThemeMatcher && typeof window !== 'undefined' && window.matchMedia) {
+      _systemThemeMatcher = window.matchMedia('(prefers-color-scheme: dark)');
+      _systemThemeMatcher.addEventListener('change', () => {
+        if (state.currentTheme === 'auto' || state.currentTheme === 'system') {
+          applyTheme('auto');
+        }
+      });
+    }
+    const isDark = _systemThemeMatcher ? _systemThemeMatcher.matches : true;
+    document.body.classList.toggle('theme-light', !isDark);
+    document.body.classList.remove('theme-yak');
+  } else {
+    document.body.classList.remove('theme-light');
+    const isYak = (themeName === 'yak');
+    document.body.classList.toggle('theme-yak', isYak);
+  }
+
   const isYak = (themeName === 'yak');
-
-  document.body.classList.toggle('theme-yak', isYak);
-
   const yakEggBtn = $('yak-easter-egg-btn');
   if (yakEggBtn) {
     yakEggBtn.title = isYak ? 'Yak Express Active! [Press Y or click to toggle]' : 'Trust in the Yak [Easter Egg Hot-key: Y]';
@@ -305,25 +327,25 @@ export function applyTheme(themeName) {
   const icon = $('suite-brand-icon');
 
   if (title) title.textContent = isYak ? 'YAK EXPRESS' : 'ZETTNAS';
-  if (badge) badge.textContent = isYak ? 'RELIABILITY CULT' : 'HARDWARE TOOLKIT';
-  if (engraved) engraved.textContent = isYak ? 'YAK EXPRESS • TOASTIE LOGISTICS LAB' : 'ZETTNAS • SYSTEM CONSOLE';
-  if (drawerSub) drawerSub.textContent = isYak ? 'LOGISTICS LAB' : 'HARDWARE TOOLKIT';
+  if (badge) badge.textContent = isYak ? 'RELIABILITY CULT' : t('nav.toolkit', 'HARDWARE TOOLKIT');
+  if (engraved) engraved.textContent = isYak ? 'YAK EXPRESS • TOASTIE LOGISTICS LAB' : t('console.engraved_title', 'ZETTNAS • SYSTEM CONSOLE');
+  if (drawerSub) drawerSub.textContent = isYak ? 'LOGISTICS LAB' : t('settings.drawer_badge', 'HARDWARE TOOLKIT');
   if (icon) icon.innerHTML = isYak ? '<use href="#i-yak"/>' : '<use href="#i-chip"/>';
 
-  if ($('lbl-module-storage')) $('lbl-module-storage').textContent = isYak ? 'Cargo Hold (Capacity & Donut)' : 'Storage (Donut & Capacity)';
-  if ($('lbl-module-cpu')) $('lbl-module-cpu').textContent = isYak ? 'YAK64 Toastie CPU' : 'CPU Gauge';
-  if ($('lbl-module-fans')) $('lbl-module-fans').textContent = isYak ? 'Asthmatic Yak Airflow & Fans' : 'Fans & Uptime';
-  if ($('lbl-module-disks')) $('lbl-module-disks').textContent = isYak ? 'Yak Parcel Bays (OS, Data, Cache)' : 'Drives Tray (OS, Data, Cache)';
-  if ($('lbl-module-net')) $('lbl-module-net').textContent = isYak ? 'Transit Courier Throughput' : 'Network Throughput';
+  if ($('lbl-module-storage')) $('lbl-module-storage').textContent = isYak ? 'Cargo Hold (Capacity & Donut)' : t('settings.mod_storage', 'Storage (Donut & Capacity)');
+  if ($('lbl-module-cpu')) $('lbl-module-cpu').textContent = isYak ? 'YAK64 Toastie CPU' : t('settings.mod_cpu', 'CPU Gauge');
+  if ($('lbl-module-fans')) $('lbl-module-fans').textContent = isYak ? 'Asthmatic Yak Airflow & Fans' : t('settings.mod_fans', 'Fans & Uptime');
+  if ($('lbl-module-disks')) $('lbl-module-disks').textContent = isYak ? 'Yak Parcel Bays (OS, Data, Cache)' : t('settings.mod_disks', 'Drives Tray (OS, Data, Cache)');
+  if ($('lbl-module-net')) $('lbl-module-net').textContent = isYak ? 'Transit Courier Throughput' : t('settings.mod_net', 'Network Throughput');
 
   const storageTitle = document.querySelector('.card-storage .card-title-txt');
   const cpuTitle = document.querySelector('.card-cpu .card-title-txt');
   const fansTitle = document.querySelector('.card-fans .card-title-txt');
   const netTitle = document.querySelector('.card-net .card-title-txt');
-  if (storageTitle) storageTitle.textContent = isYak ? 'CARGO HOLD' : 'STORAGE';
-  if (cpuTitle) cpuTitle.textContent = isYak ? 'YAK64 CPU' : 'CPU';
-  if (fansTitle) fansTitle.textContent = isYak ? 'YAK AIRFLOW' : 'FANS';
-  if (netTitle) netTitle.textContent = isYak ? 'TRANSIT I/O' : 'NETWORK I/O';
+  if (storageTitle) storageTitle.textContent = isYak ? 'CARGO HOLD' : t('console.storage', 'STORAGE');
+  if (cpuTitle) cpuTitle.textContent = isYak ? 'YAK64 CPU' : t('console.cpu', 'CPU');
+  if (fansTitle) fansTitle.textContent = isYak ? 'YAK AIRFLOW' : t('console.fans', 'FANS');
+  if (netTitle) netTitle.textContent = isYak ? 'TRANSIT I/O' : t('console.net', 'NETWORK I/O');
 
   if (state.latestStats && state.latestStats.disks) {
     renderDisks(state.latestStats.disks);
@@ -352,7 +374,7 @@ export function applyStats(s) {
       if (warnEl) warnEl.style.display = 'block';
       if (!_defaultPwdWarned) {
         _defaultPwdWarned = true;
-        showToast("⚠️ Security Warning: Default password 'admin' is active! Please change it in Settings.", 'error');
+        showToast(t('toast.default_pwd_alert', "⚠️ Security Warning: Default password 'admin' is active! Please change it in Settings."), 'error');
       }
       checkAndTriggerSetupWizard(s);
     }
@@ -424,7 +446,11 @@ export function applyStats(s) {
       updateCopyToast(s.copy_state);
     }
 
+    updateUnraidTelemetry(s.unraid);
+    updateLcdPages(s);
+
     if (!state.isLcdDirect) {
+      updateManagementTelemetry(s);
       ZettEventBus.emit('stats_tick', s);
       updateRowTelemetryBadges(s);
       updateFanCurveWorkstation(s);
@@ -439,6 +465,270 @@ export function applyStats(s) {
 
   } catch (e) {
     console.error('Error applying stats:', e);
+  }
+}
+
+let _currentLcdPageIndex = 0;
+let _lcdDotsInitialized = false;
+let _netPeakRx = 0.0;
+let _netPeakTx = 0.0;
+
+export function updateUnraidTelemetry(unraid) {
+  const arrayPill = $('unraid-array-pill');
+  const parityPill = $('unraid-parity-pill');
+  const moverPill = $('unraid-mover-pill');
+  const storageBadge = $('unraid-storage-badge');
+  const storageText = $('unraid-storage-text');
+  const storageDot = $('unraid-storage-dot');
+  const parityBox = $('unraid-parity-box');
+  const parityBar = $('unraid-parity-bar');
+  const parityTxt = $('unraid-parity-txt');
+
+  if (!unraid || !unraid.available) {
+    if (arrayPill) arrayPill.classList.add('hidden');
+    if (parityPill) parityPill.classList.add('hidden');
+    if (moverPill) moverPill.classList.add('hidden');
+    if (storageBadge) storageBadge.classList.add('hidden');
+    if (parityBox) parityBox.classList.add('hidden');
+    return;
+  }
+
+  // Navbar Array Pill
+  if (arrayPill) {
+    arrayPill.classList.remove('hidden');
+    const statusEl = $('unraid-array-status');
+    const dotEl = $('unraid-array-dot');
+    if (statusEl) statusEl.textContent = unraid.state || 'STARTED';
+    if (dotEl) {
+      dotEl.style.background = unraid.is_healthy ? 'var(--ok2)' : unraid.color?.startsWith('yellow') ? 'var(--warn)' : 'var(--crit)';
+    }
+  }
+
+  // Navbar Parity Pill
+  if (parityPill) {
+    const p = unraid.parity_check || {};
+    if (p.active) {
+      parityPill.classList.remove('hidden');
+      const pStatus = $('unraid-parity-status');
+      if (pStatus) pStatus.textContent = `${p.progress_pct || 0}%`;
+    } else {
+      parityPill.classList.add('hidden');
+    }
+  }
+
+  // Navbar Mover Pill
+  if (moverPill) {
+    const m = unraid.mover || {};
+    if (m.active) {
+      moverPill.classList.remove('hidden');
+      const mStatus = $('unraid-mover-status');
+      if (mStatus) mStatus.textContent = m.remain_files ? `${m.remain_files} left` : 'Active';
+    } else {
+      moverPill.classList.add('hidden');
+    }
+  }
+
+  // Storage Card Badges
+  if (storageBadge && storageText) {
+    storageBadge.classList.remove('hidden');
+    storageText.textContent = `UNRAID: ${unraid.state || 'STARTED'}`;
+    if (storageDot) {
+      storageDot.style.background = unraid.is_healthy ? 'var(--ok2)' : 'var(--warn)';
+    }
+  }
+
+  if (parityBox && parityBar && parityTxt) {
+    const p = unraid.parity_check || {};
+    if (p.active) {
+      parityBox.classList.remove('hidden');
+      parityBar.style.width = `${p.progress_pct || 0}%`;
+      parityTxt.textContent = `Parity: ${p.progress_pct || 0}% (${p.errors || 0} err)`;
+    } else {
+      parityBox.classList.add('hidden');
+    }
+  }
+}
+
+export function switchLcdPage(targetIndex, pushToServer = true) {
+  _currentLcdPageIndex = targetIndex;
+  document.querySelectorAll('.lcd-page').forEach((p) => {
+    p.classList.toggle('active', parseInt(p.dataset.pageIndex, 10) === targetIndex);
+  });
+  document.querySelectorAll('#lcd-page-dots .lcd-dot').forEach((d) => {
+    d.classList.toggle('active', parseInt(d.dataset.page, 10) === targetIndex);
+  });
+  if (pushToServer) {
+    api.post('/api/lcd/page', { page: targetIndex }).catch(() => {});
+  }
+}
+
+if (typeof window !== 'undefined') {
+  window.switchLcdPage = switchLcdPage;
+}
+
+export function initLcdPageDots() {
+  if (_lcdDotsInitialized) return;
+  _lcdDotsInitialized = true;
+  document.querySelectorAll('#lcd-page-dots .lcd-dot').forEach((dot) => {
+    dot.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const pIdx = parseInt(dot.dataset.page, 10);
+      switchLcdPage(pIdx, true);
+    });
+  });
+}
+
+export function updateLcdPages(s) {
+  initLcdPageDots();
+
+  // Sync active page from server if changed
+  if (s.lcd && typeof s.lcd.page === 'number' && s.lcd.page !== _currentLcdPageIndex) {
+    switchLcdPage(s.lcd.page, false);
+  }
+
+  // Page 1: Drive Bay & S.M.A.R.T. Matrix
+  const bayGrid = $('lcd-bay-matrix-grid');
+  if (bayGrid && s.disks) {
+    const disks = s.disks;
+    const numBays = Math.max(6, disks.length);
+    let matrixHtml = '';
+    for (let i = 0; i < numBays; i++) {
+      const d = disks[i];
+      if (!d) {
+        matrixHtml += `
+          <div class="bay-matrix-card empty">
+            <span class="bmc-num">BAY ${i + 1}</span>
+            <svg class="bmc-icon" style="opacity:0.3;"><use href="#i-disk"/></svg>
+            <span class="bmc-dev">EMPTY</span>
+            <div class="bmc-pills">
+              <span class="bmc-health standby">EMPTY</span>
+            </div>
+          </div>
+        `;
+      } else {
+        const isStandby = !!d.standby;
+        const temp = isStandby ? '--' : (d.temp != null ? `${d.temp}°` : '--');
+        const hClass = isStandby ? 'standby' : (d.health || 'ok');
+        const hText = isStandby ? 'STBY' : (d.health ? d.health.toUpperCase() : 'OK');
+        const devName = d.name || d.dev || `sd${String.fromCharCode(97 + i)}`;
+        const modelStr = d.model ? d.model.slice(0, 10) : devName;
+
+        matrixHtml += `
+          <div class="bay-matrix-card ${hClass}">
+            <span class="bmc-num">BAY ${i + 1}</span>
+            <svg class="bmc-icon"><use href="#i-disk"/></svg>
+            <span class="bmc-dev" title="${d.model || devName}">${modelStr}</span>
+            <div class="bmc-pills">
+              <span class="bmc-temp">${temp}</span>
+              <span class="bmc-health ${hClass}">${hText}</span>
+            </div>
+          </div>
+        `;
+      }
+    }
+    bayGrid.innerHTML = matrixHtml;
+
+    const summaryEl = $('lcd-matrix-summary');
+    if (summaryEl) {
+      const critCount = disks.filter((d) => d.health === 'crit').length;
+      const warnCount = disks.filter((d) => d.health === 'warn').length;
+      if (critCount > 0) {
+        summaryEl.textContent = `${critCount} CRITICAL ALERT`;
+        summaryEl.style.color = 'var(--crit)';
+      } else if (warnCount > 0) {
+        summaryEl.textContent = `${warnCount} WARNING`;
+        summaryEl.style.color = 'var(--warn)';
+      } else {
+        summaryEl.textContent = 'ALL DRIVES HEALTHY';
+        summaryEl.style.color = 'var(--ok2)';
+      }
+    }
+  }
+
+  // Page 2: Network & IO Telemetry
+  if (s.net) {
+    const rxStr = s.net.rx || '0 B/s';
+    const txStr = s.net.tx || '0 B/s';
+    if ($('lcd-nio-rx')) $('lcd-nio-rx').textContent = rxStr;
+    if ($('lcd-nio-tx')) $('lcd-nio-tx').textContent = txStr;
+
+    const parseRateVal = (r) => {
+      if (!r) return 0;
+      const num = parseFloat(r);
+      if (r.includes('GB/s')) return num * 1024;
+      if (r.includes('MB/s')) return num;
+      if (r.includes('KB/s')) return num / 1024;
+      return num / 1024 / 1024;
+    };
+
+    const rxMB = parseRateVal(rxStr);
+    const txMB = parseRateVal(txStr);
+    if (rxMB > _netPeakRx) _netPeakRx = rxMB;
+    if (txMB > _netPeakTx) _netPeakTx = txMB;
+
+    if ($('lcd-nio-rx-peak')) $('lcd-nio-rx-peak').textContent = `Peak: ${_netPeakRx.toFixed(1)} MB/s`;
+    if ($('lcd-nio-tx-peak')) $('lcd-nio-tx-peak').textContent = `Peak: ${_netPeakTx.toFixed(1)} MB/s`;
+    if ($('lcd-nio-ip')) $('lcd-nio-ip').textContent = `IP: ${s.ip || '0.0.0.0'}`;
+    if ($('lcd-nio-uptime')) $('lcd-nio-uptime').textContent = `up ${s.uptime || '--'}`;
+
+    const rxPct = Math.min(100, Math.round((rxMB / 125.0) * 100));
+    const txPct = Math.min(100, Math.round((txMB / 125.0) * 100));
+    if ($('lcd-nio-rx-bar')) $('lcd-nio-rx-bar').style.width = `${rxPct}%`;
+    if ($('lcd-nio-tx-bar')) $('lcd-nio-tx-bar').style.width = `${txPct}%`;
+
+    // Disk total IO rate
+    let totalDiskRate = 0.0;
+    if (s.disks) {
+      s.disks.forEach((d) => {
+        if (d.io_rate) totalDiskRate += parseRateVal(d.io_rate);
+      });
+    }
+    if ($('lcd-nio-disk-total')) $('lcd-nio-disk-total').textContent = `${totalDiskRate.toFixed(1)} MB/s`;
+    const ioPct = Math.min(100, Math.round((totalDiskRate / 200.0) * 100));
+    if ($('lcd-nio-io-bar')) $('lcd-nio-io-bar').style.width = `${ioPct}%`;
+  }
+
+  // Page 3: Unraid Array & Copy Hub
+  const unraid = s.unraid || {};
+  if ($('lcd-uc-array-badge')) {
+    $('lcd-uc-array-badge').textContent = unraid.available ? (unraid.state || 'STARTED') : 'STANDALONE';
+    $('lcd-uc-array-badge').style.background = unraid.is_healthy ? 'rgba(37,194,160,0.15)' : 'rgba(240,85,59,0.15)';
+    $('lcd-uc-array-badge').style.color = unraid.is_healthy ? 'var(--ok2)' : 'var(--crit)';
+  }
+  if ($('lcd-unraid-headline')) {
+    $('lcd-unraid-headline').textContent = unraid.available ? `UNRAID ${unraid.version || ''}` : 'STANDALONE OS';
+  }
+  if ($('lcd-uc-disks-stat') && unraid.disks) {
+    const d = unraid.disks;
+    $('lcd-uc-disks-stat').textContent = `Disks: ${d.total || 0} Assigned • ${d.disabled || 0} Disabled • ${d.missing || 0} Missing`;
+  }
+  if (unraid.parity_check) {
+    const p = unraid.parity_check;
+    if ($('lcd-uc-parity-action')) $('lcd-uc-parity-action').textContent = p.active ? (p.action || 'Parity Sync') : 'Parity Check';
+    if ($('lcd-uc-parity-pct')) $('lcd-uc-parity-pct').textContent = p.active ? `${p.progress_pct}%` : 'Idle';
+    if ($('lcd-uc-parity-bar')) $('lcd-uc-parity-bar').style.width = p.active ? `${p.progress_pct}%` : '0%';
+  }
+
+  // Media slots & Copy in Page 3
+  if ($('lcd-uc-media-slots') && s.media_slots) {
+    const sd = s.media_slots.sd || {};
+    const tf = s.media_slots.tf || {};
+    const sdStr = sd.size ? `${(sd.size / 1e9).toFixed(0)} GB` : 'Empty';
+    const tfStr = tf.size ? `${(tf.size / 1e9).toFixed(0)} GB` : 'Empty';
+    $('lcd-uc-media-slots').textContent = `SD: ${sdStr} • TF: ${tfStr}`;
+  }
+  const copyState = s.copy_state || {};
+  if ($('lcd-uc-copy-badge')) {
+    $('lcd-uc-copy-badge').textContent = (copyState.status || 'IDLE').toUpperCase();
+  }
+  if (copyState.progress) {
+    const prog = copyState.progress;
+    const total = prog.total || 0;
+    const copied = prog.copied || 0;
+    const pct = total > 0 ? Math.min(100, Math.round((copied / total) * 100)) : (copyState.status === 'success' ? 100 : 0);
+    if ($('lcd-uc-copy-file')) $('lcd-uc-copy-file').textContent = prog.file || (copyState.status === 'success' ? 'Transfer complete' : 'No active transfer');
+    if ($('lcd-uc-copy-pct')) $('lcd-uc-copy-pct').textContent = copyState.active ? `${pct}%` : (copyState.status === 'success' ? '100%' : '--');
+    if ($('lcd-uc-copy-bar')) $('lcd-uc-copy-bar').style.width = `${pct}%`;
   }
 }
 
@@ -711,3 +1001,11 @@ export function initDashboardClicks() {
   screen.querySelectorAll('.card-fans').forEach((el) => el.addEventListener('click', () => ZettEventBus.emit('modal:metric:open', 'fans')));
   screen.querySelectorAll('.card-net').forEach((el) => el.addEventListener('click', () => ZettEventBus.emit('modal:metric:open', 'net')));
 }
+
+window.addEventListener('zettnas:lang-changed', () => {
+  applyTheme(state.currentTheme);
+  if (state.latestStats && state.latestStats.disks) {
+    renderDisks(state.latestStats.disks);
+  }
+});
+

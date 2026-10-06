@@ -23,6 +23,8 @@ import { initEvents } from './components/events.js';
 import { initSettings, openDrawer, closeDrawer } from './components/settings.js';
 import { initMetricsChart, fetchAndRenderMetrics } from './components/metrics-chart.js';
 import { initSetupWizard } from './components/setup-wizard.js';
+import { initManagement } from './components/management.js';
+import { initI18n } from './i18n.js';
 
 let _sseRetryCount = 0;
 let _sse = null;
@@ -107,6 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
     state.isLcdDirect = true;
     document.body.classList.add('lcd-direct');
   }
+  initI18n();
   initDockSystem();
   initAuth();
   initDashboardClicks();
@@ -117,6 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initSettings();
   initMetricsChart();
   initSetupWizard();
+  initManagement();
 
   applyTheme(state.currentTheme);
   fetchDashboardLayout();

@@ -1,0 +1,122 @@
+"""
+ZettNAS Toolkit - UPS & Power Integrity Telemetry Subsystem
+Monitors battery health, load, runtime, and power status via apcupsd (port 3551 / apcaccess)
+or Network UPS Tools (NUT).
+"""
+import os
+import re
+import socket
+import subprocess
+import time
+from typing import Any, Dict
+
+from backend.config import logger
+
+_CACHED_UPS: Dict[str, Any] = {}
+_LAST_UPS_POLL = 0.0
+_UPS_CACHE_TTL = 3.0
+
+
+def _query_apcupsd_socket(host: str = "127.0.0.1", port: int = 3551, timeout: float = 2.0) -> Dict[str, str]:
+    """Queries apcupsd NIS server via 2-byte length prefixed NIS protocol."""
+    out: Dict[str, str] = {}
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.settimeout(timeout)
+            s.connect((host, port))
+            # NIS status command: 2 bytes length (big endian) + "status"
+            cmd = b"status"
+            s.sendall(len(cmd).to_bytes(2, "big") + cmd)
+
+            while True:
+                len_bytes = s.recv(2)
+                if not len_bytes or len(len_bytes) < 2:
+                    break
+                length = int.from_bytes(len_bytes, "big")
+                if length == 0:
+                    break
+                line_bytes = b""
+                while len(line_bytes) < length:
+                    chunk = s.recv(length - len_bytes)
+                    if not chunk:
+                        break
+                    line_bytes += chunk
+                line = line_bytes.decode("utf-8", errors="replace").strip()
+                if ":" in line:
+                    k, v = line.split(":", 1)
+                    out[k.strip().upper()] = v.strip()
+    except Exception as e:
+        logger.debug(f"[UPS] apcupsd socket check at {host}:{port} returned: {e}")
+    return out
+
+
+def _query_apcaccess_cli() -> Dict[str, str]:
+    for bin_path in ("/sbin/apcaccess", "/usr/sbin/apcaccess", "apcaccess"):
+        try:
+            r = subprocess.run([bin_path, "status"], capture_output=True, text=True, timeout=2.5)
+            if r.returncode == 0 and r.stdout:
+                out = {}
+                for line in r.stdout.splitlines():
+                    if ":" in line:
+                        k, v = line.split(":", 1)
+                        out[k.strip().upper()] = v.strip()
+                return out
+        except Exception:
+            continue
+    return {}
+
+
+def read_ups_status(force: bool = False) -> Dict[str, Any]:
+    global _CACHED_UPS, _LAST_UPS_POLL
+    now = time.time()
+    if not force and _CACHED_UPS and (now - _LAST_UPS_POLL) < _UPS_CACHE_TTL:
+        return _CACHED_UPS
+
+    ups_host = os.getenv("UPS_HOST", "127.0.0.1")
+    ups_port = int(os.getenv("UPS_PORT", "3551"))
+
+    raw = _query_apcupsd_socket(ups_host, ups_port)
+    if not raw:
+        raw = _query_apcaccess_cli()
+
+    if not raw:
+        status_obj = {
+            "available": False,
+            "status": "Not Configured / Offline",
+            "model": "N/A",
+            "battery_charge_pct": None,
+            "time_left_min": None,
+            "load_pct": None,
+            "line_volts": None,
+            "battery_volts": None,
+        }
+        _CACHED_UPS = status_obj
+        _LAST_UPS_POLL = now
+        return status_obj
+
+    # Extract parsed fields
+    bcharge_raw = raw.get("BCHARGE", "")
+    timeleft_raw = raw.get("TIMELEFT", "")
+    load_raw = raw.get("LOADPCT", "")
+    linev_raw = raw.get("LINEV", "")
+    battv_raw = raw.get("BATTV", "")
+
+    def _extract_float(val: str):
+        m = re.search(r"([0-9]+(?:\.[0-9]+)?)", val)
+        return float(m.group(1)) if m else None
+
+    status_str = raw.get("STATUS", "ONLINE").strip()
+    status_obj = {
+        "available": True,
+        "status": status_str,
+        "model": raw.get("MODEL", raw.get("UPSNAME", "Generic UPS")),
+        "battery_charge_pct": _extract_float(bcharge_raw),
+        "time_left_min": _extract_float(timeleft_raw),
+        "load_pct": _extract_float(load_raw),
+        "line_volts": _extract_float(linev_raw),
+        "battery_volts": _extract_float(battv_raw),
+    }
+
+    _CACHED_UPS = status_obj
+    _LAST_UPS_POLL = now
+    return status_obj

@@ -1,5 +1,109 @@
 # ZettNAS Toolkit - Release Changelog
 
+## v1.2.0 (2026-10-05)
+### 🚀 Major Upgrade: Full Internationalization (i18n), System Management Hub, Unraid & Docker Controls, UPS Monitoring, Interactive Charts & Ingest v2
+
+- **Frontend Internationalization (i18n) Engine**:
+  - Complete zero-dependency client-side localization engine (`frontend/src/i18n.js`) with 347 localization keys across 5 languages:
+    - **English** (`en`) — Standard Homelab & Hardware terminology.
+    - **German** (`de`) — Full German translation ("Systemverwaltung", "Hardware-Toolkit-Einstellungen", etc.).
+    - **Simplified Chinese** (`zh`) — Native Chinese localization ("系统控制台", "系统管理中心", etc.) with high-fidelity CJK font fallback stack (`PingFang SC`, `Hiragino Sans GB`, `Microsoft YaHei`, `WenQuanYi Micro Hei`).
+    - **French** (`fr`) — Full French translation ("Console Système", "Centre de Gestion", etc.).
+    - **Spanish** (`es`) — Full Spanish translation ("Consola del Sistema", "Centro de Gestión", etc.).
+  - 100% localization coverage: All views, desktop icons, dock tooltips, S.M.A.R.T. modal, Setup Wizard, Management hub, and Hardware Toolkit Settings.
+  - 1-click quick language picker select in top navigation bar (`#suite-lang-select`) and dedicated "Display Language & Localization" card in Toolkit Settings.
+  - Reactive DOM translation scanner (`data-i18n`, `data-i18n-title`, `data-i18n-placeholder`) and `zettnas:lang-changed` event bus dynamically translating components on the fly without page reload.
+  - User language preference saved in `localStorage` (`zettnas_language`) with automatic browser language detection.
+
+- **System Management Hub & Left-Sidebar Architecture**:
+  - Modernized category navigation from top horizontal tabs to a responsive full-height left sidebar (`.mgmt-sidebar`).
+  - Dynamic active tab indicators, glowing accents, and real-time live telemetry badges (Docker container counts, active alerts).
+  - Reordered desktop icons: **Management** is placed first (featuring official 3D chassis artwork `chassis-d6u.png`), followed by **ZettNAS** (renamed from ZettNAS Console with screen display glyph).
+  - Persistent drag-and-drop desktop icons: users can drag and position desktop icons anywhere on screen with automatic viewport boundary clamping, saved in `localStorage` (`zettnas_desktop_icon_positions`).
+  - Intelligent drag-vs-click arbitration (>5px movement threshold) preventing accidental window launches on drop.
+
+- **Unraid Host Subsystem & Parity Integration**:
+  - Live telemetry parser for `/var/local/emhttp/var.ini` and `mover.ini` with caching and graceful non-Unraid fallback.
+  - Monitors array state (`STARTED`, `STOPPED`), array health, server hostname (`Ark`), chassis model (`D6U`), OS version (`Unraid 7.3.2`), and assigned disk topology.
+  - Real-time parity check monitoring (`action`, `progress_pct`, `errors`) and Mover activity tracking (`remain_files`).
+  - Real-time navbar pills (`Array: STARTED`, `Parity: 0%`, Mover status) and storage card badges in WebUI and LCD.
+  - Dedicated REST API endpoint `GET /api/unraid` and Unraid card inside System Management window.
+
+- **Docker Container Introspection & Lifecycle Controls**:
+  - Zero-dependency Unix domain socket client communicating directly with `/var/run/docker.sock` via Python standard library `http.client` and `AF_UNIX`.
+  - Introspection table returning container list, state (`running`, `exited`), health status (`healthy`, `unhealthy`), uptime, image, and ID.
+  - Direct container lifecycle control (`Start`, `Stop`, `Restart`) within the Management window Docker table.
+  - REST endpoints `GET /api/docker/containers` and `POST /api/docker/containers/{container_id}/action` with robust ID sanitization and asynchronous non-blocking execution.
+  - In-place action button spinners, error notifications, and automated container list re-polling.
+
+- **UPS & Power Integrity Monitoring**:
+  - Native telemetry provider for Uninterruptible Power Supplies supporting Network UPS Tools (NUT) and apcupsd NIS protocol (port 3551) with fallback to `/sbin/apcaccess`.
+  - Reports daemon status, battery percentage, estimated runtime, load percentage, and line input voltage.
+  - REST endpoint `GET /api/ups` and dedicated "UPS & Power Integrity" card in System Management window.
+
+- **Interactive Historical Charts (Pan & Zoom)**:
+  - Integrated `chartjs-plugin-zoom` dynamically loaded on-demand alongside Chart.js (`chartjs-plugin-zoom.esm-*.js`).
+  - Enabled mouse-wheel and touch pinch zooming along the horizontal time axis, accompanied by click-and-drag panning and boundary clamping.
+  - Dynamic "↺ Reset Zoom" button appearing automatically upon viewport interaction to restore default time range.
+  - Granular multi-device historical metrics view split into dedicated category tabs: "All Devices", "CPU & RAM", "Storage Disks", and "Cooling Fans".
+  - Individual drive temperature curves (`sda`, `sdb`, `nv0`, `nv1`, etc.) and dual-axis cooling fan RPM tracking across granular time windows (`1h`, `6h`, `24h`, `7d`, `30d`).
+  - Live summary telemetry pills displaying instantaneous CPU, memory, drive temperatures, and fan speeds above the charts.
+
+- **Active S.M.A.R.T. Drive Self-Tests**:
+  - REST endpoint `POST /api/disk/smart_test` triggering background `smartctl -t short` or `smartctl -t long` self-tests on SATA/NVMe drives.
+  - Input validation strictly guarding device names against shell injection.
+  - Interactive "Run Short Test (~2m)" and "Run Extended Test" buttons added directly into S.M.A.R.T. Diagnostics modal with real-time toast feedback.
+
+- **Copy Engine v2 - SHA-256 Checksums & Persistent History**:
+  - Post-ingest streaming SHA-256 integrity verification (`verify_checksum=True`) verifying source and destination files match bit-for-bit.
+  - Persistent SQLite audit log in `history.db` (`copy_history` table) tracking timestamp, source, destination, file counts, bytes, duration, checksum status, and error logs.
+  - Dedicated `Media Ingest & Checksum History` app card and table in System Management window with dynamic refresh.
+  - REST endpoint `GET /api/copy/history?limit=50`.
+
+- **LCD Multi-Page Carousel & Hardware Button Cycling**:
+  - Modular 4-page LCD carousel strictly fitted to 640x172 (and rotated 172x640 `/dev/fb0` display):
+    - **Page 0 (Overview Dashboard)**: Gauges, storage pool rings, fans, and disks row.
+    - **Page 1 (Drive Bay & S.M.A.R.T. Matrix)**: 6-bay visual chassis layout, disk temperature pills, S.M.A.R.T. health badges, and alert summary.
+    - **Page 2 (Network & Storage I/O Telemetry)**: Inbound RX rate & peak, Outbound TX rate & peak, real-time interface IP, storage I/O throughput, active device count.
+    - **Page 3 (Unraid Array & Media Ingest Hub)**: Array state badge, disk assignment, parity check progress bar, media slot status, copy progress bar.
+  - Screen header pagination dots `(1) (2) (3) (4)` with interactive click navigation and active state sync.
+  - Physical front-panel chassis button cycling: pressing the hardware button advances through LCD pages when copy is not active.
+  - Configurable auto-cycle interval in Toolkit Settings (`Off`, `5s`, `10s`, `15s`, `30s`) and REST endpoints `GET/POST /api/lcd/page`, `POST /api/lcd/cycle`.
+
+- **Acoustic Profiles & Auto Dynamic Synchronization**:
+  - System Acoustic profile presets ("Quiet", "Balanced", "Performance") mapping fan curve ceilings and ARGB brightness/effects.
+  - Direct 1-click switcher in System Management window and REST endpoint `POST /api/system/profile`.
+  - Dynamic synchronization with live `stats.fan_control.profile` and dedicated "Auto Dynamic" status pill.
+
+- **Aero Snap Desktop Window Management**:
+  - Interactive window snapping to screen edges: Dragging a window header to the left or right edge triggers a translucent animated ghost outline (`#window-snap-ghost`) for a half-screen snap; dragging to the top edge snaps to full screen.
+  - Header double-click toggles maximize / restore with saved geometry.
+  - Natural un-snapping allows windows to restore to original bounds when dragged away from snapped edges.
+  - Dedicated maximize/restore button in window header and dock integration.
+
+- **Dedicated Mobile Stacked Mode & Responsive Layout**:
+  - Top navigation bar toggle (`#mobile-view-toggle-btn`) allowing 1-click toggling between floating desktop windows and vertical mobile stacked cards.
+  - User preference persisted across reloads in `localStorage` (`zettnas_mobile_mode`).
+  - Mobile layout automatically handles narrow viewports (`@media (max-width: 768px)` and `body.mobile-mode`) stacking CPU, storage, fans, drives, and ARGB lights into full-width cards.
+  - Dock and modals scale proportionally with touch-friendly button targets.
+
+- **Dynamic Code-Splitting for Chart.js**:
+  - Migrated `chart.js/auto` from monolithic initial bundle to dynamic on-demand import (`import('chart.js/auto')`).
+  - Reduced initial bundle size by over 203 kB (`index.js` drops from ~324 kB to 121 kB), dramatically accelerating first paint and mobile load times.
+
+- **Database & Architecture Optimizations**:
+  - Configured SQLite connection pool with Write-Ahead Logging (`PRAGMA journal_mode=WAL;`), `PRAGMA synchronous=NORMAL;`, and `PRAGMA busy_timeout=5000;` for zero write contention during heavy telemetry ingest.
+  - Wrapped synchronous filesystem directory scans (`os.scandir`) in `asyncio.to_thread` for fast, non-blocking folder exploration in `POST /api/browse`.
+  - Re-themed native select dropdowns (e.g. LCD Auto-cycle) to match project dark/teal design language with custom SVG chevron arrow, dark menu styling, and focus glow.
+
+- **Accessibility & Focus Trapping**:
+  - Built-in `trapFocus(element, onEscape)` utility cycling focus strictly inside open dialogs (S.M.A.R.T., Metrics, Management, Settings).
+  - ARIA dialog attributes (`role="dialog"`, `aria-modal="true"`, `aria-label`) added to modals and management window.
+  - Dock toolbar (`role="toolbar"`) with left/right arrow key navigation and Enter/Space actuation.
+  - Universal `Escape` key dismissal for all active overlays and modals.
+  - Automatic `prefers-color-scheme` media query synchronization.
+
+
 ## v1.1.0 (2026-10-05)
 ### ⚡ Performance, Telemetry Broadcaster & Multi-Channel Alerting
 - **Multi-Channel Notifications Engine**:

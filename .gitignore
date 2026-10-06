@@ -32,4 +32,5 @@ data/
 # Node / Frontend artifacts
 node_modules/
 dist/
+scratch/
 

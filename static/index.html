@@ -4,18 +4,18 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ZettNAS Studio • Hardware Suite</title>
-  <script type="module" crossorigin src="/assets/index-D8s2H6Ys.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-B_WKi5UB.css">
+  <script type="module" crossorigin src="/assets/index-B8-OW8L8.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-BXTwEn5u.css">
 </head>
 <body class="studio-workbench">
 
 <div id="login-overlay" style="display: none; position: fixed; inset: 0; z-index: 999999; background: var(--bg); align-items: center; justify-content: center; align-items: center; justify-content: center;">
   <div style="background: var(--card); padding: 40px; border-radius: 12px; text-align: center; border: 1px solid rgba(255,255,255,0.1); width: 320px; box-shadow: 0 25px 60px rgba(0,0,0,0.8);">
     <svg class="ic" style="width: 48px; height: 48px; color: var(--ok2); margin-bottom: 20px;"><use href="#i-chip"/></svg>
-    <h2 style="margin: 0 0 8px 0; font-size: 16px; letter-spacing: 2px; color: #fff;">ZETTNAS TOOLKIT</h2>
-    <p id="login-identity-txt" style="margin: 0 0 24px 0; font-size: 13px; color: var(--muted);">Authentication Required</p>
-    <input type="password" id="login-password" placeholder="Admin Password" style="width: 100%; padding: 12px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 6px; margin-bottom: 20px; box-sizing: border-box; text-align: center; font-size: 16px; outline: none;">
-    <button id="login-btn" class="suite-toolkit-btn" style="width: 100%; padding: 12px; font-size: 14px;">SECURE LOGIN</button>
+    <h2 style="margin: 0 0 8px 0; font-size: 16px; letter-spacing: 2px; color: #fff;" data-i18n="login.title">ZETTNAS TOOLKIT</h2>
+    <p id="login-identity-txt" style="margin: 0 0 24px 0; font-size: 13px; color: var(--muted);" data-i18n="login.auth_required">Authentication Required</p>
+    <input type="password" id="login-password" placeholder="Admin Password" data-i18n-placeholder="login.placeholder" style="width: 100%; padding: 12px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 6px; margin-bottom: 20px; box-sizing: border-box; text-align: center; font-size: 16px; outline: none;">
+    <button id="login-btn" class="suite-toolkit-btn" style="width: 100%; padding: 12px; font-size: 14px;" data-i18n="login.btn">SECURE LOGIN</button>
   </div>
 </div>
 
@@ -75,6 +75,27 @@
     <symbol id="i-storage" viewBox="0 0 24 24">
       <path d="M18 2H8C6.9 2 6 2.9 6 4v16c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 2v2h-2V4h2zm-4 0v2h-2V4h2zm6 16H8V8h12v12z" fill="currentColor"/>
     </symbol>
+    <symbol id="i-management" viewBox="0 0 24 24">
+      <rect x="3" y="3" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/>
+      <rect x="14" y="3" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/>
+      <rect x="3" y="14" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/>
+      <rect x="14" y="14" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/>
+      <circle cx="6.5" cy="6.5" r="1.5" fill="currentColor"/>
+      <circle cx="17.5" cy="6.5" r="1.5" fill="currentColor"/>
+      <circle cx="6.5" cy="17.5" r="1.5" fill="currentColor"/>
+      <circle cx="17.5" cy="17.5" r="1.5" fill="currentColor"/>
+    </symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24">
+      <rect x="3" y="3" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/>
+      <rect x="14" y="3" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/>
+      <rect x="3" y="14" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/>
+      <rect x="14" y="14" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/>
+    </symbol>
+    <symbol id="i-screen" viewBox="0 0 24 24">
+      <rect x="2" y="4" width="20" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
+      <path d="M6 11h2.5l1.5-3 2 6 1.5-3H16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M12 17v3M8 20h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    </symbol>
   </defs>
 </svg>
 
@@ -83,25 +104,48 @@
     <div class="suite-brand">
       <svg class="ic" id="suite-brand-icon" style="width:16px;height:16px;"><use href="#i-chip"/></svg>
       <span class="suite-title" id="suite-brand-title">ZETTNAS</span>
-      <span class="suite-badge" id="suite-brand-badge">HARDWARE TOOLKIT</span>
+      <span class="suite-badge" id="suite-brand-badge" data-i18n="nav.toolkit">HARDWARE TOOLKIT</span>
     </div>
 
     <div class="suite-telemetry-pills">
+      <div id="unraid-array-pill" class="suite-pill hidden"><span class="pulse-dot" id="unraid-array-dot"></span> <span data-i18n="nav.array">Array</span>: <strong id="unraid-array-status">STARTED</strong></div>
+      <div id="unraid-parity-pill" class="suite-pill hidden"><span class="pulse-dot" style="background:var(--accent-cyan,#00f0ff);box-shadow:0 0 6px var(--accent-cyan,#00f0ff)"></span> <span data-i18n="nav.parity">Parity</span>: <strong id="unraid-parity-status">0.0%</strong></div>
+      <div id="unraid-mover-pill" class="suite-pill hidden"><span class="pulse-dot" style="background:var(--warn,#f5a623);box-shadow:0 0 6px var(--warn,#f5a623)"></span> <span data-i18n="nav.mover">Mover</span>: <strong id="unraid-mover-status">Active</strong></div>
       <div class="suite-pill"><span class="pulse-dot"></span> MCU: <strong>/dev/ttyACM0</strong></div>
       <div class="suite-pill"><span class="pulse-dot"></span> FB: <strong>/dev/fb0 (640x172)</strong></div>
-                  <button id="yak-easter-egg-btn" class="yak-egg-btn" title="Trust in the Yak [Easter Egg Hot-key: Y]">🐂</button>
-      <button id="drawer-toggle-btn" class="suite-toolkit-btn" title="Open Hardware Toolkit Settings [Hot-key: T]">
-        <span class="btn-ic">⚙</span><span class="btn-txt"> TOOLKIT SETTINGS</span>
+      <select id="suite-lang-select" class="language-picker-select tz-select-input" title="Select Display Language" style="width: auto; padding: 2px 6px; font-size: 11px; height: 26px; border-radius: 6px; cursor: pointer;">
+        <option value="en">🇺🇸 EN</option>
+        <option value="de">🇩🇪 DE</option>
+        <option value="zh">🇨🇳 中文</option>
+        <option value="fr">🇫🇷 FR</option>
+        <option value="es">🇪🇸 ES</option>
+      </select>
+      <button id="mobile-view-toggle-btn" class="yak-egg-btn" title="Toggle Mobile / Stacked Mode" aria-label="Toggle Mobile Layout" data-i18n-title="nav.mobile_toggle">📱</button>
+      <button id="yak-easter-egg-btn" class="yak-egg-btn" title="Trust in the Yak [Easter Egg Hot-key: Y]" data-i18n-title="nav.yak_egg">🐂</button>
+      <button id="drawer-toggle-btn" class="suite-toolkit-btn" title="Open Hardware Toolkit Settings [Hot-key: T]" data-i18n-title="nav.settings">
+        <span class="btn-ic">⚙</span><span class="btn-txt" data-i18n="nav.settings"> TOOLKIT SETTINGS</span>
       </button>
     </div>
   </header>
 
   <main class="chassis-workbench-stage">
-    <div class="chassis-hero-box chassis-desktop-icon" id="chassis-desktop-icon" role="button" tabindex="0" title="Click to open System Dashboard">
-      <img id="chassis-hero-img" src="img/chassis-d6u.png" class="chassis-hero-img" alt="NAS Hardware Chassis">
-      <div class="desktop-icon-label">
-        <span class="icon-dot-status"></span>
-        <span class="icon-text">ZettNAS Console</span>
+    <div class="desktop-icons-container" id="desktop-icons-container">
+      <div class="chassis-hero-box management-desktop-icon" id="management-desktop-icon" role="button" tabindex="0" title="Click to open System Management" data-i18n-title="dock.management">
+        <img id="chassis-hero-img" src="img/chassis-d6u.png" class="chassis-hero-img" alt="NAS Hardware Management">
+        <div class="desktop-icon-label">
+          <span class="icon-dot-status icon-dot-mgmt"></span>
+          <span class="icon-text" data-i18n="dock.management">Management</span>
+        </div>
+      </div>
+
+      <div class="chassis-hero-box chassis-desktop-icon" id="chassis-desktop-icon" role="button" tabindex="0" title="Click to open ZettNAS (IPS Display)" data-i18n-title="dock.zettnas">
+        <div class="console-hero-box">
+          <svg class="console-hero-icon"><use href="#i-screen"/></svg>
+        </div>
+        <div class="desktop-icon-label">
+          <span class="icon-dot-status"></span>
+          <span class="icon-text" data-i18n="dock.zettnas">ZettNAS</span>
+        </div>
       </div>
     </div>
   </main>
@@ -111,7 +155,7 @@
   <div class="smart-modal-window">
     <div class="smart-modal-header">
       <span class="smart-modal-title" id="smart-modal-title">
-        <svg class="ic"><use href="#i-disk"/></svg> S.M.A.R.T. Diagnostics
+        <svg class="ic"><use href="#i-disk"/></svg> <span data-i18n="modal.smart_title">S.M.A.R.T. Diagnostics</span>
       </span>
       <div style="display:flex; gap:12px; align-items:center;">
         <button id="smart-modal-refresh" class="btn-icon" title="Refresh SMART data" style="font-size: 20px; padding: 2px;">↻</button>
@@ -121,12 +165,18 @@
     </div>
     <div class="smart-modal-body">
       <div class="smart-meta-grid" id="smart-modal-grid">
-        <div class="smart-meta-cell"><span class="lbl" id="smart-lbl-1">DEVICE & MODEL</span><span class="val" id="smart-meta-model">--</span></div>
-        <div class="smart-meta-cell"><span class="lbl" id="smart-lbl-2">SERIAL / METRIC</span><span class="val" id="smart-meta-serial">--</span></div>
-        <div class="smart-meta-cell"><span class="lbl" id="smart-lbl-3">HEALTH / STATUS</span><span class="val" id="smart-meta-health">--</span></div>
-        <div class="smart-meta-cell"><span class="lbl" id="smart-lbl-4">HOURS / READOUT</span><span class="val" id="smart-meta-hours">--</span></div>
+        <div class="smart-meta-cell"><span class="lbl" id="smart-lbl-1" data-i18n="modal.smart_device_model">DEVICE & MODEL</span><span class="val" id="smart-meta-model">--</span></div>
+        <div class="smart-meta-cell"><span class="lbl" id="smart-lbl-2" data-i18n="modal.smart_serial_metric">SERIAL / METRIC</span><span class="val" id="smart-meta-serial">--</span></div>
+        <div class="smart-meta-cell"><span class="lbl" id="smart-lbl-3" data-i18n="modal.smart_health_status">HEALTH / STATUS</span><span class="val" id="smart-meta-health">--</span></div>
+        <div class="smart-meta-cell"><span class="lbl" id="smart-lbl-4" data-i18n="modal.smart_hours_readout">HOURS / READOUT</span><span class="val" id="smart-meta-hours">--</span></div>
       </div>
-      <span style="font-size:9px; font-weight:800; color:var(--muted); letter-spacing:1px;" id="smart-modal-raw-title">RAW TELEMETRY ATTRIBUTES</span>
+      <div id="smart-actions-container" style="display: flex; gap: 8px; align-items: center; margin: 10px 0 6px 0; padding: 6px 8px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 6px;">
+        <span style="font-size: 9.5px; font-weight: 800; color: var(--muted); letter-spacing: 0.8px;" data-i18n="modal.smart_self_tests">SELF-TESTS:</span>
+        <button id="smart-btn-short-test" class="smart-test-action-btn" style="background: rgba(37,194,160,0.15); border: 1px solid var(--accent); color: var(--accent); font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 4px; cursor: pointer;" data-i18n="modal.smart_short_test">▶ Run Short Test (~2m)</button>
+        <button id="smart-btn-extended-test" class="smart-test-action-btn" style="background: rgba(52,152,219,0.15); border: 1px solid #3498db; color: #38bdf8; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 4px; cursor: pointer;" data-i18n="modal.smart_extended_test">▶ Run Extended Test</button>
+        <span id="smart-test-status" style="font-size: 10px; color: var(--muted); margin-left: auto;"></span>
+      </div>
+      <span style="font-size:9px; font-weight:800; color:var(--muted); letter-spacing:1px;" id="smart-modal-raw-title" data-i18n="modal.smart_raw_telemetry">RAW TELEMETRY ATTRIBUTES</span>
       <pre class="smart-raw-pre" id="smart-raw-output">Querying telemetry...</pre>
     </div>
   </div>
@@ -136,50 +186,50 @@
   <div class="smart-modal-window" style="width: 540px; border-color: rgba(224, 122, 56, 0.4); box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(224, 122, 56, 0.15);">
     <div class="smart-modal-header" style="background: linear-gradient(90deg, #182332 0%, #1a1e29 100%); border-bottom: 1px solid rgba(224, 122, 56, 0.25);">
       <span class="smart-modal-title" id="setup-wizard-title" style="color: #f1f5f9;">
-        <span style="font-size: 18px;">⚡</span> ZettNAS Setup Wizard
+        <span style="font-size: 18px;">⚡</span> <span data-i18n="setup.title">ZettNAS Setup Wizard</span>
       </span>
       <button id="setup-wizard-close" class="btn-icon" aria-label="Close dialog">✕</button>
     </div>
     <div class="smart-modal-body" style="padding: 24px; gap: 18px;">
       <div style="background: rgba(224, 122, 56, 0.08); border: 1px solid rgba(224, 122, 56, 0.2); border-radius: 8px; padding: 12px 14px;">
-        <div style="font-size: 13px; font-weight: 700; color: #f8fafc; margin-bottom: 4px;">Welcome to your ZettNAS Toolkit!</div>
-        <div style="font-size: 11.5px; color: #94a3b8; line-height: 1.45;">Your NAS hardware environment has been initialized. Complete this initial setup to secure your console and review connected peripherals.</div>
+        <div style="font-size: 13px; font-weight: 700; color: #f8fafc; margin-bottom: 4px;" data-i18n="setup.welcome_title">Welcome to your ZettNAS Toolkit!</div>
+        <div style="font-size: 11.5px; color: #94a3b8; line-height: 1.45;" data-i18n="setup.welcome_desc">Your NAS hardware environment has been initialized. Complete this initial setup to secure your console and review connected peripherals.</div>
       </div>
 
       <div>
-        <div style="font-size: 11px; font-weight: 800; letter-spacing: 0.8px; color: #94a3b8; text-transform: uppercase; margin-bottom: 8px;">1. Hardware Subsystem Health</div>
+        <div style="font-size: 11px; font-weight: 800; letter-spacing: 0.8px; color: #94a3b8; text-transform: uppercase; margin-bottom: 8px;" data-i18n="setup.step1_title">1. Hardware Subsystem Health</div>
         <div class="smart-meta-grid" style="grid-template-columns: repeat(2, 1fr); gap: 8px;">
-          <div class="smart-meta-cell" style="padding: 10px 12px;"><span class="lbl">CHASSIS MODEL</span><span class="val" id="setup-hw-chassis" style="font-size: 12px; color: #38bdf8;">Detecting...</span></div>
-          <div class="smart-meta-cell" style="padding: 10px 12px;"><span class="lbl">LCD SCREEN</span><span class="val" id="setup-hw-fb" style="font-size: 12px; color: #4ade80;">Active (/dev/fb0)</span></div>
-          <div class="smart-meta-cell" style="padding: 10px 12px;"><span class="lbl">FANS CONTROLLER</span><span class="val" id="setup-hw-fans" style="font-size: 12px; color: #4ade80;">Active (hwmon)</span></div>
-          <div class="smart-meta-cell" style="padding: 10px 12px;"><span class="lbl">ARGB LIGHTBAR</span><span class="val" id="setup-hw-leds" style="font-size: 12px; color: #4ade80;">WS2812B Ready</span></div>
+          <div class="smart-meta-cell" style="padding: 10px 12px;"><span class="lbl" data-i18n="setup.chassis_model">CHASSIS MODEL</span><span class="val" id="setup-hw-chassis" style="font-size: 12px; color: #38bdf8;">Detecting...</span></div>
+          <div class="smart-meta-cell" style="padding: 10px 12px;"><span class="lbl" data-i18n="setup.lcd_screen">LCD SCREEN</span><span class="val" id="setup-hw-fb" style="font-size: 12px; color: #4ade80;">Active (/dev/fb0)</span></div>
+          <div class="smart-meta-cell" style="padding: 10px 12px;"><span class="lbl" data-i18n="setup.fans_controller">FANS CONTROLLER</span><span class="val" id="setup-hw-fans" style="font-size: 12px; color: #4ade80;">Active (hwmon)</span></div>
+          <div class="smart-meta-cell" style="padding: 10px 12px;"><span class="lbl" data-i18n="setup.argb_lightbar">ARGB LIGHTBAR</span><span class="val" id="setup-hw-leds" style="font-size: 12px; color: #4ade80;">WS2812B Ready</span></div>
         </div>
       </div>
 
       <div>
-        <div style="font-size: 11px; font-weight: 800; letter-spacing: 0.8px; color: #94a3b8; text-transform: uppercase; margin-bottom: 8px;">2. Set Administrator Password</div>
-        <div style="font-size: 11.5px; color: #cbd5e1; margin-bottom: 10px;">The default password (<code style="background:rgba(255,255,255,0.1); padding:2px 4px; border-radius:3px;">admin</code>) is currently active. Replace it with a secure password (minimum 8 characters).</div>
+        <div style="font-size: 11px; font-weight: 800; letter-spacing: 0.8px; color: #94a3b8; text-transform: uppercase; margin-bottom: 8px;" data-i18n="setup.step2_title">2. Set Administrator Password</div>
+        <div style="font-size: 11.5px; color: #cbd5e1; margin-bottom: 10px;" data-i18n="setup.step2_desc">The default password (<code style="background:rgba(255,255,255,0.1); padding:2px 4px; border-radius:3px;">admin</code>) is currently active. Replace it with a secure password (minimum 8 characters).</div>
 
         <div style="display: flex; flex-direction: column; gap: 8px;">
           <div>
-            <label style="display:block; font-size: 10.5px; font-weight: 700; color: #94a3b8; margin-bottom: 4px;">CURRENT PASSWORD</label>
+            <label style="display:block; font-size: 10.5px; font-weight: 700; color: #94a3b8; margin-bottom: 4px;" data-i18n="setup.cur_pwd">CURRENT PASSWORD</label>
             <input id="setup-current-pwd" type="password" value="admin" class="input-text" style="width: 100%; font-size: 12px; padding: 8px 10px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: #fff;">
           </div>
           <div>
-            <label style="display:block; font-size: 10.5px; font-weight: 700; color: #94a3b8; margin-bottom: 4px;">NEW PASSWORD</label>
-            <input id="setup-new-pwd" type="password" placeholder="At least 8 characters..." class="input-text" style="width: 100%; font-size: 12px; padding: 8px 10px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: #fff;">
+            <label style="display:block; font-size: 10.5px; font-weight: 700; color: #94a3b8; margin-bottom: 4px;" data-i18n="setup.new_pwd">NEW PASSWORD</label>
+            <input id="setup-new-pwd" type="password" placeholder="At least 8 characters..." data-i18n-placeholder="setup.new_pwd_placeholder" class="input-text" style="width: 100%; font-size: 12px; padding: 8px 10px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: #fff;">
           </div>
           <div>
-            <label style="display:block; font-size: 10.5px; font-weight: 700; color: #94a3b8; margin-bottom: 4px;">CONFIRM NEW PASSWORD</label>
-            <input id="setup-confirm-pwd" type="password" placeholder="Repeat new password..." class="input-text" style="width: 100%; font-size: 12px; padding: 8px 10px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: #fff;">
+            <label style="display:block; font-size: 10.5px; font-weight: 700; color: #94a3b8; margin-bottom: 4px;" data-i18n="setup.confirm_pwd">CONFIRM NEW PASSWORD</label>
+            <input id="setup-confirm-pwd" type="password" placeholder="Repeat new password..." data-i18n-placeholder="setup.confirm_pwd_placeholder" class="input-text" style="width: 100%; font-size: 12px; padding: 8px 10px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: #fff;">
           </div>
         </div>
         <div id="setup-wizard-err" style="display: none; margin-top: 8px; font-size: 11.5px; color: var(--crit); font-weight: 600;"></div>
       </div>
 
       <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 6px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 16px;">
-        <button id="setup-wizard-skip" class="btn-cancel" style="padding: 8px 16px; font-size: 12px;">Remind Me Later</button>
-        <button id="setup-wizard-submit" class="btn-save-preset" style="padding: 8px 20px; font-size: 12px; background: #e07a38; border-color: #d06d2d; color: #fff; font-weight: 700;">Complete Setup & Save</button>
+        <button id="setup-wizard-skip" class="btn-cancel" style="padding: 8px 16px; font-size: 12px;" data-i18n="setup.remind_later">Remind Me Later</button>
+        <button id="setup-wizard-submit" class="btn-save-preset" style="padding: 8px 20px; font-size: 12px; background: #e07a38; border-color: #d06d2d; color: #fff; font-weight: 700;" data-i18n="setup.submit">Complete Setup & Save</button>
       </div>
     </div>
   </div>
@@ -189,144 +239,30 @@
 <aside id="led-drawer" class="slide-drawer">
   <div class="drawer-header">
     <div>
-      <div class="drawer-sub"><span id="drawer-nas-name">NAS</span> • <span id="drawer-sub-badge">HARDWARE TOOLKIT</span></div>
-      <h2 class="drawer-title" id="drawer-dynamic-title">Dashboard Layout</h2>
-      <p class="drawer-subdesc" id="drawer-dynamic-desc">Configure dashboard sizes, visibility, and layout presets.</p>
+      <div class="drawer-sub"><span id="drawer-nas-name">NAS</span> • <span id="drawer-sub-badge" data-i18n="settings.drawer_badge">HARDWARE TOOLKIT</span></div>
+      <h2 class="drawer-title" id="drawer-dynamic-title" data-i18n="settings.tab_layout_title">Dashboard Layout</h2>
+      <p class="drawer-subdesc" id="drawer-dynamic-desc" data-i18n="settings.tab_layout_desc">Configure dashboard sizes, visibility, and layout presets.</p>
     </div>
     <button id="drawer-close-btn" class="btn-icon">✕</button>
   </div>
 
   <div class="drawer-tabs-nav">
-    <button class="drawer-tab-btn active" data-tab="tab-layout">Dashboard Layout</button>
-    <button class="drawer-tab-btn" data-tab="tab-led">LED Strip bar</button>
-    <button class="drawer-tab-btn" data-tab="tab-fans">Fans</button>
-    <button class="drawer-tab-btn" data-tab="tab-buttons">Copy Button</button>
-    <button class="drawer-tab-btn" data-tab="tab-misc">Misc</button>
+    <button class="drawer-tab-btn active" data-tab="tab-layout" data-i18n="settings.tab_layout">Dashboard Layout</button>
+    <button class="drawer-tab-btn" data-tab="tab-led" data-i18n="settings.tab_led">LED Strip bar</button>
+    <button class="drawer-tab-btn" data-tab="tab-fans" data-i18n="settings.tab_fans">Fans</button>
+    <button class="drawer-tab-btn" data-tab="tab-buttons" data-i18n="settings.tab_buttons">Copy Button</button>
   </div>
-
-  
-  <!-- MISC TAB -->
-  <div id="tab-misc" class="drawer-tab-content">
-    <div class="tab-sub-header">
-      <span class="sub-title">Misc & Event Log Arrangement</span>
-      <button id="misc-cards-lock-btn" class="btn-lock-toggle" title="Lock or Unlock Section Order">🔒 Locked</button>
-    </div>
-    <div id="misc-sections-container" class="drawer-cards-flow locked">
-    
-    
-    
-    <!-- Wallpaper Section -->
-    <div class="draggable-card drawer-card" data-misc-card-id="sec-wallpaper">
-      <div class="card-headline">
-        <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <svg class="ic ic-sm" style="margin-right:6px;"><use href="#i-globe"/></svg>Custom Wallpaper<button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
-      </div>
-      <div class="card-instruction">Upload a custom background image for the dashboard.</div>
-      
-      <div class="card-body-collapsible" style="margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;">
-        <div style="display:flex; flex-direction:column; gap: 12px;">
-          <div style="display:flex; gap: 8px;">
-            <select id="wallpaper-select" style="flex:1; background: rgba(0,0,0,0.2); color: #fff; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; padding: 6px;">
-               <option value="">Default Gradient</option>
-            </select>
-            <button class="btn-pill-toggle" id="wallpaper-rename-btn" title="Rename selected image" style="padding: 0 10px;">Rename</button>
-            <button class="btn-pill-toggle" id="wallpaper-delete-btn" title="Delete selected image" style="background: rgba(240, 85, 59, 0.1); color: var(--crit); border-color: rgba(240, 85, 59, 0.2); padding: 0 10px;">Delete</button>
-          </div>
-          <div style="display:flex; gap: 12px; align-items: stretch;">
-            <div style="flex: 1; display:flex; flex-direction:column; gap: 8px;">
-              <input type="file" id="wallpaper-upload" accept="image/*" style="display:none;">
-              <button class="btn-pill-toggle" style="width:100%; justify-content:center; padding: 10px;" onclick="document.getElementById('wallpaper-upload').click()">Upload New Image</button>
-              <button class="btn-pill-toggle" id="wallpaper-clear-btn" style="width:100%; justify-content:center; padding: 10px;">Set Active</button>
-            </div>
-            <div style="flex: 1; background: rgba(0,0,0,0.3); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); overflow: hidden; position: relative; min-height: 80px; display:flex; align-items:center; justify-content:center;">
-               <img id="wallpaper-preview" src="" style="width:100%; height:100%; object-fit:cover; display:none;">
-               <span id="wallpaper-no-img" style="color:var(--muted); font-size:10px;">Default</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Metrics Section -->
-    <div class="draggable-card drawer-card" data-misc-card-id="sec-metrics">
-      <div class="card-headline" style="margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
-        <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <svg class="ic ic-sm" style="margin-right:6px;"><use href="#i-cpu"/></svg>Historical Metrics<button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
-        <select id="metrics-range-select" style="background: var(--card-hi); color: var(--fg); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; padding: 2px 6px; font-size: 11px;">
-          <option value="24h" selected>Last 24 Hours</option>
-          <option value="7d">Last 7 Days</option>
-          <option value="30d">Last 30 Days</option>
-        </select>
-      </div>
-      <div style="position: relative; height: 200px; width: 100%; margin-top: 15px;">
-        <canvas id="metricsChart"></canvas>
-      </div>
-    </div>
-
-    <!-- Events Section -->
-    <div class="draggable-card drawer-card" data-misc-card-id="sec-events">
-      <div class="card-headline">
-        <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <svg class="ic ic-sm" style="margin-right:6px;"><use href="#i-storage"/></svg>System Event Log<button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
-        <button class="btn-pill-toggle" onclick="fetch('/api/events/clear', {method: 'DELETE'})" title="Clear Logs">Clear</button>
-      </div>
-      <div class="card-instruction">Persistent timeline of system events, warnings, and alerts.</div>
-      
-      <div style="margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px;">
-        <div id="events-list" style="max-height: 400px; overflow-y: auto; margin: 0 -8px; padding: 0 8px;">
-          <div style="padding: 14px; text-align: center; color: var(--muted); font-size: 11px;">Loading events...</div>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- Security Section -->
-    <div class="draggable-card drawer-card" data-misc-card-id="sec-security">
-      <div class="card-headline">
-        <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <svg class="ic ic-sm" style="margin-right:6px;"><use href="#i-chip"/></svg>Account & Security<button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
-      </div>
-      <div class="card-instruction">Manage your dashboard credentials and identity.</div>
-      <div id="sec-default-pwd-warning" style="display:none; margin-top:10px; padding:10px 12px; background:rgba(235,87,87,0.18); border:1px solid rgba(235,87,87,0.5); border-radius:8px; color:#ff6b6b; font-size:11px; font-weight:600; line-height:1.4;">
-        ⚠️ DEFAULT PASSWORD ACTIVE: Your server is using the default password ("admin"). Please set a custom password below immediately.
-      </div>
-      
-      <div style="margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;">
-        <div style="display:flex; flex-direction:column; gap: 12px;">
-          <div>
-            <label style="display:block; font-size:11px; color:var(--muted); margin-bottom:4px;">USERNAME</label>
-            <input type="text" id="sec-username" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.2); padding:8px; color:#fff;" placeholder="admin">
-          </div>
-          <div>
-            <label style="display:block; font-size:11px; color:var(--muted); margin-bottom:4px;">EMAIL ADDRESS</label>
-            <input type="email" id="sec-email" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.2); padding:8px; color:#fff;" placeholder="admin@zettnas.local">
-          </div>
-          <div style="border-top: 1px solid rgba(255,255,255,0.05); margin-top: 4px; padding-top: 12px;">
-            <label style="display:block; font-size:11px; color:var(--warn); margin-bottom:4px;">CHANGE PASSWORD (Optional)</label>
-            <input type="password" id="sec-new-pwd" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.2); padding:8px; color:#fff;" placeholder="New password (min. 8 characters)" minlength="8" autocomplete="new-password">
-          </div>
-          <div style="border-top: 1px solid rgba(255,255,255,0.05); margin-top: 4px; padding-top: 12px;">
-            <label style="display:block; font-size:11px; color:var(--ok2); margin-bottom:4px;">CURRENT PASSWORD (Required to save)</label>
-            <input type="password" id="sec-cur-pwd" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.2); padding:8px; color:#fff;" placeholder="Enter current password">
-          </div>
-          <div style="display:flex; gap: 8px; margin-top: 8px;">
-            <button id="sec-save-btn" class="suite-toolkit-btn" style="flex:1;">SAVE CHANGES</button>
-            <button id="sec-logout-btn" class="suite-toolkit-btn" style="flex:1; background: rgba(220,50,50,0.1); color: var(--crit); border-color: rgba(220,50,50,0.3);">LOG OUT</button>
-          </div>
-          <button id="btn-launch-setup-wizard" class="btn-save-preset" style="margin-top: 4px; width: 100%; padding: 8px; font-size: 11px; background: rgba(224, 122, 56, 0.15); border-color: rgba(224, 122, 56, 0.4); color: #f8fafc;">🚀 Launch Setup Wizard</button>
-        </div>
-      </div>
-    </div>
-
-  </div>
-</div>
 
   <div id="tab-layout" class="drawer-tab-content active">
     <div class="tab-sub-header">
-      <span class="sub-title">Layout Section Arrangement</span>
+      <span class="sub-title" data-i18n="settings.section_arrangement">Layout Section Arrangement</span>
       <button id="layout-cards-lock-btn" class="btn-lock-toggle" title="Lock or Unlock Section Order">🔒 Locked</button>
     </div>
 
     <div id="layout-sections-container" class="drawer-cards-flow locked">
       <div class="draggable-card mini-preview-box" data-layout-card-id="sec-preview">
         <div class="card-headline" style="margin-bottom:2px;">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> LCD Live Canvas Re-arrange & Preview<button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <span data-i18n="settings.canvas_preview">LCD Live Canvas Re-arrange & Preview</span><button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
           <span id="lcd-renderer-badge" class="lcd-status-badge lcd-status-checking" title="LCD Framebuffer Renderer Status">&#x2B24; Checking…</span>
         </div>
         <div id="mini-lcd-canvas" class="mini-lcd-canvas">
@@ -336,10 +272,10 @@
 
       <div class="draggable-card drawer-card" data-layout-card-id="sec-clock">
         <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <svg class="ic ic-sm" style="margin: 0 4px 0 2px;"><use href="#i-clock"/></svg>Clock & Timezone<button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <svg class="ic ic-sm" style="margin: 0 4px 0 2px;"><use href="#i-clock"/></svg><span data-i18n="settings.clock_tz_title">Clock & Timezone</span><button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
           <button id="clock-format-btn" class="btn-pill-toggle">24 Hours</button>
         </div>
-        <div class="card-instruction">Override the screen time display and timezone / city.</div>
+        <div class="card-instruction" data-i18n="settings.clock_tz_desc">Override the screen time display and timezone / city.</div>
         
         <div class="tz-controls-row">
           <select id="tz-select" class="tz-select-input">
@@ -372,83 +308,95 @@
 
       <div class="draggable-card drawer-card" data-layout-card-id="sec-backlight">
         <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <svg class="ic ic-sm" style="margin: 0 4px 0 2px;"><use href="#i-chip"/></svg>LCD Backlight & Night Dimming<button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <svg class="ic ic-sm" style="margin: 0 4px 0 2px;"><use href="#i-chip"/></svg><span data-i18n="settings.backlight_title">LCD Backlight & Night Dimming</span><button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
           <span id="screen-bri-val" class="card-head-val">100%</span>
         </div>
-        <div class="card-instruction">Control the physical front LCD display brightness and scheduled nighttime dimming.</div>
+        <div class="card-instruction" data-i18n="settings.backlight_desc">Control the physical front LCD display brightness and scheduled nighttime dimming.</div>
         <div class="slider-row">
           <input type="range" id="screen-bri-slider" min="5" max="100" value="100" step="1" class="custom-slider">
         </div>
         <div class="schedule-controls-row" style="margin-top:10px; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
           <div style="display:flex; align-items:center; gap:8px;">
             <label class="switch"><input type="checkbox" id="screen-night-toggle"><span class="toggle-slider"></span></label>
-            <span style="font-size:11px; font-weight:700; color:var(--text);">Night Dimming</span>
+            <span style="font-size:11px; font-weight:700; color:var(--text);" data-i18n="settings.night_dimming">Night Dimming</span>
           </div>
           <div style="display:flex; align-items:center; gap:6px; font-size:11px;">
             <input type="time" id="screen-night-start" value="23:00" class="tz-text-input" style="width:96px; padding:3px 6px;">
-            <span style="color:var(--muted); font-size:10px;">to</span>
+            <span style="color:var(--muted); font-size:10px;" data-i18n="settings.to">to</span>
             <input type="time" id="screen-night-end" value="07:00" class="tz-text-input" style="width:96px; padding:3px 6px;">
             <span style="color:var(--muted); font-size:10px;">@</span>
             <input type="number" id="screen-night-bri" min="0" max="50" value="10" class="tz-text-input" style="width:48px; padding:3px 6px;" title="Night Brightness %">
             <span style="color:var(--muted); font-size:10px;">%</span>
           </div>
         </div>
+        <div class="schedule-controls-row" style="margin-top:10px; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:11px; font-weight:700; color:var(--text);" data-i18n="settings.autocycle">Auto-Cycle LCD Pages</span>
+          </div>
+          <select id="screen-carousel-select" class="tz-select-input" style="width:170px;">
+            <option value="0" data-i18n="settings.autocycle_off">Off (Manual / Button)</option>
+            <option value="5" data-i18n="settings.autocycle_5">Every 5 seconds</option>
+            <option value="10" data-i18n="settings.autocycle_10">Every 10 seconds</option>
+            <option value="15" data-i18n="settings.autocycle_15">Every 15 seconds</option>
+            <option value="30" data-i18n="settings.autocycle_30">Every 30 seconds</option>
+          </select>
+        </div>
       </div>
 
       <div class="draggable-card drawer-card" data-layout-card-id="sec-presets">
         <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Preset Layouts<button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <span data-i18n="settings.presets_title">Preset Layouts</span><button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
           <span id="preset-state-badge" class="preset-state-badge">DEFAULT ENGAGED</span>
         </div>
-        <div class="card-instruction">1-click dashboard module arrangements.</div>
+        <div class="card-instruction" data-i18n="settings.presets_desc">1-click dashboard module arrangements.</div>
         <div class="preset-grid-enhanced">
           <button class="preset-btn-card active" data-preset="default">
             <span class="preset-icon">🗂️</span>
             <div class="preset-info">
-              <span class="preset-name">Default (All Active)</span>
-              <span class="preset-desc">Storage, CPU, RAM, Fans, Net, Disks</span>
+              <span class="preset-name" data-i18n="settings.preset_default">Default (All Active)</span>
+              <span class="preset-desc" data-i18n="settings.preset_default_desc">Storage, CPU, RAM, Fans, Net, Disks</span>
             </div>
           </button>
           <button class="preset-btn-card" data-preset="thermal">
             <span class="preset-icon">🌡️</span>
             <div class="preset-info">
-              <span class="preset-name">Thermal Focus</span>
-              <span class="preset-desc">CPU, Fans & Disks Only</span>
+              <span class="preset-name" data-i18n="settings.preset_thermal">Thermal Focus</span>
+              <span class="preset-desc" data-i18n="settings.preset_thermal_desc">CPU, Fans & Disks Only</span>
             </div>
           </button>
           <button class="preset-btn-card" data-preset="storage">
             <span class="preset-icon">💾</span>
             <div class="preset-info">
-              <span class="preset-name">Storage Heavy</span>
-              <span class="preset-desc">Array capacity & Drives</span>
+              <span class="preset-name" data-i18n="settings.preset_storage">Storage Heavy</span>
+              <span class="preset-desc" data-i18n="settings.preset_storage_desc">Array capacity & Drives</span>
             </div>
           </button>
           <button class="preset-btn-card" data-preset="disks-only">
             <span class="preset-icon">💽</span>
             <div class="preset-info">
-              <span class="preset-name">Disks Only</span>
-              <span class="preset-desc">Full screen storage expanse</span>
+              <span class="preset-name" data-i18n="settings.preset_disks">Disks Only</span>
+              <span class="preset-desc" data-i18n="settings.preset_disks_desc">Full screen storage expanse</span>
             </div>
           </button>
         </div>
         <div class="preset-footer-row">
-          <span style="font-size:10px; color:var(--muted); font-weight:700;">Custom layout storage</span>
-          <button id="btn-save-custom-preset" class="btn-save-preset">💾 Save as My Preset</button>
+          <span style="font-size:10px; color:var(--muted); font-weight:700;" data-i18n="settings.custom_preset_storage">Custom layout storage</span>
+          <button id="btn-save-custom-preset" class="btn-save-preset" data-i18n="settings.btn_save_my_preset">💾 Save as My Preset</button>
         </div>
       </div>
 
       <div class="draggable-card drawer-card" data-layout-card-id="sec-modules">
         <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Screen Modules & Size Control<button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <span data-i18n="settings.modules_title">Screen Modules & Size Control</span><button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
         </div>
-        <div class="card-instruction">Toggle visibility and select compact or full gauge scaling for each module. (Drag cards inside the Live Preview above to reorder).</div>
+        <div class="card-instruction" data-i18n="settings.modules_desc">Toggle visibility and select compact or full gauge scaling for each module. (Drag cards inside the Live Preview above to reorder).</div>
 
         <div id="dash-reorder-container" class="dash-reorder-flow" style="margin-top:6px;">
           
           <div class="dash-module-item" data-metric-target="metric-storage">
             <div class="dash-item-info">
               <div class="dash-item-title-row">
-                <span class="dash-item-title" id="lbl-module-storage">Storage (Donut & Capacity)</span>
+                <span class="dash-item-title" id="lbl-module-storage" data-i18n="settings.mod_storage">Storage (Donut & Capacity)</span>
                 <span class="dash-live-badge" id="telemetry-badge-storage">--</span>
               </div>
             </div>
@@ -462,7 +410,7 @@
           <div class="dash-module-item" data-metric-target="metric-cpu">
             <div class="dash-item-info">
               <div class="dash-item-title-row">
-                <span class="dash-item-title" id="lbl-module-cpu">CPU Gauge</span>
+                <span class="dash-item-title" id="lbl-module-cpu" data-i18n="settings.mod_cpu">CPU Gauge</span>
                 <span class="dash-live-badge" id="telemetry-badge-cpu">--</span>
               </div>
             </div>
@@ -476,7 +424,7 @@
           <div class="dash-module-item" data-metric-target="metric-mem">
             <div class="dash-item-info">
               <div class="dash-item-title-row">
-                <span class="dash-item-title" id="lbl-module-mem">Memory Gauge</span>
+                <span class="dash-item-title" id="lbl-module-mem" data-i18n="settings.mod_mem">Memory Gauge</span>
                 <span class="dash-live-badge" id="telemetry-badge-mem">--</span>
               </div>
             </div>
@@ -490,7 +438,7 @@
           <div class="dash-module-item" data-metric-target="metric-fans">
             <div class="dash-item-info">
               <div class="dash-item-title-row">
-                <span class="dash-item-title" id="lbl-module-fans">Fans & Uptime</span>
+                <span class="dash-item-title" id="lbl-module-fans" data-i18n="settings.mod_fans">Fans & Uptime</span>
                 <span class="dash-live-badge" id="telemetry-badge-fans">--</span>
               </div>
             </div>
@@ -504,7 +452,7 @@
           <div class="dash-module-item" data-metric-target="metric-net">
             <div class="dash-item-info">
               <div class="dash-item-title-row">
-                <span class="dash-item-title" id="lbl-module-net">Network Throughput</span>
+                <span class="dash-item-title" id="lbl-module-net" data-i18n="settings.mod_net">Network Throughput</span>
                 <span class="dash-live-badge" id="telemetry-badge-net">--</span>
               </div>
             </div>
@@ -518,7 +466,7 @@
           <div class="dash-module-item" data-metric-target="metric-disks">
             <div class="dash-item-info">
               <div class="dash-item-title-row">
-                <span class="dash-item-title" id="lbl-module-disks">Drives Tray (OS, Data, Cache)</span>
+                <span class="dash-item-title" id="lbl-module-disks" data-i18n="settings.mod_disks">Drives Tray (OS, Data, Cache)</span>
                 <span class="dash-live-badge" id="telemetry-badge-disks">--</span>
               </div>
             </div>
@@ -531,17 +479,33 @@
         </div>
       </div>
 
+      <div class="draggable-card drawer-card" data-layout-card-id="sec-language">
+        <div class="card-headline">
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <svg class="ic ic-sm" style="margin: 0 4px 0 2px;"><use href="#i-grid"/></svg><span data-i18n="settings.language_title">Display Language & Localization</span><button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
+        </div>
+        <div class="card-instruction" data-i18n="settings.language_desc">Select your preferred language for the Web Studio desktop and hardware management controls.</div>
+        <div style="margin-top: 8px;">
+          <select id="settings-lang-select" class="language-picker-select tz-select-input" style="width: 100%; padding: 8px 12px; font-size: 13px; cursor: pointer;">
+            <option value="en">🇺🇸 English (US)</option>
+            <option value="de">🇩🇪 Deutsch (German)</option>
+            <option value="zh">🇨🇳 简体中文 (Simplified Chinese)</option>
+            <option value="fr">🇫🇷 Français (French)</option>
+            <option value="es">🇪🇸 Español (Spanish)</option>
+          </select>
+        </div>
+      </div>
+
       <div class="draggable-card drawer-card" data-layout-card-id="sec-backup">
         <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Suite Configuration Backup<button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <span data-i18n="settings.backup_title">Suite Configuration Backup</span><button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
         </div>
-        <div class="card-instruction">Export, import, or reset all dashboard layout, LED lighting, and fan settings in a single file.</div>
+        <div class="card-instruction" data-i18n="settings.backup_desc">Export, import, or reset all dashboard layout, LED lighting, and fan settings in a single file.</div>
         <div class="backup-row">
-          <button id="btn-export-layout" class="btn-pill-toggle">Export JSON</button>
+          <button id="btn-export-layout" class="btn-pill-toggle" data-i18n="settings.export_json">Export JSON</button>
           <label class="btn-pill-toggle custom-file-upload">
-            Import JSON <input type="file" id="file-import-layout" accept=".json" style="display:none">
+            <span data-i18n="settings.import_json">Import JSON</span> <input type="file" id="file-import-layout" accept=".json" style="display:none">
           </label>
-          <button id="dashboard-reset-btn" class="btn-lock-toggle" title="Reset all settings">↺ Reset</button>
+          <button id="dashboard-reset-btn" class="btn-lock-toggle" title="Reset all settings" data-i18n="settings.reset_btn">↺ Reset</button>
         </div>
       </div>
     </div>
@@ -556,7 +520,7 @@
     <div id="drawer-cards-container" class="drawer-cards-flow locked">
       <div class="draggable-card preview-container" data-card-id="card-preview">
         <div class="preview-label-row">
-          <span class="drag-handle-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> LIVE BAR PREVIEW</span>
+          <span class="drag-handle-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <span data-i18n="settings.live_bar_preview">LIVE BAR PREVIEW</span></span>
           <span id="preview-state-txt">ON • SOLID</span>
         </div>
         <div class="preview-housing"><div id="preview-bar" class="preview-bar-element"></div></div>
@@ -564,38 +528,38 @@
 
       <div class="draggable-card drawer-card" data-card-id="card-reactive">
         <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> System Reactive Alerts<button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <span data-i18n="settings.reactive_alerts">System Reactive Alerts</span><button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
           <label class="switch"><input type="checkbox" id="reactive-toggle" checked><span class="toggle-slider"></span></label>
         </div>
-        <div class="card-instruction">Auto-flash red or pulse amber when drive errors, overheating, or fan faults occur.</div>
+        <div class="card-instruction" data-i18n="settings.reactive_desc">Auto-flash red or pulse amber when drive errors, overheating, or fan faults occur.</div>
       </div>
 
       <div class="draggable-card drawer-card" data-card-id="card-brightness">
         <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Front LED brightness<button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <span data-i18n="settings.led_brightness">Front LED brightness</span><button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
           <span id="led-val-display" class="card-head-val">25%</span>
         </div>
-        <div class="card-instruction">Adjust physical bar intensity. Changes apply automatically.</div>
+        <div class="card-instruction" data-i18n="settings.led_brightness_desc">Adjust physical bar intensity. Changes apply automatically.</div>
         <div class="slider-row"><input type="range" id="led-slider" min="0" max="100" value="25" step="1" class="custom-slider"></div>
       </div>
 
       <div class="draggable-card drawer-card" data-card-id="card-led-schedule">
         <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Night Mode & Blackout Schedule<button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <span data-i18n="settings.led_night_title">Night Mode & Blackout Schedule</span><button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
           <label class="switch"><input type="checkbox" id="led-night-toggle"><span class="toggle-slider"></span></label>
         </div>
-        <div class="card-instruction">Automatically extinguish the ARGB light bar during nighttime hours to prevent room glare.</div>
+        <div class="card-instruction" data-i18n="settings.led_night_desc">Automatically extinguish the ARGB light bar during nighttime hours to prevent room glare.</div>
         <div class="schedule-controls-row" style="margin-top:6px; display:flex; align-items:center; gap:8px; font-size:11px;">
-          <span style="color:var(--muted); font-size:10px; font-weight:700;">BLACKOUT:</span>
+          <span style="color:var(--muted); font-size:10px; font-weight:700;" data-i18n="settings.blackout">BLACKOUT:</span>
           <input type="time" id="led-night-start" value="23:00" class="tz-text-input" style="width:96px; padding:3px 6px;">
-          <span style="color:var(--muted); font-size:10px;">to</span>
+          <span style="color:var(--muted); font-size:10px;" data-i18n="settings.to">to</span>
           <input type="time" id="led-night-end" value="07:00" class="tz-text-input" style="width:96px; padding:3px 6px;">
         </div>
       </div>
 
       <div class="draggable-card drawer-card" data-card-id="card-profiles">
-        <div class="card-headline"><span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Lighting Profiles<button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span></div>
-        <div class="card-instruction">1-click quick hardware presets.</div>
+        <div class="card-headline"><span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <span data-i18n="settings.lighting_profiles">Lighting Profiles</span><button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span></div>
+        <div class="card-instruction" data-i18n="settings.lighting_profiles_desc">1-click quick hardware presets.</div>
         <div class="profiles-grid">
           <button class="profile-pill" data-profile="clean">Clean (Teal)</button>
           <button class="profile-pill" data-profile="cyberpunk">Cyberpunk</button>
@@ -605,8 +569,8 @@
       </div>
 
       <div class="draggable-card drawer-card" data-card-id="card-effects">
-        <div class="card-headline"><span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Lighting effects<button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span></div>
-        <div class="card-instruction">Choose an active dynamic animation for the light bar.</div>
+        <div class="card-headline"><span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <span data-i18n="settings.lighting_effects">Lighting effects</span><button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span></div>
+        <div class="card-instruction" data-i18n="settings.lighting_effects_desc">Choose an active dynamic animation for the light bar.</div>
         <div class="effects-grid">
           <button class="effect-btn active" data-effect="solid">Solid</button>
           <button class="effect-btn" data-effect="breathe">Breathe</button>
@@ -620,19 +584,19 @@
 
       <div class="draggable-card drawer-card" id="speed-card" data-card-id="card-speed" style="display: none;">
         <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Effect speed<button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <span data-i18n="settings.effect_speed">Effect speed</span><button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
           <span id="speed-val-display" class="card-head-val">Medium (50%)</span>
         </div>
-        <div class="card-instruction">Control animation rate (1%: Slowest, 100%: Fastest).</div>
+        <div class="card-instruction" data-i18n="settings.effect_speed_desc">Control animation rate (1%: Slowest, 100%: Fastest).</div>
         <div class="slider-row"><input type="range" id="speed-slider" min="1" max="100" value="50" step="1" class="custom-slider"></div>
       </div>
 
       <div class="draggable-card drawer-card" id="primary-color-card" data-card-id="card-color1">
         <div class="card-headline">
-          <span class="card-head-title" id="color1-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Primary Color</span>
-          <button id="btn-toggle-led" class="btn-pill-toggle">Turn Off</button>
+          <span class="card-head-title" id="color1-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <span data-i18n="settings.primary_color">Primary Color</span></span>
+          <button id="btn-toggle-led" class="btn-pill-toggle" data-i18n="settings.turn_off">Turn Off</button>
         </div>
-        <div class="card-instruction">Select illumination preset or pick a custom hex color.</div>
+        <div class="card-instruction" data-i18n="settings.primary_color_desc">Select illumination preset or pick a custom hex color.</div>
         <div class="color-grid">
           <button class="color-chip active" data-hex="25c2a0" style="background:#25c2a0; color:#0b1f1a;">Teal</button>
           <button class="color-chip" data-hex="00ffff" style="background:#00ffff; color:#0b1f1a;">Cyan</button>
@@ -651,8 +615,8 @@
       </div>
 
       <div class="draggable-card drawer-card" id="secondary-color-card" data-card-id="card-color2" style="display: none;">
-        <div class="card-headline"><span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Secondary Color (Gradient End)<button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span></div>
-        <div class="card-instruction">Select the target tone that the primary color transitions toward.</div>
+        <div class="card-headline"><span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <span data-i18n="settings.secondary_color">Secondary Color (Gradient End)</span><button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span></div>
+        <div class="card-instruction" data-i18n="settings.secondary_color_desc">Select the target tone that the primary color transitions toward.</div>
         <div class="color-grid">
           <button class="color-chip2" data-hex="ff0055" style="background:#ff0055; color:#fff;">Pink</button>
           <button class="color-chip2" data-hex="0064ff" style="background:#0064ff; color:#fff;">Blue</button>
@@ -681,10 +645,10 @@
     <div id="fan-cards-container" class="drawer-cards-flow locked">
       <div class="draggable-card drawer-card" data-fan-card-id="fan-card-tach">
         <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <svg class="ic" style="margin-right:6px;"><use href="#i-fan"/></svg>Active Fan Tachometers<button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <svg class="ic" style="margin-right:6px;"><use href="#i-fan"/></svg><span data-i18n="settings.fan_tachometers">Active Fan Tachometers</span><button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
           <span class="suite-badge" id="fan-status-badge">ONLINE</span>
         </div>
-        <div class="card-instruction">Click any zone column below to isolate and track that zone on the Dynamic Fan Curve above.</div>
+        <div class="card-instruction" data-i18n="settings.fan_tach_desc">Click any zone column below to isolate and track that zone on the Dynamic Fan Curve above.</div>
         
         <div class="drawer-fans-unified-grid">
           <div class="drawer-fan-unified-col" id="fan-col-zone1" data-zone-filter="zone1" title="Click to isolate Zone 1 on Fan Curve">
@@ -730,7 +694,7 @@
 
       <div class="draggable-card drawer-card" data-fan-card-id="fan-card-curve">
         <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Dynamic Fan Curve • Thermal Map<button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <span data-i18n="settings.fan_curve_title">Dynamic Fan Curve • Thermal Map</span><button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
           <span class="suite-badge" id="hysteresis-badge" style="background:rgba(51,209,122,0.15); color:var(--ok); border-color:rgba(51,209,122,0.35);">HOLD: READY</span>
         </div>
         <div class="card-instruction" id="curve-filter-instruction">Displaying all thermal zones. Click a zone tachometer above or below to isolate.</div>
@@ -779,22 +743,22 @@
 
       <div class="draggable-card drawer-card" data-fan-card-id="fan-card-cpu-toggle">
         <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Control CPU Fan<button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <span data-i18n="settings.control_cpu_fan">Control CPU Fan</span><button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
           <label class="switch">
             <input type="checkbox" id="cpu-fan-toggle">
             <span class="toggle-slider"></span>
           </label>
         </div>
-        <div class="card-instruction">
-          When enabled, applies software thermal curve with a <strong>90-second upward hold timer</strong>. When disabled, returns `pwm3` to automatic BIOS/firmware control (`pwm3_enable = 2`).
+        <div class="card-instruction" data-i18n="settings.control_cpu_desc">
+          When enabled, applies software thermal curve with a 90-second upward hold timer.
         </div>
       </div>
 
       <div class="draggable-card drawer-card" data-fan-card-id="fan-card-profiles">
         <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Cooling Duty Profiles<button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <span data-i18n="settings.cooling_duty_profiles">Cooling Duty Profiles</span><button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
         </div>
-        <div class="card-instruction">Select dynamic thermal scaling or fixed duty presets mapped across disk fans.</div>
+        <div class="card-instruction" data-i18n="settings.cooling_duty_desc">Select dynamic thermal scaling or fixed duty presets mapped across disk fans.</div>
         <div class="profiles-grid" style="grid-template-columns: repeat(5, 1fr);">
           <button class="profile-pill fan-profile-btn active" data-fan-profile="auto">⚡ Auto Dynamic</button>
           <button class="profile-pill fan-profile-btn" data-fan-profile="quiet">Quiet (67)</button>
@@ -806,7 +770,7 @@
 
       <div class="draggable-card drawer-card" data-fan-card-id="fan-card-inspector">
         <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Thermal Threshold Inspector<button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <span data-i18n="settings.thermal_threshold_inspector">Thermal Threshold Inspector</span><button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
         </div>
         <div class="thermal-inspector-box">
           <div class="ti-row"><span>Cool Idle (&le; 38°C)</span><strong>58 – 67 PWM (~950 RPM)</strong></div>
@@ -818,10 +782,10 @@
 
       <div class="draggable-card drawer-card" data-fan-card-id="fan-card-thresholds">
         <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Custom Ramp Temperatures<button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <span data-i18n="settings.custom_ramp_temps">Custom Ramp Temperatures</span><button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
           <span id="fan-curve-range-val" class="suite-badge" style="background:rgba(37,194,160,0.15); color:var(--ok2); border-color:rgba(37,194,160,0.35);">37°C – 50°C</span>
         </div>
-        <div class="card-instruction">Adjust the temperature window where fan PWM dynamically scales from minimum silent RPM to 100% duty cycle. Spun-down drives are excluded from heating calculations.</div>
+        <div class="card-instruction" data-i18n="settings.custom_ramp_desc">Adjust the temperature window where fan PWM dynamically scales from minimum silent RPM to 100% duty cycle. Spun-down drives are excluded from heating calculations.</div>
         <div style="margin-top:8px; font-size:11px; color:var(--muted);">
           <em>Use the interactive graph above to drag and plot your custom fan curve points.</em>
         </div>
@@ -829,10 +793,10 @@
 
       <div class="draggable-card drawer-card" id="manual-pwm-card" data-fan-card-id="fan-card-override">
         <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> Manual PWM Override<button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <span data-i18n="settings.manual_pwm_override">Manual PWM Override</span><button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
           <span id="fan-pwm-val-display" class="card-head-val">Auto Curve</span>
         </div>
-        <div class="card-instruction">Directly commands `pwmX_enable = 1` and sets duty cycles `0-183`.</div>
+        <div class="card-instruction" data-i18n="settings.manual_pwm_desc">Directly commands pwmX_enable = 1 and sets duty cycles 0-183.</div>
         <div class="slider-row">
           <input type="range" id="fan-pwm-slider" min="10" max="100" value="60" step="1" class="custom-slider">
         </div>
@@ -842,14 +806,14 @@
 
   <div id="tab-buttons" class="drawer-tab-content">
     <div class="tab-sub-header">
-      <span class="sub-title">Chassis Hardware Bindings</span>
+      <span class="sub-title" data-i18n="settings.chassis_hw_bindings">Chassis Hardware Bindings</span>
       <button id="btn-cards-lock-btn" class="btn-lock-toggle" title="Lock or Unlock Section Order">🔒 Locked</button>
     </div>
     
     <div id="btn-sections-container" class="drawer-cards-flow locked">
       <div class="draggable-card drawer-card" data-btn-card-id="sec-copybtn" style="cursor: default;">
         <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <svg class="ic ic-sm" style="margin: 0 4px 0 2px;"><use href="#i-storage"/></svg>Front-Panel COPY Button<button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <svg class="ic ic-sm" style="margin: 0 4px 0 2px;"><use href="#i-storage"/></svg><span data-i18n="settings.copy_btn_title">Front-Panel COPY Button</span><button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
           <div style="display:flex; align-items:center; gap:8px;">
             <span id="btn-copy-status-text" style="font-size:11px; font-weight:700; text-transform:uppercase; opacity:0.8;">ENABLED</span>
             <label class="switch">
@@ -858,12 +822,12 @@
             </label>
           </div>
         </div>
-        <div class="card-instruction">Bind the physical COPY button on the chassis front to automatically ingest media from an inserted SD card.</div>
+        <div class="card-instruction" data-i18n="settings.copy_btn_desc">Bind the physical COPY button on the chassis front to automatically ingest media from an inserted SD card.</div>
         
         <div id="btn-copy-options" style="margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;">
           <div class="slider-row" style="flex-direction: column; align-items: flex-start; gap: 6px;">
             <div style="display:flex; justify-content:space-between; width:100%; align-items:center;">
-              <span class="slider-label" style="opacity: 0.8; font-size: 11px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Source Media Slot</span>
+              <span class="slider-label" style="opacity: 0.8; font-size: 11px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;" data-i18n="settings.media_slot">Source Media Slot</span>
               <span id="media-slot-info-badge" class="suite-badge" style="font-size:10px;">SLOTS EMPTY</span>
             </div>
             <select id="btn-copy-src" class="tz-text-input" style="width: 100%; box-sizing: border-box; appearance: auto;">
@@ -873,33 +837,33 @@
           </div>
           
           <div class="slider-row" style="flex-direction: column; align-items: flex-start; gap: 6px; margin-top: 12px;">
-            <span class="slider-label" style="opacity: 0.8; font-size: 11px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Destination Path (Ingest Target)</span>
+            <span class="slider-label" style="opacity: 0.8; font-size: 11px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;" data-i18n="settings.dest_path">Destination Path (Ingest Target)</span>
             <div style="display: flex; gap: 8px; width: 100%;">
               <input type="text" id="btn-copy-dst" class="tz-text-input" placeholder="/mnt/user/" style="width: 100%; box-sizing: border-box; font-family: monospace;">
-              <button id="btn-browse-dst" class="btn-pill-toggle" style="padding: 0 16px; white-space: nowrap; font-size: 11px; text-transform: uppercase; margin: 0; height: auto;">📁 Browse</button>
+              <button id="btn-browse-dst" class="btn-pill-toggle" style="padding: 0 16px; white-space: nowrap; font-size: 11px; text-transform: uppercase; margin: 0; height: auto;" data-i18n="settings.browse">📁 Browse</button>
             </div>
           </div>
           
 
           <div class="slider-row" style="margin-top: 15px; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
             <div style="display:flex; flex-direction: column;">
-              <span class="slider-label" style="opacity: 0.8; font-size: 11px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Auto-Sort by EXIF Date</span>
-              <span style="font-size: 10px; color: var(--muted); margin-top: 3px;">Organize copied photos into YYYY:MM:DD subfolders automatically.</span>
+              <span class="slider-label" style="opacity: 0.8; font-size: 11px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;" data-i18n="settings.auto_sort_exif">Auto-Sort by EXIF Date</span>
+              <span style="font-size: 10px; color: var(--muted); margin-top: 3px;" data-i18n="settings.auto_sort_exif_desc">Organize copied photos into YYYY:MM:DD subfolders automatically.</span>
             </div>
             <label class="switch"><input type="checkbox" id="btn-copy-exif" checked><span class="toggle-slider"></span></label>
           </div>
 
           <div class="slider-row" style="flex-direction: column; align-items: flex-start; gap: 6px; margin-top: 12px;">
-            <span class="slider-label" style="opacity: 0.8; font-size: 11px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Existing File Collision Rule</span>
+            <span class="slider-label" style="opacity: 0.8; font-size: 11px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;" data-i18n="settings.collision_rule">Existing File Collision Rule</span>
             <select id="btn-copy-collision" class="tz-text-input" style="width: 100%; box-sizing: border-box; appearance: auto;">
-              <option value="skip" selected>Skip Existing Files Automatically</option>
-              <option value="overwrite">Overwrite Existing Files</option>
-              <option value="ask">Ask / Prompt in WebUI</option>
+              <option value="skip" selected data-i18n="settings.collision_skip">Skip Existing Files Automatically</option>
+              <option value="overwrite" data-i18n="settings.collision_overwrite">Overwrite Existing Files</option>
+              <option value="ask" data-i18n="settings.collision_ask">Ask / Prompt in WebUI</option>
             </select>
           </div>
           
           <div class="slider-row" style="margin-top: 15px; justify-content: flex-end;">
-            <button id="btn-copy-save" class="btn-save-preset" style="width: 100%; justify-content: center;">💾 Save Configuration</button>
+            <button id="btn-copy-save" class="btn-save-preset" style="width: 100%; justify-content: center;" data-i18n="settings.btn_save_config">💾 Save Configuration</button>
 
           </div>
         </div>
@@ -914,7 +878,7 @@
 <div id="folder-browser-modal" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="folder-browser-title">
   <div class="smart-modal-window" style="width: 480px;">
     <div class="smart-modal-header">
-      <div class="smart-modal-title" id="folder-browser-title"><svg class="ic ic-sm" style="margin-right:4px;"><use href="#i-storage"/></svg> Select Destination Folder</div>
+      <div class="smart-modal-title" id="folder-browser-title"><svg class="ic ic-sm" style="margin-right:4px;"><use href="#i-storage"/></svg> <span data-i18n="modal.fb_title">Select Destination Folder</span></div>
       <button id="fb-min" class="btn-icon" aria-label="Minimize" style="font-size:18px;">–</button>
       <button id="fb-close" class="btn-icon" aria-label="Close dialog">✕</button>
     </div>
@@ -922,13 +886,13 @@
       <div id="fb-current-path" style="font-family: monospace; font-size: 11px; padding: 10px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); border-radius: 6px; color: var(--ok2, #3498db); word-break: break-all; display: flex; flex-wrap: wrap; gap: 2px; align-items: center;"></div>
       
       <div style="display: flex; gap: 8px; margin-top: 5px;">
-        <input type="text" id="fb-search-bar" class="tz-text-input" placeholder="🔍 Filter folders..." style="flex-grow: 1; font-size: 11px;">
+        <input type="text" id="fb-search-bar" class="tz-text-input" placeholder="🔍 Filter folders..." data-i18n-placeholder="modal.fb_search" style="flex-grow: 1; font-size: 11px;">
         <button id="fb-sort-btn" class="btn-pill-toggle" style="padding: 0 10px; white-space: nowrap; font-size: 10px;" title="Toggle Sort">A-Z</button>
       </div>
 
       <div style="display: flex; gap: 8px; margin-top: 5px;">
-        <input type="text" id="fb-new-folder-name" class="tz-text-input" placeholder="New folder name..." style="flex-grow: 1; font-size: 11px;">
-        <button id="fb-create-folder" class="btn-pill-toggle" style="padding: 0 12px; white-space: nowrap;">+ Create</button>
+        <input type="text" id="fb-new-folder-name" class="tz-text-input" placeholder="New folder name..." data-i18n-placeholder="modal.fb_new_folder" style="flex-grow: 1; font-size: 11px;">
+        <button id="fb-create-folder" class="btn-pill-toggle" style="padding: 0 12px; white-space: nowrap;" data-i18n="modal.fb_create">+ Create</button>
       </div>
 
       <div id="fb-list" style="max-height: 250px; overflow-y: auto; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.05); border-radius: 6px; margin-top: 10px; margin-bottom: 10px;">
@@ -936,8 +900,8 @@
       </div>
       
       <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
-        <button id="fb-cancel" class="btn-pill-toggle">Cancel</button>
-        <button id="fb-select" class="btn-save-preset" style="padding: 8px 16px;">💾 Select Current Folder</button>
+        <button id="fb-cancel" class="btn-pill-toggle" data-i18n="modal.fb_cancel">Cancel</button>
+        <button id="fb-select" class="btn-save-preset" style="padding: 8px 16px;" data-i18n="modal.fb_select">💾 Select Current Folder</button>
       </div>
     </div>
   </div>
@@ -952,7 +916,7 @@
 
 <div id="copy-toast" class="smart-modal-window" style="position: fixed; bottom: 20px; right: 20px; width: 350px; z-index: 10001; opacity: 0; pointer-events: none; transition: opacity 0.3s ease, transform 0.3s ease; transform: translateY(20px); border-color: rgba(255,255,255,0.1);" role="alertdialog" aria-modal="true">
   <div class="smart-modal-header" style="padding: 10px 15px; display: flex; justify-content: space-between; align-items: center;">
-    <div class="smart-modal-title" style="display:flex; align-items:center;"><svg class="ic ic-sm" style="margin-right:4px;"><use href="#i-storage"/></svg> Media card ingest</div>
+    <div class="smart-modal-title" style="display:flex; align-items:center;"><svg class="ic ic-sm" style="margin-right:4px;"><use href="#i-storage"/></svg> <span data-i18n="modal.copy_title">Media card ingest</span></div>
     <div style="display:flex; gap:8px;">
       <button id="copy-toast-min" class="btn-icon" style="opacity: 0.5; cursor: pointer; border:none; background:none; color:white;" aria-label="Minimize">–</button>
       <button id="copy-toast-pause" class="btn-icon" style="opacity: 0.8; cursor: pointer; border:none; background:none; color:var(--warn); font-weight:bold; font-size: 14px;" aria-label="Pause copy">⏸</button>
@@ -961,7 +925,7 @@
   </div>
   <div class="smart-modal-body" style="padding: 15px; gap: 8px;">
     <div style="display:flex; justify-content: space-between;">
-      <span id="copy-toast-status" style="font-size: 11px; font-weight: 700; color: #fff; text-transform: uppercase;">Copying...</span>
+      <span id="copy-toast-status" style="font-size: 11px; font-weight: 700; color: #fff; text-transform: uppercase;" data-i18n="modal.copying">Copying...</span>
       <span id="copy-toast-pct" style="font-size: 11px; font-weight: 700; color: var(--ok2);">0%</span>
     </div>
     <div style="background: rgba(255,255,255,0.1); height: 6px; border-radius: 3px; overflow: hidden;">
@@ -972,7 +936,514 @@
   </div>
 </div>
 
+<div id="management-modal-overlay" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="management-header-title-text" style="display: none;">
+  <div class="smart-modal-window management-window" id="management-window">
+    <div class="chassis-screws screw-tl"></div>
+    <div class="chassis-screws screw-tr"></div>
+    <div class="chassis-screws screw-bl"></div>
+    <div class="chassis-screws screw-br"></div>
 
+    <div class="smart-modal-header management-window-header" id="management-window-header">
+      <div class="mgmt-header-left">
+        <span class="smart-modal-title mgmt-header-title">
+          <svg class="ic mgmt-title-ic"><use href="#i-management"/></svg>
+          <span id="management-header-title-text" data-i18n="mgmt.title">System Management</span>
+        </span>
+      </div>
+
+      <div class="mgmt-header-right">
+        <button id="management-min" class="btn-icon" aria-label="Minimize" style="font-size:18px;">–</button>
+        <button id="management-close" class="btn-icon" aria-label="Close dialog">✕</button>
+      </div>
+    </div>
+
+    <div class="smart-modal-body management-window-body">
+      <!-- LEFT SIDEBAR -->
+      <aside class="mgmt-sidebar" id="mgmt-sidebar" aria-label="Management Navigation">
+        <div class="mgmt-sidebar-nav">
+          <button class="mgmt-sidebar-item active" data-mgmt-target="management-hub-view" title="Overview & All Categories">
+            <svg class="mgmt-sidebar-svg"><use href="#i-grid"/></svg>
+            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_overview">Overview & Hub</span>
+          </button>
+          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-wallpaper" title="Desktop Themes & Wallpapers">
+            <svg class="mgmt-sidebar-svg"><use href="#i-globe"/></svg>
+            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_wallpaper">Wallpaper</span>
+          </button>
+          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-metrics" title="Hardware Telemetry & Metrics">
+            <svg class="mgmt-sidebar-svg"><use href="#i-cpu"/></svg>
+            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_metrics">Metrics</span>
+          </button>
+          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-events" title="System Event Log">
+            <svg class="mgmt-sidebar-svg"><use href="#i-storage"/></svg>
+            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_events">Event Log</span>
+          </button>
+          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-unraid" title="Unraid Array & Acoustic Profiles">
+            <svg class="mgmt-sidebar-svg"><use href="#i-chip"/></svg>
+            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_unraid">Unraid & Profiles</span>
+          </button>
+          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-copy" title="Media Ingest History">
+            <svg class="mgmt-sidebar-svg"><use href="#i-storage"/></svg>
+            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_copy">Ingest History</span>
+          </button>
+          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-docker" title="Docker Containers & Services">
+            <svg class="mgmt-sidebar-svg"><use href="#i-chip"/></svg>
+            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_docker">Containers</span>
+            <span class="mgmt-sidebar-badge" id="mgmt-sidebar-docker-badge">Docker</span>
+          </button>
+          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-ups" title="UPS & Power Integrity">
+            <svg class="mgmt-sidebar-svg"><use href="#i-storage"/></svg>
+            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_ups">UPS & Power</span>
+            <span class="mgmt-sidebar-badge" id="mgmt-sidebar-ups-badge">Power</span>
+          </button>
+          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-security" title="Account & Master Password">
+            <svg class="mgmt-sidebar-svg"><use href="#i-chip"/></svg>
+            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_security">Security</span>
+            <span class="mgmt-sidebar-badge alert-badge" id="mgmt-sidebar-sec-badge" style="display:none;">!</span>
+          </button>
+        </div>
+      </aside>
+
+      <!-- RIGHT CONTENT PANE -->
+      <section class="mgmt-content-pane" id="mgmt-content-pane">
+        <!-- HUB GRID VIEW (Shown by default) -->
+        <div id="management-hub-view" class="management-hub-grid">
+        <!-- 1. Custom Wallpaper -->
+        <div class="mgmt-app-card" data-mgmt-target="mgmt-sec-wallpaper" role="button" tabindex="0">
+          <div class="mgmt-app-icon-wrap mgmt-icon-wallpaper">
+            <svg class="mgmt-app-svg"><use href="#i-globe"/></svg>
+          </div>
+          <div class="mgmt-app-info">
+            <div class="mgmt-app-title-row">
+              <span class="mgmt-app-title" data-i18n="mgmt.hub_wallpaper_title">Custom Wallpaper</span>
+              <span class="mgmt-app-pill" data-i18n="mgmt.hub_wallpaper_pill">Themes</span>
+            </div>
+            <p class="mgmt-app-desc" data-i18n="mgmt.hub_wallpaper_desc">Upload, manage, and customize desktop wallpapers and visual aesthetics.</p>
+          </div>
+          <div class="mgmt-app-footer">
+            <span class="mgmt-app-action" data-i18n="mgmt.hub_wallpaper_action">Configure ➔</span>
+          </div>
+        </div>
+
+        <!-- 2. Historical Metrics -->
+        <div class="mgmt-app-card" data-mgmt-target="mgmt-sec-metrics" role="button" tabindex="0">
+          <div class="mgmt-app-icon-wrap mgmt-icon-metrics">
+            <svg class="mgmt-app-svg"><use href="#i-cpu"/></svg>
+          </div>
+          <div class="mgmt-app-info">
+            <div class="mgmt-app-title-row">
+              <span class="mgmt-app-title" data-i18n="mgmt.hub_metrics_title">Historical Metrics</span>
+              <span class="mgmt-app-pill" data-i18n="mgmt.hub_metrics_pill">Telemetry</span>
+            </div>
+            <p class="mgmt-app-desc" data-i18n="mgmt.hub_metrics_desc">Interactive time-series charts for CPU load, RAM usage, thermals, and fan RPM.</p>
+          </div>
+          <div class="mgmt-app-footer">
+            <span class="mgmt-app-action" data-i18n="mgmt.hub_metrics_action">View Charts ➔</span>
+          </div>
+        </div>
+
+        <!-- 3. System Event Log -->
+        <div class="mgmt-app-card" data-mgmt-target="mgmt-sec-events" role="button" tabindex="0">
+          <div class="mgmt-app-icon-wrap mgmt-icon-events">
+            <svg class="mgmt-app-svg"><use href="#i-storage"/></svg>
+          </div>
+          <div class="mgmt-app-info">
+            <div class="mgmt-app-title-row">
+              <span class="mgmt-app-title" data-i18n="mgmt.hub_events_title">System Event Log</span>
+              <span class="mgmt-app-pill" data-i18n="mgmt.hub_events_pill">Audit</span>
+            </div>
+            <p class="mgmt-app-desc" data-i18n="mgmt.hub_events_desc">Real-time audit log of hardware notifications, alerts, and operational events.</p>
+          </div>
+          <div class="mgmt-app-footer">
+            <span class="mgmt-app-action" data-i18n="mgmt.hub_events_action">Inspect Logs ➔</span>
+          </div>
+        </div>
+
+        <!-- 4. Account & Security -->
+        <div class="mgmt-app-card" data-mgmt-target="mgmt-sec-security" role="button" tabindex="0">
+          <div class="mgmt-app-icon-wrap mgmt-icon-security">
+            <svg class="mgmt-app-svg"><use href="#i-chip"/></svg>
+            <span id="mgmt-hub-sec-badge" class="mgmt-hub-alert-badge" title="Default password active!" style="display: none;">!</span>
+          </div>
+          <div class="mgmt-app-info">
+            <div class="mgmt-app-title-row">
+              <span class="mgmt-app-title" data-i18n="mgmt.hub_security_title">Account & Security</span>
+              <span class="mgmt-app-pill mgmt-pill-sec" data-i18n="mgmt.hub_security_pill">Admin</span>
+            </div>
+            <p class="mgmt-app-desc" data-i18n="mgmt.hub_security_desc">Manage credentials, change master password, or re-run the Initial Setup Wizard.</p>
+          </div>
+          <div class="mgmt-app-footer">
+            <span class="mgmt-app-action" data-i18n="mgmt.hub_security_action">Manage Security ➔</span>
+          </div>
+        </div>
+
+        <!-- 5. Unraid & System Profiles -->
+        <div class="mgmt-app-card" data-mgmt-target="mgmt-sec-unraid" role="button" tabindex="0">
+          <div class="mgmt-app-icon-wrap" style="background:rgba(0,240,255,0.12); color:var(--accent-cyan,#00f0ff); border-color:rgba(0,240,255,0.3);">
+            <svg class="mgmt-app-svg"><use href="#i-chip"/></svg>
+          </div>
+          <div class="mgmt-app-info">
+            <div class="mgmt-app-title-row">
+              <span class="mgmt-app-title" data-i18n="mgmt.hub_unraid_title">Unraid & Profiles</span>
+              <span class="mgmt-app-pill" style="background:rgba(0,240,255,0.15); color:var(--accent-cyan,#00f0ff);" data-i18n="mgmt.hub_unraid_pill">Subsystem</span>
+            </div>
+            <p class="mgmt-app-desc" data-i18n="mgmt.hub_unraid_desc">Array status, parity checks, mover telemetry, and 1-click acoustic performance profiles.</p>
+          </div>
+          <div class="mgmt-app-footer">
+            <span class="mgmt-app-action" data-i18n="mgmt.hub_unraid_action">View Telemetry ➔</span>
+          </div>
+        </div>
+
+        <!-- 6. Media Ingest History -->
+        <div class="mgmt-app-card" data-mgmt-target="mgmt-sec-copy" role="button" tabindex="0">
+          <div class="mgmt-app-icon-wrap" style="background:rgba(37,194,160,0.12); color:var(--ok2); border-color:rgba(37,194,160,0.3);">
+            <svg class="mgmt-app-svg"><use href="#i-storage"/></svg>
+          </div>
+          <div class="mgmt-app-info">
+            <div class="mgmt-app-title-row">
+              <span class="mgmt-app-title" data-i18n="mgmt.hub_copy_title">Ingest History</span>
+              <span class="mgmt-app-pill" style="background:rgba(37,194,160,0.15); color:var(--ok2);" data-i18n="mgmt.hub_copy_pill">Integrity</span>
+            </div>
+            <p class="mgmt-app-desc" data-i18n="mgmt.hub_copy_desc">Audit persistent transfer logs, SHA-256 integrity verification, and media slot health.</p>
+          </div>
+          <div class="mgmt-app-footer">
+            <span class="mgmt-app-action" data-i18n="mgmt.hub_copy_action">Audit History ➔</span>
+          </div>
+        </div>
+
+        <!-- 7. Docker Containers & Services -->
+        <div class="mgmt-app-card" data-mgmt-target="mgmt-sec-docker" role="button" tabindex="0">
+          <div class="mgmt-app-icon-wrap" style="background:rgba(52,152,219,0.12); color:#38bdf8; border-color:rgba(52,152,219,0.3);">
+            <svg class="mgmt-app-svg"><use href="#i-chip"/></svg>
+          </div>
+          <div class="mgmt-app-info">
+            <div class="mgmt-app-title-row">
+              <span class="mgmt-app-title" data-i18n="mgmt.hub_docker_title">Containers</span>
+              <span class="mgmt-app-pill" style="background:rgba(52,152,219,0.15); color:#38bdf8;" id="mgmt-hub-docker-pill" data-i18n="mgmt.hub_docker_pill">Docker</span>
+            </div>
+            <p class="mgmt-app-desc" data-i18n="mgmt.hub_docker_desc">Inspect running Docker containers, images, runtime uptime, and service health status.</p>
+          </div>
+          <div class="mgmt-app-footer">
+            <span class="mgmt-app-action" data-i18n="mgmt.hub_docker_action">View Containers ➔</span>
+          </div>
+        </div>
+
+        <!-- 8. UPS & Power Integrity -->
+        <div class="mgmt-app-card" data-mgmt-target="mgmt-sec-ups" role="button" tabindex="0">
+          <div class="mgmt-app-icon-wrap" style="background:rgba(245,166,35,0.12); color:var(--warn,#f5a623); border-color:rgba(245,166,35,0.3);">
+            <svg class="mgmt-app-svg"><use href="#i-storage"/></svg>
+          </div>
+          <div class="mgmt-app-info">
+            <div class="mgmt-app-title-row">
+              <span class="mgmt-app-title" data-i18n="mgmt.hub_ups_title">UPS & Power</span>
+              <span class="mgmt-app-pill" style="background:rgba(245,166,35,0.15); color:var(--warn,#f5a623);" id="mgmt-hub-ups-pill" data-i18n="mgmt.hub_ups_pill">Battery</span>
+            </div>
+            <p class="mgmt-app-desc" data-i18n="mgmt.hub_ups_desc">Monitor battery health, line voltage, estimated runtime, and power integrity status.</p>
+          </div>
+          <div class="mgmt-app-footer">
+            <span class="mgmt-app-action" data-i18n="mgmt.hub_ups_action">Inspect Power ➔</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- DETAIL CONTAINER (Shown when a card is selected) -->
+      <div id="management-detail-container" style="display: none;">
+        <!-- Card 1: Wallpaper -->
+        <div id="mgmt-sec-wallpaper" class="mgmt-detail-card" style="display: none;">
+          <div class="mgmt-card-intro">
+            <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-globe"/></svg> <span data-i18n="mgmt.wallpaper_title">Custom Desktop Wallpaper</span></div>
+            <div class="mgmt-card-intro-desc" data-i18n="mgmt.wallpaper_desc">Upload a high-resolution background image to customize the ZettNAS desktop environment.</div>
+          </div>
+          <div class="mgmt-detail-body">
+            <div style="display:flex; flex-direction:column; gap: 14px;">
+              <div style="display:flex; gap: 8px;">
+                <select id="wallpaper-select" style="flex:1; background: rgba(0,0,0,0.3); color: #fff; border: 1px solid rgba(255,255,255,0.12); border-radius: 6px; padding: 8px;">
+                   <option value="">Default Gradient</option>
+                </select>
+                <button class="btn-pill-toggle" id="wallpaper-rename-btn" title="Rename selected image" style="padding: 0 12px;" data-i18n="mgmt.wallpaper_rename">Rename</button>
+                <button class="btn-pill-toggle" id="wallpaper-delete-btn" title="Delete selected image" style="background: rgba(240, 85, 59, 0.12); color: var(--crit); border-color: rgba(240, 85, 59, 0.25); padding: 0 12px;" data-i18n="mgmt.wallpaper_delete">Delete</button>
+              </div>
+              <div style="display:flex; gap: 14px; align-items: stretch;">
+                <div style="flex: 1; display:flex; flex-direction:column; gap: 10px;">
+                  <input type="file" id="wallpaper-upload" accept="image/*" style="display:none;">
+                  <button class="btn-pill-toggle" style="width:100%; justify-content:center; padding: 12px;" onclick="document.getElementById('wallpaper-upload').click()" data-i18n="mgmt.wallpaper_upload">📁 Upload New Image</button>
+                  <button class="btn-save-preset" id="wallpaper-clear-btn" style="width:100%; justify-content:center; padding: 12px;" data-i18n="mgmt.wallpaper_apply">Set Active Wallpaper</button>
+                </div>
+                <div style="flex: 1.2; background: rgba(0,0,0,0.35); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); overflow: hidden; position: relative; min-height: 120px; display:flex; align-items:center; justify-content:center;">
+                   <img id="wallpaper-preview" src="" style="width:100%; height:100%; object-fit:cover; display:none;">
+                   <span id="wallpaper-no-img" style="color:var(--muted); font-size:11px;" data-i18n="mgmt.wallpaper_theme_default">Default Desktop Theme</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2: Metrics -->
+        <div id="mgmt-sec-metrics" class="mgmt-detail-card" style="display: none;">
+          <div class="mgmt-card-intro" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+            <div>
+              <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-cpu"/></svg> <span data-i18n="mgmt.telemetry_title">Historical System Telemetry</span></div>
+              <div class="mgmt-card-intro-desc" data-i18n="mgmt.telemetry_desc">Aggregated hardware telemetry and per-device resource utilization history.</div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+              <span class="chart-zoom-hint" style="font-size: 11px; color: var(--muted); display: inline-flex; align-items: center; gap: 4px;">
+                <svg class="ic" style="width: 13px; height: 13px;"><use href="#i-grid"/></svg>
+                <span data-i18n="mgmt.zoom_hint">Drag to pan • Scroll to zoom</span>
+              </span>
+              <button id="metrics-reset-zoom-btn" class="btn-pill-toggle" style="display: none; padding: 4px 8px; font-size: 11px; color: var(--accent-cyan); border-color: var(--accent-cyan);" title="Reset Zoom View" data-i18n="mgmt.reset_zoom">↺ Reset Zoom</button>
+              <select id="metrics-range-select" class="tz-select-input" style="width: auto; padding: 6px 12px; font-size: 11px; cursor: pointer;">
+                <option value="1h" data-i18n="mgmt.range_1h">Last 1 Hour</option>
+                <option value="6h" data-i18n="mgmt.range_6h">Last 6 Hours</option>
+                <option value="24h" selected data-i18n="mgmt.range_24h">Last 24 Hours</option>
+                <option value="7d" data-i18n="mgmt.range_7d">Last 7 Days</option>
+                <option value="30d" data-i18n="mgmt.range_30d">Last 30 Days</option>
+              </select>
+            </div>
+          </div>
+          <div class="mgmt-detail-body">
+            <div class="metrics-device-filter-row">
+              <button class="metrics-device-btn active" data-metric-group="all" data-i18n="mgmt.all_devices">⚡ All Devices</button>
+              <button class="metrics-device-btn" data-metric-group="system" data-i18n="mgmt.cpu_ram">🧠 CPU & RAM</button>
+              <button class="metrics-device-btn" data-metric-group="disks" data-i18n="mgmt.storage_disks">💾 Storage Disks</button>
+              <button class="metrics-device-btn" data-metric-group="fans" data-i18n="mgmt.cooling_fans">🌀 Cooling Fans</button>
+            </div>
+            <div id="metrics-device-summary-strip" class="metrics-device-summary-strip">
+              <!-- Live per-device indicators dynamically populated -->
+            </div>
+            <div style="position: relative; height: 300px; width: 100%;">
+              <canvas id="metricsChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3: Events -->
+        <div id="mgmt-sec-events" class="mgmt-detail-card" style="display: none;">
+          <div class="mgmt-card-intro" style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-storage"/></svg> <span data-i18n="mgmt.events_title">System Event & Audit Log</span></div>
+              <div class="mgmt-card-intro-desc" data-i18n="mgmt.events_desc">Chronological log of alerts, drive wakeups, copy jobs, and hardware events.</div>
+            </div>
+            <button class="btn-pill-toggle" onclick="fetch('/api/events/clear', {method: 'DELETE'})" title="Clear Logs" data-i18n="mgmt.clear_logs">🗑️ Clear Event Log</button>
+          </div>
+          <div class="mgmt-detail-body">
+            <div id="events-list" style="max-height: 420px; overflow-y: auto; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 8px;">
+              <div style="padding: 16px; text-align: center; color: var(--muted); font-size: 11px;">Loading events...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 4: Security -->
+        <div id="mgmt-sec-security" class="mgmt-detail-card" style="display: none;">
+          <div class="mgmt-card-intro">
+            <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-chip"/></svg> <span data-i18n="mgmt.sec_title">Account Security & Credentials</span></div>
+            <div class="mgmt-card-intro-desc" data-i18n="mgmt.sec_desc">Manage administrator login credentials, security preferences, and system provisioning.</div>
+          </div>
+          <div id="sec-default-pwd-warning" style="display:none; margin: 12px 0; padding: 12px 14px; background: rgba(235,87,87,0.18); border: 1px solid rgba(235,87,87,0.5); border-radius: 8px; color: #ff6b6b; font-size: 11.5px; font-weight: 600; line-height: 1.45;" data-i18n="mgmt.sec_default_warning">
+            ⚠️ DEFAULT PASSWORD ACTIVE: Your server is using the default password ("admin"). Please set a custom password below immediately.
+          </div>
+          <div class="mgmt-detail-body">
+            <div style="display:flex; flex-direction:column; gap: 14px;">
+              <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+                <div>
+                  <label style="display:block; font-size:10.5px; font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="mgmt.sec_admin_user">ADMIN USERNAME</label>
+                  <input type="text" id="sec-username" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.25); padding:8px 10px; color:#fff;" placeholder="admin">
+                </div>
+                <div>
+                  <label style="display:block; font-size:10.5px; font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="mgmt.sec_email">NOTIFICATION EMAIL</label>
+                  <input type="email" id="sec-email" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.25); padding:8px 10px; color:#fff;" placeholder="admin@zettnas.local">
+                </div>
+              </div>
+
+              <div style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px;">
+                <label style="display:block; font-size:10.5px; font-weight:700; color:var(--warn); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="mgmt.sec_new_pwd">NEW PASSWORD (Optional)</label>
+                <input type="password" id="sec-new-pwd" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.25); padding:8px 10px; color:#fff;" placeholder="New password (min. 8 characters)" minlength="8" autocomplete="new-password">
+              </div>
+
+              <div style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px;">
+                <label style="display:block; font-size:10.5px; font-weight:700; color:var(--ok2); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="mgmt.sec_cur_pwd">CURRENT PASSWORD (Required to commit changes)</label>
+                <input type="password" id="sec-cur-pwd" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.25); padding:8px 10px; color:#fff;" placeholder="Enter current password">
+              </div>
+
+              <div style="display:flex; gap: 10px; margin-top: 6px;">
+                <button id="sec-save-btn" class="suite-toolkit-btn" style="flex:1; justify-content:center; padding:10px;" data-i18n="mgmt.sec_save">💾 SAVE CREDENTIALS</button>
+                <button id="sec-logout-btn" class="suite-toolkit-btn" style="flex:1; justify-content:center; padding:10px; background: rgba(220,50,50,0.12); color: var(--crit); border-color: rgba(220,50,50,0.3);" data-i18n="mgmt.sec_logout">LOG OUT</button>
+              </div>
+
+              <div style="border-top: 1px solid rgba(255,255,255,0.06); margin-top: 4px; padding-top: 14px;">
+                <button id="btn-launch-setup-wizard" class="btn-save-preset" style="width: 100%; justify-content:center; padding: 10px; font-size: 11.5px; background: rgba(224, 122, 56, 0.15); border-color: rgba(224, 122, 56, 0.4); color: #f8fafc;" data-i18n="mgmt.sec_wizard">🚀 Launch Initial Hardware Setup Wizard</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 5: Unraid & Profiles -->
+        <div id="mgmt-sec-unraid" class="mgmt-detail-card" style="display: none;">
+          <div class="mgmt-card-intro">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-chip"/></svg> <span data-i18n="mgmt.unraid_sec_title">Unraid Subsystem & Acoustic Profiles</span></div>
+              <span class="mgmt-app-pill" id="unraid-profile-current-pill" style="background:rgba(37,194,160,0.15); color:var(--ok2);">ACTIVE: AUTO DYNAMIC</span>
+            </div>
+            <div class="mgmt-card-intro-desc" data-i18n="mgmt.unraid_sec_desc">Monitor native Unraid storage array health, parity check status, and apply unified system profiles.</div>
+          </div>
+          <div class="mgmt-detail-body">
+            <div style="display:flex; flex-direction:column; gap: 14px;">
+              <div>
+                <label style="display:block; font-size:10.5px; font-weight:700; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px;" data-i18n="mgmt.acoustic_label">SYSTEM ACOUSTIC & PERFORMANCE PROFILE</label>
+                <div class="profile-switcher-row">
+                  <button class="profile-btn active" data-profile="auto">
+                    <span class="profile-btn-title" data-i18n="mgmt.profile_auto_title">⚡ AUTO DYNAMIC</span>
+                    <span class="profile-btn-desc" data-i18n="mgmt.profile_auto_desc">Dynamic curve based on thermals • Synced RGB</span>
+                  </button>
+                  <button class="profile-btn" data-profile="quiet">
+                    <span class="profile-btn-title" data-i18n="mgmt.profile_quiet_title">🤫 QUIET</span>
+                    <span class="profile-btn-desc" data-i18n="mgmt.profile_quiet_desc">Silent fans (37%) • 20% RGB</span>
+                  </button>
+                  <button class="profile-btn" data-profile="balanced">
+                    <span class="profile-btn-title" data-i18n="mgmt.profile_balanced_title">⚖️ BALANCED</span>
+                    <span class="profile-btn-desc" data-i18n="mgmt.profile_balanced_desc">Standard cooling (60%) • 50% RGB</span>
+                  </button>
+                  <button class="profile-btn" data-profile="performance">
+                    <span class="profile-btn-title" data-i18n="mgmt.profile_performance_title">🚀 PERFORMANCE</span>
+                    <span class="profile-btn-desc" data-i18n="mgmt.profile_performance_desc">Aggressive cooling (85%) • 100% RGB</span>
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label style="display:block; font-size:10.5px; font-weight:700; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px;" data-i18n="mgmt.unraid_status_label">UNRAID STORAGE SUBSYSTEM STATUS</label>
+                <div class="unraid-details-grid">
+                  <div class="unraid-detail-item">
+                    <span class="udi-label" data-i18n="mgmt.unraid_array_state">Array Status</span>
+                    <span class="udi-val" id="mgmt-unraid-state" style="color:var(--ok2);">STARTED</span>
+                  </div>
+                  <div class="unraid-detail-item">
+                    <span class="udi-label" data-i18n="mgmt.unraid_server_model">Server & Model</span>
+                    <span class="udi-val" id="mgmt-unraid-server">Ark (D6U)</span>
+                  </div>
+                  <div class="unraid-detail-item">
+                    <span class="udi-label" data-i18n="mgmt.unraid_os_ver">OS Version</span>
+                    <span class="udi-val" id="mgmt-unraid-version">Unraid 7.3.2</span>
+                  </div>
+                  <div class="unraid-detail-item">
+                    <span class="udi-label" data-i18n="mgmt.unraid_disks_cfg">Disks Configuration</span>
+                    <span class="udi-val" id="mgmt-unraid-disks">2 Disks Assigned</span>
+                  </div>
+                  <div class="unraid-detail-item">
+                    <span class="udi-label" data-i18n="mgmt.unraid_parity_status">Parity Check Status</span>
+                    <span class="udi-val" id="mgmt-unraid-parity">Syncing (0.0%) • 0 Errors</span>
+                  </div>
+                  <div class="unraid-detail-item">
+                    <span class="udi-label" data-i18n="mgmt.unraid_mover_act">Mover Activity</span>
+                    <span class="udi-val" id="mgmt-unraid-mover">Idle</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 6: Ingest History -->
+        <div id="mgmt-sec-copy" class="mgmt-detail-card" style="display: none;">
+          <div class="mgmt-card-intro" style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-storage"/></svg> <span data-i18n="mgmt.copy_sec_title">Media Ingest & Checksum History</span></div>
+              <div class="mgmt-card-intro-desc" data-i18n="mgmt.copy_sec_desc">Persistent audit logs of card reader imports with SHA-256 integrity verification.</div>
+            </div>
+            <button class="btn-pill-toggle" id="btn-refresh-copy-history" title="Refresh Ingest History" data-i18n="mgmt.refresh">🔄 Refresh</button>
+          </div>
+          <div class="mgmt-detail-body">
+            <div style="overflow-x:auto; max-height:400px; background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.06); border-radius:8px;">
+              <table class="copy-history-table">
+                <thead>
+                  <tr>
+                    <th data-i18n="mgmt.tbl_datetime">Date / Time</th>
+                    <th data-i18n="mgmt.tbl_source">Source</th>
+                    <th data-i18n="mgmt.tbl_dest">Destination</th>
+                    <th data-i18n="mgmt.tbl_files">Files</th>
+                    <th data-i18n="mgmt.tbl_size">Size</th>
+                    <th data-i18n="mgmt.tbl_duration">Duration</th>
+                    <th data-i18n="mgmt.tbl_status">Status & Checksum</th>
+                  </tr>
+                </thead>
+                <tbody id="copy-history-tbody">
+                  <tr><td colspan="7" style="text-align:center; color:var(--muted); padding:16px;">Loading copy history...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 7: Docker Containers -->
+        <div id="mgmt-sec-docker" class="mgmt-detail-card" style="display: none;">
+          <div class="mgmt-card-intro" style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-chip"/></svg> <span data-i18n="mgmt.docker_sec_title">Docker Containers & Services</span></div>
+              <div class="mgmt-card-intro-desc" data-i18n="mgmt.docker_sec_desc">Inspect active containers, container health, and uptime via local Docker daemon.</div>
+            </div>
+            <button class="btn-pill-toggle" id="btn-refresh-docker" title="Refresh Containers" data-i18n="mgmt.refresh">🔄 Refresh</button>
+          </div>
+          <div class="mgmt-detail-body">
+            <div style="overflow-x:auto; max-height:400px; background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.06); border-radius:8px;">
+              <table class="copy-history-table">
+                <thead>
+                  <tr>
+                    <th data-i18n="mgmt.tbl_name_id">Name / ID</th>
+                    <th data-i18n="mgmt.tbl_image">Image</th>
+                    <th data-i18n="mgmt.tbl_state">State</th>
+                    <th data-i18n="mgmt.tbl_uptime">Status & Uptime</th>
+                    <th style="text-align:right;" data-i18n="mgmt.tbl_actions">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="docker-containers-tbody">
+                  <tr><td colspan="5" style="text-align:center; color:var(--muted); padding:20px;">Scanning Docker socket...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 8: UPS & Power Integrity -->
+        <div id="mgmt-sec-ups" class="mgmt-detail-card" style="display: none;">
+          <div class="mgmt-card-intro" style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-storage"/></svg> <span data-i18n="mgmt.ups_sec_title">UPS & Power Integrity Telemetry</span></div>
+              <div class="mgmt-card-intro-desc" data-i18n="mgmt.ups_sec_desc">Uninterruptible Power Supply telemetry via apcupsd / Network UPS Tools.</div>
+            </div>
+            <button class="btn-pill-toggle" id="btn-refresh-ups" title="Refresh UPS" data-i18n="mgmt.refresh">🔄 Refresh</button>
+          </div>
+          <div class="mgmt-detail-body">
+            <div class="unraid-details-grid">
+              <div class="unraid-detail-item">
+                <span class="udi-label" data-i18n="mgmt.ups_daemon_status">Power Daemon Status</span>
+                <span class="udi-val" id="mgmt-ups-status" style="color:var(--ok2);">ONLINE</span>
+              </div>
+              <div class="unraid-detail-item">
+                <span class="udi-label" data-i18n="mgmt.ups_model">UPS Model</span>
+                <span class="udi-val" id="mgmt-ups-model">Generic UPS</span>
+              </div>
+              <div class="unraid-detail-item">
+                <span class="udi-label" data-i18n="mgmt.ups_charge">Battery Charge</span>
+                <span class="udi-val" id="mgmt-ups-charge" style="color:var(--ok2);">100%</span>
+              </div>
+              <div class="unraid-detail-item">
+                <span class="udi-label" data-i18n="mgmt.ups_runtime">Estimated Runtime</span>
+                <span class="udi-val" id="mgmt-ups-runtime">-- min</span>
+              </div>
+              <div class="unraid-detail-item">
+                <span class="udi-label" data-i18n="mgmt.ups_load">UPS Load</span>
+                <span class="udi-val" id="mgmt-ups-load">-- %</span>
+              </div>
+              <div class="unraid-detail-item">
+                <span class="udi-label" data-i18n="mgmt.ups_linev">Line / Utility Voltage</span>
+                <span class="udi-val" id="mgmt-ups-linev">-- V</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      </section>
+    </div>
+  </div>
+</div>
 
 <div id="console-modal-overlay" class="smart-modal-backdrop open">
 <div class="chassis-front-panel" id="console-window" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);">
@@ -982,7 +1453,7 @@
       <div class="chassis-screws screw-br"></div>
 
       <div class="chassis-panel-header">
-        <span class="chassis-engraved-text" id="chassis-panel-engraved">ZETTNAS • SYSTEM CONSOLE</span>
+        <span class="chassis-engraved-text" id="chassis-panel-engraved" data-i18n="console.engraved_title">ZETTNAS • SYSTEM CONSOLE</span>
         <div style="display:flex; gap:8px; align-items:center;">
           <span class="chassis-screen-spec">640 × 172 IPS</span>
           <button id="console-popout" class="btn-icon" title="Open in standalone window" aria-label="Pop out" style="font-size:14px; opacity:0.75;">↗</button>
@@ -999,64 +1470,158 @@
           </div>
           <div class="clock" id="clock">--:--</div>
           <div class="h-right">
+            <div class="lcd-page-dots" id="lcd-page-dots">
+              <span class="lcd-dot active" data-page="0" title="Page 1: Overview">1</span>
+              <span class="lcd-dot" data-page="1" title="Page 2: Drive Bay Matrix">2</span>
+              <span class="lcd-dot" data-page="2" title="Page 3: Network & IO">3</span>
+              <span class="lcd-dot" data-page="3" title="Page 4: Unraid & Copy Hub">4</span>
+            </div>
             <svg class="ic ic-sm"><use href="#i-globe"/></svg>
             <span id="ip">0.0.0.0</span>
           </div>
         </header>
 
-        <section class="cards" id="dashboard-cards-container">
-          <div class="card card-storage" data-metric-id="metric-storage" title="Click to view Storage diagnostics">
-            <div class="card-title"><svg class="ic"><use href="#i-disk"/></svg><span class="card-title-txt">STORAGE</span></div>
-            <div class="storage-body">
-              <div class="donut" id="donut"><span id="storagePct">0%</span></div>
-              <div class="storage-nums">
-                <div><span class="lbl">USED</span><span class="val" id="stUsed">0GB</span></div>
-                <div><span class="lbl">TOTAL</span><span class="val" id="stTotal">0GB</span></div>
+        <div id="lcd-viewport" class="lcd-viewport">
+          <!-- Page 0: Overview Dashboard -->
+          <div class="lcd-page active" id="lcd-page-0" data-page-index="0">
+            <section class="cards" id="dashboard-cards-container">
+              <div class="card card-storage" data-metric-id="metric-storage" title="Click to view Storage diagnostics">
+                <div class="card-title"><svg class="ic"><use href="#i-disk"/></svg><span class="card-title-txt" data-i18n="console.storage">STORAGE</span></div>
+                <div class="storage-body">
+                  <div class="donut" id="donut"><span id="storagePct">0%</span></div>
+                  <div class="storage-nums">
+                    <div><span class="lbl" data-i18n="console.used">USED</span><span class="val" id="stUsed">0GB</span></div>
+                    <div><span class="lbl" data-i18n="console.total">TOTAL</span><span class="val" id="stTotal">0GB</span></div>
+                  </div>
+                </div>
+                <div id="unraid-storage-badge" class="unraid-storage-badge hidden">
+                  <span class="unraid-badge-dot" id="unraid-storage-dot"></span>
+                  <span id="unraid-storage-text">ARRAY STARTED</span>
+                </div>
+                <div id="unraid-parity-box" class="unraid-parity-box hidden">
+                  <div class="unraid-parity-bar-bg"><div id="unraid-parity-bar" class="unraid-parity-bar-fill"></div></div>
+                  <span id="unraid-parity-txt">Parity: 0.0%</span>
+                </div>
+              </div>
+
+              <div class="card card-cpu" data-metric-id="metric-cpu" title="Click to view CPU diagnostics">
+                <div class="card-title"><svg class="ic"><use href="#i-cpu"/></svg><span class="card-title-txt" data-i18n="console.cpu">CPU</span></div>
+                <div class="gauge-body">
+                  <div class="arc" id="cpuArc"><div class="arc-val"><span id="cpuTemp">0</span><span class="u">°C</span></div></div>
+                  <div class="side"><span class="lbl" data-i18n="console.util">UTIL</span><span class="val" id="cpuUtil">0%</span></div>
+                </div>
+              </div>
+
+              <div class="card card-mem" data-metric-id="metric-mem" title="Click to view Memory diagnostics">
+                <div class="card-title"><svg class="ic"><use href="#i-mem"/></svg><span class="card-title-txt" data-i18n="console.memory">MEMORY</span></div>
+                <div class="gauge-body">
+                  <div class="arc" id="memArc"><div class="arc-val"><span id="memPct">0</span><span class="u">%</span></div></div>
+                  <div class="side"><span class="lbl" id="memUsed">0G</span><span class="val" id="memTotal">/0G</span></div>
+                </div>
+              </div>
+
+              <div class="card fans card-fans" data-metric-id="metric-fans" title="Click to view Fans & Telemetry">
+                <div class="card-title"><svg class="ic"><use href="#i-fan"/></svg><span class="card-title-txt" data-i18n="console.fans">FANS</span></div>
+                <div class="fan-row" id="fanRow"></div>
+                <div class="uptime"><svg class="ic ic-sm"><use href="#i-clock"/></svg><span id="uptime">up --</span></div>
+              </div>
+
+              <div class="card card-net" data-metric-id="metric-net" title="Click to view Network diagnostics">
+                <div class="card-title"><svg class="ic"><use href="#i-net"/></svg><span class="card-title-txt" data-i18n="console.net">NETWORK I/O</span></div>
+                <div class="net-body">
+                  <div class="net-row"><span>TX:</span><strong id="netTx">0.0 MB/s</strong></div>
+                  <div class="net-row"><span>RX:</span><strong id="netRx">0.0 MB/s</strong></div>
+                </div>
+              </div>
+            </section>
+
+            <section class="disks card-disks" id="diskRow" data-metric-id="metric-disks"></section>
+          </div>
+
+          <!-- Page 1: Drive Bay Matrix & S.M.A.R.T. Matrix -->
+          <div class="lcd-page" id="lcd-page-1" data-page-index="1">
+            <div class="lcd-page-header-banner">
+              <span class="lph-title"><svg class="ic ic-sm"><use href="#i-storage"/></svg> DRIVE BAY & S.M.A.R.T. MATRIX</span>
+              <span class="lph-stat" id="lcd-matrix-summary">ALL DRIVES HEALTHY</span>
+            </div>
+            <div class="bay-matrix-grid" id="lcd-bay-matrix-grid">
+              <!-- Rendered via renderBayMatrix(disks) -->
+            </div>
+          </div>
+
+          <!-- Page 2: Network & IO Telemetry -->
+          <div class="lcd-page" id="lcd-page-2" data-page-index="2">
+            <div class="lcd-page-header-banner">
+              <span class="lph-title"><svg class="ic ic-sm"><use href="#i-net"/></svg> NETWORK & STORAGE I/O TELEMETRY</span>
+              <span class="lph-stat" id="lcd-net-summary">INTERFACE LIVE</span>
+            </div>
+            <div class="net-io-grid">
+              <div class="net-io-panel">
+                <div class="nio-head"><span class="nio-dir rx">INBOUND (RX)</span><span class="nio-rate" id="lcd-nio-rx">0.0 MB/s</span></div>
+                <div class="nio-bar-bg"><div class="nio-bar-fill rx" id="lcd-nio-rx-bar" style="width:0%"></div></div>
+                <div class="nio-sub"><span id="lcd-nio-rx-peak">Peak: 0 MB/s</span><span>Target: 10 GbE</span></div>
+              </div>
+              <div class="net-io-panel">
+                <div class="nio-head"><span class="nio-dir tx">OUTBOUND (TX)</span><span class="nio-rate" id="lcd-nio-tx">0.0 MB/s</span></div>
+                <div class="nio-bar-bg"><div class="nio-bar-fill tx" id="lcd-nio-tx-bar" style="width:0%"></div></div>
+                <div class="nio-sub"><span id="lcd-nio-tx-peak">Peak: 0 MB/s</span><span id="lcd-nio-ip">IP: 0.0.0.0</span></div>
+              </div>
+              <div class="net-io-panel">
+                <div class="nio-head"><span class="nio-dir io">STORAGE I/O</span><span class="nio-rate" id="lcd-nio-disk-total">0.0 MB/s</span></div>
+                <div class="nio-bar-bg"><div class="nio-bar-fill io" id="lcd-nio-io-bar" style="width:0%"></div></div>
+                <div class="nio-sub"><span id="lcd-nio-uptime">up --</span><span id="lcd-nio-disks-active">Active</span></div>
               </div>
             </div>
           </div>
 
-          <div class="card card-cpu" data-metric-id="metric-cpu" title="Click to view CPU diagnostics">
-            <div class="card-title"><svg class="ic"><use href="#i-cpu"/></svg><span class="card-title-txt">CPU</span></div>
-            <div class="gauge-body">
-              <div class="arc" id="cpuArc"><div class="arc-val"><span id="cpuTemp">0</span><span class="u">°C</span></div></div>
-              <div class="side"><span class="lbl">UTIL</span><span class="val" id="cpuUtil">0%</span></div>
+          <!-- Page 3: Unraid Array & Copy Hub -->
+          <div class="lcd-page" id="lcd-page-3" data-page-index="3">
+            <div class="lcd-page-header-banner">
+              <span class="lph-title"><svg class="ic ic-sm"><use href="#i-chip"/></svg> UNRAID ARRAY & INGEST ENGINE</span>
+              <span class="lph-stat" id="lcd-unraid-headline">UNRAID HOST</span>
+            </div>
+            <div class="unraid-copy-grid">
+              <div class="uc-panel">
+                <div class="uc-title-row">
+                  <span class="uc-title">ARRAY STATUS</span>
+                  <span class="uc-state-badge" id="lcd-uc-array-badge">STARTED</span>
+                </div>
+                <div class="uc-stat-line" id="lcd-uc-disks-stat">Disks: 2 Assigned • 0 Errors</div>
+                <div class="uc-parity-section" id="lcd-uc-parity-section">
+                  <div class="uc-parity-label-row">
+                    <span id="lcd-uc-parity-action">Parity Check</span>
+                    <strong id="lcd-uc-parity-pct">0.0%</strong>
+                  </div>
+                  <div class="uc-bar-bg"><div class="uc-bar-fill" id="lcd-uc-parity-bar" style="width:0%"></div></div>
+                </div>
+              </div>
+
+              <div class="uc-panel">
+                <div class="uc-title-row">
+                  <span class="uc-title">MEDIA INGEST ENGINE</span>
+                  <span class="uc-state-badge" id="lcd-uc-copy-badge">IDLE</span>
+                </div>
+                <div class="uc-stat-line" id="lcd-uc-media-slots">SD: Slot Empty • TF: Slot Empty</div>
+                <div class="uc-copy-section" id="lcd-uc-copy-section">
+                  <div class="uc-parity-label-row">
+                    <span id="lcd-uc-copy-file">No active transfer</span>
+                    <strong id="lcd-uc-copy-pct">--</strong>
+                  </div>
+                  <div class="uc-bar-bg"><div class="uc-bar-fill copy" id="lcd-uc-copy-bar" style="width:0%"></div></div>
+                </div>
+              </div>
             </div>
           </div>
-
-          <div class="card card-mem" data-metric-id="metric-mem" title="Click to view Memory diagnostics">
-            <div class="card-title"><svg class="ic"><use href="#i-mem"/></svg><span class="card-title-txt">MEMORY</span></div>
-            <div class="gauge-body">
-              <div class="arc" id="memArc"><div class="arc-val"><span id="memPct">0</span><span class="u">%</span></div></div>
-              <div class="side"><span class="lbl" id="memUsed">0G</span><span class="val" id="memTotal">/0G</span></div>
-            </div>
-          </div>
-
-          <div class="card fans card-fans" data-metric-id="metric-fans" title="Click to view Fans & Telemetry">
-            <div class="card-title"><svg class="ic"><use href="#i-fan"/></svg><span class="card-title-txt">FANS</span></div>
-            <div class="fan-row" id="fanRow"></div>
-            <div class="uptime"><svg class="ic ic-sm"><use href="#i-clock"/></svg><span id="uptime">up --</span></div>
-          </div>
-
-          <div class="card card-net" data-metric-id="metric-net" title="Click to view Network diagnostics">
-            <div class="card-title"><svg class="ic"><use href="#i-net"/></svg><span class="card-title-txt">NETWORK I/O</span></div>
-            <div class="net-body">
-              <div class="net-row"><span>TX:</span><strong id="netTx">0.0 MB/s</strong></div>
-              <div class="net-row"><span>RX:</span><strong id="netRx">0.0 MB/s</strong></div>
-            </div>
-          </div>
-        </section>
-
-        <section class="disks card-disks" id="diskRow" data-metric-id="metric-disks"></section>
+        </div>
       </div>
 
       <div class="chassis-led-fixture">
         <div class="chassis-led-meta">
           <span class="meta-tag">
             <svg class="ic" style="width:9px;height:9px;color:currentColor;"><use href="#i-chip"/></svg>
-            ARGB LIGHT BAR // /dev/ttyACM0
+            <span data-i18n="console.led_title">ARGB LIGHT BAR // /dev/ttyACM0</span>
           </span>
-          <span class="meta-nodes">WS2812B • 38 NODES</span>
+          <span class="meta-nodes" data-i18n="console.led_nodes">WS2812B • 38 NODES</span>
         </div>
         <div class="chassis-led-channel">
           <div id="virtual-chassis-lightbar" class="chassis-lightbar-glow"></div>

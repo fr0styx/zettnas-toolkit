@@ -23,6 +23,7 @@
   <Config Name="Host Sys" Target="/host/sys" Default="/sys" Mode="rw" Description="Host sysfs hwmon &amp; thermal paths" Type="Path" Display="advanced" Required="true" Mask="false">/sys</Config>
   <Config Name="Host Dev" Target="/host/dev" Default="/dev" Mode="rw" Description="Host devices (disks &amp; serial RGB controller)" Type="Path" Display="advanced" Required="true" Mask="false">/dev</Config>
   <Config Name="Storage Pool" Target="/mnt/user" Default="/mnt/user" Mode="ro" Description="Target user array pool for disk usage calculation" Type="Path" Display="always" Required="true" Mask="false">/mnt/user</Config>
+  <Config Name="Unraid emhttp Telemetry" Target="/var/local/emhttp" Default="/var/local/emhttp" Mode="ro" Description="Unraid real-time array, parity check and mover state" Type="Path" Display="always" Required="false" Mask="false">/var/local/emhttp</Config>
   <Config Name="LCD Refresh FPS" Target="LCD_FPS" Default="10" Mode="" Description="Target LCD display frame rate" Type="Variable" Display="always" Required="false" Mask="false">10</Config>
   <Config Name="NAS Name" Target="NAS_NAME" Default="NAS" Mode="" Description="Server display name on LCD" Type="Variable" Display="always" Required="false" Mask="false">NAS</Config>
 </Container>

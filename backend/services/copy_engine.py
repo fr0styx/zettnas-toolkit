@@ -8,8 +8,10 @@ import time
 
 import aiofiles
 import exifread
+import hashlib
 
 from backend.config import ALLOWED_BROWSE_ROOTS, HOST_DEV, HOST_PROC, HOST_SYS, logger
+from backend.db import log_copy_event
 from backend.fsutil import resolve_within
 from backend.hardware.led import send_led_packet
 from backend.services.notifications import send_notification
@@ -121,11 +123,14 @@ async def _do_copy(cfg):
     src_mode = cfg.get("source", "sd").strip()
     dst = cfg.get("dest", "/mnt/user/").strip()
     use_exif = cfg.get("use_exif", True)
+    verify_checksum = cfg.get("verify_checksum", True)
 
+    copy_start_ts = time.time()
+    err_msg = ""
     Z_STATE.copy_progress = {
         "total": 0,
         "copied": 0,
-        "start": time.time(),
+        "start": copy_start_ts,
         "file": "Initializing...",
         "files_total": 0,
         "files_done": 0,
@@ -222,6 +227,8 @@ async def _do_copy(cfg):
             os.makedirs(os.path.dirname(dst_f), exist_ok=True)
             Z_STATE.copy_progress["file"] = os.path.basename(src_f)
             length = 1024 * 1024 * 4
+            hasher_src = hashlib.sha256()
+            hasher_dst = hashlib.sha256()
             try:
                 async with aiofiles.open(src_f, "rb") as fsrc, aiofiles.open(dst_f, "wb") as fdst:
                     while True:
@@ -240,25 +247,39 @@ async def _do_copy(cfg):
                         buf = await fsrc.read(length)
                         if not buf:
                             break
+                        if verify_checksum:
+                            hasher_src.update(buf)
                         await fdst.write(buf)
+                        if verify_checksum:
+                            hasher_dst.update(buf)
                         Z_STATE.copy_progress["copied"] += len(buf)
+
                 if Z_STATE.copy_abort_flag:
-                    os.remove(dst_f)
+                    if os.path.exists(dst_f):
+                        os.remove(dst_f)
                     break
+
+                if verify_checksum and (hasher_src.hexdigest() != hasher_dst.hexdigest()):
+                    if os.path.exists(dst_f):
+                        os.remove(dst_f)
+                    raise IOError(f"Checksum mismatch for {os.path.basename(src_f)}")
+
                 shutil.copystat(src_f, dst_f)
                 Z_STATE.copy_progress["files_done"] += 1
             except Exception as e:
                 logger.info(f"[ZettNAS] Error copying {src_f}: {e}")
+                raise
 
         if Z_STATE.copy_abort_flag:
             Z_STATE.copy_status = "aborted"
             Z_STATE.copy_progress["file"] = "Aborted."
-            add_event("warning", "Copy Aborted", "User aborted the copy operation.")
+            err_msg = "User aborted the copy operation."
+            add_event("warning", "Copy Aborted", err_msg)
             raise Exception("Aborted by user.")
         else:
             Z_STATE.copy_status = "success"
             done_cnt = Z_STATE.copy_progress.get("files_done", 0)
-            add_event("success", "Copy Completed", f"Successfully copied {done_cnt} files.")
+            add_event("success", "Copy Completed", f"Successfully copied {done_cnt} files (SHA-256 verified).")
             send_notification(
                 title="ZettNAS: Media Ingest Complete",
                 message=f"Successfully copied {done_cnt} files to array storage.",
@@ -266,9 +287,10 @@ async def _do_copy(cfg):
                 event_type="copy",
                 dedup_key="copy_finished",
             )
-        Z_STATE.copy_progress["file"] = "Finished successfully."
+            Z_STATE.copy_progress["file"] = "Finished successfully."
 
     except Exception as e:
+        err_msg = str(e)
         logger.info(f"[ZettNAS] Copy failed: {e}")
         Z_STATE.copy_status = "error"
         Z_STATE.copy_progress["file"] = f"Error: {e}"
@@ -287,6 +309,22 @@ async def _do_copy(cfg):
     finally:
         if tmp_mount and mounted_path:
             subprocess.run(["umount", mounted_path])
+        # Record into copy history
+        try:
+            log_copy_event(
+                ts=int(copy_start_ts),
+                source=src_mode,
+                dest=dst,
+                files_count=Z_STATE.copy_progress.get("files_done", 0),
+                total_bytes=Z_STATE.copy_progress.get("copied", 0),
+                status=Z_STATE.copy_status,
+                checksum_verified=bool(verify_checksum and Z_STATE.copy_status == "success"),
+                duration_sec=time.time() - copy_start_ts,
+                error=err_msg,
+            )
+        except Exception as log_e:
+            logger.info(f"[ZettNAS] Failed to log copy history: {log_e}")
+
         Z_STATE.copy_active = False
         Z_STATE.ui_wake.set()
         time.sleep(8)

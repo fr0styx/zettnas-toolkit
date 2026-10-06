@@ -7,12 +7,35 @@ from fastapi import APIRouter, HTTPException
 
 import backend.config as config
 from backend import __version__
-from backend.config import ALLOWED_BROWSE_ROOTS, BUTTON_CFG_FILE, DASH_LAYOUT_FILE, EVENTS_FILE, logger
+from backend.config import (
+    ALLOWED_BROWSE_ROOTS,
+    BUTTON_CFG_FILE,
+    DASH_LAYOUT_FILE,
+    EVENTS_FILE,
+    FAN_STATE_FILE,
+    LED_STATE_FILE,
+    logger,
+)
+from backend.db import query_copy_history
 from backend.fsutil import atomic_write_json, read_json, resolve_within, root_for
-from backend.hardware.disks import fetch_disk_smart_detail
+from backend.hardware.disks import fetch_disk_smart_detail, run_disk_smart_test
+from backend.hardware.fans import set_fan_pwm
+from backend.hardware.led import apply_led_state
 from backend.hardware.screen import get_screen_state
 from backend.hardware.storage import get_current_layout
-from backend.models.schemas import ButtonConfigRequest, CopyConfirmRequest, LayoutRequest, MkdirRequest, StateRequest
+from backend.hardware.unraid import read_unraid_status
+from backend.hardware.docker_stats import container_action, read_docker_containers
+from backend.hardware.ups import read_ups_status
+from backend.models.schemas import (
+    ButtonConfigRequest,
+    CopyConfirmRequest,
+    DockerActionRequest,
+    LayoutRequest,
+    LcdPageRequest,
+    MkdirRequest,
+    StateRequest,
+    SystemProfileRequest,
+)
 from backend.state import Z_STATE
 
 router = APIRouter(tags=["System & Storage"])
@@ -73,6 +96,20 @@ async def disk_wake(payload: dict):
     return {"success": True, "dev": dev, "detail": detail}
 
 
+@router.post("/disk/smart_test")
+async def disk_smart_test(payload: dict):
+    dev = str(payload.get("dev", "sda"))
+    test_type = str(payload.get("test_type", "short"))
+    if dev.startswith("/dev/"):
+        dev = dev.replace("/dev/", "")
+    m = re.match(r"^nv([0-9]+)$", dev)
+    if m:
+        dev = f"nvme{m.group(1)}n1"
+    if not re.fullmatch(r"^(sd[a-z]{1,2}|nvme[0-9]+n[0-9]+)$", dev):
+        raise HTTPException(status_code=400, detail="Invalid device parameter.")
+    return await asyncio.to_thread(run_disk_smart_test, dev, test_type)
+
+
 @router.get("/screen")
 async def screen_state():
     return get_screen_state()
@@ -113,7 +150,7 @@ def _handle_browse_logic(path: str, dirs_only: bool):
 
 @router.get("/browse")
 async def browse(path: str = "", dirs_only: str = "0"):
-    return _handle_browse_logic(path, dirs_only == "1")
+    return await asyncio.to_thread(_handle_browse_logic, path, dirs_only == "1")
 
 
 def _do_mkdir(path: str):
@@ -233,3 +270,99 @@ async def post_state(req: StateRequest):
     if req.fb is not None:
         config.ENABLE_FB = bool(req.fb)
     return {"status": "ok"}
+
+
+@router.get("/lcd/page")
+async def get_lcd_page():
+    return {
+        "page": Z_STATE.current_lcd_page,
+        "cycle_seconds": Z_STATE.lcd_cycle_seconds,
+    }
+
+
+@router.post("/lcd/page")
+async def post_lcd_page(req: LcdPageRequest):
+    if req.page is not None:
+        Z_STATE.set_lcd_page(req.page)
+    if req.cycle_seconds is not None:
+        with Z_STATE.lock:
+            Z_STATE.lcd_cycle_seconds = req.cycle_seconds
+            Z_STATE.last_lcd_cycle_time = time.time()
+        Z_STATE.ui_wake.set()
+    return {
+        "status": "ok",
+        "page": Z_STATE.current_lcd_page,
+        "cycle_seconds": Z_STATE.lcd_cycle_seconds,
+    }
+
+
+@router.post("/lcd/cycle")
+async def post_lcd_cycle():
+    new_page = Z_STATE.cycle_lcd_page()
+    return {"status": "ok", "page": new_page}
+
+
+@router.get("/copy/history")
+async def get_copy_history(limit: int = 50):
+    return query_copy_history(limit)
+
+
+@router.get("/unraid")
+async def get_unraid_telemetry():
+    return read_unraid_status(force=True)
+
+
+@router.post("/system/profile")
+async def set_system_profile(req: SystemProfileRequest):
+    profile = req.profile.lower()
+    # Profile mappings:
+    # auto: fan auto dynamic curve, LED dynamic/current
+    # quiet: fan quiet (37%), LED 20%
+    # balanced: fan balanced (60%), LED 50%
+    # performance: fan performance (85%), LED 100%
+    fan_cfg = read_json(FAN_STATE_FILE, {})
+    led_cfg = read_json(LED_STATE_FILE, {})
+
+    if profile == "auto":
+        fan_cfg["profile"] = "auto"
+        led_cfg["brightness"] = led_cfg.get("brightness", 50)
+    elif profile == "quiet":
+        fan_cfg["profile"] = "quiet"
+        fan_cfg["manual_pct"] = 37
+        led_cfg["brightness"] = 20
+    elif profile == "performance":
+        fan_cfg["profile"] = "performance"
+        fan_cfg["manual_pct"] = 85
+        led_cfg["brightness"] = 100
+    else:  # balanced
+        fan_cfg["profile"] = "balanced"
+        fan_cfg["manual_pct"] = 60
+        led_cfg["brightness"] = 50
+
+    atomic_write_json(FAN_STATE_FILE, fan_cfg)
+    atomic_write_json(LED_STATE_FILE, led_cfg)
+
+    set_fan_pwm(fan_cfg["profile"], fan_cfg.get("manual_pct", 60), ctrl_cpu_fan=fan_cfg.get("ctrl_cpu_fan", False))
+    apply_led_state(led_cfg)
+    Z_STATE.ui_wake.set()
+
+    return {"status": "ok", "profile": profile, "fan": fan_cfg, "led": led_cfg}
+
+
+@router.get("/docker/containers")
+async def get_docker_containers():
+    return await asyncio.to_thread(read_docker_containers)
+
+
+@router.post("/docker/containers/{container_id}/action")
+async def post_docker_container_action(container_id: str, req: DockerActionRequest):
+    res = await asyncio.to_thread(container_action, container_id, req.action)
+    if not res.get("success"):
+        raise HTTPException(status_code=400, detail=res.get("error", "Action failed"))
+    return res
+
+
+@router.get("/ups")
+async def get_ups_telemetry():
+    return await asyncio.to_thread(read_ups_status)
+

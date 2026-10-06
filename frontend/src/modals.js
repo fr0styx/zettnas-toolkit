@@ -2,10 +2,13 @@ import { showToast } from "./toast.js";
 import { ZettEventBus } from './event-bus.js';
 import { api } from './api.js';
 import { DockManager, bringToFront } from './components/dock.js';
+import { trapFocus } from './utils.js';
+import { t } from './i18n.js';
 // S.M.A.R.T. & INTERACTIVE METRIC DIAGNOSTIC MODAL CONTROLLER
 
 let activeModalType = null;
 let smartOverlay, smartCloseBtn, smartTitle, smartModel, smartSerial, smartHealth, smartHours, smartRaw, smartLbl1, smartLbl2, smartLbl3, smartLbl4, smartRawTitle, smartRefreshBtn;
+let _unbindSmartTrap = null;
 
 window.addEventListener('DOMContentLoaded', () => {
     smartOverlay = document.getElementById("smart-modal-overlay");
@@ -22,7 +25,7 @@ window.addEventListener('DOMContentLoaded', () => {
     smartLbl4 = document.getElementById("smart-lbl-4");
     smartRawTitle = document.getElementById("smart-modal-raw-title");
     smartRefreshBtn = document.getElementById("smart-modal-refresh");
-    const minBtn = document.getElementById("smart-min");
+    const minBtn = document.getElementById("smart-min") || document.getElementById("smart-modal-min");
     
     if (smartRefreshBtn) {
       smartRefreshBtn.addEventListener("click", () => {
@@ -40,6 +43,33 @@ window.addEventListener('DOMContentLoaded', () => {
         if (e.target === smartOverlay) closeSmartModal();
       });
     }
+
+    const shortTestBtn = document.getElementById("smart-btn-short-test");
+    const extTestBtn = document.getElementById("smart-btn-extended-test");
+    const testStatus = document.getElementById("smart-test-status");
+
+    async function triggerTest(type) {
+      if (!activeModalType || !activeModalType.startsWith("disk_")) return;
+      const dev = activeModalType.replace("disk_", "");
+      if (testStatus) testStatus.textContent = `Starting ${type} test...`;
+      try {
+        const res = await api.post("/api/disk/smart_test", { dev, test_type: type });
+        if (res && res.success) {
+          showToast(`${type.toUpperCase()} self-test started on /dev/${dev}`, "ok");
+          if (testStatus) testStatus.textContent = `Running ${type} test`;
+          if (smartRaw) smartRaw.textContent = `[S.M.A.R.T. Self-Test Triggered]\nType: ${type}\n${res.output}\n\n` + smartRaw.textContent;
+        } else {
+          showToast(`Failed to trigger test: ${res?.error || 'Unknown error'}`, "error");
+          if (testStatus) testStatus.textContent = `Failed: ${res?.error || 'Error'}`;
+        }
+      } catch (err) {
+        showToast(`Test error: ${err.message}`, "error");
+        if (testStatus) testStatus.textContent = "Error";
+      }
+    }
+
+    if (shortTestBtn) shortTestBtn.addEventListener("click", () => triggerTest("short"));
+    if (extTestBtn) extTestBtn.addEventListener("click", () => triggerTest("long"));
 });
 
 
@@ -60,18 +90,24 @@ async function openSmartModal(devName) {
   }
   const modalWin = smartOverlay.querySelector(".smart-modal-window");
   if (modalWin && bringToFront) bringToFront(modalWin);
-  if (smartTitle) smartTitle.innerHTML = `<svg class="ic"><use href="#i-disk"/></svg> S.M.A.R.T. Diagnostics • /dev/${devName}`;
-  if (smartLbl1) smartLbl1.textContent = "DEVICE & MODEL";
-  if (smartLbl2) smartLbl2.textContent = "SERIAL NUMBER";
-  if (smartLbl3) smartLbl3.textContent = "HEALTH STATUS";
-  if (smartLbl4) smartLbl4.textContent = "POWER-ON HOURS";
-  if (smartRawTitle) smartRawTitle.textContent = "RAW SMART ATTRIBUTES";
+  if (_unbindSmartTrap) { _unbindSmartTrap(); }
+  if (modalWin) _unbindSmartTrap = trapFocus(modalWin, closeSmartModal);
 
-  if (smartModel) smartModel.textContent = "Loading...";
-  if (smartSerial) smartSerial.textContent = "Loading...";
-  if (smartHealth) smartHealth.textContent = "Loading...";
-  if (smartHours) smartHours.textContent = "Loading...";
-  if (smartRaw) smartRaw.textContent = "Spinning up drive motor & querying S.M.A.R.T. telemetry (this may take a few seconds)...";
+  const actionsBox = document.getElementById("smart-actions-container");
+  if (actionsBox) actionsBox.style.display = "flex";
+
+  if (smartTitle) smartTitle.innerHTML = `<svg class="ic"><use href="#i-disk"/></svg> ${t('modal.diag_title', 'S.M.A.R.T. Diagnostics')} • /dev/${devName}`;
+  if (smartLbl1) smartLbl1.textContent = t('modal.smart_device_model', "DEVICE & MODEL");
+  if (smartLbl2) smartLbl2.textContent = t('modal.smart_serial_metric', "SERIAL NUMBER");
+  if (smartLbl3) smartLbl3.textContent = t('modal.smart_health_status', "HEALTH STATUS");
+  if (smartLbl4) smartLbl4.textContent = t('modal.smart_hours_readout', "POWER-ON HOURS");
+  if (smartRawTitle) smartRawTitle.textContent = t('modal.smart_raw_telemetry', "RAW SMART ATTRIBUTES");
+
+  if (smartModel) smartModel.textContent = t('common.loading', "Loading...");
+  if (smartSerial) smartSerial.textContent = t('common.loading', "Loading...");
+  if (smartHealth) smartHealth.textContent = t('common.loading', "Loading...");
+  if (smartHours) smartHours.textContent = t('common.loading', "Loading...");
+  if (smartRaw) smartRaw.textContent = t('common.loading', "Loading...");
 
   try {
     const res = await api.request(`/api/disk_detail?dev=${encodeURIComponent(devName)}`, { signal: _smartFetchController.signal });
@@ -147,44 +183,49 @@ function openMetricModal(type) {
   }
   const modalWin = smartOverlay.querySelector(".smart-modal-window");
   if (modalWin && bringToFront) bringToFront(modalWin);
+  if (_unbindSmartTrap) { _unbindSmartTrap(); }
+  if (modalWin) _unbindSmartTrap = trapFocus(modalWin, closeSmartModal);
+
+  const actionsBox = document.getElementById("smart-actions-container");
+  if (actionsBox) actionsBox.style.display = "none";
 
   if (type === "storage") {
-    smartTitle.innerHTML = `<svg class="ic"><use href="#i-disk"/></svg> Storage Array Diagnostics`;
-    smartLbl1.textContent = "USED SPACE";
-    smartLbl2.textContent = "TOTAL CAPACITY";
-    smartLbl3.textContent = "UTILIZATION";
-    smartLbl4.textContent = "TARGET POOL";
+    smartTitle.innerHTML = `<svg class="ic"><use href="#i-disk"/></svg> ${t('modal.storage_diag', 'Storage Array Diagnostics')}`;
+    smartLbl1.textContent = t('modal.used_space', "USED SPACE");
+    smartLbl2.textContent = t('modal.total_cap', "TOTAL CAPACITY");
+    smartLbl3.textContent = t('modal.utilization', "UTILIZATION");
+    smartLbl4.textContent = t('modal.target_pool', "TARGET POOL");
     smartHours.textContent = "/mnt/user";
     smartRawTitle.textContent = "ACTIVE DISK INVENTORY";
   } else if (type === "cpu") {
-    smartTitle.innerHTML = `<svg class="ic"><use href="#i-cpu"/></svg> Processor Diagnostics`;
-    smartLbl1.textContent = "CORE TEMP";
-    smartLbl2.textContent = "ACTIVE UTILIZATION";
-    smartLbl3.textContent = "THERMAL STATE";
-    smartLbl4.textContent = "SYSTEM UPTIME";
+    smartTitle.innerHTML = `<svg class="ic"><use href="#i-cpu"/></svg> ${t('modal.cpu_diag', 'Processor Diagnostics')}`;
+    smartLbl1.textContent = t('modal.core_temp', "CORE TEMP");
+    smartLbl2.textContent = t('modal.active_util', "ACTIVE UTILIZATION");
+    smartLbl3.textContent = t('modal.thermal_state', "THERMAL STATE");
+    smartLbl4.textContent = t('modal.system_uptime', "SYSTEM UPTIME");
     smartRawTitle.textContent = "CPU TOPOLOGY & DELTAS";
   } else if (type === "mem") {
-    smartTitle.innerHTML = `<svg class="ic"><use href="#i-mem"/></svg> Memory Distribution`;
-    smartLbl1.textContent = "RAM USED";
-    smartLbl2.textContent = "RAM TOTAL";
-    smartLbl3.textContent = "USAGE";
-    smartLbl4.textContent = "FREE MEMORY";
+    smartTitle.innerHTML = `<svg class="ic"><use href="#i-mem"/></svg> ${t('modal.mem_diag', 'Memory Distribution')}`;
+    smartLbl1.textContent = t('modal.ram_used', "RAM USED");
+    smartLbl2.textContent = t('modal.ram_total', "RAM TOTAL");
+    smartLbl3.textContent = t('modal.usage', "USAGE");
+    smartLbl4.textContent = t('modal.free_mem', "FREE MEMORY");
     smartRawTitle.textContent = "HOST MEMINFO SNAPSHOT";
   } else if (type === "fans") {
-    smartTitle.innerHTML = `<svg class="ic"><use href="#i-fan"/></svg> Cooling & Fan Tachometers`;
-    smartLbl1.textContent = "REAR FAN 1 (D1)";
-    smartLbl2.textContent = "REAR FAN 2 (D2)";
-    smartLbl3.textContent = "CPU FAN";
+    smartTitle.innerHTML = `<svg class="ic"><use href="#i-fan"/></svg> ${t('modal.fans_diag', 'Cooling & Fan Tachometers')}`;
+    smartLbl1.textContent = t('modal.rear_fan_1', "REAR FAN 1 (D1)");
+    smartLbl2.textContent = t('modal.rear_fan_2', "REAR FAN 2 (D2)");
+    smartLbl3.textContent = t('modal.cpu_fan', "CPU FAN");
     smartHealth.style.color = "var(--ok2)";
-    smartLbl4.textContent = "HWMON CHIP";
+    smartLbl4.textContent = t('modal.hwmon_chip', "HWMON CHIP");
     smartHours.textContent = "zettlab_d8_fans";
     smartRawTitle.textContent = "LIVE FAN SENSOR TELEMETRY";
   } else if (type === "net") {
-    smartTitle.innerHTML = `<svg class="ic"><use href="#i-net"/></svg> Network Throughput Diagnostics`;
-    smartLbl1.textContent = "CURRENT TX";
-    smartLbl2.textContent = "CURRENT RX";
-    smartLbl3.textContent = "LINK STATE";
-    smartLbl4.textContent = "PRIMARY IP";
+    smartTitle.innerHTML = `<svg class="ic"><use href="#i-net"/></svg> ${t('modal.net_diag', 'Network Throughput Diagnostics')}`;
+    smartLbl1.textContent = t('modal.current_tx', "CURRENT TX");
+    smartLbl2.textContent = t('modal.current_rx', "CURRENT RX");
+    smartLbl3.textContent = t('modal.link_state', "LINK STATE");
+    smartLbl4.textContent = t('modal.primary_ip', "PRIMARY IP");
     smartRawTitle.textContent = "NETWORK INTERFACE TELEMETRY";
   }
   updateMetricModalLive();
@@ -195,6 +236,10 @@ function closeSmartModal() {
   if (_smartFetchController) {
     _smartFetchController.abort();
     _smartFetchController = null;
+  }
+  if (_unbindSmartTrap) {
+    _unbindSmartTrap();
+    _unbindSmartTrap = null;
   }
   if (smartOverlay) {
     smartOverlay.classList.remove("open");
@@ -224,3 +269,18 @@ ZettEventBus.addEventListener('modal:metric:open', (e) => {
 });
 
 ZettEventBus.addEventListener('modal:smart:close', () => closeSmartModal());
+
+window.addEventListener('zettnas:lang-changed', () => {
+    if (!smartOverlay || !smartOverlay.classList.contains('open') || !activeModalType) return;
+    if (activeModalType.startsWith('disk_')) {
+        const devName = activeModalType.replace('disk_', '');
+        if (smartTitle) smartTitle.innerHTML = `<svg class="ic"><use href="#i-disk"/></svg> ${t('modal.diag_title', 'S.M.A.R.T. Diagnostics')} • /dev/${devName}`;
+        if (smartLbl1) smartLbl1.textContent = t('modal.smart_device_model', "DEVICE & MODEL");
+        if (smartLbl2) smartLbl2.textContent = t('modal.smart_serial_metric', "SERIAL NUMBER");
+        if (smartLbl3) smartLbl3.textContent = t('modal.smart_health_status', "HEALTH STATUS");
+        if (smartLbl4) smartLbl4.textContent = t('modal.smart_hours_readout', "POWER-ON HOURS");
+        if (smartRawTitle) smartRawTitle.textContent = t('modal.smart_raw_telemetry', "RAW SMART ATTRIBUTES");
+    } else {
+        openMetricModal(activeModalType);
+    }
+});

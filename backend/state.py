@@ -46,6 +46,23 @@ class ZettState:
         self.shutting_down = False
         self.collector_heartbeat = 0.0
         self.critical_temp_active = False
+        self.current_lcd_page = 0
+        self.lcd_cycle_seconds = 0
+        self.last_lcd_cycle_time = time.time()
+
+    def cycle_lcd_page(self, count: int = 4) -> int:
+        with self.lock:
+            self.current_lcd_page = (self.current_lcd_page + 1) % count
+            self.last_lcd_cycle_time = time.time()
+        self.ui_wake.set()
+        return self.current_lcd_page
+
+    def set_lcd_page(self, page: int, count: int = 4) -> int:
+        with self.lock:
+            self.current_lcd_page = max(0, min(count - 1, int(page)))
+            self.last_lcd_cycle_time = time.time()
+        self.ui_wake.set()
+        return self.current_lcd_page
 
 
 Z_STATE = ZettState()

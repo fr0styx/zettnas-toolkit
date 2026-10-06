@@ -4,6 +4,7 @@
  */
 import { ZettEventBus } from './event-bus.js';
 import { state } from './state.js';
+import { t } from './i18n.js';
 
 let _toastTimeout = null;
 
@@ -56,19 +57,19 @@ function _showTopNotification(msg, type = "error") {
   if (isErr) {
     toast.style.borderLeft = "4px solid #ef4444";
     if (iconEl) iconEl.textContent = "⚠️";
-    if (tagEl) { tagEl.textContent = "SECURITY / SYSTEM ALERT"; tagEl.style.color = "#ef4444"; }
+    if (tagEl) { tagEl.textContent = t('toast.security_alert', "SECURITY / SYSTEM ALERT"); tagEl.style.color = "#ef4444"; }
   } else if (isWarn) {
     toast.style.borderLeft = "4px solid #f59e0b";
     if (iconEl) iconEl.textContent = "⚠️";
-    if (tagEl) { tagEl.textContent = "WARNING"; tagEl.style.color = "#f59e0b"; }
+    if (tagEl) { tagEl.textContent = t('toast.warning', "WARNING"); tagEl.style.color = "#f59e0b"; }
   } else if (isSucc) {
     toast.style.borderLeft = "4px solid #22c55e";
     if (iconEl) iconEl.textContent = "✅";
-    if (tagEl) { tagEl.textContent = "SUCCESS"; tagEl.style.color = "#22c55e"; }
+    if (tagEl) { tagEl.textContent = t('toast.success', "SUCCESS"); tagEl.style.color = "#22c55e"; }
   } else {
     toast.style.borderLeft = "4px solid #38bdf8";
     if (iconEl) iconEl.textContent = "ℹ️";
-    if (tagEl) { tagEl.textContent = "INFORMATION"; tagEl.style.color = "#38bdf8"; }
+    if (tagEl) { tagEl.textContent = t('toast.info', "INFORMATION"); tagEl.style.color = "#38bdf8"; }
   }
 
   if (msgEl) msgEl.textContent = msg;
@@ -106,15 +107,15 @@ function _showTopConfirm(title, msg, onConfirm) {
     card.innerHTML = `
       <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; border-bottom: 1px solid rgba(255,255,255,0.08); background: rgba(245, 158, 11, 0.08);">
         <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: #fbbf24;" id="confirm-toast-title">
-          <span>💤</span> Drive in Standby Mode
+          <span>💤</span> ${t('toast.drive_standby', "Drive in Standby Mode")}
         </div>
         <button id="confirm-toast-close" style="background: transparent; border: none; color: #94a3b8; font-size: 18px; cursor: pointer; padding: 2px 6px; line-height: 1; border-radius: 4px;" title="Cancel">&times;</button>
       </div>
       <div style="padding: 16px 20px;">
         <div id="confirm-toast-msg" style="font-size: 12.5px; color: #cbd5e1; line-height: 1.55; word-break: break-word;"></div>
         <div style="display: flex; gap: 10px; margin-top: 16px; justify-content: flex-end;">
-          <button id="confirm-toast-cancel" style="padding: 7px 16px; background: transparent; border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: #cbd5e1; font-size: 12px; font-weight: 600; cursor: pointer;">Cancel</button>
-          <button id="confirm-toast-ok" style="padding: 7px 18px; background: #fbbf24; border: 1px solid #f59e0b; border-radius: 6px; color: #0a0e13; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px;">⚡ Wake & Inspect</button>
+          <button id="confirm-toast-cancel" style="padding: 7px 16px; background: transparent; border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: #cbd5e1; font-size: 12px; font-weight: 600; cursor: pointer;">${t('common.cancel', "Cancel")}</button>
+          <button id="confirm-toast-ok" style="padding: 7px 18px; background: #fbbf24; border: 1px solid #f59e0b; border-radius: 6px; color: #0a0e13; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px;">${t('toast.wake_inspect', "⚡ Wake & Inspect")}</button>
         </div>
       </div>
     `;
@@ -128,7 +129,7 @@ function _showTopConfirm(title, msg, onConfirm) {
   const okBtn = document.getElementById("confirm-toast-ok");
 
   if (titleEl) {
-    titleEl.innerHTML = `<span>💤</span> ${title || "Confirm Action"}`;
+    titleEl.innerHTML = `<span>💤</span> ${title || t('toast.confirm_action', "Confirm Action")}`;
   }
   if (msgEl) {
     msgEl.textContent = msg || "Are you sure you want to proceed?";

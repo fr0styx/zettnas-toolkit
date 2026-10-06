@@ -4,6 +4,7 @@
  */
 import { auth } from '../api.js';
 import { ZettEventBus } from '../event-bus.js';
+import { t } from '../i18n.js';
 
 export function initAuth() {
   const loginBtn = document.getElementById('login-btn');
@@ -18,7 +19,7 @@ export function initAuth() {
 
   if (loginBtn && loginPwd) {
     const doLogin = async () => {
-      loginBtn.textContent = 'AUTHENTICATING...';
+      loginBtn.textContent = t('login.authenticating', 'AUTHENTICATING...');
       try {
         const res = await window.fetch('/api/auth/login', {
           method: 'POST',
@@ -30,11 +31,11 @@ export function initAuth() {
           const data = await res.json();
           if (data.token) auth.setToken(data.token);
           if (overlay) overlay.style.display = 'none';
-          loginBtn.textContent = 'SECURE LOGIN';
+          loginBtn.textContent = t('login.btn', 'SECURE LOGIN');
           loginPwd.value = '';
           window.location.reload();
         } else {
-          let msg = 'INVALID PASSWORD';
+          let msg = t('login.invalid', 'INVALID PASSWORD');
           let holdMs = 2000;
           if (res.status === 429) {
             const retry = parseInt(res.headers.get('Retry-After') || '0', 10);
@@ -44,12 +45,12 @@ export function initAuth() {
           loginBtn.textContent = msg;
           loginBtn.style.borderColor = 'var(--crit)';
           setTimeout(() => {
-            loginBtn.textContent = 'SECURE LOGIN';
+            loginBtn.textContent = t('login.btn', 'SECURE LOGIN');
             loginBtn.style.borderColor = '';
           }, holdMs);
         }
       } catch (e) {
-        loginBtn.textContent = 'ERROR';
+        loginBtn.textContent = t('login.error', 'ERROR');
       }
     };
 

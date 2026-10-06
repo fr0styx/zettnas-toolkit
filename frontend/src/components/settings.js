@@ -9,6 +9,7 @@ import { showToast } from '../toast.js';
 import { applyTheme } from './dashboard.js';
 import { applyDashboardLayout, persistDashboardLayout, fitMiniPreviewScale, syncMiniPreviewTelemetry } from './mini-preview.js';
 import { fetchAndRenderMetrics } from './metrics-chart.js';
+import { t } from '../i18n.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -53,6 +54,26 @@ export function initSettings() {
   const tabBtns = document.querySelectorAll('.drawer-tab-btn');
   const tabContents = document.querySelectorAll('.drawer-tab-content');
 
+  function updateDrawerDynamicHeader(targetId) {
+    if (!targetId) {
+      const activeBtn = document.querySelector('.drawer-tab-btn.active');
+      targetId = activeBtn ? activeBtn.dataset.tab : 'tab-layout';
+    }
+    if (targetId === 'tab-layout') {
+      if (dynamicTitle) dynamicTitle.textContent = t('settings.tab_layout_title', 'Dashboard Layout');
+      if (dynamicDesc) dynamicDesc.textContent = t('settings.tab_layout_desc', 'Configure dashboard sizes, visibility, and layout presets.');
+    } else if (targetId === 'tab-led') {
+      if (dynamicTitle) dynamicTitle.textContent = t('settings.tab_led_title', 'LED Strip bar');
+      if (dynamicDesc) dynamicDesc.textContent = t('settings.tab_led_desc', 'Adjust physical lighting and reactive hardware alerts.');
+    } else if (targetId === 'tab-fans') {
+      if (dynamicTitle) dynamicTitle.textContent = t('settings.tab_fans_title', 'Fans');
+      if (dynamicDesc) dynamicDesc.textContent = t('settings.tab_fans_desc', 'Configure cooling thresholds and dynamic thermal curves.');
+    } else if (targetId === 'tab-buttons') {
+      if (dynamicTitle) dynamicTitle.textContent = t('settings.tab_buttons_title', 'Copy Button');
+      if (dynamicDesc) dynamicDesc.textContent = t('settings.tab_buttons_desc', 'Assign SD card copy rules to the physical hardware button.');
+    }
+  }
+
   tabBtns.forEach((btn) => {
     btn.addEventListener('click', () => {
       tabBtns.forEach((b) => b.classList.remove('active'));
@@ -61,24 +82,7 @@ export function initSettings() {
       const targetId = btn.dataset.tab;
       const targetContent = $(targetId);
       if (targetContent) targetContent.classList.add('active');
-
-      if (targetId === 'tab-layout') {
-        if (dynamicTitle) dynamicTitle.textContent = 'Dashboard Layout';
-        if (dynamicDesc) dynamicDesc.textContent = 'Configure dashboard sizes, visibility, and layout presets.';
-      } else if (targetId === 'tab-led') {
-        if (dynamicTitle) dynamicTitle.textContent = 'LED Strip bar';
-        if (dynamicDesc) dynamicDesc.textContent = 'Adjust physical lighting and reactive hardware alerts.';
-      } else if (targetId === 'tab-fans') {
-        if (dynamicTitle) dynamicTitle.textContent = 'Fans';
-        if (dynamicDesc) dynamicDesc.textContent = 'Configure cooling thresholds and dynamic thermal curves.';
-      } else if (targetId === 'tab-buttons') {
-        if (dynamicTitle) dynamicTitle.textContent = 'Copy Button';
-        if (dynamicDesc) dynamicDesc.textContent = 'Assign SD card copy rules to the physical hardware button.';
-      } else if (targetId === 'tab-misc') {
-        if (dynamicTitle) dynamicTitle.textContent = 'Misc & Event Log';
-        if (dynamicDesc) dynamicDesc.textContent = 'Historical metrics, background operations, and hardware alerts.';
-        fetchAndRenderMetrics();
-      }
+      updateDrawerDynamicHeader(targetId);
     });
   });
 
@@ -168,7 +172,7 @@ export function initSettings() {
     localStorage.setItem(LAYOUT_LOCK_KEY, isLayoutLocked);
     if (layoutSectionsContainer) layoutSectionsContainer.classList.toggle('locked', isLayoutLocked);
     if (layoutLockBtn) {
-      layoutLockBtn.textContent = isLayoutLocked ? '🔒 Locked' : '🔓 Reorder';
+      layoutLockBtn.textContent = isLayoutLocked ? t('settings.btn_locked', '🔒 Locked') : t('settings.btn_reorder', '🔓 Reorder');
       layoutLockBtn.classList.toggle('unlocked', !isLayoutLocked);
     }
     if (layoutSectionsContainer) {
@@ -238,59 +242,6 @@ export function initSettings() {
 
   initLayoutSectionReordering();
 
-  // --- Misc Tab Section Reordering ---
-  const miscCardsContainer = $('misc-sections-container');
-  const miscCardsLockBtn = $('misc-cards-lock-btn');
-  if (miscCardsContainer && miscCardsLockBtn) {
-    let isMiscLocked = true;
-    miscCardsLockBtn.addEventListener('click', () => {
-      isMiscLocked = !isMiscLocked;
-      miscCardsLockBtn.textContent = isMiscLocked ? '🔒 Locked' : '🔓 Unlocked';
-      miscCardsLockBtn.classList.toggle('unlocked', !isMiscLocked);
-      miscCardsContainer.classList.toggle('locked', isMiscLocked);
-      miscCardsContainer.querySelectorAll('.draggable-card').forEach(c => c.setAttribute('draggable', !isMiscLocked));
-    });
-
-    let draggedMiscCard = null;
-    let allowMiscDrag = false;
-    try {
-      const order = JSON.parse(localStorage.getItem('zettnas_misc_order') || '[]');
-      order.reverse().forEach(id => {
-        const el = miscCardsContainer.querySelector(`[data-misc-card-id="${id}"]`);
-        if (el) miscCardsContainer.prepend(el);
-      });
-    } catch (e) {}
-
-    miscCardsContainer.addEventListener('mousedown', (e) => {
-      allowMiscDrag = !isMiscLocked && !!e.target.closest('.drag-handle');
-    });
-
-    miscCardsContainer.querySelectorAll('.draggable-card').forEach((card) => {
-      card.addEventListener('dragstart', (e) => {
-        if (isMiscLocked || !allowMiscDrag) { e.preventDefault(); return false; }
-        draggedMiscCard = card;
-        card.classList.add('dragging');
-      });
-      card.addEventListener('dragend', () => {
-        allowMiscDrag = false;
-        if (draggedMiscCard) draggedMiscCard.classList.remove('dragging');
-        miscCardsContainer.querySelectorAll('.draggable-card').forEach((c) => c.classList.remove('drag-over'));
-        const order = Array.from(miscCardsContainer.querySelectorAll('.draggable-card')).map(c => c.dataset.miscCardId);
-        localStorage.setItem('zettnas_misc_order', JSON.stringify(order));
-      });
-      card.addEventListener('dragover', (e) => {
-        if (isMiscLocked || !draggedMiscCard) return;
-        e.preventDefault();
-        const targetCard = e.target.closest('.draggable-card');
-        if (targetCard && targetCard !== draggedMiscCard && targetCard.parentElement === miscCardsContainer) {
-          const rect = targetCard.getBoundingClientRect();
-          const next = (e.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
-          miscCardsContainer.insertBefore(draggedMiscCard, next && targetCard.nextSibling || targetCard);
-        }
-      });
-    });
-  }
-
   // --- Screen Backlight & Night Dimming ---
   const screenBriSlider = $('screen-bri-slider');
   const screenBriVal = $('screen-bri-val');
@@ -298,6 +249,7 @@ export function initSettings() {
   const screenNightStart = $('screen-night-start');
   const screenNightEnd = $('screen-night-end');
   const screenNightBri = $('screen-night-bri');
+  const screenCarouselSelect = $('screen-carousel-select');
   let screenDebounce = null;
 
   async function postScreenState() {
@@ -327,9 +279,30 @@ export function initSettings() {
     } catch (e) {
       console.warn('Failed to fetch screen state', e);
     }
+
+    try {
+      const lcdData = await api.get('/api/lcd/page');
+      if (screenCarouselSelect && lcdData.cycle_seconds !== undefined) {
+        screenCarouselSelect.value = String(lcdData.cycle_seconds);
+      }
+    } catch (e) {
+      console.warn('Failed to fetch LCD carousel state', e);
+    }
   }
 
   fetchScreenState();
+
+  if (screenCarouselSelect) {
+    screenCarouselSelect.addEventListener('change', async (e) => {
+      const secs = parseInt(e.target.value, 10);
+      try {
+        await api.post('/api/lcd/page', { cycle_seconds: secs });
+        showToast(secs > 0 ? `Auto-cycling LCD every ${secs}s` : 'Auto-cycling disabled (manual control)', 'info');
+      } catch (err) {
+        showToast('Failed to update LCD cycle rate', 'error');
+      }
+    });
+  }
 
   if (screenBriSlider) {
     screenBriSlider.addEventListener('input', (e) => {
@@ -551,4 +524,16 @@ export function initSettings() {
       }
     }
   });
+
+  window.addEventListener('zettnas:lang-changed', () => {
+    updateDrawerDynamicHeader();
+    if (layoutLockBtn) {
+      layoutLockBtn.textContent = isLayoutLocked ? t('settings.btn_locked', '🔒 Locked') : t('settings.btn_reorder', '🔓 Reorder');
+    }
+    const copySaveBtn = $('btn-copy-save');
+    if (copySaveBtn) {
+      copySaveBtn.textContent = t('settings.btn_save_config', '💾 Save Configuration');
+    }
+  });
 }
+

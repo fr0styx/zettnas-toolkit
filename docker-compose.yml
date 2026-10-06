@@ -20,7 +20,12 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ${STORAGE_POOL_PATH:-/mnt/user}:/mnt/user:rw
       - ./data:/app/data
+      - ./backend:/app/backend
+      - ./app.py:/app/app.py
+      - ./static:/app/static
       - /boot/config/network.cfg:/boot/config/network.cfg:ro
+      - /var/local/emhttp:/var/local/emhttp:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
       - LCD_FPS=${LCD_FPS:-10}
       - PORT=8082

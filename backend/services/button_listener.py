@@ -29,7 +29,14 @@ def button_listener_daemon():
             current_state = (copy_val & 2) >> 1
 
             if current_state == 0 and last_state == 1:
-                cfg = {"enabled": False, "source": "sd", "dest": "/mnt/user/", "use_exif": True, "on_collision": "skip"}
+                cfg = {
+                    "enabled": False,
+                    "source": "sd",
+                    "dest": "/mnt/user/",
+                    "use_exif": True,
+                    "on_collision": "skip",
+                    "action": "cycle_lcd",
+                }
                 if os.path.exists(BUTTON_CFG_FILE):
                     try:
                         with open(BUTTON_CFG_FILE) as f:
@@ -37,12 +44,16 @@ def button_listener_daemon():
                     except (json.JSONDecodeError, OSError):
                         pass
 
-                if cfg.get("enabled") and not Z_STATE.copy_active:
+                btn_action = cfg.get("action", "cycle_lcd")
+                if cfg.get("enabled") and not Z_STATE.copy_active and btn_action == "copy":
                     Z_STATE.copy_active = True
                     Z_STATE.copy_status = "copying"
                     Z_STATE.ui_wake.set()
                     add_event("info", "Copy Started", "Starting ingest from SD Card reader...")
                     threading.Thread(target=lambda c: asyncio.run(_do_copy(c)), args=(cfg,), daemon=True).start()
+                else:
+                    new_page = Z_STATE.cycle_lcd_page()
+                    add_event("info", "LCD Page Switched", f"Display cycled to Page {new_page} via front hardware button.")
 
             last_state = current_state
         except Exception as e:

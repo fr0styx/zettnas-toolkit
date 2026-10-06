@@ -10,12 +10,8 @@ __pycache__/
 *.bak
 .pytest_cache/
 
-# Node / Frontend development (Vite outputs to static/)
+# Node / Frontend development (keep node_modules local)
 node_modules/
-frontend/
-package.json
-package-lock.json
-vite.config.mjs
 
 # Environment and secrets
 .env

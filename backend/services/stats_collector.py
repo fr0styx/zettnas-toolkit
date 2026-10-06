@@ -23,6 +23,9 @@ from backend.hardware.memory import read_mem
 from backend.hardware.network import read_ip, read_network_rates
 from backend.hardware.screen import get_screen_state, is_in_time_window, set_screen_brightness
 from backend.hardware.storage import detect_chassis_model, get_current_layout, read_storage, read_uptime
+from backend.hardware.unraid import read_unraid_status
+from backend.hardware.docker_stats import read_docker_containers
+from backend.hardware.ups import read_ups_status
 from backend.services.broadcaster import broadcaster
 from backend.services.copy_engine import read_media_slots
 from backend.services.notifications import send_notification
@@ -35,6 +38,12 @@ def stats_collector_daemon():
         try:
             disks = read_disk_temps_and_io()
             net = read_network_rates()
+
+            # Auto-cycle LCD page if interval configured
+            if Z_STATE.lcd_cycle_seconds > 0:
+                if (time.time() - Z_STATE.last_lcd_cycle_time) >= Z_STATE.lcd_cycle_seconds:
+                    Z_STATE.cycle_lcd_page()
+
             bad = [d for d in disks if d.get("health") in ("warn", "crit")]
             has_crit = any(d.get("health") == "crit" for d in disks)
             if has_crit:
@@ -351,6 +360,13 @@ def stats_collector_daemon():
                 "copy_status": Z_STATE.copy_status,
                 "events": list(Z_STATE.event_log),
                 "security": {"is_default_password": is_using_default_password()},
+                "unraid": read_unraid_status(),
+                "docker": read_docker_containers(),
+                "ups": read_ups_status(),
+                "lcd": {
+                    "page": Z_STATE.current_lcd_page,
+                    "cycle_seconds": Z_STATE.lcd_cycle_seconds,
+                },
             }
 
             with Z_STATE.lock:
@@ -405,8 +421,14 @@ def collect():
                 "net": {"tx": "0 B/s", "rx": "0 B/s"},
                 "uptime": "0s",
                 "disks": [],
+                "unraid": read_unraid_status(),
+                "lcd": {"page": Z_STATE.current_lcd_page, "cycle_seconds": Z_STATE.lcd_cycle_seconds},
             }
         )
         data["events"] = list(Z_STATE.event_log)
         data["security"] = {"is_default_password": is_using_default_password()}
+        if "lcd" not in data:
+            data["lcd"] = {"page": Z_STATE.current_lcd_page, "cycle_seconds": Z_STATE.lcd_cycle_seconds}
+        if "unraid" not in data:
+            data["unraid"] = read_unraid_status()
     return data

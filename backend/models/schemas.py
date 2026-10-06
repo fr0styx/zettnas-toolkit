@@ -75,3 +75,16 @@ class LayoutRequest(BaseModel):
 
 class StateRequest(BaseModel):
     fb: bool | None = None
+
+
+class LcdPageRequest(BaseModel):
+    page: int | None = Field(default=None, ge=0, le=3)
+    cycle_seconds: int | None = Field(default=None, ge=0, le=300)
+
+
+class SystemProfileRequest(BaseModel):
+    profile: str = Field(..., pattern=r"^(auto|quiet|balanced|performance)$")
+
+
+class DockerActionRequest(BaseModel):
+    action: str = Field(..., pattern=r"^(start|stop|restart|pause|unpause)$")
