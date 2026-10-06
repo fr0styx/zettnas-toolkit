@@ -1,6 +1,7 @@
 import asyncio
 import datetime
 import glob
+import hashlib
 import os
 import shutil
 import subprocess
@@ -8,7 +9,6 @@ import time
 
 import aiofiles
 import exifread
-import hashlib
 
 from backend.config import ALLOWED_BROWSE_ROOTS, HOST_DEV, HOST_PROC, HOST_SYS, logger
 from backend.db import log_copy_event
@@ -274,7 +274,7 @@ async def _do_copy(cfg):
                     if hasher_src.hexdigest() != hasher_dst.hexdigest():
                         if os.path.exists(dst_f):
                             os.remove(dst_f)
-                        raise IOError(f"Checksum mismatch for {os.path.basename(src_f)}")
+                        raise OSError(f"Checksum mismatch for {os.path.basename(src_f)}")
 
                 shutil.copystat(src_f, dst_f)
                 Z_STATE.copy_progress["files_done"] += 1

@@ -1,15 +1,14 @@
-from pydantic import BaseModel
-import shutil
-from fastapi.responses import FileResponse
 import asyncio
 import os
 import re
+import shutil
 import time
 
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import FileResponse
+from pydantic import BaseModel
 
-import backend.config as config
-from backend import __version__
+from backend import __version__, config
 from backend.config import (
     ALLOWED_BROWSE_ROOTS,
     BUTTON_CFG_FILE,
@@ -22,21 +21,21 @@ from backend.config import (
 from backend.db import query_copy_history
 from backend.fsutil import atomic_write_json, read_json, resolve_within, root_for
 from backend.hardware.disks import fetch_disk_smart_detail, run_disk_smart_test
+from backend.hardware.docker_stats import container_action, read_docker_containers
 from backend.hardware.fans import set_fan_pwm
 from backend.hardware.led import apply_led_state
 from backend.hardware.screen import get_screen_state, save_screen_state
 from backend.hardware.storage import get_current_layout
 from backend.hardware.unraid import read_unraid_status
-from backend.hardware.docker_stats import container_action, read_docker_containers
 from backend.hardware.ups import read_ups_status
 from backend.models.schemas import (
     ButtonConfigRequest,
-    ScreenConfigRequest,
     CopyConfirmRequest,
     DockerActionRequest,
     LayoutRequest,
     LcdPageRequest,
     MkdirRequest,
+    ScreenConfigRequest,
     StateRequest,
     SystemProfileRequest,
 )
@@ -457,6 +456,7 @@ async def fs_delete(req: DeleteRequest):
 
         # Recycle Bin logic instead of hard delete
         import time
+
         from backend.state import add_event
         
         # Find which root this belongs to
@@ -491,6 +491,7 @@ async def fs_download(path: str):
 
 from fastapi import Request
 
+
 @router.post("/fs/upload")
 async def fs_upload(request: Request, path: str, filename: str):
     target_unresolved, _, _ = _safe_fs_target(path)
@@ -517,6 +518,8 @@ async def fs_upload(request: Request, path: str, filename: str):
 
 
 from pydantic import BaseModel
+
+
 class TokenCreateRequest(BaseModel):
     name: str
 

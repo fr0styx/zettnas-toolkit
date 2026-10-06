@@ -1,12 +1,12 @@
+import json
 import os
 import re
 import subprocess
 import time
 
 from backend.config import (
+    DATA_DIR,
     DISKS,
-    HDD_CRITICAL_TEMP,
-    HDD_WARN_TEMP,
     HOST_DEV,
     HOST_PROC,
     HOST_SYS,
@@ -20,16 +20,14 @@ from backend.config import (
 )
 from backend.state import Z_STATE
 
-import json
-from backend.config import DATA_DIR
 TRENDS_FILE = os.path.join(DATA_DIR, "smart_trends.json")
 _smart_trends = None
 
 def _evaluate_smart_trends(dev_name, metrics):
     global _smart_trends
-    from backend.state import add_event
-    from backend.services.notifications import send_notification
     from backend.fsutil import atomic_write_json
+    from backend.services.notifications import send_notification
+    from backend.state import add_event
     
     if _smart_trends is None:
         if os.path.exists(TRENDS_FILE):
@@ -213,16 +211,10 @@ def _parse_smart(text, is_nvme):
     crit_temp = NVME_CRITICAL_TEMP if is_nvme else 60
     warn_temp = NVME_WARN_TEMP if is_nvme else 50
     health = "ok"
-    if passed is False or pending > 0 or offline > 0 or nvme_media_err > 0:
-        health = "crit"
-    elif nvme_spare is not None and nvme_spare_thresh is not None and nvme_spare <= nvme_spare_thresh:
-        health = "crit"
-    elif temp is not None and temp >= crit_temp:
+    if passed is False or pending > 0 or offline > 0 or nvme_media_err > 0 or nvme_spare is not None and nvme_spare_thresh is not None and nvme_spare <= nvme_spare_thresh or temp is not None and temp >= crit_temp:
         health = "crit"
     elif health != "crit":
-        if realloc > 0 or crc > 0 or (nvme_used is not None and nvme_used >= 80):
-            health = "warn"
-        elif temp is not None and temp >= warn_temp:
+        if realloc > 0 or crc > 0 or (nvme_used is not None and nvme_used >= 80) or temp is not None and temp >= warn_temp:
             health = "warn"
     metrics = {
         'realloc': realloc,

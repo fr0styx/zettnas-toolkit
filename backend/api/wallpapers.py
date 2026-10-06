@@ -8,7 +8,12 @@ from fastapi import APIRouter, Request
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse
 
-from backend.config import MAX_WALLPAPER_BYTES, WALLPAPER_CONFIG_FILE, WALLPAPERS_DIR, logger
+from backend.config import (
+    MAX_WALLPAPER_BYTES,
+    WALLPAPER_CONFIG_FILE,
+    WALLPAPERS_DIR,
+    logger,
+)
 from backend.errors import error_response
 from backend.fsutil import atomic_write_json, read_json
 from backend.models.schemas import WallpaperRenameRequest, WallpaperSelectRequest

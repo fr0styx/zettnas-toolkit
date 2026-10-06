@@ -5,11 +5,11 @@ parity checks, mover progress, and storage subsystem health.
 """
 import os
 import time
-from typing import Any, Dict
+from typing import Any
 
 from backend.config import logger
 
-_CACHED_UNRAID_STATUS: Dict[str, Any] = {}
+_CACHED_UNRAID_STATUS: dict[str, Any] = {}
 _LAST_UNRAID_POLL = 0.0
 _CACHE_TTL = 1.5
 
@@ -28,8 +28,8 @@ def _find_emhttp_dir() -> str | None:
     return None
 
 
-def _parse_ini_flat(filepath: str) -> Dict[str, str]:
-    out: Dict[str, str] = {}
+def _parse_ini_flat(filepath: str) -> dict[str, str]:
+    out: dict[str, str] = {}
     if not os.path.isfile(filepath):
         return out
     try:
@@ -48,7 +48,7 @@ def _parse_ini_flat(filepath: str) -> Dict[str, str]:
     return out
 
 
-def read_unraid_status(force: bool = False) -> Dict[str, Any]:
+def read_unraid_status(force: bool = False) -> dict[str, Any]:
     global _CACHED_UNRAID_STATUS, _LAST_UNRAID_POLL
     now = time.time()
     if not force and _CACHED_UNRAID_STATUS and (now - _LAST_UNRAID_POLL < _CACHE_TTL):
@@ -56,7 +56,7 @@ def read_unraid_status(force: bool = False) -> Dict[str, Any]:
 
     emhttp_dir = _find_emhttp_dir()
     if not emhttp_dir:
-        fallback: Dict[str, Any] = {
+        fallback: dict[str, Any] = {
             "available": False,
             "state": "STANDALONE",
             "color": "grey-off",
@@ -112,7 +112,7 @@ def read_unraid_status(force: bool = False) -> Dict[str, Any]:
     total_files = _mover_int("TotalFilesToSecondary") + _mover_int("TotalFilesFromSecondary")
     remain_files = _mover_int("RemainFilesToSecondary") + _mover_int("RemainFilesFromSecondary")
 
-    res: Dict[str, Any] = {
+    res: dict[str, Any] = {
         "available": True,
         "version": version,
         "server_name": server_name,

@@ -8,11 +8,11 @@ import re
 import socket
 import subprocess
 import time
-from typing import Any, Dict
+from typing import Any
 
 from backend.config import logger
 
-_CACHED_UPS: Dict[str, Any] = {}
+_CACHED_UPS: dict[str, Any] = {}
 _LAST_UPS_POLL = 0.0
 _UPS_CACHE_TTL = 3.0
 
@@ -31,9 +31,9 @@ def _get_docker_gateway() -> str | None:
     return None
 
 
-def _query_apcupsd_socket(host: str = "127.0.0.1", port: int = 3551, timeout: float = 1.0) -> Dict[str, str]:
+def _query_apcupsd_socket(host: str = "127.0.0.1", port: int = 3551, timeout: float = 1.0) -> dict[str, str]:
     """Queries apcupsd NIS server via 2-byte length prefixed NIS protocol."""
-    out: Dict[str, str] = {}
+    out: dict[str, str] = {}
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.settimeout(timeout)
@@ -64,7 +64,7 @@ def _query_apcupsd_socket(host: str = "127.0.0.1", port: int = 3551, timeout: fl
     return out
 
 
-def _query_apcaccess_cli() -> Dict[str, str]:
+def _query_apcaccess_cli() -> dict[str, str]:
     for bin_path in ("/sbin/apcaccess", "/usr/sbin/apcaccess", "apcaccess"):
         try:
             r = subprocess.run([bin_path, "status"], capture_output=True, text=True, timeout=2.5)
@@ -116,7 +116,7 @@ def _query_nut_cli() -> dict[str, str]:
             continue
     return {}
 
-def read_ups_status(force: bool = False) -> Dict[str, Any]:
+def read_ups_status(force: bool = False) -> dict[str, Any]:
     global _CACHED_UPS, _LAST_UPS_POLL
     now = time.time()
     if not force and _CACHED_UPS and (now - _LAST_UPS_POLL) < _UPS_CACHE_TTL:

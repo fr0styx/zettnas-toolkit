@@ -1,9 +1,11 @@
-import time
 import threading
+import time
+
 from backend.config import logger
-from backend.state import Z_STATE, add_event
-from backend.hardware.disks import run_disk_smart_test, _discover_disks
+from backend.hardware.disks import _discover_disks, run_disk_smart_test
 from backend.hardware.unraid import read_unraid_status
+from backend.state import Z_STATE, add_event
+
 
 def _run_scheduled_tasks():
     while True:

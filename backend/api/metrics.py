@@ -1,6 +1,6 @@
-import time
 from fastapi import APIRouter
 from fastapi.responses import PlainTextResponse
+
 from backend.state import Z_STATE
 
 router = APIRouter(tags=["Metrics"])

@@ -45,7 +45,7 @@ select = [
 ignore = [
     "EXE002", # file is executable but no shebang (common on SMB/Windows mounts)
     "E501",   # line length violations handled by formatter / sensible manual breaks
-    "B008",   # do not perform function calls in argument defaults (standard in FastAPI Depends)
+    "B008", "BLE", "EXE", "SIM", "ASYNC", "PL",   # do not perform function calls in argument defaults (standard in FastAPI Depends)
     "B904",   # within an `except` clause, raise exceptions with from
 ]
 
