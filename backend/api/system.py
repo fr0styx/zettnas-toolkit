@@ -1,15 +1,17 @@
-from pydantic import BaseModel
-import shutil
-from fastapi.responses import FileResponse
 import asyncio
 import os
 import re
+import shutil
+import threading
 import time
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
+from fastapi.responses import FileResponse
+from pydantic import BaseModel
 
 import backend.config as config
 from backend import __version__
+from backend.api_tokens import generate_token, load_tokens, revoke_token
 from backend.config import (
     ALLOWED_BROWSE_ROOTS,
     BUTTON_CFG_FILE,
@@ -22,25 +24,26 @@ from backend.config import (
 from backend.db import query_copy_history
 from backend.fsutil import atomic_write_json, read_json, resolve_within, root_for
 from backend.hardware.disks import fetch_disk_smart_detail, run_disk_smart_test
+from backend.hardware.docker_stats import container_action, read_docker_containers
 from backend.hardware.fans import set_fan_pwm
 from backend.hardware.led import apply_led_state
 from backend.hardware.screen import get_screen_state, save_screen_state
 from backend.hardware.storage import get_current_layout
 from backend.hardware.unraid import read_unraid_status
-from backend.hardware.docker_stats import container_action, read_docker_containers
 from backend.hardware.ups import read_ups_status
 from backend.models.schemas import (
     ButtonConfigRequest,
-    ScreenConfigRequest,
     CopyConfirmRequest,
     DockerActionRequest,
     LayoutRequest,
     LcdPageRequest,
     MkdirRequest,
+    ScreenConfigRequest,
     StateRequest,
     SystemProfileRequest,
 )
-from backend.state import Z_STATE
+from backend.services.copy_engine import _do_copy
+from backend.state import Z_STATE, add_event
 
 router = APIRouter(tags=["System & Storage"])
 
@@ -224,8 +227,6 @@ def start_copy():
     Z_STATE.copy_status = "copying"
     Z_STATE.ui_wake.set()
     add_event("info", "Copy Started", "Starting ingest from media slot...")
-    from backend.services.copy_engine import _do_copy
-
     threading.Thread(target=lambda c: asyncio.run(_do_copy(c)), args=(cfg,), daemon=True).start()
     return {"status": "started"}
 
@@ -460,10 +461,6 @@ async def fs_delete(req: DeleteRequest):
             return {"status": "ok", "message": "Item permanently deleted"}
 
         # Recycle Bin logic instead of hard delete
-        import time
-        from backend.state import add_event
-
-        # Find which root this belongs to
         real_root = root_for(target_unresolved, ALLOWED_BROWSE_ROOTS)
         if not real_root:
             real_root = ALLOWED_BROWSE_ROOTS[0]  # Fallback
@@ -494,9 +491,6 @@ def fs_download(path: str):
     return FileResponse(target, filename=os.path.basename(target))
 
 
-from fastapi import Request
-
-
 @router.post("/fs/upload")
 async def fs_upload(request: Request, path: str, filename: str):
     target_unresolved, _, _ = _safe_fs_target(path)
@@ -515,16 +509,11 @@ async def fs_upload(request: Request, path: str, filename: str):
                 if chunk:
                     f_out.write(chunk)
 
-        from backend.state import add_event
-
         add_event("success", "File Explorer", f"Uploaded {filename} to {path}")
         return {"status": "ok", "message": "File uploaded"}
     except Exception as e:
         logger.error(f"[FS] Upload failed: {e}")
         raise HTTPException(status_code=500, detail="Failed to upload file")
-
-
-from pydantic import BaseModel
 
 
 class TokenCreateRequest(BaseModel):
@@ -533,8 +522,6 @@ class TokenCreateRequest(BaseModel):
 
 @router.get("/tokens")
 def list_tokens():
-    from backend.api_tokens import load_tokens
-
     tokens = load_tokens()
     # Mask the token for security when listing
     res = []
@@ -552,9 +539,6 @@ def list_tokens():
 
 @router.post("/tokens")
 def create_token(req: TokenCreateRequest):
-    from backend.api_tokens import generate_token
-    from backend.state import add_event
-
     token = generate_token(req.name)
     add_event("success", "Security", f"Generated new API token: {req.name}")
     return {"token": token, "name": req.name}
@@ -562,9 +546,6 @@ def create_token(req: TokenCreateRequest):
 
 @router.delete("/tokens/{token_id}")
 def delete_token(token_id: str):
-    from backend.api_tokens import revoke_token
-    from backend.state import add_event
-
     if revoke_token(token_id):
         add_event("info", "Security", "Revoked an API token")
         return {"status": "ok"}

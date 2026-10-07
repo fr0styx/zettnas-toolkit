@@ -18,6 +18,7 @@ from backend.config import (
     is_using_default_password,
     logger,
 )
+from backend.db import log_metrics
 from backend.fsutil import read_json
 from backend.hardware.cpu import read_cpu_temp, read_cpu_util
 from backend.hardware.disks import poll_all_disks_smart, read_disk_temps_and_io
@@ -446,8 +447,6 @@ def stats_collector_daemon():
             if now_ts - stats_collector_daemon.last_log >= 300:
                 stats_collector_daemon.last_log = now_ts
                 try:
-                    from backend.db import log_metrics
-
                     log_metrics(
                         now_ts,
                         data["cpu"].get("temp", 0),

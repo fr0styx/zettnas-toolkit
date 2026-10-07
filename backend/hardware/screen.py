@@ -4,6 +4,7 @@ import os
 import time
 
 from backend.config import SCREEN_STATE_FILE
+from backend.fsutil import atomic_write_json
 
 
 def is_in_time_window(start_str, end_str, now_minutes=None):
@@ -88,8 +89,6 @@ def set_screen_brightness(pct):
 
 
 def save_screen_state(updates: dict):
-    from backend.fsutil import atomic_write_json
-
     state = get_screen_state()
     state.update(updates)
     atomic_write_json(SCREEN_STATE_FILE, state)

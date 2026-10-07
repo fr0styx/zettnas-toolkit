@@ -46,12 +46,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpango-1.0-0 \
     libcairo2 \
     libasound2 \
+    fonts-liberation \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN --mount=type=cache,target=/root/.cache/pip pip install -r requirements.txt
 RUN playwright install chromium
 
 # Copy Python backend application
@@ -65,4 +66,4 @@ COPY --from=frontend-builder /build/static/ ./static/
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
     CMD python3 -c 'import urllib.request, sys, os; port = os.environ.get("PORT", "8082"); sys.exit(0 if urllib.request.urlopen(f"http://127.0.0.1:{port}/api/health", timeout=4).getcode() == 200 else 1)'
 
-CMD ["python3", "app.py"]
+CMD ["python3", "-m", "backend.main"]

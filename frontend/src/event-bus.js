@@ -1,11 +1,13 @@
 /**
  * ZettNAS Toolkit Reactive Event Bus
  * Extends EventTarget with ergonomic on/off/emit helper methods.
+ * Debounces high-frequency telemetry events via requestAnimationFrame to prevent UI thread lockup.
  */
 class EventBus extends EventTarget {
   constructor() {
     super();
     this._handlerMap = new Map();
+    this._rafPending = new Map();
   }
 
   on(event, handler) {
@@ -52,6 +54,23 @@ class EventBus extends EventTarget {
   }
 
   emit(event, detail = null) {
+    // For high-frequency telemetry and rendering events, coalesce to the next animation frame
+    if (
+      typeof window !== 'undefined' &&
+      typeof window.requestAnimationFrame === 'function' &&
+      (event === 'stats:updated' || event === 'stats_tick')
+    ) {
+      if (this._rafPending.has(event)) {
+        window.cancelAnimationFrame(this._rafPending.get(event));
+      }
+      const handle = window.requestAnimationFrame(() => {
+        this._rafPending.delete(event);
+        this.dispatchEvent(new CustomEvent(event, { detail }));
+      });
+      this._rafPending.set(event, handle);
+      return;
+    }
+
     this.dispatchEvent(new CustomEvent(event, { detail }));
   }
 }

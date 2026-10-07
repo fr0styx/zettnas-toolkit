@@ -3,10 +3,12 @@ import json
 import os
 import secrets
 import time
+from urllib.parse import parse_qs, urlparse
 
 from fastapi import Request
 
 from backend import config
+from backend.api_tokens import validate_api_token
 from backend.config import SESSION_TTL, SESSIONS_FILE, logger
 from backend.errors import error_response
 from backend.fsutil import atomic_write_json
@@ -61,13 +63,8 @@ def validate_session(token: str) -> bool:
 
     # Check if it's a persistent API token
     if token.startswith("zat_"):
-        try:
-            from backend.api_tokens import validate_api_token
-
-            if validate_api_token(token):
-                return True
-        except ImportError:
-            pass
+        if validate_api_token(token):
+            return True
 
     if token not in SESSIONS:
         return False
@@ -128,8 +125,6 @@ async def auth_middleware(request: Request, call_next):
         token = extract_token(request)
         if not token and is_docs:
             # Swagger UI fetches /openapi.json without our token; inherit it from /docs?token=...
-            from urllib.parse import parse_qs, urlparse
-
             ref_qs = parse_qs(urlparse(request.headers.get("referer", "")).query)
             token = (ref_qs.get("token") or [""])[0]
         if not validate_session(token):

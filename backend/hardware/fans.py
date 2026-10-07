@@ -13,7 +13,8 @@ def read_fans():
     if hw:
         for f in sorted(glob.glob(os.path.join(hw, "fan*_input"))):
             try:
-                rpm = int(open(f).read().strip() or 0)
+                with open(f, "r") as fp:
+                    rpm = int(fp.read().strip() or 0)
                 fans.append(rpm)
             except Exception:
                 fans.append(0)
@@ -21,7 +22,8 @@ def read_fans():
         for h in sorted(glob.glob(os.path.join(HOST_SYS, "class/hwmon/hwmon*"))):
             for f in sorted(glob.glob(os.path.join(h, "fan*_input"))):
                 try:
-                    rpm = int(open(f).read().strip() or 0)
+                    with open(f, "r") as fp:
+                        rpm = int(fp.read().strip() or 0)
                     if rpm > 0:
                         fans.append(rpm)
                 except Exception:
@@ -35,6 +37,20 @@ def read_fans():
         if rpm > 300:
             Z_STATE.known_active_fans.add(idx)
     return fans
+
+
+def cleanup_stale_fan_trackers(active_keys=None):
+    """Evict stale pwm_key entries from Z_STATE.fan_state_tracker."""
+    if active_keys is None:
+        hw = _find_hwmon()
+        if hw:
+            active_keys = {os.path.basename(p) for p in glob.glob(os.path.join(hw, "pwm[1-9]"))}
+        else:
+            active_keys = set()
+    if active_keys:
+        stale = [k for k in list(Z_STATE.fan_state_tracker.keys()) if k not in active_keys]
+        for k in stale:
+            Z_STATE.fan_state_tracker.pop(k, None)
 
 
 def sanitize_curve_points(points):
@@ -146,6 +162,7 @@ def set_fan_pwm(profile, manual_pct=60, custom_pwms=None, ctrl_cpu_fan=False):
 
     applied = 0
     available_pwms = sorted(glob.glob(os.path.join(hw, "pwm[1-9]")))
+    cleanup_stale_fan_trackers({os.path.basename(p) for p in available_pwms})
 
     if custom_pwms:
         targets = {}

@@ -54,9 +54,31 @@ export const state = {
     if (!s) return;
     if (!this.latestStats) {
       this.latestStats = s;
-    } else {
-      this.latestStats = { ...this.latestStats, ...s };
+      ZettEventBus.emit('stats:updated', this.latestStats);
+      return;
     }
+
+    // Diff metrics to prevent unnecessary UI renders if nothing changed
+    let changed = false;
+    for (const key of Object.keys(s)) {
+      const newVal = s[key];
+      const oldVal = this.latestStats[key];
+      if (newVal !== oldVal) {
+        if (typeof newVal === 'object' && newVal !== null && typeof oldVal === 'object' && oldVal !== null) {
+          if (JSON.stringify(newVal) !== JSON.stringify(oldVal)) {
+            changed = true;
+            break;
+          }
+        } else {
+          changed = true;
+          break;
+        }
+      }
+    }
+
+    if (!changed) return;
+
+    this.latestStats = { ...this.latestStats, ...s };
     ZettEventBus.emit('stats:updated', this.latestStats);
   },
 

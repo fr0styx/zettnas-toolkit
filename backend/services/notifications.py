@@ -2,6 +2,7 @@ import json
 import os
 import subprocess
 import time
+import urllib.request
 from typing import Any
 
 import apprise
@@ -85,8 +86,6 @@ def _dispatch_unraid(script: str, title: str, message: str, level: str) -> bool:
 
 
 def _dispatch_ntfy(cfg: dict[str, Any], title: str, message: str, level: str) -> bool:
-    import urllib.request
-
     topic = cfg.get("ntfy_topic", "").strip()
     if not topic:
         return False
@@ -133,8 +132,6 @@ def _dispatch_ntfy(cfg: dict[str, Any], title: str, message: str, level: str) ->
 
 
 def _dispatch_webhook(cfg: dict[str, Any], title: str, message: str, level: str) -> bool:
-    import urllib.request
-
     url = cfg.get("webhook_url", "").strip()
     if not url:
         return False

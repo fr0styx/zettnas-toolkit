@@ -109,6 +109,7 @@ def render_lcd_loop():
         "--media-cache-size=1",
     ]
 
+    retry_delay = 2.0
     while True:
         try:
             with sync_playwright() as p:
@@ -125,59 +126,69 @@ def render_lcd_loop():
 
                 with open("/dev/fb0", "r+b") as fb_file:
                     fb_mem = mmap.mmap(fb_file.fileno(), total_fb_bytes, mmap.MAP_SHARED, mmap.PROT_WRITE)
-                    # Pre-fill line padding once
-                    fb_mem[:total_fb_bytes] = b"\x00" * total_fb_bytes
-                    prev_raw_b64 = None
-                    idle_backoff = 0.0
-                    max_idle_backoff = 1.0
+                    try:
+                        # Pre-fill line padding once
+                        fb_mem[:total_fb_bytes] = b"\x00" * total_fb_bytes
+                        prev_raw_b64 = None
+                        idle_backoff = 0.0
+                        max_idle_backoff = 1.0
 
-                    while not Z_STATE.shutting_down:
-                        # Screen-off pause: 0 FPS when brightness is 0 or night mode is blanked
-                        if get_effective_brightness() <= 0:
-                            if Z_STATE.ui_wake.wait(1.0):
-                                Z_STATE.ui_wake.clear()
-                            continue
-
-                        t0 = time.time()
-
-                        try:
-                            res = cdp.send("Page.captureScreenshot", shot_params)
-                            raw_b64 = res.get("data")
-                            if raw_b64 and raw_b64 == prev_raw_b64:
-                                # Adaptive FPS: frame unchanged, incrementally back off up to 1.0s
-                                idle_backoff = min(max_idle_backoff, idle_backoff + 0.1)
-                                sleep_time = max(frame_interval, idle_backoff)
-                                if Z_STATE.ui_wake.wait(sleep_time):
+                        while not Z_STATE.shutting_down:
+                            # Screen-off pause: 0 FPS when brightness is 0 or night mode is blanked
+                            if get_effective_brightness() <= 0:
+                                if Z_STATE.ui_wake.wait(1.0):
                                     Z_STATE.ui_wake.clear()
-                                    idle_backoff = 0.0
                                 continue
 
-                            # Frame changed: reset idle backoff immediately
-                            idle_backoff = 0.0
-                            prev_raw_b64 = raw_b64
-                            raw_bytes = base64.b64decode(raw_b64)
+                            t0 = time.time()
+
+                            try:
+                                res = cdp.send("Page.captureScreenshot", shot_params)
+                                raw_b64 = res.get("data")
+                                if raw_b64 and raw_b64 == prev_raw_b64:
+                                    # Adaptive FPS: frame unchanged, incrementally back off up to 1.0s
+                                    idle_backoff = min(max_idle_backoff, idle_backoff + 0.1)
+                                    sleep_time = max(frame_interval, idle_backoff)
+                                    if Z_STATE.ui_wake.wait(sleep_time):
+                                        Z_STATE.ui_wake.clear()
+                                        idle_backoff = 0.0
+                                    continue
+
+                                # Frame changed: reset idle backoff immediately
+                                idle_backoff = 0.0
+                                prev_raw_b64 = raw_b64
+                                raw_bytes = base64.b64decode(raw_b64)
+                            except Exception:
+                                # Fallback if CDP session encounters an issue
+                                raw_bytes = page.screenshot(type="png")
+
+                            # Successfully rendered a frame, reset restart backoff
+                            retry_delay = 2.0
+
+                            img = Image.open(io.BytesIO(raw_bytes)).convert("RGBA")
+                            raw_pixels = img.tobytes("raw", "BGRA")
+                            mv = memoryview(raw_pixels)
+
+                            src_pos = 0
+                            dst_pos = 0
+                            for _ in range(fb_height):
+                                fb_mem[dst_pos : dst_pos + row_bytes] = mv[src_pos : src_pos + row_bytes]
+                                src_pos += row_bytes
+                                dst_pos += stride
+
+                            elapsed = time.time() - t0
+                            sleep_time = max(0.01, frame_interval - elapsed)
+                            if Z_STATE.ui_wake.wait(sleep_time):
+                                Z_STATE.ui_wake.clear()
+                                idle_backoff = 0.0
+                    finally:
+                        try:
+                            fb_mem.close()
                         except Exception:
-                            # Fallback if CDP session encounters an issue
-                            raw_bytes = page.screenshot(type="png")
-
-                        img = Image.open(io.BytesIO(raw_bytes)).convert("RGBA")
-                        raw_pixels = img.tobytes("raw", "BGRA")
-                        mv = memoryview(raw_pixels)
-
-                        src_pos = 0
-                        dst_pos = 0
-                        for _ in range(fb_height):
-                            fb_mem[dst_pos : dst_pos + row_bytes] = mv[src_pos : src_pos + row_bytes]
-                            src_pos += row_bytes
-                            dst_pos += stride
-
-                        elapsed = time.time() - t0
-                        sleep_time = max(0.01, frame_interval - elapsed)
-                        if Z_STATE.ui_wake.wait(sleep_time):
-                            Z_STATE.ui_wake.clear()
-                            idle_backoff = 0.0
+                            pass
 
         except Exception as e:
             Z_STATE.lcd_renderer_active = False
-            logger.info(f"[LCD] Active render loop error: {e}")
-            time.sleep(2)
+            logger.info(f"[LCD] Active render loop error: {e}. Reconnecting in {retry_delay:.1f}s...")
+            time.sleep(retry_delay)
+            retry_delay = min(60.0, retry_delay * 1.5)

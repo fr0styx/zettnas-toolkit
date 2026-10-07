@@ -7,6 +7,7 @@ import re
 from fastapi import APIRouter, Request
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse
+from PIL import Image
 
 from backend.config import MAX_WALLPAPER_BYTES, WALLPAPER_CONFIG_FILE, WALLPAPERS_DIR, logger
 from backend.errors import error_response
@@ -60,8 +61,6 @@ def _set_active(name):
 
 def _detect_image_format(data: bytes):
     """Validate the payload really is an image; return its canonical extension."""
-    from PIL import Image
-
     try:
         with Image.open(io.BytesIO(data)) as img:
             fmt = img.format

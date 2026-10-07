@@ -1,7 +1,10 @@
-import os
 import json
+import os
 import secrets
+import time
+
 from backend.config import DATA_DIR, logger
+from backend.fsutil import atomic_write_json
 
 TOKENS_FILE = os.path.join(DATA_DIR, "api_tokens.json")
 # Format: { "token": { "name": "...", "created": ts } }
@@ -18,14 +21,10 @@ def load_tokens() -> dict:
 
 
 def save_tokens(tokens: dict):
-    from backend.fsutil import atomic_write_json
-
     atomic_write_json(TOKENS_FILE, tokens)
 
 
 def generate_token(name: str) -> str:
-    import time
-
     tokens = load_tokens()
     # Scoped token prefix
     raw_token = "zat_" + secrets.token_urlsafe(32)

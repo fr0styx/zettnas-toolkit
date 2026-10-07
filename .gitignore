@@ -33,4 +33,5 @@ data/
 node_modules/
 dist/
 scratch/
+.fuse_hidden*
 

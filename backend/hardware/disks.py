@@ -1,9 +1,12 @@
+import concurrent.futures
+import json
 import os
 import re
 import subprocess
 import time
 
 from backend.config import (
+    DATA_DIR,
     DISKS,
     HDD_CRITICAL_TEMP,
     HDD_WARN_TEMP,
@@ -18,10 +21,9 @@ from backend.config import (
     SMART_POLL_INTERVAL_NVME,
     logger,
 )
-from backend.state import Z_STATE
-
-import json
-from backend.config import DATA_DIR
+from backend.fsutil import atomic_write_json
+from backend.services.notifications import send_notification
+from backend.state import Z_STATE, add_event
 
 TRENDS_FILE = os.path.join(DATA_DIR, "smart_trends.json")
 _smart_trends = None
@@ -29,9 +31,6 @@ _smart_trends = None
 
 def _evaluate_smart_trends(dev_name, metrics):
     global _smart_trends
-    from backend.state import add_event
-    from backend.services.notifications import send_notification
-    from backend.fsutil import atomic_write_json
 
     if _smart_trends is None:
         if os.path.exists(TRENDS_FILE):
@@ -339,8 +338,6 @@ def poll_all_disks_smart(force: bool = False):
             targets.append((dev_name, is_nvme))
 
     if targets:
-        import concurrent.futures
-
         with concurrent.futures.ThreadPoolExecutor(max_workers=min(8, len(targets))) as executor:
             futures = [executor.submit(poll_disk_smart, dev, is_nv) for dev, is_nv in targets]
             concurrent.futures.wait(futures, timeout=15.0)
@@ -415,13 +412,13 @@ def fetch_disk_smart_detail(dev_name):
     is_nvme = dev_name.startswith("nvme")
     dtype = "nvme" if is_nvme else "sat"
 
-    # For spinning HDDs, issue a direct block read to actively spin up drive if sleeping
+    # For spinning HDDs, issue an asynchronous direct block read to trigger spin up without blocking the thread
     if not is_nvme:
         try:
-            subprocess.run(
+            subprocess.Popen(
                 ["dd", f"if={dev}", "of=/dev/null", "count=1", "bs=512", "iflag=direct"],
-                capture_output=True,
-                timeout=6,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
             )
         except Exception as e:
             logger.debug(f"Direct block wake read on {dev} threw: {e}")
