@@ -31,6 +31,7 @@ def close_notification_client() -> None:
             pass
         _http_client = None
 
+
 from backend.config import DATA_DIR, logger
 from backend.fsutil import atomic_write_json, read_json
 

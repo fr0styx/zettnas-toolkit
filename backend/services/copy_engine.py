@@ -47,8 +47,20 @@ def read_media_slots():
 def _get_exif_date(filepath):
     try:
         supported_exts = (
-            ".jpg", ".jpeg", ".tiff", ".tif", ".cr2", ".cr3",
-            ".nef", ".arw", ".dng", ".heic", ".heif", ".rw2", ".orf", ".raf",
+            ".jpg",
+            ".jpeg",
+            ".tiff",
+            ".tif",
+            ".cr2",
+            ".cr3",
+            ".nef",
+            ".arw",
+            ".dng",
+            ".heic",
+            ".heif",
+            ".rw2",
+            ".orf",
+            ".raf",
         )
         if filepath.lower().endswith(supported_exts):
             with open(filepath, "rb") as f:
