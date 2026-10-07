@@ -19,17 +19,18 @@
   <img src="static/img/ui-screenshot.png" width="90%" alt="ZettNAS Web Studio & Desktop UI" style="border-radius: 8px; box-shadow: 0 12px 36px rgba(0,0,0,0.5);">
 </div>
 
-**ZettNAS Toolkit** is a specialized hardware orchestration platform engineered for Zettlab NAS enclosures (D4, D6, and D8 models) running Unraid or Debian/Docker. It bridges physical chassis peripherals with modern web management:
+**ZettNAS Toolkit** (**NAS WORKBENCH**) is a specialized hardware orchestration platform engineered for Zettlab NAS enclosures (D4, D6, and D8 models) and custom homelab servers running Unraid, Debian, or generic Docker hosts. It bridges physical chassis peripherals with modern web management:
 
 * **Direct Front-Panel LCD (`/dev/fb0`)** — 640×172 zero-overhead rendering with multi-page rotation, hardware button cycling, screen-off sleep (0 FPS), and adaptive idle rates.
-* **Modern Web OS Desktop (Port `8082`)** — Windowed workspace featuring customizable desktop icons with persistent drag-and-drop placement, Aero Snap window tiling, and interactive taskbar dock with live hover previews.
+* **Modern Web OS Desktop (Port `8082`)** — Windowed workspace featuring customizable desktop icons, persistent window coordinate bounds (`localStorage`), Aero Snap window tiling, and interactive taskbar dock with live hover previews.
+* **Mission Control & Hardware Settings** — Centralized administration hub with responsive left-sidebar navigation, live Docker container telemetry (CPU, RAM, Net I/O), custom named fan curves, and diagnostic inspectors.
+* **Predictive S.M.A.R.T. & NVMe Health** — SQLite-backed rate-of-change degradation velocity tracking (shedding sectors, stuck pending sectors, thermal drift) plus NVMe wear metrics (TBW, available spare %, critical warnings).
+* **Native NUT UPS Protocol & Emergency Failsafes** — Zero-subprocess TCP socket client (port 3493) with automated failsafes: pauses photo transfers, flushes dirty OS buffers (`os.sync()`), dispatches priority alerts, and triggers host powerdown.
+* **High-Integrity Media Ingestion** — Front SD/TF card auto-detection with interactive confirmation dialog, safe eject protection, async I/O (`aiofiles`), SHA-256 verification, and persistent SQLite logs.
+* **Multi-Architecture Docker Distribution** — Native multi-arch support (`linux/amd64` and `linux/arm64` for Raspberry Pi, ARM NAS boards, and Apple Silicon) published directly to GitHub Container Registry.
 * **Full Internationalization (i18n)** — Zero-dependency client-side localization across 5 languages (English, German, Simplified Chinese, French, and Spanish) spanning all interfaces, modals, and settings.
-* **System Management Hub** — Dedicated management center featuring responsive left-sidebar navigation, live telemetry badges, Docker container lifecycle controls, and UPS battery monitoring.
-* **Interactive Historical Charts** — Dynamic pan-and-zoom telemetry charts powered by `chartjs-plugin-zoom` with multi-device breakdowns (CPU, RAM, individual disk drives, cooling fans) across 1h to 30d retention.
-* **Intelligent Per-Zone Fan Regulation** — Independent multi-point thermal curves for HDD backplanes, NVMe cache, and CPU cooling with hysteresis hold protection and shutdown failsafe.
+* **Intelligent Per-Zone Fan Regulation** — Independent multi-point thermal curves for HDD backplanes, NVMe cache, and CPU cooling with user-defined named presets, hysteresis hold protection, and shutdown failsafe.
 * **Chassis ARGB Lightbar (`/dev/ttyACM0`)** — USB microcontroller driver for 38 WS2812B LEDs with hardware animations, error-reactive alerts (red/amber), and blackout night scheduling.
-* **Homelab & Subsystem Health** — Native Unraid array and parity telemetry, zero-dependency Docker container controls (start/stop/restart), UPS battery monitoring, and active drive S.M.A.R.T. self-tests.
-* **High-Integrity Media Ingestion** — Front SD/TF card copy engine with async I/O (`aiofiles`), SHA-256 post-copy verification, and persistent SQLite transfer logs.
 
 ---
 
@@ -85,7 +86,8 @@
 ## Web Desktop & Shortcuts
 
 When accessing the Web Desktop (`http://<server-ip>:8082`):
-* **Desktop Icons** — Clean 4-icon desktop workspace: **HUB (Management)**, **ZettNAS Console**, **File Explorer**, and **Recycle Bin**. Drag and drop anywhere on screen; positions persist automatically.
+* **Desktop Icons** — Clean 4-icon desktop workspace: **Mission Control**, **File Explorer**, **Recycle Bin**, and **ZettNAS (IPS Display)**. Drag and drop anywhere on screen; positions and open window bounds persist automatically across reloads.
+* **Hardware Settings Drawer** — Press `T` or click `HARDWARE SETTINGS` in the top navbar to configure acoustic fan profiles, LCD sleep schedules, ARGB lightbar effects, and media slots.
 * **Command Palette** — Press `Cmd+K` (macOS) or `Ctrl+K` (Linux/Windows) for fuzzy-search navigation across all toolkit tools, settings, and hardware panels.
 * **Window Snapping** — Drag any window to screen edges or top to snap (Half-Screen Left / Right / Maximize).
 * **Accessibility (A11y)** — Full keyboard navigation with `Tab`, `Enter`, and `Space` activation on interactive elements and screen-reader ARIA roles.
@@ -93,7 +95,7 @@ When accessing the Web Desktop (`http://<server-ip>:8082`):
 * **Mobile Stacked Mode** — Toggle between floating windowed desktop and vertical touch-optimized card layout via the top navbar button.
 * **Keyboard Hotkeys**:
   * `Cmd+K` / `Ctrl+K` — Open Command Palette.
-  * `T` — Toggle Hardware Toolkit Settings Drawer.
+  * `T` — Toggle Hardware Settings Drawer.
   * `Z` or `Mouse Wheel` — Cycle Chassis Zoom scale (1x, 1.25x, 1.5x, 2x).
   * `Y` — Toggle Yak theme aesthetic.
   * `Esc` — Close open modals, command palette, and drawers.

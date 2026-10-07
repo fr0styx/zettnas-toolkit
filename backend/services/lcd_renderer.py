@@ -56,8 +56,8 @@ def render_lcd_loop():
     - Adaptive FPS: 1 FPS when idle/static, bursting to target FPS on telemetry changes.
     - Single mmap memory block write into video memory per frame.
     """
-    if not ENABLE_FB or not os.path.exists("/dev/fb0"):
-        logger.info("[LCD] Framebuffer /dev/fb0 not present or disabled. Running web-only.")
+    if not ENABLE_FB or not os.path.exists("/dev/fb0") or os.path.isdir("/dev/fb0"):
+        logger.info("[LCD] Framebuffer /dev/fb0 not present, disabled, or is a directory. Running web-only.")
         return
 
     time.sleep(2)

@@ -128,7 +128,7 @@ def test_e2e_live_desktop_session_and_badge():
             },
         )
         page = context.new_page()
-        page.goto("http://127.0.0.1:8082/", wait_until="networkidle", timeout=12000)
+        page.goto("http://127.0.0.1:8082/", wait_until="domcontentloaded", timeout=12000)
 
         # Check suite badge has NAS WORKBENCH
         badge = page.wait_for_selector("#suite-brand-badge", timeout=5000)

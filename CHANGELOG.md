@@ -1,5 +1,35 @@
 # ZettNAS Toolkit - Release Changelog
 
+## v1.4.0 (2026-10-07) - Stable
+### 🚀 NAS WORKBENCH, Multi-Arch Distribution, Predictive Diagnostics, UPS Protection & Desktop OS Polish
+
+This major stable release introduces a complete hardware orchestration suite: native dual-architecture builds (`linux/amd64` and `linux/arm64`), native NUT protocol communication with automated emergency power failsafes, SQLite-backed predictive drive degradation tripwires, NVMe endurance metrics, custom named fan profiles, robust media slot auto-ingestion with user confirmation, and refined desktop workspace persistence.
+
+#### 🖥️ Desktop OS Metaphor, Persistence & UI/UX Polish
+- **Branding & Layout Modernization**: Renamed Toolkit Settings to **Hardware Settings** and elevated suite identity to **NAS WORKBENCH**; unified window headers with consistent 3-dot Mac-style window controls and top-right close dots.
+- **Persistent Window Bounds**: Floating windows (`management`, `file-manager`, `fan-control`, `led-control`, `console`, `notification-center`) now automatically save their `(x, y, width, height, z-index)` in `localStorage` and clamp dynamically to screen boundaries upon resolution changes.
+- **Instant Desktop Initialization**: Completely eliminated widget layout shift and initial page load jumping by computing CSS geometry in early `<head>` scripts before first paint.
+- **Wallpaper Delivery Streamlining**: Replaced heavy PNG background assets with pre-optimized WebP images (`<link rel="preload">`), eliminating visual redraw jitter during initial load.
+- **Enhanced Notification Center**: Converted Notification Center into a dedicated floating window with severity filtering tabs (All, Errors, Warnings, Info), unread count badges, memoized event rendering, and single-click event inspection modals.
+- **File Manager Multi-Selection**: Upgraded File Explorer with Shift-click contiguous selection and Ctrl/Cmd-click multi-selection for bulk operations.
+
+#### 🛡️ Advanced Hardware Intelligence & Predictive Diagnostics
+- **Live Docker Container Telemetry**: Streamlined persistent Docker telemetry polling calculating real-time container CPU %, memory usage (excluding page cache/buffers), and network I/O stats without daemon CPU spikes.
+- **SMART Historical Trends & Velocity Degradation**: Introduced SQLite-backed `smart_history` table in `backend/db.py` tracking drive health over 7-day and 30-day sliding windows to flag shedding sectors, stuck pending sectors, and thermal friction drift before catastrophic drive failure.
+- **NVMe Endurance & Wear Monitoring**: Parsed and exposed critical NVMe telemetry: Percentage Used, Total Bytes Written (TBW), Available Spare %, and Media Error tallies in both REST APIs and UI diagnostics.
+- **Custom Named Fan Curves**: Full-stack CRUD engine allowing users to create, save, load, and delete custom named acoustic profiles (e.g., "Silent Noctua", "High Altitude", "Crypto Rig") alongside standard presets.
+
+#### ⚡ UPS Protection & High-Integrity Media Automation
+- **Native NUT Socket Client**: Replaced external subprocess invocations with a zero-subprocess asynchronous TCP socket client querying NUT daemon port `3493`.
+- **Automated Emergency Power Failsafe**: Configurable threshold rules (battery charge $\le 20\%$ or runtime $\le 5$ min) that automatically pause active file transfers, flush OS disk buffers via `os.sync()`, broadcast high-priority Apprise notifications, and signal safe host shutdown.
+- **Media Slot Auto-Ingestion**: Kernel block device monitoring detects SD/TF card insertion, displaying an interactive ingestion confirmation prompt. State machine tracks ejected cards to prevent re-prompting while physical cards remain in slot until physical re-insertion.
+
+#### 🐳 Multi-Arch Containerization & CI/CD Release Automation
+- **Native Dual-Arch Docker Support**: Re-engineered `Dockerfile` for native `linux/amd64` and `linux/arm64` cross-compilation utilizing Debian system `chromium` and `chromium-sandbox` without proprietary browser binary downloads.
+- **Automated GitHub Container Registry Publishing**: GitHub Actions Buildx pipeline publishes unified multi-architecture manifests (`ghcr.io/fr0styx/zettnas-toolkit:latest` and tagged releases) with layer caching (`type=gha,mode=max`).
+- **Headless Playwright E2E Suite in CI**: Spin up background test server in GitHub Actions to validate real browser rendering, LCD geometry, and session state before container release.
+- **Node.js 24 & JSDOM 30 Compatibility**: Upgraded CI and build toolchain to Node.js 24 and `jsdom: 30.1.2`, eliminating Node 20 deprecation warnings and ensuring fast, robust Vitest execution.
+
 ## v1.3.2 (2026-10-07)
 ### 🛡️ Enterprise-Grade System Hardening, Concurrency, Stability & Quality Assurance
 
