@@ -37,7 +37,7 @@ from backend.hardware.storage import detect_chassis_model
 from backend.services.broadcaster import broadcaster
 from backend.services.button_listener import button_listener_daemon
 from backend.services.lcd_renderer import render_lcd_loop
-from backend.services.stats_collector import stats_collector_daemon
+from backend.services.stats_collector import smart_poller_daemon, stats_collector_daemon
 from backend.state import Z_STATE, _load_events, add_event
 
 
@@ -73,6 +73,7 @@ def startup_system():
             logger.warning(f"Failed to apply initial LED state: {e}")
 
     threading.Thread(target=stats_collector_daemon, daemon=True, name="StatsCollector").start()
+    threading.Thread(target=smart_poller_daemon, daemon=True, name="SmartPoller").start()
     threading.Thread(target=button_listener_daemon, daemon=True, name="ButtonListener").start()
     threading.Thread(target=render_lcd_loop, daemon=True, name="LcdRenderer").start()
     threading.Thread(target=fan_watchdog_daemon, daemon=True, name="FanWatchdog").start()

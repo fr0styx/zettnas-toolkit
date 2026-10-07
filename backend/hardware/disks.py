@@ -240,30 +240,6 @@ def _parse_smart(text, is_nvme):
     return temp, health, metrics
 
 
-def read_disk_temps_and_io():
-    now = time.time()
-    curr_io = {}
-    try:
-        with open(os.path.join(HOST_PROC, "diskstats")) as f:
-            for line in f:
-                parts = line.split()
-                if len(parts) >= 14:
-                    dev = parts[2]
-                    curr_io[dev] = int(parts[3]) + int(parts[7])
-    except Exception as e:
-        logger.debug(f"Silenced exception: {e}")
-
-    out = []
-    show_os = SHOW_OS_DISK
-    for d in _discover_disks():
-        dev_name = d["dev"]
-        role = d["role"]
-        if role == "os" and not show_os:
-            continue
-        dev = HOST_DEV.rstrip("/") + "/" + dev_name
-        is_nvme = dev_name.startswith("nvme")
-
-
 def poll_disk_smart(dev_name: str, is_nvme: bool):
     """Executes smartctl for a single disk in background and updates cached SMART data."""
     now = time.time()
