@@ -310,6 +310,10 @@ export function initSettings() {
       clearTimeout(screenDebounce);
       screenDebounce = setTimeout(postScreenState, 100);
     });
+    screenBriSlider.addEventListener('change', () => {
+      clearTimeout(screenDebounce);
+      postScreenState();
+    });
   }
   if (screenNightToggle) screenNightToggle.addEventListener('change', postScreenState);
   if (screenNightStart) screenNightStart.addEventListener('change', postScreenState);

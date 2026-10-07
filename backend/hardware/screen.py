@@ -3,7 +3,7 @@ import json
 import os
 import time
 
-from backend.config import SCREEN_STATE_FILE
+from backend.config import HOST_SYS, SCREEN_STATE_FILE, logger
 from backend.fsutil import atomic_write_json
 
 
@@ -46,18 +46,45 @@ def get_screen_state():
 
 
 def discover_backlight_dir():
-    candidates = [
-        "/sys/class/backlight/intel_backlight",
-        "/host/sys/class/backlight/intel_backlight",
-    ]
-    for c in candidates:
-        if os.path.exists(os.path.join(c, "brightness")):
-            return c
-    for base in ["/sys/class/backlight", "/host/sys/class/backlight"]:
-        if os.path.isdir(base):
-            for bl in sorted(glob.glob(f"{base}/*")):
-                if os.path.exists(os.path.join(bl, "brightness")):
-                    return bl
+    """
+    Locates the sysfs backlight directory.
+    Prioritizes writable paths under HOST_SYS (e.g. /host/sys/class/backlight mounted rw in Docker),
+    falling back to container-local /sys/class/backlight.
+    """
+    bases = []
+    if HOST_SYS and os.path.isdir(os.path.join(HOST_SYS, "class/backlight")):
+        bases.append(os.path.join(HOST_SYS, "class/backlight"))
+    if "/host/sys/class/backlight" not in bases and os.path.isdir("/host/sys/class/backlight"):
+        bases.append("/host/sys/class/backlight")
+    if "/sys/class/backlight" not in bases and os.path.isdir("/sys/class/backlight"):
+        bases.append("/sys/class/backlight")
+
+    priority_names = ["intel_backlight"]
+
+    # 1. Search for writable brightness sysfs entries (avoids read-only container /sys)
+    for base in bases:
+        for name in priority_names:
+            c = os.path.join(base, name)
+            b = os.path.join(c, "brightness")
+            if os.path.exists(b) and os.access(b, os.W_OK):
+                return c
+        for c in sorted(glob.glob(os.path.join(base, "*"))):
+            b = os.path.join(c, "brightness")
+            if os.path.exists(b) and os.access(b, os.W_OK):
+                return c
+
+    # 2. Fallback to any existing brightness entry (for mock environments / unit tests)
+    for base in bases:
+        for name in priority_names:
+            c = os.path.join(base, name)
+            b = os.path.join(c, "brightness")
+            if os.path.exists(b):
+                return c
+        for c in sorted(glob.glob(os.path.join(base, "*"))):
+            b = os.path.join(c, "brightness")
+            if os.path.exists(b):
+                return c
+
     return None
 
 
@@ -84,7 +111,19 @@ def set_screen_brightness(pct):
         with open(os.path.join(backlight_dir, "brightness"), "w") as f:
             f.write(f"{target}\n")
         return True
-    except Exception:
+    except Exception as e:
+        logger.warning(f"[SCREEN] Failed to set brightness in {backlight_dir}: {e}")
+        # Secondary fallback: if path was under read-only /sys, attempt writing under /host/sys
+        if "/sys/" in backlight_dir and not backlight_dir.startswith("/host/sys"):
+            fallback_dir = backlight_dir.replace("/sys/", "/host/sys/", 1)
+            b_file = os.path.join(fallback_dir, "brightness")
+            if os.path.exists(b_file):
+                try:
+                    with open(b_file, "w") as f:
+                        f.write(f"{target}\n")
+                    return True
+                except Exception as ex:
+                    logger.warning(f"[SCREEN] Fallback write to {fallback_dir} also failed: {ex}")
         return False
 
 
