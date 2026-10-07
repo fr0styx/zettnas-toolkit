@@ -70,7 +70,14 @@ def read_unraid_status(force: bool = False) -> Dict[str, Any]:
         _LAST_UNRAID_POLL = now
         return fallback
 
-    var_data = _parse_ini_flat(os.path.join(emhttp_dir, "var.ini"))
+    var_file = os.path.join(emhttp_dir, "var.ini")
+    var_data = _parse_ini_flat(var_file)
+    if not var_data or "mdState" not in var_data:
+        # Atomic read guard: emhttp rewrites var.ini dynamically. Retry after brief backoff.
+        time.sleep(0.05)
+        var_data = _parse_ini_flat(var_file)
+        if (not var_data or "mdState" not in var_data) and _CACHED_UNRAID_STATUS:
+            return _CACHED_UNRAID_STATUS
     mover_data = _parse_ini_flat(os.path.join(emhttp_dir, "mover.ini"))
 
     version = var_data.get("version", "")

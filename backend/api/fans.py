@@ -20,12 +20,12 @@ def _load_fans():
 
 
 @router.get("/fans")
-async def get_fans():
+def get_fans():
     return _load_fans()
 
 
 @router.post("/fans")
-async def post_fans(req: FanConfigRequest):
+def post_fans(req: FanConfigRequest):
     data = req.model_dump(exclude_unset=True)
 
     if "profile" in data and data["profile"] is not None and data["profile"] not in VALID_PROFILES:

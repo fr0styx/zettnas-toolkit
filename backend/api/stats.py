@@ -14,7 +14,7 @@ router = APIRouter(tags=["Telemetry & Stats"])
 
 
 @router.get("/lcd_status")
-async def get_lcd_status():
+def get_lcd_status():
     return {
         "enabled": ENABLE_FB,
         "fb_present": os.path.exists("/dev/fb0"),
@@ -24,7 +24,7 @@ async def get_lcd_status():
 
 
 @router.get("/stats")
-async def get_stats():
+def get_stats():
     return collect()
 
 
@@ -65,7 +65,7 @@ async def stats_stream(request: Request):
 
 
 @router.get("/history")
-async def get_history(range: str = "24h"):
+def get_history(range: str = "24h"):
     try:
         data = query_history(range)
         return JSONResponse(data)

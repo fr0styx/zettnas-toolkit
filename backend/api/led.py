@@ -14,12 +14,12 @@ def _load_led():
 
 
 @router.get("/led")
-async def get_led():
+def get_led():
     return _load_led()
 
 
 @router.post("/led")
-async def post_led(req: LedConfigRequest):
+def post_led(req: LedConfigRequest):
     data = req.model_dump(exclude_unset=True)
     cur_led = _load_led()
     cur_led.update(data)

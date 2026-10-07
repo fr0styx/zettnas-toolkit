@@ -14,7 +14,7 @@ def _safe_float(val):
 
 
 @router.get("/metrics", response_class=PlainTextResponse)
-async def prometheus_metrics():
+def prometheus_metrics():
     """Prometheus exposition format for ZettNAS telemetry."""
     if not Z_STATE.cached_stats:
         return "# ZettNAS metrics not ready yet\n"

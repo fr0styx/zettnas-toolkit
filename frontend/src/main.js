@@ -31,6 +31,8 @@ import { initI18n } from './i18n.js';
 
 let _sseRetryCount = 0;
 let _sse = null;
+let _sseReconnectTimer = null;
+let _pollingTimer = null;
 
 async function checkLcdStatus() {
   if (state.isLcdDirect) return;
@@ -71,12 +73,25 @@ export async function tick() {
 }
 
 export function startSSE() {
+  if (_sseReconnectTimer) {
+    clearTimeout(_sseReconnectTimer);
+    _sseReconnectTimer = null;
+  }
+  if (_sse) {
+    _sse.close();
+    _sse = null;
+  }
+
   const token = auth.getToken();
   const url = token ? `/api/stats/stream?token=${encodeURIComponent(token)}` : '/api/stats/stream';
   _sse = new EventSource(url);
 
   _sse.onopen = () => {
     _sseRetryCount = 0;
+    if (_pollingTimer) {
+      clearInterval(_pollingTimer);
+      _pollingTimer = null;
+    }
     const streamBadge = document.getElementById('stream-status-badge');
     if (streamBadge) {
       streamBadge.textContent = 'LIVE SSE';
@@ -95,15 +110,23 @@ export function startSSE() {
 
   _sse.onerror = () => {
     _sseRetryCount++;
-    if (_sse) _sse.close();
+    if (_sse) {
+      _sse.close();
+      _sse = null;
+    }
     const streamBadge = document.getElementById('stream-status-badge');
     if (streamBadge) {
       streamBadge.textContent = 'POLLING';
       streamBadge.className = 'header-badge warning';
     }
+    if (!_pollingTimer) {
+      tick();
+      _pollingTimer = setInterval(tick, 3000);
+    }
     const delay = Math.min(10000, 2000 * Math.pow(1.5, _sseRetryCount));
-    setTimeout(startSSE, delay);
-    tick();
+    _sseReconnectTimer = setTimeout(() => {
+      startSSE();
+    }, delay);
   };
 }
 

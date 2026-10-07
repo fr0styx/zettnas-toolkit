@@ -10,7 +10,7 @@ router = APIRouter(tags=["Backup"])
 
 
 @router.get("/system/backup")
-async def download_backup():
+def download_backup():
     """Generates a zip archive of the configuration data directory."""
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:

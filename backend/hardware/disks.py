@@ -323,9 +323,10 @@ def poll_disk_smart(dev_name: str, is_nvme: bool):
 
 
 def poll_all_disks_smart(force: bool = False):
-    """Background worker method: polls SMART for all disks whose poll interval has elapsed."""
+    """Background worker method: polls SMART concurrently for all disks whose poll interval has elapsed."""
     now = time.time()
     show_os = SHOW_OS_DISK
+    targets = []
     for d in _discover_disks():
         dev_name = d["dev"]
         role = d["role"]
@@ -335,7 +336,14 @@ def poll_all_disks_smart(force: bool = False):
         poll_interval = SMART_POLL_INTERVAL_NVME if is_nvme else SMART_POLL_INTERVAL_HDD
         last_scan = Z_STATE.last_smart_scan.get(dev_name, 0.0)
         if force or (now - last_scan) >= poll_interval or dev_name not in Z_STATE.cached_smart_data:
-            poll_disk_smart(dev_name, is_nvme)
+            targets.append((dev_name, is_nvme))
+
+    if targets:
+        import concurrent.futures
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=min(8, len(targets))) as executor:
+            futures = [executor.submit(poll_disk_smart, dev, is_nv) for dev, is_nv in targets]
+            concurrent.futures.wait(futures, timeout=15.0)
 
 
 def read_disk_temps_and_io(allow_sync_poll: bool = False):

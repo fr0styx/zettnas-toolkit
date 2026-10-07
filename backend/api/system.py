@@ -46,7 +46,7 @@ router = APIRouter(tags=["System & Storage"])
 
 
 @router.get("/health")
-async def health():
+def health():
     """Public liveness probe (no secrets): used by Docker HEALTHCHECK/monitoring."""
     hb = Z_STATE.collector_heartbeat
     hb_age = round(time.time() - hb, 1) if hb else None
@@ -115,7 +115,7 @@ async def disk_smart_test(payload: dict):
 
 
 @router.get("/screen")
-async def screen_state():
+def screen_state():
     return get_screen_state()
 
 
@@ -181,12 +181,12 @@ def _do_mkdir(path: str):
 
 
 @router.post("/mkdir")
-async def mkdir(req: MkdirRequest):
+def mkdir(req: MkdirRequest):
     return _do_mkdir(req.path)
 
 
 @router.post("/copy/cancel")
-async def copy_cancel():
+def copy_cancel():
     Z_STATE.copy_abort_flag = True
     Z_STATE.copy_overwrite_choice = "cancel"
     Z_STATE.copy_confirm_event.set()
@@ -197,26 +197,26 @@ async def copy_cancel():
 
 
 @router.post("/copy/confirm")
-async def copy_confirm(req: CopyConfirmRequest):
+def copy_confirm(req: CopyConfirmRequest):
     Z_STATE.copy_overwrite_choice = req.action
     Z_STATE.copy_confirm_event.set()
     return {"status": "ok"}
 
 
 @router.post("/copy/pause")
-async def pause_copy():
+def pause_copy():
     Z_STATE.copy_paused = True
     return {"status": "paused"}
 
 
 @router.post("/copy/resume")
-async def resume_copy():
+def resume_copy():
     Z_STATE.copy_paused = False
     return {"status": "resumed"}
 
 
 @router.post("/copy/start")
-async def start_copy():
+def start_copy():
     if Z_STATE.copy_active:
         raise HTTPException(status_code=409, detail="Copy operation already in progress")
     cfg = _load_buttons()
@@ -242,12 +242,12 @@ def _load_buttons():
 
 
 @router.get("/buttons")
-async def get_buttons():
+def get_buttons():
     return _load_buttons()
 
 
 @router.post("/buttons")
-async def post_buttons(req: ButtonConfigRequest):
+def post_buttons(req: ButtonConfigRequest):
     data = req.model_dump(exclude_unset=True)
     state = _load_buttons()
     if "dest" in data:
@@ -261,7 +261,7 @@ async def post_buttons(req: ButtonConfigRequest):
 
 
 @router.delete("/events/clear")
-async def clear_events():
+def clear_events():
     with Z_STATE.lock:
         Z_STATE.event_log = []
     if os.path.exists(EVENTS_FILE):
@@ -273,12 +273,12 @@ async def clear_events():
 
 
 @router.get("/layout")
-async def get_layout():
+def get_layout():
     return get_current_layout()
 
 
 @router.post("/layout")
-async def post_layout(req: LayoutRequest):
+def post_layout(req: LayoutRequest):
     data = req.model_dump()
     data["sizes"] = {k: v for k, v in data["sizes"].items() if v in ("full", "compact")}
     data["version"] = int(time.time() * 1000)
@@ -291,14 +291,14 @@ async def post_layout(req: LayoutRequest):
 
 
 @router.post("/state")
-async def post_state(req: StateRequest):
+def post_state(req: StateRequest):
     if req.fb is not None:
         config.ENABLE_FB = bool(req.fb)
     return {"status": "ok"}
 
 
 @router.get("/lcd/page")
-async def get_lcd_page():
+def get_lcd_page():
     return {
         "page": Z_STATE.current_lcd_page,
         "cycle_seconds": Z_STATE.lcd_cycle_seconds,
@@ -306,7 +306,7 @@ async def get_lcd_page():
 
 
 @router.post("/lcd/page")
-async def post_lcd_page(req: LcdPageRequest):
+def post_lcd_page(req: LcdPageRequest):
     if req.page is not None:
         Z_STATE.set_lcd_page(req.page)
     if req.cycle_seconds is not None:
@@ -322,23 +322,23 @@ async def post_lcd_page(req: LcdPageRequest):
 
 
 @router.post("/lcd/cycle")
-async def post_lcd_cycle():
+def post_lcd_cycle():
     new_page = Z_STATE.cycle_lcd_page()
     return {"status": "ok", "page": new_page}
 
 
 @router.get("/copy/history")
-async def get_copy_history(limit: int = 50):
+def get_copy_history(limit: int = 50):
     return query_copy_history(limit)
 
 
 @router.get("/unraid")
-async def get_unraid_telemetry():
+def get_unraid_telemetry():
     return read_unraid_status(force=True)
 
 
 @router.post("/system/profile")
-async def set_system_profile(req: SystemProfileRequest):
+def set_system_profile(req: SystemProfileRequest):
     profile = req.profile.lower()
     # Profile mappings:
     # auto: fan auto dynamic curve, LED dynamic/current
@@ -487,7 +487,7 @@ async def fs_delete(req: DeleteRequest):
 
 
 @router.get("/fs/download")
-async def fs_download(path: str):
+def fs_download(path: str):
     target = _contained(path, must_exist=True)
     if os.path.isdir(target):
         raise HTTPException(status_code=400, detail="Cannot download a directory")
@@ -510,9 +510,10 @@ async def fs_upload(request: Request, path: str, filename: str):
 
     file_path = os.path.join(target_unresolved, filename)
     try:
-        content = await request.body()
         with open(file_path, "wb") as f_out:
-            f_out.write(content)
+            async for chunk in request.stream():
+                if chunk:
+                    f_out.write(chunk)
 
         from backend.state import add_event
 
@@ -531,7 +532,7 @@ class TokenCreateRequest(BaseModel):
 
 
 @router.get("/tokens")
-async def list_tokens():
+def list_tokens():
     from backend.api_tokens import load_tokens
 
     tokens = load_tokens()
@@ -550,7 +551,7 @@ async def list_tokens():
 
 
 @router.post("/tokens")
-async def create_token(req: TokenCreateRequest):
+def create_token(req: TokenCreateRequest):
     from backend.api_tokens import generate_token
     from backend.state import add_event
 
@@ -560,7 +561,7 @@ async def create_token(req: TokenCreateRequest):
 
 
 @router.delete("/tokens/{token_id}")
-async def delete_token(token_id: str):
+def delete_token(token_id: str):
     from backend.api_tokens import revoke_token
     from backend.state import add_event
 

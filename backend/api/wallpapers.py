@@ -72,7 +72,7 @@ def _detect_image_format(data: bytes):
 
 
 @router.get("/wallpaper_url")
-async def get_wallpaper_url():
+def get_wallpaper_url():
     active = _safe_name(_get_active())
     if active:
         return {"url": f"/api/wallpapers/download/{active}"}
@@ -80,14 +80,14 @@ async def get_wallpaper_url():
 
 
 @router.get("/wallpapers")
-async def list_wallpapers():
+def list_wallpapers():
     os.makedirs(WALLPAPERS_DIR, exist_ok=True)
     files = [f for f in os.listdir(WALLPAPERS_DIR) if _safe_name(f)]
     return {"files": sorted(files), "active": _get_active()}
 
 
 @router.get("/wallpapers/download/{filename}")
-async def download_wallpaper(filename: str):
+def download_wallpaper(filename: str):
     safe, wp_path = _path_for(filename)
     if not safe or not os.path.isfile(wp_path):
         return error_response(404, "Wallpaper not found.")
@@ -152,7 +152,7 @@ async def upload_wallpaper(request: Request):
 
 
 @router.post("/wallpapers/select")
-async def select_wallpaper(req: WallpaperSelectRequest):
+def select_wallpaper(req: WallpaperSelectRequest):
     try:
         name = req.name if req.name is not None else req.filename
         if not name:
@@ -171,7 +171,7 @@ async def select_wallpaper(req: WallpaperSelectRequest):
 
 
 @router.post("/wallpapers/rename")
-async def rename_wallpaper(req: WallpaperRenameRequest):
+def rename_wallpaper(req: WallpaperRenameRequest):
     old_safe, old_path = _path_for(req.old_name)
     if not old_safe or not req.new_name:
         return _fail(400, "Missing or invalid parameters.")
@@ -204,7 +204,7 @@ async def rename_wallpaper(req: WallpaperRenameRequest):
 
 
 @router.delete("/wallpapers/{filename}")
-async def delete_wallpaper(filename: str):
+def delete_wallpaper(filename: str):
     safe, wp_path = _path_for(filename)
     if not safe:
         return _fail(400, "Invalid filename.")

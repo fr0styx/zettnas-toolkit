@@ -98,13 +98,13 @@ async def login(req: LoginRequest, request: Request):
 
 
 @router.post("/auth/logout")
-async def logout(request: Request):
+def logout(request: Request):
     revoke_session(extract_token(request))
     return {"status": "ok"}
 
 
 @router.get("/security")
-async def get_security():
+def get_security():
     return {
         "username": config.ZETTNAS_USERNAME,
         "email": config.ZETTNAS_EMAIL,

@@ -446,19 +446,16 @@ def stats_collector_daemon():
             if now_ts - stats_collector_daemon.last_log >= 300:
                 stats_collector_daemon.last_log = now_ts
                 try:
-                    with sqlite3.connect(DB_PATH) as conn:
-                        conn.execute(
-                            "INSERT INTO metrics (ts, cpu_temp, cpu_util, mem_pct, disks_json, fans_json) VALUES (?, ?, ?, ?, ?, ?)",
-                            (
-                                now_ts,
-                                data["cpu"].get("temp", 0),
-                                data["cpu"].get("util", 0),
-                                data["mem"].get("pct", 0),
-                                json.dumps(disks),
-                                json.dumps(fans),
-                            ),
-                        )
-                        conn.execute("DELETE FROM metrics WHERE ts < ?", (now_ts - 2592000,))
+                    from backend.db import log_metrics
+
+                    log_metrics(
+                        now_ts,
+                        data["cpu"].get("temp", 0),
+                        data["cpu"].get("util", 0),
+                        data["mem"].get("pct", 0),
+                        disks,
+                        fans,
+                    )
                 except Exception as db_e:
                     logger.info(f"[ZettNAS] DB Log Error: {db_e}")
 

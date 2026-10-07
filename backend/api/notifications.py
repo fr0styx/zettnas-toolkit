@@ -31,18 +31,18 @@ class NotificationConfigModel(BaseModel):
 
 
 @router.get("/config")
-async def get_notifications():
+def get_notifications():
     return load_notification_config()
 
 
 @router.post("/config")
-async def update_notifications(req: NotificationConfigModel):
+def update_notifications(req: NotificationConfigModel):
     data = req.model_dump()
     save_notification_config(data)
     return {"status": "ok", "config": load_notification_config()}
 
 
 @router.post("/test")
-async def trigger_test_notification(custom_cfg: dict[str, Any] | None = None):
+def trigger_test_notification(custom_cfg: dict[str, Any] | None = None):
     res = test_notification(custom_cfg)
     return res
