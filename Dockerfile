@@ -33,6 +33,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     udev \
     sg3-utils \
     usbutils \
+    chromium \
+    chromium-sandbox \
     libnss3 \
     libnspr4 \
     libatk1.0-0 \
@@ -51,13 +53,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     fonts-liberation \
     && rm -rf /var/lib/apt/lists/*
 
+# Multi-arch Playwright support (linux/amd64 and linux/arm64)
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium
+
 WORKDIR /app
 
 COPY requirements.txt .
 RUN --mount=type=cache,target=/root/.cache/pip pip install -r requirements.txt
-RUN playwright install chromium
 
 # Copy Python backend application
+COPY pyproject.toml .
 COPY app.py .
 COPY backend/ ./backend/
 COPY static/ ./static/

@@ -114,7 +114,11 @@ def render_lcd_loop():
     while True:
         try:
             with sync_playwright() as p:
-                browser = p.chromium.launch(headless=True, args=chromium_args)
+                browser = p.chromium.launch(
+                    headless=True,
+                    args=chromium_args,
+                    executable_path=os.environ.get("PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH"),
+                )
                 context = browser.new_context(viewport={"width": fb_width, "height": fb_height}, device_scale_factor=1)
                 page = context.new_page()
                 page.goto(url, wait_until="domcontentloaded", timeout=15000)
