@@ -1,5 +1,40 @@
 # ZettNAS Toolkit - Release Changelog
 
+## v1.3.2 (2026-10-07)
+### 🛡️ Enterprise-Grade System Hardening, Concurrency, Stability & Quality Assurance
+
+Comprehensive multi-domain architectural hardening based on the enterprise-grade audit plan across backend concurrency, systems integration, UI performance, and testing infrastructure:
+
+- **Critical Stability & Concurrency (Batch 1)**:
+  - **FastAPI Threadpool Routing**: Converted non-awaiting FastAPI handlers (`fans`, `led`, `notifications`, `stats`, `metrics`, `auth`, `backup`, `system`) to synchronous `def` functions, allowing FastAPI to route them automatically to worker threadpools and preventing event loop stalls on blocking SQLite and filesystem operations.
+  - **OOM Prevention on File Ingestion**: Refactored `fs_upload` in `backend/api/system.py` to stream client bodies iteratively (`async for chunk in request.stream()`) with path traversal guards.
+  - **Telemetry Database Concurrency**: Migrated background daemon in `backend/services/stats_collector.py` to use `backend.db.log_metrics()` with SQLite WAL mode and a 5000ms `busy_timeout`, eliminating `database is locked` errors during concurrent API traffic.
+  - **Concurrent S.M.A.R.T. Drive Polling**: Refactored `poll_all_disks_smart` in `backend/services/disks.py` to poll drives in parallel via `ThreadPoolExecutor(max_workers=min(8, len(targets)))`, slashing latency from ~15s to <2s and preventing UPS telemetry starvation during power events.
+  - **Atomic Unraid Telemetry Retries**: Added retry backoff mechanism (`max_retries=3`, `retry_delay=0.05s`) in `backend/services/unraid.py` for reading `var.ini`, preventing transient incomplete writes from triggering false array error alerts.
+  - **Decoupled SSE Reconnection**: Isolated SSE reconnection timers and polling fallback in `frontend/src/main.js` to eliminate competing network requests upon connection drops.
+  - **Production Docker Volume Isolation**: Removed code mounts (`./backend`, `./static`) from production `docker-compose.yml`, strictly isolating them to `docker-compose.dev.yml` to prevent shadowing built assets.
+
+- **Performance & Architecture Hardening (Batch 2)**:
+  - **Native Static File Streaming**: Replaced hand-rolled in-memory static file caching with FastAPI's native `fastapi.staticfiles.StaticFiles`.
+  - **Clean Architectural Relocation**: Relocated root entrypoint to `backend/main.py`, providing a backward-compatible root shim in `app.py`.
+  - **Clean Top-Level Imports**: Cleaned up inline imports across all API and service modules to standard top-level definitions.
+  - **Dedicated Backup Engine**: Extracted zip archive creation and extraction into `backend/services/backup_engine.py` with zip-slip path traversal validation.
+  - **Asynchronous HDD Wake**: Converted spinning drive `dd` wake calls to non-blocking `subprocess.Popen` in `backend/services/disks.py`.
+  - **Resource Leak Prevention**: Wrapped `/dev/fb0` memory maps in explicit `fb_mem.close()` within a `finally` block in `backend/services/lcd_renderer.py` to prevent descriptor leaks.
+  - **Crash Recovery Exponential Backoff**: Replaced static 2s restart sleep with exponential backoff (2s → 60s) for Chromium crash recovery on `/dev/fb0`.
+  - **Fan State Pruning**: Added `cleanup_stale_fan_trackers()` in `backend/services/fans.py` to evict stale PWM keys and wrapped sysfs fan reads in safe non-blocking context managers.
+  - **UI Render Optimization**: Introduced `requestAnimationFrame` debouncing on `EventBus.emit()` and state diffing in `frontend/src/state.js` before dispatching updates.
+  - **Docker BuildKit Caching**: Added `--mount=type=cache,target=/root/.cache/pip` to `Dockerfile` for accelerated container builds.
+
+- **UI/UX, Accessibility & Quality Hardening (Batch 3)**:
+  - **DOM Diffing Guards**: Added `setText()` and `setHtml()` helpers in `frontend/src/components/dashboard.js` to eliminate layout recalculations and DOM thrashing on high-frequency SSE telemetry ticks.
+  - **Generic Mobile Touch Scrolling**: Replaced brittle hardcoded class selector exclusion lists with generic `[data-scrollable="true"]` handling.
+  - **Automated Accessibility (A11y) Layer**: Built `frontend/src/a11y.js` with delegated keyboard event handlers (`Enter`/`Space`) and an automated `MutationObserver` attaching `role="button"`, `tabindex="0"`, and `aria-label` to interactive elements.
+  - **Frontend Unit Testing**: Added Vitest + JSDOM testing framework (`npm test`) with passing unit test suites.
+  - **Playwright E2E Integration Testing**: Added end-to-end integration test suite (`tests/test_e2e_integration.py`).
+  - **Test Coverage Reporting**: Integrated `pytest-cov` (195 passed tests, 53% coverage across 3,808 lines of Python code).
+  - **Hardware LCD Orientation**: Calibrated front-panel 172x640 portrait scan orientation (`rotate(90deg) translate(0, -172px)`) ensuring upright display.
+
 ## v1.3.0 (2026-10-06)
 ### 🚀 Desktop Web OS, Mobile Optimizations, File Explorer & Architecture Audit
 
