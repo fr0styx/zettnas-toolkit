@@ -33,6 +33,7 @@ body.lcd-direct #confirm-toast-backdrop,
 body.lcd-direct #confirm-toast-modal,
 body.lcd-direct #copy-toast,
 body.lcd-direct #copy-toast-backdrop,
+body.lcd-direct #desktop-widgets-container,
 body.lcd-direct #login-overlay {
   display: none !important;
 }
