@@ -1433,6 +1433,197 @@ body.drawer-is-open .chassis-workbench-stage {
   box-shadow: 0 0 8px rgba(37, 194, 160, 0.25);
 }
 
+/* Custom Fan Presets Sub-bar */
+.fan-presets-bar {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fan-presets-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.fan-presets-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted, #94a3b8);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.fan-presets-title .ic {
+  width: 13px;
+  height: 13px;
+  color: var(--ok2, #25c2a0);
+}
+
+.fan-presets-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fan-preset-select-wrap {
+  flex: 1;
+  min-width: 0;
+}
+
+select.fan-preset-select {
+  width: 100%;
+  height: 32px;
+  background-color: #111a26;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  color: #f1f5f9;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 0 28px 0 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+select.fan-preset-select:hover {
+  border-color: rgba(37, 194, 160, 0.45);
+  background-color: #162232;
+}
+
+select.fan-preset-select:focus {
+  border-color: var(--ok2, #25c2a0);
+  box-shadow: 0 0 8px rgba(37, 194, 160, 0.35);
+  outline: none;
+}
+
+.btn-fan-action {
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 8px;
+  font-size: 11.5px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.18s ease;
+  user-select: none;
+  font-family: inherit;
+}
+
+.btn-fan-action .ic {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+}
+
+.btn-fan-save {
+  background: #1e2a38;
+  color: #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.btn-fan-save:hover {
+  background: #27384c;
+  color: #ffffff;
+  border-color: rgba(37, 194, 160, 0.45);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.btn-fan-save:active {
+  transform: translateY(1px);
+}
+
+.btn-fan-save .ic {
+  color: var(--ok2, #25c2a0);
+}
+
+.btn-fan-apply {
+  background: rgba(37, 194, 160, 0.16);
+  color: var(--ok2, #25c2a0);
+  border: 1px solid rgba(37, 194, 160, 0.4);
+}
+
+.btn-fan-apply:hover:not(:disabled) {
+  background: rgba(37, 194, 160, 0.28);
+  border-color: var(--ok2, #25c2a0);
+  box-shadow: 0 0 10px rgba(37, 194, 160, 0.35);
+  color: #ffffff;
+}
+
+.btn-fan-apply:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.btn-fan-apply:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  color: #64748b;
+  box-shadow: none;
+}
+
+.btn-fan-apply .ic {
+  color: currentColor;
+}
+
+.btn-fan-delete {
+  padding: 0 10px;
+  background: rgba(239, 68, 68, 0.12);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.btn-fan-delete:hover {
+  background: rgba(239, 68, 68, 0.24);
+  color: #ffffff;
+  border-color: #ef4444;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.35);
+}
+
+.btn-fan-delete:active {
+  transform: translateY(1px);
+}
+
+.btn-fan-delete .ic {
+  color: currentColor;
+}
+
+body.theme-yak .btn-fan-save:hover {
+  border-color: rgba(212, 138, 55, 0.5);
+}
+
+body.theme-yak .btn-fan-save .ic {
+  color: var(--accent-yak, #d48a37);
+}
+
+body.theme-yak .btn-fan-apply {
+  background: rgba(212, 138, 55, 0.16);
+  color: var(--accent-yak, #d48a37);
+  border-color: rgba(212, 138, 55, 0.4);
+}
+
+body.theme-yak .btn-fan-apply:hover:not(:disabled) {
+  background: rgba(212, 138, 55, 0.28);
+  border-color: var(--accent-yak, #d48a37);
+  box-shadow: 0 0 10px rgba(212, 138, 55, 0.35);
+}
+
+body.theme-yak select.fan-preset-select:focus {
+  border-color: var(--accent-yak, #d48a37);
+  box-shadow: 0 0 8px rgba(212, 138, 55, 0.35);
+}
+
+
 .drawer-card { background: #151f2b; border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 10px; transition: opacity 0.25s ease, filter 0.25s ease; width: 100%; }
 .card-headline { display: flex; justify-content: space-between; align-items: center; }
 .card-head-title { font-size: 13px; font-weight: 800; color: #f1f5f9; display: flex; align-items: center; }

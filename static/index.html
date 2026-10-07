@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>ZettNAS Studio • Hardware Suite</title>
-  <script type="module" crossorigin src="/assets/index-C2B3C3Vk.js"></script>
+  <script type="module" crossorigin src="/assets/index-aeiWo4I0.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/helpers.dataset-BIT4M8iJ.js">
   <link rel="modulepreload" crossorigin href="/assets/chartjs-plugin-zoom.esm-CVlo9eU5.js">
-  <link rel="stylesheet" crossorigin href="/assets/index-TvX7W1aE.css">
+  <link rel="stylesheet" crossorigin href="/assets/index-CUffhJG0.css">
 </head>
 <body class="studio-workbench">
 
@@ -26,6 +26,25 @@
   <defs>
     <symbol id="i-trash" viewBox="0 0 24 24">
       <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="i-save" viewBox="0 0 24 24">
+      <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <polyline points="17 21 17 13 7 13 7 21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <polyline points="7 3 7 8 15 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="i-bolt" viewBox="0 0 24 24">
+      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="i-sliders" viewBox="0 0 24 24">
+      <line x1="4" y1="21" x2="4" y2="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <line x1="4" y1="10" x2="4" y2="3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <line x1="12" y1="21" x2="12" y2="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <line x1="12" y1="8" x2="12" y2="3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <line x1="20" y1="21" x2="20" y2="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <line x1="20" y1="12" x2="20" y2="3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <line x1="1" y1="14" x2="7" y2="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <line x1="9" y1="8" x2="15" y2="8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <line x1="17" y1="16" x2="23" y2="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
     </symbol>
     <symbol id="i-disk" viewBox="0 0 24 24">
       <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/>
@@ -1023,20 +1042,31 @@
           <button class="profile-pill fan-profile-btn" data-fan-profile="performance">Perf (155)</button>
           <button class="profile-pill fan-profile-btn" data-fan-profile="full">Full (183)</button>
         </div>
-        <div id="fan-presets-bar" style="margin-top: 10px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.06);">
-          <span style="font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px;" data-i18n="fan.presets_title">Custom Presets:</span>
-          <select id="fan-preset-select" class="form-input" style="padding: 4px 8px; font-size: 12px; height: 28px; width: auto; min-width: 140px; background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-color);">
-            <option value="" data-i18n="fan.select_preset">-- Select Preset --</option>
-          </select>
-          <button id="btn-save-fan-preset" class="btn btn-secondary btn-sm" style="padding: 3px 10px; font-size: 11px; height: 28px; display: flex; align-items: center; gap: 4px;" title="Save current curve as preset">
-            <span>💾</span> <span data-i18n="fan.save_preset">Save Preset</span>
-          </button>
-          <button id="btn-apply-fan-preset" class="btn btn-primary btn-sm" style="padding: 3px 10px; font-size: 11px; height: 28px; display: flex; align-items: center; gap: 4px;" disabled title="Apply selected preset">
-            <span>⚡</span> <span data-i18n="fan.apply_preset">Apply</span>
-          </button>
-          <button id="btn-delete-fan-preset" class="btn btn-danger btn-sm" style="padding: 3px 8px; font-size: 11px; height: 28px; display: none;" title="Delete selected preset">
-            <span>🗑️</span>
-          </button>
+        <div id="fan-presets-bar" class="fan-presets-bar">
+          <div class="fan-presets-header">
+            <span class="fan-presets-title">
+              <svg class="ic ic-xs"><use href="#i-sliders"/></svg>
+              <span data-i18n="fan.presets_title">Custom Presets</span>
+            </span>
+            <button id="btn-save-fan-preset" class="btn-fan-action btn-fan-save" type="button" title="Save current curve as preset">
+              <svg class="ic ic-xs"><use href="#i-save"/></svg>
+              <span data-i18n="fan.save_preset">Save Preset</span>
+            </button>
+          </div>
+          <div class="fan-presets-controls">
+            <div class="fan-preset-select-wrap">
+              <select id="fan-preset-select" class="tz-select-input fan-preset-select">
+                <option value="" data-i18n="fan.select_preset">-- Select Preset --</option>
+              </select>
+            </div>
+            <button id="btn-apply-fan-preset" class="btn-fan-action btn-fan-apply" type="button" disabled title="Apply selected preset">
+              <svg class="ic ic-xs"><use href="#i-bolt"/></svg>
+              <span data-i18n="fan.apply_preset">Apply</span>
+            </button>
+            <button id="btn-delete-fan-preset" class="btn-fan-action btn-fan-delete" type="button" style="display: none;" title="Delete selected preset">
+              <svg class="ic ic-xs"><use href="#i-trash"/></svg>
+            </button>
+          </div>
         </div>
       </div>
 

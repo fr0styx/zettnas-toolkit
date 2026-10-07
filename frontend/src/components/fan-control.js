@@ -5,6 +5,7 @@
 import { api } from '../api.js';
 import { state } from '../state.js';
 import { ZettEventBus } from '../event-bus.js';
+import { t } from '../i18n.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -378,7 +379,7 @@ export function initFanControl() {
       const data = await api.get('/api/fans/presets');
       const presets = data.presets || {};
       const currentVal = presetSelect.value;
-      presetSelect.innerHTML = '<option value="">-- Select Preset --</option>';
+      presetSelect.innerHTML = `<option value="">${t('fan.select_preset', '-- Select Preset --')}</option>`;
       Object.keys(presets).sort().forEach((name) => {
         const opt = document.createElement('option');
         opt.value = name;
@@ -460,5 +461,8 @@ export function initFanControl() {
   }
 
   loadFanPresets();
+  window.addEventListener('zettnas:lang-changed', () => {
+    loadFanPresets();
+  });
   setTimeout(renderCurveLines, 400);
 }
