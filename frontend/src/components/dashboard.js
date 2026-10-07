@@ -886,6 +886,7 @@ export function handlePendingIngest(pendingIngest) {
       hideConfirmToast();
       _activeIngestPromptTs = null;
     }
+    _dismissedIngestTs = null;
     return;
   }
 
@@ -932,7 +933,18 @@ export function handlePendingIngest(pendingIngest) {
     {
       isMedia: true,
       okText: t('media.btn_start_ingest', '📥 Start Ingest'),
-      cancelText: t('media.btn_dismiss', 'Dismiss')
+      cancelText: t('media.btn_dismiss', 'Dismiss'),
+      ejectText: t('media.btn_eject', '⏏ Eject'),
+      onEject: async () => {
+        _activeIngestPromptTs = null;
+        _dismissedIngestTs = null;
+        try {
+          await api.post('/api/copy/eject', { slot: pendingIngest.slot });
+          showToast(t('media.ejected', 'Card safely unmounted and ejected. You can now remove it.'), 'info');
+        } catch (err) {
+          showToast(`Eject failed: ${err.message || err}`, 'error');
+        }
+      }
     }
   );
 }

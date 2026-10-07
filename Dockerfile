@@ -31,6 +31,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     smartmontools \
     apcupsd \
     udev \
+    sg3-utils \
+    usbutils \
     libnss3 \
     libnspr4 \
     libatk1.0-0 \

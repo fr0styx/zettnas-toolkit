@@ -412,6 +412,34 @@ export function initSettings() {
     btnCopyDst.addEventListener('change', saveButtonConfig);
   }
 
+  const btnMediaRescan = $('btn-media-rescan');
+  if (btnMediaRescan) {
+    btnMediaRescan.addEventListener('click', async () => {
+      btnMediaRescan.textContent = 'Scanning...';
+      try {
+        await api.post('/api/copy/rescan');
+        showToast(t('media.scan_complete', 'Media slots rescanned.'), 'info');
+      } catch (err) {
+        showToast(`Scan failed: ${err.message || err}`, 'error');
+      } finally {
+        setTimeout(() => { if (btnMediaRescan) btnMediaRescan.textContent = '🔄 Scan'; }, 1000);
+      }
+    });
+  }
+
+  const btnMediaEject = $('btn-media-eject');
+  if (btnMediaEject) {
+    btnMediaEject.addEventListener('click', async () => {
+      const srcSlot = btnCopySrc ? btnCopySrc.value : 'sd';
+      try {
+        await api.post('/api/copy/eject', { slot: srcSlot });
+        showToast(t('media.ejected', 'Card safely unmounted and ejected. You can now remove it.'), 'info');
+      } catch (err) {
+        showToast(`Eject failed: ${err.message || err}`, 'error');
+      }
+    });
+  }
+
   loadButtonConfig();
 
   // --- Folder Selection Integration ---

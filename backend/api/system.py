@@ -37,6 +37,7 @@ from backend.models.schemas import (
     ButtonConfigRequest,
     CopyConfirmRequest,
     DockerActionRequest,
+    EjectMediaRequest,
     LayoutRequest,
     LcdPageRequest,
     MkdirRequest,
@@ -248,6 +249,22 @@ def dismiss_pending_ingest():
     Z_STATE.pending_ingest = None
     Z_STATE.ui_wake.set()
     return {"status": "dismissed"}
+
+
+@router.post("/copy/rescan")
+def rescan_media():
+    from backend.services.copy_engine import rescan_media_slots
+
+    slots = rescan_media_slots(force_usb_reset=True)
+    return {"status": "ok", "slots": slots}
+
+
+@router.post("/copy/eject")
+def eject_media(req: EjectMediaRequest | None = None):
+    from backend.services.copy_engine import eject_media_slot
+
+    slot = req.slot if req and req.slot else "sd"
+    return eject_media_slot(slot)
 
 
 BUTTON_DEFAULTS = {

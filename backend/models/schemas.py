@@ -71,6 +71,10 @@ class StartCopyRequest(BaseModel):
     use_exif: bool | None = None
 
 
+class EjectMediaRequest(BaseModel):
+    slot: str = "sd"
+
+
 class CopyConfirmRequest(BaseModel):
     action: str = Field(..., description="'skip', 'overwrite', or 'cancel'")
 

@@ -159,7 +159,8 @@ function _showTopConfirm(title, msg, onConfirm, onCancel, options = {}) {
       </div>
       <div style="padding: 16px 20px;">
         <div id="confirm-toast-msg" style="font-size: 12.5px; color: #cbd5e1; line-height: 1.55; word-break: break-word;"></div>
-        <div style="display: flex; gap: 10px; margin-top: 16px; justify-content: flex-end;">
+        <div style="display: flex; gap: 10px; margin-top: 16px; justify-content: flex-end; align-items: center;">
+          <button id="confirm-toast-eject" style="display: none; padding: 7px 14px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: 6px; color: #f87171; font-size: 12px; font-weight: 600; cursor: pointer; margin-right: auto;" title="Safely unmount and eject card">⏏ Eject</button>
           <button id="confirm-toast-cancel" style="padding: 7px 16px; background: transparent; border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: #cbd5e1; font-size: 12px; font-weight: 600; cursor: pointer;">Cancel</button>
           <button id="confirm-toast-ok" style="padding: 7px 18px; background: #0ea5e9; border: 1px solid #0284c7; border-radius: 6px; color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px;">Confirm</button>
         </div>
@@ -172,6 +173,7 @@ function _showTopConfirm(title, msg, onConfirm, onCancel, options = {}) {
   const closeBtn = document.getElementById("confirm-toast-close");
   const cancelBtn = document.getElementById("confirm-toast-cancel");
   const okBtn = document.getElementById("confirm-toast-ok");
+  const ejectBtn = document.getElementById("confirm-toast-eject");
   const headerBg = document.getElementById("confirm-toast-header-bg");
 
   const isStandby = title && title.toLowerCase().includes('standby');
@@ -206,6 +208,13 @@ function _showTopConfirm(title, msg, onConfirm, onCancel, options = {}) {
   cancelBtn.innerHTML = options.cancelText || "Cancel";
   msgEl.innerHTML = msg || "";
 
+  if (options.onEject && ejectBtn) {
+    ejectBtn.style.display = "block";
+    ejectBtn.innerHTML = options.ejectText || "⏏ Eject";
+  } else if (ejectBtn) {
+    ejectBtn.style.display = "none";
+  }
+
   backdrop.style.display = "block";
   card.style.display = "block";
   card.style.pointerEvents = "auto";
@@ -229,6 +238,7 @@ function _showTopConfirm(title, msg, onConfirm, onCancel, options = {}) {
     cancelBtn.removeEventListener("click", onCancelClick);
     backdrop.removeEventListener("click", onCancelClick);
     okBtn.removeEventListener("click", onOkClick);
+    if (ejectBtn) ejectBtn.removeEventListener("click", onEjectClick);
     document.removeEventListener("keydown", onKeyDown);
   };
 
@@ -242,6 +252,11 @@ function _showTopConfirm(title, msg, onConfirm, onCancel, options = {}) {
     cleanup();
     if (onConfirm) onConfirm();
   };
+  const onEjectClick = (e) => {
+    if (e) e.preventDefault();
+    cleanup();
+    if (options.onEject) options.onEject();
+  };
   const onKeyDown = (e) => {
     if (e.key === "Escape") {
       onCancelClick(e);
@@ -252,6 +267,7 @@ function _showTopConfirm(title, msg, onConfirm, onCancel, options = {}) {
   cancelBtn.addEventListener("click", onCancelClick);
   backdrop.addEventListener("click", onCancelClick);
   okBtn.addEventListener("click", onOkClick);
+  if (ejectBtn && options.onEject) ejectBtn.addEventListener("click", onEjectClick);
   document.addEventListener("keydown", onKeyDown);
 }
 

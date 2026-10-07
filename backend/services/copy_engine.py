@@ -190,6 +190,113 @@ def _ensure_slot_polling(block_path: str, dev: str, is_empty: bool):
                 break
 
 
+def probe_media_slot_capacity(dev: str, fallback_sysfs_path: str | None = None) -> int:
+    """
+    Directly query the hardware media slot via SCSI READ CAPACITY (sg_readcap).
+    Falls back to kernel sysfs if sg_readcap is not available.
+    Avoids stale Linux kernel size cache when cards are physically ejected or inserted
+    in USB multi-LUN card readers (like Genesys Logic GL3224).
+    """
+    for dev_prefix in ["/host/dev", "/dev"]:
+        dev_path = os.path.join(dev_prefix, dev)
+        if os.path.exists(dev_path):
+            try:
+                res = subprocess.run(
+                    ["sg_readcap", dev_path],
+                    capture_output=True,
+                    text=True,
+                    timeout=1.5,
+                )
+                if res.returncode == 0:
+                    for line in res.stdout.splitlines():
+                        if "Device size:" in line:
+                            m = re.search(r"Device size:\s+(\d+)\s+bytes", line)
+                            if m:
+                                return int(m.group(1))
+                # sg_readcap reported Device not ready / Unit not ready -> card is physically removed
+                return 0
+            except (subprocess.SubprocessError, OSError):
+                pass
+
+    if fallback_sysfs_path and os.path.exists(fallback_sysfs_path):
+        try:
+            return int(open(fallback_sysfs_path).read().strip()) * 512
+        except (OSError, ValueError):
+            pass
+    return 0
+
+
+def rescan_media_slots(force_usb_reset: bool = True):
+    """
+    Force-rescan all media slots:
+    1. If force_usb_reset is True, resets the card reader USB device if desynchronized.
+    2. Rescans SCSI devices.
+    3. Re-reads slots and triggers auto-ingest if a card is present.
+    """
+    if force_usb_reset:
+        try:
+            if not os.path.exists("/dev/bus/usb") and os.path.exists("/host/dev/bus/usb"):
+                os.makedirs("/dev/bus", exist_ok=True)
+                try:
+                    os.symlink("/host/dev/bus/usb", "/dev/bus/usb")
+                except OSError:
+                    pass
+            subprocess.run(["usbreset", "05e3:0764"], capture_output=True, timeout=3.0)
+            time.sleep(0.8)
+        except Exception as e:
+            logger.debug(f"usbreset error: {e}")
+
+    # Rescan SCSI devices
+    for scsi_dev in glob.glob(os.path.join(HOST_SYS, "class/scsi_device/*/device/rescan")):
+        try:
+            with open(scsi_dev, "w") as f:
+                f.write("1\n")
+        except OSError:
+            pass
+
+    time.sleep(0.5)
+    slots = read_media_slots()
+    # Reset previous slots state so any present card is seen as a fresh insertion
+    _PREV_MEDIA_SLOTS.clear()
+    check_media_slot_transitions(slots)
+    return slots
+
+
+def eject_media_slot(slot: str = "sd"):
+    """
+    Safely eject the specified media slot:
+    1. Flushes OS filesystem buffers via sync.
+    2. Clears pending_ingest and previous slot cache.
+    3. Resets the reader via usbreset so the slot is cleanly ready for the next card.
+    """
+    try:
+        subprocess.run(["sync"], timeout=5.0)
+    except Exception:
+        pass
+
+    if getattr(Z_STATE, "pending_ingest", None) and Z_STATE.pending_ingest.get("slot") == slot:
+        Z_STATE.pending_ingest = None
+        Z_STATE.ui_wake.set()
+
+    _PREV_MEDIA_SLOTS[slot] = {"size": 0, "dev": None}
+
+    # Reset the reader so the controller knows the slot is emptied
+    try:
+        if not os.path.exists("/dev/bus/usb") and os.path.exists("/host/dev/bus/usb"):
+            os.makedirs("/dev/bus", exist_ok=True)
+            try:
+                os.symlink("/host/dev/bus/usb", "/dev/bus/usb")
+            except OSError:
+                pass
+        subprocess.run(["usbreset", "05e3:0764"], capture_output=True, timeout=3.0)
+    except Exception:
+        pass
+
+    slot_label = "SD Card" if slot == "sd" else "TF Card (MicroSD)"
+    add_event("info", f"{slot_label} Ejected", f"{slot_label} was safely unmounted and ejected. You can now physically remove it.")
+    return {"status": "ok", "message": f"{slot_label} safely ejected"}
+
+
 def read_media_slots():
     slots = {"sd": {"size": 0, "dev": None}, "tf": {"size": 0, "dev": None}}
     try:
@@ -199,7 +306,7 @@ def read_media_slots():
                 if "usb" in target:
                     lun_str = target.split("/")[-3]
                     dev = os.path.basename(p)
-                    size = int(open(os.path.join(p, "size")).read().strip()) * 512
+                    size = probe_media_slot_capacity(dev, fallback_sysfs_path=os.path.join(p, "size"))
                     _ensure_slot_polling(p, dev, size == 0)
                     if lun_str.endswith(":1"):
                         slots["sd"]["size"] = size
