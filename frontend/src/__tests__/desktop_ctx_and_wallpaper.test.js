@@ -35,7 +35,7 @@ describe('Desktop Context Menu, Dock Context Menu, and Wallpaper Engine', () => 
     expect(menu.classList.contains('desktop-context-menu')).toBe(true);
   });
 
-  it('right-clicking desktop stage displays desktop context menu with align, sort, and pin options', () => {
+  it('right-clicking desktop stage displays desktop context menu with only align and sort options', () => {
     initDraggableDesktopIcons();
     const menu = document.getElementById('desktop-ctx-menu');
     expect(menu.style.display).toBe('');
@@ -52,11 +52,12 @@ describe('Desktop Context Menu, Dock Context Menu, and Wallpaper Engine', () => 
     expect(menu.style.display).toBe('block');
     expect(menu.querySelector('#ctx-align-grid')).not.toBeNull();
     expect(menu.querySelector('#ctx-sort-name')).not.toBeNull();
-    expect(menu.querySelector('[data-pin-id="fm"]')).not.toBeNull();
-    expect(menu.querySelector('[data-pin-id="management"]')).not.toBeNull();
+    // Verify Pin Apps is removed from desktop right-click
+    expect(menu.querySelector('[data-pin-id]')).toBeNull();
+    expect(menu.textContent).not.toContain('PIN APPS TO DOCK');
   });
 
-  it('right-clicking a desktop icon displays app-specific context menu', () => {
+  it('right-clicking a desktop icon displays app-specific context menu with Open and organization actions', () => {
     initDraggableDesktopIcons();
     const menu = document.getElementById('desktop-ctx-menu');
     const icon = document.getElementById('management-desktop-icon');
@@ -71,17 +72,38 @@ describe('Desktop Context Menu, Dock Context Menu, and Wallpaper Engine', () => 
 
     expect(menu.style.display).toBe('block');
     expect(menu.querySelector('#ctx-open-app')).not.toBeNull();
-    expect(menu.querySelector('#ctx-pin-app')).not.toBeNull();
+    expect(menu.querySelector('#ctx-align-grid')).not.toBeNull();
+    expect(menu.querySelector('#ctx-sort-name')).not.toBeNull();
+    expect(menu.textContent).not.toContain('PIN APPS TO DOCK');
   });
 
-  it('showDockItemContextMenu creates #dock-item-ctx-menu with pin apps list', () => {
-    showDockItemContextMenu(200, 700, null, 'Dock', false, false);
+  it('showDockItemContextMenu shows Pin to Dock for an unpinned open app', () => {
+    showDockItemContextMenu(200, 700, 'fm', 'File Explorer', false, true);
     const menu = document.getElementById('dock-item-ctx-menu');
     expect(menu).not.toBeNull();
     expect(menu.parentNode).toBe(document.body);
     expect(menu.style.display).toBe('block');
-    expect(menu.querySelector('[data-dock-pin-id="fm"]')).not.toBeNull();
-    expect(menu.querySelector('[data-dock-pin-id="console"]')).not.toBeNull();
+    expect(menu.querySelector('#dock-ctx-pin')).not.toBeNull();
+    expect(menu.querySelector('#dock-ctx-pin').textContent).toContain('Pin to Dock');
+    expect(menu.querySelector('#dock-ctx-close')).not.toBeNull();
+    expect(menu.textContent).not.toContain('PIN APPS TO DOCK');
+  });
+
+  it('showDockItemContextMenu shows Unpin from Dock for an already pinned app', () => {
+    showDockItemContextMenu(200, 700, 'fm', 'File Explorer', true, true);
+    const menu = document.getElementById('dock-item-ctx-menu');
+    expect(menu).not.toBeNull();
+    expect(menu.style.display).toBe('block');
+    expect(menu.querySelector('#dock-ctx-pin')).not.toBeNull();
+    expect(menu.querySelector('#dock-ctx-pin').textContent).toContain('Unpin from Dock');
+    expect(menu.querySelector('#dock-ctx-close')).not.toBeNull();
+    expect(menu.textContent).not.toContain('PIN APPS TO DOCK');
+  });
+
+  it('showDockItemContextMenu does not display menu for home or notif', () => {
+    showDockItemContextMenu(200, 700, 'home', 'Dashboard Home', false, false);
+    const menu = document.getElementById('dock-item-ctx-menu');
+    expect(menu).toBeNull();
   });
 
   it('setWallpaper applies background-image property with important flag', () => {
