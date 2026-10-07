@@ -61,7 +61,8 @@ def check_media_slot_transitions(slots: dict) -> list[dict]:
                 "message": f"{mb} MB card detected on /dev/{curr_dev}. Ready for import.",
                 "level": "info",
             })
-            _maybe_trigger_auto_ingest(slot)
+            _PREV_MEDIA_SLOTS[slot] = {"size": curr_sz, "dev": curr_dev}
+            _maybe_trigger_auto_ingest(slot, dev=curr_dev, size=curr_sz)
 
         # Removal transition: >0 -> 0
         elif prev_sz > 0 and curr_sz == 0:
@@ -77,12 +78,12 @@ def check_media_slot_transitions(slots: dict) -> list[dict]:
                 Z_STATE.pending_ingest = None
                 Z_STATE.ui_wake.set()
 
-        _PREV_MEDIA_SLOTS[slot] = {"size": curr_sz, "dev": curr_dev}
+            _PREV_MEDIA_SLOTS[slot] = {"size": curr_sz, "dev": curr_dev}
 
     return transitions
 
 
-def _maybe_trigger_auto_ingest(slot: str):
+def _maybe_trigger_auto_ingest(slot: str, dev: str | None = None, size: int | None = None):
     from backend.config import BUTTON_CFG_FILE
     from backend.fsutil import read_json
 
@@ -119,22 +120,22 @@ def _maybe_trigger_auto_ingest(slot: str):
         if require_confirm:
             slot_info = _PREV_MEDIA_SLOTS.get(slot, {})
             slot_label = "SD Card" if slot == "sd" else "TF Card (MicroSD)"
-            dev = slot_info.get("dev") or slot
-            size = slot_info.get("size", 0)
+            dev_name = dev or slot_info.get("dev") or slot
+            card_size = size if size is not None else slot_info.get("size", 0)
             logger.info(f"[AUTO-INGEST] {slot_label} detected - offering media ingest confirmation prompt")
             Z_STATE.pending_ingest = {
                 "slot": slot,
                 "dest": job_cfg["dest"],
                 "use_exif": job_cfg["use_exif"],
-                "size": size,
-                "dev": dev,
+                "size": card_size,
+                "dev": dev_name,
                 "ts": time.time(),
             }
             Z_STATE.ui_wake.set()
             add_event(
                 "info",
                 "Media Ingest Offered",
-                f"{slot_label} detected on /dev/{dev}. Awaiting user confirmation to start import.",
+                f"{slot_label} detected on /dev/{dev_name}. Awaiting user confirmation to start import.",
             )
             return
 
@@ -152,6 +153,43 @@ def _maybe_trigger_auto_ingest(slot: str):
         threading.Thread(target=lambda c: asyncio.run(_do_copy(c)), args=(job_cfg,), daemon=True).start()
 
 
+_LAST_MEDIA_PROBE = 0.0
+
+
+def _ensure_slot_polling(block_path: str, dev: str, is_empty: bool):
+    """
+    Ensure the Linux kernel actively polls removable card reader slots.
+    When a card is removed, the SCSI driver (drivers/scsi/sd.c) sets
+    events_poll_msecs to -1. Without udisks2 on Unraid, polling remains stopped
+    indefinitely, causing physical card insertions to be missed.
+    """
+    global _LAST_MEDIA_PROBE
+    poll_file = os.path.join(block_path, "events_poll_msecs")
+    try:
+        if os.path.exists(poll_file):
+            with open(poll_file, "r+") as f:
+                val = f.read().strip()
+                if val in ("-1", "0", ""):
+                    f.seek(0)
+                    f.write("2000\n")
+                    f.truncate()
+    except OSError:
+        pass
+
+    now = time.time()
+    if is_empty and (now - _LAST_MEDIA_PROBE) > 3.0:
+        _LAST_MEDIA_PROBE = now
+        for dev_prefix in ["/host/dev", "/dev"]:
+            dev_path = os.path.join(dev_prefix, dev)
+            if os.path.exists(dev_path):
+                try:
+                    fd = os.open(dev_path, os.O_RDONLY | os.O_NONBLOCK)
+                    os.close(fd)
+                except OSError:
+                    pass
+                break
+
+
 def read_media_slots():
     slots = {"sd": {"size": 0, "dev": None}, "tf": {"size": 0, "dev": None}}
     try:
@@ -160,14 +198,13 @@ def read_media_slots():
                 target = os.readlink(p)
                 if "usb" in target:
                     lun_str = target.split("/")[-3]
+                    dev = os.path.basename(p)
+                    size = int(open(os.path.join(p, "size")).read().strip()) * 512
+                    _ensure_slot_polling(p, dev, size == 0)
                     if lun_str.endswith(":1"):
-                        dev = os.path.basename(p)
-                        size = int(open(os.path.join(p, "size")).read().strip()) * 512
                         slots["sd"]["size"] = size
                         slots["sd"]["dev"] = dev
                     elif lun_str.endswith(":0"):
-                        dev = os.path.basename(p)
-                        size = int(open(os.path.join(p, "size")).read().strip()) * 512
                         slots["tf"]["size"] = size
                         slots["tf"]["dev"] = dev
             except Exception as e:

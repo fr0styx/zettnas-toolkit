@@ -39,6 +39,7 @@ def _save_sessions():
 
 
 def create_session(username: str) -> str:
+    _load_sessions()
     token = secrets.token_urlsafe(32)
     now = time.time()
     SESSIONS[token] = {"user": username, "created": now, "expires": now + SESSION_TTL}
@@ -67,7 +68,9 @@ def validate_session(token: str) -> bool:
             return True
 
     if token not in SESSIONS:
-        return False
+        _load_sessions()
+        if token not in SESSIONS:
+            return False
     session = SESSIONS[token]
     if session.get("expires", 0) <= time.time():
         del SESSIONS[token]
