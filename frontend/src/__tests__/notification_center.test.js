@@ -1,11 +1,15 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { makeDraggable, saveWindowBounds, loadSavedWindowBounds } from '../components/dock.js';
+import { makeDraggable, saveWindowBounds, loadSavedWindowBounds, DockManager, isEventChecked, markEventChecked, getEventKey } from '../components/dock.js';
 import { openEventDetailModal, closeEventDetailModal } from '../modals.js';
 
 describe('Notification Center Draggable Window & Event Detail Inspector', () => {
   beforeEach(() => {
     localStorage.clear();
     document.body.innerHTML = `
+      <div id="os-dock-container">
+        <div id="os-dock"></div>
+      </div>
+      <div id="global-toast-container"></div>
       <div id="notif-center-panel" class="notif-center-window" style="position:fixed; width:360px; height:420px; display:none;">
         <div id="notif-center-header" style="cursor:move;">
           <div class="os-window-controls">
@@ -147,5 +151,84 @@ describe('Notification Center Draggable Window & Event Detail Inspector', () => 
     closeEventDetailModal();
     expect(overlay.classList.contains('open')).toBe(false);
     expect(overlay.style.display).toBe('none');
+  });
+
+  it('correctly tracks and checks notification events with dimming state', () => {
+    const event1 = { ts: 1791394000, level: 'warning', title: 'NVMe Temperature High', message: 'nvme0 reached 72C' };
+    const event2 = { ts: 1791394050, level: 'info', title: 'ZFS Scrub Completed', message: 'Pool storage scrub finished' };
+
+    expect(isEventChecked(event1)).toBe(false);
+    expect(isEventChecked(event2)).toBe(false);
+
+    markEventChecked(event1);
+
+    expect(isEventChecked(event1)).toBe(true);
+    expect(isEventChecked(event2)).toBe(false);
+
+    const savedRaw = localStorage.getItem('zettnas_checked_events_v1');
+    expect(savedRaw).toBeDefined();
+    expect(savedRaw).toContain('NVMe Temperature High');
+  });
+
+  it('renders only 2 icons on clean initial dock startup: Dashboard Home and Notification Center', () => {
+    DockManager.windows = {};
+    DockManager.activeId = null;
+    DockManager.render();
+
+    const dock = document.getElementById('os-dock');
+    const items = dock.querySelectorAll('.dock-item');
+    expect(items.length).toBe(2);
+
+    // First item is Dashboard Home
+    expect(items[0].getAttribute('aria-label')).toBe('Dashboard Home');
+    expect(items[0].innerHTML).toContain('#i-globe');
+
+    // Second item is Notification Center
+    expect(items[1].getAttribute('aria-label')).toBe('Notification Center');
+    expect(items[1].innerHTML).toContain('#i-bell');
+  });
+
+  it('allows user to pin and unpin apps in the dock bar', () => {
+    DockManager.windows = {};
+    DockManager.activeId = null;
+
+    expect(DockManager.isPinned('fm')).toBe(false);
+
+    // Pin File Explorer
+    DockManager.pinApp('fm');
+    expect(DockManager.isPinned('fm')).toBe(true);
+    expect(DockManager.getPinnedApps()).toContain('fm');
+
+    // Dock now has 3 items: Home, File Explorer, Notification Center
+    const dock = document.getElementById('os-dock');
+    let items = dock.querySelectorAll('.dock-item');
+    expect(items.length).toBe(3);
+
+    const fmItem = dock.querySelector('[data-window-id="fm"]');
+    expect(fmItem).not.toBeNull();
+    expect(fmItem.classList.contains('pinned-closed')).toBe(true);
+
+    // When File Explorer is opened/registered
+    const mockFmEl = document.createElement('div');
+    DockManager.register('fm', mockFmEl, '#i-storage', 'File Explorer', false);
+    items = dock.querySelectorAll('.dock-item');
+    expect(items.length).toBe(3);
+    const runningFmItem = dock.querySelector('[data-window-id="fm"]');
+    expect(runningFmItem.classList.contains('pinned-closed')).toBe(false);
+
+    // When closed/unregistered, pinned app remains in dock as pinned-closed
+    DockManager.unregister('fm');
+    items = dock.querySelectorAll('.dock-item');
+    expect(items.length).toBe(3);
+    expect(dock.querySelector('[data-window-id="fm"]').classList.contains('pinned-closed')).toBe(true);
+
+    // Unpin File Explorer
+    DockManager.unpinApp('fm');
+    expect(DockManager.isPinned('fm')).toBe(false);
+    expect(DockManager.getPinnedApps()).not.toContain('fm');
+
+    // Dock returns to exactly 2 items
+    items = dock.querySelectorAll('.dock-item');
+    expect(items.length).toBe(2);
   });
 });

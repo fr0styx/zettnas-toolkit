@@ -5999,3 +5999,67 @@ body.theme-yak .widget-drag-handle:hover {
   background: rgba(255, 255, 255, 0.15) !important;
 }
 
+/* Checked (read) notification events - Dimmed Effect */
+.notif-center-item.notif-event-checked {
+  opacity: 0.45 !important;
+  background: transparent !important;
+  transition: opacity 0.2s ease, background 0.15s ease;
+}
+
+.notif-center-item.notif-event-checked:hover {
+  opacity: 0.95 !important;
+  background: rgba(255, 255, 255, 0.07) !important;
+}
+
+.notif-center-item.notif-event-checked .notif-center-title {
+  opacity: 0.75;
+}
+
+.notif-center-item.notif-event-checked .notif-center-msg {
+  color: var(--muted) !important;
+}
+
+.notif-center-item:not(.notif-event-checked) {
+  opacity: 1 !important;
+  background: rgba(255, 255, 255, 0.05);
+  border-left: 2.5px solid var(--brand, #0ea5e9);
+}
+
+/* Dock Pinned closed apps */
+.dock-item.pinned-closed::after {
+  display: none !important;
+}
+
+.dock-item.pinned-closed {
+  opacity: 0.82;
+}
+
+.dock-item.pinned-closed:hover {
+  opacity: 1;
+}
+
+/* Dock Item Context Menu */
+.dock-context-menu {
+  background: rgba(20, 24, 32, 0.96) !important;
+  backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8) !important;
+  border-radius: 8px !important;
+  padding: 6px !important;
+  min-width: 155px !important;
+  z-index: 10500 !important;
+}
+
+.dock-context-menu .ctx-item {
+  padding: 6px 10px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  border-radius: 6px !important;
+  transition: background 0.12s ease;
+}
+
+.dock-context-menu .ctx-item:hover {
+  background: rgba(255, 255, 255, 0.09) !important;
+}
+
+

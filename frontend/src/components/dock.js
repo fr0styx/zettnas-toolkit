@@ -12,6 +12,78 @@ let lastReadEventTs = parseFloat(localStorage.getItem('zettnas_last_read_event_t
 let clearedEventsTs = parseFloat(localStorage.getItem('zettnas_cleared_events_ts') || '0');
 let currentNotifFilter = 'all';
 
+export const CHECKED_EVENTS_KEY = 'zettnas_checked_events_v1';
+export const DOCK_PINNED_KEY = 'zettnas_dock_pinned_apps_v1';
+
+let checkedEventKeys = new Set();
+try {
+  const saved = localStorage.getItem(CHECKED_EVENTS_KEY);
+  if (saved) {
+    checkedEventKeys = new Set(JSON.parse(saved));
+  }
+} catch {
+  checkedEventKeys = new Set();
+}
+
+export function getEventKey(e) {
+  if (!e) return '';
+  return e.id || `${e.ts || 0}_${e.title || ''}_${e.level || ''}`;
+}
+
+export function isEventChecked(e) {
+  if (!e) return false;
+  const key = getEventKey(e);
+  if (checkedEventKeys.has(key)) return true;
+  if (lastReadEventTs > 0 && e.ts && e.ts <= lastReadEventTs) return true;
+  return false;
+}
+
+export function saveCheckedEvents() {
+  try {
+    const arr = Array.from(checkedEventKeys).slice(-500);
+    localStorage.setItem(CHECKED_EVENTS_KEY, JSON.stringify(arr));
+  } catch (err) {
+    console.warn('Failed to save checked events', err);
+  }
+}
+
+export function markEventChecked(e, persist = true) {
+  if (!e) return;
+  const key = getEventKey(e);
+  checkedEventKeys.add(key);
+  if (e.ts && e.ts > lastReadEventTs) {
+    lastReadEventTs = e.ts;
+    localStorage.setItem('zettnas_last_read_event_ts', lastReadEventTs.toString());
+  }
+  if (persist) {
+    saveCheckedEvents();
+  }
+}
+
+export function showDockToast(msg) {
+  let container = document.getElementById('global-toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'global-toast-container';
+    container.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:var(--z-toast, 10000);display:flex;flex-direction:column;gap:8px;';
+    document.body.appendChild(container);
+  }
+  const toast = document.createElement('div');
+  toast.className = 'dock-pin-toast';
+  toast.style.cssText = 'background:rgba(15,23,42,0.92); border:1px solid rgba(255,255,255,0.18); backdrop-filter:blur(12px); color:#fff; font-size:11px; font-weight:600; padding:6px 14px; border-radius:20px; box-shadow:0 4px 16px rgba(0,0,0,0.5); pointer-events:none; transition:opacity 0.25s ease, transform 0.25s ease; transform:translateY(10px); opacity:0;';
+  toast.textContent = msg;
+  container.appendChild(toast);
+  requestAnimationFrame(() => {
+    toast.style.transform = 'translateY(0)';
+    toast.style.opacity = '1';
+  });
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateY(-6px)';
+    setTimeout(() => toast.remove(), 300);
+  }, 2000);
+}
+
 const WIN_BOUNDS_KEY = 'zettnas_window_bounds_v2';
 
 export function loadSavedWindowBounds() {
@@ -287,16 +359,231 @@ export function makeDraggable(dragEl, handleEl, customId) {
   });
 }
 
+export const KNOWN_APPS = {
+  fm: {
+    id: 'fm',
+    icon: '#i-storage',
+    getTitle: () => t('dock.file_manager', 'File Explorer'),
+    launch: () => {
+      const fmWin = document.getElementById('file-manager-window');
+      if (fmWin) {
+        if (window.DockManager && !window.DockManager.windows['fm']) {
+          window.DockManager.register('fm', fmWin, '#i-storage', t('dock.file_manager', 'File Explorer'), false);
+        }
+        if (window.DockManager) window.DockManager.restore('fm');
+        ZettEventBus.emit('window:open', { id: 'file-manager-window' });
+      } else {
+        document.getElementById('fm-desktop-icon')?.click();
+      }
+    }
+  },
+  management: {
+    id: 'management',
+    icon: '#i-management',
+    getTitle: () => t('dock.management', 'Management'),
+    launch: () => {
+      if (window.openManagementWindow) {
+        window.openManagementWindow();
+      } else {
+        document.getElementById('management-desktop-icon')?.click();
+      }
+    }
+  },
+  console: {
+    id: 'console',
+    icon: '#i-screen',
+    getTitle: () => t('dock.zettnas', 'ZettNAS'),
+    launch: () => {
+      const consoleOverlay = document.getElementById('console-modal-overlay');
+      const consoleModal = document.getElementById('console-window');
+      if (consoleOverlay) {
+        if (window.DockManager && !window.DockManager.windows['console']) {
+          window.DockManager.register('console', consoleOverlay, '#i-screen', t('dock.zettnas', 'ZettNAS'), false);
+        }
+        if (window.DockManager) window.DockManager.restore('console');
+        consoleOverlay.style.removeProperty('display');
+        consoleOverlay.classList.add('open');
+        consoleModal?.classList.remove('window-minimized');
+        if (window.updateLcdPages && state.latestStats) window.updateLcdPages(state.latestStats);
+        if (consoleModal) bringToFront(consoleModal);
+      } else {
+        document.getElementById('chassis-desktop-icon')?.click();
+      }
+    }
+  },
+  smart: {
+    id: 'smart',
+    icon: '#i-disk',
+    getTitle: () => 'Diagnostics',
+    launch: () => {
+      if (window.openSmartModal) {
+        window.openSmartModal();
+      }
+    }
+  }
+};
+
+export function showDockItemContextMenu(x, y, id, title, isPinned, isRunning) {
+  let menu = document.getElementById('dock-item-ctx-menu');
+  if (!menu) {
+    menu = document.createElement('div');
+    menu.id = 'dock-item-ctx-menu';
+    menu.className = 'os-context-menu dock-context-menu';
+    document.body.appendChild(menu);
+  }
+
+  const pinLabel = isPinned ? t('dock.unpin', 'Unpin from Dock') : t('dock.pin', 'Pin to Dock');
+  const pinIcon = isPinned ? '📌' : '📍';
+  const openLabel = t('dock.open_app', 'Open');
+  const closeLabel = t('dock.close_window', 'Close Window');
+
+  menu.innerHTML = `
+    <div class="ctx-item" id="dock-ctx-pin">
+      <span style="font-size:12px; margin-right:6px;">${pinIcon}</span>
+      <span>${escapeHtml(pinLabel)}</span>
+    </div>
+    ${isRunning ? `
+      <div class="ctx-item" id="dock-ctx-close" style="color:var(--crit, #ff5c5c);">
+        <span style="font-size:11px; margin-right:6px;">✕</span>
+        <span>${escapeHtml(closeLabel)}</span>
+      </div>
+    ` : `
+      <div class="ctx-item" id="dock-ctx-open" style="color:var(--ok2, #25c2a0);">
+        <span style="font-size:11px; margin-right:6px;">▶</span>
+        <span>${escapeHtml(openLabel)}</span>
+      </div>
+    `}
+  `;
+
+  menu.style.display = 'block';
+  const menuW = 160;
+  const menuH = 80;
+  const left = Math.max(10, Math.min(window.innerWidth - menuW - 10, x - (menuW / 2)));
+  const top = Math.max(10, Math.min(window.innerHeight - menuH - 60, y - menuH - 8));
+  menu.style.left = `${left}px`;
+  menu.style.top = `${top}px`;
+
+  const hideMenu = () => {
+    menu.style.display = 'none';
+    document.removeEventListener('click', hideMenu);
+  };
+  setTimeout(() => document.addEventListener('click', hideMenu), 10);
+
+  document.getElementById('dock-ctx-pin')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    DockManager.togglePin(id);
+    hideMenu();
+  });
+
+  document.getElementById('dock-ctx-close')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    DockManager.closeWindow(id);
+    hideMenu();
+  });
+
+  document.getElementById('dock-ctx-open')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (KNOWN_APPS[id]?.launch) {
+      KNOWN_APPS[id].launch();
+    }
+    hideMenu();
+  });
+}
+
 export const DockManager = {
   windows: {},
   activeId: null,
 
+  getPinnedApps() {
+    try {
+      const raw = localStorage.getItem(DOCK_PINNED_KEY);
+      if (raw) {
+        const list = JSON.parse(raw);
+        if (Array.isArray(list)) return list;
+      }
+    } catch (e) {
+      console.warn('Failed to load pinned apps', e);
+    }
+    return [];
+  },
+
+  isPinned(id) {
+    if (!id || id === 'home' || id === 'notif') return false;
+    return this.getPinnedApps().includes(id);
+  },
+
+  pinApp(id) {
+    if (!id || id === 'home' || id === 'notif') return;
+    const list = this.getPinnedApps();
+    if (!list.includes(id)) {
+      list.push(id);
+      localStorage.setItem(DOCK_PINNED_KEY, JSON.stringify(list));
+      this.render();
+      showDockToast(t('dock.pinned_toast', 'Pinned to Dock'));
+    }
+  },
+
+  unpinApp(id) {
+    if (!id) return;
+    let list = this.getPinnedApps();
+    if (list.includes(id)) {
+      list = list.filter((item) => item !== id);
+      localStorage.setItem(DOCK_PINNED_KEY, JSON.stringify(list));
+      if (this.windows[id] && this.windows[id].closed) {
+        delete this.windows[id];
+      }
+      this.render();
+      showDockToast(t('dock.unpinned_toast', 'Unpinned from Dock'));
+    }
+  },
+
+  togglePin(id) {
+    if (this.isPinned(id)) {
+      this.unpinApp(id);
+    } else {
+      this.pinApp(id);
+    }
+  },
+
+  closeWindow(id) {
+    if (id === 'fm') {
+      const fmClose = document.getElementById('fm-close');
+      if (fmClose) { fmClose.click(); return; }
+    } else if (id === 'management') {
+      const mgmtClose = document.getElementById('management-close');
+      if (mgmtClose) { mgmtClose.click(); return; }
+    } else if (id === 'console') {
+      const consoleOverlay = document.getElementById('console-modal-overlay');
+      const consoleModal = document.getElementById('console-window');
+      if (consoleOverlay) {
+        consoleOverlay.classList.remove('open');
+        consoleOverlay.style.setProperty('display', 'none', 'important');
+      }
+      if (consoleModal) {
+        consoleModal.classList.add('window-minimized');
+        consoleModal.style.setProperty('display', 'none', 'important');
+      }
+      this.unregister('console');
+      return;
+    } else if (id === 'smart') {
+      const smartClose = document.getElementById('smart-modal-close');
+      if (smartClose) { smartClose.click(); return; }
+    }
+    this.unregister(id);
+  },
+
   register(id, el, icon, title, initialMinimized = false) {
     if (!this.windows[id]) {
-      this.windows[id] = { el, icon, title, minimized: initialMinimized };
+      this.windows[id] = { el, icon, title, minimized: initialMinimized, closed: false };
+    } else {
+      this.windows[id].el = el;
+      if (icon) this.windows[id].icon = icon;
+      if (title) this.windows[id].title = title;
+      this.windows[id].closed = false;
     }
     if (!initialMinimized) {
       this.windows[id].minimized = false;
+      this.windows[id].closed = false;
       el.classList.remove('window-minimized');
       el.classList.add('open');
       el.style.removeProperty('display');
@@ -316,7 +603,23 @@ export const DockManager = {
 
   unregister(id) {
     if (this.windows[id]) {
-      delete this.windows[id];
+      if (this.isPinned(id)) {
+        this.windows[id].minimized = true;
+        this.windows[id].closed = true;
+        if (this.windows[id].el) {
+          this.windows[id].el.classList.add('window-minimized');
+          this.windows[id].el.classList.remove('open');
+          this.windows[id].el.style.setProperty('display', 'none', 'important');
+          const innerWin = this.windows[id].el.querySelector('.smart-modal-window, .chassis-front-panel, .os-window, .mgmt-app-window');
+          if (innerWin) {
+            innerWin.classList.add('window-minimized');
+            innerWin.style.setProperty('display', 'none', 'important');
+          }
+        }
+      } else {
+        delete this.windows[id];
+      }
+      if (this.activeId === id) this.activeId = null;
       this.render();
     }
   },
@@ -558,11 +861,20 @@ export const DockManager = {
           </div>
         `;
         return container;
+      } else if (KNOWN_APPS[id]) {
+        const container = document.createElement('div');
+        container.className = 'dock-preview-summary';
+        const title = KNOWN_APPS[id].getTitle();
+        container.innerHTML = `
+          <div style="font-size:10px; font-weight:700; color:#fff;">${escapeHtml(title)}</div>
+          <div style="font-size:8.5px; color:var(--muted); margin-top:2px;">Click to open application</div>
+        `;
+        return container;
       }
       return null;
     }
 
-    function showDockTooltip(dockItem, id, title, icon, isMinimized) {
+    function showDockTooltip(dockItem, id, title, icon, isMinimized, isClosed = false) {
       clearTimeout(hoverTimeout);
       const tooltip = ensureDockTooltip();
       const textEl = document.getElementById('dock-tooltip-text');
@@ -578,7 +890,7 @@ export const DockManager = {
           badgeEl.className = 'dock-tooltip-status active';
         } else if (id === 'notif') {
           const events = (state.latestStats && Array.isArray(state.latestStats.events)) ? state.latestStats.events : [];
-          const unreadCount = events.filter((e) => e.ts > lastReadEventTs && e.ts > clearedEventsTs).length;
+          const unreadCount = events.filter((e) => !isEventChecked(e) && e.ts > clearedEventsTs).length;
           if (unreadCount > 0) {
             badgeEl.textContent = `${unreadCount > 99 ? '99+' : unreadCount} UNREAD`;
             badgeEl.className = 'dock-tooltip-status alert';
@@ -586,6 +898,9 @@ export const DockManager = {
             badgeEl.textContent = 'ALL CAUGHT UP';
             badgeEl.className = 'dock-tooltip-status active';
           }
+        } else if (isClosed) {
+          badgeEl.textContent = 'Pinned';
+          badgeEl.className = 'dock-tooltip-status';
         } else {
           badgeEl.textContent = isMinimized ? 'Minimized' : 'Active';
           badgeEl.className = 'dock-tooltip-status ' + (isMinimized ? 'minimized' : 'active');
@@ -648,26 +963,59 @@ export const DockManager = {
     });
     dock.appendChild(dashItem);
 
-    Object.keys(this.windows).forEach((id) => {
-      const win = this.windows[id];
+    // Dynamic apps (pinned + running)
+    const pinned = this.getPinnedApps();
+    const runningIds = Object.keys(this.windows).filter((id) => !this.windows[id].closed);
+    const displayedIds = [...pinned];
+    runningIds.forEach((id) => {
+      if (!displayedIds.includes(id)) {
+        displayedIds.push(id);
+      }
+    });
+
+    displayedIds.forEach((id) => {
+      const isRunning = !!(this.windows[id] && !this.windows[id].closed);
+      const isPinned = this.isPinned(id);
+      const win = this.windows[id] || (KNOWN_APPS[id] ? {
+        icon: KNOWN_APPS[id].icon,
+        title: KNOWN_APPS[id].getTitle(),
+        minimized: true,
+        closed: true,
+      } : null);
+
+      if (!win) return;
+
       const item = document.createElement('button');
       item.type = 'button';
       let cls = 'dock-item';
-      if (win.minimized) cls += ' minimized';
-      if (this.activeId === id && !win.minimized) cls += ' active-window';
+      if (!isRunning) cls += ' pinned-closed';
+      else if (win.minimized) cls += ' minimized';
+      if (this.activeId === id && isRunning && !win.minimized) cls += ' active-window';
       item.className = cls;
       item.setAttribute('aria-label', win.title);
       item.dataset.windowId = id;
       item.innerHTML = `<svg><use href="${win.icon}"/></svg>`;
 
       item.addEventListener('mousedown', (e) => e.stopPropagation());
-      item.addEventListener('mouseenter', () => showDockTooltip(item, id, win.title, win.icon, win.minimized));
-      item.addEventListener('focus', () => showDockTooltip(item, id, win.title, win.icon, win.minimized));
+      item.addEventListener('mouseenter', () => showDockTooltip(item, id, win.title, win.icon, win.minimized, !isRunning));
+      item.addEventListener('focus', () => showDockTooltip(item, id, win.title, win.icon, win.minimized, !isRunning));
       item.addEventListener('mouseleave', hideDockTooltip);
       item.addEventListener('blur', hideDockTooltip);
       item.addEventListener('click', () => {
         hideDockTooltip();
-        this.toggle(id);
+        if (!isRunning) {
+          if (KNOWN_APPS[id]?.launch) {
+            KNOWN_APPS[id].launch();
+          }
+        } else {
+          this.toggle(id);
+        }
+      });
+      item.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        hideDockTooltip();
+        showDockItemContextMenu(e.pageX, e.pageY, id, win.title, isPinned, isRunning);
       });
 
       dock.appendChild(item);
@@ -702,7 +1050,7 @@ export function initDockSystem() {
   if (consoleModal) makeDraggable(consoleModal, consoleHeader);
 
   const consoleOverlay = document.getElementById('console-modal-overlay');
-  if (consoleOverlay) {
+  if (consoleOverlay && DockManager.isPinned('console')) {
     DockManager.register('console', consoleOverlay, '#i-screen', t('dock.zettnas', 'ZettNAS'), true);
   }
 
@@ -730,7 +1078,7 @@ export function initDockSystem() {
   if (consoleClose) {
     const handleClose = (e) => {
       if (e && e.type === 'touchend') { e.preventDefault(); e.stopPropagation(); }
-      DockManager.minimize('console');
+      DockManager.closeWindow('console');
     };
     consoleClose.addEventListener('click', handleClose);
     consoleClose.addEventListener('touchend', handleClose);
@@ -758,7 +1106,10 @@ export function initDockSystem() {
         e.preventDefault();
       }
       if (consoleOverlay) {
-        if (DockManager.windows['console']?.minimized || consoleOverlay.style.display === 'none' || !consoleOverlay.classList.contains('open')) {
+        if (!DockManager.windows['console']) {
+          DockManager.register('console', consoleOverlay, '#i-screen', t('dock.zettnas', 'ZettNAS'), false);
+        }
+        if (DockManager.windows['console']?.minimized || consoleOverlay.style.display === 'none' || !consoleOverlay.classList.contains('open') || DockManager.windows['console']?.closed) {
           DockManager.restore('console');
           consoleOverlay.style.removeProperty('display');
           consoleOverlay.classList.add('open');
@@ -916,70 +1267,123 @@ export function initDraggableDesktopIcons() {
       ctxMenu = document.createElement('div');
       ctxMenu.id = 'desktop-ctx-menu';
       ctxMenu.className = 'os-context-menu';
-      ctxMenu.innerHTML = `
-        <div class="ctx-item" id="ctx-align-grid" data-i18n="desktop.align_grid">${t('desktop.align_grid', 'Align to Grid')}</div>
-        <div class="ctx-item" id="ctx-sort-name" data-i18n="desktop.sort_name">${t('desktop.sort_name', 'Sort by Name')}</div>
-      `;
-      document.body.appendChild(ctxMenu);
-
-      const hideMenu = () => ctxMenu.style.display = 'none';
+      const hideMenu = () => {
+        if (ctxMenu) ctxMenu.style.display = 'none';
+      };
       document.addEventListener('click', hideMenu);
-      
+
+      const wireGridAndSort = () => {
+        document.getElementById('ctx-align-grid')?.addEventListener('click', () => {
+          if (document.body.classList.contains('mobile-mode') || window.innerWidth <= 768) return;
+          const GRID_X = 140;
+          const GRID_Y = 112;
+          const OFFSET_X = 24;
+          const OFFSET_Y = 56;
+          iconConfigs.forEach(({ id }) => {
+            const el = document.getElementById(id);
+            if (el) {
+              const rect = el.getBoundingClientRect();
+              let snapLeft = OFFSET_X + Math.round((rect.left - OFFSET_X) / GRID_X) * GRID_X;
+              let snapTop = OFFSET_Y + Math.round((rect.top - OFFSET_Y) / GRID_Y) * GRID_Y;
+
+              if (snapLeft < OFFSET_X) snapLeft = OFFSET_X;
+              if (snapTop < OFFSET_Y) snapTop = OFFSET_Y;
+
+              el.style.left = snapLeft + 'px';
+              el.style.top = snapTop + 'px';
+              savedPositions[id] = { left: snapLeft, top: snapTop };
+            }
+          });
+          localStorage.setItem(storageKey, JSON.stringify(savedPositions));
+        });
+
+        document.getElementById('ctx-sort-name')?.addEventListener('click', () => {
+          if (document.body.classList.contains('mobile-mode') || window.innerWidth <= 768) return;
+          let items = [];
+          iconConfigs.forEach((conf) => {
+            const el = document.getElementById(conf.id);
+            if (el) {
+              const nameEl = el.querySelector('.icon-text');
+              items.push({ id: conf.id, el, name: nameEl ? nameEl.innerText : conf.id });
+            }
+          });
+          items.sort((a, b) => a.name.localeCompare(b.name));
+          let currentY = 56;
+          const GAP = 20;
+          items.forEach((item) => {
+            item.el.style.left = '24px';
+            item.el.style.top = currentY + 'px';
+            savedPositions[item.id] = { left: 24, top: currentY };
+            const rect = item.el.getBoundingClientRect();
+            const height = rect.height > 0 ? rect.height : 92;
+            currentY += height + GAP;
+          });
+          localStorage.setItem(storageKey, JSON.stringify(savedPositions));
+        });
+      };
+
       document.body.addEventListener('contextmenu', (e) => {
-        if (!e.target.closest('.smart-modal-window') && !e.target.closest('.os-window') && !e.target.closest('#console-window') && !e.target.closest('.os-context-menu') && !e.target.closest('.chassis-hero-box')) {
-          e.preventDefault();
-          ctxMenu.style.display = 'block';
-          ctxMenu.style.left = e.pageX + 'px';
-          ctxMenu.style.top = e.pageY + 'px';
+        if (e.target.closest('.smart-modal-window') || e.target.closest('.os-window') || e.target.closest('#console-window') || e.target.closest('.os-context-menu') || e.target.closest('#os-dock-container')) {
+          return;
         }
-      });
 
-      document.getElementById('ctx-align-grid').addEventListener('click', () => {
-        if (document.body.classList.contains('mobile-mode') || window.innerWidth <= 768) return;
-        const GRID_X = 140;
-        const GRID_Y = 112;
-        const OFFSET_X = 24;
-        const OFFSET_Y = 56;
-        iconConfigs.forEach(({id}) => {
-          const el = document.getElementById(id);
-          if (el) {
-            const rect = el.getBoundingClientRect();
-            let snapLeft = OFFSET_X + Math.round((rect.left - OFFSET_X) / GRID_X) * GRID_X;
-            let snapTop = OFFSET_Y + Math.round((rect.top - OFFSET_Y) / GRID_Y) * GRID_Y;
-            
-            if (snapLeft < OFFSET_X) snapLeft = OFFSET_X;
-            if (snapTop < OFFSET_Y) snapTop = OFFSET_Y;
-            
-            el.style.left = snapLeft + 'px';
-            el.style.top = snapTop + 'px';
-            savedPositions[id] = { left: snapLeft, top: snapTop };
-          }
-        });
-        localStorage.setItem(storageKey, JSON.stringify(savedPositions));
-      });
+        const iconEl = e.target.closest('.chassis-hero-box');
+        let iconAppId = null;
+        if (iconEl) {
+          if (iconEl.id === 'management-desktop-icon') iconAppId = 'management';
+          else if (iconEl.id === 'chassis-desktop-icon') iconAppId = 'console';
+          else if (iconEl.id === 'fm-desktop-icon' || iconEl.id === 'rb-desktop-icon') iconAppId = 'fm';
+        }
 
-      document.getElementById('ctx-sort-name').addEventListener('click', () => {
-        if (document.body.classList.contains('mobile-mode') || window.innerWidth <= 768) return;
-        let items = [];
-        iconConfigs.forEach(conf => {
-          const el = document.getElementById(conf.id);
-          if (el) {
-            const nameEl = el.querySelector('.icon-text');
-            items.push({ id: conf.id, el, name: nameEl ? nameEl.innerText : conf.id });
-          }
-        });
-        items.sort((a, b) => a.name.localeCompare(b.name));
-        let currentY = 56;
-        const GAP = 20;
-        items.forEach((item) => {
-          item.el.style.left = '24px';
-          item.el.style.top = currentY + 'px';
-          savedPositions[item.id] = { left: 24, top: currentY };
-          const rect = item.el.getBoundingClientRect();
-          const height = rect.height > 0 ? rect.height : 92;
-          currentY += height + GAP;
-        });
-        localStorage.setItem(storageKey, JSON.stringify(savedPositions));
+        e.preventDefault();
+
+        if (iconAppId) {
+          const isPinned = DockManager.isPinned(iconAppId);
+          const pinLabel = isPinned ? t('dock.unpin', 'Unpin from Dock') : t('dock.pin', 'Pin to Dock');
+          const pinIcon = isPinned ? '📌' : '📍';
+          const openLabel = t('dock.open_app', 'Open');
+
+          ctxMenu.innerHTML = `
+            <div class="ctx-item" id="ctx-open-app">
+              <span style="font-size:11px; margin-right:6px;">▶</span>
+              <span>${escapeHtml(openLabel)}</span>
+            </div>
+            <div class="ctx-item" id="ctx-pin-app">
+              <span style="font-size:12px; margin-right:6px;">${pinIcon}</span>
+              <span>${escapeHtml(pinLabel)}</span>
+            </div>
+            <div style="height:1px; background:rgba(255,255,255,0.08); margin:4px 0;"></div>
+            <div class="ctx-item" id="ctx-align-grid" data-i18n="desktop.align_grid">${t('desktop.align_grid', 'Align to Grid')}</div>
+            <div class="ctx-item" id="ctx-sort-name" data-i18n="desktop.sort_name">${t('desktop.sort_name', 'Sort by Name')}</div>
+          `;
+
+          document.getElementById('ctx-open-app')?.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            hideMenu();
+            if (KNOWN_APPS[iconAppId]?.launch) {
+              KNOWN_APPS[iconAppId].launch();
+            } else {
+              iconEl.click();
+            }
+          });
+
+          document.getElementById('ctx-pin-app')?.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            hideMenu();
+            DockManager.togglePin(iconAppId);
+          });
+        } else {
+          ctxMenu.innerHTML = `
+            <div class="ctx-item" id="ctx-align-grid" data-i18n="desktop.align_grid">${t('desktop.align_grid', 'Align to Grid')}</div>
+            <div class="ctx-item" id="ctx-sort-name" data-i18n="desktop.sort_name">${t('desktop.sort_name', 'Sort by Name')}</div>
+          `;
+        }
+
+        wireGridAndSort();
+
+        ctxMenu.style.display = 'block';
+        ctxMenu.style.left = `${Math.min(window.innerWidth - 180, e.pageX)}px`;
+        ctxMenu.style.top = `${Math.min(window.innerHeight - 150, e.pageY)}px`;
       });
     }
   }
@@ -1095,7 +1499,7 @@ function updateNotificationBadge() {
   if (!badge || !state.latestStats || !state.latestStats.events) return;
   
   const events = state.latestStats.events;
-  const unreadCount = events.filter(e => e.ts > lastReadEventTs && e.ts > clearedEventsTs).length;
+  const unreadCount = events.filter((e) => !isEventChecked(e) && e.ts > clearedEventsTs).length;
   
   if (unreadCount > 0) {
     badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
@@ -1159,7 +1563,7 @@ function renderNotificationCenter() {
   
   list.innerHTML = '';
   events.slice(0, 50).forEach(e => {
-    const isUnread = e.ts > lastReadEventTs;
+    const isChecked = isEventChecked(e);
     const dt = new Date(e.ts * 1000);
     let color = '#cbd5e1';
     let icon = 'ℹ️';
@@ -1168,25 +1572,25 @@ function renderNotificationCenter() {
     else if (e.level === 'success') { color = 'var(--ok2)'; icon = '✅'; }
     
     const row = document.createElement('div');
-    row.className = 'notif-center-item';
-    row.style.cssText = `padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; gap: 8px; align-items: flex-start; background: ${isUnread ? 'rgba(255,255,255,0.05)' : 'transparent'}; cursor:pointer; transition: background 0.15s;`;
+    row.className = 'notif-center-item' + (isChecked ? ' notif-event-checked' : '');
+    row.dataset.eventKey = getEventKey(e);
+    row.style.cssText = `padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; gap: 8px; align-items: flex-start; cursor:pointer; transition: background 0.15s, opacity 0.2s, filter 0.2s; ${isChecked ? 'opacity: 0.45; filter: grayscale(0.5); background: transparent;' : 'background: rgba(255,255,255,0.05);'}`;
     row.innerHTML = `
-      <span style="font-size: 14px; margin-top:2px;">${icon}</span>
+      <span class="notif-center-icon" style="font-size: 14px; margin-top:2px; flex-shrink:0;">${icon}</span>
       <div style="display:flex; flex-direction:column; gap:2px; flex:1; min-width:0;">
         <div style="display:flex; justify-content:space-between; align-items:center;">
-          <div style="font-size:11px; font-weight:700; color:${color}; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(e.title)}</div>
+          <div class="notif-center-title" style="font-size:11px; font-weight:700; color:${color}; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; ${isChecked ? 'opacity:0.75;' : ''}">${escapeHtml(e.title)}</div>
           <span style="font-size:9.5px; color:var(--muted); opacity:0.8; margin-left:6px; flex-shrink:0;">🔍</span>
         </div>
-        <div style="font-size:10px; color:#fff; line-height:1.4; word-break:break-word;">${escapeHtml(e.message)}</div>
+        <div class="notif-center-msg" style="font-size:10px; color:${isChecked ? 'var(--muted)' : '#fff'}; line-height:1.4; word-break:break-word;">${escapeHtml(e.message)}</div>
         <div style="font-size:9px; color:var(--muted); margin-top:2px;">${dt.toLocaleString()}</div>
       </div>
-      ${isUnread ? `<div style="width:6px; height:6px; border-radius:50%; background:var(--brand, #0ea5e9); margin-left:auto; margin-top:6px; flex-shrink:0;"></div>` : ''}
+      ${!isChecked ? `<div class="notif-unread-dot" style="width:6px; height:6px; border-radius:50%; background:var(--brand, #0ea5e9); margin-left:auto; margin-top:6px; flex-shrink:0;"></div>` : ''}
     `;
     
-    // Clicking an individual log event marks it read and opens the Event Detail modal inspector
+    // Clicking an individual log event marks it checked (dimmed) and opens the Event Detail modal inspector
     row.addEventListener('click', () => {
-      lastReadEventTs = Math.max(lastReadEventTs, e.ts);
-      localStorage.setItem('zettnas_last_read_event_ts', lastReadEventTs.toString());
+      markEventChecked(e, true);
       updateNotificationBadge();
       renderNotificationCenter();
       
@@ -1205,6 +1609,8 @@ document.addEventListener('DOMContentLoaded', () => {
     markReadBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       if (state.latestStats && state.latestStats.events && state.latestStats.events.length > 0) {
+        state.latestStats.events.forEach(ev => markEventChecked(ev, false));
+        saveCheckedEvents();
         lastReadEventTs = Math.max(...state.latestStats.events.map(ev => ev.ts));
         localStorage.setItem('zettnas_last_read_event_ts', lastReadEventTs.toString());
         updateNotificationBadge();
