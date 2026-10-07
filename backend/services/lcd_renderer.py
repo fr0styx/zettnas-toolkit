@@ -87,6 +87,7 @@ def render_lcd_loop():
         "--no-sandbox",
         "--disable-setuid-sandbox",
         "--disable-dev-shm-usage",
+        "--headless=shell",
         "--disable-background-networking",
         "--disable-background-timer-throttling",
         "--disable-renderer-backgrounding",
@@ -160,7 +161,7 @@ def render_lcd_loop():
                                 raw_bytes = base64.b64decode(raw_b64)
                             except Exception:
                                 # Fallback if CDP session encounters an issue
-                                raw_bytes = page.screenshot(type="png")
+                                raw_bytes = page.screenshot(type="png", animations="disabled")
 
                             # Successfully rendered a frame, reset restart backoff
                             retry_delay = 2.0

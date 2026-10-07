@@ -26,6 +26,7 @@ python_files = ["test_*.py"]
 addopts = "-v --tb=short"
 filterwarnings = [
     "ignore::DeprecationWarning:starlette.testclient",
+    "ignore::starlette.exceptions.StarletteDeprecationWarning",
 ]
 
 [tool.ruff]

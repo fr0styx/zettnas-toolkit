@@ -9,6 +9,7 @@ import time
 import aiofiles
 import exifread
 import hashlib
+import re
 
 from backend.config import ALLOWED_BROWSE_ROOTS, HOST_DEV, HOST_PROC, HOST_SYS, logger
 from backend.db import log_copy_event
@@ -45,9 +46,13 @@ def read_media_slots():
 
 def _get_exif_date(filepath):
     try:
-        if filepath.lower().endswith((".jpg", ".jpeg", ".tiff", ".tif", ".cr2", ".nef", ".arw", ".dng")):
+        supported_exts = (
+            ".jpg", ".jpeg", ".tiff", ".tif", ".cr2", ".cr3",
+            ".nef", ".arw", ".dng", ".heic", ".heif", ".rw2", ".orf", ".raf",
+        )
+        if filepath.lower().endswith(supported_exts):
             with open(filepath, "rb") as f:
-                tags = exifread.process_file(f, details=False)
+                tags = exifread.process_file(f, stop_tag="EXIF DateTimeOriginal", details=False)
                 date_str = str(tags.get("EXIF DateTimeOriginal", ""))
                 if not date_str:
                     date_str = str(tags.get("Image DateTime", ""))

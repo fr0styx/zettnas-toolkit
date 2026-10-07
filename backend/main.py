@@ -121,6 +121,7 @@ async def lifespan(app: FastAPI):
         yield
     finally:
         Z_STATE.shutting_down = True
+        Z_STATE.ui_wake.set()
         if not Z_STATE.fans_locked:
             _shutdown_fans("shutdown")
 
@@ -183,6 +184,8 @@ def main():
         host="0.0.0.0",
         port=port,
         log_level="warning",
+        ws="none",
+        timeout_keep_alive=15,
         timeout_graceful_shutdown=3,
     )
     ZettServer(server_config).run()
