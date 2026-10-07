@@ -4541,6 +4541,22 @@ body.mobile-mode #desktop-widgets-container .cal-glance-bar {
     border-radius: 12px !important;
   }
 
+  body.mobile-mode #notif-center-panel {
+    position: fixed !important;
+    left: 50% !important;
+    right: auto !important;
+    bottom: 64px !important;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 64px) !important;
+    top: auto !important;
+    transform: translateX(-50%) !important;
+    width: 94vw !important;
+    max-width: 420px !important;
+    height: auto !important;
+    max-height: calc(100dvh - 120px) !important;
+    border-radius: 14px !important;
+    resize: none !important;
+  }
+
   /* 1. File Explorer Window on Mobile */
   body.mobile-mode .os-window,
   body.mobile-mode .file-manager-window {
@@ -5948,3 +5964,38 @@ body.theme-yak .widget-sortable-item.drag-over-bottom {
 body.theme-yak .widget-drag-handle:hover {
   color: var(--accent-yak, #d48a37);
 }
+
+/* Notification Center Draggable Window */
+#notif-center-panel {
+  box-sizing: border-box;
+}
+
+#notif-center-panel .notif-center-item:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+#notif-center-panel .notif-filter-btn {
+  transition: all 0.15s ease;
+}
+
+#notif-center-panel .notif-filter-btn:hover {
+  filter: brightness(1.25);
+}
+
+.event-detail-window {
+  box-sizing: border-box;
+}
+
+#event-detail-copy-btn:hover {
+  background: rgba(255, 255, 255, 0.14) !important;
+  border-color: rgba(255, 255, 255, 0.25) !important;
+}
+
+#event-detail-context-btn:hover {
+  filter: brightness(1.1);
+}
+
+#event-detail-close-btn:hover {
+  background: rgba(255, 255, 255, 0.15) !important;
+}
+

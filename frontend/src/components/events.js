@@ -57,7 +57,12 @@ export function renderEventLog(events) {
           <div style="font-size: 12px; color: #fff;">${escapeHtml(e.message)}</div>
           <div style="font-size: 10px; color: var(--muted);">${escapeHtml(timeStr)}</div>
         </div>
-        <span style="font-size: 10px; color: var(--muted); padding-top: 4px;">▼ Details</span>
+        <div style="display: flex; gap: 6px; align-items: center; padding-top: 2px;">
+          <button class="event-inspect-btn" type="button" title="View full event details" style="background: rgba(14, 165, 233, 0.15); border: 1px solid rgba(14, 165, 233, 0.35); color: #38bdf8; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 3px;">
+            <span>🔍</span> <span>More Info</span>
+          </button>
+          <span style="font-size: 10px; color: var(--muted); cursor: pointer; padding: 2px 4px;">▼ Details</span>
+        </div>
       </div>
     `;
 
@@ -71,6 +76,16 @@ export function renderEventLog(events) {
     const evKey = `${e.ts}_${e.title}`;
     if (_expandedEvents.has(evKey)) {
       detailsBox.style.display = 'block';
+    }
+
+    const inspectBtn = row.querySelector('.event-inspect-btn');
+    if (inspectBtn) {
+      inspectBtn.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        if (window.openEventDetailModal) {
+          window.openEventDetailModal(e);
+        }
+      });
     }
 
     row.addEventListener('click', () => {

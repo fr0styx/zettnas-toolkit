@@ -1,7 +1,7 @@
 import { showToast } from "./toast.js";
 import { ZettEventBus } from './event-bus.js';
 import { api } from './api.js';
-import { DockManager, bringToFront } from './components/dock.js';
+import { DockManager, bringToFront, makeDraggable } from './components/dock.js';
 import { trapFocus } from './utils.js';
 import { t } from './i18n.js';
 // S.M.A.R.T. & INTERACTIVE METRIC DIAGNOSTIC MODAL CONTROLLER
@@ -9,6 +9,9 @@ import { t } from './i18n.js';
 let activeModalType = null;
 let smartOverlay, smartCloseBtn, smartTitle, smartModel, smartSerial, smartHealth, smartHours, smartRaw, smartLbl1, smartLbl2, smartLbl3, smartLbl4, smartRawTitle, smartRefreshBtn;
 let _unbindSmartTrap = null;
+let _eventDetailOverlay = null;
+let _unbindEventDetailTrap = null;
+let _currentEventDetailData = null;
 
 window.addEventListener('DOMContentLoaded', () => {
     smartOverlay = document.getElementById("smart-modal-overlay");
@@ -93,6 +96,60 @@ window.addEventListener('DOMContentLoaded', () => {
     if (shortTestBtn) shortTestBtn.addEventListener("click", () => triggerTest("short"));
     if (extTestBtn) extTestBtn.addEventListener("click", () => triggerTest("long"));
     if (abortTestBtn) abortTestBtn.addEventListener("click", () => triggerTest("abort"));
+
+    // Event Detail Modal Setup
+    _eventDetailOverlay = document.getElementById("event-detail-modal-overlay");
+    const eventDetailClose = document.getElementById("event-detail-close");
+    const eventDetailCloseBtn = document.getElementById("event-detail-close-btn");
+    const eventDetailCopyBtn = document.getElementById("event-detail-copy-btn");
+    const eventDetailHeader = document.getElementById("event-detail-header");
+    const eventDetailWindow = _eventDetailOverlay ? _eventDetailOverlay.querySelector(".smart-modal-window") : null;
+
+    if (eventDetailClose) eventDetailClose.addEventListener("click", closeEventDetailModal);
+    if (eventDetailCloseBtn) eventDetailCloseBtn.addEventListener("click", closeEventDetailModal);
+    if (_eventDetailOverlay) {
+      _eventDetailOverlay.addEventListener("click", (e) => {
+        if (e.target === _eventDetailOverlay) closeEventDetailModal();
+      });
+    }
+
+    if (eventDetailWindow && eventDetailHeader && makeDraggable) {
+      makeDraggable(eventDetailWindow, eventDetailHeader, "event-detail");
+    }
+
+    if (eventDetailCopyBtn) {
+      eventDetailCopyBtn.addEventListener("click", async () => {
+        if (!_currentEventDetailData) return;
+        const textToCopy = JSON.stringify(_currentEventDetailData, null, 2);
+        try {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(textToCopy);
+          } else {
+            const ta = document.createElement("textarea");
+            ta.value = textToCopy;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand("copy");
+            document.body.removeChild(ta);
+          }
+          const copyText = document.getElementById("event-detail-copy-text");
+          const copyIcon = document.getElementById("event-detail-copy-icon");
+          if (copyText) copyText.textContent = t("event_detail.copied", "Copied!");
+          if (copyIcon) copyIcon.textContent = "✓";
+          eventDetailCopyBtn.style.borderColor = "var(--ok2, #10b981)";
+          eventDetailCopyBtn.style.color = "var(--ok2, #10b981)";
+          showToast("Event details copied to clipboard", "info");
+          setTimeout(() => {
+            if (copyText) copyText.textContent = t("event_detail.copy", "Copy Details");
+            if (copyIcon) copyIcon.textContent = "📋";
+            eventDetailCopyBtn.style.borderColor = "rgba(255, 255, 255, 0.14)";
+            eventDetailCopyBtn.style.color = "#fff";
+          }, 2000);
+        } catch (err) {
+          console.warn("Copy details failed:", err);
+        }
+      });
+    }
 });
 
 
@@ -351,7 +408,201 @@ ZettEventBus.addEventListener('modal:metric:open', (e) => {
 
 ZettEventBus.addEventListener('modal:smart:close', () => closeSmartModal());
 
+export function closeEventDetailModal() {
+  if (_unbindEventDetailTrap) {
+    _unbindEventDetailTrap();
+    _unbindEventDetailTrap = null;
+  }
+  if (!_eventDetailOverlay || !document.body.contains(_eventDetailOverlay)) {
+    _eventDetailOverlay = document.getElementById("event-detail-modal-overlay");
+  }
+  if (_eventDetailOverlay) {
+    _eventDetailOverlay.classList.remove("open");
+    _eventDetailOverlay.style.display = "none";
+  }
+}
+
+export function openEventDetailModal(ev) {
+  if (!ev) return;
+  _currentEventDetailData = ev;
+  if (!_eventDetailOverlay || !document.body.contains(_eventDetailOverlay)) {
+    _eventDetailOverlay = document.getElementById("event-detail-modal-overlay");
+  }
+  if (!_eventDetailOverlay) return;
+
+  _eventDetailOverlay.style.display = "flex";
+  _eventDetailOverlay.classList.remove("window-minimized");
+  _eventDetailOverlay.classList.add("open");
+
+  const modalWin = _eventDetailOverlay.querySelector(".smart-modal-window");
+  if (modalWin && bringToFront) bringToFront(modalWin);
+  if (_unbindEventDetailTrap) { _unbindEventDetailTrap(); }
+  if (modalWin) _unbindEventDetailTrap = trapFocus(modalWin, closeEventDetailModal);
+
+  const headerIcon = document.getElementById("event-detail-header-icon");
+  const badgeIcon = document.getElementById("event-detail-badge-icon");
+  const badgeText = document.getElementById("event-detail-badge-text");
+  const badgeEl = document.getElementById("event-detail-badge");
+  const subsystemEl = document.getElementById("event-detail-subsystem");
+  const relTimeEl = document.getElementById("event-detail-reltime");
+  const headlineEl = document.getElementById("event-detail-event-title");
+  const messageEl = document.getElementById("event-detail-event-message");
+  const localTimeEl = document.getElementById("event-detail-localtime");
+  const epochEl = document.getElementById("event-detail-epoch");
+  const rawEl = document.getElementById("event-detail-raw");
+  const contextBtn = document.getElementById("event-detail-context-btn");
+
+  const lvl = (ev.level || "info").toLowerCase();
+  let icon = "ℹ️";
+  let badgeColor = "#38bdf8";
+  let badgeBg = "rgba(14, 165, 233, 0.2)";
+  let badgeBorder = "rgba(14, 165, 233, 0.4)";
+
+  if (lvl === "error") {
+    icon = "❌";
+    badgeColor = "var(--crit, #ff5c5c)";
+    badgeBg = "rgba(239, 68, 68, 0.2)";
+    badgeBorder = "rgba(239, 68, 68, 0.4)";
+  } else if (lvl === "warning") {
+    icon = "⚠️";
+    badgeColor = "var(--warn, #f5a623)";
+    badgeBg = "rgba(245, 166, 35, 0.2)";
+    badgeBorder = "rgba(245, 166, 35, 0.4)";
+  } else if (lvl === "success") {
+    icon = "✅";
+    badgeColor = "var(--ok2, #10b981)";
+    badgeBg = "rgba(16, 185, 129, 0.2)";
+    badgeBorder = "rgba(16, 185, 129, 0.4)";
+  }
+
+  if (headerIcon) headerIcon.textContent = icon;
+  if (badgeIcon) badgeIcon.textContent = icon;
+  if (badgeText) badgeText.textContent = lvl.toUpperCase();
+  if (badgeEl) {
+    badgeEl.style.color = badgeColor;
+    badgeEl.style.background = badgeBg;
+    badgeEl.style.border = `1px solid ${badgeBorder}`;
+  }
+
+  const searchStr = `${ev.title || ""} ${ev.message || ""}`.toLowerCase();
+  let subsystem = "SYSTEM";
+  let actionLabel = null;
+  let actionFn = null;
+
+  if (/fan|thermal|temp|rpm|pwm|curve|cooling|cpu/.test(searchStr)) {
+    subsystem = "THERMAL & FANS";
+    actionLabel = t("event_detail.action_thermal", "Open Fan Control");
+    actionFn = () => {
+      closeEventDetailModal();
+      if (window.DockManager && window.DockManager.windows["management"]) {
+        window.DockManager.restore("management");
+        const fanTab = document.querySelector('.tab-btn[data-target="management-fans"]');
+        if (fanTab) fanTab.click();
+      }
+    };
+  } else if (/smart|disk|nvme|drive|tbw|sector|storage|zpool|btrfs|ata|health/.test(searchStr)) {
+    subsystem = "STORAGE & S.M.A.R.T.";
+    actionLabel = t("event_detail.action_smart", "Inspect S.M.A.R.T.");
+    actionFn = () => {
+      closeEventDetailModal();
+      const devMatch = searchStr.match(/\b(sd[a-z]|nvme\d+n\d+)\b/);
+      if (devMatch && typeof openSmartModal === "function") {
+        openSmartModal(devMatch[1]);
+        return;
+      }
+      if (window.DockManager && window.DockManager.windows["management"]) {
+        window.DockManager.restore("management");
+        const stTab = document.querySelector('.tab-btn[data-target="management-storage"]');
+        if (stTab) stTab.click();
+      }
+    };
+  } else if (/docker|container|compose|cgroup/.test(searchStr)) {
+    subsystem = "DOCKER CONTAINERS";
+    actionLabel = t("event_detail.action_docker", "Open Container Telemetry");
+    actionFn = () => {
+      closeEventDetailModal();
+      if (window.DockManager && window.DockManager.windows["management"]) {
+        window.DockManager.restore("management");
+        const docTab = document.querySelector('.tab-btn[data-target="management-docker"]');
+        if (docTab) docTab.click();
+      }
+    };
+  } else if (/ups|battery|power|nut|charge|runtime/.test(searchStr)) {
+    subsystem = "POWER & UPS";
+    actionLabel = t("event_detail.action_management", "Open Management");
+    actionFn = () => {
+      closeEventDetailModal();
+      if (window.DockManager && window.DockManager.windows["management"]) {
+        window.DockManager.restore("management");
+        const ovTab = document.querySelector('.tab-btn[data-target="management-overview"]');
+        if (ovTab) ovTab.click();
+      }
+    };
+  } else {
+    subsystem = "SYSTEM LOG";
+    actionLabel = t("event_detail.action_events", "Open Full Event Log");
+    actionFn = () => {
+      closeEventDetailModal();
+      if (window.DockManager && window.DockManager.windows["management"]) {
+        window.DockManager.restore("management");
+        const evTab = document.querySelector('.tab-btn[data-target="management-events"]');
+        if (evTab) evTab.click();
+      }
+    };
+  }
+
+  if (subsystemEl) subsystemEl.textContent = subsystem;
+
+  const ts = ev.ts || Math.floor(Date.now() / 1000);
+  const now = Math.floor(Date.now() / 1000);
+  const diff = Math.max(0, now - ts);
+  let relText = `${diff}s ago`;
+  if (diff < 10) relText = t("time.just_now", "Just now");
+  else if (diff < 3600) relText = `${Math.floor(diff / 60)}m ago`;
+  else if (diff < 86400) relText = `${Math.floor(diff / 3600)}h ago`;
+  else relText = `${Math.floor(diff / 86400)}d ago`;
+
+  const dt = new Date(ts * 1000);
+  if (relTimeEl) relTimeEl.textContent = relText;
+  if (localTimeEl) localTimeEl.textContent = dt.toLocaleString();
+  if (epochEl) epochEl.textContent = `${ts} (${dt.toISOString()})`;
+
+  if (headlineEl) headlineEl.textContent = ev.title || "System Notification";
+  if (messageEl) messageEl.textContent = ev.message || "--";
+
+  if (rawEl) {
+    try {
+      rawEl.textContent = JSON.stringify(ev, null, 2);
+    } catch {
+      rawEl.textContent = String(ev);
+    }
+  }
+
+  if (contextBtn) {
+    if (actionLabel && actionFn) {
+      contextBtn.textContent = actionLabel;
+      contextBtn.style.display = "inline-block";
+      contextBtn.onclick = actionFn;
+    } else {
+      contextBtn.style.display = "none";
+      contextBtn.onclick = null;
+    }
+  }
+}
+
+window.openEventDetailModal = openEventDetailModal;
+window.closeEventDetailModal = closeEventDetailModal;
+
+ZettEventBus.addEventListener('modal:event-detail:open', (e) => {
+    openEventDetailModal(e.detail);
+});
+
+ZettEventBus.addEventListener('modal:event-detail:close', () => closeEventDetailModal());
+
 window.addEventListener('zettnas:lang-changed', () => {
+    if (_eventDetailOverlay && _eventDetailOverlay.classList.contains('open') && _currentEventDetailData) {
+        openEventDetailModal(_currentEventDetailData);
+    }
     if (!smartOverlay || !smartOverlay.classList.contains('open') || !activeModalType) return;
     if (activeModalType.startsWith('disk_')) {
         const devName = activeModalType.replace('disk_', '');

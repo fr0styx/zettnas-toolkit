@@ -810,7 +810,13 @@ export function initDockSystem() {
     if (tC) makeDraggable(tC, tC);
   }, 100);
 
-  document.querySelectorAll('.smart-modal-window, #console-window').forEach((win) => {
+  const notifPanel = document.getElementById('notif-center-panel');
+  const notifHeader = document.getElementById('notif-center-header');
+  if (notifPanel && notifHeader) {
+    makeDraggable(notifPanel, notifHeader, 'notif-center');
+  }
+
+  document.querySelectorAll('.smart-modal-window, #console-window, #notif-center-panel').forEach((win) => {
     win.addEventListener('mousedown', (e) => {
       bringToFront(win);
       e._handledAsWindowClick = true;
@@ -819,7 +825,7 @@ export function initDockSystem() {
 
   document.addEventListener('mousedown', (e) => {
     if (e._handledAsWindowClick) return;
-    const windowEl = e.target.closest('.smart-modal-window, #console-window');
+    const windowEl = e.target.closest('.smart-modal-window, #console-window, #notif-center-panel');
     if (windowEl) {
       bringToFront(windowEl);
     }
@@ -1104,22 +1110,28 @@ window.toggleNotificationCenter = function() {
   if (!panel) return;
   if (panel.style.display === 'none' || panel.style.display === '') {
     panel.style.display = 'flex';
+
+    // Position window if bounds not yet saved
+    const saved = loadSavedWindowBounds()['notif-center'];
+    if (!saved || saved.left == null || saved.top == null) {
+      const panelW = 360;
+      const panelH = 440;
+      const defaultLeft = Math.max(20, window.innerWidth - panelW - 24);
+      const defaultTop = Math.max(56, window.innerHeight - panelH - 80);
+      panel.style.position = 'fixed';
+      panel.style.margin = '0';
+      panel.style.bottom = 'auto';
+      panel.style.right = 'auto';
+      panel.style.left = `${defaultLeft}px`;
+      panel.style.top = `${defaultTop}px`;
+    }
+
+    bringToFront(panel);
     renderNotificationCenter();
-    document.addEventListener('click', closeNotifPanelOutside);
   } else {
     panel.style.display = 'none';
-    document.removeEventListener('click', closeNotifPanelOutside);
   }
 };
-
-function closeNotifPanelOutside(e) {
-  const panel = document.getElementById('notif-center-panel');
-  if (!panel) return;
-  if (!panel.contains(e.target) && !e.target.closest('.dock-notif-btn')) {
-    panel.style.display = 'none';
-    document.removeEventListener('click', closeNotifPanelOutside);
-  }
-}
 
 function renderNotificationCenter() {
   const list = document.getElementById('notif-center-list');
@@ -1161,25 +1173,25 @@ function renderNotificationCenter() {
     row.innerHTML = `
       <span style="font-size: 14px; margin-top:2px;">${icon}</span>
       <div style="display:flex; flex-direction:column; gap:2px; flex:1; min-width:0;">
-        <div style="font-size:11px; font-weight:700; color:${color}; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(e.title)}</div>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div style="font-size:11px; font-weight:700; color:${color}; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(e.title)}</div>
+          <span style="font-size:9.5px; color:var(--muted); opacity:0.8; margin-left:6px; flex-shrink:0;">🔍</span>
+        </div>
         <div style="font-size:10px; color:#fff; line-height:1.4; word-break:break-word;">${escapeHtml(e.message)}</div>
         <div style="font-size:9px; color:var(--muted); margin-top:2px;">${dt.toLocaleString()}</div>
       </div>
       ${isUnread ? `<div style="width:6px; height:6px; border-radius:50%; background:var(--brand, #0ea5e9); margin-left:auto; margin-top:6px; flex-shrink:0;"></div>` : ''}
     `;
     
-    // Quick action on click (open Management -> Events tab if they want, or just mark read)
+    // Clicking an individual log event marks it read and opens the Event Detail modal inspector
     row.addEventListener('click', () => {
       lastReadEventTs = Math.max(lastReadEventTs, e.ts);
       localStorage.setItem('zettnas_last_read_event_ts', lastReadEventTs.toString());
       updateNotificationBadge();
       renderNotificationCenter();
       
-      // Optionally open the full events log
-      if (window.DockManager && window.DockManager.windows['management']) {
-        window.DockManager.restore('management');
-        const evTab = document.querySelector('.tab-btn[data-target="management-events"]');
-        if (evTab) evTab.click();
+      if (window.openEventDetailModal) {
+        window.openEventDetailModal(e);
       }
     });
     
@@ -1230,6 +1242,29 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
   
+  const notifCloseBtn = document.getElementById('notif-close-btn');
+  if (notifCloseBtn) {
+    notifCloseBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const panel = document.getElementById('notif-center-panel');
+      if (panel) panel.style.display = 'none';
+    });
+  }
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      const detailOverlay = document.getElementById('event-detail-modal-overlay');
+      if (detailOverlay && detailOverlay.classList.contains('open')) {
+        if (window.closeEventDetailModal) window.closeEventDetailModal();
+        return;
+      }
+      const panel = document.getElementById('notif-center-panel');
+      if (panel && panel.style.display !== 'none') {
+        panel.style.display = 'none';
+      }
+    }
+  });
+
   ZettEventBus.on('stats:updated', () => {
     updateNotificationBadge();
     const panel = document.getElementById('notif-center-panel');
