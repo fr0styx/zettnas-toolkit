@@ -20,13 +20,15 @@ from backend.services.notifications import send_notification
 from backend.state import Z_STATE, add_event
 
 _PREV_MEDIA_SLOTS = {"sd": {"size": 0, "dev": None}, "tf": {"size": 0, "dev": None}}
+_EJECTED_SLOTS: set[str] = set()
 _AUTO_INGEST_LOCK = threading.Lock()
 
 
 def reset_media_slot_state() -> None:
     """Reset edge-detection tracking for media slots (useful for testing)."""
-    global _PREV_MEDIA_SLOTS
+    global _PREV_MEDIA_SLOTS, _EJECTED_SLOTS
     _PREV_MEDIA_SLOTS = {"sd": {"size": 0, "dev": None}, "tf": {"size": 0, "dev": None}}
+    _EJECTED_SLOTS.clear()
 
 
 def check_media_slot_transitions(slots: dict) -> list[dict]:
@@ -34,7 +36,7 @@ def check_media_slot_transitions(slots: dict) -> list[dict]:
     Detects edge transitions (insertion / removal) for SD and TF media slots.
     Dispatches notifications, logs events, and triggers auto-ingest if enabled.
     """
-    global _PREV_MEDIA_SLOTS
+    global _PREV_MEDIA_SLOTS, _EJECTED_SLOTS
     transitions = []
 
     for slot in ("sd", "tf"):
@@ -45,8 +47,35 @@ def check_media_slot_transitions(slots: dict) -> list[dict]:
         curr_dev = curr.get("dev")
         slot_label = "SD Card" if slot == "sd" else "TF Card (MicroSD)"
 
+        # Physical removal transition: card was present, now size is 0
+        if curr_sz == 0:
+            if slot in _EJECTED_SLOTS:
+                logger.info(f"[MEDIA] Ejected {slot_label} was physically removed from slot.")
+                _EJECTED_SLOTS.discard(slot)
+
+            if prev_sz > 0:
+                logger.info(f"[MEDIA] {slot_label} removed")
+                transitions.append({"event": "removed", "slot": slot})
+                add_event(
+                    "info",
+                    f"{slot_label} Removed",
+                    f"{slot_label} was unmounted and removed from slot.",
+                )
+                if getattr(Z_STATE, "pending_ingest", None) and Z_STATE.pending_ingest.get("slot") == slot:
+                    logger.info(f"[AUTO-INGEST] Clearing pending ingest for removed card {slot}")
+                    Z_STATE.pending_ingest = None
+                    Z_STATE.ui_wake.set()
+
+            _PREV_MEDIA_SLOTS[slot] = {"size": 0, "dev": None}
+
         # Insertion transition: 0 -> >0
-        if prev_sz == 0 and curr_sz > 0:
+        elif prev_sz == 0 and curr_sz > 0:
+            _PREV_MEDIA_SLOTS[slot] = {"size": curr_sz, "dev": curr_dev}
+
+            if slot in _EJECTED_SLOTS:
+                logger.info(f"[MEDIA] {slot_label} present on /dev/{curr_dev}, but slot is marked ejected - ignoring insertion.")
+                continue
+
             mb = curr_sz // (1024 * 1024)
             logger.info(f"[MEDIA] {slot_label} inserted on /dev/{curr_dev} ({mb} MB)")
             transitions.append({"event": "inserted", "slot": slot, "dev": curr_dev, "size": curr_sz})
@@ -61,24 +90,16 @@ def check_media_slot_transitions(slots: dict) -> list[dict]:
                 "message": f"{mb} MB card detected on /dev/{curr_dev}. Ready for import.",
                 "level": "info",
             })
-            _PREV_MEDIA_SLOTS[slot] = {"size": curr_sz, "dev": curr_dev}
             _maybe_trigger_auto_ingest(slot, dev=curr_dev, size=curr_sz)
 
-        # Removal transition: >0 -> 0
-        elif prev_sz > 0 and curr_sz == 0:
-            logger.info(f"[MEDIA] {slot_label} removed")
-            transitions.append({"event": "removed", "slot": slot})
-            add_event(
-                "info",
-                f"{slot_label} Removed",
-                f"{slot_label} was unmounted and removed from slot.",
-            )
-            if getattr(Z_STATE, "pending_ingest", None) and Z_STATE.pending_ingest.get("slot") == slot:
-                logger.info(f"[AUTO-INGEST] Clearing pending ingest for removed card {slot}")
-                Z_STATE.pending_ingest = None
-                Z_STATE.ui_wake.set()
-
+        else:
+            # Steady state: card remains inserted (curr_sz > 0 and prev_sz > 0)
             _PREV_MEDIA_SLOTS[slot] = {"size": curr_sz, "dev": curr_dev}
+            if slot in _EJECTED_SLOTS:
+                if getattr(Z_STATE, "pending_ingest", None) and Z_STATE.pending_ingest.get("slot") == slot:
+                    logger.info(f"[AUTO-INGEST] Clearing pending ingest for ejected card in {slot}")
+                    Z_STATE.pending_ingest = None
+                    Z_STATE.ui_wake.set()
 
     return transitions
 
@@ -86,6 +107,10 @@ def check_media_slot_transitions(slots: dict) -> list[dict]:
 def _maybe_trigger_auto_ingest(slot: str, dev: str | None = None, size: int | None = None):
     from backend.config import BUTTON_CFG_FILE
     from backend.fsutil import read_json
+
+    if slot in _EJECTED_SLOTS:
+        logger.info(f"[AUTO-INGEST] Card slot {slot} is in ejected state, skipping auto-ingest")
+        return
 
     cfg = read_json(BUTTON_CFG_FILE, {})
     auto_enabled = (
@@ -229,10 +254,14 @@ def probe_media_slot_capacity(dev: str, fallback_sysfs_path: str | None = None) 
 def rescan_media_slots(force_usb_reset: bool = True):
     """
     Force-rescan all media slots:
-    1. If force_usb_reset is True, resets the card reader USB device if desynchronized.
-    2. Rescans SCSI devices.
-    3. Re-reads slots and triggers auto-ingest if a card is present.
+    1. Clears any ejected slot suppression so all cards present will be freshly recognized.
+    2. If force_usb_reset is True, resets the card reader USB device if desynchronized.
+    3. Rescans SCSI devices.
+    4. Re-reads slots and triggers auto-ingest if a card is present.
     """
+    global _EJECTED_SLOTS
+    _EJECTED_SLOTS.clear()
+
     if force_usb_reset:
         try:
             if not os.path.exists("/dev/bus/usb") and os.path.exists("/host/dev/bus/usb"):
@@ -266,31 +295,36 @@ def eject_media_slot(slot: str = "sd"):
     """
     Safely eject the specified media slot:
     1. Flushes OS filesystem buffers via sync.
-    2. Clears pending_ingest and previous slot cache.
-    3. Resets the reader via usbreset so the slot is cleanly ready for the next card.
+    2. Unmounts any active temporary mounts.
+    3. Marks the slot as ejected so it won't prompt for auto-ingest again while remaining in slot.
+    4. Clears pending_ingest.
     """
+    global _EJECTED_SLOTS, _PREV_MEDIA_SLOTS
     try:
         subprocess.run(["sync"], timeout=5.0)
     except Exception:
         pass
 
+    # Unmount if mounted under /mnt/disks or /media
+    for mount_check in glob.glob(f"/mnt/disks/{slot}*") + glob.glob(f"/media/{slot}*"):
+        try:
+            subprocess.run(["umount", mount_check], timeout=3.0)
+        except Exception:
+            pass
+
+    _EJECTED_SLOTS.add(slot)
+
     if getattr(Z_STATE, "pending_ingest", None) and Z_STATE.pending_ingest.get("slot") == slot:
         Z_STATE.pending_ingest = None
         Z_STATE.ui_wake.set()
 
-    _PREV_MEDIA_SLOTS[slot] = {"size": 0, "dev": None}
-
-    # Reset the reader so the controller knows the slot is emptied
-    try:
-        if not os.path.exists("/dev/bus/usb") and os.path.exists("/host/dev/bus/usb"):
-            os.makedirs("/dev/bus", exist_ok=True)
-            try:
-                os.symlink("/host/dev/bus/usb", "/dev/bus/usb")
-            except OSError:
-                pass
-        subprocess.run(["usbreset", "05e3:0764"], capture_output=True, timeout=3.0)
-    except Exception:
-        pass
+    # Retain current probed size in _PREV_MEDIA_SLOTS so subsequent poll cycles
+    # don't falsely perceive a 0 -> >0 insertion edge transition while the card stays in.
+    curr_slots = read_media_slots()
+    curr_info = curr_slots.get(slot, {})
+    curr_sz = curr_info.get("size", 0)
+    curr_dev = curr_info.get("dev")
+    _PREV_MEDIA_SLOTS[slot] = {"size": curr_sz, "dev": curr_dev}
 
     slot_label = "SD Card" if slot == "sd" else "TF Card (MicroSD)"
     add_event("info", f"{slot_label} Ejected", f"{slot_label} was safely unmounted and ejected. You can now physically remove it.")
@@ -298,7 +332,10 @@ def eject_media_slot(slot: str = "sd"):
 
 
 def read_media_slots():
-    slots = {"sd": {"size": 0, "dev": None}, "tf": {"size": 0, "dev": None}}
+    slots = {
+        "sd": {"size": 0, "dev": None, "ejected": "sd" in _EJECTED_SLOTS},
+        "tf": {"size": 0, "dev": None, "ejected": "tf" in _EJECTED_SLOTS},
+    }
     try:
         for p in glob.glob(os.path.join(HOST_SYS, "block/sd*")):
             try:
@@ -308,12 +345,13 @@ def read_media_slots():
                     dev = os.path.basename(p)
                     size = probe_media_slot_capacity(dev, fallback_sysfs_path=os.path.join(p, "size"))
                     _ensure_slot_polling(p, dev, size == 0)
-                    if lun_str.endswith(":1"):
-                        slots["sd"]["size"] = size
-                        slots["sd"]["dev"] = dev
-                    elif lun_str.endswith(":0"):
-                        slots["tf"]["size"] = size
-                        slots["tf"]["dev"] = dev
+                    slot_name = "sd" if lun_str.endswith(":1") else ("tf" if lun_str.endswith(":0") else None)
+                    if slot_name:
+                        if size == 0:
+                            _EJECTED_SLOTS.discard(slot_name)
+                        slots[slot_name]["size"] = size
+                        slots[slot_name]["dev"] = dev
+                        slots[slot_name]["ejected"] = slot_name in _EJECTED_SLOTS
             except Exception as e:
                 logger.debug(f"Silenced exception: {e}")
     except Exception as e:

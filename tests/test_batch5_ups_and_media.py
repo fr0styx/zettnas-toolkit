@@ -264,6 +264,53 @@ class TestBatch5UpsAndMedia(unittest.TestCase):
         check_media_slot_transitions(empty_slots)
         self.assertIsNone(Z_STATE.pending_ingest)
 
+    @patch("backend.fsutil.read_json")
+    def test_eject_slot_suppresses_reprompt_when_card_left_in(self, mock_read_json):
+        from backend.services.copy_engine import _EJECTED_SLOTS, eject_media_slot
+
+        Z_STATE.copy_active = False
+        Z_STATE.copy_status = "idle"
+        Z_STATE.pending_ingest = None
+        mock_read_json.return_value = {
+            "enabled": True,
+            "auto_ingest": True,
+            "require_confirmation": True,
+            "source": "auto",
+            "dest": "/mnt/user/photos",
+        }
+
+        inserted_sd = {
+            "sd": {"size": 32 * 1024 * 1024 * 1024, "dev": "sdf"},
+            "tf": {"size": 0, "dev": None},
+        }
+
+        # 1. Insert card -> pending ingest offered
+        check_media_slot_transitions(inserted_sd)
+        self.assertIsNotNone(Z_STATE.pending_ingest)
+
+        # 2. User clicks EJECT while leaving card in slot
+        eject_media_slot("sd")
+        self.assertIsNone(Z_STATE.pending_ingest)
+        self.assertIn("sd", _EJECTED_SLOTS)
+
+        # 3. Next telemetry ticks occur while card remains in slot -> MUST NOT re-prompt
+        check_media_slot_transitions(inserted_sd)
+        self.assertIsNone(Z_STATE.pending_ingest)
+        self.assertFalse(Z_STATE.copy_active)
+
+        # 4. User physically removes card -> ejected state clears
+        empty_slots = {
+            "sd": {"size": 0, "dev": None},
+            "tf": {"size": 0, "dev": None},
+        }
+        check_media_slot_transitions(empty_slots)
+        self.assertNotIn("sd", _EJECTED_SLOTS)
+
+        # 5. User re-inserts card -> prompt offered again
+        check_media_slot_transitions(inserted_sd)
+        self.assertIsNotNone(Z_STATE.pending_ingest)
+        self.assertEqual(Z_STATE.pending_ingest["slot"], "sd")
+
     def test_button_config_schema_with_auto_ingest(self):
         from backend.models.schemas import ButtonConfigRequest
 

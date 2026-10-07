@@ -879,6 +879,23 @@ function initCopyToastControls() {
 
 let _activeIngestPromptTs = null;
 let _dismissedIngestTs = null;
+let _ejectedSlots = new Set();
+
+export function setSlotEjected(slot) {
+  if (slot) _ejectedSlots.add(slot);
+  if (_activeIngestPromptTs !== null) {
+    hideConfirmToast();
+    _activeIngestPromptTs = null;
+  }
+}
+
+export function clearSlotEjected(slot) {
+  if (slot) {
+    _ejectedSlots.delete(slot);
+  } else {
+    _ejectedSlots.clear();
+  }
+}
 
 export function handlePendingIngest(pendingIngest) {
   if (!pendingIngest || !pendingIngest.slot) {
@@ -887,6 +904,15 @@ export function handlePendingIngest(pendingIngest) {
       _activeIngestPromptTs = null;
     }
     _dismissedIngestTs = null;
+    return;
+  }
+
+  // If slot was ejected by the user and card has not been physically removed, do NOT re-prompt
+  if (_ejectedSlots.has(pendingIngest.slot)) {
+    if (_activeIngestPromptTs !== null) {
+      hideConfirmToast();
+      _activeIngestPromptTs = null;
+    }
     return;
   }
 
@@ -936,6 +962,7 @@ export function handlePendingIngest(pendingIngest) {
       cancelText: t('media.btn_dismiss', 'Dismiss'),
       ejectText: t('media.btn_eject', '⏏ Eject'),
       onEject: async () => {
+        _ejectedSlots.add(pendingIngest.slot);
         _activeIngestPromptTs = null;
         _dismissedIngestTs = null;
         try {
@@ -1073,23 +1100,45 @@ export function updateMediaSlots(mediaSlots) {
   const sdSize = sd.size || 0;
   const tfSize = tf.size || 0;
 
-  // Surface toast on card insertion (0 -> >0 transition)
-  if (_prevClientMediaSlots.sd !== null && _prevClientMediaSlots.sd === 0 && sdSize > 0) {
+  // Clear ejected state if the card was physically removed (size dropped to 0)
+  if (sdSize === 0) {
+    _ejectedSlots.delete('sd');
+  } else if (sd.ejected) {
+    _ejectedSlots.add('sd');
+  }
+
+  if (tfSize === 0) {
+    _ejectedSlots.delete('tf');
+  } else if (tf.ejected) {
+    _ejectedSlots.add('tf');
+  }
+
+  const sdEjected = _ejectedSlots.has('sd');
+  const tfEjected = _ejectedSlots.has('tf');
+
+  // Surface toast on card insertion (0 -> >0 transition) ONLY if not in ejected state
+  if (_prevClientMediaSlots.sd !== null && _prevClientMediaSlots.sd === 0 && sdSize > 0 && !sdEjected) {
     showToast(`📷 SD Card Detected (${(sdSize / 1e9).toFixed(1)} GB): Ready for import`, 'info');
   }
-  if (_prevClientMediaSlots.tf !== null && _prevClientMediaSlots.tf === 0 && tfSize > 0) {
+  if (_prevClientMediaSlots.tf !== null && _prevClientMediaSlots.tf === 0 && tfSize > 0 && !tfEjected) {
     showToast(`📷 TF (MicroSD) Detected (${(tfSize / 1e9).toFixed(1)} GB): Ready for import`, 'info');
   }
   _prevClientMediaSlots.sd = sdSize;
   _prevClientMediaSlots.tf = tfSize;
 
   let sdText = 'SD 4.0 Slot';
-  if (sdSize > 0) sdText += ` [${(sdSize / 1e9).toFixed(1)} GB]`;
-  else sdText += ' [Empty]';
+  if (sdSize > 0) {
+    sdText += ` [${(sdSize / 1e9).toFixed(1)} GB${sdEjected ? ' - Ejected' : ''}]`;
+  } else {
+    sdText += ' [Empty]';
+  }
 
   let tfText = 'TF 4.0 Slot (MicroSD)';
-  if (tfSize > 0) tfText += ` [${(tfSize / 1e9).toFixed(1)} GB]`;
-  else tfText += ' [Empty]';
+  if (tfSize > 0) {
+    tfText += ` [${(tfSize / 1e9).toFixed(1)} GB${tfEjected ? ' - Ejected' : ''}]`;
+  } else {
+    tfText += ' [Empty]';
+  }
 
   if (srcSelect) {
     for (let i = 0; i < srcSelect.options.length; i++) {
@@ -1102,15 +1151,27 @@ export function updateMediaSlots(mediaSlots) {
   const slotBadge = $('media-slot-info-badge');
   if (slotBadge) {
     if (sdSize > 0) {
-      slotBadge.textContent = `SD: ${(sdSize / 1e9).toFixed(1)} GB`;
-      slotBadge.style.background = 'rgba(37,194,160,0.15)';
-      slotBadge.style.color = 'var(--ok2)';
-      slotBadge.style.borderColor = 'rgba(37,194,160,0.35)';
+      slotBadge.textContent = `SD: ${(sdSize / 1e9).toFixed(1)} GB${sdEjected ? ' (EJECTED)' : ''}`;
+      if (sdEjected) {
+        slotBadge.style.background = 'rgba(234, 179, 8, 0.15)';
+        slotBadge.style.color = '#eab308';
+        slotBadge.style.borderColor = 'rgba(234, 179, 8, 0.35)';
+      } else {
+        slotBadge.style.background = 'rgba(37,194,160,0.15)';
+        slotBadge.style.color = 'var(--ok2)';
+        slotBadge.style.borderColor = 'rgba(37,194,160,0.35)';
+      }
     } else if (tfSize > 0) {
-      slotBadge.textContent = `TF: ${(tfSize / 1e9).toFixed(1)} GB`;
-      slotBadge.style.background = 'rgba(37,194,160,0.15)';
-      slotBadge.style.color = 'var(--ok2)';
-      slotBadge.style.borderColor = 'rgba(37,194,160,0.35)';
+      slotBadge.textContent = `TF: ${(tfSize / 1e9).toFixed(1)} GB${tfEjected ? ' (EJECTED)' : ''}`;
+      if (tfEjected) {
+        slotBadge.style.background = 'rgba(234, 179, 8, 0.15)';
+        slotBadge.style.color = '#eab308';
+        slotBadge.style.borderColor = 'rgba(234, 179, 8, 0.35)';
+      } else {
+        slotBadge.style.background = 'rgba(37,194,160,0.15)';
+        slotBadge.style.color = 'var(--ok2)';
+        slotBadge.style.borderColor = 'rgba(37,194,160,0.35)';
+      }
     } else {
       slotBadge.textContent = 'SLOTS EMPTY';
       slotBadge.style.background = 'rgba(255,255,255,0.05)';
@@ -1135,5 +1196,14 @@ window.addEventListener('zettnas:lang-changed', () => {
   if (state.latestStats && state.latestStats.disks) {
     renderDisks(state.latestStats.disks);
   }
+});
+
+// Sync ejected and scan events from other components
+ZettEventBus.on('media:slot_ejected', (slot) => {
+  setSlotEjected(slot);
+});
+
+ZettEventBus.on('media:slots_rescanned', () => {
+  clearSlotEjected();
 });
 

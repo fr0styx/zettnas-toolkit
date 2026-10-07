@@ -90,4 +90,32 @@ describe('Media Slot Auto-Ingest Confirmation Dialog', () => {
     handlePendingIngest(null);
     expect(modal.style.opacity).toBe('0');
   });
+
+  it('does not re-prompt when Eject is clicked and card remains in slot', async () => {
+    const postSpy = vi.spyOn(api, 'post').mockResolvedValue({ status: 'ok' });
+
+    const pending = {
+      slot: 'sd',
+      dev: 'sdd1',
+      size: 128 * 1e9,
+      dest: '/mnt/user/DCIM',
+      ts: 77777,
+    };
+
+    handlePendingIngest(pending);
+    const modal = document.getElementById('confirm-toast-modal');
+    expect(modal.style.display).toBe('block');
+
+    const ejectBtn = document.getElementById('confirm-toast-eject');
+    expect(ejectBtn).not.toBeNull();
+    ejectBtn.click();
+
+    expect(postSpy).toHaveBeenCalledWith('/api/copy/eject', { slot: 'sd' });
+
+    // Simulate subsequent stats ticks arriving while card remains in slot
+    handlePendingIngest({ ...pending, ts: 88888 });
+
+    // Modal must NOT be re-displayed (opacity remains 0) because slot is in ejected state
+    expect(modal.style.opacity).toBe('0');
+  });
 });

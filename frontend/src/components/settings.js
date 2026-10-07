@@ -418,6 +418,7 @@ export function initSettings() {
       btnMediaRescan.textContent = 'Scanning...';
       try {
         await api.post('/api/copy/rescan');
+        ZettEventBus.emit('media:slots_rescanned');
         showToast(t('media.scan_complete', 'Media slots rescanned.'), 'info');
       } catch (err) {
         showToast(`Scan failed: ${err.message || err}`, 'error');
@@ -433,6 +434,7 @@ export function initSettings() {
       const srcSlot = btnCopySrc ? btnCopySrc.value : 'sd';
       try {
         await api.post('/api/copy/eject', { slot: srcSlot });
+        ZettEventBus.emit('media:slot_ejected', srcSlot);
         showToast(t('media.ejected', 'Card safely unmounted and ejected. You can now remove it.'), 'info');
       } catch (err) {
         showToast(`Eject failed: ${err.message || err}`, 'error');
