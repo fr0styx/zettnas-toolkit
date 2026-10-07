@@ -6,7 +6,7 @@ import { t } from '../i18n.js';
 import { makeDraggable, bringToFront } from './dock.js';
 
 let fmWindow = null;
-let currentPath = '/mnt/user';
+let currentPath = localStorage.getItem('zettnas_fm_last_path') || '/mnt/user';
 let fileList = [];
 
 let currentSortBy = 'name';
@@ -158,7 +158,7 @@ export function initFileManager() {
 
 
 
-  makeDraggable(fmWindow, fmWindow.querySelector('.os-window-header'));
+  makeDraggable(fmWindow, fmWindow.querySelector('.os-window-header'), 'fm');
   fmWindow.addEventListener('mousedown', () => bringToFront(fmWindow));
 
   // Save bounds on resize/drag
@@ -497,6 +497,7 @@ async function loadPath(path) {
   try {
     const res = await api.get(`/api/browse?path=${encodeURIComponent(path)}&dirs_only=0`);
     currentPath = res.current;
+    try { localStorage.setItem('zettnas_fm_last_path', currentPath); } catch (e) {}
     selectedPaths.clear();
     lastSelectedIndex = -1;
     updateFmSelectionToolbar();

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { makeDraggable, saveWindowBounds, loadSavedWindowBounds, DockManager, isEventChecked, markEventChecked, resetCheckedEventsState, getEventKey, openConsoleWindow, KNOWN_APPS, toggleConsoleMaximize, renderNotificationCenter } from '../components/dock.js';
+import { makeDraggable, saveWindowBounds, loadSavedWindowBounds, DockManager, isEventChecked, markEventChecked, resetCheckedEventsState, getEventKey, openConsoleWindow, KNOWN_APPS, toggleConsoleMaximize, renderNotificationCenter, saveOpenWindowsState, restoreOpenWindowsState, applySavedBounds, OPEN_WINDOWS_KEY } from '../components/dock.js';
 import { openEventDetailModal, closeEventDetailModal } from '../modals.js';
 import { state } from '../state.js';
 
@@ -479,6 +479,67 @@ describe('Notification Center Draggable Window & Event Detail Inspector', () => 
 
     expect(isEventChecked(testEv)).toBe(true);
     expect(window.openEventDetailModal).toHaveBeenCalledWith(testEv);
+  });
+
+  it('saves and restores open window states across simulated browser refreshes', () => {
+    DockManager.windows = {
+      fm: { closed: false, minimized: false },
+      management: { closed: false, minimized: true }
+    };
+    DockManager.activeId = 'fm';
+
+    // Notification center open
+    const notifPanel = document.getElementById('notif-center-panel');
+    notifPanel.style.display = 'flex';
+
+    saveOpenWindowsState();
+
+    const raw = localStorage.getItem(OPEN_WINDOWS_KEY);
+    expect(raw).toBeDefined();
+    const parsed = JSON.parse(raw);
+    expect(parsed.activeId).toBe('fm');
+    expect(parsed.windows['fm']).toEqual({ minimized: false, open: true });
+    expect(parsed.windows['management']).toEqual({ minimized: true, open: true });
+    expect(parsed.windows['notif']).toEqual({ minimized: false, open: true });
+
+    // Simulate reload: clear in-memory state
+    DockManager.windows = {};
+    DockManager.activeId = null;
+    notifPanel.style.display = 'none';
+
+    // Mock launch functions
+    const fmLaunch = vi.fn();
+    const mgmtLaunch = vi.fn();
+    const notifLaunch = vi.fn();
+    KNOWN_APPS.fm.launch = fmLaunch;
+    KNOWN_APPS.management.launch = mgmtLaunch;
+    window.toggleNotificationCenter = notifLaunch;
+
+    restoreOpenWindowsState();
+
+    expect(fmLaunch).toHaveBeenCalled();
+    expect(mgmtLaunch).toHaveBeenCalled();
+    expect(notifLaunch).toHaveBeenCalled();
+  });
+
+  it('correctly applies saved bounds and handles bidirectional ID aliases', () => {
+    saveWindowBounds('fm', { left: 140, top: 90, width: 620, height: 480, snapped: 'maximize' });
+
+    const winEl = document.createElement('div');
+    winEl.id = 'file-manager-window';
+    winEl.style.width = '300px';
+    winEl.style.height = '200px';
+    document.body.appendChild(winEl);
+
+    // Apply with alias ID 'file-manager-window'
+    applySavedBounds(winEl, 'file-manager-window');
+
+    expect(winEl.dataset.snapped).toBe('maximize');
+    expect(winEl.style.left).toBe('8px');
+    expect(winEl.style.top).toBe('48px');
+    expect(winEl.style.width).toBe('calc(100vw - 16px)');
+
+    winEl.remove();
   });
 });
 

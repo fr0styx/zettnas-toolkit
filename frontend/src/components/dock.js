@@ -97,6 +97,7 @@ export function showDockToast(msg) {
 }
 
 const WIN_BOUNDS_KEY = 'zettnas_window_bounds_v2';
+export const OPEN_WINDOWS_KEY = 'zettnas_open_windows_v1';
 
 export function loadSavedWindowBounds() {
   try {
@@ -111,6 +112,14 @@ export function saveWindowBounds(id, bounds) {
   try {
     const all = loadSavedWindowBounds();
     all[id] = { ...(all[id] || {}), ...bounds };
+    if (id === 'fm') all['file-manager-window'] = all[id];
+    if (id === 'file-manager-window') all['fm'] = all[id];
+    if (id === 'management') all['management-window'] = all[id];
+    if (id === 'management-window') all['management'] = all[id];
+    if (id === 'console') all['console-window'] = all[id];
+    if (id === 'console-window') all['console'] = all[id];
+    if (id === 'smart') all['smart-modal-window'] = all[id];
+    if (id === 'smart-modal-window') all['smart'] = all[id];
     localStorage.setItem(WIN_BOUNDS_KEY, JSON.stringify(all));
   } catch (e) {
     console.warn('Failed to save window bounds', e);
@@ -122,7 +131,11 @@ export function applySavedBounds(dragEl, winId) {
   const id = winId || dragEl.id || dragEl.dataset.windowId;
   if (!id) return;
   const all = loadSavedWindowBounds();
-  const saved = all[id];
+  const saved = all[id]
+    || (id === 'file-manager-window' ? all['fm'] : (id === 'fm' ? all['file-manager-window'] : null))
+    || (id === 'management-window' ? all['management'] : (id === 'management' ? all['management-window'] : null))
+    || (id === 'console-window' ? all['console'] : (id === 'console' ? all['console-window'] : null))
+    || (id === 'smart-modal-window' ? all['smart'] : (id === 'smart' ? all['smart-modal-window'] : null));
   if (!saved || saved.left == null || saved.top == null) return;
 
   const targetW = saved.width || dragEl.offsetWidth || 500;
@@ -145,6 +158,109 @@ export function applySavedBounds(dragEl, winId) {
   }
   if (saved.snapped) {
     dragEl.dataset.snapped = saved.snapped;
+    if (saved.snapped === 'maximize') {
+      dragEl.style.left = '8px';
+      dragEl.style.top = '48px';
+      dragEl.style.width = 'calc(100vw - 16px)';
+      dragEl.style.height = 'calc(100vh - 48px - 76px)';
+    } else if (saved.snapped === 'left') {
+      dragEl.style.left = '8px';
+      dragEl.style.top = '48px';
+      dragEl.style.width = 'calc(50vw - 12px)';
+      dragEl.style.height = 'calc(100vh - 48px - 76px)';
+    } else if (saved.snapped === 'right') {
+      dragEl.style.left = 'calc(50vw + 4px)';
+      dragEl.style.top = '48px';
+      dragEl.style.width = 'calc(50vw - 12px)';
+      dragEl.style.height = 'calc(100vh - 48px - 76px)';
+    }
+  }
+}
+
+export function saveOpenWindowsState() {
+  if (document.body.classList.contains('mobile-mode') || window.innerWidth <= 768) return;
+  try {
+    const stateObj = {
+      activeId: DockManager.activeId,
+      windows: {}
+    };
+
+    if (DockManager && DockManager.windows) {
+      Object.keys(DockManager.windows).forEach((id) => {
+        const win = DockManager.windows[id];
+        if (win && !win.closed) {
+          stateObj.windows[id] = {
+            minimized: !!win.minimized,
+            open: true
+          };
+          if (id === 'management') {
+            const activeTabBtn = document.querySelector('.mgmt-inner-tab.active');
+            if (activeTabBtn && activeTabBtn.dataset.tabTarget) {
+              stateObj.windows[id].activePane = activeTabBtn.dataset.tabTarget;
+            }
+          }
+        }
+      });
+    }
+
+    const notifPanel = document.getElementById('notif-center-panel');
+    if (notifPanel && notifPanel.style.display !== 'none' && notifPanel.style.display !== '') {
+      stateObj.windows['notif'] = {
+        open: true,
+        minimized: false
+      };
+    }
+
+    localStorage.setItem(OPEN_WINDOWS_KEY, JSON.stringify(stateObj));
+  } catch (e) {
+    console.warn('Failed to save open windows state', e);
+  }
+}
+
+export function restoreOpenWindowsState() {
+  if (document.body.classList.contains('mobile-mode') || window.innerWidth <= 768) return;
+  try {
+    const raw = localStorage.getItem(OPEN_WINDOWS_KEY);
+    if (!raw) return;
+    const stateObj = JSON.parse(raw);
+    if (!stateObj || !stateObj.windows) return;
+
+    const windowIds = Object.keys(stateObj.windows);
+    if (windowIds.length === 0) return;
+
+    windowIds.forEach((id) => {
+      const entry = stateObj.windows[id];
+      if (!entry || !entry.open) return;
+
+      if (id === 'notif') {
+        const notifPanel = document.getElementById('notif-center-panel');
+        if (notifPanel && (notifPanel.style.display === 'none' || notifPanel.style.display === '')) {
+          if (window.toggleNotificationCenter) {
+            window.toggleNotificationCenter();
+          }
+        }
+      } else if (KNOWN_APPS[id] && typeof KNOWN_APPS[id].launch === 'function') {
+        KNOWN_APPS[id].launch(entry.activePane);
+        if (entry.minimized) {
+          setTimeout(() => {
+            if (DockManager.windows[id]) {
+              DockManager.minimize(id);
+            }
+          }, 60);
+        }
+      }
+    });
+
+    if (stateObj.activeId) {
+      setTimeout(() => {
+        const activeWin = DockManager.windows[stateObj.activeId];
+        if (activeWin && activeWin.el && !activeWin.minimized) {
+          bringToFront(activeWin.el);
+        }
+      }, 120);
+    }
+  } catch (e) {
+    console.warn('Failed to restore open windows', e);
   }
 }
 
@@ -171,6 +287,7 @@ export function bringToFront(windowEl) {
     if (foundId) {
       window.DockManager.activeId = foundId;
       window.DockManager.render();
+      saveOpenWindowsState();
     }
   }
 }
@@ -191,7 +308,13 @@ export function makeDraggable(dragEl, handleEl, customId) {
   handleEl = handleEl || dragEl;
   handleEl.style.cursor = 'move';
 
-  const winId = customId || dragEl.id || dragEl.dataset.windowId || (dragEl.classList.contains('management-window') ? 'management' : null) || (dragEl.classList.contains('file-manager-window') ? 'fm' : null) || (dragEl.id === 'console-window' ? 'console' : null);
+  const winId = customId || (dragEl.id === 'file-manager-window' || dragEl.classList.contains('file-manager-window') ? 'fm' : null)
+                         || (dragEl.id === 'management-window' || dragEl.classList.contains('mgmt-app-window') ? 'management' : null)
+                         || (dragEl.id === 'console-window' || dragEl.classList.contains('chassis-front-panel') ? 'console' : null)
+                         || (dragEl.id === 'smart-modal-window' ? 'smart' : null)
+                         || (dragEl.id === 'notif-center-panel' ? 'notif-center' : null)
+                         || dragEl.id
+                         || dragEl.dataset.windowId;
 
   if (winId) {
     applySavedBounds(dragEl, winId);
@@ -211,6 +334,7 @@ export function makeDraggable(dragEl, handleEl, customId) {
             width: Math.round(rect.width),
             height: Math.round(rect.height),
           });
+          saveOpenWindowsState();
         }
       }, 250);
     });
@@ -332,6 +456,7 @@ export function makeDraggable(dragEl, handleEl, customId) {
           height: Math.round(finalRect.height),
           snapped: dragEl.dataset.snapped || ''
         });
+        saveOpenWindowsState();
       }
     };
 
@@ -377,6 +502,7 @@ export function makeDraggable(dragEl, handleEl, customId) {
         height: Math.round(finalRect.height),
         snapped: dragEl.dataset.snapped || ''
       });
+      saveOpenWindowsState();
     }
   });
 }
@@ -434,9 +560,9 @@ export const KNOWN_APPS = {
     id: 'management',
     icon: '#i-management',
     getTitle: () => t('dock.management', 'Management'),
-    launch: () => {
+    launch: (pane = null) => {
       if (window.openManagementWindow) {
-        window.openManagementWindow();
+        window.openManagementWindow(pane);
       } else {
         document.getElementById('management-desktop-icon')?.click();
       }
@@ -457,6 +583,17 @@ export const KNOWN_APPS = {
     launch: () => {
       if (window.openSmartModal) {
         window.openSmartModal();
+      }
+    }
+  },
+  notif: {
+    id: 'notif',
+    icon: '#i-bell',
+    getTitle: () => t('dock.notifications', 'Notification Center'),
+    launch: () => {
+      const panel = document.getElementById('notif-center-panel');
+      if (panel && (panel.style.display === 'none' || panel.style.display === '')) {
+        if (window.toggleNotificationCenter) window.toggleNotificationCenter();
       }
     }
   }
@@ -643,6 +780,7 @@ export const DockManager = {
       }
     }
     this.render();
+    saveOpenWindowsState();
   },
 
   unregister(id) {
@@ -665,6 +803,7 @@ export const DockManager = {
       }
       if (this.activeId === id) this.activeId = null;
       this.render();
+      saveOpenWindowsState();
     }
   },
 
@@ -680,6 +819,7 @@ export const DockManager = {
         innerWin.style.setProperty('display', 'none', 'important');
       }
       this.render();
+      saveOpenWindowsState();
     }
   },
 
@@ -709,6 +849,7 @@ export const DockManager = {
         window.updateLcdPages(state.latestStats);
       }
       this.render();
+      saveOpenWindowsState();
     }
   },
 
@@ -1147,7 +1288,7 @@ export function initDockSystem() {
   if (state.isLcdDirect || (typeof window !== 'undefined' && window.location.search.includes('mode=lcd')) || (document.body && document.body.classList.contains('lcd-direct'))) return;
   const consoleModal = document.getElementById('console-window');
   const consoleHeader = document.querySelector('#console-window .chassis-panel-header');
-  if (consoleModal) makeDraggable(consoleModal, consoleHeader);
+  if (consoleModal) makeDraggable(consoleModal, consoleHeader, 'console');
 
   const consoleOverlay = document.getElementById('console-modal-overlay');
   if (consoleOverlay && DockManager.isPinned('console')) {
@@ -1224,15 +1365,15 @@ export function initDockSystem() {
 
   const smartModal = document.querySelector('#smart-modal-overlay .smart-modal-window');
   const smartHeader = document.querySelector('#smart-modal-overlay .smart-modal-header');
-  if (smartModal) makeDraggable(smartModal, smartHeader);
+  if (smartModal) makeDraggable(smartModal, smartHeader, 'smart');
 
   const fbModal = document.querySelector('#folder-browser-modal .smart-modal-window');
   const fbHeader = document.querySelector('#folder-browser-modal .smart-modal-header');
-  if (fbModal) makeDraggable(fbModal, fbHeader);
+  if (fbModal) makeDraggable(fbModal, fbHeader, 'folder-browser');
 
   const copyToast = document.getElementById('copy-toast');
   const copyToastHeader = document.querySelector('#copy-toast .smart-modal-header');
-  if (copyToast) makeDraggable(copyToast, copyToastHeader);
+  if (copyToast) makeDraggable(copyToast, copyToastHeader, 'copy-toast');
 
   let toastContainer = document.getElementById('global-toast-container');
   if (!toastContainer) {
@@ -1617,12 +1758,16 @@ window.toggleNotificationCenter = function() {
       panel.style.right = 'auto';
       panel.style.left = `${defaultLeft}px`;
       panel.style.top = `${defaultTop}px`;
+    } else {
+      applySavedBounds(panel, 'notif-center');
     }
 
     bringToFront(panel);
     renderNotificationCenter();
+    saveOpenWindowsState();
   } else {
     panel.style.display = 'none';
+    saveOpenWindowsState();
   }
 };
 
@@ -1765,7 +1910,10 @@ document.addEventListener('DOMContentLoaded', () => {
     notifCloseBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       const panel = document.getElementById('notif-center-panel');
-      if (panel) panel.style.display = 'none';
+      if (panel) {
+        panel.style.display = 'none';
+        saveOpenWindowsState();
+      }
     });
   }
 
@@ -1779,6 +1927,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const panel = document.getElementById('notif-center-panel');
       if (panel && panel.style.display !== 'none') {
         panel.style.display = 'none';
+        saveOpenWindowsState();
       }
     }
   });
@@ -1803,3 +1952,7 @@ window.renderNotificationCenter = renderNotificationCenter;
 window.resetCheckedEventsState = resetCheckedEventsState;
 window.markEventChecked = markEventChecked;
 window.isEventChecked = isEventChecked;
+window.saveWindowBounds = saveWindowBounds;
+window.loadSavedWindowBounds = loadSavedWindowBounds;
+window.saveOpenWindowsState = saveOpenWindowsState;
+window.restoreOpenWindowsState = restoreOpenWindowsState;

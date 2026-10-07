@@ -71,9 +71,15 @@ async function request(endpoint, options = {}) {
     const res = await window.fetch(url, config);
 
     if (res.status === 401) {
+      auth.clearToken();
+      document.documentElement.classList.remove('has-auth-session');
+      document.documentElement.classList.add('auth-required');
       ZettEventBus.emit('auth:required', { url });
       const overlay = document.getElementById('login-overlay');
-      if (overlay) overlay.style.display = 'flex';
+      if (overlay) {
+        overlay.style.removeProperty('opacity');
+        overlay.style.display = 'flex';
+      }
       const dock = document.getElementById('os-dock-container');
       if (dock) dock.style.display = 'none';
       throw new ApiError('Unauthorized', { status: 401, error: 'unauthorized' });

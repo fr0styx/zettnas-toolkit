@@ -280,7 +280,7 @@ export function initManagement() {
 
   // Make Management window draggable by its header
   if (header) {
-    makeDraggable(win, header);
+    makeDraggable(win, header, 'management');
   }
 
   // Minimize button

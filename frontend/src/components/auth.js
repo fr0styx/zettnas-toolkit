@@ -13,7 +13,12 @@ export function initAuth() {
   const dock = document.getElementById('os-dock-container');
 
   ZettEventBus.on('auth:required', () => {
-    if (overlay) overlay.style.display = 'flex';
+    document.documentElement.classList.remove('has-auth-session');
+    document.documentElement.classList.add('auth-required');
+    if (overlay) {
+      overlay.style.removeProperty('opacity');
+      overlay.style.display = 'flex';
+    }
     if (dock) dock.style.display = 'none';
   });
 
@@ -30,10 +35,20 @@ export function initAuth() {
         if (res.ok) {
           const data = await res.json();
           if (data.token) auth.setToken(data.token);
-          if (overlay) overlay.style.display = 'none';
+          document.documentElement.classList.remove('auth-required');
+          document.documentElement.classList.add('has-auth-session');
+          if (dock) dock.style.display = '';
+          if (overlay) {
+            overlay.style.transition = 'opacity 0.25s ease';
+            overlay.style.opacity = '0';
+            setTimeout(() => {
+              overlay.style.display = 'none';
+              overlay.style.opacity = '1';
+            }, 250);
+          }
           loginBtn.textContent = t('login.btn', 'SECURE LOGIN');
           loginPwd.value = '';
-          window.location.reload();
+          ZettEventBus.emit('auth:login');
         } else {
           let msg = t('login.invalid', 'INVALID PASSWORD');
           let holdMs = 2000;

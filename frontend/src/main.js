@@ -12,7 +12,7 @@ import { showToast, showConfirmToast } from './toast.js';
 import './folder-browser.js';
 import './modals.js';
 
-import { initDockSystem, DockManager, makeDraggable, bringToFront } from './components/dock.js';
+import { initDockSystem, DockManager, makeDraggable, bringToFront, restoreOpenWindowsState } from './components/dock.js';
 import { initAuth } from './components/auth.js';
 import { applyStats, applyTheme, initDashboardClicks } from './components/dashboard.js';
 import { initFanControl } from './components/fan-control.js';
@@ -176,13 +176,27 @@ document.addEventListener('DOMContentLoaded', () => {
   initA11y();
 
   applyTheme(state.currentTheme);
-  fetchDashboardLayout();
 
-  tick();
-  startSSE();
+  const hasAuth = auth.hasToken() || state.isLcdDirect;
+  if (hasAuth) {
+    fetchDashboardLayout();
+    tick();
+    startSSE();
+    checkLcdStatus();
+    restoreOpenWindowsState();
+  } else {
+    const overlay = document.getElementById('login-overlay');
+    if (overlay) {
+      overlay.style.removeProperty('opacity');
+      overlay.style.display = 'flex';
+    }
+  }
 
-  checkLcdStatus();
-  setInterval(checkLcdStatus, 10000);
+  setInterval(() => {
+    if (auth.hasToken() || state.isLcdDirect) {
+      checkLcdStatus();
+    }
+  }, 10000);
 
   window.addEventListener('resize', fitMiniPreviewScale);
 
@@ -206,7 +220,13 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   ZettEventBus.on('auth:login', () => {
+    fetchDashboardLayout();
+    tick();
     startSSE();
+    checkLcdStatus();
+    initWallpapers();
+    DockManager.render();
+    restoreOpenWindowsState();
   });
 
   // Prevent background drag/bounce from scrolling the page and losing the navbar on mobile
