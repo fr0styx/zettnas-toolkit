@@ -8,12 +8,12 @@ on:
     branches: [ "main" ]
 
 permissions:
-  contents: read
+  contents: write
   packages: write
 
 jobs:
   lint-and-test:
-    name: Lint & Pytest
+    name: Lint & Pytest Unit Suite
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -29,7 +29,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install ruff pytest pytest-cov httpx
+          pip install ruff pytest pytest-cov httpx playwright
 
       - name: Run Ruff Lint
         run: ruff check app.py backend tests
@@ -62,9 +62,71 @@ jobs:
       - name: Build frontend
         run: npm run build
 
-  build-and-push:
-    name: Build & Push GHCR Container
+  e2e-integration:
+    name: Headless Playwright E2E Integration
     needs: [lint-and-test, frontend]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: Build frontend static distribution
+        run: |
+          npm ci
+          npm run build
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install Python dependencies & Playwright
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest httpx playwright
+          python -m playwright install --with-deps chromium
+
+      - name: Launch Test Server & Run Playwright E2E Suite
+        env:
+          PORT: "8082"
+          WEB_PASSWORD: "admin"
+        run: |
+          # Start background server
+          python3 -m backend.main &
+          SERVER_PID=$!
+
+          # Poll health endpoint until server is ready
+          python3 -c "
+          import urllib.request, time
+          for _ in range(30):
+              try:
+                  with urllib.request.urlopen('http://127.0.0.1:8082/api/health', timeout=1) as r:
+                      if r.status == 200:
+                          print('ZettNAS test server is ready and responding on port 8082.')
+                          break
+              except Exception:
+                  time.sleep(0.5)
+          else:
+              print('Timed out waiting for test server.')
+          "
+
+          # Execute full Playwright E2E Integration Suite
+          pytest tests/test_e2e_integration.py -v
+
+          # Shutdown background server cleanly
+          kill $SERVER_PID || true
+
+  build-and-push:
+    name: Build & Push Multi-Arch GHCR Container
+    needs: [lint-and-test, frontend, e2e-integration]
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
     runs-on: ubuntu-latest
     steps:
@@ -95,12 +157,31 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=sha,format=short
 
-      - name: Build and push Docker image
+      - name: Build and push Multi-Arch Docker image
         uses: docker/build-push-action@v6
         with:
           context: .
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  create-release:
+    name: GitHub Release & Release Notes
+    needs: [build-and-push]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
