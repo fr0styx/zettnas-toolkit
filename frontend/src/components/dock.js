@@ -72,28 +72,63 @@ export function markEventChecked(e, persist = true) {
   }
 }
 
-export function showDockToast(msg) {
+export function showDockToast(msg, targetId = null) {
   let container = document.getElementById('global-toast-container');
   if (!container) {
     container = document.createElement('div');
     container.id = 'global-toast-container';
-    container.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:var(--z-toast, 10000);display:flex;flex-direction:column;gap:8px;';
     document.body.appendChild(container);
   }
+
+  const dock = document.getElementById('os-dock');
+  let bottomPos = 84;
+  let leftPos = null;
+
+  if (targetId) {
+    const item = document.querySelector(`#os-dock [data-window-id="${targetId}"]`);
+    if (item) {
+      const rect = item.getBoundingClientRect();
+      if (rect.top > 0) {
+        bottomPos = Math.max(76, Math.round(window.innerHeight - rect.top + 14));
+        leftPos = Math.max(120, Math.min(window.innerWidth - 120, Math.round(rect.left + (rect.width / 2))));
+      }
+    }
+  }
+
+  if (leftPos == null && dock) {
+    const dockRect = dock.getBoundingClientRect();
+    if (dockRect.top > 0) {
+      bottomPos = Math.max(76, Math.round(window.innerHeight - dockRect.top + 14));
+    }
+  }
+
+  container.style.position = 'fixed';
+  container.style.bottom = `${bottomPos}px`;
+  container.style.left = leftPos != null ? `${leftPos}px` : '50%';
+  container.style.transform = 'translateX(-50%)';
+  container.style.zIndex = 'var(--z-toast, 10000)';
+  container.style.display = 'flex';
+  container.style.flexDirection = 'column';
+  container.style.alignItems = 'center';
+  container.style.gap = '8px';
+  container.style.pointerEvents = 'none';
+
   const toast = document.createElement('div');
   toast.className = 'dock-pin-toast';
-  toast.style.cssText = 'background:rgba(15,23,42,0.92); border:1px solid rgba(255,255,255,0.18); backdrop-filter:blur(12px); color:#fff; font-size:11px; font-weight:600; padding:6px 14px; border-radius:20px; box-shadow:0 4px 16px rgba(0,0,0,0.5); pointer-events:none; transition:opacity 0.25s ease, transform 0.25s ease; transform:translateY(10px); opacity:0;';
+  toast.style.cssText = 'background:rgba(18,25,35,0.92); border:1px solid rgba(255,255,255,0.22); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); color:#fff; font-size:11.5px; font-weight:600; padding:6px 14px; border-radius:18px; box-shadow:0 8px 24px rgba(0,0,0,0.6), 0 0 1px rgba(255,255,255,0.2) inset; pointer-events:none; transition:opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), transform 0.22s cubic-bezier(0.16, 1, 0.3, 1); transform:translateY(8px) scale(0.96); opacity:0; white-space:nowrap;';
   toast.textContent = msg;
   container.appendChild(toast);
+
   requestAnimationFrame(() => {
-    toast.style.transform = 'translateY(0)';
+    toast.style.transform = 'translateY(0) scale(1)';
     toast.style.opacity = '1';
   });
+
   setTimeout(() => {
     toast.style.opacity = '0';
-    toast.style.transform = 'translateY(-6px)';
-    setTimeout(() => toast.remove(), 300);
-  }, 2000);
+    toast.style.transform = 'translateY(-6px) scale(0.96)';
+    setTimeout(() => toast.remove(), 250);
+  }, 2200);
 }
 
 const WIN_BOUNDS_KEY = 'zettnas_window_bounds_v2';
@@ -127,7 +162,7 @@ export function saveWindowBounds(id, bounds) {
 }
 
 export function applySavedBounds(dragEl, winId) {
-  if (!dragEl || document.body.classList.contains('mobile-mode') || window.innerWidth <= 768) return;
+  if (!dragEl || dragEl.id === 'global-toast-container' || document.body.classList.contains('mobile-mode') || window.innerWidth <= 768) return;
   const id = winId || dragEl.id || dragEl.dataset.windowId;
   if (!id) return;
   const all = loadSavedWindowBounds();
@@ -706,7 +741,7 @@ export const DockManager = {
       this.render();
       const appName = KNOWN_APPS[id]?.getTitle ? KNOWN_APPS[id].getTitle() : (this.windows[id]?.title || '');
       const toastMsg = appName ? `${appName}: ${t('dock.pinned_toast', 'Pinned to Dock')}` : t('dock.pinned_toast', 'Pinned to Dock');
-      showDockToast(toastMsg);
+      showDockToast(toastMsg, id);
     }
   },
 
@@ -722,7 +757,7 @@ export const DockManager = {
       this.render();
       const appName = KNOWN_APPS[id]?.getTitle ? KNOWN_APPS[id].getTitle() : (this.windows[id]?.title || '');
       const toastMsg = appName ? `${appName}: ${t('dock.unpinned_toast', 'Unpinned from Dock')}` : t('dock.unpinned_toast', 'Unpinned from Dock');
-      showDockToast(toastMsg);
+      showDockToast(toastMsg, id);
     }
   },
 
@@ -1392,13 +1427,9 @@ export function initDockSystem() {
   if (!toastContainer) {
     toastContainer = document.createElement('div');
     toastContainer.id = 'global-toast-container';
-    toastContainer.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:var(--z-toast, 10000);display:flex;flex-direction:column;gap:8px;';
+    toastContainer.style.cssText = 'position:fixed;bottom:84px;left:50%;transform:translateX(-50%);z-index:var(--z-toast, 10000);display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;';
     document.body.appendChild(toastContainer);
   }
-  setTimeout(() => {
-    const tC = document.getElementById('global-toast-container');
-    if (tC) makeDraggable(tC, tC);
-  }, 100);
 
   const notifPanel = document.getElementById('notif-center-panel');
   const notifHeader = document.getElementById('notif-center-header');
