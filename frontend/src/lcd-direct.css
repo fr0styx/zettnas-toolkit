@@ -58,10 +58,12 @@ body.lcd-direct .chassis-front-panel {
   transform: none !important;
 }
 
-body.lcd-direct #console-modal-overlay {
+body.lcd-direct #console-modal-overlay,
+body.lcd-direct #console-modal-overlay.window-minimized {
   display: block !important;
   background: transparent !important;
   opacity: 1 !important;
+  visibility: visible !important;
   transform: none !important;
   position: static !important;
   inset: auto !important;
@@ -70,13 +72,10 @@ body.lcd-direct #console-modal-overlay {
   pointer-events: auto !important;
 }
 
-body.lcd-direct #console-modal-overlay.window-minimized {
+body.lcd-direct #console-window,
+body.lcd-direct #console-window.window-minimized {
   display: block !important;
-  opacity: 1 !important;
-}
-
-body.lcd-direct #console-window {
-  display: block !important;
+  visibility: visible !important;
   position: static !important;
   bottom: auto !important;
   left: auto !important;
@@ -88,17 +87,14 @@ body.lcd-direct #console-window {
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
-}
-
-body.lcd-direct #console-window.window-minimized {
   opacity: 1 !important;
-  transform: none !important;
-  pointer-events: auto !important;
 }
 
 body.lcd-direct #screen,
 body.lcd-direct #screen.hardware-screen-canvas {
   display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
   flex-direction: column !important;
   position: fixed !important;
   top: 0 !important;
@@ -118,4 +114,8 @@ body.lcd-direct #screen.hardware-screen-canvas {
   z-index: 999999 !important;
   transform-origin: 0 0 !important;
   transform: rotate(90deg) translate(0, -172px) !important;
+}
+
+body.lcd-direct #screen * {
+  visibility: visible !important;
 }

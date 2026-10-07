@@ -111,6 +111,21 @@ document.addEventListener('DOMContentLoaded', () => {
   if (window.location.search.includes('mode=lcd') || document.body.classList.contains('lcd-direct')) {
     state.isLcdDirect = true;
     document.body.classList.add('lcd-direct');
+    const overlay = document.getElementById('console-modal-overlay');
+    const win = document.getElementById('console-window');
+    const screen = document.getElementById('screen');
+    if (overlay) {
+      overlay.style.removeProperty('display');
+      overlay.classList.remove('window-minimized');
+      overlay.classList.add('open');
+    }
+    if (win) {
+      win.style.removeProperty('display');
+      win.classList.remove('window-minimized');
+    }
+    if (screen) {
+      screen.style.visibility = 'visible';
+    }
   }
   initI18n();
   initDockSystem();
