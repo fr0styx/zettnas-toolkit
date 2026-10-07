@@ -360,7 +360,7 @@ export function initManagement() {
     if (detailContainer) detailContainer.style.display = 'none';
     if (headerNav) headerNav.style.display = 'none';
     if (backBtn) backBtn.style.display = 'none';
-    if (titleText) titleText.textContent = t('mgmt.title', 'System Management');
+    if (titleText) titleText.textContent = t('mgmt.title', 'Mission Control');
     document.querySelectorAll('.mgmt-category-tab').forEach((t) => t.classList.remove('active'));
     document.querySelectorAll('.mgmt-sidebar-item').forEach((b) => {
       b.classList.toggle('active', b.dataset.mgmtTarget === 'management-hub-view');
@@ -442,7 +442,7 @@ export function initManagement() {
       b.classList.toggle('active', b.dataset.mgmtTarget === targetId);
     });
 
-    let sectionName = t('mgmt.title', 'System Management');
+    let sectionName = t('mgmt.title', 'Mission Control');
     if (targetId === 'mgmt-sec-wallpaper') {
       sectionName = t('mgmt.appearance_title', 'Appearance');
       triggerActiveSubTab(targetId);

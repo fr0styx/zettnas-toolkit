@@ -594,7 +594,7 @@ export const KNOWN_APPS = {
   management: {
     id: 'management',
     icon: '#i-management',
-    getTitle: () => t('dock.management', 'Management'),
+    getTitle: () => t('dock.management', 'Mission Control'),
     launch: (pane = null) => {
       if (window.openManagementWindow) {
         window.openManagementWindow(pane);
@@ -989,7 +989,7 @@ export const DockManager = {
         container.innerHTML = `
           <img src="img/chassis-d6u.webp" style="width:38px; height:auto; border-radius:4px; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));" alt="Chassis">
           <div style="display:flex; flex-direction:column; gap:2px; overflow:hidden;">
-            <div style="font-size:10px; font-weight:700; color:#fff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">System Management</div>
+            <div style="font-size:10px; font-weight:700; color:#fff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Mission Control</div>
             <div style="font-size:8px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Profiles • Containers • Storage</div>
           </div>
         `;
@@ -1350,7 +1350,7 @@ export function initDockSystem() {
       DockManager.windows['console'].title = t('dock.zettnas', 'ZettNAS');
     }
     if (DockManager.windows['management']) {
-      DockManager.windows['management'].title = t('dock.management', 'Management');
+      DockManager.windows['management'].title = t('dock.management', 'Mission Control');
     }
     DockManager.render();
   });
@@ -1505,7 +1505,7 @@ export function initDockSystem() {
       DockManager.windows['console'].title = t('dock.zettnas', 'ZettNAS');
     }
     if (DockManager.windows['management']) {
-      DockManager.windows['management'].title = t('dock.management', 'Management');
+      DockManager.windows['management'].title = t('dock.management', 'Mission Control');
     }
     DockManager.render();
   });
