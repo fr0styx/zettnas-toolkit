@@ -344,9 +344,9 @@ export function applyTheme(themeName) {
   const icon = $('suite-brand-icon');
 
   if (title) title.textContent = isYak ? 'YAK EXPRESS' : 'ZETTNAS';
-  if (badge) badge.textContent = isYak ? 'RELIABILITY CULT' : t('nav.toolkit', 'HARDWARE TOOLKIT');
+  if (badge) badge.textContent = isYak ? 'RELIABILITY CULT' : t('nav.toolkit', 'NAS WORKBENCH');
   if (engraved) engraved.textContent = isYak ? 'YAK EXPRESS • TOASTIE LOGISTICS LAB' : t('console.engraved_title', 'ZETTNAS • SYSTEM CONSOLE');
-  if (drawerSub) drawerSub.textContent = isYak ? 'LOGISTICS LAB' : t('settings.drawer_badge', 'HARDWARE TOOLKIT');
+  if (drawerSub) drawerSub.textContent = isYak ? 'LOGISTICS LAB' : t('settings.drawer_badge', 'NAS WORKBENCH');
   if (icon) icon.innerHTML = isYak ? '<use href="#i-yak"/>' : '<use href="#i-chip"/>';
 
   if ($('lbl-module-storage')) $('lbl-module-storage').textContent = isYak ? 'Cargo Hold (Capacity & Donut)' : t('settings.mod_storage', 'Storage (Donut & Capacity)');
