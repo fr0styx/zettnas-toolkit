@@ -13,19 +13,24 @@ import { t } from '../i18n.js';
 
 const $ = (id) => document.getElementById(id);
 
-export function openDrawer() {
+export function openDrawer(tabId = null) {
   const drawer = $('led-drawer') || document.querySelector('.slide-drawer');
   const overlay = $('drawer-overlay') || document.querySelector('.drawer-backdrop');
   if (drawer && overlay) {
     drawer.classList.add('open');
     overlay.classList.add('open');
     document.body.classList.add('drawer-is-open');
+    if (tabId) {
+      const tabBtn = document.querySelector(`.drawer-tab-btn[data-tab="${tabId}"]`);
+      if (tabBtn) tabBtn.click();
+    }
     setTimeout(() => {
       fitMiniPreviewScale();
       syncMiniPreviewTelemetry();
     }, 100);
   }
 }
+window.openDrawer = openDrawer;
 
 export function closeDrawer() {
   const drawer = $('led-drawer') || document.querySelector('.slide-drawer');

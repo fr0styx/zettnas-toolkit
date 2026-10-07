@@ -494,9 +494,12 @@ export function openEventDetailModal(ev) {
     actionLabel = t("event_detail.action_thermal", "Open Fan Control");
     actionFn = () => {
       closeEventDetailModal();
-      if (window.DockManager && window.DockManager.windows["management"]) {
-        window.DockManager.restore("management");
-        const fanTab = document.querySelector('.tab-btn[data-target="management-fans"]');
+      if (typeof window.openDrawer === "function") {
+        window.openDrawer("tab-fans");
+      } else {
+        const drawerBtn = document.getElementById("drawer-toggle-btn") || document.getElementById("suite-toolkit-btn");
+        if (drawerBtn) drawerBtn.click();
+        const fanTab = document.querySelector('.drawer-tab-btn[data-tab="tab-fans"]');
         if (fanTab) fanTab.click();
       }
     };
@@ -510,10 +513,10 @@ export function openEventDetailModal(ev) {
         openSmartModal(devMatch[1]);
         return;
       }
-      if (window.DockManager && window.DockManager.windows["management"]) {
-        window.DockManager.restore("management");
-        const stTab = document.querySelector('.tab-btn[data-target="management-storage"]');
-        if (stTab) stTab.click();
+      if (typeof window.openManagementWindow === "function") {
+        window.openManagementWindow("mgmt-pane-unraid");
+      } else if (typeof openSmartModal === "function") {
+        openSmartModal();
       }
     };
   } else if (/docker|container|compose|cgroup/.test(searchStr)) {
@@ -521,10 +524,8 @@ export function openEventDetailModal(ev) {
     actionLabel = t("event_detail.action_docker", "Open Container Telemetry");
     actionFn = () => {
       closeEventDetailModal();
-      if (window.DockManager && window.DockManager.windows["management"]) {
-        window.DockManager.restore("management");
-        const docTab = document.querySelector('.tab-btn[data-target="management-docker"]');
-        if (docTab) docTab.click();
+      if (typeof window.openManagementWindow === "function") {
+        window.openManagementWindow("mgmt-pane-docker");
       }
     };
   } else if (/ups|battery|power|nut|charge|runtime/.test(searchStr)) {
@@ -532,10 +533,8 @@ export function openEventDetailModal(ev) {
     actionLabel = t("event_detail.action_management", "Open Management");
     actionFn = () => {
       closeEventDetailModal();
-      if (window.DockManager && window.DockManager.windows["management"]) {
-        window.DockManager.restore("management");
-        const ovTab = document.querySelector('.tab-btn[data-target="management-overview"]');
-        if (ovTab) ovTab.click();
+      if (typeof window.openManagementWindow === "function") {
+        window.openManagementWindow("mgmt-pane-unraid");
       }
     };
   } else {
@@ -543,10 +542,8 @@ export function openEventDetailModal(ev) {
     actionLabel = t("event_detail.action_events", "Open Full Event Log");
     actionFn = () => {
       closeEventDetailModal();
-      if (window.DockManager && window.DockManager.windows["management"]) {
-        window.DockManager.restore("management");
-        const evTab = document.querySelector('.tab-btn[data-target="management-events"]');
-        if (evTab) evTab.click();
+      if (typeof window.openManagementWindow === "function") {
+        window.openManagementWindow();
       }
     };
   }

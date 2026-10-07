@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { makeDraggable, saveWindowBounds, loadSavedWindowBounds, DockManager, isEventChecked, markEventChecked, getEventKey, openConsoleWindow, KNOWN_APPS } from '../components/dock.js';
+import { makeDraggable, saveWindowBounds, loadSavedWindowBounds, DockManager, isEventChecked, markEventChecked, getEventKey, openConsoleWindow, KNOWN_APPS, toggleConsoleMaximize } from '../components/dock.js';
 import { openEventDetailModal, closeEventDetailModal } from '../modals.js';
 
 describe('Notification Center Draggable Window & Event Detail Inspector', () => {
@@ -284,4 +284,89 @@ describe('Notification Center Draggable Window & Event Detail Inspector', () => 
     expect(win.classList.contains('window-minimized')).toBe(false);
     expect(dock.querySelector('[data-window-id="console"]').classList.contains('pinned-closed')).toBe(false);
   });
+
+  it('action button in Event Detail Modal triggers openDrawer for thermal events and closes modal', () => {
+    window.openDrawer = vi.fn();
+    const mockEvent = {
+      ts: 1791393000,
+      level: 'warning',
+      title: 'CPU Fan Speed High',
+      message: 'PWM duty reached 85% at 68°C',
+      details: { fan_idx: 1, rpm: 2250 }
+    };
+
+    openEventDetailModal(mockEvent);
+    const overlay = document.getElementById('event-detail-modal-overlay');
+    expect(overlay.classList.contains('open')).toBe(true);
+
+    const contextBtn = document.getElementById('event-detail-context-btn');
+    expect(contextBtn.style.display).toBe('inline-block');
+    expect(contextBtn.textContent).toBe('Open Fan Control');
+
+    contextBtn.click();
+    expect(window.openDrawer).toHaveBeenCalledWith('tab-fans');
+    expect(overlay.classList.contains('open')).toBe(false);
+  });
+
+  it('action button in Event Detail Modal triggers openManagementWindow for container events', () => {
+    window.openManagementWindow = vi.fn();
+    const mockEvent = {
+      ts: 1791393200,
+      level: 'info',
+      title: 'Docker Container Alert',
+      message: 'Container plex high memory usage',
+      details: { container: 'plex' }
+    };
+
+    openEventDetailModal(mockEvent);
+    const overlay = document.getElementById('event-detail-modal-overlay');
+    expect(overlay.classList.contains('open')).toBe(true);
+
+    const contextBtn = document.getElementById('event-detail-context-btn');
+    expect(contextBtn.textContent).toBe('Open Container Telemetry');
+
+    contextBtn.click();
+    expect(window.openManagementWindow).toHaveBeenCalledWith('mgmt-pane-docker');
+    expect(overlay.classList.contains('open')).toBe(false);
+  });
+
+  it('toggles console window maximize and restore with proportional scaling transform and restores previous position', () => {
+    const consoleOverlay = document.createElement('div');
+    consoleOverlay.id = 'console-modal-overlay';
+    const consoleWin = document.createElement('div');
+    consoleWin.id = 'console-window';
+    consoleWin.style.position = 'fixed';
+    consoleWin.style.left = '120px';
+    consoleWin.style.top = '80px';
+    const consoleMax = document.createElement('button');
+    consoleMax.id = 'console-max';
+    consoleMax.setAttribute('title', 'Maximize');
+
+    document.body.appendChild(consoleOverlay);
+    document.body.appendChild(consoleWin);
+    document.body.appendChild(consoleMax);
+
+    // Maximize
+    toggleConsoleMaximize();
+    expect(consoleWin.dataset.maximized).toBe('true');
+    expect(consoleMax.getAttribute('title')).toBe('Restore');
+    expect(consoleWin.style.left).toBe('50%');
+    expect(consoleWin.style.transform).toContain('scale(');
+
+    // Restore
+    toggleConsoleMaximize();
+    expect(consoleWin.dataset.maximized).toBeUndefined();
+    expect(consoleMax.getAttribute('title')).toBe('Maximize');
+    expect(consoleWin.style.left).toBe('120px');
+    expect(consoleWin.style.top).toBe('80px');
+
+    consoleOverlay.remove();
+    consoleWin.remove();
+    consoleMax.remove();
+  });
+
+  it('verifies console popout standalone button is absent from chassis header', () => {
+    expect(document.getElementById('console-popout')).toBeNull();
+  });
 });
+

@@ -216,6 +216,11 @@ export function makeDraggable(dragEl, handleEl, customId) {
     const ghost = getOrCreateSnapGhost();
     activeSnap = null;
 
+    if (dragEl.dataset.maximized) {
+      const cMax = document.getElementById('console-max');
+      if (cMax) cMax.click();
+    }
+
     if (dragEl.dataset.snapped) {
       dragEl.dataset.snapped = '';
       if (dragEl._preSnapWidth) dragEl.style.width = dragEl._preSnapWidth;
@@ -325,6 +330,10 @@ export function makeDraggable(dragEl, handleEl, customId) {
   handleEl.addEventListener('dblclick', (e) => {
     if (e.target.closest('button') || e.target.closest('input') || e.target.closest('.modal-ctrl-btn')) return;
     if (document.body.classList.contains('mobile-mode') || window.innerWidth <= 768) return;
+    if (dragEl.id === 'console-window') {
+      const cMax = document.getElementById('console-max');
+      if (cMax) { cMax.click(); return; }
+    }
     if (dragEl.dataset.snapped) {
       dragEl.dataset.snapped = '';
       dragEl.style.transition = 'all 0.22s cubic-bezier(0.16, 1, 0.3, 1)';
@@ -1067,6 +1076,61 @@ export const DockManager = {
 window.DockManager = DockManager;
 window.bringToFront = bringToFront;
 
+let _isConsoleMaximized = false;
+let _consolePreMaxBounds = null;
+
+export function toggleConsoleMaximize(e) {
+  if (e && e.preventDefault) { e.preventDefault(); e.stopPropagation(); }
+  const consoleModal = document.getElementById('console-window');
+  if (!consoleModal) return;
+  const consoleMax = document.getElementById('console-max');
+
+  if (!_isConsoleMaximized) {
+    _consolePreMaxBounds = {
+      left: consoleModal.style.left,
+      top: consoleModal.style.top,
+      transform: consoleModal.style.transform,
+      width: consoleModal.style.width,
+      height: consoleModal.style.height
+    };
+    const availW = Math.max(320, window.innerWidth - 64);
+    const availH = Math.max(200, window.innerHeight - 150);
+    const scale = Math.max(1, Math.min(availW / 712, availH / 270));
+    consoleModal.style.transition = 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), left 0.25s ease, top 0.25s ease';
+    consoleModal.style.position = 'fixed';
+    consoleModal.style.left = '50%';
+    consoleModal.style.top = 'calc(50% - 20px)';
+    consoleModal.style.transform = `translate(-50%, -50%) scale(${scale.toFixed(3)})`;
+    consoleModal.style.transformOrigin = 'center center';
+    consoleModal.dataset.maximized = 'true';
+    if (consoleMax) consoleMax.setAttribute('title', 'Restore');
+    _isConsoleMaximized = true;
+    setTimeout(() => { if (consoleModal) consoleModal.style.transition = ''; }, 260);
+  } else {
+    consoleModal.style.transition = 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), left 0.25s ease, top 0.25s ease';
+    if (_consolePreMaxBounds && _consolePreMaxBounds.left && _consolePreMaxBounds.left !== '50%') {
+      consoleModal.style.left = _consolePreMaxBounds.left;
+      consoleModal.style.top = _consolePreMaxBounds.top;
+      consoleModal.style.transform = _consolePreMaxBounds.transform || 'none';
+      consoleModal.style.width = _consolePreMaxBounds.width || '';
+      consoleModal.style.height = _consolePreMaxBounds.height || '';
+    } else {
+      consoleModal.style.left = '50%';
+      consoleModal.style.top = '50%';
+      consoleModal.style.transform = 'translate(-50%, -50%)';
+      consoleModal.style.width = '';
+      consoleModal.style.height = '';
+    }
+    delete consoleModal.dataset.maximized;
+    if (consoleMax) consoleMax.setAttribute('title', 'Maximize');
+    _isConsoleMaximized = false;
+    setTimeout(() => { if (consoleModal) consoleModal.style.transition = ''; }, 260);
+  }
+}
+if (typeof window !== 'undefined') {
+  window.toggleConsoleMaximize = toggleConsoleMaximize;
+}
+
 export function initDockSystem() {
   if (state.isLcdDirect || (typeof window !== 'undefined' && window.location.search.includes('mode=lcd')) || (document.body && document.body.classList.contains('lcd-direct'))) return;
   const consoleModal = document.getElementById('console-window');
@@ -1100,6 +1164,22 @@ export function initDockSystem() {
     consoleMin.addEventListener('touchend', handleMin);
   }
 
+  const consoleMax = document.getElementById('console-max');
+  if (consoleMax) {
+    consoleMax.addEventListener('click', toggleConsoleMaximize);
+    consoleMax.addEventListener('touchend', toggleConsoleMaximize);
+  }
+
+  window.addEventListener('resize', () => {
+    const consoleModal = document.getElementById('console-window');
+    if (consoleModal && consoleModal.dataset.maximized === 'true' && _isConsoleMaximized) {
+      const availW = Math.max(320, window.innerWidth - 64);
+      const availH = Math.max(200, window.innerHeight - 150);
+      const scale = Math.max(1, Math.min(availW / 712, availH / 270));
+      consoleModal.style.transform = `translate(-50%, -50%) scale(${scale.toFixed(3)})`;
+    }
+  });
+
   const consoleClose = document.getElementById('console-close');
   if (consoleClose) {
     const handleClose = (e) => {
@@ -1108,21 +1188,6 @@ export function initDockSystem() {
     };
     consoleClose.addEventListener('click', handleClose);
     consoleClose.addEventListener('touchend', handleClose);
-  }
-
-  const consolePopout = document.getElementById('console-popout');
-  if (consolePopout) {
-    consolePopout.addEventListener('click', () => {
-      const popupW = 680;
-      const popupH = 240;
-      const left = Math.max(0, Math.round((window.screen.width - popupW) / 2));
-      const top = Math.max(0, Math.round((window.screen.height - popupH) / 2));
-      window.open(
-        `${window.location.origin}/?mode=lcd`,
-        'ZettNAS_Dashboard_Popup',
-        `width=${popupW},height=${popupH},top=${top},left=${left},status=no,menubar=no,toolbar=no,location=no,resizable=yes`
-      );
-    });
   }
 
   const chassisDesktopIcon = document.getElementById('chassis-desktop-icon');
