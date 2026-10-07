@@ -18,6 +18,51 @@
     } catch (e) {
       document.documentElement.classList.add('auth-required');
     }
+
+    // Pre-initialize desktop widgets positioning from localStorage to eliminate any jump on refresh
+    try {
+      var wRaw = localStorage.getItem('zettnas_widgets_config');
+      if (wRaw) {
+        var wCfg = JSON.parse(wRaw);
+        var css = '';
+        if (wCfg.enabled === false) {
+          css += '#desktop-widgets-container { display: none !important; }\n';
+        }
+        var p = wCfg.position || 'pos-top-right';
+        var top = (p === 'pos-bottom-right' || p === 'pos-bottom-left') ? 'auto' : '32px';
+        var bottom = (p === 'pos-bottom-right' || p === 'pos-bottom-left') ? '80px' : 'auto';
+        var left = (p === 'pos-top-left' || p === 'pos-bottom-left') ? '32px' : 'auto';
+        var right = (p === 'pos-top-right' || p === 'pos-bottom-right') ? '32px' : 'auto';
+        css += '#desktop-widgets-container { top: ' + top + ' !important; bottom: ' + bottom + ' !important; left: ' + left + ' !important; right: ' + right + ' !important; }\n';
+
+        var origin = (p === 'pos-top-left' || p === 'pos-bottom-left') ? 'top left' : 'top right';
+        if (wCfg.scale === 'scale-compact') {
+          css += '#desktop-widgets-container { transform: scale(0.88) !important; transform-origin: ' + origin + ' !important; }\n';
+        } else if (wCfg.scale === 'scale-large') {
+          css += '#desktop-widgets-container { transform: scale(1.1) !important; transform-origin: ' + origin + ' !important; }\n';
+        }
+        if (wCfg.opacity === 'glass-subtle') {
+          css += '#desktop-widgets-container .desktop-widget { background: rgba(13, 20, 30, 0.4) !important; backdrop-filter: blur(8px) !important; }\n';
+        } else if (wCfg.opacity === 'glass-solid') {
+          css += '#desktop-widgets-container .desktop-widget { background: rgba(13, 20, 30, 0.88) !important; backdrop-filter: blur(24px) !important; }\n';
+        }
+        if (wCfg.widgets) {
+          for (var wid in wCfg.widgets) {
+            if (wCfg.widgets[wid] === false) {
+              css += '#widget-' + wid + ' { display: none !important; }\n';
+            } else if (wCfg.widgets[wid] === true) {
+              css += '#widget-' + wid + ' { display: block !important; }\n';
+            }
+          }
+        }
+        if (css) {
+          var s = document.createElement('style');
+          s.id = 'zettnas-widgets-early-style';
+          s.textContent = css;
+          document.head.appendChild(s);
+        }
+      }
+    } catch (e) {}
   })();
 </script>
 <style>
@@ -231,7 +276,63 @@
     <!-- Desktop Widgets Layer -->
         <!-- Desktop Widgets Layer -->
     <div id="desktop-widgets-container" class="pos-top-right glass-standard scale-normal">
-      <!-- 1. System Widget -->
+      <!-- 1. Time Clock Widget -->
+      <div class="desktop-widget" id="widget-clock">
+        <div class="widget-header">
+          <span class="widget-title"><svg class="ic" style="width:12px;height:12px;"><use href="#i-clock"/></svg> <span data-i18n="widget.clock">Time Clock</span></span>
+          <span class="widget-badge" id="w-clock-tz" title="Click to toggle 12h/24h" style="cursor: pointer; user-select: none;">24H</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 4px;">
+          <div style="display: flex; align-items: baseline; justify-content: space-between;">
+            <div style="font-size: 24px; font-weight: 800; font-family: var(--font-mono, monospace); letter-spacing: 0.5px; color: #fff; line-height: 1;" id="w-clock-time">
+              --:--<span style="font-size: 14px; opacity: 0.65; margin-left: 1px;" id="w-clock-sec">:--</span>
+            </div>
+            <span style="font-size: 11px; font-weight: 700; color: var(--brand, #00f0ff);" id="w-clock-ampm"></span>
+          </div>
+          <div style="font-size: 11.5px; color: var(--muted); font-weight: 500;" id="w-clock-date">--</div>
+        </div>
+      </div>
+
+      <!-- 2. Weather Widget -->
+      <div class="desktop-widget" id="widget-weather">
+        <div class="widget-header">
+          <span class="widget-title"><svg class="ic" style="width:12px;height:12px;"><use href="#i-weather"/></svg> <span data-i18n="widget.weather">Local Weather</span></span>
+          <span class="widget-badge" id="w-weather-city" title="Detected location">--</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span id="w-weather-icon" style="font-size: 24px; line-height: 1;">⛅</span>
+            <div style="display: flex; flex-direction: column;">
+              <span id="w-weather-temp" style="font-size: 20px; font-weight: 800; font-family: var(--font-mono, monospace); line-height: 1.1; cursor: pointer; user-select: none;" title="Click to toggle °C / °F">--°</span>
+              <span id="w-weather-desc" style="font-size: 10.5px; color: var(--muted); font-weight: 500;">Loading…</span>
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column; text-align: right; gap: 2px;">
+            <span id="w-weather-range" style="font-size: 11px; font-weight: 600; color: #cbd5e1; font-family: var(--font-mono, monospace);">H: --° L: --°</span>
+            <span id="w-weather-details" style="font-size: 9.5px; color: var(--muted);">💧 --% • 💨 --</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Calendar Widget -->
+      <div class="desktop-widget" id="widget-calendar" style="display: none;">
+        <div class="widget-header">
+          <span class="widget-title">
+            <svg class="ic" style="width:12px;height:12px;"><use href="#i-calendar"/></svg>
+            <span data-i18n="widget.calendar">Calendar</span>
+            <span class="widget-badge" id="w-cal-country-badge" style="margin-left: 5px; font-size: 8.5px; opacity: 0.85; cursor: pointer;" title="Official Holidays Country">US</span>
+          </span>
+          <div style="display: flex; align-items: center; gap: 4px;">
+            <button id="w-cal-prev" class="btn-icon" style="padding: 1px 5px; font-size: 9px; background: rgba(255,255,255,0.08); border: none; border-radius: 3px; color: #cbd5e1; cursor: pointer;" title="Previous Month">◀</button>
+            <span class="widget-badge" id="w-cal-month" style="font-size: 9.5px; cursor: pointer;" title="Click to jump to current month">OCT 2026</span>
+            <button id="w-cal-next" class="btn-icon" style="padding: 1px 5px; font-size: 9px; background: rgba(255,255,255,0.08); border: none; border-radius: 3px; color: #cbd5e1; cursor: pointer;" title="Next Month">▶</button>
+          </div>
+        </div>
+        <div id="w-calendar-grid" class="widget-calendar-grid"></div>
+        <div id="w-cal-glance-bar" class="cal-glance-bar"></div>
+      </div>
+
+      <!-- 4. System Widget -->
       <div class="desktop-widget" id="widget-system">
         <div class="widget-header">
           <span class="widget-title"><svg class="ic" style="width:12px;height:12px;"><use href="#i-cpu"/></svg> <span data-i18n="widget.system">System Status</span></span>
@@ -255,7 +356,7 @@
         </div>
       </div>
       
-      <!-- 2. Network Widget -->
+      <!-- 5. Network Widget -->
       <div class="desktop-widget" id="widget-network">
         <div class="widget-header">
           <span class="widget-title"><svg class="ic" style="width:12px;height:12px;"><use href="#i-net"/></svg> <span data-i18n="widget.network">Network IO</span></span>
@@ -273,7 +374,7 @@
         </div>
       </div>
 
-      <!-- 3. Storage Pool Widget -->
+      <!-- 6. Storage Pool Widget -->
       <div class="desktop-widget" id="widget-storage">
         <div class="widget-header">
           <span class="widget-title"><svg class="ic" style="width:12px;height:12px;"><use href="#i-storage"/></svg> <span data-i18n="widget.storage">Storage Pool</span></span>
@@ -290,7 +391,7 @@
         </div>
       </div>
 
-      <!-- 4. Host Info & Uptime Widget -->
+      <!-- 7. Host Info & Uptime Widget -->
       <div class="desktop-widget" id="widget-uptime" style="display: none;">
         <div class="widget-header">
           <span class="widget-title"><svg class="ic" style="width:12px;height:12px;"><use href="#i-chip"/></svg> <span data-i18n="widget.host">Host Info</span></span>
@@ -302,62 +403,6 @@
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <span style="font-size: 12px; color: var(--muted);">Uptime</span>
           <span style="font-size: 12px; font-weight: 600; font-family: var(--font-mono, monospace); color: #cbd5e1;" id="w-host-uptime">--</span>
-        </div>
-      </div>
-
-      <!-- 5. Time Clock Widget -->
-      <div class="desktop-widget" id="widget-clock" style="display: none;">
-        <div class="widget-header">
-          <span class="widget-title"><svg class="ic" style="width:12px;height:12px;"><use href="#i-clock"/></svg> <span data-i18n="widget.clock">Time Clock</span></span>
-          <span class="widget-badge" id="w-clock-tz" title="Click to toggle 12h/24h" style="cursor: pointer; user-select: none;">24H</span>
-        </div>
-        <div style="display: flex; flex-direction: column; gap: 4px;">
-          <div style="display: flex; align-items: baseline; justify-content: space-between;">
-            <div style="font-size: 24px; font-weight: 800; font-family: var(--font-mono, monospace); letter-spacing: 0.5px; color: #fff; line-height: 1;" id="w-clock-time">
-              00:00<span style="font-size: 14px; opacity: 0.65; margin-left: 1px;" id="w-clock-sec">:00</span>
-            </div>
-            <span style="font-size: 11px; font-weight: 700; color: var(--brand, #00f0ff);" id="w-clock-ampm"></span>
-          </div>
-          <div style="font-size: 11.5px; color: var(--muted); font-weight: 500;" id="w-clock-date">--</div>
-        </div>
-      </div>
-
-      <!-- 6. Calendar Widget -->
-      <div class="desktop-widget" id="widget-calendar" style="display: none;">
-        <div class="widget-header">
-          <span class="widget-title">
-            <svg class="ic" style="width:12px;height:12px;"><use href="#i-calendar"/></svg>
-            <span data-i18n="widget.calendar">Calendar</span>
-            <span class="widget-badge" id="w-cal-country-badge" style="margin-left: 5px; font-size: 8.5px; opacity: 0.85; cursor: pointer;" title="Official Holidays Country">US</span>
-          </span>
-          <div style="display: flex; align-items: center; gap: 4px;">
-            <button id="w-cal-prev" class="btn-icon" style="padding: 1px 5px; font-size: 9px; background: rgba(255,255,255,0.08); border: none; border-radius: 3px; color: #cbd5e1; cursor: pointer;" title="Previous Month">◀</button>
-            <span class="widget-badge" id="w-cal-month" style="font-size: 9.5px; cursor: pointer;" title="Click to jump to current month">OCT 2026</span>
-            <button id="w-cal-next" class="btn-icon" style="padding: 1px 5px; font-size: 9px; background: rgba(255,255,255,0.08); border: none; border-radius: 3px; color: #cbd5e1; cursor: pointer;" title="Next Month">▶</button>
-          </div>
-        </div>
-        <div id="w-calendar-grid" class="widget-calendar-grid"></div>
-        <div id="w-cal-glance-bar" class="cal-glance-bar"></div>
-      </div>
-
-      <!-- 7. Weather Widget -->
-      <div class="desktop-widget" id="widget-weather" style="display: none;">
-        <div class="widget-header">
-          <span class="widget-title"><svg class="ic" style="width:12px;height:12px;"><use href="#i-weather"/></svg> <span data-i18n="widget.weather">Local Weather</span></span>
-          <span class="widget-badge" id="w-weather-city" title="Detected location">--</span>
-        </div>
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <span id="w-weather-icon" style="font-size: 24px; line-height: 1;">⛅</span>
-            <div style="display: flex; flex-direction: column;">
-              <span id="w-weather-temp" style="font-size: 20px; font-weight: 800; font-family: var(--font-mono, monospace); line-height: 1.1; cursor: pointer; user-select: none;" title="Click to toggle °C / °F">--°</span>
-              <span id="w-weather-desc" style="font-size: 10.5px; color: var(--muted); font-weight: 500;">Loading…</span>
-            </div>
-          </div>
-          <div style="display: flex; flex-direction: column; text-align: right; gap: 2px;">
-            <span id="w-weather-range" style="font-size: 11px; font-weight: 600; color: #cbd5e1; font-family: var(--font-mono, monospace);">H: --° L: --°</span>
-            <span id="w-weather-details" style="font-size: 9.5px; color: var(--muted);">💧 --% • 💨 --</span>
-          </div>
         </div>
       </div>
     </div>

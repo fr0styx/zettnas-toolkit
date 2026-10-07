@@ -95,16 +95,25 @@ export function applyWidgetConfig() {
   container.style.display = config.enabled ? 'flex' : 'none';
 
   // Position
-  container.classList.remove('pos-top-right', 'pos-top-left', 'pos-bottom-right', 'pos-bottom-left');
-  container.classList.add(config.position || 'pos-top-right');
+  const targetPos = config.position || 'pos-top-right';
+  ['pos-top-right', 'pos-top-left', 'pos-bottom-right', 'pos-bottom-left'].forEach((cls) => {
+    if (cls !== targetPos) container.classList.remove(cls);
+  });
+  container.classList.add(targetPos);
 
   // Opacity / Glass
-  container.classList.remove('glass-subtle', 'glass-standard', 'glass-solid');
-  container.classList.add(config.opacity || 'glass-standard');
+  const targetOpacity = config.opacity || 'glass-standard';
+  ['glass-subtle', 'glass-standard', 'glass-solid'].forEach((cls) => {
+    if (cls !== targetOpacity) container.classList.remove(cls);
+  });
+  container.classList.add(targetOpacity);
 
   // Scale
-  container.classList.remove('scale-compact', 'scale-normal', 'scale-large');
-  container.classList.add(config.scale || 'scale-normal');
+  const targetScale = config.scale || 'scale-normal';
+  ['scale-compact', 'scale-normal', 'scale-large'].forEach((cls) => {
+    if (cls !== targetScale) container.classList.remove(cls);
+  });
+  container.classList.add(targetScale);
 
   // Sub-widgets visibility
   const wClock = document.getElementById('widget-clock');
@@ -123,14 +132,24 @@ export function applyWidgetConfig() {
   if (wStorage) wStorage.style.display = config.widgets.storage ? 'block' : 'none';
   if (wUptime) wUptime.style.display = config.widgets.uptime ? 'block' : 'none';
 
-  // Reorganize desktop widgets in the EXACT same order on the desktop
+  // Reorganize desktop widgets in the EXACT same order on the desktop ONLY if order differs
   const order = Array.isArray(config.order) && config.order.length ? config.order : DEFAULT_CONFIG.order;
-  order.forEach((id) => {
-    const el = document.getElementById(`widget-${id}`);
-    if (el && container.contains(el)) {
-      container.appendChild(el);
-    }
-  });
+  const currentChildrenIds = Array.from(container.children).map((el) => el.id.replace('widget-', ''));
+  const needsReorder = order.some((id, idx) => currentChildrenIds[idx] !== id);
+  if (needsReorder) {
+    order.forEach((id) => {
+      const el = document.getElementById(`widget-${id}`);
+      if (el && container.contains(el)) {
+        container.appendChild(el);
+      }
+    });
+  }
+
+  // Safely remove early-injected style now that all classes and styles are applied
+  const earlyStyle = document.getElementById('zettnas-widgets-early-style');
+  if (earlyStyle && earlyStyle.parentNode) {
+    earlyStyle.parentNode.removeChild(earlyStyle);
+  }
 
   if (config.widgets.clock) updateClock();
   if (config.widgets.calendar) renderCalendar();
