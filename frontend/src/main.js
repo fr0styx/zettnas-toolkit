@@ -18,7 +18,7 @@ import { applyStats, applyTheme, initDashboardClicks } from './components/dashbo
 import { initFanControl } from './components/fan-control.js';
 import { initLedControl } from './components/led-control.js';
 import { fetchDashboardLayout, fitMiniPreviewScale } from './components/mini-preview.js';
-import { initWallpapers } from './components/wallpapers.js';
+import { initWallpapers, loadWallpapers } from './components/wallpapers.js';
 import { initEvents } from './components/events.js';
 import { initSettings, openDrawer, closeDrawer } from './components/settings.js';
 import { initMetricsChart, fetchAndRenderMetrics } from './components/metrics-chart.js';
@@ -183,6 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
     tick();
     startSSE();
     checkLcdStatus();
+    loadWallpapers();
     restoreOpenWindowsState();
   } else {
     const overlay = document.getElementById('login-overlay');
@@ -224,7 +225,7 @@ document.addEventListener('DOMContentLoaded', () => {
     tick();
     startSSE();
     checkLcdStatus();
-    initWallpapers();
+    loadWallpapers();
     DockManager.render();
     restoreOpenWindowsState();
   });

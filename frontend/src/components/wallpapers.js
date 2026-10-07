@@ -6,71 +6,85 @@ import { state } from '../state.js';
 import { api } from '../api.js';
 import { showToast } from '../toast.js';
 
+let _wallpapersInitialized = false;
+
+export function setWallpaper(url) {
+  if (state.isLcdDirect || (typeof window !== 'undefined' && window.location.search.includes('mode=lcd')) || (document.body && document.body.classList.contains('lcd-direct'))) return;
+  const previewImg = document.getElementById('wallpaper-preview');
+  const noImgTxt = document.getElementById('wallpaper-no-img');
+
+  if (url) {
+    document.body.style.setProperty('background-image', `url('${url}')`, 'important');
+    document.body.style.setProperty('background-size', 'cover', 'important');
+    document.body.style.setProperty('background-position', 'center', 'important');
+    document.body.style.setProperty('background-repeat', 'no-repeat', 'important');
+    document.body.style.setProperty('background-attachment', 'fixed', 'important');
+    if (previewImg) {
+      previewImg.src = url;
+      previewImg.style.display = 'block';
+    }
+    if (noImgTxt) noImgTxt.style.display = 'none';
+  } else {
+    document.body.style.removeProperty('background-image');
+    document.body.style.removeProperty('background-size');
+    document.body.style.removeProperty('background-position');
+    document.body.style.removeProperty('background-repeat');
+    document.body.style.removeProperty('background-attachment');
+    if (previewImg) {
+      previewImg.src = '';
+      previewImg.style.display = 'none';
+    }
+    if (noImgTxt) noImgTxt.style.display = 'block';
+  }
+}
+
+export async function loadWallpapers() {
+  try {
+    const data = await api.get('/api/wallpapers');
+    const currentWallpapers = data.files || [];
+    const selectDropdown = document.getElementById('wallpaper-select');
+
+    if (selectDropdown) {
+      selectDropdown.innerHTML = '<option value="">Default Gradient</option>';
+      currentWallpapers.forEach((f) => {
+        const opt = document.createElement('option');
+        opt.value = f;
+        opt.textContent = f;
+        selectDropdown.appendChild(opt);
+      });
+      if (data.active) {
+        selectDropdown.value = data.active;
+        setWallpaper(`/api/wallpapers/download/${data.active}?t=${Date.now()}`);
+      } else {
+        selectDropdown.value = '';
+        setWallpaper(null);
+      }
+    } else if (data.active) {
+      setWallpaper(`/api/wallpapers/download/${data.active}?t=${Date.now()}`);
+    } else {
+      setWallpaper(null);
+    }
+  } catch (err) {
+    console.warn('Could not load wallpapers', err);
+  }
+}
+
+if (typeof window !== 'undefined') {
+  window.loadWallpapers = loadWallpapers;
+  window.setWallpaper = setWallpaper;
+}
+
 export function initWallpapers() {
   const fileInput = document.getElementById('wallpaper-upload');
   const clearBtn = document.getElementById('wallpaper-clear-btn');
-  const previewImg = document.getElementById('wallpaper-preview');
-  const noImgTxt = document.getElementById('wallpaper-no-img');
   const selectDropdown = document.getElementById('wallpaper-select');
   const deleteBtn = document.getElementById('wallpaper-delete-btn');
   const renameBtn = document.getElementById('wallpaper-rename-btn');
 
-  let currentWallpapers = [];
-
-  function setWallpaper(url) {
-    if (state.isLcdDirect || (typeof window !== 'undefined' && window.location.search.includes('mode=lcd')) || (document.body && document.body.classList.contains('lcd-direct'))) return;
-    if (url) {
-      document.body.style.backgroundImage = `url('${url}')`;
-      document.body.style.backgroundSize = 'cover';
-      document.body.style.backgroundPosition = 'center';
-      document.body.style.backgroundRepeat = 'no-repeat';
-      document.body.style.backgroundAttachment = 'fixed';
-      if (previewImg) {
-        previewImg.src = url;
-        previewImg.style.display = 'block';
-      }
-      if (noImgTxt) noImgTxt.style.display = 'none';
-    } else {
-      document.body.style.backgroundImage = '';
-      document.body.style.backgroundSize = '';
-      document.body.style.backgroundPosition = '';
-      document.body.style.backgroundRepeat = '';
-      document.body.style.backgroundAttachment = '';
-      if (previewImg) {
-        previewImg.src = '';
-        previewImg.style.display = 'none';
-      }
-      if (noImgTxt) noImgTxt.style.display = 'block';
-    }
-  }
-
-  async function loadWallpapers() {
-    try {
-      const data = await api.get('/api/wallpapers');
-      currentWallpapers = data.files || [];
-
-      if (selectDropdown) {
-        selectDropdown.innerHTML = '<option value="">Default Gradient</option>';
-        currentWallpapers.forEach((f) => {
-          const opt = document.createElement('option');
-          opt.value = f;
-          opt.textContent = f;
-          selectDropdown.appendChild(opt);
-        });
-        if (data.active) {
-          selectDropdown.value = data.active;
-          setWallpaper(`/api/wallpapers/download/${data.active}?t=${Date.now()}`);
-        } else {
-          selectDropdown.value = '';
-          setWallpaper(null);
-        }
-      }
-    } catch (err) {
-      console.warn('Could not load wallpapers', err);
-    }
-  }
-
   loadWallpapers();
+
+  if (_wallpapersInitialized) return;
+  _wallpapersInitialized = true;
 
   if (selectDropdown) {
     selectDropdown.addEventListener('change', (e) => {

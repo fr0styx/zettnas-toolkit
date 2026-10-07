@@ -608,61 +608,107 @@ export function showDockItemContextMenu(x, y, id, title, isPinned, isRunning) {
     document.body.appendChild(menu);
   }
 
+  const isApp = id && id !== 'home' && id !== 'notif';
   const pinLabel = isPinned ? t('dock.unpin', 'Unpin from Dock') : t('dock.pin', 'Pin to Dock');
   const pinIcon = isPinned ? '📌' : '📍';
   const openLabel = t('dock.open_app', 'Open');
   const closeLabel = t('dock.close_window', 'Close Window');
 
-  menu.innerHTML = `
-    <div class="ctx-item" id="dock-ctx-pin">
-      <span style="font-size:12px; margin-right:6px;">${pinIcon}</span>
-      <span>${escapeHtml(pinLabel)}</span>
+  let html = '';
+  if (isApp) {
+    html += `
+      <div class="ctx-item" id="dock-ctx-pin">
+        <span style="font-size:12px; margin-right:6px;">${pinIcon}</span>
+        <span>${escapeHtml(pinLabel)}</span>
+      </div>
+      ${isRunning ? `
+        <div class="ctx-item" id="dock-ctx-close" style="color:var(--crit, #ff5c5c);">
+          <span style="font-size:11px; margin-right:6px;">✕</span>
+          <span>${escapeHtml(closeLabel)}</span>
+        </div>
+      ` : `
+        <div class="ctx-item" id="dock-ctx-open" style="color:var(--ok2, #25c2a0);">
+          <span style="font-size:11px; margin-right:6px;">▶</span>
+          <span>${escapeHtml(openLabel)}</span>
+        </div>
+      `}
+      <div style="height:1px; background:rgba(255,255,255,0.08); margin:4px 0;"></div>
+    `;
+  }
+
+  html += `
+    <div class="ctx-header" style="padding:4px 8px; font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; font-weight:700;">Pin Apps to Dock</div>
+    <div class="ctx-item" data-dock-pin-id="fm">
+      <span style="font-size:12px; margin-right:6px;">${DockManager.isPinned('fm') ? '📌' : '📍'}</span>
+      <span>${t('dock.file_manager', 'File Explorer')}</span>
+      <span style="margin-left:auto; font-size:10px; color:var(--brand, #00f0ff);">${DockManager.isPinned('fm') ? '✓ Pinned' : '+ Pin'}</span>
     </div>
-    ${isRunning ? `
-      <div class="ctx-item" id="dock-ctx-close" style="color:var(--crit, #ff5c5c);">
-        <span style="font-size:11px; margin-right:6px;">✕</span>
-        <span>${escapeHtml(closeLabel)}</span>
-      </div>
-    ` : `
-      <div class="ctx-item" id="dock-ctx-open" style="color:var(--ok2, #25c2a0);">
-        <span style="font-size:11px; margin-right:6px;">▶</span>
-        <span>${escapeHtml(openLabel)}</span>
-      </div>
-    `}
+    <div class="ctx-item" data-dock-pin-id="management">
+      <span style="font-size:12px; margin-right:6px;">${DockManager.isPinned('management') ? '📌' : '📍'}</span>
+      <span>${t('dock.management', 'Management')}</span>
+      <span style="margin-left:auto; font-size:10px; color:var(--brand, #00f0ff);">${DockManager.isPinned('management') ? '✓ Pinned' : '+ Pin'}</span>
+    </div>
+    <div class="ctx-item" data-dock-pin-id="console">
+      <span style="font-size:12px; margin-right:6px;">${DockManager.isPinned('console') ? '📌' : '📍'}</span>
+      <span>${t('dock.zettnas', 'ZettNAS')}</span>
+      <span style="margin-left:auto; font-size:10px; color:var(--brand, #00f0ff);">${DockManager.isPinned('console') ? '✓ Pinned' : '+ Pin'}</span>
+    </div>
+    <div class="ctx-item" data-dock-pin-id="smart">
+      <span style="font-size:12px; margin-right:6px;">${DockManager.isPinned('smart') ? '📌' : '📍'}</span>
+      <span>Diagnostics</span>
+      <span style="margin-left:auto; font-size:10px; color:var(--brand, #00f0ff);">${DockManager.isPinned('smart') ? '✓ Pinned' : '+ Pin'}</span>
+    </div>
   `;
 
+  menu.innerHTML = html;
   menu.style.display = 'block';
-  const menuW = 160;
-  const menuH = 80;
+  const menuW = 190;
+  const menuH = menu.offsetHeight || 160;
   const left = Math.max(10, Math.min(window.innerWidth - menuW - 10, x - (menuW / 2)));
   const top = Math.max(10, Math.min(window.innerHeight - menuH - 60, y - menuH - 8));
   menu.style.left = `${left}px`;
   menu.style.top = `${top}px`;
 
-  const hideMenu = () => {
+  const hideMenu = (ev) => {
+    if (ev && ev.target && ev.target.closest('#dock-item-ctx-menu')) return;
     menu.style.display = 'none';
+    document.removeEventListener('pointerdown', hideMenu);
     document.removeEventListener('click', hideMenu);
   };
-  setTimeout(() => document.addEventListener('click', hideMenu), 10);
+  setTimeout(() => {
+    document.addEventListener('pointerdown', hideMenu);
+    document.addEventListener('click', hideMenu);
+  }, 100);
 
-  document.getElementById('dock-ctx-pin')?.addEventListener('click', (e) => {
-    e.stopPropagation();
-    DockManager.togglePin(id);
-    hideMenu();
-  });
+  if (isApp) {
+    document.getElementById('dock-ctx-pin')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      DockManager.togglePin(id);
+      hideMenu();
+    });
 
-  document.getElementById('dock-ctx-close')?.addEventListener('click', (e) => {
-    e.stopPropagation();
-    DockManager.closeWindow(id);
-    hideMenu();
-  });
+    document.getElementById('dock-ctx-close')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      DockManager.closeWindow(id);
+      hideMenu();
+    });
 
-  document.getElementById('dock-ctx-open')?.addEventListener('click', (e) => {
-    e.stopPropagation();
-    if (KNOWN_APPS[id]?.launch) {
-      KNOWN_APPS[id].launch();
-    }
-    hideMenu();
+    document.getElementById('dock-ctx-open')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (KNOWN_APPS[id]?.launch) {
+        KNOWN_APPS[id].launch();
+      }
+      hideMenu();
+    });
+  }
+
+  menu.querySelectorAll('[data-dock-pin-id]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const targetId = btn.dataset.dockPinId;
+      DockManager.togglePin(targetId);
+      hideMenu();
+    });
   });
 }
 
@@ -1147,6 +1193,12 @@ export const DockManager = {
         winIds.forEach((id) => this.restore(id));
       }
     });
+    dashItem.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      hideDockTooltip();
+      showDockItemContextMenu(e.pageX, e.pageY, 'home', t('dock.home', 'Dashboard Home'), false, false);
+    });
     dock.appendChild(dashItem);
 
     // Dynamic apps (pinned + running)
@@ -1221,7 +1273,21 @@ export const DockManager = {
       hideDockTooltip();
       if (window.toggleNotificationCenter) window.toggleNotificationCenter();
     });
+    notifItem.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      hideDockTooltip();
+      showDockItemContextMenu(e.pageX, e.pageY, 'notif', t('dock.notifications', 'Notification Center'), false, false);
+    });
     dock.appendChild(notifItem);
+
+    dock.oncontextmenu = (e) => {
+      if (e.target.closest('.dock-item')) return;
+      e.preventDefault();
+      e.stopPropagation();
+      hideDockTooltip();
+      showDockItemContextMenu(e.pageX, e.pageY, null, 'Dock', false, false);
+    };
 
   }
 };
@@ -1490,133 +1556,185 @@ export function initDraggableDesktopIcons() {
   ];
 
   // Desktop Context Menu
-  const stage = document.querySelector('.desktop-icons-container');
-  if (stage) {
-    let ctxMenu = document.getElementById('desktop-ctx-menu');
-    if (!ctxMenu) {
-      ctxMenu = document.createElement('div');
-      ctxMenu.id = 'desktop-ctx-menu';
-      ctxMenu.className = 'os-context-menu';
-      const hideMenu = () => {
-        if (ctxMenu) ctxMenu.style.display = 'none';
-      };
+  let ctxMenu = document.getElementById('desktop-ctx-menu');
+  if (!ctxMenu) {
+    ctxMenu = document.createElement('div');
+    ctxMenu.id = 'desktop-ctx-menu';
+    ctxMenu.className = 'os-context-menu desktop-context-menu';
+    document.body.appendChild(ctxMenu);
+  }
+
+  const hideMenu = (ev) => {
+    if (ev && ev.target && ev.target.closest('#desktop-ctx-menu')) return;
+    if (ctxMenu) ctxMenu.style.display = 'none';
+    document.removeEventListener('pointerdown', hideMenu);
+    document.removeEventListener('click', hideMenu);
+  };
+
+  const wireHide = () => {
+    setTimeout(() => {
+      document.addEventListener('pointerdown', hideMenu);
       document.addEventListener('click', hideMenu);
+    }, 100);
+  };
 
-      const wireGridAndSort = () => {
-        document.getElementById('ctx-align-grid')?.addEventListener('click', () => {
-          if (document.body.classList.contains('mobile-mode') || window.innerWidth <= 768) return;
-          const GRID_X = 140;
-          const GRID_Y = 112;
-          const OFFSET_X = 24;
-          const OFFSET_Y = 56;
-          iconConfigs.forEach(({ id }) => {
-            const el = document.getElementById(id);
-            if (el) {
-              const rect = el.getBoundingClientRect();
-              let snapLeft = OFFSET_X + Math.round((rect.left - OFFSET_X) / GRID_X) * GRID_X;
-              let snapTop = OFFSET_Y + Math.round((rect.top - OFFSET_Y) / GRID_Y) * GRID_Y;
+  const wireGridAndSort = () => {
+    document.getElementById('ctx-align-grid')?.addEventListener('click', () => {
+      if (document.body.classList.contains('mobile-mode') || window.innerWidth <= 768) return;
+      const GRID_X = 140;
+      const GRID_Y = 112;
+      const OFFSET_X = 24;
+      const OFFSET_Y = 56;
+      iconConfigs.forEach(({ id }) => {
+        const el = document.getElementById(id);
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          let snapLeft = OFFSET_X + Math.round((rect.left - OFFSET_X) / GRID_X) * GRID_X;
+          let snapTop = OFFSET_Y + Math.round((rect.top - OFFSET_Y) / GRID_Y) * GRID_Y;
 
-              if (snapLeft < OFFSET_X) snapLeft = OFFSET_X;
-              if (snapTop < OFFSET_Y) snapTop = OFFSET_Y;
+          if (snapLeft < OFFSET_X) snapLeft = OFFSET_X;
+          if (snapTop < OFFSET_Y) snapTop = OFFSET_Y;
 
-              el.style.left = snapLeft + 'px';
-              el.style.top = snapTop + 'px';
-              savedPositions[id] = { left: snapLeft, top: snapTop };
-            }
-          });
-          localStorage.setItem(storageKey, JSON.stringify(savedPositions));
-        });
-
-        document.getElementById('ctx-sort-name')?.addEventListener('click', () => {
-          if (document.body.classList.contains('mobile-mode') || window.innerWidth <= 768) return;
-          let items = [];
-          iconConfigs.forEach((conf) => {
-            const el = document.getElementById(conf.id);
-            if (el) {
-              const nameEl = el.querySelector('.icon-text');
-              items.push({ id: conf.id, el, name: nameEl ? nameEl.innerText : conf.id });
-            }
-          });
-          items.sort((a, b) => a.name.localeCompare(b.name));
-          let currentY = 56;
-          const GAP = 20;
-          items.forEach((item) => {
-            item.el.style.left = '24px';
-            item.el.style.top = currentY + 'px';
-            savedPositions[item.id] = { left: 24, top: currentY };
-            const rect = item.el.getBoundingClientRect();
-            const height = rect.height > 0 ? rect.height : 92;
-            currentY += height + GAP;
-          });
-          localStorage.setItem(storageKey, JSON.stringify(savedPositions));
-        });
-      };
-
-      document.body.addEventListener('contextmenu', (e) => {
-        if (e.target.closest('.smart-modal-window') || e.target.closest('.os-window') || e.target.closest('#console-window') || e.target.closest('.os-context-menu') || e.target.closest('#os-dock-container')) {
-          return;
+          el.style.left = snapLeft + 'px';
+          el.style.top = snapTop + 'px';
+          savedPositions[id] = { left: snapLeft, top: snapTop };
         }
+      });
+      localStorage.setItem(storageKey, JSON.stringify(savedPositions));
+      hideMenu();
+    });
 
-        const iconEl = e.target.closest('.chassis-hero-box');
-        let iconAppId = null;
-        if (iconEl) {
-          if (iconEl.id === 'management-desktop-icon') iconAppId = 'management';
-          else if (iconEl.id === 'chassis-desktop-icon') iconAppId = 'console';
-          else if (iconEl.id === 'fm-desktop-icon' || iconEl.id === 'rb-desktop-icon') iconAppId = 'fm';
+    document.getElementById('ctx-sort-name')?.addEventListener('click', () => {
+      if (document.body.classList.contains('mobile-mode') || window.innerWidth <= 768) return;
+      let items = [];
+      iconConfigs.forEach((conf) => {
+        const el = document.getElementById(conf.id);
+        if (el) {
+          const nameEl = el.querySelector('.icon-text');
+          items.push({ id: conf.id, el, name: nameEl ? nameEl.innerText : conf.id });
         }
+      });
+      items.sort((a, b) => a.name.localeCompare(b.name));
+      let currentY = 56;
+      const GAP = 20;
+      items.forEach((item) => {
+        item.el.style.left = '24px';
+        item.el.style.top = currentY + 'px';
+        savedPositions[item.id] = { left: 24, top: currentY };
+        const rect = item.el.getBoundingClientRect();
+        const height = rect.height > 0 ? rect.height : 92;
+        currentY += height + GAP;
+      });
+      localStorage.setItem(storageKey, JSON.stringify(savedPositions));
+      hideMenu();
+    });
+  };
 
-        e.preventDefault();
+  document.body.addEventListener('contextmenu', (e) => {
+    if (e.target.closest('.smart-modal-window') ||
+        e.target.closest('.os-window') ||
+        e.target.closest('#console-window') ||
+        e.target.closest('.os-context-menu') ||
+        e.target.closest('#os-dock-container') ||
+        e.target.closest('.suite-navbar') ||
+        e.target.closest('.slide-drawer')) {
+      return;
+    }
 
-        if (iconAppId) {
-          const isPinned = DockManager.isPinned(iconAppId);
-          const pinLabel = isPinned ? t('dock.unpin', 'Unpin from Dock') : t('dock.pin', 'Pin to Dock');
-          const pinIcon = isPinned ? '📌' : '📍';
-          const openLabel = t('dock.open_app', 'Open');
+    const iconEl = e.target.closest('.chassis-hero-box');
+    let iconAppId = null;
+    if (iconEl) {
+      if (iconEl.id === 'management-desktop-icon') iconAppId = 'management';
+      else if (iconEl.id === 'chassis-desktop-icon') iconAppId = 'console';
+      else if (iconEl.id === 'fm-desktop-icon' || iconEl.id === 'rb-desktop-icon') iconAppId = 'fm';
+    }
 
-          ctxMenu.innerHTML = `
-            <div class="ctx-item" id="ctx-open-app">
-              <span style="font-size:11px; margin-right:6px;">▶</span>
-              <span>${escapeHtml(openLabel)}</span>
-            </div>
-            <div class="ctx-item" id="ctx-pin-app">
-              <span style="font-size:12px; margin-right:6px;">${pinIcon}</span>
-              <span>${escapeHtml(pinLabel)}</span>
-            </div>
-            <div style="height:1px; background:rgba(255,255,255,0.08); margin:4px 0;"></div>
-            <div class="ctx-item" id="ctx-align-grid" data-i18n="desktop.align_grid">${t('desktop.align_grid', 'Align to Grid')}</div>
-            <div class="ctx-item" id="ctx-sort-name" data-i18n="desktop.sort_name">${t('desktop.sort_name', 'Sort by Name')}</div>
-          `;
+    e.preventDefault();
 
-          document.getElementById('ctx-open-app')?.addEventListener('click', (ev) => {
-            ev.stopPropagation();
-            hideMenu();
-            if (KNOWN_APPS[iconAppId]?.launch) {
-              KNOWN_APPS[iconAppId].launch();
-            } else {
-              iconEl.click();
-            }
-          });
+    if (iconAppId) {
+      const isPinned = DockManager.isPinned(iconAppId);
+      const pinLabel = isPinned ? t('dock.unpin', 'Unpin from Dock') : t('dock.pin', 'Pin to Dock');
+      const pinIcon = isPinned ? '📌' : '📍';
+      const openLabel = t('dock.open_app', 'Open');
 
-          document.getElementById('ctx-pin-app')?.addEventListener('click', (ev) => {
-            ev.stopPropagation();
-            hideMenu();
-            DockManager.togglePin(iconAppId);
-          });
+      ctxMenu.innerHTML = `
+        <div class="ctx-item" id="ctx-open-app">
+          <span style="font-size:11px; margin-right:6px;">▶</span>
+          <span>${escapeHtml(openLabel)}</span>
+        </div>
+        <div class="ctx-item" id="ctx-pin-app">
+          <span style="font-size:12px; margin-right:6px;">${pinIcon}</span>
+          <span>${escapeHtml(pinLabel)}</span>
+        </div>
+        <div style="height:1px; background:rgba(255,255,255,0.08); margin:4px 0;"></div>
+        <div class="ctx-item" id="ctx-align-grid">📐 ${t('desktop.align_grid', 'Align to Grid')}</div>
+        <div class="ctx-item" id="ctx-sort-name">🔤 ${t('desktop.sort_name', 'Sort by Name')}</div>
+      `;
+
+      document.getElementById('ctx-open-app')?.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        hideMenu();
+        if (KNOWN_APPS[iconAppId]?.launch) {
+          KNOWN_APPS[iconAppId].launch();
         } else {
-          ctxMenu.innerHTML = `
-            <div class="ctx-item" id="ctx-align-grid" data-i18n="desktop.align_grid">${t('desktop.align_grid', 'Align to Grid')}</div>
-            <div class="ctx-item" id="ctx-sort-name" data-i18n="desktop.sort_name">${t('desktop.sort_name', 'Sort by Name')}</div>
-          `;
+          iconEl.click();
         }
+      });
 
-        wireGridAndSort();
+      document.getElementById('ctx-pin-app')?.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        hideMenu();
+        DockManager.togglePin(iconAppId);
+      });
+    } else {
+      ctxMenu.innerHTML = `
+        <div class="ctx-item" id="ctx-align-grid">📐 ${t('desktop.align_grid', 'Align to Grid')}</div>
+        <div class="ctx-item" id="ctx-sort-name">🔤 ${t('desktop.sort_name', 'Sort by Name')}</div>
+        <div style="height:1px; background:rgba(255,255,255,0.08); margin:4px 0;"></div>
+        <div class="ctx-header" style="padding:4px 8px; font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; font-weight:700;">Pin Apps to Dock</div>
+        <div class="ctx-item" data-pin-id="fm">
+          <span style="font-size:12px; margin-right:6px;">${DockManager.isPinned('fm') ? '📌' : '📍'}</span>
+          <span>${t('dock.file_manager', 'File Explorer')}</span>
+          <span style="margin-left:auto; font-size:10px; color:var(--brand, #00f0ff);">${DockManager.isPinned('fm') ? '✓ Pinned' : '+ Pin'}</span>
+        </div>
+        <div class="ctx-item" data-pin-id="management">
+          <span style="font-size:12px; margin-right:6px;">${DockManager.isPinned('management') ? '📌' : '📍'}</span>
+          <span>${t('dock.management', 'Management')}</span>
+          <span style="margin-left:auto; font-size:10px; color:var(--brand, #00f0ff);">${DockManager.isPinned('management') ? '✓ Pinned' : '+ Pin'}</span>
+        </div>
+        <div class="ctx-item" data-pin-id="console">
+          <span style="font-size:12px; margin-right:6px;">${DockManager.isPinned('console') ? '📌' : '📍'}</span>
+          <span>${t('dock.zettnas', 'ZettNAS')}</span>
+          <span style="margin-left:auto; font-size:10px; color:var(--brand, #00f0ff);">${DockManager.isPinned('console') ? '✓ Pinned' : '+ Pin'}</span>
+        </div>
+        <div class="ctx-item" data-pin-id="smart">
+          <span style="font-size:12px; margin-right:6px;">${DockManager.isPinned('smart') ? '📌' : '📍'}</span>
+          <span>Diagnostics</span>
+          <span style="margin-left:auto; font-size:10px; color:var(--brand, #00f0ff);">${DockManager.isPinned('smart') ? '✓ Pinned' : '+ Pin'}</span>
+        </div>
+      `;
 
-        ctxMenu.style.display = 'block';
-        ctxMenu.style.left = `${Math.min(window.innerWidth - 180, e.pageX)}px`;
-        ctxMenu.style.top = `${Math.min(window.innerHeight - 150, e.pageY)}px`;
+      ctxMenu.querySelectorAll('[data-pin-id]').forEach(btn => {
+        btn.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          const targetId = btn.dataset.pinId;
+          DockManager.togglePin(targetId);
+          hideMenu();
+        });
       });
     }
-  }
+
+    wireGridAndSort();
+    wireHide();
+
+    ctxMenu.style.display = 'block';
+    const menuW = 180;
+    const menuH = ctxMenu.offsetHeight || 150;
+    const left = Math.max(10, Math.min(window.innerWidth - menuW - 10, e.pageX));
+    const top = Math.max(10, Math.min(window.innerHeight - menuH - 20, e.pageY));
+    ctxMenu.style.left = `${left}px`;
+    ctxMenu.style.top = `${top}px`;
+  });
 
   const refreshIconPositions = () => {
     const isMobile = document.body.classList.contains('mobile-mode') || window.innerWidth <= 768;
