@@ -8,9 +8,13 @@ import { ZettEventBus } from '../event-bus.js';
  */
 
 let activeWindowZIndex = 1000;
-let lastReadEventTs = parseFloat(localStorage.getItem('zettnas_last_read_event_ts') || '0');
+let lastReadEventTs = parseFloat(localStorage.getItem('zettnas_last_read_event_ts_v2') || '0');
 let clearedEventsTs = parseFloat(localStorage.getItem('zettnas_cleared_events_ts') || '0');
 let currentNotifFilter = 'all';
+
+try {
+  localStorage.removeItem('zettnas_last_read_event_ts');
+} catch {}
 
 export const CHECKED_EVENTS_KEY = 'zettnas_checked_events_v1';
 export const DOCK_PINNED_KEY = 'zettnas_dock_pinned_apps_v1';
@@ -23,6 +27,18 @@ try {
   }
 } catch {
   checkedEventKeys = new Set();
+}
+
+export function resetCheckedEventsState() {
+  checkedEventKeys.clear();
+  lastReadEventTs = 0;
+  clearedEventsTs = 0;
+  try {
+    localStorage.removeItem(CHECKED_EVENTS_KEY);
+    localStorage.removeItem('zettnas_last_read_event_ts');
+    localStorage.removeItem('zettnas_last_read_event_ts_v2');
+    localStorage.removeItem('zettnas_cleared_events_ts');
+  } catch {}
 }
 
 export function getEventKey(e) {
@@ -51,10 +67,6 @@ export function markEventChecked(e, persist = true) {
   if (!e) return;
   const key = getEventKey(e);
   checkedEventKeys.add(key);
-  if (e.ts && e.ts > lastReadEventTs) {
-    lastReadEventTs = e.ts;
-    localStorage.setItem('zettnas_last_read_event_ts', lastReadEventTs.toString());
-  }
   if (persist) {
     saveCheckedEvents();
   }
@@ -865,7 +877,7 @@ export const DockManager = {
           return container;
         }
 
-        const unread = events.filter((e) => e.ts > lastReadEventTs && e.ts > clearedEventsTs);
+        const unread = events.filter((e) => !isEventChecked(e) && e.ts > clearedEventsTs);
         const topEvent = unread.length > 0 ? unread[0] : events[0];
 
         let icon = 'ℹ️';
@@ -1712,7 +1724,7 @@ document.addEventListener('DOMContentLoaded', () => {
         state.latestStats.events.forEach(ev => markEventChecked(ev, false));
         saveCheckedEvents();
         lastReadEventTs = Math.max(...state.latestStats.events.map(ev => ev.ts));
-        localStorage.setItem('zettnas_last_read_event_ts', lastReadEventTs.toString());
+        localStorage.setItem('zettnas_last_read_event_ts_v2', lastReadEventTs.toString());
         updateNotificationBadge();
         renderNotificationCenter();
       }
@@ -1786,3 +1798,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+
+window.renderNotificationCenter = renderNotificationCenter;
+window.resetCheckedEventsState = resetCheckedEventsState;
+window.markEventChecked = markEventChecked;
+window.isEventChecked = isEventChecked;

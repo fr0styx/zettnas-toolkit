@@ -1,11 +1,12 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { makeDraggable, saveWindowBounds, loadSavedWindowBounds, DockManager, isEventChecked, markEventChecked, getEventKey, openConsoleWindow, KNOWN_APPS, toggleConsoleMaximize, renderNotificationCenter } from '../components/dock.js';
+import { makeDraggable, saveWindowBounds, loadSavedWindowBounds, DockManager, isEventChecked, markEventChecked, resetCheckedEventsState, getEventKey, openConsoleWindow, KNOWN_APPS, toggleConsoleMaximize, renderNotificationCenter } from '../components/dock.js';
 import { openEventDetailModal, closeEventDetailModal } from '../modals.js';
 import { state } from '../state.js';
 
 describe('Notification Center Draggable Window & Event Detail Inspector', () => {
   beforeEach(() => {
     localStorage.clear();
+    resetCheckedEventsState();
     document.body.innerHTML = `
       <div id="os-dock-container">
         <div id="os-dock"></div>
@@ -173,6 +174,58 @@ describe('Notification Center Draggable Window & Event Detail Inspector', () => 
     const savedRaw = localStorage.getItem('zettnas_checked_events_v1');
     expect(savedRaw).toBeDefined();
     expect(savedRaw).toContain('NVMe Temperature High');
+  });
+
+  it('checking an individual event marks ONLY that specific event as checked and does not dim older events below it', () => {
+    resetCheckedEventsState();
+
+    // 4 events sorted newest to oldest (event1 is newest, event4 is oldest)
+    const event1 = { ts: 1791394300, level: 'info', title: 'Backup Finished', message: 'Backup job done' };
+    const event2 = { ts: 1791394200, level: 'error', title: 'CPU Thermal Critical', message: 'Core temp exceeded 90C' };
+    const event3 = { ts: 1791394100, level: 'warning', title: 'Disk Pool Warning', message: 'Disk space above 85%' };
+    const event4 = { ts: 1791394000, level: 'info', title: 'Network Link Up', message: 'eth0 negotiated 10Gbps' };
+
+    // Initially all are unread
+    expect(isEventChecked(event1)).toBe(false);
+    expect(isEventChecked(event2)).toBe(false);
+    expect(isEventChecked(event3)).toBe(false);
+    expect(isEventChecked(event4)).toBe(false);
+
+    // User clicks/checks specifically event2
+    markEventChecked(event2);
+
+    // ONLY event2 should be checked. Older events (event3, event4) MUST NOT be checked!
+    expect(isEventChecked(event1)).toBe(false);
+    expect(isEventChecked(event2)).toBe(true);
+    expect(isEventChecked(event3)).toBe(false);
+    expect(isEventChecked(event4)).toBe(false);
+
+    // Now test DOM rendering in Notification Center
+    state.latestStats = {
+      events: [event1, event2, event3, event4]
+    };
+    const list = document.getElementById('notif-center-list');
+    list._lastRenderedSignature = null;
+    renderNotificationCenter();
+
+    const items = list.querySelectorAll('.notif-center-item');
+    expect(items.length).toBe(4);
+
+    // Item 1 (event1): not dimmed, has unread dot
+    expect(items[0].classList.contains('notif-event-checked')).toBe(false);
+    expect(items[0].querySelector('.notif-unread-dot')).not.toBeNull();
+
+    // Item 2 (event2): dimmed, no unread dot
+    expect(items[1].classList.contains('notif-event-checked')).toBe(true);
+    expect(items[1].querySelector('.notif-unread-dot')).toBeNull();
+
+    // Item 3 (event3 - chronologically older and below event2): MUST NOT be dimmed, MUST have unread dot
+    expect(items[2].classList.contains('notif-event-checked')).toBe(false);
+    expect(items[2].querySelector('.notif-unread-dot')).not.toBeNull();
+
+    // Item 4 (event4 - chronologically older and below event3): MUST NOT be dimmed, MUST have unread dot
+    expect(items[3].classList.contains('notif-event-checked')).toBe(false);
+    expect(items[3].querySelector('.notif-unread-dot')).not.toBeNull();
   });
 
   it('renders only 2 icons on clean initial dock startup: Dashboard Home and Notification Center', () => {
