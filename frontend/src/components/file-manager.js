@@ -11,9 +11,35 @@ let fileList = [];
 
 let currentSortBy = 'name';
 let currentSortDir = 'asc';
-let currentViewMode = 'list';
-let selectedPath = null;
+let selectedPaths = new Set();
+let lastSelectedIndex = -1;
 
+function updateFmSelectionToolbar() {
+  const bar = document.getElementById('fm-selection-bar');
+  const countSpan = document.getElementById('fm-selected-count');
+  const bulkDelBtn = document.getElementById('fm-bulk-delete-btn');
+  if (!bar || !countSpan) return;
+  const count = selectedPaths.size;
+  if (count > 0) {
+    bar.style.display = 'inline-flex';
+    countSpan.textContent = t('fm.selected_count', `${count} selected`).replace('{count}', count);
+    if (bulkDelBtn) bulkDelBtn.textContent = `🗑️ ${t('fm.bulk_delete', `Delete (${count})`).replace('{count}', count)}`;
+  } else {
+    bar.style.display = 'none';
+  }
+}
+
+function updateRowSelectionUI() {
+  const rows = document.querySelectorAll('.fm-row');
+  rows.forEach(r => {
+    const p = r.dataset.path;
+    if (p && selectedPaths.has(p)) {
+      r.classList.add('selected');
+    } else {
+      r.classList.remove('selected');
+    }
+  });
+}
 
 // Virtualized DOM logic
 const ROW_HEIGHT = 42;
@@ -92,6 +118,11 @@ export function initFileManager() {
           <button id="fm-new-folder-btn" class="fm-tool-btn" title="${t('fm.new_folder', 'New Folder')}" data-i18n-title="fm.new_folder" aria-label="New Folder">
             <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path><line x1="12" y1="11" x2="12" y2="17"></line><line x1="9" y1="14" x2="15" y2="14"></line></svg>
           </button>
+          <div id="fm-selection-bar" style="display: none; align-items: center; gap: 6px; margin-left: 8px;">
+            <span id="fm-selected-count" style="font-size: 11px; font-weight: 700; color: var(--accent-cyan, #0ea5e9); padding: 2px 8px; background: rgba(14,165,233,0.12); border-radius: 4px; border: 1px solid rgba(14,165,233,0.25);">0 selected</span>
+            <button id="fm-bulk-delete-btn" class="btn-pill-toggle" style="padding: 3px 10px; font-size: 11px; background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.4); color: #f87171; border-radius: 4px; cursor: pointer;" title="Delete Selected">🗑️ Delete</button>
+            <button id="fm-clear-sel-btn" class="fm-tool-btn" style="font-size: 11px; padding: 2px 6px;" title="Clear Selection">✕</button>
+          </div>
         </div>
         <div class="fm-content">
           <div class="fm-header-row">
@@ -100,7 +131,7 @@ export function initFileManager() {
             <div class="fm-col fm-col-size" data-i18n="fm.col_size">${t('fm.col_size', 'Size')}</div>
             <div class="fm-col fm-col-actions" data-i18n="fm.col_actions">${t('fm.col_actions', 'Actions')}</div>
           </div>
-          <div id="fm-viewport" class="fm-viewport">
+          <div id="fm-viewport" class="fm-viewport" data-scrollable="true">
             <div id="fm-spacer" class="fm-spacer"></div>
             <div id="fm-list" class="fm-list"></div>
           </div>
@@ -384,13 +415,91 @@ export function initFileManager() {
     });
   }
 
+  const bulkDeleteBtn = document.getElementById('fm-bulk-delete-btn');
+  if (bulkDeleteBtn) {
+    bulkDeleteBtn.addEventListener('click', () => {
+      const count = selectedPaths.size;
+      if (count === 0) return;
+      const confirmTemplate = t('fm.confirm_bulk_delete', 'Are you sure you want to move {count} items to the Recycle Bin?');
+      const confirmMsg = confirmTemplate.replace('{count}', count);
+      showConfirmToast(t('common.confirm', 'Confirm Action'), confirmMsg, async () => {
+        const targets = Array.from(selectedPaths);
+        let success = 0;
+        let failed = 0;
+        for (const p of targets) {
+          try {
+            await api.post('/api/fs/delete', { path: p });
+            success++;
+          } catch (e) {
+            failed++;
+          }
+        }
+        selectedPaths.clear();
+        lastSelectedIndex = -1;
+        updateFmSelectionToolbar();
+        loadPath(currentPath);
+        if (failed > 0) {
+          showToast(`Deleted ${success} items, failed to delete ${failed} items`, 'warning');
+        } else {
+          const successMsg = t('fm.bulk_deleted_success', `Successfully moved ${success} items to Recycle Bin.`).replace('{count}', success);
+          showToast(successMsg, 'success');
+        }
+      });
+    });
+  }
+
+  const clearSelBtn = document.getElementById('fm-clear-sel-btn');
+  if (clearSelBtn) {
+    clearSelBtn.addEventListener('click', () => {
+      selectedPaths.clear();
+      lastSelectedIndex = -1;
+      updateRowSelectionUI();
+      updateFmSelectionToolbar();
+    });
+  }
+
+  // Keyboard navigation & shortcuts inside file manager
+  if (fmWindow && !fmWindow.dataset.kbBound) {
+    fmWindow.dataset.kbBound = 'true';
+    fmWindow.addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      if (e.key === 'Escape') {
+        if (selectedPaths.size > 0) {
+          e.preventDefault();
+          selectedPaths.clear();
+          lastSelectedIndex = -1;
+          updateRowSelectionUI();
+          updateFmSelectionToolbar();
+        }
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'a') {
+        e.preventDefault();
+        selectedPaths.clear();
+        fileList.forEach((f) => {
+          if (f.name !== '..') {
+            selectedPaths.add(f.path);
+          }
+        });
+        lastSelectedIndex = fileList.length - 1;
+        updateRowSelectionUI();
+        updateFmSelectionToolbar();
+      } else if (e.key === 'Delete' || (e.metaKey && e.key === 'Backspace')) {
+        if (selectedPaths.size > 0) {
+          e.preventDefault();
+          bulkDeleteBtn?.click();
+        }
+      }
+    });
+  }
+
 }
 
 async function loadPath(path) {
   try {
     const res = await api.get(`/api/browse?path=${encodeURIComponent(path)}&dirs_only=0`);
     currentPath = res.current;
-    selectedPath = null;
+    selectedPaths.clear();
+    lastSelectedIndex = -1;
+    updateFmSelectionToolbar();
     const pathInput = document.getElementById('fm-path-input');
     if (pathInput) pathInput.value = currentPath;
 
@@ -546,7 +655,8 @@ function renderViewport() {
     const file = fileList[i];
     const row = document.createElement('div');
     row.className = 'fm-row';
-    if (file.path === selectedPath) row.classList.add('selected');
+    row.dataset.path = file.path;
+    if (selectedPaths.has(file.path)) row.classList.add('selected');
 
     const icon = file.is_dir
       ? '<svg viewBox="0 0 24 24" width="18" stroke="currentColor" fill="#eab308"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>'
@@ -570,10 +680,34 @@ function renderViewport() {
     `;
 
 
-    row.addEventListener('click', () => {
-      selectedPath = file.path;
-      document.querySelectorAll('.fm-row.selected').forEach(el => el.classList.remove('selected'));
-      row.classList.add('selected');
+    row.addEventListener('click', (e) => {
+      if (e.target.closest('.fm-act-btn') || file.name === '..') return;
+      const idx = i;
+      if (e.shiftKey && lastSelectedIndex !== -1) {
+        const start = Math.min(lastSelectedIndex, idx);
+        const end = Math.max(lastSelectedIndex, idx);
+        if (!e.ctrlKey && !e.metaKey) {
+          selectedPaths.clear();
+        }
+        for (let j = start; j <= end; j++) {
+          if (fileList[j] && fileList[j].name !== '..') {
+            selectedPaths.add(fileList[j].path);
+          }
+        }
+      } else if (e.ctrlKey || e.metaKey) {
+        if (selectedPaths.has(file.path)) {
+          selectedPaths.delete(file.path);
+        } else {
+          selectedPaths.add(file.path);
+        }
+        lastSelectedIndex = idx;
+      } else {
+        selectedPaths.clear();
+        selectedPaths.add(file.path);
+        lastSelectedIndex = idx;
+      }
+      updateRowSelectionUI();
+      updateFmSelectionToolbar();
     });
 
     if (file.is_dir) {

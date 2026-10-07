@@ -167,6 +167,19 @@ class TestV13Features(unittest.TestCase):
             self.assertTrue('"mgmt.telemetry_title":' in content or "'mgmt.telemetry_title':" in content)
             self.assertTrue('"settings.title":' in content or "'settings.title':" in content)
 
+    def test_batch3_features_and_translations(self):
+        import os
+
+        candidates = [
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "frontend", "src", "i18n.js"),
+            "/mnt/user/appdata/zettnas-toolkit/frontend/src/i18n.js",
+        ]
+        i18n_file = next((f for f in candidates if os.path.exists(f)), None)
+        if i18n_file:
+            content = open(i18n_file, "r", encoding="utf-8").read()
+            for key in ("notif.title", "notif.filter_all", "notif.clear_all", "fm.bulk_delete", "fm.selected_count"):
+                self.assertIn(f'"{key}":', content)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -9,6 +9,59 @@ import { ZettEventBus } from '../event-bus.js';
 
 let activeWindowZIndex = 1000;
 let lastReadEventTs = parseFloat(localStorage.getItem('zettnas_last_read_event_ts') || '0');
+let clearedEventsTs = parseFloat(localStorage.getItem('zettnas_cleared_events_ts') || '0');
+let currentNotifFilter = 'all';
+
+const WIN_BOUNDS_KEY = 'zettnas_window_bounds_v2';
+
+export function loadSavedWindowBounds() {
+  try {
+    return JSON.parse(localStorage.getItem(WIN_BOUNDS_KEY) || '{}');
+  } catch {
+    return {};
+  }
+}
+
+export function saveWindowBounds(id, bounds) {
+  if (!id || document.body.classList.contains('mobile-mode') || window.innerWidth <= 768) return;
+  try {
+    const all = loadSavedWindowBounds();
+    all[id] = { ...(all[id] || {}), ...bounds };
+    localStorage.setItem(WIN_BOUNDS_KEY, JSON.stringify(all));
+  } catch (e) {
+    console.warn('Failed to save window bounds', e);
+  }
+}
+
+export function applySavedBounds(dragEl, winId) {
+  if (!dragEl || document.body.classList.contains('mobile-mode') || window.innerWidth <= 768) return;
+  const id = winId || dragEl.id || dragEl.dataset.windowId;
+  if (!id) return;
+  const all = loadSavedWindowBounds();
+  const saved = all[id];
+  if (!saved || saved.left == null || saved.top == null) return;
+
+  const targetW = saved.width || dragEl.offsetWidth || 500;
+  const targetH = saved.height || dragEl.offsetHeight || 400;
+  const maxL = Math.max(24, window.innerWidth - targetW - 10);
+  const maxT = Math.max(48, window.innerHeight - targetH - 70);
+  const clampedLeft = Math.max(24, Math.min(maxL, saved.left));
+  const clampedTop = Math.max(48, Math.min(maxT, saved.top));
+
+  dragEl.style.position = 'fixed';
+  dragEl.style.left = `${clampedLeft}px`;
+  dragEl.style.top = `${clampedTop}px`;
+
+  if (saved.width && !dragEl.classList.contains('smart-modal-window')) {
+    dragEl.style.width = `${Math.min(window.innerWidth - 20, Math.max(320, saved.width))}px`;
+  }
+  if (saved.height && !dragEl.classList.contains('smart-modal-window')) {
+    dragEl.style.height = `${Math.min(window.innerHeight - 80, Math.max(240, saved.height))}px`;
+  }
+  if (saved.snapped) {
+    dragEl.dataset.snapped = saved.snapped;
+  }
+}
 
 export function bringToFront(windowEl) {
   if (!windowEl) return;
@@ -48,10 +101,36 @@ function getOrCreateSnapGhost() {
   return ghost;
 }
 
-export function makeDraggable(dragEl, handleEl) {
+export function makeDraggable(dragEl, handleEl, customId) {
   if (!dragEl) return;
   handleEl = handleEl || dragEl;
   handleEl.style.cursor = 'move';
+
+  const winId = customId || dragEl.id || dragEl.dataset.windowId || (dragEl.classList.contains('management-window') ? 'management' : null) || (dragEl.classList.contains('file-manager-window') ? 'fm' : null) || (dragEl.id === 'console-window' ? 'console' : null);
+
+  if (winId) {
+    applySavedBounds(dragEl, winId);
+  }
+
+  // Observe resizing to persist dimensions
+  if (window.ResizeObserver && winId) {
+    let resizeTimer = null;
+    const ro = new ResizeObserver(() => {
+      if (document.body.classList.contains('mobile-mode') || window.innerWidth <= 768) return;
+      if (dragEl.dataset.snapped) return;
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        const rect = dragEl.getBoundingClientRect();
+        if (rect.width > 50 && rect.height > 50) {
+          saveWindowBounds(winId, {
+            width: Math.round(rect.width),
+            height: Math.round(rect.height),
+          });
+        }
+      }, 250);
+    });
+    ro.observe(dragEl);
+  }
 
   let startX = 0, startY = 0, initialMouseX = 0, initialMouseY = 0;
   let activeSnap = null;
@@ -153,6 +232,17 @@ export function makeDraggable(dragEl, handleEl) {
         }
         setTimeout(() => { dragEl.style.transition = 'none'; }, 250);
       }
+
+      if (winId) {
+        const finalRect = dragEl.getBoundingClientRect();
+        saveWindowBounds(winId, {
+          left: Math.round(finalRect.left),
+          top: Math.round(finalRect.top),
+          width: Math.round(finalRect.width),
+          height: Math.round(finalRect.height),
+          snapped: dragEl.dataset.snapped || ''
+        });
+      }
     };
 
     document.addEventListener('mousemove', drag);
@@ -182,6 +272,17 @@ export function makeDraggable(dragEl, handleEl) {
       dragEl.style.width = 'calc(100vw - 16px)';
       dragEl.style.height = 'calc(100vh - 48px - 76px)';
       setTimeout(() => { dragEl.style.transition = 'none'; }, 250);
+    }
+
+    if (winId) {
+      const finalRect = dragEl.getBoundingClientRect();
+      saveWindowBounds(winId, {
+        left: Math.round(finalRect.left),
+        top: Math.round(finalRect.top),
+        width: Math.round(finalRect.width),
+        height: Math.round(finalRect.height),
+        snapped: dragEl.dataset.snapped || ''
+      });
     }
   });
 }
@@ -254,6 +355,7 @@ export const DockManager = {
         winEl.classList.remove('window-minimized');
         winEl.style.removeProperty('display');
         bringToFront(winEl);
+        applySavedBounds(winEl, id);
       }
       if (id === 'console' && window.updateLcdPages && state.latestStats) {
         window.updateLcdPages(state.latestStats);
@@ -413,7 +515,7 @@ export const DockManager = {
         });
 
         const events = (state.latestStats && Array.isArray(state.latestStats.events))
-          ? [...state.latestStats.events].sort((a, b) => b.ts - a.ts)
+          ? [...state.latestStats.events].filter((e) => e.ts > clearedEventsTs).sort((a, b) => b.ts - a.ts)
           : [];
 
         if (events.length === 0) {
@@ -427,7 +529,7 @@ export const DockManager = {
           return container;
         }
 
-        const unread = events.filter((e) => e.ts > lastReadEventTs);
+        const unread = events.filter((e) => e.ts > lastReadEventTs && e.ts > clearedEventsTs);
         const topEvent = unread.length > 0 ? unread[0] : events[0];
 
         let icon = 'ℹ️';
@@ -476,7 +578,7 @@ export const DockManager = {
           badgeEl.className = 'dock-tooltip-status active';
         } else if (id === 'notif') {
           const events = (state.latestStats && Array.isArray(state.latestStats.events)) ? state.latestStats.events : [];
-          const unreadCount = events.filter((e) => e.ts > lastReadEventTs).length;
+          const unreadCount = events.filter((e) => e.ts > lastReadEventTs && e.ts > clearedEventsTs).length;
           if (unreadCount > 0) {
             badgeEl.textContent = `${unreadCount > 99 ? '99+' : unreadCount} UNREAD`;
             badgeEl.className = 'dock-tooltip-status alert';
@@ -984,11 +1086,10 @@ export function initDraggableDesktopIcons() {
 
 function updateNotificationBadge() {
   const badge = document.getElementById('dock-notif-badge');
-  const panel = document.getElementById('notif-center-panel');
   if (!badge || !state.latestStats || !state.latestStats.events) return;
   
   const events = state.latestStats.events;
-  const unreadCount = events.filter(e => e.ts > lastReadEventTs).length;
+  const unreadCount = events.filter(e => e.ts > lastReadEventTs && e.ts > clearedEventsTs).length;
   
   if (unreadCount > 0) {
     badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
@@ -1024,10 +1125,23 @@ function renderNotificationCenter() {
   const list = document.getElementById('notif-center-list');
   if (!list || !state.latestStats || !state.latestStats.events) return;
   
-  const events = [...state.latestStats.events].sort((a,b) => b.ts - a.ts);
+  let events = [...state.latestStats.events]
+    .filter(e => e.ts > clearedEventsTs)
+    .sort((a,b) => b.ts - a.ts);
+
+  if (currentNotifFilter === 'error') {
+    events = events.filter(e => e.level === 'error');
+  } else if (currentNotifFilter === 'warning') {
+    events = events.filter(e => e.level === 'warning');
+  } else if (currentNotifFilter === 'info') {
+    events = events.filter(e => e.level === 'info' || e.level === 'success' || !e.level);
+  }
   
   if (events.length === 0) {
-    list.innerHTML = `<div style="padding:20px; text-align:center; color:var(--muted); font-size:11px;">No recent notifications.</div>`;
+    const emptyMsg = currentNotifFilter === 'all'
+      ? t('notif.empty', 'No recent notifications.')
+      : t('notif.no_matching', 'No notifications matching filter.');
+    list.innerHTML = `<div style="padding:28px 16px; text-align:center; color:var(--muted); font-size:11px;">${escapeHtml(emptyMsg)}</div>`;
     return;
   }
   
@@ -1042,15 +1156,16 @@ function renderNotificationCenter() {
     else if (e.level === 'success') { color = 'var(--ok2)'; icon = '✅'; }
     
     const row = document.createElement('div');
-    row.style.cssText = `padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; gap: 8px; align-items: flex-start; background: ${isUnread ? 'rgba(255,255,255,0.05)' : 'transparent'}; cursor:pointer;`;
+    row.className = 'notif-center-item';
+    row.style.cssText = `padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; gap: 8px; align-items: flex-start; background: ${isUnread ? 'rgba(255,255,255,0.05)' : 'transparent'}; cursor:pointer; transition: background 0.15s;`;
     row.innerHTML = `
       <span style="font-size: 14px; margin-top:2px;">${icon}</span>
-      <div style="display:flex; flex-direction:column; gap:2px;">
-        <div style="font-size:11px; font-weight:700; color:${color};">${escapeHtml(e.title)}</div>
-        <div style="font-size:10px; color:#fff; line-height:1.4;">${escapeHtml(e.message)}</div>
+      <div style="display:flex; flex-direction:column; gap:2px; flex:1; min-width:0;">
+        <div style="font-size:11px; font-weight:700; color:${color}; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(e.title)}</div>
+        <div style="font-size:10px; color:#fff; line-height:1.4; word-break:break-word;">${escapeHtml(e.message)}</div>
         <div style="font-size:9px; color:var(--muted); margin-top:2px;">${dt.toLocaleString()}</div>
       </div>
-      ${isUnread ? `<div style="width:6px; height:6px; border-radius:50%; background:var(--brand); margin-left:auto; margin-top:6px; flex-shrink:0;"></div>` : ''}
+      ${isUnread ? `<div style="width:6px; height:6px; border-radius:50%; background:var(--brand, #0ea5e9); margin-left:auto; margin-top:6px; flex-shrink:0;"></div>` : ''}
     `;
     
     // Quick action on click (open Management -> Events tab if they want, or just mark read)
@@ -1085,12 +1200,40 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
+
+  const clearAllBtn = document.getElementById('notif-clear-all');
+  if (clearAllBtn) {
+    clearAllBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      clearedEventsTs = Math.floor(Date.now() / 1000);
+      localStorage.setItem('zettnas_cleared_events_ts', clearedEventsTs.toString());
+      updateNotificationBadge();
+      renderNotificationCenter();
+    });
+  }
+
+  document.querySelectorAll('.notif-filter-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      document.querySelectorAll('.notif-filter-btn').forEach(b => {
+        b.classList.remove('active');
+        b.style.background = 'transparent';
+        b.style.borderColor = 'transparent';
+        b.style.color = b.dataset.filter === 'error' ? 'var(--crit, #ff5c5c)' : (b.dataset.filter === 'warning' ? 'var(--warn, #f5a623)' : (b.dataset.filter === 'info' ? '#93c5fd' : '#cbd5e1'));
+      });
+      btn.classList.add('active');
+      btn.style.background = 'rgba(255,255,255,0.1)';
+      btn.style.borderColor = 'rgba(255,255,255,0.15)';
+      btn.style.color = '#fff';
+      currentNotifFilter = btn.dataset.filter || 'all';
+      renderNotificationCenter();
+    });
+  });
   
   ZettEventBus.on('stats:updated', () => {
     updateNotificationBadge();
     const panel = document.getElementById('notif-center-panel');
     if (panel && panel.style.display !== 'none') {
-      // Re-render if open
       renderNotificationCenter();
     }
     const tooltip = document.getElementById('dock-hover-tooltip');

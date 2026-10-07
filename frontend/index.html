@@ -2142,14 +2142,21 @@
     </div>
 </div>
 
-<div id="notif-center-panel" style="display:none; position:fixed; bottom:64px; right:24px; width:340px; max-height:400px; background:rgba(20,24,32,0.95); backdrop-filter:blur(20px); border:1px solid rgba(255,255,255,0.1); border-radius:12px; z-index:9999; flex-direction:column; box-shadow:0 10px 30px rgba(0,0,0,0.8); overflow:hidden;">
+<div id="notif-center-panel" style="display:none; position:fixed; bottom:64px; right:24px; width:340px; max-height:420px; background:rgba(20,24,32,0.95); backdrop-filter:blur(20px); border:1px solid rgba(255,255,255,0.1); border-radius:12px; z-index:9999; flex-direction:column; box-shadow:0 10px 30px rgba(0,0,0,0.8); overflow:hidden;">
   <div style="padding:12px 16px; border-bottom:1px solid rgba(255,255,255,0.05); display:flex; justify-content:space-between; align-items:center;">
     <div style="font-size:12px; font-weight:800; color:#fff;" data-i18n="notif.title">Notification Center</div>
-    <div style="display:flex; gap:8px;">
-      <button id="notif-mark-read" style="background:none; border:none; color:var(--brand); cursor:pointer; font-size:11px; font-weight:600; padding:0;">Mark all as read</button>
+    <div style="display:flex; gap:10px; align-items:center;">
+      <button id="notif-mark-read" style="background:none; border:none; color:var(--brand, #0ea5e9); cursor:pointer; font-size:11px; font-weight:600; padding:0;" data-i18n="notif.mark_all_read">Mark all read</button>
+      <button id="notif-clear-all" style="background:none; border:none; color:var(--muted); cursor:pointer; font-size:11px; font-weight:600; padding:0;" title="Clear notifications" data-i18n="notif.clear_all">Clear all</button>
     </div>
   </div>
-  <div id="notif-center-list" style="flex:1; overflow-y:auto; padding:8px 0;">
+  <div id="notif-filter-bar" style="display:flex; gap:6px; padding:8px 14px; background:rgba(0,0,0,0.25); border-bottom:1px solid rgba(255,255,255,0.05);">
+    <button class="notif-filter-btn active" data-filter="all" style="padding:2px 10px; font-size:10px; font-weight:700; border-radius:12px; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.1); color:#fff; cursor:pointer;" data-i18n="notif.filter_all">All</button>
+    <button class="notif-filter-btn" data-filter="error" style="padding:2px 10px; font-size:10px; font-weight:700; border-radius:12px; border:1px solid transparent; background:transparent; color:var(--crit, #ff5c5c); cursor:pointer;" data-i18n="notif.filter_errors">Errors</button>
+    <button class="notif-filter-btn" data-filter="warning" style="padding:2px 10px; font-size:10px; font-weight:700; border-radius:12px; border:1px solid transparent; background:transparent; color:var(--warn, #f5a623); cursor:pointer;" data-i18n="notif.filter_warnings">Warnings</button>
+    <button class="notif-filter-btn" data-filter="info" style="padding:2px 10px; font-size:10px; font-weight:700; border-radius:12px; border:1px solid transparent; background:transparent; color:#93c5fd; cursor:pointer;" data-i18n="notif.filter_info">Info</button>
+  </div>
+  <div id="notif-center-list" data-scrollable="true" style="flex:1; overflow-y:auto; padding:8px 0; max-height:300px;">
     <div style="padding:20px; text-align:center; color:var(--muted); font-size:11px;" data-i18n="notif.empty">No recent notifications.</div>
   </div>
 </div>

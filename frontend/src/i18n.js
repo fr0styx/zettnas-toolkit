@@ -444,7 +444,20 @@ export const TRANSLATIONS = {
     "fm.prompt_new_folder": "Enter folder name:",
     "fm.prompt_rename": "Enter new name:",
     "fm.confirm_delete": "Are you sure you want to delete {name}?",
-    "fm.err_access_denied": "Access denied or path invalid"
+    "fm.err_access_denied": "Access denied or path invalid",
+    "notif.title": "Notification Center",
+    "notif.mark_all_read": "Mark all read",
+    "notif.clear_all": "Clear all",
+    "notif.filter_all": "All",
+    "notif.filter_errors": "Errors",
+    "notif.filter_warnings": "Warnings",
+    "notif.filter_info": "Info",
+    "notif.empty": "No recent notifications.",
+    "notif.no_matching": "No notifications matching filter.",
+    "fm.selected_count": "{count} selected",
+    "fm.bulk_delete": "Delete ({count})",
+    "fm.confirm_bulk_delete": "Are you sure you want to move {count} items to the Recycle Bin?",
+    "fm.bulk_deleted_success": "Successfully moved {count} items to Recycle Bin."
   },
   "de": {
     "action_success": "Aktion erfolgreich ausgeführt.",
@@ -876,7 +889,20 @@ export const TRANSLATIONS = {
     "fm.prompt_new_folder": "Namen des neuen Ordners eingeben:",
     "fm.prompt_rename": "Neuen Namen eingeben:",
     "fm.confirm_delete": "Möchten Sie {name} wirklich löschen?",
-    "fm.err_access_denied": "Zugriff verweigert oder Pfad ungültig"
+    "fm.err_access_denied": "Zugriff verweigert oder Pfad ungültig",
+    "notif.title": "Benachrichtigungen",
+    "notif.mark_all_read": "Alle als gelesen markieren",
+    "notif.clear_all": "Alle löschen",
+    "notif.filter_all": "Alle",
+    "notif.filter_errors": "Fehler",
+    "notif.filter_warnings": "Warnungen",
+    "notif.filter_info": "Info",
+    "notif.empty": "Keine neuen Benachrichtigungen.",
+    "notif.no_matching": "Keine Benachrichtigungen für diesen Filter.",
+    "fm.selected_count": "{count} ausgewählt",
+    "fm.bulk_delete": "Löschen ({count})",
+    "fm.confirm_bulk_delete": "Möchten Sie {count} Elemente wirklich in den Papierkorb verschieben?",
+    "fm.bulk_deleted_success": "{count} Elemente erfolgreich in den Papierkorb verschoben."
   },
   "zh": {
     "action_success": "操作已成功执行。",
@@ -1308,7 +1334,20 @@ export const TRANSLATIONS = {
     "fm.prompt_new_folder": "输入新文件夹名称：",
     "fm.prompt_rename": "输入新名称：",
     "fm.confirm_delete": "您确定要删除 {name} 吗？",
-    "fm.err_access_denied": "访问被拒绝或路径无效"
+    "fm.err_access_denied": "访问被拒绝或路径无效",
+    "notif.title": "通知中心",
+    "notif.mark_all_read": "全部标为已读",
+    "notif.clear_all": "全部清空",
+    "notif.filter_all": "全部",
+    "notif.filter_errors": "错误",
+    "notif.filter_warnings": "警告",
+    "notif.filter_info": "信息",
+    "notif.empty": "暂无通知消息。",
+    "notif.no_matching": "没有符合过滤条件的通知。",
+    "fm.selected_count": "已选 {count} 项",
+    "fm.bulk_delete": "删除 ({count})",
+    "fm.confirm_bulk_delete": "您确定要将选中的 {count} 个项目移至回收站吗？",
+    "fm.bulk_deleted_success": "已成功将 {count} 个项目移至回收站。"
   },
   "fr": {
     "action_success": "Action exécutée avec succès.",
@@ -1740,7 +1779,20 @@ export const TRANSLATIONS = {
     "fm.prompt_new_folder": "Entrez le nom du nouveau dossier :",
     "fm.prompt_rename": "Entrez le nouveau nom :",
     "fm.confirm_delete": "Voulez-vous vraiment supprimer {name} ?",
-    "fm.err_access_denied": "Accès refusé ou chemin invalide"
+    "fm.err_access_denied": "Accès refusé ou chemin invalide",
+    "notif.title": "Centre de notifications",
+    "notif.mark_all_read": "Tout marquer comme lu",
+    "notif.clear_all": "Tout effacer",
+    "notif.filter_all": "Tous",
+    "notif.filter_errors": "Erreurs",
+    "notif.filter_warnings": "Avertissements",
+    "notif.filter_info": "Infos",
+    "notif.empty": "Aucune notification récente.",
+    "notif.no_matching": "Aucune notification correspondant au filtre.",
+    "fm.selected_count": "{count} sélectionnés",
+    "fm.bulk_delete": "Supprimer ({count})",
+    "fm.confirm_bulk_delete": "Voulez-vous vraiment déplacer {count} éléments dans la corbeille ?",
+    "fm.bulk_deleted_success": "{count} éléments déplacés dans la corbeille."
   },
   "es": {
     "action_success": "Acción completada con éxito.",
@@ -2170,9 +2222,21 @@ export const TRANSLATIONS = {
     "fm.col_actions": "Acciones",
     "fm.empty_folder": "Esta carpeta está vacía.",
     "fm.prompt_new_folder": "Ingrese el nombre de la nueva carpeta:",
-    "fm.prompt_rename": "Ingrese el nuevo nombre:",
     "fm.confirm_delete": "¿Está seguro de que desea eliminar {name}?",
-    "fm.err_access_denied": "Acceso denegado o ruta inválida"
+    "fm.err_access_denied": "Acceso denegado o ruta inválida",
+    "notif.title": "Centro de notificaciones",
+    "notif.mark_all_read": "Marcar todo como leído",
+    "notif.clear_all": "Borrar todo",
+    "notif.filter_all": "Todos",
+    "notif.filter_errors": "Errores",
+    "notif.filter_warnings": "Advertencias",
+    "notif.filter_info": "Info",
+    "notif.empty": "No hay notificaciones recientes.",
+    "notif.no_matching": "No hay notificaciones que coincidan con el filtro.",
+    "fm.selected_count": "{count} seleccionados",
+    "fm.bulk_delete": "Eliminar ({count})",
+    "fm.confirm_bulk_delete": "¿Está seguro de que desea mover {count} elementos a la papelera de reciclaje?",
+    "fm.bulk_deleted_success": "Se movieron correctamente {count} elementos a la papelera."
   }
 };
 

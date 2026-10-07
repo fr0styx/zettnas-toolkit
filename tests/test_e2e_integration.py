@@ -49,3 +49,17 @@ def test_e2e_html_structure_and_assets():
     assert 'id="login-overlay"' in html
     assert 'id="unraid-array-pill"' in html
     assert "studio-workbench" in html
+
+
+def test_e2e_batch3_dom_elements():
+    """Verify Batch 3 desktop UX, notification center filtering, and file manager DOM structures."""
+    index_path = os.path.join(STATIC_DIR, "index.html")
+    with open(index_path, "r", encoding="utf-8") as f:
+        html = f.read()
+
+    assert 'id="notif-center-panel"' in html
+    assert 'id="notif-filter-bar"' in html
+    assert 'id="notif-clear-all"' in html
+    assert 'data-filter="all"' in html
+    assert 'data-filter="error"' in html
+    assert 'data-scrollable="true"' in html
