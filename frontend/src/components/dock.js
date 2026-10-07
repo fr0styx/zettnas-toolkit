@@ -1516,7 +1516,7 @@ export function initDockSystem() {
 }
 
 export function initDraggableDesktopIcons() {
-  const storageKey = 'zettnas_desktop_icon_positions_v2';
+  const storageKey = 'zettnas_desktop_icon_positions_v3';
   let savedPositions = {};
   try {
     const raw = localStorage.getItem(storageKey);
@@ -1525,12 +1525,12 @@ export function initDraggableDesktopIcons() {
     savedPositions = {};
   }
 
-  // Desktop icons arranged vertically with compact spacing (gap ~20px, pitch = 112px)
+  // Desktop icons arranged vertically with equal spacing (25px top navbar gap, 25px gap between icons, pitch = 112px)
   const iconConfigs = [
-    { id: 'management-desktop-icon', defaultLeft: 24, defaultTop: 56 },
-    { id: 'chassis-desktop-icon', defaultLeft: 24, defaultTop: 168 },
-    { id: 'fm-desktop-icon', defaultLeft: 24, defaultTop: 280 },
-    { id: 'rb-desktop-icon', defaultLeft: 24, defaultTop: 392 },
+    { id: 'management-desktop-icon', defaultLeft: 24, defaultTop: 77 },
+    { id: 'fm-desktop-icon', defaultLeft: 24, defaultTop: 189 },
+    { id: 'rb-desktop-icon', defaultLeft: 24, defaultTop: 301 },
+    { id: 'chassis-desktop-icon', defaultLeft: 24, defaultTop: 413 },
   ];
 
   // Desktop Context Menu
@@ -1562,7 +1562,7 @@ export function initDraggableDesktopIcons() {
       const GRID_X = 140;
       const GRID_Y = 112;
       const OFFSET_X = 24;
-      const OFFSET_Y = 56;
+      const OFFSET_Y = 77;
       iconConfigs.forEach(({ id }) => {
         const el = document.getElementById(id);
         if (el) {
@@ -1589,18 +1589,24 @@ export function initDraggableDesktopIcons() {
         const el = document.getElementById(conf.id);
         if (el) {
           const nameEl = el.querySelector('.icon-text');
-          items.push({ id: conf.id, el, name: nameEl ? nameEl.innerText : conf.id });
+          const name = (nameEl ? (nameEl.innerText || nameEl.textContent) : '') || conf.id;
+          items.push({ id: conf.id, el, name: String(name || '').trim() });
         }
       });
-      items.sort((a, b) => a.name.localeCompare(b.name));
-      let currentY = 56;
-      const GAP = 20;
+      // Keep Mission Control anchored as first top icon, sort others alphabetically
+      items.sort((a, b) => {
+        if (a.id === 'management-desktop-icon') return -1;
+        if (b.id === 'management-desktop-icon') return 1;
+        return a.name.localeCompare(b.name);
+      });
+      let currentY = 77;
+      const GAP = 25;
       items.forEach((item) => {
         item.el.style.left = '24px';
         item.el.style.top = currentY + 'px';
         savedPositions[item.id] = { left: 24, top: currentY };
         const rect = item.el.getBoundingClientRect();
-        const height = rect.height > 0 ? rect.height : 92;
+        const height = rect.height > 0 ? rect.height : 87;
         currentY += height + GAP;
       });
       localStorage.setItem(storageKey, JSON.stringify(savedPositions));
@@ -1684,9 +1690,9 @@ export function initDraggableDesktopIcons() {
         const curLeft = (saved && typeof saved.left === 'number') ? saved.left : defaultLeft;
         const curTop = (saved && typeof saved.top === 'number') ? saved.top : defaultTop;
         const maxLeft = Math.max(24, window.innerWidth - (el.offsetWidth || 136) - 10);
-        const maxTop = Math.max(56, window.innerHeight - (el.offsetHeight || 136) - 70);
+        const maxTop = Math.max(77, window.innerHeight - (el.offsetHeight || 136) - 70);
         const clampedLeft = Math.max(24, Math.min(maxLeft, curLeft));
-        const clampedTop = Math.max(56, Math.min(maxTop, curTop));
+        const clampedTop = Math.max(77, Math.min(maxTop, curTop));
         el.style.position = 'fixed';
         el.style.left = `${clampedLeft}px`;
         el.style.top = `${clampedTop}px`;
@@ -1729,9 +1735,9 @@ export function initDraggableDesktopIcons() {
         if (dragThresholdPassed) {
           mEvt.preventDefault();
           const curMaxLeft = Math.max(24, window.innerWidth - (el.offsetWidth || 136) - 10);
-          const curMaxTop = Math.max(56, window.innerHeight - (el.offsetHeight || 136) - 70);
+          const curMaxTop = Math.max(77, window.innerHeight - (el.offsetHeight || 136) - 70);
           const newLeft = Math.max(24, Math.min(curMaxLeft, initLeft + dx));
-          const newTop = Math.max(56, Math.min(curMaxTop, initTop + dy));
+          const newTop = Math.max(77, Math.min(curMaxTop, initTop + dy));
           el.style.left = `${newLeft}px`;
           el.style.top = `${newTop}px`;
         }

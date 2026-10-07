@@ -496,7 +496,7 @@ body.drawer-is-open .chassis-workbench-stage {
 .chassis-hero-box.management-desktop-icon,
 .management-desktop-icon {
   position: fixed;
-  top: 56px;
+  top: 77px;
   left: 24px;
   z-index: 30;
   width: 136px;

@@ -11,14 +11,17 @@ describe('Desktop Context Menu, Dock Context Menu, and Wallpaper Engine', () => 
         <div id="os-dock"></div>
       </div>
       <div class="chassis-workbench-stage" style="width:1000px; height:800px;">
-        <div id="management-desktop-icon" class="chassis-hero-box" style="position:absolute; left:24px; top:56px; width:100px; height:80px;">
-          <div class="icon-text">Management</div>
+        <div id="management-desktop-icon" class="chassis-hero-box" style="position:absolute; left:24px; top:77px; width:100px; height:80px;">
+          <div class="icon-text">Mission Control</div>
         </div>
-        <div id="chassis-desktop-icon" class="chassis-hero-box" style="position:absolute; left:24px; top:168px; width:100px; height:80px;">
-          <div class="icon-text">ZettNAS</div>
-        </div>
-        <div id="fm-desktop-icon" class="chassis-hero-box" style="position:absolute; left:24px; top:280px; width:100px; height:80px;">
+        <div id="fm-desktop-icon" class="chassis-hero-box" style="position:absolute; left:24px; top:189px; width:100px; height:80px;">
           <div class="icon-text">File Explorer</div>
+        </div>
+        <div id="rb-desktop-icon" class="chassis-hero-box" style="position:absolute; left:24px; top:301px; width:100px; height:80px;">
+          <div class="icon-text">Recycle Bin</div>
+        </div>
+        <div id="chassis-desktop-icon" class="chassis-hero-box" style="position:absolute; left:24px; top:413px; width:100px; height:80px;">
+          <div class="icon-text">ZettNAS</div>
         </div>
       </div>
       <div id="wallpaper-preview"></div>
@@ -126,5 +129,30 @@ describe('Desktop Context Menu, Dock Context Menu, and Wallpaper Engine', () => 
     const select = document.getElementById('wallpaper-select');
     expect(select.value).toBe('bahia.jpg');
     expect(select.options.length).toBe(3); // Default + 2 files
+  });
+
+  it('positions Mission Control at top: 77px with equal 25px gap from navbar, and keeps it at top on Sort by Name', () => {
+    initDraggableDesktopIcons();
+    const mc = document.getElementById('management-desktop-icon');
+    const fm = document.getElementById('fm-desktop-icon');
+    expect(mc.style.top).toBe('77px');
+    expect(fm.style.top).toBe('189px');
+
+    // Trigger desktop context menu
+    const stage = document.querySelector('.chassis-workbench-stage');
+    stage.dispatchEvent(new MouseEvent('contextmenu', {
+      bubbles: true,
+      cancelable: true,
+      clientX: 350,
+      clientY: 250
+    }));
+
+    const sortBtn = document.getElementById('ctx-sort-name');
+    expect(sortBtn).not.toBeNull();
+    sortBtn.click();
+
+    // Mission Control must remain anchored at top (77px)
+    expect(mc.style.top).toBe('77px');
+    expect(fm.style.top).toBe('189px');
   });
 });
