@@ -1052,6 +1052,8 @@ export function initDockSystem() {
   const consoleOverlay = document.getElementById('console-modal-overlay');
   if (consoleOverlay && DockManager.isPinned('console')) {
     DockManager.register('console', consoleOverlay, '#i-screen', t('dock.zettnas', 'ZettNAS'), true);
+  } else {
+    DockManager.render();
   }
 
   window.addEventListener('zettnas:lang-changed', () => {
@@ -1239,6 +1241,10 @@ export function initDockSystem() {
     }
     DockManager.render();
   });
+
+  // Always render the dock and update notification badge on startup
+  DockManager.render();
+  updateNotificationBadge();
 }
 
 export function initDraggableDesktopIcons() {
