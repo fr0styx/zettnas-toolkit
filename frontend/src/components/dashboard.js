@@ -17,6 +17,22 @@ import { t } from '../i18n.js';
 const $ = (id) => document.getElementById(id);
 const FAN_LABELS = ['D1', 'D2', 'CPU', 'SYS'];
 
+export function setText(el, text) {
+  if (!el) return;
+  const str = text == null ? '' : String(text);
+  if (el.textContent !== str) {
+    el.textContent = str;
+  }
+}
+
+export function setHtml(el, html) {
+  if (!el) return;
+  const str = html == null ? '' : String(html);
+  if (el.innerHTML !== str) {
+    el.innerHTML = str;
+  }
+}
+
 export function getLocalClock(tz, fmt) {
   try {
     const formatter = new Intl.DateTimeFormat([], {
@@ -391,26 +407,25 @@ export function applyStats(s) {
       checkAndTriggerSetupWizard(s);
     }
 
-    if ($('nasName')) $('nasName').textContent = s.name;
-    if ($('drawer-nas-name')) $('drawer-nas-name').textContent = s.name.toUpperCase();
+    setText($('nasName'), s.name);
+    setText($('drawer-nas-name'), s.name ? s.name.toUpperCase() : '');
 
     if ($('statusText')) {
-      if (state.currentTheme === 'yak' && !s.status.includes('ALERT') && !s.status.includes('WARN')) {
-        $('statusText').textContent = 'YAK OK';
-      } else {
-        $('statusText').textContent = s.status;
-      }
+      const statusVal = (state.currentTheme === 'yak' && !s.status.includes('ALERT') && !s.status.includes('WARN'))
+        ? 'YAK OK'
+        : s.status;
+      setText($('statusText'), statusVal);
     }
 
-    if ($('clock')) $('clock').textContent = getLocalClock(state.currentTimezone, state.clockFormat);
-    if ($('ip')) $('ip').textContent = s.ip;
+    setText($('clock'), getLocalClock(state.currentTimezone, state.clockFormat));
+    setText($('ip'), s.ip);
 
     updateChassisImageForTheme();
 
     const stLvl = lvlFull(s.storage.pct);
-    if ($('storagePct')) $('storagePct').textContent = s.storage.pct + '%';
-    if ($('stUsed')) $('stUsed').textContent = s.storage.used;
-    if ($('stTotal')) $('stTotal').textContent = s.storage.total;
+    setText($('storagePct'), s.storage.pct + '%');
+    setText($('stUsed'), s.storage.used);
+    setText($('stTotal'), s.storage.total);
     const donut = $('donut');
     if (donut) {
       donut.style.setProperty('--pct', s.storage.pct);
@@ -419,28 +434,28 @@ export function applyStats(s) {
 
     const cpuLvl = lvlCpu(s.cpu.temp);
     const utilLvl = lvlUtil(s.cpu.util);
-    if ($('cpuTemp')) $('cpuTemp').textContent = s.cpu.temp;
+    setText($('cpuTemp'), s.cpu.temp);
     if ($('cpuTemp') && $('cpuTemp').parentElement) $('cpuTemp').parentElement.className = 'arc-val ' + 's-' + cpuLvl;
     if ($('cpuUtil')) {
-      $('cpuUtil').textContent = s.cpu.util + '%';
+      setText($('cpuUtil'), s.cpu.util + '%');
       $('cpuUtil').className = 'val s-' + utilLvl;
     }
     if ($('cpuArc')) setArc($('cpuArc'), (s.cpu.temp / 100) * 100, cpuLvl);
 
     const memLvl = lvlUtil(s.mem.pct);
-    if ($('memPct')) $('memPct').textContent = s.mem.pct;
+    setText($('memPct'), s.mem.pct);
     if ($('memPct') && $('memPct').parentElement) $('memPct').parentElement.className = 'arc-val s-' + memLvl;
-    if ($('memUsed')) $('memUsed').textContent = s.mem.used_gb.toFixed(1) + 'G';
-    if ($('memTotal')) $('memTotal').textContent = '/' + s.mem.total_gb.toFixed(0) + 'G';
+    setText($('memUsed'), s.mem.used_gb.toFixed(1) + 'G');
+    setText($('memTotal'), '/' + s.mem.total_gb.toFixed(0) + 'G');
     if ($('memArc')) setArc($('memArc'), s.mem.pct, memLvl);
 
     renderFans(s.fans);
     renderDisks(s.disks);
-    if ($('uptime')) $('uptime').textContent = 'up ' + s.uptime;
+    setText($('uptime'), 'up ' + s.uptime);
 
     if (s.net) {
-      if ($('netTx')) $('netTx').textContent = s.net.tx;
-      if ($('netRx')) $('netRx').textContent = s.net.rx;
+      setText($('netTx'), s.net.tx);
+      setText($('netRx'), s.net.rx);
     }
 
     if (s.layout && s.layout.version && s.layout.version !== state.activeLayoutVersion) {

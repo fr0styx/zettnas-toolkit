@@ -4,7 +4,7 @@
   "description": "<div align=\"center\">   <img src=\"static/img/icon.png\" width=\"128\" height=\"128\" alt=\"ZettNAS Toolkit Icon\" style=\"border-radius: 24px;\">   <h1>ZettNAS Toolkit</h1>   <p><strong>All-in-one chassis management suite and live front-panel LCD dashboard for Zettlab NAS enclosures (D4, D6, D8).</strong></p>",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "vitest run",
     "build": "vite build",
     "dev": "vite"
   },
@@ -20,7 +20,9 @@
   },
   "homepage": "https://github.com/fr0styx/zettnas-toolkit#readme",
   "devDependencies": {
-    "vite": "^8.3.2"
+    "jsdom": "^29.1.1",
+    "vite": "^8.3.2",
+    "vitest": "^5.0.3"
   },
   "dependencies": {
     "chart.js": "^4.5.1",

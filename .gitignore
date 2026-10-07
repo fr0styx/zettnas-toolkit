@@ -35,3 +35,8 @@ dist/
 scratch/
 .fuse_hidden*
 
+# Test & Coverage artifacts
+.coverage
+coverage.xml
+htmlcov/
+

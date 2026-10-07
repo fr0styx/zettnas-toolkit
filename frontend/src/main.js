@@ -28,6 +28,7 @@ import { initCommandPalette } from './components/command-palette.js';
 import { initWidgets } from './components/widgets.js';
 import { initFileManager } from './components/file-manager.js';
 import { initI18n } from './i18n.js';
+import { initA11y } from './a11y.js';
 
 let _sseRetryCount = 0;
 let _sse = null;
@@ -165,6 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initCommandPalette();
   initWidgets();
   initFileManager();
+  initA11y();
 
   applyTheme(state.currentTheme);
   fetchDashboardLayout();
@@ -182,8 +184,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const isMobile = document.body.classList.contains('mobile-mode') || window.innerWidth <= 768;
     if (!isMobile) return;
 
-    // Allow scrolling only within designated scrollable containers
+    // Allow scrolling within designated scrollable containers (or data-scrollable="true")
     const scrollable = e.target.closest(
+      '[data-scrollable="true"], [data-scrollable], ' +
       '.mgmt-content-pane, .fm-viewport, #console-window, .smart-modal-body, ' +
       '.smart-modal-window, .slide-drawer, #desktop-widgets-container, .os-dock, ' +
       'input, select, textarea, .mgmt-sidebar, .mgmt-inner-tabs, .drawer-tabs-nav, .smart-raw-pre'
