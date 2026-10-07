@@ -28,7 +28,23 @@ def is_in_time_window(start_str, end_str, now_minutes=None):
         return False
 
 
+_cached_screen_state: dict | None = None
+_cached_screen_key: tuple[str, int, int] = ("", 0, 0)
+
+
 def get_screen_state():
+    global _cached_screen_state, _cached_screen_key
+    try:
+        if os.path.exists(SCREEN_STATE_FILE):
+            st = os.stat(SCREEN_STATE_FILE)
+            key = (str(SCREEN_STATE_FILE), st.st_mtime_ns, st.st_size)
+            if _cached_screen_state is not None and key == _cached_screen_key:
+                return dict(_cached_screen_state)
+            _cached_screen_key = key
+    except OSError:
+        if _cached_screen_state is not None:
+            return dict(_cached_screen_state)
+
     state = {
         "brightness": 100,
         "night_mode": False,
@@ -42,7 +58,8 @@ def get_screen_state():
                 state.update(json.load(f))
         except (json.JSONDecodeError, OSError):
             pass
-    return state
+    _cached_screen_state = state
+    return dict(state)
 
 
 def discover_backlight_dir():
@@ -128,9 +145,16 @@ def set_screen_brightness(pct):
 
 
 def save_screen_state(updates: dict):
+    global _cached_screen_state, _cached_screen_key
     state = get_screen_state()
     state.update(updates)
     atomic_write_json(SCREEN_STATE_FILE, state)
+    try:
+        st = os.stat(SCREEN_STATE_FILE)
+        _cached_screen_key = (str(SCREEN_STATE_FILE), st.st_mtime_ns, st.st_size)
+    except OSError:
+        pass
+    _cached_screen_state = state
     eff_bri = get_effective_brightness()
     set_screen_brightness(eff_bri)
-    return state
+    return dict(state)

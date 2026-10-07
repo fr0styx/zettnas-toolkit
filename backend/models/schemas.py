@@ -97,3 +97,8 @@ class SystemProfileRequest(BaseModel):
 
 class DockerActionRequest(BaseModel):
     action: str = Field(..., pattern=r"^(start|stop|restart|pause|unpause)$")
+
+
+class DiskSmartTestRequest(BaseModel):
+    dev: str = Field(default="sda", max_length=64)
+    test_type: str = Field(default="short", pattern=r"^(short|long|conveyance|offline)$")

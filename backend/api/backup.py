@@ -1,3 +1,4 @@
+import aiofiles
 import tempfile
 import time
 import zipfile
@@ -30,9 +31,11 @@ async def restore_backup(request: Request):
     try:
         with tempfile.NamedTemporaryFile(delete=False, suffix=".zip") as tmp:
             tmp_path = tmp.name
+
+        async with aiofiles.open(tmp_path, "wb") as f_out:
             async for chunk in request.stream():
                 if chunk:
-                    tmp.write(chunk)
+                    await f_out.write(chunk)
 
         with open(tmp_path, "rb") as archive_file:
             restore_backup_archive(archive_file)

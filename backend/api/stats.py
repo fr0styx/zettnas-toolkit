@@ -47,6 +47,8 @@ async def stats_stream(request: Request):
                     break
                 try:
                     payload = await asyncio.wait_for(q.get(), timeout=15.0)
+                    if payload is None:
+                        break
                     yield payload
                 except TimeoutError:
                     yield ": keepalive\n\n"

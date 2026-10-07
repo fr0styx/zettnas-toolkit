@@ -42,7 +42,7 @@ def post_fans(req: FanConfigRequest):
         "zone1_curve_points",
         "zone2_curve_points",
     ):
-        if curve_field in data:
+        if curve_field in data and data[curve_field] is not None:
             data[curve_field] = sanitize_curve_points(data[curve_field])
 
     fan_cfg = _load_fans()

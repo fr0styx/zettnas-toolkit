@@ -166,16 +166,9 @@ def render_lcd_loop():
                             # Successfully rendered a frame, reset restart backoff
                             retry_delay = 2.0
 
-                            img = Image.open(io.BytesIO(raw_bytes)).convert("RGBA")
-                            raw_pixels = img.tobytes("raw", "BGRA")
-                            mv = memoryview(raw_pixels)
-
-                            src_pos = 0
-                            dst_pos = 0
-                            for _ in range(fb_height):
-                                fb_mem[dst_pos : dst_pos + row_bytes] = mv[src_pos : src_pos + row_bytes]
-                                src_pos += row_bytes
-                                dst_pos += stride
+                            with Image.open(io.BytesIO(raw_bytes)) as img:
+                                raw_mode = "BGRA" if img.mode == "RGBA" else "BGRX"
+                                fb_mem[:total_fb_bytes] = img.tobytes("raw", raw_mode, stride, 1)
 
                             elapsed = time.time() - t0
                             sleep_time = max(0.01, frame_interval - elapsed)

@@ -51,11 +51,11 @@ export const state = {
   copyToastMinimized: false,
 
   setStats(s) {
-    if (!s) return;
+    if (!s) return false;
     if (!this.latestStats) {
       this.latestStats = s;
       ZettEventBus.emit('stats:updated', this.latestStats);
-      return;
+      return true;
     }
 
     // Diff metrics to prevent unnecessary UI renders if nothing changed
@@ -76,10 +76,11 @@ export const state = {
       }
     }
 
-    if (!changed) return;
+    if (!changed) return false;
 
     this.latestStats = { ...this.latestStats, ...s };
     ZettEventBus.emit('stats:updated', this.latestStats);
+    return true;
   },
 
   setTheme(theme) {

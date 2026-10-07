@@ -89,33 +89,36 @@ def test_dispatch_unraid_arguments():
 
 def test_dispatch_ntfy():
     cfg = {"ntfy_url": "https://ntfy.sh", "ntfy_topic": "homelab-nas", "ntfy_token": "secret123"}
-    with patch("urllib.request.urlopen") as mock_urlopen:
-        mock_resp = MagicMock()
-        mock_resp.status = 200
-        mock_urlopen.return_value.__enter__.return_value = mock_resp
-
+    mock_client = MagicMock()
+    mock_resp = MagicMock()
+    mock_resp.status_code = 200
+    mock_client.post.return_value = mock_resp
+    with patch("backend.services.notifications.get_http_client", return_value=mock_client):
         ok = _dispatch_ntfy(cfg, "CPU Warning", "High Temp", "warning")
         assert ok is True
 
-        req = mock_urlopen.call_args[0][0]
-        assert req.full_url == "https://ntfy.sh/homelab-nas"
-        assert req.headers["Title"] == "CPU Warning"
-        assert req.headers["Priority"] == "4"
-        assert req.headers["Authorization"] == "Bearer secret123"
+        mock_client.post.assert_called_once()
+        args, kwargs = mock_client.post.call_args
+        assert args[0] == "https://ntfy.sh/homelab-nas"
+        assert kwargs["headers"]["Title"] == "CPU Warning"
+        assert kwargs["headers"]["Priority"] == "4"
+        assert kwargs["headers"]["Authorization"] == "Bearer secret123"
 
 
 def test_dispatch_webhook_discord():
     cfg = {"webhook_url": "https://discord.com/api/webhooks/123/token"}
-    with patch("urllib.request.urlopen") as mock_urlopen:
-        mock_resp = MagicMock()
-        mock_resp.status = 204
-        mock_urlopen.return_value.__enter__.return_value = mock_resp
-
+    mock_client = MagicMock()
+    mock_resp = MagicMock()
+    mock_resp.status_code = 204
+    mock_client.post.return_value = mock_resp
+    with patch("backend.services.notifications.get_http_client", return_value=mock_client):
         ok = _dispatch_webhook(cfg, "System Alert", "Fan Stopped", "critical")
         assert ok is True
 
-        req = mock_urlopen.call_args[0][0]
-        payload = json.loads(req.data.decode("utf-8"))
+        mock_client.post.assert_called_once()
+        args, kwargs = mock_client.post.call_args
+        assert args[0] == "https://discord.com/api/webhooks/123/token"
+        payload = kwargs["json"]
         assert payload["username"] == "ZettNAS"
         assert payload["embeds"][0]["title"] == "System Alert"
         assert payload["embeds"][0]["color"] == 0xEF4444

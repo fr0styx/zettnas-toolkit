@@ -35,6 +35,7 @@ from backend.hardware.led import apply_led_state
 from backend.hardware.network import read_ip
 from backend.hardware.storage import detect_chassis_model
 from backend.services.broadcaster import broadcaster
+from backend.services.notifications import close_notification_client
 from backend.services.button_listener import button_listener_daemon
 from backend.services.lcd_renderer import render_lcd_loop
 from backend.services.stats_collector import smart_poller_daemon, stats_collector_daemon
@@ -122,6 +123,8 @@ async def lifespan(app: FastAPI):
     finally:
         Z_STATE.shutting_down = True
         Z_STATE.ui_wake.set()
+        broadcaster.shutdown()
+        close_notification_client()
         if not Z_STATE.fans_locked:
             _shutdown_fans("shutdown")
 
@@ -187,6 +190,10 @@ def main():
         ws="none",
         timeout_keep_alive=15,
         timeout_graceful_shutdown=3,
+        proxy_headers=True,
+        forwarded_allow_ips="*",
+        server_header=False,
+        limit_concurrency=256,
     )
     ZettServer(server_config).run()
 

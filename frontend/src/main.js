@@ -34,6 +34,7 @@ let _sseRetryCount = 0;
 let _sse = null;
 let _sseReconnectTimer = null;
 let _pollingTimer = null;
+let _pollAbortController = null;
 
 async function checkLcdStatus() {
   if (state.isLcdDirect) return;
@@ -65,11 +66,17 @@ async function checkLcdStatus() {
 }
 
 export async function tick() {
+  if (_pollAbortController) {
+    _pollAbortController.abort();
+  }
+  _pollAbortController = new AbortController();
   try {
-    const s = await api.get('/api/stats');
+    const s = await api.get('/api/stats', { signal: _pollAbortController.signal });
     applyStats(s);
   } catch (e) {
-    console.warn('Polling stats failed', e);
+    if (e.name !== 'AbortError') {
+      console.warn('Polling stats failed', e);
+    }
   }
 }
 
@@ -178,6 +185,29 @@ document.addEventListener('DOMContentLoaded', () => {
   setInterval(checkLcdStatus, 10000);
 
   window.addEventListener('resize', fitMiniPreviewScale);
+
+  ZettEventBus.on('auth:required', () => {
+    if (_sse) {
+      _sse.close();
+      _sse = null;
+    }
+    if (_pollingTimer) {
+      clearInterval(_pollingTimer);
+      _pollingTimer = null;
+    }
+    if (_sseReconnectTimer) {
+      clearTimeout(_sseReconnectTimer);
+      _sseReconnectTimer = null;
+    }
+    if (_pollAbortController) {
+      _pollAbortController.abort();
+      _pollAbortController = null;
+    }
+  });
+
+  ZettEventBus.on('auth:login', () => {
+    startSSE();
+  });
 
   // Prevent background drag/bounce from scrolling the page and losing the navbar on mobile
   document.addEventListener('touchmove', (e) => {

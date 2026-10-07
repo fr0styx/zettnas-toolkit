@@ -1,3 +1,4 @@
+import aiofiles
 import asyncio
 import os
 import re
@@ -32,6 +33,7 @@ from backend.hardware.storage import get_current_layout
 from backend.hardware.unraid import read_unraid_status
 from backend.hardware.ups import read_ups_status
 from backend.models.schemas import (
+    DiskSmartTestRequest,
     ButtonConfigRequest,
     CopyConfirmRequest,
     DockerActionRequest,
@@ -104,9 +106,9 @@ async def disk_wake(payload: dict):
 
 
 @router.post("/disk/smart_test")
-async def disk_smart_test(payload: dict):
-    dev = str(payload.get("dev", "sda"))
-    test_type = str(payload.get("test_type", "short"))
+async def disk_smart_test(req: DiskSmartTestRequest):
+    dev = str(req.dev)
+    test_type = str(req.test_type)
     if dev.startswith("/dev/"):
         dev = dev.replace("/dev/", "")
     m = re.match(r"^nv([0-9]+)$", dev)
@@ -504,10 +506,10 @@ async def fs_upload(request: Request, path: str, filename: str):
 
     file_path = os.path.join(target_unresolved, filename)
     try:
-        with open(file_path, "wb") as f_out:
+        async with aiofiles.open(file_path, "wb") as f_out:
             async for chunk in request.stream():
                 if chunk:
-                    f_out.write(chunk)
+                    await f_out.write(chunk)
 
         add_event("success", "File Explorer", f"Uploaded {filename} to {path}")
         return {"status": "ok", "message": "File uploaded"}

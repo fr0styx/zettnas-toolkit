@@ -28,9 +28,8 @@ class StatsBroadcaster:
 
     async def subscribe(self, initial_data: dict[str, Any] | None = None) -> asyncio.Queue:
         q: asyncio.Queue = asyncio.Queue(maxsize=10)
-        self._subscribers.add(q)
 
-        # Immediately send complete snapshot to newly connected client so nothing is missing
+        # Immediately send complete snapshot to newly connected client before registering
         full_data = initial_data or self._latest_full_data
         if full_data is not None:
             payload = f"data: {json.dumps(full_data)}\n\n"
@@ -38,7 +37,22 @@ class StatsBroadcaster:
         elif self._latest_payload is not None:
             await q.put(self._latest_payload)
 
+        self._subscribers.add(q)
         return q
+
+    def shutdown(self) -> None:
+        """Signal all active subscriber queues to cleanly exit."""
+        for q in list(self._subscribers):
+            try:
+                if q.full():
+                    try:
+                        q.get_nowait()
+                    except asyncio.QueueEmpty:
+                        pass
+                q.put_nowait(None)
+            except Exception:
+                pass
+        self._subscribers.clear()
 
     async def unsubscribe(self, q: asyncio.Queue) -> None:
         self._subscribers.discard(q)

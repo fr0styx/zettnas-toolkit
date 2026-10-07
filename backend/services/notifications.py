@@ -6,6 +6,30 @@ import urllib.request
 from typing import Any
 
 import apprise
+import httpx
+
+_http_client: httpx.Client | None = None
+
+
+def get_http_client() -> httpx.Client:
+    global _http_client
+    if _http_client is None or _http_client.is_closed:
+        _http_client = httpx.Client(
+            timeout=8.0,
+            limits=httpx.Limits(max_keepalive_connections=5, max_connections=10),
+            follow_redirects=True,
+        )
+    return _http_client
+
+
+def close_notification_client() -> None:
+    global _http_client
+    if _http_client is not None and not _http_client.is_closed:
+        try:
+            _http_client.close()
+        except Exception:
+            pass
+        _http_client = None
 
 from backend.config import DATA_DIR, logger
 from backend.fsutil import atomic_write_json, read_json
@@ -123,9 +147,9 @@ def _dispatch_ntfy(cfg: dict[str, Any], title: str, message: str, level: str) ->
         headers["Authorization"] = f"Bearer {token}"
 
     try:
-        req = urllib.request.Request(url, data=message.encode("utf-8"), headers=headers, method="POST")
-        with urllib.request.urlopen(req, timeout=8) as resp:
-            return resp.status in (200, 201, 204)
+        client = get_http_client()
+        resp = client.post(url, content=message.encode("utf-8"), headers=headers)
+        return resp.status_code in (200, 201, 204)
     except Exception as e:
         logger.warning(f"[NOTIFY] ntfy push failed: {e}")
         return False
@@ -168,10 +192,9 @@ def _dispatch_webhook(cfg: dict[str, Any], title: str, message: str, level: str)
         }
 
     try:
-        data = json.dumps(payload).encode("utf-8")
-        req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"}, method="POST")
-        with urllib.request.urlopen(req, timeout=8) as resp:
-            return resp.status in (200, 201, 204)
+        client = get_http_client()
+        resp = client.post(url, json=payload)
+        return resp.status_code in (200, 201, 204)
     except Exception as e:
         logger.warning(f"[NOTIFY] Webhook POST failed: {e}")
         return False

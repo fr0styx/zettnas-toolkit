@@ -391,8 +391,15 @@ if (typeof document !== 'undefined') {
 
 export function applyStats(s) {
   try {
-    state.setStats(s);
+    const changed = state.setStats(s);
     if (typeof document !== 'undefined' && document.hidden && !state.isLcdDirect) {
+      return;
+    }
+    // Always refresh the clock to keep time accurate to the minute
+    setText($('clock'), getLocalClock(state.currentTimezone, state.clockFormat));
+
+    // If telemetry hasn't changed and this isn't the first render, skip heavy DOM updates
+    if (!changed && state.latestStats) {
       return;
     }
     if (s.events) renderEventLog(s.events);

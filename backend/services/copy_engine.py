@@ -52,10 +52,8 @@ def _get_exif_date(filepath):
         )
         if filepath.lower().endswith(supported_exts):
             with open(filepath, "rb") as f:
-                tags = exifread.process_file(f, stop_tag="EXIF DateTimeOriginal", details=False)
-                date_str = str(tags.get("EXIF DateTimeOriginal", ""))
-                if not date_str:
-                    date_str = str(tags.get("Image DateTime", ""))
+                tags = exifread.process_file(f, stop_tag="DateTimeOriginal", details=False, strict=False)
+                date_str = str(tags.get("EXIF DateTimeOriginal") or tags.get("Image DateTime") or "")
                 if date_str:
                     parts = date_str.split(" ")
                     if len(parts) > 0:
@@ -196,7 +194,7 @@ async def _do_copy(cfg):
         Z_STATE.copy_progress["file"] = "Scanning media and EXIF metadata..."
         Z_STATE.ui_wake.set()
 
-        all_files, collisions = build_copy_plan(src_path, dst_path, use_exif)
+        all_files, collisions = await asyncio.to_thread(build_copy_plan, src_path, dst_path, use_exif)
 
         if collisions:
             collision_rule = cfg.get("on_collision", "skip")
