@@ -15,6 +15,10 @@
 
 ## Overview
 
+<div align="center">
+  <img src="static/img/ui-screenshot.png" width="90%" alt="ZettNAS Web Studio & Desktop UI" style="border-radius: 8px; box-shadow: 0 12px 36px rgba(0,0,0,0.5);">
+</div>
+
 **ZettNAS Toolkit** is a specialized hardware orchestration platform engineered for Zettlab NAS enclosures (D4, D6, and D8 models) running Unraid or Debian/Docker. It bridges physical chassis peripherals with modern web management:
 
 * **Direct Front-Panel LCD (`/dev/fb0`)** — 640×172 zero-overhead rendering with multi-page rotation, hardware button cycling, screen-off sleep (0 FPS), and adaptive idle rates.
@@ -26,10 +30,6 @@
 * **Chassis ARGB Lightbar (`/dev/ttyACM0`)** — USB microcontroller driver for 38 WS2812B LEDs with hardware animations, error-reactive alerts (red/amber), and blackout night scheduling.
 * **Homelab & Subsystem Health** — Native Unraid array and parity telemetry, zero-dependency Docker container controls (start/stop/restart), UPS battery monitoring, and active drive S.M.A.R.T. self-tests.
 * **High-Integrity Media Ingestion** — Front SD/TF card copy engine with async I/O (`aiofiles`), SHA-256 post-copy verification, and persistent SQLite transfer logs.
-
-<div align="center">
-  <img src="static/img/ui-screenshot.png" width="90%" alt="ZettNAS Web Studio & Desktop UI" style="border-radius: 8px; box-shadow: 0 12px 36px rgba(0,0,0,0.5);">
-</div>
 
 ---
 
