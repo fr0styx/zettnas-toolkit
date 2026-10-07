@@ -70,11 +70,53 @@ def _detect_image_format(data: bytes):
     return FORMAT_EXT.get(fmt)
 
 
+def _clean_cache_for(safe: str):
+    if not safe:
+        return
+    try:
+        cache_path = os.path.join(WALLPAPERS_DIR, ".cache", f"{safe}.webp")
+        if os.path.isfile(cache_path):
+            os.remove(cache_path)
+    except Exception:
+        pass
+
+
+def _get_optimized_wallpaper_path(safe: str, wp_path: str) -> tuple[str, str]:
+    ext = os.path.splitext(safe)[1].lower()
+    if ext == ".gif":
+        return wp_path, ALLOWED_TYPES.get(ext, "image/gif")
+
+    cache_dir = os.path.join(os.path.dirname(wp_path), ".cache")
+    opt_path = os.path.join(cache_dir, f"{safe}.webp")
+
+    try:
+        src_mtime = os.path.getmtime(wp_path)
+        if os.path.exists(opt_path) and os.path.getmtime(opt_path) >= src_mtime:
+            return opt_path, "image/webp"
+
+        os.makedirs(cache_dir, exist_ok=True)
+        with Image.open(wp_path) as im:
+            if im.mode not in ("RGB", "RGBA"):
+                im = im.convert("RGB")
+            # Downscale if wider or taller than 2560x1440
+            max_w, max_h = 2560, 1440
+            if im.width > max_w or im.height > max_h:
+                im.thumbnail((max_w, max_h), Image.Resampling.LANCZOS)
+            im.save(opt_path, "WEBP", quality=82, method=6)
+        return opt_path, "image/webp"
+    except Exception as e:
+        logger.warning(f"[WALLPAPER] Optimization fallback to original for {safe}: {e}")
+        return wp_path, ALLOWED_TYPES.get(ext, "image/jpeg")
+
+
 @router.get("/wallpaper_url")
 def get_wallpaper_url():
     active = _safe_name(_get_active())
     if active:
-        return {"url": f"/api/wallpapers/download/{active}"}
+        safe, wp_path = _path_for(active)
+        v = int(os.path.getmtime(wp_path)) if safe and os.path.isfile(wp_path) else None
+        v_param = f"?v={v}" if v else ""
+        return {"url": f"/api/wallpapers/download/{active}{v_param}"}
     return {"url": None}
 
 
@@ -82,19 +124,39 @@ def get_wallpaper_url():
 def list_wallpapers():
     os.makedirs(WALLPAPERS_DIR, exist_ok=True)
     files = [f for f in os.listdir(WALLPAPERS_DIR) if _safe_name(f)]
-    return {"files": sorted(files), "active": _get_active()}
+    active = _get_active()
+    version = None
+    if active:
+        safe, wp_path = _path_for(active)
+        if safe and os.path.isfile(wp_path):
+            version = int(os.path.getmtime(wp_path))
+    return {"files": sorted(files), "active": active, "version": version}
 
 
 @router.get("/wallpapers/download/{filename}")
-def download_wallpaper(filename: str):
+async def download_wallpaper(filename: str, request: Request):
     safe, wp_path = _path_for(filename)
     if not safe or not os.path.isfile(wp_path):
         return error_response(404, "Wallpaper not found.")
-    media_type = ALLOWED_TYPES[os.path.splitext(safe)[1].lower()]
+
+    accept = request.headers.get("accept", "")
+    wants_webp = "image/webp" in accept
+    file_sz = os.path.getsize(wp_path)
+
+    # Deliver optimized WebP if accepted by client and original is large (> 300KB)
+    if wants_webp and file_sz > 300 * 1024:
+        serve_path, media_type = await run_in_threadpool(_get_optimized_wallpaper_path, safe, wp_path)
+    else:
+        serve_path = wp_path
+        media_type = ALLOWED_TYPES.get(os.path.splitext(safe)[1].lower(), "application/octet-stream")
+
     return FileResponse(
-        wp_path,
+        serve_path,
         media_type=media_type,
-        headers={"X-Content-Type-Options": "nosniff", "Cache-Control": "max-age=3600"},
+        headers={
+            "X-Content-Type-Options": "nosniff",
+            "Cache-Control": "public, max-age=604800, stale-while-revalidate=86400",
+        },
     )
 
 
@@ -142,6 +204,7 @@ async def upload_wallpaper(request: Request):
 
         with open(os.path.join(WALLPAPERS_DIR, final_name), "wb") as f:
             f.write(binary_data)
+        _clean_cache_for(final_name)
         _set_active(final_name)
     except OSError as e:
         logger.error(f"[WALLPAPER] Upload failed: {e}")
@@ -193,6 +256,8 @@ def rename_wallpaper(req: WallpaperRenameRequest):
             return _fail(409, "A wallpaper with that name already exists.")
 
         os.rename(old_path, new_path)
+        _clean_cache_for(old_safe)
+        _clean_cache_for(new_name)
         if _get_active() == old_safe:
             _set_active(new_name)
     except OSError as e:
@@ -210,6 +275,7 @@ def delete_wallpaper(filename: str):
     try:
         if os.path.isfile(wp_path):
             os.remove(wp_path)
+        _clean_cache_for(safe)
         if _get_active() == safe:
             _set_active(None)
     except OSError as e:

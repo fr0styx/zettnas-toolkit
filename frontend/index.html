@@ -63,6 +63,25 @@
         }
       }
     } catch (e) {}
+
+    // Pre-initialize desktop wallpaper from localStorage to eliminate any delay, jump, or flash on reload
+    try {
+      var savedWp = localStorage.getItem('zettnas_active_wallpaper');
+      if (savedWp) {
+        var wpUrl = '/api/wallpapers/download/' + encodeURIComponent(savedWp);
+        var sWp = document.createElement('style');
+        sWp.id = 'zettnas-wallpaper-early-style';
+        sWp.textContent = 'body { background-image: url("' + wpUrl + '") !important; background-size: cover !important; background-position: center center !important; background-repeat: no-repeat !important; background-attachment: fixed !important; }\n';
+        document.head.appendChild(sWp);
+
+        var lWp = document.createElement('link');
+        lWp.rel = 'preload';
+        lWp.as = 'image';
+        lWp.href = wpUrl;
+        lWp.setAttribute('fetchpriority', 'high');
+        document.head.appendChild(lWp);
+      }
+    } catch (e) {}
   })();
 </script>
 <style>

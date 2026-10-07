@@ -7,16 +7,22 @@ import { api } from '../api.js';
 import { showToast } from '../toast.js';
 
 let _wallpapersInitialized = false;
+let _loadPromise = null;
 
-export function setWallpaper(url) {
+export function setWallpaper(url, filename = null) {
   if (state.isLcdDirect || (typeof window !== 'undefined' && window.location.search.includes('mode=lcd')) || (document.body && document.body.classList.contains('lcd-direct'))) return;
   const previewImg = document.getElementById('wallpaper-preview');
   const noImgTxt = document.getElementById('wallpaper-no-img');
 
   if (url) {
+    if (filename) {
+      try {
+        localStorage.setItem('zettnas_active_wallpaper', filename);
+      } catch (e) {}
+    }
     document.body.style.setProperty('background-image', `url('${url}')`, 'important');
     document.body.style.setProperty('background-size', 'cover', 'important');
-    document.body.style.setProperty('background-position', 'center', 'important');
+    document.body.style.setProperty('background-position', 'center center', 'important');
     document.body.style.setProperty('background-repeat', 'no-repeat', 'important');
     document.body.style.setProperty('background-attachment', 'fixed', 'important');
     if (previewImg) {
@@ -25,6 +31,9 @@ export function setWallpaper(url) {
     }
     if (noImgTxt) noImgTxt.style.display = 'none';
   } else {
+    try {
+      localStorage.removeItem('zettnas_active_wallpaper');
+    } catch (e) {}
     document.body.style.removeProperty('background-image');
     document.body.style.removeProperty('background-size');
     document.body.style.removeProperty('background-position');
@@ -36,37 +45,50 @@ export function setWallpaper(url) {
     }
     if (noImgTxt) noImgTxt.style.display = 'block';
   }
+
+  const earlyWp = document.getElementById('zettnas-wallpaper-early-style');
+  if (earlyWp && earlyWp.parentNode) {
+    earlyWp.parentNode.removeChild(earlyWp);
+  }
 }
 
-export async function loadWallpapers() {
-  try {
-    const data = await api.get('/api/wallpapers');
-    const currentWallpapers = data.files || [];
-    const selectDropdown = document.getElementById('wallpaper-select');
+export function loadWallpapers() {
+  if (_loadPromise) return _loadPromise;
+  _loadPromise = (async () => {
+    try {
+      const data = await api.get('/api/wallpapers');
+      const currentWallpapers = data.files || [];
+      const selectDropdown = document.getElementById('wallpaper-select');
 
-    if (selectDropdown) {
-      selectDropdown.innerHTML = '<option value="">Default Gradient</option>';
-      currentWallpapers.forEach((f) => {
-        const opt = document.createElement('option');
-        opt.value = f;
-        opt.textContent = f;
-        selectDropdown.appendChild(opt);
-      });
-      if (data.active) {
-        selectDropdown.value = data.active;
-        setWallpaper(`/api/wallpapers/download/${data.active}?t=${Date.now()}`);
+      if (selectDropdown) {
+        selectDropdown.innerHTML = '<option value="">Default Gradient</option>';
+        currentWallpapers.forEach((f) => {
+          const opt = document.createElement('option');
+          opt.value = f;
+          opt.textContent = f;
+          selectDropdown.appendChild(opt);
+        });
+        if (data.active) {
+          selectDropdown.value = data.active;
+          const v = data.version ? `?v=${data.version}` : '';
+          setWallpaper(`/api/wallpapers/download/${encodeURIComponent(data.active)}${v}`, data.active);
+        } else {
+          selectDropdown.value = '';
+          setWallpaper(null);
+        }
+      } else if (data.active) {
+        const v = data.version ? `?v=${data.version}` : '';
+        setWallpaper(`/api/wallpapers/download/${encodeURIComponent(data.active)}${v}`, data.active);
       } else {
-        selectDropdown.value = '';
         setWallpaper(null);
       }
-    } else if (data.active) {
-      setWallpaper(`/api/wallpapers/download/${data.active}?t=${Date.now()}`);
-    } else {
-      setWallpaper(null);
+    } catch (err) {
+      console.warn('Could not load wallpapers', err);
     }
-  } catch (err) {
-    console.warn('Could not load wallpapers', err);
-  }
+  })().finally(() => {
+    _loadPromise = null;
+  });
+  return _loadPromise;
 }
 
 if (typeof window !== 'undefined') {
@@ -90,7 +112,7 @@ export function initWallpapers() {
     selectDropdown.addEventListener('change', (e) => {
       const val = e.target.value;
       if (val) {
-        setWallpaper(`/api/wallpapers/download/${val}`);
+        setWallpaper(`/api/wallpapers/download/${encodeURIComponent(val)}`, val);
       } else {
         setWallpaper(null);
       }
@@ -111,6 +133,11 @@ export function initWallpapers() {
             filename: file.name
           });
           if (data.success) {
+            if (data.filename) {
+              try {
+                localStorage.setItem('zettnas_active_wallpaper', data.filename);
+              } catch (e) {}
+            }
             await loadWallpapers();
             showToast('Wallpaper uploaded', 'success');
           } else {
@@ -130,6 +157,15 @@ export function initWallpapers() {
       const val = selectDropdown ? selectDropdown.value : '';
       try {
         await api.post('/api/wallpapers/select', { filename: val || null });
+        if (val) {
+          try {
+            localStorage.setItem('zettnas_active_wallpaper', val);
+          } catch (e) {}
+        } else {
+          try {
+            localStorage.removeItem('zettnas_active_wallpaper');
+          } catch (e) {}
+        }
         showToast('Active wallpaper saved', 'success');
       } catch (err) {
         showToast('Failed to save wallpaper setting', 'error');
@@ -152,6 +188,11 @@ export function initWallpapers() {
         });
         if (data.success) {
           showToast(`Wallpaper renamed to ${data.new_name}`, 'success');
+          if (localStorage.getItem('zettnas_active_wallpaper') === val) {
+            try {
+              localStorage.setItem('zettnas_active_wallpaper', data.new_name);
+            } catch (e) {}
+          }
           await loadWallpapers();
           if (selectDropdown) selectDropdown.value = data.new_name;
         } else {
@@ -169,6 +210,11 @@ export function initWallpapers() {
       if (!val) return;
       try {
         await api.delete(`/api/wallpapers/${encodeURIComponent(val)}`);
+        if (localStorage.getItem('zettnas_active_wallpaper') === val) {
+          try {
+            localStorage.removeItem('zettnas_active_wallpaper');
+          } catch (e) {}
+        }
         showToast('Wallpaper deleted', 'success');
         await loadWallpapers();
       } catch (err) {
