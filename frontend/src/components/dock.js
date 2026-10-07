@@ -1614,7 +1614,7 @@ window.toggleNotificationCenter = function() {
   }
 };
 
-function renderNotificationCenter() {
+export function renderNotificationCenter() {
   const list = document.getElementById('notif-center-list');
   if (!list || !state.latestStats || !state.latestStats.events) return;
   
@@ -1634,12 +1634,46 @@ function renderNotificationCenter() {
     const emptyMsg = currentNotifFilter === 'all'
       ? t('notif.empty', 'No recent notifications.')
       : t('notif.no_matching', 'No notifications matching filter.');
+    const emptySig = `empty_${currentNotifFilter}_${clearedEventsTs}`;
+    if (list._lastRenderedSignature === emptySig) return;
+    list._lastRenderedSignature = emptySig;
     list.innerHTML = `<div style="padding:28px 16px; text-align:center; color:var(--muted); font-size:11px;">${escapeHtml(emptyMsg)}</div>`;
     return;
   }
   
+  const visibleEvents = events.slice(0, 50);
+  const sigParts = visibleEvents.map(e => `${getEventKey(e)}:${isEventChecked(e) ? '1' : '0'}`);
+  const currentSignature = `${currentNotifFilter}_${clearedEventsTs}_${visibleEvents.length}_${sigParts.join(';')}`;
+
+  // If signature has not changed, do not touch innerHTML so hover state, transitions, and active clicks aren't lost
+  if (list._lastRenderedSignature === currentSignature) {
+    return;
+  }
+  list._lastRenderedSignature = currentSignature;
+
+  // Set up event delegation once on list to ensure single-click always works reliably
+  if (!list._clickDelegated) {
+    list._clickDelegated = true;
+    list.addEventListener('click', (ev) => {
+      const row = ev.target.closest('.notif-center-item');
+      if (!row) return;
+      const eventKey = row.dataset.eventKey;
+      if (!eventKey) return;
+      const eventObj = row._eventData || (state.latestStats?.events || []).find(e => getEventKey(e) === eventKey);
+      if (!eventObj) return;
+
+      markEventChecked(eventObj, true);
+      updateNotificationBadge();
+      renderNotificationCenter();
+      
+      if (window.openEventDetailModal) {
+        window.openEventDetailModal(eventObj);
+      }
+    });
+  }
+
   list.innerHTML = '';
-  events.slice(0, 50).forEach(e => {
+  visibleEvents.forEach(e => {
     const isChecked = isEventChecked(e);
     const dt = new Date(e.ts * 1000);
     let color = '#cbd5e1';
@@ -1651,7 +1685,8 @@ function renderNotificationCenter() {
     const row = document.createElement('div');
     row.className = 'notif-center-item' + (isChecked ? ' notif-event-checked' : '');
     row.dataset.eventKey = getEventKey(e);
-    row.style.cssText = `padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; gap: 8px; align-items: flex-start; cursor:pointer; transition: background 0.15s, opacity 0.2s, filter 0.2s; ${isChecked ? 'opacity: 0.45; filter: grayscale(0.5); background: transparent;' : 'background: rgba(255,255,255,0.05);'}`;
+    row._eventData = e;
+    row.style.cssText = `padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; gap: 8px; align-items: flex-start; cursor:pointer; transition: background 0.15s ease; ${isChecked ? 'opacity: 0.45; filter: grayscale(0.5); background: transparent;' : 'background: rgba(255,255,255,0.05);'}`;
     row.innerHTML = `
       <span class="notif-center-icon" style="font-size: 14px; margin-top:2px; flex-shrink:0;">${icon}</span>
       <div style="display:flex; flex-direction:column; gap:2px; flex:1; min-width:0;">
@@ -1664,18 +1699,6 @@ function renderNotificationCenter() {
       </div>
       ${!isChecked ? `<div class="notif-unread-dot" style="width:6px; height:6px; border-radius:50%; background:var(--brand, #0ea5e9); margin-left:auto; margin-top:6px; flex-shrink:0;"></div>` : ''}
     `;
-    
-    // Clicking an individual log event marks it checked (dimmed) and opens the Event Detail modal inspector
-    row.addEventListener('click', () => {
-      markEventChecked(e, true);
-      updateNotificationBadge();
-      renderNotificationCenter();
-      
-      if (window.openEventDetailModal) {
-        window.openEventDetailModal(e);
-      }
-    });
-    
     list.appendChild(row);
   });
 }

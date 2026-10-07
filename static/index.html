@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>ZettNAS Studio • Hardware Suite</title>
-  <script type="module" crossorigin src="/assets/index-aeiWo4I0.js"></script>
+  <script type="module" crossorigin src="/assets/index-W7G85ASZ.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/helpers.dataset-BIT4M8iJ.js">
   <link rel="modulepreload" crossorigin href="/assets/chartjs-plugin-zoom.esm-CVlo9eU5.js">
-  <link rel="stylesheet" crossorigin href="/assets/index-CUffhJG0.css">
+  <link rel="stylesheet" crossorigin href="/assets/index-RdamM5_W.css">
 </head>
 <body class="studio-workbench">
 
@@ -450,6 +450,65 @@
         <button id="event-detail-close-btn" type="button" style="padding: 6px 16px; font-size: 11px; font-weight: 700; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); color: #fff; border-radius: 6px; cursor: pointer;" data-i18n="event_detail.close">Close</button>
       </div>
 
+    </div>
+  </div>
+</div>
+
+<!-- Fan Curve Preset Save Modal -->
+<div id="fan-preset-modal-overlay" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="fan-preset-title" style="display: none;">
+  <div class="smart-modal-window fan-preset-modal-window" style="max-width: 440px; width: 92%; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(14, 165, 233, 0.15); border: 1px solid rgba(255, 255, 255, 0.12);">
+    <div class="smart-modal-header" id="fan-preset-modal-header" style="cursor: default;">
+      <span class="smart-modal-title" id="fan-preset-title" style="display: flex; align-items: center; gap: 8px;">
+        <svg class="ic" style="width: 15px; height: 15px; fill: currentColor; color: var(--brand, #0ea5e9);"><use href="#i-save"/></svg>
+        <span data-i18n="fan.save_preset_title">Save Custom Preset</span>
+      </span>
+      <div class="os-window-controls">
+        <button class="win-btn close-btn" id="fan-preset-close-btn" title="Close" aria-label="Close"></button>
+      </div>
+    </div>
+    <div class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
+      <div>
+        <label for="fan-preset-name-input" style="display: block; font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;" data-i18n="fan.preset_name_label">Preset Name</label>
+        <input type="text" id="fan-preset-name-input" class="fan-preset-input" placeholder="e.g. Silent Curve, Heavy Load, Render Rig" maxlength="40" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; padding: 9px 12px; font-size: 13px; color: #fff; outline: none; transition: border-color 0.2s;" autocomplete="off" />
+      </div>
+      <div style="font-size: 11px; color: var(--muted); line-height: 1.45;" data-i18n="fan.save_preset_hint">
+        Saves current 5-point fan curve to your system presets.
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.08);">
+        <button id="fan-preset-cancel-btn" type="button" style="padding: 7px 16px; font-size: 11px; font-weight: 700; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); color: #fff; border-radius: 6px; cursor: pointer; transition: background 0.15s;" data-i18n="fan.cancel">Cancel</button>
+        <button id="fan-preset-submit-btn" type="button" style="padding: 7px 18px; font-size: 11px; font-weight: 700; background: var(--brand, #0ea5e9); border: none; color: #fff; border-radius: 6px; cursor: pointer; transition: filter 0.15s; display: inline-flex; align-items: center; gap: 6px;" data-i18n="fan.save_preset_btn">
+          <svg class="ic" style="width: 13px; height: 13px; fill: currentColor;"><use href="#i-save"/></svg>
+          <span data-i18n="fan.save_preset_btn">Save Preset</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Fan Curve Preset Delete Confirmation Modal -->
+<div id="fan-preset-delete-overlay" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="fan-delete-title" style="display: none;">
+  <div class="smart-modal-window fan-preset-modal-window" style="max-width: 420px; width: 92%; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(239, 68, 68, 0.15); border: 1px solid rgba(255, 255, 255, 0.12);">
+    <div class="smart-modal-header" id="fan-preset-delete-header" style="cursor: default;">
+      <span class="smart-modal-title" id="fan-delete-title" style="display: flex; align-items: center; gap: 8px;">
+        <svg class="ic" style="width: 15px; height: 15px; fill: currentColor; color: var(--crit, #ff5c5c);"><use href="#i-trash"/></svg>
+        <span data-i18n="fan.delete_preset_title">Delete Fan Preset</span>
+      </span>
+      <div class="os-window-controls">
+        <button class="win-btn close-btn" id="fan-delete-close-btn" title="Close" aria-label="Close"></button>
+      </div>
+    </div>
+    <div class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
+      <div style="font-size: 12px; color: #e2e8f0; line-height: 1.5;">
+        <span data-i18n="fan.delete_confirm_msg">Are you sure you want to delete fan preset</span> <strong id="fan-delete-preset-target" style="color: #fff; font-weight: 700;"></strong>?
+      </div>
+      <div style="font-size: 11px; color: var(--muted);" data-i18n="fan.delete_preset_warning">This action cannot be undone.</div>
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.08);">
+        <button id="fan-delete-cancel-btn" type="button" style="padding: 7px 16px; font-size: 11px; font-weight: 700; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); color: #fff; border-radius: 6px; cursor: pointer; transition: background 0.15s;" data-i18n="fan.cancel">Cancel</button>
+        <button id="fan-delete-confirm-btn" type="button" style="padding: 7px 18px; font-size: 11px; font-weight: 700; background: var(--crit, #ef4444); border: none; color: #fff; border-radius: 6px; cursor: pointer; transition: filter 0.15s; display: inline-flex; align-items: center; gap: 6px;" data-i18n="fan.delete_preset_btn">
+          <svg class="ic" style="width: 13px; height: 13px; fill: currentColor;"><use href="#i-trash"/></svg>
+          <span data-i18n="fan.delete_preset_btn">Delete Preset</span>
+        </button>
+      </div>
     </div>
   </div>
 </div>
@@ -2262,15 +2321,15 @@
 <div id="notif-center-panel" class="notif-center-window" style="display:none; position:fixed; width:360px; max-height:480px; background:rgba(20,24,32,0.96); backdrop-filter:blur(24px); border:1px solid rgba(255,255,255,0.12); border-radius:12px; z-index:9999; flex-direction:column; box-shadow:0 14px 40px rgba(0,0,0,0.85); overflow:hidden; resize:both; min-width:300px; min-height:260px;">
   <div id="notif-center-header" style="padding:10px 14px; border-bottom:1px solid rgba(255,255,255,0.08); display:flex; justify-content:space-between; align-items:center; cursor:move; user-select:none; background:rgba(255,255,255,0.03);">
     <div style="display:flex; align-items:center; gap:8px;">
-      <div class="os-window-controls" style="display:flex; gap:6px; align-items:center; margin-right:4px;">
-        <button class="win-btn close-btn" id="notif-close-btn" title="Close" aria-label="Close"></button>
-      </div>
       <svg class="ic" style="width:14px; height:14px; fill:currentColor; color:var(--brand, #0ea5e9);"><use href="#i-bell"/></svg>
       <div style="font-size:12px; font-weight:800; color:#fff; letter-spacing:0.3px;" data-i18n="notif.title">Notification Center</div>
     </div>
     <div style="display:flex; gap:10px; align-items:center;">
       <button id="notif-mark-read" style="background:none; border:none; color:var(--brand, #0ea5e9); cursor:pointer; font-size:11px; font-weight:600; padding:2px 4px;" data-i18n="notif.mark_all_read">Mark all read</button>
       <button id="notif-clear-all" style="background:none; border:none; color:var(--muted); cursor:pointer; font-size:11px; font-weight:600; padding:2px 4px;" title="Clear notifications" data-i18n="notif.clear_all">Clear all</button>
+      <div class="os-window-controls" style="display:flex; gap:6px; align-items:center; margin-left:4px;">
+        <button class="win-btn close-btn" id="notif-close-btn" title="Close" aria-label="Close"></button>
+      </div>
     </div>
   </div>
   <div id="notif-filter-bar" style="display:flex; gap:6px; padding:8px 14px; background:rgba(0,0,0,0.25); border-bottom:1px solid rgba(255,255,255,0.05); flex-shrink:0;">

@@ -6194,7 +6194,7 @@ body.theme-yak .widget-drag-handle:hover {
 .notif-center-item.notif-event-checked {
   opacity: 0.45 !important;
   background: transparent !important;
-  transition: opacity 0.2s ease, background 0.15s ease;
+  transition: background 0.15s ease;
 }
 
 .notif-center-item.notif-event-checked:hover {
@@ -6252,5 +6252,26 @@ body.theme-yak .widget-drag-handle:hover {
 .dock-context-menu .ctx-item:hover {
   background: rgba(255, 255, 255, 0.09) !important;
 }
+
+/* Fan Preset Modals */
+.fan-preset-modal-window {
+  box-sizing: border-box;
+}
+
+.fan-preset-input:focus {
+  border-color: var(--brand, #0ea5e9) !important;
+  box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.25) !important;
+}
+
+#fan-preset-cancel-btn:hover,
+#fan-delete-cancel-btn:hover {
+  background: rgba(255, 255, 255, 0.14) !important;
+}
+
+#fan-preset-submit-btn:hover,
+#fan-delete-confirm-btn:hover {
+  filter: brightness(1.15);
+}
+
 
 

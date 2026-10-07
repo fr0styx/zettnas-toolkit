@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { makeDraggable, saveWindowBounds, loadSavedWindowBounds, DockManager, isEventChecked, markEventChecked, getEventKey, openConsoleWindow, KNOWN_APPS, toggleConsoleMaximize } from '../components/dock.js';
+import { makeDraggable, saveWindowBounds, loadSavedWindowBounds, DockManager, isEventChecked, markEventChecked, getEventKey, openConsoleWindow, KNOWN_APPS, toggleConsoleMaximize, renderNotificationCenter } from '../components/dock.js';
 import { openEventDetailModal, closeEventDetailModal } from '../modals.js';
+import { state } from '../state.js';
 
 describe('Notification Center Draggable Window & Event Detail Inspector', () => {
   beforeEach(() => {
@@ -11,13 +12,17 @@ describe('Notification Center Draggable Window & Event Detail Inspector', () => 
       </div>
       <div id="global-toast-container"></div>
       <div id="notif-center-panel" class="notif-center-window" style="position:fixed; width:360px; height:420px; display:none;">
-        <div id="notif-center-header" style="cursor:move;">
-          <div class="os-window-controls">
-            <button class="win-btn close-btn" id="notif-close-btn" title="Close"></button>
+        <div id="notif-center-header" style="cursor:move; display:flex; justify-content:space-between; align-items:center;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span class="title">Notification Center</span>
           </div>
-          <span class="title">Notification Center</span>
-          <button id="notif-mark-read">Mark all read</button>
-          <button id="notif-clear-all">Clear all</button>
+          <div style="display:flex; gap:10px; align-items:center;">
+            <button id="notif-mark-read">Mark all read</button>
+            <button id="notif-clear-all">Clear all</button>
+            <div class="os-window-controls">
+              <button class="win-btn close-btn" id="notif-close-btn" title="Close"></button>
+            </div>
+          </div>
         </div>
         <div id="notif-filter-bar">
           <button class="notif-filter-btn active" data-filter="all">All</button>
@@ -367,6 +372,60 @@ describe('Notification Center Draggable Window & Event Detail Inspector', () => 
 
   it('verifies console popout standalone button is absent from chassis header', () => {
     expect(document.getElementById('console-popout')).toBeNull();
+  });
+
+  it('places Notification Center red close button on the right side of the header', () => {
+    const header = document.getElementById('notif-center-header');
+    const closeBtn = document.getElementById('notif-close-btn');
+    const clearAll = document.getElementById('notif-clear-all');
+    expect(closeBtn).not.toBeNull();
+    expect(clearAll).not.toBeNull();
+
+    // Verify closeBtn follows clearAll in DOM order (on the right)
+    expect(clearAll.compareDocumentPosition(closeBtn) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('memoizes notification center render to prevent re-render thrashing and blinking', () => {
+    state.latestStats = {
+      events: [
+        { ts: 1791395000, level: 'warning', title: 'Fan Alert', message: 'Fan 1 duty 90%' },
+        { ts: 1791394900, level: 'info', title: 'System Boot', message: 'All services up' }
+      ]
+    };
+
+    const list = document.getElementById('notif-center-list');
+    list._lastRenderedSignature = null;
+    renderNotificationCenter();
+
+    const itemsInitial = list.querySelectorAll('.notif-center-item');
+    expect(itemsInitial.length).toBe(2);
+    const firstNode = itemsInitial[0];
+
+    // Second call without data change should preserve exact DOM nodes (no flickering/blinking)
+    renderNotificationCenter();
+    const itemsSecond = list.querySelectorAll('.notif-center-item');
+    expect(itemsSecond.length).toBe(2);
+    expect(itemsSecond[0]).toBe(firstNode);
+  });
+
+  it('handles single click via event delegation to open Event Detail modal and mark event as checked', () => {
+    window.openEventDetailModal = vi.fn();
+    const testEv = { ts: 1791396000, level: 'error', title: 'Disk Offline', message: 'Disk sdc unplugged' };
+    state.latestStats = { events: [testEv] };
+
+    const list = document.getElementById('notif-center-list');
+    list._lastRenderedSignature = null;
+    renderNotificationCenter();
+
+    const item = list.querySelector('.notif-center-item');
+    expect(item).not.toBeNull();
+    expect(isEventChecked(testEv)).toBe(false);
+
+    // Single click
+    item.click();
+
+    expect(isEventChecked(testEv)).toBe(true);
+    expect(window.openEventDetailModal).toHaveBeenCalledWith(testEv);
   });
 });
 

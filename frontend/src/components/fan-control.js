@@ -395,6 +395,93 @@ export function initFanControl() {
     }
   }
 
+  const saveModal = document.getElementById('fan-preset-modal-overlay');
+  const nameInput = document.getElementById('fan-preset-name-input');
+  const btnSubmitSavePreset = document.getElementById('fan-preset-submit-btn');
+  const btnCancelSavePreset = document.getElementById('fan-preset-cancel-btn');
+  const btnCloseSavePreset = document.getElementById('fan-preset-close-btn');
+
+  const deleteModal = document.getElementById('fan-preset-delete-overlay');
+  const deleteTargetText = document.getElementById('fan-delete-preset-target');
+  const btnConfirmDeletePreset = document.getElementById('fan-delete-confirm-btn');
+  const btnCancelDeletePreset = document.getElementById('fan-delete-cancel-btn');
+  const btnCloseDeletePreset = document.getElementById('fan-delete-close-btn');
+
+  function openSavePresetModal() {
+    if (!saveModal) return;
+    if (nameInput) {
+      nameInput.value = '';
+      nameInput.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+    }
+    saveModal.classList.add('open');
+    saveModal.style.display = 'flex';
+    setTimeout(() => {
+      if (nameInput) nameInput.focus();
+    }, 60);
+  }
+
+  function closeSavePresetModal() {
+    if (!saveModal) return;
+    saveModal.classList.remove('open');
+    saveModal.style.display = 'none';
+  }
+
+  async function handleSavePreset() {
+    const inputEl = document.getElementById('fan-preset-name-input');
+    const cleanName = (inputEl ? inputEl.value : '').trim();
+    if (!cleanName) {
+      if (inputEl) {
+        inputEl.focus();
+        inputEl.style.borderColor = 'var(--crit, #ff5c5c)';
+      }
+      return;
+    }
+    try {
+      const pts = (state.curvePoints && state.curvePoints.length >= 2) ? state.curvePoints : [[30, 32], [37, 32], [50, 100], [60, 100]];
+      await api.post('/api/fans/presets', {
+        name: cleanName,
+        curve_points: pts,
+      });
+      closeSavePresetModal();
+      await loadFanPresets();
+      if (presetSelect) presetSelect.value = cleanName;
+      updatePresetButtons();
+      ZettEventBus.emit('toast', { message: `Preset "${cleanName}" saved`, type: 'success' });
+    } catch (e) {
+      ZettEventBus.emit('toast', { message: `Failed to save preset: ${e.message || e}`, type: 'error' });
+    }
+  }
+
+  function openDeletePresetModal(name) {
+    if (!deleteModal) return;
+    deleteModal._targetPreset = name;
+    const targetEl = document.getElementById('fan-delete-preset-target');
+    if (targetEl) targetEl.textContent = `"${name}"`;
+    deleteModal.classList.add('open');
+    deleteModal.style.display = 'flex';
+  }
+
+  function closeDeletePresetModal() {
+    if (!deleteModal) return;
+    deleteModal.classList.remove('open');
+    deleteModal.style.display = 'none';
+    deleteModal._targetPreset = null;
+  }
+
+  async function handleDeletePreset() {
+    const name = deleteModal ? deleteModal._targetPreset : null;
+    if (!name) return;
+    try {
+      await api.delete(`/api/fans/presets/${encodeURIComponent(name)}`);
+      closeDeletePresetModal();
+      await loadFanPresets();
+      updatePresetButtons();
+      ZettEventBus.emit('toast', { message: `Preset "${name}" deleted`, type: 'info' });
+    } catch (e) {
+      ZettEventBus.emit('toast', { message: `Failed to delete preset: ${e.message || e}`, type: 'error' });
+    }
+  }
+
   function updatePresetButtons() {
     const hasVal = !!(presetSelect && presetSelect.value);
     if (btnApplyPreset) btnApplyPreset.disabled = !hasVal;
@@ -406,22 +493,30 @@ export function initFanControl() {
   }
 
   if (btnSavePreset) {
-    btnSavePreset.addEventListener('click', async () => {
-      const name = prompt('Enter a name for this custom fan curve preset:');
-      if (!name || !name.trim()) return;
-      const cleanName = name.trim();
-      try {
-        await api.post('/api/fans/presets', {
-          name: cleanName,
-          curve_points: state.curvePoints,
-        });
-        await loadFanPresets();
-        if (presetSelect) presetSelect.value = cleanName;
-        updatePresetButtons();
-        ZettEventBus.emit('toast', { message: `Preset "${cleanName}" saved`, type: 'success' });
-      } catch (e) {
-        alert('Failed to save preset: ' + (e.message || e));
+    btnSavePreset.addEventListener('click', openSavePresetModal);
+  }
+
+  if (saveModal) {
+    saveModal.addEventListener('click', (e) => {
+      if (e.target.closest('#fan-preset-submit-btn')) {
+        handleSavePreset();
+      } else if (e.target.closest('#fan-preset-cancel-btn') || e.target.closest('#fan-preset-close-btn') || e.target === saveModal) {
+        closeSavePresetModal();
       }
+    });
+  }
+
+  if (nameInput) {
+    nameInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleSavePreset();
+      } else if (e.key === 'Escape') {
+        closeSavePresetModal();
+      }
+    });
+    nameInput.addEventListener('input', () => {
+      nameInput.style.borderColor = 'rgba(255, 255, 255, 0.15)';
     });
   }
 
@@ -440,25 +535,44 @@ export function initFanControl() {
         }
         ZettEventBus.emit('toast', { message: `Preset "${name}" applied`, type: 'success' });
       } catch (e) {
-        alert('Failed to apply preset: ' + (e.message || e));
+        ZettEventBus.emit('toast', { message: `Failed to apply preset: ${e.message || e}`, type: 'error' });
       }
     });
   }
 
   if (btnDeletePreset) {
-    btnDeletePreset.addEventListener('click', async () => {
+    btnDeletePreset.addEventListener('click', () => {
       const name = presetSelect ? presetSelect.value : '';
       if (!name) return;
-      if (!confirm(`Delete fan preset "${name}"?`)) return;
-      try {
-        await api.delete(`/api/fans/presets/${encodeURIComponent(name)}`);
-        await loadFanPresets();
-        ZettEventBus.emit('toast', { message: `Preset "${name}" deleted`, type: 'info' });
-      } catch (e) {
-        alert('Failed to delete preset: ' + (e.message || e));
+      openDeletePresetModal(name);
+    });
+  }
+
+  if (deleteModal) {
+    deleteModal.addEventListener('click', (e) => {
+      if (e.target.closest('#fan-delete-confirm-btn')) {
+        handleDeletePreset();
+      } else if (e.target.closest('#fan-delete-cancel-btn') || e.target.closest('#fan-delete-close-btn') || e.target === deleteModal) {
+        closeDeletePresetModal();
       }
     });
   }
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (saveModal && saveModal.classList.contains('open')) {
+        closeSavePresetModal();
+      }
+      if (deleteModal && deleteModal.classList.contains('open')) {
+        closeDeletePresetModal();
+      }
+    }
+  });
+
+  window.openSavePresetModal = openSavePresetModal;
+  window.closeSavePresetModal = closeSavePresetModal;
+  window.openDeletePresetModal = openDeletePresetModal;
+  window.closeDeletePresetModal = closeDeletePresetModal;
 
   loadFanPresets();
   window.addEventListener('zettnas:lang-changed', () => {

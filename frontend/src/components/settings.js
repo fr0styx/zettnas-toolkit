@@ -41,6 +41,7 @@ export function closeDrawer() {
     document.body.classList.remove('drawer-is-open');
   }
 }
+window.closeDrawer = closeDrawer;
 
 export function initSettings() {
   if (state.isLcdDirect || (typeof window !== 'undefined' && window.location.search.includes('mode=lcd')) || (document.body && document.body.classList.contains('lcd-direct'))) {
