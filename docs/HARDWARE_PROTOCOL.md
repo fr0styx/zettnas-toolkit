@@ -73,6 +73,8 @@ The daemon traverses `/host/sys/class/hwmon/hwmon*` searching for compatible dri
 1. **Critical Temperature Floor**: Any HDD reading >= 55 °C or CPU >= 80 °C triggers a hard hardware override setting PWM to 100% duty cycle.
 2. **Watchdog Failsafe**: If the control daemon crashes or stalls for > 15 seconds, firmware control (`pwmN_enable = 2`) is automatically restored.
 3. **Shutdown Failsafe**: On `SIGTERM` or `SIGINT`, fans are locked to full speed / firmware auto before process termination.
+4. **State Pruning & Non-Blocking Sysfs Reads**: Fan state trackers are purged via `cleanup_stale_fan_trackers()` each cycle to prevent memory leaks from detached or renumbered hardware, and sysfs reads are executed non-blocking.
+5. **Parallel SMART Telemetry**: Drive health checks run concurrently (`ThreadPoolExecutor`) so slow spinning drives cannot starve time-critical UPS battery telemetry.
 
 ---
 
@@ -100,13 +102,13 @@ Pixel Format: 32-bit BGRA (8 bits per channel)
 
 ### 4.2 Rendering Pipeline
 
-1. **Chromium Canvas Capture**: Playwright headless browser renders `index.html?mode=lcd` into memory at native `640x172`.
-2. **Buffer Transformation**:
-   - Rotated 270° counter-clockwise to match physical portrait orientation.
+1. **Chromium Canvas Capture**: Playwright headless browser renders `index.html?mode=lcd` in headless Chromium with an upright portrait transform (`transform: rotate(90deg) translate(0, -172px)`).
+2. **Buffer Alignment**:
    - Padded row-stride to align with 704-byte hardware stride.
-   - Converted to BGRA byte order.
-3. **Direct Memory Write**: Transformed byte buffer is written directly to `/dev/fb0` via `open('/dev/fb0', 'wb')`.
-4. **Backlight Control**: Display brightness is regulated via `/sys/class/backlight/*/brightness`.
+   - Converted to 32-bit BGRA byte order.
+3. **Memory-Mapped Framebuffer I/O**: Direct framebuffer memory map (`mmap.mmap`) writes pixel data with explicit `fb_mem.close()` in `finally` blocks to prevent descriptor leaks.
+4. **Crash Resiliency**: Exponential backoff (2s → 60s) for Chromium context restarts prevents CPU lockups during graphics/driver anomalies.
+5. **Backlight Control**: Display brightness is regulated via `/sys/class/backlight/*/brightness`.
 
 ---
 

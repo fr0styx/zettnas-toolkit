@@ -74,25 +74,29 @@
    cd zettnas-toolkit
    cp .env.example .env
    ```
-3. **Launch**:
+3. **Launch Production**:
    ```bash
-   docker compose up -d --build
+   docker compose up -d
    ```
+   *(For development with live source code bind-mounts, run: `docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d`)*
 
 ---
 
 ## Web Desktop & Shortcuts
 
 When accessing the Web Desktop (`http://<server-ip>:8082`):
-* **Desktop Icons** — Drag and drop the **Management** and **ZettNAS** icons anywhere on screen; coordinates persist automatically across sessions.
-* **Window Snapping** — Drag any window to the screen edges or top to snap (Half-Screen Left / Right / Maximize).
+* **Desktop Icons** — Clean 4-icon desktop workspace: **HUB (Management)**, **ZettNAS Console**, **File Explorer**, and **Recycle Bin**. Drag and drop anywhere on screen; positions persist automatically.
+* **Command Palette** — Press `Cmd+K` (macOS) or `Ctrl+K` (Linux/Windows) for fuzzy-search navigation across all toolkit tools, settings, and hardware panels.
+* **Window Snapping** — Drag any window to screen edges or top to snap (Half-Screen Left / Right / Maximize).
+* **Accessibility (A11y)** — Full keyboard navigation with `Tab`, `Enter`, and `Space` activation on interactive elements and screen-reader ARIA roles.
 * **Language Selector** — Quick 1-click language switcher in the navbar (`EN`, `DE`, `ZH`, `FR`, `ES`) with instant dynamic UI translation.
 * **Mobile Stacked Mode** — Toggle between floating windowed desktop and vertical touch-optimized card layout via the top navbar button.
 * **Keyboard Hotkeys**:
+  * `Cmd+K` / `Ctrl+K` — Open Command Palette.
   * `T` — Toggle Hardware Toolkit Settings Drawer.
   * `Z` or `Mouse Wheel` — Cycle Chassis Zoom scale (1x, 1.25x, 1.5x, 2x).
   * `Y` — Toggle Yak theme aesthetic.
-  * `Esc` — Close open modals and drawers.
+  * `Esc` — Close open modals, command palette, and drawers.
 
 ---
 
@@ -136,6 +140,9 @@ All routes are mounted at `/api` (or versioned alias `/api/v1`). Authenticated e
 | :--- | :--- | :--- |
 | `/api/browse` | `GET` | Explore filesystem directories within allowed storage pool roots (`?path=...`) |
 | `/api/mkdir` | `POST` | Create a destination directory within the storage pool |
+| `/api/fs/upload` | `POST` | High-efficiency chunked streaming file upload (`request.stream()`) with path guards |
+| `/api/fs/delete` | `POST` | Safely remove files or directories within allowed storage boundaries |
+| `/api/fs/rename` | `POST` | Rename files or folders within allowed storage pool roots |
 | `/api/copy/confirm` | `POST` | Start card reader import with optional SHA-256 verification and destination path |
 | `/api/copy/pause` | `POST` | Pause an active media copy transfer |
 | `/api/copy/resume` | `POST` | Resume a paused media copy transfer |
@@ -153,6 +160,9 @@ All routes are mounted at `/api` (or versioned alias `/api/v1`). Authenticated e
 | `/api/security` | `GET` / `POST` | Check default password status or update master credentials |
 | `/api/wallpapers` | `GET` | List available custom desktop wallpapers |
 | `/api/wallpapers/upload` | `POST` | Upload and validate new desktop background image |
+| `/api/backup/export` | `GET` | Export configuration and database snapshot as verified zip archive |
+| `/api/backup/restore` | `POST` | Restore configuration backup archive with zip-slip path validation |
+| `/api/tokens` | `GET` / `POST` / `DELETE` | Manage persistent scoped API access tokens |
 | `/api/events/clear` | `DELETE` | Flush system hardware event log |
 
 ---
@@ -162,9 +172,9 @@ All routes are mounted at `/api` (or versioned alias `/api/v1`). Authenticated e
 The frontend is built with vanilla ES modules and bundled via Vite:
 
 ```bash
-cd frontend
 npm install
 npm run build     # Outputs minified production assets to static/
+npm test          # Executes Vitest + JSDOM frontend test suite
 ```
 
 To run in development mode with hot-reloading:

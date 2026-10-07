@@ -29,11 +29,12 @@ docker compose logs -f zettnas-toolkit
 python3.12 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-pip install ruff pytest httpx
+pip install ruff pytest pytest-cov httpx
 playwright install chromium
 
 # Frontend setup
 npm install
+npm test
 npm run build
 ```
 
@@ -61,7 +62,11 @@ All contributions must pass the automated test suite and Ruff linter.
 
 ### Running the Test Suite
 ```bash
-pytest -v
+# Run Python backend test suite with test coverage
+pytest --cov=backend --cov=app -v
+
+# Run Frontend unit test suite (Vitest + JSDOM)
+npm test
 ```
 
 ### Linting & Formatting
@@ -92,6 +97,6 @@ ruff format app.py backend tests
 
 1. Fork the repository and create your branch from `main`: `git checkout -b feature/my-cool-feature`.
 2. Make your changes with clear, descriptive commit messages.
-3. Ensure all 144+ tests pass and Ruff reports 0 warnings.
+3. Ensure all 195+ backend tests and frontend Vitest tests pass and Ruff reports 0 warnings.
 4. If modifying hardware interfaces or API endpoints, update the corresponding documentation in `docs/`.
 5. Open a Pull Request detailing the problem solved and testing steps performed.

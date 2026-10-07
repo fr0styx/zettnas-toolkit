@@ -28,8 +28,8 @@ server {
     ssl_certificate     /etc/letsencrypt/live/zettnas.yourdomain.com/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/zettnas.yourdomain.com/privkey.pem;
 
-    # Client body limit (allows wallpaper uploads)
-    client_max_body_size 20M;
+    # Client body limit: Set to 0 (unlimited) or higher if using the File Explorer upload
+    client_max_body_size 0;
 
     # Standard headers
     proxy_set_header Host $host;
@@ -39,7 +39,7 @@ server {
 
     # General WebUI & REST API
     location / {
-        proxy_pass http://10.40.30.249:8082;
+        proxy_pass http://192.168.1.100:8082;  # Replace with your NAS host IP
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
@@ -47,7 +47,7 @@ server {
 
     # CRITICAL: Disable buffering for SSE telemetry stream
     location ~ ^/api/(v1/)?stats/stream {
-        proxy_pass http://10.40.30.249:8082;
+        proxy_pass http://192.168.1.100:8082;  # Replace with your NAS host IP
         proxy_http_version 1.1;
         proxy_set_header Connection "";
         proxy_buffering off;
@@ -66,13 +66,13 @@ Caddy automatically handles TLS certificate issuance and HTTP/2. Add this block 
 
 ```caddy
 zettnas.yourdomain.com {
-    # Increase body limit for wallpaper uploads
+    # Increase or disable body limit for large file uploads
     request_body {
-        max_size 20MB
+        max_size 10GB
     }
 
     # Proxy all traffic to ZettNAS Toolkit
-    reverse_proxy 10.40.30.249:8082 {
+    reverse_proxy 192.168.1.100:8082 {  # Replace with your NAS host IP
         # Flush responses immediately for SSE stream
         flush_interval -1
     }
