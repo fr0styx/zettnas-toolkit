@@ -102,68 +102,17 @@ When accessing the Web Desktop (`http://<server-ip>:8082`):
 
 ## REST API Reference
 
-All routes are mounted at `/api` (or versioned alias `/api/v1`). Authenticated endpoints accept `X-ZettNAS-Token` header or `?token=` query parameter.
+All routes are mounted at `/api` (or versioned alias `/api/v1`). Authenticated endpoints accept the `X-ZettNAS-Token` header or `?token=` query parameter.
 
-### Telemetry & Live Streaming
-| Endpoint | Method | Description |
-| :--- | :--- | :--- |
-| `/api/stats` | `GET` | Snapshot of all real-time system metrics (CPU, RAM, storage, fans, disks, lightbar, Unraid, UPS) |
-| `/api/stats/stream` | `GET` | Server-Sent Events (SSE) stream for zero-latency live telemetry updates |
-| `/api/history` | `GET` | Query historical time-series data with `?range=1h\|6h\|24h\|7d\|30d` (includes per-disk & fan trends) |
-| `/api/health` | `GET` | Public daemon liveness probe reporting thread heartbeats and collector status |
+For complete endpoint specifications, parameter schemas, Server-Sent Events (SSE) telemetry contracts, and curl examples, see the dedicated **[REST API Reference](docs/API.md)**.
 
-### System & Subsystem Management
-| Endpoint | Method | Description |
-| :--- | :--- | :--- |
-| `/api/system/profile` | `POST` | Apply unified acoustic profiles (`auto`, `quiet`, `balanced`, `performance`) |
-| `/api/unraid` | `GET` | Query Unraid array state, parity sync progress, mover activity, and disk allocation |
-| `/api/docker/containers` | `GET` | List Docker containers, images, runtime states, and uptime status |
-| `/api/docker/containers/{id}/action` | `POST` | Execute container actions: `start`, `stop`, `restart`, `pause`, `unpause` |
-| `/api/ups` | `GET` | Query UPS battery charge percentage, runtime estimate, load, and utility line voltage |
-
-### Hardware Controls & Diagnostics
-| Endpoint | Method | Description |
-| :--- | :--- | :--- |
-| `/api/fans` | `GET` / `POST` | Query tachometer RPMs or set manual PWM duty cycles and per-zone curves |
-| `/api/led` | `GET` / `POST` | Query lightbar state or apply animations, colors, brightness, and blackout schedules |
-| `/api/screen` | `GET` | Query front-panel LCD backlight brightness and power state |
-| `/api/state` | `POST` | Update front-panel LCD backlight brightness (0–100%) |
-| `/api/lcd_status` | `GET` | Inspect headless Chromium `/dev/fb0` renderer health, active FPS, and framebuffer status |
-| `/api/lcd/page` | `GET` / `POST` | Query active LCD carousel page index or switch directly to a target page |
-| `/api/lcd/cycle` | `POST` | Advance front-panel LCD to the next telemetry page |
-| `/api/disk_detail` | `GET` | Fetch drive identity, S.M.A.R.T. health attributes, and power standby state (`?dev=sda`) |
-| `/api/disk/smart_test` | `POST` | Trigger background Short or Extended S.M.A.R.T. self-test on disk |
-| `/api/disk_wake` | `POST` | Send spin-up command to standby drive for inspection |
-
-### Media Ingest & Filesystem
-| Endpoint | Method | Description |
-| :--- | :--- | :--- |
-| `/api/browse` | `GET` | Explore filesystem directories within allowed storage pool roots (`?path=...`) |
-| `/api/mkdir` | `POST` | Create a destination directory within the storage pool |
-| `/api/fs/upload` | `POST` | High-efficiency chunked streaming file upload (`request.stream()`) with path guards |
-| `/api/fs/delete` | `POST` | Safely remove files or directories within allowed storage boundaries |
-| `/api/fs/rename` | `POST` | Rename files or folders within allowed storage pool roots |
-| `/api/copy/confirm` | `POST` | Start card reader import with optional SHA-256 verification and destination path |
-| `/api/copy/pause` | `POST` | Pause an active media copy transfer |
-| `/api/copy/resume` | `POST` | Resume a paused media copy transfer |
-| `/api/copy/cancel` | `POST` | Cleanly abort an active transfer with partial file cleanup |
-| `/api/copy/history` | `GET` | Retrieve persistent SQLite media ingest history and checksum audit logs |
-
-### Configuration, Notifications & Security
-| Endpoint | Method | Description |
-| :--- | :--- | :--- |
-| `/api/layout` | `GET` / `POST` | Retrieve or persist front-panel card ordering, visibility, and clock settings |
-| `/api/notifications/config` | `GET` / `POST` | Manage multi-channel alert settings (Unraid notify, ntfy.sh, Discord/Webhooks) |
-| `/api/notifications/test` | `POST` | Dispatch test notification across all configured notification channels |
-| `/api/auth/login` | `POST` | Authenticate session and receive access token |
-| `/api/auth/logout` | `POST` | Invalidate active session token |
-| `/api/security` | `GET` / `POST` | Check default password status or update master credentials |
-| `/api/wallpapers` | `GET` | List available custom desktop wallpapers |
-| `/api/wallpapers/upload` | `POST` | Upload and validate new desktop background image |
-| `/api/backup/export` | `GET` | Export configuration and database snapshot as verified zip archive |
-| `/api/backup/restore` | `POST` | Restore configuration backup archive with zip-slip path validation |
-| `/api/tokens` | `GET` / `POST` / `DELETE` | Manage persistent scoped API access tokens |
-| `/api/events/clear` | `DELETE` | Flush system hardware event log |
+| Category | Highlights | Docs |
+| :--- | :--- | :---: |
+| **Telemetry & Streaming** | Real-time metrics snapshot (`/api/stats`), 1 Hz live SSE stream (`/api/stats/stream`), historical time-series graphs (`/api/history`). | [Details](docs/API.md#1-telemetry--live-streaming) |
+| **Subsystem Management** | Acoustic profiles (`/api/system/profile`), Unraid array status (`/api/unraid`), Docker orchestration (`/api/docker/containers`), UPS/NUT metrics (`/api/ups`). | [Details](docs/API.md#2-system--subsystem-management) |
+| **Hardware Controls** | Fan curves/PWM (`/api/fans`), ARGB lightbar effects (`/api/led`), LCD brightness/pages (`/api/lcd/*`), S.M.A.R.T. self-tests (`/api/disk/*`). | [Details](docs/API.md#3-hardware-controls--diagnostics) |
+| **Media & Filesystem** | Chunked uploads (`/api/fs/upload`), card slot detection & auto-ingest (`/api/media_slots`, `/api/copy/*`), safe ejection. | [Details](docs/API.md#4-media-ingest--filesystem-management) |
+| **Security & System** | Password rotation (`/api/security`), scoped API tokens (`/api/tokens`), multi-channel alerts (`/api/notifications/*`), backup export/restore (`/api/backup/*`). | [Details](docs/API.md#5-configuration-notifications--security) |
 
 ---
 
@@ -186,6 +135,7 @@ npm run dev
 
 ## Documentation & Guides
 
+* **[REST API Reference](docs/API.md)** — Complete endpoint specifications, live SSE telemetry contracts, card reader auto-ingest, and hardware control APIs.
 * **[System Architecture](docs/ARCHITECTURE.md)** — Threading model (`StatsCollector`, `LcdRenderer`, `ButtonListener`, `FanWatchdog`), SQLite WAL persistence, and data flow.
 * **[Hardware Protocol Reference](docs/HARDWARE_PROTOCOL.md)** — WS2812B serial packet specifications, sysfs thermal & PWM mappings, and direct `/dev/fb0` memory buffers.
 * **[Reverse Proxy & TLS Guide](docs/REVERSE_PROXY.md)** — Production configurations for Nginx, Caddy, Traefik, and Nginx Proxy Manager with SSE stream buffering disabled.

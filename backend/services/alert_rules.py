@@ -151,7 +151,9 @@ def evaluate_system_alerts(unraid_data, ups_data):
                     )
                     logger.info("[UPS FAILSAFE] Resumed paused copy engine job.")
 
-                _resolve_alert("ups_critical", "Mains power restored; UPS battery recovering. Normal operation resumed.")
+                _resolve_alert(
+                    "ups_critical", "Mains power restored; UPS battery recovering. Normal operation resumed."
+                )
 
 
 def _signal_host_powerdown():

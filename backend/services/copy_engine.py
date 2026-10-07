@@ -73,7 +73,9 @@ def check_media_slot_transitions(slots: dict) -> list[dict]:
             _PREV_MEDIA_SLOTS[slot] = {"size": curr_sz, "dev": curr_dev}
 
             if slot in _EJECTED_SLOTS:
-                logger.info(f"[MEDIA] {slot_label} present on /dev/{curr_dev}, but slot is marked ejected - ignoring insertion.")
+                logger.info(
+                    f"[MEDIA] {slot_label} present on /dev/{curr_dev}, but slot is marked ejected - ignoring insertion."
+                )
                 continue
 
             mb = curr_sz // (1024 * 1024)
@@ -84,12 +86,14 @@ def check_media_slot_transitions(slots: dict) -> list[dict]:
                 f"{slot_label} Inserted",
                 f"Detected media on /dev/{curr_dev} ({mb} MB). Ready for import.",
             )
-            send_notification({
-                "type": "media",
-                "title": f"{slot_label} Detected",
-                "message": f"{mb} MB card detected on /dev/{curr_dev}. Ready for import.",
-                "level": "info",
-            })
+            send_notification(
+                {
+                    "type": "media",
+                    "title": f"{slot_label} Detected",
+                    "message": f"{mb} MB card detected on /dev/{curr_dev}. Ready for import.",
+                    "level": "info",
+                }
+            )
             _maybe_trigger_auto_ingest(slot, dev=curr_dev, size=curr_sz)
 
         else:
@@ -169,12 +173,14 @@ def _maybe_trigger_auto_ingest(slot: str, dev: str | None = None, size: int | No
         Z_STATE.copy_status = "copying"
         Z_STATE.ui_wake.set()
         add_event("info", "Auto-Ingest Started", f"Automatically importing media from {slot.upper()} card...")
-        send_notification({
-            "type": "media",
-            "title": "Auto-Ingest Started",
-            "message": f"Automatically importing photos from {slot.upper()} card to {job_cfg['dest']}",
-            "level": "info",
-        })
+        send_notification(
+            {
+                "type": "media",
+                "title": "Auto-Ingest Started",
+                "message": f"Automatically importing photos from {slot.upper()} card to {job_cfg['dest']}",
+                "level": "info",
+            }
+        )
         threading.Thread(target=lambda c: asyncio.run(_do_copy(c)), args=(job_cfg,), daemon=True).start()
 
 
@@ -327,7 +333,11 @@ def eject_media_slot(slot: str = "sd"):
     _PREV_MEDIA_SLOTS[slot] = {"size": curr_sz, "dev": curr_dev}
 
     slot_label = "SD Card" if slot == "sd" else "TF Card (MicroSD)"
-    add_event("info", f"{slot_label} Ejected", f"{slot_label} was safely unmounted and ejected. You can now physically remove it.")
+    add_event(
+        "info",
+        f"{slot_label} Ejected",
+        f"{slot_label} was safely unmounted and ejected. You can now physically remove it.",
+    )
     return {"status": "ok", "message": f"{slot_label} safely ejected"}
 
 

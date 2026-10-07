@@ -43,17 +43,17 @@ class TestBatch5UpsAndMedia(unittest.TestCase):
         # 2. LIST VAR qnapups -> BEGIN LIST VAR qnapups ... VAR ... END LIST VAR qnapups
         # 3. LOGOUT
         responses = [
-            b"BEGIN LIST UPS\nUPS qnapups \"UPS on QNAP\"\nEND LIST UPS\n",
+            b'BEGIN LIST UPS\nUPS qnapups "UPS on QNAP"\nEND LIST UPS\n',
             (
                 b"BEGIN LIST VAR qnapups\n"
-                b"VAR qnapups battery.charge \"98.5\"\n"
-                b"VAR qnapups battery.runtime \"2400\"\n"
-                b"VAR qnapups ups.load \"18.2\"\n"
-                b"VAR qnapups input.voltage \"120.5\"\n"
-                b"VAR qnapups battery.voltage \"27.4\"\n"
-                b"VAR qnapups ups.status \"OL CHRG\"\n"
-                b"VAR qnapups ups.model \"CyberPower CP1500\"\n"
-                b"VAR qnapups ups.mfr \"CyberPower Systems\"\n"
+                b'VAR qnapups battery.charge "98.5"\n'
+                b'VAR qnapups battery.runtime "2400"\n'
+                b'VAR qnapups ups.load "18.2"\n'
+                b'VAR qnapups input.voltage "120.5"\n'
+                b'VAR qnapups battery.voltage "27.4"\n'
+                b'VAR qnapups ups.status "OL CHRG"\n'
+                b'VAR qnapups ups.model "CyberPower CP1500"\n'
+                b'VAR qnapups ups.mfr "CyberPower Systems"\n'
                 b"END LIST VAR qnapups\n"
             ),
             b"OK Goodbye\n",
