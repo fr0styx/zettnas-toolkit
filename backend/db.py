@@ -44,6 +44,21 @@ def init_db():
                 )
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_copy_history_ts ON copy_history(ts DESC)")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS smart_history (
+                    ts INTEGER NOT NULL,
+                    dev TEXT NOT NULL,
+                    temp REAL,
+                    reallocated_sectors INTEGER DEFAULT 0,
+                    pending_sectors INTEGER DEFAULT 0,
+                    offline_uncorrectable INTEGER DEFAULT 0,
+                    crc_errors INTEGER DEFAULT 0,
+                    nvme_pct_used INTEGER DEFAULT 0,
+                    nvme_media_errors INTEGER DEFAULT 0,
+                    PRIMARY KEY (ts, dev)
+                )
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_smart_history_dev_ts ON smart_history(dev, ts DESC)")
     except Exception as e:
         logger.error(f"Failed to initialize database: {e}")
 
@@ -193,3 +208,144 @@ def query_copy_history(limit: int = 50):
     except Exception as db_e:
         logger.info(f"[ZettNAS] DB Query Copy History Error: {db_e}")
         return []
+
+
+def log_smart_metrics(ts: int, dev: str, temp: float | None, metrics: dict):
+    """Logs disk SMART health metrics into SQLite and prunes entries older than 90 days."""
+    try:
+        with get_db_connection() as conn:
+            conn.execute(
+                """
+                INSERT OR REPLACE INTO smart_history (
+                    ts, dev, temp, reallocated_sectors, pending_sectors,
+                    offline_uncorrectable, crc_errors, nvme_pct_used, nvme_media_errors
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    ts,
+                    dev,
+                    round(temp, 1) if temp is not None else None,
+                    metrics.get("realloc", 0) or 0,
+                    metrics.get("pending", 0) or 0,
+                    metrics.get("offline", 0) or 0,
+                    metrics.get("crc", 0) or 0,
+                    metrics.get("nvme_used", 0) or 0,
+                    metrics.get("nvme_media_err", 0) or 0,
+                ),
+            )
+            # Prune records older than 90 days (7,776,000 seconds)
+            conn.execute("DELETE FROM smart_history WHERE ts < ?", (ts - 7776000,))
+    except Exception as db_e:
+        logger.info(f"[ZettNAS] DB Log SMART History Error: {db_e}")
+
+
+def query_smart_velocity(dev: str) -> dict:
+    """
+    Predictive SMART degradation engine:
+    Computes rate-of-change velocity over 7-day and 30-day sliding windows.
+    Detects shedding sectors, stuck pending sectors, and wear acceleration.
+    """
+    now_ts = int(time.time())
+    ts_7d = now_ts - (7 * 86400)
+    ts_30d = now_ts - (30 * 86400)
+    ts_48h = now_ts - (2 * 86400)
+
+    try:
+        with get_db_connection() as conn:
+            conn.row_factory = sqlite3.Row
+            # Latest reading
+            latest = conn.execute(
+                "SELECT * FROM smart_history WHERE dev = ? ORDER BY ts DESC LIMIT 1",
+                (dev,),
+            ).fetchone()
+
+            if not latest:
+                return {
+                    "dev": dev,
+                    "status": "insufficient_data",
+                    "shedding_sectors": False,
+                    "stuck_pending": False,
+                    "realloc_current": 0,
+                    "realloc_7d_delta": 0,
+                    "realloc_30d_delta": 0,
+                    "recommendation": "Collecting baseline telemetry",
+                }
+
+            # Baseline 7 days ago
+            rec_7d = conn.execute(
+                "SELECT * FROM smart_history WHERE dev = ? AND ts <= ? ORDER BY ts DESC LIMIT 1",
+                (dev, ts_7d),
+            ).fetchone()
+
+            # Baseline 30 days ago
+            rec_30d = conn.execute(
+                "SELECT * FROM smart_history WHERE dev = ? AND ts <= ? ORDER BY ts DESC LIMIT 1",
+                (dev, ts_30d),
+            ).fetchone()
+
+            # Check for stuck pending sectors over past 48h
+            pending_48h_rows = conn.execute(
+                "SELECT pending_sectors FROM smart_history WHERE dev = ? AND ts >= ? ORDER BY ts ASC",
+                (dev, ts_48h),
+            ).fetchall()
+            stuck_pending = len(pending_48h_rows) >= 2 and all(r["pending_sectors"] > 0 for r in pending_48h_rows)
+
+            curr_realloc = latest["reallocated_sectors"] or 0
+            base_realloc_7d = rec_7d["reallocated_sectors"] if rec_7d else curr_realloc
+            base_realloc_30d = rec_30d["reallocated_sectors"] if rec_30d else curr_realloc
+
+            delta_7d = max(0, curr_realloc - base_realloc_7d)
+            delta_30d = max(0, curr_realloc - base_realloc_30d)
+
+            shedding = delta_7d >= 2
+            status = "healthy"
+            rec_text = "Drive health metrics are stable within expected thresholds."
+
+            if shedding:
+                status = "critical"
+                rec_text = f"Active sector shedding detected: {delta_7d} reallocated sectors in the last 7 days. Plan disk replacement soon."
+            elif stuck_pending:
+                status = "warning"
+                rec_text = "Pending sectors detected for over 48 hours without sector reallocation. Run an extended SMART test to force relocation."
+            elif delta_30d > 0:
+                status = "monitor"
+                rec_text = f"Minor degradation velocity: {delta_30d} reallocated sectors over 30 days. Monitor SMART trends closely."
+            elif (latest["reallocated_sectors"] or 0) > 0:
+                status = "monitor"
+                rec_text = f"Drive has {latest['reallocated_sectors']} historical reallocated sectors, but velocity is zero over the last 30 days."
+
+            return {
+                "dev": dev,
+                "status": status,
+                "shedding_sectors": shedding,
+                "stuck_pending": stuck_pending,
+                "realloc_current": curr_realloc,
+                "realloc_7d_delta": delta_7d,
+                "realloc_30d_delta": delta_30d,
+                "recommendation": rec_text,
+            }
+    except Exception as db_e:
+        logger.info(f"[ZettNAS] DB Query SMART Velocity Error: {db_e}")
+        return {
+            "dev": dev,
+            "status": "unknown",
+            "shedding_sectors": False,
+            "stuck_pending": False,
+            "realloc_current": 0,
+            "realloc_7d_delta": 0,
+            "realloc_30d_delta": 0,
+            "recommendation": "Unable to calculate velocity",
+        }
+
+
+def query_all_smart_velocities() -> dict:
+    """Returns degradation velocity assessment for all disks with recorded history."""
+    out = {}
+    try:
+        with get_db_connection() as conn:
+            devs = [r[0] for r in conn.execute("SELECT DISTINCT dev FROM smart_history").fetchall()]
+        for d in devs:
+            out[d] = query_smart_velocity(d)
+    except Exception as e:
+        logger.debug(f"[ZettNAS] Failed to query all velocities: {e}")
+    return out

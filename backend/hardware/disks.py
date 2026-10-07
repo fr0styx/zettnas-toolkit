@@ -21,6 +21,7 @@ from backend.config import (
     SMART_POLL_INTERVAL_NVME,
     logger,
 )
+from backend.db import log_smart_metrics, query_smart_velocity
 from backend.fsutil import atomic_write_json
 from backend.services.notifications import send_notification
 from backend.state import Z_STATE, add_event
@@ -165,6 +166,10 @@ def _parse_smart(text, is_nvme):
     nvme_spare_thresh = None
     nvme_used = None
     nvme_media_err = 0
+    tbw_tb = None
+    tbr_tb = None
+    power_cycles = None
+    critical_warning = None
 
     for line in text.splitlines():
         s = line.strip()
@@ -213,6 +218,38 @@ def _parse_smart(text, is_nvme):
                 v = [int(x.replace(",", "")) for x in s.split() if x.replace(",", "").isdigit()]
                 if v:
                     nvme_media_err = v[-1]
+            elif "data units written:" in low:
+                m = re.search(r"data units written:.*?\[([\d\.]+)\s*([KMGTPE]?B)\]", s, re.IGNORECASE)
+                if m:
+                    val, unit = float(m.group(1)), m.group(2).upper()
+                    if unit.startswith("P"):
+                        tbw_tb = round(val * 1024.0, 2)
+                    elif unit.startswith("T"):
+                        tbw_tb = round(val, 2)
+                    elif unit.startswith("G"):
+                        tbw_tb = round(val / 1024.0, 2)
+                    else:
+                        tbw_tb = round(val, 2)
+            elif "data units read:" in low:
+                m = re.search(r"data units read:.*?\[([\d\.]+)\s*([KMGTPE]?B)\]", s, re.IGNORECASE)
+                if m:
+                    val, unit = float(m.group(1)), m.group(2).upper()
+                    if unit.startswith("P"):
+                        tbr_tb = round(val * 1024.0, 2)
+                    elif unit.startswith("T"):
+                        tbr_tb = round(val, 2)
+                    elif unit.startswith("G"):
+                        tbr_tb = round(val / 1024.0, 2)
+                    else:
+                        tbr_tb = round(val, 2)
+            elif "critical warning:" in low:
+                m = re.search(r"critical warning:\s*([0-9a-fx]+)", s, re.IGNORECASE)
+                if m:
+                    critical_warning = m.group(1)
+            elif "power cycles:" in low:
+                m = re.search(r"power cycles:\s*([\d,]+)", s, re.IGNORECASE)
+                if m:
+                    power_cycles = int(m.group(1).replace(",", ""))
 
     crit_temp = NVME_CRITICAL_TEMP if is_nvme else 60
     warn_temp = NVME_WARN_TEMP if is_nvme else 50
@@ -234,16 +271,26 @@ def _parse_smart(text, is_nvme):
         "offline": offline,
         "crc": crc,
         "nvme_spare": nvme_spare,
+        "nvme_spare_thresh": nvme_spare_thresh,
         "nvme_used": nvme_used,
         "nvme_media_err": nvme_media_err,
+        "tbw_tb": tbw_tb,
+        "tbr_tb": tbr_tb,
+        "power_cycles": power_cycles,
+        "critical_warning": critical_warning,
     }
     return temp, health, metrics
+
+
+def _resolve_dev_path(dev_name: str) -> str:
+    base = HOST_DEV if os.path.exists(HOST_DEV) else "/dev"
+    return base.rstrip("/") + "/" + dev_name
 
 
 def poll_disk_smart(dev_name: str, is_nvme: bool):
     """Executes smartctl for a single disk in background and updates cached SMART data."""
     now = time.time()
-    dev = HOST_DEV.rstrip("/") + "/" + dev_name
+    dev = _resolve_dev_path(dev_name)
     dtype = "nvme" if is_nvme else "sat"
 
     is_removable = False
@@ -273,6 +320,7 @@ def poll_disk_smart(dev_name: str, is_nvme: bool):
         elif r.returncode == 0:
             temp, health, metrics = _parse_smart(r.stdout, is_nvme)
             _evaluate_smart_trends(dev_name, metrics)
+            log_smart_metrics(int(now), dev_name, temp, metrics)
             Z_STATE.cached_smart_data[dev_name] = (temp, health)
             Z_STATE.cached_smart_time[dev_name] = now
         else:
@@ -384,7 +432,7 @@ def fetch_disk_smart_detail(dev_name):
     if not re.fullmatch(r"^(sd[a-z]{1,2}|nvme[0-9]+n[0-9]+)$", dev_name):
         return {"error": "Invalid device name format."}
 
-    dev = HOST_DEV.rstrip("/") + "/" + dev_name
+    dev = _resolve_dev_path(dev_name)
     is_nvme = dev_name.startswith("nvme")
     dtype = "nvme" if is_nvme else "sat"
 
@@ -462,10 +510,13 @@ def fetch_disk_smart_detail(dev_name):
                 "ATA S.M.A.R.T. commands. The device is online, responsive, and available for I/O."
             )
 
-    temp, smart_health, _ = _parse_smart(raw_text, is_nvme)
+    temp, smart_health, metrics = _parse_smart(raw_text, is_nvme)
     if temp is not None or smart_health != "standby":
         Z_STATE.cached_smart_data[dev_name] = (temp, smart_health if smart_health != "standby" else "ok")
         Z_STATE.last_smart_scan[dev_name] = time.time()
+        log_smart_metrics(int(time.time()), dev_name, temp, metrics)
+
+    velocity = query_smart_velocity(dev_name)
 
     return {
         "dev": dev_name,
@@ -476,6 +527,21 @@ def fetch_disk_smart_detail(dev_name):
         "health": health_verdict,
         "temp": temp,
         "self_test_status": self_test_status,
+        "metrics": metrics,
+        "degradation": velocity,
+        "nvme_endurance": (
+            {
+                "tbw_tb": metrics.get("tbw_tb"),
+                "tbr_tb": metrics.get("tbr_tb"),
+                "percentage_used": metrics.get("nvme_used"),
+                "available_spare": metrics.get("nvme_spare"),
+                "spare_threshold": metrics.get("nvme_spare_thresh"),
+                "critical_warning": metrics.get("critical_warning"),
+                "power_cycles": metrics.get("power_cycles"),
+            }
+            if is_nvme
+            else None
+        ),
         "raw": raw_text[:4000],
     }
 
@@ -488,7 +554,7 @@ def run_disk_smart_test(dev_name: str, test_type: str = "short"):
     if not re.fullmatch(r"^(sd[a-z]{1,2}|nvme[0-9]+n[0-9]+)$", dev_name):
         return {"success": False, "error": "Invalid device name format."}
 
-    dev = HOST_DEV.rstrip("/") + "/" + dev_name
+    dev = _resolve_dev_path(dev_name)
     is_nvme = dev_name.startswith("nvme")
     dtype = "nvme" if is_nvme else "sat"
 

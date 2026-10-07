@@ -367,5 +367,98 @@ export function initFanControl() {
     window.addEventListener('touchend', onCurveUp);
   }
 
+  const presetSelect = $('fan-preset-select');
+  const btnSavePreset = $('btn-save-fan-preset');
+  const btnApplyPreset = $('btn-apply-fan-preset');
+  const btnDeletePreset = $('btn-delete-fan-preset');
+
+  async function loadFanPresets() {
+    if (!presetSelect) return;
+    try {
+      const data = await api.get('/api/fans/presets');
+      const presets = data.presets || {};
+      const currentVal = presetSelect.value;
+      presetSelect.innerHTML = '<option value="">-- Select Preset --</option>';
+      Object.keys(presets).sort().forEach((name) => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        presetSelect.appendChild(opt);
+      });
+      if (presets[currentVal]) {
+        presetSelect.value = currentVal;
+      }
+      updatePresetButtons();
+    } catch (e) {
+      console.warn('Failed to load fan presets', e);
+    }
+  }
+
+  function updatePresetButtons() {
+    const hasVal = !!(presetSelect && presetSelect.value);
+    if (btnApplyPreset) btnApplyPreset.disabled = !hasVal;
+    if (btnDeletePreset) btnDeletePreset.style.display = hasVal ? 'inline-flex' : 'none';
+  }
+
+  if (presetSelect) {
+    presetSelect.addEventListener('change', updatePresetButtons);
+  }
+
+  if (btnSavePreset) {
+    btnSavePreset.addEventListener('click', async () => {
+      const name = prompt('Enter a name for this custom fan curve preset:');
+      if (!name || !name.trim()) return;
+      const cleanName = name.trim();
+      try {
+        await api.post('/api/fans/presets', {
+          name: cleanName,
+          curve_points: state.curvePoints,
+        });
+        await loadFanPresets();
+        if (presetSelect) presetSelect.value = cleanName;
+        updatePresetButtons();
+        ZettEventBus.emit('toast', { message: `Preset "${cleanName}" saved`, type: 'success' });
+      } catch (e) {
+        alert('Failed to save preset: ' + (e.message || e));
+      }
+    });
+  }
+
+  if (btnApplyPreset) {
+    btnApplyPreset.addEventListener('click', async () => {
+      const name = presetSelect ? presetSelect.value : '';
+      if (!name) return;
+      try {
+        const res = await api.post(`/api/fans/presets/${encodeURIComponent(name)}/apply`);
+        if (res && res.fan_config) {
+          if (res.fan_config.curve_points) {
+            state.setCurvePoints(res.fan_config.curve_points);
+            renderCurveLines();
+          }
+          updateFanUiState(res.fan_config.profile || 'auto', res.fan_config.manual_pct);
+        }
+        ZettEventBus.emit('toast', { message: `Preset "${name}" applied`, type: 'success' });
+      } catch (e) {
+        alert('Failed to apply preset: ' + (e.message || e));
+      }
+    });
+  }
+
+  if (btnDeletePreset) {
+    btnDeletePreset.addEventListener('click', async () => {
+      const name = presetSelect ? presetSelect.value : '';
+      if (!name) return;
+      if (!confirm(`Delete fan preset "${name}"?`)) return;
+      try {
+        await api.delete(`/api/fans/presets/${encodeURIComponent(name)}`);
+        await loadFanPresets();
+        ZettEventBus.emit('toast', { message: `Preset "${name}" deleted`, type: 'info' });
+      } catch (e) {
+        alert('Failed to delete preset: ' + (e.message || e));
+      }
+    });
+  }
+
+  loadFanPresets();
   setTimeout(renderCurveLines, 400);
 }

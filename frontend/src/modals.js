@@ -161,6 +161,50 @@ async function openSmartModal(devName) {
       }
       if (smartHours) smartHours.textContent = data.power_on_hours || "Unknown";
       if (smartRaw) smartRaw.textContent = data.raw || "No raw output.";
+
+      const degBanner = document.getElementById("smart-degradation-banner");
+      if (degBanner) {
+        let bannerHtml = '';
+        if (data.nvme_endurance) {
+          const nv = data.nvme_endurance;
+          const tbw = nv.tbw_tb != null ? `${nv.tbw_tb} TB` : '--';
+          const tbr = nv.tbr_tb != null ? `${nv.tbr_tb} TB` : '--';
+          const wear = nv.percentage_used != null ? `${nv.percentage_used}%` : '--';
+          const spare = nv.available_spare != null ? `${nv.available_spare}%` : '--';
+          bannerHtml += `
+            <div style="display: flex; gap: 12px; margin-bottom: 6px; padding-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,0.06); font-size: 10px; font-weight: 600; text-transform: uppercase; color: var(--text-color);">
+              <span>💾 <strong>TBW:</strong> ${tbw}</span>
+              <span>📖 <strong>TBR:</strong> ${tbr}</span>
+              <span>⚡ <strong>Wear:</strong> ${wear}</span>
+              <span>🛡️ <strong>Spare:</strong> ${spare}</span>
+            </div>
+          `;
+        }
+        if (data.degradation) {
+          const deg = data.degradation;
+          const color = deg.status === 'critical' ? 'var(--crit)' : deg.status === 'warning' ? 'var(--warn)' : 'var(--ok)';
+          const icon = deg.status === 'critical' ? '⚠️' : deg.status === 'warning' ? '⏳' : '🛡️';
+          bannerHtml += `
+            <div style="display: flex; align-items: flex-start; gap: 8px;">
+              <span style="font-size: 14px;">${icon}</span>
+              <div style="flex: 1;">
+                <div style="font-weight: 700; color: ${color}; text-transform: uppercase; font-size: 10px; letter-spacing: 0.5px;">
+                  ${deg.status.replace('_', ' ')} • SMART Velocity Analysis
+                </div>
+                <div style="color: var(--text-secondary); margin-top: 2px;">
+                  ${deg.recommendation}
+                </div>
+              </div>
+            </div>
+          `;
+        }
+        if (bannerHtml) {
+          degBanner.innerHTML = bannerHtml;
+          degBanner.style.display = 'block';
+        } else {
+          degBanner.style.display = 'none';
+        }
+      }
     }
   } catch (err) {
     if (smartRaw) smartRaw.textContent = `Error querying disk details: ${err}`;

@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException
 from backend.config import FAN_STATE_FILE
 from backend.fsutil import atomic_write_json, read_json
 from backend.hardware.fans import sanitize_curve_points
-from backend.models.schemas import FanConfigRequest
+from backend.models.schemas import FanConfigRequest, FanPresetCreate
 
 router = APIRouter(tags=["Thermal & Fan Control"])
 
@@ -51,3 +51,72 @@ def post_fans(req: FanConfigRequest):
         fan_cfg["temp_max"] = min(100, fan_cfg["temp_min"] + 1)
     atomic_write_json(FAN_STATE_FILE, fan_cfg)
     return fan_cfg
+
+
+@router.get("/fans/presets")
+def get_fan_presets():
+    """Lists all saved custom fan curve presets."""
+    fan_cfg = _load_fans()
+    return {"presets": fan_cfg.get("custom_presets", {})}
+
+
+@router.post("/fans/presets")
+def create_fan_preset(req: FanPresetCreate):
+    """Saves or updates a custom named fan curve preset."""
+    clean_curve = sanitize_curve_points(req.curve_points)
+    if not clean_curve:
+        raise HTTPException(status_code=400, detail="Curve points must have at least 2 valid points.")
+
+    fan_cfg = _load_fans()
+    if "custom_presets" not in fan_cfg or not isinstance(fan_cfg["custom_presets"], dict):
+        fan_cfg["custom_presets"] = {}
+
+    preset_data = {
+        "name": req.name,
+        "curve_points": clean_curve,
+    }
+    if req.nvme_curve_points:
+        clean_nvme = sanitize_curve_points(req.nvme_curve_points)
+        if clean_nvme:
+            preset_data["nvme_curve_points"] = clean_nvme
+    if req.cpu_curve_points:
+        clean_cpu = sanitize_curve_points(req.cpu_curve_points)
+        if clean_cpu:
+            preset_data["cpu_curve_points"] = clean_cpu
+
+    fan_cfg["custom_presets"][req.name] = preset_data
+    atomic_write_json(FAN_STATE_FILE, fan_cfg)
+    return {"success": True, "name": req.name, "preset": preset_data}
+
+
+@router.delete("/fans/presets/{preset_name}")
+def delete_fan_preset(preset_name: str):
+    """Deletes a custom named fan curve preset."""
+    fan_cfg = _load_fans()
+    presets = fan_cfg.get("custom_presets", {})
+    if preset_name not in presets:
+        raise HTTPException(status_code=404, detail="Preset not found")
+
+    del presets[preset_name]
+    fan_cfg["custom_presets"] = presets
+    atomic_write_json(FAN_STATE_FILE, fan_cfg)
+    return {"success": True, "deleted": preset_name}
+
+
+@router.post("/fans/presets/{preset_name}/apply")
+def apply_fan_preset(preset_name: str):
+    """Applies a custom named preset to the active fan curve."""
+    fan_cfg = _load_fans()
+    presets = fan_cfg.get("custom_presets", {})
+    if preset_name not in presets:
+        raise HTTPException(status_code=404, detail="Preset not found")
+
+    preset = presets[preset_name]
+    fan_cfg["curve_points"] = preset["curve_points"]
+    if "nvme_curve_points" in preset:
+        fan_cfg["nvme_curve_points"] = preset["nvme_curve_points"]
+    if "cpu_curve_points" in preset:
+        fan_cfg["cpu_curve_points"] = preset["cpu_curve_points"]
+    fan_cfg["profile"] = "auto"
+    atomic_write_json(FAN_STATE_FILE, fan_cfg)
+    return {"success": True, "applied": preset_name, "fan_config": fan_cfg}

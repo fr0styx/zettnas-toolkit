@@ -457,7 +457,17 @@ export const TRANSLATIONS = {
     "fm.selected_count": "{count} selected",
     "fm.bulk_delete": "Delete ({count})",
     "fm.confirm_bulk_delete": "Are you sure you want to move {count} items to the Recycle Bin?",
-    "fm.bulk_deleted_success": "Successfully moved {count} items to Recycle Bin."
+    "fm.bulk_deleted_success": "Successfully moved {count} items to Recycle Bin.",
+    "fan.presets_title": "Custom Presets:",
+    "fan.select_preset": "-- Select Preset --",
+    "fan.save_preset": "Save Preset",
+    "fan.apply_preset": "Apply",
+    "fan.delete_preset": "Delete Preset",
+    "smart.degradation_title": "Predictive Degradation Analysis",
+    "smart.shedding_alert": "Active Sector Shedding Detected",
+    "smart.stuck_pending_alert": "Stuck Pending Sectors Detected",
+    "smart.tbw_label": "Total Bytes Written (TBW):",
+    "smart.spare_label": "Available Spare:"
   },
   "de": {
     "action_success": "Aktion erfolgreich ausgeführt.",
@@ -902,7 +912,17 @@ export const TRANSLATIONS = {
     "fm.selected_count": "{count} ausgewählt",
     "fm.bulk_delete": "Löschen ({count})",
     "fm.confirm_bulk_delete": "Möchten Sie {count} Elemente wirklich in den Papierkorb verschieben?",
-    "fm.bulk_deleted_success": "{count} Elemente erfolgreich in den Papierkorb verschoben."
+    "fm.bulk_deleted_success": "{count} Elemente erfolgreich in den Papierkorb verschoben.",
+    "fan.presets_title": "Benutzerdefinierte Profile:",
+    "fan.select_preset": "-- Profil auswählen --",
+    "fan.save_preset": "Profil speichern",
+    "fan.apply_preset": "Anwenden",
+    "fan.delete_preset": "Profil löschen",
+    "smart.degradation_title": "Prädiktive Verschleißanalyse",
+    "smart.shedding_alert": "Aktiver Sektorverlust erkannt",
+    "smart.stuck_pending_alert": "Festsitzende schwebende Sektoren",
+    "smart.tbw_label": "Geschriebene Gesamtdaten (TBW):",
+    "smart.spare_label": "Verfügbare Reserveblöcke:"
   },
   "zh": {
     "action_success": "操作已成功执行。",
@@ -1347,7 +1367,17 @@ export const TRANSLATIONS = {
     "fm.selected_count": "已选 {count} 项",
     "fm.bulk_delete": "删除 ({count})",
     "fm.confirm_bulk_delete": "您确定要将选中的 {count} 个项目移至回收站吗？",
-    "fm.bulk_deleted_success": "已成功将 {count} 个项目移至回收站。"
+    "fm.bulk_deleted_success": "已成功将 {count} 个项目移至回收站。",
+    "fan.presets_title": "自定义预设：",
+    "fan.select_preset": "-- 选择预设 --",
+    "fan.save_preset": "保存预设",
+    "fan.apply_preset": "应用",
+    "fan.delete_preset": "删除预设",
+    "smart.degradation_title": "预测性寿命退化分析",
+    "smart.shedding_alert": "检测到活跃的坏道脱落",
+    "smart.stuck_pending_alert": "检测到长期未重映射扇区",
+    "smart.tbw_label": "总写入量 (TBW):",
+    "smart.spare_label": "可用备用空间:"
   },
   "fr": {
     "action_success": "Action exécutée avec succès.",
@@ -1792,7 +1822,17 @@ export const TRANSLATIONS = {
     "fm.selected_count": "{count} sélectionnés",
     "fm.bulk_delete": "Supprimer ({count})",
     "fm.confirm_bulk_delete": "Voulez-vous vraiment déplacer {count} éléments dans la corbeille ?",
-    "fm.bulk_deleted_success": "{count} éléments déplacés dans la corbeille."
+    "fm.bulk_deleted_success": "{count} éléments déplacés dans la corbeille.",
+    "fan.presets_title": "Préréglages personnalisés :",
+    "fan.select_preset": "-- Choisir un préréglage --",
+    "fan.save_preset": "Enregistrer",
+    "fan.apply_preset": "Appliquer",
+    "fan.delete_preset": "Supprimer",
+    "smart.degradation_title": "Analyse prédictive de dégradation",
+    "smart.shedding_alert": "Dégradation active des secteurs détectée",
+    "smart.stuck_pending_alert": "Secteurs en attente persistants détectés",
+    "smart.tbw_label": "Total des octets écrits (TBW) :",
+    "smart.spare_label": "Réserve disponible :"
   },
   "es": {
     "action_success": "Acción completada con éxito.",
@@ -2236,7 +2276,17 @@ export const TRANSLATIONS = {
     "fm.selected_count": "{count} seleccionados",
     "fm.bulk_delete": "Eliminar ({count})",
     "fm.confirm_bulk_delete": "¿Está seguro de que desea mover {count} elementos a la papelera de reciclaje?",
-    "fm.bulk_deleted_success": "Se movieron correctamente {count} elementos a la papelera."
+    "fm.bulk_deleted_success": "Se movieron correctamente {count} elementos a la papelera.",
+    "fan.presets_title": "Perfiles personalizados:",
+    "fan.select_preset": "-- Seleccionar perfil --",
+    "fan.save_preset": "Guardar perfil",
+    "fan.apply_preset": "Aplicar",
+    "fan.delete_preset": "Eliminar perfil",
+    "smart.degradation_title": "Análisis predictivo de degradación",
+    "smart.shedding_alert": "Degradación activa de sectores detectada",
+    "smart.stuck_pending_alert": "Sectores pendientes bloqueados detectados",
+    "smart.tbw_label": "Total de bytes escritos (TBW):",
+    "smart.spare_label": "Reserva disponible:"
   }
 };
 

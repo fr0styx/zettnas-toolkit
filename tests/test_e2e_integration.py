@@ -63,3 +63,16 @@ def test_e2e_batch3_dom_elements():
     assert 'data-filter="all"' in html
     assert 'data-filter="error"' in html
     assert 'data-scrollable="true"' in html
+
+
+def test_e2e_batch4_dom_elements():
+    """Verify Batch 4 custom fan presets bar and SMART degradation banner in built HTML."""
+    index_path = os.path.join(STATIC_DIR, "index.html")
+    with open(index_path, "r", encoding="utf-8") as f:
+        html = f.read()
+
+    assert 'id="fan-presets-bar"' in html
+    assert 'id="fan-preset-select"' in html
+    assert 'id="btn-save-fan-preset"' in html
+    assert 'id="btn-apply-fan-preset"' in html
+    assert 'id="smart-degradation-banner"' in html

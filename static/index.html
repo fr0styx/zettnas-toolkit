@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>ZettNAS Studio • Hardware Suite</title>
-  <script type="module" crossorigin src="/assets/index-C-cDshly.js"></script>
+  <script type="module" crossorigin src="/assets/index-D4Ie6AH8.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/helpers.dataset-BIT4M8iJ.js">
   <link rel="modulepreload" crossorigin href="/assets/chartjs-plugin-zoom.esm-CVlo9eU5.js">
   <link rel="stylesheet" crossorigin href="/assets/index-C9yPWiBy.css">
@@ -352,6 +352,7 @@
         <div class="smart-meta-cell"><span class="lbl" id="smart-lbl-3" data-i18n="modal.smart_health_status">HEALTH / STATUS</span><span class="val" id="smart-meta-health">--</span></div>
         <div class="smart-meta-cell"><span class="lbl" id="smart-lbl-4" data-i18n="modal.smart_hours_readout">HOURS / READOUT</span><span class="val" id="smart-meta-hours">--</span></div>
       </div>
+      <div id="smart-degradation-banner" style="display: none; margin: 8px 0; padding: 8px 10px; border-radius: 6px; font-size: 11px; line-height: 1.4; border: 1px solid rgba(255,255,255,0.08); background: rgba(0,0,0,0.25);"></div>
       <div id="smart-actions-container" style="display: flex; gap: 8px; align-items: center; margin: 10px 0 6px 0; padding: 6px 8px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 6px;">
         <span style="font-size: 9.5px; font-weight: 800; color: var(--muted); letter-spacing: 0.8px;" data-i18n="modal.smart_self_tests">SELF-TESTS:</span>
         <button id="smart-btn-short-test" class="smart-test-action-btn" style="background: rgba(37,194,160,0.15); border: 1px solid var(--accent); color: var(--accent); font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 4px; cursor: pointer;" data-i18n="modal.smart_short_test">▶ Run Short Test (~2m)</button>
@@ -952,6 +953,21 @@
           <button class="profile-pill fan-profile-btn" data-fan-profile="balanced">Balanced (120)</button>
           <button class="profile-pill fan-profile-btn" data-fan-profile="performance">Perf (155)</button>
           <button class="profile-pill fan-profile-btn" data-fan-profile="full">Full (183)</button>
+        </div>
+        <div id="fan-presets-bar" style="margin-top: 10px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.06);">
+          <span style="font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px;" data-i18n="fan.presets_title">Custom Presets:</span>
+          <select id="fan-preset-select" class="form-input" style="padding: 4px 8px; font-size: 12px; height: 28px; width: auto; min-width: 140px; background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-color);">
+            <option value="" data-i18n="fan.select_preset">-- Select Preset --</option>
+          </select>
+          <button id="btn-save-fan-preset" class="btn btn-secondary btn-sm" style="padding: 3px 10px; font-size: 11px; height: 28px; display: flex; align-items: center; gap: 4px;" title="Save current curve as preset">
+            <span>💾</span> <span data-i18n="fan.save_preset">Save Preset</span>
+          </button>
+          <button id="btn-apply-fan-preset" class="btn btn-primary btn-sm" style="padding: 3px 10px; font-size: 11px; height: 28px; display: flex; align-items: center; gap: 4px;" disabled title="Apply selected preset">
+            <span>⚡</span> <span data-i18n="fan.apply_preset">Apply</span>
+          </button>
+          <button id="btn-delete-fan-preset" class="btn btn-danger btn-sm" style="padding: 3px 8px; font-size: 11px; height: 28px; display: none;" title="Delete selected preset">
+            <span>🗑️</span>
+          </button>
         </div>
       </div>
 

@@ -180,6 +180,88 @@ class TestV13Features(unittest.TestCase):
             for key in ("notif.title", "notif.filter_all", "notif.clear_all", "fm.bulk_delete", "fm.selected_count"):
                 self.assertIn(f'"{key}":', content)
 
+    def test_batch4_features_and_telemetry(self):
+        import time
+        from backend.db import init_db, log_smart_metrics, query_smart_velocity
+        from backend.hardware.disks import _parse_smart
+        from backend.hardware.docker_stats import read_docker_containers
+        from backend.main import app
+        from fastapi.testclient import TestClient
+
+        # 1. Test Docker telemetry container output schema
+        containers = read_docker_containers()
+        self.assertIsInstance(containers, list)
+        if containers:
+            c = containers[0]
+            for field in ("cpu_pct", "mem_used", "mem_limit", "mem_pct", "net_rx", "net_tx"):
+                self.assertIn(field, c)
+
+        # 2. Test SMART history logging and velocity calculation
+        init_db()
+        now = int(time.time())
+        log_smart_metrics(now - 700000, "nvme_test_drive", 33.0, {"realloc": 0, "pending": 0, "offline": 0, "crc": 0})
+        log_smart_metrics(now, "nvme_test_drive", 35.0, {"realloc": 3, "pending": 0, "offline": 0, "crc": 0})
+        vel = query_smart_velocity("nvme_test_drive")
+        self.assertEqual(vel["dev"], "nvme_test_drive")
+        self.assertTrue(vel["shedding_sectors"])
+        self.assertEqual(vel["status"], "critical")
+        self.assertEqual(vel["realloc_7d_delta"], 3)
+
+        # 3. Test NVMe endurance attributes parsing
+        nvme_raw = """
+        Critical Warning:                   0x00
+        Temperature:                        32 Celsius
+        Available Spare:                    98%
+        Available Spare Threshold:          10%
+        Percentage Used:                    4%
+        Data Units Read:                    12,345,678 [6.32 TB]
+        Data Units Written:                 34,567,890 [17.7 TB]
+        Power Cycles:                       250
+        Power On Hours:                     1500
+        """
+        temp, health, metrics = _parse_smart(nvme_raw, is_nvme=True)
+        self.assertEqual(temp, 32)
+        self.assertEqual(health, "ok")
+        self.assertEqual(metrics["nvme_spare"], 98)
+        self.assertEqual(metrics["nvme_spare_thresh"], 10)
+        self.assertEqual(metrics["nvme_used"], 4)
+        self.assertEqual(metrics["tbw_tb"], 17.7)
+        self.assertEqual(metrics["tbr_tb"], 6.32)
+        self.assertEqual(metrics["power_cycles"], 250)
+        self.assertEqual(metrics["critical_warning"], "0x00")
+
+        # 4. Test Fan Preset CRUD and apply
+        client = TestClient(app)
+        login = client.post("/api/auth/login", json={"password": "admin"})
+        self.assertEqual(login.status_code, 200)
+        token = login.json()["token"]
+        headers = {"Authorization": f"Bearer {token}"}
+
+        # Create preset
+        preset_name = "Test Unit Preset"
+        create_res = client.post(
+            "/api/fans/presets",
+            json={"name": preset_name, "curve_points": [[30, 25], [40, 35], [50, 75], [60, 100]]},
+            headers=headers,
+        )
+        self.assertEqual(create_res.status_code, 200)
+        self.assertTrue(create_res.json()["success"])
+
+        # List presets
+        list_res = client.get("/api/fans/presets", headers=headers)
+        self.assertEqual(list_res.status_code, 200)
+        self.assertIn(preset_name, list_res.json()["presets"])
+
+        # Apply preset
+        apply_res = client.post(f"/api/fans/presets/{preset_name}/apply", headers=headers)
+        self.assertEqual(apply_res.status_code, 200)
+        self.assertTrue(apply_res.json()["success"])
+
+        # Delete preset
+        del_res = client.delete(f"/api/fans/presets/{preset_name}", headers=headers)
+        self.assertEqual(del_res.status_code, 200)
+        self.assertTrue(del_res.json()["success"])
+
 
 if __name__ == "__main__":
     unittest.main()

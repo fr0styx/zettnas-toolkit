@@ -25,6 +25,13 @@ class FanConfigRequest(BaseModel):
     zone2_curve_points: list[list[int]] | None = Field(default=None, max_length=12)
 
 
+class FanPresetCreate(BaseModel):
+    name: str = Field(..., min_length=1, max_length=40, pattern=r"^[a-zA-Z0-9_\-\s]+$")
+    curve_points: list[list[int]] = Field(..., min_length=2, max_length=12)
+    nvme_curve_points: list[list[int]] | None = Field(default=None, max_length=12)
+    cpu_curve_points: list[list[int]] | None = Field(default=None, max_length=12)
+
+
 class LedConfigRequest(BaseModel):
     power: str | None = None
     brightness: int | None = None
