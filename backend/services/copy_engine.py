@@ -4,6 +4,7 @@ import glob
 import os
 import shutil
 import subprocess
+import threading
 import time
 
 import aiofiles
@@ -17,6 +18,109 @@ from backend.fsutil import resolve_within
 from backend.hardware.led import send_led_packet
 from backend.services.notifications import send_notification
 from backend.state import Z_STATE, add_event
+
+_PREV_MEDIA_SLOTS = {"sd": {"size": 0, "dev": None}, "tf": {"size": 0, "dev": None}}
+_AUTO_INGEST_LOCK = threading.Lock()
+
+
+def reset_media_slot_state() -> None:
+    """Reset edge-detection tracking for media slots (useful for testing)."""
+    global _PREV_MEDIA_SLOTS
+    _PREV_MEDIA_SLOTS = {"sd": {"size": 0, "dev": None}, "tf": {"size": 0, "dev": None}}
+
+
+def check_media_slot_transitions(slots: dict) -> list[dict]:
+    """
+    Detects edge transitions (insertion / removal) for SD and TF media slots.
+    Dispatches notifications, logs events, and triggers auto-ingest if enabled.
+    """
+    global _PREV_MEDIA_SLOTS
+    transitions = []
+
+    for slot in ("sd", "tf"):
+        prev = _PREV_MEDIA_SLOTS.get(slot, {"size": 0, "dev": None})
+        curr = slots.get(slot, {"size": 0, "dev": None})
+        prev_sz = prev.get("size", 0)
+        curr_sz = curr.get("size", 0)
+        curr_dev = curr.get("dev")
+        slot_label = "SD Card" if slot == "sd" else "TF Card (MicroSD)"
+
+        # Insertion transition: 0 -> >0
+        if prev_sz == 0 and curr_sz > 0:
+            mb = curr_sz // (1024 * 1024)
+            logger.info(f"[MEDIA] {slot_label} inserted on /dev/{curr_dev} ({mb} MB)")
+            transitions.append({"event": "inserted", "slot": slot, "dev": curr_dev, "size": curr_sz})
+            add_event(
+                "info",
+                f"{slot_label} Inserted",
+                f"Detected media on /dev/{curr_dev} ({mb} MB). Ready for import.",
+            )
+            send_notification({
+                "type": "media",
+                "title": f"{slot_label} Detected",
+                "message": f"{mb} MB card detected on /dev/{curr_dev}. Ready for import.",
+                "level": "info",
+            })
+            _maybe_trigger_auto_ingest(slot)
+
+        # Removal transition: >0 -> 0
+        elif prev_sz > 0 and curr_sz == 0:
+            logger.info(f"[MEDIA] {slot_label} removed")
+            transitions.append({"event": "removed", "slot": slot})
+            add_event(
+                "info",
+                f"{slot_label} Removed",
+                f"{slot_label} was unmounted and removed from slot.",
+            )
+
+        _PREV_MEDIA_SLOTS[slot] = {"size": curr_sz, "dev": curr_dev}
+
+    return transitions
+
+
+def _maybe_trigger_auto_ingest(slot: str):
+    from backend.config import BUTTON_CFG_FILE
+    from backend.fsutil import read_json
+
+    cfg = read_json(BUTTON_CFG_FILE, {})
+    auto_enabled = (
+        cfg.get("auto_ingest", False)
+        or cfg.get("enabled", False)
+        or (os.getenv("AUTO_INGEST_ENABLED", "0").lower() in ("1", "true", "yes"))
+    )
+
+    if not auto_enabled:
+        return
+
+    with _AUTO_INGEST_LOCK:
+        if getattr(Z_STATE, "copy_active", False):
+            logger.info(f"[AUTO-INGEST] Copy operation already active, skipping auto-trigger for {slot}")
+            return
+
+        configured_src = cfg.get("source", "auto")
+        if configured_src not in ("auto", slot):
+            logger.info(f"[AUTO-INGEST] Card slot {slot} does not match configured source {configured_src}, skipping")
+            return
+
+        job_cfg = {
+            "source": slot,
+            "dest": cfg.get("dest", "/mnt/user/"),
+            "use_exif": cfg.get("use_exif", True),
+            "verify_checksum": cfg.get("verify_checksum", True),
+            "on_collision": cfg.get("on_collision", "skip"),
+        }
+
+        Z_STATE.copy_active = True
+        Z_STATE.copy_status = "copying"
+        Z_STATE.ui_wake.set()
+        add_event("info", "Auto-Ingest Started", f"Automatically importing media from {slot.upper()} card...")
+        send_notification({
+            "type": "media",
+            "title": "Auto-Ingest Started",
+            "message": f"Automatically importing photos from {slot.upper()} card to {job_cfg['dest']}",
+            "level": "info",
+        })
+        threading.Thread(target=lambda c: asyncio.run(_do_copy(c)), args=(job_cfg,), daemon=True).start()
 
 
 def read_media_slots():

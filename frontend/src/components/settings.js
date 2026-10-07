@@ -332,6 +332,7 @@ export function initSettings() {
   const btnCopySrc = $('btn-copy-src');
   const btnCopyDst = $('btn-copy-dst');
   const btnCopyExif = $('btn-copy-exif');
+  const btnCopyAutoIngest = $('btn-copy-auto-ingest');
   const btnCopyCollision = $('btn-copy-collision');
   const btnCopySave = $('btn-copy-save');
 
@@ -342,6 +343,7 @@ export function initSettings() {
       if (btnCopySrc) btnCopySrc.value = data.source || 'sd';
       if (btnCopyDst) btnCopyDst.value = data.dest || '/mnt/user/';
       if (btnCopyExif) btnCopyExif.checked = data.use_exif !== false;
+      if (btnCopyAutoIngest) btnCopyAutoIngest.checked = !!data.auto_ingest;
       if (btnCopyCollision) btnCopyCollision.value = data.on_collision || 'skip';
 
       if (btnCopyOptions) {
@@ -366,6 +368,7 @@ export function initSettings() {
         source: btnCopySrc ? btnCopySrc.value : 'sd',
         dest: btnCopyDst ? btnCopyDst.value : '/mnt/user/',
         use_exif: btnCopyExif ? btnCopyExif.checked : true,
+        auto_ingest: btnCopyAutoIngest ? btnCopyAutoIngest.checked : false,
         on_collision: btnCopyCollision ? btnCopyCollision.value : 'skip'
       });
       showToast('Button configuration saved', 'success');

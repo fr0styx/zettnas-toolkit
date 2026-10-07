@@ -989,6 +989,8 @@ export function updateCopyToast(copyState) {
   }
 }
 
+let _prevClientMediaSlots = { sd: null, tf: null };
+
 export function updateMediaSlots(mediaSlots) {
   if (!mediaSlots) return;
   const srcSelect = $('btn-copy-src');
@@ -996,6 +998,16 @@ export function updateMediaSlots(mediaSlots) {
   const tf = mediaSlots.tf || {};
   const sdSize = sd.size || 0;
   const tfSize = tf.size || 0;
+
+  // Surface toast on card insertion (0 -> >0 transition)
+  if (_prevClientMediaSlots.sd !== null && _prevClientMediaSlots.sd === 0 && sdSize > 0) {
+    showToast(`📷 SD Card Detected (${(sdSize / 1e9).toFixed(1)} GB): Ready for import`, 'info');
+  }
+  if (_prevClientMediaSlots.tf !== null && _prevClientMediaSlots.tf === 0 && tfSize > 0) {
+    showToast(`📷 TF (MicroSD) Detected (${(tfSize / 1e9).toFixed(1)} GB): Ready for import`, 'info');
+  }
+  _prevClientMediaSlots.sd = sdSize;
+  _prevClientMediaSlots.tf = tfSize;
 
   let sdText = 'SD 4.0 Slot';
   if (sdSize > 0) sdText += ` [${(sdSize / 1e9).toFixed(1)} GB]`;

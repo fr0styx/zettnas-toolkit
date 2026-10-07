@@ -81,6 +81,97 @@ def _query_apcaccess_cli() -> Dict[str, str]:
     return {}
 
 
+def _query_nut_socket(
+    host: str = "127.0.0.1", port: int = 3493, timeout: float = 1.5, ups_name: str | None = None
+) -> Dict[str, str]:
+    """Queries Network UPS Tools (NUT) server natively over TCP port 3493 (zero subprocesses)."""
+    out: Dict[str, str] = {}
+    target_ups = ups_name or os.getenv("NUT_UPS_NAME", "")
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.settimeout(timeout)
+            s.connect((host, port))
+
+            buf = ""
+
+            def read_line():
+                nonlocal buf
+                while "\n" not in buf:
+                    chunk = s.recv(1024)
+                    if not chunk:
+                        return None
+                    buf += chunk.decode("utf-8", errors="replace")
+                line, buf = buf.split("\n", 1)
+                return line.strip()
+
+            # If no UPS name provided, auto-discover first UPS via LIST UPS
+            if not target_ups:
+                s.sendall(b"LIST UPS\n")
+                while True:
+                    line = read_line()
+                    if line is None or line.startswith("ERR") or line.startswith("END LIST UPS"):
+                        break
+                    # Line format: UPS <upsname> "<description>"
+                    if line.startswith("UPS "):
+                        parts = line.split()
+                        if len(parts) >= 2:
+                            target_ups = parts[1]
+                            break
+                # Drain remaining lines from LIST UPS
+                while True:
+                    line = read_line()
+                    if line is None or line.startswith("END LIST UPS") or line.startswith("ERR"):
+                        break
+
+            if not target_ups:
+                target_ups = "ups"
+
+            # Query variables for the target UPS
+            s.sendall(f"LIST VAR {target_ups}\n".encode("utf-8"))
+
+            while True:
+                line = read_line()
+                if line is None or line.startswith("END LIST VAR") or line.startswith("ERR"):
+                    break
+                # Format: VAR <upsname> <varname> "<value>" or VAR <upsname> <varname> <value>
+                if line.startswith(f"VAR {target_ups} "):
+                    m = re.match(rf"^VAR\s+{re.escape(target_ups)}\s+(\S+)\s+(.*)$", line)
+                    if m:
+                        k_clean = m.group(1).strip()
+                        v_clean = m.group(2).strip().strip('"')
+                        if k_clean == "battery.charge":
+                            out["BCHARGE"] = v_clean
+                        elif k_clean == "battery.runtime":
+                            try:
+                                # Convert seconds to minutes
+                                out["TIMELEFT"] = str(round(float(v_clean) / 60, 1))
+                            except ValueError:
+                                pass
+                        elif k_clean == "ups.load":
+                            out["LOADPCT"] = v_clean
+                        elif k_clean == "input.voltage":
+                            out["LINEV"] = v_clean
+                        elif k_clean == "battery.voltage":
+                            out["BATTV"] = v_clean
+                        elif k_clean == "ups.status":
+                            out["STATUS"] = v_clean
+                        elif k_clean in ("ups.model", "device.model"):
+                            out.setdefault("MODEL", v_clean)
+                        elif k_clean in ("ups.mfr", "device.mfr"):
+                            out.setdefault("MFR", v_clean)
+
+            if target_ups and "MODEL" not in out:
+                out["UPSNAME"] = target_ups
+
+            try:
+                s.sendall(b"LOGOUT\n")
+            except Exception:
+                pass
+    except Exception as e:
+        logger.debug(f"[UPS] NUT socket check at {host}:{port} returned: {e}")
+    return out
+
+
 def _query_nut_cli() -> dict[str, str]:
     for bin_path in ("/usr/bin/upsc", "/bin/upsc", "upsc"):
         try:
@@ -126,17 +217,61 @@ def read_ups_status(force: bool = False) -> Dict[str, Any]:
 
     ups_host = os.getenv("UPS_HOST", "127.0.0.1")
     ups_port = int(os.getenv("UPS_PORT", "3551"))
+    nut_host = os.getenv("NUT_HOST", ups_host)
+    nut_port = int(os.getenv("NUT_PORT", "3493"))
+    ups_type = os.getenv("UPS_TYPE", "auto").lower()
 
-    raw = _query_apcupsd_socket(ups_host, ups_port)
-    if not raw and ups_host in ("127.0.0.1", "localhost"):
-        gw = _get_docker_gateway()
-        if gw and gw != ups_host:
-            raw = _query_apcupsd_socket(gw, ups_port)
+    protocol = None
+    raw: Dict[str, str] = {}
 
-    if not raw:
-        raw = _query_apcaccess_cli()
-    if not raw:
-        raw = _query_nut_cli()
+    # 1. If explicitly configured for NUT protocol or NUT port 3493
+    if ups_type == "nut" or ups_port == 3493:
+        raw = _query_nut_socket(nut_host, nut_port)
+        if raw:
+            protocol = "nut_socket"
+        elif nut_host in ("127.0.0.1", "localhost"):
+            gw = _get_docker_gateway()
+            if gw and gw != nut_host:
+                raw = _query_nut_socket(gw, nut_port)
+                if raw:
+                    protocol = "nut_socket"
+        if not raw:
+            raw = _query_nut_cli()
+            if raw:
+                protocol = "upsc_cli"
+    else:
+        # 2. Default: try apcupsd NIS socket first
+        raw = _query_apcupsd_socket(ups_host, ups_port)
+        if raw:
+            protocol = "apcupsd_socket"
+        elif ups_host in ("127.0.0.1", "localhost"):
+            gw = _get_docker_gateway()
+            if gw and gw != ups_host:
+                raw = _query_apcupsd_socket(gw, ups_port)
+                if raw:
+                    protocol = "apcupsd_socket"
+
+        # 3. If apcupsd offline, probe native NUT socket
+        if not raw:
+            raw = _query_nut_socket(nut_host, nut_port)
+            if raw:
+                protocol = "nut_socket"
+            elif nut_host in ("127.0.0.1", "localhost"):
+                gw = _get_docker_gateway()
+                if gw and gw != nut_host:
+                    raw = _query_nut_socket(gw, nut_port)
+                    if raw:
+                        protocol = "nut_socket"
+
+        # 4. Fallback to CLI utilities
+        if not raw:
+            raw = _query_apcaccess_cli()
+            if raw:
+                protocol = "apcaccess_cli"
+        if not raw:
+            raw = _query_nut_cli()
+            if raw:
+                protocol = "upsc_cli"
 
     if not raw:
         status_obj = {
@@ -148,6 +283,7 @@ def read_ups_status(force: bool = False) -> Dict[str, Any]:
             "load_pct": None,
             "line_volts": None,
             "battery_volts": None,
+            "protocol": "offline",
         }
         _CACHED_UPS = status_obj
         _LAST_UPS_POLL = now + 12.0  # Effective 15s cache when offline
@@ -174,6 +310,7 @@ def read_ups_status(force: bool = False) -> Dict[str, Any]:
         "load_pct": _extract_float(load_raw),
         "line_volts": _extract_float(linev_raw),
         "battery_volts": _extract_float(battv_raw),
+        "protocol": protocol or "unknown",
     }
 
     _CACHED_UPS = status_obj

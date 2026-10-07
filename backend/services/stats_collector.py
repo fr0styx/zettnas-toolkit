@@ -32,7 +32,7 @@ from backend.hardware.unraid import read_unraid_status
 from backend.hardware.docker_stats import read_docker_containers
 from backend.hardware.ups import read_ups_status
 from backend.services.broadcaster import broadcaster
-from backend.services.copy_engine import read_media_slots
+from backend.services.copy_engine import check_media_slot_transitions, read_media_slots
 from backend.services.notifications import send_notification
 from backend.state import Z_STATE, add_event
 from backend.services.alert_rules import evaluate_system_alerts
@@ -380,7 +380,7 @@ def stats_collector_daemon():
                     "status": Z_STATE.copy_status,
                     "progress": Z_STATE.copy_progress,
                 },
-                "media_slots": read_media_slots(),
+                "media_slots": (lambda s: (check_media_slot_transitions(s), s)[1])(read_media_slots()),
                 "fan_control": {
                     "zone1_temp": t_zone1,
                     "zone1_pwm": active_pwm1,

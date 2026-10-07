@@ -233,7 +233,15 @@ def start_copy():
     return {"status": "started"}
 
 
-BUTTON_DEFAULTS = {"enabled": False, "source": "sd", "dest": "/mnt/user/"}
+BUTTON_DEFAULTS = {
+    "enabled": False,
+    "auto_ingest": False,
+    "source": "sd",
+    "dest": "/mnt/user/",
+    "use_exif": True,
+    "verify_checksum": True,
+    "on_collision": "skip",
+}
 
 
 def _load_buttons():

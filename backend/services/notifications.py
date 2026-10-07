@@ -261,15 +261,24 @@ def _dispatch_apprise(cfg: dict[str, Any], title: str, message: str, level: str)
 
 
 def send_notification(
-    title: str,
-    message: str,
+    title: str | dict[str, Any],
+    message: str = "",
     level: str = "normal",
     event_type: str = "general",
     dedup_key: str = "",
 ) -> dict[str, bool]:
     """
     Dispatch a notification to all configured channels with rate limiting and deduplication.
+    Supports either positional args (title, message, level) or a single dictionary payload.
     """
+    if isinstance(title, dict):
+        d = title
+        title = str(d.get("title", "ZettNAS Notification"))
+        message = str(d.get("message", ""))
+        level = str(d.get("level", "normal"))
+        event_type = str(d.get("event_type", d.get("type", "general")))
+        dedup_key = str(d.get("dedup_key", ""))
+
     cfg = load_notification_config()
     if not cfg.get("enabled", False):
         return {"dispatched": False, "reason": "disabled"}
