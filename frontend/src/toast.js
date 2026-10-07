@@ -29,10 +29,25 @@ export function showToast(msg, type = "error") {
   ZettEventBus.emit('toast:show', { msg, type });
 }
 
-export function showConfirmToast(title, msg, onConfirm) {
+export function showConfirmToast(title, msg, onConfirm, onCancel, options = {}) {
   if (state.isLcdDirect || (typeof window !== 'undefined' && window.location.search.includes('mode=lcd')) || (document.body && document.body.classList.contains('lcd-direct'))) return;
-  _showTopConfirm(title, msg, onConfirm);
-  ZettEventBus.emit('toast:confirm', { title, msg, onConfirm });
+  _showTopConfirm(title, msg, onConfirm, onCancel, options);
+  ZettEventBus.emit('toast:confirm', { title, msg, onConfirm, onCancel, options });
+}
+
+export function hideConfirmToast() {
+  const backdrop = document.getElementById("confirm-toast-backdrop");
+  const card = document.getElementById("confirm-toast-modal");
+  if (backdrop && card) {
+    backdrop.style.opacity = "0";
+    card.style.opacity = "0";
+    card.style.pointerEvents = "none";
+    card.style.transform = "translate(-50%, -15px) scale(0.95)";
+    setTimeout(() => {
+      backdrop.style.display = "none";
+      card.style.display = "none";
+    }, 200);
+  }
 }
 
 // --- Multi-Toast Notification System (Top-centered stacked) ---
@@ -114,7 +129,7 @@ function _dismissToastItem(toast) {
 }
 
 // --- Confirm Toast (Top-centered below navbar with backdrop) ---
-function _showTopConfirm(title, msg, onConfirm) {
+function _showTopConfirm(title, msg, onConfirm, onCancel, options = {}) {
   if (!document.body) return;
 
   let backdrop = document.getElementById("confirm-toast-backdrop");
@@ -128,6 +143,9 @@ function _showTopConfirm(title, msg, onConfirm) {
   if (!card) {
     card = document.createElement("div");
     card.id = "confirm-toast-modal";
+    document.body.appendChild(card);
+  }
+  if (!document.getElementById("confirm-toast-title")) {
     card.setAttribute("role", "alertdialog");
     card.setAttribute("aria-modal", "true");
     card.setAttribute("aria-labelledby", "confirm-toast-title");
@@ -147,7 +165,6 @@ function _showTopConfirm(title, msg, onConfirm) {
         </div>
       </div>
     `;
-    document.body.appendChild(card);
   }
 
   const titleEl = document.getElementById("confirm-toast-title");
@@ -157,18 +174,37 @@ function _showTopConfirm(title, msg, onConfirm) {
   const okBtn = document.getElementById("confirm-toast-ok");
   const headerBg = document.getElementById("confirm-toast-header-bg");
 
-  titleEl.innerHTML = `<span>💬</span> ${title || "Confirm Action"}`;
-  msgEl.innerHTML = msg || "";
-
-  // Reset button text dynamically based on title
   const isStandby = title && title.toLowerCase().includes('standby');
-  okBtn.innerHTML = isStandby ? "⚡ Wake & Inspect" : "Confirm";
-  okBtn.style.background = isStandby ? "#fbbf24" : "#ef4444";
-  okBtn.style.border = isStandby ? "1px solid #f59e0b" : "1px solid #dc2626";
-  okBtn.style.color = isStandby ? "#0a0e13" : "#fff";
-  
-  headerBg.style.background = isStandby ? "rgba(245, 158, 11, 0.08)" : "rgba(239, 68, 68, 0.1)";
-  titleEl.style.color = isStandby ? "#fbbf24" : "#ef4444";
+  const isMedia = options.isMedia || (title && (title.toLowerCase().includes('media') || title.toLowerCase().includes('ingest') || title.toLowerCase().includes('card') || title.toLowerCase().includes('import')));
+
+  if (isMedia) {
+    titleEl.innerHTML = `<span>📷</span> ${title || "Media Card Ingest"}`;
+    okBtn.innerHTML = options.okText || "📥 Import Media";
+    okBtn.style.background = "linear-gradient(135deg, #0ea5e9, #25c2a0)";
+    okBtn.style.border = "1px solid #0ea5e9";
+    okBtn.style.color = "#fff";
+    headerBg.style.background = "rgba(14, 165, 233, 0.12)";
+    titleEl.style.color = "#38bdf8";
+  } else if (isStandby) {
+    titleEl.innerHTML = `<span>⚡</span> ${title || "Confirm Action"}`;
+    okBtn.innerHTML = options.okText || "⚡ Wake & Inspect";
+    okBtn.style.background = "#fbbf24";
+    okBtn.style.border = "1px solid #f59e0b";
+    okBtn.style.color = "#0a0e13";
+    headerBg.style.background = "rgba(245, 158, 11, 0.08)";
+    titleEl.style.color = "#fbbf24";
+  } else {
+    titleEl.innerHTML = `<span>💬</span> ${title || "Confirm Action"}`;
+    okBtn.innerHTML = options.okText || "Confirm";
+    okBtn.style.background = "#ef4444";
+    okBtn.style.border = "1px solid #dc2626";
+    okBtn.style.color = "#fff";
+    headerBg.style.background = "rgba(239, 68, 68, 0.1)";
+    titleEl.style.color = "#ef4444";
+  }
+
+  cancelBtn.innerHTML = options.cancelText || "Cancel";
+  msgEl.innerHTML = msg || "";
 
   backdrop.style.display = "block";
   card.style.display = "block";
@@ -191,22 +227,32 @@ function _showTopConfirm(title, msg, onConfirm) {
     }, 200);
     closeBtn.removeEventListener("click", onCancelClick);
     cancelBtn.removeEventListener("click", onCancelClick);
+    backdrop.removeEventListener("click", onCancelClick);
     okBtn.removeEventListener("click", onOkClick);
+    document.removeEventListener("keydown", onKeyDown);
   };
 
   const onCancelClick = (e) => {
-    if(e) e.preventDefault();
+    if (e) e.preventDefault();
     cleanup();
+    if (onCancel) onCancel();
   };
   const onOkClick = (e) => {
-    if(e) e.preventDefault();
+    if (e) e.preventDefault();
     cleanup();
     if (onConfirm) onConfirm();
+  };
+  const onKeyDown = (e) => {
+    if (e.key === "Escape") {
+      onCancelClick(e);
+    }
   };
 
   closeBtn.addEventListener("click", onCancelClick);
   cancelBtn.addEventListener("click", onCancelClick);
+  backdrop.addEventListener("click", onCancelClick);
   okBtn.addEventListener("click", onOkClick);
+  document.addEventListener("keydown", onKeyDown);
 }
 
 

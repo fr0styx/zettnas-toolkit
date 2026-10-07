@@ -6,7 +6,7 @@ import { escapeHtml } from '../utils.js';
 import { state } from '../state.js';
 import { api } from '../api.js';
 import { ZettEventBus } from '../event-bus.js';
-import { showConfirmToast, showToast } from '../toast.js';
+import { showConfirmToast, hideConfirmToast, showToast } from '../toast.js';
 import { updateFanCurveWorkstation } from './fan-control.js';
 import { syncMiniPreviewTelemetry, applyDashboardLayout } from './mini-preview.js';
 import { renderEventLog } from './events.js';
@@ -877,7 +877,69 @@ function initCopyToastControls() {
   }
 }
 
+let _activeIngestPromptTs = null;
+let _dismissedIngestTs = null;
+
+export function handlePendingIngest(pendingIngest) {
+  if (!pendingIngest || !pendingIngest.slot) {
+    if (_activeIngestPromptTs !== null) {
+      hideConfirmToast();
+      _activeIngestPromptTs = null;
+    }
+    return;
+  }
+
+  // If already showing this prompt or if user already dismissed it
+  if (pendingIngest.ts === _activeIngestPromptTs || pendingIngest.ts === _dismissedIngestTs) {
+    return;
+  }
+
+  _activeIngestPromptTs = pendingIngest.ts;
+  const slotName = pendingIngest.slot === 'sd' ? 'SD Card' : 'TF (MicroSD) Card';
+  const sizeGb = pendingIngest.size ? (pendingIngest.size / 1e9).toFixed(1) + ' GB' : '';
+  const devStr = pendingIngest.dev ? `/dev/${pendingIngest.dev}` : pendingIngest.slot.toUpperCase();
+  const destPath = pendingIngest.dest || '/mnt/user/';
+
+  const title = t('media.ingest_prompt_title', 'Media Card Ingest');
+  const sizeBadge = sizeGb ? ` (${sizeGb})` : '';
+  const msg = `<div style="display:flex; flex-direction:column; gap:10px;">
+    <div>${t('media.ingest_prompt_detected', 'Detected')} <strong>${escapeHtml(slotName)}</strong>${escapeHtml(sizeBadge)} on <code>${escapeHtml(devStr)}</code>.</div>
+    <div style="font-size:12px; color:var(--muted);">${t('media.ingest_prompt_dest', 'Target Destination:')} <code style="color:var(--ok2);">${escapeHtml(destPath)}</code></div>
+    <div>${t('media.ingest_prompt_confirm_q', 'Would you like to import and organize photos into dated folders now?')}</div>
+  </div>`;
+
+  showConfirmToast(
+    title,
+    msg,
+    async () => {
+      _activeIngestPromptTs = null;
+      try {
+        await api.post('/api/copy/start', { source: pendingIngest.slot, dest: destPath });
+        showToast(t('media.ingest_started', `Importing media from ${slotName}...`), 'info');
+      } catch (err) {
+        showToast(`Failed to start ingest: ${err.message || err}`, 'error');
+      }
+    },
+    async () => {
+      _dismissedIngestTs = pendingIngest.ts;
+      _activeIngestPromptTs = null;
+      try {
+        await api.post('/api/copy/dismiss-ingest');
+      } catch (e) {
+        // ignore
+      }
+    },
+    {
+      isMedia: true,
+      okText: t('media.btn_start_ingest', '📥 Start Ingest'),
+      cancelText: t('media.btn_dismiss', 'Dismiss')
+    }
+  );
+}
+
 export function updateCopyToast(copyState) {
+  handlePendingIngest(copyState ? copyState.pending_ingest : null);
+
   const toast = $('copy-toast');
   const backdrop = $('copy-toast-backdrop');
   if (!toast) return;

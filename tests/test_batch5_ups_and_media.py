@@ -202,10 +202,11 @@ class TestBatch5UpsAndMedia(unittest.TestCase):
 
     @patch("threading.Thread")
     @patch("backend.fsutil.read_json")
-    def test_auto_ingest_triggers_on_card_insertion(self, mock_read_json, mock_thread):
+    def test_auto_ingest_triggers_direct_copy_when_confirmation_disabled(self, mock_read_json, mock_thread):
         mock_read_json.return_value = {
             "enabled": True,
             "auto_ingest": True,
+            "require_confirmation": False,
             "source": "auto",
             "dest": "/mnt/user/photos",
             "use_exif": True,
@@ -219,17 +220,57 @@ class TestBatch5UpsAndMedia(unittest.TestCase):
         }
         check_media_slot_transitions(inserted_tf)
 
-        # Verify background copy thread was launched
+        # Verify background copy thread was launched directly when confirmation is false
         mock_thread.assert_called_once()
         self.assertTrue(Z_STATE.copy_active)
         self.assertEqual(Z_STATE.copy_status, "copying")
+        self.assertIsNone(Z_STATE.pending_ingest)
+
+    @patch("threading.Thread")
+    @patch("backend.fsutil.read_json")
+    def test_auto_ingest_prompts_confirmation_by_default(self, mock_read_json, mock_thread):
+        Z_STATE.copy_active = False
+        Z_STATE.copy_status = "idle"
+        Z_STATE.pending_ingest = None
+        mock_read_json.return_value = {
+            "enabled": True,
+            "auto_ingest": True,
+            "require_confirmation": True,
+            "source": "auto",
+            "dest": "/mnt/user/photos",
+            "use_exif": True,
+            "verify_checksum": True,
+            "on_collision": "skip",
+        }
+
+        inserted_sd = {
+            "sd": {"size": 32 * 1024 * 1024 * 1024, "dev": "sdf"},
+            "tf": {"size": 0, "dev": None},
+        }
+        check_media_slot_transitions(inserted_sd)
+
+        # Thread must NOT be launched automatically; pending_ingest must be set
+        mock_thread.assert_not_called()
+        self.assertFalse(Z_STATE.copy_active)
+        self.assertIsNotNone(Z_STATE.pending_ingest)
+        self.assertEqual(Z_STATE.pending_ingest["slot"], "sd")
+        self.assertEqual(Z_STATE.pending_ingest["dest"], "/mnt/user/photos")
+
+        # Card removal should clear pending_ingest
+        empty_slots = {
+            "sd": {"size": 0, "dev": None},
+            "tf": {"size": 0, "dev": None},
+        }
+        check_media_slot_transitions(empty_slots)
+        self.assertIsNone(Z_STATE.pending_ingest)
 
     def test_button_config_schema_with_auto_ingest(self):
         from backend.models.schemas import ButtonConfigRequest
 
-        req = ButtonConfigRequest(auto_ingest=True, verify_checksum=True, source="tf")
+        req = ButtonConfigRequest(auto_ingest=True, require_confirmation=True, verify_checksum=True, source="tf")
         d = req.model_dump(exclude_unset=True)
         self.assertEqual(d["auto_ingest"], True)
+        self.assertEqual(d["require_confirmation"], True)
         self.assertEqual(d["verify_checksum"], True)
         self.assertEqual(d["source"], "tf")
 

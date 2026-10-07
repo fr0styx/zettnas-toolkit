@@ -40,6 +40,7 @@ class ZettState:
         self.copy_confirm_event = threading.Event()
         self.copy_overwrite_choice = "cancel"
         self.copy_abort_flag = False
+        self.pending_ingest = None
         self.cached_stats = None
         self.static_cache = {}
         self.fans_released = False

@@ -379,6 +379,7 @@ def stats_collector_daemon():
                     "active": Z_STATE.copy_active,
                     "status": Z_STATE.copy_status,
                     "progress": Z_STATE.copy_progress,
+                    "pending_ingest": getattr(Z_STATE, "pending_ingest", None),
                 },
                 "media_slots": (lambda s: (check_media_slot_transitions(s), s)[1])(read_media_slots()),
                 "fan_control": {

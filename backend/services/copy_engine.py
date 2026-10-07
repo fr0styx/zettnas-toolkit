@@ -72,6 +72,10 @@ def check_media_slot_transitions(slots: dict) -> list[dict]:
                 f"{slot_label} Removed",
                 f"{slot_label} was unmounted and removed from slot.",
             )
+            if getattr(Z_STATE, "pending_ingest", None) and Z_STATE.pending_ingest.get("slot") == slot:
+                logger.info(f"[AUTO-INGEST] Clearing pending ingest for removed card {slot}")
+                Z_STATE.pending_ingest = None
+                Z_STATE.ui_wake.set()
 
         _PREV_MEDIA_SLOTS[slot] = {"size": curr_sz, "dev": curr_dev}
 
@@ -110,6 +114,31 @@ def _maybe_trigger_auto_ingest(slot: str):
             "on_collision": cfg.get("on_collision", "skip"),
         }
 
+        # Check if user confirmation prompt is required before starting copy (default: True)
+        require_confirm = cfg.get("require_confirmation", True)
+        if require_confirm:
+            slot_info = _PREV_MEDIA_SLOTS.get(slot, {})
+            slot_label = "SD Card" if slot == "sd" else "TF Card (MicroSD)"
+            dev = slot_info.get("dev") or slot
+            size = slot_info.get("size", 0)
+            logger.info(f"[AUTO-INGEST] {slot_label} detected - offering media ingest confirmation prompt")
+            Z_STATE.pending_ingest = {
+                "slot": slot,
+                "dest": job_cfg["dest"],
+                "use_exif": job_cfg["use_exif"],
+                "size": size,
+                "dev": dev,
+                "ts": time.time(),
+            }
+            Z_STATE.ui_wake.set()
+            add_event(
+                "info",
+                "Media Ingest Offered",
+                f"{slot_label} detected on /dev/{dev}. Awaiting user confirmation to start import.",
+            )
+            return
+
+        # Direct auto-ingest without confirmation prompt (if user opted out in settings)
         Z_STATE.copy_active = True
         Z_STATE.copy_status = "copying"
         Z_STATE.ui_wake.set()
@@ -457,6 +486,7 @@ async def _do_copy(cfg):
         except Exception as log_e:
             logger.info(f"[ZettNAS] Failed to log copy history: {log_e}")
 
+        Z_STATE.pending_ingest = None
         Z_STATE.copy_active = False
         Z_STATE.ui_wake.set()
         time.sleep(8)

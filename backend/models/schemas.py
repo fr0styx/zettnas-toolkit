@@ -61,7 +61,14 @@ class ButtonConfigRequest(BaseModel):
     use_exif: bool | None = None
     on_collision: str | None = None
     auto_ingest: bool | None = None
+    require_confirmation: bool | None = None
     verify_checksum: bool | None = None
+
+
+class StartCopyRequest(BaseModel):
+    source: str | None = None
+    dest: str | None = None
+    use_exif: bool | None = None
 
 
 class CopyConfirmRequest(BaseModel):

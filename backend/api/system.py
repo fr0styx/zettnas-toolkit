@@ -41,6 +41,7 @@ from backend.models.schemas import (
     LcdPageRequest,
     MkdirRequest,
     ScreenConfigRequest,
+    StartCopyRequest,
     StateRequest,
     SystemProfileRequest,
 )
@@ -221,21 +222,38 @@ def resume_copy():
 
 
 @router.post("/copy/start")
-def start_copy():
+def start_copy(req: StartCopyRequest | None = None):
     if Z_STATE.copy_active:
         raise HTTPException(status_code=409, detail="Copy operation already in progress")
     cfg = _load_buttons()
+    if req:
+        if req.source:
+            cfg["source"] = req.source
+        if req.dest:
+            cfg["dest"] = req.dest
+        if req.use_exif is not None:
+            cfg["use_exif"] = req.use_exif
+    Z_STATE.pending_ingest = None
     Z_STATE.copy_active = True
     Z_STATE.copy_status = "copying"
     Z_STATE.ui_wake.set()
-    add_event("info", "Copy Started", "Starting ingest from media slot...")
+    src_label = str(cfg.get("source", "media slot")).upper()
+    add_event("info", "Copy Started", f"Starting ingest from {src_label}...")
     threading.Thread(target=lambda c: asyncio.run(_do_copy(c)), args=(cfg,), daemon=True).start()
     return {"status": "started"}
+
+
+@router.post("/copy/dismiss-ingest")
+def dismiss_pending_ingest():
+    Z_STATE.pending_ingest = None
+    Z_STATE.ui_wake.set()
+    return {"status": "dismissed"}
 
 
 BUTTON_DEFAULTS = {
     "enabled": False,
     "auto_ingest": False,
+    "require_confirmation": True,
     "source": "sd",
     "dest": "/mnt/user/",
     "use_exif": True,

@@ -333,6 +333,7 @@ export function initSettings() {
   const btnCopyDst = $('btn-copy-dst');
   const btnCopyExif = $('btn-copy-exif');
   const btnCopyAutoIngest = $('btn-copy-auto-ingest');
+  const btnCopyRequireConfirm = $('btn-copy-require-confirm');
   const btnCopyCollision = $('btn-copy-collision');
   const btnCopySave = $('btn-copy-save');
 
@@ -344,6 +345,7 @@ export function initSettings() {
       if (btnCopyDst) btnCopyDst.value = data.dest || '/mnt/user/';
       if (btnCopyExif) btnCopyExif.checked = data.use_exif !== false;
       if (btnCopyAutoIngest) btnCopyAutoIngest.checked = !!data.auto_ingest;
+      if (btnCopyRequireConfirm) btnCopyRequireConfirm.checked = data.require_confirmation !== false;
       if (btnCopyCollision) btnCopyCollision.value = data.on_collision || 'skip';
 
       if (btnCopyOptions) {
@@ -369,6 +371,7 @@ export function initSettings() {
         dest: btnCopyDst ? btnCopyDst.value : '/mnt/user/',
         use_exif: btnCopyExif ? btnCopyExif.checked : true,
         auto_ingest: btnCopyAutoIngest ? btnCopyAutoIngest.checked : false,
+        require_confirmation: btnCopyRequireConfirm ? btnCopyRequireConfirm.checked : true,
         on_collision: btnCopyCollision ? btnCopyCollision.value : 'skip'
       });
       showToast('Button configuration saved', 'success');

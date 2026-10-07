@@ -1277,6 +1277,14 @@
             <label class="switch"><input type="checkbox" id="btn-copy-auto-ingest"><span class="toggle-slider"></span></label>
           </div>
 
+          <div class="slider-row" style="margin-top: 15px; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+            <div style="display:flex; flex-direction: column;">
+              <span class="slider-label" style="opacity: 0.8; font-size: 11px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;" data-i18n="settings.ingest_prompt">Prompt Before Ingest</span>
+              <span style="font-size: 10px; color: var(--muted); margin-top: 3px;" data-i18n="settings.ingest_prompt_desc">Show confirmation dialog before starting card copy.</span>
+            </div>
+            <label class="switch"><input type="checkbox" id="btn-copy-require-confirm" checked><span class="toggle-slider"></span></label>
+          </div>
+
           <div class="slider-row" style="flex-direction: column; align-items: flex-start; gap: 6px; margin-top: 12px;">
             <span class="slider-label" style="opacity: 0.8; font-size: 11px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;" data-i18n="settings.collision_rule">Existing File Collision Rule</span>
             <select id="btn-copy-collision" class="tz-text-input" style="width: 100%; box-sizing: border-box; appearance: auto;">
