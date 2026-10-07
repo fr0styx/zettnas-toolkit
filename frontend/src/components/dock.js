@@ -123,11 +123,12 @@ export function applySavedBounds(dragEl, winId) {
   dragEl.style.position = 'fixed';
   dragEl.style.left = `${clampedLeft}px`;
   dragEl.style.top = `${clampedTop}px`;
+  dragEl.style.transform = 'none';
 
-  if (saved.width && !dragEl.classList.contains('smart-modal-window')) {
+  if (saved.width && !dragEl.classList.contains('smart-modal-window') && !dragEl.classList.contains('chassis-front-panel')) {
     dragEl.style.width = `${Math.min(window.innerWidth - 20, Math.max(320, saved.width))}px`;
   }
-  if (saved.height && !dragEl.classList.contains('smart-modal-window')) {
+  if (saved.height && !dragEl.classList.contains('smart-modal-window') && !dragEl.classList.contains('chassis-front-panel')) {
     dragEl.style.height = `${Math.min(window.innerHeight - 80, Math.max(240, saved.height))}px`;
   }
   if (saved.snapped) {
@@ -359,6 +360,37 @@ export function makeDraggable(dragEl, handleEl, customId) {
   });
 }
 
+export function openConsoleWindow() {
+  const consoleOverlay = document.getElementById('console-modal-overlay');
+  const consoleModal = document.getElementById('console-window');
+  if (consoleOverlay) {
+    if (window.DockManager && !window.DockManager.windows['console']) {
+      window.DockManager.register('console', consoleOverlay, '#i-screen', t('dock.zettnas', 'ZettNAS'), false);
+    }
+    if (window.DockManager) {
+      window.DockManager.restore('console');
+    }
+    consoleOverlay.style.removeProperty('display');
+    consoleOverlay.classList.remove('window-minimized');
+    consoleOverlay.classList.add('open');
+    if (consoleModal) {
+      consoleModal.classList.remove('window-minimized');
+      consoleModal.style.removeProperty('display');
+      bringToFront(consoleModal);
+      consoleModal.classList.remove('window-focus-pulse');
+      void consoleModal.offsetWidth; // trigger reflow
+      consoleModal.classList.add('window-focus-pulse');
+      setTimeout(() => consoleModal.classList.remove('window-focus-pulse'), 850);
+    }
+    if (window.updateLcdPages && state.latestStats) {
+      window.updateLcdPages(state.latestStats);
+    }
+  } else {
+    document.getElementById('chassis-desktop-icon')?.click();
+  }
+}
+window.openConsoleWindow = openConsoleWindow;
+
 export const KNOWN_APPS = {
   fm: {
     id: 'fm',
@@ -394,21 +426,7 @@ export const KNOWN_APPS = {
     icon: '#i-screen',
     getTitle: () => t('dock.zettnas', 'ZettNAS'),
     launch: () => {
-      const consoleOverlay = document.getElementById('console-modal-overlay');
-      const consoleModal = document.getElementById('console-window');
-      if (consoleOverlay) {
-        if (window.DockManager && !window.DockManager.windows['console']) {
-          window.DockManager.register('console', consoleOverlay, '#i-screen', t('dock.zettnas', 'ZettNAS'), false);
-        }
-        if (window.DockManager) window.DockManager.restore('console');
-        consoleOverlay.style.removeProperty('display');
-        consoleOverlay.classList.add('open');
-        consoleModal?.classList.remove('window-minimized');
-        if (window.updateLcdPages && state.latestStats) window.updateLcdPages(state.latestStats);
-        if (consoleModal) bringToFront(consoleModal);
-      } else {
-        document.getElementById('chassis-desktop-icon')?.click();
-      }
+      openConsoleWindow();
     }
   },
   smart: {
@@ -574,25 +592,30 @@ export const DockManager = {
 
   register(id, el, icon, title, initialMinimized = false) {
     if (!this.windows[id]) {
-      this.windows[id] = { el, icon, title, minimized: initialMinimized, closed: false };
+      this.windows[id] = { el, icon, title, minimized: initialMinimized, closed: initialMinimized };
     } else {
       this.windows[id].el = el;
       if (icon) this.windows[id].icon = icon;
       if (title) this.windows[id].title = title;
-      this.windows[id].closed = false;
+      this.windows[id].closed = initialMinimized;
     }
+    const innerWin = el.querySelector('.smart-modal-window, .chassis-front-panel, .os-window, .mgmt-app-window, .file-manager-window');
     if (!initialMinimized) {
       this.windows[id].minimized = false;
       this.windows[id].closed = false;
       el.classList.remove('window-minimized');
       el.classList.add('open');
       el.style.removeProperty('display');
+      if (innerWin) {
+        innerWin.classList.remove('window-minimized');
+        innerWin.style.removeProperty('display');
+      }
     } else {
       this.windows[id].minimized = true;
+      this.windows[id].closed = true;
       el.classList.add('window-minimized');
       el.classList.remove('open');
       el.style.setProperty('display', 'none', 'important');
-      const innerWin = el.querySelector('.smart-modal-window, .chassis-front-panel, .os-window, .mgmt-app-window');
       if (innerWin) {
         innerWin.classList.add('window-minimized');
         innerWin.style.setProperty('display', 'none', 'important');
@@ -642,6 +665,7 @@ export const DockManager = {
   restore(id) {
     if (this.windows[id]) {
       this.windows[id].minimized = false;
+      this.windows[id].closed = false;
       this.windows[id].el.classList.remove('window-minimized');
       this.windows[id].el.classList.add('open');
       this.windows[id].el.style.removeProperty('display');
@@ -1103,36 +1127,18 @@ export function initDockSystem() {
 
   const chassisDesktopIcon = document.getElementById('chassis-desktop-icon');
   if (chassisDesktopIcon) {
-    const openOrFocusDashboard = (e) => {
+    const handleOpen = (e) => {
       if (e && e.type === 'touchend') {
         e.preventDefault();
       }
-      if (consoleOverlay) {
-        if (!DockManager.windows['console']) {
-          DockManager.register('console', consoleOverlay, '#i-screen', t('dock.zettnas', 'ZettNAS'), false);
-        }
-        if (DockManager.windows['console']?.minimized || consoleOverlay.style.display === 'none' || !consoleOverlay.classList.contains('open') || DockManager.windows['console']?.closed) {
-          DockManager.restore('console');
-          consoleOverlay.style.removeProperty('display');
-          consoleOverlay.classList.add('open');
-          consoleModal?.classList.remove('window-minimized');
-          if (window.updateLcdPages && state.latestStats) window.updateLcdPages(state.latestStats);
-        }
-        if (consoleModal) {
-          bringToFront(consoleModal);
-          consoleModal.classList.remove('window-focus-pulse');
-          void consoleModal.offsetWidth; // trigger reflow
-          consoleModal.classList.add('window-focus-pulse');
-          setTimeout(() => consoleModal.classList.remove('window-focus-pulse'), 850);
-        }
-      }
+      openConsoleWindow();
     };
-    chassisDesktopIcon.addEventListener('click', openOrFocusDashboard);
-    chassisDesktopIcon.addEventListener('touchend', openOrFocusDashboard);
+    chassisDesktopIcon.addEventListener('click', handleOpen);
+    chassisDesktopIcon.addEventListener('touchend', handleOpen);
     chassisDesktopIcon.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
-        openOrFocusDashboard();
+        openConsoleWindow();
       }
     });
   }

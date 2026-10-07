@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { makeDraggable, saveWindowBounds, loadSavedWindowBounds, DockManager, isEventChecked, markEventChecked, getEventKey } from '../components/dock.js';
+import { makeDraggable, saveWindowBounds, loadSavedWindowBounds, DockManager, isEventChecked, markEventChecked, getEventKey, openConsoleWindow, KNOWN_APPS } from '../components/dock.js';
 import { openEventDetailModal, closeEventDetailModal } from '../modals.js';
 
 describe('Notification Center Draggable Window & Event Detail Inspector', () => {
@@ -230,5 +230,58 @@ describe('Notification Center Draggable Window & Event Detail Inspector', () => 
     // Dock returns to exactly 2 items
     items = dock.querySelectorAll('.dock-item');
     expect(items.length).toBe(2);
+  });
+
+  it('opens and visibly restores ZettNAS console window when openConsoleWindow() is triggered', () => {
+    DockManager.windows = {};
+    DockManager.activeId = null;
+
+    const overlay = document.createElement('div');
+    overlay.id = 'console-modal-overlay';
+    overlay.className = 'smart-modal-backdrop window-minimized';
+    overlay.style.display = 'none';
+
+    const win = document.createElement('div');
+    win.id = 'console-window';
+    win.className = 'chassis-front-panel window-minimized';
+    overlay.appendChild(win);
+    document.body.appendChild(overlay);
+
+    openConsoleWindow();
+
+    expect(overlay.classList.contains('open')).toBe(true);
+    expect(overlay.classList.contains('window-minimized')).toBe(false);
+    expect(overlay.style.display).not.toBe('none');
+
+    expect(win.classList.contains('window-minimized')).toBe(false);
+    expect(win.style.display).not.toBe('none');
+
+    expect(DockManager.windows['console']).toBeDefined();
+    expect(DockManager.windows['console'].minimized).toBe(false);
+    expect(DockManager.windows['console'].closed).toBe(false);
+
+    // Verify dock has console item running
+    const dock = document.getElementById('os-dock');
+    const consoleDockItem = dock.querySelector('[data-window-id="console"]');
+    expect(consoleDockItem).not.toBeNull();
+    expect(consoleDockItem.classList.contains('pinned-closed')).toBe(false);
+
+    // Verify closing console hides window and unregisters if unpinned
+    DockManager.closeWindow('console');
+    expect(overlay.classList.contains('open')).toBe(false);
+    expect(win.classList.contains('window-minimized')).toBe(true);
+    expect(DockManager.windows['console']).toBeUndefined();
+    expect(dock.querySelector('[data-window-id="console"]')).toBeNull();
+
+    // Now test if pinned:
+    DockManager.pinApp('console');
+    expect(DockManager.isPinned('console')).toBe(true);
+    expect(dock.querySelector('[data-window-id="console"]').classList.contains('pinned-closed')).toBe(true);
+
+    // Reopen console via KNOWN_APPS.console.launch()
+    KNOWN_APPS.console.launch();
+    expect(overlay.classList.contains('open')).toBe(true);
+    expect(win.classList.contains('window-minimized')).toBe(false);
+    expect(dock.querySelector('[data-window-id="console"]').classList.contains('pinned-closed')).toBe(false);
   });
 });
