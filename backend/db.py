@@ -342,6 +342,22 @@ def query_smart_velocity(dev: str, conn: sqlite3.Connection = None) -> dict:
             status = "monitor"
             rec_text = f"Drive has {latest['reallocated_sectors']} historical reallocated sectors, but velocity is zero over the last 30 days."
 
+        # Historical sparkline points for 30-day velocity visualization
+        history_rows = c.execute(
+            "SELECT ts, temp, reallocated_sectors, pending_sectors, nvme_pct_used FROM smart_history WHERE dev = ? AND ts >= ? ORDER BY ts ASC",
+            (dev, ts_30d),
+        ).fetchall()
+        sparkline_points = [
+            {
+                "ts": r["ts"],
+                "temp": r["temp"],
+                "realloc": r["reallocated_sectors"] or 0,
+                "pending": r["pending_sectors"] or 0,
+                "wear": r["nvme_pct_used"] or 0,
+            }
+            for r in history_rows
+        ]
+
         return {
             "dev": dev,
             "status": status,
@@ -353,6 +369,7 @@ def query_smart_velocity(dev: str, conn: sqlite3.Connection = None) -> dict:
             "nvme_pct_used": curr_nvme_wear,
             "nvme_media_errors": curr_nvme_err,
             "recommendation": rec_text,
+            "sparkline_points": sparkline_points,
         }
 
     try:
@@ -371,6 +388,7 @@ def query_smart_velocity(dev: str, conn: sqlite3.Connection = None) -> dict:
             "realloc_7d_delta": 0,
             "realloc_30d_delta": 0,
             "recommendation": "Unable to calculate velocity",
+            "sparkline_points": [],
         }
 
 

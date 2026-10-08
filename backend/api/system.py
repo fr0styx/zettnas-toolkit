@@ -25,7 +25,7 @@ from backend.config import (
 )
 from backend.db import query_copy_history
 from backend.fsutil import atomic_write_json, read_json, resolve_within, root_for
-from backend.hardware.disks import fetch_disk_smart_detail, run_disk_smart_test
+from backend.hardware.disks import fetch_disk_smart_detail, locate_disk, run_disk_smart_test
 from backend.hardware.docker_stats import container_action, read_docker_containers
 from backend.hardware.fans import set_fan_pwm
 from backend.hardware.led import apply_led_state
@@ -120,6 +120,20 @@ async def disk_smart_test(req: DiskSmartTestRequest):
     if not re.fullmatch(r"^(sd[a-z]{1,2}|nvme[0-9]+n[0-9]+)$", dev):
         raise HTTPException(status_code=400, detail="Invalid device parameter.")
     return await asyncio.to_thread(run_disk_smart_test, dev, test_type)
+
+
+@router.post("/disk/locate")
+async def disk_locate_endpoint(payload: dict):
+    dev = str(payload.get("dev", "sda"))
+    duration = int(payload.get("duration", 5))
+    if dev.startswith("/dev/"):
+        dev = dev.replace("/dev/", "")
+    m = re.match(r"^nv([0-9]+)$", dev)
+    if m:
+        dev = f"nvme{m.group(1)}n1"
+    if not re.fullmatch(r"^(sd[a-z]{1,2}|nvme[0-9]+n[0-9]+)$", dev):
+        raise HTTPException(status_code=400, detail="Invalid device parameter.")
+    return await asyncio.to_thread(locate_disk, dev, duration)
 
 
 @router.get("/screen")

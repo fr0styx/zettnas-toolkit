@@ -3,6 +3,7 @@ import json
 import os
 import re
 import subprocess
+import threading
 import time
 
 from backend.config import (
@@ -767,3 +768,33 @@ def run_disk_smart_test(dev_name: str, test_type: str = "short"):
     except Exception as e:
         logger.error(f"[SMART] Failed to execute self-test action ({action_name}) on {dev_name}: {e}")
         return {"success": False, "error": str(e)}
+
+
+def locate_disk(dev_name: str, duration_sec: int = 5) -> dict:
+    """
+    Triggers physical drive identification strobe (Locate Drive / Blink Bay).
+    Reads 4KB from sector 0 in a gentle rhythm for duration_sec to pulse drive activity LED safely without writing.
+    """
+    if not re.fullmatch(r"^(sd[a-z]{1,2}|nvme[0-9]+n[0-9]+)$", dev_name):
+        return {"success": False, "error": "Invalid device name format."}
+
+    dev_path = _resolve_dev_path(dev_name)
+    if not os.path.exists(dev_path):
+        return {"success": False, "error": f"Device {dev_name} does not exist."}
+
+    duration = max(1, min(int(duration_sec or 5), 10))
+
+    def _strobe_task():
+        end_time = time.time() + duration
+        try:
+            with open(dev_path, "rb") as f:
+                while time.time() < end_time:
+                    f.seek(0)
+                    _ = f.read(4096)
+                    time.sleep(0.12)
+        except Exception as e:
+            logger.debug(f"[DiskLocate] Strobe read error on {dev_name}: {e}")
+
+    threading.Thread(target=_strobe_task, daemon=True, name=f"locate-{dev_name}").start()
+    return {"success": True, "dev": dev_name, "duration": duration}
+

@@ -7355,5 +7355,404 @@ body.theme-yak .widget-drag-handle:hover {
   filter: brightness(1.15);
 }
 
+/* =========================================================================
+   PHYSICAL CHASSIS TWIN & STORAGE TOPOLOGY ENGINE
+   ========================================================================= */
+
+.chassis-twin-view {
+  width: 100%;
+  padding: 12px;
+  box-sizing: border-box;
+}
+
+.chassis-enclosure-faceplate {
+  background: linear-gradient(180deg, #18202a 0%, #0e141c 100%);
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 14px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6), 0 0 1px rgba(255, 255, 255, 0.2) inset;
+  position: relative;
+}
+
+.chassis-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.chassis-screw-head {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #888 0%, #222 100%);
+  border: 1px solid rgba(0, 0, 0, 0.6);
+}
+
+.chassis-brand-mark {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: var(--muted, #78838f);
+  text-transform: uppercase;
+}
+
+.chassis-honeycomb-vents {
+  flex: 1;
+  height: 6px;
+  margin: 0 16px;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.12) 1px, transparent 1px);
+  background-size: 5px 5px;
+}
+
+.chassis-bay-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.chassis-bay-grid.dual-cols {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.chassis-bay-grid.tri-cols {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.chassis-bay-grid.quad-cols {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+@media (max-width: 600px) {
+  .chassis-bay-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+.chassis-bay-slot {
+  background: rgba(20, 26, 36, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  user-select: none;
+}
+
+.chassis-bay-slot.populated {
+  cursor: pointer;
+}
+
+.chassis-bay-slot.populated:hover {
+  transform: translateY(-2px);
+  border-color: var(--focus-ring, #00f0ff);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+}
+
+.chassis-bay-slot.empty {
+  opacity: 0.4;
+  border-style: dashed;
+}
+
+.chassis-bay-slot.strobe-active {
+  animation: locateStrobe 0.45s ease-in-out infinite alternate !important;
+}
+
+@keyframes locateStrobe {
+  from {
+    border-color: #ff0055;
+    box-shadow: 0 0 14px rgba(255, 0, 85, 0.8), 0 0 4px #ff0055 inset;
+    transform: scale(1.02);
+  }
+  to {
+    border-color: #00f0ff;
+    box-shadow: 0 0 24px rgba(0, 240, 255, 0.9), 0 0 8px #00f0ff inset;
+    transform: scale(1.03);
+  }
+}
+
+.bay-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.bay-num {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: var(--muted, #78838f);
+}
+
+.bay-temp-pill {
+  font-size: 9.5px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 10px;
+  border: 1px solid currentColor;
+}
+
+.bay-tray-handle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 6px 8px;
+  border-radius: 6px;
+  border-left: 3px solid rgba(255, 255, 255, 0.12);
+}
+
+.bay-led-lens {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #3bf58b;
+  box-shadow: 0 0 6px #3bf58b;
+}
+
+.bay-led-lens.standby-pulse {
+  background: #38bdf8;
+  box-shadow: 0 0 6px #38bdf8;
+  animation: diskStandbyBreathe 3s ease-in-out infinite;
+}
+
+@keyframes diskStandbyBreathe {
+  0%, 100% { opacity: 0.3; transform: scale(0.9); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
+
+.bay-drive-info {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.bay-drive-model {
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #fff;
+}
+
+.bay-drive-dev {
+  font-size: 9.5px;
+  color: var(--muted, #78838f);
+}
+
+.bay-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 2px;
+}
+
+.bay-locate-btn {
+  background: rgba(56, 189, 248, 0.1);
+  border: 1px solid rgba(56, 189, 248, 0.28);
+  color: #38bdf8;
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s ease;
+}
+
+.bay-locate-btn:hover {
+  background: #38bdf8;
+  color: #0b131a;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.5);
+}
+
+.bay-health-tag {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.bay-health-tag.ok { color: var(--ok, #3bf58b); }
+.bay-health-tag.warn { color: var(--warn, #f5b731); }
+.bay-health-tag.crit { color: var(--crit, #f0553b); }
+.bay-health-tag.standby { color: var(--muted, #78838f); }
+
+/* M.2 Motherboard Twin */
+.m2-motherboard-twin {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+.m2-twin-header {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--muted, #78838f);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+.m2-slots-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 8px;
+}
+
+.m2-slot-card {
+  background: rgba(14, 20, 28, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.m2-slot-card:hover {
+  border-color: var(--focus-ring, #00f0ff);
+}
+
+.m2-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.m2-name {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.m2-temp {
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.m2-body {
+  display: flex;
+  flex-direction: column;
+  font-size: 9.5px;
+}
+
+.m2-model {
+  color: var(--muted, #78838f);
+}
+
+.m2-wear {
+  color: #eaf1f8;
+  margin-top: 2px;
+}
+
+/* S.M.A.R.T. Velocity Sparkline */
+.smart-sparkline-svg {
+  width: 100%;
+  height: 48px;
+  overflow: visible;
+}
+
+/* Storage Topology Tree */
+.storage-topology-tree {
+  width: 100%;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.topo-root-node {
+  background: rgba(18, 24, 34, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 12px;
+}
+
+.topo-root-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #fff;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+}
+
+.topo-root-badge {
+  margin-left: auto;
+  font-size: 9px;
+  font-weight: 700;
+  background: rgba(59, 245, 139, 0.15);
+  border: 1px solid rgba(59, 245, 139, 0.4);
+  color: var(--ok, #3bf58b);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.topo-branches {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.topo-branch-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--muted, #78838f);
+  margin-bottom: 6px;
+}
+
+.topo-disk-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.topo-disk-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.topo-disk-pill.role-parity {
+  border-color: rgba(245, 183, 49, 0.5);
+  background: rgba(245, 183, 49, 0.08);
+}
+
+.topo-disk-pill.role-parity .topo-role {
+  color: var(--warn, #f5b731);
+  font-weight: 800;
+}
+
+.topo-disk-pill.role-cache {
+  border-color: rgba(192, 132, 252, 0.5);
+  background: rgba(192, 132, 252, 0.08);
+}
+
+.topo-disk-pill.role-cache .topo-role {
+  color: #c084fc;
+  font-weight: 800;
+}
+
 
 

@@ -4,6 +4,7 @@ import { api } from './api.js';
 import { DockManager, bringToFront, makeDraggable } from './components/dock.js';
 import { trapFocus } from './utils.js';
 import { t } from './i18n.js';
+import { generateSmartSparklineSvg, triggerLocateDisk } from './components/chassis-visualizer.js';
 // S.M.A.R.T. & INTERACTIVE METRIC DIAGNOSTIC MODAL CONTROLLER
 
 let activeModalType = null;
@@ -241,16 +242,37 @@ async function openSmartModal(devName) {
           const deg = data.degradation;
           const color = deg.status === 'critical' ? 'var(--crit)' : deg.status === 'warning' ? 'var(--warn)' : 'var(--ok)';
           const icon = deg.status === 'critical' ? '⚠️' : deg.status === 'warning' ? '⏳' : '🛡️';
+
+          let sparklineHtml = '';
+          if (deg.sparkline_points && deg.sparkline_points.length > 0) {
+            sparklineHtml = `
+              <div style="margin-top: 8px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.06);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; font-size:9.5px; font-weight:700; color:var(--muted); text-transform:uppercase;">
+                  <span>30-Day Degradation Sparkline</span>
+                  <span>Rate: ${deg.realloc_7d_delta > 0 ? '+' + deg.realloc_7d_delta + ' / 7d' : 'STABLE'}</span>
+                </div>
+                ${generateSmartSparklineSvg(deg.sparkline_points, 320, 44)}
+              </div>
+            `;
+          }
+
           bannerHtml += `
             <div style="display: flex; align-items: flex-start; gap: 8px;">
               <span style="font-size: 14px;">${icon}</span>
               <div style="flex: 1;">
-                <div style="font-weight: 700; color: ${color}; text-transform: uppercase; font-size: 10px; letter-spacing: 0.5px;">
-                  ${deg.status.replace('_', ' ')} • SMART Velocity Analysis
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <div style="font-weight: 700; color: ${color}; text-transform: uppercase; font-size: 10px; letter-spacing: 0.5px;">
+                    ${deg.status.replace('_', ' ')} • SMART Velocity Analysis
+                  </div>
+                  <button id="smart-btn-locate-drive" style="background:rgba(56, 189, 248, 0.12); border:1px solid rgba(56, 189, 248, 0.35); color:#38bdf8; border-radius:4px; padding:2px 8px; cursor:pointer; font-weight:600; font-size:9.5px; display:flex; align-items:center; gap:4px;">
+                    <svg viewBox="0 0 24 24" width="10" height="10"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="currentColor"/></svg>
+                    LOCATE
+                  </button>
                 </div>
                 <div style="color: var(--text-secondary); margin-top: 2px;">
                   ${deg.recommendation}
                 </div>
+                ${sparklineHtml}
               </div>
             </div>
           `;
@@ -258,6 +280,13 @@ async function openSmartModal(devName) {
         if (bannerHtml) {
           degBanner.innerHTML = bannerHtml;
           degBanner.style.display = 'block';
+          const locateBtn = degBanner.querySelector('#smart-btn-locate-drive');
+          if (locateBtn) {
+            locateBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              triggerLocateDisk(devName, modalWin);
+            });
+          }
         } else {
           degBanner.style.display = 'none';
         }
