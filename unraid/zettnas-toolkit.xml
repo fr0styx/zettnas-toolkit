@@ -14,7 +14,7 @@
   <WebUI>http://[IP]:[PORT:8082]/</WebUI>
   <TemplateURL>https://raw.githubusercontent.com/fr0styx/zettnas-toolkit/main/unraid/zettnas-toolkit.xml</TemplateURL>
   <Icon>https://raw.githubusercontent.com/fr0styx/zettnas-toolkit/main/static/img/icon.png</Icon>
-  <ExtraParams>--restart=unless-stopped --device=/dev/fb0:/dev/fb0 --device=/dev/dri:/dev/dri --cap-add=SYS_RAWIO --cap-add=SYS_ADMIN --device-cgroup-rule="c 29:* rwm" --device-cgroup-rule="c 226:* rwm" --device-cgroup-rule="c 188:* rwm" --device-cgroup-rule="c 166:* rwm" --device-cgroup-rule="b 8:* rwm" --device-cgroup-rule="b 259:* rwm"</ExtraParams>
+  <ExtraParams>--restart=unless-stopped --cap-add=SYS_RAWIO --cap-add=SYS_ADMIN --device-cgroup-rule="c 29:* rwm" --device-cgroup-rule="c 226:* rwm" --device-cgroup-rule="c 188:* rwm" --device-cgroup-rule="c 166:* rwm" --device-cgroup-rule="b 8:* rwm" --device-cgroup-rule="b 259:* rwm"</ExtraParams>
   <PostArgs/>
   <CPUset/>
   <Config Name="WebUI Port" Target="8082" Default="8082" Mode="tcp" Description="Web interface &amp; telemetry API port" Type="Port" Display="always" Required="true" Mask="false">8082</Config>
@@ -24,6 +24,8 @@
   <Config Name="Host Dev" Target="/host/dev" Default="/dev" Mode="rw" Description="Host devices (disks &amp; serial RGB controller)" Type="Path" Display="advanced" Required="true" Mask="false">/dev</Config>
   <Config Name="Storage Pool" Target="/mnt/user" Default="/mnt/user" Mode="rw" Description="Target user array pool for disk usage calculation and file ingest" Type="Path" Display="always" Required="true" Mask="false">/mnt/user</Config>
   <Config Name="Unraid emhttp Telemetry" Target="/var/local/emhttp" Default="/var/local/emhttp" Mode="ro" Description="Unraid real-time array, parity check and mover state" Type="Path" Display="always" Required="false" Mask="false">/var/local/emhttp</Config>
+  <Config Name="Host Timezone" Target="/etc/localtime" Default="/etc/localtime" Mode="ro" Description="Host local time for synchronous clock and LCD display" Type="Path" Display="advanced" Required="false" Mask="false">/etc/localtime</Config>
+  <Config Name="Unraid Network Config" Target="/boot/config/network.cfg" Default="/boot/config/network.cfg" Mode="ro" Description="Unraid network configuration for interface and gateway resolution" Type="Path" Display="advanced" Required="false" Mask="false">/boot/config/network.cfg</Config>
   <Config Name="LCD Refresh FPS" Target="LCD_FPS" Default="10" Mode="" Description="Target LCD display frame rate" Type="Variable" Display="always" Required="false" Mask="false">10</Config>
   <Config Name="NAS Name" Target="NAS_NAME" Default="NAS" Mode="" Description="Server display name on LCD" Type="Variable" Display="always" Required="false" Mask="false">NAS</Config>
   <Config Name="Docker Socket" Target="/var/run/docker.sock" Default="/var/run/docker.sock" Mode="ro" Description="Host Docker socket for container telemetry and management" Type="Path" Display="advanced" Required="false" Mask="false">/var/run/docker.sock</Config>

@@ -193,6 +193,7 @@ class ZettServer(uvicorn.Server):
 
 def main():
     port = int(os.environ.get("PORT", "8082"))
+    trusted_proxies = os.environ.get("TRUSTED_PROXIES", "127.0.0.1")
     logger.info(f"ZettNAS dashboard starting on :{port} (version {__version__})")
     server_config = uvicorn.Config(
         app,
@@ -203,7 +204,7 @@ def main():
         timeout_keep_alive=15,
         timeout_graceful_shutdown=3,
         proxy_headers=True,
-        forwarded_allow_ips="*",
+        forwarded_allow_ips=trusted_proxies,
         server_header=False,
         limit_concurrency=256,
     )

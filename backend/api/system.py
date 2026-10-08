@@ -570,7 +570,11 @@ def _safe_fs_target(req_path: str):
         raise HTTPException(status_code=400, detail="Invalid path element")
 
     target_unresolved = os.path.join(parent_canonical, base)
-    if os.path.realpath(target_unresolved) in canonical_roots:
+    target_canonical = resolve_within(target_unresolved, ALLOWED_BROWSE_ROOTS)
+    if target_canonical is None:
+        raise HTTPException(status_code=403, detail="Path or target symlink resolves outside allowed folders.")
+
+    if target_canonical in canonical_roots or os.path.realpath(target_unresolved) in canonical_roots:
         raise HTTPException(status_code=403, detail="Cannot operate on browse root")
 
     if not os.path.lexists(target_unresolved):
@@ -645,15 +649,19 @@ def fs_download(path: str):
 @router.post("/fs/upload")
 async def fs_upload(request: Request, path: str, filename: str):
     target_unresolved, _, _ = _safe_fs_target(path)
-    if not os.path.isdir(target_unresolved):
-        raise HTTPException(status_code=400, detail="Target path is not a directory")
+    target_canonical = resolve_within(target_unresolved, ALLOWED_BROWSE_ROOTS)
+    if target_canonical is None or not os.path.isdir(target_canonical):
+        raise HTTPException(status_code=400, detail="Target path is not a valid directory within allowed folders")
 
     # Secure filename against traversal
     filename = os.path.basename(filename)
-    if not filename:
+    if not filename or filename in (".", "..") or "/" in filename or "\\" in filename:
         raise HTTPException(status_code=400, detail="Invalid filename")
 
-    file_path = os.path.join(target_unresolved, filename)
+    file_path = os.path.join(target_canonical, filename)
+    if os.path.islink(file_path) and resolve_within(file_path, ALLOWED_BROWSE_ROOTS) is None:
+        raise HTTPException(status_code=403, detail="Destination symlink points outside allowed folders")
+
     try:
         async with aiofiles.open(file_path, "wb") as f_out:
             async for chunk in request.stream():
@@ -674,15 +682,15 @@ class TokenCreateRequest(BaseModel):
 @router.get("/tokens")
 def list_tokens():
     tokens = load_tokens()
-    # Mask the token for security when listing
+    # Mask the token for security when listing; id is the opaque UUID
     res = []
-    for t, data in tokens.items():
+    for tid, data in tokens.items():
         res.append(
             {
-                "masked_token": t[:8] + "..." + t[-4:],
+                "id": str(tid),  # Opaque UUID for management
+                "masked_token": data.get("masked_token", "zat_..."),
                 "name": data.get("name"),
                 "created": data.get("created"),
-                "id": t,  # we need the ID to revoke it
             }
         )
     return res

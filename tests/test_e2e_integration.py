@@ -76,11 +76,15 @@ def get_live_server_auth_token(base_url="http://127.0.0.1:8082"):
 def test_e2e_live_ui_and_lcd_geometry():
     executable_path = os.environ.get("PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH")
     with sync_playwright() as p:
-        browser = p.chromium.launch(
-            headless=True,
-            args=["--no-sandbox", "--disable-dev-shm-usage"],
-            executable_path=executable_path,
-        )
+        try:
+            browser = p.chromium.launch(
+                headless=True,
+                args=["--no-sandbox", "--disable-dev-shm-usage"],
+                executable_path=executable_path,
+            )
+        except Exception as e:
+            pytest.skip(f"Playwright chromium browser not available on test runner: {e}")
+
         context = browser.new_context(viewport={"width": 172, "height": 640})
         page = context.new_page()
         page.goto(
@@ -110,11 +114,15 @@ def test_e2e_live_desktop_session_and_badge():
 
     executable_path = os.environ.get("PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH")
     with sync_playwright() as p:
-        browser = p.chromium.launch(
-            headless=True,
-            args=["--no-sandbox", "--disable-dev-shm-usage"],
-            executable_path=executable_path,
-        )
+        try:
+            browser = p.chromium.launch(
+                headless=True,
+                args=["--no-sandbox", "--disable-dev-shm-usage"],
+                executable_path=executable_path,
+            )
+        except Exception as e:
+            pytest.skip(f"Playwright chromium browser not available on test runner: {e}")
+
         context = browser.new_context(
             viewport={"width": 1440, "height": 900},
             storage_state={

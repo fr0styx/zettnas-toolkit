@@ -35,12 +35,21 @@ def _lockout_remaining(ip: str) -> int:
 
 
 def _register_failure(ip: str) -> None:
+    now = time.time()
     with _failures_lock:
-        entry = _failures.setdefault(ip, {"count": 0, "locked_until": 0.0})
+        if len(_failures) > 1000:
+            expired = [
+                k for k, v in _failures.items() if v["locked_until"] < now and now - v.get("last_seen", 0) > 3600
+            ]
+            for k in expired:
+                _failures.pop(k, None)
+
+        entry = _failures.setdefault(ip, {"count": 0, "locked_until": 0.0, "last_seen": now})
         entry["count"] += 1
+        entry["last_seen"] = now
         over = entry["count"] - _FREE_ATTEMPTS
         if over >= 0:
-            entry["locked_until"] = time.time() + min(_MAX_LOCKOUT_SECS, 2**over * 5)
+            entry["locked_until"] = now + min(_MAX_LOCKOUT_SECS, 2**over * 5)
 
 
 def _clear_failures(ip: str) -> None:
