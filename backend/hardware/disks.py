@@ -797,4 +797,3 @@ def locate_disk(dev_name: str, duration_sec: int = 5) -> dict:
 
     threading.Thread(target=_strobe_task, daemon=True, name=f"locate-{dev_name}").start()
     return {"success": True, "dev": dev_name, "duration": duration}
-

@@ -343,7 +343,9 @@ def resolve_app_port_conflict(app_id: str) -> Dict[str, Any]:
     }
 
 
-def generate_compose_for_app(app_id: str, host_port: Optional[int] = None, storage_root: str = "/mnt/user/appdata") -> Dict[str, Any]:
+def generate_compose_for_app(
+    app_id: str, host_port: Optional[int] = None, storage_root: str = "/mnt/user/appdata"
+) -> Dict[str, Any]:
     """
     Generates a valid Docker Compose definition for 1-click deployment.
     """
@@ -384,7 +386,7 @@ def generate_compose_for_app(app_id: str, host_port: Optional[int] = None, stora
         f"    image: {app['image']}",
         "    restart: unless-stopped",
         "    ports:",
-        f"      - \"{port}:{app['default_port']}\"",
+        f'      - "{port}:{app["default_port"]}"',
     ]
     if environment_list:
         yaml_lines.append("    environment:")

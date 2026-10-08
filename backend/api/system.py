@@ -603,7 +603,6 @@ async def post_docker_container_exec(container_id: str, req: ContainerExecReques
     return res
 
 
-
 @router.get("/ups")
 async def get_ups_telemetry():
     return await asyncio.to_thread(read_ups_status)

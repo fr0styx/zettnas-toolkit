@@ -573,4 +573,3 @@ def execute_in_container(cid_or_name: str, cmd: Any) -> Dict[str, Any]:
                 conn.close()
             except Exception:
                 pass
-
