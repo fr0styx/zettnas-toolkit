@@ -621,15 +621,16 @@ async def fs_delete(req: DeleteRequest):
             real_root = ALLOWED_BROWSE_ROOTS[0]  # Fallback
 
         recycle_dir = os.path.join(real_root, ".RecycleBin")
-        if not os.path.exists(recycle_dir):
-            os.makedirs(recycle_dir, exist_ok=True)
-
         base_name = os.path.basename(target_unresolved)
         ts = int(time.time())
         dest_name = f"{ts}_{base_name}"
         dest_path = os.path.join(recycle_dir, dest_name)
 
-        await asyncio.to_thread(shutil.move, target_unresolved, dest_path)
+        def _move_to_recycle():
+            os.makedirs(recycle_dir, exist_ok=True)
+            shutil.move(target_unresolved, dest_path)
+
+        await asyncio.to_thread(_move_to_recycle)
         add_event("info", "File Explorer", f"Moved {base_name} to Recycle Bin")
 
         return {"status": "ok", "message": "Item moved to Recycle Bin"}

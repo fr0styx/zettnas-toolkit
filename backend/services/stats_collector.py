@@ -55,7 +55,7 @@ def _async_notify(**kwargs):
 
 
 def stats_collector_daemon():
-    while True:
+    while not Z_STATE.shutting_down:
         Z_STATE.collector_heartbeat = time.time()
         try:
             disks = read_disk_temps_and_io()
@@ -688,9 +688,14 @@ def smart_poller_daemon():
     except Exception as e:
         logger.debug(f"[SMART/UPS Poller] Initial scan error: {e}")
 
-    while True:
+    while not Z_STATE.shutting_down:
         try:
-            time.sleep(4.0)
+            for _ in range(8):
+                if Z_STATE.shutting_down:
+                    break
+                time.sleep(0.5)
+            if Z_STATE.shutting_down:
+                break
             poll_all_disks_smart()
             read_ups_status()
         except Exception as e:

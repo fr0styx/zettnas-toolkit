@@ -106,6 +106,7 @@ _event_dedup_cache = {}
 def add_event(level, title, message, details=None):
     global _event_dedup_cache
     now = int(time.time())
+    events_to_persist = None
     with Z_STATE.lock:
         dedup_key = (level, title)
         last_seen = _event_dedup_cache.get(dedup_key, 0)
@@ -120,7 +121,10 @@ def add_event(level, title, message, details=None):
             entry["details"] = details
         Z_STATE.event_log.insert(0, entry)
         Z_STATE.event_log = Z_STATE.event_log[:100]
+        events_to_persist = list(Z_STATE.event_log)
+
+    if events_to_persist is not None:
         try:
-            atomic_write_json(EVENTS_FILE, Z_STATE.event_log)
+            atomic_write_json(EVENTS_FILE, events_to_persist)
         except OSError as e:
             logger.warning(f"Failed to save events: {e}")

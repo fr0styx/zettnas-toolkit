@@ -28,15 +28,26 @@ def get_stats():
     return collect()
 
 
+MAX_SSE_SUBSCRIBERS = 32
+
+
 @router.get("/stats/stream")
 async def stats_stream(request: Request):
+    if broadcaster.get_subscriber_count() >= MAX_SSE_SUBSCRIBERS:
+        raise HTTPException(
+            status_code=429,
+            detail="Maximum concurrent SSE telemetry connections reached. Try again later.",
+        )
+
     try:
         loop = asyncio.get_running_loop()
         broadcaster.set_loop(loop)
     except RuntimeError:
         pass
 
-    initial = Z_STATE.cached_stats or collect()
+    initial = Z_STATE.cached_stats
+    if not initial:
+        initial = await asyncio.to_thread(collect)
     q = await broadcaster.subscribe(initial)
 
     async def event_generator():
@@ -46,7 +57,7 @@ async def stats_stream(request: Request):
                 if await request.is_disconnected():
                     break
                 try:
-                    payload = await asyncio.wait_for(q.get(), timeout=15.0)
+                    payload = await asyncio.wait_for(q.get(), timeout=10.0)
                     if payload is None:
                         break
                     yield payload

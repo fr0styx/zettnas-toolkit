@@ -91,8 +91,10 @@ def fan_watchdog_daemon():
     COLLECTOR_WATCHDOG_SECS without a heartbeat we engage the failsafe. The
     collector automatically reclaims control once it recovers.
     """
-    while True:
+    while not Z_STATE.shutting_down:
         time.sleep(5)
+        if Z_STATE.shutting_down:
+            break
         hb = Z_STATE.collector_heartbeat
         if not hb or Z_STATE.fans_locked:
             continue

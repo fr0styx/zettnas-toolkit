@@ -1,3 +1,4 @@
+import asyncio
 import aiofiles
 import tempfile
 import time
@@ -32,9 +33,9 @@ async def save_client_preferences(request: Request):
     if not isinstance(data, dict):
         raise HTTPException(status_code=400, detail="Preferences must be a JSON dictionary")
 
-    current = read_json(CLIENT_PREFS_FILE, default={})
+    current = await asyncio.to_thread(read_json, CLIENT_PREFS_FILE, {})
     current.update(data)
-    atomic_write_json(CLIENT_PREFS_FILE, current)
+    await asyncio.to_thread(atomic_write_json, CLIENT_PREFS_FILE, current)
 
     with Z_STATE.lock:
         Z_STATE.client_preferences = current
@@ -57,6 +58,11 @@ def download_backup():
     )
 
 
+def _safe_restore_archive(path: str) -> None:
+    with open(path, "rb") as archive_file:
+        restore_backup_archive(archive_file)
+
+
 @router.post("/system/restore")
 async def restore_backup(request: Request):
     """Restores configuration from a zip archive."""
@@ -70,10 +76,8 @@ async def restore_backup(request: Request):
                 if chunk:
                     await f_out.write(chunk)
 
-        with open(tmp_path, "rb") as archive_file:
-            restore_backup_archive(archive_file)
-
-        client_prefs = read_json(CLIENT_PREFS_FILE, default={})
+        await asyncio.to_thread(_safe_restore_archive, tmp_path)
+        client_prefs = await asyncio.to_thread(read_json, CLIENT_PREFS_FILE, {})
 
         return {
             "status": "ok",

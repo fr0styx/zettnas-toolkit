@@ -15,6 +15,7 @@ import time
 from typing import Any, Dict, List, Optional, Tuple
 
 from backend.config import logger
+from backend.state import Z_STATE
 
 _CACHED_CONTAINERS: List[Dict[str, Any]] = []
 _LAST_DOCKER_POLL = 0.0
@@ -312,23 +313,36 @@ def _fetch_container_telemetry(cid: str) -> Dict[str, Any]:
 
 
 def _docker_telemetry_worker():
-    while True:
+    while not Z_STATE.shutting_down:
         try:
             sock_path = "/var/run/docker.sock"
             if not os.path.exists(sock_path):
-                time.sleep(5.0)
+                for _ in range(10):
+                    if Z_STATE.shutting_down:
+                        break
+                    time.sleep(0.5)
                 continue
 
-            conn = UnixHTTPConnection(sock_path, timeout=3.0)
-            conn.request("GET", "/containers/json?filters=%7B%22status%22%3A%5B%22running%22%5D%7D")
-            res = conn.getresponse()
-            if res.status != 200:
-                time.sleep(5.0)
-                continue
+            conn = None
+            running = []
+            try:
+                conn = UnixHTTPConnection(sock_path, timeout=3.0)
+                conn.request("GET", "/containers/json?filters=%7B%22status%22%3A%5B%22running%22%5D%7D")
+                res = conn.getresponse()
+                if res.status == 200:
+                    running = json.loads(res.read().decode("utf-8", errors="replace"))
+            finally:
+                if conn:
+                    try:
+                        conn.close()
+                    except Exception:
+                        pass
 
-            running = json.loads(res.read().decode("utf-8", errors="replace"))
             if not running:
-                time.sleep(5.0)
+                for _ in range(10):
+                    if Z_STATE.shutting_down:
+                        break
+                    time.sleep(0.5)
                 continue
 
             # Limit parallel queries to avoid burdening Docker daemon
@@ -345,10 +359,16 @@ def _docker_telemetry_worker():
                                 _CONTAINER_METRICS[short_id] = telemetry
                     except Exception:
                         pass
-            time.sleep(6.0)
+            for _ in range(12):
+                if Z_STATE.shutting_down:
+                    break
+                time.sleep(0.5)
         except Exception as e:
             logger.debug(f"[Docker] Telemetry worker error: {e}")
-            time.sleep(5.0)
+            for _ in range(10):
+                if Z_STATE.shutting_down:
+                    break
+                time.sleep(0.5)
 
 
 def start_docker_telemetry_collector():
@@ -373,6 +393,7 @@ def read_docker_containers(force: bool = False) -> List[Dict[str, Any]]:
 
     start_docker_telemetry_collector()
 
+    conn = None
     try:
         conn = UnixHTTPConnection(sock_path, timeout=3.0)
         conn.request("GET", "/containers/json?all=1")
@@ -439,14 +460,16 @@ def read_docker_containers(force: bool = False) -> List[Dict[str, Any]]:
         out.sort(key=lambda x: (x["state"] != "running", x["name"]))
         _CACHED_CONTAINERS = out
         _LAST_DOCKER_POLL = now
-        try:
-            conn.close()
-        except Exception:
-            pass
         return out
     except Exception as e:
         logger.debug(f"[Docker] Failed to introspect containers: {e}")
         return _CACHED_CONTAINERS
+    finally:
+        if conn:
+            try:
+                conn.close()
+            except Exception:
+                pass
 
 
 def container_action(container_id: str, action: str) -> Dict[str, Any]:

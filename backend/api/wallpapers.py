@@ -194,7 +194,7 @@ async def upload_wallpaper(request: Request):
     base = os.path.splitext(os.path.basename(str(filename).replace("\\", "/")))[0]
     base = re.sub(r"[^a-zA-Z0-9_-]", "_", base).strip("_")[:MAX_NAME_LEN] or "wallpaper"
 
-    try:
+    def _save_wallpaper_sync():
         os.makedirs(WALLPAPERS_DIR, exist_ok=True)
         final_name = f"{base}{ext}"
         counter = 1
@@ -206,6 +206,10 @@ async def upload_wallpaper(request: Request):
             f.write(binary_data)
         _clean_cache_for(final_name)
         _set_active(final_name)
+        return final_name
+
+    try:
+        final_name = await run_in_threadpool(_save_wallpaper_sync)
     except OSError as e:
         logger.error(f"[WALLPAPER] Upload failed: {e}")
         return _fail(500, "Failed to save wallpaper.")
