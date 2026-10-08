@@ -58,7 +58,7 @@ curl -N -H "X-ZettNAS-Token: $TOKEN" https://nas.local:8082/api/stats/stream
 | Endpoint | Method | Auth | Description |
 | :--- | :---: | :---: | :--- |
 | `/api/fans` | `GET` | Yes | Read current fan RPMs, PWM values, and active curve profiles across all zones. |
-| `/api/fans` | `POST` | Yes | Update fan speeds: manual PWM duty cycles (0–255), preset profiles, or multi-point temperature curves. |
+| `/api/fans` | `POST` | Yes | Update fan speeds: manual PWM duty cycles (58–183 or 0 in Zero RPM mode), preset profiles, multi-point temperature curves, and Zero RPM HDD standby configuration (`zero_rpm_enabled`, `zero_rpm_stop_temp`, `zero_rpm_start_temp`, `zero_rpm_nvme_ceiling`). |
 | `/api/led` | `GET` | Yes | Query WS2812B lightbar state: power, effect mode, colors, brightness, and blackout window. |
 | `/api/led` | `POST` | Yes | Update lightbar animation (`breathing`, `rainbow`, `chase`, `solid`, `alert`), colors, or night blackout hours. |
 | `/api/screen` | `GET` | Yes | Query front-panel 640×172 LCD backlight brightness and power state. |

@@ -75,6 +75,9 @@ The daemon traverses `/host/sys/class/hwmon/hwmon*` searching for compatible dri
 3. **Shutdown Failsafe**: On `SIGTERM` or `SIGINT`, fans are locked to full speed / firmware auto before process termination.
 4. **State Pruning & Non-Blocking Sysfs Reads**: Fan state trackers are purged via `cleanup_stale_fan_trackers()` each cycle to prevent memory leaks from detached or renumbered hardware, and sysfs reads are executed non-blocking.
 5. **Parallel SMART Telemetry**: Drive health checks run concurrently (`ThreadPoolExecutor`) so slow spinning drives cannot starve time-critical UPS battery telemetry.
+6. **Zero RPM Fan Mode & Binary Motor Cutoff**: HDD bay exhaust fans (`pwm1`, `pwm2`) can stop completely (`0 PWM`) only when all assigned bay drives are spun down in standby and thermal conditions are cool ($\le 34^\circ\text{C}$). To protect BLDC fan motors from electrical stall current and coil buzzing, duty cycles between 1 and 57 PWM are strictly prohibited (snapped to 0 or 58). Upon restart from 0, a non-blocking 2.0-second `150 PWM` kickstart pulse is automatically applied to overcome rotor stiction.
+7. **Absolute CPU Fan Invariance**: CPU cooling (`pwm3`) is strictly isolated and immune to Zero RPM stop commands; it is unconditionally maintained at $\ge 58\text{ PWM}$ (~950 RPM) or higher at all times.
+8. **NVMe Wind-Tunnel & Subsystem Interlocks**: Zero RPM is automatically revoked if any M.2 NVMe SSD exceeds $50^\circ\text{C}$ to maintain convective wind-tunnel cooling, or during active Unraid `mover` or `parity_check` operations.
 
 ---
 

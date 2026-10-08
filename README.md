@@ -29,7 +29,7 @@
 * **High-Integrity Media Ingestion** — Front SD/TF card auto-detection with interactive confirmation dialog, safe eject protection, async I/O (`aiofiles`), SHA-256 verification, and persistent SQLite logs.
 * **Multi-Architecture Docker Distribution** — Native multi-arch support (`linux/amd64` and `linux/arm64` for Raspberry Pi, ARM NAS boards, and Apple Silicon) published directly to GitHub Container Registry.
 * **Full Internationalization (i18n)** — Zero-dependency client-side localization across 5 languages (English, German, Simplified Chinese, French, and Spanish) spanning all interfaces, modals, and settings.
-* **Intelligent Per-Zone Fan Regulation** — Independent multi-point thermal curves for HDD backplanes, NVMe cache, and CPU cooling with user-defined named presets, hysteresis hold protection, and shutdown failsafe.
+* **Intelligent Per-Zone Fan Regulation & Zero RPM Mode** — Independent multi-point thermal curves for HDD backplanes, NVMe cache, and CPU cooling with Zero RPM HDD standby mode, user-defined named presets, 2.0s kickstart torque pulsing, hysteresis hold protection, and shutdown failsafe.
 * **Chassis ARGB Lightbar (`/dev/ttyACM0`)** — USB microcontroller driver for 38 WS2812B LEDs with hardware animations, error-reactive alerts (red/amber), and blackout night scheduling.
 
 ---
