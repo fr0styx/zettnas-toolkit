@@ -73,6 +73,32 @@ class EventBus extends EventTarget {
 
     this.dispatchEvent(new CustomEvent(event, { detail }));
   }
+
+  createScope() {
+    const unsubs = [];
+    return {
+      on: (event, handler) => {
+        const unsub = this.on(event, handler);
+        if (unsub) unsubs.push(unsub);
+        return unsub;
+      },
+      once: (event, handler) => {
+        const unsub = this.once(event, handler);
+        if (unsub) unsubs.push(unsub);
+        return unsub;
+      },
+      emit: (event, detail) => this.emit(event, detail),
+      destroy: () => {
+        while (unsubs.length > 0) {
+          try {
+            unsubs.pop()();
+          } catch (e) {
+            console.warn('[EventBus] Error destroying scoped listener:', e);
+          }
+        }
+      },
+    };
+  }
 }
 
 export const ZettEventBus = new EventBus();

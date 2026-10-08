@@ -48,6 +48,7 @@ class ZettState:
         self.shutting_down = False
         self.collector_heartbeat = 0.0
         self.critical_temp_active = False
+        self.thermal_watchdog_engaged = False
         self.current_lcd_page = 0
         self.lcd_cycle_seconds = 0
         self.last_lcd_cycle_time = time.time()

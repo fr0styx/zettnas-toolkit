@@ -269,6 +269,61 @@ CRC_TABLE = [
 ]
 
 _configured_ports = set()
+_serial_handle = None
+_serial_port = None
+_serial_lock = threading.Lock()
+_last_connect_fail_time = 0.0
+_CONNECT_RETRY_INTERVAL = 3.0
+
+try:
+    import serial
+except ImportError:
+    serial = None
+
+
+def _close_serial_connection():
+    global _serial_handle, _serial_port
+    if _serial_handle is not None:
+        try:
+            _serial_handle.close()
+        except Exception:
+            pass
+        _serial_handle = None
+        _serial_port = None
+
+
+def _get_serial_connection(port: str):
+    global _serial_handle, _serial_port, _last_connect_fail_time
+    now = time.time()
+    if _serial_handle is not None and _serial_port == port:
+        return _serial_handle
+
+    if (now - _last_connect_fail_time) < _CONNECT_RETRY_INTERVAL:
+        return None
+
+    _close_serial_connection()
+
+    if port not in _configured_ports:
+        subprocess.run(
+            ["stty", "-F", port, "115200", "cs8", "-cstopb", "-parenb", "raw", "-echo", "-hupcl"],
+            check=False,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        _configured_ports.add(port)
+
+    try:
+        if serial is not None:
+            _serial_handle = serial.Serial(port, 115200, timeout=1.0)
+        else:
+            _serial_handle = open(port, "wb", buffering=0)
+        _serial_port = port
+        return _serial_handle
+    except Exception:
+        _last_connect_fail_time = now
+        _configured_ports.discard(port)
+        _close_serial_connection()
+        return None
 
 
 def find_led_port():
@@ -294,16 +349,9 @@ def find_led_port():
 def send_led_packet(mode, r1, g1, b1, r2=0, g2=0, b2=0, speed=5):
     port = find_led_port()
     if not port or not os.path.exists(port):
+        with _serial_lock:
+            _close_serial_connection()
         return False, f"Device {port or 'ttyACM0'} not found"
-
-    if port not in _configured_ports:
-        subprocess.run(
-            ["stty", "-F", port, "115200", "cs8", "-cstopb", "-parenb", "raw", "-echo", "-hupcl"],
-            check=False,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
-        _configured_ports.add(port)
 
     raw_delay = (-speed) & 0xFF if speed is not None else 0xFB
     payload = bytes([mode, r1, g1, b1, r2, g2, b2, raw_delay])
@@ -311,13 +359,22 @@ def send_led_packet(mode, r1, g1, b1, r2=0, g2=0, b2=0, speed=5):
     for byte in payload:
         crc = CRC_TABLE[crc ^ byte]
     frame = bytes([0xFF, 0xFF]) + payload + bytes([crc])
-    try:
-        with open(port, "wb", buffering=0) as f:
-            f.write(frame)
-        return True, "OK"
-    except Exception as e:
-        _configured_ports.discard(port)
-        return False, str(e)
+
+    with _serial_lock:
+        handle = _get_serial_connection(port)
+        if handle is None:
+            return False, f"Serial connection unavailable for {port}"
+        try:
+            handle.write(frame)
+            if hasattr(handle, "flush"):
+                handle.flush()
+            return True, "OK"
+        except Exception as e:
+            _close_serial_connection()
+            _configured_ports.discard(port)
+            global _last_connect_fail_time
+            _last_connect_fail_time = time.time()
+            return False, str(e)
 
 
 def _rainbow_worker(brightness, slider_speed):

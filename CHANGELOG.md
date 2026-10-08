@@ -30,6 +30,30 @@ This major stable release introduces a complete hardware orchestration suite: na
 - **Headless Playwright E2E Suite in CI**: Spin up background test server in GitHub Actions to validate real browser rendering, LCD geometry, and session state before container release.
 - **Node.js 24 & JSDOM 30 Compatibility**: Upgraded CI and build toolchain to Node.js 24 and `jsdom: 30.1.2`, eliminating Node 20 deprecation warnings and ensuring fast, robust Vitest execution.
 
+#### 🛡️ Enterprise Production Audit & Subsystems Hardening (Batches 7-10)
+- **Critical Hardware & Systems Safety (Batch 7)**:
+  - **Inviolable Thermal Watchdog**: Clamped fan curve calculation to full hardware PWM (`183`) at $\ge 80^\circ\text{C}$ with a $74^\circ\text{C}$ release hysteresis in `backend/hardware/fans.py`, overriding any flat custom curves during emergency thermal events. Added `cpu_temp >= 85°C` to critical override rules.
+  - **SQLite Connection & Transaction Safety**: Implemented `@contextmanager def db_session()` in `backend/db.py` with `check_same_thread=False`, auto-commit, explicit rollback on errors, and guaranteed connection teardown, refactoring all 8 database callers.
+  - **LCD Renderer Termination Invariance**: Bound Chromium browser supervisor loop in `backend/services/lcd_renderer.py` to `Z_STATE.shutting_down` with clean process termination to eliminate zombie process respawns during host shutdown.
+  - **Non-Blocking UPS Emergency Sync**: Offloaded blocking `os.sync()` calls during critical UPS failsafes to background daemon threads to prevent ASGI event loop stalls.
+- **Enterprise Security Hardening & Container Lockdown (Batch 8)**:
+  - **Explicit Device Cgroups**: Removed wildcard device cgroup rules (`c *:* rwm`, `b *:* rwm`) in `docker-compose.yml`, strictly isolating container access to designated framebuffers (`29:*`), DRI (`226:*`), serial (`188:*`, `166:*`), SCSI/SATA (`8:*`), and NVMe (`259:*`).
+  - **Host Sysfs Masking**: Added read-only `tmpfs` masks over `/host/sys/firmware` and `/host/sys/kernel/debug` to prevent host kernel exposure while preserving necessary `/host/sys/class/hwmon` and backlight controls.
+  - **In-Memory Auth & Token Cache**: Replaced blocking disk reads with an in-memory session/token cache validated via file modification timestamps (`st_mtime_ns`) protected by `threading.RLock()`, mitigating disk I/O exhaustion DoS attacks on invalid token sweeps.
+  - **Timing Attack Mitigation**: Replaced standard equality string comparisons with constant-time `hmac.compare_digest` across all session tokens and API keys.
+  - **ASGI Security Headers**: Injected standard HTTP security headers (`X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy`).
+- **Frontend Architecture, UX & Accessibility Compliance (Batch 9)**:
+  - **WCAG 2.1 AA Accessibility Remediation**: Stripped raw `el.className` fallbacks from automated aria-label generation in `frontend/src/a11y.js`, formatting semantic labels from `data-title`, inner text, or formatted `data-action`, and applying `aria-hidden="true"` to purely visual decorative icons.
+  - **Full-Spectrum Theme Tokens**: Defined comprehensive CSS design tokens for `theme-amber` (CRT monochrome phosphor) and `theme-emerald` (cyberpunk matrix green) with high-contrast `theme-light` support in `frontend/src/style.css` and added Cmd+K quick-switch actions.
+  - **Window Z-Index & Modal Stacking**: Guarded modals and backdrops from being assigned window-level z-indices (`--z-modal: 9100`), and implemented linear re-normalization when stacking reaches $\ge 4900$ to prevent z-index exhaustion.
+  - **Scoped Event Bus Registry**: Added `createScope()` to `ZettEventBus` for bulk event listener teardown on component destruction, preventing memory leaks.
+  - **Vite Vendor Chunk Splitting**: Reconfigured Vite/Rollup with `manualChunks` to split heavy charting and gesture dependencies (`vendor-chartjs` and `vendor-zoom`), slashing initial bundle size from 630 kB to 393 kB.
+- **Performance Optimization & Subsystems Modernization (Batch 10)**:
+  - **Structured `smartctl -j` JSON Telemetry**: Switched from regex text scraping to structured JSON parsing for ATA SMART attributes and NVMe health information logs in `backend/hardware/disks.py`, with graceful fallback to legacy text parsing.
+  - **Persistent Serial Connection for Chassis ARGB**: Replaced per-frame port open/close cycles at 25 Hz in `backend/hardware/led.py` with a persistent, thread-safe serial handle and automatic 3-second reconnect backoff.
+  - **Physical Media Bit Verification**: Enforced `os.fdatasync()` and `os.posix_fadvise(..., os.POSIX_FADV_DONTNEED)` before computing SHA-256 verification hashes in `backend/services/copy_engine.py`, guaranteeing direct physical drive sector reads.
+  - **Vitest Coverage Automation**: Integrated `@vitest/coverage-v8` with text, lcov, html, and json reporters, and updated `.github/workflows/ci.yml` to run automated coverage on every pull request and release build.
+
 ## v1.3.2 (2026-10-07)
 ### 🛡️ Enterprise-Grade System Hardening, Concurrency, Stability & Quality Assurance
 

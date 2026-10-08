@@ -1,4 +1,5 @@
 import os
+import threading
 import time
 from backend.config import logger
 from backend.state import Z_STATE, add_event
@@ -102,12 +103,15 @@ def evaluate_system_alerts(unraid_data, ups_data):
                         )
                         logger.warning("[UPS FAILSAFE] Paused active copy engine job.")
 
-                    # 2. Flush dirty filesystem buffers to persistent disks
-                    try:
-                        os.sync()
-                        logger.info("[UPS FAILSAFE] Flushed filesystem buffers via os.sync().")
-                    except Exception as e:
-                        logger.error(f"[UPS FAILSAFE] os.sync failed: {e}")
+                    # 2. Flush dirty filesystem buffers to persistent disks asynchronously
+                    def _sync_worker():
+                        try:
+                            os.sync()
+                            logger.info("[UPS FAILSAFE] Flushed filesystem buffers via os.sync().")
+                        except Exception as e:
+                            logger.error(f"[UPS FAILSAFE] os.sync failed: {e}")
+
+                    threading.Thread(target=_sync_worker, daemon=True, name="UpsFailsafeSync").start()
 
                     # 3. Dispatch critical priority notification and alert
                     crit_msg = (

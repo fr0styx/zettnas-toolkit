@@ -313,6 +313,8 @@ let _systemThemeMatcher = null;
 export function applyTheme(themeName) {
   state.setTheme(themeName);
 
+  document.body.classList.remove('theme-light', 'theme-yak', 'theme-amber', 'theme-emerald');
+
   if (themeName === 'auto' || themeName === 'system') {
     if (!_systemThemeMatcher && typeof window !== 'undefined' && window.matchMedia) {
       _systemThemeMatcher = window.matchMedia('(prefers-color-scheme: dark)');
@@ -324,11 +326,14 @@ export function applyTheme(themeName) {
     }
     const isDark = _systemThemeMatcher ? _systemThemeMatcher.matches : true;
     document.body.classList.toggle('theme-light', !isDark);
-    document.body.classList.remove('theme-yak');
-  } else {
-    document.body.classList.remove('theme-light');
-    const isYak = (themeName === 'yak');
-    document.body.classList.toggle('theme-yak', isYak);
+  } else if (themeName === 'amber') {
+    document.body.classList.add('theme-amber');
+  } else if (themeName === 'emerald') {
+    document.body.classList.add('theme-emerald');
+  } else if (themeName === 'yak') {
+    document.body.classList.add('theme-yak');
+  } else if (themeName === 'light') {
+    document.body.classList.add('theme-light');
   }
 
   const isYak = (themeName === 'yak');

@@ -85,6 +85,18 @@ def calc_curve_pwm(temp, min_pwm=FAN_MIN_PWM, max_pwm=FAN_MAX_PWM, temp_min=37, 
     if temp is None or temp <= 0:
         return min_pwm
 
+    # Inviolable hardware thermal watchdog with hysteresis
+    WATCHDOG_CEILING_TEMP = 80
+    WATCHDOG_RELEASE_TEMP = 74
+
+    if temp >= WATCHDOG_CEILING_TEMP or (
+        getattr(Z_STATE, "thermal_watchdog_engaged", False) and temp > WATCHDOG_RELEASE_TEMP
+    ):
+        Z_STATE.thermal_watchdog_engaged = True
+        return max_pwm
+    else:
+        Z_STATE.thermal_watchdog_engaged = False
+
     pts = sanitize_curve_points(curve_points)
     if pts:
         if temp <= pts[0][0]:

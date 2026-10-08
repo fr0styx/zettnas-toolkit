@@ -2,22 +2,37 @@ import json
 import os
 import sqlite3
 import time
+from contextlib import contextmanager
 
 from backend.config import DB_PATH, logger
 
 
 def get_db_connection() -> sqlite3.Connection:
-    conn = sqlite3.connect(DB_PATH, timeout=15.0)
+    conn = sqlite3.connect(DB_PATH, timeout=15.0, check_same_thread=False)
     conn.execute("PRAGMA journal_mode=WAL;")
     conn.execute("PRAGMA synchronous=NORMAL;")
     conn.execute("PRAGMA busy_timeout=5000;")
     return conn
 
 
+@contextmanager
+def db_session():
+    """Thread-safe SQLite session context manager ensuring commit, rollback on error, and guaranteed connection closure."""
+    conn = get_db_connection()
+    try:
+        yield conn
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
+
+
 def init_db():
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
     try:
-        with get_db_connection() as conn:
+        with db_session() as conn:
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS metrics (
                     ts INTEGER PRIMARY KEY,
@@ -65,7 +80,7 @@ def init_db():
 
 def log_metrics(ts: int, cpu_temp: float, cpu_util: float, mem_pct: float, disks: list, fans: list):
     try:
-        with get_db_connection() as conn:
+        with db_session() as conn:
             conn.execute(
                 "INSERT INTO metrics (ts, cpu_temp, cpu_util, mem_pct, disks_json, fans_json) VALUES (?, ?, ?, ?, ?, ?)",
                 (ts, cpu_temp, cpu_util, mem_pct, json.dumps(disks), json.dumps(fans)),
@@ -103,7 +118,7 @@ def query_history(range_str: str = "24h"):
             "SELECT ts, cpu_temp, cpu_util, mem_pct, disks_json, fans_json FROM metrics WHERE ts > ? ORDER BY ts ASC"
         )
 
-    with get_db_connection() as conn:
+    with db_session() as conn:
         conn.row_factory = sqlite3.Row
         rows = conn.execute(group_sql, (cutoff,)).fetchall()
         data = []
@@ -147,7 +162,7 @@ def log_copy_event(
     error: str = "",
 ):
     try:
-        with get_db_connection() as conn:
+        with db_session() as conn:
             conn.execute(
                 """
                 INSERT INTO copy_history (ts, source, dest, files_count, total_bytes, status, checksum_verified, duration_sec, error)
@@ -179,7 +194,7 @@ def log_copy_event(
 
 def query_copy_history(limit: int = 50):
     try:
-        with get_db_connection() as conn:
+        with db_session() as conn:
             conn.row_factory = sqlite3.Row
             rows = conn.execute(
                 """
@@ -213,7 +228,7 @@ def query_copy_history(limit: int = 50):
 def log_smart_metrics(ts: int, dev: str, temp: float | None, metrics: dict):
     """Logs disk SMART health metrics into SQLite and prunes entries older than 90 days."""
     try:
-        with get_db_connection() as conn:
+        with db_session() as conn:
             conn.execute(
                 """
                 INSERT OR REPLACE INTO smart_history (
@@ -251,7 +266,7 @@ def query_smart_velocity(dev: str) -> dict:
     ts_48h = now_ts - (2 * 86400)
 
     try:
-        with get_db_connection() as conn:
+        with db_session() as conn:
             conn.row_factory = sqlite3.Row
             # Latest reading
             latest = conn.execute(
@@ -342,7 +357,7 @@ def query_all_smart_velocities() -> dict:
     """Returns degradation velocity assessment for all disks with recorded history."""
     out = {}
     try:
-        with get_db_connection() as conn:
+        with db_session() as conn:
             devs = [r[0] for r in conn.execute("SELECT DISTINCT dev FROM smart_history").fetchall()]
         for d in devs:
             out[d] = query_smart_velocity(d)

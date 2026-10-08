@@ -151,8 +151,8 @@ def stats_collector_daemon():
             else:
                 raw_pwm3 = 85
 
-            # Safety override: any spinning or solid state disk at/above its critical temperature
-            # forces every disk fan to 100% regardless of profile or curve.
+            # Safety override: any spinning or solid state disk at/above its critical temperature,
+            # or CPU at/above 85°C, forces fans to 100% regardless of profile or curve.
             hot_disks = []
             for d in disks:
                 t = d.get("temp")
@@ -166,20 +166,29 @@ def stats_collector_daemon():
                     if t >= crit_thresh:
                         hot_disks.append((d, crit_thresh))
 
-            critical_override = bool(hot_disks)
+            cpu_critical = cpu_temp is not None and cpu_temp >= 85
+            critical_override = bool(hot_disks) or cpu_critical
             if critical_override and not Z_STATE.critical_temp_active:
-                names = ", ".join(
-                    f"{d.get('name', d.get('dev', '?'))} ({d['temp']}°C >= {thresh}°C)" for d, thresh in hot_disks
-                )
-                logger.warning(f"[FANS] Critical disk temperature: {names}. Forcing fans to 100%.")
+                reasons = []
+                if hot_disks:
+                    reasons.append(
+                        ", ".join(
+                            f"{d.get('name', d.get('dev', '?'))} ({d['temp']}°C >= {thresh}°C)"
+                            for d, thresh in hot_disks
+                        )
+                    )
+                if cpu_critical:
+                    reasons.append(f"CPU ({cpu_temp}°C >= 85°C)")
+                names = "; ".join(reasons)
+                logger.warning(f"[FANS] Critical temperature detected: {names}. Forcing fans to 100%.")
                 add_event(
                     "error",
-                    "Disk Temperature Critical",
+                    "Critical Temperature Threshold Reached",
                     f"{names}. Fans forced to 100%.",
-                    details={"disks": [d.get("dev") for d, _ in hot_disks]},
+                    details={"cpu_temp": cpu_temp, "disks": [d.get("dev") for d, _ in hot_disks]},
                 )
             elif not critical_override and Z_STATE.critical_temp_active:
-                logger.info("[FANS] Disk temperatures back below critical threshold.")
+                logger.info("[FANS] Hardware temperatures back below critical threshold.")
             Z_STATE.critical_temp_active = critical_override
 
             if critical_override:
@@ -188,7 +197,7 @@ def stats_collector_daemon():
                 active_pwm2 = apply_zone_pwm(2, FAN_MAX_PWM, hold_secs=120)
                 custom_pwms = {"pwm1": active_pwm1, "pwm2": active_pwm2}
                 if ctrl_cpu_fan:
-                    active_pwm3 = apply_zone_pwm(3, raw_pwm3, hold_secs=90)
+                    active_pwm3 = apply_zone_pwm(3, FAN_MAX_PWM, hold_secs=90)
                     custom_pwms["pwm3"] = active_pwm3
                 else:
                     active_pwm3 = 0

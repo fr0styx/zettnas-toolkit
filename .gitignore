@@ -37,6 +37,7 @@ scratch/
 
 # Test & Coverage artifacts
 .coverage
+coverage/
 coverage.xml
 htmlcov/
 

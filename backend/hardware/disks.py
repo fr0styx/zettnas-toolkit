@@ -158,7 +158,160 @@ def _short_name(dev, idx_nvme=0):
     return dev
 
 
-def _parse_smart(text, is_nvme):
+def _parse_smart_json(doc: dict, is_nvme: bool):
+    temp = None
+    passed = None
+    realloc = pending = offline = crc = 0
+    nvme_spare = None
+    nvme_spare_thresh = None
+    nvme_used = None
+    nvme_media_err = 0
+    tbw_tb = None
+    tbr_tb = None
+    power_cycles = None
+    critical_warning = None
+
+    smart_status = doc.get("smart_status", {})
+    if isinstance(smart_status, dict) and "passed" in smart_status:
+        passed = bool(smart_status["passed"])
+
+    temp_obj = doc.get("temperature", {})
+    if isinstance(temp_obj, dict) and "current" in temp_obj:
+        try:
+            temp = int(temp_obj["current"])
+        except (ValueError, TypeError):
+            pass
+
+    power_cycle_obj = doc.get("power_cycle_count")
+    if power_cycle_obj is not None:
+        try:
+            power_cycles = int(power_cycle_obj)
+        except (ValueError, TypeError):
+            pass
+
+    if is_nvme:
+        nvme_log = doc.get("nvme_smart_health_information_log", {})
+        if isinstance(nvme_log, dict):
+            if temp is None and "temperature" in nvme_log:
+                try:
+                    temp = int(nvme_log["temperature"])
+                except (ValueError, TypeError):
+                    pass
+            if "available_spare" in nvme_log:
+                try:
+                    nvme_spare = int(nvme_log["available_spare"])
+                except (ValueError, TypeError):
+                    pass
+            if "available_spare_threshold" in nvme_log:
+                try:
+                    nvme_spare_thresh = int(nvme_log["available_spare_threshold"])
+                except (ValueError, TypeError):
+                    pass
+            if "percentage_used" in nvme_log:
+                try:
+                    nvme_used = int(nvme_log["percentage_used"])
+                except (ValueError, TypeError):
+                    pass
+            if "media_errors" in nvme_log:
+                try:
+                    nvme_media_err = int(nvme_log["media_errors"])
+                except (ValueError, TypeError):
+                    pass
+            if "critical_warning" in nvme_log:
+                cw = nvme_log["critical_warning"]
+                critical_warning = hex(cw) if isinstance(cw, int) else str(cw)
+            if power_cycles is None and "power_cycles" in nvme_log:
+                try:
+                    power_cycles = int(nvme_log["power_cycles"])
+                except (ValueError, TypeError):
+                    pass
+            if "data_units_written" in nvme_log:
+                try:
+                    duw = int(nvme_log["data_units_written"])
+                    tbw_tb = round((duw * 512000) / 1e12, 2)
+                except (ValueError, TypeError):
+                    pass
+            if "data_units_read" in nvme_log:
+                try:
+                    dur = int(nvme_log["data_units_read"])
+                    tbr_tb = round((dur * 512000) / 1e12, 2)
+                except (ValueError, TypeError):
+                    pass
+    else:
+        ata_table = doc.get("ata_smart_attributes", {}).get("table", [])
+        if isinstance(ata_table, list):
+            for attr in ata_table:
+                if not isinstance(attr, dict):
+                    continue
+                attr_id = attr.get("id")
+                raw_val = attr.get("raw", {}).get("value", 0) if isinstance(attr.get("raw"), dict) else 0
+                if attr_id == 5:
+                    realloc = int(raw_val)
+                elif attr_id == 197:
+                    pending = int(raw_val)
+                elif attr_id == 198:
+                    offline = int(raw_val)
+                elif attr_id == 199:
+                    crc = int(raw_val)
+                elif attr_id in (194, 190) and temp is None:
+                    try:
+                        raw_str = attr.get("raw", {}).get("string", "")
+                        digits = [int(x) for x in raw_str.split() if x.isdigit()]
+                        if digits:
+                            temp = digits[0]
+                        else:
+                            temp = int(raw_val) & 0xFF
+                    except (ValueError, TypeError):
+                        pass
+                elif attr_id == 12 and power_cycles is None:
+                    try:
+                        power_cycles = int(raw_val)
+                    except (ValueError, TypeError):
+                        pass
+                elif attr_id == 241 and tbw_tb is None:
+                    try:
+                        tbw_tb = round((int(raw_val) * 512) / 1e12, 2)
+                    except (ValueError, TypeError):
+                        pass
+                elif attr_id == 242 and tbr_tb is None:
+                    try:
+                        tbr_tb = round((int(raw_val) * 512) / 1e12, 2)
+                    except (ValueError, TypeError):
+                        pass
+
+    crit_temp = NVME_CRITICAL_TEMP if is_nvme else 60
+    warn_temp = NVME_WARN_TEMP if is_nvme else 50
+    health = "ok"
+    if passed is False or pending > 0 or offline > 0 or nvme_media_err > 0:
+        health = "crit"
+    elif nvme_spare is not None and nvme_spare_thresh is not None and nvme_spare <= nvme_spare_thresh:
+        health = "crit"
+    elif temp is not None and temp >= crit_temp:
+        health = "crit"
+    elif health != "crit":
+        if realloc > 0 or crc > 0 or (nvme_used is not None and nvme_used >= 80):
+            health = "warn"
+        elif temp is not None and temp >= warn_temp:
+            health = "warn"
+
+    metrics = {
+        "realloc": realloc,
+        "pending": pending,
+        "offline": offline,
+        "crc": crc,
+        "nvme_spare": nvme_spare,
+        "nvme_spare_thresh": nvme_spare_thresh,
+        "nvme_used": nvme_used,
+        "nvme_media_err": nvme_media_err,
+        "tbw_tb": tbw_tb,
+        "tbr_tb": tbr_tb,
+        "power_cycles": power_cycles,
+        "critical_warning": critical_warning,
+    }
+    return temp, health, metrics
+
+
+def _parse_smart_text(text: str, is_nvme: bool):
     temp = None
     passed = None
     realloc = pending = offline = crc = 0
@@ -282,9 +435,35 @@ def _parse_smart(text, is_nvme):
     return temp, health, metrics
 
 
+def _parse_smart(data, is_nvme: bool):
+    """Parses SMART telemetry from JSON dict, JSON string (smartctl -j), or legacy text."""
+    if isinstance(data, dict):
+        return _parse_smart_json(data, is_nvme)
+    if isinstance(data, str) and data.strip().startswith("{"):
+        try:
+            doc = json.loads(data)
+            if isinstance(doc, dict):
+                return _parse_smart_json(doc, is_nvme)
+        except Exception:
+            pass
+    return _parse_smart_text(data, is_nvme)
+
+
 def _resolve_dev_path(dev_name: str) -> str:
     base = HOST_DEV if os.path.exists(HOST_DEV) else "/dev"
     return base.rstrip("/") + "/" + dev_name
+
+
+def _handle_smart_failure(dev_name: str, now: float):
+    prev_t, prev_h = Z_STATE.cached_smart_data.get(dev_name, (None, "ok"))
+    last_ok = Z_STATE.cached_smart_time.get(dev_name, 0.0)
+    if prev_t is not None and (now - last_ok) > 180.0:
+        temp = None
+        health = "unknown"
+    else:
+        temp = prev_t
+        health = prev_h if prev_h != "standby" else "ok"
+    Z_STATE.cached_smart_data[dev_name] = (temp, health)
 
 
 def poll_disk_smart(dev_name: str, is_nvme: bool):
@@ -306,7 +485,7 @@ def poll_disk_smart(dev_name: str, is_nvme: bool):
 
     Z_STATE.last_smart_scan[dev_name] = now
     try:
-        cmd = ["smartctl"]
+        cmd = ["smartctl", "-j"]
         if not is_nvme:
             cmd.extend(["-n", "standby"])
         cmd.extend(["-H", "-A", "-d", dtype, dev])
@@ -317,32 +496,32 @@ def poll_disk_smart(dev_name: str, is_nvme: bool):
         if not is_nvme and ("DEVICE IS IN STANDBY" in combined_out or "DEVICE IS IN SLEEP" in combined_out):
             prev_t, _ = Z_STATE.cached_smart_data.get(dev_name, (None, "standby"))
             Z_STATE.cached_smart_data[dev_name] = (prev_t, "standby")
-        elif r.returncode == 0:
+        elif r.stdout and (r.returncode == 0 or (r.returncode & 7) == 0 or r.stdout.strip().startswith("{")):
             temp, health, metrics = _parse_smart(r.stdout, is_nvme)
             _evaluate_smart_trends(dev_name, metrics)
             log_smart_metrics(int(now), dev_name, temp, metrics)
             Z_STATE.cached_smart_data[dev_name] = (temp, health)
             Z_STATE.cached_smart_time[dev_name] = now
-        else:
-            prev_t, prev_h = Z_STATE.cached_smart_data.get(dev_name, (None, "ok"))
-            last_ok = Z_STATE.cached_smart_time.get(dev_name, 0.0)
-            if prev_t is not None and (now - last_ok) > 180.0:
-                temp = None
-                health = "unknown"
+        elif "unrecognized option" in combined_out.lower() or "-j" in combined_out.lower():
+            # Graceful fallback for environments with legacy smartctl without -j
+            cmd_fallback = [c for c in cmd if c != "-j"]
+            r_fb = subprocess.run(cmd_fallback, capture_output=True, text=True, timeout=8)
+            fb_out = ((r_fb.stdout or "") + " " + (r_fb.stderr or "")).upper()
+            if not is_nvme and ("DEVICE IS IN STANDBY" in fb_out or "DEVICE IS IN SLEEP" in fb_out):
+                prev_t, _ = Z_STATE.cached_smart_data.get(dev_name, (None, "standby"))
+                Z_STATE.cached_smart_data[dev_name] = (prev_t, "standby")
+            elif r_fb.stdout and (r_fb.returncode == 0 or (r_fb.returncode & 7) == 0):
+                temp, health, metrics = _parse_smart(r_fb.stdout, is_nvme)
+                _evaluate_smart_trends(dev_name, metrics)
+                log_smart_metrics(int(now), dev_name, temp, metrics)
+                Z_STATE.cached_smart_data[dev_name] = (temp, health)
+                Z_STATE.cached_smart_time[dev_name] = now
             else:
-                temp = prev_t
-                health = prev_h if prev_h != "standby" else "ok"
-            Z_STATE.cached_smart_data[dev_name] = (temp, health)
-    except Exception:
-        prev_t, prev_h = Z_STATE.cached_smart_data.get(dev_name, (None, "ok"))
-        last_ok = Z_STATE.cached_smart_time.get(dev_name, 0.0)
-        if prev_t is not None and (now - last_ok) > 180.0:
-            temp = None
-            health = "unknown"
+                _handle_smart_failure(dev_name, now)
         else:
-            temp = prev_t
-            health = prev_h if prev_h != "standby" else "ok"
-        Z_STATE.cached_smart_data[dev_name] = (temp, health)
+            _handle_smart_failure(dev_name, now)
+    except Exception:
+        _handle_smart_failure(dev_name, now)
 
 
 def poll_all_disks_smart(force: bool = False):

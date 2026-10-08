@@ -91,6 +91,7 @@ When accessing the Web Desktop (`http://<server-ip>:8082`):
 * **Command Palette** — Press `Cmd+K` (macOS) or `Ctrl+K` (Linux/Windows) for fuzzy-search navigation across all toolkit tools, settings, and hardware panels.
 * **Window Snapping** — Drag any window to screen edges or top to snap (Half-Screen Left / Right / Maximize).
 * **Accessibility (A11y)** — Full keyboard navigation with `Tab`, `Enter`, and `Space` activation on interactive elements and screen-reader ARIA roles.
+* **Themes & Display Styles** — 5 curated interface themes: **Cyber** (default dark), **Amber** (CRT monochrome phosphor), **Emerald** (matrix green terminal), **Light** (clean modern high-contrast), and **Yak Express** (easter egg cult theme).
 * **Language Selector** — Quick 1-click language switcher in the navbar (`EN`, `DE`, `ZH`, `FR`, `ES`) with instant dynamic UI translation.
 * **Mobile Stacked Mode** — Toggle between floating windowed desktop and vertical touch-optimized card layout via the top navbar button.
 * **Keyboard Hotkeys**:

@@ -33,9 +33,12 @@ services:
       - HOST_PROC=/host/proc
       - HOST_SYS=/host/sys
       - HOST_DEV=/host/dev
+    tmpfs:
+      - /host/sys/firmware:ro
+      - /host/sys/kernel/debug:ro
     cap_add:
-      - SYS_RAWIO
-      - SYS_ADMIN
+      - SYS_RAWIO   # Required for low-level SCSI/SATA SMART queries via SG_IO
+      - SYS_ADMIN   # Required for NVMe ioctls (NVME_IOCTL_ADMIN_CMD) and camera media mount(2)/umount(2)
     device_cgroup_rules:
       - 'c 29:* rwm'    # Framebuffer (/dev/fb0)
       - 'c 226:* rwm'   # DRI / GPU rendering (/dev/dri/*)
@@ -43,8 +46,6 @@ services:
       - 'c 166:* rwm'   # ACM Serial (/dev/ttyACM0)
       - 'b 8:* rwm'     # SCSI/SATA block devices (/dev/sd*)
       - 'b 259:* rwm'   # NVMe block devices (/dev/nvme*)
-      - 'c *:* rwm'     # General dynamic character devices
-      - 'b *:* rwm'     # General dynamic block devices
     logging:
       driver: "json-file"
       options:

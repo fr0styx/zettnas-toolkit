@@ -301,21 +301,44 @@ export function restoreOpenWindowsState() {
 
 export function bringToFront(windowEl) {
   if (!windowEl) return;
+
+  // Protect modal backdrops & modal dialogs from being demoted into window z-index layer
+  if (
+    windowEl.classList.contains('smart-modal-window') ||
+    windowEl.closest('.smart-modal-backdrop') ||
+    windowEl.classList.contains('modal-container') ||
+    windowEl.closest('.modal-backdrop')
+  ) {
+    const backdrop = windowEl.closest('.smart-modal-backdrop') || windowEl.closest('.modal-backdrop');
+    if (backdrop) {
+      backdrop.style.zIndex = 'var(--z-modal-backdrop, 9000)';
+    }
+    windowEl.style.zIndex = 'var(--z-modal, 9100)';
+    return;
+  }
+
   activeWindowZIndex++;
   if (activeWindowZIndex >= 4900) {
-    activeWindowZIndex = 1000;
+    // Linear re-normalization: sort open windows by their existing z-index and re-index from base 1000
+    const openWins = Object.values(window.DockManager?.windows || {})
+      .map((w) => w.el)
+      .filter(Boolean)
+      .sort((a, b) => parseInt(a.style.zIndex || '1000', 10) - parseInt(b.style.zIndex || '1000', 10));
+
+    let baseZ = 1000;
+    openWins.forEach((el) => {
+      el.style.zIndex = (baseZ++).toString();
+    });
+    activeWindowZIndex = baseZ;
   }
-  const backdrop = windowEl.closest('.smart-modal-backdrop');
-  if (backdrop) {
-    backdrop.style.zIndex = activeWindowZIndex.toString();
-  }
+
   windowEl.style.zIndex = activeWindowZIndex.toString();
 
   if (window.DockManager) {
     let foundId = null;
     Object.keys(window.DockManager.windows).forEach((id) => {
       const wEl = window.DockManager.windows[id].el;
-      if (wEl === backdrop || wEl === windowEl || (wEl && wEl.contains && wEl.contains(windowEl))) {
+      if (wEl === windowEl || (wEl && wEl.contains && wEl.contains(windowEl))) {
         foundId = id;
       }
     });

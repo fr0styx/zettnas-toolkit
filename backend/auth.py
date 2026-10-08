@@ -2,6 +2,7 @@ import hmac
 import json
 import os
 import secrets
+import threading
 import time
 from urllib.parse import parse_qs, urlparse
 
@@ -14,42 +15,72 @@ from backend.errors import error_response
 from backend.fsutil import atomic_write_json
 
 SESSIONS = {}
+_sessions_file_mtime_ns = 0
+_sessions_lock = threading.RLock()
 
 
 def _load_sessions():
-    global SESSIONS
-    try:
-        if os.path.exists(SESSIONS_FILE):
+    """Thread-safe cached session loader with st_mtime_ns invalidation."""
+    global SESSIONS, _sessions_file_mtime_ns
+    with _sessions_lock:
+        try:
+            if not os.path.exists(SESSIONS_FILE):
+                SESSIONS = {}
+                _sessions_file_mtime_ns = 0
+                return
+            mtime = os.stat(SESSIONS_FILE).st_mtime_ns
+            if mtime == _sessions_file_mtime_ns and SESSIONS:
+                return
             with open(SESSIONS_FILE) as f:
                 raw = json.load(f)
-                now = time.time()
-                SESSIONS = {t: data for t, data in raw.items() if data.get("expires", 0) > now}
-    except (json.JSONDecodeError, OSError) as e:
-        logger.warning(f"Failed to load sessions.json: {e}")
-        SESSIONS = {}
+            now = time.time()
+            SESSIONS = {t: data for t, data in raw.items() if data.get("expires", 0) > now}
+            _sessions_file_mtime_ns = mtime
+        except (json.JSONDecodeError, OSError) as e:
+            logger.warning(f"Failed to load sessions.json: {e}")
+            SESSIONS = {}
+            _sessions_file_mtime_ns = 0
 
 
 def _save_sessions():
-    try:
-        now = time.time()
-        valid = {t: data for t, data in SESSIONS.items() if data.get("expires", 0) > now}
-        atomic_write_json(SESSIONS_FILE, valid)
-    except OSError as e:
-        logger.warning(f"Failed to save sessions.json: {e}")
+    """Thread-safe session persistence with atomic cache synchronization."""
+    global _sessions_file_mtime_ns
+    with _sessions_lock:
+        try:
+            now = time.time()
+            valid = {t: data for t, data in SESSIONS.items() if data.get("expires", 0) > now}
+            atomic_write_json(SESSIONS_FILE, valid)
+            if os.path.exists(SESSIONS_FILE):
+                try:
+                    _sessions_file_mtime_ns = os.stat(SESSIONS_FILE).st_mtime_ns
+                except OSError:
+                    pass
+        except OSError as e:
+            logger.warning(f"Failed to save sessions.json: {e}")
 
 
 def create_session(username: str) -> str:
     _load_sessions()
     token = secrets.token_urlsafe(32)
     now = time.time()
-    SESSIONS[token] = {"user": username, "created": now, "expires": now + SESSION_TTL}
+    with _sessions_lock:
+        SESSIONS[token] = {"user": username, "created": now, "expires": now + SESSION_TTL}
     _save_sessions()
     return token
 
 
 def revoke_session(token: str) -> None:
-    if token and SESSIONS.pop(token, None) is not None:
-        _save_sessions()
+    if not token:
+        return
+    with _sessions_lock:
+        target_token = None
+        for t in SESSIONS.keys():
+            if hmac.compare_digest(token, t):
+                target_token = t
+                break
+        if target_token:
+            del SESSIONS[target_token]
+            _save_sessions()
 
 
 def is_internal_token(token: str) -> bool:
@@ -57,6 +88,7 @@ def is_internal_token(token: str) -> bool:
 
 
 def validate_session(token: str) -> bool:
+    """Fast in-memory session validation with zero disk I/O on invalid token floods."""
     if not token:
         return False
     if is_internal_token(token):
@@ -67,21 +99,40 @@ def validate_session(token: str) -> bool:
         if validate_api_token(token):
             return True
 
-    if token not in SESSIONS:
-        _load_sessions()
-        if token not in SESSIONS:
+    with _sessions_lock:
+        # Check in-memory map first
+        session = None
+        for t, data in SESSIONS.items():
+            if hmac.compare_digest(token, t):
+                session = data
+                break
+
+        # Cache miss: only check disk mtime if file exists and changed externally
+        if not session and os.path.exists(SESSIONS_FILE):
+            try:
+                mtime = os.stat(SESSIONS_FILE).st_mtime_ns
+                if mtime != _sessions_file_mtime_ns:
+                    _load_sessions()
+                    for t, data in SESSIONS.items():
+                        if hmac.compare_digest(token, t):
+                            session = data
+                            break
+            except OSError:
+                pass
+
+        if not session:
             return False
-    session = SESSIONS[token]
-    if session.get("expires", 0) <= time.time():
-        del SESSIONS[token]
-        _save_sessions()
-        return False
-    return True
+
+        if session.get("expires", 0) <= time.time():
+            revoke_session(token)
+            return False
+        return True
 
 
 def invalidate_all_sessions():
     global SESSIONS
-    SESSIONS = {}
+    with _sessions_lock:
+        SESSIONS = {}
     _save_sessions()
 
 

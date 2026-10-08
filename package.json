@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "build": "vite build",
     "dev": "vite"
   },
@@ -20,6 +21,7 @@
   },
   "homepage": "https://github.com/fr0styx/zettnas-toolkit#readme",
   "devDependencies": {
+    "@vitest/coverage-v8": "^5.0.3",
     "jsdom": "^30.1.2",
     "vite": "^8.3.2",
     "vitest": "^5.0.3"

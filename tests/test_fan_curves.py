@@ -165,3 +165,34 @@ def test_cpu_curve_higher_thresholds():
     # At 85C+, fan runs at 100%
     assert calc_curve_pwm(85, curve_points=cpu_curve) == FAN_MAX_PWM
     assert calc_curve_pwm(95, curve_points=cpu_curve) == FAN_MAX_PWM
+
+
+def test_hardware_thermal_watchdog_overrides_flat_low_curve():
+    Z_STATE.thermal_watchdog_engaged = False
+    # User configures a flat/low curve (max 40% at 75C)
+    flat_curve = [[30, 10], [50, 25], [75, 40]]
+    # At 75C, user curve is respected
+    val = calc_curve_pwm(75, curve_points=flat_curve)
+    assert abs(val - int(0.40 * FAN_MAX_PWM)) <= 1
+
+    # At 80C+, inviolable watchdog triggers 100% PWM
+    assert calc_curve_pwm(80, curve_points=flat_curve) == FAN_MAX_PWM
+    assert calc_curve_pwm(85, curve_points=flat_curve) == FAN_MAX_PWM
+    assert Z_STATE.thermal_watchdog_engaged is True
+
+
+def test_hardware_thermal_watchdog_hysteresis():
+    Z_STATE.thermal_watchdog_engaged = False
+    flat_curve = [[30, 10], [50, 15], [75, 20]]
+    # Engage watchdog at 82C
+    calc_curve_pwm(82, curve_points=flat_curve)
+    assert Z_STATE.thermal_watchdog_engaged is True
+
+    # Drop to 77C (between 74 and 80): watchdog stays engaged due to thermal hysteresis
+    assert calc_curve_pwm(77, curve_points=flat_curve) == FAN_MAX_PWM
+    assert Z_STATE.thermal_watchdog_engaged is True
+
+    # Drop to 74C or below: watchdog disengages and curve resumes
+    val_74 = calc_curve_pwm(74, curve_points=flat_curve)
+    assert Z_STATE.thermal_watchdog_engaged is False
+    assert val_74 < FAN_MAX_PWM

@@ -64,6 +64,60 @@ body, body.studio-workbench:not(.lcd-direct) {
 
 
 /* =========================================================================
+   LIGHT THEME: HIGH-CONTRAST CLEAN MODERN DESKTOP
+   ========================================================================= */
+body.theme-light {
+  --bg: #eef2f6;
+  --card: #ffffff;
+  --card-hi: #e2e8f0;
+  --fg: #0f172a;
+  --muted: #64748b;
+  --ok: #16a34a;
+  --ok2: #0d9488;
+  --warn: #d97706;
+  --crit: #dc2626;
+  --track: #cbd5e1;
+  background: radial-gradient(circle at 50% 50%, #f8fafc 0%, #e2e8f0 70%);
+  color: var(--fg);
+}
+
+/* =========================================================================
+   AMBER THEME: MONOCHROME CRT RETRO TERMINAL
+   ========================================================================= */
+body.theme-amber {
+  --bg: #120d04;
+  --card: #1f1708;
+  --card-hi: #2b200b;
+  --fg: #ffbe40;
+  --muted: #a67c29;
+  --ok: #ffbe40;
+  --ok2: #e09b20;
+  --warn: #ff8c00;
+  --crit: #e63946;
+  --track: #2a1f0a;
+  background: radial-gradient(circle at 50% 50%, #241a09 0%, #0d0903 70%);
+  color: var(--fg);
+}
+
+/* =========================================================================
+   EMERALD THEME: GREEN CYBERPUNK MATRIX TERMINAL
+   ========================================================================= */
+body.theme-emerald {
+  --bg: #04120a;
+  --card: #082012;
+  --card-hi: #0c2e1a;
+  --fg: #3bf58b;
+  --muted: #288f57;
+  --ok: #3bf58b;
+  --ok2: #24d673;
+  --warn: #eab308;
+  --crit: #ef4444;
+  --track: #0e331f;
+  background: radial-gradient(circle at 50% 50%, #0b2917 0%, #030d07 70%);
+  color: var(--fg);
+}
+
+/* =========================================================================
    YAK EXPRESS CULT THEME: ROOT-PINNED YAK & GRASS (IMMUNE TO STAGE ZOOM)
    ========================================================================= */
 body.theme-yak {

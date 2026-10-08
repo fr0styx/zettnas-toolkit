@@ -4,5 +4,11 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: true,
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html', 'lcov'],
+      include: ['frontend/src/**/*.js'],
+      exclude: ['frontend/src/__tests__/**'],
+    },
   },
 });

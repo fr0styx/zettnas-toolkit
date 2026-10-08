@@ -111,7 +111,7 @@ def render_lcd_loop():
     ]
 
     retry_delay = 2.0
-    while True:
+    while not Z_STATE.shutting_down:
         try:
             with sync_playwright() as p:
                 browser = p.chromium.launch(
@@ -185,8 +185,16 @@ def render_lcd_loop():
                         except Exception:
                             pass
 
+            if Z_STATE.shutting_down:
+                break
+
         except Exception as e:
             Z_STATE.lcd_renderer_active = False
+            if Z_STATE.shutting_down:
+                break
             logger.info(f"[LCD] Active render loop error: {e}. Reconnecting in {retry_delay:.1f}s...")
             time.sleep(retry_delay)
             retry_delay = min(60.0, retry_delay * 1.5)
+
+    Z_STATE.lcd_renderer_active = False
+    logger.info("[LCD] Active render loop terminated cleanly.")

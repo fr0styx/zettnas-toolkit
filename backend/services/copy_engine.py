@@ -596,16 +596,30 @@ async def _do_copy(cfg):
                         await fdst.write(buf)
                         Z_STATE.copy_progress["copied"] += len(buf)
                     await fdst.flush()
+                    try:
+                        os.fdatasync(fdst.fileno())
+                    except (AttributeError, OSError):
+                        pass
+                    try:
+                        if hasattr(os, "posix_fadvise") and hasattr(os, "POSIX_FADV_DONTNEED"):
+                            os.posix_fadvise(fdst.fileno(), 0, 0, os.POSIX_FADV_DONTNEED)
+                    except (AttributeError, OSError):
+                        pass
 
                 if Z_STATE.copy_abort_flag:
                     if os.path.exists(dst_f):
                         os.remove(dst_f)
                     break
 
-                # Genuine post-write destination verification
+                # Genuine post-write destination verification directly against physical media
                 if verify_checksum:
                     hasher_dst = hashlib.sha256()
                     async with aiofiles.open(dst_f, "rb") as fdst_check:
+                        try:
+                            if hasattr(os, "posix_fadvise") and hasattr(os, "POSIX_FADV_DONTNEED"):
+                                os.posix_fadvise(fdst_check.fileno(), 0, 0, os.POSIX_FADV_DONTNEED)
+                        except (AttributeError, OSError):
+                            pass
                         while True:
                             cbuf = await fdst_check.read(length)
                             if not cbuf:

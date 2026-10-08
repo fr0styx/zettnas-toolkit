@@ -134,6 +134,18 @@ app = FastAPI(title="ZettNAS Toolkit", version=__version__, docs_url="/docs", re
 # Consistent {error, detail, code} error responses
 register_error_handlers(app)
 
+
+# Enterprise defense-in-depth HTTP security headers middleware
+@app.middleware("http")
+async def security_headers_middleware(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "SAMEORIGIN"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+    return response
+
+
 # Authentication middleware
 app.middleware("http")(auth_middleware)
 
