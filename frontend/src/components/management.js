@@ -823,6 +823,8 @@ export function initManagement() {
     'mgmt-pane-events': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-events' },
     'mgmt-sec-system': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-system' },
     'mgmt-pane-system': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-system' },
+    'mgmt-sec-about': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-about' },
+    'mgmt-pane-about': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-about' },
   };
 
   function triggerActiveSubTab(parentId) {
@@ -854,7 +856,9 @@ export function initManagement() {
     } else if (paneId === 'mgmt-pane-docker') {
       fetchAndRenderDockerContainers();
     } else if (paneId === 'mgmt-pane-system') {
-      fetchAPITokens();
+      if (typeof fetchAPITokens === 'function') fetchAPITokens();
+    } else if (paneId === 'mgmt-pane-about') {
+      fetchAndRenderSystemAbout();
     }
   }
 
@@ -1096,6 +1100,14 @@ export function initManagement() {
     });
   }
 
+  // Check for updates button
+  const checkUpdatesBtn = document.getElementById('btn-check-updates');
+  if (checkUpdatesBtn) {
+    checkUpdatesBtn.addEventListener('click', () => {
+      fetchAndRenderSystemAbout(true);
+    });
+  }
+
   // Language switch update
   window.addEventListener('zettnas:lang-changed', () => {
     const activeSection = Array.from(document.querySelectorAll('.mgmt-detail-card')).find((c) => c.style.display !== 'none');
@@ -1105,5 +1117,92 @@ export function initManagement() {
       showHub();
     }
   });
+}
+
+export async function fetchAndRenderSystemAbout(force = false) {
+  const versionBadge = document.getElementById('about-version-badge');
+  const chassisEl = document.getElementById('about-chassis-model');
+  const hostEl = document.getElementById('about-host-platform');
+  const runtimeEl = document.getElementById('about-runtime-env');
+  const uptimeEl = document.getElementById('about-system-uptime');
+
+  const statusIcon = document.getElementById('update-status-icon');
+  const statusTitle = document.getElementById('update-status-title');
+  const statusDesc = document.getElementById('update-status-desc');
+  const lastCheckedEl = document.getElementById('update-last-checked');
+  const detailsBox = document.getElementById('update-details-box');
+  const releaseTitle = document.getElementById('update-release-title');
+  const releaseLink = document.getElementById('update-release-link');
+  const releaseNotes = document.getElementById('update-release-notes');
+
+  const btnIcon = document.getElementById('btn-check-updates-icon');
+  const btnText = document.getElementById('btn-check-updates-text');
+
+  if (btnIcon && btnText) {
+    btnIcon.textContent = '⏳';
+    btnText.textContent = 'Checking...';
+  }
+
+  // 1. Fetch system about telemetry
+  try {
+    const about = await api.get('/api/system/about');
+    if (about) {
+      if (versionBadge) versionBadge.textContent = `${about.tag || 'v' + about.version} • ${about.release_channel || 'Stable'}`;
+      if (chassisEl) chassisEl.textContent = about.chassis_model || 'Standard / DIY';
+      if (hostEl) hostEl.textContent = `${about.hostname || 'NAS'} (${about.platform || 'Linux'})`;
+      if (runtimeEl) runtimeEl.textContent = `${about.containerized ? 'Docker Container' : 'Native Host'} (Python ${about.python_version || '3.12'})`;
+      if (uptimeEl && about.uptime_secs != null) {
+        const d = Math.floor(about.uptime_secs / 86400);
+        const h = Math.floor((about.uptime_secs % 86400) / 3600);
+        const m = Math.floor((about.uptime_secs % 3600) / 60);
+        uptimeEl.textContent = d > 0 ? `${d}d ${h}h ${m}m` : `${h}h ${m}m`;
+      }
+    }
+  } catch (err) {
+    console.warn('[ZettNAS] Failed to fetch system about info:', err);
+  }
+
+  // 2. Fetch update status
+  try {
+    const data = await api.get(`/api/system/updates${force ? '?force=true' : ''}`);
+    if (data) {
+      if (data.update_available) {
+        if (statusIcon) statusIcon.textContent = '🚀';
+        if (statusTitle) {
+          statusTitle.textContent = `Update Available: ${data.latest_tag || 'v' + data.latest_version}`;
+          statusTitle.style.color = 'var(--warn, #f5a623)';
+        }
+        if (statusDesc) statusDesc.textContent = `A newer release of ZettNAS Workbench is available on GitHub.`;
+        if (detailsBox) detailsBox.style.display = 'block';
+        if (releaseTitle) releaseTitle.textContent = data.release_name || `Release ${data.latest_tag}`;
+        if (releaseLink) releaseLink.href = data.release_url || 'https://github.com/fr0styx/zettnas-toolkit/releases';
+        if (releaseNotes) releaseNotes.textContent = data.release_notes || 'No release notes provided.';
+      } else {
+        if (statusIcon) statusIcon.textContent = '✅';
+        if (statusTitle) {
+          statusTitle.textContent = `ZettNAS Workbench is up to date`;
+          statusTitle.style.color = 'var(--ok2, #25c2a0)';
+        }
+        if (statusDesc) statusDesc.textContent = `You are running the latest stable release (${data.latest_tag || 'v' + data.current_version}).`;
+        if (detailsBox) detailsBox.style.display = 'none';
+      }
+      if (lastCheckedEl && data.checked_at) {
+        const timeStr = new Date(data.checked_at * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        lastCheckedEl.textContent = `Checked: ${timeStr}`;
+      }
+    }
+  } catch (err) {
+    if (statusIcon) statusIcon.textContent = '⚠️';
+    if (statusTitle) {
+      statusTitle.textContent = 'Unable to check for updates';
+      statusTitle.style.color = 'var(--crit, #ff6b6b)';
+    }
+    if (statusDesc) statusDesc.textContent = err.message || 'Offline or network request failed.';
+  } finally {
+    if (btnIcon && btnText) {
+      btnIcon.textContent = '🔄';
+      btnText.textContent = 'Check for Updates';
+    }
+  }
 }
 

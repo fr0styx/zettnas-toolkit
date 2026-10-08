@@ -96,6 +96,9 @@ export const TRANSLATIONS = {
     "mgmt.subtab_security": "Security",
     "mgmt.subtab_events": "Event Log",
     "mgmt.subtab_system": "System & API",
+    "mgmt.subtab_about": "About & Updates",
+    "mgmt.about_title": "About ZettNAS Workbench & Updates",
+    "mgmt.about_desc": "Hardware orchestration suite for Zettlab NAS enclosures & homelab systems.",
 
     "mgmt.sidebar_metrics": "Metrics",
     "mgmt.sidebar_events": "Event Log",
@@ -665,6 +668,9 @@ export const TRANSLATIONS = {
     "mgmt.subtab_security": "Sicherheit",
     "mgmt.subtab_events": "Ereignisprotokoll",
     "mgmt.subtab_system": "System & API",
+    "mgmt.subtab_about": "Über & Updates",
+    "mgmt.about_title": "Über ZettNAS Workbench & Updates",
+    "mgmt.about_desc": "Hardware-Orchestrierung für Zettlab NAS-Gehäuse und Homelab-Systeme.",
 
     "mgmt.sidebar_metrics": "Metriken",
     "mgmt.sidebar_events": "Ereignisprotokoll",
@@ -1234,6 +1240,9 @@ export const TRANSLATIONS = {
     "mgmt.subtab_security": "安全性",
     "mgmt.subtab_events": "事件日志",
     "mgmt.subtab_system": "系统与 API",
+    "mgmt.subtab_about": "关于与更新",
+    "mgmt.about_title": "关于 ZettNAS Workbench 与更新",
+    "mgmt.about_desc": "专为 Zettlab NAS 机箱与家庭实验室打造的硬件编排管理套件。",
 
     "mgmt.sidebar_metrics": "硬件指标",
     "mgmt.sidebar_events": "事件日志",
@@ -1803,6 +1812,9 @@ export const TRANSLATIONS = {
     "mgmt.subtab_security": "Sécurité",
     "mgmt.subtab_events": "Journal d'événements",
     "mgmt.subtab_system": "Système & API",
+    "mgmt.subtab_about": "À propos & Mises à jour",
+    "mgmt.about_title": "À propos de ZettNAS Workbench & Mises à jour",
+    "mgmt.about_desc": "Suite d'orchestration matérielle pour boîtiers NAS Zettlab et systèmes homelab.",
 
     "mgmt.sidebar_metrics": "Métriques",
     "mgmt.sidebar_events": "Journaux",
@@ -2372,6 +2384,9 @@ export const TRANSLATIONS = {
     "mgmt.subtab_security": "Seguridad",
     "mgmt.subtab_events": "Registro de Eventos",
     "mgmt.subtab_system": "Sistema y API",
+    "mgmt.subtab_about": "Acerca de y Actualizaciones",
+    "mgmt.about_title": "Acerca de ZettNAS Workbench y Actualizaciones",
+    "mgmt.about_desc": "Suite de orquestación de hardware para chasis Zettlab NAS y sistemas homelab.",
 
     "mgmt.sidebar_metrics": "Métricas",
     "mgmt.sidebar_events": "Registro de Eventos",

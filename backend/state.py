@@ -27,6 +27,7 @@ class ZettState:
         self.rainbow_thread = None
         self.rainbow_stop = threading.Event()
         now = time.time()
+        self.boot_time = now
         self.fan_state_tracker = {
             "pwm1": {
                 "current": 67,

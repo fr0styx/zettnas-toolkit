@@ -774,3 +774,139 @@ def delete_token(token_id: str):
         add_event("info", "Security", "Revoked an API token")
         return {"status": "ok"}
     raise HTTPException(status_code=404, detail="Token not found")
+
+
+_last_update_check = {"ts": 0.0, "data": None}
+
+
+def _parse_version(v_str: str) -> list[int]:
+    """Parse version string into integer tuple for comparison."""
+    clean = re.sub(r"^[^\d]*", "", str(v_str or "").strip())
+    parts = re.findall(r"\d+", clean)
+    return [int(p) for p in parts] if parts else [0]
+
+
+def _is_newer_version(latest_str: str, current_str: str) -> bool:
+    try:
+        latest = _parse_version(latest_str)
+        current = _parse_version(current_str)
+        max_len = max(len(latest), len(current))
+        latest.extend([0] * (max_len - len(latest)))
+        current.extend([0] * (max_len - len(current)))
+        return latest > current
+    except Exception:
+        return latest_str.strip() != current_str.strip()
+
+
+@router.get("/system/about")
+async def get_system_about():
+    """Returns high-level system information, current version, chassis twin, and runtime stats."""
+    import platform
+    import socket
+    import sys
+
+    from backend.hardware.storage import detect_chassis_model
+
+    chassis = detect_chassis_model()
+    boot_time = getattr(Z_STATE, "boot_time", None) or time.time()
+    uptime_secs = round(time.time() - boot_time, 1)
+
+    return {
+        "name": "ZettNAS Workbench",
+        "version": __version__,
+        "tag": f"v{__version__}",
+        "release_channel": "stable",
+        "chassis_model": chassis,
+        "hostname": socket.gethostname(),
+        "platform": platform.platform(),
+        "python_version": sys.version.split()[0],
+        "uptime_secs": uptime_secs,
+        "containerized": os.path.exists("/.dockerenv")
+        or os.environ.get("CONTAINERIZED") == "1"
+        or os.path.exists("/app"),
+        "github_repo": "https://github.com/fr0styx/zettnas-toolkit",
+    }
+
+
+@router.get("/system/updates")
+async def check_system_updates(force: bool = False):
+    """Check GitHub Releases for newer ZettNAS releases with in-memory caching."""
+    import httpx
+
+    now = time.time()
+    if not force and _last_update_check["data"] and (now - _last_update_check["ts"] < 600):
+        return _last_update_check["data"]
+
+    url = "https://api.github.com/repos/fr0styx/zettnas-toolkit/releases/latest"
+    headers = {
+        "Accept": "application/vnd.github.v3+json",
+        "User-Agent": f"ZettNAS-Workbench/{__version__}",
+    }
+
+    try:
+        async with httpx.AsyncClient(timeout=6.0) as client:
+            resp = await client.get(url, headers=headers)
+            if resp.status_code == 200:
+                data = resp.json()
+                tag = data.get("tag_name", "").strip()
+                clean_tag = tag.lstrip("v")
+                update_available = _is_newer_version(clean_tag, __version__)
+
+                result = {
+                    "current_version": __version__,
+                    "latest_version": clean_tag or tag,
+                    "latest_tag": tag,
+                    "update_available": update_available,
+                    "release_name": data.get("name") or tag,
+                    "release_url": data.get("html_url")
+                    or f"https://github.com/fr0styx/zettnas-toolkit/releases/tag/{tag}",
+                    "published_at": data.get("published_at"),
+                    "release_notes": data.get("body", ""),
+                    "checked_at": now,
+                    "error": None,
+                }
+                _last_update_check["ts"] = now
+                _last_update_check["data"] = result
+                return result
+            elif resp.status_code == 404:
+                # Fallback to tags endpoint if no releases are formally drafted
+                tags_resp = await client.get(
+                    "https://api.github.com/repos/fr0styx/zettnas-toolkit/tags", headers=headers
+                )
+                if tags_resp.status_code == 200 and tags_resp.json():
+                    latest_tag = tags_resp.json()[0].get("name", "")
+                    clean_tag = latest_tag.lstrip("v")
+                    update_available = _is_newer_version(clean_tag, __version__)
+                    result = {
+                        "current_version": __version__,
+                        "latest_version": clean_tag or latest_tag,
+                        "latest_tag": latest_tag,
+                        "update_available": update_available,
+                        "release_name": f"Release {latest_tag}",
+                        "release_url": f"https://github.com/fr0styx/zettnas-toolkit/releases/tag/{latest_tag}",
+                        "published_at": None,
+                        "release_notes": "",
+                        "checked_at": now,
+                        "error": None,
+                    }
+                    _last_update_check["ts"] = now
+                    _last_update_check["data"] = result
+                    return result
+
+            error_msg = f"GitHub API HTTP {resp.status_code}"
+    except Exception as e:
+        error_msg = str(e)
+
+    fallback = {
+        "current_version": __version__,
+        "latest_version": __version__,
+        "latest_tag": f"v{__version__}",
+        "update_available": False,
+        "release_name": f"ZettNAS v{__version__}",
+        "release_url": "https://github.com/fr0styx/zettnas-toolkit/releases",
+        "published_at": None,
+        "release_notes": "",
+        "checked_at": now,
+        "error": error_msg,
+    }
+    return fallback
