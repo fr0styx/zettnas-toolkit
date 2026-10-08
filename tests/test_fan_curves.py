@@ -3,6 +3,7 @@
 import pytest
 
 from backend.config import (
+    FAN_FAILSAFE_PWM,
     FAN_KICKSTART_PWM,
     FAN_KICKSTART_SECS,
     FAN_MAX_PWM,
@@ -58,8 +59,8 @@ def test_sanitize_accepts_numeric_strings():
 
 
 @pytest.mark.parametrize("temp", [None, 0, -5])
-def test_invalid_temperature_returns_floor(temp):
-    assert calc_curve_pwm(temp) == FAN_MIN_PWM
+def test_invalid_temperature_returns_failsafe(temp):
+    assert calc_curve_pwm(temp) == FAN_FAILSAFE_PWM
 
 
 def test_linear_below_min_is_floor():

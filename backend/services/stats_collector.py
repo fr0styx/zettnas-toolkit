@@ -117,8 +117,15 @@ def stats_collector_daemon():
                 zone2_disks = sata_disks[midpoint:]
 
             # Standby state per zone
-            z1_all_standby = bool(zone1_disks) and all(d.get("standby", False) for d in zone1_disks)
-            z2_all_standby = bool(zone2_disks) and all(d.get("standby", False) for d in zone2_disks)
+            if not sata_disks:
+                # All-flash array (no mechanical SATA drives installed)
+                # Zero RPM is permitted if NVMe is cold and storage is not busy
+                z1_all_standby = True
+                z2_all_standby = True
+            else:
+                z1_all_standby = bool(zone1_disks) and all(d.get("standby", False) for d in zone1_disks)
+                # If zone2 has no disks installed (under-populated chassis), inherit zone1 standby
+                z2_all_standby = all(d.get("standby", False) for d in zone2_disks) if zone2_disks else z1_all_standby
 
             # Active temperatures per zone (sleeping disks' cached temps are ignored unless critical >= 55)
             active_z1 = [d["temp"] for d in zone1_disks if d.get("temp") is not None and not d.get("standby", False)]
@@ -176,6 +183,13 @@ def stats_collector_daemon():
                 )
                 raw_pwm1 = max(raw_pwm1, raw_nvme_pwm)
                 raw_pwm2 = max(raw_pwm2, raw_nvme_pwm)
+            elif t_nvme is not None and t_nvme >= 50:
+                # Default NVMe thermal wind-tunnel ramp if no custom curve configured:
+                # 50°C -> 95 PWM (~50%), 65°C -> 145 PWM (~80%), 75°C -> MAX_PWM (100%)
+                ratio = min(1.0, max(0.0, (t_nvme - 50.0) / 25.0))
+                default_nvme_pwm = int(95 + ratio * (FAN_MAX_PWM - 95))
+                raw_pwm1 = max(raw_pwm1, default_nvme_pwm)
+                raw_pwm2 = max(raw_pwm2, default_nvme_pwm)
 
             if cpu_curve:
                 raw_pwm3 = calc_curve_pwm(

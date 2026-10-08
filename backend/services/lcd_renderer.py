@@ -173,6 +173,10 @@ def render_lcd_loop():
                             with Image.open(io.BytesIO(raw_bytes)) as img:
                                 raw_mode = "BGRA" if img.mode == "RGBA" else "BGRX"
                                 fb_mem[:total_fb_bytes] = img.tobytes("raw", raw_mode, stride, 1)
+                                try:
+                                    fb_mem.flush()
+                                except Exception:
+                                    pass
 
                             elapsed = time.time() - t0
                             sleep_time = max(0.01, frame_interval - elapsed)

@@ -103,7 +103,7 @@ def evaluate_system_alerts(unraid_data, ups_data):
                         )
                         logger.warning("[UPS FAILSAFE] Paused active copy engine job.")
 
-                    # 2. Flush dirty filesystem buffers to persistent disks asynchronously
+                    # 2. Flush dirty filesystem buffers to persistent disks with timeout
                     def _sync_worker():
                         try:
                             os.sync()
@@ -111,7 +111,8 @@ def evaluate_system_alerts(unraid_data, ups_data):
                         except Exception as e:
                             logger.error(f"[UPS FAILSAFE] os.sync failed: {e}")
 
-                    threading.Thread(target=_sync_worker, daemon=True, name="UpsFailsafeSync").start()
+                    sync_thread = threading.Thread(target=_sync_worker, daemon=True, name="UpsFailsafeSync")
+                    sync_thread.start()
 
                     # 3. Dispatch critical priority notification and alert
                     crit_msg = (
@@ -122,6 +123,8 @@ def evaluate_system_alerts(unraid_data, ups_data):
 
                     # 4. Signal host powerdown if explicitly configured
                     if shutdown_enabled:
+                        # Wait up to 10 seconds for sync to complete before signaling host shutdown
+                        sync_thread.join(timeout=10.0)
                         logger.critical("[UPS FAILSAFE] Initiating safe system powerdown sequence.")
                         add_event(
                             "critical",

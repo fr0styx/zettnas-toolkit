@@ -300,10 +300,15 @@ def query_smart_velocity(dev: str) -> dict:
 
             # Check for stuck pending sectors over past 48h
             pending_48h_rows = conn.execute(
-                "SELECT pending_sectors FROM smart_history WHERE dev = ? AND ts >= ? ORDER BY ts ASC",
+                "SELECT ts, pending_sectors FROM smart_history WHERE dev = ? AND ts >= ? ORDER BY ts ASC",
                 (dev, ts_48h),
             ).fetchall()
-            stuck_pending = len(pending_48h_rows) >= 2 and all(r["pending_sectors"] > 0 for r in pending_48h_rows)
+            time_span = (pending_48h_rows[-1]["ts"] - pending_48h_rows[0]["ts"]) if len(pending_48h_rows) >= 2 else 0
+            stuck_pending = (
+                len(pending_48h_rows) >= 2
+                and time_span >= 44 * 3600
+                and all(r["pending_sectors"] > 0 for r in pending_48h_rows)
+            )
 
             curr_realloc = latest["reallocated_sectors"] or 0
             base_realloc_7d = rec_7d["reallocated_sectors"] if rec_7d else curr_realloc
@@ -313,15 +318,24 @@ def query_smart_velocity(dev: str) -> dict:
             delta_30d = max(0, curr_realloc - base_realloc_30d)
 
             shedding = delta_7d >= 2
+            curr_nvme_wear = latest["nvme_pct_used"] if "nvme_pct_used" in latest.keys() else None
+            curr_nvme_err = latest["nvme_media_errors"] if "nvme_media_errors" in latest.keys() else None
+
             status = "healthy"
             rec_text = "Drive health metrics are stable within expected thresholds."
 
             if shedding:
                 status = "critical"
                 rec_text = f"Active sector shedding detected: {delta_7d} reallocated sectors in the last 7 days. Plan disk replacement soon."
+            elif curr_nvme_err is not None and curr_nvme_err > 0:
+                status = "critical"
+                rec_text = f"NVMe media and data integrity errors detected ({curr_nvme_err}). Plan SSD replacement."
             elif stuck_pending:
                 status = "warning"
                 rec_text = "Pending sectors detected for over 48 hours without sector reallocation. Run an extended SMART test to force relocation."
+            elif curr_nvme_wear is not None and curr_nvme_wear >= 90:
+                status = "warning"
+                rec_text = f"NVMe endurance exhausted ({curr_nvme_wear}% used). Prepare replacement drive."
             elif delta_30d > 0:
                 status = "monitor"
                 rec_text = f"Minor degradation velocity: {delta_30d} reallocated sectors over 30 days. Monitor SMART trends closely."
@@ -337,6 +351,8 @@ def query_smart_velocity(dev: str) -> dict:
                 "realloc_current": curr_realloc,
                 "realloc_7d_delta": delta_7d,
                 "realloc_30d_delta": delta_30d,
+                "nvme_pct_used": curr_nvme_wear,
+                "nvme_media_errors": curr_nvme_err,
                 "recommendation": rec_text,
             }
     except Exception as db_e:

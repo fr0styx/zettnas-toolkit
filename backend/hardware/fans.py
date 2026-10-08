@@ -118,9 +118,12 @@ def calc_curve_pwm(
     curve_points=None,
     allow_zero=False,
 ):
-    effective_min = 0 if allow_zero else min_pwm
     if temp is None or temp <= 0:
-        return effective_min
+        # Thermal failsafe: missing, disconnected, or unreadable sensor data
+        # must never stall or stop cooling fans. Default to failsafe PWM.
+        return FAN_FAILSAFE_PWM
+
+    effective_min = 0 if allow_zero else min_pwm
 
     # Inviolable hardware thermal watchdog with hysteresis
     WATCHDOG_CEILING_TEMP = 80

@@ -19,14 +19,22 @@ _UPS_CACHE_TTL = 3.0
 
 
 def _get_docker_gateway() -> str | None:
-    """Detects Docker bridge gateway (which points to the host) if running in container."""
+    """Detects Docker bridge gateway (which points to the host) if running in container.
+
+    Strictly validates that the gateway belongs to a private Docker bridge subnet (172.16.0.0/12)
+    to prevent probing local LAN router gateways when running in host networking mode.
+    """
     try:
         with open("/proc/net/route") as f:
             for line in f:
                 fields = line.strip().split()
                 if len(fields) >= 3 and (fields[1] == "00000000" or fields[1] == "0"):
                     gw_hex = fields[2]
-                    return socket.inet_ntoa(bytes.fromhex(gw_hex)[::-1])
+                    gw_ip = socket.inet_ntoa(bytes.fromhex(gw_hex)[::-1])
+                    # Validate that gw_ip belongs to standard Docker bridge space (172.16.0.0/12)
+                    parts = [int(p) for p in gw_ip.split(".")]
+                    if len(parts) == 4 and parts[0] == 172 and 16 <= parts[1] <= 31:
+                        return gw_ip
     except Exception:
         pass
     return None
