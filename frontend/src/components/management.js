@@ -122,10 +122,20 @@ let _dockerContainersList = [];
 let _dockerFilter = 'all';
 let _dockerSearchQuery = '';
 
+let _catalogList = [];
+let _catalogCat = 'all';
+let _catalogSearchQuery = '';
+
 export function _resetDockerStateForTesting() {
   _dockerContainersList = [];
   _dockerFilter = 'all';
   _dockerSearchQuery = '';
+}
+
+export function _resetCatalogStateForTesting() {
+  _catalogList = [];
+  _catalogCat = 'all';
+  _catalogSearchQuery = '';
 }
 
 function _bindDockerEvents() {
@@ -149,6 +159,48 @@ function _bindDockerEvents() {
       renderDockerContainersTable();
     });
   });
+
+  // Toggle between Containers Table and App Catalog
+  const btnContainers = document.getElementById('btn-view-docker-containers');
+  const btnCatalog = document.getElementById('btn-view-docker-catalog');
+  const wrapContainers = document.getElementById('docker-view-containers-wrap');
+  const wrapCatalog = document.getElementById('docker-view-catalog-wrap');
+
+  if (btnContainers && btnCatalog) {
+    btnContainers.addEventListener('click', () => {
+      btnContainers.classList.add('active');
+      btnCatalog.classList.remove('active');
+      if (wrapContainers) wrapContainers.style.display = 'block';
+      if (wrapCatalog) wrapCatalog.style.display = 'none';
+    });
+    btnCatalog.addEventListener('click', () => {
+      btnCatalog.classList.add('active');
+      btnContainers.classList.remove('active');
+      if (wrapContainers) wrapContainers.style.display = 'none';
+      if (wrapCatalog) wrapCatalog.style.display = 'block';
+      fetchAndRenderAppCatalog();
+    });
+  }
+
+  // Catalog category filter pills
+  const catFilterBtns = containerPane.querySelectorAll('.catalog-filter-btn');
+  catFilterBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      catFilterBtns.forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+      _catalogCat = btn.dataset.cat || 'all';
+      renderAppCatalogGrid();
+    });
+  });
+
+  // Catalog search input
+  const catSearchInput = document.getElementById('catalog-search-input');
+  if (catSearchInput) {
+    catSearchInput.addEventListener('input', (e) => {
+      _catalogSearchQuery = (e.target.value || '').trim().toLowerCase();
+      renderAppCatalogGrid();
+    });
+  }
 
   containerPane._dockerEventsBound = true;
 }
@@ -368,6 +420,204 @@ export async function fetchAndRenderDockerContainers() {
   } catch (err) {
     tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--crit); padding:16px;">Failed to load containers: ${escapeHtml(err.message)}</td></tr>`;
   }
+}
+
+export async function fetchAndRenderAppCatalog() {
+  _bindDockerEvents();
+  const grid = document.getElementById('docker-catalog-grid');
+  if (!grid) return;
+  try {
+    const list = await api.get('/api/docker/catalog');
+    _catalogList = Array.isArray(list) ? list : [];
+    renderAppCatalogGrid();
+  } catch (err) {
+    grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; color:var(--crit); padding:20px;">Failed to load catalog: ${escapeHtml(err.message)}</div>`;
+  }
+}
+
+export function renderAppCatalogGrid() {
+  const grid = document.getElementById('docker-catalog-grid');
+  if (!grid) return;
+
+  const filtered = _catalogList.filter((app) => {
+    if (_catalogCat !== 'all' && app.category !== _catalogCat) return false;
+    if (_catalogSearchQuery) {
+      const q = _catalogSearchQuery;
+      const matchName = (app.name || '').toLowerCase().includes(q);
+      const matchDesc = (app.description || '').toLowerCase().includes(q);
+      const matchId = (app.id || '').toLowerCase().includes(q);
+      if (!matchName && !matchDesc && !matchId) return false;
+    }
+    return true;
+  });
+
+  if (filtered.length === 0) {
+    grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:var(--muted); padding:30px;">No applications match your search.</div>';
+    return;
+  }
+
+  const categoryIcons = {
+    media: '🎬',
+    photos: '📸',
+    cloud: '☁️',
+    automation: '⚡',
+    utilities: '🛠️',
+    downloads: '📥',
+  };
+
+  grid.innerHTML = filtered.map((app) => {
+    const icon = categoryIcons[app.category] || '📦';
+    return `
+      <div class="catalog-app-card" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:12px; display:flex; flex-direction:column; justify-content:space-between; gap:10px; transition:border-color 0.2s, background 0.2s;">
+        <div>
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:6px; margin-bottom:6px;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="font-size:20px; line-height:1;">${icon}</span>
+              <div>
+                <div style="font-size:12.5px; font-weight:700; color:#fff;">${escapeHtml(app.name)}</div>
+                <code style="font-size:9.5px; color:var(--muted); font-family:var(--font-mono, monospace);">${escapeHtml(app.image)}</code>
+              </div>
+            </div>
+            <span class="ci-badge" style="font-size:9px; text-transform:uppercase; background:rgba(255,255,255,0.06); color:#cbd5e1; padding:2px 6px; border-radius:4px;">${escapeHtml(app.category)}</span>
+          </div>
+          <p style="font-size:11px; color:#94a3b8; line-height:1.4; margin:0 0 6px 0; min-height:32px;">${escapeHtml(app.description)}</p>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,0.06); padding-top:8px;">
+          <span style="font-size:10.5px; font-family:var(--font-mono, monospace); color:var(--accent-cyan, #00f0ff); background:rgba(0,240,255,0.08); padding:2px 6px; border-radius:4px;">Port :${app.default_port}</span>
+          <button class="btn-pill-toggle btn-deploy-app" data-appid="${escapeHtml(app.id)}" style="background:var(--brand, #0ea5e9); color:#fff; border:none; padding:3px 10px; font-weight:700; font-size:11px;">Deploy / Stack</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  grid.querySelectorAll('.btn-deploy-app').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      openAppDeployModal(btn.dataset.appid);
+    });
+  });
+}
+
+export async function openAppDeployModal(appId) {
+  let modal = document.getElementById('app-deploy-modal-overlay');
+  if (!modal) {
+    const modalHtml = `
+      <div id="app-deploy-modal-overlay" class="smart-modal-backdrop" style="display:none; z-index:10020;">
+        <div id="app-deploy-modal-window" class="smart-modal-window" style="width:620px; max-width:94vw; max-height:88vh; display:flex; flex-direction:column;">
+          <div class="smart-modal-header" style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span id="adm-icon" style="font-size:18px;">📦</span>
+              <span id="adm-title" style="font-weight:700; color:#fff; font-size:13px;">Deploy Application Stack</span>
+            </div>
+            <button class="win-btn close-btn" id="adm-close-btn" title="Close" aria-label="Close"></button>
+          </div>
+          <div style="flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:12px;">
+            <div id="adm-conflict-banner" style="padding:10px 12px; border-radius:6px; font-size:11px; line-height:1.4;"></div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+              <div>
+                <label style="display:block; font-size:10px; font-weight:700; color:var(--muted); margin-bottom:4px;">HOST PORT MAPPING</label>
+                <input type="number" id="adm-port-input" class="tz-text-input" style="width:100%; box-sizing:border-box; font-size:11.5px; padding:6px 8px;">
+              </div>
+              <div>
+                <label style="display:block; font-size:10px; font-weight:700; color:var(--muted); margin-bottom:4px;">STORAGE ROOT DIRECTORY</label>
+                <input type="text" id="adm-storage-input" value="/mnt/user/appdata" class="tz-text-input" style="width:100%; box-sizing:border-box; font-size:11.5px; padding:6px 8px;">
+              </div>
+            </div>
+            <div>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <span style="font-size:10.5px; font-weight:700; color:var(--muted);">DOCKER COMPOSE DEFINITION</span>
+                <div style="display:flex; gap:6px;">
+                  <button class="btn-pill-toggle" id="adm-copy-btn">📋 Copy YAML</button>
+                  <button class="btn-pill-toggle" id="adm-download-btn">⬇️ Download</button>
+                </div>
+              </div>
+              <pre id="adm-compose-pre" style="margin:0; background:#080c14; border:1px solid rgba(255,255,255,0.1); border-radius:6px; padding:10px; max-height:220px; overflow:auto; font-family:var(--font-mono, monospace); font-size:10.5px; color:#e2e8f0; line-height:1.45;"></pre>
+            </div>
+          </div>
+          <div style="padding:10px 16px; border-top:1px solid rgba(255,255,255,0.08); display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.2);">
+            <button class="btn-pill-toggle" id="adm-cancel-btn">Cancel</button>
+            <button class="btn-pill-toggle" id="adm-deploy-confirm-btn" style="background:var(--ok2, #25c2a0); color:#fff; border:none; padding:6px 14px; font-weight:700;">✓ Deploy Ready</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    modal = document.getElementById('app-deploy-modal-overlay');
+
+    document.getElementById('adm-close-btn').addEventListener('click', () => { modal.style.display = 'none'; });
+    document.getElementById('adm-cancel-btn').addEventListener('click', () => { modal.style.display = 'none'; });
+  }
+
+  modal.style.display = 'flex';
+
+  let suggestedPort = 8080;
+  const banner = document.getElementById('adm-conflict-banner');
+  const portInput = document.getElementById('adm-port-input');
+  const storageInput = document.getElementById('adm-storage-input');
+  const composePre = document.getElementById('adm-compose-pre');
+  const title = document.getElementById('adm-title');
+
+  title.textContent = `Deploy ${appId.toUpperCase()}`;
+  banner.innerHTML = '<span style="color:var(--muted);">Probing host ports for conflicts...</span>';
+  banner.style.background = 'rgba(255,255,255,0.04)';
+  banner.style.border = '1px solid rgba(255,255,255,0.08)';
+
+  try {
+    const resolveData = await api.get(`/api/docker/catalog/${appId}/resolve`);
+    suggestedPort = resolveData.suggested_port;
+    portInput.value = suggestedPort;
+
+    if (resolveData.conflict_detected) {
+      banner.style.background = 'rgba(245, 166, 35, 0.12)';
+      banner.style.border = '1px solid var(--warn, #f5a623)';
+      banner.innerHTML = `<span style="color:var(--warn, #f5a623); font-weight:bold;">⚠️ Port Conflict Detected:</span> Default port ${resolveData.default_port} is busy. Automatically mapped to free port <strong>${suggestedPort}</strong>!`;
+    } else {
+      banner.style.background = 'rgba(37, 194, 160, 0.12)';
+      banner.style.border = '1px solid var(--ok2, #25c2a0)';
+      banner.innerHTML = `<span style="color:var(--ok2, #25c2a0); font-weight:bold;">✓ Ready to Deploy:</span> Port ${suggestedPort} is free and ready.`;
+    }
+  } catch (e) {
+    portInput.value = 8080;
+    banner.innerHTML = '<span style="color:var(--muted);">Port status: Default assigned</span>';
+  }
+
+  async function updateComposePreview() {
+    const p = parseInt(portInput.value, 10) || suggestedPort;
+    const s = storageInput.value.trim() || '/mnt/user/appdata';
+    try {
+      const comp = await api.post(`/api/docker/catalog/${appId}/compose`, { host_port: p, storage_root: s });
+      composePre.textContent = comp.compose_yaml;
+    } catch (err) {
+      composePre.textContent = `# Failed to generate compose: ${err.message}`;
+    }
+  }
+
+  portInput.oninput = updateComposePreview;
+  storageInput.oninput = updateComposePreview;
+  await updateComposePreview();
+
+  document.getElementById('adm-copy-btn').onclick = () => {
+    navigator.clipboard.writeText(composePre.textContent).then(() => {
+      showToast('Docker Compose YAML copied to clipboard!', 'success');
+    });
+  };
+
+  document.getElementById('adm-download-btn').onclick = () => {
+    const blob = new Blob([composePre.textContent], { type: 'text/yaml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${appId}-compose.yml`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast(`Downloaded ${appId}-compose.yml`, 'info');
+  };
+
+  document.getElementById('adm-deploy-confirm-btn').onclick = () => {
+    navigator.clipboard.writeText(composePre.textContent).then(() => {
+      showToast('Stack YAML ready & copied! Paste into Docker Compose or save file.', 'success');
+      modal.style.display = 'none';
+    });
+  };
 }
 
 export async function fetchAndRenderUpsTelemetry() {

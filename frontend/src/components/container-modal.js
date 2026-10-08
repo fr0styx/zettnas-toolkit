@@ -20,6 +20,8 @@ let _activeLogFilter = '';
 let _autoScrollLogs = true;
 let _unbindFocusTrap = null;
 let _activeTab = 'overview';
+let _termHistory = [];
+let _termHistoryIdx = -1;
 
 export function initContainerModal() {
   if (document.getElementById('container-inspector-overlay')) return;
@@ -50,6 +52,7 @@ export function initContainerModal() {
           <button class="btn-pill-toggle ci-tab-btn" data-tab="env">🔑 Environment</button>
           <button class="btn-pill-toggle ci-tab-btn" data-tab="compose">📜 Docker Compose</button>
           <button class="btn-pill-toggle ci-tab-btn" data-tab="logs">📄 Live Logs</button>
+          <button class="btn-pill-toggle ci-tab-btn" data-tab="terminal">💻 Web Terminal</button>
         </div>
 
         <!-- Tab Content Panes -->
@@ -122,6 +125,27 @@ export function initContainerModal() {
             </div>
             <div id="ci-logs-terminal" style="background:#05080f; border:1px solid rgba(255,255,255,0.1); border-radius:6px; height:340px; overflow-y:auto; padding:10px; font-family:var(--font-mono, monospace); font-size:10.5px; line-height:1.45; color:#cbd5e1;">
               <div style="color:var(--muted); text-align:center; padding:20px;">Fetching logs...</div>
+            </div>
+          </div>
+
+          <!-- 7. Web Terminal Tab -->
+          <div id="ci-pane-terminal" class="ci-pane" style="display:none;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:8px;">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span class="ci-badge" style="font-size:10px; background:rgba(34,197,94,0.15); color:#22c55e; border:1px solid rgba(34,197,94,0.3); padding:2px 8px; border-radius:4px; font-weight:700;">LIVE EXEC</span>
+                <span style="font-size:11px; color:var(--muted);">In-browser container command execution</span>
+              </div>
+              <div style="display:flex; gap:6px;">
+                <button class="btn-pill-toggle" id="ci-term-clear-btn">🧹 Clear</button>
+              </div>
+            </div>
+            <div id="ci-term-output" style="background:#030712; border:1px solid rgba(255,255,255,0.12); border-radius:6px 6px 0 0; height:310px; overflow-y:auto; padding:12px; font-family:var(--font-mono, monospace); font-size:11px; line-height:1.45; color:#a7f3d0; white-space:pre-wrap; word-break:break-word;">
+              <span style="color:#64748b;"># Interactive Container Terminal Ready. Type commands below (e.g. ls -la, uname -a, ps aux)...</span>
+            </div>
+            <div style="display:flex; background:#0f172a; border:1px solid rgba(255,255,255,0.12); border-top:none; border-radius:0 0 6px 6px; padding:6px 10px; gap:8px; align-items:center;">
+              <span style="color:#10b981; font-family:var(--font-mono, monospace); font-weight:bold; font-size:12px;">$</span>
+              <input type="text" id="ci-term-input" placeholder="Type a command and press Enter..." style="flex:1; background:transparent; border:none; outline:none; color:#f8fafc; font-family:var(--font-mono, monospace); font-size:11.5px;" autocomplete="off" spellcheck="false">
+              <button class="btn-pill-toggle" id="ci-term-send-btn" style="padding:2px 10px; font-size:11px;">Run</button>
             </div>
           </div>
         </div>
@@ -263,6 +287,42 @@ export function initContainerModal() {
       });
     });
   }
+
+  // Terminal controls
+  const termClearBtn = document.getElementById('ci-term-clear-btn');
+  if (termClearBtn) {
+    termClearBtn.addEventListener('click', clearTerminal);
+  }
+
+  const termSendBtn = document.getElementById('ci-term-send-btn');
+  if (termSendBtn) {
+    termSendBtn.addEventListener('click', executeTerminalCmd);
+  }
+
+  const termInput = document.getElementById('ci-term-input');
+  if (termInput) {
+    termInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        executeTerminalCmd();
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (_termHistory.length && _termHistoryIdx > 0) {
+          _termHistoryIdx--;
+          termInput.value = _termHistory[_termHistoryIdx];
+        }
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (_termHistoryIdx < _termHistory.length - 1) {
+          _termHistoryIdx++;
+          termInput.value = _termHistory[_termHistoryIdx];
+        } else {
+          _termHistoryIdx = _termHistory.length;
+          termInput.value = '';
+        }
+      }
+    });
+  }
 }
 
 export function closeContainerInspector() {
@@ -296,8 +356,62 @@ export async function switchContainerTab(tabTarget) {
     await loadContainerCompose(_activeCid);
   } else if (tabTarget === 'logs' && _activeCid) {
     await loadContainerLogs(_activeCid);
+  } else if (tabTarget === 'terminal') {
+    const input = document.getElementById('ci-term-input');
+    if (input) setTimeout(() => input.focus(), 60);
   }
 }
+
+export async function executeTerminalCmd() {
+  const input = document.getElementById('ci-term-input');
+  const output = document.getElementById('ci-term-output');
+  if (!input || !output || !_activeCid) return;
+
+  const cmd = input.value.trim();
+  if (!cmd) return;
+
+  _termHistory.push(cmd);
+  _termHistoryIdx = _termHistory.length;
+  input.value = '';
+
+  const timestamp = new Date().toLocaleTimeString();
+  const cmdNode = document.createElement('div');
+  cmdNode.style.marginTop = '6px';
+  cmdNode.innerHTML = `<span style="color:#64748b; font-size:10px;">[${timestamp}]</span> <span style="color:#10b981; font-weight:bold;">$</span> <span style="color:#f1f5f9; font-weight:600;">${escapeHtml(cmd)}</span>`;
+  output.appendChild(cmdNode);
+
+  const runningNode = document.createElement('div');
+  runningNode.style.color = '#64748b';
+  runningNode.style.fontStyle = 'italic';
+  runningNode.textContent = 'Executing...';
+  output.appendChild(runningNode);
+  output.scrollTop = output.scrollHeight;
+
+  try {
+    const res = await api.post(`/api/docker/containers/${_activeCid}/exec`, { cmd });
+    runningNode.remove();
+
+    const resultNode = document.createElement('div');
+    resultNode.style.color = '#a7f3d0';
+    resultNode.textContent = res.output || '(No output)';
+    output.appendChild(resultNode);
+  } catch (err) {
+    runningNode.remove();
+    const errNode = document.createElement('div');
+    errNode.style.color = '#ef4444';
+    errNode.textContent = `Error: ${err.message || err}`;
+    output.appendChild(errNode);
+  }
+  output.scrollTop = output.scrollHeight;
+}
+
+export function clearTerminal() {
+  const output = document.getElementById('ci-term-output');
+  if (output) {
+    output.innerHTML = '<span style="color:#64748b;"># Interactive Container Terminal Ready. Type commands below (e.g. ls -la, uname -a, ps aux)...</span>';
+  }
+}
+
 
 export async function openContainerInspector(cid, cname) {
   initContainerModal();

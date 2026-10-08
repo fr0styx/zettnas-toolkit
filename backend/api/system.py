@@ -553,6 +553,57 @@ async def get_check_port(port: int, proto: str = "tcp"):
     return {"port": port, "proto": proto, "available": available}
 
 
+class AppComposeRequest(BaseModel):
+    host_port: Optional[int] = None
+    storage_root: str = "/mnt/user/appdata"
+
+
+class ContainerExecRequest(BaseModel):
+    cmd: str
+
+
+@router.get("/docker/catalog")
+async def get_docker_catalog():
+    from backend.services.app_catalog import get_all_catalog_apps
+
+    return await asyncio.to_thread(get_all_catalog_apps)
+
+
+@router.get("/docker/catalog/{app_id}/resolve")
+async def get_docker_catalog_resolve(app_id: str):
+    from backend.services.app_catalog import resolve_app_port_conflict
+
+    res = await asyncio.to_thread(resolve_app_port_conflict, app_id)
+    if "error" in res:
+        raise HTTPException(status_code=404, detail=res["error"])
+    return res
+
+
+@router.post("/docker/catalog/{app_id}/compose")
+async def post_docker_catalog_compose(app_id: str, req: Optional[AppComposeRequest] = None):
+    from backend.services.app_catalog import generate_compose_for_app
+
+    host_port = req.host_port if req else None
+    storage_root = req.storage_root if req else "/mnt/user/appdata"
+    res = await asyncio.to_thread(generate_compose_for_app, app_id, host_port=host_port, storage_root=storage_root)
+    if "error" in res:
+        raise HTTPException(status_code=404, detail=res["error"])
+    return res
+
+
+@router.post("/docker/containers/{container_id}/exec")
+async def post_docker_container_exec(container_id: str, req: ContainerExecRequest):
+    if not container_id or not re.match(r"^[a-zA-Z0-9_.-]{1,128}$", container_id):
+        raise HTTPException(status_code=400, detail="Invalid container ID or name")
+    from backend.services.compose_synthesizer import execute_in_container
+
+    res = await asyncio.to_thread(execute_in_container, container_id, req.cmd)
+    if not res.get("success"):
+        raise HTTPException(status_code=400, detail=res.get("error", "Execution failed"))
+    return res
+
+
+
 @router.get("/ups")
 async def get_ups_telemetry():
     return await asyncio.to_thread(read_ups_status)

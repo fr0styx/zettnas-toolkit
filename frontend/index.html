@@ -2218,42 +2218,70 @@
           </div>
         </div>
         <div id="mgmt-pane-docker" class="mgmt-tab-pane" style="display: none;">
-          <div class="mgmt-card-intro" style="display:flex; justify-content:space-between; align-items:center;">
+          <div class="mgmt-card-intro" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
             <div>
-              <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-chip"/></svg> <span data-i18n="mgmt.docker_sec_title">Docker Containers & Services</span></div>
-              <div class="mgmt-card-intro-desc" data-i18n="mgmt.docker_sec_desc">Inspect active containers, container health, and uptime via local Docker daemon.</div>
+              <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-chip"/></svg> <span data-i18n="mgmt.docker_sec_title">Docker Containers & App Catalog</span></div>
+              <div class="mgmt-card-intro-desc" data-i18n="mgmt.docker_sec_desc">Manage running containers or deploy curated homelab applications in 1-click.</div>
             </div>
-            <button class="btn-pill-toggle" id="btn-refresh-docker" title="Refresh Containers" data-i18n="mgmt.refresh">🔄 Refresh</button>
+            <div style="display:flex; gap:6px; align-items:center;">
+              <button class="btn-pill-toggle active" id="btn-view-docker-containers">Active Containers</button>
+              <button class="btn-pill-toggle" id="btn-view-docker-catalog">📦 App Catalog (25+)</button>
+              <button class="btn-pill-toggle" id="btn-refresh-docker" title="Refresh Containers" data-i18n="mgmt.refresh">🔄 Refresh</button>
+            </div>
           </div>
           <div class="mgmt-detail-body">
-            <div class="docker-toolbar" style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:8px; margin-bottom:12px;">
-              <div class="docker-filter-pills" style="display:flex; gap:6px; flex-wrap:wrap;">
-                <button class="btn-pill-toggle docker-filter-btn active" data-filter="all"><span data-i18n="mgmt.docker_filter_all">All</span> <span id="docker-count-all" class="docker-count-badge">0</span></button>
-                <button class="btn-pill-toggle docker-filter-btn" data-filter="running"><span data-i18n="mgmt.docker_filter_running">Running</span> <span id="docker-count-running" class="docker-count-badge">0</span></button>
-                <button class="btn-pill-toggle docker-filter-btn" data-filter="stopped"><span data-i18n="mgmt.docker_filter_stopped">Stopped</span> <span id="docker-count-stopped" class="docker-count-badge">0</span></button>
-                <button class="btn-pill-toggle docker-filter-btn" data-filter="compose"><span data-i18n="mgmt.docker_filter_compose">Compose</span> <span id="docker-count-compose" class="docker-count-badge">0</span></button>
-                <button class="btn-pill-toggle docker-filter-btn" data-filter="standalone"><span data-i18n="mgmt.docker_filter_standalone">Standalone</span> <span id="docker-count-standalone" class="docker-count-badge">0</span></button>
+            <!-- 1. Active Containers View -->
+            <div id="docker-view-containers-wrap">
+              <div class="docker-toolbar" style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:8px; margin-bottom:12px;">
+                <div class="docker-filter-pills" style="display:flex; gap:6px; flex-wrap:wrap;">
+                  <button class="btn-pill-toggle docker-filter-btn active" data-filter="all"><span data-i18n="mgmt.docker_filter_all">All</span> <span id="docker-count-all" class="docker-count-badge">0</span></button>
+                  <button class="btn-pill-toggle docker-filter-btn" data-filter="running"><span data-i18n="mgmt.docker_filter_running">Running</span> <span id="docker-count-running" class="docker-count-badge">0</span></button>
+                  <button class="btn-pill-toggle docker-filter-btn" data-filter="stopped"><span data-i18n="mgmt.docker_filter_stopped">Stopped</span> <span id="docker-count-stopped" class="docker-count-badge">0</span></button>
+                  <button class="btn-pill-toggle docker-filter-btn" data-filter="compose"><span data-i18n="mgmt.docker_filter_compose">Compose</span> <span id="docker-count-compose" class="docker-count-badge">0</span></button>
+                  <button class="btn-pill-toggle docker-filter-btn" data-filter="standalone"><span data-i18n="mgmt.docker_filter_standalone">Standalone</span> <span id="docker-count-standalone" class="docker-count-badge">0</span></button>
+                </div>
+                <div class="docker-search-wrap" style="position:relative;">
+                  <input type="text" id="docker-search-input" placeholder="Search containers, images, ports..." data-i18n-placeholder="mgmt.docker_search_placeholder" class="tz-text-input" style="font-size:11px; padding:3px 8px; width:200px; height:24px; border-radius:4px;">
+                </div>
               </div>
-              <div class="docker-search-wrap" style="position:relative;">
-                <input type="text" id="docker-search-input" placeholder="Search containers, images, ports..." data-i18n-placeholder="mgmt.docker_search_placeholder" class="tz-text-input" style="font-size:11px; padding:3px 8px; width:200px; height:24px; border-radius:4px;">
+              <div style="overflow-x:auto; max-height:420px; background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.06); border-radius:8px;">
+                <table class="copy-history-table docker-table">
+                  <thead>
+                    <tr>
+                      <th data-i18n="mgmt.tbl_name_id">Name / Stack</th>
+                      <th data-i18n="mgmt.tbl_hardware">Hardware</th>
+                      <th data-i18n="mgmt.tbl_telemetry">CPU / RAM</th>
+                      <th data-i18n="mgmt.tbl_ports">Ports & Web UI</th>
+                      <th data-i18n="mgmt.tbl_uptime">Status & Uptime</th>
+                      <th style="text-align:right;" data-i18n="mgmt.tbl_actions">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="docker-containers-tbody">
+                    <tr><td colspan="6" style="text-align:center; color:var(--muted); padding:20px;">Scanning Docker socket...</td></tr>
+                  </tbody>
+                </table>
               </div>
             </div>
-            <div style="overflow-x:auto; max-height:420px; background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.06); border-radius:8px;">
-              <table class="copy-history-table docker-table">
-                <thead>
-                  <tr>
-                    <th data-i18n="mgmt.tbl_name_id">Name / Stack</th>
-                    <th data-i18n="mgmt.tbl_hardware">Hardware</th>
-                    <th data-i18n="mgmt.tbl_telemetry">CPU / RAM</th>
-                    <th data-i18n="mgmt.tbl_ports">Ports & Web UI</th>
-                    <th data-i18n="mgmt.tbl_uptime">Status & Uptime</th>
-                    <th style="text-align:right;" data-i18n="mgmt.tbl_actions">Actions</th>
-                  </tr>
-                </thead>
-                <tbody id="docker-containers-tbody">
-                  <tr><td colspan="6" style="text-align:center; color:var(--muted); padding:20px;">Scanning Docker socket...</td></tr>
-                </tbody>
-              </table>
+
+            <!-- 2. Curated App Catalog View -->
+            <div id="docker-view-catalog-wrap" style="display:none;">
+              <div class="catalog-toolbar" style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:8px; margin-bottom:12px;">
+                <div class="catalog-filter-pills" style="display:flex; gap:6px; flex-wrap:wrap;">
+                  <button class="btn-pill-toggle catalog-filter-btn active" data-cat="all">All Apps (25+)</button>
+                  <button class="btn-pill-toggle catalog-filter-btn" data-cat="media">Media & Streaming</button>
+                  <button class="btn-pill-toggle catalog-filter-btn" data-cat="photos">Photos</button>
+                  <button class="btn-pill-toggle catalog-filter-btn" data-cat="cloud">Cloud & Files</button>
+                  <button class="btn-pill-toggle catalog-filter-btn" data-cat="automation">Automation</button>
+                  <button class="btn-pill-toggle catalog-filter-btn" data-cat="utilities">Utilities</button>
+                  <button class="btn-pill-toggle catalog-filter-btn" data-cat="downloads">Downloads</button>
+                </div>
+                <div class="catalog-search-wrap" style="position:relative;">
+                  <input type="text" id="catalog-search-input" placeholder="Search curated apps..." class="tz-text-input" style="font-size:11px; padding:3px 8px; width:180px; height:24px; border-radius:4px;">
+                </div>
+              </div>
+              <div id="docker-catalog-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:12px; max-height:420px; overflow-y:auto; padding:2px;">
+                <div style="color:var(--muted); text-align:center; padding:30px; grid-column:1/-1;">Loading curated app catalog...</div>
+              </div>
             </div>
           </div>
         </div>

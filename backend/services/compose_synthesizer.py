@@ -485,3 +485,92 @@ def get_container_logs_chunk(cid_or_name: str, tail: int = 200) -> Dict[str, Any
                 conn.close()
             except Exception:
                 pass
+
+
+def execute_in_container(cid_or_name: str, cmd: Any) -> Dict[str, Any]:
+    """
+    Executes a command inside the target container via Docker Engine socket.
+    Returns exit code and stdout/stderr output.
+    """
+    sock_path = "/var/run/docker.sock"
+    if not os.path.exists(sock_path):
+        return {"success": False, "error": "Docker socket not available"}
+
+    if isinstance(cmd, str):
+        cmd_list = ["/bin/sh", "-c", cmd]
+    elif isinstance(cmd, list):
+        cmd_list = cmd
+    else:
+        cmd_list = ["/bin/sh", "-c", "echo ready"]
+
+    conn = None
+    try:
+        conn = UnixHTTPConnection(sock_path, timeout=10.0)
+        # 1. Create exec instance
+        create_payload = json.dumps(
+            {
+                "AttachStdout": True,
+                "AttachStderr": True,
+                "Tty": False,
+                "Cmd": cmd_list,
+            }
+        )
+        conn.request(
+            "POST",
+            f"/containers/{cid_or_name}/exec",
+            body=create_payload,
+            headers={"Content-Type": "application/json"},
+        )
+        create_res = conn.getresponse()
+        if create_res.status not in (200, 201):
+            return {"success": False, "error": f"Failed to create exec instance: status {create_res.status}"}
+
+        exec_info = json.loads(create_res.read().decode("utf-8"))
+        exec_id = exec_info.get("Id")
+        if not exec_id:
+            return {"success": False, "error": "No Exec ID returned by Docker daemon"}
+
+        # 2. Start exec instance
+        start_payload = json.dumps({"Detach": False, "Tty": False})
+        conn.request(
+            "POST",
+            f"/exec/{exec_id}/start",
+            body=start_payload,
+            headers={"Content-Type": "application/json"},
+        )
+        start_res = conn.getresponse()
+        raw_output = start_res.read()
+
+        # Parse Docker multiplexed output or raw string
+        clean_lines = []
+        idx = 0
+        raw_len = len(raw_output)
+        while idx + 8 <= raw_len:
+            stream_type = raw_output[idx]
+            if stream_type not in (1, 2, 0):
+                break
+            payload_len = struct.unpack(">I", raw_output[idx + 4 : idx + 8])[0]
+            if idx + 8 + payload_len > raw_len:
+                break
+            payload = raw_output[idx + 8 : idx + 8 + payload_len].decode("utf-8", errors="replace")
+            idx += 8 + payload_len
+            clean_lines.append(payload)
+
+        output_str = "".join(clean_lines) if clean_lines else raw_output.decode("utf-8", errors="replace")
+
+        return {
+            "success": True,
+            "exec_id": exec_id,
+            "output": output_str.strip(),
+            "cmd": cmd_list,
+        }
+    except Exception as e:
+        logger.error(f"[Docker] Failed to execute in {cid_or_name}: {e}")
+        return {"success": False, "error": str(e)}
+    finally:
+        if conn:
+            try:
+                conn.close()
+            except Exception:
+                pass
+
