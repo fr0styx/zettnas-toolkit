@@ -730,6 +730,15 @@ function renderEnvTab(details) {
     return;
   }
 
+  const envSecretStore = new Map();
+  envs.forEach((e, idx) => {
+    envSecretStore.set(idx, {
+      raw: e.value,
+      masked: e.masked_value,
+      isSecret: e.is_secret,
+    });
+  });
+
   container.innerHTML = `
     <div style="background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.06); border-radius:6px; overflow:hidden;">
       <table class="copy-history-table" style="margin:0;">
@@ -750,11 +759,11 @@ function renderEnvTab(details) {
                   ${escapeHtml(e.key)} ${secBadge}
                 </td>
                 <td style="font-family:var(--font-mono, monospace); font-size:10.5px; word-break:break-all;">
-                  <span id="env-val-${idx}" data-raw="${escapeHtml(e.value)}" data-masked="${escapeHtml(e.masked_value)}">${escapeHtml(e.masked_value)}</span>
+                  <span id="env-val-${idx}">${escapeHtml(e.masked_value)}</span>
                 </td>
                 <td style="text-align:right;">
                   ${isSec ? `<button class="btn-toggle-secret btn-pill-toggle" data-idx="${idx}" style="font-size:9.5px; padding:1px 5px;" title="Toggle show/hide">👁️</button>` : ''}
-                  <button class="btn-copy-env btn-pill-toggle" data-val="${escapeHtml(e.value)}" style="font-size:9.5px; padding:1px 5px;" title="Copy value">📋</button>
+                  <button class="btn-copy-env btn-pill-toggle" data-idx="${idx}" style="font-size:9.5px; padding:1px 5px;" title="Copy value">📋</button>
                 </td>
               </tr>
             `;
@@ -767,11 +776,12 @@ function renderEnvTab(details) {
   // Wire secret reveal toggle
   container.querySelectorAll('.btn-toggle-secret').forEach((btn) => {
     btn.addEventListener('click', () => {
-      const idx = btn.dataset.idx;
+      const idx = parseInt(btn.dataset.idx, 10);
+      const entry = envSecretStore.get(idx);
       const span = document.getElementById(`env-val-${idx}`);
-      if (!span) return;
-      const isCurrentlyMasked = span.textContent === span.dataset.masked;
-      span.textContent = isCurrentlyMasked ? span.dataset.raw : span.dataset.masked;
+      if (!span || !entry) return;
+      const isCurrentlyMasked = span.textContent === entry.masked;
+      span.textContent = isCurrentlyMasked ? entry.raw : entry.masked;
       btn.textContent = isCurrentlyMasked ? '🔒' : '👁️';
     });
   });
@@ -779,7 +789,10 @@ function renderEnvTab(details) {
   // Wire copy buttons
   container.querySelectorAll('.btn-copy-env').forEach((btn) => {
     btn.addEventListener('click', () => {
-      const val = btn.dataset.val;
+      const idx = parseInt(btn.dataset.idx, 10);
+      const entry = envSecretStore.get(idx);
+      const val = entry ? entry.raw : '';
+      if (!val) return;
       navigator.clipboard.writeText(val).then(() => {
         showToast('Value copied to clipboard.', 'success');
       });

@@ -309,12 +309,15 @@ export function bringToFront(windowEl) {
     windowEl.id === 'management-modal-overlay' ||
     windowEl.id === 'file-manager-window' ||
     windowEl.id === 'notif-center-panel' ||
+    windowEl.id === 'container-inspector-window' ||
+    windowEl.id === 'container-inspector-overlay' ||
     windowEl.classList?.contains('chassis-front-panel') ||
     windowEl.classList?.contains('management-window') ||
     windowEl.classList?.contains('mgmt-app-window') ||
     windowEl.classList?.contains('file-manager-window') ||
+    windowEl.classList?.contains('container-inspector-window') ||
     windowEl.classList?.contains('os-window') ||
-    windowEl.closest?.('#console-modal-overlay, #management-modal-overlay, #file-manager-window, #notif-center-panel')
+    windowEl.closest?.('#console-modal-overlay, #management-modal-overlay, #file-manager-window, #notif-center-panel, #container-inspector-window, #container-inspector-overlay')
   );
 
   // Protect modal backdrops & modal dialogs from being demoted into window z-index layer
@@ -434,7 +437,8 @@ export function makeDraggable(dragEl, handleEl, customId) {
   let startX = 0, startY = 0, initialMouseX = 0, initialMouseY = 0;
   let activeSnap = null;
 
-  handleEl.addEventListener('mousedown', (e) => {
+  handleEl.style.touchAction = 'none';
+  handleEl.addEventListener('pointerdown', (e) => {
     if (e.button !== 0 || e.target.closest('button') || e.target.closest('input') || e.target.closest('.modal-ctrl-btn')) return;
     if (document.body.classList.contains('mobile-mode') || window.innerWidth <= 768) return;
     e.preventDefault();
@@ -471,6 +475,10 @@ export function makeDraggable(dragEl, handleEl, customId) {
     initialMouseX = e.clientX;
     initialMouseY = e.clientY;
 
+    try {
+      handleEl.setPointerCapture?.(e.pointerId);
+    } catch (_) {}
+
     const drag = (eMove) => {
       eMove.preventDefault();
       const dx = eMove.clientX - initialMouseX;
@@ -506,10 +514,16 @@ export function makeDraggable(dragEl, handleEl, customId) {
       }
     };
 
-    const stopDrag = () => {
+    const stopDrag = (eUp) => {
       ghost.style.display = 'none';
-      document.removeEventListener('mousemove', drag);
-      document.removeEventListener('mouseup', stopDrag);
+      document.removeEventListener('pointermove', drag);
+      document.removeEventListener('pointerup', stopDrag);
+      document.removeEventListener('pointercancel', stopDrag);
+      try {
+        if (handleEl.hasPointerCapture && handleEl.hasPointerCapture(e.pointerId)) {
+          handleEl.releasePointerCapture(e.pointerId);
+        }
+      } catch (_) {}
 
       if (activeSnap) {
         if (!dragEl._preSnapWidth) {

@@ -55,7 +55,9 @@ class EventBus extends EventTarget {
 
   emit(event, detail = null) {
     // For high-frequency telemetry and rendering events, coalesce to the next animation frame
+    const isHidden = typeof document !== 'undefined' && document.hidden;
     if (
+      !isHidden &&
       typeof window !== 'undefined' &&
       typeof window.requestAnimationFrame === 'function' &&
       (event === 'stats:updated' || event === 'stats_tick')

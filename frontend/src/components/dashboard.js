@@ -378,19 +378,23 @@ export function applyDesktopTheme(themeName, customAccent = null) {
     if (typeof document !== 'undefined' && document.documentElement) {
       document.documentElement.style.setProperty('--brand', customAccent);
       document.documentElement.style.setProperty('--ok2', customAccent);
+      document.documentElement.style.setProperty('--desktop-accent', customAccent);
     }
     if (typeof document !== 'undefined' && document.body) {
       document.body.style.setProperty('--brand', customAccent);
       document.body.style.setProperty('--ok2', customAccent);
+      document.body.style.setProperty('--desktop-accent', customAccent);
     }
   } else {
     if (typeof document !== 'undefined' && document.documentElement) {
       document.documentElement.style.removeProperty('--brand');
       document.documentElement.style.removeProperty('--ok2');
+      document.documentElement.style.removeProperty('--desktop-accent');
     }
     if (typeof document !== 'undefined' && document.body) {
       document.body.style.removeProperty('--brand');
       document.body.style.removeProperty('--ok2');
+      document.body.style.removeProperty('--desktop-accent');
     }
   }
 
@@ -449,9 +453,15 @@ export function applyLcdTheme(themeName, customAccent = null, textClarity = null
     if (customAccent) {
       el.style.setProperty('--brand', customAccent);
       el.style.setProperty('--ok2', customAccent);
+      el.style.setProperty('--lcd-brand', customAccent);
+      el.style.setProperty('--lcd-ok2', customAccent);
+      el.style.setProperty('--lcd-accent', customAccent);
     } else {
       el.style.removeProperty('--brand');
       el.style.removeProperty('--ok2');
+      el.style.removeProperty('--lcd-brand');
+      el.style.removeProperty('--lcd-ok2');
+      el.style.removeProperty('--lcd-accent');
     }
 
     el.classList.toggle('text-clarity-on', Boolean(textClarity));

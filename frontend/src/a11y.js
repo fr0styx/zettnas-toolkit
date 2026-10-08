@@ -42,11 +42,11 @@ export function enhanceInteractiveElements(root) {
     }
     if (!el.hasAttribute('aria-label') && !el.hasAttribute('title')) {
       const label = el.getAttribute('data-title') ||
-                    (el.innerText && el.innerText.trim()) ||
+                    (el.textContent && el.textContent.trim()) ||
                     (el.getAttribute('data-action') ? el.getAttribute('data-action').replace(/[-_]/g, ' ') : '');
       if (label && label.length > 0) {
         el.setAttribute('aria-label', label.slice(0, 50));
-      } else if (!el.children.length && !el.innerText?.trim()) {
+      } else if (!el.children.length && !el.textContent?.trim()) {
         el.setAttribute('aria-hidden', 'true');
       }
     }

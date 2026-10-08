@@ -6,6 +6,8 @@
   --bg:#0a0e13; --card:#141b24; --card-hi:#1b2430;
   --fg:#eaf1f8; --muted:#78838f;
   --ok:#33d17a; --ok2:#25c2a0; --warn:#f5b731; --crit:#f0553b;
+  --desktop-ok2: var(--desktop-accent, var(--ok2));
+  --lcd-ok2: var(--lcd-accent, #25c2a0);
   --track:#232e3c;
   --stage-zoom: 1;
   --chassis-scale: 1;
@@ -202,6 +204,14 @@ body.lcd-direct.lcd-theme-cyber {
   --crit: #ff4757;
   --track: #1e293b;
   --brand: #00f0ff;
+}
+
+#screen,
+#mini-lcd-canvas,
+#console-window,
+body.lcd-direct {
+  --ok2: var(--lcd-ok2, #25c2a0);
+  --brand: var(--lcd-brand, #00f0ff);
 }
 
 #screen,

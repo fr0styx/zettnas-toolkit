@@ -451,6 +451,11 @@ export function initFanControl() {
         const pts = [...state.curvePoints];
         if (dragIndex > 0) t = Math.max(t, pts[dragIndex - 1][0] + 1);
         if (dragIndex < pts.length - 1) t = Math.min(t, pts[dragIndex + 1][0] - 1);
+
+        // Enforce monotonicity: higher temperature points must have >= fan PWM
+        if (dragIndex > 0) p = Math.max(p, pts[dragIndex - 1][1]);
+        if (dragIndex < pts.length - 1) p = Math.min(p, pts[dragIndex + 1][1]);
+
         if (dragIndex === 0) t = 30;
         if (dragIndex === pts.length - 1) t = 60;
 
