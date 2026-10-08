@@ -3,7 +3,7 @@
 ## v1.5.0 (2026-10-08) - Stable
 ### 🚀 Master UI/UX Evolution & System Hardening (Phases 1–5 Complete)
 
-This major production release elevates ZettNAS Workbench into the premier homelab and NAS operating experience across all competitors (Synology DSM 7.2, TrueNAS SCALE, QTS, UGOS Pro, CasaOS, Unraid). It delivers next-generation desktop window management, physical chassis digital twins, a curated 25+ container app catalog, in-browser container execution terminals, a universal Spotlight command palette (`Cmd+K`), and a mobile PWA touch experience with zero bundle bloat and complete hardware/OS agnosticism:
+This major production release elevates ZettNAS Workbench into the premier homelab and NAS operating experience. It delivers next-generation desktop window management, physical chassis digital twins, a curated 25+ container app catalog, in-browser container execution terminals, a universal Spotlight command palette (`Cmd+K`), and a mobile PWA touch experience with zero bundle bloat and complete hardware/OS agnosticism:
 
 - **Phase 1: Core Desktop OS & Window Gestures**:
   - **8-Zone Aero Snap & Acrylic Lens**: Unified pointer capture window tiling supporting edge halves and 4 corner quarters with acrylic translucent snap preview ghost (`#window-snap-ghost`).
