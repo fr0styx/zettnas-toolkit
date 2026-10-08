@@ -1,13 +1,13 @@
 {
   "name": "zettnas-toolkit",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "description": "<div align=\"center\">   <img src=\"static/img/icon.png\" width=\"128\" height=\"128\" alt=\"ZettNAS Toolkit Icon\" style=\"border-radius: 24px;\">   <h1>ZettNAS Toolkit</h1>   <p><strong>All-in-one chassis management suite and live front-panel LCD dashboard for Zettlab NAS enclosures (D4, D6, D8).</strong></p>",
   "main": "index.js",
   "scripts": {
-    "test": "vitest run",
-    "test:coverage": "vitest run --coverage",
-    "build": "vite build",
-    "dev": "vite"
+    "test": "node ./node_modules/vitest/dist/cli.js run",
+    "test:coverage": "node ./node_modules/vitest/dist/cli.js run --coverage",
+    "build": "node ./node_modules/vite/bin/vite.js build",
+    "dev": "node ./node_modules/vite/bin/vite.js"
   },
   "repository": {
     "type": "git",

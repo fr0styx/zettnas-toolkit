@@ -2,9 +2,37 @@ import glob
 import os
 import time
 
-from backend.config import FAN_FAILSAFE_PWM, FAN_MAX_PWM, FAN_MIN_PWM, HOST_SYS, logger
+from backend.config import (
+    FAN_FAILSAFE_PWM,
+    FAN_KICKSTART_PWM,
+    FAN_KICKSTART_SECS,
+    FAN_MAX_PWM,
+    FAN_MIN_PWM,
+    HOST_SYS,
+    logger,
+)
 from backend.hardware.cpu import _find_hwmon
 from backend.state import Z_STATE
+
+
+def clamp_fan_pwm(val: int, allow_zero: bool = False) -> int:
+    """Enforce physical PWM bounds and strict binary cutoff for Zero RPM.
+
+    If allow_zero is True and val <= 0:
+        Returns 0 (fan stopped).
+    Otherwise:
+        Clamps val to [FAN_MIN_PWM, FAN_MAX_PWM] (58..183).
+    Values between 1 and 57 are strictly forbidden to prevent motor stall currents,
+    locked-rotor heating, and coil whine.
+    """
+    try:
+        ival = int(val)
+    except (TypeError, ValueError):
+        ival = FAN_MIN_PWM
+
+    if allow_zero and ival <= 0:
+        return 0
+    return max(FAN_MIN_PWM, min(FAN_MAX_PWM, ival))
 
 
 def read_fans():
@@ -81,9 +109,18 @@ def sanitize_curve_points(points):
     return out
 
 
-def calc_curve_pwm(temp, min_pwm=FAN_MIN_PWM, max_pwm=FAN_MAX_PWM, temp_min=37, temp_max=50, curve_points=None):
+def calc_curve_pwm(
+    temp,
+    min_pwm=FAN_MIN_PWM,
+    max_pwm=FAN_MAX_PWM,
+    temp_min=37,
+    temp_max=50,
+    curve_points=None,
+    allow_zero=False,
+):
+    effective_min = 0 if allow_zero else min_pwm
     if temp is None or temp <= 0:
-        return min_pwm
+        return effective_min
 
     # Inviolable hardware thermal watchdog with hysteresis
     WATCHDOG_CEILING_TEMP = 80
@@ -114,37 +151,70 @@ def calc_curve_pwm(temp, min_pwm=FAN_MIN_PWM, max_pwm=FAN_MAX_PWM, temp_min=37, 
                     pct = p1 + ratio * (p2 - p1)
                     break
         val = int((pct / 100.0) * max_pwm)
-        # Never below the minimum reliable spin speed.
-        return max(min_pwm, min(max_pwm, val))
+        return clamp_fan_pwm(val, allow_zero=allow_zero)
 
     if temp >= temp_max:
         return max_pwm
     if temp <= temp_min:
-        return min_pwm
+        return effective_min
     span = max(1, temp_max - temp_min)
     ratio = (temp - temp_min) / float(span)
     val = int(min_pwm + ratio * (max_pwm - min_pwm))
-    return max(min_pwm, min(max_pwm, val))
+    return clamp_fan_pwm(val, allow_zero=allow_zero)
 
 
-def apply_zone_pwm(pwm_index, target_pwm, hold_secs=120):
+def apply_zone_pwm(pwm_index, target_pwm, hold_secs=120, allow_zero=False):
     now = time.time()
     pwm_key = f"pwm{pwm_index}"
-    if pwm_key not in Z_STATE.fan_state_tracker:
-        Z_STATE.fan_state_tracker[pwm_key] = {"current": 67, "last_up_time": 0.0}
-    state = Z_STATE.fan_state_tracker[pwm_key]
-    current = state["current"]
+    # CPU fan (pwm3) is strictly forbidden from entering Zero RPM
+    if pwm_key == "pwm3":
+        allow_zero = False
 
-    if target_pwm > current:
-        state["current"] = target_pwm
+    if pwm_key not in Z_STATE.fan_state_tracker:
+        Z_STATE.fan_state_tracker[pwm_key] = {
+            "current": 67,
+            "last_up_time": 0.0,
+            "kickstart_until": 0.0,
+            "last_spinup_time": now,
+            "standby_since": 0.0,
+        }
+    state = Z_STATE.fan_state_tracker[pwm_key]
+    current = state.get("current", 67)
+    clamped_target = clamp_fan_pwm(target_pwm, allow_zero=allow_zero)
+
+    # 1. Non-blocking Kickstart from 0 RPM to Active Speed
+    if current == 0 and clamped_target > 0:
+        state["kickstart_until"] = now + FAN_KICKSTART_SECS
+        state["last_spinup_time"] = now
+        state["current"] = clamped_target
         state["last_up_time"] = now
-        return target_pwm
-    elif target_pwm < current:
-        if (now - state["last_up_time"]) >= hold_secs:
-            state["current"] = target_pwm
-            return target_pwm
+        return FAN_KICKSTART_PWM
+
+    # If kickstart window is currently active, deliver kickstart pulse unless target is higher
+    if now < state.get("kickstart_until", 0.0):
+        if clamped_target > FAN_KICKSTART_PWM:
+            state["kickstart_until"] = 0.0
+            state["current"] = clamped_target
+            state["last_up_time"] = now
+            return clamped_target
+        if clamped_target > 0:
+            state["current"] = clamped_target
+        return FAN_KICKSTART_PWM
+
+    # 2. Upward ramp: instantaneous
+    if clamped_target > current:
+        state["current"] = clamped_target
+        state["last_up_time"] = now
+        return clamped_target
+
+    # 3. Downward ramp: apply hysteresis hold
+    elif clamped_target < current:
+        if (now - state.get("last_up_time", 0.0)) >= hold_secs:
+            state["current"] = clamped_target
+            return clamped_target
         else:
             return current
+
     return current
 
 
@@ -165,7 +235,7 @@ def _write_sysfs(path, value):
         return False
 
 
-def set_fan_pwm(profile, manual_pct=60, custom_pwms=None, ctrl_cpu_fan=False):
+def set_fan_pwm(profile, manual_pct=60, custom_pwms=None, ctrl_cpu_fan=False, zero_rpm_allowed=False):
     if Z_STATE.fans_locked:
         return False
     hw = _find_hwmon()
@@ -194,7 +264,9 @@ def set_fan_pwm(profile, manual_pct=60, custom_pwms=None, ctrl_cpu_fan=False):
         _write_sysfs(pwm3_enable_file, 2)
 
     for path, val in targets.items():
-        val = max(FAN_MIN_PWM, min(FAN_MAX_PWM, int(val)))
+        key = os.path.basename(path)
+        allow_zero_channel = zero_rpm_allowed and (key in ("pwm1", "pwm2"))
+        val = clamp_fan_pwm(val, allow_zero=allow_zero_channel)
         # Claim manual mode for channels we drive (pwm3 may have been handed to
         # firmware). On this driver pwm1/2_enable are read-only and always 1.
         enable_file = f"{path}_enable"

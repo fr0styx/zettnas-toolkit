@@ -10,7 +10,12 @@ from backend.config import (
     ENABLE_FB,
     FAN_MAX_PWM,
     FAN_MIN_PWM,
+    FAN_SPINUP_GRACE_SECS,
     FAN_STATE_FILE,
+    FAN_ZERO_RPM_DEFAULT_NVME_CEILING,
+    FAN_ZERO_RPM_DEFAULT_START_TEMP,
+    FAN_ZERO_RPM_DEFAULT_STOP_TEMP,
+    FAN_ZERO_RPM_STOP_DELAY,
     HDD_CRITICAL_TEMP,
     LED_STATE_FILE,
     NVME_CRITICAL_TEMP,
@@ -72,7 +77,17 @@ def stats_collector_daemon():
             cpu_temp = read_cpu_temp()
             fans = read_fans()
 
-            fan_cfg = {"profile": "auto", "manual_pct": 60, "ctrl_cpu_fan": False, "temp_min": 37, "temp_max": 50}
+            fan_cfg = {
+                "profile": "auto",
+                "manual_pct": 60,
+                "ctrl_cpu_fan": False,
+                "temp_min": 37,
+                "temp_max": 50,
+                "zero_rpm_enabled": False,
+                "zero_rpm_nvme_ceiling": FAN_ZERO_RPM_DEFAULT_NVME_CEILING,
+                "zero_rpm_stop_temp": FAN_ZERO_RPM_DEFAULT_STOP_TEMP,
+                "zero_rpm_start_temp": FAN_ZERO_RPM_DEFAULT_START_TEMP,
+            }
             loaded_fan_cfg = read_json(FAN_STATE_FILE, {})
             if isinstance(loaded_fan_cfg, dict):
                 fan_cfg.update(loaded_fan_cfg)
@@ -81,22 +96,47 @@ def stats_collector_daemon():
             ctrl_cpu_fan = fan_cfg.get("ctrl_cpu_fan", False)
             temp_min = fan_cfg.get("temp_min", 37)
             temp_max = fan_cfg.get("temp_max", 50)
+            zero_rpm_enabled = fan_cfg.get("zero_rpm_enabled", False)
+            zero_rpm_nvme_ceiling = fan_cfg.get("zero_rpm_nvme_ceiling", FAN_ZERO_RPM_DEFAULT_NVME_CEILING)
+            zero_rpm_stop_temp = fan_cfg.get("zero_rpm_stop_temp", FAN_ZERO_RPM_DEFAULT_STOP_TEMP)
+            zero_rpm_start_temp = fan_cfg.get("zero_rpm_start_temp", FAN_ZERO_RPM_DEFAULT_START_TEMP)
 
+            # Chassis Topology Resolution
+            chassis_model = detect_chassis_model()
             sata_disks = [d for d in disks if d.get("role") == "data" or d.get("dev", "").startswith("sd")]
-            midpoint = max(1, len(sata_disks) // 2)
 
-            zone1_disks = sata_disks[:midpoint]
-            zone2_disks = sata_disks[midpoint:]
+            if chassis_model == "d4" or len(sata_disks) <= 4:
+                # ZettLab D4: Single exhaust fan (pwm1) cools ALL 4 bays
+                zone1_disks = sata_disks
+                zone2_disks = []
+            else:
+                # ZettLab D6U / D8: Dual fan split across Zone 1 (pwm1) and Zone 2 (pwm2)
+                midpoint = max(1, len(sata_disks) // 2)
+                zone1_disks = sata_disks[:midpoint]
+                zone2_disks = sata_disks[midpoint:]
 
+            # Standby state per zone
+            z1_all_standby = bool(zone1_disks) and all(d.get("standby", False) for d in zone1_disks)
+            z2_all_standby = bool(zone2_disks) and all(d.get("standby", False) for d in zone2_disks)
+
+            # Active temperatures per zone (sleeping disks' cached temps are ignored unless critical >= 55)
             active_z1 = [d["temp"] for d in zone1_disks if d.get("temp") is not None and not d.get("standby", False)]
             active_z2 = [d["temp"] for d in zone2_disks if d.get("temp") is not None and not d.get("standby", False)]
 
-            t_zone1 = max(active_z1, default=32)
-            t_zone2 = max(active_z2, default=32)
+            t_zone1 = max(active_z1, default=30)
+            t_zone2 = max(active_z2, default=30)
 
+            # NVMe Drives & Wind Tunnel Cooling Override
             nvme_disks = [d for d in disks if d.get("role") == "cache" or "nvme" in d.get("dev", "")]
             active_nvme = [d["temp"] for d in nvme_disks if d.get("temp") is not None and not d.get("standby", False)]
             t_nvme = max(active_nvme, default=None)
+            nvme_over_ceiling = (t_nvme is not None and t_nvme >= zero_rpm_nvme_ceiling)
+
+            # Unraid Storage Subsystem Interlocks (Parity Check & Mover)
+            unraid_status = read_unraid_status()
+            mover_active = bool(unraid_status.get("mover", {}).get("active", False))
+            parity_active = bool(unraid_status.get("parity_check", {}).get("active", False))
+            storage_busy = mover_active or parity_active
 
             curve_points = fan_cfg.get("curve_points", None)
             zone1_curve = fan_cfg.get("zone1_curve_points") or curve_points
@@ -111,6 +151,7 @@ def stats_collector_daemon():
                 temp_min=temp_min,
                 temp_max=temp_max,
                 curve_points=zone1_curve,
+                allow_zero=zero_rpm_enabled,
             )
             raw_pwm2 = calc_curve_pwm(
                 t_zone2,
@@ -119,6 +160,7 @@ def stats_collector_daemon():
                 temp_min=temp_min,
                 temp_max=temp_max,
                 curve_points=zone2_curve,
+                allow_zero=zero_rpm_enabled,
             )
 
             if nvme_curve and t_nvme is not None:
@@ -129,6 +171,7 @@ def stats_collector_daemon():
                     temp_min=temp_min,
                     temp_max=temp_max,
                     curve_points=nvme_curve,
+                    allow_zero=False,
                 )
                 raw_pwm1 = max(raw_pwm1, raw_nvme_pwm)
                 raw_pwm2 = max(raw_pwm2, raw_nvme_pwm)
@@ -141,6 +184,7 @@ def stats_collector_daemon():
                     temp_min=50,
                     temp_max=85,
                     curve_points=cpu_curve,
+                    allow_zero=False,
                 )
             elif cpu_temp >= 85:
                 raw_pwm3 = FAN_MAX_PWM
@@ -191,38 +235,109 @@ def stats_collector_daemon():
                 logger.info("[FANS] Hardware temperatures back below critical threshold.")
             Z_STATE.critical_temp_active = critical_override
 
+            # Continuous Anti-Flutter Gating for Zero RPM
+            now = time.time()
+            zero_rpm_cfg_enabled = bool(zero_rpm_enabled and profile == "auto")
+
+            z1_eligible = bool(
+                zero_rpm_cfg_enabled
+                and not critical_override
+                and not storage_busy
+                and z1_all_standby
+                and t_zone1 <= zero_rpm_stop_temp
+                and not nvme_over_ceiling
+            )
+
+            z2_eligible = bool(
+                zero_rpm_cfg_enabled
+                and not critical_override
+                and not storage_busy
+                and z2_all_standby
+                and t_zone2 <= zero_rpm_stop_temp
+                and not nvme_over_ceiling
+            )
+
+            st1 = Z_STATE.fan_state_tracker.setdefault("pwm1", {
+                "current": 67, "last_up_time": 0.0, "kickstart_until": 0.0, "last_spinup_time": now, "standby_since": 0.0
+            })
+            if z1_eligible:
+                if st1.get("standby_since", 0.0) == 0.0:
+                    st1["standby_since"] = now
+            else:
+                st1["standby_since"] = 0.0
+
+            st2 = Z_STATE.fan_state_tracker.setdefault("pwm2", {
+                "current": 67, "last_up_time": 0.0, "kickstart_until": 0.0, "last_spinup_time": now, "standby_since": 0.0
+            })
+            if z2_eligible:
+                if st2.get("standby_since", 0.0) == 0.0:
+                    st2["standby_since"] = now
+            else:
+                st2["standby_since"] = 0.0
+
+            z1_zero_rpm_ready = bool(
+                z1_eligible
+                and st1.get("standby_since", 0.0) > 0.0
+                and (now - st1["standby_since"]) >= FAN_ZERO_RPM_STOP_DELAY
+            )
+            z2_zero_rpm_ready = bool(
+                z2_eligible
+                and st2.get("standby_since", 0.0) > 0.0
+                and (now - st2["standby_since"]) >= FAN_ZERO_RPM_STOP_DELAY
+            )
+
             if critical_override:
                 raw_pwm1 = raw_pwm2 = FAN_MAX_PWM
-                active_pwm1 = apply_zone_pwm(1, FAN_MAX_PWM, hold_secs=120)
-                active_pwm2 = apply_zone_pwm(2, FAN_MAX_PWM, hold_secs=120)
+                active_pwm1 = apply_zone_pwm(1, FAN_MAX_PWM, hold_secs=120, allow_zero=False)
+                active_pwm2 = apply_zone_pwm(2, FAN_MAX_PWM, hold_secs=120, allow_zero=False)
                 custom_pwms = {"pwm1": active_pwm1, "pwm2": active_pwm2}
                 if ctrl_cpu_fan:
-                    active_pwm3 = apply_zone_pwm(3, FAN_MAX_PWM, hold_secs=90)
+                    active_pwm3 = apply_zone_pwm(3, FAN_MAX_PWM, hold_secs=90, allow_zero=False)
                     custom_pwms["pwm3"] = active_pwm3
                 else:
                     active_pwm3 = 0
-                set_fan_pwm("auto", custom_pwms=custom_pwms, ctrl_cpu_fan=ctrl_cpu_fan)
+                set_fan_pwm("auto", custom_pwms=custom_pwms, ctrl_cpu_fan=ctrl_cpu_fan, zero_rpm_allowed=False)
             elif profile == "auto":
-                active_pwm1 = apply_zone_pwm(1, raw_pwm1, hold_secs=120)
-                active_pwm2 = apply_zone_pwm(2, raw_pwm2, hold_secs=120)
+                target_pwm1 = 0 if z1_zero_rpm_ready else max(FAN_MIN_PWM, raw_pwm1)
+                target_pwm2 = 0 if z2_zero_rpm_ready else max(FAN_MIN_PWM, raw_pwm2)
+
+                allow_zero_z1 = z1_zero_rpm_ready
+                allow_zero_z2 = z2_zero_rpm_ready
+
+                active_pwm1 = apply_zone_pwm(1, target_pwm1, hold_secs=120, allow_zero=allow_zero_z1)
+                active_pwm2 = apply_zone_pwm(2, target_pwm2, hold_secs=120, allow_zero=allow_zero_z2)
 
                 custom_pwms = {"pwm1": active_pwm1, "pwm2": active_pwm2}
 
                 if ctrl_cpu_fan:
-                    active_pwm3 = apply_zone_pwm(3, raw_pwm3, hold_secs=90)
+                    active_pwm3 = apply_zone_pwm(3, raw_pwm3, hold_secs=90, allow_zero=False)
                     custom_pwms["pwm3"] = active_pwm3
                 else:
                     active_pwm3 = 0
 
-                set_fan_pwm("auto", custom_pwms=custom_pwms, ctrl_cpu_fan=ctrl_cpu_fan)
+                set_fan_pwm(
+                    "auto",
+                    custom_pwms=custom_pwms,
+                    ctrl_cpu_fan=ctrl_cpu_fan,
+                    zero_rpm_allowed=(allow_zero_z1 or allow_zero_z2),
+                )
             else:
                 pct_map = {"quiet": 67, "balanced": 120, "performance": 155, "full": FAN_MAX_PWM}
                 man_pwm = pct_map.get(profile, int((fan_cfg.get("manual_pct", 60) / 100.0) * FAN_MAX_PWM))
                 man_pwm = max(FAN_MIN_PWM, min(FAN_MAX_PWM, man_pwm))
-                active_pwm1 = man_pwm
-                active_pwm2 = man_pwm
-                active_pwm3 = man_pwm if ctrl_cpu_fan else 0
-                set_fan_pwm(profile, manual_pct=fan_cfg.get("manual_pct", 60), ctrl_cpu_fan=ctrl_cpu_fan)
+                active_pwm1 = apply_zone_pwm(1, man_pwm, hold_secs=120, allow_zero=False)
+                active_pwm2 = apply_zone_pwm(2, man_pwm, hold_secs=120, allow_zero=False)
+                active_pwm3 = apply_zone_pwm(3, man_pwm, hold_secs=90, allow_zero=False) if ctrl_cpu_fan else 0
+                custom_pwms = {"pwm1": active_pwm1, "pwm2": active_pwm2}
+                if ctrl_cpu_fan:
+                    custom_pwms["pwm3"] = active_pwm3
+                set_fan_pwm(
+                    profile,
+                    manual_pct=fan_cfg.get("manual_pct", 60),
+                    custom_pwms=custom_pwms,
+                    ctrl_cpu_fan=ctrl_cpu_fan,
+                    zero_rpm_allowed=False,
+                )
 
             # Screen Backlight Management
             screen_cfg = get_screen_state()
@@ -242,24 +357,37 @@ def stats_collector_daemon():
             )
 
             if cfg.get("reactive", True):
-                is_failing_fan = (
-                    any(fans[i] == 0 for i in Z_STATE.known_active_fans if i < len(fans))
-                    if Z_STATE.known_active_fans
-                    else False
-                )
+                stalled_fans = []
+                for i in Z_STATE.known_active_fans:
+                    if i >= len(fans):
+                        continue
+                    rpm = fans[i]
+                    if rpm == 0:
+                        pwm_key = f"pwm{i + 1}"
+                        st = Z_STATE.fan_state_tracker.get(pwm_key, {})
+                        cmd_pwm = st.get("current", 67)
+                        last_spinup = st.get("last_spinup_time", 0.0)
+                        # Suppress stall alert if the fan is commanded to 0 RPM (passive Zero RPM mode)
+                        # OR if it is within the 6.0-second spinup grace window
+                        is_suppressed = (cmd_pwm == 0) or ((now - last_spinup) < FAN_SPINUP_GRACE_SECS)
+                        if not is_suppressed:
+                            stalled_fans.append(i)
+
+                is_failing_fan = bool(stalled_fans)
                 is_crit = has_crit or (cpu_temp >= 85) or is_failing_fan
                 is_warn = (len(bad) > 0) or (cpu_temp >= 70)
 
                 if is_failing_fan:
+                    stalled_names = [f"pwm{idx+1}" for idx in stalled_fans]
                     add_event(
                         "error",
                         "Fan Stall Detected",
-                        "One or more cooling fans have stalled (0 RPM).",
-                        details={"fans": fans},
+                        f"One or more cooling fans have stalled (0 RPM): channels {stalled_names}.",
+                        details={"fans": fans, "stalled_channels": stalled_names},
                     )
                     _async_notify(
                         title="ZettNAS Alert: Fan Stall Detected",
-                        message="One or more chassis cooling fans have stalled or dropped to 0 RPM.",
+                        message=f"Cooling fan stall detected on channels {stalled_names}.",
                         level="critical",
                         event_type="fan",
                         dedup_key="fan_stall",
@@ -405,6 +533,14 @@ def stats_collector_daemon():
                     "profile": profile,
                     "temp_min": temp_min,
                     "temp_max": temp_max,
+                    "zero_rpm_enabled": zero_rpm_enabled,
+                    "zero_rpm_nvme_ceiling": zero_rpm_nvme_ceiling,
+                    "zero_rpm_stop_temp": zero_rpm_stop_temp,
+                    "zero_rpm_start_temp": zero_rpm_start_temp,
+                    "zone1_standby": z1_all_standby,
+                    "zone2_standby": z2_all_standby,
+                    "zone1_zero_rpm": active_pwm1 == 0,
+                    "zone2_zero_rpm": active_pwm2 == 0,
                     "curve_points": fan_cfg.get("curve_points", None),
                     "nvme_curve_points": fan_cfg.get("nvme_curve_points", None),
                     "cpu_curve_points": fan_cfg.get("cpu_curve_points", None),
@@ -431,7 +567,7 @@ def stats_collector_daemon():
                     "led_port": find_led_port(),
                     "led_ready": bool(find_led_port() is not None),
                     "fan_count": len([f for f in fans if f > 0]) if fans else 0,
-                    "fans_online": bool(fans and any(f > 0 for f in fans)),
+                    "fans_online": bool(fans and (any(f > 0 for f in fans) or (active_pwm1 == 0 and active_pwm2 == 0))),
                 },
             }
 

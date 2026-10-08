@@ -2,10 +2,16 @@
 
 import pytest
 
-from backend.config import FAN_MAX_PWM, FAN_MIN_PWM
+from backend.config import (
+    FAN_KICKSTART_PWM,
+    FAN_KICKSTART_SECS,
+    FAN_MAX_PWM,
+    FAN_MIN_PWM,
+)
 from backend.hardware.fans import (
     apply_zone_pwm,
     calc_curve_pwm,
+    clamp_fan_pwm,
     get_hold_remaining,
     sanitize_curve_points,
 )
@@ -196,3 +202,102 @@ def test_hardware_thermal_watchdog_hysteresis():
     val_74 = calc_curve_pwm(74, curve_points=flat_curve)
     assert Z_STATE.thermal_watchdog_engaged is False
     assert val_74 < FAN_MAX_PWM
+
+
+# ---- Zero RPM & Kickstart Tests ----
+
+
+def test_clamp_fan_pwm_binary_cutoff():
+    # allow_zero=False: strictly clamped to [FAN_MIN_PWM, FAN_MAX_PWM]
+    assert clamp_fan_pwm(0, allow_zero=False) == FAN_MIN_PWM
+    assert clamp_fan_pwm(30, allow_zero=False) == FAN_MIN_PWM
+    assert clamp_fan_pwm(57, allow_zero=False) == FAN_MIN_PWM
+    assert clamp_fan_pwm(58, allow_zero=False) == 58
+    assert clamp_fan_pwm(120, allow_zero=False) == 120
+    assert clamp_fan_pwm(200, allow_zero=False) == FAN_MAX_PWM
+
+    # allow_zero=True: 0 stays 0; stall zone (1..57) clamps to FAN_MIN_PWM
+    assert clamp_fan_pwm(0, allow_zero=True) == 0
+    assert clamp_fan_pwm(-10, allow_zero=True) == 0
+    assert clamp_fan_pwm(1, allow_zero=True) == FAN_MIN_PWM
+    assert clamp_fan_pwm(30, allow_zero=True) == FAN_MIN_PWM
+    assert clamp_fan_pwm(57, allow_zero=True) == FAN_MIN_PWM
+    assert clamp_fan_pwm(58, allow_zero=True) == 58
+    assert clamp_fan_pwm(120, allow_zero=True) == 120
+    assert clamp_fan_pwm(200, allow_zero=True) == FAN_MAX_PWM
+
+
+def test_apply_zone_pwm_kickstart_from_zero(fresh_zone):
+    # Establish fan stopped at 0
+    Z_STATE.fan_state_tracker["pwm9"] = {
+        "current": 0,
+        "last_up_time": 0.0,
+        "kickstart_until": 0.0,
+        "last_spinup_time": 0.0,
+        "standby_since": 0.0,
+    }
+
+    # Transitioning from 0 to 67 must trigger non-blocking kickstart pulse (150 PWM)
+    res = apply_zone_pwm(fresh_zone, 67, hold_secs=120, allow_zero=True)
+    assert res == FAN_KICKSTART_PWM
+    assert Z_STATE.fan_state_tracker["pwm9"]["current"] == 67
+    assert Z_STATE.fan_state_tracker["pwm9"]["kickstart_until"] > 0
+
+    # During the 2.0s kickstart window, continues returning FAN_KICKSTART_PWM
+    res_during = apply_zone_pwm(fresh_zone, 67, hold_secs=120, allow_zero=True)
+    assert res_during == FAN_KICKSTART_PWM
+
+    # Once kickstart window expires, smoothly settles at target PWM
+    Z_STATE.fan_state_tracker["pwm9"]["kickstart_until"] -= (FAN_KICKSTART_SECS + 1.0)
+    res_after = apply_zone_pwm(fresh_zone, 67, hold_secs=120, allow_zero=True)
+    assert res_after == 67
+
+
+def test_apply_zone_pwm_no_kickstart_when_already_spinning(fresh_zone):
+    # Spinning fan ramping up 67 -> 100
+    Z_STATE.fan_state_tracker["pwm9"] = {
+        "current": 67,
+        "last_up_time": 0.0,
+        "kickstart_until": 0.0,
+        "last_spinup_time": 0.0,
+        "standby_since": 0.0,
+    }
+    res = apply_zone_pwm(fresh_zone, 100, hold_secs=120, allow_zero=True)
+    assert res == 100  # Immediately ramps to 100 without kickstart
+
+
+def test_apply_zone_pwm_zero_rpm_downward_hold(fresh_zone):
+    import time
+    now = time.time()
+    # Spinning fan at 67 commanded to 0
+    Z_STATE.fan_state_tracker["pwm9"] = {
+        "current": 67,
+        "last_up_time": now,
+        "kickstart_until": 0.0,
+        "last_spinup_time": now,
+        "standby_since": 0.0,
+    }
+
+    # Immediately commanding 0 should hold at current speed (67)
+    assert apply_zone_pwm(fresh_zone, 0, hold_secs=120, allow_zero=True) == 67
+
+    # After hold_secs expires, fan drops to 0
+    Z_STATE.fan_state_tracker["pwm9"]["last_up_time"] -= 125
+    assert apply_zone_pwm(fresh_zone, 0, hold_secs=120, allow_zero=True) == 0
+    assert Z_STATE.fan_state_tracker["pwm9"]["current"] == 0
+
+
+def test_apply_zone_pwm_cpu_fan_cannot_zero():
+    # pwm3 (CPU fan) must never enter Zero RPM even if allow_zero=True
+    Z_STATE.fan_state_tracker["pwm3"] = {
+        "current": 85,
+        "last_up_time": 0.0,
+        "kickstart_until": 0.0,
+        "last_spinup_time": 0.0,
+        "standby_since": 0.0,
+    }
+    # Command 0 to CPU fan
+    res = apply_zone_pwm(3, 0, hold_secs=0, allow_zero=True)
+    # CPU fan forces allow_zero=False and clamps to FAN_MIN_PWM (58)
+    assert res == FAN_MIN_PWM
+

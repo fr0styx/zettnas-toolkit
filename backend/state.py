@@ -25,10 +25,29 @@ class ZettState:
         self.alert_active = False
         self.rainbow_thread = None
         self.rainbow_stop = threading.Event()
+        now = time.time()
         self.fan_state_tracker = {
-            "zone1": {"target": 120, "active": 120, "hold_until": 0},
-            "zone2": {"target": 120, "active": 120, "hold_until": 0},
-            "zone3": {"target": 85, "active": 85, "hold_until": 0},
+            "pwm1": {
+                "current": 67,
+                "last_up_time": 0.0,
+                "kickstart_until": 0.0,
+                "last_spinup_time": now,
+                "standby_since": 0.0,
+            },
+            "pwm2": {
+                "current": 67,
+                "last_up_time": 0.0,
+                "kickstart_until": 0.0,
+                "last_spinup_time": now,
+                "standby_since": 0.0,
+            },
+            "pwm3": {
+                "current": 85,
+                "last_up_time": 0.0,
+                "kickstart_until": 0.0,
+                "last_spinup_time": now,
+                "standby_since": 0.0,
+            },
         }
         self.cached_smart_data = {}
         self.cached_smart_time = {}

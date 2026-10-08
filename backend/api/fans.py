@@ -1,13 +1,28 @@
 from fastapi import APIRouter, HTTPException
 
-from backend.config import FAN_STATE_FILE
+from backend.config import (
+    FAN_STATE_FILE,
+    FAN_ZERO_RPM_DEFAULT_NVME_CEILING,
+    FAN_ZERO_RPM_DEFAULT_START_TEMP,
+    FAN_ZERO_RPM_DEFAULT_STOP_TEMP,
+)
 from backend.fsutil import atomic_write_json, read_json
 from backend.hardware.fans import sanitize_curve_points
 from backend.models.schemas import FanConfigRequest, FanPresetCreate
 
 router = APIRouter(tags=["Thermal & Fan Control"])
 
-FAN_DEFAULTS = {"profile": "auto", "manual_pct": 60, "ctrl_cpu_fan": False, "temp_min": 37, "temp_max": 50}
+FAN_DEFAULTS = {
+    "profile": "auto",
+    "manual_pct": 60,
+    "ctrl_cpu_fan": False,
+    "temp_min": 37,
+    "temp_max": 50,
+    "zero_rpm_enabled": False,
+    "zero_rpm_nvme_ceiling": FAN_ZERO_RPM_DEFAULT_NVME_CEILING,
+    "zero_rpm_stop_temp": FAN_ZERO_RPM_DEFAULT_STOP_TEMP,
+    "zero_rpm_start_temp": FAN_ZERO_RPM_DEFAULT_START_TEMP,
+}
 VALID_PROFILES = {"auto", "quiet", "balanced", "performance", "full", "manual"}
 
 
@@ -35,6 +50,14 @@ def post_fans(req: FanConfigRequest):
     for key in ("temp_min", "temp_max"):
         if data.get(key) is not None:
             data[key] = max(0, min(100, int(data[key])))
+    if "zero_rpm_enabled" in data and data["zero_rpm_enabled"] is not None:
+        data["zero_rpm_enabled"] = bool(data["zero_rpm_enabled"])
+    if data.get("zero_rpm_nvme_ceiling") is not None:
+        data["zero_rpm_nvme_ceiling"] = max(40, min(70, int(data["zero_rpm_nvme_ceiling"])))
+    if data.get("zero_rpm_stop_temp") is not None:
+        data["zero_rpm_stop_temp"] = max(25, min(45, int(data["zero_rpm_stop_temp"])))
+    if data.get("zero_rpm_start_temp") is not None:
+        data["zero_rpm_start_temp"] = max(30, min(55, int(data["zero_rpm_start_temp"])))
     for curve_field in (
         "curve_points",
         "nvme_curve_points",
@@ -49,6 +72,8 @@ def post_fans(req: FanConfigRequest):
     fan_cfg.update(data)
     if fan_cfg.get("temp_min", 0) >= fan_cfg.get("temp_max", 100):
         fan_cfg["temp_max"] = min(100, fan_cfg["temp_min"] + 1)
+    if fan_cfg.get("zero_rpm_stop_temp", 34) >= fan_cfg.get("zero_rpm_start_temp", 38):
+        fan_cfg["zero_rpm_start_temp"] = min(55, fan_cfg["zero_rpm_stop_temp"] + 2)
     atomic_write_json(FAN_STATE_FILE, fan_cfg)
     return fan_cfg
 

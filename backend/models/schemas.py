@@ -18,6 +18,10 @@ class FanConfigRequest(BaseModel):
     ctrl_cpu_fan: bool | None = None
     temp_min: int | None = None
     temp_max: int | None = None
+    zero_rpm_enabled: bool | None = None
+    zero_rpm_nvme_ceiling: int | None = Field(default=None, ge=40, le=70)
+    zero_rpm_stop_temp: int | None = Field(default=None, ge=25, le=45)
+    zero_rpm_start_temp: int | None = Field(default=None, ge=30, le=55)
     curve_points: list[list[int]] | None = Field(default=None, max_length=12)
     nvme_curve_points: list[list[int]] | None = Field(default=None, max_length=12)
     cpu_curve_points: list[list[int]] | None = Field(default=None, max_length=12)

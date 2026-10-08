@@ -17,8 +17,18 @@ let currentFanProfile = 'auto';
 
 export function tempToX(t) { return 38 + ((Math.max(30, Math.min(60, t)) - 30) / 30) * (285 - 38); }
 export function xToTemp(x) { return Math.round(30 + ((x - 38) / (285 - 38)) * 30); }
-export function pctToY(p) { return 100 - (Math.max(0, Math.min(100, p)) / 100) * (100 - 20); }
-export function yToPct(y) { return Math.round(100 - ((y - 20) / (100 - 20)) * 100); }
+export function pctToY(p) {
+  const clamped = Math.max(0, Math.min(100, p));
+  return 104 - (clamped / 100) * (104 - 20);
+}
+export function yToPct(y) {
+  const rawPct = Math.round(100 - ((y - 20) / (104 - 20)) * 100);
+  const clamped = Math.max(0, Math.min(100, rawPct));
+  if (clamped > 0 && clamped < 32) {
+    return clamped < 16 ? 0 : 32;
+  }
+  return clamped;
+}
 
 export function renderCurveLines() {
   const pts = state.curvePoints;
@@ -34,7 +44,7 @@ export function renderCurveLines() {
   }
   path.setAttribute('d', d);
 
-  const dArea = `${d} L ${svgCoords[svgCoords.length - 1][0]} 100 L ${svgCoords[0][0]} 100 Z`;
+  const dArea = `${d} L ${svgCoords[svgCoords.length - 1][0]} 104 L ${svgCoords[0][0]} 104 Z`;
   area.setAttribute('d', dArea);
 
   pts.forEach((p, i) => {
@@ -56,9 +66,27 @@ export function updateFanCurveWorkstation(s) {
   const fc = s.fan_control;
 
   if ($('zp-z1-temp')) $('zp-z1-temp').textContent = `${fc.zone1_temp}°C`;
-  if ($('zp-z1-pwm')) $('zp-z1-pwm').textContent = `PWM: ${fc.zone1_pwm}`;
+  if ($('zp-z1-pwm')) {
+    const el = $('zp-z1-pwm');
+    if (fc.zone1_zero_rpm || fc.zone1_pwm === 0) {
+      el.textContent = 'PWM: 0 (PASSIVE)';
+      el.style.color = '#38bdf8';
+    } else {
+      el.textContent = `PWM: ${fc.zone1_pwm}`;
+      el.style.color = '';
+    }
+  }
   if ($('zp-z2-temp')) $('zp-z2-temp').textContent = `${fc.zone2_temp}°C`;
-  if ($('zp-z2-pwm')) $('zp-z2-pwm').textContent = `PWM: ${fc.zone2_pwm}`;
+  if ($('zp-z2-pwm')) {
+    const el = $('zp-z2-pwm');
+    if (fc.zone2_zero_rpm || fc.zone2_pwm === 0) {
+      el.textContent = 'PWM: 0 (PASSIVE)';
+      el.style.color = '#38bdf8';
+    } else {
+      el.textContent = `PWM: ${fc.zone2_pwm}`;
+      el.style.color = '';
+    }
+  }
   if ($('zp-cpu-temp')) $('zp-cpu-temp').textContent = `${fc.cpu_temp}°C`;
   if ($('zp-cpu-pwm')) $('zp-cpu-pwm').textContent = fc.ctrl_cpu_fan ? `PWM: ${fc.cpu_pwm}` : 'BIOS Auto';
 
@@ -79,6 +107,45 @@ export function updateFanCurveWorkstation(s) {
       hBadge.style.background = 'rgba(51,209,122,0.15)';
       hBadge.style.color = 'var(--ok)';
       hBadge.style.borderColor = 'rgba(51,209,122,0.35)';
+    }
+  }
+
+  const badgeZ1 = $('zero-rpm-badge-z1');
+  const badgeZ2 = $('zero-rpm-badge-z2');
+  if (badgeZ1) {
+    if (fc.zone1_zero_rpm) {
+      badgeZ1.textContent = 'Zone 1: PASSIVE (0 RPM)';
+      badgeZ1.style.background = 'rgba(56, 189, 248, 0.18)';
+      badgeZ1.style.color = '#38bdf8';
+      badgeZ1.style.borderColor = 'rgba(56, 189, 248, 0.4)';
+    } else if (fc.zone1_standby) {
+      badgeZ1.textContent = 'Zone 1: Standby (Cooling down)';
+      badgeZ1.style.background = 'rgba(245, 183, 49, 0.15)';
+      badgeZ1.style.color = 'var(--warn)';
+      badgeZ1.style.borderColor = 'rgba(245, 183, 49, 0.4)';
+    } else {
+      badgeZ1.textContent = 'Zone 1: Active Spinning';
+      badgeZ1.style.background = 'rgba(51, 209, 122, 0.12)';
+      badgeZ1.style.color = 'var(--ok)';
+      badgeZ1.style.borderColor = 'rgba(51, 209, 122, 0.3)';
+    }
+  }
+  if (badgeZ2) {
+    if (fc.zone2_zero_rpm) {
+      badgeZ2.textContent = 'Zone 2: PASSIVE (0 RPM)';
+      badgeZ2.style.background = 'rgba(56, 189, 248, 0.18)';
+      badgeZ2.style.color = '#38bdf8';
+      badgeZ2.style.borderColor = 'rgba(56, 189, 248, 0.4)';
+    } else if (fc.zone2_standby) {
+      badgeZ2.textContent = 'Zone 2: Standby (Cooling down)';
+      badgeZ2.style.background = 'rgba(245, 183, 49, 0.15)';
+      badgeZ2.style.color = 'var(--warn)';
+      badgeZ2.style.borderColor = 'rgba(245, 183, 49, 0.4)';
+    } else {
+      badgeZ2.textContent = 'Zone 2: Active Spinning';
+      badgeZ2.style.background = 'rgba(51, 209, 122, 0.12)';
+      badgeZ2.style.color = 'var(--ok)';
+      badgeZ2.style.borderColor = 'rgba(51, 209, 122, 0.3)';
     }
   }
 
@@ -105,18 +172,18 @@ export function updateFanCurveWorkstation(s) {
 
   const normZ1X = Math.max(graphMinT, Math.min(graphMaxT, fc.zone1_temp));
   const svgZ1X = 38 + ((normZ1X - graphMinT) / tSpan) * (285 - 38);
-  const normZ1Pwm = Math.max(58, Math.min(183, fc.zone1_pwm));
-  const svgZ1Y = 100 - ((normZ1Pwm - 58) / (183 - 58)) * (100 - 20);
+  const normZ1Pwm = Math.max(0, Math.min(183, fc.zone1_pwm));
+  const svgZ1Y = normZ1Pwm === 0 ? 104 : pctToY((normZ1Pwm / 183) * 100);
 
   const normZ2X = Math.max(graphMinT, Math.min(graphMaxT, fc.zone2_temp));
   const svgZ2X = 38 + ((normZ2X - graphMinT) / tSpan) * (285 - 38);
-  const normZ2Pwm = Math.max(58, Math.min(183, fc.zone2_pwm));
-  const svgZ2Y = 100 - ((normZ2Pwm - 58) / (183 - 58)) * (100 - 20);
+  const normZ2Pwm = Math.max(0, Math.min(183, fc.zone2_pwm));
+  const svgZ2Y = normZ2Pwm === 0 ? 104 : pctToY((normZ2Pwm / 183) * 100);
 
   const normCpuX = Math.max(30, Math.min(85, fc.cpu_temp));
   const svgCpuX = 38 + ((normCpuX - 30) / (85 - 30)) * (285 - 38);
   const normCpuPwm = Math.max(58, Math.min(183, fc.cpu_pwm || 85));
-  const svgCpuY = 100 - ((normCpuPwm - 58) / (183 - 58)) * (100 - 20);
+  const svgCpuY = pctToY((normCpuPwm / 183) * 100);
 
   const dotZ1 = $('curve-dot-z1');
   const dotZ2 = $('curve-dot-z2');
@@ -196,6 +263,7 @@ export function initFanControl() {
   const fanPwmSlider = $('fan-pwm-slider');
   const fanPwmVal = $('fan-pwm-val-display') || $('fan-pwm-val');
   const cpuFanToggle = $('cpu-fan-toggle') || $('fan-ctrl-cpu');
+  const zeroRpmToggle = $('zero-rpm-toggle');
   const fanCurveSvg = document.querySelector('.fan-curve-svg');
 
   let fanPwmDebounce = null;
@@ -236,10 +304,11 @@ export function initFanControl() {
     }
   }
 
-  async function postFanPwm(profile, manualPct, ctrlCpu, tMin, tMax, cPoints) {
+  async function postFanPwm(profile, manualPct, ctrlCpu, tMin, tMax, cPoints, zeroRpm) {
     const curMin = tMin !== undefined ? tMin : 37;
     const curMax = tMax !== undefined ? tMax : 50;
     const mPct = (manualPct === null || manualPct === undefined) ? (fanPwmSlider ? fanPwmSlider.value : 60) : manualPct;
+    const isZeroRpm = zeroRpm !== undefined ? zeroRpm : (zeroRpmToggle ? zeroRpmToggle.checked : false);
     try {
       const data = await api.post('/api/fans', {
         profile,
@@ -247,9 +316,13 @@ export function initFanControl() {
         ctrl_cpu_fan: ctrlCpu !== undefined ? ctrlCpu : (cpuFanToggle ? cpuFanToggle.checked : false),
         temp_min: curMin,
         temp_max: curMax,
+        zero_rpm_enabled: isZeroRpm,
         curve_points: cPoints || state.curvePoints
       });
       updateFanUiState(data.profile, data.manual_pct);
+      if (zeroRpmToggle && data.zero_rpm_enabled !== undefined) {
+        zeroRpmToggle.checked = !!data.zero_rpm_enabled;
+      }
     } catch (e) {
       console.warn('Failed to update fans', e);
     }
@@ -264,6 +337,7 @@ export function initFanControl() {
       const tMax = data.temp_max !== undefined ? data.temp_max : 50;
 
       if (cpuFanToggle) cpuFanToggle.checked = !!data.ctrl_cpu_fan;
+      if (zeroRpmToggle) zeroRpmToggle.checked = !!data.zero_rpm_enabled;
       if (data.curve_points && data.curve_points.length > 0) {
         state.setCurvePoints(data.curve_points);
       } else {
@@ -285,6 +359,12 @@ export function initFanControl() {
   if (cpuFanToggle) {
     cpuFanToggle.addEventListener('change', (e) => {
       postFanPwm(currentFanProfile, parseInt(fanPwmSlider ? fanPwmSlider.value : 60, 10), e.target.checked);
+    });
+  }
+
+  if (zeroRpmToggle) {
+    zeroRpmToggle.addEventListener('change', (e) => {
+      postFanPwm(currentFanProfile, undefined, undefined, undefined, undefined, undefined, e.target.checked);
     });
   }
 

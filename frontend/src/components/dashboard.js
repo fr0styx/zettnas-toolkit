@@ -93,14 +93,20 @@ export function renderFans(fans) {
         );
       }).join('');
       r.innerHTML = html;
-    } else {
       fans.forEach((rpm, i) => {
         const fanEl = existing[i];
         if (!fanEl) return;
         const dur = rpm > 0 ? Math.max(0.25, 2.0 - (rpm / max) * 1.7).toFixed(2) : 0;
         const ic = fanEl.querySelector('.fan-ic');
         const fv = fanEl.querySelector('.fv');
-        if (fv && fv.textContent !== String(rpm)) fv.textContent = rpm;
+        const fc = state.latestStats?.fan_control || {};
+        const isPassive = (i === 0 && fc.zone1_zero_rpm) || (i === 1 && fc.zone2_zero_rpm);
+        if (fv) {
+          const displayTxt = (rpm === 0 && isPassive) ? '0' : String(rpm);
+          if (fv.textContent !== displayTxt) fv.textContent = displayTxt;
+          fv.style.color = (rpm === 0 && isPassive) ? '#38bdf8' : '';
+        }
+        fanEl.classList.toggle('fan-passive', Boolean(rpm === 0 && isPassive));
         if (ic) {
           const wantSpin = rpm > 0;
           const hasSpin = ic.classList.contains('spin');
@@ -118,7 +124,17 @@ export function renderFans(fans) {
     const dur = rpm > 0 ? Math.max(0.25, 2.0 - (rpm / max) * 1.7).toFixed(2) : 0;
     const dfRpm = $(`df-rpm-${i}`);
     const dfIc = $(`df-ic-${i}`);
-    if (dfRpm) dfRpm.textContent = rpm;
+    const fc = state.latestStats?.fan_control || {};
+    const isPassive = (i === 0 && fc.zone1_zero_rpm) || (i === 1 && fc.zone2_zero_rpm);
+    if (dfRpm) {
+      if (rpm === 0 && isPassive) {
+        dfRpm.textContent = '0 (PASSIVE)';
+        dfRpm.style.color = '#38bdf8';
+      } else {
+        dfRpm.textContent = rpm;
+        dfRpm.style.color = '';
+      }
+    }
     if (dfIc) {
       dfIc.style.setProperty('--dur', `${dur}s`);
       dfIc.classList.toggle('spin', rpm > 0);
@@ -289,8 +305,17 @@ export function updateRowTelemetryBadges(s) {
 
   if (stBadge && s.storage) stBadge.textContent = `${s.storage.pct}% • ${s.storage.used}`;
   if (cpuBadge && s.cpu) cpuBadge.textContent = `${s.cpu.temp}°C • ${s.cpu.util}%`;
-  if (memBadge && s.mem) memBadge.textContent = `${s.mem.pct}% • ${s.mem.used_gb}G`;
-  if (fanBadge && s.fans && s.fans.length > 0) fanBadge.textContent = `${Math.max(...s.fans)} RPM`;
+  if (fanBadge && s.fans && s.fans.length > 0) {
+    const maxRpm = Math.max(...s.fans);
+    const fc = s.fan_control || {};
+    if (maxRpm === 0 && (fc.zone1_zero_rpm || fc.zone2_zero_rpm)) {
+      fanBadge.textContent = '0 RPM • PASSIVE';
+      fanBadge.style.color = '#38bdf8';
+    } else {
+      fanBadge.textContent = `${maxRpm} RPM`;
+      fanBadge.style.color = '';
+    }
+  }
   if (netBadge && s.net) netBadge.textContent = `▲${s.net.tx} ▼${s.net.rx}`;
   if (dskBadge && s.disks) dskBadge.textContent = `${s.disks.length} Drives Active`;
 }

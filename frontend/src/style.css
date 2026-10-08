@@ -1051,6 +1051,15 @@ body.drawer-is-open .chassis-workbench-stage {
   white-space: nowrap;
   line-height: 1.1;
 }
+.fan.fan-passive .fv,
+.fan-passive .fv {
+  color: #38bdf8 !important;
+}
+.fan.fan-passive .fan-ic,
+.fan-passive .fan-ic {
+  color: #38bdf8 !important;
+  opacity: 0.65;
+}
 .fan-row.three-fans .fan .fv {
   font-size: 10px;
   letter-spacing: -0.4px;
