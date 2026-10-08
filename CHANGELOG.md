@@ -1,5 +1,51 @@
 # ZettNAS Toolkit - Release Changelog
 
+## v1.5.0 (2026-10-08) - Stable
+### 🛡️ Production Master Audit & System Hardening (Batches 1–5 Complete)
+
+This major production release implements the comprehensive, peer-reviewed 5-batch master audit plan across all subsystems, ensuring complete hardware- and OS-agnostic reliability, host isolation hardening, failsafe thermal dynamics, database and event loop concurrency resilience, container orchestration safety, and frontend UX excellence:
+
+- **Batch 1: Critical Security & Host Isolation Hardening**:
+  - **API Token SHA-256 Hashing**: Stored tokens are cryptographically hashed using SHA-256 with opaque UUID identifiers. `GET /api/tokens` returns masked secrets (`zat_****`) and UUIDs, preventing token leakage. Added automated legacy plaintext token migration and constant-time digest verification.
+  - **Symlink Path Containment**: Hardened `_safe_fs_target` and `fs_upload` with strict `resolve_within` canonicalization across `ALLOWED_BROWSE_ROOTS`, rejecting symlink escapes with HTTP 403.
+  - **Zip Slip & Zip Bomb Protection**: Reinforced `restore_backup_archive` with symlink rejection (`0o120000`), a 50MB decompression limit, a 1000-member limit, and Python 3.12 `filter="data"`. Excluded `api_tokens.json` from backup exports.
+  - **Trusted Proxy CIDR Enforcement**: Restricted Uvicorn `forwarded_allow_ips` from wildcard `*` to `TRUSTED_PROXIES` (defaulting to local loopback `127.0.0.1`), preventing brute-force lockout spoofing.
+  - **Auth Rate-Limiter Pruning**: Added automatic TTL expiry pruning to `_failures` dictionary to prevent unbounded memory growth from IP brute-force attempts.
+  - **Headless Server Deployment Safety**: Removed mandatory `--device=/dev/fb0` and `--device=/dev/dri` from default Unraid XML template `<ExtraParams>`, preventing container boot crashes on headless hosts.
+
+- **Batch 2: Thermal Safety & Hardware Engine Stabilization**:
+  - **Sensor Fault Failsafe Duty**: Hardened `calc_curve_pwm()` in `fans.py` to return `FAN_FAILSAFE_PWM` (150/183 duty cycle, ~82%) whenever sensor readings are missing, None, or invalid, preventing thermal runaway on sensor bus faults.
+  - **Synchronous UPS Failsafe Sync**: Joined the filesystem flush worker thread with a strict 10.0s timeout before signaling `_signal_host_powerdown()`, guaranteeing page cache commit before shutdown.
+  - **Zero RPM Gating for Under-Populated & All-Flash Arrays**: Fixed Zone 2 lockout when fewer than 5 disks are present (`zone2_disks == []`) and enabled NVMe temperature-based Zero RPM for all-flash arrays (`sata_disks == []`). Added default NVMe cooling ramp (50°C -> 95 PWM, 75°C -> 183 PWM).
+  - **Framebuffer Deferred-I/O Synchronization**: Added explicit `fb_mem.flush()` after mmap framebuffer byte copies in `lcd_renderer.py` for tear-free output on Linux deferred-I/O displays.
+  - **SMART Velocity Time Delta Validation**: Prevented false-positive stuck pending sector alarms by requiring at least 2 readings spanning $\ge 44$ hours. Integrated NVMe wear percentage and media integrity errors into velocity scoring.
+  - **UPS Prober Gateway Network Scoping**: Constrained Docker gateway socket probe to private Docker bridge subnets (`172.16.0.0/12`), preventing port 3551/3493 probes to LAN routers in host networking mode.
+
+- **Batch 3: Backend Concurrency & Database Resilience**:
+  - **Event Loop Decoupling**: Offloaded cold-boot `collect()` in `stats.py` to `asyncio.to_thread(collect)` to eliminate event loop blocking during initial SSE connections. Offloaded file deletion, backup archive extraction, and wallpaper image writes to worker threadpools.
+  - **SSE Telemetry Connection Throttling**: Introduced `MAX_SSE_SUBSCRIBERS = 32` capacity check with HTTP 429 response, preventing client tab proliferation from exhausting Uvicorn worker pools.
+  - **Decoupled Global State Lock from Disk fsync**: Cloned the event log inside `Z_STATE.lock` and executed `atomic_write_json(EVENTS_FILE)` outside the mutex in `add_event()`, ensuring the 1-second fan PWM loop never stalls on storage I/O wait.
+  - **SQLite Connection & WAL Pragma Optimization**: Configured `busy_timeout=15000` (15s) in `get_db_connection()`, eliminated redundant per-connection `PRAGMA journal_mode=WAL` executions, and established connection reuse in `query_smart_velocity` and `query_all_smart_velocities`.
+  - **Graceful Daemon Shutdown Lifecycles**: Updated `stats_collector_daemon`, `smart_poller_daemon`, `fan_watchdog_daemon`, and `_docker_telemetry_worker` to exit cleanly on `Z_STATE.shutting_down` with responsive sleep intervals and guaranteed socket cleanup.
+
+- **Batch 4: Container Orchestration & DevOps Reliability**:
+  - **Container Mutator Self-Termination Protection**: Added pre-flight check in `container_mutator.py` that inspects container hostname and image identifiers, rejecting recreation of `zettnas-toolkit` with HTTP 400.
+  - **Dual-Stack Host Port Conflict Detection**: Upgraded `check_port_available()` to inspect host procfs socket tables (`/host/proc/net/tcp`, `/host/proc/net/tcp6`, `/proc/net/tcp`) for active listeners in addition to container socket binding.
+  - **Compose Synthesizer Runtime Mount Filtering**: Filtered internal Docker runtime mounts (`/etc/resolv.conf`, `/etc/hostname`, `/etc/hosts`, `/dev/shm`) from synthesized OCI Compose files, preventing deployment conflicts.
+  - **TTY Container Log Stream Decoding**: Added raw line-stream fallback in `get_container_logs_chunk` for containers running with `Tty: true` without 8-byte multiplexed headers.
+  - **CI/CD Action Pinning**: Pinned verified stable GitHub Actions (`actions/checkout@v4`, `actions/setup-python@v5`, `actions/setup-node@v4`, `docker/build-push-action@v6`) across `.github/workflows/ci.yml`.
+  - **Multi-Arch Dockerfile Assets**: Added `libgl1-mesa-dri`, `mesa-va-drivers`, `fonts-noto-cjk`, and `fonts-noto-color-emoji` to prevent tofu glyphs (`□□□`) on physical LCD displays and enable hardware acceleration.
+
+- **Batch 5: Frontend Desktop OS & UX Excellence**:
+  - **Background Tab Telemetry Stalling Bypass**: Updated `frontend/src/event-bus.js` to bypass `requestAnimationFrame` coalescing when `document.hidden` is true, ensuring continuous background telemetry ingestion.
+  - **Eliminated Synchronous Layout Thrashing**: Replaced `el.innerText` with layout-independent `el.textContent` in `a11y.js` `enhanceInteractiveElements()`, eliminating layout reflow thrashing inside `MutationObserver`.
+  - **Container Inspector Window Layering**: Added `container-inspector-window` to `isDesktopApp` whitelist in `dock.js`, integrating it into dynamic desktop window z-index layering.
+  - **Pointer Events Touch Window Dragging**: Upgraded window dragging in `dock.js` to unified Pointer Events (`pointerdown`, `pointermove`, `pointerup`, `pointercancel`, `setPointerCapture`), enabling smooth touchscreen window dragging.
+  - **In-Memory Secret Handling**: Replaced plain DOM attributes (`data-raw`, `data-val`) in `container-modal.js` with an in-memory JavaScript `Map`, keeping credentials strictly out of DOM inspection.
+  - **Monotonic Fan Curve Constraints**: Enforced monotonic PWM constraints (`p = Math.max(p, pts[dragIndex - 1][1])`) in `fan-control.js` to prevent inverted curve configurations.
+  - **CSS Token Scoping**: Implemented hierarchical custom properties (`--desktop-accent`, `--desktop-ok2`, `--lcd-accent`, `--lcd-ok2`) and isolated `#screen`, `#console-window`, and `#mini-lcd-canvas`, ensuring desktop appearance accent changes never bleed into the physical LCD or console display.
+  - **Test Suite Expansion**: Added unit and integration test suites across all 5 batches, achieving 100% pass rates across 286 Pytest backend tests and 85 Vitest frontend tests.
+
 ## v1.4.3 (2026-10-08) - Stable
 ### 🐳 Enterprise Container Orchestration (Dynamic Compose Synthesizer, Live Logs, Atomic Port Reconfig & Zero-Downtime Resource Tuning) & Strict Theme Isolation
 
