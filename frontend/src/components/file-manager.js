@@ -1,7 +1,7 @@
-import { api } from '../api.js';
+import { api, auth, ApiError } from '../api.js';
 import { escapeHtml } from '../utils.js';
 import { ZettEventBus } from '../event-bus.js';
-import { showToast, showConfirmToast } from '../toast.js';
+import { showToast, showConfirmToast, showPromptToast } from '../toast.js';
 import { t } from '../i18n.js';
 import { makeDraggable, bringToFront } from './dock.js';
 
@@ -321,22 +321,11 @@ export function initFileManager() {
 
   document.getElementById('fm-new-folder-btn')?.addEventListener('click', () => {
     const promptMsg = t('fm.prompt_new_folder', 'Enter new folder name:');
-    import('../toast.js').then(m => {
-      if (m.showPromptToast) {
-        m.showPromptToast('New Folder', promptMsg, '', (name) => {
-          if (name) {
-            api.post('/api/mkdir', { path: currentPath + '/' + name }).then(() => {
-              loadPath(currentPath);
-            }).catch(err => m.showToast(err.message, 'error'));
-          }
-        });
-      } else {
-        const name = prompt(promptMsg);
-        if (name) {
-          api.post('/api/mkdir', { path: currentPath + '/' + name }).then(() => {
-            loadPath(currentPath);
-          }).catch(err => m.showToast(err.message, 'error'));
-        }
+    showPromptToast('New Folder', promptMsg, '', (name) => {
+      if (name) {
+        api.post('/api/mkdir', { path: currentPath + '/' + name }).then(() => {
+          loadPath(currentPath);
+        }).catch(err => showToast(err.message, 'error'));
       }
     });
   });
@@ -386,7 +375,6 @@ export function initFileManager() {
       
       if (!e.dataTransfer.files || e.dataTransfer.files.length === 0) return;
       
-      const { auth, ApiError } = await import('../api.js');
       const token = auth.getToken();
       
       let successCount = 0;
@@ -404,12 +392,12 @@ export function initFileManager() {
           successCount++;
         } catch (err) {
           failCount++;
-          import('../toast.js').then(m => m.showToast(`Failed to upload ${file.name}: ${err.message}`, 'error'));
+          showToast(`Failed to upload ${file.name}: ${err.message}`, 'error');
         }
       }
       
       if (successCount > 0) {
-        import('../toast.js').then(m => m.showToast(`Successfully uploaded ${successCount} file(s)`, 'success'));
+        showToast(`Successfully uploaded ${successCount} file(s)`, 'success');
       }
       loadPath(currentPath);
     });
@@ -761,18 +749,14 @@ async function handleAction(act, path, oldName) {
     });
   } else if (act === 'rename') {
     const promptMsg = t('fm.prompt_rename', 'Enter new name:');
-    import('../toast.js').then(m => {
-      if (m.showPromptToast) {
-        m.showPromptToast('Rename', promptMsg, oldName, async (newName) => {
-          if (newName && newName !== oldName) {
-            try {
-              await api.post('/api/fs/rename', { path, new_name: newName });
-              loadPath(currentPath);
-            } catch (err) {
-              m.showToast(err.message, 'error');
-            }
-          }
-        });
+    showPromptToast('Rename', promptMsg, oldName, async (newName) => {
+      if (newName && newName !== oldName) {
+        try {
+          await api.post('/api/fs/rename', { path, new_name: newName });
+          loadPath(currentPath);
+        } catch (err) {
+          showToast(err.message, 'error');
+        }
       }
     });
   }
@@ -780,7 +764,5 @@ async function handleAction(act, path, oldName) {
 
 
 window.openRecycleBin = () => {
-  import('../event-bus.js').then(m => {
-    m.ZettEventBus.emit('window:open', {id:'file-manager-window', path: '/mnt/user/.RecycleBin'});
-  });
+  ZettEventBus.emit('window:open', { id: 'file-manager-window', path: '/mnt/user/.RecycleBin' });
 };

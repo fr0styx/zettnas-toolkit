@@ -1,7 +1,7 @@
 # =========================================================================
 # Stage 1: Build modern offline-first frontend assets
 # =========================================================================
-FROM node:20-alpine AS frontend-builder
+FROM --platform=$BUILDPLATFORM node:24-alpine AS frontend-builder
 
 WORKDIR /build
 

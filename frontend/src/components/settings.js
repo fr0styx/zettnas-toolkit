@@ -2,10 +2,10 @@
  * ZettNAS Toolkit Settings & Preferences Controller
  * Handles settings drawer, tabs, screen backlight, timezone, hardware buttons, card layout locks, and security credentials.
  */
-import { api } from '../api.js';
+import { api, auth, ApiError } from '../api.js';
 import { state, ZOOM_PROFILES } from '../state.js';
 import { ZettEventBus } from '../event-bus.js';
-import { showToast } from '../toast.js';
+import { showToast, showConfirmToast } from '../toast.js';
 import { applyTheme } from './dashboard.js';
 import { applyDashboardLayout, persistDashboardLayout, fitMiniPreviewScale, syncMiniPreviewTelemetry } from './mini-preview.js';
 import { fetchAndRenderMetrics } from './metrics-chart.js';
@@ -664,28 +664,25 @@ export function initSystemTab() {
       const file = e.target.files[0];
       if (!file) return;
       if (!file.name.endsWith('.zip')) {
-        import('../toast.js').then(m => m.showToast('Please upload a .zip backup file.', 'error'));
+        showToast('Please upload a .zip backup file.', 'error');
         uploadInput.value = '';
         return;
       }
-      import('../toast.js').then(m => {
-        m.showConfirmToast('Restore Backup', 'Are you sure you want to restore this configuration? This will overwrite your current settings.', async () => {
-          try {
-            const { auth, ApiError } = await import('../api.js');
-            const token = auth.getToken();
-            const res = await window.fetch('/api/system/restore', {
-              method: 'POST',
-              headers: token ? { 'Authorization': `Bearer ${token}` } : {},
-              body: file
-            });
-            if (!res.ok) throw await ApiError.from(res);
-            m.showToast('Restore successful. You should restart the backend for all changes to apply.', 'success');
-          } catch (err) {
-            m.showToast('Restore failed: ' + err.message, 'error');
-          } finally {
-            uploadInput.value = '';
-          }
-        });
+      showConfirmToast('Restore Backup', 'Are you sure you want to restore this configuration? This will overwrite your current settings.', async () => {
+        try {
+          const token = auth.getToken();
+          const res = await window.fetch('/api/system/restore', {
+            method: 'POST',
+            headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+            body: file
+          });
+          if (!res.ok) throw await ApiError.from(res);
+          showToast('Restore successful. You should restart the backend for all changes to apply.', 'success');
+        } catch (err) {
+          showToast('Restore failed: ' + err.message, 'error');
+        } finally {
+          uploadInput.value = '';
+        }
       });
     });
   }
@@ -701,7 +698,6 @@ async function renderApiTokens() {
   if (!list) return;
   
   try {
-    const { api } = await import('../api.js');
     const tokens = await api.get('/api/tokens');
     
     if (tokens.length === 0) {
@@ -722,15 +718,13 @@ async function renderApiTokens() {
       `;
       
       row.querySelector('button').addEventListener('click', async () => {
-        import('../toast.js').then(m => {
-          m.showConfirmToast('Revoke Token', `Revoke token "${t.name}"?`, async () => {
-            try {
-              await api.delete(`/api/tokens/${t.id}`);
-              renderApiTokens();
-            } catch (err) {
-              m.showToast(err.message, 'error');
-            }
-          });
+        showConfirmToast('Revoke Token', `Revoke token "${t.name}"?`, async () => {
+          try {
+            await api.delete(`/api/tokens/${t.id}`);
+            renderApiTokens();
+          } catch (err) {
+            showToast(err.message, 'error');
+          }
         });
       });
       list.appendChild(row);
@@ -750,20 +744,17 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!name) return;
       
       try {
-        const { api } = await import('../api.js');
         const res = await api.post('/api/tokens', { name });
         inputName.value = '';
         renderApiTokens();
         
-        import('../toast.js').then(m => {
-          m.showConfirmToast('Token Generated', `Your new token is:
+        showConfirmToast('Token Generated', `Your new token is:
 
 ${res.token}
 
 Copy it now. You won't be able to see it again!`, () => {});
-        });
       } catch (err) {
-        import('../toast.js').then(m => m.showToast(err.message, 'error'));
+        showToast(err.message, 'error');
       }
     });
   }
