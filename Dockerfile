@@ -50,7 +50,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpango-1.0-0 \
     libcairo2 \
     libasound2 \
+    libgl1-mesa-dri \
+    mesa-va-drivers \
     fonts-liberation \
+    fonts-noto-cjk \
+    fonts-noto-color-emoji \
     && rm -rf /var/lib/apt/lists/*
 
 # Multi-arch Playwright support (linux/amd64 and linux/arm64)

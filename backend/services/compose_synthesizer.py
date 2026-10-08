@@ -103,8 +103,12 @@ def synthesize_compose_spec(inspect_data: Dict[str, Any], mask_secrets: bool = F
         if src and dst:
             if not mode:
                 mode = "rw" if rw else "ro"
-            # Avoid duplicating host devices in volumes
-            if src.startswith("/dev/"):
+            # Avoid internal container mounts and host devices in volumes
+            if (
+                src.startswith("/dev/")
+                or dst in ("/etc/resolv.conf", "/etc/hostname", "/etc/hosts", "/dev/shm")
+                or "/docker/containers/" in src
+            ):
                 continue
             volumes.append(f"{src}:{dst}:{mode}")
 
@@ -401,12 +405,12 @@ def get_container_logs_chunk(cid_or_name: str, tail: int = 200) -> Dict[str, Any
 
     tail_param = max(10, min(2000, int(tail)))
 
+    conn = None
     try:
         conn = UnixHTTPConnection(sock_path, timeout=5.0)
         conn.request("GET", f"/containers/{cid_or_name}/logs?stdout=1&stderr=1&tail={tail_param}&timestamps=1")
         res = conn.getresponse()
         raw = res.read()
-        conn.close()
 
         lines = []
         idx = 0
@@ -415,7 +419,12 @@ def get_container_logs_chunk(cid_or_name: str, tail: int = 200) -> Dict[str, Any
         # Docker 8-byte multiplex protocol: [1 byte stream][3 bytes pad][4 bytes payload length]
         while idx + 8 <= raw_len:
             stream_type = raw[idx]
+            if stream_type not in (1, 2, 0):
+                # Non-standard or non-multiplexed frame detected; break to raw line fallback
+                break
             payload_len = struct.unpack(">I", raw[idx + 4 : idx + 8])[0]
+            if idx + 8 + payload_len > raw_len:
+                break
             payload = raw[idx + 8 : idx + 8 + payload_len].decode("utf-8", errors="replace")
             idx += 8 + payload_len
 
@@ -440,6 +449,27 @@ def get_container_logs_chunk(cid_or_name: str, tail: int = 200) -> Dict[str, Any
                 }
             )
 
+        # Fallback for containers with Tty: true (no 8-byte multiplex header)
+        if not lines and raw:
+            text = raw.decode("utf-8", errors="replace")
+            for raw_line in text.splitlines():
+                clean_line = raw_line.strip("\r\n")
+                if not clean_line:
+                    continue
+                ts = ""
+                msg = clean_line
+                if len(clean_line) > 30 and clean_line[4] == "-" and clean_line[10] == "T" and " " in clean_line[:35]:
+                    parts = clean_line.split(" ", 1)
+                    ts = parts[0]
+                    msg = parts[1] if len(parts) > 1 else ""
+                lines.append(
+                    {
+                        "stream": "stdout",
+                        "ts": ts,
+                        "msg": msg,
+                    }
+                )
+
         return {
             "container": cid_or_name,
             "lines": lines,
@@ -449,3 +479,9 @@ def get_container_logs_chunk(cid_or_name: str, tail: int = 200) -> Dict[str, Any
     except Exception as e:
         logger.error(f"[Docker] Failed to read logs for {cid_or_name}: {e}")
         return {"lines": [], "error": str(e)}
+    finally:
+        if conn:
+            try:
+                conn.close()
+            except Exception:
+                pass

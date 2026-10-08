@@ -21,9 +21,25 @@ from backend.services.compose_synthesizer import fetch_container_raw_inspect
 def check_port_available(port: int, proto: str = "tcp", host: str = "0.0.0.0") -> bool:
     """
     Checks if a local port is available to bind without conflicts.
+    Inspects host procfs sockets (/host/proc/net/tcp, /host/proc/net/tcp6)
+    as well as container socket bind.
     """
     if not (1 <= port <= 65535):
         return False
+
+    hex_port = f"{port:04X}"
+    for proc_path in ("/host/proc/net/tcp", "/host/proc/net/tcp6", "/proc/net/tcp", "/proc/net/tcp6"):
+        if os.path.exists(proc_path):
+            try:
+                with open(proc_path) as f:
+                    for line in f:
+                        fields = line.strip().split()
+                        if len(fields) >= 4 and fields[3] == "0A":  # TCP_LISTEN
+                            if fields[1].endswith(f":{hex_port}"):
+                                return False
+            except Exception:
+                pass
+
     sock_type = socket.SOCK_STREAM if proto.lower() == "tcp" else socket.SOCK_DGRAM
     try:
         with socket.socket(socket.AF_INET, sock_type) as s:
@@ -136,6 +152,13 @@ def recreate_container_ports(
     orig_name = inspect_data.get("Name", "").lstrip("/")
     if not orig_name:
         raise ValueError(f"Could not determine container name for '{cid}'.")
+
+    self_hostname = socket.gethostname()
+    if (self_hostname and cid.startswith(self_hostname)) or orig_name in ("zettnas-toolkit", "zettnas"):
+        raise ValueError(
+            "Cannot recreate the active ZettNAS Toolkit container. "
+            "Port modifications must be configured in Docker Compose or your Unraid template."
+        )
 
     # Step 2: Validate ports & pre-flight socket collision check
     for pb in new_port_bindings:
