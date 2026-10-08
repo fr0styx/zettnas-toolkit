@@ -29,7 +29,8 @@
 * **High-Integrity Media Ingestion** — Front SD/TF card auto-detection with interactive confirmation dialog, safe eject protection, async I/O (`aiofiles`), SHA-256 verification, and persistent SQLite logs.
 * **Multi-Architecture Docker Distribution** — Native multi-arch support (`linux/amd64` and `linux/arm64` for Raspberry Pi, ARM NAS boards, and Apple Silicon) published directly to GitHub Container Registry.
 * **Full Internationalization (i18n)** — Zero-dependency client-side localization across 5 languages (English, German, Simplified Chinese, French, and Spanish) spanning all interfaces, modals, and settings.
-* **Intelligent Per-Zone Fan Regulation & Zero RPM Mode** — Independent multi-point thermal curves for HDD backplanes, NVMe cache, and CPU cooling with Zero RPM HDD standby mode, user-defined named presets, 2.0s kickstart torque pulsing, hysteresis hold protection, and shutdown failsafe.
+* **Hardware- & OS-Agnostic Container Engine** — Pure Docker Engine API compliance over `/var/run/docker.sock` across Debian, Ubuntu, TrueNAS SCALE, Proxmox, and Unraid. Features dynamic OCI Compose Spec v3.8+ YAML synthesizer with secret masking, multiplexed live logs console, zero-downtime resource tuning, and atomic port reconfiguration with rollback protection.
+* **Strictly Isolated Theme Architecture** — Decoupled styling engines for the physical front-panel LCD (`/dev/fb0`) vs. desktop web workspace, ensuring desktop accent color changes never alter hardware display telemetry.
 * **Chassis ARGB Lightbar (`/dev/ttyACM0`)** — USB microcontroller driver for 38 WS2812B LEDs with hardware animations, error-reactive alerts (red/amber), and blackout night scheduling.
 
 ---
@@ -112,7 +113,7 @@ For complete endpoint specifications, parameter schemas, Server-Sent Events (SSE
 | Category | Highlights | Docs |
 | :--- | :--- | :---: |
 | **Telemetry & Streaming** | Real-time metrics snapshot (`/api/stats`), 1 Hz live SSE stream (`/api/stats/stream`), historical time-series graphs (`/api/history`). | [Details](docs/API.md#1-telemetry--live-streaming) |
-| **Subsystem Management** | Acoustic profiles (`/api/system/profile`), Unraid array status (`/api/unraid`), Docker orchestration (`/api/docker/containers`), UPS/NUT metrics (`/api/ups`). | [Details](docs/API.md#2-system--subsystem-management) |
+| **Subsystem Management** | Acoustic profiles (`/api/system/profile`), Unraid array (`/api/unraid`), Docker orchestration, Compose synthesizer, logs & port mutator (`/api/docker/*`), UPS/NUT (`/api/ups`). | [Details](docs/API.md#2-system--subsystem-management) |
 | **Hardware Controls** | Fan curves/PWM (`/api/fans`), ARGB lightbar effects (`/api/led`), LCD brightness/pages (`/api/lcd/*`), S.M.A.R.T. self-tests (`/api/disk/*`). | [Details](docs/API.md#3-hardware-controls--diagnostics) |
 | **Media & Filesystem** | Chunked uploads (`/api/fs/upload`), card slot detection & auto-ingest (`/api/media_slots`, `/api/copy/*`), safe ejection. | [Details](docs/API.md#4-media-ingest--filesystem-management) |
 | **Security & System** | Password rotation (`/api/security`), scoped API tokens (`/api/tokens`), multi-channel alerts (`/api/notifications/*`), backup export/restore (`/api/backup/*`). | [Details](docs/API.md#5-configuration-notifications--security) |

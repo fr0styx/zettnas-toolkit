@@ -8,10 +8,11 @@ import concurrent.futures
 import http.client
 import json
 import os
+import re
 import socket
 import threading
 import time
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional, Tuple
 
 from backend.config import logger
 
@@ -19,12 +20,42 @@ _CACHED_CONTAINERS: List[Dict[str, Any]] = []
 _LAST_DOCKER_POLL = 0.0
 _DOCKER_CACHE_TTL = 3.0
 _CONTAINER_METRICS: Dict[str, Dict[str, Any]] = {}
+_CONTAINER_INSPECT_CACHE: Dict[str, Dict[str, Any]] = {}
 _TELEMETRY_THREAD_STARTED = False
 _TELEMETRY_LOCK = threading.Lock()
+_INSPECT_LOCK = threading.Lock()
+_INSPECT_CACHE_TTL = 60.0
+
+# Universal well-known HTTP web service ports (prioritized by common NAS services)
+WELL_KNOWN_WEB_PORTS = [
+    80,
+    443,
+    8080,
+    8096,
+    32400,
+    2283,
+    3000,
+    5055,
+    7878,
+    8989,
+    9696,
+    8686,
+    9000,
+    8082,
+    8081,
+    8888,
+    8191,
+    6868,
+    5000,
+    8000,
+    8443,
+    9443,
+    5001,
+]
 
 
 class UnixHTTPConnection(http.client.HTTPConnection):
-    def __init__(self, socket_path: str, timeout: float = 3.0):
+    def __init__(self, socket_path: str = "/var/run/docker.sock", timeout: float = 3.0):
         super().__init__("localhost", timeout=timeout)
         self.socket_path = socket_path
 
@@ -32,6 +63,197 @@ class UnixHTTPConnection(http.client.HTTPConnection):
         self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         self.sock.settimeout(self.timeout)
         self.sock.connect(self.socket_path)
+
+
+def _parse_ports_and_webui(raw_ports: list, labels: dict) -> Tuple[List[Dict[str, Any]], Optional[int], Optional[str]]:
+    """
+    Parses container port bindings into a deduplicated, sorted list and resolves
+    the primary Web UI port and URL template using universal heuristics.
+    """
+    parsed = []
+    seen = set()
+    for p in raw_ports or []:
+        pub = p.get("PublicPort")
+        priv = p.get("PrivatePort")
+        proto = p.get("Type", "tcp").lower()
+        key = (pub, priv, proto)
+        if key not in seen:
+            seen.add(key)
+            parsed.append(
+                {
+                    "public_port": pub,
+                    "private_port": priv,
+                    "type": proto,
+                    "ip": p.get("IP", "0.0.0.0"),
+                }
+            )
+
+    # Sort so public ports appear first, ordered by port number
+    parsed.sort(key=lambda x: (x["public_port"] is None, x["public_port"] or 0))
+
+    webui_url: Optional[str] = None
+    primary_port: Optional[int] = None
+
+    # Heuristic 1: Unraid WebUI label (if present, replace [IP] with [HOST])
+    unraid_webui = labels.get("net.unraid.docker.webui")
+    if unraid_webui:
+        match = re.search(r"\[PORT:(\d+)\]", unraid_webui)
+        target_priv = int(match.group(1)) if match else None
+        target_pub = target_priv
+        if target_priv:
+            for p in parsed:
+                if p["private_port"] == target_priv and p["public_port"]:
+                    target_pub = p["public_port"]
+                    break
+        webui_url = unraid_webui.replace("[IP]", "[HOST]")
+        if target_pub:
+            webui_url = re.sub(r"\[PORT:\d+\]", str(target_pub), webui_url)
+            primary_port = target_pub
+
+    # Heuristic 2: Traefik / Ingress labels (e.g. Host(`example.com`))
+    if not webui_url:
+        for k, v in labels.items():
+            if k.startswith("traefik.http.routers.") and k.endswith(".rule") and "Host(" in v:
+                m = re.search(r"Host\(`([^`]+)`\)", v)
+                if m:
+                    webui_url = f"http://{m.group(1)}/"
+                    break
+
+    # Heuristic 3: Well-known HTTP web service ports matching public bindings
+    if not webui_url:
+        pub_ports = [p["public_port"] for p in parsed if p["public_port"]]
+        for wk in WELL_KNOWN_WEB_PORTS:
+            if wk in pub_ports:
+                primary_port = wk
+                break
+        if not primary_port and pub_ports:
+            # Fallback to the first available public port
+            primary_port = pub_ports[0]
+
+        if primary_port:
+            proto = "https" if primary_port in (443, 8443, 9443) else "http"
+            webui_url = f"{proto}://[HOST]:{primary_port}/"
+
+    return parsed, primary_port, webui_url
+
+
+def _classify_stack(labels: dict) -> Tuple[Optional[str], Optional[str], str]:
+    """
+    Classifies container orchestrator stack origin (Compose, Dockhand, Unraid, Standalone).
+    """
+    stack = labels.get("com.docker.compose.project") or labels.get("io.portainer.stack.name") or None
+    service = labels.get("com.docker.compose.service") or labels.get("org.opencontainers.image.title") or None
+    managed = labels.get("net.unraid.docker.managed")
+
+    if stack:
+        managed_by = "compose"
+    elif managed == "dockerman":
+        managed_by = "unraid"
+    else:
+        managed_by = "standalone"
+
+    return stack, service, managed_by
+
+
+def _extract_hardware_badges(mounts: list, devices: list, env: list, runtime: str = "") -> List[Dict[str, str]]:
+    """
+    Hardware Abstraction Layer (HAL) badge detector.
+    OS-agnostic: discovers DRM/DRI GPUs, AMD ROCm, NVIDIA CUDA, Coral TPUs, and USB serial adapters.
+    """
+    badges = []
+
+    # 1. GPU / DRI (Intel / AMD / VirtIO / Panfrost render nodes)
+    has_dri = any("dri" in (m.get("Source") or "") for m in mounts) or any(
+        "dri" in (d.get("PathOnHost") or "") for d in devices
+    )
+    if has_dri:
+        badges.append({"id": "gpu", "label": "GPU", "icon": "zap", "color": "var(--accent-cyan,#00f0ff)"})
+
+    # 2. NVIDIA CUDA Acceleration
+    has_nvidia = (
+        runtime == "nvidia"
+        or any("nvidia" in (d.get("PathOnHost") or "").lower() for d in devices)
+        or any(e.startswith("NVIDIA_") or "CUDA_" in e for e in env)
+    )
+    if has_nvidia:
+        badges.append({"id": "nvidia", "label": "NVIDIA", "icon": "cpu", "color": "#22c55e"})
+
+    # 3. AMD ROCm / KFD
+    has_rocm = any("kfd" in (m.get("Source") or "") for m in mounts) or any(
+        "kfd" in (d.get("PathOnHost") or "") for d in devices
+    )
+    if has_rocm:
+        badges.append({"id": "rocm", "label": "ROCm", "icon": "cpu", "color": "#ef4444"})
+
+    # 4. Google Coral Edge TPU
+    has_tpu = any("apex" in (d.get("PathOnHost") or "") for d in devices) or any(
+        "coral" in (d.get("PathOnHost") or "").lower() for d in devices
+    )
+    if has_tpu:
+        badges.append({"id": "tpu", "label": "TPU", "icon": "cpu", "color": "#10b981"})
+
+    # 5. Serial / Zigbee / Z-Wave Coordinator Dongles
+    has_serial = any(
+        ("ttyUSB" in (d.get("PathOnHost") or "") or "ttyACM" in (d.get("PathOnHost") or "")) for d in devices
+    )
+    if has_serial:
+        badges.append({"id": "serial", "label": "Serial", "icon": "radio", "color": "#f59e0b"})
+
+    return badges
+
+
+def _extract_appdata_path(mounts: list) -> Optional[str]:
+    """
+    Extracts container application config/data path on the host for File Explorer deep-linking.
+    """
+    for m in mounts:
+        src = m.get("Source", "")
+        dst = m.get("Destination", "")
+        if "appdata" in src.lower() or dst in ("/config", "/data", "/app/data"):
+            return src
+    return None
+
+
+def _fetch_container_inspect(cid_short: str, conn: Optional[UnixHTTPConnection] = None) -> Dict[str, Any]:
+    """
+    Fetches full container inspection JSON with thread-safe in-memory caching.
+    """
+    now = time.time()
+    with _INSPECT_LOCK:
+        cached = _CONTAINER_INSPECT_CACHE.get(cid_short)
+        if cached and (now - cached.get("_ts", 0)) < _INSPECT_CACHE_TTL:
+            return cached
+
+    sock_path = "/var/run/docker.sock"
+    if not os.path.exists(sock_path):
+        return {}
+
+    should_close = False
+    if conn is None:
+        try:
+            conn = UnixHTTPConnection(sock_path, timeout=2.0)
+            should_close = True
+        except Exception:
+            return {}
+
+    try:
+        conn.request("GET", f"/containers/{cid_short}/json")
+        res = conn.getresponse()
+        if res.status == 200:
+            info = json.loads(res.read().decode("utf-8", errors="replace"))
+            info["_ts"] = now
+            with _INSPECT_LOCK:
+                _CONTAINER_INSPECT_CACHE[cid_short] = info
+            return info
+    except Exception as e:
+        logger.debug(f"[Docker] Inspect error for {cid_short}: {e}")
+    finally:
+        if should_close:
+            try:
+                conn.close()
+            except Exception:
+                pass
+    return {}
 
 
 def _fetch_container_telemetry(cid: str) -> Dict[str, Any]:
@@ -161,13 +383,37 @@ def read_docker_containers(force: bool = False) -> List[Dict[str, Any]]:
         raw = json.loads(res.read().decode("utf-8", errors="replace"))
         out = []
         for c in raw:
-            cid_short = c.get("Id", "")[:12]
+            cid_full = c.get("Id", "")
+            cid_short = cid_full[:12]
             names = c.get("Names", [])
             name = names[0].lstrip("/") if names else "unnamed"
             metrics = _CONTAINER_METRICS.get(cid_short, {})
+            raw_ports = c.get("Ports", [])
+            labels = c.get("Labels", {}) or {}
+            raw_mounts = c.get("Mounts", []) or []
+
+            # Ports & Universal WebUI resolution
+            ports, primary_port, webui_url = _parse_ports_and_webui(raw_ports, labels)
+
+            # Stack & Origin classification
+            stack, service, managed_by = _classify_stack(labels)
+
+            # Inspect data for hardware badges (fast cached query)
+            inspect_info = _fetch_container_inspect(cid_short, conn=conn)
+            devices = inspect_info.get("HostConfig", {}).get("Devices", []) or []
+            env = inspect_info.get("Config", {}).get("Env", []) or []
+            runtime = inspect_info.get("HostConfig", {}).get("Runtime", "")
+
+            # HAL hardware badges (GPU, ROCm, NVIDIA, Coral, Serial)
+            badges = _extract_hardware_badges(raw_mounts, devices, env, runtime=runtime)
+
+            # Appdata path for File Explorer deep-linking
+            appdata_path = _extract_appdata_path(raw_mounts)
+
             out.append(
                 {
                     "id": cid_short,
+                    "full_id": cid_full,
                     "name": name,
                     "image": c.get("Image", ""),
                     "state": c.get("State", "unknown"),
@@ -179,11 +425,24 @@ def read_docker_containers(force: bool = False) -> List[Dict[str, Any]]:
                     "mem_pct": metrics.get("mem_pct", 0.0),
                     "net_rx": metrics.get("net_rx", 0),
                     "net_tx": metrics.get("net_tx", 0),
+                    "stack": stack,
+                    "service": service,
+                    "managed_by": managed_by,
+                    "ports": ports,
+                    "primary_port": primary_port,
+                    "webui_url": webui_url,
+                    "hardware_badges": badges,
+                    "mounts_count": len(raw_mounts),
+                    "appdata_path": appdata_path,
                 }
             )
         out.sort(key=lambda x: (x["state"] != "running", x["name"]))
         _CACHED_CONTAINERS = out
         _LAST_DOCKER_POLL = now
+        try:
+            conn.close()
+        except Exception:
+            pass
         return out
     except Exception as e:
         logger.debug(f"[Docker] Failed to introspect containers: {e}")
@@ -218,6 +477,8 @@ def container_action(container_id: str, action: str) -> Dict[str, Any]:
         if res.status in (200, 204, 304):
             _CACHED_CONTAINERS = []
             _LAST_DOCKER_POLL = 0.0
+            with _INSPECT_LOCK:
+                _CONTAINER_INSPECT_CACHE.clear()
             return {"success": True, "action": action, "id": container_id}
 
         err_msg = f"HTTP {res.status}"

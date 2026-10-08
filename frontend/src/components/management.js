@@ -1,4 +1,6 @@
 import { syncWidgetSettingsUI } from './widgets.js';
+import { syncDesktopThemeUI } from './settings.js';
+import { openContainerInspector } from './container-modal.js';
 /**
  * ZettNAS Toolkit - System Management Window Controller
  * Manages the dedicated System Management desktop window, hub app grid,
@@ -10,7 +12,7 @@ import { state } from '../state.js';
 import { api } from '../api.js';
 import { showToast } from '../toast.js';
 import { trapFocus, escapeHtml } from '../utils.js';
-import { t } from '../i18n.js';
+import { t, getLanguage } from '../i18n.js';
 
 let _activeProfile = 'balanced';
 let _unbindMgmtTrap = null;
@@ -116,72 +118,253 @@ export function updateManagementTelemetry(stats) {
   }
 }
 
-export async function fetchAndRenderDockerContainers() {
+let _dockerContainersList = [];
+let _dockerFilter = 'all';
+let _dockerSearchQuery = '';
+
+export function _resetDockerStateForTesting() {
+  _dockerContainersList = [];
+  _dockerFilter = 'all';
+  _dockerSearchQuery = '';
+}
+
+function _bindDockerEvents() {
+  const containerPane = document.getElementById('mgmt-pane-docker');
+  if (!containerPane || containerPane._dockerEventsBound) return;
+
+  const searchInput = document.getElementById('docker-search-input');
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      _dockerSearchQuery = (e.target.value || '').trim().toLowerCase();
+      renderDockerContainersTable();
+    });
+  }
+
+  const filterBtns = containerPane.querySelectorAll('.docker-filter-btn');
+  filterBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      filterBtns.forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+      _dockerFilter = btn.dataset.filter || 'all';
+      renderDockerContainersTable();
+    });
+  });
+
+  containerPane._dockerEventsBound = true;
+}
+
+export function renderDockerContainersTable() {
   const tbody = document.getElementById('docker-containers-tbody');
   if (!tbody) return;
-  try {
-    const list = await api.get('/api/docker/containers');
-    if (!list || list.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--muted); padding:16px;">No Docker containers detected or socket not connected.</td></tr>';
-      return;
-    }
-    const runningCount = list.filter(c => c.state === 'running').length;
-    const pill = document.getElementById('mgmt-hub-docker-pill');
-    if (pill) pill.textContent = `${runningCount} Active`;
-    const sideBadge = document.getElementById('mgmt-sidebar-docker-badge');
-    if (sideBadge) sideBadge.textContent = `${runningCount} Active`;
 
-    tbody.innerHTML = list.map((c) => {
+  // Compute counts
+  const totalCount = _dockerContainersList.length;
+  const runningCount = _dockerContainersList.filter((c) => c.state === 'running').length;
+  const stoppedCount = _dockerContainersList.filter((c) => c.state !== 'running').length;
+  const composeCount = _dockerContainersList.filter((c) => c.managed_by === 'compose' || Boolean(c.stack)).length;
+  const standaloneCount = _dockerContainersList.filter((c) => c.managed_by !== 'compose' && !c.stack).length;
+
+  const cAll = document.getElementById('docker-count-all');
+  if (cAll) cAll.textContent = totalCount;
+  const cRun = document.getElementById('docker-count-running');
+  if (cRun) cRun.textContent = runningCount;
+  const cStop = document.getElementById('docker-count-stopped');
+  if (cStop) cStop.textContent = stoppedCount;
+  const cComp = document.getElementById('docker-count-compose');
+  if (cComp) cComp.textContent = composeCount;
+  const cStand = document.getElementById('docker-count-standalone');
+  if (cStand) cStand.textContent = standaloneCount;
+
+  const pill = document.getElementById('mgmt-hub-docker-pill');
+  if (pill) pill.textContent = `${runningCount} Active`;
+  const sideBadge = document.getElementById('mgmt-sidebar-docker-badge');
+  if (sideBadge) sideBadge.textContent = `${runningCount} Active`;
+
+  if (totalCount === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--muted); padding:20px;">${t('mgmt.docker_none', 'No Docker containers detected or socket not connected.')}</td></tr>`;
+    return;
+  }
+
+  // Filter list
+  const filtered = _dockerContainersList.filter((c) => {
+    // Check tab filter
+    if (_dockerFilter === 'running' && c.state !== 'running') return false;
+    if (_dockerFilter === 'stopped' && c.state === 'running') return false;
+    if (_dockerFilter === 'compose' && c.managed_by !== 'compose' && !c.stack) return false;
+    if (_dockerFilter === 'standalone' && (c.managed_by === 'compose' || Boolean(c.stack))) return false;
+
+    // Check search query
+    if (_dockerSearchQuery) {
+      const q = _dockerSearchQuery;
+      const matchName = (c.name || '').toLowerCase().includes(q);
+      const matchImage = (c.image || '').toLowerCase().includes(q);
+      const matchStack = (c.stack || '').toLowerCase().includes(q);
+      const matchService = (c.service || '').toLowerCase().includes(q);
+      const matchPort = (c.ports || []).some(
+        (p) => String(p.public_port).includes(q) || String(p.private_port).includes(q)
+      );
+      if (!matchName && !matchImage && !matchStack && !matchService && !matchPort) {
+        return false;
+      }
+    }
+    return true;
+  });
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--muted); padding:20px;">${t('mgmt.docker_no_matching', 'No containers match your search or filter.')}</td></tr>`;
+    return;
+  }
+
+  const currentHost = typeof window !== 'undefined' && window.location.hostname ? window.location.hostname : 'localhost';
+
+  tbody.innerHTML = filtered
+    .map((c) => {
       const isRunning = c.state === 'running';
       const badgeColor = isRunning ? 'var(--ok2)' : 'var(--muted)';
       const badgeBg = isRunning ? 'rgba(37, 194, 160, 0.15)' : 'rgba(255, 255, 255, 0.05)';
+      const idShort = c.id ? c.id.slice(0, 12) : '';
+
+      // Column 1: Stack & Name
+      let stackHtml = '';
+      if (c.stack) {
+        stackHtml = `<span class="docker-stack-pill" title="Compose Stack: ${escapeHtml(c.stack)}">📁 ${escapeHtml(c.stack)}</span>`;
+      } else {
+        const originLabel = c.managed_by === 'unraid' ? 'Unraid' : 'Standalone';
+        stackHtml = `<span class="docker-origin-pill">${originLabel}</span>`;
+      }
+
+      // Column 2: Hardware Badges
+      let hwHtml = '<span style="color:var(--muted); font-size:10px;">—</span>';
+      if (c.hardware_badges && c.hardware_badges.length > 0) {
+        hwHtml = c.hardware_badges
+          .map(
+            (b) =>
+              `<span class="docker-hw-badge docker-hw-${escapeHtml(b.id)}" title="${escapeHtml(b.label)}">${escapeHtml(b.label)}</span>`
+          )
+          .join('');
+      }
+
+      // Column 3: Telemetry (CPU / RAM)
+      let telemHtml = '<span style="color:var(--muted); font-size:10px;">—</span>';
+      if (isRunning) {
+        const cpuStr = `${(c.cpu_pct || 0).toFixed(1)}%`;
+        const memStr = c.mem_used ? `${(c.mem_used / (1024 * 1024)).toFixed(0)} MB` : '--';
+        telemHtml = `<span class="docker-telemetry-pill"><span class="telem-cpu">${cpuStr}</span><span style="opacity:0.4;">•</span><span class="telem-mem">${memStr}</span></span>`;
+      }
+
+      // Column 4: Ports & Web UI
+      let portsHtml = '<span style="color:var(--muted); font-size:10px;">—</span>';
+      const portParts = [];
+      if (c.webui_url && c.primary_port) {
+        const resolvedUrl = c.webui_url.replace('[HOST]', currentHost);
+        portParts.push(
+          `<a href="${escapeHtml(resolvedUrl)}" target="_blank" rel="noopener noreferrer" class="btn-webui-badge" title="Open Web UI (Port ${c.primary_port})">🌐 :${c.primary_port} ↗</a>`
+        );
+      }
+      // Additional public ports
+      const otherPorts = (c.ports || []).filter(
+        (p) => p.public_port && p.public_port !== c.primary_port
+      );
+      if (otherPorts.length > 0) {
+        const otherTags = otherPorts
+          .slice(0, 3)
+          .map((p) => `<span class="docker-port-tag">:${p.public_port}</span>`)
+          .join('');
+        portParts.push(otherTags);
+      }
+      if (portParts.length > 0) {
+        portsHtml = portParts.join(' ');
+      }
+
+      // Column 5: Status & Uptime
+      const statusHtml = `
+        <div style="display:flex; align-items:center; gap:6px;">
+          <span style="display:inline-block; padding:2px 6px; border-radius:4px; font-size:9.5px; font-weight:700; background:${badgeBg}; color:${badgeColor}; text-transform:uppercase;">${escapeHtml(c.state)}</span>
+          <span style="font-size:10px; color:#cbd5e1; max-width:110px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeHtml(c.status)}">${escapeHtml(c.status)}</span>
+        </div>
+      `;
+
+      // Column 6: Actions
+      const inspectBtn = `<button class="btn-container-act btn-docker-inspect" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="inspect" title="Inspect ${escapeHtml(c.name)}">🔍</button>`;
       const actions = isRunning
         ? `
+          ${inspectBtn}
           <button class="btn-container-act btn-docker-restart" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="restart" title="Restart ${escapeHtml(c.name)}">🔄</button>
           <button class="btn-container-act btn-docker-stop" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="stop" title="Stop ${escapeHtml(c.name)}">⏹</button>
         `
         : `
+          ${inspectBtn}
           <button class="btn-container-act btn-docker-start" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="start" title="Start ${escapeHtml(c.name)}">▶</button>
         `;
 
-      const idShort = c.id ? c.id.slice(0, 12) : '';
       return `
         <tr>
           <td>
-            <strong style="color:#fff; display:block; font-size:11.5px;">${escapeHtml(c.name)}</strong>
-            <code style="font-size:9.5px; color:var(--muted); font-family:var(--font-mono, monospace);">${escapeHtml(idShort)}</code>
+            <div style="display:flex; align-items:baseline; gap:6px;">
+              <button class="btn-docker-name-link" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" style="background:none; border:none; padding:0; color:#fff; font-size:11.5px; font-weight:700; cursor:pointer; text-align:left; font-family:inherit;" title="Inspect ${escapeHtml(c.name)}">${escapeHtml(c.name)}</button>
+              <code style="font-size:9px; color:var(--muted); font-family:var(--font-mono, monospace);">${escapeHtml(idShort)}</code>
+            </div>
+            <div>${stackHtml}</div>
           </td>
-          <td style="color:var(--muted); font-size:10px; max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeHtml(c.image)}">${escapeHtml(c.image)}</td>
-          <td><span style="display:inline-block; padding:2px 6px; border-radius:4px; font-size:9.5px; font-weight:700; background:${badgeBg}; color:${badgeColor}; text-transform:uppercase;">${escapeHtml(c.state)}</span></td>
-          <td style="font-size:10.5px; color:#cbd5e1; max-width:130px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeHtml(c.status)}">${escapeHtml(c.status)}</td>
+          <td>${hwHtml}</td>
+          <td>${telemHtml}</td>
+          <td>${portsHtml}</td>
+          <td>${statusHtml}</td>
           <td style="text-align:right; white-space:nowrap;">${actions}</td>
         </tr>
       `;
-    }).join('');
+    })
+    .join('');
 
-    tbody.querySelectorAll('.btn-container-act').forEach((btn) => {
-      btn.addEventListener('click', async (e) => {
-        e.stopPropagation();
-        const cid = btn.dataset.id;
-        const cname = btn.dataset.name;
-        const act = btn.dataset.action;
-        if (!cid || !act) return;
+  // Wire container action buttons
+  tbody.querySelectorAll('.btn-container-act').forEach((btn) => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const cid = btn.dataset.id;
+      const cname = btn.dataset.name;
+      const act = btn.dataset.action;
+      if (!cid || !act) return;
 
-        btn.disabled = true;
-        btn.style.opacity = '0.5';
-        showToast(`${act.toUpperCase()} request sent for ${cname}...`, 'info');
+      if (act === 'inspect') {
+        openContainerInspector(cid, cname);
+        return;
+      }
 
-        try {
-          await api.post(`/api/docker/containers/${encodeURIComponent(cid)}/action`, { action: act });
-          showToast(`Container "${cname}" successfully ${act}ed.`, 'success');
-          await fetchAndRenderDockerContainers();
-        } catch (err) {
-          showToast(`Failed to ${act} container: ${err.message}`, 'error');
-          btn.disabled = false;
-          btn.style.opacity = '1';
-        }
-      });
+      btn.disabled = true;
+      btn.style.opacity = '0.5';
+      showToast(`${act.toUpperCase()} request sent for ${cname}...`, 'info');
+
+      try {
+        await api.post(`/api/docker/containers/${encodeURIComponent(cid)}/action`, { action: act });
+        showToast(`Container "${cname}" successfully ${act}ed.`, 'success');
+        await fetchAndRenderDockerContainers();
+      } catch (err) {
+        showToast(`Failed to ${act} container: ${err.message}`, 'error');
+        btn.disabled = false;
+        btn.style.opacity = '1';
+      }
     });
+  });
+
+  // Wire container name click to open inspector
+  tbody.querySelectorAll('.btn-docker-name-link').forEach((link) => {
+    link.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const cid = link.dataset.id;
+      const cname = link.dataset.name;
+      if (cid) openContainerInspector(cid, cname);
+    });
+  });
+}
+
+export async function fetchAndRenderDockerContainers() {
+  _bindDockerEvents();
+  const tbody = document.getElementById('docker-containers-tbody');
+  if (!tbody) return;
+  try {
+    const list = await api.get('/api/docker/containers');
+    _dockerContainersList = Array.isArray(list) ? list : [];
+    renderDockerContainersTable();
   } catch (err) {
     tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--crit); padding:16px;">Failed to load containers: ${escapeHtml(err.message)}</td></tr>`;
   }
@@ -372,6 +555,10 @@ export function initManagement() {
   const SUBPANE_MAP = {
     'mgmt-pane-wallpaper': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-wallpaper' },
     'mgmt-pane-widgets': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-widgets' },
+    'mgmt-pane-theme': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-theme' },
+    'mgmt-sec-theme': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-theme' },
+    'mgmt-pane-language': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-language' },
+    'mgmt-sec-language': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-language' },
     'mgmt-sec-metrics': { section: 'mgmt-sec-activity', pane: 'mgmt-pane-metrics' },
     'mgmt-pane-metrics': { section: 'mgmt-sec-activity', pane: 'mgmt-pane-metrics' },
     'mgmt-sec-copy': { section: 'mgmt-sec-activity', pane: 'mgmt-pane-copy' },
@@ -401,6 +588,13 @@ export function initManagement() {
   function triggerSubTabLoad(paneId) {
     if (paneId === 'mgmt-pane-widgets') {
       if (typeof syncWidgetSettingsUI === 'function') syncWidgetSettingsUI();
+    } else if (paneId === 'mgmt-pane-theme') {
+      if (typeof syncDesktopThemeUI === 'function') syncDesktopThemeUI();
+    } else if (paneId === 'mgmt-pane-language') {
+      const select = document.getElementById('mgmt-lang-select');
+      if (select && typeof getLanguage === 'function') {
+        select.value = getLanguage();
+      }
     } else if (paneId === 'mgmt-pane-metrics') {
       setTimeout(fetchAndRenderMetrics, 50);
     } else if (paneId === 'mgmt-pane-copy') {

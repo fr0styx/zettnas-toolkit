@@ -12,6 +12,7 @@ from backend.config import (
     FAN_MIN_PWM,
     FAN_SPINUP_GRACE_SECS,
     FAN_STATE_FILE,
+    CLIENT_PREFS_FILE,
     FAN_ZERO_RPM_DEFAULT_NVME_CEILING,
     FAN_ZERO_RPM_DEFAULT_START_TEMP,
     FAN_ZERO_RPM_DEFAULT_STOP_TEMP,
@@ -576,6 +577,11 @@ def stats_collector_daemon():
                     "page": Z_STATE.current_lcd_page,
                     "cycle_seconds": Z_STATE.lcd_cycle_seconds,
                 },
+                "client_preferences": (
+                    Z_STATE.client_preferences
+                    if Z_STATE.client_preferences is not None
+                    else read_json(CLIENT_PREFS_FILE, default={})
+                ),
                 "peripherals": {
                     "fb_active": bool(ENABLE_FB and os.path.exists("/dev/fb0")),
                     "led_port": find_led_port(),

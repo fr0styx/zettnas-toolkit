@@ -7,7 +7,7 @@ import { ZettEventBus } from '../event-bus.js';
  * Handles floating modal registration, minimize/restore, dragging, and z-index depth stacking.
  */
 
-let activeWindowZIndex = 1000;
+export let activeWindowZIndex = 1000;
 let lastReadEventTs = parseFloat(localStorage.getItem('zettnas_last_read_event_ts_v2') || '0');
 let clearedEventsTs = parseFloat(localStorage.getItem('zettnas_cleared_events_ts') || '0');
 let currentNotifFilter = 'all';
@@ -302,12 +302,29 @@ export function restoreOpenWindowsState() {
 export function bringToFront(windowEl) {
   if (!windowEl) return;
 
+  const isDesktopApp = Boolean(
+    windowEl.id === 'console-window' ||
+    windowEl.id === 'console-modal-overlay' ||
+    windowEl.id === 'management-window' ||
+    windowEl.id === 'management-modal-overlay' ||
+    windowEl.id === 'file-manager-window' ||
+    windowEl.id === 'notif-center-panel' ||
+    windowEl.classList?.contains('chassis-front-panel') ||
+    windowEl.classList?.contains('management-window') ||
+    windowEl.classList?.contains('mgmt-app-window') ||
+    windowEl.classList?.contains('file-manager-window') ||
+    windowEl.classList?.contains('os-window') ||
+    windowEl.closest?.('#console-modal-overlay, #management-modal-overlay, #file-manager-window, #notif-center-panel')
+  );
+
   // Protect modal backdrops & modal dialogs from being demoted into window z-index layer
   if (
-    windowEl.classList.contains('smart-modal-window') ||
-    windowEl.closest('.smart-modal-backdrop') ||
-    windowEl.classList.contains('modal-container') ||
-    windowEl.closest('.modal-backdrop')
+    !isDesktopApp && (
+      windowEl.classList.contains('smart-modal-window') ||
+      windowEl.closest('.smart-modal-backdrop') ||
+      windowEl.classList.contains('modal-container') ||
+      windowEl.closest('.modal-backdrop')
+    )
   ) {
     const backdrop = windowEl.closest('.smart-modal-backdrop') || windowEl.closest('.modal-backdrop');
     if (backdrop) {
@@ -327,12 +344,27 @@ export function bringToFront(windowEl) {
 
     let baseZ = 1000;
     openWins.forEach((el) => {
-      el.style.zIndex = (baseZ++).toString();
+      const curZ = (baseZ++).toString();
+      el.style.zIndex = curZ;
+      const inner = el.querySelector?.('#console-window, #management-window, .chassis-front-panel, .mgmt-app-window');
+      if (inner) inner.style.zIndex = curZ;
     });
     activeWindowZIndex = baseZ;
   }
 
-  windowEl.style.zIndex = activeWindowZIndex.toString();
+  const zStr = activeWindowZIndex.toString();
+  windowEl.style.zIndex = zStr;
+
+  // Elevate parent overlay wrapper if applicable (#console-modal-overlay / #management-modal-overlay)
+  const parentOverlay = windowEl.closest?.('#console-modal-overlay, #management-modal-overlay');
+  if (parentOverlay && parentOverlay !== windowEl) {
+    parentOverlay.style.zIndex = zStr;
+  }
+  // Elevate child window if applicable
+  const childWin = windowEl.querySelector?.('#console-window, #management-window, .chassis-front-panel, .mgmt-app-window');
+  if (childWin && childWin !== windowEl) {
+    childWin.style.zIndex = zStr;
+  }
 
   if (window.DockManager) {
     let foundId = null;
@@ -1460,7 +1492,9 @@ export function initDockSystem() {
     makeDraggable(notifPanel, notifHeader, 'notif-center');
   }
 
-  document.querySelectorAll('.smart-modal-window, #console-window, #notif-center-panel').forEach((win) => {
+  const DESKTOP_WINDOW_SELECTOR = '.smart-modal-window, #console-window, #management-window, #file-manager-window, .file-manager-window, .os-window, #notif-center-panel';
+
+  document.querySelectorAll(DESKTOP_WINDOW_SELECTOR).forEach((win) => {
     win.addEventListener('mousedown', (e) => {
       bringToFront(win);
       e._handledAsWindowClick = true;
@@ -1469,7 +1503,7 @@ export function initDockSystem() {
 
   document.addEventListener('mousedown', (e) => {
     if (e._handledAsWindowClick) return;
-    const windowEl = e.target.closest('.smart-modal-window, #console-window, #notif-center-panel');
+    const windowEl = e.target.closest(DESKTOP_WINDOW_SELECTOR);
     if (windowEl) {
       bringToFront(windowEl);
     }

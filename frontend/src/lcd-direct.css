@@ -119,3 +119,51 @@ body.lcd-direct #screen.hardware-screen-canvas {
 body.lcd-direct #screen * {
   visibility: visible !important;
 }
+
+/* =========================================================================
+   PHYSICAL LCD TEXT CLARITY & ARTIFACT PREVENTION
+   Keeps lettering crisp white to eliminate subpixel chromatic fringe on 172x640 panel,
+   while letting meters, rings, status dots, and telemetry glow in theme accent colors.
+   ========================================================================= */
+body.lcd-direct.text-clarity-on:not(.lcd-theme-light) #screen,
+body.lcd-direct:not(.text-clarity-off):not(.lcd-theme-light) #screen {
+  --fg: #eaf1f8 !important;
+  color: #eaf1f8 !important;
+}
+
+body.lcd-direct.text-clarity-on:not(.lcd-theme-light) #screen .dash-module,
+body.lcd-direct:not(.text-clarity-off):not(.lcd-theme-light) #screen .dash-module {
+  background: #141b24 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+body.lcd-direct.text-clarity-on:not(.lcd-theme-light) #screen .card-title,
+body.lcd-direct:not(.text-clarity-off):not(.lcd-theme-light) #screen .card-title,
+body.lcd-direct.text-clarity-on:not(.lcd-theme-light) #screen .card-title-txt,
+body.lcd-direct:not(.text-clarity-off):not(.lcd-theme-light) #screen .card-title-txt,
+body.lcd-direct.text-clarity-on:not(.lcd-theme-light) #screen .mod-label,
+body.lcd-direct:not(.text-clarity-off):not(.lcd-theme-light) #screen .mod-label {
+  color: #eaf1f8 !important;
+}
+
+/* White Theme Specific Rules for Physical 172x640 Direct Capture */
+body.lcd-direct.lcd-theme-light {
+  background: #f8fafc !important;
+}
+body.lcd-direct.lcd-theme-light #screen {
+  background: #f8fafc !important;
+  --fg: #0a0f1d !important;
+  color: #0a0f1d !important;
+}
+body.lcd-direct.lcd-theme-light #screen .card,
+body.lcd-direct.lcd-theme-light #screen .disk {
+  background: linear-gradient(160deg, #dce4ed, #cbd5e1) !important;
+  border: 1px solid rgba(0, 0, 0, 0.15) !important;
+}
+body.lcd-direct.lcd-theme-light #screen .card-title,
+body.lcd-direct.lcd-theme-light #screen .card-title-txt,
+body.lcd-direct.lcd-theme-light #screen .mod-label {
+  color: #0a0f1d !important;
+}
+
+

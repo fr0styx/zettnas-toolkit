@@ -6,10 +6,43 @@ import zipfile
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import StreamingResponse
 
-from backend.config import logger
+from backend.config import CLIENT_PREFS_FILE, logger
+from backend.fsutil import atomic_write_json, read_json
 from backend.services.backup_engine import generate_backup_zip_stream, restore_backup_archive
+from backend.services.broadcaster import broadcaster
+from backend.state import Z_STATE
 
 router = APIRouter(tags=["Backup"])
+
+
+@router.get("/system/client-preferences")
+def get_client_preferences():
+    """Returns persistent client UI preferences (themes, widgets, window layouts) from DATA_DIR."""
+    prefs = read_json(CLIENT_PREFS_FILE, default={})
+    return {"status": "ok", "preferences": prefs}
+
+
+@router.post("/system/client-preferences")
+async def save_client_preferences(request: Request):
+    """Persists client UI preferences into DATA_DIR so they are preserved in backups and cross-device sync."""
+    try:
+        data = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid JSON body")
+    if not isinstance(data, dict):
+        raise HTTPException(status_code=400, detail="Preferences must be a JSON dictionary")
+
+    current = read_json(CLIENT_PREFS_FILE, default={})
+    current.update(data)
+    atomic_write_json(CLIENT_PREFS_FILE, current)
+
+    with Z_STATE.lock:
+        Z_STATE.client_preferences = current
+        if Z_STATE.cached_stats:
+            Z_STATE.cached_stats["client_preferences"] = current
+            broadcaster.broadcast(Z_STATE.cached_stats, full_data=Z_STATE.cached_stats)
+
+    return {"status": "ok", "message": "Client preferences saved", "preferences": current}
 
 
 @router.get("/system/backup")
@@ -40,7 +73,13 @@ async def restore_backup(request: Request):
         with open(tmp_path, "rb") as archive_file:
             restore_backup_archive(archive_file)
 
-        return {"status": "ok", "message": "Restore successful. A reboot may be required to apply all settings."}
+        client_prefs = read_json(CLIENT_PREFS_FILE, default={})
+
+        return {
+            "status": "ok",
+            "message": "Restore successful. A reboot or page refresh may be required to apply all settings.",
+            "client_preferences": client_prefs,
+        }
     except zipfile.BadZipFile:
         raise HTTPException(status_code=400, detail="Invalid zip archive")
     except ValueError as ve:

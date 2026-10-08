@@ -30,6 +30,35 @@ export function yToPct(y) {
   return clamped;
 }
 
+export function expandTo6Points(pts) {
+  if (!pts || !Array.isArray(pts) || pts.length === 0) {
+    return [[30, 0], [36, 32], [42, 48], [48, 65], [54, 85], [60, 100]];
+  }
+  let current = pts.map((p) => [Number(p[0]), Number(p[1])]);
+  if (current.length === 6) return current;
+  if (current.length > 6) return current.slice(0, 6);
+
+  while (current.length < 6) {
+    let maxGap = -1;
+    let insertIdx = 1;
+    for (let i = 0; i < current.length - 1; i++) {
+      const gap = current[i + 1][0] - current[i][0];
+      if (gap > maxGap) {
+        maxGap = gap;
+        insertIdx = i + 1;
+      }
+    }
+    const prev = current[insertIdx - 1];
+    const next = current[insertIdx];
+    const newT = Math.round((prev[0] + next[0]) / 2);
+    const span = Math.max(1, next[0] - prev[0]);
+    const ratio = (newT - prev[0]) / span;
+    const newP = Math.round(prev[1] + ratio * (next[1] - prev[1]));
+    current.splice(insertIdx, 0, [newT, newP]);
+  }
+  return current;
+}
+
 export function renderCurveLines() {
   const pts = state.curvePoints;
   const path = $('curve-svg-path') || $('fan-curve-path');
@@ -47,17 +76,22 @@ export function renderCurveLines() {
   const dArea = `${d} L ${svgCoords[svgCoords.length - 1][0]} 104 L ${svgCoords[0][0]} 104 Z`;
   area.setAttribute('d', dArea);
 
-  pts.forEach((p, i) => {
+  for (let i = 0; i < 6; i++) {
     const handle = $(`ch-${i}`);
     if (handle) {
-      handle.setAttribute('cx', svgCoords[i][0]);
-      handle.setAttribute('cy', svgCoords[i][1]);
+      if (i < svgCoords.length) {
+        handle.setAttribute('cx', svgCoords[i][0]);
+        handle.setAttribute('cy', svgCoords[i][1]);
+        handle.style.display = 'block';
+      } else {
+        handle.style.display = 'none';
+      }
     }
-  });
+  }
 
   const rangeVal = $('fan-curve-range-val');
-  if (rangeVal && pts.length >= 4) {
-    rangeVal.textContent = `${pts[1][0]}°C – ${pts[2][0]}°C (${pts[1][1]}% – ${pts[2][1]}%)`;
+  if (rangeVal && pts.length >= 2) {
+    rangeVal.textContent = `Ramp: ${pts[1][0]}°C – ${pts[pts.length - 2][0]}°C (${pts[1][1]}% – ${pts[pts.length - 2][1]}%)`;
   }
 }
 
@@ -152,36 +186,30 @@ export function updateFanCurveWorkstation(s) {
   const curveUpdateCooldown = (Date.now() - _lastCurveSaveTime) < 5000;
   if (!isDraggingCurve && !curveUpdateCooldown) {
     if (fc.curve_points && fc.curve_points.length > 0) {
-      if (JSON.stringify(state.curvePoints) !== JSON.stringify(fc.curve_points)) {
-        state.setCurvePoints(fc.curve_points);
+      const normalizedPts = expandTo6Points(fc.curve_points);
+      if (JSON.stringify(state.curvePoints) !== JSON.stringify(normalizedPts)) {
+        state.setCurvePoints(normalizedPts);
       }
       _curveInitialized = true;
     } else if (!_curveInitialized) {
       const tMin = fc.temp_min || 37;
       const tMax = fc.temp_max || 50;
-      state.setCurvePoints([[30, 32], [tMin, 32], [tMax, 100], [60, 100]]);
+      state.setCurvePoints(expandTo6Points([[30, 32], [tMin, 32], [tMax, 100], [60, 100]]));
       _curveInitialized = true;
     }
   }
 
   renderCurveLines();
 
-  const graphMinT = 30;
-  const graphMaxT = 60;
-  const tSpan = 30;
-
-  const normZ1X = Math.max(graphMinT, Math.min(graphMaxT, fc.zone1_temp));
-  const svgZ1X = 38 + ((normZ1X - graphMinT) / tSpan) * (285 - 38);
+  const svgZ1X = tempToX(fc.zone1_temp);
   const normZ1Pwm = Math.max(0, Math.min(183, fc.zone1_pwm));
   const svgZ1Y = normZ1Pwm === 0 ? 104 : pctToY((normZ1Pwm / 183) * 100);
 
-  const normZ2X = Math.max(graphMinT, Math.min(graphMaxT, fc.zone2_temp));
-  const svgZ2X = 38 + ((normZ2X - graphMinT) / tSpan) * (285 - 38);
+  const svgZ2X = tempToX(fc.zone2_temp);
   const normZ2Pwm = Math.max(0, Math.min(183, fc.zone2_pwm));
   const svgZ2Y = normZ2Pwm === 0 ? 104 : pctToY((normZ2Pwm / 183) * 100);
 
-  const normCpuX = Math.max(30, Math.min(85, fc.cpu_temp));
-  const svgCpuX = 38 + ((normCpuX - 30) / (85 - 30)) * (285 - 38);
+  const svgCpuX = tempToX(fc.cpu_temp);
   const normCpuPwm = Math.max(58, Math.min(183, fc.cpu_pwm || 85));
   const svgCpuY = pctToY((normCpuPwm / 183) * 100);
 
@@ -339,14 +367,14 @@ export function initFanControl() {
       if (cpuFanToggle) cpuFanToggle.checked = !!data.ctrl_cpu_fan;
       if (zeroRpmToggle) zeroRpmToggle.checked = !!data.zero_rpm_enabled;
       if (data.curve_points && data.curve_points.length > 0) {
-        state.setCurvePoints(data.curve_points);
+        state.setCurvePoints(expandTo6Points(data.curve_points));
       } else {
-        state.setCurvePoints([[30, 32], [tMin, 32], [tMax, 100], [60, 100]]);
+        state.setCurvePoints(expandTo6Points([[30, 32], [tMin, 32], [tMax, 100], [60, 100]]));
       }
       renderCurveLines();
 
       const crv = $('fan-curve-range-val');
-      if (crv) crv.textContent = `${tMin}°C – ${tMax}°C`;
+      if (crv) crv.textContent = `Ramp: ${tMin}°C – ${tMax}°C`;
 
       updateFanUiState(prof, pct);
     } catch (e) {
@@ -423,6 +451,8 @@ export function initFanControl() {
         const pts = [...state.curvePoints];
         if (dragIndex > 0) t = Math.max(t, pts[dragIndex - 1][0] + 1);
         if (dragIndex < pts.length - 1) t = Math.min(t, pts[dragIndex + 1][0] - 1);
+        if (dragIndex === 0) t = 30;
+        if (dragIndex === pts.length - 1) t = 60;
 
         pts[dragIndex] = [t, p];
         state.setCurvePoints(pts);
@@ -517,7 +547,7 @@ export function initFanControl() {
       return;
     }
     try {
-      const pts = (state.curvePoints && state.curvePoints.length >= 2) ? state.curvePoints : [[30, 32], [37, 32], [50, 100], [60, 100]];
+      const pts = (state.curvePoints && state.curvePoints.length >= 2) ? state.curvePoints : expandTo6Points([[30, 32], [37, 32], [50, 100], [60, 100]]);
       await api.post('/api/fans/presets', {
         name: cleanName,
         curve_points: pts,

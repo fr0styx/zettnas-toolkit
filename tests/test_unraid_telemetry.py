@@ -17,7 +17,7 @@ def test_unraid_parse_healthy_array(tmp_path, monkeypatch):
     var_ini = emhttp_dir / "var.ini"
     var_ini.write_text(
         """version="7.3.2"
-NAME="Ark"
+NAME="ZettNAS"
 SYS_MODEL="D6U"
 mdColor="green-on"
 mdNumDisks="6"
@@ -36,7 +36,7 @@ mdResync="0"
 
     assert status["available"] is True
     assert status["version"] == "7.3.2"
-    assert status["server_name"] == "Ark"
+    assert status["server_name"] == "ZettNAS"
     assert status["model"] == "D6U"
     assert status["state"] == "STARTED"
     assert status["color"] == "green-on"

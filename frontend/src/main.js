@@ -14,7 +14,7 @@ import './modals.js';
 
 import { initDockSystem, DockManager, makeDraggable, bringToFront, restoreOpenWindowsState } from './components/dock.js';
 import { initAuth } from './components/auth.js';
-import { applyStats, applyTheme, initDashboardClicks } from './components/dashboard.js';
+import { applyStats, applyTheme, applyDesktopTheme, applyLcdTheme, initDashboardClicks } from './components/dashboard.js';
 import { initFanControl } from './components/fan-control.js';
 import { initLedControl } from './components/led-control.js';
 import { fetchDashboardLayout, fitMiniPreviewScale } from './components/mini-preview.js';
@@ -27,6 +27,7 @@ import { initManagement } from './components/management.js';
 import { initCommandPalette } from './components/command-palette.js';
 import { initWidgets } from './components/widgets.js';
 import { initFileManager } from './components/file-manager.js';
+import { initContainerModal } from './components/container-modal.js';
 import { initI18n } from './i18n.js';
 import { initA11y } from './a11y.js';
 
@@ -173,9 +174,11 @@ document.addEventListener('DOMContentLoaded', () => {
   initCommandPalette();
   initWidgets();
   initFileManager();
+  initContainerModal();
   initA11y();
 
-  applyTheme(state.currentTheme);
+  applyDesktopTheme(state.desktopTheme, state.desktopCustomAccent);
+  applyLcdTheme(state.lcdTheme, state.lcdCustomAccent, state.lcdTextClarity);
 
   const hasAuth = auth.hasToken() || state.isLcdDirect;
   if (hasAuth) {
@@ -239,7 +242,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const scrollable = e.target.closest(
       '[data-scrollable="true"], [data-scrollable], ' +
       '.mgmt-content-pane, .fm-viewport, #console-window, .smart-modal-body, ' +
-      '.smart-modal-window, .slide-drawer, #desktop-widgets-container, .os-dock, ' +
+      '.smart-modal-window, .container-inspector-window, .ci-panes-container, #ci-logs-terminal, .ci-pane, ' +
+      '.slide-drawer, #desktop-widgets-container, .os-dock, ' +
       'input, select, textarea, .mgmt-sidebar, .mgmt-inner-tabs, .drawer-tabs-nav, .smart-raw-pre'
     );
     if (!scrollable) {

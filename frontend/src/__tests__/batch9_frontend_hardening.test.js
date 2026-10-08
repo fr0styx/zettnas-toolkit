@@ -82,13 +82,82 @@ describe('Batch 9: Frontend Hardening & Architecture', () => {
   });
 
   describe('Window Stacking & Modal Protection', () => {
-    it('protects modal z-indices and maintains --z-modal layer', () => {
+    it('protects modal z-indices and maintains --z-modal layer for true modals', () => {
       const modal = document.createElement('div');
       modal.className = 'smart-modal-window';
       document.body.appendChild(modal);
 
       bringToFront(modal);
       expect(modal.style.zIndex).toBe('var(--z-modal, 9100)');
+    });
+
+    it('assigns dynamic window stacking to Console window and synchronizes its overlay', () => {
+      const overlay = document.createElement('div');
+      overlay.id = 'console-modal-overlay';
+      overlay.className = 'smart-modal-backdrop';
+
+      const win = document.createElement('div');
+      win.id = 'console-window';
+      win.className = 'chassis-front-panel';
+      overlay.appendChild(win);
+      document.body.appendChild(overlay);
+
+      bringToFront(win);
+      const consoleZ = parseInt(win.style.zIndex, 10);
+      expect(consoleZ).toBeGreaterThanOrEqual(1000);
+      expect(consoleZ).toBeLessThan(4900);
+      expect(overlay.style.zIndex).toBe(win.style.zIndex);
+    });
+
+    it('allows File Explorer to stack above Console and Console to stack above File Explorer', () => {
+      const consoleOverlay = document.createElement('div');
+      consoleOverlay.id = 'console-modal-overlay';
+      const consoleWin = document.createElement('div');
+      consoleWin.id = 'console-window';
+      consoleOverlay.appendChild(consoleWin);
+      document.body.appendChild(consoleOverlay);
+
+      const fmWin = document.createElement('div');
+      fmWin.id = 'file-manager-window';
+      fmWin.className = 'os-window file-manager-window';
+      document.body.appendChild(fmWin);
+
+      // Focus console
+      bringToFront(consoleWin);
+      const z1 = parseInt(consoleWin.style.zIndex, 10);
+
+      // Focus file explorer -> must be in front of console
+      bringToFront(fmWin);
+      const z2 = parseInt(fmWin.style.zIndex, 10);
+      expect(z2).toBeGreaterThan(z1);
+
+      // Focus console again -> must be in front of file explorer
+      bringToFront(consoleWin);
+      const z3 = parseInt(consoleWin.style.zIndex, 10);
+      expect(z3).toBeGreaterThan(z2);
+      expect(consoleOverlay.style.zIndex).toBe(z3.toString());
+    });
+
+    it('ensures all desktop windows remain strictly below the Hardware Settings drawer layer (7100)', () => {
+      const consoleWin = document.createElement('div');
+      consoleWin.id = 'console-window';
+      document.body.appendChild(consoleWin);
+
+      const mgmtWin = document.createElement('div');
+      mgmtWin.id = 'management-window';
+      mgmtWin.className = 'smart-modal-window management-window';
+      const mgmtOverlay = document.createElement('div');
+      mgmtOverlay.id = 'management-modal-overlay';
+      mgmtOverlay.appendChild(mgmtWin);
+      document.body.appendChild(mgmtOverlay);
+
+      bringToFront(consoleWin);
+      bringToFront(mgmtWin);
+
+      const DRAWER_Z = 7100;
+      expect(parseInt(consoleWin.style.zIndex, 10)).toBeLessThan(DRAWER_Z);
+      expect(parseInt(mgmtWin.style.zIndex, 10)).toBeLessThan(DRAWER_Z);
+      expect(parseInt(mgmtOverlay.style.zIndex, 10)).toBeLessThan(DRAWER_Z);
     });
   });
 });

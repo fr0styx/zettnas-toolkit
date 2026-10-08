@@ -28,8 +28,13 @@ def generate_backup_zip_stream() -> io.BytesIO:
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
         for root, dirs, files in os.walk(DATA_DIR):
+            dirs[:] = [d for d in dirs if d not in {"__pycache__", ".pytest_cache", ".git"}]
             for file in files:
-                if file in BACKUP_EXCLUSIONS:
+                if (
+                    file in BACKUP_EXCLUSIONS
+                    or file.endswith((".pyc", ".tmp", ".swp"))
+                    or file.startswith((".tmp-", ".DS_Store"))
+                ):
                     continue
                 file_path = os.path.join(root, file)
                 rel_path = os.path.relpath(file_path, DATA_DIR)

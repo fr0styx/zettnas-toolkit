@@ -219,7 +219,7 @@ export function renderDisks(disks) {
     const groups = order
       .map((r) => ({ role: r, items: disks.filter((d) => d.role === r) }))
       .filter((g) => g.items.length);
-    const isYak = (state.currentTheme === 'yak');
+    const isYak = (state.lcdTheme === 'yak');
 
     groups.forEach((g, gi) => {
       const meta = ROLE_META[g.role] || ROLE_META.data;
@@ -335,30 +335,63 @@ export function updateChassisImageForTheme() {
 
 let _systemThemeMatcher = null;
 
-export function applyTheme(themeName) {
-  state.setTheme(themeName);
+export function applyDesktopTheme(themeName, customAccent = null) {
+  if (customAccent === undefined || customAccent === null) {
+    customAccent = state.desktopCustomAccent || (typeof localStorage !== 'undefined' ? localStorage.getItem('desktop_custom_accent') : '') || '';
+  }
 
-  document.body.classList.remove('theme-light', 'theme-yak', 'theme-amber', 'theme-emerald');
+  state.setDesktopTheme(themeName, customAccent);
 
-  if (themeName === 'auto' || themeName === 'system') {
-    if (!_systemThemeMatcher && typeof window !== 'undefined' && window.matchMedia) {
-      _systemThemeMatcher = window.matchMedia('(prefers-color-scheme: dark)');
-      _systemThemeMatcher.addEventListener('change', () => {
-        if (state.currentTheme === 'auto' || state.currentTheme === 'system') {
-          applyTheme('auto');
-        }
-      });
+  if (typeof document !== 'undefined' && document.body) {
+    document.body.classList.remove('theme-light', 'theme-yak', 'theme-amber', 'theme-emerald', 'theme-sapphire', 'theme-amethyst', 'theme-crimson');
+
+    if (themeName === 'auto' || themeName === 'system') {
+      if (!_systemThemeMatcher && typeof window !== 'undefined' && window.matchMedia) {
+        _systemThemeMatcher = window.matchMedia('(prefers-color-scheme: dark)');
+        _systemThemeMatcher.addEventListener('change', () => {
+          if (state.desktopTheme === 'auto' || state.desktopTheme === 'system') {
+            applyDesktopTheme('auto');
+          }
+        });
+      }
+      const isDark = _systemThemeMatcher ? _systemThemeMatcher.matches : true;
+      document.body.classList.toggle('theme-light', !isDark);
+    } else if (themeName === 'amber') {
+      document.body.classList.add('theme-amber');
+    } else if (themeName === 'emerald') {
+      document.body.classList.add('theme-emerald');
+    } else if (themeName === 'sapphire') {
+      document.body.classList.add('theme-sapphire');
+    } else if (themeName === 'amethyst') {
+      document.body.classList.add('theme-amethyst');
+    } else if (themeName === 'crimson') {
+      document.body.classList.add('theme-crimson');
+    } else if (themeName === 'yak') {
+      document.body.classList.add('theme-yak');
+    } else if (themeName === 'light') {
+      document.body.classList.add('theme-light');
     }
-    const isDark = _systemThemeMatcher ? _systemThemeMatcher.matches : true;
-    document.body.classList.toggle('theme-light', !isDark);
-  } else if (themeName === 'amber') {
-    document.body.classList.add('theme-amber');
-  } else if (themeName === 'emerald') {
-    document.body.classList.add('theme-emerald');
-  } else if (themeName === 'yak') {
-    document.body.classList.add('theme-yak');
-  } else if (themeName === 'light') {
-    document.body.classList.add('theme-light');
+  }
+
+  // Handle custom accent color override for desktop UI
+  if (customAccent) {
+    if (typeof document !== 'undefined' && document.documentElement) {
+      document.documentElement.style.setProperty('--brand', customAccent);
+      document.documentElement.style.setProperty('--ok2', customAccent);
+    }
+    if (typeof document !== 'undefined' && document.body) {
+      document.body.style.setProperty('--brand', customAccent);
+      document.body.style.setProperty('--ok2', customAccent);
+    }
+  } else {
+    if (typeof document !== 'undefined' && document.documentElement) {
+      document.documentElement.style.removeProperty('--brand');
+      document.documentElement.style.removeProperty('--ok2');
+    }
+    if (typeof document !== 'undefined' && document.body) {
+      document.body.style.removeProperty('--brand');
+      document.body.style.removeProperty('--ok2');
+    }
   }
 
   const isYak = (themeName === 'yak');
@@ -369,15 +402,79 @@ export function applyTheme(themeName) {
 
   const title = $('suite-brand-title');
   const badge = $('suite-brand-badge');
-  const engraved = $('chassis-panel-engraved');
   const drawerSub = $('drawer-sub-badge');
   const icon = $('suite-brand-icon');
 
   if (title) title.textContent = isYak ? 'YAK EXPRESS' : 'ZETTNAS';
   if (badge) badge.textContent = isYak ? 'RELIABILITY CULT' : t('nav.toolkit', 'NAS WORKBENCH');
-  if (engraved) engraved.textContent = isYak ? 'YAK EXPRESS • TOASTIE LOGISTICS LAB' : t('console.engraved_title', 'ZETTNAS • SYSTEM CONSOLE');
   if (drawerSub) drawerSub.textContent = isYak ? 'LOGISTICS LAB' : t('settings.drawer_badge', 'NAS WORKBENCH');
   if (icon) icon.innerHTML = isYak ? '<use href="#i-yak"/>' : '<use href="#i-chip"/>';
+
+  updateChassisImageForTheme();
+}
+
+export function applyLcdTheme(themeName, customAccent = null, textClarity = null) {
+  if (customAccent === undefined || customAccent === null) {
+    customAccent = state.lcdCustomAccent || (typeof localStorage !== 'undefined' ? localStorage.getItem('lcd_custom_accent') : '') || '';
+  }
+  if (textClarity === undefined || textClarity === null) {
+    textClarity = state.lcdTextClarity !== undefined ? state.lcdTextClarity : (typeof localStorage !== 'undefined' ? localStorage.getItem('lcd_text_clarity') !== 'false' : true);
+  }
+
+  state.setLcdTheme(themeName, customAccent, textClarity);
+
+  const targets = [];
+  const screenEl = $('screen');
+  const miniCanvas = $('mini-lcd-canvas');
+  const consoleWin = $('console-window');
+  if (screenEl) targets.push(screenEl);
+  if (miniCanvas) targets.push(miniCanvas);
+  if (consoleWin) targets.push(consoleWin);
+
+  // If running directly on the physical display, also apply to document.body
+  if (state.isLcdDirect && typeof document !== 'undefined' && document.body) {
+    targets.push(document.body);
+  }
+
+  const allLcdThemes = ['lcd-theme-cyber', 'lcd-theme-amber', 'lcd-theme-emerald', 'lcd-theme-sapphire', 'lcd-theme-amethyst', 'lcd-theme-crimson', 'lcd-theme-light', 'lcd-theme-yak'];
+
+  targets.forEach((el) => {
+    el.classList.remove(...allLcdThemes);
+    if (themeName && themeName !== 'cyber') {
+      el.classList.add(`lcd-theme-${themeName}`);
+    } else {
+      el.classList.add('lcd-theme-cyber');
+    }
+
+    if (customAccent) {
+      el.style.setProperty('--brand', customAccent);
+      el.style.setProperty('--ok2', customAccent);
+    } else {
+      el.style.removeProperty('--brand');
+      el.style.removeProperty('--ok2');
+    }
+
+    el.classList.toggle('text-clarity-on', Boolean(textClarity));
+    el.classList.toggle('text-clarity-off', !textClarity);
+  });
+
+  const isYak = (themeName === 'yak');
+  const engraved = $('chassis-panel-engraved');
+  if (engraved) engraved.textContent = isYak ? 'YAK EXPRESS • TOASTIE LOGISTICS LAB' : t('console.engraved_title', 'ZETTNAS • SYSTEM CONSOLE');
+
+  // Update module card titles inside #screen and #mini-lcd-canvas
+  document.querySelectorAll('.card-storage .card-title-txt').forEach((el) => {
+    el.textContent = isYak ? 'CARGO HOLD' : t('console.storage', 'STORAGE');
+  });
+  document.querySelectorAll('.card-cpu .card-title-txt').forEach((el) => {
+    el.textContent = isYak ? 'YAK64 CPU' : t('console.cpu', 'CPU');
+  });
+  document.querySelectorAll('.card-fans .card-title-txt').forEach((el) => {
+    el.textContent = isYak ? 'YAK AIRFLOW' : t('console.fans', 'FANS');
+  });
+  document.querySelectorAll('.card-net .card-title-txt').forEach((el) => {
+    el.textContent = isYak ? 'TRANSIT I/O' : t('console.net', 'NETWORK I/O');
+  });
 
   if ($('lbl-module-storage')) $('lbl-module-storage').textContent = isYak ? 'Cargo Hold (Capacity & Donut)' : t('settings.mod_storage', 'Storage (Donut & Capacity)');
   if ($('lbl-module-cpu')) $('lbl-module-cpu').textContent = isYak ? 'YAK64 Toastie CPU' : t('settings.mod_cpu', 'CPU Gauge');
@@ -385,27 +482,27 @@ export function applyTheme(themeName) {
   if ($('lbl-module-disks')) $('lbl-module-disks').textContent = isYak ? 'Yak Parcel Bays (OS, Data, Cache)' : t('settings.mod_disks', 'Drives Tray (OS, Data, Cache)');
   if ($('lbl-module-net')) $('lbl-module-net').textContent = isYak ? 'Transit Courier Throughput' : t('settings.mod_net', 'Network Throughput');
 
-  const storageTitle = document.querySelector('.card-storage .card-title-txt');
-  const cpuTitle = document.querySelector('.card-cpu .card-title-txt');
-  const fansTitle = document.querySelector('.card-fans .card-title-txt');
-  const netTitle = document.querySelector('.card-net .card-title-txt');
-  if (storageTitle) storageTitle.textContent = isYak ? 'CARGO HOLD' : t('console.storage', 'STORAGE');
-  if (cpuTitle) cpuTitle.textContent = isYak ? 'YAK64 CPU' : t('console.cpu', 'CPU');
-  if (fansTitle) fansTitle.textContent = isYak ? 'YAK AIRFLOW' : t('console.fans', 'FANS');
-  if (netTitle) netTitle.textContent = isYak ? 'TRANSIT I/O' : t('console.net', 'NETWORK I/O');
+  const stageGlow = $('virtual-chassis-lightbar');
+  if (stageGlow) {
+    if (isYak) {
+      stageGlow.style.background = 'linear-gradient(90deg, #1b68b8 0%, #e07a38 50%, #1b68b8 100%)';
+      stageGlow.style.boxShadow = '0 0 16px rgba(224, 122, 56, 0.5)';
+    } else {
+      stageGlow.style.removeProperty('background');
+      stageGlow.style.removeProperty('box-shadow');
+    }
+  }
 
   if (state.latestStats && state.latestStats.disks) {
     renderDisks(state.latestStats.disks);
   }
+}
 
-  updateChassisImageForTheme();
-
-  if (isYak) {
-    const stageGlow = $('virtual-chassis-lightbar');
-    if (stageGlow) {
-      stageGlow.style.background = 'linear-gradient(90deg, #1b68b8 0%, #e07a38 50%, #1b68b8 100%)';
-      stageGlow.style.boxShadow = '0 0 16px rgba(224, 122, 56, 0.5)';
-    }
+// Backward-compatible alias
+export function applyTheme(themeName, customAccent = null, textClarity = null) {
+  applyDesktopTheme(themeName, customAccent);
+  if (textClarity !== null || state.isLcdDirect) {
+    applyLcdTheme(themeName, customAccent, textClarity);
   }
 }
 
@@ -428,6 +525,18 @@ export function applyStats(s) {
     // Always refresh the clock to keep time accurate to the minute
     setText($('clock'), getLocalClock(state.currentTimezone, state.clockFormat));
 
+    // Sync theme and custom accents across SSE broadcast
+    if (s.client_preferences && s.client_preferences.lcd_theme) {
+      const srvTheme = s.client_preferences.lcd_theme;
+      const srvAccent = s.client_preferences.lcd_custom_accent || '';
+      const srvClarity = s.client_preferences.lcd_text_clarity !== 'false';
+      if (state.isLcdDirect) {
+        if (srvTheme !== state.lcdTheme || srvAccent !== (state.lcdCustomAccent || '') || srvClarity !== state.lcdTextClarity) {
+          applyLcdTheme(srvTheme, srvAccent, srvClarity);
+        }
+      }
+    }
+
     // If telemetry hasn't changed and this isn't the first render, skip heavy DOM updates
     if (!changed && state.latestStats) {
       return;
@@ -448,7 +557,7 @@ export function applyStats(s) {
     setText($('drawer-nas-name'), s.name ? s.name.toUpperCase() : '');
 
     if ($('statusText')) {
-      const statusVal = (state.currentTheme === 'yak' && !s.status.includes('ALERT') && !s.status.includes('WARN'))
+      const statusVal = (state.lcdTheme === 'yak' && !s.status.includes('ALERT') && !s.status.includes('WARN'))
         ? 'YAK OK'
         : s.status;
       setText($('statusText'), statusVal);

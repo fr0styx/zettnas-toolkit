@@ -21,6 +21,7 @@ class ZettState:
         self.cached_disk_list_time = 0.0
         self.cached_chassis_model = None
         self.lcd_renderer_active = False
+        self.client_preferences = None
         self.event_log = []
         self.alert_active = False
         self.rainbow_thread = None

@@ -43,6 +43,24 @@ os.environ.update(
     }
 )
 
+try:
+    import backend.config
+
+    backend.config.DATA_DIR = DATA_DIR
+    backend.config.CLIENT_PREFS_FILE = os.path.join(DATA_DIR, "client_preferences.json")
+    backend.config.DB_PATH = os.path.join(DATA_DIR, "history.db")
+    backend.config.FAN_STATE_FILE = os.path.join(DATA_DIR, "fan_state.json")
+    backend.config.LED_STATE_FILE = os.path.join(DATA_DIR, "led_state.json")
+    backend.config.SCREEN_STATE_FILE = os.path.join(DATA_DIR, "screen_state.json")
+    backend.config.EVENTS_FILE = os.path.join(DATA_DIR, "events.json")
+    backend.config.BUTTON_CFG_FILE = os.path.join(DATA_DIR, "button_state.json")
+    backend.config.SECURITY_FILE = os.path.join(DATA_DIR, "security.json")
+    backend.config.SESSIONS_FILE = os.path.join(DATA_DIR, "sessions.json")
+    backend.config.WALLPAPER_CONFIG_FILE = os.path.join(DATA_DIR, "wallpaper_config.json")
+    backend.config.WALLPAPERS_DIR = os.path.join(DATA_DIR, "wallpapers")
+except Exception:
+    pass
+
 
 def pytest_sessionfinish(session, exitstatus):
     shutil.rmtree(SANDBOX, ignore_errors=True)

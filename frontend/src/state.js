@@ -35,7 +35,20 @@ export const ZOOM_PROFILES = [0.75, 0.85, 1.0, 1.15, 1.25, 1.5];
 
 export const state = {
   isLcdDirect: typeof window !== 'undefined' && (window.location.search.includes('mode=lcd') || (typeof document !== 'undefined' && document.body && document.body.classList.contains('lcd-direct'))),
-  currentTheme: localStorage.getItem('lcd_theme') || 'cyber',
+  desktopTheme: (typeof localStorage !== 'undefined' && localStorage.getItem('desktop_theme')) || 'cyber',
+  desktopCustomAccent: (typeof localStorage !== 'undefined' && localStorage.getItem('desktop_custom_accent')) || '',
+  lcdTheme: (typeof localStorage !== 'undefined' && localStorage.getItem('lcd_theme')) || 'cyber',
+  lcdCustomAccent: (typeof localStorage !== 'undefined' && localStorage.getItem('lcd_custom_accent')) || '',
+  lcdTextClarity: typeof localStorage !== 'undefined' ? localStorage.getItem('lcd_text_clarity') !== 'false' : true,
+
+  // Compatibility accessors
+  get currentTheme() { return this.desktopTheme; },
+  set currentTheme(v) { this.desktopTheme = v; },
+  get customAccentColor() { return this.desktopCustomAccent; },
+  set customAccentColor(v) { this.desktopCustomAccent = v; },
+  get textClarity() { return this.lcdTextClarity; },
+  set textClarity(v) { this.lcdTextClarity = v; },
+
   clockFormat: '24',
   currentTimezone: 'America/New_York',
   latestStats: null,
@@ -46,7 +59,7 @@ export const state = {
   isLayoutLocked: localStorage.getItem('lcd_dash_cards_locked') !== 'false',
   currentZoomIdx: 2,
   selectedZoneFilter: 'all',
-  curvePoints: [[30, 32], [37, 32], [50, 100], [60, 100]],
+  curvePoints: [[30, 0], [36, 32], [42, 48], [48, 65], [54, 85], [60, 100]],
   lastCurveSaveTime: 0,
   copyToastMinimized: false,
 
@@ -83,10 +96,46 @@ export const state = {
     return true;
   },
 
-  setTheme(theme) {
-    this.currentTheme = theme;
-    localStorage.setItem('lcd_theme', theme);
-    ZettEventBus.emit('theme:changed', theme);
+  setDesktopTheme(theme, customAccent = null) {
+    this.desktopTheme = theme;
+    if (typeof localStorage !== 'undefined') localStorage.setItem('desktop_theme', theme);
+    if (customAccent !== null) {
+      this.desktopCustomAccent = customAccent;
+      if (typeof localStorage !== 'undefined') localStorage.setItem('desktop_custom_accent', customAccent);
+    }
+    ZettEventBus.emit('desktop_theme:changed', {
+      theme: this.desktopTheme,
+      accent: this.desktopCustomAccent
+    });
+    ZettEventBus.emit('theme:changed', {
+      theme: this.desktopTheme,
+      accent: this.desktopCustomAccent
+    });
+  },
+
+  setLcdTheme(theme, customAccent = null, textClarity = null) {
+    this.lcdTheme = theme;
+    if (typeof localStorage !== 'undefined') localStorage.setItem('lcd_theme', theme);
+    if (customAccent !== null) {
+      this.lcdCustomAccent = customAccent;
+      if (typeof localStorage !== 'undefined') localStorage.setItem('lcd_custom_accent', customAccent);
+    }
+    if (textClarity !== null) {
+      this.lcdTextClarity = Boolean(textClarity);
+      if (typeof localStorage !== 'undefined') localStorage.setItem('lcd_text_clarity', this.lcdTextClarity ? 'true' : 'false');
+    }
+    ZettEventBus.emit('lcd_theme:changed', {
+      theme: this.lcdTheme,
+      accent: this.lcdCustomAccent,
+      textClarity: this.lcdTextClarity
+    });
+  },
+
+  setTheme(theme, customAccent = null, textClarity = null) {
+    this.setDesktopTheme(theme, customAccent);
+    if (textClarity !== null) {
+      this.setLcdTheme(theme, customAccent, textClarity);
+    }
   },
 
   setLayout(order, vis, sizes, version = null) {

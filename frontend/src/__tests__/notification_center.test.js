@@ -388,6 +388,90 @@ describe('Notification Center Draggable Window & Event Detail Inspector', () => 
     expect(overlay.classList.contains('open')).toBe(false);
   });
 
+  it('action button in Event Detail Modal triggers openDrawer for SD Card events and sets MEDIA & INGEST subsystem', () => {
+    window.openDrawer = vi.fn();
+    const mockEvent = {
+      ts: 1791409981,
+      level: 'info',
+      title: 'SD Card Ejected',
+      message: 'SD Card was safely unmounted and ejected. You can now physically remove it.'
+    };
+
+    openEventDetailModal(mockEvent);
+    const overlay = document.getElementById('event-detail-modal-overlay');
+    expect(overlay.classList.contains('open')).toBe(true);
+
+    const subsystemEl = document.getElementById('event-detail-subsystem');
+    expect(subsystemEl.textContent).toBe('MEDIA & INGEST');
+
+    const contextBtn = document.getElementById('event-detail-context-btn');
+    expect(contextBtn.textContent).toBe('Open Media Card Settings');
+
+    contextBtn.click();
+    expect(window.openDrawer).toHaveBeenCalledWith('tab-buttons');
+    expect(overlay.classList.contains('open')).toBe(false);
+  });
+
+  it('action button in Event Detail Modal triggers openDrawer for LED events', () => {
+    window.openDrawer = vi.fn();
+    const mockEvent = {
+      ts: 1791409990,
+      level: 'info',
+      title: 'LED Mode Changed',
+      message: 'Applied Cyber Cyan ARGB lightbar profile'
+    };
+
+    openEventDetailModal(mockEvent);
+    const subsystemEl = document.getElementById('event-detail-subsystem');
+    expect(subsystemEl.textContent).toBe('ARGB LIGHTBAR');
+
+    const contextBtn = document.getElementById('event-detail-context-btn');
+    expect(contextBtn.textContent).toBe('Open LED Controls');
+
+    contextBtn.click();
+    expect(window.openDrawer).toHaveBeenCalledWith('tab-led');
+  });
+
+  it('action button in Event Detail Modal triggers openManagementWindow for Security events', () => {
+    window.openManagementWindow = vi.fn();
+    const mockEvent = {
+      ts: 1791410000,
+      level: 'success',
+      title: 'Security',
+      message: 'Generated new API token: Grafana'
+    };
+
+    openEventDetailModal(mockEvent);
+    const subsystemEl = document.getElementById('event-detail-subsystem');
+    expect(subsystemEl.textContent).toBe('SECURITY & ACCESS');
+
+    const contextBtn = document.getElementById('event-detail-context-btn');
+    expect(contextBtn.textContent).toBe('Open Security Settings');
+
+    contextBtn.click();
+    expect(window.openManagementWindow).toHaveBeenCalledWith('mgmt-pane-security');
+  });
+
+  it('action button in Event Detail Modal triggers openManagementWindow for UPS events', () => {
+    window.openManagementWindow = vi.fn();
+    const mockEvent = {
+      ts: 1791410010,
+      level: 'warning',
+      title: 'UPS On Battery',
+      message: 'Mains power disconnected. Estimated runtime: 18 min.'
+    };
+
+    openEventDetailModal(mockEvent);
+    const subsystemEl = document.getElementById('event-detail-subsystem');
+    expect(subsystemEl.textContent).toBe('POWER & UPS');
+
+    const contextBtn = document.getElementById('event-detail-context-btn');
+    expect(contextBtn.textContent).toBe('Open Power & UPS');
+
+    contextBtn.click();
+    expect(window.openManagementWindow).toHaveBeenCalledWith('mgmt-sec-ups');
+  });
+
   it('toggles console window maximize and restore with proportional scaling transform and restores previous position', () => {
     const consoleOverlay = document.createElement('div');
     consoleOverlay.id = 'console-modal-overlay';

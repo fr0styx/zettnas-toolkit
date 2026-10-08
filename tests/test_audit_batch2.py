@@ -103,3 +103,63 @@ def test_main_serve_index_and_lcd_mode(tmp_path, monkeypatch):
     res_lcd = client.get("/?mode=lcd")
     assert res_lcd.status_code == 200
     assert 'class="studio-workbench lcd-direct"' in res_lcd.text
+
+
+def test_client_preferences_endpoints(tmp_path, monkeypatch):
+    prefs_file = tmp_path / "client_preferences.json"
+    monkeypatch.setattr("backend.api.backup.CLIENT_PREFS_FILE", str(prefs_file))
+    from backend.auth import create_session
+
+    token = create_session("admin")
+    client = TestClient(app)
+    headers = {"Authorization": f"Bearer {token}"}
+
+    # Initial empty state
+    res = client.get("/api/system/client-preferences", headers=headers)
+    assert res.status_code == 200
+    assert res.json() == {"status": "ok", "preferences": {}}
+
+    # Save preferences
+    payload = {
+        "lcd_theme": "cyber",
+        "zettnas_language": "de",
+        "zettnas_desktop_widgets_config": '{"widgets":{"clock":{"enabled":true}}}',
+        "zettnas_win_bounds": '{"console":{"x":100,"y":50}}',
+    }
+    res_post = client.post("/api/system/client-preferences", json=payload, headers=headers)
+    assert res_post.status_code == 200
+
+    # Retrieve saved preferences
+    res_get = client.get("/api/system/client-preferences", headers=headers)
+    assert res_get.status_code == 200
+    assert res_get.json()["preferences"] == payload
+
+    # Invalid body
+    res_bad = client.post(
+        "/api/system/client-preferences", content="not a json", headers={"Content-Type": "application/json", **headers}
+    )
+    assert res_bad.status_code == 400
+
+
+def test_backup_and_restore_with_client_preferences(tmp_path, monkeypatch):
+    source_dir = tmp_path / "source_data"
+    source_dir.mkdir()
+    monkeypatch.setattr("backend.services.backup_engine.DATA_DIR", str(source_dir))
+
+    # Write configs and client preferences
+    (source_dir / "fan_state.json").write_text('{"curves": [30, 40]}')
+    (source_dir / "client_preferences.json").write_text('{"lcd_theme": "amber"}')
+
+    # Generate backup
+    buf = generate_backup_zip_stream()
+
+    # Restore in target
+    restore_dir = tmp_path / "target_data"
+    restore_dir.mkdir()
+    monkeypatch.setattr("backend.services.backup_engine.DATA_DIR", str(restore_dir))
+
+    restore_backup_archive(buf)
+
+    assert (restore_dir / "fan_state.json").exists()
+    assert (restore_dir / "client_preferences.json").exists()
+    assert (restore_dir / "client_preferences.json").read_text() == '{"lcd_theme": "amber"}'

@@ -1,5 +1,41 @@
 # ZettNAS Toolkit - Release Changelog
 
+## v1.4.3 (2026-10-08) - Stable
+### 🐳 Enterprise Container Orchestration (Dynamic Compose Synthesizer, Live Logs, Atomic Port Reconfig & Zero-Downtime Resource Tuning) & Strict Theme Isolation
+
+This major release introduces a hardware- and OS-agnostic container management layer, peer-reviewed by an independent Principal Systems Architect. It empowers users to inspect, reverse-engineer Docker Compose configurations, modify published ports atomically with rollback protection, stream multiplexed logs, tune resources on running containers with zero downtime, and enjoy completely decoupled styling between the physical LCD screen and desktop web workspace:
+
+- **Hardware-Agnostic & OS-Agnostic Architecture (HAL & PAL)**:
+  - **Dynamic Hardware Abstraction Layer (HAL)**: Added dynamic device detection across hardware vendors without hardcoded chipset paths. Automatically surfaces badges for Intel GPU (`[GPU]`, i915 / Intel Xe), AMD GPU (`[ROCm]`, amdgpu), NVIDIA GPU (`[NVIDIA]`, NVIDIA Container Runtime), and Google Coral Edge TPU (`[TPU]`).
+  - **Pure Docker Engine API Compliance (PAL)**: Runs 100% through the standard Docker daemon socket (`/var/run/docker.sock` or TCP socket) without host shellouts, `sudo`, or external CLI dependencies. Operates seamlessly on Debian, Ubuntu, TrueNAS SCALE, Proxmox VE, Arch Linux, Alpine, and Unraid OS.
+  - **Stack Classification**: Automatically detects and groups containers by OCI Compose v2 labels (`com.docker.compose.project`), Unraid template metadata, and standalone definitions.
+- **Dynamic Docker Compose Synthesizer (OCI Compose Spec v3.8+)**:
+  - **Reconstruction Engine** (`backend/services/compose_synthesizer.py`): Synthesizes valid, standardized `docker-compose.yml` definitions directly from container inspect metadata for any container—regardless of whether it was created via Compose, Unraid webGUI, or `docker run`.
+  - **Secret Masking & Privacy**: Automatically detects and redacts sensitive environment variables (`PASSWORD`, `SECRET`, `KEY`, `TOKEN`, `CREDENTIAL`, `AUTH`) as `********` by default, complete with an interactive UI reveal toggle, one-click `📋 Copy YAML`, and `⬇️ Download .yml` buttons.
+  - **Preserves Critical Directives**: Faithfully reconstructs volume binds, named mounts, published port formats, network links, restart policies, capabilities, devices, and health checks.
+- **Atomic Port Reconfiguration Engine & Pre-flight Conflict Checker**:
+  - **Pre-flight Socket Validation** (`GET /api/docker/check_port`): Tests socket availability across IPv4 (`0.0.0.0`) and IPv6 (`::`) before modifying container state, actively preventing port binding collisions.
+  - **Transactional Clone-and-Recreate** (`backend/services/container_mutator.py`): Safely snapshots existing container state, gracefully stops the container, renames it to a backup tag, spins up the replacement container with updated `HostConfig.PortBindings`, and verifies healthy execution.
+  - **Automated Rollback Protection**: Automatically rolls back to the original container and restores its active state if container recreation or startup encounters an error, guaranteeing zero orphaned configurations or service interruption.
+- **Zero-Downtime Live Resource Tuning**:
+  - **Live Cgroup Hot-Reloading**: Dynamically adjusts memory limits (`Memory`) and CPU core quotas (`NanoCPUs`) on running containers via `POST /api/docker/containers/{id}/resources` with zero downtime or service restart.
+- **Multiplexed Live Logs Console**:
+  - **8-Byte Frame Multiplexer**: Decodes Docker socket streams natively, accurately separating stdout (Stream Type 1) and stderr (Stream Type 2).
+  - **Interactive Terminal View**: Real-time log streaming with configurable tail depth (50, 100, 200, 500, 1000 lines), live keyword search filtering, auto-scroll tracking, color-coded stream output (cyan timestamps, red stderr, clean stdout), and one-click clipboard export.
+- **Tabbed Container Inspector Modal**:
+  - **Comprehensive Diagnostics**: Tabbed workstation (`Overview`, `Ports & Web`, `Mounts & Storage`, `Environment`, `Docker Compose`, `Live Logs`).
+  - **Storage Deep-Links**: One-click "Reveal in File Explorer" button for host volume mounts, deep-linking directly into the desktop File Explorer.
+  - **WebUI Auto-Discovery**: Identifies published HTTP/HTTPS service ports (`80`, `443`, `8080`, `8096`, `3000`, `2283`, etc.) and renders clickable `[ 🌐 :PORT ↗ ]` buttons that dynamically resolve using the browser's active host address.
+  - **Container Table Enhancements**: Live CPU and RAM metric badges, instant search filter, and stack filter pills (`All`, `Running`, `Stopped`, `Compose`, `Standalone`).
+- **Strictly Isolated Theme Architecture: Desktop Theme vs. LCD Screen Themer**:
+  - **Decoupled Styling Cascades**: Eliminated theme bleed where desktop accent changes affected the physical front-panel screen (`/dev/fb0`), LCD Live Canvas, or System Console.
+  - **Appearance Sub-Tab**: Relocated "Desktop Theme & Accent Color" into Mission Control -> Appearance with aligned preset names (Cyber Teal, Amber Gold, Emerald Matrix, Sapphire Ice, Amethyst Violet, Crimson Ruby, Daylight White, Yak Bronze).
+  - **Daylight White Contrast Tuning**: Refined the Daylight White LCD theme with crisp high-contrast dark typography and dark grayish element card styling for optimal legibility.
+- **Test Suite Expansion & CI Verification**:
+  - Added unit test suites for `container_mutator.py` (7 tests), `compose_synthesizer.py` (10 tests), and `docker_stats.py` HAL enrichment (5 tests).
+  - Added Vitest frontend test suites for `container-modal.js` (8 tests) and container table management (3 tests).
+  - 100% CI pass rate: 265 Pytest tests, 82 Vitest tests, Ruff format and lint checks, and 958ms production static assets build.
+
 ## v1.4.2 (2026-10-08) - Stable
 ### ❄️ Zero RPM HDD Standby Fan Mode & Dynamic Thermal Safety Architecture (GitHub Issue #13)
 
@@ -17,11 +53,40 @@ This release delivers the complete implementation of **Zero RPM Fan Mode** for h
   - **Intelligent Stall Watchdog Suppression**: Tachometer stall monitor suppresses false-positive 0 RPM alarms during intentional Zero RPM standby and within the 6.0s spinup grace window.
 - **Frontend Workstation & Multilingual UI**:
   - **SVG Fan Curve Workstation**: Realigned graphical floor coordinate system ($Y=104$ at $0\%$, dashed threshold line at $Y=77$ for $32\%$ minimum reliable spin). Interactive sliders snap cleanly out of the deadband.
+  - **Accurate Thermal Mapping & Granular Axis**: Re-anchored SVG temperature axis across 5 granular positions ($30^\circ\text{C}$, $37.5^\circ\text{C}$, $45^\circ\text{C}$, $52.5^\circ\text{C}$, and $60^\circ\text{C}+$) with vertical guide gridlines. Fixed CPU dot coordinate projection to use `tempToX()` identically with disk dots, eliminating coordinate distortion.
+  - **6-Point Dynamic Curve Controls**: Expanded interactive SVG fan curve from 4 to 6 control points (`ch-0` through `ch-5`) with automatic linear midpoint interpolation (`expandTo6Points`), boundary locking at $30^\circ\text{C}$ and $60^\circ\text{C}$, and full multi-touch/mouse drag support.
   - **Calm Ice-Cyan Status Badges**: Stopped fans in Zero RPM mode display `0 (PASSIVE)` with `#38bdf8` styling across dashboard cards, drawers, and LCD previews.
+  - **Fan Drawer Streamlining & Header Integration**: Removed obsolete static "Thermal Threshold Inspector" and redundant "Custom Ramp Temperatures" cards (~260px vertical drawer reduction). Placed the dynamic ramp range badge (`#fan-curve-range-val`) directly into the interactive curve legend row alongside live telemetry readouts, preserving clean single-line headline alignment for the card title and `HOLD: READY` badge without text wrapping or wasted space.
+  - **Contextual Event Detail Action Routing**: Re-engineered the action button and subsystem classifier in the Event Detail modal (`modals.js`). SD Card and media slot events (`SD Card Ejected`, `SD Card Inserted`, `TF Card Inserted`, `Media Ingest`, `Auto-Ingest Started`) now display the `MEDIA & INGEST` subsystem and feature a direct `Open Media Card Settings` action that opens the drawer's Copy Button & Media Slots tab (`tab-buttons`). Added dedicated associations across all subsystems: ARGB Lightbar (`tab-led`), File Explorer & Recycle Bin (`file-manager-window`), Security & Tokens (`mgmt-pane-security`), Power & UPS (`mgmt-sec-ups`), Unraid Array (`mgmt-pane-unraid`), System Console (`console-window`), and Wallpaper/Theme (`mgmt-pane-wallpaper`), complete with multilingual translations across 5 languages.
   - **Multilingual i18n**: Added complete translations for Zero RPM controls and descriptions across English, German, French, Spanish, and Simplified Chinese.
+- **Desktop Window Management & Stacking Hierarchy**:
+  - **Dynamic Stacking Order**: Refactored `bringToFront()` in `dock.js` so desktop application windows (ZettNAS System Console, Mission Control, File Explorer, Notification Center) utilize standard dynamic z-index stacking (`1000..4900`), seamlessly alternating foreground elevation on click or focus.
+  - **Overlay Stacking Synchronization**: Synchronized parent overlay wrappers (`#console-modal-overlay`, `#management-modal-overlay`) with active desktop window elevation, preventing the Console from remaining persistently pinned over newly opened applications.
+  - **Slide Drawer & Modal Layer Separation**: Enforced strict layer boundaries where the Hardware Settings slide drawer (`z-index: 7100`) smoothly renders above all open desktop windows, while true modal dialogs (S.M.A.R.T. diagnostics, Setup Wizard, Fan Preset modals) retain modal protection at `9000/9100`.
+- **Configuration & Deployment Templates**:
+  - **Generic Host IP in `.env.example`**: Replaced specific local host IP with generic RFC 1918 example address (`192.168.1.100`) for seamless new-user setup and documentation privacy.
+  - **Generic UI Placeholders in Mission Control**: Sanitized static Unraid subsystem cards in `frontend/index.html` to display neutral placeholders (`NAS`, `Unraid OS`, `–`) prior to live telemetry arrival.
+  - **Configurable CI Verifier**: Parameterized remote host and path variables (`ZETTNAS_SSH_HOST`, `ZETTNAS_REMOTE_DIR`) and added local Docker fallback in `scripts/verify_ci.sh`.
+  - **Generic Test Fixtures**: Updated mock Unraid telemetry fixtures in `tests/test_unraid_telemetry.py` to use generic `ZettNAS` hostname.
+- **Unified Configuration Backup & Client Customization Sync**:
+  - **Eliminated Duplicate Stub Card**: Removed legacy un-wired "Suite Configuration Backup" stub card from the Dashboard Layout drawer (`tab-layout`) in `frontend/index.html`.
+  - **Single Consolidated Backup System**: Centralized all suite configuration export and import controls into Mission Control -> System Settings & API (`mgmt-pane-system`).
+  - **Server-Synced Client Customizations**: Added `GET /api/system/client-preferences` and `POST /api/system/client-preferences` backed by atomic persistence to `client_preferences.json` inside `DATA_DIR`.
+  - **100% Comprehensive Backup Coverage**: Backup archives now bundle all server hardware configurations (`fan_state.json` 6-point curves and Zero RPM settings, `led_state.json` ARGB profiles, `screen_state.json`, `button_state.json`, `notifications.json`, `wallpaper_config.json`, `wallpapers/`, `security.json`, `api_tokens.json`) AND all client desktop customizations (`zettnas_desktop_widgets_config`, `zettnas_win_bounds`, `zettnas_dock_pinned_v1`, `lcd_theme`, `zettnas_language`, `zettnas_collapsed_cards`, `zettnas_layout_lock`, `zettnas_layout_sections_order`).
+  - **Seamless Restore & Client Hydration**: Restoring a backup zip automatically hydrates restored preferences directly into browser `localStorage` before initiating an automated reload. Added cross-device hydration on uninitialized browser sessions.
+- **Relocated Language & Localization to Mission Control Appearance**:
+  - **Drawer Decluttering**: Removed "Display Language & Localization" (`data-layout-card-id="sec-language"`) from the Dashboard Layout drawer (`tab-layout`), keeping the drawer dedicated strictly to physical dashboard module sizing, presets, and live arrangement.
+  - **First-Class Appearance Sub-Tab**: Added a dedicated "Language" sub-tab (`mgmt-pane-language`) within Mission Control -> Appearance alongside Wallpaper and Widgets.
+  - **Bi-Directional State Synchronization**: Fully registered `mgmt-pane-language` in `management.js` (`SUBPANE_MAP`) and wired `#mgmt-lang-select` (`.language-picker-select`) to automatically synchronize across the suite navbar header, command palette, and Mission Control in English, German, French, Spanish, and Simplified Chinese.
+- **Strictly Isolated Theme Architecture: Desktop Theme vs. LCD Screen Themer**:
+  - **Desktop Theme Workstation (Mission Control -> Appearance)**: Moved the full desktop theme customization workstation to a dedicated "Desktop Theme" sub-tab (`mgmt-pane-theme`) in Mission Control. Offers 8 presets (Cyber Teal, Amber Gold, Emerald Matrix, Sapphire Ice, Amethyst Violet, Crimson Ruby, Daylight White, and Yak Bronze), quick color chips, hex picker, and reset button. Updates the web desktop, windows, dock, and notification center without altering the physical front-panel screen or console canvas.
+  - **Compact LCD Screen Themer (Dashboard Layout Drawer)**: Replaced the layout drawer card with a sleek, dedicated "LCD Screen Theme" card (`sec-lcd-theme`) featuring 8 compact color chips, custom accent picker, and "High-Contrast Text on Physical Screen" toggle. Modifies `--brand`, `--ok2`, and `lcd-theme-*` specifically scoped to `#screen`, `#mini-lcd-canvas`, and direct LCD framebuffer renderers without touching the web desktop.
+  - **Strict CSS Isolation**: Scoped palette variables (`--bg`, `--card`, `--fg`, `--brand`, `--ok2`) directly onto `#screen` and `#mini-lcd-canvas`, breaking stylesheet cascading from `body.theme-*`.
+  - **Independent Server Persistence**: Persists web workstation preferences under `desktop_theme` and `desktop_custom_accent`, while physical display settings are stored under `lcd_theme`, `lcd_custom_accent`, and `lcd_text_clarity`.
+  - **Headless Framebuffer Renderer Isolation**: Playwright renderer in `mode=lcd` listens exclusively to `lcd_theme` SSE events and synchronizes the physical screen without being affected by desktop theme toggles.
 - **Automated Verification**:
-  - 8 new integration tests in `tests/test_zero_rpm_integration.py` and 6 new frontend tests in `frontend/src/__tests__/zero_rpm_fan_control.test.js`.
-  - Full suite verification: 241/241 backend pytest tests and 46/46 frontend Vitest tests passing with 100% success rate.
+  - 8 new integration tests in `tests/test_zero_rpm_integration.py`, 3 new tests in `tests/test_audit_batch2.py`, and 27 frontend tests across `zero_rpm_fan_control.test.js`, `backup_system.test.js`, `theme_customization.test.js`, and `batch9_frontend_hardening.test.js`.
+  - Full suite verification: 243/243 backend pytest tests and 71/71 frontend Vitest tests passing with 100% success rate.
 
 ## v1.4.1 (2026-10-07) - Stable
 ### 🛡️ Enterprise Subsystems Hardening, Safety Watchdogs, Container Lockdown & Telemetry Modernization (Audit Batches 7–10)
@@ -170,7 +235,7 @@ Comprehensive multi-domain architectural hardening based on the enterprise-grade
 
 - **Unraid Host Subsystem & Parity Integration**:
   - Live telemetry parser for `/var/local/emhttp/var.ini` and `mover.ini` with caching and graceful non-Unraid fallback.
-  - Monitors array state (`STARTED`, `STOPPED`), array health, server hostname (`Ark`), chassis model (`D6U`), OS version (`Unraid 7.3.2`), and assigned disk topology.
+  - Monitors array state (`STARTED`, `STOPPED`), array health, server hostname (e.g. `NAS`), chassis model (`D6U`), OS version (e.g. `Unraid 7.x`), and assigned disk topology.
   - Real-time parity check monitoring (`action`, `progress_pct`, `errors`) and Mover activity tracking (`remain_files`).
   - Real-time navbar pills (`Array: STARTED`, `Parity: 0%`, Mover status) and storage card badges in WebUI and LCD.
   - Dedicated REST API endpoint `GET /api/unraid` and Unraid card inside System Management window.

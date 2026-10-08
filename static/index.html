@@ -85,8 +85,8 @@
   })();
 </script>
 <style>html,body{color:#eaf1f8;background-color:#080c10;width:100%;height:100%;margin:0;padding:0;overflow:hidden}html.auth-required body{background:radial-gradient(circle at 50% 20%,#151d29 0%,#080c10 70%)!important}#login-overlay{z-index:999999;background:#080c10;justify-content:center;align-items:center;display:flex;position:fixed;inset:0}html.has-auth-session #login-overlay{display:none!important}html.auth-required #login-overlay{display:flex!important}html.auth-required .studio-viewport-wrapper,html.auth-required .suite-navbar,html.auth-required #desktop-icons-container,html.auth-required .desktop-icons-container,html.auth-required .top-nav,html.auth-required #desktop-widgets-container,html.auth-required #os-dock-container,html.auth-required .workspace-panel,html.auth-required .smart-modal-backdrop,html.auth-required .os-window,html.auth-required .notif-center-window{display:none!important}</style>
-  <script type="module" crossorigin src="/assets/index-CQGlZQ8o.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-BG4Y0U8J.css">
+  <script type="module" crossorigin src="/assets/index-DTcaliAT.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-CkNcXS-A.css">
 </head>
 <body class="studio-workbench">
 
@@ -684,6 +684,39 @@
         </div>
       </div>
 
+      <div class="draggable-card drawer-card" data-layout-card-id="sec-lcd-theme" id="sec-lcd-theme">
+        <div class="card-headline">
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <svg class="ic ic-sm" style="margin: 0 4px 0 2px;"><use href="#i-screen"/></svg><span data-i18n="settings.lcd_theme_title">LCD Screen Theme</span><button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
+          <span id="lcd-theme-active-badge" class="preset-state-badge" style="color:var(--brand, #00f0ff); border-color:var(--brand, #00f0ff);">CYBER TEAL</span>
+        </div>
+        <div class="card-instruction" data-i18n="settings.lcd_theme_desc">Select a color scheme specifically for the physical 640x172 LCD screen and console dashboard.</div>
+        <div class="lcd-theme-picker-row">
+          <button class="lcd-theme-chip active" data-lcd-theme="cyber" title="Cyber Teal"><span class="lcd-chip-swatch" style="background:#00f0ff;"></span><span class="lcd-chip-label" data-i18n="settings.theme_chip_cyber">Cyber</span></button>
+          <button class="lcd-theme-chip" data-lcd-theme="amber" title="Amber Gold"><span class="lcd-chip-swatch" style="background:#ffbe40;"></span><span class="lcd-chip-label" data-i18n="settings.theme_chip_amber">Amber</span></button>
+          <button class="lcd-theme-chip" data-lcd-theme="emerald" title="Emerald Matrix"><span class="lcd-chip-swatch" style="background:#3bf58b;"></span><span class="lcd-chip-label" data-i18n="settings.theme_chip_emerald">Emerald</span></button>
+          <button class="lcd-theme-chip" data-lcd-theme="sapphire" title="Sapphire Ice"><span class="lcd-chip-swatch" style="background:#38bdf8;"></span><span class="lcd-chip-label" data-i18n="settings.theme_chip_sapphire">Sapphire</span></button>
+          <button class="lcd-theme-chip" data-lcd-theme="amethyst" title="Amethyst Violet"><span class="lcd-chip-swatch" style="background:#c084fc;"></span><span class="lcd-chip-label" data-i18n="settings.theme_chip_amethyst">Amethyst</span></button>
+          <button class="lcd-theme-chip" data-lcd-theme="crimson" title="Crimson Ruby"><span class="lcd-chip-swatch" style="background:#f43f5e;"></span><span class="lcd-chip-label" data-i18n="settings.theme_chip_crimson">Crimson</span></button>
+          <button class="lcd-theme-chip" data-lcd-theme="light" title="Daylight White"><span class="lcd-chip-swatch" style="background:#f8fafc; border:1px solid #64748b;"></span><span class="lcd-chip-label" data-i18n="settings.theme_chip_light">White</span></button>
+          <button class="lcd-theme-chip" data-lcd-theme="yak" title="Yak Bronze"><span class="lcd-chip-swatch" style="background:#d48a37;"></span><span class="lcd-chip-label" data-i18n="settings.theme_chip_yak">Yak</span></button>
+        </div>
+        <div style="margin-top: 10px; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span style="font-size: 10.5px; color: var(--muted); font-weight: 600;" data-i18n="settings.lcd_custom_accent">Custom Accent:</span>
+            <input type="color" id="lcd-custom-color-picker" value="#00f0ff" style="width: 22px; height: 22px; border: none; padding: 0; background: none; cursor: pointer; border-radius: 3px;">
+            <span id="lcd-custom-hex-val" style="font-size: 10px; font-family: monospace; color: var(--muted);">#00F0FF</span>
+          </div>
+          <button id="lcd-reset-accent-btn" class="btn-pill-toggle" style="font-size: 9.5px; padding: 1px 7px;" data-i18n="settings.reset_accent">↺ Reset</button>
+        </div>
+        <div style="margin-top: 10px; padding: 8px 10px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.06); border-radius: 6px; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+          <div>
+            <div style="font-size: 11px; font-weight: 700; color: #fff;" data-i18n="settings.text_clarity_title">High-Contrast Text on Physical Screen</div>
+            <div style="font-size: 9.5px; color: var(--muted);" data-i18n="settings.text_clarity_desc">Keeps lettering crisp white to eliminate chromatic blur on 640x172 LCD while accenting gauges.</div>
+          </div>
+          <label class="switch"><input type="checkbox" id="lcd-text-clarity-toggle" checked><span class="toggle-slider"></span></label>
+        </div>
+      </div>
+
       <div class="draggable-card drawer-card" data-layout-card-id="sec-clock">
         <div class="card-headline">
           <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <svg class="ic ic-sm" style="margin: 0 4px 0 2px;"><use href="#i-clock"/></svg><span data-i18n="settings.clock_tz_title">Clock & Timezone</span><button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
@@ -892,36 +925,6 @@
           </div>
         </div>
       </div>
-
-      <div class="draggable-card drawer-card" data-layout-card-id="sec-language">
-        <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <svg class="ic ic-sm" style="margin: 0 4px 0 2px;"><use href="#i-grid"/></svg><span data-i18n="settings.language_title">Display Language & Localization</span><button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
-        </div>
-        <div class="card-instruction" data-i18n="settings.language_desc">Select your preferred language for the Web Studio desktop and hardware management controls.</div>
-        <div style="margin-top: 8px;">
-          <select id="settings-lang-select" class="language-picker-select tz-select-input" style="width: 100%; padding: 8px 12px; font-size: 13px; cursor: pointer;">
-            <option value="en">🇺🇸 English (US)</option>
-            <option value="de">🇩🇪 Deutsch (German)</option>
-            <option value="zh">🇨🇳 简体中文 (Simplified Chinese)</option>
-            <option value="fr">🇫🇷 Français (French)</option>
-            <option value="es">🇪🇸 Español (Spanish)</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="draggable-card drawer-card" data-layout-card-id="sec-backup">
-        <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <span data-i18n="settings.backup_title">Suite Configuration Backup</span><button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
-        </div>
-        <div class="card-instruction" data-i18n="settings.backup_desc">Export, import, or reset all dashboard layout, LED lighting, and fan settings in a single file.</div>
-        <div class="backup-row">
-          <button id="btn-export-layout" class="btn-pill-toggle" data-i18n="settings.export_json">Export JSON</button>
-          <label class="btn-pill-toggle custom-file-upload">
-            <span data-i18n="settings.import_json">Import JSON</span> <input type="file" id="file-import-layout" accept=".json" style="display:none">
-          </label>
-          <button id="dashboard-reset-btn" class="btn-lock-toggle" title="Reset all settings" data-i18n="settings.reset_btn">↺ Reset</button>
-        </div>
-      </div>
     </div>
   </div>
 
@@ -1125,13 +1128,20 @@
             <line x1="38" y1="20" x2="285" y2="20" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
             <line x1="38" y1="77" x2="285" y2="77" stroke="rgba(56,189,248,0.25)" stroke-width="1" stroke-dasharray="3,3"/>
             <line x1="38" y1="104" x2="285" y2="104" stroke="rgba(56,189,248,0.4)" stroke-width="1"/>
+
+            <!-- Vertical temperature guide gridlines -->
+            <line x1="100" y1="20" x2="100" y2="104" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="2,2"/>
+            <line x1="161" y1="20" x2="161" y2="104" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="2,2"/>
+            <line x1="223" y1="20" x2="223" y2="104" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="2,2"/>
             
             <text x="32" y="23" fill="#78838f" font-size="8" text-anchor="end" font-weight="700">100%</text>
             <text x="32" y="80" fill="#38bdf8" font-size="8" text-anchor="end" font-weight="700">32%</text>
             <text x="32" y="107" fill="#38bdf8" font-size="8" text-anchor="end" font-weight="700">0%</text>
             <text x="38" y="128" fill="#78838f" font-size="8" text-anchor="start" font-weight="700">30°C</text>
-            <text x="160" y="128" fill="#78838f" font-size="8" text-anchor="middle" font-weight="700">40°C</text>
-            <text x="285" y="128" fill="#78838f" font-size="8" text-anchor="end" font-weight="700">50°C+</text>
+            <text x="100" y="128" fill="#78838f" font-size="8" text-anchor="middle" font-weight="700">37.5°C</text>
+            <text x="161" y="128" fill="#78838f" font-size="8" text-anchor="middle" font-weight="700">45°C</text>
+            <text x="223" y="128" fill="#78838f" font-size="8" text-anchor="middle" font-weight="700">52.5°C</text>
+            <text x="285" y="128" fill="#78838f" font-size="8" text-anchor="end" font-weight="700">60°C+</text>
 
             <path id="curve-area-path" d="M 38 100 L 115 100 L 257 20 L 285 20 L 285 100 Z" fill="url(#curveGradient)"/>
             <path id="curve-svg-path" d="M 38 100 L 115 100 L 257 20 L 285 20" fill="none" stroke="var(--ok2)" stroke-width="2.5" stroke-linecap="round"/>
@@ -1140,6 +1150,8 @@
             <circle class="curve-handle" id="ch-1" cx="0" cy="0" r="7" fill="#fff" stroke="var(--ok2)" stroke-width="2" style="cursor:pointer;" />
             <circle class="curve-handle" id="ch-2" cx="0" cy="0" r="7" fill="#fff" stroke="var(--ok2)" stroke-width="2" style="cursor:pointer;" />
             <circle class="curve-handle" id="ch-3" cx="0" cy="0" r="7" fill="#fff" stroke="var(--ok2)" stroke-width="2" style="cursor:pointer;" />
+            <circle class="curve-handle" id="ch-4" cx="0" cy="0" r="7" fill="#fff" stroke="var(--ok2)" stroke-width="2" style="cursor:pointer;" />
+            <circle class="curve-handle" id="ch-5" cx="0" cy="0" r="7" fill="#fff" stroke="var(--ok2)" stroke-width="2" style="cursor:pointer;" />
             <circle id="curve-dot-z1" cx="38" cy="100" r="5" fill="#fff" stroke="#6b8e23" stroke-width="2.5" style="transition: cx 0.35s ease, cy 0.35s ease; pointer-events: none;"/>
             <circle id="curve-dot-z2" cx="38" cy="100" r="5" fill="#fff" stroke="#38a2ff" stroke-width="2.5" style="transition: cx 0.35s ease, cy 0.35s ease; pointer-events: none;"/>
             <circle id="curve-dot-cpu" cx="38" cy="100" r="4.5" fill="#fff" stroke="#ffaa00" stroke-width="2.5" style="transition: cx 0.35s ease, cy 0.35s ease; pointer-events: none;"/>
@@ -1150,7 +1162,10 @@
             <div class="legend-item" id="leg-item-z2"><span class="legend-dot" style="background:#38a2ff;"></span> Zone 2</div>
             <div class="legend-item" id="leg-item-cpu"><span class="legend-dot" style="background:#ffaa00;"></span> CPU</div>
             <button class="btn-reset-curve-view" id="btn-reset-curve" style="display:none;">↺ Show All Zones</button>
-            <div id="curve-readout-text" style="font-size:9px; font-weight:800; color:var(--ok2);">Active Mapping</div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span id="fan-curve-range-val" class="suite-badge" title="Dynamic Fan Ramp Range" style="background:rgba(37,194,160,0.15); color:var(--ok2); border-color:rgba(37,194,160,0.35);">Ramp: 37°C – 50°C</span>
+              <div id="curve-readout-text" style="font-size:9px; font-weight:800; color:var(--ok2);">Active Mapping</div>
+            </div>
           </div>
         </div>
       </div>
@@ -1225,28 +1240,6 @@
         </div>
       </div>
 
-      <div class="draggable-card drawer-card" data-fan-card-id="fan-card-inspector">
-        <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <span data-i18n="settings.thermal_threshold_inspector">Thermal Threshold Inspector</span><button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
-        </div>
-        <div class="thermal-inspector-box">
-          <div class="ti-row"><span>Cool Idle (&le; 38°C)</span><strong>58 – 67 PWM (~950 RPM)</strong></div>
-          <div class="ti-row"><span>Sustained Load (42–46°C)</span><strong>120 – 155 PWM (~1800 RPM)</strong></div>
-          <div class="ti-row"><span>Peak Emergency (&gt; 50°C)</span><strong>183 PWM (Full Speed)</strong></div>
-          <div class="ti-row"><span>CPU Thermal Ceiling (&gt; 85°C)</span><strong>183 PWM Override</strong></div>
-        </div>
-      </div>
-
-      <div class="draggable-card drawer-card" data-fan-card-id="fan-card-thresholds">
-        <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <span data-i18n="settings.custom_ramp_temps">Custom Ramp Temperatures</span><button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
-          <span id="fan-curve-range-val" class="suite-badge" style="background:rgba(37,194,160,0.15); color:var(--ok2); border-color:rgba(37,194,160,0.35);">37°C – 50°C</span>
-        </div>
-        <div class="card-instruction" data-i18n="settings.custom_ramp_desc">Adjust the temperature window where fan PWM dynamically scales from minimum silent RPM to 100% duty cycle. Spun-down drives are excluded from heating calculations.</div>
-        <div style="margin-top:8px; font-size:11px; color:var(--muted);">
-          <em>Use the interactive graph above to drag and plot your custom fan curve points.</em>
-        </div>
-      </div>
 
       <div class="draggable-card drawer-card" id="manual-pwm-card" data-fan-card-id="fan-card-override">
         <div class="card-headline">
@@ -1578,12 +1571,20 @@
         <div id="mgmt-sec-wallpaper" class="mgmt-detail-card" style="display: none;">
           <div class="mgmt-inner-tabs">
             <button class="mgmt-inner-tab active" data-tab-target="mgmt-pane-wallpaper">
-              <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-globe"/></svg>
+              <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-screen"/></svg>
               <span data-i18n="mgmt.subtab_wallpaper">Wallpaper</span>
+            </button>
+            <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-theme">
+              <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-sliders"/></svg>
+              <span data-i18n="mgmt.subtab_theme">Desktop Theme</span>
             </button>
             <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-widgets">
               <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-grid"/></svg>
               <span data-i18n="mgmt.subtab_widgets">Widgets</span>
+            </button>
+            <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-language">
+              <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-globe"/></svg>
+              <span data-i18n="mgmt.subtab_language">Language</span>
             </button>
           </div>
 
@@ -1615,6 +1616,110 @@
               </div>
             </div>
           </div>
+          </div>
+
+          <!-- Sub-tab: Desktop Theme & Accent -->
+          <div id="mgmt-pane-theme" class="mgmt-tab-pane" style="display: none;">
+            <div class="mgmt-card-intro">
+              <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-sliders"/></svg> <span data-i18n="mgmt.theme_title">Desktop Theme & Accent</span></div>
+              <div class="mgmt-card-intro-desc" data-i18n="mgmt.theme_desc">Personalize the color palette, windows, and accent styling of your ZettNAS desktop environment.</div>
+              <div style="margin-top: 6px;">
+                <span id="desktop-theme-active-badge" class="desktop-theme-active-badge">CYBER TEAL</span>
+              </div>
+            </div>
+            <div class="mgmt-detail-body">
+              <div class="drawer-card" style="padding: 16px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
+                <div style="font-size: 11px; font-weight: 700; color: var(--muted); margin-bottom: 12px; letter-spacing: 0.5px;" data-i18n="mgmt.theme_presets_label">SELECT DESKTOP THEME PRESET</div>
+                <div class="theme-palette-grid">
+                  <button class="desktop-theme-preset theme-preset-card active" data-theme-id="cyber">
+                    <div class="theme-swatch-circle" style="background: linear-gradient(135deg, #00f0ff 50%, #25c2a0 50%); border: 2px solid #00f0ff;"></div>
+                    <div class="theme-preset-info">
+                      <span class="theme-preset-name" data-i18n="settings.theme_cyber">Cyber Teal</span>
+                      <span class="theme-preset-desc" data-i18n="settings.theme_cyber_desc">Signature Cyan & Obsidian</span>
+                    </div>
+                  </button>
+
+                  <button class="desktop-theme-preset theme-preset-card" data-theme-id="amber">
+                    <div class="theme-swatch-circle" style="background: linear-gradient(135deg, #ffbe40 50%, #e09b20 50%); border: 2px solid #ffbe40;"></div>
+                    <div class="theme-preset-info">
+                      <span class="theme-preset-name" data-i18n="settings.theme_amber">Amber Gold</span>
+                      <span class="theme-preset-desc" data-i18n="settings.theme_amber_desc">Retro Phosphor CRT</span>
+                    </div>
+                  </button>
+
+                  <button class="desktop-theme-preset theme-preset-card" data-theme-id="emerald">
+                    <div class="theme-swatch-circle" style="background: linear-gradient(135deg, #3bf58b 50%, #24d673 50%); border: 2px solid #3bf58b;"></div>
+                    <div class="theme-preset-info">
+                      <span class="theme-preset-name" data-i18n="settings.theme_emerald">Emerald Matrix</span>
+                      <span class="theme-preset-desc" data-i18n="settings.theme_emerald_desc">Cyber Terminal Green</span>
+                    </div>
+                  </button>
+
+                  <button class="desktop-theme-preset theme-preset-card" data-theme-id="sapphire">
+                    <div class="theme-swatch-circle" style="background: linear-gradient(135deg, #38bdf8 50%, #0284c7 50%); border: 2px solid #38bdf8;"></div>
+                    <div class="theme-preset-info">
+                      <span class="theme-preset-name" data-i18n="settings.theme_sapphire">Sapphire Ice</span>
+                      <span class="theme-preset-desc" data-i18n="settings.theme_sapphire_desc">Nordic Ice Blue Glow</span>
+                    </div>
+                  </button>
+
+                  <button class="desktop-theme-preset theme-preset-card" data-theme-id="amethyst">
+                    <div class="theme-swatch-circle" style="background: linear-gradient(135deg, #c084fc 50%, #a855f7 50%); border: 2px solid #c084fc;"></div>
+                    <div class="theme-preset-info">
+                      <span class="theme-preset-name" data-i18n="settings.theme_amethyst">Amethyst Violet</span>
+                      <span class="theme-preset-desc" data-i18n="settings.theme_amethyst_desc">Synthwave Neon Purple</span>
+                    </div>
+                  </button>
+
+                  <button class="desktop-theme-preset theme-preset-card" data-theme-id="crimson">
+                    <div class="theme-swatch-circle" style="background: linear-gradient(135deg, #fb7185 50%, #f43f5e 50%); border: 2px solid #fb7185;"></div>
+                    <div class="theme-preset-info">
+                      <span class="theme-preset-name" data-i18n="settings.theme_crimson">Crimson Ruby</span>
+                      <span class="theme-preset-desc" data-i18n="settings.theme_crimson_desc">High-Energy Coral Red</span>
+                    </div>
+                  </button>
+
+                  <button class="desktop-theme-preset theme-preset-card" data-theme-id="light">
+                    <div class="theme-swatch-circle" style="background: linear-gradient(135deg, #f8fafc 50%, #cbd5e1 50%); border: 2px solid #64748b;"></div>
+                    <div class="theme-preset-info">
+                      <span class="theme-preset-name" data-i18n="settings.theme_light">Daylight White</span>
+                      <span class="theme-preset-desc" data-i18n="settings.theme_light_desc">Clean Light Desktop</span>
+                    </div>
+                  </button>
+
+                  <button class="desktop-theme-preset theme-preset-card" data-theme-id="yak">
+                    <div class="theme-swatch-circle" style="background: linear-gradient(135deg, #d48a37 50%, #e6a254 50%); border: 2px solid #d48a37;"></div>
+                    <div class="theme-preset-info">
+                      <span class="theme-preset-name" data-i18n="settings.theme_yak">Yak Bronze</span>
+                      <span class="theme-preset-desc" data-i18n="settings.theme_yak_desc">Warm Toastie Meadow</span>
+                    </div>
+                  </button>
+                </div>
+
+                <!-- Custom Desktop Accent Color -->
+                <div style="margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.06);">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <label style="font-size:10.5px; font-weight:700; color:var(--muted); letter-spacing:0.5px;" data-i18n="settings.custom_accent_label">CUSTOM ACCENT COLOR</label>
+                    <button id="desktop-theme-reset-accent-btn" class="btn-pill-toggle" style="font-size:10px; padding:2px 8px;" data-i18n="settings.reset_accent">↺ Reset to Theme Color</button>
+                  </div>
+                  <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                    <div class="custom-color-chips">
+                      <button class="desktop-color-chip color-chip-btn" data-color="#00f0ff" style="background:#00f0ff;" title="Cyan"></button>
+                      <button class="desktop-color-chip color-chip-btn" data-color="#38bdf8" style="background:#38bdf8;" title="Sky Blue"></button>
+                      <button class="desktop-color-chip color-chip-btn" data-color="#10b981" style="background:#10b981;" title="Emerald"></button>
+                      <button class="desktop-color-chip color-chip-btn" data-color="#a855f7" style="background:#a855f7;" title="Purple"></button>
+                      <button class="desktop-color-chip color-chip-btn" data-color="#f59e0b" style="background:#f59e0b;" title="Amber"></button>
+                      <button class="desktop-color-chip color-chip-btn" data-color="#f43f5e" style="background:#f43f5e;" title="Crimson"></button>
+                      <button class="desktop-color-chip color-chip-btn" data-color="#ec4899" style="background:#ec4899;" title="Pink"></button>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:6px; margin-left:auto;">
+                      <input type="color" id="desktop-custom-color-picker" value="#00f0ff" style="width:28px; height:28px; border:none; padding:0; background:none; cursor:pointer; border-radius:4px;">
+                      <span id="desktop-custom-hex-val" style="font-size:11px; font-family:monospace; color:var(--muted);">#00F0FF</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- Sub-tab 2: Desktop Widgets -->
@@ -1886,6 +1991,34 @@
               </div>
             </div>
           </div>
+
+          <!-- Sub-tab 3: Display Language & Localization -->
+          <div id="mgmt-pane-language" class="mgmt-tab-pane" style="display: none;">
+            <div class="mgmt-card-intro">
+              <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-globe"/></svg> <span data-i18n="settings.language_title">Display Language & Localization</span></div>
+              <div class="mgmt-card-intro-desc" data-i18n="settings.language_desc">Select your preferred language for the Web Studio desktop and hardware management controls.</div>
+            </div>
+            <div class="mgmt-detail-body">
+              <div class="drawer-card" style="padding: 20px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); max-width: 520px;">
+                <div class="card-headline">
+                  <span class="card-head-title" style="font-weight: 700; font-size: 14px; margin-bottom: 8px; display: block;" data-i18n="settings.language_title">Display Language & Localization</span>
+                </div>
+                <div style="font-size: 12px; color: var(--muted); margin-bottom: 16px; line-height: 1.4;" data-i18n="settings.language_desc">
+                  Select your preferred language for the Web Studio desktop and hardware management controls.
+                </div>
+                <div style="margin-top: 10px;">
+                  <label style="display:block; font-size:10.5px; font-weight:700; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px;" data-i18n="settings.select_language">SYSTEM INTERFACE LANGUAGE</label>
+                  <select id="mgmt-lang-select" class="language-picker-select tz-select-input" style="width: 100%; padding: 10px 14px; font-size: 13px; cursor: pointer; border: 1px solid rgba(255,255,255,0.12); background: rgba(0,0,0,0.3); border-radius: 6px; color: #fff;">
+                    <option value="en">🇺🇸 English (US)</option>
+                    <option value="de">🇩🇪 Deutsch (German)</option>
+                    <option value="zh">🇨🇳 简体中文 (Simplified Chinese)</option>
+                    <option value="fr">🇫🇷 Français (French)</option>
+                    <option value="es">🇪🇸 Español (Spanish)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
           <!-- 2. Activity Monitor -->
@@ -2016,23 +2149,23 @@
                 <div class="unraid-details-grid">
                   <div class="unraid-detail-item">
                     <span class="udi-label" data-i18n="mgmt.unraid_array_state">Array Status</span>
-                    <span class="udi-val" id="mgmt-unraid-state" style="color:var(--ok2);">STARTED</span>
+                    <span class="udi-val" id="mgmt-unraid-state" style="color:var(--muted);">–</span>
                   </div>
                   <div class="unraid-detail-item">
                     <span class="udi-label" data-i18n="mgmt.unraid_server_model">Server & Model</span>
-                    <span class="udi-val" id="mgmt-unraid-server">Ark (D6U)</span>
+                    <span class="udi-val" id="mgmt-unraid-server">NAS</span>
                   </div>
                   <div class="unraid-detail-item">
                     <span class="udi-label" data-i18n="mgmt.unraid_os_ver">OS Version</span>
-                    <span class="udi-val" id="mgmt-unraid-version">Unraid 7.3.2</span>
+                    <span class="udi-val" id="mgmt-unraid-version">Unraid OS</span>
                   </div>
                   <div class="unraid-detail-item">
                     <span class="udi-label" data-i18n="mgmt.unraid_disks_cfg">Disks Configuration</span>
-                    <span class="udi-val" id="mgmt-unraid-disks">2 Disks Assigned</span>
+                    <span class="udi-val" id="mgmt-unraid-disks">–</span>
                   </div>
                   <div class="unraid-detail-item">
                     <span class="udi-label" data-i18n="mgmt.unraid_parity_status">Parity Check Status</span>
-                    <span class="udi-val" id="mgmt-unraid-parity">Syncing (0.0%) • 0 Errors</span>
+                    <span class="udi-val" id="mgmt-unraid-parity">Idle</span>
                   </div>
                   <div class="unraid-detail-item">
                     <span class="udi-label" data-i18n="mgmt.unraid_mover_act">Mover Activity</span>
@@ -2043,7 +2176,7 @@
             </div>
           </div>
         </div>
-            <div id="mgmt-pane-docker" class="mgmt-tab-pane" style="display: none;">
+        <div id="mgmt-pane-docker" class="mgmt-tab-pane" style="display: none;">
           <div class="mgmt-card-intro" style="display:flex; justify-content:space-between; align-items:center;">
             <div>
               <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-chip"/></svg> <span data-i18n="mgmt.docker_sec_title">Docker Containers & Services</span></div>
@@ -2052,19 +2185,32 @@
             <button class="btn-pill-toggle" id="btn-refresh-docker" title="Refresh Containers" data-i18n="mgmt.refresh">🔄 Refresh</button>
           </div>
           <div class="mgmt-detail-body">
-            <div style="overflow-x:auto; max-height:400px; background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.06); border-radius:8px;">
-              <table class="copy-history-table">
+            <div class="docker-toolbar" style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:8px; margin-bottom:12px;">
+              <div class="docker-filter-pills" style="display:flex; gap:6px; flex-wrap:wrap;">
+                <button class="btn-pill-toggle docker-filter-btn active" data-filter="all"><span data-i18n="mgmt.docker_filter_all">All</span> <span id="docker-count-all" class="docker-count-badge">0</span></button>
+                <button class="btn-pill-toggle docker-filter-btn" data-filter="running"><span data-i18n="mgmt.docker_filter_running">Running</span> <span id="docker-count-running" class="docker-count-badge">0</span></button>
+                <button class="btn-pill-toggle docker-filter-btn" data-filter="stopped"><span data-i18n="mgmt.docker_filter_stopped">Stopped</span> <span id="docker-count-stopped" class="docker-count-badge">0</span></button>
+                <button class="btn-pill-toggle docker-filter-btn" data-filter="compose"><span data-i18n="mgmt.docker_filter_compose">Compose</span> <span id="docker-count-compose" class="docker-count-badge">0</span></button>
+                <button class="btn-pill-toggle docker-filter-btn" data-filter="standalone"><span data-i18n="mgmt.docker_filter_standalone">Standalone</span> <span id="docker-count-standalone" class="docker-count-badge">0</span></button>
+              </div>
+              <div class="docker-search-wrap" style="position:relative;">
+                <input type="text" id="docker-search-input" placeholder="Search containers, images, ports..." data-i18n-placeholder="mgmt.docker_search_placeholder" class="tz-text-input" style="font-size:11px; padding:3px 8px; width:200px; height:24px; border-radius:4px;">
+              </div>
+            </div>
+            <div style="overflow-x:auto; max-height:420px; background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.06); border-radius:8px;">
+              <table class="copy-history-table docker-table">
                 <thead>
                   <tr>
-                    <th data-i18n="mgmt.tbl_name_id">Name / ID</th>
-                    <th data-i18n="mgmt.tbl_image">Image</th>
-                    <th data-i18n="mgmt.tbl_state">State</th>
+                    <th data-i18n="mgmt.tbl_name_id">Name / Stack</th>
+                    <th data-i18n="mgmt.tbl_hardware">Hardware</th>
+                    <th data-i18n="mgmt.tbl_telemetry">CPU / RAM</th>
+                    <th data-i18n="mgmt.tbl_ports">Ports & Web UI</th>
                     <th data-i18n="mgmt.tbl_uptime">Status & Uptime</th>
                     <th style="text-align:right;" data-i18n="mgmt.tbl_actions">Actions</th>
                   </tr>
                 </thead>
                 <tbody id="docker-containers-tbody">
-                  <tr><td colspan="5" style="text-align:center; color:var(--muted); padding:20px;">Scanning Docker socket...</td></tr>
+                  <tr><td colspan="6" style="text-align:center; color:var(--muted); padding:20px;">Scanning Docker socket...</td></tr>
                 </tbody>
               </table>
             </div>
@@ -2203,10 +2349,10 @@
           <div class="mgmt-detail-body">
             <div class="drawer-card" style="margin-bottom: 24px; padding: 16px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
               <div class="card-headline">
-                <span class="card-head-title" data-i18n="settings.backup_restore" style="font-weight: 700; font-size: 14px; margin-bottom: 8px; display: block;">Configuration Backup & Restore</span>
+                <span class="card-head-title" data-i18n="settings.backup_title" style="font-weight: 700; font-size: 14px; margin-bottom: 8px; display: block;">Configuration Backup & Restore</span>
               </div>
-              <div style="font-size: 12px; color: var(--muted); margin-bottom: 16px; line-height: 1.4;">
-                Download a backup of your configuration (fan curves, layouts, dashboards). Restoring will overwrite current settings and requires a restart.
+              <div style="font-size: 12px; color: var(--muted); margin-bottom: 16px; line-height: 1.4;" data-i18n="settings.backup_desc">
+                Download a complete backup archive of all system configurations, 6-point fan curves, layouts, widgets, and themes. Restoring will apply all configurations across the suite.
               </div>
               <div style="display: flex; gap: 10px; align-items: center;">
                 <button id="btn-backup-download" class="btn-rect primary" style="flex:1;">

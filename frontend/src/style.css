@@ -82,19 +82,20 @@ body.theme-light {
 }
 
 /* =========================================================================
-   AMBER THEME: MONOCHROME CRT RETRO TERMINAL
+   AMBER THEME: RETRO PHOSPHOR CRT TERMINAL
    ========================================================================= */
 body.theme-amber {
   --bg: #120d04;
   --card: #1f1708;
   --card-hi: #2b200b;
-  --fg: #ffbe40;
+  --fg: #fef3c7;
   --muted: #a67c29;
   --ok: #ffbe40;
   --ok2: #e09b20;
   --warn: #ff8c00;
   --crit: #e63946;
   --track: #2a1f0a;
+  --brand: #ffbe40;
   background: radial-gradient(circle at 50% 50%, #241a09 0%, #0d0903 70%);
   color: var(--fg);
 }
@@ -106,15 +107,457 @@ body.theme-emerald {
   --bg: #04120a;
   --card: #082012;
   --card-hi: #0c2e1a;
-  --fg: #3bf58b;
+  --fg: #e6fced;
   --muted: #288f57;
   --ok: #3bf58b;
   --ok2: #24d673;
   --warn: #eab308;
   --crit: #ef4444;
   --track: #0e331f;
+  --brand: #3bf58b;
   background: radial-gradient(circle at 50% 50%, #0b2917 0%, #030d07 70%);
   color: var(--fg);
+}
+
+/* =========================================================================
+   SAPPHIRE THEME: NORDIC ICE BLUE GLOW
+   ========================================================================= */
+body.theme-sapphire {
+  --bg: #070e17;
+  --card: #0c1929;
+  --card-hi: #132438;
+  --fg: #f0f7ff;
+  --muted: #6482a6;
+  --ok: #38bdf8;
+  --ok2: #0ea5e9;
+  --warn: #f59e0b;
+  --crit: #ef4444;
+  --track: #15263d;
+  --brand: #38bdf8;
+  background: radial-gradient(circle at 50% 50%, #0e1e33 0%, #040810 70%);
+  color: var(--fg);
+}
+
+/* =========================================================================
+   AMETHYST THEME: SYNTHWAVE CYBER VIOLET
+   ========================================================================= */
+body.theme-amethyst {
+  --bg: #0e0717;
+  --card: #180e28;
+  --card-hi: #24153b;
+  --fg: #fbf7ff;
+  --muted: #8b6ca8;
+  --ok: #c084fc;
+  --ok2: #a855f7;
+  --warn: #fb923c;
+  --crit: #f43f5e;
+  --track: #26163d;
+  --brand: #c084fc;
+  background: radial-gradient(circle at 50% 50%, #1e1133 0%, #080310 70%);
+  color: var(--fg);
+}
+
+/* =========================================================================
+   CRIMSON THEME: HIGH-ENERGY CORAL RED
+   ========================================================================= */
+body.theme-crimson {
+  --bg: #14070a;
+  --card: #220c12;
+  --card-hi: #30131b;
+  --fg: #fff1f2;
+  --muted: #9e636e;
+  --ok: #fb7185;
+  --ok2: #f43f5e;
+  --warn: #f59e0b;
+  --crit: #ef4444;
+  --track: #36141e;
+  --brand: #f43f5e;
+  background: radial-gradient(circle at 50% 50%, #2e0e17 0%, #0d0305 70%);
+  color: var(--fg);
+}
+
+/* =========================================================================
+   HARDWARE LCD DASHBOARD SCOPED THEMES
+   Guarantees that #screen, #mini-lcd-canvas, and body.lcd-direct have their own
+   isolated palette, completely independent of the desktop website theme.
+   ========================================================================= */
+
+#screen,
+#mini-lcd-canvas,
+.mini-preview-inner,
+#console-window,
+body.lcd-direct,
+#screen.lcd-theme-cyber,
+#mini-lcd-canvas.lcd-theme-cyber,
+#console-window.lcd-theme-cyber,
+body.lcd-direct.lcd-theme-cyber {
+  --bg: #0b1118;
+  --card: #131b24;
+  --card-hi: #1c2734;
+  --fg: #eaf1f8;
+  --muted: #64748b;
+  --ok: #00f0ff;
+  --ok2: #25c2a0;
+  --warn: #ffb830;
+  --crit: #ff4757;
+  --track: #1e293b;
+  --brand: #00f0ff;
+}
+
+#screen,
+#mini-lcd-canvas,
+.mini-preview-inner {
+  color: var(--fg) !important;
+}
+
+#screen,
+.mini-preview-inner {
+  background: var(--bg) !important;
+}
+
+#screen.lcd-theme-amber,
+#mini-lcd-canvas.lcd-theme-amber,
+#console-window.lcd-theme-amber,
+body.lcd-direct.lcd-theme-amber {
+  --bg: #120d04;
+  --card: #1f1708;
+  --card-hi: #2b200b;
+  --fg: #fef3c7;
+  --muted: #a67c29;
+  --ok: #ffbe40;
+  --ok2: #e09b20;
+  --warn: #ff8c00;
+  --crit: #e63946;
+  --track: #2a1f0a;
+  --brand: #ffbe40;
+}
+
+#screen.lcd-theme-emerald,
+#mini-lcd-canvas.lcd-theme-emerald,
+#console-window.lcd-theme-emerald,
+body.lcd-direct.lcd-theme-emerald {
+  --bg: #04120a;
+  --card: #082012;
+  --card-hi: #0c2e1a;
+  --fg: #e6fced;
+  --muted: #288f57;
+  --ok: #3bf58b;
+  --ok2: #24d673;
+  --warn: #eab308;
+  --crit: #ef4444;
+  --track: #0e331f;
+  --brand: #3bf58b;
+}
+
+#screen.lcd-theme-sapphire,
+#mini-lcd-canvas.lcd-theme-sapphire,
+#console-window.lcd-theme-sapphire,
+body.lcd-direct.lcd-theme-sapphire {
+  --bg: #070e17;
+  --card: #0c1929;
+  --card-hi: #132438;
+  --fg: #f0f7ff;
+  --muted: #6482a6;
+  --ok: #38bdf8;
+  --ok2: #0ea5e9;
+  --warn: #f59e0b;
+  --crit: #ef4444;
+  --track: #15263d;
+  --brand: #38bdf8;
+}
+
+#screen.lcd-theme-amethyst,
+#mini-lcd-canvas.lcd-theme-amethyst,
+#console-window.lcd-theme-amethyst,
+body.lcd-direct.lcd-theme-amethyst {
+  --bg: #0e0717;
+  --card: #180e28;
+  --card-hi: #24153b;
+  --fg: #fbf7ff;
+  --muted: #8b6ca8;
+  --ok: #c084fc;
+  --ok2: #a855f7;
+  --warn: #fb923c;
+  --crit: #f43f5e;
+  --track: #26163d;
+  --brand: #c084fc;
+}
+
+#screen.lcd-theme-crimson,
+#mini-lcd-canvas.lcd-theme-crimson,
+#console-window.lcd-theme-crimson,
+body.lcd-direct.lcd-theme-crimson {
+  --bg: #14070a;
+  --card: #220c12;
+  --card-hi: #30131b;
+  --fg: #fff1f2;
+  --muted: #9e636e;
+  --ok: #fb7185;
+  --ok2: #f43f5e;
+  --warn: #f59e0b;
+  --crit: #ef4444;
+  --track: #36141e;
+  --brand: #f43f5e;
+}
+
+#screen.lcd-theme-light,
+#mini-lcd-canvas.lcd-theme-light,
+#console-window.lcd-theme-light,
+body.lcd-direct.lcd-theme-light {
+  --bg: #f8fafc;
+  --card: #cbd5e1;
+  --card-hi: #dce4ed;
+  --fg: #0a0f1d;
+  --muted: #475569;
+  --ok: #0284c7;
+  --ok2: #059669;
+  --warn: #d97706;
+  --crit: #dc2626;
+  --track: #94a3b8;
+  --brand: #0284c7;
+}
+
+#screen.lcd-theme-yak,
+#mini-lcd-canvas.lcd-theme-yak,
+#console-window.lcd-theme-yak,
+body.lcd-direct.lcd-theme-yak {
+  --bg: #09130d;
+  --card: #122116;
+  --card-hi: #192e20;
+  --fg: #eaf1f8;
+  --muted: #7b9483;
+  --ok: #e6a254;
+  --ok2: #d48a37;
+  --warn: #e07a38;
+  --crit: #e63946;
+  --track: #17291c;
+  --brand: #d48a37;
+}
+
+#screen .card,
+#mini-lcd-canvas .card,
+.mini-preview-inner .card {
+  background: var(--card);
+}
+
+/* White LCD Screen Theme: Darker Grayish Cards and Lower-Deck Disks */
+#screen.lcd-theme-light .card,
+#mini-lcd-canvas.lcd-theme-light .card,
+body.lcd-direct.lcd-theme-light #screen .card,
+#screen.lcd-theme-light .disk,
+#mini-lcd-canvas.lcd-theme-light .disk,
+body.lcd-direct.lcd-theme-light #screen .disk {
+  background: linear-gradient(160deg, #dce4ed, #cbd5e1) !important;
+  border: 1px solid rgba(0, 0, 0, 0.15) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+}
+
+#screen.lcd-theme-light .donut::before,
+#mini-lcd-canvas.lcd-theme-light .donut::before,
+body.lcd-direct.lcd-theme-light #screen .donut::before,
+#screen.lcd-theme-light .arc::before,
+#mini-lcd-canvas.lcd-theme-light .arc::before,
+body.lcd-direct.lcd-theme-light #screen .arc::before {
+  background: #cbd5e1 !important;
+}
+
+/* White LCD Screen Theme: Deep Black Lettering, Values & Headers */
+#screen.lcd-theme-light,
+#mini-lcd-canvas.lcd-theme-light,
+#mini-lcd-canvas.lcd-theme-light .mini-preview-inner,
+body.lcd-direct.lcd-theme-light #screen {
+  background: #f8fafc !important;
+  color: #0a0f1d !important;
+}
+
+#screen.lcd-theme-light .nas-name,
+#screen.lcd-theme-light .clock,
+#screen.lcd-theme-light #ip,
+#screen.lcd-theme-light .h-right,
+#screen.lcd-theme-light .card-title,
+#screen.lcd-theme-light .card-title-txt,
+#screen.lcd-theme-light .storage-nums .val,
+#screen.lcd-theme-light .arc-val,
+#screen.lcd-theme-light .side .val,
+#screen.lcd-theme-light .fan .fv,
+#screen.lcd-theme-light .disk .dn,
+#screen.lcd-theme-light .disk .dt,
+#screen.lcd-theme-light .donut span,
+#mini-lcd-canvas.lcd-theme-light .nas-name,
+#mini-lcd-canvas.lcd-theme-light .clock,
+#mini-lcd-canvas.lcd-theme-light #ip,
+#mini-lcd-canvas.lcd-theme-light .h-right,
+#mini-lcd-canvas.lcd-theme-light .card-title,
+#mini-lcd-canvas.lcd-theme-light .card-title-txt,
+#mini-lcd-canvas.lcd-theme-light .storage-nums .val,
+#mini-lcd-canvas.lcd-theme-light .arc-val,
+#mini-lcd-canvas.lcd-theme-light .side .val,
+#mini-lcd-canvas.lcd-theme-light .fan .fv,
+#mini-lcd-canvas.lcd-theme-light .disk .dn,
+#mini-lcd-canvas.lcd-theme-light .disk .dt,
+#mini-lcd-canvas.lcd-theme-light .donut span,
+body.lcd-direct.lcd-theme-light #screen .nas-name,
+body.lcd-direct.lcd-theme-light #screen .clock,
+body.lcd-direct.lcd-theme-light #screen #ip,
+body.lcd-direct.lcd-theme-light #screen .h-right,
+body.lcd-direct.lcd-theme-light #screen .card-title,
+body.lcd-direct.lcd-theme-light #screen .card-title-txt,
+body.lcd-direct.lcd-theme-light #screen .storage-nums .val,
+body.lcd-direct.lcd-theme-light #screen .arc-val,
+body.lcd-direct.lcd-theme-light #screen .side .val,
+body.lcd-direct.lcd-theme-light #screen .fan .fv,
+body.lcd-direct.lcd-theme-light #screen .disk .dn,
+body.lcd-direct.lcd-theme-light #screen .disk .dt,
+body.lcd-direct.lcd-theme-light #screen .donut span {
+  color: #0a0f1d !important;
+}
+
+/* White LCD Screen Theme: Dark Slate Descriptive Labels */
+#screen.lcd-theme-light .storage-nums .lbl,
+#screen.lcd-theme-light .side .lbl,
+#screen.lcd-theme-light .fl,
+#screen.lcd-theme-light .uptime,
+#screen.lcd-theme-light .group-label,
+#screen.lcd-theme-light .net-row span,
+#screen.lcd-theme-light .arc-val .u,
+#mini-lcd-canvas.lcd-theme-light .storage-nums .lbl,
+#mini-lcd-canvas.lcd-theme-light .side .lbl,
+#mini-lcd-canvas.lcd-theme-light .fl,
+#mini-lcd-canvas.lcd-theme-light .uptime,
+#mini-lcd-canvas.lcd-theme-light .group-label,
+#mini-lcd-canvas.lcd-theme-light .net-row span,
+#mini-lcd-canvas.lcd-theme-light .arc-val .u,
+body.lcd-direct.lcd-theme-light #screen .storage-nums .lbl,
+body.lcd-direct.lcd-theme-light #screen .side .lbl,
+body.lcd-direct.lcd-theme-light #screen .fl,
+body.lcd-direct.lcd-theme-light #screen .uptime,
+body.lcd-direct.lcd-theme-light #screen .group-label,
+body.lcd-direct.lcd-theme-light #screen .net-row span,
+body.lcd-direct.lcd-theme-light #screen .arc-val .u {
+  color: #334155 !important;
+  font-weight: 700;
+}
+
+/* High-Contrast Physical Screen Text Clarity for Dark Themes */
+#screen.text-clarity-on:not(.lcd-theme-light),
+#mini-lcd-canvas.text-clarity-on:not(.lcd-theme-light),
+body.lcd-direct.text-clarity-on:not(.lcd-theme-light) #screen,
+#screen:not(.text-clarity-off):not(.lcd-theme-light) {
+  --fg: #eaf1f8;
+}
+
+#screen.text-clarity-on:not(.lcd-theme-light) .nas-name,
+#screen.text-clarity-on:not(.lcd-theme-light) .clock,
+#screen.text-clarity-on:not(.lcd-theme-light) #ip,
+#screen.text-clarity-on:not(.lcd-theme-light) .card-title-txt,
+#screen.text-clarity-on:not(.lcd-theme-light) .dn,
+#screen.text-clarity-on:not(.lcd-theme-light) .dt,
+#screen.text-clarity-on:not(.lcd-theme-light) .fl,
+#screen.text-clarity-on:not(.lcd-theme-light) .fv,
+#screen.text-clarity-on:not(.lcd-theme-light) .c-val,
+#screen.text-clarity-on:not(.lcd-theme-light) .c-lbl,
+#screen.text-clarity-on:not(.lcd-theme-light) .storage-nums .val,
+#screen.text-clarity-on:not(.lcd-theme-light) .arc-val,
+#screen.text-clarity-on:not(.lcd-theme-light) .side .val,
+#screen.text-clarity-on:not(.lcd-theme-light) .donut span,
+#mini-lcd-canvas.text-clarity-on:not(.lcd-theme-light) .nas-name,
+#mini-lcd-canvas.text-clarity-on:not(.lcd-theme-light) .clock,
+#mini-lcd-canvas.text-clarity-on:not(.lcd-theme-light) #ip,
+#mini-lcd-canvas.text-clarity-on:not(.lcd-theme-light) .card-title-txt,
+#mini-lcd-canvas.text-clarity-on:not(.lcd-theme-light) .dn,
+#mini-lcd-canvas.text-clarity-on:not(.lcd-theme-light) .dt,
+#mini-lcd-canvas.text-clarity-on:not(.lcd-theme-light) .fl,
+#mini-lcd-canvas.text-clarity-on:not(.lcd-theme-light) .fv,
+#mini-lcd-canvas.text-clarity-on:not(.lcd-theme-light) .c-val,
+#mini-lcd-canvas.text-clarity-on:not(.lcd-theme-light) .c-lbl,
+#mini-lcd-canvas.text-clarity-on:not(.lcd-theme-light) .storage-nums .val,
+#mini-lcd-canvas.text-clarity-on:not(.lcd-theme-light) .arc-val,
+#mini-lcd-canvas.text-clarity-on:not(.lcd-theme-light) .side .val,
+#mini-lcd-canvas.text-clarity-on:not(.lcd-theme-light) .donut span,
+body.lcd-direct.text-clarity-on:not(.lcd-theme-light) #screen .nas-name,
+body.lcd-direct.text-clarity-on:not(.lcd-theme-light) #screen .clock,
+body.lcd-direct.text-clarity-on:not(.lcd-theme-light) #screen #ip,
+body.lcd-direct.text-clarity-on:not(.lcd-theme-light) #screen .card-title-txt,
+body.lcd-direct.text-clarity-on:not(.lcd-theme-light) #screen .dn,
+body.lcd-direct.text-clarity-on:not(.lcd-theme-light) #screen .dt,
+body.lcd-direct.text-clarity-on:not(.lcd-theme-light) #screen .fl,
+body.lcd-direct.text-clarity-on:not(.lcd-theme-light) #screen .fv,
+body.lcd-direct.text-clarity-on:not(.lcd-theme-light) #screen .c-val,
+body.lcd-direct.text-clarity-on:not(.lcd-theme-light) #screen .c-lbl,
+body.lcd-direct.text-clarity-on:not(.lcd-theme-light) #screen .storage-nums .val,
+body.lcd-direct.text-clarity-on:not(.lcd-theme-light) #screen .arc-val,
+body.lcd-direct.text-clarity-on:not(.lcd-theme-light) #screen .side .val,
+body.lcd-direct.text-clarity-on:not(.lcd-theme-light) #screen .donut span {
+  color: #eaf1f8 !important;
+}
+
+/* High-Contrast Text Clarity for White LCD Theme (Crisp Black) */
+#screen.lcd-theme-light.text-clarity-on,
+#mini-lcd-canvas.lcd-theme-light.text-clarity-on,
+#mini-lcd-canvas.lcd-theme-light.text-clarity-on .mini-preview-inner,
+body.lcd-direct.lcd-theme-light.text-clarity-on #screen {
+  --fg: #0a0f1d !important;
+  color: #0a0f1d !important;
+}
+
+/* Desktop Theme Active Badge indicator (in Mission Control) */
+.desktop-theme-active-badge {
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--brand, #00f0ff);
+  display: inline-block;
+  line-height: 1.2;
+}
+
+/* Simple LCD Screen Themer Styles for Slide Drawer */
+.lcd-theme-picker-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.lcd-theme-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  cursor: pointer;
+  color: #cbd5e1;
+  font-size: 11px;
+  font-weight: 600;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.lcd-theme-chip:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.lcd-theme-chip.active {
+  background: rgba(0, 240, 255, 0.12);
+  border-color: var(--brand, #00f0ff);
+  color: #fff;
+  box-shadow: 0 0 8px rgba(0, 240, 255, 0.25);
+}
+
+.lcd-chip-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.lcd-chip-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* =========================================================================
@@ -227,7 +670,7 @@ body.theme-yak .pulse-dot {
   box-shadow: 0 0 10px #e07a38;
 }
 
-body.theme-yak .chassis-front-panel {
+#console-window.lcd-theme-yak.chassis-front-panel {
   z-index: 50;
   position: relative;
   background: 
@@ -244,7 +687,7 @@ body.theme-yak .chassis-front-panel {
   z-index: 2;
 }
 
-body.theme-yak .chassis-front-panel::after {
+#console-window.lcd-theme-yak.chassis-front-panel::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -265,7 +708,7 @@ body.theme-yak .chassis-front-panel::after {
   100% { opacity: 1; }
 }
 
-body.theme-yak .chassis-front-panel::before {
+#console-window.lcd-theme-yak.chassis-front-panel::before {
   content: "⚠ FRAGILE • YAK EXPRESS FREIGHT • COMMUNITY FIX KIT • CONTAINS TOASTIES ⚠";
   position: absolute;
   top: -12px;
@@ -283,15 +726,15 @@ body.theme-yak .chassis-front-panel::before {
   white-space: nowrap;
 }
 
-body.theme-yak .chassis-screws {
+#console-window.lcd-theme-yak .chassis-screws {
   background: #63432a;
   border-color: #382110;
 }
-body.theme-yak .chassis-engraved-text {
-  color: #d48a37;
+#console-window.lcd-theme-yak .chassis-engraved-text {
+  color: #d48a37 !important;
   text-shadow: 0 1px 2px rgba(0,0,0,0.8);
 }
-body.theme-yak .chassis-screen-spec {
+#console-window.lcd-theme-yak .chassis-screen-spec {
   color: #8c6035;
 }
 
@@ -337,7 +780,7 @@ body.theme-yak .preset-btn-card.active {
 body.theme-yak .preset-btn-card.active .preset-name {
   color: #e6ad65;
 }
-body.theme-yak .mini-lcd-canvas {
+#mini-lcd-canvas.lcd-theme-yak {
   border-color: rgba(212, 138, 55, 0.45);
   background: #060c08;
 }
@@ -410,6 +853,9 @@ body.theme-yak .smart-meta-cell {
   border-radius: 4px;
   border: 1px solid rgba(37, 194, 160, 0.35);
   letter-spacing: 1px;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
 }
 .suite-telemetry-pills {
   display: flex;
@@ -683,6 +1129,7 @@ body.drawer-is-open .chassis-workbench-stage {
   z-index: 50;
   position: relative;
   background: linear-gradient(180deg, #1b2430 0%, #121922 60%, #0d121a 100%);
+  color: #eaf1f8;
   border-radius: 18px;
   padding: 26px 36px 26px 36px;
   box-shadow: 
@@ -1465,6 +1912,95 @@ body.drawer-is-open .chassis-workbench-stage {
 }
 
 /* =========================================================================
+   THEME PALETTE GRID & ACCENT PICKER
+   ========================================================================= */
+.theme-palette-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-top: 8px;
+}
+.theme-preset-card {
+  background: #141f2d;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 9px;
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.18s ease;
+  user-select: none;
+}
+.theme-preset-card:hover {
+  background: #1b2a3d;
+  border-color: rgba(0, 240, 255, 0.4);
+  transform: translateY(-1px);
+}
+.theme-preset-card.active {
+  background: rgba(0, 240, 255, 0.12);
+  border-color: var(--brand, #00f0ff);
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.25);
+}
+.theme-swatch-circle {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+}
+.theme-preset-info {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  overflow: hidden;
+}
+.theme-preset-name {
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.theme-preset-card.active .theme-preset-name {
+  color: var(--brand, #00f0ff);
+}
+.theme-preset-desc {
+  font-size: 9px;
+  color: var(--muted);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.custom-color-chips {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.color-chip-btn {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+.color-chip-btn:hover {
+  transform: scale(1.2);
+}
+.color-chip-btn.active {
+  border-color: #fff;
+  transform: scale(1.18);
+  box-shadow: 0 0 8px currentColor;
+}
+
+/* =========================================================================
    GENERIC DRAWER CARDS & STYLING
    ========================================================================= */
 .drawer-cards-flow { display: flex; flex-direction: column; gap: 12px; width: 100%; }
@@ -1693,7 +2229,7 @@ body.theme-yak select.fan-preset-select:focus {
 
 .drawer-card { background: #151f2b; border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 10px; transition: opacity 0.25s ease, filter 0.25s ease; width: 100%; }
 .card-headline { display: flex; justify-content: space-between; align-items: center; }
-.card-head-title { font-size: 13px; font-weight: 800; color: #f1f5f9; display: flex; align-items: center; }
+.card-head-title { font-size: 13px; font-weight: 800; color: #f1f5f9; display: flex; align-items: center; white-space: nowrap; }
 .card-head-val { font-size: 14px; font-weight: 800; color: var(--ok2); }
 .card-instruction { font-size: 11px; color: var(--muted); line-height: 1.35; }
 
@@ -1772,7 +2308,7 @@ input:checked + .toggle-slider:before { transform: translateX(18px); background-
   align-items: center;
   justify-content: center;
 }
-body.theme-yak .mini-lcd-canvas {
+#mini-lcd-canvas.lcd-theme-yak {
   border-color: rgba(212, 138, 55, 0.45);
 }
 .mini-preview-inner {
@@ -2094,6 +2630,11 @@ select.tz-select-input option, select.tz-select option {
   opacity: 0 !important;
   pointer-events: none !important;
   visibility: hidden !important;
+}
+
+#console-modal-overlay,
+#management-modal-overlay {
+  z-index: var(--z-window-base, 1000);
 }
 
 #console-modal-overlay.open,
@@ -2874,6 +3415,314 @@ select.tz-select-input option, select.tz-select option {
 .btn-container-act:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* Docker Toolbar & Filter Pills */
+.docker-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.docker-filter-pills {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.docker-filter-btn {
+  padding: 3px 9px;
+  font-size: 10px;
+  border-radius: 4px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--muted);
+  transition: all 0.15s ease;
+}
+.docker-filter-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+.docker-filter-btn.active {
+  background: var(--accent-cyan, #00f0ff) !important;
+  color: #0b0f17 !important;
+  font-weight: 700;
+  border-color: var(--accent-cyan, #00f0ff) !important;
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.25);
+}
+.docker-count-badge {
+  display: inline-block;
+  padding: 1px 5px;
+  font-size: 9px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.15);
+  font-family: var(--font-mono, monospace);
+  font-weight: 700;
+}
+.docker-filter-btn.active .docker-count-badge {
+  background: rgba(0, 0, 0, 0.25);
+  color: #000;
+}
+
+/* Web UI One-Click Badge */
+.btn-webui-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--accent-cyan, #00f0ff);
+  background: rgba(0, 240, 255, 0.1);
+  border: 1px solid rgba(0, 240, 255, 0.35);
+  text-decoration: none;
+  transition: all 0.15s ease;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn-webui-badge:hover {
+  background: rgba(0, 240, 255, 0.25);
+  border-color: var(--accent-cyan, #00f0ff);
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.35);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+/* Secondary Port Monospace Tags */
+.docker-port-tag {
+  display: inline-block;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-family: var(--font-mono, monospace);
+  font-size: 9.5px;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+/* Hardware Badges (HAL) */
+.docker-hw-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-right: 4px;
+}
+.docker-hw-gpu {
+  background: rgba(0, 240, 255, 0.12);
+  color: var(--accent-cyan, #00f0ff);
+  border: 1px solid rgba(0, 240, 255, 0.3);
+}
+.docker-hw-nvidia {
+  background: rgba(34, 197, 94, 0.12);
+  color: #22c55e;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+.docker-hw-rocm {
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+.docker-hw-tpu {
+  background: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+.docker-hw-serial {
+  background: rgba(245, 158, 11, 0.12);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+/* Stack & Origin Badges */
+.docker-stack-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 9px;
+  font-weight: 600;
+  color: #a78bfa;
+  background: rgba(167, 139, 250, 0.12);
+  border: 1px solid rgba(167, 139, 250, 0.25);
+  margin-top: 3px;
+}
+.docker-origin-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 9px;
+  font-weight: 500;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  margin-top: 3px;
+}
+
+/* Live Telemetry Pill */
+.docker-telemetry-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  color: #cbd5e1;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 2px 7px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+.docker-telemetry-pill .telem-cpu {
+  color: var(--accent-cyan, #00f0ff);
+  font-weight: 600;
+}
+.docker-telemetry-pill .telem-mem {
+  color: #e2e8f0;
+}
+
+/* Container Inspector Modal & Compose Viewer */
+.container-inspector-window {
+  width: 780px;
+  max-width: 95vw;
+  height: 580px;
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  background: rgba(13, 17, 23, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9), 0 0 30px rgba(0, 240, 255, 0.08);
+}
+
+.ci-nav-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 8px 14px;
+  background: rgba(0, 0, 0, 0.35);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.ci-tab-btn {
+  font-size: 11px;
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-weight: 600;
+  transition: all 0.15s ease;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+
+.ci-tab-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.ci-tab-btn.active {
+  color: #fff;
+  background: rgba(0, 240, 255, 0.15);
+  border-color: rgba(0, 240, 255, 0.4);
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+}
+
+.ci-panes-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px;
+  box-sizing: border-box;
+}
+
+.ci-metric-card {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 12px;
+  border-radius: 8px;
+  transition: border-color 0.15s ease;
+}
+
+.ci-metric-card:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.ci-state-pill {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.btn-reveal-fm {
+  font-size: 9.5px;
+  padding: 3px 8px;
+  background: rgba(14, 165, 233, 0.12);
+  color: var(--accent-cyan, #00f0ff);
+  border: 1px solid rgba(14, 165, 233, 0.3);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-reveal-fm:hover {
+  background: rgba(14, 165, 233, 0.25);
+  border-color: var(--accent-cyan, #00f0ff);
+  color: #fff;
+  box-shadow: 0 0 8px rgba(0, 240, 255, 0.3);
+}
+
+.ci-proto-tag {
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 9.5px;
+  font-family: var(--font-mono, monospace);
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.btn-docker-inspect {
+  background: rgba(0, 240, 255, 0.1);
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  color: var(--accent-cyan, #00f0ff);
+  transition: all 0.15s ease;
+}
+
+.btn-docker-inspect:hover {
+  background: rgba(0, 240, 255, 0.25);
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.35);
+  color: #fff;
+}
+
+.btn-docker-name-link {
+  transition: color 0.15s ease, text-shadow 0.15s ease;
+}
+
+.btn-docker-name-link:hover {
+  color: var(--accent-cyan, #00f0ff) !important;
+  text-shadow: 0 0 8px rgba(0, 240, 255, 0.4);
 }
 
 /* Metrics Device Filter Row & Badges */
@@ -4476,7 +5325,7 @@ body.theme-yak .lcd-dot.active {
 
   body.theme-yak #management-modal-overlay .mgmt-content-pane,
   body.theme-yak .fm-viewport,
-  body.theme-yak #console-window.chassis-front-panel,
+  #console-window.lcd-theme-yak.chassis-front-panel,
   body.theme-yak .smart-modal-window,
   body.theme-yak .smart-modal-body,
   body.theme-yak .slide-drawer {
@@ -4485,7 +5334,7 @@ body.theme-yak .lcd-dot.active {
 
   body.theme-yak #management-modal-overlay .mgmt-content-pane::-webkit-scrollbar-thumb,
   body.theme-yak .fm-viewport::-webkit-scrollbar-thumb,
-  body.theme-yak #console-window.chassis-front-panel::-webkit-scrollbar-thumb,
+  #console-window.lcd-theme-yak.chassis-front-panel::-webkit-scrollbar-thumb,
   body.theme-yak .smart-modal-window::-webkit-scrollbar-thumb,
   body.theme-yak .smart-modal-body::-webkit-scrollbar-thumb,
   body.theme-yak .slide-drawer::-webkit-scrollbar-thumb {
@@ -5330,7 +6179,7 @@ body.mobile-mode .slide-drawer::-webkit-scrollbar-thumb:active {
 
 body.mobile-mode.theme-yak #management-modal-overlay .mgmt-content-pane,
 body.mobile-mode.theme-yak .fm-viewport,
-body.mobile-mode.theme-yak #console-window.chassis-front-panel,
+body.mobile-mode #console-window.lcd-theme-yak.chassis-front-panel,
 body.mobile-mode.theme-yak .smart-modal-window,
 body.mobile-mode.theme-yak .smart-modal-body,
 body.mobile-mode.theme-yak .slide-drawer {
@@ -5339,7 +6188,7 @@ body.mobile-mode.theme-yak .slide-drawer {
 
 body.mobile-mode.theme-yak #management-modal-overlay .mgmt-content-pane::-webkit-scrollbar-thumb,
 body.mobile-mode.theme-yak .fm-viewport::-webkit-scrollbar-thumb,
-body.mobile-mode.theme-yak #console-window.chassis-front-panel::-webkit-scrollbar-thumb,
+body.mobile-mode #console-window.lcd-theme-yak.chassis-front-panel::-webkit-scrollbar-thumb,
 body.mobile-mode.theme-yak .smart-modal-window::-webkit-scrollbar-thumb,
 body.mobile-mode.theme-yak .smart-modal-body::-webkit-scrollbar-thumb,
 body.mobile-mode.theme-yak .slide-drawer::-webkit-scrollbar-thumb {

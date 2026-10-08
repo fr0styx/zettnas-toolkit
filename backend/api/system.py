@@ -9,6 +9,7 @@ import time
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
+from typing import Any, Dict, List, Optional
 
 import backend.config as config
 from backend import __version__
@@ -431,6 +432,111 @@ async def post_docker_container_action(container_id: str, req: DockerActionReque
     if not res.get("success"):
         raise HTTPException(status_code=400, detail=res.get("error", "Action failed"))
     return res
+
+
+@router.get("/docker/containers/{container_id}/compose")
+async def get_docker_container_compose(container_id: str):
+    if not container_id or not re.match(r"^[a-zA-Z0-9_.-]{1,128}$", container_id):
+        raise HTTPException(status_code=400, detail="Invalid container ID or name")
+    from backend.services.compose_synthesizer import get_container_compose_data
+
+    data = await asyncio.to_thread(get_container_compose_data, container_id)
+    if "error" in data:
+        raise HTTPException(status_code=404, detail=data["error"])
+    return data
+
+
+@router.get("/docker/containers/{container_id}/details")
+async def get_docker_container_details(container_id: str):
+    if not container_id or not re.match(r"^[a-zA-Z0-9_.-]{1,128}$", container_id):
+        raise HTTPException(status_code=400, detail="Invalid container ID or name")
+    from backend.services.compose_synthesizer import get_container_full_details
+
+    data = await asyncio.to_thread(get_container_full_details, container_id)
+    if "error" in data:
+        raise HTTPException(status_code=404, detail=data["error"])
+    return data
+
+
+@router.get("/docker/containers/{container_id}/logs")
+async def get_docker_container_logs(container_id: str, tail: int = 200):
+    if not container_id or not re.match(r"^[a-zA-Z0-9_.-]{1,128}$", container_id):
+        raise HTTPException(status_code=400, detail="Invalid container ID or name")
+    from backend.services.compose_synthesizer import get_container_logs_chunk
+
+    return await asyncio.to_thread(get_container_logs_chunk, container_id, tail)
+
+
+class DockerResourceUpdateRequest(BaseModel):
+    memory_mb: Optional[int] = None
+    nano_cpus: Optional[float] = None
+    cpu_shares: Optional[int] = None
+    restart_policy: Optional[str] = None
+
+
+@router.post("/docker/containers/{container_id}/resources")
+async def post_docker_container_resources(container_id: str, req: DockerResourceUpdateRequest):
+    if not container_id or not re.match(r"^[a-zA-Z0-9_.-]{1,128}$", container_id):
+        raise HTTPException(status_code=400, detail="Invalid container ID or name")
+    from backend.services.container_mutator import update_container_resources
+
+    try:
+        res = await asyncio.to_thread(
+            update_container_resources,
+            container_id,
+            memory_mb=req.memory_mb,
+            nano_cpus=req.nano_cpus,
+            cpu_shares=req.cpu_shares,
+            restart_policy=req.restart_policy,
+        )
+        return res
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"[Docker] Resource update failed for {container_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class PortMappingItem(BaseModel):
+    container_port: int
+    host_port: Optional[int] = None
+    proto: str = "tcp"
+    host_ip: str = "0.0.0.0"
+
+
+class DockerPortRecreateRequest(BaseModel):
+    ports: List[PortMappingItem]
+    keep_backup: bool = False
+
+
+@router.post("/docker/containers/{container_id}/ports")
+async def post_docker_container_ports(container_id: str, req: DockerPortRecreateRequest):
+    if not container_id or not re.match(r"^[a-zA-Z0-9_.-]{1,128}$", container_id):
+        raise HTTPException(status_code=400, detail="Invalid container ID or name")
+    from backend.services.container_mutator import recreate_container_ports
+
+    try:
+        ports_dicts = [p.model_dump() for p in req.ports]
+        res = await asyncio.to_thread(
+            recreate_container_ports,
+            container_id,
+            new_port_bindings=ports_dicts,
+            keep_backup=req.keep_backup,
+        )
+        return res
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"[Docker] Port recreate failed for {container_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/docker/check_port")
+async def get_check_port(port: int, proto: str = "tcp"):
+    from backend.services.container_mutator import check_port_available
+
+    available = await asyncio.to_thread(check_port_available, port, proto)
+    return {"port": port, "proto": proto, "available": available}
 
 
 @router.get("/ups")

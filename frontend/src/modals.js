@@ -489,7 +489,40 @@ export function openEventDetailModal(ev) {
   let actionLabel = null;
   let actionFn = null;
 
-  if (/fan|thermal|temp|rpm|pwm|curve|cooling|cpu/.test(searchStr)) {
+  // 1. SD Card / TF Card / Media Slots / Ingest / Copy Button
+  if (/sd card|tf card|microsd|\bsd\b|\bslot\b|media slot|media ingest|auto-ingest|ingest|card reader|card eject|card insert|copy button|\bcopy\b/.test(searchStr)) {
+    subsystem = "MEDIA & INGEST";
+    actionLabel = t("event_detail.action_media_card", "Open Media Card Settings");
+    actionFn = () => {
+      closeEventDetailModal();
+      if (typeof window.openDrawer === "function") {
+        window.openDrawer("tab-buttons");
+      } else {
+        const drawerBtn = document.getElementById("drawer-toggle-btn") || document.getElementById("suite-toolkit-btn");
+        if (drawerBtn) drawerBtn.click();
+        const tabBtn = document.querySelector('.drawer-tab-btn[data-tab="tab-buttons"]');
+        if (tabBtn) tabBtn.click();
+      }
+    };
+  }
+  // 2. LED Strip / Lightbar / Night Mode
+  else if (/\bled\b|lightbar|argb|\brgb\b|lighting|night mode|blackout/.test(searchStr)) {
+    subsystem = "ARGB LIGHTBAR";
+    actionLabel = t("event_detail.action_led", "Open LED Controls");
+    actionFn = () => {
+      closeEventDetailModal();
+      if (typeof window.openDrawer === "function") {
+        window.openDrawer("tab-led");
+      } else {
+        const drawerBtn = document.getElementById("drawer-toggle-btn") || document.getElementById("suite-toolkit-btn");
+        if (drawerBtn) drawerBtn.click();
+        const tabBtn = document.querySelector('.drawer-tab-btn[data-tab="tab-led"]');
+        if (tabBtn) tabBtn.click();
+      }
+    };
+  }
+  // 3. Thermal & Fans
+  else if (/\bfans?\b|thermal|\btemps?\b|temperature|\brpm\b|\bpwm\b|fan curve|cooling|\bcpu\b|zero[ -]?rpm|tachometer|hysteresis/.test(searchStr)) {
     subsystem = "THERMAL & FANS";
     actionLabel = t("event_detail.action_thermal", "Open Fan Control");
     actionFn = () => {
@@ -503,7 +536,44 @@ export function openEventDetailModal(ev) {
         if (fanTab) fanTab.click();
       }
     };
-  } else if (/smart|disk|nvme|drive|tbw|sector|storage|zpool|btrfs|ata|health/.test(searchStr)) {
+  }
+  // 4. File Explorer & Recycle Bin
+  else if (/file explorer|recycle bin|file deleted|file uploaded|fs_upload|\btrash\b/.test(searchStr)) {
+    subsystem = "FILE EXPLORER";
+    actionLabel = t("event_detail.action_files", "Open File Explorer");
+    actionFn = () => {
+      closeEventDetailModal();
+      if (/recycle bin|trash/.test(searchStr) && typeof window.openRecycleBin === "function") {
+        window.openRecycleBin();
+      } else {
+        ZettEventBus.emit('window:open', { id: 'file-manager-window' });
+      }
+    };
+  }
+  // 5. Security & Access
+  else if (/security|\btokens?\b|api token|password|\bauth\b|login|unauthorized|credential|permission/.test(searchStr)) {
+    subsystem = "SECURITY & ACCESS";
+    actionLabel = t("event_detail.action_security", "Open Security Settings");
+    actionFn = () => {
+      closeEventDetailModal();
+      if (typeof window.openManagementWindow === "function") {
+        window.openManagementWindow("mgmt-pane-security");
+      }
+    };
+  }
+  // 6. Power & UPS
+  else if (/\bups\b|battery|\bpower\b|\bnut\b|apcupsd|charge|runtime|on-battery|on battery/.test(searchStr)) {
+    subsystem = "POWER & UPS";
+    actionLabel = t("event_detail.action_ups", "Open Power & UPS");
+    actionFn = () => {
+      closeEventDetailModal();
+      if (typeof window.openManagementWindow === "function") {
+        window.openManagementWindow("mgmt-sec-ups");
+      }
+    };
+  }
+  // 7. Storage & S.M.A.R.T. Disks
+  else if (/smart|\bdisks?\b|\bnvme\b|\bdrives?\b|tbw|sectors?|storage|zpool|btrfs|\bata\b|drive health|degradation/.test(searchStr)) {
     subsystem = "STORAGE & S.M.A.R.T.";
     actionLabel = t("event_detail.action_smart", "Inspect S.M.A.R.T.");
     actionFn = () => {
@@ -519,7 +589,9 @@ export function openEventDetailModal(ev) {
         openSmartModal();
       }
     };
-  } else if (/docker|container|compose|cgroup/.test(searchStr)) {
+  }
+  // 8. Docker Containers
+  else if (/\bdocker\b|\bcontainers?\b|compose|cgroup/.test(searchStr)) {
     subsystem = "DOCKER CONTAINERS";
     actionLabel = t("event_detail.action_docker", "Open Container Telemetry");
     actionFn = () => {
@@ -528,22 +600,75 @@ export function openEventDetailModal(ev) {
         window.openManagementWindow("mgmt-pane-docker");
       }
     };
-  } else if (/ups|battery|power|nut|charge|runtime/.test(searchStr)) {
-    subsystem = "POWER & UPS";
-    actionLabel = t("event_detail.action_management", "Open Management");
+  }
+  // 9. Unraid OS & Array
+  else if (/unraid|\barray\b|parity|mover|disks\.ini|var\.ini/.test(searchStr)) {
+    subsystem = "UNRAID OS & ARRAY";
+    actionLabel = t("event_detail.action_unraid", "Open Array Status");
     actionFn = () => {
       closeEventDetailModal();
       if (typeof window.openManagementWindow === "function") {
         window.openManagementWindow("mgmt-pane-unraid");
       }
     };
-  } else {
+  }
+  // 10. Dashboard Layout & Widgets
+  else if (/layout|\bwidgets?\b|dashboard layout|tachometer card/.test(searchStr)) {
+    subsystem = "DASHBOARD LAYOUT";
+    actionLabel = t("event_detail.action_layout", "Customize Dashboard");
+    actionFn = () => {
+      closeEventDetailModal();
+      if (typeof window.openDrawer === "function") {
+        window.openDrawer("tab-layout");
+      } else {
+        const drawerBtn = document.getElementById("drawer-toggle-btn") || document.getElementById("suite-toolkit-btn");
+        if (drawerBtn) drawerBtn.click();
+        const tabBtn = document.querySelector('.drawer-tab-btn[data-tab="tab-layout"]');
+        if (tabBtn) tabBtn.click();
+      }
+    };
+  }
+  // 11. System Console
+  else if (/console|terminal|\bpty\b|\bshell\b|stdout|stderr/.test(searchStr)) {
+    subsystem = "SYSTEM CONSOLE";
+    actionLabel = t("event_detail.action_console", "Open System Console");
+    actionFn = () => {
+      closeEventDetailModal();
+      if (typeof window.openConsoleWindow === "function") {
+        window.openConsoleWindow();
+      }
+    };
+  }
+  // 12. Appearance & Wallpaper
+  else if (/wallpaper|\btheme\b|appearance|dark mode/.test(searchStr)) {
+    subsystem = "APPEARANCE & THEME";
+    actionLabel = t("event_detail.action_wallpaper", "Open Wallpaper Settings");
+    actionFn = () => {
+      closeEventDetailModal();
+      if (typeof window.openManagementWindow === "function") {
+        window.openManagementWindow("mgmt-pane-wallpaper");
+      }
+    };
+  }
+  // 13. System Metrics & Telemetry
+  else if (/metrics|telemetry|load average|ram usage|memory usage|network bandwidth/.test(searchStr)) {
+    subsystem = "SYSTEM METRICS";
+    actionLabel = t("event_detail.action_metrics", "Open Activity Monitor");
+    actionFn = () => {
+      closeEventDetailModal();
+      if (typeof window.openManagementWindow === "function") {
+        window.openManagementWindow("mgmt-pane-metrics");
+      }
+    };
+  }
+  // 14. Fallback: Full Event Log
+  else {
     subsystem = "SYSTEM LOG";
     actionLabel = t("event_detail.action_events", "Open Full Event Log");
     actionFn = () => {
       closeEventDetailModal();
       if (typeof window.openManagementWindow === "function") {
-        window.openManagementWindow();
+        window.openManagementWindow("mgmt-pane-events");
       }
     };
   }

@@ -6,7 +6,7 @@ import { api, auth, ApiError } from '../api.js';
 import { state, ZOOM_PROFILES } from '../state.js';
 import { ZettEventBus } from '../event-bus.js';
 import { showToast, showConfirmToast } from '../toast.js';
-import { applyTheme } from './dashboard.js';
+import { applyTheme, applyDesktopTheme, applyLcdTheme } from './dashboard.js';
 import { applyDashboardLayout, persistDashboardLayout, fitMiniPreviewScale, syncMiniPreviewTelemetry } from './mini-preview.js';
 import { fetchAndRenderMetrics } from './metrics-chart.js';
 import { t } from '../i18n.js';
@@ -120,6 +120,9 @@ export function initSettings() {
       applyTheme(state.currentTheme === 'yak' ? 'cyber' : 'yak');
     });
   }
+
+  // --- Theme & Color Scheme Controls ---
+  initThemeControls();
 
   // --- Clock Format & Timezone ---
   const clockFmtBtn = $('clock-format-btn');
@@ -644,17 +647,394 @@ export function initSettings() {
     if (copySaveBtn) {
       copySaveBtn.textContent = t('settings.btn_save_config', '💾 Save Configuration');
     }
+    syncThemeSettingsUI();
   });
 }
 
+let saveLcdDebounce = null;
+export async function saveLcdThemeToServer(theme, customAccent, textClarity) {
+  clearTimeout(saveLcdDebounce);
+  saveLcdDebounce = setTimeout(async () => {
+    try {
+      const token = auth.getToken();
+      await window.fetch('/api/system/client-preferences', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({
+          lcd_theme: theme,
+          lcd_custom_accent: customAccent || '',
+          lcd_text_clarity: textClarity ? 'true' : 'false'
+        })
+      });
+    } catch (e) {
+      console.warn('[LCD THEME] Failed syncing LCD theme to server:', e);
+    }
+  }, 150);
+}
 
+let saveDesktopDebounce = null;
+export async function saveDesktopThemeToServer(theme, customAccent) {
+  clearTimeout(saveDesktopDebounce);
+  saveDesktopDebounce = setTimeout(async () => {
+    try {
+      const token = auth.getToken();
+      await window.fetch('/api/system/client-preferences', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({
+          desktop_theme: theme,
+          desktop_custom_accent: customAccent || ''
+        })
+      });
+    } catch (e) {
+      console.warn('[DESKTOP THEME] Failed syncing desktop theme to server:', e);
+    }
+  }, 150);
+}
+
+export async function saveThemeToServer(theme, customAccent, textClarity) {
+  saveDesktopThemeToServer(theme, customAccent);
+  if (textClarity !== undefined && textClarity !== null) {
+    saveLcdThemeToServer(theme, customAccent, textClarity);
+  }
+}
+
+const THEME_NAMES = {
+  cyber: 'CYBER TEAL',
+  amber: 'AMBER GOLD',
+  emerald: 'EMERALD MATRIX',
+  sapphire: 'SAPPHIRE ICE',
+  amethyst: 'AMETHYST VIOLET',
+  crimson: 'CRIMSON RUBY',
+  light: 'DAYLIGHT WHITE',
+  yak: 'YAK BRONZE'
+};
+
+// --- Desktop Theme Workstation (Mission Control -> Appearance) ---
+export function syncDesktopThemeUI() {
+  const curTheme = state.desktopTheme || 'cyber';
+  const curAccent = state.desktopCustomAccent || '';
+
+  document.querySelectorAll('.desktop-theme-preset').forEach((card) => {
+    const isThis = card.dataset.themeId === curTheme;
+    card.classList.toggle('active', isThis);
+    if (isThis) {
+      card.setAttribute('aria-selected', 'true');
+    } else {
+      card.removeAttribute('aria-selected');
+    }
+  });
+
+  const badge = $('desktop-theme-active-badge');
+  if (badge) {
+    const localized = t('settings.theme_' + curTheme, THEME_NAMES[curTheme] || curTheme.toUpperCase());
+    badge.textContent = localized.toUpperCase();
+    const themeBrandColor = curTheme === 'amber' ? '#ffbe40' : curTheme === 'emerald' ? '#3bf58b' : curTheme === 'sapphire' ? '#38bdf8' : curTheme === 'amethyst' ? '#c084fc' : curTheme === 'crimson' ? '#f43f5e' : curTheme === 'yak' ? '#d48a37' : '#00f0ff';
+    badge.style.color = curAccent || themeBrandColor;
+    badge.style.borderColor = curAccent || themeBrandColor;
+  }
+
+  const picker = $('desktop-custom-color-picker');
+  const hexVal = $('desktop-custom-hex-val');
+  if (picker && curAccent) {
+    picker.value = curAccent;
+  }
+  if (hexVal) {
+    hexVal.textContent = (curAccent || (curTheme === 'amber' ? '#ffbe40' : curTheme === 'emerald' ? '#3bf58b' : curTheme === 'sapphire' ? '#38bdf8' : curTheme === 'amethyst' ? '#c084fc' : curTheme === 'crimson' ? '#fb7185' : curTheme === 'yak' ? '#d48a37' : '#00f0ff')).toUpperCase();
+  }
+
+  document.querySelectorAll('.desktop-color-chip').forEach((chip) => {
+    chip.classList.toggle('active', chip.dataset.color && chip.dataset.color.toLowerCase() === curAccent.toLowerCase());
+  });
+}
+
+export function initDesktopThemeControls() {
+  const container = $('mgmt-pane-theme');
+  if (!container) return;
+
+  container.querySelectorAll('.desktop-theme-preset').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const themeId = btn.dataset.themeId;
+      if (!themeId) return;
+      applyDesktopTheme(themeId, state.desktopCustomAccent);
+      saveDesktopThemeToServer(themeId, state.desktopCustomAccent);
+      syncDesktopThemeUI();
+    });
+  });
+
+  const picker = $('desktop-custom-color-picker');
+  if (picker) {
+    picker.addEventListener('input', (e) => {
+      const hex = e.target.value;
+      applyDesktopTheme(state.desktopTheme, hex);
+      syncDesktopThemeUI();
+    });
+    picker.addEventListener('change', (e) => {
+      const hex = e.target.value;
+      applyDesktopTheme(state.desktopTheme, hex);
+      saveDesktopThemeToServer(state.desktopTheme, hex);
+      syncDesktopThemeUI();
+    });
+  }
+
+  container.querySelectorAll('.desktop-color-chip').forEach((chip) => {
+    chip.addEventListener('click', () => {
+      const color = chip.dataset.color;
+      if (!color) return;
+      applyDesktopTheme(state.desktopTheme, color);
+      saveDesktopThemeToServer(state.desktopTheme, color);
+      syncDesktopThemeUI();
+    });
+  });
+
+  const resetBtn = $('desktop-theme-reset-accent-btn');
+  if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+      applyDesktopTheme(state.desktopTheme, '');
+      saveDesktopThemeToServer(state.desktopTheme, '');
+      syncDesktopThemeUI();
+    });
+  }
+
+  ZettEventBus.on('desktop_theme:changed', () => {
+    syncDesktopThemeUI();
+  });
+
+  syncDesktopThemeUI();
+}
+
+// --- Simple LCD Screen Themer (Hardware Settings -> Dashboard Layout) ---
+export function syncLcdThemeUI() {
+  const curTheme = state.lcdTheme || 'cyber';
+  const curAccent = state.lcdCustomAccent || '';
+  const curClarity = state.lcdTextClarity !== false;
+
+  document.querySelectorAll('.lcd-theme-chip').forEach((chip) => {
+    const isThis = chip.dataset.lcdTheme === curTheme;
+    chip.classList.toggle('active', isThis);
+    if (isThis) {
+      chip.setAttribute('aria-selected', 'true');
+    } else {
+      chip.removeAttribute('aria-selected');
+    }
+  });
+
+  const badge = $('lcd-theme-active-badge');
+  if (badge) {
+    const localized = t('settings.theme_' + curTheme, THEME_NAMES[curTheme] || curTheme.toUpperCase());
+    badge.textContent = localized.toUpperCase();
+    badge.style.color = curAccent || 'var(--brand, #00f0ff)';
+    badge.style.borderColor = curAccent || 'var(--brand, #00f0ff)';
+  }
+
+  const picker = $('lcd-custom-color-picker');
+  const hexVal = $('lcd-custom-hex-val');
+  if (picker && curAccent) {
+    picker.value = curAccent;
+  }
+  if (hexVal) {
+    hexVal.textContent = (curAccent || (curTheme === 'amber' ? '#ffbe40' : curTheme === 'emerald' ? '#3bf58b' : curTheme === 'sapphire' ? '#38bdf8' : curTheme === 'amethyst' ? '#c084fc' : curTheme === 'crimson' ? '#fb7185' : curTheme === 'yak' ? '#d48a37' : '#00f0ff')).toUpperCase();
+  }
+
+  const clarityToggle = $('lcd-text-clarity-toggle');
+  if (clarityToggle) {
+    clarityToggle.checked = curClarity;
+  }
+}
+
+export function initLcdThemeControls() {
+  const container = $('sec-lcd-theme') || document.querySelector('[data-layout-card-id="sec-lcd-theme"]');
+  if (!container) return;
+
+  container.querySelectorAll('.lcd-theme-chip').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const themeId = btn.dataset.lcdTheme;
+      if (!themeId) return;
+      applyLcdTheme(themeId, state.lcdCustomAccent, state.lcdTextClarity);
+      saveLcdThemeToServer(themeId, state.lcdCustomAccent, state.lcdTextClarity);
+      syncLcdThemeUI();
+    });
+  });
+
+  const picker = $('lcd-custom-color-picker');
+  if (picker) {
+    picker.addEventListener('input', (e) => {
+      const hex = e.target.value;
+      applyLcdTheme(state.lcdTheme, hex, state.lcdTextClarity);
+      syncLcdThemeUI();
+    });
+    picker.addEventListener('change', (e) => {
+      const hex = e.target.value;
+      applyLcdTheme(state.lcdTheme, hex, state.lcdTextClarity);
+      saveLcdThemeToServer(state.lcdTheme, hex, state.lcdTextClarity);
+      syncLcdThemeUI();
+    });
+  }
+
+  const resetBtn = $('lcd-reset-accent-btn');
+  if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+      applyLcdTheme(state.lcdTheme, '', state.lcdTextClarity);
+      saveLcdThemeToServer(state.lcdTheme, '', state.lcdTextClarity);
+      syncLcdThemeUI();
+    });
+  }
+
+  const clarityToggle = $('lcd-text-clarity-toggle');
+  if (clarityToggle) {
+    clarityToggle.addEventListener('change', (e) => {
+      const enabled = e.target.checked;
+      applyLcdTheme(state.lcdTheme, state.lcdCustomAccent, enabled);
+      saveLcdThemeToServer(state.lcdTheme, state.lcdCustomAccent, enabled);
+      syncLcdThemeUI();
+    });
+  }
+
+  ZettEventBus.on('lcd_theme:changed', () => {
+    syncLcdThemeUI();
+  });
+
+  syncLcdThemeUI();
+}
+
+// Backward compatibility alias
+export function syncThemeSettingsUI() {
+  syncDesktopThemeUI();
+  syncLcdThemeUI();
+}
+
+export function initThemeControls() {
+  initLcdThemeControls();
+  initDesktopThemeControls();
+}
+
+export function gatherClientPreferences() {
+  const prefs = {};
+  if (typeof localStorage === 'undefined') return prefs;
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (!key) continue;
+    // Exclude volatile session tokens and temporary caches
+    if (key === 'zettnas_token' || key.startsWith('zettnas_weather_cache_') || key.startsWith('zettnas_holiday_cache_')) {
+      continue;
+    }
+    // Capture all ZettNAS desktop configurations, window positions, widgets, dock pinned apps, themes, and layout locks
+    if (key.startsWith('zettnas_') || key.startsWith('lcd_')) {
+      prefs[key] = localStorage.getItem(key);
+    }
+  }
+  return prefs;
+}
+
+export function applyClientPreferences(prefs) {
+  if (!prefs || typeof prefs !== 'object' || typeof localStorage === 'undefined') return;
+  Object.entries(prefs).forEach(([k, v]) => {
+    if (k === 'zettnas_token') return;
+    try {
+      localStorage.setItem(k, typeof v === 'string' ? v : JSON.stringify(v));
+    } catch (e) {
+      console.warn('[BACKUP] Failed restoring preference key:', k, e);
+    }
+  });
+}
+
+export async function syncClientPreferencesFromServerIfEmpty() {
+  if (typeof localStorage === 'undefined' || typeof window === 'undefined') return;
+  // If user has no desktop widgets or theme configured locally, hydrate from server DATA_DIR
+  const hasLocal = localStorage.getItem('zettnas_desktop_widgets_config') || localStorage.getItem('lcd_theme');
+  if (!hasLocal) {
+    try {
+      const token = auth.getToken();
+      const res = await window.fetch('/api/system/client-preferences', {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.preferences && Object.keys(data.preferences).length > 0) {
+          applyClientPreferences(data.preferences);
+          if (data.preferences.desktop_theme || data.preferences.desktop_custom_accent !== undefined) {
+            applyDesktopTheme(
+              data.preferences.desktop_theme || state.desktopTheme,
+              data.preferences.desktop_custom_accent !== undefined ? data.preferences.desktop_custom_accent : state.desktopCustomAccent
+            );
+          }
+          if (data.preferences.lcd_theme || data.preferences.lcd_custom_accent !== undefined || data.preferences.lcd_text_clarity !== undefined) {
+            applyLcdTheme(
+              data.preferences.lcd_theme || state.lcdTheme,
+              data.preferences.lcd_custom_accent !== undefined ? data.preferences.lcd_custom_accent : state.lcdCustomAccent,
+              data.preferences.lcd_text_clarity !== undefined ? data.preferences.lcd_text_clarity !== 'false' : state.lcdTextClarity
+            );
+          }
+        }
+      }
+    } catch {
+      // Quiet fail if network/auth offline
+    }
+  }
+}
 
 export function initSystemTab() {
-  if(typeof renderApiTokens !== 'undefined') renderApiTokens();
+  if (typeof renderApiTokens !== 'undefined') renderApiTokens();
+  syncClientPreferencesFromServerIfEmpty();
   const btnDownload = document.getElementById('btn-backup-download');
   if (btnDownload) {
-    btnDownload.addEventListener('click', () => {
-      window.location.href = '/api/system/backup';
+    btnDownload.addEventListener('click', async () => {
+      const origHtml = btnDownload.innerHTML;
+      try {
+        btnDownload.disabled = true;
+        btnDownload.innerHTML = `<span class="spinner-inline"></span> ${t('settings.generating_backup', 'Generating Backup...')}`;
+
+        // 1. Gather all client settings from localStorage and sync to server
+        const prefs = gatherClientPreferences();
+        const token = auth.getToken();
+        try {
+          await window.fetch('/api/system/client-preferences', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+            },
+            body: JSON.stringify(prefs)
+          });
+        } catch (syncErr) {
+          console.warn('[BACKUP] Client preferences pre-backup sync warning:', syncErr);
+        }
+
+        // 2. Fetch the backup archive stream
+        const res = await window.fetch('/api/system/backup', {
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        });
+        if (!res.ok) throw await ApiError.from(res);
+
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+
+        const disposition = res.headers.get('content-disposition');
+        let filename = `zettnas_backup_${new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)}.zip`;
+        if (disposition && disposition.includes('filename=')) {
+          filename = disposition.split('filename=')[1].replace(/["']/g, '').trim();
+        }
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        a.remove();
+        showToast(t('settings.backup_success', 'Configuration backup downloaded successfully!'), 'success');
+      } catch (err) {
+        showToast(t('settings.backup_failed', 'Backup generation failed: ') + err.message, 'error');
+      } finally {
+        btnDownload.disabled = false;
+        btnDownload.innerHTML = origHtml;
+      }
     });
   }
 
@@ -668,22 +1048,36 @@ export function initSystemTab() {
         uploadInput.value = '';
         return;
       }
-      showConfirmToast('Restore Backup', 'Are you sure you want to restore this configuration? This will overwrite your current settings.', async () => {
-        try {
-          const token = auth.getToken();
-          const res = await window.fetch('/api/system/restore', {
-            method: 'POST',
-            headers: token ? { 'Authorization': `Bearer ${token}` } : {},
-            body: file
-          });
-          if (!res.ok) throw await ApiError.from(res);
-          showToast('Restore successful. You should restart the backend for all changes to apply.', 'success');
-        } catch (err) {
-          showToast('Restore failed: ' + err.message, 'error');
-        } finally {
-          uploadInput.value = '';
+      showConfirmToast(
+        t('settings.restore_confirm_title', 'Restore Configuration'),
+        t('settings.restore_confirm_desc', 'Are you sure you want to restore this configuration? This will restore all hardware settings, fan curves, layouts, widgets, and themes, and reload the interface.'),
+        async () => {
+          try {
+            const token = auth.getToken();
+            const res = await window.fetch('/api/system/restore', {
+              method: 'POST',
+              headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+              body: file
+            });
+            if (!res.ok) throw await ApiError.from(res);
+            const data = await res.json();
+
+            // Restore client preferences to browser localStorage if bundled
+            if (data.client_preferences && typeof data.client_preferences === 'object') {
+              applyClientPreferences(data.client_preferences);
+            }
+
+            showToast(t('settings.restore_success', 'Restore successful! Reloading to apply all configurations...'), 'success');
+            setTimeout(() => {
+              window.location.reload();
+            }, 1200);
+          } catch (err) {
+            showToast(t('settings.restore_failed', 'Restore failed: ') + err.message, 'error');
+          } finally {
+            uploadInput.value = '';
+          }
         }
-      });
+      );
     });
   }
 }
