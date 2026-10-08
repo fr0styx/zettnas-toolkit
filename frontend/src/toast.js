@@ -6,6 +6,7 @@ import { ZettEventBus } from './event-bus.js';
 import { state } from './state.js';
 import { t } from './i18n.js';
 import { escapeHtml } from './utils.js';
+import { triggerHaptic } from './haptics.js';
 
 let _toastContainer = null;
 
@@ -25,12 +26,14 @@ function _getOrCreateToastContainer() {
 
 export function showToast(msg, type = "error") {
   if (state.isLcdDirect || (typeof window !== 'undefined' && window.location.search.includes('mode=lcd')) || (document.body && document.body.classList.contains('lcd-direct'))) return;
+  triggerHaptic(type === 'success' ? 'success' : type === 'warn' ? 'warning' : 'light');
   _showTopNotification(msg, type);
   ZettEventBus.emit('toast:show', { msg, type });
 }
 
 export function showConfirmToast(title, msg, onConfirm, onCancel, options = {}) {
   if (state.isLcdDirect || (typeof window !== 'undefined' && window.location.search.includes('mode=lcd')) || (document.body && document.body.classList.contains('lcd-direct'))) return;
+  triggerHaptic('warning');
   _showTopConfirm(title, msg, onConfirm, onCancel, options);
   ZettEventBus.emit('toast:confirm', { title, msg, onConfirm, onCancel, options });
 }
