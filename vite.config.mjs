@@ -5,6 +5,7 @@ export default defineConfig({
   build: {
     outDir: '../static',
     emptyOutDir: false,
+    chunkSizeWarningLimit: 800,
     rollupOptions: {
       output: {
         manualChunks(id) {

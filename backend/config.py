@@ -25,8 +25,18 @@ LCD_FORMAT = os.environ.get("LCD_FORMAT", "png").lower()
 PORT = int(os.environ.get("PORT", "8082"))
 SHOW_OS_DISK = os.environ.get("SHOW_OS_DISK", "1") == "1"
 
+
 # ---- Data directories & persistent files ----
-DATA_DIR = os.environ.get("DATA_DIR", "/app/data")
+def _default_data_dir() -> str:
+    if "DATA_DIR" in os.environ:
+        return os.environ["DATA_DIR"]
+    if os.path.exists("/app/data") or (os.path.exists("/app") and os.access("/app", os.W_OK)):
+        return "/app/data"
+    repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(repo_root, "data")
+
+
+DATA_DIR = _default_data_dir()
 DB_PATH = os.path.join(DATA_DIR, "history.db")
 LED_STATE_FILE = os.path.join(DATA_DIR, "led_state.json")
 DASH_LAYOUT_FILE = os.environ.get("LAYOUT_PATH", os.path.join(DATA_DIR, "dash_layout.json"))
