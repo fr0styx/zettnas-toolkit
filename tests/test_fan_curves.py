@@ -248,7 +248,7 @@ def test_apply_zone_pwm_kickstart_from_zero(fresh_zone):
     assert res_during == FAN_KICKSTART_PWM
 
     # Once kickstart window expires, smoothly settles at target PWM
-    Z_STATE.fan_state_tracker["pwm9"]["kickstart_until"] -= (FAN_KICKSTART_SECS + 1.0)
+    Z_STATE.fan_state_tracker["pwm9"]["kickstart_until"] -= FAN_KICKSTART_SECS + 1.0
     res_after = apply_zone_pwm(fresh_zone, 67, hold_secs=120, allow_zero=True)
     assert res_after == 67
 
@@ -268,6 +268,7 @@ def test_apply_zone_pwm_no_kickstart_when_already_spinning(fresh_zone):
 
 def test_apply_zone_pwm_zero_rpm_downward_hold(fresh_zone):
     import time
+
     now = time.time()
     # Spinning fan at 67 commanded to 0
     Z_STATE.fan_state_tracker["pwm9"] = {
@@ -300,4 +301,3 @@ def test_apply_zone_pwm_cpu_fan_cannot_zero():
     res = apply_zone_pwm(3, 0, hold_secs=0, allow_zero=True)
     # CPU fan forces allow_zero=False and clamps to FAN_MIN_PWM (58)
     assert res == FAN_MIN_PWM
-

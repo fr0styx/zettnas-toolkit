@@ -130,7 +130,7 @@ def stats_collector_daemon():
             nvme_disks = [d for d in disks if d.get("role") == "cache" or "nvme" in d.get("dev", "")]
             active_nvme = [d["temp"] for d in nvme_disks if d.get("temp") is not None and not d.get("standby", False)]
             t_nvme = max(active_nvme, default=None)
-            nvme_over_ceiling = (t_nvme is not None and t_nvme >= zero_rpm_nvme_ceiling)
+            nvme_over_ceiling = t_nvme is not None and t_nvme >= zero_rpm_nvme_ceiling
 
             # Unraid Storage Subsystem Interlocks (Parity Check & Mover)
             unraid_status = read_unraid_status()
@@ -257,18 +257,32 @@ def stats_collector_daemon():
                 and not nvme_over_ceiling
             )
 
-            st1 = Z_STATE.fan_state_tracker.setdefault("pwm1", {
-                "current": 67, "last_up_time": 0.0, "kickstart_until": 0.0, "last_spinup_time": now, "standby_since": 0.0
-            })
+            st1 = Z_STATE.fan_state_tracker.setdefault(
+                "pwm1",
+                {
+                    "current": 67,
+                    "last_up_time": 0.0,
+                    "kickstart_until": 0.0,
+                    "last_spinup_time": now,
+                    "standby_since": 0.0,
+                },
+            )
             if z1_eligible:
                 if st1.get("standby_since", 0.0) == 0.0:
                     st1["standby_since"] = now
             else:
                 st1["standby_since"] = 0.0
 
-            st2 = Z_STATE.fan_state_tracker.setdefault("pwm2", {
-                "current": 67, "last_up_time": 0.0, "kickstart_until": 0.0, "last_spinup_time": now, "standby_since": 0.0
-            })
+            st2 = Z_STATE.fan_state_tracker.setdefault(
+                "pwm2",
+                {
+                    "current": 67,
+                    "last_up_time": 0.0,
+                    "kickstart_until": 0.0,
+                    "last_spinup_time": now,
+                    "standby_since": 0.0,
+                },
+            )
             if z2_eligible:
                 if st2.get("standby_since", 0.0) == 0.0:
                     st2["standby_since"] = now
@@ -378,7 +392,7 @@ def stats_collector_daemon():
                 is_warn = (len(bad) > 0) or (cpu_temp >= 70)
 
                 if is_failing_fan:
-                    stalled_names = [f"pwm{idx+1}" for idx in stalled_fans]
+                    stalled_names = [f"pwm{idx + 1}" for idx in stalled_fans]
                     add_event(
                         "error",
                         "Fan Stall Detected",

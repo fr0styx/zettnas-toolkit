@@ -37,9 +37,27 @@ from backend.state import Z_STATE
 def reset_fan_state():
     """Reset Z_STATE fan state trackers before each test."""
     Z_STATE.fan_state_tracker = {
-        "pwm1": {"current": 67, "last_up_time": 0.0, "kickstart_until": 0.0, "last_spinup_time": 0.0, "standby_since": 0.0},
-        "pwm2": {"current": 67, "last_up_time": 0.0, "kickstart_until": 0.0, "last_spinup_time": 0.0, "standby_since": 0.0},
-        "pwm3": {"current": 67, "last_up_time": 0.0, "kickstart_until": 0.0, "last_spinup_time": 0.0, "standby_since": 0.0},
+        "pwm1": {
+            "current": 67,
+            "last_up_time": 0.0,
+            "kickstart_until": 0.0,
+            "last_spinup_time": 0.0,
+            "standby_since": 0.0,
+        },
+        "pwm2": {
+            "current": 67,
+            "last_up_time": 0.0,
+            "kickstart_until": 0.0,
+            "last_spinup_time": 0.0,
+            "standby_since": 0.0,
+        },
+        "pwm3": {
+            "current": 67,
+            "last_up_time": 0.0,
+            "kickstart_until": 0.0,
+            "last_spinup_time": 0.0,
+            "standby_since": 0.0,
+        },
     }
     Z_STATE.critical_temp_active = False
     yield
@@ -48,6 +66,7 @@ def reset_fan_state():
 # =========================================================================
 # 1. Chassis Topology & Standby Interlock Tests
 # =========================================================================
+
 
 def test_d4_topology_requires_all_4_disks_in_standby():
     """On D4 chassis (single rear fan cooling all 4 bays), all 4 disks must be in standby."""
@@ -59,7 +78,7 @@ def test_d4_topology_requires_all_4_disks_in_standby():
         {"name": "disk4", "bay": 4, "standby": False, "temp": 33},  # One drive is active
     ]
 
-    is_d4 = (chassis_model == "D4")
+    is_d4 = chassis_model == "D4"
     if is_d4:
         bay_disks = [d for d in disks if d.get("bay") in (1, 2, 3, 4)]
         z1_all_standby = bool(bay_disks and all(d.get("standby", False) for d in bay_disks))
@@ -89,7 +108,7 @@ def test_d8_topology_dual_zone_independence():
         {"name": "disk6", "bay": 6, "standby": False, "temp": 44},
     ]
 
-    is_d4 = (chassis_model == "D4")
+    is_d4 = chassis_model == "D4"
     assert not is_d4
 
     z1_disks = [d for d in disks if d.get("bay") in (1, 2, 3, 4)]
@@ -105,6 +124,7 @@ def test_d8_topology_dual_zone_independence():
 # =========================================================================
 # 2. NVMe Wind-Tunnel Override Tests
 # =========================================================================
+
 
 def test_nvme_ceiling_overrides_zero_rpm():
     """Even if all disks are in standby and disk temps are cold, NVMe >= ceiling revokes Zero RPM."""
@@ -147,6 +167,7 @@ def test_nvme_ceiling_overrides_zero_rpm():
 # 3. Continuous Anti-Flutter Gating Tests
 # =========================================================================
 
+
 def test_anti_flutter_180s_delay_gating():
     """Zero RPM requires 180 continuous seconds of cold standby before stopping fans."""
     now = 1000.0
@@ -166,9 +187,7 @@ def test_anti_flutter_180s_delay_gating():
     # At t=1050 (50s elapsed) -> Not ready
     t_50 = 1050.0
     z1_zero_rpm_ready_50 = bool(
-        z1_eligible
-        and st1.get("standby_since", 0.0) > 0.0
-        and (t_50 - st1["standby_since"]) >= FAN_ZERO_RPM_STOP_DELAY
+        z1_eligible and st1.get("standby_since", 0.0) > 0.0 and (t_50 - st1["standby_since"]) >= FAN_ZERO_RPM_STOP_DELAY
     )
     assert z1_zero_rpm_ready_50 is False
 
@@ -192,6 +211,7 @@ def test_anti_flutter_180s_delay_gating():
 # =========================================================================
 # 4. Single Disk Spinup Breaking Standby & Kickstart Pulse
 # =========================================================================
+
 
 def test_disk_spinup_triggers_kickstart_from_zero():
     """When a disk spins up while fan is stopped at 0 RPM, transition triggers 2.0s 150 PWM kickstart."""
@@ -224,6 +244,7 @@ def test_disk_spinup_triggers_kickstart_from_zero():
 # =========================================================================
 # 5. Storage Subsystem Interlock (Mover / Parity)
 # =========================================================================
+
 
 def test_storage_busy_revokes_zero_rpm():
     """Active mover or parity check prevents fans from stopping."""
@@ -260,6 +281,7 @@ def test_storage_busy_revokes_zero_rpm():
 # 6. Absolute CPU Fan (pwm3) Zero-RPM Immunity
 # =========================================================================
 
+
 def test_cpu_fan_pwm3_never_stops():
     """CPU fan (pwm3) must never stop under any circumstance, even if allow_zero=True is passed."""
     # Attempt direct clamp with allow_zero=True
@@ -279,6 +301,7 @@ def test_cpu_fan_pwm3_never_stops():
 # =========================================================================
 # 7. Reactive Tachometer Stall Detection vs Zero RPM Suppression
 # =========================================================================
+
 
 def test_stall_watchdog_suppression_logic():
     """Stall watchdog must NOT trigger alarm when commanded to 0 or during 6s spinup grace."""
