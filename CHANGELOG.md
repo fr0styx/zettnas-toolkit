@@ -1,5 +1,28 @@
 # ZettNAS Toolkit - Release Changelog
 
+## v1.4.2 (2026-10-08) - Stable
+### ❄️ Zero RPM HDD Standby Fan Mode & Dynamic Thermal Safety Architecture (GitHub Issue #13)
+
+This release delivers the complete implementation of **Zero RPM Fan Mode** for hard drive bay exhaust fans when drives are spun down in standby, coupled with fail-safe thermal watchdogs, chassis wind-tunnel overrides, and BLDC motor anti-stall protection:
+
+- **BLDC Motor Stiction & Stall Protection**:
+  - **Strict Binary Cutoff**: Enforced binary duty cycle clamping in `backend/hardware/fans.py` (`0` or `58..183` PWM) to eliminate motor buzzing, electrical stall currents, and bearing wear within the 1–57 PWM deadband.
+  - **2.0s Kickstart Pulse**: Added non-blocking initial `150 PWM` (~82%) burst upon any transition from stopped (`0`) to spinning (`> 0`) to overcome rotor static friction.
+  - **Absolute CPU Fan (`pwm3`) Invariance**: CPU cooling fan is unconditionally excluded from Zero RPM mode under all conditions, maintaining continuous active cooling.
+- **Chassis Topology & Thermal Overrides**:
+  - **Chassis Topology Awareness**: D4 chassis requires all 4 bay drives to be spun down before stopping its single rear exhaust fan. D6U and D8 chassis support independent spindown per zone (Zone 1: bays 1–4, Zone 2: bays 5+).
+  - **NVMe Wind-Tunnel Override**: Automatically revokes Zero RPM across all bay fans if any M.2 NVMe SSD reaches $\ge 50^\circ\text{C}$ (`zero_rpm_nvme_ceiling`) to preserve critical convective airflow.
+  - **Continuous 180s Anti-Flutter Delay**: Requires 180 continuous seconds of cold temperatures and disk standby before cutting fan power, preventing rapid acoustic cycling.
+  - **Storage Subsystem Interlock**: Active Unraid `mover` or `parity_check` operations automatically prevent fan shutdown.
+  - **Intelligent Stall Watchdog Suppression**: Tachometer stall monitor suppresses false-positive 0 RPM alarms during intentional Zero RPM standby and within the 6.0s spinup grace window.
+- **Frontend Workstation & Multilingual UI**:
+  - **SVG Fan Curve Workstation**: Realigned graphical floor coordinate system ($Y=104$ at $0\%$, dashed threshold line at $Y=77$ for $32\%$ minimum reliable spin). Interactive sliders snap cleanly out of the deadband.
+  - **Calm Ice-Cyan Status Badges**: Stopped fans in Zero RPM mode display `0 (PASSIVE)` with `#38bdf8` styling across dashboard cards, drawers, and LCD previews.
+  - **Multilingual i18n**: Added complete translations for Zero RPM controls and descriptions across English, German, French, Spanish, and Simplified Chinese.
+- **Automated Verification**:
+  - 8 new integration tests in `tests/test_zero_rpm_integration.py` and 6 new frontend tests in `frontend/src/__tests__/zero_rpm_fan_control.test.js`.
+  - Full suite verification: 241/241 backend pytest tests and 46/46 frontend Vitest tests passing with 100% success rate.
+
 ## v1.4.1 (2026-10-07) - Stable
 ### 🛡️ Enterprise Subsystems Hardening, Safety Watchdogs, Container Lockdown & Telemetry Modernization (Audit Batches 7–10)
 
