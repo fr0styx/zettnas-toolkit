@@ -1,0 +1,42 @@
+services:
+  zettnas-toolkit:
+    image: ghcr.io/fr0styx/zettnas-toolkit:latest
+    container_name: zettnas-toolkit
+    restart: unless-stopped
+    ports:
+      - "${PORT:-8082}:8082"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:rw
+      - /dev:/host/dev:rw
+      - /etc/localtime:/etc/localtime:ro
+      - ${STORAGE_POOL_PATH:-/mnt/storage}:/mnt/storage:rw
+      - ./data:/app/data
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - PORT=8082
+      - WEB_PASSWORD=${WEB_PASSWORD:-admin}
+      - NAS_NAME=${NAS_NAME:-ZettNAS}
+      - POOL_PATH=/mnt/storage
+      - HOST_PROC=/host/proc
+      - HOST_SYS=/host/sys
+      - HOST_DEV=/host/dev
+      - LCD_FPS=10
+    tmpfs:
+      - /host/sys/firmware:ro
+      - /host/sys/kernel/debug:ro
+    cap_add:
+      - SYS_RAWIO   # Required for low-level SCSI/SATA SMART queries via SG_IO
+      - SYS_ADMIN   # Required for NVMe ioctls and removable media mounts
+    device_cgroup_rules:
+      - 'c 29:* rwm'    # Framebuffer (/dev/fb0)
+      - 'c 226:* rwm'   # DRI / GPU rendering (/dev/dri/*)
+      - 'c 188:* rwm'   # USB Serial (/dev/ttyUSB*)
+      - 'c 166:* rwm'   # ACM Serial (/dev/ttyACM*)
+      - 'b 8:* rwm'     # SCSI/SATA block devices (/dev/sd*)
+      - 'b 259:* rwm'   # NVMe block devices (/dev/nvme*)
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
