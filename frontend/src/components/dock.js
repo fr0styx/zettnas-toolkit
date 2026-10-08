@@ -3,6 +3,7 @@ import { state } from '../state.js';
 import { t } from '../i18n.js';
 import { ZettEventBus } from '../event-bus.js';
 import { announceA11y } from '../a11y.js';
+import { openSpotlight, initSpotlight } from './spotlight.js';
 /**
  * ZettNAS Toolkit Dock & Window Manager
  * Handles floating modal registration, minimize/restore, dragging, and z-index depth stacking.
@@ -1417,6 +1418,22 @@ export const DockManager = {
     });
     dock.appendChild(dashItem);
 
+    // Spotlight Quick Launcher
+    const spotItem = document.createElement('button');
+    spotItem.type = 'button';
+    spotItem.className = 'dock-item dock-item-spotlight';
+    spotItem.setAttribute('aria-label', 'Spotlight Command Palette (Cmd+K)');
+    spotItem.innerHTML = `<span style="font-size:15px; line-height:1;">🔍</span>`;
+    spotItem.addEventListener('mouseenter', () => showDockTooltip(spotItem, 'spotlight', 'Command Palette (Cmd+K)', '', false));
+    spotItem.addEventListener('focus', () => showDockTooltip(spotItem, 'spotlight', 'Command Palette (Cmd+K)', '', false));
+    spotItem.addEventListener('mouseleave', hideDockTooltip);
+    spotItem.addEventListener('blur', hideDockTooltip);
+    spotItem.addEventListener('click', () => {
+      hideDockTooltip();
+      openSpotlight();
+    });
+    dock.appendChild(spotItem);
+
     // Dynamic apps (pinned + running)
     const pinned = this.getPinnedApps();
     const runningIds = Object.keys(this.windows).filter((id) => !this.windows[id].closed);
@@ -1991,9 +2008,49 @@ export function initDraggableDesktopIcons() {
       });
     } else {
       ctxMenu.innerHTML = `
+        <div class="ctx-item" id="ctx-spotlight">
+          <span style="font-size:11px; margin-right:6px;">⚡</span>
+          <span>Command Palette</span>
+          <kbd style="margin-left:auto; font-size:9px; opacity:0.6;">⌘K</kbd>
+        </div>
+        <div class="ctx-item" id="ctx-open-mc">
+          <span style="font-size:11px; margin-right:6px;">🖥️</span>
+          <span>Mission Control</span>
+        </div>
+        <div class="ctx-item" id="ctx-open-fm">
+          <span style="font-size:11px; margin-right:6px;">📁</span>
+          <span>File Explorer</span>
+        </div>
+        <div style="height:1px; background:rgba(255,255,255,0.08); margin:4px 0;"></div>
         <div class="ctx-item" id="ctx-align-grid">📐 ${t('desktop.align_grid', 'Align to Grid')}</div>
         <div class="ctx-item" id="ctx-sort-name">🔤 ${t('desktop.sort_name', 'Sort by Name')}</div>
+        <div style="height:1px; background:rgba(255,255,255,0.08); margin:4px 0;"></div>
+        <div class="ctx-item" id="ctx-refresh-telemetry">
+          <span style="font-size:11px; margin-right:6px;">🔄</span>
+          <span>Refresh Desktop</span>
+        </div>
       `;
+
+      document.getElementById('ctx-spotlight')?.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        hideMenu();
+        openSpotlight();
+      });
+      document.getElementById('ctx-open-mc')?.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        hideMenu();
+        document.getElementById('management-desktop-icon')?.click();
+      });
+      document.getElementById('ctx-open-fm')?.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        hideMenu();
+        document.getElementById('fm-desktop-icon')?.click();
+      });
+      document.getElementById('ctx-refresh-telemetry')?.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        hideMenu();
+        window.location.reload();
+      });
     }
 
     wireGridAndSort();
@@ -2112,6 +2169,97 @@ export function initDraggableDesktopIcons() {
   window.addEventListener('resize', () => {
     refreshIconPositions();
   });
+
+  initDesktopLasso();
+  initSpotlight();
+}
+
+export function initDesktopLasso() {
+  if (typeof window === 'undefined' || document._desktopLassoInitialized) return;
+
+  let isLassoing = false;
+  let startX = 0, startY = 0;
+  let lassoEl = null;
+
+  document.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0) return;
+    if (document.body.classList.contains('mobile-mode') || window.innerWidth <= 768) return;
+    if (
+      e.target.closest('.smart-modal-window') ||
+      e.target.closest('.smart-modal-backdrop') ||
+      e.target.closest('.os-window') ||
+      e.target.closest('#console-window') ||
+      e.target.closest('.os-context-menu') ||
+      e.target.closest('#os-dock-container') ||
+      e.target.closest('.suite-navbar') ||
+      e.target.closest('.slide-drawer') ||
+      e.target.closest('.chassis-hero-box') ||
+      e.target.closest('.desktop-widget') ||
+      e.target.closest('#spotlight-palette-overlay')
+    ) {
+      if (!e.target.closest('.chassis-hero-box')) {
+        document.querySelectorAll('.desktop-icon-selected').forEach((el) => el.classList.remove('desktop-icon-selected'));
+      }
+      return;
+    }
+
+    document.querySelectorAll('.desktop-icon-selected').forEach((el) => el.classList.remove('desktop-icon-selected'));
+
+    isLassoing = true;
+    startX = e.clientX;
+    startY = e.clientY;
+
+    lassoEl = document.createElement('div');
+    lassoEl.id = 'desktop-lasso-rect';
+    lassoEl.style.left = `${startX}px`;
+    lassoEl.style.top = `${startY}px`;
+    lassoEl.style.width = '0px';
+    lassoEl.style.height = '0px';
+    document.body.appendChild(lassoEl);
+
+    const onPointerMove = (mEvt) => {
+      if (!isLassoing || !lassoEl) return;
+      const currentX = mEvt.clientX;
+      const currentY = mEvt.clientY;
+
+      const left = Math.min(startX, currentX);
+      const top = Math.min(startY, currentY);
+      const width = Math.abs(currentX - startX);
+      const height = Math.abs(currentY - startY);
+
+      lassoEl.style.left = `${left}px`;
+      lassoEl.style.top = `${top}px`;
+      lassoEl.style.width = `${width}px`;
+      lassoEl.style.height = `${height}px`;
+
+      const lassoRect = { left, top, right: left + width, bottom: top + height };
+      document.querySelectorAll('.chassis-hero-box').forEach((icon) => {
+        const iRect = icon.getBoundingClientRect();
+        const overlaps = !(
+          lassoRect.right < iRect.left ||
+          lassoRect.left > iRect.right ||
+          lassoRect.bottom < iRect.top ||
+          lassoRect.top > iRect.bottom
+        );
+        icon.classList.toggle('desktop-icon-selected', overlaps);
+      });
+    };
+
+    const onPointerUp = () => {
+      isLassoing = false;
+      if (lassoEl) {
+        lassoEl.remove();
+        lassoEl = null;
+      }
+      document.removeEventListener('pointermove', onPointerMove);
+      document.removeEventListener('pointerup', onPointerUp);
+    };
+
+    document.addEventListener('pointermove', onPointerMove);
+    document.addEventListener('pointerup', onPointerUp);
+  });
+
+  document._desktopLassoInitialized = true;
 }
 
 function updateNotificationBadge() {
