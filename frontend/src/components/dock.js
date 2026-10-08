@@ -2,6 +2,7 @@ import { escapeHtml } from '../utils.js';
 import { state } from '../state.js';
 import { t } from '../i18n.js';
 import { ZettEventBus } from '../event-bus.js';
+import { announceA11y } from '../a11y.js';
 /**
  * ZettNAS Toolkit Dock & Window Manager
  * Handles floating modal registration, minimize/restore, dragging, and z-index depth stacking.
@@ -131,6 +132,170 @@ export function showDockToast(msg, targetId = null) {
   }, 2200);
 }
 
+export const NAVBAR_OFFSET = 48;
+export const DOCK_MARGIN = 76;
+
+export function getSnapGeometry(snapZone) {
+  const availH = Math.max(200, (typeof window !== 'undefined' ? window.innerHeight : 900) - NAVBAR_OFFSET - DOCK_MARGIN);
+  const winW = typeof window !== 'undefined' ? window.innerWidth : 1440;
+  const halfW = Math.round((winW - 16) / 2);
+  const halfH = Math.round((availH - 8) / 2);
+
+  switch (snapZone) {
+    case 'top-left':
+      return {
+        left: 8,
+        top: NAVBAR_OFFSET,
+        width: halfW,
+        height: halfH,
+        label: 'Top Left (1/4)'
+      };
+    case 'top-right':
+      return {
+        left: 8 + halfW + 8,
+        top: NAVBAR_OFFSET,
+        width: halfW,
+        height: halfH,
+        label: 'Top Right (1/4)'
+      };
+    case 'bottom-left':
+      return {
+        left: 8,
+        top: NAVBAR_OFFSET + halfH + 8,
+        width: halfW,
+        height: halfH,
+        label: 'Bottom Left (1/4)'
+      };
+    case 'bottom-right':
+      return {
+        left: 8 + halfW + 8,
+        top: NAVBAR_OFFSET + halfH + 8,
+        width: halfW,
+        height: halfH,
+        label: 'Bottom Right (1/4)'
+      };
+    case 'left':
+      return {
+        left: 8,
+        top: NAVBAR_OFFSET,
+        width: halfW,
+        height: availH,
+        label: 'Left Half (1/2)'
+      };
+    case 'right':
+      return {
+        left: 8 + halfW + 8,
+        top: NAVBAR_OFFSET,
+        width: halfW,
+        height: availH,
+        label: 'Right Half (1/2)'
+      };
+    case 'maximize':
+      return {
+        left: 8,
+        top: NAVBAR_OFFSET,
+        width: winW - 16,
+        height: availH,
+        label: 'Maximize (Full)'
+      };
+    default:
+      return null;
+  }
+}
+
+export function evaluateSnapZone(clientX, clientY) {
+  if (typeof window === 'undefined') return null;
+  const cornerThreshold = 48;
+  const edgeThreshold = 25;
+  const bottomEdge = window.innerHeight - DOCK_MARGIN;
+
+  // Check 4 corners first
+  if (clientX <= cornerThreshold && clientY <= NAVBAR_OFFSET + cornerThreshold) {
+    return 'top-left';
+  }
+  if (clientX >= window.innerWidth - cornerThreshold && clientY <= NAVBAR_OFFSET + cornerThreshold) {
+    return 'top-right';
+  }
+  if (clientX <= cornerThreshold && clientY >= bottomEdge - cornerThreshold) {
+    return 'bottom-left';
+  }
+  if (clientX >= window.innerWidth - cornerThreshold && clientY >= bottomEdge - cornerThreshold) {
+    return 'bottom-right';
+  }
+
+  // Check edges
+  if (clientY <= NAVBAR_OFFSET + 12 || clientY <= edgeThreshold) {
+    return 'maximize';
+  }
+  if (clientX <= edgeThreshold) {
+    return 'left';
+  }
+  if (clientX >= window.innerWidth - edgeThreshold) {
+    return 'right';
+  }
+
+  return null;
+}
+
+export function applyWindowSnap(dragEl, snapZone, winId) {
+  if (!dragEl || !snapZone) return;
+  const geom = getSnapGeometry(snapZone);
+  if (!geom) return;
+
+  if (!dragEl._preSnapWidth) {
+    const curW = dragEl.offsetWidth || 640;
+    const curH = dragEl.offsetHeight || 400;
+    dragEl._preSnapWidth = `${curW}px`;
+    dragEl._preSnapHeight = `${curH}px`;
+  }
+
+  dragEl.style.transition = 'all 0.22s cubic-bezier(0.16, 1, 0.3, 1)';
+  dragEl.dataset.snapped = snapZone;
+  dragEl.style.position = 'fixed';
+  dragEl.style.transform = 'none';
+
+  if (snapZone === 'maximize') {
+    dragEl.style.left = '8px';
+    dragEl.style.top = '48px';
+    dragEl.style.width = 'calc(100vw - 16px)';
+    dragEl.style.height = 'calc(100vh - 48px - 76px)';
+  } else if (snapZone === 'left') {
+    dragEl.style.left = '8px';
+    dragEl.style.top = '48px';
+    dragEl.style.width = 'calc(50vw - 12px)';
+    dragEl.style.height = 'calc(100vh - 48px - 76px)';
+  } else if (snapZone === 'right') {
+    dragEl.style.left = 'calc(50vw + 4px)';
+    dragEl.style.top = '48px';
+    dragEl.style.width = 'calc(50vw - 12px)';
+    dragEl.style.height = 'calc(100vh - 48px - 76px)';
+  } else {
+    dragEl.style.left = `${geom.left}px`;
+    dragEl.style.top = `${geom.top}px`;
+    dragEl.style.width = `${geom.width}px`;
+    dragEl.style.height = `${geom.height}px`;
+  }
+
+  setTimeout(() => {
+    dragEl.style.transition = 'none';
+  }, 250);
+
+  if (winId) {
+    saveWindowBounds(winId, {
+      left: geom.left,
+      top: geom.top,
+      width: geom.width,
+      height: geom.height,
+      snapped: snapZone
+    });
+    saveOpenWindowsState();
+  }
+
+  if (typeof announceA11y === 'function') {
+    announceA11y(`Window snapped to ${geom.label}`);
+  }
+}
+
 const WIN_BOUNDS_KEY = 'zettnas_window_bounds_v2';
 export const OPEN_WINDOWS_KEY = 'zettnas_open_windows_v1';
 
@@ -208,6 +373,14 @@ export function applySavedBounds(dragEl, winId) {
       dragEl.style.top = '48px';
       dragEl.style.width = 'calc(50vw - 12px)';
       dragEl.style.height = 'calc(100vh - 48px - 76px)';
+    } else {
+      const geom = getSnapGeometry(saved.snapped);
+      if (geom) {
+        dragEl.style.left = `${geom.left}px`;
+        dragEl.style.top = `${geom.top}px`;
+        dragEl.style.width = `${geom.width}px`;
+        dragEl.style.height = `${geom.height}px`;
+      }
     }
   }
 }
@@ -391,7 +564,15 @@ function getOrCreateSnapGhost() {
     ghost = document.createElement('div');
     ghost.id = 'window-snap-ghost';
     ghost.className = 'window-snap-ghost';
+    ghost.setAttribute('aria-hidden', 'true');
+    const badge = document.createElement('div');
+    badge.className = 'snap-ghost-indicator';
+    ghost.appendChild(badge);
     document.body.appendChild(ghost);
+  } else if (!ghost.querySelector('.snap-ghost-indicator')) {
+    const badge = document.createElement('div');
+    badge.className = 'snap-ghost-indicator';
+    ghost.appendChild(badge);
   }
   return ghost;
 }
@@ -475,8 +656,9 @@ export function makeDraggable(dragEl, handleEl, customId) {
     initialMouseX = e.clientX;
     initialMouseY = e.clientY;
 
+    const pointerId = e.pointerId;
     try {
-      handleEl.setPointerCapture?.(e.pointerId);
+      handleEl.setPointerCapture?.(pointerId);
     } catch (_) {}
 
     const drag = (eMove) => {
@@ -486,28 +668,19 @@ export function makeDraggable(dragEl, handleEl, customId) {
       dragEl.style.left = (startX + dx) + 'px';
       dragEl.style.top = (startY + dy) + 'px';
 
-      const snapMargin = 25;
-      if (eMove.clientX <= snapMargin) {
-        activeSnap = 'left';
-        ghost.style.display = 'block';
-        ghost.style.left = '8px';
-        ghost.style.top = '48px';
-        ghost.style.width = 'calc(50vw - 12px)';
-        ghost.style.height = 'calc(100vh - 48px - 76px)';
-      } else if (eMove.clientX >= window.innerWidth - snapMargin) {
-        activeSnap = 'right';
-        ghost.style.display = 'block';
-        ghost.style.left = 'calc(50vw + 4px)';
-        ghost.style.top = '48px';
-        ghost.style.width = 'calc(50vw - 12px)';
-        ghost.style.height = 'calc(100vh - 48px - 76px)';
-      } else if (eMove.clientY <= snapMargin) {
-        activeSnap = 'maximize';
-        ghost.style.display = 'block';
-        ghost.style.left = '8px';
-        ghost.style.top = '48px';
-        ghost.style.width = 'calc(100vw - 16px)';
-        ghost.style.height = 'calc(100vh - 48px - 76px)';
+      const zone = evaluateSnapZone(eMove.clientX, eMove.clientY);
+      if (zone) {
+        activeSnap = zone;
+        const geom = getSnapGeometry(activeSnap);
+        if (geom) {
+          ghost.style.display = 'flex';
+          ghost.style.left = `${geom.left}px`;
+          ghost.style.top = `${geom.top}px`;
+          ghost.style.width = `${geom.width}px`;
+          ghost.style.height = `${geom.height}px`;
+          const badge = ghost.querySelector('.snap-ghost-indicator');
+          if (badge) badge.textContent = geom.label;
+        }
       } else {
         activeSnap = null;
         ghost.style.display = 'none';
@@ -516,56 +689,34 @@ export function makeDraggable(dragEl, handleEl, customId) {
 
     const stopDrag = (eUp) => {
       ghost.style.display = 'none';
-      document.removeEventListener('pointermove', drag);
-      document.removeEventListener('pointerup', stopDrag);
-      document.removeEventListener('pointercancel', stopDrag);
+      window.removeEventListener('pointermove', drag);
+      window.removeEventListener('pointerup', stopDrag);
+      window.removeEventListener('pointercancel', stopDrag);
       try {
-        if (handleEl.hasPointerCapture && handleEl.hasPointerCapture(e.pointerId)) {
-          handleEl.releasePointerCapture(e.pointerId);
+        if (handleEl.hasPointerCapture && handleEl.hasPointerCapture(pointerId)) {
+          handleEl.releasePointerCapture(pointerId);
         }
       } catch (_) {}
 
       if (activeSnap) {
-        if (!dragEl._preSnapWidth) {
-          dragEl._preSnapWidth = (rect.width || dragEl.offsetWidth) + 'px';
-          dragEl._preSnapHeight = (rect.height || dragEl.offsetHeight) + 'px';
-        }
-        dragEl.style.transition = 'all 0.22s cubic-bezier(0.16, 1, 0.3, 1)';
-        dragEl.dataset.snapped = activeSnap;
-        if (activeSnap === 'left') {
-          dragEl.style.left = '8px';
-          dragEl.style.top = '48px';
-          dragEl.style.width = 'calc(50vw - 12px)';
-          dragEl.style.height = 'calc(100vh - 48px - 76px)';
-        } else if (activeSnap === 'right') {
-          dragEl.style.left = 'calc(50vw + 4px)';
-          dragEl.style.top = '48px';
-          dragEl.style.width = 'calc(50vw - 12px)';
-          dragEl.style.height = 'calc(100vh - 48px - 76px)';
-        } else if (activeSnap === 'maximize') {
-          dragEl.style.left = '8px';
-          dragEl.style.top = '48px';
-          dragEl.style.width = 'calc(100vw - 16px)';
-          dragEl.style.height = 'calc(100vh - 48px - 76px)';
-        }
-        setTimeout(() => { dragEl.style.transition = 'none'; }, 250);
-      }
-
-      if (winId) {
+        applyWindowSnap(dragEl, activeSnap, winId);
+      } else if (winId) {
+        dragEl.dataset.snapped = '';
         const finalRect = dragEl.getBoundingClientRect();
         saveWindowBounds(winId, {
           left: Math.round(finalRect.left),
           top: Math.round(finalRect.top),
           width: Math.round(finalRect.width),
           height: Math.round(finalRect.height),
-          snapped: dragEl.dataset.snapped || ''
+          snapped: ''
         });
         saveOpenWindowsState();
       }
     };
 
-    document.addEventListener('mousemove', drag);
-    document.addEventListener('mouseup', stopDrag);
+    window.addEventListener('pointermove', drag);
+    window.addEventListener('pointerup', stopDrag);
+    window.addEventListener('pointercancel', stopDrag);
   });
 
   handleEl.addEventListener('dblclick', (e) => {
@@ -1401,8 +1552,118 @@ if (typeof window !== 'undefined') {
   window.toggleConsoleMaximize = toggleConsoleMaximize;
 }
 
+export function initSnapAssistFlyout() {
+  if (typeof document === 'undefined') return;
+  let flyout = document.getElementById('snap-assist-flyout');
+  if (!flyout && document.body) {
+    flyout = document.createElement('div');
+    flyout.id = 'snap-assist-flyout';
+    flyout.className = 'snap-assist-flyout';
+    flyout.setAttribute('role', 'dialog');
+    flyout.setAttribute('aria-label', 'Snap Layouts');
+    flyout.setAttribute('aria-hidden', 'true');
+    flyout.innerHTML = `
+      <div class="snap-layout-title">Snap Layouts</div>
+      <div class="snap-templates-grid">
+        <div class="snap-card" title="Split Screen (1/2)">
+          <button class="snap-slot" data-snap="left" aria-label="Snap Left Half"></button>
+          <button class="snap-slot" data-snap="right" aria-label="Snap Right Half"></button>
+        </div>
+        <div class="snap-card snap-card-quad" title="Quarter Grid (1/4)">
+          <button class="snap-slot" data-snap="top-left" aria-label="Snap Top Left"></button>
+          <button class="snap-slot" data-snap="top-right" aria-label="Snap Top Right"></button>
+          <button class="snap-slot" data-snap="bottom-left" aria-label="Snap Bottom Left"></button>
+          <button class="snap-slot" data-snap="bottom-right" aria-label="Snap Bottom Right"></button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(flyout);
+  }
+
+  if (!flyout) return;
+
+  let activeTargetWindow = null;
+  let activeTargetWinId = null;
+  let hideTimer = null;
+  let showTimer = null;
+
+  const showFlyout = (btn) => {
+    clearTimeout(hideTimer);
+    clearTimeout(showTimer);
+    showTimer = setTimeout(() => {
+      const win = btn.closest('.win-box, .modal-container, .chassis-front-panel, .mgmt-app-window, .file-manager-window, .smart-modal-window, .container-inspector-window') ||
+                  btn.closest('[id$="-window"]');
+      if (!win) return;
+      activeTargetWindow = win;
+      activeTargetWinId = win.id === 'file-manager-window' ? 'fm' :
+                         (win.id === 'management-window' ? 'management' :
+                         (win.id === 'console-window' ? 'console' :
+                         (win.id === 'smart-modal-window' ? 'smart' : win.id)));
+
+      const rect = btn.getBoundingClientRect();
+      flyout.style.top = `${rect.bottom + 6}px`;
+      flyout.style.left = `${Math.min(window.innerWidth - 230, Math.max(10, rect.left - 100))}px`;
+      flyout.classList.add('visible');
+      flyout.setAttribute('aria-hidden', 'false');
+    }, 180);
+  };
+
+  const scheduleHide = () => {
+    clearTimeout(showTimer);
+    clearTimeout(hideTimer);
+    hideTimer = setTimeout(() => {
+      flyout.classList.remove('visible');
+      flyout.setAttribute('aria-hidden', 'true');
+    }, 220);
+  };
+
+  flyout.addEventListener('mouseenter', () => clearTimeout(hideTimer));
+  flyout.addEventListener('mouseleave', scheduleHide);
+
+  flyout.querySelectorAll('.snap-slot').forEach((slot) => {
+    slot.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const zone = slot.dataset.snap;
+      if (zone && activeTargetWindow) {
+        applyWindowSnap(activeTargetWindow, zone, activeTargetWinId);
+      }
+      flyout.classList.remove('visible');
+      flyout.setAttribute('aria-hidden', 'true');
+    });
+  });
+
+  const attachToMaxButtons = () => {
+    const maxButtons = document.querySelectorAll('.win-btn.max-btn, #console-max, #management-max, #fb-max, #smart-modal-max, #copy-toast-max, #setup-wizard-max');
+    maxButtons.forEach((btn) => {
+      if (btn._snapAssistBound) return;
+      btn._snapAssistBound = true;
+      btn.addEventListener('mouseenter', () => showFlyout(btn));
+      btn.addEventListener('mouseleave', scheduleHide);
+      btn.addEventListener('focus', () => showFlyout(btn));
+      btn.addEventListener('blur', scheduleHide);
+    });
+  };
+
+  attachToMaxButtons();
+
+  if (window.MutationObserver && document.body) {
+    const observer = new MutationObserver(() => {
+      attachToMaxButtons();
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && flyout.classList.contains('visible')) {
+      flyout.classList.remove('visible');
+      flyout.setAttribute('aria-hidden', 'true');
+    }
+  });
+}
+
 export function initDockSystem() {
   if (state.isLcdDirect || (typeof window !== 'undefined' && window.location.search.includes('mode=lcd')) || (document.body && document.body.classList.contains('lcd-direct'))) return;
+  initSnapAssistFlyout();
   const consoleModal = document.getElementById('console-window');
   const consoleHeader = document.querySelector('#console-window .chassis-panel-header');
   if (consoleModal) makeDraggable(consoleModal, consoleHeader, 'console');

@@ -13,6 +13,8 @@ export function enhanceInteractiveElements(root) {
     '.os-dock-item',
     '.chassis-desktop-icon',
     '.window-control-btn',
+    '.win-btn',
+    '.snap-slot',
     '.mgmt-tab',
     '.mgmt-card',
     '.mgmt-action-btn',
@@ -53,6 +55,39 @@ export function enhanceInteractiveElements(root) {
   });
 }
 
+export function initA11yAnnouncer() {
+  if (typeof document === 'undefined') return;
+  let announcer = document.getElementById('a11y-live-announcer');
+  if (!announcer && document.body) {
+    announcer = document.createElement('div');
+    announcer.id = 'a11y-live-announcer';
+    announcer.className = 'sr-only';
+    announcer.setAttribute('aria-live', 'polite');
+    announcer.setAttribute('aria-atomic', 'true');
+    announcer.style.cssText = 'position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); border:0;';
+    document.body.appendChild(announcer);
+  }
+}
+
+export function announceA11y(message) {
+  if (typeof document === 'undefined' || !message) return;
+  let announcer = document.getElementById('a11y-live-announcer');
+  if (!announcer) {
+    initA11yAnnouncer();
+    announcer = document.getElementById('a11y-live-announcer');
+  }
+  if (announcer) {
+    announcer.textContent = '';
+    setTimeout(() => {
+      announcer.textContent = message;
+    }, 20);
+  }
+}
+
+if (typeof window !== 'undefined') {
+  window.announceA11y = announceA11y;
+}
+
 export function initA11y() {
   if (typeof document === 'undefined') return;
 
@@ -86,6 +121,7 @@ export function initA11y() {
 
   // Observe and auto-enhance interactive elements added to the DOM
   if (document.body) {
+    initA11yAnnouncer();
     enhanceInteractiveElements(document.body);
 
     const observer = new MutationObserver((mutations) => {

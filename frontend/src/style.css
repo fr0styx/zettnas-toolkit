@@ -15,6 +15,10 @@
   --stage-gap: 24px;
   --stage-offset-y: 0px;
 
+  /* Focus & A11y Ring Tokens (WCAG 2.2 AA) */
+  --focus-ring: #00f0ff;
+  --focus-shadow: 0 0 0 3px rgba(0, 240, 255, 0.35);
+
   /* Z-Index Hierarchy Layering */
   --z-desktop-icons: 10;
   --z-window-base: 1000;
@@ -66,19 +70,21 @@ body, body.studio-workbench:not(.lcd-direct) {
 
 
 /* =========================================================================
-   LIGHT THEME: HIGH-CONTRAST CLEAN MODERN DESKTOP
+   LIGHT THEME: HIGH-CONTRAST CLEAN MODERN DESKTOP (WCAG 2.2 AA)
    ========================================================================= */
 body.theme-light {
   --bg: #eef2f6;
   --card: #ffffff;
   --card-hi: #e2e8f0;
   --fg: #0f172a;
-  --muted: #64748b;
+  --muted: #475569;
   --ok: #16a34a;
   --ok2: #0d9488;
   --warn: #d97706;
   --crit: #dc2626;
   --track: #cbd5e1;
+  --focus-ring: #0284c7;
+  --focus-shadow: 0 0 0 3px rgba(2, 132, 199, 0.3);
   background: radial-gradient(circle at 50% 50%, #f8fafc 0%, #e2e8f0 70%);
   color: var(--fg);
 }
@@ -98,6 +104,8 @@ body.theme-amber {
   --crit: #e63946;
   --track: #2a1f0a;
   --brand: #ffbe40;
+  --focus-ring: #ffbe40;
+  --focus-shadow: 0 0 0 3px rgba(255, 190, 64, 0.35);
   background: radial-gradient(circle at 50% 50%, #241a09 0%, #0d0903 70%);
   color: var(--fg);
 }
@@ -110,13 +118,15 @@ body.theme-emerald {
   --card: #082012;
   --card-hi: #0c2e1a;
   --fg: #e6fced;
-  --muted: #288f57;
+  --muted: #34c776;
   --ok: #3bf58b;
   --ok2: #24d673;
   --warn: #eab308;
   --crit: #ef4444;
   --track: #0e331f;
   --brand: #3bf58b;
+  --focus-ring: #3bf58b;
+  --focus-shadow: 0 0 0 3px rgba(59, 245, 139, 0.35);
   background: radial-gradient(circle at 50% 50%, #0b2917 0%, #030d07 70%);
   color: var(--fg);
 }
@@ -136,6 +146,8 @@ body.theme-sapphire {
   --crit: #ef4444;
   --track: #15263d;
   --brand: #38bdf8;
+  --focus-ring: #38bdf8;
+  --focus-shadow: 0 0 0 3px rgba(56, 189, 248, 0.35);
   background: radial-gradient(circle at 50% 50%, #0e1e33 0%, #040810 70%);
   color: var(--fg);
 }
@@ -155,6 +167,8 @@ body.theme-amethyst {
   --crit: #f43f5e;
   --track: #26163d;
   --brand: #c084fc;
+  --focus-ring: #c084fc;
+  --focus-shadow: 0 0 0 3px rgba(192, 132, 252, 0.35);
   background: radial-gradient(circle at 50% 50%, #1e1133 0%, #080310 70%);
   color: var(--fg);
 }
@@ -174,7 +188,30 @@ body.theme-crimson {
   --crit: #ef4444;
   --track: #36141e;
   --brand: #f43f5e;
+  --focus-ring: #f43f5e;
+  --focus-shadow: 0 0 0 3px rgba(244, 63, 94, 0.35);
   background: radial-gradient(circle at 50% 50%, #2e0e17 0%, #0d0305 70%);
+  color: var(--fg);
+}
+
+/* =========================================================================
+   OLED PURE BLACK THEME: HIGH-CONTRAST ZERO-EMISSION
+   ========================================================================= */
+body.theme-oled {
+  --bg: #000000;
+  --card: #080808;
+  --card-hi: #121212;
+  --fg: #ffffff;
+  --muted: #888888;
+  --ok: #00f0ff;
+  --ok2: #0ea5e9;
+  --warn: #ffb800;
+  --crit: #ff3333;
+  --track: #181818;
+  --brand: #00f0ff;
+  --focus-ring: #00f0ff;
+  --focus-shadow: 0 0 0 3px rgba(0, 240, 255, 0.4);
+  background: #000000;
   color: var(--fg);
 }
 
@@ -577,11 +614,14 @@ body.theme-yak {
   --bg: #09130d;
   --card: #122116;
   --card-hi: #192e20;
+  --muted: #8f9b8c;
   --ok2: #d48a37;
   --ok: #e6a254;
   --warn: #e07a38;
   --crit: #e63946;
   --track: #17291c;
+  --focus-ring: #d48a37;
+  --focus-shadow: 0 0 0 3px rgba(212, 138, 55, 0.35);
   background: radial-gradient(circle at 50% 15%, #16261c 0%, #060b09 75%);
 }
 
@@ -4486,19 +4526,132 @@ body.theme-yak .lcd-dot.active {
 }
 
 /* =========================================================================
-   AERO SNAP WINDOW MANAGEMENT & SNAP GHOST
+   AERO SNAP WINDOW MANAGEMENT & SNAP GHOST (8-ZONE & SNAP ASSIST)
    ========================================================================= */
 #window-snap-ghost {
   position: fixed;
-  border-radius: 12px;
-  background: rgba(37, 194, 160, 0.12);
-  border: 2px dashed rgba(37, 194, 160, 0.65);
-  box-shadow: 0 8px 32px rgba(37, 194, 160, 0.22);
-  backdrop-filter: blur(8px);
+  border-radius: 14px;
+  background: rgba(0, 240, 255, 0.08);
+  border: 2px dashed var(--focus-ring, #00f0ff);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 24px rgba(0, 240, 255, 0.18) inset;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   pointer-events: none;
   z-index: 5500;
-  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1);
   display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+.snap-ghost-indicator {
+  background: rgba(10, 14, 19, 0.85);
+  border: 1px solid var(--focus-ring, rgba(0, 240, 255, 0.6));
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 8px 18px;
+  border-radius: 20px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+  white-space: nowrap;
+  text-transform: uppercase;
+}
+
+/* Snap Assist Flyout Menu */
+.snap-assist-flyout {
+  position: fixed;
+  z-index: 9999;
+  background: rgba(18, 25, 36, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7), 0 0 1px rgba(255, 255, 255, 0.25) inset;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 12px;
+  padding: 12px;
+  display: none;
+  flex-direction: column;
+  gap: 10px;
+  width: 220px;
+  user-select: none;
+  transition: opacity 0.15s ease, transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: top center;
+}
+
+.snap-assist-flyout.visible {
+  display: flex;
+  animation: snapFlyoutIn 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes snapFlyoutIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.snap-layout-title {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted, #78838f);
+  padding-bottom: 2px;
+}
+
+.snap-templates-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.snap-card {
+  height: 52px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  display: flex;
+  padding: 4px;
+  gap: 3px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.snap-card:hover {
+  border-color: var(--focus-ring, #00f0ff);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.snap-slot {
+  flex: 1;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.snap-slot:hover {
+  background: var(--focus-ring, #00f0ff);
+  transform: scale(1.02);
+}
+
+.snap-slot:focus-visible {
+  outline: 2px solid #ffffff !important;
+  outline-offset: 1px !important;
+}
+
+.snap-card-quad {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 3px;
 }
 
 #mobile-view-toggle-btn.active {
@@ -6509,10 +6662,11 @@ body.mobile-mode.theme-yak .slide-drawer::-webkit-scrollbar-thumb {
   background: var(--track, #444);
 }
 
-/* Accessibility: Focus Visible styles */
+/* Accessibility: Focus Visible styles (WCAG 2.2 Level AA Adaptive Focus Rings) */
 :focus-visible {
-  outline: 2px solid var(--accent-cyan, #00f0ff) !important;
+  outline: 2px solid var(--focus-ring, #00f0ff) !important;
   outline-offset: 2px !important;
+  box-shadow: var(--focus-shadow, 0 0 0 3px rgba(0, 240, 255, 0.35)) !important;
 }
 
 .dock-item:focus-visible,
@@ -6521,10 +6675,11 @@ body.mobile-mode.theme-yak .slide-drawer::-webkit-scrollbar-thumb {
 .mgmt-sidebar-item:focus-visible,
 .mgmt-app-card:focus-visible,
 .preset-btn-card:focus-visible,
+.snap-slot:focus-visible,
 .win-btn:focus-visible {
-  outline: 2px solid var(--accent-cyan, #00f0ff) !important;
-  outline-offset: 3px !important;
-  box-shadow: 0 0 12px rgba(0, 240, 255, 0.4) !important;
+  outline: 2px solid var(--focus-ring, #00f0ff) !important;
+  outline-offset: 2px !important;
+  box-shadow: var(--focus-shadow, 0 0 0 3px rgba(0, 240, 255, 0.35)) !important;
 }
 
 /* Accessibility: Reduced motion preferences */
