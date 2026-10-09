@@ -264,6 +264,31 @@ class TestBatch5UpsAndMedia(unittest.TestCase):
         check_media_slot_transitions(empty_slots)
         self.assertIsNone(Z_STATE.pending_ingest)
 
+    @patch("threading.Thread")
+    @patch("backend.fsutil.read_json")
+    def test_auto_ingest_suppressed_when_auto_ingest_is_false_even_if_button_enabled(self, mock_read_json, mock_thread):
+        Z_STATE.copy_active = False
+        Z_STATE.copy_status = "idle"
+        Z_STATE.pending_ingest = None
+        mock_read_json.return_value = {
+            "enabled": True,  # Physical chassis button is enabled
+            "auto_ingest": False,  # Slot auto-ingest is explicitly UNCHECKED
+            "require_confirmation": True,
+            "source": "auto",
+            "dest": "/mnt/user/photos",
+        }
+
+        inserted_sd = {
+            "sd": {"size": 32 * 1024 * 1024 * 1024, "dev": "sdf"},
+            "tf": {"size": 0, "dev": None},
+        }
+        check_media_slot_transitions(inserted_sd)
+
+        # Thread must NOT be launched, and pending_ingest must NOT be set
+        mock_thread.assert_not_called()
+        self.assertFalse(Z_STATE.copy_active)
+        self.assertIsNone(Z_STATE.pending_ingest)
+
     @patch("backend.fsutil.read_json")
     def test_eject_slot_suppresses_reprompt_when_card_left_in(self, mock_read_json):
         from backend.services.copy_engine import _EJECTED_SLOTS, eject_media_slot

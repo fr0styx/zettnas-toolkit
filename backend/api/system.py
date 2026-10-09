@@ -319,6 +319,10 @@ def post_buttons(req: ButtonConfigRequest):
         data["dest"] = real
     state.update(data)
     atomic_write_json(BUTTON_CFG_FILE, state)
+    if data.get("auto_ingest") is False:
+        with Z_STATE.lock:
+            Z_STATE.pending_ingest = None
+        Z_STATE.ui_wake.set()
     return state
 
 

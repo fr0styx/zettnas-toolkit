@@ -117,13 +117,18 @@ def _maybe_trigger_auto_ingest(slot: str, dev: str | None = None, size: int | No
         return
 
     cfg = read_json(BUTTON_CFG_FILE, {})
+    # auto_ingest must be explicitly enabled by user in settings ("Automatic Slot Ingest").
+    # The physical copy button toggle ("enabled") must NEVER trigger auto-ingest upon card insertion!
     auto_enabled = (
         cfg.get("auto_ingest", False)
-        or cfg.get("enabled", False)
         or (os.getenv("AUTO_INGEST_ENABLED", "0").lower() in ("1", "true", "yes"))
     )
 
     if not auto_enabled:
+        if getattr(Z_STATE, "pending_ingest", None) and Z_STATE.pending_ingest.get("slot") == slot:
+            Z_STATE.pending_ingest = None
+            Z_STATE.ui_wake.set()
+        logger.debug(f"[AUTO-INGEST] Automatic slot ingest disabled in settings, skipping for {slot}")
         return
 
     with _AUTO_INGEST_LOCK:

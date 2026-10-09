@@ -354,11 +354,11 @@ export function applySavedBounds(dragEl, winId) {
   dragEl.style.top = `${clampedTop}px`;
   dragEl.style.transform = 'none';
 
-  if (saved.width && !dragEl.classList.contains('smart-modal-window') && !dragEl.classList.contains('chassis-front-panel')) {
+  if (saved.width) {
     dragEl.style.width = `${Math.min(window.innerWidth - 20, Math.max(320, saved.width))}px`;
   }
-  if (saved.height && !dragEl.classList.contains('smart-modal-window') && !dragEl.classList.contains('chassis-front-panel')) {
-    dragEl.style.height = `${Math.min(window.innerHeight - 80, Math.max(240, saved.height))}px`;
+  if (saved.height) {
+    dragEl.style.height = `${Math.min(window.innerHeight - 80, Math.max(200, saved.height))}px`;
   }
   if (saved.snapped) {
     dragEl.dataset.snapped = saved.snapped;
@@ -608,16 +608,19 @@ export function bringToFront(windowEl) {
     windowEl.id === 'notif-center-panel' ||
     windowEl.id === 'container-inspector-window' ||
     windowEl.id === 'container-inspector-overlay' ||
+    windowEl.id === 'smart-modal-window' ||
+    windowEl.id === 'smart-modal-overlay' ||
     windowEl.classList?.contains('chassis-front-panel') ||
     windowEl.classList?.contains('management-window') ||
     windowEl.classList?.contains('mgmt-app-window') ||
     windowEl.classList?.contains('file-manager-window') ||
     windowEl.classList?.contains('container-inspector-window') ||
+    windowEl.classList?.contains('smart-modal-window') ||
     windowEl.classList?.contains('os-window') ||
-    windowEl.closest?.('#console-modal-overlay, #management-modal-overlay, #file-manager-window, #notif-center-panel, #container-inspector-window, #container-inspector-overlay')
+    windowEl.closest?.('#console-modal-overlay, #management-modal-overlay, #file-manager-window, #notif-center-panel, #container-inspector-window, #container-inspector-overlay, #smart-modal-overlay')
   );
 
-  // Protect modal backdrops & modal dialogs from being demoted into window z-index layer
+  // Protect standalone modal backdrops & modal dialogs from being demoted into window z-index layer
   if (
     !isDesktopApp && (
       windowEl.classList.contains('smart-modal-window') ||
@@ -646,7 +649,7 @@ export function bringToFront(windowEl) {
     openWins.forEach((el) => {
       const curZ = (baseZ++).toString();
       el.style.zIndex = curZ;
-      const inner = el.querySelector?.('#console-window, #management-window, .chassis-front-panel, .mgmt-app-window');
+      const inner = el.querySelector?.('#console-window, #management-window, .chassis-front-panel, .mgmt-app-window, .container-inspector-window, #container-inspector-window, .smart-modal-window, #smart-modal-window');
       if (inner) inner.style.zIndex = curZ;
     });
     activeWindowZIndex = baseZ;
@@ -655,13 +658,13 @@ export function bringToFront(windowEl) {
   const zStr = activeWindowZIndex.toString();
   windowEl.style.zIndex = zStr;
 
-  // Elevate parent overlay wrapper if applicable (#console-modal-overlay / #management-modal-overlay)
-  const parentOverlay = windowEl.closest?.('#console-modal-overlay, #management-modal-overlay');
+  // Elevate parent overlay wrapper if applicable
+  const parentOverlay = windowEl.closest?.('#console-modal-overlay, #management-modal-overlay, #container-inspector-overlay, #smart-modal-overlay');
   if (parentOverlay && parentOverlay !== windowEl) {
     parentOverlay.style.zIndex = zStr;
   }
   // Elevate child window if applicable
-  const childWin = windowEl.querySelector?.('#console-window, #management-window, .chassis-front-panel, .mgmt-app-window');
+  const childWin = windowEl.querySelector?.('#console-window, #management-window, .chassis-front-panel, .mgmt-app-window, .container-inspector-window, #container-inspector-window, .smart-modal-window, #smart-modal-window');
   if (childWin && childWin !== windowEl) {
     childWin.style.zIndex = zStr;
   }
@@ -670,7 +673,7 @@ export function bringToFront(windowEl) {
     let foundId = null;
     Object.keys(window.DockManager.windows).forEach((id) => {
       const wEl = window.DockManager.windows[id].el;
-      if (wEl === windowEl || (wEl && wEl.contains && wEl.contains(windowEl))) {
+      if (wEl === windowEl || (wEl && wEl.contains && wEl.contains(windowEl)) || (windowEl && windowEl.contains && windowEl.contains(wEl))) {
         foundId = id;
       }
     });
@@ -742,9 +745,14 @@ export function makeDraggable(dragEl, handleEl, customId) {
   let startX = 0, startY = 0, initialMouseX = 0, initialMouseY = 0;
   let activeSnap = null;
 
+  dragEl.addEventListener('pointerdown', () => {
+    bringToFront(dragEl);
+  }, { capture: true });
+
   handleEl.style.touchAction = 'none';
   handleEl.addEventListener('pointerdown', (e) => {
     if (e.button !== 0 || e.target.closest('button') || e.target.closest('input') || e.target.closest('.modal-ctrl-btn')) return;
+    bringToFront(dragEl);
     if (document.body.classList.contains('mobile-mode') || window.innerWidth <= 768) return;
     e.preventDefault();
 
@@ -1926,22 +1934,17 @@ export function initDockSystem() {
     makeDraggable(notifPanel, notifHeader, 'notif-center');
   }
 
-  const DESKTOP_WINDOW_SELECTOR = '.smart-modal-window, #console-window, #management-window, #file-manager-window, .file-manager-window, .os-window, #notif-center-panel';
+  const DESKTOP_WINDOW_SELECTOR = '.smart-modal-window, #console-window, #management-window, #file-manager-window, .file-manager-window, .os-window, #notif-center-panel, .container-inspector-window, #container-inspector-window, #container-inspector-overlay, #management-modal-overlay, #console-modal-overlay, #smart-modal-overlay';
 
-  document.querySelectorAll(DESKTOP_WINDOW_SELECTOR).forEach((win) => {
-    win.addEventListener('mousedown', (e) => {
-      bringToFront(win);
-      e._handledAsWindowClick = true;
-    });
-  });
-
-  document.addEventListener('mousedown', (e) => {
-    if (e._handledAsWindowClick) return;
+  const handleWindowActivation = (e) => {
     const windowEl = e.target.closest(DESKTOP_WINDOW_SELECTOR);
     if (windowEl) {
       bringToFront(windowEl);
     }
-  });
+  };
+
+  document.addEventListener('pointerdown', handleWindowActivation, { capture: true });
+  document.addEventListener('mousedown', handleWindowActivation);
 
   // Mobile / Stacked Mode Toggle & Auto-detection
   const mobileToggleBtn = document.getElementById('mobile-view-toggle-btn');

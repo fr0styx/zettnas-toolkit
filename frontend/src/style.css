@@ -2729,19 +2729,31 @@ select.tz-select-input option, select.tz-select option {
   pointer-events: auto !important;
 }
 
+#console-modal-overlay #console-window,
+#console-window.chassis-front-panel {
+  resize: both;
+  overflow: hidden;
+  min-width: 500px;
+  min-height: 220px;
+  max-width: 98vw;
+  max-height: 94vh;
+}
+
 .smart-modal-window {
   pointer-events: auto;
   background: #0f1620; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 14px;
-  width: 580px; max-width: 95vw; max-height: 85vh; display: flex; flex-direction: column;
+  width: 580px; height: 540px; min-width: 480px; min-height: 340px; max-width: 95vw; max-height: 88vh; display: flex; flex-direction: column;
   box-shadow: 0 25px 60px rgba(0,0,0,0.9); overflow: hidden;
+  resize: both;
 }
 .smart-modal-header {
   padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex;
-  justify-content: space-between; align-items: center; background: #131c27;
+  justify-content: space-between; align-items: center; background: #131c27; flex-shrink: 0;
 }
 .smart-modal-title { font-size: 15px; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 8px; }
 .smart-modal-body {
   padding: 20px; display: flex; flex-direction: column; gap: 14px; overflow-y: auto; font-size: 12px;
+  flex: 1; min-height: 0;
 }
 .smart-meta-grid {
   display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
@@ -3253,14 +3265,18 @@ select.tz-select-input option, select.tz-select option {
 /* =========================================================================
    SYSTEM MANAGEMENT DESKTOP WINDOW & HUB
    ========================================================================= */
-#management-modal-overlay #management-window {
+#management-modal-overlay #management-window,
+.management-window {
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   width: 900px;
-  max-width: 95vw;
-  max-height: 86vh;
+  height: 640px;
+  min-width: 580px;
+  min-height: 400px;
+  max-width: 98vw;
+  max-height: 94vh;
   display: flex;
   flex-direction: column;
   background: #0d141e;
@@ -3268,6 +3284,7 @@ select.tz-select-input option, select.tz-select option {
   border-radius: 14px;
   box-shadow: 0 25px 65px rgba(0, 0, 0, 0.88), 0 0 24px rgba(37, 194, 160, 0.12);
   overflow: hidden;
+  resize: both;
   z-index: var(--z-window-base, 1000);
   transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
@@ -3286,7 +3303,7 @@ select.tz-select-input option, select.tz-select option {
 .management-window .screw-tl { top: 8px; left: 8px; }
 .management-window .screw-tr { top: 8px; right: 8px; }
 .management-window .screw-bl { bottom: 8px; left: 8px; }
-.management-window .screw-br { bottom: 8px; right: 8px; }
+.management-window .screw-br { bottom: 8px; right: 28px; }
 
 .management-window-header {
   padding: 12px 18px;
@@ -3299,6 +3316,7 @@ select.tz-select-input option, select.tz-select option {
   user-select: none;
   min-height: 52px;
   box-sizing: border-box;
+  flex-shrink: 0;
 }
 
 .mgmt-header-left {
@@ -3335,8 +3353,8 @@ select.tz-select-input option, select.tz-select option {
   flex-direction: row !important;
   align-items: stretch;
   overflow: hidden;
-  height: 580px;
-  max-height: calc(86vh - 54px);
+  flex: 1;
+  min-height: 0;
   background: #0d141e;
 }
 
@@ -3680,12 +3698,16 @@ select.tz-select-input option, select.tz-select option {
   max-width: 95vw;
   height: 580px;
   max-height: 92vh;
+  min-width: 580px;
+  min-height: 400px;
   display: flex;
   flex-direction: column;
   background: rgba(13, 17, 23, 0.95);
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9), 0 0 30px rgba(0, 240, 255, 0.08);
+  resize: both;
+  overflow: hidden;
 }
 
 .ci-nav-tabs {
@@ -5877,6 +5899,19 @@ body.mobile-mode #desktop-widgets-container .cal-glance-bar {
     box-sizing: border-box !important;
   }
 
+  body.mobile-mode .os-window,
+  body.mobile-mode .file-manager-window,
+  body.mobile-mode #management-window,
+  body.mobile-mode .management-window,
+  body.mobile-mode #console-window,
+  body.mobile-mode .chassis-front-panel,
+  body.mobile-mode .container-inspector-window,
+  body.mobile-mode #container-inspector-window,
+  body.mobile-mode .smart-modal-window,
+  body.mobile-mode #notif-center-panel {
+    resize: none !important;
+  }
+
   body.mobile-mode .os-window.window-minimized,
   body.mobile-mode .file-manager-window.window-minimized,
   body.mobile-mode .os-window[style*="display: none"],
@@ -7975,4 +8010,52 @@ body.theme-yak .widget-drag-handle:hover {
   border-top: 1px solid rgba(255, 255, 255, 0.06);
   font-size: 10.5px;
   color: var(--muted, #64748b);
+}
+
+/* =========================================================================
+   UNIVERSAL DOUBLED WINDOW RESIZE GRIP (24px x 24px)
+   ========================================================================= */
+::-webkit-scrollbar-corner {
+  background: transparent !important;
+}
+
+.os-window::-webkit-resizer,
+.management-window::-webkit-resizer,
+#management-window::-webkit-resizer,
+.container-inspector-window::-webkit-resizer,
+#container-inspector-window::-webkit-resizer,
+.smart-modal-window::-webkit-resizer,
+#console-window::-webkit-resizer,
+#notif-center-panel::-webkit-resizer {
+  display: block !important;
+  width: 24px !important;
+  height: 24px !important;
+  background-color: transparent !important;
+  background-repeat: no-repeat !important;
+  background-position: bottom 2px right 2px !important;
+  background-size: 20px 20px !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='24' height='24' fill='none' stroke='rgba(255,255,255,0.45)' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M21 15L15 21'/%3E%3Cpath d='M21 9L9 21'/%3E%3Cpath d='M21 3L3 21'/%3E%3C/svg%3E") !important;
+  cursor: nwse-resize !important;
+}
+
+.os-window::-webkit-resizer:hover,
+.management-window::-webkit-resizer:hover,
+#management-window::-webkit-resizer:hover,
+.container-inspector-window::-webkit-resizer:hover,
+#container-inspector-window::-webkit-resizer:hover,
+.smart-modal-window::-webkit-resizer:hover,
+#console-window::-webkit-resizer:hover,
+#notif-center-panel::-webkit-resizer:hover {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='24' height='24' fill='none' stroke='%2325c2a0' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='M21 15L15 21'/%3E%3Cpath d='M21 9L9 21'/%3E%3Cpath d='M21 3L3 21'/%3E%3C/svg%3E") !important;
+}
+
+body.theme-yak .os-window::-webkit-resizer:hover,
+body.theme-yak .management-window::-webkit-resizer:hover,
+body.theme-yak #management-window::-webkit-resizer:hover,
+body.theme-yak .container-inspector-window::-webkit-resizer:hover,
+body.theme-yak #container-inspector-window::-webkit-resizer:hover,
+body.theme-yak .smart-modal-window::-webkit-resizer:hover,
+body.theme-yak #console-window::-webkit-resizer:hover,
+body.theme-yak #notif-center-panel::-webkit-resizer:hover {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='24' height='24' fill='none' stroke='%23d48a37' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='M21 15L15 21'/%3E%3Cpath d='M21 9L9 21'/%3E%3Cpath d='M21 3L3 21'/%3E%3C/svg%3E") !important;
 }
