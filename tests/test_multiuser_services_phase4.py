@@ -109,11 +109,15 @@ def test_home_folder_isolation_and_browse(setup_phase4_env):
     assert r_alice_bob.status_code == 403
 
     # 3. Alice CANNOT mkdir in Bob's home folder
-    r_mkdir_bob = client.post("/api/mkdir", json={"path": os.path.join(env['bob_home'], "hacked")}, headers=headers_alice)
+    r_mkdir_bob = client.post(
+        "/api/mkdir", json={"path": os.path.join(env["bob_home"], "hacked")}, headers=headers_alice
+    )
     assert r_mkdir_bob.status_code == 403
 
     # 4. Alice CAN mkdir in her own home folder
-    r_mkdir_own = client.post("/api/mkdir", json={"path": os.path.join(env['alice_home'], "projects")}, headers=headers_alice)
+    r_mkdir_own = client.post(
+        "/api/mkdir", json={"path": os.path.join(env["alice_home"], "projects")}, headers=headers_alice
+    )
     assert r_mkdir_own.status_code == 200
 
     # 5. Alice browsing /homes directory only sees her own directory
@@ -140,7 +144,9 @@ def test_rclone_auth_proxy_script(setup_phase4_env):
     create_user("alice", "Alice User", "AlicePass123!", role_id="share_user")
     create_user("admin_user", "Admin User", "AdminPass123!", role_id="superadmin")
 
-    script_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "backend", "services", "rclone_auth_proxy.py")
+    script_path = os.path.join(
+        os.path.dirname(os.path.dirname(__file__)), "backend", "services", "rclone_auth_proxy.py"
+    )
 
     # 1. Test Alice (standard user) -> isolated home directory root
     proc_alice = subprocess.run(

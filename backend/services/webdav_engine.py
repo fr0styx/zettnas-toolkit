@@ -165,7 +165,9 @@ class WebdavEngine:
             if cfg.get("read_only"):
                 cmd.append("--read-only")
 
-            logger.info(f"[WEBDAV] Launching: {' '.join(cmd[:5])} ... (auth={cfg.get('auth_enabled')}, proxy={os.path.exists(proxy_script)})")
+            logger.info(
+                f"[WEBDAV] Launching: {' '.join(cmd[:5])} ... (auth={cfg.get('auth_enabled')}, proxy={os.path.exists(proxy_script)})"
+            )
             try:
                 self._proc = subprocess.Popen(
                     cmd,
