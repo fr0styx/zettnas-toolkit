@@ -13,7 +13,7 @@ import { bringToFront, DockManager, makeDraggable, saveWindowBounds, saveOpenWin
 import { state } from '../state.js';
 import { api } from '../api.js';
 import { showToast, showConfirmToast } from '../toast.js';
-import { trapFocus, escapeHtml, copyTextToClipboard } from '../utils.js';
+import { trapFocus, escapeHtml, copyTextToClipboard, reconcileKeyedTable } from '../utils.js';
 import { t, getLanguage } from '../i18n.js';
 
 let _activeProfile = 'balanced';
@@ -414,115 +414,173 @@ export function renderDockerContainersTable() {
 
   const currentHost = typeof window !== 'undefined' && window.location.hostname ? window.location.hostname : 'localhost';
 
-  tbody.innerHTML = filtered
-    .map((c) => {
-      const isRunning = c.state === 'running';
-      const badgeColor = isRunning ? 'var(--ok2)' : 'var(--muted)';
-      const badgeBg = isRunning ? 'rgba(37, 194, 160, 0.15)' : 'rgba(255, 255, 255, 0.05)';
-      const idShort = c.id ? c.id.slice(0, 12) : '';
+  if (tbody.firstElementChild && tbody.firstElementChild.querySelector('td[colspan]')) {
+    tbody.innerHTML = '';
+  }
 
-      // Column 1: Stack & Name
-      let stackHtml = '';
-      if (c.stack) {
-        stackHtml = `<span class="docker-stack-pill" title="Compose Stack: ${escapeHtml(c.stack)}">📁 ${escapeHtml(c.stack)}</span>`;
+  bindDockerTableEvents(tbody);
+
+  reconcileKeyedTable(
+    tbody,
+    filtered,
+    (c) => c.id || c.name,
+    (c) => createContainerRow(c, currentHost),
+    (tr, c) => updateContainerRow(tr, c, currentHost)
+  );
+}
+
+function buildContainerRowInner(c, currentHost) {
+  const isRunning = c.state === 'running';
+  const badgeColor = isRunning ? 'var(--ok2)' : 'var(--muted)';
+  const badgeBg = isRunning ? 'rgba(37, 194, 160, 0.15)' : 'rgba(255, 255, 255, 0.05)';
+  const idShort = c.id ? c.id.slice(0, 12) : '';
+
+  // Column 1: Stack & Name
+  let stackHtml = '';
+  if (c.stack) {
+    stackHtml = `<span class="docker-stack-pill" title="Compose Stack: ${escapeHtml(c.stack)}">📁 ${escapeHtml(c.stack)}</span>`;
+  } else {
+    const originLabel = c.managed_by === 'unraid' ? 'Unraid' : 'Standalone';
+    stackHtml = `<span class="docker-origin-pill">${originLabel}</span>`;
+  }
+
+  // Column 2: Hardware Badges
+  let hwHtml = '<span style="color:var(--muted); font-size:10px;">—</span>';
+  if (c.hardware_badges && c.hardware_badges.length > 0) {
+    hwHtml = c.hardware_badges
+      .map(
+        (b) =>
+          `<span class="docker-hw-badge docker-hw-${escapeHtml(b.id)}" title="${escapeHtml(b.label)}">${escapeHtml(b.label)}</span>`
+      )
+      .join('');
+  }
+
+  // Column 3: Telemetry (CPU / RAM)
+  let telemHtml = '<span style="color:var(--muted); font-size:10px;">—</span>';
+  if (isRunning) {
+    const cpuStr = `${(c.cpu_pct || 0).toFixed(1)}%`;
+    const memStr = c.mem_used ? `${(c.mem_used / (1024 * 1024)).toFixed(0)} MB` : '--';
+    telemHtml = `<span class="docker-telemetry-pill"><span class="telem-cpu">${cpuStr}</span><span style="opacity:0.4;">•</span><span class="telem-mem">${memStr}</span></span>`;
+  }
+
+  // Column 4: Ports & Web UI
+  let portsHtml = '<span style="color:var(--muted); font-size:10px;">—</span>';
+  const portParts = [];
+  if (c.webui_url && c.primary_port) {
+    const resolvedUrl = c.webui_url.replace('[HOST]', currentHost);
+    portParts.push(
+      `<a href="${escapeHtml(resolvedUrl)}" target="_blank" rel="noopener noreferrer" class="btn-webui-badge" title="Open Web UI (Port ${c.primary_port})">🌐 :${c.primary_port} ↗</a>`
+    );
+  }
+  // Additional public ports
+  const otherPorts = (c.ports || []).filter(
+    (p) => p.public_port && p.public_port !== c.primary_port
+  );
+  if (otherPorts.length > 0) {
+    const otherTags = otherPorts
+      .slice(0, 3)
+      .map((p) => `<span class="docker-port-tag">:${p.public_port}</span>`)
+      .join('');
+    portParts.push(otherTags);
+  }
+  if (portParts.length > 0) {
+    portsHtml = portParts.join(' ');
+  }
+
+  // Column 5: Status & Uptime
+  const statusHtml = `
+    <div style="display:flex; align-items:center; gap:6px;">
+      <span class="docker-state-badge" style="display:inline-block; padding:2px 6px; border-radius:4px; font-size:9.5px; font-weight:700; background:${badgeBg}; color:${badgeColor}; text-transform:uppercase;">${escapeHtml(c.state)}</span>
+      <span class="docker-status-text" style="font-size:10px; color:#cbd5e1; max-width:110px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeHtml(c.status)}">${escapeHtml(c.status)}</span>
+    </div>
+  `;
+
+  // Column 6: Actions
+  const inspectBtn = `<button class="btn-container-act btn-docker-inspect" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="inspect" title="Inspect ${escapeHtml(c.name)}">🔍</button>`;
+  const deleteBtn = `<button class="btn-container-act btn-docker-delete" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-image="${escapeHtml(c.image || '')}" data-action="delete" title="Destroy / Delete ${escapeHtml(c.name)}" style="color:var(--crit, #ff6b6b);">🗑️</button>`;
+  const actions = isRunning
+    ? `
+      ${inspectBtn}
+      <button class="btn-container-act btn-docker-restart" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="restart" title="Restart ${escapeHtml(c.name)}">🔄</button>
+      <button class="btn-container-act btn-docker-stop" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="stop" title="Stop ${escapeHtml(c.name)}">⏹</button>
+      ${deleteBtn}
+    `
+    : `
+      ${inspectBtn}
+      <button class="btn-container-act btn-docker-start" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="start" title="Start ${escapeHtml(c.name)}">▶</button>
+      ${deleteBtn}
+    `;
+
+  return `
+    <td>
+      <div style="display:flex; align-items:baseline; gap:6px;">
+        <button class="btn-docker-name-link" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" style="background:none; border:none; padding:0; color:#fff; font-size:11.5px; font-weight:700; cursor:pointer; text-align:left; font-family:inherit;" title="Inspect ${escapeHtml(c.name)}">${escapeHtml(c.name)}</button>
+        <code style="font-size:9px; color:var(--muted); font-family:var(--font-mono, monospace);">${escapeHtml(idShort)}</code>
+      </div>
+      <div>${stackHtml}</div>
+    </td>
+    <td>${hwHtml}</td>
+    <td class="docker-telemetry-cell">${telemHtml}</td>
+    <td>${portsHtml}</td>
+    <td class="docker-status-cell">${statusHtml}</td>
+    <td class="docker-actions-cell" style="text-align:right; white-space:nowrap;">${actions}</td>
+  `;
+}
+
+function createContainerRow(c, currentHost) {
+  const tr = document.createElement('tr');
+  const key = c.id || c.name || '';
+  tr.dataset.key = key;
+  tr.dataset.id = c.id || '';
+  tr.dataset.state = c.state || '';
+  tr.innerHTML = buildContainerRowInner(c, currentHost);
+  return tr;
+}
+
+function updateContainerRow(tr, c, currentHost) {
+  if (tr.dataset.state !== c.state || !tr.children.length) {
+    tr.dataset.state = c.state || '';
+    tr.innerHTML = buildContainerRowInner(c, currentHost);
+    return;
+  }
+
+  const isRunning = c.state === 'running';
+  const telemCell = tr.querySelector('.docker-telemetry-cell');
+  if (telemCell) {
+    if (isRunning) {
+      const cpuStr = `${(c.cpu_pct || 0).toFixed(1)}%`;
+      const memStr = c.mem_used ? `${(c.mem_used / (1024 * 1024)).toFixed(0)} MB` : '--';
+      const cpuEl = telemCell.querySelector('.telem-cpu');
+      const memEl = telemCell.querySelector('.telem-mem');
+      if (cpuEl && memEl) {
+        cpuEl.textContent = cpuStr;
+        memEl.textContent = memStr;
       } else {
-        const originLabel = c.managed_by === 'unraid' ? 'Unraid' : 'Standalone';
-        stackHtml = `<span class="docker-origin-pill">${originLabel}</span>`;
+        telemCell.innerHTML = `<span class="docker-telemetry-pill"><span class="telem-cpu">${cpuStr}</span><span style="opacity:0.4;">•</span><span class="telem-mem">${memStr}</span></span>`;
       }
+    } else {
+      telemCell.innerHTML = '<span style="color:var(--muted); font-size:10px;">—</span>';
+    }
+  }
 
-      // Column 2: Hardware Badges
-      let hwHtml = '<span style="color:var(--muted); font-size:10px;">—</span>';
-      if (c.hardware_badges && c.hardware_badges.length > 0) {
-        hwHtml = c.hardware_badges
-          .map(
-            (b) =>
-              `<span class="docker-hw-badge docker-hw-${escapeHtml(b.id)}" title="${escapeHtml(b.label)}">${escapeHtml(b.label)}</span>`
-          )
-          .join('');
-      }
+  const statusText = tr.querySelector('.docker-status-text');
+  if (statusText && statusText.textContent !== c.status) {
+    statusText.textContent = c.status;
+    statusText.title = c.status;
+  }
+}
 
-      // Column 3: Telemetry (CPU / RAM)
-      let telemHtml = '<span style="color:var(--muted); font-size:10px;">—</span>';
-      if (isRunning) {
-        const cpuStr = `${(c.cpu_pct || 0).toFixed(1)}%`;
-        const memStr = c.mem_used ? `${(c.mem_used / (1024 * 1024)).toFixed(0)} MB` : '--';
-        telemHtml = `<span class="docker-telemetry-pill"><span class="telem-cpu">${cpuStr}</span><span style="opacity:0.4;">•</span><span class="telem-mem">${memStr}</span></span>`;
-      }
+function bindDockerTableEvents(tbody) {
+  if (tbody._dockerTableEventsBound) return;
+  tbody._dockerTableEventsBound = true;
 
-      // Column 4: Ports & Web UI
-      let portsHtml = '<span style="color:var(--muted); font-size:10px;">—</span>';
-      const portParts = [];
-      if (c.webui_url && c.primary_port) {
-        const resolvedUrl = c.webui_url.replace('[HOST]', currentHost);
-        portParts.push(
-          `<a href="${escapeHtml(resolvedUrl)}" target="_blank" rel="noopener noreferrer" class="btn-webui-badge" title="Open Web UI (Port ${c.primary_port})">🌐 :${c.primary_port} ↗</a>`
-        );
-      }
-      // Additional public ports
-      const otherPorts = (c.ports || []).filter(
-        (p) => p.public_port && p.public_port !== c.primary_port
-      );
-      if (otherPorts.length > 0) {
-        const otherTags = otherPorts
-          .slice(0, 3)
-          .map((p) => `<span class="docker-port-tag">:${p.public_port}</span>`)
-          .join('');
-        portParts.push(otherTags);
-      }
-      if (portParts.length > 0) {
-        portsHtml = portParts.join(' ');
-      }
-
-      // Column 5: Status & Uptime
-      const statusHtml = `
-        <div style="display:flex; align-items:center; gap:6px;">
-          <span style="display:inline-block; padding:2px 6px; border-radius:4px; font-size:9.5px; font-weight:700; background:${badgeBg}; color:${badgeColor}; text-transform:uppercase;">${escapeHtml(c.state)}</span>
-          <span style="font-size:10px; color:#cbd5e1; max-width:110px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeHtml(c.status)}">${escapeHtml(c.status)}</span>
-        </div>
-      `;
-
-      // Column 6: Actions
-      const inspectBtn = `<button class="btn-container-act btn-docker-inspect" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="inspect" title="Inspect ${escapeHtml(c.name)}">🔍</button>`;
-      const deleteBtn = `<button class="btn-container-act btn-docker-delete" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-image="${escapeHtml(c.image || '')}" data-action="delete" title="Destroy / Delete ${escapeHtml(c.name)}" style="color:var(--crit, #ff6b6b);">🗑️</button>`;
-      const actions = isRunning
-        ? `
-          ${inspectBtn}
-          <button class="btn-container-act btn-docker-restart" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="restart" title="Restart ${escapeHtml(c.name)}">🔄</button>
-          <button class="btn-container-act btn-docker-stop" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="stop" title="Stop ${escapeHtml(c.name)}">⏹</button>
-          ${deleteBtn}
-        `
-        : `
-          ${inspectBtn}
-          <button class="btn-container-act btn-docker-start" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="start" title="Start ${escapeHtml(c.name)}">▶</button>
-          ${deleteBtn}
-        `;
-
-      return `
-        <tr>
-          <td>
-            <div style="display:flex; align-items:baseline; gap:6px;">
-              <button class="btn-docker-name-link" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" style="background:none; border:none; padding:0; color:#fff; font-size:11.5px; font-weight:700; cursor:pointer; text-align:left; font-family:inherit;" title="Inspect ${escapeHtml(c.name)}">${escapeHtml(c.name)}</button>
-              <code style="font-size:9px; color:var(--muted); font-family:var(--font-mono, monospace);">${escapeHtml(idShort)}</code>
-            </div>
-            <div>${stackHtml}</div>
-          </td>
-          <td>${hwHtml}</td>
-          <td>${telemHtml}</td>
-          <td>${portsHtml}</td>
-          <td>${statusHtml}</td>
-          <td style="text-align:right; white-space:nowrap;">${actions}</td>
-        </tr>
-      `;
-    })
-    .join('');
-
-  // Wire container action buttons
-  tbody.querySelectorAll('.btn-container-act').forEach((btn) => {
-    btn.addEventListener('click', async (e) => {
+  tbody.addEventListener('click', async (e) => {
+    const actBtn = e.target.closest('.btn-container-act');
+    if (actBtn) {
       e.stopPropagation();
-      const cid = btn.dataset.id;
-      const cname = btn.dataset.name;
-      const act = btn.dataset.action;
+      const cid = actBtn.dataset.id;
+      const cname = actBtn.dataset.name;
+      const act = actBtn.dataset.action;
       if (!cid || !act) return;
 
       if (act === 'inspect') {
@@ -531,14 +589,14 @@ export function renderDockerContainersTable() {
       }
 
       if (act === 'delete') {
-        openContainerDeleteModal(cid, cname, btn.dataset.image || '', () => {
+        openContainerDeleteModal(cid, cname, actBtn.dataset.image || '', () => {
           fetchAndRenderDockerContainers();
         });
         return;
       }
 
-      btn.disabled = true;
-      btn.style.opacity = '0.5';
+      actBtn.disabled = true;
+      actBtn.style.opacity = '0.5';
       showToast(`${act.toUpperCase()} request sent for ${cname}...`, 'info');
 
       try {
@@ -547,20 +605,19 @@ export function renderDockerContainersTable() {
         await fetchAndRenderDockerContainers();
       } catch (err) {
         showToast(`Failed to ${act} container: ${err.message}`, 'error');
-        btn.disabled = false;
-        btn.style.opacity = '1';
+        actBtn.disabled = false;
+        actBtn.style.opacity = '1';
       }
-    });
-  });
+      return;
+    }
 
-  // Wire container name click to open inspector
-  tbody.querySelectorAll('.btn-docker-name-link').forEach((link) => {
-    link.addEventListener('click', (e) => {
+    const nameLink = e.target.closest('.btn-docker-name-link');
+    if (nameLink) {
       e.stopPropagation();
-      const cid = link.dataset.id;
-      const cname = link.dataset.name;
+      const cid = nameLink.dataset.id;
+      const cname = nameLink.dataset.name;
       if (cid) openContainerInspector(cid, cname);
-    });
+    }
   });
 }
 
@@ -1689,77 +1746,123 @@ export async function fetchAndRenderDisksInventory() {
       return;
     }
 
-    let rowsHtml = '';
-    disks.forEach((d) => {
-      const devName = d.dev || d.name || 'unknown';
-      const isStandby = Boolean(d.standby || d.health === 'standby');
-      const thermal = getThermalLevel(d.temp, isStandby);
-      const modelStr = d.model || 'Generic Disk';
-      const serialStr = d.serial && d.serial !== 'Unknown' ? d.serial : '--';
-      const transportStr = (d.transport || (devName.startsWith('nvme') ? 'nvme' : 'sata')).toUpperCase();
-      const driverStr = d.controller_driver || (devName.startsWith('nvme') ? 'nvme' : 'ahci');
-      const sizeStr = d.size_formatted || d.size || '--';
-      const healthStr = isStandby ? 'STANDBY' : (d.health ? String(d.health).toUpperCase() : 'OK');
+    if (tbody.firstElementChild && tbody.firstElementChild.querySelector('td[colspan]')) {
+      tbody.innerHTML = '';
+    }
 
-      rowsHtml += `
-        <tr data-dev="${devName}">
-          <td style="font-weight:700; color:#fff;">/dev/${escapeHtml(devName)}</td>
-          <td>
-            <div style="font-weight:600; color:#e2e8f0;">${escapeHtml(modelStr)}</div>
-            <div style="font-size:10px; color:var(--muted);">SN: ${escapeHtml(serialStr)}</div>
-          </td>
-          <td>
-            <span class="bay-sub-badge" style="background:rgba(255,255,255,0.06); padding:2px 6px; border-radius:4px;">${escapeHtml(transportStr)} • ${escapeHtml(driverStr)}</span>
-          </td>
-          <td style="font-weight:600; color:var(--accent-cyan,#00f0ff);">${escapeHtml(sizeStr)}</td>
-          <td>
-            <span class="bay-health-tag ${thermal.cls}">${escapeHtml(healthStr)}</span>
-          </td>
-          <td>
-            <span class="bay-temp-pill" style="color:${thermal.color}; border-color:${thermal.color};">${thermal.text}</span>
-          </td>
-          <td style="text-align:right;">
-            <div style="display:inline-flex; gap:6px;">
-              <button class="btn-pill-toggle btn-locate-row" data-dev="${devName}" title="Locate Drive (Blink Bay LED)" style="padding:3px 8px; font-size:10.5px;">⚡ Locate</button>
-              <button class="btn-pill-toggle btn-smart-row" data-dev="${devName}" title="View S.M.A.R.T. Diagnostics" style="padding:3px 8px; font-size:10.5px;">📊 S.M.A.R.T.</button>
-            </div>
-          </td>
-        </tr>
-      `;
-    });
+    bindDiskTableEvents(tbody);
 
-    tbody.innerHTML = rowsHtml;
-
-    tbody.querySelectorAll('.btn-locate-row').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const dev = btn.dataset.dev;
-        triggerLocateDisk(dev, btn.closest('tr'));
-      });
-    });
-
-    tbody.querySelectorAll('.btn-smart-row').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const dev = btn.dataset.dev;
-        const row = btn.closest('tr');
-        const isStandby = row?.querySelector('.bay-health-tag')?.textContent?.trim() === 'STANDBY';
-        if (isStandby) {
-          showConfirmToast(
-            'Drive in Standby Mode',
-            `Disk /dev/${dev} is currently sleeping. Querying S.M.A.R.T. diagnostics will wake the drive, spinning up platters. Do you wish to wake it?`,
-            () => {
-              showToast(`Waking disk /dev/${dev}...`, 'info');
-              ZettEventBus.emit('modal:smart:open', { dev, forceWake: true });
-            }
-          );
-        } else {
-          ZettEventBus.emit('modal:smart:open', dev);
-        }
-      });
-    });
+    reconcileKeyedTable(
+      tbody,
+      disks,
+      (d) => d.dev || d.name || 'unknown',
+      createDiskRow,
+      updateDiskRow
+    );
   } catch (err) {
     console.warn('[Management] Failed to fetch disks inventory:', err);
     tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--crit); padding:20px;">Failed to load disks inventory.</td></tr>`;
   }
+}
+
+function buildDiskRowInner(d) {
+  const devName = d.dev || d.name || 'unknown';
+  const isStandby = Boolean(d.standby || d.health === 'standby');
+  const thermal = getThermalLevel(d.temp, isStandby);
+  const modelStr = d.model || 'Generic Disk';
+  const serialStr = d.serial && d.serial !== 'Unknown' ? d.serial : '--';
+  const transportStr = (d.transport || (devName.startsWith('nvme') ? 'nvme' : 'sata')).toUpperCase();
+  const driverStr = d.controller_driver || (devName.startsWith('nvme') ? 'nvme' : 'ahci');
+  const sizeStr = d.size_formatted || d.size || '--';
+  const healthStr = isStandby ? 'STANDBY' : (d.health ? String(d.health).toUpperCase() : 'OK');
+
+  return `
+    <td style="font-weight:700; color:#fff;">/dev/${escapeHtml(devName)}</td>
+    <td>
+      <div style="font-weight:600; color:#e2e8f0;">${escapeHtml(modelStr)}</div>
+      <div style="font-size:10px; color:var(--muted);">SN: ${escapeHtml(serialStr)}</div>
+    </td>
+    <td>
+      <span class="bay-sub-badge" style="background:rgba(255,255,255,0.06); padding:2px 6px; border-radius:4px;">${escapeHtml(transportStr)} • ${escapeHtml(driverStr)}</span>
+    </td>
+    <td class="disk-size-cell" style="font-weight:600; color:var(--accent-cyan,#00f0ff);">${escapeHtml(sizeStr)}</td>
+    <td>
+      <span class="bay-health-tag ${thermal.cls}">${escapeHtml(healthStr)}</span>
+    </td>
+    <td>
+      <span class="bay-temp-pill" style="color:${thermal.color}; border-color:${thermal.color};">${thermal.text}</span>
+    </td>
+    <td style="text-align:right;">
+      <div style="display:inline-flex; gap:6px;">
+        <button class="btn-pill-toggle btn-locate-row" data-dev="${devName}" title="Locate Drive (Blink Bay LED)" style="padding:3px 8px; font-size:10.5px;">⚡ Locate</button>
+        <button class="btn-pill-toggle btn-smart-row" data-dev="${devName}" title="View S.M.A.R.T. Diagnostics" style="padding:3px 8px; font-size:10.5px;">📊 S.M.A.R.T.</button>
+      </div>
+    </td>
+  `;
+}
+
+function createDiskRow(d) {
+  const devName = d.dev || d.name || 'unknown';
+  const tr = document.createElement('tr');
+  tr.dataset.key = devName;
+  tr.dataset.dev = devName;
+  tr.innerHTML = buildDiskRowInner(d);
+  return tr;
+}
+
+function updateDiskRow(row, d) {
+  const isStandby = Boolean(d.standby || d.health === 'standby');
+  const thermal = getThermalLevel(d.temp, isStandby);
+  const healthStr = isStandby ? 'STANDBY' : (d.health ? String(d.health).toUpperCase() : 'OK');
+
+  const healthTag = row.querySelector('.bay-health-tag');
+  if (healthTag) {
+    healthTag.className = `bay-health-tag ${thermal.cls}`;
+    healthTag.textContent = healthStr;
+  }
+  const tempPill = row.querySelector('.bay-temp-pill');
+  if (tempPill) {
+    tempPill.style.color = thermal.color;
+    tempPill.style.borderColor = thermal.color;
+    tempPill.textContent = thermal.text;
+  }
+  const sizeTd = row.querySelector('.disk-size-cell') || row.children[3];
+  if (sizeTd && (d.size_formatted || d.size)) {
+    sizeTd.textContent = d.size_formatted || d.size;
+  }
+}
+
+function bindDiskTableEvents(tbody) {
+  if (tbody._diskEventsBound) return;
+  tbody._diskEventsBound = true;
+
+  tbody.addEventListener('click', (e) => {
+    const locateBtn = e.target.closest('.btn-locate-row');
+    if (locateBtn) {
+      const dev = locateBtn.dataset.dev;
+      triggerLocateDisk(dev, locateBtn.closest('tr'));
+      return;
+    }
+
+    const smartBtn = e.target.closest('.btn-smart-row');
+    if (smartBtn) {
+      const dev = smartBtn.dataset.dev;
+      const row = smartBtn.closest('tr');
+      const isStandby = row?.querySelector('.bay-health-tag')?.textContent?.trim() === 'STANDBY';
+      if (isStandby) {
+        showConfirmToast(
+          'Drive in Standby Mode',
+          `Disk /dev/${dev} is currently sleeping. Querying S.M.A.R.T. diagnostics will wake the drive, spinning up platters. Do you wish to wake it?`,
+          () => {
+            showToast(`Waking disk /dev/${dev}...`, 'info');
+            ZettEventBus.emit('modal:smart:open', { dev, forceWake: true });
+          }
+        );
+      } else {
+        ZettEventBus.emit('modal:smart:open', dev);
+      }
+    }
+  });
 }
 
 export function initManagement() {

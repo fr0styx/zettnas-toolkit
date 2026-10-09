@@ -102,3 +102,53 @@ export async function copyTextToClipboard(text) {
     return false;
   }
 }
+
+/**
+ * Reconciles a table body or list container with an incoming dataset without wiping the DOM.
+ * Preserves focused elements, button states, active hover, and active selection.
+ *
+ * @param {HTMLElement} parentEl - The container element (e.g. tbody or list div)
+ * @param {Array} items - Array of data objects
+ * @param {Function} keyFn - Function returning a unique string/number key for each item
+ * @param {Function} createRowFn - Function returning a new HTMLElement for an item
+ * @param {Function} [updateRowFn] - Function updating an existing HTMLElement with the new item data
+ */
+export function reconcileKeyedTable(parentEl, items, keyFn, createRowFn, updateRowFn) {
+  if (!parentEl) return;
+  const existingMap = new Map();
+  Array.from(parentEl.children).forEach((child) => {
+    const key = child.dataset?.key ?? child.dataset?.dev ?? child.dataset?.id;
+    if (key != null) existingMap.set(String(key), child);
+  });
+
+  const incomingKeys = new Set();
+  items.forEach((item, index) => {
+    const key = String(keyFn(item));
+    incomingKeys.add(key);
+    let row = existingMap.get(key);
+
+    if (row) {
+      if (updateRowFn) updateRowFn(row, item);
+    } else {
+      row = createRowFn(item);
+      if (row) {
+        row.dataset.key = key;
+      }
+    }
+
+    if (row) {
+      // Maintain exact ordering without thrashing
+      const currentChild = parentEl.children[index];
+      if (currentChild !== row) {
+        parentEl.insertBefore(row, currentChild || null);
+      }
+    }
+  });
+
+  // Remove nodes that no longer exist in the incoming dataset
+  existingMap.forEach((row, key) => {
+    if (!incomingKeys.has(key)) {
+      row.remove();
+    }
+  });
+}

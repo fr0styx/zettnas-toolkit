@@ -1,4 +1,4 @@
-import { escapeHtml, trapFocus, copyTextToClipboard } from '../utils.js';
+import { escapeHtml, trapFocus, copyTextToClipboard, reconcileKeyedTable } from '../utils.js';
 import { api } from '../api.js';
 import { t } from '../i18n.js';
 import { ZettEventBus } from '../event-bus.js';
@@ -619,146 +619,167 @@ export function renderStructuredPoolsTopology(container, data) {
   const pools = data.pools;
   const isObserver = data.is_observer_mode ?? true;
 
-  const poolsHtml = pools.map((pool) => {
-    const usedStr = formatBytes(pool.used_bytes);
-    const totalStr = formatBytes(pool.total_bytes);
-    const freeStr = formatBytes(pool.free_bytes);
-    const pct = pool.used_pct || 0;
-    const barColor = pct > 90 ? 'var(--alert, #ef4444)' : (pct > 75 ? 'var(--warn, #f59e0b)' : 'var(--accent, #3bf58b)');
+  let tree = container.querySelector('.storage-topology-tree');
+  if (!tree) {
+    container.innerHTML = `
+      <div class="storage-topology-tree">
+        ${isObserver ? `
+          <div class="topo-observer-banner">
+            <span class="observer-icon">ℹ️</span>
+            <span><strong>Host Observer Mode:</strong> Storage pools, arrays, and parity checks are managed authoritatively by the host OS. Zero risk of parity alteration.</span>
+          </div>
+        ` : `
+          <div class="topo-observer-banner" style="background:rgba(99,102,241,0.12); border-color:rgba(99,102,241,0.25);">
+            <span class="observer-icon">⚡</span>
+            <span><strong>Active Provisioner Mode:</strong> Generic Linux host detected. Storage pools, Btrfs RAID bitrot protection, and subvolume snapshots are fully managed.</span>
+          </div>
+        `}
+        <div class="topo-pools-container"></div>
+      </div>
+    `;
+    tree = container.querySelector('.storage-topology-tree');
+  }
 
-    let statusClass = 'status-healthy';
-    let statusLabel = pool.status || 'HEALTHY';
-    if (statusLabel === 'SYNCING') {
-      statusClass = 'status-syncing';
-      statusLabel = '🔄 PARITY SYNCING';
-    } else if (statusLabel === 'DEGRADED') {
-      statusClass = 'status-degraded';
+  bindTopologyTreeEvents(tree, container);
+
+  const poolsContainer = tree.querySelector('.topo-pools-container') || tree;
+  reconcileKeyedTable(
+    poolsContainer,
+    pools,
+    (p) => p.id || p.name,
+    (p) => {
+      const block = document.createElement('div');
+      block.className = 'topo-pool-block';
+      block.dataset.key = p.id || p.name;
+      block.innerHTML = buildPoolBlockInner(p, isObserver);
+      return block;
+    },
+    (block, p) => {
+      block.innerHTML = buildPoolBlockInner(p, isObserver);
     }
+  );
+}
 
-    const membersHtml = (pool.members || []).map((m) => {
-      const isStandby = m.spundown || m.status === 'STANDBY';
-      const tempDisplay = isStandby ? '🌙 Standby' : (m.temp_c != null ? `${m.temp_c}°C` : '--');
-      const tempLevel = isStandby ? 'standby' : (m.temp_c != null ? getThermalLevel(m.temp_c).cls : 'cool');
-      const readsStr = m.num_reads ? formatNumber(m.num_reads) : '0';
-      const writesStr = m.num_writes ? formatNumber(m.num_writes) : '0';
+function buildPoolBlockInner(pool, isObserver) {
+  const usedStr = formatBytes(pool.used_bytes);
+  const totalStr = formatBytes(pool.total_bytes);
+  const freeStr = formatBytes(pool.free_bytes);
+  const pct = pool.used_pct || 0;
+  const barColor = pct > 90 ? 'var(--alert, #ef4444)' : (pct > 75 ? 'var(--warn, #f59e0b)' : 'var(--accent, #3bf58b)');
 
-      return `
-        <div class="topo-disk-card role-${m.role || 'data'} ${isStandby ? 'disk-standby' : ''}">
-          <div class="topo-disk-top">
-            <span class="topo-role-badge role-${m.role || 'data'}">${(m.role || 'DATA').toUpperCase()}</span>
-            <span class="topo-dev-name">/dev/${escapeHtml(m.device || m.name)}</span>
-            <span class="topo-temp-badge thermal-${tempLevel}">${tempDisplay}</span>
-          </div>
-          <div class="topo-disk-sub">
-            <span class="topo-disk-size">${formatBytes(m.size_bytes)}</span>
-            <span class="topo-disk-io" title="Disk I/O Reads & Writes">R: ${readsStr} · W: ${writesStr}</span>
-          </div>
-          <div class="topo-disk-actions">
-            <button class="btn-locate-topo" data-dev="${escapeHtml(m.device || m.name)}" title="Blink drive activity LED">
-              💡 Locate
-            </button>
-          </div>
-        </div>
-      `;
-    }).join('');
+  let statusClass = 'status-healthy';
+  let statusLabel = pool.status || 'HEALTHY';
+  if (statusLabel === 'SYNCING') {
+    statusClass = 'status-syncing';
+    statusLabel = '🔄 PARITY SYNCING';
+  } else if (statusLabel === 'DEGRADED') {
+    statusClass = 'status-degraded';
+  }
+
+  const membersHtml = (pool.members || []).map((m) => {
+    const isStandby = m.spundown || m.status === 'STANDBY';
+    const tempDisplay = isStandby ? '🌙 Standby' : (m.temp_c != null ? `${m.temp_c}°C` : '--');
+    const tempLevel = isStandby ? 'standby' : (m.temp_c != null ? getThermalLevel(m.temp_c).cls : 'cool');
+    const readsStr = m.num_reads ? formatNumber(m.num_reads) : '0';
+    const writesStr = m.num_writes ? formatNumber(m.num_writes) : '0';
 
     return `
-      <div class="topo-pool-block">
-        <div class="topo-pool-header">
-          <div class="topo-pool-title-wrap">
-            <svg viewBox="0 0 24 24" width="18" height="18" class="pool-icon"><use href="#i-storage"/></svg>
-            <div>
-              <span class="topo-pool-name">${escapeHtml(pool.name)}</span>
-              <span class="topo-pool-fs">${escapeHtml(pool.fs_type.toUpperCase())}${pool.fs_profile ? ` · ${escapeHtml(pool.fs_profile.toUpperCase())}` : ''}</span>
-            </div>
-          </div>
-          <div class="topo-pool-badges">
-            ${pool.parity_protected ? '<span class="topo-parity-badge" title="Protected against disk failure">🛡️ Parity Protected</span>' : ''}
-            <span class="topo-status-pill ${statusClass}">${escapeHtml(statusLabel)}</span>
-          </div>
+      <div class="topo-disk-card role-${m.role || 'data'} ${isStandby ? 'disk-standby' : ''}">
+        <div class="topo-disk-top">
+          <span class="topo-role-badge role-${m.role || 'data'}">${(m.role || 'DATA').toUpperCase()}</span>
+          <span class="topo-dev-name">/dev/${escapeHtml(m.device || m.name)}</span>
+          <span class="topo-temp-badge thermal-${tempLevel}">${tempDisplay}</span>
         </div>
-
-        <div class="topo-pool-usage">
-          <div class="topo-usage-labels">
-            <span><strong>${usedStr}</strong> used / <strong>${totalStr}</strong> total (${pct}%)</span>
-            <span class="topo-free-space">${freeStr} Free</span>
-          </div>
-          <div class="topo-usage-track">
-            <div class="topo-usage-fill" style="width: ${Math.min(100, Math.max(0, pct))}%; background: ${barColor};"></div>
-          </div>
+        <div class="topo-disk-sub">
+          <span class="topo-disk-size">${formatBytes(m.size_bytes)}</span>
+          <span class="topo-disk-io" title="Disk I/O Reads & Writes">R: ${readsStr} · W: ${writesStr}</span>
         </div>
-
-        <div class="topo-members-section">
-          <div class="topo-members-label">POOL MEMBER DISKS (${(pool.members || []).length})</div>
-          <div class="topo-members-grid">
-            ${membersHtml || '<span class="empty-note">No assigned member drives</span>'}
-          </div>
-        </div>
-
-        <div class="topo-pool-actions" style="margin-top:12px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-          <button class="btn-pool-scrub btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" title="Trigger filesystem scrub or parity check">⚡ Scrub Pool</button>
-          ${pool.fs_type === 'btrfs' ? `<button class="btn-pool-snaps btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" style="background:rgba(14,165,233,0.15); border-color:rgba(14,165,233,0.3); color:#38bdf8;" title="Manage Subvolume Snapshots">📸 Snapshots</button>` : ''}
-          ${!isObserver && pool.id !== 'default_pool' ? `<button class="btn-pool-destroy btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" style="background:rgba(239,68,68,0.15); border-color:rgba(239,68,68,0.3); color:#f87171;" title="Destroy storage pool">🗑️ Destroy</button>` : ''}
+        <div class="topo-disk-actions">
+          <button class="btn-locate-topo" data-dev="${escapeHtml(m.device || m.name)}" title="Blink drive activity LED">
+            💡 Locate
+          </button>
         </div>
       </div>
     `;
   }).join('');
 
-  container.innerHTML = `
-    <div class="storage-topology-tree">
-      ${isObserver ? `
-        <div class="topo-observer-banner">
-          <span class="observer-icon">ℹ️</span>
-          <span><strong>Host Observer Mode:</strong> Storage pools, arrays, and parity checks are managed authoritatively by the host OS. Zero risk of parity alteration.</span>
+  return `
+    <div class="topo-pool-header">
+      <div class="topo-pool-title-wrap">
+        <svg viewBox="0 0 24 24" width="18" height="18" class="pool-icon"><use href="#i-storage"/></svg>
+        <div>
+          <span class="topo-pool-name">${escapeHtml(pool.name)}</span>
+          <span class="topo-pool-fs">${escapeHtml(pool.fs_type.toUpperCase())}${pool.fs_profile ? ` · ${escapeHtml(pool.fs_profile.toUpperCase())}` : ''}</span>
         </div>
-      ` : `
-        <div class="topo-observer-banner" style="background:rgba(99,102,241,0.12); border-color:rgba(99,102,241,0.25);">
-          <span class="observer-icon">⚡</span>
-          <span><strong>Active Provisioner Mode:</strong> Generic Linux host detected. Storage pools, Btrfs RAID bitrot protection, and subvolume snapshots are fully managed.</span>
-        </div>
-      `}
-      <div class="topo-pools-container">
-        ${poolsHtml}
+      </div>
+      <div class="topo-pool-badges">
+        ${pool.parity_protected ? '<span class="topo-parity-badge" title="Protected against disk failure">🛡️ Parity Protected</span>' : ''}
+        <span class="topo-status-pill ${statusClass}">${escapeHtml(statusLabel)}</span>
       </div>
     </div>
+
+    <div class="topo-pool-usage">
+      <div class="topo-usage-labels">
+        <span><strong>${usedStr}</strong> used / <strong>${totalStr}</strong> total (${pct}%)</span>
+        <span class="topo-free-space">${freeStr} Free</span>
+      </div>
+      <div class="topo-usage-track">
+        <div class="topo-usage-fill" style="width: ${Math.min(100, Math.max(0, pct))}%; background: ${barColor};"></div>
+      </div>
+    </div>
+
+    <div class="topo-members-section">
+      <div class="topo-members-label">POOL MEMBER DISKS (${(pool.members || []).length})</div>
+      <div class="topo-members-grid">
+        ${membersHtml || '<span class="empty-note">No assigned member drives</span>'}
+      </div>
+    </div>
+
+    <div class="topo-pool-actions" style="margin-top:12px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+      <button class="btn-pool-scrub btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" title="Trigger filesystem scrub or parity check">⚡ Scrub Pool</button>
+      ${pool.fs_type === 'btrfs' ? `<button class="btn-pool-snaps btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" style="background:rgba(14,165,233,0.15); border-color:rgba(14,165,233,0.3); color:#38bdf8;" title="Manage Subvolume Snapshots">📸 Snapshots</button>` : ''}
+      ${!isObserver && pool.id !== 'default_pool' ? `<button class="btn-pool-destroy btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" style="background:rgba(239,68,68,0.15); border-color:rgba(239,68,68,0.3); color:#f87171;" title="Destroy storage pool">🗑️ Destroy</button>` : ''}
+    </div>
   `;
+}
 
-  // Attach Locate click listeners
-  container.querySelectorAll('.btn-locate-topo').forEach((btn) => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const dev = btn.dataset.dev;
-      if (dev) triggerLocateDisk(dev, btn);
-    });
-  });
+function bindTopologyTreeEvents(tree, container) {
+  if (tree._eventsBound) return;
+  tree._eventsBound = true;
 
-  // Attach Scrub click listeners
-  container.querySelectorAll('.btn-pool-scrub').forEach((btn) => {
-    btn.addEventListener('click', async (e) => {
+  tree.addEventListener('click', async (e) => {
+    const locateBtn = e.target.closest('.btn-locate-topo');
+    if (locateBtn) {
       e.stopPropagation();
-      const pid = btn.dataset.poolId;
+      const dev = locateBtn.dataset.dev;
+      if (dev) triggerLocateDisk(dev, locateBtn);
+      return;
+    }
+
+    const scrubBtn = e.target.closest('.btn-pool-scrub');
+    if (scrubBtn) {
+      e.stopPropagation();
+      const pid = scrubBtn.dataset.poolId;
       try {
         const res = await api.post('/api/storage/scrub', { pool_id: pid, action: 'start' });
         showToast(res.message || 'Scrub initiated.', 'info');
       } catch (err) {
         showToast(err.message || 'Failed to trigger scrub', 'error');
       }
-    });
-  });
+      return;
+    }
 
-  // Attach Snapshots click listeners
-  container.querySelectorAll('.btn-pool-snaps').forEach((btn) => {
-    btn.addEventListener('click', (e) => {
+    const snapBtn = e.target.closest('.btn-pool-snaps');
+    if (snapBtn) {
       e.stopPropagation();
-      openSnapshotsModal(btn.dataset.poolId);
-    });
-  });
+      openSnapshotsModal(snapBtn.dataset.poolId);
+      return;
+    }
 
-  // Attach Destroy click listeners
-  container.querySelectorAll('.btn-pool-destroy').forEach((btn) => {
-    btn.addEventListener('click', async (e) => {
+    const destroyBtn = e.target.closest('.btn-pool-destroy');
+    if (destroyBtn) {
       e.stopPropagation();
-      const pid = btn.dataset.poolId;
+      const pid = destroyBtn.dataset.poolId;
       if (confirm(`Are you sure you want to destroy pool '${pid}'? All mounted data will be unmounted.`)) {
         try {
           await api.delete(`/api/storage/pools/${pid}`);
@@ -768,7 +789,7 @@ export function renderStructuredPoolsTopology(container, data) {
           showToast(err.message || 'Failed to destroy pool', 'error');
         }
       }
-    });
+    }
   });
 }
 
@@ -866,91 +887,40 @@ export async function fetchAndRenderNetworkShares(container) {
       return;
     }
 
-    const cardsHtml = shares.map((s) => {
-      const usedStr = formatBytes(s.used_bytes);
-      const totalStr = formatBytes(s.total_bytes);
-      const freeStr = formatBytes(s.free_bytes);
-      const pct = s.used_pct || 0;
-      const barColor = pct > 90 ? 'var(--alert, #ef4444)' : (pct > 75 ? 'var(--warn, #f59e0b)' : 'var(--accent, #3bf58b)');
-
-      return `
-        <div class="storage-share-card">
-          <div class="share-card-header">
-            <div class="share-title-wrap">
-              <span class="share-folder-icon">📁</span>
-              <div>
-                <span class="share-name">${escapeHtml(s.name)}</span>
-                ${s.comment ? `<div class="share-comment">${escapeHtml(s.comment)}</div>` : ''}
-              </div>
-            </div>
-            <span class="share-sec-badge sec-${s.security || 'public'}">${escapeHtml((s.security || 'public').toUpperCase())}</span>
-          </div>
-
-          <div class="share-protocols-row">
-            <span class="proto-tag ${s.export_smb ? 'proto-on' : 'proto-off'}" title="Samba SMB Protocol">SMB</span>
-            <span class="proto-tag ${s.export_nfs ? 'proto-on' : 'proto-off'}" title="NFS Protocol">NFS</span>
-            <span class="proto-tag proto-on" title="Universal WebDAV Port 8084">WebDAV :8084</span>
-            ${s.cache_mode && s.cache_mode !== 'none' ? `
-              <span class="share-cache-tag" title="Cache Tiering: ${s.cache_mode}">Cache: ${escapeHtml(s.cache_mode)}${s.cache_pool ? ` (${escapeHtml(s.cache_pool)})` : ''}</span>
-            ` : ''}
-          </div>
-
-          <div class="share-usage-wrap">
-            <div class="share-usage-labels">
-              <span>${usedStr} / ${totalStr}</span>
-              <span>${pct}% used · ${freeStr} free</span>
-            </div>
-            <div class="share-progress-track">
-              <div class="share-progress-fill" style="width: ${Math.min(100, Math.max(0, pct))}%; background: ${barColor};"></div>
-            </div>
-          </div>
-
-          <div class="share-card-actions" style="display:flex; justify-content:space-between; align-items:center;">
-            <button class="btn-share-reveal" data-path="${escapeHtml(s.mountpoint || '')}" title="Open share in File Explorer">
-              📂 Open in File Explorer
-            </button>
-            ${canManageShares ? `
-              <button class="btn-share-delete btn-pill-toggle" data-share-name="${escapeHtml(s.name)}" style="background:rgba(239,68,68,0.15); border-color:rgba(239,68,68,0.3); color:#f87171; padding:3px 8px; font-size:10.5px;" title="Delete network share">
-                🗑️ Delete
-              </button>
-            ` : ''}
-          </div>
+    if (shares.length === 0) {
+      container.innerHTML = `
+        <div class="empty-shares-box" style="text-align:center; padding:40px; color:var(--muted);">
+          <svg viewBox="0 0 24 24" width="32" height="32" style="margin:0 auto 10px; opacity:0.5;"><use href="#i-storage"/></svg>
+          <div>No active network shares detected on host.</div>
         </div>
       `;
-    }).join('');
+      return;
+    }
 
-    container.innerHTML = `
-      <div class="storage-shares-grid">
-        ${cardsHtml}
-      </div>
-    `;
+    let grid = container.querySelector('.storage-shares-grid');
+    if (!grid) {
+      container.innerHTML = `<div class="storage-shares-grid"></div>`;
+      grid = container.querySelector('.storage-shares-grid');
+    }
 
-    // Bind "Open in File Explorer" buttons
-    container.querySelectorAll('.btn-share-reveal').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const path = btn.dataset.path;
-        playChirp(720, 0.08, 'triangle');
-        ZettEventBus.emit('window:open', { id: 'file-manager-window', path });
-        showToast(t('mgmt.opened_share', `Opened share in File Explorer: ${path}`), 'info');
-      });
-    });
+    bindSharesGridEvents(grid, container);
 
-    // Bind "Delete Share" buttons
-    container.querySelectorAll('.btn-share-delete').forEach((btn) => {
-      btn.addEventListener('click', async (e) => {
-        e.stopPropagation();
-        const sName = btn.dataset.shareName;
-        if (confirm(`Are you sure you want to remove share '${sName}'?`)) {
-          try {
-            await api.delete(`/api/storage/shares/${sName}`);
-            showToast(`Share '${sName}' removed.`, 'info');
-            fetchAndRenderNetworkShares(container);
-          } catch (err) {
-            showToast(err.message || 'Failed to delete share', 'error');
-          }
-        }
-      });
-    });
+    reconcileKeyedTable(
+      grid,
+      shares,
+      (s) => s.name,
+      (s) => {
+        const card = document.createElement('div');
+        card.className = 'storage-share-card';
+        card.dataset.key = s.name;
+        card.dataset.share = s.name;
+        card.innerHTML = buildShareCardInner(s, canManageShares);
+        return card;
+      },
+      (card, s) => {
+        updateShareCard(card, s, canManageShares);
+      }
+    );
   } catch (err) {
     console.error('[ZettNAS] Failed to fetch network shares:', err);
     container.innerHTML = `
@@ -959,6 +929,106 @@ export async function fetchAndRenderNetworkShares(container) {
       </div>
     `;
   }
+}
+
+function buildShareCardInner(s, canManageShares) {
+  const usedStr = formatBytes(s.used_bytes);
+  const totalStr = formatBytes(s.total_bytes);
+  const freeStr = formatBytes(s.free_bytes);
+  const pct = s.used_pct || 0;
+  const barColor = pct > 90 ? 'var(--alert, #ef4444)' : (pct > 75 ? 'var(--warn, #f59e0b)' : 'var(--accent, #3bf58b)');
+
+  return `
+    <div class="share-card-header">
+      <div class="share-title-wrap">
+        <span class="share-folder-icon">📁</span>
+        <div>
+          <span class="share-name">${escapeHtml(s.name)}</span>
+          ${s.comment ? `<div class="share-comment">${escapeHtml(s.comment)}</div>` : ''}
+        </div>
+      </div>
+      <span class="share-sec-badge sec-${s.security || 'public'}">${escapeHtml((s.security || 'public').toUpperCase())}</span>
+    </div>
+
+    <div class="share-protocols-row">
+      <span class="proto-tag ${s.export_smb ? 'proto-on' : 'proto-off'}" title="Samba SMB Protocol">SMB</span>
+      <span class="proto-tag ${s.export_nfs ? 'proto-on' : 'proto-off'}" title="NFS Protocol">NFS</span>
+      <span class="proto-tag proto-on" title="Universal WebDAV Port 8084">WebDAV :8084</span>
+      ${s.cache_mode && s.cache_mode !== 'none' ? `
+        <span class="share-cache-tag" title="Cache Tiering: ${s.cache_mode}">Cache: ${escapeHtml(s.cache_mode)}${s.cache_pool ? ` (${escapeHtml(s.cache_pool)})` : ''}</span>
+      ` : ''}
+    </div>
+
+    <div class="share-usage-wrap">
+      <div class="share-usage-labels">
+        <span class="share-usage-text">${usedStr} / ${totalStr}</span>
+        <span class="share-free-text">${pct}% used · ${freeStr} free</span>
+      </div>
+      <div class="share-progress-track">
+        <div class="share-progress-fill" style="width: ${Math.min(100, Math.max(0, pct))}%; background: ${barColor};"></div>
+      </div>
+    </div>
+
+    <div class="share-card-actions" style="display:flex; justify-content:space-between; align-items:center;">
+      <button class="btn-share-reveal" data-path="${escapeHtml(s.mountpoint || '')}" title="Open share in File Explorer">
+        📂 Open in File Explorer
+      </button>
+      ${canManageShares ? `
+        <button class="btn-share-delete btn-pill-toggle" data-share-name="${escapeHtml(s.name)}" style="background:rgba(239,68,68,0.15); border-color:rgba(239,68,68,0.3); color:#f87171; padding:3px 8px; font-size:10.5px;" title="Delete network share">
+          🗑️ Delete
+        </button>
+      ` : ''}
+    </div>
+  `;
+}
+
+function updateShareCard(card, s, canManageShares) {
+  const usedStr = formatBytes(s.used_bytes);
+  const totalStr = formatBytes(s.total_bytes);
+  const freeStr = formatBytes(s.free_bytes);
+  const pct = s.used_pct || 0;
+  const barColor = pct > 90 ? 'var(--alert, #ef4444)' : (pct > 75 ? 'var(--warn, #f59e0b)' : 'var(--accent, #3bf58b)');
+
+  const usageText = card.querySelector('.share-usage-text');
+  if (usageText) usageText.textContent = `${usedStr} / ${totalStr}`;
+  const freeText = card.querySelector('.share-free-text');
+  if (freeText) freeText.textContent = `${pct}% used · ${freeStr} free`;
+  const fill = card.querySelector('.share-progress-fill');
+  if (fill) {
+    fill.style.width = `${Math.min(100, Math.max(0, pct))}%`;
+    fill.style.background = barColor;
+  }
+}
+
+function bindSharesGridEvents(grid, container) {
+  if (grid._sharesEventsBound) return;
+  grid._sharesEventsBound = true;
+
+  grid.addEventListener('click', async (e) => {
+    const revealBtn = e.target.closest('.btn-share-reveal');
+    if (revealBtn) {
+      const path = revealBtn.dataset.path;
+      playChirp(720, 0.08, 'triangle');
+      ZettEventBus.emit('window:open', { id: 'file-manager-window', path });
+      showToast(t('mgmt.opened_share', `Opened share in File Explorer: ${path}`), 'info');
+      return;
+    }
+
+    const delBtn = e.target.closest('.btn-share-delete');
+    if (delBtn) {
+      e.stopPropagation();
+      const sName = delBtn.dataset.shareName;
+      if (confirm(`Are you sure you want to remove share '${sName}'?`)) {
+        try {
+          await api.delete(`/api/storage/shares/${sName}`);
+          showToast(`Share '${sName}' removed.`, 'info');
+          fetchAndRenderNetworkShares(container);
+        } catch (err) {
+          showToast(err.message || 'Failed to delete share', 'error');
+        }
+      }
+    }
+  });
 }
 
 /**
@@ -1782,53 +1852,77 @@ export async function openSnapshotsModal(poolId = 'default_pool') {
         listMount.innerHTML = '<div style="padding:20px; text-align:center; color:var(--muted); font-size:11px;">No active subvolume snapshots found.</div>';
         return;
       }
-      listMount.innerHTML = `
-        <table class="copy-history-table" style="width:100%;">
-          <thead>
-            <tr>
-              <th>Snapshot Name</th>
-              <th>Path</th>
-              <th>Created</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${snaps.map((s) => {
-              const dt = s.created_at ? new Date(s.created_at * 1000).toLocaleString() : '--';
-              return `
-                <tr>
-                  <td><strong>${escapeHtml(s.name)}</strong></td>
-                  <td style="font-family:monospace; font-size:11px; color:#38bdf8;">${escapeHtml(s.path)}</td>
-                  <td style="color:var(--muted); font-size:11px;">${dt}</td>
-                  <td>
-                    <button class="btn-snap-del btn-pill-toggle" data-snap="${escapeHtml(s.name)}" style="background:rgba(239,68,68,0.15); border-color:rgba(239,68,68,0.3); color:#f87171; padding:2px 8px; font-size:10.5px; cursor:pointer;">
-                      🗑️ Delete
-                    </button>
-                  </td>
-                </tr>
-              `;
-            }).join('')}
-          </tbody>
-        </table>
-      `;
 
-      listMount.querySelectorAll('.btn-snap-del').forEach((btn) => {
-        btn.onclick = async () => {
-          const sName = btn.dataset.snap;
-          if (confirm(`Delete snapshot '${sName}'?`)) {
-            try {
-              await api.delete(`/api/storage/pools/${poolId}/snapshots/${sName}`);
-              showToast(`Snapshot '${sName}' deleted.`, 'info');
-              loadSnapshots();
-            } catch (err) {
-              showToast(err.message || 'Failed to delete snapshot', 'error');
-            }
-          }
-        };
-      });
+      let tbody = listMount.querySelector('tbody');
+      if (!tbody) {
+        listMount.innerHTML = `
+          <table class="copy-history-table" style="width:100%;">
+            <thead>
+              <tr>
+                <th>Snapshot Name</th>
+                <th>Path</th>
+                <th>Created</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        `;
+        tbody = listMount.querySelector('tbody');
+        bindSnapshotsTableEvents(tbody, poolId, loadSnapshots);
+      }
+
+      reconcileKeyedTable(
+        tbody,
+        snaps,
+        (s) => s.name,
+        (s) => {
+          const dt = s.created_at ? new Date(s.created_at * 1000).toLocaleString() : '--';
+          const tr = document.createElement('tr');
+          tr.dataset.key = s.name;
+          tr.innerHTML = `
+            <td><strong>${escapeHtml(s.name)}</strong></td>
+            <td style="font-family:monospace; font-size:11px; color:#38bdf8;">${escapeHtml(s.path)}</td>
+            <td style="color:var(--muted); font-size:11px;">${dt}</td>
+            <td>
+              <button class="btn-snap-del btn-pill-toggle" data-snap="${escapeHtml(s.name)}" style="background:rgba(239,68,68,0.15); border-color:rgba(239,68,68,0.3); color:#f87171; padding:2px 8px; font-size:10.5px; cursor:pointer;">
+                🗑️ Delete
+              </button>
+            </td>
+          `;
+          return tr;
+        },
+        (tr, s) => {
+          const dt = s.created_at ? new Date(s.created_at * 1000).toLocaleString() : '--';
+          const pathTd = tr.children[1];
+          if (pathTd) pathTd.textContent = s.path;
+          const dtTd = tr.children[2];
+          if (dtTd) dtTd.textContent = dt;
+        }
+      );
     } catch (err) {
       listMount.innerHTML = `<div style="padding:15px; color:#f87171; font-size:11px;">Error loading snapshots: ${escapeHtml(err.message || '')}</div>`;
     }
+  }
+
+  function bindSnapshotsTableEvents(tbody, pId, onReload) {
+    if (tbody._eventsBound) return;
+    tbody._eventsBound = true;
+
+    tbody.addEventListener('click', async (e) => {
+      const btn = e.target.closest('.btn-snap-del');
+      if (!btn) return;
+      const sName = btn.dataset.snap;
+      if (confirm(`Delete snapshot '${sName}'?`)) {
+        try {
+          await api.delete(`/api/storage/pools/${pId}/snapshots/${sName}`);
+          showToast(`Snapshot '${sName}' deleted.`, 'info');
+          onReload();
+        } catch (err) {
+          showToast(err.message || 'Failed to delete snapshot', 'error');
+        }
+      }
+    });
   }
 
   loadSnapshots();
