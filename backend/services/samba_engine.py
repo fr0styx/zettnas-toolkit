@@ -236,6 +236,7 @@ class SambaEngine:
 
         try:
             import httpx
+
             transport = httpx.HTTPTransport(uds=docker_sock)
             with httpx.Client(transport=transport, timeout=1.5) as client:
                 r = client.get("http://localhost/containers/json?all=1")
@@ -271,6 +272,7 @@ class SambaEngine:
         if os.path.exists(docker_sock):
             try:
                 import httpx
+
                 transport = httpx.HTTPTransport(uds=docker_sock)
                 with httpx.Client(transport=transport, timeout=3.0) as client:
                     r = client.post("http://localhost/containers/zettnas-samba/restart?t=2")
@@ -289,6 +291,7 @@ class SambaEngine:
         sidecar_detected = sidecar_info.get("detected", False)
 
         from backend.hardware.pal_storage import StoragePlatformDetector, PlatformType
+
         platform = StoragePlatformDetector.detect()
 
         if platform == PlatformType.UNRAID:

@@ -53,6 +53,7 @@ def isolated_storage_env(monkeypatch, tmp_path):
 # 1. GenericLinuxStorageAdapter Unit Tests
 # ==============================================================================
 
+
 def test_generic_linux_capabilities():
     adapter = GenericLinuxStorageAdapter()
     caps = adapter.get_capabilities()
@@ -162,6 +163,7 @@ def test_btrfs_snapshots_lifecycle(monkeypatch, tmp_path):
 # 2. UnraidStorageAdapter Observer Mode Enforcement Tests
 # ==============================================================================
 
+
 def test_unraid_observer_mode_rejections():
     adapter = UnraidStorageAdapter()
 
@@ -187,6 +189,7 @@ def test_unraid_observer_mode_rejections():
 # ==============================================================================
 # 3. SambaEngine & Apple Time Machine (vfs_fruit) Tests
 # ==============================================================================
+
 
 def test_samba_engine_conf_generation_and_timemachine(tmp_path):
     engine = SambaEngine()
@@ -240,6 +243,7 @@ def test_samba_engine_conf_generation_and_timemachine(tmp_path):
 # ==============================================================================
 # 4. REST API Endpoint Integration Tests
 # ==============================================================================
+
 
 def test_api_storage_platform_info(client, auth_headers):
     res = client.get("/api/storage/platform", headers=auth_headers)
@@ -333,4 +337,3 @@ def test_api_pool_snapshots_and_lifecycle(client, auth_headers, monkeypatch):
     del_pool_res = client.delete("/api/storage/pools/datapool", headers=auth_headers)
     assert del_pool_res.status_code == 200
     assert del_pool_res.json()["status"] == "destroyed"
-

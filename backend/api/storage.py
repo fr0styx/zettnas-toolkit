@@ -234,4 +234,3 @@ def delete_storage_snapshot(pool_id: str, snapshot_name: str) -> Dict[str, Any]:
         return adapter.delete_snapshot(pool_id=pool_id, snapshot_name=snapshot_name)
     except PlatformCapabilityError as e:
         raise HTTPException(status_code=403, detail=str(e))
-

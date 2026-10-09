@@ -51,11 +51,24 @@ CURATED_PROVIDERS = [
         "icon": "cloud-lightning",
         "description": "AWS S3, MinIO, Wasabi, Cloudflare R2, Ceph, DigitalOcean Spaces, Backblaze B2 S3 API.",
         "fields": [
-            {"name": "provider", "label": "Provider Type", "type": "select", "options": ["AWS", "Minio", "Wasabi", "Cloudflare", "Ceph", "Other"], "default": "AWS", "required": True},
+            {
+                "name": "provider",
+                "label": "Provider Type",
+                "type": "select",
+                "options": ["AWS", "Minio", "Wasabi", "Cloudflare", "Ceph", "Other"],
+                "default": "AWS",
+                "required": True,
+            },
             {"name": "access_key_id", "label": "Access Key ID", "type": "text", "required": True},
             {"name": "secret_access_key", "label": "Secret Access Key", "type": "password", "required": True},
             {"name": "region", "label": "Region", "type": "text", "default": "us-east-1", "required": False},
-            {"name": "endpoint", "label": "Custom Endpoint URL", "type": "text", "placeholder": "https://s3.us-west-000.backblazeb2.com", "required": False},
+            {
+                "name": "endpoint",
+                "label": "Custom Endpoint URL",
+                "type": "text",
+                "placeholder": "https://s3.us-west-000.backblazeb2.com",
+                "required": False,
+            },
         ],
     },
     {
@@ -78,7 +91,14 @@ CURATED_PROVIDERS = [
         "fields": [
             {"name": "client_id", "label": "OAuth Client ID (Optional)", "type": "text", "required": False},
             {"name": "client_secret", "label": "OAuth Client Secret (Optional)", "type": "password", "required": False},
-            {"name": "scope", "label": "Access Scope", "type": "select", "options": ["drive", "drive.readonly", "drive.file"], "default": "drive", "required": False},
+            {
+                "name": "scope",
+                "label": "Access Scope",
+                "type": "select",
+                "options": ["drive", "drive.readonly", "drive.file"],
+                "default": "drive",
+                "required": False,
+            },
         ],
     },
     {
@@ -90,7 +110,14 @@ CURATED_PROVIDERS = [
         "fields": [
             {"name": "client_id", "label": "OAuth Client ID (Optional)", "type": "text", "required": False},
             {"name": "client_secret", "label": "OAuth Client Secret (Optional)", "type": "password", "required": False},
-            {"name": "drive_type", "label": "Drive Type", "type": "select", "options": ["personal", "business", "documentLibrary"], "default": "personal", "required": False},
+            {
+                "name": "drive_type",
+                "label": "Drive Type",
+                "type": "select",
+                "options": ["personal", "business", "documentLibrary"],
+                "default": "personal",
+                "required": False,
+            },
         ],
     },
     {
@@ -114,10 +141,23 @@ CURATED_PROVIDERS = [
         "icon": "folder-network",
         "description": "Connect to external Nextcloud, ownCloud, Synology, or remote WebDAV shares.",
         "fields": [
-            {"name": "url", "label": "WebDAV URL", "type": "text", "placeholder": "https://nextcloud.example.com/remote.php/webdav/", "required": True},
+            {
+                "name": "url",
+                "label": "WebDAV URL",
+                "type": "text",
+                "placeholder": "https://nextcloud.example.com/remote.php/webdav/",
+                "required": True,
+            },
             {"name": "user", "label": "Username", "type": "text", "required": False},
             {"name": "pass", "label": "Password / App Token", "type": "password", "required": False},
-            {"name": "vendor", "label": "Vendor", "type": "select", "options": ["nextcloud", "owncloud", "synology", "other"], "default": "other", "required": False},
+            {
+                "name": "vendor",
+                "label": "Vendor",
+                "type": "select",
+                "options": ["nextcloud", "owncloud", "synology", "other"],
+                "default": "other",
+                "required": False,
+            },
         ],
     },
     {
@@ -355,7 +395,9 @@ class RcloneEngine:
                 time.sleep(1.0)
                 if proc.poll() is not None:
                     _, err = proc.communicate(timeout=1.0)
-                    raise RuntimeError(f"Mount exited immediately: {err.strip() if err else 'code ' + str(proc.returncode)}")
+                    raise RuntimeError(
+                        f"Mount exited immediately: {err.strip() if err else 'code ' + str(proc.returncode)}"
+                    )
 
                 self._active_mounts[name] = {
                     "proc": proc,

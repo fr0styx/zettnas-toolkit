@@ -756,6 +756,7 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
         members: List[PoolMember] = []
         try:
             from backend.hardware.hal import DiskDiscoveryHAL
+
             hal_disks = DiskDiscoveryHAL.discover_physical_disks()
             for d in hal_disks:
                 # Include non-removable disks that are data or cache
@@ -817,6 +818,7 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
         # 1. Inspect Samba Engine shares
         try:
             from backend.services.samba_engine import get_samba_engine
+
             engine = get_samba_engine()
             samba_shares = engine.list_shares()
             for s in samba_shares:
@@ -965,6 +967,7 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
 
         try:
             from backend.services.samba_engine import SambaShareConfig, get_samba_engine
+
             engine = get_samba_engine()
             share_cfg = SambaShareConfig(
                 name=name,
@@ -991,6 +994,7 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
         """Deletes a network share from Samba configuration."""
         try:
             from backend.services.samba_engine import get_samba_engine
+
             engine = get_samba_engine()
             engine.remove_share(name)
         except Exception as e:
