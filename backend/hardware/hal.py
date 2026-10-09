@@ -149,8 +149,8 @@ class DiskDiscoveryHAL:
             if res.returncode == 0 and res.stdout.strip():
                 data = json.loads(res.stdout)
                 for item in data.get("blockdevices", []):
-                    # Filter for top-level physical disks (exclude partitions, lvm, loops, rom)
-                    if item.get("type") in ("disk",) and not item.get("name", "").startswith("loop"):
+                    # Filter for top-level physical disks (exclude partitions, lvm, loops, rom, zram)
+                    if item.get("type") in ("disk",) and not item.get("name", "").startswith(("loop", "zram", "ram")):
                         lsblk_disks.append(item)
         except Exception as e:
             logger.debug(f"[DiskDiscoveryHAL] lsblk execution fallback: {e}")
@@ -212,6 +212,8 @@ class DiskDiscoveryHAL:
             controller = cls._probe_controller_driver(kname)
             is_rot = bool(d.get("rota", True))
             sz = int(d.get("size") or 0)
+            if sz == 0 and not bool(d.get("hotplug")):
+                continue
 
             # Discover all mountpoints recursively
             mountpoints: List[str] = []
