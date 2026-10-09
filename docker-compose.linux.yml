@@ -1,42 +1,59 @@
+version: "3.8"
+
+# ==============================================================================
+# ZettNAS Toolkit - Turnkey Generic Linux Deployment
+# Supports Ubuntu, Debian, Alpine, Fedora, Arch, and Raspberry Pi OS (ARM64 & x86_64).
+# Features Active Provisioner Mode (Btrfs RAID1/10) and line-rate Samba sidecar.
+# ==============================================================================
+
 services:
   zettnas-toolkit:
     image: ghcr.io/fr0styx/zettnas-toolkit:latest
     container_name: zettnas-toolkit
     restart: unless-stopped
     ports:
-      - "${PORT:-8082}:8082"
+      - "8082:8082"   # ZettNAS Workbench WebUI & REST API
+      - "8084:8084"   # Universal WebDAV Engine (Direct Line-Rate Access)
     volumes:
+      # Host telemetry and sysfs mounts
       - /proc:/host/proc:ro
       - /sys:/host/sys:rw
       - /dev:/host/dev:rw
-      - /etc/localtime:/etc/localtime:ro
-      - ${STORAGE_POOL_PATH:-/mnt/storage}:/mnt/storage:rw
+      - /dev/fuse:/dev/fuse:rw
+      
+      # Storage root with bidirectional mount propagation
+      - /mnt/storage:/mnt/storage:rshared
+      
+      # Persistent application state and credentials
       - ./data:/app/data
+      
+      # Docker engine socket for container mutator and sidecar supervision
       - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
       - PORT=8082
-      - WEB_PASSWORD=${WEB_PASSWORD:-admin}
-      - NAS_NAME=${NAS_NAME:-ZettNAS}
+      - WEBDAV_PORT=8084
       - POOL_PATH=/mnt/storage
-      - HOST_PROC=/host/proc
-      - HOST_SYS=/host/sys
-      - HOST_DEV=/host/dev
-      - LCD_FPS=10
-    tmpfs:
-      - /host/sys/firmware:ro
-      - /host/sys/kernel/debug:ro
+      - SAMBA_MODE=native_sidecar
+      - PUID=1000
+      - PGID=1000
+      - ENABLE_FB=0
     cap_add:
-      - SYS_RAWIO   # Required for low-level SCSI/SATA SMART queries via SG_IO
-      - SYS_ADMIN   # Required for NVMe ioctls and removable media mounts
-    device_cgroup_rules:
-      - 'c 29:* rwm'    # Framebuffer (/dev/fb0)
-      - 'c 226:* rwm'   # DRI / GPU rendering (/dev/dri/*)
-      - 'c 188:* rwm'   # USB Serial (/dev/ttyUSB*)
-      - 'c 166:* rwm'   # ACM Serial (/dev/ttyACM*)
-      - 'b 8:* rwm'     # SCSI/SATA block devices (/dev/sd*)
-      - 'b 259:* rwm'   # NVMe block devices (/dev/nvme*)
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+      - SYS_RAWIO
+      - SYS_ADMIN
+    devices:
+      - /dev/fuse:/dev/fuse
+
+  zettnas-samba:
+    image: dperson/samba:latest
+    container_name: zettnas-samba
+    restart: unless-stopped
+    network_mode: host                    # Line-rate 10GbE throughput + native WSD & Bonjour mDNS
+    volumes:
+      - /mnt/storage:/mnt/storage:rw
+      - ./data/samba/smb.conf:/etc/samba/smb.conf:ro
+      - ./data/samba/private:/var/lib/samba/private:rw
+    environment:
+      - USERID=1000
+      - GROUPID=1000
+    depends_on:
+      - zettnas-toolkit

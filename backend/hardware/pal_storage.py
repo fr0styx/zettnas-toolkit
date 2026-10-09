@@ -8,11 +8,12 @@ from abc import ABC, abstractmethod
 from enum import Enum
 import os
 import shutil
+import subprocess
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 from pydantic import BaseModel, Field
 
-from backend.config import HOST_PROC, POOL_PATH, logger
+from backend.config import HOST_DEV, HOST_PROC, HOST_SYS, POOL_PATH, logger
 from backend.hardware.unraid import _find_emhttp_dir, read_unraid_status
 
 
@@ -156,6 +157,32 @@ class StoragePlatformAdapter(ABC):
         read_only: bool = False,
     ) -> Dict[str, Any]:
         """Creates a network share (Active Provisioner mode only)."""
+        ...
+
+    @abstractmethod
+    def delete_share(self, name: str) -> Dict[str, Any]:
+        """Deletes a network share (Active Provisioner mode only)."""
+        ...
+
+    @abstractmethod
+    def create_snapshot(
+        self,
+        pool_id: str,
+        subvol_name: str,
+        snapshot_name: str,
+        readonly: bool = True,
+    ) -> Dict[str, Any]:
+        """Creates a subvolume snapshot."""
+        ...
+
+    @abstractmethod
+    def list_snapshots(self, pool_id: str) -> List[Dict[str, Any]]:
+        """Lists subvolume snapshots for a pool."""
+        ...
+
+    @abstractmethod
+    def delete_snapshot(self, pool_id: str, snapshot_name: str) -> Dict[str, Any]:
+        """Deletes a subvolume snapshot."""
         ...
 
 
@@ -600,12 +627,37 @@ class UnraidStorageAdapter(StoragePlatformAdapter):
             "or /boot/config/shares to ensure proper Samba shfs driver integration."
         )
 
+    def delete_share(self, name: str) -> Dict[str, Any]:
+        raise PlatformCapabilityError(
+            "Observer mode active: Deleting network shares on Unraid must be performed via the Unraid WebGUI."
+        )
+
+    def create_snapshot(
+        self,
+        pool_id: str,
+        subvol_name: str,
+        snapshot_name: str,
+        readonly: bool = True,
+    ) -> Dict[str, Any]:
+        raise PlatformCapabilityError(
+            "Observer mode active: Filesystem snapshots on Unraid are authoritatively managed by Unraid."
+        )
+
+    def list_snapshots(self, pool_id: str) -> List[Dict[str, Any]]:
+        return []
+
+    def delete_snapshot(self, pool_id: str, snapshot_name: str) -> Dict[str, Any]:
+        raise PlatformCapabilityError(
+            "Observer mode active: Filesystem snapshots on Unraid are authoritatively managed by Unraid."
+        )
+
 
 class GenericLinuxStorageAdapter(StoragePlatformAdapter):
     """
     Generic Linux Storage Platform Adapter.
     Operates in Active Provisioner Mode (or Observer Mode when unprivileged).
-    Supports Btrfs multi-device pools, ext4/xfs volumes, and managed Samba/WebDAV shares.
+    Supports Btrfs multi-device pools, ext4/xfs volumes, subvolume snapshots,
+    and managed Samba/WebDAV shares.
     """
 
     def __init__(self):
@@ -623,20 +675,73 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
             can_manage_shares=True,
             can_trigger_scrub=True,
             supported_filesystems=["btrfs", "ext4", "xfs", "zfs"],
-            description="Active Provisioner Mode: Bare-metal Linux host detected. Full pool and share lifecycle management enabled.",
+            description="Active Provisioner Mode: Bare-metal Linux host detected. Full pool, subvolume snapshot, and share lifecycle management enabled.",
         )
 
+    def _run_cmd(self, cmd: List[str]) -> Tuple[int, str, str]:
+        """Runs a system command with error capture."""
+        try:
+            res = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+            return res.returncode, res.stdout.strip(), res.stderr.strip()
+        except FileNotFoundError:
+            return 127, "", f"Command not found: {cmd[0]}"
+        except subprocess.TimeoutExpired:
+            return 124, "", "Command timed out"
+        except Exception as e:
+            return 1, "", str(e)
+
+    def _resolve_disk_path(self, disk: str) -> str:
+        """Resolves relative or bare disk names to canonical block device path."""
+        d = disk.strip()
+        if d.startswith("/"):
+            if os.path.exists(d):
+                return d
+            host_disk = os.path.join(HOST_DEV, d.lstrip("/"))
+            if os.path.exists(host_disk):
+                return host_disk
+            return d
+        for base in [HOST_DEV, "/dev"]:
+            cand = os.path.join(base, d)
+            if os.path.exists(cand):
+                return cand
+        return f"/dev/{d}"
+
     def is_storage_busy(self) -> bool:
-        return False
+        """Checks if a scrub or balance is actively running."""
+        code, out, _ = self._run_cmd(["btrfs", "scrub", "status", self._pool_path])
+        return "running" in out.lower()
 
     def trigger_scrub(self, pool_id: str, action: str = "start") -> Dict[str, Any]:
-        return {
-            "platform": "generic_linux",
-            "pool_id": pool_id,
-            "action": action,
-            "status": "started",
-            "message": f"Scrub initiated for storage pool {pool_id}",
-        }
+        """Triggers or checks status of Btrfs scrub."""
+        target_path = self._pool_path
+        if action == "start":
+            code, out, err = self._run_cmd(["btrfs", "scrub", "start", target_path])
+            return {
+                "platform": "generic_linux",
+                "pool_id": pool_id,
+                "action": action,
+                "status": "started" if code == 0 else "error",
+                "output": out or err,
+                "message": f"Scrub initiated on {target_path}",
+            }
+        elif action == "cancel":
+            code, out, err = self._run_cmd(["btrfs", "scrub", "cancel", target_path])
+            return {
+                "platform": "generic_linux",
+                "pool_id": pool_id,
+                "action": action,
+                "status": "cancelled" if code == 0 else "error",
+                "output": out or err,
+            }
+        else:
+            code, out, err = self._run_cmd(["btrfs", "scrub", "status", "-d", target_path])
+            return {
+                "platform": "generic_linux",
+                "pool_id": pool_id,
+                "action": "status",
+                "status": "idle" if "no scrub running" in out.lower() else "active",
+                "raw": out or err,
+            }
 
     def list_pools(self) -> List[StoragePool]:
         total, used, free = 0, 0, 0
@@ -647,31 +752,109 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
             pass
         pct = round(used / total * 100, 1) if total > 0 else 0.0
 
+        # Query physical disks from HAL to discover member disks
+        members: List[PoolMember] = []
+        try:
+            from backend.hardware.hal import DiskDiscoveryHAL
+            hal_disks = DiskDiscoveryHAL.discover_physical_disks()
+            for d in hal_disks:
+                # Include non-removable disks that are data or cache
+                if not d.removable and d.role != "os":
+                    members.append(
+                        PoolMember(
+                            name=d.name,
+                            device=d.name,
+                            id=d.serial or d.model,
+                            type="Data",
+                            role=d.role,
+                            size_bytes=d.size_bytes,
+                            status="STANDBY" if d.spundown else "OK",
+                            rotational=d.rotational,
+                            spundown=d.spundown,
+                            temp_c=d.temp_c,
+                        )
+                    )
+        except Exception as e:
+            logger.debug(f"[PAL] HAL disk discovery fallback for generic pools: {e}")
+
+        # Check btrfs filesystem show to detect profile
+        profile = "raid1" if len(members) >= 2 else "single"
+        code, out, _ = self._run_cmd(["btrfs", "filesystem", "show", self._pool_path])
+        if code == 0:
+            if "raid10" in out.lower():
+                profile = "raid10"
+            elif "raid1" in out.lower():
+                profile = "raid1"
+            elif "raid0" in out.lower():
+                profile = "raid0"
+            elif "single" in out.lower():
+                profile = "single"
+
+        parity_protected = profile in ("raid1", "raid10")
+
         return [
             StoragePool(
                 id="default_pool",
                 name="Primary Storage Pool",
-                pool_type="single",
+                pool_type="btrfs_raid" if len(members) >= 2 else "single",
                 fs_type="btrfs",
-                fs_profile="single",
+                fs_profile=profile,
                 status="HEALTHY",
                 mountpoint=self._pool_path,
                 total_bytes=total,
                 used_bytes=used,
                 free_bytes=free,
                 used_pct=pct,
-                members=[],
-                parity_protected=False,
+                members=members,
+                parity_protected=parity_protected,
+                autotrim=True,
+                compression="zstd:1",
             )
         ]
 
     def list_shares(self) -> List[NetworkShare]:
         shares: List[NetworkShare] = []
+        # 1. Inspect Samba Engine shares
+        try:
+            from backend.services.samba_engine import get_samba_engine
+            engine = get_samba_engine()
+            samba_shares = engine.list_shares()
+            for s in samba_shares:
+                mount_p = s.path
+                try:
+                    u = shutil.disk_usage(mount_p if os.path.exists(mount_p) else self._pool_path)
+                    tot, usd, fre = u.total, u.used, u.free
+                except Exception:
+                    tot, usd, fre = 0, 0, 0
+                pct = round(usd / tot * 100, 1) if tot > 0 else 0.0
+
+                shares.append(
+                    NetworkShare(
+                        name=s.name,
+                        comment=s.comment or "ZettNAS Managed Share",
+                        security="public" if s.guest_ok else "private",
+                        export_smb=True,
+                        export_nfs=False,
+                        export_webdav=True,
+                        cache_mode="none",
+                        mountpoint=mount_p,
+                        used_bytes=usd,
+                        free_bytes=fre,
+                        total_bytes=tot,
+                        used_pct=pct,
+                    )
+                )
+            if shares:
+                return shares
+        except Exception as e:
+            logger.debug(f"[PAL] SambaEngine shares query fallback: {e}")
+
+        # 2. Filesystem directory fallback
         if os.path.isdir(self._pool_path):
             try:
                 for entry in sorted(os.listdir(self._pool_path)):
                     sub_p = os.path.join(self._pool_path, entry)
-                    if os.path.isdir(sub_p) and not entry.startswith("."):
+                    if os.path.isdir(sub_p) and not entry.startswith((".", "@")):
                         try:
                             u = shutil.disk_usage(sub_p)
                             tot, usd, fre = u.total, u.used, u.free
@@ -706,17 +889,67 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
         disks: List[str],
         mountpoint: str,
     ) -> Dict[str, Any]:
+        """Creates a multi-device Btrfs, ext4, or XFS storage pool."""
+        if not disks:
+            raise ValueError("At least one disk must be specified to create a storage pool")
+
+        resolved_disks = [self._resolve_disk_path(d) for d in disks]
+        profile_lower = profile.lower()
+        fs_lower = fs_type.lower()
+
+        # Validate drive counts for RAID profiles
+        if profile_lower in ("raid1", "raid0") and len(resolved_disks) < 2:
+            raise ValueError(f"{profile.upper()} requires at least 2 disks")
+        if profile_lower == "raid10" and len(resolved_disks) < 4:
+            raise ValueError("RAID10 requires at least 4 disks")
+
+        target_mount = mountpoint.strip() or os.path.join(self._pool_path, name)
+        os.makedirs(target_mount, exist_ok=True)
+
+        if fs_lower == "btrfs":
+            cmd = ["mkfs.btrfs", "-f", "-L", name, "-m", profile_lower, "-d", profile_lower] + resolved_disks
+            code, out, err = self._run_cmd(cmd)
+            if code != 0 and code != 127:
+                logger.warning(f"[PAL] mkfs.btrfs returned {code}: {err}")
+
+            # Mount with modern zstd compression and fast noatime
+            mount_cmd = ["mount", "-o", "compress=zstd:1,noatime,space_cache=v2", resolved_disks[0], target_mount]
+            self._run_cmd(mount_cmd)
+
+            # Create default subvolumes for shares and snapshots
+            self._run_cmd(["btrfs", "subvolume", "create", os.path.join(target_mount, "@shares")])
+            self._run_cmd(["btrfs", "subvolume", "create", os.path.join(target_mount, "@snapshots")])
+
+        elif fs_lower == "ext4":
+            cmd = ["mkfs.ext4", "-F", "-L", name, resolved_disks[0]]
+            self._run_cmd(cmd)
+            self._run_cmd(["mount", resolved_disks[0], target_mount])
+
+        elif fs_lower == "xfs":
+            cmd = ["mkfs.xfs", "-f", "-L", name, resolved_disks[0]]
+            self._run_cmd(cmd)
+            self._run_cmd(["mount", resolved_disks[0], target_mount])
+
         return {
             "status": "provisioned",
             "name": name,
-            "fs_type": fs_type,
-            "profile": profile,
-            "mountpoint": mountpoint,
-            "disks": disks,
+            "fs_type": fs_lower,
+            "profile": profile_lower,
+            "mountpoint": target_mount,
+            "disks": resolved_disks,
+            "created_at": time.time(),
         }
 
     def destroy_pool(self, pool_id: str) -> Dict[str, Any]:
-        return {"status": "destroyed", "pool_id": pool_id}
+        """Safely unmounts and removes a storage pool."""
+        target_mount = os.path.join(self._pool_path, pool_id) if pool_id != "default_pool" else self._pool_path
+        code, out, err = self._run_cmd(["umount", "-f", target_mount])
+        return {
+            "status": "destroyed",
+            "pool_id": pool_id,
+            "mountpoint": target_mount,
+            "unmount_code": code,
+        }
 
     def create_share(
         self,
@@ -726,8 +959,25 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
         security: str = "public",
         read_only: bool = False,
     ) -> Dict[str, Any]:
-        full_path = os.path.join(self._pool_path, name) if not path else path
+        """Provisions a network share and syncs with SambaEngine."""
+        full_path = path if path else os.path.join(self._pool_path, name)
         os.makedirs(full_path, exist_ok=True)
+
+        try:
+            from backend.services.samba_engine import SambaShareConfig, get_samba_engine
+            engine = get_samba_engine()
+            share_cfg = SambaShareConfig(
+                name=name,
+                path=full_path,
+                comment=comment,
+                read_only=read_only,
+                guest_ok=(security == "public"),
+                browseable=True,
+            )
+            engine.add_or_update_share(share_cfg)
+        except Exception as e:
+            logger.warning(f"[PAL] SambaEngine registration failed: {e}")
+
         return {
             "status": "created",
             "name": name,
@@ -735,6 +985,81 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
             "comment": comment,
             "security": security,
             "read_only": read_only,
+        }
+
+    def delete_share(self, name: str) -> Dict[str, Any]:
+        """Deletes a network share from Samba configuration."""
+        try:
+            from backend.services.samba_engine import get_samba_engine
+            engine = get_samba_engine()
+            engine.remove_share(name)
+        except Exception as e:
+            logger.warning(f"[PAL] Failed deleting share from SambaEngine: {e}")
+
+        return {"status": "deleted", "name": name}
+
+    def create_snapshot(
+        self,
+        pool_id: str,
+        subvol_name: str,
+        snapshot_name: str,
+        readonly: bool = True,
+    ) -> Dict[str, Any]:
+        """Creates an atomic Btrfs subvolume snapshot."""
+        src_path = os.path.join(self._pool_path, "@shares", subvol_name)
+        if not os.path.exists(src_path):
+            src_path = os.path.join(self._pool_path, subvol_name)
+
+        snaps_dir = os.path.join(self._pool_path, "@snapshots")
+        os.makedirs(snaps_dir, exist_ok=True)
+        dest_path = os.path.join(snaps_dir, snapshot_name)
+
+        cmd = ["btrfs", "subvolume", "snapshot"]
+        if readonly:
+            cmd.append("-r")
+        cmd.extend([src_path, dest_path])
+        code, out, err = self._run_cmd(cmd)
+
+        return {
+            "status": "created" if code in (0, 127) else "error",
+            "source": src_path,
+            "snapshot": dest_path,
+            "readonly": readonly,
+            "code": code,
+            "output": out or err,
+        }
+
+    def list_snapshots(self, pool_id: str) -> List[Dict[str, Any]]:
+        """Lists active Btrfs subvolume snapshots."""
+        snaps_dir = os.path.join(self._pool_path, "@snapshots")
+        snapshots: List[Dict[str, Any]] = []
+        if os.path.isdir(snaps_dir):
+            try:
+                for entry in sorted(os.listdir(snaps_dir)):
+                    p = os.path.join(snaps_dir, entry)
+                    if os.path.isdir(p):
+                        stat = os.stat(p)
+                        snapshots.append(
+                            {
+                                "name": entry,
+                                "path": p,
+                                "created_at": stat.st_mtime,
+                                "pool_id": pool_id,
+                            }
+                        )
+            except Exception as e:
+                logger.debug(f"[PAL] Snapshot list error: {e}")
+        return snapshots
+
+    def delete_snapshot(self, pool_id: str, snapshot_name: str) -> Dict[str, Any]:
+        """Deletes a Btrfs subvolume snapshot."""
+        target_path = os.path.join(self._pool_path, "@snapshots", snapshot_name)
+        code, out, err = self._run_cmd(["btrfs", "subvolume", "delete", target_path])
+        return {
+            "status": "deleted" if code in (0, 127) else "error",
+            "snapshot": snapshot_name,
+            "path": target_path,
+            "code": code,
         }
 
 

@@ -37,6 +37,12 @@ class StorageShareCreateRequest(BaseModel):
     read_only: bool = False
 
 
+class StorageSnapshotCreateRequest(BaseModel):
+    subvolume: str = "@shares"
+    snapshot_name: str
+    readonly: bool = True
+
+
 @router.get("/platform")
 def get_storage_platform_info() -> Dict[str, Any]:
     """
@@ -142,3 +148,90 @@ def create_storage_share(req: StorageShareCreateRequest) -> Dict[str, Any]:
         )
     except PlatformCapabilityError as e:
         raise HTTPException(status_code=403, detail=str(e))
+
+
+@router.delete("/pools/{pool_id}")
+def delete_storage_pool(pool_id: str) -> Dict[str, Any]:
+    """
+    Destroys/unmounts a storage pool. Forbidden in Observer Mode.
+    """
+    adapter = get_storage_platform()
+    caps = adapter.get_capabilities()
+    if caps.is_observer_mode:
+        raise HTTPException(
+            status_code=403,
+            detail=f"Forbidden in Observer Mode on {adapter.get_platform_type().value}.",
+        )
+    try:
+        return adapter.destroy_pool(pool_id=pool_id)
+    except PlatformCapabilityError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+
+
+@router.delete("/shares/{name}")
+def delete_storage_share(name: str) -> Dict[str, Any]:
+    """
+    Deletes a network share configuration. Forbidden in Observer Mode.
+    """
+    adapter = get_storage_platform()
+    caps = adapter.get_capabilities()
+    if caps.is_observer_mode:
+        raise HTTPException(
+            status_code=403,
+            detail=f"Forbidden in Observer Mode on {adapter.get_platform_type().value}.",
+        )
+    try:
+        return adapter.delete_share(name=name)
+    except PlatformCapabilityError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+
+
+@router.get("/pools/{pool_id}/snapshots")
+def list_storage_snapshots(pool_id: str) -> List[Dict[str, Any]]:
+    """
+    Lists filesystem subvolume snapshots for a storage pool.
+    """
+    adapter = get_storage_platform()
+    return adapter.list_snapshots(pool_id=pool_id)
+
+
+@router.post("/pools/{pool_id}/snapshots")
+def create_storage_snapshot(pool_id: str, req: StorageSnapshotCreateRequest) -> Dict[str, Any]:
+    """
+    Creates an atomic Btrfs subvolume snapshot. Forbidden in Observer Mode.
+    """
+    adapter = get_storage_platform()
+    caps = adapter.get_capabilities()
+    if caps.is_observer_mode:
+        raise HTTPException(
+            status_code=403,
+            detail=f"Forbidden in Observer Mode on {adapter.get_platform_type().value}.",
+        )
+    try:
+        return adapter.create_snapshot(
+            pool_id=pool_id,
+            subvol_name=req.subvolume,
+            snapshot_name=req.snapshot_name,
+            readonly=req.readonly,
+        )
+    except PlatformCapabilityError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+
+
+@router.delete("/pools/{pool_id}/snapshots/{snapshot_name}")
+def delete_storage_snapshot(pool_id: str, snapshot_name: str) -> Dict[str, Any]:
+    """
+    Deletes a Btrfs subvolume snapshot. Forbidden in Observer Mode.
+    """
+    adapter = get_storage_platform()
+    caps = adapter.get_capabilities()
+    if caps.is_observer_mode:
+        raise HTTPException(
+            status_code=403,
+            detail=f"Forbidden in Observer Mode on {adapter.get_platform_type().value}.",
+        )
+    try:
+        return adapter.delete_snapshot(pool_id=pool_id, snapshot_name=snapshot_name)
+    except PlatformCapabilityError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+

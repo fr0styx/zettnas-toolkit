@@ -2,7 +2,7 @@ import { syncWidgetSettingsUI } from './widgets.js';
 import { syncDesktopThemeUI } from './settings.js';
 import { openContainerInspector, openContainerDeleteModal } from './container-modal.js';
 import { ZettEventBus } from '../event-bus.js';
-import { fetchAndRenderChassisTwin, renderStorageTopologyTree, fetchAndRenderStorageTopology, fetchAndRenderNetworkShares, fetchAndRenderRemoteStorage, openNewCloudRemoteModal, triggerLocateDisk, getThermalLevel } from './chassis-visualizer.js';
+import { fetchAndRenderChassisTwin, renderStorageTopologyTree, fetchAndRenderStorageTopology, fetchAndRenderNetworkShares, fetchAndRenderRemoteStorage, openNewCloudRemoteModal, openCreateStoragePoolModal, openCreateNetworkShareModal, openSnapshotsModal, triggerLocateDisk, getThermalLevel } from './chassis-visualizer.js';
 /**
  * ZettNAS Toolkit - System Management Window Controller
  * Manages the dedicated System Management desktop window, hub app grid,
@@ -2136,7 +2136,7 @@ export function initManagement() {
     });
   }
 
-  // Storage pool topology refresh button
+  // Storage pool topology refresh & create buttons
   const refreshTopoBtn = document.getElementById('btn-refresh-topo');
   if (refreshTopoBtn) {
     refreshTopoBtn.addEventListener('click', () => {
@@ -2146,13 +2146,40 @@ export function initManagement() {
     });
   }
 
-  // Network shares refresh button
+  const createPoolBtn = document.getElementById('btn-create-storage-pool');
+  if (createPoolBtn) {
+    createPoolBtn.addEventListener('click', () => {
+      const mount = document.getElementById('mgmt-storage-topo-mount');
+      openCreateStoragePoolModal(() => {
+        if (mount) fetchAndRenderStorageTopology(mount);
+      });
+    });
+  }
+
+  const manageSnapsBtn = document.getElementById('btn-manage-snapshots');
+  if (manageSnapsBtn) {
+    manageSnapsBtn.addEventListener('click', () => {
+      openSnapshotsModal();
+    });
+  }
+
+  // Network shares refresh & create buttons
   const refreshSharesBtn = document.getElementById('btn-refresh-shares');
   if (refreshSharesBtn) {
     refreshSharesBtn.addEventListener('click', () => {
       const mount = document.getElementById('mgmt-storage-shares-mount');
       if (mount) fetchAndRenderNetworkShares(mount);
       showToast('Network shares refreshed.', 'info');
+    });
+  }
+
+  const createShareBtn = document.getElementById('btn-create-network-share');
+  if (createShareBtn) {
+    createShareBtn.addEventListener('click', () => {
+      const mount = document.getElementById('mgmt-storage-shares-mount');
+      openCreateNetworkShareModal(() => {
+        if (mount) fetchAndRenderNetworkShares(mount);
+      });
     });
   }
 

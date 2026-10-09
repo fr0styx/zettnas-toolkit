@@ -2467,7 +2467,11 @@
                   <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-storage"/></svg> <span data-i18n="mgmt.topo_title">Storage Pool & Array Topology</span></div>
                   <div class="mgmt-card-intro-desc" data-i18n="mgmt.topo_desc">Hierarchical view of storage pools, parity protection drives, data array disks, and SSD cache tiers.</div>
                 </div>
-                <button class="btn-pill-toggle" id="btn-refresh-topo" title="Refresh Topology" data-i18n="mgmt.refresh">🔄 Refresh</button>
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <button class="btn-pill-toggle" id="btn-create-storage-pool" style="display:none; background:var(--brand, #0ea5e9); color:#fff; border-color:var(--brand, #0ea5e9);" title="Create New Storage Pool">+ Create Pool</button>
+                  <button class="btn-pill-toggle" id="btn-manage-snapshots" style="display:none;" title="Manage Btrfs Snapshots">📸 Snapshots</button>
+                  <button class="btn-pill-toggle" id="btn-refresh-topo" title="Refresh Topology" data-i18n="mgmt.refresh">🔄 Refresh</button>
+                </div>
               </div>
               <div class="mgmt-detail-body" id="mgmt-storage-topo-mount">
                 <!-- Mounted via renderStorageTopologyTree -->
@@ -2483,6 +2487,7 @@
                 </div>
                 <div style="display:flex; align-items:center; gap:8px;">
                   <span class="mgmt-app-pill" id="mgmt-shares-platform-badge" style="background:rgba(59,245,139,0.12); color:#3bf58b;">Observer Mode</span>
+                  <button class="btn-pill-toggle" id="btn-create-network-share" style="display:none; background:var(--brand, #0ea5e9); color:#fff; border-color:var(--brand, #0ea5e9);" title="Create Network Share">+ Create Share</button>
                   <button class="btn-pill-toggle" id="btn-refresh-shares" title="Refresh Network Shares" data-i18n="mgmt.refresh">🔄 Refresh</button>
                 </div>
               </div>
@@ -3086,6 +3091,171 @@
         <button type="submit" id="new-remote-submit-btn" style="padding: 7px 18px; font-size: 11px; font-weight: 700; background: var(--brand, #0ea5e9); border: none; color: #fff; border-radius: 6px; cursor: pointer;">Save & Connect Remote</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- Create Storage Pool Modal (Generic Linux Active Provisioner) -->
+<div id="modal-create-storage-pool" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-create-pool-title" style="display: none;">
+  <div class="smart-modal-window" style="max-width: 540px; width: 92%; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(14, 165, 233, 0.15); border: 1px solid rgba(255, 255, 255, 0.12);">
+    <div class="smart-modal-header" style="cursor: move;">
+      <span class="smart-modal-title" id="modal-create-pool-title" style="display: flex; align-items: center; gap: 8px;">
+        <svg class="ic" style="width: 15px; height: 15px; fill: currentColor; color: var(--brand, #0ea5e9);"><use href="#i-storage"/></svg>
+        <span>Provision Storage Pool & RAID</span>
+      </span>
+      <div class="os-window-controls">
+        <button class="win-btn close-btn" id="modal-create-pool-close-btn" title="Close" aria-label="Close"></button>
+      </div>
+    </div>
+    <form id="create-pool-form" class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px; max-height: 80vh; overflow-y: auto;">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <div>
+          <label style="display:block; font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;">POOL NAME</label>
+          <input type="text" id="create-pool-name" class="tz-select-input" placeholder="e.g. vault, ark, data" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff; border-radius:6px; font-size:12px;" required pattern="^[a-zA-Z0-9_\-\.]{1,32}$" />
+        </div>
+        <div>
+          <label style="display:block; font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;">FILESYSTEM</label>
+          <select id="create-pool-fs" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff; border-radius:6px; font-size:12px;">
+            <option value="btrfs" selected>Btrfs (Bitrot Protection + Snapshots)</option>
+            <option value="ext4">ext4 (Standard Linux Volume)</option>
+            <option value="xfs">XFS (High Performance Storage)</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px;">
+        <div>
+          <label style="display:block; font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;">RAID PROFILE</label>
+          <select id="create-pool-profile" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff; border-radius:6px; font-size:12px;">
+            <option value="raid1" selected>RAID 1 (Mirroring - 2+ Drives)</option>
+            <option value="raid10">RAID 10 (Striped Mirrors - 4+ Drives)</option>
+            <option value="raid0">RAID 0 (Striping - Fast, No Redundancy)</option>
+            <option value="single">Single (JBOD Drive)</option>
+          </select>
+        </div>
+        <div>
+          <label style="display:block; font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;">TRANSPARENT COMPRESSION</label>
+          <select id="create-pool-compression" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff; border-radius:6px; font-size:12px;">
+            <option value="zstd:1" selected>Zstandard (zstd:1 - Recommended)</option>
+            <option value="lzo">LZO (Fastest CPU)</option>
+            <option value="off">Disabled</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px;">
+        <label style="display:block; font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:6px; letter-spacing:0.5px;">SELECT MEMBER DISKS</label>
+        <div id="create-pool-disks-container" style="display:flex; flex-direction:column; gap:6px; max-height:160px; overflow-y:auto; background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:10px;">
+          <!-- Injected via JS -->
+        </div>
+      </div>
+
+      <div style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px;">
+        <label style="display:block; font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;">MOUNTPOINT</label>
+        <input type="text" id="create-pool-mountpoint" class="tz-select-input" placeholder="/mnt/storage/vault" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff; border-radius:6px; font-size:12px;" />
+      </div>
+
+      <div id="create-pool-error-box" style="display: none; padding: 8px 12px; background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); border-radius: 6px; color: #f87171; font-size: 11.5px;"></div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.08);">
+        <button type="button" id="modal-create-pool-cancel-btn" style="padding: 7px 16px; font-size: 11px; font-weight: 700; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); color: #fff; border-radius: 6px; cursor: pointer;">Cancel</button>
+        <button type="submit" id="create-pool-submit-btn" style="padding: 7px 18px; font-size: 11px; font-weight: 700; background: var(--brand, #0ea5e9); border: none; color: #fff; border-radius: 6px; cursor: pointer;">🚀 Provision Storage Pool</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Create Network Share Modal -->
+<div id="modal-create-network-share" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-create-share-title" style="display: none;">
+  <div class="smart-modal-window" style="max-width: 500px; width: 92%; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(14, 165, 233, 0.15); border: 1px solid rgba(255, 255, 255, 0.12);">
+    <div class="smart-modal-header" style="cursor: move;">
+      <span class="smart-modal-title" id="modal-create-share-title" style="display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 15px;">📁</span>
+        <span>Provision Network Share</span>
+      </span>
+      <div class="os-window-controls">
+        <button class="win-btn close-btn" id="modal-create-share-close-btn" title="Close" aria-label="Close"></button>
+      </div>
+    </div>
+    <form id="create-share-form" class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <div>
+          <label style="display:block; font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;">SHARE NAME</label>
+          <input type="text" id="create-share-name" class="tz-select-input" placeholder="e.g. vault, media, photos" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff; border-radius:6px; font-size:12px;" required pattern="^[a-zA-Z0-9_\-\.]{1,32}$" />
+        </div>
+        <div>
+          <label style="display:block; font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;">SECURITY ACCESS</label>
+          <select id="create-share-security" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff; border-radius:6px; font-size:12px;">
+            <option value="public" selected>Public (Guest Access Allowed)</option>
+            <option value="private">Private (Authenticated Users Only)</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label style="display:block; font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;">PATH ON DISK</label>
+        <input type="text" id="create-share-path" class="tz-select-input" placeholder="/mnt/storage/vault" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff; border-radius:6px; font-size:12px;" />
+      </div>
+
+      <div>
+        <label style="display:block; font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;">DESCRIPTION / COMMENT</label>
+        <input type="text" id="create-share-comment" class="tz-select-input" placeholder="ZettNAS Managed Share" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff; border-radius:6px; font-size:12px;" />
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 8px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px;">
+        <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:#fff; cursor:pointer;">
+          <input type="checkbox" id="create-share-export-smb" checked style="width:16px; height:16px; accent-color:var(--ok2);" />
+          <span>Export via Samba (SMB / Windows / macOS)</span>
+        </label>
+        <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:#fff; cursor:pointer;">
+          <input type="checkbox" id="create-share-timemachine" style="width:16px; height:16px; accent-color:var(--ok2);" />
+          <span>Enable Apple Time Machine Backup (vfs_fruit target)</span>
+        </label>
+        <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:#fff; cursor:pointer;">
+          <input type="checkbox" id="create-share-readonly" style="width:16px; height:16px; accent-color:var(--ok2);" />
+          <span>Read-Only Share</span>
+        </label>
+      </div>
+
+      <div id="create-share-error-box" style="display: none; padding: 8px 12px; background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); border-radius: 6px; color: #f87171; font-size: 11.5px;"></div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.08);">
+        <button type="button" id="modal-create-share-cancel-btn" style="padding: 7px 16px; font-size: 11px; font-weight: 700; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); color: #fff; border-radius: 6px; cursor: pointer;">Cancel</button>
+        <button type="submit" id="create-share-submit-btn" style="padding: 7px 18px; font-size: 11px; font-weight: 700; background: var(--brand, #0ea5e9); border: none; color: #fff; border-radius: 6px; cursor: pointer;">📁 Provision Share</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Btrfs Snapshots Manager Modal -->
+<div id="modal-btrfs-snapshots" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-snapshots-title" style="display: none;">
+  <div class="smart-modal-window" style="max-width: 600px; width: 92%; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(14, 165, 233, 0.15); border: 1px solid rgba(255, 255, 255, 0.12);">
+    <div class="smart-modal-header" style="cursor: move;">
+      <span class="smart-modal-title" id="modal-snapshots-title" style="display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 15px;">📸</span>
+        <span>Btrfs Subvolume Snapshots</span>
+      </span>
+      <div class="os-window-controls">
+        <button class="win-btn close-btn" id="modal-snapshots-close-btn" title="Close" aria-label="Close"></button>
+      </div>
+    </div>
+    <div class="smart-modal-body" style="padding: 20px; display: flex; flex-direction: column; gap: 16px;">
+      <!-- Take Snapshot Row -->
+      <div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 14px;">
+        <div style="font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 8px;">CREATE INSTANT SNAPSHOT</div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <input type="text" id="snap-name-input" class="tz-select-input" placeholder="snapshot-name (e.g. backup-daily)" style="flex: 1; min-width: 200px; border: 1px solid rgba(255,255,255,0.12); background: rgba(0,0,0,0.3); padding: 7px 10px; color: #fff; border-radius: 6px; font-size: 12px;" />
+          <button type="button" id="btn-take-snapshot-submit" style="padding: 7px 16px; font-size: 11px; font-weight: 700; background: var(--brand, #0ea5e9); border: none; color: #fff; border-radius: 6px; cursor: pointer;">📸 Take Snapshot</button>
+        </div>
+      </div>
+
+      <!-- Snapshots List -->
+      <div>
+        <div style="font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 8px;">ACTIVE SNAPSHOTS</div>
+        <div id="snapshots-list-mount" style="max-height: 240px; overflow-y: auto; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px;">
+          <!-- Populated via JS -->
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 

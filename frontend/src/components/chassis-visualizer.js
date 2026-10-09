@@ -5,6 +5,7 @@ import { ZettEventBus } from '../event-bus.js';
 import { announceA11y } from '../a11y.js';
 import { showToast } from '../toast.js';
 import { state } from '../state.js';
+import { makeDraggable } from './dock.js';
 
 /**
  * ZettNAS Physical Chassis Twin & Storage Topology Visualizer
@@ -675,6 +676,12 @@ export function renderStructuredPoolsTopology(container, data) {
             ${membersHtml || '<span class="empty-note">No assigned member drives</span>'}
           </div>
         </div>
+
+        <div class="topo-pool-actions" style="margin-top:12px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+          <button class="btn-pool-scrub btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" title="Trigger filesystem scrub or parity check">⚡ Scrub Pool</button>
+          ${pool.fs_type === 'btrfs' ? `<button class="btn-pool-snaps btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" style="background:rgba(14,165,233,0.15); border-color:rgba(14,165,233,0.3); color:#38bdf8;" title="Manage Subvolume Snapshots">📸 Snapshots</button>` : ''}
+          ${!isObserver && pool.id !== 'default_pool' ? `<button class="btn-pool-destroy btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" style="background:rgba(239,68,68,0.15); border-color:rgba(239,68,68,0.3); color:#f87171;" title="Destroy storage pool">🗑️ Destroy</button>` : ''}
+        </div>
       </div>
     `;
   }).join('');
@@ -686,7 +693,12 @@ export function renderStructuredPoolsTopology(container, data) {
           <span class="observer-icon">ℹ️</span>
           <span><strong>Host Observer Mode:</strong> Storage pools, arrays, and parity checks are managed authoritatively by the host OS. Zero risk of parity alteration.</span>
         </div>
-      ` : ''}
+      ` : `
+        <div class="topo-observer-banner" style="background:rgba(99,102,241,0.12); border-color:rgba(99,102,241,0.25);">
+          <span class="observer-icon">⚡</span>
+          <span><strong>Active Provisioner Mode:</strong> Generic Linux host detected. Storage pools, Btrfs RAID bitrot protection, and subvolume snapshots are fully managed.</span>
+        </div>
+      `}
       <div class="topo-pools-container">
         ${poolsHtml}
       </div>
@@ -699,6 +711,45 @@ export function renderStructuredPoolsTopology(container, data) {
       e.stopPropagation();
       const dev = btn.dataset.dev;
       if (dev) triggerLocateDisk(dev, btn);
+    });
+  });
+
+  // Attach Scrub click listeners
+  container.querySelectorAll('.btn-pool-scrub').forEach((btn) => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const pid = btn.dataset.poolId;
+      try {
+        const res = await api.post('/api/storage/scrub', { pool_id: pid, action: 'start' });
+        showToast(res.message || 'Scrub initiated.', 'info');
+      } catch (err) {
+        showToast(err.message || 'Failed to trigger scrub', 'error');
+      }
+    });
+  });
+
+  // Attach Snapshots click listeners
+  container.querySelectorAll('.btn-pool-snaps').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openSnapshotsModal(btn.dataset.poolId);
+    });
+  });
+
+  // Attach Destroy click listeners
+  container.querySelectorAll('.btn-pool-destroy').forEach((btn) => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const pid = btn.dataset.poolId;
+      if (confirm(`Are you sure you want to destroy pool '${pid}'? All mounted data will be unmounted.`)) {
+        try {
+          await api.delete(`/api/storage/pools/${pid}`);
+          showToast(`Pool '${pid}' destroyed.`, 'info');
+          fetchAndRenderStorageTopology(container);
+        } catch (err) {
+          showToast(err.message || 'Failed to destroy pool', 'error');
+        }
+      }
     });
   });
 }
@@ -716,7 +767,23 @@ export async function fetchAndRenderStorageTopology(container) {
   `;
 
   try {
-    const data = await api.get('/api/storage/pools');
+    const [data, platformData] = await Promise.all([
+      api.get('/api/storage/pools'),
+      api.get('/api/storage/platform').catch(() => ({})),
+    ]);
+
+    const canCreatePools = platformData?.capabilities?.can_create_pools ?? false;
+    const btnCreatePool = document.getElementById('btn-create-storage-pool');
+    const btnSnapshots = document.getElementById('btn-manage-snapshots');
+    if (btnCreatePool) {
+      btnCreatePool.style.display = canCreatePools ? 'inline-flex' : 'none';
+      btnCreatePool.onclick = () => openCreateStoragePoolModal(() => fetchAndRenderStorageTopology(container));
+    }
+    if (btnSnapshots) {
+      btnSnapshots.style.display = canCreatePools ? 'inline-flex' : 'none';
+      btnSnapshots.onclick = () => openSnapshotsModal();
+    }
+
     if (!data || !Array.isArray(data.pools) || data.pools.length === 0) {
       renderStorageTopologyTree(container, state.latestStats?.disks, state.latestStats?.unraid || {});
       return;
@@ -749,6 +816,13 @@ export async function fetchAndRenderNetworkShares(container) {
     const shares = sharesData.shares || [];
     const isObserver = sharesData.is_observer_mode ?? true;
     const platform = platformData.platform || sharesData.platform || 'unraid';
+    const canManageShares = platformData?.capabilities?.can_manage_shares ?? (!isObserver);
+
+    const btnCreateShare = document.getElementById('btn-create-network-share');
+    if (btnCreateShare) {
+      btnCreateShare.style.display = canManageShares ? 'inline-flex' : 'none';
+      btnCreateShare.onclick = () => openCreateNetworkShareModal(() => fetchAndRenderNetworkShares(container));
+    }
 
     // Update platform badge in pane header
     const badge = document.getElementById('mgmt-shares-platform-badge');
@@ -813,10 +887,15 @@ export async function fetchAndRenderNetworkShares(container) {
             </div>
           </div>
 
-          <div class="share-card-actions">
+          <div class="share-card-actions" style="display:flex; justify-content:space-between; align-items:center;">
             <button class="btn-share-reveal" data-path="${escapeHtml(s.mountpoint || '')}" title="Open share in File Explorer">
               📂 Open in File Explorer
             </button>
+            ${canManageShares ? `
+              <button class="btn-share-delete btn-pill-toggle" data-share-name="${escapeHtml(s.name)}" style="background:rgba(239,68,68,0.15); border-color:rgba(239,68,68,0.3); color:#f87171; padding:3px 8px; font-size:10.5px;" title="Delete network share">
+                🗑️ Delete
+              </button>
+            ` : ''}
           </div>
         </div>
       `;
@@ -835,6 +914,23 @@ export async function fetchAndRenderNetworkShares(container) {
         playChirp(720, 0.08, 'triangle');
         ZettEventBus.emit('window:open', { id: 'file-manager-window', path });
         showToast(t('mgmt.opened_share', `Opened share in File Explorer: ${path}`), 'info');
+      });
+    });
+
+    // Bind "Delete Share" buttons
+    container.querySelectorAll('.btn-share-delete').forEach((btn) => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const sName = btn.dataset.shareName;
+        if (confirm(`Are you sure you want to remove share '${sName}'?`)) {
+          try {
+            await api.delete(`/api/storage/shares/${sName}`);
+            showToast(`Share '${sName}' removed.`, 'info');
+            fetchAndRenderNetworkShares(container);
+          } catch (err) {
+            showToast(err.message || 'Failed to delete share', 'error');
+          }
+        }
       });
     });
   } catch (err) {
@@ -1418,4 +1514,306 @@ export async function openNewCloudRemoteModal(onSuccess) {
     showToast('Failed to load storage providers: ' + (err.message || 'Error'), 'error');
   }
 }
+
+/**
+ * Opens Create Storage Pool Modal (Generic Linux Active Provisioner)
+ */
+export async function openCreateStoragePoolModal(onSuccess) {
+  const modal = document.getElementById('modal-create-storage-pool');
+  if (!modal) return;
+
+  const closeBtn = document.getElementById('modal-create-pool-close-btn');
+  const cancelBtn = document.getElementById('modal-create-pool-cancel-btn');
+  const form = document.getElementById('create-pool-form');
+  const errorBox = document.getElementById('create-pool-error-box');
+  const disksContainer = document.getElementById('create-pool-disks-container');
+  const submitBtn = document.getElementById('create-pool-submit-btn');
+
+  const close = () => {
+    modal.style.display = 'none';
+  };
+
+  if (closeBtn) closeBtn.onclick = close;
+  if (cancelBtn) cancelBtn.onclick = close;
+
+  const modalWin = modal.querySelector('.smart-modal-window');
+  const modalHdr = modal.querySelector('.smart-modal-header');
+  if (modalWin && modalHdr) makeDraggable(modalWin, modalHdr);
+
+  modal.style.display = 'flex';
+  if (errorBox) errorBox.style.display = 'none';
+
+  // Populate available physical disks
+  if (disksContainer) {
+    disksContainer.innerHTML = '<div style="color:var(--muted); font-size:11px;">Scanning available physical disks...</div>';
+    try {
+      const disksRes = await api.get('/api/system/disks').catch(() => []);
+      const disksList = Array.isArray(disksRes) ? disksRes : (disksRes.disks || []);
+      const filtered = disksList.filter((d) => {
+        const n = String(d.dev || d.name || '').toLowerCase();
+        return !n.includes('loop') && !n.includes('zram') && !n.includes('boot');
+      });
+
+      if (filtered.length === 0) {
+        disksContainer.innerHTML = '<div style="color:var(--muted); font-size:11px;">No unassigned disks available.</div>';
+      } else {
+        disksContainer.innerHTML = filtered.map((d) => `
+          <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:#fff; cursor:pointer;">
+            <input type="checkbox" name="pool-disk" value="${escapeHtml(d.dev || d.name)}" style="accent-color:var(--ok2);" />
+            <span><strong>/dev/${escapeHtml(d.dev || d.name)}</strong> (${d.size || formatBytes(d.size_bytes)}) · ${escapeHtml(d.model || '')}</span>
+          </label>
+        `).join('');
+      }
+    } catch (dErr) {
+      disksContainer.innerHTML = '<div style="color:var(--muted); font-size:11px;">Failed to scan disks.</div>';
+    }
+  }
+
+  if (form) {
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      if (errorBox) errorBox.style.display = 'none';
+
+      const name = document.getElementById('create-pool-name')?.value.trim();
+      const fsType = document.getElementById('create-pool-fs')?.value || 'btrfs';
+      const profile = document.getElementById('create-pool-profile')?.value || 'raid1';
+      const mountpoint = document.getElementById('create-pool-mountpoint')?.value.trim() || '';
+
+      const checkedBoxes = Array.from(modal.querySelectorAll('input[name="pool-disk"]:checked'));
+      const disks = checkedBoxes.map((cb) => cb.value);
+
+      if (disks.length === 0) {
+        if (errorBox) {
+          errorBox.textContent = 'Please select at least one member disk.';
+          errorBox.style.display = 'block';
+        }
+        return;
+      }
+
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Provisioning...';
+      }
+
+      try {
+        await api.post('/api/storage/pools', {
+          name,
+          fs_type: fsType,
+          profile,
+          disks,
+          mountpoint,
+        });
+
+        close();
+        playChirp(880, 0.12, 'sine');
+        showToast(`Storage pool '${name}' provisioned successfully!`, 'info');
+        if (onSuccess) onSuccess();
+      } catch (err) {
+        if (errorBox) {
+          errorBox.textContent = err.message || 'Failed to create storage pool';
+          errorBox.style.display = 'block';
+        }
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = '🚀 Provision Storage Pool';
+        }
+      }
+    };
+  }
+}
+
+/**
+ * Opens Create Network Share Modal (Samba / WebDAV)
+ */
+export function openCreateNetworkShareModal(onSuccess) {
+  const modal = document.getElementById('modal-create-network-share');
+  if (!modal) return;
+
+  const closeBtn = document.getElementById('modal-create-share-close-btn');
+  const cancelBtn = document.getElementById('modal-create-share-cancel-btn');
+  const form = document.getElementById('create-share-form');
+  const errorBox = document.getElementById('create-share-error-box');
+  const submitBtn = document.getElementById('create-share-submit-btn');
+
+  const close = () => {
+    modal.style.display = 'none';
+  };
+
+  if (closeBtn) closeBtn.onclick = close;
+  if (cancelBtn) cancelBtn.onclick = close;
+
+  const modalWin = modal.querySelector('.smart-modal-window');
+  const modalHdr = modal.querySelector('.smart-modal-header');
+  if (modalWin && modalHdr) makeDraggable(modalWin, modalHdr);
+
+  modal.style.display = 'flex';
+  if (errorBox) errorBox.style.display = 'none';
+
+  if (form) {
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      if (errorBox) errorBox.style.display = 'none';
+
+      const name = document.getElementById('create-share-name')?.value.trim();
+      const path = document.getElementById('create-share-path')?.value.trim() || '';
+      const comment = document.getElementById('create-share-comment')?.value.trim() || '';
+      const security = document.getElementById('create-share-security')?.value || 'public';
+      const readOnly = document.getElementById('create-share-readonly')?.checked ?? false;
+      const isTm = document.getElementById('create-share-timemachine')?.checked ?? false;
+
+      if (!name) return;
+
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Provisioning...';
+      }
+
+      try {
+        await api.post('/api/storage/shares', {
+          name,
+          path,
+          comment,
+          security,
+          read_only: readOnly,
+        });
+
+        if (isTm) {
+          try {
+            await api.post('/api/samba/shares', {
+              name,
+              path: path || `/mnt/storage/${name}`,
+              comment: comment || 'Apple Time Machine Backup',
+              read_only: readOnly,
+              guest_ok: security === 'public',
+              browseable: true,
+              timemachine: true,
+            });
+          } catch (tmErr) {
+            console.warn('[Samba] Time Machine configuration warning:', tmErr);
+          }
+        }
+
+        close();
+        playChirp(880, 0.12, 'sine');
+        showToast(`Share '${name}' created successfully!`, 'info');
+        if (onSuccess) onSuccess();
+      } catch (err) {
+        if (errorBox) {
+          errorBox.textContent = err.message || 'Failed to create share';
+          errorBox.style.display = 'block';
+        }
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = '📁 Provision Share';
+        }
+      }
+    };
+  }
+}
+
+/**
+ * Opens Btrfs Subvolume Snapshots Manager Modal
+ */
+export async function openSnapshotsModal(poolId = 'default_pool') {
+  const modal = document.getElementById('modal-btrfs-snapshots');
+  if (!modal) return;
+
+  const closeBtn = document.getElementById('modal-snapshots-close-btn');
+  const snapNameInput = document.getElementById('snap-name-input');
+  const takeSnapBtn = document.getElementById('btn-take-snapshot-submit');
+  const listMount = document.getElementById('snapshots-list-mount');
+
+  const close = () => {
+    modal.style.display = 'none';
+  };
+
+  if (closeBtn) closeBtn.onclick = close;
+
+  const modalWin = modal.querySelector('.smart-modal-window');
+  const modalHdr = modal.querySelector('.smart-modal-header');
+  if (modalWin && modalHdr) makeDraggable(modalWin, modalHdr);
+
+  modal.style.display = 'flex';
+
+  async function loadSnapshots() {
+    if (!listMount) return;
+    listMount.innerHTML = '<div style="padding:15px; text-align:center; color:var(--muted); font-size:11px;">Loading snapshots...</div>';
+    try {
+      const snaps = await api.get(`/api/storage/pools/${poolId}/snapshots`);
+      if (!Array.isArray(snaps) || snaps.length === 0) {
+        listMount.innerHTML = '<div style="padding:20px; text-align:center; color:var(--muted); font-size:11px;">No active subvolume snapshots found.</div>';
+        return;
+      }
+      listMount.innerHTML = `
+        <table class="copy-history-table" style="width:100%;">
+          <thead>
+            <tr>
+              <th>Snapshot Name</th>
+              <th>Path</th>
+              <th>Created</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${snaps.map((s) => {
+              const dt = s.created_at ? new Date(s.created_at * 1000).toLocaleString() : '--';
+              return `
+                <tr>
+                  <td><strong>${escapeHtml(s.name)}</strong></td>
+                  <td style="font-family:monospace; font-size:11px; color:#38bdf8;">${escapeHtml(s.path)}</td>
+                  <td style="color:var(--muted); font-size:11px;">${dt}</td>
+                  <td>
+                    <button class="btn-snap-del btn-pill-toggle" data-snap="${escapeHtml(s.name)}" style="background:rgba(239,68,68,0.15); border-color:rgba(239,68,68,0.3); color:#f87171; padding:2px 8px; font-size:10.5px; cursor:pointer;">
+                      🗑️ Delete
+                    </button>
+                  </td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      `;
+
+      listMount.querySelectorAll('.btn-snap-del').forEach((btn) => {
+        btn.onclick = async () => {
+          const sName = btn.dataset.snap;
+          if (confirm(`Delete snapshot '${sName}'?`)) {
+            try {
+              await api.delete(`/api/storage/pools/${poolId}/snapshots/${sName}`);
+              showToast(`Snapshot '${sName}' deleted.`, 'info');
+              loadSnapshots();
+            } catch (err) {
+              showToast(err.message || 'Failed to delete snapshot', 'error');
+            }
+          }
+        };
+      });
+    } catch (err) {
+      listMount.innerHTML = `<div style="padding:15px; color:#f87171; font-size:11px;">Error loading snapshots: ${escapeHtml(err.message || '')}</div>`;
+    }
+  }
+
+  loadSnapshots();
+
+  if (takeSnapBtn && snapNameInput) {
+    takeSnapBtn.onclick = async () => {
+      const snapName = snapNameInput.value.trim() || `snap-${Date.now()}`;
+      try {
+        await api.post(`/api/storage/pools/${poolId}/snapshots`, {
+          subvolume: '@shares',
+          snapshot_name: snapName,
+          readonly: true,
+        });
+        showToast(`Snapshot '${snapName}' taken!`, 'info');
+        snapNameInput.value = '';
+        loadSnapshots();
+      } catch (err) {
+        showToast(err.message || 'Failed to create snapshot', 'error');
+      }
+    };
+  }
+}
+
 

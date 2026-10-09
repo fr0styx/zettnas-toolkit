@@ -18,6 +18,7 @@ from backend.api.chassis import router as chassis_router
 from backend.api.storage import router as storage_router
 from backend.api.webdav import router as webdav_router
 from backend.api.remotes import router as remotes_router
+from backend.api.samba import router as samba_router
 
 api_router = APIRouter()
 api_router.include_router(auth_router)
@@ -33,6 +34,7 @@ api_router.include_router(chassis_router)
 api_router.include_router(storage_router)
 api_router.include_router(webdav_router)
 api_router.include_router(remotes_router)
+api_router.include_router(samba_router)
 
 __all__ = [
     "api_router",
@@ -49,4 +51,5 @@ __all__ = [
     "storage_router",
     "webdav_router",
     "remotes_router",
+    "samba_router",
 ]
