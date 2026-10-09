@@ -4523,7 +4523,8 @@ body.theme-yak .lcd-dot.active {
   color: var(--muted);
 }
 
-.unraid-details-grid {
+.unraid-details-grid,
+.generic-details-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 10px;

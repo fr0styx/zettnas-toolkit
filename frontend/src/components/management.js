@@ -19,6 +19,47 @@ import { t, getLanguage } from '../i18n.js';
 let _activeProfile = 'balanced';
 let _unbindMgmtTrap = null;
 
+export const SUBPANE_MAP = {
+  'mgmt-pane-wallpaper': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-wallpaper' },
+  'mgmt-pane-widgets': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-widgets' },
+  'mgmt-pane-theme': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-theme' },
+  'mgmt-sec-theme': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-theme' },
+  'mgmt-sec-wallpaper': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-wallpaper' },
+  'mgmt-pane-language': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-language' },
+  'mgmt-sec-language': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-language' },
+  'mgmt-sec-metrics': { section: 'mgmt-sec-activity', pane: 'mgmt-pane-metrics' },
+  'mgmt-pane-metrics': { section: 'mgmt-sec-activity', pane: 'mgmt-pane-metrics' },
+  'mgmt-sec-copy': { section: 'mgmt-sec-activity', pane: 'mgmt-pane-copy' },
+  'mgmt-pane-copy': { section: 'mgmt-sec-activity', pane: 'mgmt-pane-copy' },
+  'mgmt-sec-activity': { section: 'mgmt-sec-activity', pane: 'mgmt-pane-metrics' },
+  // Hardware & Profiles
+  'mgmt-sec-hardware': { section: 'mgmt-sec-hardware', pane: 'mgmt-pane-unraid' },
+  'mgmt-pane-hardware': { section: 'mgmt-sec-hardware', pane: 'mgmt-pane-unraid' },
+  'mgmt-sec-services': { section: 'mgmt-sec-hardware', pane: 'mgmt-pane-unraid' }, // Backward compat
+  'mgmt-sec-unraid': { section: 'mgmt-sec-hardware', pane: 'mgmt-pane-unraid' },
+  'mgmt-pane-unraid': { section: 'mgmt-sec-hardware', pane: 'mgmt-pane-unraid' },
+  // Apps & Containers (First-Class Top-Level)
+  'mgmt-sec-docker': { section: 'mgmt-sec-docker', pane: 'mgmt-pane-docker' },
+  'mgmt-pane-docker': { section: 'mgmt-sec-docker', pane: 'mgmt-pane-docker' },
+  'mgmt-sec-catalog': { section: 'mgmt-sec-docker', pane: 'mgmt-pane-docker' },
+  'mgmt-sec-storage': { section: 'mgmt-sec-storage', pane: 'mgmt-pane-chassis-twin' },
+  'mgmt-pane-chassis-twin': { section: 'mgmt-sec-storage', pane: 'mgmt-pane-chassis-twin' },
+  'mgmt-pane-storage-topo': { section: 'mgmt-sec-storage', pane: 'mgmt-pane-storage-topo' },
+  'mgmt-pane-storage-shares': { section: 'mgmt-sec-storage', pane: 'mgmt-pane-storage-shares' },
+  'mgmt-pane-storage-remotes': { section: 'mgmt-sec-storage', pane: 'mgmt-pane-storage-remotes' },
+  'mgmt-pane-storage-disks': { section: 'mgmt-sec-storage', pane: 'mgmt-pane-storage-disks' },
+  'mgmt-sec-security': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-security' },
+  'mgmt-pane-security': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-security' },
+  'mgmt-sec-events': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-events' },
+  'mgmt-pane-events': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-events' },
+  'mgmt-sec-system': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-system' },
+  'mgmt-pane-system': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-system' },
+  'mgmt-sec-about': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-about' },
+  'mgmt-pane-about': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-about' },
+  'mgmt-sec-system-group': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-security' },
+  'mgmt-sec-ups': { section: 'mgmt-sec-ups', pane: null },
+};
+
 export function updateManagementTelemetry(stats) {
   if (!stats) return;
   const overlay = document.getElementById('management-modal-overlay');
@@ -26,7 +67,13 @@ export function updateManagementTelemetry(stats) {
     return;
   }
   const unraid = stats.unraid;
+  const unraidGrid = document.querySelector('.unraid-details-grid');
+  const genericGrid = document.querySelector('.generic-details-grid');
+
   if (unraid && unraid.available) {
+    if (unraidGrid) unraidGrid.style.display = 'grid';
+    if (genericGrid) genericGrid.style.display = 'none';
+
     const stateEl = document.getElementById('mgmt-unraid-state');
     const srvEl = document.getElementById('mgmt-unraid-server');
     const verEl = document.getElementById('mgmt-unraid-version');
@@ -64,6 +111,23 @@ export function updateManagementTelemetry(stats) {
         moverEl.style.color = 'var(--muted)';
       }
     }
+  } else {
+    if (unraidGrid) unraidGrid.style.display = 'none';
+    if (genericGrid) genericGrid.style.display = 'grid';
+
+    const osNameEl = document.getElementById('mgmt-generic-os');
+    const hostEl = document.getElementById('mgmt-generic-host');
+    const uptimeEl = document.getElementById('mgmt-generic-uptime');
+    const cpuEl = document.getElementById('mgmt-generic-cpu');
+    const loadEl = document.getElementById('mgmt-generic-load');
+    const engineEl = document.getElementById('mgmt-generic-engine');
+
+    if (osNameEl) osNameEl.textContent = stats.os?.distro || stats.system?.os || 'Linux';
+    if (hostEl) hostEl.textContent = stats.system?.hostname || 'ZettNAS Host';
+    if (uptimeEl) uptimeEl.textContent = stats.system?.uptime_str || stats.os?.uptime || 'Active';
+    if (cpuEl) cpuEl.textContent = stats.cpu?.model ? stats.cpu.model.slice(0, 24) : 'x86_64 / ARM64';
+    if (loadEl) loadEl.textContent = stats.cpu?.load_avg ? stats.cpu.load_avg.join(', ') : 'Normal';
+    if (engineEl) engineEl.textContent = stats.storage?.engine || 'Btrfs / OpenZFS';
   }
 
   // Update Docker pill in Hub and Left Sidebar
@@ -72,7 +136,10 @@ export function updateManagementTelemetry(stats) {
     const dockPill = document.getElementById('mgmt-hub-docker-pill');
     if (dockPill) dockPill.textContent = `${runningCount} Active`;
     const sideDockBadge = document.getElementById('mgmt-sidebar-docker-badge');
-    if (sideDockBadge) sideDockBadge.textContent = `${runningCount} Active`;
+    if (sideDockBadge) {
+      sideDockBadge.textContent = `${runningCount} Active`;
+      sideDockBadge.style.display = 'inline-block';
+    }
   }
 
   // Update Storage pill in Hub and Left Sidebar
@@ -299,7 +366,10 @@ export function renderDockerContainersTable() {
   const pill = document.getElementById('mgmt-hub-docker-pill');
   if (pill) pill.textContent = `${runningCount} Active`;
   const sideBadge = document.getElementById('mgmt-sidebar-docker-badge');
-  if (sideBadge) sideBadge.textContent = `${runningCount} Active`;
+  if (sideBadge) {
+    sideBadge.textContent = `${runningCount} Active`;
+    sideBadge.style.display = 'inline-block';
+  }
 
   if (totalCount === 0) {
     tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--muted); padding:20px;">${t('mgmt.docker_none', 'No Docker containers detected or socket not connected.')}</td></tr>`;
@@ -1821,41 +1891,7 @@ export function initManagement() {
   }
 
   
-  const SUBPANE_MAP = {
-    'mgmt-pane-wallpaper': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-wallpaper' },
-    'mgmt-pane-widgets': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-widgets' },
-    'mgmt-pane-theme': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-theme' },
-    'mgmt-sec-theme': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-theme' },
-    'mgmt-sec-wallpaper': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-wallpaper' },
-    'mgmt-pane-language': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-language' },
-    'mgmt-sec-language': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-language' },
-    'mgmt-sec-metrics': { section: 'mgmt-sec-activity', pane: 'mgmt-pane-metrics' },
-    'mgmt-pane-metrics': { section: 'mgmt-sec-activity', pane: 'mgmt-pane-metrics' },
-    'mgmt-sec-copy': { section: 'mgmt-sec-activity', pane: 'mgmt-pane-copy' },
-    'mgmt-pane-copy': { section: 'mgmt-sec-activity', pane: 'mgmt-pane-copy' },
-    'mgmt-sec-activity': { section: 'mgmt-sec-activity', pane: 'mgmt-pane-metrics' },
-    'mgmt-sec-unraid': { section: 'mgmt-sec-services', pane: 'mgmt-pane-unraid' },
-    'mgmt-pane-unraid': { section: 'mgmt-sec-services', pane: 'mgmt-pane-unraid' },
-    'mgmt-sec-docker': { section: 'mgmt-sec-services', pane: 'mgmt-pane-docker' },
-    'mgmt-pane-docker': { section: 'mgmt-sec-services', pane: 'mgmt-pane-docker' },
-    'mgmt-sec-services': { section: 'mgmt-sec-services', pane: 'mgmt-pane-unraid' },
-    'mgmt-sec-storage': { section: 'mgmt-sec-storage', pane: 'mgmt-pane-chassis-twin' },
-    'mgmt-pane-chassis-twin': { section: 'mgmt-sec-storage', pane: 'mgmt-pane-chassis-twin' },
-    'mgmt-pane-storage-topo': { section: 'mgmt-sec-storage', pane: 'mgmt-pane-storage-topo' },
-    'mgmt-pane-storage-shares': { section: 'mgmt-sec-storage', pane: 'mgmt-pane-storage-shares' },
-    'mgmt-pane-storage-remotes': { section: 'mgmt-sec-storage', pane: 'mgmt-pane-storage-remotes' },
-    'mgmt-pane-storage-disks': { section: 'mgmt-sec-storage', pane: 'mgmt-pane-storage-disks' },
-    'mgmt-sec-security': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-security' },
-    'mgmt-pane-security': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-security' },
-    'mgmt-sec-events': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-events' },
-    'mgmt-pane-events': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-events' },
-    'mgmt-sec-system': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-system' },
-    'mgmt-pane-system': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-system' },
-    'mgmt-sec-about': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-about' },
-    'mgmt-pane-about': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-about' },
-    'mgmt-sec-system-group': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-security' },
-    'mgmt-sec-ups': { section: 'mgmt-sec-ups', pane: null },
-  };
+
 
   function triggerActiveSubTab(parentId) {
     const parent = document.getElementById(parentId);
@@ -1942,8 +1978,12 @@ export function initManagement() {
       sectionName = t('mgmt.appearance_title', 'Appearance');
     } else if (targetId === 'mgmt-sec-activity') {
       sectionName = t('mgmt.activity_title', 'Activity Monitor');
-    } else if (targetId === 'mgmt-sec-services') {
-      sectionName = t('mgmt.services_title', 'Services');
+    } else if (targetId === 'mgmt-sec-docker') {
+      sectionName = t('mgmt.docker_title', 'Apps & Containers');
+      fetchAndRenderDockerContainers();
+    } else if (targetId === 'mgmt-sec-hardware' || targetId === 'mgmt-sec-services') {
+      sectionName = t('mgmt.hardware_title', 'Hardware & Profiles');
+      if (state.lastStats || state.latestStats) updateManagementTelemetry(state.lastStats || state.latestStats);
     } else if (targetId === 'mgmt-sec-storage') {
       sectionName = t('mgmt.storage_title', 'Storage & Chassis');
     } else if (targetId === 'mgmt-sec-ups') {

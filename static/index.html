@@ -109,11 +109,12 @@
               'mgmt-pane-metrics': 'mgmt-sec-activity',
               'mgmt-sec-copy': 'mgmt-sec-activity',
               'mgmt-pane-copy': 'mgmt-sec-activity',
-              'mgmt-sec-services': 'mgmt-sec-services',
-              'mgmt-pane-unraid': 'mgmt-sec-services',
-              'mgmt-sec-unraid': 'mgmt-sec-services',
-              'mgmt-sec-docker': 'mgmt-sec-services',
-              'mgmt-pane-docker': 'mgmt-sec-services',
+              'mgmt-sec-hardware': 'mgmt-sec-hardware',
+              'mgmt-sec-services': 'mgmt-sec-hardware',
+              'mgmt-pane-unraid': 'mgmt-sec-hardware',
+              'mgmt-sec-unraid': 'mgmt-sec-hardware',
+              'mgmt-sec-docker': 'mgmt-sec-docker',
+              'mgmt-pane-docker': 'mgmt-sec-docker',
               'mgmt-sec-ups': 'mgmt-sec-ups',
               'mgmt-sec-system-group': 'mgmt-sec-system-group',
               'mgmt-sec-security': 'mgmt-sec-system-group',
@@ -156,8 +157,8 @@
   })();
 </script>
 <style>html,body{color:#eaf1f8;background-color:#080c10;width:100%;height:100%;margin:0;padding:0;overflow:hidden}html.auth-required body{background:radial-gradient(circle at 50% 20%,#151d29 0%,#080c10 70%)!important}#login-overlay{z-index:999999;background:#080c10;justify-content:center;align-items:center;display:flex;position:fixed;inset:0}html.has-auth-session #login-overlay{display:none!important}html.auth-required #login-overlay{display:flex!important}html.auth-required .studio-viewport-wrapper,html.auth-required .suite-navbar,html.auth-required #desktop-icons-container,html.auth-required .desktop-icons-container,html.auth-required .top-nav,html.auth-required #desktop-widgets-container,html.auth-required #os-dock-container,html.auth-required .workspace-panel,html.auth-required .smart-modal-backdrop,html.auth-required .os-window,html.auth-required .notif-center-window{display:none!important}</style>
-  <script type="module" crossorigin src="/assets/index-P8qxs7Wx.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-CGyhGZq8.css">
+  <script type="module" crossorigin src="/assets/index-BnRqOgMT.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-DUx3ciVG.css">
 </head>
 <body class="studio-workbench">
 
@@ -1514,28 +1515,32 @@
             <svg class="mgmt-sidebar-svg"><use href="#i-grid"/></svg>
             <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_overview">HUB</span>
           </button>
-          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-wallpaper" title="Desktop Themes & Wallpapers">
-            <svg class="mgmt-sidebar-svg"><use href="#i-globe"/></svg>
-            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_appearance">Appearance</span>
+          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-docker" title="Docker Fleet & App Catalog">
+            <svg class="mgmt-sidebar-svg"><use href="#i-chip"/></svg>
+            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_containers">Containers</span>
+            <span class="mgmt-sidebar-badge" id="mgmt-sidebar-docker-badge" style="display:none;">0 Active</span>
+          </button>
+          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-storage" title="Storage & Physical Chassis">
+            <svg class="mgmt-sidebar-svg"><use href="#i-disk"/></svg>
+            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_storage">Storage & Chassis</span>
+            <span class="mgmt-sidebar-badge" id="mgmt-sidebar-storage-badge" style="display:none;">Drives</span>
+          </button>
+          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-hardware" title="Acoustic Profiles & Host Subsystem">
+            <svg class="mgmt-sidebar-svg"><use href="#i-sliders"/></svg>
+            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_hardware">Hardware & Profiles</span>
           </button>
           <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-activity" title="Metrics & History">
             <svg class="mgmt-sidebar-svg"><use href="#i-cpu"/></svg>
             <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_activity">Activity Monitor</span>
-          </button>
-          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-services" title="Apps & Integrations">
-            <svg class="mgmt-sidebar-svg"><use href="#i-chip"/></svg>
-            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_services">Services</span>
-            <span class="mgmt-sidebar-badge" id="mgmt-sidebar-docker-badge" style="display:none;">Docker</span>
           </button>
           <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-ups" title="UPS & Power Integrity">
             <svg class="mgmt-sidebar-svg"><use href="#i-storage"/></svg>
             <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_ups">UPS & Power</span>
             <span class="mgmt-sidebar-badge" id="mgmt-sidebar-ups-badge" style="display:none;">Power</span>
           </button>
-          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-storage" title="Storage & Physical Chassis">
-            <svg class="mgmt-sidebar-svg"><use href="#i-disk"/></svg>
-            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_storage">Storage & Chassis</span>
-            <span class="mgmt-sidebar-badge" id="mgmt-sidebar-storage-badge" style="display:none;">Drives</span>
+          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-wallpaper" title="Desktop Themes & Wallpapers">
+            <svg class="mgmt-sidebar-svg"><use href="#i-globe"/></svg>
+            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_appearance">Appearance</span>
           </button>
           <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-system-group" title="System Settings & API">
             <svg class="mgmt-sidebar-svg"><use href="#i-chip"/></svg>
@@ -1583,20 +1588,37 @@
             </div>
           </div>
 
-          <!-- 3. Services -->
-          <div class="mgmt-app-card" data-mgmt-target="mgmt-sec-services" role="button" tabindex="0">
-            <div class="mgmt-app-icon-wrap" style="background:rgba(52,152,219,0.12); color:#38bdf8; border-color:rgba(52,152,219,0.3);">
+          <!-- 3. Containers (Promoted to 1st-Class Card) -->
+          <div class="mgmt-app-card" data-mgmt-target="mgmt-sec-docker" role="button" tabindex="0">
+            <div class="mgmt-app-icon-wrap" style="background:rgba(56,189,248,0.12); color:#38bdf8; border-color:rgba(56,189,248,0.3);">
               <svg class="mgmt-app-svg"><use href="#i-chip"/></svg>
             </div>
             <div class="mgmt-app-info">
               <div class="mgmt-app-title-row">
-                <span class="mgmt-app-title" data-i18n="mgmt.hub_services_title">Services</span>
-                <span class="mgmt-app-pill" style="background:rgba(52,152,219,0.15); color:#38bdf8;" data-i18n="mgmt.hub_services_pill">Apps</span>
+                <span class="mgmt-app-title" data-i18n="mgmt.hub_docker_title">Containers</span>
+                <span class="mgmt-app-pill" id="mgmt-hub-docker-pill" style="background:rgba(56,189,248,0.15); color:#38bdf8;">0 Active</span>
               </div>
-              <p class="mgmt-app-desc" data-i18n="mgmt.hub_services_desc">Unraid array subsystem status, acoustic performance profiles, and Docker containers.</p>
+              <p class="mgmt-app-desc" data-i18n="mgmt.hub_docker_desc">Manage Docker fleet, inspect container logs, live port tuning, and 1-click curated app catalog.</p>
             </div>
             <div class="mgmt-app-footer">
-              <span class="mgmt-app-action" data-i18n="mgmt.hub_services_action">View Services ➔</span>
+              <span class="mgmt-app-action" data-i18n="mgmt.hub_docker_action">Manage Containers ➔</span>
+            </div>
+          </div>
+
+          <!-- 4. Hardware & Profiles -->
+          <div class="mgmt-app-card" data-mgmt-target="mgmt-sec-hardware" role="button" tabindex="0">
+            <div class="mgmt-app-icon-wrap" style="background:rgba(37,194,160,0.12); color:var(--ok2); border-color:rgba(37,194,160,0.3);">
+              <svg class="mgmt-app-svg"><use href="#i-sliders"/></svg>
+            </div>
+            <div class="mgmt-app-info">
+              <div class="mgmt-app-title-row">
+                <span class="mgmt-app-title" data-i18n="mgmt.hub_hardware_title">Hardware & Profiles</span>
+                <span class="mgmt-app-pill" style="background:rgba(37,194,160,0.15); color:var(--ok2);">Acoustics</span>
+              </div>
+              <p class="mgmt-app-desc" data-i18n="mgmt.hub_hardware_desc">Acoustic fan curves, hardware performance profiles, and host subsystem monitoring.</p>
+            </div>
+            <div class="mgmt-app-footer">
+              <span class="mgmt-app-action" data-i18n="mgmt.hub_hardware_action">Tune Profiles ➔</span>
             </div>
           </div>
 
@@ -2189,152 +2211,176 @@
         </div>
           </div>
 
-          <!-- 3. Services -->
-          <div id="mgmt-sec-services" class="mgmt-detail-card" style="display: none;">
-            <div class="mgmt-inner-tabs">
-              <button class="mgmt-inner-tab active" data-tab-target="mgmt-pane-unraid">
-                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-chip"/></svg>
-                <span data-i18n="mgmt.subtab_unraid">Unraid & Profiles</span>
-              </button>
-              <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-docker">
-                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-chip"/></svg>
-                <span data-i18n="mgmt.subtab_docker">Containers</span>
-              </button>
+          <!-- Apps & Containers (Standalone Top-Level Section) -->
+          <div id="mgmt-sec-docker" class="mgmt-detail-card" style="display: none;">
+            <div id="mgmt-pane-docker" class="mgmt-tab-pane" style="display: block;">
+              <div class="mgmt-card-intro" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                <div>
+                  <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-chip"/></svg> <span data-i18n="mgmt.docker_sec_title">Docker Containers & App Catalog</span></div>
+                  <div class="mgmt-card-intro-desc" data-i18n="mgmt.docker_sec_desc">Manage running containers or deploy curated homelab applications in 1-click.</div>
+                </div>
+                <div style="display:flex; gap:6px; align-items:center;">
+                  <button class="btn-pill-toggle active" id="btn-view-docker-containers">Active Containers</button>
+                  <button class="btn-pill-toggle" id="btn-view-docker-catalog">📦 App Catalog <span id="catalog-total-badge" class="docker-count-badge" style="margin-left:4px;">25+</span></button>
+                  <button class="btn-pill-toggle" id="btn-docker-prune" title="Clean up unused images, volumes, and stopped containers">🧹 Prune / Cleanup</button>
+                  <button class="btn-pill-toggle" id="btn-refresh-docker" title="Refresh Containers" data-i18n="mgmt.refresh">🔄 Refresh</button>
+                </div>
+              </div>
+              <div class="mgmt-detail-body">
+                <!-- 1. Active Containers View -->
+                <div id="docker-view-containers-wrap">
+                  <div class="docker-toolbar" style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:8px; margin-bottom:12px;">
+                    <div class="docker-filter-pills" style="display:flex; gap:6px; flex-wrap:wrap;">
+                      <button class="btn-pill-toggle docker-filter-btn active" data-filter="all"><span data-i18n="mgmt.docker_filter_all">All</span> <span id="docker-count-all" class="docker-count-badge">0</span></button>
+                      <button class="btn-pill-toggle docker-filter-btn" data-filter="running"><span data-i18n="mgmt.docker_filter_running">Running</span> <span id="docker-count-running" class="docker-count-badge">0</span></button>
+                      <button class="btn-pill-toggle docker-filter-btn" data-filter="stopped"><span data-i18n="mgmt.docker_filter_stopped">Stopped</span> <span id="docker-count-stopped" class="docker-count-badge">0</span></button>
+                      <button class="btn-pill-toggle docker-filter-btn" data-filter="compose"><span data-i18n="mgmt.docker_filter_compose">Compose</span> <span id="docker-count-compose" class="docker-count-badge">0</span></button>
+                      <button class="btn-pill-toggle docker-filter-btn" data-filter="standalone"><span data-i18n="mgmt.docker_filter_standalone">Standalone</span> <span id="docker-count-standalone" class="docker-count-badge">0</span></button>
+                    </div>
+                    <div class="docker-search-wrap" style="position:relative;">
+                      <input type="text" id="docker-search-input" placeholder="Search containers, images, ports..." data-i18n-placeholder="mgmt.docker_search_placeholder" class="tz-text-input" style="font-size:11px; padding:3px 8px; width:200px; height:24px; border-radius:4px;">
+                    </div>
+                  </div>
+                  <div style="overflow-x:auto; max-height:420px; background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.06); border-radius:8px;">
+                    <table class="copy-history-table docker-table">
+                      <thead>
+                        <tr>
+                          <th data-i18n="mgmt.tbl_name_id">Name / Stack</th>
+                          <th data-i18n="mgmt.tbl_hardware">Hardware</th>
+                          <th data-i18n="mgmt.tbl_telemetry">CPU / RAM</th>
+                          <th data-i18n="mgmt.tbl_ports">Ports & Web UI</th>
+                          <th data-i18n="mgmt.tbl_uptime">Status & Uptime</th>
+                          <th style="text-align:right;" data-i18n="mgmt.tbl_actions">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody id="docker-containers-tbody">
+                        <tr><td colspan="6" style="text-align:center; color:var(--muted); padding:20px;">Scanning Docker socket...</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <!-- 2. Curated App Catalog View -->
+                <div id="docker-view-catalog-wrap" style="display:none;">
+                  <div class="catalog-toolbar" style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:8px; margin-bottom:12px;">
+                    <div class="catalog-filter-pills" style="display:flex; gap:6px; flex-wrap:wrap;">
+                      <button class="btn-pill-toggle catalog-filter-btn active" data-cat="all">All Apps <span id="catalog-all-count" class="docker-count-badge" style="margin-left:4px;">25+</span></button>
+                      <button class="btn-pill-toggle catalog-filter-btn" data-cat="media">Media & Streaming</button>
+                      <button class="btn-pill-toggle catalog-filter-btn" data-cat="photos">Photos</button>
+                      <button class="btn-pill-toggle catalog-filter-btn" data-cat="cloud">Cloud & Files</button>
+                      <button class="btn-pill-toggle catalog-filter-btn" data-cat="automation">Automation</button>
+                      <button class="btn-pill-toggle catalog-filter-btn" data-cat="utilities">Utilities</button>
+                      <button class="btn-pill-toggle catalog-filter-btn" data-cat="downloads">Downloads</button>
+                    </div>
+                    <div class="catalog-search-wrap" style="display:flex; align-items:center; gap:8px;">
+                      <input type="text" id="catalog-search-input" placeholder="Search apps..." class="tz-text-input" style="font-size:11px; padding:3px 8px; width:180px; height:24px; border-radius:4px;">
+                      <button class="btn-pill-toggle" id="btn-manage-app-sources" title="Manage App Template Sources (Portainer/Custom)">🌐 Sources <span id="catalog-sources-count-badge" class="docker-count-badge" style="margin-left:3px; background:var(--accent); color:#000;">1</span></button>
+                    </div>
+                  </div>
+                  <div id="docker-catalog-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:12px; max-height:420px; overflow-y:auto; padding:2px;">
+                    <div style="color:var(--muted); text-align:center; padding:30px; grid-column:1/-1;">Loading app catalog...</div>
+                  </div>
+                </div>
+              </div>
             </div>
+          </div>
+
+          <!-- Hardware & Profiles (Formerly Services / Unraid) -->
+          <div id="mgmt-sec-hardware" class="mgmt-detail-card" style="display: none;">
             <div id="mgmt-pane-unraid" class="mgmt-tab-pane" style="display: block;">
-          <div class="mgmt-card-intro">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-              <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-chip"/></svg> <span data-i18n="mgmt.unraid_sec_title">Unraid Subsystem & Acoustic Profiles</span></div>
-              <span class="mgmt-app-pill" id="unraid-profile-current-pill" style="background:rgba(37,194,160,0.15); color:var(--ok2);">ACTIVE: AUTO DYNAMIC</span>
-            </div>
-            <div class="mgmt-card-intro-desc" data-i18n="mgmt.unraid_sec_desc">Monitor native Unraid storage array health, parity check status, and apply unified system profiles.</div>
-          </div>
-          <div class="mgmt-detail-body">
-            <div style="display:flex; flex-direction:column; gap: 14px;">
-              <div>
-                <label style="display:block; font-size:10.5px; font-weight:700; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px;" data-i18n="mgmt.acoustic_label">SYSTEM ACOUSTIC & PERFORMANCE PROFILE</label>
-                <div class="profile-switcher-row">
-                  <button class="profile-btn active" data-profile="auto">
-                    <span class="profile-btn-title" data-i18n="mgmt.profile_auto_title">⚡ AUTO DYNAMIC</span>
-                    <span class="profile-btn-desc" data-i18n="mgmt.profile_auto_desc">Dynamic curve based on thermals • Synced RGB</span>
-                  </button>
-                  <button class="profile-btn" data-profile="quiet">
-                    <span class="profile-btn-title" data-i18n="mgmt.profile_quiet_title">🤫 QUIET</span>
-                    <span class="profile-btn-desc" data-i18n="mgmt.profile_quiet_desc">Silent fans (37%) • 20% RGB</span>
-                  </button>
-                  <button class="profile-btn" data-profile="balanced">
-                    <span class="profile-btn-title" data-i18n="mgmt.profile_balanced_title">⚖️ BALANCED</span>
-                    <span class="profile-btn-desc" data-i18n="mgmt.profile_balanced_desc">Standard cooling (60%) • 50% RGB</span>
-                  </button>
-                  <button class="profile-btn" data-profile="performance">
-                    <span class="profile-btn-title" data-i18n="mgmt.profile_performance_title">🚀 PERFORMANCE</span>
-                    <span class="profile-btn-desc" data-i18n="mgmt.profile_performance_desc">Aggressive cooling (85%) • 100% RGB</span>
-                  </button>
+              <div class="mgmt-card-intro">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-sliders"/></svg> <span data-i18n="mgmt.hardware_sec_title">Hardware & Acoustic Profiles</span></div>
+                  <span class="mgmt-app-pill" id="unraid-profile-current-pill" style="background:rgba(37,194,160,0.15); color:var(--ok2);">ACTIVE: AUTO DYNAMIC</span>
                 </div>
+                <div class="mgmt-card-intro-desc" data-i18n="mgmt.hardware_sec_desc">Apply unified hardware cooling profiles, monitor host subsystem health, and tune thermal performance.</div>
               </div>
+              <div class="mgmt-detail-body">
+                <div style="display:flex; flex-direction:column; gap: 14px;">
+                  <div>
+                    <label style="display:block; font-size:10.5px; font-weight:700; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px;" data-i18n="mgmt.acoustic_label">SYSTEM ACOUSTIC & PERFORMANCE PROFILE</label>
+                    <div class="profile-switcher-row">
+                      <button class="profile-btn active" data-profile="auto">
+                        <span class="profile-btn-title" data-i18n="mgmt.profile_auto_title">⚡ AUTO DYNAMIC</span>
+                        <span class="profile-btn-desc" data-i18n="mgmt.profile_auto_desc">Dynamic curve based on thermals • Synced RGB</span>
+                      </button>
+                      <button class="profile-btn" data-profile="quiet">
+                        <span class="profile-btn-title" data-i18n="mgmt.profile_quiet_title">🤫 QUIET</span>
+                        <span class="profile-btn-desc" data-i18n="mgmt.profile_quiet_desc">Silent fans (37%) • 20% RGB</span>
+                      </button>
+                      <button class="profile-btn" data-profile="balanced">
+                        <span class="profile-btn-title" data-i18n="mgmt.profile_balanced_title">⚖️ BALANCED</span>
+                        <span class="profile-btn-desc" data-i18n="mgmt.profile_balanced_desc">Standard cooling (60%) • 50% RGB</span>
+                      </button>
+                      <button class="profile-btn" data-profile="performance">
+                        <span class="profile-btn-title" data-i18n="mgmt.profile_performance_title">🚀 PERFORMANCE</span>
+                        <span class="profile-btn-desc" data-i18n="mgmt.profile_performance_desc">Aggressive cooling (85%) • 100% RGB</span>
+                      </button>
+                    </div>
+                  </div>
 
-              <div>
-                <label style="display:block; font-size:10.5px; font-weight:700; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px;" data-i18n="mgmt.unraid_status_label">UNRAID STORAGE SUBSYSTEM STATUS</label>
-                <div class="unraid-details-grid">
-                  <div class="unraid-detail-item">
-                    <span class="udi-label" data-i18n="mgmt.unraid_array_state">Array Status</span>
-                    <span class="udi-val" id="mgmt-unraid-state" style="color:var(--muted);">–</span>
-                  </div>
-                  <div class="unraid-detail-item">
-                    <span class="udi-label" data-i18n="mgmt.unraid_server_model">Server & Model</span>
-                    <span class="udi-val" id="mgmt-unraid-server">NAS</span>
-                  </div>
-                  <div class="unraid-detail-item">
-                    <span class="udi-label" data-i18n="mgmt.unraid_os_ver">OS Version</span>
-                    <span class="udi-val" id="mgmt-unraid-version">Unraid OS</span>
-                  </div>
-                  <div class="unraid-detail-item">
-                    <span class="udi-label" data-i18n="mgmt.unraid_disks_cfg">Disks Configuration</span>
-                    <span class="udi-val" id="mgmt-unraid-disks">–</span>
-                  </div>
-                  <div class="unraid-detail-item">
-                    <span class="udi-label" data-i18n="mgmt.unraid_parity_status">Parity Check Status</span>
-                    <span class="udi-val" id="mgmt-unraid-parity">Idle</span>
-                  </div>
-                  <div class="unraid-detail-item">
-                    <span class="udi-label" data-i18n="mgmt.unraid_mover_act">Mover Activity</span>
-                    <span class="udi-val" id="mgmt-unraid-mover">Idle</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div id="mgmt-pane-docker" class="mgmt-tab-pane" style="display: none;">
-          <div class="mgmt-card-intro" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-            <div>
-              <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-chip"/></svg> <span data-i18n="mgmt.docker_sec_title">Docker Containers & App Catalog</span></div>
-              <div class="mgmt-card-intro-desc" data-i18n="mgmt.docker_sec_desc">Manage running containers or deploy curated homelab applications in 1-click.</div>
-            </div>
-            <div style="display:flex; gap:6px; align-items:center;">
-              <button class="btn-pill-toggle active" id="btn-view-docker-containers">Active Containers</button>
-              <button class="btn-pill-toggle" id="btn-view-docker-catalog">📦 App Catalog <span id="catalog-total-badge" class="docker-count-badge" style="margin-left:4px;">25+</span></button>
-              <button class="btn-pill-toggle" id="btn-docker-prune" title="Clean up unused images, volumes, and stopped containers">🧹 Prune / Cleanup</button>
-              <button class="btn-pill-toggle" id="btn-refresh-docker" title="Refresh Containers" data-i18n="mgmt.refresh">🔄 Refresh</button>
-            </div>
-          </div>
-          <div class="mgmt-detail-body">
-            <!-- 1. Active Containers View -->
-            <div id="docker-view-containers-wrap">
-              <div class="docker-toolbar" style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:8px; margin-bottom:12px;">
-                <div class="docker-filter-pills" style="display:flex; gap:6px; flex-wrap:wrap;">
-                  <button class="btn-pill-toggle docker-filter-btn active" data-filter="all"><span data-i18n="mgmt.docker_filter_all">All</span> <span id="docker-count-all" class="docker-count-badge">0</span></button>
-                  <button class="btn-pill-toggle docker-filter-btn" data-filter="running"><span data-i18n="mgmt.docker_filter_running">Running</span> <span id="docker-count-running" class="docker-count-badge">0</span></button>
-                  <button class="btn-pill-toggle docker-filter-btn" data-filter="stopped"><span data-i18n="mgmt.docker_filter_stopped">Stopped</span> <span id="docker-count-stopped" class="docker-count-badge">0</span></button>
-                  <button class="btn-pill-toggle docker-filter-btn" data-filter="compose"><span data-i18n="mgmt.docker_filter_compose">Compose</span> <span id="docker-count-compose" class="docker-count-badge">0</span></button>
-                  <button class="btn-pill-toggle docker-filter-btn" data-filter="standalone"><span data-i18n="mgmt.docker_filter_standalone">Standalone</span> <span id="docker-count-standalone" class="docker-count-badge">0</span></button>
-                </div>
-                <div class="docker-search-wrap" style="position:relative;">
-                  <input type="text" id="docker-search-input" placeholder="Search containers, images, ports..." data-i18n-placeholder="mgmt.docker_search_placeholder" class="tz-text-input" style="font-size:11px; padding:3px 8px; width:200px; height:24px; border-radius:4px;">
-                </div>
-              </div>
-              <div style="overflow-x:auto; max-height:420px; background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.06); border-radius:8px;">
-                <table class="copy-history-table docker-table">
-                  <thead>
-                    <tr>
-                      <th data-i18n="mgmt.tbl_name_id">Name / Stack</th>
-                      <th data-i18n="mgmt.tbl_hardware">Hardware</th>
-                      <th data-i18n="mgmt.tbl_telemetry">CPU / RAM</th>
-                      <th data-i18n="mgmt.tbl_ports">Ports & Web UI</th>
-                      <th data-i18n="mgmt.tbl_uptime">Status & Uptime</th>
-                      <th style="text-align:right;" data-i18n="mgmt.tbl_actions">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody id="docker-containers-tbody">
-                    <tr><td colspan="6" style="text-align:center; color:var(--muted); padding:20px;">Scanning Docker socket...</td></tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
+                  <div>
+                    <label style="display:block; font-size:10.5px; font-weight:700; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px;" data-i18n="mgmt.unraid_status_label">HOST SUBSYSTEM STATUS</label>
+                    
+                    <!-- Unraid Host Details Grid -->
+                    <div class="unraid-details-grid">
+                      <div class="unraid-detail-item">
+                        <span class="udi-label" data-i18n="mgmt.unraid_array_state">Array Status</span>
+                        <span class="udi-val" id="mgmt-unraid-state" style="color:var(--muted);">–</span>
+                      </div>
+                      <div class="unraid-detail-item">
+                        <span class="udi-label" data-i18n="mgmt.unraid_server_model">Server & Model</span>
+                        <span class="udi-val" id="mgmt-unraid-server">NAS</span>
+                      </div>
+                      <div class="unraid-detail-item">
+                        <span class="udi-label" data-i18n="mgmt.unraid_os_ver">OS Version</span>
+                        <span class="udi-val" id="mgmt-unraid-version">Unraid OS</span>
+                      </div>
+                      <div class="unraid-detail-item">
+                        <span class="udi-label" data-i18n="mgmt.unraid_disks_cfg">Disks Configuration</span>
+                        <span class="udi-val" id="mgmt-unraid-disks">–</span>
+                      </div>
+                      <div class="unraid-detail-item">
+                        <span class="udi-label" data-i18n="mgmt.unraid_parity_status">Parity Check Status</span>
+                        <span class="udi-val" id="mgmt-unraid-parity">Idle</span>
+                      </div>
+                      <div class="unraid-detail-item">
+                        <span class="udi-label" data-i18n="mgmt.unraid_mover_act">Mover Activity</span>
+                        <span class="udi-val" id="mgmt-unraid-mover">Idle</span>
+                      </div>
+                    </div>
 
-            <!-- 2. Curated App Catalog View -->
-            <div id="docker-view-catalog-wrap" style="display:none;">
-              <div class="catalog-toolbar" style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:8px; margin-bottom:12px;">
-                <div class="catalog-filter-pills" style="display:flex; gap:6px; flex-wrap:wrap;">
-                  <button class="btn-pill-toggle catalog-filter-btn active" data-cat="all">All Apps <span id="catalog-all-count" class="docker-count-badge" style="margin-left:4px;">25+</span></button>
-                  <button class="btn-pill-toggle catalog-filter-btn" data-cat="media">Media & Streaming</button>
-                  <button class="btn-pill-toggle catalog-filter-btn" data-cat="photos">Photos</button>
-                  <button class="btn-pill-toggle catalog-filter-btn" data-cat="cloud">Cloud & Files</button>
-                  <button class="btn-pill-toggle catalog-filter-btn" data-cat="automation">Automation</button>
-                  <button class="btn-pill-toggle catalog-filter-btn" data-cat="utilities">Utilities</button>
-                  <button class="btn-pill-toggle catalog-filter-btn" data-cat="downloads">Downloads</button>
+                    <!-- Generic Linux / TrueNAS Host Details Grid -->
+                    <div class="generic-details-grid" style="display: none;">
+                      <div class="unraid-detail-item">
+                        <span class="udi-label">Host Distribution</span>
+                        <span class="udi-val" id="mgmt-generic-os" style="color:var(--ok2);">Linux</span>
+                      </div>
+                      <div class="unraid-detail-item">
+                        <span class="udi-label">Hostname</span>
+                        <span class="udi-val" id="mgmt-generic-host">ZettNAS</span>
+                      </div>
+                      <div class="unraid-detail-item">
+                        <span class="udi-label">Host Uptime</span>
+                        <span class="udi-val" id="mgmt-generic-uptime">Active</span>
+                      </div>
+                      <div class="unraid-detail-item">
+                        <span class="udi-label">Processor</span>
+                        <span class="udi-val" id="mgmt-generic-cpu">x86_64</span>
+                      </div>
+                      <div class="unraid-detail-item">
+                        <span class="udi-label">System Load</span>
+                        <span class="udi-val" id="mgmt-generic-load">Normal</span>
+                      </div>
+                      <div class="unraid-detail-item">
+                        <span class="udi-label">Storage Engine</span>
+                        <span class="udi-val" id="mgmt-generic-engine">Btrfs / OpenZFS</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div class="catalog-search-wrap" style="display:flex; align-items:center; gap:8px;">
-                  <input type="text" id="catalog-search-input" placeholder="Search apps..." class="tz-text-input" style="font-size:11px; padding:3px 8px; width:180px; height:24px; border-radius:4px;">
-                  <button class="btn-pill-toggle" id="btn-manage-app-sources" title="Manage App Template Sources (Portainer/Custom)">🌐 Sources <span id="catalog-sources-count-badge" class="docker-count-badge" style="margin-left:3px; background:var(--accent); color:#000;">1</span></button>
-                </div>
-              </div>
-              <div id="docker-catalog-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:12px; max-height:420px; overflow-y:auto; padding:2px;">
-                <div style="color:var(--muted); text-align:center; padding:30px; grid-column:1/-1;">Loading app catalog...</div>
               </div>
             </div>
-          </div>
-        </div>
           </div>
 
           <!-- 4. UPS & Power -->
