@@ -14,6 +14,13 @@ let lastReadEventTs = parseFloat(localStorage.getItem('zettnas_last_read_event_t
 let clearedEventsTs = parseFloat(localStorage.getItem('zettnas_cleared_events_ts') || '0');
 let currentNotifFilter = 'all';
 
+let _magnificationEnabled = true;
+let _magnificationScale = 1.45;
+let _dockPosition = 'bottom';
+let _dockSize = 'medium';
+let _dockAutohide = false;
+let _parabolicInitialized = false;
+
 try {
   localStorage.removeItem('zettnas_last_read_event_ts');
 } catch {}
@@ -104,10 +111,29 @@ export function showDockToast(msg, targetId = null) {
     }
   }
 
-  container.style.position = 'fixed';
-  container.style.bottom = `${bottomPos}px`;
-  container.style.left = leftPos != null ? `${leftPos}px` : '50%';
-  container.style.transform = 'translateX(-50%)';
+  if (_dockPosition === 'left') {
+    const dockRect = dock ? dock.getBoundingClientRect() : null;
+    const lPos = dockRect ? Math.round(dockRect.right + 24) : 90;
+    container.style.position = 'fixed';
+    container.style.bottom = '32px';
+    container.style.top = 'auto';
+    container.style.left = `${lPos}px`;
+    container.style.transform = 'none';
+  } else if (_dockPosition === 'top') {
+    const dockRect = dock ? dock.getBoundingClientRect() : null;
+    const tPos = dockRect ? Math.round(dockRect.bottom + 16) : 90;
+    container.style.position = 'fixed';
+    container.style.top = `${tPos}px`;
+    container.style.bottom = 'auto';
+    container.style.left = '50%';
+    container.style.transform = 'translateX(-50%)';
+  } else {
+    container.style.position = 'fixed';
+    container.style.bottom = `${bottomPos}px`;
+    container.style.top = 'auto';
+    container.style.left = leftPos != null ? `${leftPos}px` : '50%';
+    container.style.transform = 'translateX(-50%)';
+  }
   container.style.zIndex = 'var(--z-toast, 10000)';
   container.style.display = 'flex';
   container.style.flexDirection = 'column';
@@ -137,65 +163,85 @@ export const NAVBAR_OFFSET = 48;
 export const DOCK_MARGIN = 76;
 
 export function getSnapGeometry(snapZone) {
-  const availH = Math.max(200, (typeof window !== 'undefined' ? window.innerHeight : 900) - NAVBAR_OFFSET - DOCK_MARGIN);
   const winW = typeof window !== 'undefined' ? window.innerWidth : 1440;
-  const halfW = Math.round((winW - 16) / 2);
+  const winH = typeof window !== 'undefined' ? window.innerHeight : 900;
+
+  let leftInset = 8;
+  let topInset = NAVBAR_OFFSET;
+  let availW = winW - 16;
+  let availH = winH - NAVBAR_OFFSET - DOCK_MARGIN;
+
+  if (_dockPosition === 'left' && !_dockAutohide) {
+    const dockW = _dockSize === 'large' ? 84 : (_dockSize === 'small' ? 60 : 70);
+    leftInset = dockW + 12;
+    availW = winW - leftInset - 8;
+    availH = winH - NAVBAR_OFFSET - 16;
+  } else if (_dockPosition === 'top' && !_dockAutohide) {
+    const dockH = _dockSize === 'large' ? 76 : (_dockSize === 'small' ? 56 : 64);
+    topInset = NAVBAR_OFFSET + dockH + 8;
+    availH = winH - topInset - 16;
+  } else if (_dockAutohide) {
+    availH = winH - NAVBAR_OFFSET - 16;
+  }
+
+  availH = Math.max(200, availH);
+  const halfW = Math.round(availW / 2);
   const halfH = Math.round((availH - 8) / 2);
 
   switch (snapZone) {
     case 'top-left':
       return {
-        left: 8,
-        top: NAVBAR_OFFSET,
+        left: leftInset,
+        top: topInset,
         width: halfW,
         height: halfH,
         label: 'Top Left (1/4)'
       };
     case 'top-right':
       return {
-        left: 8 + halfW + 8,
-        top: NAVBAR_OFFSET,
+        left: leftInset + halfW + 8,
+        top: topInset,
         width: halfW,
         height: halfH,
         label: 'Top Right (1/4)'
       };
     case 'bottom-left':
       return {
-        left: 8,
-        top: NAVBAR_OFFSET + halfH + 8,
+        left: leftInset,
+        top: topInset + halfH + 8,
         width: halfW,
         height: halfH,
         label: 'Bottom Left (1/4)'
       };
     case 'bottom-right':
       return {
-        left: 8 + halfW + 8,
-        top: NAVBAR_OFFSET + halfH + 8,
+        left: leftInset + halfW + 8,
+        top: topInset + halfH + 8,
         width: halfW,
         height: halfH,
         label: 'Bottom Right (1/4)'
       };
     case 'left':
       return {
-        left: 8,
-        top: NAVBAR_OFFSET,
+        left: leftInset,
+        top: topInset,
         width: halfW,
         height: availH,
         label: 'Left Half (1/2)'
       };
     case 'right':
       return {
-        left: 8 + halfW + 8,
-        top: NAVBAR_OFFSET,
+        left: leftInset + halfW + 8,
+        top: topInset,
         width: halfW,
         height: availH,
         label: 'Right Half (1/2)'
       };
     case 'maximize':
       return {
-        left: 8,
-        top: NAVBAR_OFFSET,
-        width: winW - 16,
+        left: leftInset,
+        top: topInset,
+        width: availW,
         height: availH,
         label: 'Maximize (Full)'
       };
@@ -1680,20 +1726,42 @@ export const DockManager = {
         const dockRect = dockEl ? dockEl.getBoundingClientRect() : null;
         const rect = dockItem.getBoundingClientRect();
         const tooltipW = tooltip.offsetWidth || 210;
+        const tooltipH = tooltip.offsetHeight || 50;
 
-        const centerX = (dockEl && dockRect && typeof dockItem.offsetLeft === 'number')
-          ? (dockRect.left + dockItem.offsetLeft - (dockEl.scrollLeft || 0) + (dockItem.offsetWidth / 2))
-          : (rect.left + (rect.width / 2));
+        if (_dockPosition === 'left') {
+          const leftPos = dockRect ? Math.round(dockRect.right + 12) : Math.round(rect.right + 12);
+          let topPos = Math.round(rect.top + (rect.height / 2) - (tooltipH / 2));
+          topPos = Math.max(56, Math.min(window.innerHeight - tooltipH - 16, topPos));
+          tooltip.style.left = `${leftPos}px`;
+          tooltip.style.top = `${topPos}px`;
+          tooltip.style.bottom = 'auto';
+        } else if (_dockPosition === 'top') {
+          const centerX = (dockEl && dockRect && typeof dockItem.offsetLeft === 'number')
+            ? (dockRect.left + dockItem.offsetLeft - (dockEl.scrollLeft || 0) + (dockItem.offsetWidth / 2))
+            : (rect.left + (rect.width / 2));
+          let leftPos = Math.round(centerX - (tooltipW / 2));
+          leftPos = Math.max(24, Math.min(window.innerWidth - tooltipW - 10, leftPos));
+          const topPos = dockRect ? Math.round(dockRect.bottom + 12) : Math.round(rect.bottom + 12);
+          tooltip.style.left = `${leftPos}px`;
+          tooltip.style.top = `${topPos}px`;
+          tooltip.style.bottom = 'auto';
+        } else {
+          // Bottom (Default)
+          const centerX = (dockEl && dockRect && typeof dockItem.offsetLeft === 'number')
+            ? (dockRect.left + dockItem.offsetLeft - (dockEl.scrollLeft || 0) + (dockItem.offsetWidth / 2))
+            : (rect.left + (rect.width / 2));
 
-        let leftPos = Math.round(centerX - (tooltipW / 2));
-        leftPos = Math.max(24, Math.min(window.innerWidth - tooltipW - 10, leftPos));
-        const bottomPos = dockRect
-          ? Math.max(10, Math.round(window.innerHeight - dockRect.top + 14))
-          : Math.max(10, Math.round(window.innerHeight - rect.top + 10));
+          let leftPos = Math.round(centerX - (tooltipW / 2));
+          leftPos = Math.max(24, Math.min(window.innerWidth - tooltipW - 10, leftPos));
+          const bottomPos = dockRect
+            ? Math.max(10, Math.round(window.innerHeight - dockRect.top + 14))
+            : Math.max(10, Math.round(window.innerHeight - rect.top + 10));
 
-        tooltip.style.left = `${leftPos}px`;
-        tooltip.style.bottom = `${bottomPos}px`;
-        tooltip.style.top = 'auto';
+          tooltip.style.left = `${leftPos}px`;
+          tooltip.style.bottom = `${bottomPos}px`;
+          tooltip.style.top = 'auto';
+        }
+
         tooltip.classList.add('visible');
       }
     }
@@ -1819,8 +1887,242 @@ export const DockManager = {
     });
     dock.appendChild(notifItem);
 
+    if (dock.classList.contains('dock-magnify-enabled')) {
+      dock.querySelectorAll('.dock-item').forEach((item) => {
+        item.style.setProperty('--dock-item-scale', '1');
+      });
+    }
+
   }
 };
+
+export function initParabolicDockMagnification(dockEl) {
+  if (!dockEl) dockEl = document.getElementById('os-dock');
+  if (!dockEl) return;
+  if (dockEl._parabolicBound) return;
+  dockEl._parabolicBound = true;
+
+  const radius = 130;
+
+  dockEl.addEventListener('pointermove', (e) => {
+    if (!_magnificationEnabled) return;
+    if (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const items = Array.from(dockEl.querySelectorAll('.dock-item'));
+    if (!items.length) return;
+
+    const isVertical = _dockPosition === 'left';
+    const pointerPos = isVertical ? (e.clientY ?? 0) : (e.clientX ?? 0);
+
+    items.forEach((item) => {
+      const rect = item.getBoundingClientRect();
+      const center = isVertical
+        ? (rect.top + rect.height / 2)
+        : (rect.left + rect.width / 2);
+      const distance = Math.abs(pointerPos - center);
+
+      let scale = 1;
+      if (distance < radius) {
+        const cosFactor = Math.cos((distance / radius) * (Math.PI / 2));
+        scale = 1 + (_magnificationScale - 1) * cosFactor;
+      }
+      item.style.setProperty('--dock-item-scale', scale.toFixed(3));
+    });
+  });
+
+  dockEl.addEventListener('pointerleave', () => {
+    const items = dockEl.querySelectorAll('.dock-item');
+    items.forEach((item) => {
+      item.style.setProperty('--dock-item-scale', '1');
+    });
+  });
+}
+
+export function applyDockSettings(position = 'bottom', magnification = true, maxScale = 1.45, iconSize = 'medium', autohide = false, persist = true) {
+  _dockPosition = ['bottom', 'left', 'top'].includes(position) ? position : 'bottom';
+  _magnificationEnabled = Boolean(magnification);
+  _magnificationScale = Math.max(1.1, Math.min(1.8, parseFloat(maxScale) || 1.45));
+  _dockSize = ['small', 'medium', 'large'].includes(iconSize) ? iconSize : 'medium';
+  _dockAutohide = Boolean(autohide);
+
+  if (typeof document !== 'undefined') {
+    const root = document.documentElement;
+    const dockContainer = document.getElementById('os-dock-container');
+    const dock = document.getElementById('os-dock');
+
+    let heightVal = '52px';
+    let iconPx = '48px';
+    if (_dockSize === 'small') {
+      heightVal = '44px';
+      iconPx = '42px';
+    } else if (_dockSize === 'large') {
+      heightVal = '64px';
+      iconPx = '60px';
+    }
+
+    if (root) {
+      root.style.setProperty('--dock-position', _dockPosition);
+      root.style.setProperty('--dock-height', heightVal);
+      root.style.setProperty('--dock-icon-size', iconPx);
+
+      if (_dockPosition === 'bottom') {
+        root.style.setProperty('--workspace-inset-bottom', _dockAutohide ? '0px' : `calc(${heightVal} + 16px)`);
+        root.style.setProperty('--workspace-inset-left', '0px');
+        root.style.setProperty('--workspace-inset-top', '0px');
+      } else if (_dockPosition === 'left') {
+        root.style.setProperty('--workspace-inset-bottom', '0px');
+        root.style.setProperty('--workspace-inset-left', _dockAutohide ? '0px' : `calc(${heightVal} + 16px)`);
+        root.style.setProperty('--workspace-inset-top', '0px');
+      } else if (_dockPosition === 'top') {
+        root.style.setProperty('--workspace-inset-bottom', '0px');
+        root.style.setProperty('--workspace-inset-left', '0px');
+        root.style.setProperty('--workspace-inset-top', _dockAutohide ? '0px' : `calc(${heightVal} + 16px)`);
+      }
+    }
+
+    if (dockContainer) {
+      dockContainer.classList.remove('dock-pos-bottom', 'dock-pos-left', 'dock-pos-top');
+      dockContainer.classList.add(`dock-pos-${_dockPosition}`);
+      dockContainer.classList.toggle('dock-autohide', _dockAutohide);
+    }
+
+    if (dock) {
+      dock.classList.remove('dock-size-small', 'dock-size-medium', 'dock-size-large');
+      dock.classList.add(`dock-size-${_dockSize}`);
+      dock.classList.toggle('dock-magnify-enabled', _magnificationEnabled);
+
+      if (!_magnificationEnabled) {
+        dock.querySelectorAll('.dock-item').forEach((item) => {
+          item.style.setProperty('--dock-item-scale', '1');
+        });
+      }
+    }
+
+    const posBtns = document.querySelectorAll('.dock-pos-btn');
+    posBtns.forEach((btn) => {
+      const isMatch = btn.dataset.pos === _dockPosition;
+      btn.classList.toggle('active', isMatch);
+      btn.setAttribute('aria-checked', isMatch ? 'true' : 'false');
+    });
+
+    const sizeBtns = document.querySelectorAll('.dock-size-btn');
+    sizeBtns.forEach((btn) => {
+      const isMatch = btn.dataset.size === _dockSize;
+      btn.classList.toggle('active', isMatch);
+      btn.setAttribute('aria-checked', isMatch ? 'true' : 'false');
+    });
+
+    const magToggle = document.getElementById('dock-magnification-toggle');
+    if (magToggle) magToggle.checked = _magnificationEnabled;
+
+    const magSlider = document.getElementById('dock-magnification-slider');
+    if (magSlider && parseFloat(magSlider.value) !== _magnificationScale) {
+      magSlider.value = _magnificationScale.toString();
+    }
+
+    const magVal = document.getElementById('dock-magnification-val');
+    if (magVal) magVal.textContent = `${_magnificationScale.toFixed(2)}x`;
+
+    const autohideToggle = document.getElementById('dock-autohide-toggle');
+    if (autohideToggle) autohideToggle.checked = _dockAutohide;
+  }
+
+  if (persist) {
+    try {
+      localStorage.setItem('zettnas_dock_position', _dockPosition);
+      localStorage.setItem('zettnas_dock_magnification', _magnificationEnabled ? 'true' : 'false');
+      localStorage.setItem('zettnas_dock_scale', _magnificationScale.toString());
+      localStorage.setItem('zettnas_dock_size', _dockSize);
+      localStorage.setItem('zettnas_dock_autohide', _dockAutohide ? 'true' : 'false');
+    } catch (e) {}
+  }
+}
+
+export function getDockSettings() {
+  return {
+    position: _dockPosition,
+    magnification: _magnificationEnabled,
+    scale: _magnificationScale,
+    size: _dockSize,
+    autohide: _dockAutohide
+  };
+}
+
+export function initDockSettingsControls() {
+  let savedPos = 'bottom';
+  let savedMag = true;
+  let savedScale = 1.45;
+  let savedSize = 'medium';
+  let savedAutohide = false;
+
+  try {
+    const p = localStorage.getItem('zettnas_dock_position');
+    if (p) savedPos = p;
+    const m = localStorage.getItem('zettnas_dock_magnification');
+    if (m !== null) savedMag = (m === 'true');
+    const s = localStorage.getItem('zettnas_dock_scale');
+    if (s !== null) savedScale = parseFloat(s) || 1.45;
+    const sz = localStorage.getItem('zettnas_dock_size');
+    if (sz) savedSize = sz;
+    const ah = localStorage.getItem('zettnas_dock_autohide');
+    if (ah !== null) savedAutohide = (ah === 'true');
+  } catch (e) {}
+
+  applyDockSettings(savedPos, savedMag, savedScale, savedSize, savedAutohide, false);
+
+  const dockEl = document.getElementById('os-dock');
+  if (dockEl) {
+    initParabolicDockMagnification(dockEl);
+  }
+
+  const posBtns = document.querySelectorAll('.dock-pos-btn');
+  posBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const pos = btn.dataset.pos;
+      applyDockSettings(pos, _magnificationEnabled, _magnificationScale, _dockSize, _dockAutohide, true);
+    });
+  });
+
+  const sizeBtns = document.querySelectorAll('.dock-size-btn');
+  sizeBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const sz = btn.dataset.size;
+      applyDockSettings(_dockPosition, _magnificationEnabled, _magnificationScale, sz, _dockAutohide, true);
+    });
+  });
+
+  const magToggle = document.getElementById('dock-magnification-toggle');
+  if (magToggle) {
+    magToggle.addEventListener('change', (e) => {
+      applyDockSettings(_dockPosition, e.target.checked, _magnificationScale, _dockSize, _dockAutohide, true);
+    });
+  }
+
+  const magSlider = document.getElementById('dock-magnification-slider');
+  if (magSlider) {
+    magSlider.addEventListener('input', (e) => {
+      applyDockSettings(_dockPosition, _magnificationEnabled, parseFloat(e.target.value), _dockSize, _dockAutohide, false);
+    });
+    magSlider.addEventListener('change', (e) => {
+      applyDockSettings(_dockPosition, _magnificationEnabled, parseFloat(e.target.value), _dockSize, _dockAutohide, true);
+    });
+  }
+
+  const autohideToggle = document.getElementById('dock-autohide-toggle');
+  if (autohideToggle) {
+    autohideToggle.addEventListener('change', (e) => {
+      applyDockSettings(_dockPosition, _magnificationEnabled, _magnificationScale, _dockSize, e.target.checked, true);
+    });
+  }
+
+  const resetBtn = document.getElementById('dock-reset-btn');
+  if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+      applyDockSettings('bottom', true, 1.45, 'medium', false, true);
+      showDockToast(t('mgmt.dock_reset_toast', 'Dock settings restored to defaults'));
+    });
+  }
+}
 
 export function initTopbarUserPill() {
   const topbarPill = document.getElementById('topbar-user-pill');
@@ -2186,6 +2488,7 @@ export function initDockSystem() {
   if (state.isLcdDirect || (typeof window !== 'undefined' && window.location.search.includes('mode=lcd')) || (document.body && document.body.classList.contains('lcd-direct'))) return;
   initSnapAssistFlyout();
   initTopbarUserPill();
+  initDockSettingsControls();
   const consoleModal = document.getElementById('console-window');
   const consoleHeader = document.querySelector('#console-window .chassis-panel-header');
   if (consoleModal) makeDraggable(consoleModal, consoleHeader, 'console');
@@ -3013,6 +3316,10 @@ window.loadSavedWindowBounds = loadSavedWindowBounds;
 window.saveOpenWindowsState = saveOpenWindowsState;
 window.restoreOpenWindowsState = restoreOpenWindowsState;
 window.setWindowRestorationComplete = setWindowRestorationComplete;
+window.applyDockSettings = applyDockSettings;
+window.initDockSettingsControls = initDockSettingsControls;
+window.getDockSettings = getDockSettings;
+window.initParabolicDockMagnification = initParabolicDockMagnification;
 
 if (typeof window !== 'undefined') {
   window.addEventListener('beforeunload', () => {

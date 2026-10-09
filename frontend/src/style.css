@@ -30,6 +30,14 @@
   --wallpaper-dim: 0.15;
   --wallpaper-blur: 0px;
 
+  /* Workspace Bounds & Dock Tokens */
+  --dock-position: bottom;
+  --dock-height: 52px;
+  --dock-icon-size: 48px;
+  --workspace-inset-bottom: calc(var(--dock-height) + 16px);
+  --workspace-inset-left: 0px;
+  --workspace-inset-top: 0px;
+
   /* Z-Index Hierarchy Layering */
   --z-desktop-icons: 10;
   --z-window-base: 1000;
@@ -1037,6 +1045,9 @@ body.drawer-is-open .chassis-workbench-stage {
   bottom: 0;
   z-index: 30;
   pointer-events: none;
+  padding-left: var(--workspace-inset-left, 0px);
+  padding-top: var(--workspace-inset-top, 0px);
+  transition: padding 0.3s ease;
 }
 
 .desktop-icons-container .chassis-desktop-icon,
@@ -2941,7 +2952,7 @@ select.tz-select-input option, select.tz-select option {
 
 
 /* =========================================================================
-   OS DOCK (MACOS STYLE)
+   OS DOCK (MACOS STYLE - MULTI-POSITION & PARABOLIC MAGNIFICATION)
    ========================================================================= */
 .os-dock-container {
   position: fixed;
@@ -2950,10 +2961,84 @@ select.tz-select-input option, select.tz-select option {
   width: 100%;
   display: flex;
   justify-content: center;
+  align-items: flex-end;
   pointer-events: none;
   z-index: var(--z-dock, 6000);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease;
 }
 
+/* Position: Bottom (Default) */
+.os-dock-container.dock-pos-bottom {
+  bottom: 12px;
+  top: auto;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: auto;
+  flex-direction: row;
+  justify-content: center;
+  align-items: flex-end;
+}
+.os-dock-container.dock-pos-bottom .os-dock {
+  flex-direction: row;
+  transform: translateY(100px);
+}
+.os-dock-container.dock-pos-bottom .os-dock.active {
+  transform: translateY(0);
+}
+
+/* Position: Left (Widescreen) */
+.os-dock-container.dock-pos-left {
+  left: 12px;
+  right: auto;
+  top: 56px;
+  bottom: 16px;
+  width: auto;
+  height: calc(100vh - 72px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+}
+.os-dock-container.dock-pos-left .os-dock {
+  flex-direction: column;
+  transform: translateX(-100px);
+}
+.os-dock-container.dock-pos-left .os-dock.active {
+  transform: translateX(0);
+}
+.os-dock-container.dock-pos-left .dock-item::after {
+  left: -5px;
+  top: calc(50% - 2px);
+  bottom: auto;
+}
+
+/* Position: Top (Status Bar) */
+.os-dock-container.dock-pos-top {
+  top: 56px;
+  bottom: auto;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: auto;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: flex-start;
+}
+.os-dock-container.dock-pos-top .os-dock {
+  flex-direction: row;
+  transform: translateY(-100px);
+}
+.os-dock-container.dock-pos-top .os-dock.active {
+  transform: translateY(0);
+}
+.os-dock-container.dock-pos-top .dock-item::after {
+  top: -5px;
+  bottom: auto;
+}
+
+/* Sizing Modifiers */
 .os-dock {
   display: flex;
   gap: 10px;
@@ -2975,9 +3060,83 @@ select.tz-select-input option, select.tz-select option {
   opacity: 1;
 }
 
-.dock-item {
+.os-dock.dock-size-small {
+  padding: 4px 8px;
+  gap: 6px;
+  border-radius: 14px;
+}
+.os-dock.dock-size-small .dock-item {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+}
+.os-dock.dock-size-small .dock-item svg {
+  width: 20px;
+  height: 20px;
+}
+
+.os-dock.dock-size-medium {
+  padding: 6px 10px;
+  gap: 10px;
+  border-radius: 18px;
+}
+.os-dock.dock-size-medium .dock-item {
   width: 48px;
   height: 48px;
+  border-radius: 12px;
+}
+.os-dock.dock-size-medium .dock-item svg {
+  width: 24px;
+  height: 24px;
+}
+
+.os-dock.dock-size-large {
+  padding: 8px 14px;
+  gap: 12px;
+  border-radius: 20px;
+}
+.os-dock.dock-size-large .dock-item {
+  width: 60px;
+  height: 60px;
+  border-radius: 14px;
+}
+.os-dock.dock-size-large .dock-item svg {
+  width: 30px;
+  height: 30px;
+}
+
+/* Auto-Hide Dock Mode */
+.os-dock-container.dock-autohide {
+  pointer-events: auto;
+}
+.os-dock-container.dock-autohide.dock-pos-bottom {
+  transform: translateY(calc(100% - 6px));
+}
+.os-dock-container.dock-autohide.dock-pos-bottom:hover,
+.os-dock-container.dock-autohide.dock-pos-bottom:focus-within {
+  transform: translateY(0);
+}
+
+.os-dock-container.dock-autohide.dock-pos-left {
+  transform: translateX(calc(-100% + 6px));
+}
+.os-dock-container.dock-autohide.dock-pos-left:hover,
+.os-dock-container.dock-autohide.dock-pos-left:focus-within {
+  transform: translateX(0);
+}
+
+.os-dock-container.dock-autohide.dock-pos-top {
+  transform: translateY(calc(-100% + 6px));
+}
+.os-dock-container.dock-autohide.dock-pos-top:hover,
+.os-dock-container.dock-autohide.dock-pos-top:focus-within {
+  transform: translateY(0);
+}
+
+/* Dock Items & Parabolic Magnification */
+.dock-item {
+  width: var(--dock-icon-size, 48px);
+  height: var(--dock-icon-size, 48px);
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -2985,13 +3144,34 @@ select.tz-select-input option, select.tz-select option {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.12s ease-out;
   position: relative;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  transform: scale(var(--dock-item-scale, 1));
+  will-change: transform;
 }
 
-.dock-item:hover {
+.os-dock:not(.dock-magnify-enabled) .dock-item:hover {
   transform: scale(1.15) translateY(-6px);
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.2);
+  z-index: 10;
+}
+
+.os-dock.dock-magnify-enabled .dock-item {
+  transform-origin: center bottom;
+  transform: scale(var(--dock-item-scale, 1));
+}
+
+.os-dock-container.dock-pos-left .os-dock.dock-magnify-enabled .dock-item {
+  transform-origin: left center;
+}
+
+.os-dock-container.dock-pos-top .os-dock.dock-magnify-enabled .dock-item {
+  transform-origin: center top;
+}
+
+.os-dock.dock-magnify-enabled .dock-item:hover {
   background: rgba(255, 255, 255, 0.12);
   border-color: rgba(255, 255, 255, 0.2);
   z-index: 10;
@@ -7165,26 +7345,26 @@ body.theme-yak .mgmt-inner-tab.active .ic {
 
 /* Positions */
 #desktop-widgets-container.pos-top-right {
-  top: 32px;
+  top: calc(32px + var(--workspace-inset-top, 0px));
   right: 32px;
   left: auto;
   bottom: auto;
 }
 #desktop-widgets-container.pos-top-left {
-  top: 32px;
-  left: 32px;
+  top: calc(32px + var(--workspace-inset-top, 0px));
+  left: calc(32px + var(--workspace-inset-left, 0px));
   right: auto;
   bottom: auto;
 }
 #desktop-widgets-container.pos-bottom-right {
-  bottom: 80px;
+  bottom: calc(80px + var(--workspace-inset-bottom, 0px));
   right: 32px;
   left: auto;
   top: auto;
 }
 #desktop-widgets-container.pos-bottom-left {
-  bottom: 80px;
-  left: 32px;
+  bottom: calc(80px + var(--workspace-inset-bottom, 0px));
+  left: calc(32px + var(--workspace-inset-left, 0px));
   right: auto;
   top: auto;
 }

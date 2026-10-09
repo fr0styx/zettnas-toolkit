@@ -26,6 +26,8 @@ export const SUBPANE_MAP = {
   'mgmt-sec-theme': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-theme' },
   'mgmt-pane-glass': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-glass' },
   'mgmt-sec-glass': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-glass' },
+  'mgmt-pane-dock': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-dock' },
+  'mgmt-sec-dock': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-dock' },
   'mgmt-sec-wallpaper': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-wallpaper' },
   'mgmt-pane-language': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-language' },
   'mgmt-sec-language': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-language' },
@@ -2247,6 +2249,10 @@ export function initManagement() {
   function triggerSubTabLoad(paneId) {
     if (paneId === 'mgmt-pane-widgets') {
       if (typeof syncWidgetSettingsUI === 'function') syncWidgetSettingsUI();
+    } else if (paneId === 'mgmt-pane-dock') {
+      if (typeof window.initDockSettingsControls === 'function') {
+        window.initDockSettingsControls();
+      }
     } else if (paneId === 'mgmt-pane-theme') {
       if (typeof syncDesktopThemeUI === 'function') syncDesktopThemeUI();
     } else if (paneId === 'mgmt-pane-language') {
