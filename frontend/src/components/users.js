@@ -72,6 +72,20 @@ export function updateUserInterfaceElements() {
   }
 }
 
+export function openModal(modal) {
+  if (!modal) return;
+  modal.classList.add('open');
+  modal.style.display = 'flex';
+}
+
+export function closeModal(modal) {
+  if (!modal) return;
+  modal.classList.remove('open');
+  modal.style.display = 'none';
+}
+
+let _usersCache = {};
+
 export function formatRole(roleId) {
   const map = {
     superadmin: 'SuperAdmin 👑',
@@ -90,7 +104,7 @@ export function initUsersManagement() {
   // Sub-tabs in Users Pane
   const subtabs = document.querySelectorAll('.users-nav-btn');
   subtabs.forEach((btn) => {
-    btn.addEventListener('click', () => {
+    btn.onclick = () => {
       subtabs.forEach((b) => b.classList.remove('active'));
       btn.classList.add('active');
       const targetId = btn.dataset.tab;
@@ -100,38 +114,59 @@ export function initUsersManagement() {
       if (targetId === 'users-pane-list') loadUsersList();
       if (targetId === 'users-pane-sessions') loadSessionsList();
       if (targetId === 'users-pane-2fa') load2FAStatus();
-    });
+    };
   });
 
   // Modal triggers
   const btnAddUser = document.getElementById('btn-add-user');
-  if (btnAddUser) btnAddUser.addEventListener('click', showAddUserModal);
+  if (btnAddUser) btnAddUser.onclick = showAddUserModal;
 
   const btnRefreshUsers = document.getElementById('btn-refresh-users');
-  if (btnRefreshUsers) btnRefreshUsers.addEventListener('click', loadUsersList);
+  if (btnRefreshUsers) btnRefreshUsers.onclick = loadUsersList;
 
   const btnRefreshSessions = document.getElementById('btn-refresh-sessions');
-  if (btnRefreshSessions) btnRefreshSessions.addEventListener('click', loadSessionsList);
+  if (btnRefreshSessions) btnRefreshSessions.onclick = loadSessionsList;
 
   const btnRevokeAllSessions = document.getElementById('btn-revoke-all-sessions');
-  if (btnRevokeAllSessions) btnRevokeAllSessions.addEventListener('click', revokeAllOtherSessions);
+  if (btnRevokeAllSessions) btnRevokeAllSessions.onclick = revokeAllOtherSessions;
 
   const btnEnable2fa = document.getElementById('btn-enable-2fa');
-  if (btnEnable2fa) btnEnable2fa.addEventListener('click', start2FASetup);
+  if (btnEnable2fa) btnEnable2fa.onclick = start2FASetup;
 
   const btnDisable2fa = document.getElementById('btn-disable-2fa');
-  if (btnDisable2fa) btnDisable2fa.addEventListener('click', disable2FA);
+  if (btnDisable2fa) btnDisable2fa.onclick = disable2FA;
 
-  // Close modals
+  // Close modals via buttons
   document.querySelectorAll('.modal-close-btn').forEach((btn) => {
-    btn.addEventListener('click', (e) => {
+    btn.onclick = (e) => {
       const modal = e.target.closest('.smart-modal-backdrop') || e.target.closest('.os-modal');
-      if (modal) modal.style.display = 'none';
-    });
+      if (modal) closeModal(modal);
+    };
+  });
+
+  // Close modals on clicking outer backdrop
+  ['modal-add-user', 'modal-edit-user', 'modal-reset-password', 'modal-setup-2fa'].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.onclick = (e) => {
+        if (e.target === el) closeModal(el);
+      };
+    }
+  });
+
+  // Escape key closes open user modals
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      ['modal-add-user', 'modal-edit-user', 'modal-reset-password', 'modal-setup-2fa'].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el && el.classList.contains('open')) closeModal(el);
+      });
+    }
   });
 }
 
 export async function loadUsersPane() {
+  initUsersManagement();
   await fetchCurrentProfile();
   loadUsersList();
   loadSessionsList();
@@ -159,6 +194,11 @@ export async function loadUsersList() {
       container.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 24px; color: var(--muted);">No users found.</td></tr>';
       return;
     }
+
+    _usersCache = {};
+    users.forEach((u) => {
+      _usersCache[u.id] = u;
+    });
 
     container.innerHTML = users.map((u) => {
       const letter = (u.display_name?.[0] || u.username?.[0] || 'U').toUpperCase();
@@ -199,7 +239,7 @@ export async function loadUsersList() {
           <td style="padding: 12px; font-size: 12px; color: #94a3b8;">${quotaStr}</td>
           <td style="padding: 12px; text-align:right;">
             <div style="display:inline-flex; gap: 6px;">
-              <button class="suite-toolkit-btn sm btn-edit-user" data-user='${JSON.stringify(u)}' title="Edit User">✏️</button>
+              <button class="suite-toolkit-btn sm btn-edit-user" data-id="${u.id}" title="Edit User">✏️</button>
               <button class="suite-toolkit-btn sm btn-pwd-user" data-id="${u.id}" data-user="${escapeHtml(u.username)}" title="Reset Password">🔑</button>
               ${!isSelf ? `
                 <button class="suite-toolkit-btn sm btn-toggle-user" data-id="${u.id}" data-status="${u.status}" title="${isActive ? 'Disable User' : 'Enable User'}">
@@ -215,31 +255,31 @@ export async function loadUsersList() {
 
     // Attach row events
     container.querySelectorAll('.btn-edit-user').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const u = JSON.parse(btn.dataset.user);
-        showEditUserModal(u);
-      });
+      btn.onclick = () => {
+        const u = _usersCache[btn.dataset.id];
+        if (u) showEditUserModal(u);
+      };
     });
 
     container.querySelectorAll('.btn-pwd-user').forEach((btn) => {
-      btn.addEventListener('click', () => {
+      btn.onclick = () => {
         showResetPasswordModal(btn.dataset.id, btn.dataset.user);
-      });
+      };
     });
 
     container.querySelectorAll('.btn-toggle-user').forEach((btn) => {
-      btn.addEventListener('click', async () => {
+      btn.onclick = async () => {
         const uid = btn.dataset.id;
         const curStatus = btn.dataset.status;
         const newStatus = curStatus === 'active' ? 'disabled' : 'active';
         await toggleUserStatus(uid, newStatus);
-      });
+      };
     });
 
     container.querySelectorAll('.btn-delete-user').forEach((btn) => {
-      btn.addEventListener('click', () => {
+      btn.onclick = () => {
         confirmDeleteUser(btn.dataset.id, btn.dataset.user);
-      });
+      };
     });
 
   } catch (err) {
@@ -250,7 +290,7 @@ export async function loadUsersList() {
 export function showAddUserModal() {
   const modal = document.getElementById('modal-add-user');
   if (!modal) return;
-  modal.style.display = 'flex';
+  openModal(modal);
   const form = document.getElementById('form-add-user');
   if (form) {
     form.reset();
@@ -283,7 +323,7 @@ export function showAddUserModal() {
         });
         const result = await res.json();
         if (res.ok) {
-          modal.style.display = 'none';
+          closeModal(modal);
           loadUsersList();
         } else {
           alert(`Error: ${result.detail || result.error || 'Failed to create user'}`);
@@ -301,7 +341,7 @@ export function showAddUserModal() {
 export function showEditUserModal(user) {
   const modal = document.getElementById('modal-edit-user');
   if (!modal) return;
-  modal.style.display = 'flex';
+  openModal(modal);
 
   document.getElementById('edit-user-id').value = user.id;
   document.getElementById('edit-user-username').value = user.username;
@@ -337,7 +377,7 @@ export function showEditUserModal(user) {
           })
         });
         if (res.ok) {
-          modal.style.display = 'none';
+          closeModal(modal);
           loadUsersList();
           fetchCurrentProfile();
         } else {
@@ -357,7 +397,7 @@ export function showEditUserModal(user) {
 export function showResetPasswordModal(userId, username) {
   const modal = document.getElementById('modal-reset-password');
   if (!modal) return;
-  modal.style.display = 'flex';
+  openModal(modal);
   document.getElementById('reset-pwd-username').textContent = `@${username}`;
 
   const form = document.getElementById('form-reset-password');
@@ -386,7 +426,7 @@ export function showResetPasswordModal(userId, username) {
         });
         if (res.ok) {
           alert('Password successfully updated.');
-          modal.style.display = 'none';
+          closeModal(modal);
         } else {
           const err = await res.json();
           alert(`Error: ${err.detail || 'Failed to reset password'}`);
@@ -545,7 +585,7 @@ export async function load2FAStatus() {
 async function start2FASetup() {
   const modal = document.getElementById('modal-setup-2fa');
   if (!modal) return;
-  modal.style.display = 'flex';
+  openModal(modal);
 
   const qrContainer = document.getElementById('mfa-qr-container');
   const secretKeyEl = document.getElementById('mfa-secret-key');

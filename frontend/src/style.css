@@ -2682,7 +2682,11 @@ select.tz-select-input option, select.tz-select option {
 #modal-webdav-config,
 #modal-create-storage-pool,
 #modal-create-network-share,
-#modal-btrfs-snapshots {
+#modal-btrfs-snapshots,
+#modal-add-user,
+#modal-edit-user,
+#modal-reset-password,
+#modal-setup-2fa {
   z-index: 10030 !important;
   background: rgba(0, 0, 0, 0.65) !important;
   backdrop-filter: blur(8px) !important;
@@ -2695,7 +2699,11 @@ select.tz-select-input option, select.tz-select option {
 #modal-webdav-config.open,
 #modal-create-storage-pool.open,
 #modal-create-network-share.open,
-#modal-btrfs-snapshots.open {
+#modal-btrfs-snapshots.open,
+#modal-add-user.open,
+#modal-edit-user.open,
+#modal-reset-password.open,
+#modal-setup-2fa.open {
   display: flex !important;
   opacity: 1 !important;
   pointer-events: auto !important;
@@ -2708,7 +2716,11 @@ select.tz-select-input option, select.tz-select option {
 #modal-webdav-config:not(.open),
 #modal-create-storage-pool:not(.open),
 #modal-create-network-share:not(.open),
-#modal-btrfs-snapshots:not(.open) {
+#modal-btrfs-snapshots:not(.open),
+#modal-add-user:not(.open),
+#modal-edit-user:not(.open),
+#modal-reset-password:not(.open),
+#modal-setup-2fa:not(.open) {
   display: none !important;
   opacity: 0 !important;
   pointer-events: none !important;

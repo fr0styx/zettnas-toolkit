@@ -73,4 +73,19 @@ describe('Phase 5: Multi-User Identity, RBAC & Desktop Lock UI', () => {
     setCurrentUser(regularUser);
     expect(document.getElementById('mgmt-tab-users').style.display).toBe('none');
   });
+
+  it('openModal adds open class and sets display flex, closeModal removes open and sets none', async () => {
+    const { openModal, closeModal } = await import('../components/users.js');
+    const modal = document.createElement('div');
+    modal.className = 'smart-modal-backdrop';
+    document.body.appendChild(modal);
+
+    openModal(modal);
+    expect(modal.classList.contains('open')).toBe(true);
+    expect(modal.style.display).toBe('flex');
+
+    closeModal(modal);
+    expect(modal.classList.contains('open')).toBe(false);
+    expect(modal.style.display).toBe('none');
+  });
 });
