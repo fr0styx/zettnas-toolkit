@@ -153,6 +153,7 @@ describe('Phase 3: Container App Catalog & Web Terminal', () => {
     const modal = document.getElementById('app-deploy-modal-overlay');
     expect(modal).toBeTruthy();
     expect(modal.style.display).toBe('flex');
+    expect(modal.classList.contains('open')).toBe(true);
 
     const deployBtn = document.getElementById('adm-deploy-confirm-btn');
     expect(deployBtn).toBeTruthy();
@@ -179,6 +180,14 @@ describe('Phase 3: Container App Catalog & Web Terminal', () => {
     expect(logs.textContent).toContain('Initializing deployment');
     expect(logs.textContent).toContain('Pulling layers');
     expect(logs.textContent).toContain('Home Assistant deployed');
+
+    // Test closing modal via done button
+    const closeProgressBtn = document.getElementById('adm-progress-close-btn');
+    expect(closeProgressBtn).toBeTruthy();
+    expect(closeProgressBtn.style.display).toBe('inline-block');
+    closeProgressBtn.onclick();
+    expect(modal.classList.contains('open')).toBe(false);
+    expect(modal.style.display).toBe('none');
   });
 });
 

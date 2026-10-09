@@ -491,7 +491,9 @@ export function renderAppCatalogGrid() {
   }).join('');
 
   grid.querySelectorAll('.btn-deploy-app').forEach((btn) => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
       openAppDeployModal(btn.dataset.appid);
     });
   });
@@ -594,11 +596,45 @@ export async function openAppDeployModal(appId) {
     document.body.insertAdjacentHTML('beforeend', modalHtml);
     modal = document.getElementById('app-deploy-modal-overlay');
 
-    document.getElementById('adm-close-btn').addEventListener('click', () => { modal.style.display = 'none'; });
-    document.getElementById('adm-cancel-btn').addEventListener('click', () => { modal.style.display = 'none'; });
+    document.getElementById('adm-close-btn').addEventListener('click', (e) => {
+      e.preventDefault();
+      if (modal._close) modal._close();
+    });
+    document.getElementById('adm-cancel-btn').addEventListener('click', (e) => {
+      e.preventDefault();
+      if (modal._close) modal._close();
+    });
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal && modal._close) {
+        modal._close();
+      }
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modal.classList.contains('open') && modal._close) {
+        modal._close();
+      }
+    });
   }
 
-  // Ensure config view is visible by default
+  modal._close = () => {
+    if (modal._isDeploying) return;
+    modal.classList.remove('open');
+    modal.style.display = 'none';
+    const vc = document.getElementById('adm-view-config');
+    const vp = document.getElementById('adm-view-progress');
+    const fc = document.getElementById('adm-footer-config');
+    const fp = document.getElementById('adm-footer-progress');
+    if (vc) vc.style.display = 'flex';
+    if (vp) vp.style.display = 'none';
+    if (fc) fc.style.display = 'flex';
+    if (fp) fp.style.display = 'none';
+  };
+
+  // Ensure config view is visible by default and open modal
+  modal._isDeploying = false;
+  modal.classList.add('open');
+  modal.style.display = 'flex';
+
   const viewConfig = document.getElementById('adm-view-config');
   const viewProgress = document.getElementById('adm-view-progress');
   const footerConfig = document.getElementById('adm-footer-config');
@@ -607,8 +643,6 @@ export async function openAppDeployModal(appId) {
   if (viewProgress) viewProgress.style.display = 'none';
   if (footerConfig) footerConfig.style.display = 'flex';
   if (footerProgress) footerProgress.style.display = 'none';
-
-  modal.style.display = 'flex';
 
   let suggestedPort = 8080;
   const banner = document.getElementById('adm-conflict-banner');
@@ -738,6 +772,7 @@ export async function openAppDeployModal(appId) {
         closeProgressBtn.style.display = 'inline-block';
         closeProgressBtn.textContent = '✓ Done';
       }
+      modal._isDeploying = false;
 
       try {
         fetchAndRenderDockerContainers();
@@ -745,6 +780,7 @@ export async function openAppDeployModal(appId) {
 
       showToast(`${appId} stack deployed and running!`, 'success');
     } else if (data.step === 'error') {
+      modal._isDeploying = false;
       if (progressSpinner) {
         progressSpinner.textContent = '❌';
         progressSpinner.style.animation = 'none';
@@ -769,6 +805,7 @@ export async function openAppDeployModal(appId) {
   }
 
   deployConfirmBtn.onclick = async () => {
+    modal._isDeploying = true;
     const p = parseInt(portInput.value, 10) || suggestedPort;
     const s = storageInput.value.trim() || '/mnt/user/appdata';
 
@@ -855,6 +892,7 @@ export async function openAppDeployModal(appId) {
         } catch (e) {}
       }
     } catch (err) {
+      modal._isDeploying = false;
       handleDeployEvent({
         step: 'error',
         percent: 0,
@@ -876,11 +914,8 @@ export async function openAppDeployModal(appId) {
 
   if (closeProgressBtn) {
     closeProgressBtn.onclick = () => {
-      modal.style.display = 'none';
-      viewProgress.style.display = 'none';
-      footerProgress.style.display = 'none';
-      viewConfig.style.display = 'flex';
-      footerConfig.style.display = 'flex';
+      modal._isDeploying = false;
+      if (modal._close) modal._close();
     };
   }
 }

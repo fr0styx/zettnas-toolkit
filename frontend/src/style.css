@@ -2674,6 +2674,26 @@ select.tz-select-input option, select.tz-select option {
   pointer-events: auto !important;
   visibility: visible !important;
 }
+
+#app-deploy-modal-overlay {
+  z-index: 10020 !important;
+  background: rgba(0, 0, 0, 0.65) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+}
+#app-deploy-modal-overlay.open {
+  display: flex !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  visibility: visible !important;
+}
+#app-deploy-modal-overlay:not(.open) {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+}
+
 #console-modal-overlay:not(.open),
 #management-modal-overlay:not(.open) {
   display: none !important;
