@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { makeDraggable, makeResizable, saveWindowBounds, loadSavedWindowBounds, DockManager, isEventChecked, markEventChecked, resetCheckedEventsState, getEventKey, openConsoleWindow, KNOWN_APPS, toggleConsoleMaximize, renderNotificationCenter, saveOpenWindowsState, restoreOpenWindowsState, applySavedBounds, OPEN_WINDOWS_KEY } from '../components/dock.js';
+import { makeDraggable, makeResizable, saveWindowBounds, loadSavedWindowBounds, DockManager, isEventChecked, markEventChecked, resetCheckedEventsState, getEventKey, openConsoleWindow, KNOWN_APPS, toggleConsoleMaximize, renderNotificationCenter, saveOpenWindowsState, restoreOpenWindowsState, applySavedBounds, OPEN_WINDOWS_KEY, initDesktopLasso } from '../components/dock.js';
 import { openEventDetailModal, closeEventDetailModal } from '../modals.js';
 import { initManagement } from '../components/management.js';
 import { state } from '../state.js';
@@ -803,6 +803,35 @@ describe('Notification Center Draggable Window & Event Detail Inspector', () => 
     const widgetsPane = document.getElementById('mgmt-pane-widgets');
     expect(widgetsTab.classList.contains('active')).toBe(true);
     expect(widgetsPane.style.display).toBe('block');
+  });
+
+  it('does not trigger desktop lasso marquee when clicking or dragging notification center resizer or panel', () => {
+    document._desktopLassoInitialized = false;
+    initDesktopLasso();
+    const panel = document.getElementById('notif-center-panel');
+    const resizer = document.getElementById('notif-center-resizer');
+
+    // Simulate pointerdown on resizer
+    const resizerDown = new PointerEvent('pointerdown', {
+      bubbles: true,
+      cancelable: true,
+      clientX: 300,
+      clientY: 300,
+      button: 0,
+    });
+    resizer.dispatchEvent(resizerDown);
+    expect(document.getElementById('desktop-lasso-rect')).toBeNull();
+
+    // Simulate pointerdown on panel
+    const panelDown = new PointerEvent('pointerdown', {
+      bubbles: true,
+      cancelable: true,
+      clientX: 200,
+      clientY: 200,
+      button: 0,
+    });
+    panel.dispatchEvent(panelDown);
+    expect(document.getElementById('desktop-lasso-rect')).toBeNull();
   });
 });
 

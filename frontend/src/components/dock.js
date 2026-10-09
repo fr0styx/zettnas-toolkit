@@ -915,6 +915,8 @@ export function makeResizable(dragEl, resizerEl, customId, options = {}) {
     const maxH = Math.max(minH, window.innerHeight - rect.top - 70);
 
     dragEl.style.transition = 'none';
+    const prevUserSelect = document.body.style.userSelect;
+    document.body.style.userSelect = 'none';
 
     const pointerId = e.pointerId;
     try {
@@ -932,6 +934,7 @@ export function makeResizable(dragEl, resizerEl, customId, options = {}) {
     };
 
     const onPointerUp = () => {
+      document.body.style.userSelect = prevUserSelect;
       window.removeEventListener('pointermove', onPointerMove);
       window.removeEventListener('pointerup', onPointerUp);
       window.removeEventListener('pointercancel', onPointerUp);
@@ -2576,17 +2579,14 @@ export function initDesktopLasso() {
     if (e.button !== 0) return;
     if (document.body.classList.contains('mobile-mode') || window.innerWidth <= 768) return;
     if (
-      e.target.closest('.smart-modal-window') ||
-      e.target.closest('.smart-modal-backdrop') ||
-      e.target.closest('.os-window') ||
-      e.target.closest('#console-window') ||
-      e.target.closest('.os-context-menu') ||
-      e.target.closest('#os-dock-container') ||
-      e.target.closest('.suite-navbar') ||
-      e.target.closest('.slide-drawer') ||
-      e.target.closest('.chassis-hero-box') ||
-      e.target.closest('.desktop-widget') ||
-      e.target.closest('#spotlight-palette-overlay')
+      e.target.closest(
+        '.smart-modal-window, .smart-modal-backdrop, .os-window, #console-window, #console-modal-overlay, ' +
+        '#notif-center-panel, .notif-center-window, #management-window, .management-window, #management-modal-overlay, ' +
+        '#file-manager-window, .file-manager-window, #container-inspector-window, .container-inspector-window, ' +
+        '#container-inspector-overlay, #user-profile-flyout, .user-profile-flyout, .os-context-menu, ' +
+        '#os-dock-container, .suite-navbar, .slide-drawer, .chassis-hero-box, .desktop-widget, ' +
+        '#spotlight-palette-overlay, .window-resizer-grip, [data-window-id]'
+      )
     ) {
       if (!e.target.closest('.chassis-hero-box')) {
         document.querySelectorAll('.desktop-icon-selected').forEach((el) => el.classList.remove('desktop-icon-selected'));

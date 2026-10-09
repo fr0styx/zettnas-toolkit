@@ -7334,6 +7334,8 @@ body.theme-yak .widget-drag-handle:hover {
   min-height: 240px;
   max-width: calc(100vw - 24px);
   max-height: calc(100vh - 90px);
+  user-select: none;
+  resize: none !important;
 }
 
 #notif-center-resizer {
@@ -8200,8 +8202,7 @@ body.theme-yak #notif-center-resizer:hover {
 .container-inspector-window::-webkit-resizer,
 #container-inspector-window::-webkit-resizer,
 .smart-modal-window::-webkit-resizer,
-#console-window::-webkit-resizer,
-#notif-center-panel::-webkit-resizer {
+#console-window::-webkit-resizer {
   display: block !important;
   width: 24px !important;
   height: 24px !important;
@@ -8219,8 +8220,7 @@ body.theme-yak #notif-center-resizer:hover {
 .container-inspector-window::-webkit-resizer:hover,
 #container-inspector-window::-webkit-resizer:hover,
 .smart-modal-window::-webkit-resizer:hover,
-#console-window::-webkit-resizer:hover,
-#notif-center-panel::-webkit-resizer:hover {
+#console-window::-webkit-resizer:hover {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='24' height='24' fill='none' stroke='%2325c2a0' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='M21 15L15 21'/%3E%3Cpath d='M21 9L9 21'/%3E%3Cpath d='M21 3L3 21'/%3E%3C/svg%3E") !important;
 }
 
@@ -8230,8 +8230,7 @@ body.theme-yak #management-window::-webkit-resizer:hover,
 body.theme-yak .container-inspector-window::-webkit-resizer:hover,
 body.theme-yak #container-inspector-window::-webkit-resizer:hover,
 body.theme-yak .smart-modal-window::-webkit-resizer:hover,
-body.theme-yak #console-window::-webkit-resizer:hover,
-body.theme-yak #notif-center-panel::-webkit-resizer:hover {
+body.theme-yak #console-window::-webkit-resizer:hover {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='24' height='24' fill='none' stroke='%23d48a37' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='M21 15L15 21'/%3E%3Cpath d='M21 9L9 21'/%3E%3Cpath d='M21 3L3 21'/%3E%3C/svg%3E") !important;
 }
 
