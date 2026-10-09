@@ -6,6 +6,7 @@ Provides WebDAV daemon controls, modern WebDAV Portal UI, and transparent HTTP p
 import asyncio
 import logging
 import os
+import urllib.parse
 from typing import Any, Dict, Optional
 import httpx
 from fastapi import APIRouter, HTTPException, Request
@@ -13,6 +14,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
 import backend.config as config
+from backend.passwords import verify_password
 from backend.services.webdav_engine import get_webdav_engine
 from backend.services.webdav_portal import render_webdav_login, render_webdav_portal
 
@@ -73,18 +75,51 @@ async def restart_webdav():
 
 
 # WebDAV Portal Authentication Routes
-@proxy_router.post("/webdav/auth/login")
+@proxy_router.api_route("/webdav/auth/login", methods=["GET", "POST"])
 async def webdav_portal_login(request: Request):
-    form = await request.form()
-    username = str(form.get("username", "")).strip()
-    password = str(form.get("password", "")).strip()
+    if request.method == "GET":
+        return RedirectResponse(url="/webdav/", status_code=303)
+
+    try:
+        content_type = request.headers.get("content-type", "")
+        if "application/json" in content_type:
+            payload = await request.json()
+            username = str(payload.get("username", "")).strip()
+            password = str(payload.get("password", "")).strip()
+        else:
+            raw_body = await request.body()
+            parsed = urllib.parse.parse_qs(raw_body.decode("utf-8", errors="ignore"))
+            username = parsed.get("username", [""])[0].strip()
+            password = parsed.get("password", [""])[0].strip()
+    except Exception as parse_err:
+        logger.warning(f"[WebDAV Login] Body parse error: {parse_err}")
+        username = ""
+        password = ""
 
     engine = get_webdav_engine()
     cfg = engine.load_config()
     expected_user = cfg.get("username", "admin") or "admin"
-    expected_pass = cfg.get("password") or config.WEB_PASSWORD or "admin"
+    webdav_pass = cfg.get("password")
 
-    if username == expected_user and password == expected_pass:
+    user_ok = bool(username and expected_user and username.lower() == expected_user.lower())
+
+    pass_ok = False
+    if user_ok:
+        if webdav_pass and password == webdav_pass:
+            pass_ok = True
+        elif config.STORED_PASSWORD_HASH and verify_password(password, config.STORED_PASSWORD_HASH):
+            pass_ok = True
+            # Sync this password to webdav config if no dedicated password was set
+            if not webdav_pass and password != "admin":
+                try:
+                    engine.save_config({"password": password})
+                    asyncio.create_task(asyncio.to_thread(engine.restart))
+                except Exception as e:
+                    logger.warning(f"[WebDAV] Failed to sync master password: {e}")
+        elif password == (config.WEB_PASSWORD or "admin"):
+            pass_ok = True
+
+    if user_ok and pass_ok:
         resp = RedirectResponse(url="/webdav/", status_code=303)
         resp.set_cookie(
             key="webdav_session",
@@ -97,7 +132,7 @@ async def webdav_portal_login(request: Request):
     else:
         return HTMLResponse(
             render_webdav_login(error_msg="Invalid WebDAV username or password."),
-            status_code=401,
+            status_code=200,
         )
 
 

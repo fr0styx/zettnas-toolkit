@@ -8823,3 +8823,15 @@ body.theme-yak #notif-center-panel::-webkit-resizer:hover {
   border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
+
+/* Micro screw corner icons removed per user request */
+.chassis-screws,
+.chassis-screw-head {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+.chassis-screws::after {
+  display: none !important;
+}
