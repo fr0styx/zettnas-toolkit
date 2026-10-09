@@ -110,8 +110,8 @@
               'mgmt-pane-theme': 'mgmt-sec-wallpaper',
               'mgmt-sec-theme': 'mgmt-sec-wallpaper',
               'mgmt-pane-widgets': 'mgmt-sec-wallpaper',
-              'mgmt-pane-language': 'mgmt-sec-wallpaper',
-              'mgmt-sec-language': 'mgmt-sec-wallpaper',
+              'mgmt-pane-language': 'mgmt-sec-system-group',
+              'mgmt-sec-language': 'mgmt-sec-system-group',
               'mgmt-sec-activity': 'mgmt-sec-activity',
               'mgmt-pane-metrics': 'mgmt-sec-activity',
               'mgmt-sec-copy': 'mgmt-sec-activity',
@@ -2032,40 +2032,54 @@
               <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-grid"/></svg>
               <span data-i18n="mgmt.subtab_widgets">Widgets</span>
             </button>
-            <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-language">
-              <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-globe"/></svg>
-              <span data-i18n="mgmt.subtab_language">Language</span>
-            </button>
           </div>
 
-          <!-- Sub-tab 1: Wallpaper -->
+          <!-- Sub-tab 1: Wallpaper & Backgrounds Gallery -->
           <div id="mgmt-pane-wallpaper" class="mgmt-tab-pane" style="display: block;">
             <div class="mgmt-card-intro">
-            <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-globe"/></svg> <span data-i18n="mgmt.wallpaper_title">Custom Desktop Wallpaper</span></div>
-            <div class="mgmt-card-intro-desc" data-i18n="mgmt.wallpaper_desc">Upload a high-resolution background image to customize the ZettNAS desktop environment.</div>
-          </div>
-          <div class="mgmt-detail-body">
-            <div style="display:flex; flex-direction:column; gap: 14px;">
-              <div style="display:flex; gap: 8px;">
-                <select id="wallpaper-select" style="flex:1; background: rgba(0,0,0,0.3); color: #fff; border: 1px solid rgba(255,255,255,0.12); border-radius: 6px; padding: 8px;">
-                   <option value="">Default Gradient</option>
-                </select>
-                <button class="btn-pill-toggle" id="wallpaper-rename-btn" title="Rename selected image" style="padding: 0 12px;" data-i18n="mgmt.wallpaper_rename">Rename</button>
-                <button class="btn-pill-toggle" id="wallpaper-delete-btn" title="Delete selected image" style="background: rgba(240, 85, 59, 0.12); color: var(--crit); border-color: rgba(240, 85, 59, 0.25); padding: 0 12px;" data-i18n="mgmt.wallpaper_delete">Delete</button>
+              <div class="mgmt-card-intro-title">
+                <svg class="ic"><use href="#i-screen"/></svg> 
+                <span data-i18n="mgmt.wallpaper_title">Desktop Wallpapers & Backgrounds</span>
               </div>
-              <div style="display:flex; gap: 14px; align-items: stretch;">
-                <div style="flex: 1; display:flex; flex-direction:column; gap: 10px;">
-                  <input type="file" id="wallpaper-upload" accept="image/*" style="display:none;">
-                  <button class="btn-pill-toggle" style="width:100%; justify-content:center; padding: 12px;" onclick="document.getElementById('wallpaper-upload').click()" data-i18n="mgmt.wallpaper_upload">📁 Upload New Image</button>
-                  <button class="btn-save-preset" id="wallpaper-clear-btn" style="width:100%; justify-content:center; padding: 12px;" data-i18n="mgmt.wallpaper_apply">Set Active Wallpaper</button>
-                </div>
-                <div style="flex: 1.2; background: rgba(0,0,0,0.35); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); overflow: hidden; position: relative; min-height: 120px; display:flex; align-items:center; justify-content:center;">
-                   <img id="wallpaper-preview" src="" style="width:100%; height:100%; object-fit:cover; display:none;">
-                   <span id="wallpaper-no-img" style="color:var(--muted); font-size:11px;" data-i18n="mgmt.wallpaper_theme_default">Default Desktop Theme</span>
-                </div>
+              <div class="mgmt-card-intro-desc" data-i18n="mgmt.wallpaper_desc">
+                Browse high-resolution desktop backgrounds. Click any image to instantly preview and set it on your desktop workspace.
               </div>
             </div>
-          </div>
+            <div class="mgmt-detail-body">
+              <div class="wallpaper-gallery-container">
+                <!-- Toolbar: Filter & Actions -->
+                <div class="wallpaper-gallery-toolbar">
+                  <div class="wallpaper-filter-pills">
+                    <span id="wallpaper-count-badge" class="wallpaper-count-badge">0 Wallpapers</span>
+                  </div>
+                  <div class="wallpaper-toolbar-actions">
+                    <input type="file" id="wallpaper-upload" accept="image/*" style="display:none;">
+                    <button class="btn-pill-toggle btn-primary-accent" id="wallpaper-upload-btn" onclick="document.getElementById('wallpaper-upload').click()">
+                      <svg class="ic" style="width:13px; height:13px; margin-right:4px;"><use href="#i-upload"/></svg>
+                      <span data-i18n="mgmt.wallpaper_upload">Upload Wallpaper</span>
+                    </button>
+                    <button class="btn-pill-toggle" id="wallpaper-default-btn" title="Revert to default desktop theme gradient">
+                      <span data-i18n="mgmt.wallpaper_theme_default">Theme Gradient</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Interactive Wallpaper Visual Grid -->
+                <div id="wallpaper-gallery-grid" class="wallpaper-gallery-grid" role="grid" aria-label="Desktop Wallpapers">
+                  <div class="wallpaper-loading-state">
+                    <span style="color:var(--muted); font-size:12px;">Loading wallpaper gallery...</span>
+                  </div>
+                </div>
+
+                <!-- Hidden elements for test and script compatibility -->
+                <select id="wallpaper-select" style="display:none;"><option value="">Default Gradient</option></select>
+                <button id="wallpaper-clear-btn" style="display:none;">Set Active Wallpaper</button>
+                <button id="wallpaper-rename-btn" style="display:none;">Rename</button>
+                <button id="wallpaper-delete-btn" style="display:none;">Delete</button>
+                <div id="wallpaper-preview" style="display:none;"><img id="wallpaper-preview-img" src="" alt="preview"></div>
+                <div id="wallpaper-no-img" style="display:none;"></div>
+              </div>
+            </div>
           </div>
 
           <!-- Sub-tab: Desktop Theme & Accent -->
@@ -2438,34 +2452,6 @@
                   <button id="widget-reset-defaults-btn" class="btn-pill-toggle" style="padding: 8px 16px; font-size: 11.5px;">↺ Reset to Defaults</button>
                 </div>
 
-              </div>
-            </div>
-          </div>
-
-          <!-- Sub-tab 3: Display Language & Localization -->
-          <div id="mgmt-pane-language" class="mgmt-tab-pane" style="display: none;">
-            <div class="mgmt-card-intro">
-              <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-globe"/></svg> <span data-i18n="settings.language_title">Display Language & Localization</span></div>
-              <div class="mgmt-card-intro-desc" data-i18n="settings.language_desc">Select your preferred language for the Web Studio desktop and hardware management controls.</div>
-            </div>
-            <div class="mgmt-detail-body">
-              <div class="drawer-card" style="padding: 20px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); max-width: 520px;">
-                <div class="card-headline">
-                  <span class="card-head-title" style="font-weight: 700; font-size: 14px; margin-bottom: 8px; display: block;" data-i18n="settings.language_title">Display Language & Localization</span>
-                </div>
-                <div style="font-size: 12px; color: var(--muted); margin-bottom: 16px; line-height: 1.4;" data-i18n="settings.language_desc">
-                  Select your preferred language for the Web Studio desktop and hardware management controls.
-                </div>
-                <div style="margin-top: 10px;">
-                  <label style="display:block; font-size:10.5px; font-weight:700; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px;" data-i18n="settings.select_language">SYSTEM INTERFACE LANGUAGE</label>
-                  <select id="mgmt-lang-select" class="language-picker-select tz-select-input" style="width: 100%; padding: 10px 14px; font-size: 13px; cursor: pointer; border: 1px solid rgba(255,255,255,0.12); background: rgba(0,0,0,0.3); border-radius: 6px; color: #fff;">
-                    <option value="en">🇺🇸 English (US)</option>
-                    <option value="de">🇩🇪 Deutsch (German)</option>
-                    <option value="zh">🇨🇳 简体中文 (Simplified Chinese)</option>
-                    <option value="fr">🇫🇷 Français (French)</option>
-                    <option value="es">🇪🇸 Español (Spanish)</option>
-                  </select>
-                </div>
               </div>
             </div>
           </div>
@@ -3008,6 +2994,10 @@
                 <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-chip"/></svg>
                 <span data-i18n="mgmt.subtab_system">System & API</span>
               </button>
+              <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-language" id="mgmt-tab-language">
+                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-globe"/></svg>
+                <span data-i18n="mgmt.subtab_language">Language & Region</span>
+              </button>
               <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-about" id="mgmt-tab-about">
                 <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-globe"/></svg>
                 <span data-i18n="mgmt.subtab_about">About & Updates</span>
@@ -3507,6 +3497,34 @@
               <div style="display: flex; gap: 8px;">
                 <input type="text" id="new-token-name" placeholder="Token Name (e.g. Home Assistant)" style="flex:1; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 8px 12px; font-size: 12px; border-radius: 6px;">
                 <button id="btn-generate-token" class="btn-rect">Generate</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5c. Display Language & Localization Pane -->
+        <div id="mgmt-pane-language" class="mgmt-tab-pane" style="display: none;">
+          <div class="mgmt-card-intro">
+            <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-globe"/></svg> <span data-i18n="settings.language_title">Display Language & Localization</span></div>
+            <div class="mgmt-card-intro-desc" data-i18n="settings.language_desc">Select your preferred language for the Web Studio desktop and hardware management controls.</div>
+          </div>
+          <div class="mgmt-detail-body">
+            <div class="drawer-card" style="padding: 20px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); max-width: 520px;">
+              <div class="card-headline">
+                <span class="card-head-title" style="font-weight: 700; font-size: 14px; margin-bottom: 8px; display: block;" data-i18n="settings.language_title">Display Language & Localization</span>
+              </div>
+              <div style="font-size: 12px; color: var(--muted); margin-bottom: 16px; line-height: 1.4;" data-i18n="settings.language_desc">
+                Select your preferred language for the Web Studio desktop and hardware management controls.
+              </div>
+              <div style="margin-top: 10px;">
+                <label style="display:block; font-size:10.5px; font-weight:700; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px;" data-i18n="settings.select_language">SYSTEM INTERFACE LANGUAGE</label>
+                <select id="mgmt-lang-select" class="language-picker-select tz-select-input" style="width: 100%; padding: 10px 14px; font-size: 13px; cursor: pointer; border: 1px solid rgba(255,255,255,0.12); background: rgba(0,0,0,0.3); border-radius: 6px; color: #fff;">
+                  <option value="en">🇺🇸 English (US)</option>
+                  <option value="de">🇩🇪 Deutsch (German)</option>
+                  <option value="zh">🇨🇳 简体中文 (Simplified Chinese)</option>
+                  <option value="fr">🇫🇷 Français (French)</option>
+                  <option value="es">🇪🇸 Español (Spanish)</option>
+                </select>
               </div>
             </div>
           </div>

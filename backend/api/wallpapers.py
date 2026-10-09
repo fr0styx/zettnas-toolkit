@@ -73,12 +73,40 @@ def _detect_image_format(data: bytes):
 def _clean_cache_for(safe: str):
     if not safe:
         return
+    cache_dir = os.path.join(WALLPAPERS_DIR, ".cache")
+    for fname in [f"{safe}.webp", f"thumb_{safe}.webp"]:
+        try:
+            cache_path = os.path.join(cache_dir, fname)
+            if os.path.isfile(cache_path):
+                os.remove(cache_path)
+        except Exception:
+            pass
+
+
+def _get_thumbnail_wallpaper_path(safe: str, wp_path: str) -> tuple[str, str]:
+    ext = os.path.splitext(safe)[1].lower()
+    if ext == ".gif":
+        return wp_path, ALLOWED_TYPES.get(ext, "image/gif")
+
+    cache_dir = os.path.join(os.path.dirname(wp_path), ".cache")
+    thumb_path = os.path.join(cache_dir, f"thumb_{safe}.webp")
+
     try:
-        cache_path = os.path.join(WALLPAPERS_DIR, ".cache", f"{safe}.webp")
-        if os.path.isfile(cache_path):
-            os.remove(cache_path)
-    except Exception:
-        pass
+        src_mtime = os.path.getmtime(wp_path)
+        if os.path.exists(thumb_path) and os.path.getmtime(thumb_path) >= src_mtime:
+            return thumb_path, "image/webp"
+
+        os.makedirs(cache_dir, exist_ok=True)
+        with Image.open(wp_path) as im:
+            if im.mode not in ("RGB", "RGBA"):
+                im = im.convert("RGB")
+            # Downscale thumbnail to 360x202 (16:9 standard card preview)
+            im.thumbnail((360, 202), Image.Resampling.LANCZOS)
+            im.save(thumb_path, "WEBP", quality=80, method=4)
+        return thumb_path, "image/webp"
+    except Exception as e:
+        logger.warning(f"[WALLPAPER] Thumbnail fallback to original for {safe}: {e}")
+        return wp_path, ALLOWED_TYPES.get(ext, "image/jpeg")
 
 
 def _get_optimized_wallpaper_path(safe: str, wp_path: str) -> tuple[str, str]:
@@ -150,6 +178,23 @@ async def download_wallpaper(filename: str, request: Request):
         serve_path = wp_path
         media_type = ALLOWED_TYPES.get(os.path.splitext(safe)[1].lower(), "application/octet-stream")
 
+    return FileResponse(
+        serve_path,
+        media_type=media_type,
+        headers={
+            "X-Content-Type-Options": "nosniff",
+            "Cache-Control": "public, max-age=604800, stale-while-revalidate=86400",
+        },
+    )
+
+
+@router.get("/wallpapers/thumb/{filename}")
+async def get_wallpaper_thumbnail(filename: str):
+    safe, wp_path = _path_for(filename)
+    if not safe or not os.path.isfile(wp_path):
+        return error_response(404, "Wallpaper not found.")
+
+    serve_path, media_type = await run_in_threadpool(_get_thumbnail_wallpaper_path, safe, wp_path)
     return FileResponse(
         serve_path,
         media_type=media_type,

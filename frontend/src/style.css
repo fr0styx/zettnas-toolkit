@@ -9727,3 +9727,222 @@ body.desktop-locked #os-dock-container {
   font-size: 10px;
   font-family: var(--font-mono, monospace);
 }
+
+/* =========================================================================
+   Visual Wallpaper Gallery Suite (Batch 1)
+   ========================================================================= */
+
+.wallpaper-gallery-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.wallpaper-gallery-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+}
+
+.wallpaper-filter-pills {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.wallpaper-count-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+  color: var(--muted, #94a3b8);
+}
+
+.wallpaper-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-primary-accent {
+  background: rgba(var(--ok2-rgb, 0, 240, 255), 0.15) !important;
+  color: var(--ok2, #00f0ff) !important;
+  border-color: rgba(var(--ok2-rgb, 0, 240, 255), 0.35) !important;
+  font-weight: 600;
+}
+
+.btn-primary-accent:hover {
+  background: rgba(var(--ok2-rgb, 0, 240, 255), 0.25) !important;
+  border-color: var(--ok2, #00f0ff) !important;
+}
+
+.wallpaper-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
+  gap: 14px;
+  min-height: 220px;
+  max-height: 480px;
+  overflow-y: auto;
+  padding: 6px 2px;
+  border-radius: 8px;
+}
+
+.wallpaper-gallery-grid.dragover {
+  border: 2px dashed var(--ok2, #00f0ff);
+  background: rgba(var(--ok2-rgb, 0, 240, 255), 0.04);
+}
+
+.wallpaper-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1.5px solid rgba(255, 255, 255, 0.09);
+  border-radius: 10px;
+  padding: 7px;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.2s ease,
+              box-shadow 0.2s ease,
+              background-color 0.2s ease;
+  user-select: none;
+  outline: none;
+}
+
+.wallpaper-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 10px 24px -6px rgba(0, 0, 0, 0.5);
+}
+
+.wallpaper-card:focus-visible {
+  border-color: var(--ok2, #00f0ff);
+  box-shadow: 0 0 0 2px rgba(var(--ok2-rgb, 0, 240, 255), 0.4);
+}
+
+.wallpaper-card.active {
+  border-color: var(--ok2, #00f0ff);
+  background: rgba(var(--ok2-rgb, 0, 240, 255), 0.08);
+  box-shadow: 0 0 20px -2px rgba(var(--ok2-rgb, 0, 240, 255), 0.35);
+}
+
+.wallpaper-card-thumb-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 7px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.wallpaper-card-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.35s ease;
+}
+
+.wallpaper-card:hover .wallpaper-card-thumb {
+  transform: scale(1.05);
+}
+
+.wallpaper-gradient-preview {
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at 50% 30%, #172436 0%, #0a0e17 80%, #05080e 100%);
+}
+
+.wallpaper-card-active-indicator {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  background: var(--ok2, #00f0ff);
+  color: #040910;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  padding: 2px 7px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  animation: wpActivePop 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes wpActivePop {
+  0% { transform: scale(0.6); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.wallpaper-card-actions {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.wallpaper-card:hover .wallpaper-card-actions {
+  opacity: 1;
+}
+
+.wallpaper-action-btn {
+  background: rgba(10, 15, 24, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #f1f5f9;
+  border-radius: 5px;
+  padding: 4px 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.wallpaper-action-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.wallpaper-action-btn.delete-btn:hover {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #fca5a5;
+}
+
+.wallpaper-card-footer {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.wallpaper-card-title {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #cbd5e1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.wallpaper-card.active .wallpaper-card-title {
+  color: #fff;
+  font-weight: 700;
+}

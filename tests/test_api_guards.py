@@ -96,6 +96,9 @@ def test_wallpaper_upload_select_download_delete(client, auth_headers):
     assert d.status_code == 200
     assert d.headers["content-type"] == "image/png"
     assert d.headers["x-content-type-options"] == "nosniff"
+    thumb = client.get(f"/api/wallpapers/thumb/{name}")
+    assert thumb.status_code == 200
+    assert thumb.headers["x-content-type-options"] == "nosniff"
     # UI sends `filename`; API also accepts `name`.
     assert client.post("/api/wallpapers/select", json={"filename": name}, headers=auth_headers).json()["success"]
     assert client.get("/api/wallpapers", headers=auth_headers).json()["active"] == name
