@@ -1,3 +1,6 @@
+import base64
+import hashlib
+import hmac
 import json
 import threading
 import time
@@ -24,17 +27,33 @@ from backend.errors import error_response
 from backend.fsutil import atomic_write_json
 from backend.models.schemas import (
     LoginRequest,
+    MfaChallengeRequest,
+    MfaDisableRequest,
+    MfaEnableRequest,
     SecurityUpdateRequest,
     UserCreateRequest,
     UserPasswordChangeRequest,
     UserUpdateRequest,
 )
 from backend.passwords import hash_password, is_legacy_hash, needs_rehash, verify_password
+from backend.totp import (
+    generate_qr_svg,
+    generate_recovery_codes,
+    generate_totp_code,
+    generate_totp_secret,
+    get_otpauth_uri,
+    hash_recovery_code,
+    verify_totp_code,
+)
 from backend.users_db import (
+    consume_user_recovery_code,
     create_user,
     delete_user,
+    disable_user_mfa,
+    enable_user_mfa,
     get_user_by_id,
     get_user_by_username,
+    get_user_mfa,
     list_user_sessions,
     list_users,
     log_security_event,
@@ -111,6 +130,9 @@ def _persist_security() -> None:
 
 
 def _get_authenticated_user(request: Request) -> Optional[Dict[str, Any]]:
+    sess = getattr(request.state, "session", None)
+    if sess and sess.get("user_id"):
+        return get_user_by_id(sess["user_id"])
     token = extract_token(request)
     if not token or not validate_session(token):
         return None
@@ -118,6 +140,93 @@ def _get_authenticated_user(request: Request) -> Optional[Dict[str, Any]]:
     if not sess:
         return None
     return get_user_by_id(sess["user_id"])
+
+
+def create_mfa_token(user_id: str, username: str, remember_me: bool) -> str:
+    payload = {
+        "uid": user_id,
+        "u": username,
+        "rm": remember_me,
+        "exp": time.time() + 300,
+    }
+    raw = json.dumps(payload, separators=(",", ":")).encode("utf-8")
+    b64 = base64.urlsafe_b64encode(raw).decode("ascii").rstrip("=")
+    key = (getattr(config, "STORED_PASSWORD_HASH", "") or "zettnas-mfa-default-key").encode("utf-8")
+    sig = hmac.new(key, b64.encode("ascii"), hashlib.sha256).hexdigest()
+    return f"mfa_{b64}.{sig}"
+
+
+def verify_mfa_token(token: str) -> Optional[dict]:
+    if not token or not token.startswith("mfa_") or "." not in token:
+        return None
+    try:
+        body = token[4:]
+        b64, sig = body.split(".", 1)
+        key = (getattr(config, "STORED_PASSWORD_HASH", "") or "zettnas-mfa-default-key").encode("utf-8")
+        expected_sig = hmac.new(key, b64.encode("ascii"), hashlib.sha256).hexdigest()
+        if not hmac.compare_digest(sig, expected_sig):
+            return None
+        missing = len(b64) % 4
+        if missing:
+            b64 += "=" * (4 - missing)
+        data = json.loads(base64.urlsafe_b64decode(b64.encode("ascii")).decode("utf-8"))
+        if data.get("exp", 0) < time.time():
+            return None
+        return data
+    except Exception:
+        return None
+
+
+def _build_session_response(
+    user: Dict[str, Any], remember_me: bool, request: Request, method: str = "password"
+) -> JSONResponse:
+    ip = _client_ip(request)
+    ua = request.headers.get("user-agent", "")
+    token = create_session(user["username"], is_remembered=remember_me, ip=ip, user_agent=ua)
+    record_successful_login(user["id"], ip)
+
+    log_security_event(
+        "auth.login.success",
+        "success",
+        actor_id=user["id"],
+        actor_username=user["username"],
+        actor_ip=ip,
+        actor_user_agent=ua,
+        details={"method": method},
+    )
+    logger.info(f"Successful login for '{user['username']}' from {ip} via {method}.")
+
+    response_data = {
+        "status": "ok",
+        "token": token,
+        "user": {
+            "id": user["id"],
+            "username": user["username"],
+            "display_name": user["display_name"],
+            "role": user["role_id"],
+            "role_name": user.get("role_name", "User"),
+            "scopes": user.get("scopes", []),
+            "mfa_enabled": bool(user.get("mfa_enabled")),
+            "idp_type": user.get("idp_type", "local"),
+            "must_change_password": bool(user.get("must_change_password")),
+            "avatar_url": user.get("avatar_url", ""),
+            "home_directory": user.get("home_directory", ""),
+        },
+        "is_default_password": is_using_default_password(),
+    }
+    response = JSONResponse(content=response_data)
+
+    ttl = 30 * 86400 if remember_me else config.SESSION_TTL
+    response.set_cookie(
+        key="zettnas_session",
+        value=token,
+        max_age=ttl,
+        httponly=True,
+        samesite="lax",
+        secure=request.url.scheme == "https",
+        path="/",
+    )
+    return response
 
 
 # ==============================================================================
@@ -128,6 +237,16 @@ def _get_authenticated_user(request: Request) -> Optional[Dict[str, Any]]:
 @router.post("/auth/login")
 async def login(req: LoginRequest, request: Request):
     ip = _client_ip(request)
+
+    # 0. Handle direct MFA token challenge completion
+    if req.mfa_token:
+        challenge_req = MfaChallengeRequest(
+            mfa_token=req.mfa_token,
+            mfa_code=req.mfa_code,
+            recovery_code=req.recovery_code,
+        )
+        return await mfa_challenge(challenge_req, request)
+
     username = (req.username or "").strip().lower()
     target_username = username or (getattr(config, "ZETTNAS_USERNAME", "admin") or "admin").lower()
 
@@ -210,52 +329,192 @@ async def login(req: LoginRequest, request: Request):
         except Exception as e:
             logger.warning(f"Failed to upgrade password hash for '{target_username}': {e}")
 
-    # 5. Create session
-    ua = request.headers.get("user-agent", "")
-    token = create_session(user["username"], is_remembered=req.remember_me, ip=ip, user_agent=ua)
-    record_successful_login(user["id"], ip)
+    # 5. Check Multi-Factor Authentication (MFA / 2FA)
+    if bool(user.get("mfa_enabled")):
+        # If user passed MFA code or recovery code directly with credentials
+        if req.mfa_code or req.recovery_code:
+            user_mfa = get_user_mfa(user["id"])
+            mfa_ok = False
+            method = "totp"
+            if req.mfa_code and user_mfa and user_mfa.get("mfa_secret"):
+                mfa_ok = verify_totp_code(user_mfa["mfa_secret"], req.mfa_code, user_id=user["id"])
+            if not mfa_ok and req.recovery_code:
+                mfa_ok = consume_user_recovery_code(user["id"], req.recovery_code)
+                method = "recovery_code"
+
+            if not mfa_ok:
+                _register_failure(ip)
+                _register_failure(f"user:{target_username}")
+                log_security_event(
+                    "auth.mfa.failure",
+                    "failure",
+                    actor_id=user["id"],
+                    actor_username=user["username"],
+                    actor_ip=ip,
+                    details={"reason": "invalid_code"},
+                )
+                return error_response(401, "Invalid verification code or recovery code.", error="invalid_mfa_code")
+
+            return _build_session_response(user, req.remember_me, request, method=method)
+
+        # Issue intermediate MFA token
+        mfa_tok = create_mfa_token(user["id"], user["username"], req.remember_me)
+        return JSONResponse(
+            content={
+                "status": "mfa_required",
+                "mfa_token": mfa_tok,
+                "user_id": user["id"],
+                "username": user["username"],
+            }
+        )
+
+    # 6. MFA not required, issue full session
+    return _build_session_response(user, req.remember_me, request, method="password")
+
+
+@router.post("/auth/mfa/challenge")
+async def mfa_challenge(req: MfaChallengeRequest, request: Request):
+    ip = _client_ip(request)
+    remaining_ip = _lockout_remaining(ip)
+    if remaining_ip > 0:
+        return _rate_limited(remaining_ip)
+
+    token_data = verify_mfa_token(req.mfa_token)
+    if not token_data:
+        return error_response(401, "Invalid or expired MFA session. Please log in again.", error="invalid_mfa_token")
+
+    target_username = token_data.get("u", "")
+    remaining_user = _lockout_remaining(f"user:{target_username}")
+    if remaining_user > 0:
+        return _rate_limited(remaining_user)
+
+    user = get_user_by_id(token_data.get("uid", ""))
+    if not user or user.get("status") != "active":
+        return error_response(403, "Account is disabled or locked.", error="account_disabled")
+
+    user_mfa = get_user_mfa(user["id"])
+    mfa_ok = False
+    method = "totp"
+    if req.mfa_code and user_mfa and user_mfa.get("mfa_secret"):
+        mfa_ok = verify_totp_code(user_mfa["mfa_secret"], req.mfa_code, user_id=user["id"])
+    if not mfa_ok and req.recovery_code:
+        mfa_ok = consume_user_recovery_code(user["id"], req.recovery_code)
+        method = "recovery_code"
+
+    if not mfa_ok:
+        _register_failure(ip)
+        _register_failure(f"user:{target_username}")
+        log_security_event(
+            "auth.mfa.failure",
+            "failure",
+            actor_id=user["id"],
+            actor_username=user["username"],
+            actor_ip=ip,
+            details={"reason": "invalid_code"},
+        )
+        return error_response(401, "Invalid verification code or recovery code.", error="invalid_mfa_code")
+
+    _clear_failures(ip)
+    _clear_failures(f"user:{target_username}")
+    return _build_session_response(user, token_data.get("rm", False), request, method=method)
+
+
+@router.post("/auth/mfa/setup")
+def setup_mfa(request: Request):
+    user = _get_authenticated_user(request)
+    if not user:
+        return error_response(401, "Not authenticated.")
+
+    secret = generate_totp_secret()
+    recovery_codes = generate_recovery_codes()
+    issuer_name = getattr(config, "NAS_NAME", "ZettNAS") or "ZettNAS"
+    otpauth_uri = get_otpauth_uri(user["username"], secret, issuer=issuer_name)
+    qr_svg = generate_qr_svg(otpauth_uri)
+
+    return {
+        "status": "ok",
+        "secret": secret,
+        "otpauth_uri": otpauth_uri,
+        "qr_svg": qr_svg,
+        "recovery_codes": recovery_codes,
+    }
+
+
+@router.post("/auth/mfa/enable")
+def enable_mfa(data: MfaEnableRequest, request: Request):
+    user = _get_authenticated_user(request)
+    if not user:
+        return error_response(401, "Not authenticated.")
+
+    if not verify_totp_code(data.secret, data.code):
+        return error_response(400, "Invalid verification code. Please check your authenticator app and try again.")
+
+    rec_codes = data.recovery_codes or generate_recovery_codes()
+    hashed_codes = [hash_recovery_code(c) for c in rec_codes]
+
+    ok = enable_user_mfa(user["id"], data.secret, hashed_codes)
+    if not ok:
+        return error_response(500, "Failed to enable two-factor authentication.")
 
     log_security_event(
-        "auth.login.success",
+        "auth.mfa.enabled",
         "success",
         actor_id=user["id"],
         actor_username=user["username"],
-        actor_ip=ip,
-        actor_user_agent=ua,
+        actor_ip=_client_ip(request),
     )
-    logger.info(f"Successful login for '{user['username']}' from {ip}.")
-
-    # Build response with both token and HttpOnly session cookie
-    response_data = {
+    return {
         "status": "ok",
-        "token": token,
-        "user": {
-            "id": user["id"],
-            "username": user["username"],
-            "display_name": user["display_name"],
-            "role": user["role_id"],
-            "role_name": user.get("role_name", "User"),
-            "scopes": user.get("scopes", []),
-            "must_change_password": bool(user.get("must_change_password")),
-            "avatar_url": user.get("avatar_url", ""),
-            "home_directory": user.get("home_directory", ""),
-        },
-        "is_default_password": is_using_default_password(),
+        "message": "Two-factor authentication enabled successfully.",
+        "recovery_codes": rec_codes,
     }
-    response = JSONResponse(content=response_data)
 
-    # Set modern SameSite=Lax HttpOnly cookie
-    ttl = 30 * 86400 if req.remember_me else config.SESSION_TTL
-    response.set_cookie(
-        key="zettnas_session",
-        value=token,
-        max_age=ttl,
-        httponly=True,
-        samesite="lax",
-        secure=request.url.scheme == "https",
-        path="/",
+
+@router.post("/auth/mfa/disable")
+def disable_mfa(data: MfaDisableRequest, request: Request):
+    user = _get_authenticated_user(request)
+    if not user:
+        return error_response(401, "Not authenticated.")
+
+    user_mfa = get_user_mfa(user["id"])
+    if not user_mfa or not user_mfa.get("mfa_enabled"):
+        return {"status": "ok", "message": "Two-factor authentication is already disabled."}
+
+    valid = False
+    if data.password:
+        valid = verify_password(data.password, user.get("password_hash", ""))
+        if not valid and user["username"] in ("admin", getattr(config, "ZETTNAS_USERNAME", "admin")):
+            valid = verify_password(data.password, config.STORED_PASSWORD_HASH)
+    elif data.code and user_mfa.get("mfa_secret"):
+        valid = verify_totp_code(user_mfa["mfa_secret"], data.code, user_id=user["id"])
+
+    if not valid:
+        return error_response(401, "Invalid password or verification code to disable 2FA.")
+
+    ok = disable_user_mfa(user["id"])
+    if not ok:
+        return error_response(500, "Failed to disable two-factor authentication.")
+
+    log_security_event(
+        "auth.mfa.disabled",
+        "success",
+        actor_id=user["id"],
+        actor_username=user["username"],
+        actor_ip=_client_ip(request),
     )
-    return response
+    return {"status": "ok", "message": "Two-factor authentication disabled successfully."}
+
+
+@router.get("/auth/mfa/status")
+def get_mfa_status(request: Request):
+    user = _get_authenticated_user(request)
+    if not user:
+        return error_response(401, "Not authenticated.")
+    user_mfa = get_user_mfa(user["id"])
+    return {
+        "mfa_enabled": bool(user_mfa.get("mfa_enabled")) if user_mfa else False,
+        "recovery_codes_count": user_mfa.get("recovery_codes_count", 0) if user_mfa else 0,
+    }
 
 
 @router.post("/auth/logout")
@@ -292,6 +551,8 @@ def get_current_user_profile(request: Request):
             "scopes": ["*"],
             "email": config.ZETTNAS_EMAIL,
             "status": "active",
+            "mfa_enabled": False,
+            "idp_type": "local",
             "is_default_password": is_using_default_password(),
             "preferences": {},
         }
@@ -304,6 +565,8 @@ def get_current_user_profile(request: Request):
         "role_name": user.get("role_name", "User"),
         "scopes": user.get("scopes", []),
         "status": user.get("status", "active"),
+        "mfa_enabled": bool(user.get("mfa_enabled")),
+        "idp_type": user.get("idp_type", "local"),
         "must_change_password": bool(user.get("must_change_password")),
         "avatar_url": user.get("avatar_url", ""),
         "home_directory": user.get("home_directory", ""),

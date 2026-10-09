@@ -247,12 +247,43 @@ def extract_token(request: Request) -> str:
 _PUBLIC_API_PATHS = {
     "/api/auth/login",
     "/api/v1/auth/login",
+    "/api/auth/mfa/challenge",
+    "/api/v1/auth/mfa/challenge",
     "/api/health",
     "/api/v1/health",
     "/api/metrics",
     "/api/v1/metrics",
 }
 _DOCS_PATHS = {"/docs", "/redoc", "/openapi.json", "/docs/oauth2-redirect"}
+
+
+def is_ip_in_trusted_proxies(client_ip: str, trusted_list: Optional[List[str]] = None) -> bool:
+    """Check if client IP matches configured trusted proxies or CIDR subnets."""
+    if not client_ip or client_ip == "unknown":
+        return False
+    import ipaddress
+
+    proxies = trusted_list if trusted_list is not None else getattr(config, "TRUSTED_PROXIES", ["127.0.0.1", "::1"])
+    if client_ip in proxies:
+        return True
+
+    try:
+        ip_obj = ipaddress.ip_address(client_ip)
+    except ValueError:
+        return False
+
+    for trusted in proxies:
+        try:
+            if "/" in trusted:
+                net = ipaddress.ip_network(trusted, strict=False)
+                if ip_obj in net:
+                    return True
+            else:
+                if ip_obj == ipaddress.ip_address(trusted):
+                    return True
+        except ValueError:
+            continue
+    return False
 
 
 async def auth_middleware(request: Request, call_next):
@@ -275,12 +306,55 @@ async def auth_middleware(request: Request, call_next):
         return error_response(404, "Not found.")
 
     if (is_api and not is_exempt) or is_docs:
+        client_host = request.client.host if request.client else "unknown"
+
+        # Reverse Proxy Header SSO (Authelia, Authentik, Traefik, Cloudflare Access)
+        if getattr(config, "ENABLE_PROXY_SSO", False) and is_ip_in_trusted_proxies(client_host):
+            proxy_user = (
+                request.headers.get("Remote-User")
+                or request.headers.get("X-Forwarded-User")
+                or request.headers.get("X-Forwarded-Preferred-Username")
+            )
+            if proxy_user:
+                proxy_user = proxy_user.strip()
+                user = get_user_by_username(proxy_user)
+                if not user:
+                    try:
+                        from backend.users_db import create_user
+
+                        email = request.headers.get("Remote-Email") or request.headers.get("X-Forwarded-Email") or ""
+                        display_name = request.headers.get("Remote-Name") or proxy_user
+                        user = create_user(
+                            username=proxy_user,
+                            display_name=display_name,
+                            password=secrets.token_urlsafe(32),
+                            email=email,
+                            role_id="share_user",
+                            idp_type="proxy_sso",
+                            idp_sub=proxy_user,
+                        )
+                    except Exception as e:
+                        logger.warning(f"Failed to auto-provision proxy user '{proxy_user}': {e}")
+                        user = get_user_by_username(proxy_user)
+
+                if user and user.get("status") == "active":
+                    sso_sess = {
+                        "user_id": user["id"],
+                        "username": user["username"],
+                        "role_id": user["role_id"],
+                        "scopes": user.get("scopes", []),
+                        "is_proxy_sso": True,
+                    }
+                    request.state.session = sso_sess
+                    request.state.user = sso_sess
+                    request.state.token = f"sso_{user['username']}"
+                    return await call_next(request)
+
         token = extract_token(request)
         if not token and is_docs:
             ref_qs = parse_qs(urlparse(request.headers.get("referer", "")).query)
             token = (ref_qs.get("token") or [""])[0]
         if not validate_session(token):
-            client_host = request.client.host if request.client else "unknown"
             logger.warning(f"Auth failed for client {client_host} accessing {path}")
             return error_response(401, "Unauthorized. Please log in.")
 

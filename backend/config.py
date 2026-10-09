@@ -61,6 +61,10 @@ ZETTNAS_EMAIL = ""
 SESSION_TTL = 30 * 86400  # 30 days
 MIN_PASSWORD_LENGTH = 8
 
+# Reverse Proxy SSO (Sprint 3)
+TRUSTED_PROXIES = [p.strip() for p in os.environ.get("TRUSTED_PROXIES", "127.0.0.1,::1").split(",") if p.strip()]
+ENABLE_PROXY_SSO = os.environ.get("ENABLE_PROXY_SSO", "0").lower() in ("1", "true", "yes")
+
 # Random per-process token handed only to the headless LCD renderer.
 # Replaces the old "trust every request from 127.0.0.1" bypass.
 LCD_INTERNAL_TOKEN = secrets.token_urlsafe(32)

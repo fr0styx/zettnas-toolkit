@@ -5,6 +5,26 @@ class LoginRequest(BaseModel):
     password: str
     username: str | None = None
     remember_me: bool = False
+    mfa_code: str | None = None
+    recovery_code: str | None = None
+    mfa_token: str | None = None
+
+
+class MfaChallengeRequest(BaseModel):
+    mfa_token: str
+    mfa_code: str | None = None
+    recovery_code: str | None = None
+
+
+class MfaEnableRequest(BaseModel):
+    secret: str
+    code: str
+    recovery_codes: list[str] = []
+
+
+class MfaDisableRequest(BaseModel):
+    password: str | None = None
+    code: str | None = None
 
 
 class UserCreateRequest(BaseModel):

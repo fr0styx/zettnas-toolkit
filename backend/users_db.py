@@ -36,7 +36,7 @@ _TOKEN_CACHE_LOCK = threading.RLock()
 
 
 def get_users_db_connection(db_path: Optional[str] = None) -> sqlite3.Connection:
-    target_path = db_path or USERS_DB_PATH
+    target_path = db_path or getattr(config, "USERS_DB_PATH", USERS_DB_PATH)
     os.makedirs(os.path.dirname(target_path), exist_ok=True)
     conn = sqlite3.connect(target_path, timeout=15.0, check_same_thread=False)
     conn.row_factory = sqlite3.Row
@@ -202,6 +202,19 @@ def init_users_db(db_path: Optional[str] = None) -> None:
             );
         """)
         conn.execute("CREATE INDEX IF NOT EXISTS idx_security_audit_ts ON security_audit_log(timestamp DESC);")
+
+        # Ensure MFA and IdP columns exist on users table
+        cols = {row["name"] for row in conn.execute("PRAGMA table_info(users)").fetchall()}
+        if "mfa_enabled" not in cols:
+            conn.execute("ALTER TABLE users ADD COLUMN mfa_enabled INTEGER DEFAULT 0;")
+        if "mfa_secret" not in cols:
+            conn.execute("ALTER TABLE users ADD COLUMN mfa_secret TEXT DEFAULT '';")
+        if "mfa_recovery_codes_json" not in cols:
+            conn.execute("ALTER TABLE users ADD COLUMN mfa_recovery_codes_json TEXT DEFAULT '[]';")
+        if "idp_type" not in cols:
+            conn.execute("ALTER TABLE users ADD COLUMN idp_type TEXT DEFAULT 'local';")
+        if "idp_sub" not in cols:
+            conn.execute("ALTER TABLE users ADD COLUMN idp_sub TEXT DEFAULT '';")
 
         # Seed default roles if missing
         now = time.time()
@@ -415,12 +428,17 @@ def list_users(db_path: Optional[str] = None) -> List[Dict[str, Any]]:
         rows = conn.execute("""
             SELECT u.id, u.username, u.display_name, u.email, u.role_id, r.name AS role_name,
                    u.status, u.must_change_password, u.avatar_url, u.home_directory,
-                   u.storage_quota_bytes, u.created_at, u.last_login_at, u.last_login_ip
+                   u.storage_quota_bytes, u.mfa_enabled, u.idp_type, u.created_at, u.last_login_at, u.last_login_ip
             FROM users u
             JOIN roles r ON u.role_id = r.id
             ORDER BY u.created_at ASC
         """).fetchall()
-        return [dict(r) for r in rows]
+        res = []
+        for r in rows:
+            d = dict(r)
+            d["mfa_enabled"] = bool(d.get("mfa_enabled", 0))
+            res.append(d)
+        return res
 
 
 def create_user(
@@ -430,6 +448,8 @@ def create_user(
     email: str = "",
     role_id: str = "share_user",
     storage_quota_bytes: int = 0,
+    idp_type: str = "local",
+    idp_sub: str = "",
     db_path: Optional[str] = None,
 ) -> Dict[str, Any]:
     username_clean = username.strip().lower()
@@ -450,8 +470,9 @@ def create_user(
             """
             INSERT INTO users (
                 id, username, display_name, email, password_hash, role_id, status,
-                must_change_password, home_directory, storage_quota_bytes, created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                must_change_password, home_directory, storage_quota_bytes,
+                idp_type, idp_sub, created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
             (
                 user_id,
@@ -464,6 +485,8 @@ def create_user(
                 0,
                 f"/mnt/user/homes/{username_clean}",
                 storage_quota_bytes,
+                idp_type,
+                idp_sub,
                 now,
                 now,
             ),
@@ -902,3 +925,82 @@ def query_security_audit_logs(limit: int = 100, offset: int = 0, db_path: Option
             d["details"] = json.loads(d.pop("details_json", "{}"))
             res.append(d)
         return res
+
+
+# ==============================================================================
+# 6. Multi-Factor Authentication (MFA / 2FA) Operations
+# ==============================================================================
+
+
+def get_user_mfa(user_id: str, db_path: Optional[str] = None) -> Optional[Dict[str, Any]]:
+    with users_db_session(db_path) as conn:
+        row = conn.execute(
+            "SELECT id, username, mfa_enabled, mfa_secret, mfa_recovery_codes_json FROM users WHERE id = ?",
+            (user_id,),
+        ).fetchone()
+        if not row:
+            return None
+        rec_codes = json.loads(row["mfa_recovery_codes_json"] or "[]")
+        return {
+            "user_id": row["id"],
+            "username": row["username"],
+            "mfa_enabled": bool(row["mfa_enabled"]),
+            "mfa_secret": row["mfa_secret"] or "",
+            "recovery_codes_count": len(rec_codes),
+        }
+
+
+def enable_user_mfa(
+    user_id: str,
+    secret: str,
+    recovery_code_hashes: List[str],
+    db_path: Optional[str] = None,
+) -> bool:
+    with users_db_session(db_path) as conn:
+        res = conn.execute(
+            """
+            UPDATE users
+            SET mfa_enabled = 1, mfa_secret = ?, mfa_recovery_codes_json = ?, updated_at = ?
+            WHERE id = ?
+        """,
+            (secret.strip(), json.dumps(recovery_code_hashes), time.time(), user_id),
+        )
+        return res.rowcount > 0
+
+
+def disable_user_mfa(user_id: str, db_path: Optional[str] = None) -> bool:
+    with users_db_session(db_path) as conn:
+        res = conn.execute(
+            """
+            UPDATE users
+            SET mfa_enabled = 0, mfa_secret = '', mfa_recovery_codes_json = '[]', updated_at = ?
+            WHERE id = ?
+        """,
+            (time.time(), user_id),
+        )
+        return res.rowcount > 0
+
+
+def consume_user_recovery_code(
+    user_id: str,
+    candidate_code: str,
+    db_path: Optional[str] = None,
+) -> bool:
+    from backend.totp import verify_and_consume_recovery_code
+
+    with users_db_session(db_path) as conn:
+        row = conn.execute(
+            "SELECT mfa_recovery_codes_json FROM users WHERE id = ?",
+            (user_id,),
+        ).fetchone()
+        if not row:
+            return False
+        stored_hashes = json.loads(row["mfa_recovery_codes_json"] or "[]")
+        ok, updated = verify_and_consume_recovery_code(stored_hashes, candidate_code)
+        if ok:
+            conn.execute(
+                "UPDATE users SET mfa_recovery_codes_json = ?, updated_at = ? WHERE id = ?",
+                (json.dumps(updated), time.time(), user_id),
+            )
+            return True
+        return False
