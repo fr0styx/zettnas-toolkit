@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { makeDraggable, saveWindowBounds, loadSavedWindowBounds, DockManager, isEventChecked, markEventChecked, resetCheckedEventsState, getEventKey, openConsoleWindow, KNOWN_APPS, toggleConsoleMaximize, renderNotificationCenter, saveOpenWindowsState, restoreOpenWindowsState, applySavedBounds, OPEN_WINDOWS_KEY } from '../components/dock.js';
+import { makeDraggable, makeResizable, saveWindowBounds, loadSavedWindowBounds, DockManager, isEventChecked, markEventChecked, resetCheckedEventsState, getEventKey, openConsoleWindow, KNOWN_APPS, toggleConsoleMaximize, renderNotificationCenter, saveOpenWindowsState, restoreOpenWindowsState, applySavedBounds, OPEN_WINDOWS_KEY } from '../components/dock.js';
 import { openEventDetailModal, closeEventDetailModal } from '../modals.js';
 import { initManagement } from '../components/management.js';
 import { state } from '../state.js';
@@ -31,6 +31,7 @@ describe('Notification Center Draggable Window & Event Detail Inspector', () => 
           <button class="notif-filter-btn" data-filter="error">Errors</button>
         </div>
         <div id="notif-center-list"></div>
+        <div id="notif-center-resizer" class="window-resizer-grip"></div>
       </div>
 
       <div id="event-detail-modal-overlay" class="smart-modal-backdrop" style="display:none;">
@@ -81,6 +82,53 @@ describe('Notification Center Draggable Window & Event Detail Inspector', () => 
     makeDraggable(panel, header, 'notif-center');
     expect(panel.style.left).toBe('450px');
     expect(panel.style.top).toBe('220px');
+  });
+
+  it('makes Notification Center resizable via dedicated resizer grip and saves expanded dimensions', () => {
+    const panel = document.getElementById('notif-center-panel');
+    const resizer = document.getElementById('notif-center-resizer');
+
+    window.innerWidth = 1200;
+    window.innerHeight = 1000;
+
+    panel.getBoundingClientRect = () => ({
+      left: 100,
+      top: 100,
+      width: 380,
+      height: 480,
+      right: 480,
+      bottom: 580
+    });
+
+    makeResizable(panel, resizer, 'notif-center', { minWidth: 320, minHeight: 240 });
+
+    // Simulate pointerdown on resizer
+    const pDown = new MouseEvent('pointerdown', { clientX: 480, clientY: 580, button: 0, bubbles: true });
+    resizer.dispatchEvent(pDown);
+
+    // Simulate pointermove to expand window
+    const pMove = new MouseEvent('pointermove', { clientX: 600, clientY: 750, bubbles: true });
+    window.dispatchEvent(pMove);
+
+    expect(parseInt(panel.style.width, 10)).toBe(500); // 380 + (600 - 480) = 500
+    expect(parseInt(panel.style.height, 10)).toBe(650); // 480 + (750 - 580) = 650
+
+    // Simulate pointerup to persist
+    panel.getBoundingClientRect = () => ({
+      left: 100,
+      top: 100,
+      width: 500,
+      height: 650,
+      right: 600,
+      bottom: 750
+    });
+    const pUp = new MouseEvent('pointerup', { clientX: 600, clientY: 750, bubbles: true });
+    window.dispatchEvent(pUp);
+
+    const bounds = loadSavedWindowBounds();
+    expect(bounds['notif-center']).toBeDefined();
+    expect(bounds['notif-center'].width).toBe(500);
+    expect(bounds['notif-center'].height).toBe(650);
   });
 
   it('populates and opens Event Detail Modal for a thermal/fan warning event', () => {

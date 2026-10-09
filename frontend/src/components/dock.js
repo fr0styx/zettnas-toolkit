@@ -891,6 +891,74 @@ export function makeDraggable(dragEl, handleEl, customId) {
   });
 }
 
+export function makeResizable(dragEl, resizerEl, customId, options = {}) {
+  if (!dragEl || !resizerEl) return;
+  const winId = customId || dragEl.id || dragEl.dataset.windowId;
+  const minW = options.minWidth || 320;
+  const minH = options.minHeight || 240;
+
+  resizerEl.style.touchAction = 'none';
+
+  resizerEl.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0) return;
+    if (document.body.classList.contains('mobile-mode') || window.innerWidth <= 768) return;
+    e.preventDefault();
+    e.stopPropagation();
+    bringToFront(dragEl);
+
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const rect = dragEl.getBoundingClientRect();
+    const startW = rect.width;
+    const startH = rect.height;
+    const maxW = Math.max(minW, window.innerWidth - rect.left - 12);
+    const maxH = Math.max(minH, window.innerHeight - rect.top - 70);
+
+    dragEl.style.transition = 'none';
+
+    const pointerId = e.pointerId;
+    try {
+      resizerEl.setPointerCapture?.(pointerId);
+    } catch (_) {}
+
+    const onPointerMove = (eMove) => {
+      eMove.preventDefault();
+      const dx = eMove.clientX - startX;
+      const dy = eMove.clientY - startY;
+      const newW = Math.max(minW, Math.min(maxW, startW + dx));
+      const newH = Math.max(minH, Math.min(maxH, startH + dy));
+      dragEl.style.width = `${Math.round(newW)}px`;
+      dragEl.style.height = `${Math.round(newH)}px`;
+    };
+
+    const onPointerUp = () => {
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', onPointerUp);
+      window.removeEventListener('pointercancel', onPointerUp);
+      try {
+        if (resizerEl.hasPointerCapture && resizerEl.hasPointerCapture(pointerId)) {
+          resizerEl.releasePointerCapture(pointerId);
+        }
+      } catch (_) {}
+
+      if (winId) {
+        const finalRect = dragEl.getBoundingClientRect();
+        saveWindowBounds(winId, {
+          left: Math.round(finalRect.left),
+          top: Math.round(finalRect.top),
+          width: Math.round(finalRect.width),
+          height: Math.round(finalRect.height)
+        });
+        saveOpenWindowsState();
+      }
+    };
+
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', onPointerUp);
+    window.addEventListener('pointercancel', onPointerUp);
+  });
+}
+
 export function openConsoleWindow() {
   const consoleOverlay = document.getElementById('console-modal-overlay');
   const consoleModal = document.getElementById('console-window');
@@ -2051,8 +2119,12 @@ export function initDockSystem() {
 
   const notifPanel = document.getElementById('notif-center-panel');
   const notifHeader = document.getElementById('notif-center-header');
+  const notifResizer = document.getElementById('notif-center-resizer');
   if (notifPanel && notifHeader) {
     makeDraggable(notifPanel, notifHeader, 'notif-center');
+  }
+  if (notifPanel && notifResizer) {
+    makeResizable(notifPanel, notifResizer, 'notif-center', { minWidth: 320, minHeight: 240 });
   }
 
   const DESKTOP_WINDOW_SELECTOR = '.smart-modal-window, #console-window, #management-window, #file-manager-window, .file-manager-window, .os-window, #notif-center-panel, .container-inspector-window, #container-inspector-window, #container-inspector-overlay, #management-modal-overlay, #console-modal-overlay, #smart-modal-overlay';
@@ -2552,8 +2624,8 @@ window.toggleNotificationCenter = function() {
     // Position window if bounds not yet saved
     const saved = loadSavedWindowBounds()['notif-center'];
     if (!saved || saved.left == null || saved.top == null) {
-      const panelW = 360;
-      const panelH = 440;
+      const panelW = 380;
+      const panelH = 500;
       const defaultLeft = Math.max(20, window.innerWidth - panelW - 24);
       const defaultTop = Math.max(56, window.innerHeight - panelH - 80);
       panel.style.position = 'fixed';
@@ -2562,6 +2634,8 @@ window.toggleNotificationCenter = function() {
       panel.style.right = 'auto';
       panel.style.left = `${defaultLeft}px`;
       panel.style.top = `${defaultTop}px`;
+      panel.style.width = `${panelW}px`;
+      panel.style.height = `${panelH}px`;
     } else {
       applySavedBounds(panel, 'notif-center');
     }
