@@ -2,7 +2,7 @@ import json
 import os
 import subprocess
 import time
-import urllib.request
+import urllib.parse
 from typing import Any
 
 import apprise
@@ -37,23 +37,47 @@ from backend.fsutil import atomic_write_json, read_json
 
 NOTIFICATIONS_FILE = os.path.join(DATA_DIR, "notifications.json")
 
-DEFAULT_NOTIFICATION_CONFIG = {
+MASK_PLACEHOLDER = "********"
+SECRET_FIELDS = {"smtp_pass", "telegram_bot_token", "ntfy_token"}
+
+DEFAULT_NOTIFICATION_CONFIG: dict[str, Any] = {
     "enabled": False,
-    # Channels
+    # Host fallback
     "unraid_notify": True,
-    "apprise_urls": [],  # List of apprise URLs (e.g. 'discord://...', 'slack://...', 'tgram://...')
-    # Legacy fields (kept for compatibility with old UI temporarily if needed)
+    # Discord
+    "discord_enabled": False,
+    "discord_webhook_url": "",
+    # Telegram
+    "telegram_enabled": False,
+    "telegram_bot_token": "",
+    "telegram_chat_id": "",
+    # Email / SMTP
+    "email_enabled": False,
+    "smtp_host": "",
+    "smtp_port": 587,
+    "smtp_user": "",
+    "smtp_pass": "",
+    "smtp_tls": True,
+    "email_from": "",
+    "email_to": "",
+    # ntfy
     "ntfy_enabled": False,
     "ntfy_url": "https://ntfy.sh",
     "ntfy_topic": "",
     "ntfy_token": "",
+    # Generic Webhook
     "webhook_enabled": False,
     "webhook_url": "",
+    # Apprise Raw URLs
+    "apprise_urls": [],
     # Event triggers
     "notify_on_smart": True,
     "notify_on_temp": True,
     "notify_on_fan": True,
+    "notify_on_ups": True,
     "notify_on_copy": True,
+    "notify_on_container": True,
+    "notify_on_backup": True,
     # Thresholds
     "hdd_temp_threshold": 50,
     "cpu_temp_threshold": 80,
@@ -73,10 +97,96 @@ def load_notification_config() -> dict[str, Any]:
     return cfg
 
 
+def mask_notification_config(cfg: dict[str, Any]) -> dict[str, Any]:
+    """Return a copy of the notification config with secrets masked for safe UI display."""
+    masked = dict(cfg)
+    for field in SECRET_FIELDS:
+        if masked.get(field):
+            masked[field] = MASK_PLACEHOLDER
+    return masked
+
+
+def unmask_notification_config(new_cfg: dict[str, Any], existing_cfg: dict[str, Any]) -> dict[str, Any]:
+    """Restore existing secret values if the caller sent back the MASK_PLACEHOLDER."""
+    resolved = dict(new_cfg)
+    for field in SECRET_FIELDS:
+        if resolved.get(field) == MASK_PLACEHOLDER:
+            resolved[field] = existing_cfg.get(field, "")
+    return resolved
+
+
 def save_notification_config(cfg: dict[str, Any]) -> None:
-    merged = load_notification_config()
-    merged.update(cfg)
+    existing = load_notification_config()
+    merged = unmask_notification_config(cfg, existing)
     atomic_write_json(NOTIFICATIONS_FILE, merged)
+
+
+def build_apprise_urls(cfg: dict[str, Any]) -> list[str]:
+    """Synthesize structured channel credentials into standard Apprise URL schemas."""
+    urls: list[str] = []
+
+    # 1. Discord
+    if cfg.get("discord_enabled") and cfg.get("discord_webhook_url"):
+        d_url = cfg.get("discord_webhook_url", "").strip()
+        if d_url:
+            urls.append(d_url)
+
+    # 2. Telegram: tgram://{bot_token}/{chat_id}
+    if cfg.get("telegram_enabled"):
+        token = cfg.get("telegram_bot_token", "").strip()
+        chat_id = cfg.get("telegram_chat_id", "").strip()
+        if token and chat_id:
+            # Ensure chat_id has leading '-' or numbers preserved
+            urls.append(f"tgram://{token}/{chat_id}")
+
+    # 3. Email / SMTP: mailto://user:pass@host:port?to=recipients&from=sender
+    if cfg.get("email_enabled") and cfg.get("smtp_host"):
+        host = cfg.get("smtp_host", "").strip()
+        port = cfg.get("smtp_port", 587)
+        user = urllib.parse.quote_plus(cfg.get("smtp_user", "").strip())
+        pwd = urllib.parse.quote_plus(cfg.get("smtp_pass", "").strip())
+        auth = f"{user}:{pwd}@" if user and pwd else (f"{user}@" if user else "")
+        proto = "mailtos" if cfg.get("smtp_tls", True) else "mailto"
+        to_addr = cfg.get("email_to", "").strip()
+        from_addr = cfg.get("email_from", "").strip()
+
+        params = []
+        if to_addr:
+            params.append(f"to={urllib.parse.quote_plus(to_addr)}")
+        if from_addr:
+            params.append(f"from={urllib.parse.quote_plus(from_addr)}")
+
+        query = f"?{'&'.join(params)}" if params else ""
+        urls.append(f"{proto}://{auth}{host}:{port}{query}")
+
+    # 4. ntfy: ntfys://host/topic or ntfy://host/topic
+    if cfg.get("ntfy_enabled") and cfg.get("ntfy_topic"):
+        topic = cfg.get("ntfy_topic", "").strip()
+        base_url = (
+            cfg.get("ntfy_url", "https://ntfy.sh")
+            .rstrip("/")
+            .replace("https://", "ntfys://")
+            .replace("http://", "ntfy://")
+        )
+        token = cfg.get("ntfy_token", "").strip()
+        token_param = f"?token={token}" if token else ""
+        urls.append(f"{base_url}/{topic}{token_param}")
+
+    # 5. Generic Webhook
+    if cfg.get("webhook_enabled") and cfg.get("webhook_url"):
+        wb = cfg.get("webhook_url", "").strip()
+        if wb:
+            urls.append(wb)
+
+    # 6. Raw Apprise URLs
+    raw_urls = cfg.get("apprise_urls", [])
+    if isinstance(raw_urls, str):
+        raw_urls = [raw_urls]
+    for r in raw_urls:
+        if isinstance(r, str) and r.strip():
+            urls.append(r.strip())
+
+    return urls
 
 
 def _find_unraid_notify() -> str | None:
@@ -120,6 +230,7 @@ def _dispatch_ntfy(cfg: dict[str, Any], title: str, message: str, level: str) ->
 
     priority_map = {
         "normal": "3",
+        "info": "3",
         "warning": "4",
         "warn": "4",
         "critical": "5",
@@ -130,6 +241,7 @@ def _dispatch_ntfy(cfg: dict[str, Any], title: str, message: str, level: str) ->
 
     tags_map = {
         "normal": "information_source",
+        "info": "information_source",
         "warning": "warning",
         "warn": "warning",
         "critical": "rotating_light,skull",
@@ -164,6 +276,7 @@ def _dispatch_webhook(cfg: dict[str, Any], title: str, message: str, level: str)
     if "discord.com/api/webhooks" in url or "discordapp.com/api/webhooks" in url:
         color_map = {
             "normal": 0x25C2A0,
+            "info": 0x25C2A0,
             "warning": 0xF59E0B,
             "warn": 0xF59E0B,
             "critical": 0xEF4444,
@@ -202,46 +315,20 @@ def _dispatch_webhook(cfg: dict[str, Any], title: str, message: str, level: str)
 
 
 def _dispatch_apprise(cfg: dict[str, Any], title: str, message: str, level: str) -> bool:
-    # Build Apprise instance
+    urls = build_apprise_urls(cfg)
+    if not urls:
+        return False
+
     apobj = apprise.Apprise()
-
-    # 1. Add explicitly configured Apprise URLs
-    urls = cfg.get("apprise_urls", [])
-    if isinstance(urls, str):
-        urls = [urls]
-
-    for url in urls:
-        if url.strip():
-            apobj.add(url.strip())
-
-    # 2. Translate legacy configuration into Apprise URLs
-    if cfg.get("ntfy_enabled") and cfg.get("ntfy_topic"):
-        topic = cfg.get("ntfy_topic", "").strip()
-        base_url = (
-            cfg.get("ntfy_url", "https://ntfy.sh")
-            .rstrip("/")
-            .replace("https://", "ntfys://")
-            .replace("http://", "ntfy://")
-        )
-        url = f"{base_url}/{topic}"
-        token = cfg.get("ntfy_token", "").strip()
-        if token:
-            url += f"?token={token}"
-        apobj.add(url)
-
-    if cfg.get("webhook_enabled") and cfg.get("webhook_url"):
-        wb_url = cfg.get("webhook_url", "").strip()
-        # Very basic apprise webhook mapping or rely on apprise parsing discord directly
-        if "discord.com" in wb_url or "discordapp.com" in wb_url:
-            # apprise handles discord webhooks automatically if prefixed with discord://
-            # but natively discord webhooks are http URLs, let's just pass it to apprise
-            pass
-        apobj.add(wb_url)
+    for u in urls:
+        try:
+            apobj.add(u)
+        except Exception as e:
+            logger.warning(f"[NOTIFY] Could not add Apprise URL '{u}': {e}")
 
     if not len(apobj):
         return False
 
-    # Map our level to Apprise NotifyType
     notify_type = apprise.NotifyType.INFO
     if level in ("warning", "warn"):
         notify_type = apprise.NotifyType.WARNING
@@ -254,7 +341,7 @@ def _dispatch_apprise(cfg: dict[str, Any], title: str, message: str, level: str)
             title=title,
             notify_type=notify_type,
         )
-        return result
+        return bool(result)
     except Exception as e:
         logger.warning(f"[NOTIFY] Apprise push failed: {e}")
         return False
@@ -283,12 +370,15 @@ def send_notification(
     if not cfg.get("enabled", False):
         return {"dispatched": False, "reason": "disabled"}
 
-    # Event-specific toggles
+    # Subsystem-specific event toggles
     type_toggle_map = {
         "smart": "notify_on_smart",
         "temp": "notify_on_temp",
         "fan": "notify_on_fan",
         "copy": "notify_on_copy",
+        "ups": "notify_on_ups",
+        "container": "notify_on_container",
+        "backup": "notify_on_backup",
     }
     toggle_key = type_toggle_map.get(event_type)
     if toggle_key and not cfg.get(toggle_key, True):
@@ -303,14 +393,17 @@ def send_notification(
         if prev:
             elapsed = now - prev.get("last_sent", 0)
             prev_level = prev.get("last_level", "normal")
-            # Only suppress if within cooldown AND level hasn't escalated
-            is_escalation = prev_level in ("normal", "warning", "warn") and level in ("critical", "alert", "error")
+            is_escalation = prev_level in ("normal", "info", "warning", "warn") and level in (
+                "critical",
+                "alert",
+                "error",
+            )
             if elapsed < cooldown and not is_escalation:
                 return {"dispatched": False, "reason": "cooldown"}
 
         _alert_history[dedup_key] = {"last_sent": now, "last_level": level}
 
-    results = {}
+    results: dict[str, bool] = {}
 
     # 1. Unraid native notification
     if cfg.get("unraid_notify", True):
@@ -324,16 +417,26 @@ def send_notification(
     if cfg.get("webhook_enabled", False):
         results["webhook"] = _dispatch_webhook(cfg, title, message, level)
 
-    # 3. Apprise notifications (for explicitly configured Apprise URLs or multi-channel)
-    if cfg.get("apprise_urls"):
+    # 3. Apprise multi-channel dispatch (Discord, Telegram, SMTP, Apprise URLs)
+    has_apprise_channels = any(
+        [
+            cfg.get("discord_enabled"),
+            cfg.get("telegram_enabled"),
+            cfg.get("email_enabled"),
+            bool(cfg.get("apprise_urls")),
+        ]
+    )
+    if has_apprise_channels:
         results["apprise"] = _dispatch_apprise(cfg, title, message, level)
 
     return {"dispatched": any(results.values()), "channels": results}
 
 
 def test_notification(custom_cfg: dict[str, Any] | None = None) -> dict[str, Any]:
-    """Send an immediate test alert to verify notification channels."""
+    """Send an immediate test alert across all configured channels."""
     cfg = custom_cfg if custom_cfg is not None else load_notification_config()
+    existing = load_notification_config()
+    cfg = unmask_notification_config(cfg, existing)
     results = {}
 
     title = "ZettNAS Test Notification"
@@ -348,7 +451,99 @@ def test_notification(custom_cfg: dict[str, Any] | None = None) -> dict[str, Any
         results["ntfy"] = _dispatch_ntfy(cfg, title, message, level)
     if cfg.get("webhook_enabled", False):
         results["webhook"] = _dispatch_webhook(cfg, title, message, level)
-    if cfg.get("apprise_urls"):
+
+    # Apprise dispatch for Discord, Telegram, Email, and raw URLs
+    has_apprise_channels = any(
+        [
+            cfg.get("discord_enabled"),
+            cfg.get("telegram_enabled"),
+            cfg.get("email_enabled"),
+            bool(cfg.get("apprise_urls")),
+        ]
+    )
+    if has_apprise_channels:
         results["apprise"] = _dispatch_apprise(cfg, title, message, level)
 
     return {"status": "ok", "tested_channels": results}
+
+
+def test_single_channel(channel: str, channel_cfg: dict[str, Any]) -> dict[str, Any]:
+    """Test an individual notification channel and return status and latency in ms."""
+    existing = load_notification_config()
+    full_cfg = unmask_notification_config(channel_cfg, existing)
+
+    t0 = time.perf_counter()
+    title = f"ZettNAS Test: {channel.upper()}"
+    message = f"Connection to {channel.capitalize()} tested successfully from ZettNAS Toolkit!"
+    level = "info"
+
+    success = False
+    error_msg = ""
+
+    try:
+        if channel == "unraid":
+            script = _find_unraid_notify()
+            if script:
+                success = _dispatch_unraid(script, title, message, level)
+            else:
+                error_msg = "Unraid notify binary not found (non-Unraid host)."
+        elif channel == "discord":
+            test_apprise_cfg = {
+                "discord_enabled": True,
+                "discord_webhook_url": full_cfg.get("discord_webhook_url", ""),
+            }
+            success = _dispatch_apprise(test_apprise_cfg, title, message, level)
+            if not success:
+                error_msg = "Discord dispatch failed. Verify webhook URL."
+        elif channel == "telegram":
+            test_apprise_cfg = {
+                "telegram_enabled": True,
+                "telegram_bot_token": full_cfg.get("telegram_bot_token", ""),
+                "telegram_chat_id": full_cfg.get("telegram_chat_id", ""),
+            }
+            success = _dispatch_apprise(test_apprise_cfg, title, message, level)
+            if not success:
+                error_msg = "Telegram dispatch failed. Check bot token and chat ID."
+        elif channel in ("email", "smtp"):
+            test_apprise_cfg = {
+                "email_enabled": True,
+                "smtp_host": full_cfg.get("smtp_host", ""),
+                "smtp_port": full_cfg.get("smtp_port", 587),
+                "smtp_user": full_cfg.get("smtp_user", ""),
+                "smtp_pass": full_cfg.get("smtp_pass", ""),
+                "smtp_tls": full_cfg.get("smtp_tls", True),
+                "email_from": full_cfg.get("email_from", ""),
+                "email_to": full_cfg.get("email_to", ""),
+            }
+            success = _dispatch_apprise(test_apprise_cfg, title, message, level)
+            if not success:
+                error_msg = "SMTP delivery failed. Verify host, port, credentials, and TLS."
+        elif channel == "ntfy":
+            success = _dispatch_ntfy(full_cfg, title, message, level)
+            if not success:
+                error_msg = "ntfy push failed. Verify topic and server URL."
+        elif channel == "webhook":
+            success = _dispatch_webhook(full_cfg, title, message, level)
+            if not success:
+                error_msg = "Webhook delivery failed. Verify target URL."
+        elif channel in ("apprise", "apprise_raw"):
+            raw_urls = full_cfg.get("apprise_urls", [])
+            test_apprise_cfg = {"apprise_urls": raw_urls}
+            success = _dispatch_apprise(test_apprise_cfg, title, message, level)
+            if not success:
+                error_msg = "Apprise notification failed. Check URL syntax."
+        else:
+            error_msg = f"Unknown notification channel '{channel}'."
+    except Exception as e:
+        success = False
+        error_msg = str(e)
+
+    t1 = time.perf_counter()
+    latency_ms = round((t1 - t0) * 1000)
+
+    return {
+        "status": "ok" if success else "error",
+        "success": success,
+        "latency_ms": latency_ms,
+        "message": f"Delivered to {channel} in {latency_ms}ms" if success else error_msg,
+    }

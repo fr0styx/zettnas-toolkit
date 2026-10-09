@@ -2585,6 +2585,21 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
   
+  const notifSettingsBtn = document.getElementById('notif-settings-btn');
+  if (notifSettingsBtn) {
+    notifSettingsBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const panel = document.getElementById('notif-center-panel');
+      if (panel) {
+        panel.style.display = 'none';
+        saveOpenWindowsState();
+      }
+      if (typeof window.openManagementWindow === 'function') {
+        window.openManagementWindow('mgmt-pane-notifications');
+      }
+    });
+  }
+
   const notifCloseBtn = document.getElementById('notif-close-btn');
   if (notifCloseBtn) {
     notifCloseBtn.addEventListener('click', (e) => {
