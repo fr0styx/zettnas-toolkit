@@ -676,5 +676,30 @@ describe('Notification Center Draggable Window & Event Detail Inspector', () => 
 
     winEl.remove();
   });
+
+  it('correctly preserves and restores specific subpanes (Widgets, Ingest History, Containers, About)', () => {
+    const testCases = [
+      { subpane: 'mgmt-pane-widgets', desc: 'Appearance -> Widgets' },
+      { subpane: 'mgmt-pane-copy', desc: 'Activity Monitor -> Ingest History' },
+      { subpane: 'mgmt-pane-docker', desc: 'Services -> Docker Containers' },
+      { subpane: 'mgmt-pane-about', desc: 'System -> About & Updates' }
+    ];
+
+    testCases.forEach(({ subpane }) => {
+      localStorage.setItem(OPEN_WINDOWS_KEY, JSON.stringify({
+        activeId: 'management',
+        windows: {
+          management: { open: true, minimized: false, activePane: subpane }
+        }
+      }));
+
+      const mgmtOpenSpy = vi.fn();
+      window.openManagementWindow = mgmtOpenSpy;
+
+      restoreOpenWindowsState();
+
+      expect(mgmtOpenSpy).toHaveBeenCalledWith(subpane);
+    });
+  });
 });
 

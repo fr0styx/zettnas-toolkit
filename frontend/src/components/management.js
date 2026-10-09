@@ -1196,6 +1196,11 @@ export function initManagement() {
     makeDraggable(win, header, 'management');
   }
 
+  win.addEventListener('mousedown', () => {
+    bringToFront(win);
+    saveOpenWindowsState();
+  });
+
   // Minimize button
   const minBtn = document.getElementById('management-min');
   if (minBtn) {
@@ -1297,6 +1302,7 @@ export function initManagement() {
       b.classList.toggle('active', b.dataset.mgmtTarget === 'management-hub-view');
     });
     document.querySelectorAll('.mgmt-detail-card').forEach((c) => (c.style.display = 'none'));
+    saveOpenWindowsState();
   }
 
   
@@ -1305,16 +1311,19 @@ export function initManagement() {
     'mgmt-pane-widgets': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-widgets' },
     'mgmt-pane-theme': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-theme' },
     'mgmt-sec-theme': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-theme' },
+    'mgmt-sec-wallpaper': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-wallpaper' },
     'mgmt-pane-language': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-language' },
     'mgmt-sec-language': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-language' },
     'mgmt-sec-metrics': { section: 'mgmt-sec-activity', pane: 'mgmt-pane-metrics' },
     'mgmt-pane-metrics': { section: 'mgmt-sec-activity', pane: 'mgmt-pane-metrics' },
     'mgmt-sec-copy': { section: 'mgmt-sec-activity', pane: 'mgmt-pane-copy' },
     'mgmt-pane-copy': { section: 'mgmt-sec-activity', pane: 'mgmt-pane-copy' },
+    'mgmt-sec-activity': { section: 'mgmt-sec-activity', pane: 'mgmt-pane-metrics' },
     'mgmt-sec-unraid': { section: 'mgmt-sec-services', pane: 'mgmt-pane-unraid' },
     'mgmt-pane-unraid': { section: 'mgmt-sec-services', pane: 'mgmt-pane-unraid' },
     'mgmt-sec-docker': { section: 'mgmt-sec-services', pane: 'mgmt-pane-docker' },
     'mgmt-pane-docker': { section: 'mgmt-sec-services', pane: 'mgmt-pane-docker' },
+    'mgmt-sec-services': { section: 'mgmt-sec-services', pane: 'mgmt-pane-unraid' },
     'mgmt-sec-security': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-security' },
     'mgmt-pane-security': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-security' },
     'mgmt-sec-events': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-events' },
@@ -1323,6 +1332,8 @@ export function initManagement() {
     'mgmt-pane-system': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-system' },
     'mgmt-sec-about': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-about' },
     'mgmt-pane-about': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-about' },
+    'mgmt-sec-system-group': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-security' },
+    'mgmt-sec-ups': { section: 'mgmt-sec-ups', pane: null },
   };
 
   function triggerActiveSubTab(parentId) {
@@ -1391,7 +1402,6 @@ export function initManagement() {
     let sectionName = t('mgmt.title', 'Mission Control');
     if (targetId === 'mgmt-sec-wallpaper') {
       sectionName = t('mgmt.appearance_title', 'Appearance');
-      triggerActiveSubTab(targetId);
     } else if (targetId === 'mgmt-sec-activity') {
       sectionName = t('mgmt.activity_title', 'Activity Monitor');
     } else if (targetId === 'mgmt-sec-services') {
@@ -1406,9 +1416,9 @@ export function initManagement() {
 
     if (titleText) titleText.textContent = sectionName;
 
-    if (desiredSubPane) {
-      const parentCard = document.getElementById(targetId);
-      if (parentCard) {
+    const parentCard = document.getElementById(targetId);
+    if (parentCard) {
+      if (desiredSubPane) {
         parentCard.querySelectorAll('.mgmt-inner-tab').forEach((t) => {
           t.classList.toggle('active', t.dataset.tabTarget === desiredSubPane);
         });
@@ -1416,10 +1426,25 @@ export function initManagement() {
           p.style.display = p.id === desiredSubPane ? 'block' : 'none';
         });
         triggerSubTabLoad(desiredSubPane);
+      } else {
+        let activeTabBtn = parentCard.querySelector('.mgmt-inner-tab.active');
+        if (!activeTabBtn) {
+          activeTabBtn = parentCard.querySelector('.mgmt-inner-tab');
+          if (activeTabBtn) activeTabBtn.classList.add('active');
+        }
+        if (activeTabBtn) {
+          const paneId = activeTabBtn.dataset.tabTarget;
+          parentCard.querySelectorAll('.mgmt-inner-tab').forEach((t) => {
+            t.classList.toggle('active', t === activeTabBtn);
+          });
+          parentCard.querySelectorAll('.mgmt-tab-pane').forEach((p) => {
+            p.style.display = p.id === paneId ? 'block' : 'none';
+          });
+          triggerSubTabLoad(paneId);
+        }
       }
-    } else {
-      triggerActiveSubTab(targetId);
     }
+    saveOpenWindowsState();
   }
 
   // Left sidebar items click listener
@@ -1444,6 +1469,7 @@ export function initManagement() {
       });
       
       triggerSubTabLoad(targetPaneId);
+      saveOpenWindowsState();
     });
   });
 
@@ -1455,6 +1481,7 @@ export function initManagement() {
       } else if (targetId) {
         showSection(targetId);
       }
+      saveOpenWindowsState();
     });
   });
 
@@ -1462,13 +1489,19 @@ export function initManagement() {
   document.querySelectorAll('.mgmt-app-card').forEach((card) => {
     card.addEventListener('click', () => {
       const targetId = card.dataset.mgmtTarget;
-      if (targetId) showSection(targetId);
+      if (targetId) {
+        showSection(targetId);
+        saveOpenWindowsState();
+      }
     });
     card.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
         const targetId = card.dataset.mgmtTarget;
-        if (targetId) showSection(targetId);
+        if (targetId) {
+          showSection(targetId);
+          saveOpenWindowsState();
+        }
       }
     });
   });
@@ -1477,13 +1510,19 @@ export function initManagement() {
   document.querySelectorAll('.mgmt-category-tab').forEach((tab) => {
     tab.addEventListener('click', () => {
       const targetId = tab.dataset.mgmtTarget;
-      if (targetId) showSection(targetId);
+      if (targetId) {
+        showSection(targetId);
+        saveOpenWindowsState();
+      }
     });
   });
 
   // Back button click listener
   if (backBtn) {
-    backBtn.addEventListener('click', showHub);
+    backBtn.addEventListener('click', () => {
+      showHub();
+      saveOpenWindowsState();
+    });
   }
 
   // Global helper to open / focus Management window

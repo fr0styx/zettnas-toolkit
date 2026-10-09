@@ -418,7 +418,7 @@ export function saveOpenWindowsState() {
             const isDetailVisible = detailContainer && detailContainer.style.display !== 'none' && (!hubView || hubView.style.display === 'none');
             if (isDetailVisible) {
               const visibleCard = Array.from(document.querySelectorAll('.mgmt-detail-card')).find(
-                (c) => c.style.display !== 'none' && c.style.display !== ''
+                (c) => c.style.display === 'block' || (c.style.display !== 'none' && c.style.display !== '')
               );
               if (visibleCard) {
                 const activeTab = visibleCard.querySelector('.mgmt-inner-tab.active');
@@ -2637,3 +2637,15 @@ window.loadSavedWindowBounds = loadSavedWindowBounds;
 window.saveOpenWindowsState = saveOpenWindowsState;
 window.restoreOpenWindowsState = restoreOpenWindowsState;
 window.setWindowRestorationComplete = setWindowRestorationComplete;
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeunload', () => {
+    saveOpenWindowsState();
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+      saveOpenWindowsState();
+    }
+  });
+}
+
