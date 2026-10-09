@@ -181,6 +181,13 @@ def test_discover_disks_skips_zero_size(monkeypatch, tmp_path):
     (sdc / "queue").mkdir()
     (sdc / "queue" / "rotational").write_text("0\n")
 
+    import backend.hardware.hal as hal_mod
+
+    monkeypatch.setattr(
+        hal_mod.DiskDiscoveryHAL,
+        "discover_physical_disks",
+        lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("HAL fallback test")),
+    )
     monkeypatch.setattr(disks_mod, "HOST_SYS", str(fake_sys))
     Z_STATE.cached_disk_list = None
     Z_STATE.cached_disk_list_time = 0.0

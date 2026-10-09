@@ -53,12 +53,10 @@ def needs_rehash(stored: str) -> bool:
     """Returns True if the stored hash should be upgraded to modern Argon2id on successful login."""
     if not stored:
         return True
-    if not _ARGON2_AVAILABLE or not _PH:
-        return not stored.startswith("scrypt$")
     if not stored.startswith("$argon2id$"):
         return True
     try:
-        return _PH.check_needs_rehash(stored)
+        return _PH.check_needs_rehash(stored) if _PH else False
     except Exception:
         return True
 
