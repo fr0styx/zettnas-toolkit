@@ -750,7 +750,70 @@ export function makeDraggable(dragEl, handleEl, customId) {
   handleEl.addEventListener('pointerdown', (e) => {
     if (e.button !== 0 || e.target.closest('button') || e.target.closest('input') || e.target.closest('.modal-ctrl-btn')) return;
     bringToFront(dragEl);
-    if (document.body.classList.contains('mobile-mode') || window.innerWidth <= 768) return;
+    if (document.body.classList.contains('mobile-mode') || window.innerWidth <= 768) {
+      // Mobile & touch swipe-to-dismiss gesture
+      const touchStartY = e.clientY;
+      let currentDy = 0;
+      const pointerId = e.pointerId;
+      try {
+        handleEl.setPointerCapture?.(pointerId);
+      } catch (_) {}
+
+      const onTouchMove = (eMove) => {
+        const dy = eMove.clientY - touchStartY;
+        if (dy > 0) {
+          currentDy = dy;
+          dragEl.style.transition = 'none';
+          dragEl.style.transform = `translateX(-50%) translateY(${Math.round(dy * 0.75)}px)`;
+          dragEl.style.opacity = String(Math.max(0.3, 1 - (dy / 300)));
+        }
+      };
+
+      const onTouchEnd = () => {
+        window.removeEventListener('pointermove', onTouchMove);
+        window.removeEventListener('pointerup', onTouchEnd);
+        window.removeEventListener('pointercancel', onTouchEnd);
+        try {
+          if (handleEl.hasPointerCapture && handleEl.hasPointerCapture(pointerId)) {
+            handleEl.releasePointerCapture(pointerId);
+          }
+        } catch (_) {}
+
+        if (currentDy >= 70) {
+          // Threshold passed: smooth spring exit & dismissal
+          dragEl.style.transition = 'transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease';
+          dragEl.style.transform = 'translateX(-50%) translateY(260px)';
+          dragEl.style.opacity = '0';
+          setTimeout(() => {
+            dragEl.style.removeProperty('transform');
+            dragEl.style.removeProperty('opacity');
+            dragEl.style.removeProperty('transition');
+            if (winId && DockManager.windows[winId]) {
+              DockManager.minimize(winId);
+            } else {
+              const closeBtn = dragEl.querySelector('.close-btn, .modal-close, .modal-ctrl-btn, #console-close, #management-close');
+              if (closeBtn) closeBtn.click();
+              else dragEl.style.setProperty('display', 'none', 'important');
+            }
+          }, 220);
+        } else if (currentDy > 0) {
+          // Snap back to resting position
+          dragEl.style.transition = 'transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease';
+          dragEl.style.transform = 'translateX(-50%) translateY(0)';
+          dragEl.style.opacity = '1';
+          setTimeout(() => {
+            dragEl.style.removeProperty('transform');
+            dragEl.style.removeProperty('opacity');
+            dragEl.style.removeProperty('transition');
+          }, 220);
+        }
+      };
+
+      window.addEventListener('pointermove', onTouchMove);
+      window.addEventListener('pointerup', onTouchEnd);
+      window.addEventListener('pointercancel', onTouchEnd);
+      return;
+    }
     e.preventDefault();
 
     const ghost = getOrCreateSnapGhost();

@@ -5580,6 +5580,169 @@ body.theme-yak .lcd-dot.active {
   body.theme-yak .slide-drawer::-webkit-scrollbar-thumb {
     background: rgba(212, 138, 55, 0.6) !important;
   }
+
+  /* Mobile Stacked Responsive Cards for Tables (Batch 3) */
+  .docker-table thead,
+  #mgmt-pane-docker table thead,
+  #mgmt-sec-disks table thead,
+  .copy-history-table.responsive-cards thead {
+    display: none !important;
+  }
+
+  .docker-table tbody,
+  #mgmt-pane-docker table tbody,
+  #mgmt-sec-disks table tbody,
+  .copy-history-table.responsive-cards tbody {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    width: 100% !important;
+  }
+
+  .docker-table tbody tr,
+  #mgmt-pane-docker table tbody tr,
+  #mgmt-sec-disks table tbody tr,
+  .copy-history-table.responsive-cards tbody tr {
+    display: flex !important;
+    flex-direction: column !important;
+    background: rgba(15, 23, 42, 0.65) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 10px !important;
+    padding: 12px 14px !important;
+    gap: 8px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+  }
+
+  .docker-table tbody td,
+  #mgmt-pane-docker table tbody td,
+  #mgmt-sec-disks table tbody td,
+  .copy-history-table.responsive-cards tbody td {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 4px 0 !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+    font-size: 11.5px !important;
+    min-height: 26px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .docker-table tbody td.docker-actions-cell,
+  #mgmt-pane-docker table tbody td.docker-actions-cell,
+  #mgmt-sec-disks table tbody td:last-child,
+  .copy-history-table.responsive-cards tbody td:last-child {
+    border-bottom: none !important;
+    padding-top: 8px !important;
+    justify-content: flex-end !important;
+    gap: 8px !important;
+  }
+
+  .docker-table tbody tr:has(td[colspan]),
+  #mgmt-pane-docker table tbody tr:has(td[colspan]),
+  #mgmt-sec-disks table tbody tr:has(td[colspan]) {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  .docker-table tbody tr td[colspan],
+  #mgmt-pane-docker table tbody tr td[colspan],
+  #mgmt-sec-disks table tbody tr td[colspan] {
+    justify-content: center !important;
+    border-bottom: none !important;
+    text-align: center !important;
+  }
+
+  /* Touch Hit Target Ergonomics (44px min hit targets for thumb tapability) */
+  .btn-container-act,
+  .btn-pill-toggle,
+  .btn-locate-topo,
+  .mgmt-inner-tab,
+  .win-btn,
+  .btn-webui-badge {
+    min-height: 44px !important;
+    min-width: 44px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    touch-action: manipulation !important;
+  }
+
+  /* Zero Horizontal Overflow on 375px+ screens */
+  #management-modal-overlay #management-window,
+  #management-modal-overlay .mgmt-content-pane,
+  #management-modal-overlay .mgmt-detail-card,
+  #management-modal-overlay .management-window-body {
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
+  }
+
+  #docker-search-input,
+  .tz-text-input {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+}
+
+/* =========================================================================
+   TABLET RESPONSIVE MODE (769px - 1024px) (Batch 3)
+   ========================================================================= */
+@media (min-width: 769px) and (max-width: 1024px) {
+  #management-modal-overlay #management-window {
+    width: 96vw !important;
+    max-width: 96vw !important;
+    height: 88vh !important;
+    max-height: 88vh !important;
+  }
+
+  /* Mission Control Sidebar - Collapsed Icon-Only Dock Rail */
+  #management-modal-overlay .mgmt-sidebar {
+    width: 64px !important;
+    min-width: 64px !important;
+    padding: 12px 6px !important;
+    align-items: center !important;
+  }
+
+  #management-modal-overlay .mgmt-sidebar-nav {
+    width: 100% !important;
+    align-items: center !important;
+    gap: 6px !important;
+  }
+
+  #management-modal-overlay .mgmt-sidebar-item {
+    justify-content: center !important;
+    padding: 10px 0 !important;
+    width: 48px !important;
+    height: 44px !important;
+    position: relative !important;
+  }
+
+  #management-modal-overlay .mgmt-sidebar-text {
+    display: none !important;
+  }
+
+  #management-modal-overlay .mgmt-sidebar-badge {
+    position: absolute !important;
+    top: 3px !important;
+    right: 3px !important;
+    font-size: 8px !important;
+    padding: 1px 4px !important;
+    border-radius: 4px !important;
+  }
+
+  #management-modal-overlay .mgmt-sidebar-svg {
+    width: 18px !important;
+    height: 18px !important;
+  }
+
+  #management-modal-overlay .management-hub-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
+  }
 }
 
 body.mobile-mode {
@@ -6447,6 +6610,96 @@ body.mobile-mode.theme-yak .smart-modal-body::-webkit-scrollbar-thumb,
 body.mobile-mode.theme-yak .slide-drawer::-webkit-scrollbar-thumb {
   background: rgba(212, 138, 55, 0.6) !important;
 }
+
+/* Mobile Stacked Responsive Cards for Tables (body.mobile-mode) */
+body.mobile-mode .docker-table thead,
+body.mobile-mode #mgmt-pane-docker table thead,
+body.mobile-mode #mgmt-sec-disks table thead,
+body.mobile-mode .copy-history-table.responsive-cards thead {
+  display: none !important;
+}
+
+body.mobile-mode .docker-table tbody,
+body.mobile-mode #mgmt-pane-docker table tbody,
+body.mobile-mode #mgmt-sec-disks table tbody,
+body.mobile-mode .copy-history-table.responsive-cards tbody {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  width: 100% !important;
+}
+
+body.mobile-mode .docker-table tbody tr,
+body.mobile-mode #mgmt-pane-docker table tbody tr,
+body.mobile-mode #mgmt-sec-disks table tbody tr,
+body.mobile-mode .copy-history-table.responsive-cards tbody tr {
+  display: flex !important;
+  flex-direction: column !important;
+  background: rgba(15, 23, 42, 0.65) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 10px !important;
+  padding: 12px 14px !important;
+  gap: 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+}
+
+body.mobile-mode .docker-table tbody td,
+body.mobile-mode #mgmt-pane-docker table tbody td,
+body.mobile-mode #mgmt-sec-disks table tbody td,
+body.mobile-mode .copy-history-table.responsive-cards tbody td {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding: 4px 0 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+  font-size: 11.5px !important;
+  min-height: 26px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+body.mobile-mode .docker-table tbody td.docker-actions-cell,
+body.mobile-mode #mgmt-pane-docker table tbody td.docker-actions-cell,
+body.mobile-mode #mgmt-sec-disks table tbody td:last-child,
+body.mobile-mode .copy-history-table.responsive-cards tbody td:last-child {
+  border-bottom: none !important;
+  padding-top: 8px !important;
+  justify-content: flex-end !important;
+  gap: 8px !important;
+}
+
+body.mobile-mode .docker-table tbody tr:has(td[colspan]),
+body.mobile-mode #mgmt-pane-docker table tbody tr:has(td[colspan]),
+body.mobile-mode #mgmt-sec-disks table tbody tr:has(td[colspan]) {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+body.mobile-mode .docker-table tbody tr td[colspan],
+body.mobile-mode #mgmt-pane-docker table tbody tr td[colspan],
+body.mobile-mode #mgmt-sec-disks table tbody tr td[colspan] {
+  justify-content: center !important;
+  border-bottom: none !important;
+  text-align: center !important;
+}
+
+body.mobile-mode .btn-container-act,
+body.mobile-mode .btn-pill-toggle,
+body.mobile-mode .btn-locate-topo,
+body.mobile-mode .mgmt-inner-tab,
+body.mobile-mode .win-btn,
+body.mobile-mode .btn-webui-badge {
+  min-height: 44px !important;
+  min-width: 44px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  touch-action: manipulation !important;
+}
+
 
 
 /* Command Palette */
