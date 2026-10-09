@@ -608,16 +608,13 @@ export function bringToFront(windowEl) {
     windowEl.id === 'notif-center-panel' ||
     windowEl.id === 'container-inspector-window' ||
     windowEl.id === 'container-inspector-overlay' ||
-    windowEl.id === 'smart-modal-window' ||
-    windowEl.id === 'smart-modal-overlay' ||
     windowEl.classList?.contains('chassis-front-panel') ||
     windowEl.classList?.contains('management-window') ||
     windowEl.classList?.contains('mgmt-app-window') ||
     windowEl.classList?.contains('file-manager-window') ||
     windowEl.classList?.contains('container-inspector-window') ||
-    windowEl.classList?.contains('smart-modal-window') ||
     windowEl.classList?.contains('os-window') ||
-    windowEl.closest?.('#console-modal-overlay, #management-modal-overlay, #file-manager-window, #notif-center-panel, #container-inspector-window, #container-inspector-overlay, #smart-modal-overlay')
+    windowEl.closest?.('#console-modal-overlay, #management-modal-overlay, #file-manager-window, #notif-center-panel, #container-inspector-window, #container-inspector-overlay')
   );
 
   // Protect standalone modal backdrops & modal dialogs from being demoted into window z-index layer
