@@ -95,6 +95,22 @@
       }
     } catch (e) {}
 
+    // Pre-initialize visual tokens and glass settings
+    try {
+      var sDim = localStorage.getItem('zettnas_wallpaper_dim');
+      if (sDim !== null) document.documentElement.style.setProperty('--wallpaper-dim', (parseInt(sDim, 10) / 100).toFixed(2));
+      var sWpBlur = localStorage.getItem('zettnas_wallpaper_blur');
+      if (sWpBlur !== null) document.documentElement.style.setProperty('--wallpaper-blur', parseInt(sWpBlur, 10) + 'px');
+      var sGBlur = localStorage.getItem('zettnas_glass_blur');
+      if (sGBlur !== null) document.documentElement.style.setProperty('--glass-blur', parseInt(sGBlur, 10) + 'px');
+      var sGOpacity = localStorage.getItem('zettnas_glass_opacity');
+      if (sGOpacity !== null) document.documentElement.style.setProperty('--glass-opacity', (parseInt(sGOpacity, 10) / 100).toFixed(2));
+      var sRadius = localStorage.getItem('zettnas_window_radius');
+      if (sRadius) document.documentElement.style.setProperty('--window-radius', sRadius);
+      var sGlow = localStorage.getItem('zettnas_window_glow');
+      if (sGlow === 'false') document.documentElement.style.setProperty('--window-glow-enabled', '0');
+    } catch (e) {}
+
     // Pre-initialize Mission Control active section and subpanes from localStorage to eliminate any jump/flicker to HUB on refresh
     try {
       var owRaw = localStorage.getItem('zettnas_open_windows_v1');
@@ -109,6 +125,8 @@
               'mgmt-pane-wallpaper': 'mgmt-sec-wallpaper',
               'mgmt-pane-theme': 'mgmt-sec-wallpaper',
               'mgmt-sec-theme': 'mgmt-sec-wallpaper',
+              'mgmt-pane-glass': 'mgmt-sec-wallpaper',
+              'mgmt-sec-glass': 'mgmt-sec-wallpaper',
               'mgmt-pane-widgets': 'mgmt-sec-wallpaper',
               'mgmt-pane-language': 'mgmt-sec-system-group',
               'mgmt-sec-language': 'mgmt-sec-system-group',
@@ -221,6 +239,8 @@
 </style>
 </head>
 <body class="studio-workbench">
+
+<div id="desktop-wallpaper-dimmer" class="desktop-wallpaper-dimmer" aria-hidden="true"></div>
 
 <div id="login-overlay" style="position: fixed; inset: 0; z-index: 999999; background: #080c10; align-items: center; justify-content: center;">
   <div style="background: var(--card, #141b24); padding: 36px 32px; border-radius: 14px; text-align: center; border: 1px solid rgba(255,255,255,0.12); width: 340px; box-shadow: 0 25px 60px rgba(0,0,0,0.85); position: relative;">
@@ -2028,6 +2048,10 @@
               <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-sliders"/></svg>
               <span data-i18n="mgmt.subtab_theme">Desktop Theme</span>
             </button>
+            <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-glass">
+              <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-sliders"/></svg>
+              <span data-i18n="mgmt.subtab_glass">Glass & Effects</span>
+            </button>
             <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-widgets">
               <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-grid"/></svg>
               <span data-i18n="mgmt.subtab_widgets">Widgets</span>
@@ -2068,6 +2092,52 @@
                 <div id="wallpaper-gallery-grid" class="wallpaper-gallery-grid" role="grid" aria-label="Desktop Wallpapers">
                   <div class="wallpaper-loading-state">
                     <span style="color:var(--muted); font-size:12px;">Loading wallpaper gallery...</span>
+                  </div>
+                </div>
+
+                <!-- Wallpaper Readability & Contrast Controls -->
+                <div class="wallpaper-readability-drawer drawer-card" style="margin-top: 16px; padding: 14px 16px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">
+                    <div>
+                      <div style="font-size: 12.5px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 6px;">
+                        <svg class="ic" style="width:14px; height:14px;"><use href="#i-sliders"/></svg>
+                        <span data-i18n="mgmt.wallpaper_readability_title">Wallpaper Readability & Contrast</span>
+                      </div>
+                      <div style="font-size: 11px; color: var(--muted); margin-top: 2px;" data-i18n="mgmt.wallpaper_readability_desc">
+                        Enhance desktop icon and widget legibility over bright or busy photographic backgrounds.
+                      </div>
+                    </div>
+                    <button id="wallpaper-readability-reset-btn" class="btn-pill-toggle" style="font-size:10px; padding:2px 8px;" title="Reset dimming and blur to defaults" data-i18n="mgmt.reset_defaults">↺ Reset Defaults</button>
+                  </div>
+
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <!-- 1. Dimming Slider -->
+                    <div>
+                      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
+                        <label for="wallpaper-dim-slider" style="font-size: 10.5px; font-weight: 700; color: var(--muted); letter-spacing: 0.5px;" data-i18n="mgmt.wallpaper_dim_label">WALLPAPER DIMMING</label>
+                        <span id="wallpaper-dim-val" style="font-size: 11px; font-family: var(--font-mono, monospace); color: var(--brand, #00f0ff); font-weight: 600;">15%</span>
+                      </div>
+                      <input type="range" id="wallpaper-dim-slider" min="0" max="70" value="15" step="1" class="tz-range-slider" style="width:100%; cursor:pointer;" aria-label="Wallpaper Dimming Percentage">
+                      <div style="display:flex; justify-content:space-between; font-size:9.5px; color:var(--muted); margin-top:3px;">
+                        <span>0% (Off)</span>
+                        <span>35% (Medium)</span>
+                        <span>70% (Dark)</span>
+                      </div>
+                    </div>
+
+                    <!-- 2. Desktop Blur Slider -->
+                    <div>
+                      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
+                        <label for="wallpaper-blur-slider" style="font-size: 10.5px; font-weight: 700; color: var(--muted); letter-spacing: 0.5px;" data-i18n="mgmt.wallpaper_blur_label">BACKGROUND BLUR</label>
+                        <span id="wallpaper-blur-val" style="font-size: 11px; font-family: var(--font-mono, monospace); color: var(--brand, #00f0ff); font-weight: 600;">0px</span>
+                      </div>
+                      <input type="range" id="wallpaper-blur-slider" min="0" max="30" value="0" step="1" class="tz-range-slider" style="width:100%; cursor:pointer;" aria-label="Desktop Blur Radius">
+                      <div style="display:flex; justify-content:space-between; font-size:9.5px; color:var(--muted); margin-top:3px;">
+                        <span>0px (Crisp)</span>
+                        <span>15px (Soft)</span>
+                        <span>30px (Frosted)</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -2151,6 +2221,14 @@
                     </div>
                   </button>
 
+                  <button class="desktop-theme-preset theme-preset-card" data-theme-id="oled" role="radio" aria-checked="false" aria-label="Pure OLED Black: Deep Zero-Emission Contrast">
+                    <div class="theme-swatch-circle" style="background: #000000; border: 2px solid rgba(255,255,255,0.4); box-shadow: 0 0 8px rgba(0,240,255,0.2);"></div>
+                    <div class="theme-preset-info">
+                      <span class="theme-preset-name" data-i18n="settings.theme_oled">Pure OLED Black</span>
+                      <span class="theme-preset-desc" data-i18n="settings.theme_oled_desc">Deep Zero-Emission Contrast</span>
+                    </div>
+                  </button>
+
                   <button class="desktop-theme-preset theme-preset-card" data-theme-id="yak" role="radio" aria-checked="false" aria-label="Yak Bronze: Warm Toastie Meadow">
                     <div class="theme-swatch-circle" style="background: linear-gradient(135deg, #d48a37 50%, #e6a254 50%); border: 2px solid #d48a37;"></div>
                     <div class="theme-preset-info">
@@ -2182,6 +2260,97 @@
                     </div>
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sub-tab: Glass & Visual Effects -->
+          <div id="mgmt-pane-glass" class="mgmt-tab-pane" style="display: none;">
+            <div class="mgmt-card-intro">
+              <div class="mgmt-card-intro-title">
+                <svg class="ic"><use href="#i-sliders"/></svg> 
+                <span data-i18n="mgmt.glass_sec_title">Glassmorphism & Visual Effects</span>
+              </div>
+              <div class="mgmt-card-intro-desc" data-i18n="mgmt.glass_sec_desc">
+                Fine-tune acrylic material translucency, backdrop blur radius, window corner styling, and specular border highlights.
+              </div>
+            </div>
+
+            <div class="mgmt-detail-body">
+              <div style="display:flex; flex-direction:column; gap: 16px;">
+                
+                <!-- Card 1: Acrylic Material & Blur -->
+                <div class="drawer-card" style="padding: 16px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 14px;">
+                    <div>
+                      <div style="font-size: 13.5px; font-weight: 700; color: #fff;" data-i18n="mgmt.acrylic_material_title">Acrylic Glass Material</div>
+                      <div style="font-size: 11.5px; color: var(--muted); margin-top: 2px;" data-i18n="mgmt.acrylic_material_desc">Controls window and drawer backdrop-filter blur and surface translucency.</div>
+                    </div>
+                    <button id="glass-reset-btn" class="btn-pill-toggle" style="font-size:10px; padding:2px 8px;" title="Reset glass settings to defaults" data-i18n="mgmt.reset_glass">↺ Reset Glass Defaults</button>
+                  </div>
+
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 14px;">
+                    <!-- Acrylic Blur Radius -->
+                    <div>
+                      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
+                        <label for="glass-blur-slider" style="font-size: 10.5px; font-weight: 700; color: var(--muted); letter-spacing: 0.5px;" data-i18n="mgmt.glass_blur_label">ACRYLIC BLUR RADIUS</label>
+                        <span id="glass-blur-val" style="font-size: 11px; font-family: var(--font-mono, monospace); color: var(--brand, #00f0ff); font-weight: 600;">24px</span>
+                      </div>
+                      <input type="range" id="glass-blur-slider" min="0" max="40" value="24" step="2" class="tz-range-slider" style="width:100%; cursor:pointer;" aria-label="Acrylic Blur Radius">
+                      <div style="display:flex; justify-content:space-between; font-size:9.5px; color:var(--muted); margin-top:3px;">
+                        <span>0px (Transparent)</span>
+                        <span>24px (Standard)</span>
+                        <span>40px (Ultra-Deep)</span>
+                      </div>
+                    </div>
+
+                    <!-- Glass Opacity -->
+                    <div>
+                      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
+                        <label for="glass-opacity-slider" style="font-size: 10.5px; font-weight: 700; color: var(--muted); letter-spacing: 0.5px;" data-i18n="mgmt.glass_opacity_label">GLASS SURFACE OPACITY</label>
+                        <span id="glass-opacity-val" style="font-size: 11px; font-family: var(--font-mono, monospace); color: var(--brand, #00f0ff); font-weight: 600;">72%</span>
+                      </div>
+                      <input type="range" id="glass-opacity-slider" min="30" max="95" value="72" step="1" class="tz-range-slider" style="width:100%; cursor:pointer;" aria-label="Glass Surface Opacity">
+                      <div style="display:flex; justify-content:space-between; font-size:9.5px; color:var(--muted); margin-top:3px;">
+                        <span>30% (High Sheer)</span>
+                        <span>72% (Balanced)</span>
+                        <span>95% (Near Solid)</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Card 2: Window Geometry & Specular Lighting -->
+                <div class="drawer-card" style="padding: 16px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
+                  <div style="font-size: 13.5px; font-weight: 700; color: #fff; margin-bottom: 12px;" data-i18n="mgmt.window_geometry_title">Window Geometry & Lighting</div>
+
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <!-- Window Corner Curvature -->
+                    <div>
+                      <label style="display:block; font-size:10.5px; font-weight:700; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px;" data-i18n="mgmt.window_radius_label">WINDOW CORNER CURVATURE</label>
+                      <div class="window-radius-selector" style="display:flex; gap:6px;" role="radiogroup" aria-label="Window Corner Curvature">
+                        <button type="button" class="btn-pill-toggle window-radius-btn" data-radius="6px" role="radio" aria-checked="false" style="flex:1; padding:6px; font-size:11px;">Sharp (6px)</button>
+                        <button type="button" class="btn-pill-toggle window-radius-btn active" data-radius="12px" role="radio" aria-checked="true" style="flex:1; padding:6px; font-size:11px;">Modern (12px)</button>
+                        <button type="button" class="btn-pill-toggle window-radius-btn" data-radius="20px" role="radio" aria-checked="false" style="flex:1; padding:6px; font-size:11px;">Rounded (20px)</button>
+                      </div>
+                    </div>
+
+                    <!-- Specular Border Glow -->
+                    <div>
+                      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
+                        <label for="window-glow-toggle" style="font-size: 10.5px; font-weight: 700; color: var(--muted); letter-spacing: 0.5px;" data-i18n="mgmt.window_glow_label">SPECULAR BORDER HIGHLIGHT</label>
+                        <label class="switch-toggle" style="position:relative; display:inline-block; width:38px; height:20px; cursor:pointer;">
+                          <input type="checkbox" id="window-glow-toggle" checked style="opacity:0; width:0; height:0;" aria-label="Toggle Specular Border Highlight">
+                          <span class="slider-round" style="position:absolute; inset:0; background:rgba(255,255,255,0.15); border-radius:20px; transition:0.3s;"></span>
+                        </label>
+                      </div>
+                      <div style="font-size: 11px; color: var(--muted); line-height: 1.4;" data-i18n="mgmt.window_glow_desc">
+                        Renders an active specular accent rim around the active foreground window, docking bar, and modal sheets.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
               </div>
             </div>
           </div>

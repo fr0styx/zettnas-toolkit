@@ -24,8 +24,8 @@ describe('Desktop Theme & LCD Screen Themer Isolation Suite', () => {
     expect(html).toContain('id="mgmt-pane-theme"');
     expect(html).toContain('id="desktop-theme-active-badge"');
 
-    // 8 Theme presets in Mission Control
-    const themes = ['cyber', 'amber', 'emerald', 'sapphire', 'amethyst', 'crimson', 'light', 'yak'];
+    // 9 Theme presets in Mission Control
+    const themes = ['cyber', 'amber', 'emerald', 'sapphire', 'amethyst', 'crimson', 'oled', 'light', 'yak'];
     themes.forEach((tId) => {
       expect(html).toContain(`desktop-theme-preset theme-preset-card`);
       expect(html).toContain(`data-theme-id="${tId}"`);

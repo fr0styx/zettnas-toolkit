@@ -19,6 +19,17 @@
   --focus-ring: #00f0ff;
   --focus-shadow: 0 0 0 3px rgba(0, 240, 255, 0.35);
 
+  /* Glassmorphism & Visual Effects Tokens */
+  --glass-blur: 24px;
+  --glass-opacity: 0.72;
+  --window-radius: 12px;
+  --window-glow-enabled: 1;
+  --accent-rgb: 0, 240, 255;
+  --accent-glow: rgba(0, 240, 255, 0.35);
+  --accent-hover: rgba(0, 240, 255, 0.15);
+  --wallpaper-dim: 0.15;
+  --wallpaper-blur: 0px;
+
   /* Z-Index Hierarchy Layering */
   --z-desktop-icons: 10;
   --z-window-base: 1000;
@@ -3307,14 +3318,16 @@ select.tz-select-input option, select.tz-select option {
   max-height: 94vh;
   display: flex;
   flex-direction: column;
-  background: #0d141e;
+  background: rgba(13, 20, 30, var(--glass-opacity, 0.72));
+  backdrop-filter: blur(var(--glass-blur, 24px)) saturate(140%);
+  -webkit-backdrop-filter: blur(var(--glass-blur, 24px)) saturate(140%);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 14px;
-  box-shadow: 0 25px 65px rgba(0, 0, 0, 0.88), 0 0 24px rgba(37, 194, 160, 0.12);
+  border-radius: var(--window-radius, 14px);
+  box-shadow: 0 25px 65px rgba(0, 0, 0, 0.88), 0 0 24px rgba(var(--accent-rgb, 37, 194, 160), calc(0.18 * var(--window-glow-enabled, 1)));
   overflow: hidden;
   resize: both;
   z-index: var(--z-window-base, 1000);
-  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease, border-radius 0.2s ease;
 }
 
 .management-window .chassis-screws {
@@ -6911,9 +6924,11 @@ body.mobile-mode .btn-webui-badge {
 
 .os-window {
   position: fixed;
-  background: var(--card, #111);
+  background: rgba(17, 24, 34, var(--glass-opacity, 0.75));
+  backdrop-filter: blur(var(--glass-blur, 24px)) saturate(140%);
+  -webkit-backdrop-filter: blur(var(--glass-blur, 24px)) saturate(140%);
   border: 1px solid var(--track, #333);
-  border-radius: 12px;
+  border-radius: var(--window-radius, 12px);
   box-shadow: 0 16px 40px rgba(0,0,0,0.5);
   display: flex;
   flex-direction: column;
@@ -6926,6 +6941,7 @@ body.mobile-mode .btn-webui-badge {
   min-height: 320px;
   max-width: 98vw;
   max-height: 94vh;
+  transition: border-radius 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 .os-window-header {
   height: 40px;
@@ -9946,3 +9962,87 @@ body.desktop-locked #os-dock-container {
   color: #fff;
   font-weight: 700;
 }
+
+/* =========================================================================
+   BATCH 2: GLASSMORPHISM, WALLPAPER READABILITY & SPECULAR BORDER GLOW
+   ========================================================================= */
+
+/* 1. Desktop Wallpaper Readability Dimmer & Backdrop Blur */
+#desktop-wallpaper-dimmer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background: rgba(0, 0, 0, var(--wallpaper-dim, 0.15));
+  backdrop-filter: blur(var(--wallpaper-blur, 0px));
+  -webkit-backdrop-filter: blur(var(--wallpaper-blur, 0px));
+  transition: background 0.2s ease, backdrop-filter 0.2s ease, -webkit-backdrop-filter 0.2s ease;
+}
+
+/* 2. Specular Border Glow & Active Window Highlight */
+#management-modal-overlay #management-window.active-window,
+#management-modal-overlay #management-window:focus-within,
+.os-window.active,
+.os-window.active-window,
+.os-window:focus-within,
+.active-window {
+  border-color: rgba(var(--accent-rgb, 0, 240, 255), calc(0.55 * var(--window-glow-enabled, 1))) !important;
+  box-shadow: 0 25px 65px rgba(0, 0, 0, 0.88), 0 0 24px rgba(var(--accent-rgb, 0, 240, 255), calc(0.3 * var(--window-glow-enabled, 1))) !important;
+}
+
+body.no-specular-glow #management-modal-overlay #management-window,
+body.no-specular-glow .os-window,
+body.no-specular-glow .active-window {
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85) !important;
+}
+
+/* 3. Window Corner Radius Selector */
+.window-radius-btn.active {
+  background: var(--brand, #00f0ff) !important;
+  color: #0b1118 !important;
+  font-weight: 700 !important;
+  border-color: var(--brand, #00f0ff) !important;
+  box-shadow: 0 0 10px rgba(var(--accent-rgb, 0, 240, 255), 0.35);
+}
+
+/* 4. Sleek Modern Range Sliders */
+input[type="range"].tz-range-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+  outline: none;
+  transition: background 0.2s;
+}
+
+input[type="range"].tz-range-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--brand, #00f0ff);
+  box-shadow: 0 0 8px rgba(var(--accent-rgb, 0, 240, 255), 0.5);
+  cursor: pointer;
+  border: 2px solid #0d141e;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+input[type="range"].tz-range-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.18);
+  box-shadow: 0 0 12px var(--brand, #00f0ff);
+}
+
+input[type="range"].tz-range-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--brand, #00f0ff);
+  box-shadow: 0 0 8px rgba(var(--accent-rgb, 0, 240, 255), 0.5);
+  cursor: pointer;
+  border: 2px solid #0d141e;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+

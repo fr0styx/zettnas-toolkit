@@ -343,7 +343,7 @@ export function applyDesktopTheme(themeName, customAccent = null) {
   state.setDesktopTheme(themeName, customAccent);
 
   if (typeof document !== 'undefined' && document.body) {
-    document.body.classList.remove('theme-light', 'theme-yak', 'theme-amber', 'theme-emerald', 'theme-sapphire', 'theme-amethyst', 'theme-crimson');
+    document.body.classList.remove('theme-light', 'theme-yak', 'theme-amber', 'theme-emerald', 'theme-sapphire', 'theme-amethyst', 'theme-crimson', 'theme-oled');
 
     if (themeName === 'auto' || themeName === 'system') {
       if (!_systemThemeMatcher && typeof window !== 'undefined' && window.matchMedia) {
@@ -366,6 +366,8 @@ export function applyDesktopTheme(themeName, customAccent = null) {
       document.body.classList.add('theme-amethyst');
     } else if (themeName === 'crimson') {
       document.body.classList.add('theme-crimson');
+    } else if (themeName === 'oled') {
+      document.body.classList.add('theme-oled');
     } else if (themeName === 'yak') {
       document.body.classList.add('theme-yak');
     } else if (themeName === 'light') {
@@ -373,28 +375,59 @@ export function applyDesktopTheme(themeName, customAccent = null) {
     }
   }
 
+  // Helper to parse hex to RGB
+  const hexToRgb = (hex) => {
+    if (!hex) return null;
+    let clean = hex.replace('#', '').trim();
+    if (clean.length === 3) clean = clean.split('').map(c => c + c).join('');
+    if (clean.length !== 6) return null;
+    const num = parseInt(clean, 16);
+    return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
+  };
+
   // Handle custom accent color override for desktop UI
   if (customAccent) {
+    const rgb = hexToRgb(customAccent);
+    const rgbStr = rgb ? `${rgb.r}, ${rgb.g}, ${rgb.b}` : null;
+    const glowStr = rgb ? `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.35)` : '';
+    const hoverStr = rgb ? `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.15)` : '';
+
     if (typeof document !== 'undefined' && document.documentElement) {
       document.documentElement.style.setProperty('--brand', customAccent);
       document.documentElement.style.setProperty('--ok2', customAccent);
       document.documentElement.style.setProperty('--desktop-accent', customAccent);
+      if (rgbStr) {
+        document.documentElement.style.setProperty('--accent-rgb', rgbStr);
+        document.documentElement.style.setProperty('--accent-glow', glowStr);
+        document.documentElement.style.setProperty('--accent-hover', hoverStr);
+      }
     }
     if (typeof document !== 'undefined' && document.body) {
       document.body.style.setProperty('--brand', customAccent);
       document.body.style.setProperty('--ok2', customAccent);
       document.body.style.setProperty('--desktop-accent', customAccent);
+      if (rgbStr) {
+        document.body.style.setProperty('--accent-rgb', rgbStr);
+        document.body.style.setProperty('--accent-glow', glowStr);
+        document.body.style.setProperty('--accent-hover', hoverStr);
+      }
     }
   } else {
     if (typeof document !== 'undefined' && document.documentElement) {
       document.documentElement.style.removeProperty('--brand');
       document.documentElement.style.removeProperty('--ok2');
       document.documentElement.style.removeProperty('--desktop-accent');
+      document.documentElement.style.removeProperty('--accent-rgb');
+      document.documentElement.style.removeProperty('--accent-glow');
+      document.documentElement.style.removeProperty('--accent-hover');
     }
     if (typeof document !== 'undefined' && document.body) {
       document.body.style.removeProperty('--brand');
       document.body.style.removeProperty('--ok2');
       document.body.style.removeProperty('--desktop-accent');
+      document.body.style.removeProperty('--accent-rgb');
+      document.body.style.removeProperty('--accent-glow');
+      document.body.style.removeProperty('--accent-hover');
     }
   }
 

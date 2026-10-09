@@ -712,6 +712,7 @@ const THEME_NAMES = {
   sapphire: 'SAPPHIRE ICE',
   amethyst: 'AMETHYST VIOLET',
   crimson: 'CRIMSON RUBY',
+  oled: 'PURE OLED BLACK',
   light: 'DAYLIGHT WHITE',
   yak: 'YAK BRONZE'
 };
@@ -736,7 +737,7 @@ export function syncDesktopThemeUI() {
   if (badge) {
     const localized = t('settings.theme_' + curTheme, THEME_NAMES[curTheme] || curTheme.toUpperCase());
     badge.textContent = localized.toUpperCase();
-    const themeBrandColor = curTheme === 'amber' ? '#ffbe40' : curTheme === 'emerald' ? '#3bf58b' : curTheme === 'sapphire' ? '#38bdf8' : curTheme === 'amethyst' ? '#c084fc' : curTheme === 'crimson' ? '#f43f5e' : curTheme === 'yak' ? '#d48a37' : '#00f0ff';
+    const themeBrandColor = curTheme === 'amber' ? '#ffbe40' : curTheme === 'emerald' ? '#3bf58b' : curTheme === 'sapphire' ? '#38bdf8' : curTheme === 'amethyst' ? '#c084fc' : curTheme === 'crimson' ? '#f43f5e' : curTheme === 'yak' ? '#d48a37' : curTheme === 'oled' ? '#00f0ff' : '#00f0ff';
     badge.style.color = curAccent || themeBrandColor;
     badge.style.borderColor = curAccent || themeBrandColor;
   }

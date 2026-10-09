@@ -309,6 +309,8 @@ export function initWallpapers() {
   const galleryEl = document.getElementById('wallpaper-gallery-grid');
 
   loadWallpapers();
+  initWallpaperReadabilityControls();
+  initGlassControls();
 
   if (_wallpapersInitialized) return;
   _wallpapersInitialized = true;
@@ -410,3 +412,220 @@ export function initWallpapers() {
     });
   }
 }
+
+/**
+ * Wallpaper Readability & Contrast Engine (Dimming & Blur)
+ */
+export function applyWallpaperReadability(dimPercent, blurPx, persist = true) {
+  dimPercent = Math.max(0, Math.min(70, parseInt(dimPercent, 10) || 0));
+  blurPx = Math.max(0, Math.min(30, parseInt(blurPx, 10) || 0));
+
+  if (typeof document !== 'undefined') {
+    if (document.documentElement) {
+      document.documentElement.style.setProperty('--wallpaper-dim', (dimPercent / 100).toFixed(2));
+      document.documentElement.style.setProperty('--wallpaper-blur', `${blurPx}px`);
+    }
+    const dimVal = document.getElementById('wallpaper-dim-val');
+    const dimSlider = document.getElementById('wallpaper-dim-slider');
+    const blurVal = document.getElementById('wallpaper-blur-val');
+    const blurSlider = document.getElementById('wallpaper-blur-slider');
+
+    if (dimVal) dimVal.textContent = `${dimPercent}%`;
+    if (dimSlider && parseInt(dimSlider.value, 10) !== dimPercent) dimSlider.value = dimPercent;
+    if (blurVal) blurVal.textContent = `${blurPx}px`;
+    if (blurSlider && parseInt(blurSlider.value, 10) !== blurPx) blurSlider.value = blurPx;
+  }
+
+  if (persist) {
+    try {
+      localStorage.setItem('zettnas_wallpaper_dim', dimPercent.toString());
+      localStorage.setItem('zettnas_wallpaper_blur', blurPx.toString());
+    } catch (e) {}
+  }
+}
+
+export function initWallpaperReadabilityControls() {
+  const dimSlider = document.getElementById('wallpaper-dim-slider');
+  const blurSlider = document.getElementById('wallpaper-blur-slider');
+  const resetBtn = document.getElementById('wallpaper-readability-reset-btn');
+
+  // Load saved values or default
+  let savedDim = 15;
+  let savedBlur = 0;
+  try {
+    const d = localStorage.getItem('zettnas_wallpaper_dim');
+    if (d !== null) savedDim = parseInt(d, 10);
+    const b = localStorage.getItem('zettnas_wallpaper_blur');
+    if (b !== null) savedBlur = parseInt(b, 10);
+  } catch (e) {}
+
+  applyWallpaperReadability(savedDim, savedBlur, false);
+
+  if (dimSlider) {
+    dimSlider.addEventListener('input', (e) => {
+      const curBlur = blurSlider ? parseInt(blurSlider.value, 10) : 0;
+      applyWallpaperReadability(e.target.value, curBlur, false);
+    });
+    dimSlider.addEventListener('change', (e) => {
+      const curBlur = blurSlider ? parseInt(blurSlider.value, 10) : 0;
+      applyWallpaperReadability(e.target.value, curBlur, true);
+    });
+  }
+
+  if (blurSlider) {
+    blurSlider.addEventListener('input', (e) => {
+      const curDim = dimSlider ? parseInt(dimSlider.value, 10) : 15;
+      applyWallpaperReadability(curDim, e.target.value, false);
+    });
+    blurSlider.addEventListener('change', (e) => {
+      const curDim = dimSlider ? parseInt(dimSlider.value, 10) : 15;
+      applyWallpaperReadability(curDim, e.target.value, true);
+    });
+  }
+
+  if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+      applyWallpaperReadability(15, 0, true);
+      showToast('Wallpaper readability reset to defaults', 'info');
+    });
+  }
+}
+
+/**
+ * Glassmorphism & Visual Effects Engine (Acrylic Blur, Opacity, Radius, Specular Glow)
+ */
+export function applyGlassSettings(blurPx, opacityPercent, radiusPx, glowEnabled, persist = true) {
+  blurPx = Math.max(0, Math.min(40, parseInt(blurPx, 10) || 0));
+  opacityPercent = Math.max(30, Math.min(95, parseInt(opacityPercent, 10) || 72));
+  radiusPx = ['6px', '12px', '20px'].includes(radiusPx) ? radiusPx : '12px';
+  glowEnabled = Boolean(glowEnabled);
+
+  if (typeof document !== 'undefined') {
+    if (document.documentElement) {
+      document.documentElement.style.setProperty('--glass-blur', `${blurPx}px`);
+      document.documentElement.style.setProperty('--glass-opacity', (opacityPercent / 100).toFixed(2));
+      document.documentElement.style.setProperty('--window-radius', radiusPx);
+      document.documentElement.style.setProperty('--window-glow-enabled', glowEnabled ? '1' : '0');
+    }
+    if (document.body) {
+      document.body.classList.toggle('no-specular-glow', !glowEnabled);
+    }
+
+    const blurVal = document.getElementById('glass-blur-val');
+    const blurSlider = document.getElementById('glass-blur-slider');
+    const opacityVal = document.getElementById('glass-opacity-val');
+    const opacitySlider = document.getElementById('glass-opacity-slider');
+    const glowToggle = document.getElementById('window-glow-toggle');
+    const radiusBtns = document.querySelectorAll('.window-radius-btn');
+
+    if (blurVal) blurVal.textContent = `${blurPx}px`;
+    if (blurSlider && parseInt(blurSlider.value, 10) !== blurPx) blurSlider.value = blurPx;
+    if (opacityVal) opacityVal.textContent = `${opacityPercent}%`;
+    if (opacitySlider && parseInt(opacitySlider.value, 10) !== opacityPercent) opacitySlider.value = opacityPercent;
+    if (glowToggle) glowToggle.checked = glowEnabled;
+
+    radiusBtns.forEach((btn) => {
+      const isMatch = btn.dataset.radius === radiusPx;
+      btn.classList.toggle('active', isMatch);
+      btn.setAttribute('aria-checked', isMatch ? 'true' : 'false');
+    });
+  }
+
+  if (persist) {
+    try {
+      localStorage.setItem('zettnas_glass_blur', blurPx.toString());
+      localStorage.setItem('zettnas_glass_opacity', opacityPercent.toString());
+      localStorage.setItem('zettnas_window_radius', radiusPx);
+      localStorage.setItem('zettnas_window_glow', glowEnabled ? 'true' : 'false');
+    } catch (e) {}
+  }
+}
+
+export function initGlassControls() {
+  const blurSlider = document.getElementById('glass-blur-slider');
+  const opacitySlider = document.getElementById('glass-opacity-slider');
+  const glowToggle = document.getElementById('window-glow-toggle');
+  const resetBtn = document.getElementById('glass-reset-btn');
+  const radiusBtns = document.querySelectorAll('.window-radius-btn');
+
+  // Load saved or defaults
+  let savedBlur = 24;
+  let savedOpacity = 72;
+  let savedRadius = '12px';
+  let savedGlow = true;
+
+  try {
+    const b = localStorage.getItem('zettnas_glass_blur');
+    if (b !== null) savedBlur = parseInt(b, 10);
+    const o = localStorage.getItem('zettnas_glass_opacity');
+    if (o !== null) savedOpacity = parseInt(o, 10);
+    const r = localStorage.getItem('zettnas_window_radius');
+    if (r) savedRadius = r;
+    const g = localStorage.getItem('zettnas_window_glow');
+    if (g !== null) savedGlow = (g === 'true');
+  } catch (e) {}
+
+  applyGlassSettings(savedBlur, savedOpacity, savedRadius, savedGlow, false);
+
+  if (blurSlider) {
+    blurSlider.addEventListener('input', (e) => {
+      const curOpacity = opacitySlider ? parseInt(opacitySlider.value, 10) : 72;
+      const curGlow = glowToggle ? glowToggle.checked : true;
+      const curActiveRadiusBtn = document.querySelector('.window-radius-btn.active');
+      const curRadius = curActiveRadiusBtn ? curActiveRadiusBtn.dataset.radius : '12px';
+      applyGlassSettings(e.target.value, curOpacity, curRadius, curGlow, false);
+    });
+    blurSlider.addEventListener('change', (e) => {
+      const curOpacity = opacitySlider ? parseInt(opacitySlider.value, 10) : 72;
+      const curGlow = glowToggle ? glowToggle.checked : true;
+      const curActiveRadiusBtn = document.querySelector('.window-radius-btn.active');
+      const curRadius = curActiveRadiusBtn ? curActiveRadiusBtn.dataset.radius : '12px';
+      applyGlassSettings(e.target.value, curOpacity, curRadius, curGlow, true);
+    });
+  }
+
+  if (opacitySlider) {
+    opacitySlider.addEventListener('input', (e) => {
+      const curBlur = blurSlider ? parseInt(blurSlider.value, 10) : 24;
+      const curGlow = glowToggle ? glowToggle.checked : true;
+      const curActiveRadiusBtn = document.querySelector('.window-radius-btn.active');
+      const curRadius = curActiveRadiusBtn ? curActiveRadiusBtn.dataset.radius : '12px';
+      applyGlassSettings(curBlur, e.target.value, curRadius, curGlow, false);
+    });
+    opacitySlider.addEventListener('change', (e) => {
+      const curBlur = blurSlider ? parseInt(blurSlider.value, 10) : 24;
+      const curGlow = glowToggle ? glowToggle.checked : true;
+      const curActiveRadiusBtn = document.querySelector('.window-radius-btn.active');
+      const curRadius = curActiveRadiusBtn ? curActiveRadiusBtn.dataset.radius : '12px';
+      applyGlassSettings(curBlur, e.target.value, curRadius, curGlow, true);
+    });
+  }
+
+  radiusBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const radius = btn.dataset.radius;
+      const curBlur = blurSlider ? parseInt(blurSlider.value, 10) : 24;
+      const curOpacity = opacitySlider ? parseInt(opacitySlider.value, 10) : 72;
+      const curGlow = glowToggle ? glowToggle.checked : true;
+      applyGlassSettings(curBlur, curOpacity, radius, curGlow, true);
+    });
+  });
+
+  if (glowToggle) {
+    glowToggle.addEventListener('change', (e) => {
+      const curBlur = blurSlider ? parseInt(blurSlider.value, 10) : 24;
+      const curOpacity = opacitySlider ? parseInt(opacitySlider.value, 10) : 72;
+      const curActiveRadiusBtn = document.querySelector('.window-radius-btn.active');
+      const curRadius = curActiveRadiusBtn ? curActiveRadiusBtn.dataset.radius : '12px';
+      applyGlassSettings(curBlur, curOpacity, curRadius, e.target.checked, true);
+    });
+  }
+
+  if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+      applyGlassSettings(24, 72, '12px', true, true);
+      showToast('Glass and visual effects reset to defaults', 'info');
+    });
+  }
+}
+

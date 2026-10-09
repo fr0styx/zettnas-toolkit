@@ -680,6 +680,15 @@ export function bringToFront(windowEl) {
       saveOpenWindowsState();
     }
   }
+
+  // Update active-window class for specular border highlight
+  try {
+    document.querySelectorAll('.active-window').forEach((w) => {
+      w.classList.remove('active-window');
+    });
+    const targetWin = windowEl.querySelector?.('#console-window, #management-window, .chassis-front-panel, .mgmt-app-window, .container-inspector-window, #container-inspector-window') || windowEl;
+    if (targetWin && targetWin.classList) targetWin.classList.add('active-window');
+  } catch (e) {}
 }
 
 function getOrCreateSnapGhost() {
