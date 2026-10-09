@@ -29,6 +29,9 @@ import { initCommandPalette } from './components/command-palette.js';
 import { initWidgets } from './components/widgets.js';
 import { initFileManager } from './components/file-manager.js';
 import { initContainerModal } from './components/container-modal.js';
+import { initDesktopContextMenu } from './components/desktop-context-menu.js';
+import { initDesktopDragAndDrop } from './components/desktop-drag-drop.js';
+import { initScreensaverSystem } from './components/screensaver.js';
 import { initI18n } from './i18n.js';
 import { initA11y } from './a11y.js';
 
@@ -178,6 +181,9 @@ document.addEventListener('DOMContentLoaded', () => {
   initWidgets();
   initFileManager();
   initContainerModal();
+  initDesktopContextMenu();
+  initDesktopDragAndDrop();
+  initScreensaverSystem();
   initA11y();
 
   applyDesktopTheme(state.desktopTheme, state.desktopCustomAccent);

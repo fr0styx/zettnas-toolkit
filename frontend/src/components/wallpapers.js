@@ -299,6 +299,43 @@ if (typeof window !== 'undefined') {
   window.selectWallpaper = selectWallpaper;
 }
 
+export async function uploadAndApplyWallpaper(file) {
+  if (!file) return;
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      const base64data = ev.target.result;
+      try {
+        const data = await api.post('/api/wallpapers/upload', {
+          image: base64data,
+          filename: file.name
+        });
+        if (data && data.success) {
+          if (data.filename) {
+            try {
+              localStorage.setItem('zettnas_active_wallpaper', data.filename);
+            } catch (e) {}
+          }
+          await loadWallpapers();
+          if (data.filename) {
+            await selectWallpaper(data.filename);
+          }
+          showToast(`Wallpaper uploaded & applied: ${data.filename || file.name}`, 'success');
+          resolve(data);
+        } else {
+          showToast('Failed: ' + ((data && data.error) || 'Upload error'), 'error');
+          reject(new Error((data && data.error) || 'Upload error'));
+        }
+      } catch (err) {
+        showToast('Upload failed: ' + err.message, 'error');
+        reject(err);
+      }
+    };
+    reader.onerror = () => reject(new Error('Failed reading image file'));
+    reader.readAsDataURL(file);
+  });
+}
+
 export function initWallpapers() {
   const fileInput = document.getElementById('wallpaper-upload');
   const clearBtn = document.getElementById('wallpaper-clear-btn');
@@ -332,34 +369,7 @@ export function initWallpapers() {
 
   // File upload handler
   const handleUploadFile = (file) => {
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = async (ev) => {
-      const base64data = ev.target.result;
-      try {
-        const data = await api.post('/api/wallpapers/upload', {
-          image: base64data,
-          filename: file.name
-        });
-        if (data.success) {
-          if (data.filename) {
-            try {
-              localStorage.setItem('zettnas_active_wallpaper', data.filename);
-            } catch (e) {}
-          }
-          await loadWallpapers();
-          if (data.filename) {
-            await selectWallpaper(data.filename);
-          }
-          showToast('Wallpaper uploaded & applied', 'success');
-        } else {
-          showToast('Failed: ' + (data.error || 'Upload error'), 'error');
-        }
-      } catch (err) {
-        showToast('Upload failed: ' + err.message, 'error');
-      }
-    };
-    reader.readAsDataURL(file);
+    uploadAndApplyWallpaper(file);
   };
 
   if (fileInput) {

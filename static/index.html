@@ -129,6 +129,8 @@
               'mgmt-sec-glass': 'mgmt-sec-wallpaper',
               'mgmt-pane-dock': 'mgmt-sec-wallpaper',
               'mgmt-sec-dock': 'mgmt-sec-wallpaper',
+              'mgmt-pane-screensaver': 'mgmt-sec-wallpaper',
+              'mgmt-sec-screensaver': 'mgmt-sec-wallpaper',
               'mgmt-pane-widgets': 'mgmt-sec-wallpaper',
               'mgmt-pane-language': 'mgmt-sec-system-group',
               'mgmt-sec-language': 'mgmt-sec-system-group',
@@ -190,11 +192,11 @@
   })();
 </script>
 <style>html,body{color:#eaf1f8;background-color:#080c10;width:100%;height:100%;margin:0;padding:0;overflow:hidden}html.auth-required body{background:radial-gradient(circle at 50% 20%,#151d29 0%,#080c10 70%)!important}#login-overlay{z-index:999999;background:#080c10;justify-content:center;align-items:center;display:flex;position:fixed;inset:0}html.has-auth-session #login-overlay{display:none!important}html.auth-required #login-overlay{display:flex!important}html.is-desktop-locked #lock-overlay{opacity:1!important;display:flex!important}html.is-desktop-locked body{overflow:hidden!important}html.auth-required .studio-viewport-wrapper,html.auth-required .suite-navbar,html.auth-required #desktop-icons-container,html.auth-required .desktop-icons-container,html.auth-required .top-nav,html.auth-required #desktop-widgets-container,html.auth-required #os-dock-container,html.auth-required .workspace-panel,html.auth-required .smart-modal-backdrop,html.auth-required .os-window,html.auth-required .notif-center-window{display:none!important}</style>
-  <script type="module" crossorigin src="/assets/index-Dev_MKJ0.js"></script>
+  <script type="module" crossorigin src="/assets/index-Mu-S8Cvk.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-hePW80VL.js">
-  <link rel="modulepreload" crossorigin href="/assets/dock-DMHLKZGg.js">
-  <link rel="modulepreload" crossorigin href="/assets/users-VHA0qa8Y.js">
-  <link rel="stylesheet" crossorigin href="/assets/index-C85qlYNq.css">
+  <link rel="modulepreload" crossorigin href="/assets/dock-D6WCa3Hz.js">
+  <link rel="modulepreload" crossorigin href="/assets/users-B_E_iedT.js">
+  <link rel="stylesheet" crossorigin href="/assets/index-BhXJP-Lx.css">
 </head>
 <body class="studio-workbench">
 
@@ -2013,6 +2015,10 @@
               <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-grid"/></svg>
               <span data-i18n="mgmt.subtab_dock">Dock & Desktop</span>
             </button>
+            <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-screensaver">
+              <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-clock"/></svg>
+              <span data-i18n="mgmt.subtab_screensaver">Screensaver</span>
+            </button>
             <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-widgets">
               <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-grid"/></svg>
               <span data-i18n="mgmt.subtab_widgets">Widgets</span>
@@ -2403,6 +2409,111 @@
                       <span class="slider-round" style="position:absolute; inset:0; background:rgba(255,255,255,0.15); border-radius:20px; transition:0.3s;"></span>
                     </label>
                   </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <!-- Sub-tab: Screensaver & OLED Protection -->
+          <div id="mgmt-pane-screensaver" class="mgmt-tab-pane" style="display: none;">
+            <div class="mgmt-card-intro">
+              <div class="mgmt-card-intro-title">
+                <svg class="ic"><use href="#i-clock"/></svg>
+                <span data-i18n="mgmt.screensaver_sec_title">Screensaver & OLED Protection</span>
+              </div>
+              <div class="mgmt-card-intro-desc" data-i18n="mgmt.screensaver_sec_desc">
+                Configure automatic OLED-friendly screensavers, animations (Matrix Digital Rain, Retro Nixie Clock, Starfield), idle timeout, and security lock.
+              </div>
+            </div>
+
+            <div class="mgmt-detail-body">
+              <div style="display:flex; flex-direction:column; gap: 16px;">
+
+                <!-- Card 1: Master Enable & Idle Timeout -->
+                <div class="drawer-card" style="padding: 16px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 14px;">
+                    <div>
+                      <div style="font-size: 13.5px; font-weight: 700; color: #fff;" data-i18n="mgmt.screensaver_enable_title">Enable Screensaver</div>
+                      <div style="font-size: 11.5px; color: var(--muted); margin-top: 2px;" data-i18n="mgmt.screensaver_enable_desc">Engages the animated screensaver after a period of user inactivity.</div>
+                    </div>
+                    <label class="switch-toggle" style="position:relative; display:inline-block; width:38px; height:20px; cursor:pointer;">
+                      <input type="checkbox" id="screensaver-enable-toggle" checked style="opacity:0; width:0; height:0;" aria-label="Toggle Screensaver Active State">
+                      <span class="slider-round" style="position:absolute; inset:0; background:rgba(255,255,255,0.15); border-radius:20px; transition:0.3s;"></span>
+                    </label>
+                  </div>
+
+                  <div style="padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.06);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
+                      <label for="screensaver-timeout-select" style="font-size: 10.5px; font-weight: 700; color: var(--muted); letter-spacing: 0.5px;" data-i18n="mgmt.screensaver_timeout_label">IDLE INACTIVITY TIMEOUT</label>
+                    </div>
+                    <select id="screensaver-timeout-select" class="tz-select-input" style="width: 100%; border: 1px solid rgba(255,255,255,0.12); background: rgba(0,0,0,0.3); padding: 8px 10px; color: #fff; border-radius: 6px; font-size: 12px;">
+                      <option value="1" data-i18n="mgmt.screensaver_timeout_1m">1 Minute (Testing)</option>
+                      <option value="5" data-i18n="mgmt.screensaver_timeout_5m">5 Minutes</option>
+                      <option value="10" selected data-i18n="mgmt.screensaver_timeout_10m">10 Minutes (Default)</option>
+                      <option value="15" data-i18n="mgmt.screensaver_timeout_15m">15 Minutes</option>
+                      <option value="30" data-i18n="mgmt.screensaver_timeout_30m">30 Minutes</option>
+                      <option value="60" data-i18n="mgmt.screensaver_timeout_60m">1 Hour</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Card 2: Animation Style / Mode Selector -->
+                <div class="drawer-card" style="padding: 16px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
+                  <div style="font-size: 10.5px; font-weight: 700; color: var(--muted); letter-spacing: 0.5px; margin-bottom: 10px;" data-i18n="mgmt.screensaver_style_label">SCREENSAVER ANIMATION STYLE</div>
+                  
+                  <div class="screensaver-styles-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;" role="radiogroup" aria-label="Screensaver Style">
+                    <!-- Matrix Rain -->
+                    <div class="screensaver-style-card active" data-mode="matrix_rain" role="radio" aria-checked="true" tabindex="0" style="padding: 14px; background: rgba(0,0,0,0.35); border: 1px solid rgba(34, 197, 94, 0.4); border-radius: 8px; cursor: pointer; transition: all 0.2s ease;">
+                      <div style="display:flex; align-items:center; gap: 8px; margin-bottom: 6px;">
+                        <span style="font-size: 16px;">🟩</span>
+                        <span style="font-size: 12.5px; font-weight: 700; color: #fff;" data-i18n="mgmt.screensaver_style_matrix">Matrix Digital Rain</span>
+                      </div>
+                      <div style="font-size: 11px; color: var(--muted); line-height: 1.4;">Cybernetic vertical cascading green code streams on pure OLED black.</div>
+                    </div>
+
+                    <!-- Retro Clock -->
+                    <div class="screensaver-style-card" data-mode="retro_clock" role="radio" aria-checked="false" tabindex="0" style="padding: 14px; background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; cursor: pointer; transition: all 0.2s ease;">
+                      <div style="display:flex; align-items:center; gap: 8px; margin-bottom: 6px;">
+                        <span style="font-size: 16px;">🕰️</span>
+                        <span style="font-size: 12.5px; font-weight: 700; color: #fff;" data-i18n="mgmt.screensaver_style_clock">Retro Nixie Clock</span>
+                      </div>
+                      <div style="font-size: 11px; color: var(--muted); line-height: 1.4;">Glowing digital clock with soft anti-burn-in drift to protect OLED displays.</div>
+                    </div>
+
+                    <!-- Starfield -->
+                    <div class="screensaver-style-card" data-mode="starfield" role="radio" aria-checked="false" tabindex="0" style="padding: 14px; background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; cursor: pointer; transition: all 0.2s ease;">
+                      <div style="display:flex; align-items:center; gap: 8px; margin-bottom: 6px;">
+                        <span style="font-size: 16px;">✨</span>
+                        <span style="font-size: 12.5px; font-weight: 700; color: #fff;" data-i18n="mgmt.screensaver_style_starfield">Hyperspace Starfield</span>
+                      </div>
+                      <div style="font-size: 11px; color: var(--muted); line-height: 1.4;">3D perspective deep-space hyperspace warp speed stars.</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Card 3: Security & Lock Option -->
+                <div class="drawer-card" style="padding: 16px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
+                  <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                      <div style="font-size: 13.5px; font-weight: 700; color: #fff;" data-i18n="mgmt.screensaver_lock_title">Require Password on Wake</div>
+                      <div style="font-size: 11.5px; color: var(--muted); margin-top: 2px;" data-i18n="mgmt.screensaver_lock_desc">Immediately locks the desktop session when the screensaver is dismissed.</div>
+                    </div>
+                    <label class="switch-toggle" style="position:relative; display:inline-block; width:38px; height:20px; cursor:pointer;">
+                      <input type="checkbox" id="screensaver-lock-toggle" style="opacity:0; width:0; height:0;" aria-label="Toggle Require Password on Wake">
+                      <span class="slider-round" style="position:absolute; inset:0; background:rgba(255,255,255,0.15); border-radius:20px; transition:0.3s;"></span>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Card 4: Action Buttons (Preview & Reset) -->
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top: 4px;">
+                  <button type="button" id="screensaver-preview-btn" class="btn-pill-toggle btn-primary-accent" style="padding: 8px 18px; font-size: 12px; font-weight: 700; cursor: pointer;">
+                    <span data-i18n="mgmt.screensaver_preview_btn">👁️ Preview Screensaver</span>
+                  </button>
+                  <button type="button" id="screensaver-reset-btn" class="btn-pill-toggle" style="padding: 8px 16px; font-size: 11.5px; cursor: pointer;">
+                    <span data-i18n="mgmt.screensaver_reset_btn">Reset Defaults</span>
+                  </button>
                 </div>
 
               </div>
@@ -4504,6 +4615,63 @@
   <div class="os-dock active" id="os-dock">
     <!-- Dock items injected via JS -->
   </div>
+</div>
+
+<!-- Desktop Right-Click Context Menu -->
+<div id="desktop-context-menu" class="desktop-context-menu" role="menu" aria-label="Desktop Context Menu" style="display: none;">
+  <div class="context-menu-item" role="menuitem" tabindex="0" data-action="wallpaper">
+    <span class="context-menu-icon">🖼️</span>
+    <span class="context-menu-label" data-i18n="ctx.wallpaper">Change Wallpaper & Style…</span>
+  </div>
+  <div class="context-menu-item" role="menuitem" tabindex="0" data-action="theme">
+    <span class="context-menu-icon">🎨</span>
+    <span class="context-menu-label" data-i18n="ctx.theme">Desktop Theme & Colors…</span>
+  </div>
+  <div class="context-menu-item" role="menuitem" tabindex="0" data-action="glass">
+    <span class="context-menu-icon">🪟</span>
+    <span class="context-menu-label" data-i18n="ctx.glass">Glass & Visual Effects…</span>
+  </div>
+  <div class="context-menu-item" role="menuitem" tabindex="0" data-action="dock">
+    <span class="context-menu-icon">📊</span>
+    <span class="context-menu-label" data-i18n="ctx.dock">Dock & Desktop Settings…</span>
+  </div>
+  <div class="context-menu-item" role="menuitem" tabindex="0" data-action="screensaver">
+    <span class="context-menu-icon">🖥️</span>
+    <span class="context-menu-label" data-i18n="ctx.screensaver">Screensaver Settings…</span>
+  </div>
+  <div class="context-menu-divider" role="separator"></div>
+  <div class="context-menu-item" role="menuitem" tabindex="0" data-action="fullscreen">
+    <span class="context-menu-icon">⛶</span>
+    <span class="context-menu-label" data-i18n="ctx.fullscreen">Toggle Fullscreen</span>
+  </div>
+  <div class="context-menu-item" role="menuitem" tabindex="0" data-action="activity">
+    <span class="context-menu-icon">⚡</span>
+    <span class="context-menu-label" data-i18n="ctx.activity">System Activity & Telemetry</span>
+  </div>
+  <div class="context-menu-divider" role="separator"></div>
+  <div class="context-menu-item" role="menuitem" tabindex="0" data-action="lock">
+    <span class="context-menu-icon">🔒</span>
+    <span class="context-menu-label" data-i18n="ctx.lock">Lock Workspace</span>
+  </div>
+</div>
+
+<!-- Desktop Drag & Drop Wallpaper Drop Target -->
+<div id="desktop-drop-zone" class="desktop-drop-zone" aria-hidden="true" style="display: none;">
+  <div class="desktop-drop-card">
+    <div class="desktop-drop-icon">✨</div>
+    <div class="desktop-drop-title" data-i18n="dnd.title">Drop image to set as wallpaper</div>
+    <div class="desktop-drop-subtitle" data-i18n="dnd.subtitle">Supports PNG, JPG, WEBP, and GIF (up to 16MB)</div>
+  </div>
+</div>
+
+<!-- Desktop Screensaver & OLED Protection Engine Overlay -->
+<div id="desktop-screensaver" class="desktop-screensaver" aria-hidden="true" style="display: none;">
+  <canvas id="screensaver-canvas" class="screensaver-canvas"></canvas>
+  <div id="screensaver-clock-display" class="screensaver-clock-display" style="display: none;">
+    <div class="screensaver-clock-time" id="screensaver-time">12:00:00</div>
+    <div class="screensaver-clock-date" id="screensaver-date">Friday, October 9, 2026</div>
+  </div>
+  <div class="screensaver-wake-hint" data-i18n="screensaver.wake_hint">Move mouse or press any key to wake</div>
 </div>
 
 </body>

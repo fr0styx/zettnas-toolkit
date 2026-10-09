@@ -656,18 +656,10 @@ export async function saveLcdThemeToServer(theme, customAccent, textClarity) {
   clearTimeout(saveLcdDebounce);
   saveLcdDebounce = setTimeout(async () => {
     try {
-      const token = auth.getToken();
-      await window.fetch('/api/system/client-preferences', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-        },
-        body: JSON.stringify({
-          lcd_theme: theme,
-          lcd_custom_accent: customAccent || '',
-          lcd_text_clarity: textClarity ? 'true' : 'false'
-        })
+      await api.post('/api/system/client-preferences', {
+        lcd_theme: theme,
+        lcd_custom_accent: customAccent || '',
+        lcd_text_clarity: textClarity ? 'true' : 'false'
       });
     } catch (e) {
       console.warn('[LCD THEME] Failed syncing LCD theme to server:', e);
@@ -680,17 +672,9 @@ export async function saveDesktopThemeToServer(theme, customAccent) {
   clearTimeout(saveDesktopDebounce);
   saveDesktopDebounce = setTimeout(async () => {
     try {
-      const token = auth.getToken();
-      await window.fetch('/api/system/client-preferences', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-        },
-        body: JSON.stringify({
-          desktop_theme: theme,
-          desktop_custom_accent: customAccent || ''
-        })
+      await api.post('/api/system/client-preferences', {
+        desktop_theme: theme,
+        desktop_custom_accent: customAccent || ''
       });
     } catch (e) {
       console.warn('[DESKTOP THEME] Failed syncing desktop theme to server:', e);

@@ -10226,3 +10226,234 @@ input[type="range"].tz-range-slider::-moz-range-thumb {
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
+/* ==========================================================================
+   Desktop Context Menu & Ergonomics (macOS / Win11 Fluent inspired)
+   ========================================================================== */
+.desktop-context-menu {
+  position: fixed;
+  z-index: 99998;
+  min-width: 220px;
+  background: rgba(18, 26, 36, 0.88);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7), 0 0 20px rgba(0, 240, 255, 0.08);
+  padding: 6px;
+  user-select: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  animation: contextMenuFadeIn 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes contextMenuFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.context-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 7px;
+  color: #e2e8f0;
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+  outline: none;
+}
+
+.context-menu-item:hover,
+.context-menu-item:focus-visible {
+  background: rgba(37, 194, 160, 0.18);
+  color: #fff;
+  box-shadow: inset 0 0 0 1px rgba(37, 194, 160, 0.35);
+}
+
+.context-menu-icon {
+  font-size: 14px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+}
+
+.context-menu-label {
+  flex: 1;
+  letter-spacing: 0.2px;
+}
+
+.context-menu-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+  margin: 4px 6px;
+}
+
+/* ==========================================================================
+   Desktop Wallpaper Drag-and-Drop Ingestion Target
+   ========================================================================== */
+.desktop-drop-zone {
+  position: fixed;
+  inset: 0;
+  z-index: 99990;
+  background: rgba(8, 12, 16, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.desktop-drop-zone.active {
+  opacity: 1;
+}
+
+.desktop-drop-card {
+  background: rgba(18, 26, 36, 0.92);
+  border: 2px dashed var(--brand, #00f0ff);
+  border-radius: 20px;
+  padding: 48px 56px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(0, 240, 255, 0.25);
+  animation: dropCardPulse 2s infinite ease-in-out;
+  max-width: 480px;
+  width: 90%;
+}
+
+@keyframes dropCardPulse {
+  0%, 100% {
+    transform: scale(1);
+    border-color: var(--brand, #00f0ff);
+  }
+  50% {
+    transform: scale(1.02);
+    border-color: var(--ok2, #25c2a0);
+    box-shadow: 0 25px 70px rgba(0, 0, 0, 0.85), 0 0 50px rgba(37, 194, 160, 0.35);
+  }
+}
+
+.desktop-drop-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+.desktop-drop-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 0.3px;
+  margin-bottom: 6px;
+}
+
+.desktop-drop-subtitle {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+/* ==========================================================================
+   Screensaver & OLED Protection Engine Overlay
+   ========================================================================== */
+.desktop-screensaver {
+  position: fixed;
+  inset: 0;
+  z-index: 99995;
+  background: #000;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+
+.desktop-screensaver.active {
+  opacity: 1;
+  pointer-events: auto;
+  cursor: none;
+}
+
+.screensaver-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.screensaver-clock-display {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  color: #fff;
+  transition: top 45s ease, left 45s ease;
+  user-select: none;
+  pointer-events: none;
+}
+
+.screensaver-clock-time {
+  font-size: clamp(48px, 9vw, 92px);
+  font-weight: 800;
+  font-family: var(--font-mono, monospace);
+  letter-spacing: 3px;
+  color: var(--brand, #00f0ff);
+  text-shadow: 0 0 30px rgba(0, 240, 255, 0.45);
+  line-height: 1;
+}
+
+.screensaver-clock-date {
+  font-size: clamp(14px, 2vw, 20px);
+  font-weight: 600;
+  color: #94a3b8;
+  margin-top: 14px;
+  letter-spacing: 0.8px;
+}
+
+.screensaver-wake-hint {
+  position: absolute;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.35);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  animation: wakeHintPulse 3s infinite ease-in-out;
+  pointer-events: none;
+}
+
+@keyframes wakeHintPulse {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 0.8; }
+}
+
+.screensaver-style-card {
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.screensaver-style-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.25) !important;
+}
+
+.screensaver-style-card.active {
+  border-color: var(--brand, #00f0ff) !important;
+  background: rgba(0, 240, 255, 0.08) !important;
+  box-shadow: 0 0 16px rgba(0, 240, 255, 0.15) !important;
+}
+
+

@@ -28,6 +28,8 @@ export const SUBPANE_MAP = {
   'mgmt-sec-glass': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-glass' },
   'mgmt-pane-dock': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-dock' },
   'mgmt-sec-dock': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-dock' },
+  'mgmt-pane-screensaver': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-screensaver' },
+  'mgmt-sec-screensaver': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-screensaver' },
   'mgmt-sec-wallpaper': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-wallpaper' },
   'mgmt-pane-language': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-language' },
   'mgmt-sec-language': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-language' },
@@ -2252,6 +2254,10 @@ export function initManagement() {
     } else if (paneId === 'mgmt-pane-dock') {
       if (typeof window.initDockSettingsControls === 'function') {
         window.initDockSettingsControls();
+      }
+    } else if (paneId === 'mgmt-pane-screensaver') {
+      if (typeof window.initScreensaverSettingsControls === 'function') {
+        window.initScreensaverSettingsControls();
       }
     } else if (paneId === 'mgmt-pane-theme') {
       if (typeof syncDesktopThemeUI === 'function') syncDesktopThemeUI();
