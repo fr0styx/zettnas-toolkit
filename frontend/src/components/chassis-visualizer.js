@@ -1,9 +1,9 @@
-import { escapeHtml, trapFocus } from '../utils.js';
+import { escapeHtml, trapFocus, copyTextToClipboard } from '../utils.js';
 import { api } from '../api.js';
 import { t } from '../i18n.js';
 import { ZettEventBus } from '../event-bus.js';
 import { announceA11y } from '../a11y.js';
-import { showToast } from '../toast.js';
+import { showToast, showConfirmToast } from '../toast.js';
 import { state } from '../state.js';
 import { makeDraggable } from './dock.js';
 
@@ -57,8 +57,9 @@ export async function triggerLocateDisk(devName, targetElement = null) {
     }, 5200);
   }
 
-  // 3. Screen reader a11y announcement
+  // 3. Screen reader a11y announcement & user toast
   announceA11y(`Locating drive ${devName}. Physical bay indicator flashing.`);
+  showToast(`⚡ Locating drive /dev/${devName}: Pulsing physical activity LED and backplane indicator for 5s to identify bay.`, 'info');
 
   // 4. Issue backend hardware strobe request
   try {
@@ -179,11 +180,16 @@ export function renderChassisTwin(container, disks = [], options = {}) {
             <span class="bay-status-badge empty">VACANT</span>
           </div>
           <div class="bay-tray-handle">
-            <svg class="bay-icon" viewBox="0 0 24 24"><use href="#i-disk"/></svg>
-            <span class="bay-label">EMPTY TRAY</span>
+            <div class="bay-led-lens off"></div>
+            <div class="bay-drive-info">
+              <span class="bay-drive-model" style="opacity: 0.5;">VACANT</span>
+              <span class="bay-drive-dev" style="opacity: 0.4;">Slot ${slotNum} Available</span>
+              <span class="bay-sub-badge" style="opacity: 0.35;">STANDBY READY</span>
+            </div>
           </div>
           <div class="bay-footer">
-            <span class="bay-meta">NO DISK</span>
+            <span class="bay-meta" style="font-size:10px; color:var(--muted); letter-spacing:0.04em;">NO DISK</span>
+            <span class="bay-health-tag" style="opacity:0.3;">EMPTY</span>
           </div>
         </div>
       `;
@@ -298,7 +304,18 @@ export function renderChassisTwin(container, disks = [], options = {}) {
     slot.addEventListener('click', (e) => {
       if (e.target.closest('.bay-locate-btn')) return;
       const dev = slot.dataset.dev;
-      if (dev) {
+      if (!dev) return;
+      const isStandby = slot.classList.contains('standby') || Boolean(slot.querySelector('.bay-led-lens')?.classList.contains('standby-pulse'));
+      if (isStandby) {
+        showConfirmToast(
+          'Drive in Standby Mode',
+          `Drive /dev/${dev} in this bay is currently sleeping. Querying S.M.A.R.T. will spin up the disk. Are you sure you want to wake it?`,
+          () => {
+            showToast(`Waking disk /dev/${dev}...`, 'info');
+            ZettEventBus.emit('modal:smart:open', { dev, forceWake: true });
+          }
+        );
+      } else {
         ZettEventBus.emit('modal:smart:open', dev);
       }
     });
@@ -1239,12 +1256,16 @@ export async function fetchAndRenderRemoteStorage(container) {
 
     // Quick Connect copy buttons
     container.querySelectorAll('.btn-qc-copy').forEach((btn) => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', async () => {
         const text = btn.dataset.copy;
         if (text) {
-          navigator.clipboard.writeText(text);
+          const ok = await copyTextToClipboard(text);
           playChirp(880, 0.08, 'triangle');
-          showToast('Copied to clipboard!', 'info');
+          if (ok) {
+            showToast('Copied to clipboard!', 'info');
+          } else {
+            showToast('Failed to copy to clipboard', 'warn');
+          }
         }
       });
     });
@@ -1346,9 +1367,13 @@ export function openWebdavConfigModal(currentConfig, onSuccess) {
   if (authToggle) authToggle.checked = currentConfig?.auth_enabled ?? true;
   if (roToggle) roToggle.checked = currentConfig?.read_only ?? false;
 
+  modal.classList.add('open');
   modal.style.display = 'flex';
 
-  const close = () => { modal.style.display = 'none'; };
+  const close = () => {
+    modal.classList.remove('open');
+    modal.style.display = 'none';
+  };
   const cBtn = document.getElementById('modal-webdav-close-btn');
   const canBtn = document.getElementById('modal-webdav-cancel-btn');
   if (cBtn) cBtn.onclick = close;
@@ -1397,9 +1422,13 @@ export async function openNewCloudRemoteModal(onSuccess) {
   if (errorBox) errorBox.style.display = 'none';
   if (nameInput) nameInput.value = '';
 
+  modal.classList.add('open');
   modal.style.display = 'flex';
 
-  const close = () => { modal.style.display = 'none'; };
+  const close = () => {
+    modal.classList.remove('open');
+    modal.style.display = 'none';
+  };
   const cBtn = document.getElementById('modal-remote-close-btn');
   const canBtn = document.getElementById('modal-remote-cancel-btn');
   if (cBtn) cBtn.onclick = close;
@@ -1530,6 +1559,7 @@ export async function openCreateStoragePoolModal(onSuccess) {
   const submitBtn = document.getElementById('create-pool-submit-btn');
 
   const close = () => {
+    modal.classList.remove('open');
     modal.style.display = 'none';
   };
 
@@ -1540,6 +1570,7 @@ export async function openCreateStoragePoolModal(onSuccess) {
   const modalHdr = modal.querySelector('.smart-modal-header');
   if (modalWin && modalHdr) makeDraggable(modalWin, modalHdr);
 
+  modal.classList.add('open');
   modal.style.display = 'flex';
   if (errorBox) errorBox.style.display = 'none';
 
@@ -1637,6 +1668,7 @@ export function openCreateNetworkShareModal(onSuccess) {
   const submitBtn = document.getElementById('create-share-submit-btn');
 
   const close = () => {
+    modal.classList.remove('open');
     modal.style.display = 'none';
   };
 
@@ -1647,6 +1679,7 @@ export function openCreateNetworkShareModal(onSuccess) {
   const modalHdr = modal.querySelector('.smart-modal-header');
   if (modalWin && modalHdr) makeDraggable(modalWin, modalHdr);
 
+  modal.classList.add('open');
   modal.style.display = 'flex';
   if (errorBox) errorBox.style.display = 'none';
 
@@ -1726,6 +1759,7 @@ export async function openSnapshotsModal(poolId = 'default_pool') {
   const listMount = document.getElementById('snapshots-list-mount');
 
   const close = () => {
+    modal.classList.remove('open');
     modal.style.display = 'none';
   };
 
@@ -1735,6 +1769,7 @@ export async function openSnapshotsModal(poolId = 'default_pool') {
   const modalHdr = modal.querySelector('.smart-modal-header');
   if (modalWin && modalHdr) makeDraggable(modalWin, modalHdr);
 
+  modal.classList.add('open');
   modal.style.display = 'flex';
 
   async function loadSnapshots() {

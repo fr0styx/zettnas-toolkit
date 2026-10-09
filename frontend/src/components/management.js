@@ -12,8 +12,8 @@ import { fetchAndRenderMetrics } from './metrics-chart.js';
 import { bringToFront, DockManager, makeDraggable, saveWindowBounds, saveOpenWindowsState } from './dock.js';
 import { state } from '../state.js';
 import { api } from '../api.js';
-import { showToast } from '../toast.js';
-import { trapFocus, escapeHtml } from '../utils.js';
+import { showToast, showConfirmToast } from '../toast.js';
+import { trapFocus, escapeHtml, copyTextToClipboard } from '../utils.js';
 import { t, getLanguage } from '../i18n.js';
 
 let _activeProfile = 'balanced';
@@ -83,6 +83,40 @@ export function updateManagementTelemetry(stats) {
     if (sideStorageBadge) {
       sideStorageBadge.textContent = `${stats.disks.length} Drives`;
       sideStorageBadge.style.display = 'inline-block';
+    }
+
+    // Live update Disks Inventory table if currently rendered
+    const diskTbody = document.getElementById('mgmt-disks-inventory-tbody');
+    if (diskTbody) {
+      const existingRows = diskTbody.querySelectorAll('tr[data-dev]');
+      if (existingRows.length > 0) {
+        stats.disks.forEach((d) => {
+          const devName = d.dev || d.name;
+          if (!devName) return;
+          const row = diskTbody.querySelector(`tr[data-dev="${devName}"]`);
+          if (row) {
+            const isStandby = Boolean(d.standby || d.health === 'standby');
+            const thermal = getThermalLevel(d.temp, isStandby);
+            const healthStr = isStandby ? 'STANDBY' : (d.health ? String(d.health).toUpperCase() : 'OK');
+            
+            const healthTag = row.querySelector('.bay-health-tag');
+            if (healthTag) {
+              healthTag.className = `bay-health-tag ${thermal.cls}`;
+              healthTag.textContent = healthStr;
+            }
+            const tempPill = row.querySelector('.bay-temp-pill');
+            if (tempPill) {
+              tempPill.style.color = thermal.color;
+              tempPill.style.borderColor = thermal.color;
+              tempPill.textContent = thermal.text;
+            }
+            const sizeTd = row.children[3];
+            if (sizeTd && (d.size_formatted || d.size)) {
+              sizeTd.textContent = d.size_formatted || d.size;
+            }
+          }
+        });
+      }
     }
   }
 
@@ -788,8 +822,12 @@ export async function openAppDeployModal(appId) {
   await updateComposePreview();
 
   document.getElementById('adm-copy-btn').onclick = () => {
-    navigator.clipboard.writeText(composePre.textContent).then(() => {
-      showToast('Docker Compose YAML copied to clipboard!', 'success');
+    copyTextToClipboard(composePre.textContent).then((ok) => {
+      if (ok) {
+        showToast('Docker Compose YAML copied to clipboard!', 'success');
+      } else {
+        showToast('Failed to copy to clipboard', 'warn');
+      }
     });
   };
 
@@ -1626,7 +1664,20 @@ export async function fetchAndRenderDisksInventory() {
     tbody.querySelectorAll('.btn-smart-row').forEach((btn) => {
       btn.addEventListener('click', () => {
         const dev = btn.dataset.dev;
-        ZettEventBus.emit('modal:smart:open', dev);
+        const row = btn.closest('tr');
+        const isStandby = row?.querySelector('.bay-health-tag')?.textContent?.trim() === 'STANDBY';
+        if (isStandby) {
+          showConfirmToast(
+            'Drive in Standby Mode',
+            `Disk /dev/${dev} is currently sleeping. Querying S.M.A.R.T. diagnostics will wake the drive, spinning up platters. Do you wish to wake it?`,
+            () => {
+              showToast(`Waking disk /dev/${dev}...`, 'info');
+              ZettEventBus.emit('modal:smart:open', { dev, forceWake: true });
+            }
+          );
+        } else {
+          ZettEventBus.emit('modal:smart:open', dev);
+        }
       });
     });
   } catch (err) {

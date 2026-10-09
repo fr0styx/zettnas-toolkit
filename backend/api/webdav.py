@@ -1,18 +1,20 @@
 """
 ZettNAS Toolkit - WebDAV API & Streaming Reverse Proxy
-Provides WebDAV daemon controls and transparent HTTP proxying on /webdav.
+Provides WebDAV daemon controls, modern WebDAV Portal UI, and transparent HTTP proxying on /webdav.
 """
 
 import asyncio
 import logging
+import os
 from typing import Any, Dict, Optional
 import httpx
 from fastapi import APIRouter, HTTPException, Request
-from fastapi.responses import StreamingResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
 import backend.config as config
 from backend.services.webdav_engine import get_webdav_engine
+from backend.services.webdav_portal import render_webdav_login, render_webdav_portal
 
 logger = logging.getLogger("ZettNAS.WebDAVApi")
 
@@ -70,6 +72,42 @@ async def restart_webdav():
     return await asyncio.to_thread(engine.restart)
 
 
+# WebDAV Portal Authentication Routes
+@proxy_router.post("/webdav/auth/login")
+async def webdav_portal_login(request: Request):
+    form = await request.form()
+    username = str(form.get("username", "")).strip()
+    password = str(form.get("password", "")).strip()
+
+    engine = get_webdav_engine()
+    cfg = engine.load_config()
+    expected_user = cfg.get("username", "admin") or "admin"
+    expected_pass = cfg.get("password") or config.WEB_PASSWORD or "admin"
+
+    if username == expected_user and password == expected_pass:
+        resp = RedirectResponse(url="/webdav/", status_code=303)
+        resp.set_cookie(
+            key="webdav_session",
+            value=f"{username}:authed",
+            max_age=86400 * 7,
+            httponly=True,
+            samesite="lax",
+        )
+        return resp
+    else:
+        return HTMLResponse(
+            render_webdav_login(error_msg="Invalid WebDAV username or password."),
+            status_code=401,
+        )
+
+
+@proxy_router.get("/webdav/auth/logout")
+async def webdav_portal_logout():
+    resp = RedirectResponse(url="/webdav/", status_code=303)
+    resp.delete_cookie("webdav_session")
+    return resp
+
+
 # Transparent Reverse Proxy for /webdav
 WEBDAV_METHODS = [
     "GET",
@@ -88,10 +126,32 @@ WEBDAV_METHODS = [
 ]
 
 
+def _is_browser_interactive_request(request: Request) -> bool:
+    if request.method != "GET":
+        return False
+    accept = request.headers.get("accept", "")
+    if "text/html" not in accept:
+        return False
+    ua = request.headers.get("user-agent", "").lower()
+    client_signatures = ["webdav", "davfs", "cyberduck", "rclone", "curl", "wget", "python", "git"]
+    if any(sig in ua for sig in client_signatures):
+        return False
+    return True
+
+
+def _check_webdav_portal_auth(request: Request, cfg: Dict[str, Any]) -> bool:
+    if not cfg.get("auth_enabled", True):
+        return True
+    session_cookie = request.cookies.get("webdav_session")
+    expected_user = cfg.get("username", "admin") or "admin"
+    if session_cookie and session_cookie.startswith(f"{expected_user}:"):
+        return True
+    return False
+
+
 async def _proxy_webdav(request: Request, path: str = ""):
     engine = get_webdav_engine()
     if not engine.is_running():
-        # Try auto-starting if enabled
         cfg = engine.load_config()
         if cfg.get("enabled", True):
             await asyncio.to_thread(engine.start)
@@ -167,9 +227,34 @@ async def _proxy_webdav(request: Request, path: str = ""):
 
 @proxy_router.api_route("/webdav", methods=WEBDAV_METHODS)
 async def webdav_proxy_root(request: Request):
+    if request.method in ("GET", "HEAD"):
+        return RedirectResponse(url="/webdav/", status_code=307)
     return await _proxy_webdav(request, "")
 
 
 @proxy_router.api_route("/webdav/{path:path}", methods=WEBDAV_METHODS)
 async def webdav_proxy_subpath(request: Request, path: str):
+    # Exclude internal auth routes
+    if path.startswith("auth/"):
+        raise HTTPException(status_code=404, detail="Not Found")
+
+    engine = get_webdav_engine()
+    cfg = engine.load_config()
+
+    # Browser UI handling
+    if _is_browser_interactive_request(request) and not request.query_params.get("raw"):
+        root_path = str(cfg.get("root_path", config.POOL_PATH))
+        clean_path = path.strip("/")
+        abs_target = os.path.abspath(os.path.join(root_path, clean_path)) if clean_path else os.path.abspath(root_path)
+
+        # Check authentication first
+        if not _check_webdav_portal_auth(request, cfg):
+            return HTMLResponse(render_webdav_login(), status_code=200)
+
+        # If target is a directory, render the ZettNAS WebDAV Cloud Portal
+        if os.path.isdir(abs_target):
+            username = cfg.get("username", "admin") or "admin"
+            return HTMLResponse(render_webdav_portal(clean_path, root_path, username), status_code=200)
+
+    # For WebDAV clients, direct file downloads, or non-HTML requests, pass to streaming proxy
     return await _proxy_webdav(request, path)

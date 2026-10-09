@@ -2677,15 +2677,25 @@ select.tz-select-input option, select.tz-select option {
 
 #app-deploy-modal-overlay,
 #container-delete-modal-overlay,
-#docker-prune-modal-overlay {
-  z-index: 10020 !important;
+#docker-prune-modal-overlay,
+#modal-new-cloud-remote,
+#modal-webdav-config,
+#modal-create-storage-pool,
+#modal-create-network-share,
+#modal-btrfs-snapshots {
+  z-index: 10030 !important;
   background: rgba(0, 0, 0, 0.65) !important;
   backdrop-filter: blur(8px) !important;
   -webkit-backdrop-filter: blur(8px) !important;
 }
 #app-deploy-modal-overlay.open,
 #container-delete-modal-overlay.open,
-#docker-prune-modal-overlay.open {
+#docker-prune-modal-overlay.open,
+#modal-new-cloud-remote.open,
+#modal-webdav-config.open,
+#modal-create-storage-pool.open,
+#modal-create-network-share.open,
+#modal-btrfs-snapshots.open {
   display: flex !important;
   opacity: 1 !important;
   pointer-events: auto !important;
@@ -2693,7 +2703,12 @@ select.tz-select-input option, select.tz-select option {
 }
 #app-deploy-modal-overlay:not(.open),
 #container-delete-modal-overlay:not(.open),
-#docker-prune-modal-overlay:not(.open) {
+#docker-prune-modal-overlay:not(.open),
+#modal-new-cloud-remote:not(.open),
+#modal-webdav-config:not(.open),
+#modal-create-storage-pool:not(.open),
+#modal-create-network-share:not(.open),
+#modal-btrfs-snapshots:not(.open) {
   display: none !important;
   opacity: 0 !important;
   pointer-events: none !important;
@@ -7561,6 +7576,9 @@ body.theme-yak .widget-drag-handle:hover {
   padding: 10px;
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
+  min-height: 110px;
+  box-sizing: border-box;
   gap: 8px;
   transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
   user-select: none;
@@ -7577,8 +7595,15 @@ body.theme-yak .widget-drag-handle:hover {
 }
 
 .chassis-bay-slot.empty {
-  opacity: 0.4;
+  opacity: 0.6;
   border-style: dashed;
+}
+
+.chassis-bay-slot.empty .bay-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  opacity: 0.5;
 }
 
 .chassis-bay-slot.strobe-active {

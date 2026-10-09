@@ -1,4 +1,5 @@
-import { showToast } from "./toast.js";
+import { showToast, showConfirmToast } from "./toast.js";
+import { state } from "./state.js";
 import { ZettEventBus } from './event-bus.js';
 import { api } from './api.js';
 import { DockManager, bringToFront, makeDraggable } from './components/dock.js';
@@ -156,7 +157,27 @@ window.addEventListener('DOMContentLoaded', () => {
 
 let _smartFetchController = null;
 
-async function openSmartModal(devName) {
+async function openSmartModal(devName, forceWake = false) {
+  if (!devName) return;
+
+  if (!forceWake) {
+    const disks = state?.latestStats?.disks || _latestStats?.disks || [];
+    const diskData = disks.find((d) => (d.dev || d.name) === devName || d.name === devName || d.dev === devName);
+    const isStandby = Boolean(diskData?.standby || diskData?.health === 'standby');
+    if (isStandby) {
+      const diskLabel = diskData?.model ? `${diskData.model} (/dev/${devName})` : `/dev/${devName}`;
+      showConfirmToast(
+        'Drive in Standby Mode',
+        `Disk ${diskLabel} is currently sleeping. Querying S.M.A.R.T. diagnostics will wake the drive, spinning up platters and consuming power. Do you wish to proceed and wake it?`,
+        () => {
+          showToast(`Waking disk /dev/${devName}...`, 'info');
+          openSmartModal(devName, true);
+        }
+      );
+      return;
+    }
+  }
+
   if (_smartFetchController) _smartFetchController.abort();
   _smartFetchController = new AbortController();
   if (!smartOverlay) smartOverlay = document.getElementById("smart-modal-overlay");
@@ -428,7 +449,11 @@ ZettEventBus.addEventListener('stats_tick', (e) => {
 });
 
 ZettEventBus.addEventListener('modal:smart:open', (e) => {
-    openSmartModal(e.detail);
+    if (typeof e.detail === 'object' && e.detail !== null) {
+        openSmartModal(e.detail.dev, Boolean(e.detail.forceWake));
+    } else {
+        openSmartModal(e.detail, false);
+    }
 });
 
 ZettEventBus.addEventListener('modal:metric:open', (e) => {
