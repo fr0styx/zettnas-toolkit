@@ -190,7 +190,7 @@ def serve_index(request: Request):
 
 # Mount static assets using native FastAPI StaticFiles for streaming, proper Range headers, and zero RAM caching
 if os.path.isdir(STATIC_DIR):
-    app.mount("/", StaticFiles(directory=STATIC_DIR), name="static")
+    app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="static")
 
 
 class ZettServer(uvicorn.Server):
