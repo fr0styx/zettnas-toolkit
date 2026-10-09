@@ -6,6 +6,8 @@ Modular Backend Architecture
 import asyncio
 import atexit
 import os
+import re
+import secrets
 import threading
 import time
 from contextlib import asynccontextmanager
@@ -17,6 +19,7 @@ from fastapi.staticfiles import StaticFiles
 from backend import __version__
 from backend.api import api_router
 from backend.auth import _load_sessions, auth_middleware
+from backend.logging_config import correlation_id_ctx, setup_structured_logging
 from backend.config import (
     COLLECTOR_WATCHDOG_SECS,
     DATA_DIR,
@@ -47,6 +50,7 @@ from backend.state import Z_STATE, _load_events, add_event
 
 def startup_system():
     """System initialization and background services launch."""
+    setup_structured_logging()
     read_cpu_util()
     if DATA_DIR:
         os.makedirs(DATA_DIR, exist_ok=True)
@@ -169,6 +173,20 @@ async def security_headers_middleware(request: Request, call_next):
 
 # Authentication middleware
 app.middleware("http")(auth_middleware)
+
+
+# Request correlation ID tracking middleware (outermost in processing chain)
+@app.middleware("http")
+async def correlation_id_middleware(request: Request, call_next):
+    corr_id = request.headers.get("X-Correlation-ID") or secrets.token_hex(8)
+    token = correlation_id_ctx.set(corr_id)
+    try:
+        response = await call_next(request)
+        response.headers["X-Correlation-ID"] = corr_id
+        return response
+    finally:
+        correlation_id_ctx.reset(token)
+
 
 # WebDAV streaming reverse proxy
 app.include_router(webdav_proxy_router)

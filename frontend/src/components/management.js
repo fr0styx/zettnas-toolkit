@@ -2696,6 +2696,12 @@ export function initManagement() {
     });
   }
 
+  // Diagnostics bundle download button
+  const downloadDiagBtn = document.getElementById('btn-download-diagnostics');
+  if (downloadDiagBtn) {
+    downloadDiagBtn.addEventListener('click', downloadDiagnosticsBundle);
+  }
+
   // Notification Center triggers
   const sendTestAlertBtn = document.getElementById('btn-send-test-alert');
   if (sendTestAlertBtn) {
@@ -2929,6 +2935,29 @@ export async function fetchAndRenderSystemAbout(force = false) {
       btnIcon.textContent = '🔄';
       btnText.textContent = 'Check for Updates';
     }
+  }
+}
+
+export async function downloadDiagnosticsBundle() {
+  const btn = document.getElementById('btn-download-diagnostics');
+  const btnIcon = document.getElementById('btn-download-diagnostics-icon');
+  const btnText = document.getElementById('btn-download-diagnostics-text');
+
+  if (btn) btn.disabled = true;
+  if (btnIcon) btnIcon.textContent = '⏳';
+  if (btnText) btnText.textContent = 'Generating Archive...';
+
+  showToast('Generating diagnostics bundle (scrubbing secrets)...', 'info');
+
+  try {
+    const filename = await api.downloadBlob('/api/system/diagnostics-bundle', 'zettnas_diagnostics.zip');
+    showToast(`Diagnostics bundle downloaded successfully (${filename}).`, 'success');
+  } catch (err) {
+    showToast(`Failed to download diagnostics: ${err.message}`, 'error');
+  } finally {
+    if (btn) btn.disabled = false;
+    if (btnIcon) btnIcon.textContent = '📦';
+    if (btnText) btnText.textContent = 'Download Diagnostics Bundle';
   }
 }
 

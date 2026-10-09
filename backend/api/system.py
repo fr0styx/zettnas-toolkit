@@ -1,14 +1,19 @@
 import aiofiles
 import asyncio
+from datetime import datetime, timezone
+import io
 import json
 import os
+import platform
 import re
 import shutil
+import sys
 import threading
 import time
+import zipfile
 
 from fastapi import APIRouter, Depends, HTTPException, Request
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from pydantic import BaseModel
 from typing import Any, Dict, List, Optional
 
@@ -32,7 +37,7 @@ from backend.hardware.docker_stats import container_action, read_docker_containe
 from backend.hardware.fans import set_fan_pwm
 from backend.hardware.led import apply_led_state
 from backend.hardware.screen import get_screen_state, save_screen_state
-from backend.hardware.storage import get_current_layout
+from backend.hardware.storage import detect_chassis_model, get_current_layout
 from backend.hardware.unraid import read_unraid_status
 from backend.hardware.ups import read_ups_status
 from backend.models.schemas import (
@@ -50,6 +55,10 @@ from backend.models.schemas import (
     SystemProfileRequest,
 )
 from backend.services.copy_engine import _do_copy
+from backend.services.notifications import DEFAULT_NOTIFICATION_CONFIG, NOTIFICATIONS_FILE
+from backend.hardware.memory import read_mem
+from backend.hardware.pal_storage import get_storage_platform
+from backend.logging_config import get_recent_logs, sanitize_dict, sanitize_string
 from backend.state import Z_STATE, add_event
 
 router = APIRouter(tags=["System & Storage"])
@@ -1302,3 +1311,133 @@ async def system_network_topology():
     """
     from backend.hardware.network import get_network_topology
     return await asyncio.to_thread(get_network_topology)
+
+
+@router.get(
+    "/system/diagnostics-bundle",
+    dependencies=[Depends(require_scope("system:view", "system:read", "system:config"))],
+)
+async def generate_diagnostics_bundle():
+    """
+    Generates an in-memory zip archive containing complete sanitized system diagnostics:
+    - system_summary.json (platform, kernel, chassis, PAL mode, CPU/RAM, uptime)
+    - hardware_telemetry.json (thermals, fan PWM/RPM, UPS status, screen)
+    - storage_and_smart.json (disks layout, SMART attributes summary)
+    - network_topology.json (physical NICs, speeds, duplex, bridges, bonds, routes, Docker bridge networks)
+    - container_manifests.json (running containers and compose stacks with sensitive env vars redacted)
+    - notifications_summary.json (configured channels with webhooks/tokens redacted)
+    - system_events.json (last 100 system events)
+    - recent_logs.log (sanitized structured log lines)
+    """
+    t0 = time.time()
+
+    # 1. System summary
+    uptime_sec = 0.0
+    try:
+        if os.path.exists("/proc/uptime"):
+            with open("/proc/uptime", "r") as f:
+                uptime_sec = float(f.read().split()[0])
+        else:
+            uptime_sec = round(time.time() - Z_STATE.boot_time, 1)
+    except Exception:
+        uptime_sec = round(time.time() - Z_STATE.boot_time, 1)
+
+    ram_stats = {}
+    try:
+        ram_stats = read_mem()
+    except Exception:
+        pass
+
+    try:
+        pal_adapter = get_storage_platform()
+        pal_caps = pal_adapter.get_capabilities().model_dump()
+    except Exception:
+        pal_caps = {"platform": "unknown"}
+
+    system_summary = {
+        "toolkit_version": __version__,
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "platform": {
+            "system": platform.system(),
+            "release": platform.release(),
+            "version": platform.version(),
+            "machine": platform.machine(),
+            "processor": platform.processor(),
+            "python_version": sys.version,
+        },
+        "chassis_model": detect_chassis_model(),
+        "pal_capabilities": pal_caps,
+        "cpu_count": os.cpu_count(),
+        "memory": ram_stats,
+        "uptime_seconds": uptime_sec,
+    }
+
+    # 2. Hardware telemetry
+    fan_cfg = read_json(FAN_STATE_FILE, {})
+    led_cfg = read_json(LED_STATE_FILE, {})
+    ups_status = read_ups_status()
+    screen_state = get_screen_state()
+    hardware_telemetry = {
+        "fan_state_tracker": Z_STATE.fan_state_tracker,
+        "fan_config": fan_cfg,
+        "led_config": led_cfg,
+        "ups_status": ups_status,
+        "screen_state": screen_state,
+        "fans_released": Z_STATE.fans_released,
+        "critical_temp_active": Z_STATE.critical_temp_active,
+    }
+
+    # 3. Storage and SMART
+    layout = get_current_layout()
+    smart_data = Z_STATE.cached_smart_data or {}
+    storage_and_smart = {
+        "layout": layout,
+        "smart_telemetry": smart_data,
+    }
+
+    # 4. Network topology
+    from backend.hardware.network import get_network_topology
+    net_topology = await asyncio.to_thread(get_network_topology)
+
+    # 5. Containers (sanitized)
+    containers = await asyncio.to_thread(read_docker_containers)
+    sanitized_containers = sanitize_dict(containers)
+
+    # 6. Notifications (sanitized)
+    notif_cfg = read_json(NOTIFICATIONS_FILE, DEFAULT_NOTIFICATION_CONFIG)
+    sanitized_notifs = sanitize_dict(notif_cfg)
+
+    # 7. System events (last 100)
+    events = list(Z_STATE.event_log)
+
+    # 8. Recent logs
+    log_lines = get_recent_logs(max_lines=1000)
+    recent_logs_text = "\n".join(log_lines)
+
+    # Compress into zip in memory
+    zip_buf = io.BytesIO()
+    with zipfile.ZipFile(zip_buf, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
+        zf.writestr("system_summary.json", json.dumps(sanitize_dict(system_summary), indent=2))
+        zf.writestr("hardware_telemetry.json", json.dumps(sanitize_dict(hardware_telemetry), indent=2))
+        zf.writestr("storage_and_smart.json", json.dumps(sanitize_dict(storage_and_smart), indent=2))
+        zf.writestr("network_topology.json", json.dumps(sanitize_dict(net_topology), indent=2))
+        zf.writestr("container_manifests.json", json.dumps(sanitized_containers, indent=2))
+        zf.writestr("notifications_summary.json", json.dumps(sanitized_notifs, indent=2))
+        zf.writestr("system_events.json", json.dumps(sanitize_dict(events), indent=2))
+        zf.writestr("recent_logs.log", sanitize_string(recent_logs_text))
+
+    zip_bytes = zip_buf.getvalue()
+    elapsed = round(time.time() - t0, 3)
+    logger.info(f"[DIAGNOSTICS] Generated bundle ({len(zip_bytes)} bytes) in {elapsed}s")
+
+    timestamp_str = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+    filename = f"zettnas_diagnostics_{timestamp_str}.zip"
+    return Response(
+        content=zip_bytes,
+        media_type="application/zip",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Content-Length": str(len(zip_bytes)),
+        },
+    )

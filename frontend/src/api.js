@@ -112,6 +112,26 @@ export const api = {
     const res = await request(url, { method: 'DELETE', ...options });
     if (!res.ok) throw await ApiError.from(res);
     return res.json();
+  },
+  async downloadBlob(url, defaultFilename = 'download.zip') {
+    const res = await request(url, { method: 'GET' });
+    if (!res.ok) throw await ApiError.from(res);
+    const blob = await res.blob();
+    const disposition = res.headers.get('content-disposition') || '';
+    let filename = defaultFilename;
+    const match = disposition.match(/filename="?([^";]+)"?/);
+    if (match && match[1]) {
+      filename = match[1];
+    }
+    const blobUrl = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(blobUrl);
+    return filename;
   }
 };
 

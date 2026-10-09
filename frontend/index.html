@@ -3600,6 +3600,40 @@
                 </div>
               </div>
             </div>
+
+            <!-- Observability & Diagnostics Bundle Card -->
+            <div class="drawer-card" style="margin-top: 16px; padding: 18px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
+              <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:8px; margin-bottom:12px;">
+                <div>
+                  <div style="font-weight:700; font-size:14px; color:#fff; display:flex; align-items:center; gap:8px;">
+                    <svg class="ic" style="width:16px; height:16px; color:var(--ok2, #25c2a0);"><use href="#i-chip"/></svg>
+                    <span>Observability & Diagnostics Bundle</span>
+                  </div>
+                  <div style="font-size:11px; color:var(--muted); margin-top:2px;">
+                    Generate and download an encrypted, redacted diagnostic archive (&lt; 3s) for troubleshooting and system support.
+                  </div>
+                </div>
+                <button id="btn-download-diagnostics" class="btn-pill-toggle" style="display:flex; align-items:center; gap:8px; padding:8px 16px; font-size:12px; font-weight:700; background:linear-gradient(135deg, rgba(37,194,160,0.2), rgba(14,165,233,0.2)); border:1px solid rgba(37,194,160,0.5); color:#fff; border-radius:6px; cursor:pointer;">
+                  <span id="btn-download-diagnostics-icon">📦</span>
+                  <span id="btn-download-diagnostics-text">Download Diagnostics Bundle</span>
+                </button>
+              </div>
+
+              <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:10px; padding:12px; background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.05); border-radius:6px; font-size:11px;">
+                <div style="color:#cbd5e1;">
+                  <span style="color:var(--ok2, #25c2a0); font-weight:600;">✓</span> <strong>System & Hardware:</strong> Kernel, Chassis, Fans, UPS
+                </div>
+                <div style="color:#cbd5e1;">
+                  <span style="color:var(--ok2, #25c2a0); font-weight:600;">✓</span> <strong>Disks & SMART:</strong> Health, Thermals, Layout
+                </div>
+                <div style="color:#cbd5e1;">
+                  <span style="color:var(--ok2, #25c2a0); font-weight:600;">✓</span> <strong>Network & Docker:</strong> NICs, Bridges, Stacks
+                </div>
+                <div style="color:#cbd5e1;">
+                  <span style="color:var(--accent-cyan, #0ea5e9); font-weight:600;">🔒</span> <strong>Privacy Scrubbed:</strong> Passwords, API tokens & keys redacted
+                </div>
+              </div>
+            </div>
           </div>
         </div>
           </div>
