@@ -10,3 +10,4 @@ pytest-asyncio
 httpx>=0.28.1
 pytest-cov>=4.0.0
 PyYAML>=6.0.1
+argon2-cffi>=23.1.0

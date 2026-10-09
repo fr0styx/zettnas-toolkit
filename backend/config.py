@@ -38,6 +38,7 @@ def _default_data_dir() -> str:
 
 DATA_DIR = _default_data_dir()
 DB_PATH = os.path.join(DATA_DIR, "history.db")
+USERS_DB_PATH = os.path.join(DATA_DIR, "users.db")
 LED_STATE_FILE = os.path.join(DATA_DIR, "led_state.json")
 DASH_LAYOUT_FILE = os.environ.get("LAYOUT_PATH", os.path.join(DATA_DIR, "dash_layout.json"))
 FAN_STATE_FILE = os.path.join(DATA_DIR, "fan_state.json")

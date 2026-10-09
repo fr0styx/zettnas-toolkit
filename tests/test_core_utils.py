@@ -15,8 +15,7 @@ from backend.passwords import hash_password, is_legacy_hash, verify_password
 
 def test_hash_format_is_scrypt():
     h = hash_password("correct horse")
-    parts = h.split("$")
-    assert parts[0] == "scrypt" and len(parts) == 6
+    assert h.startswith("$argon2id$") or (h.startswith("scrypt$") and len(h.split("$")) == 6)
 
 
 def test_hash_is_salted():

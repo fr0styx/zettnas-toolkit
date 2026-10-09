@@ -3,6 +3,30 @@ from pydantic import BaseModel, Field
 
 class LoginRequest(BaseModel):
     password: str
+    username: str | None = None
+    remember_me: bool = False
+
+
+class UserCreateRequest(BaseModel):
+    username: str = Field(..., min_length=2, max_length=32, pattern=r"^[a-zA-Z0-9_\-\.]+$")
+    display_name: str | None = None
+    password: str = Field(..., min_length=8)
+    email: str | None = None
+    role_id: str = "share_user"
+    storage_quota_bytes: int = 0
+
+
+class UserUpdateRequest(BaseModel):
+    display_name: str | None = None
+    email: str | None = None
+    role_id: str | None = None
+    status: str | None = None
+    storage_quota_bytes: int | None = None
+    preferences: dict | None = None
+
+
+class UserPasswordChangeRequest(BaseModel):
+    new_password: str = Field(..., min_length=8)
 
 
 class SecurityUpdateRequest(BaseModel):

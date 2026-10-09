@@ -110,7 +110,7 @@ def test_password_change_invalidates_sessions(client, auth_headers):
 def test_legacy_hash_upgraded_on_login(client):
     config.STORED_PASSWORD_HASH = hashlib.sha256(b"legacy-pass").hexdigest()
     assert client.post("/api/auth/login", json={"password": "legacy-pass"}).status_code == 200
-    assert config.STORED_PASSWORD_HASH.startswith("scrypt$")
+    assert config.STORED_PASSWORD_HASH.startswith("$argon2id$") or config.STORED_PASSWORD_HASH.startswith("scrypt$")
 
 
 def test_security_reports_min_length(client, auth_headers):
@@ -124,6 +124,7 @@ def test_docs_hidden_by_default(client, auth_headers):
 
 def test_docs_require_auth_when_enabled(client, auth_headers, monkeypatch):
     monkeypatch.setattr(config, "ENABLE_API_DOCS", True)
+    client.cookies.clear()
     assert client.get("/openapi.json").status_code == 401
     assert client.get("/openapi.json", headers=auth_headers).status_code == 200
 

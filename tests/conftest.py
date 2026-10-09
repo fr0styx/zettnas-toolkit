@@ -56,8 +56,13 @@ try:
     backend.config.BUTTON_CFG_FILE = os.path.join(DATA_DIR, "button_state.json")
     backend.config.SECURITY_FILE = os.path.join(DATA_DIR, "security.json")
     backend.config.SESSIONS_FILE = os.path.join(DATA_DIR, "sessions.json")
+    backend.config.USERS_DB_PATH = os.path.join(DATA_DIR, "users.db")
     backend.config.WALLPAPER_CONFIG_FILE = os.path.join(DATA_DIR, "wallpaper_config.json")
     backend.config.WALLPAPERS_DIR = os.path.join(DATA_DIR, "wallpapers")
+
+    from backend.users_db import init_users_db
+
+    init_users_db(backend.config.USERS_DB_PATH)
 except Exception:
     pass
 
