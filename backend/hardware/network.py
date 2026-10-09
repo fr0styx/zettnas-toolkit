@@ -109,16 +109,18 @@ def _parse_routes() -> List[Dict[str, Any]]:
                 cidr = _mask_to_cidr(mask)
                 is_default = dest == "0.0.0.0" and flags & 0x0002 != 0
 
-                routes.append({
-                    "iface": iface,
-                    "destination": dest,
-                    "gateway": gateway,
-                    "mask": mask,
-                    "cidr": cidr,
-                    "metric": metric,
-                    "flags": flags,
-                    "is_default": is_default,
-                })
+                routes.append(
+                    {
+                        "iface": iface,
+                        "destination": dest,
+                        "gateway": gateway,
+                        "mask": mask,
+                        "cidr": cidr,
+                        "metric": metric,
+                        "flags": flags,
+                        "is_default": is_default,
+                    }
+                )
     except Exception as e:
         logger.debug(f"Error parsing routes: {e}")
 
@@ -141,7 +143,7 @@ def _get_dns_servers() -> List[str]:
                         line = line.strip()
                         # Unraid network.cfg format
                         if "DNS_SERVER" in line and "=" in line:
-                            val = line.split("=", 1)[1].strip('"\'; ')
+                            val = line.split("=", 1)[1].strip("\"'; ")
                             if val and val not in servers:
                                 servers.append(val)
                         # Standard resolv.conf
@@ -228,16 +230,18 @@ def _get_docker_topology() -> List[Dict[str, Any]]:
                 # Attached containers
                 attached = containers_by_net.get(net_name, [])
 
-                docker_networks.append({
-                    "id": net_id,
-                    "name": net_name,
-                    "driver": driver,
-                    "subnet": subnet,
-                    "gateway": gateway,
-                    "bridge_device": bridge_dev,
-                    "containers": attached,
-                    "container_count": len(attached),
-                })
+                docker_networks.append(
+                    {
+                        "id": net_id,
+                        "name": net_name,
+                        "driver": driver,
+                        "subnet": subnet,
+                        "gateway": gateway,
+                        "bridge_device": bridge_dev,
+                        "containers": attached,
+                        "container_count": len(attached),
+                    }
+                )
     except Exception as e:
         logger.debug(f"Docker network topology query error: {e}")
 
@@ -276,7 +280,9 @@ def get_network_topology() -> Dict[str, Any]:
     if non_shim_defaults:
         default_route = sorted(non_shim_defaults, key=lambda x: x.get("metric", 999))[0]
     else:
-        default_route = next((r for r in sorted(routes, key=lambda x: x.get("metric", 999)) if r.get("is_default")), None)
+        default_route = next(
+            (r for r in sorted(routes, key=lambda x: x.get("metric", 999)) if r.get("is_default")), None
+        )
     default_gw = default_route.get("gateway") if default_route else ""
     primary_iface = default_route.get("iface") if default_route else ""
 
@@ -295,8 +301,12 @@ def get_network_topology() -> Dict[str, Any]:
         except OSError:
             pass
 
-        is_pci_or_platform = ("devices/pci" in link_target or "devices/platform" in link_target) and "devices/virtual" not in link_target
-        is_virtual = "devices/virtual" in link_target or iface.startswith(("veth", "br-", "docker", "shim-", "tunl", "wg", "tailscale", "tap", "tun"))
+        is_pci_or_platform = (
+            "devices/pci" in link_target or "devices/platform" in link_target
+        ) and "devices/virtual" not in link_target
+        is_virtual = "devices/virtual" in link_target or iface.startswith(
+            ("veth", "br-", "docker", "shim-", "tunl", "wg", "tailscale", "tap", "tun")
+        )
 
         operstate = _read_file(os.path.join(iface_dir, "operstate"), "unknown").lower()
         carrier_str = _read_file(os.path.join(iface_dir, "carrier"), "0")
@@ -341,51 +351,55 @@ def get_network_topology() -> Dict[str, Any]:
                     elif line.startswith("PCI_ID="):
                         pci_id = line.split("=", 1)[1]
 
-            physical_interfaces.append({
-                "name": iface,
-                "state": operstate,
-                "carrier": carrier,
-                "is_up": is_up,
-                "speed_mbps": speed_val if is_up else None,
-                "speed_human": _format_speed(speed_val, is_up),
-                "duplex": duplex,
-                "mtu": mtu,
-                "mac": mac,
-                "master": master,
-                "pci_slot": pci_slot,
-                "driver": driver,
-                "pci_id": pci_id,
-                "rx_bytes": _read_stat(iface_dir, "rx_bytes"),
-                "tx_bytes": _read_stat(iface_dir, "tx_bytes"),
-                "rx_packets": _read_stat(iface_dir, "rx_packets"),
-                "tx_packets": _read_stat(iface_dir, "tx_packets"),
-                "rx_errors": _read_stat(iface_dir, "rx_errors"),
-                "tx_errors": _read_stat(iface_dir, "tx_errors"),
-                "rx_dropped": _read_stat(iface_dir, "rx_dropped"),
-                "tx_dropped": _read_stat(iface_dir, "tx_dropped"),
-            })
+            physical_interfaces.append(
+                {
+                    "name": iface,
+                    "state": operstate,
+                    "carrier": carrier,
+                    "is_up": is_up,
+                    "speed_mbps": speed_val if is_up else None,
+                    "speed_human": _format_speed(speed_val, is_up),
+                    "duplex": duplex,
+                    "mtu": mtu,
+                    "mac": mac,
+                    "master": master,
+                    "pci_slot": pci_slot,
+                    "driver": driver,
+                    "pci_id": pci_id,
+                    "rx_bytes": _read_stat(iface_dir, "rx_bytes"),
+                    "tx_bytes": _read_stat(iface_dir, "tx_bytes"),
+                    "rx_packets": _read_stat(iface_dir, "rx_packets"),
+                    "tx_packets": _read_stat(iface_dir, "tx_packets"),
+                    "rx_errors": _read_stat(iface_dir, "rx_errors"),
+                    "tx_errors": _read_stat(iface_dir, "tx_errors"),
+                    "rx_dropped": _read_stat(iface_dir, "rx_dropped"),
+                    "tx_dropped": _read_stat(iface_dir, "tx_dropped"),
+                }
+            )
 
         # 2. Check for Bonding interfaces
         elif os.path.isdir(os.path.join(iface_dir, "bonding")):
             mode = _read_file(os.path.join(iface_dir, "bonding/mode"), "")
             slaves = _read_file(os.path.join(iface_dir, "bonding/slaves"), "").split()
             active_slave = _read_file(os.path.join(iface_dir, "bonding/active_slave"), "")
-            bonds.append({
-                "name": iface,
-                "mode": mode,
-                "slaves": slaves,
-                "active_slave": active_slave,
-                "carrier": carrier,
-                "is_up": is_up,
-                "speed_mbps": speed_val if is_up else None,
-                "speed_human": _format_speed(speed_val, is_up),
-                "duplex": duplex,
-                "mtu": mtu,
-                "mac": mac,
-                "master": master,
-                "rx_bytes": _read_stat(iface_dir, "rx_bytes"),
-                "tx_bytes": _read_stat(iface_dir, "tx_bytes"),
-            })
+            bonds.append(
+                {
+                    "name": iface,
+                    "mode": mode,
+                    "slaves": slaves,
+                    "active_slave": active_slave,
+                    "carrier": carrier,
+                    "is_up": is_up,
+                    "speed_mbps": speed_val if is_up else None,
+                    "speed_human": _format_speed(speed_val, is_up),
+                    "duplex": duplex,
+                    "mtu": mtu,
+                    "mac": mac,
+                    "master": master,
+                    "rx_bytes": _read_stat(iface_dir, "rx_bytes"),
+                    "tx_bytes": _read_stat(iface_dir, "tx_bytes"),
+                }
+            )
 
         # 3. Check for Host Bridges (e.g. br0)
         elif os.path.isdir(os.path.join(iface_dir, "bridge")) and not iface.startswith(("br-", "docker0")):
@@ -401,17 +415,19 @@ def get_network_topology() -> Dict[str, Any]:
                     bridge_ip = f"{r.get('destination')}/{r.get('cidr')}"
                     break
 
-            bridges.append({
-                "name": iface,
-                "interfaces": sorted(members),
-                "carrier": carrier,
-                "is_up": is_up,
-                "mtu": mtu,
-                "mac": mac,
-                "ip_address": bridge_ip,
-                "rx_bytes": _read_stat(iface_dir, "rx_bytes"),
-                "tx_bytes": _read_stat(iface_dir, "tx_bytes"),
-            })
+            bridges.append(
+                {
+                    "name": iface,
+                    "interfaces": sorted(members),
+                    "carrier": carrier,
+                    "is_up": is_up,
+                    "mtu": mtu,
+                    "mac": mac,
+                    "ip_address": bridge_ip,
+                    "rx_bytes": _read_stat(iface_dir, "rx_bytes"),
+                    "tx_bytes": _read_stat(iface_dir, "tx_bytes"),
+                }
+            )
 
     # Docker network inspection
     docker_networks = _get_docker_topology()
@@ -580,7 +596,12 @@ def read_ip():
                     m = re.search(r"(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})", prev_line)
                     if m:
                         candidate_ip = m.group(1)
-                        if not (candidate_ip.startswith("127.") or candidate_ip.startswith("172.") or candidate_ip.endswith(".255") or candidate_ip == "0.0.0.0"):
+                        if not (
+                            candidate_ip.startswith("127.")
+                            or candidate_ip.startswith("172.")
+                            or candidate_ip.endswith(".255")
+                            or candidate_ip == "0.0.0.0"
+                        ):
                             Z_STATE.discovered_host_ip = candidate_ip
                             return candidate_ip
         except Exception:

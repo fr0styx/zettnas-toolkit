@@ -255,7 +255,9 @@ def restore_storage_snapshot(pool_id: str, req: StorageSnapshotRestoreRequest) -
             detail=f"Forbidden in Observer Mode on {adapter.get_platform_type().value}.",
         )
     try:
-        res = adapter.restore_snapshot(pool_id=pool_id, snapshot_name=req.snapshot_name, target_subvol=req.target_subvol)
+        res = adapter.restore_snapshot(
+            pool_id=pool_id, snapshot_name=req.snapshot_name, target_subvol=req.target_subvol
+        )
         if res.get("status") == "error":
             raise HTTPException(status_code=400, detail=res.get("message") or "Snapshot restore failed")
         return res

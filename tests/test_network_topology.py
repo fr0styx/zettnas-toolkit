@@ -97,25 +97,42 @@ def test_get_network_topology_mocked(tmp_path):
     (bonding / "slaves").write_text("eth0 eth1\n")
     (bonding / "active_slave").write_text("eth0\n")
 
-    with patch("backend.hardware.network._find_sys_net_dir", return_value=str(sys_net)), \
-         patch("backend.hardware.network._parse_routes", return_value=[
-             {"iface": "br0", "destination": "0.0.0.0", "gateway": "10.0.0.1", "is_default": True, "metric": 1},
-             {"iface": "br0", "destination": "10.0.0.0", "gateway": "0.0.0.0", "cidr": 24, "is_default": False, "metric": 1},
-         ]), \
-         patch("backend.hardware.network._get_dns_servers", return_value=["10.0.0.1"]), \
-         patch("backend.hardware.network.read_ip", return_value="10.0.0.100"), \
-         patch("backend.hardware.network._get_docker_topology", return_value=[
-             {
-                 "id": "net123456789",
-                 "name": "app_network",
-                 "driver": "bridge",
-                 "subnet": "172.22.0.0/16",
-                 "gateway": "172.22.0.1",
-                 "bridge_device": "br-net123456789",
-                 "containers": [{"name": "web", "ipv4": "172.22.0.2", "mac": "02:42:ac:16:00:02", "ports": ["80:80/tcp"]}],
-                 "container_count": 1,
-             }
-         ]):
+    with (
+        patch("backend.hardware.network._find_sys_net_dir", return_value=str(sys_net)),
+        patch(
+            "backend.hardware.network._parse_routes",
+            return_value=[
+                {"iface": "br0", "destination": "0.0.0.0", "gateway": "10.0.0.1", "is_default": True, "metric": 1},
+                {
+                    "iface": "br0",
+                    "destination": "10.0.0.0",
+                    "gateway": "0.0.0.0",
+                    "cidr": 24,
+                    "is_default": False,
+                    "metric": 1,
+                },
+            ],
+        ),
+        patch("backend.hardware.network._get_dns_servers", return_value=["10.0.0.1"]),
+        patch("backend.hardware.network.read_ip", return_value="10.0.0.100"),
+        patch(
+            "backend.hardware.network._get_docker_topology",
+            return_value=[
+                {
+                    "id": "net123456789",
+                    "name": "app_network",
+                    "driver": "bridge",
+                    "subnet": "172.22.0.0/16",
+                    "gateway": "172.22.0.1",
+                    "bridge_device": "br-net123456789",
+                    "containers": [
+                        {"name": "web", "ipv4": "172.22.0.2", "mac": "02:42:ac:16:00:02", "ports": ["80:80/tcp"]}
+                    ],
+                    "container_count": 1,
+                }
+            ],
+        ),
+    ):
         topo = get_network_topology()
         assert topo["status"] == "ok"
         assert topo["summary"]["total_physical"] == 2

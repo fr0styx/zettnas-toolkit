@@ -102,6 +102,7 @@ def restore_backup_archive(archive_file: BinaryIO) -> None:
 # Hyper-Backup Orchestrator: Jobs, Snapshots & 3-2-1 Cloud Sync
 # =========================================================================
 
+
 def get_backup_jobs() -> List[Dict[str, Any]]:
     """Retrieves all scheduled hyper-backup jobs."""
     raw = read_json(BACKUP_JOBS_FILE, default=[])

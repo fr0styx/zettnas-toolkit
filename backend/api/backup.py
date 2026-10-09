@@ -33,6 +33,7 @@ router = APIRouter(tags=["Backup"])
 # Pydantic Schemas for Hyper-Backup & Snapshots
 # -------------------------------------------------------------------------
 
+
 class BackupJobModel(BaseModel):
     id: Optional[str] = None
     name: str = Field(..., description="Human-readable job name")
@@ -62,6 +63,7 @@ class SnapshotRestoreModel(BaseModel):
 # -------------------------------------------------------------------------
 # Client Preferences
 # -------------------------------------------------------------------------
+
 
 @router.get("/system/client-preferences")
 def get_client_preferences():
@@ -96,6 +98,7 @@ async def save_client_preferences(request: Request):
 # -------------------------------------------------------------------------
 # Configuration Zip Archives (Export / Import)
 # -------------------------------------------------------------------------
+
 
 @router.get("/system/backup", dependencies=[Depends(require_scope("backup:read", "backup:manage", "system:config"))])
 def download_backup():
@@ -154,20 +157,25 @@ async def restore_backup(request: Request):
 # Hyper-Backup Jobs & 3-2-1 Pipelines
 # -------------------------------------------------------------------------
 
+
 @router.get("/backup/schedule", dependencies=[Depends(require_scope("backup:read", "backup:manage", "system:config"))])
 def list_backup_jobs():
     """Lists all scheduled hyper-backup jobs."""
     return {"status": "ok", "jobs": get_backup_jobs()}
 
 
-@router.post("/backup/schedule", dependencies=[Depends(require_scope("backup:write", "backup:manage", "system:config"))])
+@router.post(
+    "/backup/schedule", dependencies=[Depends(require_scope("backup:write", "backup:manage", "system:config"))]
+)
 def create_or_update_backup_job(job: BackupJobModel):
     """Creates or updates a scheduled hyper-backup job."""
     saved = save_backup_job(job.model_dump() if hasattr(job, "model_dump") else job.dict())
     return {"status": "ok", "job": saved}
 
 
-@router.delete("/backup/schedule/{job_id}", dependencies=[Depends(require_scope("backup:write", "backup:manage", "system:config"))])
+@router.delete(
+    "/backup/schedule/{job_id}", dependencies=[Depends(require_scope("backup:write", "backup:manage", "system:config"))]
+)
 def remove_backup_job(job_id: str):
     """Deletes a scheduled hyper-backup job."""
     success = delete_backup_job(job_id)
@@ -176,7 +184,10 @@ def remove_backup_job(job_id: str):
     return {"status": "ok", "message": f"Job '{job_id}' deleted."}
 
 
-@router.post("/backup/schedule/{job_id}/run", dependencies=[Depends(require_scope("backup:write", "backup:manage", "system:config"))])
+@router.post(
+    "/backup/schedule/{job_id}/run",
+    dependencies=[Depends(require_scope("backup:write", "backup:manage", "system:config"))],
+)
 async def trigger_backup_job(job_id: str):
     """Triggers immediate execution of a hyper-backup job in the background."""
     try:
@@ -199,7 +210,11 @@ def list_backup_history(limit: int = 50):
 # Storage Pool Snapshots & Rollback
 # -------------------------------------------------------------------------
 
-@router.get("/backup/snapshots", dependencies=[Depends(require_scope("backup:read", "backup:manage", "system:config", "storage:read"))])
+
+@router.get(
+    "/backup/snapshots",
+    dependencies=[Depends(require_scope("backup:read", "backup:manage", "system:config", "storage:read"))],
+)
 def list_pool_snapshots(pool_id: str = "default"):
     """Lists filesystem snapshots for a storage pool."""
     pal = get_storage_platform()
@@ -211,7 +226,10 @@ def list_pool_snapshots(pool_id: str = "default"):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/backup/snapshots", dependencies=[Depends(require_scope("backup:write", "backup:manage", "system:config", "storage:admin"))])
+@router.post(
+    "/backup/snapshots",
+    dependencies=[Depends(require_scope("backup:write", "backup:manage", "system:config", "storage:admin"))],
+)
 def create_pool_snapshot(req: SnapshotCreateModel):
     """Creates an atomic filesystem snapshot on the storage platform."""
     pal = get_storage_platform()
@@ -231,7 +249,10 @@ def create_pool_snapshot(req: SnapshotCreateModel):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/backup/restore-snapshot", dependencies=[Depends(require_scope("backup:write", "backup:manage", "system:config", "storage:admin"))])
+@router.post(
+    "/backup/restore-snapshot",
+    dependencies=[Depends(require_scope("backup:write", "backup:manage", "system:config", "storage:admin"))],
+)
 def restore_pool_snapshot(req: SnapshotRestoreModel):
     """Restores or rolls back an atomic filesystem snapshot."""
     pal = get_storage_platform()
@@ -253,7 +274,10 @@ def restore_pool_snapshot(req: SnapshotRestoreModel):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.delete("/backup/snapshots/{pool_id}/{snapshot_name}", dependencies=[Depends(require_scope("backup:write", "backup:manage", "system:config", "storage:admin"))])
+@router.delete(
+    "/backup/snapshots/{pool_id}/{snapshot_name}",
+    dependencies=[Depends(require_scope("backup:write", "backup:manage", "system:config", "storage:admin"))],
+)
 def delete_pool_snapshot(pool_id: str, snapshot_name: str):
     """Deletes an atomic filesystem snapshot."""
     pal = get_storage_platform()

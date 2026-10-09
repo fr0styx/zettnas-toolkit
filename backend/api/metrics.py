@@ -97,4 +97,5 @@ async def metrics_network_topology():
     """Network topology metrics and switch status."""
     import asyncio
     from backend.hardware.network import get_network_topology
+
     return await asyncio.to_thread(get_network_topology)

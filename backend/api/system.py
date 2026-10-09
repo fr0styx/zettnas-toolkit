@@ -1310,6 +1310,7 @@ async def system_network_topology():
     bonding, bridges, and Docker bridge IP mappings.
     """
     from backend.hardware.network import get_network_topology
+
     return await asyncio.to_thread(get_network_topology)
 
 
@@ -1397,6 +1398,7 @@ async def generate_diagnostics_bundle():
 
     # 4. Network topology
     from backend.hardware.network import get_network_topology
+
     net_topology = await asyncio.to_thread(get_network_topology)
 
     # 5. Containers (sanitized)

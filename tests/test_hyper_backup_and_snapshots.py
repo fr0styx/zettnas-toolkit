@@ -62,6 +62,7 @@ def auth_client(monkeypatch):
 # 1. Storage Platform Adapter: restore_snapshot
 # =========================================================================
 
+
 def test_unraid_storage_adapter_rejects_restore_snapshot():
     adapter = UnraidStorageAdapter()
     with pytest.raises(PlatformCapabilityError) as exc_info:
@@ -102,6 +103,7 @@ def test_generic_linux_storage_adapter_restore_snapshot(tmp_path, monkeypatch):
 # =========================================================================
 # 2. Hyper-Backup Engine: CRUD & Scheduling
 # =========================================================================
+
 
 def test_backup_jobs_crud():
     assert get_backup_jobs() == []
@@ -144,6 +146,7 @@ def test_backup_jobs_crud():
 # 3. Snapshot Retention Pruning
 # =========================================================================
 
+
 def test_prune_job_snapshots(monkeypatch):
     class MockPlatform:
         def __init__(self):
@@ -176,6 +179,7 @@ def test_prune_job_snapshots(monkeypatch):
 # 4. Job Execution & Pipeline
 # =========================================================================
 
+
 def test_execute_backup_job_local_and_remote(monkeypatch):
     class MockPlatform:
         def get_pool_path(self, pool_id):
@@ -197,16 +201,18 @@ def test_execute_backup_job_local_and_remote(monkeypatch):
     monkeypatch.setattr("backend.services.backup_engine.get_storage_platform", lambda: MockPlatform())
     monkeypatch.setattr("backend.services.backup_engine.get_rclone_engine", lambda: MockRclone())
 
-    job = save_backup_job({
-        "name": "Cloud Backup Pipeline",
-        "source_pool": "default",
-        "source_subvolume": "vault",
-        "destination_type": "remote",
-        "remote_name": "s3-aws",
-        "remote_path": "zettnas-backups/vault",
-        "schedule": "daily",
-        "retention_count": 7,
-    })
+    job = save_backup_job(
+        {
+            "name": "Cloud Backup Pipeline",
+            "source_pool": "default",
+            "source_subvolume": "vault",
+            "destination_type": "remote",
+            "remote_name": "s3-aws",
+            "remote_path": "zettnas-backups/vault",
+            "schedule": "daily",
+            "retention_count": 7,
+        }
+    )
 
     result = execute_backup_job(job["id"])
     assert result["status"] == "success"
@@ -235,6 +241,7 @@ def test_scheduler_lifecycle():
 # =========================================================================
 # 5. REST Endpoints (TestClient)
 # =========================================================================
+
 
 def test_api_backup_schedule_endpoints(client, auth_headers, monkeypatch):
     # 1. List empty schedule
@@ -298,12 +305,16 @@ def test_api_snapshots_endpoints(client, auth_headers, monkeypatch):
     assert len(res.json()["snapshots"]) == 1
 
     # Create snapshot
-    c_res = client.post("/api/backup/snapshots", json={"pool_id": "default", "subvol_name": "data"}, headers=auth_headers)
+    c_res = client.post(
+        "/api/backup/snapshots", json={"pool_id": "default", "subvol_name": "data"}, headers=auth_headers
+    )
     assert c_res.status_code == 200
     assert c_res.json()["result"]["status"] == "created"
 
     # Restore snapshot
-    r_res = client.post("/api/backup/restore-snapshot", json={"pool_id": "default", "snapshot_name": "snap1"}, headers=auth_headers)
+    r_res = client.post(
+        "/api/backup/restore-snapshot", json={"pool_id": "default", "snapshot_name": "snap1"}, headers=auth_headers
+    )
     assert r_res.status_code == 200
     assert r_res.json()["result"]["status"] == "restored"
 
