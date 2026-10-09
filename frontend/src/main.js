@@ -183,12 +183,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const hasAuth = auth.hasToken() || state.isLcdDirect;
   if (hasAuth) {
+    restoreOpenWindowsState();
     fetchDashboardLayout();
     tick();
     startSSE();
     checkLcdStatus();
     loadWallpapers();
-    restoreOpenWindowsState();
   } else {
     setWindowRestorationComplete(true);
     const overlay = document.getElementById('login-overlay');

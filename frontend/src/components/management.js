@@ -1292,6 +1292,8 @@ export function initManagement() {
   }
 
   function showHub() {
+    const earlyStyle = document.getElementById('zettnas-mgmt-early-style');
+    if (earlyStyle) earlyStyle.remove();
     if (hubView) hubView.style.display = 'grid';
     if (detailContainer) detailContainer.style.display = 'none';
     if (headerNav) headerNav.style.display = 'none';
@@ -1372,6 +1374,8 @@ export function initManagement() {
   }
 
   function showSection(targetId) {
+    const earlyStyle = document.getElementById('zettnas-mgmt-early-style');
+    if (earlyStyle) earlyStyle.remove();
     let desiredSubPane = null;
     if (SUBPANE_MAP[targetId]) {
       desiredSubPane = SUBPANE_MAP[targetId].pane;
@@ -1527,6 +1531,12 @@ export function initManagement() {
 
   // Global helper to open / focus Management window
   window.openManagementWindow = (sectionId = null) => {
+    if (sectionId) {
+      showSection(sectionId);
+    } else {
+      showHub();
+    }
+
     if (!DockManager.windows['management']) {
       DockManager.register('management', overlay, '#i-management', 'Management');
     }
@@ -1548,12 +1558,6 @@ export function initManagement() {
       const cBtn = document.getElementById('management-close');
       if (cBtn) cBtn.click();
     });
-
-    if (sectionId) {
-      showSection(sectionId);
-    } else {
-      showHub();
-    }
   };
 
   // Desktop icon click listener

@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { makeDraggable, saveWindowBounds, loadSavedWindowBounds, DockManager, isEventChecked, markEventChecked, resetCheckedEventsState, getEventKey, openConsoleWindow, KNOWN_APPS, toggleConsoleMaximize, renderNotificationCenter, saveOpenWindowsState, restoreOpenWindowsState, applySavedBounds, OPEN_WINDOWS_KEY } from '../components/dock.js';
 import { openEventDetailModal, closeEventDetailModal } from '../modals.js';
+import { initManagement } from '../components/management.js';
 import { state } from '../state.js';
 
 describe('Notification Center Draggable Window & Event Detail Inspector', () => {
@@ -700,6 +701,60 @@ describe('Notification Center Draggable Window & Event Detail Inspector', () => 
 
       expect(mgmtOpenSpy).toHaveBeenCalledWith(subpane);
     });
+  });
+
+  it('openManagementWindow applies desired section and cleans up zettnas-mgmt-early-style without flashing HUB', () => {
+    // Set up minimal DOM for Management window
+    document.body.innerHTML = `
+      <style id="zettnas-mgmt-early-style">.test { color: red; }</style>
+      <div id="management-modal-overlay" class="smart-modal-backdrop" style="display: none;">
+        <div id="management-window" class="smart-modal-window">
+          <div id="management-window-header"></div>
+          <button id="management-close"></button>
+          <aside class="mgmt-sidebar">
+            <button class="mgmt-sidebar-item active" data-mgmt-target="management-hub-view">HUB</button>
+            <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-wallpaper">Appearance</button>
+          </aside>
+          <div id="management-hub-view" style="display: grid;"></div>
+          <div id="management-detail-container" style="display: none;">
+            <div id="mgmt-sec-wallpaper" class="mgmt-detail-card" style="display: none;">
+              <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-wallpaper">Wallpaper</button>
+              <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-widgets">Widgets</button>
+              <div id="mgmt-pane-wallpaper" class="mgmt-tab-pane"></div>
+              <div id="mgmt-pane-widgets" class="mgmt-tab-pane"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Re-initialize management component with new DOM
+    initManagement();
+
+    expect(document.getElementById('zettnas-mgmt-early-style')).not.toBeNull();
+
+    // Call openManagementWindow with 'mgmt-pane-widgets'
+    window.openManagementWindow('mgmt-pane-widgets');
+
+    // Early style should have been removed
+    expect(document.getElementById('zettnas-mgmt-early-style')).toBeNull();
+
+    // HUB button must NOT be active; Appearance button must be active
+    const hubBtn = document.querySelector('.mgmt-sidebar-item[data-mgmt-target="management-hub-view"]');
+    const appBtn = document.querySelector('.mgmt-sidebar-item[data-mgmt-target="mgmt-sec-wallpaper"]');
+    expect(hubBtn.classList.contains('active')).toBe(false);
+    expect(appBtn.classList.contains('active')).toBe(true);
+
+    // Hub view must be hidden, detail container visible, wallpaper card visible
+    expect(document.getElementById('management-hub-view').style.display).toBe('none');
+    expect(document.getElementById('management-detail-container').style.display).toBe('block');
+    expect(document.getElementById('mgmt-sec-wallpaper').style.display).toBe('block');
+
+    // Widgets inner tab must be active and widgets pane displayed
+    const widgetsTab = document.querySelector('.mgmt-inner-tab[data-tab-target="mgmt-pane-widgets"]');
+    const widgetsPane = document.getElementById('mgmt-pane-widgets');
+    expect(widgetsTab.classList.contains('active')).toBe(true);
+    expect(widgetsPane.style.display).toBe('block');
   });
 });
 

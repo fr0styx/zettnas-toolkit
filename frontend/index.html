@@ -87,6 +87,72 @@
         document.head.appendChild(lWp);
       }
     } catch (e) {}
+
+    // Pre-initialize Mission Control active section and subpanes from localStorage to eliminate any jump/flicker to HUB on refresh
+    try {
+      var owRaw = localStorage.getItem('zettnas_open_windows_v1');
+      if (owRaw) {
+        var ow = JSON.parse(owRaw);
+        var mgmt = ow && ow.windows && ow.windows.management;
+        if (mgmt && mgmt.open && !mgmt.minimized) {
+          var ap = mgmt.activePane;
+          if (ap && ap !== 'hub') {
+            var subToSec = {
+              'mgmt-sec-wallpaper': 'mgmt-sec-wallpaper',
+              'mgmt-pane-wallpaper': 'mgmt-sec-wallpaper',
+              'mgmt-pane-theme': 'mgmt-sec-wallpaper',
+              'mgmt-sec-theme': 'mgmt-sec-wallpaper',
+              'mgmt-pane-widgets': 'mgmt-sec-wallpaper',
+              'mgmt-pane-language': 'mgmt-sec-wallpaper',
+              'mgmt-sec-language': 'mgmt-sec-wallpaper',
+              'mgmt-sec-activity': 'mgmt-sec-activity',
+              'mgmt-pane-metrics': 'mgmt-sec-activity',
+              'mgmt-sec-copy': 'mgmt-sec-activity',
+              'mgmt-pane-copy': 'mgmt-sec-activity',
+              'mgmt-sec-services': 'mgmt-sec-services',
+              'mgmt-pane-unraid': 'mgmt-sec-services',
+              'mgmt-sec-unraid': 'mgmt-sec-services',
+              'mgmt-sec-docker': 'mgmt-sec-services',
+              'mgmt-pane-docker': 'mgmt-sec-services',
+              'mgmt-sec-ups': 'mgmt-sec-ups',
+              'mgmt-sec-system-group': 'mgmt-sec-system-group',
+              'mgmt-sec-security': 'mgmt-sec-system-group',
+              'mgmt-pane-security': 'mgmt-sec-system-group',
+              'mgmt-sec-events': 'mgmt-sec-system-group',
+              'mgmt-pane-events': 'mgmt-sec-system-group',
+              'mgmt-sec-system': 'mgmt-sec-system-group',
+              'mgmt-pane-system': 'mgmt-sec-system-group',
+              'mgmt-sec-about': 'mgmt-sec-system-group',
+              'mgmt-pane-about': 'mgmt-sec-system-group'
+            };
+            var sec = subToSec[ap] || ap;
+            var subCss = '';
+            // Reset active styles from HUB sidebar button
+            subCss += '.mgmt-sidebar-item[data-mgmt-target="management-hub-view"] { background: transparent !important; border-color: transparent !important; color: #94a3b8 !important; font-weight: 600 !important; }\n';
+            subCss += '.mgmt-sidebar-item[data-mgmt-target="management-hub-view"]::before { display: none !important; }\n';
+            // Apply active styles to the target section sidebar button
+            subCss += '.mgmt-sidebar-item[data-mgmt-target="' + sec + '"] { background: rgba(37, 194, 160, 0.14) !important; border-color: rgba(37, 194, 160, 0.35) !important; color: #fff !important; font-weight: 700 !important; }\n';
+            subCss += '.mgmt-sidebar-item[data-mgmt-target="' + sec + '"]::before { content: "" !important; position: absolute !important; left: 0 !important; top: 6px !important; bottom: 6px !important; width: 3px !important; border-radius: 0 3px 3px 0 !important; background: var(--ok2, #25c2a0) !important; box-shadow: 0 0 8px var(--ok2, #25c2a0) !important; display: block !important; }\n';
+            // Hide hub grid and show detail container and matching section card
+            subCss += '#management-hub-view { display: none !important; }\n';
+            subCss += '#management-detail-container { display: block !important; }\n';
+            subCss += '#' + sec + ' { display: block !important; }\n';
+            if (ap !== sec) {
+              subCss += '#' + sec + ' .mgmt-inner-tab { background: transparent !important; color: #94a3b8 !important; border-color: transparent !important; }\n';
+              subCss += '#' + sec + ' .mgmt-inner-tab[data-tab-target="' + ap + '"] { background: rgba(37, 194, 160, 0.16) !important; color: #fff !important; border-color: rgba(37, 194, 160, 0.4) !important; font-weight: 700 !important; }\n';
+              subCss += '#' + sec + ' .mgmt-tab-pane { display: none !important; }\n';
+              subCss += '#' + ap + ' { display: block !important; }\n';
+            }
+            if (subCss) {
+              var sMgmt = document.createElement('style');
+              sMgmt.id = 'zettnas-mgmt-early-style';
+              sMgmt.textContent = subCss;
+              document.head.appendChild(sMgmt);
+            }
+          }
+        }
+      }
+    } catch (e) {}
   })();
 </script>
 <style>
