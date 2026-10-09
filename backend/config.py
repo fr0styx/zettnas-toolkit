@@ -64,12 +64,21 @@ MIN_PASSWORD_LENGTH = 8
 # Replaces the old "trust every request from 127.0.0.1" bypass.
 LCD_INTERNAL_TOKEN = secrets.token_urlsafe(32)
 
+# Universal WebDAV & Remote Storage (Sprint 4)
+REMOTES_PATH = os.environ.get("REMOTES_PATH", "/mnt/remotes")
+WEBDAV_PORT = int(os.environ.get("WEBDAV_PORT", "8084"))
+WEBDAV_CONFIG_FILE = os.path.join(DATA_DIR, "webdav_config.json")
+RCLONE_CONFIG_FILE = os.path.join(DATA_DIR, "rclone", "rclone.conf")
+RCLONE_CACHE_DIR = os.path.join(DATA_DIR, "rclone", "vfs_cache")
+
 # Folder browser / mkdir / copy destination are confined to these roots.
-ALLOWED_BROWSE_ROOTS = [p.strip() for p in os.environ.get("BROWSE_ROOTS", POOL_PATH).split(",") if p.strip()]
+_default_roots = f"{POOL_PATH},{REMOTES_PATH}" if os.environ.get("BROWSE_ROOTS") is None else os.environ["BROWSE_ROOTS"]
+ALLOWED_BROWSE_ROOTS = [p.strip() for p in _default_roots.split(",") if p.strip()]
 
 # OpenAPI docs (/docs, /redoc, /openapi.json): disabled unless explicitly enabled,
 # and always require authentication when enabled.
 ENABLE_API_DOCS = os.environ.get("ENABLE_API_DOCS", "0") == "1"
+
 
 # Reject request bodies larger than this (wallpaper uploads are base64 JSON).
 MAX_BODY_BYTES = int(os.environ.get("MAX_BODY_MB", "16")) * 1024 * 1024

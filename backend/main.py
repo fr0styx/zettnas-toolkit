@@ -35,6 +35,8 @@ from backend.hardware.led import apply_led_state
 from backend.hardware.network import read_ip
 from backend.hardware.storage import detect_chassis_model
 from backend.services.broadcaster import broadcaster
+from backend.api.webdav import proxy_router as webdav_proxy_router
+from backend.services.webdav_engine import get_webdav_engine
 from backend.services.notifications import close_notification_client
 from backend.services.button_listener import button_listener_daemon
 from backend.services.lcd_renderer import render_lcd_loop
@@ -78,6 +80,12 @@ def startup_system():
     threading.Thread(target=button_listener_daemon, daemon=True, name="ButtonListener").start()
     threading.Thread(target=render_lcd_loop, daemon=True, name="LcdRenderer").start()
     threading.Thread(target=fan_watchdog_daemon, daemon=True, name="FanWatchdog").start()
+
+    try:
+        get_webdav_engine().start_if_enabled()
+    except Exception as e:
+        logger.warning(f"Could not auto-start WebDAV engine: {e}")
+
     # Backup in case the server exits without running the lifespan shutdown.
     # Registered here (not at import) so tooling that imports main.py is inert.
     atexit.register(lambda: Z_STATE.fans_locked or _shutdown_fans("exit"))
@@ -127,6 +135,10 @@ async def lifespan(app: FastAPI):
         Z_STATE.ui_wake.set()
         broadcaster.shutdown()
         close_notification_client()
+        try:
+            get_webdav_engine().stop()
+        except Exception:
+            pass
         if not Z_STATE.fans_locked:
             _shutdown_fans("shutdown")
 
@@ -150,6 +162,9 @@ async def security_headers_middleware(request: Request, call_next):
 
 # Authentication middleware
 app.middleware("http")(auth_middleware)
+
+# WebDAV streaming reverse proxy
+app.include_router(webdav_proxy_router)
 
 # Register API routers with backwards-compatible /api alias and modern /api/v1 prefix
 app.include_router(api_router, prefix="/api")

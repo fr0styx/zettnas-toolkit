@@ -33,6 +33,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     udev \
     sg3-utils \
     usbutils \
+    rclone \
+    fuse3 \
     chromium \
     chromium-sandbox \
     libnss3 \

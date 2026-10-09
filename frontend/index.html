@@ -2436,6 +2436,10 @@
                 <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-storage"/></svg>
                 <span data-i18n="mgmt.subtab_shares">Network Shares</span>
               </button>
+              <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-storage-remotes">
+                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-globe"/></svg>
+                <span data-i18n="mgmt.subtab_remotes">Remote & Cloud Storage</span>
+              </button>
               <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-storage-disks">
                 <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-chip"/></svg>
                 <span data-i18n="mgmt.subtab_disks">Physical Disks Inventory</span>
@@ -2484,6 +2488,23 @@
               </div>
               <div class="mgmt-detail-body" id="mgmt-storage-shares-mount">
                 <!-- Mounted via fetchAndRenderNetworkShares -->
+              </div>
+            </div>
+
+            <!-- Sub-tab 4: Remote & Cloud Storage -->
+            <div id="mgmt-pane-storage-remotes" class="mgmt-tab-pane" style="display: none;">
+              <div class="mgmt-card-intro" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                <div>
+                  <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-globe"/></svg> <span data-i18n="mgmt.remotes_title">Remote & Cloud Storage Subsystem</span></div>
+                  <div class="mgmt-card-intro-desc" data-i18n="mgmt.remotes_desc">Embedded Universal WebDAV server, FUSE cloud bucket mounting (/mnt/remotes), and automated offsite sync.</div>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <button class="btn-pill-toggle" id="btn-add-cloud-remote" style="background:var(--brand, #0ea5e9); color:#fff; border-color:var(--brand, #0ea5e9);" title="Connect New Cloud Remote">☁️ + Connect Cloud Remote</button>
+                  <button class="btn-pill-toggle" id="btn-refresh-remotes" title="Refresh Remotes" data-i18n="mgmt.refresh">🔄 Refresh</button>
+                </div>
+              </div>
+              <div class="mgmt-detail-body" id="mgmt-storage-remotes-mount">
+                <!-- Mounted via fetchAndRenderRemoteStorage -->
               </div>
             </div>
 
@@ -2960,6 +2981,111 @@
   </div>
   <div id="notif-center-list" data-scrollable="true" style="flex:1; overflow-y:auto; padding:6px 0; min-height:160px;">
     <div style="padding:20px; text-align:center; color:var(--muted); font-size:11px;" data-i18n="notif.empty">No recent notifications.</div>
+  </div>
+</div>
+
+<!-- WebDAV Server Configuration Modal -->
+<div id="modal-webdav-config" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-webdav-title" style="display: none;">
+  <div class="smart-modal-window" style="max-width: 480px; width: 92%; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(14, 165, 233, 0.15); border: 1px solid rgba(255, 255, 255, 0.12);">
+    <div class="smart-modal-header" style="cursor: move;">
+      <span class="smart-modal-title" id="modal-webdav-title" style="display: flex; align-items: center; gap: 8px;">
+        <svg class="ic" style="width: 15px; height: 15px; fill: currentColor; color: var(--brand, #0ea5e9);"><use href="#i-globe"/></svg>
+        <span>Configure WebDAV File Server</span>
+      </span>
+      <div class="os-window-controls">
+        <button class="win-btn close-btn" id="modal-webdav-close-btn" title="Close" aria-label="Close"></button>
+      </div>
+    </div>
+    <form id="webdav-config-form" class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <div>
+          <label style="display:block; font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;">LINE-RATE PORT</label>
+          <input type="number" id="webdav-cfg-port" min="1024" max="65535" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff; border-radius:6px; font-size:12px;" required />
+        </div>
+        <div>
+          <label style="display:block; font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;">ROOT STORAGE PATH</label>
+          <input type="text" id="webdav-cfg-root" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff; border-radius:6px; font-size:12px;" required />
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px;">
+        <div>
+          <label style="display:block; font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;">USERNAME</label>
+          <input type="text" id="webdav-cfg-user" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff; border-radius:6px; font-size:12px;" />
+        </div>
+        <div>
+          <label style="display:block; font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;">NEW PASSWORD</label>
+          <input type="password" id="webdav-cfg-pass" class="tz-select-input" placeholder="(Leave blank to keep)" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff; border-radius:6px; font-size:12px;" />
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 8px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px;">
+        <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:#fff; cursor:pointer;">
+          <input type="checkbox" id="webdav-cfg-auth-toggle" checked style="width:16px; height:16px; accent-color:var(--ok2);" />
+          <span>Require Authentication (Basic Auth)</span>
+        </label>
+        <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:#fff; cursor:pointer;">
+          <input type="checkbox" id="webdav-cfg-readonly-toggle" style="width:16px; height:16px; accent-color:var(--ok2);" />
+          <span>Mount Read-Only (Disallow file uploads & modifications)</span>
+        </label>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.08);">
+        <button type="button" id="modal-webdav-cancel-btn" style="padding: 7px 16px; font-size: 11px; font-weight: 700; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); color: #fff; border-radius: 6px; cursor: pointer;">Cancel</button>
+        <button type="submit" style="padding: 7px 18px; font-size: 11px; font-weight: 700; background: var(--brand, #0ea5e9); border: none; color: #fff; border-radius: 6px; cursor: pointer;">Save & Restart Server</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Connect New Cloud Remote Modal -->
+<div id="modal-new-cloud-remote" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-remote-title" style="display: none;">
+  <div class="smart-modal-window" style="max-width: 540px; width: 92%; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(14, 165, 233, 0.15); border: 1px solid rgba(255, 255, 255, 0.12);">
+    <div class="smart-modal-header" style="cursor: move;">
+      <span class="smart-modal-title" id="modal-remote-title" style="display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 16px;">☁️</span>
+        <span>Connect New Cloud / Remote Storage</span>
+      </span>
+      <div class="os-window-controls">
+        <button class="win-btn close-btn" id="modal-remote-close-btn" title="Close" aria-label="Close"></button>
+      </div>
+    </div>
+    <form id="new-remote-form" class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px; max-height: 80vh; overflow-y: auto;">
+      <div>
+        <label style="display:block; font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:6px; letter-spacing:0.5px;">1. SELECT CLOUD / STORAGE PROVIDER</label>
+        <select id="new-remote-provider-select" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff; border-radius:6px; font-size:12px;">
+          <!-- Dynamically populated from /api/remotes/providers -->
+        </select>
+        <div id="new-remote-provider-desc" style="font-size: 11px; color: var(--muted); margin-top: 6px; line-height: 1.4;"></div>
+      </div>
+
+      <div style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px;">
+        <label style="display:block; font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;">2. REMOTE NAME (Local Identifier)</label>
+        <input type="text" id="new-remote-name" class="tz-select-input" placeholder="e.g. backup-s3, gdrive, offsite-nas" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff; border-radius:6px; font-size:12px;" required pattern="^[a-zA-Z0-9_\-\.]{1,64}$" />
+        <div style="font-size: 10.5px; color: var(--muted); margin-top: 4px;">Will be mounted to: <code style="color:#38bdf8;">/mnt/remotes/&lt;name&gt;</code></div>
+      </div>
+
+      <div style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px;">
+        <div style="font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:8px; letter-spacing:0.5px;">3. PROVIDER PARAMETERS</div>
+        <div id="new-remote-dynamic-fields" style="display: flex; flex-direction: column; gap: 10px;">
+          <!-- Dynamically populated fields based on provider -->
+        </div>
+      </div>
+
+      <div style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 10px;">
+        <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:#fff; cursor:pointer;">
+          <input type="checkbox" id="new-remote-auto-mount" checked style="width:16px; height:16px; accent-color:var(--ok2);" />
+          <span>Mount immediately to <code style="color:#38bdf8;">/mnt/remotes</code> via FUSE</span>
+        </label>
+      </div>
+
+      <div id="new-remote-error-box" style="display: none; padding: 8px 12px; background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); border-radius: 6px; color: #f87171; font-size: 11.5px;"></div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.08);">
+        <button type="button" id="modal-remote-cancel-btn" style="padding: 7px 16px; font-size: 11px; font-weight: 700; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); color: #fff; border-radius: 6px; cursor: pointer;">Cancel</button>
+        <button type="submit" id="new-remote-submit-btn" style="padding: 7px 18px; font-size: 11px; font-weight: 700; background: var(--brand, #0ea5e9); border: none; color: #fff; border-radius: 6px; cursor: pointer;">Save & Connect Remote</button>
+      </div>
+    </form>
   </div>
 </div>
 

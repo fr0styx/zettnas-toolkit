@@ -913,3 +913,509 @@ export function renderStorageTopologyTree(container, disks = [], unraidData = {}
   `;
 }
 
+const PROVIDER_ICONS = {
+  s3: '⚡',
+  b2: '💾',
+  drive: '🔺',
+  onedrive: '☁️',
+  sftp: '🖥️',
+  webdav: '📁',
+  smb: '🔗',
+  dropbox: '📦',
+  unknown: '☁️'
+};
+
+/**
+ * Fetches and renders Universal WebDAV and Cloud Remote Storage Subsystem (Sprint 4)
+ */
+export async function fetchAndRenderRemoteStorage(container) {
+  if (!container) return;
+  container.innerHTML = `
+    <div style="text-align:center; padding:30px; color:var(--muted);">
+      <div class="loader-spinner" style="margin:0 auto 10px;"></div>
+      Scanning cloud remotes and WebDAV engine...
+    </div>
+  `;
+
+  try {
+    const [webdavStatus, remotes] = await Promise.all([
+      api.get('/api/webdav/status'),
+      api.get('/api/remotes')
+    ]);
+
+    const isRunning = webdavStatus.running;
+    const webdavPillClass = isRunning ? 'running' : 'stopped';
+    const webdavPillText = isRunning ? `🟢 RUNNING (PID: ${webdavStatus.pid || 'Active'})` : '⚪ STOPPED';
+
+    const qc = webdavStatus.quick_connect || {};
+    const hostIp = window.location.hostname;
+    const directUrl = webdavStatus.direct_url || `http://${hostIp}:${webdavStatus.port || 8084}/`;
+    const proxyUrl = `${window.location.origin}${webdavStatus.proxy_url || '/webdav/'}`;
+
+    let remotesHtml = '';
+    if (!remotes || remotes.length === 0) {
+      remotesHtml = `
+        <div style="text-align:center; padding:36px 20px; background:rgba(0,0,0,0.25); border:1px dashed rgba(255,255,255,0.12); border-radius:10px;">
+          <div style="font-size:32px; margin-bottom:8px;">☁️</div>
+          <div style="font-size:14px; font-weight:700; color:#fff; margin-bottom:4px;">No Cloud Remotes Connected</div>
+          <div style="font-size:12px; color:var(--muted); max-width:440px; margin:0 auto 16px auto; line-height:1.45;">
+            Connect your cloud storage buckets (Amazon S3, Backblaze B2, Google Drive, OneDrive, SFTP) to mount them directly into the ZettNAS File Explorer (/mnt/remotes).
+          </div>
+          <button class="btn-pill-toggle btn-trigger-new-remote" style="padding:7px 18px; font-size:12px; font-weight:700; background:var(--brand, #0ea5e9); color:#fff; border-color:var(--brand, #0ea5e9);">
+            ☁️ + Connect First Cloud Remote
+          </button>
+        </div>
+      `;
+    } else {
+      const cards = remotes.map((r) => {
+        const icon = PROVIDER_ICONS[r.type] || PROVIDER_ICONS.unknown;
+        const isMounted = r.is_mounted;
+        const statusText = isMounted ? `🟢 Mounted at ${escapeHtml(r.mount_path)}` : '⚪ Not Mounted';
+        const statusCls = isMounted ? 'mounted' : '';
+
+        return `
+          <div class="remote-card" data-remote-name="${escapeHtml(r.name)}">
+            <div class="remote-card-header">
+              <div class="remote-title-wrap">
+                <span class="remote-icon">${icon}</span>
+                <div>
+                  <div class="remote-name">${escapeHtml(r.name)}</div>
+                  <div class="remote-mount-status ${statusCls}">${statusText}</div>
+                </div>
+              </div>
+              <span class="remote-type-tag">${escapeHtml(r.type)}</span>
+            </div>
+
+            <div style="font-size:11px; color:var(--muted); font-family:monospace; background:rgba(0,0,0,0.3); padding:6px 8px; border-radius:4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+              /mnt/remotes/${escapeHtml(r.name)}
+            </div>
+
+            <div class="remote-card-actions">
+              <div>
+                ${isMounted ? `
+                  <button class="btn-remote-reveal btn-pill-toggle" data-path="${escapeHtml(r.mount_path)}" title="Open in File Explorer" style="padding:4px 10px; font-size:11px; background:rgba(14,165,233,0.15); color:#38bdf8; border-color:rgba(14,165,233,0.3);">
+                    📂 Open in File Explorer
+                  </button>
+                ` : `
+                  <button class="btn-remote-mount btn-pill-toggle" data-name="${escapeHtml(r.name)}" title="Mount to /mnt/remotes" style="padding:4px 10px; font-size:11px; background:rgba(59,245,139,0.12); color:#3bf58b; border-color:rgba(59,245,139,0.25);">
+                    ▶ Mount
+                  </button>
+                `}
+              </div>
+              <div style="display:flex; gap:6px;">
+                ${isMounted ? `
+                  <button class="btn-remote-unmount btn-pill-toggle" data-name="${escapeHtml(r.name)}" title="Unmount from system" style="padding:4px 8px; font-size:11px;">
+                    ⏹ Unmount
+                  </button>
+                ` : ''}
+                <button class="btn-remote-delete btn-pill-toggle" data-name="${escapeHtml(r.name)}" title="Delete remote" style="padding:4px 8px; font-size:11px; color:var(--crit,#ef4444); border-color:rgba(239,68,68,0.25);">
+                  🗑
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      remotesHtml = `
+        <div class="remotes-grid">
+          ${cards}
+        </div>
+      `;
+    }
+
+    container.innerHTML = `
+      <div class="remote-storage-container">
+        <!-- Section 1: Universal WebDAV File Server -->
+        <div class="webdav-server-card">
+          <div class="webdav-card-header">
+            <div class="webdav-header-title">
+              <svg class="ic" style="width:18px; height:18px; fill:currentColor; color:var(--brand, #0ea5e9);"><use href="#i-globe"/></svg>
+              <span>Universal WebDAV File Server</span>
+              <span class="webdav-status-pill ${webdavPillClass}">${webdavPillText}</span>
+            </div>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <button class="btn-pill-toggle" id="btn-webdav-toggle" style="padding:5px 12px; font-size:11px; font-weight:700;">
+                ${isRunning ? '⏹ Stop Server' : '▶ Start Server'}
+              </button>
+              <button class="btn-pill-toggle" id="btn-webdav-restart" style="padding:5px 10px; font-size:11px;" title="Restart WebDAV Server">
+                ↺ Restart
+              </button>
+              <button class="btn-pill-toggle" id="btn-webdav-config-open" style="padding:5px 10px; font-size:11px;" title="Configure WebDAV settings">
+                ⚙️ Settings
+              </button>
+            </div>
+          </div>
+
+          <div style="display:flex; gap:16px; flex-wrap:wrap; font-size:11.5px; color:var(--muted); align-items:center;">
+            <span>Line-Rate Port: <strong style="color:#fff;">${webdavStatus.port}</strong></span>
+            <span>Root Path: <code style="color:#38bdf8;">${escapeHtml(webdavStatus.root_path)}</code></span>
+            <span>Mode: <strong style="color:#fff;">${webdavStatus.read_only ? 'Read-Only' : 'Read/Write'}</strong></span>
+            <span>Auth: <strong style="color:#fff;">${webdavStatus.auth_enabled ? 'Basic Auth (' + escapeHtml(webdavStatus.username) + ')' : 'Anonymous / None'}</strong></span>
+          </div>
+
+          <!-- Quick Connect Grid -->
+          <div class="webdav-quickconnect-grid">
+            <div class="webdav-qc-item">
+              <div class="webdav-qc-label">
+                <span>🍏 macOS Finder (⌘K)</span>
+                <button class="btn-qc-copy" data-copy="${escapeHtml(qc.macos || '')}" title="Copy command">📋 Copy</button>
+              </div>
+              <div class="webdav-qc-code">
+                <span>${escapeHtml(qc.macos || '')}</span>
+              </div>
+            </div>
+
+            <div class="webdav-qc-item">
+              <div class="webdav-qc-label">
+                <span>🪟 Windows Map Network Drive</span>
+                <button class="btn-qc-copy" data-copy="${escapeHtml(qc.windows || '')}" title="Copy command">📋 Copy</button>
+              </div>
+              <div class="webdav-qc-code">
+                <span>${escapeHtml(qc.windows || '')}</span>
+              </div>
+            </div>
+
+            <div class="webdav-qc-item">
+              <div class="webdav-qc-label">
+                <span>📱 iOS & Android Files</span>
+                <button class="btn-qc-copy" data-copy="${escapeHtml(qc.ios || '')}" title="Copy URL">📋 Copy</button>
+              </div>
+              <div class="webdav-qc-code">
+                <span>${escapeHtml(qc.ios || '')}</span>
+              </div>
+            </div>
+
+            <div class="webdav-qc-item">
+              <div class="webdav-qc-label">
+                <span>🌐 Toolkit HTTP Reverse Proxy</span>
+                <button class="btn-qc-copy" data-copy="${escapeHtml(proxyUrl)}" title="Copy Proxy URL">📋 Copy</button>
+              </div>
+              <div class="webdav-qc-code">
+                <span>${escapeHtml(proxyUrl)}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 2: Connected Cloud & Remote Drives -->
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="font-size:13px; font-weight:800; color:#fff; letter-spacing:0.5px; text-transform:uppercase;">
+              Connected Cloud Drives & Buckets (${remotes ? remotes.length : 0})
+            </div>
+          </div>
+          ${remotesHtml}
+        </div>
+      </div>
+    `;
+
+    // Event bindings
+    // WebDAV toggle
+    container.querySelector('#btn-webdav-toggle')?.addEventListener('click', async () => {
+      playChirp(600, 0.08, 'sine');
+      try {
+        await api.post('/api/webdav/toggle', { enabled: !isRunning });
+        showToast(isRunning ? 'WebDAV server stopped.' : 'WebDAV server started on port ' + webdavStatus.port, 'info');
+        fetchAndRenderRemoteStorage(container);
+      } catch (e) {
+        showToast('Failed to toggle WebDAV: ' + (e.message || 'Error'), 'error');
+      }
+    });
+
+    // WebDAV restart
+    container.querySelector('#btn-webdav-restart')?.addEventListener('click', async () => {
+      playChirp(700, 0.08, 'sine');
+      try {
+        await api.post('/api/webdav/restart');
+        showToast('WebDAV server restarted.', 'info');
+        fetchAndRenderRemoteStorage(container);
+      } catch (e) {
+        showToast('Failed to restart WebDAV: ' + (e.message || 'Error'), 'error');
+      }
+    });
+
+    // WebDAV settings modal open
+    container.querySelector('#btn-webdav-config-open')?.addEventListener('click', () => {
+      playChirp(640, 0.08, 'triangle');
+      openWebdavConfigModal(webdavStatus, () => fetchAndRenderRemoteStorage(container));
+    });
+
+    // Quick Connect copy buttons
+    container.querySelectorAll('.btn-qc-copy').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const text = btn.dataset.copy;
+        if (text) {
+          navigator.clipboard.writeText(text);
+          playChirp(880, 0.08, 'triangle');
+          showToast('Copied to clipboard!', 'info');
+        }
+      });
+    });
+
+    // "+ Connect First Cloud Remote" CTA button
+    container.querySelector('.btn-trigger-new-remote')?.addEventListener('click', () => {
+      playChirp(640, 0.08, 'triangle');
+      openNewCloudRemoteModal(() => fetchAndRenderRemoteStorage(container));
+    });
+
+    // Open in File Explorer
+    container.querySelectorAll('.btn-remote-reveal').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const path = btn.dataset.path;
+        playChirp(720, 0.08, 'triangle');
+        ZettEventBus.emit('window:open', { id: 'file-manager-window', path });
+        showToast(`Opened ${path} in File Explorer`, 'info');
+      });
+    });
+
+    // Mount remote
+    container.querySelectorAll('.btn-remote-mount').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const name = btn.dataset.name;
+        btn.textContent = 'Mounting...';
+        btn.disabled = true;
+        try {
+          await api.post(`/api/remotes/${name}/mount`, {});
+          playChirp(800, 0.1, 'sine');
+          showToast(`Remote '${name}' mounted to /mnt/remotes/${name}`, 'info');
+          fetchAndRenderRemoteStorage(container);
+        } catch (e) {
+          showToast(`Mount failed: ${e.message || 'Error'}`, 'error');
+          fetchAndRenderRemoteStorage(container);
+        }
+      });
+    });
+
+    // Unmount remote
+    container.querySelectorAll('.btn-remote-unmount').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const name = btn.dataset.name;
+        btn.textContent = 'Unmounting...';
+        btn.disabled = true;
+        try {
+          await api.post(`/api/remotes/${name}/unmount`);
+          playChirp(500, 0.1, 'sine');
+          showToast(`Remote '${name}' unmounted.`, 'info');
+          fetchAndRenderRemoteStorage(container);
+        } catch (e) {
+          showToast(`Unmount failed: ${e.message || 'Error'}`, 'error');
+          fetchAndRenderRemoteStorage(container);
+        }
+      });
+    });
+
+    // Delete remote
+    container.querySelectorAll('.btn-remote-delete').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const name = btn.dataset.name;
+        if (confirm(`Are you sure you want to remove remote '${name}'? This will unmount and delete its stored credentials.`)) {
+          try {
+            await api.delete(`/api/remotes/${name}`);
+            playChirp(440, 0.1, 'sawtooth');
+            showToast(`Remote '${name}' deleted.`, 'info');
+            fetchAndRenderRemoteStorage(container);
+          } catch (e) {
+            showToast(`Failed to delete remote: ${e.message || 'Error'}`, 'error');
+          }
+        }
+      });
+    });
+
+  } catch (err) {
+    console.error('[ZettNAS] Failed to fetch remote storage:', err);
+    container.innerHTML = `
+      <div style="text-align:center; padding:30px; color:var(--alert, #ef4444);">
+        Failed to load remote storage subsystem: ${escapeHtml(err.message || 'Unknown error')}
+      </div>
+    `;
+  }
+}
+
+export function openWebdavConfigModal(currentConfig, onSuccess) {
+  const modal = document.getElementById('modal-webdav-config');
+  if (!modal) return;
+
+  const portInput = document.getElementById('webdav-cfg-port');
+  const rootInput = document.getElementById('webdav-cfg-root');
+  const userInput = document.getElementById('webdav-cfg-user');
+  const passInput = document.getElementById('webdav-cfg-pass');
+  const authToggle = document.getElementById('webdav-cfg-auth-toggle');
+  const roToggle = document.getElementById('webdav-cfg-readonly-toggle');
+
+  if (portInput) portInput.value = currentConfig?.port || 8084;
+  if (rootInput) rootInput.value = currentConfig?.root_path || '/mnt/user';
+  if (userInput) userInput.value = currentConfig?.username || 'admin';
+  if (passInput) passInput.value = '';
+  if (authToggle) authToggle.checked = currentConfig?.auth_enabled ?? true;
+  if (roToggle) roToggle.checked = currentConfig?.read_only ?? false;
+
+  modal.style.display = 'flex';
+
+  const close = () => { modal.style.display = 'none'; };
+  const cBtn = document.getElementById('modal-webdav-close-btn');
+  const canBtn = document.getElementById('modal-webdav-cancel-btn');
+  if (cBtn) cBtn.onclick = close;
+  if (canBtn) canBtn.onclick = close;
+
+  const form = document.getElementById('webdav-config-form');
+  if (form) {
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      const payload = {
+        port: Number(portInput.value),
+        root_path: rootInput.value.trim(),
+        username: userInput.value.trim(),
+        auth_enabled: authToggle.checked,
+        read_only: roToggle.checked
+      };
+      if (passInput.value.trim()) {
+        payload.password = passInput.value.trim();
+      }
+      try {
+        await api.post('/api/webdav/config', payload);
+        close();
+        playChirp(880, 0.1, 'sine');
+        showToast('WebDAV configuration saved and server restarted!', 'info');
+        if (onSuccess) onSuccess();
+      } catch (err) {
+        showToast('Error saving WebDAV config: ' + (err.message || 'Error'), 'error');
+      }
+    };
+  }
+}
+
+let _providersCache = null;
+
+export async function openNewCloudRemoteModal(onSuccess) {
+  const modal = document.getElementById('modal-new-cloud-remote');
+  if (!modal) return;
+
+  const providerSelect = document.getElementById('new-remote-provider-select');
+  const descEl = document.getElementById('new-remote-provider-desc');
+  const dynamicFields = document.getElementById('new-remote-dynamic-fields');
+  const nameInput = document.getElementById('new-remote-name');
+  const autoMountToggle = document.getElementById('new-remote-auto-mount');
+  const errorBox = document.getElementById('new-remote-error-box');
+
+  if (errorBox) errorBox.style.display = 'none';
+  if (nameInput) nameInput.value = '';
+
+  modal.style.display = 'flex';
+
+  const close = () => { modal.style.display = 'none'; };
+  const cBtn = document.getElementById('modal-remote-close-btn');
+  const canBtn = document.getElementById('modal-remote-cancel-btn');
+  if (cBtn) cBtn.onclick = close;
+  if (canBtn) canBtn.onclick = close;
+
+  try {
+    if (!_providersCache) {
+      _providersCache = await api.get('/api/remotes/providers');
+    }
+    const providers = _providersCache || [];
+
+    if (providerSelect) {
+      providerSelect.innerHTML = providers.map((p) => `
+        <option value="${p.type}">${p.name} (${p.category})</option>
+      `).join('');
+
+      const renderFields = () => {
+        const selectedType = providerSelect.value;
+        const prov = providers.find((p) => p.type === selectedType) || providers[0];
+        if (descEl) descEl.textContent = prov ? prov.description || '' : '';
+
+        if (dynamicFields && prov) {
+          dynamicFields.innerHTML = (prov.fields || []).map((f) => {
+            if (f.type === 'select') {
+              const opts = (f.options || []).map((o) => `<option value="${o}" ${o === f.default ? 'selected' : ''}>${o}</option>`).join('');
+              return `
+                <div>
+                  <label style="display:block; font-size:10px; font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">${escapeHtml(f.label.toUpperCase())}</label>
+                  <select name="${escapeHtml(f.name)}" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff; border-radius:6px; font-size:12px;">
+                    ${opts}
+                  </select>
+                </div>
+              `;
+            } else {
+              return `
+                <div>
+                  <label style="display:block; font-size:10px; font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">
+                    ${escapeHtml(f.label.toUpperCase())} ${f.required ? '<span style="color:var(--crit,#ef4444);">*</span>' : ''}
+                  </label>
+                  <input type="${f.type === 'password' ? 'password' : 'text'}"
+                    name="${escapeHtml(f.name)}"
+                    placeholder="${escapeHtml(f.placeholder || '')}"
+                    value="${escapeHtml(f.default != null ? String(f.default) : '')}"
+                    class="tz-select-input"
+                    style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff; border-radius:6px; font-size:12px;"
+                    ${f.required ? 'required' : ''} />
+                </div>
+              `;
+            }
+          }).join('');
+        }
+      };
+
+      providerSelect.onchange = renderFields;
+      renderFields();
+    }
+
+    const form = document.getElementById('new-remote-form');
+    if (form) {
+      form.onsubmit = async (e) => {
+        e.preventDefault();
+        const name = nameInput.value.trim();
+        const provType = providerSelect.value;
+        const formData = new FormData(form);
+        const parameters = {};
+
+        formData.forEach((val, key) => {
+          if (key !== 'name' && val !== '') {
+            parameters[key] = val;
+          }
+        });
+
+        const submitBtn = document.getElementById('new-remote-submit-btn');
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.textContent = 'Connecting...';
+        }
+
+        try {
+          await api.post('/api/remotes', {
+            name,
+            type: provType,
+            parameters
+          });
+
+          if (autoMountToggle && autoMountToggle.checked) {
+            try {
+              await api.post(`/api/remotes/${name}/mount`, {});
+            } catch (mErr) {
+              console.warn('[Remote] Auto-mount warning:', mErr);
+            }
+          }
+
+          close();
+          playChirp(880, 0.12, 'sine');
+          showToast(`Cloud remote '${name}' connected successfully!`, 'info');
+          if (onSuccess) onSuccess();
+        } catch (err) {
+          if (errorBox) {
+            errorBox.textContent = err.message || 'Failed to connect remote';
+            errorBox.style.display = 'block';
+          }
+        } finally {
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Save & Connect Remote';
+          }
+        }
+      };
+    }
+  } catch (err) {
+    showToast('Failed to load storage providers: ' + (err.message || 'Error'), 'error');
+  }
+}
+

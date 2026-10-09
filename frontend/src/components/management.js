@@ -2,7 +2,7 @@ import { syncWidgetSettingsUI } from './widgets.js';
 import { syncDesktopThemeUI } from './settings.js';
 import { openContainerInspector, openContainerDeleteModal } from './container-modal.js';
 import { ZettEventBus } from '../event-bus.js';
-import { fetchAndRenderChassisTwin, renderStorageTopologyTree, fetchAndRenderStorageTopology, fetchAndRenderNetworkShares, triggerLocateDisk, getThermalLevel } from './chassis-visualizer.js';
+import { fetchAndRenderChassisTwin, renderStorageTopologyTree, fetchAndRenderStorageTopology, fetchAndRenderNetworkShares, fetchAndRenderRemoteStorage, openNewCloudRemoteModal, triggerLocateDisk, getThermalLevel } from './chassis-visualizer.js';
 /**
  * ZettNAS Toolkit - System Management Window Controller
  * Manages the dedicated System Management desktop window, hub app grid,
@@ -1792,6 +1792,7 @@ export function initManagement() {
     'mgmt-pane-chassis-twin': { section: 'mgmt-sec-storage', pane: 'mgmt-pane-chassis-twin' },
     'mgmt-pane-storage-topo': { section: 'mgmt-sec-storage', pane: 'mgmt-pane-storage-topo' },
     'mgmt-pane-storage-shares': { section: 'mgmt-sec-storage', pane: 'mgmt-pane-storage-shares' },
+    'mgmt-pane-storage-remotes': { section: 'mgmt-sec-storage', pane: 'mgmt-pane-storage-remotes' },
     'mgmt-pane-storage-disks': { section: 'mgmt-sec-storage', pane: 'mgmt-pane-storage-disks' },
     'mgmt-sec-security': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-security' },
     'mgmt-pane-security': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-security' },
@@ -1842,6 +1843,9 @@ export function initManagement() {
     } else if (paneId === 'mgmt-pane-storage-shares') {
       const mount = document.getElementById('mgmt-storage-shares-mount');
       if (mount) fetchAndRenderNetworkShares(mount);
+    } else if (paneId === 'mgmt-pane-storage-remotes') {
+      const mount = document.getElementById('mgmt-storage-remotes-mount');
+      if (mount) fetchAndRenderRemoteStorage(mount);
     } else if (paneId === 'mgmt-pane-storage-disks') {
       fetchAndRenderDisksInventory();
     } else if (paneId === 'mgmt-pane-system') {
@@ -2149,6 +2153,27 @@ export function initManagement() {
       const mount = document.getElementById('mgmt-storage-shares-mount');
       if (mount) fetchAndRenderNetworkShares(mount);
       showToast('Network shares refreshed.', 'info');
+    });
+  }
+
+  // Remote & Cloud Storage refresh button
+  const refreshRemotesBtn = document.getElementById('btn-refresh-remotes');
+  if (refreshRemotesBtn) {
+    refreshRemotesBtn.addEventListener('click', () => {
+      const mount = document.getElementById('mgmt-storage-remotes-mount');
+      if (mount) fetchAndRenderRemoteStorage(mount);
+      showToast('Remote storage refreshed.', 'info');
+    });
+  }
+
+  // Connect Cloud Remote button
+  const addRemoteBtn = document.getElementById('btn-add-cloud-remote');
+  if (addRemoteBtn) {
+    addRemoteBtn.addEventListener('click', () => {
+      const mount = document.getElementById('mgmt-storage-remotes-mount');
+      openNewCloudRemoteModal(() => {
+        if (mount) fetchAndRenderRemoteStorage(mount);
+      });
     });
   }
 
