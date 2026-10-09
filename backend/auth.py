@@ -5,10 +5,10 @@ import os
 import secrets
 import threading
 import time
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 from urllib.parse import parse_qs, urlparse
 
-from fastapi import Request
+from fastapi import Depends, HTTPException, Request
 
 from backend import config
 from backend.api_tokens import validate_api_token
@@ -284,4 +284,112 @@ async def auth_middleware(request: Request, call_next):
             logger.warning(f"Auth failed for client {client_host} accessing {path}")
             return error_response(401, "Unauthorized. Please log in.")
 
+        sess = get_current_session(token)
+        if sess:
+            request.state.session = sess
+            request.state.user = sess
+            request.state.token = token
+
     return await call_next(request)
+
+
+# ==============================================================================
+# RBAC Scope Evaluation & FastAPI Dependencies
+# ==============================================================================
+
+
+def has_scope(user_scopes: List[str], required_scope: str) -> bool:
+    """Evaluates whether granted user_scopes satisfy the required_scope.
+
+    Supports:
+    - Global wildcard: '*' matches all scopes
+    - Global read wildcard: '*:read' matches any ':read' or ':view' scope
+    - Domain wildcard: 'storage:*' matches 'storage:read', 'storage:write', 'storage:admin'
+    - Permission hierarchy: ':admin' or ':manage' matches ':write' and ':read'; ':write' matches ':read'
+    """
+    if not user_scopes:
+        return False
+    if "*" in user_scopes:
+        return True
+    if required_scope in user_scopes:
+        return True
+
+    # Global read wildcard (*:read)
+    if "*:read" in user_scopes and (required_scope.endswith(":read") or required_scope.endswith(":view")):
+        return True
+
+    # Check domain-level hierarchy (e.g. storage:* matches storage:read)
+    if ":" in required_scope:
+        domain, action = required_scope.split(":", 1)
+        if f"{domain}:*" in user_scopes:
+            return True
+        # Hierarchy: admin / manage > write > read / view
+        if action in ("read", "view"):
+            if any(f"{domain}:{act}" in user_scopes for act in ("write", "admin", "manage", "power")):
+                return True
+        elif action == "write":
+            if any(f"{domain}:{act}" in user_scopes for act in ("admin", "manage")):
+                return True
+
+    return False
+
+
+class AuthenticatedPrincipal:
+    """Represents an active, authenticated user or service token principal with scopes."""
+
+    def __init__(self, data: Dict[str, Any]):
+        self.user_id: str = data.get("user_id", "")
+        self.username: str = data.get("username", "")
+        self.role_id: str = data.get("role_id", "share_user")
+        self.scopes: List[str] = data.get("scopes", [])
+        self.is_api_token: bool = data.get("is_api_token", False)
+        self.is_system: bool = data.get("is_system", False)
+        self.raw_data: Dict[str, Any] = data
+
+    def has_scope(self, scope: str) -> bool:
+        return has_scope(self.scopes, scope)
+
+    def has_any_scope(self, *scopes: str) -> bool:
+        return any(self.has_scope(s) for s in scopes)
+
+    def has_all_scopes(self, *scopes: str) -> bool:
+        return all(self.has_scope(s) for s in scopes)
+
+    def __repr__(self) -> str:
+        return f"<AuthenticatedPrincipal username={self.username} role={self.role_id} scopes={self.scopes}>"
+
+
+def get_current_principal(request: Request) -> AuthenticatedPrincipal:
+    """FastAPI dependency that returns the AuthenticatedPrincipal from request context."""
+    sess = getattr(request.state, "session", None)
+    if not sess:
+        token = extract_token(request)
+        if not token:
+            raise HTTPException(status_code=401, detail="Authentication credentials required.")
+        sess = get_current_session(token)
+        if not sess:
+            raise HTTPException(status_code=401, detail="Invalid or expired session.")
+
+    return AuthenticatedPrincipal(sess)
+
+
+def require_scope(*required_scopes: str):
+    """FastAPI dependency factory enforcing that the authenticated principal possesses
+
+    at least one of the specified scopes (with wildcard and role resolution).
+    """
+
+    def _dependency(principal: AuthenticatedPrincipal = Depends(get_current_principal)) -> AuthenticatedPrincipal:
+        if not required_scopes:
+            return principal
+
+        satisfied = any(principal.has_scope(scope) for scope in required_scopes)
+        if not satisfied:
+            required_str = ", ".join(required_scopes)
+            raise HTTPException(
+                status_code=403,
+                detail=f"Permission denied. Required scope: '{required_str}'. Current role: '{principal.role_id}'.",
+            )
+        return principal
+
+    return _dependency

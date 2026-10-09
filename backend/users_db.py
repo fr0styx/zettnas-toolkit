@@ -828,13 +828,23 @@ def list_user_api_tokens(user_id: str, db_path: Optional[str] = None) -> List[Di
 
 def revoke_api_token(token_id: str, user_id: Optional[str] = None, db_path: Optional[str] = None) -> bool:
     with users_db_session(db_path) as conn:
-        if user_id:
-            res = conn.execute("DELETE FROM api_tokens WHERE token_id = ? AND user_id = ?", (token_id, user_id))
+        if token_id.startswith("zat_"):
+            token_hash = hashlib.sha256(token_id.encode("utf-8")).hexdigest()
+            if user_id:
+                res = conn.execute("DELETE FROM api_tokens WHERE token_hash = ? AND user_id = ?", (token_hash, user_id))
+            else:
+                res = conn.execute("DELETE FROM api_tokens WHERE token_hash = ?", (token_hash,))
         else:
-            res = conn.execute("DELETE FROM api_tokens WHERE token_id = ?", (token_id,))
+            if user_id:
+                res = conn.execute("DELETE FROM api_tokens WHERE token_id = ? AND user_id = ?", (token_id, user_id))
+            else:
+                res = conn.execute("DELETE FROM api_tokens WHERE token_id = ?", (token_id,))
         with _TOKEN_CACHE_LOCK:
             _TOKEN_CACHE.clear()
         return res.rowcount > 0
+
+
+revoke_scoped_api_token = revoke_api_token
 
 
 # ==============================================================================

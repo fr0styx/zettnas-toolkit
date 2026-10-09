@@ -5,9 +5,10 @@ and network shares (Samba/NFS/WebDAV).
 """
 
 from typing import Any, Dict, List
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
+from backend.auth import require_scope
 from backend.hardware.pal_storage import (
     PlatformCapabilityError,
     get_storage_platform,
@@ -89,7 +90,7 @@ def get_storage_shares() -> Dict[str, Any]:
     }
 
 
-@router.post("/scrub")
+@router.post("/scrub", dependencies=[Depends(require_scope("storage:admin"))])
 def trigger_storage_scrub(req: StorageScrubRequest) -> Dict[str, Any]:
     """
     Initiates or monitors non-destructive array parity check or filesystem scrub.
@@ -98,7 +99,7 @@ def trigger_storage_scrub(req: StorageScrubRequest) -> Dict[str, Any]:
     return adapter.trigger_scrub(pool_id=req.pool_id, action=req.action)
 
 
-@router.post("/pools")
+@router.post("/pools", dependencies=[Depends(require_scope("storage:admin"))])
 def create_storage_pool(req: StoragePoolCreateRequest) -> Dict[str, Any]:
     """
     Creates a new storage pool. In Observer Mode (e.g. Unraid, TrueNAS),
@@ -124,7 +125,7 @@ def create_storage_pool(req: StoragePoolCreateRequest) -> Dict[str, Any]:
         raise HTTPException(status_code=403, detail=str(e))
 
 
-@router.post("/shares")
+@router.post("/shares", dependencies=[Depends(require_scope("shares:manage"))])
 def create_storage_share(req: StorageShareCreateRequest) -> Dict[str, Any]:
     """
     Creates a new network share. In Observer Mode (e.g. Unraid, TrueNAS),
@@ -150,7 +151,7 @@ def create_storage_share(req: StorageShareCreateRequest) -> Dict[str, Any]:
         raise HTTPException(status_code=403, detail=str(e))
 
 
-@router.delete("/pools/{pool_id}")
+@router.delete("/pools/{pool_id}", dependencies=[Depends(require_scope("storage:admin"))])
 def delete_storage_pool(pool_id: str) -> Dict[str, Any]:
     """
     Destroys/unmounts a storage pool. Forbidden in Observer Mode.
@@ -168,7 +169,7 @@ def delete_storage_pool(pool_id: str) -> Dict[str, Any]:
         raise HTTPException(status_code=403, detail=str(e))
 
 
-@router.delete("/shares/{name}")
+@router.delete("/shares/{name}", dependencies=[Depends(require_scope("shares:manage"))])
 def delete_storage_share(name: str) -> Dict[str, Any]:
     """
     Deletes a network share configuration. Forbidden in Observer Mode.
@@ -195,7 +196,7 @@ def list_storage_snapshots(pool_id: str) -> List[Dict[str, Any]]:
     return adapter.list_snapshots(pool_id=pool_id)
 
 
-@router.post("/pools/{pool_id}/snapshots")
+@router.post("/pools/{pool_id}/snapshots", dependencies=[Depends(require_scope("storage:admin"))])
 def create_storage_snapshot(pool_id: str, req: StorageSnapshotCreateRequest) -> Dict[str, Any]:
     """
     Creates an atomic Btrfs subvolume snapshot. Forbidden in Observer Mode.
@@ -218,7 +219,7 @@ def create_storage_snapshot(pool_id: str, req: StorageSnapshotCreateRequest) -> 
         raise HTTPException(status_code=403, detail=str(e))
 
 
-@router.delete("/pools/{pool_id}/snapshots/{snapshot_name}")
+@router.delete("/pools/{pool_id}/snapshots/{snapshot_name}", dependencies=[Depends(require_scope("storage:admin"))])
 def delete_storage_snapshot(pool_id: str, snapshot_name: str) -> Dict[str, Any]:
     """
     Deletes a Btrfs subvolume snapshot. Forbidden in Observer Mode.

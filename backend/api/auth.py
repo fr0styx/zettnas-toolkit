@@ -3,16 +3,19 @@ import threading
 import time
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.responses import JSONResponse
 from starlette.concurrency import run_in_threadpool
 
 import backend.config as config
 from backend.auth import (
+    AuthenticatedPrincipal,
     create_session,
     extract_token,
+    get_current_principal,
     get_current_session,
     invalidate_all_sessions,
+    require_scope,
     revoke_session,
     validate_session,
 )
@@ -315,20 +318,18 @@ def get_current_user_profile(request: Request):
 # ==============================================================================
 
 
-@router.get("/users")
+@router.get("/users", dependencies=[Depends(require_scope("users:read"))])
 def get_users_list(request: Request):
-    user = _get_authenticated_user(request)
-    # Viewers can see list; in Phase 2 RBAC enforcement is fully checked
     users = list_users()
     return {"users": users, "total": len(users)}
 
 
-@router.post("/users")
-async def create_new_user(data: UserCreateRequest, request: Request):
-    user = _get_authenticated_user(request)
-    if user and user.get("role_id") not in ("superadmin", "admin"):
-        return error_response(403, "Only administrators can create new users.")
-
+@router.post("/users", dependencies=[Depends(require_scope("users:write"))])
+async def create_new_user(
+    data: UserCreateRequest,
+    request: Request,
+    principal: AuthenticatedPrincipal = Depends(require_scope("users:write")),
+):
     existing = get_user_by_username(data.username)
     if existing:
         return error_response(409, f"User '{data.username}' already exists.", error="user_exists")
@@ -345,8 +346,8 @@ async def create_new_user(data: UserCreateRequest, request: Request):
         log_security_event(
             "user.created",
             "success",
-            actor_id=user["id"] if user else None,
-            actor_username=user["username"] if user else "system",
+            actor_id=principal.user_id,
+            actor_username=principal.username,
             actor_ip=_client_ip(request),
             details={"created_user": data.username, "role": data.role_id},
         )
@@ -420,13 +421,13 @@ async def change_user_password(user_id: str, data: UserPasswordChangeRequest, re
     return {"status": "ok", "message": "Password updated successfully."}
 
 
-@router.delete("/users/{user_id}")
-def delete_user_endpoint(user_id: str, request: Request):
-    current = _get_authenticated_user(request)
-    if current and current.get("role_id") not in ("superadmin", "admin"):
-        return error_response(403, "Only administrators can delete users.")
-
-    if current and current["id"] == user_id:
+@router.delete("/users/{user_id}", dependencies=[Depends(require_scope("users:delete"))])
+def delete_user_endpoint(
+    user_id: str,
+    request: Request,
+    principal: AuthenticatedPrincipal = Depends(require_scope("users:delete")),
+):
+    if principal.user_id == user_id:
         return error_response(400, "Cannot delete your own active account.")
 
     try:
@@ -436,8 +437,8 @@ def delete_user_endpoint(user_id: str, request: Request):
         log_security_event(
             "user.deleted",
             "success",
-            actor_id=current["id"] if current else None,
-            actor_username=current["username"] if current else "admin",
+            actor_id=principal.user_id,
+            actor_username=principal.username,
             actor_ip=_client_ip(request),
             details={"deleted_user_id": user_id},
         )
@@ -495,11 +496,8 @@ def revoke_all_other_sessions(request: Request):
     return {"status": "ok", "message": "All other sessions have been revoked."}
 
 
-@router.get("/auth/audit")
+@router.get("/auth/audit", dependencies=[Depends(require_scope("audit:read"))])
 def get_security_audit_logs(request: Request, limit: int = 50, offset: int = 0):
-    user = _get_authenticated_user(request)
-    if user and user.get("role_id") not in ("superadmin", "admin", "auditor"):
-        return error_response(403, "Permission denied.")
     logs = query_security_audit_logs(limit=min(200, limit), offset=offset)
     return {"audit_logs": logs, "count": len(logs)}
 

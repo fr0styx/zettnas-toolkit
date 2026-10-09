@@ -1,8 +1,9 @@
 from typing import Any
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 
+from backend.auth import require_scope
 from backend.services.notifications import (
     load_notification_config,
     mask_notification_config,
@@ -70,13 +71,13 @@ class TestChannelRequest(BaseModel):
     config: dict[str, Any] = Field(default_factory=dict, description="Configuration parameters for the channel")
 
 
-@router.get("/config")
+@router.get("/config", dependencies=[Depends(require_scope("system:view", "system:config"))])
 def get_notifications():
     """Retrieve current notification settings with sensitive credentials masked."""
     return mask_notification_config(load_notification_config())
 
 
-@router.post("/config")
+@router.post("/config", dependencies=[Depends(require_scope("system:config"))])
 def update_notifications(req: NotificationConfigModel):
     """Save notification settings, preserving existing secrets when masked."""
     data = req.model_dump()
@@ -84,14 +85,14 @@ def update_notifications(req: NotificationConfigModel):
     return {"status": "ok", "config": mask_notification_config(load_notification_config())}
 
 
-@router.post("/test")
+@router.post("/test", dependencies=[Depends(require_scope("system:config"))])
 def trigger_test_notification(custom_cfg: dict[str, Any] | None = None):
     """Dispatch an immediate test alert across all configured channels."""
     res = test_notification(custom_cfg)
     return res
 
 
-@router.post("/test-channel")
+@router.post("/test-channel", dependencies=[Depends(require_scope("system:config"))])
 def trigger_test_channel(req: TestChannelRequest):
     """Test a specific notification channel with latency telemetry and detailed diagnostic feedback."""
     return test_single_channel(req.channel, req.config)

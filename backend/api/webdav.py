@@ -9,11 +9,12 @@ import os
 import urllib.parse
 from typing import Any, Dict, Optional
 import httpx
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
 import backend.config as config
+from backend.auth import require_scope
 from backend.passwords import verify_password
 from backend.services.webdav_engine import get_webdav_engine
 from backend.services.webdav_portal import render_webdav_login, render_webdav_portal
@@ -45,7 +46,7 @@ async def get_webdav_status():
     return engine.get_status()
 
 
-@router.post("/webdav/toggle")
+@router.post("/webdav/toggle", dependencies=[Depends(require_scope("shares:manage", "storage:admin"))])
 async def toggle_webdav(req: WebdavToggleRequest):
     """Enables or disables the WebDAV service."""
     engine = get_webdav_engine()
@@ -56,7 +57,7 @@ async def toggle_webdav(req: WebdavToggleRequest):
         return await asyncio.to_thread(engine.stop)
 
 
-@router.post("/webdav/config")
+@router.post("/webdav/config", dependencies=[Depends(require_scope("shares:manage", "storage:admin"))])
 async def update_webdav_config(req: WebdavConfigRequest):
     """Updates WebDAV configuration and restarts the daemon if running."""
     engine = get_webdav_engine()
@@ -67,7 +68,7 @@ async def update_webdav_config(req: WebdavConfigRequest):
     return engine.get_status()
 
 
-@router.post("/webdav/restart")
+@router.post("/webdav/restart", dependencies=[Depends(require_scope("shares:manage", "storage:admin"))])
 async def restart_webdav():
     """Restarts the WebDAV daemon."""
     engine = get_webdav_engine()

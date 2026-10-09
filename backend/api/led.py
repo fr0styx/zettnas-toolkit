@@ -1,5 +1,6 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
+from backend.auth import require_scope
 from backend.config import LED_STATE_FILE
 from backend.fsutil import atomic_write_json, read_json
 from backend.hardware.led import apply_led_state
@@ -18,7 +19,7 @@ def get_led():
     return _load_led()
 
 
-@router.post("/led")
+@router.post("/led", dependencies=[Depends(require_scope("hardware:rgb"))])
 def post_led(req: LedConfigRequest):
     data = req.model_dump(exclude_unset=True)
     cur_led = _load_led()

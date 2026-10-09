@@ -5,8 +5,9 @@ shares, configuration, and macOS Time Machine integration.
 """
 
 from typing import Any, Dict, List
-from fastapi import APIRouter, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException, Response
 
+from backend.auth import require_scope
 from backend.services.samba_engine import (
     SambaShareConfig,
     SambaStatus,
@@ -34,7 +35,7 @@ def get_samba_shares() -> List[SambaShareConfig]:
     return engine.list_shares()
 
 
-@router.post("/shares", response_model=SambaShareConfig)
+@router.post("/shares", response_model=SambaShareConfig, dependencies=[Depends(require_scope("shares:manage"))])
 def create_or_update_samba_share(share: SambaShareConfig) -> SambaShareConfig:
     """Creates or updates a Samba share."""
     platform = StoragePlatformDetector.detect()
@@ -50,7 +51,7 @@ def create_or_update_samba_share(share: SambaShareConfig) -> SambaShareConfig:
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.delete("/shares/{name}")
+@router.delete("/shares/{name}", dependencies=[Depends(require_scope("shares:manage"))])
 def delete_samba_share(name: str) -> Dict[str, Any]:
     """Deletes a configured Samba share."""
     platform = StoragePlatformDetector.detect()
@@ -73,7 +74,7 @@ def get_samba_config() -> Response:
     return Response(content=conf_text, media_type="text/plain")
 
 
-@router.post("/reload")
+@router.post("/reload", dependencies=[Depends(require_scope("shares:manage"))])
 def reload_samba_service() -> Dict[str, Any]:
     """Reloads Samba service configuration."""
     engine = get_samba_engine()

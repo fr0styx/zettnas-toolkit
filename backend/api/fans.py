@@ -1,5 +1,6 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 
+from backend.auth import require_scope
 from backend.config import (
     FAN_STATE_FILE,
     FAN_ZERO_RPM_DEFAULT_NVME_CEILING,
@@ -39,7 +40,7 @@ def get_fans():
     return _load_fans()
 
 
-@router.post("/fans")
+@router.post("/fans", dependencies=[Depends(require_scope("hardware:fans"))])
 def post_fans(req: FanConfigRequest):
     data = req.model_dump(exclude_unset=True)
 
@@ -85,7 +86,7 @@ def get_fan_presets():
     return {"presets": fan_cfg.get("custom_presets", {})}
 
 
-@router.post("/fans/presets")
+@router.post("/fans/presets", dependencies=[Depends(require_scope("hardware:fans"))])
 def create_fan_preset(req: FanPresetCreate):
     """Saves or updates a custom named fan curve preset."""
     clean_curve = sanitize_curve_points(req.curve_points)
@@ -114,7 +115,7 @@ def create_fan_preset(req: FanPresetCreate):
     return {"success": True, "name": req.name, "preset": preset_data}
 
 
-@router.delete("/fans/presets/{preset_name}")
+@router.delete("/fans/presets/{preset_name}", dependencies=[Depends(require_scope("hardware:fans"))])
 def delete_fan_preset(preset_name: str):
     """Deletes a custom named fan curve preset."""
     fan_cfg = _load_fans()
@@ -128,7 +129,7 @@ def delete_fan_preset(preset_name: str):
     return {"success": True, "deleted": preset_name}
 
 
-@router.post("/fans/presets/{preset_name}/apply")
+@router.post("/fans/presets/{preset_name}/apply", dependencies=[Depends(require_scope("hardware:fans"))])
 def apply_fan_preset(preset_name: str):
     """Applies a custom named preset to the active fan curve."""
     fan_cfg = _load_fans()

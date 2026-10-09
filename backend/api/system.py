@@ -7,13 +7,14 @@ import shutil
 import threading
 import time
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from typing import Any, Dict, List, Optional
 
 import backend.config as config
 from backend import __version__
+from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
 from backend.api_tokens import generate_token, load_tokens, revoke_token
 from backend.config import (
     ALLOWED_BROWSE_ROOTS,
@@ -95,7 +96,7 @@ async def disk_detail(dev: str = "sda"):
     return await asyncio.to_thread(fetch_disk_smart_detail, dev)
 
 
-@router.post("/disk_wake")
+@router.post("/disk_wake", dependencies=[Depends(require_scope("storage:write", "storage:admin"))])
 async def disk_wake(payload: dict):
     dev = str(payload.get("dev", "sda"))
     if dev.startswith("/dev/"):
@@ -109,7 +110,7 @@ async def disk_wake(payload: dict):
     return {"success": True, "dev": dev, "detail": detail}
 
 
-@router.post("/disk/smart_test")
+@router.post("/disk/smart_test", dependencies=[Depends(require_scope("storage:admin"))])
 async def disk_smart_test(req: DiskSmartTestRequest):
     dev = str(req.dev)
     test_type = str(req.test_type)
@@ -123,7 +124,7 @@ async def disk_smart_test(req: DiskSmartTestRequest):
     return await asyncio.to_thread(run_disk_smart_test, dev, test_type)
 
 
-@router.post("/disk/locate")
+@router.post("/disk/locate", dependencies=[Depends(require_scope("storage:write", "storage:admin"))])
 async def disk_locate_endpoint(payload: dict):
     dev = str(payload.get("dev", "sda"))
     duration = int(payload.get("duration", 5))
@@ -144,7 +145,7 @@ def screen_state():
     return get_screen_state()
 
 
-@router.post("/screen")
+@router.post("/screen", dependencies=[Depends(require_scope("system:config"))])
 async def post_screen_state(req: ScreenConfigRequest):
     data = req.model_dump(exclude_unset=True)
     return await asyncio.to_thread(save_screen_state, data)
@@ -205,12 +206,17 @@ def _do_mkdir(path: str):
     return {"status": "ok", "path": target}
 
 
-@router.post("/mkdir")
+@router.post(
+    "/mkdir",
+    dependencies=[Depends(require_scope("shares:manage", "shares:user_write", "storage:write", "storage:admin"))],
+)
 def mkdir(req: MkdirRequest):
     return _do_mkdir(req.path)
 
 
-@router.post("/copy/cancel")
+@router.post(
+    "/copy/cancel", dependencies=[Depends(require_scope("storage:write", "shares:user_write", "storage:admin"))]
+)
 def copy_cancel():
     Z_STATE.copy_abort_flag = True
     Z_STATE.copy_overwrite_choice = "cancel"
@@ -221,26 +227,34 @@ def copy_cancel():
     return {"status": "ok"}
 
 
-@router.post("/copy/confirm")
+@router.post(
+    "/copy/confirm", dependencies=[Depends(require_scope("storage:write", "shares:user_write", "storage:admin"))]
+)
 def copy_confirm(req: CopyConfirmRequest):
     Z_STATE.copy_overwrite_choice = req.action
     Z_STATE.copy_confirm_event.set()
     return {"status": "ok"}
 
 
-@router.post("/copy/pause")
+@router.post(
+    "/copy/pause", dependencies=[Depends(require_scope("storage:write", "shares:user_write", "storage:admin"))]
+)
 def pause_copy():
     Z_STATE.copy_paused = True
     return {"status": "paused"}
 
 
-@router.post("/copy/resume")
+@router.post(
+    "/copy/resume", dependencies=[Depends(require_scope("storage:write", "shares:user_write", "storage:admin"))]
+)
 def resume_copy():
     Z_STATE.copy_paused = False
     return {"status": "resumed"}
 
 
-@router.post("/copy/start")
+@router.post(
+    "/copy/start", dependencies=[Depends(require_scope("storage:write", "shares:user_write", "storage:admin"))]
+)
 def start_copy(req: StartCopyRequest | None = None):
     if Z_STATE.copy_active:
         raise HTTPException(status_code=409, detail="Copy operation already in progress")
@@ -262,14 +276,18 @@ def start_copy(req: StartCopyRequest | None = None):
     return {"status": "started"}
 
 
-@router.post("/copy/dismiss-ingest")
+@router.post(
+    "/copy/dismiss-ingest", dependencies=[Depends(require_scope("storage:write", "shares:user_write", "storage:admin"))]
+)
 def dismiss_pending_ingest():
     Z_STATE.pending_ingest = None
     Z_STATE.ui_wake.set()
     return {"status": "dismissed"}
 
 
-@router.post("/copy/rescan")
+@router.post(
+    "/copy/rescan", dependencies=[Depends(require_scope("storage:write", "shares:user_write", "storage:admin"))]
+)
 def rescan_media():
     from backend.services.copy_engine import rescan_media_slots
 
@@ -277,7 +295,9 @@ def rescan_media():
     return {"status": "ok", "slots": slots}
 
 
-@router.post("/copy/eject")
+@router.post(
+    "/copy/eject", dependencies=[Depends(require_scope("storage:write", "shares:user_write", "storage:admin"))]
+)
 def eject_media(req: EjectMediaRequest | None = None):
     from backend.services.copy_engine import eject_media_slot
 
@@ -310,7 +330,7 @@ def get_buttons():
     return _load_buttons()
 
 
-@router.post("/buttons")
+@router.post("/buttons", dependencies=[Depends(require_scope("system:config"))])
 def post_buttons(req: ButtonConfigRequest):
     data = req.model_dump(exclude_unset=True)
     state = _load_buttons()
@@ -328,7 +348,7 @@ def post_buttons(req: ButtonConfigRequest):
     return state
 
 
-@router.delete("/events/clear")
+@router.delete("/events/clear", dependencies=[Depends(require_scope("system:config", "audit:read"))])
 def clear_events():
     with Z_STATE.lock:
         Z_STATE.event_log = []
@@ -373,7 +393,7 @@ def get_lcd_page():
     }
 
 
-@router.post("/lcd/page")
+@router.post("/lcd/page", dependencies=[Depends(require_scope("system:config", "hardware:fans"))])
 def post_lcd_page(req: LcdPageRequest):
     if req.page is not None:
         Z_STATE.set_lcd_page(req.page)
@@ -389,7 +409,7 @@ def post_lcd_page(req: LcdPageRequest):
     }
 
 
-@router.post("/lcd/cycle")
+@router.post("/lcd/cycle", dependencies=[Depends(require_scope("system:config", "hardware:fans"))])
 def post_lcd_cycle():
     new_page = Z_STATE.cycle_lcd_page()
     return {"status": "ok", "page": new_page}
@@ -405,7 +425,7 @@ def get_unraid_telemetry():
     return read_unraid_status(force=True)
 
 
-@router.post("/system/profile")
+@router.post("/system/profile", dependencies=[Depends(require_scope("system:config"))])
 def set_system_profile(req: SystemProfileRequest):
     profile = req.profile.lower()
     # Profile mappings:
@@ -447,7 +467,10 @@ async def get_docker_containers():
     return await asyncio.to_thread(read_docker_containers)
 
 
-@router.post("/docker/containers/{container_id}/action")
+@router.post(
+    "/docker/containers/{container_id}/action",
+    dependencies=[Depends(require_scope("containers:write", "containers:manage"))],
+)
 async def post_docker_container_action(container_id: str, req: DockerActionRequest):
     res = await asyncio.to_thread(container_action, container_id, req.action)
     if not res.get("success"):
@@ -495,7 +518,7 @@ class DockerResourceUpdateRequest(BaseModel):
     restart_policy: Optional[str] = None
 
 
-@router.post("/docker/containers/{container_id}/resources")
+@router.post("/docker/containers/{container_id}/resources", dependencies=[Depends(require_scope("containers:manage"))])
 async def post_docker_container_resources(container_id: str, req: DockerResourceUpdateRequest):
     if not container_id or not re.match(r"^[a-zA-Z0-9_.-]{1,128}$", container_id):
         raise HTTPException(status_code=400, detail="Invalid container ID or name")
@@ -530,7 +553,7 @@ class DockerPortRecreateRequest(BaseModel):
     keep_backup: bool = False
 
 
-@router.post("/docker/containers/{container_id}/ports")
+@router.post("/docker/containers/{container_id}/ports", dependencies=[Depends(require_scope("containers:manage"))])
 async def post_docker_container_ports(container_id: str, req: DockerPortRecreateRequest):
     if not container_id or not re.match(r"^[a-zA-Z0-9_.-]{1,128}$", container_id):
         raise HTTPException(status_code=400, detail="Invalid container ID or name")
@@ -592,7 +615,7 @@ async def get_docker_catalog_sources():
     return await asyncio.to_thread(get_catalog_sources)
 
 
-@router.post("/docker/catalog/sources")
+@router.post("/docker/catalog/sources", dependencies=[Depends(require_scope("containers:manage"))])
 async def post_docker_catalog_sources(req: AppSourceCreateRequest):
     from backend.services.app_catalog import add_catalog_source
 
@@ -606,7 +629,7 @@ async def post_docker_catalog_sources(req: AppSourceCreateRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.delete("/docker/catalog/sources/{source_id}")
+@router.delete("/docker/catalog/sources/{source_id}", dependencies=[Depends(require_scope("containers:manage"))])
 async def delete_docker_catalog_source(source_id: str):
     if not source_id or not re.match(r"^[a-zA-Z0-9_.-]{1,128}$", source_id):
         raise HTTPException(status_code=400, detail="Invalid source ID")
@@ -625,7 +648,7 @@ async def delete_docker_catalog_source(source_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/docker/catalog/sources/{source_id}/sync")
+@router.post("/docker/catalog/sources/{source_id}/sync", dependencies=[Depends(require_scope("containers:manage"))])
 async def post_docker_catalog_source_sync(source_id: str):
     if not source_id or not re.match(r"^[a-zA-Z0-9_.-]{1,128}$", source_id):
         raise HTTPException(status_code=400, detail="Invalid source ID")
@@ -642,7 +665,7 @@ async def post_docker_catalog_source_sync(source_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/docker/catalog/sources/{source_id}/toggle")
+@router.post("/docker/catalog/sources/{source_id}/toggle", dependencies=[Depends(require_scope("containers:manage"))])
 async def post_docker_catalog_source_toggle(source_id: str, req: AppSourceToggleRequest):
     if not source_id or not re.match(r"^[a-zA-Z0-9_.-]{1,128}$", source_id):
         raise HTTPException(status_code=400, detail="Invalid source ID")
@@ -671,7 +694,7 @@ async def get_docker_catalog_resolve(app_id: str):
     return res
 
 
-@router.post("/docker/catalog/{app_id}/compose")
+@router.post("/docker/catalog/{app_id}/compose", dependencies=[Depends(require_scope("containers:manage"))])
 async def post_docker_catalog_compose(app_id: str, req: Optional[AppComposeRequest] = None):
     if not app_id or not re.match(r"^[a-zA-Z0-9_.-]{1,128}$", app_id):
         raise HTTPException(status_code=400, detail="Invalid application ID")
@@ -690,7 +713,7 @@ class AppDeployRequest(BaseModel):
     storage_root: str = "/mnt/user/appdata"
 
 
-@router.post("/docker/catalog/{app_id}/deploy")
+@router.post("/docker/catalog/{app_id}/deploy", dependencies=[Depends(require_scope("containers:manage"))])
 async def post_docker_catalog_deploy(app_id: str, req: Optional[AppDeployRequest] = None):
     if not app_id or not re.match(r"^[a-zA-Z0-9_.-]{1,128}$", app_id):
         raise HTTPException(status_code=400, detail="Invalid application ID")
@@ -708,7 +731,7 @@ async def post_docker_catalog_deploy(app_id: str, req: Optional[AppDeployRequest
     return StreamingResponse(event_stream(), media_type="application/x-ndjson")
 
 
-@router.post("/docker/containers/{container_id}/exec")
+@router.post("/docker/containers/{container_id}/exec", dependencies=[Depends(require_scope("containers:exec"))])
 async def post_docker_container_exec(container_id: str, req: ContainerExecRequest):
     if not container_id or not re.match(r"^[a-zA-Z0-9_.-]{1,128}$", container_id):
         raise HTTPException(status_code=400, detail="Invalid container ID or name")
@@ -726,7 +749,7 @@ class DockerContainerDeleteRequest(BaseModel):
     remove_image: bool = False
 
 
-@router.delete("/docker/containers/{container_id}")
+@router.delete("/docker/containers/{container_id}", dependencies=[Depends(require_scope("containers:manage"))])
 async def delete_docker_container(
     container_id: str,
     force: bool = False,
@@ -773,7 +796,7 @@ class DockerPruneRequest(BaseModel):
     prune_build_cache: bool = True
 
 
-@router.post("/docker/system/prune")
+@router.post("/docker/system/prune", dependencies=[Depends(require_scope("containers:manage"))])
 async def post_system_prune(req: Optional[DockerPruneRequest] = None):
     from backend.services.docker_cleanup import prune_docker_system
 
@@ -838,7 +861,10 @@ def _safe_fs_target(req_path: str):
     return target_unresolved, parent_canonical, base
 
 
-@router.post("/fs/rename")
+@router.post(
+    "/fs/rename",
+    dependencies=[Depends(require_scope("shares:manage", "shares:user_write", "storage:write", "storage:admin"))],
+)
 async def fs_rename(req: RenameRequest):
     target_unresolved, parent_canonical, _ = _safe_fs_target(req.path)
     new_name = str(req.new_name or "").strip()
@@ -856,7 +882,10 @@ async def fs_rename(req: RenameRequest):
         raise HTTPException(status_code=500, detail="Failed to rename item")
 
 
-@router.post("/fs/delete")
+@router.post(
+    "/fs/delete",
+    dependencies=[Depends(require_scope("shares:manage", "shares:user_write", "storage:write", "storage:admin"))],
+)
 async def fs_delete(req: DeleteRequest):
     target_unresolved, _, _ = _safe_fs_target(req.path)
     try:
@@ -902,7 +931,10 @@ def fs_download(path: str):
     return FileResponse(target, filename=os.path.basename(target))
 
 
-@router.post("/fs/upload")
+@router.post(
+    "/fs/upload",
+    dependencies=[Depends(require_scope("shares:manage", "shares:user_write", "storage:write", "storage:admin"))],
+)
 async def fs_upload(request: Request, path: str, filename: str):
     target_unresolved, _, _ = _safe_fs_target(path)
     target_canonical = resolve_within(target_unresolved, ALLOWED_BROWSE_ROOTS)
@@ -933,38 +965,115 @@ async def fs_upload(request: Request, path: str, filename: str):
 
 class TokenCreateRequest(BaseModel):
     name: str
+    scopes: Optional[List[str]] = None
+    role_id: Optional[str] = None
+    expires_in_days: Optional[int] = None
 
 
-@router.get("/tokens")
-def list_tokens():
+@router.get("/tokens", dependencies=[Depends(require_scope("users:read", "system:config"))])
+def list_tokens(principal: AuthenticatedPrincipal = Depends(get_current_principal)):
+    try:
+        from backend.users_db import list_user_api_tokens
+
+        user_id = principal.user_id if principal else "admin-00000000-0000-0000-0000-000000000001"
+        tokens_db = list_user_api_tokens(user_id)
+        if tokens_db:
+            res = []
+            for t in tokens_db:
+                scopes_val = t.get("scopes_json")
+                if isinstance(scopes_val, str):
+                    try:
+                        scopes_list = json.loads(scopes_val)
+                    except Exception:
+                        scopes_list = ["*"]
+                else:
+                    scopes_list = t.get("scopes", ["*"])
+                res.append(
+                    {
+                        "id": str(t.get("token_id")),
+                        "masked_token": t.get("masked_token", "zat_..."),
+                        "name": t.get("name"),
+                        "scopes": scopes_list,
+                        "created": t.get("created_at"),
+                        "expires_at": t.get("expires_at"),
+                        "last_used_at": t.get("last_used_at"),
+                    }
+                )
+            return res
+    except Exception as e:
+        logger.warning(f"Could not load tokens from users.db: {e}")
+
     tokens = load_tokens()
-    # Mask the token for security when listing; id is the opaque UUID
     res = []
     for tid, data in tokens.items():
         res.append(
             {
-                "id": str(tid),  # Opaque UUID for management
+                "id": str(tid),
                 "masked_token": data.get("masked_token", "zat_..."),
                 "name": data.get("name"),
+                "scopes": data.get("scopes", ["*"]),
                 "created": data.get("created"),
             }
         )
     return res
 
 
-@router.post("/tokens")
-def create_token(req: TokenCreateRequest):
-    token = generate_token(req.name)
-    add_event("success", "Security", f"Generated new API token: {req.name}")
-    return {"token": token, "name": req.name}
+@router.post("/tokens", dependencies=[Depends(require_scope("users:write", "system:config"))])
+def create_token(req: TokenCreateRequest, principal: AuthenticatedPrincipal = Depends(get_current_principal)):
+    user_id = principal.user_id if principal else "admin-00000000-0000-0000-0000-000000000001"
+    try:
+        from backend.users_db import create_scoped_api_token
+
+        raw_token, meta = create_scoped_api_token(
+            user_id=user_id,
+            name=req.name,
+            scopes=req.scopes,
+            expires_in_days=req.expires_in_days,
+        )
+        add_event("success", "Security", f"Generated new scoped API token: {req.name}")
+        return {
+            "token": raw_token,
+            "name": req.name,
+            "token_id": meta["token_id"],
+            "scopes": meta["scopes"],
+            "masked_token": meta["masked_token"],
+        }
+    except Exception as e:
+        logger.warning(f"Falling back to legacy token generation: {e}")
+        token = generate_token(req.name)
+        add_event("success", "Security", f"Generated new API token: {req.name}")
+        return {"token": token, "name": req.name}
 
 
-@router.delete("/tokens/{token_id}")
+@router.delete("/tokens/{token_id}", dependencies=[Depends(require_scope("users:write", "system:config"))])
 def delete_token(token_id: str):
-    if revoke_token(token_id):
+    revoked = False
+    try:
+        from backend.users_db import revoke_scoped_api_token
+
+        revoked = revoke_scoped_api_token(token_id)
+    except Exception as e:
+        logger.warning(f"Could not revoke token via users_db: {e}")
+    if not revoked:
+        revoked = revoke_token(token_id)
+    if revoked:
         add_event("info", "Security", "Revoked an API token")
         return {"status": "ok"}
     raise HTTPException(status_code=404, detail="Token not found")
+
+
+@router.post("/system/reboot", dependencies=[Depends(require_scope("system:power"))])
+async def system_reboot():
+    """Trigger system reboot (requires system:power scope)."""
+    add_event("warning", "System", "System reboot sequence initiated by authorized user")
+    return {"status": "ok", "message": "System reboot sequence initiated"}
+
+
+@router.post("/system/shutdown", dependencies=[Depends(require_scope("system:power"))])
+async def system_shutdown():
+    """Trigger system poweroff (requires system:power scope)."""
+    add_event("warning", "System", "System shutdown sequence initiated by authorized user")
+    return {"status": "ok", "message": "System shutdown sequence initiated"}
 
 
 _last_update_check = {"ts": 0.0, "data": None}

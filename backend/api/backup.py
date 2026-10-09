@@ -4,9 +4,10 @@ import tempfile
 import time
 import zipfile
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 
+from backend.auth import require_scope
 from backend.config import CLIENT_PREFS_FILE, logger
 from backend.fsutil import atomic_write_json, read_json
 from backend.services.backup_engine import generate_backup_zip_stream, restore_backup_archive
@@ -46,7 +47,7 @@ async def save_client_preferences(request: Request):
     return {"status": "ok", "message": "Client preferences saved", "preferences": current}
 
 
-@router.get("/system/backup")
+@router.get("/system/backup", dependencies=[Depends(require_scope("backup:read", "backup:manage", "system:config"))])
 def download_backup():
     """Generates a zip archive of the configuration data directory."""
     buf = generate_backup_zip_stream()
@@ -63,7 +64,7 @@ def _safe_restore_archive(path: str) -> None:
         restore_backup_archive(archive_file)
 
 
-@router.post("/system/restore")
+@router.post("/system/restore", dependencies=[Depends(require_scope("backup:write", "backup:manage", "system:config"))])
 async def restore_backup(request: Request):
     """Restores configuration from a zip archive."""
     tmp_path = None

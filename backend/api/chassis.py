@@ -2,7 +2,8 @@
 ZettNAS Toolkit - Chassis Visualizer & Layout API Routes
 """
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from backend.auth import require_scope
 from backend.hardware.chassis import ChassisEngine, ChassisBayMapRequest
 
 router = APIRouter(prefix="/chassis", tags=["Chassis Visualizer & Layout"])
@@ -17,7 +18,7 @@ def get_chassis_config():
     return ChassisEngine.get_chassis_status()
 
 
-@router.post("/bay_map")
+@router.post("/bay_map", dependencies=[Depends(require_scope("storage:admin", "system:config"))])
 def save_chassis_bay_map(request: ChassisBayMapRequest):
     """
     Saves user-customized chassis profile, total bays, and drag-and-drop bay slot assignments.
