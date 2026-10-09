@@ -3314,11 +3314,63 @@
         </div>
             <div id="mgmt-pane-system" class="mgmt-tab-pane" style="display: none;">
           <div class="mgmt-card-intro">
-            <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-chip"/></svg> <span data-i18n="mgmt.sys_title">System Settings & API</span></div>
-            <div class="mgmt-card-intro-desc" data-i18n="mgmt.sys_desc">Manage configuration backups, restore settings, and generate API tokens for third-party integrations.</div>
+            <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-chip"/></svg> <span data-i18n="mgmt.sys_title">Hyper-Backup, Snapshots & API</span></div>
+            <div class="mgmt-card-intro-desc" data-i18n="mgmt.sys_desc">Manage automated 3-2-1 backup pipelines, point-in-time filesystem snapshots, configuration archives, and API tokens.</div>
           </div>
           
           <div class="mgmt-detail-body">
+            <!-- Hyper-Backup Tasks & 3-2-1 Pipelines -->
+            <div class="drawer-card" style="margin-bottom: 24px; padding: 16px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 12px; flex-wrap: wrap;">
+                <div>
+                  <span class="card-head-title" style="font-weight: 700; font-size: 14px; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+                    <span>🛡️</span>
+                    <span>Hyper-Backup Tasks & 3-2-1 Pipelines</span>
+                  </span>
+                  <div style="font-size: 12px; color: var(--muted); line-height: 1.4;">
+                    Automated local filesystem snapshot scheduling with offsite cloud synchronization via Rclone and rotation retention policies.
+                  </div>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                  <button id="btn-refresh-backup-jobs" class="btn-rect" style="background: rgba(255,255,255,0.08); font-size: 11px; padding: 6px 12px;">
+                    <svg class="ic"><use href="#i-refresh"/></svg> Refresh
+                  </button>
+                  <button id="btn-open-create-backup-job" class="btn-rect primary" style="font-size: 11px; padding: 6px 14px;">
+                    <svg class="ic"><use href="#i-plus"/></svg> Add Backup Task
+                  </button>
+                </div>
+              </div>
+              <div id="backup-jobs-mount">
+                <div style="font-size: 12px; color: var(--muted); text-align: center; padding: 16px;">Loading hyper-backup jobs...</div>
+              </div>
+            </div>
+
+            <!-- Storage Pool Snapshots & Revert -->
+            <div class="drawer-card" style="margin-bottom: 24px; padding: 16px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 12px; flex-wrap: wrap;">
+                <div>
+                  <span class="card-head-title" style="font-weight: 700; font-size: 14px; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+                    <span>📸</span>
+                    <span>Storage Pool Snapshots & Rollback</span>
+                  </span>
+                  <div style="font-size: 12px; color: var(--muted); line-height: 1.4;">
+                    Atomic copy-on-write subvolume snapshots with instant point-in-time rollback and retention pruning.
+                  </div>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                  <button id="btn-refresh-snapshots" class="btn-rect" style="background: rgba(255,255,255,0.08); font-size: 11px; padding: 6px 12px;">
+                    <svg class="ic"><use href="#i-refresh"/></svg> Refresh
+                  </button>
+                  <button id="btn-open-create-snapshot" class="btn-rect primary" style="font-size: 11px; padding: 6px 14px;">
+                    <svg class="ic"><use href="#i-camera"/></svg> Take Snapshot
+                  </button>
+                </div>
+              </div>
+              <div id="system-snapshots-mount">
+                <div style="font-size: 12px; color: var(--muted); text-align: center; padding: 16px;">Loading snapshots...</div>
+              </div>
+            </div>
+
             <div class="drawer-card" style="margin-bottom: 24px; padding: 16px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
               <div class="card-headline">
                 <span class="card-head-title" data-i18n="settings.backup_title" style="font-weight: 700; font-size: 14px; margin-bottom: 8px; display: block;">Configuration Backup & Restore</span>
@@ -3962,6 +4014,113 @@
         </div>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- Create Hyper-Backup Task Modal -->
+<div id="modal-create-backup-job" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-backup-job-title" style="display: none;">
+  <div class="smart-modal-window" style="max-width: 520px; width: 92%; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(14, 165, 233, 0.15); border: 1px solid rgba(255, 255, 255, 0.12);">
+    <div class="smart-modal-header" style="cursor: move;">
+      <span class="smart-modal-title" id="modal-backup-job-title" style="display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 15px;">🛡️</span>
+        <span>Add Hyper-Backup Task</span>
+      </span>
+      <div class="os-window-controls">
+        <button class="win-btn close-btn" id="modal-backup-job-close-btn" title="Close" aria-label="Close"></button>
+      </div>
+    </div>
+    <form id="create-backup-job-form" class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
+      <div>
+        <label for="backup-job-name" style="display: block; font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;">Task Name</label>
+        <input type="text" id="backup-job-name" class="tz-select-input" placeholder="e.g. Daily Documents & Photos Sync" required style="width: 100%; border: 1px solid rgba(255,255,255,0.12); background: rgba(0,0,0,0.3); padding: 8px 10px; color: #fff; border-radius: 6px; font-size: 12px;" />
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <div>
+          <label for="backup-job-subvolume" style="display: block; font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;">Source Share / Subvolume</label>
+          <input type="text" id="backup-job-subvolume" class="tz-select-input" placeholder="e.g. shares, documents" required style="width: 100%; border: 1px solid rgba(255,255,255,0.12); background: rgba(0,0,0,0.3); padding: 8px 10px; color: #fff; border-radius: 6px; font-size: 12px;" />
+        </div>
+        <div>
+          <label for="backup-job-dest-type" style="display: block; font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;">Destination Pipeline</label>
+          <select id="backup-job-dest-type" class="tz-select-input" style="width: 100%; border: 1px solid rgba(255,255,255,0.12); background: rgba(0,0,0,0.3); padding: 8px 10px; color: #fff; border-radius: 6px; font-size: 12px;">
+            <option value="remote" selected>Snapshot + Cloud Sync (3-2-1)</option>
+            <option value="local_snapshot">Local Snapshot Only</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="backup-remote-fields" style="display: flex; flex-direction: column; gap: 12px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div>
+            <label for="backup-job-remote-name" style="display: block; font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;">Rclone Remote</label>
+            <input type="text" id="backup-job-remote-name" class="tz-select-input" placeholder="e.g. b2-backup, gdrive" style="width: 100%; border: 1px solid rgba(255,255,255,0.12); background: rgba(0,0,0,0.3); padding: 8px 10px; color: #fff; border-radius: 6px; font-size: 12px;" />
+          </div>
+          <div>
+            <label for="backup-job-remote-path" style="display: block; font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;">Remote Bucket / Folder</label>
+            <input type="text" id="backup-job-remote-path" class="tz-select-input" placeholder="e.g. backup-bucket/nas" style="width: 100%; border: 1px solid rgba(255,255,255,0.12); background: rgba(0,0,0,0.3); padding: 8px 10px; color: #fff; border-radius: 6px; font-size: 12px;" />
+          </div>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <div>
+          <label for="backup-job-schedule" style="display: block; font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;">Frequency Schedule</label>
+          <select id="backup-job-schedule" class="tz-select-input" style="width: 100%; border: 1px solid rgba(255,255,255,0.12); background: rgba(0,0,0,0.3); padding: 8px 10px; color: #fff; border-radius: 6px; font-size: 12px;">
+            <option value="daily" selected>Daily (Every 24 Hours)</option>
+            <option value="hourly">Hourly</option>
+            <option value="weekly">Weekly</option>
+            <option value="manual">Manual Execution Only</option>
+          </select>
+        </div>
+        <div>
+          <label for="backup-job-retention" style="display: block; font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;">Snapshot Retention Count</label>
+          <input type="number" id="backup-job-retention" min="1" max="100" value="7" class="tz-select-input" style="width: 100%; border: 1px solid rgba(255,255,255,0.12); background: rgba(0,0,0,0.3); padding: 8px 10px; color: #fff; border-radius: 6px; font-size: 12px;" />
+        </div>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
+        <input type="checkbox" id="backup-job-enabled" checked style="width: 16px; height: 16px; cursor: pointer;" />
+        <label for="backup-job-enabled" style="font-size: 12px; color: #fff; cursor: pointer;">Enable automatic scheduling</label>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+        <button type="button" id="modal-backup-job-cancel-btn" style="padding: 7px 16px; font-size: 11px; font-weight: 700; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); color: #fff; border-radius: 6px; cursor: pointer;">Cancel</button>
+        <button type="submit" style="padding: 7px 18px; font-size: 11px; font-weight: 700; background: var(--brand, #0ea5e9); border: none; color: #fff; border-radius: 6px; cursor: pointer;">Save Pipeline</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Take Instant Snapshot Modal -->
+<div id="modal-create-snapshot" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-take-snap-title" style="display: none;">
+  <div class="smart-modal-window" style="max-width: 480px; width: 92%; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(14, 165, 233, 0.15); border: 1px solid rgba(255, 255, 255, 0.12);">
+    <div class="smart-modal-header" style="cursor: move;">
+      <span class="smart-modal-title" id="modal-take-snap-title" style="display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 15px;">📸</span>
+        <span>Take Storage Snapshot</span>
+      </span>
+      <div class="os-window-controls">
+        <button class="win-btn close-btn" id="modal-create-snapshot-close-btn" title="Close" aria-label="Close"></button>
+      </div>
+    </div>
+    <form id="create-snapshot-form" class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
+      <div>
+        <label for="snapshot-subvol-input" style="display: block; font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;">Target Subvolume / Share</label>
+        <input type="text" id="snapshot-subvol-input" class="tz-select-input" placeholder="e.g. shares, data, media" required style="width: 100%; border: 1px solid rgba(255,255,255,0.12); background: rgba(0,0,0,0.3); padding: 8px 10px; color: #fff; border-radius: 6px; font-size: 12px;" />
+      </div>
+      <div>
+        <label for="snapshot-custom-name-input" style="display: block; font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;">Custom Snapshot Tag (Optional)</label>
+        <input type="text" id="snapshot-custom-name-input" class="tz-select-input" placeholder="Leave empty for auto timestamp" style="width: 100%; border: 1px solid rgba(255,255,255,0.12); background: rgba(0,0,0,0.3); padding: 8px 10px; color: #fff; border-radius: 6px; font-size: 12px;" />
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <input type="checkbox" id="snapshot-readonly-input" checked style="width: 16px; height: 16px; cursor: pointer;" />
+        <label for="snapshot-readonly-input" style="font-size: 12px; color: #fff; cursor: pointer;">Read-only protection (prevents modification)</label>
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+        <button type="button" id="modal-create-snapshot-cancel-btn" style="padding: 7px 16px; font-size: 11px; font-weight: 700; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); color: #fff; border-radius: 6px; cursor: pointer;">Cancel</button>
+        <button type="submit" style="padding: 7px 18px; font-size: 11px; font-weight: 700; background: var(--brand, #0ea5e9); border: none; color: #fff; border-radius: 6px; cursor: pointer;">Create Snapshot</button>
+      </div>
+    </form>
   </div>
 </div>
 

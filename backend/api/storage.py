@@ -44,6 +44,11 @@ class StorageSnapshotCreateRequest(BaseModel):
     readonly: bool = True
 
 
+class StorageSnapshotRestoreRequest(BaseModel):
+    snapshot_name: str
+    target_subvol: str = ""
+
+
 @router.get("/platform")
 def get_storage_platform_info() -> Dict[str, Any]:
     """
@@ -233,5 +238,26 @@ def delete_storage_snapshot(pool_id: str, snapshot_name: str) -> Dict[str, Any]:
         )
     try:
         return adapter.delete_snapshot(pool_id=pool_id, snapshot_name=snapshot_name)
+    except PlatformCapabilityError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+
+
+@router.post("/pools/{pool_id}/snapshots/restore", dependencies=[Depends(require_scope("storage:admin"))])
+def restore_storage_snapshot(pool_id: str, req: StorageSnapshotRestoreRequest) -> Dict[str, Any]:
+    """
+    Restores or rolls back a Btrfs subvolume snapshot. Forbidden in Observer Mode.
+    """
+    adapter = get_storage_platform()
+    caps = adapter.get_capabilities()
+    if caps.is_observer_mode:
+        raise HTTPException(
+            status_code=403,
+            detail=f"Forbidden in Observer Mode on {adapter.get_platform_type().value}.",
+        )
+    try:
+        res = adapter.restore_snapshot(pool_id=pool_id, snapshot_name=req.snapshot_name, target_subvol=req.target_subvol)
+        if res.get("status") == "error":
+            raise HTTPException(status_code=400, detail=res.get("message") or "Snapshot restore failed")
+        return res
     except PlatformCapabilityError as e:
         raise HTTPException(status_code=403, detail=str(e))

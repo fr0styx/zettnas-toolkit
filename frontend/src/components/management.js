@@ -2046,6 +2046,8 @@ export function initManagement() {
       fetchAndRenderDisksInventory();
     } else if (paneId === 'mgmt-pane-system') {
       if (typeof fetchAPITokens === 'function') fetchAPITokens();
+      fetchAndRenderBackupJobs();
+      fetchAndRenderSystemSnapshots();
     } else if (paneId === 'mgmt-pane-notifications') {
       fetchAndRenderNotificationConfig();
     } else if (paneId === 'mgmt-pane-users') {
@@ -2486,6 +2488,111 @@ export function initManagement() {
     });
   }
 
+  // Hyper-Backup & Snapshots event bindings
+  const btnOpenBackupJob = document.getElementById('btn-open-create-backup-job');
+  const modalBackupJob = document.getElementById('modal-create-backup-job');
+  const btnCloseBackupJob = document.getElementById('modal-backup-job-close-btn');
+  const btnCancelBackupJob = document.getElementById('modal-backup-job-cancel-btn');
+  const formBackupJob = document.getElementById('create-backup-job-form');
+  const btnRefreshBackupJobs = document.getElementById('btn-refresh-backup-jobs');
+
+  if (btnOpenBackupJob && modalBackupJob) {
+    btnOpenBackupJob.addEventListener('click', () => {
+      modalBackupJob.style.display = 'flex';
+      const nameInput = document.getElementById('backup-job-name');
+      if (nameInput) nameInput.focus();
+    });
+  }
+  const closeBackupModal = () => {
+    if (modalBackupJob) modalBackupJob.style.display = 'none';
+  };
+  if (btnCloseBackupJob) btnCloseBackupJob.addEventListener('click', closeBackupModal);
+  if (btnCancelBackupJob) btnCancelBackupJob.addEventListener('click', closeBackupModal);
+
+  const destTypeSelect = document.getElementById('backup-job-dest-type');
+  const remoteFieldsDiv = document.getElementById('backup-remote-fields');
+  if (destTypeSelect && remoteFieldsDiv) {
+    destTypeSelect.addEventListener('change', () => {
+      remoteFieldsDiv.style.display = destTypeSelect.value === 'remote' ? 'flex' : 'none';
+    });
+  }
+
+  if (formBackupJob) {
+    formBackupJob.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const payload = {
+        name: document.getElementById('backup-job-name')?.value.trim() || 'Untitled Backup Task',
+        source_subvolume: document.getElementById('backup-job-subvolume')?.value.trim() || '',
+        destination_type: document.getElementById('backup-job-dest-type')?.value || 'remote',
+        remote_name: document.getElementById('backup-job-remote-name')?.value.trim() || '',
+        remote_path: document.getElementById('backup-job-remote-path')?.value.trim() || '',
+        schedule: document.getElementById('backup-job-schedule')?.value || 'daily',
+        retention_count: parseInt(document.getElementById('backup-job-retention')?.value, 10) || 7,
+        enabled: !!document.getElementById('backup-job-enabled')?.checked,
+      };
+
+      try {
+        await api.post('/api/backup/schedule', payload);
+        showToast('Hyper-backup pipeline saved successfully!', 'success');
+        closeBackupModal();
+        formBackupJob.reset();
+        fetchAndRenderBackupJobs();
+      } catch (err) {
+        showToast(`Failed to save backup job: ${err.message}`, 'error');
+      }
+    });
+  }
+
+  if (btnRefreshBackupJobs) {
+    btnRefreshBackupJobs.addEventListener('click', () => fetchAndRenderBackupJobs());
+  }
+
+  // Snapshots modal & actions
+  const btnOpenSnapshot = document.getElementById('btn-open-create-snapshot');
+  const modalSnapshot = document.getElementById('modal-create-snapshot');
+  const btnCloseSnapshot = document.getElementById('modal-create-snapshot-close-btn');
+  const btnCancelSnapshot = document.getElementById('modal-create-snapshot-cancel-btn');
+  const formSnapshot = document.getElementById('create-snapshot-form');
+  const btnRefreshSnapshots = document.getElementById('btn-refresh-snapshots');
+
+  if (btnOpenSnapshot && modalSnapshot) {
+    btnOpenSnapshot.addEventListener('click', () => {
+      modalSnapshot.style.display = 'flex';
+      const subvolInput = document.getElementById('snapshot-subvol-input');
+      if (subvolInput) subvolInput.focus();
+    });
+  }
+  const closeSnapshotModal = () => {
+    if (modalSnapshot) modalSnapshot.style.display = 'none';
+  };
+  if (btnCloseSnapshot) btnCloseSnapshot.addEventListener('click', closeSnapshotModal);
+  if (btnCancelSnapshot) btnCancelSnapshot.addEventListener('click', closeSnapshotModal);
+
+  if (formSnapshot) {
+    formSnapshot.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const payload = {
+        subvol_name: document.getElementById('snapshot-subvol-input')?.value.trim() || '',
+        snapshot_name: document.getElementById('snapshot-custom-name-input')?.value.trim() || undefined,
+        readonly: !!document.getElementById('snapshot-readonly-input')?.checked,
+      };
+
+      try {
+        await api.post('/api/backup/snapshots', payload);
+        showToast('Filesystem snapshot created successfully!', 'success');
+        closeSnapshotModal();
+        formSnapshot.reset();
+        fetchAndRenderSystemSnapshots();
+      } catch (err) {
+        showToast(`Failed to create snapshot: ${err.message}`, 'error');
+      }
+    });
+  }
+
+  if (btnRefreshSnapshots) {
+    btnRefreshSnapshots.addEventListener('click', () => fetchAndRenderSystemSnapshots());
+  }
+
   // Language switch update
   window.addEventListener('zettnas:lang-changed', () => {
     const activeSection = Array.from(document.querySelectorAll('.mgmt-detail-card')).find((c) => c.style.display !== 'none');
@@ -2896,6 +3003,250 @@ export function saveCurrentChannelModal() {
 
   saveNotificationsConfig();
   modal.style.display = 'none';
+}
+
+
+// =========================================================================
+// Hyper-Backup Tasks & 3-2-1 Pipelines
+// =========================================================================
+
+export async function fetchAndRenderBackupJobs(mountEl) {
+  const mount = mountEl || document.getElementById('backup-jobs-mount');
+  if (!mount) return;
+
+  try {
+    const data = await api.get('/api/backup/schedule');
+    const jobs = (data && data.jobs) || [];
+
+    if (jobs.length === 0) {
+      mount.innerHTML = `
+        <div style="text-align: center; padding: 24px 16px; background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px dashed rgba(255,255,255,0.1);">
+          <div style="font-size: 24px; margin-bottom: 8px;">🛡️</div>
+          <div style="font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 4px;">No Backup Pipelines Configured</div>
+          <div style="font-size: 11.5px; color: var(--muted); max-width: 400px; margin: 0 auto 12px; line-height: 1.4;">
+            Automate snapshot rotation and offsite cloud backups to protect against drive failure, ransomware, or accidental deletion.
+          </div>
+          <button type="button" class="btn-rect primary" onclick="document.getElementById('btn-open-create-backup-job')?.click()" style="font-size: 11px; padding: 6px 14px;">
+            Configure First Pipeline
+          </button>
+        </div>
+      `;
+      return;
+    }
+
+    const rowsHtml = jobs.map(job => {
+      const isRemote = job.destination_type === 'remote';
+      const destBadge = isRemote
+        ? `<span class="badge" style="background: rgba(14,165,233,0.15); color: #38bdf8; border: 1px solid rgba(14,165,233,0.3); font-size: 10px; padding: 2px 6px; border-radius: 4px;">☁️ ${escapeHtml(job.remote_name || 'Cloud')}:${escapeHtml(job.remote_path || '')}</span>`
+        : `<span class="badge" style="background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); font-size: 10px; padding: 2px 6px; border-radius: 4px;">📸 Local Snapshot</span>`;
+
+      const schedBadge = `<span class="badge" style="background: rgba(255,255,255,0.06); color: #cbd5e1; font-size: 10px; padding: 2px 6px; border-radius: 4px; text-transform: capitalize;">${escapeHtml(job.schedule || 'daily')}</span>`;
+      
+      let statusHtml = '';
+      if (job.last_status === 'running') {
+        statusHtml = `<span style="display:inline-flex; align-items:center; gap:4px; color: #38bdf8; font-size: 11px;"><span class="spinner-inline" style="width:10px; height:10px;"></span> Running...</span>`;
+      } else if (job.last_status === 'success') {
+        statusHtml = `<span style="color: #34d399; font-size: 11px; font-weight:600;">✓ Success</span>`;
+      } else if (job.last_status === 'error') {
+        statusHtml = `<span style="color: #f43f5e; font-size: 11px; font-weight:600;" title="${escapeHtml(job.last_error || '')}">⚠ Failed</span>`;
+      } else {
+        statusHtml = `<span style="color: var(--muted); font-size: 11px;">Idle</span>`;
+      }
+
+      const lastRunStr = job.last_run_at ? new Date(job.last_run_at * 1000).toLocaleString() : 'Never';
+
+      return `
+        <tr style="border-bottom: 1px solid rgba(255,255,255,0.06); font-size: 11.5px;">
+          <td style="padding: 10px 12px; font-weight: 600; color: #fff;">
+            <div>${escapeHtml(job.name)}</div>
+            <div style="font-size: 10px; color: var(--muted); font-weight: normal;">Subvolume: <code>${escapeHtml(job.source_subvolume || '@shares')}</code></div>
+          </td>
+          <td style="padding: 10px 12px;">${destBadge}</td>
+          <td style="padding: 10px 12px;">
+            <div style="display: flex; gap: 4px; align-items: center; flex-wrap: wrap;">
+              ${schedBadge}
+              <span style="font-size: 10px; color: var(--muted);">Keep ${job.retention_count || 7}</span>
+            </div>
+          </td>
+          <td style="padding: 10px 12px;">
+            <div>${statusHtml}</div>
+            <div style="font-size: 10px; color: var(--muted);">${lastRunStr}</div>
+          </td>
+          <td style="padding: 10px 12px; text-align: right;">
+            <div style="display: inline-flex; gap: 6px;">
+              <button class="btn-rect primary btn-run-backup-job" data-job-id="${escapeHtml(job.id)}" style="font-size: 10.5px; padding: 4px 10px;">
+                ▶ Run
+              </button>
+              <button class="btn-rect danger btn-delete-backup-job" data-job-id="${escapeHtml(job.id)}" style="font-size: 10.5px; padding: 4px 8px;">
+                🗑
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    mount.innerHTML = `
+      <div style="overflow-x: auto; background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
+        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+          <thead>
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase;">
+              <th style="padding: 8px 12px;">Task & Target</th>
+              <th style="padding: 8px 12px;">Pipeline</th>
+              <th style="padding: 8px 12px;">Schedule & Retention</th>
+              <th style="padding: 8px 12px;">Last Run</th>
+              <th style="padding: 8px 12px; text-align: right;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+      </div>
+    `;
+
+    mount.querySelectorAll('.btn-run-backup-job').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const jobId = btn.dataset.jobId;
+        const origText = btn.innerHTML;
+        try {
+          btn.disabled = true;
+          btn.innerHTML = `<span class="spinner-inline" style="width:8px; height:8px;"></span>`;
+          showToast(`Triggering backup pipeline ${jobId}...`, 'info');
+          await api.post(`/api/backup/schedule/${jobId}/run`);
+          showToast(`Backup pipeline completed successfully!`, 'success');
+          fetchAndRenderBackupJobs(mount);
+        } catch (err) {
+          showToast(`Backup run failed: ${err.message}`, 'error');
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = origText;
+        }
+      });
+    });
+
+    mount.querySelectorAll('.btn-delete-backup-job').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const jobId = btn.dataset.jobId;
+        showConfirmToast(`Delete scheduled backup task "${jobId}"?`, async () => {
+          try {
+            await api.delete(`/api/backup/schedule/${jobId}`);
+            showToast('Backup task removed.', 'success');
+            fetchAndRenderBackupJobs(mount);
+          } catch (err) {
+            showToast(`Failed to delete job: ${err.message}`, 'error');
+          }
+        });
+      });
+    });
+
+  } catch (err) {
+    mount.innerHTML = `<div style="padding: 16px; color: #f43f5e; font-size: 12px;">Failed to load backup jobs: ${escapeHtml(err.message)}</div>`;
+  }
+}
+
+// =========================================================================
+// Storage Pool Snapshots & Revert
+// =========================================================================
+
+export async function fetchAndRenderSystemSnapshots(mountEl) {
+  const mount = mountEl || document.getElementById('system-snapshots-mount');
+  if (!mount) return;
+
+  try {
+    const data = await api.get('/api/backup/snapshots');
+    const snaps = (data && data.snapshots) || [];
+
+    if (snaps.length === 0) {
+      mount.innerHTML = `
+        <div style="text-align: center; padding: 20px; font-size: 12px; color: var(--muted);">
+          No active filesystem snapshots found. Click "Take Snapshot" to create an atomic snapshot.
+        </div>
+      `;
+      return;
+    }
+
+    const rowsHtml = snaps.map(s => {
+      const createdDate = s.created_at ? new Date(s.created_at * 1000).toLocaleString() : 'N/A';
+      const poolId = s.pool_id || 'default';
+      return `
+        <tr style="border-bottom: 1px solid rgba(255,255,255,0.06); font-size: 11.5px;">
+          <td style="padding: 8px 12px; font-weight: 600; color: #fff;">
+            <span style="font-family: monospace;">📸 ${escapeHtml(s.name)}</span>
+          </td>
+          <td style="padding: 8px 12px; color: var(--muted); font-size: 11px;">
+            ${escapeHtml(s.path || '')}
+          </td>
+          <td style="padding: 8px 12px; color: var(--muted); font-size: 11px;">
+            ${createdDate}
+          </td>
+          <td style="padding: 8px 12px; text-align: right;">
+            <div style="display: inline-flex; gap: 6px;">
+              <button class="btn-rect btn-sys-restore-snap" data-snap-name="${escapeHtml(s.name)}" data-pool-id="${escapeHtml(poolId)}" style="font-size: 10px; padding: 3px 8px; background: rgba(245,158,11,0.2); border: 1px solid rgba(245,158,11,0.4); color: #fbbf24; cursor: pointer;">
+                ⏪ Restore
+              </button>
+              <button class="btn-rect danger btn-sys-delete-snap" data-snap-name="${escapeHtml(s.name)}" data-pool-id="${escapeHtml(poolId)}" style="font-size: 10px; padding: 3px 6px; cursor: pointer;">
+                🗑
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    mount.innerHTML = `
+      <div style="overflow-x: auto; background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
+        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+          <thead>
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase;">
+              <th style="padding: 8px 12px;">Snapshot Name</th>
+              <th style="padding: 8px 12px;">Filesystem Path</th>
+              <th style="padding: 8px 12px;">Created</th>
+              <th style="padding: 8px 12px; text-align: right;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+      </div>
+    `;
+
+    mount.querySelectorAll('.btn-sys-restore-snap').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const snapName = btn.dataset.snapName;
+        const poolId = btn.dataset.poolId || 'default';
+        showConfirmToast(`Roll back to snapshot "${snapName}"? Existing subvolume will be archived safely.`, async () => {
+          try {
+            showToast(`Restoring snapshot ${snapName}...`, 'info');
+            await api.post('/api/backup/restore-snapshot', {
+              pool_id: poolId,
+              snapshot_name: snapName,
+            });
+            showToast(`Snapshot "${snapName}" successfully restored!`, 'success');
+            fetchAndRenderSystemSnapshots(mount);
+          } catch (err) {
+            showToast(`Restore failed: ${err.message}`, 'error');
+          }
+        });
+      });
+    });
+
+    mount.querySelectorAll('.btn-sys-delete-snap').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const snapName = btn.dataset.snapName;
+        const poolId = btn.dataset.poolId || 'default';
+        showConfirmToast(`Delete snapshot "${snapName}"?`, async () => {
+          try {
+            await api.delete(`/api/backup/snapshots/${encodeURIComponent(poolId)}/${encodeURIComponent(snapName)}`);
+            showToast(`Snapshot "${snapName}" deleted.`, 'success');
+            fetchAndRenderSystemSnapshots(mount);
+          } catch (err) {
+            showToast(`Failed to delete snapshot: ${err.message}`, 'error');
+          }
+        });
+      });
+    });
+
+  } catch (err) {
+    mount.innerHTML = `<div style="padding: 16px; color: #f43f5e; font-size: 12px;">Failed to load snapshots: ${escapeHtml(err.message)}</div>`;
+  }
 }
 
 

@@ -1885,9 +1885,14 @@ export async function openSnapshotsModal(poolId = 'default_pool') {
             <td style="font-family:monospace; font-size:11px; color:#38bdf8;">${escapeHtml(s.path)}</td>
             <td style="color:var(--muted); font-size:11px;">${dt}</td>
             <td>
-              <button class="btn-snap-del btn-pill-toggle" data-snap="${escapeHtml(s.name)}" style="background:rgba(239,68,68,0.15); border-color:rgba(239,68,68,0.3); color:#f87171; padding:2px 8px; font-size:10.5px; cursor:pointer;">
-                🗑️ Delete
-              </button>
+              <div style="display:flex; gap:6px; align-items:center;">
+                <button class="btn-snap-restore btn-pill-toggle" data-snap="${escapeHtml(s.name)}" style="background:rgba(245,158,11,0.15); border-color:rgba(245,158,11,0.3); color:#fbbf24; padding:2px 8px; font-size:10.5px; cursor:pointer;">
+                  ⏪ Revert
+                </button>
+                <button class="btn-snap-del btn-pill-toggle" data-snap="${escapeHtml(s.name)}" style="background:rgba(239,68,68,0.15); border-color:rgba(239,68,68,0.3); color:#f87171; padding:2px 8px; font-size:10.5px; cursor:pointer;">
+                  🗑️ Delete
+                </button>
+              </div>
             </td>
           `;
           return tr;
@@ -1910,6 +1915,23 @@ export async function openSnapshotsModal(poolId = 'default_pool') {
     tbody._eventsBound = true;
 
     tbody.addEventListener('click', async (e) => {
+      const restoreBtn = e.target.closest('.btn-snap-restore');
+      if (restoreBtn) {
+        const sName = restoreBtn.dataset.snap;
+        if (confirm(`Roll back subvolume to snapshot '${sName}'? Pre-existing state will be archived safely.`)) {
+          try {
+            await api.post(`/api/storage/pools/${pId}/snapshots/restore`, {
+              snapshot_name: sName,
+            });
+            showToast(`Snapshot '${sName}' reverted successfully!`, 'success');
+            onReload();
+          } catch (err) {
+            showToast(err.message || 'Failed to revert snapshot', 'error');
+          }
+        }
+        return;
+      }
+
       const btn = e.target.closest('.btn-snap-del');
       if (!btn) return;
       const sName = btn.dataset.snap;

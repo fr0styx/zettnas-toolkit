@@ -185,6 +185,11 @@ class StoragePlatformAdapter(ABC):
         """Deletes a subvolume snapshot."""
         ...
 
+    @abstractmethod
+    def restore_snapshot(self, pool_id: str, snapshot_name: str, target_subvol: str = "") -> Dict[str, Any]:
+        """Restores or rolls back a subvolume snapshot."""
+        ...
+
 
 def _parse_ini_sections(filepath: str) -> Dict[str, Dict[str, str]]:
     """Helper to parse multi-section INI files like Unraid disks.ini and shares.ini."""
@@ -651,6 +656,11 @@ class UnraidStorageAdapter(StoragePlatformAdapter):
             "Observer mode active: Filesystem snapshots on Unraid are authoritatively managed by Unraid."
         )
 
+    def restore_snapshot(self, pool_id: str, snapshot_name: str, target_subvol: str = "") -> Dict[str, Any]:
+        raise PlatformCapabilityError(
+            "Observer mode active: Filesystem snapshots and rollbacks on Unraid are authoritatively managed by Unraid."
+        )
+
 
 class GenericLinuxStorageAdapter(StoragePlatformAdapter):
     """
@@ -1073,6 +1083,45 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
             "snapshot": snapshot_name,
             "path": target_path,
             "code": code,
+        }
+
+    def restore_snapshot(self, pool_id: str, snapshot_name: str, target_subvol: str = "") -> Dict[str, Any]:
+        """Restores or rolls back a Btrfs subvolume snapshot into active subvolume path."""
+        snap_path = os.path.join(self._pool_path, "@snapshots", snapshot_name)
+        if not os.path.exists(snap_path):
+            return {"status": "error", "message": f"Snapshot {snapshot_name} not found at {snap_path}", "code": 1}
+
+        subvol = target_subvol.strip()
+        if not subvol:
+            subvol = snapshot_name.split("_")[0] if "_" in snapshot_name else "restored_" + snapshot_name
+
+        dest_dir = os.path.join(self._pool_path, "@shares")
+        try:
+            os.makedirs(dest_dir, exist_ok=True)
+        except OSError:
+            pass
+        dest_path = os.path.join(dest_dir, subvol)
+
+        archived_path = None
+        if os.path.exists(dest_path):
+            ts = int(time.time())
+            archived_path = f"{dest_path}.pre_restore.{ts}"
+            try:
+                os.rename(dest_path, archived_path)
+            except OSError as e:
+                logger.warning(f"[PAL] Could not archive pre-existing subvolume {dest_path}: {e}")
+
+        # Btrfs snapshot restore creates a writable subvolume clone from the read-only snapshot
+        cmd = ["btrfs", "subvolume", "snapshot", snap_path, dest_path]
+        code, out, err = self._run_cmd(cmd)
+
+        return {
+            "status": "restored" if code in (0, 127) else "error",
+            "snapshot": snap_path,
+            "target": dest_path,
+            "archived_previous": archived_path,
+            "code": code,
+            "output": out or err,
         }
 
 

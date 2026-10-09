@@ -41,6 +41,7 @@ from backend.services.notifications import close_notification_client
 from backend.services.button_listener import button_listener_daemon
 from backend.services.lcd_renderer import render_lcd_loop
 from backend.services.stats_collector import smart_poller_daemon, stats_collector_daemon
+from backend.services.backup_engine import start_backup_scheduler, stop_backup_scheduler
 from backend.state import Z_STATE, _load_events, add_event
 
 
@@ -85,6 +86,11 @@ def startup_system():
         get_webdav_engine().start_if_enabled()
     except Exception as e:
         logger.warning(f"Could not auto-start WebDAV engine: {e}")
+
+    try:
+        start_backup_scheduler()
+    except Exception as e:
+        logger.warning(f"Could not auto-start hyper-backup scheduler: {e}")
 
     # Backup in case the server exits without running the lifespan shutdown.
     # Registered here (not at import) so tooling that imports main.py is inert.
@@ -135,6 +141,7 @@ async def lifespan(app: FastAPI):
         Z_STATE.ui_wake.set()
         broadcaster.shutdown()
         close_notification_client()
+        stop_backup_scheduler()
         try:
             get_webdav_engine().stop()
         except Exception:
