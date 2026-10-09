@@ -1291,3 +1291,14 @@ async def check_system_updates(force: bool = False):
         "error": error_msg,
     }
     return fallback
+
+
+@router.get("/system/network-topology")
+async def system_network_topology():
+    """
+    Expose complete host networking topology, physical NIC carrier states,
+    link negotiation speeds (10GbE / 2.5GbE / 1GbE / 100M), duplex, MTU,
+    bonding, bridges, and Docker bridge IP mappings.
+    """
+    from backend.hardware.network import get_network_topology
+    return await asyncio.to_thread(get_network_topology)

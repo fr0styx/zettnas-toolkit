@@ -116,6 +116,8 @@
               'mgmt-pane-metrics': 'mgmt-sec-activity',
               'mgmt-sec-copy': 'mgmt-sec-activity',
               'mgmt-pane-copy': 'mgmt-sec-activity',
+              'mgmt-sec-network': 'mgmt-sec-activity',
+              'mgmt-pane-network': 'mgmt-sec-activity',
               'mgmt-sec-hardware': 'mgmt-sec-hardware',
               'mgmt-sec-services': 'mgmt-sec-hardware',
               'mgmt-pane-unraid': 'mgmt-sec-hardware',
@@ -168,11 +170,11 @@
   })();
 </script>
 <style>html,body{color:#eaf1f8;background-color:#080c10;width:100%;height:100%;margin:0;padding:0;overflow:hidden}html.auth-required body{background:radial-gradient(circle at 50% 20%,#151d29 0%,#080c10 70%)!important}#login-overlay{z-index:999999;background:#080c10;justify-content:center;align-items:center;display:flex;position:fixed;inset:0}html.has-auth-session #login-overlay{display:none!important}html.auth-required #login-overlay{display:flex!important}html.is-desktop-locked #lock-overlay{opacity:1!important;display:flex!important}html.is-desktop-locked body{overflow:hidden!important}html.auth-required .studio-viewport-wrapper,html.auth-required .suite-navbar,html.auth-required #desktop-icons-container,html.auth-required .desktop-icons-container,html.auth-required .top-nav,html.auth-required #desktop-widgets-container,html.auth-required #os-dock-container,html.auth-required .workspace-panel,html.auth-required .smart-modal-backdrop,html.auth-required .os-window,html.auth-required .notif-center-window{display:none!important}</style>
-  <script type="module" crossorigin src="/assets/index-CekhgmUo.js"></script>
+  <script type="module" crossorigin src="/assets/index-57cLLVLu.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-hePW80VL.js">
-  <link rel="modulepreload" crossorigin href="/assets/dock-BA8J5RlF.js">
-  <link rel="modulepreload" crossorigin href="/assets/users-CstpmrAG.js">
-  <link rel="stylesheet" crossorigin href="/assets/index-BSSWulbG.css">
+  <link rel="modulepreload" crossorigin href="/assets/dock-Du-z8U2-.js">
+  <link rel="modulepreload" crossorigin href="/assets/users-D2sCtwn6.js">
+  <link rel="stylesheet" crossorigin href="/assets/index-D3ueuSV5.css">
 </head>
 <body class="studio-workbench">
 
@@ -2435,6 +2437,10 @@
                 <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-storage"/></svg>
                 <span data-i18n="mgmt.subtab_copy">Ingest History</span>
               </button>
+              <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-network">
+                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-net"/></svg>
+                <span data-i18n="mgmt.subtab_network">Network & Switch</span>
+              </button>
             </div>
             <div id="mgmt-pane-metrics" class="mgmt-tab-pane" style="display: block;">
           <div class="mgmt-card-intro" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
@@ -2501,9 +2507,104 @@
             </div>
           </div>
         </div>
+
+        <!-- 3. Network & Virtual Switch Inspector -->
+        <div id="mgmt-pane-network" class="mgmt-tab-pane" style="display: none;">
+          <div class="mgmt-card-intro" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+            <div>
+              <div class="mgmt-card-intro-title">
+                <svg class="ic"><use href="#i-net"/></svg>
+                <span data-i18n="mgmt.network_sec_title">Visual Network & Virtual Switch Inspector</span>
+              </div>
+              <div class="mgmt-card-intro-desc" data-i18n="mgmt.network_sec_desc">
+                Host interface carriers, link negotiation speeds (10GbE / 2.5GbE / 1GbE), bridges, and Docker container network topology.
+              </div>
+            </div>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <button class="btn-pill-toggle" id="btn-refresh-network-topology" title="Refresh Network Topology" data-i18n="mgmt.refresh">🔄 Refresh</button>
+            </div>
           </div>
 
-          <!-- Apps & Containers (Standalone Top-Level Section) -->
+          <div class="mgmt-detail-body">
+            <!-- 4 KPI Metrics Header -->
+            <div class="network-kpi-grid">
+              <div class="network-kpi-card">
+                <div class="network-kpi-label">Primary Host IP</div>
+                <div class="network-kpi-val" id="net-kpi-ip">--</div>
+                <div class="network-kpi-sub" id="net-kpi-iface">--</div>
+              </div>
+              <div class="network-kpi-card">
+                <div class="network-kpi-label">Default Gateway</div>
+                <div class="network-kpi-val" id="net-kpi-gw">--</div>
+                <div class="network-kpi-sub" id="net-kpi-dns">DNS: --</div>
+              </div>
+              <div class="network-kpi-card">
+                <div class="network-kpi-label">Max Link Speed</div>
+                <div class="network-kpi-val text-emerald" id="net-kpi-speed">--</div>
+                <div class="network-kpi-sub" id="net-kpi-carrier">--</div>
+              </div>
+              <div class="network-kpi-card">
+                <div class="network-kpi-label">Virtual Fleet</div>
+                <div class="network-kpi-val" id="net-kpi-docker">--</div>
+                <div class="network-kpi-sub" id="net-kpi-containers">--</div>
+              </div>
+            </div>
+
+            <!-- Visual Front-Panel Switch Jack Matrix -->
+            <div class="network-section-header">
+              <span class="network-section-title">HARDWARE SWITCH PORTS (PHYSICAL JACKS)</span>
+              <span class="network-section-badge" id="net-active-ports-badge">-- Active</span>
+            </div>
+            <div class="network-switch-chassis" id="network-switch-chassis">
+              <div class="network-switch-faceplate" id="network-switch-faceplate">
+                <!-- Populated dynamically with RJ45/SFP+ jacks and live status LEDs -->
+              </div>
+            </div>
+
+            <!-- Physical Interfaces Detailed Table -->
+            <div class="network-section-header" style="margin-top: 24px;">
+              <span class="network-section-title">PHYSICAL INTERFACES INVENTORY</span>
+            </div>
+            <div class="network-table-wrap">
+              <table class="copy-history-table">
+                <thead>
+                  <tr>
+                    <th>Interface</th>
+                    <th>Carrier & State</th>
+                    <th>Speed / Duplex</th>
+                    <th>MAC Address</th>
+                    <th>MTU</th>
+                    <th>Master / Bond</th>
+                    <th>Cumulative Rx / Tx</th>
+                    <th>Hardware / Driver</th>
+                  </tr>
+                </thead>
+                <tbody id="network-physical-tbody">
+                  <tr><td colspan="8" style="text-align:center; color:var(--muted); padding:16px;">Loading network interfaces...</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Virtual Switches, Bonds & Bridges -->
+            <div class="network-section-header" style="margin-top: 24px;">
+              <span class="network-section-title">HOST BRIDGES & BONDING GROUPS</span>
+            </div>
+            <div class="network-grid-two-col" id="network-bridges-container">
+              <!-- Populated dynamically with bridge cards and bond cards -->
+            </div>
+
+            <!-- Docker Bridge Routing & Container Allocations -->
+            <div class="network-section-header" style="margin-top: 24px;">
+              <span class="network-section-title">DOCKER BRIDGE NETWORKS & CONTAINER IP ALLOCATIONS</span>
+            </div>
+            <div class="network-docker-list" id="network-docker-container">
+              <!-- Populated dynamically with docker network cards and attached container pills -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Apps & Containers (Standalone Top-Level Section) -->
           <div id="mgmt-sec-docker" class="mgmt-detail-card" style="display: none;">
             <div id="mgmt-pane-docker" class="mgmt-tab-pane" style="display: block;">
               <div class="mgmt-card-intro" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">

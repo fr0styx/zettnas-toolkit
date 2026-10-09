@@ -90,3 +90,11 @@ def prometheus_metrics():
         out.extend(metric_lines)
 
     return "\n".join(out) + "\n"
+
+
+@router.get("/metrics/network-topology")
+async def metrics_network_topology():
+    """Network topology metrics and switch status."""
+    import asyncio
+    from backend.hardware.network import get_network_topology
+    return await asyncio.to_thread(get_network_topology)

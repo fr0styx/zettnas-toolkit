@@ -31,6 +31,8 @@ export const SUBPANE_MAP = {
   'mgmt-pane-metrics': { section: 'mgmt-sec-activity', pane: 'mgmt-pane-metrics' },
   'mgmt-sec-copy': { section: 'mgmt-sec-activity', pane: 'mgmt-pane-copy' },
   'mgmt-pane-copy': { section: 'mgmt-sec-activity', pane: 'mgmt-pane-copy' },
+  'mgmt-sec-network': { section: 'mgmt-sec-activity', pane: 'mgmt-pane-network' },
+  'mgmt-pane-network': { section: 'mgmt-sec-activity', pane: 'mgmt-pane-network' },
   'mgmt-sec-activity': { section: 'mgmt-sec-activity', pane: 'mgmt-pane-metrics' },
   // Hardware & Profiles
   'mgmt-sec-hardware': { section: 'mgmt-sec-hardware', pane: 'mgmt-pane-unraid' },
@@ -1725,6 +1727,234 @@ export async function fetchAndRenderCopyHistory() {
   }
 }
 
+export async function fetchAndRenderNetworkTopology() {
+  const switchFaceplate = document.getElementById('network-switch-faceplate');
+  const physicalTbody = document.getElementById('network-physical-tbody');
+  const bridgesContainer = document.getElementById('network-bridges-container');
+  const dockerContainer = document.getElementById('network-docker-container');
+  const activeBadge = document.getElementById('net-active-ports-badge');
+
+  // KPI elements
+  const kpiIp = document.getElementById('net-kpi-ip');
+  const kpiIface = document.getElementById('net-kpi-iface');
+  const kpiGw = document.getElementById('net-kpi-gw');
+  const kpiDns = document.getElementById('net-kpi-dns');
+  const kpiSpeed = document.getElementById('net-kpi-speed');
+  const kpiCarrier = document.getElementById('net-kpi-carrier');
+  const kpiDocker = document.getElementById('net-kpi-docker');
+  const kpiContainers = document.getElementById('net-kpi-containers');
+
+  function fmtBytes(bytes) {
+    if (!bytes || bytes <= 0) return '0 B';
+    const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+    return (bytes / Math.pow(1024, i)).toFixed(i === 0 ? 0 : 1) + ' ' + units[i];
+  }
+
+  try {
+    const topo = await api.get('/api/system/network-topology');
+    if (!topo || topo.status !== 'ok') {
+      if (physicalTbody) {
+        physicalTbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--crit); padding:16px;">Failed to load network topology: ${escapeHtml(topo?.message || 'Unknown error')}</td></tr>`;
+      }
+      return;
+    }
+
+    const summary = topo.summary || {};
+    const physical = topo.physical_interfaces || [];
+    const bonds = topo.bonds || [];
+    const bridges = topo.bridges || [];
+    const dockerNets = topo.docker_networks || [];
+
+    // 1. Update KPIs
+    if (kpiIp) kpiIp.textContent = summary.primary_ip || '--';
+    if (kpiIface) kpiIface.textContent = `Via ${summary.primary_interface || 'eth0'}`;
+    if (kpiGw) kpiGw.textContent = summary.default_gateway || '--';
+    if (kpiDns) kpiDns.textContent = `DNS: ${(summary.dns_servers || []).join(', ') || 'Auto'}`;
+    if (kpiSpeed) kpiSpeed.textContent = summary.max_speed || '--';
+    if (kpiCarrier) kpiCarrier.textContent = `${summary.active_physical || 0} of ${summary.total_physical || 0} Ports Online`;
+    if (kpiDocker) kpiDocker.textContent = `${summary.docker_networks_count || 0} Networks`;
+    if (kpiContainers) kpiContainers.textContent = `${summary.docker_containers_count || 0} Containers Attached`;
+    if (activeBadge) activeBadge.textContent = `${summary.active_physical || 0} Active`;
+
+    // 2. Render Hardware Switch Ports (Front-Panel Faceplate)
+    if (switchFaceplate) {
+      if (physical.length === 0) {
+        switchFaceplate.innerHTML = `<div style="color:var(--muted); font-size:12px; padding:12px;">No physical network interfaces detected.</div>`;
+      } else {
+        switchFaceplate.innerHTML = physical.map((nic) => {
+          const isUp = Boolean(nic.is_up);
+          const is10G = (nic.speed_mbps || 0) >= 2500;
+          const speedPillClass = isUp ? (is10G ? 'speed-10g' : '') : 'speed-down';
+          const linkLedClass = isUp ? 'led-link-on' : '';
+          const speedLedClass = isUp ? (is10G ? 'led-speed-10g' : 'led-speed-gig') : '';
+
+          return `
+            <div class="switch-port-jack ${isUp ? 'is-active' : ''}">
+              <div class="switch-port-top">
+                <div class="switch-port-id">
+                  <svg style="width:12px; height:12px; fill:${isUp ? 'var(--ok2, #3bf58b)' : 'var(--muted, #64748b)'};"><circle cx="6" cy="6" r="4"/></svg>
+                  ${escapeHtml(nic.name.toUpperCase())}
+                </div>
+                <div class="switch-port-leds">
+                  <div class="switch-led-group">
+                    <span class="switch-led-lbl">LNK</span>
+                    <span class="switch-led-dot ${linkLedClass}"></span>
+                  </div>
+                  <div class="switch-led-group">
+                    <span class="switch-led-lbl">ACT</span>
+                    <span class="switch-led-dot ${speedLedClass}"></span>
+                  </div>
+                </div>
+              </div>
+              <div class="switch-port-socket">
+                <svg viewBox="0 0 24 24">
+                  <rect x="3" y="5" width="18" height="14" rx="2" />
+                  <path d="M7 15v-4h10v4M9 11V8h6v3" />
+                </svg>
+              </div>
+              <div class="switch-port-badge-row">
+                <span class="switch-speed-pill ${speedPillClass}">${escapeHtml(nic.speed_human || (isUp ? 'Connected' : 'Disconnected'))}</span>
+                <span style="font-size:10px; color:var(--muted);">${nic.duplex === 'full' ? 'Full Duplex' : nic.duplex}</span>
+              </div>
+              <div class="switch-port-meta">
+                <div>MAC: ${escapeHtml(nic.mac || 'N/A')}</div>
+                ${nic.master ? `<div style="color:var(--accent-cyan);">Master: ${escapeHtml(nic.master)}</div>` : ''}
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    // 3. Render Physical Interfaces Detailed Table
+    if (physicalTbody) {
+      if (physical.length === 0) {
+        physicalTbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--muted); padding:16px;">No physical interfaces found.</td></tr>`;
+      } else {
+        physicalTbody.innerHTML = physical.map((nic) => {
+          const isUp = Boolean(nic.is_up);
+          const rxFmt = fmtBytes(nic.rx_bytes);
+          const txFmt = fmtBytes(nic.tx_bytes);
+
+          return `
+            <tr>
+              <td>
+                <div style="display:flex; align-items:center; gap:6px; font-weight:700; font-family:var(--font-mono, monospace);">
+                  <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:${isUp ? 'var(--ok2, #3bf58b)' : 'var(--muted, #64748b)'};"></span>
+                  ${escapeHtml(nic.name)}
+                </div>
+              </td>
+              <td>
+                <span class="switch-speed-pill ${isUp ? 'speed-10g' : 'speed-down'}">
+                  ${isUp ? 'UP / CARRIER' : 'DOWN'}
+                </span>
+              </td>
+              <td>
+                <span style="font-weight:600; color:${isUp ? '#f8fafc' : 'var(--muted)'};">${escapeHtml(nic.speed_human)}</span>
+                <span style="font-size:10px; color:var(--muted); margin-left:4px;">(${escapeHtml(nic.duplex)})</span>
+              </td>
+              <td style="font-family:var(--font-mono, monospace); font-size:11px;">${escapeHtml(nic.mac || '--')}</td>
+              <td style="font-family:var(--font-mono, monospace);">${escapeHtml(String(nic.mtu || 1500))}</td>
+              <td>
+                ${nic.master ? `<span class="network-member-pill" style="color:var(--accent-cyan); border-color:rgba(56,189,248,0.3);">${escapeHtml(nic.master)}</span>` : '<span style="color:var(--muted);">Standalone</span>'}
+              </td>
+              <td style="font-family:var(--font-mono, monospace); font-size:11px;">
+                <div>↓ ${rxFmt} <span style="font-size:9.5px; color:var(--muted);">(${nic.rx_packets?.toLocaleString() || 0} pkts)</span></div>
+                <div>↑ ${txFmt} <span style="font-size:9.5px; color:var(--muted);">(${nic.tx_packets?.toLocaleString() || 0} pkts)</span></div>
+              </td>
+              <td style="font-size:11px; color:var(--muted);">
+                <div>${escapeHtml(nic.driver || 'Generic')}</div>
+                <div style="font-family:var(--font-mono, monospace); font-size:9.5px;">${escapeHtml(nic.pci_slot || '--')}</div>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+    }
+
+    // 4. Render Virtual Switches, Bonds & Bridges
+    if (bridgesContainer) {
+      const items = [];
+      // Bridges
+      bridges.forEach((br) => {
+        items.push(`
+          <div class="network-bridge-card">
+            <div class="network-bridge-header">
+              <span class="network-bridge-name">Bridge: ${escapeHtml(br.name)}</span>
+              <span class="network-bridge-ip">${escapeHtml(br.ip_address || 'Unassigned IP')}</span>
+            </div>
+            <div style="font-size:11px; color:var(--muted);">Member Ports:</div>
+            <div class="network-bridge-members">
+              ${(br.interfaces || []).map((m) => `<span class="network-member-pill">${escapeHtml(m)}</span>`).join('') || '<span style="color:var(--muted); font-size:10px;">No members</span>'}
+            </div>
+          </div>
+        `);
+      });
+
+      // Bonds
+      bonds.forEach((b) => {
+        items.push(`
+          <div class="network-bridge-card">
+            <div class="network-bridge-header">
+              <span class="network-bridge-name">Bond: ${escapeHtml(b.name)}</span>
+              <span class="switch-speed-pill speed-10g">${escapeHtml(b.mode || 'Bonding')}</span>
+            </div>
+            <div style="font-size:11px; color:var(--muted);">Active Slave: <strong style="color:var(--ok2, #3bf58b);">${escapeHtml(b.active_slave || 'None')}</strong></div>
+            <div class="network-bridge-members">
+              ${(b.slaves || []).map((s) => `<span class="network-member-pill ${s === b.active_slave ? 'active' : ''}">${escapeHtml(s)}</span>`).join('')}
+            </div>
+          </div>
+        `);
+      });
+
+      bridgesContainer.innerHTML = items.length > 0 ? items.join('') : `<div style="color:var(--muted); font-size:12px; padding:12px;">No virtual bridges or bonds configured.</div>`;
+    }
+
+    // 5. Render Docker Networks & Containers
+    if (dockerContainer) {
+      if (dockerNets.length === 0) {
+        dockerContainer.innerHTML = `<div style="color:var(--muted); font-size:12px; padding:12px;">No active Docker bridge networks found.</div>`;
+      } else {
+        dockerContainer.innerHTML = dockerNets.map((net) => {
+          const containers = net.containers || [];
+          return `
+            <div class="network-docker-card">
+              <div class="network-docker-top">
+                <div class="network-docker-name">
+                  <svg class="ic" style="width:14px; height:14px;"><use href="#i-chip"/></svg>
+                  ${escapeHtml(net.name)}
+                  <span class="network-docker-driver">${escapeHtml(net.driver)}</span>
+                </div>
+                <div class="network-docker-cidr">
+                  ${net.subnet ? `Subnet: <strong>${escapeHtml(net.subnet)}</strong>` : ''}
+                  ${net.gateway ? ` • Gateway: <strong>${escapeHtml(net.gateway)}</strong>` : ''}
+                  ${net.bridge_device ? ` • Dev: <strong>${escapeHtml(net.bridge_device)}</strong>` : ''}
+                </div>
+              </div>
+              <div class="network-docker-containers">
+                ${containers.length === 0 ? '<span style="font-size:11px; color:var(--muted);">No containers attached</span>' : containers.map((c) => `
+                  <div class="network-container-chip">
+                    <span class="network-chip-dot"></span>
+                    <span class="network-chip-name">${escapeHtml(c.name)}</span>
+                    <span class="network-chip-ip">${escapeHtml(c.ipv4 || 'Host')}</span>
+                    ${c.ports?.length ? `<span class="network-chip-ports">[${escapeHtml(c.ports.join(', '))}]</span>` : ''}
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+  } catch (err) {
+    console.warn('[ZettNAS] Error fetching network topology:', err);
+    if (physicalTbody) {
+      physicalTbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--crit); padding:16px;">Failed to load network topology: ${escapeHtml(err.message || String(err))}</td></tr>`;
+    }
+  }
+}
+
 export async function fetchAndRenderDisksInventory() {
   const tbody = document.getElementById('mgmt-disks-inventory-tbody');
   if (!tbody) return;
@@ -2026,6 +2256,8 @@ export function initManagement() {
       setTimeout(fetchAndRenderMetrics, 50);
     } else if (paneId === 'mgmt-pane-copy') {
       fetchAndRenderCopyHistory();
+    } else if (paneId === 'mgmt-pane-network') {
+      fetchAndRenderNetworkTopology();
     } else if (paneId === 'mgmt-pane-unraid') {
       if (state.lastStats) updateManagementTelemetry(state.lastStats);
     } else if (paneId === 'mgmt-pane-docker') {
@@ -2338,6 +2570,15 @@ export function initManagement() {
     refreshHistoryBtn.addEventListener('click', () => {
       fetchAndRenderCopyHistory();
       showToast('Ingest history refreshed.', 'info');
+    });
+  }
+
+  // Network topology refresh button
+  const refreshNetBtn = document.getElementById('btn-refresh-network-topology');
+  if (refreshNetBtn) {
+    refreshNetBtn.addEventListener('click', () => {
+      fetchAndRenderNetworkTopology();
+      showToast('Network topology refreshed.', 'info');
     });
   }
 
