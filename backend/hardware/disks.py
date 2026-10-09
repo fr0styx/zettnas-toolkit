@@ -133,21 +133,39 @@ def _discover_disks():
         Z_STATE.cached_disk_list = result
         Z_STATE.cached_disk_list_time = now
         return result
+
+    # Primary: Unified Hardware Abstraction Layer (HAL)
     disks = []
     try:
-        names = sorted(os.listdir(os.path.join(HOST_SYS, "block")))
-        for name in names:
-            if name.startswith("sd") and len(name) == 3:
-                if not has_medium(name):
-                    continue
-                disks.append({"dev": name, "role": classify(name)})
-        for name in names:
-            if name.startswith("nvme") and name.endswith("n1"):
-                if not has_medium(name):
-                    continue
-                disks.append({"dev": name, "role": classify(name)})
+        from backend.hardware.hal import DiskDiscoveryHAL
+
+        records = DiskDiscoveryHAL.discover_physical_disks()
+        for r in records:
+            disks.append(
+                {
+                    "dev": r.dev_name,
+                    "role": r.role,
+                    "canonical_id": r.canonical_id,
+                    "model": r.model,
+                    "serial": r.serial,
+                    "transport": r.transport,
+                    "controller_driver": r.controller_driver,
+                    "smart_protocol": r.smart_protocol,
+                }
+            )
     except Exception as e:
-        logger.debug(f"Silenced exception: {e}")
+        logger.debug(f"[disks] HAL fallback error: {e}")
+        disks = []
+        try:
+            names = sorted(os.listdir(os.path.join(HOST_SYS, "block")))
+            for name in names:
+                if re.match(r"^(sd[a-z]+|nvme[0-9]+n[0-9]+|vd[a-z]+)$", name):
+                    if not has_medium(name):
+                        continue
+                    disks.append({"dev": name, "role": classify(name)})
+        except Exception as ex:
+            logger.debug(f"Silenced exception: {ex}")
+
     Z_STATE.cached_disk_list = disks
     Z_STATE.cached_disk_list_time = now
     return disks
@@ -279,6 +297,27 @@ def _parse_smart_json(doc: dict, is_nvme: bool):
                         tbr_tb = round((int(raw_val) * 512) / 1e12, 2)
                     except (ValueError, TypeError):
                         pass
+
+        # Check for SAS / SCSI enterprise SMART data
+        defect_list = doc.get("scsi_grown_defect_list")
+        if defect_list is not None:
+            try:
+                realloc = int(defect_list)
+            except (ValueError, TypeError):
+                pass
+        err_log = doc.get("scsi_error_counter_log", {})
+        if isinstance(err_log, dict):
+            uncorr_read = (
+                err_log.get("read", {}).get("total_un_corrected_errors", 0)
+                if isinstance(err_log.get("read"), dict)
+                else 0
+            )
+            uncorr_write = (
+                err_log.get("write", {}).get("total_un_corrected_errors", 0)
+                if isinstance(err_log.get("write"), dict)
+                else 0
+            )
+            offline = int(uncorr_read) + int(uncorr_write)
 
     crit_temp = NVME_CRITICAL_TEMP if is_nvme else 60
     warn_temp = NVME_WARN_TEMP if is_nvme else 50
@@ -451,8 +490,13 @@ def _parse_smart(data, is_nvme: bool):
 
 
 def _resolve_dev_path(dev_name: str) -> str:
+    if dev_name.startswith("/"):
+        return dev_name
     base = HOST_DEV if os.path.exists(HOST_DEV) else "/dev"
-    return base.rstrip("/") + "/" + dev_name
+    by_id = os.path.join(base, "disk", "by-id", dev_name)
+    if os.path.exists(by_id):
+        return by_id
+    return os.path.join(base, dev_name)
 
 
 def _handle_smart_failure(dev_name: str, now: float):
@@ -472,6 +516,11 @@ def poll_disk_smart(dev_name: str, is_nvme: bool):
     now = time.time()
     dev = _resolve_dev_path(dev_name)
     dtype = "nvme" if is_nvme else "sat"
+    if Z_STATE.cached_disk_list:
+        for d in Z_STATE.cached_disk_list:
+            if d.get("dev") == dev_name:
+                dtype = d.get("smart_protocol") or dtype
+                break
 
     is_removable = False
     try:
@@ -608,13 +657,21 @@ def read_disk_temps_and_io(allow_sync_poll: bool = False):
     return out
 
 
+VALID_DEV_PATTERN = re.compile(r"^(sd[a-z]+|nvme[0-9]+n[0-9]+|vd[a-z]+|xvd[a-z]+|[a-zA-Z0-9_\-\.:]+)$")
+
+
 def fetch_disk_smart_detail(dev_name):
-    if not re.fullmatch(r"^(sd[a-z]{1,2}|nvme[0-9]+n[0-9]+)$", dev_name):
+    if not VALID_DEV_PATTERN.fullmatch(dev_name):
         return {"error": "Invalid device name format."}
 
     dev = _resolve_dev_path(dev_name)
     is_nvme = dev_name.startswith("nvme")
     dtype = "nvme" if is_nvme else "sat"
+    if Z_STATE.cached_disk_list:
+        for d in Z_STATE.cached_disk_list:
+            if d.get("dev") == dev_name:
+                dtype = d.get("smart_protocol") or dtype
+                break
 
     # For spinning HDDs, issue an asynchronous direct block read to trigger spin up without blocking the thread
     if not is_nvme:
@@ -731,12 +788,17 @@ def run_disk_smart_test(dev_name: str, test_type: str = "short"):
     Triggers or aborts an active S.M.A.R.T. self-test on the target disk via smartctl.
     Supported types: 'short', 'long' (extended), 'abort'.
     """
-    if not re.fullmatch(r"^(sd[a-z]{1,2}|nvme[0-9]+n[0-9]+)$", dev_name):
+    if not VALID_DEV_PATTERN.fullmatch(dev_name):
         return {"success": False, "error": "Invalid device name format."}
 
     dev = _resolve_dev_path(dev_name)
     is_nvme = dev_name.startswith("nvme")
     dtype = "nvme" if is_nvme else "sat"
+    if Z_STATE.cached_disk_list:
+        for d in Z_STATE.cached_disk_list:
+            if d.get("dev") == dev_name:
+                dtype = d.get("smart_protocol") or dtype
+                break
 
     test_type = (test_type or "short").lower().strip()
     if test_type in ("abort", "stop", "cancel"):
@@ -775,7 +837,7 @@ def locate_disk(dev_name: str, duration_sec: int = 5) -> dict:
     Triggers physical drive identification strobe (Locate Drive / Blink Bay).
     Reads 4KB from sector 0 in a gentle rhythm for duration_sec to pulse drive activity LED safely without writing.
     """
-    if not re.fullmatch(r"^(sd[a-z]{1,2}|nvme[0-9]+n[0-9]+)$", dev_name):
+    if not VALID_DEV_PATTERN.fullmatch(dev_name):
         return {"success": False, "error": "Invalid device name format."}
 
     dev_path = _resolve_dev_path(dev_name)
