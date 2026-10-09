@@ -767,3 +767,5 @@ window.addEventListener('zettnas:lang-changed', () => {
         openMetricModal(activeModalType);
     }
 });
+
+window.openSmartModal = openSmartModal;

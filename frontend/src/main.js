@@ -12,7 +12,7 @@ import { showToast, showConfirmToast } from './toast.js';
 import './folder-browser.js';
 import './modals.js';
 
-import { initDockSystem, DockManager, makeDraggable, bringToFront, restoreOpenWindowsState } from './components/dock.js';
+import { initDockSystem, DockManager, makeDraggable, bringToFront, restoreOpenWindowsState, setWindowRestorationComplete } from './components/dock.js';
 import { initAuth } from './components/auth.js';
 import { applyStats, applyTheme, applyDesktopTheme, applyLcdTheme, initDashboardClicks } from './components/dashboard.js';
 import { initFanControl } from './components/fan-control.js';
@@ -159,6 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
       screen.style.visibility = 'visible';
     }
   }
+  setWindowRestorationComplete(false);
   initI18n();
   initDockSystem();
   initAuth();
@@ -189,6 +190,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadWallpapers();
     restoreOpenWindowsState();
   } else {
+    setWindowRestorationComplete(true);
     const overlay = document.getElementById('login-overlay');
     if (overlay) {
       overlay.style.removeProperty('opacity');

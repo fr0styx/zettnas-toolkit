@@ -321,6 +321,8 @@ export function saveWindowBounds(id, bounds) {
     if (id === 'console-window') all['console'] = all[id];
     if (id === 'smart') all['smart-modal-window'] = all[id];
     if (id === 'smart-modal-window') all['smart'] = all[id];
+    if (id === 'container-inspector') all['container-inspector-window'] = all[id];
+    if (id === 'container-inspector-window') all['container-inspector'] = all[id];
     localStorage.setItem(WIN_BOUNDS_KEY, JSON.stringify(all));
   } catch (e) {
     console.warn('Failed to save window bounds', e);
@@ -336,7 +338,8 @@ export function applySavedBounds(dragEl, winId) {
     || (id === 'file-manager-window' ? all['fm'] : (id === 'fm' ? all['file-manager-window'] : null))
     || (id === 'management-window' ? all['management'] : (id === 'management' ? all['management-window'] : null))
     || (id === 'console-window' ? all['console'] : (id === 'console' ? all['console-window'] : null))
-    || (id === 'smart-modal-window' ? all['smart'] : (id === 'smart' ? all['smart-modal-window'] : null));
+    || (id === 'smart-modal-window' ? all['smart'] : (id === 'smart' ? all['smart-modal-window'] : null))
+    || (id === 'container-inspector-window' ? all['container-inspector'] : (id === 'container-inspector' ? all['container-inspector-window'] : null));
   if (!saved || saved.left == null || saved.top == null) return;
 
   const targetW = saved.width || dragEl.offsetWidth || 500;
@@ -386,7 +389,14 @@ export function applySavedBounds(dragEl, winId) {
   }
 }
 
+let isWindowRestorationComplete = true;
+
+export function setWindowRestorationComplete(val = true) {
+  isWindowRestorationComplete = !!val;
+}
+
 export function saveOpenWindowsState() {
+  if (!isWindowRestorationComplete) return;
   if (document.body.classList.contains('mobile-mode') || window.innerWidth <= 768) return;
   try {
     const stateObj = {
@@ -403,9 +413,43 @@ export function saveOpenWindowsState() {
             open: true
           };
           if (id === 'management') {
-            const activeTabBtn = document.querySelector('.mgmt-inner-tab.active');
-            if (activeTabBtn && activeTabBtn.dataset.tabTarget) {
-              stateObj.windows[id].activePane = activeTabBtn.dataset.tabTarget;
+            const hubView = document.getElementById('management-hub-view');
+            const detailContainer = document.getElementById('management-detail-container');
+            const isDetailVisible = detailContainer && detailContainer.style.display !== 'none' && (!hubView || hubView.style.display === 'none');
+            if (isDetailVisible) {
+              const visibleCard = Array.from(document.querySelectorAll('.mgmt-detail-card')).find(
+                (c) => c.style.display !== 'none' && c.style.display !== ''
+              );
+              if (visibleCard) {
+                const activeTab = visibleCard.querySelector('.mgmt-inner-tab.active');
+                stateObj.windows[id].activePane = (activeTab && activeTab.dataset.tabTarget)
+                  ? activeTab.dataset.tabTarget
+                  : visibleCard.id;
+              } else {
+                stateObj.windows[id].activePane = 'hub';
+              }
+            } else {
+              stateObj.windows[id].activePane = 'hub';
+            }
+          } else if (id === 'fm') {
+            const pathInput = document.getElementById('fm-path-input');
+            if (pathInput && pathInput.value) {
+              stateObj.windows[id].activePath = pathInput.value;
+            }
+          } else if (id === 'container-inspector') {
+            const titleId = document.getElementById('ci-header-id');
+            const titleName = document.getElementById('ci-header-title');
+            if (titleId && titleId.textContent && titleId.textContent !== '--') {
+              stateObj.windows[id].containerData = {
+                cid: titleId.textContent.trim(),
+                cname: titleName ? titleName.textContent.trim() : ''
+              };
+            }
+          } else if (id === 'smart') {
+            const title = document.getElementById('smart-modal-title');
+            const match = title ? title.textContent.match(/\b(sd[a-z]|nvme\d+n\d+)\b/) : null;
+            if (match) {
+              stateObj.windows[id].devName = match[1];
             }
           }
         }
@@ -427,7 +471,10 @@ export function saveOpenWindowsState() {
 }
 
 export function restoreOpenWindowsState() {
-  if (document.body.classList.contains('mobile-mode') || window.innerWidth <= 768) return;
+  if (document.body.classList.contains('mobile-mode') || window.innerWidth <= 768) {
+    isWindowRestorationComplete = true;
+    return;
+  }
   try {
     const raw = localStorage.getItem(OPEN_WINDOWS_KEY);
     if (!raw) return;
@@ -448,6 +495,71 @@ export function restoreOpenWindowsState() {
             window.toggleNotificationCenter();
           }
         }
+      } else if (id === 'management') {
+        if (KNOWN_APPS['management']?.launch) {
+          KNOWN_APPS['management'].launch(entry.activePane === 'hub' ? null : entry.activePane);
+        } else if (typeof window.openManagementWindow === 'function') {
+          window.openManagementWindow(entry.activePane === 'hub' ? null : entry.activePane);
+        }
+        if (entry.minimized) {
+          setTimeout(() => {
+            if (DockManager.windows['management']) {
+              DockManager.minimize('management');
+            }
+          }, 60);
+        }
+      } else if (id === 'fm') {
+        if (KNOWN_APPS['fm']?.launch) {
+          KNOWN_APPS['fm'].launch(entry.activePath);
+        } else if (typeof window.openFileManager === 'function') {
+          window.openFileManager(entry.activePath);
+        }
+        if (entry.minimized) {
+          setTimeout(() => {
+            if (DockManager.windows['fm']) {
+              DockManager.minimize('fm');
+            }
+          }, 60);
+        }
+      } else if (id === 'console') {
+        if (KNOWN_APPS['console']?.launch) {
+          KNOWN_APPS['console'].launch();
+        } else {
+          openConsoleWindow();
+        }
+        if (entry.minimized) {
+          setTimeout(() => {
+            if (DockManager.windows['console']) {
+              DockManager.minimize('console');
+            }
+          }, 60);
+        }
+      } else if (id === 'smart') {
+        if (KNOWN_APPS['smart']?.launch) {
+          KNOWN_APPS['smart'].launch(entry.devName);
+        } else if (typeof window.openSmartModal === 'function') {
+          window.openSmartModal(entry.devName);
+        }
+        if (entry.minimized) {
+          setTimeout(() => {
+            if (DockManager.windows['smart']) {
+              DockManager.minimize('smart');
+            }
+          }, 60);
+        }
+      } else if (id === 'container-inspector') {
+        if (KNOWN_APPS['container-inspector']?.launch) {
+          KNOWN_APPS['container-inspector'].launch(entry.containerData);
+        } else if (entry.containerData?.cid && typeof window.openContainerInspector === 'function') {
+          window.openContainerInspector(entry.containerData.cid, entry.containerData.cname);
+        }
+        if (entry.minimized) {
+          setTimeout(() => {
+            if (DockManager.windows['container-inspector']) {
+              DockManager.minimize('container-inspector');
+            }
+          }, 60);
+        }
       } else if (KNOWN_APPS[id] && typeof KNOWN_APPS[id].launch === 'function') {
         KNOWN_APPS[id].launch(entry.activePane);
         if (entry.minimized) {
@@ -464,12 +576,23 @@ export function restoreOpenWindowsState() {
       setTimeout(() => {
         const activeWin = DockManager.windows[stateObj.activeId];
         if (activeWin && activeWin.el && !activeWin.minimized) {
-          bringToFront(activeWin.el);
+          const el = activeWin.el;
+          const winEl = el.classList.contains('smart-modal-window') || el.classList.contains('chassis-front-panel') || el.classList.contains('os-window') || el.classList.contains('file-manager-window') || el.classList.contains('mgmt-app-window') || el.classList.contains('container-inspector-window')
+            ? el
+            : el.querySelector('.smart-modal-window, .chassis-front-panel, .os-window, .file-manager-window, .mgmt-app-window, .container-inspector-window') || el;
+          bringToFront(winEl);
+          DockManager.activeId = stateObj.activeId;
+          DockManager.render();
         }
       }, 120);
     }
   } catch (e) {
     console.warn('Failed to restore open windows', e);
+  } finally {
+    isWindowRestorationComplete = true;
+    setTimeout(() => {
+      saveOpenWindowsState();
+    }, 200);
   }
 }
 
@@ -799,16 +922,20 @@ export const KNOWN_APPS = {
     id: 'fm',
     icon: '#i-storage',
     getTitle: () => t('dock.file_manager', 'File Explorer'),
-    launch: () => {
-      const fmWin = document.getElementById('file-manager-window');
-      if (fmWin) {
-        if (window.DockManager && !window.DockManager.windows['fm']) {
-          window.DockManager.register('fm', fmWin, '#i-storage', t('dock.file_manager', 'File Explorer'), false);
-        }
-        if (window.DockManager) window.DockManager.restore('fm');
-        ZettEventBus.emit('window:open', { id: 'file-manager-window' });
+    launch: (path = null) => {
+      if (typeof window.openFileManager === 'function') {
+        window.openFileManager(path);
       } else {
-        document.getElementById('fm-desktop-icon')?.click();
+        const fmWin = document.getElementById('file-manager-window');
+        if (fmWin) {
+          if (window.DockManager && !window.DockManager.windows['fm']) {
+            window.DockManager.register('fm', fmWin, '#i-storage', t('dock.file_manager', 'File Explorer'), false);
+          }
+          if (window.DockManager) window.DockManager.restore('fm');
+          ZettEventBus.emit('window:open', { id: 'file-manager-window', path: path || undefined });
+        } else {
+          document.getElementById('fm-desktop-icon')?.click();
+        }
       }
     }
   },
@@ -817,8 +944,8 @@ export const KNOWN_APPS = {
     icon: '#i-management',
     getTitle: () => t('dock.management', 'Mission Control'),
     launch: (pane = null) => {
-      if (window.openManagementWindow) {
-        window.openManagementWindow(pane);
+      if (typeof window.openManagementWindow === 'function') {
+        window.openManagementWindow(pane === 'hub' ? null : pane);
       } else {
         document.getElementById('management-desktop-icon')?.click();
       }
@@ -836,9 +963,19 @@ export const KNOWN_APPS = {
     id: 'smart',
     icon: '#i-disk',
     getTitle: () => 'Diagnostics',
-    launch: () => {
-      if (window.openSmartModal) {
-        window.openSmartModal();
+    launch: (devName = null) => {
+      if (typeof window.openSmartModal === 'function') {
+        window.openSmartModal(devName);
+      }
+    }
+  },
+  'container-inspector': {
+    id: 'container-inspector',
+    icon: '#i-chip',
+    getTitle: () => 'Container Inspector',
+    launch: (data = null) => {
+      if (data && data.cid && typeof window.openContainerInspector === 'function') {
+        window.openContainerInspector(data.cid, data.cname);
       }
     }
   },
@@ -1013,6 +1150,9 @@ export const DockManager = {
     } else if (id === 'smart') {
       const smartClose = document.getElementById('smart-modal-close');
       if (smartClose) { smartClose.click(); return; }
+    } else if (id === 'container-inspector') {
+      const ciClose = document.getElementById('ci-close-btn');
+      if (ciClose) { ciClose.click(); return; }
     }
     this.unregister(id);
   },
@@ -1049,7 +1189,9 @@ export const DockManager = {
       }
     }
     this.render();
-    saveOpenWindowsState();
+    if (!initialMinimized) {
+      saveOpenWindowsState();
+    }
   },
 
   unregister(id) {
@@ -2494,3 +2636,4 @@ window.saveWindowBounds = saveWindowBounds;
 window.loadSavedWindowBounds = loadSavedWindowBounds;
 window.saveOpenWindowsState = saveOpenWindowsState;
 window.restoreOpenWindowsState = restoreOpenWindowsState;
+window.setWindowRestorationComplete = setWindowRestorationComplete;

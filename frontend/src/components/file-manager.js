@@ -763,6 +763,10 @@ async function handleAction(act, path, oldName) {
 }
 
 
+window.openFileManager = (path = null) => {
+  ZettEventBus.emit('window:open', { id: 'file-manager-window', path: path || undefined });
+};
+
 window.openRecycleBin = () => {
   ZettEventBus.emit('window:open', { id: 'file-manager-window', path: '/mnt/user/.RecycleBin' });
 };

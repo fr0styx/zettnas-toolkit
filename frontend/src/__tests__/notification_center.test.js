@@ -586,7 +586,7 @@ describe('Notification Center Draggable Window & Event Detail Inspector', () => 
     const parsed = JSON.parse(raw);
     expect(parsed.activeId).toBe('fm');
     expect(parsed.windows['fm']).toEqual({ minimized: false, open: true });
-    expect(parsed.windows['management']).toEqual({ minimized: true, open: true });
+    expect(parsed.windows['management']).toEqual({ minimized: true, open: true, activePane: 'hub' });
     expect(parsed.windows['notif']).toEqual({ minimized: false, open: true });
 
     // Simulate reload: clear in-memory state
@@ -595,6 +595,8 @@ describe('Notification Center Draggable Window & Event Detail Inspector', () => 
     notifPanel.style.display = 'none';
 
     // Mock launch functions
+    const origFmLaunch = KNOWN_APPS.fm.launch;
+    const origMgmtLaunch = KNOWN_APPS.management.launch;
     const fmLaunch = vi.fn();
     const mgmtLaunch = vi.fn();
     const notifLaunch = vi.fn();
@@ -602,11 +604,57 @@ describe('Notification Center Draggable Window & Event Detail Inspector', () => 
     KNOWN_APPS.management.launch = mgmtLaunch;
     window.toggleNotificationCenter = notifLaunch;
 
+    try {
+      restoreOpenWindowsState();
+
+      expect(fmLaunch).toHaveBeenCalled();
+      expect(mgmtLaunch).toHaveBeenCalled();
+      expect(notifLaunch).toHaveBeenCalled();
+    } finally {
+      KNOWN_APPS.fm.launch = origFmLaunch;
+      KNOWN_APPS.management.launch = origMgmtLaunch;
+    }
+  });
+
+  it('preserves open windows across page reload without minimizing to dock', () => {
+    const { setWindowRestorationComplete } = window;
+    
+    // Save state where management (Services/Docker) and fm are OPEN on desktop (not minimized)
+    localStorage.setItem(OPEN_WINDOWS_KEY, JSON.stringify({
+      activeId: 'management',
+      windows: {
+        management: { open: true, minimized: false, activePane: 'mgmt-pane-docker' },
+        fm: { open: true, minimized: false, activePath: '/mnt/user/appdata' }
+      }
+    }));
+
+    // Simulate app boot sequence: guard is active
+    setWindowRestorationComplete(false);
+
+    // During boot, background registrations occur with initialMinimized = true
+    const dummyOverlay = document.createElement('div');
+    DockManager.register('console', dummyOverlay, '#i-screen', 'Console', true);
+
+    // Verify localStorage was NOT wiped clean by registration during boot
+    const rawDuringBoot = JSON.parse(localStorage.getItem(OPEN_WINDOWS_KEY));
+    expect(rawDuringBoot.windows['management']).toBeDefined();
+    expect(rawDuringBoot.windows['management'].open).toBe(true);
+    expect(rawDuringBoot.windows['management'].minimized).toBe(false);
+
+    // Now restoreOpenWindowsState executes at end of boot
+    const mgmtOpenSpy = vi.fn();
+    const fmOpenSpy = vi.fn();
+    window.openManagementWindow = mgmtOpenSpy;
+    window.openFileManager = fmOpenSpy;
+
     restoreOpenWindowsState();
 
-    expect(fmLaunch).toHaveBeenCalled();
-    expect(mgmtLaunch).toHaveBeenCalled();
-    expect(notifLaunch).toHaveBeenCalled();
+    expect(mgmtOpenSpy).toHaveBeenCalledWith('mgmt-pane-docker');
+    expect(fmOpenSpy).toHaveBeenCalledWith('/mnt/user/appdata');
+    
+    // Verify windows did NOT get minimized
+    expect(DockManager.windows['management']?.minimized).toBeFalsy();
+    expect(DockManager.windows['fm']?.minimized).toBeFalsy();
   });
 
   it('correctly applies saved bounds and handles bidirectional ID aliases', () => {

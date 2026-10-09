@@ -8,7 +8,7 @@ import { ZettEventBus } from '../event-bus.js';
  * category navigation, and card views (Wallpaper, Metrics, Events, Security).
  */
 import { fetchAndRenderMetrics } from './metrics-chart.js';
-import { bringToFront, DockManager, makeDraggable } from './dock.js';
+import { bringToFront, DockManager, makeDraggable, saveWindowBounds, saveOpenWindowsState } from './dock.js';
 import { state } from '../state.js';
 import { api } from '../api.js';
 import { showToast } from '../toast.js';
@@ -1227,8 +1227,18 @@ export function initManagement() {
         win.style.transform = 'none';
         win.style.width = 'calc(100vw - 32px)';
         win.style.height = 'calc(100vh - 128px)';
+        win.dataset.snapped = 'maximize';
         _isMaximized = true;
+        saveWindowBounds('management', {
+          left: 16,
+          top: 56,
+          width: window.innerWidth - 32,
+          height: window.innerHeight - 128,
+          snapped: 'maximize'
+        });
+        saveOpenWindowsState();
       } else {
+        win.dataset.snapped = '';
         if (_preMaxBounds) {
           win.style.left = _preMaxBounds.left;
           win.style.top = _preMaxBounds.top;
@@ -1243,6 +1253,14 @@ export function initManagement() {
           win.style.height = '';
         }
         _isMaximized = false;
+        saveWindowBounds('management', {
+          left: Math.round(window.innerWidth / 2 - 450),
+          top: Math.round(window.innerHeight / 2 - 300),
+          width: 900,
+          height: 600,
+          snapped: ''
+        });
+        saveOpenWindowsState();
       }
     };
     maxBtn.addEventListener('click', handleMax);
