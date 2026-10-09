@@ -126,6 +126,7 @@ let _dockerSearchQuery = '';
 let _catalogList = [];
 let _catalogCat = 'all';
 let _catalogSearchQuery = '';
+let _catalogSources = [];
 
 export function _resetDockerStateForTesting() {
   _dockerContainersList = [];
@@ -137,6 +138,7 @@ export function _resetCatalogStateForTesting() {
   _catalogList = [];
   _catalogCat = 'all';
   _catalogSearchQuery = '';
+  _catalogSources = [];
 }
 
 function _bindDockerEvents() {
@@ -208,6 +210,14 @@ function _bindDockerEvents() {
   if (btnPrune) {
     btnPrune.addEventListener('click', () => {
       openDockerPruneModal();
+    });
+  }
+
+  // Sources button
+  const btnSources = document.getElementById('btn-manage-app-sources');
+  if (btnSources) {
+    btnSources.addEventListener('click', () => {
+      openAppSourcesModal();
     });
   }
 
@@ -445,13 +455,44 @@ export async function fetchAndRenderDockerContainers() {
   }
 }
 
+export async function fetchCatalogSources() {
+  try {
+    const sources = await api.get('/api/docker/catalog/sources');
+    _catalogSources = Array.isArray(sources) ? sources : [];
+    updateCatalogSourcesBadge();
+    return _catalogSources;
+  } catch (err) {
+    console.error('Failed to fetch catalog sources:', err);
+    return [];
+  }
+}
+
+export function updateCatalogSourcesBadge() {
+  const badge = document.getElementById('catalog-sources-count-badge');
+  if (badge) {
+    const enabledCount = _catalogSources.filter((s) => s.enabled !== false).length;
+    badge.textContent = enabledCount || _catalogSources.length || '1';
+  }
+}
+
 export async function fetchAndRenderAppCatalog() {
   _bindDockerEvents();
   const grid = document.getElementById('docker-catalog-grid');
   if (!grid) return;
   try {
-    const list = await api.get('/api/docker/catalog');
+    const [list, sources] = await Promise.all([
+      api.get('/api/docker/catalog'),
+      api.get('/api/docker/catalog/sources').catch(() => []),
+    ]);
     _catalogList = Array.isArray(list) ? list : [];
+    _catalogSources = Array.isArray(sources) ? sources : [];
+
+    const totalBadge = document.getElementById('catalog-total-badge');
+    if (totalBadge) totalBadge.textContent = _catalogList.length;
+    const allCount = document.getElementById('catalog-all-count');
+    if (allCount) allCount.textContent = _catalogList.length;
+    updateCatalogSourcesBadge();
+
     renderAppCatalogGrid();
   } catch (err) {
     grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; color:var(--crit); padding:20px;">Failed to load catalog: ${escapeHtml(err.message)}</div>`;
@@ -469,7 +510,9 @@ export function renderAppCatalogGrid() {
       const matchName = (app.name || '').toLowerCase().includes(q);
       const matchDesc = (app.description || '').toLowerCase().includes(q);
       const matchId = (app.id || '').toLowerCase().includes(q);
-      if (!matchName && !matchDesc && !matchId) return false;
+      const matchImg = (app.image || '').toLowerCase().includes(q);
+      const matchSrc = (app.source_name || '').toLowerCase().includes(q);
+      if (!matchName && !matchDesc && !matchId && !matchImg && !matchSrc) return false;
     }
     return true;
   });
@@ -486,22 +529,41 @@ export function renderAppCatalogGrid() {
     automation: '⚡',
     utilities: '🛠️',
     downloads: '📥',
+    other: '📦',
   };
 
   grid.innerHTML = filtered.map((app) => {
     const icon = categoryIcons[app.category] || '📦';
+    const logoHtml = app.logo
+      ? `<img src="${escapeHtml(app.logo)}" alt="${escapeHtml(app.name)}" style="width:24px; height:24px; object-fit:contain; border-radius:4px; vertical-align:middle; flex-shrink:0;" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='inline';" /><span style="font-size:20px; line-height:1; display:none;">${icon}</span>`
+      : `<span style="font-size:20px; line-height:1;">${icon}</span>`;
+
+    const sourceBadge = app.source_name && app.source_name !== 'Built-in'
+      ? `<span class="ci-badge" style="font-size:8.5px; background:rgba(14,165,233,0.15); color:#38bdf8; border:1px solid rgba(14,165,233,0.3); padding:1px 5px; border-radius:3px;">${escapeHtml(app.source_name)}</span>`
+      : `<span class="ci-badge" style="font-size:8.5px; background:rgba(37,194,160,0.15); color:var(--accent, #25c2a0); border:1px solid rgba(37,194,160,0.3); padding:1px 5px; border-radius:3px;">Built-in</span>`;
+
+    const typeBadge = app.type === 'stack'
+      ? `<span class="ci-badge" style="font-size:8.5px; background:rgba(168,85,247,0.15); color:#c084fc; border:1px solid rgba(168,85,247,0.3); padding:1px 5px; border-radius:3px;">Stack</span>`
+      : '';
+
+    const imageDisplay = app.image || (app.repository ? 'compose-stack' : 'container');
+
     return `
       <div class="catalog-app-card" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:12px; display:flex; flex-direction:column; justify-content:space-between; gap:10px; transition:border-color 0.2s, background 0.2s;">
         <div>
           <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:6px; margin-bottom:6px;">
-            <div style="display:flex; align-items:center; gap:8px;">
-              <span style="font-size:20px; line-height:1;">${icon}</span>
-              <div>
-                <div style="font-size:12.5px; font-weight:700; color:#fff;">${escapeHtml(app.name)}</div>
-                <code style="font-size:9.5px; color:var(--muted); font-family:var(--font-mono, monospace);">${escapeHtml(app.image)}</code>
+            <div style="display:flex; align-items:center; gap:8px; overflow:hidden;">
+              ${logoHtml}
+              <div style="overflow:hidden;">
+                <div style="font-size:12.5px; font-weight:700; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(app.name)}</div>
+                <code style="font-size:9.5px; color:var(--muted); font-family:var(--font-mono, monospace); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block;">${escapeHtml(imageDisplay)}</code>
               </div>
             </div>
-            <span class="ci-badge" style="font-size:9px; text-transform:uppercase; background:rgba(255,255,255,0.06); color:#cbd5e1; padding:2px 6px; border-radius:4px;">${escapeHtml(app.category)}</span>
+            <div style="display:flex; gap:4px; align-items:center; flex-shrink:0;">
+              ${typeBadge}
+              ${sourceBadge}
+              <span class="ci-badge" style="font-size:9px; text-transform:uppercase; background:rgba(255,255,255,0.06); color:#cbd5e1; padding:2px 6px; border-radius:4px;">${escapeHtml(app.category)}</span>
+            </div>
           </div>
           <p style="font-size:11px; color:#94a3b8; line-height:1.4; margin:0 0 6px 0; min-height:32px;">${escapeHtml(app.description)}</p>
         </div>
@@ -1098,6 +1160,313 @@ export async function openDockerPruneModal() {
       confirmBtn.textContent = '🧹 Run Prune & Reclaim Storage';
     }
   };
+}
+
+function formatRelativeTime(ts) {
+  if (!ts) return 'Never';
+  const sec = Math.floor(Date.now() / 1000 - ts);
+  if (sec < 60) return 'Just now';
+  if (sec < 3600) return `${Math.floor(sec / 60)}m ago`;
+  if (sec < 86400) return `${Math.floor(sec / 3600)}h ago`;
+  return `${Math.floor(sec / 86400)}d ago`;
+}
+
+export async function openAppSourcesModal() {
+  let modal = document.getElementById('app-sources-modal-overlay');
+  if (!modal) {
+    const html = `
+      <div id="app-sources-modal-overlay" class="smart-modal-backdrop" style="display:none; z-index:10020;">
+        <div id="app-sources-modal-window" class="smart-modal-window" style="width:680px; max-width:94vw; max-height:88vh; display:flex; flex-direction:column;">
+          <div class="smart-modal-header" style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="font-size:18px;">🌐</span>
+              <span style="font-weight:700; color:#fff; font-size:13px;">App Template Sources</span>
+            </div>
+            <button class="win-btn close-btn" id="asm-close-btn" title="Close" aria-label="Close"></button>
+          </div>
+          <div style="padding:16px; overflow-y:auto; display:flex; flex-direction:column; gap:14px;">
+            <div style="font-size:11px; color:#cbd5e1; line-height:1.4;">
+              Expand your App Catalog with external Portainer v2/v3 or custom JSON template repositories.
+            </div>
+
+            <!-- Quick Add Preset Banner -->
+            <div id="asm-preset-banner" style="background:linear-gradient(135deg, rgba(14,165,233,0.12), rgba(37,194,160,0.08)); border:1px solid rgba(14,165,233,0.3); border-radius:8px; padding:12px 14px; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+              <div>
+                <div style="font-size:12px; font-weight:700; color:#fff; display:flex; align-items:center; gap:6px;">
+                  <span>⭐ Lissy93 Portainer Templates</span>
+                  <span class="ci-badge" style="font-size:9px; background:rgba(37,194,160,0.2); color:var(--accent);">790+ Apps</span>
+                </div>
+                <div style="font-size:10.5px; color:#94a3b8; margin-top:2px;">
+                  Comprehensive community catalog of self-hosted homelab applications, web tools, and stacks.
+                </div>
+              </div>
+              <button class="btn-pill-toggle" id="asm-btn-add-lissy" style="background:var(--brand, #0ea5e9); color:#fff; border:none; padding:5px 12px; font-weight:700; font-size:11px; white-space:nowrap; cursor:pointer;">
+                + Add Lissy93 (790+ Apps)
+              </button>
+            </div>
+
+            <!-- Add Custom Source Form -->
+            <div style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:12px; display:flex; flex-direction:column; gap:10px;">
+              <div style="font-size:11px; font-weight:700; color:#fff; text-transform:uppercase; letter-spacing:0.5px;">Add Custom Template Source</div>
+              <div style="display:grid; grid-template-columns:1fr 2fr auto; gap:8px; align-items:end;">
+                <div>
+                  <label style="display:block; font-size:9.5px; font-weight:700; color:var(--muted); margin-bottom:3px;">SOURCE NAME</label>
+                  <input type="text" id="asm-input-name" placeholder="e.g. Community Apps" class="tz-text-input" style="width:100%; box-sizing:border-box; font-size:11px; padding:5px 8px;">
+                </div>
+                <div>
+                  <label style="display:block; font-size:9.5px; font-weight:700; color:var(--muted); margin-bottom:3px;">TEMPLATE URL (JSON)</label>
+                  <input type="url" id="asm-input-url" placeholder="https://example.com/templates.json" class="tz-text-input" style="width:100%; box-sizing:border-box; font-size:11px; padding:5px 8px;">
+                </div>
+                <div>
+                  <button class="btn-pill-toggle" id="asm-btn-add-custom" style="background:linear-gradient(135deg, var(--brand, #0ea5e9), var(--ok2, #25c2a0)); color:#fff; border:none; padding:5px 14px; font-weight:700; font-size:11px; height:28px; white-space:nowrap; cursor:pointer;">
+                    + Add & Sync
+                  </button>
+                </div>
+              </div>
+              <div id="asm-form-status" style="font-size:10.5px; display:none; padding:4px 6px; border-radius:4px;"></div>
+            </div>
+
+            <!-- Active Sources List -->
+            <div>
+              <div style="font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; margin-bottom:8px; letter-spacing:0.5px;">
+                Configured Sources (<span id="asm-sources-count">0</span>)
+              </div>
+              <div id="asm-sources-list" style="display:flex; flex-direction:column; gap:8px; max-height:260px; overflow-y:auto;">
+                <div style="text-align:center; color:var(--muted); padding:16px;">Loading sources...</div>
+              </div>
+            </div>
+          </div>
+          <div style="padding:10px 16px; border-top:1px solid rgba(255,255,255,0.08); display:flex; justify-content:flex-end; align-items:center; background:rgba(0,0,0,0.2);">
+            <button class="btn-pill-toggle" id="asm-done-btn">Done</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', html);
+    modal = document.getElementById('app-sources-modal-overlay');
+
+    const closeModal = () => {
+      modal.classList.remove('open');
+      modal.style.display = 'none';
+      fetchAndRenderAppCatalog();
+    };
+    document.getElementById('asm-close-btn').onclick = (e) => { e.preventDefault(); closeModal(); };
+    document.getElementById('asm-done-btn').onclick = (e) => { e.preventDefault(); closeModal(); };
+    modal.onclick = (e) => { if (e.target === modal) closeModal(); };
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modal.classList.contains('open')) closeModal();
+    });
+
+    // Wire Lissy93 quick add
+    const btnLissy = document.getElementById('asm-btn-add-lissy');
+    if (btnLissy) {
+      btnLissy.onclick = async () => {
+        btnLissy.disabled = true;
+        btnLissy.textContent = '⏳ Adding & Syncing...';
+        try {
+          await api.post('/api/docker/catalog/sources', {
+            name: 'Lissy93 Templates',
+            url: 'https://raw.githubusercontent.com/Lissy93/portainer-templates/main/templates.json',
+          });
+          showToast('Lissy93 Portainer templates added (790+ apps)!', 'success');
+          await refreshSourcesUI();
+          fetchAndRenderAppCatalog();
+        } catch (err) {
+          showToast(`Failed to add Lissy93 templates: ${err.message}`, 'error');
+          btnLissy.disabled = false;
+          btnLissy.textContent = '+ Add Lissy93 (790+ Apps)';
+        }
+      };
+    }
+
+    // Wire custom add
+    const btnCustom = document.getElementById('asm-btn-add-custom');
+    if (btnCustom) {
+      btnCustom.onclick = async () => {
+        const nameInput = document.getElementById('asm-input-name');
+        const urlInput = document.getElementById('asm-input-url');
+        const statusEl = document.getElementById('asm-form-status');
+        const name = (nameInput.value || '').trim();
+        const url = (urlInput.value || '').trim();
+        if (!name || !url) {
+          statusEl.style.display = 'block';
+          statusEl.style.background = 'rgba(239,68,68,0.15)';
+          statusEl.style.color = '#fca5a5';
+          statusEl.textContent = 'Please enter both name and URL.';
+          return;
+        }
+        btnCustom.disabled = true;
+        btnCustom.textContent = '⏳ Syncing...';
+        statusEl.style.display = 'block';
+        statusEl.style.background = 'rgba(14,165,233,0.15)';
+        statusEl.style.color = '#38bdf8';
+        statusEl.textContent = 'Fetching and caching remote templates...';
+        try {
+          await api.post('/api/docker/catalog/sources', { name, url });
+          nameInput.value = '';
+          urlInput.value = '';
+          statusEl.style.background = 'rgba(37,194,160,0.15)';
+          statusEl.style.color = 'var(--accent)';
+          statusEl.textContent = '✓ Source added and synced successfully!';
+          showToast(`Added template source "${name}"!`, 'success');
+          setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
+          await refreshSourcesUI();
+          fetchAndRenderAppCatalog();
+        } catch (err) {
+          statusEl.style.background = 'rgba(239,68,68,0.15)';
+          statusEl.style.color = '#fca5a5';
+          statusEl.textContent = `Error: ${err.message}`;
+          showToast(`Failed to add source: ${err.message}`, 'error');
+        } finally {
+          btnCustom.disabled = false;
+          btnCustom.textContent = '+ Add & Sync';
+        }
+      };
+    }
+  }
+
+  modal.style.display = 'flex';
+  modal.classList.add('open');
+  await refreshSourcesUI();
+}
+
+async function refreshSourcesUI() {
+  const listEl = document.getElementById('asm-sources-list');
+  const countEl = document.getElementById('asm-sources-count');
+  const btnLissy = document.getElementById('asm-btn-add-lissy');
+  if (!listEl) return;
+
+  try {
+    const sources = await api.get('/api/docker/catalog/sources');
+    _catalogSources = Array.isArray(sources) ? sources : [];
+    if (countEl) countEl.textContent = _catalogSources.length;
+    updateCatalogSourcesBadge();
+
+    // Check if Lissy93 is present
+    const hasLissy = _catalogSources.some(
+      (s) => (s.url && s.url.includes('Lissy93')) || (s.name && s.name.toLowerCase().includes('lissy'))
+    );
+    if (btnLissy) {
+      if (hasLissy) {
+        btnLissy.disabled = true;
+        btnLissy.style.background = 'rgba(37,194,160,0.15)';
+        btnLissy.style.color = 'var(--accent)';
+        btnLissy.style.border = '1px solid rgba(37,194,160,0.3)';
+        btnLissy.textContent = '✓ Lissy93 Added';
+      } else {
+        btnLissy.disabled = false;
+        btnLissy.style.background = 'var(--brand, #0ea5e9)';
+        btnLissy.style.color = '#fff';
+        btnLissy.style.border = 'none';
+        btnLissy.textContent = '+ Add Lissy93 (790+ Apps)';
+      }
+    }
+
+    if (_catalogSources.length === 0) {
+      listEl.innerHTML = '<div style="text-align:center; color:var(--muted); padding:16px;">No template sources configured.</div>';
+      return;
+    }
+
+    listEl.innerHTML = _catalogSources.map((src) => {
+      const isBuiltin = src.id === 'builtin';
+      const isEnabled = src.enabled !== false;
+      const statusBadge = src.status === 'ok'
+        ? `<span class="ci-badge" style="font-size:9px; background:rgba(37,194,160,0.15); color:var(--accent);">✓ Synced (${formatRelativeTime(src.last_synced)})</span>`
+        : (src.status === 'error'
+          ? `<span class="ci-badge" style="font-size:9px; background:rgba(239,68,68,0.15); color:#fca5a5;" title="${escapeHtml(src.error || 'Sync failed')}">⚠️ Error</span>`
+          : `<span class="ci-badge" style="font-size:9px; background:rgba(14,165,233,0.15); color:#38bdf8;">🔄 ${escapeHtml(src.status || 'pending')}</span>`);
+
+      const toggleBtnClass = isEnabled ? 'btn-pill-toggle active' : 'btn-pill-toggle';
+      const toggleText = isEnabled ? 'Enabled' : 'Disabled';
+
+      return `
+        <div class="asm-source-card" data-sourceid="${escapeHtml(src.id)}" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:10px 12px; display:flex; justify-content:space-between; align-items:center; gap:10px;">
+          <div style="overflow:hidden; flex:1;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <strong style="font-size:12px; color:#fff;">${escapeHtml(src.name)}</strong>
+              <span class="ci-badge" style="font-size:9px; background:rgba(255,255,255,0.06); color:#cbd5e1;">${src.item_count || 0} apps</span>
+              ${statusBadge}
+            </div>
+            <div style="font-size:10px; color:var(--muted); font-family:var(--font-mono, monospace); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px;">
+              ${escapeHtml(src.url)}
+            </div>
+            ${src.error ? `<div style="font-size:10px; color:#fca5a5; margin-top:3px;">${escapeHtml(src.error)}</div>` : ''}
+          </div>
+          <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
+            <button class="${toggleBtnClass} asm-btn-toggle" data-sourceid="${escapeHtml(src.id)}" data-enabled="${isEnabled ? 'true' : 'false'}" style="font-size:10.5px; padding:3px 8px; cursor:pointer;">
+              ${toggleText}
+            </button>
+            <button class="btn-pill-toggle asm-btn-sync" data-sourceid="${escapeHtml(src.id)}" title="Sync Now" style="font-size:11px; padding:3px 8px; cursor:pointer;">
+              🔄
+            </button>
+            ${!isBuiltin ? `
+              <button class="btn-pill-toggle asm-btn-delete" data-sourceid="${escapeHtml(src.id)}" title="Delete Source" style="font-size:11px; padding:3px 8px; color:#fca5a5; cursor:pointer;">
+                🗑️
+              </button>
+            ` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // Wire toggle buttons
+    listEl.querySelectorAll('.asm-btn-toggle').forEach((btn) => {
+      btn.onclick = async () => {
+        const sid = btn.dataset.sourceid;
+        const curEnabled = btn.dataset.enabled === 'true';
+        btn.disabled = true;
+        try {
+          await api.post(`/api/docker/catalog/sources/${sid}/toggle`, { enabled: !curEnabled });
+          showToast(`Source ${!curEnabled ? 'enabled' : 'disabled'}.`, 'info');
+          await refreshSourcesUI();
+          fetchAndRenderAppCatalog();
+        } catch (err) {
+          showToast(`Failed to toggle source: ${err.message}`, 'error');
+          btn.disabled = false;
+        }
+      };
+    });
+
+    // Wire sync buttons
+    listEl.querySelectorAll('.asm-btn-sync').forEach((btn) => {
+      btn.onclick = async () => {
+        const sid = btn.dataset.sourceid;
+        btn.disabled = true;
+        btn.textContent = '⏳';
+        try {
+          const res = await api.post(`/api/docker/catalog/sources/${sid}/sync`);
+          showToast(`Source synced (${res.source ? res.source.item_count : 0} apps).`, 'success');
+          await refreshSourcesUI();
+          fetchAndRenderAppCatalog();
+        } catch (err) {
+          showToast(`Failed to sync source: ${err.message}`, 'error');
+          btn.disabled = false;
+          btn.textContent = '🔄';
+        }
+      };
+    });
+
+    // Wire delete buttons
+    listEl.querySelectorAll('.asm-btn-delete').forEach((btn) => {
+      btn.onclick = async () => {
+        const sid = btn.dataset.sourceid;
+        if (!confirm('Are you sure you want to delete this template source and all cached templates?')) return;
+        btn.disabled = true;
+        try {
+          await api.delete(`/api/docker/catalog/sources/${sid}`);
+          showToast('Source deleted successfully.', 'info');
+          await refreshSourcesUI();
+          fetchAndRenderAppCatalog();
+        } catch (err) {
+          showToast(`Failed to delete source: ${err.message}`, 'error');
+          btn.disabled = false;
+        }
+      };
+    });
+
+  } catch (err) {
+    listEl.innerHTML = `<div style="text-align:center; color:var(--crit); padding:16px;">Failed to load sources: ${escapeHtml(err.message)}</div>`;
+  }
 }
 
 export async function fetchAndRenderUpsTelemetry() {

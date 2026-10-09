@@ -1,9 +1,12 @@
 import json
 import os
+import re
 import time
+import urllib.request
 from typing import Any, Dict, Iterator, List, Optional
 
-from backend.config import logger
+from backend.config import DATA_DIR, logger
+from backend.fsutil import atomic_write_json, read_json
 from backend.hardware.docker_stats import UnixHTTPConnection
 from backend.services.container_mutator import _docker_request, check_port_available
 from backend.state import add_event
@@ -292,14 +295,355 @@ CURATED_APP_CATALOG: List[Dict[str, Any]] = [
 ]
 
 
+CATALOG_SOURCES_FILE = os.path.join(DATA_DIR, "catalog_sources.json")
+CATALOG_CACHE_DIR = os.path.join(DATA_DIR, "catalog_cache")
+
+DEFAULT_SOURCES: List[Dict[str, Any]] = [
+    {
+        "id": "builtin",
+        "name": "ZettNAS Curated Suite",
+        "url": "builtin",
+        "enabled": True,
+        "type": "builtin",
+        "description": "Hand-crafted, tested homelab stacks built directly into ZettNAS.",
+        "item_count": len(CURATED_APP_CATALOG),
+        "last_synced": int(time.time()),
+        "status": "ok",
+        "error": None,
+    }
+]
+
+
+def normalize_category(cats: Any) -> str:
+    """Normalizes arbitrary template categories to ZettNAS standard categories."""
+    if isinstance(cats, str):
+        cats = [cats]
+    elif not isinstance(cats, list):
+        cats = []
+    lower = " ".join([str(c).lower() for c in cats])
+    if any(w in lower for w in ("media", "video", "music", "audio", "streaming", "movie", "tv", "book", "podcast", "radio")):
+        return "media"
+    if any(w in lower for w in ("photo", "gallery", "image")):
+        return "photos"
+    if any(w in lower for w in ("cloud", "storage", "file", "sync", "backup", "drive", "document", "office", "notes", "wiki")):
+        return "cloud"
+    if any(w in lower for w in ("auto", "ai", "smart home", "iot", "home automation", "mqtt", "zigbee", "workflow")):
+        return "automation"
+    if any(w in lower for w in ("download", "torrent", "usenet", "p2p", "arr", "nzb")):
+        return "downloads"
+    if any(w in lower for w in ("util", "tool", "dns", "security", "proxy", "vpn", "monitor", "network", "dash", "system", "database", "finance", "admin", "dev")):
+        return "utilities"
+    return "other"
+
+
+def parse_portainer_ports(raw_ports: Any) -> tuple[int, list[str]]:
+    """Extracts default port and normalized port mapping list from Portainer template ports."""
+    ports_list = []
+    if isinstance(raw_ports, list):
+        for p in raw_ports:
+            if isinstance(p, str):
+                ports_list.append(p)
+            elif isinstance(p, dict):
+                c = p.get("container")
+                h = p.get("host", c)
+                proto = p.get("protocol", "tcp")
+                if c:
+                    ports_list.append(f"{h}:{c}/{proto}")
+    elif isinstance(raw_ports, dict):
+        for c, h in raw_ports.items():
+            ports_list.append(f"{h}:{c}")
+
+    default_port = 8080
+    if ports_list:
+        for p in ports_list:
+            match = re.match(r"^(\d+):(\d+)", str(p))
+            if match:
+                hp = int(match.group(1))
+                cp = int(match.group(2))
+                if cp in (80, 8080, 3000, 5000, 8000, 8096, 2283, 9000):
+                    default_port = hp
+                    break
+        else:
+            match = re.match(r"^(\d+):(\d+)", str(ports_list[0]))
+            if match:
+                default_port = int(match.group(1))
+
+    return default_port, ports_list
+
+
+def parse_portainer_volumes(raw_vols: Any) -> dict[str, str]:
+    """Extracts clean volume mapping dictionary from Portainer template volumes."""
+    vol_dict = {}
+    if isinstance(raw_vols, list):
+        for v in raw_vols:
+            if isinstance(v, dict):
+                target = v.get("container") or v.get("target")
+                if target:
+                    key = target.strip("/").split("/")[-1] or "data"
+                    key = re.sub(r"[^a-zA-Z0-9_]+", "_", key).lower()
+                    if key in vol_dict:
+                        key = f"{key}_{len(vol_dict)+1}"
+                    vol_dict[key] = target
+            elif isinstance(v, str) and ":" in v:
+                parts = v.split(":")
+                target = parts[1]
+                key = target.strip("/").split("/")[-1] or "data"
+                key = re.sub(r"[^a-zA-Z0-9_]+", "_", key).lower()
+                vol_dict[key] = target
+    elif isinstance(raw_vols, dict):
+        vol_dict = raw_vols
+    if not vol_dict:
+        vol_dict = {"config": "/config"}
+    return vol_dict
+
+
+def parse_portainer_env(raw_env: Any) -> dict[str, str]:
+    """Extracts key-value environment variables from Portainer template env."""
+    env_dict = {}
+    if isinstance(raw_env, list):
+        for e in raw_env:
+            if isinstance(e, dict):
+                name = e.get("name")
+                if name:
+                    val = e.get("default", "")
+                    env_dict[str(name)] = str(val) if val is not None else ""
+            elif isinstance(e, str) and "=" in e:
+                k, v = e.split("=", 1)
+                env_dict[k.strip()] = v.strip()
+    elif isinstance(raw_env, dict):
+        env_dict = {str(k): str(v) for k, v in raw_env.items()}
+    return env_dict
+
+
+def get_catalog_sources() -> List[Dict[str, Any]]:
+    """Loads configured app sources list, initializing defaults if needed."""
+    sources = read_json(CATALOG_SOURCES_FILE, None)
+    if not sources or not isinstance(sources, list):
+        sources = [dict(s) for s in DEFAULT_SOURCES]
+        save_catalog_sources(sources)
+    else:
+        # Guarantee builtin exists
+        if not any(s.get("id") == "builtin" for s in sources):
+            sources.insert(0, dict(DEFAULT_SOURCES[0]))
+            save_catalog_sources(sources)
+    return sources
+
+
+def save_catalog_sources(sources: List[Dict[str, Any]]) -> None:
+    """Atomically saves configured sources list."""
+    atomic_write_json(CATALOG_SOURCES_FILE, sources)
+
+
+def sync_catalog_source(source_id: str) -> Dict[str, Any]:
+    """Fetches templates from remote source URL and updates local cache."""
+    sources = get_catalog_sources()
+    src = next((s for s in sources if s["id"] == source_id), None)
+    if not src:
+        raise ValueError(f"Source '{source_id}' not found.")
+
+    if src["id"] == "builtin":
+        src["item_count"] = len(CURATED_APP_CATALOG)
+        src["last_synced"] = int(time.time())
+        src["status"] = "ok"
+        src["error"] = None
+        save_catalog_sources(sources)
+        return src
+
+    url = src.get("url")
+    if not url or not url.startswith(("http://", "https://")):
+        src["status"] = "error"
+        src["error"] = "Invalid source URL"
+        save_catalog_sources(sources)
+        return src
+
+    try:
+        req = urllib.request.Request(
+            url,
+            headers={"User-Agent": "ZettNAS-Toolkit/1.5 (+https://github.com/fr0styx/zettnas-toolkit)"},
+        )
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            raw_text = resp.read().decode("utf-8", errors="replace")
+            data = json.loads(raw_text)
+
+        templates = data.get("templates", []) if isinstance(data, dict) else (data if isinstance(data, list) else [])
+
+        normalized_apps = []
+        seen_slugs = set()
+
+        for idx, t in enumerate(templates):
+            if not isinstance(t, dict):
+                continue
+
+            raw_name = t.get("name") or t.get("title") or f"app_{idx+1}"
+            slug = re.sub(r"[^a-z0-9_-]+", "_", str(raw_name).lower()).strip("_")
+            if not slug:
+                slug = f"app_{idx+1}"
+
+            base_slug = slug
+            dedup_cnt = 2
+            while slug in seen_slugs:
+                slug = f"{base_slug}_{dedup_cnt}"
+                dedup_cnt += 1
+            seen_slugs.add(slug)
+
+            app_id = f"{source_id}_{slug}"
+            title = t.get("title") or t.get("name") or slug.replace("_", " ").title()
+            cat = normalize_category(t.get("categories") or t.get("category"))
+            desc = t.get("description") or t.get("note") or f"{title} container application."
+            logo = t.get("logo") or ""
+            image = t.get("image") or ""
+            repo = t.get("repository") if isinstance(t.get("repository"), dict) else None
+            app_type = "stack" if (t.get("type") == 3 or repo) else "standalone"
+
+            default_port, ports_list = parse_portainer_ports(t.get("ports"))
+            vol_dict = parse_portainer_volumes(t.get("volumes"))
+            env_dict = parse_portainer_env(t.get("env"))
+
+            normalized_apps.append({
+                "id": app_id,
+                "app_slug": slug,
+                "source_id": source_id,
+                "source_name": src.get("name", source_id),
+                "name": title,
+                "category": cat,
+                "description": desc,
+                "image": image,
+                "logo": logo,
+                "default_port": default_port,
+                "ports": ports_list,
+                "webui_path": "/",
+                "env": env_dict,
+                "volumes": vol_dict,
+                "repository": repo,
+                "type": app_type,
+            })
+
+        os.makedirs(CATALOG_CACHE_DIR, exist_ok=True)
+        cache_file = os.path.join(CATALOG_CACHE_DIR, f"{source_id}.json")
+        atomic_write_json(cache_file, normalized_apps)
+
+        src["item_count"] = len(normalized_apps)
+        src["last_synced"] = int(time.time())
+        src["status"] = "ok"
+        src["error"] = None
+        save_catalog_sources(sources)
+        logger.info(f"[AppCatalog] Successfully synced {len(normalized_apps)} apps from source '{src['name']}'")
+        return src
+
+    except Exception as e:
+        logger.warning(f"[AppCatalog] Failed to sync source '{src['name']}': {e}")
+        src["status"] = "error"
+        src["error"] = str(e)
+        save_catalog_sources(sources)
+        return src
+
+
+def add_catalog_source(name: str, url: str) -> Dict[str, Any]:
+    """Adds a new template source and immediately syncs its templates."""
+    name = (name or "").strip()
+    url = (url or "").strip()
+    if not name or not url:
+        raise ValueError("Name and URL are required.")
+    if not url.startswith(("http://", "https://")):
+        raise ValueError("URL must start with http:// or https://")
+
+    sources = get_catalog_sources()
+    for s in sources:
+        if s.get("url") == url:
+            raise ValueError(f"Source with this URL already exists: '{s.get('name')}'")
+
+    source_id = re.sub(r"[^a-z0-9_-]+", "_", name.lower()).strip("_")
+    if not source_id:
+        source_id = f"src_{int(time.time())}"
+
+    base_id = source_id
+    counter = 2
+    while any(s.get("id") == source_id for s in sources):
+        source_id = f"{base_id}_{counter}"
+        counter += 1
+
+    new_source = {
+        "id": source_id,
+        "name": name,
+        "url": url,
+        "enabled": True,
+        "type": "portainer",
+        "description": f"Custom template source from {url}",
+        "item_count": 0,
+        "last_synced": 0,
+        "status": "pending",
+        "error": None,
+    }
+    sources.append(new_source)
+    save_catalog_sources(sources)
+
+    updated = sync_catalog_source(source_id)
+    return {"status": "ok", "source": updated}
+
+
+def delete_catalog_source(source_id: str) -> bool:
+    """Deletes a custom template source and removes its cache file."""
+    if source_id == "builtin":
+        raise ValueError("Built-in curated catalog cannot be deleted.")
+
+    sources = get_catalog_sources()
+    filtered = [s for s in sources if s["id"] != source_id]
+    if len(filtered) == len(sources):
+        return False
+
+    save_catalog_sources(filtered)
+    cache_file = os.path.join(CATALOG_CACHE_DIR, f"{source_id}.json")
+    if os.path.exists(cache_file):
+        try:
+            os.remove(cache_file)
+        except OSError:
+            pass
+    return True
+
+
+def toggle_catalog_source(source_id: str, enabled: bool) -> Dict[str, Any]:
+    """Enables or disables an app source."""
+    sources = get_catalog_sources()
+    src = next((s for s in sources if s["id"] == source_id), None)
+    if not src:
+        raise ValueError(f"Source '{source_id}' not found.")
+    src["enabled"] = bool(enabled)
+    save_catalog_sources(sources)
+    return src
+
+
 def get_all_catalog_apps() -> List[Dict[str, Any]]:
-    """Returns all available curated homelab applications."""
-    return CURATED_APP_CATALOG
+    """Returns all available homelab applications across all enabled sources."""
+    sources = get_catalog_sources()
+    apps: List[Dict[str, Any]] = []
+
+    # 1. Built-in Apps
+    builtin_src = next((s for s in sources if s["id"] == "builtin"), None)
+    if not builtin_src or builtin_src.get("enabled", True):
+        for b_app in CURATED_APP_CATALOG:
+            item = dict(b_app)
+            item.setdefault("source_id", "builtin")
+            item.setdefault("source_name", "Built-in")
+            item.setdefault("app_slug", item["id"])
+            item.setdefault("type", "standalone")
+            item.setdefault("logo", "")
+            apps.append(item)
+
+    # 2. Custom Sources
+    for src in sources:
+        if src["id"] == "builtin" or not src.get("enabled", True):
+            continue
+        cache_file = os.path.join(CATALOG_CACHE_DIR, f"{src['id']}.json")
+        cached = read_json(cache_file, [])
+        if isinstance(cached, list):
+            apps.extend(cached)
+
+    return apps
 
 
 def get_catalog_app(app_id: str) -> Optional[Dict[str, Any]]:
-    """Finds an application template by ID."""
-    for app in CURATED_APP_CATALOG:
+    """Finds an application template by ID across all sources."""
+    for app in get_all_catalog_apps():
         if app["id"] == app_id:
             return dict(app)
     return None
@@ -349,29 +693,82 @@ def generate_compose_for_app(
 ) -> Dict[str, Any]:
     """
     Generates a valid Docker Compose definition for 1-click deployment.
+    Supports both standalone container templates and remote stack templates.
     """
     app = get_catalog_app(app_id)
     if not app:
         return {"error": f"App '{app_id}' not found."}
 
-    port = host_port or app.get("default_port", 8080)
-    service_name = app_id
+    default_p = int(app.get("default_port", 8080))
+    port = host_port or default_p
+    service_name = app.get("app_slug") or app_id
+    service_name = re.sub(r"[^a-zA-Z0-9_.-]+", "_", service_name)
+    storage_slug = app.get("app_slug") or app_id
+    storage_slug = re.sub(r"[^a-zA-Z0-9_.-]+", "_", storage_slug)
 
+    # Check for stackfile in repository (e.g. Lissy93 / Portainer stacks)
+    repo = app.get("repository")
+    if repo and isinstance(repo, dict):
+        repo_url = repo.get("url", "")
+        stackfile = repo.get("stackfile", "")
+        if repo_url and stackfile and "github.com/" in repo_url:
+            clean_repo = repo_url.split("github.com/")[1].strip("/").rstrip(".git")
+            for branch in ("main", "master"):
+                raw_url = f"https://raw.githubusercontent.com/{clean_repo}/{branch}/{stackfile.lstrip('/')}"
+                try:
+                    req = urllib.request.Request(
+                        raw_url,
+                        headers={"User-Agent": "ZettNAS-Toolkit/1.5"},
+                    )
+                    with urllib.request.urlopen(req, timeout=5) as r:
+                        raw_stack = r.read().decode("utf-8", errors="replace")
+                        if raw_stack.strip():
+                            return {
+                                "app_id": app_id,
+                                "service_name": service_name,
+                                "port": port,
+                                "compose_yaml": raw_stack,
+                            }
+                except Exception:
+                    pass
+
+    # Build volumes list with storage_slug
     volumes_list = []
     for vol_key, vol_target in app.get("volumes", {}).items():
-        host_path = f"{storage_root.rstrip('/')}/{app_id}/{vol_key}"
+        host_path = f"{storage_root.rstrip('/')}/{storage_slug}/{vol_key}"
         volumes_list.append(f"{host_path}:{vol_target}")
 
     environment_list = [f"{k}={v}" for k, v in app.get("env", {}).items()]
+
+    # Format ports
+    ports_mapped = []
+    raw_ports = app.get("ports")
+    if raw_ports and isinstance(raw_ports, list):
+        for p_str in raw_ports:
+            m = re.match(r"^(\d+):(\d+)(.*)$", str(p_str).strip())
+            if m:
+                hp = int(m.group(1))
+                cp = int(m.group(2))
+                suffix = m.group(3)
+                if hp == default_p or cp == default_p:
+                    ports_mapped.append(f"{port}:{cp}{suffix}")
+                else:
+                    ports_mapped.append(f"{hp}:{cp}{suffix}")
+            else:
+                ports_mapped.append(str(p_str))
+    if not ports_mapped:
+        ports_mapped = [f"{port}:{default_p}"]
+
+    image_name = app.get("image") or f"{service_name}:latest"
 
     compose_dict = {
         "version": "3.8",
         "services": {
             service_name: {
                 "container_name": service_name,
-                "image": app["image"],
+                "image": image_name,
                 "restart": "unless-stopped",
-                "ports": [f"{port}:{app['default_port']}"],
+                "ports": ports_mapped,
                 "environment": environment_list,
                 "volumes": volumes_list,
             }
@@ -384,11 +781,12 @@ def generate_compose_for_app(
         "services:",
         f"  {service_name}:",
         f"    container_name: {service_name}",
-        f"    image: {app['image']}",
+        f"    image: {image_name}",
         "    restart: unless-stopped",
         "    ports:",
-        f'      - "{port}:{app["default_port"]}"',
     ]
+    for p_item in ports_mapped:
+        yaml_lines.append(f'      - "{p_item}"')
     if environment_list:
         yaml_lines.append("    environment:")
         for env_item in environment_list:
@@ -424,9 +822,12 @@ def stream_deploy_catalog_app(
         }
         return
 
-    port = host_port or app.get("default_port", 8080)
-    service_name = app_id
-    image_name = app["image"]
+    port = host_port or int(app.get("default_port", 8080))
+    service_name = app.get("app_slug") or app_id
+    service_name = re.sub(r"[^a-zA-Z0-9_.-]+", "_", service_name)
+    storage_slug = app.get("app_slug") or app_id
+    storage_slug = re.sub(r"[^a-zA-Z0-9_.-]+", "_", storage_slug)
+    image_name = app.get("image") or ""
 
     yield {
         "step": "init",
@@ -439,7 +840,7 @@ def stream_deploy_catalog_app(
     yield {
         "step": "storage",
         "percent": 12,
-        "message": f"Preparing persistent storage directories under {storage_root}/{app_id}...",
+        "message": f"Preparing persistent storage directories under {storage_root}/{storage_slug}...",
         "done": False,
     }
 
@@ -450,7 +851,7 @@ def stream_deploy_catalog_app(
         resolved_root = os.environ.get("DATA_DIR", "/tmp/zettnas-appdata")
         os.makedirs(resolved_root, exist_ok=True)
 
-    app_dir = os.path.join(resolved_root, app_id)
+    app_dir = os.path.join(resolved_root, storage_slug)
     binds = []
     try:
         os.makedirs(app_dir, exist_ok=True)
@@ -464,8 +865,22 @@ def stream_deploy_catalog_app(
             compose_file = os.path.join(app_dir, "docker-compose.yml")
             with open(compose_file, "w", encoding="utf-8") as f:
                 f.write(comp_info["compose_yaml"])
+            if not image_name:
+                m_img = re.search(r"image:\s*([^\s#]+)", comp_info["compose_yaml"])
+                if m_img:
+                    image_name = m_img.group(1).strip("'\"")
     except Exception as e:
         logger.warning(f"Storage setup notice for {app_id}: {e}")
+
+    if not image_name:
+        yield {
+            "step": "error",
+            "percent": 0,
+            "message": f"Application '{app['name']}' requires a multi-service Docker Compose engine or does not specify a primary container image.",
+            "error": "No container image defined in template",
+            "done": True,
+        }
+        return
 
     yield {
         "step": "preflight",
@@ -623,24 +1038,45 @@ def stream_deploy_catalog_app(
     }
 
     env_list = [f"{k}={v}" for k, v in app.get("env", {}).items()]
-    target_port = app.get("default_port", 8080)
-    port_key = f"{target_port}/tcp"
+
+    # Build ExposedPorts and PortBindings
+    port_bindings = {}
+    exposed_ports = {}
+    raw_ports = app.get("ports")
+    default_target = int(app.get("default_port", 8080))
+    if raw_ports and isinstance(raw_ports, list):
+        for p_str in raw_ports:
+            m = re.match(r"^(\d+):(\d+)(?:/([a-zA-Z0-9]+))?$", str(p_str).strip())
+            if m:
+                hp = int(m.group(1))
+                cp = int(m.group(2))
+                proto = m.group(3) or "tcp"
+                final_hp = port if (hp == default_target or cp == default_target) else hp
+                key = f"{cp}/{proto}"
+                exposed_ports[key] = {}
+                if key not in port_bindings:
+                    port_bindings[key] = []
+                port_bindings[key].append({"HostIp": "", "HostPort": str(final_hp)})
+    if not port_bindings:
+        p_key = f"{default_target}/tcp"
+        exposed_ports[p_key] = {}
+        port_bindings[p_key] = [{"HostIp": "", "HostPort": str(port)}]
 
     create_body = {
         "Image": image_name,
         "Env": env_list,
-        "ExposedPorts": {port_key: {}},
+        "ExposedPorts": exposed_ports,
         "HostConfig": {
-            "PortBindings": {port_key: [{"HostIp": "", "HostPort": str(port)}]},
+            "PortBindings": port_bindings,
             "Binds": binds,
             "RestartPolicy": {"Name": "unless-stopped"},
         },
         "Labels": {
-            "com.docker.compose.project": app_id,
-            "com.docker.compose.service": app_id,
+            "com.docker.compose.project": service_name,
+            "com.docker.compose.service": service_name,
             "net.unraid.docker.managed": "dockerman",
             "net.unraid.docker.webui": f"http://[IP]:[PORT:{port}]{app.get('webui_path', '/')}",
-            "net.unraid.docker.icon": f"https://raw.githubusercontent.com/fr0styx/zettnas-toolkit/main/static/img/icons/{app_id}.png",
+            "net.unraid.docker.icon": app.get("logo") or f"https://raw.githubusercontent.com/fr0styx/zettnas-toolkit/main/static/img/icons/{app_id}.png",
         },
     }
 

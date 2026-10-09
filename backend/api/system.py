@@ -558,6 +558,15 @@ async def get_check_port(port: int, proto: str = "tcp"):
     return {"port": port, "proto": proto, "available": available}
 
 
+class AppSourceCreateRequest(BaseModel):
+    name: str
+    url: str
+
+
+class AppSourceToggleRequest(BaseModel):
+    enabled: bool
+
+
 class AppComposeRequest(BaseModel):
     host_port: Optional[int] = None
     storage_root: str = "/mnt/user/appdata"
@@ -574,8 +583,84 @@ async def get_docker_catalog():
     return await asyncio.to_thread(get_all_catalog_apps)
 
 
+@router.get("/docker/catalog/sources")
+async def get_docker_catalog_sources():
+    from backend.services.app_catalog import get_catalog_sources
+
+    return await asyncio.to_thread(get_catalog_sources)
+
+
+@router.post("/docker/catalog/sources")
+async def post_docker_catalog_sources(req: AppSourceCreateRequest):
+    from backend.services.app_catalog import add_catalog_source
+
+    try:
+        res = await asyncio.to_thread(add_catalog_source, req.name, req.url)
+        return res
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"[AppCatalog] Failed to add source: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.delete("/docker/catalog/sources/{source_id}")
+async def delete_docker_catalog_source(source_id: str):
+    if not source_id or not re.match(r"^[a-zA-Z0-9_.-]{1,128}$", source_id):
+        raise HTTPException(status_code=400, detail="Invalid source ID")
+
+    from backend.services.app_catalog import delete_catalog_source
+
+    try:
+        deleted = await asyncio.to_thread(delete_catalog_source, source_id)
+        if not deleted:
+            raise HTTPException(status_code=404, detail="Source not found")
+        return {"status": "ok", "deleted": True}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"[AppCatalog] Failed to delete source: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/docker/catalog/sources/{source_id}/sync")
+async def post_docker_catalog_source_sync(source_id: str):
+    if not source_id or not re.match(r"^[a-zA-Z0-9_.-]{1,128}$", source_id):
+        raise HTTPException(status_code=400, detail="Invalid source ID")
+
+    from backend.services.app_catalog import sync_catalog_source
+
+    try:
+        updated = await asyncio.to_thread(sync_catalog_source, source_id)
+        return {"status": "ok", "source": updated}
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        logger.error(f"[AppCatalog] Failed to sync source: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/docker/catalog/sources/{source_id}/toggle")
+async def post_docker_catalog_source_toggle(source_id: str, req: AppSourceToggleRequest):
+    if not source_id or not re.match(r"^[a-zA-Z0-9_.-]{1,128}$", source_id):
+        raise HTTPException(status_code=400, detail="Invalid source ID")
+
+    from backend.services.app_catalog import toggle_catalog_source
+
+    try:
+        updated = await asyncio.to_thread(toggle_catalog_source, source_id, req.enabled)
+        return {"status": "ok", "source": updated}
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        logger.error(f"[AppCatalog] Failed to toggle source: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/docker/catalog/{app_id}/resolve")
 async def get_docker_catalog_resolve(app_id: str):
+    if not app_id or not re.match(r"^[a-zA-Z0-9_.-]{1,128}$", app_id):
+        raise HTTPException(status_code=400, detail="Invalid application ID")
     from backend.services.app_catalog import resolve_app_port_conflict
 
     res = await asyncio.to_thread(resolve_app_port_conflict, app_id)
@@ -586,6 +671,8 @@ async def get_docker_catalog_resolve(app_id: str):
 
 @router.post("/docker/catalog/{app_id}/compose")
 async def post_docker_catalog_compose(app_id: str, req: Optional[AppComposeRequest] = None):
+    if not app_id or not re.match(r"^[a-zA-Z0-9_.-]{1,128}$", app_id):
+        raise HTTPException(status_code=400, detail="Invalid application ID")
     from backend.services.app_catalog import generate_compose_for_app
 
     host_port = req.host_port if req else None
@@ -603,7 +690,7 @@ class AppDeployRequest(BaseModel):
 
 @router.post("/docker/catalog/{app_id}/deploy")
 async def post_docker_catalog_deploy(app_id: str, req: Optional[AppDeployRequest] = None):
-    if not app_id or not re.match(r"^[a-zA-Z0-9_-]{1,64}$", app_id):
+    if not app_id or not re.match(r"^[a-zA-Z0-9_.-]{1,128}$", app_id):
         raise HTTPException(status_code=400, detail="Invalid application ID")
 
     from fastapi.responses import StreamingResponse

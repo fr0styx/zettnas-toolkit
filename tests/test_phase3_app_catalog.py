@@ -120,3 +120,87 @@ def test_stream_deploy_catalog_app_endpoint(client, auth_headers):
         assert data_last["percent"] == 100
         assert data_last["container_id"] == "mock_cid_12345"
         assert data_last["port"] == 8123
+
+
+def test_get_catalog_sources(client, auth_headers):
+    res = client.get("/api/docker/catalog/sources", headers=auth_headers)
+    assert res.status_code == 200
+    data = res.json()
+    assert isinstance(data, list)
+    assert any(s["id"] == "builtin" for s in data)
+
+
+def test_add_sync_toggle_delete_custom_source(client, auth_headers, tmp_path):
+    import json
+    from unittest.mock import MagicMock
+
+    mock_templates = {
+        "templates": [
+            {
+                "type": 1,
+                "title": "Mock AdGuard",
+                "name": "mock-adguard",
+                "categories": ["DNS", "Network"],
+                "description": "AdGuard Home DNS Server",
+                "image": "adguard/adguardhome:latest",
+                "ports": ["53:53/udp", "3000:3000/tcp"],
+                "env": [{"name": "TZ", "default": "UTC"}],
+                "volumes": [{"container": "/opt/adguardhome/conf"}],
+            }
+        ]
+    }
+    raw_json_bytes = json.dumps(mock_templates).encode("utf-8")
+
+    mock_resp = MagicMock()
+    mock_resp.read.return_value = raw_json_bytes
+    mock_resp.__enter__.return_value = mock_resp
+
+    with patch("urllib.request.urlopen", return_value=mock_resp):
+        # 1. Add source
+        add_res = client.post(
+            "/api/docker/catalog/sources",
+            json={
+                "name": "Custom Unit Test Source",
+                "url": "https://raw.githubusercontent.com/test/templates.json",
+            },
+            headers=auth_headers,
+        )
+        assert add_res.status_code == 200
+        add_data = add_res.json()
+        assert add_data["status"] == "ok"
+        src = add_data["source"]
+        src_id = src["id"]
+        assert src["item_count"] == 1
+        assert src["status"] == "ok"
+
+        # Verify app is now in catalog
+        cat_res = client.get("/api/docker/catalog", headers=auth_headers)
+        assert cat_res.status_code == 200
+        apps = cat_res.json()
+        custom_app = next((a for a in apps if a.get("source_id") == src_id), None)
+        assert custom_app is not None
+        assert custom_app["name"] == "Mock AdGuard"
+        assert custom_app["category"] == "utilities"
+
+        # 2. Toggle source
+        toggle_res = client.post(
+            f"/api/docker/catalog/sources/{src_id}/toggle",
+            json={"enabled": False},
+            headers=auth_headers,
+        )
+        assert toggle_res.status_code == 200
+        assert toggle_res.json()["source"]["enabled"] is False
+
+        # Verify app is excluded from catalog when source disabled
+        cat_res2 = client.get("/api/docker/catalog", headers=auth_headers)
+        apps2 = cat_res2.json()
+        assert not any(a.get("source_id") == src_id for a in apps2)
+
+        # 3. Delete source
+        del_res = client.delete(f"/api/docker/catalog/sources/{src_id}", headers=auth_headers)
+        assert del_res.status_code == 200
+        assert del_res.json()["deleted"] is True
+
+        # 4. Built-in deletion fails
+        del_builtin = client.delete("/api/docker/catalog/sources/builtin", headers=auth_headers)
+        assert del_builtin.status_code == 400

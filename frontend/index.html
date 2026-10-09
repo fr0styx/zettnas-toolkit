@@ -2296,7 +2296,7 @@
             </div>
             <div style="display:flex; gap:6px; align-items:center;">
               <button class="btn-pill-toggle active" id="btn-view-docker-containers">Active Containers</button>
-              <button class="btn-pill-toggle" id="btn-view-docker-catalog">📦 App Catalog (25+)</button>
+              <button class="btn-pill-toggle" id="btn-view-docker-catalog">📦 App Catalog <span id="catalog-total-badge" class="docker-count-badge" style="margin-left:4px;">25+</span></button>
               <button class="btn-pill-toggle" id="btn-docker-prune" title="Clean up unused images, volumes, and stopped containers">🧹 Prune / Cleanup</button>
               <button class="btn-pill-toggle" id="btn-refresh-docker" title="Refresh Containers" data-i18n="mgmt.refresh">🔄 Refresh</button>
             </div>
@@ -2339,7 +2339,7 @@
             <div id="docker-view-catalog-wrap" style="display:none;">
               <div class="catalog-toolbar" style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:8px; margin-bottom:12px;">
                 <div class="catalog-filter-pills" style="display:flex; gap:6px; flex-wrap:wrap;">
-                  <button class="btn-pill-toggle catalog-filter-btn active" data-cat="all">All Apps (25+)</button>
+                  <button class="btn-pill-toggle catalog-filter-btn active" data-cat="all">All Apps <span id="catalog-all-count" class="docker-count-badge" style="margin-left:4px;">25+</span></button>
                   <button class="btn-pill-toggle catalog-filter-btn" data-cat="media">Media & Streaming</button>
                   <button class="btn-pill-toggle catalog-filter-btn" data-cat="photos">Photos</button>
                   <button class="btn-pill-toggle catalog-filter-btn" data-cat="cloud">Cloud & Files</button>
@@ -2347,12 +2347,13 @@
                   <button class="btn-pill-toggle catalog-filter-btn" data-cat="utilities">Utilities</button>
                   <button class="btn-pill-toggle catalog-filter-btn" data-cat="downloads">Downloads</button>
                 </div>
-                <div class="catalog-search-wrap" style="position:relative;">
-                  <input type="text" id="catalog-search-input" placeholder="Search curated apps..." class="tz-text-input" style="font-size:11px; padding:3px 8px; width:180px; height:24px; border-radius:4px;">
+                <div class="catalog-search-wrap" style="display:flex; align-items:center; gap:8px;">
+                  <input type="text" id="catalog-search-input" placeholder="Search apps..." class="tz-text-input" style="font-size:11px; padding:3px 8px; width:180px; height:24px; border-radius:4px;">
+                  <button class="btn-pill-toggle" id="btn-manage-app-sources" title="Manage App Template Sources (Portainer/Custom)">🌐 Sources <span id="catalog-sources-count-badge" class="docker-count-badge" style="margin-left:3px; background:var(--accent); color:#000;">1</span></button>
                 </div>
               </div>
               <div id="docker-catalog-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:12px; max-height:420px; overflow-y:auto; padding:2px;">
-                <div style="color:var(--muted); text-align:center; padding:30px; grid-column:1/-1;">Loading curated app catalog...</div>
+                <div style="color:var(--muted); text-align:center; padding:30px; grid-column:1/-1;">Loading app catalog...</div>
               </div>
             </div>
           </div>
