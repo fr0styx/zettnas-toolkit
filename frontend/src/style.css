@@ -8836,3 +8836,79 @@ body.theme-yak #notif-center-panel::-webkit-resizer:hover {
 .chassis-screws::after {
   display: none !important;
 }
+
+/* ==============================================================================
+ * Multi-User Identity, RBAC & Desktop Lock Screen Styles
+ * ============================================================================== */
+
+/* User Profile Flyout from Dock */
+.user-profile-flyout {
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+  animation: flyoutSlideUp 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes flyoutSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.user-flyout-btn:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Login Screen User Cards */
+.login-user-card {
+  user-select: none;
+}
+.login-user-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.15);
+}
+
+/* Acrylic Desktop Lock Overlay */
+#lock-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99998;
+  background: rgba(10, 15, 29, 0.75);
+  backdrop-filter: blur(25px) saturate(160%);
+  -webkit-backdrop-filter: blur(25px) saturate(160%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+body.desktop-locked #os-dock-container {
+  pointer-events: none;
+  filter: blur(4px);
+}
+
+/* Mission Control Users Pane */
+.users-subpane {
+  animation: fadeInPane 0.2s ease;
+}
+
+@keyframes fadeInPane {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.users-nav-bar .btn-pill-toggle.active {
+  background: var(--accent-cyan, #0ea5e9);
+  color: #fff;
+  border-color: rgba(14, 165, 233, 0.4);
+}
+

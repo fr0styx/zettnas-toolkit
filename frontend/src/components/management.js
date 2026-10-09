@@ -50,6 +50,8 @@ export const SUBPANE_MAP = {
   'mgmt-pane-storage-disks': { section: 'mgmt-sec-storage', pane: 'mgmt-pane-storage-disks' },
   'mgmt-sec-notifications': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-notifications' },
   'mgmt-pane-notifications': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-notifications' },
+  'mgmt-sec-users': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-users' },
+  'mgmt-pane-users': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-users' },
   'mgmt-sec-security': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-security' },
   'mgmt-pane-security': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-security' },
   'mgmt-sec-events': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-events' },
@@ -1941,6 +1943,8 @@ export function initManagement() {
       if (typeof fetchAPITokens === 'function') fetchAPITokens();
     } else if (paneId === 'mgmt-pane-notifications') {
       fetchAndRenderNotificationConfig();
+    } else if (paneId === 'mgmt-pane-users') {
+      import('./users.js').then((m) => m.loadUsersPane());
     } else if (paneId === 'mgmt-pane-about') {
       fetchAndRenderSystemAbout();
     }

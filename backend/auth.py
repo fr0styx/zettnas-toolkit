@@ -263,6 +263,8 @@ _PUBLIC_API_PATHS = {
     "/api/v1/auth/login",
     "/api/auth/mfa/challenge",
     "/api/v1/auth/mfa/challenge",
+    "/api/auth/users-list",
+    "/api/v1/auth/users-list",
     "/api/health",
     "/api/v1/health",
     "/api/metrics",

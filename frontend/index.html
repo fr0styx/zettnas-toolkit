@@ -119,6 +119,8 @@
               'mgmt-sec-system-group': 'mgmt-sec-system-group',
               'mgmt-sec-security': 'mgmt-sec-system-group',
               'mgmt-pane-security': 'mgmt-sec-system-group',
+              'mgmt-sec-users': 'mgmt-sec-system-group',
+              'mgmt-pane-users': 'mgmt-sec-system-group',
               'mgmt-sec-notifications': 'mgmt-sec-system-group',
               'mgmt-pane-notifications': 'mgmt-sec-system-group',
               'mgmt-sec-events': 'mgmt-sec-system-group',
@@ -205,18 +207,106 @@
 <body class="studio-workbench">
 
 <div id="login-overlay" style="position: fixed; inset: 0; z-index: 999999; background: #080c10; align-items: center; justify-content: center;">
-  <div style="background: var(--card, #141b24); padding: 40px; border-radius: 12px; text-align: center; border: 1px solid rgba(255,255,255,0.1); width: 320px; box-shadow: 0 25px 60px rgba(0,0,0,0.8);">
-    <svg class="ic" style="width: 48px; height: 48px; color: var(--ok2); margin-bottom: 20px;"><use href="#i-chip"/></svg>
-    <h2 style="margin: 0 0 8px 0; font-size: 16px; letter-spacing: 2px; color: #fff;" data-i18n="login.title">ZETTNAS TOOLKIT</h2>
-    <p id="login-identity-txt" style="margin: 0 0 24px 0; font-size: 13px; color: var(--muted);" data-i18n="login.auth_required">Authentication Required</p>
-    <input type="password" id="login-password" placeholder="Admin Password" data-i18n-placeholder="login.placeholder" style="width: 100%; padding: 12px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 6px; margin-bottom: 20px; box-sizing: border-box; text-align: center; font-size: 16px; outline: none;">
-    <button id="login-btn" class="suite-toolkit-btn" style="width: 100%; padding: 12px; font-size: 14px;" data-i18n="login.btn">SECURE LOGIN</button>
+  <div style="background: var(--card, #141b24); padding: 36px 32px; border-radius: 14px; text-align: center; border: 1px solid rgba(255,255,255,0.12); width: 340px; box-shadow: 0 25px 60px rgba(0,0,0,0.85); position: relative;">
+    
+    <!-- Step 1: Credentials (Dual Mode: Chooser vs Classic) -->
+    <div id="login-step-credentials">
+      <svg class="ic" style="width: 44px; height: 44px; color: var(--ok2); margin-bottom: 16px;"><use href="#i-chip"/></svg>
+      <h2 style="margin: 0 0 6px 0; font-size: 16px; letter-spacing: 2px; color: #fff;" data-i18n="login.title">ZETTNAS WORKBENCH</h2>
+      <p id="login-identity-txt" style="margin: 0 0 20px 0; font-size: 12.5px; color: var(--muted);" data-i18n="login.auth_required">Select an account or enter credentials</p>
+
+      <!-- Mode A: Account Chooser Grid -->
+      <div id="login-users-chooser" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; max-height: 200px; overflow-y: auto;">
+        <!-- Populated dynamically via JS -->
+      </div>
+
+      <!-- Selected Account Card (When clicked from chooser) -->
+      <div id="login-user-selected-card" style="display: none; align-items: center; gap: 12px; background: rgba(14,165,233,0.1); border: 1px solid rgba(56,189,248,0.3); border-radius: 8px; padding: 10px 12px; margin-bottom: 16px;">
+        <div id="login-selected-initial" style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #0284c7, #0369a1); display: flex; align-items: center; justify-content: center; font-weight: 800; color: #fff; font-size: 13px;">A</div>
+        <div style="text-align: left; flex: 1; min-width: 0;">
+          <div id="login-selected-name" style="font-weight: 700; color: #fff; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Administrator</div>
+          <div style="font-size: 10.5px; color: var(--muted);">Click to change account</div>
+        </div>
+      </div>
+
+      <!-- Mode B: Manual Username Input (Hidden in Chooser mode) -->
+      <div id="login-manual-fields" style="display: none; margin-bottom: 12px;">
+        <input type="text" id="login-username" placeholder="Username" autocomplete="username" style="width: 100%; padding: 11px 12px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); color: #fff; border-radius: 6px; box-sizing: border-box; text-align: center; font-size: 14px; outline: none; margin-bottom: 10px;">
+      </div>
+
+      <!-- Password Input -->
+      <input type="password" id="login-password" placeholder="Password" autocomplete="current-password" data-i18n-placeholder="login.placeholder" style="width: 100%; padding: 11px 12px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.18); color: #fff; border-radius: 6px; margin-bottom: 12px; box-sizing: border-box; text-align: center; font-size: 15px; outline: none;">
+
+      <!-- Remember Me -->
+      <div style="display: flex; align-items: center; justify-content: flex-start; gap: 8px; margin-bottom: 18px; font-size: 12px; color: var(--muted); cursor: pointer;">
+        <input type="checkbox" id="login-remember-me" checked style="accent-color: var(--ok2); cursor: pointer;">
+        <label for="login-remember-me" style="cursor: pointer; user-select: none;">Keep me signed in</label>
+      </div>
+
+      <button id="login-btn" class="suite-toolkit-btn" style="width: 100%; padding: 12px; font-size: 14px; font-weight: 700;" data-i18n="login.btn">SECURE LOGIN</button>
+
+      <!-- Toggle Links -->
+      <div style="margin-top: 16px; font-size: 11.5px;">
+        <a href="#" id="login-toggle-manual" style="color: var(--muted); text-decoration: none;">Sign in with different account</a>
+        <a href="#" id="login-toggle-chooser" style="color: var(--muted); text-decoration: none; display: none;">← Back to account list</a>
+      </div>
+    </div>
+
+    <!-- Step 2: 2FA / TOTP Challenge Interception -->
+    <div id="login-step-mfa" style="display: none;">
+      <div style="width: 48px; height: 48px; border-radius: 50%; background: rgba(56,189,248,0.15); border: 1px solid rgba(56,189,248,0.35); display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 0 auto 16px auto;">
+        🛡️
+      </div>
+      <h2 style="margin: 0 0 6px 0; font-size: 16px; letter-spacing: 1px; color: #fff;">TWO-FACTOR AUTH</h2>
+      <p id="mfa-user-target" style="margin: 0 0 20px 0; font-size: 12.5px; color: var(--muted);">Enter verification code from your authenticator app</p>
+
+      <form id="form-mfa-challenge">
+        <input type="text" id="mfa-challenge-code" placeholder="6-Digit Code" maxlength="6" autocomplete="one-time-code" style="width: 100%; padding: 12px; background: rgba(0,0,0,0.5); border: 1px solid rgba(56,189,248,0.4); color: #38bdf8; border-radius: 6px; margin-bottom: 16px; box-sizing: border-box; text-align: center; font-size: 20px; font-weight: 800; letter-spacing: 6px; outline: none; font-family: monospace;">
+        <button type="submit" id="btn-submit-mfa" class="suite-toolkit-btn ok" style="width: 100%; padding: 12px; font-size: 13.5px; font-weight: 700;">VERIFY & SIGN IN</button>
+      </form>
+
+      <div style="margin-top: 16px; font-size: 11.5px; display: flex; flex-direction: column; gap: 8px;">
+        <a href="#" id="mfa-toggle-recovery" style="color: #38bdf8; text-decoration: none;">Use 8-character recovery code</a>
+        <a href="#" id="mfa-back-btn" style="color: var(--muted); text-decoration: none;">← Back to credentials</a>
+      </div>
+    </div>
+
   </div>
 </div>
 
+<!-- Inactivity Auto-Lock & Manual Lock Screen Overlay -->
+<div id="lock-overlay" style="display: none; position: fixed; inset: 0; z-index: 999990; background: rgba(8,12,16,0.75); backdrop-filter: blur(28px) saturate(180%) brightness(0.65); align-items: center; justify-content: center;">
+  <div style="background: rgba(20,27,36,0.85); padding: 40px 36px; border-radius: 16px; text-align: center; border: 1px solid rgba(255,255,255,0.14); width: 340px; box-shadow: 0 30px 80px rgba(0,0,0,0.9);">
+    <div id="lock-clock" style="font-size: 42px; font-weight: 800; color: #fff; letter-spacing: -1px; font-family: var(--font-mono, monospace);">12:00</div>
+    <div id="lock-date" style="font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 24px;">Monday, October 9</div>
+
+    <div style="display: flex; align-items: center; justify-content: center; gap: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 12px; margin-bottom: 20px;">
+      <div id="lock-avatar" style="width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #0284c7, #0369a1); display: flex; align-items: center; justify-content: center; font-weight: 800; color: #fff; font-size: 14px; border: 1px solid rgba(255,255,255,0.25);">A</div>
+      <div style="text-align: left; min-width: 0; flex: 1;">
+        <div id="lock-display-name" style="font-weight: 700; color: #fff; font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Administrator</div>
+        <div id="lock-role-badge" style="font-size: 10.5px; color: var(--accent-cyan, #38bdf8); font-weight: 600;">SuperAdmin 👑</div>
+      </div>
+    </div>
+
+    <div style="position: relative; margin-bottom: 12px;">
+      <input type="password" id="lock-password" placeholder="Enter password to unlock" autocomplete="current-password" style="width: 100%; padding: 12px 42px 12px 14px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 8px; box-sizing: border-box; font-size: 14px; outline: none;">
+      <button id="lock-unlock-btn" style="position: absolute; right: 6px; top: 6px; bottom: 6px; width: 32px; background: var(--ok2, #25c2a0); border: none; border-radius: 6px; color: #fff; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center;">➔</button>
+    </div>
+
+    <div id="lock-error" style="display: none; font-size: 11.5px; color: var(--crit, #ff6b6b); margin-bottom: 12px;">Incorrect password</div>
+
+    <button id="lock-switch-btn" style="background: transparent; border: none; color: var(--muted); font-size: 12px; cursor: pointer; text-decoration: underline;">Switch Account</button>
+  </div>
+</div>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
+    <symbol id="i-users" viewBox="0 0 24 24">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="9" cy="7" r="4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M16 3.13a4 4 0 0 1 0 7.75" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
     <symbol id="i-trash" viewBox="0 0 24 24">
       <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
     </symbol>
@@ -1499,6 +1589,185 @@
   </div>
 </div>
 
+<!-- Modal: Add User -->
+<div id="modal-add-user" class="smart-modal-backdrop" role="dialog" aria-modal="true" style="display: none; align-items: center; justify-content: center; z-index: 10005;">
+  <div class="smart-modal-window" style="width: 440px; max-width: 90vw;">
+    <div class="smart-modal-header" style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px;">
+      <div class="smart-modal-title" style="display:flex; align-items:center; gap:6px;">
+        <svg class="ic ic-sm"><use href="#i-users"/></svg> <span>Create New User</span>
+      </div>
+      <button type="button" class="win-btn close-btn modal-close-btn" title="Close" aria-label="Close"></button>
+    </div>
+    <form id="form-add-user" class="smart-modal-body" style="padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+      <div>
+        <label style="display:block; font-size:10.5px; font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">USERNAME (REQUIRED)</label>
+        <input type="text" id="add-user-username" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff;" placeholder="e.g. john" pattern="^[a-zA-Z0-9_\.-]{3,32}$" required>
+      </div>
+      <div>
+        <label style="display:block; font-size:10.5px; font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">DISPLAY NAME</label>
+        <input type="text" id="add-user-display" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff;" placeholder="e.g. John Doe">
+      </div>
+      <div>
+        <label style="display:block; font-size:10.5px; font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">EMAIL ADDRESS</label>
+        <input type="email" id="add-user-email" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff;" placeholder="john@example.com">
+      </div>
+      <div>
+        <label style="display:block; font-size:10.5px; font-weight:700; color:var(--warn); margin-bottom:4px; letter-spacing:0.5px;">PASSWORD (REQUIRED)</label>
+        <input type="password" id="add-user-password" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff;" placeholder="Min. 8 characters" minlength="8" required autocomplete="new-password">
+      </div>
+      <div>
+        <label style="display:block; font-size:10.5px; font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">ROLE & PERMISSIONS</label>
+        <select id="add-user-role" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff;">
+          <option value="share_user" selected>Family & Share User 👤 (Files & WebDAV only)</option>
+          <option value="app_operator">App Operator 📦 (Docker & App management)</option>
+          <option value="storage_admin">Storage Administrator 💾 (Disks & Pools)</option>
+          <option value="backup_operator">Backup Operator 🔄 (Backups & Cloud Sync)</option>
+          <option value="auditor">Auditor & Viewer 👁️ (Read-only telemetry)</option>
+          <option value="superadmin">SuperAdmin 👑 (Full unrestricted control)</option>
+        </select>
+      </div>
+      <div>
+        <label style="display:block; font-size:10.5px; font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">STORAGE QUOTA (GB, 0 = UNLIMITED)</label>
+        <input type="number" id="add-user-quota" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff;" placeholder="0" min="0">
+      </div>
+      <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:8px;">
+        <button type="button" class="btn-pill-toggle modal-close-btn">Cancel</button>
+        <button type="submit" class="btn-save-preset" style="padding:8px 18px;">CREATE USER</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Edit User -->
+<div id="modal-edit-user" class="smart-modal-backdrop" role="dialog" aria-modal="true" style="display: none; align-items: center; justify-content: center; z-index: 10005;">
+  <div class="smart-modal-window" style="width: 440px; max-width: 90vw;">
+    <div class="smart-modal-header" style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px;">
+      <div class="smart-modal-title" style="display:flex; align-items:center; gap:6px;">
+        <svg class="ic ic-sm"><use href="#i-users"/></svg> <span>Edit User Profile</span>
+      </div>
+      <button type="button" class="win-btn close-btn modal-close-btn" title="Close" aria-label="Close"></button>
+    </div>
+    <form id="form-edit-user" class="smart-modal-body" style="padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+      <input type="hidden" id="edit-user-id">
+      <div>
+        <label style="display:block; font-size:10.5px; font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">USERNAME</label>
+        <input type="text" id="edit-user-username" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.08); background:rgba(255,255,255,0.05); padding:8px 10px; color:var(--muted); cursor:not-allowed;" disabled>
+      </div>
+      <div>
+        <label style="display:block; font-size:10.5px; font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">DISPLAY NAME</label>
+        <input type="text" id="edit-user-display" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff;" placeholder="e.g. John Doe">
+      </div>
+      <div>
+        <label style="display:block; font-size:10.5px; font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">EMAIL ADDRESS</label>
+        <input type="email" id="edit-user-email" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff;" placeholder="john@example.com">
+      </div>
+      <div>
+        <label style="display:block; font-size:10.5px; font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">ROLE & PERMISSIONS</label>
+        <select id="edit-user-role" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff;">
+          <option value="share_user">Family & Share User 👤 (Files & WebDAV only)</option>
+          <option value="app_operator">App Operator 📦 (Docker & App management)</option>
+          <option value="storage_admin">Storage Administrator 💾 (Disks & Pools)</option>
+          <option value="backup_operator">Backup Operator 🔄 (Backups & Cloud Sync)</option>
+          <option value="auditor">Auditor & Viewer 👁️ (Read-only telemetry)</option>
+          <option value="superadmin">SuperAdmin 👑 (Full unrestricted control)</option>
+        </select>
+      </div>
+      <div>
+        <label style="display:block; font-size:10.5px; font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">STORAGE QUOTA (GB, 0 = UNLIMITED)</label>
+        <input type="number" id="edit-user-quota" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff;" placeholder="0" min="0">
+      </div>
+      <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:8px;">
+        <button type="button" class="btn-pill-toggle modal-close-btn">Cancel</button>
+        <button type="submit" class="btn-save-preset" style="padding:8px 18px;">SAVE CHANGES</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Reset Password -->
+<div id="modal-reset-password" class="smart-modal-backdrop" role="dialog" aria-modal="true" style="display: none; align-items: center; justify-content: center; z-index: 10005;">
+  <div class="smart-modal-window" style="width: 400px; max-width: 90vw;">
+    <div class="smart-modal-header" style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px;">
+      <div class="smart-modal-title" style="display:flex; align-items:center; gap:6px;">
+        <span style="font-size:15px;">🔑</span> <span>Reset Password for <strong id="reset-pwd-username">@user</strong></span>
+      </div>
+      <button type="button" class="win-btn close-btn modal-close-btn" title="Close" aria-label="Close"></button>
+    </div>
+    <form id="form-reset-password" class="smart-modal-body" style="padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+      <div>
+        <label style="display:block; font-size:10.5px; font-weight:700; color:var(--warn); margin-bottom:4px; letter-spacing:0.5px;">NEW PASSWORD</label>
+        <input type="password" id="reset-pwd-input" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff;" placeholder="Min. 8 characters" minlength="8" required autocomplete="new-password">
+      </div>
+      <div>
+        <label style="display:block; font-size:10.5px; font-weight:700; color:var(--warn); margin-bottom:4px; letter-spacing:0.5px;">CONFIRM NEW PASSWORD</label>
+        <input type="password" id="reset-pwd-confirm" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff;" placeholder="Repeat new password" minlength="8" required autocomplete="new-password">
+      </div>
+      <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:8px;">
+        <button type="button" class="btn-pill-toggle modal-close-btn">Cancel</button>
+        <button type="submit" class="btn-save-preset" style="padding:8px 18px;">UPDATE PASSWORD</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Setup 2FA -->
+<div id="modal-setup-2fa" class="smart-modal-backdrop" role="dialog" aria-modal="true" style="display: none; align-items: center; justify-content: center; z-index: 10005;">
+  <div class="smart-modal-window" style="width: 460px; max-width: 90vw;">
+    <div class="smart-modal-header" style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px;">
+      <div class="smart-modal-title" style="display:flex; align-items:center; gap:6px;">
+        <span style="font-size:15px;">🛡️</span> <span>Setup Two-Factor Authentication</span>
+      </div>
+      <button type="button" class="win-btn close-btn modal-close-btn" title="Close" aria-label="Close"></button>
+    </div>
+    <div class="smart-modal-body" style="padding: 18px;">
+      <!-- Step 1: Scan & Verify -->
+      <div id="mfa-step-verify">
+        <div style="font-size:12px; color:#cbd5e1; margin-bottom:12px; line-height:1.45;">
+          Scan the QR code below using your authenticator app (such as Google Authenticator, Aegis, 1Password, or Bitwarden):
+        </div>
+        <div id="mfa-qr-container" style="background:#fff; border-radius:8px; padding:12px; display:flex; justify-content:center; align-items:center; margin:0 auto 14px; width:220px; height:220px; box-shadow:0 4px 14px rgba(0,0,0,0.4);">
+          <!-- QR SVG injected here -->
+        </div>
+        <div style="font-size:11px; color:var(--muted); text-align:center; margin-bottom:14px;">
+          Or enter this key manually: <code id="mfa-secret-key" style="font-weight:700; color:#38bdf8; background:rgba(0,0,0,0.4); padding:2px 6px; border-radius:4px; letter-spacing:1px; user-select:all;">--</code>
+        </div>
+        <form id="form-verify-2fa" style="display:flex; flex-direction:column; gap:10px;">
+          <div>
+            <label style="display:block; font-size:10.5px; font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">6-DIGIT VERIFICATION CODE</label>
+            <input type="text" id="mfa-verify-code" class="tz-select-input" style="width:100%; border:1px solid rgba(56,189,248,0.4); background:rgba(0,0,0,0.3); padding:10px; color:#fff; font-size:18px; font-family:monospace; text-align:center; letter-spacing:4px;" placeholder="000000" maxlength="6" pattern="[0-9]{6}" required autocomplete="one-time-code">
+          </div>
+          <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:6px;">
+            <button type="button" class="btn-pill-toggle modal-close-btn">Cancel</button>
+            <button type="submit" class="btn-save-preset" style="padding:8px 18px;">VERIFY & ACTIVATE 2FA</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Step 2: Emergency Recovery Codes -->
+      <div id="mfa-step-success" style="display: none;">
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px; color:var(--ok2);">
+          <span style="font-size:20px;">✅</span>
+          <strong style="font-size:14px;">Two-Factor Authentication Activated!</strong>
+        </div>
+        <div style="font-size:11.5px; color:#cbd5e1; line-height:1.45; margin-bottom:12px;">
+          Save these <strong>Emergency Recovery Codes</strong> in a secure password manager. Each single-use code can be used to sign in if you lose access to your authenticator device:
+        </div>
+        <div id="mfa-recovery-codes-list" style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px;">
+          <!-- Populated via users.js -->
+        </div>
+        <div style="display:flex; justify-content:space-between; gap:10px;">
+          <button type="button" id="btn-copy-recovery-codes" class="btn-pill-toggle" style="background:rgba(56,189,248,0.15); border-color:rgba(56,189,248,0.35); color:#38bdf8; font-weight:700;">
+            📋 COPY ALL CODES
+          </button>
+          <button type="button" class="btn-save-preset modal-close-btn" style="padding:8px 18px;">
+            DONE
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 
         
   
@@ -2597,6 +2866,10 @@
                 <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-chip"/></svg>
                 <span data-i18n="mgmt.subtab_security">Security</span>
               </button>
+              <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-users" id="mgmt-tab-users">
+                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-users"/></svg>
+                <span data-i18n="mgmt.subtab_users">Users & Roles</span>
+              </button>
               <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-notifications" id="mgmt-tab-notifications">
                 <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-bell"/></svg>
                 <span data-i18n="mgmt.subtab_notifications">Notifications & Alerts</span>
@@ -2667,6 +2940,136 @@
             </div>
           </div>
         </div>
+
+        <!-- Users & Roles Pane -->
+        <div id="mgmt-pane-users" class="mgmt-tab-pane" style="display: none;">
+          <div class="mgmt-card-intro" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <div>
+              <div class="mgmt-card-intro-title">
+                <svg class="ic"><use href="#i-users"/></svg>
+                <span>User Accounts & Role-Based Access Control</span>
+              </div>
+              <div class="mgmt-card-intro-desc">
+                Manage system users, assign role-based permissions, monitor active login sessions, and configure two-factor authentication.
+              </div>
+            </div>
+          </div>
+
+          <div class="mgmt-detail-body">
+            <!-- Sub-navigation Pills -->
+            <div class="users-nav-bar" style="display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 12px;">
+              <button type="button" class="btn-pill-toggle users-nav-btn active" data-tab="users-pane-list">
+                👥 User Accounts
+              </button>
+              <button type="button" class="btn-pill-toggle users-nav-btn" data-tab="users-pane-sessions">
+                💻 Active Sessions
+              </button>
+              <button type="button" class="btn-pill-toggle users-nav-btn" data-tab="users-pane-2fa">
+                🛡️ Two-Factor Authentication (2FA)
+              </button>
+            </div>
+
+            <!-- Subpane 1: User Inventory -->
+            <div id="users-pane-list" class="users-subpane" style="display: block;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px; flex-wrap:wrap; gap:8px;">
+                <div style="font-size: 11px; font-weight: 800; color: var(--muted); letter-spacing: 0.6px;">ACTIVE USER ACCOUNTS</div>
+                <div style="display:flex; gap: 8px;">
+                  <button type="button" id="btn-refresh-users" class="btn-pill-toggle" style="padding: 6px 12px; font-size: 11px;">
+                    🔄 Refresh
+                  </button>
+                  <button type="button" id="btn-add-user" class="btn-save-preset" style="padding: 6px 14px; font-size: 11.5px;">
+                    ➕ Add User
+                  </button>
+                </div>
+              </div>
+              <div class="table-container" style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; text-align: left; min-width: 650px;">
+                  <thead>
+                    <tr style="background: rgba(255,255,255,0.03); border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 10.5px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px;">
+                      <th style="padding: 10px 12px;">User</th>
+                      <th style="padding: 10px 12px;">Email</th>
+                      <th style="padding: 10px 12px;">Role</th>
+                      <th style="padding: 10px 12px;">Status</th>
+                      <th style="padding: 10px 12px;">2FA</th>
+                      <th style="padding: 10px 12px;">Storage Quota</th>
+                      <th style="padding: 10px 12px; text-align: right;">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="users-table-body">
+                    <!-- Populated via users.js -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Subpane 2: Active Sessions -->
+            <div id="users-pane-sessions" class="users-subpane" style="display: none;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px; flex-wrap:wrap; gap:8px;">
+                <div>
+                  <div style="font-size: 11px; font-weight: 800; color: var(--muted); letter-spacing: 0.6px;">ACTIVE LOGIN SESSIONS</div>
+                  <div style="font-size: 11px; color: var(--muted); margin-top: 2px;">Review browser and client sessions authorized on this NAS.</div>
+                </div>
+                <div style="display:flex; gap: 8px;">
+                  <button type="button" id="btn-refresh-sessions" class="btn-pill-toggle" style="padding: 6px 12px; font-size: 11px;">
+                    🔄 Refresh
+                  </button>
+                  <button type="button" id="btn-revoke-all-sessions" class="suite-toolkit-btn danger" style="padding: 6px 14px; font-size: 11px;">
+                    Revoke Other Sessions
+                  </button>
+                </div>
+              </div>
+              <div class="table-container" style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; text-align: left; min-width: 600px;">
+                  <thead>
+                    <tr style="background: rgba(255,255,255,0.03); border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 10.5px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px;">
+                      <th style="padding: 10px 12px;">Device / Client</th>
+                      <th style="padding: 10px 12px;">IP Address</th>
+                      <th style="padding: 10px 12px;">First Login</th>
+                      <th style="padding: 10px 12px;">Last Active</th>
+                      <th style="padding: 10px 12px; text-align: right;">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="sessions-table-body">
+                    <!-- Populated via users.js -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Subpane 3: 2FA Self-Service -->
+            <div id="users-pane-2fa" class="users-subpane" style="display: none;">
+              <div id="mfa-status-card" class="drawer-card" style="padding: 18px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap: 12px; margin-bottom: 14px;">
+                  <div style="display:flex; align-items:center; gap: 12px;">
+                    <div style="width: 40px; height: 40px; border-radius: 8px; background: rgba(56,189,248,0.15); border: 1px solid rgba(56,189,248,0.3); display:flex; align-items:center; justify-content:center; font-size: 20px;">
+                      🛡️
+                    </div>
+                    <div>
+                      <div style="font-size: 14px; font-weight: 700; color: #fff;">Two-Factor Authentication (RFC 6238 TOTP)</div>
+                      <div style="font-size: 11px; color: var(--muted);">Authenticator app verification for enhanced sign-in security.</div>
+                    </div>
+                  </div>
+                  <div>
+                    <span id="mfa-status-badge" style="font-size: 10.5px; font-weight: 700; padding: 4px 10px; border-radius: 20px; background: rgba(239,68,68,0.15); color: var(--crit); border: 1px solid rgba(239,68,68,0.3);">DISABLED</span>
+                  </div>
+                </div>
+                <div id="mfa-status-desc" style="font-size: 12px; line-height: 1.5; color: #cbd5e1; margin-bottom: 16px;">
+                  Two-factor authentication is currently disabled. Add an extra layer of defense against password theft with an authenticator app (Google Authenticator, Aegis, 1Password, Bitwarden).
+                </div>
+                <div style="display: flex; gap: 10px;">
+                  <button type="button" id="btn-enable-2fa" class="btn-save-preset" style="padding: 8px 16px; font-size: 12px;">
+                    🛡️ Set Up Two-Factor Authentication
+                  </button>
+                  <button type="button" id="btn-disable-2fa" class="suite-toolkit-btn danger" style="padding: 8px 16px; font-size: 12px; display: none;">
+                    Disable 2FA
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
             <!-- Notifications & Alerts Pane -->
             <div id="mgmt-pane-notifications" class="mgmt-tab-pane" style="display: none;">
               <div class="mgmt-card-intro" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">

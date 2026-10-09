@@ -14,6 +14,7 @@ import './modals.js';
 
 import { initDockSystem, DockManager, makeDraggable, bringToFront, restoreOpenWindowsState, setWindowRestorationComplete } from './components/dock.js';
 import { initAuth } from './components/auth.js';
+import { initUsersManagement } from './components/users.js';
 import { applyStats, applyTheme, applyDesktopTheme, applyLcdTheme, initDashboardClicks } from './components/dashboard.js';
 import { initFanControl } from './components/fan-control.js';
 import { initLedControl } from './components/led-control.js';
@@ -163,6 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initI18n();
   initDockSystem();
   initAuth();
+  initUsersManagement();
   initDashboardClicks();
   initFanControl();
   initLedControl();

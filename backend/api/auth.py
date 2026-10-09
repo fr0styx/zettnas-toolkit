@@ -634,6 +634,35 @@ def get_current_user_profile(request: Request):
     }
 
 
+@router.get("/auth/users-list")
+def list_public_users():
+    """Returns non-sensitive public user cards for login chooser (username, display_name, avatar_url, role_id)."""
+    try:
+        users = list_users()
+        return [
+            {
+                "username": u["username"],
+                "display_name": u.get("display_name") or u["username"],
+                "role_id": u.get("role_id", "share_user"),
+                "avatar_url": u.get("avatar_url") or "",
+                "has_mfa": bool(u.get("mfa_enabled")),
+            }
+            for u in users
+            if u.get("status") == "active"
+        ]
+    except Exception as e:
+        logger.warning(f"Could not list public users for chooser: {e}")
+        return [
+            {
+                "username": "admin",
+                "display_name": "Administrator",
+                "role_id": "superadmin",
+                "avatar_url": "",
+                "has_mfa": False,
+            }
+        ]
+
+
 # ==============================================================================
 # Multi-User Management Endpoints
 # ==============================================================================

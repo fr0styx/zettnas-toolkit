@@ -1655,8 +1655,132 @@ export const DockManager = {
     });
     dock.appendChild(notifItem);
 
+    // User Profile Item & Flyout Trigger
+    const userItem = document.createElement('button');
+    userItem.type = 'button';
+    userItem.className = 'dock-item dock-user-btn';
+    userItem.id = 'dock-user-profile-btn';
+    userItem.setAttribute('aria-label', 'User Profile & Identity');
+    userItem.innerHTML = `
+      <div style="width:24px; height:24px; border-radius:50%; background:linear-gradient(135deg, #0284c7, #0369a1); display:flex; align-items:center; justify-content:center; font-weight:800; color:#fff; font-size:11px; border:1px solid rgba(255,255,255,0.25); position:relative;">
+        <span id="dock-user-avatar-initial">A</span>
+        <span style="position:absolute; bottom:-1px; right:-1px; width:7px; height:7px; background:var(--ok2, #25c2a0); border-radius:50%; border:1px solid #000;"></span>
+      </div>
+    `;
+    userItem.addEventListener('mouseenter', () => showDockTooltip(userItem, 'user_profile', 'Account & Security', '#i-chip', false));
+    userItem.addEventListener('focus', () => showDockTooltip(userItem, 'user_profile', 'Account & Security', '#i-chip', false));
+    userItem.addEventListener('mouseleave', hideDockTooltip);
+    userItem.addEventListener('blur', hideDockTooltip);
+    userItem.addEventListener('click', (e) => {
+      e.stopPropagation();
+      hideDockTooltip();
+      toggleUserProfileFlyout(userItem);
+    });
+    dock.appendChild(userItem);
+
   }
 };
+
+export function toggleUserProfileFlyout(anchorEl) {
+  let flyout = document.getElementById('user-profile-flyout');
+  if (!flyout) {
+    flyout = document.createElement('div');
+    flyout.id = 'user-profile-flyout';
+    flyout.className = 'user-profile-flyout glassmorphic-panel';
+    flyout.innerHTML = `
+      <div class="user-flyout-header" style="display:flex; align-items:center; gap:12px; padding:16px; border-bottom:1px solid rgba(255,255,255,0.08);">
+        <div id="user-flyout-avatar" style="width:42px; height:42px; border-radius:50%; background:linear-gradient(135deg, #0284c7, #0369a1); display:flex; align-items:center; justify-content:center; font-weight:800; color:#fff; font-size:16px; border:1px solid rgba(255,255,255,0.3); box-shadow:0 4px 12px rgba(2,132,199,0.3);">
+          A
+        </div>
+        <div style="flex:1; min-width:0;">
+          <div id="user-flyout-name" style="font-weight:700; color:#fff; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Administrator</div>
+          <div id="user-flyout-username" style="font-size:11.5px; color:var(--muted);">@admin</div>
+          <span id="user-flyout-role" style="font-size:10px; font-weight:700; color:var(--accent-cyan, #38bdf8); background:rgba(56,189,248,0.12); padding:2px 6px; border-radius:4px; display:inline-block; margin-top:4px;">SuperAdmin 👑</span>
+        </div>
+      </div>
+      <div class="user-flyout-actions" style="padding:8px;">
+        <button class="user-flyout-btn" id="btn-flyout-lock" style="width:100%; display:flex; align-items:center; gap:10px; padding:9px 12px; background:transparent; border:none; border-radius:6px; color:#fff; font-size:13px; font-weight:600; cursor:pointer; text-align:left; transition:background 0.15s ease;">
+          <span style="font-size:15px;">🔒</span> <span>Lock Screen</span>
+          <span style="margin-left:auto; font-size:10px; color:var(--muted); font-family:monospace;">Cmd+L</span>
+        </button>
+        <button class="user-flyout-btn" id="btn-flyout-users" style="width:100%; display:flex; align-items:center; gap:10px; padding:9px 12px; background:transparent; border:none; border-radius:6px; color:#fff; font-size:13px; font-weight:600; cursor:pointer; text-align:left; transition:background 0.15s ease;">
+          <span style="font-size:15px;">👥</span> <span>Users & Permissions</span>
+        </button>
+        <button class="user-flyout-btn" id="btn-flyout-security" style="width:100%; display:flex; align-items:center; gap:10px; padding:9px 12px; background:transparent; border:none; border-radius:6px; color:#fff; font-size:13px; font-weight:600; cursor:pointer; text-align:left; transition:background 0.15s ease;">
+          <span style="font-size:15px;">🛡️</span> <span>Account Security & 2FA</span>
+        </button>
+        <div style="height:1px; background:rgba(255,255,255,0.06); margin:6px 0;"></div>
+        <button class="user-flyout-btn" id="btn-flyout-switch" style="width:100%; display:flex; align-items:center; gap:10px; padding:9px 12px; background:transparent; border:none; border-radius:6px; color:#cbd5e1; font-size:13px; font-weight:600; cursor:pointer; text-align:left; transition:background 0.15s ease;">
+          <span style="font-size:15px;">🔄</span> <span>Switch User</span>
+        </button>
+        <button class="user-flyout-btn" id="btn-flyout-logout" style="width:100%; display:flex; align-items:center; gap:10px; padding:9px 12px; background:transparent; border:none; border-radius:6px; color:var(--crit, #ff6b6b); font-size:13px; font-weight:600; cursor:pointer; text-align:left; transition:background 0.15s ease;">
+          <span style="font-size:15px;">🚪</span> <span>Sign Out</span>
+        </button>
+      </div>
+    `;
+    document.body.appendChild(flyout);
+
+    // Hover effect for buttons
+    flyout.querySelectorAll('.user-flyout-btn').forEach((btn) => {
+      btn.addEventListener('mouseenter', () => { btn.style.background = 'rgba(255,255,255,0.08)'; });
+      btn.addEventListener('mouseleave', () => { btn.style.background = 'transparent'; });
+    });
+
+    // Actions
+    document.getElementById('btn-flyout-lock').addEventListener('click', () => {
+      flyout.style.display = 'none';
+      import('./auth.js').then((m) => m.lockDesktop());
+    });
+
+    document.getElementById('btn-flyout-users').addEventListener('click', () => {
+      flyout.style.display = 'none';
+      ZettEventBus.emit('window:open', { id: 'management', section: 'mgmt-sec-system-group', pane: 'mgmt-pane-users' });
+    });
+
+    document.getElementById('btn-flyout-security').addEventListener('click', () => {
+      flyout.style.display = 'none';
+      ZettEventBus.emit('window:open', { id: 'management', section: 'mgmt-sec-system-group', pane: 'mgmt-pane-security' });
+    });
+
+    document.getElementById('btn-flyout-switch').addEventListener('click', () => {
+      flyout.style.display = 'none';
+      import('./auth.js').then((m) => m.switchUser());
+    });
+
+    document.getElementById('btn-flyout-logout').addEventListener('click', () => {
+      flyout.style.display = 'none';
+      import('./auth.js').then((m) => m.logout());
+    });
+
+    // Click outside to close
+    document.addEventListener('click', (evt) => {
+      if (flyout.style.display !== 'none' && !flyout.contains(evt.target) && !anchorEl.contains(evt.target)) {
+        flyout.style.display = 'none';
+      }
+    });
+  }
+
+  // Toggle display
+  if (flyout.style.display === 'block') {
+    flyout.style.display = 'none';
+    return;
+  }
+
+  // Refresh current user info
+  import('./users.js').then((m) => m.updateUserInterfaceElements());
+
+  const rect = anchorEl.getBoundingClientRect();
+  const flyoutW = 240;
+  const bottomPos = window.innerHeight - rect.top + 12;
+  const leftPos = Math.max(16, Math.min(window.innerWidth - flyoutW - 16, rect.left + (rect.width / 2) - (flyoutW / 2)));
+
+  flyout.style.position = 'fixed';
+  flyout.style.bottom = `${bottomPos}px`;
+  flyout.style.left = `${leftPos}px`;
+  flyout.style.width = `${flyoutW}px`;
+  flyout.style.zIndex = '99999';
+  flyout.style.display = 'block';
+}
 
 window.DockManager = DockManager;
 window.bringToFront = bringToFront;
