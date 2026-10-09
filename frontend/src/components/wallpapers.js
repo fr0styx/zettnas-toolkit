@@ -5,7 +5,8 @@ import { state } from '../state.js';
  * and seamless background switching.
  */
 import { api } from '../api.js';
-import { showToast } from '../toast.js';
+import { showToast, showPromptToast, showConfirmToast } from '../toast.js';
+import { escapeHtml } from '../utils.js';
 
 let _wallpapersInitialized = false;
 let _loadPromise = null;
@@ -91,46 +92,61 @@ export async function selectWallpaper(filename) {
 
 export async function renameWallpaper(oldName) {
   if (!oldName) return;
-  const newName = prompt(`Enter new name for ${oldName}:`, oldName);
-  if (!newName || newName === oldName) return;
+  showPromptToast(
+    'Rename Wallpaper',
+    `Enter a new name for <strong>${escapeHtml(oldName)}</strong>:`,
+    oldName,
+    async (newName) => {
+      newName = (newName || '').trim();
+      if (!newName || newName === oldName) return;
 
-  try {
-    const data = await api.post('/api/wallpapers/rename', {
-      old_name: oldName,
-      new_name: newName
-    });
-    if (data.success) {
-      showToast(`Wallpaper renamed to ${data.new_name}`, 'success');
-      if (localStorage.getItem('zettnas_active_wallpaper') === oldName) {
-        try {
-          localStorage.setItem('zettnas_active_wallpaper', data.new_name);
-        } catch (e) {}
+      try {
+        const data = await api.post('/api/wallpapers/rename', {
+          old_name: oldName,
+          new_name: newName
+        });
+        if (data.success) {
+          showToast(`Wallpaper renamed to ${data.new_name}`, 'success');
+          if (localStorage.getItem('zettnas_active_wallpaper') === oldName) {
+            try {
+              localStorage.setItem('zettnas_active_wallpaper', data.new_name);
+            } catch (e) {}
+          }
+          await loadWallpapers();
+        } else {
+          showToast('Rename failed: ' + (data.error || 'Unknown error'), 'error');
+        }
+      } catch (err) {
+        showToast('Rename request failed: ' + err.message, 'error');
       }
-      await loadWallpapers();
-    } else {
-      showToast('Rename failed: ' + (data.error || 'Unknown error'), 'error');
-    }
-  } catch (err) {
-    showToast('Rename request failed: ' + err.message, 'error');
-  }
+    },
+    null,
+    { okText: 'Rename', cancelText: 'Cancel' }
+  );
 }
 
 export async function deleteWallpaper(filename) {
   if (!filename) return;
-  if (!confirm(`Are you sure you want to delete wallpaper "${filename}"?`)) return;
-
-  try {
-    await api.delete(`/api/wallpapers/${encodeURIComponent(filename)}`);
-    if (localStorage.getItem('zettnas_active_wallpaper') === filename) {
+  showConfirmToast(
+    'Delete Wallpaper',
+    `Are you sure you want to delete wallpaper <strong>${escapeHtml(filename)}</strong>? This action cannot be undone.`,
+    async () => {
       try {
-        localStorage.removeItem('zettnas_active_wallpaper');
-      } catch (e) {}
-    }
-    showToast('Wallpaper deleted', 'success');
-    await loadWallpapers();
-  } catch (err) {
-    showToast('Delete failed: ' + err.message, 'error');
-  }
+        await api.delete(`/api/wallpapers/${encodeURIComponent(filename)}`);
+        if (localStorage.getItem('zettnas_active_wallpaper') === filename) {
+          try {
+            localStorage.removeItem('zettnas_active_wallpaper');
+          } catch (e) {}
+        }
+        showToast('Wallpaper deleted', 'success');
+        await loadWallpapers();
+      } catch (err) {
+        showToast('Delete failed: ' + err.message, 'error');
+      }
+    },
+    null,
+    { okText: '🗑️ Delete', cancelText: 'Cancel' }
+  );
 }
 
 export function renderWallpaperGallery(files, active, version) {
@@ -550,7 +566,7 @@ export function initGlassControls() {
   let savedBlur = 24;
   let savedOpacity = 72;
   let savedRadius = '12px';
-  let savedGlow = true;
+  let savedGlow = false;
 
   try {
     const b = localStorage.getItem('zettnas_glass_blur');
@@ -568,14 +584,14 @@ export function initGlassControls() {
   if (blurSlider) {
     blurSlider.addEventListener('input', (e) => {
       const curOpacity = opacitySlider ? parseInt(opacitySlider.value, 10) : 72;
-      const curGlow = glowToggle ? glowToggle.checked : true;
+      const curGlow = glowToggle ? glowToggle.checked : false;
       const curActiveRadiusBtn = document.querySelector('.window-radius-btn.active');
       const curRadius = curActiveRadiusBtn ? curActiveRadiusBtn.dataset.radius : '12px';
       applyGlassSettings(e.target.value, curOpacity, curRadius, curGlow, false);
     });
     blurSlider.addEventListener('change', (e) => {
       const curOpacity = opacitySlider ? parseInt(opacitySlider.value, 10) : 72;
-      const curGlow = glowToggle ? glowToggle.checked : true;
+      const curGlow = glowToggle ? glowToggle.checked : false;
       const curActiveRadiusBtn = document.querySelector('.window-radius-btn.active');
       const curRadius = curActiveRadiusBtn ? curActiveRadiusBtn.dataset.radius : '12px';
       applyGlassSettings(e.target.value, curOpacity, curRadius, curGlow, true);
@@ -585,14 +601,14 @@ export function initGlassControls() {
   if (opacitySlider) {
     opacitySlider.addEventListener('input', (e) => {
       const curBlur = blurSlider ? parseInt(blurSlider.value, 10) : 24;
-      const curGlow = glowToggle ? glowToggle.checked : true;
+      const curGlow = glowToggle ? glowToggle.checked : false;
       const curActiveRadiusBtn = document.querySelector('.window-radius-btn.active');
       const curRadius = curActiveRadiusBtn ? curActiveRadiusBtn.dataset.radius : '12px';
       applyGlassSettings(curBlur, e.target.value, curRadius, curGlow, false);
     });
     opacitySlider.addEventListener('change', (e) => {
       const curBlur = blurSlider ? parseInt(blurSlider.value, 10) : 24;
-      const curGlow = glowToggle ? glowToggle.checked : true;
+      const curGlow = glowToggle ? glowToggle.checked : false;
       const curActiveRadiusBtn = document.querySelector('.window-radius-btn.active');
       const curRadius = curActiveRadiusBtn ? curActiveRadiusBtn.dataset.radius : '12px';
       applyGlassSettings(curBlur, e.target.value, curRadius, curGlow, true);
@@ -604,7 +620,7 @@ export function initGlassControls() {
       const radius = btn.dataset.radius;
       const curBlur = blurSlider ? parseInt(blurSlider.value, 10) : 24;
       const curOpacity = opacitySlider ? parseInt(opacitySlider.value, 10) : 72;
-      const curGlow = glowToggle ? glowToggle.checked : true;
+      const curGlow = glowToggle ? glowToggle.checked : false;
       applyGlassSettings(curBlur, curOpacity, radius, curGlow, true);
     });
   });
@@ -621,7 +637,7 @@ export function initGlassControls() {
 
   if (resetBtn) {
     resetBtn.addEventListener('click', () => {
-      applyGlassSettings(24, 72, '12px', true, true);
+      applyGlassSettings(24, 72, '12px', false, true);
       showToast('Glass and visual effects reset to defaults', 'info');
     });
   }

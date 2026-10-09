@@ -144,7 +144,7 @@ describe('Batch 2: Glassmorphism, Wallpaper Readability, OLED Theme & Specular G
       <input type="range" id="glass-blur-slider" value="24">
       <span id="glass-opacity-val"></span>
       <input type="range" id="glass-opacity-slider" value="72">
-      <input type="checkbox" id="window-glow-toggle" checked>
+      <input type="checkbox" id="window-glow-toggle">
       <button class="window-radius-btn" data-radius="6px"></button>
       <button class="window-radius-btn active" data-radius="12px"></button>
       <button class="window-radius-btn" data-radius="20px"></button>
@@ -166,8 +166,8 @@ describe('Batch 2: Glassmorphism, Wallpaper Readability, OLED Theme & Specular G
     expect(document.documentElement.style.getPropertyValue('--glass-blur')).toBe('24px');
     expect(document.documentElement.style.getPropertyValue('--glass-opacity')).toBe('0.72');
     expect(document.documentElement.style.getPropertyValue('--window-radius')).toBe('12px');
-    expect(document.documentElement.style.getPropertyValue('--window-glow-enabled')).toBe('1');
-    expect(document.body.classList.contains('no-specular-glow')).toBe(false);
+    expect(document.documentElement.style.getPropertyValue('--window-glow-enabled')).toBe('0');
+    expect(document.body.classList.contains('no-specular-glow')).toBe(true);
   });
 
   it('applyDesktopTheme supports Pure OLED Black theme and computes dynamic RGB, glow and hover variables', () => {

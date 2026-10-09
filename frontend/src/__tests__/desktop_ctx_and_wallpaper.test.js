@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { initDraggableDesktopIcons, showDockItemContextMenu, DockManager } from '../components/dock.js';
-import { setWallpaper, loadWallpapers } from '../components/wallpapers.js';
+import { setWallpaper, loadWallpapers, renameWallpaper, deleteWallpaper } from '../components/wallpapers.js';
 import { api } from '../api.js';
 
 describe('Desktop Context Menu, Dock Context Menu, and Wallpaper Engine', () => {
@@ -152,5 +152,55 @@ describe('Desktop Context Menu, Dock Context Menu, and Wallpaper Engine', () => 
     // Mission Control must remain anchored at top (77px)
     expect(mc.style.top).toBe('77px');
     expect(fm.style.top).toBe('189px');
+  });
+
+  it('renameWallpaper uses custom OS prompt modal instead of browser prompt', async () => {
+    const promptSpy = vi.spyOn(window, 'prompt');
+    const apiSpy = vi.spyOn(api, 'post').mockResolvedValueOnce({ success: true, new_name: 'bahia_new.jpg' });
+
+    renameWallpaper('bahia.jpg');
+
+    // Must NOT call browser prompt
+    expect(promptSpy).not.toHaveBeenCalled();
+
+    // Verify custom OS modal rendered
+    const modal = document.getElementById('confirm-toast-modal');
+    expect(modal).not.toBeNull();
+    const input = document.getElementById('prompt-toast-input');
+    expect(input).not.toBeNull();
+    expect(input.value).toBe('bahia.jpg');
+
+    // Change value and submit via confirm button
+    input.value = 'bahia_new.jpg';
+    const confirmBtn = document.getElementById('confirm-toast-ok');
+    confirmBtn.click();
+
+    await Promise.resolve();
+    expect(apiSpy).toHaveBeenCalledWith('/api/wallpapers/rename', {
+      old_name: 'bahia.jpg',
+      new_name: 'bahia_new.jpg'
+    });
+  });
+
+  it('deleteWallpaper uses custom OS confirm modal instead of browser confirm', async () => {
+    const confirmSpy = vi.spyOn(window, 'confirm');
+    const apiSpy = vi.spyOn(api, 'delete').mockResolvedValueOnce({ success: true });
+
+    deleteWallpaper('bahia.jpg');
+
+    // Must NOT call browser confirm
+    expect(confirmSpy).not.toHaveBeenCalled();
+
+    // Verify custom OS modal rendered
+    const modal = document.getElementById('confirm-toast-modal');
+    expect(modal).not.toBeNull();
+    expect(modal.textContent).toContain('bahia.jpg');
+
+    // Confirm deletion
+    const okBtn = document.getElementById('confirm-toast-ok');
+    okBtn.click();
+
+    await Promise.resolve();
+    expect(apiSpy).toHaveBeenCalledWith('/api/wallpapers/bahia.jpg');
   });
 });

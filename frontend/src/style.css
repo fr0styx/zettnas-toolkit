@@ -23,7 +23,7 @@
   --glass-blur: 24px;
   --glass-opacity: 0.72;
   --window-radius: 12px;
-  --window-glow-enabled: 1;
+  --window-glow-enabled: 0;
   --accent-rgb: 0, 240, 255;
   --accent-glow: rgba(0, 240, 255, 0.35);
   --accent-hover: rgba(0, 240, 255, 0.15);
