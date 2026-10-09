@@ -102,14 +102,30 @@ async def webdav_portal_login(request: Request):
     expected_user = cfg.get("username", "admin") or "admin"
     webdav_pass = cfg.get("password")
 
-    user_ok = bool(username and expected_user and username.lower() == expected_user.lower())
+    authenticated = False
+    is_admin = False
 
-    pass_ok = False
-    if user_ok:
+    # 1. Check user in SQLite users.db
+    from backend.users_db import get_user_by_username
+
+    user = get_user_by_username(username)
+    if user and user.get("status") == "active":
+        if verify_password(password, user.get("password_hash", "")):
+            authenticated = True
+            is_admin = user.get("role_id") in ("superadmin", "storage_admin")
+
+    # 2. Fallback check for legacy admin credentials
+    if not authenticated and username.lower() in (
+        "admin",
+        expected_user.lower(),
+        getattr(config, "ZETTNAS_USERNAME", "admin").lower(),
+    ):
         if webdav_pass and password == webdav_pass:
-            pass_ok = True
+            authenticated = True
+            is_admin = True
         elif config.STORED_PASSWORD_HASH and verify_password(password, config.STORED_PASSWORD_HASH):
-            pass_ok = True
+            authenticated = True
+            is_admin = True
             # Sync this password to webdav config if no dedicated password was set
             if not webdav_pass and password != "admin":
                 try:
@@ -118,13 +134,15 @@ async def webdav_portal_login(request: Request):
                 except Exception as e:
                     logger.warning(f"[WebDAV] Failed to sync master password: {e}")
         elif password == (config.WEB_PASSWORD or "admin"):
-            pass_ok = True
+            authenticated = True
+            is_admin = True
 
-    if user_ok and pass_ok:
+    if authenticated:
+        role_label = "admin" if is_admin else "user"
         resp = RedirectResponse(url="/webdav/", status_code=303)
         resp.set_cookie(
             key="webdav_session",
-            value=f"{username}:authed",
+            value=f"{username}:{role_label}",
             max_age=86400 * 7,
             httponly=True,
             samesite="lax",
@@ -175,14 +193,33 @@ def _is_browser_interactive_request(request: Request) -> bool:
     return True
 
 
-def _check_webdav_portal_auth(request: Request, cfg: Dict[str, Any]) -> bool:
+def _get_webdav_portal_user(request: Request, cfg: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     if not cfg.get("auth_enabled", True):
-        return True
+        return {"username": cfg.get("username", "admin") or "admin", "is_admin": True, "role_id": "superadmin"}
     session_cookie = request.cookies.get("webdav_session")
+    if not session_cookie or ":" not in session_cookie:
+        return None
+    username, _ = session_cookie.split(":", 1)
+    if not username:
+        return None
+
+    from backend.users_db import get_user_by_username
+
+    user = get_user_by_username(username)
+    if user and user.get("status") == "active":
+        is_admin = user.get("role_id") in ("superadmin", "storage_admin")
+        return {
+            "username": user["username"],
+            "role_id": user.get("role_id", "share_user"),
+            "is_admin": is_admin,
+            "home_directory": user.get("home_directory"),
+        }
+
     expected_user = cfg.get("username", "admin") or "admin"
-    if session_cookie and session_cookie.startswith(f"{expected_user}:"):
-        return True
-    return False
+    if username.lower() in ("admin", expected_user.lower(), getattr(config, "ZETTNAS_USERNAME", "admin").lower()):
+        return {"username": username, "role_id": "superadmin", "is_admin": True}
+
+    return None
 
 
 async def _proxy_webdav(request: Request, path: str = ""):
@@ -279,18 +316,29 @@ async def webdav_proxy_subpath(request: Request, path: str):
 
     # Browser UI handling
     if _is_browser_interactive_request(request) and not request.query_params.get("raw"):
-        root_path = str(cfg.get("root_path", config.POOL_PATH))
+        user_info = _get_webdav_portal_user(request, cfg)
+        if not user_info:
+            return HTMLResponse(render_webdav_login(), status_code=200)
+
+        base_pool = str(cfg.get("root_path", config.POOL_PATH))
+        if user_info.get("is_admin"):
+            root_path = base_pool
+        else:
+            home = user_info.get("home_directory")
+            if not home:
+                home = os.path.join(base_pool, "homes", user_info["username"].lower())
+            try:
+                os.makedirs(home, exist_ok=True)
+            except OSError:
+                pass
+            root_path = home
+
         clean_path = path.strip("/")
         abs_target = os.path.abspath(os.path.join(root_path, clean_path)) if clean_path else os.path.abspath(root_path)
 
-        # Check authentication first
-        if not _check_webdav_portal_auth(request, cfg):
-            return HTMLResponse(render_webdav_login(), status_code=200)
-
         # If target is a directory, render the ZettNAS WebDAV Cloud Portal
         if os.path.isdir(abs_target):
-            username = cfg.get("username", "admin") or "admin"
-            return HTMLResponse(render_webdav_portal(clean_path, root_path, username), status_code=200)
+            return HTMLResponse(render_webdav_portal(clean_path, root_path, user_info["username"]), status_code=200)
 
     # For WebDAV clients, direct file downloads, or non-HTML requests, pass to streaming proxy
     return await _proxy_webdav(request, path)

@@ -537,6 +537,64 @@ def logout(request: Request):
     return response
 
 
+# Stream Tickets (Single-Use, Short-Lived SSE/WebSocket tickets to prevent token leakage in query strings)
+_STREAM_TICKETS: Dict[str, Dict[str, Any]] = {}
+_STREAM_TICKETS_LOCK = threading.RLock()
+
+
+def create_stream_ticket(user_id: str, username: str, scopes: List[str], role_id: str) -> str:
+    import secrets
+
+    ticket = f"zst_{secrets.token_urlsafe(32)}"
+    now = time.time()
+    with _STREAM_TICKETS_LOCK:
+        expired = [k for k, v in _STREAM_TICKETS.items() if v["expires_at"] < now]
+        for k in expired:
+            _STREAM_TICKETS.pop(k, None)
+
+        _STREAM_TICKETS[ticket] = {
+            "user_id": user_id,
+            "username": username,
+            "scopes": scopes,
+            "role_id": role_id,
+            "expires_at": now + 60,
+        }
+    return ticket
+
+
+def validate_and_consume_stream_ticket(ticket: str) -> Optional[Dict[str, Any]]:
+    if not ticket or not ticket.startswith("zst_"):
+        return None
+    now = time.time()
+    with _STREAM_TICKETS_LOCK:
+        entry = _STREAM_TICKETS.pop(ticket, None)
+        if entry and entry.get("expires_at", 0) > now:
+            return {
+                "user_id": entry["user_id"],
+                "username": entry["username"],
+                "role_id": entry["role_id"],
+                "scopes": entry["scopes"],
+                "is_stream_ticket": True,
+            }
+    return None
+
+
+@router.post("/auth/ticket")
+def request_stream_ticket(request: Request):
+    """Generate a single-use, 60-second ticket for SSE or WebSocket connections."""
+    user = _get_authenticated_user(request)
+    if not user:
+        return error_response(401, "Not authenticated.")
+
+    ticket = create_stream_ticket(
+        user_id=user["id"],
+        username=user["username"],
+        scopes=user.get("scopes", []),
+        role_id=user.get("role_id", "share_user"),
+    )
+    return {"status": "ok", "ticket": ticket, "expires_in": 60}
+
+
 @router.get("/auth/me")
 def get_current_user_profile(request: Request):
     user = _get_authenticated_user(request)

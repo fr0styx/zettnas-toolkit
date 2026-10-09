@@ -127,30 +127,45 @@ class WebdavEngine:
                 except OSError as e:
                     logger.warning(f"[WEBDAV] Could not create root path {root}: {e}")
 
-            cmd = [
-                rclone_bin,
-                "serve",
-                "webdav",
-                root,
-                "--addr",
-                f":{port}",
-                "--vfs-cache-mode",
-                "writes",
-                "--dir-cache-time",
-                "10s",
-            ]
+            proxy_script = os.path.join(os.path.dirname(__file__), "rclone_auth_proxy.py")
+            if cfg.get("auth_enabled", True) and os.path.exists(proxy_script):
+                cmd = [
+                    rclone_bin,
+                    "serve",
+                    "webdav",
+                    "--addr",
+                    f":{port}",
+                    "--vfs-cache-mode",
+                    "writes",
+                    "--dir-cache-time",
+                    "10s",
+                    "--auth-proxy",
+                    proxy_script,
+                ]
+            else:
+                cmd = [
+                    rclone_bin,
+                    "serve",
+                    "webdav",
+                    root,
+                    "--addr",
+                    f":{port}",
+                    "--vfs-cache-mode",
+                    "writes",
+                    "--dir-cache-time",
+                    "10s",
+                ]
+                if cfg.get("auth_enabled", True):
+                    username = cfg.get("username", "admin") or "admin"
+                    password = cfg.get("password")
+                    if not password:
+                        password = config.WEB_PASSWORD or "admin"
+                    cmd.extend(["--user", username, "--pass", password])
 
             if cfg.get("read_only"):
                 cmd.append("--read-only")
 
-            if cfg.get("auth_enabled", True):
-                username = cfg.get("username", "admin") or "admin"
-                password = cfg.get("password")
-                if not password:
-                    password = config.WEB_PASSWORD or "admin"
-                cmd.extend(["--user", username, "--pass", password])
-
-            logger.info(f"[WEBDAV] Launching: {' '.join(cmd[:5])} ... (auth={cfg.get('auth_enabled')})")
+            logger.info(f"[WEBDAV] Launching: {' '.join(cmd[:5])} ... (auth={cfg.get('auth_enabled')}, proxy={os.path.exists(proxy_script)})")
             try:
                 self._proc = subprocess.Popen(
                     cmd,

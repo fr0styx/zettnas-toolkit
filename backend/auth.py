@@ -125,6 +125,13 @@ def get_current_session(token: str) -> Optional[Dict[str, Any]]:
             "scopes": ["*"],
             "is_system": True,
         }
+    if token.startswith("zst_"):
+        from backend.api.auth import validate_and_consume_stream_ticket
+
+        tok = validate_and_consume_stream_ticket(token)
+        if tok:
+            return tok
+
     if token.startswith("zat_"):
         tok = validate_scoped_api_token(token)
         if tok:
@@ -168,6 +175,13 @@ def validate_session(token: str) -> bool:
         return False
     if is_internal_token(token):
         return True
+
+    # 0. Single-use stream ticket
+    if token.startswith("zst_"):
+        from backend.api.auth import _STREAM_TICKETS, _STREAM_TICKETS_LOCK
+
+        with _STREAM_TICKETS_LOCK:
+            return token in _STREAM_TICKETS
 
     # 1. Scoped or legacy API token
     if token.startswith("zat_"):

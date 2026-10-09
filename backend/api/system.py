@@ -151,7 +151,33 @@ async def post_screen_state(req: ScreenConfigRequest):
     return await asyncio.to_thread(save_screen_state, data)
 
 
-def _handle_browse_logic(path: str, dirs_only: bool):
+def check_user_path_access(req_path: str, principal: Optional[AuthenticatedPrincipal]) -> None:
+    """Enforce multi-user path isolation:
+    - SuperAdmin / StorageAdmin / users with 'shares:manage' or '*' scope have unrestricted access to all allowed roots.
+    - Standard users cannot access other users' private home folders in /homes/<other_user>.
+    """
+    if not principal:
+        return
+
+    if (
+        principal.role_id in ("superadmin", "storage_admin")
+        or principal.has_scope("shares:manage")
+        or principal.has_scope("*")
+    ):
+        return
+
+    norm_path = os.path.normpath(str(req_path or "").strip()).replace("\\", "/")
+    parts = [p for p in norm_path.split("/") if p]
+    if "homes" in parts:
+        idx = parts.index("homes")
+        if idx + 1 < len(parts):
+            target_user = parts[idx + 1].lower()
+            current_user = (principal.username or "").lower()
+            if target_user != current_user:
+                raise HTTPException(status_code=403, detail="Access denied to another user's home folder.")
+
+
+def _handle_browse_logic(path: str, dirs_only: bool, principal: Optional[AuthenticatedPrincipal] = None):
     real = _contained(path or ALLOWED_BROWSE_ROOTS[0])
     if not os.path.isdir(real):
         raise HTTPException(status_code=400, detail="Not a directory.")
@@ -166,7 +192,29 @@ def _handle_browse_logic(path: str, dirs_only: bool):
     except OSError as e:
         logger.warning(f"[BROWSE] listdir failed for {real}: {e}")
         raise HTTPException(status_code=500, detail="Unable to read directory.")
+
+    is_admin = not principal or (
+        principal.role_id in ("superadmin", "storage_admin")
+        or principal.has_scope("shares:manage")
+        or principal.has_scope("*")
+    )
+    is_homes_dir = os.path.basename(real.rstrip("/")) == "homes"
+
+    if is_homes_dir and not is_admin and principal and principal.username:
+        user_home_name = principal.username.lower()
+        user_home_path = os.path.join(real, user_home_name)
+        if not os.path.exists(user_home_path):
+            try:
+                os.makedirs(user_home_path, exist_ok=True)
+                if user_home_name not in entries:
+                    entries.append(user_home_name)
+            except OSError as e:
+                logger.warning(f"[BROWSE] Failed to auto-provision home directory {user_home_path}: {e}")
+
     for e in sorted(entries):
+        if is_homes_dir and not is_admin and principal:
+            if e.lower() != (principal.username or "").lower():
+                continue
         full = os.path.join(real, e)
         is_dir = os.path.isdir(full)
         if dirs_only and not is_dir:
@@ -185,8 +233,13 @@ def _handle_browse_logic(path: str, dirs_only: bool):
 
 
 @router.get("/browse")
-async def browse(path: str = "", dirs_only: str = "0"):
-    return await asyncio.to_thread(_handle_browse_logic, path, dirs_only == "1")
+async def browse(
+    path: str = "",
+    dirs_only: str = "0",
+    principal: AuthenticatedPrincipal = Depends(get_current_principal),
+):
+    check_user_path_access(path, principal)
+    return await asyncio.to_thread(_handle_browse_logic, path, dirs_only == "1", principal)
 
 
 def _do_mkdir(path: str):
@@ -210,7 +263,8 @@ def _do_mkdir(path: str):
     "/mkdir",
     dependencies=[Depends(require_scope("shares:manage", "shares:user_write", "storage:write", "storage:admin"))],
 )
-def mkdir(req: MkdirRequest):
+def mkdir(req: MkdirRequest, principal: AuthenticatedPrincipal = Depends(get_current_principal)):
+    check_user_path_access(req.path, principal)
     return _do_mkdir(req.path)
 
 
@@ -865,13 +919,23 @@ def _safe_fs_target(req_path: str):
     "/fs/rename",
     dependencies=[Depends(require_scope("shares:manage", "shares:user_write", "storage:write", "storage:admin"))],
 )
-async def fs_rename(req: RenameRequest):
+async def fs_rename(req: RenameRequest, principal: AuthenticatedPrincipal = Depends(get_current_principal)):
+    check_user_path_access(req.path, principal)
     target_unresolved, parent_canonical, _ = _safe_fs_target(req.path)
     new_name = str(req.new_name or "").strip()
     if not new_name or "/" in new_name or "\\" in new_name or new_name in (".", ".."):
         raise HTTPException(status_code=400, detail="Invalid new name")
 
+    is_admin = (
+        principal.role_id in ("superadmin", "storage_admin")
+        or principal.has_scope("shares:manage")
+        or principal.has_scope("*")
+    )
+    if not is_admin and os.path.basename(parent_canonical.rstrip("/")) == "homes":
+        raise HTTPException(status_code=403, detail="Cannot rename user home directory root.")
+
     dst = os.path.join(parent_canonical, new_name)
+    check_user_path_access(dst, principal)
     if os.path.lexists(dst):
         raise HTTPException(status_code=400, detail="Destination already exists")
     try:
@@ -886,8 +950,17 @@ async def fs_rename(req: RenameRequest):
     "/fs/delete",
     dependencies=[Depends(require_scope("shares:manage", "shares:user_write", "storage:write", "storage:admin"))],
 )
-async def fs_delete(req: DeleteRequest):
-    target_unresolved, _, _ = _safe_fs_target(req.path)
+async def fs_delete(req: DeleteRequest, principal: AuthenticatedPrincipal = Depends(get_current_principal)):
+    check_user_path_access(req.path, principal)
+    target_unresolved, parent_canonical, _ = _safe_fs_target(req.path)
+    is_admin = (
+        principal.role_id in ("superadmin", "storage_admin")
+        or principal.has_scope("shares:manage")
+        or principal.has_scope("*")
+    )
+    if not is_admin and os.path.basename(parent_canonical.rstrip("/")) == "homes":
+        raise HTTPException(status_code=403, detail="Cannot delete user home directory root.")
+
     try:
         if "/.RecycleBin/" in target_unresolved.replace("\\", "/") or target_unresolved.endswith(".RecycleBin"):
             # Hard delete if already in recycle bin
@@ -924,7 +997,8 @@ async def fs_delete(req: DeleteRequest):
 
 
 @router.get("/fs/download")
-def fs_download(path: str):
+def fs_download(path: str, principal: AuthenticatedPrincipal = Depends(get_current_principal)):
+    check_user_path_access(path, principal)
     target = _contained(path, must_exist=True)
     if os.path.isdir(target):
         raise HTTPException(status_code=400, detail="Cannot download a directory")
@@ -935,7 +1009,13 @@ def fs_download(path: str):
     "/fs/upload",
     dependencies=[Depends(require_scope("shares:manage", "shares:user_write", "storage:write", "storage:admin"))],
 )
-async def fs_upload(request: Request, path: str, filename: str):
+async def fs_upload(
+    request: Request,
+    path: str,
+    filename: str,
+    principal: AuthenticatedPrincipal = Depends(get_current_principal),
+):
+    check_user_path_access(path, principal)
     target_unresolved, _, _ = _safe_fs_target(path)
     target_canonical = resolve_within(target_unresolved, ALLOWED_BROWSE_ROOTS)
     if target_canonical is None or not os.path.isdir(target_canonical):
@@ -947,6 +1027,7 @@ async def fs_upload(request: Request, path: str, filename: str):
         raise HTTPException(status_code=400, detail="Invalid filename")
 
     file_path = os.path.join(target_canonical, filename)
+    check_user_path_access(file_path, principal)
     if os.path.islink(file_path) and resolve_within(file_path, ALLOWED_BROWSE_ROOTS) is None:
         raise HTTPException(status_code=403, detail="Destination symlink points outside allowed folders")
 
