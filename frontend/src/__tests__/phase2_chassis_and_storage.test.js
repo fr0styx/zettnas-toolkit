@@ -7,10 +7,18 @@ import {
   openChassisConfigModal,
   triggerLocateDisk,
   renderStorageTopologyTree,
+  renderStructuredPoolsTopology,
+  fetchAndRenderStorageTopology,
+  fetchAndRenderNetworkShares,
+  formatBytes,
+  formatNumber,
   playChirp
 } from '../components/chassis-visualizer.js';
+
+import { ZettEventBus } from '../event-bus.js';
 import { fetchAndRenderDisksInventory } from '../components/management.js';
 import { api } from '../api.js';
+
 
 describe('Phase 2: Thermal Heatmap Level Calculations', () => {
   it('correctly maps disk temperatures to 5-tier thermal heatmap tokens', () => {
@@ -288,3 +296,127 @@ describe('Phase 2: Parametric Chassis Twin & Locate Strobe', () => {
     mockTbody.remove();
   });
 });
+
+describe('Sprint 3: Storage Pools Topology & Network Shares', () => {
+  it('formats byte units and number metrics correctly', () => {
+    expect(formatBytes(0)).toBe('0 B');
+    expect(formatBytes(1024)).toBe('1.0 KB');
+    expect(formatBytes(1000000000)).toBe('1.0 GB');
+    expect(formatBytes(21998832922624)).toBe('22.0 TB');
+
+    expect(formatNumber(0)).toBe('0');
+    expect(formatNumber(1500)).toBe('1.5K');
+    expect(formatNumber(744196899)).toBe('744.2M');
+    expect(formatNumber(2000000000)).toBe('2.0B');
+  });
+
+  it('renders structured storage pools topology with parity badges and member disks', () => {
+    const container = document.createElement('div');
+    const mockData = {
+      platform: 'unraid',
+      is_observer_mode: true,
+      pools: [
+        {
+          id: 'unraid_array',
+          name: 'Main Array',
+          pool_type: 'unraid_array',
+          fs_type: 'xfs',
+          fs_profile: 'parity-1',
+          status: 'HEALTHY',
+          parity_protected: true,
+          total_bytes: 22000000000000,
+          used_bytes: 14000000000000,
+          free_bytes: 8000000000000,
+          used_pct: 63.6,
+          members: [
+            { name: 'parity', device: 'sdb', role: 'parity', size_bytes: 22000000000000, spundown: true, status: 'STANDBY', temp_c: null },
+            { name: 'disk1', device: 'sda', role: 'data', size_bytes: 22000000000000, spundown: false, status: 'OK', temp_c: 41, num_reads: 500000 }
+          ]
+        }
+      ]
+    };
+
+    renderStructuredPoolsTopology(container, mockData);
+
+    expect(container.textContent).toContain('Main Array');
+    expect(container.textContent).toContain('XFS · PARITY-1');
+    expect(container.textContent).toContain('Parity Protected');
+    expect(container.textContent).toContain('/dev/sdb');
+    expect(container.textContent).toContain('/dev/sda');
+    expect(container.textContent).toContain('Standby');
+    expect(container.textContent).toContain('41°C');
+    expect(container.textContent).toContain('Host Observer Mode');
+    expect(container.querySelectorAll('.btn-locate-topo').length).toBe(2);
+  });
+
+  it('fetches and audits network shares, rendering protocol tags and open-in-explorer actions', async () => {
+    const container = document.createElement('div');
+    const badge = document.createElement('span');
+    badge.id = 'mgmt-shares-platform-badge';
+    document.body.appendChild(badge);
+
+    const apiSpy = vi.spyOn(api, 'get').mockImplementation(async (url) => {
+      if (url === '/api/storage/shares') {
+        return {
+          platform: 'unraid',
+          is_observer_mode: true,
+          shares: [
+            {
+              name: 'appdata',
+              comment: 'application data',
+              security: 'public',
+              export_smb: true,
+              export_nfs: false,
+              export_webdav: true,
+              cache_mode: 'only',
+              cache_pool: 'ark',
+              mountpoint: '/mnt/user/appdata',
+              used_bytes: 183000000000,
+              free_bytes: 815000000000,
+              total_bytes: 998000000000,
+              used_pct: 18.3
+            }
+          ]
+        };
+      }
+      if (url === '/api/storage/platform') {
+        return {
+          platform: 'unraid',
+          is_busy: false,
+          capabilities: { is_observer_mode: true }
+        };
+      }
+      return {};
+    });
+
+    const eventSpy = vi.fn();
+    ZettEventBus.on('window:open', eventSpy);
+
+    await fetchAndRenderNetworkShares(container);
+
+    expect(badge.textContent).toContain('UNRAID · Observer Mode');
+    expect(container.textContent).toContain('appdata');
+    expect(container.textContent).toContain('application data');
+    expect(container.textContent).toContain('PUBLIC');
+    expect(container.textContent).toContain('SMB');
+    expect(container.textContent).toContain('WebDAV :8084');
+    expect(container.textContent).toContain('Cache: only (ark)');
+
+    const openBtn = container.querySelector('.btn-share-reveal');
+    expect(openBtn).toBeTruthy();
+    openBtn.click();
+
+    expect(eventSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 'file-manager-window',
+        path: '/mnt/user/appdata'
+      }),
+      expect.anything()
+    );
+
+
+    apiSpy.mockRestore();
+    badge.remove();
+  });
+});
+

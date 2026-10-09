@@ -2,7 +2,7 @@ import { syncWidgetSettingsUI } from './widgets.js';
 import { syncDesktopThemeUI } from './settings.js';
 import { openContainerInspector, openContainerDeleteModal } from './container-modal.js';
 import { ZettEventBus } from '../event-bus.js';
-import { fetchAndRenderChassisTwin, renderStorageTopologyTree, triggerLocateDisk, getThermalLevel } from './chassis-visualizer.js';
+import { fetchAndRenderChassisTwin, renderStorageTopologyTree, fetchAndRenderStorageTopology, fetchAndRenderNetworkShares, triggerLocateDisk, getThermalLevel } from './chassis-visualizer.js';
 /**
  * ZettNAS Toolkit - System Management Window Controller
  * Manages the dedicated System Management desktop window, hub app grid,
@@ -1791,6 +1791,7 @@ export function initManagement() {
     'mgmt-sec-storage': { section: 'mgmt-sec-storage', pane: 'mgmt-pane-chassis-twin' },
     'mgmt-pane-chassis-twin': { section: 'mgmt-sec-storage', pane: 'mgmt-pane-chassis-twin' },
     'mgmt-pane-storage-topo': { section: 'mgmt-sec-storage', pane: 'mgmt-pane-storage-topo' },
+    'mgmt-pane-storage-shares': { section: 'mgmt-sec-storage', pane: 'mgmt-pane-storage-shares' },
     'mgmt-pane-storage-disks': { section: 'mgmt-sec-storage', pane: 'mgmt-pane-storage-disks' },
     'mgmt-sec-security': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-security' },
     'mgmt-pane-security': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-security' },
@@ -1837,9 +1838,10 @@ export function initManagement() {
       if (mount) fetchAndRenderChassisTwin(mount);
     } else if (paneId === 'mgmt-pane-storage-topo') {
       const mount = document.getElementById('mgmt-storage-topo-mount');
-      if (mount && state.latestStats?.disks) {
-        renderStorageTopologyTree(mount, state.latestStats.disks, state.latestStats.unraid || {});
-      }
+      if (mount) fetchAndRenderStorageTopology(mount);
+    } else if (paneId === 'mgmt-pane-storage-shares') {
+      const mount = document.getElementById('mgmt-storage-shares-mount');
+      if (mount) fetchAndRenderNetworkShares(mount);
     } else if (paneId === 'mgmt-pane-storage-disks') {
       fetchAndRenderDisksInventory();
     } else if (paneId === 'mgmt-pane-system') {
@@ -1848,6 +1850,7 @@ export function initManagement() {
       fetchAndRenderSystemAbout();
     }
   }
+
 
   function showSection(targetId) {
     const earlyStyle = document.getElementById('zettnas-mgmt-early-style');
@@ -2129,8 +2132,29 @@ export function initManagement() {
     });
   }
 
+  // Storage pool topology refresh button
+  const refreshTopoBtn = document.getElementById('btn-refresh-topo');
+  if (refreshTopoBtn) {
+    refreshTopoBtn.addEventListener('click', () => {
+      const mount = document.getElementById('mgmt-storage-topo-mount');
+      if (mount) fetchAndRenderStorageTopology(mount);
+      showToast('Storage topology refreshed.', 'info');
+    });
+  }
+
+  // Network shares refresh button
+  const refreshSharesBtn = document.getElementById('btn-refresh-shares');
+  if (refreshSharesBtn) {
+    refreshSharesBtn.addEventListener('click', () => {
+      const mount = document.getElementById('mgmt-storage-shares-mount');
+      if (mount) fetchAndRenderNetworkShares(mount);
+      showToast('Network shares refreshed.', 'info');
+    });
+  }
+
   // Disks inventory refresh button
   const refreshDisksInvBtn = document.getElementById('btn-refresh-disks-inventory');
+
   if (refreshDisksInvBtn) {
     refreshDisksInvBtn.addEventListener('click', () => {
       fetchAndRenderDisksInventory();

@@ -570,8 +570,285 @@ export function generateSmartSparklineSvg(points = [], width = 280, height = 50)
   `;
 }
 
+export function formatBytes(bytes) {
+  if (bytes == null || isNaN(bytes) || bytes <= 0) return '0 B';
+  const units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
+  let i = 0;
+  let val = Number(bytes);
+  while (val >= 1000 && i < units.length - 1) {
+    val /= 1000;
+    i++;
+  }
+  return `${val.toFixed(i === 0 ? 0 : 1)} ${units[i]}`;
+}
+
+export function formatNumber(num) {
+  if (!num) return '0';
+  const n = Number(num);
+  if (n >= 1e9) return (n / 1e9).toFixed(1) + 'B';
+  if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
+  if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
+  return String(n);
+}
+
 /**
- * Renders Storage Topology Tree (Pool -> VDEVs / Disks -> Datasets)
+ * Renders Structured Storage Pools Topology from /api/storage/pools
+ */
+export function renderStructuredPoolsTopology(container, data) {
+  if (!container || !data || !Array.isArray(data.pools)) return;
+
+  const pools = data.pools;
+  const isObserver = data.is_observer_mode ?? true;
+
+  const poolsHtml = pools.map((pool) => {
+    const usedStr = formatBytes(pool.used_bytes);
+    const totalStr = formatBytes(pool.total_bytes);
+    const freeStr = formatBytes(pool.free_bytes);
+    const pct = pool.used_pct || 0;
+    const barColor = pct > 90 ? 'var(--alert, #ef4444)' : (pct > 75 ? 'var(--warn, #f59e0b)' : 'var(--accent, #3bf58b)');
+
+    let statusClass = 'status-healthy';
+    let statusLabel = pool.status || 'HEALTHY';
+    if (statusLabel === 'SYNCING') {
+      statusClass = 'status-syncing';
+      statusLabel = '🔄 PARITY SYNCING';
+    } else if (statusLabel === 'DEGRADED') {
+      statusClass = 'status-degraded';
+    }
+
+    const membersHtml = (pool.members || []).map((m) => {
+      const isStandby = m.spundown || m.status === 'STANDBY';
+      const tempDisplay = isStandby ? '🌙 Standby' : (m.temp_c != null ? `${m.temp_c}°C` : '--');
+      const tempLevel = isStandby ? 'standby' : (m.temp_c != null ? getThermalLevel(m.temp_c) : 'cool');
+      const readsStr = m.num_reads ? formatNumber(m.num_reads) : '0';
+      const writesStr = m.num_writes ? formatNumber(m.num_writes) : '0';
+
+      return `
+        <div class="topo-disk-card role-${m.role || 'data'} ${isStandby ? 'disk-standby' : ''}">
+          <div class="topo-disk-top">
+            <span class="topo-role-badge role-${m.role || 'data'}">${(m.role || 'DATA').toUpperCase()}</span>
+            <span class="topo-dev-name">/dev/${escapeHtml(m.device || m.name)}</span>
+            <span class="topo-temp-badge thermal-${tempLevel}">${tempDisplay}</span>
+          </div>
+          <div class="topo-disk-sub">
+            <span class="topo-disk-size">${formatBytes(m.size_bytes)}</span>
+            <span class="topo-disk-io" title="Disk I/O Reads & Writes">R: ${readsStr} · W: ${writesStr}</span>
+          </div>
+          <div class="topo-disk-actions">
+            <button class="btn-locate-topo" data-dev="${escapeHtml(m.device || m.name)}" title="Blink drive activity LED">
+              💡 Locate
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    return `
+      <div class="topo-pool-block">
+        <div class="topo-pool-header">
+          <div class="topo-pool-title-wrap">
+            <svg viewBox="0 0 24 24" width="18" height="18" class="pool-icon"><use href="#i-storage"/></svg>
+            <div>
+              <span class="topo-pool-name">${escapeHtml(pool.name)}</span>
+              <span class="topo-pool-fs">${escapeHtml(pool.fs_type.toUpperCase())}${pool.fs_profile ? ` · ${escapeHtml(pool.fs_profile.toUpperCase())}` : ''}</span>
+            </div>
+          </div>
+          <div class="topo-pool-badges">
+            ${pool.parity_protected ? '<span class="topo-parity-badge" title="Protected against disk failure">🛡️ Parity Protected</span>' : ''}
+            <span class="topo-status-pill ${statusClass}">${escapeHtml(statusLabel)}</span>
+          </div>
+        </div>
+
+        <div class="topo-pool-usage">
+          <div class="topo-usage-labels">
+            <span><strong>${usedStr}</strong> used / <strong>${totalStr}</strong> total (${pct}%)</span>
+            <span class="topo-free-space">${freeStr} Free</span>
+          </div>
+          <div class="topo-usage-track">
+            <div class="topo-usage-fill" style="width: ${Math.min(100, Math.max(0, pct))}%; background: ${barColor};"></div>
+          </div>
+        </div>
+
+        <div class="topo-members-section">
+          <div class="topo-members-label">POOL MEMBER DISKS (${(pool.members || []).length})</div>
+          <div class="topo-members-grid">
+            ${membersHtml || '<span class="empty-note">No assigned member drives</span>'}
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  container.innerHTML = `
+    <div class="storage-topology-tree">
+      ${isObserver ? `
+        <div class="topo-observer-banner">
+          <span class="observer-icon">ℹ️</span>
+          <span><strong>Host Observer Mode:</strong> Storage pools, arrays, and parity checks are managed authoritatively by the host OS. Zero risk of parity alteration.</span>
+        </div>
+      ` : ''}
+      <div class="topo-pools-container">
+        ${poolsHtml}
+      </div>
+    </div>
+  `;
+
+  // Attach Locate click listeners
+  container.querySelectorAll('.btn-locate-topo').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const dev = btn.dataset.dev;
+      if (dev) triggerLocateDisk(dev, btn);
+    });
+  });
+}
+
+/**
+ * Fetches and renders Storage Topology Tree
+ */
+export async function fetchAndRenderStorageTopology(container) {
+  if (!container) return;
+  container.innerHTML = `
+    <div style="text-align:center; padding:30px; color:var(--muted);">
+      <div class="loader-spinner" style="margin:0 auto 10px;"></div>
+      Scanning storage pools and array topology...
+    </div>
+  `;
+
+  try {
+    const data = await api.get('/api/storage/pools');
+    if (!data || !Array.isArray(data.pools) || data.pools.length === 0) {
+      renderStorageTopologyTree(container, state.latestStats?.disks, state.latestStats?.unraid || {});
+      return;
+    }
+    renderStructuredPoolsTopology(container, data);
+  } catch (err) {
+    console.warn('[ZettNAS] Failed to load /api/storage/pools, falling back to local disks:', err);
+    renderStorageTopologyTree(container, state.latestStats?.disks, state.latestStats?.unraid || {});
+  }
+}
+
+/**
+ * Fetches and renders Network Shares & Protocols
+ */
+export async function fetchAndRenderNetworkShares(container) {
+  if (!container) return;
+  container.innerHTML = `
+    <div style="text-align:center; padding:30px; color:var(--muted);">
+      <div class="loader-spinner" style="margin:0 auto 10px;"></div>
+      Auditing network shares and protocols...
+    </div>
+  `;
+
+  try {
+    const [sharesData, platformData] = await Promise.all([
+      api.get('/api/storage/shares'),
+      api.get('/api/storage/platform').catch(() => ({})),
+    ]);
+
+    const shares = sharesData.shares || [];
+    const isObserver = sharesData.is_observer_mode ?? true;
+    const platform = platformData.platform || sharesData.platform || 'unraid';
+
+    // Update platform badge in pane header
+    const badge = document.getElementById('mgmt-shares-platform-badge');
+    if (badge) {
+      if (isObserver) {
+        badge.textContent = `${platform.toUpperCase()} · Observer Mode`;
+        badge.style.background = 'rgba(59,245,139,0.12)';
+        badge.style.color = '#3bf58b';
+      } else {
+        badge.textContent = `${platform.toUpperCase()} · Active Provisioner`;
+        badge.style.background = 'rgba(99,102,241,0.15)';
+        badge.style.color = '#818cf8';
+      }
+    }
+
+    if (shares.length === 0) {
+      container.innerHTML = `
+        <div class="empty-shares-box" style="text-align:center; padding:40px; color:var(--muted);">
+          <svg viewBox="0 0 24 24" width="32" height="32" style="margin:0 auto 10px; opacity:0.5;"><use href="#i-storage"/></svg>
+          <div>No active network shares detected on host.</div>
+        </div>
+      `;
+      return;
+    }
+
+    const cardsHtml = shares.map((s) => {
+      const usedStr = formatBytes(s.used_bytes);
+      const totalStr = formatBytes(s.total_bytes);
+      const freeStr = formatBytes(s.free_bytes);
+      const pct = s.used_pct || 0;
+      const barColor = pct > 90 ? 'var(--alert, #ef4444)' : (pct > 75 ? 'var(--warn, #f59e0b)' : 'var(--accent, #3bf58b)');
+
+      return `
+        <div class="storage-share-card">
+          <div class="share-card-header">
+            <div class="share-title-wrap">
+              <span class="share-folder-icon">📁</span>
+              <div>
+                <span class="share-name">${escapeHtml(s.name)}</span>
+                ${s.comment ? `<div class="share-comment">${escapeHtml(s.comment)}</div>` : ''}
+              </div>
+            </div>
+            <span class="share-sec-badge sec-${s.security || 'public'}">${escapeHtml((s.security || 'public').toUpperCase())}</span>
+          </div>
+
+          <div class="share-protocols-row">
+            <span class="proto-tag ${s.export_smb ? 'proto-on' : 'proto-off'}" title="Samba SMB Protocol">SMB</span>
+            <span class="proto-tag ${s.export_nfs ? 'proto-on' : 'proto-off'}" title="NFS Protocol">NFS</span>
+            <span class="proto-tag proto-on" title="Universal WebDAV Port 8084">WebDAV :8084</span>
+            ${s.cache_mode && s.cache_mode !== 'none' ? `
+              <span class="share-cache-tag" title="Cache Tiering: ${s.cache_mode}">Cache: ${escapeHtml(s.cache_mode)}${s.cache_pool ? ` (${escapeHtml(s.cache_pool)})` : ''}</span>
+            ` : ''}
+          </div>
+
+          <div class="share-usage-wrap">
+            <div class="share-usage-labels">
+              <span>${usedStr} / ${totalStr}</span>
+              <span>${pct}% used · ${freeStr} free</span>
+            </div>
+            <div class="share-progress-track">
+              <div class="share-progress-fill" style="width: ${Math.min(100, Math.max(0, pct))}%; background: ${barColor};"></div>
+            </div>
+          </div>
+
+          <div class="share-card-actions">
+            <button class="btn-share-reveal" data-path="${escapeHtml(s.mountpoint || '')}" title="Open share in File Explorer">
+              📂 Open in File Explorer
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    container.innerHTML = `
+      <div class="storage-shares-grid">
+        ${cardsHtml}
+      </div>
+    `;
+
+    // Bind "Open in File Explorer" buttons
+    container.querySelectorAll('.btn-share-reveal').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const path = btn.dataset.path;
+        playChirp(720, 0.08, 'triangle');
+        ZettEventBus.emit('window:open', { id: 'file-manager-window', path });
+        showToast(t('mgmt.opened_share', `Opened share in File Explorer: ${path}`), 'info');
+      });
+    });
+  } catch (err) {
+    console.error('[ZettNAS] Failed to fetch network shares:', err);
+    container.innerHTML = `
+      <div style="text-align:center; padding:30px; color:var(--alert, #ef4444);">
+        Failed to audit network shares: ${escapeHtml(err.message || 'Unknown error')}
+      </div>
+    `;
+  }
+}
+
+/**
+ * Fallback Renders Storage Topology Tree (Pool -> VDEVs / Disks -> Datasets)
  */
 export function renderStorageTopologyTree(container, disks = [], unraidData = {}) {
   if (!container) return;
@@ -635,3 +912,4 @@ export function renderStorageTopologyTree(container, disks = [], unraidData = {}
     </div>
   `;
 }
+

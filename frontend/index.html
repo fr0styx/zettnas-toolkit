@@ -2430,7 +2430,11 @@
               </button>
               <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-storage-topo">
                 <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-storage"/></svg>
-                <span data-i18n="mgmt.subtab_topo">Pool Topology</span>
+                <span data-i18n="mgmt.subtab_topo">Pool & Array Topology</span>
+              </button>
+              <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-storage-shares">
+                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-storage"/></svg>
+                <span data-i18n="mgmt.subtab_shares">Network Shares</span>
               </button>
               <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-storage-disks">
                 <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-chip"/></svg>
@@ -2454,14 +2458,35 @@
 
             <!-- Sub-tab 2: Storage Pool & Array Topology -->
             <div id="mgmt-pane-storage-topo" class="mgmt-tab-pane" style="display: none;">
-              <div class="mgmt-card-intro">
-                <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-storage"/></svg> <span data-i18n="mgmt.topo_title">Storage Pool & Array Topology</span></div>
-                <div class="mgmt-card-intro-desc" data-i18n="mgmt.topo_desc">Hierarchical view of storage pools, parity protection drives, data array disks, and SSD cache tiers.</div>
+              <div class="mgmt-card-intro" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                <div>
+                  <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-storage"/></svg> <span data-i18n="mgmt.topo_title">Storage Pool & Array Topology</span></div>
+                  <div class="mgmt-card-intro-desc" data-i18n="mgmt.topo_desc">Hierarchical view of storage pools, parity protection drives, data array disks, and SSD cache tiers.</div>
+                </div>
+                <button class="btn-pill-toggle" id="btn-refresh-topo" title="Refresh Topology" data-i18n="mgmt.refresh">🔄 Refresh</button>
               </div>
               <div class="mgmt-detail-body" id="mgmt-storage-topo-mount">
                 <!-- Mounted via renderStorageTopologyTree -->
               </div>
             </div>
+
+            <!-- Sub-tab 3: Network Shares -->
+            <div id="mgmt-pane-storage-shares" class="mgmt-tab-pane" style="display: none;">
+              <div class="mgmt-card-intro" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                <div>
+                  <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-storage"/></svg> <span data-i18n="mgmt.shares_title">Network Shares & Protocols</span></div>
+                  <div class="mgmt-card-intro-desc" data-i18n="mgmt.shares_desc">Host Samba (SMB), NFS, and Universal WebDAV network shares, security levels, and live storage usage.</div>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <span class="mgmt-app-pill" id="mgmt-shares-platform-badge" style="background:rgba(59,245,139,0.12); color:#3bf58b;">Observer Mode</span>
+                  <button class="btn-pill-toggle" id="btn-refresh-shares" title="Refresh Network Shares" data-i18n="mgmt.refresh">🔄 Refresh</button>
+                </div>
+              </div>
+              <div class="mgmt-detail-body" id="mgmt-storage-shares-mount">
+                <!-- Mounted via fetchAndRenderNetworkShares -->
+              </div>
+            </div>
+
 
             <!-- Sub-tab 3: Physical Disks Inventory -->
             <div id="mgmt-pane-storage-disks" class="mgmt-tab-pane" style="display: none;">

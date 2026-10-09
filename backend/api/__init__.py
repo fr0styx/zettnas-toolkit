@@ -15,6 +15,7 @@ from backend.api.wallpapers import router as wallpapers_router
 from backend.api.metrics import router as metrics_router
 from backend.api.backup import router as backup_router
 from backend.api.chassis import router as chassis_router
+from backend.api.storage import router as storage_router
 
 api_router = APIRouter()
 api_router.include_router(auth_router)
@@ -27,6 +28,7 @@ api_router.include_router(notifications_router)
 api_router.include_router(metrics_router)
 api_router.include_router(backup_router)
 api_router.include_router(chassis_router)
+api_router.include_router(storage_router)
 
 __all__ = [
     "api_router",
@@ -40,4 +42,5 @@ __all__ = [
     "metrics_router",
     "backup_router",
     "chassis_router",
+    "storage_router",
 ]
