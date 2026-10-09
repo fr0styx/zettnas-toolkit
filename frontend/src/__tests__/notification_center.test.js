@@ -833,5 +833,74 @@ describe('Notification Center Draggable Window & Event Detail Inspector', () => 
     panel.dispatchEvent(panelDown);
     expect(document.getElementById('desktop-lasso-rect')).toBeNull();
   });
+
+  it('keeps dock notification tooltip position stable and avoids vertical jump during telemetry ticks', () => {
+    window.innerWidth = 1200;
+    window.innerHeight = 900;
+
+    const dock = document.getElementById('os-dock');
+    dock.getBoundingClientRect = () => ({
+      left: 300,
+      top: 840,
+      width: 600,
+      height: 60,
+      right: 900,
+      bottom: 900,
+    });
+
+    DockManager.render();
+    const notifBtn = document.querySelector('.dock-notif-btn');
+    expect(notifBtn).not.toBeNull();
+
+    // Mock initial un-hovered bounding rect
+    Object.defineProperty(notifBtn, 'offsetLeft', { value: 500, configurable: true });
+    Object.defineProperty(notifBtn, 'offsetWidth', { value: 48, configurable: true });
+    notifBtn.getBoundingClientRect = () => ({
+      left: 800,
+      top: 846,
+      width: 48,
+      height: 48,
+      right: 848,
+      bottom: 894,
+    });
+
+    state.latestStats = {
+      events: [
+        { ts: Math.floor(Date.now() / 1000), level: 'info', title: 'System Healthy', message: 'All checks passed' }
+      ]
+    };
+
+    // First hover
+    DockManager.showTooltip(notifBtn, 'notif', 'Notification Center', '#i-bell', false);
+    const tooltip = document.getElementById('dock-hover-tooltip');
+    expect(tooltip).not.toBeNull();
+    expect(tooltip.classList.contains('visible')).toBe(true);
+
+    const initialBottom = tooltip.style.bottom;
+    const initialLeft = tooltip.style.left;
+    expect(initialBottom).toBeTruthy();
+    expect(initialLeft).toBeTruthy();
+
+    // Now simulate button completing its hover animation: translateY(-6px)
+    notifBtn.getBoundingClientRect = () => ({
+      left: 800,
+      top: 840, // 6px higher due to CSS hover
+      width: 48,
+      height: 48,
+      right: 848,
+      bottom: 888,
+    });
+
+    // Telemetry tick (stats:updated) re-invokes showTooltip while visible
+    DockManager.showTooltip(notifBtn, 'notif', 'Notification Center', '#i-bell', false);
+
+    // Tooltip position must remain exactly identical with zero vertical or horizontal shift
+    expect(tooltip.style.bottom).toBe(initialBottom);
+    expect(tooltip.style.left).toBe(initialLeft);
+
+    // Verify preview content updated cleanly
+    const previewEl = document.getElementById('dock-tooltip-preview-content');
+    expect(previewEl.textContent).toContain('System Healthy');
+  });
 });
 

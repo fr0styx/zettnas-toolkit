@@ -3072,7 +3072,8 @@ select.tz-select-input option, select.tz-select option {
   transform: translateY(8px) scale(0.96);
   transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1),
               transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
-              left 0.15s ease-out;
+              left 0.15s ease-out,
+              bottom 0.15s ease-out;
   background: rgba(14, 21, 31, 0.94);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);

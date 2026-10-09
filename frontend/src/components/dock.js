@@ -1581,28 +1581,49 @@ export const DockManager = {
       }
 
       if (previewEl) {
-        previewEl.innerHTML = '';
         const previewContent = generatePreviewForWindow(id);
         if (previewContent) {
-          previewEl.appendChild(previewContent);
+          if (typeof previewEl.replaceChildren === 'function') {
+            previewEl.replaceChildren(previewContent);
+          } else {
+            previewEl.innerHTML = '';
+            previewEl.appendChild(previewContent);
+          }
           previewEl.style.display = 'flex';
         } else {
           previewEl.style.display = 'none';
+          if (typeof previewEl.replaceChildren === 'function') {
+            previewEl.replaceChildren();
+          } else {
+            previewEl.innerHTML = '';
+          }
         }
       }
 
+      const isAlreadyVisibleForThisItem = tooltip.classList.contains('visible') && tooltip.dataset.currentWindowId === id;
       tooltip.dataset.currentWindowId = id;
-      const rect = dockItem.getBoundingClientRect();
-      const tooltipW = tooltip.offsetWidth || 210;
 
-      let leftPos = rect.left + (rect.width / 2) - (tooltipW / 2);
-      leftPos = Math.max(24, Math.min(window.innerWidth - tooltipW - 10, leftPos));
-      const bottomPos = Math.max(10, window.innerHeight - rect.top + 10);
+      if (!isAlreadyVisibleForThisItem) {
+        const dockEl = document.getElementById('os-dock');
+        const dockRect = dockEl ? dockEl.getBoundingClientRect() : null;
+        const rect = dockItem.getBoundingClientRect();
+        const tooltipW = tooltip.offsetWidth || 210;
 
-      tooltip.style.left = `${leftPos}px`;
-      tooltip.style.bottom = `${bottomPos}px`;
-      tooltip.style.top = 'auto';
-      tooltip.classList.add('visible');
+        const centerX = (dockEl && dockRect && typeof dockItem.offsetLeft === 'number')
+          ? (dockRect.left + dockItem.offsetLeft - (dockEl.scrollLeft || 0) + (dockItem.offsetWidth / 2))
+          : (rect.left + (rect.width / 2));
+
+        let leftPos = Math.round(centerX - (tooltipW / 2));
+        leftPos = Math.max(24, Math.min(window.innerWidth - tooltipW - 10, leftPos));
+        const bottomPos = dockRect
+          ? Math.max(10, Math.round(window.innerHeight - dockRect.top + 14))
+          : Math.max(10, Math.round(window.innerHeight - rect.top + 10));
+
+        tooltip.style.left = `${leftPos}px`;
+        tooltip.style.bottom = `${bottomPos}px`;
+        tooltip.style.top = 'auto';
+        tooltip.classList.add('visible');
+      }
     }
 
     this.showTooltip = showDockTooltip;
