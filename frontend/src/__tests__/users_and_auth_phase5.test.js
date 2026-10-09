@@ -5,6 +5,8 @@ describe('Phase 5: Multi-User Identity, RBAC & Desktop Lock UI', () => {
   beforeEach(() => {
     document.body.innerHTML = `
       <div id="os-dock"></div>
+      <div id="topbar-user-avatar-initial"></div>
+      <div id="topbar-user-display-name"></div>
       <div id="dock-user-avatar-initial"></div>
       <div id="dock-user-display-name"></div>
       <div id="lock-avatar"></div>
@@ -50,6 +52,8 @@ describe('Phase 5: Multi-User Identity, RBAC & Desktop Lock UI', () => {
     setCurrentUser(user);
     expect(getCurrentUser()).toEqual(user);
 
+    expect(document.getElementById('topbar-user-avatar-initial').textContent).toBe('J');
+    expect(document.getElementById('topbar-user-display-name').textContent).toBe('John Doe');
     expect(document.getElementById('dock-user-avatar-initial').textContent).toBe('J');
     expect(document.getElementById('dock-user-display-name').textContent).toBe('John Doe');
     expect(document.getElementById('lock-display-name').textContent).toBe('John Doe');

@@ -1723,31 +1723,27 @@ export const DockManager = {
     });
     dock.appendChild(notifItem);
 
-    // User Profile Item & Flyout Trigger
-    const userItem = document.createElement('button');
-    userItem.type = 'button';
-    userItem.className = 'dock-item dock-user-btn';
-    userItem.id = 'dock-user-profile-btn';
-    userItem.setAttribute('aria-label', 'User Profile & Identity');
-    userItem.innerHTML = `
-      <div style="width:24px; height:24px; border-radius:50%; background:linear-gradient(135deg, #0284c7, #0369a1); display:flex; align-items:center; justify-content:center; font-weight:800; color:#fff; font-size:11px; border:1px solid rgba(255,255,255,0.25); position:relative;">
-        <span id="dock-user-avatar-initial">A</span>
-        <span style="position:absolute; bottom:-1px; right:-1px; width:7px; height:7px; background:var(--ok2, #25c2a0); border-radius:50%; border:1px solid #000;"></span>
-      </div>
-    `;
-    userItem.addEventListener('mouseenter', () => showDockTooltip(userItem, 'user_profile', 'Account & Security', '#i-chip', false));
-    userItem.addEventListener('focus', () => showDockTooltip(userItem, 'user_profile', 'Account & Security', '#i-chip', false));
-    userItem.addEventListener('mouseleave', hideDockTooltip);
-    userItem.addEventListener('blur', hideDockTooltip);
-    userItem.addEventListener('click', (e) => {
-      e.stopPropagation();
-      hideDockTooltip();
-      toggleUserProfileFlyout(userItem);
-    });
-    dock.appendChild(userItem);
-
   }
 };
+
+export function initTopbarUserPill() {
+  const topbarPill = document.getElementById('topbar-user-pill');
+  if (!topbarPill || topbarPill.dataset.userPillBound === 'true') return;
+  topbarPill.dataset.userPillBound = 'true';
+
+  topbarPill.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleUserProfileFlyout(topbarPill);
+  });
+
+  topbarPill.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleUserProfileFlyout(topbarPill);
+    }
+  });
+}
 
 export function toggleUserProfileFlyout(anchorEl) {
   let flyout = document.getElementById('user-profile-flyout');
@@ -1794,36 +1790,64 @@ export function toggleUserProfileFlyout(anchorEl) {
       btn.addEventListener('mouseleave', () => { btn.style.background = 'transparent'; });
     });
 
+    const resetFlyoutTrigger = () => {
+      if (anchorEl) {
+        anchorEl.setAttribute('aria-expanded', 'false');
+        anchorEl.classList.remove('active');
+      }
+      const topbarPill = document.getElementById('topbar-user-pill');
+      if (topbarPill) {
+        topbarPill.setAttribute('aria-expanded', 'false');
+        topbarPill.classList.remove('active');
+      }
+    };
+
     // Actions
     document.getElementById('btn-flyout-lock').addEventListener('click', () => {
       flyout.style.display = 'none';
+      resetFlyoutTrigger();
       import('./auth.js').then((m) => m.lockDesktop());
     });
 
     document.getElementById('btn-flyout-users').addEventListener('click', () => {
       flyout.style.display = 'none';
+      resetFlyoutTrigger();
       ZettEventBus.emit('window:open', { id: 'management', section: 'mgmt-sec-system-group', pane: 'mgmt-pane-users' });
     });
 
     document.getElementById('btn-flyout-security').addEventListener('click', () => {
       flyout.style.display = 'none';
+      resetFlyoutTrigger();
       ZettEventBus.emit('window:open', { id: 'management', section: 'mgmt-sec-system-group', pane: 'mgmt-pane-security' });
     });
 
     document.getElementById('btn-flyout-switch').addEventListener('click', () => {
       flyout.style.display = 'none';
+      resetFlyoutTrigger();
       import('./auth.js').then((m) => m.switchUser());
     });
 
     document.getElementById('btn-flyout-logout').addEventListener('click', () => {
       flyout.style.display = 'none';
+      resetFlyoutTrigger();
       import('./auth.js').then((m) => m.logout());
     });
 
     // Click outside to close
     document.addEventListener('click', (evt) => {
-      if (flyout.style.display !== 'none' && !flyout.contains(evt.target) && !anchorEl.contains(evt.target)) {
+      if (flyout.style.display !== 'none' && !flyout.contains(evt.target)) {
+        const topbarPill = document.getElementById('topbar-user-pill');
+        if ((!anchorEl || !anchorEl.contains(evt.target)) && (!topbarPill || !topbarPill.contains(evt.target))) {
+          flyout.style.display = 'none';
+          resetFlyoutTrigger();
+        }
+      }
+    });
+
+    document.addEventListener('keydown', (evt) => {
+      if (evt.key === 'Escape' && flyout.style.display === 'block') {
         flyout.style.display = 'none';
+        resetFlyoutTrigger();
       }
     });
   }
@@ -1831,23 +1855,51 @@ export function toggleUserProfileFlyout(anchorEl) {
   // Toggle display
   if (flyout.style.display === 'block') {
     flyout.style.display = 'none';
+    if (anchorEl) {
+      anchorEl.setAttribute('aria-expanded', 'false');
+      anchorEl.classList.remove('active');
+    }
+    const topbarPill = document.getElementById('topbar-user-pill');
+    if (topbarPill) {
+      topbarPill.setAttribute('aria-expanded', 'false');
+      topbarPill.classList.remove('active');
+    }
     return;
   }
 
   // Refresh current user info
   import('./users.js').then((m) => m.updateUserInterfaceElements());
 
-  const rect = anchorEl.getBoundingClientRect();
-  const flyoutW = 240;
-  const bottomPos = window.innerHeight - rect.top + 12;
-  const leftPos = Math.max(16, Math.min(window.innerWidth - flyoutW - 16, rect.left + (rect.width / 2) - (flyoutW / 2)));
+  const rect = anchorEl ? anchorEl.getBoundingClientRect() : { top: 0, bottom: 48, left: 16, width: 30 };
+  const flyoutW = 250;
+  const isTopBar = rect.top < (typeof window !== 'undefined' ? window.innerHeight / 2 : 400);
 
-  flyout.style.position = 'fixed';
-  flyout.style.bottom = `${bottomPos}px`;
-  flyout.style.left = `${leftPos}px`;
+  if (isTopBar) {
+    const topPos = rect.bottom + 8;
+    const leftPos = Math.max(12, Math.min((typeof window !== 'undefined' ? window.innerWidth : 1200) - flyoutW - 12, rect.left));
+    flyout.style.position = 'fixed';
+    flyout.style.top = `${topPos}px`;
+    flyout.style.bottom = 'auto';
+    flyout.style.left = `${leftPos}px`;
+    flyout.style.animation = 'flyoutSlideDown 0.18s cubic-bezier(0.16, 1, 0.3, 1)';
+  } else {
+    const bottomPos = (typeof window !== 'undefined' ? window.innerHeight : 900) - rect.top + 12;
+    const leftPos = Math.max(16, Math.min((typeof window !== 'undefined' ? window.innerWidth : 1200) - flyoutW - 16, rect.left + (rect.width / 2) - (flyoutW / 2)));
+    flyout.style.position = 'fixed';
+    flyout.style.top = 'auto';
+    flyout.style.bottom = `${bottomPos}px`;
+    flyout.style.left = `${leftPos}px`;
+    flyout.style.animation = 'flyoutSlideUp 0.18s cubic-bezier(0.16, 1, 0.3, 1)';
+  }
+
   flyout.style.width = `${flyoutW}px`;
   flyout.style.zIndex = '99999';
   flyout.style.display = 'block';
+
+  if (anchorEl) {
+    anchorEl.setAttribute('aria-expanded', 'true');
+    anchorEl.classList.add('active');
+  }
 }
 
 window.DockManager = DockManager;
@@ -2020,6 +2072,7 @@ export function initSnapAssistFlyout() {
 export function initDockSystem() {
   if (state.isLcdDirect || (typeof window !== 'undefined' && window.location.search.includes('mode=lcd')) || (document.body && document.body.classList.contains('lcd-direct'))) return;
   initSnapAssistFlyout();
+  initTopbarUserPill();
   const consoleModal = document.getElementById('console-window');
   const consoleHeader = document.querySelector('#console-window .chassis-panel-header');
   if (consoleModal) makeDraggable(consoleModal, consoleHeader, 'console');

@@ -6,6 +6,7 @@
 import { escapeHtml } from '../utils.js';
 import { ZettEventBus } from '../event-bus.js';
 import { t } from '../i18n.js';
+import { initTopbarUserPill } from './dock.js';
 
 let _currentUser = null;
 
@@ -39,7 +40,13 @@ export function updateUserInterfaceElements() {
   const roleId = _currentUser.role_id || 'share_user';
   const avatarLetter = (displayName[0] || username[0] || 'U').toUpperCase();
 
-  // Update Dock User Pill
+  // Update Topbar User Pill
+  const topbarAvatar = document.getElementById('topbar-user-avatar-initial');
+  if (topbarAvatar) topbarAvatar.textContent = avatarLetter;
+  const topbarName = document.getElementById('topbar-user-display-name');
+  if (topbarName) topbarName.textContent = displayName;
+
+  // Update Dock User Pill (backward compatibility)
   const dockAvatar = document.getElementById('dock-user-avatar-initial');
   if (dockAvatar) dockAvatar.textContent = avatarLetter;
   const dockName = document.getElementById('dock-user-display-name');
@@ -99,6 +106,7 @@ export function formatRole(roleId) {
 }
 
 export function initUsersManagement() {
+  initTopbarUserPill();
   fetchCurrentProfile();
 
   // Sub-tabs in Users Pane

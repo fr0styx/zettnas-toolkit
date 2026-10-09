@@ -277,14 +277,14 @@ describe('Notification Center Draggable Window & Event Detail Inspector', () => 
     expect(items[3].querySelector('.notif-unread-dot')).not.toBeNull();
   });
 
-  it('renders default icons on clean initial dock startup: Dashboard Home, Spotlight, Notification Center, and User Profile', () => {
+  it('renders default icons on clean initial dock startup: Dashboard Home, Spotlight, and Notification Center', () => {
     DockManager.windows = {};
     DockManager.activeId = null;
     DockManager.render();
 
     const dock = document.getElementById('os-dock');
     const items = dock.querySelectorAll('.dock-item');
-    expect(items.length).toBe(4);
+    expect(items.length).toBe(3);
 
     // First item is Dashboard Home
     expect(items[0].getAttribute('aria-label')).toBe('Dashboard Home');
@@ -296,9 +296,6 @@ describe('Notification Center Draggable Window & Event Detail Inspector', () => 
     // Third item is Notification Center
     expect(items[2].getAttribute('aria-label')).toBe('Notification Center');
     expect(items[2].innerHTML).toContain('#i-bell');
-
-    // Fourth item is User Profile
-    expect(items[3].getAttribute('aria-label')).toBe('User Profile & Identity');
   });
 
   it('allows user to pin and unpin apps in the dock bar', () => {
@@ -312,10 +309,10 @@ describe('Notification Center Draggable Window & Event Detail Inspector', () => 
     expect(DockManager.isPinned('fm')).toBe(true);
     expect(DockManager.getPinnedApps()).toContain('fm');
 
-    // Dock now has 5 items: Home, Spotlight, File Explorer, Notification Center, User Profile
+    // Dock now has 4 items: Home, Spotlight, File Explorer, Notification Center
     const dock = document.getElementById('os-dock');
     let items = dock.querySelectorAll('.dock-item');
-    expect(items.length).toBe(5);
+    expect(items.length).toBe(4);
 
     const fmItem = dock.querySelector('[data-window-id="fm"]');
     expect(fmItem).not.toBeNull();
@@ -325,14 +322,14 @@ describe('Notification Center Draggable Window & Event Detail Inspector', () => 
     const mockFmEl = document.createElement('div');
     DockManager.register('fm', mockFmEl, '#i-storage', 'File Explorer', false);
     items = dock.querySelectorAll('.dock-item');
-    expect(items.length).toBe(5);
+    expect(items.length).toBe(4);
     const runningFmItem = dock.querySelector('[data-window-id="fm"]');
     expect(runningFmItem.classList.contains('pinned-closed')).toBe(false);
 
     // When closed/unregistered, pinned app remains in dock as pinned-closed
     DockManager.unregister('fm');
     items = dock.querySelectorAll('.dock-item');
-    expect(items.length).toBe(5);
+    expect(items.length).toBe(4);
     expect(dock.querySelector('[data-window-id="fm"]').classList.contains('pinned-closed')).toBe(true);
 
     // Unpin File Explorer
@@ -340,9 +337,9 @@ describe('Notification Center Draggable Window & Event Detail Inspector', () => 
     expect(DockManager.isPinned('fm')).toBe(false);
     expect(DockManager.getPinnedApps()).not.toContain('fm');
 
-    // Dock returns to 4 default items
+    // Dock returns to 3 default items
     items = dock.querySelectorAll('.dock-item');
-    expect(items.length).toBe(4);
+    expect(items.length).toBe(3);
   });
 
   it('opens and visibly restores ZettNAS console window when openConsoleWindow() is triggered', () => {
