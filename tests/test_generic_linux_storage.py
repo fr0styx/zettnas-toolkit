@@ -298,9 +298,9 @@ def test_api_samba_endpoints(client, auth_headers, monkeypatch):
     assert del_res.json()["status"] == "deleted"
 
 
-def test_api_pool_snapshots_and_lifecycle(client, auth_headers, monkeypatch):
+def test_api_pool_snapshots_and_lifecycle(client, auth_headers, monkeypatch, tmp_path):
     # Mock adapter as GenericLinuxStorageAdapter
-    generic_adapter = GenericLinuxStorageAdapter()
+    generic_adapter = GenericLinuxStorageAdapter(pool_path=str(tmp_path / "pools"))
     monkeypatch.setattr(
         "backend.api.storage.get_storage_platform",
         lambda: generic_adapter,
@@ -312,12 +312,13 @@ def test_api_pool_snapshots_and_lifecycle(client, auth_headers, monkeypatch):
     )
 
     # Create pool via API
+    mount_dir = str(tmp_path / "datapool")
     pool_payload = {
         "name": "datapool",
         "fs_type": "btrfs",
         "profile": "raid1",
         "disks": ["sdb", "sdc"],
-        "mountpoint": "/mnt/storage/datapool",
+        "mountpoint": mount_dir,
     }
     create_pool_res = client.post("/api/storage/pools", json=pool_payload, headers=auth_headers)
     assert create_pool_res.status_code == 200

@@ -660,8 +660,8 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
     and managed Samba/WebDAV shares.
     """
 
-    def __init__(self):
-        self._pool_path = POOL_PATH or "/mnt/storage"
+    def __init__(self, pool_path: Optional[str] = None):
+        self._pool_path = pool_path or POOL_PATH or "/mnt/storage"
 
     def get_platform_type(self) -> PlatformType:
         return PlatformType.GENERIC_LINUX
@@ -906,7 +906,10 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
             raise ValueError("RAID10 requires at least 4 disks")
 
         target_mount = mountpoint.strip() or os.path.join(self._pool_path, name)
-        os.makedirs(target_mount, exist_ok=True)
+        try:
+            os.makedirs(target_mount, exist_ok=True)
+        except OSError as e:
+            logger.warning(f"[PAL] Could not pre-create target mount dir {target_mount}: {e}")
 
         if fs_lower == "btrfs":
             cmd = ["mkfs.btrfs", "-f", "-L", name, "-m", profile_lower, "-d", profile_lower] + resolved_disks
@@ -963,7 +966,10 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
     ) -> Dict[str, Any]:
         """Provisions a network share and syncs with SambaEngine."""
         full_path = path if path else os.path.join(self._pool_path, name)
-        os.makedirs(full_path, exist_ok=True)
+        try:
+            os.makedirs(full_path, exist_ok=True)
+        except OSError as e:
+            logger.warning(f"[PAL] Could not pre-create share dir {full_path}: {e}")
 
         try:
             from backend.services.samba_engine import SambaShareConfig, get_samba_engine
@@ -1015,7 +1021,10 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
             src_path = os.path.join(self._pool_path, subvol_name)
 
         snaps_dir = os.path.join(self._pool_path, "@snapshots")
-        os.makedirs(snaps_dir, exist_ok=True)
+        try:
+            os.makedirs(snaps_dir, exist_ok=True)
+        except OSError as e:
+            logger.warning(f"[PAL] Could not pre-create snapshots dir {snaps_dir}: {e}")
         dest_path = os.path.join(snaps_dir, snapshot_name)
 
         cmd = ["btrfs", "subvolume", "snapshot"]

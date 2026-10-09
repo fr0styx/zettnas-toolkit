@@ -253,18 +253,18 @@ def test_unraid_storage_adapter_shares_parsing(tmp_path):
     assert vault.security == "private"
 
 
-def test_generic_linux_storage_adapter():
-    adapter = GenericLinuxStorageAdapter()
+def test_generic_linux_storage_adapter(tmp_path):
+    adapter = GenericLinuxStorageAdapter(pool_path=str(tmp_path / "pools"))
     caps = adapter.get_capabilities()
     assert caps.is_observer_mode is False
     assert caps.can_create_pools is True
     assert caps.can_manage_shares is True
 
     # Creating pool & share succeeds in Generic Linux mode
-    res_pool = adapter.create_pool("data_pool", "btrfs", "raid1", ["/dev/sdb", "/dev/sdc"], "/mnt/data")
+    res_pool = adapter.create_pool("data_pool", "btrfs", "raid1", ["/dev/sdb", "/dev/sdc"], str(tmp_path / "data"))
     assert res_pool["status"] == "provisioned"
 
-    res_share = adapter.create_share("media", "", comment="Media share", security="public")
+    res_share = adapter.create_share("media", str(tmp_path / "media"), comment="Media share", security="public")
     assert res_share["status"] == "created"
 
 

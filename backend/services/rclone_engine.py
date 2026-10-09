@@ -508,22 +508,22 @@ class RcloneEngine:
         self._sync_jobs[job_id] = job
 
         def _run_sync():
-            rclone_bin = self._get_rclone_bin()
-            cmd = [
-                rclone_bin,
-                action,
-                src,
-                dst,
-                "--config",
-                self.config_file,
-                "--stats",
-                "2s",
-                "--stats-one-line",
-            ]
-            if dry_run:
-                cmd.append("--dry-run")
-
             try:
+                rclone_bin = self._get_rclone_bin()
+                cmd = [
+                    rclone_bin,
+                    action,
+                    src,
+                    dst,
+                    "--config",
+                    self.config_file,
+                    "--stats",
+                    "2s",
+                    "--stats-one-line",
+                ]
+                if dry_run:
+                    cmd.append("--dry-run")
+
                 proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
                 job["completed_at"] = time.time()
                 if proc.returncode == 0:
