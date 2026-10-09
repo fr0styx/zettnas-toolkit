@@ -243,7 +243,11 @@ def _get_webdav_portal_user(request: Request, cfg: Dict[str, Any]) -> Optional[D
                 }
 
             expected_user = cfg.get("username", "admin") or "admin"
-            if username.lower() in ("admin", expected_user.lower(), getattr(config, "ZETTNAS_USERNAME", "admin").lower()):
+            if username.lower() in (
+                "admin",
+                expected_user.lower(),
+                getattr(config, "ZETTNAS_USERNAME", "admin").lower(),
+            ):
                 return {"username": username, "role_id": "superadmin", "is_admin": True}
 
     # 2. Check active ZettNAS desktop session (session cookie, bearer token, or state)

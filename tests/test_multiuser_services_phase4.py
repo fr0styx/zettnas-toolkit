@@ -247,7 +247,7 @@ def test_webdav_portal_serves_files_directly_without_basic_auth(setup_phase4_env
     assert resp_file.status_code == 200
     assert resp_file.text == "Alice private data"
     assert "www-authenticate" not in resp_file.headers
-    assert resp_file.headers.get("content-disposition", "") == "inline; filename=\"alice_notes.txt\""
+    assert resp_file.headers.get("content-disposition", "") == 'inline; filename="alice_notes.txt"'
 
     # 4. Click AppleDouble sidecar JPG file: serves file directly without 401 prompt
     resp_jpg = client.get("/webdav/._DSCF9385.JPG", cookies=cookies)
@@ -288,4 +288,3 @@ def test_webdav_portal_desktop_sso_and_unauth_fallback(setup_phase4_env):
     assert resp_sso.status_code == 200
     assert "ZettNAS WebDAV" in resp_sso.text
     assert "admin_user" in resp_sso.text
-
