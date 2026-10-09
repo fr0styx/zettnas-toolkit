@@ -24,8 +24,6 @@ describe('Desktop Context Menu, Dock Context Menu, and Wallpaper Engine', () => 
           <div class="icon-text">ZettNAS</div>
         </div>
       </div>
-      <div id="wallpaper-preview"></div>
-      <div id="wallpaper-no-img"></div>
       <select id="wallpaper-select"></select>
     `;
   });

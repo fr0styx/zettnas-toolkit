@@ -14,8 +14,6 @@ let _activeWallpaper = null;
 
 export function setWallpaper(url, filename = null) {
   if (state.isLcdDirect || (typeof window !== 'undefined' && window.location.search.includes('mode=lcd')) || (document.body && document.body.classList.contains('lcd-direct'))) return;
-  const previewImg = document.getElementById('wallpaper-preview');
-  const noImgTxt = document.getElementById('wallpaper-no-img');
 
   if (url) {
     if (filename) {
@@ -28,11 +26,6 @@ export function setWallpaper(url, filename = null) {
     document.body.style.setProperty('background-position', 'center center', 'important');
     document.body.style.setProperty('background-repeat', 'no-repeat', 'important');
     document.body.style.setProperty('background-attachment', 'fixed', 'important');
-    if (previewImg) {
-      previewImg.src = url;
-      previewImg.style.display = 'block';
-    }
-    if (noImgTxt) noImgTxt.style.display = 'none';
   } else {
     try {
       localStorage.removeItem('zettnas_active_wallpaper');
@@ -42,11 +35,6 @@ export function setWallpaper(url, filename = null) {
     document.body.style.removeProperty('background-position');
     document.body.style.removeProperty('background-repeat');
     document.body.style.removeProperty('background-attachment');
-    if (previewImg) {
-      previewImg.src = '';
-      previewImg.style.display = 'none';
-    }
-    if (noImgTxt) noImgTxt.style.display = 'block';
   }
 
   // Update active state in visual gallery grid if rendered
