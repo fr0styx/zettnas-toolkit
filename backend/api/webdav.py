@@ -10,7 +10,7 @@ import urllib.parse
 from typing import Any, Dict, Optional
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request
-from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
 import backend.config as config
@@ -180,44 +180,97 @@ WEBDAV_METHODS = [
 ]
 
 
-def _is_browser_interactive_request(request: Request) -> bool:
-    if request.method != "GET":
-        return False
-    accept = request.headers.get("accept", "")
-    if "text/html" not in accept:
-        return False
+def _is_webdav_client(request: Request) -> bool:
+    """Detects whether a request originates from a native WebDAV client or CLI tool,
+    as opposed to an interactive web browser session.
+    """
+    # 1. Non-GET/HEAD WebDAV protocol methods (PROPFIND, MKCOL, PUT, etc.)
+    if request.method not in ("GET", "HEAD"):
+        return True
+
+    # 2. Presence of HTTP Basic Authorization header (Finder, Cyberduck, etc.)
+    auth_header = request.headers.get("authorization", "")
+    if auth_header.lower().startswith("basic "):
+        return True
+
+    # 3. WebDAV-specific protocol headers
+    if any(h in request.headers for h in ("depth", "destination", "translate", "if", "lock-token", "overwrite")):
+        return True
+
+    # 4. Known WebDAV client / CLI user-agents
     ua = request.headers.get("user-agent", "").lower()
-    client_signatures = ["webdav", "davfs", "cyberduck", "rclone", "curl", "wget", "python", "git"]
-    if any(sig in ua for sig in client_signatures):
-        return False
-    return True
+    dav_clients = (
+        "webdav",
+        "davfs",
+        "cyberduck",
+        "rclone",
+        "curl",
+        "wget",
+        "python",
+        "git",
+        "transmit",
+        "winhttp",
+        "microsoft-webdav",
+        "gvfs",
+        "mountainduck",
+        "filezilla",
+    )
+    if any(client in ua for client in dav_clients):
+        return True
+
+    return False
 
 
 def _get_webdav_portal_user(request: Request, cfg: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     if not cfg.get("auth_enabled", True):
         return {"username": cfg.get("username", "admin") or "admin", "is_admin": True, "role_id": "superadmin"}
+
+    # 1. Check dedicated webdav_session cookie
     session_cookie = request.cookies.get("webdav_session")
-    if not session_cookie or ":" not in session_cookie:
-        return None
-    username, _ = session_cookie.split(":", 1)
-    if not username:
-        return None
+    if session_cookie and ":" in session_cookie:
+        username, _ = session_cookie.split(":", 1)
+        if username:
+            from backend.users_db import get_user_by_username
 
-    from backend.users_db import get_user_by_username
+            user = get_user_by_username(username)
+            if user and user.get("status") == "active":
+                is_admin = user.get("role_id") in ("superadmin", "storage_admin")
+                return {
+                    "username": user["username"],
+                    "role_id": user.get("role_id", "share_user"),
+                    "is_admin": is_admin,
+                    "home_directory": user.get("home_directory"),
+                }
 
-    user = get_user_by_username(username)
-    if user and user.get("status") == "active":
-        is_admin = user.get("role_id") in ("superadmin", "storage_admin")
-        return {
-            "username": user["username"],
-            "role_id": user.get("role_id", "share_user"),
-            "is_admin": is_admin,
-            "home_directory": user.get("home_directory"),
-        }
+            expected_user = cfg.get("username", "admin") or "admin"
+            if username.lower() in ("admin", expected_user.lower(), getattr(config, "ZETTNAS_USERNAME", "admin").lower()):
+                return {"username": username, "role_id": "superadmin", "is_admin": True}
 
-    expected_user = cfg.get("username", "admin") or "admin"
-    if username.lower() in ("admin", expected_user.lower(), getattr(config, "ZETTNAS_USERNAME", "admin").lower()):
-        return {"username": username, "role_id": "superadmin", "is_admin": True}
+    # 2. Check active ZettNAS desktop session (session cookie, bearer token, or state)
+    try:
+        sess = getattr(request.state, "session", None)
+        if not sess:
+            from backend.auth import extract_token, get_current_session
+
+            tok = extract_token(request)
+            if tok:
+                sess = get_current_session(tok)
+        if sess:
+            u_name = sess.get("username", "admin")
+            role_id = sess.get("role_id", "share_user")
+            is_admin = role_id in ("superadmin", "storage_admin")
+            from backend.users_db import get_user_by_username
+
+            u_rec = get_user_by_username(u_name)
+            home_dir = u_rec.get("home_directory") if u_rec else None
+            return {
+                "username": u_name,
+                "role_id": role_id,
+                "is_admin": is_admin,
+                "home_directory": home_dir,
+            }
+    except Exception as e:
+        logger.debug(f"[WebDAV Auth] Desktop session lookup fallback failed: {e}")
 
     return None
 
@@ -314,31 +367,55 @@ async def webdav_proxy_subpath(request: Request, path: str):
     engine = get_webdav_engine()
     cfg = engine.load_config()
 
-    # Browser UI handling
-    if _is_browser_interactive_request(request) and not request.query_params.get("raw"):
-        user_info = _get_webdav_portal_user(request, cfg)
-        if not user_info:
-            return HTMLResponse(render_webdav_login(), status_code=200)
+    # Native WebDAV clients (Finder, Cyberduck, rclone, curl, etc.) or Basic Auth -> proxy to daemon
+    if _is_webdav_client(request):
+        return await _proxy_webdav(request, path)
 
-        base_pool = str(cfg.get("root_path", config.POOL_PATH))
-        if user_info.get("is_admin"):
-            root_path = base_pool
-        else:
-            home = user_info.get("home_directory")
-            if not home:
-                home = os.path.join(base_pool, "homes", user_info["username"].lower())
-            try:
-                os.makedirs(home, exist_ok=True)
-            except OSError:
-                pass
-            root_path = home
+    # Web browser requests: verify portal authentication
+    user_info = _get_webdav_portal_user(request, cfg)
+    if not user_info:
+        return HTMLResponse(render_webdav_login(), status_code=200)
 
-        clean_path = path.strip("/")
-        abs_target = os.path.abspath(os.path.join(root_path, clean_path)) if clean_path else os.path.abspath(root_path)
+    configured_root = cfg.get("root_path")
+    if configured_root and os.path.exists(str(configured_root)):
+        base_pool = str(configured_root)
+    else:
+        base_pool = str(config.POOL_PATH)
 
-        # If target is a directory, render the ZettNAS WebDAV Cloud Portal
-        if os.path.isdir(abs_target):
-            return HTMLResponse(render_webdav_portal(clean_path, root_path, user_info["username"]), status_code=200)
+    if user_info.get("is_admin"):
+        root_path = os.path.abspath(base_pool)
+    else:
+        home = user_info.get("home_directory")
+        if not home or not os.path.exists(home):
+            home = os.path.join(base_pool, "homes", user_info["username"].lower())
+        try:
+            os.makedirs(home, exist_ok=True)
+        except OSError:
+            pass
+        root_path = os.path.abspath(home)
 
-    # For WebDAV clients, direct file downloads, or non-HTML requests, pass to streaming proxy
-    return await _proxy_webdav(request, path)
+    clean_path = urllib.parse.unquote(path).strip("/")
+    abs_target = os.path.abspath(os.path.join(root_path, clean_path)) if clean_path else root_path
+
+    # Security: Path traversal protection
+    if abs_target != root_path and not abs_target.startswith(root_path + os.sep):
+        logger.warning(f"[WEBDAV] Directory traversal attempt rejected: {path} -> {abs_target}")
+        raise HTTPException(status_code=403, detail="Access denied: path traversal detected.")
+
+    # Target directory -> Render ZettNAS WebDAV Cloud Portal UI
+    if os.path.isdir(abs_target):
+        return HTMLResponse(render_webdav_portal(clean_path, root_path, user_info["username"]), status_code=200)
+
+    # Target file -> Direct line-rate serving with FileResponse (inline preview or raw attachment download)
+    if os.path.isfile(abs_target):
+        is_raw_download = request.query_params.get("raw") == "1"
+        disposition = "attachment" if is_raw_download else "inline"
+        filename = os.path.basename(abs_target)
+        return FileResponse(
+            path=abs_target,
+            filename=filename,
+            content_disposition_type=disposition,
+        )
+
+    # Path does not exist
+    raise HTTPException(status_code=404, detail="The requested file or directory does not exist.")

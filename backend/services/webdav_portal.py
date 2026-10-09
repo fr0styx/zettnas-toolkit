@@ -6,6 +6,7 @@ Provides a responsive, dark glassmorphic web interface for WebDAV file browsing 
 import html
 import os
 import time
+import urllib.parse
 from typing import Any, Dict, List, Optional
 
 
@@ -241,7 +242,7 @@ def render_webdav_portal(current_subpath: str, root_path: str, username: str) ->
     crumbs_html = ['<a href="/webdav/" class="crumb">Root</a>']
     cum_path = ""
     for p in parts:
-        cum_path += f"/{p}"
+        cum_path += f"/{urllib.parse.quote(p)}"
         crumbs_html.append(
             f'<span class="crumb-sep">/</span><a href="/webdav{cum_path}/" class="crumb">{html.escape(p)}</a>'
         )
@@ -251,7 +252,8 @@ def render_webdav_portal(current_subpath: str, root_path: str, username: str) ->
     parent_html = ""
     if parts:
         parent_parts = parts[:-1]
-        parent_href = f"/webdav/{'/'.join(parent_parts)}/" if parent_parts else "/webdav/"
+        parent_encoded = "/".join(urllib.parse.quote(p) for p in parent_parts)
+        parent_href = f"/webdav/{parent_encoded}/" if parent_parts else "/webdav/"
         parent_html = f"""
         <tr class="dir-row parent-dir-row">
             <td class="col-icon">📁</td>
@@ -271,17 +273,20 @@ def render_webdav_portal(current_subpath: str, root_path: str, username: str) ->
         date_str = format_mtime(it["mtime"])
 
         rel_target = f"{clean_sub}/{name}" if clean_sub else name
+        encoded_target = "/".join(urllib.parse.quote(part) for part in rel_target.split("/"))
         if is_dir:
-            href = f"/webdav/{rel_target}/"
+            href = f"/webdav/{encoded_target}/"
             action_btn = f'<a href="{href}" class="btn-open">Open</a>'
+            link_target = ""
         else:
-            href = f"/webdav/{rel_target}"
+            href = f"/webdav/{encoded_target}"
             action_btn = f'<a href="{href}?raw=1" download="{html.escape(name)}" class="btn-download">⬇️ Download</a>'
+            link_target = 'target="_blank" rel="noopener noreferrer"'
 
         rows_html.append(f"""
         <tr class="file-row {"is-dir" if is_dir else "is-file"}">
             <td class="col-icon">{icon}</td>
-            <td class="col-name"><a href="{href}" class="file-link {"dir-link" if is_dir else ""}">{html.escape(name)}</a></td>
+            <td class="col-name"><a href="{href}" class="file-link {"dir-link" if is_dir else ""}" {link_target}>{html.escape(name)}</a></td>
             <td class="col-size">{size_str}</td>
             <td class="col-date">{date_str}</td>
             <td class="col-action">{action_btn}</td>

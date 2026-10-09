@@ -451,6 +451,7 @@ def create_user(
     idp_type: str = "local",
     idp_sub: str = "",
     db_path: Optional[str] = None,
+    home_directory: Optional[str] = None,
 ) -> Dict[str, Any]:
     username_clean = username.strip().lower()
     if len(username_clean) < 2 or len(username_clean) > 32:
@@ -459,6 +460,8 @@ def create_user(
     now = time.time()
     user_id = str(uuid.uuid4())
     pwd_hash = hash_password(password)
+
+    resolved_home = home_directory or f"{getattr(config, 'POOL_PATH', '/mnt/user')}/homes/{username_clean}"
 
     with users_db_session(db_path) as conn:
         # Check role exists
@@ -483,7 +486,7 @@ def create_user(
                 role_id,
                 "active",
                 0,
-                f"/mnt/user/homes/{username_clean}",
+                resolved_home,
                 storage_quota_bytes,
                 idp_type,
                 idp_sub,
