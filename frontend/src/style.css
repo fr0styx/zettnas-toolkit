@@ -2675,19 +2675,25 @@ select.tz-select-input option, select.tz-select option {
   visibility: visible !important;
 }
 
-#app-deploy-modal-overlay {
+#app-deploy-modal-overlay,
+#container-delete-modal-overlay,
+#docker-prune-modal-overlay {
   z-index: 10020 !important;
   background: rgba(0, 0, 0, 0.65) !important;
   backdrop-filter: blur(8px) !important;
   -webkit-backdrop-filter: blur(8px) !important;
 }
-#app-deploy-modal-overlay.open {
+#app-deploy-modal-overlay.open,
+#container-delete-modal-overlay.open,
+#docker-prune-modal-overlay.open {
   display: flex !important;
   opacity: 1 !important;
   pointer-events: auto !important;
   visibility: visible !important;
 }
-#app-deploy-modal-overlay:not(.open) {
+#app-deploy-modal-overlay:not(.open),
+#container-delete-modal-overlay:not(.open),
+#docker-prune-modal-overlay:not(.open) {
   display: none !important;
   opacity: 0 !important;
   pointer-events: none !important;

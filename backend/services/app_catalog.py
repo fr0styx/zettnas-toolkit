@@ -205,7 +205,7 @@ CURATED_APP_CATALOG: List[Dict[str, Any]] = [
         "name": "Uptime Kuma",
         "category": "utilities",
         "description": "Self-hosted monitoring tool with notification integrations and status pages.",
-        "image": "louislam/uptime-kuma:1",
+        "image": "louislam/uptime-kuma:next",
         "default_port": 3001,
         "webui_path": "/",
         "env": {},

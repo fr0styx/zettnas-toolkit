@@ -1,6 +1,7 @@
 import { syncWidgetSettingsUI } from './widgets.js';
 import { syncDesktopThemeUI } from './settings.js';
-import { openContainerInspector } from './container-modal.js';
+import { openContainerInspector, openContainerDeleteModal } from './container-modal.js';
+import { ZettEventBus } from '../event-bus.js';
 /**
  * ZettNAS Toolkit - System Management Window Controller
  * Manages the dedicated System Management desktop window, hub app grid,
@@ -202,6 +203,18 @@ function _bindDockerEvents() {
     });
   }
 
+  // Prune button
+  const btnPrune = document.getElementById('btn-docker-prune');
+  if (btnPrune) {
+    btnPrune.addEventListener('click', () => {
+      openDockerPruneModal();
+    });
+  }
+
+  ZettEventBus.on('docker:containers-updated', () => {
+    fetchAndRenderDockerContainers();
+  });
+
   containerPane._dockerEventsBound = true;
 }
 
@@ -338,15 +351,18 @@ export function renderDockerContainersTable() {
 
       // Column 6: Actions
       const inspectBtn = `<button class="btn-container-act btn-docker-inspect" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="inspect" title="Inspect ${escapeHtml(c.name)}">🔍</button>`;
+      const deleteBtn = `<button class="btn-container-act btn-docker-delete" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-image="${escapeHtml(c.image || '')}" data-action="delete" title="Destroy / Delete ${escapeHtml(c.name)}" style="color:var(--crit, #ff6b6b);">🗑️</button>`;
       const actions = isRunning
         ? `
           ${inspectBtn}
           <button class="btn-container-act btn-docker-restart" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="restart" title="Restart ${escapeHtml(c.name)}">🔄</button>
           <button class="btn-container-act btn-docker-stop" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="stop" title="Stop ${escapeHtml(c.name)}">⏹</button>
+          ${deleteBtn}
         `
         : `
           ${inspectBtn}
           <button class="btn-container-act btn-docker-start" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="start" title="Start ${escapeHtml(c.name)}">▶</button>
+          ${deleteBtn}
         `;
 
       return `
@@ -379,6 +395,13 @@ export function renderDockerContainersTable() {
 
       if (act === 'inspect') {
         openContainerInspector(cid, cname);
+        return;
+      }
+
+      if (act === 'delete') {
+        openContainerDeleteModal(cid, cname, btn.dataset.image || '', () => {
+          fetchAndRenderDockerContainers();
+        });
         return;
       }
 
@@ -918,6 +941,163 @@ export async function openAppDeployModal(appId) {
       if (modal._close) modal._close();
     };
   }
+}
+
+export async function openDockerPruneModal() {
+  let modal = document.getElementById('docker-prune-modal-overlay');
+  if (!modal) {
+    const html = `
+      <div id="docker-prune-modal-overlay" class="smart-modal-backdrop" style="display:none; z-index:10020;">
+        <div id="docker-prune-modal-window" class="smart-modal-window" style="width:580px; max-width:94vw; max-height:88vh; display:flex; flex-direction:column;">
+          <div class="smart-modal-header" style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="font-size:18px;">🧹</span>
+              <span style="font-weight:700; color:#fff; font-size:13px;">Docker Storage Prune & Cleanup</span>
+            </div>
+            <button class="win-btn close-btn" id="dpm-close-btn" title="Close" aria-label="Close"></button>
+          </div>
+          <div style="padding:16px; overflow-y:auto; display:flex; flex-direction:column; gap:12px;">
+            <div style="font-size:11px; color:#cbd5e1; line-height:1.4;">
+              Reclaim host storage space by pruning unused Docker resources. Safe for running containers.
+            </div>
+
+            <!-- Live Disk Usage Breakdown -->
+            <div id="dpm-df-summary" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(110px, 1fr)); gap:8px;">
+              <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); padding:8px 10px; border-radius:6px; text-align:center;">
+                <div style="font-size:9px; color:var(--muted); text-transform:uppercase; font-weight:700;">Images</div>
+                <div id="dpm-df-images" style="font-size:12.5px; font-weight:700; color:#fff; margin-top:2px;">Loading...</div>
+              </div>
+              <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); padding:8px 10px; border-radius:6px; text-align:center;">
+                <div style="font-size:9px; color:var(--muted); text-transform:uppercase; font-weight:700;">Containers</div>
+                <div id="dpm-df-containers" style="font-size:12.5px; font-weight:700; color:#fff; margin-top:2px;">Loading...</div>
+              </div>
+              <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); padding:8px 10px; border-radius:6px; text-align:center;">
+                <div style="font-size:9px; color:var(--muted); text-transform:uppercase; font-weight:700;">Volumes</div>
+                <div id="dpm-df-volumes" style="font-size:12.5px; font-weight:700; color:#fff; margin-top:2px;">Loading...</div>
+              </div>
+              <div style="background:rgba(0,240,255,0.06); border:1px solid rgba(0,240,255,0.2); padding:8px 10px; border-radius:6px; text-align:center;">
+                <div style="font-size:9px; color:var(--accent-cyan, #00f0ff); text-transform:uppercase; font-weight:700;">Reclaimable</div>
+                <div id="dpm-df-reclaimable" style="font-size:12.5px; font-weight:800; color:var(--ok2, #25c2a0); margin-top:2px;">--</div>
+              </div>
+            </div>
+
+            <!-- Prune Options -->
+            <div style="background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:12px; display:flex; flex-direction:column; gap:10px;">
+              <label style="display:flex; align-items:flex-start; gap:8px; font-size:11.5px; color:#e2e8f0; cursor:pointer;">
+                <input type="checkbox" id="dpm-opt-containers" checked style="margin-top:2px; cursor:pointer;">
+                <div>
+                  <strong>Prune Stopped Containers</strong>
+                  <div style="font-size:10px; color:var(--muted);">Deletes all exited, stopped, and dead containers.</div>
+                </div>
+              </label>
+              <label style="display:flex; align-items:flex-start; gap:8px; font-size:11.5px; color:#e2e8f0; cursor:pointer;">
+                <input type="checkbox" id="dpm-opt-images" checked style="margin-top:2px; cursor:pointer;">
+                <div>
+                  <strong>Prune Dangling Images</strong>
+                  <div style="font-size:10px; color:var(--muted);">Removes untagged &lt;none&gt; build layers and intermediate images.</div>
+                </div>
+              </label>
+              <label style="display:flex; align-items:flex-start; gap:8px; font-size:11.5px; color:#e2e8f0; cursor:pointer;">
+                <input type="checkbox" id="dpm-opt-all-images" style="margin-top:2px; cursor:pointer;">
+                <div>
+                  <strong>Prune ALL Unused Images</strong>
+                  <div style="font-size:10px; color:var(--muted);">Removes all images not currently referenced by at least one running container.</div>
+                </div>
+              </label>
+              <label style="display:flex; align-items:flex-start; gap:8px; font-size:11.5px; color:#e2e8f0; cursor:pointer;">
+                <input type="checkbox" id="dpm-opt-volumes" style="margin-top:2px; cursor:pointer;">
+                <div>
+                  <strong>Prune Unused Local Volumes</strong>
+                  <div style="font-size:10px; color:var(--warn, #f5a623);">Caution: Removes local anonymous volumes not mounted by containers.</div>
+                </div>
+              </label>
+              <label style="display:flex; align-items:flex-start; gap:8px; font-size:11.5px; color:#e2e8f0; cursor:pointer;">
+                <input type="checkbox" id="dpm-opt-buildcache" checked style="margin-top:2px; cursor:pointer;">
+                <div>
+                  <strong>Prune Build Cache & Unused Networks</strong>
+                  <div style="font-size:10px; color:var(--muted);">Frees temporary Docker build cache layers and disconnected bridge networks.</div>
+                </div>
+              </label>
+            </div>
+          </div>
+          <div style="padding:10px 16px; border-top:1px solid rgba(255,255,255,0.08); display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.2);">
+            <button class="btn-pill-toggle" id="dpm-cancel-btn">Cancel</button>
+            <button class="btn-pill-toggle" id="dpm-confirm-btn" style="background:linear-gradient(135deg, var(--brand, #0ea5e9), var(--ok2, #25c2a0)); color:#fff; border:none; padding:6px 18px; font-weight:700; cursor:pointer;">
+              🧹 Run Prune & Reclaim Storage
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', html);
+    modal = document.getElementById('docker-prune-modal-overlay');
+
+    const closeModal = () => {
+      modal.classList.remove('open');
+      modal.style.display = 'none';
+    };
+    document.getElementById('dpm-close-btn').onclick = (e) => { e.preventDefault(); closeModal(); };
+    document.getElementById('dpm-cancel-btn').onclick = (e) => { e.preventDefault(); closeModal(); };
+    modal.onclick = (e) => { if (e.target === modal) closeModal(); };
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modal.classList.contains('open')) closeModal();
+    });
+  }
+
+  modal.classList.add('open');
+  modal.style.display = 'flex';
+
+  // Fetch live system df metrics
+  try {
+    const df = await api.get('/api/docker/system/df');
+    const imgEl = document.getElementById('dpm-df-images');
+    const cntEl = document.getElementById('dpm-df-containers');
+    const volEl = document.getElementById('dpm-df-volumes');
+    const recEl = document.getElementById('dpm-df-reclaimable');
+
+    if (imgEl && df.images) imgEl.textContent = `${df.images.total_count} (${df.images.unused_count} unused)`;
+    if (cntEl && df.containers) cntEl.textContent = `${df.containers.total_count} (${df.containers.stopped_count} stopped)`;
+    if (volEl && df.volumes) volEl.textContent = `${df.volumes.total_count} (${df.volumes.unused_count} unused)`;
+    if (recEl) recEl.textContent = df.total_reclaimable_human || '0 B';
+  } catch (err) {
+    console.warn('Failed to load system df:', err);
+  }
+
+  const confirmBtn = document.getElementById('dpm-confirm-btn');
+  confirmBtn.disabled = false;
+  confirmBtn.textContent = '🧹 Run Prune & Reclaim Storage';
+
+  confirmBtn.onclick = async () => {
+    const pruneContainers = document.getElementById('dpm-opt-containers').checked;
+    const pruneImages = document.getElementById('dpm-opt-images').checked;
+    const allImages = document.getElementById('dpm-opt-all-images').checked;
+    const pruneVolumes = document.getElementById('dpm-opt-volumes').checked;
+    const pruneBuildCache = document.getElementById('dpm-opt-buildcache').checked;
+
+    confirmBtn.disabled = true;
+    confirmBtn.textContent = 'Pruning storage...';
+
+    try {
+      const res = await api.post('/api/docker/system/prune', {
+        prune_containers: pruneContainers,
+        prune_images: pruneImages,
+        all_images: allImages,
+        prune_volumes: pruneVolumes,
+        prune_networks: pruneBuildCache,
+        prune_build_cache: pruneBuildCache,
+      });
+
+      showToast(`Prune completed! Reclaimed ${res.space_reclaimed_human || '0 B'}.`, 'success');
+      modal.classList.remove('open');
+      modal.style.display = 'none';
+
+      await fetchAndRenderDockerContainers();
+    } catch (err) {
+      showToast(`Prune failed: ${err.message}`, 'error');
+      confirmBtn.disabled = false;
+      confirmBtn.textContent = '🧹 Run Prune & Reclaim Storage';
+    }
+  };
 }
 
 export async function fetchAndRenderUpsTelemetry() {

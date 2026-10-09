@@ -560,6 +560,20 @@ async function loadContainerDetails(cid) {
           </div>
         </div>
       </div>
+
+      <!-- Container Management / Danger Zone -->
+      <div class="ci-metric-card" style="background:rgba(255,107,107,0.06); border:1px solid rgba(255,107,107,0.22); padding:12px; border-radius:8px; margin-top:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+          <div>
+            <div style="font-size:11px; font-weight:700; color:#fca5a5; text-transform:uppercase; letter-spacing:0.5px;">⚠️ Danger Zone</div>
+            <div style="font-size:10px; color:var(--muted); margin-top:2px;">Restart or permanently destroy this container and its volumes/images.</div>
+          </div>
+          <div style="display:flex; gap:6px;">
+            <button class="btn-pill-toggle" id="ci-btn-restart-action" style="padding:5px 12px; font-size:11px; font-weight:700;">🔄 Restart</button>
+            <button class="btn-pill-toggle" id="ci-btn-destroy-action" style="padding:5px 12px; font-size:11px; font-weight:700; color:#fff; background:var(--crit, #ff6b6b); border-color:var(--crit, #ff6b6b); cursor:pointer;">🗑️ Destroy Container</button>
+          </div>
+        </div>
+      </div>
     `;
 
     // Wire Resource Tuning button
@@ -579,7 +593,7 @@ async function loadContainerDetails(cid) {
           await api.post(`/api/docker/containers/${encodeURIComponent(cid)}/resources`, {
             memory_mb: isNaN(memVal) ? 0 : memVal,
             nano_cpus: isNaN(cpuVal) ? 0 : cpuVal,
-            restart_policy: restartVal
+            restart_policy: restartVal,
           });
           showToast('Resource limits updated with zero downtime!', 'success');
           await loadContainerDetails(cid);
@@ -588,6 +602,33 @@ async function loadContainerDetails(cid) {
         } finally {
           applyResBtn.disabled = false;
           applyResBtn.textContent = '💾 Apply Tuning';
+        }
+      });
+    }
+
+    // Wire Danger Zone buttons
+    const destroyActionBtn = document.getElementById('ci-btn-destroy-action');
+    if (destroyActionBtn) {
+      destroyActionBtn.addEventListener('click', () => {
+        openContainerDeleteModal(cid, ov.name || _activeCname, ov.image, () => {
+          closeContainerInspector();
+        });
+      });
+    }
+
+    const restartActionBtn = document.getElementById('ci-btn-restart-action');
+    if (restartActionBtn) {
+      restartActionBtn.addEventListener('click', async () => {
+        restartActionBtn.disabled = true;
+        showToast(`Restarting ${_activeCname}...`, 'info');
+        try {
+          await api.post(`/api/docker/containers/${encodeURIComponent(cid)}/action`, { action: 'restart' });
+          showToast(`Container "${_activeCname}" restarted.`, 'success');
+          await loadContainerDetails(cid);
+        } catch (err) {
+          showToast(`Restart failed: ${err.message}`, 'error');
+        } finally {
+          restartActionBtn.disabled = false;
         }
       });
     }
@@ -991,6 +1032,112 @@ function renderLogsOutput() {
   if (_autoScrollLogs) {
     terminal.scrollTop = terminal.scrollHeight;
   }
+}
+
+export function openContainerDeleteModal(cid, cname, imageRef = '', onDeleted = null) {
+  let modal = document.getElementById('container-delete-modal-overlay');
+  if (!modal) {
+    const html = `
+      <div id="container-delete-modal-overlay" class="smart-modal-backdrop" style="display:none; z-index:10020;">
+        <div id="container-delete-modal-window" class="smart-modal-window" style="width:480px; max-width:92vw; display:flex; flex-direction:column;">
+          <div class="smart-modal-header" style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="font-size:18px;">⚠️</span>
+              <span style="font-weight:700; color:var(--crit, #ff6b6b); font-size:13px;">Destroy Container</span>
+            </div>
+            <button class="win-btn close-btn" id="cdm-close-btn" title="Close" aria-label="Close"></button>
+          </div>
+          <div style="padding:16px; display:flex; flex-direction:column; gap:14px;">
+            <div style="font-size:12px; line-height:1.5; color:#cbd5e1;">
+              Are you sure you want to permanently delete container <strong id="cdm-cname" style="color:#fff;"></strong> (<code id="cdm-cid" style="font-family:var(--font-mono, monospace); font-size:10.5px; color:var(--accent-cyan, #00f0ff);"></code>)?
+            </div>
+            <div style="background:rgba(255,107,107,0.08); border:1px solid rgba(255,107,107,0.25); border-radius:6px; padding:10px 12px; font-size:11px; color:#fca5a5; line-height:1.4;">
+              ⚠️ <strong>Warning:</strong> This container will be stopped and removed from the host Docker daemon. Any unsaved data inside the container layer will be lost.
+            </div>
+            <div style="display:flex; flex-direction:column; gap:8px; background:rgba(0,0,0,0.2); padding:10px; border-radius:6px; border:1px solid rgba(255,255,255,0.06);">
+              <label style="display:flex; align-items:center; gap:8px; font-size:11px; color:#e2e8f0; cursor:pointer;">
+                <input type="checkbox" id="cdm-force" checked style="cursor:pointer;">
+                <span>Force stop container if currently running</span>
+              </label>
+              <label style="display:flex; align-items:center; gap:8px; font-size:11px; color:#e2e8f0; cursor:pointer;">
+                <input type="checkbox" id="cdm-volumes" checked style="cursor:pointer;">
+                <span>Delete associated anonymous volumes (reclaim storage)</span>
+              </label>
+              <label style="display:flex; align-items:center; gap:8px; font-size:11px; color:#e2e8f0; cursor:pointer;">
+                <input type="checkbox" id="cdm-image" style="cursor:pointer;">
+                <span>Also delete container image <code id="cdm-image-tag" style="color:var(--muted); font-size:10px;"></code></span>
+              </label>
+            </div>
+          </div>
+          <div style="padding:10px 16px; border-top:1px solid rgba(255,255,255,0.08); display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.2);">
+            <button class="btn-pill-toggle" id="cdm-cancel-btn">Cancel</button>
+            <button class="btn-pill-toggle" id="cdm-confirm-btn" style="background:var(--crit, #ff6b6b); color:#fff; border:none; padding:6px 16px; font-weight:700; cursor:pointer;">
+              💥 Destroy Container
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', html);
+    modal = document.getElementById('container-delete-modal-overlay');
+
+    const closeModal = () => {
+      modal.classList.remove('open');
+      modal.style.display = 'none';
+    };
+    document.getElementById('cdm-close-btn').onclick = (e) => {
+      e.preventDefault();
+      closeModal();
+    };
+    document.getElementById('cdm-cancel-btn').onclick = (e) => {
+      e.preventDefault();
+      closeModal();
+    };
+    modal.onclick = (e) => {
+      if (e.target === modal) closeModal();
+    };
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modal.classList.contains('open')) closeModal();
+    });
+  }
+
+  document.getElementById('cdm-cname').textContent = cname || cid;
+  document.getElementById('cdm-cid').textContent = (cid || '').slice(0, 12);
+  const imgLabel = document.getElementById('cdm-image-tag');
+  if (imgLabel) imgLabel.textContent = imageRef ? `(${imageRef})` : '';
+
+  modal.classList.add('open');
+  modal.style.display = 'flex';
+
+  const confirmBtn = document.getElementById('cdm-confirm-btn');
+  confirmBtn.disabled = false;
+  confirmBtn.textContent = '💥 Destroy Container';
+
+  confirmBtn.onclick = async () => {
+    const force = document.getElementById('cdm-force').checked;
+    const removeVolumes = document.getElementById('cdm-volumes').checked;
+    const removeImage = document.getElementById('cdm-image').checked;
+
+    confirmBtn.disabled = true;
+    confirmBtn.textContent = 'Destroying...';
+
+    try {
+      const url = `/api/docker/containers/${encodeURIComponent(cid)}?force=${force}&remove_volumes=${removeVolumes}&remove_image=${removeImage}`;
+      await api.delete(url);
+      showToast(`Container "${cname}" permanently destroyed.`, 'success');
+      modal.classList.remove('open');
+      modal.style.display = 'none';
+
+      if (typeof onDeleted === 'function') {
+        onDeleted();
+      }
+      ZettEventBus.emit('docker:containers-updated');
+    } catch (err) {
+      showToast(`Failed to destroy container: ${err.message}`, 'error');
+      confirmBtn.disabled = false;
+      confirmBtn.textContent = '💥 Destroy Container';
+    }
+  };
 }
 
 export function _resetContainerModalForTesting() {

@@ -627,6 +627,80 @@ async def post_docker_container_exec(container_id: str, req: ContainerExecReques
     return res
 
 
+class DockerContainerDeleteRequest(BaseModel):
+    force: bool = False
+    remove_volumes: bool = True
+    remove_image: bool = False
+
+
+@router.delete("/docker/containers/{container_id}")
+async def delete_docker_container(
+    container_id: str,
+    force: bool = False,
+    remove_volumes: bool = True,
+    remove_image: bool = False,
+):
+    if not container_id or not re.match(r"^[a-zA-Z0-9_.-]{1,128}$", container_id):
+        raise HTTPException(status_code=400, detail="Invalid container ID or name")
+    from backend.services.docker_cleanup import destroy_container
+
+    try:
+        res = await asyncio.to_thread(
+            destroy_container,
+            container_id,
+            force=force,
+            remove_volumes=remove_volumes,
+            remove_image=remove_image,
+        )
+        return res
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"[Docker Cleanup] Failed to delete container {container_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/docker/system/df")
+async def get_system_df():
+    from backend.services.docker_cleanup import get_docker_system_df
+
+    try:
+        return await asyncio.to_thread(get_docker_system_df)
+    except Exception as e:
+        logger.error(f"[Docker Cleanup] Failed to get system df: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class DockerPruneRequest(BaseModel):
+    prune_containers: bool = True
+    prune_images: bool = True
+    all_images: bool = False
+    prune_volumes: bool = False
+    prune_networks: bool = True
+    prune_build_cache: bool = True
+
+
+@router.post("/docker/system/prune")
+async def post_system_prune(req: Optional[DockerPruneRequest] = None):
+    from backend.services.docker_cleanup import prune_docker_system
+
+    payload = req or DockerPruneRequest()
+    try:
+        res = await asyncio.to_thread(
+            prune_docker_system,
+            prune_containers=payload.prune_containers,
+            prune_images=payload.prune_images,
+            all_images=payload.all_images,
+            prune_volumes=payload.prune_volumes,
+            prune_networks=payload.prune_networks,
+            prune_build_cache=payload.prune_build_cache,
+        )
+        return res
+    except Exception as e:
+        logger.error(f"[Docker Cleanup] Prune failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/ups")
 async def get_ups_telemetry():
     return await asyncio.to_thread(read_ups_status)
