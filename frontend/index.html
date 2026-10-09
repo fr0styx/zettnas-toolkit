@@ -69,6 +69,13 @@
       }
     } catch (e) {}
 
+    // Pre-initialize lockscreen state from sessionStorage to eliminate any desktop exposure on back/forward or reload
+    try {
+      if (sessionStorage.getItem('zettnas_desktop_locked') === 'true') {
+        document.documentElement.classList.add('is-desktop-locked');
+      }
+    } catch (e) {}
+
     // Pre-initialize desktop wallpaper from localStorage to eliminate any delay, jump, or flash on reload
     try {
       var savedWp = localStorage.getItem('zettnas_active_wallpaper');
@@ -189,6 +196,13 @@
   html.auth-required #login-overlay {
     display: flex !important;
   }
+  html.is-desktop-locked #lock-overlay {
+    display: flex !important;
+    opacity: 1 !important;
+  }
+  html.is-desktop-locked body {
+    overflow: hidden !important;
+  }
   html.auth-required .studio-viewport-wrapper,
   html.auth-required .suite-navbar,
   html.auth-required #desktop-icons-container,
@@ -221,12 +235,15 @@
       </div>
 
       <!-- Selected Account Card (When clicked from chooser) -->
-      <div id="login-user-selected-card" style="display: none; align-items: center; gap: 12px; background: rgba(14,165,233,0.1); border: 1px solid rgba(56,189,248,0.3); border-radius: 8px; padding: 10px 12px; margin-bottom: 16px;">
+      <div id="login-user-selected-card" role="button" tabindex="0" title="Click to change account" style="display: none; align-items: center; gap: 12px; background: rgba(14,165,233,0.1); border: 1px solid rgba(56,189,248,0.3); border-radius: 8px; padding: 10px 12px; margin-bottom: 16px; cursor: pointer; transition: all 0.18s ease; user-select: none;">
         <div id="login-selected-initial" style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #0284c7, #0369a1); display: flex; align-items: center; justify-content: center; font-weight: 800; color: #fff; font-size: 13px;">A</div>
         <div style="text-align: left; flex: 1; min-width: 0;">
           <div id="login-selected-name" style="font-weight: 700; color: #fff; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Administrator</div>
-          <div style="font-size: 10.5px; color: var(--muted);">Click to change account</div>
+          <div style="font-size: 10.5px; color: var(--accent-cyan, #38bdf8); display: flex; align-items: center; gap: 4px;">
+            <span>Change user</span> <span style="font-size: 9px;">▼</span>
+          </div>
         </div>
+        <button type="button" id="login-change-user-btn" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18); border-radius: 6px; color: #fff; font-size: 11px; padding: 4px 8px; cursor: pointer; transition: background 0.15s ease;">Switch</button>
       </div>
 
       <!-- Mode B: Manual Username Input (Hidden in Chooser mode) -->

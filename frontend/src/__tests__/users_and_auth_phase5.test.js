@@ -92,4 +92,59 @@ describe('Phase 5: Multi-User Identity, RBAC & Desktop Lock UI', () => {
     expect(modal.classList.contains('open')).toBe(false);
     expect(modal.style.display).toBe('none');
   });
+
+  it('lockDesktop persists lock state in sessionStorage and marks documentElement is-desktop-locked', async () => {
+    const { lockDesktop, isDesktopLocked } = await import('../components/auth.js');
+    const lockOverlay = document.createElement('div');
+    lockOverlay.id = 'lock-overlay';
+    document.body.appendChild(lockOverlay);
+
+    lockDesktop();
+    expect(isDesktopLocked()).toBe(true);
+    expect(sessionStorage.getItem('zettnas_desktop_locked')).toBe('true');
+    expect(document.documentElement.classList.contains('is-desktop-locked')).toBe(true);
+    expect(document.body.classList.contains('desktop-locked')).toBe(true);
+    expect(lockOverlay.style.display).toBe('flex');
+  });
+
+  it('switchUser clears desktop lock and enters chooser mode', async () => {
+    const { switchUser, isDesktopLocked } = await import('../components/auth.js');
+    const lockOverlay = document.createElement('div');
+    lockOverlay.id = 'lock-overlay';
+    const loginOverlay = document.createElement('div');
+    loginOverlay.id = 'login-overlay';
+    const chooser = document.createElement('div');
+    chooser.id = 'login-users-chooser';
+    const manualFields = document.createElement('div');
+    manualFields.id = 'login-manual-fields';
+    const selectedCard = document.createElement('div');
+    selectedCard.id = 'login-user-selected-card';
+
+    document.body.appendChild(lockOverlay);
+    document.body.appendChild(loginOverlay);
+    document.body.appendChild(chooser);
+    document.body.appendChild(manualFields);
+    document.body.appendChild(selectedCard);
+
+    sessionStorage.setItem('zettnas_desktop_locked', 'true');
+    document.documentElement.classList.add('is-desktop-locked');
+
+    switchUser();
+    expect(isDesktopLocked()).toBe(false);
+    expect(sessionStorage.getItem('zettnas_desktop_locked')).toBe(null);
+    expect(document.documentElement.classList.contains('is-desktop-locked')).toBe(false);
+    expect(document.documentElement.classList.contains('auth-required')).toBe(true);
+  });
+
+  it('logout clears session, user state, and removes lock state', async () => {
+    const { logout } = await import('../components/auth.js');
+    sessionStorage.setItem('zettnas_desktop_locked', 'true');
+    document.documentElement.classList.add('is-desktop-locked');
+
+    await logout();
+    expect(sessionStorage.getItem('zettnas_desktop_locked')).toBe(null);
+    expect(document.documentElement.classList.contains('is-desktop-locked')).toBe(false);
+    expect(getCurrentUser()).toBe(null);
+    expect(document.documentElement.classList.contains('auth-required')).toBe(true);
+  });
 });

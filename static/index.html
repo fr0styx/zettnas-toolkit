@@ -69,6 +69,13 @@
       }
     } catch (e) {}
 
+    // Pre-initialize lockscreen state from sessionStorage to eliminate any desktop exposure on back/forward or reload
+    try {
+      if (sessionStorage.getItem('zettnas_desktop_locked') === 'true') {
+        document.documentElement.classList.add('is-desktop-locked');
+      }
+    } catch (e) {}
+
     // Pre-initialize desktop wallpaper from localStorage to eliminate any delay, jump, or flash on reload
     try {
       var savedWp = localStorage.getItem('zettnas_active_wallpaper');
@@ -160,9 +167,11 @@
     } catch (e) {}
   })();
 </script>
-<style>html,body{color:#eaf1f8;background-color:#080c10;width:100%;height:100%;margin:0;padding:0;overflow:hidden}html.auth-required body{background:radial-gradient(circle at 50% 20%,#151d29 0%,#080c10 70%)!important}#login-overlay{z-index:999999;background:#080c10;justify-content:center;align-items:center;display:flex;position:fixed;inset:0}html.has-auth-session #login-overlay{display:none!important}html.auth-required #login-overlay{display:flex!important}html.auth-required .studio-viewport-wrapper,html.auth-required .suite-navbar,html.auth-required #desktop-icons-container,html.auth-required .desktop-icons-container,html.auth-required .top-nav,html.auth-required #desktop-widgets-container,html.auth-required #os-dock-container,html.auth-required .workspace-panel,html.auth-required .smart-modal-backdrop,html.auth-required .os-window,html.auth-required .notif-center-window{display:none!important}</style>
-  <script type="module" crossorigin src="/assets/index-B8MwnBAe.js"></script>
+<style>html,body{color:#eaf1f8;background-color:#080c10;width:100%;height:100%;margin:0;padding:0;overflow:hidden}html.auth-required body{background:radial-gradient(circle at 50% 20%,#151d29 0%,#080c10 70%)!important}#login-overlay{z-index:999999;background:#080c10;justify-content:center;align-items:center;display:flex;position:fixed;inset:0}html.has-auth-session #login-overlay{display:none!important}html.auth-required #login-overlay{display:flex!important}html.is-desktop-locked #lock-overlay{opacity:1!important;display:flex!important}html.is-desktop-locked body{overflow:hidden!important}html.auth-required .studio-viewport-wrapper,html.auth-required .suite-navbar,html.auth-required #desktop-icons-container,html.auth-required .desktop-icons-container,html.auth-required .top-nav,html.auth-required #desktop-widgets-container,html.auth-required #os-dock-container,html.auth-required .workspace-panel,html.auth-required .smart-modal-backdrop,html.auth-required .os-window,html.auth-required .notif-center-window{display:none!important}</style>
+  <script type="module" crossorigin src="/assets/index-Ds-Ki8L6.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-hePW80VL.js">
+  <link rel="modulepreload" crossorigin href="/assets/dock-DbSmQqiB.js">
+  <link rel="modulepreload" crossorigin href="/assets/users-Ct7NdaiL.js">
   <link rel="stylesheet" crossorigin href="/assets/index-BdwMmOpP.css">
 </head>
 <body class="studio-workbench">
@@ -182,12 +191,15 @@
       </div>
 
       <!-- Selected Account Card (When clicked from chooser) -->
-      <div id="login-user-selected-card" style="display: none; align-items: center; gap: 12px; background: rgba(14,165,233,0.1); border: 1px solid rgba(56,189,248,0.3); border-radius: 8px; padding: 10px 12px; margin-bottom: 16px;">
+      <div id="login-user-selected-card" role="button" tabindex="0" title="Click to change account" style="display: none; align-items: center; gap: 12px; background: rgba(14,165,233,0.1); border: 1px solid rgba(56,189,248,0.3); border-radius: 8px; padding: 10px 12px; margin-bottom: 16px; cursor: pointer; transition: all 0.18s ease; user-select: none;">
         <div id="login-selected-initial" style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #0284c7, #0369a1); display: flex; align-items: center; justify-content: center; font-weight: 800; color: #fff; font-size: 13px;">A</div>
         <div style="text-align: left; flex: 1; min-width: 0;">
           <div id="login-selected-name" style="font-weight: 700; color: #fff; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Administrator</div>
-          <div style="font-size: 10.5px; color: var(--muted);">Click to change account</div>
+          <div style="font-size: 10.5px; color: var(--accent-cyan, #38bdf8); display: flex; align-items: center; gap: 4px;">
+            <span>Change user</span> <span style="font-size: 9px;">▼</span>
+          </div>
         </div>
+        <button type="button" id="login-change-user-btn" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18); border-radius: 6px; color: #fff; font-size: 11px; padding: 4px 8px; cursor: pointer; transition: background 0.15s ease;">Switch</button>
       </div>
 
       <!-- Mode B: Manual Username Input (Hidden in Chooser mode) -->

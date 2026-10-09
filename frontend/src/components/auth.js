@@ -52,6 +52,53 @@ export function initAuth() {
     btnToggleManual.addEventListener('click', (e) => {
       e.preventDefault();
       setLoginMode('manual');
+      if (loginUser) {
+        loginUser.value = '';
+        loginUser.focus();
+      }
+    });
+  }
+
+  // Selected user card click / change account handlers
+  const userSelectedCard = document.getElementById('login-user-selected-card');
+  const changeUserBtn = document.getElementById('login-change-user-btn');
+
+  const triggerChangeUser = (e) => {
+    if (e) e.preventDefault();
+    const chooserContainer = document.getElementById('login-users-chooser');
+    const cards = chooserContainer ? chooserContainer.querySelectorAll('.login-user-card') : [];
+    if (cards.length > 1) {
+      setLoginMode('chooser');
+    } else {
+      setLoginMode('manual');
+      if (loginUser) {
+        loginUser.value = '';
+        loginUser.focus();
+      }
+    }
+  };
+
+  if (userSelectedCard) {
+    userSelectedCard.addEventListener('click', triggerChangeUser);
+    userSelectedCard.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        triggerChangeUser(e);
+      }
+    });
+    userSelectedCard.addEventListener('mouseenter', () => {
+      userSelectedCard.style.background = 'rgba(14,165,233,0.18)';
+      userSelectedCard.style.borderColor = 'rgba(56,189,248,0.5)';
+    });
+    userSelectedCard.addEventListener('mouseleave', () => {
+      userSelectedCard.style.background = 'rgba(14,165,233,0.1)';
+      userSelectedCard.style.borderColor = 'rgba(56,189,248,0.3)';
+    });
+  }
+  if (changeUserBtn) {
+    changeUserBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      triggerChangeUser(e);
     });
   }
 
@@ -125,11 +172,30 @@ export function initAuth() {
   // Initialize Inactivity Tracker
   initInactivityTracker();
 
+  // Enforce lock if persisted in sessionStorage
+  if (sessionStorage.getItem('zettnas_desktop_locked') === 'true') {
+    lockDesktop();
+  }
+
+  // Intercept browser back/forward and bfcache navigation while locked
+  window.addEventListener('popstate', () => {
+    if (sessionStorage.getItem('zettnas_desktop_locked') === 'true' || _isLocked) {
+      lockDesktop();
+    }
+  });
+
+  window.addEventListener('pageshow', () => {
+    if (sessionStorage.getItem('zettnas_desktop_locked') === 'true' || _isLocked) {
+      lockDesktop();
+    }
+  });
+
   // Try fetching current profile if we have active session
   fetchCurrentProfile();
 }
 
-export async function renderLoginChooser() {
+export async function renderLoginChooser(options = {}) {
+  const { forceChooser = false } = options;
   const chooserContainer = document.getElementById('login-users-chooser');
   const manualFields = document.getElementById('login-manual-fields');
   const userSelectedCard = document.getElementById('login-user-selected-card');
@@ -180,11 +246,24 @@ export async function renderLoginChooser() {
       });
     });
 
-    // Default to first user or admin if single user
-    if (users.length === 1) {
-      selectUserForLogin(users[0].username, users[0].display_name);
+    if (forceChooser) {
+      if (users.length > 1) {
+        setLoginMode('chooser');
+      } else {
+        setLoginMode('manual');
+        const loginUser = document.getElementById('login-username');
+        if (loginUser) {
+          loginUser.value = '';
+          loginUser.focus();
+        }
+      }
     } else {
-      setLoginMode('chooser');
+      // Default to first user or admin if single user
+      if (users.length === 1) {
+        selectUserForLogin(users[0].username, users[0].display_name);
+      } else {
+        setLoginMode('chooser');
+      }
     }
 
   } catch (err) {
@@ -446,9 +525,17 @@ export function lockDesktop() {
   if (!lockOverlay) return;
 
   _isLocked = true;
+  sessionStorage.setItem('zettnas_desktop_locked', 'true');
+  document.documentElement.classList.add('is-desktop-locked');
   document.body.classList.add('desktop-locked');
   lockOverlay.style.display = 'flex';
   lockOverlay.style.opacity = '1';
+
+  try {
+    if (!history.state || !history.state.zettnas_locked) {
+      history.pushState({ zettnas_locked: true }, '', window.location.href);
+    }
+  } catch (e) {}
 
   updateLockClock();
   clearInterval(_clockInterval);
@@ -492,6 +579,8 @@ export async function unlockDesktop() {
     if (res.ok && (data.status === 'ok' || data.token)) {
       if (data.token) auth.setToken(data.token);
       _isLocked = false;
+      sessionStorage.removeItem('zettnas_desktop_locked');
+      document.documentElement.classList.remove('is-desktop-locked');
       document.body.classList.remove('desktop-locked');
       clearInterval(_clockInterval);
 
@@ -541,20 +630,58 @@ export function switchUser() {
   if (lockOverlay) lockOverlay.style.display = 'none';
   clearInterval(_clockInterval);
   _isLocked = false;
+  sessionStorage.removeItem('zettnas_desktop_locked');
+  document.documentElement.classList.remove('is-desktop-locked');
   document.body.classList.remove('desktop-locked');
 
-  // Trigger full login overlay
-  ZettEventBus.emit('auth:required');
+  // Trigger full login overlay in chooser mode
+  _selectedUser = null;
+  document.documentElement.classList.remove('has-auth-session');
+  document.documentElement.classList.add('auth-required');
+
+  const overlay = document.getElementById('login-overlay');
+  const dock = document.getElementById('os-dock-container');
+  if (overlay) {
+    overlay.style.removeProperty('opacity');
+    overlay.style.display = 'flex';
+    renderLoginChooser({ forceChooser: true });
+  }
+  if (dock) dock.style.display = 'none';
 }
 
 export async function logout() {
+  sessionStorage.removeItem('zettnas_desktop_locked');
+  document.documentElement.classList.remove('is-desktop-locked');
+  document.body.classList.remove('desktop-locked');
+  _isLocked = false;
+  _selectedUser = null;
+
   try {
     await window.fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
   } catch {}
   auth.clearToken();
-  _currentUser = null;
+  setCurrentUser(null);
+
+  const credsStep = document.getElementById('login-step-credentials');
+  const mfaStep = document.getElementById('login-step-mfa');
+  if (credsStep) credsStep.style.display = 'block';
+  if (mfaStep) mfaStep.style.display = 'none';
+
+  const loginPwd = document.getElementById('login-password');
+  if (loginPwd) loginPwd.value = '';
+
   document.documentElement.classList.remove('has-auth-session');
   document.documentElement.classList.add('auth-required');
+
+  const overlay = document.getElementById('login-overlay');
+  const dock = document.getElementById('os-dock-container');
+  if (overlay) {
+    overlay.style.removeProperty('opacity');
+    overlay.style.display = 'flex';
+    renderLoginChooser({ forceChooser: true });
+  }
+  if (dock) dock.style.display = 'none';
+
   ZettEventBus.emit('auth:logout');
   ZettEventBus.emit('auth:required');
 }

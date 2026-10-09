@@ -1812,16 +1812,33 @@ export function toggleUserProfileFlyout(anchorEl) {
       import('./auth.js').then((m) => m.lockDesktop());
     });
 
+    const openMgmtPane = (pane) => {
+      if (typeof window.openManagementWindow === 'function') {
+        window.openManagementWindow(pane);
+      } else {
+        import('./management.js').then(() => {
+          if (typeof window.openManagementWindow === 'function') {
+            window.openManagementWindow(pane);
+          } else {
+            document.getElementById('management-desktop-icon')?.click();
+          }
+        }).catch(() => {
+          document.getElementById('management-desktop-icon')?.click();
+        });
+      }
+      ZettEventBus.emit('window:open', { id: 'management', pane: pane });
+    };
+
     document.getElementById('btn-flyout-users').addEventListener('click', () => {
       flyout.style.display = 'none';
       resetFlyoutTrigger();
-      ZettEventBus.emit('window:open', { id: 'management', section: 'mgmt-sec-system-group', pane: 'mgmt-pane-users' });
+      openMgmtPane('mgmt-pane-users');
     });
 
     document.getElementById('btn-flyout-security').addEventListener('click', () => {
       flyout.style.display = 'none';
       resetFlyoutTrigger();
-      ZettEventBus.emit('window:open', { id: 'management', section: 'mgmt-sec-system-group', pane: 'mgmt-pane-security' });
+      openMgmtPane('mgmt-pane-security');
     });
 
     document.getElementById('btn-flyout-switch').addEventListener('click', () => {

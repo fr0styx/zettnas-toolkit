@@ -2144,6 +2144,13 @@ export function initManagement() {
     });
   };
 
+  // Support window:open event bus deep-linking
+  ZettEventBus.on('window:open', (payload) => {
+    if (payload && (payload.id === 'management' || payload.id === 'management-window')) {
+      window.openManagementWindow(payload.pane || payload.section);
+    }
+  });
+
   // Desktop icon click listener
   if (desktopIcon) {
     desktopIcon.addEventListener('click', () => {
