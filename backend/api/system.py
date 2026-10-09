@@ -132,7 +132,9 @@ async def disk_locate_endpoint(payload: dict):
     m = re.match(r"^nv([0-9]+)$", dev)
     if m:
         dev = f"nvme{m.group(1)}n1"
-    if not re.fullmatch(r"^(sd[a-z]{1,2}|nvme[0-9]+n[0-9]+)$", dev):
+    from backend.hardware.disks import VALID_DEV_PATTERN
+
+    if not VALID_DEV_PATTERN.fullmatch(dev):
         raise HTTPException(status_code=400, detail="Invalid device parameter.")
     return await asyncio.to_thread(locate_disk, dev, duration)
 

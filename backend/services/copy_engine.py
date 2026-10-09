@@ -119,9 +119,8 @@ def _maybe_trigger_auto_ingest(slot: str, dev: str | None = None, size: int | No
     cfg = read_json(BUTTON_CFG_FILE, {})
     # auto_ingest must be explicitly enabled by user in settings ("Automatic Slot Ingest").
     # The physical copy button toggle ("enabled") must NEVER trigger auto-ingest upon card insertion!
-    auto_enabled = (
-        cfg.get("auto_ingest", False)
-        or (os.getenv("AUTO_INGEST_ENABLED", "0").lower() in ("1", "true", "yes"))
+    auto_enabled = cfg.get("auto_ingest", False) or (
+        os.getenv("AUTO_INGEST_ENABLED", "0").lower() in ("1", "true", "yes")
     )
 
     if not auto_enabled:

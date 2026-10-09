@@ -321,17 +321,40 @@ def normalize_category(cats: Any) -> str:
     elif not isinstance(cats, list):
         cats = []
     lower = " ".join([str(c).lower() for c in cats])
-    if any(w in lower for w in ("media", "video", "music", "audio", "streaming", "movie", "tv", "book", "podcast", "radio")):
+    if any(
+        w in lower for w in ("media", "video", "music", "audio", "streaming", "movie", "tv", "book", "podcast", "radio")
+    ):
         return "media"
     if any(w in lower for w in ("photo", "gallery", "image")):
         return "photos"
-    if any(w in lower for w in ("cloud", "storage", "file", "sync", "backup", "drive", "document", "office", "notes", "wiki")):
+    if any(
+        w in lower
+        for w in ("cloud", "storage", "file", "sync", "backup", "drive", "document", "office", "notes", "wiki")
+    ):
         return "cloud"
     if any(w in lower for w in ("auto", "ai", "smart home", "iot", "home automation", "mqtt", "zigbee", "workflow")):
         return "automation"
     if any(w in lower for w in ("download", "torrent", "usenet", "p2p", "arr", "nzb")):
         return "downloads"
-    if any(w in lower for w in ("util", "tool", "dns", "security", "proxy", "vpn", "monitor", "network", "dash", "system", "database", "finance", "admin", "dev")):
+    if any(
+        w in lower
+        for w in (
+            "util",
+            "tool",
+            "dns",
+            "security",
+            "proxy",
+            "vpn",
+            "monitor",
+            "network",
+            "dash",
+            "system",
+            "database",
+            "finance",
+            "admin",
+            "dev",
+        )
+    ):
         return "utilities"
     return "other"
 
@@ -382,7 +405,7 @@ def parse_portainer_volumes(raw_vols: Any) -> dict[str, str]:
                     key = target.strip("/").split("/")[-1] or "data"
                     key = re.sub(r"[^a-zA-Z0-9_]+", "_", key).lower()
                     if key in vol_dict:
-                        key = f"{key}_{len(vol_dict)+1}"
+                        key = f"{key}_{len(vol_dict) + 1}"
                     vol_dict[key] = target
             elif isinstance(v, str) and ":" in v:
                 parts = v.split(":")
@@ -474,10 +497,10 @@ def sync_catalog_source(source_id: str) -> Dict[str, Any]:
             if not isinstance(t, dict):
                 continue
 
-            raw_name = t.get("name") or t.get("title") or f"app_{idx+1}"
+            raw_name = t.get("name") or t.get("title") or f"app_{idx + 1}"
             slug = re.sub(r"[^a-z0-9_-]+", "_", str(raw_name).lower()).strip("_")
             if not slug:
-                slug = f"app_{idx+1}"
+                slug = f"app_{idx + 1}"
 
             base_slug = slug
             dedup_cnt = 2
@@ -499,24 +522,26 @@ def sync_catalog_source(source_id: str) -> Dict[str, Any]:
             vol_dict = parse_portainer_volumes(t.get("volumes"))
             env_dict = parse_portainer_env(t.get("env"))
 
-            normalized_apps.append({
-                "id": app_id,
-                "app_slug": slug,
-                "source_id": source_id,
-                "source_name": src.get("name", source_id),
-                "name": title,
-                "category": cat,
-                "description": desc,
-                "image": image,
-                "logo": logo,
-                "default_port": default_port,
-                "ports": ports_list,
-                "webui_path": "/",
-                "env": env_dict,
-                "volumes": vol_dict,
-                "repository": repo,
-                "type": app_type,
-            })
+            normalized_apps.append(
+                {
+                    "id": app_id,
+                    "app_slug": slug,
+                    "source_id": source_id,
+                    "source_name": src.get("name", source_id),
+                    "name": title,
+                    "category": cat,
+                    "description": desc,
+                    "image": image,
+                    "logo": logo,
+                    "default_port": default_port,
+                    "ports": ports_list,
+                    "webui_path": "/",
+                    "env": env_dict,
+                    "volumes": vol_dict,
+                    "repository": repo,
+                    "type": app_type,
+                }
+            )
 
         os.makedirs(CATALOG_CACHE_DIR, exist_ok=True)
         cache_file = os.path.join(CATALOG_CACHE_DIR, f"{source_id}.json")
@@ -1076,7 +1101,8 @@ def stream_deploy_catalog_app(
             "com.docker.compose.service": service_name,
             "net.unraid.docker.managed": "dockerman",
             "net.unraid.docker.webui": f"http://[IP]:[PORT:{port}]{app.get('webui_path', '/')}",
-            "net.unraid.docker.icon": app.get("logo") or f"https://raw.githubusercontent.com/fr0styx/zettnas-toolkit/main/static/img/icons/{app_id}.png",
+            "net.unraid.docker.icon": app.get("logo")
+            or f"https://raw.githubusercontent.com/fr0styx/zettnas-toolkit/main/static/img/icons/{app_id}.png",
         },
     }
 

@@ -1,18 +1,21 @@
-import { escapeHtml } from '../utils.js';
+import { escapeHtml, trapFocus } from '../utils.js';
 import { api } from '../api.js';
 import { t } from '../i18n.js';
 import { ZettEventBus } from '../event-bus.js';
 import { announceA11y } from '../a11y.js';
+import { showToast } from '../toast.js';
+import { state } from '../state.js';
 
 /**
  * ZettNAS Physical Chassis Twin & Storage Topology Visualizer
- * - Parametric SVG chassis twin (D4, D6, D8, DIY)
+ * - Parametric SVG chassis twin (Compact Dual, Desktop Tower, Enterprise Rackmount)
  * - Multi-zone thermal heatmaps (<35C cool, 35-45C green, 46-52C yellow, >=53C red)
  * - Quad-action Locate Drive / Blink Bay strobe
  * - Platter Standby / Spindown Twin with calm breathe glow
  * - M.2 Motherboard Twin with PCIe lanes & endurance meters
  * - Zero-bloat S.M.A.R.T. Velocity SVG Sparklines (7d & 30d)
  * - Storage Pool / Array Topology Tree with live IOPS & throughput
+ * - Persistent User Bay Slot Mapping Modal
  */
 
 // Zero-asset Web Audio Synthesizer for tactical user feedback
@@ -97,20 +100,81 @@ export function getThermalLevel(tempC, isStandby = false) {
 export function renderChassisTwin(container, disks = [], options = {}) {
   if (!container) return;
 
-  const hdds = disks.filter((d) => !String(d.dev || d.name).startsWith('nvme'));
-  const nvmes = disks.filter((d) => String(d.dev || d.name).startsWith('nvme'));
+  const cfg = options.chassisConfig || null;
+  const isBayConfig = Boolean(cfg && Array.isArray(cfg.bays));
 
-  const count = Math.max(options.minBays || 4, hdds.length);
-  let chassisModel = options.model || (count <= 4 ? 'ZETTLAB D4' : count <= 6 ? 'ZETTLAB D6' : count <= 8 ? 'ZETTLAB D8' : 'DIY STORAGE CHASSIS');
+  let profile = 'tower_desktop';
+  let totalBays = 4;
+  let chassisModel = options.model || 'STORAGE ENCLOSURE';
+  let bays = [];
+  let nvmes = [];
+  let availableDrives = [];
+
+  if (isBayConfig) {
+    profile = cfg.profile || 'auto';
+    totalBays = cfg.total_bays || (cfg.bays ? cfg.bays.length : 4);
+    chassisModel = cfg.chassis_model || options.model || (totalBays <= 2 ? 'COMPACT DUAL' : totalBays <= 6 ? 'DESKTOP TOWER' : 'ENTERPRISE RACK');
+    bays = cfg.bays || [];
+    nvmes = (cfg.nvme_slots || []).map((s) => s.disk).filter(Boolean);
+    availableDrives = cfg.available_drives || [];
+  } else {
+    // disks is raw array of disks for backward compatibility
+    const hdds = disks.filter((d) => !String(d.dev || d.name).startsWith('nvme'));
+    nvmes = disks.filter((d) => String(d.dev || d.name).startsWith('nvme'));
+    totalBays = Math.max(options.minBays || 4, hdds.length);
+    if (totalBays <= 2) profile = 'compact_dual';
+    else if (totalBays <= 6) profile = 'tower_desktop';
+    else profile = 'rackmount_backplane';
+
+    chassisModel = options.model || (totalBays <= 4 ? 'ZETTLAB D4' : totalBays <= 6 ? 'ZETTLAB D6' : totalBays <= 8 ? 'ZETTLAB D8' : 'DIY STORAGE CHASSIS');
+    bays = [];
+    for (let i = 0; i < totalBays; i++) {
+      const d = hdds[i];
+      bays.push({
+        slot_index: i + 1,
+        is_populated: Boolean(d),
+        custom_label: null,
+        disk: d ? {
+          dev: d.name || d.dev || `sd${String.fromCharCode(97 + i)}`,
+          model: d.model,
+          serial: d.serial,
+          size_formatted: d.size_formatted || d.size,
+          transport: d.transport || 'sata',
+          controller_driver: d.controller_driver,
+          temp: d.temp,
+          health: d.health,
+          standby: Boolean(d.standby || d.health === 'standby'),
+        } : null
+      });
+    }
+  }
+
+  // Determine grid CSS layout
+  let gridClass = 'dual-cols';
+  if (profile === 'compact_dual') {
+    gridClass = 'mode-compact-dual dual-cols';
+  } else if (profile === 'tower_desktop') {
+    gridClass = `mode-tower ${totalBays > 4 ? 'tri-cols' : 'dual-cols'}`;
+  } else if (profile === 'rackmount_backplane') {
+    gridClass = `mode-rackmount ${totalBays > 12 ? 'octa-cols' : totalBays > 6 ? 'quad-cols' : 'tri-cols'}`;
+  } else {
+    gridClass = `mode-custom ${totalBays > 6 ? 'quad-cols' : totalBays > 4 ? 'tri-cols' : 'dual-cols'}`;
+  }
 
   let baysHtml = '';
-  for (let i = 0; i < count; i++) {
-    const d = hdds[i];
-    if (!d) {
+  bays.forEach((bay) => {
+    const slotNum = bay.slot_index;
+    const isPopulated = bay.is_populated && bay.disk;
+    const customLabel = bay.custom_label ? `<span class="bay-custom-label" title="${escapeHtml(bay.custom_label)}">${escapeHtml(bay.custom_label)}</span>` : '';
+
+    if (!isPopulated) {
       baysHtml += `
-        <div class="chassis-bay-slot empty" data-bay="${i + 1}" role="region" aria-label="Bay ${i + 1} Empty">
+        <div class="chassis-bay-slot empty" data-bay="${slotNum}" role="region" aria-label="Bay ${slotNum} Empty">
           <div class="bay-header">
-            <span class="bay-num">BAY ${i + 1}</span>
+            <div style="display:flex; align-items:center; gap:6px; overflow:hidden;">
+              <span class="bay-num">BAY ${slotNum}</span>
+              ${customLabel}
+            </div>
             <span class="bay-status-badge empty">VACANT</span>
           </div>
           <div class="bay-tray-handle">
@@ -123,16 +187,22 @@ export function renderChassisTwin(container, disks = [], options = {}) {
         </div>
       `;
     } else {
-      const devName = d.name || d.dev || `sd${String.fromCharCode(97 + i)}`;
+      const d = bay.disk;
+      const devName = d.dev || d.name || `sd${String.fromCharCode(96 + slotNum)}`;
       const isStandby = Boolean(d.standby || d.health === 'standby');
       const thermal = getThermalLevel(d.temp, isStandby);
       const modelStr = d.model ? d.model.slice(0, 14) : devName;
       const sizeStr = d.size_formatted || d.size || '';
+      const transportStr = d.transport ? d.transport.toUpperCase() : 'SATA';
+      const driverStr = d.controller_driver ? ` • ${d.controller_driver}` : '';
 
       baysHtml += `
-        <div class="chassis-bay-slot populated ${thermal.cls}" data-bay="${i + 1}" data-dev="${devName}" role="button" tabindex="0" aria-label="Bay ${i + 1}: ${escapeHtml(modelStr)}, ${thermal.text}">
+        <div class="chassis-bay-slot populated ${thermal.cls}" data-bay="${slotNum}" data-dev="${devName}" role="button" tabindex="0" aria-label="Bay ${slotNum}: ${escapeHtml(modelStr)}, ${thermal.text}">
           <div class="bay-header">
-            <span class="bay-num">BAY ${i + 1}</span>
+            <div style="display:flex; align-items:center; gap:6px; overflow:hidden;">
+              <span class="bay-num">BAY ${slotNum}</span>
+              ${customLabel}
+            </div>
             <span class="bay-temp-pill" style="color: ${thermal.color}; border-color: ${thermal.color};">${thermal.text}</span>
           </div>
           <div class="bay-tray-handle">
@@ -140,19 +210,20 @@ export function renderChassisTwin(container, disks = [], options = {}) {
             <div class="bay-drive-info">
               <span class="bay-drive-model" title="${escapeHtml(d.model || devName)}">${escapeHtml(modelStr)}</span>
               <span class="bay-drive-dev">/dev/${devName} ${sizeStr ? '• ' + sizeStr : ''}</span>
+              <span class="bay-sub-badge">${transportStr}${driverStr}</span>
             </div>
           </div>
           <div class="bay-footer">
-            <button class="bay-locate-btn" data-dev="${devName}" title="Locate Drive (Blink Bay LED)" aria-label="Locate drive in Bay ${i + 1}">
+            <button class="bay-locate-btn" data-dev="${devName}" title="Locate Drive (Blink Bay LED)" aria-label="Locate drive in Bay ${slotNum}">
               <svg class="locate-icon" viewBox="0 0 24 24" width="12" height="12"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="currentColor"/></svg>
               <span>LOCATE</span>
             </button>
-            <span class="bay-health-tag ${thermal.cls}">${isStandby ? 'STANDBY' : (d.health ? d.health.toUpperCase() : 'OK')}</span>
+            <span class="bay-health-tag ${thermal.cls}">${isStandby ? 'STANDBY' : (d.health ? String(d.health).toUpperCase() : 'OK')}</span>
           </div>
         </div>
       `;
     }
-  }
+  });
 
   let m2Html = '';
   if (nvmes.length > 0) {
@@ -195,10 +266,16 @@ export function renderChassisTwin(container, disks = [], options = {}) {
         <div class="chassis-top-bar">
           <div class="chassis-screw-head"></div>
           <div class="chassis-brand-mark">${escapeHtml(chassisModel)}</div>
+          <div class="chassis-top-actions">
+            <button class="chassis-config-btn" id="chassis-open-slots-btn" title="Configure Chassis Bays & Profile" aria-label="Configure Chassis Bays & Profile">
+              <svg viewBox="0 0 24 24" width="12" height="12"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z" fill="currentColor"/><path fill-rule="evenodd" d="M1.323 11.447C2.811 6.976 7.028 3.75 12.001 3.75c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113-1.487 4.471-5.705 7.697-10.677 7.697-4.97 0-9.186-3.223-10.675-7.69a1.762 1.762 0 010-1.113zM17.25 12a5.25 5.25 0 11-10.5 0 5.25 5.25 0 0110.5 0z" clip-rule="evenodd" fill="currentColor"/></svg>
+              <span>SLOTS / MAPPING</span>
+            </button>
+          </div>
           <div class="chassis-honeycomb-vents"></div>
           <div class="chassis-screw-head"></div>
         </div>
-        <div class="chassis-bay-grid ${count > 6 ? 'quad-cols' : count > 4 ? 'tri-cols' : 'dual-cols'}">
+        <div class="chassis-bay-grid ${gridClass}">
           ${baysHtml}
         </div>
         ${m2Html}
@@ -225,6 +302,229 @@ export function renderChassisTwin(container, disks = [], options = {}) {
       }
     });
   });
+
+  const slotsBtn = container.querySelector('#chassis-open-slots-btn');
+  if (slotsBtn) {
+    slotsBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const activeCfg = cfg || {
+        profile,
+        total_bays: totalBays,
+        bays,
+        available_drives: availableDrives
+      };
+      openChassisConfigModal(activeCfg, () => {
+        fetchAndRenderChassisTwin(container, options);
+      });
+    });
+  }
+}
+
+/**
+ * Fetches latest chassis configuration and renders the twin
+ */
+export async function fetchAndRenderChassisTwin(container, options = {}) {
+  if (!container) return;
+  try {
+    const res = await api.request('/api/chassis/config');
+    if (res.ok) {
+      const config = await res.json();
+      renderChassisTwin(container, config.bays || [], { ...options, chassisConfig: config });
+      return config;
+    }
+  } catch (err) {
+    console.warn('[ChassisVisualizer] Failed to load chassis config:', err);
+  }
+
+  // Fallback to latestStats.disks if available
+  const fallbackDisks = state.latestStats?.disks || [];
+  renderChassisTwin(container, fallbackDisks, options);
+}
+
+/**
+ * Modal to configure physical chassis profile, bay counts, and slot assignments
+ */
+export function openChassisConfigModal(currentConfig = {}, onSaved = null) {
+  let modalOverlay = document.getElementById('chassis-config-modal-overlay');
+  if (!modalOverlay) {
+    modalOverlay = document.createElement('div');
+    modalOverlay.id = 'chassis-config-modal-overlay';
+    modalOverlay.className = 'smart-modal-backdrop open';
+    modalOverlay.setAttribute('role', 'dialog');
+    modalOverlay.setAttribute('aria-modal', 'true');
+    document.body.appendChild(modalOverlay);
+  }
+
+  modalOverlay.style.display = 'flex';
+  modalOverlay.classList.remove('window-minimized');
+  modalOverlay.classList.add('open');
+
+  const profile = currentConfig.profile || 'auto';
+  let totalBays = currentConfig.total_bays || (currentConfig.bays ? currentConfig.bays.length : 4);
+  const availableDrives = currentConfig.available_drives || [];
+  const currentBays = currentConfig.bays || [];
+
+  modalOverlay.innerHTML = `
+    <div class="smart-modal-window chassis-slots-modal" style="width: 660px; max-width: 95vw; max-height: 85vh; display: flex; flex-direction: column;">
+      <div class="smart-modal-header" style="display:flex; justify-content:space-between; align-items:center;">
+        <div class="smart-modal-title" style="display:flex; align-items:center; gap:8px;">
+          <svg viewBox="0 0 24 24" width="16" height="16"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z" fill="currentColor"/></svg>
+          <span>CHASSIS ENCLOSURE & BAY CONFIGURATION</span>
+        </div>
+        <button class="win-btn close-btn" id="chassis-config-close" title="Close" aria-label="Close"></button>
+      </div>
+      <div class="smart-modal-body" style="padding: 16px; overflow-y: auto; flex: 1; display:flex; flex-direction:column; gap: 14px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div>
+            <label style="display:block; font-size:10.5px; font-weight:700; color:var(--muted); margin-bottom:6px;">ENCLOSURE PROFILE</label>
+            <select id="chassis-profile-select" class="tz-select-input" style="width:100%; padding:8px; border-radius:6px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.12); color:#fff; font-size:12px;">
+              <option value="auto" ${profile === 'auto' ? 'selected' : ''}>Auto Dynamic (Auto-Detect)</option>
+              <option value="compact_dual" ${profile === 'compact_dual' ? 'selected' : ''}>Compact Dual (1–2 Bays)</option>
+              <option value="tower_desktop" ${profile === 'tower_desktop' ? 'selected' : ''}>Desktop Tower (3–6 Bays)</option>
+              <option value="rackmount_backplane" ${profile === 'rackmount_backplane' ? 'selected' : ''}>Enterprise Rackmount (8–24 Bays)</option>
+              <option value="custom" ${profile === 'custom' ? 'selected' : ''}>Custom Enclosure</option>
+            </select>
+          </div>
+          <div>
+            <label style="display:block; font-size:10.5px; font-weight:700; color:var(--muted); margin-bottom:6px;">TOTAL PHYSICAL BAYS</label>
+            <input type="number" id="chassis-total-bays-input" min="1" max="48" value="${totalBays}" style="width:100%; padding:8px; border-radius:6px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.12); color:#fff; font-size:12px;">
+          </div>
+        </div>
+
+        <div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <label style="font-size:10.5px; font-weight:700; color:var(--muted); letter-spacing:0.5px;">PHYSICAL BAY ALLOCATION & LABELS</label>
+            <button id="chassis-auto-assign-btn" class="btn-pill-toggle" style="padding:4px 10px; font-size:11px;">⚡ Auto-Assign Sequentially</button>
+          </div>
+          <div style="max-height: 320px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; background: rgba(0,0,0,0.2);">
+            <table class="copy-history-table chassis-slots-table" style="width:100%;">
+              <thead>
+                <tr>
+                  <th style="width:80px;">Slot</th>
+                  <th>Assigned Physical Drive</th>
+                  <th style="width:180px;">Custom Label</th>
+                </tr>
+              </thead>
+              <tbody id="chassis-slots-tbody">
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="smart-modal-footer" style="padding: 12px 16px; border-top: 1px solid rgba(255,255,255,0.08); display:flex; justify-content:flex-end; gap: 8px;">
+        <button id="chassis-config-cancel-btn" class="btn-pill-toggle" style="padding: 8px 16px;">Cancel</button>
+        <button id="chassis-config-save-btn" class="btn-save-preset" style="padding: 8px 20px;">Save Bay Mapping</button>
+      </div>
+    </div>
+  `;
+
+  const tbody = modalOverlay.querySelector('#chassis-slots-tbody');
+  const baysInput = modalOverlay.querySelector('#chassis-total-bays-input');
+  const profileSelect = modalOverlay.querySelector('#chassis-profile-select');
+
+  function renderRows(count, mappings = []) {
+    let rowsHtml = '';
+    for (let slot = 1; slot <= count; slot++) {
+      const existing = mappings.find((m) => m.slot_index === slot) || currentBays.find((b) => b.slot_index === slot);
+      const currentCid = existing?.canonical_id || existing?.disk?.canonical_id || existing?.disk?.dev || '';
+      const currentLabel = existing?.custom_label || '';
+
+      let optionsHtml = `<option value="">-- [ Vacant / Empty Tray ] --</option>`;
+      availableDrives.forEach((d) => {
+        const isSel = d.canonical_id === currentCid || d.dev === currentCid || d.serial === currentCid;
+        const text = `${d.dev} • ${d.model || 'Drive'} (${d.size_formatted || ''}) [${d.serial || ''}]`;
+        optionsHtml += `<option value="${escapeHtml(d.canonical_id)}" ${isSel ? 'selected' : ''}>${escapeHtml(text)}</option>`;
+      });
+
+      rowsHtml += `
+        <tr data-slot="${slot}">
+          <td style="font-weight:700; color:var(--accent-cyan,#00f0ff);">BAY ${slot}</td>
+          <td>
+            <select class="slot-drive-select tz-select-input" style="width:100%; padding:6px; font-size:11.5px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); color:#fff; border-radius:4px;">
+              ${optionsHtml}
+            </select>
+          </td>
+          <td>
+            <input type="text" class="slot-label-input tz-text-input" maxlength="64" value="${escapeHtml(currentLabel)}" placeholder="e.g. Parity 1, Pool A" style="width:100%; padding:6px; font-size:11.5px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); color:#fff; border-radius:4px;">
+          </td>
+        </tr>
+      `;
+    }
+    tbody.innerHTML = rowsHtml;
+  }
+
+  renderRows(totalBays);
+
+  baysInput.addEventListener('change', () => {
+    const val = parseInt(baysInput.value, 10);
+    if (val >= 1 && val <= 48) {
+      totalBays = val;
+      renderRows(totalBays);
+    }
+  });
+
+  const autoAssignBtn = modalOverlay.querySelector('#chassis-auto-assign-btn');
+  if (autoAssignBtn) {
+    autoAssignBtn.addEventListener('click', () => {
+      const autoMappings = availableDrives.slice(0, totalBays).map((d, idx) => ({
+        slot_index: idx + 1,
+        canonical_id: d.canonical_id,
+        custom_label: idx === 0 ? 'Parity / Primary' : `Disk ${idx}`
+      }));
+      renderRows(totalBays, autoMappings);
+      showToast('Assigned detected drives sequentially.', 'info');
+    });
+  }
+
+  function closeModal() {
+    modalOverlay.style.display = 'none';
+    modalOverlay.classList.remove('open');
+  }
+
+  modalOverlay.querySelector('#chassis-config-close').addEventListener('click', closeModal);
+  modalOverlay.querySelector('#chassis-config-cancel-btn').addEventListener('click', closeModal);
+
+  modalOverlay.querySelector('#chassis-config-save-btn').addEventListener('click', async () => {
+    const mappings = [];
+    tbody.querySelectorAll('tr[data-slot]').forEach((tr) => {
+      const slotIdx = parseInt(tr.dataset.slot, 10);
+      const select = tr.querySelector('.slot-drive-select');
+      const labelInp = tr.querySelector('.slot-label-input');
+      const cid = select.value;
+      if (cid) {
+        mappings.push({
+          slot_index: slotIdx,
+          canonical_id: cid,
+          custom_label: labelInp.value.trim() || null
+        });
+      }
+    });
+
+    const payload = {
+      profile: profileSelect.value,
+      total_bays: parseInt(baysInput.value, 10),
+      mappings
+    };
+
+    try {
+      const res = await api.request('/api/chassis/bay_map', {
+        method: 'POST',
+        body: payload
+      });
+      if (res.ok) {
+        showToast('Chassis bay mapping updated successfully.', 'success');
+        closeModal();
+        if (typeof onSaved === 'function') onSaved(payload);
+      } else {
+        showToast('Failed to save chassis bay mapping.', 'error');
+      }
+    } catch (err) {
+      showToast(`Error saving bay mapping: ${err.message}`, 'error');
+    }
+  });
+
+  const win = modalOverlay.querySelector('.smart-modal-window');
+  trapFocus(win, closeModal);
 }
 
 /**
@@ -240,7 +540,6 @@ export function generateSmartSparklineSvg(points = [], width = 280, height = 50)
   }
 
   const values = points.map((p) => (p.realloc || 0) + (p.pending || 0));
-  const minVal = 0;
   const maxVal = Math.max(1, Math.max(...values));
 
   const padX = 6;

@@ -2,6 +2,7 @@ import { syncWidgetSettingsUI } from './widgets.js';
 import { syncDesktopThemeUI } from './settings.js';
 import { openContainerInspector, openContainerDeleteModal } from './container-modal.js';
 import { ZettEventBus } from '../event-bus.js';
+import { fetchAndRenderChassisTwin, renderStorageTopologyTree, triggerLocateDisk, getThermalLevel } from './chassis-visualizer.js';
 /**
  * ZettNAS Toolkit - System Management Window Controller
  * Manages the dedicated System Management desktop window, hub app grid,
@@ -72,6 +73,17 @@ export function updateManagementTelemetry(stats) {
     if (dockPill) dockPill.textContent = `${runningCount} Active`;
     const sideDockBadge = document.getElementById('mgmt-sidebar-docker-badge');
     if (sideDockBadge) sideDockBadge.textContent = `${runningCount} Active`;
+  }
+
+  // Update Storage pill in Hub and Left Sidebar
+  if (stats.disks && Array.isArray(stats.disks)) {
+    const storagePill = document.getElementById('mgmt-hub-storage-pill');
+    if (storagePill) storagePill.textContent = `${stats.disks.length} Drives`;
+    const sideStorageBadge = document.getElementById('mgmt-sidebar-storage-badge');
+    if (sideStorageBadge) {
+      sideStorageBadge.textContent = `${stats.disks.length} Drives`;
+      sideStorageBadge.style.display = 'inline-block';
+    }
   }
 
   // Update UPS pill, sidebar badge, and telemetry if active
@@ -1542,6 +1554,87 @@ export async function fetchAndRenderCopyHistory() {
   }
 }
 
+export async function fetchAndRenderDisksInventory() {
+  const tbody = document.getElementById('mgmt-disks-inventory-tbody');
+  if (!tbody) return;
+
+  try {
+    const res = await api.request('/api/chassis/config');
+    let disks = [];
+    if (res.ok) {
+      const data = await res.json();
+      const hddDisks = (data.bays || []).map((b) => b.disk).filter(Boolean);
+      const nvmeDisks = (data.nvme_slots || []).map((s) => s.disk).filter(Boolean);
+      disks = [...hddDisks, ...nvmeDisks];
+    } else {
+      disks = state.latestStats?.disks || [];
+    }
+
+    if (disks.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--muted); padding:20px;">No physical disks discovered.</td></tr>`;
+      return;
+    }
+
+    let rowsHtml = '';
+    disks.forEach((d) => {
+      const devName = d.dev || d.name || 'unknown';
+      const isStandby = Boolean(d.standby || d.health === 'standby');
+      const thermal = getThermalLevel(d.temp, isStandby);
+      const modelStr = d.model || 'Generic Disk';
+      const serialStr = d.serial && d.serial !== 'Unknown' ? d.serial : '--';
+      const transportStr = (d.transport || (devName.startsWith('nvme') ? 'nvme' : 'sata')).toUpperCase();
+      const driverStr = d.controller_driver || (devName.startsWith('nvme') ? 'nvme' : 'ahci');
+      const sizeStr = d.size_formatted || d.size || '--';
+      const healthStr = isStandby ? 'STANDBY' : (d.health ? String(d.health).toUpperCase() : 'OK');
+
+      rowsHtml += `
+        <tr data-dev="${devName}">
+          <td style="font-weight:700; color:#fff;">/dev/${escapeHtml(devName)}</td>
+          <td>
+            <div style="font-weight:600; color:#e2e8f0;">${escapeHtml(modelStr)}</div>
+            <div style="font-size:10px; color:var(--muted);">SN: ${escapeHtml(serialStr)}</div>
+          </td>
+          <td>
+            <span class="bay-sub-badge" style="background:rgba(255,255,255,0.06); padding:2px 6px; border-radius:4px;">${escapeHtml(transportStr)} • ${escapeHtml(driverStr)}</span>
+          </td>
+          <td style="font-weight:600; color:var(--accent-cyan,#00f0ff);">${escapeHtml(sizeStr)}</td>
+          <td>
+            <span class="bay-health-tag ${thermal.cls}">${escapeHtml(healthStr)}</span>
+          </td>
+          <td>
+            <span class="bay-temp-pill" style="color:${thermal.color}; border-color:${thermal.color};">${thermal.text}</span>
+          </td>
+          <td style="text-align:right;">
+            <div style="display:inline-flex; gap:6px;">
+              <button class="btn-pill-toggle btn-locate-row" data-dev="${devName}" title="Locate Drive (Blink Bay LED)" style="padding:3px 8px; font-size:10.5px;">⚡ Locate</button>
+              <button class="btn-pill-toggle btn-smart-row" data-dev="${devName}" title="View S.M.A.R.T. Diagnostics" style="padding:3px 8px; font-size:10.5px;">📊 S.M.A.R.T.</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    });
+
+    tbody.innerHTML = rowsHtml;
+
+    tbody.querySelectorAll('.btn-locate-row').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const dev = btn.dataset.dev;
+        triggerLocateDisk(dev, btn.closest('tr'));
+      });
+    });
+
+    tbody.querySelectorAll('.btn-smart-row').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const dev = btn.dataset.dev;
+        ZettEventBus.emit('modal:smart:open', dev);
+      });
+    });
+  } catch (err) {
+    console.warn('[Management] Failed to fetch disks inventory:', err);
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--crit); padding:20px;">Failed to load disks inventory.</td></tr>`;
+  }
+}
+
 export function initManagement() {
   if (state.isLcdDirect || (typeof window !== 'undefined' && window.location.search.includes('mode=lcd')) || (document.body && document.body.classList.contains('lcd-direct'))) {
     return;
@@ -1695,6 +1788,10 @@ export function initManagement() {
     'mgmt-sec-docker': { section: 'mgmt-sec-services', pane: 'mgmt-pane-docker' },
     'mgmt-pane-docker': { section: 'mgmt-sec-services', pane: 'mgmt-pane-docker' },
     'mgmt-sec-services': { section: 'mgmt-sec-services', pane: 'mgmt-pane-unraid' },
+    'mgmt-sec-storage': { section: 'mgmt-sec-storage', pane: 'mgmt-pane-chassis-twin' },
+    'mgmt-pane-chassis-twin': { section: 'mgmt-sec-storage', pane: 'mgmt-pane-chassis-twin' },
+    'mgmt-pane-storage-topo': { section: 'mgmt-sec-storage', pane: 'mgmt-pane-storage-topo' },
+    'mgmt-pane-storage-disks': { section: 'mgmt-sec-storage', pane: 'mgmt-pane-storage-disks' },
     'mgmt-sec-security': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-security' },
     'mgmt-pane-security': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-security' },
     'mgmt-sec-events': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-events' },
@@ -1735,6 +1832,16 @@ export function initManagement() {
       if (state.lastStats) updateManagementTelemetry(state.lastStats);
     } else if (paneId === 'mgmt-pane-docker') {
       fetchAndRenderDockerContainers();
+    } else if (paneId === 'mgmt-pane-chassis-twin') {
+      const mount = document.getElementById('mgmt-chassis-twin-mount');
+      if (mount) fetchAndRenderChassisTwin(mount);
+    } else if (paneId === 'mgmt-pane-storage-topo') {
+      const mount = document.getElementById('mgmt-storage-topo-mount');
+      if (mount && state.latestStats?.disks) {
+        renderStorageTopologyTree(mount, state.latestStats.disks, state.latestStats.unraid || {});
+      }
+    } else if (paneId === 'mgmt-pane-storage-disks') {
+      fetchAndRenderDisksInventory();
     } else if (paneId === 'mgmt-pane-system') {
       if (typeof fetchAPITokens === 'function') fetchAPITokens();
     } else if (paneId === 'mgmt-pane-about') {
@@ -1779,6 +1886,8 @@ export function initManagement() {
       sectionName = t('mgmt.activity_title', 'Activity Monitor');
     } else if (targetId === 'mgmt-sec-services') {
       sectionName = t('mgmt.services_title', 'Services');
+    } else if (targetId === 'mgmt-sec-storage') {
+      sectionName = t('mgmt.storage_title', 'Storage & Chassis');
     } else if (targetId === 'mgmt-sec-ups') {
       sectionName = t('mgmt.sidebar_ups', 'UPS & Power');
       if (typeof fetchAndRenderUpsTelemetry === 'function') fetchAndRenderUpsTelemetry();
@@ -2007,6 +2116,25 @@ export function initManagement() {
     refreshUpsBtn.addEventListener('click', () => {
       fetchAndRenderUpsTelemetry();
       showToast('UPS telemetry refreshed.', 'info');
+    });
+  }
+
+  // Chassis digital twin refresh button
+  const refreshChassisBtn = document.getElementById('btn-refresh-chassis');
+  if (refreshChassisBtn) {
+    refreshChassisBtn.addEventListener('click', () => {
+      const mount = document.getElementById('mgmt-chassis-twin-mount');
+      if (mount) fetchAndRenderChassisTwin(mount);
+      showToast('Chassis digital twin refreshed.', 'info');
+    });
+  }
+
+  // Disks inventory refresh button
+  const refreshDisksInvBtn = document.getElementById('btn-refresh-disks-inventory');
+  if (refreshDisksInvBtn) {
+    refreshDisksInvBtn.addEventListener('click', () => {
+      fetchAndRenderDisksInventory();
+      showToast('Disks inventory refreshed.', 'info');
     });
   }
 

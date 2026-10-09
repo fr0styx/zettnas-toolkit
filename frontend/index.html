@@ -1577,6 +1577,11 @@
             <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_ups">UPS & Power</span>
             <span class="mgmt-sidebar-badge" id="mgmt-sidebar-ups-badge" style="display:none;">Power</span>
           </button>
+          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-storage" title="Storage & Physical Chassis">
+            <svg class="mgmt-sidebar-svg"><use href="#i-disk"/></svg>
+            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_storage">Storage & Chassis</span>
+            <span class="mgmt-sidebar-badge" id="mgmt-sidebar-storage-badge" style="display:none;">Drives</span>
+          </button>
           <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-system-group" title="System Settings & API">
             <svg class="mgmt-sidebar-svg"><use href="#i-chip"/></svg>
             <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_system">System</span>
@@ -1657,7 +1662,24 @@
             </div>
           </div>
 
-          <!-- 5. System -->
+          <!-- 5. Storage & Chassis -->
+          <div class="mgmt-app-card" data-mgmt-target="mgmt-sec-storage" role="button" tabindex="0">
+            <div class="mgmt-app-icon-wrap" style="background:rgba(59,245,139,0.12); color:#3bf58b; border-color:rgba(59,245,139,0.3);">
+              <svg class="mgmt-app-svg"><use href="#i-disk"/></svg>
+            </div>
+            <div class="mgmt-app-info">
+              <div class="mgmt-app-title-row">
+                <span class="mgmt-app-title" data-i18n="mgmt.hub_storage_title">Storage & Chassis</span>
+                <span class="mgmt-app-pill" style="background:rgba(59,245,139,0.15); color:#3bf58b;" id="mgmt-hub-storage-pill" data-i18n="mgmt.hub_storage_pill">Hardware</span>
+              </div>
+              <p class="mgmt-app-desc" data-i18n="mgmt.hub_storage_desc">Interactive physical chassis digital twin, custom bay slot mapping, pool topology, and drive diagnostics.</p>
+            </div>
+            <div class="mgmt-app-footer">
+              <span class="mgmt-app-action" data-i18n="mgmt.hub_storage_action">Inspect Storage ➔</span>
+            </div>
+          </div>
+
+          <!-- 6. System -->
           <div class="mgmt-app-card" data-mgmt-target="mgmt-sec-system-group" role="button" tabindex="0">
             <div class="mgmt-app-icon-wrap mgmt-icon-security">
               <svg class="mgmt-app-svg"><use href="#i-chip"/></svg>
@@ -2399,7 +2421,81 @@
           </div>
         </div>
 
-          <!-- 5. System -->
+          <!-- 5. Storage & Physical Chassis -->
+          <div id="mgmt-sec-storage" class="mgmt-detail-card" style="display: none;">
+            <div class="mgmt-inner-tabs">
+              <button class="mgmt-inner-tab active" data-tab-target="mgmt-pane-chassis-twin">
+                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-disk"/></svg>
+                <span data-i18n="mgmt.subtab_chassis">Chassis Digital Twin</span>
+              </button>
+              <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-storage-topo">
+                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-storage"/></svg>
+                <span data-i18n="mgmt.subtab_topo">Pool Topology</span>
+              </button>
+              <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-storage-disks">
+                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-chip"/></svg>
+                <span data-i18n="mgmt.subtab_disks">Physical Disks Inventory</span>
+              </button>
+            </div>
+
+            <!-- Sub-tab 1: Chassis Digital Twin -->
+            <div id="mgmt-pane-chassis-twin" class="mgmt-tab-pane" style="display: block;">
+              <div class="mgmt-card-intro" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                <div>
+                  <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-disk"/></svg> <span data-i18n="mgmt.chassis_title">Parametric Chassis Digital Twin</span></div>
+                  <div class="mgmt-card-intro-desc" data-i18n="mgmt.chassis_desc">Live thermal heatmap, multi-tier physical drive locator strobe, and motherboard M.2 NVMe twin.</div>
+                </div>
+                <button class="btn-pill-toggle" id="btn-refresh-chassis" title="Refresh Chassis State" data-i18n="mgmt.refresh">🔄 Refresh</button>
+              </div>
+              <div class="mgmt-detail-body" id="mgmt-chassis-twin-mount">
+                <!-- Mounted via fetchAndRenderChassisTwin -->
+              </div>
+            </div>
+
+            <!-- Sub-tab 2: Storage Pool & Array Topology -->
+            <div id="mgmt-pane-storage-topo" class="mgmt-tab-pane" style="display: none;">
+              <div class="mgmt-card-intro">
+                <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-storage"/></svg> <span data-i18n="mgmt.topo_title">Storage Pool & Array Topology</span></div>
+                <div class="mgmt-card-intro-desc" data-i18n="mgmt.topo_desc">Hierarchical view of storage pools, parity protection drives, data array disks, and SSD cache tiers.</div>
+              </div>
+              <div class="mgmt-detail-body" id="mgmt-storage-topo-mount">
+                <!-- Mounted via renderStorageTopologyTree -->
+              </div>
+            </div>
+
+            <!-- Sub-tab 3: Physical Disks Inventory -->
+            <div id="mgmt-pane-storage-disks" class="mgmt-tab-pane" style="display: none;">
+              <div class="mgmt-card-intro" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                <div>
+                  <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-chip"/></svg> <span data-i18n="mgmt.disks_title">Hardware Abstraction Layer (HAL) Disks Inventory</span></div>
+                  <div class="mgmt-card-intro-desc" data-i18n="mgmt.disks_desc">Low-level controller driver discovery, S.M.A.R.T. health, temperatures, and zero-wake spindown status.</div>
+                </div>
+                <button class="btn-pill-toggle" id="btn-refresh-disks-inventory" title="Refresh Disks Inventory" data-i18n="mgmt.refresh">🔄 Refresh</button>
+              </div>
+              <div class="mgmt-detail-body">
+                <div style="overflow-x:auto; max-height:420px; background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.06); border-radius:8px;">
+                  <table class="copy-history-table">
+                    <thead>
+                      <tr>
+                        <th>Device</th>
+                        <th>Model & Serial</th>
+                        <th>Transport & Driver</th>
+                        <th>Capacity</th>
+                        <th>Status / Standby</th>
+                        <th>Temperature</th>
+                        <th style="text-align:right;">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody id="mgmt-disks-inventory-tbody">
+                      <tr><td colspan="7" style="text-align:center; color:var(--muted); padding:20px;">Scanning HAL disk devices...</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 6. System -->
           <div id="mgmt-sec-system-group" class="mgmt-detail-card" style="display: none;">
             <div class="mgmt-inner-tabs">
               <button class="mgmt-inner-tab active" data-tab-target="mgmt-pane-security">

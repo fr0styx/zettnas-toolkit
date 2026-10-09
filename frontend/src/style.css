@@ -7460,6 +7460,35 @@ body.theme-yak .widget-drag-handle:hover {
   text-transform: uppercase;
 }
 
+.chassis-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 10px;
+}
+
+.chassis-config-btn {
+  background: rgba(0, 240, 255, 0.1);
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  color: var(--accent-cyan, #00f0ff);
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.15s ease;
+}
+
+.chassis-config-btn:hover {
+  background: var(--accent-cyan, #00f0ff);
+  color: #0b131c;
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+}
+
 .chassis-honeycomb-vents {
   flex: 1;
   height: 6px;
@@ -7483,6 +7512,40 @@ body.theme-yak .widget-drag-handle:hover {
 
 .chassis-bay-grid.quad-cols {
   grid-template-columns: repeat(4, 1fr);
+}
+
+.chassis-bay-grid.octa-cols {
+  grid-template-columns: repeat(6, 1fr);
+}
+
+.chassis-bay-grid.mode-compact-dual {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.chassis-bay-grid.mode-tower.dual-cols {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.chassis-bay-grid.mode-tower.tri-cols {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.chassis-bay-grid.mode-rackmount.tri-cols {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.chassis-bay-grid.mode-rackmount.quad-cols {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.chassis-bay-grid.mode-rackmount.octa-cols {
+  grid-template-columns: repeat(6, 1fr);
+}
+
+@media (max-width: 900px) {
+  .chassis-bay-grid.mode-rackmount.octa-cols {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
 @media (max-width: 600px) {
@@ -7634,6 +7697,28 @@ body.theme-yak .widget-drag-handle:hover {
   box-shadow: 0 0 8px rgba(56, 189, 248, 0.5);
 }
 
+.bay-custom-label {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--accent-cyan, #00f0ff);
+  background: rgba(0, 240, 255, 0.1);
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  padding: 1px 5px;
+  border-radius: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 90px;
+}
+
+.bay-sub-badge {
+  font-size: 8.5px;
+  font-weight: 700;
+  color: var(--muted, #78838f);
+  letter-spacing: 0.03em;
+  margin-top: 1px;
+}
+
 .bay-health-tag {
   font-size: 9px;
   font-weight: 700;
@@ -7644,6 +7729,23 @@ body.theme-yak .widget-drag-handle:hover {
 .bay-health-tag.warn { color: var(--warn, #f5b731); }
 .bay-health-tag.crit { color: var(--crit, #f0553b); }
 .bay-health-tag.standby { color: var(--muted, #78838f); }
+
+/* Chassis Slots Mapping Modal */
+.chassis-slots-modal {
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(14, 20, 28, 0.96);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.7);
+}
+
+.chassis-slots-table th,
+.chassis-slots-table td {
+  padding: 6px 10px;
+  font-size: 11.5px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
 
 /* M.2 Motherboard Twin */
 .m2-motherboard-twin {

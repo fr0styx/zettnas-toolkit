@@ -835,7 +835,7 @@ def run_disk_smart_test(dev_name: str, test_type: str = "short"):
 def locate_disk(dev_name: str, duration_sec: int = 5) -> dict:
     """
     Triggers physical drive identification strobe (Locate Drive / Blink Bay).
-    Reads 4KB from sector 0 in a gentle rhythm for duration_sec to pulse drive activity LED safely without writing.
+    Uses multi-tier hardware driver (SES -> ARGB -> Software Read Strobe).
     """
     if not VALID_DEV_PATTERN.fullmatch(dev_name):
         return {"success": False, "error": "Invalid device name format."}
@@ -844,18 +844,6 @@ def locate_disk(dev_name: str, duration_sec: int = 5) -> dict:
     if not os.path.exists(dev_path):
         return {"success": False, "error": f"Device {dev_name} does not exist."}
 
-    duration = max(1, min(int(duration_sec or 5), 10))
+    from backend.hardware.locate import locate_drive_multitier
 
-    def _strobe_task():
-        end_time = time.time() + duration
-        try:
-            with open(dev_path, "rb") as f:
-                while time.time() < end_time:
-                    f.seek(0)
-                    _ = f.read(4096)
-                    time.sleep(0.12)
-        except Exception as e:
-            logger.debug(f"[DiskLocate] Strobe read error on {dev_name}: {e}")
-
-    threading.Thread(target=_strobe_task, daemon=True, name=f"locate-{dev_name}").start()
-    return {"success": True, "dev": dev_name, "duration": duration}
+    return locate_drive_multitier(dev_name, dev_path, duration_sec)
