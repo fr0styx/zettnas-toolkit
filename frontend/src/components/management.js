@@ -225,7 +225,9 @@ export function updateManagementTelemetry(stats) {
     if (['auto', 'quiet', 'balanced', 'performance'].includes(prof) && prof !== _activeProfile) {
       _activeProfile = prof;
       document.querySelectorAll('.profile-btn').forEach((b) => {
-        b.classList.toggle('active', b.dataset.profile === prof);
+        const isAct = b.dataset.profile === prof;
+        b.classList.toggle('active', isAct);
+        b.setAttribute('aria-checked', isAct ? 'true' : 'false');
       });
     }
     const currentPill = document.getElementById('unraid-profile-current-pill');
@@ -2184,13 +2186,18 @@ export function initManagement() {
     syncSecurityBadge();
   }
 
-  // Profile buttons listener
-  document.querySelectorAll('.profile-btn').forEach((btn) => {
+  // Profile buttons listener and keyboard navigation
+  const profileBtns = Array.from(document.querySelectorAll('.profile-btn'));
+  profileBtns.forEach((btn, idx) => {
     btn.addEventListener('click', async () => {
       const p = btn.dataset.profile;
       if (!p) return;
       _activeProfile = p;
-      document.querySelectorAll('.profile-btn').forEach((b) => b.classList.toggle('active', b === btn));
+      profileBtns.forEach((b) => {
+        const isAct = b === btn;
+        b.classList.toggle('active', isAct);
+        b.setAttribute('aria-checked', isAct ? 'true' : 'false');
+      });
       const pill = document.getElementById('unraid-profile-current-pill');
       if (pill) {
         pill.textContent = `ACTIVE: ${p === 'auto' ? 'AUTO DYNAMIC' : p.toUpperCase()}`;
@@ -2201,6 +2208,21 @@ export function initManagement() {
         showToast(`System profile switched to ${p === 'auto' ? 'AUTO DYNAMIC' : p.toUpperCase()}.`, 'success');
       } catch (err) {
         showToast(`Failed to switch profile: ${err.message}`, 'error');
+      }
+    });
+
+    btn.addEventListener('keydown', (e) => {
+      let targetBtn = null;
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        targetBtn = profileBtns[(idx + 1) % profileBtns.length];
+      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        targetBtn = profileBtns[(idx - 1 + profileBtns.length) % profileBtns.length];
+      }
+      if (targetBtn) {
+        targetBtn.focus();
+        targetBtn.click();
       }
     });
   });

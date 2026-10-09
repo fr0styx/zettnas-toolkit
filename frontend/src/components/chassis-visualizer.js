@@ -79,21 +79,22 @@ export function getThermalLevel(tempC, isStandby = false) {
   if (isStandby || tempC == null) {
     return {
       cls: 'standby',
-      color: '#64748b',
+      color: 'var(--muted, #64748b)',
       glow: 'rgba(100, 116, 139, 0.3)',
-      text: isStandby ? 'STANDBY' : 'UNKNOWN'
+      text: isStandby ? 'STANDBY' : 'UNKNOWN',
+      toString() { return this.cls; }
     };
   }
   if (tempC >= 53) {
-    return { cls: 'crit', color: '#f0553b', glow: 'rgba(240, 85, 59, 0.45)', text: `${tempC}°C` };
+    return { cls: 'crit', color: 'var(--crit, #f0553b)', glow: 'rgba(240, 85, 59, 0.45)', text: `${tempC}°C`, toString() { return this.cls; } };
   }
   if (tempC >= 46) {
-    return { cls: 'warn', color: '#f5b731', glow: 'rgba(245, 183, 49, 0.45)', text: `${tempC}°C` };
+    return { cls: 'warn', color: 'var(--warn, #f5b731)', glow: 'rgba(245, 183, 49, 0.45)', text: `${tempC}°C`, toString() { return this.cls; } };
   }
   if (tempC >= 35) {
-    return { cls: 'ok', color: '#3bf58b', glow: 'rgba(59, 245, 139, 0.35)', text: `${tempC}°C` };
+    return { cls: 'ok', color: 'var(--ok, #3bf58b)', glow: 'rgba(59, 245, 139, 0.35)', text: `${tempC}°C`, toString() { return this.cls; } };
   }
-  return { cls: 'cool', color: '#38bdf8', glow: 'rgba(56, 189, 248, 0.35)', text: `${tempC}°C` };
+  return { cls: 'cool', color: 'var(--brand, #38bdf8)', glow: 'rgba(56, 189, 248, 0.35)', text: `${tempC}°C`, toString() { return this.cls; } };
 }
 
 /**
@@ -637,7 +638,7 @@ export function renderStructuredPoolsTopology(container, data) {
     const membersHtml = (pool.members || []).map((m) => {
       const isStandby = m.spundown || m.status === 'STANDBY';
       const tempDisplay = isStandby ? '🌙 Standby' : (m.temp_c != null ? `${m.temp_c}°C` : '--');
-      const tempLevel = isStandby ? 'standby' : (m.temp_c != null ? getThermalLevel(m.temp_c) : 'cool');
+      const tempLevel = isStandby ? 'standby' : (m.temp_c != null ? getThermalLevel(m.temp_c).cls : 'cool');
       const readsStr = m.num_reads ? formatNumber(m.num_reads) : '0';
       const writesStr = m.num_writes ? formatNumber(m.num_writes) : '0';
 

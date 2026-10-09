@@ -2078,8 +2078,8 @@
             <div class="mgmt-detail-body">
               <div class="drawer-card" style="padding: 16px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
                 <div style="font-size: 11px; font-weight: 700; color: var(--muted); margin-bottom: 12px; letter-spacing: 0.5px;" data-i18n="mgmt.theme_presets_label">SELECT DESKTOP THEME PRESET</div>
-                <div class="theme-palette-grid">
-                  <button class="desktop-theme-preset theme-preset-card active" data-theme-id="cyber">
+                <div class="theme-palette-grid" role="radiogroup" aria-label="Desktop Theme Presets">
+                  <button class="desktop-theme-preset theme-preset-card active" data-theme-id="cyber" role="radio" aria-checked="true" aria-label="Cyber Teal: Signature Cyan & Obsidian">
                     <div class="theme-swatch-circle" style="background: linear-gradient(135deg, #00f0ff 50%, #25c2a0 50%); border: 2px solid #00f0ff;"></div>
                     <div class="theme-preset-info">
                       <span class="theme-preset-name" data-i18n="settings.theme_cyber">Cyber Teal</span>
@@ -2087,7 +2087,7 @@
                     </div>
                   </button>
 
-                  <button class="desktop-theme-preset theme-preset-card" data-theme-id="amber">
+                  <button class="desktop-theme-preset theme-preset-card" data-theme-id="amber" role="radio" aria-checked="false" aria-label="Amber Gold: Retro Phosphor CRT">
                     <div class="theme-swatch-circle" style="background: linear-gradient(135deg, #ffbe40 50%, #e09b20 50%); border: 2px solid #ffbe40;"></div>
                     <div class="theme-preset-info">
                       <span class="theme-preset-name" data-i18n="settings.theme_amber">Amber Gold</span>
@@ -2095,7 +2095,7 @@
                     </div>
                   </button>
 
-                  <button class="desktop-theme-preset theme-preset-card" data-theme-id="emerald">
+                  <button class="desktop-theme-preset theme-preset-card" data-theme-id="emerald" role="radio" aria-checked="false" aria-label="Emerald Matrix: Cyber Terminal Green">
                     <div class="theme-swatch-circle" style="background: linear-gradient(135deg, #3bf58b 50%, #24d673 50%); border: 2px solid #3bf58b;"></div>
                     <div class="theme-preset-info">
                       <span class="theme-preset-name" data-i18n="settings.theme_emerald">Emerald Matrix</span>
@@ -2103,7 +2103,7 @@
                     </div>
                   </button>
 
-                  <button class="desktop-theme-preset theme-preset-card" data-theme-id="sapphire">
+                  <button class="desktop-theme-preset theme-preset-card" data-theme-id="sapphire" role="radio" aria-checked="false" aria-label="Sapphire Ice: Nordic Ice Blue Glow">
                     <div class="theme-swatch-circle" style="background: linear-gradient(135deg, #38bdf8 50%, #0284c7 50%); border: 2px solid #38bdf8;"></div>
                     <div class="theme-preset-info">
                       <span class="theme-preset-name" data-i18n="settings.theme_sapphire">Sapphire Ice</span>
@@ -2111,7 +2111,7 @@
                     </div>
                   </button>
 
-                  <button class="desktop-theme-preset theme-preset-card" data-theme-id="amethyst">
+                  <button class="desktop-theme-preset theme-preset-card" data-theme-id="amethyst" role="radio" aria-checked="false" aria-label="Amethyst Violet: Synthwave Neon Purple">
                     <div class="theme-swatch-circle" style="background: linear-gradient(135deg, #c084fc 50%, #a855f7 50%); border: 2px solid #c084fc;"></div>
                     <div class="theme-preset-info">
                       <span class="theme-preset-name" data-i18n="settings.theme_amethyst">Amethyst Violet</span>
@@ -2119,7 +2119,7 @@
                     </div>
                   </button>
 
-                  <button class="desktop-theme-preset theme-preset-card" data-theme-id="crimson">
+                  <button class="desktop-theme-preset theme-preset-card" data-theme-id="crimson" role="radio" aria-checked="false" aria-label="Crimson Ruby: High-Energy Coral Red">
                     <div class="theme-swatch-circle" style="background: linear-gradient(135deg, #fb7185 50%, #f43f5e 50%); border: 2px solid #fb7185;"></div>
                     <div class="theme-preset-info">
                       <span class="theme-preset-name" data-i18n="settings.theme_crimson">Crimson Ruby</span>
@@ -2127,7 +2127,7 @@
                     </div>
                   </button>
 
-                  <button class="desktop-theme-preset theme-preset-card" data-theme-id="light">
+                  <button class="desktop-theme-preset theme-preset-card" data-theme-id="light" role="radio" aria-checked="false" aria-label="Daylight White: Clean Light Desktop">
                     <div class="theme-swatch-circle" style="background: linear-gradient(135deg, #f8fafc 50%, #cbd5e1 50%); border: 2px solid #64748b;"></div>
                     <div class="theme-preset-info">
                       <span class="theme-preset-name" data-i18n="settings.theme_light">Daylight White</span>
@@ -2135,7 +2135,7 @@
                     </div>
                   </button>
 
-                  <button class="desktop-theme-preset theme-preset-card" data-theme-id="yak">
+                  <button class="desktop-theme-preset theme-preset-card" data-theme-id="yak" role="radio" aria-checked="false" aria-label="Yak Bronze: Warm Toastie Meadow">
                     <div class="theme-swatch-circle" style="background: linear-gradient(135deg, #d48a37 50%, #e6a254 50%); border: 2px solid #d48a37;"></div>
                     <div class="theme-preset-info">
                       <span class="theme-preset-name" data-i18n="settings.theme_yak">Yak Bronze</span>
@@ -2636,20 +2636,20 @@
                 <div style="display:flex; flex-direction:column; gap: 14px;">
                   <div>
                     <label style="display:block; font-size:10.5px; font-weight:700; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px;" data-i18n="mgmt.acoustic_label">SYSTEM ACOUSTIC & PERFORMANCE PROFILE</label>
-                    <div class="profile-switcher-row">
-                      <button class="profile-btn active" data-profile="auto">
+                    <div class="profile-switcher-row" role="radiogroup" aria-label="System Acoustic & Performance Profile">
+                      <button class="profile-btn active" role="radio" aria-checked="true" data-profile="auto">
                         <span class="profile-btn-title" data-i18n="mgmt.profile_auto_title">⚡ AUTO DYNAMIC</span>
                         <span class="profile-btn-desc" data-i18n="mgmt.profile_auto_desc">Dynamic curve based on thermals • Synced RGB</span>
                       </button>
-                      <button class="profile-btn" data-profile="quiet">
+                      <button class="profile-btn" role="radio" aria-checked="false" data-profile="quiet">
                         <span class="profile-btn-title" data-i18n="mgmt.profile_quiet_title">🤫 QUIET</span>
                         <span class="profile-btn-desc" data-i18n="mgmt.profile_quiet_desc">Silent fans (37%) • 20% RGB</span>
                       </button>
-                      <button class="profile-btn" data-profile="balanced">
+                      <button class="profile-btn" role="radio" aria-checked="false" data-profile="balanced">
                         <span class="profile-btn-title" data-i18n="mgmt.profile_balanced_title">⚖️ BALANCED</span>
                         <span class="profile-btn-desc" data-i18n="mgmt.profile_balanced_desc">Standard cooling (60%) • 50% RGB</span>
                       </button>
-                      <button class="profile-btn" data-profile="performance">
+                      <button class="profile-btn" role="radio" aria-checked="false" data-profile="performance">
                         <span class="profile-btn-title" data-i18n="mgmt.profile_performance_title">🚀 PERFORMANCE</span>
                         <span class="profile-btn-desc" data-i18n="mgmt.profile_performance_desc">Aggressive cooling (85%) • 100% RGB</span>
                       </button>
@@ -2924,11 +2924,11 @@
             <div style="display:flex; flex-direction:column; gap: 14px;">
               <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
                 <div>
-                  <label style="display:block; font-size:10.5px; font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="mgmt.sec_admin_user">ADMIN USERNAME</label>
+                  <label for="sec-username" style="display:block; font-size:10.5px; font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="mgmt.sec_admin_user">ADMIN USERNAME</label>
                   <input type="text" id="sec-username" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.25); padding:8px 10px; color:#fff;" placeholder="admin">
                 </div>
                 <div>
-                  <label style="display:block; font-size:10.5px; font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="mgmt.sec_email">NOTIFICATION EMAIL</label>
+                  <label for="sec-email" style="display:block; font-size:10.5px; font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="mgmt.sec_email">NOTIFICATION EMAIL</label>
                   <input type="email" id="sec-email" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.25); padding:8px 10px; color:#fff;" placeholder="admin@zettnas.local">
                 </div>
               </div>
@@ -2936,11 +2936,11 @@
               <div style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px;">
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
                   <div>
-                    <label style="display:block; font-size:10.5px; font-weight:700; color:var(--warn); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="mgmt.sec_new_pwd">NEW PASSWORD (Optional)</label>
+                    <label for="sec-new-pwd" style="display:block; font-size:10.5px; font-weight:700; color:var(--warn); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="mgmt.sec_new_pwd">NEW PASSWORD (Optional)</label>
                     <input type="password" id="sec-new-pwd" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.25); padding:8px 10px; color:#fff;" placeholder="New password (min. 8 characters)" minlength="8" autocomplete="new-password">
                   </div>
                   <div>
-                    <label style="display:block; font-size:10.5px; font-weight:700; color:var(--warn); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="mgmt.sec_confirm_pwd">CONFIRM NEW PASSWORD</label>
+                    <label for="sec-confirm-pwd" style="display:block; font-size:10.5px; font-weight:700; color:var(--warn); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="mgmt.sec_confirm_pwd">CONFIRM NEW PASSWORD</label>
                     <input type="password" id="sec-confirm-pwd" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.25); padding:8px 10px; color:#fff;" placeholder="Repeat new password" data-i18n-placeholder="mgmt.sec_confirm_placeholder" minlength="8" autocomplete="new-password">
                   </div>
                 </div>
@@ -2950,7 +2950,7 @@
               </div>
 
               <div style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px;">
-                <label style="display:block; font-size:10.5px; font-weight:700; color:var(--ok2); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="mgmt.sec_cur_pwd">CURRENT PASSWORD (Required to commit changes)</label>
+                <label for="sec-cur-pwd" style="display:block; font-size:10.5px; font-weight:700; color:var(--ok2); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="mgmt.sec_cur_pwd">CURRENT PASSWORD (Required to commit changes)</label>
                 <input type="password" id="sec-cur-pwd" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.25); padding:8px 10px; color:#fff;" placeholder="Enter current password">
               </div>
 
@@ -3126,7 +3126,7 @@
                   </div>
                   <div style="display:flex; align-items:center; gap:10px;">
                     <span id="notif-master-status-badge" style="font-size:10px; font-weight:700; padding:2px 8px; border-radius:10px; background:rgba(37,194,160,0.15); color:var(--ok2); border:1px solid rgba(37,194,160,0.4);">Active</span>
-                    <label class="switch-toggle" style="position:relative; display:inline-block; width:38px; height:20px; margin:0;">
+                    <label class="switch-toggle" for="notif-master-enabled" style="position:relative; display:inline-block; width:38px; height:20px; margin:0;" aria-label="Toggle Master Notification Engine">
                       <input type="checkbox" id="notif-master-enabled" checked style="opacity:0; width:0; height:0;">
                       <span class="slider round" style="position:absolute; cursor:pointer; inset:0; background:rgba(255,255,255,0.2); border-radius:20px; transition:.3s;"></span>
                     </label>
@@ -3243,37 +3243,37 @@
                 <div style="background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:16px;">
                   <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:12px; margin-bottom:16px;">
                     
-                    <label style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size:11.5px; color:#fff;">
+                    <label for="notif-toggle-smart" style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size:11.5px; color:#fff;">
                       <input type="checkbox" id="notif-toggle-smart" checked>
                       <span>S.M.A.R.T. Drive Health & Sector Errors</span>
                     </label>
 
-                    <label style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size:11.5px; color:#fff;">
+                    <label for="notif-toggle-temp" style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size:11.5px; color:#fff;">
                       <input type="checkbox" id="notif-toggle-temp" checked>
                       <span>Thermal Overheat Warnings (CPU / HDD)</span>
                     </label>
 
-                    <label style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size:11.5px; color:#fff;">
+                    <label for="notif-toggle-ups" style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size:11.5px; color:#fff;">
                       <input type="checkbox" id="notif-toggle-ups" checked>
                       <span>UPS On-Battery, Low-Battery & Shutdown</span>
                     </label>
 
-                    <label style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size:11.5px; color:#fff;">
+                    <label for="notif-toggle-fan" style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size:11.5px; color:#fff;">
                       <input type="checkbox" id="notif-toggle-fan" checked>
                       <span>Fan Stalls & Hardware Cooling Anomalies</span>
                     </label>
 
-                    <label style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size:11.5px; color:#fff;">
+                    <label for="notif-toggle-copy" style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size:11.5px; color:#fff;">
                       <input type="checkbox" id="notif-toggle-copy" checked>
                       <span>Media Card Auto-Ingest Completion / Errors</span>
                     </label>
 
-                    <label style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size:11.5px; color:#fff;">
+                    <label for="notif-toggle-container" style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size:11.5px; color:#fff;">
                       <input type="checkbox" id="notif-toggle-container">
                       <span>Container Crashes & OOM Events</span>
                     </label>
 
-                    <label style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size:11.5px; color:#fff;">
+                    <label for="notif-toggle-backup" style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size:11.5px; color:#fff;">
                       <input type="checkbox" id="notif-toggle-backup">
                       <span>Configuration Backup & Snapshot Status</span>
                     </label>
@@ -3282,15 +3282,15 @@
 
                   <div style="border-top:1px solid rgba(255,255,255,0.06); padding-top:14px; display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px;">
                     <div>
-                      <label style="display:block; font-size:10.5px; font-weight:700; color:var(--muted); margin-bottom:4px;">HDD TEMP THRESHOLD (°C)</label>
+                      <label for="notif-input-hdd-temp" style="display:block; font-size:10.5px; font-weight:700; color:var(--muted); margin-bottom:4px;">HDD TEMP THRESHOLD (°C)</label>
                       <input type="number" id="notif-input-hdd-temp" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.25); padding:8px 10px; color:#fff;" min="30" max="80" value="50">
                     </div>
                     <div>
-                      <label style="display:block; font-size:10.5px; font-weight:700; color:var(--muted); margin-bottom:4px;">CPU TEMP THRESHOLD (°C)</label>
+                      <label for="notif-input-cpu-temp" style="display:block; font-size:10.5px; font-weight:700; color:var(--muted); margin-bottom:4px;">CPU TEMP THRESHOLD (°C)</label>
                       <input type="number" id="notif-input-cpu-temp" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.25); padding:8px 10px; color:#fff;" min="40" max="105" value="80">
                     </div>
                     <div>
-                      <label style="display:block; font-size:10.5px; font-weight:700; color:var(--muted); margin-bottom:4px;">ALERT COOLDOWN (MINUTES)</label>
+                      <label for="notif-input-cooldown" style="display:block; font-size:10.5px; font-weight:700; color:var(--muted); margin-bottom:4px;">ALERT COOLDOWN (MINUTES)</label>
                       <input type="number" id="notif-input-cooldown" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.25); padding:8px 10px; color:#fff;" min="1" max="1440" value="30">
                     </div>
                   </div>
@@ -3710,32 +3710,32 @@
     <form id="webdav-config-form" class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
         <div>
-          <label style="display:block; font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;">LINE-RATE PORT</label>
+          <label for="webdav-cfg-port" style="display:block; font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;">LINE-RATE PORT</label>
           <input type="number" id="webdav-cfg-port" min="1024" max="65535" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff; border-radius:6px; font-size:12px;" required />
         </div>
         <div>
-          <label style="display:block; font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;">ROOT STORAGE PATH</label>
+          <label for="webdav-cfg-root" style="display:block; font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;">ROOT STORAGE PATH</label>
           <input type="text" id="webdav-cfg-root" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff; border-radius:6px; font-size:12px;" required />
         </div>
       </div>
 
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px;">
         <div>
-          <label style="display:block; font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;">USERNAME</label>
+          <label for="webdav-cfg-user" style="display:block; font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;">USERNAME</label>
           <input type="text" id="webdav-cfg-user" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff; border-radius:6px; font-size:12px;" />
         </div>
         <div>
-          <label style="display:block; font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;">NEW PASSWORD</label>
+          <label for="webdav-cfg-pass" style="display:block; font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;">NEW PASSWORD</label>
           <input type="password" id="webdav-cfg-pass" class="tz-select-input" placeholder="(Leave blank to keep)" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff; border-radius:6px; font-size:12px;" />
         </div>
       </div>
 
       <div style="display: flex; flex-direction: column; gap: 8px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px;">
-        <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:#fff; cursor:pointer;">
+        <label for="webdav-cfg-auth-toggle" style="display:flex; align-items:center; gap:8px; font-size:12px; color:#fff; cursor:pointer;">
           <input type="checkbox" id="webdav-cfg-auth-toggle" checked style="width:16px; height:16px; accent-color:var(--ok2);" />
           <span>Require Authentication (Basic Auth)</span>
         </label>
-        <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:#fff; cursor:pointer;">
+        <label for="webdav-cfg-readonly-toggle" style="display:flex; align-items:center; gap:8px; font-size:12px; color:#fff; cursor:pointer;">
           <input type="checkbox" id="webdav-cfg-readonly-toggle" style="width:16px; height:16px; accent-color:var(--ok2);" />
           <span>Mount Read-Only (Disallow file uploads & modifications)</span>
         </label>
@@ -3763,7 +3763,7 @@
     </div>
     <form id="new-remote-form" class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px; max-height: 80vh; overflow-y: auto;">
       <div>
-        <label style="display:block; font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:6px; letter-spacing:0.5px;">1. SELECT CLOUD / STORAGE PROVIDER</label>
+        <label for="new-remote-provider-select" style="display:block; font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:6px; letter-spacing:0.5px;">1. SELECT CLOUD / STORAGE PROVIDER</label>
         <select id="new-remote-provider-select" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff; border-radius:6px; font-size:12px;">
           <!-- Dynamically populated from /api/remotes/providers -->
         </select>
@@ -3771,7 +3771,7 @@
       </div>
 
       <div style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px;">
-        <label style="display:block; font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;">2. REMOTE NAME (Local Identifier)</label>
+        <label for="new-remote-name" style="display:block; font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;">2. REMOTE NAME (Local Identifier)</label>
         <input type="text" id="new-remote-name" class="tz-select-input" placeholder="e.g. backup-s3, gdrive, offsite-nas" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff; border-radius:6px; font-size:12px;" required pattern="^[a-zA-Z0-9_\-\.]{1,64}$" />
         <div style="font-size: 10.5px; color: var(--muted); margin-top: 4px;">Will be mounted to: <code style="color:#38bdf8;">/mnt/remotes/&lt;name&gt;</code></div>
       </div>
@@ -3784,7 +3784,7 @@
       </div>
 
       <div style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 10px;">
-        <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:#fff; cursor:pointer;">
+        <label for="new-remote-auto-mount" style="display:flex; align-items:center; gap:8px; font-size:12px; color:#fff; cursor:pointer;">
           <input type="checkbox" id="new-remote-auto-mount" checked style="width:16px; height:16px; accent-color:var(--ok2);" />
           <span>Mount immediately to <code style="color:#38bdf8;">/mnt/remotes</code> via FUSE</span>
         </label>
@@ -3815,11 +3815,11 @@
     <form id="create-pool-form" class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px; max-height: 80vh; overflow-y: auto;">
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
         <div>
-          <label style="display:block; font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;">POOL NAME</label>
+          <label for="create-pool-name" style="display:block; font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;">POOL NAME</label>
           <input type="text" id="create-pool-name" class="tz-select-input" placeholder="e.g. vault, ark, data" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff; border-radius:6px; font-size:12px;" required pattern="^[a-zA-Z0-9_\-\.]{1,32}$" />
         </div>
         <div>
-          <label style="display:block; font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;">FILESYSTEM</label>
+          <label for="create-pool-fs" style="display:block; font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;">FILESYSTEM</label>
           <select id="create-pool-fs" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff; border-radius:6px; font-size:12px;">
             <option value="btrfs" selected>Btrfs (Bitrot Protection + Snapshots)</option>
             <option value="ext4">ext4 (Standard Linux Volume)</option>
@@ -3830,7 +3830,7 @@
 
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px;">
         <div>
-          <label style="display:block; font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;">RAID PROFILE</label>
+          <label for="create-pool-profile" style="display:block; font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;">RAID PROFILE</label>
           <select id="create-pool-profile" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff; border-radius:6px; font-size:12px;">
             <option value="raid1" selected>RAID 1 (Mirroring - 2+ Drives)</option>
             <option value="raid10">RAID 10 (Striped Mirrors - 4+ Drives)</option>
@@ -3839,7 +3839,7 @@
           </select>
         </div>
         <div>
-          <label style="display:block; font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;">TRANSPARENT COMPRESSION</label>
+          <label for="create-pool-compression" style="display:block; font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;">TRANSPARENT COMPRESSION</label>
           <select id="create-pool-compression" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff; border-radius:6px; font-size:12px;">
             <option value="zstd:1" selected>Zstandard (zstd:1 - Recommended)</option>
             <option value="lzo">LZO (Fastest CPU)</option>
@@ -3856,7 +3856,7 @@
       </div>
 
       <div style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px;">
-        <label style="display:block; font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;">MOUNTPOINT</label>
+        <label for="create-pool-mountpoint" style="display:block; font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;">MOUNTPOINT</label>
         <input type="text" id="create-pool-mountpoint" class="tz-select-input" placeholder="/mnt/storage/vault" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff; border-radius:6px; font-size:12px;" />
       </div>
 
@@ -3885,11 +3885,11 @@
     <form id="create-share-form" class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
         <div>
-          <label style="display:block; font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;">SHARE NAME</label>
+          <label for="create-share-name" style="display:block; font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;">SHARE NAME</label>
           <input type="text" id="create-share-name" class="tz-select-input" placeholder="e.g. vault, media, photos" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff; border-radius:6px; font-size:12px;" required pattern="^[a-zA-Z0-9_\-\.]{1,32}$" />
         </div>
         <div>
-          <label style="display:block; font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;">SECURITY ACCESS</label>
+          <label for="create-share-security" style="display:block; font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;">SECURITY ACCESS</label>
           <select id="create-share-security" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff; border-radius:6px; font-size:12px;">
             <option value="public" selected>Public (Guest Access Allowed)</option>
             <option value="private">Private (Authenticated Users Only)</option>
@@ -3898,25 +3898,25 @@
       </div>
 
       <div>
-        <label style="display:block; font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;">PATH ON DISK</label>
+        <label for="create-share-path" style="display:block; font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;">PATH ON DISK</label>
         <input type="text" id="create-share-path" class="tz-select-input" placeholder="/mnt/storage/vault" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff; border-radius:6px; font-size:12px;" />
       </div>
 
       <div>
-        <label style="display:block; font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;">DESCRIPTION / COMMENT</label>
+        <label for="create-share-comment" style="display:block; font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;">DESCRIPTION / COMMENT</label>
         <input type="text" id="create-share-comment" class="tz-select-input" placeholder="ZettNAS Managed Share" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff; border-radius:6px; font-size:12px;" />
       </div>
 
       <div style="display: flex; flex-direction: column; gap: 8px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px;">
-        <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:#fff; cursor:pointer;">
+        <label for="create-share-export-smb" style="display:flex; align-items:center; gap:8px; font-size:12px; color:#fff; cursor:pointer;">
           <input type="checkbox" id="create-share-export-smb" checked style="width:16px; height:16px; accent-color:var(--ok2);" />
           <span>Export via Samba (SMB / Windows / macOS)</span>
         </label>
-        <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:#fff; cursor:pointer;">
+        <label for="create-share-timemachine" style="display:flex; align-items:center; gap:8px; font-size:12px; color:#fff; cursor:pointer;">
           <input type="checkbox" id="create-share-timemachine" style="width:16px; height:16px; accent-color:var(--ok2);" />
           <span>Enable Apple Time Machine Backup (vfs_fruit target)</span>
         </label>
-        <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:#fff; cursor:pointer;">
+        <label for="create-share-readonly" style="display:flex; align-items:center; gap:8px; font-size:12px; color:#fff; cursor:pointer;">
           <input type="checkbox" id="create-share-readonly" style="width:16px; height:16px; accent-color:var(--ok2);" />
           <span>Read-Only Share</span>
         </label>
@@ -3947,7 +3947,7 @@
     <div class="smart-modal-body" style="padding: 20px; display: flex; flex-direction: column; gap: 16px;">
       <!-- Take Snapshot Row -->
       <div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 14px;">
-        <div style="font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 8px;">CREATE INSTANT SNAPSHOT</div>
+        <label for="snap-name-input" style="display: block; font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 8px;">CREATE INSTANT SNAPSHOT</label>
         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
           <input type="text" id="snap-name-input" class="tz-select-input" placeholder="snapshot-name (e.g. backup-daily)" style="flex: 1; min-width: 200px; border: 1px solid rgba(255,255,255,0.12); background: rgba(0,0,0,0.3); padding: 7px 10px; color: #fff; border-radius: 6px; font-size: 12px;" />
           <button type="button" id="btn-take-snapshot-submit" style="padding: 7px 16px; font-size: 11px; font-weight: 700; background: var(--brand, #0ea5e9); border: none; color: #fff; border-radius: 6px; cursor: pointer;">📸 Take Snapshot</button>

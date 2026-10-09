@@ -30,25 +30,25 @@ describe('Phase 2: Thermal Heatmap Level Calculations', () => {
     // Cool drive (< 35C)
     const cool = getThermalLevel(28, false);
     expect(cool.cls).toBe('cool');
-    expect(cool.color).toBe('#38bdf8');
+    expect(cool.color).toBe('var(--brand, #38bdf8)');
     expect(cool.text).toBe('28°C');
 
     // Optimal healthy drive (35 - 45C)
     const ok = getThermalLevel(38, false);
     expect(ok.cls).toBe('ok');
-    expect(ok.color).toBe('#3bf58b');
+    expect(ok.color).toBe('var(--ok, #3bf58b)');
     expect(ok.text).toBe('38°C');
 
     // Warm drive (46 - 52C)
     const warn = getThermalLevel(49, false);
     expect(warn.cls).toBe('warn');
-    expect(warn.color).toBe('#f5b731');
+    expect(warn.color).toBe('var(--warn, #f5b731)');
     expect(warn.text).toBe('49°C');
 
     // Critical hot drive (>= 53C)
     const crit = getThermalLevel(56, false);
     expect(crit.cls).toBe('crit');
-    expect(crit.color).toBe('#f0553b');
+    expect(crit.color).toBe('var(--crit, #f0553b)');
     expect(crit.text).toBe('56°C');
   });
 });

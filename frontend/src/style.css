@@ -6766,7 +6766,21 @@ body.mobile-mode.theme-yak .slide-drawer::-webkit-scrollbar-thumb {
 .mgmt-app-card:focus-visible,
 .preset-btn-card:focus-visible,
 .snap-slot:focus-visible,
-.win-btn:focus-visible {
+.win-btn:focus-visible,
+.profile-btn:focus-visible,
+.desktop-theme-preset:focus-visible,
+.mgmt-inner-tab:focus-visible,
+.btn-pill-toggle:focus-visible,
+.btn-sm:focus-visible,
+.tz-select-input:focus-visible {
+  outline: 2px solid var(--focus-ring, #00f0ff) !important;
+  outline-offset: 2px !important;
+  box-shadow: var(--focus-shadow, 0 0 0 3px rgba(0, 240, 255, 0.35)) !important;
+}
+
+.switch input:focus-visible + .toggle-slider,
+.switch-toggle input:focus-visible + .slider,
+.switch-toggle input:focus-visible + .slider-round {
   outline: 2px solid var(--focus-ring, #00f0ff) !important;
   outline-offset: 2px !important;
   box-shadow: var(--focus-shadow, 0 0 0 3px rgba(0, 240, 255, 0.35)) !important;

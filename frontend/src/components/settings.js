@@ -724,6 +724,7 @@ export function syncDesktopThemeUI() {
   document.querySelectorAll('.desktop-theme-preset').forEach((card) => {
     const isThis = card.dataset.themeId === curTheme;
     card.classList.toggle('active', isThis);
+    card.setAttribute('aria-checked', isThis ? 'true' : 'false');
     if (isThis) {
       card.setAttribute('aria-selected', 'true');
     } else {
@@ -758,13 +759,29 @@ export function initDesktopThemeControls() {
   const container = $('mgmt-pane-theme');
   if (!container) return;
 
-  container.querySelectorAll('.desktop-theme-preset').forEach((btn) => {
+  const themePresets = Array.from(container.querySelectorAll('.desktop-theme-preset'));
+  themePresets.forEach((btn, idx) => {
     btn.addEventListener('click', () => {
       const themeId = btn.dataset.themeId;
       if (!themeId) return;
       applyDesktopTheme(themeId, state.desktopCustomAccent);
       saveDesktopThemeToServer(themeId, state.desktopCustomAccent);
       syncDesktopThemeUI();
+    });
+
+    btn.addEventListener('keydown', (e) => {
+      let targetBtn = null;
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        targetBtn = themePresets[(idx + 1) % themePresets.length];
+      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        targetBtn = themePresets[(idx - 1 + themePresets.length) % themePresets.length];
+      }
+      if (targetBtn) {
+        targetBtn.focus();
+        targetBtn.click();
+      }
     });
   });
 
