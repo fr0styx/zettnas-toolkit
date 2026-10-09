@@ -1,5 +1,6 @@
 import aiofiles
 import asyncio
+import json
 import os
 import re
 import shutil
@@ -589,6 +590,29 @@ async def post_docker_catalog_compose(app_id: str, req: Optional[AppComposeReque
     if "error" in res:
         raise HTTPException(status_code=404, detail=res["error"])
     return res
+
+
+class AppDeployRequest(BaseModel):
+    host_port: Optional[int] = None
+    storage_root: str = "/mnt/user/appdata"
+
+
+@router.post("/docker/catalog/{app_id}/deploy")
+async def post_docker_catalog_deploy(app_id: str, req: Optional[AppDeployRequest] = None):
+    if not app_id or not re.match(r"^[a-zA-Z0-9_-]{1,64}$", app_id):
+        raise HTTPException(status_code=400, detail="Invalid application ID")
+
+    from fastapi.responses import StreamingResponse
+    from backend.services.app_catalog import stream_deploy_catalog_app
+
+    host_port = req.host_port if req else None
+    storage_root = req.storage_root if req else "/mnt/user/appdata"
+
+    def event_stream():
+        for event in stream_deploy_catalog_app(app_id, host_port=host_port, storage_root=storage_root):
+            yield json.dumps(event) + "\n"
+
+    return StreamingResponse(event_stream(), media_type="application/x-ndjson")
 
 
 @router.post("/docker/containers/{container_id}/exec")

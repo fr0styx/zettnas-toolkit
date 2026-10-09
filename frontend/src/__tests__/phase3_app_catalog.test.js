@@ -10,6 +10,7 @@ import {
 import {
   fetchAndRenderAppCatalog,
   renderAppCatalogGrid,
+  openAppDeployModal,
   _resetCatalogStateForTesting,
 } from '../components/management.js';
 
@@ -114,4 +115,70 @@ describe('Phase 3: Container App Catalog & Web Terminal', () => {
     expect(grid.textContent).toContain('Vaultwarden');
     expect(grid.textContent).toContain(':8096');
   });
+
+  it('opens deploy modal, executes deployment, streams progress, and renders success launch button', async () => {
+    vi.spyOn(api, 'get').mockResolvedValue({
+      app_id: 'homeassistant',
+      default_port: 8123,
+      suggested_port: 8123,
+      conflict_detected: false,
+    });
+    vi.spyOn(api, 'post').mockResolvedValue({
+      app_id: 'homeassistant',
+      port: 8123,
+      compose_yaml: 'version: "3.8"\nservices:\n  homeassistant:\n    image: ghcr.io/home-assistant/home-assistant:stable',
+    });
+
+    const mockEventsNdjson = [
+      JSON.stringify({ step: 'init', percent: 5, message: 'Initializing deployment...' }),
+      JSON.stringify({ step: 'pull', percent: 50, message: 'Pulling layers...' }),
+      JSON.stringify({
+        step: 'success',
+        percent: 100,
+        message: '✓ Home Assistant deployed successfully!',
+        port: 8123,
+        webui_url: 'http://[HOST]:8123/',
+        done: true,
+      }),
+    ].join('\n');
+
+    vi.spyOn(api, 'request').mockResolvedValue({
+      ok: true,
+      status: 200,
+      text: async () => mockEventsNdjson,
+    });
+
+    await openAppDeployModal('homeassistant');
+
+    const modal = document.getElementById('app-deploy-modal-overlay');
+    expect(modal).toBeTruthy();
+    expect(modal.style.display).toBe('flex');
+
+    const deployBtn = document.getElementById('adm-deploy-confirm-btn');
+    expect(deployBtn).toBeTruthy();
+
+    await deployBtn.onclick();
+
+    const progressView = document.getElementById('adm-view-progress');
+    expect(progressView.style.display).toBe('flex');
+
+    const progressFill = document.getElementById('adm-progress-bar-fill');
+    expect(progressFill.style.width).toBe('100%');
+
+    const progressPct = document.getElementById('adm-progress-pct-badge');
+    expect(progressPct.textContent).toBe('100%');
+
+    const successBox = document.getElementById('adm-success-box');
+    expect(successBox.style.display).toBe('flex');
+
+    const webuiBtn = document.getElementById('adm-webui-launch-btn');
+    expect(webuiBtn).toBeTruthy();
+    expect(webuiBtn.href).toContain(':8123');
+
+    const logs = document.getElementById('adm-deploy-logs');
+    expect(logs.textContent).toContain('Initializing deployment');
+    expect(logs.textContent).toContain('Pulling layers');
+    expect(logs.textContent).toContain('Home Assistant deployed');
+  });
 });
+

@@ -77,3 +77,46 @@ def test_container_exec_endpoint(client, auth_headers):
         data = res.json()
         assert data["success"] is True
         assert "Linux" in data["output"]
+
+
+def test_stream_deploy_catalog_app_endpoint(client, auth_headers):
+    import json
+
+    mock_events = [
+        {"step": "init", "percent": 5, "message": "Initializing deployment...", "done": False},
+        {"step": "storage", "percent": 20, "message": "Storage prepared", "done": False},
+        {"step": "pull", "percent": 75, "message": "Image pulled", "done": False},
+        {"step": "create", "percent": 88, "message": "Container created", "done": False},
+        {
+            "step": "success",
+            "percent": 100,
+            "message": "✓ Home Assistant deployed successfully!",
+            "container_id": "mock_cid_12345",
+            "webui_url": "http://[HOST]:8123/",
+            "port": 8123,
+            "done": True,
+        },
+    ]
+
+    def mock_generator(*args, **kwargs):
+        yield from mock_events
+
+    with patch("backend.services.app_catalog.stream_deploy_catalog_app", side_effect=mock_generator):
+        res = client.post(
+            "/api/docker/catalog/homeassistant/deploy",
+            json={"host_port": 8123, "storage_root": "/tmp/test-appdata"},
+            headers=auth_headers,
+        )
+        assert res.status_code == 200
+        lines = [line.strip() for line in res.text.strip().split("\n") if line.strip()]
+        assert len(lines) == 5
+
+        data_0 = json.loads(lines[0])
+        assert data_0["step"] == "init"
+        assert data_0["percent"] == 5
+
+        data_last = json.loads(lines[-1])
+        assert data_last["step"] == "success"
+        assert data_last["percent"] == 100
+        assert data_last["container_id"] == "mock_cid_12345"
+        assert data_last["port"] == 8123

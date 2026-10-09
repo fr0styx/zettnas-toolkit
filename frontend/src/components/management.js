@@ -510,7 +510,9 @@ export async function openAppDeployModal(appId) {
             </div>
             <button class="win-btn close-btn" id="adm-close-btn" title="Close" aria-label="Close"></button>
           </div>
-          <div style="flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:12px;">
+
+          <!-- View 1: Configuration View -->
+          <div id="adm-view-config" style="flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:12px;">
             <div id="adm-conflict-banner" style="padding:10px 12px; border-radius:6px; font-size:11px; line-height:1.4;"></div>
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
               <div>
@@ -530,12 +532,61 @@ export async function openAppDeployModal(appId) {
                   <button class="btn-pill-toggle" id="adm-download-btn">⬇️ Download</button>
                 </div>
               </div>
-              <pre id="adm-compose-pre" style="margin:0; background:#080c14; border:1px solid rgba(255,255,255,0.1); border-radius:6px; padding:10px; max-height:220px; overflow:auto; font-family:var(--font-mono, monospace); font-size:10.5px; color:#e2e8f0; line-height:1.45;"></pre>
+              <pre id="adm-compose-pre" style="margin:0; background:#080c14; border:1px solid rgba(255,255,255,0.1); border-radius:6px; padding:10px; max-height:200px; overflow:auto; font-family:var(--font-mono, monospace); font-size:10.5px; color:#e2e8f0; line-height:1.45;"></pre>
             </div>
           </div>
-          <div style="padding:10px 16px; border-top:1px solid rgba(255,255,255,0.08); display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.2);">
+
+          <!-- View 2: Live Deployment Progress View -->
+          <div id="adm-view-progress" style="display:none; flex:1; overflow-y:auto; padding:18px 16px; flex-direction:column; gap:12px;">
+            <div style="display:flex; align-items:center; justify-content:space-between;">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <span id="adm-progress-spinner" style="font-size:22px; display:inline-block;">⚙️</span>
+                <div>
+                  <div id="adm-progress-title" style="font-size:13px; font-weight:700; color:#fff;">Deploying Application...</div>
+                  <div id="adm-progress-status-text" style="font-size:11px; color:var(--muted); margin-top:2px;">Preparing environment and directories...</div>
+                </div>
+              </div>
+              <div id="adm-progress-pct-badge" style="font-size:13px; font-weight:800; font-family:var(--font-mono, monospace); color:var(--accent-cyan, #00f0ff); background:rgba(0,240,255,0.08); padding:3px 9px; border-radius:6px; border:1px solid rgba(0,240,255,0.2);">0%</div>
+            </div>
+
+            <!-- Stylized Progress Bar -->
+            <div style="width:100%; height:10px; background:rgba(255,255,255,0.06); border-radius:5px; overflow:hidden; border:1px solid rgba(255,255,255,0.1); position:relative;">
+              <div id="adm-progress-bar-fill" style="height:100%; width:0%; background:linear-gradient(90deg, var(--brand, #0ea5e9), var(--ok2, #25c2a0)); transition:width 0.25s ease; box-shadow:0 0 10px rgba(37,194,160,0.5);"></div>
+            </div>
+
+            <!-- Real-time Activity Log Terminal -->
+            <div style="margin-top:2px;">
+              <div style="font-size:9.5px; font-weight:700; color:var(--muted); margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;">Deployment Console Log</div>
+              <div id="adm-deploy-logs" style="background:#05080f; border:1px solid rgba(255,255,255,0.1); border-radius:6px; height:160px; overflow-y:auto; padding:10px; font-family:var(--font-mono, monospace); font-size:10.5px; line-height:1.5; color:#cbd5e1;">
+                <div style="color:var(--muted);">Waiting for deployment stream to begin...</div>
+              </div>
+            </div>
+
+            <!-- Success Callout -->
+            <div id="adm-success-box" style="display:none; padding:12px 14px; background:rgba(37,194,160,0.12); border:1px solid var(--ok2, #25c2a0); border-radius:6px; align-items:center; justify-content:space-between; gap:12px;">
+              <div>
+                <div style="font-weight:700; color:var(--ok2, #25c2a0); font-size:12px;">🚀 Container is Live & Running!</div>
+                <div id="adm-success-msg" style="font-size:11px; color:#cbd5e1; margin-top:2px;">Your application has been deployed and started successfully.</div>
+              </div>
+              <a id="adm-webui-launch-btn" href="#" target="_blank" rel="noopener noreferrer" class="btn-pill-toggle" style="background:var(--ok2, #25c2a0); color:#000; font-weight:700; font-size:11px; padding:6px 14px; text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
+                🌐 Open Web UI ↗
+              </a>
+            </div>
+          </div>
+
+          <!-- Footer for Config View -->
+          <div id="adm-footer-config" style="padding:10px 16px; border-top:1px solid rgba(255,255,255,0.08); display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.2);">
             <button class="btn-pill-toggle" id="adm-cancel-btn">Cancel</button>
-            <button class="btn-pill-toggle" id="adm-deploy-confirm-btn" style="background:var(--ok2, #25c2a0); color:#fff; border:none; padding:6px 14px; font-weight:700;">✓ Deploy Ready</button>
+            <button class="btn-pill-toggle" id="adm-deploy-confirm-btn" style="background:linear-gradient(135deg, var(--brand, #0ea5e9), var(--ok2, #25c2a0)); color:#fff; border:none; padding:6px 16px; font-weight:700; cursor:pointer;">
+              🚀 Deploy & Launch Container
+            </button>
+          </div>
+
+          <!-- Footer for Progress View -->
+          <div id="adm-footer-progress" style="display:none; padding:10px 16px; border-top:1px solid rgba(255,255,255,0.08); justify-content:space-between; align-items:center; background:rgba(0,0,0,0.2);">
+            <button class="btn-pill-toggle" id="adm-back-to-config-btn" style="display:none;">← Reconfigure</button>
+            <div style="flex:1;"></div>
+            <button class="btn-pill-toggle" id="adm-progress-close-btn" style="display:none; background:var(--ok2, #25c2a0); color:#fff; border:none; padding:6px 16px; font-weight:700;">✓ Done</button>
           </div>
         </div>
       </div>
@@ -546,6 +597,16 @@ export async function openAppDeployModal(appId) {
     document.getElementById('adm-close-btn').addEventListener('click', () => { modal.style.display = 'none'; });
     document.getElementById('adm-cancel-btn').addEventListener('click', () => { modal.style.display = 'none'; });
   }
+
+  // Ensure config view is visible by default
+  const viewConfig = document.getElementById('adm-view-config');
+  const viewProgress = document.getElementById('adm-view-progress');
+  const footerConfig = document.getElementById('adm-footer-config');
+  const footerProgress = document.getElementById('adm-footer-progress');
+  if (viewConfig) viewConfig.style.display = 'flex';
+  if (viewProgress) viewProgress.style.display = 'none';
+  if (footerConfig) footerConfig.style.display = 'flex';
+  if (footerProgress) footerProgress.style.display = 'none';
 
   modal.style.display = 'flex';
 
@@ -612,12 +673,216 @@ export async function openAppDeployModal(appId) {
     showToast(`Downloaded ${appId}-compose.yml`, 'info');
   };
 
-  document.getElementById('adm-deploy-confirm-btn').onclick = () => {
-    navigator.clipboard.writeText(composePre.textContent).then(() => {
-      showToast('Stack YAML ready & copied! Paste into Docker Compose or save file.', 'success');
-      modal.style.display = 'none';
-    });
+  // Deployment execution with live progress bar and streaming console
+  const deployConfirmBtn = document.getElementById('adm-deploy-confirm-btn');
+  const progressFill = document.getElementById('adm-progress-bar-fill');
+  const progressPct = document.getElementById('adm-progress-pct-badge');
+  const progressStatus = document.getElementById('adm-progress-status-text');
+  const progressTitle = document.getElementById('adm-progress-title');
+  const progressSpinner = document.getElementById('adm-progress-spinner');
+  const deployLogs = document.getElementById('adm-deploy-logs');
+  const successBox = document.getElementById('adm-success-box');
+  const webuiBtn = document.getElementById('adm-webui-launch-btn');
+  const closeProgressBtn = document.getElementById('adm-progress-close-btn');
+  const backConfigBtn = document.getElementById('adm-back-to-config-btn');
+  const closeBtn = document.getElementById('adm-close-btn');
+
+  function logDeployLine(msg, type = 'info') {
+    if (!deployLogs) return;
+    const now = new Date().toTimeString().split(' ')[0];
+    const color = type === 'error' ? 'var(--crit, #ff6b6b)' : type === 'success' ? 'var(--ok2, #25c2a0)' : '#cbd5e1';
+    const line = document.createElement('div');
+    line.style.color = color;
+    line.textContent = `[${now}] ${msg}`;
+    deployLogs.appendChild(line);
+    deployLogs.scrollTop = deployLogs.scrollHeight;
+  }
+
+  function handleDeployEvent(data) {
+    if (!data) return;
+
+    if (data.percent != null && data.step !== 'error') {
+      if (progressFill) progressFill.style.width = `${data.percent}%`;
+      if (progressPct) progressPct.textContent = `${data.percent}%`;
+    }
+    if (data.message) {
+      if (progressStatus) progressStatus.textContent = data.message;
+      logDeployLine(data.message, data.step === 'error' ? 'error' : data.step === 'success' ? 'success' : 'info');
+    }
+
+    if (data.step === 'success') {
+      if (progressFill) progressFill.style.width = '100%';
+      if (progressPct) {
+        progressPct.textContent = '100%';
+        progressPct.style.color = 'var(--ok2, #25c2a0)';
+      }
+      if (progressTitle) progressTitle.textContent = `✓ ${appId.toUpperCase()} Deployed!`;
+      if (progressSpinner) {
+        progressSpinner.textContent = '✅';
+        progressSpinner.style.animation = 'none';
+      }
+
+      if (successBox) successBox.style.display = 'flex';
+      const webUrl = data.webui_url ? data.webui_url.replace('[HOST]', window.location.hostname) : `http://${window.location.hostname}:${data.port || suggestedPort}`;
+      if (webuiBtn) {
+        webuiBtn.href = webUrl;
+        webuiBtn.textContent = `🌐 Open Web UI (:${data.port || suggestedPort}) ↗`;
+      }
+
+      if (closeBtn) {
+        closeBtn.disabled = false;
+        closeBtn.style.opacity = '1';
+        closeBtn.style.pointerEvents = 'auto';
+      }
+      if (closeProgressBtn) {
+        closeProgressBtn.style.display = 'inline-block';
+        closeProgressBtn.textContent = '✓ Done';
+      }
+
+      try {
+        fetchAndRenderDockerContainers();
+      } catch (e) {}
+
+      showToast(`${appId} stack deployed and running!`, 'success');
+    } else if (data.step === 'error') {
+      if (progressSpinner) {
+        progressSpinner.textContent = '❌';
+        progressSpinner.style.animation = 'none';
+      }
+      if (progressTitle) progressTitle.textContent = 'Deployment Failed';
+      if (progressStatus) progressStatus.style.color = 'var(--crit, #ff6b6b)';
+      if (progressPct) progressPct.style.color = 'var(--crit, #ff6b6b)';
+
+      if (closeBtn) {
+        closeBtn.disabled = false;
+        closeBtn.style.opacity = '1';
+        closeBtn.style.pointerEvents = 'auto';
+      }
+      if (backConfigBtn) backConfigBtn.style.display = 'inline-block';
+      if (closeProgressBtn) {
+        closeProgressBtn.style.display = 'inline-block';
+        closeProgressBtn.textContent = 'Close';
+      }
+
+      showToast(`Deployment failed: ${data.message}`, 'error');
+    }
+  }
+
+  deployConfirmBtn.onclick = async () => {
+    const p = parseInt(portInput.value, 10) || suggestedPort;
+    const s = storageInput.value.trim() || '/mnt/user/appdata';
+
+    // Switch views
+    viewConfig.style.display = 'none';
+    footerConfig.style.display = 'none';
+    viewProgress.style.display = 'flex';
+    footerProgress.style.display = 'flex';
+
+    // Lock close button while active
+    closeBtn.disabled = true;
+    closeBtn.style.opacity = '0.3';
+    closeBtn.style.pointerEvents = 'none';
+
+    // Reset progress UI
+    if (progressFill) progressFill.style.width = '0%';
+    if (progressPct) {
+      progressPct.textContent = '0%';
+      progressPct.style.color = 'var(--accent-cyan, #00f0ff)';
+    }
+    if (progressTitle) progressTitle.textContent = `Deploying ${appId.toUpperCase()} Stack...`;
+    if (progressStatus) {
+      progressStatus.textContent = 'Connecting to Docker daemon...';
+      progressStatus.style.color = 'var(--muted)';
+    }
+    if (progressSpinner) {
+      progressSpinner.textContent = '⚙️';
+      progressSpinner.style.animation = 'spin 2s linear infinite';
+    }
+    if (deployLogs) deployLogs.innerHTML = '';
+    if (successBox) successBox.style.display = 'none';
+    if (closeProgressBtn) closeProgressBtn.style.display = 'none';
+    if (backConfigBtn) backConfigBtn.style.display = 'none';
+
+    logDeployLine(`Initiating deployment request for ${appId} (Port :${p}, Storage: ${s})...`);
+
+    try {
+      const response = await api.request(`/api/docker/catalog/${appId}/deploy`, {
+        method: 'POST',
+        body: { host_port: p, storage_root: s },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Deployment request failed: HTTP ${response.status}`);
+      }
+
+      if (!response.body || !response.body.getReader) {
+        const text = await response.text();
+        const lines = text.split('\n').filter(Boolean);
+        for (const line of lines) {
+          try {
+            const data = JSON.parse(line);
+            handleDeployEvent(data);
+          } catch (e) {}
+        }
+        return;
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop();
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          try {
+            const eventData = JSON.parse(line);
+            handleDeployEvent(eventData);
+          } catch (err) {
+            console.warn('NDJSON parsing error:', err, line);
+          }
+        }
+      }
+
+      if (buffer.trim()) {
+        try {
+          const eventData = JSON.parse(buffer);
+          handleDeployEvent(eventData);
+        } catch (e) {}
+      }
+    } catch (err) {
+      handleDeployEvent({
+        step: 'error',
+        percent: 0,
+        message: err.message || 'Deployment connection failed',
+        error: err.message,
+        done: true,
+      });
+    }
   };
+
+  if (backConfigBtn) {
+    backConfigBtn.onclick = () => {
+      viewProgress.style.display = 'none';
+      footerProgress.style.display = 'none';
+      viewConfig.style.display = 'flex';
+      footerConfig.style.display = 'flex';
+    };
+  }
+
+  if (closeProgressBtn) {
+    closeProgressBtn.onclick = () => {
+      modal.style.display = 'none';
+      viewProgress.style.display = 'none';
+      footerProgress.style.display = 'none';
+      viewConfig.style.display = 'flex';
+      footerConfig.style.display = 'flex';
+    };
+  }
 }
 
 export async function fetchAndRenderUpsTelemetry() {
