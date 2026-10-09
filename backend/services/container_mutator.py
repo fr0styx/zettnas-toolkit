@@ -11,6 +11,7 @@ import json
 import os
 import socket
 import time
+import urllib.parse
 from typing import Any, Dict, List, Optional, Tuple
 
 from backend.config import logger
@@ -55,6 +56,23 @@ def _docker_request(method: str, path: str, body: Optional[dict] = None, timeout
     sock_path = "/var/run/docker.sock"
     if not os.path.exists(sock_path):
         raise RuntimeError("Docker socket /var/run/docker.sock not found")
+
+    # Sanitize URL path and query parameters so control chars and unencoded JSON in query strings never cause InvalidURL
+    if "?" in path:
+        base, query = path.split("?", 1)
+        parts = query.split("&")
+        safe_parts = []
+        for p in parts:
+            if "=" in p:
+                k, v = p.split("=", 1)
+                unquoted = urllib.parse.unquote(v)
+                safe_parts.append(f"{k}={urllib.parse.quote(unquoted)}")
+            else:
+                safe_parts.append(p)
+        query_str = "&".join(safe_parts)
+        path = f"{base}?{query_str}"
+    elif " " in path:
+        path = path.replace(" ", "%20")
 
     conn = UnixHTTPConnection(sock_path, timeout=timeout)
     headers = {"Content-Type": "application/json"} if body is not None else {}

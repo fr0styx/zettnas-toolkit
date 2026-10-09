@@ -11,6 +11,7 @@ Supports:
 import json
 import re
 import socket
+import urllib.parse
 from typing import Any, Dict, List
 
 from backend.config import logger
@@ -249,10 +250,10 @@ def prune_docker_system(
             logger.warning(f"[Docker Prune] Containers prune error: {e}")
 
     # 2. Prune images
-    if prune_images:
+    if prune_images or all_images:
         try:
             dangling_flag = "false" if all_images else "true"
-            filters = json.dumps({"dangling": [dangling_flag]})
+            filters = urllib.parse.quote(json.dumps({"dangling": [dangling_flag]}))
             status, res = _docker_request("POST", f"/images/prune?filters={filters}", timeout=timeout)
             if status == 200:
                 i_del = [
@@ -260,6 +261,8 @@ def prune_docker_system(
                 ]
                 images_deleted.extend([i for i in i_del if i])
                 reclaimed_bytes += res.get("SpaceReclaimed", 0)
+            else:
+                logger.warning(f"[Docker Prune] Images prune returned HTTP {status}: {res}")
         except Exception as e:
             logger.warning(f"[Docker Prune] Images prune error: {e}")
 
@@ -271,6 +274,8 @@ def prune_docker_system(
                 v_del = res.get("VolumesDeleted") or []
                 volumes_deleted.extend(v_del)
                 reclaimed_bytes += res.get("SpaceReclaimed", 0)
+            else:
+                logger.warning(f"[Docker Prune] Volumes prune returned HTTP {status}: {res}")
         except Exception as e:
             logger.warning(f"[Docker Prune] Volumes prune error: {e}")
 
@@ -281,17 +286,21 @@ def prune_docker_system(
             if status == 200:
                 n_del = res.get("NetworksDeleted") or []
                 networks_deleted.extend(n_del)
+            else:
+                logger.warning(f"[Docker Prune] Networks prune returned HTTP {status}: {res}")
         except Exception as e:
             logger.warning(f"[Docker Prune] Networks prune error: {e}")
 
     # 5. Prune build cache
     if prune_build_cache:
         try:
-            status, res = _docker_request("POST", "/build/prune", timeout=timeout)
+            status, res = _docker_request("POST", "/build/prune?all=true", timeout=timeout)
             if status == 200:
                 c_del = res.get("CachesDeleted") or []
                 build_caches_deleted += len(c_del)
                 reclaimed_bytes += res.get("SpaceReclaimed", 0)
+            else:
+                logger.warning(f"[Docker Prune] Build cache prune returned HTTP {status}: {res}")
         except Exception as e:
             logger.warning(f"[Docker Prune] Build cache prune error: {e}")
 

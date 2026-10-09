@@ -129,4 +129,47 @@ describe('Container Deletion and Docker Prune Subsystem', () => {
     expect(modal.classList.contains('open')).toBe(false);
     expect(modal.style.display).toBe('none');
   });
+
+  it('disables and syncs dangling images checkbox when all_images is checked and sends all_images=true', async () => {
+    vi.spyOn(api, 'get').mockResolvedValue({
+      images: { total_count: 5, unused_count: 2 },
+      containers: { total_count: 8, stopped_count: 3 },
+      volumes: { total_count: 10, unused_count: 4 },
+      total_reclaimable_human: '1.2 GB',
+    });
+
+    const postSpy = vi.spyOn(api, 'post').mockResolvedValue({
+      success: true,
+      space_reclaimed_bytes: 500000000,
+      space_reclaimed_human: '500 MB',
+      images_deleted_count: 3,
+      containers_deleted_count: 0,
+      volumes_deleted_count: 0,
+      build_caches_deleted_count: 0,
+    });
+
+    await openDockerPruneModal();
+
+    const optImages = document.getElementById('dpm-opt-images');
+    const optAllImages = document.getElementById('dpm-opt-all-images');
+
+    // Toggle all images checkbox
+    optAllImages.checked = true;
+    optAllImages.onchange();
+
+    expect(optImages.checked).toBe(true);
+    expect(optImages.disabled).toBe(true);
+
+    const confirmBtn = document.getElementById('dpm-confirm-btn');
+    await confirmBtn.onclick();
+
+    expect(postSpy).toHaveBeenCalledWith('/api/docker/system/prune', {
+      prune_containers: true,
+      prune_images: true,
+      all_images: true,
+      prune_volumes: false,
+      prune_networks: true,
+      prune_build_cache: true,
+    });
+  });
 });

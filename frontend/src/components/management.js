@@ -1295,6 +1295,22 @@ export async function openDockerPruneModal() {
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && modal.classList.contains('open')) closeModal();
     });
+
+    const optImages = document.getElementById('dpm-opt-images');
+    const optAllImages = document.getElementById('dpm-opt-all-images');
+    const syncImageOptions = () => {
+      if (optAllImages && optImages) {
+        if (optAllImages.checked) {
+          optImages.checked = true;
+          optImages.disabled = true;
+          optImages.parentElement.style.opacity = '0.5';
+        } else {
+          optImages.disabled = false;
+          optImages.parentElement.style.opacity = '1';
+        }
+      }
+    };
+    if (optAllImages) optAllImages.onchange = syncImageOptions;
   }
 
   modal.classList.add('open');
@@ -1333,14 +1349,29 @@ export async function openDockerPruneModal() {
     try {
       const res = await api.post('/api/docker/system/prune', {
         prune_containers: pruneContainers,
-        prune_images: pruneImages,
+        prune_images: pruneImages || allImages,
         all_images: allImages,
         prune_volumes: pruneVolumes,
         prune_networks: pruneBuildCache,
         prune_build_cache: pruneBuildCache,
       });
 
-      showToast(`Prune completed! Reclaimed ${res.space_reclaimed_human || '0 B'}.`, 'success');
+      const details = [];
+      if (res.images_deleted_count > 0) details.push(`${res.images_deleted_count} image${res.images_deleted_count > 1 ? 's' : ''}`);
+      if (res.containers_deleted_count > 0) details.push(`${res.containers_deleted_count} container${res.containers_deleted_count > 1 ? 's' : ''}`);
+      if (res.volumes_deleted_count > 0) details.push(`${res.volumes_deleted_count} volume${res.volumes_deleted_count > 1 ? 's' : ''}`);
+      if (res.build_caches_deleted_count > 0) details.push(`${res.build_caches_deleted_count} build cache layer${res.build_caches_deleted_count > 1 ? 's' : ''}`);
+
+      let msg = '';
+      if (res.space_reclaimed_bytes > 0) {
+        msg = `Prune completed! Reclaimed ${res.space_reclaimed_human}${details.length ? ' (' + details.join(', ') + ')' : ''}.`;
+      } else if (details.length > 0) {
+        msg = `Prune completed! Removed ${details.join(', ')} (no additional space freed).`;
+      } else {
+        msg = 'Prune completed: No unused resources were found to remove.';
+      }
+
+      showToast(msg, 'success');
       modal.classList.remove('open');
       modal.style.display = 'none';
 

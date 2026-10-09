@@ -868,7 +868,7 @@ async def post_system_prune(req: Optional[DockerPruneRequest] = None):
         res = await asyncio.to_thread(
             prune_docker_system,
             prune_containers=payload.prune_containers,
-            prune_images=payload.prune_images,
+            prune_images=payload.prune_images or payload.all_images,
             all_images=payload.all_images,
             prune_volumes=payload.prune_volumes,
             prune_networks=payload.prune_networks,

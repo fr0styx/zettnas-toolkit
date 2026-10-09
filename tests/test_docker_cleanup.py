@@ -152,3 +152,46 @@ def test_system_df_and_prune(client, auth_headers):
         )
         assert api_res.status_code == 200
         assert api_res.json()["success"] is True
+
+
+def test_prune_all_unused_images_and_url_encoding(client, auth_headers):
+    captured_paths = []
+
+    def mock_docker(method, path, body=None, timeout=60.0):
+        captured_paths.append(path)
+        if "images/prune" in path:
+            return 200, {"ImagesDeleted": [{"Deleted": "unused_tagged_img"}], "SpaceReclaimed": 800000000}
+        return 200, {}
+
+    with patch("backend.services.docker_cleanup._docker_request", side_effect=mock_docker):
+        # Even if prune_images is False, all_images=True must trigger image pruning with dangling=false
+        res = prune_docker_system(
+            prune_containers=False,
+            prune_images=False,
+            all_images=True,
+            prune_volumes=False,
+            prune_networks=False,
+            prune_build_cache=False,
+        )
+        assert res["success"] is True
+        assert res["images_deleted_count"] == 1
+        assert res["space_reclaimed_bytes"] == 800000000
+
+        # Verify that path contains URL encoded dangling=false
+        image_prune_path = next(p for p in captured_paths if "images/prune" in p)
+        assert "dangling" in image_prune_path
+        # Must be safe for HTTP query string (no raw unescaped quotes or curly braces)
+        assert "{" not in image_prune_path
+        assert "}" not in image_prune_path
+        assert " " not in image_prune_path
+
+    # Test via API endpoint
+    with patch("backend.services.docker_cleanup._docker_request", side_effect=mock_docker):
+        api_res = client.post(
+            "/api/docker/system/prune",
+            json={"prune_containers": False, "prune_images": False, "all_images": True},
+            headers=auth_headers,
+        )
+        assert api_res.status_code == 200
+        assert api_res.json()["images_deleted_count"] == 1
+        assert api_res.json()["space_reclaimed_bytes"] == 800000000
