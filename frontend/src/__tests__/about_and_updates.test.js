@@ -37,8 +37,8 @@ describe('System About & Software Updates Frontend Component', () => {
       if (url === '/api/system/about') {
         return {
           name: 'ZettNAS Workbench',
-          version: '1.5.0',
-          tag: 'v1.5.0',
+          version: '1.6.0',
+          tag: 'v1.6.0',
           release_channel: 'Stable',
           chassis_model: 'Zettlab D8 (8-Bay)',
           hostname: 'ZettTower',
@@ -50,9 +50,9 @@ describe('System About & Software Updates Frontend Component', () => {
       }
       if (url.startsWith('/api/system/updates')) {
         return {
-          current_version: '1.5.0',
-          latest_version: '1.5.0',
-          latest_tag: 'v1.5.0',
+          current_version: '1.6.0',
+          latest_version: '1.6.0',
+          latest_tag: 'v1.6.0',
           update_available: false,
           checked_at: 1775685600,
         };
@@ -62,7 +62,7 @@ describe('System About & Software Updates Frontend Component', () => {
 
     await fetchAndRenderSystemAbout();
 
-    expect(document.getElementById('about-version-badge').textContent).toBe('v1.5.0 • Stable');
+    expect(document.getElementById('about-version-badge').textContent).toBe('v1.6.0 • Stable');
     expect(document.getElementById('about-chassis-model').textContent).toBe('Zettlab D8 (8-Bay)');
     expect(document.getElementById('about-host-platform').textContent).toBe('ZettTower (Linux 6.12.13-Unraid)');
     expect(document.getElementById('about-runtime-env').textContent).toBe('Docker Container (Python 3.12.15)');
@@ -79,8 +79,8 @@ describe('System About & Software Updates Frontend Component', () => {
       if (url === '/api/system/about') {
         return {
           name: 'ZettNAS Workbench',
-          version: '1.5.0',
-          tag: 'v1.5.0',
+          version: '1.6.0',
+          tag: 'v1.6.0',
           release_channel: 'Stable',
           chassis_model: 'Zettlab D4 (4-Bay)',
           uptime_secs: 3660,
@@ -88,12 +88,12 @@ describe('System About & Software Updates Frontend Component', () => {
       }
       if (url.startsWith('/api/system/updates')) {
         return {
-          current_version: '1.5.0',
-          latest_version: '1.6.0',
-          latest_tag: 'v1.6.0',
+          current_version: '1.6.0',
+          latest_version: '1.7.0',
+          latest_tag: 'v1.7.0',
           update_available: true,
-          release_name: 'ZettNAS v1.6.0 Enterprise Speed',
-          release_url: 'https://github.com/fr0styx/zettnas-toolkit/releases/tag/v1.6.0',
+          release_name: 'ZettNAS v1.7.0 Enterprise Speed',
+          release_url: 'https://github.com/fr0styx/zettnas-toolkit/releases/tag/v1.7.0',
           release_notes: '## Improvements\n- High-velocity NVMe telemetry',
           checked_at: 1775685600,
         };
@@ -104,10 +104,10 @@ describe('System About & Software Updates Frontend Component', () => {
     await fetchAndRenderSystemAbout(true);
 
     expect(document.getElementById('update-status-icon').textContent).toBe('🚀');
-    expect(document.getElementById('update-status-title').textContent).toContain('Update Available: v1.6.0');
+    expect(document.getElementById('update-status-title').textContent).toContain('Update Available: v1.7.0');
     expect(document.getElementById('update-details-box').style.display).toBe('block');
-    expect(document.getElementById('update-release-title').textContent).toBe('ZettNAS v1.6.0 Enterprise Speed');
-    expect(document.getElementById('update-release-link').href).toBe('https://github.com/fr0styx/zettnas-toolkit/releases/tag/v1.6.0');
+    expect(document.getElementById('update-release-title').textContent).toBe('ZettNAS v1.7.0 Enterprise Speed');
+    expect(document.getElementById('update-release-link').href).toBe('https://github.com/fr0styx/zettnas-toolkit/releases/tag/v1.7.0');
     expect(document.getElementById('update-release-notes').textContent).toContain('High-velocity NVMe telemetry');
   });
 

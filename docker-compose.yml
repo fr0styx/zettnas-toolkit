@@ -11,21 +11,24 @@ services:
       net.unraid.docker.shell: "bash"
     ports:
       - "${PORT:-8082}:8082"
+      - "${WEBDAV_PORT:-8084}:8084"
     volumes:
       - /proc:/host/proc:ro
       - /sys:/host/sys:rw
       - /dev:/host/dev:rw
-      - /dev/fb0:/dev/fb0
-      - /dev/dri:/dev/dri
+      - /dev/fb0:/dev/fb0                                    # Physical LCD (optional - omit if headless)
+      - /dev/dri:/dev/dri                                    # GPU acceleration (optional)
+      - /dev/fuse:/dev/fuse:rw                               # FUSE cloud remotes mount
       - /etc/localtime:/etc/localtime:ro
       - ${STORAGE_POOL_PATH:-/mnt/user}:/mnt/user:rw
       - ./data:/app/data
-      - /boot/config/network.cfg:/boot/config/network.cfg:ro
-      - /var/local/emhttp:/var/local/emhttp:ro
+      - /boot/config/network.cfg:/boot/config/network.cfg:ro # Unraid network config (optional on Linux)
+      - /var/local/emhttp:/var/local/emhttp:ro               # Unraid array status (optional on Linux)
       - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
       - LCD_FPS=${LCD_FPS:-10}
       - PORT=8082
+      - WEBDAV_PORT=${WEBDAV_PORT:-8084}
       - WEB_PASSWORD=${WEB_PASSWORD:-admin}
       - NAS_NAME=${NAS_NAME:-NAS}
       - POOL_PATH=/mnt/user

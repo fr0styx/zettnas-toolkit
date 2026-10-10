@@ -19,25 +19,22 @@
   <img src="static/img/ui-screenshot.png" width="90%" alt="ZettNAS Web Studio & Desktop UI" style="border-radius: 8px; box-shadow: 0 12px 36px rgba(0,0,0,0.5);">
 </div>
 
-**ZettNAS Toolkit** (**NAS WORKBENCH**) is a specialized hardware orchestration platform engineered for Zettlab NAS enclosures (D4, D6, and D8 models) and custom homelab servers running Unraid, Debian, or generic Docker hosts. It bridges physical chassis peripherals with modern web management:
+**ZettNAS Toolkit** (**NAS WORKBENCH**) is an enterprise-grade hardware orchestration platform, modern web desktop OS, and container management suite engineered for Zettlab NAS enclosures (D4, D6, D8 models), Aoostar appliances, and generic homelab servers running Unraid, Debian, Ubuntu, TrueNAS, or Docker. It bridges physical server hardware with an intuitive desktop environment:
 
+* **Enterprise Multi-User & Granular RBAC** — SQLite WAL user store (`users.db`), RFC 9106 Argon2id credential hashing, RFC 6238 TOTP Multi-Factor Authentication, Reverse Proxy SSO (`X-Forwarded-User`), scoped API tokens with CIDR whitelisting, private home folder isolation (`/mnt/user/homes/<username>`), and Inactivity Auto-Lock screen (`Cmd+L`).
+* **Multi-Channel Notifications & Alert Engine** — Unified Apprise integration for Discord, Telegram, Email/SMTP, ntfy, Pushover, Gotify, and webhooks with Mission Control channel setup wizards, 1-click test dispatches, secret masking, and Dock deep-links.
+* **Universal Storage & Platform Abstraction Layer (PAL)** — Multi-protocol S.M.A.R.T. engine (SATA, NVMe, SAS, USB UAS), zero-wake ATA spindown safeguard (`smartctl -n standby`), dynamic 2.5D parametric Chassis Digital Twin with drag-and-drop bay slot mapping, and dynamic coexistence across Btrfs RAID, Unraid array, and ZFS.
+* **Universal WebDAV Server & Rclone Cloud Gateway (Port `8084`)** — Collision-free WebDAV file access and direct desktop File Explorer browsing for 20+ cloud backends (S3, Backblaze B2, Google Drive, OneDrive, Dropbox).
+* **Hyper-Backup & 3-2-1 Disaster Recovery** — Automated snapshot schedules, local and remote cloud backup pipelines, retention pruning, and 1-click snapshot rollback.
+* **In-Place Docker Compose Stack Inspector & Editor** — Live Compose stack editing, container mutator, clickable container update badges, individual and "Update All" container updates with automatic image pull and rollback protection.
+* **Visual Network Topology & Virtual Switch Inspector** — Interactive SVG interface cards displaying link speeds, MTU, duplex, IPv4/IPv6, and zero-flicker real-time throughput sparklines for physical and virtual interfaces (`bond0`, bridges).
+* **Modern Desktop OS & Personalization** — Visual wallpaper gallery with drag-and-drop upload, macOS-style parabolic dock magnification, acrylic glassmorphism sliders, desktop context menu, custom desktop shortcuts, and themes (Cyber Teal, Amber CRT, Emerald Matrix, Yak Bronze, and Pure OLED Black).
+* **Dynamic Hardware HAL** — Automatically detects custom appliance hardware (Physical LCD panel `/dev/fb0`, front copy button, SD/TF card slot as on ZETTLABS D6U / Aoostar WTR) vs generic servers, intelligently hiding unsupported menus and top-bar MCU/FB badges.
 * **Direct Front-Panel LCD (`/dev/fb0`)** — 640×172 zero-overhead rendering with multi-page rotation, hardware button cycling, screen-off sleep (0 FPS), and adaptive idle rates.
-* **Modern Web OS Desktop (Port `8082`)** — Windowed workspace featuring customizable desktop icons, persistent window coordinate bounds (`localStorage`), 8-zone Aero Snap window tiling, snap assist hover flyouts, and interactive taskbar dock with live hover previews.
-* **Universal Spotlight Command Palette (`Cmd+K` / `Ctrl+K`)** — Lightning-fast fuzzy search across applications, active Docker containers, storage browse roots, and direct hardware actions (`>reboot`, `>spindown`, `>quiet fans`, `>turbo`, `>theme oled`).
-* **Curated 25+ Homelab App Catalog & Conflict Resolver** — Built-in 1-click Docker application catalog (Jellyfin, Immich, Nextcloud, Home Assistant, Vaultwarden, qBittorrent, etc.) with automatic pre-flight host port conflict resolution and live Compose generation.
-* **In-Browser Container Web Terminal** — Interactive container console in the Container Inspector allowing live shell command execution, history navigation, and clean output streaming.
-* **Parametric 2.5D SVG Chassis Twin & Drive Locator** — Real-time interactive physical twin for Zettlab D4, D6, D8, and DIY enclosures with per-bay thermal heatmaps, spindown platter states, and physical quad-action "Locate Drive" strobe with Web Audio chirps.
-* **Desktop Marquee Lasso & Context Menu** — Desktop wallpaper click-and-drag multi-select box and right-click desktop workspace context menu.
-* **Mobile PWA & Touch Haptics** — Standalone progressive web app (`manifest.json`) with responsive bottom-sheet layouts and tactile touch vibration feedback (`navigator.vibrate`).
-* **Mission Control & Hardware Settings** — Centralized administration hub with responsive left-sidebar navigation, live Docker container telemetry (CPU, RAM, Net I/O), custom named fan curves, and diagnostic inspectors.
-* **Predictive S.M.A.R.T. & NVMe Health** — SQLite-backed rate-of-change degradation velocity tracking (shedding sectors, stuck pending sectors, thermal drift) with 30-day sparklines plus NVMe wear metrics (TBW, available spare %, critical warnings).
+* **Predictive S.M.A.R.T. & NVMe Velocity Tracking** — Rate-of-change degradation velocity tracking (reallocated sectors, pending sectors, NVMe wear) with 30-day sparklines.
 * **Native NUT UPS Protocol & Emergency Failsafes** — Zero-subprocess TCP socket client (port 3493) with automated failsafes: pauses photo transfers, flushes dirty OS buffers (`os.sync()`), dispatches priority alerts, and triggers host powerdown.
 * **High-Integrity Media Ingestion** — Front SD/TF card auto-detection with interactive confirmation dialog, safe eject protection, async I/O (`aiofiles`), SHA-256 verification, and persistent SQLite logs.
-* **Multi-Architecture Docker Distribution** — Native multi-arch support (`linux/amd64` and `linux/arm64` for Raspberry Pi, ARM NAS boards, and Apple Silicon) published directly to GitHub Container Registry.
 * **Full Internationalization (i18n)** — Zero-dependency client-side localization across 5 languages (English, German, Simplified Chinese, French, and Spanish) spanning all interfaces, modals, and settings.
-* **Hardware- & OS-Agnostic Container Engine** — Pure Docker Engine API compliance over `/var/run/docker.sock` across Debian, Ubuntu, TrueNAS SCALE, Proxmox, and Unraid. Features dynamic OCI Compose Spec v3.8+ YAML synthesizer with secret masking, multiplexed live logs console, zero-downtime resource tuning, and atomic port reconfiguration with rollback protection.
-* **Strictly Isolated Theme Architecture** — Decoupled styling engines for the physical front-panel LCD (`/dev/fb0`) vs. desktop web workspace, ensuring desktop accent color changes never alter hardware display telemetry.
-* **Chassis ARGB Lightbar (`/dev/ttyACM0`)** — USB microcontroller driver for 38 WS2812B LEDs with hardware animations, error-reactive alerts (red/amber), and blackout night scheduling.
 
 ---
 

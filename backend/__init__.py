@@ -3,4 +3,4 @@ ZettNAS Toolkit Backend Package
 Modularized architecture for chassis management, telemetry, and LCD dashboard.
 """
 
-__version__ = "1.5.0"
+__version__ = "1.6.0"

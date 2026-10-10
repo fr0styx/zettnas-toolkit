@@ -1,5 +1,68 @@
 # ZettNAS Toolkit - Release Changelog
 
+## v1.6.0 (2026-10-10) - Stable
+### 🛡️ Universal Multi-User RBAC, Enterprise Notifications, Hyper-Backup & Modern Desktop OS
+
+This landmark release transforms ZettNAS Workbench into an enterprise-ready, cross-platform NAS operating environment. Peer-reviewed across multiple systems engineering disciplines, v1.6.0 introduces an enterprise SQLite-backed Multi-User & RBAC engine, multi-channel alerting with Apprise, 3-2-1 Hyper-Backup and disaster recovery, a universal Platform Abstraction Layer (PAL) with Btrfs/Unraid/ZFS coexistence, an in-place Docker Compose Stack Editor, an interactive visual Network Topology inspector, and deep Desktop OS personalization with macOS-style dock magnification, dynamic hardware detection, and an OLED pure black theme:
+
+- **Enterprise Identity, Multi-User & Granular RBAC (Phases 1–5)**:
+  - **SQLite WAL User Store (`users.db`)**: High-performance persistence layer operating in Write-Ahead Logging (WAL) mode for users, roles, sessions, scoped API tokens, and structured security audit logs. Features transparent zero-downtime migration from legacy `security.json` and `sessions.json`.
+  - **Argon2id Cryptographic Security**: Upgraded credential hashing to RFC 9106 Argon2id (`m=64MB`, `t=3`, `p=4`) with automated transparent rehash on valid user login.
+  - **Multi-Factor Authentication (MFA / 2FA)**: RFC 6238 TOTP implementation with QR provisioning (`otpauth://`), time-drift tolerance, replay attack prevention, and 8 single-use cryptographically hashed recovery codes.
+  - **Enterprise SSO & Reverse Proxy Header Auth**: Native support for `X-Forwarded-User`, `Remote-User`, and `X-Forwarded-Email` headers from Authelia, Authentik, Traefik, and Cloudflare Access with trusted subnet validation.
+  - **Granular RBAC Scope Taxonomy**: Role-based access control with standard roles (`SuperAdmin`, `StorageAdmin`, `AppOperator`, `BackupOperator`, `ShareUser`, `Auditor`) and granular permission scopes (`system:*`, `storage:*`, `shares:*`, `containers:*`, `users:*`, `hardware:*`, `logs:*`).
+  - **Scoped API Tokens & Service Accounts**: Token provisioning with customizable scope matrices, CIDR whitelisting, expiration timestamps, and masked secret previews (`zat_****`).
+  - **Desktop UX & Authentication Overhaul**: Dual-mode login screen (User Avatar Chooser vs Classic Mode), 6-digit numeric OTP challenge, acrylic glassmorphic Inactivity Auto-Lock screen (`Cmd+L`), and top-bar user account pill and flyout.
+  - **Private Home Isolation & Multi-User WebDAV**: Automatic home directory provisioning (`/mnt/user/homes/<username>`) with 0700 permissions, per-user desktop state synchronization (wallpaper, theme, dock pins), and WebDAV authentication proxy.
+
+- **Universal Storage, Multi-Protocol HAL & Platform Abstraction Layer (PAL)**:
+  - **Multi-Protocol S.M.A.R.T. Engine**: Universal drive diagnostics supporting SATA (`-d sat`), NVMe (`-d nvme`), SAS (`-d scsi`), and USB bridge enclosures (`-d sntrealtek`, `-d sntjmicron`).
+  - **ATA Zero-Wake Spindown Safeguard**: Uses `smartctl -n standby` to query telemetry and temperatures without waking sleeping hard drive platters.
+  - **Virtual Block Device Filtering**: Automatically filters out zram, loop devices, and zero-byte virtual blocks from physical disk discovery.
+  - **Dynamic 2.5D Parametric Chassis Visualizer**: Dynamically models custom drive counts and backplanes beyond fixed 4/6/8 bay enclosures. Includes an interactive Bay Slots Mapping modal for drag-to-reorder disk identification and quad-action locate strobe.
+  - **Platform Abstraction Layer (PAL)**: Dynamic coexistence between Unraid array management and generic Linux storage engines (Btrfs RAID 0/1/5/6/10, mdadm, and ZFS).
+  - **Samba Port 445 Paradox Resolution**: Automatically probes port 445; acts as Host Share Auditor on appliance hosts (Unraid/TrueNAS) or provisions active Samba sidecars on Generic Linux.
+  - **Universal WebDAV & Rclone Multi-Cloud Gateway**: Zero-conflict WebDAV file server (Port `8084`) and Rclone cloud engine supporting 20+ remote providers (S3, Backblaze B2, Google Drive, Dropbox) directly browseable in File Explorer.
+
+- **Enterprise Multi-Channel Notifications & Alert Routing**:
+  - **Unified Apprise Integration**: Native dispatch across Discord (webhooks), Telegram (bot token & chat ID), Email/SMTP (TLS/SSL auth), ntfy (topics & self-hosted servers), Pushover, Gotify, generic webhooks, and raw Apprise URLs.
+  - **Mission Control Setup Wizards**: Dedicated `#mgmt-pane-notifications` tab with visual channel cards, active/disabled status badges, 1-click in-place test dispatches, and secret masking.
+  - **Dock Notification Center Deep-Link**: Quick header gear button in the Dock's notification flyout linking straight to notification channel settings.
+  - **Granular Alert Triggers & Thresholds**: Configurable event rules for S.M.A.R.T. degradation velocity, hard drive and CPU thermal ceilings, fan stalls, UPS power interrupts, container events, and backup status.
+
+- **Hyper-Backup & Disaster Recovery Subsystem**:
+  - **3-2-1 Backup Engine**: Automated pipeline supporting local filesystem snapshots and off-site cloud replication via Rclone.
+  - **Automated Scheduling & Pruning**: Configurable cron schedules with automated retention policies (hourly, daily, weekly, monthly prune).
+  - **1-Click Snapshot Rollback**: Instant filesystem snapshot restoration with transactional safety.
+  - **Sanitized Backup Archives**: System configuration exports with automatic exclusion of credentials, API tokens, and sensitive keys.
+
+- **Docker Containers, Compose Stacks & App Catalog**:
+  - **Top-Level Mission Control Menu**: Elevated "Apps & Containers" to a primary top-level sidebar menu item with live running container count badges.
+  - **In-Place Compose Stack Inspector & Editor**: Interactive editor for `docker-compose.yml` stacks and container configurations with syntax highlighting, validation, and live restart triggers.
+  - **Native UI Dialogs & Stack Picker**: Custom glassmorphic modals replacing native browser `prompt()` and `confirm()` dialogs.
+  - **Container Mutator & Update Engine**: Clickable container update badges, individual container updates, and "Update All" with automatic image pull, recreate, and rollback protection.
+  - **Docker Cleanup & External Templates**: URL-encoded Docker prune filters and support for external app templates (Portainer, Lissy93).
+
+- **Visual Network Topology & Virtual Switch Inspector**:
+  - **Interactive Network Interface Cards**: Visual SVG cards for physical interfaces, virtual bridges, and bonding interfaces (`bond0`) with live link speeds, MTU, duplex, and IPv4/IPv6 addresses.
+  - **Real-Time Throughput Sparklines**: Keyed zero-flicker table reconciler and SVG throughput graphs for live RX/TX network traffic.
+
+- **Structured Diagnostics & Correlation Tracing**:
+  - **Structured JSON Logging**: Uniform JSON logging with UUID `x-correlation-id` request tracing across all API endpoints, SSE streams, and background daemons.
+  - **1-Click Anonymized Diagnostics Bundle**: One-click download of sanitized system diagnostics with automatic redaction of passwords, tokens, public IPs, and user hashes.
+
+- **Desktop OS Personalization & UX Polish**:
+  - **Visual Wallpaper Gallery Grid**: Thumbnail grid with lazy loading, active wallpaper indicators, drag-and-drop file ingestion, and custom modal for rename/delete.
+  - **Parabolic Dock Magnification**: Smooth macOS-style magnification on hover, configurable dock positioning (Bottom, Left, Right), and dynamic desktop workspace bounds.
+  - **Acrylic Glassmorphism Controls**: Sliders for blur strength, opacity, and specular highlights (disabled by default for clean contrast).
+  - **Themes & Instant Yak Switching**: Cyber Teal, Amber CRT, Emerald Matrix, Sapphire Ice, Amethyst, Crimson, Yak Bronze, and Pure OLED Black (`theme-oled`). Instant wallpaper switch to Yak wallpaper when Yak theme is selected.
+  - **Desktop Shortcuts & Context Menu**: Right-click desktop workspace menu with deduplication and alignment tools; custom desktop shortcuts for Containers, Storage, and Activity Monitor.
+
+- **Dynamic Hardware HAL & Custom Chassis Features**:
+  - **Dynamic Hardware Settings Button**: Automatically detects whether host has custom appliance hardware (Physical LCD panel `/dev/fb0`, front copy button, SD/TF card slot as on ZETTLABS D6U / Aoostar WTR) vs generic servers, intelligently hiding unsupported menus.
+  - **Dynamic MCU & FB Status Badges**: Top-bar MCU (`/dev/ttyACM0`) and FB (`/dev/fb0`) status badges automatically hide if the physical peripheral is not connected.
+  - **Universal Card Re-ordering**: Card locking and drag-to-reorder now works universally across all 4 drawer tabs (Dashboard Layout, LED Strip Bar, Fans, Copy Button).
+
 ## v1.5.0 (2026-10-08) - Stable
 ### 🚀 Master UI/UX Evolution & System Hardening (Phases 1–5 Complete)
 
