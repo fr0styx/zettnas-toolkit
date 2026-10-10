@@ -752,6 +752,36 @@ export function bringToFront(windowEl) {
   } catch (e) {}
 }
 
+export const DESKTOP_WINDOW_SELECTOR = '.smart-modal-window, #console-window, #management-window, #file-manager-window, .file-manager-window, .os-window, #notif-center-panel, .container-inspector-window, #container-inspector-window, #stack-inspector-window, #stack-picker-window, #app-deploy-modal-window';
+
+export const handleWindowActivation = (e) => {
+  // If the click directly targeted an overlay backdrop, do not activate it as a window
+  if (e.target && (
+    e.target.id === 'app-deploy-modal-overlay' ||
+    e.target.id === 'management-modal-overlay' ||
+    e.target.id === 'console-modal-overlay' ||
+    e.target.id === 'smart-modal-overlay'
+  )) {
+    return;
+  }
+  const windowEl = e.target.closest?.(DESKTOP_WINDOW_SELECTOR);
+  if (windowEl) {
+    bringToFront(windowEl);
+  } else if (e.target.closest?.('#desktop') && !e.target.closest?.(DESKTOP_WINDOW_SELECTOR)) {
+    // User clicked on empty desktop wallpaper or desktop icons/widgets
+    document.querySelectorAll('.active-window').forEach((w) => w.classList.remove('active-window'));
+    if (window.DockManager) {
+      window.DockManager.activeId = null;
+      window.DockManager.render();
+    }
+  }
+};
+
+if (typeof document !== 'undefined') {
+  document.addEventListener('pointerdown', handleWindowActivation, { capture: true });
+  document.addEventListener('mousedown', handleWindowActivation);
+}
+
 function getOrCreateSnapGhost() {
   let ghost = document.getElementById('window-snap-ghost');
   if (!ghost) {
@@ -2630,18 +2660,6 @@ export function initDockSystem() {
   if (notifPanel && notifResizer) {
     makeResizable(notifPanel, notifResizer, 'notif-center', { minWidth: 320, minHeight: 240 });
   }
-
-  const DESKTOP_WINDOW_SELECTOR = '.smart-modal-window, #console-window, #management-window, #file-manager-window, .file-manager-window, .os-window, #notif-center-panel, .container-inspector-window, #container-inspector-window, #container-inspector-overlay, #management-modal-overlay, #console-modal-overlay, #smart-modal-overlay, #app-deploy-modal-window, #app-deploy-modal-overlay';
-
-  const handleWindowActivation = (e) => {
-    const windowEl = e.target.closest(DESKTOP_WINDOW_SELECTOR);
-    if (windowEl) {
-      bringToFront(windowEl);
-    }
-  };
-
-  document.addEventListener('pointerdown', handleWindowActivation, { capture: true });
-  document.addEventListener('mousedown', handleWindowActivation);
 
   // Mobile / Stacked Mode Toggle & Auto-detection
   const mobileToggleBtn = document.getElementById('mobile-view-toggle-btn');

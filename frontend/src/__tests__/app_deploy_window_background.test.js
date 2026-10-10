@@ -282,4 +282,52 @@ describe('App Catalog Deployment Window - Background & Minimize Suite', () => {
     expect(deployPayload.host_port).toBe(3005);
     expect(deployPayload.replace_existing).toBe(false);
   });
+
+  it('allows clicking on management window or desktop to bring them to foreground while leaving deploy modal in background', async () => {
+    await openAppDeployModal('uptime-kuma');
+
+    const overlay = document.getElementById('app-deploy-modal-overlay');
+    const deployWin = document.getElementById('app-deploy-modal-window');
+    const mgmtWin = document.getElementById('management-window');
+    const mgmtOverlay = document.getElementById('management-modal-overlay');
+    const desktop = document.getElementById('desktop');
+
+    expect(overlay.classList.contains('open')).toBe(true);
+    expect(deployWin.classList.contains('active-window')).toBe(true);
+
+    // Initial state: deployWin is in foreground
+    expect(parseInt(deployWin.style.zIndex || '0', 10)).toBeGreaterThanOrEqual(parseInt(mgmtWin.style.zIndex || '0', 10));
+
+    // User clicks anywhere inside Mission Control (#management-window)
+    const mgmtEvent = new MouseEvent('pointerdown', { bubbles: true, cancelable: true });
+    mgmtWin.dispatchEvent(mgmtEvent);
+
+    // Mission Control is elevated to foreground
+    expect(parseInt(mgmtWin.style.zIndex, 10)).toBeGreaterThan(parseInt(deployWin.style.zIndex, 10));
+    expect(parseInt(mgmtOverlay.style.zIndex, 10)).toBeGreaterThan(parseInt(overlay.style.zIndex, 10));
+    expect(mgmtWin.classList.contains('active-window')).toBe(true);
+    expect(deployWin.classList.contains('active-window')).toBe(false);
+
+    // Deploy window is still open and running in background
+    expect(overlay.classList.contains('open')).toBe(true);
+    expect(overlay.classList.contains('window-minimized')).toBe(false);
+
+    // User clicks desktop wallpaper outside any window
+    const desktopEvent = new MouseEvent('pointerdown', { bubbles: true, cancelable: true });
+    desktop.dispatchEvent(desktopEvent);
+
+    // Active window indicator is cleared, but both windows remain open
+    expect(deployWin.classList.contains('active-window')).toBe(false);
+    expect(mgmtWin.classList.contains('active-window')).toBe(false);
+    expect(overlay.classList.contains('open')).toBe(true);
+
+    // User clicks back on deploy window
+    const deployClickEvent = new MouseEvent('pointerdown', { bubbles: true, cancelable: true });
+    deployWin.dispatchEvent(deployClickEvent);
+
+    // Deploy window is brought back to front
+    expect(parseInt(deployWin.style.zIndex, 10)).toBeGreaterThan(parseInt(mgmtWin.style.zIndex, 10));
+    expect(deployWin.classList.contains('active-window')).toBe(true);
+  });
 });
+

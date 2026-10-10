@@ -2698,16 +2698,16 @@ select.tz-select-input option, select.tz-select option {
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 }
-.smart-modal-backdrop:not(#console-modal-overlay):not(#management-modal-overlay):not(.open) {
+.smart-modal-backdrop:not(#console-modal-overlay):not(#management-modal-overlay):not(#app-deploy-modal-overlay):not(.open) {
   display: none !important;
   opacity: 0 !important;
   pointer-events: none !important;
   visibility: hidden !important;
 }
-.smart-modal-backdrop:not(#console-modal-overlay):not(#management-modal-overlay):not(.open) * {
+.smart-modal-backdrop:not(#console-modal-overlay):not(#management-modal-overlay):not(#app-deploy-modal-overlay):not(.open) * {
   pointer-events: none !important;
 }
-.smart-modal-backdrop:not(#console-modal-overlay):not(#management-modal-overlay).open {
+.smart-modal-backdrop:not(#console-modal-overlay):not(#management-modal-overlay):not(#app-deploy-modal-overlay).open {
   display: flex !important;
   opacity: 1 !important;
   pointer-events: auto !important;
@@ -2752,7 +2752,6 @@ select.tz-select-input option, select.tz-select option {
   pointer-events: auto !important;
   visibility: visible !important;
 }
-#app-deploy-modal-overlay:not(.open),
 #container-delete-modal-overlay:not(.open),
 #docker-prune-modal-overlay:not(.open),
 #stack-inspector-overlay:not(.open),
@@ -2787,7 +2786,8 @@ select.tz-select-input option, select.tz-select option {
 }
 
 #console-modal-overlay:not(.open),
-#management-modal-overlay:not(.open) {
+#management-modal-overlay:not(.open),
+#app-deploy-modal-overlay:not(.open) {
   display: none !important;
   opacity: 0 !important;
   pointer-events: none !important;

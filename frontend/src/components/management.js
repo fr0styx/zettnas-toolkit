@@ -2872,6 +2872,11 @@ export function initManagement() {
     makeDraggable(win, header, 'management');
   }
 
+  win.addEventListener('pointerdown', () => {
+    bringToFront(win);
+    saveOpenWindowsState();
+  }, { capture: true });
+
   win.addEventListener('mousedown', () => {
     bringToFront(win);
     saveOpenWindowsState();
