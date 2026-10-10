@@ -391,7 +391,8 @@ export function applySavedBounds(dragEl, winId) {
     || (id === 'management-window' ? all['management'] : (id === 'management' ? all['management-window'] : null))
     || (id === 'console-window' ? all['console'] : (id === 'console' ? all['console-window'] : null))
     || (id === 'smart-modal-window' ? all['smart'] : (id === 'smart' ? all['smart-modal-window'] : null))
-    || (id === 'container-inspector-window' ? all['container-inspector'] : (id === 'container-inspector' ? all['container-inspector-window'] : null));
+    || (id === 'container-inspector-window' ? all['container-inspector'] : (id === 'container-inspector' ? all['container-inspector-window'] : null))
+    || (id === 'app-deploy-modal-window' ? all['app-deploy'] : (id === 'app-deploy' ? all['app-deploy-modal-window'] : null));
   if (!saved || saved.left == null || saved.top == null) return;
 
   const targetW = saved.width || dragEl.offsetWidth || 500;
@@ -664,14 +665,17 @@ export function bringToFront(windowEl) {
     windowEl.id === 'stack-inspector-overlay' ||
     windowEl.id === 'stack-picker-window' ||
     windowEl.id === 'stack-picker-overlay' ||
+    windowEl.id === 'app-deploy-modal-window' ||
+    windowEl.id === 'app-deploy-modal-overlay' ||
     windowEl.classList?.contains('chassis-front-panel') ||
     windowEl.classList?.contains('management-window') ||
     windowEl.classList?.contains('mgmt-app-window') ||
     windowEl.classList?.contains('file-manager-window') ||
     windowEl.classList?.contains('container-inspector-window') ||
     windowEl.classList?.contains('stack-inspector-window') ||
+    windowEl.classList?.contains('app-deploy-window') ||
     windowEl.classList?.contains('os-window') ||
-    windowEl.closest?.('#console-modal-overlay, #management-modal-overlay, #file-manager-window, #notif-center-panel, #container-inspector-window, #container-inspector-overlay, #stack-inspector-window, #stack-inspector-overlay, #stack-picker-window, #stack-picker-overlay')
+    windowEl.closest?.('#console-modal-overlay, #management-modal-overlay, #file-manager-window, #notif-center-panel, #container-inspector-window, #container-inspector-overlay, #stack-inspector-window, #stack-inspector-overlay, #stack-picker-window, #stack-picker-overlay, #app-deploy-modal-window, #app-deploy-modal-overlay')
   );
 
   // Protect standalone modal backdrops & modal dialogs from being demoted into window z-index layer
@@ -703,7 +707,7 @@ export function bringToFront(windowEl) {
     openWins.forEach((el) => {
       const curZ = (baseZ++).toString();
       el.style.zIndex = curZ;
-      const inner = el.querySelector?.('#console-window, #management-window, .chassis-front-panel, .mgmt-app-window, .container-inspector-window, #container-inspector-window, .smart-modal-window, #smart-modal-window, #stack-inspector-window, #stack-picker-window');
+      const inner = el.querySelector?.('#console-window, #management-window, .chassis-front-panel, .mgmt-app-window, .container-inspector-window, #container-inspector-window, .smart-modal-window, #smart-modal-window, #stack-inspector-window, #stack-picker-window, #app-deploy-modal-window');
       if (inner) inner.style.zIndex = curZ;
     });
     activeWindowZIndex = baseZ;
@@ -713,12 +717,12 @@ export function bringToFront(windowEl) {
   windowEl.style.zIndex = zStr;
 
   // Elevate parent overlay wrapper if applicable
-  const parentOverlay = windowEl.closest?.('#console-modal-overlay, #management-modal-overlay, #container-inspector-overlay, #smart-modal-overlay, #stack-inspector-overlay, #stack-picker-overlay');
+  const parentOverlay = windowEl.closest?.('#console-modal-overlay, #management-modal-overlay, #container-inspector-overlay, #smart-modal-overlay, #stack-inspector-overlay, #stack-picker-overlay, #app-deploy-modal-overlay');
   if (parentOverlay && parentOverlay !== windowEl) {
     parentOverlay.style.zIndex = zStr;
   }
   // Elevate child window if applicable
-  const childWin = windowEl.querySelector?.('#console-window, #management-window, .chassis-front-panel, .mgmt-app-window, .container-inspector-window, #container-inspector-window, .smart-modal-window, #smart-modal-window, #stack-inspector-window, #stack-picker-window');
+  const childWin = windowEl.querySelector?.('#console-window, #management-window, .chassis-front-panel, .mgmt-app-window, .container-inspector-window, #container-inspector-window, .smart-modal-window, #smart-modal-window, #stack-inspector-window, #stack-picker-window, #app-deploy-modal-window');
   if (childWin && childWin !== windowEl) {
     childWin.style.zIndex = zStr;
   }
@@ -743,7 +747,7 @@ export function bringToFront(windowEl) {
     document.querySelectorAll('.active-window').forEach((w) => {
       w.classList.remove('active-window');
     });
-    const targetWin = windowEl.querySelector?.('#console-window, #management-window, .chassis-front-panel, .mgmt-app-window, .container-inspector-window, #container-inspector-window') || windowEl;
+    const targetWin = windowEl.querySelector?.('#console-window, #management-window, .chassis-front-panel, .mgmt-app-window, .container-inspector-window, #container-inspector-window, #app-deploy-modal-window') || windowEl;
     if (targetWin && targetWin.classList) targetWin.classList.add('active-window');
   } catch (e) {}
 }
@@ -1184,6 +1188,19 @@ export const KNOWN_APPS = {
       }
     }
   },
+  'app-deploy': {
+    id: 'app-deploy',
+    icon: '#i-chip',
+    getTitle: () => 'App Deployment',
+    launch: () => {
+      const overlay = document.getElementById('app-deploy-modal-overlay');
+      const win = document.getElementById('app-deploy-modal-window');
+      if (overlay) {
+        if (DockManager) DockManager.restore('app-deploy');
+        if (win) bringToFront(win);
+      }
+    }
+  },
   notif: {
     id: 'notif',
     icon: '#i-bell',
@@ -1358,6 +1375,9 @@ export const DockManager = {
     } else if (id === 'container-inspector') {
       const ciClose = document.getElementById('ci-close-btn');
       if (ciClose) { ciClose.click(); return; }
+    } else if (id === 'app-deploy') {
+      const deployClose = document.getElementById('adm-close-btn');
+      if (deployClose) { deployClose.click(); return; }
     }
     this.unregister(id);
   },
@@ -1377,7 +1397,11 @@ export const DockManager = {
       this.windows[id].closed = false;
       el.classList.remove('window-minimized');
       el.classList.add('open');
-      el.style.removeProperty('display');
+      if (el.classList.contains('smart-modal-backdrop') || el.classList.contains('os-window') || el.classList.contains('file-manager-window')) {
+        el.style.display = 'flex';
+      } else {
+        el.style.removeProperty('display');
+      }
       if (innerWin) {
         innerWin.classList.remove('window-minimized');
         innerWin.style.removeProperty('display');
@@ -1448,7 +1472,7 @@ export const DockManager = {
       this.windows[id].el.style.removeProperty('display');
 
       const el = this.windows[id].el;
-      if (el.classList.contains('os-window') || el.classList.contains('file-manager-window')) {
+      if (el.classList.contains('os-window') || el.classList.contains('file-manager-window') || el.classList.contains('smart-modal-backdrop')) {
         el.style.setProperty('display', 'flex', 'important');
       }
 
@@ -2607,7 +2631,7 @@ export function initDockSystem() {
     makeResizable(notifPanel, notifResizer, 'notif-center', { minWidth: 320, minHeight: 240 });
   }
 
-  const DESKTOP_WINDOW_SELECTOR = '.smart-modal-window, #console-window, #management-window, #file-manager-window, .file-manager-window, .os-window, #notif-center-panel, .container-inspector-window, #container-inspector-window, #container-inspector-overlay, #management-modal-overlay, #console-modal-overlay, #smart-modal-overlay';
+  const DESKTOP_WINDOW_SELECTOR = '.smart-modal-window, #console-window, #management-window, #file-manager-window, .file-manager-window, .os-window, #notif-center-panel, .container-inspector-window, #container-inspector-window, #container-inspector-overlay, #management-modal-overlay, #console-modal-overlay, #smart-modal-overlay, #app-deploy-modal-window, #app-deploy-modal-overlay';
 
   const handleWindowActivation = (e) => {
     const windowEl = e.target.closest(DESKTOP_WINDOW_SELECTOR);

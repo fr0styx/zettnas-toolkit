@@ -2714,7 +2714,6 @@ select.tz-select-input option, select.tz-select option {
   visibility: visible !important;
 }
 
-#app-deploy-modal-overlay,
 #container-delete-modal-overlay,
 #docker-prune-modal-overlay,
 #stack-inspector-overlay,
@@ -2734,7 +2733,6 @@ select.tz-select-input option, select.tz-select option {
   backdrop-filter: blur(8px) !important;
   -webkit-backdrop-filter: blur(8px) !important;
 }
-#app-deploy-modal-overlay.open,
 #container-delete-modal-overlay.open,
 #docker-prune-modal-overlay.open,
 #stack-inspector-overlay.open,
@@ -2797,12 +2795,14 @@ select.tz-select-input option, select.tz-select option {
 }
 
 #console-modal-overlay,
-#management-modal-overlay {
+#management-modal-overlay,
+#app-deploy-modal-overlay {
   z-index: var(--z-window-base, 1000);
 }
 
 #console-modal-overlay.open,
-#management-modal-overlay.open {
+#management-modal-overlay.open,
+#app-deploy-modal-overlay.open {
   display: flex !important;
   opacity: 1 !important;
   visibility: visible !important;
@@ -2813,7 +2813,8 @@ select.tz-select-input option, select.tz-select option {
 }
 
 #console-modal-overlay #console-window,
-#management-modal-overlay #management-window {
+#management-modal-overlay #management-window,
+#app-deploy-modal-overlay #app-deploy-modal-window {
   pointer-events: auto !important;
 }
 
@@ -10327,6 +10328,8 @@ body.desktop-locked #os-dock-container {
 /* 2. Specular Border Glow & Active Window Highlight */
 #management-modal-overlay #management-window.active-window,
 #management-modal-overlay #management-window:focus-within,
+#app-deploy-modal-overlay #app-deploy-modal-window.active-window,
+#app-deploy-modal-overlay #app-deploy-modal-window:focus-within,
 .os-window.active,
 .os-window.active-window,
 .os-window:focus-within,

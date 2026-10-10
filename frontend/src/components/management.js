@@ -10,7 +10,7 @@ import { fetchAndRenderChassisTwin, renderStorageTopologyTree, fetchAndRenderSto
  * category navigation, and card views (Wallpaper, Metrics, Events, Security).
  */
 import { fetchAndRenderMetrics } from './metrics-chart.js';
-import { bringToFront, DockManager, makeDraggable, saveWindowBounds, saveOpenWindowsState } from './dock.js';
+import { bringToFront, DockManager, makeDraggable, saveWindowBounds, saveOpenWindowsState, showDockToast } from './dock.js';
 import { state } from '../state.js';
 import { api } from '../api.js';
 import { showToast, showConfirmToast } from '../toast.js';
@@ -1047,14 +1047,17 @@ export async function openAppDeployModal(appId) {
   let modal = document.getElementById('app-deploy-modal-overlay');
   if (!modal) {
     const modalHtml = `
-      <div id="app-deploy-modal-overlay" class="smart-modal-backdrop" style="display:none; z-index:10020;">
-        <div id="app-deploy-modal-window" class="smart-modal-window" style="width:620px; max-width:94vw; max-height:88vh; display:flex; flex-direction:column;">
-          <div class="smart-modal-header" style="display:flex; justify-content:space-between; align-items:center;">
+      <div id="app-deploy-modal-overlay" class="smart-modal-backdrop" style="display:none;">
+        <div id="app-deploy-modal-window" class="smart-modal-window app-deploy-window" style="width:620px; max-width:94vw; max-height:88vh; display:flex; flex-direction:column; position:relative;">
+          <div class="smart-modal-header" id="adm-header" style="cursor:move; user-select:none; display:flex; justify-content:space-between; align-items:center;">
             <div style="display:flex; align-items:center; gap:8px;">
               <span id="adm-icon" style="font-size:18px;">📦</span>
               <span id="adm-title" style="font-weight:700; color:#fff; font-size:13px;">Deploy Application Stack</span>
             </div>
-            <button class="win-btn close-btn" id="adm-close-btn" title="Close" aria-label="Close"></button>
+            <div class="os-window-controls" style="display:flex; gap:6px; align-items:center;">
+              <button class="win-btn min-btn" id="adm-min-btn" title="Minimize to Dock" aria-label="Minimize"></button>
+              <button class="win-btn close-btn" id="adm-close-btn" title="Close" aria-label="Close"></button>
+            </div>
           </div>
 
           <!-- View 1: Configuration View -->
@@ -1140,30 +1143,72 @@ export async function openAppDeployModal(appId) {
     document.body.insertAdjacentHTML('beforeend', modalHtml);
     modal = document.getElementById('app-deploy-modal-overlay');
 
+    const win = document.getElementById('app-deploy-modal-window');
+    const header = document.getElementById('adm-header');
+    if (win && header) {
+      makeDraggable(win, header, 'app-deploy');
+    }
+    if (win) {
+      win.addEventListener('pointerdown', () => {
+        bringToFront(win);
+      }, { capture: true });
+    }
+
+    const minBtn = document.getElementById('adm-min-btn');
+    if (minBtn) {
+      minBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (DockManager) {
+          DockManager.minimize('app-deploy');
+        } else {
+          modal.classList.add('window-minimized');
+          modal.style.display = 'none';
+        }
+      });
+    }
+
     document.getElementById('adm-close-btn').addEventListener('click', (e) => {
       e.preventDefault();
-      if (modal._close) modal._close();
+      e.stopPropagation();
+      if (modal._isDeploying) {
+        if (DockManager) {
+          DockManager.minimize('app-deploy');
+        } else {
+          modal.classList.add('window-minimized');
+          modal.style.display = 'none';
+        }
+        showToast(`Deploying ${modal._activeAppId || 'app'} in background. Click Dock icon to restore.`, 'info');
+      } else {
+        if (modal._close) modal._close();
+      }
     });
+
     document.getElementById('adm-cancel-btn').addEventListener('click', (e) => {
       e.preventDefault();
       if (modal._close) modal._close();
     });
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal && modal._close) {
-        modal._close();
-      }
-    });
+
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && modal.classList.contains('open') && modal._close) {
-        modal._close();
+      if (e.key === 'Escape' && modal.classList.contains('open') && !modal.classList.contains('window-minimized')) {
+        if (modal._isDeploying) {
+          if (DockManager) DockManager.minimize('app-deploy');
+          else modal.classList.add('window-minimized');
+          showToast(`Deploying in background. Reopen from Dock anytime.`, 'info');
+        } else if (modal._close) {
+          modal._close();
+        }
       }
     });
   }
 
   modal._close = () => {
-    if (modal._isDeploying) return;
-    modal.classList.remove('open');
+    modal._isDeploying = false;
+    modal.classList.remove('open', 'window-minimized');
     modal.style.display = 'none';
+    if (DockManager) {
+      DockManager.unregister('app-deploy');
+    }
     const vc = document.getElementById('adm-view-config');
     const vp = document.getElementById('adm-view-progress');
     const fc = document.getElementById('adm-footer-config');
@@ -1175,8 +1220,29 @@ export async function openAppDeployModal(appId) {
   };
 
   // Ensure config view is visible by default and open modal
+  modal._activeAppId = appId;
   modal._isDeploying = false;
+  modal.classList.remove('window-minimized');
   modal.classList.add('open');
+  modal.style.display = 'flex';
+
+  const win = document.getElementById('app-deploy-modal-window');
+  if (win) {
+    win.classList.remove('window-minimized');
+    win.style.removeProperty('display');
+    bringToFront(win);
+  }
+
+  // Register in DockManager
+  if (DockManager) {
+    if (!DockManager.windows['app-deploy']) {
+      DockManager.register('app-deploy', modal, '#i-chip', `Deploy: ${appId.toUpperCase()}`, false);
+    } else {
+      DockManager.windows['app-deploy'].title = `Deploy: ${appId.toUpperCase()}`;
+      DockManager.restore('app-deploy');
+    }
+  }
+
   modal.style.display = 'flex';
 
   const viewConfig = document.getElementById('adm-view-config');
@@ -1286,6 +1352,10 @@ export async function openAppDeployModal(appId) {
     if (data.percent != null && data.step !== 'error') {
       if (progressFill) progressFill.style.width = `${data.percent}%`;
       if (progressPct) progressPct.textContent = `${data.percent}%`;
+      if (DockManager && DockManager.windows['app-deploy']) {
+        DockManager.windows['app-deploy'].title = `${appId.toUpperCase()} (${data.percent}%)`;
+        DockManager.render();
+      }
     }
     if (data.message) {
       if (progressStatus) progressStatus.textContent = data.message;
@@ -1322,6 +1392,14 @@ export async function openAppDeployModal(appId) {
       }
       modal._isDeploying = false;
 
+      if (DockManager && DockManager.windows['app-deploy']) {
+        DockManager.windows['app-deploy'].title = `✓ ${appId.toUpperCase()} Deployed`;
+        DockManager.render();
+      }
+      if (modal.classList.contains('window-minimized') || (DockManager && DockManager.windows['app-deploy']?.minimized)) {
+        showDockToast(`🚀 ${appId.toUpperCase()} stack deployed and running! Click to open.`, 'app-deploy');
+      }
+
       try {
         fetchAndRenderDockerContainers();
       } catch (e) {}
@@ -1348,12 +1426,21 @@ export async function openAppDeployModal(appId) {
         closeProgressBtn.textContent = 'Close';
       }
 
+      if (DockManager && DockManager.windows['app-deploy']) {
+        DockManager.windows['app-deploy'].title = `❌ ${appId.toUpperCase()} Failed`;
+        DockManager.render();
+      }
+      if (modal.classList.contains('window-minimized') || (DockManager && DockManager.windows['app-deploy']?.minimized)) {
+        showDockToast(`❌ ${appId.toUpperCase()} deployment failed! Click to view logs.`, 'app-deploy');
+      }
+
       showToast(`Deployment failed: ${data.message}`, 'error');
     }
   }
 
   deployConfirmBtn.onclick = async () => {
     modal._isDeploying = true;
+    modal._activeAppId = appId;
     const p = parseInt(portInput.value, 10) || suggestedPort;
     const s = storageInput.value.trim() || '/mnt/user/appdata';
 
@@ -1363,10 +1450,10 @@ export async function openAppDeployModal(appId) {
     viewProgress.style.display = 'flex';
     footerProgress.style.display = 'flex';
 
-    // Lock close button while active
-    closeBtn.disabled = true;
-    closeBtn.style.opacity = '0.3';
-    closeBtn.style.pointerEvents = 'none';
+    // Keep close button interactive while active
+    closeBtn.disabled = false;
+    closeBtn.style.opacity = '1';
+    closeBtn.style.pointerEvents = 'auto';
 
     // Reset progress UI
     if (progressFill) progressFill.style.width = '0%';
