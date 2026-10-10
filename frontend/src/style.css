@@ -3889,9 +3889,32 @@ select.tz-select-input option, select.tz-select option {
   font-family: var(--font-mono, monospace);
   font-weight: 700;
 }
+.docker-count-badge.badge-warning {
+  background: rgba(245, 158, 11, 0.25);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+}
 .docker-filter-btn.active .docker-count-badge {
   background: rgba(0, 0, 0, 0.25);
   color: #000;
+}
+.docker-filter-btn.active .docker-count-badge.badge-warning {
+  background: #f59e0b;
+  color: #000;
+  border-color: #f59e0b;
+}
+#btn-docker-filter-updates {
+  border-color: rgba(245, 158, 11, 0.4);
+  color: #fbbf24;
+}
+#btn-docker-filter-updates:hover {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: #f59e0b;
+}
+#btn-docker-filter-updates.active {
+  background: #f59e0b !important;
+  color: #000 !important;
+  border-color: #f59e0b !important;
 }
 
 /* Web UI One-Click Badge */

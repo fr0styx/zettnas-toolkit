@@ -23,6 +23,7 @@ describe('Container Edit & Docker Update System', () => {
             <div class="docker-toolbar">
               <div class="docker-filter-pills">
                 <button class="btn-pill-toggle docker-filter-btn active" data-filter="all">All <span id="docker-count-all">0</span></button>
+                <button class="btn-pill-toggle docker-filter-btn" id="btn-docker-filter-updates" data-filter="updates" style="display:none;">Updates <span id="docker-count-updates" class="docker-count-badge badge-warning">0</span></button>
               </div>
               <div>
                 <button class="btn-pill-toggle" id="btn-docker-check-updates">Check for updates</button>
@@ -238,4 +239,96 @@ describe('Container Edit & Docker Update System', () => {
 
     expect(postSpy).toHaveBeenCalledWith('/api/docker/containers/c9fa84f9db51/update-image');
   });
+
+  it('automatically shows UPDATE badge and updates filter pill dynamically when Check for updates is clicked without full page refresh', async () => {
+    let checkCalled = false;
+    vi.spyOn(api, 'get').mockImplementation(async (url) => {
+      if (url.includes('/docker/containers')) {
+        return [
+          { id: 'c1', name: 'immich_server', state: 'running', status: 'Up 2 days' },
+          { id: 'c2', name: 'dockhand', state: 'running', status: 'Up 5 hours' },
+          { id: 'c3', name: 'nginx', state: 'running', status: 'Up 10 days' },
+        ];
+      }
+      if (url.includes('/docker/updates/status')) {
+        if (!checkCalled) {
+          return {
+            updates_available_count: 0,
+            containers: {},
+          };
+        }
+        return {
+          updates_available_count: 2,
+          containers: {
+            immich_server: { name: 'immich_server', has_update: true },
+            dockhand: { name: 'dockhand', has_update: true },
+          },
+        };
+      }
+      return {};
+    });
+
+    vi.spyOn(api, 'post').mockImplementation(async (url) => {
+      if (url.includes('/updates/check')) {
+        checkCalled = true;
+        return {
+          checked_at: 1728518800,
+          total_containers: 3,
+          updates_available_count: 2,
+          containers: {
+            immich_server: { name: 'immich_server', has_update: true },
+            dockhand: { name: 'dockhand', has_update: true },
+          },
+        };
+      }
+      return {};
+    });
+
+    // 1. Initial page load / render before checking updates
+    await fetchAndRenderDockerContainers();
+
+    const tbody = document.getElementById('docker-containers-tbody');
+    expect(tbody.querySelectorAll('tr').length).toBe(3);
+    // Initially, no container has the UPDATE badge
+    expect(tbody.querySelectorAll('.btn-docker-update-badge').length).toBe(0);
+
+    const filterUpdatesBtn = document.getElementById('btn-docker-filter-updates');
+    const updatesCountBadge = document.getElementById('docker-count-updates');
+    expect(filterUpdatesBtn.style.display).toBe('none');
+
+    // 2. User clicks "Check for updates"
+    const checkBtn = document.getElementById('btn-docker-check-updates');
+    checkBtn.click();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    // 3. Verify: WITHOUT any page refresh or manual re-render, existing rows were dynamically updated
+    const updateBadges = tbody.querySelectorAll('.btn-docker-update-badge');
+    expect(updateBadges.length).toBe(2);
+
+    const immichRow = Array.from(tbody.querySelectorAll('tr')).find(
+      (r) => r.dataset.name === 'immich_server'
+    );
+    expect(immichRow.dataset.hasUpdate).toBe('1');
+    expect(immichRow.querySelector('.btn-docker-update-badge')).not.toBeNull();
+    expect(immichRow.querySelector('[data-action="update-single"]')).not.toBeNull();
+
+    const nginxRow = Array.from(tbody.querySelectorAll('tr')).find(
+      (r) => r.dataset.name === 'nginx'
+    );
+    expect(nginxRow.dataset.hasUpdate).toBe('0');
+    expect(nginxRow.querySelector('.btn-docker-update-badge')).toBeNull();
+
+    // 4. Verify: Filter updates pill dynamically appeared with count 2
+    expect(filterUpdatesBtn.style.display).not.toBe('none');
+    expect(updatesCountBadge.textContent).toBe('2');
+
+    // 5. Test filtering by updates
+    await filterUpdatesBtn.click();
+    const visibleRows = Array.from(tbody.querySelectorAll('tr')).filter(
+      (r) => r.style.display !== 'none'
+    );
+    expect(visibleRows.length).toBe(2);
+    expect(visibleRows.map((r) => r.dataset.name).sort()).toEqual(['dockhand', 'immich_server']);
+  });
 });
+

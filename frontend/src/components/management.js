@@ -386,7 +386,7 @@ function _bindDockerEvents() {
         } else {
           showToast('All containers are up to date!', 'success');
         }
-        renderDockerContainersTable();
+        await fetchAndRenderDockerContainers(false);
       } catch (err) {
         showToast(`Update check failed: ${err.message}`, 'error');
       } finally {
@@ -472,7 +472,13 @@ export async function refreshDockerUpdatesStatus() {
 export function updateDockerUpdatesToolbarUI(count) {
   const btnUpdateAll = document.getElementById('btn-docker-update-all');
   const badge = document.getElementById('docker-updates-count-badge');
+  const filterUpd = document.getElementById('btn-docker-filter-updates');
+  const cUpd = document.getElementById('docker-count-updates');
   if (badge) badge.textContent = count;
+  if (cUpd) cUpd.textContent = count;
+  if (filterUpd) {
+    filterUpd.style.display = count > 0 ? 'inline-flex' : 'none';
+  }
   if (btnUpdateAll) {
     btnUpdateAll.style.display = count > 0 ? 'inline-flex' : 'none';
   }
@@ -488,6 +494,10 @@ export function renderDockerContainersTable() {
   const stoppedCount = _dockerContainersList.filter((c) => c.state !== 'running').length;
   const composeCount = _dockerContainersList.filter((c) => c.managed_by === 'compose' || Boolean(c.stack)).length;
   const standaloneCount = _dockerContainersList.filter((c) => c.managed_by !== 'compose' && !c.stack).length;
+  const updatesCount = _dockerContainersList.filter((c) => {
+    const info = _dockerUpdatesCache?.containers?.[c.name] || _dockerUpdatesCache?.containers?.[c.id];
+    return Boolean(info?.has_update);
+  }).length;
 
   const cAll = document.getElementById('docker-count-all');
   if (cAll) cAll.textContent = totalCount;
@@ -495,6 +505,10 @@ export function renderDockerContainersTable() {
   if (cRun) cRun.textContent = runningCount;
   const cStop = document.getElementById('docker-count-stopped');
   if (cStop) cStop.textContent = stoppedCount;
+  const cUpd = document.getElementById('docker-count-updates');
+  if (cUpd) cUpd.textContent = updatesCount;
+  const filterUpd = document.getElementById('btn-docker-filter-updates');
+  if (filterUpd) filterUpd.style.display = updatesCount > 0 ? 'inline-flex' : 'none';
   const cComp = document.getElementById('docker-count-compose');
   if (cComp) cComp.textContent = composeCount;
   const cStand = document.getElementById('docker-count-standalone');
@@ -518,6 +532,10 @@ export function renderDockerContainersTable() {
     // Check tab filter
     if (_dockerFilter === 'running' && c.state !== 'running') return false;
     if (_dockerFilter === 'stopped' && c.state === 'running') return false;
+    if (_dockerFilter === 'updates') {
+      const updateInfo = _dockerUpdatesCache?.containers?.[c.name] || _dockerUpdatesCache?.containers?.[c.id];
+      if (!updateInfo?.has_update) return false;
+    }
     if (_dockerFilter === 'compose' && c.managed_by !== 'compose' && !c.stack) return false;
     if (_dockerFilter === 'standalone' && (c.managed_by === 'compose' || Boolean(c.stack))) return false;
 
@@ -683,14 +701,25 @@ function createContainerRow(c, currentHost) {
   const key = c.id || c.name || '';
   tr.dataset.key = key;
   tr.dataset.id = c.id || '';
+  tr.dataset.name = c.name || '';
   tr.dataset.state = c.state || '';
+  const updateInfo = _dockerUpdatesCache?.containers?.[c.name] || _dockerUpdatesCache?.containers?.[c.id];
+  tr.dataset.hasUpdate = updateInfo?.has_update ? '1' : '0';
   tr.innerHTML = buildContainerRowInner(c, currentHost);
   return tr;
 }
 
 function updateContainerRow(tr, c, currentHost) {
-  if (tr.dataset.state !== c.state || !tr.children.length) {
+  const updateInfo = _dockerUpdatesCache?.containers?.[c.name] || _dockerUpdatesCache?.containers?.[c.id];
+  const hasUpdate = Boolean(updateInfo?.has_update);
+  const prevHasUpdate = tr.dataset.hasUpdate === '1';
+
+  tr.dataset.id = c.id || '';
+  tr.dataset.name = c.name || '';
+
+  if (tr.dataset.state !== c.state || prevHasUpdate !== hasUpdate || !tr.children.length) {
     tr.dataset.state = c.state || '';
+    tr.dataset.hasUpdate = hasUpdate ? '1' : '0';
     tr.innerHTML = buildContainerRowInner(c, currentHost);
     return;
   }
@@ -826,6 +855,7 @@ function bindDockerTableEvents(tbody) {
 
 let _dockerAutoRefreshTimer = null;
 let _isDockerAutoRefreshing = false;
+let _dockerAutoRefreshCount = 0;
 
 export function startDockerAutoRefresh() {
   if (_dockerAutoRefreshTimer) return;
@@ -844,6 +874,10 @@ export function startDockerAutoRefresh() {
     if (_isDockerAutoRefreshing) return;
     _isDockerAutoRefreshing = true;
     try {
+      _dockerAutoRefreshCount++;
+      if (_dockerAutoRefreshCount % 6 === 0) {
+        refreshDockerUpdatesStatus().catch(() => {});
+      }
       await fetchAndRenderDockerContainers(true);
     } catch (e) {
       console.warn('Docker background auto-refresh poll error:', e);
@@ -867,7 +901,7 @@ export async function fetchAndRenderDockerContainers(isBackground = false) {
   try {
     const [list] = await Promise.all([
       api.get('/api/docker/containers'),
-      _dockerUpdatesCache ? Promise.resolve() : refreshDockerUpdatesStatus().catch(() => {}),
+      (!isBackground || !_dockerUpdatesCache) ? refreshDockerUpdatesStatus().catch(() => {}) : Promise.resolve(),
     ]);
     _dockerContainersList = Array.isArray(list) ? list : [];
     renderDockerContainersTable();
