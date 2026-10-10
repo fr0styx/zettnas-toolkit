@@ -67,13 +67,12 @@ class ChassisEngine:
 
         # Check for known custom hardware brands / models
         is_custom_appliance = bool(
-            "zettlab" in vendor
-            or "aoostar" in vendor
-            or any(k in product for k in ("d4", "d6", "d8", "wtr"))
+            "zettlab" in vendor or "aoostar" in vendor or any(k in product for k in ("d4", "d6", "d8", "wtr"))
         )
 
         # LCD Framebuffer detection
         from backend.config import ENABLE_FB
+
         has_lcd = bool(
             ENABLE_FB
             and (
@@ -85,6 +84,7 @@ class ChassisEngine:
 
         # MCU / ARGB serial controller
         from backend.hardware.led import find_led_port
+
         led_port = find_led_port()
         has_mcu = bool(
             led_port is not None
@@ -108,17 +108,20 @@ class ChassisEngine:
         if not has_sd_slot:
             try:
                 from backend.services.copy_engine import read_media_slots
+
                 slots = read_media_slots()
-                if (slots.get("sd", {}).get("dev") or slots.get("sd", {}).get("size", 0) > 0 or
-                    slots.get("tf", {}).get("dev") or slots.get("tf", {}).get("size", 0) > 0):
+                if (
+                    slots.get("sd", {}).get("dev")
+                    or slots.get("sd", {}).get("size", 0) > 0
+                    or slots.get("tf", {}).get("dev")
+                    or slots.get("tf", {}).get("size", 0) > 0
+                ):
                     has_sd_slot = True
             except Exception:
                 pass
 
         # Unified custom hardware flag
-        has_custom_hardware = bool(
-            has_lcd or has_mcu or has_copy_button or has_sd_slot or is_custom_appliance
-        )
+        has_custom_hardware = bool(has_lcd or has_mcu or has_copy_button or has_sd_slot or is_custom_appliance)
 
         return {
             "sys_vendor": cls._read_dmi_sys_vendor(),
