@@ -61,7 +61,7 @@ def mock_container_inspect():
                 "Source": "/mnt/user/media",
                 "Destination": "/media",
                 "RW": False,
-            }
+            },
         ],
     }
 
@@ -93,10 +93,11 @@ def test_create_and_restore_app_backup(tmp_path, mock_container_inspect):
 
     registry_file = tmp_path / "app_backups.json"
 
-    with patch("backend.services.app_backup.get_app_backup_base_dir", return_value=str(backup_base)), \
-         patch("backend.services.app_backup.APP_BACKUPS_REGISTRY_FILE", str(registry_file)), \
-         patch("backend.services.app_backup._docker_request") as mock_docker:
-        
+    with (
+        patch("backend.services.app_backup.get_app_backup_base_dir", return_value=str(backup_base)),
+        patch("backend.services.app_backup.APP_BACKUPS_REGISTRY_FILE", str(registry_file)),
+        patch("backend.services.app_backup._docker_request") as mock_docker,
+    ):
         # Mock GET container json, POST pause, POST unpause
         def docker_side_effect(method, path, **kwargs):
             if method == "GET":
@@ -157,13 +158,18 @@ def test_destroy_container_auto_archives_on_uninstall(tmp_path, mock_container_i
     backup_base.mkdir()
     registry_file = tmp_path / "app_backups.json"
 
-    with patch("backend.services.app_backup.get_app_backup_base_dir", return_value=str(backup_base)), \
-         patch("backend.services.app_backup.APP_BACKUPS_REGISTRY_FILE", str(registry_file)), \
-         patch("backend.services.docker_cleanup._docker_request") as mock_docker_clean, \
-         patch("backend.services.app_backup._docker_request") as mock_docker_backup:
-
-        mock_docker_clean.side_effect = lambda method, path, **kw: (200, mock_container_inspect) if method == "GET" else (204, {})
-        mock_docker_backup.side_effect = lambda method, path, **kw: (200, mock_container_inspect) if method == "GET" else (204, {})
+    with (
+        patch("backend.services.app_backup.get_app_backup_base_dir", return_value=str(backup_base)),
+        patch("backend.services.app_backup.APP_BACKUPS_REGISTRY_FILE", str(registry_file)),
+        patch("backend.services.docker_cleanup._docker_request") as mock_docker_clean,
+        patch("backend.services.app_backup._docker_request") as mock_docker_backup,
+    ):
+        mock_docker_clean.side_effect = lambda method, path, **kw: (
+            (200, mock_container_inspect) if method == "GET" else (204, {})
+        )
+        mock_docker_backup.side_effect = lambda method, path, **kw: (
+            (200, mock_container_inspect) if method == "GET" else (204, {})
+        )
 
         # Test destroying container with archive_data=True (Feature 21a)
         res = destroy_container("193158e06cff", archive_data=True, remove_volumes=True)
@@ -176,7 +182,9 @@ def test_destroy_container_auto_archives_on_uninstall(tmp_path, mock_container_i
 
 def test_destroy_container_can_skip_archive(tmp_path, mock_container_inspect):
     with patch("backend.services.docker_cleanup._docker_request") as mock_docker_clean:
-        mock_docker_clean.side_effect = lambda method, path, **kw: (200, mock_container_inspect) if method == "GET" else (204, {})
+        mock_docker_clean.side_effect = lambda method, path, **kw: (
+            (200, mock_container_inspect) if method == "GET" else (204, {})
+        )
 
         res = destroy_container("193158e06cff", archive_data=False, remove_volumes=False)
         assert res["success"] is True
@@ -197,13 +205,18 @@ def test_app_backups_api_endpoints(client, auth_headers, tmp_path, mock_containe
     backup_base.mkdir()
     registry_file = tmp_path / "app_backups.json"
 
-    with patch("backend.services.app_backup.get_app_backup_base_dir", return_value=str(backup_base)), \
-         patch("backend.services.app_backup.APP_BACKUPS_REGISTRY_FILE", str(registry_file)), \
-         patch("backend.services.app_backup._docker_request") as mock_docker_backup, \
-         patch("backend.services.docker_cleanup._docker_request") as mock_docker_clean:
-
-        mock_docker_backup.side_effect = lambda method, path, **kw: (200, mock_container_inspect) if method == "GET" else (200, {})
-        mock_docker_clean.side_effect = lambda method, path, **kw: (200, mock_container_inspect) if method == "GET" else (204, {})
+    with (
+        patch("backend.services.app_backup.get_app_backup_base_dir", return_value=str(backup_base)),
+        patch("backend.services.app_backup.APP_BACKUPS_REGISTRY_FILE", str(registry_file)),
+        patch("backend.services.app_backup._docker_request") as mock_docker_backup,
+        patch("backend.services.docker_cleanup._docker_request") as mock_docker_clean,
+    ):
+        mock_docker_backup.side_effect = lambda method, path, **kw: (
+            (200, mock_container_inspect) if method == "GET" else (200, {})
+        )
+        mock_docker_clean.side_effect = lambda method, path, **kw: (
+            (200, mock_container_inspect) if method == "GET" else (204, {})
+        )
 
         # 1. POST /api/docker/containers/{cid}/backup (On-demand backup - Feature 21b)
         res = client.post("/api/docker/containers/api-app/backup", headers=auth_headers, json={"reason": "on-demand"})
@@ -227,7 +240,9 @@ def test_app_backups_api_endpoints(client, auth_headers, tmp_path, mock_containe
 
         # 4. POST /api/backup/apps/{id}/restore (Restore app - Feature 21c)
         test_db.write_text("corrupted-db")
-        res = client.post(f"/api/backup/apps/{backup_id}/restore", headers=auth_headers, json={"recreate_container": False})
+        res = client.post(
+            f"/api/backup/apps/{backup_id}/restore", headers=auth_headers, json={"recreate_container": False}
+        )
         assert res.status_code == 200
         assert res.json()["result"]["success"] is True
         assert test_db.read_text() == "database-v1-data"
@@ -244,4 +259,3 @@ def test_app_backups_api_endpoints(client, auth_headers, tmp_path, mock_containe
         assert del_data["success"] is True
         assert del_data["archived"] is True
         assert del_data["archive_record"]["reason"] == "uninstall"
-

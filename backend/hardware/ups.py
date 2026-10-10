@@ -98,7 +98,13 @@ def save_ups_config(new_cfg: Dict[str, Any]) -> Dict[str, Any]:
         merged["password"] = current.get("password", "")
 
     # Ensure numeric types
-    for int_key in ("port", "shutdown_timer_sec", "battery_threshold_pct", "runtime_threshold_min", "container_shutdown_timeout_sec"):
+    for int_key in (
+        "port",
+        "shutdown_timer_sec",
+        "battery_threshold_pct",
+        "runtime_threshold_min",
+        "container_shutdown_timeout_sec",
+    ):
         if int_key in merged and merged[int_key] is not None:
             try:
                 merged[int_key] = int(merged[int_key])
@@ -356,34 +362,38 @@ def discover_ups_sources() -> List[Dict[str, Any]]:
 
                 if is_ups_vendor or is_ups_prod:
                     vendor_title = KNOWN_UPS_VENDORS.get(vid, mfr or "Generic USB")
-                    candidates.append({
-                        "type": "usb_hid",
-                        "mode": "usb_hid",
-                        "title": f"{vendor_title} ({prod_name or pid})",
-                        "vendor_id": vid,
-                        "product_id": pid,
-                        "model": prod_name or vendor_title,
-                        "host": "localhost",
-                        "port": 0,
-                        "description": f"Direct USB Device ({vid}:{pid})",
-                        "is_usb": True,
-                    })
+                    candidates.append(
+                        {
+                            "type": "usb_hid",
+                            "mode": "usb_hid",
+                            "title": f"{vendor_title} ({prod_name or pid})",
+                            "vendor_id": vid,
+                            "product_id": pid,
+                            "model": prod_name or vendor_title,
+                            "host": "localhost",
+                            "port": 0,
+                            "description": f"Direct USB Device ({vid}:{pid})",
+                            "is_usb": True,
+                        }
+                    )
         except Exception:
             continue
 
     # 2. Check /dev/usb/hiddev* devices
     hiddev_nodes = glob.glob("/dev/usb/hiddev*") + glob.glob("/host/dev/usb/hiddev*")
     if hiddev_nodes and not candidates:
-        candidates.append({
-            "type": "usb_hid",
-            "mode": "usb_hid",
-            "title": f"USB HID Power Device ({os.path.basename(hiddev_nodes[0])})",
-            "model": "Generic USB HID UPS",
-            "host": "localhost",
-            "port": 0,
-            "description": f"Detected character node {hiddev_nodes[0]}",
-            "is_usb": True,
-        })
+        candidates.append(
+            {
+                "type": "usb_hid",
+                "mode": "usb_hid",
+                "title": f"USB HID Power Device ({os.path.basename(hiddev_nodes[0])})",
+                "model": "Generic USB HID UPS",
+                "host": "localhost",
+                "port": 0,
+                "description": f"Detected character node {hiddev_nodes[0]}",
+                "is_usb": True,
+            }
+        )
 
     # 3. Probe LAN / Host apcupsd and NUT daemons
     hosts_to_test = ["127.0.0.1"]
@@ -397,37 +407,41 @@ def discover_ups_sources() -> List[Dict[str, Any]]:
         if apc_raw:
             model = apc_raw.get("MODEL", "APC UPS")
             status = apc_raw.get("STATUS", "ONLINE")
-            candidates.append({
-                "type": "apcupsd_client",
-                "mode": "apcupsd_client",
-                "title": f"APCUPSD Server @ {h}:3551",
-                "model": model,
-                "host": h,
-                "port": 3551,
-                "status": status,
-                "charge": apc_raw.get("BCHARGE"),
-                "description": f"Active APC daemon on {h}:3551 ({status})",
-                "is_usb": False,
-            })
+            candidates.append(
+                {
+                    "type": "apcupsd_client",
+                    "mode": "apcupsd_client",
+                    "title": f"APCUPSD Server @ {h}:3551",
+                    "model": model,
+                    "host": h,
+                    "port": 3551,
+                    "status": status,
+                    "charge": apc_raw.get("BCHARGE"),
+                    "description": f"Active APC daemon on {h}:3551 ({status})",
+                    "is_usb": False,
+                }
+            )
 
         # Check NUT port 3493
         nut_raw = _query_nut_socket(h, 3493, timeout=0.8)
         if nut_raw:
             model = nut_raw.get("MODEL", nut_raw.get("UPSNAME", "NUT UPS"))
             status = nut_raw.get("STATUS", "ONLINE")
-            candidates.append({
-                "type": "nut_client",
-                "mode": "nut_client",
-                "title": f"Network UPS Tools (NUT) @ {h}:3493",
-                "model": model,
-                "host": h,
-                "port": 3493,
-                "ups_name": nut_raw.get("UPSNAME", "ups"),
-                "status": status,
-                "charge": nut_raw.get("BCHARGE"),
-                "description": f"Active NUT daemon on {h}:3493 ({status})",
-                "is_usb": False,
-            })
+            candidates.append(
+                {
+                    "type": "nut_client",
+                    "mode": "nut_client",
+                    "title": f"Network UPS Tools (NUT) @ {h}:3493",
+                    "model": model,
+                    "host": h,
+                    "port": 3493,
+                    "ups_name": nut_raw.get("UPSNAME", "ups"),
+                    "status": status,
+                    "charge": nut_raw.get("BCHARGE"),
+                    "description": f"Active NUT daemon on {h}:3493 ({status})",
+                    "is_usb": False,
+                }
+            )
 
     return candidates
 
@@ -448,11 +462,15 @@ def test_ups_connection(
     raw: Dict[str, str] = {}
 
     if clean_mode in ("nut_client", "nut") or clean_port == 3493:
-        raw = _query_nut_socket(clean_host, clean_port, timeout=2.0, ups_name=ups_name, username=username, password=password)
+        raw = _query_nut_socket(
+            clean_host, clean_port, timeout=2.0, ups_name=ups_name, username=username, password=password
+        )
         if not raw and clean_host in ("127.0.0.1", "localhost"):
             gw = _get_docker_gateway()
             if gw and gw != clean_host:
-                raw = _query_nut_socket(gw, clean_port, timeout=2.0, ups_name=ups_name, username=username, password=password)
+                raw = _query_nut_socket(
+                    gw, clean_port, timeout=2.0, ups_name=ups_name, username=username, password=password
+                )
     else:
         raw = _query_apcupsd_socket(clean_host, clean_port, timeout=2.0)
         if not raw and clean_host in ("127.0.0.1", "localhost"):
@@ -520,7 +538,20 @@ def run_ups_self_test() -> Dict[str, Any]:
     if not test_executed:
         for bin_path in ("/usr/bin/upscmd", "upscmd"):
             try:
-                r = subprocess.run([bin_path, "-u", cfg.get("username", "monuser"), "-p", cfg.get("password", ""), f"{ups_name}@{host}", "test.battery.start.quick"], capture_output=True, text=True, timeout=3.0)
+                r = subprocess.run(
+                    [
+                        bin_path,
+                        "-u",
+                        cfg.get("username", "monuser"),
+                        "-p",
+                        cfg.get("password", ""),
+                        f"{ups_name}@{host}",
+                        "test.battery.start.quick",
+                    ],
+                    capture_output=True,
+                    text=True,
+                    timeout=3.0,
+                )
                 if r.returncode == 0:
                     test_executed = True
                     result_msg = "Executed upscmd battery self-test."

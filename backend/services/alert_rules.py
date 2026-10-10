@@ -56,6 +56,7 @@ def evaluate_system_alerts(unraid_data, ups_data):
 
         try:
             from backend.hardware.ups import load_ups_config
+
             ups_cfg = load_ups_config()
             batt_thresh = float(ups_cfg.get("battery_threshold_pct", 20.0))
             time_thresh = float(ups_cfg.get("runtime_threshold_min", 5.0))
@@ -99,6 +100,7 @@ def evaluate_system_alerts(unraid_data, ups_data):
                     )
                     try:
                         from backend.db import log_ups_event
+
                         log_ups_event(
                             event_type="FAILSAFE_ENGAGED",
                             status="ACTIVE",
@@ -165,6 +167,7 @@ def evaluate_system_alerts(unraid_data, ups_data):
                 _low_batt_start_ts = None
                 try:
                     from backend.db import log_ups_event
+
                     log_ups_event(
                         event_type="OUTAGE_RECOVERED",
                         status="RESOLVED",

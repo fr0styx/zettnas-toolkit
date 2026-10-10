@@ -151,7 +151,9 @@ def create_app_backup(
         compose_yaml, _ = synthesize_compose_spec(inspect_data, mask_secrets=False)
     except Exception as e:
         logger.warning(f"[App Backup] Could not synthesize compose spec for '{cname}': {e}")
-        compose_yaml = f"# ZettNAS Compose Export for {cname}\nversion: '3.8'\nservices:\n  {cname}:\n    image: {image}\n"
+        compose_yaml = (
+            f"# ZettNAS Compose Export for {cname}\nversion: '3.8'\nservices:\n  {cname}:\n    image: {image}\n"
+        )
 
     # 2. Identify bind mounts to back up
     mounts = inspect_data.get("Mounts", [])
@@ -170,12 +172,14 @@ def create_app_backup(
                 continue
             if os.path.exists(src):
                 idx = len(appdata_mounts)
-                appdata_mounts.append({
-                    "source": src,
-                    "destination": dst,
-                    "rw": m.get("RW", True),
-                    "archive_prefix": f"data/mount_{idx}",
-                })
+                appdata_mounts.append(
+                    {
+                        "source": src,
+                        "destination": dst,
+                        "rw": m.get("RW", True),
+                        "archive_prefix": f"data/mount_{idx}",
+                    }
+                )
             else:
                 skipped_mounts.append({"source": src, "destination": dst, "reason": "host_path_not_found"})
 

@@ -86,8 +86,11 @@ def destroy_container(
     if archive_data:
         try:
             from backend.services.app_backup import create_app_backup
+
             archive_record = create_app_backup(full_id, reason="uninstall", custom_name=cname)
-            logger.info(f"[Docker Cleanup] Auto-archived app data & config for '{cname}' prior to uninstall: {archive_record.get('filename')}")
+            logger.info(
+                f"[Docker Cleanup] Auto-archived app data & config for '{cname}' prior to uninstall: {archive_record.get('filename')}"
+            )
         except Exception as e:
             logger.warning(f"[Docker Cleanup] Could not auto-archive '{cname}' prior to uninstall: {e}")
 
@@ -146,7 +149,8 @@ def destroy_container(
         "image_error": image_error,
         "archived": archive_record is not None,
         "archive_record": archive_record,
-        "message": f"Container '{cname}' destroyed successfully." + (" (Data archived to backups)" if archive_record else ""),
+        "message": f"Container '{cname}' destroyed successfully."
+        + (" (Data archived to backups)" if archive_record else ""),
     }
 
 

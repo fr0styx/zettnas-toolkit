@@ -303,7 +303,9 @@ class AppBackupRequest(BaseModel):
 
 class AppRestoreRequest(BaseModel):
     recreate_container: bool = Field(True, description="Whether to recreate the container after restoring appdata")
-    target_mount_overrides: Optional[Dict[str, str]] = Field(None, description="Optional mapping of source -> new destination path")
+    target_mount_overrides: Optional[Dict[str, str]] = Field(
+        None, description="Optional mapping of source -> new destination path"
+    )
 
 
 @router.post(
@@ -410,4 +412,3 @@ async def delete_app_backup_endpoint(backup_id: str):
     except Exception as e:
         logger.error(f"[App Backup] Failed to delete backup {backup_id}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-

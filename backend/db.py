@@ -445,8 +445,16 @@ def log_ups_event(
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
-                    now_ts, event_type, status, duration_sec, start_battery_pct,
-                    end_battery_pct, min_line_volts, max_load_pct, action_taken, details
+                    now_ts,
+                    event_type,
+                    status,
+                    duration_sec,
+                    start_battery_pct,
+                    end_battery_pct,
+                    min_line_volts,
+                    max_load_pct,
+                    action_taken,
+                    details,
                 ),
             )
             return cur.lastrowid or 0

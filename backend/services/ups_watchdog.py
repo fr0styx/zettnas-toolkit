@@ -62,6 +62,7 @@ def graceful_docker_teardown(timeout_sec: int = 30):
     """Gracefully stops running Docker containers, allowing databases to flush WAL."""
     try:
         from backend.hardware.docker_stats import container_action, read_docker_containers
+
         containers = read_docker_containers()
         running = [c for c in containers if c.get("state") == "running"]
         if not running:
@@ -94,6 +95,7 @@ def send_ups_cut_power():
     if mode in ("nut_client", "nut") or port == 3493:
         try:
             import socket
+
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 s.settimeout(2.0)
                 s.connect((host, port))
@@ -116,6 +118,7 @@ def signal_host_powerdown():
         if os.path.exists(trigger_path) and os.access(trigger_path, os.X_OK):
             try:
                 import subprocess
+
                 subprocess.Popen([trigger_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                 logger.critical(f"[UPS FAILSAFE] Successfully executed {trigger_path}")
                 return True
