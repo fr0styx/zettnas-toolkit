@@ -87,63 +87,80 @@ For complete configuration templates, hardware pass-through rules, and platform-
 ## Web Desktop & Shortcuts
 
 When accessing the Web Desktop (`http://<server-ip>:8082`):
-* **Desktop Icons** — Clean 4-icon desktop workspace: **Mission Control**, **File Explorer**, **Recycle Bin**, and **ZettNAS (IPS Display)**. Drag and drop anywhere on screen; positions and open window bounds persist automatically across reloads.
-* **Hardware Settings Drawer** — Press `T` or click `HARDWARE SETTINGS` in the top navbar to configure acoustic fan profiles, LCD sleep schedules, ARGB lightbar effects, and media slots.
-* **Command Palette** — Press `Cmd+K` (macOS) or `Ctrl+K` (Linux/Windows) for fuzzy-search navigation across all toolkit tools, settings, and hardware panels.
-* **Window Snapping** — Drag any window to screen edges or top to snap (Half-Screen Left / Right / Maximize).
-* **Accessibility (A11y)** — Full keyboard navigation with `Tab`, `Enter`, and `Space` activation on interactive elements and screen-reader ARIA roles.
-* **Themes & Display Styles** — 5 curated interface themes: **Cyber** (default dark), **Amber** (CRT monochrome phosphor), **Emerald** (matrix green terminal), **Light** (clean modern high-contrast), and **Yak Express** (easter egg cult theme).
-* **Language Selector** — Quick 1-click language switcher in the navbar (`EN`, `DE`, `ZH`, `FR`, `ES`) with instant dynamic UI translation.
-* **Mobile Stacked Mode** — Toggle between floating windowed desktop and vertical touch-optimized card layout via the top navbar button.
+* **Desktop Workspace & Custom Shortcuts** — Interactive glassmorphic workspace featuring **Mission Control**, **File Explorer**, **Recycle Bin**, and **Physical LCD Canvas**. Right-click empty workspace to create custom application shortcuts (Containers, Storage Pools, Activity Monitor) or align to grid; positions and window bounds persist automatically across browser reloads.
+* **macOS-Style Parabolic Dock** — Fluid magnification on hover, active running indicators, unread notification counter badges, and configurable dock positioning (Bottom, Left, Right).
+* **Spotlight Command Palette** — Press `Cmd+K` (macOS) or `Ctrl+K` (Linux/Windows) for fuzzy-search navigation across applications, active Docker containers, storage browse roots, and quick hardware actions (`>reboot`, `>spindown`, `>quiet fans`, `>turbo`, `>theme oled`).
+* **Dynamic Hardware Settings Drawer** — Press `T` or click `HARDWARE SETTINGS` in the top navbar. Dynamically displays only when custom appliance features (LCD `/dev/fb0`, front copy button, SD/TF card slot) are present; automatically hides on standard generic servers.
+* **Window Snapping & Aero Tiling** — 8-zone edge and corner window snapping with translucent acrylic preview ghost and maximize hover flyouts.
+* **Inactivity Auto-Lock & Lock Screen** — Lock the desktop workspace at any time via `Cmd+L` / `Win+L` or configurable inactivity timers without terminating background jobs.
+* **Themes & Personalization** — 8 curated themes: **Cyber Teal**, **Amber CRT**, **Emerald Matrix**, **Sapphire Ice**, **Amethyst**, **Crimson**, **Yak Bronze** (with instant Yak wallpaper switch), and **Pure OLED Black** (`theme-oled`). Includes visual wallpaper gallery with drag-and-drop upload and acrylic blur sliders.
+* **Multi-User Profile Switcher** — User avatar pill with role badge (`SuperAdmin`, `StorageAdmin`, `AppOperator`, `ShareUser`), fast account switching, and password rotation.
+* **1-Click Language Switcher** — Instant UI translation across 5 languages: English (`EN`), German (`DE`), Simplified Chinese (`ZH`), French (`FR`), and Spanish (`ES`).
+* **Mobile Responsive Mode** — Seamless touch-optimized viewport scaling, gesture window dragging, and haptic tactile feedback (`triggerHaptic`).
 * **Keyboard Hotkeys**:
-  * `Cmd+K` / `Ctrl+K` — Open Command Palette.
-  * `T` — Toggle Hardware Settings Drawer.
-  * `Z` or `Mouse Wheel` — Cycle Chassis Zoom scale (1x, 1.25x, 1.5x, 2x).
-  * `Y` — Toggle Yak theme aesthetic.
-  * `Esc` — Close open modals, command palette, and drawers.
+  * `Cmd+K` / `Ctrl+K` — Open Spotlight Command Palette
+  * `Cmd+L` / `Win+L` — Lock Desktop Workspace
+  * `T` — Toggle Hardware Settings Drawer (when appliance hardware present)
+  * `Z` or `Mouse Wheel` — Cycle Chassis Zoom scale (1x, 1.25x, 1.5x, 2x)
+  * `Y` — Toggle Yak theme aesthetic
+  * `Esc` — Close open modals, command palette, and drawers
 
 ---
 
 ## REST API Reference
 
-All routes are mounted at `/api` (or versioned alias `/api/v1`). Authenticated endpoints accept the `X-ZettNAS-Token` header or `?token=` query parameter.
+All routes are mounted at `/api` (or versioned alias `/api/v1`). Authenticated endpoints accept `Authorization: Bearer <zat_token>` headers, HttpOnly SameSite session cookies, or the `X-ZettNAS-Token` header.
 
-For complete endpoint specifications, parameter schemas, Server-Sent Events (SSE) telemetry contracts, and curl examples, see the dedicated **[REST API Reference](docs/API.md)**.
+For complete endpoint specifications, parameter schemas, Server-Sent Events (SSE) telemetry contracts, and curl examples, see the dedicated **[REST API Reference (docs/API.md)](docs/API.md)**.
 
 | Category | Highlights | Docs |
 | :--- | :--- | :---: |
-| **Telemetry & Streaming** | Real-time metrics snapshot (`/api/stats`), 1 Hz live SSE stream (`/api/stats/stream`), historical time-series graphs (`/api/history`). | [Details](docs/API.md#1-telemetry--live-streaming) |
-| **Subsystem Management** | Acoustic profiles (`/api/system/profile`), Unraid array (`/api/unraid`), Docker orchestration, Compose synthesizer, logs & port mutator (`/api/docker/*`), UPS/NUT (`/api/ups`). | [Details](docs/API.md#2-system--subsystem-management) |
-| **Hardware Controls** | Fan curves/PWM (`/api/fans`), ARGB lightbar effects (`/api/led`), LCD brightness/pages (`/api/lcd/*`), S.M.A.R.T. self-tests (`/api/disk/*`). | [Details](docs/API.md#3-hardware-controls--diagnostics) |
-| **Media & Filesystem** | Chunked uploads (`/api/fs/upload`), card slot detection & auto-ingest (`/api/media_slots`, `/api/copy/*`), safe ejection. | [Details](docs/API.md#4-media-ingest--filesystem-management) |
-| **Security & System** | Password rotation (`/api/security`), scoped API tokens (`/api/tokens`), multi-channel alerts (`/api/notifications/*`), backup export/restore (`/api/backup/*`). | [Details](docs/API.md#5-configuration-notifications--security) |
+| **Identity & Multi-User RBAC** | User inventory & roles (`/api/auth/users`), TOTP 2FA setup & verify (`/api/auth/totp/*`), session revocation (`/api/auth/sessions`), scoped API tokens (`/api/tokens`). | [Details](docs/API.md#1-identity-multi-user--rbac) |
+| **Telemetry & Live Streaming** | Real-time system metrics snapshot (`/api/stats`), 1 Hz live SSE stream (`/api/stats/stream`), historical time-series graphs (`/api/history`), health probe (`/api/health`). | [Details](docs/API.md#2-telemetry--live-streaming) |
+| **Storage & Platform Abstraction (PAL)** | Platform storage pools (`/api/storage/pools`), physical drive inventory (`/api/storage/disks`), bay slot mapping (`/api/storage/bay-slots`), quad-action disk locate strobe (`/api/storage/locate`). | [Details](docs/API.md#3-storage--platform-abstraction-layer-pal) |
+| **Docker Orchestration & Compose** | Containers & updates (`/api/docker/containers`, `/api/docker/updates/*`), Compose stack synthesis & editing (`/api/docker/stacks/*`), Web Terminal (`/api/docker/containers/{id}/exec`), 25+ app catalog (`/api/docker/catalog`). | [Details](docs/API.md#4-docker-containers-stacks--app-catalog) |
+| **Cloud Remotes & WebDAV** | Universal WebDAV server port 8084 (`/api/webdav/*`), Rclone multi-cloud mounting (`/api/remotes/*`) for 20+ cloud backends (S3, B2, Google Drive, OneDrive). | [Details](docs/API.md#5-remote-cloud-storage--webdav) |
+| **Hardware Controls & Fans** | 6-point fan curves & Zero RPM mode (`/api/fans`), WS2812B ARGB lightbar effects (`/api/led`), physical LCD brightness/pages (`/api/lcd/*`), S.M.A.R.T. tests (`/api/disk/*`). | [Details](docs/API.md#6-hardware-controls--diagnostics) |
+| **Alerts & Hyper-Backup** | Apprise multi-channel alerts & test dispatch (`/api/notifications/*`), local/cloud snapshot schedules & 1-click restore (`/api/backup/*`), sanitized diagnostics bundle (`/api/system/diagnostics`). | [Details](docs/API.md#7-notifications-hyper-backup--diagnostics) |
+| **Media & Filesystem** | Chunked file streaming (`/api/fs/upload`), front SD/TF card auto-detection & SHA-256 verified ingest (`/api/media_slots`, `/api/copy/*`), safe ejection. | [Details](docs/API.md#8-media-ingest--filesystem-management) |
 
 ---
 
-## Frontend Build & Development
+## Development & Test Suite
 
-The frontend is built with vanilla ES modules and bundled via Vite:
+The frontend is built with vanilla modern ES modules and bundled via Vite. The backend is powered by FastAPI, SQLite WAL, and multi-protocol hardware daemons.
 
+### Frontend Workflow
 ```bash
 npm install
-npm run build     # Outputs minified production assets to static/
-npm test          # Executes Vitest + JSDOM frontend test suite
+npm run build          # Compiles minified production assets to static/
+npm test               # Runs full Vitest + JSDOM frontend test suite (40 test files, 256 tests)
+npm run test:coverage  # Generates Vitest V8 code coverage report
+npm run dev            # Starts local Vite development server with hot module reload
 ```
 
-To run in development mode with hot-reloading:
+### Backend Workflow & Pytest Suite
 ```bash
-npm run dev
+# Run full Pytest test suite (422 unit and integration tests)
+docker exec -i zettnas-toolkit python3 -m pytest -q /mnt/user/appdata/zettnas-toolkit/tests
+
+# Run code style & formatting checks
+ruff check app.py backend tests
+ruff format --check app.py backend tests
 ```
+
+For remote test appliance execution rules and architectural invariants, see **[AGENTS.md](AGENTS.md)**.
 
 ---
 
 ## Documentation & Guides
 
-* **[Installation & Deployment Guide](docs/INSTALLATION.md)** — Step-by-step setup for Unraid, Ubuntu/Debian, FygoOS, TrueNAS SCALE, Docker CLI, device rules, and headless servers.
-* **[REST API Reference](docs/API.md)** — Complete endpoint specifications, live SSE telemetry contracts, card reader auto-ingest, and hardware control APIs.
-* **[System Architecture](docs/ARCHITECTURE.md)** — Threading model (`StatsCollector`, `LcdRenderer`, `ButtonListener`, `FanWatchdog`), SQLite WAL persistence, and data flow.
-* **[Hardware Protocol Reference](docs/HARDWARE_PROTOCOL.md)** — WS2812B serial packet specifications, sysfs thermal & PWM mappings, and direct `/dev/fb0` memory buffers.
-* **[Reverse Proxy & TLS Guide](docs/REVERSE_PROXY.md)** — Production configurations for Nginx, Caddy, Traefik, and Nginx Proxy Manager with SSE stream buffering disabled.
+* **[Installation & Deployment Guide (docs/INSTALLATION.md)](docs/INSTALLATION.md)** — Step-by-step setup for Unraid, Ubuntu/Debian, FygoOS, TrueNAS SCALE, Docker CLI, device rules, and headless servers.
+* **[Developer & AI Agent Guidelines (AGENTS.md)](AGENTS.md)** — Operational blueprint, testing gates, architectural invariants, and remote execution protocols.
+* **[REST API Reference (docs/API.md)](docs/API.md)** — Complete endpoint specifications, live SSE telemetry contracts, card reader auto-ingest, and hardware control APIs.
+* **[System Architecture (docs/ARCHITECTURE.md)](docs/ARCHITECTURE.md)** — Threading model (`StatsCollector`, `LcdRenderer`, `ButtonListener`, `FanWatchdog`), SQLite WAL persistence, and data flow.
+* **[Hardware Protocol Reference (docs/HARDWARE_PROTOCOL.md)](docs/HARDWARE_PROTOCOL.md)** — WS2812B serial packet specifications, sysfs thermal & PWM mappings, and direct `/dev/fb0` memory buffers.
+* **[Reverse Proxy & TLS Guide (docs/REVERSE_PROXY.md)](docs/REVERSE_PROXY.md)** — Production configurations for Nginx, Caddy, Traefik, and Nginx Proxy Manager with SSE stream buffering disabled.
 * **[Contributing Guidelines](CONTRIBUTING.md)** — Pull request standards, local test environment, and automated test execution.
 
 ---
