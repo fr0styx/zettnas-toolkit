@@ -3861,6 +3861,176 @@ select.tz-select-input option, select.tz-select option {
   cursor: not-allowed;
 }
 
+/* =========================================================================
+   BACKUP & SNAPSHOT TABLE ACTION BUTTONS & RECT BUTTONS
+   ========================================================================= */
+.btn-rect {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: #cbd5e1;
+  transition: all 0.15s ease;
+  line-height: 1.2;
+}
+.btn-rect:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.28);
+  color: #fff;
+}
+.btn-rect.primary {
+  background: rgba(14, 165, 233, 0.14);
+  border-color: rgba(14, 165, 233, 0.35);
+  color: #38bdf8;
+}
+.btn-rect.primary:hover:not(:disabled) {
+  background: rgba(14, 165, 233, 0.28);
+  border-color: #0ea5e9;
+  color: #fff;
+  box-shadow: 0 0 10px rgba(14, 165, 233, 0.4);
+}
+.btn-rect.danger {
+  background: rgba(244, 63, 94, 0.12);
+  border-color: rgba(244, 63, 94, 0.35);
+  color: #fb7185;
+}
+.btn-rect.danger:hover:not(:disabled) {
+  background: rgba(244, 63, 94, 0.28);
+  border-color: #f43f5e;
+  color: #fff;
+  box-shadow: 0 0 10px rgba(244, 63, 94, 0.4);
+}
+
+.btn-download-app-backup {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(56, 189, 248, 0.12) !important;
+  color: #38bdf8 !important;
+  border: 1px solid rgba(56, 189, 248, 0.35) !important;
+  border-radius: 5px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  padding: 4px 9px !important;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.btn-download-app-backup:hover:not(:disabled) {
+  background: rgba(56, 189, 248, 0.28) !important;
+  border-color: #38bdf8 !important;
+  color: #fff !important;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.45) !important;
+  transform: translateY(-1px);
+}
+
+.btn-restore-app-backup {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(37, 194, 160, 0.14) !important;
+  color: var(--ok2, #25c2a0) !important;
+  border: 1px solid rgba(37, 194, 160, 0.35) !important;
+  border-radius: 5px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  padding: 4px 9px !important;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.btn-restore-app-backup:hover:not(:disabled) {
+  background: rgba(37, 194, 160, 0.28) !important;
+  border-color: #25c2a0 !important;
+  color: #fff !important;
+  box-shadow: 0 0 10px rgba(37, 194, 160, 0.45) !important;
+  transform: translateY(-1px);
+}
+
+.btn-delete-app-backup,
+.btn-delete-backup-job,
+.btn-sys-delete-snap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(244, 63, 94, 0.14) !important;
+  color: #fb7185 !important;
+  border: 1px solid rgba(244, 63, 94, 0.35) !important;
+  border-radius: 5px !important;
+  font-size: 12px !important;
+  padding: 4px 8px !important;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.btn-delete-app-backup:hover:not(:disabled),
+.btn-delete-backup-job:hover:not(:disabled),
+.btn-sys-delete-snap:hover:not(:disabled) {
+  background: rgba(244, 63, 94, 0.3) !important;
+  border-color: #f43f5e !important;
+  color: #fff !important;
+  box-shadow: 0 0 10px rgba(244, 63, 94, 0.45) !important;
+  transform: translateY(-1px);
+}
+
+.btn-run-backup-job {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(14, 165, 233, 0.14) !important;
+  color: #38bdf8 !important;
+  border: 1px solid rgba(14, 165, 233, 0.35) !important;
+  border-radius: 5px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  padding: 4px 10px !important;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.btn-run-backup-job:hover:not(:disabled) {
+  background: rgba(14, 165, 233, 0.28) !important;
+  border-color: #0ea5e9 !important;
+  color: #fff !important;
+  box-shadow: 0 0 10px rgba(14, 165, 233, 0.45) !important;
+}
+
+.btn-sys-restore-snap {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(245, 158, 11, 0.14) !important;
+  color: #fbbf24 !important;
+  border: 1px solid rgba(245, 158, 11, 0.35) !important;
+  border-radius: 5px !important;
+  font-size: 10.5px !important;
+  font-weight: 600 !important;
+  padding: 3px 8px !important;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.btn-sys-restore-snap:hover:not(:disabled) {
+  background: rgba(245, 158, 11, 0.28) !important;
+  border-color: #fbbf24 !important;
+  color: #fff !important;
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.45) !important;
+}
+
+#sec-save-btn {
+  background: rgba(249, 115, 22, 0.14) !important;
+  border: 1px solid rgba(249, 115, 22, 0.45) !important;
+  color: #fb923c !important;
+}
+#sec-save-btn:hover:not(:disabled) {
+  background: rgba(249, 115, 22, 0.28) !important;
+  border-color: #f97316 !important;
+  color: #fff !important;
+  box-shadow: 0 0 12px rgba(249, 115, 22, 0.45) !important;
+}
+
 /* Docker Toolbar & Filter Pills */
 .docker-toolbar {
   display: flex;

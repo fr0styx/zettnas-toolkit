@@ -156,6 +156,8 @@
               'mgmt-pane-notifications': 'mgmt-sec-system-group',
               'mgmt-sec-events': 'mgmt-sec-system-group',
               'mgmt-pane-events': 'mgmt-sec-system-group',
+              'mgmt-sec-backups': 'mgmt-sec-system-group',
+              'mgmt-pane-backups': 'mgmt-sec-system-group',
               'mgmt-sec-system': 'mgmt-sec-system-group',
               'mgmt-pane-system': 'mgmt-sec-system-group',
               'mgmt-sec-about': 'mgmt-sec-system-group',
@@ -192,11 +194,11 @@
   })();
 </script>
 <style>html,body{color:#eaf1f8;background-color:#080c10;width:100%;height:100%;margin:0;padding:0;overflow:hidden}html.auth-required body{background:radial-gradient(circle at 50% 20%,#151d29 0%,#080c10 70%)!important}#login-overlay{z-index:999999;background:#080c10;justify-content:center;align-items:center;display:flex;position:fixed;inset:0}html.has-auth-session #login-overlay{display:none!important}html.auth-required #login-overlay{display:flex!important}html.is-desktop-locked #lock-overlay{opacity:1!important;display:flex!important}html.is-desktop-locked body{overflow:hidden!important}html.auth-required .studio-viewport-wrapper,html.auth-required .suite-navbar,html.auth-required #desktop-icons-container,html.auth-required .desktop-icons-container,html.auth-required .top-nav,html.auth-required #desktop-widgets-container,html.auth-required #os-dock-container,html.auth-required .workspace-panel,html.auth-required .smart-modal-backdrop,html.auth-required .os-window,html.auth-required .notif-center-window{display:none!important}</style>
-  <script type="module" crossorigin src="/assets/index-DroPNoyB.js"></script>
+  <script type="module" crossorigin src="/assets/index-CykjGcHh.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-hePW80VL.js">
-  <link rel="modulepreload" crossorigin href="/assets/dock-BdWraArn.js">
-  <link rel="modulepreload" crossorigin href="/assets/users-CKeXIFqh.js">
-  <link rel="stylesheet" crossorigin href="/assets/index-8rmv-uel.css">
+  <link rel="modulepreload" crossorigin href="/assets/dock-BVG7Gger.js">
+  <link rel="modulepreload" crossorigin href="/assets/users-Dp64ocoQ.js">
+  <link rel="stylesheet" crossorigin href="/assets/index-DXH-5wHQ.css">
 </head>
 <body class="studio-workbench no-specular-glow">
 
@@ -3319,7 +3321,7 @@
           <!-- 6. System -->
           <div id="mgmt-sec-system-group" class="mgmt-detail-card" style="display: none;">
             <div class="mgmt-inner-tabs">
-              <button class="mgmt-inner-tab active" data-tab-target="mgmt-pane-security">
+              <button class="mgmt-inner-tab active" data-tab-target="mgmt-pane-security" id="mgmt-tab-security">
                 <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-chip"/></svg>
                 <span data-i18n="mgmt.subtab_security">Security</span>
               </button>
@@ -3327,17 +3329,17 @@
                 <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-users"/></svg>
                 <span data-i18n="mgmt.subtab_users">Users & Roles</span>
               </button>
+              <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-backups" id="mgmt-tab-backups">
+                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-storage"/></svg>
+                <span data-i18n="mgmt.subtab_backups">Backups & Recovery</span>
+              </button>
               <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-notifications" id="mgmt-tab-notifications">
                 <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-bell"/></svg>
                 <span data-i18n="mgmt.subtab_notifications">Notifications & Alerts</span>
               </button>
-              <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-events">
+              <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-events" id="mgmt-tab-events">
                 <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-storage"/></svg>
                 <span data-i18n="mgmt.subtab_events">Event Log</span>
-              </button>
-              <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-system">
-                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-chip"/></svg>
-                <span data-i18n="mgmt.subtab_system">System & API</span>
               </button>
               <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-language" id="mgmt-tab-language">
                 <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-globe"/></svg>
@@ -3397,6 +3399,23 @@
 
               <div style="border-top: 1px solid rgba(255,255,255,0.06); margin-top: 4px; padding-top: 14px;">
                 <button id="btn-launch-setup-wizard" class="btn-save-preset" style="width: 100%; justify-content:center; padding: 10px; font-size: 11.5px; background: rgba(224, 122, 56, 0.15); border-color: rgba(224, 122, 56, 0.4); color: #f8fafc;" data-i18n="mgmt.sec_wizard">🚀 Launch Initial Hardware Setup Wizard</button>
+              </div>
+
+              <!-- Scoped API Tokens -->
+              <div style="border-top: 1px solid rgba(255,255,255,0.06); margin-top: 14px; padding-top: 14px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                  <span style="font-weight:700; font-size:12.5px; color:#fff;" data-i18n="settings.api_tokens">API Tokens & Automation Keys</span>
+                </div>
+                <div style="font-size: 11px; color: var(--muted); margin-bottom: 12px; line-height: 1.4;">
+                  Generate scoped API tokens for third-party integrations (e.g., Home Assistant, Prometheus, or backup automation).
+                </div>
+                <div id="api-tokens-list" style="margin-bottom: 12px; display: flex; flex-direction: column; gap: 8px;">
+                  <div style="font-size:11px; color:var(--muted); text-align:center;">Loading...</div>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                  <input type="text" id="new-token-name" placeholder="Token Name (e.g. Home Assistant)" class="tz-select-input" style="flex:1; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.12); color: #fff; padding: 7px 12px; font-size: 11.5px; border-radius: 6px;">
+                  <button id="btn-generate-token" class="btn-pill-toggle" style="font-weight:700; color:var(--brand, #38bdf8); border-color:rgba(56,189,248,0.35); background:rgba(56,189,248,0.12); padding:6px 14px;">Generate</button>
+                </div>
               </div>
             </div>
           </div>
@@ -3748,10 +3767,10 @@
             </div>
           </div>
         </div>
-            <div id="mgmt-pane-system" class="mgmt-tab-pane" style="display: none;">
+            <div id="mgmt-pane-backups" class="mgmt-tab-pane" style="display: none;">
           <div class="mgmt-card-intro">
-            <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-chip"/></svg> <span data-i18n="mgmt.sys_title">Hyper-Backup, Snapshots & API</span></div>
-            <div class="mgmt-card-intro-desc" data-i18n="mgmt.sys_desc">Manage automated 3-2-1 backup pipelines, point-in-time filesystem snapshots, configuration archives, and API tokens.</div>
+            <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-storage"/></svg> <span data-i18n="mgmt.backups_title">Backups, Snapshots & Disaster Recovery</span></div>
+            <div class="mgmt-card-intro-desc" data-i18n="mgmt.backups_desc">Automated 3-2-1 backup pipelines, point-in-time storage snapshots, application state archives, and system configuration restoration.</div>
           </div>
           
           <div class="mgmt-detail-body">
@@ -3768,10 +3787,10 @@
                   </div>
                 </div>
                 <div style="display: flex; gap: 8px;">
-                  <button id="btn-refresh-backup-jobs" class="btn-rect" style="background: rgba(255,255,255,0.08); font-size: 11px; padding: 6px 12px;">
-                    <svg class="ic"><use href="#i-refresh"/></svg> Refresh
+                  <button class="btn-pill-toggle" id="btn-refresh-backup-jobs" title="Refresh Backup Tasks" data-i18n="mgmt.refresh">
+                    🔄 Refresh
                   </button>
-                  <button id="btn-open-create-backup-job" class="btn-rect primary" style="font-size: 11px; padding: 6px 14px;">
+                  <button class="btn-pill-toggle" id="btn-open-create-backup-job" style="color:var(--brand, #38bdf8); border-color:rgba(56,189,248,0.35); background:rgba(56,189,248,0.12); font-weight:700;">
                     <svg class="ic"><use href="#i-plus"/></svg> Add Backup Task
                   </button>
                 </div>
@@ -3794,10 +3813,10 @@
                   </div>
                 </div>
                 <div style="display: flex; gap: 8px;">
-                  <button id="btn-refresh-snapshots" class="btn-rect" style="background: rgba(255,255,255,0.08); font-size: 11px; padding: 6px 12px;">
-                    <svg class="ic"><use href="#i-refresh"/></svg> Refresh
+                  <button class="btn-pill-toggle" id="btn-refresh-snapshots" title="Refresh Snapshots" data-i18n="mgmt.refresh">
+                    🔄 Refresh
                   </button>
-                  <button id="btn-open-create-snapshot" class="btn-rect primary" style="font-size: 11px; padding: 6px 14px;">
+                  <button class="btn-pill-toggle" id="btn-open-create-snapshot" style="color:var(--brand, #38bdf8); border-color:rgba(56,189,248,0.35); background:rgba(56,189,248,0.12); font-weight:700;">
                     <svg class="ic"><use href="#i-camera"/></svg> Take Snapshot
                   </button>
                 </div>
@@ -3823,8 +3842,8 @@
                   <select id="app-backups-filter-app" class="tz-select-input" style="font-size: 11px; padding: 5px 8px; min-width: 140px;" title="Filter by Application">
                     <option value="" data-i18n="mgmt.app_backups_all">All Applications (Box-Wide)</option>
                   </select>
-                  <button id="btn-refresh-app-backups" class="btn-rect" style="background: rgba(255,255,255,0.08); font-size: 11px; padding: 6px 12px;">
-                    <svg class="ic"><use href="#i-refresh"/></svg> Refresh
+                  <button class="btn-pill-toggle" id="btn-refresh-app-backups" title="Refresh Application Backups" data-i18n="mgmt.refresh">
+                    🔄 Refresh
                   </button>
                 </div>
               </div>
@@ -3833,41 +3852,24 @@
               </div>
             </div>
 
+            <!-- System Configuration Backup & Restore -->
             <div class="drawer-card" style="margin-bottom: 24px; padding: 16px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
               <div class="card-headline">
-                <span class="card-head-title" data-i18n="settings.backup_title" style="font-weight: 700; font-size: 14px; margin-bottom: 8px; display: block;">Configuration Backup & Restore</span>
+                <span class="card-head-title" data-i18n="settings.backup_title" style="font-weight: 700; font-size: 14px; margin-bottom: 8px; display: block;">System Configuration Backup & Restore</span>
               </div>
               <div style="font-size: 12px; color: var(--muted); margin-bottom: 16px; line-height: 1.4;" data-i18n="settings.backup_desc">
                 Download a complete backup archive of all system configurations, 6-point fan curves, layouts, widgets, and themes. Restoring will apply all configurations across the suite.
               </div>
-              <div style="display: flex; gap: 10px; align-items: center;">
-                <button id="btn-backup-download" class="btn-rect primary" style="flex:1;">
-                  <svg class="ic"><use href="#i-disk"/></svg> <span data-i18n="settings.btn_download_backup">Download Backup</span>
+              <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <button id="btn-backup-download" class="btn-pill-toggle" style="flex:1; justify-content:center; padding:8px 16px; font-size:11.5px; font-weight:700; color:#38bdf8; border-color:rgba(56,189,248,0.4); background:rgba(56,189,248,0.12);">
+                  <svg class="ic"><use href="#i-disk"/></svg> <span data-i18n="settings.btn_download_backup">Download Backup Archive (.zip)</span>
                 </button>
-                <div style="flex:1; position: relative;">
-                  <input type="file" id="backup-upload-input" accept=".zip" style="opacity:0; position:absolute; inset:0; cursor:pointer;" title="Upload backup file">
-                  <button class="btn-rect danger" style="width:100%; pointer-events:none;">
-                     <span data-i18n="settings.btn_restore_backup">Restore Backup</span>
+                <div style="flex:1; min-width: 200px; position: relative;">
+                  <input type="file" id="backup-upload-input" accept=".zip" style="opacity:0; position:absolute; inset:0; cursor:pointer; z-index:2;" title="Upload backup file">
+                  <button class="btn-pill-toggle" style="width:100%; justify-content:center; padding:8px 16px; font-size:11.5px; font-weight:700; color:#fb7185; border-color:rgba(244,63,94,0.4); background:rgba(244,63,94,0.12); pointer-events:none;">
+                     🔄 <span data-i18n="settings.btn_restore_backup">Upload & Restore Archive</span>
                   </button>
                 </div>
-              </div>
-            </div>
-
-            <div class="drawer-card" style="padding: 16px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
-              <div class="card-headline">
-                <span class="card-head-title" data-i18n="settings.api_tokens" style="font-weight: 700; font-size: 14px; margin-bottom: 8px; display: block;">API Tokens</span>
-              </div>
-              <div style="font-size: 12px; color: var(--muted); margin-bottom: 16px; line-height: 1.4;">
-                Generate scoped API tokens for third-party integrations (e.g., Home Assistant) or scripts.
-              </div>
-              
-              <div id="api-tokens-list" style="margin-bottom: 16px; display: flex; flex-direction: column; gap: 8px;">
-                <div style="font-size:12px; color:var(--muted); text-align:center;">Loading...</div>
-              </div>
-              
-              <div style="display: flex; gap: 8px;">
-                <input type="text" id="new-token-name" placeholder="Token Name (e.g. Home Assistant)" style="flex:1; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 8px 12px; font-size: 12px; border-radius: 6px;">
-                <button id="btn-generate-token" class="btn-rect">Generate</button>
               </div>
             </div>
           </div>

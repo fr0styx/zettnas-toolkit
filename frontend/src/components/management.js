@@ -69,8 +69,10 @@ export const SUBPANE_MAP = {
   'mgmt-pane-security': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-security' },
   'mgmt-sec-events': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-events' },
   'mgmt-pane-events': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-events' },
-  'mgmt-sec-system': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-system' },
-  'mgmt-pane-system': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-system' },
+  'mgmt-sec-backups': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-backups' },
+  'mgmt-pane-backups': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-backups' },
+  'mgmt-sec-system': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-backups' },
+  'mgmt-pane-system': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-backups' },
   'mgmt-sec-about': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-about' },
   'mgmt-pane-about': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-about' },
   'mgmt-sec-system-group': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-security' },
@@ -3067,11 +3069,13 @@ export function initManagement() {
       if (mount) fetchAndRenderRemoteStorage(mount);
     } else if (paneId === 'mgmt-pane-storage-disks') {
       fetchAndRenderDisksInventory();
-    } else if (paneId === 'mgmt-pane-system') {
-      if (typeof fetchAPITokens === 'function') fetchAPITokens();
+    } else if (paneId === 'mgmt-pane-backups' || paneId === 'mgmt-pane-system') {
       fetchAndRenderBackupJobs();
       fetchAndRenderSystemSnapshots();
       fetchAndRenderAppBackups();
+    } else if (paneId === 'mgmt-pane-security') {
+      if (typeof fetchAPITokens === 'function') fetchAPITokens();
+      if (typeof renderApiTokens === 'function') renderApiTokens();
     } else if (paneId === 'mgmt-pane-notifications') {
       fetchAndRenderNotificationConfig();
     } else if (paneId === 'mgmt-pane-users') {
@@ -3086,6 +3090,7 @@ export function initManagement() {
     const earlyStyle = document.getElementById('zettnas-mgmt-early-style');
     if (earlyStyle) earlyStyle.remove();
     let desiredSubPane = specificPane;
+    if (desiredSubPane === 'mgmt-pane-system') desiredSubPane = 'mgmt-pane-backups';
     if (!desiredSubPane && SUBPANE_MAP[targetId]) {
       desiredSubPane = SUBPANE_MAP[targetId].pane;
       targetId = SUBPANE_MAP[targetId].section;
@@ -4164,11 +4169,11 @@ export async function fetchAndRenderBackupJobs(mountEl) {
           </td>
           <td style="padding: 10px 12px; text-align: right;">
             <div style="display: inline-flex; gap: 6px;">
-              <button class="btn-rect primary btn-run-backup-job" data-job-id="${escapeHtml(job.id)}" style="font-size: 10.5px; padding: 4px 10px;">
+              <button class="btn-rect primary btn-run-backup-job" data-job-id="${escapeHtml(job.id)}" title="Run Backup Job Now">
                 ▶ Run
               </button>
-              <button class="btn-rect danger btn-delete-backup-job" data-job-id="${escapeHtml(job.id)}" style="font-size: 10.5px; padding: 4px 8px;">
-                🗑
+              <button class="btn-rect danger btn-delete-backup-job" data-job-id="${escapeHtml(job.id)}" title="Delete Backup Job">
+                🗑️
               </button>
             </div>
           </td>
@@ -4270,11 +4275,11 @@ export async function fetchAndRenderSystemSnapshots(mountEl) {
           </td>
           <td style="padding: 8px 12px; text-align: right;">
             <div style="display: inline-flex; gap: 6px;">
-              <button class="btn-rect btn-sys-restore-snap" data-snap-name="${escapeHtml(s.name)}" data-pool-id="${escapeHtml(poolId)}" style="font-size: 10px; padding: 3px 8px; background: rgba(245,158,11,0.2); border: 1px solid rgba(245,158,11,0.4); color: #fbbf24; cursor: pointer;">
+              <button class="btn-rect btn-sys-restore-snap" data-snap-name="${escapeHtml(s.name)}" data-pool-id="${escapeHtml(poolId)}" title="Rollback to this snapshot">
                 ⏪ Restore
               </button>
-              <button class="btn-rect danger btn-sys-delete-snap" data-snap-name="${escapeHtml(s.name)}" data-pool-id="${escapeHtml(poolId)}" style="font-size: 10px; padding: 3px 6px; cursor: pointer;">
-                🗑
+              <button class="btn-rect danger btn-sys-delete-snap" data-snap-name="${escapeHtml(s.name)}" data-pool-id="${escapeHtml(poolId)}" title="Delete Snapshot">
+                🗑️
               </button>
             </div>
           </td>
@@ -4412,14 +4417,14 @@ export async function fetchAndRenderAppBackups(mountEl, filterApp = '') {
           </td>
           <td style="padding: 10px 12px; text-align: right;">
             <div style="display: inline-flex; gap: 6px;">
-              <button class="btn-rect btn-download-app-backup" data-backup-id="${escapeHtml(b.id)}" data-file="${escapeHtml(b.archive_file || 'app_backup.tar.gz')}" style="font-size: 10.5px; padding: 4px 8px; cursor: pointer;" title="Download Archive (.tar.gz)">
+              <button class="btn-rect btn-download-app-backup" data-backup-id="${escapeHtml(b.id)}" data-file="${escapeHtml(b.archive_file || 'app_backup.tar.gz')}" title="Download Archive (.tar.gz)">
                 ⬇️ Download
               </button>
-              <button class="btn-rect btn-restore-app-backup" data-backup-id="${escapeHtml(b.id)}" data-app-name="${escapeHtml(b.container_name || b.id)}" style="font-size: 10.5px; padding: 4px 8px; background: rgba(37,194,160,0.15); border: 1px solid rgba(37,194,160,0.35); color: var(--accent); cursor: pointer;" title="Restore Configuration & Data">
+              <button class="btn-rect btn-restore-app-backup" data-backup-id="${escapeHtml(b.id)}" data-app-name="${escapeHtml(b.container_name || b.id)}" title="Restore Configuration & Data">
                 🔄 Restore
               </button>
-              <button class="btn-rect danger btn-delete-app-backup" data-backup-id="${escapeHtml(b.id)}" data-file="${escapeHtml(b.archive_file || b.id)}" style="font-size: 10.5px; padding: 4px 8px; cursor: pointer;" title="Delete Backup Archive">
-                🗑
+              <button class="btn-rect danger btn-delete-app-backup" data-backup-id="${escapeHtml(b.id)}" data-file="${escapeHtml(b.archive_file || b.id)}" title="Delete Backup Archive">
+                🗑️
               </button>
             </div>
           </td>
