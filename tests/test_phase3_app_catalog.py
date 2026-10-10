@@ -254,9 +254,10 @@ def test_check_port_detailed_with_docker():
 def test_stream_deploy_catalog_app_aborts_on_conflicting_port():
     from backend.services.app_catalog import stream_deploy_catalog_app
 
-    with patch("backend.services.app_catalog.check_port_available_detailed", return_value=(False, "container 'rogue-app'")):
+    with patch(
+        "backend.services.app_catalog.check_port_available_detailed", return_value=(False, "container 'rogue-app'")
+    ):
         events = list(stream_deploy_catalog_app("uptime-kuma", host_port=3001))
         error_event = next((e for e in events if e.get("step") == "error"), None)
         assert error_event is not None
         assert "already in use by container 'rogue-app'" in error_event["message"]
-
