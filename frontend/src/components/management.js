@@ -300,18 +300,31 @@ function _bindDockerEvents() {
   const wrapCatalog = document.getElementById('docker-view-catalog-wrap');
 
   if (btnContainers && btnCatalog) {
-    btnContainers.addEventListener('click', () => {
-      btnContainers.classList.add('active');
+    const showContainersView = () => {
+      btnContainers.style.display = 'none';
+      btnContainers.classList.remove('active');
       btnCatalog.classList.remove('active');
       if (wrapContainers) wrapContainers.style.display = 'block';
       if (wrapCatalog) wrapCatalog.style.display = 'none';
-    });
-    btnCatalog.addEventListener('click', () => {
+    };
+
+    const showCatalogView = () => {
       btnCatalog.classList.add('active');
+      btnContainers.style.display = 'inline-flex';
+      btnContainers.textContent = '← Back to Containers';
       btnContainers.classList.remove('active');
       if (wrapContainers) wrapContainers.style.display = 'none';
       if (wrapCatalog) wrapCatalog.style.display = 'block';
       fetchAndRenderAppCatalog();
+    };
+
+    btnContainers.addEventListener('click', showContainersView);
+    btnCatalog.addEventListener('click', () => {
+      if (wrapCatalog && wrapCatalog.style.display === 'block') {
+        showContainersView();
+      } else {
+        showCatalogView();
+      }
     });
   }
 
@@ -381,25 +394,35 @@ function _bindDockerEvents() {
   // Update all button
   const btnUpdateAll = document.getElementById('btn-docker-update-all');
   if (btnUpdateAll) {
-    btnUpdateAll.addEventListener('click', async () => {
+    btnUpdateAll.addEventListener('click', () => {
       const count = _dockerUpdatesCache?.updates_available_count || 0;
-      if (!confirm(`Update all ${count} containers to their latest images? Each container will be safely recreated with automated rollback protection.`)) {
-        return;
-      }
-      btnUpdateAll.disabled = true;
-      btnUpdateAll.innerHTML = '<span>⏳</span> <span>Updating all...</span>';
-      showToast(`Starting batch update for ${count} containers...`, 'info');
-      try {
-        const res = await api.post('/api/docker/updates/apply-all');
-        const updatedCount = res.total_updated || (res.updated || []).length;
-        showToast(`Batch update complete: ${updatedCount} updated, ${(res.failed || []).length} failed.`, updatedCount > 0 ? 'success' : 'warn');
-        await refreshDockerUpdatesStatus();
-        await fetchAndRenderDockerContainers();
-      } catch (err) {
-        showToast(`Batch update failed: ${err.message}`, 'error');
-      } finally {
-        btnUpdateAll.disabled = false;
-      }
+      showConfirmToast(
+        'Update All Containers',
+        `Update all <strong>${count} containers</strong> with available image updates?<br><br><span style="font-size:11.5px; color:var(--muted);">Each container will be repulled and recreated with automated rollback protection if startup fails.</span>`,
+        async () => {
+          btnUpdateAll.disabled = true;
+          btnUpdateAll.innerHTML = '<span>⏳</span> <span>Updating all...</span>';
+          showToast(`Starting batch update for ${count} containers...`, 'info');
+          try {
+            const res = await api.post('/api/docker/updates/apply-all');
+            const updatedCount = res.total_updated || (res.updated || []).length;
+            showToast(`Batch update complete: ${updatedCount} updated, ${(res.failed || []).length} failed.`, updatedCount > 0 ? 'success' : 'warn');
+            await refreshDockerUpdatesStatus();
+            await fetchAndRenderDockerContainers();
+          } catch (err) {
+            showToast(`Batch update failed: ${err.message}`, 'error');
+          } finally {
+            btnUpdateAll.disabled = false;
+            updateDockerUpdatesToolbarUI();
+          }
+        },
+        null,
+        {
+          okText: '⬆️ Update All Now',
+          cancelText: 'Cancel',
+          isUpdate: true,
+        }
+      );
     });
   }
 
@@ -620,18 +643,18 @@ function buildContainerRowInner(c, currentHost) {
   const updateInfo = _dockerUpdatesCache?.containers?.[c.name] || _dockerUpdatesCache?.containers?.[c.id];
   const hasUpdate = Boolean(updateInfo?.has_update);
   const updateBadge = hasUpdate
-    ? `<span class="ci-badge badge-update-ready" title="New image update available" style="display:inline-flex; align-items:center; gap:2px; background:rgba(245,158,11,0.18); color:#fbbf24; border:1px solid rgba(245,158,11,0.4); font-size:9px; font-weight:700; padding:1px 5px; border-radius:3px; margin-left:4px;">⬆️ UPDATE</span>`
+    ? `<button class="ci-badge badge-update-ready btn-container-act btn-docker-update-badge" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="update-single" title="Click to update ${escapeHtml(c.name)} to latest image">⬆️ UPDATE</button>`
     : '';
 
   const inspectBtn = `<button class="btn-container-act btn-docker-inspect" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="inspect" title="Inspect ${escapeHtml(c.name)}">🔍</button>`;
   const editBtn = `<button class="btn-container-act btn-docker-edit" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="edit" title="Edit ${escapeHtml(c.name)}">✏️</button>`;
   const stackBtn = c.stack
-    ? `<button class="btn-container-act btn-docker-stack" data-action="stack" data-stack="${escapeHtml(c.stack)}" title="Open & Edit Stack: ${escapeHtml(c.stack)}" style="color:var(--accent-cyan, #38bdf8);">📁</button>`
+    ? `<button class="btn-container-act btn-docker-stack" data-action="stack" data-stack="${escapeHtml(c.stack)}" title="Open & Edit Stack: ${escapeHtml(c.stack)}">📁</button>`
     : '';
   const updateBtn = hasUpdate
-    ? `<button class="btn-container-act btn-docker-update-single" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="update-single" title="Update ${escapeHtml(c.name)} to latest image" style="color:#fbbf24;">⬆️</button>`
+    ? `<button class="btn-container-act btn-docker-update-single" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="update-single" title="Update ${escapeHtml(c.name)} to latest image">⬆️</button>`
     : '';
-  const deleteBtn = `<button class="btn-container-act btn-docker-delete" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-image="${escapeHtml(c.image || '')}" data-action="delete" title="Destroy / Delete ${escapeHtml(c.name)}" style="color:var(--crit, #ff6b6b);">🗑️</button>`;
+  const deleteBtn = `<button class="btn-container-act btn-docker-delete" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-image="${escapeHtml(c.image || '')}" data-action="delete" title="Destroy / Delete ${escapeHtml(c.name)}">🗑️</button>`;
   const actions = isRunning
     ? `
       ${inspectBtn}
@@ -752,22 +775,32 @@ function bindDockerTableEvents(tbody) {
       }
 
       if (act === 'update-single') {
-        if (!confirm(`Update container "${cname}" to the latest image? The newest image will be pulled and the container will be atomically recreated.`)) {
-          return;
-        }
-        actBtn.disabled = true;
-        actBtn.textContent = '⏳';
-        showToast(`Updating "${cname}" to latest image...`, 'info');
-        try {
-          await api.post(`/api/docker/containers/${encodeURIComponent(cid)}/update-image`);
-          showToast(`Container "${cname}" updated and restarted successfully!`, 'success');
-          await fetchAndRenderDockerContainers();
-          await refreshDockerUpdatesStatus();
-        } catch (err) {
-          showToast(`Update failed: ${err.message}`, 'error');
-          actBtn.disabled = false;
-          actBtn.textContent = '⬆️';
-        }
+        showConfirmToast(
+          `Update Container "${cname}"`,
+          `Pull the latest image and update <strong>${escapeHtml(cname)}</strong> to its newest release?<br><br><span style="font-size:11.5px; color:var(--muted);">All volumes, persistent paths, and environment settings will be preserved intact.</span>`,
+          async () => {
+            actBtn.disabled = true;
+            const originalContent = actBtn.innerHTML;
+            actBtn.innerHTML = '⏳';
+            showToast(`Updating "${cname}" to latest image...`, 'info');
+            try {
+              await api.post(`/api/docker/containers/${encodeURIComponent(cid)}/update-image`);
+              showToast(`Container "${cname}" updated and restarted successfully!`, 'success');
+              await refreshDockerUpdatesStatus();
+              await fetchAndRenderDockerContainers();
+            } catch (err) {
+              showToast(`Update failed: ${err.message}`, 'error');
+              actBtn.disabled = false;
+              actBtn.innerHTML = originalContent;
+            }
+          },
+          null,
+          {
+            okText: '⬆️ Update Now',
+            cancelText: 'Cancel',
+            isUpdate: true,
+          }
+        );
         return;
       }
 

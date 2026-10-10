@@ -50,6 +50,29 @@ describe('Docker Stacks & Wallpaper Blur & Dock Labels', () => {
     });
   });
 
+  describe('Docker Container Updates, Action Button Styling & Header Layout', () => {
+    it('verifies Active Containers button is hidden by default in index.html', () => {
+      const htmlPath = path.resolve(__dirname, '../../../frontend/index.html');
+      const htmlContent = fs.readFileSync(htmlPath, 'utf8');
+      expect(htmlContent).toContain('id="btn-view-docker-containers" style="display:none;"');
+    });
+
+    it('verifies style.css contains light yellow highlight for edit pencil and rose/crimson for delete', () => {
+      const cssPath = path.resolve(__dirname, '../../../frontend/src/style.css');
+      const cssContent = fs.readFileSync(cssPath, 'utf8');
+      // Edit button - light yellow
+      expect(cssContent).toContain('.btn-docker-edit');
+      expect(cssContent).toContain('#fde047');
+      // Delete button - rose/crimson
+      expect(cssContent).toContain('.btn-docker-delete');
+      expect(cssContent).toContain('#fb7185');
+      expect(cssContent).toContain('#f43f5e');
+      // Clickable update badge
+      expect(cssContent).toContain('.btn-docker-update-badge');
+      expect(cssContent).toContain('cursor: pointer');
+    });
+  });
+
   describe('Wallpaper Dedicated Layer & Blur Architecture', () => {
     it('verifies #desktop-wallpaper layer receives background-image update', () => {
       const layer = document.getElementById('desktop-wallpaper');

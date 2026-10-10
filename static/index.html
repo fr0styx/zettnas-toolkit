@@ -192,11 +192,11 @@
   })();
 </script>
 <style>html,body{color:#eaf1f8;background-color:#080c10;width:100%;height:100%;margin:0;padding:0;overflow:hidden}html.auth-required body{background:radial-gradient(circle at 50% 20%,#151d29 0%,#080c10 70%)!important}#login-overlay{z-index:999999;background:#080c10;justify-content:center;align-items:center;display:flex;position:fixed;inset:0}html.has-auth-session #login-overlay{display:none!important}html.auth-required #login-overlay{display:flex!important}html.is-desktop-locked #lock-overlay{opacity:1!important;display:flex!important}html.is-desktop-locked body{overflow:hidden!important}html.auth-required .studio-viewport-wrapper,html.auth-required .suite-navbar,html.auth-required #desktop-icons-container,html.auth-required .desktop-icons-container,html.auth-required .top-nav,html.auth-required #desktop-widgets-container,html.auth-required #os-dock-container,html.auth-required .workspace-panel,html.auth-required .smart-modal-backdrop,html.auth-required .os-window,html.auth-required .notif-center-window{display:none!important}</style>
-  <script type="module" crossorigin src="/assets/index-TC4qa2dD.js"></script>
+  <script type="module" crossorigin src="/assets/index-D9mdjVIo.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-hePW80VL.js">
-  <link rel="modulepreload" crossorigin href="/assets/dock-B6XpD0ay.js">
-  <link rel="modulepreload" crossorigin href="/assets/users-CO6MJmEO.js">
-  <link rel="stylesheet" crossorigin href="/assets/index-CYgYr8Vu.css">
+  <link rel="modulepreload" crossorigin href="/assets/dock-D5aujaBL.js">
+  <link rel="modulepreload" crossorigin href="/assets/users-Daf26ONf.js">
+  <link rel="stylesheet" crossorigin href="/assets/index-CcVKvR0m.css">
 </head>
 <body class="studio-workbench no-specular-glow">
 
@@ -2977,7 +2977,7 @@
                   <div class="mgmt-card-intro-desc" data-i18n="mgmt.docker_sec_desc">Manage running containers or deploy curated homelab applications in 1-click.</div>
                 </div>
                 <div style="display:flex; gap:6px; align-items:center;">
-                  <button class="btn-pill-toggle active" id="btn-view-docker-containers">Active Containers</button>
+                  <button class="btn-pill-toggle" id="btn-view-docker-containers" style="display:none;">← Back to Containers</button>
                   <button class="btn-pill-toggle" id="btn-view-docker-catalog">📦 App Catalog <span id="catalog-total-badge" class="docker-count-badge" style="margin-left:4px;">25+</span></button>
                   <button class="btn-pill-toggle" id="btn-docker-prune" title="Clean up unused images, volumes, and stopped containers">🧹 Prune / Cleanup</button>
                   <button class="btn-pill-toggle" id="btn-refresh-docker" title="Refresh Containers" data-i18n="mgmt.refresh">🔄 Refresh</button>

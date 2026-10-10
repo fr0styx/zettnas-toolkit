@@ -182,6 +182,7 @@ function _showTopConfirm(title, msg, onConfirm, onCancel, options = {}) {
 
   const isStandby = title && title.toLowerCase().includes('standby');
   const isMedia = options.isMedia || (title && (title.toLowerCase().includes('media') || title.toLowerCase().includes('ingest') || title.toLowerCase().includes('card') || title.toLowerCase().includes('import')));
+  const isUpdate = options.isUpdate || (title && (title.toLowerCase().includes('update') || title.toLowerCase().includes('upgrade')));
 
   if (isMedia) {
     titleEl.innerHTML = `<span>📷</span> ${title || "Media Card Ingest"}`;
@@ -198,6 +199,15 @@ function _showTopConfirm(title, msg, onConfirm, onCancel, options = {}) {
     okBtn.style.border = "1px solid #f59e0b";
     okBtn.style.color = "#0a0e13";
     headerBg.style.background = "rgba(245, 158, 11, 0.08)";
+    titleEl.style.color = "#fbbf24";
+  } else if (isUpdate) {
+    titleEl.innerHTML = `<span>⬆️</span> ${title || "Confirm Update"}`;
+    okBtn.innerHTML = options.okText || "⬆️ Update Now";
+    okBtn.style.background = "linear-gradient(135deg, #f59e0b, #d97706)";
+    okBtn.style.border = "1px solid #f59e0b";
+    okBtn.style.color = "#0a0e13";
+    okBtn.style.fontWeight = "700";
+    headerBg.style.background = "rgba(245, 158, 11, 0.14)";
     titleEl.style.color = "#fbbf24";
   } else {
     titleEl.innerHTML = `<span>💬</span> ${title || "Confirm Action"}`;
@@ -224,12 +234,16 @@ function _showTopConfirm(title, msg, onConfirm, onCancel, options = {}) {
   card.style.pointerEvents = "auto";
 
   setTimeout(() => {
+    backdrop.classList.add("open");
+    card.classList.add("open");
     backdrop.style.opacity = "1";
     card.style.opacity = "1";
     card.style.transform = "translate(-50%, 0) scale(1)";
   }, 10);
 
   const cleanup = () => {
+    backdrop.classList.remove("open");
+    card.classList.remove("open");
     backdrop.style.opacity = "0";
     card.style.opacity = "0";
     card.style.pointerEvents = "none";

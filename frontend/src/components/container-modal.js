@@ -6,7 +6,7 @@
  */
 
 import { api } from '../api.js';
-import { showToast } from '../toast.js';
+import { showToast, showConfirmToast } from '../toast.js';
 import { escapeHtml, trapFocus } from '../utils.js';
 import { t } from '../i18n.js';
 import { bringToFront, makeDraggable, DockManager } from './dock.js';

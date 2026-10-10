@@ -176,10 +176,64 @@ describe('Container Edit & Docker Update System', () => {
     expect(updateAllBtn.style.display).toBe('inline-flex');
     expect(badge.textContent).toBe('2');
 
-    // Confirm and click Update All
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    // Confirm and click Update All using custom UI dialog
     await updateAllBtn.click();
+    const okBtn = document.getElementById('confirm-toast-ok');
+    if (okBtn) okBtn.click();
 
     expect(postSpy).toHaveBeenCalledWith('/api/docker/updates/apply-all');
+  });
+
+  it('allows individually updating a container by clicking the UPDATE badge next to its name', async () => {
+    vi.spyOn(api, 'get').mockImplementation(async (url) => {
+      if (url.includes('/docker/containers')) {
+        return [
+          { id: 'c9fa84f9db51', name: 'immich_server', state: 'running', status: 'Up 46 hours (healthy)' },
+        ];
+      }
+      if (url.includes('/docker/updates/status')) {
+        return {
+          updates_available_count: 1,
+          containers: {
+            immich_server: { name: 'immich_server', has_update: true },
+          },
+        };
+      }
+      return {};
+    });
+
+    const postSpy = vi.spyOn(api, 'post').mockImplementation(async (url) => {
+      if (url.includes('/update-image')) {
+        return { success: true, message: 'Container updated' };
+      }
+      return {};
+    });
+
+    await fetchAndRenderDockerContainers();
+
+    // Check updates button clicked to load updates cache
+    const checkBtn = document.getElementById('btn-docker-check-updates');
+    await checkBtn.click();
+
+    // Re-render table so update badge appears
+    await fetchAndRenderDockerContainers();
+
+    const tbody = document.getElementById('docker-containers-tbody');
+    const updateBadgeBtn = tbody.querySelector('.btn-docker-update-badge');
+    expect(updateBadgeBtn).not.toBeNull();
+    expect(updateBadgeBtn.tagName).toBe('BUTTON');
+    expect(updateBadgeBtn.textContent).toContain('UPDATE');
+    expect(updateBadgeBtn.dataset.action).toBe('update-single');
+
+    // Click the UPDATE badge
+    await updateBadgeBtn.click();
+
+    // Confirm toast should appear with custom UI
+    const okBtn = document.getElementById('confirm-toast-ok');
+    expect(okBtn).not.toBeNull();
+    expect(okBtn.textContent).toContain('Update');
+    await okBtn.click();
+
+    expect(postSpy).toHaveBeenCalledWith('/api/docker/containers/c9fa84f9db51/update-image');
   });
 });
