@@ -579,6 +579,26 @@ async function loadContainerDetails(cid) {
         </div>
       </div>
 
+      <!-- App Backup & Recovery Section -->
+      <div class="ci-metric-card" style="background:rgba(0,240,255,0.04); border:1px solid rgba(0,240,255,0.2); padding:12px; border-radius:8px; margin-top:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+          <div>
+            <div style="font-size:11px; font-weight:700; color:var(--accent-cyan,#00f0ff); text-transform:uppercase; letter-spacing:0.5px; display:flex; align-items:center; gap:6px;">
+              <span>💾</span>
+              <span>App Data & Config Backup</span>
+            </div>
+            <div style="font-size:10px; color:var(--muted); margin-top:2px;">
+              Create an on-demand portable backup archive (.tar.gz) of this container's configuration and appdata mounts.
+            </div>
+          </div>
+          <div>
+            <button class="btn-pill-toggle" id="ci-btn-backup-action" style="padding:5px 14px; font-size:11px; font-weight:700; color:var(--accent-cyan,#00f0ff); border-color:var(--accent-cyan,#00f0ff); background:rgba(0,240,255,0.1); cursor:pointer;">
+              💾 Backup App Now
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- Container Management / Danger Zone -->
       <div class="ci-metric-card" style="background:rgba(255,107,107,0.06); border:1px solid rgba(255,107,107,0.22); padding:12px; border-radius:8px; margin-top:12px;">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
@@ -602,6 +622,27 @@ async function loadContainerDetails(cid) {
         if (stName) openStackModal(stName);
       });
     });
+
+    // Wire App Backup button
+    const backupActionBtn = document.getElementById('ci-btn-backup-action');
+    if (backupActionBtn) {
+      backupActionBtn.addEventListener('click', async () => {
+        backupActionBtn.disabled = true;
+        backupActionBtn.textContent = '⏳ Backing up...';
+        showToast(`Creating backup for ${_activeCname}...`, 'info');
+        try {
+          const res = await api.post(`/api/docker/containers/${encodeURIComponent(cid)}/backup`);
+          const archiveName = res?.backup?.archive_file || 'archive.tar.gz';
+          const sizeStr = res?.backup?.archive_size_formatted || '';
+          showToast(`App "${_activeCname}" backed up successfully (${archiveName}${sizeStr ? ' - ' + sizeStr : ''})!`, 'success');
+        } catch (err) {
+          showToast(`Backup failed: ${err.message}`, 'error');
+        } finally {
+          backupActionBtn.disabled = false;
+          backupActionBtn.textContent = '💾 Backup App Now';
+        }
+      });
+    }
 
     // Wire Resource Tuning button
     const applyResBtn = document.getElementById('ci-btn-apply-resources');
@@ -1091,6 +1132,10 @@ export function openContainerDeleteModal(cid, cname, imageRef = '', onDeleted = 
               ⚠️ <strong>Warning:</strong> This container will be stopped and removed from the host Docker daemon. Any unsaved data inside the container layer will be lost.
             </div>
             <div style="display:flex; flex-direction:column; gap:8px; background:rgba(0,0,0,0.2); padding:10px; border-radius:6px; border:1px solid rgba(255,255,255,0.06);">
+              <label style="display:flex; align-items:center; gap:8px; font-size:11px; color:var(--accent-cyan, #00f0ff); font-weight:600; cursor:pointer;">
+                <input type="checkbox" id="cdm-archive" checked style="cursor:pointer;">
+                <span>Archive app data & config (never delete, save to backup library)</span>
+              </label>
               <label style="display:flex; align-items:center; gap:8px; font-size:11px; color:#e2e8f0; cursor:pointer;">
                 <input type="checkbox" id="cdm-force" checked style="cursor:pointer;">
                 <span>Force stop container if currently running</span>
@@ -1150,6 +1195,7 @@ export function openContainerDeleteModal(cid, cname, imageRef = '', onDeleted = 
   confirmBtn.textContent = '💥 Destroy Container';
 
   confirmBtn.onclick = async () => {
+    const archiveData = document.getElementById('cdm-archive')?.checked ?? true;
     const force = document.getElementById('cdm-force').checked;
     const removeVolumes = document.getElementById('cdm-volumes').checked;
     const removeImage = document.getElementById('cdm-image').checked;
@@ -1158,9 +1204,13 @@ export function openContainerDeleteModal(cid, cname, imageRef = '', onDeleted = 
     confirmBtn.textContent = 'Destroying...';
 
     try {
-      const url = `/api/docker/containers/${encodeURIComponent(cid)}?force=${force}&remove_volumes=${removeVolumes}&remove_image=${removeImage}`;
-      await api.delete(url);
-      showToast(`Container "${cname}" permanently destroyed.`, 'success');
+      const url = `/api/docker/containers/${encodeURIComponent(cid)}?force=${force}&remove_volumes=${removeVolumes}&remove_image=${removeImage}&archive_data=${archiveData}`;
+      const res = await api.delete(url);
+      if (res?.archived && res?.archive) {
+        showToast(`Container "${cname}" destroyed. App data & config safely archived!`, 'success');
+      } else {
+        showToast(`Container "${cname}" permanently destroyed.`, 'success');
+      }
       modal.classList.remove('open');
       modal.style.display = 'none';
 

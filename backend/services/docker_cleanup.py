@@ -52,11 +52,13 @@ def destroy_container(
     remove_volumes: bool = True,
     remove_image: bool = False,
     timeout: float = 20.0,
+    archive_data: bool = True,
 ) -> Dict[str, Any]:
     """
     Destroys/deletes a Docker container via official Docker API:
     DELETE /containers/{id}?v={remove_volumes}&force={force}
 
+    Optionally archives app data & synthesized compose config before deletion (Feature 21a).
     Optionally removes the container's associated image after deletion.
     Guarantees self-deletion protection for zettnas-toolkit.
     """
@@ -78,6 +80,16 @@ def destroy_container(
     # 2. Check self-protection
     if is_self_container(full_id, cname):
         raise ValueError("Safety lock: Cannot destroy the zettnas-toolkit container itself.")
+
+    # 2b. Auto-archive app data & config on uninstall (Feature 21a: never delete without archive)
+    archive_record = None
+    if archive_data:
+        try:
+            from backend.services.app_backup import create_app_backup
+            archive_record = create_app_backup(full_id, reason="uninstall", custom_name=cname)
+            logger.info(f"[Docker Cleanup] Auto-archived app data & config for '{cname}' prior to uninstall: {archive_record.get('filename')}")
+        except Exception as e:
+            logger.warning(f"[Docker Cleanup] Could not auto-archive '{cname}' prior to uninstall: {e}")
 
     # 3. Delete the container
     v_param = "true" if remove_volumes else "false"
@@ -132,7 +144,9 @@ def destroy_container(
         "image_removed": image_deleted,
         "image_ref": target_image,
         "image_error": image_error,
-        "message": f"Container '{cname}' destroyed successfully.",
+        "archived": archive_record is not None,
+        "archive_record": archive_record,
+        "message": f"Container '{cname}' destroyed successfully." + (" (Data archived to backups)" if archive_record else ""),
     }
 
 

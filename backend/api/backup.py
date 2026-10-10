@@ -289,3 +289,125 @@ def delete_pool_snapshot(pool_id: str, snapshot_name: str):
     except Exception as e:
         logger.error(f"[SNAPSHOTS] Failed to delete snapshot {snapshot_name}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# -------------------------------------------------------------------------
+# Application & Appdata Backups (Features 21a, 21b, 21c)
+# -------------------------------------------------------------------------
+
+
+class AppBackupRequest(BaseModel):
+    reason: str = Field("on-demand", description="'on-demand', 'uninstall', or 'scheduled'")
+    custom_name: Optional[str] = Field(None, description="Optional custom name for the backup archive")
+
+
+class AppRestoreRequest(BaseModel):
+    recreate_container: bool = Field(True, description="Whether to recreate the container after restoring appdata")
+    target_mount_overrides: Optional[Dict[str, str]] = Field(None, description="Optional mapping of source -> new destination path")
+
+
+@router.post(
+    "/docker/containers/{container_id}/backup",
+    dependencies=[Depends(require_scope("containers:manage", "backup:write", "backup:manage"))],
+)
+async def backup_container_app(container_id: str, req: Optional[AppBackupRequest] = None):
+    """Takes an on-demand backup of an installed container app's data and synthesized compose config."""
+    from backend.services.app_backup import create_app_backup
+
+    reason = req.reason if req else "on-demand"
+    custom_name = req.custom_name if req else None
+    try:
+        record = await asyncio.to_thread(create_app_backup, container_id, reason=reason, custom_name=custom_name)
+        return {"status": "ok", "backup": record}
+    except ValueError as ve:
+        raise HTTPException(status_code=404, detail=str(ve))
+    except Exception as e:
+        logger.error(f"[App Backup] Failed to backup container {container_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get(
+    "/backup/apps",
+    dependencies=[Depends(require_scope("backup:read", "backup:manage", "containers:read"))],
+)
+async def list_app_backups_endpoint(app_name: Optional[str] = None):
+    """Lists saved app data & configuration archives, optionally filtered by app name."""
+    from backend.services.app_backup import list_app_backups
+
+    try:
+        backups = await asyncio.to_thread(list_app_backups, app_name)
+        return {"status": "ok", "backups": backups}
+    except Exception as e:
+        logger.error(f"[App Backup] Failed to list app backups: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get(
+    "/backup/apps/{backup_id}/download",
+    dependencies=[Depends(require_scope("backup:read", "backup:manage"))],
+)
+async def download_app_backup(backup_id: str):
+    """Downloads an application backup archive (.tar.gz)."""
+    from backend.services.app_backup import get_app_backup_path
+
+    filepath = await asyncio.to_thread(get_app_backup_path, backup_id)
+    if not filepath or not os.path.exists(filepath):
+        raise HTTPException(status_code=404, detail=f"Backup archive '{backup_id}' not found.")
+    filename = os.path.basename(filepath)
+
+    def iter_file():
+        with open(filepath, "rb") as f:
+            while chunk := f.read(65536):
+                yield chunk
+
+    return StreamingResponse(
+        iter_file(),
+        media_type="application/gzip",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@router.post(
+    "/backup/apps/{backup_id}/restore",
+    dependencies=[Depends(require_scope("containers:manage", "backup:write", "backup:manage"))],
+)
+async def restore_app_backup_endpoint(backup_id: str, req: Optional[AppRestoreRequest] = None):
+    """Restores application configuration and appdata from a backup archive."""
+    from backend.services.app_backup import restore_app_backup
+
+    recreate = req.recreate_container if req else True
+    overrides = req.target_mount_overrides if req else None
+    try:
+        res = await asyncio.to_thread(
+            restore_app_backup,
+            backup_id,
+            recreate_container=recreate,
+            target_mount_overrides=overrides,
+        )
+        return {"status": "ok", "result": res}
+    except ValueError as ve:
+        raise HTTPException(status_code=404, detail=str(ve))
+    except Exception as e:
+        logger.error(f"[App Backup] Failed to restore backup {backup_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.delete(
+    "/backup/apps/{backup_id}",
+    dependencies=[Depends(require_scope("containers:manage", "backup:write", "backup:manage"))],
+)
+async def delete_app_backup_endpoint(backup_id: str):
+    """Deletes an application backup archive from disk and registry."""
+    from backend.services.app_backup import delete_app_backup
+
+    try:
+        success = await asyncio.to_thread(delete_app_backup, backup_id)
+        if not success:
+            raise HTTPException(status_code=404, detail=f"Backup archive '{backup_id}' not found.")
+        return {"status": "ok", "message": f"Backup '{backup_id}' deleted."}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"[App Backup] Failed to delete backup {backup_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+

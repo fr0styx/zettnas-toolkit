@@ -69,9 +69,11 @@ describe('Container Deletion and Docker Prune Subsystem', () => {
     const forceCb = document.getElementById('cdm-force');
     const volumesCb = document.getElementById('cdm-volumes');
     const imageCb = document.getElementById('cdm-image');
+    const archiveCb = document.getElementById('cdm-archive');
     expect(forceCb.checked).toBe(true);
     expect(volumesCb.checked).toBe(true);
     expect(imageCb.checked).toBe(false);
+    expect(archiveCb.checked).toBe(true);
 
     // Toggle remove image to true
     imageCb.checked = true;
@@ -80,7 +82,7 @@ describe('Container Deletion and Docker Prune Subsystem', () => {
     await confirmBtn.onclick();
 
     expect(deleteSpy).toHaveBeenCalledWith(
-      '/api/docker/containers/c123456789012?force=true&remove_volumes=true&remove_image=true'
+      '/api/docker/containers/c123456789012?force=true&remove_volumes=true&remove_image=true&archive_data=true'
     );
     expect(onDeletedMock).toHaveBeenCalled();
     expect(modal.classList.contains('open')).toBe(false);

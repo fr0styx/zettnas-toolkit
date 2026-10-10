@@ -659,6 +659,7 @@ function buildContainerRowInner(c, currentHost) {
   const updateBtn = hasUpdate
     ? `<button class="btn-container-act btn-docker-update-single" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="update-single" title="Update ${escapeHtml(c.name)} to latest image">⬆️</button>`
     : '';
+  const backupBtn = `<button class="btn-container-act btn-docker-backup" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="backup" title="Backup App Data & Config">💾</button>`;
   const deleteBtn = `<button class="btn-container-act btn-docker-delete" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-image="${escapeHtml(c.image || '')}" data-action="delete" title="Destroy / Delete ${escapeHtml(c.name)}">🗑️</button>`;
   const actions = isRunning
     ? `
@@ -666,6 +667,7 @@ function buildContainerRowInner(c, currentHost) {
       ${editBtn}
       ${stackBtn}
       ${updateBtn}
+      ${backupBtn}
       <button class="btn-container-act btn-docker-restart" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="restart" title="Restart ${escapeHtml(c.name)}">🔄</button>
       <button class="btn-container-act btn-docker-stop" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="stop" title="Stop ${escapeHtml(c.name)}">⏹</button>
       ${deleteBtn}
@@ -675,6 +677,7 @@ function buildContainerRowInner(c, currentHost) {
       ${editBtn}
       ${stackBtn}
       ${updateBtn}
+      ${backupBtn}
       <button class="btn-container-act btn-docker-start" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="start" title="Start ${escapeHtml(c.name)}">▶</button>
       ${deleteBtn}
     `;
@@ -817,6 +820,25 @@ function bindDockerTableEvents(tbody) {
             isUpdate: true,
           }
         );
+        return;
+      }
+
+      if (act === 'backup') {
+        actBtn.disabled = true;
+        const originalContent = actBtn.innerHTML;
+        actBtn.innerHTML = '⏳';
+        showToast(`Creating backup for ${cname}...`, 'info');
+        try {
+          const res = await api.post(`/api/docker/containers/${encodeURIComponent(cid)}/backup`);
+          const archiveName = res?.backup?.archive_file || 'archive.tar.gz';
+          const sizeStr = res?.backup?.archive_size_formatted || '';
+          showToast(`App "${cname}" backed up successfully (${archiveName}${sizeStr ? ' - ' + sizeStr : ''})!`, 'success');
+        } catch (err) {
+          showToast(`Backup failed: ${err.message}`, 'error');
+        } finally {
+          actBtn.disabled = false;
+          actBtn.innerHTML = originalContent;
+        }
         return;
       }
 
@@ -3049,6 +3071,7 @@ export function initManagement() {
       if (typeof fetchAPITokens === 'function') fetchAPITokens();
       fetchAndRenderBackupJobs();
       fetchAndRenderSystemSnapshots();
+      fetchAndRenderAppBackups();
     } else if (paneId === 'mgmt-pane-notifications') {
       fetchAndRenderNotificationConfig();
     } else if (paneId === 'mgmt-pane-users') {
@@ -3618,6 +3641,23 @@ export function initManagement() {
 
   if (btnRefreshSnapshots) {
     btnRefreshSnapshots.addEventListener('click', () => fetchAndRenderSystemSnapshots());
+  }
+
+  // Application Backups event bindings
+  const btnRefreshAppBackups = document.getElementById('btn-refresh-app-backups');
+  if (btnRefreshAppBackups) {
+    btnRefreshAppBackups.addEventListener('click', () => {
+      const filterApp = document.getElementById('app-backups-filter-app')?.value || '';
+      fetchAndRenderAppBackups(null, filterApp);
+      showToast('Application backups refreshed.', 'info');
+    });
+  }
+
+  const selectFilterAppBackups = document.getElementById('app-backups-filter-app');
+  if (selectFilterAppBackups) {
+    selectFilterAppBackups.addEventListener('change', () => {
+      fetchAndRenderAppBackups(null, selectFilterAppBackups.value);
+    });
   }
 
   // Language switch update
@@ -4298,5 +4338,180 @@ export async function fetchAndRenderSystemSnapshots(mountEl) {
     mount.innerHTML = `<div style="padding: 16px; color: #f43f5e; font-size: 12px;">Failed to load snapshots: ${escapeHtml(err.message)}</div>`;
   }
 }
+
+// =========================================================================
+// Application Backups & Recovery (Per-App & Box-Wide)
+// =========================================================================
+
+export async function fetchAndRenderAppBackups(mountEl, filterApp = '') {
+  const mount = mountEl || document.getElementById('app-backups-mount');
+  if (!mount) return;
+
+  try {
+    const url = `/api/backup/apps${filterApp ? `?app_name=${encodeURIComponent(filterApp)}` : ''}`;
+    const data = await api.get(url);
+    const backups = Array.isArray(data) ? data : (data?.backups || []);
+
+    // Update filter dropdown options if element exists and not currently active
+    const filterSelect = document.getElementById('app-backups-filter-app');
+    if (filterSelect && (!filterApp || filterSelect.options.length <= 1)) {
+      const currentVal = filterSelect.value || filterApp;
+      const allData = filterApp ? await api.get('/api/backup/apps') : data;
+      const allBackups = Array.isArray(allData) ? allData : (allData?.backups || []);
+      const appNames = Array.from(new Set(allBackups.map(b => b.container_name).filter(Boolean))).sort();
+      
+      filterSelect.innerHTML = `<option value="">All Applications (Box-Wide)</option>` +
+        appNames.map(name => `<option value="${escapeHtml(name)}" ${name === currentVal ? 'selected' : ''}>${escapeHtml(name)}</option>`).join('');
+    }
+
+    if (backups.length === 0) {
+      mount.innerHTML = `
+        <div style="text-align: center; padding: 24px 16px; background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px dashed rgba(255,255,255,0.1);">
+          <div style="font-size: 24px; margin-bottom: 8px;">📦</div>
+          <div style="font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 4px;">No Application Backups Found</div>
+          <div style="font-size: 11.5px; color: var(--muted); max-width: 440px; margin: 0 auto; line-height: 1.4;">
+            ${filterApp ? `No backups recorded for "${escapeHtml(filterApp)}".` : 'Backups are automatically created whenever containers are uninstalled with archiving enabled, or on-demand via the Container Inspector.'}
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    const rowsHtml = backups.map(b => {
+      const isUninstall = b.reason === 'uninstall';
+      const reasonBadge = isUninstall
+        ? `<span class="badge" style="background: rgba(239,68,68,0.15); color: #fca5a5; border: 1px solid rgba(239,68,68,0.3); font-size: 10px; padding: 2px 6px; border-radius: 4px;">⚠️ Auto-Archive (Uninstall)</span>`
+        : `<span class="badge" style="background: rgba(0,240,255,0.15); color: #38bdf8; border: 1px solid rgba(0,240,255,0.3); font-size: 10px; padding: 2px 6px; border-radius: 4px;">💾 On-Demand</span>`;
+
+      const createdDate = b.created_at_epoch ? new Date(b.created_at_epoch * 1000).toLocaleString() : (b.created_at ? new Date(b.created_at).toLocaleString() : 'N/A');
+      const sizeStr = b.archive_size_formatted || (b.archive_size_bytes ? `${(b.archive_size_bytes / (1024 * 1024)).toFixed(1)} MB` : '--');
+      const stackHtml = b.stack ? `<span style="font-size:10px; color:var(--muted); margin-left:6px;">(Stack: <code>${escapeHtml(b.stack)}</code>)</span>` : '';
+      const mountsCount = b.mounts_count || (b.mounts ? b.mounts.length : 0);
+
+      return `
+        <tr style="border-bottom: 1px solid rgba(255,255,255,0.06); font-size: 11.5px;">
+          <td style="padding: 10px 12px; font-weight: 600; color: #fff;">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span>📦</span>
+              <strong>${escapeHtml(b.container_name || b.id)}</strong>
+              ${stackHtml}
+            </div>
+            <div style="font-size: 10px; color: var(--muted); font-weight: normal; margin-top:2px;">
+              Image: <code style="font-size:9.5px; color:#cbd5e1;">${escapeHtml(b.image || 'N/A')}</code>
+            </div>
+          </td>
+          <td style="padding: 10px 12px;">${reasonBadge}</td>
+          <td style="padding: 10px 12px;">
+            <div style="font-family: var(--font-mono, monospace); font-size: 10.5px; color: #e2e8f0;">${escapeHtml(b.archive_file || b.id)}</div>
+            <div style="font-size: 10px; color: var(--muted); margin-top: 2px;">
+              ${sizeStr} • ${mountsCount} volume${mountsCount === 1 ? '' : 's'}
+            </div>
+          </td>
+          <td style="padding: 10px 12px; color: var(--muted); font-size: 11px;">
+            ${createdDate}
+          </td>
+          <td style="padding: 10px 12px; text-align: right;">
+            <div style="display: inline-flex; gap: 6px;">
+              <button class="btn-rect btn-download-app-backup" data-backup-id="${escapeHtml(b.id)}" data-file="${escapeHtml(b.archive_file || 'app_backup.tar.gz')}" style="font-size: 10.5px; padding: 4px 8px; cursor: pointer;" title="Download Archive (.tar.gz)">
+                ⬇️ Download
+              </button>
+              <button class="btn-rect btn-restore-app-backup" data-backup-id="${escapeHtml(b.id)}" data-app-name="${escapeHtml(b.container_name || b.id)}" style="font-size: 10.5px; padding: 4px 8px; background: rgba(37,194,160,0.15); border: 1px solid rgba(37,194,160,0.35); color: var(--accent); cursor: pointer;" title="Restore Configuration & Data">
+                🔄 Restore
+              </button>
+              <button class="btn-rect danger btn-delete-app-backup" data-backup-id="${escapeHtml(b.id)}" data-file="${escapeHtml(b.archive_file || b.id)}" style="font-size: 10.5px; padding: 4px 8px; cursor: pointer;" title="Delete Backup Archive">
+                🗑
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    mount.innerHTML = `
+      <div style="overflow-x: auto; background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
+        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+          <thead>
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase;">
+              <th style="padding: 8px 12px;">Application</th>
+              <th style="padding: 8px 12px;">Trigger</th>
+              <th style="padding: 8px 12px;">Archive File & Size</th>
+              <th style="padding: 8px 12px;">Created</th>
+              <th style="padding: 8px 12px; text-align: right;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+      </div>
+    `;
+
+    // Download action
+    mount.querySelectorAll('.btn-download-app-backup').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const backupId = btn.dataset.backupId;
+        const filename = btn.dataset.file;
+        try {
+          btn.disabled = true;
+          showToast(`Downloading backup "${filename}"...`, 'info');
+          await api.downloadBlob(`/api/backup/apps/${encodeURIComponent(backupId)}/download`, filename);
+        } catch (err) {
+          showToast(`Download failed: ${err.message}`, 'error');
+        } finally {
+          btn.disabled = false;
+        }
+      });
+    });
+
+    // Restore action
+    mount.querySelectorAll('.btn-restore-app-backup').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const backupId = btn.dataset.backupId;
+        const appName = btn.dataset.appName;
+        showConfirmToast(
+          `Restore App Data for "${appName}"?`,
+          `This will extract configurations and mount files back into the original host directories. Existing paths will be preserved in a <code>.pre_restore</code> backup.`,
+          async () => {
+            try {
+              showToast(`Restoring ${appName}...`, 'info');
+              const res = await api.post(`/api/backup/apps/${encodeURIComponent(backupId)}/restore`);
+              showToast(`App "${appName}" successfully restored (${res.extracted_count || 'all'} paths restored)!`, 'success');
+              fetchAndRenderAppBackups(mount, document.getElementById('app-backups-filter-app')?.value || '');
+            } catch (err) {
+              showToast(`Restore failed: ${err.message}`, 'error');
+            }
+          },
+          null,
+          { okText: '🔄 Restore App Data', cancelText: 'Cancel' }
+        );
+      });
+    });
+
+    // Delete action
+    mount.querySelectorAll('.btn-delete-app-backup').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const backupId = btn.dataset.backupId;
+        const filename = btn.dataset.file;
+        showConfirmToast(
+          `Delete Backup Archive?`,
+          `Are you sure you want to permanently delete backup archive <strong>${escapeHtml(filename)}</strong>? This cannot be undone.`,
+          async () => {
+            try {
+              await api.delete(`/api/backup/apps/${encodeURIComponent(backupId)}`);
+              showToast(`Backup "${filename}" deleted.`, 'success');
+              fetchAndRenderAppBackups(mount, document.getElementById('app-backups-filter-app')?.value || '');
+            } catch (err) {
+              showToast(`Delete failed: ${err.message}`, 'error');
+            }
+          },
+          null,
+          { okText: '🗑 Delete Archive', cancelText: 'Cancel' }
+        );
+      });
+    });
+
+  } catch (err) {
+    mount.innerHTML = `<div style="padding: 16px; color: #f43f5e; font-size: 12px;">Failed to load application backups: ${escapeHtml(err.message)}</div>`;
+  }
+}
+
 
 

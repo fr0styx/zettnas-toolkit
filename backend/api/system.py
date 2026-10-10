@@ -991,6 +991,7 @@ class DockerContainerDeleteRequest(BaseModel):
     force: bool = False
     remove_volumes: bool = True
     remove_image: bool = False
+    archive_data: bool = True
 
 
 @router.delete("/docker/containers/{container_id}", dependencies=[Depends(require_scope("containers:manage"))])
@@ -999,6 +1000,7 @@ async def delete_docker_container(
     force: bool = False,
     remove_volumes: bool = True,
     remove_image: bool = False,
+    archive_data: bool = True,
 ):
     if not container_id or not re.match(r"^[a-zA-Z0-9_.-]{1,128}$", container_id):
         raise HTTPException(status_code=400, detail="Invalid container ID or name")
@@ -1011,6 +1013,7 @@ async def delete_docker_container(
             force=force,
             remove_volumes=remove_volumes,
             remove_image=remove_image,
+            archive_data=archive_data,
         )
         return res
     except ValueError as e:
