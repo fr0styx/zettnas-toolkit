@@ -4,6 +4,12 @@ import { t } from '../i18n.js';
 import { ZettEventBus } from '../event-bus.js';
 import { announceA11y } from '../a11y.js';
 import { openSpotlight, initSpotlight } from './spotlight.js';
+import {
+  initDesktopShortcuts,
+  removeDesktopShortcut,
+  openAddDesktopShortcutModal
+} from './desktop-shortcuts.js';
+import { hideDesktopContextMenu } from './desktop-context-menu.js';
 /**
  * ZettNAS Toolkit Dock & Window Manager
  * Handles floating modal registration, minimize/restore, dragging, and z-index depth stacking.
@@ -2681,15 +2687,38 @@ export function initDraggableDesktopIcons() {
     savedPositions = {};
   }
 
+  // Initialize stored custom shortcuts into DOM
+  initDesktopShortcuts();
+
   // Desktop icons arranged vertically with equal spacing (25px top navbar gap, 25px gap between icons, pitch = 112px)
-  const iconConfigs = [
+  const defaultIconConfigs = [
     { id: 'management-desktop-icon', defaultLeft: 24, defaultTop: 77 },
     { id: 'fm-desktop-icon', defaultLeft: 24, defaultTop: 189 },
     { id: 'rb-desktop-icon', defaultLeft: 24, defaultTop: 301 },
     { id: 'chassis-desktop-icon', defaultLeft: 24, defaultTop: 413 },
   ];
 
-  // Desktop Context Menu
+  const getAllIconElements = () => {
+    const defaultIds = ['management-desktop-icon', 'fm-desktop-icon', 'rb-desktop-icon', 'chassis-desktop-icon'];
+    const elements = [];
+    const seen = new Set();
+    defaultIds.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) {
+        elements.push({ id, el });
+        seen.add(id);
+      }
+    });
+    document.querySelectorAll('#desktop-icons-container .chassis-hero-box, .chassis-workbench-stage .chassis-hero-box').forEach((el) => {
+      if (el.id && !seen.has(el.id)) {
+        elements.push({ id: el.id, el });
+        seen.add(el.id);
+      }
+    });
+    return elements;
+  };
+
+  // Desktop Icon Context Menu
   let ctxMenu = document.getElementById('desktop-ctx-menu');
   if (!ctxMenu) {
     ctxMenu = document.createElement('div');
@@ -2713,65 +2742,73 @@ export function initDraggableDesktopIcons() {
     }, 100);
   };
 
+  const alignGrid = () => {
+    if (document.body.classList.contains('mobile-mode') || window.innerWidth <= 768) return;
+    const GRID_X = 140;
+    const GRID_Y = 112;
+    const OFFSET_X = 24;
+    const OFFSET_Y = 77;
+    const icons = getAllIconElements();
+    icons.forEach(({ id, el }) => {
+      const rect = el.getBoundingClientRect();
+      let snapLeft = OFFSET_X + Math.round((rect.left - OFFSET_X) / GRID_X) * GRID_X;
+      let snapTop = OFFSET_Y + Math.round((rect.top - OFFSET_Y) / GRID_Y) * GRID_Y;
+
+      if (snapLeft < OFFSET_X) snapLeft = OFFSET_X;
+      if (snapTop < OFFSET_Y) snapTop = OFFSET_Y;
+
+      el.style.left = snapLeft + 'px';
+      el.style.top = snapTop + 'px';
+      savedPositions[id] = { left: snapLeft, top: snapTop };
+    });
+    localStorage.setItem(storageKey, JSON.stringify(savedPositions));
+    hideMenu();
+  };
+  window.alignDesktopGrid = alignGrid;
+
+  const sortByName = () => {
+    if (document.body.classList.contains('mobile-mode') || window.innerWidth <= 768) return;
+    const icons = getAllIconElements();
+    let items = icons.map(({ id, el }) => {
+      const nameEl = el.querySelector('.icon-text');
+      const name = (nameEl ? (nameEl.innerText || nameEl.textContent) : '') || id;
+      return { id, el, name: String(name || '').trim() };
+    });
+    // Keep Mission Control anchored as first top icon, sort others alphabetically
+    items.sort((a, b) => {
+      if (a.id === 'management-desktop-icon') return -1;
+      if (b.id === 'management-desktop-icon') return 1;
+      return a.name.localeCompare(b.name);
+    });
+    let currentY = 77;
+    let currentX = 24;
+    const GAP = 25;
+    const maxH = typeof window !== 'undefined' ? window.innerHeight - 100 : 700;
+    items.forEach((item) => {
+      const rect = item.el.getBoundingClientRect();
+      const height = rect.height > 0 ? rect.height : 87;
+      if (currentY + height > maxH) {
+        currentX += 140;
+        currentY = 77;
+      }
+      item.el.style.left = `${currentX}px`;
+      item.el.style.top = `${currentY}px`;
+      savedPositions[item.id] = { left: currentX, top: currentY };
+      currentY += height + GAP;
+    });
+    localStorage.setItem(storageKey, JSON.stringify(savedPositions));
+    hideMenu();
+  };
+  window.sortDesktopIcons = sortByName;
+  window.openAddDesktopShortcutModal = openAddDesktopShortcutModal;
+
   const wireGridAndSort = () => {
-    document.getElementById('ctx-align-grid')?.addEventListener('click', () => {
-      if (document.body.classList.contains('mobile-mode') || window.innerWidth <= 768) return;
-      const GRID_X = 140;
-      const GRID_Y = 112;
-      const OFFSET_X = 24;
-      const OFFSET_Y = 77;
-      iconConfigs.forEach(({ id }) => {
-        const el = document.getElementById(id);
-        if (el) {
-          const rect = el.getBoundingClientRect();
-          let snapLeft = OFFSET_X + Math.round((rect.left - OFFSET_X) / GRID_X) * GRID_X;
-          let snapTop = OFFSET_Y + Math.round((rect.top - OFFSET_Y) / GRID_Y) * GRID_Y;
-
-          if (snapLeft < OFFSET_X) snapLeft = OFFSET_X;
-          if (snapTop < OFFSET_Y) snapTop = OFFSET_Y;
-
-          el.style.left = snapLeft + 'px';
-          el.style.top = snapTop + 'px';
-          savedPositions[id] = { left: snapLeft, top: snapTop };
-        }
-      });
-      localStorage.setItem(storageKey, JSON.stringify(savedPositions));
-      hideMenu();
-    });
-
-    document.getElementById('ctx-sort-name')?.addEventListener('click', () => {
-      if (document.body.classList.contains('mobile-mode') || window.innerWidth <= 768) return;
-      let items = [];
-      iconConfigs.forEach((conf) => {
-        const el = document.getElementById(conf.id);
-        if (el) {
-          const nameEl = el.querySelector('.icon-text');
-          const name = (nameEl ? (nameEl.innerText || nameEl.textContent) : '') || conf.id;
-          items.push({ id: conf.id, el, name: String(name || '').trim() });
-        }
-      });
-      // Keep Mission Control anchored as first top icon, sort others alphabetically
-      items.sort((a, b) => {
-        if (a.id === 'management-desktop-icon') return -1;
-        if (b.id === 'management-desktop-icon') return 1;
-        return a.name.localeCompare(b.name);
-      });
-      let currentY = 77;
-      const GAP = 25;
-      items.forEach((item) => {
-        item.el.style.left = '24px';
-        item.el.style.top = currentY + 'px';
-        savedPositions[item.id] = { left: 24, top: currentY };
-        const rect = item.el.getBoundingClientRect();
-        const height = rect.height > 0 ? rect.height : 87;
-        currentY += height + GAP;
-      });
-      localStorage.setItem(storageKey, JSON.stringify(savedPositions));
-      hideMenu();
-    });
+    document.getElementById('ctx-align-grid')?.addEventListener('click', alignGrid);
+    document.getElementById('ctx-sort-name')?.addEventListener('click', sortByName);
   };
 
   document.body.addEventListener('contextmenu', (e) => {
+    if (typeof e.target?.closest !== 'function') return;
     if (e.target.closest('.smart-modal-window') ||
         e.target.closest('.os-window') ||
         e.target.closest('#console-window') ||
@@ -2783,99 +2820,132 @@ export function initDraggableDesktopIcons() {
     }
 
     const iconEl = e.target.closest('.chassis-hero-box');
-    let iconAppId = null;
     if (iconEl) {
+      e.preventDefault();
+      // Ensure the background desktop context menu is closed
+      hideDesktopContextMenu();
+
+      let iconAppId = null;
       if (iconEl.id === 'management-desktop-icon') iconAppId = 'management';
       else if (iconEl.id === 'chassis-desktop-icon') iconAppId = 'console';
       else if (iconEl.id === 'fm-desktop-icon' || iconEl.id === 'rb-desktop-icon') iconAppId = 'fm';
-    }
 
-    e.preventDefault();
-
-    if (iconAppId) {
       const openLabel = t('dock.open_app', 'Open');
+      const nameEl = iconEl.querySelector('.icon-text');
+      const iconName = nameEl ? (nameEl.innerText || nameEl.textContent || '').trim() : '';
+      const isCustom = iconEl.classList.contains('custom-desktop-shortcut') || !!iconEl.dataset.shortcutId;
 
       ctxMenu.innerHTML = `
         <div class="ctx-item" id="ctx-open-app">
           <span style="font-size:11px; margin-right:6px;">▶</span>
-          <span>${escapeHtml(openLabel)}</span>
+          <span>${escapeHtml(openLabel)}${iconName ? ` ${escapeHtml(iconName)}` : ''}</span>
         </div>
         <div style="height:1px; background:rgba(255,255,255,0.08); margin:4px 0;"></div>
         <div class="ctx-item" id="ctx-align-grid">📐 ${t('desktop.align_grid', 'Align to Grid')}</div>
         <div class="ctx-item" id="ctx-sort-name">🔤 ${t('desktop.sort_name', 'Sort by Name')}</div>
+        ${isCustom ? `
+          <div style="height:1px; background:rgba(255,255,255,0.08); margin:4px 0;"></div>
+          <div class="ctx-item" id="ctx-remove-shortcut" style="color:#f87171;">
+            <span style="font-size:11px; margin-right:6px;">🗑️</span>
+            <span>Remove from Desktop</span>
+          </div>
+        ` : ''}
       `;
 
       document.getElementById('ctx-open-app')?.addEventListener('click', (ev) => {
         ev.stopPropagation();
         hideMenu();
-        if (KNOWN_APPS[iconAppId]?.launch) {
+        if (iconAppId && KNOWN_APPS[iconAppId]?.launch) {
           KNOWN_APPS[iconAppId].launch();
         } else {
           iconEl.click();
         }
       });
-    } else {
-      ctxMenu.innerHTML = `
-        <div class="ctx-item" id="ctx-spotlight">
-          <span style="font-size:11px; margin-right:6px;">⚡</span>
-          <span>Command Palette</span>
-          <kbd style="margin-left:auto; font-size:9px; opacity:0.6;">⌘K</kbd>
-        </div>
-        <div class="ctx-item" id="ctx-open-mc">
-          <span style="font-size:11px; margin-right:6px;">🖥️</span>
-          <span>Mission Control</span>
-        </div>
-        <div class="ctx-item" id="ctx-open-fm">
-          <span style="font-size:11px; margin-right:6px;">📁</span>
-          <span>File Explorer</span>
-        </div>
-        <div style="height:1px; background:rgba(255,255,255,0.08); margin:4px 0;"></div>
-        <div class="ctx-item" id="ctx-align-grid">📐 ${t('desktop.align_grid', 'Align to Grid')}</div>
-        <div class="ctx-item" id="ctx-sort-name">🔤 ${t('desktop.sort_name', 'Sort by Name')}</div>
-        <div style="height:1px; background:rgba(255,255,255,0.08); margin:4px 0;"></div>
-        <div class="ctx-item" id="ctx-refresh-telemetry">
-          <span style="font-size:11px; margin-right:6px;">🔄</span>
-          <span>Refresh Desktop</span>
-        </div>
-      `;
 
-      document.getElementById('ctx-spotlight')?.addEventListener('click', (ev) => {
-        ev.stopPropagation();
-        hideMenu();
-        openSpotlight();
-      });
-      document.getElementById('ctx-open-mc')?.addEventListener('click', (ev) => {
-        ev.stopPropagation();
-        hideMenu();
-        document.getElementById('management-desktop-icon')?.click();
-      });
-      document.getElementById('ctx-open-fm')?.addEventListener('click', (ev) => {
-        ev.stopPropagation();
-        hideMenu();
-        document.getElementById('fm-desktop-icon')?.click();
-      });
-      document.getElementById('ctx-refresh-telemetry')?.addEventListener('click', (ev) => {
-        ev.stopPropagation();
-        hideMenu();
-        window.location.reload();
-      });
+      if (isCustom) {
+        document.getElementById('ctx-remove-shortcut')?.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          hideMenu();
+          removeDesktopShortcut(iconEl.id);
+        });
+      }
+
+      wireGridAndSort();
+      wireHide();
+
+      ctxMenu.style.display = 'block';
+      const menuW = 190;
+      const menuH = ctxMenu.offsetHeight || 100;
+      const left = Math.max(10, Math.min(window.innerWidth - menuW - 10, e.pageX));
+      const top = Math.max(10, Math.min(window.innerHeight - menuH - 20, e.pageY));
+      ctxMenu.style.left = `${left}px`;
+      ctxMenu.style.top = `${top}px`;
+      return;
     }
+
+    // Right-clicked on empty desktop space:
+    // If the unified desktop context menu element is present in the DOM, let desktop-context-menu.js handle it!
+    if (document.getElementById('desktop-context-menu')) {
+      return;
+    }
+
+    // Fallback for tests/environments where #desktop-context-menu is not present:
+    e.preventDefault();
+    ctxMenu.innerHTML = `
+      <div class="ctx-item" id="ctx-spotlight">
+        <span style="font-size:11px; margin-right:6px;">⚡</span>
+        <span>Command Palette</span>
+        <kbd style="margin-left:auto; font-size:9px; opacity:0.6;">⌘K</kbd>
+      </div>
+      <div class="ctx-item" id="ctx-open-mc">
+        <span style="font-size:11px; margin-right:6px;">🖥️</span>
+        <span>Mission Control</span>
+      </div>
+      <div class="ctx-item" id="ctx-open-fm">
+        <span style="font-size:11px; margin-right:6px;">📁</span>
+        <span>File Explorer</span>
+      </div>
+      <div style="height:1px; background:rgba(255,255,255,0.08); margin:4px 0;"></div>
+      <div class="ctx-item" id="ctx-align-grid">📐 ${t('desktop.align_grid', 'Align to Grid')}</div>
+      <div class="ctx-item" id="ctx-sort-name">🔤 ${t('desktop.sort_name', 'Sort by Name')}</div>
+      <div style="height:1px; background:rgba(255,255,255,0.08); margin:4px 0;"></div>
+      <div class="ctx-item" id="ctx-refresh-telemetry">
+        <span style="font-size:11px; margin-right:6px;">🔄</span>
+        <span>Refresh Desktop</span>
+      </div>
+    `;
+
+    document.getElementById('ctx-spotlight')?.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      hideMenu();
+      if (typeof openSpotlight === 'function') openSpotlight();
+    });
+    document.getElementById('ctx-open-mc')?.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      hideMenu();
+      document.getElementById('management-desktop-icon')?.click();
+    });
+    document.getElementById('ctx-open-fm')?.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      hideMenu();
+      document.getElementById('fm-desktop-icon')?.click();
+    });
+    document.getElementById('ctx-refresh-telemetry')?.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      hideMenu();
+      window.location.reload();
+    });
 
     wireGridAndSort();
     wireHide();
-
     ctxMenu.style.display = 'block';
-    const menuW = 180;
-    const menuH = ctxMenu.offsetHeight || 80;
-    const left = Math.max(10, Math.min(window.innerWidth - menuW - 10, e.pageX));
-    const top = Math.max(10, Math.min(window.innerHeight - menuH - 20, e.pageY));
-    ctxMenu.style.left = `${left}px`;
-    ctxMenu.style.top = `${top}px`;
+    ctxMenu.style.left = `${e.pageX}px`;
+    ctxMenu.style.top = `${e.pageY}px`;
   });
 
   const refreshIconPositions = () => {
     const isMobile = document.body.classList.contains('mobile-mode') || window.innerWidth <= 768;
-    iconConfigs.forEach(({ id, defaultLeft, defaultTop }) => {
+    defaultIconConfigs.forEach(({ id, defaultLeft, defaultTop }) => {
       const el = document.getElementById(id);
       if (!el) return;
       if (isMobile) {
@@ -2895,15 +2965,36 @@ export function initDraggableDesktopIcons() {
         el.style.top = `${clampedTop}px`;
       }
     });
+
+    // Also handle clamping for any custom desktop shortcuts
+    getAllIconElements().forEach(({ id, el }) => {
+      if (defaultIconConfigs.some((d) => d.id === id)) return;
+      if (isMobile) {
+        el.style.removeProperty('position');
+        el.style.removeProperty('left');
+        el.style.removeProperty('top');
+      } else {
+        const saved = savedPositions[id];
+        if (saved && typeof saved.left === 'number' && typeof saved.top === 'number') {
+          const maxLeft = Math.max(24, window.innerWidth - (el.offsetWidth || 136) - 10);
+          const maxTop = Math.max(77, window.innerHeight - (el.offsetHeight || 136) - 70);
+          const clampedLeft = Math.max(24, Math.min(maxLeft, saved.left));
+          const clampedTop = Math.max(77, Math.min(maxTop, saved.top));
+          el.style.position = 'fixed';
+          el.style.left = `${clampedLeft}px`;
+          el.style.top = `${clampedTop}px`;
+        }
+      }
+    });
   };
   window.refreshDesktopIconPositions = refreshIconPositions;
 
   // Apply initial positions
   refreshIconPositions();
 
-  iconConfigs.forEach(({ id }) => {
-    const el = document.getElementById(id);
-    if (!el) return;
+  const makeIconDraggable = (el, id) => {
+    if (!el || el._draggableBound) return;
+    el._draggableBound = true;
 
     let startX = 0, startY = 0, initLeft = 0, initTop = 0;
     let didDrag = false;
@@ -2972,7 +3063,11 @@ export function initDraggableDesktopIcons() {
         dragThresholdPassed = false;
       }
     }, true);
-  });
+  };
+  window.makeDesktopIconDraggable = makeIconDraggable;
+
+  // Bind draggable to all existing desktop icons
+  getAllIconElements().forEach(({ el, id }) => makeIconDraggable(el, id));
 
   window.addEventListener('resize', () => {
     refreshIconPositions();
@@ -2993,6 +3088,7 @@ export function initDesktopLasso() {
     if (e.button !== 0) return;
     if (document.body.classList.contains('mobile-mode') || window.innerWidth <= 768) return;
     if (
+      typeof e.target?.closest === 'function' &&
       e.target.closest(
         '.smart-modal-window, .smart-modal-backdrop, .os-window, #console-window, #console-modal-overlay, ' +
         '#notif-center-panel, .notif-center-window, #management-window, .management-window, #management-modal-overlay, ' +
@@ -3002,7 +3098,7 @@ export function initDesktopLasso() {
         '#spotlight-palette-overlay, .window-resizer-grip, [data-window-id]'
       )
     ) {
-      if (!e.target.closest('.chassis-hero-box')) {
+      if (typeof e.target?.closest === 'function' && !e.target.closest('.chassis-hero-box')) {
         document.querySelectorAll('.desktop-icon-selected').forEach((el) => el.classList.remove('desktop-icon-selected'));
       }
       return;

@@ -5,6 +5,7 @@
  */
 import { ZettEventBus } from '../event-bus.js';
 import { showToast } from '../toast.js';
+import { openAddDesktopShortcutModal } from './desktop-shortcuts.js';
 
 let _contextMenuInitialized = false;
 
@@ -17,17 +18,21 @@ export function initDesktopContextMenu() {
 
   // Global right-click handler
   document.addEventListener('contextmenu', (e) => {
+    if (typeof e.target?.closest !== 'function') return;
     // 1. Allow native context menu in text inputs, textareas, contenteditable, monaco, code editors, and links
     if (e.target.closest('input, textarea, select, [contenteditable="true"], .monaco-editor, #ci-logs-terminal, .terminal, .code-editor, a[href]')) {
       return;
     }
 
-    // 2. Allow windows and modals to handle their own context menus (e.g. file manager viewport)
-    if (e.target.closest('.os-window, .smart-modal-window, .notif-center-window, #os-dock, .suite-navbar, .smart-modal-backdrop')) {
+    // 2. Allow windows, modals, dock, navbar, and DESKTOP ICONS to handle their own context menus
+    if (e.target.closest(
+      '.os-window, .smart-modal-window, .notif-center-window, #os-dock, #os-dock-container, ' +
+      '.suite-navbar, .smart-modal-backdrop, .chassis-hero-box, #desktop-ctx-menu, .dock-context-menu'
+    )) {
       return;
     }
 
-    // 3. Prevent native menu on empty desktop space, wallpaper dimmer, background, and icons
+    // 3. Prevent native menu on empty desktop space and display unified desktop context menu
     e.preventDefault();
     showDesktopContextMenu(e.clientX, e.clientY);
   });
@@ -74,6 +79,12 @@ export function initDesktopContextMenu() {
 export function showDesktopContextMenu(x, y) {
   const menu = document.getElementById('desktop-context-menu');
   if (!menu) return;
+
+  // Ensure any other context menus are hidden
+  const iconCtx = document.getElementById('desktop-ctx-menu');
+  if (iconCtx) iconCtx.style.display = 'none';
+  const dockCtx = document.getElementById('dock-item-ctx-menu');
+  if (dockCtx) dockCtx.style.display = 'none';
 
   menu.style.display = 'flex';
   menu.setAttribute('aria-hidden', 'false');
@@ -126,6 +137,36 @@ export function executeContextAction(action) {
   if (!action) return;
 
   switch (action) {
+    case 'add-shortcut':
+      if (typeof window.openAddDesktopShortcutModal === 'function') {
+        window.openAddDesktopShortcutModal();
+      } else {
+        openAddDesktopShortcutModal();
+      }
+      break;
+
+    case 'align-grid':
+      if (typeof window.alignDesktopGrid === 'function') {
+        window.alignDesktopGrid();
+      }
+      break;
+
+    case 'sort-name':
+      if (typeof window.sortDesktopIcons === 'function') {
+        window.sortDesktopIcons();
+      }
+      break;
+
+    case 'refresh-desktop':
+      window.location.reload();
+      break;
+
+    case 'spotlight':
+      if (typeof window.openSpotlight === 'function') {
+        window.openSpotlight();
+      }
+      break;
+
     case 'wallpaper':
       if (typeof window.openManagementSection === 'function') {
         window.openManagementSection('mgmt-sec-wallpaper', 'mgmt-pane-wallpaper');

@@ -4674,6 +4674,24 @@
 
 <!-- Desktop Right-Click Context Menu -->
 <div id="desktop-context-menu" class="desktop-context-menu" role="menu" aria-label="Desktop Context Menu" style="display: none;">
+  <div class="context-menu-item" role="menuitem" tabindex="0" data-action="add-shortcut">
+    <span class="context-menu-icon">➕</span>
+    <span class="context-menu-label">Add Desktop Shortcut…</span>
+  </div>
+  <div class="context-menu-divider" role="separator"></div>
+  <div class="context-menu-item" role="menuitem" tabindex="0" data-action="align-grid">
+    <span class="context-menu-icon">📐</span>
+    <span class="context-menu-label" data-i18n="desktop.align_grid">Align to Grid</span>
+  </div>
+  <div class="context-menu-item" role="menuitem" tabindex="0" data-action="sort-name">
+    <span class="context-menu-icon">🔤</span>
+    <span class="context-menu-label" data-i18n="desktop.sort_name">Sort by Name</span>
+  </div>
+  <div class="context-menu-item" role="menuitem" tabindex="0" data-action="refresh-desktop">
+    <span class="context-menu-icon">🔄</span>
+    <span class="context-menu-label">Refresh Desktop</span>
+  </div>
+  <div class="context-menu-divider" role="separator"></div>
   <div class="context-menu-item" role="menuitem" tabindex="0" data-action="wallpaper">
     <span class="context-menu-icon">🖼️</span>
     <span class="context-menu-label" data-i18n="ctx.wallpaper">Change Wallpaper & Style…</span>
@@ -4695,12 +4713,17 @@
     <span class="context-menu-label" data-i18n="ctx.screensaver">Screensaver Settings…</span>
   </div>
   <div class="context-menu-divider" role="separator"></div>
+  <div class="context-menu-item" role="menuitem" tabindex="0" data-action="spotlight">
+    <span class="context-menu-icon">⚡</span>
+    <span class="context-menu-label">Command Palette</span>
+    <kbd style="margin-left:auto; font-size:9.5px; opacity:0.6; padding:1px 4px; background:rgba(255,255,255,0.08); border-radius:3px;">⌘K</kbd>
+  </div>
   <div class="context-menu-item" role="menuitem" tabindex="0" data-action="fullscreen">
     <span class="context-menu-icon">⛶</span>
     <span class="context-menu-label" data-i18n="ctx.fullscreen">Toggle Fullscreen</span>
   </div>
   <div class="context-menu-item" role="menuitem" tabindex="0" data-action="activity">
-    <span class="context-menu-icon">⚡</span>
+    <span class="context-menu-icon">📈</span>
     <span class="context-menu-label" data-i18n="ctx.activity">System Activity & Telemetry</span>
   </div>
   <div class="context-menu-divider" role="separator"></div>
