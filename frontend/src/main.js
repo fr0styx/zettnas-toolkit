@@ -71,6 +71,9 @@ async function checkLcdStatus() {
 }
 
 export async function tick() {
+  if (!auth.hasToken() && !state.isLcdDirect) {
+    return;
+  }
   if (_pollAbortController) {
     _pollAbortController.abort();
   }
@@ -86,6 +89,9 @@ export async function tick() {
 }
 
 export function startSSE() {
+  if (!auth.hasToken() && !state.isLcdDirect) {
+    return;
+  }
   if (_sseReconnectTimer) {
     clearTimeout(_sseReconnectTimer);
     _sseReconnectTimer = null;
@@ -131,6 +137,9 @@ export function startSSE() {
     if (streamBadge) {
       streamBadge.textContent = 'POLLING';
       streamBadge.className = 'header-badge warning';
+    }
+    if (!auth.hasToken() && !state.isLcdDirect) {
+      return;
     }
     if (!_pollingTimer) {
       tick();

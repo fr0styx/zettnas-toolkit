@@ -249,6 +249,7 @@ export function updateManagementTelemetry(stats) {
 let _dockerContainersList = [];
 let _dockerFilter = 'all';
 let _dockerSearchQuery = '';
+let _dockerUpdatesCache = null;
 
 let _catalogList = [];
 let _catalogCat = 'all';
@@ -259,6 +260,7 @@ export function _resetDockerStateForTesting() {
   _dockerContainersList = [];
   _dockerFilter = 'all';
   _dockerSearchQuery = '';
+  _dockerUpdatesCache = null;
 }
 
 export function _resetCatalogStateForTesting() {
@@ -348,11 +350,86 @@ function _bindDockerEvents() {
     });
   }
 
+  // Check for updates button
+  const btnCheckUpdates = document.getElementById('btn-docker-check-updates');
+  if (btnCheckUpdates) {
+    btnCheckUpdates.addEventListener('click', async () => {
+      btnCheckUpdates.disabled = true;
+      const originalHtml = btnCheckUpdates.innerHTML;
+      btnCheckUpdates.innerHTML = '<span>⏳</span> <span>Checking updates...</span>';
+      try {
+        const res = await api.post('/api/docker/updates/check');
+        _dockerUpdatesCache = res;
+        const count = res.updates_available_count || 0;
+        updateDockerUpdatesToolbarUI(count);
+        if (count > 0) {
+          showToast(`Update check complete: ${count} container update${count > 1 ? 's' : ''} available!`, 'warn');
+        } else {
+          showToast('All containers are up to date!', 'success');
+        }
+        renderDockerContainersTable();
+      } catch (err) {
+        showToast(`Update check failed: ${err.message}`, 'error');
+      } finally {
+        btnCheckUpdates.disabled = false;
+        btnCheckUpdates.innerHTML = originalHtml;
+      }
+    });
+  }
+
+  // Update all button
+  const btnUpdateAll = document.getElementById('btn-docker-update-all');
+  if (btnUpdateAll) {
+    btnUpdateAll.addEventListener('click', async () => {
+      const count = _dockerUpdatesCache?.updates_available_count || 0;
+      if (!confirm(`Update all ${count} containers to their latest images? Each container will be safely recreated with automated rollback protection.`)) {
+        return;
+      }
+      btnUpdateAll.disabled = true;
+      btnUpdateAll.innerHTML = '<span>⏳</span> <span>Updating all...</span>';
+      showToast(`Starting batch update for ${count} containers...`, 'info');
+      try {
+        const res = await api.post('/api/docker/updates/apply-all');
+        const updatedCount = res.total_updated || (res.updated || []).length;
+        showToast(`Batch update complete: ${updatedCount} updated, ${(res.failed || []).length} failed.`, updatedCount > 0 ? 'success' : 'warn');
+        await refreshDockerUpdatesStatus();
+        await fetchAndRenderDockerContainers();
+      } catch (err) {
+        showToast(`Batch update failed: ${err.message}`, 'error');
+      } finally {
+        btnUpdateAll.disabled = false;
+      }
+    });
+  }
+
   ZettEventBus.on('docker:containers-updated', () => {
     fetchAndRenderDockerContainers();
   });
 
+  ZettEventBus.on('docker:containers:refresh', () => {
+    fetchAndRenderDockerContainers();
+    refreshDockerUpdatesStatus();
+  });
+
   containerPane._dockerEventsBound = true;
+}
+
+export async function refreshDockerUpdatesStatus() {
+  try {
+    const res = await api.get('/api/docker/updates/status');
+    _dockerUpdatesCache = res;
+    updateDockerUpdatesToolbarUI(res.updates_available_count || 0);
+    renderDockerContainersTable();
+  } catch (e) {}
+}
+
+export function updateDockerUpdatesToolbarUI(count) {
+  const btnUpdateAll = document.getElementById('btn-docker-update-all');
+  const badge = document.getElementById('docker-updates-count-badge');
+  if (badge) badge.textContent = count;
+  if (btnUpdateAll) {
+    btnUpdateAll.style.display = count > 0 ? 'inline-flex' : 'none';
+  }
 }
 
 export function renderDockerContainersTable() {
@@ -504,17 +581,31 @@ function buildContainerRowInner(c, currentHost) {
   `;
 
   // Column 6: Actions
+  const updateInfo = _dockerUpdatesCache?.containers?.[c.name] || _dockerUpdatesCache?.containers?.[c.id];
+  const hasUpdate = Boolean(updateInfo?.has_update);
+  const updateBadge = hasUpdate
+    ? `<span class="ci-badge badge-update-ready" title="New image update available" style="display:inline-flex; align-items:center; gap:2px; background:rgba(245,158,11,0.18); color:#fbbf24; border:1px solid rgba(245,158,11,0.4); font-size:9px; font-weight:700; padding:1px 5px; border-radius:3px; margin-left:4px;">⬆️ UPDATE</span>`
+    : '';
+
   const inspectBtn = `<button class="btn-container-act btn-docker-inspect" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="inspect" title="Inspect ${escapeHtml(c.name)}">🔍</button>`;
+  const editBtn = `<button class="btn-container-act btn-docker-edit" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="edit" title="Edit ${escapeHtml(c.name)}">✏️</button>`;
+  const updateBtn = hasUpdate
+    ? `<button class="btn-container-act btn-docker-update-single" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="update-single" title="Update ${escapeHtml(c.name)} to latest image" style="color:#fbbf24;">⬆️</button>`
+    : '';
   const deleteBtn = `<button class="btn-container-act btn-docker-delete" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-image="${escapeHtml(c.image || '')}" data-action="delete" title="Destroy / Delete ${escapeHtml(c.name)}" style="color:var(--crit, #ff6b6b);">🗑️</button>`;
   const actions = isRunning
     ? `
       ${inspectBtn}
+      ${editBtn}
+      ${updateBtn}
       <button class="btn-container-act btn-docker-restart" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="restart" title="Restart ${escapeHtml(c.name)}">🔄</button>
       <button class="btn-container-act btn-docker-stop" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="stop" title="Stop ${escapeHtml(c.name)}">⏹</button>
       ${deleteBtn}
     `
     : `
       ${inspectBtn}
+      ${editBtn}
+      ${updateBtn}
       <button class="btn-container-act btn-docker-start" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="start" title="Start ${escapeHtml(c.name)}">▶</button>
       ${deleteBtn}
     `;
@@ -524,6 +615,7 @@ function buildContainerRowInner(c, currentHost) {
       <div style="display:flex; align-items:baseline; gap:6px;">
         <button class="btn-docker-name-link" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" style="background:none; border:none; padding:0; color:#fff; font-size:11.5px; font-weight:700; cursor:pointer; text-align:left; font-family:inherit;" title="Inspect ${escapeHtml(c.name)}">${escapeHtml(c.name)}</button>
         <code style="font-size:9px; color:var(--muted); font-family:var(--font-mono, monospace);">${escapeHtml(idShort)}</code>
+        ${updateBadge}
       </div>
       <div>${stackHtml}</div>
     </td>
@@ -596,6 +688,31 @@ function bindDockerTableEvents(tbody) {
         return;
       }
 
+      if (act === 'edit') {
+        openContainerInspector(cid, cname, 'edit');
+        return;
+      }
+
+      if (act === 'update-single') {
+        if (!confirm(`Update container "${cname}" to the latest image? The newest image will be pulled and the container will be atomically recreated.`)) {
+          return;
+        }
+        actBtn.disabled = true;
+        actBtn.textContent = '⏳';
+        showToast(`Updating "${cname}" to latest image...`, 'info');
+        try {
+          await api.post(`/api/docker/containers/${encodeURIComponent(cid)}/update-image`);
+          showToast(`Container "${cname}" updated and restarted successfully!`, 'success');
+          await fetchAndRenderDockerContainers();
+          await refreshDockerUpdatesStatus();
+        } catch (err) {
+          showToast(`Update failed: ${err.message}`, 'error');
+          actBtn.disabled = false;
+          actBtn.textContent = '⬆️';
+        }
+        return;
+      }
+
       if (act === 'delete') {
         openContainerDeleteModal(cid, cname, actBtn.dataset.image || '', () => {
           fetchAndRenderDockerContainers();
@@ -634,7 +751,10 @@ export async function fetchAndRenderDockerContainers() {
   const tbody = document.getElementById('docker-containers-tbody');
   if (!tbody) return;
   try {
-    const list = await api.get('/api/docker/containers');
+    const [list] = await Promise.all([
+      api.get('/api/docker/containers'),
+      _dockerUpdatesCache ? Promise.resolve() : refreshDockerUpdatesStatus().catch(() => {}),
+    ]);
     _dockerContainersList = Array.isArray(list) ? list : [];
     renderDockerContainersTable();
   } catch (err) {

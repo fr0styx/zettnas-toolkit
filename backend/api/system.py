@@ -638,6 +638,98 @@ async def post_docker_container_ports(container_id: str, req: DockerPortRecreate
         raise HTTPException(status_code=500, detail=str(e))
 
 
+class DockerContainerRecreateRequest(BaseModel):
+    name: Optional[str] = None
+    image: Optional[str] = None
+    env: Optional[List[str]] = None
+    binds: Optional[List[str]] = None
+    port_bindings: Optional[List[PortMappingItem]] = None
+    network_mode: Optional[str] = None
+    restart_policy: Optional[str] = None
+    pull_image: bool = False
+    keep_backup: bool = False
+
+
+@router.post(
+    "/docker/containers/{container_id}/recreate",
+    dependencies=[Depends(require_scope("containers:manage"))],
+)
+async def post_docker_container_recreate(container_id: str, req: DockerContainerRecreateRequest):
+    if not container_id or not re.match(r"^[a-zA-Z0-9_.-]{1,128}$", container_id):
+        raise HTTPException(status_code=400, detail="Invalid container ID or name")
+    from backend.services.container_mutator import recreate_container
+
+    try:
+        ports_dicts = [p.model_dump() for p in req.port_bindings] if req.port_bindings is not None else None
+        res = await asyncio.to_thread(
+            recreate_container,
+            cid=container_id,
+            name=req.name,
+            image=req.image,
+            env=req.env,
+            binds=req.binds,
+            port_bindings=ports_dicts,
+            network_mode=req.network_mode,
+            restart_policy=req.restart_policy,
+            pull_image=req.pull_image,
+            keep_backup=req.keep_backup,
+        )
+        return res
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"[Docker] Container recreate failed for {container_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/docker/updates/status", dependencies=[Depends(require_scope("containers:read", "system:view"))])
+async def get_docker_updates_status():
+    from backend.services.docker_updates import get_cached_update_status
+
+    return await asyncio.to_thread(get_cached_update_status)
+
+
+@router.post("/docker/updates/check", dependencies=[Depends(require_scope("containers:read", "system:view"))])
+async def post_docker_updates_check():
+    from backend.services.docker_updates import check_all_container_updates
+
+    return await asyncio.to_thread(check_all_container_updates, force=True)
+
+
+@router.post(
+    "/docker/containers/{container_id}/update-image",
+    dependencies=[Depends(require_scope("containers:manage"))],
+)
+async def post_docker_container_update_image(container_id: str):
+    if not container_id or not re.match(r"^[a-zA-Z0-9_.-]{1,128}$", container_id):
+        raise HTTPException(status_code=400, detail="Invalid container ID or name")
+    from backend.services.docker_updates import update_single_container
+
+    try:
+        res = await asyncio.to_thread(update_single_container, container_id)
+        return res
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"[Docker] Update image failed for {container_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post(
+    "/docker/updates/apply-all",
+    dependencies=[Depends(require_scope("containers:manage"))],
+)
+async def post_docker_updates_apply_all():
+    from backend.services.docker_updates import update_all_containers
+
+    try:
+        res = await asyncio.to_thread(update_all_containers)
+        return res
+    except Exception as e:
+        logger.error(f"[Docker] Batch update all failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/docker/check_port")
 async def get_check_port(port: int, proto: str = "tcp"):
     from backend.services.container_mutator import check_port_available

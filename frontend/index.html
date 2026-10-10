@@ -3038,8 +3038,16 @@
                       <button class="btn-pill-toggle docker-filter-btn" data-filter="compose"><span data-i18n="mgmt.docker_filter_compose">Compose</span> <span id="docker-count-compose" class="docker-count-badge">0</span></button>
                       <button class="btn-pill-toggle docker-filter-btn" data-filter="standalone"><span data-i18n="mgmt.docker_filter_standalone">Standalone</span> <span id="docker-count-standalone" class="docker-count-badge">0</span></button>
                     </div>
-                    <div class="docker-search-wrap" style="position:relative;">
-                      <input type="text" id="docker-search-input" placeholder="Search containers, images, ports..." data-i18n-placeholder="mgmt.docker_search_placeholder" class="tz-text-input" style="font-size:11px; padding:3px 8px; width:200px; height:24px; border-radius:4px;">
+                    <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                      <button class="btn-pill-toggle" id="btn-docker-check-updates" style="display:inline-flex; align-items:center; gap:5px; font-weight:600;" title="Check remote registries for container image updates">
+                        <span style="color:var(--ok2, #25c2a0);">✓</span> <span>Check for updates</span>
+                      </button>
+                      <button class="btn-pill-toggle" id="btn-docker-update-all" style="display:none; align-items:center; gap:5px; font-weight:700; color:#fbbf24; border-color:rgba(251,191,36,0.4); background:rgba(251,191,36,0.12);" title="Update all containers with available image updates">
+                        <span style="display:inline-flex; align-items:center; justify-content:center; width:13px; height:13px; border-radius:50%; border:1.5px solid #fbbf24; font-size:9.5px; line-height:1;">↑</span> <span>Update all (<span id="docker-updates-count-badge">0</span>)</span>
+                      </button>
+                      <div class="docker-search-wrap" style="position:relative;">
+                        <input type="text" id="docker-search-input" placeholder="Search containers, images, ports..." data-i18n-placeholder="mgmt.docker_search_placeholder" class="tz-text-input" style="font-size:11px; padding:3px 8px; width:180px; height:24px; border-radius:4px;">
+                      </div>
                     </div>
                   </div>
                   <div style="overflow-x:auto; max-height:420px; background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.06); border-radius:8px;">

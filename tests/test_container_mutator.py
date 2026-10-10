@@ -215,3 +215,49 @@ def test_recreate_container_ports_collision_detected(mock_chk_port, mock_inspect
             "abc123fullid000111222333444",
             new_port_bindings=[{"container_port": 8096, "host_port": 9999, "proto": "tcp"}],
         )
+
+
+@patch("backend.services.container_mutator.fetch_container_raw_inspect")
+@patch("backend.services.container_mutator._docker_request")
+def test_recreate_container_full_config(mock_docker_req, mock_inspect):
+    from backend.services.container_mutator import recreate_container
+
+    mock_inspect.return_value = MOCK_INSPECT_DATA
+    # 1. Stop old -> 204
+    # 2. Rename old -> 204
+    # 3. Create new -> 201
+    # 4. Start new -> 204
+    # 5. Delete backup -> 204
+    mock_docker_req.side_effect = [
+        (204, {}),
+        (204, {}),
+        (201, {"Id": "recreated_new_id_12345"}),
+        (204, {}),
+        (204, {}),
+    ]
+
+    res = recreate_container(
+        "abc123fullid000111222333444",
+        name="jellyfin-renamed",
+        image="lscr.io/linuxserver/jellyfin:10.9.1",
+        env=["PUID=1001", "PGID=101", "TZ=UTC"],
+        binds=["/mnt/user/appdata/jellyfin:/config:rw", "/mnt/user/media:/media:ro"],
+        network_mode="bridge",
+        restart_policy="always",
+        keep_backup=True,
+    )
+
+    assert res["status"] == "success"
+    assert res["target_name"] == "jellyfin-renamed"
+    assert res["target_image"] == "lscr.io/linuxserver/jellyfin:10.9.1"
+    assert res["retained_backup"] is True
+    assert res["new_id"] == "recreated_new_id_12345"[:12]
+
+    # Verify create payload
+    create_call = [c for c in mock_docker_req.call_args_list if c[0][0] == "POST" and "/containers/create" in c[0][1]][0]
+    create_body = create_call[1]["body"]
+    assert create_body["Image"] == "lscr.io/linuxserver/jellyfin:10.9.1"
+    assert create_body["Env"] == ["PUID=1001", "PGID=101", "TZ=UTC"]
+    assert create_body["HostConfig"]["Binds"] == ["/mnt/user/appdata/jellyfin:/config:rw", "/mnt/user/media:/media:ro"]
+    assert create_body["HostConfig"]["RestartPolicy"] == {"Name": "always"}
+

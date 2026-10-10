@@ -22,6 +22,7 @@ let _unbindFocusTrap = null;
 let _activeTab = 'overview';
 let _termHistory = [];
 let _termHistoryIdx = -1;
+let _activeDetails = null;
 
 export function initContainerModal() {
   if (document.getElementById('container-inspector-overlay')) return;
@@ -53,6 +54,7 @@ export function initContainerModal() {
           <button class="btn-pill-toggle ci-tab-btn" data-tab="compose">📜 Docker Compose</button>
           <button class="btn-pill-toggle ci-tab-btn" data-tab="logs">📄 Live Logs</button>
           <button class="btn-pill-toggle ci-tab-btn" data-tab="terminal">💻 Web Terminal</button>
+          <button class="btn-pill-toggle ci-tab-btn" data-tab="edit">✏️ Edit Container</button>
         </div>
 
         <!-- Tab Content Panes -->
@@ -146,6 +148,13 @@ export function initContainerModal() {
               <span style="color:#10b981; font-family:var(--font-mono, monospace); font-weight:bold; font-size:12px;">$</span>
               <input type="text" id="ci-term-input" placeholder="Type a command and press Enter..." style="flex:1; background:transparent; border:none; outline:none; color:#f8fafc; font-family:var(--font-mono, monospace); font-size:11.5px;" autocomplete="off" spellcheck="false">
               <button class="btn-pill-toggle" id="ci-term-send-btn" style="padding:2px 10px; font-size:11px;">Run</button>
+            </div>
+          </div>
+
+          <!-- 8. Edit Container Tab -->
+          <div id="ci-pane-edit" class="ci-pane" style="display:none;">
+            <div id="cie-form-host">
+              <div style="text-align:center; padding:30px; color:var(--muted);">Loading container configuration...</div>
             </div>
           </div>
         </div>
@@ -359,6 +368,8 @@ export async function switchContainerTab(tabTarget) {
   } else if (tabTarget === 'terminal') {
     const input = document.getElementById('ci-term-input');
     if (input) setTimeout(() => input.focus(), 60);
+  } else if (tabTarget === 'edit' && _activeCid) {
+    await renderContainerEditTab(_activeCid);
   }
 }
 
@@ -413,7 +424,7 @@ export function clearTerminal() {
 }
 
 
-export async function openContainerInspector(cid, cname) {
+export async function openContainerInspector(cid, cname, initialTab = 'overview') {
   initContainerModal();
   const overlay = document.getElementById('container-inspector-overlay');
   const win = document.getElementById('container-inspector-window');
@@ -444,12 +455,17 @@ export async function openContainerInspector(cid, cname) {
   if (_unbindFocusTrap) _unbindFocusTrap();
   _unbindFocusTrap = trapFocus(win, closeContainerInspector);
 
-  // Default to Overview tab
-  const overviewTabBtn = overlay.querySelector('.ci-tab-btn[data-tab="overview"]');
-  if (overviewTabBtn) overviewTabBtn.click();
+  // Activate requested tab
+  const targetTab = initialTab || 'overview';
+  const tabBtn = overlay.querySelector(`.ci-tab-btn[data-tab="${targetTab}"]`);
+  if (tabBtn) tabBtn.click();
+  else switchContainerTab(targetTab);
 
   // Load details
   await loadContainerDetails(cid);
+  if (targetTab === 'edit') {
+    await renderContainerEditTab(cid);
+  }
 }
 
 async function loadContainerDetails(cid) {
@@ -460,6 +476,7 @@ async function loadContainerDetails(cid) {
 
   try {
     const details = await api.get(`/api/docker/containers/${encodeURIComponent(cid)}/details`);
+    _activeDetails = details;
     if (loadingEl) loadingEl.style.display = 'none';
     if (!contentEl) return;
     contentEl.style.display = 'block';
@@ -1131,11 +1148,351 @@ export function openContainerDeleteModal(cid, cname, imageRef = '', onDeleted = 
       if (typeof onDeleted === 'function') {
         onDeleted();
       }
-      ZettEventBus.emit('docker:containers-updated');
     } catch (err) {
       showToast(`Failed to destroy container: ${err.message}`, 'error');
       confirmBtn.disabled = false;
       confirmBtn.textContent = '💥 Destroy Container';
+    }
+  };
+}
+
+async function renderContainerEditTab(cid) {
+  const hostEl = document.getElementById('cie-form-host');
+  if (!hostEl) return;
+
+  if (!_activeDetails || (_activeDetails.overview && _activeDetails.overview.id !== cid && _activeDetails.overview.full_id !== cid)) {
+    hostEl.innerHTML = '<div style="text-align:center; padding:30px; color:var(--muted);">Loading container configuration...</div>';
+    try {
+      _activeDetails = await api.get(`/api/docker/containers/${encodeURIComponent(cid)}/details`);
+    } catch (e) {
+      hostEl.innerHTML = `<div style="color:var(--crit); padding:20px;">Failed to load container details: ${escapeHtml(e.message)}</div>`;
+      return;
+    }
+  }
+
+  const details = _activeDetails;
+  const ov = details.overview || {};
+  const currentName = ov.name || _activeCname || '';
+  const currentImage = ov.image || '';
+  const currentNetwork = ov.network_mode || 'bridge';
+  const currentRestart = ov.restart_policy || 'unless-stopped';
+  const isToolkit = currentName === 'zettnas-toolkit' || currentName === 'zettnas' || (cid && window.location.hostname && cid.startsWith(window.location.hostname));
+
+  const portsList = (details.ports || []).map((p) => ({
+    container_port: p.private_port,
+    host_port: p.public_port || '',
+    proto: (p.type || 'tcp').toLowerCase(),
+    host_ip: p.ip || '0.0.0.0',
+  }));
+
+  const mountsList = (details.mounts || []).map((m) => ({
+    source: m.source || '',
+    destination: m.destination || '',
+    mode: m.mode || (m.rw ? 'rw' : 'ro') || 'rw',
+  }));
+
+  const envList = (details.env || []).map((e) => ({
+    key: e.key || '',
+    value: e.value != null ? String(e.value) : '',
+    sensitive: Boolean(e.sensitive),
+  }));
+
+  hostEl.innerHTML = `
+    <div class="cie-form-wrap" style="padding:4px 2px;">
+      <!-- Guidance Notice -->
+      <div style="background:rgba(14,165,233,0.08); border:1px solid rgba(14,165,233,0.25); border-radius:6px; padding:10px 12px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <div style="font-weight:700; color:#38bdf8; font-size:12px;">✏️ Container Configuration Editor</div>
+          <div style="font-size:10.5px; color:var(--muted); margin-top:2px;">
+            Zero-downtime atomic clone-and-recreate with automated rollback. All settings are validated before touching the container.
+          </div>
+        </div>
+        ${isToolkit ? `<span class="ci-badge" style="background:rgba(239,68,68,0.15); color:#fca5a5; font-size:9.5px; padding:2px 8px; border-radius:4px; font-weight:700;">SELF-PROTECTED</span>` : ''}
+      </div>
+
+      ${isToolkit ? `
+        <div style="background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:6px; padding:12px; margin-bottom:14px; color:#fca5a5; font-size:11px;">
+          ⚠️ The active ZettNAS Toolkit container cannot be recreated from within the web interface. Please modify its configuration in Docker Compose or your host template to avoid severing active agent connections.
+        </div>
+      ` : ''}
+
+      <!-- Section 1: General Settings -->
+      <div class="ci-metric-card" style="background:rgba(0,0,0,0.35); border:1px solid rgba(255,255,255,0.08); padding:12px; border-radius:8px; margin-bottom:14px;">
+        <div style="font-size:11px; font-weight:700; color:#fff; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px;">General Settings</div>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px;">
+          <div>
+            <label style="font-size:10px; color:var(--muted); display:block; margin-bottom:4px; font-weight:600;">CONTAINER NAME</label>
+            <input type="text" id="cie-input-name" class="tz-text-input" style="width:100%; box-sizing:border-box; font-size:11.5px; padding:5px 8px;" value="${escapeHtml(currentName)}" ${isToolkit ? 'disabled' : ''}>
+          </div>
+          <div>
+            <label style="font-size:10px; color:var(--muted); display:block; margin-bottom:4px; font-weight:600;">IMAGE REPO & TAG</label>
+            <input type="text" id="cie-input-image" class="tz-text-input" style="width:100%; box-sizing:border-box; font-size:11.5px; padding:5px 8px;" value="${escapeHtml(currentImage)}" ${isToolkit ? 'disabled' : ''}>
+          </div>
+          <div>
+            <label style="font-size:10px; color:var(--muted); display:block; margin-bottom:4px; font-weight:600;">NETWORK MODE</label>
+            <select id="cie-select-network" class="tz-select-input" style="width:100%; box-sizing:border-box; font-size:11.5px; padding:4px 6px;" ${isToolkit ? 'disabled' : ''}>
+              <option value="bridge" ${currentNetwork === 'bridge' ? 'selected' : ''}>bridge (Default)</option>
+              <option value="host" ${currentNetwork === 'host' ? 'selected' : ''}>host (Direct Host Network)</option>
+              <option value="none" ${currentNetwork === 'none' ? 'selected' : ''}>none (Isolated)</option>
+              ${currentNetwork && !['bridge', 'host', 'none'].includes(currentNetwork) ? `<option value="${escapeHtml(currentNetwork)}" selected>${escapeHtml(currentNetwork)} (Custom)</option>` : ''}
+            </select>
+          </div>
+          <div>
+            <label style="font-size:10px; color:var(--muted); display:block; margin-bottom:4px; font-weight:600;">RESTART POLICY</label>
+            <select id="cie-select-restart" class="tz-select-input" style="width:100%; box-sizing:border-box; font-size:11.5px; padding:4px 6px;" ${isToolkit ? 'disabled' : ''}>
+              <option value="unless-stopped" ${currentRestart === 'unless-stopped' ? 'selected' : ''}>unless-stopped (Recommended)</option>
+              <option value="always" ${currentRestart === 'always' ? 'selected' : ''}>always</option>
+              <option value="on-failure" ${currentRestart === 'on-failure' ? 'selected' : ''}>on-failure</option>
+              <option value="no" ${currentRestart === 'no' ? 'selected' : ''}>no</option>
+            </select>
+          </div>
+        </div>
+        <div style="margin-top:10px;">
+          <label style="display:flex; align-items:center; gap:6px; font-size:10.5px; color:#cbd5e1; cursor:pointer;">
+            <input type="checkbox" id="cie-cb-pull" style="cursor:pointer;" ${isToolkit ? 'disabled' : ''}>
+            <span>Pull latest image layers from registry before recreate</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Section 2: Port Mappings -->
+      <div class="ci-metric-card" style="background:rgba(0,0,0,0.35); border:1px solid rgba(255,255,255,0.08); padding:12px; border-radius:8px; margin-bottom:14px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <div style="font-size:11px; font-weight:700; color:#fff; text-transform:uppercase; letter-spacing:0.5px;">Port Bindings</div>
+          <button class="btn-pill-toggle" id="cie-btn-add-port" style="font-size:10px; padding:2px 8px;" ${isToolkit ? 'disabled' : ''}>+ Add Port</button>
+        </div>
+        <div id="cie-ports-container" style="display:flex; flex-direction:column; gap:6px;"></div>
+      </div>
+
+      <!-- Section 3: Volume Mounts & Paths -->
+      <div class="ci-metric-card" style="background:rgba(0,0,0,0.35); border:1px solid rgba(255,255,255,0.08); padding:12px; border-radius:8px; margin-bottom:14px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <div style="font-size:11px; font-weight:700; color:#fff; text-transform:uppercase; letter-spacing:0.5px;">Storage Mounts & Paths (Binds)</div>
+          <button class="btn-pill-toggle" id="cie-btn-add-mount" style="font-size:10px; padding:2px 8px;" ${isToolkit ? 'disabled' : ''}>+ Add Mount</button>
+        </div>
+        <div id="cie-mounts-container" style="display:flex; flex-direction:column; gap:6px;"></div>
+      </div>
+
+      <!-- Section 4: Environment Variables -->
+      <div class="ci-metric-card" style="background:rgba(0,0,0,0.35); border:1px solid rgba(255,255,255,0.08); padding:12px; border-radius:8px; margin-bottom:14px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:6px;">
+          <div style="font-size:11px; font-weight:700; color:#fff; text-transform:uppercase; letter-spacing:0.5px;">Environment Variables</div>
+          <div style="display:flex; gap:6px; align-items:center;">
+            <input type="text" id="cie-env-filter" placeholder="Filter variables..." class="tz-text-input" style="font-size:10px; padding:2px 6px; width:130px;">
+            <button class="btn-pill-toggle" id="cie-btn-add-env" style="font-size:10px; padding:2px 8px;" ${isToolkit ? 'disabled' : ''}>+ Add Variable</button>
+          </div>
+        </div>
+        <div id="cie-env-container" style="display:flex; flex-direction:column; gap:6px; max-height:280px; overflow-y:auto;"></div>
+      </div>
+
+      <!-- Footer Actions -->
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.08);">
+        <label style="display:flex; align-items:center; gap:6px; font-size:10.5px; color:var(--muted); cursor:pointer;">
+          <input type="checkbox" id="cie-cb-backup" style="cursor:pointer;" ${isToolkit ? 'disabled' : ''}>
+          <span>Keep backup container (retains previous state as {name}.backup)</span>
+        </label>
+        <div style="display:flex; gap:8px;">
+          <button class="btn-pill-toggle" id="cie-btn-cancel">Cancel</button>
+          <button class="btn-pill-toggle" id="cie-btn-save" style="font-weight:700; background:var(--brand, #0ea5e9); color:#fff; border:none; padding:6px 16px;" ${isToolkit ? 'disabled' : ''}>
+            💾 Save & Recreate Container
+          </button>
+        </div>
+      </div>
+      <div id="cie-status-msg" style="display:none; margin-top:10px; padding:8px 12px; border-radius:6px; font-size:11px;"></div>
+    </div>
+  `;
+
+  // Render initial rows
+  const portsBox = document.getElementById('cie-ports-container');
+  const mountsBox = document.getElementById('cie-mounts-container');
+  const envBox = document.getElementById('cie-env-container');
+
+  function addPortRow(p = {}) {
+    const row = document.createElement('div');
+    row.className = 'cie-port-row';
+    row.style.cssText = 'display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.03); padding:6px 10px; border-radius:6px;';
+    row.innerHTML = `
+      <span style="font-size:10px; color:var(--muted); width:65px;">Container:</span>
+      <input type="number" class="tz-text-input cie-cp-input" placeholder="80" value="${p.container_port || ''}" style="width:75px; font-size:11px; padding:3px 6px;">
+      <span style="font-size:10px; color:var(--muted);">/</span>
+      <select class="tz-select-input cie-proto-input" style="font-size:11px; padding:2px 4px;">
+        <option value="tcp" ${p.proto === 'udp' ? '' : 'selected'}>TCP</option>
+        <option value="udp" ${p.proto === 'udp' ? 'selected' : ''}>UDP</option>
+      </select>
+      <span style="color:var(--muted);">➔</span>
+      <span style="font-size:10px; color:var(--muted);">Host:</span>
+      <input type="number" class="tz-text-input cie-hp-input" placeholder="8080" value="${p.host_port || ''}" style="width:75px; font-size:11px; padding:3px 6px;">
+      <input type="text" class="tz-text-input cie-ip-input" placeholder="0.0.0.0" value="${p.host_ip || '0.0.0.0'}" style="width:75px; font-size:10px; padding:3px 6px;" title="Host IP">
+      <button class="btn-pill-toggle cie-row-del" title="Remove" style="color:#fca5a5; padding:2px 6px;">🗑️</button>
+    `;
+    row.querySelector('.cie-row-del').onclick = () => row.remove();
+    portsBox.appendChild(row);
+  }
+
+  function addMountRow(m = {}) {
+    const row = document.createElement('div');
+    row.className = 'cie-mount-row';
+    row.style.cssText = 'display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.03); padding:6px 10px; border-radius:6px;';
+    row.innerHTML = `
+      <span style="font-size:10px; color:var(--muted); width:65px;">Host Path:</span>
+      <input type="text" class="tz-text-input cie-src-input" placeholder="/mnt/user/appdata/app" value="${escapeHtml(m.source || '')}" style="flex:1; font-size:11px; padding:3px 6px; font-family:var(--font-mono, monospace);">
+      <span style="color:var(--muted);">➔</span>
+      <span style="font-size:10px; color:var(--muted); width:65px;">Container:</span>
+      <input type="text" class="tz-text-input cie-dst-input" placeholder="/config" value="${escapeHtml(m.destination || '')}" style="flex:1; font-size:11px; padding:3px 6px; font-family:var(--font-mono, monospace);">
+      <select class="tz-select-input cie-mode-input" style="font-size:11px; padding:2px 4px;">
+        <option value="rw" ${m.mode === 'ro' ? '' : 'selected'}>rw</option>
+        <option value="ro" ${m.mode === 'ro' ? 'selected' : ''}>ro</option>
+      </select>
+      <button class="btn-pill-toggle cie-row-del" title="Remove" style="color:#fca5a5; padding:2px 6px;">🗑️</button>
+    `;
+    row.querySelector('.cie-row-del').onclick = () => row.remove();
+    mountsBox.appendChild(row);
+  }
+
+  function addEnvRow(e = {}) {
+    const row = document.createElement('div');
+    row.className = 'cie-env-row';
+    row.style.cssText = 'display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.03); padding:4px 8px; border-radius:6px;';
+    row.innerHTML = `
+      <input type="text" class="tz-text-input cie-key-input" placeholder="KEY" value="${escapeHtml(e.key || '')}" style="width:180px; font-size:11px; padding:3px 6px; font-family:var(--font-mono, monospace); font-weight:700;">
+      <span style="color:var(--muted);">=</span>
+      <input type="text" class="tz-text-input cie-val-input" placeholder="value" value="${escapeHtml(e.value || '')}" style="flex:1; font-size:11px; padding:3px 6px; font-family:var(--font-mono, monospace);">
+      <button class="btn-pill-toggle cie-row-del" title="Remove" style="color:#fca5a5; padding:2px 6px;">🗑️</button>
+    `;
+    row.querySelector('.cie-row-del').onclick = () => row.remove();
+    envBox.appendChild(row);
+  }
+
+  portsList.forEach(addPortRow);
+  mountsList.forEach(addMountRow);
+  envList.forEach(addEnvRow);
+
+  // Wire add buttons
+  document.getElementById('cie-btn-add-port').onclick = () => addPortRow();
+  document.getElementById('cie-btn-add-mount').onclick = () => addMountRow();
+  document.getElementById('cie-btn-add-env').onclick = () => addEnvRow();
+
+  // Wire env search
+  document.getElementById('cie-env-filter').oninput = (ev) => {
+    const q = (ev.target.value || '').toLowerCase();
+    envBox.querySelectorAll('.cie-env-row').forEach((r) => {
+      const keyVal = (r.querySelector('.cie-key-input').value || '').toLowerCase();
+      r.style.display = keyVal.includes(q) ? 'flex' : 'none';
+    });
+  };
+
+  // Wire Cancel
+  document.getElementById('cie-btn-cancel').onclick = () => {
+    switchContainerTab('overview');
+  };
+
+  // Wire Save
+  const saveBtn = document.getElementById('cie-btn-save');
+  const statusMsg = document.getElementById('cie-status-msg');
+
+  saveBtn.onclick = async () => {
+    const name = document.getElementById('cie-input-name').value.trim();
+    const image = document.getElementById('cie-input-image').value.trim();
+    const network_mode = document.getElementById('cie-select-network').value;
+    const restart_policy = document.getElementById('cie-select-restart').value;
+    const pull_image = document.getElementById('cie-cb-pull').checked;
+    const keep_backup = document.getElementById('cie-cb-backup').checked;
+
+    if (!name || !image) {
+      showToast('Container name and image cannot be empty.', 'warn');
+      return;
+    }
+
+    if (!confirm(`Save changes and recreate container '${name}'? The container will be atomically restarted.`)) {
+      return;
+    }
+
+    // Collect port bindings
+    const portBindings = [];
+    portsBox.querySelectorAll('.cie-port-row').forEach((r) => {
+      const cp = parseInt(r.querySelector('.cie-cp-input').value, 10);
+      const hp = parseInt(r.querySelector('.cie-hp-input').value, 10);
+      const proto = r.querySelector('.cie-proto-input').value;
+      const host_ip = r.querySelector('.cie-ip-input').value.trim() || '0.0.0.0';
+      if (cp && cp > 0) {
+        portBindings.push({
+          container_port: cp,
+          host_port: hp && hp > 0 ? hp : null,
+          proto,
+          host_ip,
+        });
+      }
+    });
+
+    // Collect mounts
+    const binds = [];
+    mountsBox.querySelectorAll('.cie-mount-row').forEach((r) => {
+      const src = r.querySelector('.cie-src-input').value.trim();
+      const dst = r.querySelector('.cie-dst-input').value.trim();
+      const mode = r.querySelector('.cie-mode-input').value;
+      if (src && dst) {
+        binds.push(`${src}:${dst}:${mode}`);
+      }
+    });
+
+    // Collect env
+    const envVars = [];
+    envBox.querySelectorAll('.cie-env-row').forEach((r) => {
+      const k = r.querySelector('.cie-key-input').value.trim();
+      const v = r.querySelector('.cie-val-input').value;
+      if (k) {
+        envVars.push(`${k}=${v}`);
+      }
+    });
+
+    saveBtn.disabled = true;
+    saveBtn.textContent = '⏳ Recreating Container...';
+    statusMsg.style.display = 'block';
+    statusMsg.style.background = 'rgba(14,165,233,0.15)';
+    statusMsg.style.color = '#38bdf8';
+    statusMsg.textContent = 'Validating configuration, creating backup, and recreating container...';
+
+    try {
+      const res = await api.post(`/api/docker/containers/${encodeURIComponent(cid)}/recreate`, {
+        name,
+        image,
+        network_mode,
+        restart_policy,
+        pull_image,
+        keep_backup,
+        port_bindings: portBindings,
+        binds,
+        env: envVars,
+      });
+
+      statusMsg.style.background = 'rgba(37,194,160,0.15)';
+      statusMsg.style.color = 'var(--ok2, #25c2a0)';
+      statusMsg.textContent = `✓ ${res.message || 'Container recreated successfully!'}`;
+      showToast(`Container "${res.target_name || name}" successfully recreated!`, 'success');
+
+      // Refresh details
+      _activeCid = res.new_id || name;
+      _activeCname = res.target_name || name;
+      const titleName = document.getElementById('ci-header-title');
+      const titleId = document.getElementById('ci-header-id');
+      if (titleName) titleName.textContent = _activeCname;
+      if (titleId) titleId.textContent = _activeCid.slice(0, 12);
+
+      await loadContainerDetails(_activeCid);
+      setTimeout(() => {
+        switchContainerTab('overview');
+      }, 1200);
+
+      // Notify parent list to refresh
+      ZettEventBus.emit('docker:containers:refresh');
+    } catch (err) {
+      statusMsg.style.background = 'rgba(239,68,68,0.15)';
+      statusMsg.style.color = '#fca5a5';
+      statusMsg.textContent = `Error: ${err.message}`;
+      showToast(`Recreation failed: ${err.message}`, 'error');
+    } finally {
+      saveBtn.disabled = false;
+      saveBtn.textContent = '💾 Save & Recreate Container';
     }
   };
 }

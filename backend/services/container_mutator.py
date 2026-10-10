@@ -144,21 +144,71 @@ def update_container_resources(
         raise RuntimeError(f"Docker API resource update failed: {err_msg}")
 
 
-def recreate_container_ports(
+def pull_container_image(image: str, timeout: float = 180.0) -> bool:
+    """
+    Pulls a Docker image using Docker Engine Unix socket API:
+    POST /images/create?fromImage={repo}&tag={tag}.
+    Streams pull progress chunks until complete.
+    """
+    sock_path = "/var/run/docker.sock"
+    if not os.path.exists(sock_path):
+        raise RuntimeError("Docker socket /var/run/docker.sock not found")
+
+    image_str = image.strip()
+    if ":" in image_str and not image_str.endswith(":"):
+        repo, tag = image_str.rsplit(":", 1)
+        if "/" in tag:
+            repo = image_str
+            tag = "latest"
+    else:
+        repo = image_str
+        tag = "latest"
+
+    url_path = f"/images/create?fromImage={urllib.parse.quote(repo)}&tag={urllib.parse.quote(tag)}"
+    conn = UnixHTTPConnection(sock_path, timeout=timeout)
+    try:
+        conn.request("POST", url_path)
+        res = conn.getresponse()
+        if res.status != 200:
+            raw = res.read().decode("utf-8", errors="replace")
+            logger.error(f"[Docker Pull] Pull failed for '{image}' (HTTP {res.status}): {raw}")
+            raise RuntimeError(f"Docker API pull failed for '{image}': {raw[:200]}")
+
+        while True:
+            chunk = res.readline()
+            if not chunk:
+                break
+        logger.info(f"[Docker Pull] Successfully pulled image '{image}'")
+        return True
+    except Exception as exc:
+        logger.error(f"[Docker Pull] Exception pulling '{image}': {exc}")
+        raise RuntimeError(f"Failed to pull image '{image}': {exc}")
+    finally:
+        try:
+            conn.close()
+        except Exception:
+            pass
+
+
+def recreate_container(
     cid: str,
-    new_port_bindings: List[Dict[str, Any]],
+    name: Optional[str] = None,
+    image: Optional[str] = None,
+    env: Optional[List[str]] = None,
+    binds: Optional[List[str]] = None,
+    port_bindings: Optional[List[Dict[str, Any]]] = None,
+    network_mode: Optional[str] = None,
+    restart_policy: Optional[str] = None,
+    pull_image: bool = False,
     keep_backup: bool = False,
-    timeout: float = 30.0,
+    timeout: float = 45.0,
 ) -> Dict[str, Any]:
     """
-    Safely reconfigures container ports using the Atomic Clone-and-Recreate pattern.
+    Safely reconfigures and mutates a container using the Atomic Clone-and-Recreate pattern.
+    Supports updating container name, image tag, environment variables, mounts / binds,
+    network mode, port bindings, and restart policy.
     Includes automated rollback to guarantee zero data loss and uninterrupted availability
     if creation or startup of the updated container encounters an error.
-
-    new_port_bindings format:
-    [
-        {"container_port": 8096, "host_port": 8097, "proto": "tcp", "host_ip": "0.0.0.0"}
-    ]
     """
     # Step 1: Pre-flight inspect
     inspect_data = fetch_container_raw_inspect(cid)
@@ -174,47 +224,73 @@ def recreate_container_ports(
     self_hostname = socket.gethostname()
     if (self_hostname and cid.startswith(self_hostname)) or orig_name in ("zettnas-toolkit", "zettnas"):
         raise ValueError(
-            "Cannot recreate the active ZettNAS Toolkit container. "
-            "Port modifications must be configured in Docker Compose or your Unraid template."
+            "Cannot recreate the active ZettNAS Toolkit container from within the app. "
+            "Container modifications must be configured in Docker Compose or your host template."
         )
 
-    # Step 2: Validate ports & pre-flight socket collision check
-    for pb in new_port_bindings:
-        hp = pb.get("host_port")
-        proto = pb.get("proto", "tcp")
-        if hp is not None and int(hp) > 0:
-            hp_int = int(hp)
-            if not check_port_available(hp_int, proto=proto):
-                # Check if it was bound by the container itself currently
-                current_ports = host_config.get("PortBindings", {})
-                already_bound_by_self = any(
-                    any(int(b.get("HostPort", 0)) == hp_int for b in binds) for binds in current_ports.values()
-                )
-                if not already_bound_by_self:
-                    raise ValueError(
-                        f"Port collision: Host port {hp_int}/{proto} is already in use by another service."
-                    )
+    target_name = name.strip().lstrip("/") if (name and name.strip()) else orig_name
+    target_image = image.strip() if (image and image.strip()) else config.get("Image", "")
 
-    # Step 3: Build new PortBindings and ExposedPorts
-    cloned_port_bindings: Dict[str, Any] = {}
+    # Step 2: Optionally pull new image if requested
+    if pull_image and target_image:
+        logger.info(f"[Container Recreate] Pulling image '{target_image}' before recreate...")
+        pull_container_image(target_image, timeout=120.0)
+
+    # Step 3: Handle Port Bindings and Exposed Ports
+    cloned_port_bindings: Dict[str, Any] = dict(host_config.get("PortBindings") or {})
     cloned_exposed_ports: Dict[str, Any] = dict(config.get("ExposedPorts") or {})
 
-    for pb in new_port_bindings:
-        cp = pb.get("container_port")
-        hp = pb.get("host_port")
-        proto = pb.get("proto", "tcp").lower()
-        host_ip = pb.get("host_ip", "")
+    if port_bindings is not None:
+        cloned_port_bindings = {}
+        cloned_exposed_ports = {}
+        current_ports = host_config.get("PortBindings", {})
 
-        port_key = f"{cp}/{proto}"
-        cloned_exposed_ports[port_key] = {}
-        if hp:
-            cloned_port_bindings[port_key] = [{"HostIp": host_ip, "HostPort": str(hp)}]
+        for pb in port_bindings:
+            cp = pb.get("container_port")
+            hp = pb.get("host_port")
+            proto = pb.get("proto", "tcp").lower()
+            host_ip = pb.get("host_ip", "")
 
-    # Step 4: Prepare create payload based on current inspect
-    # Only transfer valid container creation fields
+            if not cp:
+                continue
+
+            port_key = f"{cp}/{proto}"
+            cloned_exposed_ports[port_key] = {}
+
+            if hp is not None and int(hp) > 0:
+                hp_int = int(hp)
+                if not check_port_available(hp_int, proto=proto):
+                    already_bound_by_self = any(
+                        any(int(b.get("HostPort", 0)) == hp_int for b in binds_list)
+                        for binds_list in current_ports.values()
+                    )
+                    if not already_bound_by_self:
+                        raise ValueError(
+                            f"Port collision: Host port {hp_int}/{proto} is already in use by another service."
+                        )
+                cloned_port_bindings[port_key] = [{"HostIp": host_ip, "HostPort": str(hp_int)}]
+
+    # Step 4: Prepare new HostConfig
+    new_host_config = dict(host_config)
+    new_host_config["PortBindings"] = cloned_port_bindings
+
+    if binds is not None:
+        new_host_config["Binds"] = [b.strip() for b in binds if b and b.strip()]
+
+    if network_mode is not None and network_mode.strip():
+        new_host_config["NetworkMode"] = network_mode.strip()
+
+    if restart_policy is not None and restart_policy.strip():
+        valid_policies = ["no", "always", "unless-stopped", "on-failure"]
+        pol = restart_policy.strip()
+        if pol in valid_policies:
+            new_host_config["RestartPolicy"] = {"Name": pol}
+
+    # Step 5: Prepare create payload based on current inspect
+    target_env = [e.strip() for e in env if e and e.strip()] if env is not None else config.get("Env", [])
     create_body: Dict[str, Any] = {
-        "Image": config.get("Image"),
-        "Env": config.get("Env", []),
+        "Image": target_image,
+        "Env": target_env,
         "Cmd": config.get("Cmd"),
         "Entrypoint": config.get("Entrypoint"),
         "WorkingDir": config.get("WorkingDir"),
@@ -223,41 +299,41 @@ def recreate_container_ports(
         "ExposedPorts": cloned_exposed_ports,
         "StopSignal": config.get("StopSignal"),
         "StopTimeout": config.get("StopTimeout"),
+        "HostConfig": new_host_config,
     }
 
-    # Clone HostConfig with updated ports
-    new_host_config = dict(host_config)
-    new_host_config["PortBindings"] = cloned_port_bindings
-    create_body["HostConfig"] = new_host_config
-
-    # NetworkingConfig
-    network_settings = inspect_data.get("NetworkSettings", {})
-    networks = network_settings.get("Networks", {})
-    if networks:
-        create_body["NetworkingConfig"] = {"EndpointsConfig": networks}
+    # NetworkingConfig (EndpointsConfig for custom networks if not host/none)
+    net_mode = new_host_config.get("NetworkMode", "")
+    if net_mode not in ("host", "none"):
+        network_settings = inspect_data.get("NetworkSettings", {})
+        networks = network_settings.get("Networks", {})
+        if networks:
+            create_body["NetworkingConfig"] = {"EndpointsConfig": networks}
 
     ts_suffix = int(time.time())
     backup_name = f"{orig_name}.backup.{ts_suffix}"
     backup_id = inspect_data.get("Id", cid)
     new_id = None
 
-    logger.info(f"[Container Recreate] Starting atomic port reconfiguration for '{orig_name}' (ID: {backup_id[:12]})")
+    logger.info(
+        f"[Container Recreate] Starting atomic reconfiguration for '{orig_name}' -> '{target_name}' (ID: {backup_id[:12]})"
+    )
 
     try:
-        # Step 5: Stop old container gracefully
+        # Step 6: Stop old container gracefully
         logger.info(f"[Container Recreate] Stopping old container '{orig_name}'...")
         _docker_request("POST", f"/containers/{backup_id}/stop?t=10", timeout=timeout)
 
-        # Step 6: Temporarily rename old container to free the original name
+        # Step 7: Temporarily rename old container to free the original name
         logger.info(f"[Container Recreate] Renaming '{orig_name}' -> '{backup_name}'...")
         status, rename_resp = _docker_request("POST", f"/containers/{backup_id}/rename?name={backup_name}")
         if status != 204:
             raise RuntimeError(f"Failed to rename old container: {rename_resp}")
 
-        # Step 7: Create new container with original name and updated ports
-        logger.info(f"[Container Recreate] Creating new container '{orig_name}' with updated ports...")
+        # Step 8: Create new container with target name and updated configuration
+        logger.info(f"[Container Recreate] Creating new container '{target_name}' with updated config...")
         status, create_resp = _docker_request(
-            "POST", f"/containers/create?name={orig_name}", body=create_body, timeout=timeout
+            "POST", f"/containers/create?name={target_name}", body=create_body, timeout=timeout
         )
         if status != 201:
             raise RuntimeError(f"Failed to create new container: {create_resp}")
@@ -266,22 +342,24 @@ def recreate_container_ports(
         if not new_id:
             raise RuntimeError(f"Docker did not return ID for created container: {create_resp}")
 
-        # Step 8: Start new container
-        logger.info(f"[Container Recreate] Starting new container '{orig_name}' (ID: {new_id[:12]})...")
+        # Step 9: Start new container
+        logger.info(f"[Container Recreate] Starting new container '{target_name}' (ID: {new_id[:12]})...")
         status, start_resp = _docker_request("POST", f"/containers/{new_id}/start", timeout=timeout)
         if status != 204:
             raise RuntimeError(f"Failed to start newly created container: {start_resp}")
 
-        # Step 9: Success! Cleanup or retain backup
+        # Step 10: Success! Cleanup or retain backup
         if not keep_backup:
             logger.info(f"[Container Recreate] Removing backup container '{backup_name}'...")
             _docker_request("DELETE", f"/containers/{backup_id}?v=false&force=true")
 
         return {
             "status": "success",
-            "message": f"Container '{orig_name}' successfully recreated with updated port bindings.",
+            "message": f"Container '{target_name}' successfully recreated with updated configuration.",
             "old_id": backup_id[:12],
             "new_id": new_id[:12],
+            "target_name": target_name,
+            "target_image": target_image,
             "retained_backup": keep_backup,
             "backup_name": backup_name if keep_backup else None,
         }
@@ -312,4 +390,22 @@ def recreate_container_ports(
         except Exception as e:
             logger.error(f"[Rollback] Failed to restart original container: {e}")
 
-        raise RuntimeError(f"Port mutation aborted. Automatic rollback restored original state. Reason: {exc}")
+        raise RuntimeError(f"Container mutation aborted. Automatic rollback restored original state. Reason: {exc}")
+
+
+def recreate_container_ports(
+    cid: str,
+    new_port_bindings: List[Dict[str, Any]],
+    keep_backup: bool = False,
+    timeout: float = 30.0,
+) -> Dict[str, Any]:
+    """
+    Backwards-compatible convenience wrapper around recreate_container.
+    """
+    return recreate_container(
+        cid=cid,
+        port_bindings=new_port_bindings,
+        keep_backup=keep_backup,
+        timeout=timeout,
+    )
+

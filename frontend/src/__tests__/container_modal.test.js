@@ -126,7 +126,7 @@ describe('Container Inspector & Docker Compose Viewer - Phase 2', () => {
 
     // Check tabs exist
     const tabs = overlay.querySelectorAll('.ci-tab-btn');
-    expect(tabs.length).toBe(7);
+    expect(tabs.length).toBe(8);
     expect(tabs[0].dataset.tab).toBe('overview');
     expect(tabs[1].dataset.tab).toBe('ports');
     expect(tabs[2].dataset.tab).toBe('mounts');
@@ -134,6 +134,7 @@ describe('Container Inspector & Docker Compose Viewer - Phase 2', () => {
     expect(tabs[4].dataset.tab).toBe('compose');
     expect(tabs[5].dataset.tab).toBe('logs');
     expect(tabs[6].dataset.tab).toBe('terminal');
+    expect(tabs[7].dataset.tab).toBe('edit');
   });
 
   it('opens inspector, fetches container details, and populates Overview, Ports, Mounts, and Env tabs', async () => {

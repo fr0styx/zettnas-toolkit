@@ -371,7 +371,10 @@ async def auth_middleware(request: Request, call_next):
             ref_qs = parse_qs(urlparse(request.headers.get("referer", "")).query)
             token = (ref_qs.get("token") or [""])[0]
         if not validate_session(token):
-            logger.warning(f"Auth failed for client {client_host} accessing {path}")
+            if path in ("/api/stats", "/api/stats/stream", "/api/metrics"):
+                logger.debug(f"Auth failed for client {client_host} accessing polling route {path}")
+            else:
+                logger.warning(f"Auth failed for client {client_host} accessing {path}")
             return error_response(401, "Unauthorized. Please log in.")
 
         sess = get_current_session(token)
