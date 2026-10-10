@@ -701,6 +701,18 @@ def resolve_app_port_conflict(app_id: str) -> Dict[str, Any]:
     except Exception:
         pass
 
+    suggested_container_name = service_name
+    if existing_container:
+        counter = 2
+        cand_name = f"{service_name}-{counter}"
+        while counter < 100:
+            st, _ = _docker_request("GET", f"/containers/{cand_name}/json")
+            if st == 404:
+                suggested_container_name = cand_name
+                break
+            counter += 1
+            cand_name = f"{service_name}-{counter}"
+
     is_mocked = hasattr(check_port_available, "mock_calls")
     if is_mocked:
         is_avail = bool(check_port_available(default_port))
@@ -715,6 +727,7 @@ def resolve_app_port_conflict(app_id: str) -> Dict[str, Any]:
             "suggested_port": default_port,
             "conflict_detected": False,
             "existing_container": existing_container,
+            "suggested_container_name": suggested_container_name,
         }
 
     # Search for next available port
@@ -735,12 +748,16 @@ def resolve_app_port_conflict(app_id: str) -> Dict[str, Any]:
         "conflict_detected": True,
         "in_use_by": occupier,
         "existing_container": existing_container,
+        "suggested_container_name": suggested_container_name,
         "reason": f"Port {default_port} is already in use by {occupier}.",
     }
 
 
 def generate_compose_for_app(
-    app_id: str, host_port: Optional[int] = None, storage_root: str = "/mnt/user/appdata"
+    app_id: str,
+    host_port: Optional[int] = None,
+    storage_root: str = "/mnt/user/appdata",
+    container_name: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Generates a valid Docker Compose definition for 1-click deployment.
@@ -753,9 +770,10 @@ def generate_compose_for_app(
     default_p = int(app.get("default_port", 8080))
     port = host_port or default_p
     service_name = app.get("app_slug") or app_id
+    if container_name and container_name.strip():
+        service_name = container_name.strip()
     service_name = re.sub(r"[^a-zA-Z0-9_.-]+", "_", service_name)
-    storage_slug = app.get("app_slug") or app_id
-    storage_slug = re.sub(r"[^a-zA-Z0-9_.-]+", "_", storage_slug)
+    storage_slug = service_name
 
     # Check for stackfile in repository (e.g. Lissy93 / Portainer stacks)
     repo = app.get("repository")
@@ -857,7 +875,11 @@ def generate_compose_for_app(
 
 
 def stream_deploy_catalog_app(
-    app_id: str, host_port: Optional[int] = None, storage_root: str = "/mnt/user/appdata"
+    app_id: str,
+    host_port: Optional[int] = None,
+    storage_root: str = "/mnt/user/appdata",
+    container_name: Optional[str] = None,
+    replace_existing: bool = False,
 ) -> Iterator[Dict[str, Any]]:
     """
     Deploys a curated application stack from the catalog, streaming real-time progress
@@ -875,15 +897,16 @@ def stream_deploy_catalog_app(
 
     port = host_port or int(app.get("default_port", 8080))
     service_name = app.get("app_slug") or app_id
+    if container_name and container_name.strip():
+        service_name = container_name.strip()
     service_name = re.sub(r"[^a-zA-Z0-9_.-]+", "_", service_name)
-    storage_slug = app.get("app_slug") or app_id
-    storage_slug = re.sub(r"[^a-zA-Z0-9_.-]+", "_", storage_slug)
+    storage_slug = service_name
     image_name = app.get("image") or ""
 
     yield {
         "step": "init",
         "percent": 5,
-        "message": f"Initializing deployment for {app['name']} (Port :{port})...",
+        "message": f"Initializing deployment for {app['name']} as '{service_name}' (Port :{port})...",
         "done": False,
     }
 
@@ -911,7 +934,9 @@ def stream_deploy_catalog_app(
             os.makedirs(vol_host_path, exist_ok=True)
             binds.append(f"{vol_host_path}:{vol_target}:rw")
 
-        comp_info = generate_compose_for_app(app_id, host_port=port, storage_root=resolved_root)
+        comp_info = generate_compose_for_app(
+            app_id, host_port=port, storage_root=resolved_root, container_name=service_name
+        )
         if "compose_yaml" in comp_info:
             compose_file = os.path.join(app_dir, "docker-compose.yml")
             with open(compose_file, "w", encoding="utf-8") as f:
@@ -940,22 +965,37 @@ def stream_deploy_catalog_app(
         "done": False,
     }
 
-    # Pre-flight port availability verification:
-    is_avail, in_use_by = check_port_available_detailed(port, proto="tcp")
-    if not is_avail and in_use_by != f"container '{service_name}'":
+    # Check existing container with same name
+    st_exist, old_c = _docker_request("GET", f"/containers/{service_name}/json")
+    has_existing = st_exist == 200
+
+    if has_existing and not replace_existing:
         yield {
             "step": "error",
             "percent": 0,
-            "message": f"Deployment aborted: Host port {port} is already in use by {in_use_by}. Please choose an available port in configuration.",
-            "error": "Port in use",
+            "message": f"Deployment aborted: A container named '{service_name}' already exists. Please choose a different container name or select 'Stop & Replace Existing'.",
+            "error": "Container already exists",
             "done": True,
         }
         return
 
+    # Pre-flight port availability verification:
+    is_avail, in_use_by = check_port_available_detailed(port, proto="tcp")
+    if not is_avail:
+        is_same_container_replacing = replace_existing and has_existing and in_use_by == f"container '{service_name}'"
+        if not is_same_container_replacing:
+            yield {
+                "step": "error",
+                "percent": 0,
+                "message": f"Deployment aborted: Host port {port} is already in use by {in_use_by}. Please choose an available port in configuration.",
+                "error": "Port in use",
+                "done": True,
+            }
+            return
+
     # 2. Check and clean up existing container with same name if any
-    try:
-        st, old_c = _docker_request("GET", f"/containers/{service_name}/json")
-        if st == 200:
+    if has_existing and replace_existing:
+        try:
             yield {
                 "step": "clean",
                 "percent": 25,
@@ -965,8 +1005,8 @@ def stream_deploy_catalog_app(
             if old_c.get("State", {}).get("Running"):
                 _docker_request("POST", f"/containers/{service_name}/stop?t=5")
             _docker_request("DELETE", f"/containers/{service_name}?v=false")
-    except Exception as e:
-        logger.warning(f"Notice during old container cleanup for {service_name}: {e}")
+        except Exception as e:
+            logger.warning(f"Notice during old container cleanup for {service_name}: {e}")
 
     # 3. Pull image with streaming progress
     yield {

@@ -808,6 +808,7 @@ class AppSourceToggleRequest(BaseModel):
 class AppComposeRequest(BaseModel):
     host_port: Optional[int] = None
     storage_root: str = "/mnt/user/appdata"
+    container_name: Optional[str] = None
 
 
 class ContainerExecRequest(BaseModel):
@@ -915,7 +916,14 @@ async def post_docker_catalog_compose(app_id: str, req: Optional[AppComposeReque
 
     host_port = req.host_port if req else None
     storage_root = req.storage_root if req else "/mnt/user/appdata"
-    res = await asyncio.to_thread(generate_compose_for_app, app_id, host_port=host_port, storage_root=storage_root)
+    container_name = req.container_name if req else None
+    res = await asyncio.to_thread(
+        generate_compose_for_app,
+        app_id,
+        host_port=host_port,
+        storage_root=storage_root,
+        container_name=container_name,
+    )
     if "error" in res:
         raise HTTPException(status_code=404, detail=res["error"])
     return res
@@ -924,6 +932,21 @@ async def post_docker_catalog_compose(app_id: str, req: Optional[AppComposeReque
 class AppDeployRequest(BaseModel):
     host_port: Optional[int] = None
     storage_root: str = "/mnt/user/appdata"
+    container_name: Optional[str] = None
+    replace_existing: bool = False
+
+
+@router.get("/docker/check_container_name")
+async def get_check_container_name(name: str):
+    from backend.services.container_mutator import _docker_request
+
+    clean_name = re.sub(r"[^a-zA-Z0-9_.-]+", "_", name.strip())
+    st, c_info = await asyncio.to_thread(_docker_request, "GET", f"/containers/{clean_name}/json")
+    exists = st == 200
+    running = False
+    if exists and isinstance(c_info, dict):
+        running = bool(c_info.get("State", {}).get("Running", False))
+    return {"name": clean_name, "exists": exists, "running": running}
 
 
 @router.post("/docker/catalog/{app_id}/deploy", dependencies=[Depends(require_scope("containers:manage"))])
@@ -936,9 +959,17 @@ async def post_docker_catalog_deploy(app_id: str, req: Optional[AppDeployRequest
 
     host_port = req.host_port if req else None
     storage_root = req.storage_root if req else "/mnt/user/appdata"
+    container_name = req.container_name if req else None
+    replace_existing = req.replace_existing if req else False
 
     def event_stream():
-        for event in stream_deploy_catalog_app(app_id, host_port=host_port, storage_root=storage_root):
+        for event in stream_deploy_catalog_app(
+            app_id,
+            host_port=host_port,
+            storage_root=storage_root,
+            container_name=container_name,
+            replace_existing=replace_existing,
+        ):
             yield json.dumps(event) + "\n"
 
     return StreamingResponse(event_stream(), media_type="application/x-ndjson")

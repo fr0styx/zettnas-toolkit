@@ -187,4 +187,99 @@ describe('App Catalog Deployment Window - Background & Minimize Suite', () => {
     expect(banner.innerHTML).toContain('Port 3002 is free and ready');
     expect(deployBtn.disabled).toBe(false);
   });
+
+  it('provides confirmation choices when existing container is found and allows custom container name', async () => {
+    let deployPayload = null;
+
+    vi.spyOn(api, 'get').mockImplementation(async (url) => {
+      if (url.includes('/resolve')) {
+        return {
+          app_id: 'uptime-kuma',
+          default_port: 3001,
+          suggested_port: 3002,
+          conflict_detected: true,
+          in_use_by: "container 'uptime-kuma'",
+          existing_container: { name: 'uptime-kuma', id: 'cid_kuma_1', state: 'running' },
+          suggested_container_name: 'uptime-kuma-2',
+          reason: "Port 3001 is already in use by container 'uptime-kuma'.",
+        };
+      }
+      if (url.includes('/check_container_name?name=uptime-kuma')) {
+        return { name: 'uptime-kuma', exists: true, running: true };
+      }
+      if (url.includes('/check_container_name?name=uptime-kuma-2')) {
+        return { name: 'uptime-kuma-2', exists: false, running: false };
+      }
+      if (url.includes('/check_container_name?name=my-custom-kuma')) {
+        return { name: 'my-custom-kuma', exists: false, running: false };
+      }
+      if (url.includes('/check_port?port=3001')) {
+        return { port: 3001, proto: 'tcp', available: false, in_use_by: "container 'uptime-kuma'" };
+      }
+      if (url.includes('/check_port?port=3002') || url.includes('/check_port?port=3005')) {
+        return { port: 3002, proto: 'tcp', available: true, in_use_by: null };
+      }
+      return { apps: [] };
+    });
+
+    vi.spyOn(api, 'request').mockImplementation(async (url, opts) => {
+      if (url.includes('/deploy')) {
+        deployPayload = opts.body;
+        return {
+          ok: true,
+          status: 200,
+          text: async () => JSON.stringify({ step: 'init', percent: 5, message: 'Starting' }),
+        };
+      }
+      return { ok: true, status: 200, json: async () => ({}) };
+    });
+
+    await openAppDeployModal('uptime-kuma');
+
+    const existingBox = document.getElementById('adm-existing-box');
+    const existingBadge = document.getElementById('adm-existing-status-badge');
+    const replaceBtn = document.getElementById('adm-choice-replace-btn');
+    const newBtn = document.getElementById('adm-choice-new-btn');
+    const nameInput = document.getElementById('adm-name-input');
+    const portInput = document.getElementById('adm-port-input');
+    const deployBtn = document.getElementById('adm-deploy-confirm-btn');
+
+    // Existing container UI box is visible
+    expect(existingBox.style.display).toBe('flex');
+    expect(existingBadge.textContent).toBe('RUNNING');
+
+    // Defaults to Deploy Alongside: suggested name 'uptime-kuma-2', suggested port 3002
+    expect(nameInput.value).toBe('uptime-kuma-2');
+    expect(portInput.value).toBe('3002');
+    expect(deployBtn.textContent).toContain('Deploy New Instance');
+
+    // User switches to "Stop & Replace Existing"
+    replaceBtn.click();
+    expect(nameInput.value).toBe('uptime-kuma');
+    expect(portInput.value).toBe('3001');
+    expect(deployBtn.textContent).toContain('Stop, Replace & Launch');
+
+    // User switches back to "Deploy Alongside (New)"
+    newBtn.click();
+    expect(nameInput.value).toBe('uptime-kuma-2');
+    expect(portInput.value).toBe('3002');
+    expect(deployBtn.textContent).toContain('Deploy New Instance');
+
+    // User customizes the container name and port manually
+    nameInput.value = 'my-custom-kuma';
+    portInput.value = '3005';
+    nameInput.oninput();
+    portInput.oninput();
+
+    await new Promise((r) => setTimeout(r, 350));
+
+    // Submit deployment
+    await deployBtn.onclick();
+
+    // Verify request payload includes customized container_name and replace_existing flag
+    expect(deployPayload).toBeTruthy();
+    expect(deployPayload.container_name).toBe('my-custom-kuma');
+    expect(deployPayload.host_port).toBe(3005);
+    expect(deployPayload.replace_existing).toBe(false);
+  });
 });

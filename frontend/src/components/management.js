@@ -1063,15 +1063,41 @@ export async function openAppDeployModal(appId) {
           <!-- View 1: Configuration View -->
           <div id="adm-view-config" style="flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:12px;">
             <div id="adm-conflict-banner" style="padding:10px 12px; border-radius:6px; font-size:11px; line-height:1.4;"></div>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            
+            <!-- Pre-existing Container Action Choice Box -->
+            <div id="adm-existing-box" style="display:none; padding:11px 13px; border-radius:6px; background:rgba(245, 166, 35, 0.09); border:1px solid rgba(245, 166, 35, 0.35); flex-direction:column; gap:8px;">
+              <div style="display:flex; align-items:center; justify-content:space-between;">
+                <div style="display:flex; align-items:center; gap:6px; color:var(--warn, #f5a623); font-weight:700; font-size:11.5px;">
+                  <span>⚠️</span> <span id="adm-existing-title">Pre-existing Container Detected</span>
+                </div>
+                <span id="adm-existing-status-badge" style="font-size:9.5px; padding:2px 7px; border-radius:4px; background:rgba(255,255,255,0.08); font-family:var(--font-mono, monospace); font-weight:700;">Running</span>
+              </div>
+              <div id="adm-existing-desc" style="color:#cbd5e1; font-size:11px; line-height:1.4;">
+                A container with this name or port already exists on your system. Choose an action:
+              </div>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:4px;">
+                <button type="button" id="adm-choice-replace-btn" class="btn-pill-toggle" style="justify-content:center; text-align:center; padding:7px 10px; font-size:11px; border:1px solid rgba(235, 87, 87, 0.4); background:rgba(235, 87, 87, 0.12); color:#ff8080; font-weight:700; cursor:pointer;">
+                  🔄 Stop &amp; Replace Existing
+                </button>
+                <button type="button" id="adm-choice-new-btn" class="btn-pill-toggle" style="justify-content:center; text-align:center; padding:7px 10px; font-size:11px; border:2px solid var(--ok2, #25c2a0); background:rgba(37, 194, 160, 0.18); color:var(--ok2, #25c2a0); font-weight:700; cursor:pointer;">
+                  ➕ Deploy Alongside (New)
+                </button>
+              </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1.2fr 1fr; gap:10px;">
+              <div>
+                <label style="display:block; font-size:10px; font-weight:700; color:var(--muted); margin-bottom:4px;">CONTAINER NAME</label>
+                <input type="text" id="adm-name-input" class="tz-text-input" style="width:100%; box-sizing:border-box; font-size:11.5px; padding:6px 8px; font-family:var(--font-mono, monospace);">
+              </div>
               <div>
                 <label style="display:block; font-size:10px; font-weight:700; color:var(--muted); margin-bottom:4px;">HOST PORT MAPPING</label>
-                <input type="number" id="adm-port-input" class="tz-text-input" style="width:100%; box-sizing:border-box; font-size:11.5px; padding:6px 8px;">
+                <input type="number" id="adm-port-input" class="tz-text-input" style="width:100%; box-sizing:border-box; font-size:11.5px; padding:6px 8px; font-family:var(--font-mono, monospace);">
               </div>
-              <div>
-                <label style="display:block; font-size:10px; font-weight:700; color:var(--muted); margin-bottom:4px;">STORAGE ROOT DIRECTORY</label>
-                <input type="text" id="adm-storage-input" value="/mnt/user/appdata" class="tz-text-input" style="width:100%; box-sizing:border-box; font-size:11.5px; padding:6px 8px;">
-              </div>
+            </div>
+            <div>
+              <label style="display:block; font-size:10px; font-weight:700; color:var(--muted); margin-bottom:4px;">STORAGE ROOT DIRECTORY</label>
+              <input type="text" id="adm-storage-input" value="/mnt/user/appdata" class="tz-text-input" style="width:100%; box-sizing:border-box; font-size:11.5px; padding:6px 8px;">
             </div>
             <div>
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
@@ -1254,44 +1280,246 @@ export async function openAppDeployModal(appId) {
   if (footerConfig) footerConfig.style.display = 'flex';
   if (footerProgress) footerProgress.style.display = 'none';
 
+  let replaceExisting = false;
+  let defaultContainerName = appId;
+  let suggestedContainerName = appId;
+  let defaultPort = 8080;
   let suggestedPort = 8080;
+  let existingContainerInfo = null;
+
   const deployConfirmBtn = document.getElementById('adm-deploy-confirm-btn');
   const banner = document.getElementById('adm-conflict-banner');
+  const existingBox = document.getElementById('adm-existing-box');
+  const existingBadge = document.getElementById('adm-existing-status-badge');
+  const existingDesc = document.getElementById('adm-existing-desc');
+  const choiceReplaceBtn = document.getElementById('adm-choice-replace-btn');
+  const choiceNewBtn = document.getElementById('adm-choice-new-btn');
+  const nameInput = document.getElementById('adm-name-input');
   const portInput = document.getElementById('adm-port-input');
   const storageInput = document.getElementById('adm-storage-input');
   const composePre = document.getElementById('adm-compose-pre');
   const title = document.getElementById('adm-title');
 
+  if (existingBox) existingBox.style.display = 'none';
+  if (choiceReplaceBtn) {
+    choiceReplaceBtn.style.border = '1px solid rgba(235, 87, 87, 0.4)';
+    choiceReplaceBtn.style.background = 'rgba(235, 87, 87, 0.12)';
+    choiceReplaceBtn.style.opacity = '0.75';
+    choiceReplaceBtn.style.boxShadow = 'none';
+  }
+  if (choiceNewBtn) {
+    choiceNewBtn.style.border = '2px solid var(--ok2, #25c2a0)';
+    choiceNewBtn.style.background = 'rgba(37, 194, 160, 0.18)';
+    choiceNewBtn.style.opacity = '1';
+    choiceNewBtn.style.boxShadow = '0 0 8px rgba(37,194,160,0.3)';
+  }
+
+  if (nameInput) {
+    nameInput.value = appId;
+    nameInput.style.borderColor = '';
+  }
+  if (portInput) {
+    portInput.value = 8080;
+    portInput.style.borderColor = '';
+  }
+
   if (deployConfirmBtn) {
     deployConfirmBtn.disabled = false;
     deployConfirmBtn.style.opacity = '1';
     deployConfirmBtn.style.pointerEvents = 'auto';
+    deployConfirmBtn.textContent = '🚀 Deploy & Launch Container';
+    deployConfirmBtn.style.background = 'linear-gradient(135deg, var(--brand, #0ea5e9), var(--ok2, #25c2a0))';
   }
 
   title.textContent = `Deploy ${appId.toUpperCase()}`;
-  banner.innerHTML = '<span style="color:var(--muted);">Probing host ports for conflicts...</span>';
+  banner.innerHTML = '<span style="color:var(--muted);">Probing host ports and container state...</span>';
   banner.style.background = 'rgba(255,255,255,0.04)';
   banner.style.border = '1px solid rgba(255,255,255,0.08)';
 
   try {
     const resolveData = await api.get(`/api/docker/catalog/${appId}/resolve`);
-    suggestedPort = resolveData.suggested_port;
-    portInput.value = suggestedPort;
+    defaultPort = resolveData.default_port || 8080;
+    suggestedPort = resolveData.suggested_port || defaultPort;
+    existingContainerInfo = resolveData.existing_container;
+    suggestedContainerName = resolveData.suggested_container_name || appId;
+    defaultContainerName = (existingContainerInfo && existingContainerInfo.name) ? existingContainerInfo.name : appId;
 
-    if (resolveData.conflict_detected) {
+    if (existingContainerInfo) {
+      if (existingBox) existingBox.style.display = 'flex';
+      const isRunning = existingContainerInfo.state === 'running';
+      if (existingBadge) {
+        existingBadge.textContent = isRunning ? 'RUNNING' : (existingContainerInfo.state || 'EXISTING').toUpperCase();
+        existingBadge.style.color = isRunning ? 'var(--ok2, #25c2a0)' : 'var(--muted)';
+        existingBadge.style.background = isRunning ? 'rgba(37,194,160,0.15)' : 'rgba(255,255,255,0.08)';
+      }
+      if (existingDesc) {
+        existingDesc.innerHTML = `Found existing container <strong>${existingContainerInfo.name}</strong> (${existingContainerInfo.state || 'present'}). Would you like to stop and replace it, or deploy alongside as a new instance?`;
+      }
+
+      // Default to Deploy Alongside
+      replaceExisting = false;
+      if (nameInput) nameInput.value = suggestedContainerName;
+      if (portInput) portInput.value = suggestedPort;
+
+      if (resolveData.conflict_detected) {
+        banner.style.background = 'rgba(245, 166, 35, 0.12)';
+        banner.style.border = '1px solid var(--warn, #f5a623)';
+        const occupier = resolveData.in_use_by ? ` (in use by ${resolveData.in_use_by})` : '';
+        banner.innerHTML = `<span style="color:var(--warn, #f5a623); font-weight:bold;">⚠️ Port Conflict Detected:</span> Default port ${defaultPort} is busy${occupier}. Automatically remapped to free port <strong>${suggestedPort}</strong>!`;
+      } else {
+        banner.style.background = 'rgba(37, 194, 160, 0.12)';
+        banner.style.border = '1px solid var(--ok2, #25c2a0)';
+        banner.innerHTML = `<span style="color:var(--ok2, #25c2a0); font-weight:bold;">✓ Deploy Alongside:</span> Suggested new container name <strong>${suggestedContainerName}</strong> on available port <strong>${suggestedPort}</strong>.`;
+      }
+      if (deployConfirmBtn) deployConfirmBtn.textContent = '🚀 Deploy New Instance';
+    } else if (resolveData.conflict_detected) {
+      if (nameInput) nameInput.value = appId;
+      if (portInput) portInput.value = suggestedPort;
       banner.style.background = 'rgba(245, 166, 35, 0.12)';
       banner.style.border = '1px solid var(--warn, #f5a623)';
       const occupier = resolveData.in_use_by ? ` (in use by ${resolveData.in_use_by})` : '';
-      const existMsg = resolveData.existing_container ? `<br/><small style="opacity:0.85;">⚠️ An existing container <strong>${resolveData.existing_container.name}</strong> was detected on this host.</small>` : '';
-      banner.innerHTML = `<span style="color:var(--warn, #f5a623); font-weight:bold;">⚠️ Port Conflict Detected:</span> Default port ${resolveData.default_port} is busy${occupier}. Automatically remapped to free port <strong>${suggestedPort}</strong>!${existMsg}`;
+      banner.innerHTML = `<span style="color:var(--warn, #f5a623); font-weight:bold;">⚠️ Port Conflict Detected:</span> Default port ${defaultPort} is busy${occupier}. Automatically remapped to free port <strong>${suggestedPort}</strong>!`;
     } else {
+      if (nameInput) nameInput.value = appId;
+      if (portInput) portInput.value = suggestedPort;
       banner.style.background = 'rgba(37, 194, 160, 0.12)';
       banner.style.border = '1px solid var(--ok2, #25c2a0)';
-      banner.innerHTML = `<span style="color:var(--ok2, #25c2a0); font-weight:bold;">✓ Ready to Deploy:</span> Port ${suggestedPort} is free and ready.`;
+      banner.innerHTML = `<span style="color:var(--ok2, #25c2a0); font-weight:bold;">✓ Ready to Deploy:</span> Port ${suggestedPort} and name <strong>${appId}</strong> are free.`;
     }
   } catch (e) {
-    portInput.value = 8080;
+    if (nameInput) nameInput.value = appId;
+    if (portInput) portInput.value = 8080;
     banner.innerHTML = '<span style="color:var(--muted);">Port status: Default assigned</span>';
+  }
+
+  function selectReplaceMode() {
+    replaceExisting = true;
+    if (nameInput) {
+      nameInput.value = defaultContainerName;
+      nameInput.style.borderColor = '';
+    }
+    if (portInput) {
+      portInput.value = defaultPort;
+      portInput.style.borderColor = '';
+    }
+
+    if (choiceReplaceBtn) {
+      choiceReplaceBtn.style.border = '2px solid var(--err, #eb5757)';
+      choiceReplaceBtn.style.background = 'rgba(235, 87, 87, 0.22)';
+      choiceReplaceBtn.style.opacity = '1';
+      choiceReplaceBtn.style.boxShadow = '0 0 8px rgba(235,87,87,0.4)';
+    }
+    if (choiceNewBtn) {
+      choiceNewBtn.style.border = '1px solid rgba(37, 194, 160, 0.4)';
+      choiceNewBtn.style.background = 'rgba(37, 194, 160, 0.1)';
+      choiceNewBtn.style.opacity = '0.75';
+      choiceNewBtn.style.boxShadow = 'none';
+    }
+
+    banner.style.background = 'rgba(235, 87, 87, 0.12)';
+    banner.style.border = '1px solid var(--err, #eb5757)';
+    banner.innerHTML = `<span style="color:#ff8080; font-weight:bold;">⚠️ Stop &amp; Replace Mode:</span> The existing container <strong>${defaultContainerName}</strong> will be cleanly stopped and replaced on port <strong>${defaultPort}</strong>. Persistent data will be preserved.`;
+
+    if (deployConfirmBtn) {
+      deployConfirmBtn.textContent = '🔄 Stop, Replace & Launch';
+      deployConfirmBtn.style.background = 'linear-gradient(135deg, #e65100, var(--err, #eb5757))';
+      deployConfirmBtn.disabled = false;
+      deployConfirmBtn.style.opacity = '1';
+      deployConfirmBtn.style.pointerEvents = 'auto';
+    }
+
+    updateComposePreview();
+  }
+
+  function selectNewInstanceMode() {
+    replaceExisting = false;
+    if (nameInput) {
+      nameInput.value = suggestedContainerName;
+      nameInput.style.borderColor = '';
+    }
+    if (portInput) {
+      portInput.value = suggestedPort;
+      portInput.style.borderColor = '';
+    }
+
+    if (choiceNewBtn) {
+      choiceNewBtn.style.border = '2px solid var(--ok2, #25c2a0)';
+      choiceNewBtn.style.background = 'rgba(37, 194, 160, 0.18)';
+      choiceNewBtn.style.opacity = '1';
+      choiceNewBtn.style.boxShadow = '0 0 8px rgba(37,194,160,0.3)';
+    }
+    if (choiceReplaceBtn) {
+      choiceReplaceBtn.style.border = '1px solid rgba(235, 87, 87, 0.4)';
+      choiceReplaceBtn.style.background = 'rgba(235, 87, 87, 0.12)';
+      choiceReplaceBtn.style.opacity = '0.75';
+      choiceReplaceBtn.style.boxShadow = 'none';
+    }
+
+    banner.style.background = 'rgba(37, 194, 160, 0.12)';
+    banner.style.border = '1px solid var(--ok2, #25c2a0)';
+    banner.innerHTML = `<span style="color:var(--ok2, #25c2a0); font-weight:bold;">✓ New Instance Mode:</span> Configuring container <strong>${suggestedContainerName}</strong> on free port <strong>${suggestedPort}</strong> alongside existing instance.`;
+
+    if (deployConfirmBtn) {
+      deployConfirmBtn.textContent = '🚀 Deploy New Instance';
+      deployConfirmBtn.style.background = 'linear-gradient(135deg, var(--brand, #0ea5e9), var(--ok2, #25c2a0))';
+      deployConfirmBtn.disabled = false;
+      deployConfirmBtn.style.opacity = '1';
+      deployConfirmBtn.style.pointerEvents = 'auto';
+    }
+
+    updateComposePreview();
+  }
+
+  if (choiceReplaceBtn) choiceReplaceBtn.onclick = selectReplaceMode;
+  if (choiceNewBtn) choiceNewBtn.onclick = selectNewInstanceMode;
+
+  let nameValidationTimer = null;
+  async function validateEnteredName() {
+    const rawName = nameInput ? nameInput.value.trim() : '';
+    if (!rawName) {
+      banner.style.background = 'rgba(235, 87, 87, 0.12)';
+      banner.style.border = '1px solid var(--err, #eb5757)';
+      if (nameInput) nameInput.style.borderColor = 'var(--err, #eb5757)';
+      banner.innerHTML = `<span style="color:var(--err, #eb5757); font-weight:bold;">✕ Invalid Name:</span> Container name cannot be empty.`;
+      if (deployConfirmBtn) {
+        deployConfirmBtn.disabled = true;
+        deployConfirmBtn.style.opacity = '0.5';
+        deployConfirmBtn.style.pointerEvents = 'none';
+      }
+      return;
+    }
+
+    try {
+      const check = await api.get(`/api/docker/check_container_name?name=${encodeURIComponent(rawName)}`);
+      if (check && check.exists) {
+        if (replaceExisting && check.name === defaultContainerName) {
+          if (nameInput) nameInput.style.borderColor = '';
+          banner.style.background = 'rgba(235, 87, 87, 0.12)';
+          banner.style.border = '1px solid var(--err, #eb5757)';
+          banner.innerHTML = `<span style="color:#ff8080; font-weight:bold;">⚠️ Stop &amp; Replace Mode:</span> Existing container <strong>${check.name}</strong> will be stopped and replaced.`;
+          if (deployConfirmBtn) {
+            deployConfirmBtn.disabled = false;
+            deployConfirmBtn.style.opacity = '1';
+            deployConfirmBtn.style.pointerEvents = 'auto';
+          }
+        } else {
+          banner.style.background = 'rgba(245, 166, 35, 0.15)';
+          banner.style.border = '1px solid var(--warn, #f5a623)';
+          if (nameInput) nameInput.style.borderColor = 'var(--warn, #f5a623)';
+          banner.innerHTML = `<span style="color:var(--warn, #f5a623); font-weight:bold;">⚠️ Container Name In Use:</span> A container named <strong>${check.name}</strong> already exists. Please choose a different name or select 'Stop &amp; Replace'.`;
+          if (deployConfirmBtn) {
+            deployConfirmBtn.disabled = true;
+            deployConfirmBtn.style.opacity = '0.5';
+            deployConfirmBtn.style.pointerEvents = 'none';
+          }
+        }
+      } else {
+        if (nameInput) nameInput.style.borderColor = '';
+        validateEnteredPort();
+      }
+    } catch (e) {
+      if (nameInput) nameInput.style.borderColor = '';
+    }
   }
 
   let portValidationTimer = null;
@@ -1313,6 +1541,25 @@ export async function openAppDeployModal(appId) {
     try {
       const check = await api.get(`/api/docker/check_port?port=${val}&proto=tcp`);
       if (check && check.available === false) {
+        const cName = nameInput ? nameInput.value.trim() : appId;
+        const isOccupiedByTarget = replaceExisting && check.in_use_by && (
+          check.in_use_by === `container '${cName}'` ||
+          check.in_use_by.includes(cName)
+        );
+
+        if (isOccupiedByTarget) {
+          banner.style.background = 'rgba(235, 87, 87, 0.12)';
+          banner.style.border = '1px solid var(--err, #eb5757)';
+          portInput.style.borderColor = '';
+          banner.innerHTML = `<span style="color:#ff8080; font-weight:bold;">⚠️ Stop &amp; Replace Mode:</span> Port ${val} is currently bound by <strong>${cName}</strong>, which will be stopped and replaced.`;
+          if (deployConfirmBtn) {
+            deployConfirmBtn.disabled = false;
+            deployConfirmBtn.style.opacity = '1';
+            deployConfirmBtn.style.pointerEvents = 'auto';
+          }
+          return;
+        }
+
         banner.style.background = 'rgba(245, 166, 35, 0.15)';
         banner.style.border = '1px solid var(--warn, #f5a623)';
         portInput.style.borderColor = 'var(--warn, #f5a623)';
@@ -1327,7 +1574,8 @@ export async function openAppDeployModal(appId) {
         banner.style.background = 'rgba(37, 194, 160, 0.12)';
         banner.style.border = '1px solid var(--ok2, #25c2a0)';
         portInput.style.borderColor = '';
-        banner.innerHTML = `<span style="color:var(--ok2, #25c2a0); font-weight:bold;">✓ Ready to Deploy:</span> Port ${val} is free and ready.`;
+        const cName = nameInput ? nameInput.value.trim() : appId;
+        banner.innerHTML = `<span style="color:var(--ok2, #25c2a0); font-weight:bold;">✓ Ready to Deploy:</span> Port ${val} is free and ready for container <strong>${cName}</strong>.`;
         if (deployConfirmBtn) {
           deployConfirmBtn.disabled = false;
           deployConfirmBtn.style.opacity = '1';
@@ -1346,12 +1594,25 @@ export async function openAppDeployModal(appId) {
   async function updateComposePreview() {
     const p = parseInt(portInput.value, 10) || suggestedPort;
     const s = storageInput.value.trim() || '/mnt/user/appdata';
+    const cName = nameInput ? nameInput.value.trim() : appId;
     try {
-      const comp = await api.post(`/api/docker/catalog/${appId}/compose`, { host_port: p, storage_root: s });
+      const comp = await api.post(`/api/docker/catalog/${appId}/compose`, {
+        host_port: p,
+        storage_root: s,
+        container_name: cName,
+      });
       composePre.textContent = comp.compose_yaml;
     } catch (err) {
       composePre.textContent = `# Failed to generate compose: ${err.message}`;
     }
+  }
+
+  if (nameInput) {
+    nameInput.oninput = () => {
+      updateComposePreview();
+      clearTimeout(nameValidationTimer);
+      nameValidationTimer = setTimeout(validateEnteredName, 250);
+    };
   }
 
   portInput.oninput = () => {
@@ -1502,20 +1763,36 @@ export async function openAppDeployModal(appId) {
   deployConfirmBtn.onclick = async () => {
     const p = parseInt(portInput.value, 10) || suggestedPort;
     const s = storageInput.value.trim() || '/mnt/user/appdata';
+    const cName = nameInput ? nameInput.value.trim() : appId;
 
-    // Verify port availability before starting deployment
-    try {
-      const check = await api.get(`/api/docker/check_port?port=${p}&proto=tcp`);
-      if (check && check.available === false) {
-        banner.style.background = 'rgba(245, 166, 35, 0.15)';
-        banner.style.border = '1px solid var(--warn, #f5a623)';
-        portInput.style.borderColor = 'var(--warn, #f5a623)';
-        const inUse = check.in_use_by ? ` (in use by ${check.in_use_by})` : '';
-        banner.innerHTML = `<span style="color:var(--warn, #f5a623); font-weight:bold;">⚠️ Port Conflict:</span> Port ${p} is already busy${inUse}. Please choose an available port before deploying.`;
-        showToast(`Port ${p} is already in use${inUse}. Please change the port.`, 'warn');
-        return;
-      }
-    } catch (err) {}
+    if (!replaceExisting) {
+      // 1. Verify container name is available
+      try {
+        const nameCheck = await api.get(`/api/docker/check_container_name?name=${encodeURIComponent(cName)}`);
+        if (nameCheck && nameCheck.exists) {
+          banner.style.background = 'rgba(245, 166, 35, 0.15)';
+          banner.style.border = '1px solid var(--warn, #f5a623)';
+          if (nameInput) nameInput.style.borderColor = 'var(--warn, #f5a623)';
+          banner.innerHTML = `<span style="color:var(--warn, #f5a623); font-weight:bold;">⚠️ Container Name In Use:</span> A container named <strong>${cName}</strong> already exists. Please choose a unique name or select 'Stop &amp; Replace Existing'.`;
+          showToast(`Container '${cName}' already exists. Please rename or select Replace.`, 'warn');
+          return;
+        }
+      } catch (err) {}
+
+      // 2. Verify port availability before starting deployment
+      try {
+        const check = await api.get(`/api/docker/check_port?port=${p}&proto=tcp`);
+        if (check && check.available === false) {
+          banner.style.background = 'rgba(245, 166, 35, 0.15)';
+          banner.style.border = '1px solid var(--warn, #f5a623)';
+          portInput.style.borderColor = 'var(--warn, #f5a623)';
+          const inUse = check.in_use_by ? ` (in use by ${check.in_use_by})` : '';
+          banner.innerHTML = `<span style="color:var(--warn, #f5a623); font-weight:bold;">⚠️ Port Conflict:</span> Port ${p} is already busy${inUse}. Please choose an available port before deploying.`;
+          showToast(`Port ${p} is already in use${inUse}. Please change the port.`, 'warn');
+          return;
+        }
+      } catch (err) {}
+    }
 
     modal._isDeploying = true;
     modal._activeAppId = appId;
@@ -1537,7 +1814,7 @@ export async function openAppDeployModal(appId) {
       progressPct.textContent = '0%';
       progressPct.style.color = 'var(--accent-cyan, #00f0ff)';
     }
-    if (progressTitle) progressTitle.textContent = `Deploying ${appId.toUpperCase()} Stack...`;
+    if (progressTitle) progressTitle.textContent = `Deploying ${cName} Stack...`;
     if (progressStatus) {
       progressStatus.textContent = 'Connecting to Docker daemon...';
       progressStatus.style.color = 'var(--muted)';
@@ -1551,12 +1828,17 @@ export async function openAppDeployModal(appId) {
     if (closeProgressBtn) closeProgressBtn.style.display = 'none';
     if (backConfigBtn) backConfigBtn.style.display = 'none';
 
-    logDeployLine(`Initiating deployment request for ${appId} (Port :${p}, Storage: ${s})...`);
+    logDeployLine(`Initiating deployment request for ${cName} (Port :${p}, Storage: ${s}, Replace: ${replaceExisting})...`);
 
     try {
       const response = await api.request(`/api/docker/catalog/${appId}/deploy`, {
         method: 'POST',
-        body: { host_port: p, storage_root: s },
+        body: {
+          host_port: p,
+          storage_root: s,
+          container_name: cName,
+          replace_existing: replaceExisting,
+        },
       });
 
       if (!response.ok) {

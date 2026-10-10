@@ -63,6 +63,62 @@ def test_generate_compose_for_app(client, auth_headers):
     assert "services" in data["compose_dict"]
 
 
+def test_generate_compose_for_app_custom_container_name(client, auth_headers):
+    res = client.post(
+        "/api/docker/catalog/jellyfin/compose",
+        json={"host_port": 8099, "storage_root": "/mnt/user/appdata", "container_name": "jellyfin-2"},
+        headers=auth_headers,
+    )
+    assert res.status_code == 200
+    data = res.json()
+    assert data["service_name"] == "jellyfin-2"
+    assert "container_name: jellyfin-2" in data["compose_yaml"]
+    assert "/mnt/user/appdata/jellyfin-2/config" in data["compose_yaml"]
+
+
+def test_check_container_name_endpoint(client, auth_headers):
+    with patch("backend.services.container_mutator._docker_request", return_value=(200, {"State": {"Running": True}})):
+        res = client.get("/api/docker/check_container_name?name=uptime-kuma", headers=auth_headers)
+        assert res.status_code == 200
+        data = res.json()
+        assert data["name"] == "uptime-kuma"
+        assert data["exists"] is True
+        assert data["running"] is True
+
+    with patch("backend.services.container_mutator._docker_request", return_value=(404, {})):
+        res = client.get("/api/docker/check_container_name?name=non-existent-app", headers=auth_headers)
+        assert res.status_code == 200
+        data = res.json()
+        assert data["exists"] is False
+        assert data["running"] is False
+
+
+def test_stream_deploy_catalog_app_existing_container_conflict():
+    from backend.services.app_catalog import stream_deploy_catalog_app
+
+    def mock_docker_req(method, path, body=None):
+        if "/containers/uptime-kuma/json" in path:
+            return 200, {"State": {"Running": True}}
+        return 404, {}
+
+    with (
+        patch("backend.services.app_catalog._docker_request", side_effect=mock_docker_req),
+        patch("backend.services.app_catalog.check_port_available_detailed", return_value=(True, None)),
+    ):
+        events = list(
+            stream_deploy_catalog_app(
+                "uptime-kuma",
+                host_port=3001,
+                storage_root="/tmp/test-appdata",
+                container_name="uptime-kuma",
+                replace_existing=False,
+            )
+        )
+        error_events = [e for e in events if e.get("step") == "error"]
+        assert len(error_events) > 0
+        assert "already exists" in error_events[0]["message"]
+
+
 def test_container_exec_endpoint(client, auth_headers):
     with patch(
         "backend.services.compose_synthesizer.execute_in_container",
@@ -221,16 +277,24 @@ def test_resolve_app_port_detects_docker_container_conflict(client, auth_headers
             return 200, {"Id": "abc123456789", "State": {"Running": True}}
         return 404, {}
 
-    with patch("backend.services.container_mutator._docker_request", side_effect=fake_docker):
-        with patch("backend.services.app_catalog._docker_request", side_effect=fake_docker):
-            res = client.get("/api/docker/catalog/uptime-kuma/resolve", headers=auth_headers)
-            assert res.status_code == 200
-            data = res.json()
-            assert data["app_id"] == "uptime-kuma"
-            assert data["conflict_detected"] is True
-            assert data["suggested_port"] == 3002
-            assert "container 'uptime-kuma'" in data["in_use_by"]
-            assert data["existing_container"]["name"] == "uptime-kuma"
+    def mock_check_port(port, proto="tcp"):
+        if port == 3001:
+            return False, "container 'uptime-kuma'"
+        return True, None
+
+    with (
+        patch("backend.services.container_mutator._docker_request", side_effect=fake_docker),
+        patch("backend.services.app_catalog._docker_request", side_effect=fake_docker),
+        patch("backend.services.app_catalog.check_port_available_detailed", side_effect=mock_check_port),
+    ):
+        res = client.get("/api/docker/catalog/uptime-kuma/resolve", headers=auth_headers)
+        assert res.status_code == 200
+        data = res.json()
+        assert data["app_id"] == "uptime-kuma"
+        assert data["conflict_detected"] is True
+        assert data["suggested_port"] == 3002
+        assert "container 'uptime-kuma'" in data["in_use_by"]
+        assert data["existing_container"]["name"] == "uptime-kuma"
 
 
 def test_check_port_detailed_with_docker():
@@ -254,10 +318,46 @@ def test_check_port_detailed_with_docker():
 def test_stream_deploy_catalog_app_aborts_on_conflicting_port():
     from backend.services.app_catalog import stream_deploy_catalog_app
 
-    with patch(
-        "backend.services.app_catalog.check_port_available_detailed", return_value=(False, "container 'rogue-app'")
+    with (
+        patch("backend.services.app_catalog._docker_request", return_value=(404, {})),
+        patch(
+            "backend.services.app_catalog.check_port_available_detailed",
+            return_value=(False, "container 'rogue-app'"),
+        ),
     ):
         events = list(stream_deploy_catalog_app("uptime-kuma", host_port=3001))
         error_event = next((e for e in events if e.get("step") == "error"), None)
         assert error_event is not None
         assert "already in use by container 'rogue-app'" in error_event["message"]
+
+
+def test_stream_deploy_catalog_app_replace_existing_proceeds():
+    from backend.services.app_catalog import stream_deploy_catalog_app
+
+    def fake_docker(method, path, *args, **kwargs):
+        if "/containers/uptime-kuma/json" in path:
+            return 200, {"Id": "abc123456789", "State": {"Running": True}}
+        if "create" in path:
+            return 201, {"Id": "new_cid_123456"}
+        if "start" in path:
+            return 204, {}
+        return 200, {}
+
+    with (
+        patch("backend.services.app_catalog._docker_request", side_effect=fake_docker),
+        patch(
+            "backend.services.app_catalog.check_port_available_detailed",
+            return_value=(False, "container 'uptime-kuma'"),
+        ),
+    ):
+        events = list(
+            stream_deploy_catalog_app(
+                "uptime-kuma",
+                host_port=3001,
+                container_name="uptime-kuma",
+                replace_existing=True,
+            )
+        )
+        clean_events = [e for e in events if e.get("step") == "clean"]
+        assert len(clean_events) == 1
+        assert "Stopping and replacing" in clean_events[0]["message"]
