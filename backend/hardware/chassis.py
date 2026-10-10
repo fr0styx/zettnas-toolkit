@@ -9,7 +9,7 @@ import os
 from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
 
-from backend.config import DATA_DIR, HOST_SYS, logger
+from backend.config import DATA_DIR, HOST_DEV, HOST_SYS, logger
 from backend.fsutil import atomic_write_json
 from backend.hardware.hal import DiskDiscoveryHAL, PhysicalDiskRecord
 from backend.state import Z_STATE
@@ -36,14 +36,100 @@ class ChassisEngine:
     """
 
     @classmethod
+    def _read_dmi_field(cls, field: str) -> str:
+        for base in (HOST_SYS, "/sys", "/host/sys"):
+            dmi_path = os.path.join(base, "class/dmi/id", field)
+            if os.path.exists(dmi_path):
+                try:
+                    with open(dmi_path, "r") as f:
+                        return f.read().strip()
+                except Exception:
+                    pass
+        return ""
+
+    @classmethod
     def _read_dmi_product_name(cls) -> str:
-        dmi_path = os.path.join(HOST_SYS, "class/dmi/id/product_name")
-        if os.path.exists(dmi_path):
+        return cls._read_dmi_field("product_name")
+
+    @classmethod
+    def _read_dmi_sys_vendor(cls) -> str:
+        return cls._read_dmi_field("sys_vendor")
+
+    @classmethod
+    def detect_hardware_features(cls) -> Dict[str, Any]:
+        """
+        Detects whether running platform has custom hardware peripherals:
+        Physical LCD Screen, Front Panel COPY Button, SD/TF Card slot, MCU ARGB Lightbar.
+        Distinguishes custom appliances (e.g. Zettlab D6U/D8/D4, Aoostar WTR) from generic PCs/servers/VMs.
+        """
+        vendor = cls._read_dmi_sys_vendor().lower()
+        product = cls._read_dmi_product_name().lower()
+
+        # Check for known custom hardware brands / models
+        is_custom_appliance = bool(
+            "zettlab" in vendor
+            or "aoostar" in vendor
+            or any(k in product for k in ("d4", "d6", "d8", "wtr"))
+        )
+
+        # LCD Framebuffer detection
+        from backend.config import ENABLE_FB
+        has_lcd = bool(
+            ENABLE_FB
+            and (
+                os.path.exists("/dev/fb0")
+                or os.path.exists(os.path.join(HOST_DEV, "fb0"))
+                or os.path.exists("/host/dev/fb0")
+            )
+        )
+
+        # MCU / ARGB serial controller
+        from backend.hardware.led import find_led_port
+        led_port = find_led_port()
+        has_mcu = bool(
+            led_port is not None
+            or os.path.exists("/dev/ttyACM0")
+            or os.path.exists(os.path.join(HOST_DEV, "ttyACM0"))
+            or os.path.exists("/host/dev/ttyACM0")
+        )
+
+        # Physical COPY button
+        # On Zettlab appliances it's mapped to MMIO /dev/mem
+        has_copy_button = bool(
+            is_custom_appliance
+            or (
+                (os.path.exists("/dev/mem") or os.path.exists(os.path.join(HOST_DEV, "mem")))
+                and ("zettlab" in vendor or any(k in product for k in ("d4", "d6", "d8")))
+            )
+        )
+
+        # SD / TF card slot detection
+        has_sd_slot = is_custom_appliance
+        if not has_sd_slot:
             try:
-                return open(dmi_path).read().strip()
+                from backend.services.copy_engine import read_media_slots
+                slots = read_media_slots()
+                if (slots.get("sd", {}).get("dev") or slots.get("sd", {}).get("size", 0) > 0 or
+                    slots.get("tf", {}).get("dev") or slots.get("tf", {}).get("size", 0) > 0):
+                    has_sd_slot = True
             except Exception:
                 pass
-        return ""
+
+        # Unified custom hardware flag
+        has_custom_hardware = bool(
+            has_lcd or has_mcu or has_copy_button or has_sd_slot or is_custom_appliance
+        )
+
+        return {
+            "sys_vendor": cls._read_dmi_sys_vendor(),
+            "product_name": cls._read_dmi_product_name(),
+            "is_custom_appliance": is_custom_appliance,
+            "has_lcd": has_lcd,
+            "has_mcu": has_mcu,
+            "has_copy_button": has_copy_button,
+            "has_sd_slot": has_sd_slot,
+            "has_custom_hardware": has_custom_hardware,
+        }
 
     @classmethod
     def load_bay_mapping_config(cls) -> Dict[str, Any]:

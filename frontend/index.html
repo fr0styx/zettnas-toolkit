@@ -489,8 +489,8 @@
       <div id="unraid-array-pill" class="suite-pill hidden"><span class="pulse-dot" id="unraid-array-dot"></span> <span data-i18n="nav.array">Array</span>: <strong id="unraid-array-status">STARTED</strong></div>
       <div id="unraid-parity-pill" class="suite-pill hidden"><span class="pulse-dot" style="background:var(--accent-cyan,#00f0ff);box-shadow:0 0 6px var(--accent-cyan,#00f0ff)"></span> <span data-i18n="nav.parity">Parity</span>: <strong id="unraid-parity-status">0.0%</strong></div>
       <div id="unraid-mover-pill" class="suite-pill hidden"><span class="pulse-dot" style="background:var(--warn,#f5a623);box-shadow:0 0 6px var(--warn,#f5a623)"></span> <span data-i18n="nav.mover">Mover</span>: <strong id="unraid-mover-status">Active</strong></div>
-      <div class="suite-pill"><span class="pulse-dot"></span> MCU: <strong>/dev/ttyACM0</strong></div>
-      <div class="suite-pill"><span class="pulse-dot"></span> FB: <strong>/dev/fb0 (640x172)</strong></div>
+      <div id="mcu-status-pill" class="suite-pill hidden"><span class="pulse-dot"></span> MCU: <strong id="mcu-status-text">/dev/ttyACM0</strong></div>
+      <div id="fb-status-pill" class="suite-pill hidden"><span class="pulse-dot"></span> FB: <strong id="fb-status-text">/dev/fb0 (640x172)</strong></div>
       <select id="suite-lang-select" class="language-picker-select tz-select-input" title="Select Display Language" style="width: auto; padding: 2px 6px; font-size: 11px; height: 26px; border-radius: 6px; cursor: pointer;">
         <option value="en">🇺🇸 EN</option>
         <option value="de">🇩🇪 DE</option>
@@ -500,7 +500,7 @@
       </select>
       <button id="mobile-view-toggle-btn" class="yak-egg-btn" title="Toggle Mobile / Stacked Mode" aria-label="Toggle Mobile Layout" data-i18n-title="nav.mobile_toggle">📱</button>
       <button id="yak-easter-egg-btn" class="yak-egg-btn" title="Trust in the Yak [Easter Egg Hot-key: Y]" data-i18n-title="nav.yak_egg">🐂</button>
-      <button id="drawer-toggle-btn" class="suite-toolkit-btn" title="Open Hardware Settings [Hot-key: T]" data-i18n-title="nav.settings_title">
+      <button id="drawer-toggle-btn" class="suite-toolkit-btn hidden" title="Open Hardware Settings [Hot-key: T]" data-i18n-title="nav.settings_title">
         <span class="btn-ic">⚙</span><span class="btn-txt" data-i18n="nav.settings"> HARDWARE SETTINGS</span>
       </button>
     </div>

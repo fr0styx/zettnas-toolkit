@@ -661,6 +661,23 @@ body.theme-yak::before {
   transition: opacity 0.4s ease;
 }
 
+body.theme-yak #desktop-wallpaper {
+  background-image: 
+    linear-gradient(180deg, rgba(6, 11, 9, 0.45) 0%, rgba(6, 11, 9, 0.75) 100%),
+    radial-gradient(ellipse at 50% 50%, transparent 30%, rgba(6, 11, 9, 0.90) 100%),
+    url("/img/yak.webp") !important;
+  background-size: contain !important;
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
+  background-color: #060b09 !important;
+  display: block !important;
+}
+
+body.theme-yak {
+  background-image: none !important;
+  background-color: #060b09 !important;
+}
+
 body.theme-yak::after {
   content: "";
   position: fixed;
@@ -4429,7 +4446,9 @@ body.theme-yak .mgmt-back-btn:hover {
 /* =========================================================================
    MILESTONE 1.2: LCD MULTI-PAGE CAROUSEL & UNRAID TELEMETRY
    ========================================================================= */
-.suite-pill.hidden {
+.suite-pill.hidden,
+.suite-toolkit-btn.hidden,
+#drawer-toggle-btn.hidden {
   display: none !important;
 }
 

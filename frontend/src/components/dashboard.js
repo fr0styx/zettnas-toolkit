@@ -333,6 +333,25 @@ export function updateChassisImageForTheme() {
   chassisImg.src = modelMap[chassis] || 'img/chassis-d6u.webp';
 }
 
+function _restoreNonYakWallpaper(wpLayer) {
+  if (!wpLayer) return;
+  if (wpLayer.dataset.previousWallpaper) {
+    wpLayer.style.setProperty('background-image', wpLayer.dataset.previousWallpaper);
+    delete wpLayer.dataset.previousWallpaper;
+  } else if (wpLayer.style.backgroundImage && wpLayer.style.backgroundImage.includes('yak.webp')) {
+    const savedWp = (typeof localStorage !== 'undefined' ? localStorage.getItem('zettnas_active_wallpaper') : null);
+    if (savedWp) {
+      wpLayer.style.setProperty('background-image', `url('/wallpapers/${savedWp}')`);
+    } else {
+      wpLayer.style.removeProperty('background-image');
+    }
+  }
+  wpLayer.style.removeProperty('background-size');
+  wpLayer.style.removeProperty('background-position');
+  wpLayer.style.removeProperty('background-repeat');
+  wpLayer.style.removeProperty('background-color');
+}
+
 let _systemThemeMatcher = null;
 
 export function applyDesktopTheme(themeName, customAccent = null) {
@@ -345,6 +364,8 @@ export function applyDesktopTheme(themeName, customAccent = null) {
   if (typeof document !== 'undefined' && document.body) {
     document.body.classList.remove('theme-light', 'theme-yak', 'theme-amber', 'theme-emerald', 'theme-sapphire', 'theme-amethyst', 'theme-crimson', 'theme-oled');
 
+    const wpLayer = document.getElementById('desktop-wallpaper');
+
     if (themeName === 'auto' || themeName === 'system') {
       if (!_systemThemeMatcher && typeof window !== 'undefined' && window.matchMedia) {
         _systemThemeMatcher = window.matchMedia('(prefers-color-scheme: dark)');
@@ -356,22 +377,37 @@ export function applyDesktopTheme(themeName, customAccent = null) {
       }
       const isDark = _systemThemeMatcher ? _systemThemeMatcher.matches : true;
       document.body.classList.toggle('theme-light', !isDark);
-    } else if (themeName === 'amber') {
-      document.body.classList.add('theme-amber');
-    } else if (themeName === 'emerald') {
-      document.body.classList.add('theme-emerald');
-    } else if (themeName === 'sapphire') {
-      document.body.classList.add('theme-sapphire');
-    } else if (themeName === 'amethyst') {
-      document.body.classList.add('theme-amethyst');
-    } else if (themeName === 'crimson') {
-      document.body.classList.add('theme-crimson');
-    } else if (themeName === 'oled') {
-      document.body.classList.add('theme-oled');
+      if (wpLayer) _restoreNonYakWallpaper(wpLayer);
     } else if (themeName === 'yak') {
       document.body.classList.add('theme-yak');
-    } else if (themeName === 'light') {
-      document.body.classList.add('theme-light');
+      if (wpLayer) {
+        if (!wpLayer.dataset.previousWallpaper && wpLayer.style.backgroundImage && !wpLayer.style.backgroundImage.includes('yak.webp')) {
+          wpLayer.dataset.previousWallpaper = wpLayer.style.backgroundImage;
+        }
+        wpLayer.style.setProperty('background-image', 'url("/img/yak.webp")', 'important');
+        wpLayer.style.setProperty('background-size', 'contain', 'important');
+        wpLayer.style.setProperty('background-position', 'center center', 'important');
+        wpLayer.style.setProperty('background-repeat', 'no-repeat', 'important');
+        wpLayer.style.setProperty('background-color', '#060b09', 'important');
+        wpLayer.style.display = 'block';
+      }
+    } else {
+      if (themeName === 'amber') {
+        document.body.classList.add('theme-amber');
+      } else if (themeName === 'emerald') {
+        document.body.classList.add('theme-emerald');
+      } else if (themeName === 'sapphire') {
+        document.body.classList.add('theme-sapphire');
+      } else if (themeName === 'amethyst') {
+        document.body.classList.add('theme-amethyst');
+      } else if (themeName === 'crimson') {
+        document.body.classList.add('theme-crimson');
+      } else if (themeName === 'oled') {
+        document.body.classList.add('theme-oled');
+      } else if (themeName === 'light') {
+        document.body.classList.add('theme-light');
+      }
+      if (wpLayer) _restoreNonYakWallpaper(wpLayer);
     }
   }
 
@@ -663,6 +699,7 @@ export function applyStats(s) {
     }
 
     updateUnraidTelemetry(s.unraid);
+    updateHardwareTelemetry(s);
     updateLcdPages(s);
 
     if (!state.isLcdDirect) {
@@ -761,6 +798,65 @@ export function updateUnraidTelemetry(unraid) {
       parityTxt.textContent = `Parity: ${p.progress_pct || 0}% (${p.errors || 0} err)`;
     } else {
       parityBox.classList.add('hidden');
+    }
+  }
+}
+
+export function updateHardwareTelemetry(s) {
+  const mcuPill = $('mcu-status-pill');
+  const mcuText = $('mcu-status-text');
+  const fbPill = $('fb-status-pill');
+  const fbText = $('fb-status-text');
+  const drawerBtn = $('drawer-toggle-btn');
+
+  const peripherals = s?.peripherals || {};
+  const hardware = s?.hardware || {};
+
+  // MCU pill visibility
+  const hasMcu = Boolean(peripherals.led_ready && peripherals.led_port) || Boolean(hardware.has_mcu);
+  if (mcuPill) {
+    if (hasMcu) {
+      mcuPill.classList.remove('hidden');
+      if (mcuText && peripherals.led_port) {
+        mcuText.textContent = peripherals.led_port;
+      }
+    } else {
+      mcuPill.classList.add('hidden');
+    }
+  }
+
+  // FB pill visibility
+  const hasFb = Boolean(peripherals.fb_active) || Boolean(hardware.has_lcd);
+  if (fbPill) {
+    if (hasFb) {
+      fbPill.classList.remove('hidden');
+      if (fbText) {
+        fbText.textContent = '/dev/fb0 (640x172)';
+      }
+    } else {
+      fbPill.classList.add('hidden');
+    }
+  }
+
+  // Hardware Settings drawer toggle button
+  // Viewable only when custom hardware features (LCD, COPY button, SD card slot, MCU, or known custom appliance) are detected.
+  const hasCustomHardware = Boolean(
+    hardware.has_custom_hardware ||
+    peripherals.has_custom_hardware ||
+    hasMcu ||
+    hasFb ||
+    hardware.has_copy_button ||
+    hardware.has_sd_slot ||
+    hardware.is_custom_appliance
+  );
+
+  if (drawerBtn) {
+    if (hasCustomHardware) {
+      drawerBtn.classList.remove('hidden');
+      drawerBtn.style.display = '';
+    } else {
+      drawerBtn.classList.add('hidden');
+      drawerBtn.style.display = 'none';
     }
   }
 }

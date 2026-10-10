@@ -27,6 +27,7 @@ from backend.config import (
 from backend.db import log_metrics
 from backend.fsutil import read_json
 from backend.hardware.cpu import read_cpu_temp, read_cpu_util
+from backend.hardware.chassis import ChassisEngine
 from backend.hardware.disks import poll_all_disks_smart, read_disk_temps_and_io
 from backend.hardware.fans import apply_zone_pwm, calc_curve_pwm, get_hold_remaining, read_fans, set_fan_pwm
 from backend.hardware.led import apply_led_state, find_led_port, send_led_packet
@@ -533,6 +534,8 @@ def stats_collector_daemon():
             if docker_changed:
                 stats_collector_daemon._last_docker_summary = docker_summary
 
+            hw_features = ChassisEngine.detect_hardware_features()
+
             data = {
                 "name": get_server_hostname(),
                 "status": status,
@@ -596,10 +599,12 @@ def stats_collector_daemon():
                     if Z_STATE.client_preferences is not None
                     else read_json(CLIENT_PREFS_FILE, default={})
                 ),
+                "hardware": hw_features,
                 "peripherals": {
-                    "fb_active": bool(ENABLE_FB and os.path.exists("/dev/fb0")),
+                    "fb_active": hw_features["has_lcd"],
                     "led_port": find_led_port(),
-                    "led_ready": bool(find_led_port() is not None),
+                    "led_ready": hw_features["has_mcu"],
+                    "has_custom_hardware": hw_features["has_custom_hardware"],
                     "fan_count": len([f for f in fans if f > 0]) if fans else 0,
                     "fans_online": bool(fans and (any(f > 0 for f in fans) or (active_pwm1 == 0 and active_pwm2 == 0))),
                 },

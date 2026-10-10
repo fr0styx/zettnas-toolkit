@@ -169,87 +169,140 @@ export function initSettings() {
     });
   }
 
-  // --- Layout Cards Locking & Dragging ---
-  const layoutSectionsContainer = $('layout-sections-container');
-  const layoutLockBtn = $('layout-cards-lock-btn');
-  const LAYOUT_SECTIONS_STORAGE_KEY = 'lcd_dash_card_order';
-  const LAYOUT_LOCK_KEY = 'lcd_dash_cards_locked';
-  let isLayoutLocked = localStorage.getItem(LAYOUT_LOCK_KEY) !== 'false';
+  // --- Universal Drawer Card Reordering & Locking ---
+  const _cardReorderUpdaters = [];
 
-  function setLayoutLockState(locked) {
-    isLayoutLocked = locked;
-    localStorage.setItem(LAYOUT_LOCK_KEY, isLayoutLocked);
-    if (layoutSectionsContainer) layoutSectionsContainer.classList.toggle('locked', isLayoutLocked);
-    if (layoutLockBtn) {
-      layoutLockBtn.textContent = isLayoutLocked ? t('settings.btn_locked', '🔒 Locked') : t('settings.btn_reorder', '🔓 Reorder');
-      layoutLockBtn.classList.toggle('unlocked', !isLayoutLocked);
-    }
-    if (layoutSectionsContainer) {
-      layoutSectionsContainer.querySelectorAll('.draggable-card').forEach((card) => {
-        card.setAttribute('draggable', !isLayoutLocked);
-      });
-    }
-  }
+  function setupCardContainerReordering({
+    containerId,
+    lockBtnId,
+    storageOrderKey,
+    storageLockKey,
+    idAttr,
+    ignoredSelectors = [],
+  }) {
+    const container = $(containerId);
+    const lockBtn = $(lockBtnId);
+    if (!container) return;
 
-  function initLayoutSectionReordering() {
-    if (!layoutSectionsContainer) return;
-    const savedOrder = JSON.parse(localStorage.getItem(LAYOUT_SECTIONS_STORAGE_KEY) || '[]');
-    if (savedOrder.length > 0) {
-      const cardMap = {};
-      layoutSectionsContainer.querySelectorAll('.draggable-card').forEach((c) => {
-        cardMap[c.dataset.layoutCardId] = c;
-      });
-      savedOrder.forEach((id) => {
-        if (cardMap[id]) layoutSectionsContainer.appendChild(cardMap[id]);
-      });
-    }
+    let isLocked = localStorage.getItem(storageLockKey) !== 'false';
 
-    let draggedLayoutCard = null;
-    let allowLayoutDrag = false;
-
-    layoutSectionsContainer.addEventListener('mousedown', (e) => {
-      if (e.target.closest('#mini-lcd-canvas') || e.target.closest('.dash-reorder-flow')) {
-        allowLayoutDrag = false;
-        return;
+    function setLockState(locked) {
+      isLocked = locked;
+      localStorage.setItem(storageLockKey, isLocked);
+      container.classList.toggle('locked', isLocked);
+      if (lockBtn) {
+        lockBtn.textContent = isLocked ? t('settings.btn_locked', '🔒 Locked') : t('settings.btn_reorder', '🔓 Reorder');
+        lockBtn.classList.toggle('unlocked', !isLocked);
       }
-      allowLayoutDrag = !isLayoutLocked && !!e.target.closest('.drag-handle');
+      container.querySelectorAll('.draggable-card').forEach((card) => {
+        card.setAttribute('draggable', !isLocked);
+      });
+    }
+
+    _cardReorderUpdaters.push(() => {
+      if (lockBtn) {
+        lockBtn.textContent = isLocked ? t('settings.btn_locked', '🔒 Locked') : t('settings.btn_reorder', '🔓 Reorder');
+      }
     });
 
-    layoutSectionsContainer.querySelectorAll('.draggable-card').forEach((card) => {
+    const savedOrder = JSON.parse(localStorage.getItem(storageOrderKey) || '[]');
+    if (savedOrder.length > 0) {
+      const cardMap = {};
+      container.querySelectorAll('.draggable-card').forEach((c) => {
+        const id = c.dataset[idAttr];
+        if (id) cardMap[id] = c;
+      });
+      savedOrder.forEach((id) => {
+        if (cardMap[id]) container.appendChild(cardMap[id]);
+      });
+    }
+
+    let draggedCard = null;
+    let allowDrag = false;
+
+    container.addEventListener('mousedown', (e) => {
+      for (const sel of ignoredSelectors) {
+        if (e.target.closest(sel)) {
+          allowDrag = false;
+          return;
+        }
+      }
+      allowDrag = !isLocked && !!e.target.closest('.drag-handle');
+    });
+
+    container.querySelectorAll('.draggable-card').forEach((card) => {
       card.addEventListener('dragstart', (e) => {
-        if (isLayoutLocked || !allowLayoutDrag) { e.preventDefault(); return false; }
-        draggedLayoutCard = card;
+        if (isLocked || !allowDrag) { e.preventDefault(); return false; }
+        draggedCard = card;
         card.classList.add('dragging');
         e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/plain', card.dataset.layoutCardId);
+        const cardId = card.dataset[idAttr] || '';
+        e.dataTransfer.setData('text/plain', cardId);
       });
 
       card.addEventListener('dragend', () => {
-        allowLayoutDrag = false;
-        if (draggedLayoutCard) draggedLayoutCard.classList.remove('dragging');
-        layoutSectionsContainer.querySelectorAll('.draggable-card').forEach((c) => c.classList.remove('drag-over'));
-        const order = Array.from(layoutSectionsContainer.querySelectorAll('.draggable-card')).map((c) => c.dataset.layoutCardId);
-        localStorage.setItem(LAYOUT_SECTIONS_STORAGE_KEY, JSON.stringify(order));
+        allowDrag = false;
+        if (draggedCard) draggedCard.classList.remove('dragging');
+        container.querySelectorAll('.draggable-card').forEach((c) => c.classList.remove('drag-over'));
+        const order = Array.from(container.querySelectorAll('.draggable-card'))
+          .map((c) => c.dataset[idAttr])
+          .filter(Boolean);
+        localStorage.setItem(storageOrderKey, JSON.stringify(order));
       });
 
       card.addEventListener('dragover', (e) => {
-        if (isLayoutLocked || !draggedLayoutCard) return;
+        if (isLocked || !draggedCard) return;
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
         const targetCard = e.target.closest('.draggable-card');
-        if (targetCard && targetCard !== draggedLayoutCard && targetCard.parentElement === layoutSectionsContainer) {
+        if (targetCard && targetCard !== draggedCard && targetCard.parentElement === container) {
           const rect = targetCard.getBoundingClientRect();
           const next = (e.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
-          layoutSectionsContainer.insertBefore(draggedLayoutCard, next && targetCard.nextSibling || targetCard);
+          container.insertBefore(draggedCard, (next && targetCard.nextSibling) || targetCard);
         }
       });
     });
 
-    if (layoutLockBtn) layoutLockBtn.addEventListener('click', () => setLayoutLockState(!isLayoutLocked));
-    setLayoutLockState(isLayoutLocked);
+    if (lockBtn) lockBtn.addEventListener('click', () => setLockState(!isLocked));
+    setLockState(isLocked);
   }
 
-  initLayoutSectionReordering();
+  // 1. Dashboard Layout Cards
+  setupCardContainerReordering({
+    containerId: 'layout-sections-container',
+    lockBtnId: 'layout-cards-lock-btn',
+    storageOrderKey: 'lcd_dash_card_order',
+    storageLockKey: 'lcd_dash_cards_locked',
+    idAttr: 'layoutCardId',
+    ignoredSelectors: ['#mini-lcd-canvas', '.dash-reorder-flow'],
+  });
+
+  // 2. LED Strip Bar Cards
+  setupCardContainerReordering({
+    containerId: 'drawer-cards-container',
+    lockBtnId: 'drawer-lock-btn',
+    storageOrderKey: 'lcd_led_card_order',
+    storageLockKey: 'lcd_led_cards_locked',
+    idAttr: 'cardId',
+  });
+
+  // 3. Fans Control Cards
+  setupCardContainerReordering({
+    containerId: 'fan-cards-container',
+    lockBtnId: 'fan-cards-lock-btn',
+    storageOrderKey: 'lcd_fans_card_order',
+    storageLockKey: 'lcd_fans_cards_locked',
+    idAttr: 'fanCardId',
+  });
+
+  // 4. Front Panel COPY Button Cards
+  setupCardContainerReordering({
+    containerId: 'btn-sections-container',
+    lockBtnId: 'btn-cards-lock-btn',
+    storageOrderKey: 'lcd_copy_card_order',
+    storageLockKey: 'lcd_copy_cards_locked',
+    idAttr: 'btnCardId',
+  });
 
   // --- Screen Backlight & Night Dimming ---
   const screenBriSlider = $('screen-bri-slider');
@@ -630,6 +683,9 @@ export function initSettings() {
     } else if (e.key === 'y' || e.key === 'Y') {
       applyTheme(state.currentTheme === 'yak' ? 'cyber' : 'yak');
     } else if (e.key === 't' || e.key === 'T' || e.key === 'd' || e.key === 'D') {
+      if (toggleBtn && (toggleBtn.classList.contains('hidden') || toggleBtn.style.display === 'none')) {
+        return;
+      }
       if (drawer && drawer.classList.contains('open')) {
         closeDrawer();
       } else {
@@ -640,9 +696,7 @@ export function initSettings() {
 
   window.addEventListener('zettnas:lang-changed', () => {
     updateDrawerDynamicHeader();
-    if (layoutLockBtn) {
-      layoutLockBtn.textContent = isLayoutLocked ? t('settings.btn_locked', '🔒 Locked') : t('settings.btn_reorder', '🔓 Reorder');
-    }
+    _cardReorderUpdaters.forEach((fn) => fn());
     const copySaveBtn = $('btn-copy-save');
     if (copySaveBtn) {
       copySaveBtn.textContent = t('settings.btn_save_config', '💾 Save Configuration');
