@@ -10147,7 +10147,26 @@ body.desktop-locked #os-dock-container {
    BATCH 2: GLASSMORPHISM, WALLPAPER READABILITY & SPECULAR BORDER GLOW
    ========================================================================= */
 
-/* 1. Desktop Wallpaper Readability Dimmer & Backdrop Blur */
+/* 1. Desktop Wallpaper Background Layer & Hardware GPU Blur */
+#desktop-wallpaper {
+  position: fixed;
+  top: -24px;
+  left: -24px;
+  right: -24px;
+  bottom: -24px;
+  z-index: 0;
+  pointer-events: none;
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  filter: blur(var(--wallpaper-blur, 0px));
+  -webkit-filter: blur(var(--wallpaper-blur, 0px));
+  transform: translate3d(0, 0, 0);
+  will-change: filter;
+  transition: filter 0.15s ease, opacity 0.25s ease;
+}
+
+/* 2. Desktop Wallpaper Readability Dimmer & Backdrop Blur */
 #desktop-wallpaper-dimmer {
   position: fixed;
   inset: 0;

@@ -730,6 +730,64 @@ async def post_docker_updates_apply_all():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+class StackSaveRequest(BaseModel):
+    compose_yaml: str
+    env_content: Optional[str] = None
+
+
+class StackActionRequest(BaseModel):
+    action: str  # "restart", "stop", "start", "redeploy"
+
+
+@router.get("/docker/stacks")
+async def get_docker_stacks():
+    from backend.services.docker_stacks import list_all_stacks
+
+    return await asyncio.to_thread(list_all_stacks)
+
+
+@router.get("/docker/stacks/{stack_name}")
+async def get_docker_stack_details(stack_name: str):
+    if not stack_name or not re.match(r"^[a-zA-Z0-9_.-]{1,128}$", stack_name):
+        raise HTTPException(status_code=400, detail="Invalid stack name")
+    from backend.services.docker_stacks import get_stack_details
+
+    details = await asyncio.to_thread(get_stack_details, stack_name)
+    if not details.get("containers") and not details.get("has_real_file"):
+        raise HTTPException(status_code=404, detail=f"Stack '{stack_name}' not found")
+    return details
+
+
+@router.post(
+    "/docker/stacks/{stack_name}/save",
+    dependencies=[Depends(require_scope("containers:manage"))],
+)
+async def post_docker_stack_save(stack_name: str, req: StackSaveRequest):
+    if not stack_name or not re.match(r"^[a-zA-Z0-9_.-]{1,128}$", stack_name):
+        raise HTTPException(status_code=400, detail="Invalid stack name")
+    from backend.services.docker_stacks import save_stack_config
+
+    res = await asyncio.to_thread(save_stack_config, stack_name, req.compose_yaml, req.env_content)
+    if not res.get("success"):
+        raise HTTPException(status_code=400, detail=res.get("error", "Failed saving stack configuration"))
+    return res
+
+
+@router.post(
+    "/docker/stacks/{stack_name}/action",
+    dependencies=[Depends(require_scope("containers:write", "containers:manage"))],
+)
+async def post_docker_stack_action(stack_name: str, req: StackActionRequest):
+    if not stack_name or not re.match(r"^[a-zA-Z0-9_.-]{1,128}$", stack_name):
+        raise HTTPException(status_code=400, detail="Invalid stack name")
+    from backend.services.docker_stacks import execute_stack_action
+
+    res = await asyncio.to_thread(execute_stack_action, stack_name, req.action)
+    if not res.get("success"):
+        raise HTTPException(status_code=400, detail=res.get("error", f"Stack action '{req.action}' failed"))
+    return res
+
+
 @router.get("/docker/check_port")
 async def get_check_port(port: int, proto: str = "tcp"):
     from backend.services.container_mutator import check_port_available

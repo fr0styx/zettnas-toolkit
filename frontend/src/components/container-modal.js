@@ -11,6 +11,7 @@ import { escapeHtml, trapFocus } from '../utils.js';
 import { t } from '../i18n.js';
 import { bringToFront, makeDraggable, DockManager } from './dock.js';
 import { ZettEventBus } from '../event-bus.js';
+import { openStackModal } from './stack-modal.js';
 
 let _activeCid = null;
 let _activeCname = null;
@@ -506,7 +507,7 @@ async function loadContainerDetails(cid) {
 
     // Stack pill HTML
     const stackHtml = details.stack
-      ? `<span class="docker-stack-pill">📁 ${escapeHtml(details.stack)}</span>`
+      ? `<span class="docker-stack-pill clickable-stack-pill" data-stack="${escapeHtml(details.stack)}" style="cursor:pointer;" title="Open & Edit Stack: ${escapeHtml(details.stack)}">📁 ${escapeHtml(details.stack)} <span style="font-size:9px; opacity:0.8;">(Edit Stack)</span></span>`
       : `<span class="docker-origin-pill">${escapeHtml(details.managed_by === 'unraid' ? 'Unraid' : 'Standalone')}</span>`;
 
     const memMb = res.memory_limit ? Math.round(res.memory_limit / (1024 * 1024)) : 0;
@@ -593,6 +594,15 @@ async function loadContainerDetails(cid) {
       </div>
     `;
 
+    // Wire Stack Click
+    contentEl.querySelectorAll('.clickable-stack-pill').forEach((pill) => {
+      pill.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const stName = pill.dataset.stack;
+        if (stName) openStackModal(stName);
+      });
+    });
+
     // Wire Resource Tuning button
     const applyResBtn = document.getElementById('ci-btn-apply-resources');
     if (applyResBtn) {
@@ -662,6 +672,8 @@ async function loadContainerDetails(cid) {
     if (loadingEl) loadingEl.innerHTML = `<span style="color:var(--crit);">Failed to load container details: ${escapeHtml(err.message)}</span>`;
   }
 }
+
+export const openContainerModal = openContainerInspector;
 
 function renderPortsTab(details) {
   const container = document.getElementById('ci-ports-content');

@@ -83,7 +83,7 @@
         var wpUrl = '/api/wallpapers/download/' + encodeURIComponent(savedWp);
         var sWp = document.createElement('style');
         sWp.id = 'zettnas-wallpaper-early-style';
-        sWp.textContent = 'body { background-image: url("' + wpUrl + '") !important; background-size: cover !important; background-position: center center !important; background-repeat: no-repeat !important; background-attachment: fixed !important; }\n';
+        sWp.textContent = '#desktop-wallpaper, body { background-image: url("' + wpUrl + '") !important; background-size: cover !important; background-position: center center !important; background-repeat: no-repeat !important; background-attachment: fixed !important; }\n';
         document.head.appendChild(sWp);
 
         var lWp = document.createElement('link');
@@ -244,6 +244,7 @@
 </head>
 <body class="studio-workbench no-specular-glow">
 
+<div id="desktop-wallpaper" class="desktop-wallpaper" aria-hidden="true"></div>
 <div id="desktop-wallpaper-dimmer" class="desktop-wallpaper-dimmer" aria-hidden="true"></div>
 
 <div id="login-overlay" style="position: fixed; inset: 0; z-index: 999999; background: #080c10; align-items: center; justify-content: center;">
@@ -2373,7 +2374,7 @@
                 <span data-i18n="mgmt.dock_sec_title">Dock & Desktop Space</span>
               </div>
               <div class="mgmt-card-intro-desc" data-i18n="mgmt.dock_sec_desc">
-                Customize screen placement, macOS parabolic magnification curve, icon scale, and auto-hide behaviors for your desktop dock.
+                Customize screen placement, parabolic magnification curve, icon scale, and auto-hide behaviors for your desktop dock.
               </div>
             </div>
 
@@ -2417,7 +2418,7 @@
                 <div class="drawer-card" style="padding: 16px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
                   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 14px;">
                     <div>
-                      <div style="font-size: 13.5px; font-weight: 700; color: #fff;" data-i18n="mgmt.dock_magnification_title">macOS Parabolic Magnification</div>
+                      <div style="font-size: 13.5px; font-weight: 700; color: #fff;" data-i18n="mgmt.dock_magnification_title">Parabolic Magnification</div>
                       <div style="font-size: 11.5px; color: var(--muted); margin-top: 2px;" data-i18n="mgmt.dock_magnification_desc">Magnifies dock applications dynamically as your cursor hovers over them.</div>
                     </div>
                     <label class="switch-toggle" style="position:relative; display:inline-block; width:38px; height:20px; cursor:pointer;">
@@ -2434,7 +2435,7 @@
                     <input type="range" id="dock-magnification-slider" min="1.1" max="1.8" value="1.45" step="0.05" class="tz-range-slider" style="width:100%; cursor:pointer;" aria-label="Magnification Scale">
                     <div style="display:flex; justify-content:space-between; font-size:9.5px; color:var(--muted); margin-top:3px;">
                       <span>1.10x (Subtle)</span>
-                      <span>1.45x (macOS Standard)</span>
+                      <span>1.45x (Standard)</span>
                       <span>1.80x (Dramatic)</span>
                     </div>
                   </div>
@@ -3035,10 +3036,13 @@
                       <button class="btn-pill-toggle docker-filter-btn active" data-filter="all"><span data-i18n="mgmt.docker_filter_all">All</span> <span id="docker-count-all" class="docker-count-badge">0</span></button>
                       <button class="btn-pill-toggle docker-filter-btn" data-filter="running"><span data-i18n="mgmt.docker_filter_running">Running</span> <span id="docker-count-running" class="docker-count-badge">0</span></button>
                       <button class="btn-pill-toggle docker-filter-btn" data-filter="stopped"><span data-i18n="mgmt.docker_filter_stopped">Stopped</span> <span id="docker-count-stopped" class="docker-count-badge">0</span></button>
-                      <button class="btn-pill-toggle docker-filter-btn" data-filter="compose"><span data-i18n="mgmt.docker_filter_compose">Compose</span> <span id="docker-count-compose" class="docker-count-badge">0</span></button>
+                      <button class="btn-pill-toggle docker-filter-btn" data-filter="compose"><span data-i18n="mgmt.docker_filter_compose">Stacks</span> <span id="docker-count-compose" class="docker-count-badge">0</span></button>
                       <button class="btn-pill-toggle docker-filter-btn" data-filter="standalone"><span data-i18n="mgmt.docker_filter_standalone">Standalone</span> <span id="docker-count-standalone" class="docker-count-badge">0</span></button>
                     </div>
                     <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                      <button class="btn-pill-toggle" id="btn-docker-stacks-menu" style="display:inline-flex; align-items:center; gap:5px; font-weight:600; color:var(--accent-cyan, #38bdf8);" title="View & Edit Docker Compose Stacks">
+                        <span>📁</span> <span>Manage Stacks</span>
+                      </button>
                       <button class="btn-pill-toggle" id="btn-docker-check-updates" style="display:inline-flex; align-items:center; gap:5px; font-weight:600;" title="Check remote registries for container image updates">
                         <span style="color:var(--ok2, #25c2a0);">✓</span> <span>Check for updates</span>
                       </button>

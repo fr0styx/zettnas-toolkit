@@ -1,6 +1,7 @@
 import { syncWidgetSettingsUI } from './widgets.js';
 import { syncDesktopThemeUI } from './settings.js';
 import { openContainerInspector, openContainerDeleteModal } from './container-modal.js';
+import { openStackModal } from './stack-modal.js';
 import { ZettEventBus } from '../event-bus.js';
 import { fetchAndRenderChassisTwin, renderStorageTopologyTree, fetchAndRenderStorageTopology, fetchAndRenderNetworkShares, fetchAndRenderRemoteStorage, openNewCloudRemoteModal, openCreateStoragePoolModal, openCreateNetworkShareModal, openSnapshotsModal, triggerLocateDisk, getThermalLevel } from './chassis-visualizer.js';
 /**
@@ -402,6 +403,41 @@ function _bindDockerEvents() {
     });
   }
 
+  // Manage Stacks button
+  const btnStacksMenu = document.getElementById('btn-docker-stacks-menu');
+  if (btnStacksMenu) {
+    btnStacksMenu.addEventListener('click', async () => {
+      try {
+        const stacks = await api.get('/api/docker/stacks');
+        if (!stacks || !stacks.length) {
+          showToast('No active Compose stacks found.', 'info');
+          return;
+        }
+        if (stacks.length === 1) {
+          openStackModal(stacks[0].name);
+          return;
+        }
+        const stackListStr = stacks.map((s, i) => `${i + 1}. ${s.name} (${s.running_count}/${s.total_count} running)`).join('\n');
+        const chosen = prompt(`Select a Docker Stack to open & modify setup:\n\n${stackListStr}\n\nEnter stack name or number:`, stacks[0].name);
+        if (!chosen) return;
+        const trimmed = chosen.trim();
+        const found = stacks.find((s) => s.name.toLowerCase() === trimmed.toLowerCase());
+        if (found) {
+          openStackModal(found.name);
+          return;
+        }
+        const num = parseInt(trimmed, 10);
+        if (!isNaN(num) && num >= 1 && num <= stacks.length) {
+          openStackModal(stacks[num - 1].name);
+          return;
+        }
+        showToast(`Stack "${trimmed}" not found`, 'warn');
+      } catch (err) {
+        showToast(`Failed loading stacks: ${err.message}`, 'error');
+      }
+    });
+  }
+
   ZettEventBus.on('docker:containers-updated', () => {
     fetchAndRenderDockerContainers();
   });
@@ -523,7 +559,7 @@ function buildContainerRowInner(c, currentHost) {
   // Column 1: Stack & Name
   let stackHtml = '';
   if (c.stack) {
-    stackHtml = `<span class="docker-stack-pill" title="Compose Stack: ${escapeHtml(c.stack)}">📁 ${escapeHtml(c.stack)}</span>`;
+    stackHtml = `<span class="docker-stack-pill clickable-stack-pill" data-stack="${escapeHtml(c.stack)}" title="Open & Edit Stack: ${escapeHtml(c.stack)}" style="cursor:pointer;">📁 ${escapeHtml(c.stack)}</span>`;
   } else {
     const originLabel = c.managed_by === 'unraid' ? 'Unraid' : 'Standalone';
     stackHtml = `<span class="docker-origin-pill">${originLabel}</span>`;
@@ -589,6 +625,9 @@ function buildContainerRowInner(c, currentHost) {
 
   const inspectBtn = `<button class="btn-container-act btn-docker-inspect" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="inspect" title="Inspect ${escapeHtml(c.name)}">🔍</button>`;
   const editBtn = `<button class="btn-container-act btn-docker-edit" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="edit" title="Edit ${escapeHtml(c.name)}">✏️</button>`;
+  const stackBtn = c.stack
+    ? `<button class="btn-container-act btn-docker-stack" data-action="stack" data-stack="${escapeHtml(c.stack)}" title="Open & Edit Stack: ${escapeHtml(c.stack)}" style="color:var(--accent-cyan, #38bdf8);">📁</button>`
+    : '';
   const updateBtn = hasUpdate
     ? `<button class="btn-container-act btn-docker-update-single" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="update-single" title="Update ${escapeHtml(c.name)} to latest image" style="color:#fbbf24;">⬆️</button>`
     : '';
@@ -597,6 +636,7 @@ function buildContainerRowInner(c, currentHost) {
     ? `
       ${inspectBtn}
       ${editBtn}
+      ${stackBtn}
       ${updateBtn}
       <button class="btn-container-act btn-docker-restart" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="restart" title="Restart ${escapeHtml(c.name)}">🔄</button>
       <button class="btn-container-act btn-docker-stop" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="stop" title="Stop ${escapeHtml(c.name)}">⏹</button>
@@ -605,6 +645,7 @@ function buildContainerRowInner(c, currentHost) {
     : `
       ${inspectBtn}
       ${editBtn}
+      ${stackBtn}
       ${updateBtn}
       <button class="btn-container-act btn-docker-start" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="start" title="Start ${escapeHtml(c.name)}">▶</button>
       ${deleteBtn}
@@ -675,12 +716,29 @@ function bindDockerTableEvents(tbody) {
   tbody._dockerTableEventsBound = true;
 
   tbody.addEventListener('click', async (e) => {
+    const stackPill = e.target.closest('.clickable-stack-pill, .open-stack-btn');
+    if (stackPill) {
+      e.stopPropagation();
+      const stackName = stackPill.dataset.stack;
+      if (stackName) {
+        openStackModal(stackName);
+        return;
+      }
+    }
+
     const actBtn = e.target.closest('.btn-container-act');
     if (actBtn) {
       e.stopPropagation();
       const cid = actBtn.dataset.id;
       const cname = actBtn.dataset.name;
       const act = actBtn.dataset.action;
+
+      if (act === 'stack') {
+        const stackName = actBtn.dataset.stack;
+        if (stackName) openStackModal(stackName);
+        return;
+      }
+
       if (!cid || !act) return;
 
       if (act === 'inspect') {

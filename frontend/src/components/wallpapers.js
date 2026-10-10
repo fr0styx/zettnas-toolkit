@@ -16,11 +16,17 @@ let _activeWallpaper = null;
 export function setWallpaper(url, filename = null) {
   if (state.isLcdDirect || (typeof window !== 'undefined' && window.location.search.includes('mode=lcd')) || (document.body && document.body.classList.contains('lcd-direct'))) return;
 
+  const wpLayer = typeof document !== 'undefined' ? document.getElementById('desktop-wallpaper') : null;
+
   if (url) {
     if (filename) {
       try {
         localStorage.setItem('zettnas_active_wallpaper', filename);
       } catch (e) {}
+    }
+    if (wpLayer) {
+      wpLayer.style.setProperty('background-image', `url('${url}')`);
+      wpLayer.style.display = 'block';
     }
     document.body.style.setProperty('background-image', `url('${url}')`, 'important');
     document.body.style.setProperty('background-size', 'cover', 'important');
@@ -31,6 +37,10 @@ export function setWallpaper(url, filename = null) {
     try {
       localStorage.removeItem('zettnas_active_wallpaper');
     } catch (e) {}
+    if (wpLayer) {
+      wpLayer.style.removeProperty('background-image');
+      wpLayer.style.display = 'none';
+    }
     document.body.style.removeProperty('background-image');
     document.body.style.removeProperty('background-size');
     document.body.style.removeProperty('background-position');
