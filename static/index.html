@@ -194,11 +194,11 @@
   })();
 </script>
 <style>html,body{color:#eaf1f8;background-color:#080c10;width:100%;height:100%;margin:0;padding:0;overflow:hidden}html.auth-required body{background:radial-gradient(circle at 50% 20%,#151d29 0%,#080c10 70%)!important}#login-overlay{z-index:999999;background:#080c10;justify-content:center;align-items:center;display:flex;position:fixed;inset:0}html.has-auth-session #login-overlay{display:none!important}html.auth-required #login-overlay{display:flex!important}html.is-desktop-locked #lock-overlay{opacity:1!important;display:flex!important}html.is-desktop-locked body{overflow:hidden!important}html.auth-required .studio-viewport-wrapper,html.auth-required .suite-navbar,html.auth-required #desktop-icons-container,html.auth-required .desktop-icons-container,html.auth-required .top-nav,html.auth-required #desktop-widgets-container,html.auth-required #os-dock-container,html.auth-required .workspace-panel,html.auth-required .smart-modal-backdrop,html.auth-required .os-window,html.auth-required .notif-center-window{display:none!important}</style>
-  <script type="module" crossorigin src="/assets/index-CykjGcHh.js"></script>
+  <script type="module" crossorigin src="/assets/index-D_bOj9yR.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-hePW80VL.js">
-  <link rel="modulepreload" crossorigin href="/assets/dock-BVG7Gger.js">
-  <link rel="modulepreload" crossorigin href="/assets/users-Dp64ocoQ.js">
-  <link rel="stylesheet" crossorigin href="/assets/index-DXH-5wHQ.css">
+  <link rel="modulepreload" crossorigin href="/assets/dock-DFIWA2HR.js">
+  <link rel="modulepreload" crossorigin href="/assets/users-Dc5WOygp.js">
+  <link rel="stylesheet" crossorigin href="/assets/index-DpjAMiyE.css">
 </head>
 <body class="studio-workbench no-specular-glow">
 
@@ -1562,6 +1562,148 @@
   
 
 
+</aside>
+
+<!-- UPS Configuration Drawer -->
+<div id="ups-drawer-overlay" class="drawer-backdrop" style="display:none;"></div>
+<aside id="ups-config-drawer" class="slide-drawer" style="display:none; z-index:7100;">
+  <div class="drawer-header">
+    <div>
+      <div class="drawer-sub">ZettNAS • <span data-i18n="mgmt.ups_drawer_badge">POWER INTEGRITY</span></div>
+      <h2 class="drawer-title" data-i18n="mgmt.ups_drawer_title">UPS & Safe Shutdown Settings</h2>
+      <p class="drawer-subdesc" data-i18n="mgmt.ups_drawer_desc">Manage UPS drivers, battery thresholds, and automated atomic powerdown policies.</p>
+    </div>
+    <button id="btn-close-ups-drawer" class="btn-icon">✕</button>
+  </div>
+
+  <div class="drawer-cards-flow" style="padding: 16px 0; display:flex; flex-direction:column; gap:16px;">
+    <!-- 1-Click Auto Discovery -->
+    <div class="drawer-card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <span style="font-weight:600; font-size:13px;" data-i18n="mgmt.ups_autodiscover_title">🔍 Hardware Auto-Discovery</span>
+        <button id="btn-ups-discover" class="btn-pill-toggle" data-i18n="mgmt.ups_btn_scan">Scan Hardware</button>
+      </div>
+      <p style="font-size:12px; color:var(--muted); margin:0 0 10px 0;" data-i18n="mgmt.ups_autodiscover_desc">Scans local USB HID ports and Docker host gateway for active power daemons.</p>
+      <div id="ups-discover-candidates" style="display:flex; flex-direction:column; gap:6px;"></div>
+    </div>
+
+    <!-- Operating Mode Selection -->
+    <div class="drawer-card">
+      <label style="font-weight:600; font-size:13px; display:block; margin-bottom:8px;" data-i18n="mgmt.ups_mode_title">Operating Mode</label>
+      <div class="ups-mode-chooser-grid">
+        <label class="ups-mode-option">
+          <input type="radio" name="ups-mode" value="auto" checked>
+          <span class="ups-mode-box">
+            <strong>Auto-Detect</strong>
+            <small>Probes apcupsd & NUT</small>
+          </span>
+        </label>
+        <label class="ups-mode-option">
+          <input type="radio" name="ups-mode" value="apcupsd_client">
+          <span class="ups-mode-box">
+            <strong>APCUPSD</strong>
+            <small>Unraid host :3551</small>
+          </span>
+        </label>
+        <label class="ups-mode-option">
+          <input type="radio" name="ups-mode" value="nut_client">
+          <span class="ups-mode-box">
+            <strong>NUT Client</strong>
+            <small>Network Tools :3493</small>
+          </span>
+        </label>
+        <label class="ups-mode-option">
+          <input type="radio" name="ups-mode" value="usb_hid">
+          <span class="ups-mode-box">
+            <strong>Direct USB</strong>
+            <small>USB HID cable</small>
+          </span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Connection Details -->
+    <div class="drawer-card" id="ups-drawer-conn-card">
+      <div style="font-weight:600; font-size:13px; margin-bottom:10px;" data-i18n="mgmt.ups_conn_title">Connection Parameters</div>
+      <div style="display:grid; grid-template-columns: 2fr 1fr; gap:10px; margin-bottom:10px;">
+        <div>
+          <label style="font-size:12px; color:var(--muted);" data-i18n="mgmt.ups_field_host">Host / IP</label>
+          <input type="text" id="ups-cfg-host" class="input-modern" placeholder="127.0.0.1" value="127.0.0.1" style="width:100%; box-sizing:border-box;">
+        </div>
+        <div>
+          <label style="font-size:12px; color:var(--muted);" data-i18n="mgmt.ups_field_port">Port</label>
+          <input type="number" id="ups-cfg-port" class="input-modern" placeholder="3551" value="3551" style="width:100%; box-sizing:border-box;">
+        </div>
+      </div>
+      <div style="margin-bottom:10px;">
+        <label style="font-size:12px; color:var(--muted);" data-i18n="mgmt.ups_field_name">UPS Name (NUT only)</label>
+        <input type="text" id="ups-cfg-name" class="input-modern" placeholder="ups" value="ups" style="width:100%; box-sizing:border-box;">
+      </div>
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+        <div>
+          <label style="font-size:12px; color:var(--muted);" data-i18n="mgmt.ups_field_user">Username</label>
+          <input type="text" id="ups-cfg-user" class="input-modern" placeholder="Optional" style="width:100%; box-sizing:border-box;">
+        </div>
+        <div>
+          <label style="font-size:12px; color:var(--muted);" data-i18n="mgmt.ups_field_pass">Password</label>
+          <input type="password" id="ups-cfg-pass" class="input-modern" placeholder="••••••••" style="width:100%; box-sizing:border-box;">
+        </div>
+      </div>
+      <div style="margin-top:12px; display:flex; justify-content:flex-end;">
+        <button id="btn-ups-test-conn" class="btn-pill-toggle" data-i18n="mgmt.ups_btn_test_conn">🔌 Test Connection</button>
+      </div>
+    </div>
+
+    <!-- Safe Powerdown Policy -->
+    <div class="drawer-card">
+      <div style="font-weight:600; font-size:13px; margin-bottom:10px;" data-i18n="mgmt.ups_policy_title">Safe Shutdown Policy</div>
+      <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:14px;">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+          <input type="radio" name="ups-policy" value="runtime_left" checked>
+          <span><strong data-i18n="mgmt.ups_policy_runtime">Shutdown when Estimated Runtime drops below:</strong></span>
+        </label>
+        <div style="display:flex; align-items:center; gap:12px; padding-left:24px;">
+          <input type="range" id="ups-slider-runtime" min="2" max="25" step="1" value="5" class="custom-slider" style="flex:1;">
+          <span id="ups-val-runtime" class="slider-val-badge">5 min</span>
+        </div>
+
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-top:6px;">
+          <input type="radio" name="ups-policy" value="battery_pct">
+          <span><strong data-i18n="mgmt.ups_policy_batt">Shutdown when Battery Charge drops below:</strong></span>
+        </label>
+        <div style="display:flex; align-items:center; gap:12px; padding-left:24px;">
+          <input type="range" id="ups-slider-battery" min="10" max="50" step="5" value="20" class="custom-slider" style="flex:1;">
+          <span id="ups-val-battery" class="slider-val-badge">20 %</span>
+        </div>
+
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-top:6px;">
+          <input type="radio" name="ups-policy" value="timer">
+          <span><strong data-i18n="mgmt.ups_policy_timer">Shutdown after Time on Battery exceeds:</strong></span>
+        </label>
+        <div style="display:flex; align-items:center; gap:12px; padding-left:24px;">
+          <input type="range" id="ups-slider-timer" min="60" max="900" step="30" value="300" class="custom-slider" style="flex:1;">
+          <span id="ups-val-timer" class="slider-val-badge">300 sec</span>
+        </div>
+      </div>
+
+      <!-- Failsafe Toggles -->
+      <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top:12px; display:flex; flex-direction:column; gap:8px;">
+        <label style="display:flex; align-items:center; gap:8px; font-size:12px; cursor:pointer;">
+          <input type="checkbox" id="ups-chk-docker" checked>
+          <span data-i18n="mgmt.ups_chk_docker">Gracefully terminate Docker database containers (flush WAL)</span>
+        </label>
+        <label style="display:flex; align-items:center; gap:8px; font-size:12px; cursor:pointer;">
+          <input type="checkbox" id="ups-chk-cutpower">
+          <span data-i18n="mgmt.ups_chk_cutpower">Send cut-power command to UPS on halt (load.off.delay)</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Save Button -->
+    <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:4px;">
+      <button id="btn-save-ups-config" class="btn-pill-toggle active" style="padding: 10px 20px; font-weight:600;" data-i18n="mgmt.ups_btn_save">💾 Save & Apply UPS Policy</button>
+    </div>
+  </div>
 </aside>
 
 <div id="folder-browser-modal" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="folder-browser-title">
@@ -3156,42 +3298,141 @@
 
           <!-- 4. UPS & Power -->
           <div id="mgmt-sec-ups" class="mgmt-detail-card" style="display: none;">
-          <div class="mgmt-card-intro" style="display:flex; justify-content:space-between; align-items:center;">
-            <div>
-              <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-storage"/></svg> <span data-i18n="mgmt.ups_sec_title">UPS & Power Integrity Telemetry</span></div>
-              <div class="mgmt-card-intro-desc" data-i18n="mgmt.ups_sec_desc">Uninterruptible Power Supply telemetry via apcupsd / Network UPS Tools.</div>
-            </div>
-            <button class="btn-pill-toggle" id="btn-refresh-ups" title="Refresh UPS" data-i18n="mgmt.refresh">🔄 Refresh</button>
-          </div>
-          <div class="mgmt-detail-body">
-            <div class="unraid-details-grid">
-              <div class="unraid-detail-item">
-                <span class="udi-label" data-i18n="mgmt.ups_daemon_status">Power Daemon Status</span>
-                <span class="udi-val" id="mgmt-ups-status" style="color:var(--ok2);">ONLINE</span>
+            <div class="mgmt-card-intro" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+              <div>
+                <div class="mgmt-card-intro-title">
+                  <svg class="ic"><use href="#i-storage"/></svg>
+                  <span data-i18n="mgmt.ups_sec_title">UPS & Power Integrity Telemetry</span>
+                </div>
+                <div class="mgmt-card-intro-desc" data-i18n="mgmt.ups_sec_desc">
+                  Universal power orchestration suite with real-time digital twin, multi-protocol HAL, and atomic safe shutdown.
+                </div>
               </div>
-              <div class="unraid-detail-item">
-                <span class="udi-label" data-i18n="mgmt.ups_model">UPS Model</span>
-                <span class="udi-val" id="mgmt-ups-model">Generic UPS</span>
-              </div>
-              <div class="unraid-detail-item">
-                <span class="udi-label" data-i18n="mgmt.ups_charge">Battery Charge</span>
-                <span class="udi-val" id="mgmt-ups-charge" style="color:var(--ok2);">100%</span>
-              </div>
-              <div class="unraid-detail-item">
-                <span class="udi-label" data-i18n="mgmt.ups_runtime">Estimated Runtime</span>
-                <span class="udi-val" id="mgmt-ups-runtime">-- min</span>
-              </div>
-              <div class="unraid-detail-item">
-                <span class="udi-label" data-i18n="mgmt.ups_load">UPS Load</span>
-                <span class="udi-val" id="mgmt-ups-load">-- %</span>
-              </div>
-              <div class="unraid-detail-item">
-                <span class="udi-label" data-i18n="mgmt.ups_linev">Line / Utility Voltage</span>
-                <span class="udi-val" id="mgmt-ups-linev">-- V</span>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <button class="btn-pill-toggle" id="btn-open-ups-config" title="Configure UPS and power policies" data-i18n="mgmt.ups_btn_config">⚙️ Configure UPS</button>
+                <button class="btn-pill-toggle" id="btn-run-ups-selftest" title="Trigger 10s diagnostic battery self-test" data-i18n="mgmt.ups_btn_selftest">🔋 Self-Test</button>
+                <button class="btn-pill-toggle" id="btn-refresh-ups" title="Refresh UPS Telemetry" data-i18n="mgmt.refresh">🔄 Refresh</button>
               </div>
             </div>
+
+            <!-- Emergency Warning Banner (Shown when on battery or simulating) -->
+            <div id="ups-emergency-banner" class="ups-emergency-banner" style="display:none;">
+              <div class="ups-eb-icon">⚠️</div>
+              <div class="ups-eb-content">
+                <div class="ups-eb-title" data-i18n="mgmt.ups_emergency_title">UTILITY POWER FAILURE DETECTED</div>
+                <div class="ups-eb-desc" id="ups-emergency-desc" data-i18n="mgmt.ups_emergency_desc">System running on battery reserve. Automated powerdown policy is active.</div>
+              </div>
+              <div class="ups-eb-action">
+                <span id="ups-emergency-countdown" class="ups-countdown-badge">--:--</span>
+              </div>
+            </div>
+
+            <!-- 2.5D Power Flow Digital Twin -->
+            <div class="ups-power-flow-container" id="ups-power-flow-container">
+              <div class="ups-flow-card" id="ups-card-grid">
+                <div class="ups-card-status-dot active" id="ups-grid-dot"></div>
+                <div class="ups-card-icon">⚡</div>
+                <div class="ups-card-label" data-i18n="mgmt.ups_twin_grid">Utility Grid</div>
+                <div class="ups-card-val" id="ups-twin-linev">-- V</div>
+                <div class="ups-card-sub" id="ups-twin-grid-status">120V / 60Hz Nominal</div>
+              </div>
+
+              <!-- Animated Electron Flow Channel 1 -->
+              <div class="ups-flow-channel" id="ups-channel-grid-battery">
+                <svg viewBox="0 0 100 24" preserveAspectRatio="none" class="ups-flow-svg">
+                  <path d="M 0 12 L 100 12" class="ups-pulse-track"></path>
+                  <path d="M 0 12 L 100 12" class="ups-pulse-line" id="ups-pulse-line-1"></path>
+                </svg>
+                <span class="ups-flow-rate" id="ups-flow-text-1">AC Mains</span>
+              </div>
+
+              <div class="ups-flow-card" id="ups-card-battery">
+                <div class="ups-battery-ring-wrap">
+                  <svg viewBox="0 0 64 64" class="ups-radial-svg">
+                    <circle cx="32" cy="32" r="28" class="ups-radial-track"></circle>
+                    <circle cx="32" cy="32" r="28" class="ups-radial-fill" id="ups-radial-fill"></circle>
+                  </svg>
+                  <div class="ups-radial-label" id="mgmt-ups-charge">--%</div>
+                </div>
+                <div class="ups-card-label" data-i18n="mgmt.ups_twin_battery">Battery Subsystem</div>
+                <div class="ups-card-sub" id="mgmt-ups-runtime">-- min remaining</div>
+                <div class="ups-card-meta" id="ups-twin-batt-volts">-- V • --°C</div>
+              </div>
+
+              <!-- Animated Electron Flow Channel 2 -->
+              <div class="ups-flow-channel" id="ups-channel-battery-host">
+                <svg viewBox="0 0 100 24" preserveAspectRatio="none" class="ups-flow-svg">
+                  <path d="M 0 12 L 100 12" class="ups-pulse-track"></path>
+                  <path d="M 0 12 L 100 12" class="ups-pulse-line" id="ups-pulse-line-2"></path>
+                </svg>
+                <span class="ups-flow-rate" id="ups-flow-text-2">Conditioned</span>
+              </div>
+
+              <div class="ups-flow-card" id="ups-card-host">
+                <div class="ups-card-status-dot active"></div>
+                <div class="ups-card-icon">🖥️</div>
+                <div class="ups-card-label" data-i18n="mgmt.ups_twin_host">Host & Storage Load</div>
+                <div class="ups-card-val" id="ups-twin-watts">-- W</div>
+                <div class="ups-card-sub" id="mgmt-ups-load">-- % of Capacity</div>
+                <div class="ups-card-meta" id="ups-twin-policy-badge">Policy: Safe Shutdown</div>
+              </div>
+            </div>
+
+            <!-- Detailed Telemetry Grid -->
+            <div class="mgmt-detail-body" style="margin-top: 18px;">
+              <div class="unraid-details-grid">
+                <div class="unraid-detail-item">
+                  <span class="udi-label" data-i18n="mgmt.ups_daemon_status">Power Daemon Status</span>
+                  <span class="udi-val" id="mgmt-ups-status" style="color:var(--ok2);">ONLINE</span>
+                </div>
+                <div class="unraid-detail-item">
+                  <span class="udi-label" data-i18n="mgmt.ups_model">UPS Model</span>
+                  <span class="udi-val" id="mgmt-ups-model">Generic UPS</span>
+                </div>
+                <div class="unraid-detail-item">
+                  <span class="udi-label" data-i18n="mgmt.ups_protocol">Connection Protocol</span>
+                  <span class="udi-val" id="mgmt-ups-protocol">Auto / NIS</span>
+                </div>
+                <div class="unraid-detail-item">
+                  <span class="udi-label" data-i18n="mgmt.ups_battv">Battery Voltage</span>
+                  <span class="udi-val" id="mgmt-ups-battv">-- V</span>
+                </div>
+                <div class="unraid-detail-item">
+                  <span class="udi-label" data-i18n="mgmt.ups_linev">Line / Utility Voltage</span>
+                  <span class="udi-val" id="mgmt-ups-linev">-- V</span>
+                </div>
+                <div class="unraid-detail-item">
+                  <span class="udi-label" data-i18n="mgmt.ups_active_policy">Failsafe Policy</span>
+                  <span class="udi-val" id="mgmt-ups-policy">Runtime &lt; 5m</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Power Outage History & Analytics Table -->
+            <div class="ups-events-section" style="margin-top: 24px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px;">
+                <div style="font-weight:600; font-size:13px; color:var(--text);" data-i18n="mgmt.ups_events_title">📜 Power Integrity & Outage Ledger</div>
+                <button class="btn-pill-toggle" id="btn-ups-simulate" title="Simulate 15s power outage drill" data-i18n="mgmt.ups_btn_simulate">⚠️ Simulate Outage Drill</button>
+              </div>
+              <div class="table-container" style="max-height: 220px; overflow-y: auto;">
+                <table class="copy-history-table responsive-cards" id="ups-events-table">
+                  <thead>
+                    <tr>
+                      <th data-i18n="mgmt.ups_col_time">Date / Time</th>
+                      <th data-i18n="mgmt.ups_col_type">Event Type</th>
+                      <th data-i18n="mgmt.ups_col_duration">Duration</th>
+                      <th data-i18n="mgmt.ups_col_battery">Battery Delta</th>
+                      <th data-i18n="mgmt.ups_col_action">Action Taken</th>
+                    </tr>
+                  </thead>
+                  <tbody id="ups-events-tbody">
+                    <tr><td colspan="5" style="text-align:center; color:var(--muted); padding:16px;" data-i18n="mgmt.ups_no_events">No power events or brownouts recorded. All power lines normal.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
-        </div>
+
 
           <!-- 5. Storage & Physical Chassis -->
           <div id="mgmt-sec-storage" class="mgmt-detail-card" style="display: none;">

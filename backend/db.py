@@ -74,6 +74,22 @@ def init_db():
                 )
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_smart_history_dev_ts ON smart_history(dev, ts DESC)")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS ups_events (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    ts INTEGER NOT NULL,
+                    event_type TEXT NOT NULL,
+                    status TEXT NOT NULL,
+                    duration_sec REAL DEFAULT 0.0,
+                    start_battery_pct REAL,
+                    end_battery_pct REAL,
+                    min_line_volts REAL,
+                    max_load_pct REAL,
+                    action_taken TEXT DEFAULT '',
+                    details TEXT DEFAULT ''
+                )
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_ups_events_ts ON ups_events(ts DESC)")
     except Exception as e:
         logger.error(f"Failed to initialize database: {e}")
 
@@ -403,4 +419,59 @@ def query_all_smart_velocities() -> dict:
                 out[d] = query_smart_velocity(d, conn=conn)
     except Exception as e:
         logger.debug(f"[ZettNAS] Failed to query all velocities: {e}")
+    return out
+
+
+def log_ups_event(
+    event_type: str,
+    status: str = "COMPLETED",
+    duration_sec: float = 0.0,
+    start_battery_pct: float | None = None,
+    end_battery_pct: float | None = None,
+    min_line_volts: float | None = None,
+    max_load_pct: float | None = None,
+    action_taken: str = "",
+    details: str = "",
+    ts: int | None = None,
+) -> int:
+    now_ts = int(time.time()) if ts is None else ts
+    try:
+        with db_session() as conn:
+            cur = conn.execute(
+                """
+                INSERT INTO ups_events (
+                    ts, event_type, status, duration_sec, start_battery_pct,
+                    end_battery_pct, min_line_volts, max_load_pct, action_taken, details
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    now_ts, event_type, status, duration_sec, start_battery_pct,
+                    end_battery_pct, min_line_volts, max_load_pct, action_taken, details
+                ),
+            )
+            return cur.lastrowid or 0
+    except Exception as e:
+        logger.error(f"[UPS DB] Failed to log UPS event: {e}")
+        return 0
+
+
+def query_ups_events(limit: int = 50) -> list[dict]:
+    out = []
+    try:
+        with db_session() as conn:
+            conn.row_factory = sqlite3.Row
+            rows = conn.execute(
+                """
+                SELECT id, ts, event_type, status, duration_sec, start_battery_pct,
+                       end_battery_pct, min_line_volts, max_load_pct, action_taken, details
+                FROM ups_events
+                ORDER BY ts DESC
+                LIMIT ?
+                """,
+                (limit,),
+            ).fetchall()
+            for r in rows:
+                out.append(dict(r))
+    except Exception as e:
+        logger.debug(f"[UPS DB] Failed to query UPS events: {e}")
     return out

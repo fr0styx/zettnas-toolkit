@@ -208,31 +208,7 @@ export function updateManagementTelemetry(stats) {
 
   // Update UPS pill, sidebar badge, and telemetry if active
   if (stats.ups) {
-    const upsVal = stats.ups.battery_charge_pct != null ? `${stats.ups.battery_charge_pct}%` : (stats.ups.available ? 'Active' : 'Offline');
-    const upsPill = document.getElementById('mgmt-hub-ups-pill');
-    if (upsPill) upsPill.textContent = upsVal;
-    const sideUpsBadge = document.getElementById('mgmt-sidebar-ups-badge');
-    if (sideUpsBadge) sideUpsBadge.textContent = upsVal;
-
-    const statusEl = document.getElementById('mgmt-ups-status');
-    const modelEl = document.getElementById('mgmt-ups-model');
-    const chargeEl = document.getElementById('mgmt-ups-charge');
-    const runtimeEl = document.getElementById('mgmt-ups-runtime');
-    const loadEl = document.getElementById('mgmt-ups-load');
-    const linevEl = document.getElementById('mgmt-ups-linev');
-
-    if (statusEl) {
-      statusEl.textContent = stats.ups.status || (stats.ups.available ? 'ONLINE' : 'Offline');
-      statusEl.style.color = stats.ups.available ? 'var(--ok2)' : 'var(--warn)';
-    }
-    if (modelEl) modelEl.textContent = stats.ups.model || 'Generic UPS';
-    if (chargeEl) {
-      chargeEl.textContent = stats.ups.battery_charge_pct != null ? `${stats.ups.battery_charge_pct}%` : 'N/A';
-      chargeEl.style.color = (stats.ups.battery_charge_pct == null || stats.ups.battery_charge_pct > 30) ? 'var(--ok2)' : 'var(--crit)';
-    }
-    if (runtimeEl) runtimeEl.textContent = stats.ups.time_left_min != null ? `${stats.ups.time_left_min} min` : 'N/A';
-    if (loadEl) loadEl.textContent = stats.ups.load_pct != null ? `${stats.ups.load_pct}%` : 'N/A';
-    if (linevEl) linevEl.textContent = stats.ups.line_volts != null ? `${stats.ups.line_volts} V` : 'N/A';
+    renderUpsTelemetry(stats.ups);
   }
 
   if (stats.fan_control && stats.fan_control.profile) {
@@ -2432,37 +2408,465 @@ async function refreshSourcesUI() {
   }
 }
 
+export function renderUpsTelemetry(ups) {
+  if (!ups) return;
+  const upsVal = ups.battery_charge_pct != null ? `${ups.battery_charge_pct}%` : (ups.available ? 'Active' : 'Offline');
+  const upsPill = document.getElementById('mgmt-hub-ups-pill');
+  if (upsPill) upsPill.textContent = upsVal;
+  const sideUpsBadge = document.getElementById('mgmt-sidebar-ups-badge');
+  if (sideUpsBadge) sideUpsBadge.textContent = upsVal;
+
+  const statusEl = document.getElementById('mgmt-ups-status');
+  const modelEl = document.getElementById('mgmt-ups-model');
+  const chargeEl = document.getElementById('mgmt-ups-charge');
+  const runtimeEl = document.getElementById('mgmt-ups-runtime');
+  const loadEl = document.getElementById('mgmt-ups-load');
+  const linevEl = document.getElementById('mgmt-ups-linev');
+  const protocolEl = document.getElementById('mgmt-ups-protocol');
+  const battvEl = document.getElementById('mgmt-ups-battv');
+  const policyEl = document.getElementById('mgmt-ups-policy');
+
+  if (statusEl) {
+    statusEl.textContent = ups.status || (ups.available ? 'ONLINE' : 'Offline');
+    statusEl.style.color = ups.available ? (ups.on_battery ? 'var(--warn)' : 'var(--ok2)') : 'var(--muted)';
+  }
+  if (modelEl) modelEl.textContent = ups.model || 'Generic UPS';
+  if (chargeEl) {
+    chargeEl.textContent = ups.battery_charge_pct != null ? `${ups.battery_charge_pct}%` : 'N/A';
+    chargeEl.style.color = (ups.battery_charge_pct == null || ups.battery_charge_pct > 30) ? 'var(--ok2)' : 'var(--crit)';
+  }
+  if (runtimeEl) runtimeEl.textContent = ups.time_left_min != null ? `${ups.time_left_min} min` : 'N/A';
+  if (loadEl) loadEl.textContent = ups.load_pct != null ? `${ups.load_pct}%` : 'N/A';
+  if (linevEl) linevEl.textContent = ups.line_volts != null ? `${ups.line_volts} V` : 'N/A';
+  if (protocolEl) protocolEl.textContent = ups.protocol || 'Auto / NIS';
+  if (battvEl) battvEl.textContent = ups.battery_volts != null ? `${ups.battery_volts} V` : 'N/A';
+  if (policyEl) policyEl.textContent = ups.active_policy ? `Policy: ${ups.active_policy}` : 'Runtime < 5m';
+
+  // Digital Twin Nodes
+  const flowContainer = document.getElementById('ups-power-flow-container');
+  const twinLinev = document.getElementById('ups-twin-linev');
+  const twinGridStatus = document.getElementById('ups-twin-grid-status');
+  const twinWatts = document.getElementById('ups-twin-watts');
+  const twinBattVolts = document.getElementById('ups-twin-batt-volts');
+  const radialFill = document.getElementById('ups-radial-fill');
+  const gridDot = document.getElementById('ups-grid-dot');
+  const emergencyBanner = document.getElementById('ups-emergency-banner');
+  const emergencyCountdown = document.getElementById('ups-emergency-countdown');
+
+  if (twinLinev) twinLinev.textContent = ups.line_volts != null ? `${ups.line_volts} V` : (ups.available ? '120.0 V' : '-- V');
+  if (twinGridStatus) {
+    twinGridStatus.textContent = ups.on_battery ? 'AC Mains Disconnected' : (ups.line_freq_hz ? `${ups.line_freq_hz} Hz Nominal` : '120V / 60Hz Nominal');
+  }
+  if (twinWatts) twinWatts.textContent = ups.power_watts != null ? `${ups.power_watts} W` : (ups.load_pct != null ? `${Math.round(ups.load_pct * 9)} W` : '-- W');
+  if (twinBattVolts) {
+    const vStr = ups.battery_volts != null ? `${ups.battery_volts} V` : '-- V';
+    const tStr = ups.battery_temp_c != null ? `${ups.battery_temp_c}°C` : '--°C';
+    twinBattVolts.textContent = `${vStr} • ${tStr}`;
+  }
+
+  // Radial progress ring (circumference for r=28 is 175.93)
+  if (radialFill) {
+    const pct = Math.max(0, Math.min(100, ups.battery_charge_pct != null ? ups.battery_charge_pct : 100));
+    const offset = 175.93 * (1 - pct / 100);
+    radialFill.style.strokeDashoffset = offset;
+    radialFill.style.stroke = pct <= 20 ? 'var(--err, #eb5757)' : (pct <= 40 ? 'var(--warn, #f5a623)' : 'var(--ok2, #25c2a0)');
+  }
+
+  if (flowContainer) {
+    flowContainer.classList.toggle('on-battery', Boolean(ups.on_battery));
+    flowContainer.classList.toggle('critical-battery', Boolean(ups.battery_charge_pct != null && ups.battery_charge_pct <= 20));
+  }
+
+  if (gridDot) {
+    gridDot.className = 'ups-card-status-dot ' + (ups.on_battery ? 'danger' : (ups.available ? 'active' : ''));
+  }
+
+  if (emergencyBanner) {
+    if (ups.on_battery) {
+      emergencyBanner.style.display = 'flex';
+      if (emergencyCountdown) {
+        emergencyCountdown.textContent = ups.time_left_min != null ? `~${ups.time_left_min}m remaining` : 'ON BATTERY';
+      }
+    } else {
+      emergencyBanner.style.display = 'none';
+    }
+  }
+}
+
+export async function fetchAndRenderUpsEvents() {
+  const tbody = document.getElementById('ups-events-tbody');
+  if (!tbody) return;
+  try {
+    const res = await api.get('/api/ups/events');
+    const events = res && Array.isArray(res.events) ? res.events : [];
+    if (!events.length) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--muted); padding:16px;">No power events or brownouts recorded. All power lines normal.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = events.map(ev => {
+      const dateStr = ev.ts ? new Date(ev.ts * 1000).toLocaleString() : '--';
+      let typeBadge = `<span class="badge" style="background:rgba(0,240,255,0.15); border:1px solid #00f0ff; color:#00f0ff; padding:2px 8px; border-radius:4px; font-size:11px;">${escapeHtml(ev.event_type)}</span>`;
+      if (ev.event_type.includes('OUTAGE') || ev.event_type.includes('FAILSAFE')) {
+        typeBadge = `<span class="badge" style="background:rgba(245,166,35,0.15); border:1px solid #f5a623; color:#f5a623; padding:2px 8px; border-radius:4px; font-size:11px;">${escapeHtml(ev.event_type)}</span>`;
+      } else if (ev.event_type.includes('SELF_TEST')) {
+        typeBadge = `<span class="badge" style="background:rgba(37,194,160,0.15); border:1px solid #25c2a0; color:#25c2a0; padding:2px 8px; border-radius:4px; font-size:11px;">${escapeHtml(ev.event_type)}</span>`;
+      }
+      const durStr = ev.duration_sec ? `${ev.duration_sec}s` : '--';
+      const battDelta = ev.start_battery_pct != null && ev.end_battery_pct != null
+        ? `${ev.start_battery_pct}% ➔ ${ev.end_battery_pct}%`
+        : (ev.start_battery_pct != null ? `${ev.start_battery_pct}%` : '--');
+      const action = ev.action_taken || ev.status || '--';
+
+      return `<tr>
+        <td style="font-size:12px; font-variant-numeric:tabular-nums;">${escapeHtml(dateStr)}</td>
+        <td>${typeBadge}</td>
+        <td style="font-size:12px;">${escapeHtml(durStr)}</td>
+        <td style="font-size:12px;">${escapeHtml(battDelta)}</td>
+        <td style="font-size:12px; color:var(--text);">${escapeHtml(action)}</td>
+      </tr>`;
+    }).join('');
+  } catch (err) {
+    console.debug('Failed to fetch UPS events:', err);
+  }
+}
+
 export async function fetchAndRenderUpsTelemetry() {
   try {
     const ups = await api.get('/api/ups');
     if (!ups) return;
-    const statusEl = document.getElementById('mgmt-ups-status');
-    const modelEl = document.getElementById('mgmt-ups-model');
-    const chargeEl = document.getElementById('mgmt-ups-charge');
-    const runtimeEl = document.getElementById('mgmt-ups-runtime');
-    const loadEl = document.getElementById('mgmt-ups-load');
-    const linevEl = document.getElementById('mgmt-ups-linev');
-    const pill = document.getElementById('mgmt-hub-ups-pill');
-
-    if (statusEl) {
-      statusEl.textContent = ups.status || (ups.available ? 'ONLINE' : 'Offline');
-      statusEl.style.color = ups.available ? 'var(--ok2)' : 'var(--warn)';
-    }
-    if (pill) {
-      pill.textContent = ups.battery_charge_pct != null ? `${ups.battery_charge_pct}%` : (ups.available ? 'Active' : 'Offline');
-    }
-    if (modelEl) modelEl.textContent = ups.model || 'Generic UPS';
-    if (chargeEl) {
-      chargeEl.textContent = ups.battery_charge_pct != null ? `${ups.battery_charge_pct}%` : 'N/A';
-      chargeEl.style.color = (ups.battery_charge_pct == null || ups.battery_charge_pct > 30) ? 'var(--ok2)' : 'var(--crit)';
-    }
-    if (runtimeEl) runtimeEl.textContent = ups.time_left_min != null ? `${ups.time_left_min} min` : 'N/A';
-    if (loadEl) loadEl.textContent = ups.load_pct != null ? `${ups.load_pct}%` : 'N/A';
-    if (linevEl) linevEl.textContent = ups.line_volts != null ? `${ups.line_volts} V` : 'N/A';
+    renderUpsTelemetry(ups);
+    fetchAndRenderUpsEvents();
   } catch (err) {
     console.debug('Failed to fetch UPS telemetry:', err);
   }
 }
+
+export function openUpsDrawer() {
+  const drawer = document.getElementById('ups-config-drawer');
+  const overlay = document.getElementById('ups-drawer-overlay');
+  if (!drawer || !overlay) return;
+  drawer.style.display = 'flex';
+  overlay.style.display = 'block';
+  void drawer.offsetWidth;
+  drawer.classList.add('open');
+  overlay.classList.add('open');
+  loadUpsConfigToDrawer();
+}
+if (typeof window !== 'undefined') window.openUpsDrawer = openUpsDrawer;
+
+export function closeUpsDrawer() {
+  const drawer = document.getElementById('ups-config-drawer');
+  const overlay = document.getElementById('ups-drawer-overlay');
+  if (!drawer || !overlay) return;
+  drawer.classList.remove('open');
+  overlay.classList.remove('open');
+  setTimeout(() => {
+    drawer.style.display = 'none';
+    overlay.style.display = 'none';
+  }, 250);
+}
+if (typeof window !== 'undefined') window.closeUpsDrawer = closeUpsDrawer;
+
+export async function loadUpsConfigToDrawer() {
+  try {
+    const cfg = await api.get('/api/ups/config');
+    if (!cfg) return;
+
+    // Mode selection
+    const mode = cfg.mode || 'auto';
+    const modeRadios = document.querySelectorAll('input[name="ups-mode"]');
+    modeRadios.forEach(r => {
+      r.checked = (r.value === mode);
+    });
+
+    // Inputs
+    const hostEl = document.getElementById('ups-cfg-host');
+    const portEl = document.getElementById('ups-cfg-port');
+    const nameEl = document.getElementById('ups-cfg-name');
+    const userEl = document.getElementById('ups-cfg-user');
+    const passEl = document.getElementById('ups-cfg-pass');
+
+    if (hostEl) hostEl.value = cfg.host || '127.0.0.1';
+    if (portEl) portEl.value = cfg.port || 3551;
+    if (nameEl) nameEl.value = cfg.ups_name || 'ups';
+    if (userEl) userEl.value = cfg.username || '';
+    if (passEl) passEl.value = cfg.password || '';
+
+    // Shutdown Policy
+    const policy = cfg.shutdown_policy || 'runtime_left';
+    const policyRadios = document.querySelectorAll('input[name="ups-policy"]');
+    policyRadios.forEach(r => {
+      r.checked = (r.value === policy);
+    });
+
+    // Sliders
+    const runtimeSlider = document.getElementById('ups-slider-runtime');
+    const runtimeVal = document.getElementById('ups-val-runtime');
+    if (runtimeSlider) {
+      runtimeSlider.value = cfg.runtime_threshold_min != null ? cfg.runtime_threshold_min : 5;
+      if (runtimeVal) runtimeVal.textContent = `${runtimeSlider.value} min`;
+    }
+
+    const batterySlider = document.getElementById('ups-slider-battery');
+    const batteryVal = document.getElementById('ups-val-battery');
+    if (batterySlider) {
+      batterySlider.value = cfg.battery_threshold_pct != null ? cfg.battery_threshold_pct : 20;
+      if (batteryVal) batteryVal.textContent = `${batterySlider.value} %`;
+    }
+
+    const timerSlider = document.getElementById('ups-slider-timer');
+    const timerVal = document.getElementById('ups-val-timer');
+    if (timerSlider) {
+      timerSlider.value = cfg.shutdown_timer_sec != null ? cfg.shutdown_timer_sec : 300;
+      if (timerVal) timerVal.textContent = `${timerSlider.value} sec`;
+    }
+
+    // Checkboxes
+    const chkDocker = document.getElementById('ups-chk-docker');
+    if (chkDocker) {
+      chkDocker.checked = (cfg.container_shutdown_timeout_sec ?? 45) > 0;
+    }
+
+    const chkCutpower = document.getElementById('ups-chk-cutpower');
+    if (chkCutpower) {
+      chkCutpower.checked = Boolean(cfg.poweroff_ups);
+    }
+  } catch (err) {
+    console.debug('Failed to load UPS config:', err);
+  }
+}
+
+export function initUpsDrawerControls() {
+  const btnOpen = document.getElementById('btn-open-ups-config');
+  btnOpen?.addEventListener('click', (e) => {
+    e.preventDefault();
+    openUpsDrawer();
+  });
+
+  const btnClose = document.getElementById('btn-close-ups-drawer');
+  btnClose?.addEventListener('click', (e) => {
+    e.preventDefault();
+    closeUpsDrawer();
+  });
+
+  const overlay = document.getElementById('ups-drawer-overlay');
+  overlay?.addEventListener('click', () => {
+    closeUpsDrawer();
+  });
+
+  // Slider value listeners
+  const runtimeSlider = document.getElementById('ups-slider-runtime');
+  const runtimeVal = document.getElementById('ups-val-runtime');
+  runtimeSlider?.addEventListener('input', () => {
+    if (runtimeVal) runtimeVal.textContent = `${runtimeSlider.value} min`;
+  });
+
+  const batterySlider = document.getElementById('ups-slider-battery');
+  const batteryVal = document.getElementById('ups-val-battery');
+  batterySlider?.addEventListener('input', () => {
+    if (batteryVal) batteryVal.textContent = `${batterySlider.value} %`;
+  });
+
+  const timerSlider = document.getElementById('ups-slider-timer');
+  const timerVal = document.getElementById('ups-val-timer');
+  timerSlider?.addEventListener('input', () => {
+    if (timerVal) timerVal.textContent = `${timerSlider.value} sec`;
+  });
+
+  // Mode radio ports auto-fill
+  const modeRadios = document.querySelectorAll('input[name="ups-mode"]');
+  modeRadios.forEach(radio => {
+    radio.addEventListener('change', () => {
+      const portEl = document.getElementById('ups-cfg-port');
+      if (radio.value === 'apcupsd_client' && portEl && (portEl.value === '3493' || !portEl.value)) {
+        portEl.value = '3551';
+      } else if (radio.value === 'nut_client' && portEl && (portEl.value === '3551' || !portEl.value)) {
+        portEl.value = '3493';
+      }
+    });
+  });
+
+  // Auto-Discovery
+  const btnDiscover = document.getElementById('btn-ups-discover');
+  const discoverContainer = document.getElementById('ups-discover-candidates');
+  btnDiscover?.addEventListener('click', async () => {
+    try {
+      btnDiscover.disabled = true;
+      btnDiscover.textContent = 'Scanning...';
+      const res = await api.post('/api/ups/discover');
+      const candidates = res && Array.isArray(res.candidates) ? res.candidates : [];
+      if (!discoverContainer) return;
+      if (candidates.length === 0) {
+        discoverContainer.innerHTML = `<div style="font-size:11.5px; color:var(--muted); padding:6px 0;">No active UPS daemons or USB devices detected on local ports.</div>`;
+        return;
+      }
+      discoverContainer.innerHTML = candidates.map((cand, idx) => {
+        const typeLabel = cand.type === 'apcupsd' ? 'APCUPSD NIS' : (cand.type === 'nut' ? 'NUT Server' : 'USB HID Device');
+        const hostPort = cand.port ? `${cand.host}:${cand.port}` : (cand.path || cand.host);
+        return `<div class="ups-discover-item" data-idx="${idx}" style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.08); padding:8px 12px; border-radius:6px; cursor:pointer;">
+          <div>
+            <div style="font-size:12px; font-weight:600; color:#fff;">${escapeHtml(cand.label || typeLabel)}</div>
+            <div style="font-size:11px; color:var(--muted);">${escapeHtml(typeLabel)} • <code>${escapeHtml(hostPort)}</code></div>
+          </div>
+          <button type="button" class="btn-rect" style="font-size:11px; padding:3px 8px;">Apply</button>
+        </div>`;
+      }).join('');
+
+      discoverContainer.querySelectorAll('.ups-discover-item').forEach(item => {
+        item.addEventListener('click', () => {
+          const idx = parseInt(item.dataset.idx, 10);
+          const cand = candidates[idx];
+          if (!cand) return;
+          const targetMode = cand.type === 'apcupsd' ? 'apcupsd_client' : (cand.type === 'nut' ? 'nut_client' : 'usb_hid');
+          const radio = document.querySelector(`input[name="ups-mode"][value="${targetMode}"]`);
+          if (radio) radio.checked = true;
+          const hostEl = document.getElementById('ups-cfg-host');
+          const portEl = document.getElementById('ups-cfg-port');
+          const nameEl = document.getElementById('ups-cfg-name');
+          if (hostEl && cand.host) hostEl.value = cand.host;
+          if (portEl && cand.port) portEl.value = cand.port;
+          if (nameEl && cand.ups_name) nameEl.value = cand.ups_name;
+          showToast(`Applied ${cand.label || typeLabel} parameters!`, 'info');
+        });
+      });
+    } catch (err) {
+      showToast(`Auto-discovery failed: ${err.message}`, 'error');
+    } finally {
+      btnDiscover.disabled = false;
+      btnDiscover.textContent = 'Scan Hardware';
+    }
+  });
+
+  // Test Connection
+  const btnTest = document.getElementById('btn-ups-test-conn');
+  btnTest?.addEventListener('click', async () => {
+    try {
+      btnTest.disabled = true;
+      btnTest.textContent = 'Testing...';
+      const mode = document.querySelector('input[name="ups-mode"]:checked')?.value || 'auto';
+      const host = document.getElementById('ups-cfg-host')?.value.trim() || '127.0.0.1';
+      const port = parseInt(document.getElementById('ups-cfg-port')?.value, 10) || 3551;
+      const ups_name = document.getElementById('ups-cfg-name')?.value.trim() || 'ups';
+      const username = document.getElementById('ups-cfg-user')?.value.trim() || '';
+      const passwordRaw = document.getElementById('ups-cfg-pass')?.value || '';
+      const password = passwordRaw.startsWith('••') ? '' : passwordRaw;
+
+      const res = await api.post('/api/ups/test-connection', {
+        mode, host, port, ups_name, username, password
+      });
+
+      if (res && res.connected) {
+        showToast(`Connection successful! (${res.model || res.status || 'ONLINE'})`, 'success');
+        btnTest.textContent = '✓ Connected';
+        setTimeout(() => { btnTest.textContent = '🔌 Test Connection'; }, 3000);
+      } else {
+        showToast(`Connection failed: ${res.error || 'UPS daemon unreachable'}`, 'error');
+        btnTest.textContent = '✗ Failed';
+        setTimeout(() => { btnTest.textContent = '🔌 Test Connection'; }, 3000);
+      }
+    } catch (err) {
+      showToast(`Connection test error: ${err.message}`, 'error');
+      btnTest.textContent = '✗ Error';
+      setTimeout(() => { btnTest.textContent = '🔌 Test Connection'; }, 3000);
+    } finally {
+      btnTest.disabled = false;
+    }
+  });
+
+  // Save Config
+  const btnSave = document.getElementById('btn-save-ups-config');
+  btnSave?.addEventListener('click', async () => {
+    try {
+      btnSave.disabled = true;
+      btnSave.textContent = 'Saving...';
+      const mode = document.querySelector('input[name="ups-mode"]:checked')?.value || 'auto';
+      const host = document.getElementById('ups-cfg-host')?.value.trim() || '127.0.0.1';
+      const port = parseInt(document.getElementById('ups-cfg-port')?.value, 10) || 3551;
+      const ups_name = document.getElementById('ups-cfg-name')?.value.trim() || 'ups';
+      const username = document.getElementById('ups-cfg-user')?.value.trim() || '';
+      const passwordRaw = document.getElementById('ups-cfg-pass')?.value || '';
+      const password = passwordRaw.startsWith('••') ? undefined : passwordRaw;
+
+      const policy = document.querySelector('input[name="ups-policy"]:checked')?.value || 'runtime_left';
+      const runtime_threshold_min = parseInt(document.getElementById('ups-slider-runtime')?.value, 10) || 5;
+      const battery_threshold_pct = parseInt(document.getElementById('ups-slider-battery')?.value, 10) || 20;
+      const shutdown_timer_sec = parseInt(document.getElementById('ups-slider-timer')?.value, 10) || 300;
+
+      const container_shutdown_timeout_sec = document.getElementById('ups-chk-docker')?.checked ? 45 : 0;
+      const poweroff_ups = Boolean(document.getElementById('ups-chk-cutpower')?.checked);
+
+      const payload = {
+        enabled: true,
+        mode,
+        host,
+        port,
+        ups_name,
+        username,
+        shutdown_policy: policy,
+        runtime_threshold_min,
+        battery_threshold_pct,
+        shutdown_timer_sec,
+        container_shutdown_timeout_sec,
+        poweroff_ups
+      };
+      if (password !== undefined) {
+        payload.password = password;
+      }
+
+      await api.post('/api/ups/config', payload);
+      showToast('UPS configuration & safe shutdown policies saved!', 'success');
+      closeUpsDrawer();
+      fetchAndRenderUpsTelemetry();
+    } catch (err) {
+      showToast(`Failed to save UPS configuration: ${err.message}`, 'error');
+    } finally {
+      btnSave.disabled = false;
+      btnSave.textContent = '💾 Save & Apply UPS Policy';
+    }
+  });
+
+  // Battery Self-Test
+  const btnSelfTest = document.getElementById('btn-run-ups-selftest');
+  btnSelfTest?.addEventListener('click', () => {
+    showConfirmToast(
+      'Run Diagnostic Battery Self-Test?',
+      'This commands the UPS inverter to perform a 10-second internal battery discharge test under active load.',
+      async () => {
+        try {
+          showToast('Initiating battery self-test...', 'info');
+          const res = await api.post('/api/ups/self-test');
+          showToast(res.message || 'Battery self-test command sent successfully!', 'success');
+          fetchAndRenderUpsTelemetry();
+        } catch (err) {
+          showToast(`Self-test failed: ${err.message}`, 'error');
+        }
+      },
+      null,
+      { okText: '🔋 Run Self-Test', cancelText: 'Cancel' }
+    );
+  });
+
+  // Outage Simulation Drill
+  const btnSimulate = document.getElementById('btn-ups-simulate');
+  btnSimulate?.addEventListener('click', () => {
+    showConfirmToast(
+      'Simulate Power Outage Drill?',
+      'This simulates a 15-second utility power failure drill to verify digital twin electron animations, emergency countdown banner, and event ledger logging. <strong>Host will NOT shut down.</strong>',
+      async () => {
+        try {
+          showToast('Outage drill started (15s)...', 'warn');
+          await api.post('/api/ups/simulate', { duration_sec: 15 });
+          fetchAndRenderUpsTelemetry();
+        } catch (err) {
+          showToast(`Simulation failed: ${err.message}`, 'error');
+        }
+      },
+      null,
+      { okText: '⚠️ Start Drill', cancelText: 'Cancel' }
+    );
+  });
+}
+if (typeof window !== 'undefined') window.initUpsDrawerControls = initUpsDrawerControls;
 
 export async function fetchAndRenderCopyHistory() {
   const tbody = document.getElementById('copy-history-tbody');
@@ -3399,7 +3803,7 @@ export function initManagement() {
     });
   }
 
-  // UPS telemetry refresh button
+  // UPS telemetry refresh button & drawer controls
   const refreshUpsBtn = document.getElementById('btn-refresh-ups');
   if (refreshUpsBtn) {
     refreshUpsBtn.addEventListener('click', () => {
@@ -3407,6 +3811,7 @@ export function initManagement() {
       showToast('UPS telemetry refreshed.', 'info');
     });
   }
+  initUpsDrawerControls();
 
   // Chassis digital twin refresh button
   const refreshChassisBtn = document.getElementById('btn-refresh-chassis');

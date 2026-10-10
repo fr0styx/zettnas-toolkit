@@ -50,6 +50,7 @@ SESSIONS_FILE = os.path.join(DATA_DIR, "sessions.json")
 WALLPAPER_CONFIG_FILE = os.path.join(DATA_DIR, "wallpaper_config.json")
 WALLPAPERS_DIR = os.path.join(DATA_DIR, "wallpapers")
 CLIENT_PREFS_FILE = os.path.join(DATA_DIR, "client_preferences.json")
+UPS_CONFIG_FILE = os.path.join(DATA_DIR, "ups_config.json")
 
 # ---- Security & Auth ----
 from backend.passwords import hash_password, verify_password  # noqa: E402

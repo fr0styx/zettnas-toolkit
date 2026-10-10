@@ -1064,11 +1064,6 @@ async def post_system_prune(req: Optional[DockerPruneRequest] = None):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/ups")
-async def get_ups_telemetry():
-    return await asyncio.to_thread(read_ups_status)
-
-
 class RenameRequest(BaseModel):
     path: str
     new_name: str

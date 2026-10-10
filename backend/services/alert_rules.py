@@ -54,8 +54,15 @@ def evaluate_system_alerts(unraid_data, ups_data):
         charge = ups_data.get("battery_charge_pct")
         runtime = ups_data.get("time_left_min")
 
-        batt_thresh = float(os.getenv("UPS_FAILSAFE_BATTERY_MIN", "20.0"))
-        time_thresh = float(os.getenv("UPS_FAILSAFE_RUNTIME_MIN", "5.0"))
+        try:
+            from backend.hardware.ups import load_ups_config
+            ups_cfg = load_ups_config()
+            batt_thresh = float(ups_cfg.get("battery_threshold_pct", 20.0))
+            time_thresh = float(ups_cfg.get("runtime_threshold_min", 5.0))
+        except Exception:
+            batt_thresh = float(os.getenv("UPS_FAILSAFE_BATTERY_MIN", "20.0"))
+            time_thresh = float(os.getenv("UPS_FAILSAFE_RUNTIME_MIN", "5.0"))
+
         grace_period = float(os.getenv("UPS_FAILSAFE_GRACE_SEC", "15.0"))
         shutdown_enabled = os.getenv("UPS_FAILSAFE_SHUTDOWN", "0").lower() in ("1", "true", "yes")
 
@@ -90,6 +97,17 @@ def evaluate_system_alerts(unraid_data, ups_data):
                     logger.warning(
                         f"[UPS FAILSAFE] Engaging automated failsafe: battery={charge}%, runtime={runtime}m (grace={elapsed:.1f}s)"
                     )
+                    try:
+                        from backend.db import log_ups_event
+                        log_ups_event(
+                            event_type="FAILSAFE_ENGAGED",
+                            status="ACTIVE",
+                            start_battery_pct=charge,
+                            action_taken="Filesystem buffers synced; copy paused.",
+                            details=f"Critical battery: {charge}%, runtime: {runtime}m",
+                        )
+                    except Exception:
+                        pass
 
                     # 1. Protect file copy operation by pausing it cleanly
                     if getattr(Z_STATE, "copy_active", False) and not getattr(Z_STATE, "copy_paused", False):
@@ -145,6 +163,16 @@ def evaluate_system_alerts(unraid_data, ups_data):
                 logger.info("[UPS FAILSAFE] AC mains power restored. Disengaging failsafe.")
                 _failsafe_active = False
                 _low_batt_start_ts = None
+                try:
+                    from backend.db import log_ups_event
+                    log_ups_event(
+                        event_type="OUTAGE_RECOVERED",
+                        status="RESOLVED",
+                        end_battery_pct=charge,
+                        action_taken="AC mains power restored. Failsafe disengaged.",
+                    )
+                except Exception:
+                    pass
 
                 # Resume copy job if it was paused by the failsafe
                 if _copy_paused_by_failsafe:
