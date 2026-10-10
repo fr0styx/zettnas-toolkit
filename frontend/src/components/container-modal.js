@@ -580,10 +580,10 @@ async function loadContainerDetails(cid) {
       </div>
 
       <!-- App Backup & Recovery Section -->
-      <div class="ci-metric-card" style="background:rgba(0,240,255,0.04); border:1px solid rgba(0,240,255,0.2); padding:12px; border-radius:8px; margin-top:12px;">
+      <div class="ci-metric-card" style="background:rgba(249,115,22,0.05); border:1px solid rgba(249,115,22,0.25); padding:12px; border-radius:8px; margin-top:12px;">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
           <div>
-            <div style="font-size:11px; font-weight:700; color:var(--accent-cyan,#00f0ff); text-transform:uppercase; letter-spacing:0.5px; display:flex; align-items:center; gap:6px;">
+            <div style="font-size:11px; font-weight:700; color:#fb923c; text-transform:uppercase; letter-spacing:0.5px; display:flex; align-items:center; gap:6px;">
               <span>💾</span>
               <span>App Data & Config Backup</span>
             </div>
@@ -592,7 +592,7 @@ async function loadContainerDetails(cid) {
             </div>
           </div>
           <div>
-            <button class="btn-pill-toggle" id="ci-btn-backup-action" style="padding:5px 14px; font-size:11px; font-weight:700; color:var(--accent-cyan,#00f0ff); border-color:var(--accent-cyan,#00f0ff); background:rgba(0,240,255,0.1); cursor:pointer;">
+            <button class="btn-pill-toggle ci-btn-backup-orange" id="ci-btn-backup-action" style="padding:5px 14px; font-size:11px; font-weight:700; color:#fb923c; border-color:rgba(249,115,22,0.4); background:rgba(249,115,22,0.12); cursor:pointer;">
               💾 Backup App Now
             </button>
           </div>
@@ -1132,7 +1132,7 @@ export function openContainerDeleteModal(cid, cname, imageRef = '', onDeleted = 
               ⚠️ <strong>Warning:</strong> This container will be stopped and removed from the host Docker daemon. Any unsaved data inside the container layer will be lost.
             </div>
             <div style="display:flex; flex-direction:column; gap:8px; background:rgba(0,0,0,0.2); padding:10px; border-radius:6px; border:1px solid rgba(255,255,255,0.06);">
-              <label style="display:flex; align-items:center; gap:8px; font-size:11px; color:var(--accent-cyan, #00f0ff); font-weight:600; cursor:pointer;">
+              <label style="display:flex; align-items:center; gap:8px; font-size:11px; color:#fb923c; font-weight:600; cursor:pointer;">
                 <input type="checkbox" id="cdm-archive" checked style="cursor:pointer;">
                 <span>Archive app data & config (never delete, save to backup library)</span>
               </label>

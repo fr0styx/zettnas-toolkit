@@ -1997,7 +1997,8 @@ body.drawer-is-open .chassis-workbench-stage {
 .btn-save-preset:hover {
   background: #253547;
   color: #fff;
-  border-color: var(--ok2);
+  border-color: #f97316;
+  box-shadow: 0 0 8px rgba(249, 115, 22, 0.35);
 }
 
 /* =========================================================================
@@ -2226,8 +2227,8 @@ select.fan-preset-select:focus {
 .btn-fan-save:hover {
   background: #27384c;
   color: #ffffff;
-  border-color: rgba(37, 194, 160, 0.45);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  border-color: rgba(249, 115, 22, 0.5);
+  box-shadow: 0 2px 8px rgba(249, 115, 22, 0.3);
 }
 
 .btn-fan-save:active {
@@ -2235,7 +2236,7 @@ select.fan-preset-select:focus {
 }
 
 .btn-fan-save .ic {
-  color: var(--ok2, #25c2a0);
+  color: #fb923c;
 }
 
 .btn-fan-apply {
@@ -3780,6 +3781,24 @@ select.tz-select-input option, select.tz-select option {
   border-color: #fbbf24;
   color: #fff;
   box-shadow: 0 0 10px rgba(245, 158, 11, 0.4);
+}
+.btn-docker-backup {
+  background: rgba(249, 115, 22, 0.14);
+  color: #fb923c;
+  border-color: rgba(249, 115, 22, 0.35);
+}
+.btn-docker-backup:hover:not(:disabled) {
+  background: rgba(249, 115, 22, 0.3);
+  border-color: #f97316;
+  color: #fff;
+  box-shadow: 0 0 10px rgba(249, 115, 22, 0.45);
+}
+.ci-btn-backup-orange:hover:not(:disabled),
+#ci-btn-backup-action:hover:not(:disabled) {
+  background: rgba(249, 115, 22, 0.28) !important;
+  border-color: #f97316 !important;
+  color: #fff !important;
+  box-shadow: 0 0 12px rgba(249, 115, 22, 0.45);
 }
 .btn-docker-update-badge {
   display: inline-flex;

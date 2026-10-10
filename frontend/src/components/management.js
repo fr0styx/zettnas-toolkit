@@ -4381,7 +4381,7 @@ export async function fetchAndRenderAppBackups(mountEl, filterApp = '') {
       const isUninstall = b.reason === 'uninstall';
       const reasonBadge = isUninstall
         ? `<span class="badge" style="background: rgba(239,68,68,0.15); color: #fca5a5; border: 1px solid rgba(239,68,68,0.3); font-size: 10px; padding: 2px 6px; border-radius: 4px;">⚠️ Auto-Archive (Uninstall)</span>`
-        : `<span class="badge" style="background: rgba(0,240,255,0.15); color: #38bdf8; border: 1px solid rgba(0,240,255,0.3); font-size: 10px; padding: 2px 6px; border-radius: 4px;">💾 On-Demand</span>`;
+        : `<span class="badge" style="background: rgba(249, 115, 22, 0.15); color: #fb923c; border: 1px solid rgba(249, 115, 22, 0.35); font-size: 10px; padding: 2px 6px; border-radius: 4px;">💾 On-Demand</span>`;
 
       const createdDate = b.created_at_epoch ? new Date(b.created_at_epoch * 1000).toLocaleString() : (b.created_at ? new Date(b.created_at).toLocaleString() : 'N/A');
       const sizeStr = b.archive_size_formatted || (b.archive_size_bytes ? `${(b.archive_size_bytes / (1024 * 1024)).toFixed(1)} MB` : '--');
