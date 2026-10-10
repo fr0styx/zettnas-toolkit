@@ -1,7 +1,7 @@
 import { syncWidgetSettingsUI } from './widgets.js';
 import { syncDesktopThemeUI } from './settings.js';
 import { openContainerInspector, openContainerDeleteModal } from './container-modal.js';
-import { openStackModal } from './stack-modal.js';
+import { openStackModal, openStackPickerModal } from './stack-modal.js';
 import { ZettEventBus } from '../event-bus.js';
 import { fetchAndRenderChassisTwin, renderStorageTopologyTree, fetchAndRenderStorageTopology, fetchAndRenderNetworkShares, fetchAndRenderRemoteStorage, openNewCloudRemoteModal, openCreateStoragePoolModal, openCreateNetworkShareModal, openSnapshotsModal, triggerLocateDisk, getThermalLevel } from './chassis-visualizer.js';
 /**
@@ -258,6 +258,7 @@ let _catalogSearchQuery = '';
 let _catalogSources = [];
 
 export function _resetDockerStateForTesting() {
+  stopDockerAutoRefresh();
   _dockerContainersList = [];
   _dockerFilter = 'all';
   _dockerSearchQuery = '';
@@ -436,25 +437,7 @@ function _bindDockerEvents() {
           showToast('No active Compose stacks found.', 'info');
           return;
         }
-        if (stacks.length === 1) {
-          openStackModal(stacks[0].name);
-          return;
-        }
-        const stackListStr = stacks.map((s, i) => `${i + 1}. ${s.name} (${s.running_count}/${s.total_count} running)`).join('\n');
-        const chosen = prompt(`Select a Docker Stack to open & modify setup:\n\n${stackListStr}\n\nEnter stack name or number:`, stacks[0].name);
-        if (!chosen) return;
-        const trimmed = chosen.trim();
-        const found = stacks.find((s) => s.name.toLowerCase() === trimmed.toLowerCase());
-        if (found) {
-          openStackModal(found.name);
-          return;
-        }
-        const num = parseInt(trimmed, 10);
-        if (!isNaN(num) && num >= 1 && num <= stacks.length) {
-          openStackModal(stacks[num - 1].name);
-          return;
-        }
-        showToast(`Stack "${trimmed}" not found`, 'warn');
+        openStackPickerModal(stacks);
       } catch (err) {
         showToast(`Failed loading stacks: ${err.message}`, 'error');
       }
@@ -837,7 +820,43 @@ function bindDockerTableEvents(tbody) {
   });
 }
 
-export async function fetchAndRenderDockerContainers() {
+let _dockerAutoRefreshTimer = null;
+let _isDockerAutoRefreshing = false;
+
+export function startDockerAutoRefresh() {
+  if (_dockerAutoRefreshTimer) return;
+  _dockerAutoRefreshTimer = setInterval(async () => {
+    if (typeof document !== 'undefined' && document.hidden) return;
+    const mgmtWin = document.getElementById('management-window');
+    if (mgmtWin && (mgmtWin.style.display === 'none' || mgmtWin.classList.contains('minimized') || mgmtWin.classList.contains('window-minimized'))) {
+      return;
+    }
+    const dockerSec = document.getElementById('mgmt-sec-docker');
+    if (!dockerSec) return;
+    if (dockerSec.style.display === 'none') return;
+    const style = typeof window !== 'undefined' && window.getComputedStyle ? window.getComputedStyle(dockerSec) : null;
+    if (style && style.display === 'none') return;
+
+    if (_isDockerAutoRefreshing) return;
+    _isDockerAutoRefreshing = true;
+    try {
+      await fetchAndRenderDockerContainers(true);
+    } catch (e) {
+      console.warn('Docker background auto-refresh poll error:', e);
+    } finally {
+      _isDockerAutoRefreshing = false;
+    }
+  }, 5000);
+}
+
+export function stopDockerAutoRefresh() {
+  if (_dockerAutoRefreshTimer) {
+    clearInterval(_dockerAutoRefreshTimer);
+    _dockerAutoRefreshTimer = null;
+  }
+}
+
+export async function fetchAndRenderDockerContainers(isBackground = false) {
   _bindDockerEvents();
   const tbody = document.getElementById('docker-containers-tbody');
   if (!tbody) return;
@@ -849,7 +868,11 @@ export async function fetchAndRenderDockerContainers() {
     _dockerContainersList = Array.isArray(list) ? list : [];
     renderDockerContainersTable();
   } catch (err) {
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--crit); padding:16px;">Failed to load containers: ${escapeHtml(err.message)}</td></tr>`;
+    if (!isBackground || _dockerContainersList.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--crit); padding:16px;">Failed to load containers: ${escapeHtml(err.message)}</td></tr>`;
+    } else {
+      console.warn('Silent docker refresh error:', err);
+    }
   }
 }
 
@@ -2376,6 +2399,7 @@ export function initManagement() {
   if (minBtn) {
     const handleMin = (e) => {
       if (e && e.type === 'touchend') { e.preventDefault(); e.stopPropagation(); }
+      stopDockerAutoRefresh();
       DockManager.minimize('management');
     };
     minBtn.addEventListener('click', handleMin);
@@ -2447,6 +2471,7 @@ export function initManagement() {
   if (closeBtn) {
     const handleClose = (e) => {
       if (e && e.type === 'touchend') { e.preventDefault(); e.stopPropagation(); }
+      stopDockerAutoRefresh();
       overlay.classList.remove('open');
       overlay.style.setProperty('display', 'none', 'important');
       win.classList.remove('window-focus-pulse');
@@ -2584,17 +2609,21 @@ export function initManagement() {
     } else if (targetId === 'mgmt-sec-docker') {
       sectionName = t('mgmt.docker_title', 'Apps & Containers');
       fetchAndRenderDockerContainers();
-    } else if (targetId === 'mgmt-sec-hardware' || targetId === 'mgmt-sec-services') {
-      sectionName = t('mgmt.hardware_title', 'Hardware & Profiles');
-      if (state.lastStats || state.latestStats) updateManagementTelemetry(state.lastStats || state.latestStats);
-    } else if (targetId === 'mgmt-sec-storage') {
-      sectionName = t('mgmt.storage_title', 'Storage & Chassis');
-    } else if (targetId === 'mgmt-sec-ups') {
-      sectionName = t('mgmt.sidebar_ups', 'UPS & Power');
-      if (typeof fetchAndRenderUpsTelemetry === 'function') fetchAndRenderUpsTelemetry();
-      else if (typeof fetchAndRenderUPS === 'function') fetchAndRenderUPS();
-    } else if (targetId === 'mgmt-sec-system-group') {
-      sectionName = t('mgmt.system_title', 'System');
+      startDockerAutoRefresh();
+    } else {
+      stopDockerAutoRefresh();
+      if (targetId === 'mgmt-sec-hardware' || targetId === 'mgmt-sec-services') {
+        sectionName = t('mgmt.hardware_title', 'Hardware & Profiles');
+        if (state.lastStats || state.latestStats) updateManagementTelemetry(state.lastStats || state.latestStats);
+      } else if (targetId === 'mgmt-sec-storage') {
+        sectionName = t('mgmt.storage_title', 'Storage & Chassis');
+      } else if (targetId === 'mgmt-sec-ups') {
+        sectionName = t('mgmt.sidebar_ups', 'UPS & Power');
+        if (typeof fetchAndRenderUpsTelemetry === 'function') fetchAndRenderUpsTelemetry();
+        else if (typeof fetchAndRenderUPS === 'function') fetchAndRenderUPS();
+      } else if (targetId === 'mgmt-sec-system-group') {
+        sectionName = t('mgmt.system_title', 'System');
+      }
     }
 
     if (titleText) titleText.textContent = sectionName;

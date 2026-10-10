@@ -2695,6 +2695,7 @@ export function initDraggableDesktopIcons() {
     ctxMenu = document.createElement('div');
     ctxMenu.id = 'desktop-ctx-menu';
     ctxMenu.className = 'os-context-menu desktop-context-menu';
+    ctxMenu.style.display = 'none';
     document.body.appendChild(ctxMenu);
   }
 

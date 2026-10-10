@@ -403,6 +403,8 @@ describe('Container Inspector & Docker Compose Viewer - Phase 2', () => {
     const applyPortsBtn = document.getElementById('ci-btn-apply-ports');
     expect(applyPortsBtn).not.toBeNull();
     applyPortsBtn.click();
+    const okBtn = document.getElementById('confirm-toast-ok');
+    if (okBtn) okBtn.click();
 
     await vi.waitFor(() => {
       expect(postSpy).toHaveBeenCalledWith(

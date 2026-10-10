@@ -10330,7 +10330,7 @@ input[type="range"].tz-range-slider::-moz-range-thumb {
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7), 0 0 20px rgba(0, 240, 255, 0.08);
   padding: 6px;
   user-select: none;
-  display: flex;
+  display: none;
   flex-direction: column;
   gap: 2px;
   animation: contextMenuFadeIn 0.15s cubic-bezier(0.16, 1, 0.3, 1);

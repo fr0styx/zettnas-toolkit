@@ -32,6 +32,13 @@ export function showToast(msg, type = "error") {
 }
 
 export function showConfirmToast(title, msg, onConfirm, onCancel, options = {}) {
+  if (typeof msg === 'function') {
+    options = onCancel || {};
+    onCancel = onConfirm || null;
+    onConfirm = msg;
+    msg = title;
+    title = options.title || 'Confirm Action';
+  }
   if (state.isLcdDirect || (typeof window !== 'undefined' && window.location.search.includes('mode=lcd')) || (document.body && document.body.classList.contains('lcd-direct'))) return;
   triggerHaptic('warning');
   _showTopConfirm(title, msg, onConfirm, onCancel, options);
@@ -133,6 +140,13 @@ function _dismissToastItem(toast) {
 
 // --- Confirm Toast (Top-centered below navbar with backdrop) ---
 function _showTopConfirm(title, msg, onConfirm, onCancel, options = {}) {
+  if (typeof msg === 'function') {
+    options = onCancel || {};
+    onCancel = onConfirm || null;
+    onConfirm = msg;
+    msg = title;
+    title = options.title || 'Confirm Action';
+  }
   if (!document.body) return;
 
   let backdrop = document.getElementById("confirm-toast-backdrop");

@@ -420,9 +420,180 @@ async function triggerStackAction(action) {
   }
 }
 
+export function openStackPickerModal(stacks = []) {
+  initStackModal();
+  let overlay = document.getElementById('stack-picker-overlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'stack-picker-overlay';
+    overlay.className = 'smart-modal-backdrop';
+    overlay.style.cssText = 'display:none; z-index:10020;';
+    overlay.innerHTML = `
+      <div id="stack-picker-window" class="smart-modal-window" style="width:620px; max-width:95vw; max-height:86vh; display:flex; flex-direction:column; overflow:hidden; box-shadow: 0 25px 70px rgba(0,0,0,0.85);">
+        <!-- Header -->
+        <div class="smart-modal-header" style="display:flex; justify-content:space-between; align-items:center; user-select:none; cursor:move;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:16px;">📁</span>
+            <span style="font-weight:700; color:#fff; font-size:13.5px;">Docker Compose Stacks</span>
+            <span id="stack-picker-badge" class="ci-badge" style="font-size:9.5px; padding:2px 7px; border-radius:4px; font-weight:700; background:rgba(14,165,233,0.15); color:var(--accent-cyan, #38bdf8); border:1px solid rgba(56,189,248,0.3);">0 Stacks</span>
+          </div>
+          <div class="os-window-controls">
+            <button class="win-btn close-btn" id="stack-picker-close-btn" title="Close" aria-label="Close"></button>
+          </div>
+        </div>
+
+        <!-- Toolbar & Filter -->
+        <div style="padding:12px 16px; background:rgba(0,0,0,0.35); border-bottom:1px solid rgba(255,255,255,0.06); display:flex; flex-direction:column; gap:8px;">
+          <div style="font-size:11.5px; color:var(--muted);">Select a Docker Compose stack to inspect services, modify setup YAML, or manage lifecycle:</div>
+          <div style="position:relative; display:flex; align-items:center;">
+            <span style="position:absolute; left:10px; font-size:12px; color:var(--muted); pointer-events:none;">🔍</span>
+            <input type="text" id="stack-picker-search" placeholder="Filter stacks by name, service, or path..." class="tz-text-input" style="width:100%; padding:7px 10px 7px 30px; font-size:12px; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.12); border-radius:6px; color:#fff; outline:none; box-sizing:border-box;">
+          </div>
+        </div>
+
+        <!-- Stacks List Container -->
+        <div id="stack-picker-list" style="flex:1; overflow-y:auto; padding:12px 16px; display:flex; flex-direction:column; gap:8px; min-height:160px; max-height:450px;">
+        </div>
+
+        <!-- Footer -->
+        <div style="padding:10px 16px; background:rgba(0,0,0,0.5); border-top:1px solid rgba(255,255,255,0.08); display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-size:11px; color:var(--muted); font-style:italic;">Click any stack card to open setup editor</span>
+          <button class="btn-pill-toggle" id="stack-picker-cancel-btn">Cancel</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    const closePicker = () => {
+      overlay.style.display = 'none';
+      overlay.classList.remove('open');
+    };
+
+    overlay.querySelector('#stack-picker-close-btn')?.addEventListener('click', closePicker);
+    overlay.querySelector('#stack-picker-cancel-btn')?.addEventListener('click', closePicker);
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) closePicker();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && overlay.style.display !== 'none') {
+        closePicker();
+      }
+    });
+  }
+
+  const badge = overlay.querySelector('#stack-picker-badge');
+  if (badge) badge.textContent = `${stacks.length} Stack${stacks.length === 1 ? '' : 's'}`;
+
+  const searchInput = overlay.querySelector('#stack-picker-search');
+  const listContainer = overlay.querySelector('#stack-picker-list');
+
+  const renderFilteredCards = (query = '') => {
+    if (!listContainer) return;
+    const filtered = stacks.filter((s) => {
+      if (!query) return true;
+      const matchName = (s.name || '').toLowerCase().includes(query);
+      const matchPath = (s.working_dir || s.config_files || '').toLowerCase().includes(query);
+      const matchServices = (s.services || []).some((svc) => (svc || '').toLowerCase().includes(query));
+      return matchName || matchPath || matchServices;
+    });
+
+    if (filtered.length === 0) {
+      listContainer.innerHTML = `
+        <div style="text-align:center; padding:32px 16px; color:var(--muted); font-size:12px;">
+          No Compose stacks match "${escapeHtml(query)}"
+        </div>
+      `;
+      return;
+    }
+
+    listContainer.innerHTML = filtered.map((s) => {
+      const isAllRunning = s.running_count === s.total_count && s.total_count > 0;
+      const isNoneRunning = s.running_count === 0;
+
+      let statusPill = '';
+      if (isAllRunning) {
+        statusPill = `<span style="display:inline-flex; align-items:center; gap:5px; font-size:10.5px; color:var(--ok2, #10b981); background:rgba(16,185,129,0.12); padding:2px 8px; border-radius:12px; border:1px solid rgba(16,185,129,0.3); font-weight:600;"><span style="width:6px; height:6px; border-radius:50%; background:var(--ok2, #10b981); box-shadow:0 0 6px var(--ok2, #10b981);"></span> ${s.running_count}/${s.total_count} Running</span>`;
+      } else if (isNoneRunning) {
+        statusPill = `<span style="display:inline-flex; align-items:center; gap:5px; font-size:10.5px; color:var(--muted); background:rgba(255,255,255,0.06); padding:2px 8px; border-radius:12px; border:1px solid rgba(255,255,255,0.1);"><span style="width:6px; height:6px; border-radius:50%; background:var(--muted);"></span> Stopped (${s.total_count})</span>`;
+      } else {
+        statusPill = `<span style="display:inline-flex; align-items:center; gap:5px; font-size:10.5px; color:var(--warn, #f5a623); background:rgba(245,166,35,0.12); padding:2px 8px; border-radius:12px; border:1px solid rgba(245,166,35,0.3); font-weight:600;"><span style="width:6px; height:6px; border-radius:50%; background:var(--warn, #f5a623); box-shadow:0 0 6px var(--warn, #f5a623);"></span> ${s.running_count}/${s.total_count} Running</span>`;
+      }
+
+      const servicesHtml = (s.services || []).slice(0, 6).map((svc) => `
+        <span class="ci-badge" style="font-size:9.5px; padding:2px 6px; border-radius:4px; background:rgba(255,255,255,0.06); color:#cbd5e1; border:1px solid rgba(255,255,255,0.1); font-family:var(--font-mono, monospace);">${escapeHtml(svc)}</span>
+      `).join('');
+
+      const moreCount = (s.services || []).length > 6 ? ` <span style="font-size:9.5px; color:var(--muted);">+${s.services.length - 6} more</span>` : '';
+
+      const pathStr = s.working_dir || s.config_files || 'Managed by Docker daemon';
+
+      return `
+        <div class="stack-picker-card" data-stack="${escapeHtml(s.name)}" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.09); border-radius:8px; padding:10px 14px; cursor:pointer; transition:all 0.16s cubic-bezier(0.16, 1, 0.3, 1); display:flex; flex-direction:column; gap:6px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+            <div style="display:flex; align-items:center; gap:8px; min-width:0;">
+              <span style="font-size:14px;">📁</span>
+              <strong style="font-size:13.5px; color:#fff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(s.name)}</strong>
+              <span class="ci-badge" style="font-size:9px; padding:1px 5px; border-radius:3px; background:rgba(14,165,233,0.12); color:var(--accent-cyan, #38bdf8); border:1px solid rgba(56,189,248,0.25); text-transform:uppercase;">${escapeHtml(s.origin || 'Compose')}</span>
+            </div>
+            ${statusPill}
+          </div>
+          <div style="font-size:11px; color:var(--muted); font-family:var(--font-mono, monospace); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+            📂 ${escapeHtml(pathStr)}
+          </div>
+          ${servicesHtml ? `
+            <div style="display:flex; align-items:center; flex-wrap:wrap; gap:4px; margin-top:2px;">
+              <span style="font-size:10px; color:var(--muted); margin-right:2px;">Services:</span>
+              ${servicesHtml}${moreCount}
+            </div>
+          ` : ''}
+        </div>
+      `;
+    }).join('');
+
+    // Bind card clicks & hover effects
+    listContainer.querySelectorAll('.stack-picker-card').forEach((card) => {
+      card.addEventListener('mouseenter', () => {
+        card.style.background = 'rgba(255,255,255,0.07)';
+        card.style.borderColor = 'rgba(56,189,248,0.45)';
+        card.style.transform = 'translateY(-1px)';
+        card.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)';
+      });
+      card.addEventListener('mouseleave', () => {
+        card.style.background = 'rgba(255,255,255,0.03)';
+        card.style.borderColor = 'rgba(255,255,255,0.09)';
+        card.style.transform = 'translateY(0)';
+        card.style.boxShadow = 'none';
+      });
+      card.addEventListener('click', () => {
+        const stackName = card.dataset.stack;
+        if (stackName) {
+          overlay.style.display = 'none';
+          overlay.classList.remove('open');
+          openStackModal(stackName);
+        }
+      });
+    });
+  };
+
+  if (searchInput) {
+    searchInput.value = '';
+    searchInput.oninput = () => renderFilteredCards(searchInput.value.toLowerCase().trim());
+  }
+
+  renderFilteredCards();
+  overlay.style.display = 'flex';
+  overlay.classList.add('open');
+  if (searchInput) {
+    setTimeout(() => searchInput.focus(), 50);
+  }
+}
+
 export function _resetStackModalForTesting() {
   _activeStackName = null;
   _activeStackDetails = null;
   const overlay = document.getElementById('stack-inspector-overlay');
   if (overlay) overlay.remove();
+  const picker = document.getElementById('stack-picker-overlay');
+  if (picker) picker.remove();
 }

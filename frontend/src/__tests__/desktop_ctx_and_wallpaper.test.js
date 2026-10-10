@@ -39,7 +39,7 @@ describe('Desktop Context Menu, Dock Context Menu, and Wallpaper Engine', () => 
   it('right-clicking desktop stage displays desktop context menu with only align and sort options', () => {
     initDraggableDesktopIcons();
     const menu = document.getElementById('desktop-ctx-menu');
-    expect(menu.style.display).toBe('');
+    expect(menu.style.display).toBe('none');
 
     const stage = document.querySelector('.chassis-workbench-stage');
     const evt = new MouseEvent('contextmenu', {

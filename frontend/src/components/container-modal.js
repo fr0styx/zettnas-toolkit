@@ -798,43 +798,50 @@ function renderPortsTab(details) {
 
   const applyPortsBtn = document.getElementById('ci-btn-apply-ports');
   if (applyPortsBtn) {
-    applyPortsBtn.addEventListener('click', async () => {
+    applyPortsBtn.addEventListener('click', () => {
       const cname = details.overview?.name || details.cid;
-      const confirmed = window.confirm(`Recreate container "${cname}" with updated port mappings?\n\nA 2-3 second recreation will occur. Volumes and persistent data will remain 100% intact.`);
-      if (!confirmed) return;
+      showConfirmToast(
+        `Recreate container "<strong>${escapeHtml(cname)}</strong>" with updated port mappings?<br><br><span style="font-size:11.5px; color:var(--muted);">A 2-3 second recreation will occur. Volumes and persistent data will remain 100% intact.</span>`,
+        async () => {
+          const portInputs = container.querySelectorAll('.ci-port-input');
+          const newPorts = [];
+          portInputs.forEach((inp) => {
+            const cp = parseInt(inp.dataset.cp, 10);
+            const proto = inp.dataset.proto || 'tcp';
+            const hp = parseInt(inp.value, 10);
+            newPorts.push({
+              container_port: cp,
+              host_port: isNaN(hp) ? null : hp,
+              proto: proto,
+              host_ip: '0.0.0.0'
+            });
+          });
 
-      const portInputs = container.querySelectorAll('.ci-port-input');
-      const newPorts = [];
-      portInputs.forEach((inp) => {
-        const cp = parseInt(inp.dataset.cp, 10);
-        const proto = inp.dataset.proto || 'tcp';
-        const hp = parseInt(inp.value, 10);
-        newPorts.push({
-          container_port: cp,
-          host_port: isNaN(hp) ? null : hp,
-          proto: proto,
-          host_ip: '0.0.0.0'
-        });
-      });
+          applyPortsBtn.disabled = true;
+          applyPortsBtn.textContent = 'Recreating container...';
+          showToast(`Recreating container "${cname}" with new ports...`, 'info');
 
-      applyPortsBtn.disabled = true;
-      applyPortsBtn.textContent = 'Recreating container...';
-      showToast(`Recreating container "${cname}" with new ports...`, 'info');
-
-      try {
-        const targetId = details.cid || details.overview?.id;
-        const res = await api.post(`/api/docker/containers/${encodeURIComponent(targetId)}/ports`, {
-          ports: newPorts,
-          keep_backup: false
-        });
-        showToast(res.message || 'Container recreated successfully!', 'success');
-        await loadContainerDetails(targetId);
-      } catch (err) {
-        showToast(`Port reconfiguration failed: ${err.message}`, 'error');
-      } finally {
-        applyPortsBtn.disabled = false;
-        applyPortsBtn.textContent = '🚀 Recreate Container with New Ports';
-      }
+          try {
+            const targetId = details.cid || details.overview?.id;
+            const res = await api.post(`/api/docker/containers/${encodeURIComponent(targetId)}/ports`, {
+              ports: newPorts,
+              keep_backup: false
+            });
+            showToast(res.message || 'Container recreated successfully!', 'success');
+            await loadContainerDetails(targetId);
+          } catch (err) {
+            showToast(`Port reconfiguration failed: ${err.message}`, 'error');
+          } finally {
+            applyPortsBtn.disabled = false;
+            applyPortsBtn.textContent = '🚀 Recreate Container with New Ports';
+          }
+        },
+        null,
+        {
+          okText: '🚀 Recreate Container',
+          cancelText: 'Cancel'
+        }
+      );
     });
   }
 }
@@ -1415,97 +1422,103 @@ async function renderContainerEditTab(cid) {
       return;
     }
 
-    if (!confirm(`Save changes and recreate container '${name}'? The container will be atomically restarted.`)) {
-      return;
-    }
-
-    // Collect port bindings
-    const portBindings = [];
-    portsBox.querySelectorAll('.cie-port-row').forEach((r) => {
-      const cp = parseInt(r.querySelector('.cie-cp-input').value, 10);
-      const hp = parseInt(r.querySelector('.cie-hp-input').value, 10);
-      const proto = r.querySelector('.cie-proto-input').value;
-      const host_ip = r.querySelector('.cie-ip-input').value.trim() || '0.0.0.0';
-      if (cp && cp > 0) {
-        portBindings.push({
-          container_port: cp,
-          host_port: hp && hp > 0 ? hp : null,
-          proto,
-          host_ip,
+    showConfirmToast(
+      `Save changes and recreate container "<strong>${escapeHtml(name)}</strong>"?<br><br><span style="font-size:11.5px; color:var(--muted);">The container will be stopped and recreated with updated configuration. Persistent volumes and paths remain intact.</span>`,
+      async () => {
+        // Collect port bindings
+        const portBindings = [];
+        portsBox.querySelectorAll('.cie-port-row').forEach((r) => {
+          const cp = parseInt(r.querySelector('.cie-cp-input').value, 10);
+          const hp = parseInt(r.querySelector('.cie-hp-input').value, 10);
+          const proto = r.querySelector('.cie-proto-input').value;
+          const host_ip = r.querySelector('.cie-ip-input').value.trim() || '0.0.0.0';
+          if (cp && cp > 0) {
+            portBindings.push({
+              container_port: cp,
+              host_port: hp && hp > 0 ? hp : null,
+              proto,
+              host_ip,
+            });
+          }
         });
+
+        // Collect mounts
+        const binds = [];
+        mountsBox.querySelectorAll('.cie-mount-row').forEach((r) => {
+          const src = r.querySelector('.cie-src-input').value.trim();
+          const dst = r.querySelector('.cie-dst-input').value.trim();
+          const mode = r.querySelector('.cie-mode-input').value;
+          if (src && dst) {
+            binds.push(`${src}:${dst}:${mode}`);
+          }
+        });
+
+        // Collect env
+        const envVars = [];
+        envBox.querySelectorAll('.cie-env-row').forEach((r) => {
+          const k = r.querySelector('.cie-key-input').value.trim();
+          const v = r.querySelector('.cie-val-input').value;
+          if (k) {
+            envVars.push(`${k}=${v}`);
+          }
+        });
+
+        saveBtn.disabled = true;
+        saveBtn.textContent = '⏳ Recreating Container...';
+        statusMsg.style.display = 'block';
+        statusMsg.style.background = 'rgba(14,165,233,0.15)';
+        statusMsg.style.color = '#38bdf8';
+        statusMsg.textContent = 'Validating configuration, creating backup, and recreating container...';
+
+        try {
+          const res = await api.post(`/api/docker/containers/${encodeURIComponent(cid)}/recreate`, {
+            name,
+            image,
+            network_mode,
+            restart_policy,
+            pull_image,
+            keep_backup,
+            port_bindings: portBindings,
+            binds,
+            env: envVars,
+          });
+
+          statusMsg.style.background = 'rgba(37,194,160,0.15)';
+          statusMsg.style.color = 'var(--ok2, #25c2a0)';
+          statusMsg.textContent = `✓ ${res.message || 'Container recreated successfully!'}`;
+          showToast(`Container "${res.target_name || name}" successfully recreated!`, 'success');
+
+          // Refresh details
+          _activeCid = res.new_id || name;
+          _activeCname = res.target_name || name;
+          const titleName = document.getElementById('ci-header-title');
+          const titleId = document.getElementById('ci-header-id');
+          if (titleName) titleName.textContent = _activeCname;
+          if (titleId) titleId.textContent = _activeCid.slice(0, 12);
+
+          await loadContainerDetails(_activeCid);
+          setTimeout(() => {
+            switchContainerTab('overview');
+          }, 1200);
+
+          // Notify parent list to refresh
+          ZettEventBus.emit('docker:containers:refresh');
+        } catch (err) {
+          statusMsg.style.background = 'rgba(239,68,68,0.15)';
+          statusMsg.style.color = '#fca5a5';
+          statusMsg.textContent = `Error: ${err.message}`;
+          showToast(`Recreation failed: ${err.message}`, 'error');
+        } finally {
+          saveBtn.disabled = false;
+          saveBtn.textContent = '💾 Save & Recreate Container';
+        }
+      },
+      null,
+      {
+        okText: '💾 Save & Recreate',
+        cancelText: 'Cancel'
       }
-    });
-
-    // Collect mounts
-    const binds = [];
-    mountsBox.querySelectorAll('.cie-mount-row').forEach((r) => {
-      const src = r.querySelector('.cie-src-input').value.trim();
-      const dst = r.querySelector('.cie-dst-input').value.trim();
-      const mode = r.querySelector('.cie-mode-input').value;
-      if (src && dst) {
-        binds.push(`${src}:${dst}:${mode}`);
-      }
-    });
-
-    // Collect env
-    const envVars = [];
-    envBox.querySelectorAll('.cie-env-row').forEach((r) => {
-      const k = r.querySelector('.cie-key-input').value.trim();
-      const v = r.querySelector('.cie-val-input').value;
-      if (k) {
-        envVars.push(`${k}=${v}`);
-      }
-    });
-
-    saveBtn.disabled = true;
-    saveBtn.textContent = '⏳ Recreating Container...';
-    statusMsg.style.display = 'block';
-    statusMsg.style.background = 'rgba(14,165,233,0.15)';
-    statusMsg.style.color = '#38bdf8';
-    statusMsg.textContent = 'Validating configuration, creating backup, and recreating container...';
-
-    try {
-      const res = await api.post(`/api/docker/containers/${encodeURIComponent(cid)}/recreate`, {
-        name,
-        image,
-        network_mode,
-        restart_policy,
-        pull_image,
-        keep_backup,
-        port_bindings: portBindings,
-        binds,
-        env: envVars,
-      });
-
-      statusMsg.style.background = 'rgba(37,194,160,0.15)';
-      statusMsg.style.color = 'var(--ok2, #25c2a0)';
-      statusMsg.textContent = `✓ ${res.message || 'Container recreated successfully!'}`;
-      showToast(`Container "${res.target_name || name}" successfully recreated!`, 'success');
-
-      // Refresh details
-      _activeCid = res.new_id || name;
-      _activeCname = res.target_name || name;
-      const titleName = document.getElementById('ci-header-title');
-      const titleId = document.getElementById('ci-header-id');
-      if (titleName) titleName.textContent = _activeCname;
-      if (titleId) titleId.textContent = _activeCid.slice(0, 12);
-
-      await loadContainerDetails(_activeCid);
-      setTimeout(() => {
-        switchContainerTab('overview');
-      }, 1200);
-
-      // Notify parent list to refresh
-      ZettEventBus.emit('docker:containers:refresh');
-    } catch (err) {
-      statusMsg.style.background = 'rgba(239,68,68,0.15)';
-      statusMsg.style.color = '#fca5a5';
-      statusMsg.textContent = `Error: ${err.message}`;
-      showToast(`Recreation failed: ${err.message}`, 'error');
-    } finally {
-      saveBtn.disabled = false;
-      saveBtn.textContent = '💾 Save & Recreate Container';
-    }
+    );
   };
 }
 

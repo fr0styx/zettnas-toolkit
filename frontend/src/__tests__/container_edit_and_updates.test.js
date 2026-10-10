@@ -114,6 +114,8 @@ describe('Container Edit & Docker Update System', () => {
 
     const saveBtn = document.getElementById('cie-btn-save');
     await saveBtn.click();
+    const okBtn = document.getElementById('confirm-toast-ok');
+    if (okBtn) okBtn.click();
 
     expect(postSpy).toHaveBeenCalled();
     const [callUrl, callPayload] = postSpy.mock.calls.find((c) => c[0].includes('/recreate'));
