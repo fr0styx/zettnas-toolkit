@@ -2700,6 +2700,9 @@ select.tz-select-input option, select.tz-select option {
 #app-deploy-modal-overlay,
 #container-delete-modal-overlay,
 #docker-prune-modal-overlay,
+#stack-inspector-overlay,
+#stack-picker-overlay,
+#container-inspector-overlay,
 #modal-new-cloud-remote,
 #modal-webdav-config,
 #modal-create-storage-pool,
@@ -2717,6 +2720,9 @@ select.tz-select-input option, select.tz-select option {
 #app-deploy-modal-overlay.open,
 #container-delete-modal-overlay.open,
 #docker-prune-modal-overlay.open,
+#stack-inspector-overlay.open,
+#stack-picker-overlay.open,
+#container-inspector-overlay.open,
 #modal-new-cloud-remote.open,
 #modal-webdav-config.open,
 #modal-create-storage-pool.open,
@@ -2734,6 +2740,9 @@ select.tz-select-input option, select.tz-select option {
 #app-deploy-modal-overlay:not(.open),
 #container-delete-modal-overlay:not(.open),
 #docker-prune-modal-overlay:not(.open),
+#stack-inspector-overlay:not(.open),
+#stack-picker-overlay:not(.open),
+#container-inspector-overlay:not(.open),
 #modal-new-cloud-remote:not(.open),
 #modal-webdav-config:not(.open),
 #modal-create-storage-pool:not(.open),
@@ -2747,6 +2756,19 @@ select.tz-select-input option, select.tz-select option {
   opacity: 0 !important;
   pointer-events: none !important;
   visibility: hidden !important;
+}
+
+#stack-inspector-overlay .stack-inspector-window,
+.stack-inspector-window {
+  background: #0d141e !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 25px 65px rgba(0, 0, 0, 0.9) !important;
+  border-radius: 12px;
+  overflow: hidden;
+}
+#stack-inspector-overlay .smart-modal-header {
+  background: #111a26 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 #console-modal-overlay:not(.open),
@@ -7052,19 +7074,28 @@ body.mobile-mode .btn-webui-badge {
   color: var(--muted);
 }
 
-/* File Manager Window */
+/* File Manager Window - Solid, Premium Dark Explorer Surface */
+#file-manager-window.file-manager-window,
 .file-manager-window {
   display: flex;
   flex-direction: column;
-  background: var(--card);
+  background: rgba(15, 23, 42, 0.98) !important;
+  backdrop-filter: blur(28px) saturate(140%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(140%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 25px 65px rgba(0, 0, 0, 0.85) !important;
+}
+.file-manager-window .os-window-header {
+  background: rgba(22, 32, 46, 0.98) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 .fm-toolbar {
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 8px;
-  border-bottom: 1px solid var(--track);
-  background: var(--card-hi);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(18, 26, 38, 0.98);
 }
 .fm-tool-btn {
   background: transparent;
@@ -7091,12 +7122,13 @@ body.mobile-mode .btn-webui-badge {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  background: #0b111a;
 }
 .fm-header-row {
   display: flex;
   padding: 8px 12px;
-  background: var(--card-hi);
-  border-bottom: 1px solid var(--track);
+  background: rgba(22, 32, 46, 0.98);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   font-weight: 600;
   font-size: 0.9rem;
 }
@@ -7104,6 +7136,7 @@ body.mobile-mode .btn-webui-badge {
   flex: 1;
   overflow-y: auto;
   position: relative;
+  background: #0b111a;
 }
 .fm-spacer {
   width: 100%;
@@ -7111,6 +7144,7 @@ body.mobile-mode .btn-webui-badge {
 .fm-list {
   position: absolute;
   top: 0; left: 0; right: 0;
+  background: #0b111a;
 }
 .fm-row {
   display: flex;

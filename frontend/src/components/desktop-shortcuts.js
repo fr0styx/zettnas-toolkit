@@ -34,7 +34,7 @@ export const SYSTEM_SHORTCUTS = [
     svg: true,
     color: '#38bdf8',
     targetSection: 'mgmt-sec-storage',
-    targetPane: 'mgmt-pane-chassis',
+    targetPane: 'mgmt-pane-storage-topo',
     badge: 'ZFS/Btrfs'
   },
   {
@@ -215,16 +215,25 @@ export function launchShortcut(shortcut) {
     return;
   }
 
+  let targetSection = shortcut.targetSection;
+  let targetPane = shortcut.targetPane;
+
+  // Backwards compatibility normalization for storage shortcut
+  if (shortcut.id === 'storage-desktop-icon' && (targetPane === 'mgmt-pane-chassis' || !targetPane)) {
+    targetPane = 'mgmt-pane-storage-topo';
+    targetSection = 'mgmt-sec-storage';
+  }
+
   // System shortcut launch
-  if (typeof window.openManagementSection === 'function' && shortcut.targetPane) {
-    window.openManagementSection(shortcut.targetSection, shortcut.targetPane);
+  if (typeof window.openManagementSection === 'function' && targetPane) {
+    window.openManagementSection(targetSection, targetPane);
   } else if (typeof window.openManagementWindow === 'function') {
-    window.openManagementWindow(shortcut.targetPane || shortcut.targetSection);
+    window.openManagementWindow(targetPane || targetSection);
   } else {
     ZettEventBus.emit('window:open', {
       id: 'management-window',
-      section: shortcut.targetSection,
-      pane: shortcut.targetPane
+      section: targetSection,
+      pane: targetPane
     });
   }
 }

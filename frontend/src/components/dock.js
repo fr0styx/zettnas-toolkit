@@ -660,13 +660,18 @@ export function bringToFront(windowEl) {
     windowEl.id === 'notif-center-panel' ||
     windowEl.id === 'container-inspector-window' ||
     windowEl.id === 'container-inspector-overlay' ||
+    windowEl.id === 'stack-inspector-window' ||
+    windowEl.id === 'stack-inspector-overlay' ||
+    windowEl.id === 'stack-picker-window' ||
+    windowEl.id === 'stack-picker-overlay' ||
     windowEl.classList?.contains('chassis-front-panel') ||
     windowEl.classList?.contains('management-window') ||
     windowEl.classList?.contains('mgmt-app-window') ||
     windowEl.classList?.contains('file-manager-window') ||
     windowEl.classList?.contains('container-inspector-window') ||
+    windowEl.classList?.contains('stack-inspector-window') ||
     windowEl.classList?.contains('os-window') ||
-    windowEl.closest?.('#console-modal-overlay, #management-modal-overlay, #file-manager-window, #notif-center-panel, #container-inspector-window, #container-inspector-overlay')
+    windowEl.closest?.('#console-modal-overlay, #management-modal-overlay, #file-manager-window, #notif-center-panel, #container-inspector-window, #container-inspector-overlay, #stack-inspector-window, #stack-inspector-overlay, #stack-picker-window, #stack-picker-overlay')
   );
 
   // Protect standalone modal backdrops & modal dialogs from being demoted into window z-index layer
@@ -698,7 +703,7 @@ export function bringToFront(windowEl) {
     openWins.forEach((el) => {
       const curZ = (baseZ++).toString();
       el.style.zIndex = curZ;
-      const inner = el.querySelector?.('#console-window, #management-window, .chassis-front-panel, .mgmt-app-window, .container-inspector-window, #container-inspector-window, .smart-modal-window, #smart-modal-window');
+      const inner = el.querySelector?.('#console-window, #management-window, .chassis-front-panel, .mgmt-app-window, .container-inspector-window, #container-inspector-window, .smart-modal-window, #smart-modal-window, #stack-inspector-window, #stack-picker-window');
       if (inner) inner.style.zIndex = curZ;
     });
     activeWindowZIndex = baseZ;
@@ -708,12 +713,12 @@ export function bringToFront(windowEl) {
   windowEl.style.zIndex = zStr;
 
   // Elevate parent overlay wrapper if applicable
-  const parentOverlay = windowEl.closest?.('#console-modal-overlay, #management-modal-overlay, #container-inspector-overlay, #smart-modal-overlay');
+  const parentOverlay = windowEl.closest?.('#console-modal-overlay, #management-modal-overlay, #container-inspector-overlay, #smart-modal-overlay, #stack-inspector-overlay, #stack-picker-overlay');
   if (parentOverlay && parentOverlay !== windowEl) {
     parentOverlay.style.zIndex = zStr;
   }
   // Elevate child window if applicable
-  const childWin = windowEl.querySelector?.('#console-window, #management-window, .chassis-front-panel, .mgmt-app-window, .container-inspector-window, #container-inspector-window, .smart-modal-window, #smart-modal-window');
+  const childWin = windowEl.querySelector?.('#console-window, #management-window, .chassis-front-panel, .mgmt-app-window, .container-inspector-window, #container-inspector-window, .smart-modal-window, #smart-modal-window, #stack-inspector-window, #stack-picker-window');
   if (childWin && childWin !== windowEl) {
     childWin.style.zIndex = zStr;
   }

@@ -53,6 +53,10 @@ export const SUBPANE_MAP = {
   'mgmt-sec-catalog': { section: 'mgmt-sec-docker', pane: 'mgmt-pane-docker' },
   'mgmt-sec-storage': { section: 'mgmt-sec-storage', pane: 'mgmt-pane-chassis-twin' },
   'mgmt-pane-chassis-twin': { section: 'mgmt-sec-storage', pane: 'mgmt-pane-chassis-twin' },
+  'mgmt-pane-chassis': { section: 'mgmt-sec-storage', pane: 'mgmt-pane-storage-topo' },
+  'mgmt-sec-pools': { section: 'mgmt-sec-storage', pane: 'mgmt-pane-storage-topo' },
+  'mgmt-pane-pools': { section: 'mgmt-sec-storage', pane: 'mgmt-pane-storage-topo' },
+  'storage-pools': { section: 'mgmt-sec-storage', pane: 'mgmt-pane-storage-topo' },
   'mgmt-pane-storage-topo': { section: 'mgmt-sec-storage', pane: 'mgmt-pane-storage-topo' },
   'mgmt-pane-storage-shares': { section: 'mgmt-sec-storage', pane: 'mgmt-pane-storage-shares' },
   'mgmt-pane-storage-remotes': { section: 'mgmt-sec-storage', pane: 'mgmt-pane-storage-remotes' },
@@ -2571,12 +2575,14 @@ export function initManagement() {
   }
 
 
-  function showSection(targetId) {
+  function showSection(targetId, specificPane = null) {
     const earlyStyle = document.getElementById('zettnas-mgmt-early-style');
     if (earlyStyle) earlyStyle.remove();
-    let desiredSubPane = null;
-    if (SUBPANE_MAP[targetId]) {
+    let desiredSubPane = specificPane;
+    if (!desiredSubPane && SUBPANE_MAP[targetId]) {
       desiredSubPane = SUBPANE_MAP[targetId].pane;
+      targetId = SUBPANE_MAP[targetId].section;
+    } else if (SUBPANE_MAP[targetId]) {
       targetId = SUBPANE_MAP[targetId].section;
     }
 
@@ -2738,9 +2744,9 @@ export function initManagement() {
   }
 
   // Global helper to open / focus Management window
-  window.openManagementWindow = (sectionId = null) => {
+  window.openManagementWindow = (sectionId = null, paneId = null) => {
     if (sectionId) {
-      showSection(sectionId);
+      showSection(sectionId, paneId);
     } else {
       showHub();
     }
@@ -2768,10 +2774,15 @@ export function initManagement() {
     });
   };
 
+  // Explicit helper for section and subpane deep-linking
+  window.openManagementSection = (sectionId, paneId = null) => {
+    window.openManagementWindow(sectionId, paneId);
+  };
+
   // Support window:open event bus deep-linking
   ZettEventBus.on('window:open', (payload) => {
     if (payload && (payload.id === 'management' || payload.id === 'management-window')) {
-      window.openManagementWindow(payload.pane || payload.section);
+      window.openManagementWindow(payload.section || payload.pane, payload.pane);
     }
   });
 

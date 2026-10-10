@@ -7,7 +7,7 @@
 import { api } from '../api.js';
 import { showToast, showConfirmToast } from '../toast.js';
 import { escapeHtml } from '../utils.js';
-import { DockManager } from './dock.js';
+import { DockManager, bringToFront } from './dock.js';
 import { openContainerModal } from './container-modal.js';
 
 let _activeStackName = null;
@@ -113,6 +113,8 @@ export function initStackModal() {
     DockManager.register('stack-inspector', overlay, '#i-grid', 'Stack Inspector', true);
   }
 
+  win.addEventListener('mousedown', () => bringToFront(win));
+
   // Window drag handling
   const header = document.getElementById('stack-inspector-header');
   let isDragging = false;
@@ -214,9 +216,16 @@ export function initStackModal() {
 
 export function closeStackModal() {
   const overlay = document.getElementById('stack-inspector-overlay');
+  const win = document.getElementById('stack-inspector-window');
   if (overlay) {
-    overlay.style.display = 'none';
     overlay.classList.remove('open');
+    overlay.style.setProperty('display', 'none', 'important');
+    if (win) {
+      win.style.setProperty('display', 'none', 'important');
+    }
+  }
+  if (DockManager && typeof DockManager.minimize === 'function') {
+    DockManager.minimize('stack-inspector');
   }
 }
 
@@ -239,8 +248,23 @@ export async function openStackModal(stackName) {
   const win = document.getElementById('stack-inspector-window');
   if (!overlay || !win) return;
 
+  overlay.style.removeProperty('display');
   overlay.style.display = 'flex';
+  overlay.classList.remove('window-minimized');
   overlay.classList.add('open');
+
+  win.style.removeProperty('display');
+  win.classList.remove('window-minimized');
+
+  bringToFront(win);
+
+  if (DockManager && typeof DockManager.restore === 'function') {
+    DockManager.restore('stack-inspector');
+  }
+
+  overlay.style.display = 'flex';
+  win.style.display = 'flex';
+
   switchStackTab('compose');
 
   document.getElementById('stack-header-title').textContent = `Stack: ${stackName}`;
@@ -582,6 +606,7 @@ export function openStackPickerModal(stacks = []) {
   }
 
   renderFilteredCards();
+  overlay.style.removeProperty('display');
   overlay.style.display = 'flex';
   overlay.classList.add('open');
   if (searchInput) {
