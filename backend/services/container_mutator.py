@@ -19,38 +19,6 @@ from backend.hardware.docker_stats import UnixHTTPConnection
 from backend.services.compose_synthesizer import fetch_container_raw_inspect
 
 
-def check_port_available(port: int, proto: str = "tcp", host: str = "0.0.0.0") -> bool:
-    """
-    Checks if a local port is available to bind without conflicts.
-    Inspects host procfs sockets (/host/proc/net/tcp, /host/proc/net/tcp6)
-    as well as container socket bind.
-    """
-    if not (1 <= port <= 65535):
-        return False
-
-    hex_port = f"{port:04X}"
-    for proc_path in ("/host/proc/net/tcp", "/host/proc/net/tcp6", "/proc/net/tcp", "/proc/net/tcp6"):
-        if os.path.exists(proc_path):
-            try:
-                with open(proc_path) as f:
-                    for line in f:
-                        fields = line.strip().split()
-                        if len(fields) >= 4 and fields[3] == "0A":  # TCP_LISTEN
-                            if fields[1].endswith(f":{hex_port}"):
-                                return False
-            except Exception:
-                pass
-
-    sock_type = socket.SOCK_STREAM if proto.lower() == "tcp" else socket.SOCK_DGRAM
-    try:
-        with socket.socket(socket.AF_INET, sock_type) as s:
-            s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            s.bind((host, port))
-            return True
-    except OSError:
-        return False
-
-
 def _docker_request(method: str, path: str, body: Optional[dict] = None, timeout: float = 15.0) -> Tuple[int, Any]:
     """Helper for making synchronous HTTP requests over the Docker Unix socket."""
     sock_path = "/var/run/docker.sock"
@@ -92,6 +60,95 @@ def _docker_request(method: str, path: str, body: Optional[dict] = None, timeout
             conn.close()
         except Exception:
             pass
+
+
+def check_port_available_detailed(port: int, proto: str = "tcp", host: str = "0.0.0.0") -> Tuple[bool, Optional[str]]:
+    """
+    Checks if a local port is available to bind without conflicts.
+    1. Inspects active Docker containers via Docker Unix socket.
+    2. Inspects host procfs sockets (/host/proc/1/net/tcp, etc.) where PID 1
+       operates in the host network namespace.
+    3. Inspects container socket bind fallback.
+    Returns (True, None) if free, or (False, "<owner>") if busy.
+    """
+    if not (1 <= port <= 65535):
+        return False, "invalid port range"
+
+    proto_lower = proto.lower()
+
+    # 1. Inspect Docker containers via Docker engine API
+    try:
+        st, containers = _docker_request("GET", "/containers/json", timeout=2.0)
+        if st == 200 and isinstance(containers, list):
+            for c in containers:
+                c_name = (c.get("Names") or [""])[0].lstrip("/")
+                for p in c.get("Ports", []):
+                    pub = p.get("PublicPort")
+                    p_type = p.get("Type", "tcp").lower()
+                    if pub == port and p_type == proto_lower:
+                        return False, f"container '{c_name}'"
+    except Exception:
+        pass
+
+    # 2. Inspect host and container procfs network tables
+    hex_port = f"{port:04X}"
+    proc_paths = (
+        (
+            "/host/proc/1/net/tcp",
+            "/host/proc/1/net/tcp6",
+            "/proc/1/net/tcp",
+            "/proc/1/net/tcp6",
+            "/host/proc/net/tcp",
+            "/host/proc/net/tcp6",
+            "/proc/net/tcp",
+            "/proc/net/tcp6",
+        )
+        if proto_lower == "tcp"
+        else (
+            "/host/proc/1/net/udp",
+            "/host/proc/1/net/udp6",
+            "/proc/1/net/udp",
+            "/proc/1/net/udp6",
+            "/host/proc/net/udp",
+            "/host/proc/net/udp6",
+            "/proc/net/udp",
+            "/proc/net/udp6",
+        )
+    )
+
+    for proc_path in proc_paths:
+        if os.path.exists(proc_path):
+            try:
+                with open(proc_path) as f:
+                    for line in f:
+                        fields = line.strip().split()
+                        if proto_lower == "tcp":
+                            if len(fields) >= 4 and fields[3] == "0A":  # TCP_LISTEN
+                                if fields[1].endswith(f":{hex_port}"):
+                                    return False, "host service"
+                        else:
+                            if len(fields) >= 2 and fields[1].endswith(f":{hex_port}"):
+                                return False, "host service"
+            except Exception:
+                pass
+
+    # 3. Direct socket bind attempt
+    sock_type = socket.SOCK_STREAM if proto_lower == "tcp" else socket.SOCK_DGRAM
+    try:
+        with socket.socket(socket.AF_INET, sock_type) as s:
+            s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            s.bind((host, port))
+            return True, None
+    except OSError:
+        return False, "local service"
+
+
+def check_port_available(port: int, proto: str = "tcp", host: str = "0.0.0.0") -> bool:
+    """
+    Backwards-compatible boolean wrapper for check_port_available_detailed.
+    """
+    avail, _ = check_port_available_detailed(port, proto, host)
+    return avail
 
 
 def update_container_resources(

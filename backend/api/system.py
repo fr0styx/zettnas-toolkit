@@ -790,10 +790,10 @@ async def post_docker_stack_action(stack_name: str, req: StackActionRequest):
 
 @router.get("/docker/check_port")
 async def get_check_port(port: int, proto: str = "tcp"):
-    from backend.services.container_mutator import check_port_available
+    from backend.services.container_mutator import check_port_available_detailed
 
-    available = await asyncio.to_thread(check_port_available, port, proto)
-    return {"port": port, "proto": proto, "available": available}
+    available, in_use_by = await asyncio.to_thread(check_port_available_detailed, port, proto)
+    return {"port": port, "proto": proto, "available": available, "in_use_by": in_use_by}
 
 
 class AppSourceCreateRequest(BaseModel):

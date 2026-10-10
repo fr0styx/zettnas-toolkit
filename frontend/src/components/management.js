@@ -1255,11 +1255,18 @@ export async function openAppDeployModal(appId) {
   if (footerProgress) footerProgress.style.display = 'none';
 
   let suggestedPort = 8080;
+  const deployConfirmBtn = document.getElementById('adm-deploy-confirm-btn');
   const banner = document.getElementById('adm-conflict-banner');
   const portInput = document.getElementById('adm-port-input');
   const storageInput = document.getElementById('adm-storage-input');
   const composePre = document.getElementById('adm-compose-pre');
   const title = document.getElementById('adm-title');
+
+  if (deployConfirmBtn) {
+    deployConfirmBtn.disabled = false;
+    deployConfirmBtn.style.opacity = '1';
+    deployConfirmBtn.style.pointerEvents = 'auto';
+  }
 
   title.textContent = `Deploy ${appId.toUpperCase()}`;
   banner.innerHTML = '<span style="color:var(--muted);">Probing host ports for conflicts...</span>';
@@ -1274,7 +1281,9 @@ export async function openAppDeployModal(appId) {
     if (resolveData.conflict_detected) {
       banner.style.background = 'rgba(245, 166, 35, 0.12)';
       banner.style.border = '1px solid var(--warn, #f5a623)';
-      banner.innerHTML = `<span style="color:var(--warn, #f5a623); font-weight:bold;">⚠️ Port Conflict Detected:</span> Default port ${resolveData.default_port} is busy. Automatically mapped to free port <strong>${suggestedPort}</strong>!`;
+      const occupier = resolveData.in_use_by ? ` (in use by ${resolveData.in_use_by})` : '';
+      const existMsg = resolveData.existing_container ? `<br/><small style="opacity:0.85;">⚠️ An existing container <strong>${resolveData.existing_container.name}</strong> was detected on this host.</small>` : '';
+      banner.innerHTML = `<span style="color:var(--warn, #f5a623); font-weight:bold;">⚠️ Port Conflict Detected:</span> Default port ${resolveData.default_port} is busy${occupier}. Automatically remapped to free port <strong>${suggestedPort}</strong>!${existMsg}`;
     } else {
       banner.style.background = 'rgba(37, 194, 160, 0.12)';
       banner.style.border = '1px solid var(--ok2, #25c2a0)';
@@ -1283,6 +1292,55 @@ export async function openAppDeployModal(appId) {
   } catch (e) {
     portInput.value = 8080;
     banner.innerHTML = '<span style="color:var(--muted);">Port status: Default assigned</span>';
+  }
+
+  let portValidationTimer = null;
+  async function validateEnteredPort() {
+    const val = parseInt(portInput.value, 10);
+    if (!val || val < 1 || val > 65535) {
+      banner.style.background = 'rgba(235, 87, 87, 0.12)';
+      banner.style.border = '1px solid var(--err, #eb5757)';
+      portInput.style.borderColor = 'var(--err, #eb5757)';
+      banner.innerHTML = `<span style="color:var(--err, #eb5757); font-weight:bold;">✕ Invalid Port:</span> Please enter a valid port between 1 and 65535.`;
+      if (deployConfirmBtn) {
+        deployConfirmBtn.disabled = true;
+        deployConfirmBtn.style.opacity = '0.5';
+        deployConfirmBtn.style.pointerEvents = 'none';
+      }
+      return;
+    }
+
+    try {
+      const check = await api.get(`/api/docker/check_port?port=${val}&proto=tcp`);
+      if (check && check.available === false) {
+        banner.style.background = 'rgba(245, 166, 35, 0.15)';
+        banner.style.border = '1px solid var(--warn, #f5a623)';
+        portInput.style.borderColor = 'var(--warn, #f5a623)';
+        const inUse = check.in_use_by ? ` (in use by ${check.in_use_by})` : '';
+        banner.innerHTML = `<span style="color:var(--warn, #f5a623); font-weight:bold;">⚠️ Port Conflict:</span> Port ${val} is already busy${inUse}. Please choose an available port before deploying.`;
+        if (deployConfirmBtn) {
+          deployConfirmBtn.disabled = true;
+          deployConfirmBtn.style.opacity = '0.5';
+          deployConfirmBtn.style.pointerEvents = 'none';
+        }
+      } else {
+        banner.style.background = 'rgba(37, 194, 160, 0.12)';
+        banner.style.border = '1px solid var(--ok2, #25c2a0)';
+        portInput.style.borderColor = '';
+        banner.innerHTML = `<span style="color:var(--ok2, #25c2a0); font-weight:bold;">✓ Ready to Deploy:</span> Port ${val} is free and ready.`;
+        if (deployConfirmBtn) {
+          deployConfirmBtn.disabled = false;
+          deployConfirmBtn.style.opacity = '1';
+          deployConfirmBtn.style.pointerEvents = 'auto';
+        }
+      }
+    } catch (err) {
+      if (deployConfirmBtn) {
+        deployConfirmBtn.disabled = false;
+        deployConfirmBtn.style.opacity = '1';
+        deployConfirmBtn.style.pointerEvents = 'auto';
+      }
+    }
   }
 
   async function updateComposePreview() {
@@ -1296,7 +1354,11 @@ export async function openAppDeployModal(appId) {
     }
   }
 
-  portInput.oninput = updateComposePreview;
+  portInput.oninput = () => {
+    updateComposePreview();
+    clearTimeout(portValidationTimer);
+    portValidationTimer = setTimeout(validateEnteredPort, 250);
+  };
   storageInput.oninput = updateComposePreview;
   await updateComposePreview();
 
@@ -1322,7 +1384,6 @@ export async function openAppDeployModal(appId) {
   };
 
   // Deployment execution with live progress bar and streaming console
-  const deployConfirmBtn = document.getElementById('adm-deploy-confirm-btn');
   const progressFill = document.getElementById('adm-progress-bar-fill');
   const progressPct = document.getElementById('adm-progress-pct-badge');
   const progressStatus = document.getElementById('adm-progress-status-text');
@@ -1439,10 +1500,25 @@ export async function openAppDeployModal(appId) {
   }
 
   deployConfirmBtn.onclick = async () => {
-    modal._isDeploying = true;
-    modal._activeAppId = appId;
     const p = parseInt(portInput.value, 10) || suggestedPort;
     const s = storageInput.value.trim() || '/mnt/user/appdata';
+
+    // Verify port availability before starting deployment
+    try {
+      const check = await api.get(`/api/docker/check_port?port=${p}&proto=tcp`);
+      if (check && check.available === false) {
+        banner.style.background = 'rgba(245, 166, 35, 0.15)';
+        banner.style.border = '1px solid var(--warn, #f5a623)';
+        portInput.style.borderColor = 'var(--warn, #f5a623)';
+        const inUse = check.in_use_by ? ` (in use by ${check.in_use_by})` : '';
+        banner.innerHTML = `<span style="color:var(--warn, #f5a623); font-weight:bold;">⚠️ Port Conflict:</span> Port ${p} is already busy${inUse}. Please choose an available port before deploying.`;
+        showToast(`Port ${p} is already in use${inUse}. Please change the port.`, 'warn');
+        return;
+      }
+    } catch (err) {}
+
+    modal._isDeploying = true;
+    modal._activeAppId = appId;
 
     // Switch views
     viewConfig.style.display = 'none';

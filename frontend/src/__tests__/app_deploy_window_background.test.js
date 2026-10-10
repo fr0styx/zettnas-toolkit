@@ -18,8 +18,16 @@ describe('App Catalog Deployment Window - Background & Minimize Suite', () => {
       </div>
     `;
 
-    vi.spyOn(api, 'get').mockResolvedValue({
-      apps: [{ id: 'uptime-kuma', name: 'Uptime Kuma', default_port: 3001, category: 'utilities', description: 'Monitor' }],
+    vi.spyOn(api, 'get').mockImplementation(async (url) => {
+      if (url.includes('/resolve')) {
+        return { app_id: 'uptime-kuma', default_port: 3001, suggested_port: 3001, conflict_detected: false };
+      }
+      if (url.includes('/check_port')) {
+        return { port: 3001, proto: 'tcp', available: true };
+      }
+      return {
+        apps: [{ id: 'uptime-kuma', name: 'Uptime Kuma', default_port: 3001, category: 'utilities', description: 'Monitor' }],
+      };
     });
     vi.spyOn(api, 'request').mockResolvedValue({
       ok: true,
@@ -81,7 +89,6 @@ describe('App Catalog Deployment Window - Background & Minimize Suite', () => {
     const mockNdjson = [
       JSON.stringify({ step: 'init', percent: 10, message: 'Pulling layers' }),
       JSON.stringify({ step: 'pull', percent: 69, message: 'Extracting image' }),
-      JSON.stringify({ step: 'success', percent: 100, message: 'Container started', port: 3001, done: true }),
     ].join('\n');
 
     vi.spyOn(api, 'request').mockResolvedValue({
@@ -99,7 +106,7 @@ describe('App Catalog Deployment Window - Background & Minimize Suite', () => {
     const mgmtWin = document.getElementById('management-window');
 
     // Trigger deployment
-    deployBtn.onclick();
+    await deployBtn.onclick();
 
     // While deploying, close button is NOT disabled
     expect(closeBtn.disabled).toBe(false);
@@ -122,5 +129,62 @@ describe('App Catalog Deployment Window - Background & Minimize Suite', () => {
 
     expect(overlay.classList.contains('window-minimized')).toBe(true);
     expect(DockManager.windows['app-deploy'].minimized).toBe(true);
+  });
+
+  it('displays port conflict alert banner and auto-suggests free port when pre-deployed container is present', async () => {
+    vi.spyOn(api, 'get').mockImplementation(async (url) => {
+      if (url.includes('/resolve')) {
+        return {
+          app_id: 'uptime-kuma',
+          default_port: 3001,
+          suggested_port: 3002,
+          conflict_detected: true,
+          in_use_by: "container 'uptime-kuma'",
+          existing_container: { name: 'uptime-kuma', id: '193158e06cff', running: true },
+          reason: "Port 3001 is already in use by container 'uptime-kuma'.",
+        };
+      }
+      if (url.includes('/check_port?port=3001')) {
+        return { port: 3001, proto: 'tcp', available: false, in_use_by: "container 'uptime-kuma'" };
+      }
+      if (url.includes('/check_port?port=3002')) {
+        return { port: 3002, proto: 'tcp', available: true, in_use_by: null };
+      }
+      return {
+        apps: [{ id: 'uptime-kuma', name: 'Uptime Kuma', default_port: 3001, category: 'utilities', description: 'Monitor' }],
+      };
+    });
+
+    await openAppDeployModal('uptime-kuma');
+
+    const portInput = document.getElementById('adm-port-input');
+    const banner = document.getElementById('adm-conflict-banner');
+    const deployBtn = document.getElementById('adm-deploy-confirm-btn');
+
+    // Input automatically remapped to suggested free port 3002
+    expect(portInput.value).toBe('3002');
+    // Banner alerts user of the port conflict and existing container
+    expect(banner.innerHTML).toContain('Port Conflict Detected');
+    expect(banner.innerHTML).toContain("container 'uptime-kuma'");
+    expect(banner.innerHTML).toContain('3002');
+
+    // If user manually types the occupied port 3001
+    portInput.value = '3001';
+    portInput.oninput();
+
+    // Wait for debounced port check
+    await new Promise((r) => setTimeout(r, 350));
+
+    expect(banner.innerHTML).toContain('Port 3001 is already busy');
+    expect(deployBtn.disabled).toBe(true);
+
+    // If user sets back to free port 3002
+    portInput.value = '3002';
+    portInput.oninput();
+
+    await new Promise((r) => setTimeout(r, 350));
+
+    expect(banner.innerHTML).toContain('Port 3002 is free and ready');
+    expect(deployBtn.disabled).toBe(false);
   });
 });

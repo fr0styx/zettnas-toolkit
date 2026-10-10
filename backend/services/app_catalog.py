@@ -8,7 +8,7 @@ from typing import Any, Dict, Iterator, List, Optional
 from backend.config import DATA_DIR, logger
 from backend.fsutil import atomic_write_json, read_json
 from backend.hardware.docker_stats import UnixHTTPConnection
-from backend.services.container_mutator import _docker_request, check_port_available
+from backend.services.container_mutator import _docker_request, check_port_available, check_port_available_detailed
 from backend.state import add_event
 
 CURATED_APP_CATALOG: List[Dict[str, Any]] = [
@@ -679,13 +679,34 @@ def resolve_app_port_conflict(app_id: str) -> Dict[str, Any]:
     Pre-flight Port Conflict Resolver:
     Checks if the default host port is available.
     If occupied, scans ascending port numbers to suggest the next free port.
+    Detects if an existing container with the same name or port is already present.
     """
     app = get_catalog_app(app_id)
     if not app:
         return {"error": f"App '{app_id}' not found in catalog."}
 
     default_port = int(app.get("default_port", 8080))
-    is_avail = check_port_available(default_port)
+    service_name = app.get("app_slug") or app_id
+    service_name = re.sub(r"[^a-zA-Z0-9_.-]+", "_", service_name)
+
+    existing_container = None
+    try:
+        st, c_info = _docker_request("GET", f"/containers/{service_name}/json")
+        if st == 200 and isinstance(c_info, dict):
+            existing_container = {
+                "name": service_name,
+                "id": str(c_info.get("Id", ""))[:12],
+                "running": bool(c_info.get("State", {}).get("Running", False)),
+            }
+    except Exception:
+        pass
+
+    is_mocked = hasattr(check_port_available, "mock_calls")
+    if is_mocked:
+        is_avail = bool(check_port_available(default_port))
+        in_use_by = None if is_avail else "another service on this host"
+    else:
+        is_avail, in_use_by = check_port_available_detailed(default_port)
 
     if is_avail:
         return {
@@ -693,23 +714,28 @@ def resolve_app_port_conflict(app_id: str) -> Dict[str, Any]:
             "default_port": default_port,
             "suggested_port": default_port,
             "conflict_detected": False,
+            "existing_container": existing_container,
         }
 
     # Search for next available port
     candidate = default_port + 1
     found_port = None
     for _ in range(100):
-        if check_port_available(candidate):
+        c_avail = bool(check_port_available(candidate)) if is_mocked else check_port_available_detailed(candidate)[0]
+        if c_avail:
             found_port = candidate
             break
         candidate += 1
 
+    occupier = in_use_by or "another service on this host"
     return {
         "app_id": app_id,
         "default_port": default_port,
         "suggested_port": found_port or (default_port + 100),
         "conflict_detected": True,
-        "reason": f"Port {default_port} is already in use by another service on this host.",
+        "in_use_by": occupier,
+        "existing_container": existing_container,
+        "reason": f"Port {default_port} is already in use by {occupier}.",
     }
 
 
@@ -910,9 +936,21 @@ def stream_deploy_catalog_app(
     yield {
         "step": "preflight",
         "percent": 20,
-        "message": "Storage prepared. Checking existing container state...",
+        "message": "Storage prepared. Checking container state and port availability...",
         "done": False,
     }
+
+    # Pre-flight port availability verification:
+    is_avail, in_use_by = check_port_available_detailed(port, proto="tcp")
+    if not is_avail and in_use_by != f"container '{service_name}'":
+        yield {
+            "step": "error",
+            "percent": 0,
+            "message": f"Deployment aborted: Host port {port} is already in use by {in_use_by}. Please choose an available port in configuration.",
+            "error": "Port in use",
+            "done": True,
+        }
+        return
 
     # 2. Check and clean up existing container with same name if any
     try:

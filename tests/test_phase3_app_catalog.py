@@ -204,3 +204,59 @@ def test_add_sync_toggle_delete_custom_source(client, auth_headers, tmp_path):
         # 4. Built-in deletion fails
         del_builtin = client.delete("/api/docker/catalog/sources/builtin", headers=auth_headers)
         assert del_builtin.status_code == 400
+
+
+def test_resolve_app_port_detects_docker_container_conflict(client, auth_headers):
+    mock_containers = [
+        {
+            "Names": ["/uptime-kuma"],
+            "Ports": [{"PublicPort": 3001, "Type": "tcp"}],
+        }
+    ]
+
+    def fake_docker(method, path, *args, **kwargs):
+        if path == "/containers/json":
+            return 200, mock_containers
+        if "/containers/uptime-kuma/json" in path:
+            return 200, {"Id": "abc123456789", "State": {"Running": True}}
+        return 404, {}
+
+    with patch("backend.services.container_mutator._docker_request", side_effect=fake_docker):
+        with patch("backend.services.app_catalog._docker_request", side_effect=fake_docker):
+            res = client.get("/api/docker/catalog/uptime-kuma/resolve", headers=auth_headers)
+            assert res.status_code == 200
+            data = res.json()
+            assert data["app_id"] == "uptime-kuma"
+            assert data["conflict_detected"] is True
+            assert data["suggested_port"] == 3002
+            assert "container 'uptime-kuma'" in data["in_use_by"]
+            assert data["existing_container"]["name"] == "uptime-kuma"
+
+
+def test_check_port_detailed_with_docker():
+    from backend.services.container_mutator import check_port_available_detailed
+
+    mock_containers = [
+        {
+            "Names": ["/uptime-kuma"],
+            "Ports": [{"PublicPort": 3001, "Type": "tcp"}],
+        }
+    ]
+    with patch("backend.services.container_mutator._docker_request", return_value=(200, mock_containers)):
+        with patch("backend.services.container_mutator.socket.socket") as mock_sock:
+            # Mock successful bind for free ports
+            mock_sock.return_value.__enter__.return_value.bind.return_value = None
+            avail, owner = check_port_available_detailed(3001, "tcp")
+            assert avail is False
+            assert owner == "container 'uptime-kuma'"
+
+
+def test_stream_deploy_catalog_app_aborts_on_conflicting_port():
+    from backend.services.app_catalog import stream_deploy_catalog_app
+
+    with patch("backend.services.app_catalog.check_port_available_detailed", return_value=(False, "container 'rogue-app'")):
+        events = list(stream_deploy_catalog_app("uptime-kuma", host_port=3001))
+        error_event = next((e for e in events if e.get("step") == "error"), None)
+        assert error_event is not None
+        assert "already in use by container 'rogue-app'" in error_event["message"]
+
