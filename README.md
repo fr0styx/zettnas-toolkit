@@ -1,7 +1,7 @@
 <div align="center">
   <img src="static/img/icon.png" width="128" height="128" alt="ZettNAS Toolkit Icon" style="border-radius: 24px;">
   <h1>ZettNAS Toolkit</h1>
-  <p><strong>All-in-one hardware management suite, real-time web desktop, and live front-panel LCD dashboard for Zettlab NAS enclosures (D4, D6, D8).</strong></p>
+  <p><strong>Universal hardware orchestration suite, glassmorphic Web Desktop OS, and container management platform for any NAS and homelab server.</strong></p>
 
   <p>
     <a href="https://github.com/fr0styx/zettnas-toolkit/releases"><img src="https://img.shields.io/github/v/release/fr0styx/zettnas-toolkit?color=25c2a0&style=flat-square" alt="GitHub Release"></a>
@@ -19,7 +19,7 @@
   <img src="static/img/ui-screenshot.png" width="90%" alt="ZettNAS Web Studio & Desktop UI" style="border-radius: 8px; box-shadow: 0 12px 36px rgba(0,0,0,0.5);">
 </div>
 
-**ZettNAS Toolkit** (**NAS WORKBENCH**) is an enterprise-grade hardware orchestration platform, modern web desktop OS, and container management suite engineered for Zettlab NAS enclosures (D4, D6, D8), Aoostar appliances, and generic homelab servers running Unraid, Debian, Ubuntu, TrueNAS, or Docker. It bridges low-level hardware intelligence with a fluid, multi-window desktop operating experience:
+**ZettNAS Toolkit** (**NAS WORKBENCH**) is an enterprise-grade, hardware-agnostic orchestration platform, modern web desktop OS, and container management suite engineered for any NAS appliance or custom DIY homelab server (Aoostar, Zettlab, Fractal, Jonsbo, Supermicro, SilverStone) running Unraid, Debian, Ubuntu, TrueNAS SCALE, Proxmox, or Docker. It bridges low-level hardware intelligence with a fluid, multi-window desktop operating experience:
 
 * 🖥️ **Glassmorphic Web Desktop OS** — Fluid multi-window desktop with window snapping, macOS-style parabolic dock magnification, Spotlight command palette (`Cmd+K`), visual wallpaper gallery with drag-and-drop ingestion, and instant themes (Cyber Teal, Amber CRT, Emerald Matrix, Yak Bronze, and Pure OLED Black).
 * 🛡️ **Enterprise Multi-User & Granular RBAC** — SQLite WAL user store (`users.db`), RFC 9106 Argon2id credential hashing, TOTP two-factor authentication (2FA), Reverse Proxy SSO (`X-Forwarded-User`), scoped API tokens with CIDR whitelisting, private `/homes/` isolation, and desktop auto-lock (`Cmd+L`).

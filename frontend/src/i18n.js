@@ -215,7 +215,7 @@ export const TRANSLATIONS = {
     "notif.configure_channels": "Configure Alert Channels",
     "mgmt.subtab_about": "About & Updates",
     "mgmt.about_title": "About ZettNAS Workbench & Updates",
-    "mgmt.about_desc": "Hardware orchestration suite for Zettlab NAS enclosures & homelab systems.",
+    "mgmt.about_desc": "Universal hardware orchestration suite & Web Desktop OS for any NAS and homelab system.",
 
     "mgmt.sidebar_metrics": "Metrics",
     "mgmt.sidebar_events": "Event Log",
@@ -888,7 +888,7 @@ export const TRANSLATIONS = {
     "notif.configure_channels": "Alarmkanäle konfigurieren",
     "mgmt.subtab_about": "Über & Updates",
     "mgmt.about_title": "Über ZettNAS Workbench & Updates",
-    "mgmt.about_desc": "Hardware-Orchestrierung für Zettlab NAS-Gehäuse und Homelab-Systeme.",
+    "mgmt.about_desc": "Universelle Hardware-Orchestrierung & Web Desktop OS für jedes NAS- und Homelab-System.",
 
     "mgmt.sidebar_metrics": "Metriken",
     "mgmt.sidebar_events": "Ereignisprotokoll",
@@ -1561,7 +1561,7 @@ export const TRANSLATIONS = {
     "notif.configure_channels": "配置警报渠道",
     "mgmt.subtab_about": "关于与更新",
     "mgmt.about_title": "关于 ZettNAS Workbench 与更新",
-    "mgmt.about_desc": "专为 Zettlab NAS 机箱与家庭实验室打造的硬件编排管理套件。",
+    "mgmt.about_desc": "适用于各类 NAS 与家庭实验室服务器的通用硬件编排管理及 Web 桌面操作系统。",
 
     "mgmt.sidebar_metrics": "硬件指标",
     "mgmt.sidebar_events": "事件日志",
@@ -2224,7 +2224,7 @@ export const TRANSLATIONS = {
     "mgmt.subtab_system": "Système & API",
     "mgmt.subtab_about": "À propos & Mises à jour",
     "mgmt.about_title": "À propos de ZettNAS Workbench & Mises à jour",
-    "mgmt.about_desc": "Suite d'orchestration matérielle pour boîtiers NAS Zettlab et systèmes homelab.",
+    "mgmt.about_desc": "Suite universelle d'orchestration matérielle et Web Desktop OS pour tout NAS et système homelab.",
 
     "mgmt.sidebar_metrics": "Métriques",
     "mgmt.sidebar_events": "Journaux",
@@ -2897,7 +2897,7 @@ export const TRANSLATIONS = {
     "notif.configure_channels": "Configurar canales de alerta",
     "mgmt.subtab_about": "Acerca de y Actualizaciones",
     "mgmt.about_title": "Acerca de ZettNAS Workbench y Actualizaciones",
-    "mgmt.about_desc": "Suite de orquestación de hardware para chasis Zettlab NAS y sistemas homelab.",
+    "mgmt.about_desc": "Suite universal de orquestación de hardware y Web Desktop OS para cualquier sistema NAS y homelab.",
 
     "mgmt.sidebar_metrics": "Métricas",
     "mgmt.sidebar_events": "Registro de Eventos",
