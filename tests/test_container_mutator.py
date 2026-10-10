@@ -254,10 +254,11 @@ def test_recreate_container_full_config(mock_docker_req, mock_inspect):
     assert res["new_id"] == "recreated_new_id_12345"[:12]
 
     # Verify create payload
-    create_call = [c for c in mock_docker_req.call_args_list if c[0][0] == "POST" and "/containers/create" in c[0][1]][0]
+    create_call = [c for c in mock_docker_req.call_args_list if c[0][0] == "POST" and "/containers/create" in c[0][1]][
+        0
+    ]
     create_body = create_call[1]["body"]
     assert create_body["Image"] == "lscr.io/linuxserver/jellyfin:10.9.1"
     assert create_body["Env"] == ["PUID=1001", "PGID=101", "TZ=UTC"]
     assert create_body["HostConfig"]["Binds"] == ["/mnt/user/appdata/jellyfin:/config:rw", "/mnt/user/media:/media:ro"]
     assert create_body["HostConfig"]["RestartPolicy"] == {"Name": "always"}
-
