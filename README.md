@@ -34,13 +34,19 @@
 
 ## Hardware Compatibility
 
-| Component | Target Hardware | Interface & Drivers |
+ZettNAS Toolkit is architected around a universal **Hardware Abstraction Layer (HAL)**. It runs seamlessly on commercial NAS appliances, custom DIY homelab towers, enterprise rackmount servers, mini PCs, and ARM64 single-board computers—with **zero hardcoded hardware dependencies**.
+
+When specialized appliance peripherals (physical front LCD, ARGB lightbar, or front Copy button) are not present, the toolkit runs in standard **Headless Mode** without unhandled exceptions or log spam, and dynamically hides appliance-only badges (`MCU`, `FB`) and controls.
+
+| Subsystem | Supported Hardware & Form Factors | Driver / Interface & Capabilities |
 | :--- | :--- | :--- |
-| **Enclosures** | Zettlab D4, D6, D8 | Auto-detected via DMI product name or discovered drive topology |
-| **Front Display** | Internal 640×172 IPS LCD | Direct memory-mapped `/dev/fb0` (stride 704) |
-| **Cooling Fans** | Motherboard `hwmon` | Supports `nct6775`, `it87`, `zettlab_d8_fans`, or standard Linux PWM (`pwm1`–`pwm3`) |
-| **ARGB Strip** | Built-in USB microcontroller | Recognized as `ZettOS_RGB` or `/dev/ttyACM0` (38 WS2812B nodes) |
-| **Card Reader** | Front SD / MicroSD Slots | Removable block storage (`/dev/sd*`) with auto-detection |
+| **Chassis & Enclosures** | • **Turnkey Appliances**: Aoostar (WTR Pro, R1), Zettlab (D4, D6, D8, D6U), Minisforum, Terramaster<br>• **DIY Homelab Towers**: Fractal Design (Node 304/804, Define), Jonsbo (N1–N5 series), SilverStone (CS380/381), Lian Li, generic ATX/ITX<br>• **Enterprise Rackmounts**: 1U–4U backplanes (Supermicro, Dell PowerEdge, HP ProLiant, Chenbro, 4–24+ bays)<br>• **Mini-PCs & ARM64 SBCs**: Intel NUC, Beelink, GMKtec, Raspberry Pi 5 (PCIe NVMe HAT), Radxa Rock 5B | Auto-detected via DMI product name (`/sys/class/dmi/id/`) or synthesized from discovered storage topology. Features parametric 2.5D chassis digital twin with user drag-and-drop bay slot reordering. |
+| **Storage Controllers & Buses** | • **SATA AHCI**: Intel/AMD chipset AHCI, ASMedia (ASM1061/1064/1166), JMicron (JMB585), Marvell PCIe multiplexers<br>• **Enterprise SAS HBAs**: Broadcom / LSI MegaRAID & IT-mode HBAs (`mpt3sas`, `mpt2sas`, `mptsas` — LSI 9211-8i, 9300-8i, 9400-16i, 9500-16i)<br>• **PCIe NVMe**: Direct M.2 2280, U.2, U.3, E1.S direct CPU/PCH lanes (`nvme` driver)<br>• **USB Storage**: USB 3.x to SATA/NVMe bridges (Realtek RTL9210, ASMedia ASM1153E/2362, JMicron JMS567/583) | Unified discovery via persistent `/dev/disk/by-id/` symlinks and `lsblk -J -O`. Supports multi-protocol S.M.A.R.T. (SAT, NVMe, SCSI) and non-invasive zero-wake spindown checks (`smartctl -n standby`, `hdparm -C`). |
+| **Cooling Fans & PWM** | • **Super I/O Chips**: Nuvoton (`nct6775`, `nct6776`, `nct6779`, `nct6791`–`nct6799`), ITE Tech (`it87`, `it8620`, `it8628`), Fintek<br>• **Appliance Fan Drivers**: `zettlab_d8_fans`, `zettos_pwm_fan`<br>• **Generic Linux PWM**: Any standard motherboard `hwmon*` PWM channels (`pwm1`–`pwm3` / `fan*_input`) | Dynamic 6-point SVG fan curves, acoustic profiles (Auto, Quiet, Balanced, Performance), and Zero RPM standby mode for spun-down drive bays. Enforces strict hardware thermal clamp at ≥80°C. |
+| **Processors & Thermals** | • **Intel**: Core, Xeon, Celeron, Pentium (`coretemp`)<br>• **AMD**: Ryzen, Threadripper, EPYC (`k10temp`, `zenpower`)<br>• **ARM64 & SoCs**: Rockchip, Allwinner, Raspberry Pi Broadcom (`cpu_thermal`) | Direct kernel sysfs temperature polling, per-core telemetry, historical velocity tracking, and configurable Apprise thermal warning thresholds. |
+| **Physical LCD Display** *(Optional)* | Built-in 640×172 IPS front LCD panel (Zettlab D6U/D8, Aoostar appliances) | Direct memory-mapped `/dev/fb0` (stride 704). Sleep timers, dynamic carousel pages, and instant Web Desktop mirroring. Dynamically hidden when display hardware is not present. |
+| **ARGB Lightbar** *(Optional)* | Front-panel WS2812B ambient lightbar (38 addressable LED nodes) | Serial USB microcontroller `/dev/ttyACM0` (`ZettOS_RGB`). 7 hardware effects (Aurora, Pulse, Thermal, Drive Activity, Cyber). Dynamically hidden when MCU is not present. |
+| **Media Ingest & Button** *(Optional)* | Front SD / MicroSD / TF card slots and physical front-panel COPY button | Removable block storage (`/dev/sd*`) with SHA-256 verified auto-ingest into `/mnt/user/media_ingest`. Hardware copy button polled via MMIO `/dev/mem` on supported hardware. |
 
 ---
 
