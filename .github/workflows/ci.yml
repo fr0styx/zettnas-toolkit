@@ -205,9 +205,27 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Extract Release Notes from CHANGELOG.md
+        run: |
+          python3 -c "
+          import re, os
+          tag = os.environ.get('GITHUB_REF_NAME', '')
+          notes = ''
+          if os.path.exists('CHANGELOG.md') and tag:
+              with open('CHANGELOG.md') as f:
+                  text = f.read()
+              pattern = rf'##\s+{re.escape(tag)}.*?\n(.*?)(?=\n##|\Z)'
+              m = re.search(pattern, text, re.DOTALL)
+              if m:
+                  notes = m.group(1).strip()
+          with open('RELEASE_NOTES.md', 'w') as out:
+              out.write(notes)
+          "
+
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
+          body_path: RELEASE_NOTES.md
           generate_release_notes: true
           draft: false
           prerelease: false
