@@ -3,8 +3,43 @@ import json
 import os
 import time
 
-from backend.config import HOST_SYS, SCREEN_STATE_FILE, logger
+from backend.config import HOST_DEV, HOST_SYS, SCREEN_STATE_FILE, logger
 from backend.fsutil import atomic_write_json
+
+
+def find_fb_device(writable_only: bool = True) -> str | None:
+    """
+    Discovers an accessible framebuffer character device.
+    Prioritizes FRAMEBUFFER env, /dev/fb0, HOST_DEV/fb0, and /host/dev/fb0.
+    If writable_only=True, verifies that the device can be opened for r+b (verifying cgroup permissions).
+    Returns device path or None.
+    """
+    candidates = []
+    if "FRAMEBUFFER" in os.environ:
+        candidates.append(os.environ["FRAMEBUFFER"])
+    candidates.extend(
+        [
+            "/dev/fb0",
+            os.path.join(HOST_DEV, "fb0") if HOST_DEV else "/host/dev/fb0",
+            "/host/dev/fb0",
+        ]
+    )
+
+    seen = set()
+    for cand in candidates:
+        if not cand or cand in seen:
+            continue
+        seen.add(cand)
+        if os.path.exists(cand) and not os.path.isdir(cand):
+            if writable_only:
+                try:
+                    with open(cand, "r+b"):
+                        return cand
+                except OSError:
+                    continue
+            else:
+                return cand
+    return None
 
 
 def is_in_time_window(start_str, end_str, now_minutes=None):

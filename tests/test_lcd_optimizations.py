@@ -3,6 +3,7 @@ from unittest.mock import mock_open, patch
 
 from backend.hardware.screen import (
     discover_backlight_dir,
+    find_fb_device,
     get_effective_brightness,
     set_screen_brightness,
 )
@@ -104,3 +105,49 @@ def test_set_screen_brightness(tmp_path):
 
         set_screen_brightness(-20)
         assert br_file.read_text().strip() == "0"
+
+
+def test_find_fb_device_none():
+    with patch("os.path.exists", return_value=False):
+        assert find_fb_device() is None
+
+
+def test_find_fb_device_prefers_dev_fb0():
+    def fake_exists(p):
+        return p == "/dev/fb0"
+
+    with patch("os.path.exists", side_effect=fake_exists), patch("builtins.open", mock_open()):
+        assert find_fb_device() == "/dev/fb0"
+
+
+def test_find_fb_device_falls_back_to_host_dev_fb0():
+    def fake_exists(p):
+        return p == "/host/dev/fb0"
+
+    with patch("os.path.exists", side_effect=fake_exists), patch("builtins.open", mock_open()):
+        assert find_fb_device() == "/host/dev/fb0"
+
+
+def test_find_fb_device_permission_error():
+    def fake_exists(p):
+        return p == "/host/dev/fb0"
+
+    def fake_open(p, mode="r"):
+        if p == "/host/dev/fb0" and ("w" in mode or "+" in mode):
+            raise PermissionError("[Errno 1] Operation not permitted")
+        return mock_open()()
+
+    with patch("os.path.exists", side_effect=fake_exists), patch("builtins.open", side_effect=fake_open):
+        # Writable only returns None because permission is denied
+        assert find_fb_device(writable_only=True) is None
+        # Non-writable returns the path
+        assert find_fb_device(writable_only=False) == "/host/dev/fb0"
+
+
+def test_find_fb_device_env_override():
+    with (
+        patch.dict("os.environ", {"FRAMEBUFFER": "/dev/fb99"}),
+        patch("os.path.exists", side_effect=lambda p: p == "/dev/fb99"),
+        patch("builtins.open", mock_open()),
+    ):
+        assert find_fb_device() == "/dev/fb99"

@@ -8,8 +8,12 @@ from PIL import Image
 from playwright.sync_api import sync_playwright
 
 from backend import config
-from backend.config import ENABLE_FB, LCD_FORMAT, LCD_FPS, PORT, logger
-from backend.hardware.screen import discover_backlight_dir, get_effective_brightness
+from backend.config import ENABLE_FB, HOST_SYS, LCD_FORMAT, LCD_FPS, PORT, logger
+from backend.hardware.screen import (
+    discover_backlight_dir,
+    find_fb_device,
+    get_effective_brightness,
+)
 from backend.state import Z_STATE
 
 
@@ -22,7 +26,11 @@ def discover_fb_geometry() -> tuple[int, int, int]:
     default_h = 640
     default_stride = 704
 
-    for base in ["/sys/class/graphics/fb0", "/host/sys/class/graphics/fb0"]:
+    bases = ["/sys/class/graphics/fb0", "/host/sys/class/graphics/fb0"]
+    if HOST_SYS and os.path.isdir(os.path.join(HOST_SYS, "class/graphics/fb0")):
+        bases.insert(0, os.path.join(HOST_SYS, "class/graphics/fb0"))
+
+    for base in bases:
         stride_file = os.path.join(base, "stride")
         vsize_file = os.path.join(base, "virtual_size")
         if os.path.exists(stride_file):
@@ -49,15 +57,25 @@ def discover_fb_geometry() -> tuple[int, int, int]:
 
 def render_lcd_loop():
     """
-    Active Framebuffer Streamer to /dev/fb0:
+    Active Framebuffer Streamer:
     - Dynamic discovery of backlight sysfs and framebuffer stride/geometry.
     - Viewport oriented 172x640 via CSS 90deg rotation (No CPU matrix rotate overhead).
     - Screen-off pause: 0 FPS when screen blanked/night mode.
     - Adaptive FPS: 1 FPS when idle/static, bursting to target FPS on telemetry changes.
     - Single mmap memory block write into video memory per frame.
     """
-    if not ENABLE_FB or not os.path.exists("/dev/fb0") or os.path.isdir("/dev/fb0"):
-        logger.info("[LCD] Framebuffer /dev/fb0 not present, disabled, or is a directory. Running web-only.")
+    if Z_STATE.shutting_down:
+        return
+
+    if not ENABLE_FB:
+        logger.info("[LCD] Framebuffer disabled via ENABLE_FB=0. Running web-only.")
+        return
+
+    fb_path = find_fb_device(writable_only=True)
+    if not fb_path:
+        logger.info(
+            "[LCD] Framebuffer device (/dev/fb0, /host/dev/fb0) not present, inaccessible, or is a directory. Running web-only."
+        )
         return
 
     time.sleep(2)
@@ -80,7 +98,7 @@ def render_lcd_loop():
     lcd_format = LCD_FORMAT
 
     logger.info(
-        f"[LCD] Starting active renderer: {fb_width}x{fb_height} @ {target_fps} FPS -> /dev/fb0 (stride {stride}, format {lcd_format})"
+        f"[LCD] Starting active renderer: {fb_width}x{fb_height} @ {target_fps} FPS -> {fb_path} (stride {stride}, format {lcd_format})"
     )
 
     chromium_args = [
@@ -129,7 +147,7 @@ def render_lcd_loop():
                 if lcd_format == "jpeg":
                     shot_params["quality"] = 95
 
-                with open("/dev/fb0", "r+b") as fb_file:
+                with open(fb_path, "r+b") as fb_file:
                     fb_mem = mmap.mmap(fb_file.fileno(), total_fb_bytes, mmap.MAP_SHARED, mmap.PROT_WRITE)
                     try:
                         # Pre-fill line padding once
