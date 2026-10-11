@@ -1,0 +1,43 @@
+#!/bin/bash
+set -e
+
+RUFF_CMD=""
+if command -v ruff >/dev/null 2>&1; then
+  RUFF_CMD="ruff"
+elif [ -x "/usr/local/bin/ruff" ]; then
+  RUFF_CMD="/usr/local/bin/ruff"
+elif command -v docker >/dev/null 2>&1 && docker ps --format '{{.Names}}' | grep -q '^zettnas-toolkit$'; then
+  RUFF_CMD="docker exec -i zettnas-toolkit ruff"
+fi
+
+if [ -z "" ]; then
+  exit 0
+fi
+
+STAGED_PY_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep '\.py$' || true)
+
+if [ -n "" ]; then
+  echo "🔍 [pre-commit] Formatting and verifying staged Python files with Ruff..."
+  for f in $STAGED_PY_FILES; do
+    if [ -f "$f" ]; then
+      $RUFF_CMD format "$f"
+      $RUFF_CMD check --fix --unsafe-fixes "$f" >/dev/null 2>&1 || true
+      git add "$f"
+    fi
+  done
+
+  for f in $STAGED_PY_FILES; do
+    if [ -f "$f" ]; then
+      if ! $RUFF_CMD check "$f"; then
+        echo "❌ [pre-commit] Ruff check failed on $f."
+        exit 1
+      fi
+      if ! $RUFF_CMD format --check "$f"; then
+        echo "❌ [pre-commit] Ruff format check failed on $f."
+        exit 1
+      fi
+    fi
+  done
+  echo "✅ [pre-commit] Staged Python files verified clean."
+fi
+exit 0

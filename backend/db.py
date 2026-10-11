@@ -125,8 +125,8 @@ def log_metrics(
             cols = {row[1] for row in cur.fetchall()}
             if "net_rx_bytes_sec" in cols:
                 conn.execute(
-                    """INSERT INTO metrics 
-                       (ts, cpu_temp, cpu_util, mem_pct, disks_json, fans_json, net_rx_bytes_sec, net_tx_bytes_sec, disk_read_bytes_sec, disk_write_bytes_sec) 
+                    """INSERT INTO metrics
+                       (ts, cpu_temp, cpu_util, mem_pct, disks_json, fans_json, net_rx_bytes_sec, net_tx_bytes_sec, disk_read_bytes_sec, disk_write_bytes_sec)
                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                     (
                         ts,

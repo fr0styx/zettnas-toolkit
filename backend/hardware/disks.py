@@ -632,9 +632,9 @@ def read_disk_temps_and_io(allow_sync_poll: bool = False):
             if dev in prev_sectors:
                 p_r, p_w = prev_sectors[dev]
                 if r_sec >= p_r:
-                    delta_r_sec += (r_sec - p_r)
+                    delta_r_sec += r_sec - p_r
                 if w_sec >= p_w:
-                    delta_w_sec += (w_sec - p_w)
+                    delta_w_sec += w_sec - p_w
         total_read_rate = (delta_r_sec * 512.0) / dt
         total_write_rate = (delta_w_sec * 512.0) / dt
 

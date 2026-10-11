@@ -144,31 +144,41 @@ Whenever you modify files in `frontend/src/` or `frontend/index.html`:
 
 ## 4. Testing & Verification Gates
 
-### 4.1 The Zero-Broken-Tests Rule
-Before committing any changes or concluding a task, you **must** verify that all test suites pass with 100% success rate:
-- **Frontend (Vitest)**: 40 test files, 256+ unit tests.
-- **Backend (Pytest)**: 420+ unit and integration tests.
+### 4.1 The Zero-Broken-Tests & Lint Invariant
+Before committing any changes or concluding a task, you **must** verify that all linting and test suites pass with 100% success rate:
+- **Python Lint & Format (Ruff)**: Staged Python files **must** pass `ruff check` and `ruff format --check`. The CI pipeline will unconditionally fail within 17s if trailing whitespace or unformatted lines exist.
+- **Frontend (Vitest)**: 44 test files, 280+ unit tests.
+- **Backend (Pytest)**: 441+ unit and integration tests.
 
-### 4.2 Running Tests
+### 4.2 Running Verification & Tests
 
-#### Run Single Frontend Test File:
+#### Step 1: Run Python Lint & Format Checks (Mandatory before every commit):
 ```bash
-ssh root@10.40.30.249 "cd /mnt/user/appdata/zettnas-toolkit && node ./node_modules/vitest/dist/cli.js run frontend/src/__tests__/<test_name>.test.js"
+ssh root@10.40.30.249 "cd /mnt/user/appdata/zettnas-toolkit && npm run lint"
+```
+To auto-fix any formatting issues automatically:
+```bash
+ssh root@10.40.30.249 "cd /mnt/user/appdata/zettnas-toolkit && npm run format:py"
 ```
 
-#### Run Full Frontend Test Suite:
+#### Step 2: Run Full Frontend Test Suite:
 ```bash
 ssh root@10.40.30.249 "cd /mnt/user/appdata/zettnas-toolkit && npm test"
 ```
 
-#### Run Backend Pytest Suite:
+#### Step 3: Run Backend Pytest Suite:
 ```bash
-ssh root@10.40.30.249 "docker exec -i zettnas-toolkit python3 -m pytest -q /mnt/user/appdata/zettnas-toolkit/tests"
+ssh root@10.40.30.249 "docker exec -i zettnas-toolkit python3 -m pytest -q /app/tests"
+```
+
+#### Run Specific Frontend Test:
+```bash
+ssh root@10.40.30.249 "cd /mnt/user/appdata/zettnas-toolkit && node ./node_modules/vitest/dist/cli.js run frontend/src/__tests__/<test_name>.test.js"
 ```
 
 #### Run Specific Backend Test:
 ```bash
-ssh root@10.40.30.249 "docker exec -i zettnas-toolkit python3 -m pytest -v /mnt/user/appdata/zettnas-toolkit/tests/test_docker_updates.py"
+ssh root@10.40.30.249 "docker exec -i zettnas-toolkit python3 -m pytest -v /app/tests/test_docker_updates.py"
 ```
 
 ---

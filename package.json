@@ -7,7 +7,11 @@
     "test": "node ./node_modules/vitest/dist/cli.js run",
     "test:coverage": "node ./node_modules/vitest/dist/cli.js run --coverage",
     "build": "node ./node_modules/vite/bin/vite.js build",
-    "dev": "node ./node_modules/vite/bin/vite.js"
+    "dev": "node ./node_modules/vite/bin/vite.js",
+    "lint:py": "ruff check app.py backend tests",
+    "format:py": "ruff format app.py backend tests",
+    "lint": "ruff check app.py backend tests && ruff format --check app.py backend tests",
+    "check:all": "npm run lint && npm test"
   },
   "repository": {
     "type": "git",

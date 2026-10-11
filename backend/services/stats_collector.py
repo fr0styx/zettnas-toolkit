@@ -642,8 +642,12 @@ def stats_collector_daemon():
                         fans,
                         net_rx_bytes_sec=net.get("rx_bytes_sec", 0.0) if isinstance(net, dict) else 0.0,
                         net_tx_bytes_sec=net.get("tx_bytes_sec", 0.0) if isinstance(net, dict) else 0.0,
-                        disk_read_bytes_sec=disk_rates.get("read_bytes_sec", 0.0) if isinstance(disk_rates, dict) else 0.0,
-                        disk_write_bytes_sec=disk_rates.get("write_bytes_sec", 0.0) if isinstance(disk_rates, dict) else 0.0,
+                        disk_read_bytes_sec=disk_rates.get("read_bytes_sec", 0.0)
+                        if isinstance(disk_rates, dict)
+                        else 0.0,
+                        disk_write_bytes_sec=disk_rates.get("write_bytes_sec", 0.0)
+                        if isinstance(disk_rates, dict)
+                        else 0.0,
                     )
                 except Exception as db_e:
                     logger.info(f"[ZettNAS] DB Log Error: {db_e}")
