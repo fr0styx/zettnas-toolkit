@@ -8,11 +8,16 @@ from backend.hardware.network import (
     _format_speed,
     _hex_to_ip,
     _mask_to_cidr,
+    apply_host_ip_config_canary,
+    confirm_host_ip_config,
     create_docker_network,
     delete_docker_network,
+    get_canary_watchdog,
+    get_host_ip_config,
     get_network_topology,
     get_port_config,
     load_network_config,
+    revert_host_ip_config,
     save_network_config,
     update_port_config,
 )
@@ -308,3 +313,208 @@ def test_network_api_port_and_docker_endpoints(client, token):
         res = client.delete("/api/network/docker/net789", headers=headers)
         assert res.status_code == 200
         assert res.json()["status"] == "ok"
+
+
+def test_get_host_ip_config(tmp_path):
+    cfg_file = tmp_path / "network_config.json"
+    mock_topo = {
+        "status": "ok",
+        "summary": {
+            "primary_ip": "10.40.30.249",
+            "default_gateway": "10.40.30.1",
+            "primary_interface": "br0",
+            "dns_servers": ["10.40.30.1"],
+        },
+        "physical_interfaces": [{"name": "eth0"}, {"name": "eth1"}],
+        "bridges": [{"name": "br0"}],
+        "bonds": [{"name": "bond0"}],
+        "routes": [{"iface": "br0", "destination": "10.40.30.0", "mask": "255.255.255.0", "cidr": 24}],
+    }
+
+    with (
+        patch("backend.hardware.network.NETWORK_CONFIG_FILE", str(cfg_file)),
+        patch("backend.hardware.network.get_network_topology", return_value=mock_topo),
+        patch("backend.hardware.network._parse_unraid_network_cfg", return_value={}),
+    ):
+        res = get_host_ip_config()
+        assert res["status"] == "ok"
+        assert res["interface"] == "br0"
+        assert "br0" in res["available_interfaces"]
+        assert "eth0" in res["available_interfaces"]
+        assert res["ip_address"] == "10.40.30.249"
+        assert res["netmask"] == "255.255.255.0"
+        assert res["cidr"] == 24
+        assert res["gateway"] == "10.40.30.1"
+        assert res["dns1"] == "10.40.30.1"
+        assert res["canary"]["is_active"] is False
+
+
+def test_apply_host_ip_config_canary_and_confirm(tmp_path):
+    cfg_file = tmp_path / "network_config.json"
+    mock_topo = {
+        "status": "ok",
+        "summary": {"primary_ip": "10.40.30.249", "default_gateway": "10.40.30.1", "primary_interface": "br0"},
+        "physical_interfaces": [{"name": "eth0"}],
+        "bridges": [{"name": "br0"}],
+        "bonds": [],
+        "routes": [],
+    }
+
+    watchdog = get_canary_watchdog()
+    watchdog.confirm()  # Ensure reset
+
+    with (
+        patch("backend.hardware.network.NETWORK_CONFIG_FILE", str(cfg_file)),
+        patch("backend.hardware.network.get_network_topology", return_value=mock_topo),
+        patch("backend.hardware.network._write_unraid_network_cfg", return_value=True) as mock_write_unraid,
+        patch("backend.state.add_event") as mock_event,
+    ):
+        # 1. Apply new IP config with 60s Canary
+        res = apply_host_ip_config_canary(
+            {
+                "mode": "static",
+                "interface": "br0",
+                "ip_address": "10.40.30.250",
+                "netmask": "255.255.255.0",
+                "gateway": "10.40.30.1",
+                "dns1": "1.1.1.1",
+                "dns2": "8.8.8.8",
+            },
+            timeout_sec=60,
+        )
+
+        assert res["status"] == "testing"
+        assert res["target_ip"] == "10.40.30.250"
+        assert res["target_url"] == "http://10.40.30.250:8082"
+        assert res["expires_in"] == 60
+        canary_id = res["canary_id"]
+        assert canary_id
+
+        # Verify staged config in JSON
+        saved = load_network_config()
+        assert "host_ip_staged" in saved
+        assert saved["host_ip_staged"]["canary_id"] == canary_id
+        assert saved["host_ip_staged"]["target"]["ip_address"] == "10.40.30.250"
+
+        # Verify Unraid update called
+        mock_write_unraid.assert_called()
+        mock_event.assert_called()
+
+        # 2. Confirm Canary
+        confirm_res = confirm_host_ip_config(canary_id=canary_id)
+        assert confirm_res["status"] == "confirmed"
+
+        # Verify persisted permanently
+        saved_final = load_network_config()
+        assert "host_ip_staged" not in saved_final
+        assert saved_final["host_ip_config"]["ip_address"] == "10.40.30.250"
+        assert watchdog.is_active is False
+
+
+def test_apply_host_ip_config_canary_revert(tmp_path):
+    cfg_file = tmp_path / "network_config.json"
+    mock_topo = {
+        "status": "ok",
+        "summary": {"primary_ip": "10.40.30.249", "default_gateway": "10.40.30.1", "primary_interface": "br0"},
+        "physical_interfaces": [{"name": "eth0"}],
+        "bridges": [{"name": "br0"}],
+        "bonds": [],
+        "routes": [],
+    }
+
+    watchdog = get_canary_watchdog()
+    watchdog.confirm()  # Ensure reset
+
+    with (
+        patch("backend.hardware.network.NETWORK_CONFIG_FILE", str(cfg_file)),
+        patch("backend.hardware.network.get_network_topology", return_value=mock_topo),
+        patch("backend.hardware.network._write_unraid_network_cfg", return_value=True),
+        patch("backend.state.add_event"),
+    ):
+        apply_res = apply_host_ip_config_canary(
+            {
+                "mode": "static",
+                "interface": "br0",
+                "ip_address": "10.40.30.251",
+                "netmask": "255.255.255.0",
+                "gateway": "10.40.30.1",
+            },
+            timeout_sec=60,
+        )
+        assert apply_res["status"] == "testing"
+        canary_id = apply_res["canary_id"]
+
+        revert_res = revert_host_ip_config(canary_id=canary_id)
+        assert revert_res["status"] == "reverted"
+        assert revert_res["restored_ip"] == "10.40.30.249"
+
+        saved = load_network_config()
+        assert "host_ip_staged" not in saved
+        assert watchdog.is_active is False
+
+
+def test_canary_watchdog_auto_rollback_on_timeout():
+    watchdog = get_canary_watchdog()
+    watchdog.confirm()  # Reset
+
+    target = {"ip_address": "10.40.30.252"}
+    original = {"ip_address": "10.40.30.249"}
+
+    with (
+        patch("backend.hardware.network._execute_revert") as mock_revert,
+        patch("backend.state.add_event") as mock_event,
+    ):
+        canary_id = watchdog.arm(target, original, timeout_sec=60)
+        assert watchdog.is_active is True
+
+        # Directly trigger timeout callback
+        watchdog._on_timeout(canary_id)
+        assert watchdog.is_active is False
+        mock_revert.assert_called_once_with(original)
+        mock_event.assert_called()
+
+
+def test_host_ip_api_endpoints(client, token):
+    headers = {"Authorization": f"Bearer {token}"}
+    mock_config = {
+        "status": "ok",
+        "mode": "static",
+        "interface": "br0",
+        "ip_address": "10.40.30.249",
+        "netmask": "255.255.255.0",
+        "gateway": "10.40.30.1",
+        "canary": {"is_active": False},
+    }
+
+    with (
+        patch("backend.api.network.get_host_ip_config", return_value=mock_config),
+        patch(
+            "backend.api.network.apply_host_ip_config_canary",
+            return_value={"status": "testing", "canary_id": "c123", "expires_in": 60},
+        ),
+        patch("backend.api.network.confirm_host_ip_config", return_value={"status": "confirmed"}),
+        patch("backend.api.network.revert_host_ip_config", return_value={"status": "reverted"}),
+    ):
+        # 1. GET /api/network/host/config
+        r1 = client.get("/api/network/host/config", headers=headers)
+        assert r1.status_code == 200
+        assert r1.json()["ip_address"] == "10.40.30.249"
+
+        # 2. POST /api/network/host/apply
+        r2 = client.post(
+            "/api/network/host/apply",
+            json={"mode": "static", "interface": "br0", "ip_address": "10.40.30.250"},
+            headers=headers,
+        )
+        assert r2.status_code == 200
+        assert r2.json()["status"] == "testing"
+
+        # 3. POST /api/network/host/confirm
+        r3 = client.post("/api/network/host/confirm", json={"canary_id": "c123"}, headers=headers)
+        assert r3.status_code == 200
+        assert r3.json()["status"] == "confirmed"
+
+        # 4. POST /api/network/host/revert
+        r4 = client.post("/api/network/host/revert", json={"canary_id": "c123"}, headers=headers)
+        assert r4.status_code == 200
+        assert r4.json()["status"] == "reverted"

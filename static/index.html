@@ -194,11 +194,11 @@
   })();
 </script>
 <style>html,body{color:#eaf1f8;background-color:#080c10;width:100%;height:100%;margin:0;padding:0;overflow:hidden}html.auth-required body{background:radial-gradient(circle at 50% 20%,#151d29 0%,#080c10 70%)!important}#login-overlay{z-index:999999;background:#080c10;justify-content:center;align-items:center;display:flex;position:fixed;inset:0}html.has-auth-session #login-overlay{display:none!important}html.auth-required #login-overlay{display:flex!important}html.is-desktop-locked #lock-overlay{opacity:1!important;display:flex!important}html.is-desktop-locked body{overflow:hidden!important}html.auth-required .studio-viewport-wrapper,html.auth-required .suite-navbar,html.auth-required #desktop-icons-container,html.auth-required .desktop-icons-container,html.auth-required .top-nav,html.auth-required #desktop-widgets-container,html.auth-required #os-dock-container,html.auth-required .workspace-panel,html.auth-required .smart-modal-backdrop,html.auth-required .os-window,html.auth-required .notif-center-window{display:none!important}</style>
-  <script type="module" crossorigin src="/assets/index-BLmUXO4f.js"></script>
+  <script type="module" crossorigin src="/assets/index-BG6mD6RY.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-hePW80VL.js">
-  <link rel="modulepreload" crossorigin href="/assets/dock-CRZf_Zn2.js">
-  <link rel="modulepreload" crossorigin href="/assets/users-zqRPNvwY.js">
-  <link rel="stylesheet" crossorigin href="/assets/index-UV8WPSv6.css">
+  <link rel="modulepreload" crossorigin href="/assets/dock-BE2WHj8C.js">
+  <link rel="modulepreload" crossorigin href="/assets/users-qOpNM0Sy.js">
+  <link rel="stylesheet" crossorigin href="/assets/index-DpCyGA8Q.css">
 </head>
 <body class="studio-workbench no-specular-glow">
 
@@ -922,6 +922,150 @@
         <button id="net-docker-create-submit-btn" type="button" class="btn-pill-toggle active" style="background: var(--accent-cyan, #0ea5e9); border-color: transparent; color: #fff; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
           <span data-i18n="net.create_btn">+ Create Network</span>
         </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Host IP, Subnet, Gateway & DNS Configuration Modal -->
+<div id="network-host-config-overlay" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="net-host-cfg-title" style="display: none;">
+  <div class="smart-modal-window" style="max-width: 520px; width: 92%; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 35px rgba(56, 189, 248, 0.18); border: 1px solid rgba(255, 255, 255, 0.14);">
+    <div class="smart-modal-header" style="cursor: default;">
+      <span class="smart-modal-title" id="net-host-cfg-title" style="display: flex; align-items: center; gap: 8px;">
+        <svg class="ic" style="width: 16px; height: 16px; color: var(--accent-cyan, #38bdf8); fill: currentColor;"><use href="#i-net"/></svg>
+        <span data-i18n="net.host_cfg_title">Host IP & DNS Configuration</span>
+      </span>
+      <div class="os-window-controls">
+        <button class="win-btn close-btn" id="net-host-cfg-close-btn" title="Close" aria-label="Close"></button>
+      </div>
+    </div>
+    <div class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
+      <!-- Protocol Mode Segmented Switch -->
+      <div>
+        <label style="display: block; font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;" data-i18n="net.host_proto_label">IPv4 Assignment Protocol</label>
+        <div style="display: flex; gap: 8px;">
+          <button type="button" class="btn-pill-toggle net-proto-btn active" data-proto="static" id="net-proto-btn-static" style="flex: 1; padding: 7px 12px; font-size: 12px; font-weight: 600;" data-i18n="net.proto_static">Static IP Configuration</button>
+          <button type="button" class="btn-pill-toggle net-proto-btn" data-proto="dhcp" id="net-proto-btn-dhcp" style="flex: 1; padding: 7px 12px; font-size: 12px; font-weight: 600;" data-i18n="net.proto_dhcp">DHCP (Auto-Assign)</button>
+        </div>
+      </div>
+
+      <!-- Interface Selector -->
+      <div>
+        <label for="net-host-iface-select" style="display: block; font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;" data-i18n="net.host_iface_label">Target Interface</label>
+        <select id="net-host-iface-select" class="tz-select-input" style="width: 100%; box-sizing: border-box; font-family: var(--font-mono, monospace);">
+          <!-- Populated dynamically: br0, bond0, eth0... -->
+        </select>
+      </div>
+
+      <!-- Static IP Fields Section -->
+      <div id="net-host-static-fields" style="display: flex; flex-direction: column; gap: 12px;">
+        <!-- IPv4 Address -->
+        <div>
+          <label for="net-host-ip-input" style="display: block; font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;" data-i18n="net.ip_label">IPv4 Address</label>
+          <input type="text" id="net-host-ip-input" class="tz-text-input" placeholder="e.g. 10.40.30.249" maxlength="32" style="width: 100%; box-sizing: border-box; font-family: var(--font-mono, monospace);" autocomplete="off" />
+          <div style="font-size: 11px; color: var(--muted); margin-top: 3px;" data-i18n="net.ip_hint">Static host IP address.</div>
+        </div>
+
+        <!-- Subnet Mask + Presets -->
+        <div>
+          <label for="net-host-netmask-input" style="display: block; font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;" data-i18n="net.netmask_label">Subnet Mask</label>
+          <div style="display: flex; gap: 6px; align-items: center; margin-bottom: 6px; flex-wrap: wrap;">
+            <button type="button" class="btn-pill-toggle net-cidr-preset" data-netmask="255.255.255.0">/24 (255.255.255.0)</button>
+            <button type="button" class="btn-pill-toggle net-cidr-preset" data-netmask="255.255.0.0">/16 (255.255.0.0)</button>
+            <button type="button" class="btn-pill-toggle net-cidr-preset" data-netmask="255.0.0.0">/8 (255.0.0.0)</button>
+          </div>
+          <input type="text" id="net-host-netmask-input" class="tz-text-input" value="255.255.255.0" maxlength="32" style="width: 100%; box-sizing: border-box; font-family: var(--font-mono, monospace);" autocomplete="off" />
+        </div>
+
+        <!-- Default Gateway -->
+        <div>
+          <label for="net-host-gateway-input" style="display: block; font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;" data-i18n="net.gw_label">Default Gateway</label>
+          <input type="text" id="net-host-gateway-input" class="tz-text-input" placeholder="e.g. 10.40.30.1" maxlength="32" style="width: 100%; box-sizing: border-box; font-family: var(--font-mono, monospace);" autocomplete="off" />
+          <div style="font-size: 11px; color: var(--muted); margin-top: 3px;" data-i18n="net.gw_hint">Upstream router/gateway IP address.</div>
+        </div>
+      </div>
+
+      <!-- DNS Configuration -->
+      <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 12px; display: flex; flex-direction: column; gap: 10px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
+          <label style="font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px;" data-i18n="net.dns1_label">DNS Nameservers</label>
+          <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+            <button type="button" class="btn-pill-toggle net-dns-preset" data-dns1="1.1.1.1" data-dns2="1.0.0.1" style="font-size: 9.5px; padding: 2px 6px;">Cloudflare</button>
+            <button type="button" class="btn-pill-toggle net-dns-preset" data-dns1="8.8.8.8" data-dns2="8.8.4.4" style="font-size: 9.5px; padding: 2px 6px;">Google</button>
+            <button type="button" class="btn-pill-toggle net-dns-preset" data-dns1="9.9.9.9" data-dns2="149.112.112.112" style="font-size: 9.5px; padding: 2px 6px;">Quad9</button>
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+          <div>
+            <label for="net-host-dns1-input" style="display: block; font-size: 9.5px; color: var(--muted); margin-bottom: 4px;" data-i18n="net.dns1_label">Primary DNS</label>
+            <input type="text" id="net-host-dns1-input" class="tz-text-input" placeholder="e.g. 1.1.1.1" maxlength="32" style="width: 100%; box-sizing: border-box; font-family: var(--font-mono, monospace);" autocomplete="off" />
+          </div>
+          <div>
+            <label for="net-host-dns2-input" style="display: block; font-size: 9.5px; color: var(--muted); margin-bottom: 4px;" data-i18n="net.dns2_label">Secondary DNS</label>
+            <input type="text" id="net-host-dns2-input" class="tz-text-input" placeholder="e.g. 8.8.8.8" maxlength="32" style="width: 100%; box-sizing: border-box; font-family: var(--font-mono, monospace);" autocomplete="off" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Safety Notice Callout -->
+      <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 6px; padding: 10px 12px; display: flex; gap: 10px; align-items: flex-start;">
+        <span style="font-size: 16px; line-height: 1;">🛡️</span>
+        <div style="font-size: 11px; color: #fcd34d; line-height: 1.45;">
+          <strong>60-Second Canary Watchdog Armed:</strong> When applying changes, a 60s countdown timer will begin. If you lose connection or do not confirm, the server will automatically revert to protect against lockout.
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.08);">
+        <button id="net-host-cfg-cancel-btn" type="button" class="btn-pill-toggle" data-i18n="net.cancel">Cancel</button>
+        <button id="net-host-cfg-apply-btn" type="button" class="btn-pill-toggle active" style="background: var(--accent-cyan, #0ea5e9); border-color: transparent; color: #fff; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+          <span data-i18n="net.apply_canary_btn">Test & Apply (60s Canary)</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 60-Second Canary Rollback Watchdog Overlay Modal -->
+<div id="network-canary-overlay" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="net-canary-title" style="display: none; z-index: 9600;">
+  <div class="smart-modal-window" style="max-width: 480px; width: 92%; box-shadow: 0 30px 80px rgba(0,0,0,0.95), 0 0 40px rgba(245, 158, 11, 0.3); border: 1px solid rgba(245, 158, 11, 0.5); background: rgba(15, 23, 42, 0.96);">
+    <div class="smart-modal-header" style="cursor: default; border-bottom: 1px solid rgba(245, 158, 11, 0.3);">
+      <span class="smart-modal-title" id="net-canary-title" style="display: flex; align-items: center; gap: 8px; color: #fbbf24;">
+        <span class="canary-pulsing-dot"></span>
+        <span data-i18n="net.canary_title">Network Canary Watchdog Active</span>
+      </span>
+    </div>
+    <div class="smart-modal-body" style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 16px; padding: 24px 20px;">
+      <!-- Circular Countdown Timer -->
+      <div class="canary-countdown-wrap">
+        <div class="canary-timer-circle" id="net-canary-timer-circle">
+          <span id="net-canary-timer-digits" class="canary-digits">60</span>
+          <span class="canary-unit">SECONDS</span>
+        </div>
+      </div>
+
+      <div style="font-size: 13px; color: #e2e8f0; line-height: 1.5;" data-i18n="net.canary_desc">
+        New IP settings applied. A 60-second safety countdown is active to prevent accidental lockout. Please confirm that you can connect before the timer expires.
+      </div>
+
+      <!-- Target Address Box -->
+      <div id="net-canary-dest-card" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 12px; font-size: 12px;">
+        <div style="color: var(--muted); font-size: 11px; margin-bottom: 4px;" data-i18n="net.canary_redirect_hint">If host IP changed, open the new address in a new tab to confirm:</div>
+        <div style="display: flex; justify-content: center; align-items: center; gap: 8px; font-family: var(--font-mono, monospace); font-weight: 700; color: var(--accent-cyan, #38bdf8); font-size: 13px;">
+          <span id="net-canary-target-url">http://--:8082</span>
+          <a id="net-canary-open-link" href="#" target="_blank" rel="noopener noreferrer" class="btn-pill-toggle" style="font-size: 10px; padding: 2px 8px; color: var(--accent-cyan); border-color: rgba(56,189,248,0.4);">Open ↗</a>
+        </div>
+      </div>
+
+      <!-- Reverting message (hidden by default) -->
+      <div id="net-canary-reverting-msg" style="display: none; color: #f87171; font-weight: 600; font-size: 12px;" data-i18n="net.canary_reverting">
+        Timer expired or reverted. Restoring previous network settings...
+      </div>
+
+      <!-- Action Buttons -->
+      <div style="display: flex; gap: 12px; width: 100%; justify-content: center; margin-top: 6px;">
+        <button id="net-canary-revert-btn" type="button" class="btn-pill-toggle" style="flex: 1; padding: 9px 14px; font-size: 12px; font-weight: 700; color: #f87171; border-color: rgba(248, 113, 113, 0.4); background: rgba(248, 113, 113, 0.1);" data-i18n="net.canary_revert_btn">Revert Changes Now</button>
+        <button id="net-canary-confirm-btn" type="button" class="btn-pill-toggle active" style="flex: 1.2; padding: 9px 14px; font-size: 12px; font-weight: 700; background: var(--ok2, #25c2a0); border-color: transparent; color: #000;" data-i18n="net.canary_confirm_btn">Confirm & Keep Settings</button>
       </div>
     </div>
   </div>
@@ -3143,8 +3287,11 @@
               <div class="mgmt-detail-body">
                 <!-- 4 KPI Metrics Header -->
                 <div class="network-kpi-grid">
-                  <div class="network-kpi-card">
-                    <div class="network-kpi-label">Primary Host IP</div>
+                  <div class="network-kpi-card" id="net-kpi-ip-card">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                      <div class="network-kpi-label">Primary Host IP</div>
+                      <button class="btn-pill-toggle" id="btn-open-host-ip-modal" style="font-size: 9.5px; padding: 1px 7px; color: var(--accent-cyan, #38bdf8); border-color: rgba(56, 189, 248, 0.35); text-transform: none; margin-top: -2px;" data-i18n="net.host_cfg_btn">⚙️ Configure</button>
+                    </div>
                     <div class="network-kpi-val" id="net-kpi-ip">--</div>
                     <div class="network-kpi-sub" id="net-kpi-iface">--</div>
                   </div>

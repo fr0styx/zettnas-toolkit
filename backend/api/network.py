@@ -11,14 +11,39 @@ from pydantic import BaseModel, Field
 
 from backend.auth import require_scope
 from backend.hardware.network import (
+    apply_host_ip_config_canary,
+    confirm_host_ip_config,
     create_docker_network,
     delete_docker_network,
+    get_host_ip_config,
     get_network_topology,
     get_port_config,
+    revert_host_ip_config,
     update_port_config,
 )
 
 router = APIRouter(tags=["Network & Switching"])
+
+
+class HostIpConfigApplyRequest(BaseModel):
+    mode: str = Field(default="static", description="Protocol mode: 'dhcp' or 'static'")
+    interface: Optional[str] = Field(default="br0", description="Target network interface (e.g. br0, eth0)")
+    ip_address: Optional[str] = Field(default=None, description="Static IPv4 address (e.g. 10.40.30.249)")
+    netmask: Optional[str] = Field(default="255.255.255.0", description="Subnet mask or CIDR prefix")
+    gateway: Optional[str] = Field(default=None, description="Default gateway IPv4 address")
+    dns1: Optional[str] = Field(default=None, description="Primary upstream DNS server")
+    dns2: Optional[str] = Field(default=None, description="Secondary upstream DNS server")
+    timeout_sec: Optional[int] = Field(
+        default=60, ge=10, le=300, description="Canary rollback safety timeout in seconds"
+    )
+
+
+class HostIpConfirmRequest(BaseModel):
+    canary_id: Optional[str] = Field(default=None, description="Canary test token ID to seal")
+
+
+class HostIpRevertRequest(BaseModel):
+    canary_id: Optional[str] = Field(default=None, description="Canary test token ID to cancel and rollback")
 
 
 class PortConfigUpdateRequest(BaseModel):
@@ -83,4 +108,47 @@ async def delete_docker_network_endpoint(net_id_or_name: str):
     res = await asyncio.to_thread(delete_docker_network, net_id_or_name)
     if res.get("status") == "error":
         raise HTTPException(status_code=400, detail=res.get("message", "Failed to delete Docker network"))
+    return res
+
+
+@router.get("/network/host/config")
+async def get_host_ip_config_endpoint():
+    """Retrieve host IP assignment mode, primary interface, netmask, gateway, and DNS servers."""
+    return await asyncio.to_thread(get_host_ip_config)
+
+
+@router.post("/network/host/apply", dependencies=[Depends(require_scope("system:config"))])
+async def apply_host_ip_config_endpoint(req: HostIpConfigApplyRequest):
+    """
+    Arm 60-second Canary watchdog, snapshot configuration, and stage/apply new host IP settings.
+    Automatically reverts within 60s unless confirmed.
+    """
+    try:
+        updates = req.model_dump(exclude_unset=True)
+        timeout_sec = updates.pop("timeout_sec", 60)
+        res = await asyncio.to_thread(apply_host_ip_config_canary, updates, timeout_sec=timeout_sec)
+        return res
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to apply host network configuration: {e}")
+
+
+@router.post("/network/host/confirm", dependencies=[Depends(require_scope("system:config"))])
+async def confirm_host_ip_config_endpoint(req: Optional[HostIpConfirmRequest] = None):
+    """Confirm and seal host network configuration, cancelling the 60s rollback watchdog."""
+    canary_id = req.canary_id if req else None
+    res = await asyncio.to_thread(confirm_host_ip_config, canary_id)
+    if res.get("status") == "error":
+        raise HTTPException(status_code=400, detail=res.get("message", "Confirmation failed"))
+    return res
+
+
+@router.post("/network/host/revert", dependencies=[Depends(require_scope("system:config"))])
+async def revert_host_ip_config_endpoint(req: Optional[HostIpRevertRequest] = None):
+    """Manually abort Canary test and immediately restore previous host network configuration."""
+    canary_id = req.canary_id if req else None
+    res = await asyncio.to_thread(revert_host_ip_config, canary_id)
+    if res.get("status") == "error":
+        raise HTTPException(status_code=400, detail=res.get("message", "Reversion failed"))
     return res
