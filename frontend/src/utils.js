@@ -60,6 +60,7 @@ export function trapFocus(element, onEscape = null) {
 
   // Auto-focus first focusable element inside the modal
   setTimeout(() => {
+    if (typeof document === 'undefined' || !element) return;
     const first = element.querySelector(focusableSelector);
     if (first && !element.contains(document.activeElement)) {
       first.focus();

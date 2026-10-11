@@ -194,11 +194,11 @@
   })();
 </script>
 <style>html,body{color:#eaf1f8;background-color:#080c10;width:100%;height:100%;margin:0;padding:0;overflow:hidden}html.auth-required body{background:radial-gradient(circle at 50% 20%,#151d29 0%,#080c10 70%)!important}#login-overlay{z-index:999999;background:#080c10;justify-content:center;align-items:center;display:flex;position:fixed;inset:0}html.has-auth-session #login-overlay{display:none!important}html.auth-required #login-overlay{display:flex!important}html.is-desktop-locked #lock-overlay{opacity:1!important;display:flex!important}html.is-desktop-locked body{overflow:hidden!important}html.auth-required .studio-viewport-wrapper,html.auth-required .suite-navbar,html.auth-required #desktop-icons-container,html.auth-required .desktop-icons-container,html.auth-required .top-nav,html.auth-required #desktop-widgets-container,html.auth-required #os-dock-container,html.auth-required .workspace-panel,html.auth-required .smart-modal-backdrop,html.auth-required .os-window,html.auth-required .notif-center-window{display:none!important}</style>
-  <script type="module" crossorigin src="/assets/index-DQk2MLYw.js"></script>
+  <script type="module" crossorigin src="/assets/index-BLmUXO4f.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-hePW80VL.js">
-  <link rel="modulepreload" crossorigin href="/assets/dock-BC0-1ucL.js">
-  <link rel="modulepreload" crossorigin href="/assets/users-DrN3sP7c.js">
-  <link rel="stylesheet" crossorigin href="/assets/index-CaKCq_22.css">
+  <link rel="modulepreload" crossorigin href="/assets/dock-CRZf_Zn2.js">
+  <link rel="modulepreload" crossorigin href="/assets/users-zqRPNvwY.js">
+  <link rel="stylesheet" crossorigin href="/assets/index-UV8WPSv6.css">
 </head>
 <body class="studio-workbench no-specular-glow">
 
@@ -800,6 +800,127 @@
         <button id="fan-delete-confirm-btn" type="button" style="padding: 7px 18px; font-size: 11px; font-weight: 700; background: var(--crit, #ef4444); border: none; color: #fff; border-radius: 6px; cursor: pointer; transition: filter 0.15s; display: inline-flex; align-items: center; gap: 6px;" data-i18n="fan.delete_preset_btn">
           <svg class="ic" style="width: 13px; height: 13px; fill: currentColor;"><use href="#i-trash"/></svg>
           <span data-i18n="fan.delete_preset_btn">Delete Preset</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Network Port Configuration Modal -->
+<div id="network-port-config-overlay" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="net-port-cfg-title" style="display: none;">
+  <div class="smart-modal-window" style="max-width: 500px; width: 92%; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(56, 189, 248, 0.15); border: 1px solid rgba(255, 255, 255, 0.14);">
+    <div class="smart-modal-header" style="cursor: default;">
+      <span class="smart-modal-title" id="net-port-cfg-title" style="display: flex; align-items: center; gap: 8px;">
+        <span id="net-port-cfg-dot" style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--ok2, #3bf58b);"></span>
+        <span data-i18n="net.port_cfg_title">Port Configuration</span>: <strong id="net-port-cfg-iface" style="color: var(--accent-cyan, #38bdf8); font-family: var(--font-mono, monospace);">ETH0</strong>
+      </span>
+      <div class="os-window-controls">
+        <button class="win-btn close-btn" id="net-port-cfg-close-btn" title="Close" aria-label="Close"></button>
+      </div>
+    </div>
+    <div class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
+      <!-- Port Alias -->
+      <div>
+        <label for="net-port-alias-input" style="display: block; font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;" data-i18n="net.alias_label">Port Friendly Alias</label>
+        <input type="text" id="net-port-alias-input" class="tz-text-input" placeholder="e.g. 10G Workstation Direct, Uplink to Switch" maxlength="64" style="width: 100%; box-sizing: border-box;" autocomplete="off" />
+        <div style="font-size: 11px; color: var(--muted); margin-top: 4px;" data-i18n="net.alias_hint">Custom name shown on switch faceplate and Unraid network config.</div>
+      </div>
+
+      <!-- MTU Configuration -->
+      <div>
+        <label style="display: block; font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;" data-i18n="net.mtu_label">MTU (Maximum Transmission Unit)</label>
+        <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 6px;">
+          <button type="button" class="btn-pill-toggle net-mtu-preset" data-mtu="1500" id="net-mtu-preset-1500">1500 (Standard)</button>
+          <button type="button" class="btn-pill-toggle net-mtu-preset" data-mtu="9000" id="net-mtu-preset-9000">9000 (Jumbo Frames)</button>
+          <input type="number" id="net-port-mtu-input" min="68" max="9216" value="1500" class="tz-text-input" style="width: 100px; text-align: center; font-family: var(--font-mono, monospace);" />
+        </div>
+        <div style="font-size: 11px; color: var(--muted);" data-i18n="net.mtu_hint">Use 9000 Jumbo Frames for high-throughput 10GbE point-to-point connections.</div>
+      </div>
+
+      <!-- Wake-on-LAN -->
+      <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 10px 12px;">
+        <div>
+          <div style="font-size: 12px; font-weight: 600; color: #f1f5f9;" data-i18n="net.wol_label">Wake-on-LAN (Magic Packet)</div>
+          <div id="net-port-wol-desc" style="font-size: 11px; color: var(--muted);" data-i18n="net.wol_hint">Permit network magic packet wakeups from sleep/standby.</div>
+        </div>
+        <label class="switch" style="margin: 0;">
+          <input type="checkbox" id="net-port-wol-toggle" />
+          <span class="slider round"></span>
+        </label>
+      </div>
+
+      <!-- Link Negotiation Speed -->
+      <div>
+        <label for="net-port-speed-select" style="display: block; font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;" data-i18n="net.speed_label">Link Negotiation / Speed</label>
+        <select id="net-port-speed-select" class="tz-select-input" style="width: 100%; box-sizing: border-box;">
+          <option value="auto" data-i18n="net.speed_auto">Auto-Negotiate (Recommended)</option>
+          <option value="10000">10,000 Mbps Full-Duplex (10GbE)</option>
+          <option value="2500">2,500 Mbps Full-Duplex (2.5GbE)</option>
+          <option value="1000">1,000 Mbps Full-Duplex (Gigabit)</option>
+          <option value="100">100 Mbps Full-Duplex</option>
+        </select>
+        <div style="font-size: 11px; color: var(--muted); margin-top: 4px;" data-i18n="net.speed_hint">Auto-negotiate adapts dynamically to connected switch capabilities.</div>
+      </div>
+
+      <!-- Interface Hardware Summary Readout -->
+      <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.06); border-radius: 6px; padding: 10px 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 11px;">
+        <div><span style="color: var(--muted);">MAC:</span> <span id="net-port-ro-mac" style="font-family: var(--font-mono, monospace); color: #cbd5e1;">--</span></div>
+        <div><span style="color: var(--muted);">Driver:</span> <span id="net-port-ro-driver" style="color: #cbd5e1;">--</span></div>
+        <div><span style="color: var(--muted);">PCI Slot:</span> <span id="net-port-ro-pci" style="font-family: var(--font-mono, monospace); color: #cbd5e1;">--</span></div>
+        <div><span style="color: var(--muted);">Link:</span> <span id="net-port-ro-link" style="color: #cbd5e1;">--</span></div>
+      </div>
+
+      <!-- Action buttons -->
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.08);">
+        <button id="net-port-cfg-cancel-btn" type="button" class="btn-pill-toggle" data-i18n="net.cancel">Cancel</button>
+        <button id="net-port-cfg-save-btn" type="button" class="btn-pill-toggle active" style="background: var(--accent-cyan, #0ea5e9); border-color: transparent; color: #fff; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+          <span data-i18n="net.save_port_cfg">Save & Apply</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Docker Network Create Modal -->
+<div id="network-docker-create-overlay" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="net-docker-create-title" style="display: none;">
+  <div class="smart-modal-window" style="max-width: 460px; width: 92%; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(56, 189, 248, 0.15); border: 1px solid rgba(255, 255, 255, 0.14);">
+    <div class="smart-modal-header" style="cursor: default;">
+      <span class="smart-modal-title" id="net-docker-create-title" style="display: flex; align-items: center; gap: 8px;">
+        <svg class="ic" style="width: 15px; height: 15px; color: var(--accent-cyan, #38bdf8); fill: currentColor;"><use href="#i-chip"/></svg>
+        <span data-i18n="net.create_docker_title">Create Docker Network</span>
+      </span>
+      <div class="os-window-controls">
+        <button class="win-btn close-btn" id="net-docker-create-close-btn" title="Close" aria-label="Close"></button>
+      </div>
+    </div>
+    <div class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
+      <div>
+        <label for="net-docker-name-input" style="display: block; font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;" data-i18n="net.docker_name_label">Network Name</label>
+        <input type="text" id="net-docker-name-input" class="tz-text-input" placeholder="e.g. homelab_isolated, iot_net" maxlength="64" style="width: 100%; box-sizing: border-box;" autocomplete="off" />
+      </div>
+      <div>
+        <label for="net-docker-driver-select" style="display: block; font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;" data-i18n="net.docker_driver_label">Driver</label>
+        <select id="net-docker-driver-select" class="tz-select-input" style="width: 100%; box-sizing: border-box;">
+          <option value="bridge">bridge (Isolated host bridge)</option>
+          <option value="macvlan">macvlan (Direct LAN IP assignment)</option>
+          <option value="ipvlan">ipvlan (Direct L2/L3 LAN assignment)</option>
+        </select>
+      </div>
+      <div>
+        <label for="net-docker-subnet-input" style="display: block; font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;" data-i18n="net.docker_subnet_label">Subnet CIDR (Optional)</label>
+        <input type="text" id="net-docker-subnet-input" class="tz-text-input" placeholder="e.g. 172.28.0.0/16" maxlength="32" style="width: 100%; box-sizing: border-box; font-family: var(--font-mono, monospace);" autocomplete="off" />
+      </div>
+      <div>
+        <label for="net-docker-gateway-input" style="display: block; font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;" data-i18n="net.docker_gateway_label">Gateway IP (Optional)</label>
+        <input type="text" id="net-docker-gateway-input" class="tz-text-input" placeholder="e.g. 172.28.0.1" maxlength="32" style="width: 100%; box-sizing: border-box; font-family: var(--font-mono, monospace);" autocomplete="off" />
+      </div>
+      <div style="font-size: 11px; color: var(--muted); line-height: 1.45;" data-i18n="net.docker_create_hint">
+        Creates a custom virtual bridge network on the Docker daemon for container interconnectivity.
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.08);">
+        <button id="net-docker-create-cancel-btn" type="button" class="btn-pill-toggle" data-i18n="net.cancel">Cancel</button>
+        <button id="net-docker-create-submit-btn" type="button" class="btn-pill-toggle active" style="background: var(--accent-cyan, #0ea5e9); border-color: transparent; color: #fff; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+          <span data-i18n="net.create_btn">+ Create Network</span>
         </button>
       </div>
     </div>
@@ -3064,6 +3185,7 @@
                     <thead>
                       <tr>
                         <th>Interface</th>
+                        <th>Alias / Role</th>
                         <th>Carrier & State</th>
                         <th>Speed / Duplex</th>
                         <th>MAC Address</th>
@@ -3071,10 +3193,11 @@
                         <th>Master / Bond</th>
                         <th>Cumulative Rx / Tx</th>
                         <th>Hardware / Driver</th>
+                        <th style="text-align: right;">Action</th>
                       </tr>
                     </thead>
                     <tbody id="network-physical-tbody">
-                      <tr><td colspan="8" style="text-align:center; color:var(--muted); padding:16px;">Loading network interfaces...</td></tr>
+                      <tr><td colspan="10" style="text-align:center; color:var(--muted); padding:16px;">Loading network interfaces...</td></tr>
                     </tbody>
                   </table>
                 </div>
@@ -3088,8 +3211,9 @@
                 </div>
 
                 <!-- Docker Bridge Routing & Container Allocations -->
-                <div class="network-section-header" style="margin-top: 24px;">
+                <div class="network-section-header" style="margin-top: 24px; display: flex; justify-content: space-between; align-items: center;">
                   <span class="network-section-title">DOCKER BRIDGE NETWORKS & CONTAINER IP ALLOCATIONS</span>
+                  <button class="btn-pill-toggle" id="btn-create-docker-net" style="font-size: 11px; padding: 3px 10px; color: var(--accent-cyan, #38bdf8); border-color: rgba(56, 189, 248, 0.4);" data-i18n="net.create_docker_net">+ Create Network</button>
                 </div>
                 <div class="network-docker-list" id="network-docker-container">
                   <!-- Populated dynamically with docker network cards and attached container pills -->

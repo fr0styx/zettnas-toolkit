@@ -2,12 +2,14 @@ import os
 import re
 import socket
 import struct
+import subprocess
 import time
 from typing import Any, Dict, List, Optional
 
 import httpx
 
-from backend.config import HOST_PROC, HOST_SYS, logger
+from backend.config import HOST_PROC, HOST_SYS, NETWORK_CONFIG_FILE, logger
+from backend.fsutil import atomic_write_json, read_json
 from backend.state import Z_STATE
 
 
@@ -240,12 +242,339 @@ def _get_docker_topology() -> List[Dict[str, Any]]:
                         "bridge_device": bridge_dev,
                         "containers": attached,
                         "container_count": len(attached),
+                        "is_custom": net_name not in ("bridge", "host", "none"),
                     }
                 )
     except Exception as e:
         logger.debug(f"Docker network topology query error: {e}")
 
     return docker_networks
+
+
+def load_network_config() -> Dict[str, Any]:
+    """Load persistent network configuration (aliases and port settings)."""
+    cfg = read_json(NETWORK_CONFIG_FILE, None)
+    if not isinstance(cfg, dict):
+        cfg = {"aliases": {}, "ports": {}}
+    if "aliases" not in cfg:
+        cfg["aliases"] = {}
+    if "ports" not in cfg:
+        cfg["ports"] = {}
+    return cfg
+
+
+def save_network_config(cfg: Dict[str, Any]) -> None:
+    """Save persistent network configuration atomically."""
+    atomic_write_json(NETWORK_CONFIG_FILE, cfg)
+
+
+def _get_unraid_descriptions() -> Dict[str, str]:
+    """Parse descriptions from /boot/config/network.cfg if on Unraid."""
+    desc_map: Dict[str, str] = {}
+    candidates = ["/boot/config/network.cfg", "/host/boot/config/network.cfg"]
+    for c in candidates:
+        if os.path.isfile(c):
+            try:
+                with open(c, "r", encoding="utf-8", errors="replace") as f:
+                    lines = f.readlines()
+                for line in lines:
+                    line = line.strip()
+                    if line.startswith("DESCRIPTION[") and "=" in line:
+                        m = re.match(r'DESCRIPTION\[(\d+)\]="?(.*?)"?$', line)
+                        if m:
+                            idx = m.group(1)
+                            desc = m.group(2)
+                            desc_map[idx] = desc
+                            if idx == "0":
+                                desc_map["eth0"] = desc
+                                desc_map["br0"] = desc
+                                desc_map["bond0"] = desc
+            except Exception:
+                pass
+            break
+    return desc_map
+
+
+def _query_ethtool(iface: str) -> str:
+    """Query ethtool for an interface safely, checking host namespace if needed."""
+    if not re.match(r"^[a-zA-Z0-9_\-\.]+$", iface):
+        return ""
+    try:
+        res = subprocess.run(["ethtool", iface], capture_output=True, text=True, timeout=3)
+        if res.returncode == 0 or "Settings for" in res.stdout:
+            return res.stdout
+    except Exception:
+        pass
+
+    if os.path.exists("/host/proc/1/ns/net"):
+        try:
+            res = subprocess.run(
+                ["nsenter", "--net=/host/proc/1/ns/net", "ethtool", iface],
+                capture_output=True,
+                text=True,
+                timeout=3,
+            )
+            if res.returncode == 0 or "Settings for" in res.stdout:
+                return res.stdout
+        except Exception:
+            pass
+
+    return ""
+
+
+def _apply_mtu(iface: str, mtu_val: int) -> bool:
+    """Apply MTU via ip link directly or in host netns."""
+    if not re.match(r"^[a-zA-Z0-9_\-\.]+$", iface):
+        return False
+    try:
+        res = subprocess.run(
+            ["ip", "link", "set", "dev", iface, "mtu", str(mtu_val)],
+            capture_output=True,
+            timeout=3,
+        )
+        if res.returncode == 0:
+            return True
+    except Exception:
+        pass
+
+    if os.path.exists("/host/proc/1/ns/net"):
+        try:
+            res = subprocess.run(
+                ["nsenter", "--net=/host/proc/1/ns/net", "ip", "link", "set", "dev", iface, "mtu", str(mtu_val)],
+                capture_output=True,
+                timeout=3,
+            )
+            if res.returncode == 0:
+                return True
+        except Exception:
+            pass
+
+    for sys_base in [HOST_SYS, "/host/sys", "/sys"]:
+        mtu_path = os.path.join(sys_base, "class/net", iface, "mtu")
+        if os.path.isfile(mtu_path):
+            try:
+                with open(mtu_path, "w") as f:
+                    f.write(str(mtu_val))
+                return True
+            except Exception:
+                pass
+    return False
+
+
+def _apply_wol(iface: str, enabled: bool) -> bool:
+    """Apply Wake-on-LAN mode via ethtool."""
+    if not re.match(r"^[a-zA-Z0-9_\-\.]+$", iface):
+        return False
+    wol_arg = "g" if enabled else "d"
+    try:
+        res = subprocess.run(["ethtool", "-s", iface, "wol", wol_arg], capture_output=True, timeout=3)
+        if res.returncode == 0:
+            return True
+    except Exception:
+        pass
+
+    if os.path.exists("/host/proc/1/ns/net"):
+        try:
+            res = subprocess.run(
+                ["nsenter", "--net=/host/proc/1/ns/net", "ethtool", "-s", iface, "wol", wol_arg],
+                capture_output=True,
+                timeout=3,
+            )
+            if res.returncode == 0:
+                return True
+        except Exception:
+            pass
+    return False
+
+
+def _apply_negotiation(iface: str, autoneg: bool, speed: Optional[int] = None, duplex: str = "full") -> bool:
+    """Apply speed/duplex negotiation via ethtool."""
+    if not re.match(r"^[a-zA-Z0-9_\-\.]+$", iface):
+        return False
+    cmd_args = ["-s", iface]
+    if autoneg or speed is None:
+        cmd_args.extend(["autoneg", "on"])
+    else:
+        cmd_args.extend(["speed", str(speed), "duplex", duplex, "autoneg", "off"])
+
+    try:
+        res = subprocess.run(["ethtool"] + cmd_args, capture_output=True, timeout=3)
+        if res.returncode == 0:
+            return True
+    except Exception:
+        pass
+
+    if os.path.exists("/host/proc/1/ns/net"):
+        try:
+            res = subprocess.run(
+                ["nsenter", "--net=/host/proc/1/ns/net", "ethtool"] + cmd_args,
+                capture_output=True,
+                timeout=3,
+            )
+            if res.returncode == 0:
+                return True
+        except Exception:
+            pass
+    return False
+
+
+def get_port_config(iface_name: str) -> Dict[str, Any]:
+    """Retrieve full configuration, hardware capabilities, and alias for a port."""
+    if not re.match(r"^[a-zA-Z0-9_\-\.]+$", iface_name):
+        return {"status": "error", "message": "Invalid interface name"}
+
+    topo = get_network_topology()
+    nic = next((p for p in topo.get("physical_interfaces", []) if p["name"] == iface_name), None)
+    if not nic:
+        nic = next((b for b in topo.get("bonds", []) + topo.get("bridges", []) if b["name"] == iface_name), None)
+    if not nic:
+        return {"status": "error", "message": f"Interface '{iface_name}' not found"}
+
+    cfg = load_network_config()
+    alias = cfg.get("aliases", {}).get(iface_name, "")
+    if not alias:
+        unraid_descs = _get_unraid_descriptions()
+        alias = unraid_descs.get(iface_name, "")
+
+    ethtool_out = _query_ethtool(iface_name)
+    wol_supported = False
+    wol_enabled = False
+    autoneg = True
+    for line in ethtool_out.splitlines():
+        line = line.strip()
+        if line.startswith("Supports Wake-on:"):
+            val = line.split(":", 1)[1].strip()
+            wol_supported = any(c in val for c in ["g", "p", "u", "m", "b"])
+        elif line.startswith("Wake-on:"):
+            val = line.split(":", 1)[1].strip()
+            wol_enabled = "g" in val
+        elif line.startswith("Auto-negotiation:"):
+            val = line.split(":", 1)[1].strip().lower()
+            autoneg = val == "on"
+
+    supported_speeds = [10000, 5000, 2500, 1000, 100]
+
+    return {
+        "status": "ok",
+        "interface": nic,
+        "alias": alias,
+        "mtu": nic.get("mtu", 1500),
+        "wol_supported": wol_supported,
+        "wol_enabled": wol_enabled,
+        "autoneg": autoneg,
+        "supported_speeds": supported_speeds,
+    }
+
+
+def update_port_config(iface_name: str, updates: Dict[str, Any]) -> Dict[str, Any]:
+    """Update port configuration: friendly alias, MTU, WOL, speed/duplex."""
+    if not re.match(r"^[a-zA-Z0-9_\-\.]+$", iface_name):
+        return {"status": "error", "message": "Invalid interface name"}
+
+    cfg = load_network_config()
+    aliases = cfg.setdefault("aliases", {})
+    ports = cfg.setdefault("ports", {})
+    port_meta = ports.setdefault(iface_name, {})
+
+    # 1. Alias update
+    if "alias" in updates:
+        alias = str(updates["alias"]).strip()
+        aliases[iface_name] = alias
+        port_meta["alias"] = alias
+
+    # 2. MTU update
+    if "mtu" in updates and updates["mtu"] is not None:
+        try:
+            mtu_val = int(updates["mtu"])
+            if 68 <= mtu_val <= 9216:
+                port_meta["mtu"] = mtu_val
+                _apply_mtu(iface_name, mtu_val)
+        except (ValueError, TypeError):
+            pass
+
+    # 3. Wake-on-LAN update
+    if "wol_enabled" in updates:
+        wol_en = bool(updates["wol_enabled"])
+        port_meta["wol_enabled"] = wol_en
+        _apply_wol(iface_name, wol_en)
+
+    # 4. Link Negotiation update
+    if "autoneg" in updates or "speed" in updates:
+        autoneg = bool(updates.get("autoneg", True))
+        speed = updates.get("speed")
+        duplex = updates.get("duplex", "full")
+        port_meta["autoneg"] = autoneg
+        port_meta["speed"] = speed
+        port_meta["duplex"] = duplex
+        _apply_negotiation(iface_name, autoneg, speed, duplex)
+
+    save_network_config(cfg)
+    return {"status": "ok", "message": f"Port configuration saved for {iface_name}", "config": port_meta}
+
+
+def create_docker_network(name: str, driver: str = "bridge", subnet: str = "", gateway: str = "") -> Dict[str, Any]:
+    """Create a new Docker network via Docker engine API."""
+    docker_sock = "/var/run/docker.sock"
+    if not os.path.exists(docker_sock):
+        return {"status": "error", "message": "Docker socket not accessible"}
+
+    if not name or not re.match(r"^[a-zA-Z0-9_\-\.]+$", name):
+        return {"status": "error", "message": "Invalid network name"}
+
+    body: Dict[str, Any] = {
+        "Name": name,
+        "Driver": driver or "bridge",
+        "CheckDuplicate": True,
+    }
+
+    if subnet:
+        ipam_cfg: Dict[str, str] = {"Subnet": subnet}
+        if gateway:
+            ipam_cfg["Gateway"] = gateway
+        body["IPAM"] = {"Config": [ipam_cfg]}
+
+    try:
+        transport = httpx.HTTPTransport(uds=docker_sock)
+        with httpx.Client(transport=transport, base_url="http://docker", timeout=10.0) as client:
+            res = client.post("/networks/create", json=body)
+            if res.status_code in (200, 201):
+                data = res.json()
+                return {"status": "ok", "id": data.get("Id", "")[:12], "message": f"Network '{name}' created"}
+            else:
+                err_detail = ""
+                try:
+                    err_detail = res.json().get("message", "")
+                except Exception:
+                    err_detail = res.text
+                return {"status": "error", "message": err_detail or f"Docker API returned {res.status_code}"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
+def delete_docker_network(net_id_or_name: str) -> Dict[str, Any]:
+    """Delete a custom Docker network via Docker engine API."""
+    docker_sock = "/var/run/docker.sock"
+    if not os.path.exists(docker_sock):
+        return {"status": "error", "message": "Docker socket not accessible"}
+
+    if net_id_or_name in ("bridge", "host", "none"):
+        return {"status": "error", "message": f"Cannot delete default system network '{net_id_or_name}'"}
+
+    try:
+        transport = httpx.HTTPTransport(uds=docker_sock)
+        with httpx.Client(transport=transport, base_url="http://docker", timeout=10.0) as client:
+            res = client.delete(f"/networks/{net_id_or_name}")
+            if res.status_code in (200, 204):
+                return {"status": "ok", "message": f"Network '{net_id_or_name}' deleted"}
+            else:
+                err_detail = ""
+                try:
+                    err_detail = res.json().get("message", "")
+                except Exception:
+                    err_detail = res.text
+                return {"status": "error", "message": err_detail or f"Docker API returned {res.status_code}"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
 
 def get_network_topology() -> Dict[str, Any]:
@@ -274,6 +603,9 @@ def get_network_topology() -> Dict[str, Any]:
 
     routes = _parse_routes()
     dns_servers = _get_dns_servers()
+    saved_cfg = load_network_config()
+    saved_aliases = saved_cfg.get("aliases", {})
+    unraid_descs = _get_unraid_descriptions()
 
     # Determine default gateway and primary interface
     non_shim_defaults = [r for r in routes if r.get("is_default") and not r.get("iface", "").startswith("shim-")]
@@ -334,6 +666,8 @@ def get_network_topology() -> Dict[str, Any]:
             except OSError:
                 pass
 
+        alias = saved_aliases.get(iface) or unraid_descs.get(iface) or ""
+
         # 1. Check for physical NICs
         if is_pci_or_platform or (not is_virtual and iface.startswith(("eth", "en", "wl"))):
             # Parse PCI uevent
@@ -354,6 +688,7 @@ def get_network_topology() -> Dict[str, Any]:
             physical_interfaces.append(
                 {
                     "name": iface,
+                    "alias": alias,
                     "state": operstate,
                     "carrier": carrier,
                     "is_up": is_up,
@@ -385,6 +720,7 @@ def get_network_topology() -> Dict[str, Any]:
             bonds.append(
                 {
                     "name": iface,
+                    "alias": alias,
                     "mode": mode,
                     "slaves": slaves,
                     "active_slave": active_slave,
@@ -418,6 +754,7 @@ def get_network_topology() -> Dict[str, Any]:
             bridges.append(
                 {
                     "name": iface,
+                    "alias": alias,
                     "interfaces": sorted(members),
                     "carrier": carrier,
                     "is_up": is_up,

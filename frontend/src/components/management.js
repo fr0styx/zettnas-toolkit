@@ -3121,11 +3121,12 @@ export async function fetchAndRenderNetworkTopology() {
           const speedLedClass = isUp ? (is10G ? 'led-speed-10g' : 'led-speed-gig') : '';
 
           return `
-            <div class="switch-port-jack ${isUp ? 'is-active' : ''}">
+            <div class="switch-port-jack ${isUp ? 'is-active' : ''} clickable" data-iface="${escapeHtml(nic.name)}" title="Configure ${escapeHtml(nic.name)}">
               <div class="switch-port-top">
                 <div class="switch-port-id">
                   <svg style="width:12px; height:12px; fill:${isUp ? 'var(--ok2, #3bf58b)' : 'var(--muted, #64748b)'};"><circle cx="6" cy="6" r="4"/></svg>
                   ${escapeHtml(nic.name.toUpperCase())}
+                  ${nic.alias ? `<span class="switch-port-alias-tag" title="${escapeHtml(nic.alias)}">${escapeHtml(nic.alias)}</span>` : ''}
                 </div>
                 <div class="switch-port-leds">
                   <div class="switch-led-group">
@@ -3155,13 +3156,20 @@ export async function fetchAndRenderNetworkTopology() {
             </div>
           `;
         }).join('');
+
+        switchFaceplate.querySelectorAll('.switch-port-jack.clickable').forEach((jack) => {
+          jack.addEventListener('click', () => {
+            const iface = jack.dataset.iface;
+            if (iface) openNetworkPortModal(iface);
+          });
+        });
       }
     }
 
     // 3. Render Physical Interfaces Detailed Table
     if (physicalTbody) {
       if (physical.length === 0) {
-        physicalTbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--muted); padding:16px;">No physical interfaces found.</td></tr>`;
+        physicalTbody.innerHTML = `<tr><td colspan="10" style="text-align:center; color:var(--muted); padding:16px;">No physical interfaces found.</td></tr>`;
       } else {
         physicalTbody.innerHTML = physical.map((nic) => {
           const isUp = Boolean(nic.is_up);
@@ -3175,6 +3183,9 @@ export async function fetchAndRenderNetworkTopology() {
                   <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:${isUp ? 'var(--ok2, #3bf58b)' : 'var(--muted, #64748b)'};"></span>
                   ${escapeHtml(nic.name)}
                 </div>
+              </td>
+              <td>
+                ${nic.alias ? `<span class="switch-port-alias-tag" title="${escapeHtml(nic.alias)}">${escapeHtml(nic.alias)}</span>` : '<span style="color:var(--muted); font-size:11px;">--</span>'}
               </td>
               <td>
                 <span class="switch-speed-pill ${isUp ? 'speed-10g' : 'speed-down'}">
@@ -3198,9 +3209,20 @@ export async function fetchAndRenderNetworkTopology() {
                 <div>${escapeHtml(nic.driver || 'Generic')}</div>
                 <div style="font-family:var(--font-mono, monospace); font-size:9.5px;">${escapeHtml(nic.pci_slot || '--')}</div>
               </td>
+              <td style="text-align: right;">
+                <button class="btn-pill-toggle btn-config-port" data-iface="${escapeHtml(nic.name)}" style="font-size:10px; padding:2px 8px; color:var(--accent-cyan, #38bdf8); border-color:rgba(56,189,248,0.3);">${t('net.configure_port', 'Configure')}</button>
+              </td>
             </tr>
           `;
         }).join('');
+
+        physicalTbody.querySelectorAll('.btn-config-port').forEach((btn) => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const iface = btn.dataset.iface;
+            if (iface) openNetworkPortModal(iface);
+          });
+        });
       }
     }
 
@@ -3252,10 +3274,11 @@ export async function fetchAndRenderNetworkTopology() {
           return `
             <div class="network-docker-card">
               <div class="network-docker-top">
-                <div class="network-docker-name">
+                <div class="network-docker-name" style="display:flex; align-items:center; gap:8px;">
                   <svg class="ic" style="width:14px; height:14px;"><use href="#i-chip"/></svg>
                   ${escapeHtml(net.name)}
                   <span class="network-docker-driver">${escapeHtml(net.driver)}</span>
+                  ${net.is_custom ? `<button class="net-docker-delete-btn" data-net-id="${escapeHtml(net.id)}" data-net-name="${escapeHtml(net.name)}" title="Delete Network">🗑</button>` : ''}
                 </div>
                 <div class="network-docker-cidr">
                   ${net.subnet ? `Subnet: <strong>${escapeHtml(net.subnet)}</strong>` : ''}
@@ -3276,13 +3299,280 @@ export async function fetchAndRenderNetworkTopology() {
             </div>
           `;
         }).join('');
+
+        dockerContainer.querySelectorAll('.net-docker-delete-btn').forEach((btn) => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const netId = btn.dataset.netId;
+            const netName = btn.dataset.netName;
+            if (!netId) return;
+            showConfirmToast(`${t('net.delete_docker_confirm', 'Are you sure you want to delete Docker network')} "${netName}"?`, async () => {
+              try {
+                await api.delete(`/api/network/docker/${encodeURIComponent(netId)}`);
+                showToast(t('net.docker_deleted_toast', 'Docker network deleted successfully'), 'success');
+                fetchAndRenderNetworkTopology();
+              } catch (err) {
+                showToast(err.message || 'Failed to delete Docker network', 'error');
+              }
+            });
+          });
+        });
       }
+    }
+
+    const createDockerBtn = document.getElementById('btn-create-docker-net');
+    if (createDockerBtn && !createDockerBtn.dataset.bound) {
+      createDockerBtn.dataset.bound = '1';
+      createDockerBtn.addEventListener('click', () => openDockerNetworkCreateModal());
     }
   } catch (err) {
     console.warn('[ZettNAS] Error fetching network topology:', err);
     if (physicalTbody) {
-      physicalTbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--crit); padding:16px;">Failed to load network topology: ${escapeHtml(err.message || String(err))}</td></tr>`;
+      physicalTbody.innerHTML = `<tr><td colspan="10" style="text-align:center; color:var(--crit); padding:16px;">Failed to load network topology: ${escapeHtml(err.message || String(err))}</td></tr>`;
     }
+  }
+}
+
+let _currentPortIface = null;
+
+export async function openNetworkPortModal(ifaceName) {
+  _currentPortIface = ifaceName;
+  const overlay = document.getElementById('network-port-config-overlay');
+  if (!overlay) return;
+
+  const titleIface = document.getElementById('net-port-cfg-iface');
+  const dot = document.getElementById('net-port-cfg-dot');
+  const aliasInput = document.getElementById('net-port-alias-input');
+  const mtuInput = document.getElementById('net-port-mtu-input');
+  const wolToggle = document.getElementById('net-port-wol-toggle');
+  const wolDesc = document.getElementById('net-port-wol-desc');
+  const speedSelect = document.getElementById('net-port-speed-select');
+  const roMac = document.getElementById('net-port-ro-mac');
+  const roDriver = document.getElementById('net-port-ro-driver');
+  const roPci = document.getElementById('net-port-ro-pci');
+  const roLink = document.getElementById('net-port-ro-link');
+
+  if (titleIface) titleIface.textContent = ifaceName.toUpperCase();
+
+  try {
+    const data = await api.get(`/api/network/port/${encodeURIComponent(ifaceName)}`);
+    const nic = data.interface || {};
+
+    if (dot) {
+      dot.style.background = nic.is_up ? 'var(--ok2, #3bf58b)' : 'var(--muted, #64748b)';
+    }
+
+    if (aliasInput) aliasInput.value = data.alias || '';
+    const mtuVal = data.mtu || nic.mtu || 1500;
+    if (mtuInput) mtuInput.value = mtuVal;
+
+    document.querySelectorAll('.net-mtu-preset').forEach((btn) => {
+      btn.classList.toggle('active', Number(btn.dataset.mtu) === Number(mtuVal));
+    });
+
+    if (wolToggle) {
+      wolToggle.checked = Boolean(data.wol_enabled);
+      wolToggle.disabled = !data.wol_supported;
+    }
+    if (wolDesc) {
+      wolDesc.textContent = data.wol_supported
+        ? t('net.wol_hint', 'Permit network magic packet wakeups from sleep/standby.')
+        : 'Wake-on-LAN is not supported by this hardware NIC.';
+    }
+
+    if (speedSelect) {
+      if (data.autoneg) {
+        speedSelect.value = 'auto';
+      } else if (data.speed) {
+        speedSelect.value = String(data.speed);
+      } else {
+        speedSelect.value = 'auto';
+      }
+    }
+
+    if (roMac) roMac.textContent = nic.mac || '--';
+    if (roDriver) roDriver.textContent = nic.driver || 'Generic';
+    if (roPci) roPci.textContent = nic.pci_slot || '--';
+    if (roLink) roLink.textContent = nic.is_up ? `${nic.speed_human || 'Connected'} (${nic.duplex || 'full'})` : 'Down / Disconnected';
+
+    overlay.style.display = 'flex';
+  } catch (err) {
+    showToast(`Failed to load port config: ${err.message || err}`, 'error');
+  }
+}
+
+export function closeNetworkPortModal() {
+  const overlay = document.getElementById('network-port-config-overlay');
+  if (overlay) overlay.style.display = 'none';
+  _currentPortIface = null;
+}
+
+export async function saveNetworkPortConfig() {
+  if (!_currentPortIface) return;
+  const aliasInput = document.getElementById('net-port-alias-input');
+  const mtuInput = document.getElementById('net-port-mtu-input');
+  const wolToggle = document.getElementById('net-port-wol-toggle');
+  const speedSelect = document.getElementById('net-port-speed-select');
+  const saveBtn = document.getElementById('net-port-cfg-save-btn');
+
+  const alias = aliasInput ? aliasInput.value.trim() : '';
+  const mtu = mtuInput ? parseInt(mtuInput.value, 10) : 1500;
+  const wol_enabled = wolToggle ? wolToggle.checked : false;
+  const speedVal = speedSelect ? speedSelect.value : 'auto';
+  const autoneg = speedVal === 'auto';
+  const speed = autoneg ? null : parseInt(speedVal, 10);
+
+  if (isNaN(mtu) || mtu < 68 || mtu > 9216) {
+    showToast('MTU must be an integer between 68 and 9216', 'error');
+    return;
+  }
+
+  if (saveBtn) {
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving...';
+  }
+
+  try {
+    await api.post(`/api/network/port/${encodeURIComponent(_currentPortIface)}`, {
+      alias,
+      mtu,
+      wol_enabled,
+      autoneg,
+      speed,
+      duplex: 'full'
+    });
+    showToast(t('net.port_saved_toast', 'Port configuration saved successfully'), 'success');
+    closeNetworkPortModal();
+    fetchAndRenderNetworkTopology();
+  } catch (err) {
+    showToast(err.message || 'Failed to save port config', 'error');
+  } finally {
+    if (saveBtn) {
+      saveBtn.disabled = false;
+      saveBtn.textContent = t('net.save_port_cfg', 'Save & Apply');
+    }
+  }
+}
+
+export function openDockerNetworkCreateModal() {
+  const overlay = document.getElementById('network-docker-create-overlay');
+  if (!overlay) return;
+
+  const nameInput = document.getElementById('net-docker-name-input');
+  const driverSelect = document.getElementById('net-docker-driver-select');
+  const subnetInput = document.getElementById('net-docker-subnet-input');
+  const gwInput = document.getElementById('net-docker-gateway-input');
+
+  if (nameInput) nameInput.value = '';
+  if (driverSelect) driverSelect.value = 'bridge';
+  if (subnetInput) subnetInput.value = '';
+  if (gwInput) gwInput.value = '';
+
+  overlay.style.display = 'flex';
+}
+
+export function closeDockerNetworkCreateModal() {
+  const overlay = document.getElementById('network-docker-create-overlay');
+  if (overlay) overlay.style.display = 'none';
+}
+
+export async function submitDockerNetworkCreate() {
+  const nameInput = document.getElementById('net-docker-name-input');
+  const driverSelect = document.getElementById('net-docker-driver-select');
+  const subnetInput = document.getElementById('net-docker-subnet-input');
+  const gwInput = document.getElementById('net-docker-gateway-input');
+  const submitBtn = document.getElementById('net-docker-create-submit-btn');
+
+  const name = nameInput ? nameInput.value.trim() : '';
+  const driver = driverSelect ? driverSelect.value : 'bridge';
+  const subnet = subnetInput ? subnetInput.value.trim() : '';
+  const gateway = gwInput ? gwInput.value.trim() : '';
+
+  if (!name) {
+    showToast('Please enter a network name', 'error');
+    return;
+  }
+
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Creating...';
+  }
+
+  try {
+    await api.post('/api/network/docker/create', { name, driver, subnet, gateway });
+    showToast(t('net.docker_created_toast', 'Docker network created successfully'), 'success');
+    closeDockerNetworkCreateModal();
+    fetchAndRenderNetworkTopology();
+  } catch (err) {
+    showToast(err.message || 'Failed to create Docker network', 'error');
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = t('net.create_btn', '+ Create Network');
+    }
+  }
+}
+
+export function initNetworkControls() {
+  const portClose = document.getElementById('net-port-cfg-close-btn');
+  if (portClose && !portClose.dataset.bound) {
+    portClose.dataset.bound = '1';
+    portClose.addEventListener('click', closeNetworkPortModal);
+  }
+
+  const portCancel = document.getElementById('net-port-cfg-cancel-btn');
+  if (portCancel && !portCancel.dataset.bound) {
+    portCancel.dataset.bound = '1';
+    portCancel.addEventListener('click', closeNetworkPortModal);
+  }
+
+  const portSave = document.getElementById('net-port-cfg-save-btn');
+  if (portSave && !portSave.dataset.bound) {
+    portSave.dataset.bound = '1';
+    portSave.addEventListener('click', saveNetworkPortConfig);
+  }
+
+  const mtuInput = document.getElementById('net-port-mtu-input');
+  if (mtuInput && !mtuInput.dataset.bound) {
+    mtuInput.dataset.bound = '1';
+    mtuInput.addEventListener('input', () => {
+      const val = Number(mtuInput.value);
+      document.querySelectorAll('.net-mtu-preset').forEach((btn) => {
+        btn.classList.toggle('active', Number(btn.dataset.mtu) === val);
+      });
+    });
+  }
+
+  document.querySelectorAll('.net-mtu-preset').forEach((btn) => {
+    if (!btn.dataset.bound) {
+      btn.dataset.bound = '1';
+      btn.addEventListener('click', () => {
+        const mtuVal = btn.dataset.mtu;
+        if (mtuInput && mtuVal) {
+          mtuInput.value = mtuVal;
+          document.querySelectorAll('.net-mtu-preset').forEach((b) => b.classList.remove('active'));
+          btn.classList.add('active');
+        }
+      });
+    }
+  });
+
+  const dockerClose = document.getElementById('net-docker-create-close-btn');
+  if (dockerClose && !dockerClose.dataset.bound) {
+    dockerClose.dataset.bound = '1';
+    dockerClose.addEventListener('click', closeDockerNetworkCreateModal);
+  }
+
+  const dockerCancel = document.getElementById('net-docker-create-cancel-btn');
+  if (dockerCancel && !dockerCancel.dataset.bound) {
+    dockerCancel.dataset.bound = '1';
+    dockerCancel.addEventListener('click', closeDockerNetworkCreateModal);
+  }
+
+  const dockerSubmit = document.getElementById('net-docker-create-submit-btn');
+  if (dockerSubmit && !dockerSubmit.dataset.bound) {
+    dockerSubmit.dataset.bound = '1';
+    dockerSubmit.addEventListener('click', submitDockerNetworkCreate);
   }
 }
 
@@ -3943,7 +4233,7 @@ export function initManagement() {
     });
   }
 
-  // Network topology refresh button
+  // Network topology refresh button & controls
   const refreshNetBtn = document.getElementById('btn-refresh-network-topology');
   if (refreshNetBtn) {
     refreshNetBtn.addEventListener('click', () => {
@@ -3951,6 +4241,7 @@ export function initManagement() {
       showToast('Network topology refreshed.', 'info');
     });
   }
+  initNetworkControls();
 
   // Docker containers refresh button
   const refreshDockerBtn = document.getElementById('btn-refresh-docker');

@@ -9988,6 +9988,50 @@ body.desktop-locked #os-dock-container {
   box-shadow: inset 0 0 16px rgba(59, 245, 139, 0.05);
 }
 
+.switch-port-jack.clickable {
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.switch-port-jack.clickable:hover {
+  transform: translateY(-2px);
+  border-color: rgba(56, 189, 248, 0.5);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4), 0 0 14px rgba(56, 189, 248, 0.18);
+}
+
+.switch-port-alias-tag {
+  font-size: 10px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--accent-cyan, #38bdf8);
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  padding: 1px 6px;
+  border-radius: 4px;
+  max-width: 140px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.net-docker-delete-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--muted, #64748b);
+  cursor: pointer;
+  border-radius: 4px;
+  padding: 3px 6px;
+  font-size: 12px;
+  line-height: 1;
+  transition: all 0.15s ease;
+}
+
+.net-docker-delete-btn:hover {
+  color: var(--crit, #ef4444);
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
 .switch-port-top {
   display: flex;
   justify-content: space-between;

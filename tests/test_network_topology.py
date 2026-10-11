@@ -8,7 +8,13 @@ from backend.hardware.network import (
     _format_speed,
     _hex_to_ip,
     _mask_to_cidr,
+    create_docker_network,
+    delete_docker_network,
     get_network_topology,
+    get_port_config,
+    load_network_config,
+    save_network_config,
+    update_port_config,
 )
 
 
@@ -188,3 +194,117 @@ def test_network_topology_api_endpoints(client, token):
         assert res2.status_code == 200
         json2 = res2.json()
         assert json2["status"] == "ok"
+
+
+def test_network_config_persistence(tmp_path):
+    cfg_file = tmp_path / "network_config.json"
+    with patch("backend.hardware.network.NETWORK_CONFIG_FILE", str(cfg_file)):
+        cfg = load_network_config()
+        assert cfg == {"aliases": {}, "ports": {}}
+
+        cfg["aliases"]["eth0"] = "Direct 10G to Workstation"
+        cfg["ports"]["eth0"] = {"mtu": 9000, "wol_enabled": True}
+        save_network_config(cfg)
+
+        reloaded = load_network_config()
+        assert reloaded["aliases"]["eth0"] == "Direct 10G to Workstation"
+        assert reloaded["ports"]["eth0"]["mtu"] == 9000
+        assert reloaded["ports"]["eth0"]["wol_enabled"] is True
+
+
+def test_get_and_update_port_config(tmp_path):
+    cfg_file = tmp_path / "network_config.json"
+    mock_topo = {
+        "status": "ok",
+        "physical_interfaces": [{"name": "eth0", "mtu": 1500, "is_up": True}],
+        "bonds": [],
+        "bridges": [],
+    }
+
+    with (
+        patch("backend.hardware.network.NETWORK_CONFIG_FILE", str(cfg_file)),
+        patch("backend.hardware.network.get_network_topology", return_value=mock_topo),
+        patch(
+            "backend.hardware.network._query_ethtool",
+            return_value="Supports Wake-on: pumbg\nWake-on: d\nAuto-negotiation: on",
+        ),
+        patch("backend.hardware.network._apply_mtu", return_value=True) as mock_mtu,
+        patch("backend.hardware.network._apply_wol", return_value=True) as mock_wol,
+        patch("backend.hardware.network._apply_negotiation", return_value=True) as mock_neg,
+    ):
+        # 1. Query port configuration
+        cfg = get_port_config("eth0")
+        assert cfg["status"] == "ok"
+        assert cfg["interface"]["name"] == "eth0"
+        assert cfg["wol_supported"] is True
+        assert cfg["wol_enabled"] is False
+        assert cfg["autoneg"] is True
+
+        # 2. Update port configuration
+        res = update_port_config(
+            "eth0",
+            {
+                "alias": "Direct 10G Workstation",
+                "mtu": 9000,
+                "wol_enabled": True,
+                "autoneg": False,
+                "speed": 10000,
+                "duplex": "full",
+            },
+        )
+        assert res["status"] == "ok"
+        assert res["config"]["alias"] == "Direct 10G Workstation"
+        assert res["config"]["mtu"] == 9000
+        assert res["config"]["wol_enabled"] is True
+        mock_mtu.assert_called_once_with("eth0", 9000)
+        mock_wol.assert_called_once_with("eth0", True)
+        mock_neg.assert_called_once_with("eth0", False, 10000, "full")
+
+
+def test_network_api_port_and_docker_endpoints(client, token):
+    mock_port_data = {
+        "status": "ok",
+        "interface": {"name": "eth0", "mtu": 1500},
+        "alias": "Workstation Link",
+        "mtu": 1500,
+        "wol_supported": True,
+        "wol_enabled": False,
+        "autoneg": True,
+        "supported_speeds": [10000, 2500, 1000],
+    }
+
+    with (
+        patch("backend.api.network.get_port_config", return_value=mock_port_data),
+        patch("backend.api.network.update_port_config", return_value={"status": "ok", "message": "Updated"}),
+        patch("backend.api.network.create_docker_network", return_value={"status": "ok", "id": "net789"}),
+        patch("backend.api.network.delete_docker_network", return_value={"status": "ok", "message": "Deleted"}),
+    ):
+        headers = {"Authorization": f"Bearer {token}"}
+
+        # 1. GET /api/network/port/eth0
+        res = client.get("/api/network/port/eth0", headers=headers)
+        assert res.status_code == 200
+        assert res.json()["alias"] == "Workstation Link"
+
+        # 2. POST /api/network/port/eth0
+        res = client.post(
+            "/api/network/port/eth0",
+            json={"alias": "Uplink", "mtu": 9000, "wol_enabled": True},
+            headers=headers,
+        )
+        assert res.status_code == 200
+        assert res.json()["status"] == "ok"
+
+        # 3. POST /api/network/docker/create
+        res = client.post(
+            "/api/network/docker/create",
+            json={"name": "test_net", "driver": "bridge", "subnet": "172.28.0.0/16"},
+            headers=headers,
+        )
+        assert res.status_code == 200
+        assert res.json()["id"] == "net789"
+
+        # 4. DELETE /api/network/docker/net789
+        res = client.delete("/api/network/docker/net789", headers=headers)
+        assert res.status_code == 200
+        assert res.json()["status"] == "ok"
