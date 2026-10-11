@@ -99,6 +99,30 @@ describe('Mission Control Navigation Restructure & Hardware Agnosticism', () => 
       section: 'mgmt-sec-hardware',
       pane: 'mgmt-pane-unraid'
     });
+
+    // Network & Switch Standalone Section
+    expect(SUBPANE_MAP['mgmt-sec-network']).toEqual({
+      section: 'mgmt-sec-network',
+      pane: 'mgmt-pane-network'
+    });
+    expect(SUBPANE_MAP['mgmt-pane-network']).toEqual({
+      section: 'mgmt-sec-network',
+      pane: 'mgmt-pane-network'
+    });
+
+    // Media Ingest Re-homing to Storage & Chassis
+    expect(SUBPANE_MAP['mgmt-sec-copy']).toEqual({
+      section: 'mgmt-sec-storage',
+      pane: 'mgmt-pane-copy'
+    });
+    expect(SUBPANE_MAP['mgmt-pane-copy']).toEqual({
+      section: 'mgmt-sec-storage',
+      pane: 'mgmt-pane-copy'
+    });
+    expect(SUBPANE_MAP['mgmt-pane-storage-ingest']).toEqual({
+      section: 'mgmt-sec-storage',
+      pane: 'mgmt-pane-copy'
+    });
   });
 
   it('updates live Docker container counts on Hub pill and sidebar badge', () => {
@@ -173,5 +197,36 @@ describe('Mission Control Navigation Restructure & Hardware Agnosticism', () => 
     expect(hostEl.textContent).toBe('zettnas-homelab');
     expect(uptimeEl.textContent).toBe('14 days');
     expect(engineEl.textContent).toBe('Btrfs Native Subvolumes');
+  });
+
+  it('updates live network interface count on Hub pill and sidebar badge', () => {
+    const hubPill = document.createElement('span');
+    hubPill.id = 'mgmt-hub-net-pill';
+    hubPill.textContent = '-';
+    document.body.appendChild(hubPill);
+
+    const sideBadge = document.createElement('span');
+    sideBadge.id = 'mgmt-sidebar-net-badge';
+    sideBadge.style.display = 'none';
+    sideBadge.textContent = '-';
+    document.body.appendChild(sideBadge);
+
+    const mockStats = {
+      network: {
+        interfaces: [
+          { iface: 'eth0', operstate: 'up' },
+          { iface: 'eth1', operstate: 'up' },
+          { iface: 'docker0', operstate: 'up' },
+          { iface: 'lo', operstate: 'up' },
+          { iface: 'eth2', operstate: 'down' }
+        ]
+      }
+    };
+
+    updateManagementTelemetry(mockStats);
+
+    expect(hubPill.textContent).toBe('2 Active');
+    expect(sideBadge.textContent).toBe('2 Active');
+    expect(sideBadge.style.display).toBe('inline-block');
   });
 });

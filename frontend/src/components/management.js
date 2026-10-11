@@ -36,11 +36,15 @@ export const SUBPANE_MAP = {
   'mgmt-sec-language': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-language' },
   'mgmt-sec-metrics': { section: 'mgmt-sec-activity', pane: 'mgmt-pane-metrics' },
   'mgmt-pane-metrics': { section: 'mgmt-sec-activity', pane: 'mgmt-pane-metrics' },
-  'mgmt-sec-copy': { section: 'mgmt-sec-activity', pane: 'mgmt-pane-copy' },
-  'mgmt-pane-copy': { section: 'mgmt-sec-activity', pane: 'mgmt-pane-copy' },
-  'mgmt-sec-network': { section: 'mgmt-sec-activity', pane: 'mgmt-pane-network' },
-  'mgmt-pane-network': { section: 'mgmt-sec-activity', pane: 'mgmt-pane-network' },
   'mgmt-sec-activity': { section: 'mgmt-sec-activity', pane: 'mgmt-pane-metrics' },
+  // Storage & Ingest
+  'mgmt-sec-copy': { section: 'mgmt-sec-storage', pane: 'mgmt-pane-copy' },
+  'mgmt-pane-copy': { section: 'mgmt-sec-storage', pane: 'mgmt-pane-copy' },
+  'mgmt-pane-storage-ingest': { section: 'mgmt-sec-storage', pane: 'mgmt-pane-copy' },
+  'mgmt-sec-ingest': { section: 'mgmt-sec-storage', pane: 'mgmt-pane-copy' },
+  // Network & Switch (First-Class Top-Level)
+  'mgmt-sec-network': { section: 'mgmt-sec-network', pane: 'mgmt-pane-network' },
+  'mgmt-pane-network': { section: 'mgmt-sec-network', pane: 'mgmt-pane-network' },
   // Hardware & Profiles
   'mgmt-sec-hardware': { section: 'mgmt-sec-hardware', pane: 'mgmt-pane-unraid' },
   'mgmt-pane-hardware': { section: 'mgmt-sec-hardware', pane: 'mgmt-pane-unraid' },
@@ -203,6 +207,33 @@ export function updateManagementTelemetry(stats) {
           }
         });
       }
+    }
+  }
+
+  // Update Network pill in Hub and Left Sidebar
+  if (stats.net || stats.ip || stats.network) {
+    let ifaceLabel = 'Online';
+    if (stats.network?.interfaces && Array.isArray(stats.network.interfaces)) {
+      const activePhys = stats.network.interfaces.filter((i) => {
+        const isUp = i.operstate === 'up' || i.carrier === 1;
+        const isVirtual = /^(lo|docker\d*|veth|br-|virbr|tailscale|wg\d*)/i.test(i.iface || i.name || '');
+        return isUp && !isVirtual;
+      });
+      if (activePhys.length > 0) {
+        ifaceLabel = `${activePhys.length} Active`;
+      } else if (stats.net?.iface) {
+        ifaceLabel = stats.net.iface.toUpperCase();
+      }
+    } else if (stats.net?.iface) {
+      ifaceLabel = stats.net.iface.toUpperCase();
+    }
+
+    const netPill = document.getElementById('mgmt-hub-net-pill');
+    if (netPill) netPill.textContent = ifaceLabel;
+    const sideNetBadge = document.getElementById('mgmt-sidebar-net-badge');
+    if (sideNetBadge) {
+      sideNetBadge.textContent = ifaceLabel;
+      sideNetBadge.style.display = 'inline-block';
     }
   }
 
@@ -3646,6 +3677,9 @@ export function initManagement() {
       sectionName = t('mgmt.appearance_title', 'Appearance');
     } else if (targetId === 'mgmt-sec-activity') {
       sectionName = t('mgmt.activity_title', 'Activity Monitor');
+    } else if (targetId === 'mgmt-sec-network') {
+      sectionName = t('mgmt.network_sec_title', 'Network & Switch');
+      fetchAndRenderNetworkTopology();
     } else if (targetId === 'mgmt-sec-docker') {
       sectionName = t('mgmt.docker_title', 'Apps & Containers');
       fetchAndRenderDockerContainers();
@@ -3693,6 +3727,12 @@ export function initManagement() {
             p.style.display = p.id === paneId ? 'block' : 'none';
           });
           triggerSubTabLoad(paneId);
+        } else {
+          const singlePane = parentCard.querySelector('.mgmt-tab-pane');
+          if (singlePane) {
+            singlePane.style.display = 'block';
+            triggerSubTabLoad(singlePane.id);
+          }
         }
       }
     }

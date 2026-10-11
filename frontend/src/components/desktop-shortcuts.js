@@ -38,10 +38,22 @@ export const SYSTEM_SHORTCUTS = [
     badge: 'ZFS/Btrfs'
   },
   {
+    id: 'network-desktop-icon',
+    name: 'Network & Switch',
+    title: 'Network & Virtual Switch',
+    desc: 'Visual hardware switch faceplate, link negotiation, host bridges, and Docker network topology.',
+    icon: '#i-net',
+    svg: true,
+    color: '#00f0ff',
+    targetSection: 'mgmt-sec-network',
+    targetPane: 'mgmt-pane-network',
+    badge: 'Switch'
+  },
+  {
     id: 'activity-desktop-icon',
     name: 'Activity Monitor',
     title: 'Activity & Telemetry',
-    desc: 'Real-time CPU, RAM, network bandwidth graphs, and media auto-ingest logs.',
+    desc: 'Real-time CPU, RAM, disk thermals, and system telemetry historical trends.',
     icon: '#i-bolt',
     svg: true,
     color: '#fbbf24',

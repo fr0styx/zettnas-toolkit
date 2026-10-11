@@ -44,6 +44,18 @@ async function getChart() {
   return _ChartLib;
 }
 
+function formatRate(bytesSec) {
+  if (bytesSec == null || isNaN(bytesSec) || bytesSec <= 0) return '0 B/s';
+  const units = ['B/s', 'KB/s', 'MB/s', 'GB/s'];
+  let val = Number(bytesSec);
+  let unitIdx = 0;
+  while (val >= 1024 && unitIdx < units.length - 1) {
+    val /= 1024;
+    unitIdx++;
+  }
+  return `${val.toFixed(unitIdx === 0 ? 0 : 1)} ${units[unitIdx]}`;
+}
+
 function updateSummaryStrip(data) {
   const strip = document.getElementById('metrics-device-summary-strip');
   if (!strip || !data || data.length === 0) return;
@@ -93,6 +105,30 @@ function updateSummaryStrip(data) {
         </div>
       `);
     });
+  }
+
+  // Network Bandwidth Pill
+  const rxRate = latest.net_rx || 0;
+  const txRate = latest.net_tx || 0;
+  pills.push(`
+    <div class="device-metric-pill">
+      <span class="dmp-name">Net:</span>
+      <span class="dmp-val">↓ ${formatRate(rxRate)} · ↑ ${formatRate(txRate)}</span>
+    </div>
+  `);
+
+  // Disk I/O Pill
+  if (latest.disk_read != null || latest.disk_write != null) {
+    const rRate = latest.disk_read || 0;
+    const wRate = latest.disk_write || 0;
+    if (rRate > 0 || wRate > 0) {
+      pills.push(`
+        <div class="device-metric-pill">
+          <span class="dmp-name">Disk I/O:</span>
+          <span class="dmp-val">R: ${formatRate(rRate)} · W: ${formatRate(wRate)}</span>
+        </div>
+      `);
+    }
   }
 
   strip.innerHTML = pills.join('');
@@ -236,8 +272,66 @@ export async function fetchAndRenderMetrics(skipFetch = false) {
       scales.y.title.text = 'Speed (RPM)';
       scales.y.min = 0;
       scales.y.max = 3500;
+    } else if (_metricsGroup === 'network') {
+      const maxNet = Math.max(...data.map((d) => Math.max(d.net_rx || 0, d.net_tx || 0)), 0);
+      const useMB = maxNet >= 1024 * 1024;
+      const factor = useMB ? (1024 * 1024) : 1024;
+      const unitStr = useMB ? 'MB/s' : 'KB/s';
+
+      datasets.push({
+        label: `Download Rx (${unitStr})`,
+        data: data.map((d) => Number(((d.net_rx || 0) / factor).toFixed(2))),
+        borderColor: '#38bdf8',
+        backgroundColor: 'rgba(56, 189, 248, 0.15)',
+        borderWidth: 2,
+        tension: 0.3,
+        fill: true,
+        pointRadius: 0,
+        pointHoverRadius: 4
+      });
+
+      datasets.push({
+        label: `Upload Tx (${unitStr})`,
+        data: data.map((d) => Number(((d.net_tx || 0) / factor).toFixed(2))),
+        borderColor: '#a78bfa',
+        backgroundColor: 'rgba(167, 139, 250, 0.15)',
+        borderWidth: 2,
+        tension: 0.3,
+        fill: true,
+        pointRadius: 0,
+        pointHoverRadius: 4
+      });
+
+      const maxDisk = Math.max(...data.map((d) => Math.max(d.disk_read || 0, d.disk_write || 0)), 0);
+      if (maxDisk > 0) {
+        datasets.push({
+          label: `Disk Read (${unitStr})`,
+          data: data.map((d) => Number(((d.disk_read || 0) / factor).toFixed(2))),
+          borderColor: '#25c2a0',
+          borderDash: [3, 3],
+          borderWidth: 1.5,
+          tension: 0.3,
+          fill: false,
+          pointRadius: 0,
+          pointHoverRadius: 4
+        });
+        datasets.push({
+          label: `Disk Write (${unitStr})`,
+          data: data.map((d) => Number(((d.disk_write || 0) / factor).toFixed(2))),
+          borderColor: '#f5a623',
+          borderDash: [3, 3],
+          borderWidth: 1.5,
+          tension: 0.3,
+          fill: false,
+          pointRadius: 0,
+          pointHoverRadius: 4
+        });
+      }
+
+      scales.y.title.text = `Throughput (${unitStr})`;
+      scales.y.beginAtZero = true;
     } else {
-      // 'all' view: CPU, RAM, Disk Temps, and Dual Axis for Fans
+      // 'all' view: CPU, RAM, Disk Temps (clean single 0-100 scale, no conflicting fan RPM axis)
       datasets.push({
         label: 'CPU Temp (°C)',
         data: data.map((d) => d.cpu_temp),
@@ -247,8 +341,7 @@ export async function fetchAndRenderMetrics(skipFetch = false) {
         tension: 0.3,
         fill: false,
         pointRadius: 0,
-        pointHoverRadius: 4,
-        yAxisID: 'y'
+        pointHoverRadius: 4
       });
       datasets.push({
         label: 'CPU (%)',
@@ -256,8 +349,7 @@ export async function fetchAndRenderMetrics(skipFetch = false) {
         borderColor: '#38bdf8',
         borderWidth: 1.5,
         tension: 0.3,
-        pointRadius: 0,
-        yAxisID: 'y'
+        pointRadius: 0
       });
       datasets.push({
         label: 'RAM (%)',
@@ -265,8 +357,7 @@ export async function fetchAndRenderMetrics(skipFetch = false) {
         borderColor: '#a78bfa',
         borderWidth: 1.5,
         tension: 0.3,
-        pointRadius: 0,
-        yAxisID: 'y'
+        pointRadius: 0
       });
 
       // Individual Disk lines in 'all' view
@@ -296,39 +387,11 @@ export async function fetchAndRenderMetrics(skipFetch = false) {
           tension: 0.3,
           spanGaps: true,
           pointRadius: 0,
-          pointHoverRadius: 4,
-          yAxisID: 'y'
+          pointHoverRadius: 4
         });
       });
 
-      // Fans on y1 (right axis)
-      const maxFans = Math.max(...data.map((d) => (d.fans ? d.fans.length : 0)), 0);
-      const fanNames = ['Rear Fan', 'Disks Fan', 'CPU Fan'];
-      for (let f = 0; f < maxFans; f++) {
-        const label = fanNames[f] || `Fan ${f + 1}`;
-        datasets.push({
-          label: `${label} (RPM)`,
-          data: data.map((d) => (d.fans && d.fans[f] != null ? d.fans[f] : null)),
-          borderColor: FAN_COLORS[f % FAN_COLORS.length],
-          borderDash: [4, 4],
-          borderWidth: 1.5,
-          tension: 0.3,
-          spanGaps: true,
-          pointRadius: 0,
-          pointHoverRadius: 4,
-          yAxisID: 'y1'
-        });
-      }
-
       scales.y.max = 100;
-      scales.y1 = {
-        position: 'right',
-        beginAtZero: true,
-        max: 3500,
-        grid: { display: false },
-        title: { display: true, text: 'Fan RPM', font: { size: 9 }, color: '#94a3b8' },
-        ticks: { color: '#94a3b8', font: { size: 9 } }
-      };
     }
 
     if (reqId !== _renderRequestId) return;

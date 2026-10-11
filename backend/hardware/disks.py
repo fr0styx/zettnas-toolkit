@@ -604,6 +604,7 @@ def read_disk_temps_and_io(allow_sync_poll: bool = False):
     """
     now = time.time()
     curr_io = {}
+    curr_sectors = {}
     try:
         with open(os.path.join(HOST_PROC, "diskstats")) as f:
             for line in f:
@@ -611,8 +612,38 @@ def read_disk_temps_and_io(allow_sync_poll: bool = False):
                 if len(parts) >= 14:
                     dev = parts[2]
                     curr_io[dev] = int(parts[3]) + int(parts[7])
+                    try:
+                        curr_sectors[dev] = (int(parts[5]), int(parts[9]))
+                    except (ValueError, IndexError):
+                        pass
     except Exception as e:
         logger.debug(f"Silenced exception: {e}")
+
+    prev_sectors = getattr(Z_STATE, "prev_disk_sectors", None)
+    prev_time = getattr(Z_STATE, "prev_disk_time", 0.0)
+    dt = max(0.1, now - prev_time) if prev_time > 0 else 0.0
+    total_read_rate = 0.0
+    total_write_rate = 0.0
+
+    if prev_sectors and dt > 0:
+        delta_r_sec = 0
+        delta_w_sec = 0
+        for dev, (r_sec, w_sec) in curr_sectors.items():
+            if dev in prev_sectors:
+                p_r, p_w = prev_sectors[dev]
+                if r_sec >= p_r:
+                    delta_r_sec += (r_sec - p_r)
+                if w_sec >= p_w:
+                    delta_w_sec += (w_sec - p_w)
+        total_read_rate = (delta_r_sec * 512.0) / dt
+        total_write_rate = (delta_w_sec * 512.0) / dt
+
+    Z_STATE.prev_disk_sectors = curr_sectors
+    Z_STATE.prev_disk_time = now
+    Z_STATE.disk_throughput = {
+        "read_bytes_sec": total_read_rate,
+        "write_bytes_sec": total_write_rate,
+    }
 
     out = []
     show_os = SHOW_OS_DISK

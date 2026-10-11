@@ -136,10 +136,10 @@
               'mgmt-sec-language': 'mgmt-sec-system-group',
               'mgmt-sec-activity': 'mgmt-sec-activity',
               'mgmt-pane-metrics': 'mgmt-sec-activity',
-              'mgmt-sec-copy': 'mgmt-sec-activity',
-              'mgmt-pane-copy': 'mgmt-sec-activity',
-              'mgmt-sec-network': 'mgmt-sec-activity',
-              'mgmt-pane-network': 'mgmt-sec-activity',
+              'mgmt-sec-copy': 'mgmt-sec-storage',
+              'mgmt-pane-copy': 'mgmt-sec-storage',
+              'mgmt-sec-network': 'mgmt-sec-network',
+              'mgmt-pane-network': 'mgmt-sec-network',
               'mgmt-sec-hardware': 'mgmt-sec-hardware',
               'mgmt-sec-services': 'mgmt-sec-hardware',
               'mgmt-pane-unraid': 'mgmt-sec-hardware',
@@ -2037,6 +2037,11 @@
             <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_storage">Storage & Chassis</span>
             <span class="mgmt-sidebar-badge" id="mgmt-sidebar-storage-badge" style="display:none;">Drives</span>
           </button>
+          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-network" title="Network & Virtual Switch">
+            <svg class="mgmt-sidebar-svg"><use href="#i-net"/></svg>
+            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_network">Network & Switch</span>
+            <span class="mgmt-sidebar-badge" id="mgmt-sidebar-net-badge" style="display:none;">Online</span>
+          </button>
           <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-hardware" title="Acoustic Profiles & Host Subsystem">
             <svg class="mgmt-sidebar-svg"><use href="#i-sliders"/></svg>
             <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_hardware">Hardware & Profiles</span>
@@ -2093,10 +2098,27 @@
                 <span class="mgmt-app-title" data-i18n="mgmt.hub_activity_title">Activity Monitor</span>
                 <span class="mgmt-app-pill" data-i18n="mgmt.hub_activity_pill">Telemetry</span>
               </div>
-              <p class="mgmt-app-desc" data-i18n="mgmt.hub_activity_desc">Interactive hardware performance metrics and media ingest transfer history.</p>
+              <p class="mgmt-app-desc" data-i18n="mgmt.hub_activity_desc">Real-time and historical hardware performance metrics, thermals, and resource utilization.</p>
             </div>
             <div class="mgmt-app-footer">
               <span class="mgmt-app-action" data-i18n="mgmt.hub_activity_action">View Activity ➔</span>
+            </div>
+          </div>
+
+          <!-- Network & Switch -->
+          <div class="mgmt-app-card" data-mgmt-target="mgmt-sec-network" role="button" tabindex="0">
+            <div class="mgmt-app-icon-wrap" style="background:rgba(0,240,255,0.12); color:var(--accent-cyan,#00f0ff); border-color:rgba(0,240,255,0.3);">
+              <svg class="mgmt-app-svg"><use href="#i-net"/></svg>
+            </div>
+            <div class="mgmt-app-info">
+              <div class="mgmt-app-title-row">
+                <span class="mgmt-app-title" data-i18n="mgmt.hub_network_title">Network & Switch</span>
+                <span class="mgmt-app-pill" style="background:rgba(0,240,255,0.15); color:var(--accent-cyan,#00f0ff);" id="mgmt-hub-net-pill" data-i18n="mgmt.hub_network_pill">Topology</span>
+              </div>
+              <p class="mgmt-app-desc" data-i18n="mgmt.hub_network_desc">Visual hardware switch jack faceplate, link negotiation, host bridges, and Docker network topology.</p>
+            </div>
+            <div class="mgmt-app-footer">
+              <span class="mgmt-app-action" data-i18n="mgmt.hub_network_action">Inspect Network ➔</span>
             </div>
           </div>
 
@@ -2983,183 +3005,143 @@
           </div>
         </div>
 
-          <!-- 2. Activity Monitor -->
+          <!-- 2. Activity Monitor & Historical Telemetry -->
           <div id="mgmt-sec-activity" class="mgmt-detail-card" style="display: none;">
-            <div class="mgmt-inner-tabs">
-              <button class="mgmt-inner-tab active" data-tab-target="mgmt-pane-metrics">
-                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-cpu"/></svg>
-                <span data-i18n="mgmt.subtab_metrics">Metrics</span>
-              </button>
-              <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-copy">
-                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-storage"/></svg>
-                <span data-i18n="mgmt.subtab_copy">Ingest History</span>
-              </button>
-              <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-network">
-                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-net"/></svg>
-                <span data-i18n="mgmt.subtab_network">Network & Switch</span>
-              </button>
-            </div>
             <div id="mgmt-pane-metrics" class="mgmt-tab-pane" style="display: block;">
-          <div class="mgmt-card-intro" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-            <div>
-              <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-cpu"/></svg> <span data-i18n="mgmt.telemetry_title">Historical System Telemetry</span></div>
-              <div class="mgmt-card-intro-desc" data-i18n="mgmt.telemetry_desc">Aggregated hardware telemetry and per-device resource utilization history.</div>
-            </div>
-            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-              <span class="chart-zoom-hint" style="font-size: 11px; color: var(--muted); display: inline-flex; align-items: center; gap: 4px;">
-                <svg class="ic" style="width: 13px; height: 13px;"><use href="#i-grid"/></svg>
-                <span data-i18n="mgmt.zoom_hint">Drag to pan • Scroll to zoom</span>
-              </span>
-              <button id="metrics-reset-zoom-btn" class="btn-pill-toggle" style="display: none; padding: 4px 8px; font-size: 11px; color: var(--accent-cyan); border-color: var(--accent-cyan);" title="Reset Zoom View" data-i18n="mgmt.reset_zoom">↺ Reset Zoom</button>
-              <select id="metrics-range-select" class="tz-select-input" style="width: auto; padding: 6px 12px; font-size: 11px; cursor: pointer;">
-                <option value="1h" data-i18n="mgmt.range_1h">Last 1 Hour</option>
-                <option value="6h" data-i18n="mgmt.range_6h">Last 6 Hours</option>
-                <option value="24h" selected data-i18n="mgmt.range_24h">Last 24 Hours</option>
-                <option value="7d" data-i18n="mgmt.range_7d">Last 7 Days</option>
-                <option value="30d" data-i18n="mgmt.range_30d">Last 30 Days</option>
-              </select>
-            </div>
-          </div>
-          <div class="mgmt-detail-body">
-            <div class="metrics-device-filter-row">
-              <button class="metrics-device-btn active" data-metric-group="all" data-i18n="mgmt.all_devices">⚡ All Devices</button>
-              <button class="metrics-device-btn" data-metric-group="system" data-i18n="mgmt.cpu_ram">🧠 CPU & RAM</button>
-              <button class="metrics-device-btn" data-metric-group="disks" data-i18n="mgmt.storage_disks">💾 Storage Disks</button>
-              <button class="metrics-device-btn" data-metric-group="fans" data-i18n="mgmt.cooling_fans">🌀 Cooling Fans</button>
-            </div>
-            <div id="metrics-device-summary-strip" class="metrics-device-summary-strip">
-              <!-- Live per-device indicators dynamically populated -->
-            </div>
-            <div style="position: relative; height: 300px; width: 100%;">
-              <canvas id="metricsChart"></canvas>
-            </div>
-          </div>
-        </div>
-            <div id="mgmt-pane-copy" class="mgmt-tab-pane" style="display: none;">
-          <div class="mgmt-card-intro" style="display:flex; justify-content:space-between; align-items:center;">
-            <div>
-              <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-storage"/></svg> <span data-i18n="mgmt.copy_sec_title">Media Ingest & Checksum History</span></div>
-              <div class="mgmt-card-intro-desc" data-i18n="mgmt.copy_sec_desc">Persistent audit logs of card reader imports with SHA-256 integrity verification.</div>
-            </div>
-            <button class="btn-pill-toggle" id="btn-refresh-copy-history" title="Refresh Ingest History" data-i18n="mgmt.refresh">🔄 Refresh</button>
-          </div>
-          <div class="mgmt-detail-body">
-            <div style="overflow-x:auto; max-height:400px; background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.06); border-radius:8px;">
-              <table class="copy-history-table">
-                <thead>
-                  <tr>
-                    <th data-i18n="mgmt.tbl_datetime">Date / Time</th>
-                    <th data-i18n="mgmt.tbl_source">Source</th>
-                    <th data-i18n="mgmt.tbl_dest">Destination</th>
-                    <th data-i18n="mgmt.tbl_files">Files</th>
-                    <th data-i18n="mgmt.tbl_size">Size</th>
-                    <th data-i18n="mgmt.tbl_duration">Duration</th>
-                    <th data-i18n="mgmt.tbl_status">Status & Checksum</th>
-                  </tr>
-                </thead>
-                <tbody id="copy-history-tbody">
-                  <tr><td colspan="7" style="text-align:center; color:var(--muted); padding:16px;">Loading copy history...</td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        <!-- 3. Network & Virtual Switch Inspector -->
-        <div id="mgmt-pane-network" class="mgmt-tab-pane" style="display: none;">
-          <div class="mgmt-card-intro" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-            <div>
-              <div class="mgmt-card-intro-title">
-                <svg class="ic"><use href="#i-net"/></svg>
-                <span data-i18n="mgmt.network_sec_title">Visual Network & Virtual Switch Inspector</span>
+              <div class="mgmt-card-intro" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                <div>
+                  <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-cpu"/></svg> <span data-i18n="mgmt.telemetry_title">Historical System Telemetry</span></div>
+                  <div class="mgmt-card-intro-desc" data-i18n="mgmt.telemetry_desc">Aggregated hardware telemetry and per-device resource utilization history.</div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                  <span class="chart-zoom-hint" style="font-size: 11px; color: var(--muted); display: inline-flex; align-items: center; gap: 4px;">
+                    <svg class="ic" style="width: 13px; height: 13px;"><use href="#i-grid"/></svg>
+                    <span data-i18n="mgmt.zoom_hint">Drag to pan • Scroll to zoom</span>
+                  </span>
+                  <button id="metrics-reset-zoom-btn" class="btn-pill-toggle" style="display: none; padding: 4px 8px; font-size: 11px; color: var(--accent-cyan); border-color: var(--accent-cyan);" title="Reset Zoom View" data-i18n="mgmt.reset_zoom">↺ Reset Zoom</button>
+                  <select id="metrics-range-select" class="tz-select-input" style="width: auto; padding: 6px 12px; font-size: 11px; cursor: pointer;">
+                    <option value="1h" data-i18n="mgmt.range_1h">Last 1 Hour</option>
+                    <option value="6h" data-i18n="mgmt.range_6h">Last 6 Hours</option>
+                    <option value="24h" selected data-i18n="mgmt.range_24h">Last 24 Hours</option>
+                    <option value="7d" data-i18n="mgmt.range_7d">Last 7 Days</option>
+                    <option value="30d" data-i18n="mgmt.range_30d">Last 30 Days</option>
+                  </select>
+                </div>
               </div>
-              <div class="mgmt-card-intro-desc" data-i18n="mgmt.network_sec_desc">
-                Host interface carriers, link negotiation speeds (10GbE / 2.5GbE / 1GbE), bridges, and Docker container network topology.
+              <div class="mgmt-detail-body">
+                <div class="metrics-device-filter-row">
+                  <button class="metrics-device-btn active" data-metric-group="all" data-i18n="mgmt.all_devices">⚡ All Devices</button>
+                  <button class="metrics-device-btn" data-metric-group="system" data-i18n="mgmt.cpu_ram">🧠 CPU & RAM</button>
+                  <button class="metrics-device-btn" data-metric-group="disks" data-i18n="mgmt.storage_disks">💾 Storage Disks</button>
+                  <button class="metrics-device-btn" data-metric-group="network" data-i18n="mgmt.network_bandwidth">🌐 Network Bandwidth</button>
+                  <button class="metrics-device-btn" data-metric-group="fans" data-i18n="mgmt.cooling_fans">🌀 Cooling Fans</button>
+                </div>
+                <div id="metrics-device-summary-strip" class="metrics-device-summary-strip">
+                  <!-- Live per-device indicators dynamically populated -->
+                </div>
+                <div style="position: relative; height: 300px; width: 100%;">
+                  <canvas id="metricsChart"></canvas>
+                </div>
               </div>
-            </div>
-            <div style="display:flex; gap:8px; align-items:center;">
-              <button class="btn-pill-toggle" id="btn-refresh-network-topology" title="Refresh Network Topology" data-i18n="mgmt.refresh">🔄 Refresh</button>
             </div>
           </div>
 
-          <div class="mgmt-detail-body">
-            <!-- 4 KPI Metrics Header -->
-            <div class="network-kpi-grid">
-              <div class="network-kpi-card">
-                <div class="network-kpi-label">Primary Host IP</div>
-                <div class="network-kpi-val" id="net-kpi-ip">--</div>
-                <div class="network-kpi-sub" id="net-kpi-iface">--</div>
+          <!-- 3. Network & Virtual Switch Inspector (Standalone Top-Level Section) -->
+          <div id="mgmt-sec-network" class="mgmt-detail-card" style="display: none;">
+            <div id="mgmt-pane-network" class="mgmt-tab-pane" style="display: block;">
+              <div class="mgmt-card-intro" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                <div>
+                  <div class="mgmt-card-intro-title">
+                    <svg class="ic"><use href="#i-net"/></svg>
+                    <span data-i18n="mgmt.network_sec_title">Visual Network & Virtual Switch Inspector</span>
+                  </div>
+                  <div class="mgmt-card-intro-desc" data-i18n="mgmt.network_sec_desc">
+                    Host interface carriers, link negotiation speeds (10GbE / 2.5GbE / 1GbE), bridges, and Docker container network topology.
+                  </div>
+                </div>
+                <div style="display:flex; gap:8px; align-items:center;">
+                  <button class="btn-pill-toggle" id="btn-refresh-network-topology" title="Refresh Network Topology" data-i18n="mgmt.refresh">🔄 Refresh</button>
+                </div>
               </div>
-              <div class="network-kpi-card">
-                <div class="network-kpi-label">Default Gateway</div>
-                <div class="network-kpi-val" id="net-kpi-gw">--</div>
-                <div class="network-kpi-sub" id="net-kpi-dns">DNS: --</div>
-              </div>
-              <div class="network-kpi-card">
-                <div class="network-kpi-label">Max Link Speed</div>
-                <div class="network-kpi-val text-emerald" id="net-kpi-speed">--</div>
-                <div class="network-kpi-sub" id="net-kpi-carrier">--</div>
-              </div>
-              <div class="network-kpi-card">
-                <div class="network-kpi-label">Virtual Fleet</div>
-                <div class="network-kpi-val" id="net-kpi-docker">--</div>
-                <div class="network-kpi-sub" id="net-kpi-containers">--</div>
-              </div>
-            </div>
 
-            <!-- Visual Front-Panel Switch Jack Matrix -->
-            <div class="network-section-header">
-              <span class="network-section-title">HARDWARE SWITCH PORTS (PHYSICAL JACKS)</span>
-              <span class="network-section-badge" id="net-active-ports-badge">-- Active</span>
-            </div>
-            <div class="network-switch-chassis" id="network-switch-chassis">
-              <div class="network-switch-faceplate" id="network-switch-faceplate">
-                <!-- Populated dynamically with RJ45/SFP+ jacks and live status LEDs -->
+              <div class="mgmt-detail-body">
+                <!-- 4 KPI Metrics Header -->
+                <div class="network-kpi-grid">
+                  <div class="network-kpi-card">
+                    <div class="network-kpi-label">Primary Host IP</div>
+                    <div class="network-kpi-val" id="net-kpi-ip">--</div>
+                    <div class="network-kpi-sub" id="net-kpi-iface">--</div>
+                  </div>
+                  <div class="network-kpi-card">
+                    <div class="network-kpi-label">Default Gateway</div>
+                    <div class="network-kpi-val" id="net-kpi-gw">--</div>
+                    <div class="network-kpi-sub" id="net-kpi-dns">DNS: --</div>
+                  </div>
+                  <div class="network-kpi-card">
+                    <div class="network-kpi-label">Max Link Speed</div>
+                    <div class="network-kpi-val text-emerald" id="net-kpi-speed">--</div>
+                    <div class="network-kpi-sub" id="net-kpi-carrier">--</div>
+                  </div>
+                  <div class="network-kpi-card">
+                    <div class="network-kpi-label">Virtual Fleet</div>
+                    <div class="network-kpi-val" id="net-kpi-docker">--</div>
+                    <div class="network-kpi-sub" id="net-kpi-containers">--</div>
+                  </div>
+                </div>
+
+                <!-- Visual Front-Panel Switch Jack Matrix -->
+                <div class="network-section-header">
+                  <span class="network-section-title">HARDWARE SWITCH PORTS (PHYSICAL JACKS)</span>
+                  <span class="network-section-badge" id="net-active-ports-badge">-- Active</span>
+                </div>
+                <div class="network-switch-chassis" id="network-switch-chassis">
+                  <div class="network-switch-faceplate" id="network-switch-faceplate">
+                    <!-- Populated dynamically with RJ45/SFP+ jacks and live status LEDs -->
+                  </div>
+                </div>
+
+                <!-- Physical Interfaces Detailed Table -->
+                <div class="network-section-header" style="margin-top: 24px;">
+                  <span class="network-section-title">PHYSICAL INTERFACES INVENTORY</span>
+                </div>
+                <div class="network-table-wrap">
+                  <table class="copy-history-table">
+                    <thead>
+                      <tr>
+                        <th>Interface</th>
+                        <th>Carrier & State</th>
+                        <th>Speed / Duplex</th>
+                        <th>MAC Address</th>
+                        <th>MTU</th>
+                        <th>Master / Bond</th>
+                        <th>Cumulative Rx / Tx</th>
+                        <th>Hardware / Driver</th>
+                      </tr>
+                    </thead>
+                    <tbody id="network-physical-tbody">
+                      <tr><td colspan="8" style="text-align:center; color:var(--muted); padding:16px;">Loading network interfaces...</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <!-- Virtual Switches, Bonds & Bridges -->
+                <div class="network-section-header" style="margin-top: 24px;">
+                  <span class="network-section-title">HOST BRIDGES & BONDING GROUPS</span>
+                </div>
+                <div class="network-grid-two-col" id="network-bridges-container">
+                  <!-- Populated dynamically with bridge cards and bond cards -->
+                </div>
+
+                <!-- Docker Bridge Routing & Container Allocations -->
+                <div class="network-section-header" style="margin-top: 24px;">
+                  <span class="network-section-title">DOCKER BRIDGE NETWORKS & CONTAINER IP ALLOCATIONS</span>
+                </div>
+                <div class="network-docker-list" id="network-docker-container">
+                  <!-- Populated dynamically with docker network cards and attached container pills -->
+                </div>
               </div>
-            </div>
-
-            <!-- Physical Interfaces Detailed Table -->
-            <div class="network-section-header" style="margin-top: 24px;">
-              <span class="network-section-title">PHYSICAL INTERFACES INVENTORY</span>
-            </div>
-            <div class="network-table-wrap">
-              <table class="copy-history-table">
-                <thead>
-                  <tr>
-                    <th>Interface</th>
-                    <th>Carrier & State</th>
-                    <th>Speed / Duplex</th>
-                    <th>MAC Address</th>
-                    <th>MTU</th>
-                    <th>Master / Bond</th>
-                    <th>Cumulative Rx / Tx</th>
-                    <th>Hardware / Driver</th>
-                  </tr>
-                </thead>
-                <tbody id="network-physical-tbody">
-                  <tr><td colspan="8" style="text-align:center; color:var(--muted); padding:16px;">Loading network interfaces...</td></tr>
-                </tbody>
-              </table>
-            </div>
-
-            <!-- Virtual Switches, Bonds & Bridges -->
-            <div class="network-section-header" style="margin-top: 24px;">
-              <span class="network-section-title">HOST BRIDGES & BONDING GROUPS</span>
-            </div>
-            <div class="network-grid-two-col" id="network-bridges-container">
-              <!-- Populated dynamically with bridge cards and bond cards -->
-            </div>
-
-            <!-- Docker Bridge Routing & Container Allocations -->
-            <div class="network-section-header" style="margin-top: 24px;">
-              <span class="network-section-title">DOCKER BRIDGE NETWORKS & CONTAINER IP ALLOCATIONS</span>
-            </div>
-            <div class="network-docker-list" id="network-docker-container">
-              <!-- Populated dynamically with docker network cards and attached container pills -->
             </div>
           </div>
-        </div>
-      </div>
 
       <!-- Apps & Containers (Standalone Top-Level Section) -->
           <div id="mgmt-sec-docker" class="mgmt-detail-card" style="display: none;">
@@ -3506,6 +3488,10 @@
                 <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-chip"/></svg>
                 <span data-i18n="mgmt.subtab_disks">Physical Disks Inventory</span>
               </button>
+              <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-copy">
+                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-storage"/></svg>
+                <span data-i18n="mgmt.subtab_copy">Media Ingest</span>
+              </button>
             </div>
 
             <!-- Sub-tab 1: Chassis Digital Twin -->
@@ -3601,6 +3587,37 @@
                     </thead>
                     <tbody id="mgmt-disks-inventory-tbody">
                       <tr><td colspan="7" style="text-align:center; color:var(--muted); padding:20px;">Scanning HAL disk devices...</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- Sub-tab 6: Media Ingest & Checksum History -->
+            <div id="mgmt-pane-copy" class="mgmt-tab-pane" style="display: none;">
+              <div class="mgmt-card-intro" style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                  <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-storage"/></svg> <span data-i18n="mgmt.copy_sec_title">Media Ingest & Checksum History</span></div>
+                  <div class="mgmt-card-intro-desc" data-i18n="mgmt.copy_sec_desc">Persistent audit logs of card reader imports with SHA-256 integrity verification.</div>
+                </div>
+                <button class="btn-pill-toggle" id="btn-refresh-copy-history" title="Refresh Ingest History" data-i18n="mgmt.refresh">🔄 Refresh</button>
+              </div>
+              <div class="mgmt-detail-body">
+                <div style="overflow-x:auto; max-height:400px; background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.06); border-radius:8px;">
+                  <table class="copy-history-table">
+                    <thead>
+                      <tr>
+                        <th data-i18n="mgmt.tbl_datetime">Date / Time</th>
+                        <th data-i18n="mgmt.tbl_source">Source</th>
+                        <th data-i18n="mgmt.tbl_dest">Destination</th>
+                        <th data-i18n="mgmt.tbl_files">Files</th>
+                        <th data-i18n="mgmt.tbl_size">Size</th>
+                        <th data-i18n="mgmt.tbl_duration">Duration</th>
+                        <th data-i18n="mgmt.tbl_status">Status & Checksum</th>
+                      </tr>
+                    </thead>
+                    <tbody id="copy-history-tbody">
+                      <tr><td colspan="7" style="text-align:center; color:var(--muted); padding:16px;">Loading copy history...</td></tr>
                     </tbody>
                   </table>
                 </div>

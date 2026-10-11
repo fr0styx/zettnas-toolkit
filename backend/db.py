@@ -40,9 +40,22 @@ def init_db():
                     cpu_util REAL,
                     mem_pct REAL,
                     disks_json TEXT,
-                    fans_json TEXT
+                    fans_json TEXT,
+                    net_rx_bytes_sec REAL DEFAULT 0.0,
+                    net_tx_bytes_sec REAL DEFAULT 0.0,
+                    disk_read_bytes_sec REAL DEFAULT 0.0,
+                    disk_write_bytes_sec REAL DEFAULT 0.0
                 )
             """)
+            # Auto-migrate metrics table columns if missing
+            cur = conn.execute("PRAGMA table_info(metrics)")
+            existing_cols = {row[1] for row in cur.fetchall()}
+            for col_name in ("net_rx_bytes_sec", "net_tx_bytes_sec", "disk_read_bytes_sec", "disk_write_bytes_sec"):
+                if col_name not in existing_cols:
+                    try:
+                        conn.execute(f"ALTER TABLE metrics ADD COLUMN {col_name} REAL DEFAULT 0.0")
+                    except Exception:
+                        pass
             conn.execute("CREATE INDEX IF NOT EXISTS idx_metrics_ts ON metrics(ts)")
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS copy_history (
@@ -94,13 +107,45 @@ def init_db():
         logger.error(f"Failed to initialize database: {e}")
 
 
-def log_metrics(ts: int, cpu_temp: float, cpu_util: float, mem_pct: float, disks: list, fans: list):
+def log_metrics(
+    ts: int,
+    cpu_temp: float,
+    cpu_util: float,
+    mem_pct: float,
+    disks: list,
+    fans: list,
+    net_rx_bytes_sec: float = 0.0,
+    net_tx_bytes_sec: float = 0.0,
+    disk_read_bytes_sec: float = 0.0,
+    disk_write_bytes_sec: float = 0.0,
+):
     try:
         with db_session() as conn:
-            conn.execute(
-                "INSERT INTO metrics (ts, cpu_temp, cpu_util, mem_pct, disks_json, fans_json) VALUES (?, ?, ?, ?, ?, ?)",
-                (ts, cpu_temp, cpu_util, mem_pct, json.dumps(disks), json.dumps(fans)),
-            )
+            cur = conn.execute("PRAGMA table_info(metrics)")
+            cols = {row[1] for row in cur.fetchall()}
+            if "net_rx_bytes_sec" in cols:
+                conn.execute(
+                    """INSERT INTO metrics 
+                       (ts, cpu_temp, cpu_util, mem_pct, disks_json, fans_json, net_rx_bytes_sec, net_tx_bytes_sec, disk_read_bytes_sec, disk_write_bytes_sec) 
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                    (
+                        ts,
+                        cpu_temp,
+                        cpu_util,
+                        mem_pct,
+                        json.dumps(disks),
+                        json.dumps(fans),
+                        float(net_rx_bytes_sec or 0.0),
+                        float(net_tx_bytes_sec or 0.0),
+                        float(disk_read_bytes_sec or 0.0),
+                        float(disk_write_bytes_sec or 0.0),
+                    ),
+                )
+            else:
+                conn.execute(
+                    "INSERT INTO metrics (ts, cpu_temp, cpu_util, mem_pct, disks_json, fans_json) VALUES (?, ?, ?, ?, ?, ?)",
+                    (ts, cpu_temp, cpu_util, mem_pct, json.dumps(disks), json.dumps(fans)),
+                )
             # Prune records older than 30 days (2,592,000 seconds)
             conn.execute("DELETE FROM metrics WHERE ts < ?", (ts - 2592000,))
     except Exception as db_e:
@@ -110,32 +155,72 @@ def log_metrics(ts: int, cpu_temp: float, cpu_util: float, mem_pct: float, disks
 def query_history(range_str: str = "24h"):
     now_ts = int(time.time())
 
-    if range_str == "1h":
-        cutoff = now_ts - 3600
-        group_sql = (
-            "SELECT ts, cpu_temp, cpu_util, mem_pct, disks_json, fans_json FROM metrics WHERE ts > ? ORDER BY ts ASC"
-        )
-    elif range_str == "6h":
-        cutoff = now_ts - 21600
-        group_sql = (
-            "SELECT ts, cpu_temp, cpu_util, mem_pct, disks_json, fans_json FROM metrics WHERE ts > ? ORDER BY ts ASC"
-        )
-    elif range_str == "7d":
-        cutoff = now_ts - (86400 * 7)
-        # Downsample to 30-minute buckets for 7-day range to keep payload fast and preserve accuracy
-        group_sql = "SELECT (ts / 1800) * 1800 AS ts, ROUND(AVG(cpu_temp), 1) AS cpu_temp, ROUND(AVG(cpu_util), 1) AS cpu_util, ROUND(AVG(mem_pct), 1) AS mem_pct, disks_json, fans_json FROM metrics WHERE ts > ? GROUP BY (ts / 1800) ORDER BY ts ASC"
-    elif range_str == "30d":
-        cutoff = now_ts - (86400 * 30)
-        # Downsample to 2-hour buckets for 30-day range
-        group_sql = "SELECT (ts / 7200) * 7200 AS ts, ROUND(AVG(cpu_temp), 1) AS cpu_temp, ROUND(AVG(cpu_util), 1) AS cpu_util, ROUND(AVG(mem_pct), 1) AS mem_pct, disks_json, fans_json FROM metrics WHERE ts > ? GROUP BY (ts / 7200) ORDER BY ts ASC"
-    else:  # default 24h
-        cutoff = now_ts - 86400
-        group_sql = (
-            "SELECT ts, cpu_temp, cpu_util, mem_pct, disks_json, fans_json FROM metrics WHERE ts > ? ORDER BY ts ASC"
-        )
-
     with db_session() as conn:
         conn.row_factory = sqlite3.Row
+        cur = conn.execute("PRAGMA table_info(metrics)")
+        cols = {row[1] for row in cur.fetchall()}
+        has_net_io = "net_rx_bytes_sec" in cols
+
+        if has_net_io:
+            if range_str == "1h":
+                cutoff = now_ts - 3600
+                group_sql = (
+                    "SELECT ts, cpu_temp, cpu_util, mem_pct, disks_json, fans_json, "
+                    "net_rx_bytes_sec AS net_rx, net_tx_bytes_sec AS net_tx, "
+                    "disk_read_bytes_sec AS disk_read, disk_write_bytes_sec AS disk_write "
+                    "FROM metrics WHERE ts > ? ORDER BY ts ASC"
+                )
+            elif range_str == "6h":
+                cutoff = now_ts - 21600
+                group_sql = (
+                    "SELECT ts, cpu_temp, cpu_util, mem_pct, disks_json, fans_json, "
+                    "net_rx_bytes_sec AS net_rx, net_tx_bytes_sec AS net_tx, "
+                    "disk_read_bytes_sec AS disk_read, disk_write_bytes_sec AS disk_write "
+                    "FROM metrics WHERE ts > ? ORDER BY ts ASC"
+                )
+            elif range_str == "7d":
+                cutoff = now_ts - (86400 * 7)
+                group_sql = (
+                    "SELECT (ts / 1800) * 1800 AS ts, "
+                    "ROUND(AVG(cpu_temp), 1) AS cpu_temp, ROUND(AVG(cpu_util), 1) AS cpu_util, ROUND(AVG(mem_pct), 1) AS mem_pct, "
+                    "ROUND(AVG(COALESCE(net_rx_bytes_sec, 0.0)), 1) AS net_rx, ROUND(AVG(COALESCE(net_tx_bytes_sec, 0.0)), 1) AS net_tx, "
+                    "ROUND(AVG(COALESCE(disk_read_bytes_sec, 0.0)), 1) AS disk_read, ROUND(AVG(COALESCE(disk_write_bytes_sec, 0.0)), 1) AS disk_write, "
+                    "disks_json, fans_json FROM metrics WHERE ts > ? GROUP BY (ts / 1800) ORDER BY ts ASC"
+                )
+            elif range_str == "30d":
+                cutoff = now_ts - (86400 * 30)
+                group_sql = (
+                    "SELECT (ts / 7200) * 7200 AS ts, "
+                    "ROUND(AVG(cpu_temp), 1) AS cpu_temp, ROUND(AVG(cpu_util), 1) AS cpu_util, ROUND(AVG(mem_pct), 1) AS mem_pct, "
+                    "ROUND(AVG(COALESCE(net_rx_bytes_sec, 0.0)), 1) AS net_rx, ROUND(AVG(COALESCE(net_tx_bytes_sec, 0.0)), 1) AS net_tx, "
+                    "ROUND(AVG(COALESCE(disk_read_bytes_sec, 0.0)), 1) AS disk_read, ROUND(AVG(COALESCE(disk_write_bytes_sec, 0.0)), 1) AS disk_write, "
+                    "disks_json, fans_json FROM metrics WHERE ts > ? GROUP BY (ts / 7200) ORDER BY ts ASC"
+                )
+            else:  # default 24h
+                cutoff = now_ts - 86400
+                group_sql = (
+                    "SELECT ts, cpu_temp, cpu_util, mem_pct, disks_json, fans_json, "
+                    "net_rx_bytes_sec AS net_rx, net_tx_bytes_sec AS net_tx, "
+                    "disk_read_bytes_sec AS disk_read, disk_write_bytes_sec AS disk_write "
+                    "FROM metrics WHERE ts > ? ORDER BY ts ASC"
+                )
+        else:
+            if range_str == "1h":
+                cutoff = now_ts - 3600
+                group_sql = "SELECT ts, cpu_temp, cpu_util, mem_pct, disks_json, fans_json FROM metrics WHERE ts > ? ORDER BY ts ASC"
+            elif range_str == "6h":
+                cutoff = now_ts - 21600
+                group_sql = "SELECT ts, cpu_temp, cpu_util, mem_pct, disks_json, fans_json FROM metrics WHERE ts > ? ORDER BY ts ASC"
+            elif range_str == "7d":
+                cutoff = now_ts - (86400 * 7)
+                group_sql = "SELECT (ts / 1800) * 1800 AS ts, ROUND(AVG(cpu_temp), 1) AS cpu_temp, ROUND(AVG(cpu_util), 1) AS cpu_util, ROUND(AVG(mem_pct), 1) AS mem_pct, disks_json, fans_json FROM metrics WHERE ts > ? GROUP BY (ts / 1800) ORDER BY ts ASC"
+            elif range_str == "30d":
+                cutoff = now_ts - (86400 * 30)
+                group_sql = "SELECT (ts / 7200) * 7200 AS ts, ROUND(AVG(cpu_temp), 1) AS cpu_temp, ROUND(AVG(cpu_util), 1) AS cpu_util, ROUND(AVG(mem_pct), 1) AS mem_pct, disks_json, fans_json FROM metrics WHERE ts > ? GROUP BY (ts / 7200) ORDER BY ts ASC"
+            else:  # default 24h
+                cutoff = now_ts - 86400
+                group_sql = "SELECT ts, cpu_temp, cpu_util, mem_pct, disks_json, fans_json FROM metrics WHERE ts > ? ORDER BY ts ASC"
+
         rows = conn.execute(group_sql, (cutoff,)).fetchall()
         data = []
         for r in rows:
@@ -159,6 +244,10 @@ def query_history(range_str: str = "24h"):
                     "cpu_temp": round(r["cpu_temp"], 1) if r["cpu_temp"] else 0,
                     "cpu_util": round(r["cpu_util"], 1) if r["cpu_util"] else 0,
                     "mem_pct": round(r["mem_pct"], 1) if r["mem_pct"] else 0,
+                    "net_rx": round(r["net_rx"], 1) if "net_rx" in r.keys() and r["net_rx"] else 0.0,
+                    "net_tx": round(r["net_tx"], 1) if "net_tx" in r.keys() and r["net_tx"] else 0.0,
+                    "disk_read": round(r["disk_read"], 1) if "disk_read" in r.keys() and r["disk_read"] else 0.0,
+                    "disk_write": round(r["disk_write"], 1) if "disk_write" in r.keys() and r["disk_write"] else 0.0,
                     "disks": disks,
                     "fans": fans,
                 }
