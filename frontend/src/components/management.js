@@ -3415,8 +3415,31 @@ export async function fetchAndRenderNetworkTopology() {
     const createDockerBtn = document.getElementById('btn-create-docker-net');
     if (createDockerBtn && !createDockerBtn.dataset.bound) {
       createDockerBtn.dataset.bound = '1';
-      createDockerBtn.addEventListener('click', () => openDockerNetworkCreateModal());
+      createDockerBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openDockerNetworkCreateModal();
+      });
     }
+
+    const btnOpenVlan = document.getElementById('btn-open-create-vlan-modal');
+    if (btnOpenVlan && !btnOpenVlan.dataset.bound) {
+      btnOpenVlan.dataset.bound = '1';
+      btnOpenVlan.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openCreateVlanModal();
+      });
+    }
+
+    const btnOpenHostIp = document.getElementById('btn-open-host-ip-modal');
+    if (btnOpenHostIp && !btnOpenHostIp.dataset.bound) {
+      btnOpenHostIp.dataset.bound = '1';
+      btnOpenHostIp.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openHostIpConfigModal();
+      });
+    }
+
+    initNetworkControls();
   } catch (err) {
     console.warn('[ZettNAS] Error fetching network topology:', err);
     if (physicalTbody) {
@@ -3445,6 +3468,9 @@ export async function openNetworkPortModal(ifaceName) {
   const roLink = document.getElementById('net-port-ro-link');
 
   if (titleIface) titleIface.textContent = ifaceName.toUpperCase();
+
+  overlay.classList.add('open');
+  overlay.style.display = 'flex';
 
   try {
     const data = await api.get(`/api/network/port/${encodeURIComponent(ifaceName)}`);
@@ -3486,8 +3512,6 @@ export async function openNetworkPortModal(ifaceName) {
     if (roDriver) roDriver.textContent = nic.driver || 'Generic';
     if (roPci) roPci.textContent = nic.pci_slot || '--';
     if (roLink) roLink.textContent = nic.is_up ? `${nic.speed_human || 'Connected'} (${nic.duplex || 'full'})` : 'Down / Disconnected';
-
-    overlay.style.display = 'flex';
   } catch (err) {
     showToast(`Failed to load port config: ${err.message || err}`, 'error');
   }
@@ -3495,7 +3519,10 @@ export async function openNetworkPortModal(ifaceName) {
 
 export function closeNetworkPortModal() {
   const overlay = document.getElementById('network-port-config-overlay');
-  if (overlay) overlay.style.display = 'none';
+  if (overlay) {
+    overlay.classList.remove('open');
+    overlay.style.display = 'none';
+  }
   _currentPortIface = null;
 }
 
@@ -3560,12 +3587,16 @@ export function openDockerNetworkCreateModal() {
   if (subnetInput) subnetInput.value = '';
   if (gwInput) gwInput.value = '';
 
+  overlay.classList.add('open');
   overlay.style.display = 'flex';
 }
 
 export function closeDockerNetworkCreateModal() {
   const overlay = document.getElementById('network-docker-create-overlay');
-  if (overlay) overlay.style.display = 'none';
+  if (overlay) {
+    overlay.classList.remove('open');
+    overlay.style.display = 'none';
+  }
 }
 
 export async function submitDockerNetworkCreate() {
@@ -3653,6 +3684,7 @@ export async function openHostIpConfigModal() {
       btn.classList.toggle('active', btn.dataset.netmask === (data.netmask || '255.255.255.0'));
     });
 
+    overlay.classList.add('open');
     overlay.style.display = 'flex';
   } catch (err) {
     showToast(`Failed to load host network config: ${err.message || err}`, 'error');
@@ -3661,7 +3693,10 @@ export async function openHostIpConfigModal() {
 
 export function closeHostIpConfigModal() {
   const overlay = document.getElementById('network-host-config-overlay');
-  if (overlay) overlay.style.display = 'none';
+  if (overlay) {
+    overlay.classList.remove('open');
+    overlay.style.display = 'none';
+  }
 }
 
 export async function applyHostIpConfig() {
@@ -3740,6 +3775,7 @@ export function openCanaryModal(canaryData) {
   if (targetUrlEl) targetUrlEl.textContent = targetUrl;
   if (openLink) openLink.href = targetUrl;
 
+  overlay.classList.add('open');
   overlay.style.display = 'flex';
 
   if (_canaryInterval) {
@@ -3775,7 +3811,10 @@ export function closeCanaryModal() {
     _canaryInterval = null;
   }
   const overlay = document.getElementById('network-canary-overlay');
-  if (overlay) overlay.style.display = 'none';
+  if (overlay) {
+    overlay.classList.remove('open');
+    overlay.style.display = 'none';
+  }
   _currentCanaryId = null;
 }
 
@@ -3869,6 +3908,7 @@ export async function openBondConfigModal(bondName) {
       }
     }
 
+    overlay.classList.add('open');
     overlay.style.display = 'flex';
   } catch (err) {
     showToast(`Failed to load bond configuration: ${err.message || err}`, 'error');
@@ -3877,7 +3917,10 @@ export async function openBondConfigModal(bondName) {
 
 export function closeBondConfigModal() {
   const overlay = document.getElementById('network-bond-config-overlay');
-  if (overlay) overlay.style.display = 'none';
+  if (overlay) {
+    overlay.classList.remove('open');
+    overlay.style.display = 'none';
+  }
   _currentBondName = null;
 }
 
@@ -3969,6 +4012,7 @@ export async function openBridgeConfigModal(brName) {
       }
     }
 
+    overlay.classList.add('open');
     overlay.style.display = 'flex';
   } catch (err) {
     showToast(`Failed to load bridge configuration: ${err.message || err}`, 'error');
@@ -3977,7 +4021,10 @@ export async function openBridgeConfigModal(brName) {
 
 export function closeBridgeConfigModal() {
   const overlay = document.getElementById('network-bridge-config-overlay');
-  if (overlay) overlay.style.display = 'none';
+  if (overlay) {
+    overlay.classList.remove('open');
+    overlay.style.display = 'none';
+  }
   _currentBridgeName = null;
 }
 
@@ -4030,6 +4077,9 @@ export async function openCreateVlanModal() {
   if (idInput) idInput.value = '';
   if (aliasInput) aliasInput.value = '';
 
+  overlay.classList.add('open');
+  overlay.style.display = 'flex';
+
   try {
     const topo = await api.get('/api/system/network-topology');
     if (parentSelect && topo) {
@@ -4042,7 +4092,6 @@ export async function openCreateVlanModal() {
         .map((item) => `<option value="${escapeHtml(item.name)}">${escapeHtml(item.name)} (${escapeHtml(item.type)})</option>`)
         .join('');
     }
-    overlay.style.display = 'flex';
   } catch (err) {
     showToast(`Failed to open VLAN creator: ${err.message || err}`, 'error');
   }
@@ -4050,7 +4099,10 @@ export async function openCreateVlanModal() {
 
 export function closeCreateVlanModal() {
   const overlay = document.getElementById('network-vlan-create-overlay');
-  if (overlay) overlay.style.display = 'none';
+  if (overlay) {
+    overlay.classList.remove('open');
+    overlay.style.display = 'none';
+  }
 }
 
 export async function submitCreateVlan() {

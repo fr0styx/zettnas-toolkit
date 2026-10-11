@@ -1181,19 +1181,8 @@ def get_vlans() -> List[Dict[str, Any]]:
                 if "DEVTYPE=vlan" in uevent:
                     is_vlan = True
 
-                # 3. Match from lower_* symlink (e.g. lower_eth0 -> ../eth0)
-                if not parent:
-                    try:
-                        for entry in os.listdir(iface_dir):
-                            if entry.startswith("lower_"):
-                                parent = entry[6:]
-                                is_vlan = True
-                                break
-                    except OSError:
-                        pass
-
-                # 4. Match dot notation naming (e.g. eth0.10, br0.20)
-                if "." in iface and not is_vlan:
+                # 3. Match dot notation naming (e.g. eth0.10, br0.20)
+                if "." in iface:
                     p_cand, vid_cand = iface.rsplit(".", 1)
                     if vid_cand.isdigit() and 1 <= int(vid_cand) <= 4094:
                         is_vlan = True
@@ -1202,7 +1191,7 @@ def get_vlans() -> List[Dict[str, Any]]:
                         if not vlan_id:
                             vlan_id = int(vid_cand)
 
-                # 5. Check persistent config
+                # 4. Check persistent config
                 if iface in saved_vlans:
                     is_vlan = True
                     if not parent:
@@ -1210,7 +1199,17 @@ def get_vlans() -> List[Dict[str, Any]]:
                     if not vlan_id:
                         vlan_id = int(saved_vlans[iface].get("vlan_id", 0))
 
-                if is_vlan:
+                # 5. Match parent from lower_* symlink only if already confirmed as VLAN
+                if is_vlan and not parent:
+                    try:
+                        for entry in os.listdir(iface_dir):
+                            if entry.startswith("lower_"):
+                                parent = entry[6:]
+                                break
+                    except OSError:
+                        pass
+
+                if is_vlan and 1 <= vlan_id <= 4094:
                     discovered_names.add(iface)
                     operstate = _read_file(os.path.join(iface_dir, "operstate"), "unknown").lower()
                     carrier_str = _read_file(os.path.join(iface_dir, "carrier"), "0")

@@ -2730,7 +2730,14 @@ select.tz-select-input option, select.tz-select option {
 #modal-add-user,
 #modal-edit-user,
 #modal-reset-password,
-#modal-setup-2fa {
+#modal-setup-2fa,
+#network-port-config-overlay,
+#network-docker-create-overlay,
+#network-host-config-overlay,
+#network-canary-overlay,
+#network-bond-config-overlay,
+#network-bridge-config-overlay,
+#network-vlan-create-overlay {
   z-index: 10030 !important;
   background: rgba(0, 0, 0, 0.65) !important;
   backdrop-filter: blur(8px) !important;
@@ -2749,7 +2756,14 @@ select.tz-select-input option, select.tz-select option {
 #modal-add-user.open,
 #modal-edit-user.open,
 #modal-reset-password.open,
-#modal-setup-2fa.open {
+#modal-setup-2fa.open,
+#network-port-config-overlay.open,
+#network-docker-create-overlay.open,
+#network-host-config-overlay.open,
+#network-canary-overlay.open,
+#network-bond-config-overlay.open,
+#network-bridge-config-overlay.open,
+#network-vlan-create-overlay.open {
   display: flex !important;
   opacity: 1 !important;
   pointer-events: auto !important;
@@ -2768,7 +2782,14 @@ select.tz-select-input option, select.tz-select option {
 #modal-add-user:not(.open),
 #modal-edit-user:not(.open),
 #modal-reset-password:not(.open),
-#modal-setup-2fa:not(.open) {
+#modal-setup-2fa:not(.open),
+#network-port-config-overlay:not(.open),
+#network-docker-create-overlay:not(.open),
+#network-host-config-overlay:not(.open),
+#network-canary-overlay:not(.open),
+#network-bond-config-overlay:not(.open),
+#network-bridge-config-overlay:not(.open),
+#network-vlan-create-overlay:not(.open) {
   display: none !important;
   opacity: 0 !important;
   pointer-events: none !important;

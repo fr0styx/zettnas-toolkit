@@ -317,17 +317,23 @@ describe('Tier 3: Advanced Virtual Switching, Bonding & 802.1Q VLAN Tagging', ()
       const bridgeOverlay = document.getElementById('network-bridge-config-overlay');
       const vlanOverlay = document.getElementById('network-vlan-create-overlay');
 
+      bondOverlay.classList.add('open');
       bondOverlay.style.display = 'flex';
       document.getElementById('net-bond-cfg-close-btn').click();
       expect(bondOverlay.style.display).toBe('none');
+      expect(bondOverlay.classList.contains('open')).toBe(false);
 
+      bridgeOverlay.classList.add('open');
       bridgeOverlay.style.display = 'flex';
       document.getElementById('net-bridge-cfg-cancel-btn').click();
       expect(bridgeOverlay.style.display).toBe('none');
+      expect(bridgeOverlay.classList.contains('open')).toBe(false);
 
+      vlanOverlay.classList.add('open');
       vlanOverlay.style.display = 'flex';
       document.getElementById('net-vlan-create-close-btn').click();
       expect(vlanOverlay.style.display).toBe('none');
+      expect(vlanOverlay.classList.contains('open')).toBe(false);
     });
   });
 });
