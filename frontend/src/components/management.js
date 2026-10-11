@@ -265,17 +265,177 @@ let _dockerFilter = 'all';
 let _dockerSearchQuery = '';
 let _dockerUpdatesCache = null;
 
+let _dockerSortCol = null;
+let _dockerSortDir = 'asc';
+try {
+  const savedCol = localStorage.getItem('zettnas_docker_sort_col');
+  const savedDir = localStorage.getItem('zettnas_docker_sort_dir');
+  if (savedCol && ['name', 'hardware', 'cpu', 'ports', 'status'].includes(savedCol)) {
+    _dockerSortCol = savedCol;
+  }
+  if (savedDir && ['asc', 'desc'].includes(savedDir)) {
+    _dockerSortDir = savedDir;
+  }
+} catch (e) {}
+
 let _catalogList = [];
 let _catalogCat = 'all';
 let _catalogSearchQuery = '';
 let _catalogSources = [];
 
+export function setDockerSort(col, dir) {
+  _dockerSortCol = col;
+  if (dir) _dockerSortDir = dir;
+  try {
+    if (col) {
+      localStorage.setItem('zettnas_docker_sort_col', _dockerSortCol);
+      localStorage.setItem('zettnas_docker_sort_dir', _dockerSortDir);
+    } else {
+      localStorage.removeItem('zettnas_docker_sort_col');
+      localStorage.removeItem('zettnas_docker_sort_dir');
+    }
+  } catch (e) {}
+  renderDockerContainersTable();
+}
+
+export function getDockerSort() {
+  return { col: _dockerSortCol, dir: _dockerSortDir };
+}
+
+export function getContainerPortSortValue(c) {
+  if (!c) return 0;
+  if (c.primary_port && Number(c.primary_port) > 0) {
+    return Number(c.primary_port);
+  }
+  if (Array.isArray(c.ports) && c.ports.length > 0) {
+    const pubPorts = c.ports
+      .map((p) => Number(p.public_port))
+      .filter((p) => !isNaN(p) && p > 0);
+    if (pubPorts.length > 0) return Math.min(...pubPorts);
+  }
+  return 0;
+}
+
+export function getContainerStatusRank(c) {
+  if (!c) return 0;
+  const state = (c.state || '').toLowerCase();
+  if (state === 'running') return 3;
+  if (state === 'restarting') return 2;
+  if (state === 'paused') return 1;
+  return 0;
+}
+
+export function sortDockerContainers(list, col = 'name', dir = 'asc') {
+  if (!Array.isArray(list) || list.length <= 1 || !col) return list;
+
+  list.sort((a, b) => {
+    switch (col) {
+      case 'hardware': {
+        const hwA = (a.hardware_badges || []).map((x) => x.label || x.id || '').filter(Boolean).join(' ');
+        const hwB = (b.hardware_badges || []).map((x) => x.label || x.id || '').filter(Boolean).join(' ');
+        if (hwA && !hwB) return dir === 'desc' ? -1 : 1;
+        if (!hwA && hwB) return dir === 'desc' ? 1 : -1;
+        if (hwA !== hwB) {
+          const cmp = hwA.localeCompare(hwB);
+          return dir === 'desc' ? -cmp : cmp;
+        }
+        return (a.name || '').localeCompare(b.name || '');
+      }
+
+      case 'cpu': {
+        const cpuA = Number(a.cpu_pct) || 0;
+        const cpuB = Number(b.cpu_pct) || 0;
+        if (cpuA !== cpuB) {
+          return dir === 'desc' ? cpuB - cpuA : cpuA - cpuB;
+        }
+        const memA = Number(a.mem_used) || 0;
+        const memB = Number(b.mem_used) || 0;
+        if (memA !== memB) {
+          return dir === 'desc' ? memB - memA : memA - memB;
+        }
+        return (a.name || '').localeCompare(b.name || '');
+      }
+
+      case 'ports': {
+        const portA = getContainerPortSortValue(a);
+        const portB = getContainerPortSortValue(b);
+        if (portA > 0 && portB === 0) return -1;
+        if (portA === 0 && portB > 0) return 1;
+        if (portA !== portB) {
+          return dir === 'desc' ? portB - portA : portA - portB;
+        }
+        return (a.name || '').localeCompare(b.name || '');
+      }
+
+      case 'status': {
+        const rankA = getContainerStatusRank(a);
+        const rankB = getContainerStatusRank(b);
+        if (rankA !== rankB) {
+          return dir === 'desc' ? rankA - rankB : rankB - rankA;
+        }
+        const statusCmp = (a.status || '').localeCompare(b.status || '');
+        if (statusCmp !== 0) {
+          return dir === 'desc' ? -statusCmp : statusCmp;
+        }
+        return (a.name || '').localeCompare(b.name || '');
+      }
+
+      case 'name':
+      default: {
+        const nameA = (a.name || a.id || '').toLowerCase();
+        const nameB = (b.name || b.id || '').toLowerCase();
+        const cmp = nameA.localeCompare(nameB);
+        if (cmp !== 0) return dir === 'desc' ? -cmp : cmp;
+        const stackA = (a.stack || a.managed_by || '').toLowerCase();
+        const stackB = (b.stack || b.managed_by || '').toLowerCase();
+        const sCmp = stackA.localeCompare(stackB);
+        return dir === 'desc' ? -sCmp : sCmp;
+      }
+    }
+  });
+
+  return list;
+}
+
+export function updateDockerTableHeaderUI() {
+  const containerPane = document.getElementById('mgmt-pane-docker');
+  if (!containerPane) return;
+  const sortHeaders = containerPane.querySelectorAll('th.sortable-th');
+  sortHeaders.forEach((th) => {
+    const col = th.dataset.sortCol;
+    const indicator = th.querySelector('.docker-sort-indicator');
+    if (col === _dockerSortCol) {
+      th.classList.add('active-sort');
+      th.setAttribute('aria-sort', _dockerSortDir === 'asc' ? 'ascending' : 'descending');
+      if (indicator) {
+        indicator.textContent = _dockerSortDir === 'asc' ? '▲' : '▼';
+        indicator.title = _dockerSortDir === 'asc' ? 'Sorted Ascending' : 'Sorted Descending';
+      }
+    } else {
+      th.classList.remove('active-sort');
+      th.setAttribute('aria-sort', 'none');
+      if (indicator) {
+        indicator.textContent = '';
+        indicator.title = '';
+      }
+    }
+  });
+}
+
 export function _resetDockerStateForTesting() {
   stopDockerAutoRefresh();
+  const containerPane = document.getElementById('mgmt-pane-docker');
+  if (containerPane) containerPane._dockerEventsBound = false;
   _dockerContainersList = [];
   _dockerFilter = 'all';
   _dockerSearchQuery = '';
   _dockerUpdatesCache = null;
+  _dockerSortCol = null;
+  _dockerSortDir = 'asc';
+  try {
+    localStorage.removeItem('zettnas_docker_sort_col');
+    localStorage.removeItem('zettnas_docker_sort_dir');
+  } catch (e) {}
 }
 
 export function _resetCatalogStateForTesting() {
@@ -457,6 +617,35 @@ function _bindDockerEvents() {
     });
   }
 
+  // Sortable column headers
+  const sortHeaders = containerPane.querySelectorAll('th.sortable-th');
+  sortHeaders.forEach((th) => {
+    const col = th.dataset.sortCol;
+    if (!col) return;
+
+    const handleSort = () => {
+      if (_dockerSortCol === col) {
+        _dockerSortDir = _dockerSortDir === 'asc' ? 'desc' : 'asc';
+      } else {
+        _dockerSortCol = col;
+        _dockerSortDir = (col === 'cpu' || col === 'hardware') ? 'desc' : 'asc';
+      }
+      try {
+        localStorage.setItem('zettnas_docker_sort_col', _dockerSortCol);
+        localStorage.setItem('zettnas_docker_sort_dir', _dockerSortDir);
+      } catch (e) {}
+      renderDockerContainersTable();
+    };
+
+    th.addEventListener('click', handleSort);
+    th.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        handleSort();
+      }
+    });
+  });
+
   ZettEventBus.on('docker:containers-updated', () => {
     fetchAndRenderDockerContainers();
   });
@@ -564,6 +753,12 @@ export function renderDockerContainersTable() {
     }
     return true;
   });
+
+  // Sort list if sort column active
+  if (_dockerSortCol) {
+    sortDockerContainers(filtered, _dockerSortCol, _dockerSortDir);
+  }
+  updateDockerTableHeaderUI();
 
   if (filtered.length === 0) {
     tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--muted); padding:20px;">${t('mgmt.docker_no_matching', 'No containers match your search or filter.')}</td></tr>`;

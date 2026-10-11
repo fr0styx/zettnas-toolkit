@@ -3648,11 +3648,21 @@
                     <table class="copy-history-table docker-table responsive-cards">
                       <thead>
                         <tr>
-                          <th data-i18n="mgmt.tbl_name_id">Name / Stack</th>
-                          <th data-i18n="mgmt.tbl_hardware">Hardware</th>
-                          <th data-i18n="mgmt.tbl_telemetry">CPU / RAM</th>
-                          <th data-i18n="mgmt.tbl_ports">Ports & Web UI</th>
-                          <th data-i18n="mgmt.tbl_uptime">Status & Uptime</th>
+                          <th class="sortable-th" data-sort-col="name" role="columnheader" aria-sort="none" tabindex="0" title="Click to sort by Name / Stack">
+                            <span data-i18n="mgmt.tbl_name_id">Name / Stack</span><span class="docker-sort-indicator" aria-hidden="true"></span>
+                          </th>
+                          <th class="sortable-th" data-sort-col="hardware" role="columnheader" aria-sort="none" tabindex="0" title="Click to sort by Hardware">
+                            <span data-i18n="mgmt.tbl_hardware">Hardware</span><span class="docker-sort-indicator" aria-hidden="true"></span>
+                          </th>
+                          <th class="sortable-th" data-sort-col="cpu" role="columnheader" aria-sort="none" tabindex="0" title="Click to sort by CPU / RAM">
+                            <span data-i18n="mgmt.tbl_telemetry">CPU / RAM</span><span class="docker-sort-indicator" aria-hidden="true"></span>
+                          </th>
+                          <th class="sortable-th" data-sort-col="ports" role="columnheader" aria-sort="none" tabindex="0" title="Click to sort by Ports & Web UI">
+                            <span data-i18n="mgmt.tbl_ports">Ports & Web UI</span><span class="docker-sort-indicator" aria-hidden="true"></span>
+                          </th>
+                          <th class="sortable-th" data-sort-col="status" role="columnheader" aria-sort="none" tabindex="0" title="Click to sort by Status & Uptime">
+                            <span data-i18n="mgmt.tbl_uptime">Status & Uptime</span><span class="docker-sort-indicator" aria-hidden="true"></span>
+                          </th>
                           <th style="text-align:right;" data-i18n="mgmt.tbl_actions">Actions</th>
                         </tr>
                       </thead>

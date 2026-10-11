@@ -5122,6 +5122,38 @@ body.theme-yak .lcd-dot.active {
   font-size: 9.5px;
   text-transform: uppercase;
 }
+.copy-history-table th.sortable-th {
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.15s ease, background 0.15s ease;
+  white-space: nowrap;
+}
+.copy-history-table th.sortable-th:hover {
+  color: var(--text, #e2e8f0);
+  background: rgba(255, 255, 255, 0.04);
+}
+.copy-history-table th.sortable-th:focus-visible {
+  outline: 1.5px solid var(--accent-cyan, #38bdf8);
+  outline-offset: -2px;
+}
+.docker-sort-indicator {
+  display: inline-block;
+  margin-left: 5px;
+  font-size: 9px;
+  opacity: 0.35;
+  transition: opacity 0.15s ease, color 0.15s ease;
+  min-width: 8px;
+}
+.copy-history-table th.sortable-th:hover .docker-sort-indicator {
+  opacity: 0.75;
+}
+.copy-history-table th.sortable-th.active-sort {
+  color: var(--accent-cyan, #38bdf8);
+}
+.copy-history-table th.sortable-th.active-sort .docker-sort-indicator {
+  opacity: 1;
+  color: var(--accent-cyan, #38bdf8);
+}
 .copy-history-table td {
   padding: 8px 10px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
