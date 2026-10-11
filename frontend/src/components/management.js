@@ -2567,8 +2567,101 @@ export function closeUpsDrawer() {
 }
 if (typeof window !== 'undefined') window.closeUpsDrawer = closeUpsDrawer;
 
+let upsSaveDebounceTimer = null;
+let isUpsLoadingConfig = false;
+
+export function updateUpsConnCardState(mode) {
+  const connCard = document.getElementById('ups-drawer-conn-card');
+  const badge = document.getElementById('ups-conn-disabled-badge');
+  if (!connCard) return;
+  const isDirectUsb = (mode === 'usb_hid');
+  if (isDirectUsb) {
+    connCard.classList.add('disabled');
+    connCard.setAttribute('aria-disabled', 'true');
+    if (badge) badge.style.display = 'inline-flex';
+  } else {
+    connCard.classList.remove('disabled');
+    connCard.removeAttribute('aria-disabled');
+    if (badge) badge.style.display = 'none';
+  }
+  const inputs = connCard.querySelectorAll('input, button');
+  inputs.forEach(el => {
+    el.disabled = isDirectUsb;
+  });
+}
+if (typeof window !== 'undefined') window.updateUpsConnCardState = updateUpsConnCardState;
+
+export async function saveUpsConfigFromDrawer() {
+  if (isUpsLoadingConfig) return;
+  try {
+    const mode = document.querySelector('input[name="ups-mode"]:checked')?.value || 'auto';
+    const host = document.getElementById('ups-cfg-host')?.value.trim() || '127.0.0.1';
+    const port = parseInt(document.getElementById('ups-cfg-port')?.value, 10) || 3551;
+    const ups_name = document.getElementById('ups-cfg-name')?.value.trim() || 'ups';
+    const username = document.getElementById('ups-cfg-user')?.value.trim() || '';
+    const passwordRaw = document.getElementById('ups-cfg-pass')?.value || '';
+    const password = passwordRaw.startsWith('••') ? undefined : passwordRaw;
+
+    const policy = document.querySelector('input[name="ups-policy"]:checked')?.value || 'runtime_left';
+    const runtime_threshold_min = parseInt(document.getElementById('ups-slider-runtime')?.value, 10) || 5;
+    const battery_threshold_pct = parseInt(document.getElementById('ups-slider-battery')?.value, 10) || 20;
+    const shutdown_timer_sec = parseInt(document.getElementById('ups-slider-timer')?.value, 10) || 300;
+
+    const container_shutdown_timeout_sec = document.getElementById('ups-chk-docker')?.checked ? 45 : 0;
+    const poweroff_ups = Boolean(document.getElementById('ups-chk-cutpower')?.checked);
+
+    const payload = {
+      enabled: true,
+      mode,
+      host,
+      port,
+      ups_name,
+      username,
+      shutdown_policy: policy,
+      runtime_threshold_min,
+      battery_threshold_pct,
+      shutdown_timer_sec,
+      container_shutdown_timeout_sec,
+      poweroff_ups
+    };
+    if (password !== undefined) {
+      payload.password = password;
+    }
+
+    const statusEl = document.getElementById('ups-save-status');
+    if (statusEl) {
+      statusEl.textContent = 'Saving…';
+      statusEl.style.display = 'inline-flex';
+    }
+
+    await api.post('/api/ups/config', payload);
+
+    if (statusEl) {
+      statusEl.textContent = '✓ Saved';
+      statusEl.style.display = 'inline-flex';
+      setTimeout(() => {
+        if (statusEl && statusEl.textContent === '✓ Saved') {
+          statusEl.style.display = 'none';
+        }
+      }, 1500);
+    }
+    fetchAndRenderUpsTelemetry();
+  } catch (err) {
+    console.warn('Failed to auto-save UPS configuration:', err);
+    const statusEl = document.getElementById('ups-save-status');
+    if (statusEl) {
+      statusEl.textContent = '✗ Error';
+      setTimeout(() => {
+        if (statusEl) statusEl.style.display = 'none';
+      }, 3000);
+    }
+  }
+}
+if (typeof window !== 'undefined') window.saveUpsConfigFromDrawer = saveUpsConfigFromDrawer;
+
 export async function loadUpsConfigToDrawer() {
   try {
+    isUpsLoadingConfig = true;
     const cfg = await api.get('/api/ups/config');
     if (!cfg) return;
 
@@ -2578,6 +2671,9 @@ export async function loadUpsConfigToDrawer() {
     modeRadios.forEach(r => {
       r.checked = (r.value === mode);
     });
+
+    // Update connection parameters card state (gray out if Direct USB)
+    updateUpsConnCardState(mode);
 
     // Inputs
     const hostEl = document.getElementById('ups-cfg-host');
@@ -2633,6 +2729,8 @@ export async function loadUpsConfigToDrawer() {
     }
   } catch (err) {
     console.debug('Failed to load UPS config:', err);
+  } finally {
+    isUpsLoadingConfig = false;
   }
 }
 
@@ -2654,26 +2752,69 @@ export function initUpsDrawerControls() {
     closeUpsDrawer();
   });
 
-  // Slider value listeners
+  const triggerDebouncedSave = (delay = 200) => {
+    clearTimeout(upsSaveDebounceTimer);
+    upsSaveDebounceTimer = setTimeout(() => {
+      saveUpsConfigFromDrawer();
+    }, delay);
+  };
+
+  const triggerImmediateSave = () => {
+    clearTimeout(upsSaveDebounceTimer);
+    saveUpsConfigFromDrawer();
+  };
+
+  // Slider value listeners + auto-save
   const runtimeSlider = document.getElementById('ups-slider-runtime');
   const runtimeVal = document.getElementById('ups-val-runtime');
   runtimeSlider?.addEventListener('input', () => {
     if (runtimeVal) runtimeVal.textContent = `${runtimeSlider.value} min`;
+    triggerDebouncedSave(200);
+  });
+  runtimeSlider?.addEventListener('change', () => {
+    triggerImmediateSave();
   });
 
   const batterySlider = document.getElementById('ups-slider-battery');
   const batteryVal = document.getElementById('ups-val-battery');
   batterySlider?.addEventListener('input', () => {
     if (batteryVal) batteryVal.textContent = `${batterySlider.value} %`;
+    triggerDebouncedSave(200);
+  });
+  batterySlider?.addEventListener('change', () => {
+    triggerImmediateSave();
   });
 
   const timerSlider = document.getElementById('ups-slider-timer');
   const timerVal = document.getElementById('ups-val-timer');
   timerSlider?.addEventListener('input', () => {
     if (timerVal) timerVal.textContent = `${timerSlider.value} sec`;
+    triggerDebouncedSave(200);
+  });
+  timerSlider?.addEventListener('change', () => {
+    triggerImmediateSave();
   });
 
-  // Mode radio ports auto-fill
+  // Policy radio auto-save
+  const policyRadios = document.querySelectorAll('input[name="ups-policy"]');
+  policyRadios.forEach(radio => {
+    radio.addEventListener('change', () => {
+      triggerImmediateSave();
+    });
+  });
+
+  // Checkbox toggles auto-save
+  const chkDocker = document.getElementById('ups-chk-docker');
+  chkDocker?.addEventListener('change', () => {
+    triggerImmediateSave();
+  });
+
+  const chkCutpower = document.getElementById('ups-chk-cutpower');
+  chkCutpower?.addEventListener('change', () => {
+    triggerImmediateSave();
+  });
+
+  // Mode radio ports auto-fill, gray-out state, and auto-save
   const modeRadios = document.querySelectorAll('input[name="ups-mode"]');
   modeRadios.forEach(radio => {
     radio.addEventListener('change', () => {
@@ -2683,6 +2824,26 @@ export function initUpsDrawerControls() {
       } else if (radio.value === 'nut_client' && portEl && (portEl.value === '3551' || !portEl.value)) {
         portEl.value = '3493';
       }
+      updateUpsConnCardState(radio.value);
+      triggerImmediateSave();
+    });
+  });
+
+  // Connection text inputs auto-save
+  const connInputs = [
+    document.getElementById('ups-cfg-host'),
+    document.getElementById('ups-cfg-port'),
+    document.getElementById('ups-cfg-name'),
+    document.getElementById('ups-cfg-user'),
+    document.getElementById('ups-cfg-pass')
+  ];
+  connInputs.forEach(input => {
+    if (!input) return;
+    input.addEventListener('change', () => {
+      triggerImmediateSave();
+    });
+    input.addEventListener('input', () => {
+      triggerDebouncedSave(600);
     });
   });
 
@@ -2726,6 +2887,8 @@ export function initUpsDrawerControls() {
           if (hostEl && cand.host) hostEl.value = cand.host;
           if (portEl && cand.port) portEl.value = cand.port;
           if (nameEl && cand.ups_name) nameEl.value = cand.ups_name;
+          updateUpsConnCardState(targetMode);
+          triggerImmediateSave();
           showToast(`Applied ${cand.label || typeLabel} parameters!`, 'info');
         });
       });
@@ -2773,56 +2936,11 @@ export function initUpsDrawerControls() {
     }
   });
 
-  // Save Config
+  // Legacy save button handler fallback if still rendered in custom views
   const btnSave = document.getElementById('btn-save-ups-config');
   btnSave?.addEventListener('click', async () => {
-    try {
-      btnSave.disabled = true;
-      btnSave.textContent = 'Saving...';
-      const mode = document.querySelector('input[name="ups-mode"]:checked')?.value || 'auto';
-      const host = document.getElementById('ups-cfg-host')?.value.trim() || '127.0.0.1';
-      const port = parseInt(document.getElementById('ups-cfg-port')?.value, 10) || 3551;
-      const ups_name = document.getElementById('ups-cfg-name')?.value.trim() || 'ups';
-      const username = document.getElementById('ups-cfg-user')?.value.trim() || '';
-      const passwordRaw = document.getElementById('ups-cfg-pass')?.value || '';
-      const password = passwordRaw.startsWith('••') ? undefined : passwordRaw;
-
-      const policy = document.querySelector('input[name="ups-policy"]:checked')?.value || 'runtime_left';
-      const runtime_threshold_min = parseInt(document.getElementById('ups-slider-runtime')?.value, 10) || 5;
-      const battery_threshold_pct = parseInt(document.getElementById('ups-slider-battery')?.value, 10) || 20;
-      const shutdown_timer_sec = parseInt(document.getElementById('ups-slider-timer')?.value, 10) || 300;
-
-      const container_shutdown_timeout_sec = document.getElementById('ups-chk-docker')?.checked ? 45 : 0;
-      const poweroff_ups = Boolean(document.getElementById('ups-chk-cutpower')?.checked);
-
-      const payload = {
-        enabled: true,
-        mode,
-        host,
-        port,
-        ups_name,
-        username,
-        shutdown_policy: policy,
-        runtime_threshold_min,
-        battery_threshold_pct,
-        shutdown_timer_sec,
-        container_shutdown_timeout_sec,
-        poweroff_ups
-      };
-      if (password !== undefined) {
-        payload.password = password;
-      }
-
-      await api.post('/api/ups/config', payload);
-      showToast('UPS configuration & safe shutdown policies saved!', 'success');
-      closeUpsDrawer();
-      fetchAndRenderUpsTelemetry();
-    } catch (err) {
-      showToast(`Failed to save UPS configuration: ${err.message}`, 'error');
-    } finally {
-      btnSave.disabled = false;
-      btnSave.textContent = '💾 Save & Apply UPS Policy';
-    }
+    await saveUpsConfigFromDrawer();
+    closeUpsDrawer();
   });
 
   // Battery Self-Test

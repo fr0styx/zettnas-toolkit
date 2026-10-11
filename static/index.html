@@ -194,11 +194,11 @@
   })();
 </script>
 <style>html,body{color:#eaf1f8;background-color:#080c10;width:100%;height:100%;margin:0;padding:0;overflow:hidden}html.auth-required body{background:radial-gradient(circle at 50% 20%,#151d29 0%,#080c10 70%)!important}#login-overlay{z-index:999999;background:#080c10;justify-content:center;align-items:center;display:flex;position:fixed;inset:0}html.has-auth-session #login-overlay{display:none!important}html.auth-required #login-overlay{display:flex!important}html.is-desktop-locked #lock-overlay{opacity:1!important;display:flex!important}html.is-desktop-locked body{overflow:hidden!important}html.auth-required .studio-viewport-wrapper,html.auth-required .suite-navbar,html.auth-required #desktop-icons-container,html.auth-required .desktop-icons-container,html.auth-required .top-nav,html.auth-required #desktop-widgets-container,html.auth-required #os-dock-container,html.auth-required .workspace-panel,html.auth-required .smart-modal-backdrop,html.auth-required .os-window,html.auth-required .notif-center-window{display:none!important}</style>
-  <script type="module" crossorigin src="/assets/index-D_bOj9yR.js"></script>
+  <script type="module" crossorigin src="/assets/index-Di38Mh_G.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-hePW80VL.js">
-  <link rel="modulepreload" crossorigin href="/assets/dock-DFIWA2HR.js">
-  <link rel="modulepreload" crossorigin href="/assets/users-Dc5WOygp.js">
-  <link rel="stylesheet" crossorigin href="/assets/index-DpjAMiyE.css">
+  <link rel="modulepreload" crossorigin href="/assets/dock-Da0S4trQ.js">
+  <link rel="modulepreload" crossorigin href="/assets/users-ygXTlPYe.js">
+  <link rel="stylesheet" crossorigin href="/assets/index-CaKCq_22.css">
 </head>
 <body class="studio-workbench no-specular-glow">
 
@@ -1624,61 +1624,64 @@
 
     <!-- Connection Details -->
     <div class="drawer-card" id="ups-drawer-conn-card">
-      <div style="font-weight:600; font-size:13px; margin-bottom:10px;" data-i18n="mgmt.ups_conn_title">Connection Parameters</div>
-      <div style="display:grid; grid-template-columns: 2fr 1fr; gap:10px; margin-bottom:10px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <span style="font-weight:700; font-size:13px; color:#f1f5f9;" data-i18n="mgmt.ups_conn_title">Connection Parameters</span>
+        <span id="ups-conn-disabled-badge" class="suite-badge" style="font-size:10px; display:none; color:var(--muted); border-color:rgba(255,255,255,0.15);" data-i18n="mgmt.ups_conn_not_required">Not required for Direct USB</span>
+      </div>
+      <div style="display:grid; grid-template-columns: 2fr 1fr; gap:12px; margin-bottom:12px;">
         <div>
-          <label style="font-size:12px; color:var(--muted);" data-i18n="mgmt.ups_field_host">Host / IP</label>
-          <input type="text" id="ups-cfg-host" class="input-modern" placeholder="127.0.0.1" value="127.0.0.1" style="width:100%; box-sizing:border-box;">
+          <label class="drawer-field-label" data-i18n="mgmt.ups_field_host">Host / IP</label>
+          <input type="text" id="ups-cfg-host" class="input-modern" placeholder="127.0.0.1" value="127.0.0.1">
         </div>
         <div>
-          <label style="font-size:12px; color:var(--muted);" data-i18n="mgmt.ups_field_port">Port</label>
-          <input type="number" id="ups-cfg-port" class="input-modern" placeholder="3551" value="3551" style="width:100%; box-sizing:border-box;">
+          <label class="drawer-field-label" data-i18n="mgmt.ups_field_port">Port</label>
+          <input type="number" id="ups-cfg-port" class="input-modern" placeholder="3551" value="3551">
         </div>
       </div>
-      <div style="margin-bottom:10px;">
-        <label style="font-size:12px; color:var(--muted);" data-i18n="mgmt.ups_field_name">UPS Name (NUT only)</label>
-        <input type="text" id="ups-cfg-name" class="input-modern" placeholder="ups" value="ups" style="width:100%; box-sizing:border-box;">
+      <div style="margin-bottom:12px;">
+        <label class="drawer-field-label" data-i18n="mgmt.ups_field_name">UPS Name (NUT only)</label>
+        <input type="text" id="ups-cfg-name" class="input-modern" placeholder="ups" value="ups">
       </div>
-      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
         <div>
-          <label style="font-size:12px; color:var(--muted);" data-i18n="mgmt.ups_field_user">Username</label>
-          <input type="text" id="ups-cfg-user" class="input-modern" placeholder="Optional" style="width:100%; box-sizing:border-box;">
+          <label class="drawer-field-label" data-i18n="mgmt.ups_field_user">Username</label>
+          <input type="text" id="ups-cfg-user" class="input-modern" placeholder="Optional">
         </div>
         <div>
-          <label style="font-size:12px; color:var(--muted);" data-i18n="mgmt.ups_field_pass">Password</label>
-          <input type="password" id="ups-cfg-pass" class="input-modern" placeholder="••••••••" style="width:100%; box-sizing:border-box;">
+          <label class="drawer-field-label" data-i18n="mgmt.ups_field_pass">Password</label>
+          <input type="password" id="ups-cfg-pass" class="input-modern" placeholder="••••••••">
         </div>
       </div>
-      <div style="margin-top:12px; display:flex; justify-content:flex-end;">
-        <button id="btn-ups-test-conn" class="btn-pill-toggle" data-i18n="mgmt.ups_btn_test_conn">🔌 Test Connection</button>
+      <div style="margin-top:14px; display:flex; justify-content:flex-end;">
+        <button id="btn-ups-test-conn" class="btn-pill-toggle" style="padding:6px 14px; font-weight:600; display:inline-flex; align-items:center; gap:6px;" data-i18n="mgmt.ups_btn_test_conn">🔌 Test Connection</button>
       </div>
     </div>
 
     <!-- Safe Powerdown Policy -->
     <div class="drawer-card">
-      <div style="font-weight:600; font-size:13px; margin-bottom:10px;" data-i18n="mgmt.ups_policy_title">Safe Shutdown Policy</div>
-      <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:14px;">
+      <div style="font-weight:700; font-size:13px; color:#f1f5f9; margin-bottom:12px;" data-i18n="mgmt.ups_policy_title">Safe Shutdown Policy</div>
+      <div style="display:flex; flex-direction:column; gap:12px; margin-bottom:14px;">
         <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-          <input type="radio" name="ups-policy" value="runtime_left" checked>
-          <span><strong data-i18n="mgmt.ups_policy_runtime">Shutdown when Estimated Runtime drops below:</strong></span>
+          <input type="radio" name="ups-policy" value="runtime_left" checked style="accent-color:var(--ok2, #25c2a0); width:16px; height:16px; cursor:pointer;">
+          <span style="font-size:12.5px; font-weight:600; color:var(--fg, #f1f5f9);"><strong data-i18n="mgmt.ups_policy_runtime">Shutdown when Estimated Runtime drops below:</strong></span>
         </label>
         <div style="display:flex; align-items:center; gap:12px; padding-left:24px;">
           <input type="range" id="ups-slider-runtime" min="2" max="25" step="1" value="5" class="custom-slider" style="flex:1;">
           <span id="ups-val-runtime" class="slider-val-badge">5 min</span>
         </div>
 
-        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-top:6px;">
-          <input type="radio" name="ups-policy" value="battery_pct">
-          <span><strong data-i18n="mgmt.ups_policy_batt">Shutdown when Battery Charge drops below:</strong></span>
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-top:4px;">
+          <input type="radio" name="ups-policy" value="battery_pct" style="accent-color:var(--ok2, #25c2a0); width:16px; height:16px; cursor:pointer;">
+          <span style="font-size:12.5px; font-weight:600; color:var(--fg, #f1f5f9);"><strong data-i18n="mgmt.ups_policy_batt">Shutdown when Battery Charge drops below:</strong></span>
         </label>
         <div style="display:flex; align-items:center; gap:12px; padding-left:24px;">
           <input type="range" id="ups-slider-battery" min="10" max="50" step="5" value="20" class="custom-slider" style="flex:1;">
           <span id="ups-val-battery" class="slider-val-badge">20 %</span>
         </div>
 
-        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-top:6px;">
-          <input type="radio" name="ups-policy" value="timer">
-          <span><strong data-i18n="mgmt.ups_policy_timer">Shutdown after Time on Battery exceeds:</strong></span>
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-top:4px;">
+          <input type="radio" name="ups-policy" value="timer" style="accent-color:var(--ok2, #25c2a0); width:16px; height:16px; cursor:pointer;">
+          <span style="font-size:12.5px; font-weight:600; color:var(--fg, #f1f5f9);"><strong data-i18n="mgmt.ups_policy_timer">Shutdown after Time on Battery exceeds:</strong></span>
         </label>
         <div style="display:flex; align-items:center; gap:12px; padding-left:24px;">
           <input type="range" id="ups-slider-timer" min="60" max="900" step="30" value="300" class="custom-slider" style="flex:1;">
@@ -1687,21 +1690,22 @@
       </div>
 
       <!-- Failsafe Toggles -->
-      <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top:12px; display:flex; flex-direction:column; gap:8px;">
-        <label style="display:flex; align-items:center; gap:8px; font-size:12px; cursor:pointer;">
-          <input type="checkbox" id="ups-chk-docker" checked>
-          <span data-i18n="mgmt.ups_chk_docker">Gracefully terminate Docker database containers (flush WAL)</span>
-        </label>
-        <label style="display:flex; align-items:center; gap:8px; font-size:12px; cursor:pointer;">
-          <input type="checkbox" id="ups-chk-cutpower">
-          <span data-i18n="mgmt.ups_chk_cutpower">Send cut-power command to UPS on halt (load.off.delay)</span>
-        </label>
+      <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top:14px; display:flex; flex-direction:column; gap:12px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+          <label for="ups-chk-docker" style="font-size:12px; font-weight:500; color:var(--fg, #eaf1f8); cursor:pointer; flex:1;" data-i18n="mgmt.ups_chk_docker">Gracefully terminate Docker database containers (flush WAL)</label>
+          <label class="switch"><input type="checkbox" id="ups-chk-docker" checked><span class="toggle-slider"></span></label>
+        </div>
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+          <label for="ups-chk-cutpower" style="font-size:12px; font-weight:500; color:var(--fg, #eaf1f8); cursor:pointer; flex:1;" data-i18n="mgmt.ups_chk_cutpower">Send cut-power command to UPS on halt (load.off.delay)</label>
+          <label class="switch"><input type="checkbox" id="ups-chk-cutpower"><span class="toggle-slider"></span></label>
+        </div>
       </div>
     </div>
 
-    <!-- Save Button -->
-    <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:4px;">
-      <button id="btn-save-ups-config" class="btn-pill-toggle active" style="padding: 10px 20px; font-weight:600;" data-i18n="mgmt.ups_btn_save">💾 Save & Apply UPS Policy</button>
+    <!-- Auto-save notification note -->
+    <div style="display:flex; justify-content:space-between; align-items:center; padding:2px 4px 6px; margin-top:2px;">
+      <span style="font-size:11px; color:var(--muted); opacity:0.8;">⚡ All parameters and thresholds save automatically.</span>
+      <span id="ups-save-status" class="ups-save-badge" style="display:none;" data-i18n="mgmt.ups_auto_saved">✓ Saved</span>
     </div>
   </div>
 </aside>

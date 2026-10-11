@@ -2323,10 +2323,12 @@ body.theme-yak select.fan-preset-select:focus {
 .card-head-val { font-size: 14px; font-weight: 800; color: var(--ok2); }
 .card-instruction { font-size: 11px; color: var(--muted); line-height: 1.35; }
 
-.drawer-card.manual-override-disabled {
+.drawer-card.manual-override-disabled,
+.drawer-card.disabled {
   opacity: 0.38;
   pointer-events: none;
-  filter: grayscale(0.4);
+  filter: grayscale(0.5);
+  user-select: none;
 }
 
 .slider-row { display: flex; align-items: center; gap: 14px; margin-top: 4px; }
@@ -11174,6 +11176,82 @@ input[type="range"].tz-range-slider::-moz-range-thumb {
   font-weight: 600;
   color: var(--ok2, #25c2a0);
   font-variant-numeric: tabular-nums;
+}
+
+.drawer-field-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted, #8e8e93);
+  margin-bottom: 6px;
+}
+
+.input-modern {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  color: var(--fg, #eaf1f8);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 12px;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.input-modern:hover:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.22);
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.input-modern:focus {
+  border-color: var(--ok2, #25c2a0);
+  background: #0b131e;
+  box-shadow: 0 0 0 3px rgba(37, 194, 160, 0.22);
+}
+
+.input-modern::placeholder {
+  color: rgba(148, 163, 184, 0.45);
+  font-weight: 400;
+}
+
+.input-modern:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+body.theme-amber .input-modern:focus {
+  border-color: var(--accent-amber, #f59e0b);
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.25);
+}
+
+body.theme-emerald .input-modern:focus {
+  border-color: var(--accent-emerald, #10b981);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25);
+}
+
+body.theme-yak .input-modern:focus {
+  border-color: var(--accent-yak, #d48a37);
+  box-shadow: 0 0 0 3px rgba(212, 138, 55, 0.25);
+}
+
+.ups-save-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ok2, #25c2a0);
+  background: rgba(37, 194, 160, 0.12);
+  border: 1px solid rgba(37, 194, 160, 0.3);
+  padding: 2px 8px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: opacity 0.3s ease;
 }
 
 @media (max-width: 768px) {

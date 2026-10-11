@@ -7,6 +7,8 @@ import {
   closeUpsDrawer,
   loadUpsConfigToDrawer,
   initUpsDrawerControls,
+  updateUpsConnCardState,
+  saveUpsConfigFromDrawer,
 } from '../components/management.js';
 import { api } from '../api.js';
 
@@ -71,13 +73,15 @@ describe('UPS Power Flow Digital Twin & Drawer Controls', () => {
         <input type="radio" name="ups-mode" value="nut_client">
         <input type="radio" name="ups-mode" value="usb_hid">
 
-        <input type="text" id="ups-cfg-host" value="127.0.0.1">
-        <input type="number" id="ups-cfg-port" value="3551">
-        <input type="text" id="ups-cfg-name" value="ups">
-        <input type="text" id="ups-cfg-user" value="">
-        <input type="password" id="ups-cfg-pass" value="">
-
-        <button id="btn-ups-test-conn">Test Connection</button>
+        <div class="drawer-card" id="ups-drawer-conn-card">
+          <span id="ups-conn-disabled-badge" style="display:none;"></span>
+          <input type="text" id="ups-cfg-host" value="127.0.0.1">
+          <input type="number" id="ups-cfg-port" value="3551">
+          <input type="text" id="ups-cfg-name" value="ups">
+          <input type="text" id="ups-cfg-user" value="">
+          <input type="password" id="ups-cfg-pass" value="">
+          <button id="btn-ups-test-conn">Test Connection</button>
+        </div>
 
         <input type="radio" name="ups-policy" value="runtime_left" checked>
         <input type="radio" name="ups-policy" value="battery_pct">
@@ -95,7 +99,7 @@ describe('UPS Power Flow Digital Twin & Drawer Controls', () => {
         <input type="checkbox" id="ups-chk-docker" checked>
         <input type="checkbox" id="ups-chk-cutpower">
 
-        <button id="btn-save-ups-config">Save & Apply</button>
+        <span id="ups-save-status" style="display:none;"></span>
       </aside>
     `;
     vi.restoreAllMocks();
@@ -268,5 +272,90 @@ describe('UPS Power Flow Digital Twin & Drawer Controls', () => {
     expect(document.getElementById('ups-slider-battery').value).toBe('25');
     expect(document.getElementById('ups-val-battery').textContent).toBe('25 %');
     expect(document.getElementById('ups-chk-cutpower').checked).toBe(true);
+    expect(document.getElementById('ups-drawer-conn-card').classList.contains('disabled')).toBe(false);
+  });
+
+  it('automatically grays out connection parameters card when Direct USB mode is selected', () => {
+    updateUpsConnCardState('usb_hid');
+    const connCard = document.getElementById('ups-drawer-conn-card');
+    const badge = document.getElementById('ups-conn-disabled-badge');
+    expect(connCard.classList.contains('disabled')).toBe(true);
+    expect(connCard.getAttribute('aria-disabled')).toBe('true');
+    expect(badge.style.display).toBe('inline-flex');
+
+    const inputs = connCard.querySelectorAll('input, button');
+    inputs.forEach(el => {
+      expect(el.disabled).toBe(true);
+    });
+
+    // Re-enabling when switching to APCUPSD
+    updateUpsConnCardState('apcupsd_client');
+    expect(connCard.classList.contains('disabled')).toBe(false);
+    expect(connCard.hasAttribute('aria-disabled')).toBe(false);
+    expect(badge.style.display).toBe('none');
+    inputs.forEach(el => {
+      expect(el.disabled).toBe(false);
+    });
+  });
+
+  it('automatically grays out connection parameters card when loading usb_hid config', async () => {
+    vi.spyOn(api, 'get').mockResolvedValue({
+      enabled: true,
+      mode: 'usb_hid',
+      shutdown_policy: 'runtime_left',
+      runtime_threshold_min: 6,
+    });
+
+    await loadUpsConfigToDrawer();
+
+    const usbRadio = document.querySelector('input[name="ups-mode"][value="usb_hid"]');
+    expect(usbRadio.checked).toBe(true);
+    const connCard = document.getElementById('ups-drawer-conn-card');
+    expect(connCard.classList.contains('disabled')).toBe(true);
+    expect(document.getElementById('ups-cfg-host').disabled).toBe(true);
+  });
+
+  it('automatically saves configuration when sliders, policy, or toggles change without needing a save button', async () => {
+    vi.spyOn(api, 'get').mockResolvedValue({});
+    const postSpy = vi.spyOn(api, 'post').mockResolvedValue({ success: true });
+    initUpsDrawerControls();
+
+    // 1. Moving slider
+    const runtimeSlider = document.getElementById('ups-slider-runtime');
+    runtimeSlider.value = '12';
+    runtimeSlider.dispatchEvent(new Event('change'));
+
+    expect(postSpy).toHaveBeenCalledWith('/api/ups/config', expect.objectContaining({
+      runtime_threshold_min: 12,
+    }));
+
+    // 2. Changing policy radio
+    const battPolicyRadio = document.querySelector('input[name="ups-policy"][value="battery_pct"]');
+    battPolicyRadio.checked = true;
+    battPolicyRadio.dispatchEvent(new Event('change'));
+
+    expect(postSpy).toHaveBeenCalledWith('/api/ups/config', expect.objectContaining({
+      shutdown_policy: 'battery_pct',
+    }));
+
+    // 3. Changing cut-power toggle
+    const chkCutpower = document.getElementById('ups-chk-cutpower');
+    chkCutpower.checked = true;
+    chkCutpower.dispatchEvent(new Event('change'));
+
+    expect(postSpy).toHaveBeenCalledWith('/api/ups/config', expect.objectContaining({
+      poweroff_ups: true,
+    }));
+
+    // 4. Changing mode to usb_hid
+    const usbRadio = document.querySelector('input[name="ups-mode"][value="usb_hid"]');
+    usbRadio.checked = true;
+    usbRadio.dispatchEvent(new Event('change'));
+
+    expect(postSpy).toHaveBeenCalledWith('/api/ups/config', expect.objectContaining({
+      mode: 'usb_hid',
+    }));
+    const connCard = document.getElementById('ups-drawer-conn-card');
+    expect(connCard.classList.contains('disabled')).toBe(true);
   });
 });
