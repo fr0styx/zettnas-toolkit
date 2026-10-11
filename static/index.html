@@ -194,11 +194,11 @@
   })();
 </script>
 <style>html,body{color:#eaf1f8;background-color:#080c10;width:100%;height:100%;margin:0;padding:0;overflow:hidden}html.auth-required body{background:radial-gradient(circle at 50% 20%,#151d29 0%,#080c10 70%)!important}#login-overlay{z-index:999999;background:#080c10;justify-content:center;align-items:center;display:flex;position:fixed;inset:0}html.has-auth-session #login-overlay{display:none!important}html.auth-required #login-overlay{display:flex!important}html.is-desktop-locked #lock-overlay{opacity:1!important;display:flex!important}html.is-desktop-locked body{overflow:hidden!important}html.auth-required .studio-viewport-wrapper,html.auth-required .suite-navbar,html.auth-required #desktop-icons-container,html.auth-required .desktop-icons-container,html.auth-required .top-nav,html.auth-required #desktop-widgets-container,html.auth-required #os-dock-container,html.auth-required .workspace-panel,html.auth-required .smart-modal-backdrop,html.auth-required .os-window,html.auth-required .notif-center-window{display:none!important}</style>
-  <script type="module" crossorigin src="/assets/index-BG6mD6RY.js"></script>
+  <script type="module" crossorigin src="/assets/index-VT4N4vXL.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-hePW80VL.js">
-  <link rel="modulepreload" crossorigin href="/assets/dock-BE2WHj8C.js">
-  <link rel="modulepreload" crossorigin href="/assets/users-qOpNM0Sy.js">
-  <link rel="stylesheet" crossorigin href="/assets/index-DpCyGA8Q.css">
+  <link rel="modulepreload" crossorigin href="/assets/dock-BQpGYy9C.js">
+  <link rel="modulepreload" crossorigin href="/assets/users-CKzszDRU.js">
+  <link rel="stylesheet" crossorigin href="/assets/index-wN3zhJKo.css">
 </head>
 <body class="studio-workbench no-specular-glow">
 
@@ -1066,6 +1066,169 @@
       <div style="display: flex; gap: 12px; width: 100%; justify-content: center; margin-top: 6px;">
         <button id="net-canary-revert-btn" type="button" class="btn-pill-toggle" style="flex: 1; padding: 9px 14px; font-size: 12px; font-weight: 700; color: #f87171; border-color: rgba(248, 113, 113, 0.4); background: rgba(248, 113, 113, 0.1);" data-i18n="net.canary_revert_btn">Revert Changes Now</button>
         <button id="net-canary-confirm-btn" type="button" class="btn-pill-toggle active" style="flex: 1.2; padding: 9px 14px; font-size: 12px; font-weight: 700; background: var(--ok2, #25c2a0); border-color: transparent; color: #000;" data-i18n="net.canary_confirm_btn">Confirm & Keep Settings</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bonding Mode & Link Aggregation Configuration Modal -->
+<div id="network-bond-config-overlay" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="net-bond-cfg-title" style="display: none;">
+  <div class="smart-modal-window" style="max-width: 520px; width: 92%; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 35px rgba(56, 189, 248, 0.18); border: 1px solid rgba(255, 255, 255, 0.14);">
+    <div class="smart-modal-header" style="cursor: default;">
+      <span class="smart-modal-title" id="net-bond-cfg-title" style="display: flex; align-items: center; gap: 8px;">
+        <svg class="ic" style="width: 16px; height: 16px; color: var(--accent-cyan, #38bdf8); fill: currentColor;"><use href="#i-net"/></svg>
+        <span data-i18n="net.bond_cfg_title">Bonding & Link Aggregation</span>
+        <span class="switch-speed-pill speed-10g" id="net-bond-target-badge" style="margin-left: 6px;">bond0</span>
+      </span>
+      <div class="os-window-controls">
+        <button class="win-btn close-btn" id="net-bond-cfg-close-btn" title="Close" aria-label="Close"></button>
+      </div>
+    </div>
+    <div class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
+      <!-- Bonding Mode Selection -->
+      <div>
+        <label for="net-bond-mode-select" style="display: block; font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;" data-i18n="net.bond_mode_label">Bonding Mode (Aggregation Policy)</label>
+        <select id="net-bond-mode-select" class="tz-select-input" style="width: 100%; box-sizing: border-box;">
+          <option value="1">Mode 1: Active-Backup (Failover / Redundancy - Recommended for Unmanaged Switches)</option>
+          <option value="4">Mode 4: IEEE 802.3ad LACP (Dynamic Link Aggregation - Requires LACP Switch)</option>
+          <option value="6">Mode 6: Balance-ALB (Adaptive Load Balancing - No Switch Config)</option>
+          <option value="0">Mode 0: Balance-RR (Round-Robin Packet Distribution)</option>
+          <option value="2">Mode 2: Balance-XOR (Transmit Hash Policy)</option>
+        </select>
+        <div id="net-bond-mode-desc" style="font-size: 11px; color: var(--muted); margin-top: 5px; line-height: 1.45;">
+          Only one slave in the bond is active. A different slave becomes active if and only if the active slave fails.
+        </div>
+      </div>
+
+      <!-- Enslaved Member Interfaces -->
+      <div>
+        <label style="display: block; font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;" data-i18n="net.bond_slaves_label">Enslaved Physical Interfaces</label>
+        <div id="net-bond-slaves-container" class="network-member-checkbox-list" style="display: flex; flex-direction: column; gap: 6px; max-height: 150px; overflow-y: auto; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 10px;">
+          <!-- Dynamically populated with physical NIC checkboxes: eth0, eth1, etc. -->
+        </div>
+        <div style="font-size: 10.5px; color: var(--muted); margin-top: 4px;" data-i18n="net.bond_slaves_hint">Select the physical Ethernet jacks participating in this bonding group.</div>
+      </div>
+
+      <!-- MII Monitoring Interval -->
+      <div>
+        <label for="net-bond-miimon-input" style="display: block; font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;" data-i18n="net.bond_miimon_label">MII Link Monitoring Interval (ms)</label>
+        <input type="number" id="net-bond-miimon-input" class="tz-text-input" min="10" max="1000" step="10" value="100" style="width: 100%; box-sizing: border-box; font-family: var(--font-mono, monospace);" />
+        <div style="font-size: 11px; color: var(--muted); margin-top: 3px;" data-i18n="net.bond_miimon_hint">Frequency in milliseconds to inspect carrier link health (default: 100ms).</div>
+      </div>
+
+      <!-- Warning Callout -->
+      <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 6px; padding: 10px 12px; display: flex; gap: 10px; align-items: flex-start;">
+        <span style="font-size: 16px; line-height: 1;">⚠️</span>
+        <div style="font-size: 11px; color: #fcd34d; line-height: 1.45;" data-i18n="net.bond_reboot_notice">
+          <strong>Kernel Driver Note:</strong> Bonding configuration is persisted to system boot configuration. Rebinding physical drivers on active management interfaces takes full effect upon network reload or system reboot.
+        </div>
+      </div>
+
+      <!-- Footer Buttons -->
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.08);">
+        <button id="net-bond-cfg-cancel-btn" type="button" class="btn-pill-toggle" data-i18n="net.cancel">Cancel</button>
+        <button id="net-bond-cfg-save-btn" type="button" class="btn-pill-toggle active" style="background: var(--accent-cyan, #0ea5e9); border-color: transparent; color: #fff; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+          <span data-i18n="net.save_bond_btn">Save Bonding Config</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Virtual Bridge Configuration Modal -->
+<div id="network-bridge-config-overlay" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="net-bridge-cfg-title" style="display: none;">
+  <div class="smart-modal-window" style="max-width: 500px; width: 92%; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 35px rgba(56, 189, 248, 0.18); border: 1px solid rgba(255, 255, 255, 0.14);">
+    <div class="smart-modal-header" style="cursor: default;">
+      <span class="smart-modal-title" id="net-bridge-cfg-title" style="display: flex; align-items: center; gap: 8px;">
+        <svg class="ic" style="width: 16px; height: 16px; color: var(--accent-cyan, #38bdf8); fill: currentColor;"><use href="#i-net"/></svg>
+        <span data-i18n="net.bridge_cfg_title">Virtual Bridge Tuning</span>
+        <span class="switch-speed-pill speed-10g" id="net-bridge-target-badge" style="margin-left: 6px;">br0</span>
+      </span>
+      <div class="os-window-controls">
+        <button class="win-btn close-btn" id="net-bridge-cfg-close-btn" title="Close" aria-label="Close"></button>
+      </div>
+    </div>
+    <div class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
+      <!-- Spanning Tree Protocol (STP) Switch -->
+      <div>
+        <label style="display: block; font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;" data-i18n="net.bridge_stp_label">Spanning Tree Protocol (STP)</label>
+        <div style="display: flex; gap: 8px;">
+          <button type="button" class="btn-pill-toggle net-stp-toggle-btn active" data-stp="true" id="net-stp-btn-enable" style="flex: 1; padding: 7px 12px; font-size: 12px; font-weight: 600;" data-i18n="net.stp_enabled">Enabled (Loop Protection)</button>
+          <button type="button" class="btn-pill-toggle net-stp-toggle-btn" data-stp="false" id="net-stp-btn-disable" style="flex: 1; padding: 7px 12px; font-size: 12px; font-weight: 600;" data-i18n="net.stp_disabled">Disabled (Faster Link)</button>
+        </div>
+        <div style="font-size: 11px; color: var(--muted); margin-top: 5px; line-height: 1.45;" data-i18n="net.stp_hint">
+          Prevents Ethernet bridge loops and broadcast storms when bridging multiple interfaces connected to switches.
+        </div>
+      </div>
+
+      <!-- Forward Delay -->
+      <div>
+        <label for="net-bridge-fd-input" style="display: block; font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;" data-i18n="net.bridge_fd_label">Forward Delay (Seconds)</label>
+        <input type="number" id="net-bridge-fd-input" class="tz-text-input" min="0" max="30" step="1" value="0" style="width: 100%; box-sizing: border-box; font-family: var(--font-mono, monospace);" />
+        <div style="font-size: 11px; color: var(--muted); margin-top: 3px;" data-i18n="net.bridge_fd_hint">Time spent in listening and learning states before forwarding (0s recommended when STP is disabled, 15s standard for STP).</div>
+      </div>
+
+      <!-- Bridge Member Interfaces -->
+      <div>
+        <label style="display: block; font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;" data-i18n="net.bridge_members_label">Bridge Member Interfaces</label>
+        <div id="net-bridge-members-container" class="network-member-checkbox-list" style="display: flex; flex-direction: column; gap: 6px; max-height: 140px; overflow-y: auto; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 10px;">
+          <!-- Dynamically populated with bond0, eth0, etc. -->
+        </div>
+        <div style="font-size: 10.5px; color: var(--muted); margin-top: 4px;" data-i18n="net.bridge_members_hint">Select interfaces bound directly to this bridge.</div>
+      </div>
+
+      <!-- Footer Buttons -->
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.08);">
+        <button id="net-bridge-cfg-cancel-btn" type="button" class="btn-pill-toggle" data-i18n="net.cancel">Cancel</button>
+        <button id="net-bridge-cfg-save-btn" type="button" class="btn-pill-toggle active" style="background: var(--accent-cyan, #0ea5e9); border-color: transparent; color: #fff; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+          <span data-i18n="net.save_bridge_btn">Save Bridge Config</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 802.1Q VLAN Sub-Interface Creation Modal -->
+<div id="network-vlan-create-overlay" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="net-vlan-create-title" style="display: none;">
+  <div class="smart-modal-window" style="max-width: 480px; width: 92%; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 35px rgba(56, 189, 248, 0.18); border: 1px solid rgba(255, 255, 255, 0.14);">
+    <div class="smart-modal-header" style="cursor: default;">
+      <span class="smart-modal-title" id="net-vlan-create-title" style="display: flex; align-items: center; gap: 8px;">
+        <svg class="ic" style="width: 16px; height: 16px; color: var(--accent-cyan, #38bdf8); fill: currentColor;"><use href="#i-net"/></svg>
+        <span data-i18n="net.create_vlan_title">Create 802.1Q VLAN Sub-Interface</span>
+      </span>
+      <div class="os-window-controls">
+        <button class="win-btn close-btn" id="net-vlan-create-close-btn" title="Close" aria-label="Close"></button>
+      </div>
+    </div>
+    <div class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
+      <!-- Parent Interface Selector -->
+      <div>
+        <label for="net-vlan-parent-select" style="display: block; font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;" data-i18n="net.vlan_parent_label">Parent Trunk Interface</label>
+        <select id="net-vlan-parent-select" class="tz-select-input" style="width: 100%; box-sizing: border-box; font-family: var(--font-mono, monospace);">
+          <!-- Populated dynamically with physical NICs, bonds, and bridges -->
+        </select>
+        <div style="font-size: 11px; color: var(--muted); margin-top: 3px;" data-i18n="net.vlan_parent_hint">The physical interface, bond, or bridge carrying 802.1Q tagged frames.</div>
+      </div>
+
+      <!-- VLAN Tag ID -->
+      <div>
+        <label for="net-vlan-id-input" style="display: block; font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;" data-i18n="net.vlan_id_label">802.1Q VLAN Tag ID (1 - 4094)</label>
+        <input type="number" id="net-vlan-id-input" class="tz-text-input" min="1" max="4094" placeholder="e.g. 10" style="width: 100%; box-sizing: border-box; font-family: var(--font-mono, monospace);" />
+        <div style="font-size: 11px; color: var(--muted); margin-top: 3px;" data-i18n="net.vlan_id_hint">Sub-interface will be named &lt;parent&gt;.&lt;vlan_id&gt; (e.g. eth0.10 or br0.20).</div>
+      </div>
+
+      <!-- Friendly Role / Alias -->
+      <div>
+        <label for="net-vlan-alias-input" style="display: block; font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;" data-i18n="net.vlan_alias_label">Friendly Alias / Role (Optional)</label>
+        <input type="text" id="net-vlan-alias-input" class="tz-text-input" placeholder="e.g. IoT Network, Guest Wi-Fi, Storage DMZ" maxlength="48" style="width: 100%; box-sizing: border-box;" autocomplete="off" />
+      </div>
+
+      <!-- Footer Buttons -->
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.08);">
+        <button id="net-vlan-create-cancel-btn" type="button" class="btn-pill-toggle" data-i18n="net.cancel">Cancel</button>
+        <button id="net-vlan-create-submit-btn" type="button" class="btn-pill-toggle active" style="background: var(--accent-cyan, #0ea5e9); border-color: transparent; color: #fff; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+          <span data-i18n="net.create_vlan_btn">+ Create VLAN Sub-Interface</span>
+        </button>
       </div>
     </div>
   </div>
@@ -3355,6 +3518,31 @@
                 </div>
                 <div class="network-grid-two-col" id="network-bridges-container">
                   <!-- Populated dynamically with bridge cards and bond cards -->
+                </div>
+
+                <!-- 802.1Q VLAN Sub-Interfaces -->
+                <div class="network-section-header" style="margin-top: 24px; display: flex; justify-content: space-between; align-items: center;">
+                  <span class="network-section-title">VLAN SUB-INTERFACES (802.1Q TAGGING)</span>
+                  <button class="btn-pill-toggle" id="btn-open-create-vlan-modal" style="font-size: 11px; padding: 3px 10px; color: var(--accent-cyan, #38bdf8); border-color: rgba(56, 189, 248, 0.4);" data-i18n="net.create_vlan_btn">+ Add VLAN</button>
+                </div>
+                <div class="network-table-wrap" id="network-vlan-table-wrap">
+                  <table class="copy-history-table">
+                    <thead>
+                      <tr>
+                        <th>VLAN Interface</th>
+                        <th>Parent Interface</th>
+                        <th>VLAN Tag ID</th>
+                        <th>Alias / Role</th>
+                        <th>Status</th>
+                        <th>IP Address</th>
+                        <th>Cumulative Rx / Tx</th>
+                        <th style="text-align: right;">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody id="network-vlan-tbody">
+                      <tr><td colspan="8" style="text-align:center; color:var(--muted); padding:16px;">Loading VLAN sub-interfaces...</td></tr>
+                    </tbody>
+                  </table>
                 </div>
 
                 <!-- Docker Bridge Routing & Container Allocations -->

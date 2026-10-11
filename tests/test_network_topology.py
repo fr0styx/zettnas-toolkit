@@ -11,14 +11,21 @@ from backend.hardware.network import (
     apply_host_ip_config_canary,
     confirm_host_ip_config,
     create_docker_network,
+    create_vlan,
     delete_docker_network,
+    delete_vlan,
+    get_bond_config,
+    get_bridge_config,
     get_canary_watchdog,
     get_host_ip_config,
     get_network_topology,
     get_port_config,
+    get_vlans,
     load_network_config,
     revert_host_ip_config,
     save_network_config,
+    update_bond_config,
+    update_bridge_config,
     update_port_config,
 )
 
@@ -518,3 +525,194 @@ def test_host_ip_api_endpoints(client, token):
         r4 = client.post("/api/network/host/revert", json={"canary_id": "c123"}, headers=headers)
         assert r4.status_code == 200
         assert r4.json()["status"] == "reverted"
+
+
+def test_get_and_update_bond_config(tmp_path):
+    sys_net = tmp_path / "sys_net"
+    sys_net.mkdir()
+    bond0 = sys_net / "bond0"
+    bond0.mkdir()
+    bonding = bond0 / "bonding"
+    bonding.mkdir()
+    (bonding / "mode").write_text("active-backup 1\n")
+    (bonding / "slaves").write_text("eth0 eth1\n")
+    (bonding / "active_slave").write_text("eth0\n")
+    (bonding / "miimon").write_text("100\n")
+
+    unraid_cfg = tmp_path / "network.cfg"
+    unraid_cfg.write_text('BONDING_MODE[0]="1"\nBONDNICS[0]="eth0 eth1"\nBONDING_MIIMON[0]="100"\n')
+
+    cfg_file = tmp_path / "network_config.json"
+
+    with (
+        patch("backend.hardware.network._find_sys_net_dir", return_value=str(sys_net)),
+        patch("backend.hardware.network.NETWORK_CONFIG_FILE", str(cfg_file)),
+        patch(
+            "backend.hardware.network.get_network_topology",
+            return_value={"physical_interfaces": [{"name": "eth0"}, {"name": "eth1"}]},
+        ),
+        patch("os.path.isfile", side_effect=lambda p: str(p) == str(unraid_cfg) or os.path.exists(p)),
+        patch(
+            "backend.hardware.network._parse_unraid_network_cfg",
+            return_value={"BONDING_MODE[0]": "1", "BONDNICS[0]": "eth0 eth1", "BONDING_MIIMON[0]": "100"},
+        ),
+        patch("backend.hardware.network._write_unraid_network_cfg", return_value=True),
+    ):
+        # 1. Get bond config
+        cfg = get_bond_config("bond0")
+        assert cfg["status"] == "ok"
+        assert cfg["mode"] == "1"
+        assert cfg["mode_name"] == "active-backup"
+        assert "eth0" in cfg["slaves"]
+        assert len(cfg["available_modes"]) >= 5
+
+        # 2. Update bond config to 802.3ad LACP
+        up_res = update_bond_config("bond0", {"mode": "4", "slaves": ["eth0", "eth1"], "miimon": 100})
+        assert up_res["status"] == "ok"
+        assert up_res["mode"] == "4"
+
+        # 3. Invalid mode validation
+        err_res = update_bond_config("bond0", {"mode": "invalid_mode", "slaves": ["eth0"]})
+        assert err_res["status"] == "error"
+
+        # 4. Empty slaves validation
+        err_res2 = update_bond_config("bond0", {"mode": "1", "slaves": []})
+        assert err_res2["status"] == "error"
+
+
+def test_get_and_update_bridge_config(tmp_path):
+    sys_net = tmp_path / "sys_net"
+    sys_net.mkdir()
+    br0 = sys_net / "br0"
+    br0.mkdir()
+    bridge_dir = br0 / "bridge"
+    bridge_dir.mkdir()
+    (bridge_dir / "stp_state").write_text("0\n")
+    (bridge_dir / "forward_delay").write_text("0\n")
+    brif = br0 / "brif"
+    brif.mkdir()
+    (brif / "bond0").touch()
+
+    cfg_file = tmp_path / "network_config.json"
+
+    with (
+        patch("backend.hardware.network._find_sys_net_dir", return_value=str(sys_net)),
+        patch("backend.hardware.network.NETWORK_CONFIG_FILE", str(cfg_file)),
+        patch(
+            "backend.hardware.network.get_network_topology",
+            return_value={"physical_interfaces": [{"name": "eth0"}], "bonds": [{"name": "bond0"}]},
+        ),
+        patch("backend.hardware.network._write_unraid_network_cfg", return_value=True),
+    ):
+        # 1. Get bridge config
+        cfg = get_bridge_config("br0")
+        assert cfg["status"] == "ok"
+        assert cfg["stp"] is False
+        assert cfg["forward_delay"] == 0
+        assert "bond0" in cfg["members"]
+
+        # 2. Update bridge config with STP enabled and 15s forward delay
+        up_res = update_bridge_config("br0", {"stp": True, "forward_delay": 15, "members": ["bond0"]})
+        assert up_res["status"] == "ok"
+        assert up_res["stp"] is True
+        assert up_res["forward_delay"] == 15
+
+        # 3. Invalid forward delay clamped
+        up_res2 = update_bridge_config("br0", {"stp": False, "forward_delay": 999, "members": ["bond0"]})
+        assert up_res2["forward_delay"] == 0
+
+
+def test_vlan_lifecycle(tmp_path):
+    cfg_file = tmp_path / "network_config.json"
+
+    with (
+        patch("backend.hardware.network.NETWORK_CONFIG_FILE", str(cfg_file)),
+        patch("subprocess.run", return_value=MagicMock(returncode=0, stdout="", stderr="")),
+        patch("os.path.exists", return_value=False),
+    ):
+        # 1. Create VLAN eth0.10
+        create_res = create_vlan("eth0", 10, "IoT Network")
+        assert create_res["status"] == "ok"
+        assert create_res["name"] == "eth0.10"
+        assert create_res["vlan_id"] == 10
+
+        # 2. List VLANs
+        vlans = get_vlans()
+        assert len(vlans) >= 1
+        v = next((x for x in vlans if x["name"] == "eth0.10"), None)
+        assert v is not None
+        assert v["alias"] == "IoT Network"
+
+        # 3. Invalid VLAN ID
+        err1 = create_vlan("eth0", 9999)
+        assert err1["status"] == "error"
+
+        # 4. Invalid parent
+        err2 = create_vlan("", 10)
+        assert err2["status"] == "error"
+
+        # 5. Delete VLAN
+        del_res = delete_vlan("eth0.10")
+        assert del_res["status"] == "ok"
+        vlans_after = get_vlans()
+        assert not any(x["name"] == "eth0.10" for x in vlans_after)
+
+
+def test_tier3_api_endpoints(client, token):
+    headers = {"Authorization": f"Bearer {token}"}
+
+    mock_bond = {"status": "ok", "bond_name": "bond0", "mode": "1", "slaves": ["eth0", "eth1"]}
+    mock_bridge = {"status": "ok", "bridge_name": "br0", "stp": False, "members": ["bond0"]}
+    mock_vlans = [{"name": "eth0.10", "parent": "eth0", "vlan_id": 10}]
+
+    with (
+        patch("backend.api.network.get_bond_config", return_value=mock_bond),
+        patch(
+            "backend.api.network.update_bond_config", return_value={"status": "ok", "bond_name": "bond0", "mode": "4"}
+        ),
+        patch("backend.api.network.get_bridge_config", return_value=mock_bridge),
+        patch(
+            "backend.api.network.update_bridge_config", return_value={"status": "ok", "bridge_name": "br0", "stp": True}
+        ),
+        patch("backend.api.network.get_vlans", return_value=mock_vlans),
+        patch("backend.api.network.create_vlan", return_value={"status": "ok", "name": "eth0.20", "vlan_id": 20}),
+        patch("backend.api.network.delete_vlan", return_value={"status": "ok", "message": "deleted"}),
+    ):
+        # 1. GET /api/network/bond/bond0
+        r_b1 = client.get("/api/network/bond/bond0", headers=headers)
+        assert r_b1.status_code == 200
+        assert r_b1.json()["mode"] == "1"
+
+        # 2. POST /api/network/bond/bond0
+        r_b2 = client.post("/api/network/bond/bond0", json={"mode": "4", "slaves": ["eth0", "eth1"]}, headers=headers)
+        assert r_b2.status_code == 200
+        assert r_b2.json()["status"] == "ok"
+
+        # 3. GET /api/network/bridge/br0
+        r_br1 = client.get("/api/network/bridge/br0", headers=headers)
+        assert r_br1.status_code == 200
+        assert r_br1.json()["bridge_name"] == "br0"
+
+        # 4. POST /api/network/bridge/br0
+        r_br2 = client.post(
+            "/api/network/bridge/br0", json={"stp": True, "forward_delay": 0, "members": ["bond0"]}, headers=headers
+        )
+        assert r_br2.status_code == 200
+        assert r_br2.json()["status"] == "ok"
+
+        # 5. GET /api/network/vlans
+        r_v1 = client.get("/api/network/vlans", headers=headers)
+        assert r_v1.status_code == 200
+        assert len(r_v1.json()["vlans"]) == 1
+
+        # 6. POST /api/network/vlan/create
+        r_v2 = client.post(
+            "/api/network/vlan/create", json={"parent": "eth0", "vlan_id": 20, "alias": "Guest"}, headers=headers
+        )
+        assert r_v2.status_code == 200
+        assert r_v2.json()["name"] == "eth0.20"
+
+        # 7. DELETE /api/network/vlan/eth0.20
+        r_v3 = client.delete("/api/network/vlan/eth0.20", headers=headers)
+        assert r_v3.status_code == 200
+        assert r_v3.json()["status"] == "ok"

@@ -5,7 +5,7 @@ friendly interface aliases, and Docker network management.
 """
 
 import asyncio
-from typing import Optional
+from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
@@ -14,11 +14,18 @@ from backend.hardware.network import (
     apply_host_ip_config_canary,
     confirm_host_ip_config,
     create_docker_network,
+    create_vlan,
     delete_docker_network,
+    delete_vlan,
+    get_bond_config,
+    get_bridge_config,
     get_host_ip_config,
     get_network_topology,
     get_port_config,
+    get_vlans,
     revert_host_ip_config,
+    update_bond_config,
+    update_bridge_config,
     update_port_config,
 )
 
@@ -60,6 +67,35 @@ class DockerNetworkCreateRequest(BaseModel):
     driver: str = Field(default="bridge", description="Network driver: 'bridge', 'macvlan', 'ipvlan'")
     subnet: Optional[str] = Field(default="", description="Subnet CIDR (e.g. 172.28.0.0/16)")
     gateway: Optional[str] = Field(default="", description="Gateway IP address (e.g. 172.28.0.1)")
+
+
+class BondConfigUpdateRequest(BaseModel):
+    mode: str = Field(
+        default="1",
+        description="Bonding mode: '0' (balance-rr), '1' (active-backup), '2' (balance-xor), '4' (802.3ad), '6' (balance-alb)",
+    )
+    slaves: List[str] = Field(
+        ...,
+        min_length=1,
+        description="List of slave member interfaces to enslave (e.g. ['eth0', 'eth1'])",
+    )
+    miimon: Optional[int] = Field(
+        default=100, ge=10, le=1000, description="MII link monitoring interval in milliseconds (10-1000)"
+    )
+
+
+class BridgeConfigUpdateRequest(BaseModel):
+    stp: bool = Field(default=False, description="Enable Spanning Tree Protocol (STP) to prevent network loops")
+    forward_delay: Optional[int] = Field(default=0, ge=0, le=30, description="Bridge forward delay in seconds (0-30)")
+    members: List[str] = Field(
+        default_factory=list, description="List of member interfaces attached to the bridge (e.g. ['bond0'])"
+    )
+
+
+class VlanCreateRequest(BaseModel):
+    parent: str = Field(..., description="Parent network interface name (e.g. eth0, br0, bond0)")
+    vlan_id: int = Field(..., ge=1, le=4094, description="802.1Q VLAN Tag ID (1-4094)")
+    alias: Optional[str] = Field(default="", description="Friendly role/purpose alias for this VLAN")
 
 
 @router.get("/network/topology")
@@ -151,4 +187,71 @@ async def revert_host_ip_config_endpoint(req: Optional[HostIpRevertRequest] = No
     res = await asyncio.to_thread(revert_host_ip_config, canary_id)
     if res.get("status") == "error":
         raise HTTPException(status_code=400, detail=res.get("message", "Reversion failed"))
+    return res
+
+
+@router.get("/network/bond/{bond_name}")
+async def get_bond_config_endpoint(bond_name: str):
+    """Retrieve configuration, operational mode, active slave, and candidates for a bonding group."""
+    res = await asyncio.to_thread(get_bond_config, bond_name)
+    if res.get("status") == "error":
+        raise HTTPException(status_code=404, detail=res.get("message", "Bond interface not found"))
+    return res
+
+
+@router.post("/network/bond/{bond_name}", dependencies=[Depends(require_scope("system:config"))])
+async def update_bond_config_endpoint(bond_name: str, req: BondConfigUpdateRequest):
+    """Update bonding group mode (802.3ad / active-backup / balance-alb), slave member interfaces, and miimon."""
+    updates = req.model_dump(exclude_unset=True)
+    res = await asyncio.to_thread(update_bond_config, bond_name, updates)
+    if res.get("status") == "error":
+        raise HTTPException(status_code=400, detail=res.get("message", "Failed to update bond configuration"))
+    return res
+
+
+@router.get("/network/bridge/{br_name}")
+async def get_bridge_config_endpoint(br_name: str):
+    """Retrieve configuration, STP state, forward delay, and members for a virtual bridge."""
+    res = await asyncio.to_thread(get_bridge_config, br_name)
+    if res.get("status") == "error":
+        raise HTTPException(status_code=404, detail=res.get("message", "Bridge interface not found"))
+    return res
+
+
+@router.post("/network/bridge/{br_name}", dependencies=[Depends(require_scope("system:config"))])
+async def update_bridge_config_endpoint(br_name: str, req: BridgeConfigUpdateRequest):
+    """Update virtual bridge parameters (STP enable/disable, forward delay, member interfaces)."""
+    updates = req.model_dump(exclude_unset=True)
+    res = await asyncio.to_thread(update_bridge_config, br_name, updates)
+    if res.get("status") == "error":
+        raise HTTPException(status_code=400, detail=res.get("message", "Failed to update bridge configuration"))
+    return res
+
+
+@router.get("/network/vlans")
+async def get_vlans_endpoint():
+    """List all active and configured 802.1Q VLAN sub-interfaces."""
+    return {"status": "ok", "vlans": await asyncio.to_thread(get_vlans)}
+
+
+@router.post("/network/vlan/create", dependencies=[Depends(require_scope("system:config"))])
+async def create_vlan_endpoint(req: VlanCreateRequest):
+    """Create a new 802.1Q VLAN tagged sub-interface (e.g. eth0.10, br0.20)."""
+    res = await asyncio.to_thread(
+        create_vlan,
+        parent=req.parent,
+        vlan_id=req.vlan_id,
+        alias=req.alias or "",
+    )
+    if res.get("status") == "error":
+        raise HTTPException(status_code=400, detail=res.get("message", "Failed to create VLAN sub-interface"))
+    return res
+
+
+@router.delete("/network/vlan/{vlan_iface}", dependencies=[Depends(require_scope("system:config"))])
+async def delete_vlan_endpoint(vlan_iface: str):
+    """Delete an existing 802.1Q VLAN tagged sub-interface."""
+    res = await asyncio.to_thread(delete_vlan, vlan_iface)
+    if res.get("status") == "error":
+        raise HTTPException(status_code=400, detail=res.get("message", "Failed to delete VLAN sub-interface"))
     return res

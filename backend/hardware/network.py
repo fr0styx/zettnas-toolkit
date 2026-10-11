@@ -1080,6 +1080,723 @@ def delete_docker_network(net_id_or_name: str) -> Dict[str, Any]:
         return {"status": "error", "message": str(e)}
 
 
+BONDING_MODES: Dict[str, Dict[str, Any]] = {
+    "0": {
+        "code": "0",
+        "name": "balance-rr",
+        "title": "Round-Robin",
+        "description": "Transmit packets in sequential order from first available slave to last. Provides link load balancing and fault tolerance.",
+    },
+    "1": {
+        "code": "1",
+        "name": "active-backup",
+        "title": "Active-Backup (Failover)",
+        "description": "Only one slave in the bond is active. A different slave becomes active if and only if the active slave fails. Recommended for unmanaged switches.",
+    },
+    "2": {
+        "code": "2",
+        "name": "balance-xor",
+        "title": "Balance-XOR",
+        "description": "Transmit based on the selected transmit hash policy (MAC / IP). Provides load balancing and fault tolerance.",
+    },
+    "4": {
+        "code": "4",
+        "name": "802.3ad",
+        "title": "IEEE 802.3ad LACP (Dynamic Link Aggregation)",
+        "description": "IEEE 802.3ad Dynamic Link Aggregation. Requires an 802.3ad LACP-capable switch with matching LAG/trunk configured.",
+    },
+    "6": {
+        "code": "6",
+        "name": "balance-alb",
+        "title": "Adaptive Load Balancing (ALB)",
+        "description": "Includes balance-tlb plus receive load balancing (RLB) for IPv4 traffic. Does not require special switch configuration.",
+    },
+}
+
+
+def _parse_proc_net_vlan() -> Dict[str, Dict[str, Any]]:
+    """Parse /proc/net/vlan/config for active 802.1Q VLAN devices."""
+    vlan_map: Dict[str, Dict[str, Any]] = {}
+    vlan_file = _find_proc_net_path("vlan/config")
+    if not vlan_file:
+        for p in [
+            "/proc/net/vlan/config",
+            "/proc/1/net/vlan/config",
+            os.path.join(HOST_PROC, "net/vlan/config"),
+            os.path.join(HOST_PROC, "1/net/vlan/config"),
+        ]:
+            if os.path.isfile(p):
+                vlan_file = p
+                break
+    if vlan_file and os.path.isfile(vlan_file):
+        try:
+            with open(vlan_file, "r", encoding="utf-8", errors="replace") as f:
+                for line in f:
+                    line = line.strip()
+                    if "|" in line and "VLAN Dev name" not in line:
+                        parts = [p.strip() for p in line.split("|")]
+                        if len(parts) >= 3:
+                            vname, vid, parent = parts[0], parts[1], parts[2]
+                            try:
+                                vlan_map[vname] = {"vlan_id": int(vid), "parent": parent}
+                            except ValueError:
+                                pass
+        except Exception as e:
+            logger.debug(f"Error parsing /proc/net/vlan/config: {e}")
+    return vlan_map
+
+
+def get_vlans() -> List[Dict[str, Any]]:
+    """Discover all active 802.1Q VLAN sub-interfaces and persist metadata."""
+    sys_net_dir = _find_sys_net_dir()
+    routes = _parse_routes()
+    saved_cfg = load_network_config()
+    saved_vlans = saved_cfg.get("vlans", {})
+    proc_vlans = _parse_proc_net_vlan()
+
+    vlans: List[Dict[str, Any]] = []
+    discovered_names = set()
+
+    if sys_net_dir and os.path.isdir(sys_net_dir):
+        try:
+            for iface in sorted(os.listdir(sys_net_dir)):
+                if iface in ("lo", "bonding_masters"):
+                    continue
+                iface_dir = os.path.join(sys_net_dir, iface)
+                if not os.path.isdir(iface_dir):
+                    continue
+
+                is_vlan = False
+                parent = ""
+                vlan_id = 0
+
+                # 1. Match from /proc/net/vlan/config
+                if iface in proc_vlans:
+                    is_vlan = True
+                    parent = proc_vlans[iface]["parent"]
+                    vlan_id = proc_vlans[iface]["vlan_id"]
+
+                # 2. Match from sysfs uevent
+                uevent = _read_file(os.path.join(iface_dir, "uevent"), "")
+                if "DEVTYPE=vlan" in uevent:
+                    is_vlan = True
+
+                # 3. Match from lower_* symlink (e.g. lower_eth0 -> ../eth0)
+                if not parent:
+                    try:
+                        for entry in os.listdir(iface_dir):
+                            if entry.startswith("lower_"):
+                                parent = entry[6:]
+                                is_vlan = True
+                                break
+                    except OSError:
+                        pass
+
+                # 4. Match dot notation naming (e.g. eth0.10, br0.20)
+                if "." in iface and not is_vlan:
+                    p_cand, vid_cand = iface.rsplit(".", 1)
+                    if vid_cand.isdigit() and 1 <= int(vid_cand) <= 4094:
+                        is_vlan = True
+                        if not parent:
+                            parent = p_cand
+                        if not vlan_id:
+                            vlan_id = int(vid_cand)
+
+                # 5. Check persistent config
+                if iface in saved_vlans:
+                    is_vlan = True
+                    if not parent:
+                        parent = saved_vlans[iface].get("parent", "")
+                    if not vlan_id:
+                        vlan_id = int(saved_vlans[iface].get("vlan_id", 0))
+
+                if is_vlan:
+                    discovered_names.add(iface)
+                    operstate = _read_file(os.path.join(iface_dir, "operstate"), "unknown").lower()
+                    carrier_str = _read_file(os.path.join(iface_dir, "carrier"), "0")
+                    carrier = 1 if carrier_str == "1" else 0
+                    is_up = operstate == "up" and carrier == 1
+
+                    raw_speed = _read_file(os.path.join(iface_dir, "speed"), "-1")
+                    try:
+                        speed_val = int(raw_speed) if raw_speed and raw_speed.lstrip("-").isdigit() else -1
+                        if speed_val < 0:
+                            speed_val = None
+                    except ValueError:
+                        speed_val = None
+
+                    mtu = int(_read_file(os.path.join(iface_dir, "mtu"), "1500") or 1500)
+                    mac = _read_file(os.path.join(iface_dir, "address"), "").lower()
+
+                    vlan_ip = ""
+                    for r in routes:
+                        if r.get("iface") == iface and r.get("destination") != "0.0.0.0":
+                            vlan_ip = f"{r.get('destination')}/{r.get('cidr')}"
+                            break
+
+                    alias = saved_vlans.get(iface, {}).get("alias", "")
+                    if not alias:
+                        alias = saved_cfg.get("aliases", {}).get(iface, "")
+
+                    vlans.append(
+                        {
+                            "name": iface,
+                            "parent": parent,
+                            "vlan_id": vlan_id,
+                            "alias": alias,
+                            "carrier": carrier,
+                            "is_up": is_up,
+                            "speed_human": _format_speed(speed_val, is_up),
+                            "mtu": mtu,
+                            "mac": mac,
+                            "ip_address": vlan_ip,
+                            "rx_bytes": _read_stat(iface_dir, "rx_bytes"),
+                            "tx_bytes": _read_stat(iface_dir, "tx_bytes"),
+                        }
+                    )
+        except Exception as e:
+            logger.debug(f"Error enumerating VLAN interfaces: {e}")
+
+    # Merge any saved VLANs that are currently offline or down
+    for vname, vdata in saved_vlans.items():
+        if vname not in discovered_names:
+            vlans.append(
+                {
+                    "name": vname,
+                    "parent": vdata.get("parent", ""),
+                    "vlan_id": int(vdata.get("vlan_id", 0)),
+                    "alias": vdata.get("alias", ""),
+                    "carrier": 0,
+                    "is_up": False,
+                    "speed_human": "Disconnected",
+                    "mtu": 1500,
+                    "mac": "",
+                    "ip_address": "",
+                    "rx_bytes": 0,
+                    "tx_bytes": 0,
+                }
+            )
+
+    return sorted(vlans, key=lambda v: (v.get("parent", ""), v.get("vlan_id", 0)))
+
+
+def create_vlan(parent: str, vlan_id: int, alias: str = "") -> Dict[str, Any]:
+    """Create an 802.1Q VLAN sub-interface (e.g. eth0.10) and persist metadata."""
+    parent = (parent or "").strip()
+    if not re.match(r"^[a-zA-Z0-9_\-\.]+$", parent):
+        return {"status": "error", "message": "Invalid parent interface name"}
+
+    try:
+        vid = int(vlan_id)
+        if not (1 <= vid <= 4094):
+            return {"status": "error", "message": "VLAN ID must be an integer between 1 and 4094"}
+    except (ValueError, TypeError):
+        return {"status": "error", "message": "VLAN ID must be an integer between 1 and 4094"}
+
+    vname = f"{parent}.{vid}"
+
+    # Attempt creation using ip link
+    cmd = ["ip", "link", "add", "link", parent, "name", vname, "type", "vlan", "id", str(vid)]
+    success = False
+    err_msg = ""
+    try:
+        res = subprocess.run(cmd, capture_output=True, text=True, timeout=5)
+        if res.returncode == 0:
+            success = True
+        else:
+            err_msg = res.stderr.strip()
+    except Exception as e:
+        err_msg = str(e)
+
+    if not success and os.path.exists("/host/proc/1/ns/net"):
+        try:
+            ns_cmd = ["nsenter", "--net=/host/proc/1/ns/net"] + cmd
+            res = subprocess.run(ns_cmd, capture_output=True, text=True, timeout=5)
+            if res.returncode == 0:
+                success = True
+            else:
+                err_msg = res.stderr.strip()
+        except Exception as e:
+            err_msg = str(e)
+
+    # Bring interface up
+    if success:
+        subprocess.run(["ip", "link", "set", "dev", vname, "up"], capture_output=True, timeout=5)
+        if os.path.exists("/host/proc/1/ns/net"):
+            subprocess.run(
+                ["nsenter", "--net=/host/proc/1/ns/net", "ip", "link", "set", "dev", vname, "up"],
+                capture_output=True,
+                timeout=5,
+            )
+
+    # Persist in network_config.json
+    cfg = load_network_config()
+    vlans = cfg.setdefault("vlans", {})
+    vlans[vname] = {
+        "name": vname,
+        "parent": parent,
+        "vlan_id": vid,
+        "alias": alias.strip(),
+        "created_at": time.time(),
+    }
+    if alias.strip():
+        cfg.setdefault("aliases", {})[vname] = alias.strip()
+    save_network_config(cfg)
+
+    try:
+        from backend.state import add_event
+
+        add_event(
+            "success",
+            "VLAN Created",
+            f"802.1Q VLAN sub-interface {vname} (Tag ID: {vid}) created on {parent}.",
+        )
+    except Exception:
+        pass
+
+    return {
+        "status": "ok",
+        "name": vname,
+        "parent": parent,
+        "vlan_id": vid,
+        "alias": alias.strip(),
+        "applied_runtime": success,
+        "message": (
+            f"VLAN sub-interface '{vname}' created successfully"
+            if success
+            else f"VLAN '{vname}' configuration saved. {err_msg or 'Will apply on network restart.'}"
+        ),
+    }
+
+
+def delete_vlan(vlan_name: str) -> Dict[str, Any]:
+    """Delete an 802.1Q VLAN sub-interface."""
+    vlan_name = (vlan_name or "").strip()
+    if not re.match(r"^[a-zA-Z0-9_\-\.]+$", vlan_name):
+        return {"status": "error", "message": "Invalid VLAN interface name"}
+
+    # Attempt deletion using ip link
+    cmd = ["ip", "link", "del", "dev", vlan_name]
+    success = False
+    err_msg = ""
+    try:
+        res = subprocess.run(cmd, capture_output=True, text=True, timeout=5)
+        if res.returncode == 0:
+            success = True
+        else:
+            err_msg = res.stderr.strip()
+    except Exception as e:
+        err_msg = str(e)
+
+    if not success and os.path.exists("/host/proc/1/ns/net"):
+        try:
+            ns_cmd = ["nsenter", "--net=/host/proc/1/ns/net"] + cmd
+            res = subprocess.run(ns_cmd, capture_output=True, text=True, timeout=5)
+            if res.returncode == 0:
+                success = True
+            else:
+                err_msg = res.stderr.strip()
+        except Exception as e:
+            err_msg = str(e)
+
+    # Remove from network_config.json
+    cfg = load_network_config()
+    if "vlans" in cfg and vlan_name in cfg["vlans"]:
+        cfg["vlans"].pop(vlan_name, None)
+    if "aliases" in cfg and vlan_name in cfg["aliases"]:
+        cfg["aliases"].pop(vlan_name, None)
+    save_network_config(cfg)
+
+    try:
+        from backend.state import add_event
+
+        add_event(
+            "warning",
+            "VLAN Deleted",
+            f"802.1Q VLAN sub-interface {vlan_name} removed.",
+        )
+    except Exception:
+        pass
+
+    return {
+        "status": "ok",
+        "name": vlan_name,
+        "message": f"VLAN sub-interface '{vlan_name}' removed successfully.",
+    }
+
+
+def get_bond_config(bond_name: str) -> Dict[str, Any]:
+    """Retrieve configuration, operational mode, slaves, and candidate NICs for a bond."""
+    bond_name = (bond_name or "").strip()
+    if not re.match(r"^[a-zA-Z0-9_\-\.]+$", bond_name):
+        return {"status": "error", "message": "Invalid bond interface name"}
+
+    sys_net_dir = _find_sys_net_dir()
+    bond_dir = os.path.join(sys_net_dir, bond_name) if sys_net_dir else f"/sys/class/net/{bond_name}"
+
+    mode_str = _read_file(os.path.join(bond_dir, "bonding/mode"), "")
+    slaves = _read_file(os.path.join(bond_dir, "bonding/slaves"), "").split()
+    active_slave = _read_file(os.path.join(bond_dir, "bonding/active_slave"), "")
+    miimon_str = _read_file(os.path.join(bond_dir, "bonding/miimon"), "100")
+    try:
+        miimon = int(miimon_str) if miimon_str.isdigit() else 100
+    except ValueError:
+        miimon = 100
+
+    # Check Unraid config
+    unraid_cfg = _parse_unraid_network_cfg()
+    idx = "0"
+    m = re.search(r"\d+", bond_name)
+    if m:
+        idx = m.group(0)
+
+    if f"BONDING_MODE[{idx}]" in unraid_cfg:
+        mode_code = unraid_cfg[f"BONDING_MODE[{idx}]"]
+    else:
+        mode_parts = mode_str.split()
+        if mode_parts and mode_parts[-1].isdigit():
+            mode_code = mode_parts[-1]
+        elif "802.3ad" in mode_str.lower():
+            mode_code = "4"
+        elif "balance-alb" in mode_str.lower():
+            mode_code = "6"
+        elif "balance-rr" in mode_str.lower():
+            mode_code = "0"
+        elif "balance-xor" in mode_str.lower():
+            mode_code = "2"
+        else:
+            mode_code = "1"
+
+    if f"BONDNICS[{idx}]" in unraid_cfg and not slaves:
+        slaves = unraid_cfg[f"BONDNICS[{idx}]"].split()
+    if f"BONDING_MIIMON[{idx}]" in unraid_cfg:
+        try:
+            miimon = int(unraid_cfg[f"BONDING_MIIMON[{idx}]"])
+        except ValueError:
+            pass
+
+    # Saved config
+    saved_cfg = load_network_config()
+    bond_meta = saved_cfg.get("bonds", {}).get(bond_name, {})
+    if "mode" in bond_meta:
+        mode_code = str(bond_meta["mode"])
+    if "slaves" in bond_meta and not slaves:
+        slaves = list(bond_meta["slaves"])
+    if "miimon" in bond_meta:
+        miimon = int(bond_meta["miimon"])
+
+    mode_info = BONDING_MODES.get(mode_code, BONDING_MODES["1"])
+
+    # Candidate slave NICs
+    topo = get_network_topology()
+    candidate_slaves = []
+    for nic in topo.get("physical_interfaces", []):
+        n_name = nic["name"]
+        is_slave = n_name in slaves
+        candidate_slaves.append(
+            {
+                "name": n_name,
+                "alias": nic.get("alias", ""),
+                "speed_human": nic.get("speed_human", ""),
+                "is_up": nic.get("is_up", False),
+                "mac": nic.get("mac", ""),
+                "is_slave": is_slave,
+                "master": nic.get("master"),
+            }
+        )
+
+    return {
+        "status": "ok",
+        "bond_name": bond_name,
+        "mode": mode_code,
+        "mode_name": mode_info.get("name", "active-backup"),
+        "mode_title": mode_info.get("title", "Active-Backup"),
+        "slaves": sorted(slaves),
+        "active_slave": active_slave,
+        "miimon": miimon,
+        "available_modes": [
+            {"code": k, "name": v["name"], "title": v["title"], "description": v["description"]}
+            for k, v in BONDING_MODES.items()
+        ],
+        "candidate_slaves": candidate_slaves,
+    }
+
+
+def update_bond_config(bond_name: str, updates: Dict[str, Any]) -> Dict[str, Any]:
+    """Update bonding mode, enslaved interfaces, and MII monitoring."""
+    bond_name = (bond_name or "").strip()
+    if not re.match(r"^[a-zA-Z0-9_\-\.]+$", bond_name):
+        return {"status": "error", "message": "Invalid bond interface name"}
+
+    mode = str(updates.get("mode", "1")).strip().lower()
+    mode_map = {
+        "balance-rr": "0",
+        "0": "0",
+        "active-backup": "1",
+        "1": "1",
+        "balance-xor": "2",
+        "2": "2",
+        "802.3ad": "4",
+        "4": "4",
+        "balance-alb": "6",
+        "6": "6",
+    }
+    if mode not in mode_map:
+        return {
+            "status": "error",
+            "message": "Invalid bonding mode. Supported modes: 0 (balance-rr), 1 (active-backup), 2 (balance-xor), 4 (802.3ad), 6 (balance-alb)",
+        }
+    mode_code = mode_map[mode]
+
+    slaves = updates.get("slaves", [])
+    if not isinstance(slaves, list) or len(slaves) == 0:
+        return {
+            "status": "error",
+            "message": "At least one member interface must be selected for the bond",
+        }
+    for s in slaves:
+        if not isinstance(s, str) or not re.match(r"^[a-zA-Z0-9_\-\.]+$", s):
+            return {"status": "error", "message": f"Invalid slave interface: {s}"}
+
+    try:
+        miimon = int(updates.get("miimon", 100))
+        if not (10 <= miimon <= 1000):
+            miimon = 100
+    except (ValueError, TypeError):
+        miimon = 100
+
+    # Persist to network_config.json
+    cfg = load_network_config()
+    bonds = cfg.setdefault("bonds", {})
+    bonds[bond_name] = {
+        "mode": mode_code,
+        "slaves": slaves,
+        "miimon": miimon,
+        "updated_at": time.time(),
+    }
+    save_network_config(cfg)
+
+    # Persist to Unraid /boot/config/network.cfg if present
+    idx = "0"
+    m = re.search(r"\d+", bond_name)
+    if m:
+        idx = m.group(0)
+
+    unraid_updates = {
+        f"BONDING_MODE[{idx}]": mode_code,
+        f"BONDNICS[{idx}]": " ".join(slaves),
+        f"BONDING_MIIMON[{idx}]": str(miimon),
+    }
+    _write_unraid_network_cfg(unraid_updates)
+
+    # Runtime sysfs tuning for miimon
+    sys_net_dir = _find_sys_net_dir()
+    if sys_net_dir:
+        miimon_path = os.path.join(sys_net_dir, bond_name, "bonding/miimon")
+        if os.path.isfile(miimon_path):
+            try:
+                with open(miimon_path, "w") as f:
+                    f.write(str(miimon))
+            except Exception:
+                pass
+
+    mode_info = BONDING_MODES.get(mode_code, BONDING_MODES["1"])
+    try:
+        from backend.state import add_event
+
+        add_event(
+            "info",
+            "Bonding Mode Updated",
+            f"Bond {bond_name} updated to {mode_info['title']} with slaves: {', '.join(slaves)} (miimon: {miimon}ms).",
+        )
+    except Exception:
+        pass
+
+    return {
+        "status": "ok",
+        "bond_name": bond_name,
+        "mode": mode_code,
+        "mode_title": mode_info.get("title"),
+        "slaves": slaves,
+        "miimon": miimon,
+        "message": f"Bonding configuration for '{bond_name}' saved successfully. Settings persisted to system config.",
+    }
+
+
+def get_bridge_config(br_name: str) -> Dict[str, Any]:
+    """Retrieve configuration, STP state, forward delay, and members for a virtual bridge."""
+    br_name = (br_name or "").strip()
+    if not re.match(r"^[a-zA-Z0-9_\-\.]+$", br_name):
+        return {"status": "error", "message": "Invalid bridge interface name"}
+
+    sys_net_dir = _find_sys_net_dir()
+    br_dir = os.path.join(sys_net_dir, br_name) if sys_net_dir else f"/sys/class/net/{br_name}"
+
+    stp_raw = _read_file(os.path.join(br_dir, "bridge/stp_state"), "0").strip()
+    stp_enabled = stp_raw in ("1", "yes", "true")
+    fd_raw = _read_file(os.path.join(br_dir, "bridge/forward_delay"), "0").strip()
+    try:
+        forward_delay = int(fd_raw)
+        if forward_delay > 100:
+            forward_delay = forward_delay // 100
+    except ValueError:
+        forward_delay = 0
+
+    members = []
+    brif_dir = os.path.join(br_dir, "brif")
+    if os.path.isdir(brif_dir):
+        members = os.listdir(brif_dir)
+
+    # Check Unraid config
+    unraid_cfg = _parse_unraid_network_cfg()
+    idx = "0"
+    m = re.search(r"\d+", br_name)
+    if m:
+        idx = m.group(0)
+
+    if f"BRSTP[{idx}]" in unraid_cfg:
+        stp_enabled = unraid_cfg[f"BRSTP[{idx}]"].lower() == "yes"
+    if f"BRFD[{idx}]" in unraid_cfg:
+        try:
+            forward_delay = int(unraid_cfg[f"BRFD[{idx}]"])
+        except ValueError:
+            pass
+    if f"BRNICS[{idx}]" in unraid_cfg and not members:
+        members = unraid_cfg[f"BRNICS[{idx}]"].split()
+
+    # Saved config
+    saved_cfg = load_network_config()
+    br_meta = saved_cfg.get("bridges", {}).get(br_name, {})
+    if "stp" in br_meta:
+        stp_enabled = bool(br_meta["stp"])
+    if "forward_delay" in br_meta:
+        forward_delay = int(br_meta["forward_delay"])
+    if "members" in br_meta and not members:
+        members = list(br_meta["members"])
+
+    # Candidate members (physical NICs + bonds)
+    topo = get_network_topology()
+    candidate_members = []
+    for b in topo.get("bonds", []):
+        b_name = b["name"]
+        candidate_members.append(
+            {
+                "name": b_name,
+                "type": "bond",
+                "alias": b.get("alias", ""),
+                "speed_human": b.get("speed_human", ""),
+                "is_up": b.get("is_up", False),
+                "is_member": b_name in members,
+            }
+        )
+    for nic in topo.get("physical_interfaces", []):
+        n_name = nic["name"]
+        candidate_members.append(
+            {
+                "name": n_name,
+                "type": "physical",
+                "alias": nic.get("alias", ""),
+                "speed_human": nic.get("speed_human", ""),
+                "is_up": nic.get("is_up", False),
+                "is_member": n_name in members,
+            }
+        )
+
+    return {
+        "status": "ok",
+        "bridge_name": br_name,
+        "stp": stp_enabled,
+        "forward_delay": forward_delay,
+        "members": sorted(members),
+        "candidate_members": candidate_members,
+    }
+
+
+def update_bridge_config(br_name: str, updates: Dict[str, Any]) -> Dict[str, Any]:
+    """Update virtual bridge parameters: STP toggle, forward delay, and member interfaces."""
+    br_name = (br_name or "").strip()
+    if not re.match(r"^[a-zA-Z0-9_\-\.]+$", br_name):
+        return {"status": "error", "message": "Invalid bridge interface name"}
+
+    stp = bool(updates.get("stp", False))
+    try:
+        forward_delay = int(updates.get("forward_delay", 0))
+        if not (0 <= forward_delay <= 30):
+            forward_delay = 0
+    except (ValueError, TypeError):
+        forward_delay = 0
+
+    members = updates.get("members", [])
+    if not isinstance(members, list):
+        members = []
+    for m in members:
+        if not isinstance(m, str) or not re.match(r"^[a-zA-Z0-9_\-\.]+$", m):
+            return {"status": "error", "message": f"Invalid member interface: {m}"}
+
+    # Persist to network_config.json
+    cfg = load_network_config()
+    bridges = cfg.setdefault("bridges", {})
+    bridges[br_name] = {
+        "stp": stp,
+        "forward_delay": forward_delay,
+        "members": members,
+        "updated_at": time.time(),
+    }
+    save_network_config(cfg)
+
+    # Persist to Unraid /boot/config/network.cfg if present
+    idx = "0"
+    m_idx = re.search(r"\d+", br_name)
+    if m_idx:
+        idx = m_idx.group(0)
+
+    unraid_updates = {
+        f"BRSTP[{idx}]": "yes" if stp else "no",
+        f"BRFD[{idx}]": str(forward_delay),
+    }
+    if members:
+        unraid_updates[f"BRNICS[{idx}]"] = " ".join(members)
+    _write_unraid_network_cfg(unraid_updates)
+
+    # Runtime sysfs apply
+    sys_net_dir = _find_sys_net_dir()
+    if sys_net_dir:
+        stp_path = os.path.join(sys_net_dir, br_name, "bridge/stp_state")
+        if os.path.isfile(stp_path):
+            try:
+                with open(stp_path, "w") as f:
+                    f.write("1" if stp else "0")
+            except Exception:
+                pass
+        fd_path = os.path.join(sys_net_dir, br_name, "bridge/forward_delay")
+        if os.path.isfile(fd_path):
+            try:
+                with open(fd_path, "w") as f:
+                    f.write(str(forward_delay * 100))
+            except Exception:
+                pass
+
+    try:
+        from backend.state import add_event
+
+        add_event(
+            "info",
+            "Bridge Configured",
+            f"Bridge {br_name} updated: STP {'Enabled' if stp else 'Disabled'}, Forward Delay {forward_delay}s, Members: {', '.join(members) or 'None'}.",
+        )
+    except Exception:
+        pass
+
+    return {
+        "status": "ok",
+        "bridge_name": br_name,
+        "stp": stp,
+        "forward_delay": forward_delay,
+        "members": members,
+        "message": f"Bridge configuration for '{br_name}' saved successfully. Settings persisted to system config.",
+    }
+
+
 def get_network_topology() -> Dict[str, Any]:
     """
     Expose complete host networking topology, physical NIC carrier states,
@@ -1220,13 +1937,39 @@ def get_network_topology() -> Dict[str, Any]:
             mode = _read_file(os.path.join(iface_dir, "bonding/mode"), "")
             slaves = _read_file(os.path.join(iface_dir, "bonding/slaves"), "").split()
             active_slave = _read_file(os.path.join(iface_dir, "bonding/active_slave"), "")
+            miimon_str = _read_file(os.path.join(iface_dir, "bonding/miimon"), "100")
+            try:
+                miimon_val = int(miimon_str) if miimon_str.isdigit() else 100
+            except ValueError:
+                miimon_val = 100
+
+            mode_parts = mode.split()
+            if mode_parts and mode_parts[-1].isdigit():
+                mode_code = mode_parts[-1]
+            elif "802.3ad" in mode.lower():
+                mode_code = "4"
+            elif "balance-alb" in mode.lower():
+                mode_code = "6"
+            elif "balance-rr" in mode.lower():
+                mode_code = "0"
+            elif "balance-xor" in mode.lower():
+                mode_code = "2"
+            else:
+                mode_code = "1"
+
+            mode_info = BONDING_MODES.get(mode_code, BONDING_MODES["1"])
+
             bonds.append(
                 {
                     "name": iface,
                     "alias": alias,
                     "mode": mode,
+                    "mode_code": mode_code,
+                    "mode_name": mode_info.get("name", "active-backup"),
+                    "mode_title": mode_info.get("title", "Active-Backup"),
                     "slaves": slaves,
                     "active_slave": active_slave,
+                    "miimon": miimon_val,
                     "carrier": carrier,
                     "is_up": is_up,
                     "speed_mbps": speed_val if is_up else None,
@@ -1247,6 +1990,16 @@ def get_network_topology() -> Dict[str, Any]:
             if os.path.isdir(brif_dir):
                 members = os.listdir(brif_dir)
 
+            stp_raw = _read_file(os.path.join(iface_dir, "bridge/stp_state"), "0").strip()
+            stp_enabled = stp_raw in ("1", "yes", "true")
+            fd_raw = _read_file(os.path.join(iface_dir, "bridge/forward_delay"), "0").strip()
+            try:
+                fd_val = int(fd_raw)
+                if fd_val > 100:
+                    fd_val = fd_val // 100
+            except ValueError:
+                fd_val = 0
+
             # Match IP address from routes or state
             bridge_ip = ""
             for r in routes:
@@ -1259,6 +2012,8 @@ def get_network_topology() -> Dict[str, Any]:
                     "name": iface,
                     "alias": alias,
                     "interfaces": sorted(members),
+                    "stp": stp_enabled,
+                    "forward_delay": fd_val,
                     "carrier": carrier,
                     "is_up": is_up,
                     "mtu": mtu,
@@ -1268,6 +2023,9 @@ def get_network_topology() -> Dict[str, Any]:
                     "tx_bytes": _read_stat(iface_dir, "tx_bytes"),
                 }
             )
+
+    # 4. VLAN Sub-Interfaces (802.1Q)
+    vlans = get_vlans()
 
     # Docker network inspection
     docker_networks = _get_docker_topology()
@@ -1288,6 +2046,7 @@ def get_network_topology() -> Dict[str, Any]:
         "total_physical": len(physical_interfaces),
         "active_physical": sum(1 for p in physical_interfaces if p["is_up"]),
         "max_speed": max_speed_str,
+        "vlan_count": len(vlans),
         "docker_networks_count": len(docker_networks),
         "docker_containers_count": total_containers,
         "canary": get_canary_watchdog().get_status(),
@@ -1299,6 +2058,7 @@ def get_network_topology() -> Dict[str, Any]:
         "physical_interfaces": physical_interfaces,
         "bonds": bonds,
         "bridges": bridges,
+        "vlans": vlans,
         "docker_networks": docker_networks,
         "routes": routes,
     }

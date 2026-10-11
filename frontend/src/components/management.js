@@ -3242,8 +3242,15 @@ export async function fetchAndRenderNetworkTopology() {
         items.push(`
           <div class="network-bridge-card">
             <div class="network-bridge-header">
-              <span class="network-bridge-name">Bridge: ${escapeHtml(br.name)}</span>
-              <span class="network-bridge-ip">${escapeHtml(br.ip_address || 'Unassigned IP')}</span>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span class="network-bridge-name">Bridge: ${escapeHtml(br.name)}</span>
+                <span class="switch-speed-pill ${br.stp ? 'speed-10g' : 'speed-down'}" style="font-size:9.5px; padding:2px 6px;">STP: ${br.stp ? 'ON' : 'OFF'}</span>
+                <span style="font-size:10px; color:var(--muted); font-family:var(--font-mono, monospace);">FD: ${br.forward_delay || 0}s</span>
+              </div>
+              <div style="display:flex; align-items:center; gap:6px;">
+                <span class="network-bridge-ip">${escapeHtml(br.ip_address || 'Unassigned IP')}</span>
+                <button class="btn-pill-toggle btn-config-bridge" data-bridge="${escapeHtml(br.name)}" style="font-size:10px; padding:2px 8px; color:var(--accent-cyan, #38bdf8); border-color:rgba(56,189,248,0.3);">${t('net.configure_bridge', 'Configure')}</button>
+              </div>
             </div>
             <div style="font-size:11px; color:var(--muted);">Member Ports:</div>
             <div class="network-bridge-members">
@@ -3258,8 +3265,12 @@ export async function fetchAndRenderNetworkTopology() {
         items.push(`
           <div class="network-bridge-card">
             <div class="network-bridge-header">
-              <span class="network-bridge-name">Bond: ${escapeHtml(b.name)}</span>
-              <span class="switch-speed-pill speed-10g">${escapeHtml(b.mode || 'Bonding')}</span>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span class="network-bridge-name">Bond: ${escapeHtml(b.name)}</span>
+                <span class="switch-speed-pill speed-10g" title="${escapeHtml(b.mode_title || b.mode_name || b.mode)}">${escapeHtml(b.mode_title || b.mode_name || b.mode || 'Bonding')}</span>
+                <span style="font-size:10px; color:var(--muted); font-family:var(--font-mono, monospace);">${b.miimon || 100}ms</span>
+              </div>
+              <button class="btn-pill-toggle btn-config-bond" data-bond="${escapeHtml(b.name)}" style="font-size:10px; padding:2px 8px; color:var(--accent-cyan, #38bdf8); border-color:rgba(56,189,248,0.3);">${t('net.configure_bond', 'Configure')}</button>
             </div>
             <div style="font-size:11px; color:var(--muted);">Active Slave: <strong style="color:var(--ok2, #3bf58b);">${escapeHtml(b.active_slave || 'None')}</strong></div>
             <div class="network-bridge-members">
@@ -3270,6 +3281,79 @@ export async function fetchAndRenderNetworkTopology() {
       });
 
       bridgesContainer.innerHTML = items.length > 0 ? items.join('') : `<div style="color:var(--muted); font-size:12px; padding:12px;">No virtual bridges or bonds configured.</div>`;
+
+      bridgesContainer.querySelectorAll('.btn-config-bridge').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const br = btn.dataset.bridge;
+          if (br) openBridgeConfigModal(br);
+        });
+      });
+
+      bridgesContainer.querySelectorAll('.btn-config-bond').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const bond = btn.dataset.bond;
+          if (bond) openBondConfigModal(bond);
+        });
+      });
+    }
+
+    // 5. Render VLAN Sub-Interfaces (802.1Q)
+    const vlanTbody = document.getElementById('network-vlan-tbody');
+    const vlans = topo.vlans || [];
+    if (vlanTbody) {
+      if (vlans.length === 0) {
+        vlanTbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--muted); padding:16px;">No 802.1Q VLAN sub-interfaces created yet. Click "+ Add VLAN" to tag an interface.</td></tr>`;
+      } else {
+        vlanTbody.innerHTML = vlans
+          .map((v) => {
+            const isUp = Boolean(v.is_up);
+            const rxFmt = fmtBytes(v.rx_bytes);
+            const txFmt = fmtBytes(v.tx_bytes);
+
+            return `
+            <tr>
+              <td>
+                <div style="display:flex; align-items:center; gap:6px; font-weight:700; font-family:var(--font-mono, monospace);">
+                  <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:${isUp ? 'var(--ok2, #3bf58b)' : 'var(--muted, #64748b)'};"></span>
+                  ${escapeHtml(v.name)}
+                </div>
+              </td>
+              <td>
+                <span class="network-member-pill">${escapeHtml(v.parent)}</span>
+              </td>
+              <td>
+                <span class="network-member-pill" style="color:var(--accent-cyan, #38bdf8); border-color:rgba(56,189,248,0.4); font-weight:700;">VID ${escapeHtml(String(v.vlan_id))}</span>
+              </td>
+              <td>
+                ${v.alias ? `<span class="switch-port-alias-tag" title="${escapeHtml(v.alias)}">${escapeHtml(v.alias)}</span>` : '<span style="color:var(--muted); font-size:11px;">--</span>'}
+              </td>
+              <td>
+                <span class="switch-speed-pill ${isUp ? 'speed-10g' : 'speed-down'}">
+                  ${isUp ? 'UP' : 'DOWN'}
+                </span>
+              </td>
+              <td style="font-family:var(--font-mono, monospace); font-size:11px;">${escapeHtml(v.ip_address || '--')}</td>
+              <td style="font-family:var(--font-mono, monospace); font-size:11px;">
+                <div>↓ ${rxFmt} / ↑ ${txFmt}</div>
+              </td>
+              <td style="text-align: right;">
+                <button class="btn-pill-toggle btn-delete-vlan" data-vlan="${escapeHtml(v.name)}" style="font-size:10px; padding:2px 8px; color:#f87171; border-color:rgba(248,113,113,0.3);" title="Delete VLAN">🗑</button>
+              </td>
+            </tr>
+          `;
+          })
+          .join('');
+
+        vlanTbody.querySelectorAll('.btn-delete-vlan').forEach((btn) => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const vlan = btn.dataset.vlan;
+            if (vlan) deleteVlanSubinterface(vlan);
+          });
+        });
+      }
     }
 
     // 5. Render Docker Networks & Containers
@@ -3739,6 +3823,288 @@ export async function revertCanaryConfig() {
   }
 }
 
+let _currentBondName = null;
+let _currentBridgeName = null;
+
+export async function openBondConfigModal(bondName) {
+  _currentBondName = bondName;
+  const overlay = document.getElementById('network-bond-config-overlay');
+  if (!overlay) return;
+
+  const targetBadge = document.getElementById('net-bond-target-badge');
+  const modeSelect = document.getElementById('net-bond-mode-select');
+  const modeDesc = document.getElementById('net-bond-mode-desc');
+  const slavesContainer = document.getElementById('net-bond-slaves-container');
+  const miimonInput = document.getElementById('net-bond-miimon-input');
+
+  if (targetBadge) targetBadge.textContent = bondName;
+
+  try {
+    const data = await api.get(`/api/network/bond/${encodeURIComponent(bondName)}`);
+    if (modeSelect) {
+      modeSelect.value = String(data.mode || '1');
+      const activeMode = (data.available_modes || []).find((m) => String(m.code) === String(data.mode));
+      if (modeDesc && activeMode) modeDesc.textContent = activeMode.description;
+    }
+    if (miimonInput) miimonInput.value = data.miimon || 100;
+
+    if (slavesContainer) {
+      const candidates = data.candidate_slaves || [];
+      if (candidates.length === 0) {
+        slavesContainer.innerHTML = '<div style="color:var(--muted); font-size:11px;">No physical Ethernet adapters detected.</div>';
+      } else {
+        slavesContainer.innerHTML = candidates
+          .map((nic) => {
+            const isChecked = Boolean(nic.is_slave);
+            return `
+            <label style="display:flex; align-items:center; gap:8px; font-size:11.5px; cursor:pointer; user-select:none;">
+              <input type="checkbox" class="net-bond-slave-checkbox" value="${escapeHtml(nic.name)}" ${isChecked ? 'checked' : ''} style="cursor:pointer;" />
+              <span style="font-family:var(--font-mono, monospace); font-weight:600; color:#f8fafc;">${escapeHtml(nic.name)}</span>
+              ${nic.alias ? `<span class="switch-port-alias-tag">${escapeHtml(nic.alias)}</span>` : ''}
+              <span style="font-size:10px; color:var(--muted); margin-left:auto;">${escapeHtml(nic.speed_human || (nic.is_up ? 'Connected' : 'Disconnected'))}</span>
+            </label>
+          `;
+          })
+          .join('');
+      }
+    }
+
+    overlay.style.display = 'flex';
+  } catch (err) {
+    showToast(`Failed to load bond configuration: ${err.message || err}`, 'error');
+  }
+}
+
+export function closeBondConfigModal() {
+  const overlay = document.getElementById('network-bond-config-overlay');
+  if (overlay) overlay.style.display = 'none';
+  _currentBondName = null;
+}
+
+export async function saveBondConfig() {
+  if (!_currentBondName) return;
+  const modeSelect = document.getElementById('net-bond-mode-select');
+  const miimonInput = document.getElementById('net-bond-miimon-input');
+  const saveBtn = document.getElementById('net-bond-cfg-save-btn');
+
+  const mode = modeSelect ? modeSelect.value : '1';
+  const miimon = miimonInput ? parseInt(miimonInput.value, 10) : 100;
+
+  const slaves = [];
+  document.querySelectorAll('.net-bond-slave-checkbox:checked').forEach((cb) => {
+    slaves.push(cb.value);
+  });
+
+  if (slaves.length === 0) {
+    showToast('Please select at least one physical interface for the bond', 'error');
+    return;
+  }
+
+  if (saveBtn) {
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving...';
+  }
+
+  try {
+    await api.post(`/api/network/bond/${encodeURIComponent(_currentBondName)}`, {
+      mode,
+      slaves,
+      miimon
+    });
+    showToast(t('net.bond_saved_toast', 'Bonding configuration saved successfully'), 'success');
+    closeBondConfigModal();
+    fetchAndRenderNetworkTopology();
+  } catch (err) {
+    showToast(err.message || 'Failed to save bond configuration', 'error');
+  } finally {
+    if (saveBtn) {
+      saveBtn.disabled = false;
+      saveBtn.textContent = t('net.save_bond_btn', 'Save Bonding Config');
+    }
+  }
+}
+
+export async function openBridgeConfigModal(brName) {
+  _currentBridgeName = brName;
+  const overlay = document.getElementById('network-bridge-config-overlay');
+  if (!overlay) return;
+
+  const targetBadge = document.getElementById('net-bridge-target-badge');
+  const btnEnable = document.getElementById('net-stp-btn-enable');
+  const btnDisable = document.getElementById('net-stp-btn-disable');
+  const fdInput = document.getElementById('net-bridge-fd-input');
+  const membersContainer = document.getElementById('net-bridge-members-container');
+
+  if (targetBadge) targetBadge.textContent = brName;
+
+  try {
+    const data = await api.get(`/api/network/bridge/${encodeURIComponent(brName)}`);
+    const stp = Boolean(data.stp);
+
+    if (btnEnable && btnDisable) {
+      btnEnable.classList.toggle('active', stp);
+      btnDisable.classList.toggle('active', !stp);
+    }
+    if (fdInput) fdInput.value = data.forward_delay || 0;
+
+    if (membersContainer) {
+      const candidates = data.candidate_members || [];
+      if (candidates.length === 0) {
+        membersContainer.innerHTML = '<div style="color:var(--muted); font-size:11px;">No interfaces available to bridge.</div>';
+      } else {
+        membersContainer.innerHTML = candidates
+          .map((cand) => {
+            const isChecked = Boolean(cand.is_member);
+            return `
+            <label style="display:flex; align-items:center; gap:8px; font-size:11.5px; cursor:pointer; user-select:none;">
+              <input type="checkbox" class="net-bridge-member-checkbox" value="${escapeHtml(cand.name)}" ${isChecked ? 'checked' : ''} style="cursor:pointer;" />
+              <span style="font-family:var(--font-mono, monospace); font-weight:600; color:#f8fafc;">${escapeHtml(cand.name)}</span>
+              <span class="network-member-pill" style="font-size:9px; padding:1px 5px;">${escapeHtml(cand.type || 'interface')}</span>
+              ${cand.alias ? `<span class="switch-port-alias-tag">${escapeHtml(cand.alias)}</span>` : ''}
+              <span style="font-size:10px; color:var(--muted); margin-left:auto;">${escapeHtml(cand.speed_human || (cand.is_up ? 'Connected' : 'Disconnected'))}</span>
+            </label>
+          `;
+          })
+          .join('');
+      }
+    }
+
+    overlay.style.display = 'flex';
+  } catch (err) {
+    showToast(`Failed to load bridge configuration: ${err.message || err}`, 'error');
+  }
+}
+
+export function closeBridgeConfigModal() {
+  const overlay = document.getElementById('network-bridge-config-overlay');
+  if (overlay) overlay.style.display = 'none';
+  _currentBridgeName = null;
+}
+
+export async function saveBridgeConfig() {
+  if (!_currentBridgeName) return;
+  const btnEnable = document.getElementById('net-stp-btn-enable');
+  const fdInput = document.getElementById('net-bridge-fd-input');
+  const saveBtn = document.getElementById('net-bridge-cfg-save-btn');
+
+  const stp = btnEnable ? btnEnable.classList.contains('active') : false;
+  const forward_delay = fdInput ? parseInt(fdInput.value, 10) : 0;
+
+  const members = [];
+  document.querySelectorAll('.net-bridge-member-checkbox:checked').forEach((cb) => {
+    members.push(cb.value);
+  });
+
+  if (saveBtn) {
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving...';
+  }
+
+  try {
+    await api.post(`/api/network/bridge/${encodeURIComponent(_currentBridgeName)}`, {
+      stp,
+      forward_delay,
+      members
+    });
+    showToast(t('net.bridge_saved_toast', 'Bridge configuration saved successfully'), 'success');
+    closeBridgeConfigModal();
+    fetchAndRenderNetworkTopology();
+  } catch (err) {
+    showToast(err.message || 'Failed to save bridge configuration', 'error');
+  } finally {
+    if (saveBtn) {
+      saveBtn.disabled = false;
+      saveBtn.textContent = t('net.save_bridge_btn', 'Save Bridge Config');
+    }
+  }
+}
+
+export async function openCreateVlanModal() {
+  const overlay = document.getElementById('network-vlan-create-overlay');
+  if (!overlay) return;
+
+  const parentSelect = document.getElementById('net-vlan-parent-select');
+  const idInput = document.getElementById('net-vlan-id-input');
+  const aliasInput = document.getElementById('net-vlan-alias-input');
+
+  if (idInput) idInput.value = '';
+  if (aliasInput) aliasInput.value = '';
+
+  try {
+    const topo = await api.get('/api/system/network-topology');
+    if (parentSelect && topo) {
+      const parents = [];
+      (topo.physical_interfaces || []).forEach((p) => parents.push({ name: p.name, type: 'Physical NIC' }));
+      (topo.bonds || []).forEach((b) => parents.push({ name: b.name, type: 'Bonding Group' }));
+      (topo.bridges || []).forEach((br) => parents.push({ name: br.name, type: 'Virtual Bridge' }));
+
+      parentSelect.innerHTML = parents
+        .map((item) => `<option value="${escapeHtml(item.name)}">${escapeHtml(item.name)} (${escapeHtml(item.type)})</option>`)
+        .join('');
+    }
+    overlay.style.display = 'flex';
+  } catch (err) {
+    showToast(`Failed to open VLAN creator: ${err.message || err}`, 'error');
+  }
+}
+
+export function closeCreateVlanModal() {
+  const overlay = document.getElementById('network-vlan-create-overlay');
+  if (overlay) overlay.style.display = 'none';
+}
+
+export async function submitCreateVlan() {
+  const parentSelect = document.getElementById('net-vlan-parent-select');
+  const idInput = document.getElementById('net-vlan-id-input');
+  const aliasInput = document.getElementById('net-vlan-alias-input');
+  const submitBtn = document.getElementById('net-vlan-create-submit-btn');
+
+  const parent = parentSelect ? parentSelect.value : '';
+  const vid = idInput ? parseInt(idInput.value, 10) : 0;
+  const alias = aliasInput ? aliasInput.value.trim() : '';
+
+  if (!parent) {
+    showToast('Please select a parent trunk interface', 'error');
+    return;
+  }
+  if (isNaN(vid) || vid < 1 || vid > 4094) {
+    showToast('VLAN ID must be an integer between 1 and 4094', 'error');
+    return;
+  }
+
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Creating...';
+  }
+
+  try {
+    await api.post('/api/network/vlan/create', { parent, vlan_id: vid, alias });
+    showToast(t('net.vlan_created_toast', 'VLAN sub-interface created successfully'), 'success');
+    closeCreateVlanModal();
+    fetchAndRenderNetworkTopology();
+  } catch (err) {
+    showToast(err.message || 'Failed to create VLAN sub-interface', 'error');
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = t('net.create_vlan_btn', '+ Create VLAN Sub-Interface');
+    }
+  }
+}
+
+export async function deleteVlanSubinterface(vlanName) {
+  if (!confirm(`${t('net.delete_vlan_confirm', 'Are you sure you want to delete VLAN sub-interface')} "${vlanName}"?`)) {
+    return;
+  }
+  try {
+    await api.delete(`/api/network/vlan/${encodeURIComponent(vlanName)}`);
+    showToast(t('net.vlan_deleted_toast', 'VLAN sub-interface removed successfully'), 'success');
+    fetchAndRenderNetworkTopology();
+  } catch (err) {
+    showToast(err.message || 'Failed to delete VLAN sub-interface', 'error');
+  }
+}
+
 export function initNetworkControls() {
   const btnOpenHostIp = document.getElementById('btn-open-host-ip-modal');
   if (btnOpenHostIp && !btnOpenHostIp.dataset.bound) {
@@ -3900,6 +4266,104 @@ export function initNetworkControls() {
   if (dockerSubmit && !dockerSubmit.dataset.bound) {
     dockerSubmit.dataset.bound = '1';
     dockerSubmit.addEventListener('click', submitDockerNetworkCreate);
+  }
+
+  // Tier 3: Bonding Configuration Modal
+  const bondClose = document.getElementById('net-bond-cfg-close-btn');
+  if (bondClose && !bondClose.dataset.bound) {
+    bondClose.dataset.bound = '1';
+    bondClose.addEventListener('click', closeBondConfigModal);
+  }
+
+  const bondCancel = document.getElementById('net-bond-cfg-cancel-btn');
+  if (bondCancel && !bondCancel.dataset.bound) {
+    bondCancel.dataset.bound = '1';
+    bondCancel.addEventListener('click', closeBondConfigModal);
+  }
+
+  const bondSave = document.getElementById('net-bond-cfg-save-btn');
+  if (bondSave && !bondSave.dataset.bound) {
+    bondSave.dataset.bound = '1';
+    bondSave.addEventListener('click', saveBondConfig);
+  }
+
+  const bondModeSelect = document.getElementById('net-bond-mode-select');
+  const bondModeDesc = document.getElementById('net-bond-mode-desc');
+  if (bondModeSelect && !bondModeSelect.dataset.bound) {
+    bondModeSelect.dataset.bound = '1';
+    const modeDescriptions = {
+      '0': t('net.bond_mode_desc_0', 'Round-robin policy: Transmit network packets sequentially from the first available slave through the last. Provides fault tolerance and load balancing across multiple links.'),
+      '1': t('net.bond_mode_desc_1', 'Active-backup policy: Only one slave interface is active. Another slave becomes active only if the primary fails. Recommended for unmanaged switch environments.'),
+      '2': t('net.bond_mode_desc_2', 'XOR balance policy: Transmits based on the selected transmit hash policy [(source MAC XOR dest MAC) modulo slave count]. Provides fault tolerance and load balancing.'),
+      '4': t('net.bond_mode_desc_4', 'Dynamic Link Aggregation (IEEE 802.3ad LACP): Requires a switch that supports IEEE 802.3ad dynamic aggregation. Shares identical speed and duplex settings for maximum aggregate bandwidth and resilience.'),
+      '6': t('net.bond_mode_desc_6', 'Adaptive Load Balancing (Balance-ALB): Includes balance-tlb plus receive load balancing (rlb) for IPv4 traffic. Does not require special switch support.')
+    };
+    bondModeSelect.addEventListener('change', () => {
+      if (bondModeDesc) {
+        bondModeDesc.textContent = modeDescriptions[bondModeSelect.value] || '';
+      }
+    });
+  }
+
+  // Tier 3: Bridge Configuration Modal
+  const bridgeClose = document.getElementById('net-bridge-cfg-close-btn');
+  if (bridgeClose && !bridgeClose.dataset.bound) {
+    bridgeClose.dataset.bound = '1';
+    bridgeClose.addEventListener('click', closeBridgeConfigModal);
+  }
+
+  const bridgeCancel = document.getElementById('net-bridge-cfg-cancel-btn');
+  if (bridgeCancel && !bridgeCancel.dataset.bound) {
+    bridgeCancel.dataset.bound = '1';
+    bridgeCancel.addEventListener('click', closeBridgeConfigModal);
+  }
+
+  const bridgeSave = document.getElementById('net-bridge-cfg-save-btn');
+  if (bridgeSave && !bridgeSave.dataset.bound) {
+    bridgeSave.dataset.bound = '1';
+    bridgeSave.addEventListener('click', saveBridgeConfig);
+  }
+
+  const btnStpEnable = document.getElementById('net-stp-btn-enable');
+  const btnStpDisable = document.getElementById('net-stp-btn-disable');
+  if (btnStpEnable && !btnStpEnable.dataset.bound) {
+    btnStpEnable.dataset.bound = '1';
+    btnStpEnable.addEventListener('click', () => {
+      btnStpEnable.classList.add('active');
+      if (btnStpDisable) btnStpDisable.classList.remove('active');
+    });
+  }
+  if (btnStpDisable && !btnStpDisable.dataset.bound) {
+    btnStpDisable.dataset.bound = '1';
+    btnStpDisable.addEventListener('click', () => {
+      btnStpDisable.classList.add('active');
+      if (btnStpEnable) btnStpEnable.classList.remove('active');
+    });
+  }
+
+  // Tier 3: 802.1Q VLAN Sub-Interface Modal
+  const btnOpenVlan = document.getElementById('btn-open-create-vlan-modal');
+  if (btnOpenVlan && !btnOpenVlan.dataset.bound) {
+    btnOpenVlan.dataset.bound = '1';
+    btnOpenVlan.addEventListener('click', () => openCreateVlanModal());
+  }
+
+  const vlanClose = document.getElementById('net-vlan-create-close-btn');
+  if (vlanClose && !vlanClose.dataset.bound) {
+    vlanClose.dataset.bound = '1';
+    vlanClose.addEventListener('click', closeCreateVlanModal);
+  }
+
+  const vlanCancel = document.getElementById('net-vlan-create-cancel-btn');
+  if (vlanCancel && !vlanCancel.dataset.bound) {
+    vlanCancel.dataset.bound = '1';
+    vlanCancel.addEventListener('click', closeCreateVlanModal);
+  }
+
+  const vlanSubmit = document.getElementById('net-vlan-create-submit-btn');
+  if (vlanSubmit && !vlanSubmit.dataset.bound) {
+    vlanSubmit.dataset.bound = '1';
+    vlanSubmit.addEventListener('click', submitCreateVlan);
   }
 }
 
