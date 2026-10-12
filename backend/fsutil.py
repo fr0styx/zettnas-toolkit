@@ -5,8 +5,11 @@ Filesystem helpers: crash-safe JSON persistence and path containment checks.
 import json
 import os
 import tempfile
+import time
 from collections.abc import Iterable
 from typing import Any
+
+_JSON_CACHE: dict[str, tuple[float, Any, float]] = {}
 
 
 def atomic_write_json(path: str, data: Any) -> None:
@@ -24,6 +27,8 @@ def atomic_write_json(path: str, data: Any) -> None:
             f.flush()
             os.fsync(f.fileno())
         os.replace(tmp_path, path)
+        now = time.time()
+        _JSON_CACHE[path] = (now, data, now)
     except BaseException:
         try:
             os.unlink(tmp_path)
@@ -37,6 +42,30 @@ def read_json(path: str, default: Any = None) -> Any:
     try:
         with open(path) as f:
             return json.load(f)
+    except (OSError, json.JSONDecodeError):
+        return default
+
+
+def read_json_cached(path: str, default: Any = None, max_age: float = 3.0) -> Any:
+    """Read JSON from `path` with in-memory caching to eliminate redundant disk I/O on hot loops."""
+    try:
+        now = time.time()
+        cached = _JSON_CACHE.get(path)
+        if cached:
+            cached_mtime, cached_data, checked_at = cached
+            if (now - checked_at) < max_age:
+                return cached_data
+            stat = os.stat(path)
+            if stat.st_mtime == cached_mtime:
+                _JSON_CACHE[path] = (cached_mtime, cached_data, now)
+                return cached_data
+            data = read_json(path, default)
+            _JSON_CACHE[path] = (stat.st_mtime, data, now)
+            return data
+        stat = os.stat(path)
+        data = read_json(path, default)
+        _JSON_CACHE[path] = (stat.st_mtime, data, now)
+        return data
     except (OSError, json.JSONDecodeError):
         return default
 

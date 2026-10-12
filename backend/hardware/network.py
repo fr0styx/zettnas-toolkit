@@ -2208,3 +2208,102 @@ def read_ip():
             pass
 
     return "?"
+
+
+def get_mesh_vpn_status() -> Dict[str, Any]:
+    """
+    Zero-Trust Mesh Hub detector:
+    Queries Tailscale daemon status (via CLI or local socket) and WireGuard kernel interfaces.
+    """
+    import json
+
+    ts_info = {
+        "installed": False,
+        "active": False,
+        "ipv4": "",
+        "tailnet": "",
+        "hostname": "",
+        "peers_count": 0,
+    }
+
+    try:
+        r = subprocess.run(["tailscale", "status", "--json"], capture_output=True, text=True, timeout=3)
+        if r.returncode == 0 and r.stdout.strip():
+            ts_info["installed"] = True
+            doc = json.loads(r.stdout)
+            status_str = doc.get("BackendState", "")
+            ts_info["active"] = status_str == "Running"
+            ts_info["hostname"] = doc.get("Self", {}).get("HostName", "")
+            ips = doc.get("Self", {}).get("TailscaleIPs", [])
+            ts_info["ipv4"] = ips[0] if ips else ""
+            ts_info["tailnet"] = doc.get("MagicDNSSuffix", "")
+            peers = doc.get("Peer", {})
+            ts_info["peers_count"] = len(peers) if isinstance(peers, dict) else len(peers or [])
+    except FileNotFoundError:
+        pass
+    except Exception as e:
+        logger.debug(f"[Network] Tailscale status query: {e}")
+
+    wg_info = {
+        "installed": False,
+        "active": False,
+        "interfaces": [],
+    }
+    try:
+        r = subprocess.run(["wg", "show", "interfaces"], capture_output=True, text=True, timeout=3)
+        if r.returncode == 0:
+            wg_info["installed"] = True
+            ifaces = [i.strip() for i in r.stdout.strip().split() if i.strip()]
+            wg_info["interfaces"] = ifaces
+            wg_info["active"] = len(ifaces) > 0
+    except FileNotFoundError:
+        pass
+    except Exception as e:
+        logger.debug(f"[Network] Wireguard status query: {e}")
+
+    return {
+        "tailscale": ts_info,
+        "wireguard": wg_info,
+    }
+
+
+def execute_tailscale_up(
+    auth_key: Optional[str] = None,
+    hostname: Optional[str] = None,
+    accept_routes: bool = True,
+) -> Dict[str, Any]:
+    """Connects host to the Zero-Trust Tailscale mesh network."""
+    cmd = ["tailscale", "up"]
+    if auth_key:
+        cmd.extend(["--authkey", auth_key])
+    if hostname:
+        cmd.extend(["--hostname", hostname])
+    if accept_routes:
+        cmd.append("--accept-routes")
+
+    try:
+        r = subprocess.run(cmd, capture_output=True, text=True, timeout=15)
+        return {
+            "status": "success" if r.returncode == 0 else "error",
+            "code": r.returncode,
+            "output": r.stdout or r.stderr,
+        }
+    except FileNotFoundError:
+        return {"status": "error", "code": 127, "output": "tailscale CLI not found on host"}
+    except Exception as e:
+        return {"status": "error", "code": 1, "output": str(e)}
+
+
+def execute_tailscale_down() -> Dict[str, Any]:
+    """Disconnects host from the Zero-Trust Tailscale mesh network."""
+    try:
+        r = subprocess.run(["tailscale", "down"], capture_output=True, text=True, timeout=10)
+        return {
+            "status": "success" if r.returncode == 0 else "error",
+            "code": r.returncode,
+            "output": r.stdout or r.stderr,
+        }
+    except FileNotFoundError:
+        return {"status": "error", "code": 127, "output": "tailscale CLI not found on host"}
+    except Exception as e:
+        return {"status": "error", "code": 1, "output": str(e)}

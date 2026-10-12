@@ -40,7 +40,6 @@ def get_users_db_connection(db_path: Optional[str] = None) -> sqlite3.Connection
     os.makedirs(os.path.dirname(target_path), exist_ok=True)
     conn = sqlite3.connect(target_path, timeout=15.0, check_same_thread=False)
     conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA journal_mode=WAL;")
     conn.execute("PRAGMA synchronous=NORMAL;")
     conn.execute("PRAGMA foreign_keys=ON;")
     conn.execute("PRAGMA busy_timeout=15000;")
@@ -48,17 +47,24 @@ def get_users_db_connection(db_path: Optional[str] = None) -> sqlite3.Connection
 
 
 @contextmanager
-def users_db_session(db_path: Optional[str] = None):
-    with _db_lock:
+def users_db_session(db_path: Optional[str] = None, readonly: bool = False):
+    if readonly:
         conn = get_users_db_connection(db_path)
         try:
             yield conn
-            conn.commit()
-        except Exception:
-            conn.rollback()
-            raise
         finally:
             conn.close()
+    else:
+        with _db_lock:
+            conn = get_users_db_connection(db_path)
+            try:
+                yield conn
+                conn.commit()
+            except Exception:
+                conn.rollback()
+                raise
+            finally:
+                conn.close()
 
 
 # ==============================================================================
@@ -117,6 +123,7 @@ def init_users_db(db_path: Optional[str] = None) -> None:
     os.makedirs(os.path.dirname(target_path), exist_ok=True)
 
     with users_db_session(target_path) as conn:
+        conn.execute("PRAGMA journal_mode=WAL;")
         # 1. Roles table
         conn.execute("""
             CREATE TABLE IF NOT EXISTS roles (
@@ -384,7 +391,7 @@ def migrate_legacy_data(db_path: Optional[str] = None) -> None:
 
 
 def get_user_by_id(user_id: str, db_path: Optional[str] = None) -> Optional[Dict[str, Any]]:
-    with users_db_session(db_path) as conn:
+    with users_db_session(db_path, readonly=True) as conn:
         row = conn.execute(
             """
             SELECT u.*, r.name AS role_name, r.scopes_json
@@ -405,7 +412,7 @@ def get_user_by_id(user_id: str, db_path: Optional[str] = None) -> Optional[Dict
 def get_user_by_username(username: str, db_path: Optional[str] = None) -> Optional[Dict[str, Any]]:
     if not username:
         return None
-    with users_db_session(db_path) as conn:
+    with users_db_session(db_path, readonly=True) as conn:
         row = conn.execute(
             """
             SELECT u.*, r.name AS role_name, r.scopes_json
@@ -424,7 +431,7 @@ def get_user_by_username(username: str, db_path: Optional[str] = None) -> Option
 
 
 def list_users(db_path: Optional[str] = None) -> List[Dict[str, Any]]:
-    with users_db_session(db_path) as conn:
+    with users_db_session(db_path, readonly=True) as conn:
         rows = conn.execute("""
             SELECT u.id, u.username, u.display_name, u.email, u.role_id, r.name AS role_name,
                    u.status, u.must_change_password, u.avatar_url, u.home_directory,
@@ -727,7 +734,7 @@ def revoke_all_sessions_for_user(
 
 
 def list_user_sessions(user_id: str, db_path: Optional[str] = None) -> List[Dict[str, Any]]:
-    with users_db_session(db_path) as conn:
+    with users_db_session(db_path, readonly=True) as conn:
         rows = conn.execute(
             """
             SELECT session_id_hash, created_at, expires_at, last_active_at, ip_address, user_agent, is_remembered
@@ -798,7 +805,7 @@ def validate_scoped_api_token(raw_token: str, db_path: Optional[str] = None) -> 
                 del _TOKEN_CACHE[token_hash]
                 return None
 
-    with users_db_session(db_path) as conn:
+    with users_db_session(db_path, readonly=True) as conn:
         row = conn.execute(
             """
             SELECT t.*, u.username, u.status, u.role_id
@@ -833,7 +840,7 @@ def validate_scoped_api_token(raw_token: str, db_path: Optional[str] = None) -> 
 
 
 def list_user_api_tokens(user_id: str, db_path: Optional[str] = None) -> List[Dict[str, Any]]:
-    with users_db_session(db_path) as conn:
+    with users_db_session(db_path, readonly=True) as conn:
         rows = conn.execute(
             """
             SELECT token_id, name, masked_token, scopes_json, created_at, expires_at, last_used_at, last_used_ip
@@ -913,7 +920,7 @@ def log_security_event(
 
 
 def query_security_audit_logs(limit: int = 100, offset: int = 0, db_path: Optional[str] = None) -> List[Dict[str, Any]]:
-    with users_db_session(db_path) as conn:
+    with users_db_session(db_path, readonly=True) as conn:
         rows = conn.execute(
             """
             SELECT * FROM security_audit_log
@@ -936,7 +943,7 @@ def query_security_audit_logs(limit: int = 100, offset: int = 0, db_path: Option
 
 
 def get_user_mfa(user_id: str, db_path: Optional[str] = None) -> Optional[Dict[str, Any]]:
-    with users_db_session(db_path) as conn:
+    with users_db_session(db_path, readonly=True) as conn:
         row = conn.execute(
             "SELECT id, username, mfa_enabled, mfa_secret, mfa_recovery_codes_json FROM users WHERE id = ?",
             (user_id,),

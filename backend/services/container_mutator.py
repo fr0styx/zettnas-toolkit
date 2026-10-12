@@ -259,13 +259,14 @@ def recreate_container(
     pull_image: bool = False,
     keep_backup: bool = False,
     timeout: float = 45.0,
+    grace_period_seconds: float = 0.0,
 ) -> Dict[str, Any]:
     """
     Safely reconfigures and mutates a container using the Atomic Clone-and-Recreate pattern.
     Supports updating container name, image tag, environment variables, mounts / binds,
     network mode, port bindings, and restart policy.
     Includes automated rollback to guarantee zero data loss and uninterrupted availability
-    if creation or startup of the updated container encounters an error.
+    if creation, startup, or liveness verification of the updated container encounters an error.
     """
     # Step 1: Pre-flight inspect
     inspect_data = fetch_container_raw_inspect(cid)
@@ -405,6 +406,29 @@ def recreate_container(
         if status != 204:
             raise RuntimeError(f"Failed to start newly created container: {start_resp}")
 
+        # Step 9b: Liveness verification with grace period before removing backup
+        if grace_period_seconds > 0:
+            logger.info(
+                f"[Container Recreate] Verifying container '{target_name}' liveness for {grace_period_seconds}s grace period..."
+            )
+            deadline = time.time() + grace_period_seconds
+            while time.time() < deadline:
+                time.sleep(min(0.5, max(0.05, deadline - time.time())))
+                st_code, inspect_live = _docker_request("GET", f"/containers/{new_id}/json", timeout=timeout)
+                if st_code == 200 and isinstance(inspect_live, dict):
+                    live_state = inspect_live.get("State", {})
+                    is_running = live_state.get("Running", False)
+                    exit_code = live_state.get("ExitCode", 0)
+                    error_msg = live_state.get("Error", "")
+                    if not is_running and exit_code != 0:
+                        raise RuntimeError(
+                            f"Container '{target_name}' crashed immediately after launch with exit code {exit_code}: {error_msg or 'Abnormal termination'}"
+                        )
+                    if live_state.get("Dead", False) or live_state.get("OOMKilled", False):
+                        raise RuntimeError(
+                            f"Container '{target_name}' failed liveness check: OOMKilled={live_state.get('OOMKilled')}, Dead={live_state.get('Dead')}"
+                        )
+
         # Step 10: Success! Cleanup or retain backup
         if not keep_backup:
             logger.info(f"[Container Recreate] Removing backup container '{backup_name}'...")
@@ -455,6 +479,7 @@ def recreate_container_ports(
     new_port_bindings: List[Dict[str, Any]],
     keep_backup: bool = False,
     timeout: float = 30.0,
+    grace_period_seconds: float = 0.0,
 ) -> Dict[str, Any]:
     """
     Backwards-compatible convenience wrapper around recreate_container.
@@ -464,4 +489,5 @@ def recreate_container_ports(
         port_bindings=new_port_bindings,
         keep_backup=keep_backup,
         timeout=timeout,
+        grace_period_seconds=grace_period_seconds,
     )

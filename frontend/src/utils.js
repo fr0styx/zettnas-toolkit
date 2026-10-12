@@ -115,15 +115,20 @@ export async function copyTextToClipboard(text) {
  * @param {Function} [updateRowFn] - Function updating an existing HTMLElement with the new item data
  */
 export function reconcileKeyedTable(parentEl, items, keyFn, createRowFn, updateRowFn) {
-  if (!parentEl) return;
+  if (!parentEl || !Array.isArray(items)) return;
   const existingMap = new Map();
-  Array.from(parentEl.children).forEach((child) => {
+  const children = parentEl.children;
+  const len = children.length;
+  for (let i = 0; i < len; i++) {
+    const child = children[i];
     const key = child.dataset?.key ?? child.dataset?.dev ?? child.dataset?.id;
     if (key != null) existingMap.set(String(key), child);
-  });
+  }
 
   const incomingKeys = new Set();
-  items.forEach((item, index) => {
+  const itemsCount = items.length;
+  for (let index = 0; index < itemsCount; index++) {
+    const item = items[index];
     const key = String(keyFn(item));
     incomingKeys.add(key);
     let row = existingMap.get(key);
@@ -139,12 +144,12 @@ export function reconcileKeyedTable(parentEl, items, keyFn, createRowFn, updateR
 
     if (row) {
       // Maintain exact ordering without thrashing
-      const currentChild = parentEl.children[index];
+      const currentChild = children[index];
       if (currentChild !== row) {
         parentEl.insertBefore(row, currentChild || null);
       }
     }
-  });
+  }
 
   // Remove nodes that no longer exist in the incoming dataset
   existingMap.forEach((row, key) => {

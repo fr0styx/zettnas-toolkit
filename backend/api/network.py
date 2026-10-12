@@ -252,6 +252,47 @@ async def create_vlan_endpoint(req: VlanCreateRequest):
 async def delete_vlan_endpoint(vlan_iface: str):
     """Delete an existing 802.1Q VLAN tagged sub-interface."""
     res = await asyncio.to_thread(delete_vlan, vlan_iface)
+    return res
+
+
+class TailscaleUpRequest(BaseModel):
+    auth_key: Optional[str] = Field(
+        default=None, description="Pre-authenticated Tailscale ephemeral or reusable auth key"
+    )
+    hostname: Optional[str] = Field(default=None, description="Custom node hostname on tailnet")
+    accept_routes: bool = Field(default=True, description="Accept subnet routes from other nodes")
+
+
+@router.get("/network/mesh-vpn", dependencies=[Depends(require_scope("system:view"))])
+async def get_mesh_vpn_endpoint():
+    """Retrieves Zero-Trust Mesh VPN telemetry and status for Tailscale and WireGuard."""
+    from backend.hardware.network import get_mesh_vpn_status
+
+    return await asyncio.to_thread(get_mesh_vpn_status)
+
+
+@router.post("/network/mesh-vpn/tailscale/up", dependencies=[Depends(require_scope("system:config"))])
+async def post_tailscale_up(req: TailscaleUpRequest):
+    """Connects host to the Zero-Trust Tailscale mesh network."""
+    from backend.hardware.network import execute_tailscale_up
+
+    res = await asyncio.to_thread(
+        execute_tailscale_up,
+        auth_key=req.auth_key,
+        hostname=req.hostname,
+        accept_routes=req.accept_routes,
+    )
     if res.get("status") == "error":
-        raise HTTPException(status_code=400, detail=res.get("message", "Failed to delete VLAN sub-interface"))
+        raise HTTPException(status_code=400, detail=res.get("output", "Tailscale connection failed"))
+    return res
+
+
+@router.post("/network/mesh-vpn/tailscale/down", dependencies=[Depends(require_scope("system:config"))])
+async def post_tailscale_down():
+    """Disconnects host from the Zero-Trust Tailscale mesh network."""
+    from backend.hardware.network import execute_tailscale_down
+
+    res = await asyncio.to_thread(execute_tailscale_down)
+    if res.get("status") == "error":
+        raise HTTPException(status_code=400, detail=res.get("output", "Tailscale disconnection failed"))
     return res

@@ -2853,6 +2853,8 @@ select.tz-select-input option, select.tz-select option {
 }
 
 .smart-modal-window {
+  contain: layout style;
+  transform: translateZ(0);
   pointer-events: auto;
   background: #0f1620; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 14px;
   width: 580px; height: 540px; min-width: 480px; min-height: 340px; max-width: 95vw; max-height: 88vh; display: flex; flex-direction: column;
@@ -3104,6 +3106,7 @@ select.tz-select-input option, select.tz-select option {
 
 /* Sizing Modifiers */
 .os-dock {
+  contain: layout style;
   display: flex;
   gap: 10px;
   padding: 6px 10px;
@@ -3550,6 +3553,7 @@ select.tz-select-input option, select.tz-select option {
    ========================================================================= */
 #management-modal-overlay #management-window,
 .management-window {
+  contain: layout style;
   position: fixed;
   top: 50%;
   left: 50%;

@@ -6,6 +6,7 @@ Provides hardware- and OS-agnostic disk, pool, and network share abstractions.
 
 from abc import ABC, abstractmethod
 from enum import Enum
+import json
 import os
 import shutil
 import subprocess
@@ -171,6 +172,8 @@ class StoragePlatformAdapter(ABC):
         subvol_name: str,
         snapshot_name: str,
         readonly: bool = True,
+        worm_mode: Optional[str] = None,
+        retention_days: Optional[int] = None,
     ) -> Dict[str, Any]:
         """Creates a subvolume snapshot."""
         ...
@@ -181,7 +184,13 @@ class StoragePlatformAdapter(ABC):
         ...
 
     @abstractmethod
-    def delete_snapshot(self, pool_id: str, snapshot_name: str) -> Dict[str, Any]:
+    def delete_snapshot(
+        self,
+        pool_id: str,
+        snapshot_name: str,
+        break_glass: bool = False,
+        reason: str = "",
+    ) -> Dict[str, Any]:
         """Deletes a subvolume snapshot."""
         ...
 
@@ -648,6 +657,8 @@ class UnraidStorageAdapter(StoragePlatformAdapter):
         subvol_name: str,
         snapshot_name: str,
         readonly: bool = True,
+        worm_mode: Optional[str] = None,
+        retention_days: Optional[int] = None,
     ) -> Dict[str, Any]:
         raise PlatformCapabilityError(
             "Observer mode active: Filesystem snapshots on Unraid are authoritatively managed by Unraid."
@@ -656,7 +667,13 @@ class UnraidStorageAdapter(StoragePlatformAdapter):
     def list_snapshots(self, pool_id: str) -> List[Dict[str, Any]]:
         return []
 
-    def delete_snapshot(self, pool_id: str, snapshot_name: str) -> Dict[str, Any]:
+    def delete_snapshot(
+        self,
+        pool_id: str,
+        snapshot_name: str,
+        break_glass: bool = False,
+        reason: str = "",
+    ) -> Dict[str, Any]:
         raise PlatformCapabilityError(
             "Observer mode active: Filesystem snapshots on Unraid are authoritatively managed by Unraid."
         )
@@ -1038,8 +1055,10 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
         subvol_name: str,
         snapshot_name: str,
         readonly: bool = True,
+        worm_mode: Optional[str] = None,
+        retention_days: Optional[int] = None,
     ) -> Dict[str, Any]:
-        """Creates an atomic Btrfs subvolume snapshot."""
+        """Creates an atomic Btrfs subvolume snapshot with optional Two-Tier WORM immutability."""
         src_path = os.path.join(self._pool_path, "@shares", subvol_name)
         if not os.path.exists(src_path):
             src_path = os.path.join(self._pool_path, subvol_name)
@@ -1051,47 +1070,136 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
             logger.warning(f"[PAL] Could not pre-create snapshots dir {snaps_dir}: {e}")
         dest_path = os.path.join(snaps_dir, snapshot_name)
 
+        # Force readonly for WORM snapshots
+        if worm_mode in ("compliance", "governance"):
+            readonly = True
+
         cmd = ["btrfs", "subvolume", "snapshot"]
         if readonly:
             cmd.append("-r")
         cmd.extend([src_path, dest_path])
         code, out, err = self._run_cmd(cmd)
 
+        now = time.time()
+        retention_until = None
+        if worm_mode in ("compliance", "governance"):
+            days = retention_days if (retention_days and retention_days > 0) else 30
+            retention_until = now + (days * 86400)
+            worm_meta = {
+                "snapshot_name": snapshot_name,
+                "pool_id": pool_id,
+                "subvol_name": subvol_name,
+                "worm_mode": worm_mode.lower(),
+                "created_at": now,
+                "retention_until": retention_until,
+            }
+            meta_path = os.path.join(snaps_dir, f".{snapshot_name}.worm.json")
+            try:
+                with open(meta_path, "w", encoding="utf-8") as f:
+                    json.dump(worm_meta, f, indent=2)
+            except Exception as e:
+                logger.warning(f"[PAL] Failed saving WORM metadata: {e}")
+
         return {
             "status": "created" if code in (0, 127) else "error",
             "source": src_path,
             "snapshot": dest_path,
             "readonly": readonly,
+            "worm_mode": worm_mode,
+            "retention_until": retention_until,
             "code": code,
             "output": out or err,
         }
 
     def list_snapshots(self, pool_id: str) -> List[Dict[str, Any]]:
-        """Lists active Btrfs subvolume snapshots."""
+        """Lists active Btrfs subvolume snapshots with WORM immutability metadata."""
         snaps_dir = os.path.join(self._pool_path, "@snapshots")
         snapshots: List[Dict[str, Any]] = []
         if os.path.isdir(snaps_dir):
             try:
                 for entry in sorted(os.listdir(snaps_dir)):
+                    if entry.startswith("."):
+                        continue
                     p = os.path.join(snaps_dir, entry)
                     if os.path.isdir(p):
                         stat = os.stat(p)
-                        snapshots.append(
-                            {
-                                "name": entry,
-                                "path": p,
-                                "created_at": stat.st_mtime,
-                                "pool_id": pool_id,
-                            }
-                        )
+                        item = {
+                            "name": entry,
+                            "path": p,
+                            "created_at": stat.st_mtime,
+                            "pool_id": pool_id,
+                            "worm_mode": None,
+                            "retention_until": None,
+                            "is_immutable": False,
+                        }
+                        meta_path = os.path.join(snaps_dir, f".{entry}.worm.json")
+                        if os.path.isfile(meta_path):
+                            try:
+                                with open(meta_path, "r", encoding="utf-8") as f:
+                                    meta = json.load(f)
+                                item["worm_mode"] = meta.get("worm_mode")
+                                item["retention_until"] = meta.get("retention_until")
+                                item["is_immutable"] = (meta.get("retention_until") or 0) > time.time()
+                            except Exception:
+                                pass
+                        snapshots.append(item)
             except Exception as e:
                 logger.debug(f"[PAL] Snapshot list error: {e}")
         return snapshots
 
-    def delete_snapshot(self, pool_id: str, snapshot_name: str) -> Dict[str, Any]:
-        """Deletes a Btrfs subvolume snapshot."""
-        target_path = os.path.join(self._pool_path, "@snapshots", snapshot_name)
+    def delete_snapshot(
+        self,
+        pool_id: str,
+        snapshot_name: str,
+        break_glass: bool = False,
+        reason: str = "",
+    ) -> Dict[str, Any]:
+        """Deletes a Btrfs subvolume snapshot, strictly enforcing Two-Tier WORM immutability."""
+        snaps_dir = os.path.join(self._pool_path, "@snapshots")
+        target_path = os.path.join(snaps_dir, snapshot_name)
+        meta_path = os.path.join(snaps_dir, f".{snapshot_name}.worm.json")
+
+        if os.path.isfile(meta_path):
+            try:
+                with open(meta_path, "r", encoding="utf-8") as f:
+                    meta = json.load(f)
+                mode = (meta.get("worm_mode") or "").lower()
+                retention_until = meta.get("retention_until") or 0
+                now = time.time()
+                if now < retention_until:
+                    if mode == "compliance":
+                        raise PlatformCapabilityError(
+                            f"Compliance WORM lock active: Snapshot '{snapshot_name}' cannot be deleted until retention expires on {time.ctime(retention_until)}."
+                        )
+                    elif mode == "governance" and not break_glass:
+                        raise PlatformCapabilityError(
+                            f"Governance WORM lock active: Snapshot '{snapshot_name}' requires Break-Glass authorization and audit justification to delete."
+                        )
+            except PlatformCapabilityError:
+                raise
+            except Exception as e:
+                logger.warning(f"[PAL] Error reading WORM metadata during delete: {e}")
+
+        # If break_glass was invoked for governance snapshot, log security audit event
+        if break_glass:
+            try:
+                from backend.users_db import log_security_event
+
+                log_security_event(
+                    event_type="worm_break_glass_delete",
+                    status="success",
+                    details={"snapshot": snapshot_name, "pool_id": pool_id, "reason": reason},
+                )
+            except Exception as e:
+                logger.warning(f"[PAL] Security audit log error: {e}")
+
         code, out, err = self._run_cmd(["btrfs", "subvolume", "delete", target_path])
+        if os.path.isfile(meta_path) and code in (0, 127):
+            try:
+                os.remove(meta_path)
+            except OSError:
+                pass
+
         return {
             "status": "deleted" if code in (0, 127) else "error",
             "snapshot": snapshot_name,

@@ -25,7 +25,7 @@ from backend.config import (
     logger,
 )
 from backend.db import log_metrics
-from backend.fsutil import read_json
+from backend.fsutil import read_json, read_json_cached
 from backend.hardware.cpu import read_cpu_temp, read_cpu_util
 from backend.hardware.chassis import ChassisEngine
 from backend.hardware.disks import poll_all_disks_smart, read_disk_temps_and_io
@@ -97,7 +97,7 @@ def stats_collector_daemon():
                 "zero_rpm_stop_temp": FAN_ZERO_RPM_DEFAULT_STOP_TEMP,
                 "zero_rpm_start_temp": FAN_ZERO_RPM_DEFAULT_START_TEMP,
             }
-            loaded_fan_cfg = read_json(FAN_STATE_FILE, {})
+            loaded_fan_cfg = read_json_cached(FAN_STATE_FILE, {})
             if isinstance(loaded_fan_cfg, dict):
                 fan_cfg.update(loaded_fan_cfg)
 
@@ -385,7 +385,7 @@ def stats_collector_daemon():
             set_screen_brightness(target_bl)
 
             # LED Lighting & Schedule
-            cfg = read_json(LED_STATE_FILE, {})
+            cfg = read_json_cached(LED_STATE_FILE, {})
             if not isinstance(cfg, dict):
                 cfg = {}
 
@@ -620,7 +620,7 @@ def stats_collector_daemon():
                 "client_preferences": (
                     Z_STATE.client_preferences
                     if Z_STATE.client_preferences is not None
-                    else read_json(CLIENT_PREFS_FILE, default={})
+                    else read_json_cached(CLIENT_PREFS_FILE, default={})
                 ),
                 "hardware": hw_features,
                 "peripherals": {

@@ -3,6 +3,7 @@ import json
 from typing import Any
 
 from backend.config import logger
+from backend.fast_json import dumps as fast_dumps
 
 
 class StatsBroadcaster:
@@ -32,7 +33,7 @@ class StatsBroadcaster:
         # Immediately send complete snapshot to newly connected client before registering
         full_data = initial_data or self._latest_full_data
         if full_data is not None:
-            payload = f"data: {json.dumps(full_data)}\n\n"
+            payload = f"data: {fast_dumps(full_data)}\n\n"
             await q.put(payload)
         elif self._latest_payload is not None:
             await q.put(self._latest_payload)
@@ -84,7 +85,7 @@ class StatsBroadcaster:
             self._latest_full_data = data
 
         try:
-            payload = f"data: {json.dumps(data)}\n\n"
+            payload = f"data: {fast_dumps(data)}\n\n"
         except (TypeError, ValueError) as e:
             logger.warning(f"[BROADCASTER] Serialization error: {e}")
             return

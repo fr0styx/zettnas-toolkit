@@ -33,6 +33,27 @@ export const defaultSizes = {
 
 export const ZOOM_PROFILES = [0.75, 0.85, 1.0, 1.15, 1.25, 1.5];
 
+export function fastEqual(a, b) {
+  if (a === b) return true;
+  if (!a || !b || typeof a !== 'object' || typeof b !== 'object') return false;
+  if (Array.isArray(a) !== Array.isArray(b)) return false;
+  if (Array.isArray(a)) {
+    if (a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) {
+      if (!fastEqual(a[i], b[i])) return false;
+    }
+    return true;
+  }
+  const keysA = Object.keys(a);
+  const keysB = Object.keys(b);
+  if (keysA.length !== keysB.length) return false;
+  for (let i = 0; i < keysA.length; i++) {
+    const k = keysA[i];
+    if (!(k in b) || !fastEqual(a[k], b[k])) return false;
+  }
+  return true;
+}
+
 export const state = {
   isLcdDirect: typeof window !== 'undefined' && (window.location.search.includes('mode=lcd') || (typeof document !== 'undefined' && document.body && document.body.classList.contains('lcd-direct'))),
   desktopTheme: (typeof localStorage !== 'undefined' && localStorage.getItem('desktop_theme')) || 'cyber',
@@ -71,14 +92,14 @@ export const state = {
       return true;
     }
 
-    // Diff metrics to prevent unnecessary UI renders if nothing changed
+    // Fast diff metrics without heap JSON allocations to prevent unnecessary UI renders
     let changed = false;
     for (const key of Object.keys(s)) {
       const newVal = s[key];
       const oldVal = this.latestStats[key];
       if (newVal !== oldVal) {
         if (typeof newVal === 'object' && newVal !== null && typeof oldVal === 'object' && oldVal !== null) {
-          if (JSON.stringify(newVal) !== JSON.stringify(oldVal)) {
+          if (!fastEqual(newVal, oldVal)) {
             changed = true;
             break;
           }

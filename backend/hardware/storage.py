@@ -3,6 +3,7 @@ import os
 import shutil
 
 from backend.config import DASH_LAYOUT_FILE, HOST_PROC, HOST_SYS, POOL_PATH, logger
+from backend.fsutil import read_json_cached
 from backend.hardware.disks import _discover_disks
 from backend.state import Z_STATE
 
@@ -95,10 +96,7 @@ def get_current_layout():
         "timezone": "America/New_York",
         "version": 1,
     }
-    if os.path.exists(DASH_LAYOUT_FILE):
-        try:
-            with open(DASH_LAYOUT_FILE) as f:
-                layout = json.load(f)
-        except (json.JSONDecodeError, OSError) as e:
-            logger.debug(f"Silenced exception: {e}")
+    loaded = read_json_cached(DASH_LAYOUT_FILE, default=None)
+    if isinstance(loaded, dict):
+        layout = loaded
     return layout

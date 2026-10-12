@@ -648,6 +648,7 @@ class DockerContainerRecreateRequest(BaseModel):
     restart_policy: Optional[str] = None
     pull_image: bool = False
     keep_backup: bool = False
+    grace_period_seconds: float = 3.0
 
 
 @router.post(
@@ -673,6 +674,7 @@ async def post_docker_container_recreate(container_id: str, req: DockerContainer
             restart_policy=req.restart_policy,
             pull_image=req.pull_image,
             keep_backup=req.keep_backup,
+            grace_period_seconds=req.grace_period_seconds,
         )
         return res
     except ValueError as e:
@@ -1230,6 +1232,200 @@ async def fs_upload(
     except Exception as e:
         logger.error(f"[FS] Upload failed: {e}")
         raise HTTPException(status_code=500, detail="Failed to upload file")
+
+
+class TrashRestoreRequest(BaseModel):
+    item_id: str
+    target_path: Optional[str] = None
+
+
+@router.get("/fs/search", dependencies=[Depends(require_scope("shares:read", "storage:read", "system:view"))])
+async def fs_search(
+    q: str,
+    path: Optional[str] = None,
+    limit: int = 50,
+    offset: int = 0,
+    recursive: bool = True,
+    principal: AuthenticatedPrincipal = Depends(get_current_principal),
+):
+    """
+    Streaming bounded filesystem search using os.scandir with path containment.
+    """
+    query = (q or "").strip().lower()
+    if not query:
+        return {"items": [], "total": 0, "query": q, "limit": limit, "offset": offset}
+
+    limit = max(1, min(limit, 200))
+    offset = max(0, offset)
+
+    if path and path.strip():
+        check_user_path_access(path, principal)
+        search_root = resolve_within(path, ALLOWED_BROWSE_ROOTS)
+        if search_root is None or not os.path.isdir(search_root):
+            raise HTTPException(status_code=400, detail="Invalid search path")
+        search_roots = [search_root]
+    else:
+        search_roots = [r for r in ALLOWED_BROWSE_ROOTS if os.path.isdir(r)]
+
+    def _execute_search():
+        matched = []
+        scanned_count = 0
+        max_scanned = 10000
+
+        for s_root in search_roots:
+            queue = [(s_root, 0)]
+            while queue and scanned_count < max_scanned:
+                curr_dir, depth = queue.pop(0)
+                try:
+                    with os.scandir(curr_dir) as it:
+                        for entry in it:
+                            scanned_count += 1
+                            if scanned_count >= max_scanned:
+                                break
+                            if entry.name.startswith(".") and entry.name != ".RecycleBin":
+                                continue
+
+                            is_match = query in entry.name.lower()
+                            is_dir = entry.is_dir(follow_symlinks=False)
+
+                            if is_match:
+                                try:
+                                    st = entry.stat(follow_symlinks=False)
+                                    matched.append(
+                                        {
+                                            "name": entry.name,
+                                            "path": entry.path,
+                                            "is_dir": is_dir,
+                                            "size": st.st_size if not is_dir else 0,
+                                            "mtime": st.st_mtime,
+                                        }
+                                    )
+                                except (OSError, PermissionError):
+                                    pass
+
+                            if recursive and is_dir and depth < 8 and not entry.is_symlink():
+                                queue.append((entry.path, depth + 1))
+                except (OSError, PermissionError):
+                    continue
+
+        total = len(matched)
+        paged = matched[offset : offset + limit]
+        return {"items": paged, "total": total, "query": q, "limit": limit, "offset": offset}
+
+    return await asyncio.to_thread(_execute_search)
+
+
+@router.get("/fs/trash", dependencies=[Depends(require_scope("shares:read", "storage:read", "system:view"))])
+async def fs_trash_list(principal: AuthenticatedPrincipal = Depends(get_current_principal)):
+    """Lists deleted items currently residing in the Recycle Bin."""
+
+    def _scan_trash():
+        items = []
+        for root_dir in ALLOWED_BROWSE_ROOTS:
+            recycle_dir = os.path.join(root_dir, ".RecycleBin")
+            if not os.path.isdir(recycle_dir):
+                continue
+            try:
+                with os.scandir(recycle_dir) as it:
+                    for entry in it:
+                        if entry.name.startswith("."):
+                            continue
+                        name_parts = entry.name.split("_", 1)
+                        deleted_ts = 0
+                        orig_name = entry.name
+                        if len(name_parts) == 2 and name_parts[0].isdigit():
+                            deleted_ts = int(name_parts[0])
+                            orig_name = name_parts[1]
+                        try:
+                            st = entry.stat(follow_symlinks=False)
+                            is_dir = entry.is_dir(follow_symlinks=False)
+                            items.append(
+                                {
+                                    "id": entry.name,
+                                    "name": orig_name,
+                                    "path": entry.path,
+                                    "is_dir": is_dir,
+                                    "size": st.st_size if not is_dir else 0,
+                                    "deleted_at": deleted_ts or int(st.st_mtime),
+                                    "root_path": root_dir,
+                                }
+                            )
+                        except (OSError, PermissionError):
+                            pass
+            except (OSError, PermissionError):
+                pass
+        items.sort(key=lambda x: x["deleted_at"], reverse=True)
+        return {"items": items, "total": len(items)}
+
+    return await asyncio.to_thread(_scan_trash)
+
+
+@router.post(
+    "/fs/trash/restore",
+    dependencies=[Depends(require_scope("shares:user_write", "storage:write", "storage:admin"))],
+)
+async def fs_trash_restore(
+    req: TrashRestoreRequest, principal: AuthenticatedPrincipal = Depends(get_current_principal)
+):
+    """Restores an item from the Recycle Bin back to its original or specified destination."""
+    item_id = os.path.basename(req.item_id.strip())
+    if not item_id or item_id in (".", ".."):
+        raise HTTPException(status_code=400, detail="Invalid item ID")
+
+    def _do_restore():
+        for root_dir in ALLOWED_BROWSE_ROOTS:
+            source_path = os.path.join(root_dir, ".RecycleBin", item_id)
+            if os.path.lexists(source_path):
+                parts = item_id.split("_", 1)
+                orig_name = parts[1] if (len(parts) == 2 and parts[0].isdigit()) else item_id
+                dest_dir = req.target_path if (req.target_path and os.path.isdir(req.target_path)) else root_dir
+                dest_path = os.path.join(dest_dir, orig_name)
+
+                if os.path.lexists(dest_path):
+                    ts = int(time.time())
+                    dest_path = os.path.join(dest_dir, f"restored_{ts}_{orig_name}")
+
+                shutil.move(source_path, dest_path)
+                return {"status": "ok", "message": f"Restored {orig_name}", "path": dest_path}
+        raise FileNotFoundError(f"Trash item '{item_id}' not found")
+
+    try:
+        res = await asyncio.to_thread(_do_restore)
+        add_event("success", "File Explorer", f"Restored {item_id} from Recycle Bin")
+        return res
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="Item not found in Recycle Bin")
+    except Exception as e:
+        logger.error(f"[FS] Restore failed: {e}")
+        raise HTTPException(status_code=500, detail="Failed to restore item")
+
+
+@router.delete("/fs/trash/empty", dependencies=[Depends(require_scope("shares:manage", "storage:admin"))])
+async def fs_trash_empty(principal: AuthenticatedPrincipal = Depends(get_current_principal)):
+    """Permanently purges all items currently in the Recycle Bin across all browse roots."""
+
+    def _do_empty():
+        purged = 0
+        for root_dir in ALLOWED_BROWSE_ROOTS:
+            recycle_dir = os.path.join(root_dir, ".RecycleBin")
+            if os.path.isdir(recycle_dir):
+                for entry in os.listdir(recycle_dir):
+                    p = os.path.join(recycle_dir, entry)
+                    try:
+                        if os.path.islink(p):
+                            os.unlink(p)
+                        elif os.path.isdir(p):
+                            shutil.rmtree(p)
+                        else:
+                            os.remove(p)
+                        purged += 1
+                    except Exception as e:
+                        logger.warning(f"[FS] Could not purge {p}: {e}")
+        return {"status": "ok", "purged_count": purged}
+
+    res = await asyncio.to_thread(_do_empty)
+    add_event("info", "File Explorer", f"Recycle Bin emptied ({res['purged_count']} items permanently deleted)")
+    return res
 
 
 class TokenCreateRequest(BaseModel):

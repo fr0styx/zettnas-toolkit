@@ -33,12 +33,32 @@ const FAN_COLORS = [
 async function getChart() {
   if (!_ChartLib) {
     const [chartMod, zoomPluginMod] = await Promise.all([
-      import('chart.js/auto'),
+      import('chart.js'),
       import('chartjs-plugin-zoom')
     ]);
-    const Chart = chartMod.default || chartMod;
+    const {
+      Chart,
+      LineController,
+      LineElement,
+      PointElement,
+      LinearScale,
+      CategoryScale,
+      Legend,
+      Tooltip,
+      Filler
+    } = chartMod;
     const zoomPlugin = zoomPluginMod.default || zoomPluginMod;
-    Chart.register(zoomPlugin);
+    Chart.register(
+      LineController,
+      LineElement,
+      PointElement,
+      LinearScale,
+      CategoryScale,
+      Legend,
+      Tooltip,
+      Filler,
+      zoomPlugin
+    );
     _ChartLib = Chart;
   }
   return _ChartLib;

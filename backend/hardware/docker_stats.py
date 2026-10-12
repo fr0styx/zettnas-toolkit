@@ -402,6 +402,24 @@ def read_docker_containers(force: bool = False) -> List[Dict[str, Any]]:
             return _CACHED_CONTAINERS
 
         raw = json.loads(res.read().decode("utf-8", errors="replace"))
+
+        # Batch concurrent inspection for cache misses / expired inspects
+        cids_to_inspect = []
+        with _INSPECT_LOCK:
+            for c in raw:
+                cid_short = c.get("Id", "")[:12]
+                cached = _CONTAINER_INSPECT_CACHE.get(cid_short)
+                if not cached or (now - cached.get("_ts", 0)) >= _INSPECT_CACHE_TTL:
+                    cids_to_inspect.append(cid_short)
+
+        if cids_to_inspect:
+
+            def _inspect_worker(cid: str) -> None:
+                _fetch_container_inspect(cid, conn=None)
+
+            with concurrent.futures.ThreadPoolExecutor(max_workers=min(8, len(cids_to_inspect))) as pool:
+                list(pool.map(_inspect_worker, cids_to_inspect))
+
         out = []
         for c in raw:
             cid_full = c.get("Id", "")

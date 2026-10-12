@@ -4,7 +4,7 @@ Platform Abstraction Layer (PAL) endpoints for storage pools, array topology,
 and network shares (Samba/NFS/WebDAV).
 """
 
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
@@ -42,6 +42,17 @@ class StorageSnapshotCreateRequest(BaseModel):
     subvolume: str = "@shares"
     snapshot_name: str
     readonly: bool = True
+    worm_mode: Optional[str] = Field(default=None, description="Two-Tier WORM mode: 'governance' or 'compliance'")
+    retention_days: Optional[int] = Field(
+        default=None, ge=1, le=3650, description="WORM retention period in days (1-3650)"
+    )
+
+
+class StorageSnapshotBreakGlassDeleteRequest(BaseModel):
+    snapshot_name: str
+    reason: str = Field(
+        ..., min_length=5, description="Mandatory audit justification for breaking governance WORM lock"
+    )
 
 
 class StorageSnapshotRestoreRequest(BaseModel):
@@ -219,6 +230,8 @@ def create_storage_snapshot(pool_id: str, req: StorageSnapshotCreateRequest) -> 
             subvol_name=req.subvolume,
             snapshot_name=req.snapshot_name,
             readonly=req.readonly,
+            worm_mode=req.worm_mode,
+            retention_days=req.retention_days,
         )
     except PlatformCapabilityError as e:
         raise HTTPException(status_code=403, detail=str(e))
@@ -227,7 +240,7 @@ def create_storage_snapshot(pool_id: str, req: StorageSnapshotCreateRequest) -> 
 @router.delete("/pools/{pool_id}/snapshots/{snapshot_name}", dependencies=[Depends(require_scope("storage:admin"))])
 def delete_storage_snapshot(pool_id: str, snapshot_name: str) -> Dict[str, Any]:
     """
-    Deletes a Btrfs subvolume snapshot. Forbidden in Observer Mode.
+    Deletes a Btrfs subvolume snapshot. Forbidden in Observer Mode or if WORM locked.
     """
     adapter = get_storage_platform()
     caps = adapter.get_capabilities()
@@ -238,6 +251,30 @@ def delete_storage_snapshot(pool_id: str, snapshot_name: str) -> Dict[str, Any]:
         )
     try:
         return adapter.delete_snapshot(pool_id=pool_id, snapshot_name=snapshot_name)
+    except PlatformCapabilityError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+
+
+@router.post("/pools/{pool_id}/snapshots/break-glass-delete", dependencies=[Depends(require_scope("storage:admin"))])
+def break_glass_delete_snapshot(pool_id: str, req: StorageSnapshotBreakGlassDeleteRequest) -> Dict[str, Any]:
+    """
+    Overrides Governance-mode WORM lock to delete a snapshot with mandatory audit logging.
+    Forbidden for Compliance-mode WORM locks before retention expiry.
+    """
+    adapter = get_storage_platform()
+    caps = adapter.get_capabilities()
+    if caps.is_observer_mode:
+        raise HTTPException(
+            status_code=403,
+            detail=f"Forbidden in Observer Mode on {adapter.get_platform_type().value}.",
+        )
+    try:
+        return adapter.delete_snapshot(
+            pool_id=pool_id,
+            snapshot_name=req.snapshot_name,
+            break_glass=True,
+            reason=req.reason,
+        )
     except PlatformCapabilityError as e:
         raise HTTPException(status_code=403, detail=str(e))
 

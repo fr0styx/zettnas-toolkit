@@ -4,6 +4,7 @@ import threading
 
 import pytest
 
+from backend.fast_json import dumps as fast_dumps
 from backend.services.broadcaster import StatsBroadcaster
 
 
@@ -30,7 +31,7 @@ async def test_broadcaster_subscribe_initial_data():
     q = await broadcaster.subscribe(initial_data=initial)
 
     item = await asyncio.wait_for(q.get(), timeout=1.0)
-    assert item == f"data: {json.dumps(initial)}\n\n"
+    assert item == f"data: {fast_dumps(initial)}\n\n"
 
     await broadcaster.unsubscribe(q)
 
@@ -52,7 +53,7 @@ async def test_broadcaster_broadcast_delivery():
     item1 = await asyncio.wait_for(q1.get(), timeout=1.0)
     item2 = await asyncio.wait_for(q2.get(), timeout=1.0)
 
-    expected = f"data: {json.dumps(data)}\n\n"
+    expected = f"data: {fast_dumps(data)}\n\n"
     assert item1 == expected
     assert item2 == expected
 

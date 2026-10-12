@@ -204,3 +204,49 @@ def test_disks_discover_disks_integration_backward_compatibility():
         assert disks[0]["canonical_id"] == "ata-WDC_123"
         assert disks[1]["dev"] == "nvme0n1"
         assert disks[1]["role"] == "os"
+
+
+def test_predictive_smart_velocity_and_linear_regression(tmp_path):
+    import time
+    from backend.db import compute_linear_regression_slope, init_db, log_smart_metrics, query_smart_velocity
+
+    # 1. Closed-form linear regression unit assertions
+    # Perfectly linear: y = 2x + 1
+    xs = [1.0, 2.0, 3.0, 4.0, 5.0]
+    ys = [3.0, 5.0, 7.0, 9.0, 11.0]
+    slope, r2 = compute_linear_regression_slope(xs, ys)
+    assert slope == 2.0
+    assert r2 == 1.0
+
+    # Constant: y = 0
+    ys_flat = [0.0, 0.0, 0.0, 0.0]
+    slope_f, r2_f = compute_linear_regression_slope([1.0, 2.0, 3.0, 4.0], ys_flat)
+    assert slope_f == 0.0
+
+    # 2. Database integration test with power on hours
+    init_db()
+    dev = "sd_predictive_test"
+    now = int(time.time())
+
+    # Log 10 checkpoints with increasing reallocated sectors over power-on hours
+    for i in range(10):
+        t = now - (10 - i) * 3600
+        poh = 1000 + (i * 100)
+        realloc = i * 2  # 2 reallocated sectors per 100 POH
+        log_smart_metrics(
+            t,
+            dev,
+            temp=35.0,
+            metrics={"realloc": realloc, "pending": 0, "offline": 0, "crc": 0, "nvme_used": 0},
+            power_on_hours=poh,
+        )
+
+    res = query_smart_velocity(dev)
+    assert res["dev"] == dev
+    assert "predictive_velocity" in res
+    pred = res["predictive_velocity"]
+    assert pred["sample_points"] == 10
+    # Slope should be ~20 sectors per 1000 POH (0.02 * 1000)
+    assert pred["realloc_slope_per_1000h"] > 15.0
+    assert pred["realloc_r2"] > 0.9
+    assert pred["is_accelerating"] is True

@@ -257,7 +257,11 @@ class SmartTelemetryEngine:
         if temp is not None or health != "standby":
             Z_STATE.cached_smart_data[dev_name] = (temp, health if health != "standby" else "ok")
             Z_STATE.cached_smart_time[dev_name] = now
-            log_smart_metrics(int(now), dev_name, temp, metrics)
+            poh_val = 0
+            if hours and str(hours).isdigit():
+                poh_val = int(hours)
+            metrics["power_on_hours"] = poh_val
+            log_smart_metrics(int(now), dev_name, temp, metrics, power_on_hours=poh_val)
 
         return {
             "dev": dev_name,

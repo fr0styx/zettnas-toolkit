@@ -262,3 +262,72 @@ def test_recreate_container_full_config(mock_docker_req, mock_inspect):
     assert create_body["Env"] == ["PUID=1001", "PGID=101", "TZ=UTC"]
     assert create_body["HostConfig"]["Binds"] == ["/mnt/user/appdata/jellyfin:/config:rw", "/mnt/user/media:/media:ro"]
     assert create_body["HostConfig"]["RestartPolicy"] == {"Name": "always"}
+
+
+@patch("backend.services.container_mutator.fetch_container_raw_inspect")
+@patch("backend.services.container_mutator._docker_request")
+def test_recreate_container_grace_period_success(mock_docker_req, mock_inspect):
+    from backend.services.container_mutator import recreate_container
+
+    mock_inspect.return_value = MOCK_INSPECT_DATA
+    # 1. Stop old -> 204
+    # 2. Rename old -> 204
+    # 3. Create new -> 201
+    # 4. Start new -> 204
+    # 5. Inspect liveness -> 200 (Running=True, ExitCode=0)
+    # 6. Delete backup -> 204
+    mock_docker_req.side_effect = [
+        (204, {}),
+        (204, {}),
+        (201, {"Id": "healthy_id_12345"}),
+        (204, {}),
+        (200, {"State": {"Running": True, "ExitCode": 0}}),
+        (204, {}),
+    ]
+
+    res = recreate_container(
+        "abc123fullid000111222333444",
+        name="jellyfin",
+        grace_period_seconds=0.08,
+    )
+    assert res["status"] == "success"
+    assert res["new_id"] == "healthy_id_1"
+
+
+@patch("backend.services.container_mutator.fetch_container_raw_inspect")
+@patch("backend.services.container_mutator._docker_request")
+def test_recreate_container_grace_period_crash_triggers_rollback(mock_docker_req, mock_inspect):
+    from backend.services.container_mutator import recreate_container
+
+    mock_inspect.return_value = MOCK_INSPECT_DATA
+    # 1. Stop old -> 204
+    # 2. Rename old -> 204
+    # 3. Create new -> 201
+    # 4. Start new -> 204
+    # 5. Inspect liveness -> 200 (Running=False, ExitCode=137, OOMKilled=True)
+    # Rollback begins:
+    # 6. Delete failed new container -> 204
+    # 7. Rename backup back -> 204
+    # 8. Start original container -> 204
+    mock_docker_req.side_effect = [
+        (204, {}),
+        (204, {}),
+        (201, {"Id": "crashed_new_id_9999"}),
+        (204, {}),
+        (200, {"State": {"Running": False, "ExitCode": 137, "OOMKilled": True}}),
+        (204, {}),
+        (204, {}),
+        (204, {}),
+    ]
+
+    with pytest.raises(RuntimeError, match="Automatic rollback restored original state"):
+        recreate_container(
+            "abc123fullid000111222333444",
+            name="jellyfin",
+            grace_period_seconds=0.08,
+        )
+
+    # Verify rollback was performed: backup renamed back and restarted
+    calls = mock_docker_req.call_args_list
+    assert any("/rename?name=jellyfin" in c[0][1] for c in calls)
+    assert any(c[0][1] == "/containers/abc123fullid000111222333444/start" for c in calls)
