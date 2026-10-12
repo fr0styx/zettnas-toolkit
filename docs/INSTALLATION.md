@@ -28,6 +28,7 @@ This document provides complete, step-by-step instructions for installing and ru
 - **Architecture**: `linux/amd64` (x86_64) or `linux/arm64` (aarch64).
 - **Container Engine**: Docker 24.0+ and Docker Compose v2.20+ (or Podman with docker-compose compatibility).
 - **Host Kernel**: Linux kernel 5.15+ recommended with `cgroup v2` support.
+- **Virtualization (Optional for VMs)**: Intel VT-x or AMD-V hardware virtualization enabled in host BIOS/UEFI with `/dev/kvm` accessible.
 - **Port Availability**: Port `8082` (Web Desktop & REST API) and optionally Port `8084` (WebDAV Server).
 
 ---
@@ -249,6 +250,8 @@ docker run -d \
   --device-cgroup-rule='c 226:* rwm' \
   --device-cgroup-rule='c 166:* rwm' \
   --device-cgroup-rule='c 188:* rwm' \
+  --device-cgroup-rule='c 10:232 rwm' \
+  --device-cgroup-rule='c 10:* rwm' \
   --device-cgroup-rule='b 8:* rwm' \
   --device-cgroup-rule='b 259:* rwm' \
   ghcr.io/fr0styx/zettnas-toolkit:latest
@@ -264,6 +267,7 @@ ZettNAS Toolkit accesses physical hardware through Linux device nodes and `cgrou
 | :--- | :--- | :--- | :---: |
 | `/dev/fb0` | `c 29:* rwm` | Physical front-panel IPS LCD display (640×172) | Optional |
 | `/dev/dri/*` | `c 226:* rwm` | GPU hardware acceleration (Intel QuickSync, AMD ROCm) | Optional |
+| `/dev/kvm` | `c 10:232 rwm` | Hardware-assisted virtual machine acceleration (KVM) | Optional |
 | `/dev/ttyACM0` | `c 166:* rwm` | WS2812B ARGB chassis lightbar USB microcontroller | Optional |
 | `/dev/ttyUSB*` | `c 188:* rwm` | Alternative USB serial LED / MCU controllers | Optional |
 | `/dev/sd*` | `b 8:* rwm` | Physical SATA/SAS hard drives and SD/TF card slots | Recommended |
@@ -299,6 +303,9 @@ ZettNAS Toolkit accesses physical hardware through Linux device nodes and `cgrou
 | `ZERO_RPM_TEMP` | `40` | Temperature ceiling (°C) above which Zero RPM is prohibited |
 | `ZERO_RPM_NVME` | `50` | NVMe temperature ceiling (°C) triggering convective airflow spinup |
 | `TRUSTED_PROXIES` | `127.0.0.1` | Comma-separated list of reverse proxy IP addresses/CIDRs |
+| `VM_ISO_DIR` | `/mnt/user/isos` | Directory for uploaded and downloaded guest ISO images |
+| `TAILSCALE_STATE_DIR` | `/app/data/tailscale` | State and configuration directory for embedded Tailscale mesh node |
+| `SFTP_PORT` | `2222` | Port for drop-in chrooted SFTP server |
 
 ---
 

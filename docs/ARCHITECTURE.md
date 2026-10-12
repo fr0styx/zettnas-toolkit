@@ -82,6 +82,20 @@ The application starts four persistent background daemon threads upon startup vi
      - Releases manual fan overrides and restores motherboard firmware / BIOS fan control (`pwmN_enable = 2`).
      - Logs an alert event to the event subsystem.
 
+### 2.5 Virtual Machine Hypervisor & Resource Governor
+- **Target**: Linux KVM (`/dev/kvm`) and QEMU/libvirt virtualization layer.
+- **Responsibilities**:
+  1. Computes dynamic elastic host memory reserve (`max(2GB, 0.10 * Total RAM)`) to prevent host OOM freezes.
+  2. Enforces non-destructive resource limits across guest domains with thread overcommit detection.
+  3. Supervises guest VNC ports and provides authenticated WebSocket tunnels for `@novnc/novnc` browser console rendering.
+  4. Manages official ISO catalog downloads with SHA-256 integrity checks and background download queuing.
+
+### 2.6 Enterprise Standards: DMTF Redfish & SNMP
+- **Standards**: DMTF Redfish 1.16+ and SNMP v2c/v3.
+- **Responsibilities**:
+  1. Exposes standard in-memory Redfish endpoints (`/redfish/v1/Chassis/1/Thermal`, `/redfish/v1/Systems/1`, `/redfish/v1/Storage/1`) backed directly by the live telemetry state cache with zero subprocess forks.
+  2. Implements standard MIB counters for automated ingestion into homelab and enterprise infrastructure monitoring tools.
+
 ---
 
 ## 3. Data Persistence & State Model

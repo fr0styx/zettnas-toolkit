@@ -1,5 +1,51 @@
 # ZettNAS Toolkit - Release Changelog
 
+## v1.7.0 (2026-10-12) - Stable
+### 🚀 Virtual Machines, File Explorer Grid View, Cloud OAuth Assistant & Enterprise Networking
+
+This major milestone expands ZettNAS Toolkit into a complete virtualization and enterprise networking workstation. Version 1.7.0 introduces a dedicated Virtual Machines (VM) Desktop Application with dynamic elastic resource budgeting and an official OS catalog, a redesigned File Explorer with responsive Icon Grid View, multi-instance window workflows and recursive merge, an in-app Cloud Remote OAuth assistant with mobile QR pairing, Combined LAN throughput telemetry, 1-click Tailscale and WireGuard zero-trust mesh networking, OpenZFS RAIDZ pool provisioning, an inbound SFTP server, and DMTF Redfish / SNMP telemetry standards:
+
+- **Virtual Machines (VM) Desktop Application & Hypervisor Engine**:
+  - **Dedicated Desktop Window (`#vm-manager-window`)**: Registered with DockManager and Spotlight palette (`Cmd+K` -> `>vms`), featuring live hypervisor telemetry, KVM virtualization status, active VM counts, and aggregated vCPU/RAM allocation.
+  - **Dynamic Elastic Resource Budgeting**: Automatically calculates safe host memory headroom (`Host Reserve = max(2GB, 0.10 * Total RAM)`) dynamically scaling from 32GB to 96GB/256GB host servers. Features dynamic vCPU/RAM allocation sliders with real-time headroom visualization, thread overcommit warnings, and an Advanced Override switch for power users.
+  - **Curated Official ISO Catalog**: Integrated 1-click download manager for verified, official distribution images (Ubuntu Server 24.04 LTS, Debian 12 Bookworm, Alpine Linux 3.20, Fedora Server 40, TrueNAS SCALE, Windows Server Evaluation, and VirtIO Windows Drivers ISO) with real-time background download progress and SHA-256 verification.
+  - **Local ISO Drag-and-Drop Uploader**: Direct browser upload for custom ISO images to `/mnt/user/isos` with chunked transfer progress bars.
+  - **In-Browser Interactive Web Console (`#vm-console-window`)**: Low-latency VNC web console powered by `@novnc/novnc` with WebSocket streaming, Canvas hardware rendering, full-screen toggle, and quick Ctrl+Alt+Del signal dispatch.
+  - **Multi-Protocol Connection Modal ("Join VM")**: Integrated connection sheet offering 1-click clipboard copy for SSH terminal commands (`ssh root@<ip>`), VNC viewer URIs (`vnc://<host>:<port>`), and direct Web Console launch with fallback clipboard compatibility for non-HTTPS contexts.
+  - **VirtIO-FS & Volume Mapping**: Seamless host directory pass-through (e.g. `/mnt/storage` or `/mnt/user/appdata`) via VirtIO-FS/9p and secondary virtual disk attachment.
+
+- **File Explorer Desktop App Overhaul**:
+  - **Icon Grid View & List View**: Toggle between a responsive, multi-column grid of file and folder tiles with thumbnail previews and a detailed sortable list view with persistent preference caching in `localStorage`.
+  - **Multi-Instance Window Support**: Launch independent File Explorer instances simultaneously from the Dock or Context menu, enabling side-by-side folder navigation and cross-window drag-and-drop file operations.
+  - **Keyboard Range Selection (`Shift + Up/Down/Space`)**: Full multi-item keyboard navigation and range selection with complete event isolation, preventing keystroke leakage to underlying desktop icons.
+  - **Non-Destructive Recursive Directory Merge**: Unified collision engine supporting atomic folder merging (`CollisionPolicy.MERGE`), cross-device `EXDEV` move boundaries, and native glassmorphic collision modals for Cut/Paste and Drag-and-Drop operations.
+
+- **Cloud Remote Gateway & In-App OAuth Assistant**:
+  - **In-App OAuth Authorization**: Streamlined 1-click authentication flow for cloud storage remotes (Microsoft OneDrive, Google Drive, Dropbox, Box, Nextcloud) with PKCE token exchange and instant connection testing.
+  - **Explicit Authorization Trigger**: Fixed unintended immediate window pop-ups upon cloud provider selection; authentication flow is now strictly initiated by user confirmation.
+  - **Mobile QR Code Assistant**: Generated via `qrcode` library, allowing administrators to complete cloud OAuth authorization workflows on mobile devices or out-of-band browsers.
+  - **Native Confirmation Dialogs**: Custom glassmorphic modals replacing default browser `confirm()` pop-ups during cloud drive or bucket deletion.
+  - **Real-Time Connection Diagnostics**: Instant visual success badges and latency verification for validated cloud storage connections.
+
+- **Enterprise Network, Virtual Switch & Zero-Trust Mesh**:
+  - **Combined LAN Throughput Telemetry**: Aggregate network throughput metrics and real-time SVG sparklines combining all active physical NICs (`eth0`, `eth1`, `bond0`) into a unified interface card.
+  - **1-Click Tailscale SSO Integration**: Native zero-trust mesh network provisioning with QR code login, device connectivity status, and optional exit node advertisement.
+  - **WireGuard Mobile QR Configuration Export**: Instant mobile VPN configuration via scannable SVG QR codes and one-click `.conf` client profile downloads.
+  - **802.1Q VLAN Tagging & Link Aggregation**: Support for IEEE 802.3ad (LACP), active-backup, and balance-xor bonding modes directly in Mission Control.
+  - **Canary Rollback Watchdog**: Automated 30-second ping verification guard reverting invalid network configurations automatically to prevent loss of remote server access.
+
+- **Storage Topology, OpenZFS & Inbound SFTP Subsystem**:
+  - **OpenZFS RAIDZ Provisioning**: Direct creation and management of RAIDZ1, RAIDZ2, RAIDZ3, mirrors, and striped storage pools within the Platform Abstraction Layer (PAL).
+  - **Inbound SFTP Subsystem**: Secure drop-in SFTP server with chrooted user homes, port configuration, and public key authentication.
+  - **NPU Neural Accelerator Discovery**: Automatic detection of Intel AI Boost / NPU neural accelerator devices (`/dev/accel/accel0`).
+  - **2.5D UPS Power Flow Digital Twin**: Real-time animated SVG power routing telemetry for NUT-supported uninterruptible power supplies.
+  - **WORM Immutable Snapshots**: Enterprise Write-Once-Read-Many ransomware protection with legal hold timers and immutable snapshot schedules.
+
+- **Enterprise Standards, DMTF Redfish & SNMP Monitoring**:
+  - **DMTF Redfish REST API (`/redfish/v1/`)**: In-memory standard out-of-band management endpoints for Chassis, Thermal, Systems, and Storage.
+  - **SNMP v2c/v3 Telemetry Engine**: Standard MIB counters for homelab monitoring platforms (Grafana, Zabbix, PRTG).
+  - **High-Concurrency SQLite WAL Optimizations**: Fine-tuned database connection pools and connection timeout handling for heavy background telemetry loads.
+
 ## v1.6.0 (2026-10-10) - Stable
 ### 🛡️ Universal Multi-User RBAC, Enterprise Notifications, Hyper-Backup & Modern Desktop OS
 

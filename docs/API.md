@@ -166,6 +166,52 @@ Persistent scoped tokens can be provisioned and managed via `/api/tokens`.
 
 ---
 
+### 9. Virtual Machines & Hypervisor
+
+| Endpoint | Method | Auth / Scope | Description |
+| :--- | :---: | :---: | :--- |
+| `/api/vms` | `GET` | `vms:read` | Inventory all virtual machines, runtime states, vCPU, RAM, and assigned IPs. |
+| `/api/vms` | `POST` | `vms:manage` | Create a new virtual machine with disk image, ISO, and resource allocations. |
+| `/api/vms/{id}/action` | `POST` | `vms:manage` | VM lifecycle control actions: `start`, `stop`, `pause`, `resume`, `force-stop`. |
+| `/api/vms/{id}` | `DELETE` | `vms:manage` | Delete a virtual machine and optionally remove associated virtual disk files. |
+| `/api/vms/{id}/console` | `GET` | `vms:read` | Retrieve WebSocket VNC connection URL and credentials for Web Console. |
+| `/api/vms/budget` | `GET` | `vms:read` | Dynamic elastic budget calculation (host reserve, safe RAM/vCPU ceilings). |
+| `/api/vms/isos` | `GET` | `vms:read` | List local ISO images available in `/mnt/user/isos`. |
+| `/api/vms/isos` | `POST` | `vms:manage` | Multipart streaming upload for custom ISO installation images. |
+| `/api/vms/isos/catalog` | `GET` | `vms:read` | Browse curated official ISO catalog (Ubuntu, Debian, Alpine, Fedora, Windows). |
+| `/api/vms/isos/download` | `POST` | `vms:manage` | Trigger background download of verified official distribution ISO image. |
+
+---
+
+### 10. Network, Virtual Switch & Mesh
+
+| Endpoint | Method | Auth / Scope | Description |
+| :--- | :---: | :---: | :--- |
+| `/api/network/combined-lan` | `GET` | `system:read` | Aggregate real-time throughput metrics across all physical NICs (`eth0`, `eth1`, `bond0`). |
+| `/api/network/interfaces` | `GET` | `system:read` | Inventory physical and virtual network interfaces, link states, MTU, and IPs. |
+| `/api/network/tailscale/status` | `GET` | `system:read` | Inspect Tailscale node status, peers, mesh IP, and exit node state. |
+| `/api/network/tailscale/login` | `POST` | `system:admin` | Initiate 1-click Tailscale login flow with interactive auth URL and QR pairing. |
+| `/api/network/wireguard/config` | `GET` | `system:read` | Generate mobile WireGuard client profile and scannable QR code. |
+| `/api/network/vlans` | `GET` | `system:read` | List configured 802.1Q VLAN virtual interfaces. |
+| `/api/network/vlans` | `POST` | `system:admin` | Create or update 802.1Q VLAN interface with canary rollback guard. |
+| `/api/network/bonds` | `GET` | `system:read` | List bonded interfaces and LACP link aggregation groups. |
+| `/api/network/bonds` | `POST` | `system:admin` | Configure network bonding (802.3ad LACP, active-backup, balance-xor). |
+
+---
+
+### 11. Enterprise Standards: Redfish & SNMP
+
+| Endpoint | Method | Auth / Scope | Description |
+| :--- | :---: | :---: | :--- |
+| `/redfish/v1/` | `GET` | Public | DMTF Redfish service root listing system and chassis endpoints. |
+| `/redfish/v1/Chassis/1/Thermal` | `GET` | Public | Standard Redfish thermal endpoint with temperature sensors and fan tachometers. |
+| `/redfish/v1/Systems/1` | `GET` | Public | Standard Redfish computer system model, CPU, memory, and power state. |
+| `/redfish/v1/Storage/1` | `GET` | Public | Standard Redfish storage subsystem and drive telemetry. |
+| `/api/snmp/status` | `GET` | `system:read` | Query SNMP v2c/v3 telemetry daemon state and active traps. |
+| `/api/snmp/config` | `POST` | `system:admin` | Update SNMP community strings, user credentials, and trap receivers. |
+
+---
+
 ## Response Formats & Error Handling
 
 Standard responses are returned as `application/json`. Errors adhere to standard HTTP status codes:
