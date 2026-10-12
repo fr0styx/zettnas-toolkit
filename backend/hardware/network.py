@@ -2228,10 +2228,67 @@ def _find_tailscale_bin() -> Optional[str]:
     return None
 
 
+def _get_tailscale_container_info() -> Dict[str, Any]:
+    """Checks if a Docker container named 'tailscale' exists and returns its state."""
+    try:
+        from backend.services.container_mutator import _docker_request
+
+        status, data = _docker_request("GET", "/containers/tailscale/json")
+        if status == 200 and isinstance(data, dict):
+            state = data.get("State", {})
+            return {
+                "exists": True,
+                "running": bool(state.get("Running", False)),
+                "id": str(data.get("Id", ""))[:12],
+                "status": state.get("Status", "unknown"),
+            }
+    except Exception:
+        pass
+    return {"exists": False, "running": False, "id": "", "status": "not_found"}
+
+
+def _run_tailscale_cmd(args: List[str], timeout: float = 10.0) -> tuple[int, str]:
+    """
+    Executes a Tailscale command using native host binary if present,
+    or falls back to Docker exec inside the 'tailscale' container.
+    Returns (returncode, output_text).
+    """
+    ts_bin = _find_tailscale_bin()
+    try:
+        r = subprocess.run([ts_bin or "tailscale"] + args, capture_output=True, text=True, timeout=timeout)
+        out = ((r.stdout or "") + "\n" + (r.stderr or "")).strip()
+        if r.returncode == 0 or "tailscale" in out.lower() or "login.tailscale.com" in out.lower():
+            return r.returncode, out
+        if ts_bin:
+            return r.returncode, out
+    except FileNotFoundError:
+        pass
+    except Exception as e:
+        if ts_bin:
+            return 1, str(e)
+
+    # Fallback to docker exec inside 'tailscale' container
+    c_info = _get_tailscale_container_info()
+    if c_info.get("exists") and c_info.get("running"):
+        try:
+            from backend.services.compose_synthesizer import execute_in_container
+
+            res = execute_in_container("tailscale", ["tailscale"] + args)
+            if res.get("success"):
+                exit_code = res.get("exit_code", 0)
+                out = res.get("output", "")
+                return exit_code, out
+            return 1, res.get("error", "Container execution failed")
+        except Exception as e:
+            return 1, str(e)
+
+    return 127, "tailscale CLI or running container not found"
+
+
 def get_mesh_vpn_status() -> Dict[str, Any]:
     """
     Zero-Trust Mesh Hub detector:
-    Queries Tailscale daemon status (via CLI or local socket) and WireGuard kernel interfaces.
+    Queries Tailscale daemon status (via CLI, Docker container, or local socket) and WireGuard kernel interfaces.
     """
     import json
 
@@ -2243,15 +2300,22 @@ def get_mesh_vpn_status() -> Dict[str, Any]:
         "tailnet": "",
         "hostname": "",
         "peers_count": 0,
+        "container_mode": False,
+        "container_id": "",
     }
 
     ts_bin = _find_tailscale_bin()
+    c_info = _get_tailscale_container_info()
+    if c_info.get("exists"):
+        ts_info["container_mode"] = True
+        ts_info["container_id"] = c_info.get("id", "")
 
-    try:
-        r = subprocess.run([ts_bin or "tailscale", "status", "--json"], capture_output=True, text=True, timeout=3)
-        if r.returncode == 0 and r.stdout.strip():
+    code, out = _run_tailscale_cmd(["status", "--json"], timeout=4.0)
+    out_stripped = out.strip()
+    if code == 0 and out_stripped.startswith("{"):
+        try:
+            doc = json.loads(out_stripped)
             ts_info["installed"] = True
-            doc = json.loads(r.stdout)
             status_str = doc.get("BackendState", "")
             ts_info["backend_state"] = status_str
             ts_info["active"] = status_str == "Running"
@@ -2261,18 +2325,15 @@ def get_mesh_vpn_status() -> Dict[str, Any]:
             ts_info["tailnet"] = doc.get("MagicDNSSuffix", "")
             peers = doc.get("Peer", {})
             ts_info["peers_count"] = len(peers) if isinstance(peers, dict) else len(peers or [])
-        elif ts_bin or (r.returncode != 0 and "tailscale" in (r.stderr + r.stdout).lower()):
-            ts_info["installed"] = True
-            out = (r.stdout + r.stderr).lower()
-            if "logged out" in out or "needslogin" in out:
-                ts_info["backend_state"] = "NeedsLogin"
-            else:
-                ts_info["backend_state"] = "Stopped"
-    except FileNotFoundError:
-        if ts_bin:
-            ts_info["installed"] = True
-    except Exception as e:
-        logger.debug(f"[Network] Tailscale status query: {e}")
+        except Exception as e:
+            logger.debug(f"[Network] Tailscale status json parse error: {e}")
+    elif ts_bin or c_info.get("exists") or (code != 127 and "tailscale" in out.lower()):
+        ts_info["installed"] = True
+        out_lower = out.lower()
+        if "logged out" in out_lower or "needslogin" in out_lower:
+            ts_info["backend_state"] = "NeedsLogin"
+        else:
+            ts_info["backend_state"] = "Stopped"
 
     wg_info = {
         "installed": False,
@@ -2303,8 +2364,7 @@ def execute_tailscale_up(
     accept_routes: bool = True,
 ) -> Dict[str, Any]:
     """Connects host to the Zero-Trust Tailscale mesh network."""
-    ts_bin = _find_tailscale_bin()
-    cmd = [ts_bin or "tailscale", "up"]
+    cmd = ["up"]
     if auth_key:
         cmd.extend(["--authkey", auth_key])
     if hostname:
@@ -2312,33 +2372,215 @@ def execute_tailscale_up(
     if accept_routes:
         cmd.append("--accept-routes")
 
-    try:
-        r = subprocess.run(cmd, capture_output=True, text=True, timeout=15)
+    code, out = _run_tailscale_cmd(cmd, timeout=15.0)
+
+    # Check for interactive authentication URL in output
+    auth_url = None
+    m = re.search(r"https://login\.tailscale\.com/a/[a-zA-Z0-9_-]+", out)
+    if m:
+        auth_url = m.group(0)
+    elif "login.tailscale.com" in out:
+        m2 = re.search(r"https://\S+", out)
+        if m2:
+            auth_url = m2.group(0)
+
+    if auth_url:
         return {
-            "status": "success" if r.returncode == 0 else "error",
-            "code": r.returncode,
-            "output": r.stdout or r.stderr,
+            "status": "needs_login",
+            "code": 0,
+            "auth_url": auth_url,
+            "output": out,
+            "message": "Authentication required. Visit the authorization URL to link this device.",
         }
-    except FileNotFoundError:
-        return {"status": "error", "code": 127, "output": "tailscale CLI not found on host"}
-    except Exception as e:
-        return {"status": "error", "code": 1, "output": str(e)}
+
+    if code == 0:
+        return {
+            "status": "success",
+            "code": 0,
+            "output": out,
+        }
+
+    if code == 127:
+        return {"status": "error", "code": 127, "output": "tailscale CLI or container not found on host"}
+
+    return {"status": "error", "code": code, "output": out}
 
 
 def execute_tailscale_down() -> Dict[str, Any]:
     """Disconnects host from the Zero-Trust Tailscale mesh network."""
-    ts_bin = _find_tailscale_bin()
-    try:
-        r = subprocess.run([ts_bin or "tailscale", "down"], capture_output=True, text=True, timeout=10)
+    code, out = _run_tailscale_cmd(["down"], timeout=10.0)
+    if code == 0:
         return {
-            "status": "success" if r.returncode == 0 else "error",
-            "code": r.returncode,
-            "output": r.stdout or r.stderr,
+            "status": "success",
+            "code": 0,
+            "output": out,
         }
-    except FileNotFoundError:
-        return {"status": "error", "code": 127, "output": "tailscale CLI not found on host"}
+    if code == 127:
+        return {"status": "error", "code": 127, "output": "tailscale CLI or container not found on host"}
+    return {"status": "error", "code": code, "output": out}
+
+
+def deploy_tailscale_container(
+    auth_key: Optional[str] = None,
+    hostname: Optional[str] = None,
+    accept_routes: bool = True,
+    state_dir: Optional[str] = None,
+) -> Dict[str, Any]:
+    """
+    1-Click turnkey provisioning of the official Tailscale Docker container
+    with host network mode, NET_ADMIN caps, and persistent state storage.
+    """
+    from backend.hardware.docker_stats import UnixHTTPConnection
+    from backend.services.container_mutator import _docker_request
+
+    sock_path = "/var/run/docker.sock"
+    if not os.path.exists(sock_path):
+        return {
+            "status": "error",
+            "message": "Docker socket /var/run/docker.sock not available. Docker is required for 1-click deployment.",
+        }
+
+    # 1. Check if 'tailscale' container already exists
+    st_exist, c_info = _docker_request("GET", "/containers/tailscale/json")
+    if st_exist == 200 and isinstance(c_info, dict):
+        cid = str(c_info.get("Id", ""))[:12]
+        is_running = bool(c_info.get("State", {}).get("Running", False))
+        if not is_running:
+            _docker_request("POST", "/containers/tailscale/start")
+            time.sleep(2)
+
+        if auth_key:
+            up_res = execute_tailscale_up(auth_key=auth_key, hostname=hostname, accept_routes=accept_routes)
+            return {
+                "status": "success",
+                "container_id": cid,
+                "message": "Tailscale container started and connected with auth key.",
+                "details": up_res,
+            }
+        else:
+            up_res = execute_tailscale_up(hostname=hostname, accept_routes=accept_routes)
+            return {
+                "status": "success",
+                "container_id": cid,
+                "auth_url": up_res.get("auth_url"),
+                "message": "Tailscale container running. Authorization required.",
+            }
+
+    # 2. Pull official image if not cached locally
+    image_name = "tailscale/tailscale:stable"
+    st_img, _ = _docker_request("GET", f"/images/{image_name}/json")
+    if st_img != 200:
+        logger.info(f"[Network] Pulling image {image_name} for 1-click Tailscale deployment...")
+        pull_conn = None
+        try:
+            pull_conn = UnixHTTPConnection(sock_path, timeout=180.0)
+            pull_conn.request("POST", "/images/create?fromImage=tailscale/tailscale&tag=stable")
+            res_p = pull_conn.getresponse()
+            while True:
+                chunk = res_p.read(4096)
+                if not chunk:
+                    break
+        except Exception as e:
+            logger.warning(f"[Network] Image pull notice: {e}")
+        finally:
+            if pull_conn:
+                try:
+                    pull_conn.close()
+                except Exception:
+                    pass
+
+    # 3. Resolve persistent host storage directory
+    if not state_dir:
+        if os.path.isdir("/mnt/user/appdata"):
+            state_dir = "/mnt/user/appdata/tailscale"
+        else:
+            from backend.config import DATA_DIR
+
+            state_dir = os.path.join(DATA_DIR, "tailscale")
+    try:
+        os.makedirs(state_dir, exist_ok=True)
     except Exception as e:
-        return {"status": "error", "code": 1, "output": str(e)}
+        logger.warning(f"[Network] Could not create state_dir {state_dir}: {e}")
+
+    # 4. Configure environment variables
+    env_vars = [
+        "TS_STATE_DIR=/var/lib/tailscale",
+        "TS_USERSPACE=false",
+    ]
+    if hostname:
+        env_vars.append(f"TS_HOSTNAME={hostname.strip()}")
+    if auth_key:
+        env_vars.append(f"TS_AUTHKEY={auth_key.strip()}")
+    if accept_routes:
+        env_vars.append("TS_EXTRA_ARGS=--accept-routes")
+
+    # 5. Device and capabilities handling
+    devices = []
+    if os.path.exists("/dev/net/tun"):
+        devices.append(
+            {
+                "PathOnHost": "/dev/net/tun",
+                "PathInContainer": "/dev/net/tun",
+                "CgroupPermissions": "rwm",
+            }
+        )
+    else:
+        # Fallback to userspace networking if /dev/net/tun is unavailable
+        env_vars = [e for e in env_vars if not e.startswith("TS_USERSPACE=")]
+        env_vars.append("TS_USERSPACE=true")
+
+    create_body = {
+        "Image": image_name,
+        "Env": env_vars,
+        "HostConfig": {
+            "NetworkMode": "host",
+            "CapAdd": ["NET_ADMIN", "NET_RAW"],
+            "Binds": [f"{state_dir}:/var/lib/tailscale"],
+            "Devices": devices,
+            "RestartPolicy": {"Name": "unless-stopped"},
+        },
+        "Labels": {
+            "com.docker.compose.project": "tailscale",
+            "com.docker.compose.service": "tailscale",
+            "net.unraid.docker.managed": "dockerman",
+            "net.unraid.docker.icon": "https://raw.githubusercontent.com/tailscale/tailscale/main/cmd/tailscale/logo.png",
+            "app.name": "Tailscale Zero-Trust Mesh",
+        },
+    }
+
+    # 6. Create container
+    st_create, res_create = _docker_request("POST", "/containers/create?name=tailscale", body=create_body)
+    if st_create != 201:
+        err_msg = res_create.get("message") if isinstance(res_create, dict) else str(res_create)
+        return {"status": "error", "message": f"Failed to create Tailscale container: {err_msg}"}
+
+    cid = str(res_create.get("Id", ""))
+
+    # 7. Start container
+    st_start, res_start = _docker_request("POST", f"/containers/{cid}/start")
+    if st_start not in (204, 304):
+        err_msg = res_start.get("message") if isinstance(res_start, dict) else str(res_start)
+        return {"status": "error", "message": f"Failed to start Tailscale container: {err_msg}"}
+
+    time.sleep(2.5)
+
+    # 8. Check auth requirement or trigger login
+    auth_url = None
+    if not auth_key:
+        up_res = execute_tailscale_up(hostname=hostname, accept_routes=accept_routes)
+        auth_url = up_res.get("auth_url")
+
+    return {
+        "status": "success",
+        "container_id": cid[:12],
+        "state_dir": state_dir,
+        "auth_url": auth_url,
+        "message": (
+            "Tailscale container deployed. Please authenticate in your browser to complete setup."
+            if auth_url
+            else "Tailscale container deployed and connected to Tailnet."
+        ),
+    }
 
 
 def generate_wireguard_keypair() -> tuple[str, str]:

@@ -263,6 +263,15 @@ class TailscaleUpRequest(BaseModel):
     accept_routes: bool = Field(default=True, description="Accept subnet routes from other nodes")
 
 
+class TailscaleDeployRequest(BaseModel):
+    auth_key: Optional[str] = Field(
+        default=None, description="Pre-authenticated Tailscale ephemeral or reusable auth key"
+    )
+    hostname: Optional[str] = Field(default=None, description="Custom node hostname on tailnet")
+    accept_routes: bool = Field(default=True, description="Accept subnet routes from other nodes")
+    state_dir: Optional[str] = Field(default=None, description="Custom persistent state directory on host")
+
+
 @router.get("/network/mesh-vpn", dependencies=[Depends(require_scope("system:view"))])
 async def get_mesh_vpn_endpoint():
     """Retrieves Zero-Trust Mesh VPN telemetry and status for Tailscale and WireGuard."""
@@ -295,6 +304,23 @@ async def post_tailscale_down():
     res = await asyncio.to_thread(execute_tailscale_down)
     if res.get("status") == "error":
         raise HTTPException(status_code=400, detail=res.get("output", "Tailscale disconnection failed"))
+    return res
+
+
+@router.post("/network/mesh-vpn/tailscale/deploy", dependencies=[Depends(require_scope("system:config"))])
+async def post_tailscale_deploy(req: TailscaleDeployRequest):
+    """1-Click turnkey provisioning of the official Tailscale Docker container."""
+    from backend.hardware.network import deploy_tailscale_container
+
+    res = await asyncio.to_thread(
+        deploy_tailscale_container,
+        auth_key=req.auth_key,
+        hostname=req.hostname,
+        accept_routes=req.accept_routes,
+        state_dir=req.state_dir,
+    )
+    if res.get("status") == "error":
+        raise HTTPException(status_code=400, detail=res.get("message", "Tailscale deployment failed"))
     return res
 
 

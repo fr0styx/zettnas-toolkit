@@ -3503,6 +3503,11 @@ export async function fetchAndRenderWireguard() {
   const tsAcceptRoutesCb = document.getElementById('ts-accept-routes-input');
   const tsUpBtn = document.getElementById('btn-tailscale-up');
   const tsDownBtn = document.getElementById('btn-tailscale-down');
+  const tsDeployBanner = document.getElementById('ts-deploy-banner');
+  const tsDeployBtn = document.getElementById('btn-deploy-tailscale');
+  const tsAuthPrompt = document.getElementById('ts-auth-prompt');
+  const tsAuthLink = document.getElementById('ts-auth-link');
+  const tsCopyAuthUrlBtn = document.getElementById('btn-copy-ts-auth-url');
 
   try {
     const meshData = await api.get('/api/network/mesh-vpn').catch(() => null);
@@ -3519,8 +3524,9 @@ export async function fetchAndRenderWireguard() {
           tsPillEl.style.color = 'var(--muted, #94a3b8)';
           tsPillEl.style.background = 'rgba(255,255,255,0.06)';
         }
+        if (tsDeployBanner) tsDeployBanner.style.display = 'block';
         if (tsFormIntro) {
-          tsFormIntro.textContent = 'Tailscale daemon or CLI is not detected on this system. Install Tailscale on the host OS or deploy as a Docker container.';
+          tsFormIntro.textContent = 'Deploy official Tailscale container or provide auth key to connect instantly:';
           tsFormIntro.style.color = '#f59e0b';
         }
         if (tsIpEl) tsIpEl.textContent = '--';
@@ -3531,6 +3537,10 @@ export async function fetchAndRenderWireguard() {
         if (tsConnectForm) tsConnectForm.style.display = 'flex';
         if (tsConnectedView) tsConnectedView.style.display = 'none';
         if (tsDownBtn) tsDownBtn.style.display = 'none';
+        if (tsUpBtn) {
+          tsUpBtn.textContent = '⚡ 1-Click Deploy Tailscale';
+          tsUpBtn.dataset.mode = 'deploy';
+        }
       } else if (ts.active) {
         if (tsBadgeEl) {
           tsBadgeEl.textContent = 'Active (Connected)';
@@ -3542,6 +3552,12 @@ export async function fetchAndRenderWireguard() {
           tsPillEl.style.color = '#3bf58b';
           tsPillEl.style.background = 'rgba(59,245,139,0.12)';
         }
+        if (tsDeployBanner) tsDeployBanner.style.display = 'none';
+        if (tsAuthPrompt) tsAuthPrompt.style.display = 'none';
+        if (window._tsAuthPollInterval) {
+          clearInterval(window._tsAuthPollInterval);
+          window._tsAuthPollInterval = null;
+        }
         if (tsIpEl) tsIpEl.textContent = ts.ipv4 || '--';
         if (tsCopyIpBtn) tsCopyIpBtn.style.display = ts.ipv4 ? 'inline-block' : 'none';
         if (tsTailnetEl) tsTailnetEl.textContent = ts.tailnet || '--';
@@ -3550,6 +3566,10 @@ export async function fetchAndRenderWireguard() {
         if (tsConnectForm) tsConnectForm.style.display = 'none';
         if (tsConnectedView) tsConnectedView.style.display = 'flex';
         if (tsDownBtn) tsDownBtn.style.display = 'inline-block';
+        if (tsUpBtn) {
+          tsUpBtn.textContent = '🚀 Connect Tailscale';
+          tsUpBtn.dataset.mode = 'connect';
+        }
       } else {
         const isNeedsLogin = ts.backend_state === 'NeedsLogin';
         if (tsBadgeEl) {
@@ -3562,6 +3582,7 @@ export async function fetchAndRenderWireguard() {
           tsPillEl.style.color = '#f59e0b';
           tsPillEl.style.background = 'rgba(245,158,11,0.12)';
         }
+        if (tsDeployBanner) tsDeployBanner.style.display = 'none';
         if (tsFormIntro) {
           tsFormIntro.textContent = 'Join your Zero-Trust Tailnet with a pre-authenticated auth key:';
           tsFormIntro.style.color = 'var(--muted)';
@@ -3569,11 +3590,15 @@ export async function fetchAndRenderWireguard() {
         if (tsIpEl) tsIpEl.textContent = '--';
         if (tsCopyIpBtn) tsCopyIpBtn.style.display = 'none';
         if (tsTailnetEl) tsTailnetEl.textContent = '--';
-        if (tsHostEl) tsHostEl.textContent = ts.hostname || '--';
+        if (tsHostEl) tsHostEl.textContent = '--';
         if (tsPeersEl) tsPeersEl.textContent = '0 peers';
         if (tsConnectForm) tsConnectForm.style.display = 'flex';
         if (tsConnectedView) tsConnectedView.style.display = 'none';
         if (tsDownBtn) tsDownBtn.style.display = 'none';
+        if (tsUpBtn) {
+          tsUpBtn.textContent = '🚀 Connect Tailscale';
+          tsUpBtn.dataset.mode = 'connect';
+        }
       }
     }
   } catch (err) {
@@ -3597,29 +3622,114 @@ export async function fetchAndRenderWireguard() {
     }
   } catch (e) {}
 
+  async function deployTailscaleContainer(btn) {
+    const authKey = tsAuthKeyInput ? tsAuthKeyInput.value.trim() : '';
+    const hostname = tsHostnameInput ? tsHostnameInput.value.trim() : '';
+    const acceptRoutes = tsAcceptRoutesCb ? tsAcceptRoutesCb.checked : true;
+    const origText = btn ? btn.textContent : '';
+    try {
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = '⏳ Deploying Container...';
+      }
+      showToast('Deploying official Tailscale container to Docker...', 'info');
+
+      const res = await api.post('/api/network/mesh-vpn/tailscale/deploy', {
+        auth_key: authKey || null,
+        hostname: hostname || null,
+        accept_routes: acceptRoutes,
+      });
+
+      if (res && res.auth_url) {
+        if (tsAuthPrompt) tsAuthPrompt.style.display = 'block';
+        if (tsAuthLink) tsAuthLink.href = res.auth_url;
+        if (tsCopyAuthUrlBtn) {
+          tsCopyAuthUrlBtn.onclick = () => {
+            if (navigator.clipboard?.writeText) {
+              navigator.clipboard.writeText(res.auth_url);
+              showToast('Authorization link copied to clipboard.', 'success');
+            }
+          };
+        }
+        showToast('Tailscale deployed! Browser authorization required.', 'info');
+        startTailscaleAuthPolling();
+      } else {
+        showToast('Tailscale container deployed and connected!', 'success');
+        if (tsAuthPrompt) tsAuthPrompt.style.display = 'none';
+        fetchAndRenderWireguard();
+      }
+    } catch (err) {
+      showToast(`Tailscale deployment failed: ${err.message}`, 'error');
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = origText;
+      }
+    }
+  }
+
+  function startTailscaleAuthPolling() {
+    if (window._tsAuthPollInterval) clearInterval(window._tsAuthPollInterval);
+    window._tsAuthPollInterval = setInterval(async () => {
+      try {
+        const mesh = await api.get('/api/network/mesh-vpn').catch(() => null);
+        if (mesh && mesh.tailscale && mesh.tailscale.active) {
+          clearInterval(window._tsAuthPollInterval);
+          window._tsAuthPollInterval = null;
+          if (tsAuthPrompt) tsAuthPrompt.style.display = 'none';
+          showToast('Tailscale node successfully authorized and connected!', 'success');
+          fetchAndRenderWireguard();
+        }
+      } catch (_) {}
+    }, 2500);
+  }
+
+  if (tsDeployBtn && !tsDeployBtn._bound) {
+    tsDeployBtn._bound = true;
+    tsDeployBtn.addEventListener('click', () => deployTailscaleContainer(tsDeployBtn));
+  }
+
   // Tailscale Up handler
   if (tsUpBtn && !tsUpBtn._bound) {
     tsUpBtn._bound = true;
     tsUpBtn.addEventListener('click', async () => {
+      if (tsUpBtn.dataset.mode === 'deploy') {
+        return deployTailscaleContainer(tsUpBtn);
+      }
       const authKey = tsAuthKeyInput ? tsAuthKeyInput.value.trim() : '';
       const hostname = tsHostnameInput ? tsHostnameInput.value.trim() : '';
       const acceptRoutes = tsAcceptRoutesCb ? tsAcceptRoutesCb.checked : true;
       try {
         tsUpBtn.disabled = true;
         tsUpBtn.textContent = '🚀 Connecting...';
-        await api.post('/api/network/mesh-vpn/tailscale/up', {
+        const res = await api.post('/api/network/mesh-vpn/tailscale/up', {
           auth_key: authKey || null,
           hostname: hostname || null,
           accept_routes: acceptRoutes,
         });
-        showToast('Connected host to Tailscale mesh network.', 'success');
-        if (tsAuthKeyInput) tsAuthKeyInput.value = '';
-        fetchAndRenderWireguard();
+        if (res && res.auth_url) {
+          if (tsAuthPrompt) tsAuthPrompt.style.display = 'block';
+          if (tsAuthLink) tsAuthLink.href = res.auth_url;
+          if (tsCopyAuthUrlBtn) {
+            tsCopyAuthUrlBtn.onclick = () => {
+              if (navigator.clipboard?.writeText) {
+                navigator.clipboard.writeText(res.auth_url);
+                showToast('Authorization link copied to clipboard.', 'success');
+              }
+            };
+          }
+          showToast('Browser authorization required. Click to log in.', 'info');
+          startTailscaleAuthPolling();
+        } else {
+          showToast('Connected host to Tailscale mesh network.', 'success');
+          if (tsAuthKeyInput) tsAuthKeyInput.value = '';
+          fetchAndRenderWireguard();
+        }
       } catch (err) {
         showToast(`Tailscale connection failed: ${err.message}`, 'error');
       } finally {
         tsUpBtn.disabled = false;
-        tsUpBtn.textContent = '🚀 Connect Tailscale';
+        tsUpBtn.textContent = tsUpBtn.dataset.mode === 'deploy' ? '⚡ 1-Click Deploy Tailscale' : '🚀 Connect Tailscale';
       }
     });
   }

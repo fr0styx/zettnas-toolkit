@@ -558,9 +558,20 @@ def execute_in_container(cid_or_name: str, cmd: Any) -> Dict[str, Any]:
 
         output_str = "".join(clean_lines) if clean_lines else raw_output.decode("utf-8", errors="replace")
 
+        exit_code = 0
+        try:
+            conn.request("GET", f"/exec/{exec_id}/json")
+            insp_res = conn.getresponse()
+            if insp_res.status == 200:
+                insp_data = json.loads(insp_res.read().decode("utf-8", errors="replace"))
+                exit_code = insp_data.get("ExitCode", 0)
+        except Exception:
+            pass
+
         return {
             "success": True,
             "exec_id": exec_id,
+            "exit_code": exit_code,
             "output": output_str.strip(),
             "cmd": cmd_list,
         }

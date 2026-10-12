@@ -911,7 +911,17 @@ export const TRANSLATIONS = {
     "net.vlan_alias_label": "Friendly Alias / Role (Optional)",
     "net.delete_vlan_confirm": "Are you sure you want to delete VLAN sub-interface",
     "net.vlan_created_toast": "VLAN sub-interface created successfully",
-    "net.vlan_deleted_toast": "VLAN sub-interface removed successfully"
+    "net.vlan_deleted_toast": "VLAN sub-interface removed successfully",
+    "net.tailscale_1click_title": "1-Click Tailscale Container Deployment",
+    "net.tailscale_1click_desc": "Instantly provision the official Tailscale daemon in Docker with host networking, /dev/net/tun, and persistent state.",
+    "net.tailscale_deploy_btn": "⚡ 1-Click Deploy Tailscale",
+    "net.tailscale_deploying": "⏳ Deploying Container...",
+    "net.tailscale_auth_required_title": "👉 Browser Authentication Required",
+    "net.tailscale_auth_required_desc": "To finish connecting this node to your Tailnet, log in via your browser:",
+    "net.tailscale_open_login": "🔗 Open Tailscale Login",
+    "net.tailscale_copy_link": "📋 Copy Link",
+    "net.tailscale_waiting_auth": "⏳ Waiting for authorization...",
+    "net.tailscale_deployed_toast": "Tailscale container deployed successfully."
   },
   "de": {
     "net.wol_bios_title": "Hardware- & BIOS-Anforderung:",
@@ -1791,7 +1801,17 @@ export const TRANSLATIONS = {
     "net.vlan_alias_label": "Freundlicher Alias / Rolle (Optional)",
     "net.delete_vlan_confirm": "Sind Sie sicher, dass Sie die VLAN-Subschnittstelle löschen möchten",
     "net.vlan_created_toast": "VLAN-Subschnittstelle erfolgreich erstellt",
-    "net.vlan_deleted_toast": "VLAN-Subschnittstelle erfolgreich entfernt"
+    "net.vlan_deleted_toast": "VLAN-Subschnittstelle erfolgreich entfernt",
+    "net.tailscale_1click_title": "1-Klick-Tailscale-Container-Bereitstellung",
+    "net.tailscale_1click_desc": "Offiziellen Tailscale-Daemon blitzschnell in Docker mit Host-Netzwerk, /dev/net/tun und permanentem Speicher bereitstellen.",
+    "net.tailscale_deploy_btn": "⚡ 1-Klick Tailscale bereitstellen",
+    "net.tailscale_deploying": "⏳ Container wird bereitgestellt...",
+    "net.tailscale_auth_required_title": "👉 Browser-Authentifizierung erforderlich",
+    "net.tailscale_auth_required_desc": "Um diesen Knoten mit Ihrem Tailnet zu verbinden, melden Sie sich in Ihrem Browser an:",
+    "net.tailscale_open_login": "🔗 Tailscale-Anmeldung öffnen",
+    "net.tailscale_copy_link": "📋 Link kopieren",
+    "net.tailscale_waiting_auth": "⏳ Warte auf Autorisierung...",
+    "net.tailscale_deployed_toast": "Tailscale-Container erfolgreich bereitgestellt."
   },
   "zh": {
     "net.wol_bios_title": "硬件与主板 BIOS 必备配置：",
@@ -2671,7 +2691,17 @@ export const TRANSLATIONS = {
     "net.vlan_alias_label": "自定义别名 / 角色 (可选)",
     "net.delete_vlan_confirm": "确定要删除 VLAN 子接口吗",
     "net.vlan_created_toast": "VLAN 子接口创建成功",
-    "net.vlan_deleted_toast": "VLAN 子接口删除成功"
+    "net.vlan_deleted_toast": "VLAN 子接口删除成功",
+    "net.tailscale_1click_title": "一键部署 Tailscale 容器",
+    "net.tailscale_1click_desc": "使用主机网络、/dev/net/tun 设备与持久化存储在 Docker 中即刻部署官方 Tailscale 守护进程。",
+    "net.tailscale_deploy_btn": "⚡ 一键部署 Tailscale",
+    "net.tailscale_deploying": "⏳ 正在部署容器...",
+    "net.tailscale_auth_required_title": "👉 需要通过浏览器授权登录",
+    "net.tailscale_auth_required_desc": "要完成将此节点连接到您的 Tailnet，请在浏览器中登录授权：",
+    "net.tailscale_open_login": "🔗 打开 Tailscale 登录",
+    "net.tailscale_copy_link": "📋 复制链接",
+    "net.tailscale_waiting_auth": "⏳ 等待授权完成...",
+    "net.tailscale_deployed_toast": "Tailscale 容器部署成功。"
   },
   "fr": {
     "net.wol_bios_title": "Configuration matérielle et BIOS requise :",
@@ -3541,7 +3571,17 @@ export const TRANSLATIONS = {
     "net.vlan_alias_label": "Alias convivial / Rôle (Optionnel)",
     "net.delete_vlan_confirm": "Voulez-vous vraiment supprimer la sous-interface VLAN",
     "net.vlan_created_toast": "Sous-interface VLAN créée avec succès",
-    "net.vlan_deleted_toast": "Sous-interface VLAN supprimée avec succès"
+    "net.vlan_deleted_toast": "Sous-interface VLAN supprimée avec succès",
+    "net.tailscale_1click_title": "Déploiement en 1-clic du conteneur Tailscale",
+    "net.tailscale_1click_desc": "Provisionnez instantanément le démon officiel Tailscale dans Docker avec mise en réseau de l hôte, /dev/net/tun et état persistant.",
+    "net.tailscale_deploy_btn": "⚡ Déployer Tailscale en 1 clic",
+    "net.tailscale_deploying": "⏳ Déploiement du conteneur...",
+    "net.tailscale_auth_required_title": "👉 Authentification par navigateur requise",
+    "net.tailscale_auth_required_desc": "Pour terminer la connexion de ce nœud à votre Tailnet, connectez-vous via votre navigateur :",
+    "net.tailscale_open_login": "🔗 Ouvrir la connexion Tailscale",
+    "net.tailscale_copy_link": "📋 Copier le lien",
+    "net.tailscale_waiting_auth": "⏳ En attente d autorisation...",
+    "net.tailscale_deployed_toast": "Conteneur Tailscale déployé avec succès."
   },
   "es": {
     "net.wol_bios_title": "Requisito de hardware y BIOS UEFI:",
@@ -4421,7 +4461,17 @@ export const TRANSLATIONS = {
     "net.vlan_alias_label": "Alias descriptivo / Rol (Opcional)",
     "net.delete_vlan_confirm": "¿Está seguro de que desea eliminar la subinterfaz VLAN",
     "net.vlan_created_toast": "Subinterfaz VLAN creada correctamente",
-    "net.vlan_deleted_toast": "Subinterfaz VLAN eliminada correctamente"
+    "net.vlan_deleted_toast": "Subinterfaz VLAN eliminada correctamente",
+    "net.tailscale_1click_title": "Despliegue en 1 clic del contenedor Tailscale",
+    "net.tailscale_1click_desc": "Aprovisione al instante el demonio oficial de Tailscale en Docker con red de host, /dev/net/tun y estado persistente.",
+    "net.tailscale_deploy_btn": "⚡ Desplegar Tailscale en 1 clic",
+    "net.tailscale_deploying": "⏳ Desplegando contenedor...",
+    "net.tailscale_auth_required_title": "👉 Se requiere autenticación en el navegador",
+    "net.tailscale_auth_required_desc": "Para terminar de conectar este nodo a su Tailnet, inicie sesión a través de su navegador:",
+    "net.tailscale_open_login": "🔗 Abrir inicio de sesión de Tailscale",
+    "net.tailscale_copy_link": "📋 Copiar enlace",
+    "net.tailscale_waiting_auth": "⏳ Esperando autorización...",
+    "net.tailscale_deployed_toast": "Contenedor Tailscale desplegado con éxito."
   }
 };
 

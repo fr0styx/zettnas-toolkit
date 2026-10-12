@@ -23,6 +23,12 @@ describe('Zero-Trust Mesh VPN Suite (WireGuard & Tailscale)', () => {
       <span id="ts-hostname-display">--</span>
       <span id="ts-peers-display">0 peers</span>
 
+      <div id="ts-deploy-banner" style="display:none;"></div>
+      <button id="btn-deploy-tailscale"></button>
+      <div id="ts-auth-prompt" style="display:none;"></div>
+      <a id="ts-auth-link" href="#"></a>
+      <button id="btn-copy-ts-auth-url"></button>
+
       <div id="ts-connect-form"></div>
       <div id="ts-connected-view" style="display:none;"></div>
       <div id="ts-form-intro"></div>
@@ -88,6 +94,7 @@ describe('Zero-Trust Mesh VPN Suite (WireGuard & Tailscale)', () => {
     expect(document.getElementById('ts-connected-view').style.display).toBe('flex');
     expect(document.getElementById('ts-connect-form').style.display).toBe('none');
     expect(document.getElementById('btn-tailscale-down').style.display).toBe('inline-block');
+    expect(document.getElementById('ts-deploy-banner').style.display).toBe('none');
   });
 
   it('handles Tailscale when disconnected with pre-auth form', async () => {
@@ -116,6 +123,7 @@ describe('Zero-Trust Mesh VPN Suite (WireGuard & Tailscale)', () => {
     expect(document.getElementById('ts-connect-form').style.display).toBe('flex');
     expect(document.getElementById('ts-connected-view').style.display).toBe('none');
     expect(document.getElementById('btn-tailscale-down').style.display).toBe('none');
+    expect(document.getElementById('ts-deploy-banner').style.display).toBe('none');
   });
 
   it('triggers Tailscale up POST on connect button click', async () => {
@@ -124,7 +132,7 @@ describe('Zero-Trust Mesh VPN Suite (WireGuard & Tailscale)', () => {
       wireguard: { installed: true, active: false },
     });
     const postSpy = vi.spyOn(api, 'post').mockResolvedValue({ status: 'success' });
-    const toastSpy = vi.spyOn(toast, 'showToast').mockImplementation(() => {});
+    vi.spyOn(toast, 'showToast').mockImplementation(() => {});
 
     await fetchAndRenderWireguard();
 
@@ -141,6 +149,49 @@ describe('Zero-Trust Mesh VPN Suite (WireGuard & Tailscale)', () => {
       hostname: 'my-custom-node',
       accept_routes: true,
     });
+  });
+
+  it('surfaces 1-click deployment when Tailscale is not installed', async () => {
+    vi.spyOn(api, 'get').mockResolvedValue({
+      tailscale: { installed: false, active: false },
+      wireguard: { installed: true, active: false },
+    });
+
+    await fetchAndRenderWireguard();
+
+    expect(document.getElementById('ts-deploy-banner').style.display).toBe('block');
+    expect(document.getElementById('btn-tailscale-up').textContent).toBe('⚡ 1-Click Deploy Tailscale');
+    expect(document.getElementById('tailscale-status-badge').textContent).toBe('Not Installed');
+  });
+
+  it('triggers 1-click deploy POST and displays browser auth prompt on auth_url response', async () => {
+    vi.spyOn(api, 'get').mockResolvedValue({
+      tailscale: { installed: false, active: false },
+      wireguard: { installed: true, active: false },
+    });
+    const postSpy = vi.spyOn(api, 'post').mockResolvedValue({
+      status: 'success',
+      container_id: 'c12345678901',
+      auth_url: 'https://login.tailscale.com/a/oauth123',
+    });
+    vi.spyOn(toast, 'showToast').mockImplementation(() => {});
+
+    await fetchAndRenderWireguard();
+
+    const hostInput = document.getElementById('ts-hostname-input');
+    hostInput.value = 'zettnas-appliance';
+
+    const deployBtn = document.getElementById('btn-deploy-tailscale');
+    await deployBtn.click();
+
+    expect(postSpy).toHaveBeenCalledWith('/api/network/mesh-vpn/tailscale/deploy', {
+      auth_key: null,
+      hostname: 'zettnas-appliance',
+      accept_routes: true,
+    });
+
+    expect(document.getElementById('ts-auth-prompt').style.display).toBe('block');
+    expect(document.getElementById('ts-auth-link').href).toBe('https://login.tailscale.com/a/oauth123');
   });
 
   it('filters services between all, tailscale, and wireguard', async () => {
