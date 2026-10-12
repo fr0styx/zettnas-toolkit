@@ -3372,6 +3372,192 @@ export async function fetchAndRenderCopyHistory() {
   }
 }
 
+export async function fetchAndRenderReplication() {
+  const tbody = document.getElementById('replication-jobs-tbody');
+  const histTbody = document.getElementById('replication-history-tbody');
+  if (!tbody) return;
+
+  try {
+    const [jobsRes, histRes] = await Promise.all([
+      api.get('/api/storage/replication/jobs').catch(() => ({ jobs: [] })),
+      api.get('/api/storage/replication/history').catch(() => ({ history: [] })),
+    ]);
+
+    const jobs = jobsRes.jobs || [];
+    if (jobs.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--muted); padding:20px;">No replication pipelines configured. Click '+ New Replication Pipeline' to create one.</td></tr>`;
+    } else {
+      tbody.innerHTML = jobs
+        .map((j) => {
+          const tgtDesc =
+            j.target_type === 'local'
+              ? `Local: ${escapeHtml(j.target_pool || 'default')}`
+              : `${escapeHtml(j.target_host || 'remote')}:${escapeHtml(j.target_pool || '')} (${j.target_type})`;
+          return `
+          <tr>
+            <td><strong>${escapeHtml(j.name || j.id)}</strong></td>
+            <td><span class="badge" style="font-family:monospace;">${escapeHtml(j.source_pool)}/${escapeHtml(j.source_subvolume || '@')}</span></td>
+            <td>${tgtDesc}</td>
+            <td><span class="mgmt-app-pill" style="font-size:10px;">${escapeHtml(j.schedule || 'manual')}</span></td>
+            <td>${j.bandwidth_limit_mbps ? `${j.bandwidth_limit_mbps} MB/s` : 'Unlimited'}</td>
+            <td>${j.retention_count || 7} snaps</td>
+            <td><span class="mgmt-app-pill ${j.enabled ? 'text-emerald' : 'text-muted'}">${j.enabled ? 'Active' : 'Disabled'}</span></td>
+            <td style="text-align:right;">
+              <button class="btn-pill-toggle btn-run-repl" data-id="${escapeHtml(j.id)}" style="font-size:10.5px; padding:2px 8px; margin-right:4px;" title="Execute Replication Now">▶ Run</button>
+              <button class="btn-pill-toggle btn-del-repl" data-id="${escapeHtml(j.id)}" style="font-size:10.5px; padding:2px 8px; color:var(--crit);" title="Delete Pipeline">🗑️</button>
+            </td>
+          </tr>
+        `;
+        })
+        .join('');
+
+      tbody.querySelectorAll('.btn-run-repl').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          const id = btn.dataset.id;
+          try {
+            btn.disabled = true;
+            btn.textContent = '⏳ Running...';
+            await api.post(`/api/storage/replication/jobs/${encodeURIComponent(id)}/run`);
+            showToast(`Replication pipeline '${id}' dispatched.`, 'success');
+            setTimeout(fetchAndRenderReplication, 1000);
+          } catch (e) {
+            showToast(`Replication failed: ${e.message}`, 'error');
+          } finally {
+            btn.disabled = false;
+            btn.textContent = '▶ Run';
+          }
+        });
+      });
+
+      tbody.querySelectorAll('.btn-del-repl').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          const id = btn.dataset.id;
+          if (!confirm(`Delete replication pipeline '${id}'?`)) return;
+          try {
+            await api.delete(`/api/storage/replication/jobs/${encodeURIComponent(id)}`);
+            showToast(`Pipeline '${id}' deleted.`, 'success');
+            fetchAndRenderReplication();
+          } catch (e) {
+            showToast(`Delete failed: ${e.message}`, 'error');
+          }
+        });
+      });
+    }
+
+    if (histTbody) {
+      const history = histRes.history || [];
+      if (history.length === 0) {
+        histTbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--muted); padding:16px;">No replication history recorded yet.</td></tr>`;
+      } else {
+        histTbody.innerHTML = history
+          .slice(0, 20)
+          .map((h) => {
+            const dt = h.timestamp ? new Date(h.timestamp * 1000).toLocaleString() : '--';
+            const isOk = h.status === 'success';
+            return `
+            <tr>
+              <td>${escapeHtml(dt)}</td>
+              <td><code>${escapeHtml(h.job_id || '--')}</code></td>
+              <td>${escapeHtml(h.target || '--')}</td>
+              <td>${h.bytes_transferred ? (h.bytes_transferred / (1024 * 1024)).toFixed(1) + ' MB' : '--'}</td>
+              <td>${h.duration_seconds ? `${h.duration_seconds.toFixed(1)}s` : '--'}</td>
+              <td><span class="mgmt-app-pill ${isOk ? 'text-emerald' : 'text-crimson'}">${isOk ? '✓ Success' : 'Failed'}</span></td>
+            </tr>
+          `;
+          })
+          .join('');
+      }
+    }
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--crit); padding:16px;">Failed to load replication pipelines: ${escapeHtml(err.message)}</td></tr>`;
+  }
+}
+
+export async function fetchAndRenderWireguard() {
+  const ipFwdEl = document.getElementById('wg-ip-forward-status');
+  const pubkeyEl = document.getElementById('wg-pubkey-display');
+  const badgeEl = document.getElementById('wg-tunnel-status-badge');
+  const previewEl = document.getElementById('wg-conf-preview');
+  const dlBtn = document.getElementById('btn-download-wg-conf');
+  const genBtn = document.getElementById('btn-wg-gen-client-config');
+  const natBtn = document.getElementById('btn-toggle-wg-subnet-nat');
+
+  try {
+    const res = await api.get('/api/network/mesh-vpn/wireguard/subnet-routing').catch(() => null);
+    if (res && ipFwdEl) {
+      const isFwd = Boolean(res.ip_forwarding);
+      ipFwdEl.textContent = isFwd ? 'Active (Forwarding Enabled)' : 'Disabled';
+      ipFwdEl.style.color = isFwd ? 'var(--ok2, #3bf58b)' : 'var(--muted, #64748b)';
+      if (badgeEl) {
+        badgeEl.textContent = res.enabled ? 'Mesh NAT Routing Active' : 'Curve25519 Ready';
+        badgeEl.style.color = res.enabled ? '#3bf58b' : '#38bdf8';
+      }
+    }
+  } catch (e) {}
+
+  if (genBtn && !genBtn._bound) {
+    genBtn._bound = true;
+    genBtn.addEventListener('click', async () => {
+      try {
+        genBtn.disabled = true;
+        genBtn.textContent = '🔑 Generating...';
+        const cfg = await api.post('/api/network/mesh-vpn/wireguard/client-config', {
+          server_endpoint: (window.location.hostname || '127.0.0.1') + ':51820',
+          client_address: '10.100.0.2/24',
+          allowed_ips: '0.0.0.0/0',
+          persistent_keepalive: 25,
+        });
+        if (previewEl) {
+          previewEl.textContent = cfg.config_content || JSON.stringify(cfg, null, 2);
+        }
+        if (pubkeyEl && cfg.public_key) {
+          pubkeyEl.textContent = cfg.public_key;
+        }
+        if (dlBtn && cfg.config_content) {
+          dlBtn.style.display = 'inline-block';
+          dlBtn.onclick = () => {
+            const blob = new Blob([cfg.config_content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'zettnas-client.conf';
+            a.click();
+            URL.revokeObjectURL(url);
+          };
+        }
+        showToast('WireGuard Curve25519 client profile generated.', 'success');
+      } catch (err) {
+        showToast(`Failed to generate WireGuard config: ${err.message}`, 'error');
+      } finally {
+        genBtn.disabled = false;
+        genBtn.textContent = '🔑 Generate Client .conf';
+      }
+    });
+  }
+
+  if (natBtn && !natBtn._bound) {
+    natBtn._bound = true;
+    natBtn.addEventListener('click', async () => {
+      try {
+        natBtn.disabled = true;
+        const curStatus = await api.get('/api/network/mesh-vpn/wireguard/subnet-routing');
+        const nextState = !Boolean(curStatus.enabled);
+        const res = await api.post('/api/network/mesh-vpn/wireguard/subnet-routing', {
+          enabled: nextState,
+          interface: 'wg0',
+          out_interface: 'eth0',
+        });
+        showToast(`WireGuard subnet routing ${res.enabled ? 'enabled' : 'disabled'}.`, 'info');
+        fetchAndRenderWireguard();
+      } catch (err) {
+        showToast(`Subnet routing toggle failed: ${err.message}`, 'error');
+      } finally {
+        natBtn.disabled = false;
+      }
+    });
+  }
+}
+
 export async function fetchAndRenderNetworkTopology() {
   const switchFaceplate = document.getElementById('network-switch-faceplate');
   const physicalTbody = document.getElementById('network-physical-tbody');
@@ -3753,6 +3939,7 @@ export async function fetchAndRenderNetworkTopology() {
       });
     }
 
+    fetchAndRenderWireguard();
     initNetworkControls();
   } catch (err) {
     console.warn('[ZettNAS] Error fetching network topology:', err);
@@ -5081,6 +5268,8 @@ export function initManagement() {
       if (mount) fetchAndRenderRemoteStorage(mount);
     } else if (paneId === 'mgmt-pane-storage-disks') {
       fetchAndRenderDisksInventory();
+    } else if (paneId === 'mgmt-pane-storage-replication') {
+      fetchAndRenderReplication();
     } else if (paneId === 'mgmt-pane-backups' || paneId === 'mgmt-pane-system') {
       fetchAndRenderBackupJobs();
       fetchAndRenderSystemSnapshots();
@@ -5516,6 +5705,96 @@ export function initManagement() {
     refreshDisksInvBtn.addEventListener('click', () => {
       fetchAndRenderDisksInventory();
       showToast('Disks inventory refreshed.', 'info');
+    });
+  }
+
+  // Replication refresh and create pipeline buttons
+  const refreshReplBtn = document.getElementById('btn-refresh-replication');
+  if (refreshReplBtn) {
+    refreshReplBtn.addEventListener('click', () => {
+      fetchAndRenderReplication();
+      showToast('Replication pipelines refreshed.', 'info');
+    });
+  }
+
+  const createReplBtn = document.getElementById('btn-create-replication-job');
+  const replModal = document.getElementById('modal-create-replication-pipeline');
+  if (createReplBtn && replModal) {
+    const replCloseBtn = document.getElementById('modal-repl-close-btn');
+    const replCancelBtn = document.getElementById('modal-repl-cancel-btn');
+    const replForm = document.getElementById('create-replication-pipeline-form');
+    const replTargetType = document.getElementById('repl-target-type');
+    const replRemoteFields = document.getElementById('repl-remote-fields');
+
+    const closeReplModal = () => {
+      replModal.classList.remove('open');
+      replModal.style.display = 'none';
+      if (replForm) replForm.reset();
+      if (replRemoteFields) replRemoteFields.style.display = 'none';
+    };
+
+    if (replCloseBtn) replCloseBtn.onclick = closeReplModal;
+    if (replCancelBtn) replCancelBtn.onclick = closeReplModal;
+
+    if (replTargetType && replRemoteFields) {
+      replTargetType.addEventListener('change', () => {
+        replRemoteFields.style.display = replTargetType.value === 'local' ? 'none' : 'flex';
+      });
+    }
+
+    createReplBtn.addEventListener('click', () => {
+      replModal.classList.add('open');
+      replModal.style.display = 'flex';
+    });
+
+    if (replForm && !replForm._bound) {
+      replForm._bound = true;
+      replForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const submitBtn = document.getElementById('btn-submit-repl-pipeline');
+        try {
+          if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Saving...';
+          }
+          const tType = document.getElementById('repl-target-type')?.value || 'local';
+          const payload = {
+            name: document.getElementById('repl-job-name')?.value.trim(),
+            source_pool: document.getElementById('repl-source-pool')?.value.trim(),
+            source_dataset: document.getElementById('repl-source-dataset')?.value.trim(),
+            target_type: tType,
+            target_pool: document.getElementById('repl-target-pool')?.value.trim(),
+            target_dataset: document.getElementById('repl-target-dataset')?.value.trim(),
+            schedule: document.getElementById('repl-schedule')?.value || 'daily',
+            retention_count: parseInt(document.getElementById('repl-retention')?.value || '14', 10),
+          };
+          if (tType !== 'local') {
+            payload.target_host = document.getElementById('repl-target-host')?.value.trim() || undefined;
+            payload.target_port = parseInt(document.getElementById('repl-target-port')?.value || '22', 10);
+            payload.target_user = document.getElementById('repl-target-user')?.value.trim() || 'root';
+          }
+          await api.post('/api/storage/replication/jobs', payload);
+          showToast(`Replication pipeline '${payload.name}' created.`, 'success');
+          closeReplModal();
+          fetchAndRenderReplication();
+        } catch (err) {
+          showToast(`Failed to create pipeline: ${err.message}`, 'error');
+        } finally {
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Save Pipeline';
+          }
+        }
+      });
+    }
+  }
+
+  // WireGuard refresh button
+  const refreshWgBtn = document.getElementById('btn-refresh-wireguard');
+  if (refreshWgBtn) {
+    refreshWgBtn.addEventListener('click', () => {
+      fetchAndRenderWireguard();
+      showToast('WireGuard mesh status refreshed.', 'info');
     });
   }
 
