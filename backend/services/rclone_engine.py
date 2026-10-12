@@ -487,23 +487,38 @@ class RcloneEngine:
         dst: str,
         action: str = "sync",
         dry_run: bool = False,
+        ignore_errors: bool = False,
+        retries: int = 3,
+        verbose: bool = False,
+        notify: bool = True,
     ) -> Dict[str, Any]:
-        """Launches a background sync/copy/move operation between local and remote."""
+        """Launches a background sync/copy/move operation between local and remote with real-time stats streaming."""
         if action not in ["sync", "copy", "move"]:
             raise ValueError(f"Invalid sync action: '{action}'. Choose from sync, copy, or move.")
 
         job_id = str(uuid.uuid4())[:8]
-        job = {
+        job: Dict[str, Any] = {
             "id": job_id,
             "src": src,
             "dst": dst,
             "action": action,
             "dry_run": dry_run,
+            "ignore_errors": ignore_errors,
+            "retries": retries,
+            "verbose": verbose,
+            "notify": notify,
             "status": "running",
             "started_at": time.time(),
             "completed_at": None,
             "bytes_transferred": 0,
+            "total_bytes": 0,
+            "percent": 0.0,
+            "speed_mbps": 0.0,
+            "eta_seconds": None,
             "error": None,
+            "successful_files": [],
+            "failed_files": [],
+            "transfer_log": [],
         }
         self._sync_jobs[job_id] = job
 
@@ -517,28 +532,139 @@ class RcloneEngine:
                     dst,
                     "--config",
                     self.config_file,
+                    "--use-json-log",
                     "--stats",
-                    "2s",
-                    "--stats-one-line",
+                    "1s",
+                    "--stats-log-level",
+                    "NOTICE",
+                    "--retries",
+                    str(max(1, int(retries))),
                 ]
+                if ignore_errors:
+                    cmd.append("--ignore-errors")
+                if verbose:
+                    cmd.append("-v")
                 if dry_run:
                     cmd.append("--dry-run")
 
-                proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                logger.info(f"[RCLONE] Starting async sync job {job_id}: {' '.join(cmd)}")
+                proc = subprocess.Popen(
+                    cmd,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                    text=True,
+                    bufsize=1,
+                )
+
+                if proc.stdout:
+                    for raw_line in iter(proc.stdout.readline, ""):
+                        line = raw_line.strip()
+                        if not line:
+                            continue
+                        try:
+                            data = json.loads(line)
+                            # 1. Parse stats payload
+                            stats = data.get("stats")
+                            if isinstance(stats, dict):
+                                b = stats.get("bytes", 0)
+                                tb = stats.get("totalBytes", 0)
+                                job["bytes_transferred"] = b
+                                job["total_bytes"] = tb
+                                if tb > 0:
+                                    job["percent"] = round((b / tb) * 100.0, 1)
+                                elif b > 0 and tb == 0:
+                                    job["percent"] = 100.0
+
+                                spd = stats.get("speed", 0.0)
+                                job["speed_mbps"] = round(spd / (1024 * 1024), 2)
+                                job["eta_seconds"] = stats.get("eta")
+
+                            # 2. Parse file log items
+                            msg = data.get("msg", "")
+                            obj = data.get("object") or data.get("source")
+                            level = data.get("level", "info")
+
+                            log_entry = {
+                                "time": round(time.time(), 2),
+                                "level": level,
+                                "message": msg,
+                                "object": obj,
+                            }
+                            if len(job["transfer_log"]) < 200:
+                                job["transfer_log"].append(log_entry)
+                            else:
+                                job["transfer_log"] = job["transfer_log"][-199:] + [log_entry]
+
+                            if level == "error" or "failed" in msg.lower():
+                                if obj and obj not in [f.get("file") for f in job["failed_files"]]:
+                                    job["failed_files"].append(
+                                        {"file": obj, "error": msg, "time": round(time.time(), 2)}
+                                    )
+                            elif "copied" in msg.lower() or (obj and "done" in msg.lower()):
+                                if obj and obj not in [f.get("file") for f in job["successful_files"]]:
+                                    job["successful_files"].append({"file": obj, "time": round(time.time(), 2)})
+
+                        except json.JSONDecodeError:
+                            if len(job["transfer_log"]) < 200:
+                                job["transfer_log"].append(
+                                    {"time": round(time.time(), 2), "level": "info", "message": line}
+                                )
+
+                    proc.stdout.close()
+                proc.wait()
+
                 job["completed_at"] = time.time()
                 if proc.returncode == 0:
                     job["status"] = "success"
+                    job["percent"] = 100.0
+                    job["eta_seconds"] = 0
                 else:
                     job["status"] = "error"
-                    job["error"] = proc.stderr.strip() or f"Exited with code {proc.returncode}"
+                    if job["failed_files"]:
+                        job["error"] = f"{len(job['failed_files'])} file(s) failed during transfer."
+                    else:
+                        job["error"] = f"Rclone exited with code {proc.returncode}"
             except Exception as e:
                 job["completed_at"] = time.time()
                 job["status"] = "error"
                 job["error"] = str(e)
 
+            # Notification dispatch
+            if job.get("notify", True):
+                try:
+                    from backend.services.notifications import send_notification
+
+                    if job["status"] == "success":
+                        mb = round(job.get("bytes_transferred", 0) / (1024 * 1024), 2)
+                        send_notification(
+                            {
+                                "type": "sync",
+                                "title": f"Cloud Sync Completed: {action.capitalize()}",
+                                "message": f"Operation '{action}' from {src} to {dst} finished successfully ({mb} MB transferred).",
+                                "level": "info",
+                                "meta": {"job_id": job_id, "src": src, "dst": dst},
+                            }
+                        )
+                    else:
+                        send_notification(
+                            {
+                                "type": "sync",
+                                "title": f"Cloud Sync Failed: {action.capitalize()}",
+                                "message": f"Sync from {src} to {dst} failed: {job.get('error')}",
+                                "level": "error",
+                                "meta": {"job_id": job_id, "src": src, "dst": dst, "error": job.get("error")},
+                            }
+                        )
+                except Exception as notify_err:
+                    logger.debug(f"[RCLONE] Notification error: {notify_err}")
+
         t = threading.Thread(target=_run_sync, daemon=True, name=f"RcloneSync-{job_id}")
         t.start()
         return job
+
+    def get_sync_job(self, job_id: str) -> Optional[Dict[str, Any]]:
+        """Returns specific tracked synchronization job by ID."""
+        return self._sync_jobs.get(job_id)
 
     def get_sync_jobs(self) -> List[Dict[str, Any]]:
         """Returns list of tracked synchronization jobs."""

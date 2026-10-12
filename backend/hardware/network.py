@@ -2066,10 +2066,6 @@ def get_network_topology() -> Dict[str, Any]:
 
 def read_network_rates():
     now = time.time()
-    rx_bytes = 0
-    tx_bytes = 0
-    chosen_iface = "bond0"
-
     dev_path = _find_proc_net_path("dev")
     ifaces = {}
     if dev_path:
@@ -2085,56 +2081,6 @@ def read_network_rates():
         except Exception as e:
             logger.debug(f"Silenced exception reading net/dev: {e}")
 
-    # Interface selection hierarchy:
-    env_iface = os.environ.get("HOST_NET_IFACE", "").strip()
-    if env_iface and env_iface in ifaces:
-        chosen_iface = env_iface
-        rx_bytes, tx_bytes = ifaces[env_iface]
-    elif "bond0" in ifaces:
-        chosen_iface = "bond0"
-        rx_bytes, tx_bytes = ifaces["bond0"]
-    else:
-        bond_candidates = [i for i in ifaces if i.startswith("bond")]
-        if bond_candidates:
-            chosen_iface = bond_candidates[0]
-            rx_bytes, tx_bytes = ifaces[chosen_iface]
-        elif "br0" in ifaces:
-            chosen_iface = "br0"
-            rx_bytes, tx_bytes = ifaces["br0"]
-        elif "eth0" in ifaces and (ifaces["eth0"][0] > 0 or ifaces["eth0"][1] > 0):
-            chosen_iface = "eth0"
-            rx_bytes, tx_bytes = ifaces["eth0"]
-        else:
-            active_phys = [i for i in ifaces if i.startswith(("eth", "en")) and (ifaces[i][0] > 0 or ifaces[i][1] > 0)]
-            if active_phys:
-                chosen_iface = active_phys[0]
-                rx_bytes, tx_bytes = ifaces[chosen_iface]
-            elif ifaces:
-                chosen_iface = "all"
-                for i, (r, t) in ifaces.items():
-                    if i in ("lo",) or i.startswith(("veth", "br-", "docker", "shim-", "tunl")):
-                        continue
-                    rx_bytes += r
-                    tx_bytes += t
-
-    prev = getattr(Z_STATE, "prev_net", None)
-    if not isinstance(prev, dict):
-        prev = {"time": 0.0, "rx": 0, "tx": 0, "iface": chosen_iface}
-
-    if prev.get("iface") != chosen_iface:
-        prev = {"time": 0.0, "rx": rx_bytes, "tx": tx_bytes, "iface": chosen_iface}
-
-    prev_time = prev.get("time", 0.0)
-    dt = max(0.1, now - prev_time)
-    rx_rate = 0.0
-    tx_rate = 0.0
-
-    if prev_time > 0 and rx_bytes >= prev.get("rx", 0) and tx_bytes >= prev.get("tx", 0):
-        rx_rate = max(0.0, (rx_bytes - prev.get("rx", 0)) / dt)
-        tx_rate = max(0.0, (tx_bytes - prev.get("tx", 0)) / dt)
-
-    Z_STATE.prev_net = {"time": now, "rx": rx_bytes, "tx": tx_bytes, "iface": chosen_iface}
-
     def fmt_speed(b):
         if b >= 1024 * 1024 * 1024:
             return f"{b / (1024 * 1024 * 1024):.1f} GB/s"
@@ -2144,14 +2090,100 @@ def read_network_rates():
             return f"{b / 1024:.0f} KB/s"
         return f"{b:.0f} B/s"
 
-    return {
-        "rx": fmt_speed(rx_rate),
-        "tx": fmt_speed(tx_rate),
-        "rx_bytes": rx_bytes,
-        "tx_bytes": tx_bytes,
-        "rx_rate": round(rx_rate, 1),
-        "tx_rate": round(tx_rate, 1),
+    prev_ifaces = getattr(Z_STATE, "prev_net_ifaces", None)
+    if not isinstance(prev_ifaces, dict):
+        prev_ifaces = {}
+
+    interfaces_info = {}
+    total_physical_rx_rate = 0.0
+    total_physical_tx_rate = 0.0
+    total_physical_rx_bytes = 0
+    total_physical_tx_bytes = 0
+
+    bond_slaves = set()
+    for b in [i for i in ifaces if i.startswith("bond")]:
+        try:
+            bonding_slaves_path = os.path.join(HOST_SYS, "class/net", b, "bonding/slaves")
+            if os.path.exists(bonding_slaves_path):
+                with open(bonding_slaves_path, "r", encoding="utf-8") as bf:
+                    bond_slaves.update(bf.read().split())
+        except Exception:
+            pass
+
+    for iface_name, (cur_rx, cur_tx) in ifaces.items():
+        if iface_name == "lo" or iface_name.startswith(("veth", "docker", "br-", "shim-", "tunl", "tailscale", "wg")):
+            continue
+
+        prev_data = prev_ifaces.get(iface_name)
+        rx_rate = 0.0
+        tx_rate = 0.0
+        if prev_data:
+            dt = max(0.1, now - prev_data["time"])
+            if cur_rx >= prev_data["rx"] and cur_tx >= prev_data["tx"]:
+                rx_rate = max(0.0, (cur_rx - prev_data["rx"]) / dt)
+                tx_rate = max(0.0, (cur_tx - prev_data["tx"]) / dt)
+
+        prev_ifaces[iface_name] = {"time": now, "rx": cur_rx, "tx": cur_tx}
+
+        is_physical = iface_name.startswith(("eth", "en"))
+        interfaces_info[iface_name] = {
+            "rx": fmt_speed(rx_rate),
+            "tx": fmt_speed(tx_rate),
+            "rx_bytes": cur_rx,
+            "tx_bytes": cur_tx,
+            "rx_rate": round(rx_rate, 1),
+            "tx_rate": round(tx_rate, 1),
+            "is_physical": is_physical,
+            "is_bond": iface_name.startswith("bond"),
+            "is_bridge": iface_name.startswith("br"),
+        }
+
+        if iface_name.startswith("bond"):
+            total_physical_rx_rate += rx_rate
+            total_physical_tx_rate += tx_rate
+            total_physical_rx_bytes += cur_rx
+            total_physical_tx_bytes += cur_tx
+        elif is_physical and iface_name not in bond_slaves:
+            total_physical_rx_rate += rx_rate
+            total_physical_tx_rate += tx_rate
+            total_physical_rx_bytes += cur_rx
+            total_physical_tx_bytes += cur_tx
+
+    Z_STATE.prev_net_ifaces = prev_ifaces
+
+    env_iface = os.environ.get("HOST_NET_IFACE", "").strip()
+    if env_iface and env_iface in interfaces_info:
+        target = interfaces_info[env_iface]
+        combined_rx_rate = target["rx_rate"]
+        combined_tx_rate = target["tx_rate"]
+        combined_rx_bytes = target["rx_bytes"]
+        combined_tx_bytes = target["tx_bytes"]
+        chosen_iface = env_iface
+    else:
+        combined_rx_rate = total_physical_rx_rate
+        combined_tx_rate = total_physical_tx_rate
+        combined_rx_bytes = total_physical_rx_bytes
+        combined_tx_bytes = total_physical_tx_bytes
+        chosen_iface = "combined"
+
+    Z_STATE.prev_net = {
+        "time": now,
+        "rx": combined_rx_bytes,
+        "tx": combined_tx_bytes,
         "iface": chosen_iface,
+    }
+
+    return {
+        "rx": fmt_speed(combined_rx_rate),
+        "tx": fmt_speed(combined_tx_rate),
+        "rx_bytes": combined_rx_bytes,
+        "tx_bytes": combined_tx_bytes,
+        "rx_rate": round(combined_rx_rate, 1),
+        "tx_rate": round(combined_tx_rate, 1),
+        "rx_bytes_sec": round(combined_rx_rate, 1),
+        "tx_bytes_sec": round(combined_tx_rate, 1),
+        "iface": chosen_iface,
+        "interfaces": interfaces_info,
     }
 
 
@@ -2291,6 +2323,247 @@ def _run_tailscale_cmd(args: List[str], timeout: float = 10.0) -> tuple[int, str
     return 127, "tailscale CLI or running container not found"
 
 
+def detect_local_subnets() -> List[str]:
+    """Detects local physical IPv4 network subnets (e.g. ['10.40.30.0/24'])."""
+    subnets = []
+    try:
+        routes = _parse_routes()
+        for r in routes:
+            iface = r.get("iface", "")
+            if r.get("is_default") or iface.startswith(
+                ("lo", "docker", "shim-", "br-", "tunl", "wg", "tailscale", "veth")
+            ):
+                continue
+            dest = r.get("destination", "")
+            cidr = r.get("cidr", 24)
+            if dest and dest != "0.0.0.0" and not dest.startswith(("127.", "169.254.")):
+                s = f"{dest}/{cidr}"
+                if s not in subnets:
+                    subnets.append(s)
+    except Exception as e:
+        logger.debug(f"[Network] Error detecting subnets: {e}")
+    if not subnets:
+        subnets = ["192.168.1.0/24"]
+    return subnets
+
+
+def get_taildrop_dir() -> str:
+    """Finds or creates persistent Taildrop directory on host."""
+    from backend.config import DATA_DIR
+
+    candidates = [
+        "/mnt/user/downloads/taildrop",
+        "/mnt/user/appdata/tailscale/taildrop",
+        os.path.join(DATA_DIR, "tailscale", "taildrop"),
+    ]
+    for c in candidates:
+        try:
+            parent = os.path.dirname(c)
+            if os.path.isdir(parent):
+                os.makedirs(c, exist_ok=True)
+                return c
+        except Exception:
+            continue
+    fallback = os.path.join(DATA_DIR, "taildrop")
+    os.makedirs(fallback, exist_ok=True)
+    return fallback
+
+
+def get_taildrop_inbox_files() -> List[Dict[str, Any]]:
+    """Lists files received via Taildrop."""
+    from datetime import datetime, timezone
+
+    target_dir = get_taildrop_dir()
+    files = []
+    if not os.path.isdir(target_dir):
+        return files
+    try:
+        for entry in os.scandir(target_dir):
+            if entry.is_file():
+                try:
+                    st = entry.stat()
+                    size_b = st.st_size
+                    if size_b < 1024:
+                        size_fmt = f"{size_b} B"
+                    elif size_b < 1024 * 1024:
+                        size_fmt = f"{size_b / 1024:.1f} KB"
+                    elif size_b < 1024 * 1024 * 1024:
+                        size_fmt = f"{size_b / (1024 * 1024):.1f} MB"
+                    else:
+                        size_fmt = f"{size_b / (1024 * 1024 * 1024):.2f} GB"
+                    mtime_iso = datetime.fromtimestamp(st.st_mtime, timezone.utc).strftime("%Y-%m-%d %H:%M")
+                    files.append(
+                        {
+                            "name": entry.name,
+                            "size_bytes": size_b,
+                            "size_formatted": size_fmt,
+                            "modified_at": mtime_iso,
+                            "path": entry.path,
+                        }
+                    )
+                except Exception:
+                    pass
+    except Exception as e:
+        logger.debug(f"[Tailscale] Failed to read taildrop inbox: {e}")
+    files.sort(key=lambda x: x["name"].lower())
+    return files
+
+
+def execute_tailscale_taildrop_receive() -> Dict[str, Any]:
+    """Ingests any pending files from Taildrop queue into the inbox."""
+    target_dir = get_taildrop_dir()
+    c_info = _get_tailscale_container_info()
+    if c_info.get("exists") and c_info.get("running"):
+        cmd = ["file", "get", "--conflict=rename", "/var/lib/tailscale/taildrop"]
+    else:
+        cmd = ["file", "get", "--conflict=rename", target_dir]
+    code, out = _run_tailscale_cmd(cmd, timeout=12.0)
+    files = get_taildrop_inbox_files()
+    return {
+        "status": "ok" if code == 0 else "error",
+        "code": code,
+        "output": out,
+        "directory": target_dir,
+        "files": files,
+        "count": len(files),
+    }
+
+
+def execute_tailscale_ping(peer: str) -> Dict[str, Any]:
+    """Pings a Tailscale peer and parses round-trip latency and route path."""
+    import re
+
+    clean_peer = peer.strip()
+    if not clean_peer:
+        return {"status": "error", "message": "Peer IP or hostname is required"}
+    code, out = _run_tailscale_cmd(["ping", "--c=1", "--timeout=2s", clean_peer], timeout=4.0)
+    out_clean = out.strip()
+    if "pong from" in out_clean.lower():
+        route = ""
+        latency_str = ""
+        latency_ms = None
+        m_route = re.search(r"via\s+([^\s]+)", out_clean)
+        if m_route:
+            route = m_route.group(1)
+        m_time = re.search(r"in\s+([0-9.]+)\s*(ms|s)", out_clean)
+        if m_time:
+            val = float(m_time.group(1))
+            unit = m_time.group(2)
+            latency_ms = val if unit == "ms" else val * 1000.0
+            latency_str = f"{latency_ms:.1f} ms"
+        is_direct = bool(route and not route.lower().startswith("derp"))
+        return {
+            "status": "success",
+            "peer": clean_peer,
+            "route": route,
+            "latency": latency_str,
+            "latency_ms": latency_ms,
+            "is_direct": is_direct,
+            "output": out_clean,
+        }
+    return {
+        "status": "error",
+        "peer": clean_peer,
+        "output": out_clean or "Ping timed out or peer is unreachable",
+    }
+
+
+def execute_tailscale_set_routes(routes: str, enabled: bool = True) -> Dict[str, Any]:
+    """Advertises or withdraws subnet routes to the Tailnet."""
+    clean_routes = routes.strip() if enabled else ""
+    cmd = ["set", f"--advertise-routes={clean_routes}"]
+    code, out = _run_tailscale_cmd(cmd, timeout=8.0)
+    return {
+        "status": "ok" if code == 0 else "error",
+        "code": code,
+        "enabled": enabled and bool(clean_routes),
+        "advertised_routes": clean_routes,
+        "output": out,
+    }
+
+
+def execute_tailscale_set_exit_node(enabled: bool) -> Dict[str, Any]:
+    """Advertises this node as a Tailscale Exit Node."""
+    val = "true" if enabled else "false"
+    cmd = ["set", f"--advertise-exit-node={val}"]
+    code, out = _run_tailscale_cmd(cmd, timeout=8.0)
+    return {
+        "status": "ok" if code == 0 else "error",
+        "code": code,
+        "enabled": enabled,
+        "output": out,
+    }
+
+
+def execute_tailscale_set_ssh(enabled: bool) -> Dict[str, Any]:
+    """Enables or disables Tailscale SSH."""
+    val = "true" if enabled else "false"
+    cmd = ["set", f"--ssh={val}"]
+    code, out = _run_tailscale_cmd(cmd, timeout=8.0)
+    return {
+        "status": "ok" if code == 0 else "error",
+        "code": code,
+        "enabled": enabled,
+        "output": out,
+    }
+
+
+def execute_tailscale_set_serve(serve: bool, funnel: bool = False, port: int = 8082) -> Dict[str, Any]:
+    """Configures Tailscale Serve and Funnel proxy for ZettNAS Web Desktop."""
+    import re
+
+    approval_url = ""
+    # 1. Handle Serve
+    if serve:
+        _code_s, out_s = _run_tailscale_cmd(["serve", "--bg", "--yes", str(port)], timeout=6.0)
+        m_s = re.search(r"https://login\.tailscale\.com/f/serve[^\s]+", out_s)
+        if m_s:
+            approval_url = m_s.group(0)
+    else:
+        _run_tailscale_cmd(["serve", "reset"], timeout=6.0)
+
+    # 2. Handle Funnel
+    if funnel and serve:
+        _code_f, out_f = _run_tailscale_cmd(["funnel", "--bg", "--yes", str(port)], timeout=6.0)
+        m_f = re.search(r"https://login\.tailscale\.com/f/funnel[^\s]+", out_f)
+        if m_f:
+            approval_url = m_f.group(0)
+    else:
+        _run_tailscale_cmd(["funnel", "reset"], timeout=6.0)
+
+    return {
+        "status": "ok" if not approval_url else "needs_approval",
+        "serve_enabled": serve,
+        "funnel_enabled": funnel and serve,
+        "approval_url": approval_url,
+        "port": port,
+    }
+
+
+def execute_tailscale_reauth() -> Dict[str, Any]:
+    """Forces Tailscale node re-authentication, returning interactive login URL."""
+    import re
+
+    code, out = _run_tailscale_cmd(["up", "--force-reauth", "--reset"], timeout=8.0)
+    m = re.search(r"https://login\.tailscale\.com/a/[a-zA-Z0-9_-]+", out)
+    auth_url = m.group(0) if m else ""
+    if not auth_url:
+        s_code, s_out = _run_tailscale_cmd(["status", "--json"], timeout=4.0)
+        if s_code == 0 and s_out.strip().startswith("{"):
+            try:
+                import json
+
+                s_doc = json.loads(s_out.strip())
+                auth_url = s_doc.get("AuthURL", "")
+            except Exception:
+                pass
+    return {
+        "status": "needs_login" if auth_url else ("ok" if code == 0 else "error"),
+        "auth_url": auth_url,
+        "output": out,
+    }
+
+
 def get_mesh_vpn_status() -> Dict[str, Any]:
     """
     Zero-Trust Mesh Hub detector:
@@ -2305,10 +2578,27 @@ def get_mesh_vpn_status() -> Dict[str, Any]:
         "ipv4": "",
         "tailnet": "",
         "hostname": "",
+        "dns_name": "",
         "peers_count": 0,
+        "peers": [],
         "auth_url": "",
         "container_mode": False,
         "container_id": "",
+        "key_expiry": "",
+        "key_expiry_days": None,
+        "key_expired": False,
+        "detected_subnets": [],
+        "advertised_routes": [],
+        "is_subnet_router": False,
+        "advertise_exit_node": False,
+        "is_exit_node": False,
+        "ssh_enabled": False,
+        "serve_enabled": False,
+        "funnel_enabled": False,
+        "serve_url": "",
+        "taildrop_dir": "",
+        "taildrop_files_count": 0,
+        "taildrop_files": [],
     }
 
     ts_bin = _find_tailscale_bin()
@@ -2330,9 +2620,94 @@ def get_mesh_vpn_status() -> Dict[str, Any]:
             ips = doc.get("Self", {}).get("TailscaleIPs", [])
             ts_info["ipv4"] = ips[0] if ips else ""
             ts_info["tailnet"] = doc.get("MagicDNSSuffix", "")
-            peers = doc.get("Peer", {})
-            ts_info["peers_count"] = len(peers) if isinstance(peers, dict) else len(peers or [])
+            dns_name = doc.get("Self", {}).get("DNSName", "").rstrip(".")
+            ts_info["dns_name"] = dns_name
+            ts_info["serve_url"] = f"https://{dns_name}" if dns_name else ""
+
+            # Key Expiry
+            key_exp = doc.get("Self", {}).get("KeyExpiry", "")
+            ts_info["key_expiry"] = key_exp
+            key_days = None
+            if key_exp:
+                try:
+                    from datetime import datetime, timezone
+
+                    exp_dt = datetime.fromisoformat(key_exp.replace("Z", "+00:00"))
+                    now_dt = datetime.now(timezone.utc)
+                    delta = (exp_dt - now_dt).days
+                    key_days = max(0, delta)
+                except Exception:
+                    pass
+            ts_info["key_expiry_days"] = key_days
+            ts_info["key_expired"] = (key_days == 0) if key_days is not None else False
+
+            # Gateway options
+            ts_info["advertise_exit_node"] = bool(doc.get("Self", {}).get("ExitNodeOption", False))
+            ts_info["is_exit_node"] = bool(doc.get("Self", {}).get("ExitNode", False))
+
+            allowed = doc.get("Self", {}).get("AllowedIPs", [])
+            advertised = [ip for ip in allowed if not ip.startswith("100.") and not ip.startswith("fd7a:")]
+            ts_info["advertised_routes"] = advertised
+            ts_info["is_subnet_router"] = len(advertised) > 0
+            ts_info["detected_subnets"] = detect_local_subnets()
+
+            # Parse Peers
+            peers_dict = doc.get("Peer", {})
+            peers_list = []
+            if isinstance(peers_dict, dict):
+                for p_key, p_val in peers_dict.items():
+                    p_ips = p_val.get("TailscaleIPs", [])
+                    p_ip = p_ips[0] if p_ips else ""
+                    cur_addr = p_val.get("CurAddr", "")
+                    relay = p_val.get("Relay", "")
+                    conn_type = "Direct P2P" if cur_addr else (f"DERP ({relay})" if relay else "Offline")
+                    peers_list.append(
+                        {
+                            "id": p_key,
+                            "name": p_val.get("HostName", "Unknown"),
+                            "hostname": p_val.get("HostName", "Unknown"),
+                            "dns_name": p_val.get("DNSName", "").rstrip("."),
+                            "os": p_val.get("OS", "unknown"),
+                            "ip": p_ip,
+                            "online": p_val.get("Online", False),
+                            "relay": relay,
+                            "cur_addr": cur_addr,
+                            "connection_type": conn_type,
+                            "exit_node_option": p_val.get("ExitNodeOption", False),
+                            "last_seen": p_val.get("LastSeen", ""),
+                        }
+                    )
+            peers_list.sort(key=lambda x: (not x["online"], x["name"].lower()))
+            ts_info["peers"] = peers_list
+            ts_info["peers_count"] = len(peers_list)
             ts_info["auth_url"] = doc.get("AuthURL") or ""
+
+            # Check debug prefs for RunSSH
+            p_code, p_out = _run_tailscale_cmd(["debug", "prefs"], timeout=2.0)
+            if p_code == 0 and p_out.strip().startswith("{"):
+                try:
+                    p_doc = json.loads(p_out.strip())
+                    ts_info["ssh_enabled"] = bool(p_doc.get("RunSSH", False))
+                    p_routes = p_doc.get("AdvertiseRoutes") or []
+                    if p_routes and not ts_info["advertised_routes"]:
+                        ts_info["advertised_routes"] = p_routes
+                        ts_info["is_subnet_router"] = True
+                except Exception:
+                    pass
+
+            # Check serve / funnel status
+            sv_code, sv_out = _run_tailscale_cmd(["serve", "status", "--json"], timeout=2.0)
+            if sv_code == 0 and sv_out.strip().startswith("{") and len(sv_out.strip()) > 2:
+                ts_info["serve_enabled"] = True
+                fn_code, fn_out = _run_tailscale_cmd(["funnel", "status", "--json"], timeout=2.0)
+                if fn_code == 0 and "AllowFunnel" in fn_out:
+                    ts_info["funnel_enabled"] = True
+
+            # Taildrop inbox files
+            ts_info["taildrop_dir"] = get_taildrop_dir()
+            taildrop_files = get_taildrop_inbox_files()
+            ts_info["taildrop_files_count"] = len(taildrop_files)
+            ts_info["taildrop_files"] = taildrop_files
         except Exception as e:
             logger.debug(f"[Network] Tailscale status json parse error: {e}")
     elif c_info.get("running"):

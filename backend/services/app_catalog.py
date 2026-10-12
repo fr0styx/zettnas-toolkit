@@ -637,6 +637,182 @@ def toggle_catalog_source(source_id: str, enabled: bool) -> Dict[str, Any]:
     return src
 
 
+SIDELOADED_APPS_FILE = os.path.join(DATA_DIR, "sideloaded_apps.json")
+
+
+def get_sideloaded_apps() -> List[Dict[str, Any]]:
+    """Retrieves locally sideloaded application packages."""
+    items = read_json(SIDELOADED_APPS_FILE, [])
+    return items if isinstance(items, list) else []
+
+
+def save_sideloaded_apps(items: List[Dict[str, Any]]) -> None:
+    """Persists sideloaded application packages."""
+    atomic_write_json(SIDELOADED_APPS_FILE, items)
+
+
+def sideload_app_manifest(
+    url: Optional[str] = None,
+    manifest_content: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Sideloads an application from a direct URL (zett-app.json / docker-compose.yml)
+
+    or raw JSON/YAML content. Performs security assessment for privileged flags and socket mounts.
+    """
+    raw_text = ""
+    if url:
+        u = url.strip()
+        if not u.startswith(("http://", "https://")):
+            raise ValueError("URL must start with http:// or https://")
+        req = urllib.request.Request(u, headers={"User-Agent": "ZettNAS-Toolkit/1.0"})
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            raw_text = resp.read().decode("utf-8", errors="replace")
+    elif manifest_content:
+        raw_text = manifest_content.strip()
+    else:
+        raise ValueError("Either 'url' or 'manifest_content' must be provided.")
+
+    if not raw_text:
+        raise ValueError("Manifest content is empty.")
+
+    # Try parsing as JSON first
+    parsed_json = None
+    try:
+        parsed_json = json.loads(raw_text)
+    except Exception:
+        parsed_json = None
+
+    parsed_yaml = None
+    if parsed_json is None:
+        try:
+            import yaml
+
+            parsed_yaml = yaml.safe_load(raw_text)
+        except Exception as e:
+            raise ValueError(f"Failed to parse manifest as JSON or YAML: {e}")
+
+    manifest_data = parsed_json if parsed_json is not None else parsed_yaml
+    if not isinstance(manifest_data, dict):
+        raise ValueError("Invalid manifest structure: root must be a JSON/YAML object.")
+
+    # 1. Detect if this is zett-app.json / Portainer template or direct docker-compose.yml
+    is_compose = "services" in manifest_data or "version" in manifest_data
+
+    app_id = ""
+    name = ""
+    category = "utilities"
+    description = ""
+    image = ""
+    default_port = 8080
+    ports: List[int] = []
+    volumes: Dict[str, str] = {}
+    env: Dict[str, str] = {}
+    logo = ""
+
+    if is_compose:
+        services = manifest_data.get("services", {})
+        if not services or not isinstance(services, dict):
+            raise ValueError("Compose manifest contains no services.")
+        svc_name, svc_cfg = next(iter(services.items()))
+        name = manifest_data.get("name") or svc_name.capitalize()
+        app_id = f"sideload_{re.sub(r'[^a-z0-9_]+', '_', svc_name.lower())}_{int(time.time())}"
+        description = f"Sideloaded Stack: {name}"
+        image = svc_cfg.get("image", "")
+        raw_ports = svc_cfg.get("ports", [])
+        if raw_ports and isinstance(raw_ports, list):
+            for p in raw_ports:
+                p_str = str(p)
+                if ":" in p_str:
+                    host_p = p_str.split(":")[0]
+                    if host_p.isdigit():
+                        default_port = int(host_p)
+                        ports.append(default_port)
+        raw_vols = svc_cfg.get("volumes", [])
+        if raw_vols and isinstance(raw_vols, list):
+            for v in raw_vols:
+                v_str = str(v)
+                if ":" in v_str:
+                    h, c = v_str.split(":", 1)
+                    volumes[h] = c
+        raw_env = svc_cfg.get("environment", {})
+        if isinstance(raw_env, dict):
+            env = {str(k): str(val) for k, val in raw_env.items()}
+        elif isinstance(raw_env, list):
+            for e_item in raw_env:
+                if "=" in str(e_item):
+                    k, val = str(e_item).split("=", 1)
+                    env[k.strip()] = val.strip()
+    else:
+        name = manifest_data.get("name", "Custom Sideloaded App")
+        slug = manifest_data.get("id") or re.sub(r"[^a-z0-9_]+", "_", name.lower())
+        app_id = f"sideload_{slug}"
+        category = manifest_data.get("category", "utilities")
+        description = manifest_data.get("description", "Custom sideloaded package")
+        image = manifest_data.get("image", "")
+        default_port = int(manifest_data.get("default_port", 8080))
+        logo = manifest_data.get("logo") or manifest_data.get("icon") or ""
+        ports = manifest_data.get("ports", [default_port])
+        volumes = manifest_data.get("volumes", {})
+        env = manifest_data.get("env", {})
+
+    # 2. Security Assessment
+    security_flags = []
+    text_lower = raw_text.lower()
+    if "privileged: true" in text_lower or "privileged: yes" in text_lower:
+        security_flags.append("Runs in Privileged Mode (Full Host Kernel Access)")
+    if "/var/run/docker.sock" in text_lower:
+        security_flags.append("Mounts Docker Unix Socket (/var/run/docker.sock)")
+    if "network_mode: host" in text_lower or 'network_mode: "host"' in text_lower:
+        security_flags.append("Uses Host Networking (Bypasses Container Network Isolation)")
+    if (
+        "/:/host" in text_lower
+        or ":/:" in text_lower
+        or ":/host" in text_lower
+        or ":/root" in text_lower
+        or " /:" in text_lower
+        or "/:/" in text_lower
+    ):
+        security_flags.append("Mounts Root Filesystem of Host")
+
+    security_rating = "verified"
+    if security_flags:
+        security_rating = (
+            "review_required" if len(security_flags) == 1 and "/var/run/docker.sock" not in text_lower else "elevated"
+        )
+
+    app_record = {
+        "id": app_id,
+        "name": name,
+        "category": category,
+        "description": description,
+        "image": image,
+        "default_port": default_port,
+        "ports": ports,
+        "volumes": volumes,
+        "env": env,
+        "logo": logo,
+        "source_id": "sideload",
+        "source_name": "Sideloaded",
+        "type": "compose" if is_compose else "standalone",
+        "sideloaded_at": time.time(),
+        "security_rating": security_rating,
+        "security_flags": security_flags,
+        "raw_manifest": raw_text,
+    }
+
+    sideloaded = get_sideloaded_apps()
+    sideloaded = [a for a in sideloaded if a.get("id") != app_id]
+    sideloaded.append(app_record)
+    save_sideloaded_apps(sideloaded)
+
+    return {
+        "status": "ok",
+        "app": app_record,
+        "security_rating": security_rating,
+        "security_flags": security_flags,
+    }
+
+
 def get_all_catalog_apps() -> List[Dict[str, Any]]:
     """Returns all available homelab applications across all enabled sources."""
     sources = get_catalog_sources()
@@ -662,6 +838,10 @@ def get_all_catalog_apps() -> List[Dict[str, Any]]:
         cached = read_json(cache_file, [])
         if isinstance(cached, list):
             apps.extend(cached)
+
+    # 3. Sideloaded Apps
+    sideloaded = get_sideloaded_apps()
+    apps.extend(sideloaded)
 
     return apps
 

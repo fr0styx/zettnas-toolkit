@@ -797,6 +797,108 @@ def delete_user_endpoint(
         return error_response(400, str(e))
 
 
+@router.post("/users/admin/disable", dependencies=[Depends(require_scope("users:manage", "users:write"))])
+def disable_default_admin_endpoint(
+    request: Request,
+    principal: AuthenticatedPrincipal = Depends(get_current_principal),
+):
+    """
+    1-click action to disable the default admin account.
+    Enforces the inviolable last-active-superadmin guardrail.
+    """
+    if principal.role_id != "superadmin":
+        raise HTTPException(status_code=403, detail="Only an active SuperAdmin can disable the default admin account.")
+
+    from backend.users_db import disable_admin_user
+
+    try:
+        res = disable_admin_user("admin")
+        is_self = principal.username.lower() == "admin"
+        return {
+            "status": "ok",
+            "message": "Default admin account has been disabled.",
+            "is_self": is_self,
+            "result": res,
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=409, detail=str(e))
+
+
+@router.get("/security/advisor", dependencies=[Depends(require_scope("system:view", "users:read"))])
+def get_security_advisor_checklist():
+    """
+    Runs automated zero-wake security checks across identity, passwords, and sessions.
+    """
+    from backend.config import is_using_default_password
+    from backend.users_db import list_users
+
+    users = list_users()
+    admin_user = next((u for u in users if u["username"].lower() == "admin"), None)
+    active_superadmins = [u for u in users if u.get("role_id") == "superadmin" and u.get("status") == "active"]
+
+    admin_is_disabled = bool(admin_user and admin_user.get("status") != "active")
+    admin_disabled_check = {
+        "id": "sec_default_admin",
+        "title": "Default 'admin' Account Status",
+        "status": "pass" if admin_is_disabled else "warn",
+        "severity": "high",
+        "message": (
+            "Default 'admin' account is disabled."
+            if admin_is_disabled
+            else "Default 'admin' account is still active. Recommendation: Disable it once an alternative SuperAdmin is created."
+        ),
+        "can_disable": len(active_superadmins) >= (2 if not admin_is_disabled else 1),
+        "action_type": "disable_admin",
+    }
+
+    default_pwd = is_using_default_password()
+    password_check = {
+        "id": "sec_default_password",
+        "title": "Master / Default Password",
+        "status": "fail" if default_pwd else "pass",
+        "severity": "critical",
+        "message": (
+            "System is currently using default credentials!"
+            if default_pwd
+            else "Custom secure password has been configured."
+        ),
+    }
+
+    mfa_admins = [u for u in active_superadmins if u.get("mfa_enabled")]
+    mfa_check = {
+        "id": "sec_superadmin_mfa",
+        "title": "SuperAdmin Multi-Factor Authentication",
+        "status": "pass" if len(mfa_admins) == len(active_superadmins) else "warn",
+        "severity": "medium",
+        "message": f"{len(mfa_admins)} of {len(active_superadmins)} active SuperAdmin(s) have TOTP 2FA enabled.",
+    }
+
+    redundancy_check = {
+        "id": "sec_superadmin_redundancy",
+        "title": "SuperAdmin Redundancy",
+        "status": "pass" if len(active_superadmins) >= 2 else "info",
+        "severity": "low",
+        "message": f"{len(active_superadmins)} active SuperAdmin account(s) configured.",
+    }
+
+    checks = [password_check, admin_disabled_check, mfa_check, redundancy_check]
+    score = 100
+    if default_pwd:
+        score -= 40
+    if not admin_is_disabled:
+        score -= 20
+    if len(mfa_admins) < len(active_superadmins):
+        score -= 15
+
+    return {
+        "score": max(10, score),
+        "verdict": "critical" if default_pwd else ("warning" if not admin_is_disabled else "healthy"),
+        "active_superadmins_count": len(active_superadmins),
+        "admin_is_disabled": admin_is_disabled,
+        "checks": checks,
+    }
+
+
 # ==============================================================================
 # Active Sessions & Device Management
 # ==============================================================================

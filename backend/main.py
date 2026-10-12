@@ -191,6 +191,12 @@ async def correlation_id_middleware(request: Request, call_next):
 # WebDAV streaming reverse proxy
 app.include_router(webdav_proxy_router)
 
+# DMTF Redfish Scalable Platforms Management API
+from backend.api.redfish import router as redfish_router
+
+app.include_router(redfish_router, prefix="/redfish/v1")
+app.include_router(redfish_router, prefix="/redfish")
+
 # Register API routers with backwards-compatible /api alias and modern /api/v1 prefix
 app.include_router(api_router, prefix="/api")
 app.include_router(api_router, prefix="/api/v1")

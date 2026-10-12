@@ -523,7 +523,93 @@ export function initSettings() {
     }
   }
 
+  async function fetchSecurityAdvisor() {
+    try {
+      const adv = await api.get('/api/security/advisor');
+      const scoreBadge = $('sec-advisor-score-badge');
+      if (scoreBadge) {
+        scoreBadge.textContent = `Score: ${adv.score}/100`;
+        if (adv.score >= 90) {
+          scoreBadge.style.color = 'var(--ok2, #25c2a0)';
+          scoreBadge.style.borderColor = 'rgba(37,194,160,0.4)';
+          scoreBadge.style.background = 'rgba(37,194,160,0.15)';
+        } else if (adv.score >= 70) {
+          scoreBadge.style.color = 'var(--warn, #f5a623)';
+          scoreBadge.style.borderColor = 'rgba(245,166,35,0.4)';
+          scoreBadge.style.background = 'rgba(245,166,35,0.15)';
+        } else {
+          scoreBadge.style.color = 'var(--crit, #ff5c5c)';
+          scoreBadge.style.borderColor = 'rgba(255,92,92,0.4)';
+          scoreBadge.style.background = 'rgba(255,92,92,0.15)';
+        }
+      }
+
+      const itemsEl = $('sec-advisor-items');
+      if (itemsEl && Array.isArray(adv.checks)) {
+        itemsEl.innerHTML = adv.checks.map((chk) => {
+          const icon = chk.status === 'pass' ? '✅' : (chk.status === 'fail' ? '❌' : (chk.status === 'warn' ? '⚠️' : 'ℹ️'));
+          const color = chk.status === 'pass' ? 'var(--ok2, #25c2a0)' : (chk.status === 'fail' ? 'var(--crit, #ff5c5c)' : 'var(--warn, #f5a623)');
+          return `
+            <div style="display:flex; align-items:flex-start; gap:8px; padding: 4px 0;">
+              <span>${icon}</span>
+              <div>
+                <span style="font-weight:600; color:#fff;">${escapeHtml(chk.title)}: </span>
+                <span style="color:${color};">${escapeHtml(chk.message)}</span>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      const disableAdminCont = $('sec-disable-admin-container');
+      const disableAdminBtn = $('btn-disable-default-admin');
+      if (disableAdminCont && disableAdminBtn) {
+        if (!adv.admin_is_disabled) {
+          disableAdminCont.style.display = 'block';
+          const canDisable = adv.active_superadmins_count >= 2;
+          disableAdminBtn.disabled = !canDisable;
+          disableAdminBtn.style.opacity = canDisable ? '1' : '0.5';
+          disableAdminBtn.style.cursor = canDisable ? 'pointer' : 'not-allowed';
+          if (!canDisable) {
+            disableAdminBtn.title = t('sec.disable_admin_need_superadmin', "Create another active SuperAdmin account first before disabling 'admin'.");
+          } else {
+            disableAdminBtn.title = t('sec.disable_admin_btn', "Disable Default Admin");
+          }
+        } else {
+          disableAdminCont.style.display = 'none';
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to load security advisor', e);
+    }
+  }
+
+  const disableAdminBtn = $('btn-disable-default-admin');
+  if (disableAdminBtn && !disableAdminBtn.dataset.bound) {
+    disableAdminBtn.dataset.bound = 'true';
+    disableAdminBtn.addEventListener('click', () => {
+      const confirmMsg = t('sec.disable_admin_confirm', "Are you sure you want to disable the default 'admin' account? You must use an alternative SuperAdmin to manage this server.");
+      showConfirmToast(t('common.confirm', 'Confirm Action'), confirmMsg, async () => {
+        try {
+          const res = await api.post('/api/users/admin/disable', {});
+          showToast(t('sec.disable_admin_success', "Default admin account has been disabled."), 'success');
+          if (res.is_self) {
+            setTimeout(() => {
+              window.location.href = '/login';
+            }, 1200);
+          } else {
+            fetchSecurity();
+            fetchSecurityAdvisor();
+          }
+        } catch (err) {
+          showToast(err.message, 'error');
+        }
+      });
+    });
+  }
+
   fetchSecurity();
+  fetchSecurityAdvisor();
 
   const newPwdEl = $('sec-new-pwd');
   const confirmPwdEl = $('sec-confirm-pwd');

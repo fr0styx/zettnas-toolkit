@@ -3639,6 +3639,76 @@ export async function fetchAndRenderReplication() {
   }
 }
 
+export function renderTailscalePeersTable(peers, filterQuery = '') {
+  const tbody = document.getElementById('ts-peers-table-body');
+  const countPill = document.getElementById('ts-peer-count-pill');
+  if (!tbody) return;
+  const q = (filterQuery || '').toLowerCase().trim();
+  const peersArr = Array.isArray(peers) ? peers : [];
+  const filtered = q
+    ? peersArr.filter(
+        p =>
+          (p.name || p.hostname || '').toLowerCase().includes(q) ||
+          (p.ip || '').includes(q) ||
+          (p.os || '').toLowerCase().includes(q)
+      )
+    : peersArr;
+
+  if (countPill) {
+    const onlineCount = peersArr.filter(p => p.online).length;
+    countPill.textContent = `${onlineCount} online / ${peersArr.length} total`;
+  }
+
+  if (filtered.length === 0) {
+    tbody.innerHTML =
+      '<tr><td colspan="6" style="text-align:center; padding:16px; color:var(--muted);">No peers match search query.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = filtered
+    .map(p => {
+      const osLower = (p.os || '').toLowerCase();
+      let osLabel = `🌐 ${p.os || 'Unknown'}`;
+      if (osLower.includes('ios')) osLabel = '📱 iOS';
+      else if (osLower.includes('android')) osLabel = '🤖 Android';
+      else if (osLower.includes('mac') || osLower.includes('darwin')) osLabel = '🍏 macOS';
+      else if (osLower.includes('windows')) osLabel = '🪟 Windows';
+      else if (osLower.includes('linux')) osLabel = '🐧 Linux';
+
+      const routeBadge = p.cur_addr
+        ? '<span style="color:#3bf58b; font-weight:600;">⚡ Direct P2P</span>'
+        : p.relay
+          ? `<span style="color:#f59e0b;">🌐 DERP (${escapeHtml(p.relay)})</span>`
+          : '<span style="color:var(--muted);">--</span>';
+
+      const statusPill = p.online
+        ? '<span class="mgmt-app-pill" style="color:#3bf58b; background:rgba(59,245,139,0.12); font-size:10px; padding:2px 7px;">Online</span>'
+        : '<span class="mgmt-app-pill" style="color:var(--muted); background:rgba(255,255,255,0.06); font-size:10px; padding:2px 7px;">Offline</span>';
+
+      const safeIpId = (p.ip || 'no_ip').replace(/[^a-zA-Z0-9]/g, '_');
+
+      return `
+      <tr style="border-bottom:1px solid rgba(255,255,255,0.05); font-size:11.5px;">
+        <td style="padding:8px 12px;">
+          <div style="font-weight:700; color:#fff;">${escapeHtml(p.name || p.hostname || 'Unnamed')}</div>
+          ${p.dns_name ? `<div style="font-size:10px; color:var(--muted);">${escapeHtml(p.dns_name)}</div>` : ''}
+        </td>
+        <td style="padding:8px 12px; color:var(--text-sub);">${osLabel}</td>
+        <td style="padding:8px 12px;"><code style="color:#38bdf8; font-size:11px;">${escapeHtml(p.ip || '--')}</code></td>
+        <td style="padding:8px 12px;">${routeBadge}</td>
+        <td style="padding:8px 12px;">${statusPill}</td>
+        <td style="padding:8px 12px; text-align:right;">
+          <div style="display:inline-flex; align-items:center; gap:6px;">
+            <span id="latency-${safeIpId}" style="font-size:10.5px; font-weight:700;"></span>
+            <button class="btn-pill-toggle btn-ping-peer" data-peer-ip="${escapeHtml(p.ip || '')}" style="font-size:10px; padding:2px 8px;" ${!p.ip ? 'disabled' : ''}>⚡ Ping</button>
+          </div>
+        </td>
+      </tr>
+    `;
+    })
+    .join('');
+}
+
 export async function fetchAndRenderWireguard() {
   const ipFwdEl = document.getElementById('wg-ip-forward-status');
   const pubkeyEl = document.getElementById('wg-pubkey-display');
@@ -3672,6 +3742,9 @@ export async function fetchAndRenderWireguard() {
   const tsAuthLink = document.getElementById('ts-auth-link');
   const tsCopyAuthUrlBtn = document.getElementById('btn-copy-ts-auth-url');
 
+  const tsExtContainer = document.getElementById('network-tailscale-extended');
+  const tsPeersCard = document.getElementById('tailscale-peers-card');
+
   try {
     const meshData = await api.get('/api/network/mesh-vpn').catch(() => null);
     if (meshData && meshData.tailscale) {
@@ -3704,6 +3777,14 @@ export async function fetchAndRenderWireguard() {
           tsUpBtn.textContent = '⚡ 1-Click Deploy Tailscale';
           tsUpBtn.dataset.mode = 'deploy';
         }
+        if (tsExtContainer) {
+          tsExtContainer.style.display = 'none';
+          tsExtContainer.dataset.active = '0';
+        }
+        if (tsPeersCard) {
+          tsPeersCard.style.display = 'none';
+          tsPeersCard.dataset.active = '0';
+        }
       } else if (ts.active) {
         if (tsBadgeEl) {
           tsBadgeEl.textContent = 'Active (Connected)';
@@ -3733,6 +3814,146 @@ export async function fetchAndRenderWireguard() {
           tsUpBtn.textContent = '🚀 Connect Tailscale';
           tsUpBtn.dataset.mode = 'connect';
         }
+
+        // Show extended capability cards
+        if (tsExtContainer) {
+          tsExtContainer.style.display = 'grid';
+          tsExtContainer.dataset.active = '1';
+        }
+        if (tsPeersCard) {
+          tsPeersCard.style.display = 'block';
+          tsPeersCard.dataset.active = '1';
+        }
+
+        // 7. Node Key Expiry & Re-Auth
+        const keyExpiryDisplay = document.getElementById('ts-key-expiry-display');
+        const reauthBtn = document.getElementById('btn-ts-reauth');
+        if (keyExpiryDisplay) {
+          if (ts.key_expiry_days !== null && ts.key_expiry_days !== undefined) {
+            if (ts.key_expiry_days > 14) {
+              const dt = ts.key_expiry ? ts.key_expiry.slice(0, 10) : '';
+              keyExpiryDisplay.textContent = `Expires in ${ts.key_expiry_days} days (${dt})`;
+              keyExpiryDisplay.style.color = 'var(--ok2, #3bf58b)';
+            } else if (ts.key_expiry_days > 0) {
+              keyExpiryDisplay.textContent = `⚠️ Expires in ${ts.key_expiry_days} days`;
+              keyExpiryDisplay.style.color = '#fbbf24';
+            } else {
+              keyExpiryDisplay.textContent = '❌ Key Expired';
+              keyExpiryDisplay.style.color = '#f87171';
+            }
+          } else {
+            keyExpiryDisplay.textContent = 'Key Expiry Disabled';
+            keyExpiryDisplay.style.color = 'var(--ok2, #3bf58b)';
+          }
+        }
+        if (reauthBtn) reauthBtn.style.display = 'inline-block';
+
+        // 1. Subnet Router Gateway
+        const subnetToggle = document.getElementById('ts-subnet-router-toggle');
+        const subnetInput = document.getElementById('ts-subnet-routes-input');
+        if (subnetToggle) subnetToggle.checked = Boolean(ts.is_subnet_router);
+        if (subnetInput && document.activeElement !== subnetInput) {
+          const advRoutes = Array.isArray(ts.advertised_routes)
+            ? ts.advertised_routes.join(', ')
+            : ts.advertised_routes || '';
+          const detRoutes = Array.isArray(ts.detected_subnets)
+            ? ts.detected_subnets.join(', ')
+            : ts.detected_subnets || '';
+          subnetInput.value = advRoutes || detRoutes;
+        }
+
+        // 2. Exit Node Gateway
+        const exitNodeToggle = document.getElementById('ts-exit-node-toggle');
+        const exitNodePill = document.getElementById('ts-exit-node-pill');
+        if (exitNodeToggle) exitNodeToggle.checked = Boolean(ts.advertise_exit_node);
+        if (exitNodePill) {
+          if (ts.is_exit_node) {
+            exitNodePill.textContent = 'Active Exit Node';
+            exitNodePill.style.color = '#3bf58b';
+            exitNodePill.style.background = 'rgba(59,245,139,0.15)';
+          } else if (ts.advertise_exit_node) {
+            exitNodePill.textContent = 'Advertised (Pending/Approved)';
+            exitNodePill.style.color = '#38bdf8';
+            exitNodePill.style.background = 'rgba(56,189,248,0.15)';
+          } else {
+            exitNodePill.textContent = 'Inactive';
+            exitNodePill.style.color = 'var(--muted)';
+            exitNodePill.style.background = 'rgba(255,255,255,0.06)';
+          }
+        }
+
+        // 3. Tailscale SSH
+        const sshToggle = document.getElementById('ts-ssh-toggle');
+        const sshPill = document.getElementById('ts-ssh-pill');
+        if (sshToggle) sshToggle.checked = Boolean(ts.ssh_enabled);
+        if (sshPill) {
+          sshPill.textContent = ts.ssh_enabled ? 'Enabled' : 'Disabled';
+          sshPill.style.color = ts.ssh_enabled ? '#3bf58b' : 'var(--muted)';
+          sshPill.style.background = ts.ssh_enabled
+            ? 'rgba(59,245,139,0.15)'
+            : 'rgba(255,255,255,0.06)';
+        }
+
+        // 4. Tailscale Serve & Funnel
+        const serveToggle = document.getElementById('ts-serve-toggle');
+        const servePill = document.getElementById('ts-serve-pill');
+        const serveBox = document.getElementById('ts-serve-url-box');
+        const serveLink = document.getElementById('ts-serve-url-link');
+        const funnelToggle = document.getElementById('ts-funnel-toggle');
+        const funnelPill = document.getElementById('ts-funnel-pill');
+        if (serveToggle) serveToggle.checked = Boolean(ts.serve_enabled);
+        if (servePill) {
+          servePill.textContent = ts.serve_enabled ? 'Active' : 'Disabled';
+          servePill.style.color = ts.serve_enabled ? '#3bf58b' : 'var(--muted)';
+          servePill.style.background = ts.serve_enabled
+            ? 'rgba(59,245,139,0.15)'
+            : 'rgba(255,255,255,0.06)';
+        }
+        if (serveBox && serveLink) {
+          if (ts.serve_enabled && ts.serve_url) {
+            serveBox.style.display = 'flex';
+            serveLink.href = ts.serve_url;
+            serveLink.textContent = ts.serve_url;
+          } else {
+            serveBox.style.display = 'none';
+          }
+        }
+        if (funnelToggle) funnelToggle.checked = Boolean(ts.funnel_enabled);
+        if (funnelPill) {
+          funnelPill.textContent = ts.funnel_enabled ? 'Active' : 'Off';
+          funnelPill.style.color = ts.funnel_enabled ? '#f87171' : 'var(--muted)';
+          funnelPill.style.background = ts.funnel_enabled
+            ? 'rgba(239,68,68,0.15)'
+            : 'rgba(255,255,255,0.06)';
+        }
+
+        // 5. Taildrop Inbox
+        const taildropBadge = document.getElementById('ts-taildrop-badge');
+        const taildropList = document.getElementById('ts-taildrop-list');
+        const files = ts.taildrop_files || [];
+        const filesCount = ts.taildrop_files_count !== undefined ? ts.taildrop_files_count : files.length;
+        if (taildropBadge) taildropBadge.textContent = `${filesCount} file(s)`;
+        if (taildropList) {
+          if (files.length === 0) {
+            taildropList.innerHTML =
+              '<div style="color:var(--muted); font-size:11px; text-align:center; padding:12px 0;">No files in Taildrop inbox yet.</div>';
+          } else {
+            taildropList.innerHTML = files
+              .map(
+                f => `
+              <div style="display:flex; justify-content:space-between; align-items:center; padding:5px 8px; border-bottom:1px solid rgba(255,255,255,0.05); font-size:11px;">
+                <span style="font-weight:600; color:#fff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:60%;" title="${escapeHtml(f.name)}">📄 ${escapeHtml(f.name)}</span>
+                <span style="color:var(--muted); font-size:10.5px;">${escapeHtml(f.size_formatted)} · ${escapeHtml(f.modified_at)}</span>
+              </div>
+            `
+              )
+              .join('');
+          }
+        }
+
+        // 6. Interactive Mesh Peer Directory
+        window._tsPeersList = ts.peers || [];
+        renderTailscalePeersTable(window._tsPeersList);
       } else {
         const isNeedsLogin = ts.backend_state === 'NeedsLogin';
         if (tsBadgeEl) {
@@ -3760,6 +3981,14 @@ export async function fetchAndRenderWireguard() {
         if (tsConnectForm) tsConnectForm.style.display = 'flex';
         if (tsConnectedView) tsConnectedView.style.display = 'none';
         if (tsDownBtn) tsDownBtn.style.display = 'none';
+        if (tsExtContainer) {
+          tsExtContainer.style.display = 'none';
+          tsExtContainer.dataset.active = '0';
+        }
+        if (tsPeersCard) {
+          tsPeersCard.style.display = 'none';
+          tsPeersCard.dataset.active = '0';
+        }
 
         if (isNeedsLogin) {
           if (ts.auth_url) {
@@ -3999,6 +4228,247 @@ export async function fetchAndRenderWireguard() {
     });
   }
 
+  // 7. Node Key Re-Auth button
+  const btnTsReauth = document.getElementById('btn-ts-reauth');
+  if (btnTsReauth && !btnTsReauth._bound) {
+    btnTsReauth._bound = true;
+    btnTsReauth.addEventListener('click', async () => {
+      try {
+        btnTsReauth.disabled = true;
+        btnTsReauth.textContent = '⏳ ...';
+        const res = await api.post('/api/network/mesh-vpn/tailscale/reauth');
+        if (res && res.auth_url) {
+          try {
+            window.open(res.auth_url, '_blank', 'noopener,noreferrer');
+          } catch (_) {}
+          showToast('Re-authentication initiated. Complete in your browser.', 'info');
+          startTailscaleAuthPolling();
+        } else {
+          showToast('Tailscale node re-authenticated successfully.', 'success');
+          fetchAndRenderWireguard();
+        }
+      } catch (err) {
+        showToast(`Re-authentication failed: ${err.message}`, 'error');
+      } finally {
+        btnTsReauth.disabled = false;
+        btnTsReauth.textContent = '⚡ Re-auth';
+      }
+    });
+  }
+
+  // 1. Subnet Router Save & Toggle
+  const btnTsSaveRoutes = document.getElementById('btn-ts-save-routes');
+  const tsSubnetRoutesInput = document.getElementById('ts-subnet-routes-input');
+  const tsSubnetRouterToggle = document.getElementById('ts-subnet-router-toggle');
+  async function saveSubnetRoutes() {
+    if (!tsSubnetRoutesInput || !tsSubnetRouterToggle) return;
+    const routes = tsSubnetRoutesInput.value.trim();
+    const enabled = tsSubnetRouterToggle.checked;
+    try {
+      if (btnTsSaveRoutes) {
+        btnTsSaveRoutes.disabled = true;
+        btnTsSaveRoutes.textContent = '⏳ ...';
+      }
+      await api.post('/api/network/mesh-vpn/tailscale/set-routes', { routes, enabled });
+      showToast(
+        enabled ? `Subnet routes advertised: ${routes}` : 'Subnet routes withdrawn.',
+        'success'
+      );
+      fetchAndRenderWireguard();
+    } catch (e) {
+      showToast(`Failed to update subnet routes: ${e.message}`, 'error');
+    } finally {
+      if (btnTsSaveRoutes) {
+        btnTsSaveRoutes.disabled = false;
+        btnTsSaveRoutes.textContent = 'Save Subnets';
+      }
+    }
+  }
+  if (btnTsSaveRoutes && !btnTsSaveRoutes._bound) {
+    btnTsSaveRoutes._bound = true;
+    btnTsSaveRoutes.addEventListener('click', saveSubnetRoutes);
+  }
+  if (tsSubnetRouterToggle && !tsSubnetRouterToggle._bound) {
+    tsSubnetRouterToggle._bound = true;
+    tsSubnetRouterToggle.addEventListener('change', saveSubnetRoutes);
+  }
+
+  // 2. Exit Node Toggle
+  const tsExitNodeToggle = document.getElementById('ts-exit-node-toggle');
+  if (tsExitNodeToggle && !tsExitNodeToggle._bound) {
+    tsExitNodeToggle._bound = true;
+    tsExitNodeToggle.addEventListener('change', async () => {
+      const enabled = tsExitNodeToggle.checked;
+      try {
+        await api.post('/api/network/mesh-vpn/tailscale/set-exit-node', { enabled });
+        showToast(
+          enabled ? 'Node advertised as Exit Node.' : 'Exit Node advertising disabled.',
+          'success'
+        );
+        fetchAndRenderWireguard();
+      } catch (e) {
+        showToast(`Failed to set exit node: ${e.message}`, 'error');
+      }
+    });
+  }
+
+  // 3. Tailscale SSH Toggle
+  const tsSshToggle = document.getElementById('ts-ssh-toggle');
+  if (tsSshToggle && !tsSshToggle._bound) {
+    tsSshToggle._bound = true;
+    tsSshToggle.addEventListener('change', async () => {
+      const enabled = tsSshToggle.checked;
+      try {
+        await api.post('/api/network/mesh-vpn/tailscale/set-ssh', { enabled });
+        showToast(enabled ? 'Tailscale SSH enabled.' : 'Tailscale SSH disabled.', 'success');
+        fetchAndRenderWireguard();
+      } catch (e) {
+        showToast(`Failed to toggle SSH: ${e.message}`, 'error');
+      }
+    });
+  }
+
+  // 4. Tailscale Serve & Funnel Toggles
+  const tsServeToggle = document.getElementById('ts-serve-toggle');
+  const tsFunnelToggle = document.getElementById('ts-funnel-toggle');
+  async function triggerServeFunnelUpdate() {
+    const serve = tsServeToggle ? tsServeToggle.checked : false;
+    let funnel = tsFunnelToggle ? tsFunnelToggle.checked : false;
+    if (funnel && !serve) {
+      if (tsServeToggle) tsServeToggle.checked = true;
+    }
+    try {
+      const res = await api.post('/api/network/mesh-vpn/tailscale/set-serve', {
+        serve: tsServeToggle ? tsServeToggle.checked : true,
+        funnel,
+        port: 8082,
+      });
+      if (res && res.status === 'needs_approval' && res.approval_url) {
+        try {
+          window.open(res.approval_url, '_blank', 'noopener,noreferrer');
+        } catch (_) {}
+        showToast('Tailscale Serve requires Tailnet admin approval. Approval page opened.', 'info');
+      } else {
+        showToast(
+          serve
+            ? 'Tailscale HTTPS Serve enabled on port 8082.'
+            : 'Tailscale Serve disabled.',
+          'success'
+        );
+      }
+      fetchAndRenderWireguard();
+    } catch (e) {
+      showToast(`Failed to configure Tailscale Serve: ${e.message}`, 'error');
+    }
+  }
+  if (tsServeToggle && !tsServeToggle._bound) {
+    tsServeToggle._bound = true;
+    tsServeToggle.addEventListener('change', triggerServeFunnelUpdate);
+  }
+  if (tsFunnelToggle && !tsFunnelToggle._bound) {
+    tsFunnelToggle._bound = true;
+    tsFunnelToggle.addEventListener('change', () => {
+      if (tsFunnelToggle.checked) {
+        const ok = confirm(
+          'Warning: Enabling Public Internet Funnel exposes your ZettNAS desktop port 8082 to the public internet. Ensure your superadmin password and 2FA are strong. Do you want to proceed?'
+        );
+        if (!ok) {
+          tsFunnelToggle.checked = false;
+          return;
+        }
+      }
+      triggerServeFunnelUpdate();
+    });
+  }
+
+  // 5. Taildrop Inbox Actions
+  const btnTsTaildropFetch = document.getElementById('btn-ts-taildrop-fetch');
+  if (btnTsTaildropFetch && !btnTsTaildropFetch._bound) {
+    btnTsTaildropFetch._bound = true;
+    btnTsTaildropFetch.addEventListener('click', async () => {
+      try {
+        btnTsTaildropFetch.disabled = true;
+        btnTsTaildropFetch.textContent = '⏳ ...';
+        const res = await api.post('/api/network/mesh-vpn/tailscale/taildrop/receive');
+        showToast(
+          `Taildrop check completed. ${res.count || 0} file(s) available in inbox.`,
+          'success'
+        );
+        fetchAndRenderWireguard();
+      } catch (e) {
+        showToast(`Failed to fetch Taildrop files: ${e.message}`, 'error');
+      } finally {
+        btnTsTaildropFetch.disabled = false;
+        btnTsTaildropFetch.textContent = '📥 Fetch';
+      }
+    });
+  }
+  const btnTsTaildropOpen = document.getElementById('btn-ts-taildrop-open');
+  if (btnTsTaildropOpen && !btnTsTaildropOpen._bound) {
+    btnTsTaildropOpen._bound = true;
+    btnTsTaildropOpen.addEventListener('click', () => {
+      const fmWin = document.getElementById('file-manager-window');
+      if (fmWin) {
+        if (window.bringToFront) window.bringToFront('file-manager-window');
+        fmWin.style.display = 'flex';
+      }
+      if (window.navigateToPath) {
+        window.navigateToPath('/mnt/user/appdata/tailscale/taildrop');
+      }
+    });
+  }
+
+  // 6. Peer search and Ping handler
+  const tsPeerSearch = document.getElementById('ts-peer-search');
+  if (tsPeerSearch && !tsPeerSearch._bound) {
+    tsPeerSearch._bound = true;
+    tsPeerSearch.addEventListener('input', () => {
+      renderTailscalePeersTable(window._tsPeersList || [], tsPeerSearch.value);
+    });
+  }
+  const tsPeersTableBody = document.getElementById('ts-peers-table-body');
+  if (tsPeersTableBody && !tsPeersTableBody._bound) {
+    tsPeersTableBody._bound = true;
+    tsPeersTableBody.addEventListener('click', async e => {
+      const pingBtn = e.target.closest('.btn-ping-peer');
+      if (!pingBtn) return;
+      const ip = pingBtn.dataset.peerIp;
+      if (!ip) return;
+      const safeIpId = ip.replace(/[^a-zA-Z0-9]/g, '_');
+      const resSpan = document.getElementById(`latency-${safeIpId}`);
+      try {
+        pingBtn.disabled = true;
+        pingBtn.textContent = '⏳ ...';
+        if (resSpan) {
+          resSpan.textContent = 'pinging...';
+          resSpan.style.color = 'var(--muted)';
+        }
+        const res = await api.post('/api/network/mesh-vpn/tailscale/ping', { peer: ip });
+        if (res && res.status === 'success') {
+          if (resSpan) {
+            resSpan.textContent = `⚡ ${res.latency}`;
+            resSpan.style.color = res.is_direct ? 'var(--ok2, #3bf58b)' : '#f59e0b';
+          }
+          showToast(`Pinged ${ip}: ${res.latency} (${res.route || 'direct'})`, 'success');
+        } else {
+          if (resSpan) {
+            resSpan.textContent = '❌ Failed';
+            resSpan.style.color = '#f87171';
+          }
+          showToast(`Ping ${ip} failed or timed out.`, 'warning');
+        }
+      } catch (err) {
+        if (resSpan) {
+          resSpan.textContent = '❌ Error';
+          resSpan.style.color = '#f87171';
+        }
+      } finally {
+        pingBtn.disabled = false;
+        pingBtn.textContent = '⚡ Ping';
+      }
+    });
+  }
+
   // Mesh Service Filter switcher
   const filterContainer = document.getElementById('mesh-service-filter');
   if (filterContainer && !filterContainer._bound) {
@@ -4006,6 +4476,8 @@ export async function fetchAndRenderWireguard() {
     const filterBtns = filterContainer.querySelectorAll('button[data-mesh-filter]');
     const tsHeader = document.getElementById('section-header-tailscale');
     const tsContainer = document.getElementById('network-tailscale-container');
+    const tsExtended = document.getElementById('network-tailscale-extended');
+    const tsPeersBlock = document.getElementById('tailscale-peers-card');
     const wgHeader = document.getElementById('section-header-wireguard');
     const wgContainer = document.getElementById('network-wireguard-container');
 
@@ -4017,16 +4489,22 @@ export async function fetchAndRenderWireguard() {
         if (mode === 'tailscale') {
           if (tsHeader) tsHeader.style.display = 'flex';
           if (tsContainer) tsContainer.style.display = 'grid';
+          if (tsExtended && tsExtended.dataset.active === '1') tsExtended.style.display = 'grid';
+          if (tsPeersBlock && tsPeersBlock.dataset.active === '1') tsPeersBlock.style.display = 'block';
           if (wgHeader) wgHeader.style.display = 'none';
           if (wgContainer) wgContainer.style.display = 'none';
         } else if (mode === 'wireguard') {
           if (tsHeader) tsHeader.style.display = 'none';
           if (tsContainer) tsContainer.style.display = 'none';
+          if (tsExtended) tsExtended.style.display = 'none';
+          if (tsPeersBlock) tsPeersBlock.style.display = 'none';
           if (wgHeader) wgHeader.style.display = 'flex';
           if (wgContainer) wgContainer.style.display = 'grid';
         } else {
           if (tsHeader) tsHeader.style.display = 'flex';
           if (tsContainer) tsContainer.style.display = 'grid';
+          if (tsExtended && tsExtended.dataset.active === '1') tsExtended.style.display = 'grid';
+          if (tsPeersBlock && tsPeersBlock.dataset.active === '1') tsPeersBlock.style.display = 'block';
           if (wgHeader) wgHeader.style.display = 'flex';
           if (wgContainer) wgContainer.style.display = 'grid';
         }

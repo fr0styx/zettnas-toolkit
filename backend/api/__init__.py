@@ -23,6 +23,9 @@ from backend.api.ups import router as ups_router
 from backend.api.network import router as network_router
 from backend.api.replication import router as replication_router
 from backend.api.media import router as media_router
+from backend.api.sftp import router as sftp_router
+from backend.api.vms import router as vms_router
+from backend.api.snmp import router as snmp_router
 
 api_router = APIRouter()
 api_router.include_router(auth_router)
@@ -43,6 +46,9 @@ api_router.include_router(ups_router)
 api_router.include_router(network_router)
 api_router.include_router(replication_router)
 api_router.include_router(media_router)
+api_router.include_router(sftp_router)
+api_router.include_router(vms_router)
+api_router.include_router(snmp_router)
 
 __all__ = [
     "api_router",

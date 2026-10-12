@@ -53,6 +53,14 @@ def prometheus_metrics():
     net = stats.get("net", {})
     add_gauge("zettnas_network_rx_bytes", "Network Bytes Received", net.get("rx_bytes"))
     add_gauge("zettnas_network_tx_bytes", "Network Bytes Transmitted", net.get("tx_bytes"))
+    add_gauge("zettnas_network_combined_rx_bytes_sec", "Network Combined Rx Rate (Bytes/sec)", net.get("rx_rate"))
+    add_gauge("zettnas_network_combined_tx_bytes_sec", "Network Combined Tx Rate (Bytes/sec)", net.get("tx_rate"))
+    for if_name, if_data in net.get("interfaces", {}).items():
+        if_labels = {"interface": if_name}
+        add_gauge("zettnas_network_interface_rx_bytes", "Interface Rx Bytes", if_data.get("rx_bytes"), if_labels)
+        add_gauge("zettnas_network_interface_tx_bytes", "Interface Tx Bytes", if_data.get("tx_bytes"), if_labels)
+        add_gauge("zettnas_network_interface_rx_bytes_sec", "Interface Rx Rate", if_data.get("rx_rate"), if_labels)
+        add_gauge("zettnas_network_interface_tx_bytes_sec", "Interface Tx Rate", if_data.get("tx_rate"), if_labels)
 
     # Disks
     for d in stats.get("disks", []):

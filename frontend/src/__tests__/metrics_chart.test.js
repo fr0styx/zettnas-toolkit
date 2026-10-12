@@ -104,4 +104,23 @@ describe('Historical Metrics Chart & Summary Strip Component', () => {
     expect(allBtn.classList.contains('active')).toBe(false);
     expect(netBtn.classList.contains('active')).toBe(true);
   });
+
+  it('renders per-interface physical NIC pills when available in live state', async () => {
+    const { state } = await import('../state.js');
+    state.latestStats = {
+      net: {
+        interfaces: {
+          eth0: { rx: '0 B/s', tx: '0 B/s', is_physical: true },
+          eth1: { rx: '250.0 MB/s', tx: '120.0 MB/s', is_physical: true }
+        }
+      }
+    };
+
+    await fetchAndRenderMetrics();
+    const strip = document.getElementById('metrics-device-summary-strip');
+    const text = strip.textContent;
+    expect(text).toContain('eth0:');
+    expect(text).toContain('eth1:');
+    expect(text).toContain('250.0 MB/s');
+  });
 });

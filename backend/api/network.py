@@ -324,6 +324,94 @@ async def post_tailscale_deploy(req: TailscaleDeployRequest):
     return res
 
 
+class TailscaleSetRoutesRequest(BaseModel):
+    routes: str = Field(default="", max_length=512)
+    enabled: bool = Field(default=True)
+
+
+class TailscaleSetExitNodeRequest(BaseModel):
+    enabled: bool = Field(default=True)
+
+
+class TailscaleSetSshRequest(BaseModel):
+    enabled: bool = Field(default=True)
+
+
+class TailscaleSetServeRequest(BaseModel):
+    serve: bool = Field(default=True)
+    funnel: bool = Field(default=False)
+    port: int = Field(default=8082, ge=1, le=65535)
+
+
+class TailscalePingRequest(BaseModel):
+    peer: str = Field(..., max_length=128)
+
+
+@router.post("/network/mesh-vpn/tailscale/set-routes", dependencies=[Depends(require_scope("system:config"))])
+async def post_tailscale_set_routes(req: TailscaleSetRoutesRequest):
+    """Advertises or withdraws subnet routes on the Tailscale network."""
+    from backend.hardware.network import execute_tailscale_set_routes
+
+    return await asyncio.to_thread(execute_tailscale_set_routes, routes=req.routes, enabled=req.enabled)
+
+
+@router.post("/network/mesh-vpn/tailscale/set-exit-node", dependencies=[Depends(require_scope("system:config"))])
+async def post_tailscale_set_exit_node(req: TailscaleSetExitNodeRequest):
+    """Enables or disables advertising this NAS as a Tailscale Exit Node."""
+    from backend.hardware.network import execute_tailscale_set_exit_node
+
+    return await asyncio.to_thread(execute_tailscale_set_exit_node, enabled=req.enabled)
+
+
+@router.post("/network/mesh-vpn/tailscale/set-ssh", dependencies=[Depends(require_scope("system:config"))])
+async def post_tailscale_set_ssh(req: TailscaleSetSshRequest):
+    """Enables or disables Tailscale SSH."""
+    from backend.hardware.network import execute_tailscale_set_ssh
+
+    return await asyncio.to_thread(execute_tailscale_set_ssh, enabled=req.enabled)
+
+
+@router.post("/network/mesh-vpn/tailscale/set-serve", dependencies=[Depends(require_scope("system:config"))])
+async def post_tailscale_set_serve(req: TailscaleSetServeRequest):
+    """Configures Tailscale Serve (HTTPS on Tailnet) and optional Public Funnel."""
+    from backend.hardware.network import execute_tailscale_set_serve
+
+    return await asyncio.to_thread(execute_tailscale_set_serve, serve=req.serve, funnel=req.funnel, port=req.port)
+
+
+@router.post("/network/mesh-vpn/tailscale/taildrop/receive", dependencies=[Depends(require_scope("storage:write"))])
+async def post_tailscale_taildrop_receive():
+    """Receives and ingests incoming files from the Taildrop file inbox."""
+    from backend.hardware.network import execute_tailscale_taildrop_receive
+
+    return await asyncio.to_thread(execute_tailscale_taildrop_receive)
+
+
+@router.get("/network/mesh-vpn/tailscale/taildrop/files", dependencies=[Depends(require_scope("storage:read"))])
+async def get_tailscale_taildrop_files():
+    """Lists files received via Taildrop."""
+    from backend.hardware.network import get_taildrop_inbox_files
+
+    files = await asyncio.to_thread(get_taildrop_inbox_files)
+    return {"files": files, "count": len(files)}
+
+
+@router.post("/network/mesh-vpn/tailscale/ping", dependencies=[Depends(require_scope("system:view"))])
+async def post_tailscale_ping(req: TailscalePingRequest):
+    """Performs real-time latency ping against a Tailscale mesh peer."""
+    from backend.hardware.network import execute_tailscale_ping
+
+    return await asyncio.to_thread(execute_tailscale_ping, peer=req.peer)
+
+
+@router.post("/network/mesh-vpn/tailscale/reauth", dependencies=[Depends(require_scope("system:config"))])
+async def post_tailscale_reauth():
+    """Forces node re-authentication before node key expiration."""
+    from backend.hardware.network import execute_tailscale_reauth
+
+    return await asyncio.to_thread(execute_tailscale_reauth)
+
+
 class WireguardClientConfigRequest(BaseModel):
     client_name: str = Field(default="mobile-client", max_length=64)
     client_ip: str = Field(default="10.13.13.2/32")

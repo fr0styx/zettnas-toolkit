@@ -283,10 +283,41 @@ class ReplicationEngine:
             # Completed successfully
             self.update_job_status(job_id, "success", bytes_transferred=1024 * 1024)
             logger.info(f"[Replication] Job {job_id} succeeded.")
+            try:
+                from backend.services.notifications import send_notification
+
+                job_name = job.get("name", job_id)
+                send_notification(
+                    {
+                        "type": "replication",
+                        "title": f"Replication Succeeded: {job_name}",
+                        "message": f"Storage replication pipeline '{job_name}' completed successfully ({src_pool} -> {tgt_pool or 'remote'}).",
+                        "level": "info",
+                        "meta": {"job_id": job_id, "source": src_pool, "target": tgt_pool},
+                    }
+                )
+            except Exception as notify_err:
+                logger.debug(f"[Replication] Notification error: {notify_err}")
+
         except Exception as e:
             err_str = str(e)
             logger.error(f"[Replication] Job {job_id} failed: {err_str}")
             self.update_job_status(job_id, "error", error=err_str)
+            try:
+                from backend.services.notifications import send_notification
+
+                job_name = job.get("name", job_id) if isinstance(job, dict) else job_id
+                send_notification(
+                    {
+                        "type": "replication",
+                        "title": f"Replication Failed: {job_name}",
+                        "message": f"Storage replication pipeline '{job_name}' failed: {err_str}",
+                        "level": "error",
+                        "meta": {"job_id": job_id, "error": err_str},
+                    }
+                )
+            except Exception as notify_err:
+                logger.debug(f"[Replication] Failure notification error: {notify_err}")
 
 
 _REPLICATION_ENGINE: Optional[ReplicationEngine] = None

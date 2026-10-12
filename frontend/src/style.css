@@ -2741,7 +2741,8 @@ select.tz-select-input option, select.tz-select option {
 #network-vlan-create-overlay,
 #modal-create-replication-pipeline,
 #modal-create-backup-job,
-#modal-create-snapshot {
+#modal-create-snapshot,
+#modal-vm-create {
   z-index: 10030 !important;
   background: rgba(0, 0, 0, 0.65) !important;
   backdrop-filter: blur(8px) !important;
@@ -2771,7 +2772,8 @@ select.tz-select-input option, select.tz-select option {
 #network-vlan-create-overlay.open,
 #modal-create-replication-pipeline.open,
 #modal-create-backup-job.open,
-#modal-create-snapshot.open {
+#modal-create-snapshot.open,
+#modal-vm-create.open {
   display: flex !important;
   opacity: 1 !important;
   pointer-events: auto !important;
@@ -2801,7 +2803,8 @@ select.tz-select-input option, select.tz-select option {
 #network-vlan-create-overlay:not(.open),
 #modal-create-replication-pipeline:not(.open),
 #modal-create-backup-job:not(.open),
-#modal-create-snapshot:not(.open) {
+#modal-create-snapshot:not(.open),
+#modal-vm-create:not(.open) {
   display: none !important;
   opacity: 0 !important;
   pointer-events: none !important;
@@ -3296,8 +3299,10 @@ select.tz-select-input option, select.tz-select option {
 
 .os-window.window-minimized,
 .file-manager-window.window-minimized,
+.vm-manager-window.window-minimized,
 .os-window[style*="display: none"],
 .file-manager-window[style*="display: none"],
+.vm-manager-window[style*="display: none"],
 .smart-modal-backdrop.window-minimized,
 .smart-modal-backdrop[style*="display: none"] {
   display: none !important;
@@ -5767,9 +5772,10 @@ body.theme-yak .lcd-dot.active {
     border-radius: 12px !important;
   }
 
-  /* 1. File Explorer Window on Mobile */
+  /* 1. File Explorer & VM Manager Window on Mobile */
   .os-window,
-  .file-manager-window {
+  .file-manager-window,
+  .vm-manager-window {
     position: fixed !important;
     left: 50% !important;
     transform: translateX(-50%) !important;
@@ -5793,8 +5799,10 @@ body.theme-yak .lcd-dot.active {
 
   .os-window.window-minimized,
   .file-manager-window.window-minimized,
+  .vm-manager-window.window-minimized,
   .os-window[style*="display: none"],
-  .file-manager-window[style*="display: none"] {
+  .file-manager-window[style*="display: none"],
+  .vm-manager-window[style*="display: none"] {
     display: none !important;
     pointer-events: none !important;
     opacity: 0 !important;
@@ -6925,6 +6933,7 @@ body.mobile-mode #desktop-widgets-container .cal-glance-bar {
 
   body.mobile-mode .os-window,
   body.mobile-mode .file-manager-window,
+  body.mobile-mode .vm-manager-window,
   body.mobile-mode #management-window,
   body.mobile-mode .management-window,
   body.mobile-mode #console-window,
@@ -6938,8 +6947,10 @@ body.mobile-mode #desktop-widgets-container .cal-glance-bar {
 
   body.mobile-mode .os-window.window-minimized,
   body.mobile-mode .file-manager-window.window-minimized,
+  body.mobile-mode .vm-manager-window.window-minimized,
   body.mobile-mode .os-window[style*="display: none"],
-  body.mobile-mode .file-manager-window[style*="display: none"] {
+  body.mobile-mode .file-manager-window[style*="display: none"],
+  body.mobile-mode .vm-manager-window[style*="display: none"] {
     display: none !important;
     pointer-events: none !important;
     opacity: 0 !important;
@@ -7841,6 +7852,133 @@ body.mobile-mode .btn-webui-badge {
 .fm-act-btn:hover {
   filter: grayscale(0);
   transform: scale(1.1);
+}
+
+/* Virtual Machine Manager Window - Solid, Premium Opaque Surface */
+#vm-manager-window.vm-manager-window,
+.vm-manager-window {
+  display: flex;
+  flex-direction: column;
+  background: #0f1622 !important;
+  backdrop-filter: blur(28px) saturate(140%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(140%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 25px 65px rgba(0, 0, 0, 0.92) !important;
+}
+
+#vm-manager-window .os-window-header {
+  background: #141d2c !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+#vm-manager-window .vm-telemetry-header {
+  background: #101824 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+#vm-manager-window .vm-content-body {
+  background: #0b1019 !important;
+}
+
+body.theme-yak #vm-manager-window.vm-manager-window {
+  background: #191410 !important;
+}
+body.theme-yak #vm-manager-window .os-window-header {
+  background: #241c16 !important;
+}
+body.theme-yak #vm-manager-window .vm-telemetry-header {
+  background: #1e1713 !important;
+}
+body.theme-yak #vm-manager-window .vm-content-body {
+  background: #130f0c !important;
+}
+
+/* Virtual Machine Action Buttons */
+.btn-vm-action,
+.btn-vm-console,
+.btn-vm-delete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: 1px solid transparent;
+}
+
+.btn-vm-start {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border-color: rgba(16, 185, 129, 0.35);
+}
+.btn-vm-start:hover:not(:disabled) {
+  background: rgba(16, 185, 129, 0.3);
+  border-color: #34d399;
+  color: #fff;
+  box-shadow: 0 0 10px rgba(52, 211, 153, 0.35);
+}
+
+.btn-vm-pause {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border-color: rgba(245, 158, 11, 0.35);
+}
+.btn-vm-pause:hover:not(:disabled) {
+  background: rgba(245, 158, 11, 0.3);
+  border-color: #fbbf24;
+  color: #fff;
+  box-shadow: 0 0 10px rgba(251, 191, 36, 0.35);
+}
+
+.btn-vm-resume {
+  background: rgba(14, 165, 233, 0.15);
+  color: #38bdf8;
+  border-color: rgba(14, 165, 233, 0.35);
+}
+.btn-vm-resume:hover:not(:disabled) {
+  background: rgba(14, 165, 233, 0.3);
+  border-color: #38bdf8;
+  color: #fff;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.35);
+}
+
+.btn-vm-stop {
+  background: rgba(239, 68, 68, 0.12);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+.btn-vm-stop:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: #f87171;
+  color: #fff;
+  box-shadow: 0 0 10px rgba(248, 113, 113, 0.35);
+}
+
+.btn-vm-console {
+  background: rgba(255, 255, 255, 0.06);
+  color: #cbd5e1;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+.btn-vm-console:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #fff;
+}
+
+.btn-vm-delete {
+  background: rgba(239, 68, 68, 0.1);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.25);
+}
+.btn-vm-delete:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: #ef4444;
+  color: #fff;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
 }
 
 .os-window {

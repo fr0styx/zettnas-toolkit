@@ -34,6 +34,10 @@ class RemoteSyncRequest(BaseModel):
     dst: str = Field(..., min_length=1)
     action: str = Field("sync", pattern="^(sync|copy|move)$")
     dry_run: bool = False
+    ignore_errors: bool = False
+    retries: int = 3
+    verbose: bool = False
+    notify: bool = True
 
 
 @router.get("/remotes", dependencies=[Depends(require_scope("storage:read", "storage:admin"))])
@@ -115,7 +119,16 @@ async def start_remote_sync(req: RemoteSyncRequest):
     """Triggers an asynchronous cloud sync/copy/move operation."""
     engine = get_rclone_engine()
     try:
-        return engine.start_sync_job(req.src, req.dst, req.action, req.dry_run)
+        return engine.start_sync_job(
+            src=req.src,
+            dst=req.dst,
+            action=req.action,
+            dry_run=req.dry_run,
+            ignore_errors=req.ignore_errors,
+            retries=req.retries,
+            verbose=req.verbose,
+            notify=req.notify,
+        )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
@@ -127,3 +140,13 @@ async def list_sync_jobs():
     """Lists recent and active cloud sync jobs."""
     engine = get_rclone_engine()
     return engine.get_sync_jobs()
+
+
+@router.get("/remotes/sync/jobs/{job_id}", dependencies=[Depends(require_scope("storage:read", "storage:admin"))])
+async def get_sync_job_status(job_id: str):
+    """Returns detailed real-time telemetry for a specific sync job."""
+    engine = get_rclone_engine()
+    job = engine.get_sync_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Sync job not found")
+    return job

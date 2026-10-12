@@ -14,13 +14,16 @@ describe('Desktop Context Menu, Dock Context Menu, and Wallpaper Engine', () => 
         <div id="management-desktop-icon" class="chassis-hero-box" style="position:absolute; left:24px; top:77px; width:100px; height:80px;">
           <div class="icon-text">Mission Control</div>
         </div>
-        <div id="fm-desktop-icon" class="chassis-hero-box" style="position:absolute; left:24px; top:189px; width:100px; height:80px;">
+        <div id="vm-desktop-icon" class="chassis-hero-box" style="position:absolute; left:24px; top:189px; width:100px; height:80px;">
+          <div class="icon-text">Virtual Machines</div>
+        </div>
+        <div id="fm-desktop-icon" class="chassis-hero-box" style="position:absolute; left:24px; top:301px; width:100px; height:80px;">
           <div class="icon-text">File Explorer</div>
         </div>
-        <div id="rb-desktop-icon" class="chassis-hero-box" style="position:absolute; left:24px; top:301px; width:100px; height:80px;">
+        <div id="rb-desktop-icon" class="chassis-hero-box" style="position:absolute; left:24px; top:413px; width:100px; height:80px;">
           <div class="icon-text">Recycle Bin</div>
         </div>
-        <div id="chassis-desktop-icon" class="chassis-hero-box" style="position:absolute; left:24px; top:413px; width:100px; height:80px;">
+        <div id="chassis-desktop-icon" class="chassis-hero-box" style="position:absolute; left:24px; top:525px; width:100px; height:80px;">
           <div class="icon-text">ZettNAS</div>
         </div>
       </div>
@@ -132,9 +135,11 @@ describe('Desktop Context Menu, Dock Context Menu, and Wallpaper Engine', () => 
   it('positions Mission Control at top: 77px with equal 25px gap from navbar, and keeps it at top on Sort by Name', () => {
     initDraggableDesktopIcons();
     const mc = document.getElementById('management-desktop-icon');
+    const vm = document.getElementById('vm-desktop-icon');
     const fm = document.getElementById('fm-desktop-icon');
     expect(mc.style.top).toBe('77px');
-    expect(fm.style.top).toBe('189px');
+    expect(vm.style.top).toBe('189px');
+    expect(fm.style.top).toBe('301px');
 
     // Trigger desktop context menu
     const stage = document.querySelector('.chassis-workbench-stage');
@@ -149,9 +154,10 @@ describe('Desktop Context Menu, Dock Context Menu, and Wallpaper Engine', () => 
     expect(sortBtn).not.toBeNull();
     sortBtn.click();
 
-    // Mission Control must remain anchored at top (77px)
+    // Mission Control must remain anchored at top (77px), VM second (189px), FM third (301px)
     expect(mc.style.top).toBe('77px');
-    expect(fm.style.top).toBe('189px');
+    expect(vm.style.top).toBe('189px');
+    expect(fm.style.top).toBe('301px');
   });
 
   it('renameWallpaper uses custom OS prompt modal instead of browser prompt', async () => {

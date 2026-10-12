@@ -14,7 +14,7 @@ import zipfile
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import FileResponse, Response
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Any, Dict, List, Optional
 
 import backend.config as config
@@ -813,6 +813,11 @@ class AppSourceToggleRequest(BaseModel):
     enabled: bool
 
 
+class AppSideloadRequest(BaseModel):
+    url: Optional[str] = None
+    manifest_content: Optional[str] = None
+
+
 class AppComposeRequest(BaseModel):
     host_port: Optional[int] = None
     storage_root: str = "/mnt/user/appdata"
@@ -901,6 +906,21 @@ async def post_docker_catalog_source_toggle(source_id: str, req: AppSourceToggle
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         logger.error(f"[AppCatalog] Failed to toggle source: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/docker/catalog/sideload", dependencies=[Depends(require_scope("containers:manage"))])
+async def post_docker_catalog_sideload(req: AppSideloadRequest):
+    """Sideloads an application from a URL (e.g. GitHub raw zett-app.json / compose) or direct manifest content."""
+    from backend.services.app_catalog import sideload_app_manifest
+
+    try:
+        res = await asyncio.to_thread(sideload_app_manifest, req.url, req.manifest_content)
+        return res
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"[AppCatalog] Failed to sideload manifest: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -1081,6 +1101,18 @@ class DeleteRequest(BaseModel):
     path: str
 
 
+class FsConflictCheckRequest(BaseModel):
+    sources: list[str]
+    destination_dir: str
+
+
+class FsTransferRequest(BaseModel):
+    sources: list[str]
+    destination_dir: str
+    action: str = Field("copy", pattern="^(copy|move)$")
+    collision_policy: str = Field("merge", pattern="^(merge|overwrite|skip|keep_both)$")
+
+
 def _safe_fs_target(req_path: str):
     raw = str(req_path or "").strip()
     if not raw or "\x00" in raw:
@@ -1190,6 +1222,65 @@ async def fs_delete(req: DeleteRequest, principal: AuthenticatedPrincipal = Depe
     except Exception as e:
         logger.error(f"[FS] Delete/Recycle failed: {e}")
         raise HTTPException(status_code=500, detail="Failed to process delete request")
+
+
+@router.post(
+    "/fs/conflict-check",
+    dependencies=[Depends(require_scope("shares:manage", "shares:user_write", "storage:write", "storage:admin"))],
+)
+async def fs_conflict_check(
+    req: FsConflictCheckRequest, principal: AuthenticatedPrincipal = Depends(get_current_principal)
+):
+    from backend.services.fs_transfer import check_transfer_conflicts
+
+    dest_canonical = resolve_within(req.destination_dir, ALLOWED_BROWSE_ROOTS)
+    if dest_canonical is None:
+        raise HTTPException(status_code=403, detail="Destination directory is outside allowed folders.")
+    check_user_path_access(req.destination_dir, principal)
+
+    for src in req.sources:
+        src_canonical = resolve_within(src, ALLOWED_BROWSE_ROOTS)
+        if src_canonical is None:
+            raise HTTPException(status_code=403, detail=f"Source path {src} is outside allowed folders.")
+        check_user_path_access(src, principal)
+
+    return await asyncio.to_thread(check_transfer_conflicts, req.sources, dest_canonical)
+
+
+@router.post(
+    "/fs/transfer",
+    dependencies=[Depends(require_scope("shares:manage", "shares:user_write", "storage:write", "storage:admin"))],
+)
+async def fs_transfer(req: FsTransferRequest, principal: AuthenticatedPrincipal = Depends(get_current_principal)):
+    from backend.services.fs_transfer import execute_transfer
+
+    dest_canonical = resolve_within(req.destination_dir, ALLOWED_BROWSE_ROOTS)
+    if dest_canonical is None:
+        raise HTTPException(status_code=403, detail="Destination directory is outside allowed folders.")
+    check_user_path_access(req.destination_dir, principal)
+
+    is_admin = (
+        principal.role_id in ("superadmin", "storage_admin")
+        or principal.has_scope("shares:manage")
+        or principal.has_scope("*")
+    )
+
+    for src in req.sources:
+        src_canonical = resolve_within(src, ALLOWED_BROWSE_ROOTS)
+        if src_canonical is None:
+            raise HTTPException(status_code=403, detail=f"Source path {src} is outside allowed folders.")
+        check_user_path_access(src, principal)
+
+        if req.action == "move" and not is_admin and os.path.basename(src.rstrip("/")) == "homes":
+            raise HTTPException(status_code=403, detail="Cannot move root homes directory.")
+
+    res = await asyncio.to_thread(execute_transfer, req.sources, dest_canonical, req.action, req.collision_policy)
+    add_event(
+        "info",
+        "File Explorer",
+        f"Transferred {res.get('transferred', 0)} item(s) to {os.path.basename(dest_canonical)} ({req.action}, {req.collision_policy})",
+    )
+    return res
 
 
 @router.get("/fs/download")

@@ -28,6 +28,7 @@ import { initManagement } from './components/management.js';
 import { initCommandPalette } from './components/command-palette.js';
 import { initWidgets } from './components/widgets.js';
 import { initFileManager } from './components/file-manager.js';
+import { initVmManager } from './components/vm-manager.js';
 import { initContainerModal } from './components/container-modal.js';
 import { initStackModal } from './components/stack-modal.js';
 import { initDesktopContextMenu } from './components/desktop-context-menu.js';
@@ -190,6 +191,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initCommandPalette();
   initWidgets();
   initFileManager();
+  initVmManager();
   initContainerModal();
   initStackModal();
   initDesktopContextMenu();

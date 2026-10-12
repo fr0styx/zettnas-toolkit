@@ -1456,6 +1456,27 @@ export const KNOWN_APPS = {
       }
     }
   },
+  vm: {
+    id: 'vm',
+    icon: '#i-vm',
+    getTitle: () => t('dock.vm_manager', 'Virtual Machines'),
+    launch: () => {
+      if (typeof window.openVmManager === 'function') {
+        window.openVmManager();
+      } else {
+        const vmWin = document.getElementById('vm-manager-window');
+        if (vmWin) {
+          if (window.DockManager && !window.DockManager.windows['vm']) {
+            window.DockManager.register('vm', vmWin, '#i-vm', t('dock.vm_manager', 'Virtual Machines'), false);
+          }
+          if (window.DockManager) window.DockManager.restore('vm');
+          ZettEventBus.emit('window:open', { id: 'vm-manager-window' });
+        } else {
+          document.getElementById('vm-desktop-icon')?.click();
+        }
+      }
+    }
+  },
   'app-deploy': {
     id: 'app-deploy',
     icon: '#i-chip',
@@ -3015,13 +3036,14 @@ export function initDraggableDesktopIcons() {
   // Desktop icons arranged vertically with equal spacing (25px top navbar gap, 25px gap between icons, pitch = 112px)
   const defaultIconConfigs = [
     { id: 'management-desktop-icon', defaultLeft: 24, defaultTop: 77 },
-    { id: 'fm-desktop-icon', defaultLeft: 24, defaultTop: 189 },
-    { id: 'rb-desktop-icon', defaultLeft: 24, defaultTop: 301 },
-    { id: 'chassis-desktop-icon', defaultLeft: 24, defaultTop: 413 },
+    { id: 'vm-desktop-icon', defaultLeft: 24, defaultTop: 189 },
+    { id: 'fm-desktop-icon', defaultLeft: 24, defaultTop: 301 },
+    { id: 'rb-desktop-icon', defaultLeft: 24, defaultTop: 413 },
+    { id: 'chassis-desktop-icon', defaultLeft: 24, defaultTop: 525 },
   ];
 
   const getAllIconElements = () => {
-    const defaultIds = ['management-desktop-icon', 'fm-desktop-icon', 'rb-desktop-icon', 'chassis-desktop-icon'];
+    const defaultIds = ['management-desktop-icon', 'vm-desktop-icon', 'fm-desktop-icon', 'rb-desktop-icon', 'chassis-desktop-icon'];
     const elements = [];
     const seen = new Set();
     defaultIds.forEach((id) => {
@@ -3096,10 +3118,12 @@ export function initDraggableDesktopIcons() {
       const name = (nameEl ? (nameEl.innerText || nameEl.textContent) : '') || id;
       return { id, el, name: String(name || '').trim() };
     });
-    // Keep Mission Control anchored as first top icon, sort others alphabetically
+    // Keep Mission Control anchored as first top icon, Virtual Machines second, sort others alphabetically
     items.sort((a, b) => {
       if (a.id === 'management-desktop-icon') return -1;
       if (b.id === 'management-desktop-icon') return 1;
+      if (a.id === 'vm-desktop-icon') return -1;
+      if (b.id === 'vm-desktop-icon') return 1;
       return a.name.localeCompare(b.name);
     });
     let currentY = 77;
@@ -3149,6 +3173,7 @@ export function initDraggableDesktopIcons() {
 
       let iconAppId = null;
       if (iconEl.id === 'management-desktop-icon') iconAppId = 'management';
+      else if (iconEl.id === 'vm-desktop-icon') iconAppId = 'vm';
       else if (iconEl.id === 'chassis-desktop-icon') iconAppId = 'console';
       else if (iconEl.id === 'fm-desktop-icon' || iconEl.id === 'rb-desktop-icon') iconAppId = 'fm';
 
@@ -3276,6 +3301,11 @@ export function initDraggableDesktopIcons() {
         el.style.removeProperty('top');
       } else {
         const saved = savedPositions[id];
+        // If VM icon was previously saved at top: 54/77 (above/overlapping Mission Control), reset to defaultTop: 189
+        if (id === 'vm-desktop-icon' && saved && (saved.top < 100 || saved.top === 77)) {
+          saved.top = defaultTop;
+          saved.left = defaultLeft;
+        }
         const curLeft = (saved && typeof saved.left === 'number') ? saved.left : defaultLeft;
         const curTop = (saved && typeof saved.top === 'number') ? saved.top : defaultTop;
         const maxLeft = Math.max(24, window.innerWidth - (el.offsetWidth || 136) - 10);

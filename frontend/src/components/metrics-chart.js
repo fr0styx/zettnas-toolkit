@@ -4,6 +4,7 @@ import { escapeHtml } from '../utils.js';
  * Multi-device time-series telemetry for CPU, RAM, individual Disks, and Fans.
  */
 import { api } from '../api.js';
+import { state } from '../state.js';
 import { t } from '../i18n.js';
 
 let _metricsChart = null;
@@ -127,15 +128,30 @@ function updateSummaryStrip(data) {
     });
   }
 
-  // Network Bandwidth Pill
+  // Network Bandwidth Pill (Combined by default)
   const rxRate = latest.net_rx || 0;
   const txRate = latest.net_tx || 0;
   pills.push(`
-    <div class="device-metric-pill">
+    <div class="device-metric-pill" title="Combined LAN Throughput (all physical interfaces)">
       <span class="dmp-name">Net:</span>
-      <span class="dmp-val">↓ ${formatRate(rxRate)} · ↑ ${formatRate(txRate)}</span>
+      <span class="dmp-val">↓ ${formatRate(rxRate)} · ↑ ${formatRate(txRate)} <span style="opacity:0.65; font-size:10px;">(Combined)</span></span>
     </div>
   `);
+
+  const liveNetIfaces = state?.latestStats?.net?.interfaces;
+  if (liveNetIfaces && typeof liveNetIfaces === 'object') {
+    Object.keys(liveNetIfaces).forEach((ifName) => {
+      const ifInfo = liveNetIfaces[ifName];
+      if (ifInfo && (ifInfo.is_physical || ifInfo.is_bond)) {
+        pills.push(`
+          <div class="device-metric-pill" title="${escapeHtml(ifName)} Throughput">
+            <span class="dmp-name">${escapeHtml(ifName)}:</span>
+            <span class="dmp-val">↓ ${escapeHtml(ifInfo.rx || '0 B/s')} · ↑ ${escapeHtml(ifInfo.tx || '0 B/s')}</span>
+          </div>
+        `);
+      }
+    });
+  }
 
   // Disk I/O Pill
   if (latest.disk_read != null || latest.disk_write != null) {

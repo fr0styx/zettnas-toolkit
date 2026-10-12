@@ -13,6 +13,7 @@ let currentSortBy = 'name';
 let currentSortDir = 'asc';
 let selectedPaths = new Set();
 let lastSelectedIndex = -1;
+let _clipboard = { items: [], action: 'copy' };
 
 function updateFmSelectionToolbar() {
   const bar = document.getElementById('fm-selection-bar');
@@ -117,6 +118,9 @@ export function initFileManager() {
           </button>
           <button id="fm-new-folder-btn" class="fm-tool-btn" title="${t('fm.new_folder', 'New Folder')}" data-i18n-title="fm.new_folder" aria-label="New Folder">
             <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path><line x1="12" y1="11" x2="12" y2="17"></line><line x1="9" y1="14" x2="15" y2="14"></line></svg>
+          </button>
+          <button id="fm-organize-btn" class="fm-tool-btn" title="${t('fm.organize_media', 'Organize Media')}" data-i18n-title="fm.organize_media" aria-label="Organize Media">
+            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
           </button>
           <div id="fm-selection-bar" style="display: none; align-items: center; gap: 6px; margin-left: 8px;">
             <span id="fm-selected-count" style="font-size: 11px; font-weight: 700; color: var(--accent-cyan, #0ea5e9); padding: 2px 8px; background: rgba(14,165,233,0.12); border-radius: 4px; border: 1px solid rgba(14,165,233,0.25);">0 selected</span>
@@ -349,6 +353,10 @@ export function initFileManager() {
     });
   });
 
+  document.getElementById('fm-organize-btn')?.addEventListener('click', () => {
+    openMediaOrganizerModal(currentPath);
+  });
+
   const viewport = document.getElementById('fm-viewport');
 
   
@@ -391,14 +399,25 @@ export function initFileManager() {
     viewportElem.addEventListener('drop', async (e) => {
       e.preventDefault();
       viewportElem.style.background = 'transparent';
-      
+
+      const jsonStr = e.dataTransfer.getData('application/json');
+      if (jsonStr) {
+        try {
+          const payload = JSON.parse(jsonStr);
+          if (payload.paths && payload.paths.length > 0) {
+            executeTransferWithConflictCheck(payload.paths, currentPath, payload.action || 'move');
+            return;
+          }
+        } catch (err) {}
+      }
+
       if (!e.dataTransfer.files || e.dataTransfer.files.length === 0) return;
-      
+
       const token = auth.getToken();
-      
+
       let successCount = 0;
       let failCount = 0;
-      
+
       for (let i = 0; i < e.dataTransfer.files.length; i++) {
         const file = e.dataTransfer.files[i];
         try {
@@ -414,7 +433,7 @@ export function initFileManager() {
           showToast(`Failed to upload ${file.name}: ${err.message}`, 'error');
         }
       }
-      
+
       if (successCount > 0) {
         showToast(`Successfully uploaded ${successCount} file(s)`, 'success');
       }
@@ -493,6 +512,25 @@ export function initFileManager() {
         if (selectedPaths.size > 0) {
           e.preventDefault();
           bulkDeleteBtn?.click();
+        }
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'c') {
+        if (selectedPaths.size > 0) {
+          e.preventDefault();
+          _clipboard = { items: Array.from(selectedPaths), action: 'copy' };
+          const msg = t('fm.copied_clipboard', `Copied ${selectedPaths.size} item(s) to clipboard`).replace('{count}', selectedPaths.size);
+          showToast(msg, 'info');
+        }
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'x') {
+        if (selectedPaths.size > 0) {
+          e.preventDefault();
+          _clipboard = { items: Array.from(selectedPaths), action: 'move' };
+          const msg = t('fm.cut_clipboard', `Cut ${selectedPaths.size} item(s) to clipboard`).replace('{count}', selectedPaths.size);
+          showToast(msg, 'info');
+        }
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'v') {
+        if (_clipboard && _clipboard.items && _clipboard.items.length > 0) {
+          e.preventDefault();
+          executeTransferWithConflictCheck(_clipboard.items, currentPath, _clipboard.action);
         }
       }
     });
@@ -700,6 +738,40 @@ function renderViewport() {
       </div>
     `;
 
+    if (file.name !== '..') {
+      row.setAttribute('draggable', 'true');
+      row.addEventListener('dragstart', (e) => {
+        const paths = selectedPaths.has(file.path) ? Array.from(selectedPaths) : [file.path];
+        e.dataTransfer.setData('application/json', JSON.stringify({ paths, action: 'move' }));
+        e.dataTransfer.effectAllowed = 'move';
+      });
+    }
+
+    if (file.is_dir && file.name !== '..') {
+      row.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        row.style.background = 'rgba(14, 165, 233, 0.15)';
+      });
+      row.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        row.style.background = '';
+      });
+      row.addEventListener('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        row.style.background = '';
+        const jsonStr = e.dataTransfer.getData('application/json');
+        if (jsonStr) {
+          try {
+            const payload = JSON.parse(jsonStr);
+            if (payload.paths && payload.paths.length > 0) {
+              executeTransferWithConflictCheck(payload.paths, file.path, payload.action || 'move');
+            }
+          } catch (err) {}
+        }
+      });
+    }
+
 
     row.addEventListener('click', (e) => {
       if (e.target.closest('.fm-act-btn') || file.name === '..') return;
@@ -794,6 +866,160 @@ async function handleAction(act, path, oldName) {
   }
 }
 
+export async function executeTransferWithConflictCheck(sources, destinationDir, action = 'copy') {
+  if (!sources || sources.length === 0) return;
+  const normDst = (destinationDir || '').replace(/\/+$/, '');
+  const validSources = sources.filter((s) => {
+    const normSrc = (s || '').replace(/\/+$/, '');
+    return normSrc !== normDst && !normDst.startsWith(normSrc + '/');
+  });
+
+  if (validSources.length === 0) {
+    showToast(t('fm.err_drop_into_self', 'Cannot move an item into itself or its own subfolder.'), 'warning');
+    return;
+  }
+
+  try {
+    const checkRes = await api.post('/api/fs/conflict-check', {
+      sources: validSources,
+      destination_dir: destinationDir,
+    });
+
+    if (!checkRes.has_conflict) {
+      const res = await api.post('/api/fs/transfer', {
+        sources: validSources,
+        destination_dir: destinationDir,
+        action,
+        collision_policy: 'merge',
+      });
+      const count = res.transferred != null ? res.transferred : validSources.length;
+      showToast(t('fm.transfer_success', `Successfully transferred ${count} item(s)`).replace('{count}', count), 'success');
+      loadPath(currentPath);
+      return;
+    }
+
+    showCollisionModal({
+      sources: validSources,
+      destinationDir,
+      action,
+      conflicts: checkRes.conflicts,
+      onResolved: () => {
+        loadPath(currentPath);
+      },
+    });
+  } catch (err) {
+    showToast(`Transfer failed: ${err.message}`, 'error');
+  }
+}
+
+export function showCollisionModal({ sources, destinationDir, action, conflicts, onResolved }) {
+  let modal = document.getElementById('modal-fm-collision');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'modal-fm-collision';
+    modal.className = 'modal-backdrop';
+    document.body.appendChild(modal);
+  }
+
+  const hasDir = conflicts && conflicts.some((c) => c.is_dir);
+
+  modal.innerHTML = `
+    <div class="modal-card glassmorphic-card" style="max-width: 520px; width: 90%; max-height: 85vh; display: flex; flex-direction: column; padding: 24px; border-radius: 14px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+        <h3 style="margin: 0; font-size: 16px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 8px;">
+          <span>⚠️</span> <span>${escapeHtml(t('fm.collision_title', 'File & Directory Conflict'))}</span>
+        </h3>
+        <button id="fm-collision-close" class="modal-close-btn" style="background: none; border: none; color: var(--muted); cursor: pointer; font-size: 18px;">✕</button>
+      </div>
+      <p style="font-size: 12px; color: var(--muted); margin: 0 0 12px 0;">
+        ${escapeHtml(t('fm.collision_desc', 'The following files or directories already exist at the destination:'))}
+      </p>
+      <div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 10px; max-height: 180px; overflow-y: auto; margin-bottom: 16px;">
+        ${(conflicts || [])
+          .map(
+            (c) => `
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 12px;">
+            <div style="display: flex; align-items: center; gap: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+              <span>${c.is_dir ? '📁' : '📄'}</span>
+              <span style="font-weight: 600; color: #fff;">${escapeHtml(c.name)}</span>
+            </div>
+            <span style="font-size: 10px; color: var(--muted);">${c.is_dir ? 'Directory' : formatBytes(c.dest_size || 0)}</span>
+          </div>
+        `
+          )
+          .join('')}
+      </div>
+      <div style="margin-bottom: 18px;">
+        <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); cursor: pointer;">
+          <input type="checkbox" id="fm-collision-apply-all" checked style="accent-color: var(--accent-cyan, #0ea5e9);" />
+          <span>${escapeHtml(t('fm.apply_all', 'Apply to all conflicts'))}</span>
+        </label>
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap;">
+        <button id="fm-collision-cancel" class="btn-secondary" style="padding: 7px 14px; font-size: 12px; border-radius: 6px; cursor: pointer;">Cancel</button>
+        <button id="fm-collision-skip" class="btn-secondary" style="padding: 7px 14px; font-size: 12px; border-radius: 6px; cursor: pointer;">${escapeHtml(t('fm.skip', 'Skip'))}</button>
+        ${
+          !hasDir
+            ? `
+          <button id="fm-collision-keep-both" class="btn-secondary" style="padding: 7px 14px; font-size: 12px; border-radius: 6px; cursor: pointer;">${escapeHtml(t('fm.keep_both', 'Keep Both'))}</button>
+        `
+            : ''
+        }
+        <button id="fm-collision-overwrite" class="btn-pill-toggle" style="padding: 7px 14px; font-size: 12px; border-radius: 6px; cursor: pointer; background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.4); color: #f87171;">${escapeHtml(t('fm.overwrite', 'Overwrite'))}</button>
+        ${
+          hasDir
+            ? `
+          <button id="fm-collision-merge" class="btn-primary" style="padding: 7px 16px; font-size: 12px; font-weight: 700; border-radius: 6px; cursor: pointer; background: var(--accent-cyan, #0ea5e9); color: #fff; border: none;">${escapeHtml(t('fm.merge', 'Merge'))}</button>
+        `
+            : ''
+        }
+      </div>
+    </div>
+  `;
+
+  const closeModal = () => {
+    modal.style.display = 'none';
+    modal.classList.remove('open');
+  };
+
+  const executeWithPolicy = async (policy) => {
+    closeModal();
+    try {
+      const res = await api.post('/api/fs/transfer', {
+        sources,
+        destination_dir: destinationDir,
+        action,
+        collision_policy: policy,
+      });
+      const count = res.transferred != null ? res.transferred : sources.length;
+      showToast(t('fm.transfer_success', `Successfully transferred ${count} item(s)`).replace('{count}', count), 'success');
+      if (typeof onResolved === 'function') onResolved();
+    } catch (err) {
+      showToast(`Transfer failed: ${err.message}`, 'error');
+    }
+  };
+
+  const btnClose = modal.querySelector('#fm-collision-close');
+  if (btnClose) btnClose.onclick = closeModal;
+
+  const btnCancel = modal.querySelector('#fm-collision-cancel');
+  if (btnCancel) btnCancel.onclick = closeModal;
+
+  const btnSkip = modal.querySelector('#fm-collision-skip');
+  if (btnSkip) btnSkip.onclick = () => executeWithPolicy('skip');
+
+  const btnOverwrite = modal.querySelector('#fm-collision-overwrite');
+  if (btnOverwrite) btnOverwrite.onclick = () => executeWithPolicy('overwrite');
+
+  const btnKeepBoth = modal.querySelector('#fm-collision-keep-both');
+  if (btnKeepBoth) btnKeepBoth.onclick = () => executeWithPolicy('keep_both');
+
+  const btnMerge = modal.querySelector('#fm-collision-merge');
+  if (btnMerge) btnMerge.onclick = () => executeWithPolicy('merge');
+
+  modal.style.display = 'flex';
+  modal.classList.add('open');
+}
 
 window.openFileManager = (path = null) => {
   ZettEventBus.emit('window:open', { id: 'file-manager-window', path: path || undefined });
@@ -810,3 +1036,159 @@ window.openRecycleBin = () => {
   }
   ZettEventBus.emit('window:open', { id: 'file-manager-window', path: target });
 };
+
+export function openMediaOrganizerModal(initialPath = '') {
+  const modal = document.getElementById('modal-media-organizer');
+  if (!modal) return;
+
+  const closeBtn = document.getElementById('modal-media-org-close-btn');
+  const cancelBtn = document.getElementById('modal-media-org-cancel-btn');
+  const srcInput = document.getElementById('media-org-source-input');
+  const dstInput = document.getElementById('media-org-dest-input');
+  const modeSelect = document.getElementById('media-org-mode-select');
+  const btnPreview = document.getElementById('btn-media-org-preview');
+  const btnApply = document.getElementById('btn-media-org-apply');
+  const previewWrap = document.getElementById('media-org-preview-wrap');
+
+  let previewItems = [];
+
+  function closeModal() {
+    modal.style.display = 'none';
+    modal.classList.remove('open');
+    if (btnApply) {
+      btnApply.disabled = true;
+      btnApply.style.opacity = '0.5';
+      btnApply.style.cursor = 'not-allowed';
+    }
+  }
+
+  if (closeBtn) closeBtn.onclick = closeModal;
+  if (cancelBtn) cancelBtn.onclick = closeModal;
+  modal.onclick = (e) => {
+    if (e.target === modal) closeModal();
+  };
+
+  if (srcInput && (!srcInput.value || initialPath)) {
+    srcInput.value = initialPath || '/mnt/user/downloads';
+  }
+  if (dstInput && !dstInput.value) {
+    dstInput.value = '/mnt/user/media';
+  }
+
+  if (btnPreview) {
+    btnPreview.onclick = async () => {
+      const source_dir = (srcInput?.value || '').trim();
+      const target_dir = (dstInput?.value || '').trim();
+      if (!source_dir || !target_dir) {
+        showToast('Please specify both source and destination folders.', 'warning');
+        return;
+      }
+
+      btnPreview.disabled = true;
+      btnPreview.innerHTML = '<span>⏳</span> <span>Analyzing...</span>';
+      if (previewWrap) {
+        previewWrap.innerHTML = '<div style="text-align:center; padding:25px; color:var(--muted); font-size:12px;"><div class="loader-spinner" style="margin:0 auto 10px;"></div>Parsing media files via regex heuristics...</div>';
+      }
+
+      try {
+        const res = await api.post('/api/media/organize/preview', { source_dir, target_dir });
+        const items = res.items || [];
+        previewItems = items;
+
+        if (items.length === 0) {
+          if (previewWrap) {
+            previewWrap.innerHTML = '<div style="text-align:center; padding:25px; color:var(--muted); font-size:12px;">No video files found in source folder.</div>';
+          }
+          if (btnApply) {
+            btnApply.disabled = true;
+            btnApply.style.opacity = '0.5';
+            btnApply.style.cursor = 'not-allowed';
+          }
+          return;
+        }
+
+        if (previewWrap) {
+          previewWrap.innerHTML = `
+            <div style="font-size:11px; padding:8px 12px; background:rgba(255,255,255,0.03); border-bottom:1px solid rgba(255,255,255,0.08); font-weight:700; color:var(--muted); display:flex; justify-content:space-between;">
+              <span>Detected ${items.length} file(s) for reorganization:</span>
+              <span>Plex / Jellyfin Schema</span>
+            </div>
+            <div style="display:flex; flex-direction:column;">
+              ${items.map((it) => {
+                const isTv = it.media_type === 'tv';
+                const typeBadge = isTv
+                  ? `<span class="ci-badge" style="font-size:9px; background:rgba(168,85,247,0.15); color:#c084fc; border:1px solid rgba(168,85,247,0.3); padding:1px 5px; border-radius:3px;">TV Show · S${String(it.season || 1).padStart(2, '0')}E${String(it.episode || 1).padStart(2, '0')}</span>`
+                  : `<span class="ci-badge" style="font-size:9px; background:rgba(14,165,233,0.15); color:#38bdf8; border:1px solid rgba(14,165,233,0.3); padding:1px 5px; border-radius:3px;">Movie ${it.year ? `(${it.year})` : ''}</span>`;
+                const qualBadge = `<span class="ci-badge" style="font-size:9px; background:rgba(255,255,255,0.06); color:#cbd5e1; padding:1px 5px; border-radius:3px;">${escapeHtml(it.resolution || '1080p')} · ${escapeHtml(it.codec || 'x264')}</span>`;
+
+                return `
+                  <div style="padding:8px 12px; border-bottom:1px solid rgba(255,255,255,0.04); display:flex; flex-direction:column; gap:4px; font-size:11px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                      <div style="font-weight:700; color:#fff; word-break:break-all;">${escapeHtml(it.title || it.original_filename)}</div>
+                      <div style="display:flex; gap:6px;">${typeBadge}${qualBadge}</div>
+                    </div>
+                    <div style="color:var(--muted); font-size:10px; font-family:monospace; display:flex; align-items:center; gap:6px;">
+                      <span style="color:#f87171; text-decoration:line-through;">${escapeHtml(it.original_filename)}</span>
+                      <span>➔</span>
+                      <span style="color:#4ade80;">${escapeHtml(it.proposed_relative_path)}</span>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          `;
+        }
+
+        if (btnApply) {
+          btnApply.disabled = false;
+          btnApply.style.opacity = '1';
+          btnApply.style.cursor = 'pointer';
+        }
+      } catch (err) {
+        showToast(`Preview failed: ${err.message}`, 'error');
+        if (previewWrap) {
+          previewWrap.innerHTML = `<div style="text-align:center; padding:25px; color:var(--alert, #ef4444); font-size:12px;">Failed: ${escapeHtml(err.message)}</div>`;
+        }
+      } finally {
+        btnPreview.disabled = false;
+        btnPreview.innerHTML = '🔍 <span>Scan & Preview Diff</span>';
+      }
+    };
+  }
+
+  if (btnApply) {
+    btnApply.onclick = async () => {
+      if (!previewItems || previewItems.length === 0) return;
+      const mode = modeSelect?.value || 'hardlink';
+      const action = mode === 'move' ? 'move' : 'copy';
+      const hardlink = mode === 'hardlink';
+
+      btnApply.disabled = true;
+      btnApply.innerHTML = '<span>⏳</span> <span>Organizing...</span>';
+
+      try {
+        const res = await api.post('/api/media/organize/apply', {
+          items: previewItems,
+          action,
+          hardlink,
+        });
+
+        const procCount = res.processed != null ? res.processed : previewItems.length;
+        showToast(t('media.success', `Media organization completed successfully (${procCount} files).`), 'success');
+        closeModal();
+        if (typeof loadPath === 'function') {
+          loadPath(srcInput?.value || initialPath);
+        }
+      } catch (err) {
+        showToast(`Failed to execute reorganization: ${err.message}`, 'error');
+      } finally {
+        btnApply.disabled = false;
+        btnApply.innerHTML = t('media.apply_btn', 'Execute Reorganization');
+      }
+    };
+  }
+
+  modal.style.display = 'flex';
+  modal.classList.add('open');
+}
+

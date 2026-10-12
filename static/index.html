@@ -194,11 +194,11 @@
   })();
 </script>
 <style>html,body{color:#eaf1f8;background-color:#080c10;width:100%;height:100%;margin:0;padding:0;overflow:hidden}html.auth-required body{background:radial-gradient(circle at 50% 20%,#151d29 0%,#080c10 70%)!important}#login-overlay{z-index:999999;background:#080c10;justify-content:center;align-items:center;display:flex;position:fixed;inset:0}html.has-auth-session #login-overlay{display:none!important}html.auth-required #login-overlay{display:flex!important}html.is-desktop-locked #lock-overlay{opacity:1!important;display:flex!important}html.is-desktop-locked body{overflow:hidden!important}html.auth-required .studio-viewport-wrapper,html.auth-required .suite-navbar,html.auth-required #desktop-icons-container,html.auth-required .desktop-icons-container,html.auth-required .top-nav,html.auth-required #desktop-widgets-container,html.auth-required #os-dock-container,html.auth-required .workspace-panel,html.auth-required .smart-modal-backdrop,html.auth-required .os-window,html.auth-required .notif-center-window{display:none!important}</style>
-  <script type="module" crossorigin src="/assets/index-C6XBAmfe.js"></script>
+  <script type="module" crossorigin src="/assets/index-D7fYmybe.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-hePW80VL.js">
-  <link rel="modulepreload" crossorigin href="/assets/dock-stkaGj5I.js">
-  <link rel="modulepreload" crossorigin href="/assets/users-CvQ00KFl.js">
-  <link rel="stylesheet" crossorigin href="/assets/index-BxGEGn11.css">
+  <link rel="modulepreload" crossorigin href="/assets/dock-BCvNEONi.js">
+  <link rel="modulepreload" crossorigin href="/assets/users-DtpX-kCt.js">
+  <link rel="stylesheet" crossorigin href="/assets/index-DwpYt3qv.css">
 </head>
 <body class="studio-workbench no-specular-glow">
 
@@ -472,6 +472,12 @@
       <polyline points="17 8 12 3 7 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       <line x1="12" y1="3" x2="12" y2="15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
     </symbol>
+    <symbol id="i-vm" viewBox="0 0 24 24">
+      <rect x="2" y="3" width="20" height="14" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2"/>
+      <line x1="8" y1="21" x2="16" y2="21" stroke="currentColor" stroke-width="2"/>
+      <line x1="12" y1="17" x2="12" y2="21" stroke="currentColor" stroke-width="2"/>
+      <path d="M7 8h2v2H7zM15 8h2v2h-2z" fill="currentColor"/>
+    </symbol>
   </defs>
 </svg>
 
@@ -729,6 +735,16 @@
         <div class="desktop-icon-label">
           <span class="icon-dot-status icon-dot-mgmt"></span>
           <span class="icon-text" data-i18n="dock.management">Mission Control</span>
+        </div>
+      </div>
+
+      <div class="chassis-hero-box chassis-desktop-icon vm-desktop-icon" id="vm-desktop-icon" role="button" tabindex="0" title="Click to open Virtual Machines" data-i18n-title="dock.vm_manager">
+        <div class="console-hero-box">
+          <svg class="console-hero-icon"><use href="#i-vm"/></svg>
+        </div>
+        <div class="desktop-icon-label">
+          <span class="icon-dot-status icon-dot-vm"></span>
+          <span class="icon-text" data-i18n="dock.vm_manager">Virtual Machines</span>
         </div>
       </div>
 
@@ -3811,9 +3827,16 @@
                         <span style="color:var(--muted);">Node Hostname:</span>
                         <span id="ts-hostname-display" style="font-weight:600; color:#fff;">--</span>
                       </div>
-                      <div style="display:flex; justify-content:space-between; align-items:center;">
+                      <div style="display:flex; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:6px;">
                         <span style="color:var(--muted);">Connected Mesh Peers:</span>
                         <span id="ts-peers-display" style="font-weight:700; color:var(--accent-cyan, #38bdf8);">0 peers</span>
+                      </div>
+                      <div style="display:flex; justify-content:space-between; align-items:center;" id="ts-key-expiry-row">
+                        <span style="color:var(--muted);" data-i18n="net.tailscale_key_expiry">Node Key Expiry:</span>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                          <span id="ts-key-expiry-display" style="font-weight:600; color:var(--ok2, #3bf58b); font-size:11px;">--</span>
+                          <button class="btn-pill-toggle" id="btn-ts-reauth" style="font-size:10px; padding:2px 8px; display:none;" title="Re-authenticate node key" data-i18n="net.tailscale_reauth_btn">⚡ Re-auth</button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -3881,15 +3904,142 @@
                       </div>
 
                       <!-- Connected State View -->
-                      <div id="ts-connected-view" style="display:none; flex-direction:column; gap:8px;">
+                      <div id="ts-connected-view" style="display:none; flex-direction:column; gap:10px;">
                         <div style="display:flex; align-items:center; gap:8px; color:var(--ok2, #3bf58b); font-weight:700; font-size:13px;">
                           <span>✓ Node Active on Tailnet</span>
                         </div>
-                        <div style="color:var(--text-sub); font-size:12px; line-height:1.5;">
+                        <div style="color:var(--text-sub); font-size:11.5px; line-height:1.4;">
                           This appliance is securely connected to your Tailscale mesh network. Traffic routed to this machine is end-to-end encrypted with WireGuard primitives.
+                        </div>
+
+                        <!-- Subnet Router Gateway (Capability 1) -->
+                        <div style="border-top:1px solid rgba(255,255,255,0.08); padding-top:8px; display:flex; flex-direction:column; gap:6px;">
+                          <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <label style="display:flex; align-items:center; gap:6px; font-weight:700; font-size:11.5px; color:#fff; cursor:pointer;">
+                              <input type="checkbox" id="ts-subnet-router-toggle" style="accent-color:var(--accent-cyan, #38bdf8);" />
+                              <span data-i18n="net.tailscale_subnet_router">Subnet Router Gateway (--advertise-routes)</span>
+                            </label>
+                            <button class="btn-pill-toggle" id="btn-ts-save-routes" style="font-size:10px; padding:2px 8px;" data-i18n="net.tailscale_save_routes">Save Subnets</button>
+                          </div>
+                          <div style="font-size:10.5px; color:var(--text-sub); line-height:1.3;" data-i18n="net.tailscale_subnet_desc">
+                            Advertise local LAN subnets to access devices remotely without per-device clients.
+                          </div>
+                          <input type="text" id="ts-subnet-routes-input" class="tz-select-input" placeholder="e.g. 10.40.30.0/24" style="border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:4px 8px; color:#fff; border-radius:5px; font-size:11px; font-family:monospace;" />
+                        </div>
+
+                        <!-- Exit Node Gateway (Capability 2) -->
+                        <div style="border-top:1px solid rgba(255,255,255,0.08); padding-top:8px; display:flex; flex-direction:column; gap:4px;">
+                          <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <label style="display:flex; align-items:center; gap:6px; font-weight:700; font-size:11.5px; color:#fff; cursor:pointer;">
+                              <input type="checkbox" id="ts-exit-node-toggle" style="accent-color:var(--accent-cyan, #38bdf8);" />
+                              <span data-i18n="net.tailscale_exit_node">Exit Node Gateway (--advertise-exit-node)</span>
+                            </label>
+                            <span class="mgmt-app-pill" id="ts-exit-node-pill" style="font-size:9.5px; padding:2px 7px;">Inactive</span>
+                          </div>
+                          <div style="font-size:10.5px; color:var(--text-sub); line-height:1.3;" data-i18n="net.tailscale_exit_desc">
+                            Route all mobile/laptop internet traffic encrypted through this NAS when traveling.
+                          </div>
+                        </div>
+
+                        <!-- Tailscale SSH (Capability 3) -->
+                        <div style="border-top:1px solid rgba(255,255,255,0.08); padding-top:8px; display:flex; flex-direction:column; gap:4px;">
+                          <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <label style="display:flex; align-items:center; gap:6px; font-weight:700; font-size:11.5px; color:#fff; cursor:pointer;">
+                              <input type="checkbox" id="ts-ssh-toggle" style="accent-color:var(--accent-cyan, #38bdf8);" />
+                              <span data-i18n="net.tailscale_ssh">Tailscale SSH (--ssh)</span>
+                            </label>
+                            <span class="mgmt-app-pill" id="ts-ssh-pill" style="font-size:9.5px; padding:2px 7px;">Disabled</span>
+                          </div>
+                          <div style="font-size:10.5px; color:var(--text-sub); line-height:1.3;" data-i18n="net.tailscale_ssh_desc">
+                            Authenticate SSH connections via Tailnet identity without passwords or SSH keys.
+                          </div>
                         </div>
                       </div>
                     </div>
+                  </div>
+                </div>
+
+                <!-- Extended Capabilities Row 2: Serve/Funnel & Taildrop (Capabilities 4 & 5) -->
+                <div class="network-grid-two-col" id="network-tailscale-extended" style="margin-bottom: 24px; display: none;">
+                  <!-- Tailscale Serve & Funnel Card -->
+                  <div class="network-card" id="tailscale-serve-card">
+                    <div class="network-card-header">
+                      <div class="network-card-title"><svg class="ic" style="width:14px; height:14px;"><use href="#i-shield"/></svg> <span data-i18n="net.tailscale_serve">Tailscale Serve & Funnel (Instant TLS)</span></div>
+                      <span class="mgmt-app-pill" id="ts-serve-pill" style="font-size:10px; padding:2px 8px;">Disabled</span>
+                    </div>
+                    <div style="padding:12px; font-size:12px; display:flex; flex-direction:column; gap:8px;">
+                      <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <label style="display:flex; align-items:center; gap:6px; font-weight:700; color:#fff; cursor:pointer;">
+                          <input type="checkbox" id="ts-serve-toggle" style="accent-color:var(--accent-cyan, #38bdf8);" />
+                          <span data-i18n="net.tailscale_enable_serve">Enable HTTPS on Tailnet (tailscale serve)</span>
+                        </label>
+                      </div>
+                      <div style="font-size:11px; color:var(--text-sub); line-height:1.4;" data-i18n="net.tailscale_serve_desc">
+                        Generates automatic Let's Encrypt TLS certificates for your Tailnet domain and proxies directly to the ZettNAS desktop port 8082 without browser warnings.
+                      </div>
+                      <div id="ts-serve-url-box" style="display:none; padding:8px 10px; background:rgba(56,189,248,0.08); border:1px solid rgba(56,189,248,0.2); border-radius:6px; font-size:11.5px; justify-content:space-between; align-items:center;">
+                        <span style="color:var(--muted); font-size:11px;">Direct HTTPS URL:</span>
+                        <a id="ts-serve-url-link" href="#" target="_blank" rel="noopener noreferrer" style="color:#38bdf8; font-weight:600; text-decoration:underline;">https://--</a>
+                      </div>
+                      <div style="border-top:1px solid rgba(255,255,255,0.06); padding-top:8px; display:flex; justify-content:space-between; align-items:center;">
+                        <label style="display:flex; align-items:center; gap:6px; font-weight:600; font-size:11.5px; color:#f87171; cursor:pointer;">
+                          <input type="checkbox" id="ts-funnel-toggle" style="accent-color:#ef4444;" />
+                          <span data-i18n="net.tailscale_funnel">Enable Public Internet Funnel</span>
+                        </label>
+                        <span class="mgmt-app-pill" id="ts-funnel-pill" style="font-size:9.5px; padding:2px 7px; color:var(--muted);">Off</span>
+                      </div>
+                      <div style="font-size:10.5px; color:var(--muted); line-height:1.3;" data-i18n="net.tailscale_funnel_desc">
+                        Exposes the desktop securely to the public internet via Tailscale relay edge without port forwarding or dynamic DNS.
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Taildrop Inbox Card -->
+                  <div class="network-card" id="tailscale-taildrop-card">
+                    <div class="network-card-header">
+                      <div class="network-card-title"><svg class="ic" style="width:14px; height:14px;"><use href="#i-download"/></svg> <span data-i18n="net.tailscale_taildrop">Taildrop Inbox (Zero-Trust AirDrop)</span></div>
+                      <div style="display:flex; align-items:center; gap:6px;">
+                        <span class="mgmt-app-pill" id="ts-taildrop-badge" style="font-size:10px; padding:2px 8px;">0 files</span>
+                        <button class="btn-pill-toggle" id="btn-ts-taildrop-fetch" style="font-size:10px; padding:2px 7px;" title="Fetch pending files from Taildrop queue" data-i18n="net.tailscale_taildrop_fetch">📥 Fetch</button>
+                        <button class="btn-pill-toggle" id="btn-ts-taildrop-open" style="font-size:10px; padding:2px 7px;" title="Open Taildrop folder in Files app" data-i18n="net.tailscale_taildrop_open">📂 Files</button>
+                      </div>
+                    </div>
+                    <div style="padding:12px; font-size:12px; display:flex; flex-direction:column; gap:8px;">
+                      <div style="font-size:11px; color:var(--text-sub); line-height:1.3;" data-i18n="net.tailscale_taildrop_desc">
+                        Encrypted peer-to-peer file transfer from iPhones, Macs, Androids, and PCs directly to your NAS. Received files are saved in <code>/mnt/user/appdata/tailscale/taildrop</code>.
+                      </div>
+                      <div id="ts-taildrop-list" style="max-height:120px; overflow-y:auto; border:1px solid rgba(255,255,255,0.06); border-radius:6px; background:rgba(0,0,0,0.25); padding:6px;">
+                        <div style="color:var(--muted); font-size:11px; text-align:center; padding:12px 0;" data-i18n="net.tailscale_taildrop_empty">No files in Taildrop inbox yet.</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Extended Capabilities Row 3: Interactive Mesh Peer Directory (Capability 6) -->
+                <div class="network-card" id="tailscale-peers-card" style="margin-bottom: 24px; display: none;">
+                  <div class="network-card-header" style="flex-wrap:wrap; gap:8px;">
+                    <div class="network-card-title"><svg class="ic" style="width:14px; height:14px;"><use href="#i-server"/></svg> <span data-i18n="net.tailscale_peers_title">Interactive Mesh Peer Directory & Latency Ping</span></div>
+                    <div style="display:flex; align-items:center; gap:8px; margin-left:auto;">
+                      <input type="text" id="ts-peer-search" placeholder="Search peers by name, IP, or OS..." class="tz-select-input" style="font-size:11px; padding:3px 8px; width:220px; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); color:#fff; border-radius:5px;" />
+                      <span class="mgmt-app-pill" id="ts-peer-count-pill" style="font-size:10.5px; padding:3px 10px; background:rgba(56,189,248,0.12); color:#38bdf8;">0 peers</span>
+                    </div>
+                  </div>
+                  <div style="padding:0; overflow-x:auto;">
+                    <table class="tz-data-table" style="width:100%; border-collapse:collapse; font-size:12px;" id="ts-peers-table">
+                      <thead>
+                        <tr style="border-bottom:1px solid rgba(255,255,255,0.08); text-align:left; color:var(--muted); font-size:11px; text-transform:uppercase;">
+                          <th style="padding:8px 12px;">Peer / Device</th>
+                          <th style="padding:8px 12px;">OS Platform</th>
+                          <th style="padding:8px 12px;">Tailscale IP</th>
+                          <th style="padding:8px 12px;">Connection Route</th>
+                          <th style="padding:8px 12px;">Status</th>
+                          <th style="padding:8px 12px; text-align:right;">Latency Ping</th>
+                        </tr>
+                      </thead>
+                      <tbody id="ts-peers-table-body">
+                        <tr><td colspan="6" style="text-align:center; padding:16px; color:var(--muted);">No peers detected.</td></tr>
+                      </tbody>
+                    </table>
                   </div>
                 </div>
 
@@ -4653,6 +4803,26 @@
           </div>
           <div id="sec-default-pwd-warning" style="display:none; margin: 12px 0; padding: 12px 14px; background: rgba(235,87,87,0.18); border: 1px solid rgba(235,87,87,0.5); border-radius: 8px; color: #ff6b6b; font-size: 11.5px; font-weight: 600; line-height: 1.45;" data-i18n="mgmt.sec_default_warning">
             ⚠️ DEFAULT PASSWORD ACTIVE: Your server is using the default password ("admin"). Please set a custom password below immediately.
+          </div>
+          <div id="sec-advisor-card" style="margin: 12px 0; padding: 14px; background: rgba(15,23,42,0.65); border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; display: flex; flex-direction: column; gap: 10px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-size: 12px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 6px;">
+                <svg class="ic" style="width: 14px; height: 14px; color: var(--accent-cyan);"><use href="#i-chip"/></svg>
+                <span data-i18n="sec.advisor_title">Security Advisor Hardening Checklist</span>
+              </span>
+              <span id="sec-advisor-score-badge" class="ci-badge" style="background: rgba(37,194,160,0.15); color: #25c2a0; border: 1px solid rgba(37,194,160,0.3); font-size: 10px; font-weight: 700;">Score: 100/100</span>
+            </div>
+            <div id="sec-advisor-items" style="display: flex; flex-direction: column; gap: 6px; font-size: 11px;">
+              <!-- Dynamic checklist items -->
+            </div>
+            <div id="sec-disable-admin-container" style="display: none; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.08);">
+              <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <span style="font-size: 11px; color: var(--muted);" data-i18n="sec.disable_admin_desc">Retire the default 'admin' account to harden system against automated brute-force attacks.</span>
+                <button type="button" id="btn-disable-default-admin" class="btn-pill-toggle" style="background: rgba(239,68,68,0.2); border-color: rgba(239,68,68,0.5); color: #f87171; white-space: nowrap; font-size: 11px; padding: 5px 12px; cursor: pointer; border-radius: 4px; font-weight: 600;">
+                  🔒 <span data-i18n="sec.disable_admin_btn">Disable Default Admin</span>
+                </button>
+              </div>
+            </div>
           </div>
           <div class="mgmt-detail-body">
             <div style="display:flex; flex-direction:column; gap: 14px;">

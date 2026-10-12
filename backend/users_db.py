@@ -523,6 +523,20 @@ def update_user_password(user_id: str, new_password: str, db_path: Optional[str]
     return res.rowcount > 0
 
 
+def assert_remaining_superadmin_guard(
+    conn: sqlite3.Connection, target_user_id: str, action: str = "disable, demote, or delete"
+) -> None:
+    """Ensures at least one OTHER active SuperAdmin exists before mutating or deleting target_user_id."""
+    row = conn.execute("SELECT role_id, status FROM users WHERE id = ?", (target_user_id,)).fetchone()
+    if row and row["role_id"] == "superadmin" and row["status"] == "active":
+        other_admins = conn.execute(
+            "SELECT COUNT(*) AS c FROM users WHERE role_id = 'superadmin' AND status = 'active' AND id != ?",
+            (target_user_id,),
+        ).fetchone()["c"]
+        if other_admins < 1:
+            raise ValueError(f"Cannot {action} the only active SuperAdmin.")
+
+
 def update_user_profile(
     user_id: str,
     display_name: Optional[str] = None,
@@ -535,6 +549,11 @@ def update_user_profile(
 ) -> bool:
     now = time.time()
     with users_db_session(db_path) as conn:
+        if status is not None and status != "active":
+            assert_remaining_superadmin_guard(conn, user_id, action="disable")
+        elif role_id is not None and role_id != "superadmin":
+            assert_remaining_superadmin_guard(conn, user_id, action="demote")
+
         updates = ["updated_at = ?"]
         params: List[Any] = [now]
 
@@ -559,6 +578,10 @@ def update_user_profile(
 
         params.append(user_id)
         res = conn.execute(f"UPDATE users SET {', '.join(updates)} WHERE id = ?", params)
+        if status is not None and status != "active":
+            conn.execute("DELETE FROM sessions WHERE user_id = ?", (user_id,))
+            with _SESSION_CACHE_LOCK:
+                _SESSION_CACHE.clear()
         return res.rowcount > 0
 
 
@@ -568,15 +591,62 @@ def delete_user(user_id: str, db_path: Optional[str] = None) -> bool:
         user = conn.execute("SELECT role_id FROM users WHERE id = ?", (user_id,)).fetchone()
         if not user:
             return False
-        if user["role_id"] == "superadmin":
-            admin_count = conn.execute(
-                "SELECT COUNT(*) AS c FROM users WHERE role_id = 'superadmin' AND status = 'active'"
-            ).fetchone()["c"]
-            if admin_count <= 1:
-                raise ValueError("Cannot delete the only active SuperAdmin account.")
+        assert_remaining_superadmin_guard(conn, user_id, action="delete")
 
         conn.execute("DELETE FROM users WHERE id = ?", (user_id,))
+        with _SESSION_CACHE_LOCK:
+            _SESSION_CACHE.clear()
         return True
+
+
+def disable_admin_user(admin_identifier: str = "admin", db_path: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Safely disables the default admin account:
+    1. Verifies another active SuperAdmin exists (fails fast if invariant violated).
+    2. Sets status = 'disabled'.
+    3. Revokes all active sessions for admin in SQLite, memory cache, and auth.py SESSIONS.
+    4. Logs structured security audit event.
+    """
+    with users_db_session(db_path) as conn:
+        admin = conn.execute(
+            "SELECT * FROM users WHERE username = ? COLLATE NOCASE OR id = ?",
+            (admin_identifier, admin_identifier),
+        ).fetchone()
+        if not admin:
+            raise ValueError(f"Admin account '{admin_identifier}' not found.")
+
+        admin_id = admin["id"]
+        assert_remaining_superadmin_guard(conn, admin_id, action="disable")
+
+        now = time.time()
+        conn.execute("UPDATE users SET status = 'disabled', updated_at = ? WHERE id = ?", (now, admin_id))
+        conn.execute("DELETE FROM sessions WHERE user_id = ?", (admin_id,))
+
+    with _SESSION_CACHE_LOCK:
+        keys_to_remove = [k for k, v in _SESSION_CACHE.items() if v.get("user_id") == admin_id]
+        for k in keys_to_remove:
+            _SESSION_CACHE.pop(k, None)
+
+    try:
+        from backend.auth import SESSIONS, _save_sessions, _sessions_lock
+
+        with _sessions_lock:
+            legacy_keys = [k for k, v in SESSIONS.items() if v.get("user") == admin["username"]]
+            for k in legacy_keys:
+                del SESSIONS[k]
+            _save_sessions()
+    except Exception as e:
+        logger.warning(f"Could not purge legacy sessions for disabled admin: {e}")
+
+    log_security_event(
+        "admin.account.disabled",
+        "success",
+        actor_id=admin_id,
+        actor_username=admin["username"],
+        details={"guardrail_validated": True, "action": "disable_default_admin"},
+        db_path=db_path,
+    )
+    return {"status": "ok", "user_id": admin_id, "username": admin["username"], "disabled": True}
 
 
 def record_successful_login(user_id: str, ip: str, db_path: Optional[str] = None) -> None:

@@ -716,3 +716,55 @@ def test_tier3_api_endpoints(client, token):
         r_v3 = client.delete("/api/network/vlan/eth0.20", headers=headers)
         assert r_v3.status_code == 200
         assert r_v3.json()["status"] == "ok"
+
+
+def test_read_network_rates_combined_and_interfaces(tmp_path):
+    from backend.hardware.network import read_network_rates
+    from backend.state import Z_STATE
+
+    proc_net = tmp_path / "proc_net"
+    proc_net.mkdir(parents=True, exist_ok=True)
+    dev_file = proc_net / "dev"
+
+    # Simulate 2 physical NICs: eth0 and eth1
+    content_t1 = (
+        "Inter-|   Receive                                                |  Transmit\n"
+        " face |bytes    packets errs drop fifo frame compressed multicast|bytes    packets errs drop fifo colls carrier compressed\n"
+        "  lo: 1000       10    0    0    0     0          0         0     1000       10    0    0    0     0       0          0\n"
+        "eth0: 1000000    50    0    0    0     0          0         0  2000000       60    0    0    0     0       0          0\n"
+        "eth1: 5000000    80    0    0    0     0          0         0  4000000       90    0    0    0     0       0          0\n"
+        "veth123: 500      5    0    0    0     0          0         0      500        5    0    0    0     0       0          0\n"
+    )
+    dev_file.write_text(content_t1)
+
+    with patch("backend.hardware.network._find_proc_net_path", return_value=str(dev_file)):
+        # Sample 1
+        res1 = read_network_rates()
+        assert res1["iface"] == "combined"
+        assert "interfaces" in res1
+        assert "eth0" in res1["interfaces"]
+        assert "eth1" in res1["interfaces"]
+        assert "lo" not in res1["interfaces"]
+        assert "veth123" not in res1["interfaces"]
+
+        # Advance counters (Sample 2)
+        content_t2 = (
+            "Inter-|   Receive                                                |  Transmit\n"
+            " face |bytes    packets errs drop fifo frame compressed multicast|bytes    packets errs drop fifo colls carrier compressed\n"
+            "  lo: 1000       10    0    0    0     0          0         0     1000       10    0    0    0     0       0          0\n"
+            "eth0: 2048576    60    0    0    0     0          0         0  3048576       70    0    0    0     0       0          0\n"
+            "eth1: 7097152    90    0    0    0     0          0         0  6097152      100    0    0    0     0       0          0\n"
+        )
+        dev_file.write_text(content_t2)
+
+        res2 = read_network_rates()
+        assert res2["iface"] == "combined"
+        # Total combined bytes must equal sum of eth0 and eth1
+        assert res2["rx_bytes"] == 2048576 + 7097152
+        assert res2["tx_bytes"] == 3048576 + 6097152
+        assert res2["rx_rate"] > 0
+        assert res2["tx_rate"] > 0
+        assert res2["interfaces"]["eth0"]["rx_bytes"] == 2048576
+        assert res2["interfaces"]["eth1"]["rx_bytes"] == 7097152
+        assert res2["interfaces"]["eth0"]["is_physical"] is True
+        assert res2["interfaces"]["eth1"]["is_physical"] is True

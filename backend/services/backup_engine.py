@@ -289,6 +289,26 @@ def execute_backup_job(job_id: str) -> Dict[str, Any]:
         history_record["completed_at"] = time.time()
         history_record["status"] = "success"
         record_backup_history(history_record)
+
+        # Dispatch multi-channel notification
+        if job.get("notify", True):
+            try:
+                from backend.services.notifications import send_notification
+
+                dest_desc = f" -> {dest_target}" if (dest_type == "remote" and remote_name) else ""
+                send_notification(
+                    {
+                        "type": "backup",
+                        "title": f"Hyper-Backup Succeeded: {job.get('name', job_id)}",
+                        "message": f"Backup job '{job.get('name', job_id)}' completed successfully{dest_desc}."
+                        + (f" Snapshot: {snap_name}" if snap_name else ""),
+                        "level": "info",
+                        "meta": {"job_id": job_id, "snapshot": snap_name, "pool": pool_id},
+                    }
+                )
+            except Exception as notify_err:
+                logger.debug(f"[HYPER-BACKUP] Notification dispatch error: {notify_err}")
+
         return history_record
 
     except Exception as e:
@@ -302,6 +322,23 @@ def execute_backup_job(job_id: str) -> Dict[str, Any]:
         history_record["status"] = "error"
         history_record["error"] = str(e)
         record_backup_history(history_record)
+
+        if job.get("notify", True):
+            try:
+                from backend.services.notifications import send_notification
+
+                send_notification(
+                    {
+                        "type": "backup",
+                        "title": f"Hyper-Backup Failed: {job.get('name', job_id)}",
+                        "message": f"Backup job '{job.get('name', job_id)}' failed: {str(e)}",
+                        "level": "error",
+                        "meta": {"job_id": job_id, "error": str(e), "pool": pool_id},
+                    }
+                )
+            except Exception as notify_err:
+                logger.debug(f"[HYPER-BACKUP] Failure notification dispatch error: {notify_err}")
+
         return history_record
 
 
