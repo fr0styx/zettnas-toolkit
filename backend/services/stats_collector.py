@@ -394,9 +394,14 @@ def stats_collector_daemon():
             )
 
             if cfg.get("reactive", True):
+                if not ctrl_cpu_fan:
+                    Z_STATE.known_active_fans.discard(2)
+
                 stalled_fans = []
                 for i in Z_STATE.known_active_fans:
                     if i >= len(fans):
+                        continue
+                    if i == 2 and not ctrl_cpu_fan:
                         continue
                     rpm = fans[i]
                     if rpm == 0:

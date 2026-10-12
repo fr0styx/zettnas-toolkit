@@ -339,6 +339,21 @@
       <button id="lock-unlock-btn" style="position: absolute; right: 6px; top: 6px; bottom: 6px; width: 32px; background: var(--ok2, #25c2a0); border: none; border-radius: 6px; color: #fff; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center;">➔</button>
     </div>
 
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; font-size: 11.5px; color: var(--muted); padding: 0 2px;">
+      <label for="lock-timeout-select" style="cursor: pointer; display: flex; align-items: center; gap: 5px; user-select: none;">
+        <span>⏱️</span>
+        <span data-i18n="lock.stay_unlocked">Auto-lock after:</span>
+      </label>
+      <select id="lock-timeout-select" class="tz-select-input" style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.18); color: #fff; border-radius: 6px; padding: 4px 8px; font-size: 11px; cursor: pointer; outline: none;">
+        <option value="900000" data-i18n="lock.timeout_15m">15 minutes</option>
+        <option value="3600000" data-i18n="lock.timeout_1h">1 hour</option>
+        <option value="14400000" selected data-i18n="lock.timeout_4h">4 hours (Standard)</option>
+        <option value="86400000" data-i18n="lock.timeout_24h">24 hours (1 day)</option>
+        <option value="604800000" data-i18n="lock.timeout_7d">7 days (Stay unlocked)</option>
+        <option value="0" data-i18n="lock.timeout_never">Never (Always unlocked)</option>
+      </select>
+    </div>
+
     <div id="lock-error" style="display: none; font-size: 11.5px; color: var(--crit, #ff6b6b); margin-bottom: 12px;">Incorrect password</div>
 
     <button id="lock-switch-btn" style="background: transparent; border: none; color: var(--muted); font-size: 12px; cursor: pointer; text-decoration: underline;">Switch Account</button>

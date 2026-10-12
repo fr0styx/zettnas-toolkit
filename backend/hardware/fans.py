@@ -61,9 +61,18 @@ def read_fans():
         if fans[i] >= 6000:
             fans[i] = 0
 
+    global _fan_presence_counter
+    if "_fan_presence_counter" not in globals():
+        _fan_presence_counter = {}
+
     for idx, rpm in enumerate(fans):
         if rpm > 300:
-            Z_STATE.known_active_fans.add(idx)
+            _fan_presence_counter[idx] = _fan_presence_counter.get(idx, 0) + 1
+            if _fan_presence_counter[idx] >= 3:
+                Z_STATE.known_active_fans.add(idx)
+        else:
+            if idx not in Z_STATE.known_active_fans:
+                _fan_presence_counter[idx] = 0
     return fans
 
 

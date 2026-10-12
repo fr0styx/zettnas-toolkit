@@ -14,7 +14,7 @@ let _autoLockTimer = null;
 let _isLocked = false;
 let _clockInterval = null;
 
-const DEFAULT_IDLE_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes default
+const DEFAULT_IDLE_TIMEOUT_MS = 4 * 60 * 60 * 1000; // 4 hours default (can be set to Never / 7d in UI)
 
 export function isDesktopLocked() {
   return _isLocked;
@@ -500,6 +500,7 @@ export function initLockOverlay() {
   const unlockBtn = document.getElementById('lock-unlock-btn');
   const unlockPwd = document.getElementById('lock-password');
   const switchBtn = document.getElementById('lock-switch-btn');
+  const timeoutSelect = document.getElementById('lock-timeout-select');
 
   if (unlockBtn) unlockBtn.addEventListener('click', unlockDesktop);
   if (unlockPwd) {
@@ -509,6 +510,22 @@ export function initLockOverlay() {
   }
   if (switchBtn) {
     switchBtn.addEventListener('click', switchUser);
+  }
+
+  if (timeoutSelect) {
+    const cur = localStorage.getItem('zettnas_auto_lock_timeout_ms') || String(DEFAULT_IDLE_TIMEOUT_MS);
+    timeoutSelect.value = cur;
+    timeoutSelect.addEventListener('change', () => {
+      const val = timeoutSelect.value;
+      localStorage.setItem('zettnas_auto_lock_timeout_ms', val);
+      resetInactivityTimer();
+      window.fetch('/api/system/client-preferences', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ auto_lock_timeout_ms: parseInt(val, 10) }),
+        credentials: 'include'
+      }).catch(() => {});
+    });
   }
 
   // Global hotkey: Cmd+L or Ctrl+L to lock screen
@@ -543,6 +560,10 @@ export function lockDesktop() {
 
   const pwdInput = document.getElementById('lock-password');
   const errorEl = document.getElementById('lock-error');
+  const timeoutSelect = document.getElementById('lock-timeout-select');
+  if (timeoutSelect) {
+    timeoutSelect.value = localStorage.getItem('zettnas_auto_lock_timeout_ms') || String(DEFAULT_IDLE_TIMEOUT_MS);
+  }
   if (errorEl) errorEl.style.display = 'none';
   if (pwdInput) {
     pwdInput.value = '';
@@ -593,6 +614,10 @@ export async function unlockDesktop() {
         }, 250);
       }
 
+      const timeoutSelect = document.getElementById('lock-timeout-select');
+      if (timeoutSelect) {
+        localStorage.setItem('zettnas_auto_lock_timeout_ms', timeoutSelect.value);
+      }
       pwdInput.value = '';
       resetInactivityTimer();
       ZettEventBus.emit('auth:unlocked');
