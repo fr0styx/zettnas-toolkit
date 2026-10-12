@@ -168,13 +168,22 @@ def test_get_server_hostname_suppresses_container_id(monkeypatch, tmp_path):
 
     monkeypatch.setattr(socket, "gethostname", lambda: "425dae47b7b9")
 
-    # Mock docker socket not found
+    # Mock docker socket and host hostname files not found
     import os
 
     real_exists = os.path.exists
 
     def mock_exists(p):
-        if p == "/var/run/docker.sock":
+        if p in (
+            "/var/run/docker.sock",
+            "/host/etc/hostname",
+            "/etc/hostname",
+            "/boot/config/ident.cfg",
+            "/host/boot/config/ident.cfg",
+            "/var/local/emhttp/var.ini",
+            "/host/var/local/emhttp/var.ini",
+            "/etc/unraid-ident.cfg",
+        ):
             return False
         return real_exists(p)
 
@@ -200,7 +209,7 @@ def test_get_server_hostname_unraid_ident(monkeypatch, tmp_path):
     def mock_exists(p):
         if p == "/boot/config/ident.cfg":
             return True
-        if p == "/var/run/docker.sock":
+        if p in ("/var/run/docker.sock", "/host/etc/hostname", "/etc/hostname"):
             return False
         return real_exists(p)
 

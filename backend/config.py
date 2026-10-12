@@ -183,20 +183,7 @@ def get_server_hostname() -> str:
         _cached_server_hostname_ts = now
         return env_name
 
-    # 2. Host /etc/hostname
-    for h_path in ("/host/etc/hostname", "/etc/hostname"):
-        try:
-            if os.path.exists(h_path):
-                with open(h_path, "r", encoding="utf-8") as f:
-                    content = f.read().strip()
-                    if content and not _is_container_id(content):
-                        _cached_server_hostname = content
-                        _cached_server_hostname_ts = now
-                        return content
-        except OSError:
-            pass
-
-    # 3. Unraid ident files
+    # 2. Unraid ident files (primary appliance NAS identity)
     unraid_paths = (
         "/boot/config/ident.cfg",
         "/host/boot/config/ident.cfg",
@@ -216,6 +203,19 @@ def get_server_hostname() -> str:
                                 _cached_server_hostname = parsed
                                 _cached_server_hostname_ts = now
                                 return parsed
+        except OSError:
+            pass
+
+    # 3. Host /etc/hostname (/host/etc/hostname or /etc/hostname)
+    for h_path in ("/host/etc/hostname", "/etc/hostname"):
+        try:
+            if os.path.exists(h_path):
+                with open(h_path, "r", encoding="utf-8") as f:
+                    content = f.read().strip()
+                    if content and not _is_container_id(content):
+                        _cached_server_hostname = content
+                        _cached_server_hostname_ts = now
+                        return content
         except OSError:
             pass
 
