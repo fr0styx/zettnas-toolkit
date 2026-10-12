@@ -1558,6 +1558,12 @@ export function showDockItemContextMenu(x, y, id, title, isPinned, isRunning) {
       <span style="font-size:12px; margin-right:6px;">${pinIcon}</span>
       <span>${escapeHtml(pinLabel)}</span>
     </div>
+    ${(id === 'fm' || (id && id.startsWith('fm-'))) ? `
+      <div class="ctx-item" id="dock-ctx-new-window">
+        <span style="font-size:11px; margin-right:6px;">🪟</span>
+        <span>${escapeHtml(t('dock.new_fm_window', 'New Window'))}</span>
+      </div>
+    ` : ''}
     ${isRunning ? `
       <div class="ctx-item" id="dock-ctx-close" style="color:var(--crit, #ff5c5c);">
         <span style="font-size:11px; margin-right:6px;">✕</span>
@@ -1594,6 +1600,14 @@ export function showDockItemContextMenu(x, y, id, title, isPinned, isRunning) {
   document.getElementById('dock-ctx-pin')?.addEventListener('click', (e) => {
     e.stopPropagation();
     DockManager.togglePin(id);
+    hideMenu();
+  });
+
+  document.getElementById('dock-ctx-new-window')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (typeof window.openNewFileManagerWindow === 'function') {
+      window.openNewFileManagerWindow();
+    }
     hideMenu();
   });
 
@@ -1679,6 +1693,10 @@ export const DockManager = {
     if (id === 'fm') {
       const fmClose = document.getElementById('fm-close');
       if (fmClose) { fmClose.click(); return; }
+    } else if (id && id.startsWith('fm-')) {
+      const win = this.windows[id]?.el;
+      const closeBtn = win?.querySelector('.close-btn');
+      if (closeBtn) { closeBtn.click(); return; }
     } else if (id === 'management') {
       const mgmtClose = document.getElementById('management-close');
       if (mgmtClose) { mgmtClose.click(); return; }
@@ -3267,6 +3285,12 @@ export function initDraggableDesktopIcons() {
           <span style="font-size:11px; margin-right:6px;">▶</span>
           <span>${escapeHtml(openLabel)}${iconName ? ` ${escapeHtml(iconName)}` : ''}</span>
         </div>
+        ${iconAppId === 'fm' ? `
+          <div class="ctx-item" id="ctx-new-window">
+            <span style="font-size:11px; margin-right:6px;">🪟</span>
+            <span>${escapeHtml(t('dock.new_fm_window', 'New Window'))}</span>
+          </div>
+        ` : ''}
         <div style="height:1px; background:rgba(255,255,255,0.08); margin:4px 0;"></div>
         <div class="ctx-item" id="ctx-align-grid">📐 ${t('desktop.align_grid', 'Align to Grid')}</div>
         <div class="ctx-item" id="ctx-sort-name">🔤 ${t('desktop.sort_name', 'Sort by Name')}</div>
@@ -3286,6 +3310,14 @@ export function initDraggableDesktopIcons() {
           KNOWN_APPS[iconAppId].launch();
         } else {
           iconEl.click();
+        }
+      });
+
+      document.getElementById('ctx-new-window')?.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        hideMenu();
+        if (typeof window.openNewFileManagerWindow === 'function') {
+          window.openNewFileManagerWindow();
         }
       });
 
@@ -3332,6 +3364,10 @@ export function initDraggableDesktopIcons() {
         <span style="font-size:11px; margin-right:6px;">📁</span>
         <span>File Explorer</span>
       </div>
+      <div class="ctx-item" id="ctx-new-fm">
+        <span style="font-size:11px; margin-right:6px;">🪟</span>
+        <span>${escapeHtml(t('dock.new_fm_window', 'New Window'))}</span>
+      </div>
       <div style="height:1px; background:rgba(255,255,255,0.08); margin:4px 0;"></div>
       <div class="ctx-item" id="ctx-align-grid">📐 ${t('desktop.align_grid', 'Align to Grid')}</div>
       <div class="ctx-item" id="ctx-sort-name">🔤 ${t('desktop.sort_name', 'Sort by Name')}</div>
@@ -3356,6 +3392,13 @@ export function initDraggableDesktopIcons() {
       ev.stopPropagation();
       hideMenu();
       document.getElementById('fm-desktop-icon')?.click();
+    });
+    document.getElementById('ctx-new-fm')?.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      hideMenu();
+      if (typeof window.openNewFileManagerWindow === 'function') {
+        window.openNewFileManagerWindow();
+      }
     });
     document.getElementById('ctx-refresh-telemetry')?.addEventListener('click', (ev) => {
       ev.stopPropagation();

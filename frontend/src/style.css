@@ -8159,6 +8159,21 @@ body.mobile-mode .btn-webui-badge {
   background: #ffffff;
 }
 
+.fm-checkbox:focus,
+.fm-checkbox:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.fm-marquee-rect {
+  position: absolute;
+  pointer-events: none;
+  border: 1px solid var(--accent-cyan, #00f0ff);
+  background: rgba(0, 240, 255, 0.15);
+  border-radius: 3px;
+  z-index: 50;
+}
+
 /* Floating pill selection toolbar */
 #fm-selection-bar {
   display: inline-flex;

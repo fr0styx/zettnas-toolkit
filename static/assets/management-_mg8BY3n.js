@@ -1,0 +1,1 @@
+import{F as e}from"./dashboard-CATBIZ6F.js";export{e as initManagement};
