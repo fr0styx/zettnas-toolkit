@@ -731,7 +731,7 @@ export class FileManagerWindow {
   }
 
   ensureFocus() {
-    if (!this.viewport) return;
+    if (!this.windowEl || !this.viewport) return;
     const active = document.activeElement;
     const isTextInput = active && (
       active.tagName === 'TEXTAREA' ||
@@ -748,7 +748,7 @@ export class FileManagerWindow {
       }
     });
 
-    if (active && !this.windowEl.contains(active)) {
+    if (active && this.windowEl && !this.windowEl.contains(active)) {
       try { active.blur(); } catch (_) {}
     }
     if (active && active.tagName === 'INPUT' && (active.type === 'checkbox' || active.type === 'radio')) {
@@ -827,6 +827,7 @@ export class FileManagerWindow {
       this.windowEl.remove();
       this.windowEl = null;
     }
+    this.viewport = null;
     _fmInstances.delete(this.id);
     if (window.DockManager) {
       window.DockManager.unregister(this.dockId);
