@@ -37,6 +37,12 @@ from backend.hardware.screen import get_screen_state, is_in_time_window, set_scr
 from backend.hardware.storage import detect_chassis_model, get_current_layout, read_storage, read_uptime
 from backend.hardware.unraid import read_unraid_status
 from backend.hardware.docker_stats import read_docker_containers
+from backend.hardware.host_telemetry import (
+    get_cpu_telemetry,
+    get_dmi_telemetry,
+    get_gpu_telemetry,
+    get_os_telemetry,
+)
 from backend.hardware.ups import read_ups_status
 from backend.services.broadcaster import broadcaster
 from backend.services.copy_engine import check_media_slot_transitions, read_media_slots
@@ -535,13 +541,27 @@ def stats_collector_daemon():
                 stats_collector_daemon._last_docker_summary = docker_summary
 
             hw_features = ChassisEngine.detect_hardware_features()
+            cpu_telemetry = get_cpu_telemetry()
+            dmi_telemetry = get_dmi_telemetry()
+            os_telemetry = get_os_telemetry()
+            gpu_telemetry = get_gpu_telemetry()
 
             data = {
                 "name": get_server_hostname(),
                 "status": status,
                 "ip": read_ip(),
                 "storage": read_storage(),
-                "cpu": {"temp": cpu_temp, "util": read_cpu_util()},
+                "cpu": {
+                    "temp": cpu_temp,
+                    "util": read_cpu_util(),
+                    "model": cpu_telemetry.get("model", ""),
+                    "cores": cpu_telemetry.get("cores", 1),
+                    "governor": cpu_telemetry.get("governor", "performance"),
+                    "load_avg": cpu_telemetry.get("load_avg", [0.0, 0.0, 0.0]),
+                },
+                "system": os_telemetry,
+                "motherboard": dmi_telemetry,
+                "gpu": gpu_telemetry,
                 "mem": read_mem(),
                 "fans": fans,
                 "copy_state": {
@@ -669,8 +689,24 @@ def collect():
                 "name": get_server_hostname(),
                 "status": "-- OK",
                 "ip": read_ip(),
-                "storage": {"used": "0GB", "total": "0GB", "pct": 0},
-                "cpu": {"temp": 0, "util": 0},
+                "storage": {"used": "0GB", "total": "0GB", "pct": 0, "engine": "Btrfs / OpenZFS"},
+                "cpu": {
+                    "temp": 0,
+                    "util": 0,
+                    "model": "x86_64",
+                    "cores": 1,
+                    "governor": "performance",
+                    "load_avg": [0.0, 0.0, 0.0],
+                },
+                "system": {
+                    "distro": "Linux",
+                    "kernel": "Linux",
+                    "uptime_str": "0s",
+                    "uptime_sec": 0.0,
+                    "hostname": get_server_hostname(),
+                },
+                "motherboard": {"vendor": "Zettlab", "board": "Standard PC", "bios_version": "N/A", "bios_date": ""},
+                "gpu": {"present": False, "vendor": "Generic", "model": "None", "codecs": [], "ready": False},
                 "mem": {"used_gb": 0, "total_gb": 0, "pct": 0},
                 "fans": [],
                 "copy_state": {"active": False, "status": "idle", "progress": {}},

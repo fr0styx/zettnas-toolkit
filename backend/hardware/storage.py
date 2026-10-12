@@ -17,9 +17,25 @@ def read_storage():
         def fmt(g):
             return f"{g / 1000:.0f}TB" if g >= 1000 else f"{g:.0f}GB"
 
-        return {"used": fmt(used_gb), "total": fmt(total_gb), "pct": pct}
+        engine = "Btrfs / OpenZFS"
+        try:
+            from backend.hardware.pal_storage import PlatformType, StoragePlatformDetector
+
+            pt = StoragePlatformDetector.detect()
+            if pt == PlatformType.UNRAID:
+                engine = "Unraid (md/shfs)"
+            elif pt == PlatformType.TRUENAS:
+                engine = "OpenZFS"
+            elif pt == PlatformType.PROXMOX:
+                engine = "ZFS / LVM-Thin"
+            else:
+                engine = "Btrfs Native Subvolumes"
+        except Exception:
+            pass
+
+        return {"used": fmt(used_gb), "total": fmt(total_gb), "pct": pct, "engine": engine}
     except Exception:
-        return {"used": "0GB", "total": "0GB", "pct": 0}
+        return {"used": "0GB", "total": "0GB", "pct": 0, "engine": "Btrfs / OpenZFS"}
 
 
 def read_uptime():

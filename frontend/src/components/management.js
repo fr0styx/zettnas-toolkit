@@ -92,10 +92,12 @@ export function updateManagementTelemetry(stats) {
   const unraid = stats.unraid;
   const unraidGrid = document.querySelector('.unraid-details-grid');
   const genericGrid = document.querySelector('.generic-details-grid');
+  const hostLabel = document.getElementById('mgmt-host-status-label');
 
   if (unraid && unraid.available) {
     if (unraidGrid) unraidGrid.style.display = 'grid';
     if (genericGrid) genericGrid.style.display = 'none';
+    if (hostLabel) hostLabel.textContent = t('mgmt.unraid_status_label');
 
     const stateEl = document.getElementById('mgmt-unraid-state');
     const srvEl = document.getElementById('mgmt-unraid-server');
@@ -108,7 +110,7 @@ export function updateManagementTelemetry(stats) {
       stateEl.textContent = unraid.state;
       stateEl.style.color = unraid.color?.startsWith('green') ? 'var(--ok2)' : 'var(--warn)';
     }
-    if (srvEl) srvEl.textContent = `${unraid.server_name || 'NAS'} (${unraid.model || stats.chassis?.model || 'D6U'})`;
+    if (srvEl) srvEl.textContent = `${unraid.server_name || stats.name || 'NAS'} (${unraid.model || stats.motherboard?.board || stats.chassis?.model || 'D6U'})`;
     if (verEl) verEl.textContent = `Unraid ${unraid.version || ''}`;
     if (disksEl) {
       const d = unraid.disks || {};
@@ -137,6 +139,7 @@ export function updateManagementTelemetry(stats) {
   } else {
     if (unraidGrid) unraidGrid.style.display = 'none';
     if (genericGrid) genericGrid.style.display = 'grid';
+    if (hostLabel) hostLabel.textContent = t('mgmt.generic_status_label');
 
     const osNameEl = document.getElementById('mgmt-generic-os');
     const hostEl = document.getElementById('mgmt-generic-host');
@@ -145,12 +148,78 @@ export function updateManagementTelemetry(stats) {
     const loadEl = document.getElementById('mgmt-generic-load');
     const engineEl = document.getElementById('mgmt-generic-engine');
 
-    if (osNameEl) osNameEl.textContent = stats.os?.distro || stats.system?.os || 'Linux';
-    if (hostEl) hostEl.textContent = stats.system?.hostname || 'ZettNAS Host';
+    const distroName = stats.os?.distro || stats.system?.os || stats.system?.distro || 'Linux';
+    if (osNameEl) osNameEl.textContent = distroName;
+    if (hostEl) hostEl.textContent = stats.system?.hostname || stats.name || 'ZettNAS Host';
     if (uptimeEl) uptimeEl.textContent = stats.system?.uptime_str || stats.os?.uptime || 'Active';
-    if (cpuEl) cpuEl.textContent = stats.cpu?.model ? stats.cpu.model.slice(0, 24) : 'x86_64 / ARM64';
-    if (loadEl) loadEl.textContent = stats.cpu?.load_avg ? stats.cpu.load_avg.join(', ') : 'Normal';
+    if (cpuEl) {
+      const cpuName = stats.cpu?.model ? stats.cpu.model.replace(/\(R\)|\(TM\)/g, '').trim() : 'x86_64 / ARM64';
+      const coresStr = stats.cpu?.cores ? ` (${stats.cpu.cores}T)` : '';
+      cpuEl.textContent = `${cpuName}${coresStr}`;
+    }
+    if (loadEl) {
+      if (Array.isArray(stats.cpu?.load_avg)) {
+        loadEl.textContent = stats.cpu.load_avg.map(v => Number(v).toFixed(2)).join(', ');
+      } else {
+        loadEl.textContent = stats.cpu?.load_avg || 'Normal';
+      }
+    }
     if (engineEl) engineEl.textContent = stats.storage?.engine || 'Btrfs / OpenZFS';
+  }
+
+  // Option D: Motherboard & DMI
+  const boardEl = document.getElementById('mgmt-board-name');
+  const biosEl = document.getElementById('mgmt-bios-ver');
+  const govEl = document.getElementById('mgmt-cpu-gov');
+  const cpuCoresEl = document.getElementById('mgmt-cpu-cores');
+
+  if (stats.motherboard) {
+    if (boardEl) boardEl.textContent = `${stats.motherboard.vendor || ''} ${stats.motherboard.board || 'Standard PC'}`.trim();
+    if (biosEl) {
+      const bDate = stats.motherboard.bios_date ? ` (${stats.motherboard.bios_date})` : '';
+      biosEl.textContent = `${stats.motherboard.bios_version || 'N/A'}${bDate}`;
+    }
+  }
+  if (govEl) govEl.textContent = stats.cpu?.governor || 'performance';
+  if (cpuCoresEl) {
+    const cores = stats.cpu?.cores || 1;
+    cpuCoresEl.textContent = `${cores} Threads / Cores`;
+  }
+
+  // Option D: GPU Hardware Transcode Engine
+  if (stats.gpu) {
+    const gpuBadge = document.getElementById('mgmt-gpu-status-badge');
+    const gpuNameEl = document.getElementById('mgmt-gpu-name');
+    const gpuDriverEl = document.getElementById('mgmt-gpu-driver');
+    const gpuNodeEl = document.getElementById('mgmt-gpu-node');
+    const gpuAccelEl = document.getElementById('mgmt-gpu-accel');
+    const gpuCodecsEl = document.getElementById('mgmt-gpu-codecs-list');
+
+    if (gpuBadge) {
+      if (stats.gpu.ready) {
+        gpuBadge.textContent = 'ACCELERATION ACTIVE';
+        gpuBadge.style.color = 'var(--ok2)';
+        gpuBadge.style.borderColor = 'rgba(37,194,160,0.35)';
+      } else {
+        gpuBadge.textContent = 'SOFTWARE ONLY';
+        gpuBadge.style.color = 'var(--muted)';
+        gpuBadge.style.borderColor = 'rgba(255,255,255,0.1)';
+      }
+    }
+    if (gpuNameEl) gpuNameEl.textContent = stats.gpu.model || 'No GPU Detected';
+    if (gpuDriverEl) gpuDriverEl.textContent = `Driver: ${stats.gpu.driver || 'none'}`;
+    if (gpuNodeEl) {
+      gpuNodeEl.textContent = stats.gpu.render_node || 'No render node';
+      gpuNodeEl.style.display = stats.gpu.render_node ? 'inline-block' : 'none';
+    }
+    if (gpuAccelEl) gpuAccelEl.textContent = stats.gpu.acceleration || 'Software CPU Only';
+    if (gpuCodecsEl && Array.isArray(stats.gpu.codecs)) {
+      if (stats.gpu.codecs.length > 0) {
+        gpuCodecsEl.innerHTML = stats.gpu.codecs.map(c => `<span class="gpu-codec-tag">${escapeHtml(c)}</span>`).join('');
+      } else {
+        gpuCodecsEl.innerHTML = `<span class="gpu-codec-tag" style="color:var(--muted); border-color:rgba(255,255,255,0.1);">CPU Decode Only</span>`;
+      }
+    }
   }
 
   // Update Docker pill in Hub and Left Sidebar

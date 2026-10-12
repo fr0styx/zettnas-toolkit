@@ -3733,7 +3733,7 @@
                   </div>
 
                   <div>
-                    <label style="display:block; font-size:10.5px; font-weight:700; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px;" data-i18n="mgmt.unraid_status_label">HOST SUBSYSTEM STATUS</label>
+                    <label style="display:block; font-size:10.5px; font-weight:700; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px;" id="mgmt-host-status-label" data-i18n="mgmt.unraid_status_label">UNRAID STORAGE SUBSYSTEM STATUS</label>
                     
                     <!-- Unraid Host Details Grid -->
                     <div class="unraid-details-grid">
@@ -3788,6 +3788,61 @@
                       <div class="unraid-detail-item">
                         <span class="udi-label">Storage Engine</span>
                         <span class="udi-val" id="mgmt-generic-engine">Btrfs / OpenZFS</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- System Board & Hardware Infrastructure (DMI / BIOS / Governor) -->
+                  <div>
+                    <label style="display:block; font-size:10.5px; font-weight:700; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px;" data-i18n="mgmt.sys_board_label">SYSTEM BOARD & HARDWARE INFRASTRUCTURE</label>
+                    <div class="unraid-details-grid" id="mgmt-board-details-grid">
+                      <div class="unraid-detail-item">
+                        <span class="udi-label" data-i18n="mgmt.board_vendor">Motherboard & Vendor</span>
+                        <span class="udi-val" id="mgmt-board-name">Zettlab WY120</span>
+                      </div>
+                      <div class="unraid-detail-item">
+                        <span class="udi-label" data-i18n="mgmt.bios_version">BIOS Firmware</span>
+                        <span class="udi-val" id="mgmt-bios-ver">WY120V016</span>
+                      </div>
+                      <div class="unraid-detail-item">
+                        <span class="udi-label" data-i18n="mgmt.cpu_governor">CPU Scaling Governor</span>
+                        <span class="udi-val" id="mgmt-cpu-gov" style="color:var(--accent-cyan,#00f0ff);">performance</span>
+                      </div>
+                      <div class="unraid-detail-item">
+                        <span class="udi-label" data-i18n="mgmt.cpu_topology">Core Topology</span>
+                        <span class="udi-val" id="mgmt-cpu-cores">18 Threads</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- GPU Hardware Transcode Acceleration Engine -->
+                  <div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                      <label style="font-size:10.5px; font-weight:700; color:var(--muted); letter-spacing:0.5px;" data-i18n="mgmt.gpu_transcode_label">GPU HARDWARE TRANSCODE ENGINE</label>
+                      <span class="suite-badge" id="mgmt-gpu-status-badge" style="background:rgba(37,194,160,0.15); color:var(--ok2); border-color:rgba(37,194,160,0.35);">ACCELERATION ACTIVE</span>
+                    </div>
+                    <div class="gpu-transcode-card">
+                      <div class="gpu-transcode-header">
+                        <div class="gpu-transcode-icon-box">
+                          <svg class="ic" style="width:20px; height:20px; color:var(--accent-cyan,#00f0ff);"><use href="#i-cpu"/></svg>
+                        </div>
+                        <div class="gpu-transcode-info">
+                          <div class="gpu-title-row">
+                            <span class="gpu-name" id="mgmt-gpu-name">Intel Arc Graphics (Meteor Lake-P GT1)</span>
+                            <span class="gpu-driver-badge" id="mgmt-gpu-driver">Driver: i915</span>
+                            <span class="gpu-node-badge" id="mgmt-gpu-node">/dev/dri/renderD128</span>
+                          </div>
+                          <div class="gpu-accel-desc" id="mgmt-gpu-accel">Intel QuickSync Video (QSV) • VA-API 1.20</div>
+                        </div>
+                      </div>
+                      <div class="gpu-codecs-row">
+                        <span class="gpu-codec-label" data-i18n="mgmt.gpu_codecs">Hardware Codecs:</span>
+                        <div class="gpu-codecs-list" id="mgmt-gpu-codecs-list">
+                          <span class="gpu-codec-tag">AV1</span>
+                          <span class="gpu-codec-tag">HEVC 10-bit</span>
+                          <span class="gpu-codec-tag">H.264</span>
+                          <span class="gpu-codec-tag">VP9</span>
+                        </div>
                       </div>
                     </div>
                   </div>

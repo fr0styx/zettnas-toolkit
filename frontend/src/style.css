@@ -5105,6 +5105,101 @@ body.theme-yak .lcd-dot.active {
   font-family: var(--font-mono, monospace);
 }
 
+/* GPU Transcode Engine Card */
+.gpu-transcode-card {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.gpu-transcode-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.gpu-transcode-icon-box {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.gpu-transcode-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+}
+.gpu-title-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.gpu-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text, #fff);
+  font-family: var(--font-sans);
+}
+.gpu-driver-badge,
+.gpu-node-badge {
+  font-size: 10px;
+  font-family: var(--font-mono, monospace);
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--muted, #94a3b8);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.gpu-node-badge {
+  color: var(--accent-cyan, #00f0ff);
+  background: rgba(0, 240, 255, 0.08);
+  border-color: rgba(0, 240, 255, 0.2);
+}
+.gpu-accel-desc {
+  font-size: 11px;
+  color: var(--ok2, #25c2a0);
+  font-weight: 600;
+}
+.gpu-codecs-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+.gpu-codec-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--muted, #94a3b8);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.gpu-codecs-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.gpu-codec-tag {
+  font-size: 10px;
+  font-weight: 700;
+  font-family: var(--font-mono, monospace);
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: rgba(37, 194, 160, 0.12);
+  color: var(--ok2, #25c2a0);
+  border: 1px solid rgba(37, 194, 160, 0.25);
+}
+
 /* Ingest History Table */
 .copy-history-table {
   width: 100%;
