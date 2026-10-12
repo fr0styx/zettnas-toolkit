@@ -2864,23 +2864,35 @@ select.tz-select-input option, select.tz-select option {
   pointer-events: auto !important;
 }
 
-/* Cloud Remote Window */
+/* =========================================================================
+   Cloud Remote Window - Solid, Premium Opaque Surface & High-Contrast Form
+   ========================================================================= */
+#modal-new-cloud-remote #cloud-remote-window,
+#cloud-remote-window.cloud-remote-window,
 .cloud-remote-window {
-  width: 580px;
-  max-width: 95vw;
-  background: var(--bg-surface, rgba(18, 22, 31, 0.85));
-  backdrop-filter: blur(24px) saturate(160%);
-  -webkit-backdrop-filter: blur(24px) saturate(160%);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 12px;
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85), 0 0 35px rgba(14, 165, 233, 0.15);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
+  display: flex !important;
+  flex-direction: column !important;
+  background: #0f1622 !important;
+  backdrop-filter: blur(28px) saturate(140%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(140%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.95), 0 0 35px rgba(14, 165, 233, 0.2) !important;
+  width: 580px !important;
+  max-width: 95vw !important;
+  height: 640px !important;
+  max-height: 88vh !important;
+  overflow: hidden !important;
   transition: width 0.2s cubic-bezier(0.16, 1, 0.3, 1), height 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.cloud-remote-window[data-maximized="true"] {
+#modal-new-cloud-remote #cloud-remote-window.active-window,
+#cloud-remote-window.active-window {
+  border-color: rgba(14, 165, 233, 0.5) !important;
+  box-shadow: 0 30px 85px rgba(0, 0, 0, 0.95), 0 0 40px rgba(14, 165, 233, 0.3) !important;
+}
+
+#cloud-remote-window[data-maximized="true"] {
   width: 95vw !important;
   max-width: 1000px !important;
   height: 85vh !important;
@@ -2888,13 +2900,205 @@ select.tz-select-input option, select.tz-select option {
   border-radius: 8px !important;
 }
 
-.cloud-remote-window[data-maximized="true"] .smart-modal-body {
-  max-height: calc(85vh - 54px) !important;
+#cloud-remote-window .smart-modal-header,
+#cloud-remote-window #cloud-remote-window-header {
+  background: #141d2c !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  padding: 12px 18px !important;
+  height: 44px !important;
+  flex-shrink: 0 !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
 }
 
-#modal-new-cloud-remote #cloud-remote-window.active-window {
-  border-color: rgba(14, 165, 233, 0.4);
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9), 0 0 35px rgba(14, 165, 233, 0.25);
+#cloud-remote-window #new-remote-form {
+  background: #0b1019 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+#cloud-remote-window .cloud-remote-scroll-body {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  padding: 20px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 16px !important;
+}
+
+#cloud-remote-window .remote-form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+#cloud-remote-window .remote-form-section:not(:first-child) {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 14px;
+}
+
+#cloud-remote-window .remote-section-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 800;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+#cloud-remote-window .cloud-remote-footer {
+  flex-shrink: 0 !important;
+  background: #141d2c !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+  padding: 12px 20px !important;
+  display: flex !important;
+  justify-content: flex-end !important;
+  align-items: center !important;
+  gap: 10px !important;
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Crisp, high-contrast inputs for Cloud Remote dialog */
+#cloud-remote-window .tz-select-input,
+#cloud-remote-window select,
+#cloud-remote-window input[type="text"],
+#cloud-remote-window input[type="password"],
+#cloud-remote-window textarea {
+  background: #141d2c !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  color: #fff !important;
+  border-radius: 6px !important;
+  padding: 9px 12px !important;
+  font-size: 12.5px !important;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3) !important;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+#cloud-remote-window .tz-select-input:focus,
+#cloud-remote-window select:focus,
+#cloud-remote-window input:focus,
+#cloud-remote-window textarea:focus {
+  border-color: #38bdf8 !important;
+  box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.25) !important;
+  outline: none !important;
+}
+
+#cloud-remote-window select option {
+  background: #141d2c !important;
+  color: #fff !important;
+}
+
+.btn-cloud-cancel {
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #e2e8f0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.btn-cloud-cancel:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+
+.btn-cloud-test {
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 700;
+  background: rgba(56, 189, 248, 0.14);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  color: #38bdf8;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+.btn-cloud-test:hover:not(:disabled) {
+  background: rgba(56, 189, 248, 0.28);
+  border-color: #38bdf8;
+  color: #fff;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.35);
+}
+.btn-cloud-test:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-cloud-submit {
+  padding: 8px 20px;
+  font-size: 12px;
+  font-weight: 700;
+  background: #0ea5e9;
+  border: 1px solid #38bdf8;
+  color: #fff;
+  border-radius: 6px;
+  cursor: pointer;
+  box-shadow: 0 0 14px rgba(14, 165, 233, 0.4);
+  transition: all 0.15s ease;
+}
+.btn-cloud-submit:hover:not(:disabled) {
+  background: #0284c7;
+  box-shadow: 0 0 20px rgba(14, 165, 233, 0.6);
+  transform: translateY(-1px);
+}
+.btn-cloud-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Theme variations for Cloud Remote dialog */
+body.theme-yak #modal-new-cloud-remote #cloud-remote-window,
+body.theme-yak .cloud-remote-window {
+  background: #191410 !important;
+}
+body.theme-yak #cloud-remote-window .smart-modal-header,
+body.theme-yak #cloud-remote-window #cloud-remote-window-header,
+body.theme-yak #cloud-remote-window .cloud-remote-footer {
+  background: #241d17 !important;
+}
+body.theme-yak #cloud-remote-window #new-remote-form {
+  background: #140f0c !important;
+}
+body.theme-yak #cloud-remote-window .tz-select-input,
+body.theme-yak #cloud-remote-window select,
+body.theme-yak #cloud-remote-window input[type="text"],
+body.theme-yak #cloud-remote-window input[type="password"],
+body.theme-yak #cloud-remote-window textarea,
+body.theme-yak #cloud-remote-window select option {
+  background: #241d17 !important;
+}
+
+body.theme-oled #modal-new-cloud-remote #cloud-remote-window,
+body.theme-oled .cloud-remote-window {
+  background: #000000 !important;
+}
+body.theme-oled #cloud-remote-window .smart-modal-header,
+body.theme-oled #cloud-remote-window #cloud-remote-window-header,
+body.theme-oled #cloud-remote-window .cloud-remote-footer {
+  background: #0a0a0a !important;
+}
+body.theme-oled #cloud-remote-window #new-remote-form {
+  background: #000000 !important;
+}
+body.theme-oled #cloud-remote-window .tz-select-input,
+body.theme-oled #cloud-remote-window select,
+body.theme-oled #cloud-remote-window input[type="text"],
+body.theme-oled #cloud-remote-window input[type="password"],
+body.theme-oled #cloud-remote-window textarea,
+body.theme-oled #cloud-remote-window select option {
+  background: #0d0d0d !important;
 }
 
 #console-modal-overlay #console-window,

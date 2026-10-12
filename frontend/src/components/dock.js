@@ -1013,7 +1013,8 @@ export const handleWindowActivation = (e) => {
     e.target.id === 'app-deploy-modal-overlay' ||
     e.target.id === 'management-modal-overlay' ||
     e.target.id === 'console-modal-overlay' ||
-    e.target.id === 'smart-modal-overlay'
+    e.target.id === 'smart-modal-overlay' ||
+    e.target.id === 'modal-new-cloud-remote'
   )) {
     return;
   }

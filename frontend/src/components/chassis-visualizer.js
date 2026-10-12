@@ -1719,6 +1719,9 @@ export async function fetchAndRenderRemoteStorage(container) {
             <div style="font-size:13px; font-weight:800; color:#fff; letter-spacing:0.5px; text-transform:uppercase;">
               Connected Cloud Drives & Buckets (${remotes ? remotes.length : 0})
             </div>
+            <button class="btn-pill-toggle btn-trigger-new-remote" style="padding:4px 10px; font-size:11px; font-weight:700; background:rgba(14,165,233,0.15); color:#38bdf8; border-color:rgba(14,165,233,0.3);" title="Connect New Cloud Remote">
+              ☁️ + Add Remote
+            </button>
           </div>
           ${remotesHtml}
         </div>
@@ -2048,8 +2051,8 @@ export async function openNewCloudRemoteModal(onSuccess) {
               const opts = (f.options || []).map((o) => `<option value="${o}" ${o === f.default ? 'selected' : ''}>${o}</option>`).join('');
               return `
                 <div>
-                  <label style="display:block; font-size:10px; font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">${escapeHtml(f.label.toUpperCase())}</label>
-                  <select name="${escapeHtml(f.name)}" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff; border-radius:6px; font-size:12px;">
+                  <label style="display:block; font-size:10px; font-weight:700; color:#94a3b8; margin-bottom:4px; letter-spacing:0.5px;">${escapeHtml(f.label.toUpperCase())}</label>
+                  <select name="${escapeHtml(f.name)}" class="tz-select-input" style="width:100%;">
                     ${opts}
                   </select>
                 </div>
@@ -2058,7 +2061,7 @@ export async function openNewCloudRemoteModal(onSuccess) {
               return `
                 <div>
                   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                    <label style="display:block; font-size:10px; font-weight:700; color:var(--muted); letter-spacing:0.5px;">
+                    <label style="display:block; font-size:10px; font-weight:700; color:#94a3b8; letter-spacing:0.5px;">
                       ${escapeHtml(f.label.toUpperCase())} ${f.required ? '<span style="color:var(--crit,#ef4444);">*</span>' : ''}
                     </label>
                     ${prov.authorize_cmd ? `
@@ -2072,15 +2075,15 @@ export async function openNewCloudRemoteModal(onSuccess) {
                     placeholder="${escapeHtml(f.placeholder || '')}"
                     class="tz-select-input"
                     rows="4"
-                    style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff; border-radius:6px; font-size:11px; font-family:monospace; resize:vertical;"
+                    style="width:100%; font-family:monospace; resize:vertical;"
                     ${f.required ? 'required' : ''}>${escapeHtml(f.default != null ? String(f.default) : '')}</textarea>
-                  ${f.help ? `<div style="font-size:10.5px; color:var(--muted); margin-top:4px; line-height:1.4;">${escapeHtml(f.help)}</div>` : ''}
+                  ${f.help ? `<div style="font-size:11px; color:#94a3b8; margin-top:4px; line-height:1.4;">${escapeHtml(f.help)}</div>` : ''}
                 </div>
               `;
             } else {
               return `
                 <div>
-                  <label style="display:block; font-size:10px; font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">
+                  <label style="display:block; font-size:10px; font-weight:700; color:#94a3b8; margin-bottom:4px; letter-spacing:0.5px;">
                     ${escapeHtml(f.label.toUpperCase())} ${f.required ? '<span style="color:var(--crit,#ef4444);">*</span>' : ''}
                   </label>
                   <input type="${f.type === 'password' ? 'password' : 'text'}"
@@ -2088,7 +2091,7 @@ export async function openNewCloudRemoteModal(onSuccess) {
                     placeholder="${escapeHtml(f.placeholder || '')}"
                     value="${escapeHtml(f.default != null ? String(f.default) : '')}"
                     class="tz-select-input"
-                    style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff; border-radius:6px; font-size:12px;"
+                    style="width:100%;"
                     ${f.required ? 'required' : ''} />
                 </div>
               `;

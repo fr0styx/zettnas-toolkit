@@ -521,6 +521,8 @@
       <line x1="8" y1="21" x2="16" y2="21" stroke="currentColor" stroke-width="2"/>
       <line x1="12" y1="17" x2="12" y2="21" stroke="currentColor" stroke-width="2"/>
       <path d="M7 8h2v2H7zM15 8h2v2h-2z" fill="currentColor"/>
+    <symbol id="i-cloud" viewBox="0 0 24 24">
+      <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
     </symbol>
   </defs>
 </svg>
@@ -5858,51 +5860,59 @@
 </div>
 
 <!-- Connect New Cloud Remote Modal -->
-<div id="modal-new-cloud-remote" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-remote-title" style="display: none;">
-  <div class="smart-modal-window" style="max-width: 540px; width: 92%; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(14, 165, 233, 0.15); border: 1px solid rgba(255, 255, 255, 0.12);">
-    <div class="smart-modal-header" style="cursor: move;">
-      <span class="smart-modal-title" id="modal-remote-title" style="display: flex; align-items: center; gap: 8px;">
-        <span style="font-size: 16px;">☁️</span>
+<div id="modal-new-cloud-remote" class="smart-modal-backdrop os-window-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-remote-title" style="display: none;">
+  <div class="smart-modal-window os-window cloud-remote-window" id="cloud-remote-window">
+    <div class="smart-modal-header os-window-header" id="cloud-remote-window-header" style="cursor: move;">
+      <span class="smart-modal-title os-window-title" id="modal-remote-title" style="display: flex; align-items: center; gap: 8px;">
+        <svg class="ic" style="width: 16px; height: 16px; color: var(--brand, #0ea5e9);"><use href="#i-cloud"/></svg>
         <span>Connect New Cloud / Remote Storage</span>
       </span>
-      <div class="os-window-controls">
+      <div class="os-window-controls" style="display: flex; gap: 6px; align-items: center;">
+        <button class="win-btn min-btn" id="modal-remote-min-btn" title="Minimize" aria-label="Minimize"></button>
+        <button class="win-btn max-btn" id="modal-remote-max-btn" title="Maximize" aria-label="Maximize"></button>
         <button class="win-btn close-btn" id="modal-remote-close-btn" title="Close" aria-label="Close"></button>
       </div>
     </div>
-    <form id="new-remote-form" class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px; max-height: 80vh; overflow-y: auto;">
-      <div>
-        <label for="new-remote-provider-select" style="display:block; font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:6px; letter-spacing:0.5px;">1. SELECT CLOUD / STORAGE PROVIDER</label>
-        <select id="new-remote-provider-select" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff; border-radius:6px; font-size:12px;">
-          <!-- Dynamically populated from /api/remotes/providers -->
-        </select>
-        <div id="new-remote-provider-desc" style="font-size: 11px; color: var(--muted); margin-top: 6px; line-height: 1.4;"></div>
-      </div>
-
-      <div style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px;">
-        <label for="new-remote-name" style="display:block; font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;">2. REMOTE NAME (Local Identifier)</label>
-        <input type="text" id="new-remote-name" class="tz-select-input" placeholder="e.g. backup-s3, gdrive, offsite-nas" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff; border-radius:6px; font-size:12px;" required pattern="^[a-zA-Z0-9_\-\.]{1,64}$" />
-        <div style="font-size: 10.5px; color: var(--muted); margin-top: 4px;">Will be mounted to: <code style="color:#38bdf8;">/mnt/remotes/&lt;name&gt;</code></div>
-      </div>
-
-      <div style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px;">
-        <div style="font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:8px; letter-spacing:0.5px;">3. PROVIDER PARAMETERS</div>
-        <div id="new-remote-dynamic-fields" style="display: flex; flex-direction: column; gap: 10px;">
-          <!-- Dynamically populated fields based on provider -->
+    <form id="new-remote-form">
+      <div class="cloud-remote-scroll-body">
+        <div class="remote-form-section">
+          <label for="new-remote-provider-select" class="remote-section-label">1. SELECT CLOUD / STORAGE PROVIDER</label>
+          <select id="new-remote-provider-select" class="tz-select-input" style="width: 100%;">
+            <!-- Dynamically populated from /api/remotes/providers -->
+          </select>
+          <div id="new-remote-provider-desc" style="font-size: 11.5px; color: #94a3b8; margin-top: 6px; line-height: 1.45;"></div>
         </div>
+
+        <div class="remote-form-section">
+          <label for="new-remote-name" class="remote-section-label">2. REMOTE NAME (Local Identifier)</label>
+          <input type="text" id="new-remote-name" class="tz-select-input" placeholder="e.g. backup-s3, gdrive, onedrive-photos, offsite-nas" style="width: 100%;" required pattern="^[a-zA-Z0-9_\-\.]{1,64}$" />
+          <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">Will be mounted to: <code style="color: #38bdf8; font-weight: 600;">/mnt/remotes/&lt;name&gt;</code></div>
+        </div>
+
+        <div class="remote-form-section">
+          <div class="remote-section-label">3. PROVIDER PARAMETERS</div>
+          <div id="new-remote-dynamic-fields" style="display: flex; flex-direction: column; gap: 12px;">
+            <!-- Dynamically populated fields based on provider -->
+          </div>
+        </div>
+
+        <div class="remote-form-section" style="padding-top: 4px;">
+          <label for="new-remote-auto-mount" style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: #e2e8f0; cursor: pointer;">
+            <input type="checkbox" id="new-remote-auto-mount" checked style="width: 16px; height: 16px; accent-color: var(--ok2, #22c55e);" />
+            <span>Mount immediately to <code style="color: #38bdf8;">/mnt/remotes</code> via FUSE</span>
+          </label>
+        </div>
+
+        <div id="new-remote-test-result" style="display: none; padding: 10px 14px; border-radius: 6px; font-size: 12px; line-height: 1.45;"></div>
+        <div id="new-remote-error-box" style="display: none; padding: 10px 14px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 6px; color: #f87171; font-size: 12px; line-height: 1.45;"></div>
       </div>
 
-      <div style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 10px;">
-        <label for="new-remote-auto-mount" style="display:flex; align-items:center; gap:8px; font-size:12px; color:#fff; cursor:pointer;">
-          <input type="checkbox" id="new-remote-auto-mount" checked style="width:16px; height:16px; accent-color:var(--ok2);" />
-          <span>Mount immediately to <code style="color:#38bdf8;">/mnt/remotes</code> via FUSE</span>
-        </label>
-      </div>
-
-      <div id="new-remote-error-box" style="display: none; padding: 8px 12px; background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); border-radius: 6px; color: #f87171; font-size: 11.5px;"></div>
-
-      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.08);">
-        <button type="button" id="modal-remote-cancel-btn" style="padding: 7px 16px; font-size: 11px; font-weight: 700; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); color: #fff; border-radius: 6px; cursor: pointer;">Cancel</button>
-        <button type="submit" id="new-remote-submit-btn" style="padding: 7px 18px; font-size: 11px; font-weight: 700; background: var(--brand, #0ea5e9); border: none; color: #fff; border-radius: 6px; cursor: pointer;">Save & Connect Remote</button>
+      <div class="cloud-remote-footer">
+        <button type="button" id="modal-remote-cancel-btn" class="btn-cloud-cancel">Cancel</button>
+        <button type="button" id="new-remote-test-btn" class="btn-cloud-test">
+          <span>⚡ Test Connection</span>
+        </button>
+        <button type="submit" id="new-remote-submit-btn" class="btn-cloud-submit">Save & Connect Remote</button>
       </div>
     </form>
   </div>
