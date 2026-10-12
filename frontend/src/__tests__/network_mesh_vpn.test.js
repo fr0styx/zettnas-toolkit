@@ -64,6 +64,7 @@ describe('Zero-Trust Mesh VPN Suite (WireGuard & Tailscale)', () => {
       <!-- Capability 2: Exit Node -->
       <input type="checkbox" id="ts-exit-node-toggle" />
       <span id="ts-exit-node-pill"></span>
+      <div id="ts-exit-node-approval-hint" style="display:none;"></div>
 
       <!-- Capability 3: SSH -->
       <input type="checkbox" id="ts-ssh-toggle" />
@@ -75,6 +76,7 @@ describe('Zero-Trust Mesh VPN Suite (WireGuard & Tailscale)', () => {
       <input type="checkbox" id="ts-serve-toggle" />
       <div id="ts-serve-url-box" style="display:none;"></div>
       <a id="ts-serve-url-link" href="#"></a>
+      <button id="btn-copy-ts-serve-url"></button>
       <input type="checkbox" id="ts-funnel-toggle" />
       <span id="ts-funnel-pill"></span>
 
@@ -413,7 +415,7 @@ describe('Zero-Trust Mesh VPN Suite (WireGuard & Tailscale)', () => {
     const exitToggle = document.getElementById('ts-exit-node-toggle');
     expect(exitToggle.checked).toBe(true);
     const exitPill = document.getElementById('ts-exit-node-pill');
-    expect(exitPill.textContent).toBe('Active Exit Node');
+    expect(exitPill.textContent).toBe('Active (In Use)');
 
     // 4. SSH
     const sshToggle = document.getElementById('ts-ssh-toggle');
@@ -462,6 +464,44 @@ describe('Zero-Trust Mesh VPN Suite (WireGuard & Tailscale)', () => {
     const fetchBtn = document.getElementById('btn-ts-taildrop-fetch');
     await fetchBtn.click();
     expect(postSpy).toHaveBeenCalledWith('/api/network/mesh-vpn/tailscale/taildrop/receive');
+  });
+
+  it('renders exit node in Pending Admin Approval state with link and hint banner', async () => {
+    vi.spyOn(api, 'get').mockResolvedValue({
+      tailscale: {
+        installed: true,
+        active: true,
+        backend_state: 'Running',
+        ipv4: '100.77.187.102',
+        advertise_exit_node: true,
+        exit_node_approved: false,
+        is_exit_node: false,
+        is_subnet_router: false,
+        advertised_routes: [],
+        detected_subnets: ['10.40.30.0/24'],
+        peers: [],
+      },
+      wireguard: { installed: true, active: false },
+    });
+
+    await fetchAndRenderWireguard();
+
+    const exitToggle = document.getElementById('ts-exit-node-toggle');
+    expect(exitToggle.checked).toBe(true);
+
+    const exitPill = document.getElementById('ts-exit-node-pill');
+    expect(exitPill.innerHTML).toContain('Pending Admin Approval');
+    expect(exitPill.innerHTML).toContain('login.tailscale.com/admin/machines');
+
+    const exitHint = document.getElementById('ts-exit-node-approval-hint');
+    expect(exitHint.style.display).toBe('block');
+    expect(exitHint.textContent).toContain('Exit node is advertised');
+
+    const subnetToggle = document.getElementById('ts-subnet-router-toggle');
+    expect(subnetToggle.checked).toBe(false);
+    const subnetInput = document.getElementById('ts-subnet-routes-input');
+    // Subnet input must NOT contain 0.0.0.0/0
+    expect(subnetInput.value).not.toContain('0.0.0.0/0');
   });
 
   it('renders interactive peer directory table, filters peers, and handles peer ping latency', async () => {

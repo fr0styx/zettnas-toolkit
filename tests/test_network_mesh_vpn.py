@@ -63,6 +63,54 @@ def test_get_mesh_vpn_status_container_running():
         assert status["tailscale"]["peers_count"] == 2
 
 
+def test_get_mesh_vpn_status_exit_node_and_routes_separation():
+    mock_status_json = json.dumps(
+        {
+            "BackendState": "Running",
+            "Self": {
+                "HostName": "zettnas-box",
+                "TailscaleIPs": ["100.80.90.100"],
+                "ExitNodeOption": False,
+                "ExitNode": False,
+            },
+            "Peer": {},
+        }
+    )
+    mock_prefs_json = json.dumps(
+        {
+            "AdvertiseRoutes": ["0.0.0.0/0", "::/0", "192.168.1.0/24"],
+            "RunSSH": True,
+        }
+    )
+
+    def mock_cmd(args, timeout=10.0):
+        if args[:2] == ["status", "--json"]:
+            return 0, mock_status_json
+        if args[:2] == ["debug", "prefs"]:
+            return 0, mock_prefs_json
+        return 1, ""
+
+    with (
+        patch("backend.hardware.network._find_tailscale_bin", return_value="/usr/bin/tailscale"),
+        patch("backend.hardware.network._get_tailscale_container_info", return_value={"exists": False}),
+        patch("backend.hardware.network._run_tailscale_cmd", side_effect=mock_cmd),
+        patch("subprocess.run") as mock_subp,
+    ):
+        mock_subp.return_value = MagicMock(returncode=1, stdout="")
+        status = get_mesh_vpn_status()
+        ts = status["tailscale"]
+        assert ts["installed"] is True
+        assert ts["active"] is True
+        # Exit node is advertised via 0.0.0.0/0, but not yet approved in admin console
+        assert ts["advertise_exit_node"] is True
+        assert ts["exit_node_approved"] is False
+        assert ts["is_exit_node"] is False
+        # Subnet routes must contain ONLY genuine LAN routes, NEVER 0.0.0.0/0 or ::/0
+        assert ts["advertised_routes"] == ["192.168.1.0/24"]
+        assert ts["is_subnet_router"] is True
+        assert ts["ssh_enabled"] is True
+
+
 def test_execute_tailscale_up_needs_login():
     auth_text = "To authenticate, visit:\n\n\thttps://login.tailscale.com/a/sample123456\n"
     with patch("backend.hardware.network._run_tailscale_cmd", return_value=(1, auth_text)):

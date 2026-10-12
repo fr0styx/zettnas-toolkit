@@ -3984,6 +3984,9 @@
                           <div style="font-size:10.5px; color:var(--text-sub); line-height:1.3;" data-i18n="net.tailscale_exit_desc">
                             Route all mobile/laptop internet traffic encrypted through this NAS when traveling.
                           </div>
+                          <div id="ts-exit-node-approval-hint" style="display:none; font-size:11px; padding:6px 10px; border-radius:6px; border:1px solid rgba(245,158,11,0.25); background:rgba(245,158,11,0.08); color:#fbbf24; line-height:1.4; margin-top:4px;">
+                            ⚠️ Exit node is advertised. To allow other devices to route traffic through this NAS, approve it in your <a href="https://login.tailscale.com/admin/machines" target="_blank" rel="noopener noreferrer" style="color:#38bdf8; text-decoration:underline; font-weight:700;">Tailscale Admin Console ↗</a> (Machines → Edit route settings → Use as exit node).
+                          </div>
                         </div>
 
                         <!-- Tailscale SSH (Capability 3) -->
@@ -4024,7 +4027,10 @@
                       </div>
                       <div id="ts-serve-url-box" style="display:none; padding:8px 10px; background:rgba(56,189,248,0.08); border:1px solid rgba(56,189,248,0.2); border-radius:6px; font-size:11.5px; justify-content:space-between; align-items:center;">
                         <span style="color:var(--muted); font-size:11px;">Direct HTTPS URL:</span>
-                        <a id="ts-serve-url-link" href="#" target="_blank" rel="noopener noreferrer" style="color:#38bdf8; font-weight:600; text-decoration:underline;">https://--</a>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                          <a id="ts-serve-url-link" href="#" target="_blank" rel="noopener noreferrer" style="color:#38bdf8; font-weight:600; text-decoration:underline;">https://--</a>
+                          <button class="btn-pill-toggle" id="btn-copy-ts-serve-url" style="font-size:9.5px; padding:1px 6px;">📋 Copy</button>
+                        </div>
                       </div>
                       <div style="border-top:1px solid rgba(255,255,255,0.06); padding-top:8px; display:flex; justify-content:space-between; align-items:center;">
                         <label style="display:flex; align-items:center; gap:6px; font-weight:600; font-size:11.5px; color:#f87171; cursor:pointer;">

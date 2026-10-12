@@ -2471,6 +2471,9 @@ def execute_tailscale_ping(peer: str) -> Dict[str, Any]:
 def execute_tailscale_set_routes(routes: str, enabled: bool = True) -> Dict[str, Any]:
     """Advertises or withdraws subnet routes to the Tailnet."""
     clean_routes = routes.strip() if enabled else ""
+    if clean_routes:
+        parts = [p.strip() for p in clean_routes.split(",") if p.strip() and p.strip() not in ("0.0.0.0/0", "::/0")]
+        clean_routes = ",".join(parts)
     cmd = ["set", f"--advertise-routes={clean_routes}"]
     code, out = _run_tailscale_cmd(cmd, timeout=8.0)
     return {
@@ -2591,7 +2594,9 @@ def get_mesh_vpn_status() -> Dict[str, Any]:
         "advertised_routes": [],
         "is_subnet_router": False,
         "advertise_exit_node": False,
+        "exit_node_approved": False,
         "is_exit_node": False,
+        "admin_console_url": "https://login.tailscale.com/admin/machines",
         "ssh_enabled": False,
         "serve_enabled": False,
         "funnel_enabled": False,
@@ -2641,14 +2646,33 @@ def get_mesh_vpn_status() -> Dict[str, Any]:
             ts_info["key_expiry_days"] = key_days
             ts_info["key_expired"] = (key_days == 0) if key_days is not None else False
 
-            # Gateway options
-            ts_info["advertise_exit_node"] = bool(doc.get("Self", {}).get("ExitNodeOption", False))
+            # Check debug prefs for RunSSH and AdvertiseRoutes
+            p_routes = []
+            p_code, p_out = _run_tailscale_cmd(["debug", "prefs"], timeout=2.0)
+            if p_code == 0 and p_out.strip().startswith("{"):
+                try:
+                    p_doc = json.loads(p_out.strip())
+                    ts_info["ssh_enabled"] = bool(p_doc.get("RunSSH", False))
+                    p_routes = p_doc.get("AdvertiseRoutes") or []
+                except Exception:
+                    pass
+
+            # Exit Node Gateway options
+            has_exit_route = any(r in ("0.0.0.0/0", "::/0") for r in p_routes)
+            exit_node_approved = bool(doc.get("Self", {}).get("ExitNodeOption", False))
+            ts_info["advertise_exit_node"] = has_exit_route or exit_node_approved
+            ts_info["exit_node_approved"] = exit_node_approved
             ts_info["is_exit_node"] = bool(doc.get("Self", {}).get("ExitNode", False))
 
-            allowed = doc.get("Self", {}).get("AllowedIPs", [])
-            advertised = [ip for ip in allowed if not ip.startswith("100.") and not ip.startswith("fd7a:")]
-            ts_info["advertised_routes"] = advertised
-            ts_info["is_subnet_router"] = len(advertised) > 0
+            # Subnet Router options (LAN routes only, excluding 0.0.0.0/0, ::/0, and tailscale overlay IPs)
+            candidate_routes = p_routes if p_routes else doc.get("Self", {}).get("AllowedIPs", [])
+            lan_routes = [
+                r
+                for r in candidate_routes
+                if r not in ("0.0.0.0/0", "::/0") and not r.startswith("100.") and not r.startswith("fd7a:")
+            ]
+            ts_info["advertised_routes"] = lan_routes
+            ts_info["is_subnet_router"] = len(lan_routes) > 0
             ts_info["detected_subnets"] = detect_local_subnets()
 
             # Parse Peers
@@ -2681,19 +2705,6 @@ def get_mesh_vpn_status() -> Dict[str, Any]:
             ts_info["peers"] = peers_list
             ts_info["peers_count"] = len(peers_list)
             ts_info["auth_url"] = doc.get("AuthURL") or ""
-
-            # Check debug prefs for RunSSH
-            p_code, p_out = _run_tailscale_cmd(["debug", "prefs"], timeout=2.0)
-            if p_code == 0 and p_out.strip().startswith("{"):
-                try:
-                    p_doc = json.loads(p_out.strip())
-                    ts_info["ssh_enabled"] = bool(p_doc.get("RunSSH", False))
-                    p_routes = p_doc.get("AdvertiseRoutes") or []
-                    if p_routes and not ts_info["advertised_routes"]:
-                        ts_info["advertised_routes"] = p_routes
-                        ts_info["is_subnet_router"] = True
-                except Exception:
-                    pass
 
             # Check serve / funnel status
             sv_code, sv_out = _run_tailscale_cmd(["serve", "status", "--json"], timeout=2.0)
@@ -2925,11 +2936,13 @@ def deploy_tailscale_container(
     if auth_key:
         env_vars.append(f"TS_AUTHKEY={auth_key.strip()}")
     if accept_routes:
-        env_vars.append("TS_EXTRA_ARGS=--accept-routes")
+        env_vars.append("TS_EXTRA_ARGS=--reset --accept-routes")
+    else:
+        env_vars.append("TS_EXTRA_ARGS=--reset")
 
     # 5. Device and capabilities handling
     devices = []
-    if os.path.exists("/dev/net/tun"):
+    if os.path.exists("/dev/net/tun") or os.path.exists("/host/dev/net/tun"):
         devices.append(
             {
                 "PathOnHost": "/dev/net/tun",

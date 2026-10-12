@@ -3854,31 +3854,55 @@ export async function fetchAndRenderWireguard() {
         if (subnetToggle) subnetToggle.checked = Boolean(ts.is_subnet_router);
         if (subnetInput && document.activeElement !== subnetInput) {
           const advRoutes = Array.isArray(ts.advertised_routes)
-            ? ts.advertised_routes.join(', ')
-            : ts.advertised_routes || '';
+            ? ts.advertised_routes.filter(r => r !== '0.0.0.0/0' && r !== '::/0').join(', ')
+            : (ts.advertised_routes || '');
           const detRoutes = Array.isArray(ts.detected_subnets)
             ? ts.detected_subnets.join(', ')
             : ts.detected_subnets || '';
           subnetInput.value = advRoutes || detRoutes;
+          if (!advRoutes && detRoutes) {
+            subnetInput.placeholder = detRoutes;
+          }
         }
 
         // 2. Exit Node Gateway
         const exitNodeToggle = document.getElementById('ts-exit-node-toggle');
         const exitNodePill = document.getElementById('ts-exit-node-pill');
+        const exitNodeHint = document.getElementById('ts-exit-node-approval-hint');
         if (exitNodeToggle) exitNodeToggle.checked = Boolean(ts.advertise_exit_node);
         if (exitNodePill) {
           if (ts.is_exit_node) {
-            exitNodePill.textContent = 'Active Exit Node';
+            exitNodePill.textContent = 'Active (In Use)';
             exitNodePill.style.color = '#3bf58b';
             exitNodePill.style.background = 'rgba(59,245,139,0.15)';
+            if (exitNodeHint) exitNodeHint.style.display = 'none';
+          } else if (ts.exit_node_approved) {
+            exitNodePill.textContent = 'Approved & Available';
+            exitNodePill.style.color = '#3bf58b';
+            exitNodePill.style.background = 'rgba(59,245,139,0.15)';
+            if (exitNodeHint) {
+              exitNodeHint.style.display = 'block';
+              exitNodeHint.innerHTML = '✅ Approved in Tailscale. Other devices on your Tailnet can now select this NAS as their Exit Node.';
+              exitNodeHint.style.color = 'var(--ok2, #3bf58b)';
+              exitNodeHint.style.background = 'rgba(59,245,139,0.08)';
+              exitNodeHint.style.borderColor = 'rgba(59,245,139,0.25)';
+            }
           } else if (ts.advertise_exit_node) {
-            exitNodePill.textContent = 'Advertised (Pending/Approved)';
+            exitNodePill.innerHTML = '<a href="https://login.tailscale.com/admin/machines" target="_blank" rel="noopener noreferrer" style="color:#38bdf8; text-decoration:underline;">Pending Admin Approval ↗</a>';
             exitNodePill.style.color = '#38bdf8';
             exitNodePill.style.background = 'rgba(56,189,248,0.15)';
+            if (exitNodeHint) {
+              exitNodeHint.style.display = 'block';
+              exitNodeHint.innerHTML = '⚠️ Exit node is advertised. To allow other devices to route traffic through this NAS, approve it in your <a href="https://login.tailscale.com/admin/machines" target="_blank" rel="noopener noreferrer" style="color:#38bdf8; text-decoration:underline; font-weight:700;">Tailscale Admin Console ↗</a> (Machines → Edit route settings → Use as exit node).';
+              exitNodeHint.style.color = '#fbbf24';
+              exitNodeHint.style.background = 'rgba(245,158,11,0.08)';
+              exitNodeHint.style.borderColor = 'rgba(245,158,11,0.25)';
+            }
           } else {
             exitNodePill.textContent = 'Inactive';
             exitNodePill.style.color = 'var(--muted)';
             exitNodePill.style.background = 'rgba(255,255,255,0.06)';
+            if (exitNodeHint) exitNodeHint.style.display = 'none';
           }
         }
 
@@ -4378,6 +4402,21 @@ export async function fetchAndRenderWireguard() {
         }
       }
       triggerServeFunnelUpdate();
+    });
+  }
+
+  const btnCopyServeUrl = document.getElementById('btn-copy-ts-serve-url');
+  if (btnCopyServeUrl && !btnCopyServeUrl._bound) {
+    btnCopyServeUrl._bound = true;
+    btnCopyServeUrl.addEventListener('click', () => {
+      const link = document.getElementById('ts-serve-url-link');
+      const url = link ? link.href : '';
+      if (url && url !== '#') {
+        if (navigator.clipboard?.writeText) {
+          navigator.clipboard.writeText(url);
+          showToast('Tailscale HTTPS URL copied to clipboard.', 'success');
+        }
+      }
     });
   }
 
