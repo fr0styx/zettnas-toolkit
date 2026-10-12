@@ -131,3 +131,90 @@ def test_root_for(pool_tree):
 )
 def test_is_in_time_window(start, end, now, expected):
     assert is_in_time_window(start, end, now_minutes=now) is expected
+
+
+# ---- hostname resolution & container ID suppression ----
+
+
+def test_is_container_id():
+    from backend.config import _is_container_id
+
+    assert _is_container_id("425dae47b7b9") is True
+    assert _is_container_id("425DAE47B7B9") is True
+    assert _is_container_id("a" * 64) is True
+    assert _is_container_id("") is True
+    assert _is_container_id(None) is True
+    assert _is_container_id("Ark") is False
+    assert _is_container_id("ZettNAS") is False
+    assert _is_container_id("my-homelab-server") is False
+
+
+def test_get_server_hostname_env_override(monkeypatch):
+    from backend.config import clear_hostname_cache, get_server_hostname
+
+    clear_hostname_cache()
+    monkeypatch.setenv("NAS_NAME", "IronVault")
+    assert get_server_hostname() == "IronVault"
+
+
+def test_get_server_hostname_suppresses_container_id(monkeypatch, tmp_path):
+    from backend.config import clear_hostname_cache, get_server_hostname
+
+    clear_hostname_cache()
+    monkeypatch.delenv("NAS_NAME", raising=False)
+
+    # Mock socket hostname to a 12-char docker container ID
+    import socket
+
+    monkeypatch.setattr(socket, "gethostname", lambda: "425dae47b7b9")
+
+    # Mock docker socket not found
+    import os
+
+    real_exists = os.path.exists
+
+    def mock_exists(p):
+        if p == "/var/run/docker.sock":
+            return False
+        return real_exists(p)
+
+    monkeypatch.setattr(os.path, "exists", mock_exists)
+
+    # Should NOT return 425DAE47B7B9, should fallback cleanly to ZettNAS
+    assert get_server_hostname() == "ZettNAS"
+
+
+def test_get_server_hostname_unraid_ident(monkeypatch, tmp_path):
+    from backend.config import clear_hostname_cache, get_server_hostname
+
+    clear_hostname_cache()
+    monkeypatch.delenv("NAS_NAME", raising=False)
+
+    ident_file = tmp_path / "ident.cfg"
+    ident_file.write_text('NAME="Ark"\nCOMMENT="Main Storage"\n')
+
+    import os
+
+    real_exists = os.path.exists
+
+    def mock_exists(p):
+        if p == "/boot/config/ident.cfg":
+            return True
+        if p == "/var/run/docker.sock":
+            return False
+        return real_exists(p)
+
+    monkeypatch.setattr(os.path, "exists", mock_exists)
+
+    import builtins
+
+    real_open = builtins.open
+
+    def mock_open(file, *args, **kwargs):
+        if file == "/boot/config/ident.cfg":
+            return real_open(str(ident_file), *args, **kwargs)
+        return real_open(file, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "open", mock_open)
+
+    assert get_server_hostname() == "Ark"

@@ -20,6 +20,7 @@ services:
       - /dev/dri:/dev/dri                                    # GPU acceleration (optional)
       - /dev/fuse:/dev/fuse:rw                               # FUSE cloud remotes mount
       - /etc/localtime:/etc/localtime:ro
+      - /etc/hostname:/host/etc/hostname:ro
       - ${STORAGE_POOL_PATH:-/mnt/user}:/mnt/user:rw
       - ./data:/app/data
       - /boot/config/network.cfg:/boot/config/network.cfg:ro # Unraid network config (optional on Linux)
@@ -30,7 +31,7 @@ services:
       - PORT=8082
       - WEBDAV_PORT=${WEBDAV_PORT:-8084}
       - WEB_PASSWORD=${WEB_PASSWORD:-admin}
-      - NAS_NAME=${NAS_NAME:-NAS}
+      - NAS_NAME=${NAS_NAME:-}
       - POOL_PATH=/mnt/user
       - OS_NVME=${OS_NVME:-nvme1n1}
       - HOST_PROC=/host/proc

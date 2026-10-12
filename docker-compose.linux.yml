@@ -20,6 +20,7 @@ services:
       - /sys:/host/sys:rw
       - /dev:/host/dev:rw
       - /dev/fuse:/dev/fuse:rw
+      - /etc/hostname:/host/etc/hostname:ro
       
       # Storage root with bidirectional mount propagation
       - /mnt/storage:/mnt/storage:rshared
@@ -38,6 +39,7 @@ services:
       - PGID=1000
       - ENABLE_FB=1
       - LCD_FPS=10
+      - NAS_NAME=${NAS_NAME:-}
     cap_add:
       - SYS_RAWIO
       - SYS_ADMIN

@@ -3,6 +3,7 @@ import logging
 import os
 import secrets
 import socket
+import time
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("ZettNAS")
@@ -135,20 +136,119 @@ def _load_security():
             logger.error(f"Failed to load security.json: {e}")
 
 
-def get_server_hostname():
-    name = os.environ.get("NAS_NAME")
-    if name:
-        return name
+def _is_container_id(val: str | None) -> bool:
+    """Checks whether a string resembles an auto-generated Docker/container ID
+    (12 to 64 hexadecimal characters, e.g. '425dae47b7b9').
+    """
+    if not val:
+        return True
+    s = val.strip()
+    if 12 <= len(s) <= 64 and all(c in "0123456789abcdefABCDEF" for c in s):
+        return True
+    return False
+
+
+_cached_server_hostname: str | None = None
+_cached_server_hostname_ts: float = 0.0
+
+
+def clear_hostname_cache():
+    """Resets the cached server hostname (useful for tests and dynamic updates)."""
+    global _cached_server_hostname, _cached_server_hostname_ts
+    _cached_server_hostname = None
+    _cached_server_hostname_ts = 0.0
+
+
+def get_server_hostname() -> str:
+    """Discovers the true human-friendly server hostname.
+    Resolution order:
+    1. Explicit NAS_NAME environment variable (if not 'NAS' or container ID)
+    2. Host /etc/hostname (/host/etc/hostname or /etc/hostname)
+    3. Unraid config files (/boot/config/ident.cfg, /var/local/emhttp/var.ini, etc.)
+    4. Docker daemon engine info via /var/run/docker.sock
+    5. Local socket.gethostname() if not a container hex ID
+    6. Explicit NAS_NAME if 'NAS'
+    7. Fallback: 'ZettNAS'
+    """
+    global _cached_server_hostname, _cached_server_hostname_ts
+
+    now = time.time()
+    if _cached_server_hostname and (now - _cached_server_hostname_ts < 60):
+        return _cached_server_hostname
+
+    # 1. Environment variable override (if customized and not a container hex ID)
+    env_name = os.environ.get("NAS_NAME", "").strip()
+    if env_name and not _is_container_id(env_name) and env_name.upper() != "NAS":
+        _cached_server_hostname = env_name
+        _cached_server_hostname_ts = now
+        return env_name
+
+    # 2. Host /etc/hostname
+    for h_path in ("/host/etc/hostname", "/etc/hostname"):
+        try:
+            if os.path.exists(h_path):
+                with open(h_path, "r", encoding="utf-8") as f:
+                    content = f.read().strip()
+                    if content and not _is_container_id(content):
+                        _cached_server_hostname = content
+                        _cached_server_hostname_ts = now
+                        return content
+        except OSError:
+            pass
+
+    # 3. Unraid ident files
+    unraid_paths = (
+        "/boot/config/ident.cfg",
+        "/host/boot/config/ident.cfg",
+        "/var/local/emhttp/var.ini",
+        "/host/var/local/emhttp/var.ini",
+        "/etc/unraid-ident.cfg",
+    )
+    for u_path in unraid_paths:
+        try:
+            if os.path.exists(u_path):
+                with open(u_path, "r", encoding="utf-8", errors="ignore") as f:
+                    for line in f:
+                        line = line.strip()
+                        if line.startswith("NAME="):
+                            parsed = line.split("=", 1)[1].strip().strip('"').strip("'")
+                            if parsed and not _is_container_id(parsed):
+                                _cached_server_hostname = parsed
+                                _cached_server_hostname_ts = now
+                                return parsed
+        except OSError:
+            pass
+
+    # 4. Docker daemon via Unix Domain Socket
+    sock_path = "/var/run/docker.sock"
+    if os.path.exists(sock_path):
+        try:
+            import httpx
+
+            transport = httpx.HTTPTransport(uds=sock_path)
+            with httpx.Client(transport=transport, timeout=0.8) as client:
+                res = client.get("http://docker/info")
+                if res.status_code == 200:
+                    d_name = res.json().get("Name", "").strip()
+                    if d_name and not _is_container_id(d_name):
+                        _cached_server_hostname = d_name
+                        _cached_server_hostname_ts = now
+                        return d_name
+        except Exception:
+            pass
+
+    # 5. Local socket hostname (if not a raw container ID)
     try:
-        ident_file = "/etc/unraid-ident.cfg"
-        if os.path.exists(ident_file):
-            with open(ident_file) as f:
-                for line in f:
-                    if line.startswith("NAME="):
-                        return line.split("=", 1)[1].strip().strip('"')
-    except (OSError, IndexError):
-        pass
-    try:
-        return socket.gethostname().split(".")[0].upper()
+        raw_sock = socket.gethostname().split(".")[0].strip()
+        if raw_sock and not _is_container_id(raw_sock):
+            _cached_server_hostname = raw_sock
+            _cached_server_hostname_ts = now
+            return raw_sock
     except Exception:
-        return "NAS"
+        pass
+
+    # 6. Fallback to env_name if set to "NAS", otherwise "ZettNAS"
+    fallback = env_name if env_name and not _is_container_id(env_name) else "ZettNAS"
+    _cached_server_hostname = fallback
+    _cached_server_hostname_ts = now
+    return fallback
