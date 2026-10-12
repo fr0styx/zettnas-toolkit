@@ -2310,9 +2310,90 @@ export async function openNewCloudRemoteModal(onSuccess) {
               showToast('Cloud credentials verified & token auto-populated!', 'info');
             };
 
-            const startOAuth = async (isQr = false) => {
-              if (browserBtn) browserBtn.disabled = true;
+            const renderQrCode = async (session) => {
+              if (!qrTarget || !session) return;
+              try {
+                const origin = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : 'http://127.0.0.1:8082';
+                const mobileUrl = `${origin}/api/remotes/oauth/mobile-page?sid=${encodeURIComponent(session.session_id)}`;
+                const svgStr = await QRCode.toString(mobileUrl, {
+                  type: 'svg',
+                  margin: 1,
+                  width: 170,
+                  color: { dark: '#000000', light: '#ffffff' }
+                });
+                qrTarget.innerHTML = svgStr;
+
+                let directLink = qrBox ? qrBox.querySelector('.oauth-direct-links') : null;
+                if (qrBox && !directLink) {
+                  directLink = document.createElement('div');
+                  directLink.className = 'oauth-direct-links';
+                  directLink.style.cssText = 'margin-top: 8px; font-size: 11px; text-align: center; line-height: 1.5;';
+                  qrBox.appendChild(directLink);
+                }
+                if (directLink) {
+                  directLink.innerHTML = `
+                    <div style="color: #94a3b8; font-size: 10px; margin-bottom: 2px;">Can't scan QR code?</div>
+                    <a href="${escapeHtml(session.auth_url)}" target="_blank" rel="noopener noreferrer" style="color: #38bdf8; text-decoration: underline; font-weight: 600;">
+                      🔗 Open Direct Login Page
+                    </a>
+                  `;
+                }
+              } catch (qErr) {
+                qrTarget.innerHTML = `
+                  <div style="padding: 12px; text-align: center;">
+                    <div style="color: #f87171; font-size: 11px; margin-bottom: 6px;">Could not display QR code</div>
+                    <a href="${escapeHtml(session.auth_url)}" target="_blank" rel="noopener noreferrer" style="color: #38bdf8; text-decoration: underline; font-size: 11px; font-weight: 600;">Click here to log in directly</a>
+                  </div>
+                `;
+              }
+            };
+
+            const startOAuth = async (isQr = false, forceNew = false) => {
+              // Reuse existing active session if available
+              if (!forceNew && _currentOAuthSession && _currentOAuthSession.auth_url) {
+                if (isQr) {
+                  if (qrBox) qrBox.style.display = 'block';
+                  await renderQrCode(_currentOAuthSession);
+                  if (statusEl) {
+                    statusEl.style.display = 'block';
+                    statusEl.style.background = 'rgba(56, 189, 248, 0.12)';
+                    statusEl.style.border = '1px solid rgba(56, 189, 248, 0.3)';
+                    statusEl.style.color = '#38bdf8';
+                    statusEl.innerHTML = '📱 <strong>QR Code Ready:</strong> Scan with your phone camera to sign in on mobile, or follow Step 2 below.';
+                  }
+                } else {
+                  if (typeof window !== 'undefined' && window.open) {
+                    window.open(_currentOAuthSession.auth_url, '_blank');
+                  }
+                  if (statusEl) {
+                    statusEl.style.display = 'block';
+                    statusEl.style.background = 'rgba(56, 189, 248, 0.12)';
+                    statusEl.style.border = '1px solid rgba(56, 189, 248, 0.3)';
+                    statusEl.style.color = '#38bdf8';
+                    statusEl.innerHTML = '🌐 <strong>Sign-in window opened:</strong> Log in to your account. When redirected to the page saying <em>"This site can\'t be reached"</em>, copy the full address from your URL bar and paste it in Step 2 below.';
+                  }
+                  if (urlInput) {
+                    setTimeout(() => urlInput.focus(), 200);
+                  }
+                }
+                if (step2Box) step2Box.style.display = 'block';
+                return;
+              }
+
+              // If forcing new and there was an existing session, delete it cleanly
+              if (_currentOAuthSession && _currentOAuthSession.session_id) {
+                api.delete(`/api/remotes/oauth/${_currentOAuthSession.session_id}`).catch(() => {});
+                _currentOAuthSession = null;
+              }
+
+              if (browserBtn) {
+                browserBtn.disabled = true;
+                browserBtn.innerHTML = '<span>⏳ Starting Authorization...</span>';
+              }
               if (qrBtn) qrBtn.disabled = true;
+              if (qrTarget && isQr) {
+                qrTarget.innerHTML = '<div style="font-size: 11px; color: #0284c7; font-weight: 600;">⏳ Initializing QR code...</div>';
+              }
 
               if (statusEl) {
                 statusEl.style.display = 'block';
@@ -2332,35 +2413,13 @@ export async function openNewCloudRemoteModal(onSuccess) {
                   if (step2Box) step2Box.style.display = 'block';
 
                   if (isQr) {
-                    if (qrPanel) qrPanel.style.display = 'block';
-                    if (desktopPanel) desktopPanel.style.display = 'none';
-                    if (tabQr) {
-                      tabQr.style.background = '#0284c7';
-                      tabQr.style.color = '#fff';
-                    }
-                    if (tabDesktop) {
-                      tabDesktop.style.background = 'transparent';
-                      tabDesktop.style.color = '#94a3b8';
-                    }
-                    if (qrBox && qrTarget) {
-                      qrBox.style.display = 'block';
-                      try {
-                        const svgStr = await QRCode.toString(res.auth_url, {
-                          type: 'svg',
-                          margin: 1,
-                          width: 170,
-                          color: { dark: '#000000', light: '#ffffff' }
-                        });
-                        qrTarget.innerHTML = svgStr;
-                      } catch (qErr) {
-                        qrTarget.innerHTML = `<a href="${escapeHtml(res.auth_url)}" target="_blank" style="color:#0284c7; text-decoration:underline;">Click here to open login link</a>`;
-                      }
-                    }
+                    if (qrBox) qrBox.style.display = 'block';
+                    await renderQrCode(res);
                     if (statusEl) {
                       statusEl.style.background = 'rgba(56, 189, 248, 0.12)';
                       statusEl.style.border = '1px solid rgba(56, 189, 248, 0.3)';
                       statusEl.style.color = '#38bdf8';
-                      statusEl.innerHTML = '📱 <strong>QR Code Ready:</strong> Scan with your phone camera to log in. Once signed in, copy the redirected URL and paste it in Step 2 below.';
+                      statusEl.innerHTML = '📱 <strong>QR Code Ready:</strong> Scan with your phone camera to sign in on mobile, or follow Step 2 below.';
                     }
                   } else {
                     if (typeof window !== 'undefined' && window.open) {
@@ -2371,6 +2430,9 @@ export async function openNewCloudRemoteModal(onSuccess) {
                       statusEl.style.border = '1px solid rgba(56, 189, 248, 0.3)';
                       statusEl.style.color = '#38bdf8';
                       statusEl.innerHTML = '🌐 <strong>Sign-in window opened:</strong> Log in to your account. When redirected to the page saying <em>"This site can\'t be reached"</em>, copy the full address from your URL bar and paste it in Step 2 below.';
+                    }
+                    if (urlInput) {
+                      setTimeout(() => urlInput.focus(), 300);
                     }
                   }
 
@@ -2395,35 +2457,30 @@ export async function openNewCloudRemoteModal(onSuccess) {
                   statusEl.style.color = '#f87171';
                   statusEl.innerHTML = `❌ Failed to start authorization: ${escapeHtml(err.message || 'Unknown error')}`;
                 }
+                if (isQr && qrTarget) {
+                  qrTarget.innerHTML = `
+                    <div style="padding: 12px; text-align: center; color: #ef4444; font-size: 11px;">
+                      <div>❌ ${escapeHtml(err.message || 'Failed to start authorization')}</div>
+                      <button type="button" class="btn-retry-qr" style="margin-top: 8px; padding: 4px 10px; font-size: 11px; background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.4); color: #fff; border-radius: 4px; cursor: pointer;">🔄 Retry</button>
+                    </div>
+                  `;
+                  const retryBtn = qrTarget.querySelector('.btn-retry-qr');
+                  if (retryBtn) {
+                    retryBtn.onclick = () => startOAuth(true, true);
+                  }
+                }
               } finally {
-                if (browserBtn) browserBtn.disabled = false;
+                if (browserBtn) {
+                  browserBtn.disabled = false;
+                  browserBtn.innerHTML = `<span>🌐 ${escapeHtml(brandBtnLabel)}</span>`;
+                }
                 if (qrBtn) qrBtn.disabled = false;
               }
             };
 
             if (browserBtn) {
               browserBtn.onclick = () => {
-                if (_currentOAuthSession && _currentOAuthSession.auth_url) {
-                  if (typeof window !== 'undefined' && window.open) {
-                    window.open(_currentOAuthSession.auth_url, '_blank');
-                  }
-                  if (statusEl) {
-                    statusEl.style.display = 'block';
-                    statusEl.style.background = 'rgba(56, 189, 248, 0.12)';
-                    statusEl.style.border = '1px solid rgba(56, 189, 248, 0.3)';
-                    statusEl.style.color = '#38bdf8';
-                    statusEl.innerHTML = '🌐 <strong>Sign-in window opened:</strong> Log in to your account. When redirected, copy the address from your URL bar and paste it in Step 2 below.';
-                  }
-                  if (step2Box) {
-                    step2Box.style.display = 'block';
-                    step2Box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                  }
-                  if (urlInput) {
-                    urlInput.focus();
-                  }
-                } else {
-                  startOAuth(false);
-                }
+                startOAuth(false, false);
               };
             }
 
@@ -2439,7 +2496,7 @@ export async function openNewCloudRemoteModal(onSuccess) {
                   tabDesktop.style.background = 'transparent';
                   tabDesktop.style.color = '#94a3b8';
                 }
-                startOAuth(true);
+                startOAuth(true, true);
               };
             }
 
@@ -2542,11 +2599,6 @@ export async function openNewCloudRemoteModal(onSuccess) {
                   exchangeBtn.innerHTML = '<span>✓ Complete & Populate Token</span>';
                 }
               };
-            }
-
-            const isTest = (typeof process !== 'undefined' && process.env && (process.env.VITEST || process.env.NODE_ENV === 'test')) || (typeof window !== 'undefined' && window.__VITEST__);
-            if (!isTest) {
-              startOAuth(false);
             }
           }
 

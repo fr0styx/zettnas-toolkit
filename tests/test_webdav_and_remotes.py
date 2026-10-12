@@ -304,3 +304,49 @@ def test_api_remotes_oauth_lifecycle(client, auth_headers):
 def test_api_remotes_oauth_status_not_found(client, auth_headers):
     resp = client.get("/api/remotes/oauth/status/non_existent_session", headers=auth_headers)
     assert resp.status_code == 404
+
+
+def test_api_remotes_mobile_oauth_flow(client):
+    from backend.api.remotes import _ACTIVE_OAUTH_SESSIONS
+
+    # 1. 404 on expired session
+    resp = client.get("/api/remotes/oauth/mobile-page?sid=expired_sid")
+    assert resp.status_code == 404
+    assert "Session Expired" in resp.text
+
+    # 2. Render mobile companion page with active session
+    session_id = "zos_mobile123"
+    _ACTIVE_OAUTH_SESSIONS[session_id] = {
+        "proc": MagicMock(poll=MagicMock(return_value=None), kill=MagicMock()),
+        "provider_type": "onedrive",
+        "auth_url": "https://login.microsoftonline.com/oauth_test",
+        "local_url": "http://127.0.0.1:53682/auth?state=s123",
+        "port": 53682,
+        "state": "s123",
+        "started_at": time.time(),
+        "token": None,
+        "error": None,
+        "completed": False,
+    }
+
+    resp = client.get(f"/api/remotes/oauth/mobile-page?sid={session_id}")
+    assert resp.status_code == 200
+    assert "Connect Microsoft OneDrive" in resp.text
+    assert "https://login.microsoftonline.com/oauth_test" in resp.text
+    assert "Step 1" in resp.text
+    assert "Step 2" in resp.text
+
+    # 3. Mobile exchange without requiring desktop session cookie
+    _ACTIVE_OAUTH_SESSIONS[session_id]["token"] = '{"access_token": "mobile_jwt"}'
+    _ACTIVE_OAUTH_SESSIONS[session_id]["completed"] = True
+
+    with patch("urllib.request.urlopen"):
+        resp = client.post(
+            "/api/remotes/oauth/mobile-exchange",
+            json={"session_id": session_id, "redirect_url": "http://localhost:53682/?code=mob_code&state=s123"},
+        )
+        assert resp.status_code == 200
+        assert resp.json()["status"] == "ok"
+        assert resp.json()["token"] == '{"access_token": "mobile_jwt"}'
+
+    _ACTIVE_OAUTH_SESSIONS.pop(session_id, None)

@@ -269,6 +269,8 @@ _PUBLIC_API_PATHS = {
     "/api/v1/health",
     "/api/metrics",
     "/api/v1/metrics",
+    "/api/remotes/oauth/mobile-page",
+    "/api/remotes/oauth/mobile-exchange",
 }
 _DOCS_PATHS = {"/docs", "/redoc", "/openapi.json", "/docs/oauth2-redirect"}
 
