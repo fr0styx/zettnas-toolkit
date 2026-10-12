@@ -45,6 +45,9 @@ export const SUBPANE_MAP = {
   // Network & Switch (First-Class Top-Level)
   'mgmt-sec-network': { section: 'mgmt-sec-network', pane: 'mgmt-pane-network' },
   'mgmt-pane-network': { section: 'mgmt-sec-network', pane: 'mgmt-pane-network' },
+  'mgmt-pane-network-physical': { section: 'mgmt-sec-network', pane: 'mgmt-pane-network' },
+  'mgmt-pane-network-wireguard': { section: 'mgmt-sec-network', pane: 'mgmt-pane-network-wireguard' },
+  'mgmt-pane-network-docker': { section: 'mgmt-sec-network', pane: 'mgmt-pane-network-docker' },
   // Hardware & Profiles
   'mgmt-sec-hardware': { section: 'mgmt-sec-hardware', pane: 'mgmt-pane-unraid' },
   'mgmt-pane-hardware': { section: 'mgmt-sec-hardware', pane: 'mgmt-pane-unraid' },
@@ -5248,7 +5251,11 @@ export function initManagement() {
       setTimeout(fetchAndRenderMetrics, 50);
     } else if (paneId === 'mgmt-pane-copy') {
       fetchAndRenderCopyHistory();
-    } else if (paneId === 'mgmt-pane-network') {
+    } else if (paneId === 'mgmt-pane-network' || paneId === 'mgmt-pane-network-physical') {
+      fetchAndRenderNetworkTopology();
+    } else if (paneId === 'mgmt-pane-network-wireguard') {
+      fetchAndRenderWireguard();
+    } else if (paneId === 'mgmt-pane-network-docker') {
       fetchAndRenderNetworkTopology();
     } else if (paneId === 'mgmt-pane-unraid') {
       if (state.lastStats) updateManagementTelemetry(state.lastStats);

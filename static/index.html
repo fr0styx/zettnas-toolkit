@@ -194,10 +194,10 @@
   })();
 </script>
 <style>html,body{color:#eaf1f8;background-color:#080c10;width:100%;height:100%;margin:0;padding:0;overflow:hidden}html.auth-required body{background:radial-gradient(circle at 50% 20%,#151d29 0%,#080c10 70%)!important}#login-overlay{z-index:999999;background:#080c10;justify-content:center;align-items:center;display:flex;position:fixed;inset:0}html.has-auth-session #login-overlay{display:none!important}html.auth-required #login-overlay{display:flex!important}html.is-desktop-locked #lock-overlay{opacity:1!important;display:flex!important}html.is-desktop-locked body{overflow:hidden!important}html.auth-required .studio-viewport-wrapper,html.auth-required .suite-navbar,html.auth-required #desktop-icons-container,html.auth-required .desktop-icons-container,html.auth-required .top-nav,html.auth-required #desktop-widgets-container,html.auth-required #os-dock-container,html.auth-required .workspace-panel,html.auth-required .smart-modal-backdrop,html.auth-required .os-window,html.auth-required .notif-center-window{display:none!important}</style>
-  <script type="module" crossorigin src="/assets/index-Cc93RjMf.js"></script>
+  <script type="module" crossorigin src="/assets/index-DfQDz-eo.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-hePW80VL.js">
-  <link rel="modulepreload" crossorigin href="/assets/dock-D5t4A26x.js">
-  <link rel="modulepreload" crossorigin href="/assets/users-BX52eq-r.js">
+  <link rel="modulepreload" crossorigin href="/assets/dock-WBPyBMPn.js">
+  <link rel="modulepreload" crossorigin href="/assets/users-BJy7Z2Co.js">
   <link rel="stylesheet" crossorigin href="/assets/index-nOXmo-Ik.css">
 </head>
 <body class="studio-workbench no-specular-glow">
@@ -3578,6 +3578,23 @@
 
           <!-- 3. Network & Virtual Switch Inspector (Standalone Top-Level Section) -->
           <div id="mgmt-sec-network" class="mgmt-detail-card" style="display: none;">
+            <!-- Inner Tab Bar for Network & Switch -->
+            <div class="mgmt-inner-tab-bar">
+              <button class="mgmt-inner-tab active" data-tab-target="mgmt-pane-network">
+                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-net"/></svg>
+                <span data-i18n="mgmt.subtab_network_physical">Switch & Physical</span>
+              </button>
+              <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-network-wireguard">
+                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-shield"/></svg>
+                <span data-i18n="mgmt.subtab_network_wireguard">WireGuard & Mesh VPN</span>
+              </button>
+              <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-network-docker">
+                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-docker"/></svg>
+                <span data-i18n="mgmt.subtab_network_docker">Docker Networks</span>
+              </button>
+            </div>
+
+            <!-- Sub-tab 1: Visual Network & Physical Switch -->
             <div id="mgmt-pane-network" class="mgmt-tab-pane" style="display: block;">
               <div class="mgmt-card-intro" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
                 <div>
@@ -3586,7 +3603,7 @@
                     <span data-i18n="mgmt.network_sec_title">Visual Network & Virtual Switch Inspector</span>
                   </div>
                   <div class="mgmt-card-intro-desc" data-i18n="mgmt.network_sec_desc">
-                    Host interface carriers, link negotiation speeds (10GbE / 2.5GbE / 1GbE), bridges, and Docker container network topology.
+                    Host interface carriers, link negotiation speeds (10GbE / 2.5GbE / 1GbE), bridges, and physical switch faceplate.
                   </div>
                 </div>
                 <div style="display:flex; gap:8px; align-items:center;">
@@ -3691,24 +3708,28 @@
                     </tbody>
                   </table>
                 </div>
+              </div>
+            </div>
 
-                <!-- Docker Bridge Routing & Container Allocations -->
-                <div class="network-section-header" style="margin-top: 24px; display: flex; justify-content: space-between; align-items: center;">
-                  <span class="network-section-title">DOCKER BRIDGE NETWORKS & CONTAINER IP ALLOCATIONS</span>
-                  <button class="btn-pill-toggle" id="btn-create-docker-net" style="font-size: 11px; padding: 3px 10px; color: var(--accent-cyan, #38bdf8); border-color: rgba(56, 189, 248, 0.4);" data-i18n="net.create_docker_net">+ Create Network</button>
-                </div>
-                <div class="network-docker-list" id="network-docker-container">
-                  <!-- Populated dynamically with docker network cards and attached container pills -->
-                </div>
-
-                <!-- WireGuard Mesh VPN & Subnet Router -->
-                <div class="network-section-header" style="margin-top: 24px; display: flex; justify-content: space-between; align-items: center;">
-                  <span class="network-section-title">WIREGUARD MESH VPN & SITE-TO-SITE SUBNET ROUTER</span>
-                  <div style="display:flex; gap:8px;">
-                    <button class="btn-pill-toggle" id="btn-wg-gen-client-config" style="font-size: 11px; padding: 3px 10px; color: var(--accent-cyan, #38bdf8); border-color: rgba(56, 189, 248, 0.4);">🔑 Generate Client .conf</button>
-                    <button class="btn-pill-toggle" id="btn-refresh-wireguard" style="font-size: 11px; padding: 3px 10px;">🔄 Refresh</button>
+            <!-- Sub-tab 2: WireGuard & Mesh VPN -->
+            <div id="mgmt-pane-network-wireguard" class="mgmt-tab-pane" style="display: none;">
+              <div class="mgmt-card-intro" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                <div>
+                  <div class="mgmt-card-intro-title">
+                    <svg class="ic"><use href="#i-shield"/></svg>
+                    <span data-i18n="mgmt.wireguard_sec_title">WireGuard Mesh VPN & Site-to-Site Subnet Router</span>
+                  </div>
+                  <div class="mgmt-card-intro-desc" data-i18n="mgmt.wireguard_sec_desc">
+                    Zero-Trust peer mesh networking, cryptographic client profile generator (Curve25519), and kernel subnet NAT routing gateway.
                   </div>
                 </div>
+                <div style="display:flex; gap:8px; align-items:center;">
+                  <button class="btn-pill-toggle" id="btn-wg-gen-client-config" style="font-size: 11px; padding: 5px 12px; color: var(--accent-cyan, #38bdf8); border-color: rgba(56, 189, 248, 0.4);">🔑 Generate Client .conf</button>
+                  <button class="btn-pill-toggle" id="btn-refresh-wireguard" style="font-size: 11px; padding: 5px 12px;" title="Refresh WireGuard Status">🔄 Refresh</button>
+                </div>
+              </div>
+
+              <div class="mgmt-detail-body">
                 <div class="network-grid-two-col" id="network-wireguard-container">
                   <div class="network-card">
                     <div class="network-card-header">
@@ -3744,9 +3765,34 @@
                 </div>
               </div>
             </div>
+
+            <!-- Sub-tab 3: Docker Networks -->
+            <div id="mgmt-pane-network-docker" class="mgmt-tab-pane" style="display: none;">
+              <div class="mgmt-card-intro" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                <div>
+                  <div class="mgmt-card-intro-title">
+                    <svg class="ic"><use href="#i-docker"/></svg>
+                    <span data-i18n="mgmt.docker_net_title">Docker Bridge Networks & Container Allocations</span>
+                  </div>
+                  <div class="mgmt-card-intro-desc" data-i18n="mgmt.docker_net_desc">
+                    Docker bridge routing subnets, default gateways, and container IP address bindings.
+                  </div>
+                </div>
+                <div style="display:flex; gap:8px; align-items:center;">
+                  <button class="btn-pill-toggle" id="btn-create-docker-net" style="font-size: 11px; padding: 5px 12px; color: var(--accent-cyan, #38bdf8); border-color: rgba(56, 189, 248, 0.4);" data-i18n="net.create_docker_net">+ Create Network</button>
+                </div>
+              </div>
+
+              <div class="mgmt-detail-body">
+                <div class="network-docker-list" id="network-docker-container">
+                  <!-- Populated dynamically with docker network cards and attached container pills -->
+                </div>
+              </div>
+            </div>
           </div>
 
-      <!-- Apps & Containers (Standalone Top-Level Section) -->
+
+          <!-- Apps & Containers (Standalone Top-Level Section) -->
           <div id="mgmt-sec-docker" class="mgmt-detail-card" style="display: none;">
             <div id="mgmt-pane-docker" class="mgmt-tab-pane" style="display: block;">
               <div class="mgmt-card-intro" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
