@@ -1222,10 +1222,23 @@ def _validate_console_ticket(ticket: Optional[str], vm_id: str) -> bool:
     if not ticket:
         return False
     now = time.time()
+    # Prune expired tickets
+    expired = [k for k, v in _CONSOLE_TICKETS.items() if v.get("expires_at", 0) <= now]
+    for k in expired:
+        _CONSOLE_TICKETS.pop(k, None)
+
     if ticket in _CONSOLE_TICKETS:
         entry = _CONSOLE_TICKETS.pop(ticket)
         if entry.get("vm_id") == vm_id and entry.get("expires_at", 0) > now:
             return True
+    try:
+        from backend.auth import get_current_session
+
+        session = get_current_session(ticket)
+        if session:
+            return True
+    except Exception:
+        pass
     try:
         from backend.api.auth import validate_and_consume_stream_ticket
 
@@ -1240,14 +1253,19 @@ def _validate_console_ticket(ticket: Optional[str], vm_id: str) -> bool:
 @router.websocket("/{vm_id}/console/ws")
 async def websocket_vm_console(websocket: WebSocket, vm_id: str):
     """WebSocket proxy bridging browser to QEMU RFB VNC display socket."""
-    ticket = websocket.query_params.get("ticket")
+    ticket = (
+        websocket.query_params.get("ticket")
+        or websocket.query_params.get("token")
+        or websocket.cookies.get("session_token")
+        or websocket.cookies.get("zettnas_session")
+        or websocket.cookies.get("zat_token")
+    )
     if not _validate_console_ticket(ticket, vm_id):
         await websocket.close(code=1008, reason="Unauthorized or expired console ticket")
         return
 
-    subprotocol = None
-    if "binary" in websocket.headers.get("sec-websocket-protocol", ""):
-        subprotocol = "binary"
+    subprotocols = [s.strip() for s in websocket.headers.get("sec-websocket-protocol", "").split(",") if s.strip()]
+    subprotocol = "binary" if "binary" in subprotocols else (subprotocols[0] if subprotocols else None)
     await websocket.accept(subprotocol=subprotocol)
 
     vms = _load_vms()
@@ -1266,7 +1284,13 @@ async def websocket_vm_console(websocket: WebSocket, vm_id: str):
 @router.websocket("/{vm_id}/serial/ws")
 async def websocket_vm_serial(websocket: WebSocket, vm_id: str):
     """WebSocket proxy bridging browser to QEMU serial PTY / UNIX domain socket."""
-    ticket = websocket.query_params.get("ticket")
+    ticket = (
+        websocket.query_params.get("ticket")
+        or websocket.query_params.get("token")
+        or websocket.cookies.get("session_token")
+        or websocket.cookies.get("zettnas_session")
+        or websocket.cookies.get("zat_token")
+    )
     if not _validate_console_ticket(ticket, vm_id):
         await websocket.close(code=1008, reason="Unauthorized or expired serial ticket")
         return

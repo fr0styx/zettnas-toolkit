@@ -16,19 +16,21 @@ async def stream_socket_to_websocket(ws: WebSocket, host: str, port: int, timeou
     Bridges a TCP RFB (VNC) socket to an active WebSocket connection.
     Forwards binary frame buffers from QEMU to browser and user pointer/keyboard events back to QEMU.
     """
-    try:
-        reader, writer = await asyncio.wait_for(
-            asyncio.open_connection(host, port),
-            timeout=timeout_sec,
-        )
-    except asyncio.TimeoutError:
-        logger.warning(f"[ConsoleProxy] Timeout connecting to VM VNC socket at {host}:{port}")
-        await ws.close(code=1011, reason=f"VNC server at {host}:{port} timed out. VM may still be booting.")
-        return
-    except Exception as e:
-        logger.warning(f"[ConsoleProxy] Failed connecting to VM VNC socket at {host}:{port} - {e}")
-        await ws.close(code=1011, reason=f"Cannot connect to VM display socket: {e}")
-        return
+    reader, writer = None, None
+    for attempt in range(5):
+        try:
+            reader, writer = await asyncio.wait_for(
+                asyncio.open_connection(host, port),
+                timeout=timeout_sec,
+            )
+            break
+        except (OSError, asyncio.TimeoutError) as e:
+            if attempt < 4:
+                await asyncio.sleep(0.5)
+            else:
+                logger.warning(f"[ConsoleProxy] Failed connecting to VM VNC socket at {host}:{port} - {e}")
+                await ws.close(code=1011, reason=f"Cannot connect to VM display socket: {e}")
+                return
 
     async def forward_tcp_to_ws():
         try:
@@ -76,25 +78,34 @@ async def stream_unix_socket_to_websocket(ws: WebSocket, socket_path: str, timeo
     Bridges a UNIX domain socket (QEMU guest serial PTY / chardev) to an active WebSocket connection.
     Transmits ANSI terminal I/O for interactive serial console access.
     """
-    if not os.path.exists(socket_path):
-        banner = (
-            f"\r\n\x1b[33m[ZettNAS Serial Console]\x1b[0m Waiting for serial socket at '{socket_path}'...\r\n"
-            f"\x1b[90mEnsure VM has '-serial unix:{socket_path},server,nowait' configured.\x1b[0m\r\n"
-        )
-        await ws.send_text(banner)
-        await asyncio.sleep(1.0)
-        await ws.close(code=1011, reason=f"Serial socket '{socket_path}' not available.")
-        return
+    reader, writer = None, None
+    for attempt in range(5):
+        if not os.path.exists(socket_path):
+            if attempt < 4:
+                await asyncio.sleep(0.5)
+                continue
+            banner = (
+                f"\r\n\x1b[33m[ZettNAS Serial Console]\x1b[0m Waiting for serial socket at '{socket_path}'...\r\n"
+                f"\x1b[90mEnsure VM is running and serial socket is initialized.\x1b[0m\r\n"
+            )
+            await ws.send_text(banner)
+            await asyncio.sleep(0.5)
+            await ws.close(code=1011, reason=f"Serial socket '{socket_path}' not available.")
+            return
 
-    try:
-        reader, writer = await asyncio.wait_for(
-            asyncio.open_unix_connection(socket_path),
-            timeout=timeout_sec,
-        )
-    except Exception as e:
-        logger.warning(f"[ConsoleProxy] Failed opening UNIX socket {socket_path}: {e}")
-        await ws.close(code=1011, reason=f"Cannot connect to serial socket: {e}")
-        return
+        try:
+            reader, writer = await asyncio.wait_for(
+                asyncio.open_unix_connection(socket_path),
+                timeout=timeout_sec,
+            )
+            break
+        except (OSError, asyncio.TimeoutError) as e:
+            if attempt < 4:
+                await asyncio.sleep(0.5)
+            else:
+                logger.warning(f"[ConsoleProxy] Failed opening UNIX socket {socket_path}: {e}")
+                await ws.close(code=1011, reason=f"Cannot connect to serial socket: {e}")
+                return
 
     async def forward_sock_to_ws():
         try:
