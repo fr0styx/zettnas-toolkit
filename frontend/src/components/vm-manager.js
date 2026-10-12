@@ -1577,10 +1577,10 @@ function initGuiDesktopSimulation(canvas, vmName) {
   render();
 }
 
-let _activeRfb = null;
-let _activeSerialWs = null;
+export let _activeRfb = null;
+export let _activeSerialWs = null;
 
-function _sendKeyToRfb(keysym, code) {
+export function _sendKeyToRfb(keysym, code) {
   if (_activeRfb && typeof _activeRfb.sendKey === 'function') {
     _activeRfb.sendKey(keysym, code, true);
     setTimeout(() => {
@@ -1589,11 +1589,11 @@ function _sendKeyToRfb(keysym, code) {
           _activeRfb.sendKey(keysym, code, false);
         }
       } catch (_) {}
-    }, 50);
+    }, 40);
   }
 }
 
-function _sendCtrlCToRfb() {
+export function _sendCtrlCToRfb() {
   if (_activeRfb && typeof _activeRfb.sendKey === 'function') {
     _activeRfb.sendKey(0xffe3, 'ControlLeft', true);
     _activeRfb.sendKey(0x63, 'KeyC', true);
@@ -1604,7 +1604,121 @@ function _sendCtrlCToRfb() {
           _activeRfb.sendKey(0xffe3, 'ControlLeft', false);
         }
       } catch (_) {}
-    }, 50);
+    }, 40);
+  }
+}
+
+export function getActiveConsoleTarget(consoleWin) {
+  if (!consoleWin) consoleWin = document.getElementById('vm-console-window');
+  if (!consoleWin) return null;
+
+  const mode = consoleWin._activeMode || 'gui';
+  if (mode === 'gui') {
+    const realCanvas = consoleWin.querySelector('.vnc-screen-target canvas');
+    if (realCanvas && realCanvas.style.display !== 'none') {
+      return realCanvas;
+    }
+    const simCanvas = consoleWin.querySelector('#vm-console-canvas');
+    if (simCanvas && simCanvas.style.display !== 'none') {
+      return simCanvas;
+    }
+    return realCanvas || consoleWin.querySelector('.vnc-screen-target') || consoleWin.querySelector('#vm-console-viewport');
+  } else {
+    const cliContainer = consoleWin.querySelector('#vm-cli-container');
+    if (cliContainer && cliContainer.style.display !== 'none') {
+      return cliContainer;
+    }
+    const simCanvas = consoleWin.querySelector('#vm-console-canvas');
+    if (simCanvas && simCanvas.style.display !== 'none') {
+      return simCanvas;
+    }
+    return cliContainer;
+  }
+}
+
+export function focusActiveConsole() {
+  const consoleWin = document.getElementById('vm-console-window');
+  if (!consoleWin) return;
+  const mode = consoleWin._activeMode || 'gui';
+
+  if (mode === 'gui') {
+    if (_activeRfb && typeof _activeRfb.focus === 'function') {
+      try { _activeRfb.focus({ preventScroll: true }); } catch (_) {}
+    }
+    const realCanvas = consoleWin.querySelector('.vnc-screen-target canvas');
+    if (realCanvas && realCanvas.style.display !== 'none') {
+      realCanvas.tabIndex = 0;
+      try { realCanvas.focus({ preventScroll: true }); } catch (_) {}
+      return;
+    }
+    const simCanvas = consoleWin.querySelector('#vm-console-canvas');
+    if (simCanvas && simCanvas.style.display !== 'none') {
+      try { simCanvas.focus({ preventScroll: true }); } catch (_) {}
+    }
+  } else {
+    const cliContainer = consoleWin.querySelector('#vm-cli-container');
+    if (cliContainer) {
+      cliContainer.tabIndex = 0;
+      try { cliContainer.focus({ preventScroll: true }); } catch (_) {}
+    }
+  }
+}
+
+export function _handleRfbKeyFallback(e) {
+  if (!_activeRfb) return;
+
+  const keyMap = {
+    'Enter': { keysym: 0xff0d, code: 'Enter' },
+    'Backspace': { keysym: 0xff08, code: 'Backspace' },
+    'Tab': { keysym: 0xff09, code: 'Tab' },
+    'Escape': { keysym: 0xff1b, code: 'Escape' },
+    'Delete': { keysym: 0xffff, code: 'Delete' },
+    'ArrowUp': { keysym: 0xff52, code: 'ArrowUp' },
+    'ArrowDown': { keysym: 0xff54, code: 'ArrowDown' },
+    'ArrowLeft': { keysym: 0xff51, code: 'ArrowLeft' },
+    'ArrowRight': { keysym: 0xff53, code: 'ArrowRight' },
+    'Home': { keysym: 0xff50, code: 'Home' },
+    'End': { keysym: 0xff57, code: 'End' },
+    'PageUp': { keysym: 0xff55, code: 'PageUp' },
+    'PageDown': { keysym: 0xff56, code: 'PageDown' },
+    ' ': { keysym: 0x0020, code: 'Space' },
+    'Space': { keysym: 0x0020, code: 'Space' },
+  };
+
+  if (keyMap[e.key]) {
+    e.preventDefault();
+    e.stopPropagation();
+    _sendKeyToRfb(keyMap[e.key].keysym, keyMap[e.key].code);
+    return;
+  }
+
+  // Ctrl combos
+  if (e.ctrlKey && e.key && e.key.length === 1) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.key.toLowerCase() === 'c') {
+      _sendCtrlCToRfb();
+    } else {
+      const code = e.code || `Key${e.key.toUpperCase()}`;
+      _activeRfb.sendKey?.(0xffe3, 'ControlLeft', true);
+      _activeRfb.sendKey?.(e.key.charCodeAt(0), code, true);
+      setTimeout(() => {
+        try {
+          _activeRfb.sendKey?.(e.key.charCodeAt(0), code, false);
+          _activeRfb.sendKey?.(0xffe3, 'ControlLeft', false);
+        } catch (_) {}
+      }, 40);
+    }
+    return;
+  }
+
+  // Single printable characters (letters, digits, symbols)
+  if (e.key && e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+    e.preventDefault();
+    e.stopPropagation();
+    const keysym = e.key.charCodeAt(0);
+    const code = e.code || null;
+    _sendKeyToRfb(keysym, code);
   }
 }
 
@@ -1660,6 +1774,7 @@ async function initRealVncClient(container, vmId, vmName) {
       rfb.scaleViewport = true;
       rfb.resizeSession = false;
       rfb.clipViewport = false;
+      rfb.focusOnClick = true;
 
       rfb.addEventListener('connect', () => {
         if (statusPill) {
@@ -1671,6 +1786,26 @@ async function initRealVncClient(container, vmId, vmName) {
           resStat.textContent = `${rfb._fbWidth} × ${rfb._fbHeight}`;
         }
         showToast(`Connected to ${vmName} display`, 'success');
+
+        const realCanvas = vncScreen.querySelector('canvas');
+        if (realCanvas) {
+          realCanvas.tabIndex = 0;
+          realCanvas.style.outline = 'none';
+          try { realCanvas.focus({ preventScroll: true }); } catch (_) {}
+          realCanvas.addEventListener('focus', () => setConsoleFocus(true));
+        }
+        try { rfb.focus({ preventScroll: true }); } catch (_) {}
+        setConsoleFocus(true);
+      });
+
+      vncScreen.addEventListener('mousedown', () => {
+        setConsoleFocus(true);
+        const realCanvas = vncScreen.querySelector('canvas');
+        if (realCanvas) {
+          realCanvas.tabIndex = 0;
+          try { realCanvas.focus({ preventScroll: true }); } catch (_) {}
+        }
+        try { rfb.focus({ preventScroll: true }); } catch (_) {}
       });
 
       rfb.addEventListener('disconnect', (e) => {
@@ -1760,6 +1895,7 @@ async function initRealSerialTerminal(container, vmId, vmName) {
       };
 
       if (container) {
+        container.tabIndex = 0;
         container.onkeydown = (e) => {
           e.stopPropagation();
           if (ws.readyState === WebSocket.OPEN) {
@@ -1770,7 +1906,42 @@ async function initRealSerialTerminal(container, vmId, vmName) {
             } else if (e.key === 'Tab') {
               e.preventDefault();
               ws.send('\t');
-            } else if (e.key.length === 1) {
+            } else if (e.key === 'Escape') {
+              ws.send('\x1b');
+            } else if (e.key === 'ArrowUp') {
+              e.preventDefault();
+              ws.send('\x1b[A');
+            } else if (e.key === 'ArrowDown') {
+              e.preventDefault();
+              ws.send('\x1b[B');
+            } else if (e.key === 'ArrowRight') {
+              e.preventDefault();
+              ws.send('\x1b[C');
+            } else if (e.key === 'ArrowLeft') {
+              e.preventDefault();
+              ws.send('\x1b[D');
+            } else if (e.key === 'Home') {
+              e.preventDefault();
+              ws.send('\x1b[H');
+            } else if (e.key === 'End') {
+              e.preventDefault();
+              ws.send('\x1b[F');
+            } else if (e.key === 'PageUp') {
+              e.preventDefault();
+              ws.send('\x1b[5~');
+            } else if (e.key === 'PageDown') {
+              e.preventDefault();
+              ws.send('\x1b[6~');
+            } else if (e.key === 'Delete') {
+              e.preventDefault();
+              ws.send('\x1b[3~');
+            } else if (e.ctrlKey && e.key && e.key.length === 1) {
+              const code = e.key.toLowerCase().charCodeAt(0) - 96;
+              if (code >= 1 && code <= 26) {
+                e.preventDefault();
+                ws.send(String.fromCharCode(code));
+              }
+            } else if (e.key.length === 1 && !e.metaKey && !e.altKey) {
               ws.send(e.key);
             }
           }
@@ -1832,6 +2003,9 @@ export function openVmConsole(vmId, vmName = 'Virtual Machine', initialMode = 'g
             <span class="toolbar-stat" id="vm-console-kbd-pill" style="color: #38bdf8; font-weight: 500; cursor: pointer;" title="Keyboard captured by VM console. Click outside or minimize to release.">⌨️ Captured</span>
           </div>
           <div class="console-toolbar-right">
+            <button class="btn-console-act" id="btn-vnc-softkbd" title="${t('vm.soft_kbd', 'Keyboard')}">
+              <span>⌨️ ${t('vm.soft_kbd', 'Keyboard')}</span>
+            </button>
             <button class="btn-console-act" id="btn-vnc-cad" title="Send Ctrl+Alt+Del">
               <span>Ctrl+Alt+Del</span>
             </button>
@@ -1861,6 +2035,7 @@ export function openVmConsole(vmId, vmName = 'Virtual Machine', initialMode = 'g
 
         <!-- Viewport -->
         <div class="vm-console-viewport" id="vm-console-viewport" style="position: relative; flex: 1; display: flex; align-items: center; justify-content: center; background: #060a12; overflow: hidden;">
+          <input type="text" id="vm-console-hidden-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" tabindex="-1" style="position: absolute; opacity: 0; pointer-events: none; width: 1px; height: 1px; left: 0; top: 0; z-index: -1;" />
           <div id="vm-vnc-container" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden;">
             <canvas id="vm-console-canvas" tabindex="0" width="880" height="510"></canvas>
           </div>
@@ -1880,13 +2055,14 @@ export function openVmConsole(vmId, vmName = 'Virtual Machine', initialMode = 'g
     }
 
     makeDraggable(consoleWin, consoleWin.querySelector('#vm-console-header'));
-    consoleWin.addEventListener('mousedown', () => {
+    consoleWin.addEventListener('mousedown', (e) => {
       bringToFront(consoleWin);
       setConsoleFocus(true);
-      const canvas = consoleWin.querySelector('#vm-console-canvas');
-      if (canvas && document.activeElement !== canvas && !['button', 'input', 'select'].includes(document.activeElement?.tagName?.toLowerCase())) {
-        canvas.focus();
+      const tag = e.target?.tagName?.toLowerCase();
+      if (['button', 'input', 'select', 'textarea'].includes(tag) || e.target?.closest?.('button, input, select, textarea, .dropdown-sendkey-wrap, .os-window-controls')) {
+        return;
       }
+      focusActiveConsole();
     });
 
     document.addEventListener('mousedown', (e) => {
@@ -1902,8 +2078,70 @@ export function openVmConsole(vmId, vmName = 'Virtual Machine', initialMode = 'g
         e.stopPropagation();
         bringToFront(consoleWin);
         setConsoleFocus(true);
-        consoleWin.querySelector('#vm-console-canvas')?.focus();
+        focusActiveConsole();
+        const hiddenInput = consoleWin.querySelector('#vm-console-hidden-input');
+        if (hiddenInput && ('ontouchstart' in window || navigator.maxTouchPoints > 0)) {
+          hiddenInput.focus();
+        }
       };
+    }
+
+    const viewport = consoleWin.querySelector('#vm-console-viewport');
+    if (viewport) {
+      viewport.addEventListener('click', (e) => {
+        const tag = e.target?.tagName?.toLowerCase();
+        if (['button', 'input', 'select', 'textarea'].includes(tag) || e.target?.closest?.('button, input, select, textarea')) {
+          return;
+        }
+        setConsoleFocus(true);
+        focusActiveConsole();
+      });
+    }
+
+    const hiddenInput = consoleWin.querySelector('#vm-console-hidden-input');
+    const btnSoftKbd = consoleWin.querySelector('#btn-vnc-softkbd');
+    if (btnSoftKbd && hiddenInput) {
+      btnSoftKbd.onclick = (e) => {
+        e.stopPropagation();
+        bringToFront(consoleWin);
+        setConsoleFocus(true);
+        hiddenInput.focus();
+      };
+    }
+    if (hiddenInput) {
+      hiddenInput.addEventListener('input', () => {
+        const val = hiddenInput.value;
+        if (val) {
+          const mode = consoleWin._activeMode || 'gui';
+          if (mode === 'gui') {
+            for (let i = 0; i < val.length; i++) {
+              const ch = val[i];
+              if (ch === '\n') _sendKeyToRfb(0xff0d, 'Enter');
+              else _sendKeyToRfb(ch.charCodeAt(0), null);
+            }
+          } else if (_activeSerialWs && _activeSerialWs.readyState === WebSocket.OPEN) {
+            _activeSerialWs.send(val);
+          }
+          hiddenInput.value = '';
+        }
+      });
+      hiddenInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace') {
+          const mode = consoleWin._activeMode || 'gui';
+          if (mode === 'gui') {
+            _sendKeyToRfb(0xff08, 'Backspace');
+          } else if (_activeSerialWs && _activeSerialWs.readyState === WebSocket.OPEN) {
+            _activeSerialWs.send('\b');
+          }
+        } else if (e.key === 'Enter') {
+          const mode = consoleWin._activeMode || 'gui';
+          if (mode === 'gui') {
+            _sendKeyToRfb(0xff0d, 'Enter');
+          } else if (_activeSerialWs && _activeSerialWs.readyState === WebSocket.OPEN) {
+            _activeSerialWs.send('\r\n');
+          }
+        }
+      });
     }
 
     // Minimize, Maximize, Close Bindings
@@ -2019,7 +2257,6 @@ export function openVmConsole(vmId, vmName = 'Virtual Machine', initialMode = 'g
 
     // Fullscreen
     const btnFs = consoleWin.querySelector('#btn-vnc-fullscreen');
-    const viewport = consoleWin.querySelector('#vm-console-viewport');
     if (btnFs && viewport) {
       btnFs.onclick = () => {
         if (!document.fullscreenElement) {
@@ -2075,14 +2312,37 @@ export function openVmConsole(vmId, vmName = 'Virtual Machine', initialMode = 'g
           text = prompt('Enter text string to paste into guest VM:');
         }
         if (text) {
-          if (_activeRfb && typeof _activeRfb.clipboardPasteFrom === 'function') {
-            _activeRfb.clipboardPasteFrom(text);
-            showToast(`Pasted ${text.length} characters into guest VM`, 'success');
-          } else if (_activeSerialWs && _activeSerialWs.readyState === WebSocket.OPEN) {
-            _activeSerialWs.send(text);
-            showToast(`Sent ${text.length} characters to serial terminal`, 'success');
+          const mode = consoleWin._activeMode || 'gui';
+          if (mode === 'gui') {
+            if (_activeRfb) {
+              if (typeof _activeRfb.clipboardPasteFrom === 'function') {
+                try { _activeRfb.clipboardPasteFrom(text); } catch (_) {}
+              }
+              for (let i = 0; i < text.length; i++) {
+                const ch = text[i];
+                if (ch === '\r') continue;
+                if (ch === '\n') {
+                  _sendKeyToRfb(0xff0d, 'Enter');
+                } else if (ch === '\t') {
+                  _sendKeyToRfb(0xff09, 'Tab');
+                } else {
+                  _sendKeyToRfb(ch.charCodeAt(0), null);
+                }
+                if (text.length > 1) {
+                  await new Promise((r) => setTimeout(r, 15));
+                }
+              }
+              showToast(`Pasted ${text.length} characters into guest VM`, 'success');
+            } else {
+              showToast(`Pasted ${text.length} characters into guest input stream`, 'success');
+            }
           } else {
-            showToast(`Injected ${text.length} characters into guest input stream`, 'success');
+            if (_activeSerialWs && _activeSerialWs.readyState === WebSocket.OPEN) {
+              _activeSerialWs.send(text.replace(/\n/g, '\r\n'));
+              showToast(`Sent ${text.length} characters to serial terminal`, 'success');
+            } else {
+              showToast(`Sent ${text.length} characters to terminal`, 'success');
+            }
           }
         }
       };
@@ -2126,6 +2386,7 @@ export function openVmConsole(vmId, vmName = 'Virtual Machine', initialMode = 'g
       if (!isTestEnv) {
         initRealVncClient(vncWrap, consoleWin._vmId || vmId, consoleWin._vmName || vmName);
       }
+      focusActiveConsole();
     } else {
       if (btnCli) btnCli.classList.add('active');
       if (btnGui) btnGui.classList.remove('active');
@@ -2150,6 +2411,7 @@ export function openVmConsole(vmId, vmName = 'Virtual Machine', initialMode = 'g
       if (!isTestEnv) {
         initRealSerialTerminal(cliWrap, consoleWin._vmId || vmId, consoleWin._vmName || vmName);
       }
+      focusActiveConsole();
     }
   }
 
@@ -2168,6 +2430,7 @@ export function openVmConsole(vmId, vmName = 'Virtual Machine', initialMode = 'g
   bringToFront(consoleWin);
 
   setConsoleMode(initialMode || 'gui');
+  focusActiveConsole();
 }
 
 /**
@@ -2462,16 +2725,58 @@ if (typeof window !== 'undefined' && !window._vmConsoleGlobalCaptureBound) {
         return;
       }
       const isFocused = cw.dataset.focused === 'true' || cw.contains(document.activeElement);
-      if (isFocused) {
-        const canvas = cw.querySelector('#vm-console-canvas');
-        if (
-          canvas &&
-          document.activeElement !== canvas &&
-          !['button', 'input', 'select'].includes(document.activeElement?.tagName?.toLowerCase())
-        ) {
-          canvas.focus();
-          if (canvas.onkeydown && e.target !== canvas) {
-            canvas.onkeydown(e);
+      if (!isFocused) return;
+
+      const activeTag = document.activeElement?.tagName?.toLowerCase();
+      if (['input', 'textarea', 'select'].includes(activeTag) && document.activeElement?.id !== 'vm-console-hidden-input') {
+        return;
+      }
+
+      const mode = cw._activeMode || 'gui';
+      if (mode === 'gui') {
+        const realCanvas = cw.querySelector('.vnc-screen-target canvas');
+        if (realCanvas) {
+          if (document.activeElement === realCanvas) {
+            return;
+          }
+          realCanvas.tabIndex = 0;
+          try { realCanvas.focus({ preventScroll: true }); } catch (_) {}
+          if (_activeRfb && typeof _activeRfb.focus === 'function') {
+            try { _activeRfb.focus({ preventScroll: true }); } catch (_) {}
+          }
+          _handleRfbKeyFallback(e);
+          return;
+        }
+
+        // Offline / Test Simulation canvas
+        const simCanvas = cw.querySelector('#vm-console-canvas');
+        if (simCanvas && simCanvas.style.display !== 'none') {
+          if (document.activeElement !== simCanvas) {
+            simCanvas.focus();
+          }
+          if (simCanvas.onkeydown && e.target !== simCanvas) {
+            simCanvas.onkeydown(e);
+          }
+        }
+      } else {
+        // Serial TTY mode
+        const cliContainer = cw.querySelector('#vm-cli-container');
+        if (cliContainer && cliContainer.style.display !== 'none') {
+          if (document.activeElement !== cliContainer) {
+            cliContainer.focus();
+          }
+          if (cliContainer.onkeydown && e.target !== cliContainer) {
+            cliContainer.onkeydown(e);
+          }
+          return;
+        }
+        const simCanvas = cw.querySelector('#vm-console-canvas');
+        if (simCanvas && simCanvas.style.display !== 'none') {
+          if (document.activeElement !== simCanvas) {
+            simCanvas.focus();
+          }
+          if (simCanvas.onkeydown && e.target !== simCanvas) {
+            simCanvas.onkeydown(e);
           }
         }
       }

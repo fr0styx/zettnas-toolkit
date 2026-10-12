@@ -7,7 +7,11 @@ import {
   openVmConsole,
   setConsoleFocus,
   openIsoManagerModal,
-  OFFICIAL_ISO_CATALOG
+  OFFICIAL_ISO_CATALOG,
+  focusActiveConsole,
+  getActiveConsoleTarget,
+  _handleRfbKeyFallback,
+  _sendKeyToRfb
 } from '../components/vm-manager.js';
 import { api } from '../api.js';
 import { showToast } from '../toast.js';
@@ -606,6 +610,104 @@ describe('VM Manager & Dynamic Elastic Headroom Budgeting', () => {
       btnGui.click();
       canvas.onkeydown(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
       expect(showToast).not.toHaveBeenCalledWith(expect.stringContaining('Guest executed'));
+    });
+
+    it('accurately resolves active console target and handles focusActiveConsole', () => {
+      openVmConsole('vm-test-focus', 'Focus VM', 'gui');
+      const consoleWin = document.getElementById('vm-console-window');
+      expect(consoleWin).not.toBeNull();
+
+      // By default in test environment, simulation canvas is visible
+      const simTarget = getActiveConsoleTarget(consoleWin);
+      expect(simTarget).toBe(consoleWin.querySelector('#vm-console-canvas'));
+
+      // If a real noVNC canvas exists inside .vnc-screen-target
+      const vncContainer = consoleWin.querySelector('#vm-vnc-container');
+      const vncScreen = document.createElement('div');
+      vncScreen.className = 'vnc-screen-target';
+      const realCanvas = document.createElement('canvas');
+      vncScreen.appendChild(realCanvas);
+      vncContainer.appendChild(vncScreen);
+
+      // Now getActiveConsoleTarget should resolve the real canvas
+      const activeTarget = getActiveConsoleTarget(consoleWin);
+      expect(activeTarget).toBe(realCanvas);
+
+      // focusActiveConsole sets tabindex="0" and focuses real canvas
+      focusActiveConsole();
+      expect(realCanvas.tabIndex).toBe(0);
+
+      // In CLI mode, target should resolve to #vm-cli-container
+      consoleWin._setConsoleMode('cli');
+      const cliTarget = getActiveConsoleTarget(consoleWin);
+      expect(cliTarget).toBe(consoleWin.querySelector('#vm-cli-container'));
+    });
+
+    it('routes fallback keys and ctrl combos via _handleRfbKeyFallback safely', () => {
+      openVmConsole('vm-test-keys', 'Keys VM', 'gui');
+      const consoleWin = document.getElementById('vm-console-window');
+      expect(consoleWin).not.toBeNull();
+
+      // Test key routing directly - safe without active RFB
+      const evEnter = new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', cancelable: true });
+      expect(() => _handleRfbKeyFallback(evEnter)).not.toThrow();
+
+      const evArrow = new KeyboardEvent('keydown', { key: 'ArrowUp', code: 'ArrowUp', cancelable: true });
+      expect(() => _handleRfbKeyFallback(evArrow)).not.toThrow();
+
+      const evChar = new KeyboardEvent('keydown', { key: 'a', code: 'KeyA', cancelable: true });
+      expect(() => _handleRfbKeyFallback(evChar)).not.toThrow();
+
+      const evCtrlC = new KeyboardEvent('keydown', { key: 'c', ctrlKey: true, cancelable: true });
+      expect(() => _handleRfbKeyFallback(evCtrlC)).not.toThrow();
+
+      expect(() => _sendKeyToRfb(0xff0d, 'Enter')).not.toThrow();
+    });
+
+    it('handles mobile virtual keyboard input through hidden input helper', () => {
+      openVmConsole('vm-test-mobile', 'Mobile VM', 'gui');
+      const consoleWin = document.getElementById('vm-console-window');
+      expect(consoleWin).not.toBeNull();
+
+      const hiddenInput = consoleWin.querySelector('#vm-console-hidden-input');
+      const btnSoftKbd = consoleWin.querySelector('#btn-vnc-softkbd');
+      expect(hiddenInput).not.toBeNull();
+      expect(btnSoftKbd).not.toBeNull();
+
+      // Clicking soft keyboard button focuses hidden input
+      const focusSpy = vi.spyOn(hiddenInput, 'focus');
+      btnSoftKbd.click();
+      expect(focusSpy).toHaveBeenCalled();
+
+      // Typing into hidden input clears its value and triggers input dispatch
+      hiddenInput.value = 'root';
+      hiddenInput.dispatchEvent(new Event('input'));
+      expect(hiddenInput.value).toBe('');
+
+      // Backspace and Enter key events on hidden input
+      const bsEvt = new KeyboardEvent('keydown', { key: 'Backspace' });
+      hiddenInput.dispatchEvent(bsEvt);
+
+      const enterEvt = new KeyboardEvent('keydown', { key: 'Enter' });
+      hiddenInput.dispatchEvent(enterEvt);
+    });
+
+    it('handles clipboard paste button by typing keystrokes into guest', async () => {
+      openVmConsole('vm-test-paste', 'Paste VM', 'gui');
+      const consoleWin = document.getElementById('vm-console-window');
+      const btnClip = consoleWin.querySelector('#btn-vnc-clipboard');
+      expect(btnClip).not.toBeNull();
+
+      // Mock prompt
+      vi.spyOn(window, 'prompt').mockReturnValue('root\n');
+      btnClip.click();
+
+      await vi.waitFor(() => {
+        expect(showToast).toHaveBeenCalledWith(
+          expect.stringContaining('Pasted 5 characters into guest'),
+          'success'
+        );
+      });
     });
   });
 });
