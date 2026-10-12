@@ -3846,6 +3846,39 @@
                       </div>
                     </div>
                   </div>
+
+                  <!-- NPU Neural Acceleration Engine -->
+                  <div id="mgmt-npu-container" style="margin-top: 14px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                      <label style="font-size:10.5px; font-weight:700; color:var(--muted); letter-spacing:0.5px;" data-i18n="mgmt.npu_engine_label">NPU NEURAL ACCELERATION ENGINE</label>
+                      <span class="suite-badge" id="mgmt-npu-status-badge" style="background:rgba(168,85,247,0.15); color:#c084fc; border-color:rgba(168,85,247,0.35);">NPU ACTIVE</span>
+                    </div>
+                    <div class="gpu-transcode-card npu-card" style="border-left: 3px solid #a855f7;">
+                      <div class="gpu-transcode-header">
+                        <div class="gpu-transcode-icon-box" style="background:rgba(168,85,247,0.12); border-color:rgba(168,85,247,0.3);">
+                          <svg class="ic" style="width:20px; height:20px; color:#c084fc;"><use href="#i-chip"/></svg>
+                        </div>
+                        <div class="gpu-transcode-info">
+                          <div class="gpu-title-row">
+                            <span class="gpu-name" id="mgmt-npu-name">Intel AI Boost NPU (Meteor Lake VPU 3720)</span>
+                            <span class="gpu-driver-badge" id="mgmt-npu-driver">Driver: intel_vpu</span>
+                            <span class="gpu-node-badge" id="mgmt-npu-node" style="color:#c084fc; background:rgba(168,85,247,0.08); border-color:rgba(168,85,247,0.25);">/dev/accel/accel0</span>
+                            <span class="gpu-driver-badge" id="mgmt-npu-clock">1400 MHz</span>
+                          </div>
+                          <div class="gpu-accel-desc" id="mgmt-npu-accel" style="color:#c084fc;">Intel OpenVINO • ONNX Runtime • DirectML</div>
+                        </div>
+                      </div>
+                      <div class="gpu-codecs-row">
+                        <span class="gpu-codec-label" data-i18n="mgmt.npu_frameworks">AI Frameworks:</span>
+                        <div class="gpu-codecs-list" id="mgmt-npu-frameworks-list">
+                          <span class="gpu-codec-tag" style="background:rgba(168,85,247,0.12); color:#c084fc; border-color:rgba(168,85,247,0.25);">OpenVINO</span>
+                          <span class="gpu-codec-tag" style="background:rgba(168,85,247,0.12); color:#c084fc; border-color:rgba(168,85,247,0.25);">ONNX Runtime</span>
+                          <span class="gpu-codec-tag" style="background:rgba(168,85,247,0.12); color:#c084fc; border-color:rgba(168,85,247,0.25);">DirectML</span>
+                          <span class="gpu-codec-tag" style="background:rgba(168,85,247,0.12); color:#c084fc; border-color:rgba(168,85,247,0.25);">PyTorch IPEX</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

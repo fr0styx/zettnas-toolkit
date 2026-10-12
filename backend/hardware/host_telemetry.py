@@ -174,16 +174,13 @@ def get_gpu_telemetry() -> Dict[str, Any]:
     if _GPU_CACHE and (now - _GPU_CACHE_TS < 60):
         return _GPU_CACHE
 
-    render_nodes = (
-        glob.glob(os.path.join(HOST_DEV, "dri/render*"))
-        or glob.glob("/host/dev/dri/render*")
-        or glob.glob("/dev/dri/render*")
-    )
-    cards = (
-        glob.glob(os.path.join(HOST_SYS, "class/drm/card*"))
-        or glob.glob("/host/sys/class/drm/card*")
-        or glob.glob("/sys/class/drm/card*")
-    )
+    render_nodes = glob.glob(os.path.join(HOST_DEV, "dri/render*"))
+    if not render_nodes and HOST_DEV in ("/dev", "/host/dev"):
+        render_nodes = glob.glob("/host/dev/dri/render*") or glob.glob("/dev/dri/render*")
+
+    cards = glob.glob(os.path.join(HOST_SYS, "class/drm/card*"))
+    if not cards and HOST_SYS in ("/sys", "/host/sys"):
+        cards = glob.glob("/host/sys/class/drm/card*") or glob.glob("/sys/class/drm/card*")
 
     vendor_id = ""
     device_id = ""
@@ -250,12 +247,127 @@ def get_gpu_telemetry() -> Dict[str, Any]:
     return _GPU_CACHE
 
 
+_NPU_CACHE: Dict[str, Any] = {}
+_NPU_CACHE_TS = 0.0
+
+
+def get_npu_telemetry() -> Dict[str, Any]:
+    """
+    Detects dedicated Neural Processing Unit (NPU) AI acceleration hardware (Intel AI Boost, AMD Ryzen AI).
+    Surfaces driver status, clock rates, hardware scheduler, and supported inference frameworks.
+    """
+    global _NPU_CACHE, _NPU_CACHE_TS
+    now = time.time()
+    if _NPU_CACHE and (now - _NPU_CACHE_TS < 60):
+        return _NPU_CACHE
+
+    accel_nodes = glob.glob(os.path.join(HOST_DEV, "accel/accel*"))
+    if not accel_nodes and HOST_DEV in ("/dev", "/host/dev"):
+        accel_nodes = glob.glob("/host/dev/accel/accel*") or glob.glob("/dev/accel/accel*")
+
+    accel_sys = glob.glob(os.path.join(HOST_SYS, "class/accel/accel*"))
+    if not accel_sys and HOST_SYS in ("/sys", "/host/sys"):
+        accel_sys = glob.glob("/host/sys/class/accel/accel*") or glob.glob("/sys/class/accel/accel*")
+
+    vendor_id = ""
+    device_id = ""
+    driver = ""
+    max_freq = 0
+    cur_freq = 0
+    sched_mode = ""
+
+    for node in accel_sys:
+        dev_dir = os.path.join(node, "device")
+        if os.path.exists(dev_dir):
+            try:
+                v_path = os.path.join(dev_dir, "vendor")
+                if os.path.exists(v_path):
+                    with open(v_path, "r", encoding="utf-8", errors="replace") as f:
+                        vendor_id = f.read().strip().lower()
+                d_path = os.path.join(dev_dir, "device")
+                if os.path.exists(d_path):
+                    with open(d_path, "r", encoding="utf-8", errors="replace") as f:
+                        device_id = f.read().strip().lower()
+                dr_path = os.path.join(dev_dir, "driver")
+                if os.path.islink(dr_path):
+                    driver = os.path.basename(os.readlink(dr_path))
+
+                freq_max_path = os.path.join(dev_dir, "npu_max_frequency_mhz")
+                if os.path.exists(freq_max_path):
+                    with open(freq_max_path, "r", encoding="utf-8", errors="replace") as f:
+                        max_freq = int(f.read().strip())
+
+                freq_cur_path = os.path.join(dev_dir, "npu_current_frequency_mhz")
+                if os.path.exists(freq_cur_path):
+                    with open(freq_cur_path, "r", encoding="utf-8", errors="replace") as f:
+                        cur_freq = int(f.read().strip())
+
+                sched_path = os.path.join(dev_dir, "sched_mode")
+                if os.path.exists(sched_path):
+                    with open(sched_path, "r", encoding="utf-8", errors="replace") as f:
+                        sched_mode = f.read().strip()
+                break
+            except Exception:
+                pass
+
+    if vendor_id == "0x8086" or driver == "intel_vpu":
+        vendor_name = "Intel"
+        model_name = "Intel AI Boost NPU (Meteor Lake VPU 3720)"
+        if device_id == "0x7d1d":
+            model_name = "Intel AI Boost NPU (Meteor Lake VPU 3720)"
+        elif device_id in ("0x643e", "0x643d"):
+            model_name = "Intel AI Boost NPU (Lunar Lake / Arrow Lake)"
+        acceleration = "Intel OpenVINO • ONNX Runtime • DirectML"
+        frameworks = ["OpenVINO", "ONNX Runtime", "DirectML", "PyTorch IPEX"]
+    elif vendor_id == "0x1022" or "xdna" in driver.lower() or "amd" in driver.lower():
+        vendor_name = "AMD"
+        model_name = "AMD Ryzen AI NPU (XDNA)"
+        acceleration = "AMD Ryzen AI Software • ONNX Runtime"
+        frameworks = ["Ryzen AI", "ONNX Runtime", "Vitis AI"]
+    else:
+        vendor_name = "None"
+        model_name = "No NPU Detected"
+        acceleration = "N/A"
+        frameworks = []
+
+    present = bool(accel_nodes or accel_sys or (vendor_id and vendor_id != "None"))
+    active_node = (
+        accel_nodes[0] if accel_nodes else (f"/dev/accel/{os.path.basename(accel_sys[0])}" if accel_sys else "")
+    )
+
+    _NPU_CACHE = {
+        "present": present,
+        "vendor": vendor_name if present else "None",
+        "model": model_name,
+        "driver": driver or ("intel_vpu" if vendor_name == "Intel" else ""),
+        "acceleration": acceleration,
+        "render_node": active_node,
+        "max_freq_mhz": max_freq,
+        "cur_freq_mhz": cur_freq,
+        "sched_mode": sched_mode,
+        "frameworks": frameworks,
+        "ready": present,
+    }
+    _NPU_CACHE_TS = now
+    return _NPU_CACHE
+
+
 def clear_telemetry_cache():
     """Test helper to invalidate cached hardware state."""
-    global _DMI_CACHE, _DMI_CACHE_TS, _CPU_MODEL_CACHE, _OS_DISTRO_CACHE, _GPU_CACHE, _GPU_CACHE_TS
+    global \
+        _DMI_CACHE, \
+        _DMI_CACHE_TS, \
+        _CPU_MODEL_CACHE, \
+        _OS_DISTRO_CACHE, \
+        _GPU_CACHE, \
+        _GPU_CACHE_TS, \
+        _NPU_CACHE, \
+        _NPU_CACHE_TS
     _DMI_CACHE = {}
     _DMI_CACHE_TS = 0.0
     _CPU_MODEL_CACHE = ""
     _OS_DISTRO_CACHE = ""
     _GPU_CACHE = {}
     _GPU_CACHE_TS = 0.0
+    _NPU_CACHE = {}
+    _NPU_CACHE_TS = 0.0

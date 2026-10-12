@@ -5,6 +5,7 @@ from backend.hardware.host_telemetry import (
     get_cpu_telemetry,
     get_dmi_telemetry,
     get_gpu_telemetry,
+    get_npu_telemetry,
     get_os_telemetry,
 )
 
@@ -98,3 +99,54 @@ def test_gpu_telemetry_intel_arc(tmp_path, monkeypatch):
     assert gpu["ready"] is True
     assert "AV1" in gpu["codecs"]
     assert "HEVC 10-bit" in gpu["codecs"]
+
+
+def test_npu_telemetry_intel_ai_boost(tmp_path, monkeypatch):
+    clear_telemetry_cache()
+
+    dev_dir = tmp_path / "dev"
+    accel_dir = dev_dir / "accel"
+    accel_dir.mkdir(parents=True)
+    (accel_dir / "accel0").write_text("")
+
+    sys_dir = tmp_path / "sys"
+    accel_sys_dev = sys_dir / "class" / "accel" / "accel0" / "device"
+    accel_sys_dev.mkdir(parents=True)
+    (accel_sys_dev / "vendor").write_text("0x8086\n")
+    (accel_sys_dev / "device").write_text("0x7d1d\n")
+    (accel_sys_dev / "npu_max_frequency_mhz").write_text("1400\n")
+    (accel_sys_dev / "npu_current_frequency_mhz").write_text("0\n")
+    (accel_sys_dev / "sched_mode").write_text("HW\n")
+    driver_link = accel_sys_dev / "driver"
+    try:
+        os.symlink("/lib/modules/drivers/accel/intel_vpu", str(driver_link))
+    except Exception:
+        driver_link.write_text("intel_vpu")
+
+    monkeypatch.setattr("backend.hardware.host_telemetry.HOST_DEV", str(dev_dir))
+    monkeypatch.setattr("backend.hardware.host_telemetry.HOST_SYS", str(sys_dir))
+
+    npu = get_npu_telemetry()
+    assert npu["present"] is True
+    assert npu["vendor"] == "Intel"
+    assert "AI Boost" in npu["model"]
+    assert npu["max_freq_mhz"] == 1400
+    assert npu["sched_mode"] == "HW"
+    assert "OpenVINO" in npu["frameworks"]
+    assert npu["ready"] is True
+
+
+def test_npu_telemetry_none(tmp_path, monkeypatch):
+    clear_telemetry_cache()
+    dev_dir = tmp_path / "empty_dev"
+    dev_dir.mkdir(parents=True)
+    sys_dir = tmp_path / "empty_sys"
+    sys_dir.mkdir(parents=True)
+
+    monkeypatch.setattr("backend.hardware.host_telemetry.HOST_DEV", str(dev_dir))
+    monkeypatch.setattr("backend.hardware.host_telemetry.HOST_SYS", str(sys_dir))
+
+    npu = get_npu_telemetry()
+    assert npu["present"] is False
+    assert npu["vendor"] == "None"
+    assert npu["frameworks"] == []

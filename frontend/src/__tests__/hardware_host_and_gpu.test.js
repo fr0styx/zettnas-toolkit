@@ -38,6 +38,16 @@ describe('Hardware Subsystem & GPU Transcode Cockpit (Option C & D)', () => {
         <span id="mgmt-gpu-node">-</span>
         <span id="mgmt-gpu-accel">-</span>
         <div id="mgmt-gpu-codecs-list"></div>
+
+        <div id="mgmt-npu-container">
+          <span id="mgmt-npu-status-badge">STANDBY</span>
+          <span id="mgmt-npu-name">-</span>
+          <span id="mgmt-npu-driver">-</span>
+          <span id="mgmt-npu-node">-</span>
+          <span id="mgmt-npu-clock">-</span>
+          <span id="mgmt-npu-accel">-</span>
+          <div id="mgmt-npu-frameworks-list"></div>
+        </div>
       </div>
     `;
   });
@@ -183,5 +193,43 @@ describe('Hardware Subsystem & GPU Transcode Cockpit (Option C & D)', () => {
     expect(codecsEl.querySelectorAll('.gpu-codec-tag').length).toBe(4);
     expect(codecsEl.textContent).toContain('AV1');
     expect(codecsEl.textContent).toContain('HEVC 10-bit');
+  });
+
+  it('renders NPU Neural Acceleration Engine telemetry and AI frameworks', () => {
+    const mockStats = {
+      npu: {
+        present: true,
+        vendor: 'Intel',
+        model: 'Intel AI Boost NPU (Meteor Lake VPU 3720)',
+        driver: 'intel_vpu',
+        render_node: '/dev/accel/accel0',
+        max_freq_mhz: 1400,
+        acceleration: 'Intel OpenVINO • ONNX Runtime • DirectML',
+        frameworks: ['OpenVINO', 'ONNX Runtime', 'DirectML', 'PyTorch IPEX'],
+        ready: true
+      }
+    };
+
+    updateManagementTelemetry(mockStats);
+
+    const container = document.getElementById('mgmt-npu-container');
+    const badge = document.getElementById('mgmt-npu-status-badge');
+    const nameEl = document.getElementById('mgmt-npu-name');
+    const driverEl = document.getElementById('mgmt-npu-driver');
+    const nodeEl = document.getElementById('mgmt-npu-node');
+    const clockEl = document.getElementById('mgmt-npu-clock');
+    const accelEl = document.getElementById('mgmt-npu-accel');
+    const fwEl = document.getElementById('mgmt-npu-frameworks-list');
+
+    expect(container.style.display).toBe('block');
+    expect(badge.textContent).toBe('NPU ACTIVE');
+    expect(nameEl.textContent).toBe('Intel AI Boost NPU (Meteor Lake VPU 3720)');
+    expect(driverEl.textContent).toBe('Driver: intel_vpu');
+    expect(nodeEl.textContent).toBe('/dev/accel/accel0');
+    expect(clockEl.textContent).toBe('1400 MHz');
+    expect(accelEl.textContent).toContain('OpenVINO');
+    expect(fwEl.querySelectorAll('.gpu-codec-tag').length).toBe(4);
+    expect(fwEl.textContent).toContain('ONNX Runtime');
+    expect(fwEl.textContent).toContain('DirectML');
   });
 });

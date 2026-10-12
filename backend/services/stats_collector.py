@@ -41,6 +41,7 @@ from backend.hardware.host_telemetry import (
     get_cpu_telemetry,
     get_dmi_telemetry,
     get_gpu_telemetry,
+    get_npu_telemetry,
     get_os_telemetry,
 )
 from backend.hardware.ups import read_ups_status
@@ -545,6 +546,7 @@ def stats_collector_daemon():
             dmi_telemetry = get_dmi_telemetry()
             os_telemetry = get_os_telemetry()
             gpu_telemetry = get_gpu_telemetry()
+            npu_telemetry = get_npu_telemetry()
 
             data = {
                 "name": get_server_hostname(),
@@ -562,6 +564,7 @@ def stats_collector_daemon():
                 "system": os_telemetry,
                 "motherboard": dmi_telemetry,
                 "gpu": gpu_telemetry,
+                "npu": npu_telemetry,
                 "mem": read_mem(),
                 "fans": fans,
                 "copy_state": {
@@ -707,6 +710,7 @@ def collect():
                 },
                 "motherboard": {"vendor": "Zettlab", "board": "Standard PC", "bios_version": "N/A", "bios_date": ""},
                 "gpu": {"present": False, "vendor": "Generic", "model": "None", "codecs": [], "ready": False},
+                "npu": {"present": False, "vendor": "None", "model": "None", "frameworks": [], "ready": False},
                 "mem": {"used_gb": 0, "total_gb": 0, "pct": 0},
                 "fans": [],
                 "copy_state": {"active": False, "status": "idle", "progress": {}},

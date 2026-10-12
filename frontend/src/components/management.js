@@ -222,6 +222,56 @@ export function updateManagementTelemetry(stats) {
     }
   }
 
+  // NPU Neural Acceleration Engine
+  if (stats.npu) {
+    const npuContainer = document.getElementById('mgmt-npu-container');
+    const npuBadge = document.getElementById('mgmt-npu-status-badge');
+    const npuNameEl = document.getElementById('mgmt-npu-name');
+    const npuDriverEl = document.getElementById('mgmt-npu-driver');
+    const npuNodeEl = document.getElementById('mgmt-npu-node');
+    const npuClockEl = document.getElementById('mgmt-npu-clock');
+    const npuAccelEl = document.getElementById('mgmt-npu-accel');
+    const npuFrameworksEl = document.getElementById('mgmt-npu-frameworks-list');
+
+    if (npuContainer) {
+      npuContainer.style.display = stats.npu.present ? 'block' : 'none';
+    }
+    if (npuBadge) {
+      if (stats.npu.ready) {
+        npuBadge.textContent = 'NPU ACTIVE';
+        npuBadge.style.color = '#c084fc';
+        npuBadge.style.borderColor = 'rgba(168,85,247,0.35)';
+      } else {
+        npuBadge.textContent = 'NPU OFFLINE';
+        npuBadge.style.color = 'var(--muted)';
+        npuBadge.style.borderColor = 'rgba(255,255,255,0.1)';
+      }
+    }
+    if (npuNameEl) npuNameEl.textContent = stats.npu.model || 'No NPU Detected';
+    if (npuDriverEl) npuDriverEl.textContent = `Driver: ${stats.npu.driver || 'none'}`;
+    if (npuNodeEl) {
+      npuNodeEl.textContent = stats.npu.render_node || 'No node';
+      npuNodeEl.style.display = stats.npu.render_node ? 'inline-block' : 'none';
+    }
+    if (npuClockEl) {
+      const maxF = stats.npu.max_freq_mhz || 0;
+      npuClockEl.textContent = maxF > 0 ? `${maxF} MHz` : 'Dynamic Clock';
+    }
+    if (npuAccelEl) npuAccelEl.textContent = stats.npu.acceleration || 'AI Acceleration Ready';
+    if (npuFrameworksEl && Array.isArray(stats.npu.frameworks)) {
+      if (stats.npu.frameworks.length > 0) {
+        npuFrameworksEl.innerHTML = stats.npu.frameworks
+          .map(
+            f =>
+              `<span class="gpu-codec-tag" style="background:rgba(168,85,247,0.12); color:#c084fc; border-color:rgba(168,85,247,0.25);">${escapeHtml(f)}</span>`
+          )
+          .join('');
+      } else {
+        npuFrameworksEl.innerHTML = `<span class="gpu-codec-tag" style="color:var(--muted); border-color:rgba(255,255,255,0.1);">CPU Fallback</span>`;
+      }
+    }
+  }
+
   // Update Docker pill in Hub and Left Sidebar
   if (stats.docker && Array.isArray(stats.docker)) {
     const runningCount = stats.docker.filter(c => c.state === 'running').length;
