@@ -194,11 +194,11 @@
   })();
 </script>
 <style>html,body{color:#eaf1f8;background-color:#080c10;width:100%;height:100%;margin:0;padding:0;overflow:hidden}html.auth-required body{background:radial-gradient(circle at 50% 20%,#151d29 0%,#080c10 70%)!important}#login-overlay{z-index:999999;background:#080c10;justify-content:center;align-items:center;display:flex;position:fixed;inset:0}html.has-auth-session #login-overlay{display:none!important}html.auth-required #login-overlay{display:flex!important}html.is-desktop-locked #lock-overlay{opacity:1!important;display:flex!important}html.is-desktop-locked body{overflow:hidden!important}html.auth-required .studio-viewport-wrapper,html.auth-required .suite-navbar,html.auth-required #desktop-icons-container,html.auth-required .desktop-icons-container,html.auth-required .top-nav,html.auth-required #desktop-widgets-container,html.auth-required #os-dock-container,html.auth-required .workspace-panel,html.auth-required .smart-modal-backdrop,html.auth-required .os-window,html.auth-required .notif-center-window{display:none!important}</style>
-  <script type="module" crossorigin src="/assets/index-CHiaEU0Z.js"></script>
+  <script type="module" crossorigin src="/assets/index--APC65PV.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-hePW80VL.js">
-  <link rel="modulepreload" crossorigin href="/assets/dock-D7tIoUUZ.js">
-  <link rel="modulepreload" crossorigin href="/assets/users-3l7ROKGV.js">
-  <link rel="stylesheet" crossorigin href="/assets/index-DwpYt3qv.css">
+  <link rel="modulepreload" crossorigin href="/assets/dock-DjqDJgEM.js">
+  <link rel="modulepreload" crossorigin href="/assets/users-CEKS2YBA.js">
+  <link rel="stylesheet" crossorigin href="/assets/index-BqWoDElg.css">
 </head>
 <body class="studio-workbench no-specular-glow">
 
@@ -477,6 +477,8 @@
       <line x1="8" y1="21" x2="16" y2="21" stroke="currentColor" stroke-width="2"/>
       <line x1="12" y1="17" x2="12" y2="21" stroke="currentColor" stroke-width="2"/>
       <path d="M7 8h2v2H7zM15 8h2v2h-2z" fill="currentColor"/>
+    <symbol id="i-cloud" viewBox="0 0 24 24">
+      <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
     </symbol>
   </defs>
 </svg>
@@ -5813,14 +5815,16 @@
 </div>
 
 <!-- Connect New Cloud Remote Modal -->
-<div id="modal-new-cloud-remote" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-remote-title" style="display: none;">
-  <div class="smart-modal-window" style="max-width: 540px; width: 92%; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(14, 165, 233, 0.15); border: 1px solid rgba(255, 255, 255, 0.12);">
-    <div class="smart-modal-header" style="cursor: move;">
+<div id="modal-new-cloud-remote" class="smart-modal-backdrop os-window-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-remote-title" style="display: none;">
+  <div class="smart-modal-window os-window cloud-remote-window" id="cloud-remote-window" style="max-width: 580px; width: 92%; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(14, 165, 233, 0.15); border: 1px solid rgba(255, 255, 255, 0.12);">
+    <div class="smart-modal-header" id="cloud-remote-window-header" style="cursor: move;">
       <span class="smart-modal-title" id="modal-remote-title" style="display: flex; align-items: center; gap: 8px;">
-        <span style="font-size: 16px;">☁️</span>
+        <svg class="ic" style="width: 16px; height: 16px; color: var(--brand, #0ea5e9);"><use href="#i-cloud"/></svg>
         <span>Connect New Cloud / Remote Storage</span>
       </span>
-      <div class="os-window-controls">
+      <div class="os-window-controls" style="display: flex; gap: 6px; align-items: center;">
+        <button class="win-btn min-btn" id="modal-remote-min-btn" title="Minimize" aria-label="Minimize"></button>
+        <button class="win-btn max-btn" id="modal-remote-max-btn" title="Maximize" aria-label="Maximize"></button>
         <button class="win-btn close-btn" id="modal-remote-close-btn" title="Close" aria-label="Close"></button>
       </div>
     </div>
@@ -5835,13 +5839,13 @@
 
       <div style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px;">
         <label for="new-remote-name" style="display:block; font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;">2. REMOTE NAME (Local Identifier)</label>
-        <input type="text" id="new-remote-name" class="tz-select-input" placeholder="e.g. backup-s3, gdrive, offsite-nas" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff; border-radius:6px; font-size:12px;" required pattern="^[a-zA-Z0-9_\-\.]{1,64}$" />
+        <input type="text" id="new-remote-name" class="tz-select-input" placeholder="e.g. backup-s3, gdrive, onedrive-photos, offsite-nas" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff; border-radius:6px; font-size:12px;" required pattern="^[a-zA-Z0-9_\-\.]{1,64}$" />
         <div style="font-size: 10.5px; color: var(--muted); margin-top: 4px;">Will be mounted to: <code style="color:#38bdf8;">/mnt/remotes/&lt;name&gt;</code></div>
       </div>
 
       <div style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px;">
         <div style="font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:8px; letter-spacing:0.5px;">3. PROVIDER PARAMETERS</div>
-        <div id="new-remote-dynamic-fields" style="display: flex; flex-direction: column; gap: 10px;">
+        <div id="new-remote-dynamic-fields" style="display: flex; flex-direction: column; gap: 12px;">
           <!-- Dynamically populated fields based on provider -->
         </div>
       </div>
@@ -5853,10 +5857,14 @@
         </label>
       </div>
 
+      <div id="new-remote-test-result" style="display: none; padding: 10px 14px; border-radius: 6px; font-size: 11.5px; line-height: 1.4;"></div>
       <div id="new-remote-error-box" style="display: none; padding: 8px 12px; background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); border-radius: 6px; color: #f87171; font-size: 11.5px;"></div>
 
-      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.08);">
+      <div style="display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-top: 6px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.08);">
         <button type="button" id="modal-remote-cancel-btn" style="padding: 7px 16px; font-size: 11px; font-weight: 700; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); color: #fff; border-radius: 6px; cursor: pointer;">Cancel</button>
+        <button type="button" id="new-remote-test-btn" style="padding: 7px 16px; font-size: 11px; font-weight: 700; background: rgba(56,189,248,0.12); border: 1px solid rgba(56,189,248,0.3); color: #38bdf8; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+          <span>⚡ Test Connection</span>
+        </button>
         <button type="submit" id="new-remote-submit-btn" style="padding: 7px 18px; font-size: 11px; font-weight: 700; background: var(--brand, #0ea5e9); border: none; color: #fff; border-radius: 6px; cursor: pointer;">Save & Connect Remote</button>
       </div>
     </form>

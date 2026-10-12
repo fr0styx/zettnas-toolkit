@@ -5,7 +5,7 @@ import { ZettEventBus } from '../event-bus.js';
 import { announceA11y } from '../a11y.js';
 import { showToast, showConfirmToast } from '../toast.js';
 import { state } from '../state.js';
-import { makeDraggable } from './dock.js';
+import { makeDraggable, bringToFront, DockManager } from './dock.js';
 
 /**
  * ZettNAS Physical Chassis Twin & Storage Topology Visualizer
@@ -739,6 +739,7 @@ function buildPoolBlockInner(pool, isObserver) {
       <button class="btn-pool-scrub btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" title="Trigger filesystem scrub or parity check">⚡ Scrub Pool</button>
       ${!isObserver ? `<button class="btn-pool-rename btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" data-pool-name="${escapeHtml(pool.name)}" title="Rename storage pool">✏️ Rename</button>` : ''}
       ${pool.fs_type === 'btrfs' ? `<button class="btn-pool-snaps btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" style="background:rgba(14,165,233,0.15); border-color:rgba(14,165,233,0.3); color:#38bdf8;" title="Manage Subvolume Snapshots">📸 Snapshots</button>` : ''}
+      ${(!isObserver || pool.fs_type === 'zfs') && pool.id !== 'unraid_array' && pool.id !== 'default_pool' ? `<button class="btn-pool-export btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" style="background:rgba(245,158,11,0.15); border-color:rgba(245,158,11,0.3); color:#fbbf24;" title="Safely flush dirty cache and detach pool">⏏️ Safely Eject</button>` : ''}
       ${!isObserver && pool.id !== 'default_pool' ? `<button class="btn-pool-destroy btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" style="background:rgba(239,68,68,0.15); border-color:rgba(239,68,68,0.3); color:#f87171;" title="Destroy storage pool">🗑️ Destroy</button>` : ''}
     </div>
   `;
@@ -799,6 +800,59 @@ function bindTopologyTreeEvents(tree, container) {
           showToast(err.message || 'Failed to destroy pool', 'error');
         }
       }
+      return;
+    }
+
+    const exportBtn = e.target.closest('.btn-pool-export');
+    if (exportBtn) {
+      e.stopPropagation();
+      const pid = exportBtn.dataset.poolId;
+      if (confirm(`Safely flush write cache and export/detach pool '${pid}'? Make sure no active file transfers are running.`)) {
+        try {
+          exportBtn.disabled = true;
+          exportBtn.textContent = '⏳ Ejecting...';
+          const res = await api.post(`/api/storage/pools/${encodeURIComponent(pid)}/export`, { force: false });
+          showToast(res.message || `Pool '${pid}' safely ejected. You may disconnect the cable.`, 'success');
+          fetchAndRenderStorageTopology(container);
+        } catch (err) {
+          if (err.message && err.message.includes('force=true')) {
+            if (confirm(`${err.message}\n\nDo you want to FORCE export and unmount anyway?`)) {
+              try {
+                const res = await api.post(`/api/storage/pools/${encodeURIComponent(pid)}/export`, { force: true });
+                showToast(res.message || `Pool '${pid}' safely ejected.`, 'success');
+                fetchAndRenderStorageTopology(container);
+              } catch (e2) {
+                showToast(e2.message || 'Failed to force eject pool', 'error');
+              }
+            }
+          } else {
+            showToast(err.message || 'Failed to safely eject pool', 'error');
+          }
+        } finally {
+          exportBtn.disabled = false;
+          exportBtn.textContent = '⏏️ Safely Eject';
+        }
+      }
+      return;
+    }
+
+    const importBtn = e.target.closest('.btn-import-external-pool');
+    if (importBtn) {
+      e.stopPropagation();
+      const pid = importBtn.dataset.poolId;
+      const fstype = importBtn.dataset.fsType || 'zfs';
+      try {
+        importBtn.disabled = true;
+        importBtn.textContent = '⏳ Importing...';
+        await api.post('/api/storage/pools/import', { pool_id: pid, fs_type: fstype });
+        showToast(`Successfully imported storage pool '${pid}'!`, 'success');
+        fetchAndRenderStorageTopology(container);
+      } catch (err) {
+        showToast(err.message || `Failed to import pool '${pid}'`, 'error');
+        importBtn.disabled = false;
+        importBtn.textContent = '📥 Import Pool';
+      }
+      return;
     }
   });
 }
@@ -816,9 +870,10 @@ export async function fetchAndRenderStorageTopology(container) {
   `;
 
   try {
-    const [data, platformData] = await Promise.all([
+    const [data, platformData, discoveredData] = await Promise.all([
       api.get('/api/storage/pools'),
       api.get('/api/storage/platform').catch(() => ({})),
+      api.get('/api/storage/pools/discover').catch(() => ({ discovered_pools: [] })),
     ]);
 
     const canCreatePools = platformData?.capabilities?.can_create_pools ?? false;
@@ -833,11 +888,57 @@ export async function fetchAndRenderStorageTopology(container) {
       btnSnapshots.onclick = () => openSnapshotsModal();
     }
 
+    const discoveredList = discoveredData?.discovered_pools || [];
+    let externalBannerHtml = '';
+    if (discoveredList.length > 0) {
+      externalBannerHtml = discoveredList.map(p => `
+        <div class="external-pools-banner" style="background:rgba(14,165,233,0.12); border:1px solid rgba(14,165,233,0.3); border-radius:8px; padding:12px 16px; margin-bottom:16px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span style="font-size:20px;">🔌</span>
+            <div>
+              <strong style="color:#38bdf8;">External Storage Pool Detected:</strong>
+              <span style="color:#fff; margin-left:6px; font-weight:600;">${escapeHtml(p.pool_id)}</span>
+              <span style="color:var(--muted); font-size:12px; margin-left:8px;">(${escapeHtml((p.fs_type || 'zfs').toUpperCase())}${p.status ? ` · ${escapeHtml(p.status)}` : ''})</span>
+            </div>
+          </div>
+          <button class="btn-import-external-pool btn-pill-toggle" data-pool-id="${escapeHtml(p.pool_id)}" data-fs-type="${escapeHtml(p.fs_type || 'zfs')}" style="background:rgba(34,197,94,0.15); border-color:rgba(34,197,94,0.3); color:#4ade80;" title="Import detached storage pool">
+            📥 Import Pool
+          </button>
+        </div>
+      `).join('');
+    }
+
     if (!data || !Array.isArray(data.pools) || data.pools.length === 0) {
       renderStorageTopologyTree(container, state.latestStats?.disks, state.latestStats?.unraid || {});
-      return;
+    } else {
+      renderStructuredPoolsTopology(container, data);
     }
-    renderStructuredPoolsTopology(container, data);
+
+    if (externalBannerHtml) {
+      container.insertAdjacentHTML('afterbegin', externalBannerHtml);
+      if (!container._externalPoolEventsBound) {
+        container._externalPoolEventsBound = true;
+        container.addEventListener('click', async (e) => {
+          const importBtn = e.target.closest('.btn-import-external-pool');
+          if (importBtn) {
+            e.stopPropagation();
+            const pid = importBtn.dataset.poolId;
+            const fstype = importBtn.dataset.fsType || 'zfs';
+            try {
+              importBtn.disabled = true;
+              importBtn.textContent = '⏳ Importing...';
+              await api.post('/api/storage/pools/import', { pool_id: pid, fs_type: fstype });
+              showToast(`Successfully imported storage pool '${pid}'!`, 'success');
+              fetchAndRenderStorageTopology(container);
+            } catch (err) {
+              showToast(err.message || `Failed to import pool '${pid}'`, 'error');
+              importBtn.disabled = false;
+              importBtn.textContent = '📥 Import Pool';
+            }
+          }
+        });
+      }
+    }
   } catch (err) {
     console.warn('[ZettNAS] Failed to load /api/storage/pools, falling back to local disks:', err);
     renderStorageTopologyTree(container, state.latestStats?.disks, state.latestStats?.unraid || {});
@@ -882,7 +983,7 @@ export function buildSftpCardHtml(sftpStatus, usersCount = 0, sampleUser = 'admi
         <span>Line-Rate Port: <strong style="color:#fff;">${port}</strong></span>
         <span>Subsystem: <code style="color:#38bdf8;">internal-sftp</code></span>
         <span>Isolation: <strong style="color:#fff;">Chroot Jail (/home/%u)</strong></span>
-        <span>Host Shell: <strong style="color:var(--alert, #ef4444);">Prohibited (No PTY)</strong></span>
+        <span>Host Shell: <strong style="color:var(--ok2, #22c55e); background:rgba(34,197,94,0.12); padding:1px 6px; border-radius:4px; font-size:10.5px;">Prohibited (No PTY)</strong></span>
       </div>
 
       <!-- Quick Connect Grid -->
@@ -1656,10 +1757,13 @@ export async function fetchAndRenderRemoteStorage(container) {
       });
     });
 
-    // "+ Connect First Cloud Remote" CTA button
-    container.querySelector('.btn-trigger-new-remote')?.addEventListener('click', () => {
-      playChirp(640, 0.08, 'triangle');
-      openNewCloudRemoteModal(() => fetchAndRenderRemoteStorage(container));
+    // "+ Connect First Cloud Remote" CTA button(s)
+    container.querySelectorAll('.btn-trigger-new-remote').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        playChirp(640, 0.08, 'triangle');
+        openNewCloudRemoteModal(() => fetchAndRenderRemoteStorage(container));
+      });
     });
 
     // Open in File Explorer
@@ -1798,27 +1902,110 @@ export async function openNewCloudRemoteModal(onSuccess) {
   const modal = document.getElementById('modal-new-cloud-remote');
   if (!modal) return;
 
+  const winEl = document.getElementById('cloud-remote-window') || modal.querySelector('.smart-modal-window');
+  const headerEl = document.getElementById('cloud-remote-window-header') || modal.querySelector('.smart-modal-header');
   const providerSelect = document.getElementById('new-remote-provider-select');
   const descEl = document.getElementById('new-remote-provider-desc');
   const dynamicFields = document.getElementById('new-remote-dynamic-fields');
   const nameInput = document.getElementById('new-remote-name');
   const autoMountToggle = document.getElementById('new-remote-auto-mount');
   const errorBox = document.getElementById('new-remote-error-box');
+  const testResult = document.getElementById('new-remote-test-result');
+  const testBtn = document.getElementById('new-remote-test-btn');
 
   if (errorBox) errorBox.style.display = 'none';
+  if (testResult) testResult.style.display = 'none';
   if (nameInput) nameInput.value = '';
 
+  // Register with DockManager as a real desktop window
+  if (typeof DockManager !== 'undefined' && DockManager.register) {
+    DockManager.register('cloud-remote', modal, '#i-cloud', 'Cloud Remotes', false);
+    if (typeof DockManager.restore === 'function') {
+      DockManager.restore('cloud-remote');
+    }
+  }
+  modal.classList.remove('window-minimized');
   modal.classList.add('open');
-  modal.style.display = 'flex';
+  modal.style.removeProperty('display');
+  modal.style.setProperty('display', 'flex', 'important');
+
+  if (winEl) {
+    winEl.classList.remove('window-minimized');
+    winEl.style.removeProperty('display');
+    bringToFront(winEl);
+    bringToFront(modal);
+    winEl.addEventListener('pointerdown', () => {
+      bringToFront(winEl);
+      bringToFront(modal);
+    });
+  }
+  if (winEl && headerEl) {
+    makeDraggable(winEl, headerEl, 'cloud-remote');
+  }
 
   const close = () => {
+    if (typeof DockManager !== 'undefined' && DockManager.unregister) {
+      DockManager.unregister('cloud-remote');
+    }
     modal.classList.remove('open');
-    modal.style.display = 'none';
+    modal.classList.add('window-minimized');
+    modal.style.setProperty('display', 'none', 'important');
+    if (winEl) {
+      winEl.classList.add('window-minimized');
+      winEl.style.setProperty('display', 'none', 'important');
+    }
   };
+
   const cBtn = document.getElementById('modal-remote-close-btn');
   const canBtn = document.getElementById('modal-remote-cancel-btn');
   if (cBtn) cBtn.onclick = close;
   if (canBtn) canBtn.onclick = close;
+
+  // Minimize button
+  const minBtn = document.getElementById('modal-remote-min-btn');
+  if (minBtn) {
+    minBtn.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (typeof DockManager !== 'undefined' && DockManager.minimize) {
+        DockManager.minimize('cloud-remote');
+      } else {
+        close();
+      }
+    };
+  }
+
+  // Maximize / Restore toggle
+  const maxBtn = document.getElementById('modal-remote-max-btn');
+  const toggleMaximize = () => {
+    if (!winEl) return;
+    const isMax = winEl.dataset.maximized === 'true';
+    if (isMax) {
+      winEl.dataset.maximized = 'false';
+      winEl.style.width = winEl.dataset.prevWidth || '';
+      winEl.style.height = winEl.dataset.prevHeight || '';
+      winEl.style.top = winEl.dataset.prevTop || '';
+      winEl.style.left = winEl.dataset.prevLeft || '';
+      winEl.style.transform = winEl.dataset.prevTransform || '';
+    } else {
+      winEl.dataset.prevWidth = winEl.style.width;
+      winEl.dataset.prevHeight = winEl.style.height;
+      winEl.dataset.prevTop = winEl.style.top;
+      winEl.dataset.prevLeft = winEl.style.left;
+      winEl.dataset.prevTransform = winEl.style.transform;
+      winEl.dataset.maximized = 'true';
+      winEl.style.top = '50%';
+      winEl.style.left = '50%';
+      winEl.style.transform = 'translate(-50%, -50%)';
+    }
+  };
+  if (maxBtn) maxBtn.onclick = toggleMaximize;
+  if (headerEl) {
+    headerEl.ondblclick = (e) => {
+      if (e.target.closest('.os-window-controls')) return;
+      toggleMaximize();
+    };
+  }
 
   try {
     if (!_providersCache) {
@@ -1835,6 +2022,8 @@ export async function openNewCloudRemoteModal(onSuccess) {
         const selectedType = providerSelect.value;
         const prov = providers.find((p) => p.type === selectedType) || providers[0];
         if (descEl) descEl.textContent = prov ? prov.description || '' : '';
+        if (testResult) testResult.style.display = 'none';
+        if (errorBox) errorBox.style.display = 'none';
 
         if (dynamicFields && prov) {
           dynamicFields.innerHTML = (prov.fields || []).map((f) => {
@@ -1846,6 +2035,29 @@ export async function openNewCloudRemoteModal(onSuccess) {
                   <select name="${escapeHtml(f.name)}" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff; border-radius:6px; font-size:12px;">
                     ${opts}
                   </select>
+                </div>
+              `;
+            } else if (f.type === 'textarea') {
+              return `
+                <div>
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                    <label style="display:block; font-size:10px; font-weight:700; color:var(--muted); letter-spacing:0.5px;">
+                      ${escapeHtml(f.label.toUpperCase())} ${f.required ? '<span style="color:var(--crit,#ef4444);">*</span>' : ''}
+                    </label>
+                    ${prov.authorize_cmd ? `
+                      <button type="button" class="remote-copy-cmd-btn" data-cmd="${escapeHtml(prov.authorize_cmd)}" style="background:rgba(14,165,233,0.15); border:1px solid rgba(14,165,233,0.3); color:#38bdf8; font-size:10px; font-weight:600; padding:2px 8px; border-radius:4px; cursor:pointer;">
+                        📋 Copy: ${escapeHtml(prov.authorize_cmd)}
+                      </button>
+                    ` : ''}
+                  </div>
+                  <textarea
+                    name="${escapeHtml(f.name)}"
+                    placeholder="${escapeHtml(f.placeholder || '')}"
+                    class="tz-select-input"
+                    rows="4"
+                    style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff; border-radius:6px; font-size:11px; font-family:monospace; resize:vertical;"
+                    ${f.required ? 'required' : ''}>${escapeHtml(f.default != null ? String(f.default) : '')}</textarea>
+                  ${f.help ? `<div style="font-size:10.5px; color:var(--muted); margin-top:4px; line-height:1.4;">${escapeHtml(f.help)}</div>` : ''}
                 </div>
               `;
             } else {
@@ -1865,11 +2077,94 @@ export async function openNewCloudRemoteModal(onSuccess) {
               `;
             }
           }).join('');
+
+          // Bind copy buttons inside dynamic fields
+          dynamicFields.querySelectorAll('.remote-copy-cmd-btn').forEach((btn) => {
+            btn.onclick = async (ev) => {
+              ev.preventDefault();
+              const cmd = btn.getAttribute('data-cmd');
+              if (cmd) {
+                const ok = await copyTextToClipboard(cmd);
+                if (ok) {
+                  btn.textContent = '✅ Copied!';
+                  showToast(`Copied command: ${cmd}`, 'info');
+                  setTimeout(() => {
+                    btn.textContent = `📋 Copy: ${cmd}`;
+                  }, 2000);
+                }
+              }
+            };
+          });
         }
       };
 
       providerSelect.onchange = renderFields;
       renderFields();
+    }
+
+    // Bind Test Connection button
+    if (testBtn) {
+      testBtn.onclick = async (e) => {
+        e.preventDefault();
+        const formEl = document.getElementById('new-remote-form');
+        if (!formEl) return;
+        const provType = providerSelect.value;
+        const formData = new FormData(formEl);
+        const parameters = {};
+
+        formData.forEach((val, key) => {
+          if (key !== 'name' && val !== '') {
+            parameters[key] = val;
+          }
+        });
+
+        testBtn.disabled = true;
+        testBtn.innerHTML = '<span>⏳ Testing...</span>';
+        if (testResult) {
+          testResult.style.display = 'block';
+          testResult.style.background = 'rgba(56, 189, 248, 0.12)';
+          testResult.style.border = '1px solid rgba(56, 189, 248, 0.3)';
+          testResult.style.color = '#38bdf8';
+          testResult.textContent = 'Validating credentials and connecting to remote...';
+        }
+
+        try {
+          const res = await api.post('/api/remotes/test', {
+            type: provType,
+            parameters
+          });
+
+          if (res && res.success) {
+            playChirp(880, 0.12, 'sine');
+            if (testResult) {
+              testResult.style.background = 'rgba(34, 197, 94, 0.15)';
+              testResult.style.border = '1px solid rgba(34, 197, 94, 0.3)';
+              testResult.style.color = '#4ade80';
+              const sample = (res.items_sample && res.items_sample.length > 0)
+                ? ` (Files found: ${res.items_sample.slice(0, 3).join(', ')})`
+                : '';
+              testResult.innerHTML = `✅ <strong>Connection Verified!</strong> Valid credentials and remote accessible${sample}.`;
+            }
+          } else {
+            if (testResult) {
+              testResult.style.background = 'rgba(239, 68, 68, 0.15)';
+              testResult.style.border = '1px solid rgba(239, 68, 68, 0.3)';
+              testResult.style.color = '#f87171';
+              testResult.innerHTML = `❌ <strong>Connection Failed:</strong> ${escapeHtml(res?.error || 'Authentication error')}`;
+            }
+          }
+        } catch (err) {
+          if (testResult) {
+            testResult.style.background = 'rgba(239, 68, 68, 0.15)';
+            testResult.style.border = '1px solid rgba(239, 68, 68, 0.3)';
+            testResult.style.color = '#f87171';
+            testResult.innerHTML = `❌ <strong>Connection Failed:</strong> ${escapeHtml(err.message || 'Error communicating with host')}`;
+          }
+        } finally {
+          testBtn.disabled = false;
+          testBtn.innerHTML = '<span>⚡ Test Connection</span>';
+        }
+      };
     }
 
     const form = document.getElementById('new-remote-form');
@@ -1928,6 +2223,10 @@ export async function openNewCloudRemoteModal(onSuccess) {
   } catch (err) {
     showToast('Failed to load storage providers: ' + (err.message || 'Error'), 'error');
   }
+}
+
+if (typeof window !== 'undefined') {
+  window.openNewCloudRemoteModal = openNewCloudRemoteModal;
 }
 
 /**

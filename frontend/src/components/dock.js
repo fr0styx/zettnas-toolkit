@@ -645,11 +645,23 @@ export function applySavedBounds(dragEl, winId) {
   dragEl.style.top = `${clampedTop}px`;
   dragEl.style.transform = 'none';
 
-  if (saved.width) {
-    dragEl.style.width = `${Math.min(window.innerWidth - 20, Math.max(320, saved.width))}px`;
-  }
-  if (saved.height) {
-    dragEl.style.height = `${Math.min(window.innerHeight - 80, Math.max(200, saved.height))}px`;
+  if (id === 'console' || id === 'console-window' || dragEl.id === 'console-window') {
+    dragEl.style.removeProperty('width');
+    dragEl.style.removeProperty('height');
+    if (saved && (saved.width || saved.height)) {
+      delete saved.width;
+      delete saved.height;
+      try {
+        localStorage.setItem(WIN_BOUNDS_KEY, JSON.stringify(all));
+      } catch (_) {}
+    }
+  } else {
+    if (saved.width) {
+      dragEl.style.width = `${Math.min(window.innerWidth - 20, Math.max(320, saved.width))}px`;
+    }
+    if (saved.height) {
+      dragEl.style.height = `${Math.min(window.innerHeight - 80, Math.max(200, saved.height))}px`;
+    }
   }
   if (saved.snapped) {
     dragEl.dataset.snapped = saved.snapped;
@@ -905,6 +917,8 @@ export function bringToFront(windowEl) {
     windowEl.id === 'stack-picker-overlay' ||
     windowEl.id === 'app-deploy-modal-window' ||
     windowEl.id === 'app-deploy-modal-overlay' ||
+    windowEl.id === 'modal-new-cloud-remote' ||
+    windowEl.id === 'cloud-remote-window' ||
     windowEl.classList?.contains('chassis-front-panel') ||
     windowEl.classList?.contains('management-window') ||
     windowEl.classList?.contains('mgmt-app-window') ||
@@ -912,8 +926,9 @@ export function bringToFront(windowEl) {
     windowEl.classList?.contains('container-inspector-window') ||
     windowEl.classList?.contains('stack-inspector-window') ||
     windowEl.classList?.contains('app-deploy-window') ||
+    windowEl.classList?.contains('cloud-remote-window') ||
     windowEl.classList?.contains('os-window') ||
-    windowEl.closest?.('#console-modal-overlay, #management-modal-overlay, #file-manager-window, #notif-center-panel, #container-inspector-window, #container-inspector-overlay, #stack-inspector-window, #stack-inspector-overlay, #stack-picker-window, #stack-picker-overlay, #app-deploy-modal-window, #app-deploy-modal-overlay')
+    windowEl.closest?.('#console-modal-overlay, #management-modal-overlay, #file-manager-window, #notif-center-panel, #container-inspector-window, #container-inspector-overlay, #stack-inspector-window, #stack-inspector-overlay, #stack-picker-window, #stack-picker-overlay, #app-deploy-modal-window, #app-deploy-modal-overlay, #modal-new-cloud-remote')
   );
 
   // Protect standalone modal backdrops & modal dialogs from being demoted into window z-index layer
@@ -945,7 +960,7 @@ export function bringToFront(windowEl) {
     openWins.forEach((el) => {
       const curZ = (baseZ++).toString();
       el.style.zIndex = curZ;
-      const inner = el.querySelector?.('#console-window, #management-window, .chassis-front-panel, .mgmt-app-window, .container-inspector-window, #container-inspector-window, .smart-modal-window, #smart-modal-window, #stack-inspector-window, #stack-picker-window, #app-deploy-modal-window');
+      const inner = el.querySelector?.('#console-window, #management-window, .chassis-front-panel, .mgmt-app-window, .container-inspector-window, #container-inspector-window, .smart-modal-window, #smart-modal-window, #stack-inspector-window, #stack-picker-window, #app-deploy-modal-window, #cloud-remote-window, .cloud-remote-window');
       if (inner) inner.style.zIndex = curZ;
     });
     activeWindowZIndex = baseZ;
@@ -955,12 +970,12 @@ export function bringToFront(windowEl) {
   windowEl.style.zIndex = zStr;
 
   // Elevate parent overlay wrapper if applicable
-  const parentOverlay = windowEl.closest?.('#console-modal-overlay, #management-modal-overlay, #container-inspector-overlay, #smart-modal-overlay, #stack-inspector-overlay, #stack-picker-overlay, #app-deploy-modal-overlay');
+  const parentOverlay = windowEl.closest?.('#console-modal-overlay, #management-modal-overlay, #container-inspector-overlay, #smart-modal-overlay, #stack-inspector-overlay, #stack-picker-overlay, #app-deploy-modal-overlay, #modal-new-cloud-remote, #vm-console-overlay, #vm-iso-manager-overlay, .smart-modal-backdrop');
   if (parentOverlay && parentOverlay !== windowEl) {
     parentOverlay.style.zIndex = zStr;
   }
   // Elevate child window if applicable
-  const childWin = windowEl.querySelector?.('#console-window, #management-window, .chassis-front-panel, .mgmt-app-window, .container-inspector-window, #container-inspector-window, .smart-modal-window, #smart-modal-window, #stack-inspector-window, #stack-picker-window, #app-deploy-modal-window');
+  const childWin = windowEl.querySelector?.('#console-window, #management-window, .chassis-front-panel, .mgmt-app-window, .container-inspector-window, #container-inspector-window, .smart-modal-window, #smart-modal-window, #stack-inspector-window, #stack-picker-window, #app-deploy-modal-window, #cloud-remote-window, .cloud-remote-window');
   if (childWin && childWin !== windowEl) {
     childWin.style.zIndex = zStr;
   }
@@ -985,12 +1000,12 @@ export function bringToFront(windowEl) {
     document.querySelectorAll('.active-window').forEach((w) => {
       w.classList.remove('active-window');
     });
-    const targetWin = windowEl.querySelector?.('#console-window, #management-window, .chassis-front-panel, .mgmt-app-window, .container-inspector-window, #container-inspector-window, #app-deploy-modal-window') || windowEl;
+    const targetWin = windowEl.querySelector?.('#console-window, #management-window, .chassis-front-panel, .mgmt-app-window, .container-inspector-window, #container-inspector-window, #app-deploy-modal-window, #cloud-remote-window, .cloud-remote-window') || windowEl;
     if (targetWin && targetWin.classList) targetWin.classList.add('active-window');
   } catch (e) {}
 }
 
-export const DESKTOP_WINDOW_SELECTOR = '#console-window, #management-window, #file-manager-window, .file-manager-window, #notif-center-panel, .container-inspector-window, #container-inspector-window, #stack-inspector-window, #stack-picker-window, #app-deploy-modal-window, .os-window';
+export const DESKTOP_WINDOW_SELECTOR = '#console-window, #management-window, #file-manager-window, .file-manager-window, #notif-center-panel, .container-inspector-window, #container-inspector-window, #stack-inspector-window, #stack-picker-window, #app-deploy-modal-window, #cloud-remote-window, .cloud-remote-window, .os-window';
 
 export const handleWindowActivation = (e) => {
   // If the click directly targeted an overlay backdrop, do not activate it as a window
@@ -1500,6 +1515,23 @@ export const KNOWN_APPS = {
         if (window.toggleNotificationCenter) window.toggleNotificationCenter();
       }
     }
+  },
+  'cloud-remote': {
+    id: 'cloud-remote',
+    icon: '#i-cloud',
+    getTitle: () => 'Cloud Remotes',
+    launch: () => {
+      if (typeof window.openNewCloudRemoteModal === 'function') {
+        window.openNewCloudRemoteModal();
+      } else {
+        const crOverlay = document.getElementById('modal-new-cloud-remote');
+        const crWin = document.getElementById('cloud-remote-window');
+        if (crOverlay && window.DockManager) {
+          window.DockManager.restore('cloud-remote');
+          if (crWin) bringToFront(crWin);
+        }
+      }
+    }
   }
 };
 
@@ -1638,6 +1670,10 @@ export const DockManager = {
     }
   },
 
+  close(id) {
+    this.closeWindow(id);
+  },
+
   closeWindow(id) {
     if (id === 'fm') {
       const fmClose = document.getElementById('fm-close');
@@ -1667,7 +1703,44 @@ export const DockManager = {
     } else if (id === 'app-deploy') {
       const deployClose = document.getElementById('adm-close-btn');
       if (deployClose) { deployClose.click(); return; }
+    } else if (id === 'cloud-remote') {
+      const crClose = document.getElementById('modal-remote-close-btn');
+      if (crClose) { crClose.click(); return; }
+    } else if (id === 'vm-console') {
+      const cw = document.getElementById('vm-console-window');
+      if (cw) {
+        cw.classList.add('window-minimized');
+        cw.classList.remove('open');
+        cw.style.setProperty('display', 'none', 'important');
+      }
+    } else if (id === 'vm-iso-manager') {
+      const isoWin = document.getElementById('vm-iso-manager-window') || document.getElementById('modal-iso-manager');
+      if (isoWin) {
+        isoWin.classList.add('window-minimized');
+        isoWin.classList.remove('open');
+        isoWin.style.setProperty('display', 'none', 'important');
+      }
+    } else if (id === 'vm' || id === 'vm-manager') {
+      const vmWin = document.getElementById('vm-manager-window');
+      if (vmWin) {
+        vmWin.classList.add('window-minimized');
+        vmWin.classList.remove('open');
+        vmWin.style.setProperty('display', 'none', 'important');
+      }
     }
+
+    if (this.windows[id] && this.windows[id].el) {
+      const el = this.windows[id].el;
+      el.classList.add('window-minimized');
+      el.classList.remove('open');
+      el.style.setProperty('display', 'none', 'important');
+      const innerWin = el.querySelector('.smart-modal-window, .chassis-front-panel, .os-window, .mgmt-app-window, .file-manager-window');
+      if (innerWin) {
+        innerWin.classList.add('window-minimized');
+        innerWin.style.setProperty('display', 'none', 'important');
+      }
+    }
+
     this.unregister(id);
   },
 
@@ -1686,10 +1759,9 @@ export const DockManager = {
       this.windows[id].closed = false;
       el.classList.remove('window-minimized');
       el.classList.add('open');
+      el.style.removeProperty('display');
       if (el.classList.contains('smart-modal-backdrop') || el.classList.contains('os-window') || el.classList.contains('file-manager-window')) {
-        el.style.display = 'flex';
-      } else {
-        el.style.removeProperty('display');
+        el.style.setProperty('display', 'flex');
       }
       if (innerWin) {
         innerWin.classList.remove('window-minimized');
@@ -1714,19 +1786,20 @@ export const DockManager = {
 
   unregister(id) {
     if (this.windows[id]) {
-      if (this.isPinned(id)) {
-        this.windows[id].minimized = true;
-        this.windows[id].closed = true;
-        if (this.windows[id].el) {
-          this.windows[id].el.classList.add('window-minimized');
-          this.windows[id].el.classList.remove('open');
-          this.windows[id].el.style.setProperty('display', 'none', 'important');
-          const innerWin = this.windows[id].el.querySelector('.smart-modal-window, .chassis-front-panel, .os-window, .mgmt-app-window');
-          if (innerWin) {
-            innerWin.classList.add('window-minimized');
-            innerWin.style.setProperty('display', 'none', 'important');
-          }
+      const winObj = this.windows[id];
+      if (winObj.el) {
+        winObj.el.classList.add('window-minimized');
+        winObj.el.classList.remove('open');
+        winObj.el.style.setProperty('display', 'none', 'important');
+        const innerWin = winObj.el.querySelector('.smart-modal-window, .chassis-front-panel, .os-window, .mgmt-app-window, .file-manager-window');
+        if (innerWin) {
+          innerWin.classList.add('window-minimized');
+          innerWin.style.setProperty('display', 'none', 'important');
         }
+      }
+      if (this.isPinned(id)) {
+        winObj.minimized = true;
+        winObj.closed = true;
       } else {
         delete this.windows[id];
       }
@@ -2948,6 +3021,12 @@ export function initDockSystem() {
   }
   if (notifPanel && notifResizer) {
     makeResizable(notifPanel, notifResizer, 'notif-center', { minWidth: 320, minHeight: 240 });
+  }
+
+  const crModal = document.getElementById('cloud-remote-window');
+  const crHeader = document.getElementById('cloud-remote-window-header');
+  if (crModal && crHeader) {
+    makeDraggable(crModal, crHeader, 'cloud-remote');
   }
 
   // Mobile / Stacked Mode Toggle & Auto-detection
