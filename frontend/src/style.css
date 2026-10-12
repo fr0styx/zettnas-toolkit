@@ -8055,6 +8055,12 @@ body.mobile-mode .btn-webui-badge {
   position: relative;
   background: #0b111a;
 }
+.fm-viewport:focus,
+.fm-viewport:focus-visible,
+.file-manager-window:focus,
+.file-manager-window:focus-visible {
+  outline: none !important;
+}
 .fm-spacer {
   width: 100%;
 }

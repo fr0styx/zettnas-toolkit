@@ -13,6 +13,7 @@ let currentSortBy = 'name';
 let currentSortDir = 'asc';
 let selectedPaths = new Set();
 let lastSelectedIndex = -1;
+let selectionAnchorIndex = -1;
 let _clipboard = { items: [], action: 'copy' };
 
 function updateFmSelectionToolbar() {
@@ -73,6 +74,324 @@ function updateRowSelectionUI() {
 const ROW_HEIGHT = 42;
 const BUFFER = 5;
 
+export function ensureFmFocus() {
+  const viewport = document.getElementById('fm-viewport');
+  if (!viewport) return;
+  const active = document.activeElement;
+  if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.tagName === 'SELECT' || active.isContentEditable)) {
+    return;
+  }
+  const win = fmWindow || document.getElementById('file-manager-window');
+  if (win && win.contains(active) && active !== win && active !== viewport) {
+    return;
+  }
+  try {
+    viewport.focus({ preventScroll: true });
+  } catch (_) {}
+}
+
+export function scrollIndexIntoView(idx) {
+  const viewport = document.getElementById('fm-viewport');
+  if (!viewport || idx < 0) return;
+  const targetTop = idx * ROW_HEIGHT;
+  const targetBottom = targetTop + ROW_HEIGHT;
+  const viewTop = viewport.scrollTop;
+  const viewHeight = viewport.clientHeight || 400;
+  const viewBottom = viewTop + viewHeight;
+
+  if (targetTop < viewTop) {
+    viewport.scrollTop = targetTop;
+  } else if (targetBottom > viewBottom) {
+    viewport.scrollTop = Math.max(0, targetBottom - viewHeight);
+  }
+  renderViewport();
+}
+
+export function isFmActive() {
+  const win = fmWindow || document.getElementById('file-manager-window');
+  if (!win) return false;
+  if (win.style.display === 'none' || win.classList.contains('window-minimized')) return false;
+  if (document.activeElement && win.contains(document.activeElement)) return true;
+  if (win.classList.contains('active-window')) return true;
+  if (window.DockManager && window.DockManager.activeId === 'fm') return true;
+  if (!window.DockManager && win.style.display !== 'none') return true;
+  return false;
+}
+
+export function getFmSelectedPaths() {
+  return Array.from(selectedPaths);
+}
+
+export function getFmSelectionState() {
+  return {
+    selectedPaths: Array.from(selectedPaths),
+    lastSelectedIndex,
+    selectionAnchorIndex,
+  };
+}
+
+export function setFmStateForTesting(opts = {}) {
+  if (opts.fileList) fileList = opts.fileList;
+  if (opts.selectedPaths) selectedPaths = new Set(opts.selectedPaths);
+  if (opts.lastSelectedIndex !== undefined) lastSelectedIndex = opts.lastSelectedIndex;
+  if (opts.selectionAnchorIndex !== undefined) selectionAnchorIndex = opts.selectionAnchorIndex;
+  if (opts.currentPath !== undefined) currentPath = opts.currentPath;
+}
+
+export function handleFmKeydown(e) {
+  if (!e || e.defaultPrevented) return;
+  if (!isFmActive()) return;
+
+  const target = e.target;
+  if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT' || target.isContentEditable)) {
+    return;
+  }
+  // Check if any modal or toast prompt is active over the UI
+  if (document.querySelector('.smart-modal-backdrop.open, .smart-modal-backdrop:not([style*="display: none"]):not([style*="display:none"]), .toast-prompt-backdrop, #modal-fm-collision.open')) {
+    return;
+  }
+
+  const minSelectableIndex = (fileList[0]?.name === '..') ? 1 : 0;
+  const hasSelectableFiles = fileList.length > minSelectableIndex;
+
+  if (e.key === 'Escape') {
+    if (selectedPaths.size > 0) {
+      e.preventDefault();
+      e.stopPropagation();
+      selectedPaths.clear();
+      lastSelectedIndex = -1;
+      selectionAnchorIndex = -1;
+      updateRowSelectionUI();
+      updateFmSelectionToolbar();
+    }
+  } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'a') {
+    e.preventDefault();
+    e.stopPropagation();
+    selectedPaths.clear();
+    fileList.forEach((f) => {
+      if (f.name !== '..') {
+        selectedPaths.add(f.path);
+      }
+    });
+    lastSelectedIndex = fileList.length - 1;
+    selectionAnchorIndex = minSelectableIndex;
+    updateRowSelectionUI();
+    updateFmSelectionToolbar();
+  } else if (e.key === 'Delete' || (e.metaKey && e.key === 'Backspace')) {
+    if (selectedPaths.size > 0) {
+      e.preventDefault();
+      e.stopPropagation();
+      document.getElementById('fm-bulk-delete-btn')?.click();
+    }
+  } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'c') {
+    if (selectedPaths.size > 0) {
+      e.preventDefault();
+      e.stopPropagation();
+      _clipboard = { items: Array.from(selectedPaths), action: 'copy' };
+      const msg = t('fm.copied_clipboard', `Copied ${selectedPaths.size} item(s) to clipboard`).replace('{count}', selectedPaths.size);
+      showToast(msg, 'info');
+    }
+  } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'x') {
+    if (selectedPaths.size > 0) {
+      e.preventDefault();
+      e.stopPropagation();
+      _clipboard = { items: Array.from(selectedPaths), action: 'move' };
+      const msg = t('fm.cut_clipboard', `Cut ${selectedPaths.size} item(s) to clipboard`).replace('{count}', selectedPaths.size);
+      showToast(msg, 'info');
+    }
+  } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'v') {
+    if (_clipboard && _clipboard.items && _clipboard.items.length > 0) {
+      e.preventDefault();
+      e.stopPropagation();
+      executeTransferWithConflictCheck(_clipboard.items, currentPath, _clipboard.action);
+    }
+  } else if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    e.stopPropagation();
+    ensureFmFocus();
+    if (!hasSelectableFiles) return;
+
+    if (lastSelectedIndex === -1) {
+      const targetIdx = minSelectableIndex;
+      lastSelectedIndex = targetIdx;
+      selectionAnchorIndex = targetIdx;
+      selectedPaths.clear();
+      if (fileList[targetIdx] && fileList[targetIdx].name !== '..') {
+        selectedPaths.add(fileList[targetIdx].path);
+      }
+      scrollIndexIntoView(targetIdx);
+      updateRowSelectionUI();
+      updateFmSelectionToolbar();
+      return;
+    }
+
+    if (e.shiftKey) {
+      if (selectionAnchorIndex === -1) selectionAnchorIndex = lastSelectedIndex;
+      const nextIdx = Math.min(fileList.length - 1, lastSelectedIndex + 1);
+      lastSelectedIndex = nextIdx;
+      selectedPaths.clear();
+      const start = Math.min(selectionAnchorIndex, lastSelectedIndex);
+      const end = Math.max(selectionAnchorIndex, lastSelectedIndex);
+      for (let j = start; j <= end; j++) {
+        if (fileList[j] && fileList[j].name !== '..') {
+          selectedPaths.add(fileList[j].path);
+        }
+      }
+      scrollIndexIntoView(lastSelectedIndex);
+      updateRowSelectionUI();
+      updateFmSelectionToolbar();
+    } else if (!e.ctrlKey && !e.metaKey) {
+      const targetIdx = Math.min(fileList.length - 1, lastSelectedIndex + 1);
+      lastSelectedIndex = targetIdx;
+      selectionAnchorIndex = targetIdx;
+      selectedPaths.clear();
+      if (fileList[targetIdx] && fileList[targetIdx].name !== '..') {
+        selectedPaths.add(fileList[targetIdx].path);
+      }
+      scrollIndexIntoView(targetIdx);
+      updateRowSelectionUI();
+      updateFmSelectionToolbar();
+    }
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    e.stopPropagation();
+    ensureFmFocus();
+    if (!hasSelectableFiles) return;
+
+    if (lastSelectedIndex === -1) {
+      const targetIdx = fileList.length - 1;
+      lastSelectedIndex = targetIdx;
+      selectionAnchorIndex = targetIdx;
+      selectedPaths.clear();
+      if (fileList[targetIdx] && fileList[targetIdx].name !== '..') {
+        selectedPaths.add(fileList[targetIdx].path);
+      }
+      scrollIndexIntoView(targetIdx);
+      updateRowSelectionUI();
+      updateFmSelectionToolbar();
+      return;
+    }
+
+    if (e.shiftKey) {
+      if (selectionAnchorIndex === -1) selectionAnchorIndex = lastSelectedIndex;
+      const prevIdx = Math.max(minSelectableIndex, lastSelectedIndex - 1);
+      lastSelectedIndex = prevIdx;
+      selectedPaths.clear();
+      const start = Math.min(selectionAnchorIndex, lastSelectedIndex);
+      const end = Math.max(selectionAnchorIndex, lastSelectedIndex);
+      for (let j = start; j <= end; j++) {
+        if (fileList[j] && fileList[j].name !== '..') {
+          selectedPaths.add(fileList[j].path);
+        }
+      }
+      scrollIndexIntoView(lastSelectedIndex);
+      updateRowSelectionUI();
+      updateFmSelectionToolbar();
+    } else if (!e.ctrlKey && !e.metaKey) {
+      const targetIdx = Math.max(minSelectableIndex, lastSelectedIndex - 1);
+      lastSelectedIndex = targetIdx;
+      selectionAnchorIndex = targetIdx;
+      selectedPaths.clear();
+      if (fileList[targetIdx] && fileList[targetIdx].name !== '..') {
+        selectedPaths.add(fileList[targetIdx].path);
+      }
+      scrollIndexIntoView(targetIdx);
+      updateRowSelectionUI();
+      updateFmSelectionToolbar();
+    }
+  } else if (e.key === 'Home') {
+    e.preventDefault();
+    e.stopPropagation();
+    ensureFmFocus();
+    if (!hasSelectableFiles) return;
+    const targetIdx = minSelectableIndex;
+    if (e.shiftKey) {
+      if (selectionAnchorIndex === -1) selectionAnchorIndex = (lastSelectedIndex >= 0) ? lastSelectedIndex : targetIdx;
+      lastSelectedIndex = targetIdx;
+      selectedPaths.clear();
+      const start = Math.min(selectionAnchorIndex, lastSelectedIndex);
+      const end = Math.max(selectionAnchorIndex, lastSelectedIndex);
+      for (let j = start; j <= end; j++) {
+        if (fileList[j] && fileList[j].name !== '..') {
+          selectedPaths.add(fileList[j].path);
+        }
+      }
+    } else if (!e.ctrlKey && !e.metaKey) {
+      lastSelectedIndex = targetIdx;
+      selectionAnchorIndex = targetIdx;
+      selectedPaths.clear();
+      if (fileList[targetIdx] && fileList[targetIdx].name !== '..') {
+        selectedPaths.add(fileList[targetIdx].path);
+      }
+    }
+    scrollIndexIntoView(lastSelectedIndex);
+    updateRowSelectionUI();
+    updateFmSelectionToolbar();
+  } else if (e.key === 'End') {
+    e.preventDefault();
+    e.stopPropagation();
+    ensureFmFocus();
+    if (!hasSelectableFiles) return;
+    const targetIdx = fileList.length - 1;
+    if (e.shiftKey) {
+      if (selectionAnchorIndex === -1) selectionAnchorIndex = (lastSelectedIndex >= 0) ? lastSelectedIndex : minSelectableIndex;
+      lastSelectedIndex = targetIdx;
+      selectedPaths.clear();
+      const start = Math.min(selectionAnchorIndex, lastSelectedIndex);
+      const end = Math.max(selectionAnchorIndex, lastSelectedIndex);
+      for (let j = start; j <= end; j++) {
+        if (fileList[j] && fileList[j].name !== '..') {
+          selectedPaths.add(fileList[j].path);
+        }
+      }
+    } else if (!e.ctrlKey && !e.metaKey) {
+      lastSelectedIndex = targetIdx;
+      selectionAnchorIndex = targetIdx;
+      selectedPaths.clear();
+      if (fileList[targetIdx] && fileList[targetIdx].name !== '..') {
+        selectedPaths.add(fileList[targetIdx].path);
+      }
+    }
+    scrollIndexIntoView(lastSelectedIndex);
+    updateRowSelectionUI();
+    updateFmSelectionToolbar();
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    e.stopPropagation();
+    let targetItem = null;
+    if (selectedPaths.size === 1) {
+      const selPath = Array.from(selectedPaths)[0];
+      targetItem = fileList.find(f => f.path === selPath);
+    } else if (lastSelectedIndex >= 0 && fileList[lastSelectedIndex]) {
+      targetItem = fileList[lastSelectedIndex];
+    }
+    if (targetItem && targetItem.name !== '..') {
+      if (targetItem.is_dir) {
+        loadPath(targetItem.path);
+      } else if (targetItem.name.match(/\.(jpeg|jpg|png|gif|webp|svg)$/i)) {
+        handleAction('preview', targetItem.path, targetItem.name);
+      }
+    }
+  } else if ((e.key === 'Backspace' && !e.metaKey && !e.ctrlKey && !e.altKey && !e.shiftKey) || ((e.altKey || e.metaKey) && e.key === 'ArrowUp')) {
+    e.preventDefault();
+    e.stopPropagation();
+    document.getElementById('fm-up-btn')?.click();
+  } else if ((e.key === ' ' || e.code === 'Space') && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
+    let targetItem = null;
+    if (selectedPaths.size === 1) {
+      const selPath = Array.from(selectedPaths)[0];
+      targetItem = fileList.find(f => f.path === selPath);
+    } else if (lastSelectedIndex >= 0 && fileList[lastSelectedIndex]) {
+      targetItem = fileList[lastSelectedIndex];
+    }
+    if (targetItem && !targetItem.is_dir && targetItem.name.match(/\.(jpeg|jpg|png|gif|webp|svg)$/i)) {
+      e.preventDefault();
+      e.stopPropagation();
+      handleAction('preview', targetItem.path, targetItem.name);
+    }
+  }
+}
+
 export function initFileManager() {
   if (window._fmInitialized) return;
   window._fmInitialized = true;
@@ -113,7 +432,7 @@ export function initFileManager() {
   // Inject the window HTML into the body if it doesn't exist
   if (!document.getElementById('file-manager-window')) {
     const html = `
-      <div id="file-manager-window" class="os-window file-manager-window" style="display: none;">
+      <div id="file-manager-window" class="os-window file-manager-window" tabindex="-1" style="display: none;">
         <div class="os-window-header">
           <div class="os-window-title">
             <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
@@ -165,7 +484,7 @@ export function initFileManager() {
             <div class="fm-col fm-col-size" data-i18n="fm.col_size">${t('fm.col_size', 'Size')}</div>
             <div class="fm-col fm-col-actions" data-i18n="fm.col_actions">${t('fm.col_actions', 'Actions')}</div>
           </div>
-          <div id="fm-viewport" class="fm-viewport" data-scrollable="true">
+          <div id="fm-viewport" class="fm-viewport" data-scrollable="true" tabindex="0">
             <div id="fm-spacer" class="fm-spacer"></div>
             <div id="fm-list" class="fm-list"></div>
           </div>
@@ -196,7 +515,14 @@ export function initFileManager() {
 
 
   makeDraggable(fmWindow, fmWindow.querySelector('.os-window-header'), 'fm');
-  fmWindow.addEventListener('mousedown', () => bringToFront(fmWindow));
+  const handleFmActivation = (e) => {
+    bringToFront(fmWindow);
+    if (!e || !e.target || !e.target.closest('input, textarea, select, button, .fm-tool-btn, .fm-act-btn')) {
+      ensureFmFocus();
+    }
+  };
+  fmWindow.addEventListener('mousedown', handleFmActivation);
+  fmWindow.addEventListener('pointerdown', handleFmActivation);
 
   // Save bounds on resize/drag
   const saveBounds = () => {
@@ -312,6 +638,7 @@ export function initFileManager() {
       fmWindow.style.removeProperty('display');
       fmWindow.style.setProperty('display', 'flex', 'important');
       loadPath(payload.path || currentPath);
+      setTimeout(ensureFmFocus, 60);
     }
   });
 
@@ -389,9 +716,22 @@ export function initFileManager() {
 
   const viewport = document.getElementById('fm-viewport');
 
-  
-
-  if (viewport) viewport.addEventListener('scroll', () => renderViewport());
+  if (viewport) {
+    viewport.addEventListener('scroll', () => renderViewport());
+    if (!viewport.dataset.clickBound) {
+      viewport.dataset.clickBound = 'true';
+      viewport.addEventListener('click', (e) => {
+        if (e.target === viewport || e.target.id === 'fm-spacer' || e.target.id === 'fm-list') {
+          selectedPaths.clear();
+          lastSelectedIndex = -1;
+          selectionAnchorIndex = -1;
+          updateRowSelectionUI();
+          updateFmSelectionToolbar();
+          ensureFmFocus();
+        }
+      });
+    }
+  }
 
   // Drag and Drop Upload
   
@@ -539,8 +879,12 @@ export function initFileManager() {
       const selectableFiles = fileList.filter(f => f.name !== '..');
       if (masterChk.checked) {
         selectableFiles.forEach(f => selectedPaths.add(f.path));
+        lastSelectedIndex = fileList.length - 1;
+        selectionAnchorIndex = (fileList[0]?.name === '..') ? 1 : 0;
       } else {
         selectedPaths.clear();
+        lastSelectedIndex = -1;
+        selectionAnchorIndex = -1;
       }
       updateRowSelectionUI();
       updateFmSelectionToolbar();
@@ -552,6 +896,7 @@ export function initFileManager() {
     clearSelBtn.addEventListener('click', () => {
       selectedPaths.clear();
       lastSelectedIndex = -1;
+      selectionAnchorIndex = -1;
       updateRowSelectionUI();
       updateFmSelectionToolbar();
     });
@@ -560,53 +905,12 @@ export function initFileManager() {
   // Keyboard navigation & shortcuts inside file manager
   if (fmWindow && !fmWindow.dataset.kbBound) {
     fmWindow.dataset.kbBound = 'true';
-    fmWindow.addEventListener('keydown', (e) => {
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-      if (e.key === 'Escape') {
-        if (selectedPaths.size > 0) {
-          e.preventDefault();
-          selectedPaths.clear();
-          lastSelectedIndex = -1;
-          updateRowSelectionUI();
-          updateFmSelectionToolbar();
-        }
-      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'a') {
-        e.preventDefault();
-        selectedPaths.clear();
-        fileList.forEach((f) => {
-          if (f.name !== '..') {
-            selectedPaths.add(f.path);
-          }
-        });
-        lastSelectedIndex = fileList.length - 1;
-        updateRowSelectionUI();
-        updateFmSelectionToolbar();
-      } else if (e.key === 'Delete' || (e.metaKey && e.key === 'Backspace')) {
-        if (selectedPaths.size > 0) {
-          e.preventDefault();
-          bulkDeleteBtn?.click();
-        }
-      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'c') {
-        if (selectedPaths.size > 0) {
-          e.preventDefault();
-          _clipboard = { items: Array.from(selectedPaths), action: 'copy' };
-          const msg = t('fm.copied_clipboard', `Copied ${selectedPaths.size} item(s) to clipboard`).replace('{count}', selectedPaths.size);
-          showToast(msg, 'info');
-        }
-      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'x') {
-        if (selectedPaths.size > 0) {
-          e.preventDefault();
-          _clipboard = { items: Array.from(selectedPaths), action: 'move' };
-          const msg = t('fm.cut_clipboard', `Cut ${selectedPaths.size} item(s) to clipboard`).replace('{count}', selectedPaths.size);
-          showToast(msg, 'info');
-        }
-      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'v') {
-        if (_clipboard && _clipboard.items && _clipboard.items.length > 0) {
-          e.preventDefault();
-          executeTransferWithConflictCheck(_clipboard.items, currentPath, _clipboard.action);
-        }
-      }
-    });
+    fmWindow.addEventListener('keydown', handleFmKeydown);
+  }
+
+  if (typeof document !== 'undefined' && !document._fmDocKbBound) {
+    document._fmDocKbBound = true;
+    document.addEventListener('keydown', handleFmKeydown);
   }
 
 }
@@ -627,6 +931,7 @@ async function loadPath(path) {
     }
     selectedPaths.clear();
     lastSelectedIndex = -1;
+    selectionAnchorIndex = -1;
     updateFmSelectionToolbar();
     const pathInput = document.getElementById('fm-path-input');
     if (pathInput) pathInput.value = currentPath;
@@ -849,6 +1154,7 @@ function renderViewport() {
 
     row.addEventListener('click', (e) => {
       if (e.target.closest('.fm-act-btn') || file.name === '..') return;
+      ensureFmFocus();
       if (e.target.closest('.fm-checkbox')) {
         const chk = e.target.closest('.fm-checkbox');
         if (chk.checked) {
@@ -857,14 +1163,18 @@ function renderViewport() {
           selectedPaths.delete(file.path);
         }
         lastSelectedIndex = i;
+        if (selectionAnchorIndex === -1) selectionAnchorIndex = i;
         updateRowSelectionUI();
         updateFmSelectionToolbar();
         return;
       }
       const idx = i;
-      if (e.shiftKey && lastSelectedIndex !== -1) {
-        const start = Math.min(lastSelectedIndex, idx);
-        const end = Math.max(lastSelectedIndex, idx);
+      if (e.shiftKey) {
+        if (selectionAnchorIndex === -1) {
+          selectionAnchorIndex = (lastSelectedIndex !== -1) ? lastSelectedIndex : idx;
+        }
+        const start = Math.min(selectionAnchorIndex, idx);
+        const end = Math.max(selectionAnchorIndex, idx);
         if (!e.ctrlKey && !e.metaKey) {
           selectedPaths.clear();
         }
@@ -873,6 +1183,7 @@ function renderViewport() {
             selectedPaths.add(fileList[j].path);
           }
         }
+        lastSelectedIndex = idx;
       } else if (e.ctrlKey || e.metaKey) {
         if (selectedPaths.has(file.path)) {
           selectedPaths.delete(file.path);
@@ -880,10 +1191,12 @@ function renderViewport() {
           selectedPaths.add(file.path);
         }
         lastSelectedIndex = idx;
+        selectionAnchorIndex = idx;
       } else {
         selectedPaths.clear();
         selectedPaths.add(file.path);
         lastSelectedIndex = idx;
+        selectionAnchorIndex = idx;
       }
       updateRowSelectionUI();
       updateFmSelectionToolbar();
