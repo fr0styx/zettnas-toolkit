@@ -2878,10 +2878,10 @@ select.tz-select-input option, select.tz-select option {
   border: 1px solid rgba(255, 255, 255, 0.14) !important;
   border-radius: 12px !important;
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.95), 0 0 35px rgba(14, 165, 233, 0.2) !important;
-  width: 580px !important;
+  width: 620px !important;
   max-width: 95vw !important;
-  height: 640px !important;
-  max-height: 88vh !important;
+  height: 720px !important;
+  max-height: 90vh !important;
   overflow: hidden !important;
   transition: width 0.2s cubic-bezier(0.16, 1, 0.3, 1), height 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }

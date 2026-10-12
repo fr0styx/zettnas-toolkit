@@ -1966,11 +1966,16 @@ export async function openNewCloudRemoteModal(onSuccess) {
 
   let _currentOAuthSession = null;
   let _oauthPollTimer = null;
+  let _focusListener = null;
 
   const close = () => {
     if (_oauthPollTimer) {
       clearInterval(_oauthPollTimer);
       _oauthPollTimer = null;
+    }
+    if (_focusListener && typeof window !== 'undefined' && window.removeEventListener) {
+      window.removeEventListener('focus', _focusListener);
+      _focusListener = null;
     }
     if (_currentOAuthSession && _currentOAuthSession.session_id) {
       api.delete(`/api/remotes/oauth/${_currentOAuthSession.session_id}`).catch(() => {});
@@ -2055,6 +2060,10 @@ export async function openNewCloudRemoteModal(onSuccess) {
           clearInterval(_oauthPollTimer);
           _oauthPollTimer = null;
         }
+        if (_focusListener && typeof window !== 'undefined' && window.removeEventListener) {
+          window.removeEventListener('focus', _focusListener);
+          _focusListener = null;
+        }
         if (_currentOAuthSession && _currentOAuthSession.session_id) {
           api.delete(`/api/remotes/oauth/${_currentOAuthSession.session_id}`).catch(() => {});
           _currentOAuthSession = null;
@@ -2086,8 +2095,8 @@ export async function openNewCloudRemoteModal(onSuccess) {
                   : `1-Click Authorize with ${prov.name}`)));
 
           const oauthAssistantHtml = isOAuthProv ? `
-            <div class="oauth-assistant-card" style="margin-bottom: 16px; padding: 16px; background: rgba(14, 165, 233, 0.08); border: 1px solid rgba(14, 165, 233, 0.28); border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.25);">
-              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 8px;">
+            <div class="oauth-assistant-card" style="margin-bottom: 16px; padding: 14px 16px; background: rgba(14, 165, 233, 0.08); border: 1px solid rgba(14, 165, 233, 0.28); border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.25);">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 8px;">
                 <div style="display: flex; align-items: center; gap: 8px;">
                   <span style="font-size: 18px;">🔑</span>
                   <span style="font-size: 13px; font-weight: 700; color: #fff; letter-spacing: 0.3px;">Connect ${escapeHtml(provTitle)}</span>
@@ -2097,19 +2106,29 @@ export async function openNewCloudRemoteModal(onSuccess) {
                 </span>
               </div>
 
-              <!-- Step 1: 1-Click OR QR Code -->
-              <div id="oauth-step1-actions" style="margin-bottom: 14px;">
+              <!-- Auth Mode Switcher (Tabs) -->
+              <div style="display: flex; gap: 6px; margin-bottom: 12px; background: rgba(0,0,0,0.3); padding: 3px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.06);">
+                <button type="button" id="tab-oauth-desktop" style="flex: 1; padding: 6px 10px; font-size: 11px; font-weight: 700; border-radius: 4px; border: none; cursor: pointer; background: #0284c7; color: #fff; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.15s;">
+                  <span>💻 Desktop 1-Click</span>
+                </button>
+                <button type="button" id="tab-oauth-qr" style="flex: 1; padding: 6px 10px; font-size: 11px; font-weight: 700; border-radius: 4px; border: none; cursor: pointer; background: transparent; color: #94a3b8; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.15s;">
+                  <span>📱 Mobile QR Code</span>
+                </button>
+              </div>
+
+              <!-- Step 1: Desktop Panel -->
+              <div id="oauth-desktop-panel">
                 <button type="button" id="btn-oauth-browser" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 16px; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 7px; font-size: 12.5px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35); transition: all 0.2s;">
                   <span>🌐 ${escapeHtml(brandBtnLabel)}</span>
                 </button>
 
-                <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin: 12px 0 10px 0; color: #64748b; font-size: 11px; font-weight: 700;">
-                  <span style="height: 1px; flex: 1; background: rgba(255,255,255,0.08);"></span>
-                  <span>— OR —</span>
-                  <span style="height: 1px; flex: 1; background: rgba(255,255,255,0.08);"></span>
+                <div style="margin-top: 8px; margin-bottom: 12px; padding: 8px 10px; background: rgba(14, 165, 233, 0.07); border: 1px dashed rgba(14, 165, 233, 0.28); border-radius: 6px; font-size: 11px; color: #cbd5e1; line-height: 1.45;">
+                  <strong style="color: #38bdf8;">📌 What to expect:</strong> After approving login in Microsoft, the new tab will show <code style="color:#f87171; background:rgba(239,68,68,0.15); padding:1px 4px; border-radius:3px;">This site can't be reached (localhost:53682)</code>. <strong>This is completely normal!</strong> Simply copy the address bar from that tab and paste it in Step 2 below.
                 </div>
+              </div>
 
-                <!-- QR Code Box -->
+              <!-- Step 1: Mobile QR Code Panel -->
+              <div id="oauth-qr-panel" style="display: none; margin-bottom: 12px;">
                 <div id="oauth-qr-box" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12px; background: rgba(0, 0, 0, 0.35); border: 1px dashed rgba(14, 165, 233, 0.35); border-radius: 8px;">
                   <div id="oauth-qr-target" style="display: inline-flex; align-items: center; justify-content: center; padding: 8px; background: #ffffff; border-radius: 8px; min-width: 140px; min-height: 140px; box-shadow: 0 4px 14px rgba(0,0,0,0.6);">
                     <div style="font-size: 11px; color: #0284c7; font-weight: 600;">⏳ Initializing QR code...</div>
@@ -2120,6 +2139,9 @@ export async function openNewCloudRemoteModal(onSuccess) {
                   </div>
                 </div>
               </div>
+
+              <!-- Status feedback pill -->
+              <div id="oauth-assistant-status" style="display: none; margin-bottom: 12px; padding: 8px 12px; border-radius: 6px; font-size: 11.5px; line-height: 1.45;"></div>
 
               <!-- Step 2: Code Relay Input & Complete button -->
               <div id="oauth-step2-box" style="padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, 0.08);">
@@ -2140,9 +2162,6 @@ export async function openNewCloudRemoteModal(onSuccess) {
                   <span>✓ Complete & Populate Token</span>
                 </button>
               </div>
-
-              <!-- Status feedback pill -->
-              <div id="oauth-assistant-status" style="display: none; margin-top: 10px; padding: 8px 12px; border-radius: 6px; font-size: 11.5px; line-height: 1.45;"></div>
             </div>
           ` : '';
 
@@ -2211,6 +2230,31 @@ export async function openNewCloudRemoteModal(onSuccess) {
             const qrBox = dynamicFields.querySelector('#oauth-qr-box');
             const qrTarget = dynamicFields.querySelector('#oauth-qr-target');
             const step2Box = dynamicFields.querySelector('#oauth-step2-box');
+            const tabDesktop = dynamicFields.querySelector('#tab-oauth-desktop');
+            const tabQr = dynamicFields.querySelector('#tab-oauth-qr');
+            const desktopPanel = dynamicFields.querySelector('#oauth-desktop-panel');
+            const qrPanel = dynamicFields.querySelector('#oauth-qr-panel');
+
+            if (tabDesktop && tabQr) {
+              tabDesktop.onclick = () => {
+                tabDesktop.style.background = '#0284c7';
+                tabDesktop.style.color = '#fff';
+                tabQr.style.background = 'transparent';
+                tabQr.style.color = '#94a3b8';
+                if (desktopPanel) desktopPanel.style.display = 'block';
+                if (qrPanel) qrPanel.style.display = 'none';
+              };
+              tabQr.onclick = () => {
+                tabQr.style.background = '#0284c7';
+                tabQr.style.color = '#fff';
+                tabDesktop.style.background = 'transparent';
+                tabDesktop.style.color = '#94a3b8';
+                if (desktopPanel) desktopPanel.style.display = 'none';
+                if (qrPanel) qrPanel.style.display = 'block';
+                if (qrBox) qrBox.style.display = 'block';
+                startOAuth(true);
+              };
+            }
 
             const applyAcquiredToken = (token) => {
               const tokenArea = dynamicFields.querySelector('textarea[name="token"]');
@@ -2232,8 +2276,11 @@ export async function openNewCloudRemoteModal(onSuccess) {
                 statusEl.style.color = '#4ade80';
                 statusEl.innerHTML = '✅ <strong>Authentication Successful!</strong> Token verified & auto-populated below. You may now click <em>⚡ Test Connection</em> or <em>Save & Connect Remote</em>.';
               }
-              const step1 = dynamicFields.querySelector('#oauth-step1-actions');
-              if (step1) step1.style.display = 'none';
+              const desktopP = dynamicFields.querySelector('#oauth-desktop-panel');
+              const qrP = dynamicFields.querySelector('#oauth-qr-panel');
+              if (desktopP) desktopP.style.display = 'none';
+              if (qrP) qrP.style.display = 'none';
+              if (tabDesktop && tabDesktop.parentElement) tabDesktop.parentElement.style.display = 'none';
               if (qrBox) qrBox.style.display = 'none';
               if (step2Box) step2Box.style.display = 'none';
               playChirp(880, 0.12, 'sine');
@@ -2262,6 +2309,16 @@ export async function openNewCloudRemoteModal(onSuccess) {
                   if (step2Box) step2Box.style.display = 'block';
 
                   if (isQr) {
+                    if (qrPanel) qrPanel.style.display = 'block';
+                    if (desktopPanel) desktopPanel.style.display = 'none';
+                    if (tabQr) {
+                      tabQr.style.background = '#0284c7';
+                      tabQr.style.color = '#fff';
+                    }
+                    if (tabDesktop) {
+                      tabDesktop.style.background = 'transparent';
+                      tabDesktop.style.color = '#94a3b8';
+                    }
                     if (qrBox && qrTarget) {
                       qrBox.style.display = 'block';
                       try {
@@ -2290,7 +2347,7 @@ export async function openNewCloudRemoteModal(onSuccess) {
                       statusEl.style.background = 'rgba(56, 189, 248, 0.12)';
                       statusEl.style.border = '1px solid rgba(56, 189, 248, 0.3)';
                       statusEl.style.color = '#38bdf8';
-                      statusEl.innerHTML = '🌐 <strong>Sign-in window opened:</strong> Log in to your account. When redirected, copy the address from your URL bar and paste it in Step 2 below.';
+                      statusEl.innerHTML = '🌐 <strong>Sign-in window opened:</strong> Log in to your account. When redirected to the page saying <em>"This site can\'t be reached"</em>, copy the full address from your URL bar and paste it in Step 2 below.';
                     }
                   }
 
@@ -2334,12 +2391,34 @@ export async function openNewCloudRemoteModal(onSuccess) {
                     statusEl.style.color = '#38bdf8';
                     statusEl.innerHTML = '🌐 <strong>Sign-in window opened:</strong> Log in to your account. When redirected, copy the address from your URL bar and paste it in Step 2 below.';
                   }
+                  if (step2Box) {
+                    step2Box.style.display = 'block';
+                    step2Box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                  }
+                  if (urlInput) {
+                    urlInput.focus();
+                  }
                 } else {
                   startOAuth(false);
                 }
               };
             }
-            if (qrBtn) qrBtn.onclick = () => startOAuth(true);
+
+            if (qrBtn) {
+              qrBtn.onclick = () => {
+                if (qrPanel) qrPanel.style.display = 'block';
+                if (desktopPanel) desktopPanel.style.display = 'none';
+                if (tabQr) {
+                  tabQr.style.background = '#0284c7';
+                  tabQr.style.color = '#fff';
+                }
+                if (tabDesktop) {
+                  tabDesktop.style.background = 'transparent';
+                  tabDesktop.style.color = '#94a3b8';
+                }
+                startOAuth(true);
+              };
+            }
 
             if (pasteBtn && urlInput) {
               pasteBtn.onclick = async () => {
@@ -2349,6 +2428,9 @@ export async function openNewCloudRemoteModal(onSuccess) {
                     if (text && text.trim()) {
                       urlInput.value = text.trim();
                       showToast('Pasted URL from clipboard', 'info');
+                      if (exchangeBtn) {
+                        exchangeBtn.focus();
+                      }
                       return;
                     }
                   }
@@ -2358,6 +2440,34 @@ export async function openNewCloudRemoteModal(onSuccess) {
                   urlInput.value = manual.trim();
                 }
               };
+            }
+
+            // Smart clipboard watcher: detect when returning from authorization tab
+            _focusListener = async () => {
+              try {
+                if (navigator.clipboard && navigator.clipboard.readText) {
+                  const clip = await navigator.clipboard.readText();
+                  if (clip && (clip.includes('localhost:53682') || clip.includes('127.0.0.1:53682') || clip.includes('code='))) {
+                    if (urlInput && !urlInput.value.trim()) {
+                      urlInput.value = clip.trim();
+                      showToast('Detected OAuth redirect URL from clipboard!', 'info');
+                      if (statusEl) {
+                        statusEl.style.display = 'block';
+                        statusEl.style.background = 'rgba(34, 197, 94, 0.15)';
+                        statusEl.style.border = '1px solid rgba(34, 197, 94, 0.35)';
+                        statusEl.style.color = '#4ade80';
+                        statusEl.innerHTML = '📋 <strong>Redirect URL detected in clipboard!</strong> Auto-filled in Step 2. Click <strong>✓ Complete & Populate Token</strong> to finish.';
+                      }
+                      if (exchangeBtn) {
+                        exchangeBtn.focus();
+                      }
+                    }
+                  }
+                }
+              } catch (_) {}
+            };
+            if (typeof window !== 'undefined' && window.addEventListener) {
+              window.addEventListener('focus', _focusListener);
             }
 
             if (exchangeBtn && urlInput) {
@@ -2413,7 +2523,7 @@ export async function openNewCloudRemoteModal(onSuccess) {
 
             const isTest = (typeof process !== 'undefined' && process.env && (process.env.VITEST || process.env.NODE_ENV === 'test')) || (typeof window !== 'undefined' && window.__VITEST__);
             if (!isTest) {
-              startOAuth(true);
+              startOAuth(false);
             }
           }
 

@@ -1,0 +1,1 @@
+import{F as e}from"./dashboard-BUcoFl_Y.js";export{e as initManagement};
