@@ -4214,6 +4214,18 @@ export async function openNetworkPortModal(ifaceName) {
     }
 
     if (roMac) roMac.textContent = nic.mac || '--';
+    const copyMacBtn = document.getElementById('btn-copy-port-mac');
+    if (copyMacBtn) {
+      copyMacBtn.onclick = () => {
+        const mac = nic.mac || roMac?.textContent;
+        if (mac && mac !== '--') {
+          navigator.clipboard.writeText(mac);
+          showToast(`MAC address ${mac} copied to clipboard!`, 'info');
+        } else {
+          showToast('No MAC address available to copy', 'warn');
+        }
+      };
+    }
     if (roDriver) roDriver.textContent = nic.driver || 'Generic';
     if (roPci) roPci.textContent = nic.pci_slot || '--';
     if (roLink) roLink.textContent = nic.is_up ? `${nic.speed_human || 'Connected'} (${nic.duplex || 'full'})` : 'Down / Disconnected';

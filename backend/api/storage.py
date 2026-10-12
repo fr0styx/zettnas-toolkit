@@ -36,6 +36,17 @@ class StorageShareCreateRequest(BaseModel):
     comment: str = ""
     security: str = "public"
     read_only: bool = False
+    export_smb: bool = True
+    export_nfs: bool = False
+    nfs_squash: str = Field(default="no_root_squash", description="'no_root_squash', 'root_squash', or 'all_squash'")
+    nfs_anonuid: int = Field(default=1000, description="Mapped UID for anonymous/squashed users")
+    nfs_anongid: int = Field(default=1000, description="Mapped GID for anonymous/squashed users")
+    nfs_sync: bool = Field(default=True, description="True for synchronous commits (ACID), False for async")
+    nfs_clients: str = Field(default="*", description="Allowed client host, CIDR subnet, or wildcard (*)")
+
+
+class StoragePoolRenameRequest(BaseModel):
+    new_name: str = Field(..., min_length=1, max_length=64, description="New name for storage pool")
 
 
 class StorageSnapshotCreateRequest(BaseModel):
@@ -162,9 +173,41 @@ def create_storage_share(req: StorageShareCreateRequest) -> Dict[str, Any]:
             comment=req.comment,
             security=req.security,
             read_only=req.read_only,
+            export_smb=req.export_smb,
+            export_nfs=req.export_nfs,
+            nfs_squash=req.nfs_squash,
+            nfs_anonuid=req.nfs_anonuid,
+            nfs_anongid=req.nfs_anongid,
+            nfs_sync=req.nfs_sync,
+            nfs_clients=req.nfs_clients,
         )
     except PlatformCapabilityError as e:
         raise HTTPException(status_code=403, detail=str(e))
+
+
+@router.post("/pools/{pool_id}/rename", dependencies=[Depends(require_scope("storage:admin"))])
+def rename_storage_pool(pool_id: str, req: StoragePoolRenameRequest) -> Dict[str, Any]:
+    """
+    Renames an existing storage pool (OpenZFS or Btrfs) and creates an atomic
+    backwards-compatibility symlink to preserve Docker container volume mounts.
+    Forbidden in Observer Mode.
+    """
+    adapter = get_storage_platform()
+    caps = adapter.get_capabilities()
+    if caps.is_observer_mode:
+        raise HTTPException(
+            status_code=403,
+            detail=f"Forbidden in Observer Mode on {adapter.get_platform_type().value}. "
+            "Storage pools and array identifiers must be managed authoritatively by the host OS.",
+        )
+    try:
+        return adapter.rename_pool(pool_id=pool_id, new_name=req.new_name)
+    except PlatformCapabilityError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.delete("/pools/{pool_id}", dependencies=[Depends(require_scope("storage:admin"))])

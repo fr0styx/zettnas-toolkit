@@ -194,11 +194,11 @@
   })();
 </script>
 <style>html,body{color:#eaf1f8;background-color:#080c10;width:100%;height:100%;margin:0;padding:0;overflow:hidden}html.auth-required body{background:radial-gradient(circle at 50% 20%,#151d29 0%,#080c10 70%)!important}#login-overlay{z-index:999999;background:#080c10;justify-content:center;align-items:center;display:flex;position:fixed;inset:0}html.has-auth-session #login-overlay{display:none!important}html.auth-required #login-overlay{display:flex!important}html.is-desktop-locked #lock-overlay{opacity:1!important;display:flex!important}html.is-desktop-locked body{overflow:hidden!important}html.auth-required .studio-viewport-wrapper,html.auth-required .suite-navbar,html.auth-required #desktop-icons-container,html.auth-required .desktop-icons-container,html.auth-required .top-nav,html.auth-required #desktop-widgets-container,html.auth-required #os-dock-container,html.auth-required .workspace-panel,html.auth-required .smart-modal-backdrop,html.auth-required .os-window,html.auth-required .notif-center-window{display:none!important}</style>
-  <script type="module" crossorigin src="/assets/index-i99ImSJ7.js"></script>
+  <script type="module" crossorigin src="/assets/index-BMNicBX_.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-hePW80VL.js">
-  <link rel="modulepreload" crossorigin href="/assets/dock-mHlpi6Vi.js">
-  <link rel="modulepreload" crossorigin href="/assets/users-C8kelrAi.js">
-  <link rel="stylesheet" crossorigin href="/assets/index-BH5iKKUU.css">
+  <link rel="modulepreload" crossorigin href="/assets/dock-Cp5axH9a.js">
+  <link rel="modulepreload" crossorigin href="/assets/users-D-5cc8r6.js">
+  <link rel="stylesheet" crossorigin href="/assets/index-CJWPAmc8.css">
 </head>
 <body class="studio-workbench no-specular-glow">
 
@@ -972,6 +972,15 @@
         </label>
       </div>
 
+      <!-- WoL UEFI/BIOS notice -->
+      <div id="net-port-wol-bios-notice" style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 6px; padding: 8px 12px; font-size: 11px; line-height: 1.4; color: #fde68a; display: flex; gap: 8px; align-items: flex-start;">
+        <span style="font-size: 14px; flex-shrink: 0;">💡</span>
+        <div>
+          <strong data-i18n="net.wol_bios_title">Hardware & BIOS Requirement:</strong>
+          <span data-i18n="net.wol_bios_desc">Ensure "PCIe PME / Wake on LAN" is enabled in motherboard UEFI BIOS, and "ErP/EuP" power saving is DISABLED so the network controller remains powered (+5VSB) in standby.</span>
+        </div>
+      </div>
+
       <!-- Link Negotiation Speed -->
       <div>
         <label for="net-port-speed-select" style="display: block; font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;" data-i18n="net.speed_label">Link Negotiation / Speed</label>
@@ -987,7 +996,12 @@
 
       <!-- Interface Hardware Summary Readout -->
       <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.06); border-radius: 6px; padding: 10px 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 11px;">
-        <div><span style="color: var(--muted);">MAC:</span> <span id="net-port-ro-mac" style="font-family: var(--font-mono, monospace); color: #cbd5e1;">--</span></div>
+        <div style="display: flex; align-items: center; justify-content: space-between; grid-column: span 2;">
+          <div><span style="color: var(--muted);">MAC:</span> <span id="net-port-ro-mac" style="font-family: var(--font-mono, monospace); color: #cbd5e1;">--</span></div>
+          <button type="button" id="btn-copy-port-mac" class="btn-pill-toggle" style="font-size: 10px; padding: 2px 8px; height: 22px; display: inline-flex; align-items: center; gap: 4px;" title="Copy MAC address for Wake-on-LAN Magic Packet dispatch">
+            <span>📋</span> <span data-i18n="net.copy_mac">Copy MAC</span>
+          </button>
+        </div>
         <div><span style="color: var(--muted);">Driver:</span> <span id="net-port-ro-driver" style="color: #cbd5e1;">--</span></div>
         <div><span style="color: var(--muted);">PCI Slot:</span> <span id="net-port-ro-pci" style="font-family: var(--font-mono, monospace); color: #cbd5e1;">--</span></div>
         <div><span style="color: var(--muted);">Link:</span> <span id="net-port-ro-link" style="color: #cbd5e1;">--</span></div>
@@ -5656,6 +5670,7 @@
           <label for="create-pool-fs" style="display:block; font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;">FILESYSTEM</label>
           <select id="create-pool-fs" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff; border-radius:6px; font-size:12px;">
             <option value="btrfs" selected>Btrfs (Bitrot Protection + Snapshots)</option>
+            <option value="zfs">OpenZFS (Enterprise RAIDZ & ARC Cache)</option>
             <option value="ext4">ext4 (Standard Linux Volume)</option>
             <option value="xfs">XFS (High Performance Storage)</option>
           </select>
@@ -5704,6 +5719,48 @@
   </div>
 </div>
 
+<!-- Rename Storage Pool Modal -->
+<div id="modal-rename-storage-pool" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-rename-pool-title" style="display: none;">
+  <div class="smart-modal-window" style="max-width: 480px; width: 92%; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(14, 165, 233, 0.15); border: 1px solid rgba(255, 255, 255, 0.12);">
+    <div class="smart-modal-header" style="cursor: move;">
+      <span class="smart-modal-title" id="modal-rename-pool-title" style="display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 15px;">✏️</span>
+        <span data-i18n="storage.rename_pool_title">Rename Storage Pool</span>
+      </span>
+      <div class="os-window-controls">
+        <button class="win-btn close-btn" id="modal-rename-pool-close-btn" title="Close" aria-label="Close"></button>
+      </div>
+    </div>
+    <form id="rename-pool-form" class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
+      <div>
+        <label style="display:block; font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;" data-i18n="storage.current_pool_name">CURRENT POOL NAME</label>
+        <input type="text" id="rename-pool-current-name" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.08); background:rgba(0,0,0,0.4); padding:8px 10px; color:var(--muted); border-radius:6px; font-size:12px;" disabled />
+      </div>
+
+      <div>
+        <label for="rename-pool-new-name" style="display:block; font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;" data-i18n="storage.new_pool_name">NEW POOL NAME</label>
+        <input type="text" id="rename-pool-new-name" class="tz-select-input" placeholder="e.g. storage2, vault_fast" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff; border-radius:6px; font-size:12px;" required pattern="^[a-zA-Z0-9_\-\.]{1,32}$" />
+      </div>
+
+      <!-- Docker Bindings Compatibility Safety Alert -->
+      <div style="background: rgba(14, 165, 233, 0.08); border: 1px solid rgba(14, 165, 233, 0.25); border-radius: 6px; padding: 10px 12px; font-size: 11px; line-height: 1.4; color: #bae6fd; display: flex; gap: 8px;">
+        <span style="font-size: 14px; flex-shrink: 0;">🛡️</span>
+        <div>
+          <strong data-i18n="storage.rename_compat_title">Zero-Downtime Bind Mount Safety:</strong>
+          <span data-i18n="storage.rename_compat_desc">An atomic backwards-compatibility symlink is preserved at the previous mountpoint so running Docker container volume bindings continue to resolve seamlessly.</span>
+        </div>
+      </div>
+
+      <div id="rename-pool-error-box" style="display: none; padding: 8px 12px; background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); border-radius: 6px; color: #f87171; font-size: 11.5px;"></div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.08);">
+        <button type="button" id="modal-rename-pool-cancel-btn" style="padding: 7px 16px; font-size: 11px; font-weight: 700; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); color: #fff; border-radius: 6px; cursor: pointer;">Cancel</button>
+        <button type="submit" id="rename-pool-submit-btn" style="padding: 7px 18px; font-size: 11px; font-weight: 700; background: var(--brand, #0ea5e9); border: none; color: #fff; border-radius: 6px; cursor: pointer;">✏️ <span data-i18n="storage.apply_rename">Apply Rename</span></button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- Create Network Share Modal -->
 <div id="modal-create-network-share" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-create-share-title" style="display: none;">
   <div class="smart-modal-window" style="max-width: 500px; width: 92%; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(14, 165, 233, 0.15); border: 1px solid rgba(255, 255, 255, 0.12);">
@@ -5744,16 +5801,59 @@
       <div style="display: flex; flex-direction: column; gap: 8px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px;">
         <label for="create-share-export-smb" style="display:flex; align-items:center; gap:8px; font-size:12px; color:#fff; cursor:pointer;">
           <input type="checkbox" id="create-share-export-smb" checked style="width:16px; height:16px; accent-color:var(--ok2);" />
-          <span>Export via Samba (SMB / Windows / macOS)</span>
+          <span data-i18n="storage.export_smb_label">Export via Samba (SMB / Windows / macOS)</span>
+        </label>
+        <label for="create-share-export-nfs" style="display:flex; align-items:center; gap:8px; font-size:12px; color:#fff; cursor:pointer;">
+          <input type="checkbox" id="create-share-export-nfs" style="width:16px; height:16px; accent-color:var(--ok2);" />
+          <span data-i18n="storage.export_nfs_label">Export via NFS (Linux / Kubernetes / VMware)</span>
         </label>
         <label for="create-share-timemachine" style="display:flex; align-items:center; gap:8px; font-size:12px; color:#fff; cursor:pointer;">
           <input type="checkbox" id="create-share-timemachine" style="width:16px; height:16px; accent-color:var(--ok2);" />
-          <span>Enable Apple Time Machine Backup (vfs_fruit target)</span>
+          <span data-i18n="storage.timemachine_label">Enable Apple Time Machine Backup (vfs_fruit target)</span>
         </label>
         <label for="create-share-readonly" style="display:flex; align-items:center; gap:8px; font-size:12px; color:#fff; cursor:pointer;">
           <input type="checkbox" id="create-share-readonly" style="width:16px; height:16px; accent-color:var(--ok2);" />
-          <span>Read-Only Share</span>
+          <span data-i18n="storage.readonly_label">Read-Only Share</span>
         </label>
+      </div>
+
+      <!-- Collapsible NFS Options Section -->
+      <div id="create-share-nfs-opts" style="display: none; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 12px; flex-direction: column; gap: 10px;">
+        <div style="font-size: 11px; font-weight: 800; color: var(--accent-cyan, #38bdf8); text-transform: uppercase; letter-spacing: 0.5px;" data-i18n="storage.nfs_config_title">NFS Kernel Server & Root Squash Settings</div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div>
+            <label for="create-share-nfs-squash" style="display:block; font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px;" data-i18n="storage.nfs_squash_label">Root Squash Policy</label>
+            <select id="create-share-nfs-squash" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:6px 8px; color:#fff; border-radius:6px; font-size:11px;">
+              <option value="no_root_squash" selected data-i18n="storage.nfs_no_root_squash">no_root_squash (Kubernetes / Databases / Root)</option>
+              <option value="root_squash" data-i18n="storage.nfs_root_squash">root_squash (Squash root to anonymous UID)</option>
+              <option value="all_squash" data-i18n="storage.nfs_all_squash">all_squash (Map all users to anonymous UID)</option>
+            </select>
+          </div>
+          <div>
+            <label for="create-share-nfs-sync" style="display:block; font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px;" data-i18n="storage.nfs_sync_label">Sync Mode</label>
+            <select id="create-share-nfs-sync" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:6px 8px; color:#fff; border-radius:6px; font-size:11px;">
+              <option value="sync" selected data-i18n="storage.nfs_sync">sync (ACID Database Persistence)</option>
+              <option value="async" data-i18n="storage.nfs_async">async (Maximum Throughput)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div>
+            <label for="create-share-nfs-anonuid" style="display:block; font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px;" data-i18n="storage.nfs_anonuid_label">Anon UID (Pod User)</label>
+            <input type="number" id="create-share-nfs-anonuid" value="1000" min="0" max="65535" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:6px 8px; color:#fff; border-radius:6px; font-size:11px;" />
+          </div>
+          <div>
+            <label for="create-share-nfs-anongid" style="display:block; font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px;" data-i18n="storage.nfs_anongid_label">Anon GID (Pod Group)</label>
+            <input type="number" id="create-share-nfs-anongid" value="1000" min="0" max="65535" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:6px 8px; color:#fff; border-radius:6px; font-size:11px;" />
+          </div>
+        </div>
+
+        <div>
+          <label for="create-share-nfs-clients" style="display:block; font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px;" data-i18n="storage.nfs_clients_label">Allowed Clients (CIDR / Host)</label>
+          <input type="text" id="create-share-nfs-clients" value="*" placeholder="* or 10.244.0.0/16, 192.168.1.0/24" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:6px 8px; color:#fff; border-radius:6px; font-size:11px;" />
+        </div>
       </div>
 
       <div id="create-share-error-box" style="display: none; padding: 8px 12px; background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); border-radius: 6px; color: #f87171; font-size: 11.5px;"></div>

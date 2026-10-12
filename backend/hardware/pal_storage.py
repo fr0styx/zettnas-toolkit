@@ -156,6 +156,13 @@ class StoragePlatformAdapter(ABC):
         comment: str = "",
         security: str = "public",
         read_only: bool = False,
+        export_smb: bool = True,
+        export_nfs: bool = False,
+        nfs_squash: str = "no_root_squash",
+        nfs_anonuid: int = 1000,
+        nfs_anongid: int = 1000,
+        nfs_sync: bool = True,
+        nfs_clients: str = "*",
     ) -> Dict[str, Any]:
         """Creates a network share (Active Provisioner mode only)."""
         ...
@@ -163,6 +170,11 @@ class StoragePlatformAdapter(ABC):
     @abstractmethod
     def delete_share(self, name: str) -> Dict[str, Any]:
         """Deletes a network share (Active Provisioner mode only)."""
+        ...
+
+    @abstractmethod
+    def rename_pool(self, pool_id: str, new_name: str) -> Dict[str, Any]:
+        """Renames a storage pool (Active Provisioner mode only)."""
         ...
 
     @abstractmethod
@@ -640,6 +652,13 @@ class UnraidStorageAdapter(StoragePlatformAdapter):
         comment: str = "",
         security: str = "public",
         read_only: bool = False,
+        export_smb: bool = True,
+        export_nfs: bool = False,
+        nfs_squash: str = "no_root_squash",
+        nfs_anonuid: int = 1000,
+        nfs_anongid: int = 1000,
+        nfs_sync: bool = True,
+        nfs_clients: str = "*",
     ) -> Dict[str, Any]:
         raise PlatformCapabilityError(
             "Observer mode active: Network shares on Unraid must be provisioned via the Unraid WebGUI "
@@ -649,6 +668,12 @@ class UnraidStorageAdapter(StoragePlatformAdapter):
     def delete_share(self, name: str) -> Dict[str, Any]:
         raise PlatformCapabilityError(
             "Observer mode active: Deleting network shares on Unraid must be performed via the Unraid WebGUI."
+        )
+
+    def rename_pool(self, pool_id: str, new_name: str) -> Dict[str, Any]:
+        raise PlatformCapabilityError(
+            "Observer mode active: Storage pool and array identifiers on Unraid "
+            "are authoritatively managed via Unraid Main / Array settings."
         )
 
     def create_snapshot(
@@ -834,7 +859,7 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
 
         parity_protected = profile in ("raid1", "raid10")
 
-        return [
+        pools = [
             StoragePool(
                 id="default_pool",
                 name="Primary Storage Pool",
@@ -854,8 +879,68 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
             )
         ]
 
+        # 2. Discover OpenZFS pools
+        code, zout, _ = self._run_cmd(["zpool", "list", "-Hp", "-o", "name,size,alloc,free,health"])
+        if code == 0 and zout.strip():
+            for line in zout.strip().splitlines():
+                parts = line.split("\t")
+                if len(parts) >= 5:
+                    zp_name = parts[0].strip()
+                    zp_size, zp_alloc, zp_free, zp_health = (
+                        parts[1].strip(),
+                        parts[2].strip(),
+                        parts[3].strip(),
+                        parts[4].strip(),
+                    )
+                    try:
+                        z_total = int(zp_size) if zp_size.isdigit() else 0
+                        z_used = int(zp_alloc) if zp_alloc.isdigit() else 0
+                        z_free = int(zp_free) if zp_free.isdigit() else 0
+                        z_pct = round(z_used / z_total * 100, 1) if z_total > 0 else 0.0
+                    except Exception:
+                        z_total, z_used, z_free, z_pct = 0, 0, 0, 0.0
+
+                    _, zmnt, _ = self._run_cmd(["zfs", "get", "-Hp", "-o", "value", "mountpoint", zp_name])
+                    z_mount = zmnt.strip() if zmnt.strip() and zmnt.strip() != "none" else f"/{zp_name}"
+
+                    _, zstat, _ = self._run_cmd(["zpool", "status", zp_name])
+                    z_profile = "single"
+                    zstat_l = zstat.lower()
+                    if "raidz3" in zstat_l:
+                        z_profile = "raidz3"
+                    elif "raidz2" in zstat_l:
+                        z_profile = "raidz2"
+                    elif "raidz1" in zstat_l:
+                        z_profile = "raidz1"
+                    elif "mirror" in zstat_l:
+                        z_profile = "mirror"
+
+                    pools.append(
+                        StoragePool(
+                            id=zp_name,
+                            name=zp_name,
+                            pool_type="zfs_raid"
+                            if z_profile in ("raidz1", "raidz2", "raidz3")
+                            else ("zfs_mirror" if z_profile == "mirror" else "zfs_single"),
+                            fs_type="zfs",
+                            fs_profile=z_profile,
+                            status="HEALTHY" if zp_health == "ONLINE" else zp_health,
+                            mountpoint=z_mount,
+                            total_bytes=z_total,
+                            used_bytes=z_used,
+                            free_bytes=z_free,
+                            used_pct=z_pct,
+                            members=[],
+                            parity_protected=z_profile in ("raidz1", "raidz2", "raidz3", "mirror"),
+                            autotrim=True,
+                            compression="zstd",
+                        )
+                    )
+
+        return pools
+
     def list_shares(self) -> List[NetworkShare]:
-        shares: List[NetworkShare] = []
+        shares_map: Dict[str, NetworkShare] = {}
         # 1. Inspect Samba Engine shares
         try:
             from backend.services.samba_engine import get_samba_engine
@@ -871,14 +956,47 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
                     tot, usd, fre = 0, 0, 0
                 pct = round(usd / tot * 100, 1) if tot > 0 else 0.0
 
-                shares.append(
-                    NetworkShare(
-                        name=s.name,
-                        comment=s.comment or "ZettNAS Managed Share",
-                        security="public" if s.guest_ok else "private",
-                        export_smb=True,
-                        export_nfs=False,
-                        export_webdav=True,
+                shares_map[s.name] = NetworkShare(
+                    name=s.name,
+                    comment=s.comment or "ZettNAS Managed Share",
+                    security="public" if s.guest_ok else "private",
+                    export_smb=True,
+                    export_nfs=False,
+                    export_webdav=True,
+                    cache_mode="none",
+                    mountpoint=mount_p,
+                    used_bytes=usd,
+                    free_bytes=fre,
+                    total_bytes=tot,
+                    used_pct=pct,
+                )
+        except Exception as e:
+            logger.debug(f"[PAL] SambaEngine shares query fallback: {e}")
+
+        # 2. Inspect NFS Engine exports
+        try:
+            from backend.services.nfs_engine import get_nfs_engine
+
+            nfs_engine = get_nfs_engine()
+            for n in nfs_engine.list_exports():
+                if n.name in shares_map:
+                    shares_map[n.name].export_nfs = True
+                else:
+                    mount_p = n.path
+                    try:
+                        u = shutil.disk_usage(mount_p if os.path.exists(mount_p) else self._pool_path)
+                        tot, usd, fre = u.total, u.used, u.free
+                    except Exception:
+                        tot, usd, fre = 0, 0, 0
+                    pct = round(usd / tot * 100, 1) if tot > 0 else 0.0
+
+                    shares_map[n.name] = NetworkShare(
+                        name=n.name,
+                        comment=n.comment or "ZettNAS Managed NFS Export",
+                        security="public" if n.clients == "*" else "private",
+                        export_smb=False,
+                        export_nfs=True,
+                        export_webdav=False,
                         cache_mode="none",
                         mountpoint=mount_p,
                         used_bytes=usd,
@@ -886,13 +1004,13 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
                         total_bytes=tot,
                         used_pct=pct,
                     )
-                )
-            if shares:
-                return shares
         except Exception as e:
-            logger.debug(f"[PAL] SambaEngine shares query fallback: {e}")
+            logger.debug(f"[PAL] NfsEngine exports query fallback: {e}")
 
-        # 2. Filesystem directory fallback
+        if shares_map:
+            return list(shares_map.values())
+
+        # 3. Filesystem directory fallback
         if os.path.isdir(self._pool_path):
             try:
                 for entry in sorted(os.listdir(self._pool_path)):
@@ -904,25 +1022,23 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
                         except Exception:
                             tot, usd, fre = 0, 0, 0
                         pct = round(usd / tot * 100, 1) if tot > 0 else 0.0
-                        shares.append(
-                            NetworkShare(
-                                name=entry,
-                                comment="Managed Linux Share",
-                                security="public",
-                                export_smb=True,
-                                export_nfs=False,
-                                export_webdav=True,
-                                cache_mode="none",
-                                mountpoint=sub_p,
-                                used_bytes=usd,
-                                free_bytes=fre,
-                                total_bytes=tot,
-                                used_pct=pct,
-                            )
+                        shares_map[entry] = NetworkShare(
+                            name=entry,
+                            comment="Managed Linux Share",
+                            security="public",
+                            export_smb=True,
+                            export_nfs=False,
+                            export_webdav=True,
+                            cache_mode="none",
+                            mountpoint=sub_p,
+                            used_bytes=usd,
+                            free_bytes=fre,
+                            total_bytes=tot,
+                            used_pct=pct,
                         )
             except Exception as e:
                 logger.debug(f"[PAL] Error listing generic shares: {e}")
-        return shares
+        return list(shares_map.values())
 
     def create_pool(
         self,
@@ -932,7 +1048,7 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
         disks: List[str],
         mountpoint: str,
     ) -> Dict[str, Any]:
-        """Creates a multi-device Btrfs, ext4, or XFS storage pool."""
+        """Creates a multi-device Btrfs, OpenZFS, ext4, or XFS storage pool."""
         if not disks:
             raise ValueError("At least one disk must be specified to create a storage pool")
 
@@ -941,10 +1057,20 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
         fs_lower = fs_type.lower()
 
         # Validate drive counts for RAID profiles
-        if profile_lower in ("raid1", "raid0") and len(resolved_disks) < 2:
-            raise ValueError(f"{profile.upper()} requires at least 2 disks")
-        if profile_lower == "raid10" and len(resolved_disks) < 4:
-            raise ValueError("RAID10 requires at least 4 disks")
+        if fs_lower == "zfs":
+            if profile_lower == "raidz1" and len(resolved_disks) < 3:
+                raise ValueError("OpenZFS RAIDZ1 requires at least 3 disks (single parity)")
+            elif profile_lower == "raidz2" and len(resolved_disks) < 4:
+                raise ValueError("OpenZFS RAIDZ2 requires at least 4 disks (dual parity)")
+            elif profile_lower == "raidz3" and len(resolved_disks) < 5:
+                raise ValueError("OpenZFS RAIDZ3 requires at least 5 disks (triple parity)")
+            elif profile_lower in ("mirror", "raid1") and len(resolved_disks) < 2:
+                raise ValueError("OpenZFS Mirror requires at least 2 disks")
+        else:
+            if profile_lower in ("raid1", "raid0") and len(resolved_disks) < 2:
+                raise ValueError(f"{profile.upper()} requires at least 2 disks")
+            if profile_lower == "raid10" and len(resolved_disks) < 4:
+                raise ValueError("RAID10 requires at least 4 disks")
 
         target_mount = mountpoint.strip() or os.path.join(self._pool_path, name)
         try:
@@ -952,7 +1078,33 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
         except OSError as e:
             logger.warning(f"[PAL] Could not pre-create target mount dir {target_mount}: {e}")
 
-        if fs_lower == "btrfs":
+        if fs_lower == "zfs":
+            # ashift=12 (4Kn/512e modern sector alignment), zstd compression, posixacl, xattr=sa
+            vdev_type = profile_lower if profile_lower in ("raidz1", "raidz2", "raidz3", "mirror") else ""
+            vdev_args = [vdev_type] + resolved_disks if vdev_type else resolved_disks
+            cmd = [
+                "zpool",
+                "create",
+                "-f",
+                "-o",
+                "ashift=12",
+                "-O",
+                "compression=zstd",
+                "-O",
+                "acltype=posixacl",
+                "-O",
+                "xattr=sa",
+                "-O",
+                "atime=off",
+                "-m",
+                target_mount,
+                name,
+            ] + vdev_args
+            code, out, err = self._run_cmd(cmd)
+            if code != 0 and code != 127:
+                logger.warning(f"[PAL] zpool create returned {code}: {err}")
+
+        elif fs_lower == "btrfs":
             cmd = ["mkfs.btrfs", "-f", "-L", name, "-m", profile_lower, "-d", profile_lower] + resolved_disks
             code, out, err = self._run_cmd(cmd)
             if code != 0 and code != 127:
@@ -986,6 +1138,78 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
             "created_at": time.time(),
         }
 
+    def rename_pool(self, pool_id: str, new_name: str) -> Dict[str, Any]:
+        """Renames a storage pool (ZFS export/import, Btrfs label) and creates compatibility symlink."""
+        if not new_name or not new_name.strip():
+            raise ValueError("New pool name cannot be empty")
+        clean_name = new_name.strip()
+        if pool_id == clean_name:
+            return {
+                "status": "unchanged",
+                "pool_id": pool_id,
+                "name": clean_name,
+                "message": "Pool name unchanged",
+            }
+
+        # 1. Check if it's an OpenZFS pool
+        code, _, _ = self._run_cmd(["zpool", "status", pool_id])
+        if code == 0:
+            exp_code, _, exp_err = self._run_cmd(["zpool", "export", pool_id])
+            if exp_code != 0 and exp_code != 127:
+                raise RuntimeError(f"Failed to export zpool '{pool_id}': {exp_err or 'active I/O or busy'}")
+
+            imp_code, _, imp_err = self._run_cmd(["zpool", "import", pool_id, clean_name])
+            if imp_code != 0 and imp_code != 127:
+                self._run_cmd(["zpool", "import", pool_id])
+                raise RuntimeError(f"Failed to import zpool as '{clean_name}': {imp_err}")
+
+            old_mnt = os.path.join(self._pool_path, pool_id) if self._pool_path != "/mnt" else f"/mnt/{pool_id}"
+            new_mnt = os.path.join(self._pool_path, clean_name) if self._pool_path != "/mnt" else f"/mnt/{clean_name}"
+            try:
+                if os.path.exists(old_mnt) and not os.path.islink(old_mnt):
+                    try:
+                        os.rmdir(old_mnt)
+                    except Exception:
+                        pass
+                if not os.path.exists(old_mnt):
+                    os.symlink(new_mnt, old_mnt)
+                    logger.info(f"[PAL] Created compatibility symlink {old_mnt} -> {new_mnt}")
+            except Exception as e:
+                logger.warning(f"[PAL] Could not create compatibility symlink {old_mnt} -> {new_mnt}: {e}")
+
+            return {
+                "status": "renamed",
+                "old_name": pool_id,
+                "new_name": clean_name,
+                "fs_type": "zfs",
+                "mountpoint": new_mnt,
+                "compat_symlink": old_mnt,
+            }
+
+        # 2. Check if Btrfs or generic pool directory
+        old_mnt = os.path.join(self._pool_path, pool_id) if pool_id != "default_pool" else self._pool_path
+        new_mnt = os.path.join(os.path.dirname(old_mnt), clean_name) if pool_id != "default_pool" else old_mnt
+
+        btrfs_code, _, _ = self._run_cmd(["btrfs", "filesystem", "label", old_mnt, clean_name])
+
+        if pool_id != "default_pool" and old_mnt != new_mnt:
+            try:
+                if os.path.exists(old_mnt) and not os.path.exists(new_mnt):
+                    os.rename(old_mnt, new_mnt)
+                    os.symlink(new_mnt, old_mnt)
+                    logger.info(f"[PAL] Renamed directory {old_mnt} -> {new_mnt} and created compatibility symlink")
+            except Exception as e:
+                logger.warning(f"[PAL] Directory rename or symlink creation error: {e}")
+
+        return {
+            "status": "renamed",
+            "old_name": pool_id,
+            "new_name": clean_name,
+            "fs_type": "btrfs" if btrfs_code == 0 else "generic",
+            "mountpoint": new_mnt,
+            "compat_symlink": old_mnt if old_mnt != new_mnt else None,
+        }
+
     def destroy_pool(self, pool_id: str) -> Dict[str, Any]:
         """Safely unmounts and removes a storage pool."""
         target_mount = os.path.join(self._pool_path, pool_id) if pool_id != "default_pool" else self._pool_path
@@ -1004,29 +1228,57 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
         comment: str = "",
         security: str = "public",
         read_only: bool = False,
+        export_smb: bool = True,
+        export_nfs: bool = False,
+        nfs_squash: str = "no_root_squash",
+        nfs_anonuid: int = 1000,
+        nfs_anongid: int = 1000,
+        nfs_sync: bool = True,
+        nfs_clients: str = "*",
     ) -> Dict[str, Any]:
-        """Provisions a network share and syncs with SambaEngine."""
+        """Provisions a network share and syncs with SambaEngine and NfsEngine."""
         full_path = path if path else os.path.join(self._pool_path, name)
         try:
             os.makedirs(full_path, exist_ok=True)
         except OSError as e:
             logger.warning(f"[PAL] Could not pre-create share dir {full_path}: {e}")
 
-        try:
-            from backend.services.samba_engine import SambaShareConfig, get_samba_engine
+        if export_smb:
+            try:
+                from backend.services.samba_engine import SambaShareConfig, get_samba_engine
 
-            engine = get_samba_engine()
-            share_cfg = SambaShareConfig(
-                name=name,
-                path=full_path,
-                comment=comment,
-                read_only=read_only,
-                guest_ok=(security == "public"),
-                browseable=True,
-            )
-            engine.add_or_update_share(share_cfg)
-        except Exception as e:
-            logger.warning(f"[PAL] SambaEngine registration failed: {e}")
+                engine = get_samba_engine()
+                share_cfg = SambaShareConfig(
+                    name=name,
+                    path=full_path,
+                    comment=comment,
+                    read_only=read_only,
+                    guest_ok=(security == "public"),
+                    browseable=True,
+                )
+                engine.add_or_update_share(share_cfg)
+            except Exception as e:
+                logger.warning(f"[PAL] SambaEngine registration failed: {e}")
+
+        if export_nfs:
+            try:
+                from backend.services.nfs_engine import NfsExportRule, get_nfs_engine
+
+                nfs_engine = get_nfs_engine()
+                rule = NfsExportRule(
+                    name=name,
+                    path=full_path,
+                    clients=nfs_clients.strip() or "*",
+                    permission="ro" if read_only else "rw",
+                    squash=nfs_squash or "no_root_squash",
+                    anonuid=nfs_anonuid,
+                    anongid=nfs_anongid,
+                    sync_mode="sync" if nfs_sync else "async",
+                    comment=comment,
+                )
+                nfs_engine.add_or_update_export(rule)
+            except Exception as e:
+                logger.warning(f"[PAL] NfsEngine registration failed: {e}")
 
         return {
             "status": "created",
@@ -1035,10 +1287,12 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
             "comment": comment,
             "security": security,
             "read_only": read_only,
+            "export_smb": export_smb,
+            "export_nfs": export_nfs,
         }
 
     def delete_share(self, name: str) -> Dict[str, Any]:
-        """Deletes a network share from Samba configuration."""
+        """Deletes a network share from Samba and NFS configurations."""
         try:
             from backend.services.samba_engine import get_samba_engine
 
@@ -1046,6 +1300,14 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
             engine.remove_share(name)
         except Exception as e:
             logger.warning(f"[PAL] Failed deleting share from SambaEngine: {e}")
+
+        try:
+            from backend.services.nfs_engine import get_nfs_engine
+
+            nfs_engine = get_nfs_engine()
+            nfs_engine.remove_export(name)
+        except Exception as e:
+            logger.warning(f"[PAL] Failed deleting share from NfsEngine: {e}")
 
         return {"status": "deleted", "name": name}
 

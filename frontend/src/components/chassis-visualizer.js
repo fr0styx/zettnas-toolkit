@@ -737,6 +737,7 @@ function buildPoolBlockInner(pool, isObserver) {
 
     <div class="topo-pool-actions" style="margin-top:12px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
       <button class="btn-pool-scrub btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" title="Trigger filesystem scrub or parity check">⚡ Scrub Pool</button>
+      ${!isObserver ? `<button class="btn-pool-rename btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" data-pool-name="${escapeHtml(pool.name)}" title="Rename storage pool">✏️ Rename</button>` : ''}
       ${pool.fs_type === 'btrfs' ? `<button class="btn-pool-snaps btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" style="background:rgba(14,165,233,0.15); border-color:rgba(14,165,233,0.3); color:#38bdf8;" title="Manage Subvolume Snapshots">📸 Snapshots</button>` : ''}
       ${!isObserver && pool.id !== 'default_pool' ? `<button class="btn-pool-destroy btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" style="background:rgba(239,68,68,0.15); border-color:rgba(239,68,68,0.3); color:#f87171;" title="Destroy storage pool">🗑️ Destroy</button>` : ''}
     </div>
@@ -766,6 +767,15 @@ function bindTopologyTreeEvents(tree, container) {
       } catch (err) {
         showToast(err.message || 'Failed to trigger scrub', 'error');
       }
+      return;
+    }
+
+    const renameBtn = e.target.closest('.btn-pool-rename');
+    if (renameBtn) {
+      e.stopPropagation();
+      const pid = renameBtn.dataset.poolId;
+      const pname = renameBtn.dataset.poolName || pid;
+      openRenameStoragePoolModal(pid, pname, () => fetchAndRenderStorageTopology(container));
       return;
     }
 
@@ -1645,6 +1655,37 @@ export async function openCreateStoragePoolModal(onSuccess) {
   modal.style.display = 'flex';
   if (errorBox) errorBox.style.display = 'none';
 
+  const fsSelect = document.getElementById('create-pool-fs');
+  const profileSelect = document.getElementById('create-pool-profile');
+  const updateProfiles = () => {
+    if (!profileSelect) return;
+    const fs = fsSelect?.value || 'btrfs';
+    if (fs === 'zfs') {
+      profileSelect.innerHTML = `
+        <option value="raidz2" selected>RAIDZ2 (Dual Parity - 4+ Drives - Recommended)</option>
+        <option value="raidz1">RAIDZ1 (Single Parity - 3+ Drives)</option>
+        <option value="raidz3">RAIDZ3 (Triple Parity - 5+ Drives)</option>
+        <option value="mirror">ZFS Mirror (2+ Drives)</option>
+        <option value="single">Single / Stripe (No Parity)</option>
+      `;
+    } else if (fs === 'btrfs') {
+      profileSelect.innerHTML = `
+        <option value="raid1" selected>RAID 1 (Mirroring - 2+ Drives)</option>
+        <option value="raid10">RAID 10 (Striped Mirrors - 4+ Drives)</option>
+        <option value="raid0">RAID 0 (Striping - Fast, No Redundancy)</option>
+        <option value="single">Single (JBOD Drive)</option>
+      `;
+    } else {
+      profileSelect.innerHTML = `
+        <option value="single" selected>Single Volume (Standard Drive)</option>
+      `;
+    }
+  };
+  if (fsSelect) {
+    fsSelect.onchange = updateProfiles;
+    updateProfiles();
+  }
+
   // Populate available physical disks
   if (disksContainer) {
     disksContainer.innerHTML = '<div style="color:var(--muted); font-size:11px;">Scanning available physical disks...</div>';
@@ -1754,6 +1795,16 @@ export function openCreateNetworkShareModal(onSuccess) {
   modal.style.display = 'flex';
   if (errorBox) errorBox.style.display = 'none';
 
+  const exportNfsCb = document.getElementById('create-share-export-nfs');
+  const nfsOpts = document.getElementById('create-share-nfs-opts');
+  if (exportNfsCb && nfsOpts) {
+    const toggleNfs = () => {
+      nfsOpts.style.display = exportNfsCb.checked ? 'flex' : 'none';
+    };
+    exportNfsCb.onchange = toggleNfs;
+    toggleNfs();
+  }
+
   if (form) {
     form.onsubmit = async (e) => {
       e.preventDefault();
@@ -1765,6 +1816,13 @@ export function openCreateNetworkShareModal(onSuccess) {
       const security = document.getElementById('create-share-security')?.value || 'public';
       const readOnly = document.getElementById('create-share-readonly')?.checked ?? false;
       const isTm = document.getElementById('create-share-timemachine')?.checked ?? false;
+      const exportSmb = document.getElementById('create-share-export-smb')?.checked ?? true;
+      const exportNfs = document.getElementById('create-share-export-nfs')?.checked ?? false;
+      const nfsSquash = document.getElementById('create-share-nfs-squash')?.value || 'no_root_squash';
+      const nfsAnonuid = parseInt(document.getElementById('create-share-nfs-anonuid')?.value, 10) || 1000;
+      const nfsAnongid = parseInt(document.getElementById('create-share-nfs-anongid')?.value, 10) || 1000;
+      const nfsSync = (document.getElementById('create-share-nfs-sync')?.value || 'sync') === 'sync';
+      const nfsClients = document.getElementById('create-share-nfs-clients')?.value.trim() || '*';
 
       if (!name) return;
 
@@ -1780,6 +1838,13 @@ export function openCreateNetworkShareModal(onSuccess) {
           comment,
           security,
           read_only: readOnly,
+          export_smb: exportSmb,
+          export_nfs: exportNfs,
+          nfs_squash: nfsSquash,
+          nfs_anonuid: nfsAnonuid,
+          nfs_anongid: nfsAnongid,
+          nfs_sync: nfsSync,
+          nfs_clients: nfsClients,
         });
 
         if (isTm) {
@@ -1969,3 +2034,82 @@ export async function openSnapshotsModal(poolId = 'default_pool') {
 }
 
 
+
+
+/**
+ * Opens Rename Storage Pool Modal (OpenZFS / Btrfs)
+ */
+export function openRenameStoragePoolModal(poolId, currentName, onSuccess) {
+  const modal = document.getElementById('modal-rename-storage-pool');
+  if (!modal) return;
+
+  const closeBtn = document.getElementById('modal-rename-pool-close-btn');
+  const cancelBtn = document.getElementById('modal-rename-pool-cancel-btn');
+  const form = document.getElementById('rename-pool-form');
+  const currentNameInput = document.getElementById('rename-pool-current-name');
+  const newNameInput = document.getElementById('rename-pool-new-name');
+  const errorBox = document.getElementById('rename-pool-error-box');
+  const submitBtn = document.getElementById('rename-pool-submit-btn');
+
+  const close = () => {
+    modal.classList.remove('open');
+    modal.style.display = 'none';
+  };
+
+  if (closeBtn) closeBtn.onclick = close;
+  if (cancelBtn) cancelBtn.onclick = close;
+
+  const modalWin = modal.querySelector('.smart-modal-window');
+  const modalHdr = modal.querySelector('.smart-modal-header');
+  if (modalWin && modalHdr) makeDraggable(modalWin, modalHdr);
+
+  if (currentNameInput) currentNameInput.value = currentName || poolId;
+  if (newNameInput) newNameInput.value = '';
+  if (errorBox) errorBox.style.display = 'none';
+
+  modal.classList.add('open');
+  modal.style.display = 'flex';
+  if (newNameInput) newNameInput.focus();
+
+  if (form) {
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      if (errorBox) errorBox.style.display = 'none';
+
+      const newName = newNameInput?.value.trim();
+      if (!newName) {
+        if (errorBox) {
+          errorBox.textContent = 'Please enter a valid new pool name.';
+          errorBox.style.display = 'block';
+        }
+        return;
+      }
+
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Renaming...';
+      }
+
+      try {
+        await api.post(`/api/storage/pools/${encodeURIComponent(poolId)}/rename`, {
+          new_name: newName,
+        });
+
+        close();
+        playChirp(880, 0.12, 'sine');
+        showToast(`Storage pool '${currentName}' renamed to '${newName}' successfully!`, 'info');
+        if (onSuccess) onSuccess();
+      } catch (err) {
+        if (errorBox) {
+          errorBox.textContent = err.message || 'Failed to rename storage pool';
+          errorBox.style.display = 'block';
+        }
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = '✏️ Apply Rename';
+        }
+      }
+    };
+  }
+}
