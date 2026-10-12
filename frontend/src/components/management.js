@@ -3479,11 +3479,106 @@ export async function fetchAndRenderReplication() {
 export async function fetchAndRenderWireguard() {
   const ipFwdEl = document.getElementById('wg-ip-forward-status');
   const pubkeyEl = document.getElementById('wg-pubkey-display');
-  const badgeEl = document.getElementById('wg-tunnel-status-badge');
+  const wgBadgeEl = document.getElementById('wg-tunnel-status-badge');
+  const wgFwdPill = document.getElementById('wg-forwarding-pill');
   const previewEl = document.getElementById('wg-conf-preview');
   const dlBtn = document.getElementById('btn-download-wg-conf');
   const genBtn = document.getElementById('btn-wg-gen-client-config');
   const natBtn = document.getElementById('btn-toggle-wg-subnet-nat');
+  const refreshBtn = document.getElementById('btn-refresh-wireguard');
+
+  // Tailscale elements
+  const tsBadgeEl = document.getElementById('tailscale-status-badge');
+  const tsPillEl = document.getElementById('ts-connection-pill');
+  const tsIpEl = document.getElementById('ts-ipv4-display');
+  const tsCopyIpBtn = document.getElementById('btn-copy-ts-ip');
+  const tsTailnetEl = document.getElementById('ts-tailnet-display');
+  const tsHostEl = document.getElementById('ts-hostname-display');
+  const tsPeersEl = document.getElementById('ts-peers-display');
+  const tsConnectForm = document.getElementById('ts-connect-form');
+  const tsConnectedView = document.getElementById('ts-connected-view');
+  const tsFormIntro = document.getElementById('ts-form-intro');
+  const tsAuthKeyInput = document.getElementById('ts-auth-key-input');
+  const tsHostnameInput = document.getElementById('ts-hostname-input');
+  const tsAcceptRoutesCb = document.getElementById('ts-accept-routes-input');
+  const tsUpBtn = document.getElementById('btn-tailscale-up');
+  const tsDownBtn = document.getElementById('btn-tailscale-down');
+
+  try {
+    const meshData = await api.get('/api/network/mesh-vpn').catch(() => null);
+    if (meshData && meshData.tailscale) {
+      const ts = meshData.tailscale;
+      if (!ts.installed) {
+        if (tsBadgeEl) {
+          tsBadgeEl.textContent = 'Not Installed';
+          tsBadgeEl.style.color = 'var(--muted, #94a3b8)';
+          tsBadgeEl.style.borderColor = 'rgba(255,255,255,0.1)';
+        }
+        if (tsPillEl) {
+          tsPillEl.textContent = 'Daemon Not Found';
+          tsPillEl.style.color = 'var(--muted, #94a3b8)';
+          tsPillEl.style.background = 'rgba(255,255,255,0.06)';
+        }
+        if (tsFormIntro) {
+          tsFormIntro.textContent = 'Tailscale daemon or CLI is not detected on this system. Install Tailscale on the host OS or deploy as a Docker container.';
+          tsFormIntro.style.color = '#f59e0b';
+        }
+        if (tsIpEl) tsIpEl.textContent = '--';
+        if (tsCopyIpBtn) tsCopyIpBtn.style.display = 'none';
+        if (tsTailnetEl) tsTailnetEl.textContent = '--';
+        if (tsHostEl) tsHostEl.textContent = '--';
+        if (tsPeersEl) tsPeersEl.textContent = '0 peers';
+        if (tsConnectForm) tsConnectForm.style.display = 'flex';
+        if (tsConnectedView) tsConnectedView.style.display = 'none';
+        if (tsDownBtn) tsDownBtn.style.display = 'none';
+      } else if (ts.active) {
+        if (tsBadgeEl) {
+          tsBadgeEl.textContent = 'Active (Connected)';
+          tsBadgeEl.style.color = 'var(--ok2, #3bf58b)';
+          tsBadgeEl.style.borderColor = 'rgba(59,245,139,0.3)';
+        }
+        if (tsPillEl) {
+          tsPillEl.textContent = 'Connected';
+          tsPillEl.style.color = '#3bf58b';
+          tsPillEl.style.background = 'rgba(59,245,139,0.12)';
+        }
+        if (tsIpEl) tsIpEl.textContent = ts.ipv4 || '--';
+        if (tsCopyIpBtn) tsCopyIpBtn.style.display = ts.ipv4 ? 'inline-block' : 'none';
+        if (tsTailnetEl) tsTailnetEl.textContent = ts.tailnet || '--';
+        if (tsHostEl) tsHostEl.textContent = ts.hostname || '--';
+        if (tsPeersEl) tsPeersEl.textContent = `${ts.peers_count || 0} peer(s)`;
+        if (tsConnectForm) tsConnectForm.style.display = 'none';
+        if (tsConnectedView) tsConnectedView.style.display = 'flex';
+        if (tsDownBtn) tsDownBtn.style.display = 'inline-block';
+      } else {
+        const isNeedsLogin = ts.backend_state === 'NeedsLogin';
+        if (tsBadgeEl) {
+          tsBadgeEl.textContent = isNeedsLogin ? 'Needs Login' : 'Disconnected';
+          tsBadgeEl.style.color = '#f59e0b';
+          tsBadgeEl.style.borderColor = 'rgba(245,158,11,0.3)';
+        }
+        if (tsPillEl) {
+          tsPillEl.textContent = isNeedsLogin ? 'Login Required' : 'Disconnected';
+          tsPillEl.style.color = '#f59e0b';
+          tsPillEl.style.background = 'rgba(245,158,11,0.12)';
+        }
+        if (tsFormIntro) {
+          tsFormIntro.textContent = 'Join your Zero-Trust Tailnet with a pre-authenticated auth key:';
+          tsFormIntro.style.color = 'var(--muted)';
+        }
+        if (tsIpEl) tsIpEl.textContent = '--';
+        if (tsCopyIpBtn) tsCopyIpBtn.style.display = 'none';
+        if (tsTailnetEl) tsTailnetEl.textContent = '--';
+        if (tsHostEl) tsHostEl.textContent = ts.hostname || '--';
+        if (tsPeersEl) tsPeersEl.textContent = '0 peers';
+        if (tsConnectForm) tsConnectForm.style.display = 'flex';
+        if (tsConnectedView) tsConnectedView.style.display = 'none';
+        if (tsDownBtn) tsDownBtn.style.display = 'none';
+      }
+    }
+  } catch (err) {
+    console.debug('[MeshVPN] Tailscale query error:', err);
+  }
 
   try {
     const res = await api.get('/api/network/mesh-vpn/wireguard/subnet-routing').catch(() => null);
@@ -3491,12 +3586,118 @@ export async function fetchAndRenderWireguard() {
       const isFwd = Boolean(res.ip_forwarding);
       ipFwdEl.textContent = isFwd ? 'Active (Forwarding Enabled)' : 'Disabled';
       ipFwdEl.style.color = isFwd ? 'var(--ok2, #3bf58b)' : 'var(--muted, #64748b)';
-      if (badgeEl) {
-        badgeEl.textContent = res.enabled ? 'Mesh NAT Routing Active' : 'Curve25519 Ready';
-        badgeEl.style.color = res.enabled ? '#3bf58b' : '#38bdf8';
+      if (wgBadgeEl) {
+        wgBadgeEl.textContent = res.enabled ? 'NAT Routing Active' : 'Curve25519 Ready';
+        wgBadgeEl.style.color = res.enabled ? '#3bf58b' : '#38bdf8';
+      }
+      if (wgFwdPill) {
+        wgFwdPill.textContent = res.enabled ? 'NAT Active' : 'Curve25519 Ready';
+        wgFwdPill.style.color = res.enabled ? '#3bf58b' : '#38bdf8';
       }
     }
   } catch (e) {}
+
+  // Tailscale Up handler
+  if (tsUpBtn && !tsUpBtn._bound) {
+    tsUpBtn._bound = true;
+    tsUpBtn.addEventListener('click', async () => {
+      const authKey = tsAuthKeyInput ? tsAuthKeyInput.value.trim() : '';
+      const hostname = tsHostnameInput ? tsHostnameInput.value.trim() : '';
+      const acceptRoutes = tsAcceptRoutesCb ? tsAcceptRoutesCb.checked : true;
+      try {
+        tsUpBtn.disabled = true;
+        tsUpBtn.textContent = '🚀 Connecting...';
+        await api.post('/api/network/mesh-vpn/tailscale/up', {
+          auth_key: authKey || null,
+          hostname: hostname || null,
+          accept_routes: acceptRoutes,
+        });
+        showToast('Connected host to Tailscale mesh network.', 'success');
+        if (tsAuthKeyInput) tsAuthKeyInput.value = '';
+        fetchAndRenderWireguard();
+      } catch (err) {
+        showToast(`Tailscale connection failed: ${err.message}`, 'error');
+      } finally {
+        tsUpBtn.disabled = false;
+        tsUpBtn.textContent = '🚀 Connect Tailscale';
+      }
+    });
+  }
+
+  // Tailscale Down handler
+  if (tsDownBtn && !tsDownBtn._bound) {
+    tsDownBtn._bound = true;
+    tsDownBtn.addEventListener('click', async () => {
+      try {
+        tsDownBtn.disabled = true;
+        await api.post('/api/network/mesh-vpn/tailscale/down');
+        showToast('Disconnected from Tailscale mesh network.', 'info');
+        fetchAndRenderWireguard();
+      } catch (err) {
+        showToast(`Tailscale disconnection failed: ${err.message}`, 'error');
+      } finally {
+        tsDownBtn.disabled = false;
+      }
+    });
+  }
+
+  // Copy Tailscale IP
+  if (tsCopyIpBtn && !tsCopyIpBtn._bound) {
+    tsCopyIpBtn._bound = true;
+    tsCopyIpBtn.addEventListener('click', () => {
+      const ip = tsIpEl ? tsIpEl.textContent.trim() : '';
+      if (ip && ip !== '--') {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(ip);
+        }
+        showToast(`Copied Tailscale IP: ${ip}`, 'success');
+      }
+    });
+  }
+
+  // Mesh Service Filter switcher
+  const filterContainer = document.getElementById('mesh-service-filter');
+  if (filterContainer && !filterContainer._bound) {
+    filterContainer._bound = true;
+    const filterBtns = filterContainer.querySelectorAll('button[data-mesh-filter]');
+    const tsHeader = document.getElementById('section-header-tailscale');
+    const tsContainer = document.getElementById('network-tailscale-container');
+    const wgHeader = document.getElementById('section-header-wireguard');
+    const wgContainer = document.getElementById('network-wireguard-container');
+
+    filterBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        filterBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const mode = btn.dataset.meshFilter;
+        if (mode === 'tailscale') {
+          if (tsHeader) tsHeader.style.display = 'flex';
+          if (tsContainer) tsContainer.style.display = 'grid';
+          if (wgHeader) wgHeader.style.display = 'none';
+          if (wgContainer) wgContainer.style.display = 'none';
+        } else if (mode === 'wireguard') {
+          if (tsHeader) tsHeader.style.display = 'none';
+          if (tsContainer) tsContainer.style.display = 'none';
+          if (wgHeader) wgHeader.style.display = 'flex';
+          if (wgContainer) wgContainer.style.display = 'grid';
+        } else {
+          if (tsHeader) tsHeader.style.display = 'flex';
+          if (tsContainer) tsContainer.style.display = 'grid';
+          if (wgHeader) wgHeader.style.display = 'flex';
+          if (wgContainer) wgContainer.style.display = 'grid';
+        }
+      });
+    });
+  }
+
+  // Refresh button
+  if (refreshBtn && !refreshBtn._bound) {
+    refreshBtn._bound = true;
+    refreshBtn.addEventListener('click', () => {
+      fetchAndRenderWireguard();
+      showToast('Mesh VPN telemetry refreshed.', 'info');
+    });
+  }
 
   if (genBtn && !genBtn._bound) {
     genBtn._bound = true;

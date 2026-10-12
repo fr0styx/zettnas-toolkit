@@ -2,6 +2,7 @@ import ipaddress
 import os
 import re
 import secrets
+import shutil
 import socket
 import struct
 import subprocess
@@ -2210,6 +2211,23 @@ def read_ip():
     return "?"
 
 
+def _find_tailscale_bin() -> Optional[str]:
+    """Finds tailscale CLI executable across standard PATH and NAS host plugin paths."""
+    ts_bin = shutil.which("tailscale")
+    if ts_bin:
+        return ts_bin
+    for cand in (
+        "/usr/local/sbin/tailscale",
+        "/usr/sbin/tailscale",
+        "/usr/bin/tailscale",
+        "/usr/local/bin/tailscale",
+        "/usr/local/emhttp/plugins/tailscale/bin/tailscale",
+    ):
+        if os.path.exists(cand) and os.access(cand, os.X_OK):
+            return cand
+    return None
+
+
 def get_mesh_vpn_status() -> Dict[str, Any]:
     """
     Zero-Trust Mesh Hub detector:
@@ -2220,18 +2238,22 @@ def get_mesh_vpn_status() -> Dict[str, Any]:
     ts_info = {
         "installed": False,
         "active": False,
+        "backend_state": "Stopped",
         "ipv4": "",
         "tailnet": "",
         "hostname": "",
         "peers_count": 0,
     }
 
+    ts_bin = _find_tailscale_bin()
+
     try:
-        r = subprocess.run(["tailscale", "status", "--json"], capture_output=True, text=True, timeout=3)
+        r = subprocess.run([ts_bin or "tailscale", "status", "--json"], capture_output=True, text=True, timeout=3)
         if r.returncode == 0 and r.stdout.strip():
             ts_info["installed"] = True
             doc = json.loads(r.stdout)
             status_str = doc.get("BackendState", "")
+            ts_info["backend_state"] = status_str
             ts_info["active"] = status_str == "Running"
             ts_info["hostname"] = doc.get("Self", {}).get("HostName", "")
             ips = doc.get("Self", {}).get("TailscaleIPs", [])
@@ -2239,8 +2261,16 @@ def get_mesh_vpn_status() -> Dict[str, Any]:
             ts_info["tailnet"] = doc.get("MagicDNSSuffix", "")
             peers = doc.get("Peer", {})
             ts_info["peers_count"] = len(peers) if isinstance(peers, dict) else len(peers or [])
+        elif ts_bin or (r.returncode != 0 and "tailscale" in (r.stderr + r.stdout).lower()):
+            ts_info["installed"] = True
+            out = (r.stdout + r.stderr).lower()
+            if "logged out" in out or "needslogin" in out:
+                ts_info["backend_state"] = "NeedsLogin"
+            else:
+                ts_info["backend_state"] = "Stopped"
     except FileNotFoundError:
-        pass
+        if ts_bin:
+            ts_info["installed"] = True
     except Exception as e:
         logger.debug(f"[Network] Tailscale status query: {e}")
 
@@ -2273,7 +2303,8 @@ def execute_tailscale_up(
     accept_routes: bool = True,
 ) -> Dict[str, Any]:
     """Connects host to the Zero-Trust Tailscale mesh network."""
-    cmd = ["tailscale", "up"]
+    ts_bin = _find_tailscale_bin()
+    cmd = [ts_bin or "tailscale", "up"]
     if auth_key:
         cmd.extend(["--authkey", auth_key])
     if hostname:
@@ -2296,8 +2327,9 @@ def execute_tailscale_up(
 
 def execute_tailscale_down() -> Dict[str, Any]:
     """Disconnects host from the Zero-Trust Tailscale mesh network."""
+    ts_bin = _find_tailscale_bin()
     try:
-        r = subprocess.run(["tailscale", "down"], capture_output=True, text=True, timeout=10)
+        r = subprocess.run([ts_bin or "tailscale", "down"], capture_output=True, text=True, timeout=10)
         return {
             "status": "success" if r.returncode == 0 else "error",
             "code": r.returncode,

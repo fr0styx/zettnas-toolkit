@@ -194,11 +194,11 @@
   })();
 </script>
 <style>html,body{color:#eaf1f8;background-color:#080c10;width:100%;height:100%;margin:0;padding:0;overflow:hidden}html.auth-required body{background:radial-gradient(circle at 50% 20%,#151d29 0%,#080c10 70%)!important}#login-overlay{z-index:999999;background:#080c10;justify-content:center;align-items:center;display:flex;position:fixed;inset:0}html.has-auth-session #login-overlay{display:none!important}html.auth-required #login-overlay{display:flex!important}html.is-desktop-locked #lock-overlay{opacity:1!important;display:flex!important}html.is-desktop-locked body{overflow:hidden!important}html.auth-required .studio-viewport-wrapper,html.auth-required .suite-navbar,html.auth-required #desktop-icons-container,html.auth-required .desktop-icons-container,html.auth-required .top-nav,html.auth-required #desktop-widgets-container,html.auth-required #os-dock-container,html.auth-required .workspace-panel,html.auth-required .smart-modal-backdrop,html.auth-required .os-window,html.auth-required .notif-center-window{display:none!important}</style>
-  <script type="module" crossorigin src="/assets/index-BYDmajsu.js"></script>
+  <script type="module" crossorigin src="/assets/index-i99ImSJ7.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-hePW80VL.js">
-  <link rel="modulepreload" crossorigin href="/assets/dock-BVrRK_wr.js">
-  <link rel="modulepreload" crossorigin href="/assets/users-CU25KI31.js">
-  <link rel="stylesheet" crossorigin href="/assets/index-BmDio15a.css">
+  <link rel="modulepreload" crossorigin href="/assets/dock-mHlpi6Vi.js">
+  <link rel="modulepreload" crossorigin href="/assets/users-C8kelrAi.js">
+  <link rel="stylesheet" crossorigin href="/assets/index-BH5iKKUU.css">
 </head>
 <body class="studio-workbench no-specular-glow">
 
@@ -3619,7 +3619,7 @@
               </button>
               <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-network-wireguard">
                 <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-shield"/></svg>
-                <span data-i18n="mgmt.subtab_network_wireguard">WireGuard & Mesh VPN</span>
+                <span data-i18n="mgmt.subtab_network_wireguard">WireGuard & Tailscale</span>
               </button>
               <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-network-docker">
                 <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-docker"/></svg>
@@ -3744,30 +3744,123 @@
               </div>
             </div>
 
-            <!-- Sub-tab 2: WireGuard & Mesh VPN -->
+            <!-- Sub-tab 2: WireGuard & Tailscale Mesh VPN -->
             <div id="mgmt-pane-network-wireguard" class="mgmt-tab-pane" style="display: none;">
               <div class="mgmt-card-intro" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
                 <div>
                   <div class="mgmt-card-intro-title">
                     <svg class="ic"><use href="#i-shield"/></svg>
-                    <span data-i18n="mgmt.wireguard_sec_title">WireGuard Mesh VPN & Site-to-Site Subnet Router</span>
+                    <span data-i18n="mgmt.wireguard_sec_title">Tailscale & WireGuard Zero-Trust Mesh VPN</span>
                   </div>
                   <div class="mgmt-card-intro-desc" data-i18n="mgmt.wireguard_sec_desc">
-                    Zero-Trust peer mesh networking, cryptographic client profile generator (Curve25519), and kernel subnet NAT routing gateway.
+                    Zero-Trust peer mesh networking, Tailscale mesh overlay, and WireGuard site-to-site kernel subnet NAT routing.
                   </div>
                 </div>
                 <div style="display:flex; gap:8px; align-items:center;">
+                  <div class="btn-group" id="mesh-service-filter" style="display:flex; gap:4px; margin-right:4px;">
+                    <button class="btn-pill-toggle active" data-mesh-filter="all" style="font-size:11px; padding:4px 10px;">All</button>
+                    <button class="btn-pill-toggle" data-mesh-filter="tailscale" style="font-size:11px; padding:4px 10px;">Tailscale</button>
+                    <button class="btn-pill-toggle" data-mesh-filter="wireguard" style="font-size:11px; padding:4px 10px;">WireGuard</button>
+                  </div>
                   <button class="btn-pill-toggle" id="btn-wg-gen-client-config" style="font-size: 11px; padding: 5px 12px; color: var(--accent-cyan, #38bdf8); border-color: rgba(56, 189, 248, 0.4);">🔑 Generate Client .conf</button>
-                  <button class="btn-pill-toggle" id="btn-refresh-wireguard" style="font-size: 11px; padding: 5px 12px;" title="Refresh WireGuard Status">🔄 Refresh</button>
+                  <button class="btn-pill-toggle" id="btn-refresh-wireguard" style="font-size: 11px; padding: 5px 12px;" title="Refresh Mesh VPN Status">🔄 Refresh</button>
                 </div>
               </div>
 
               <div class="mgmt-detail-body">
+                <!-- Section 1: Tailscale Zero-Trust Mesh Overlay -->
+                <div class="network-section-header" id="section-header-tailscale">
+                  <span class="network-section-title">TAILSCALE ZERO-TRUST MESH OVERLAY</span>
+                  <span class="network-section-badge" id="tailscale-status-badge">Checking...</span>
+                </div>
+
+                <div class="network-grid-two-col" id="network-tailscale-container" style="margin-bottom: 24px;">
+                  <!-- Tailscale Telemetry Card -->
+                  <div class="network-card" id="tailscale-telemetry-card">
+                    <div class="network-card-header">
+                      <div class="network-card-title"><svg class="ic" style="width:14px; height:14px;"><use href="#i-shield"/></svg> Tailscale Node Telemetry</div>
+                      <span class="mgmt-app-pill" id="ts-connection-pill" style="background:rgba(100,116,139,0.15); color:var(--muted);">Offline</span>
+                    </div>
+                    <div style="padding:12px; font-size:12px; display:flex; flex-direction:column; gap:8px;">
+                      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:6px;">
+                        <span style="color:var(--muted);">Tailscale IP (IPv4):</span>
+                        <div style="display:flex; align-items:center; gap:6px;">
+                          <code id="ts-ipv4-display" style="font-size:11.5px; color:#38bdf8; font-weight:600;">--</code>
+                          <button class="btn-pill-toggle" id="btn-copy-ts-ip" style="display:none; font-size:9.5px; padding:1px 6px;" title="Copy Tailscale IP">📋 Copy</button>
+                        </div>
+                      </div>
+                      <div style="display:flex; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:6px;">
+                        <span style="color:var(--muted);">Tailnet Domain:</span>
+                        <code id="ts-tailnet-display" style="font-size:11px; color:#a5f3fc;">--</code>
+                      </div>
+                      <div style="display:flex; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:6px;">
+                        <span style="color:var(--muted);">Node Hostname:</span>
+                        <span id="ts-hostname-display" style="font-weight:600; color:#fff;">--</span>
+                      </div>
+                      <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="color:var(--muted);">Connected Mesh Peers:</span>
+                        <span id="ts-peers-display" style="font-weight:700; color:var(--accent-cyan, #38bdf8);">0 peers</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Tailscale Connection & Auth Card -->
+                  <div class="network-card" id="tailscale-controls-card">
+                    <div class="network-card-header">
+                      <div class="network-card-title"><svg class="ic" style="width:14px; height:14px;"><use href="#i-key"/></svg> Tailscale Connection & Auth</div>
+                      <button class="btn-pill-toggle" id="btn-tailscale-down" style="font-size:10.5px; padding:2px 10px; color:#f87171; border-color:rgba(239,68,68,0.3); display:none;">🔌 Disconnect</button>
+                    </div>
+                    <div style="padding:12px; font-size:12px;" id="ts-controls-body">
+                      <!-- Disconnected State Form -->
+                      <div id="ts-connect-form" style="display:flex; flex-direction:column; gap:10px;">
+                        <div id="ts-form-intro" style="color:var(--muted); font-size:11.5px;">
+                          Join your Zero-Trust Tailnet with a pre-authenticated auth key:
+                        </div>
+                        <div>
+                          <label style="display:block; font-size:10.5px; font-weight:700; color:var(--muted); margin-bottom:4px; text-transform:uppercase;">Auth Key (Optional)</label>
+                          <input type="password" id="ts-auth-key-input" class="tz-select-input" placeholder="tskey-auth-k123456789..." style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:6px 10px; color:#fff; border-radius:6px; font-size:12px; font-family:monospace;" />
+                        </div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                          <div>
+                            <label style="display:block; font-size:10.5px; font-weight:700; color:var(--muted); margin-bottom:4px; text-transform:uppercase;">Custom Hostname</label>
+                            <input type="text" id="ts-hostname-input" class="tz-select-input" placeholder="e.g. zettnas" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:6px 10px; color:#fff; border-radius:6px; font-size:12px;" />
+                          </div>
+                          <div style="display:flex; align-items:flex-end; padding-bottom:6px;">
+                            <label style="display:flex; align-items:center; gap:6px; font-size:11px; color:var(--text-sub); cursor:pointer;">
+                              <input type="checkbox" id="ts-accept-routes-input" checked style="accent-color:var(--accent-cyan, #38bdf8);" />
+                              <span>Accept Routes</span>
+                            </label>
+                          </div>
+                        </div>
+                        <div style="display:flex; justify-content:flex-end; margin-top:2px;">
+                          <button class="btn-pill-toggle" id="btn-tailscale-up" style="font-size:11.5px; padding:5px 14px; background:rgba(56,189,248,0.15); color:#38bdf8; border-color:rgba(56,189,248,0.4); font-weight:700;">🚀 Connect Tailscale</button>
+                        </div>
+                      </div>
+
+                      <!-- Connected State View -->
+                      <div id="ts-connected-view" style="display:none; flex-direction:column; gap:8px;">
+                        <div style="display:flex; align-items:center; gap:8px; color:var(--ok2, #3bf58b); font-weight:700; font-size:13px;">
+                          <span>✓ Node Active on Tailnet</span>
+                        </div>
+                        <div style="color:var(--text-sub); font-size:12px; line-height:1.5;">
+                          This appliance is securely connected to your Tailscale mesh network. Traffic routed to this machine is end-to-end encrypted with WireGuard primitives.
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Section 2: WireGuard Point-to-Point Tunnel & Subnet Router -->
+                <div class="network-section-header" id="section-header-wireguard">
+                  <span class="network-section-title">WIREGUARD POINT-TO-POINT TUNNEL & SUBNET ROUTER</span>
+                  <span class="network-section-badge" id="wg-tunnel-status-badge">Curve25519 Ready</span>
+                </div>
+
                 <div class="network-grid-two-col" id="network-wireguard-container">
                   <div class="network-card">
                     <div class="network-card-header">
                       <div class="network-card-title"><svg class="ic" style="width:14px; height:14px;"><use href="#i-shield"/></svg> WireGuard Tunnel Status (wg0)</div>
-                      <span class="mgmt-app-pill" id="wg-tunnel-status-badge" style="background:rgba(59,245,139,0.12); color:#3bf58b;">Curve25519 Ready</span>
+                      <span class="mgmt-app-pill" id="wg-forwarding-pill" style="background:rgba(59,245,139,0.12); color:#3bf58b;">Curve25519 Ready</span>
                     </div>
                     <div style="padding:12px; font-size:12px; display:flex; flex-direction:column; gap:8px;">
                       <div style="display:flex; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:6px;">
