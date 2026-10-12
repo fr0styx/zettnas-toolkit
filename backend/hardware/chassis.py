@@ -70,7 +70,11 @@ class ChassisEngine:
             "zettlab" in vendor
             or any(k in product for k in ("d4", "d6", "d6u", "d6 ultra", "d8", "zettbox", "zettnas"))
         )
-        is_custom_appliance = bool(is_zettlabs or "aoostar" in vendor or any(k in product for k in ("wtr", "r1")))
+        is_ugreen = bool("ugreen" in vendor or any(k in product for k in ("dxp", "ugos", "ugreen")))
+        is_minisforum = bool("minisforum" in vendor or any(k in product for k in ("ms-01", "ms-a1", "minisforum")))
+        is_custom_appliance = bool(
+            is_zettlabs or "aoostar" in vendor or any(k in product for k in ("wtr", "r1")) or is_ugreen or is_minisforum
+        )
 
         # LCD Framebuffer detection
         from backend.config import ENABLE_FB
@@ -228,14 +232,19 @@ class ChassisEngine:
         # 2. Determine Friendly Chassis Model Label
         dmi_prod = cls._read_dmi_product_name()
         dmi_lower = dmi_prod.lower()
+        vendor_lower = cls._read_dmi_sys_vendor().lower()
         if "d8" in dmi_lower:
             chassis_model = "ZETTLAB D8"
         elif "d6" in dmi_lower:
             chassis_model = "ZETTLAB D6"
         elif "d4" in dmi_lower:
             chassis_model = "ZETTLAB D4"
-        elif "wtr" in dmi_lower:
-            chassis_model = f"AOOSTAR WTR ({dmi_prod})"
+        elif "wtr" in dmi_lower or "aoostar" in vendor_lower:
+            chassis_model = f"AOOSTAR WTR ({dmi_prod})" if dmi_prod else "AOOSTAR WTR"
+        elif "ugreen" in vendor_lower or any(k in dmi_lower for k in ("dxp", "ugreen")):
+            chassis_model = f"UGREEN DXP ({dmi_prod.upper()})" if dmi_prod else f"UGREEN DXP ({total_bays}-BAY)"
+        elif "minisforum" in vendor_lower or any(k in dmi_lower for k in ("ms-01", "ms-a1", "minisforum")):
+            chassis_model = f"MINISFORUM ({dmi_prod.upper()})" if dmi_prod else "MINISFORUM NAS"
         elif profile == "compact_dual":
             chassis_model = f"COMPACT DUAL ({total_bays}-BAY)"
         elif profile == "tower_desktop":

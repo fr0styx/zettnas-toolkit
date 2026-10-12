@@ -50,6 +50,7 @@ def read_cpu_temp():
         except Exception:
             Z_STATE.cached_cpu_temp_path = None
 
+    # 1. Hardware Monitor Drivers (coretemp, k10temp, zenpower, cpu_thermal)
     for h in sorted(glob.glob(os.path.join(HOST_SYS, "class/hwmon/hwmon*"))):
         try:
             name = open(os.path.join(h, "name")).read().strip()
@@ -61,4 +62,25 @@ def read_cpu_temp():
                         return round(val)
         except Exception:
             continue
+
+    # 2. ACPI / Linux thermal zones (/sys/class/thermal/thermal_zone*)
+    for base in (HOST_SYS, "/sys", "/host/sys"):
+        if not base or not os.path.exists(base):
+            continue
+        for tz in sorted(glob.glob(os.path.join(base, "class/thermal/thermal_zone*"))):
+            try:
+                temp_file = os.path.join(tz, "temp")
+                type_file = os.path.join(tz, "type")
+                if os.path.exists(temp_file):
+                    tz_type = open(type_file).read().strip().lower() if os.path.exists(type_file) else ""
+                    if not tz_type or any(k in tz_type for k in ("acpi", "cpu", "x86_pkg", "soc", "package")):
+                        val = int(open(temp_file).read().strip() or 0)
+                        if val > 1000:
+                            val /= 1000
+                        if val > 0:
+                            Z_STATE.cached_cpu_temp_path = temp_file
+                            return round(val)
+            except Exception:
+                continue
+
     return 0
