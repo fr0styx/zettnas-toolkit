@@ -5768,9 +5768,28 @@ export function initManagement() {
       });
     }
 
-    createReplBtn.addEventListener('click', () => {
-      replModal.classList.add('open');
+    const openReplModal = () => {
+      replModal.classList.remove('workspace-hidden');
+      const inner = replModal.querySelector('.smart-modal-window');
+      if (inner) inner.classList.remove('workspace-hidden');
+      replModal.style.removeProperty('display');
       replModal.style.display = 'flex';
+      replModal.classList.add('open');
+      bringToFront(replModal);
+      const nameInput = document.getElementById('repl-job-name');
+      if (nameInput) nameInput.focus();
+    };
+
+    createReplBtn.addEventListener('click', openReplModal);
+
+    replModal.addEventListener('click', (e) => {
+      if (e.target === replModal) closeReplModal();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && replModal.classList.contains('open')) {
+        closeReplModal();
+      }
     });
 
     if (replForm && !replForm._bound) {
@@ -5881,13 +5900,25 @@ export function initManagement() {
 
   if (btnOpenBackupJob && modalBackupJob) {
     btnOpenBackupJob.addEventListener('click', () => {
+      modalBackupJob.classList.remove('workspace-hidden');
+      const inner = modalBackupJob.querySelector('.smart-modal-window');
+      if (inner) inner.classList.remove('workspace-hidden');
+      modalBackupJob.style.removeProperty('display');
       modalBackupJob.style.display = 'flex';
+      modalBackupJob.classList.add('open');
+      bringToFront(modalBackupJob);
       const nameInput = document.getElementById('backup-job-name');
       if (nameInput) nameInput.focus();
     });
+    modalBackupJob.addEventListener('click', (e) => {
+      if (e.target === modalBackupJob) closeBackupModal();
+    });
   }
   const closeBackupModal = () => {
-    if (modalBackupJob) modalBackupJob.style.display = 'none';
+    if (modalBackupJob) {
+      modalBackupJob.classList.remove('open');
+      modalBackupJob.style.display = 'none';
+    }
   };
   if (btnCloseBackupJob) btnCloseBackupJob.addEventListener('click', closeBackupModal);
   if (btnCancelBackupJob) btnCancelBackupJob.addEventListener('click', closeBackupModal);
@@ -5940,13 +5971,25 @@ export function initManagement() {
 
   if (btnOpenSnapshot && modalSnapshot) {
     btnOpenSnapshot.addEventListener('click', () => {
+      modalSnapshot.classList.remove('workspace-hidden');
+      const inner = modalSnapshot.querySelector('.smart-modal-window');
+      if (inner) inner.classList.remove('workspace-hidden');
+      modalSnapshot.style.removeProperty('display');
       modalSnapshot.style.display = 'flex';
+      modalSnapshot.classList.add('open');
+      bringToFront(modalSnapshot);
       const subvolInput = document.getElementById('snapshot-subvol-input');
       if (subvolInput) subvolInput.focus();
     });
+    modalSnapshot.addEventListener('click', (e) => {
+      if (e.target === modalSnapshot) closeSnapshotModal();
+    });
   }
   const closeSnapshotModal = () => {
-    if (modalSnapshot) modalSnapshot.style.display = 'none';
+    if (modalSnapshot) {
+      modalSnapshot.classList.remove('open');
+      modalSnapshot.style.display = 'none';
+    }
   };
   if (btnCloseSnapshot) btnCloseSnapshot.addEventListener('click', closeSnapshotModal);
   if (btnCancelSnapshot) btnCancelSnapshot.addEventListener('click', closeSnapshotModal);

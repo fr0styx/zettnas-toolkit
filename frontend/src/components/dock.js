@@ -390,9 +390,9 @@ export function restoreWindowSnap(dragEl, winId) {
 
 let _currentWorkspace = 1;
 export const WORKSPACES = [
-  { id: 1, name: 'Storage & Hardware', key: 'workspace.storage', defaultApps: ['console', 'smart', 'fm'] },
-  { id: 2, name: 'Applications & Stacks', key: 'workspace.apps', defaultApps: ['management', 'container-inspector', 'stack-inspector', 'app-deploy'] },
-  { id: 3, name: 'Network & Security', key: 'workspace.system', defaultApps: ['settings', 'notif-center', 'network'] },
+  { id: 1, name: 'Workspace 1', key: 'workspace.1' },
+  { id: 2, name: 'Workspace 2', key: 'workspace.2' },
+  { id: 3, name: 'Workspace 3', key: 'workspace.3' },
 ];
 
 export function getCurrentWorkspace() {
@@ -417,42 +417,49 @@ export function switchWorkspace(wsId) {
   // Filter visible windows according to workspace
   const allWindows = document.querySelectorAll(DESKTOP_WINDOW_SELECTOR);
   allWindows.forEach((winEl) => {
+    // If element is inside a transient modal dialog, skip and keep visible
+    if (winEl.closest?.('.smart-modal-backdrop:not(#console-modal-overlay):not(#management-modal-overlay):not(#app-deploy-modal-overlay):not(#container-inspector-overlay):not(#stack-inspector-overlay):not(#stack-picker-overlay), .modal-backdrop, [role="dialog"]:not(#console-modal-overlay):not(#management-modal-overlay)')) {
+      winEl.classList.remove('workspace-hidden');
+      return;
+    }
+
     const parentOverlay = winEl.closest?.('#console-modal-overlay, #management-modal-overlay, #container-inspector-overlay, #smart-modal-overlay, #stack-inspector-overlay, #stack-picker-overlay, #app-deploy-modal-overlay') || winEl;
     
     // Determine assigned workspace
-    let assignedWs = parseInt(winEl.dataset.workspace, 10);
+    let assignedWs = parseInt(winEl.dataset.workspace, 10) || parseInt(parentOverlay.dataset.workspace, 10);
     if (!assignedWs) {
-      const winId = (winEl.id || winEl.dataset.windowId || '').toLowerCase();
-      if (['console', 'smart', 'file-manager', 'fm', 'chassis'].some((s) => winId.includes(s))) {
+      const winId = (winEl.id || winEl.dataset.windowId || parentOverlay.id || '').toLowerCase();
+      if (winId.includes('console')) {
         assignedWs = 1;
-      } else if (['management', 'container-inspector', 'stack-inspector', 'app-deploy', 'docker'].some((s) => winId.includes(s))) {
+      } else if (winId.includes('management')) {
         assignedWs = 2;
-      } else if (['settings', 'notif', 'network'].some((s) => winId.includes(s))) {
-        assignedWs = 3;
       } else {
-        assignedWs = 1;
+        assignedWs = _currentWorkspace;
       }
       winEl.dataset.workspace = String(assignedWs);
+      parentOverlay.dataset.workspace = String(assignedWs);
     }
 
     if (assignedWs === wsId) {
       parentOverlay.classList.remove('workspace-hidden');
+      winEl.classList.remove('workspace-hidden');
     } else {
       parentOverlay.classList.add('workspace-hidden');
+      winEl.classList.add('workspace-hidden');
     }
   });
 
   const wsNames = {
-    1: t('workspace.storage', 'Storage'),
-    2: t('workspace.apps', 'Apps'),
-    3: t('workspace.system', 'System'),
+    1: t('workspace.1', 'Workspace 1'),
+    2: t('workspace.2', 'Workspace 2'),
+    3: t('workspace.3', 'Workspace 3'),
   };
   const wsLabel = wsNames[wsId] || `Workspace ${wsId}`;
   if (typeof announceA11y === 'function') {
-    announceA11y(`Switched to Workspace ${wsId}: ${wsLabel}`);
+    announceA11y(`Switched to ${wsLabel}`);
   }
   if (typeof showToast === 'function') {
-    showToast(`Workspace ${wsId}: ${wsLabel}`, 'info', 1400);
+    showToast(wsLabel, 'info', 1400);
   }
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent('zettnas:workspace-changed', { detail: { workspace: wsId } }));
@@ -983,7 +990,7 @@ export function bringToFront(windowEl) {
   } catch (e) {}
 }
 
-export const DESKTOP_WINDOW_SELECTOR = '.smart-modal-window, #console-window, #management-window, #file-manager-window, .file-manager-window, .os-window, #notif-center-panel, .container-inspector-window, #container-inspector-window, #stack-inspector-window, #stack-picker-window, #app-deploy-modal-window';
+export const DESKTOP_WINDOW_SELECTOR = '#console-window, #management-window, #file-manager-window, .file-manager-window, #notif-center-panel, .container-inspector-window, #container-inspector-window, #stack-inspector-window, #stack-picker-window, #app-deploy-modal-window, .os-window';
 
 export const handleWindowActivation = (e) => {
   // If the click directly targeted an overlay backdrop, do not activate it as a window

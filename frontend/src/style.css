@@ -2737,7 +2737,10 @@ select.tz-select-input option, select.tz-select option {
 #network-canary-overlay,
 #network-bond-config-overlay,
 #network-bridge-config-overlay,
-#network-vlan-create-overlay {
+#network-vlan-create-overlay,
+#modal-create-replication-pipeline,
+#modal-create-backup-job,
+#modal-create-snapshot {
   z-index: 10030 !important;
   background: rgba(0, 0, 0, 0.65) !important;
   backdrop-filter: blur(8px) !important;
@@ -2763,7 +2766,10 @@ select.tz-select-input option, select.tz-select option {
 #network-canary-overlay.open,
 #network-bond-config-overlay.open,
 #network-bridge-config-overlay.open,
-#network-vlan-create-overlay.open {
+#network-vlan-create-overlay.open,
+#modal-create-replication-pipeline.open,
+#modal-create-backup-job.open,
+#modal-create-snapshot.open {
   display: flex !important;
   opacity: 1 !important;
   pointer-events: auto !important;
@@ -2789,7 +2795,10 @@ select.tz-select-input option, select.tz-select option {
 #network-canary-overlay:not(.open),
 #network-bond-config-overlay:not(.open),
 #network-bridge-config-overlay:not(.open),
-#network-vlan-create-overlay:not(.open) {
+#network-vlan-create-overlay:not(.open),
+#modal-create-replication-pipeline:not(.open),
+#modal-create-backup-job:not(.open),
+#modal-create-snapshot:not(.open) {
   display: none !important;
   opacity: 0 !important;
   pointer-events: none !important;
@@ -11935,7 +11944,6 @@ body.mobile-mode .workspace-pill {
 }
 
 .workspace-hidden,
-.smart-modal-backdrop.workspace-hidden,
 #console-modal-overlay.workspace-hidden,
 #management-modal-overlay.workspace-hidden,
 #app-deploy-modal-overlay.workspace-hidden,
@@ -11943,8 +11951,9 @@ body.mobile-mode .workspace-pill {
 #stack-picker-overlay.workspace-hidden,
 #container-inspector-overlay.workspace-hidden,
 #smart-modal-overlay.workspace-hidden,
+#file-manager-window.workspace-hidden,
+#notif-center-panel.workspace-hidden,
 #led-drawer.workspace-hidden,
-.smart-modal-window.workspace-hidden,
 .os-window.workspace-hidden,
 .mgmt-app-window.workspace-hidden {
   display: none !important;

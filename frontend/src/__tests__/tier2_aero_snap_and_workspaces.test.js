@@ -245,6 +245,31 @@ describe('Tier 2: Aero Snap 2.0, Virtual Desktops, Spotlight Actions & Modular W
       window.dispatchEvent(evtCtrlLeft);
       expect(getCurrentWorkspace()).toBe(2);
     });
+
+    it('ensures transient modal dialogs like replication pipelines are never hidden by workspace switching', () => {
+      initWorkspaceSwitcher();
+
+      const replBackdrop = document.createElement('div');
+      replBackdrop.id = 'modal-create-replication-pipeline';
+      replBackdrop.className = 'smart-modal-backdrop';
+      const replWindow = document.createElement('div');
+      replWindow.className = 'smart-modal-window';
+      replBackdrop.appendChild(replWindow);
+      document.body.appendChild(replBackdrop);
+
+      // Switch across all 3 workspaces
+      switchWorkspace(2);
+      expect(replBackdrop.classList.contains('workspace-hidden')).toBe(false);
+      expect(replWindow.classList.contains('workspace-hidden')).toBe(false);
+
+      switchWorkspace(3);
+      expect(replBackdrop.classList.contains('workspace-hidden')).toBe(false);
+      expect(replWindow.classList.contains('workspace-hidden')).toBe(false);
+
+      switchWorkspace(1);
+      expect(replBackdrop.classList.contains('workspace-hidden')).toBe(false);
+      expect(replWindow.classList.contains('workspace-hidden')).toBe(false);
+    });
   });
 
   describe('3. Spotlight Natural Language Actions', () => {
