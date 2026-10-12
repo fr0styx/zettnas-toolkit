@@ -194,10 +194,10 @@
   })();
 </script>
 <style>html,body{color:#eaf1f8;background-color:#080c10;width:100%;height:100%;margin:0;padding:0;overflow:hidden}html.auth-required body{background:radial-gradient(circle at 50% 20%,#151d29 0%,#080c10 70%)!important}#login-overlay{z-index:999999;background:#080c10;justify-content:center;align-items:center;display:flex;position:fixed;inset:0}html.has-auth-session #login-overlay{display:none!important}html.auth-required #login-overlay{display:flex!important}html.is-desktop-locked #lock-overlay{opacity:1!important;display:flex!important}html.is-desktop-locked body{overflow:hidden!important}html.auth-required .studio-viewport-wrapper,html.auth-required .suite-navbar,html.auth-required #desktop-icons-container,html.auth-required .desktop-icons-container,html.auth-required .top-nav,html.auth-required #desktop-widgets-container,html.auth-required #os-dock-container,html.auth-required .workspace-panel,html.auth-required .smart-modal-backdrop,html.auth-required .os-window,html.auth-required .notif-center-window{display:none!important}</style>
-  <script type="module" crossorigin src="/assets/index-DySSvwDT.js"></script>
+  <script type="module" crossorigin src="/assets/index-BByRHDjO.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-hePW80VL.js">
-  <link rel="modulepreload" crossorigin href="/assets/dock-CCDfDJeI.js">
-  <link rel="modulepreload" crossorigin href="/assets/users--IKvgdQz.js">
+  <link rel="modulepreload" crossorigin href="/assets/dock-DbbSzGVs.js">
+  <link rel="modulepreload" crossorigin href="/assets/users-COc3R1Jd.js">
   <link rel="stylesheet" crossorigin href="/assets/index-CBer6zEF.css">
 </head>
 <body class="studio-workbench no-specular-glow">
@@ -4567,6 +4567,15 @@
                   <button id="btn-generate-token" class="btn-pill-toggle" style="font-weight:700; color:var(--brand, #38bdf8); border-color:rgba(56,189,248,0.35); background:rgba(56,189,248,0.12); padding:6px 14px;">Generate</button>
                 </div>
               </div>
+
+              <!-- Two-Factor Authentication Quick Access -->
+              <div style="border-top: 1px solid rgba(255,255,255,0.06); margin-top: 14px; padding-top: 14px; display: flex; justify-content: space-between; align-items: center; background: rgba(56,189,248,0.05); border: 1px solid rgba(56,189,248,0.2); border-radius: 8px; padding: 12px 14px;">
+                <div>
+                  <div style="font-weight:700; font-size:12.5px; color:#fff;">🛡️ Two-Factor Authentication (2FA)</div>
+                  <div style="font-size:11px; color:var(--muted); margin-top:2px;">Protect your account with RFC 6238 TOTP authenticator app verification.</div>
+                </div>
+                <button type="button" class="btn-pill-toggle" id="btn-jump-to-2fa" style="font-size:11.5px; padding:6px 14px; color:var(--accent-cyan, #38bdf8); border-color:rgba(56,189,248,0.4); white-space:nowrap;">Configure 2FA →</button>
+              </div>
             </div>
           </div>
         </div>
@@ -4693,6 +4702,10 @@
                   <button type="button" id="btn-disable-2fa" class="suite-toolkit-btn danger" style="padding: 8px 16px; font-size: 12px; display: none;">
                     Disable 2FA
                   </button>
+                </div>
+                <div style="margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                  <div style="font-size: 11px; color: var(--muted);">Looking to change your admin username, password, or API automation keys?</div>
+                  <button type="button" class="btn-pill-toggle" id="btn-jump-to-security" style="font-size: 11px; padding: 5px 12px; color: #fff;">Admin Credentials & Password →</button>
                 </div>
               </div>
             </div>

@@ -1733,6 +1733,10 @@ export const DockManager = {
       this.windows[id].el.style.removeProperty('display');
 
       const el = this.windows[id].el;
+      el.classList.remove('workspace-hidden');
+      const curWs = (typeof getCurrentWorkspace === 'function') ? getCurrentWorkspace() : (_currentWorkspace || 1);
+      el.dataset.workspace = String(curWs);
+
       if (el.classList.contains('os-window') || el.classList.contains('file-manager-window') || el.classList.contains('smart-modal-backdrop')) {
         el.style.setProperty('display', 'flex', 'important');
       }
@@ -1741,6 +1745,8 @@ export const DockManager = {
         ? el
         : el.querySelector('.smart-modal-window, .chassis-front-panel, .os-window, .file-manager-window, .mgmt-app-window') || el;
       if (winEl) {
+        winEl.classList.remove('workspace-hidden');
+        winEl.dataset.workspace = String(curWs);
         winEl.classList.remove('window-minimized');
         winEl.style.removeProperty('display');
         bringToFront(winEl);
@@ -2503,13 +2509,25 @@ export function toggleUserProfileFlyout(anchorEl) {
       import('./auth.js').then((m) => m.lockDesktop());
     });
 
-    const openMgmtPane = (pane) => {
+    const openMgmtPane = (pane, subtab = null) => {
+      const curWs = (typeof getCurrentWorkspace === 'function') ? getCurrentWorkspace() : (_currentWorkspace || 1);
+      const mgmtOverlay = document.getElementById('management-modal-overlay');
+      const mgmtWin = document.getElementById('management-window');
+      if (mgmtOverlay) {
+        mgmtOverlay.classList.remove('workspace-hidden');
+        mgmtOverlay.dataset.workspace = String(curWs);
+      }
+      if (mgmtWin) {
+        mgmtWin.classList.remove('workspace-hidden');
+        mgmtWin.dataset.workspace = String(curWs);
+      }
       if (typeof window.openManagementWindow === 'function') {
-        window.openManagementWindow(pane);
+        window.openManagementWindow(pane, null, subtab);
       } else {
-        import('./management.js').then(() => {
+        import('./management.js').then((m) => {
+          if (typeof m.initManagement === 'function') m.initManagement();
           if (typeof window.openManagementWindow === 'function') {
-            window.openManagementWindow(pane);
+            window.openManagementWindow(pane, null, subtab);
           } else {
             document.getElementById('management-desktop-icon')?.click();
           }
@@ -2517,19 +2535,19 @@ export function toggleUserProfileFlyout(anchorEl) {
           document.getElementById('management-desktop-icon')?.click();
         });
       }
-      ZettEventBus.emit('window:open', { id: 'management', pane: pane });
+      ZettEventBus.emit('window:open', { id: 'management', pane: pane, subtab: subtab });
     };
 
     document.getElementById('btn-flyout-users').addEventListener('click', () => {
       flyout.style.display = 'none';
       resetFlyoutTrigger();
-      openMgmtPane('mgmt-pane-users');
+      openMgmtPane('mgmt-pane-users', 'users-pane-list');
     });
 
     document.getElementById('btn-flyout-security').addEventListener('click', () => {
       flyout.style.display = 'none';
       resetFlyoutTrigger();
-      openMgmtPane('mgmt-pane-security');
+      openMgmtPane('mgmt-pane-users', 'users-pane-2fa');
     });
 
     document.getElementById('btn-flyout-switch').addEventListener('click', () => {

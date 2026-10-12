@@ -5229,7 +5229,7 @@ export function initManagement() {
     }
   }
 
-  function triggerSubTabLoad(paneId) {
+  function triggerSubTabLoad(paneId, subTabId = null) {
     if (paneId === 'mgmt-pane-widgets') {
       if (typeof syncWidgetSettingsUI === 'function') syncWidgetSettingsUI();
     } else if (paneId === 'mgmt-pane-dock') {
@@ -5287,14 +5287,14 @@ export function initManagement() {
     } else if (paneId === 'mgmt-pane-notifications') {
       fetchAndRenderNotificationConfig();
     } else if (paneId === 'mgmt-pane-users') {
-      import('./users.js').then((m) => m.loadUsersPane());
+      import('./users.js').then((m) => m.loadUsersPane(subTabId || 'users-pane-list'));
     } else if (paneId === 'mgmt-pane-about') {
       fetchAndRenderSystemAbout();
     }
   }
 
 
-  function showSection(targetId, specificPane = null) {
+  function showSection(targetId, specificPane = null, subTabId = null) {
     const earlyStyle = document.getElementById('zettnas-mgmt-early-style');
     if (earlyStyle) earlyStyle.remove();
     let desiredSubPane = specificPane;
@@ -5366,7 +5366,7 @@ export function initManagement() {
         parentCard.querySelectorAll('.mgmt-tab-pane').forEach((p) => {
           p.style.display = p.id === desiredSubPane ? 'block' : 'none';
         });
-        triggerSubTabLoad(desiredSubPane);
+        triggerSubTabLoad(desiredSubPane, subTabId);
       } else {
         let activeTabBtn = parentCard.querySelector('.mgmt-inner-tab.active');
         if (!activeTabBtn) {
@@ -5381,12 +5381,12 @@ export function initManagement() {
           parentCard.querySelectorAll('.mgmt-tab-pane').forEach((p) => {
             p.style.display = p.id === paneId ? 'block' : 'none';
           });
-          triggerSubTabLoad(paneId);
+          triggerSubTabLoad(paneId, subTabId);
         } else {
           const singlePane = parentCard.querySelector('.mgmt-tab-pane');
           if (singlePane) {
             singlePane.style.display = 'block';
-            triggerSubTabLoad(singlePane.id);
+            triggerSubTabLoad(singlePane.id, subTabId);
           }
         }
       }
@@ -5473,9 +5473,18 @@ export function initManagement() {
   }
 
   // Global helper to open / focus Management window
-  window.openManagementWindow = (sectionId = null, paneId = null) => {
+  window.openManagementWindow = (sectionId = null, paneId = null, subTabId = null) => {
+    overlay.classList.remove('workspace-hidden');
+    win.classList.remove('workspace-hidden');
+
+    const curWs = (typeof getCurrentWorkspace === 'function')
+      ? getCurrentWorkspace()
+      : ((typeof window !== 'undefined' && window.getCurrentWorkspace) ? window.getCurrentWorkspace() : 1);
+    overlay.dataset.workspace = String(curWs);
+    win.dataset.workspace = String(curWs);
+
     if (sectionId) {
-      showSection(sectionId, paneId);
+      showSection(sectionId, paneId, subTabId);
     } else {
       showHub();
     }
@@ -5483,13 +5492,19 @@ export function initManagement() {
     if (!DockManager.windows['management']) {
       DockManager.register('management', overlay, '#i-management', 'Management');
     }
-    if (DockManager.windows['management']?.minimized || overlay.style.display === 'none' || !overlay.classList.contains('open')) {
-      DockManager.restore('management');
-      overlay.style.removeProperty('display');
-      overlay.classList.add('open');
-      win.classList.remove('window-minimized');
-      if (state.latestStats) updateManagementTelemetry(state.latestStats);
+    if (DockManager.windows['management']) {
+      DockManager.windows['management'].minimized = false;
+      DockManager.windows['management'].closed = false;
     }
+    DockManager.restore('management');
+    overlay.style.removeProperty('display');
+    overlay.style.display = 'flex';
+    overlay.classList.add('open');
+    win.classList.remove('window-minimized');
+    win.style.removeProperty('display');
+
+    if (state.latestStats) updateManagementTelemetry(state.latestStats);
+
     bringToFront(win);
     win.classList.remove('window-focus-pulse');
     void win.offsetWidth; // Reflow
@@ -5501,17 +5516,21 @@ export function initManagement() {
       const cBtn = document.getElementById('management-close');
       if (cBtn) cBtn.click();
     });
+
+    if (window.DockManager) {
+      window.DockManager.render();
+    }
   };
 
   // Explicit helper for section and subpane deep-linking
-  window.openManagementSection = (sectionId, paneId = null) => {
-    window.openManagementWindow(sectionId, paneId);
+  window.openManagementSection = (sectionId, paneId = null, subTabId = null) => {
+    window.openManagementWindow(sectionId, paneId, subTabId);
   };
 
   // Support window:open event bus deep-linking
   ZettEventBus.on('window:open', (payload) => {
     if (payload && (payload.id === 'management' || payload.id === 'management-window')) {
-      window.openManagementWindow(payload.section || payload.pane, payload.pane);
+      window.openManagementWindow(payload.section || payload.pane, payload.pane, payload.subtab);
     }
   });
 

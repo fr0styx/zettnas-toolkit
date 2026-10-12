@@ -147,4 +147,48 @@ describe('Phase 5: Multi-User Identity, RBAC & Desktop Lock UI', () => {
     expect(getCurrentUser()).toBe(null);
     expect(document.documentElement.classList.contains('auth-required')).toBe(true);
   });
+
+  it('switchUsersSubtab switches active subtab and subpane visibility', async () => {
+    const { switchUsersSubtab } = await import('../components/users.js');
+
+    switchUsersSubtab('users-pane-2fa');
+    expect(document.getElementById('users-pane-2fa').style.display).toBe('block');
+    expect(document.getElementById('users-pane-list').style.display).toBe('none');
+
+    const activeBtn = document.querySelector('.users-nav-btn.active');
+    expect(activeBtn).not.toBeNull();
+    expect(activeBtn.dataset.tab).toBe('users-pane-2fa');
+
+    switchUsersSubtab('users-pane-list');
+    expect(document.getElementById('users-pane-list').style.display).toBe('block');
+    expect(document.getElementById('users-pane-2fa').style.display).toBe('none');
+  });
+
+  it('toggleUserProfileFlyout triggers openManagementWindow for users and 2FA tabs', async () => {
+    const { toggleUserProfileFlyout } = await import('../components/dock.js');
+
+    const topbarPill = document.createElement('button');
+    topbarPill.id = 'topbar-user-pill';
+    document.body.appendChild(topbarPill);
+
+    const openMgmtSpy = vi.fn();
+    window.openManagementWindow = openMgmtSpy;
+
+    toggleUserProfileFlyout(topbarPill);
+
+    const flyout = document.getElementById('user-profile-flyout');
+    expect(flyout).not.toBeNull();
+
+    const btnUsers = document.getElementById('btn-flyout-users');
+    const btnSecurity = document.getElementById('btn-flyout-security');
+    expect(btnUsers).not.toBeNull();
+    expect(btnSecurity).not.toBeNull();
+
+    btnUsers.click();
+    expect(openMgmtSpy).toHaveBeenCalledWith('mgmt-pane-users', null, 'users-pane-list');
+
+    openMgmtSpy.mockClear();
+    btnSecurity.click();
+    expect(openMgmtSpy).toHaveBeenCalledWith('mgmt-pane-users', null, 'users-pane-2fa');
+  });
 });

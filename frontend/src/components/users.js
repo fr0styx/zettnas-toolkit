@@ -113,15 +113,7 @@ export function initUsersManagement() {
   const subtabs = document.querySelectorAll('.users-nav-btn');
   subtabs.forEach((btn) => {
     btn.onclick = () => {
-      subtabs.forEach((b) => b.classList.remove('active'));
-      btn.classList.add('active');
-      const targetId = btn.dataset.tab;
-      document.querySelectorAll('.users-subpane').forEach((pane) => {
-        pane.style.display = pane.id === targetId ? 'block' : 'none';
-      });
-      if (targetId === 'users-pane-list') loadUsersList();
-      if (targetId === 'users-pane-sessions') loadSessionsList();
-      if (targetId === 'users-pane-2fa') load2FAStatus();
+      switchUsersSubtab(btn.dataset.tab);
     };
   });
 
@@ -143,6 +135,26 @@ export function initUsersManagement() {
 
   const btnDisable2fa = document.getElementById('btn-disable-2fa');
   if (btnDisable2fa) btnDisable2fa.onclick = disable2FA;
+
+  const btnJumpToSecurity = document.getElementById('btn-jump-to-security');
+  if (btnJumpToSecurity && !btnJumpToSecurity.dataset.bound) {
+    btnJumpToSecurity.dataset.bound = 'true';
+    btnJumpToSecurity.onclick = () => {
+      if (typeof window.openManagementWindow === 'function') {
+        window.openManagementWindow('mgmt-pane-security');
+      }
+    };
+  }
+
+  const btnJumpTo2fa = document.getElementById('btn-jump-to-2fa');
+  if (btnJumpTo2fa && !btnJumpTo2fa.dataset.bound) {
+    btnJumpTo2fa.dataset.bound = 'true';
+    btnJumpTo2fa.onclick = () => {
+      if (typeof window.openManagementWindow === 'function') {
+        window.openManagementWindow('mgmt-pane-users', null, 'users-pane-2fa');
+      }
+    };
+  }
 
   // Close modals via buttons
   document.querySelectorAll('.modal-close-btn').forEach((btn) => {
@@ -173,12 +185,23 @@ export function initUsersManagement() {
   });
 }
 
-export async function loadUsersPane() {
+export function switchUsersSubtab(targetId) {
+  const subtabs = document.querySelectorAll('.users-nav-btn');
+  subtabs.forEach((btn) => {
+    btn.classList.toggle('active', btn.dataset.tab === targetId);
+  });
+  document.querySelectorAll('.users-subpane').forEach((pane) => {
+    pane.style.display = pane.id === targetId ? 'block' : 'none';
+  });
+  if (targetId === 'users-pane-list') loadUsersList();
+  if (targetId === 'users-pane-sessions') loadSessionsList();
+  if (targetId === 'users-pane-2fa') load2FAStatus();
+}
+
+export async function loadUsersPane(defaultSubtab = 'users-pane-list') {
   initUsersManagement();
   await fetchCurrentProfile();
-  loadUsersList();
-  loadSessionsList();
-  load2FAStatus();
+  switchUsersSubtab(defaultSubtab);
 }
 
 export async function loadUsersList() {
