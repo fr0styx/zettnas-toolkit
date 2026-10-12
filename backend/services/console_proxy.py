@@ -1,0 +1,140 @@
+"""
+ZettNAS VM Console Proxy Service
+Provides multiplexed bidirectional streaming between WebSockets and QEMU VNC / serial sockets.
+Supports RFB binary frames for graphical consoles and ANSI text for serial PTY consoles.
+"""
+
+import asyncio
+import os
+from typing import Optional
+from fastapi import WebSocket, WebSocketDisconnect
+from backend.config import logger
+
+
+async def stream_socket_to_websocket(ws: WebSocket, host: str, port: int, timeout_sec: float = 3.0):
+    """
+    Bridges a TCP RFB (VNC) socket to an active WebSocket connection.
+    Forwards binary frame buffers from QEMU to browser and user pointer/keyboard events back to QEMU.
+    """
+    try:
+        reader, writer = await asyncio.wait_for(
+            asyncio.open_connection(host, port),
+            timeout=timeout_sec,
+        )
+    except asyncio.TimeoutError:
+        logger.warning(f"[ConsoleProxy] Timeout connecting to VM VNC socket at {host}:{port}")
+        await ws.close(code=1011, reason=f"VNC server at {host}:{port} timed out. VM may still be booting.")
+        return
+    except Exception as e:
+        logger.warning(f"[ConsoleProxy] Failed connecting to VM VNC socket at {host}:{port} - {e}")
+        await ws.close(code=1011, reason=f"Cannot connect to VM display socket: {e}")
+        return
+
+    async def forward_tcp_to_ws():
+        try:
+            while True:
+                data = await reader.read(65536)
+                if not data:
+                    break
+                await ws.send_bytes(data)
+        except Exception:
+            pass
+
+    async def forward_ws_to_tcp():
+        try:
+            while True:
+                message = await ws.receive()
+                if message.get("type") == "websocket.disconnect":
+                    break
+                if "bytes" in message and message["bytes"]:
+                    writer.write(message["bytes"])
+                    await writer.drain()
+                elif "text" in message and message["text"]:
+                    writer.write(message["text"].encode("utf-8"))
+                    await writer.drain()
+        except WebSocketDisconnect:
+            pass
+        except Exception:
+            pass
+
+    t1 = asyncio.create_task(forward_tcp_to_ws())
+    t2 = asyncio.create_task(forward_ws_to_tcp())
+    try:
+        done, pending = await asyncio.wait([t1, t2], return_when=asyncio.FIRST_COMPLETED)
+        for t in pending:
+            t.cancel()
+    finally:
+        writer.close()
+        try:
+            await writer.wait_closed()
+        except Exception:
+            pass
+
+
+async def stream_unix_socket_to_websocket(ws: WebSocket, socket_path: str, timeout_sec: float = 3.0):
+    """
+    Bridges a UNIX domain socket (QEMU guest serial PTY / chardev) to an active WebSocket connection.
+    Transmits ANSI terminal I/O for interactive serial console access.
+    """
+    if not os.path.exists(socket_path):
+        banner = (
+            f"\r\n\x1b[33m[ZettNAS Serial Console]\x1b[0m Waiting for serial socket at '{socket_path}'...\r\n"
+            f"\x1b[90mEnsure VM has '-serial unix:{socket_path},server,nowait' configured.\x1b[0m\r\n"
+        )
+        await ws.send_text(banner)
+        await asyncio.sleep(1.0)
+        await ws.close(code=1011, reason=f"Serial socket '{socket_path}' not available.")
+        return
+
+    try:
+        reader, writer = await asyncio.wait_for(
+            asyncio.open_unix_connection(socket_path),
+            timeout=timeout_sec,
+        )
+    except Exception as e:
+        logger.warning(f"[ConsoleProxy] Failed opening UNIX socket {socket_path}: {e}")
+        await ws.close(code=1011, reason=f"Cannot connect to serial socket: {e}")
+        return
+
+    async def forward_sock_to_ws():
+        try:
+            while True:
+                data = await reader.read(4096)
+                if not data:
+                    break
+                try:
+                    await ws.send_text(data.decode("utf-8", errors="replace"))
+                except Exception:
+                    await ws.send_bytes(data)
+        except Exception:
+            pass
+
+    async def forward_ws_to_sock():
+        try:
+            while True:
+                message = await ws.receive()
+                if message.get("type") == "websocket.disconnect":
+                    break
+                if "text" in message and message["text"]:
+                    writer.write(message["text"].encode("utf-8"))
+                    await writer.drain()
+                elif "bytes" in message and message["bytes"]:
+                    writer.write(message["bytes"])
+                    await writer.drain()
+        except WebSocketDisconnect:
+            pass
+        except Exception:
+            pass
+
+    t1 = asyncio.create_task(forward_sock_to_ws())
+    t2 = asyncio.create_task(forward_ws_to_sock())
+    try:
+        done, pending = await asyncio.wait([t1, t2], return_when=asyncio.FIRST_COMPLETED)
+        for t in pending:
+            t.cancel()
+    finally:
+        writer.close()
+        try:
+            await writer.wait_closed()
+        except Exception:
+            pass

@@ -8,6 +8,8 @@ import hashlib
 import os
 import re
 import shutil
+import signal
+import subprocess
 import threading
 import time
 import urllib.request
@@ -917,6 +919,220 @@ def create_vm(req: VmCreateRequest, principal: AuthenticatedPrincipal = Depends(
     return new_vm
 
 
+_RUNNING_QEMU_PROCS: Dict[str, Dict[str, Any]] = {}
+
+
+def _get_qemu_vnc_port(vms: List[Dict[str, Any]], vm_id: str) -> int:
+    idx = next((i for i, v in enumerate(vms) if v["id"] == vm_id), 0)
+    return 5900 + idx + 1
+
+
+def _is_qemu_process_alive(vm_id: str) -> bool:
+    if vm_id in _RUNNING_QEMU_PROCS:
+        entry = _RUNNING_QEMU_PROCS[vm_id]
+        proc = entry.get("proc")
+        if proc:
+            if proc.poll() is None:
+                return True
+            else:
+                _RUNNING_QEMU_PROCS.pop(vm_id, None)
+                return False
+        pid = entry.get("pid")
+        if pid:
+            try:
+                os.kill(pid, 0)
+                return True
+            except OSError:
+                _RUNNING_QEMU_PROCS.pop(vm_id, None)
+                return False
+
+    pid_file = os.path.join(DATA_DIR, "vms", vm_id, "qemu.pid")
+    if os.path.exists(pid_file):
+        try:
+            with open(pid_file, "r") as f:
+                pid = int(f.read().strip())
+            os.kill(pid, 0)
+            return True
+        except (ValueError, OSError):
+            try:
+                os.remove(pid_file)
+            except OSError:
+                pass
+    return False
+
+
+def _start_qemu(target_vm: Dict[str, Any], vnc_port: int) -> bool:
+    vm_id = target_vm["id"]
+    if _is_qemu_process_alive(vm_id):
+        return True
+
+    qemu_bin = shutil.which("qemu-system-x86_64") or "/usr/bin/qemu-system-x86_64"
+    if not os.path.exists(qemu_bin) and not shutil.which(qemu_bin):
+        logger.warning(f"qemu-system-x86_64 not found to start VM '{target_vm['name']}'.")
+        return False
+
+    vm_dir = os.path.join(DATA_DIR, "vms", vm_id)
+    os.makedirs(vm_dir, exist_ok=True)
+    disk_path = target_vm.get("disk_path") or os.path.join(vm_dir, "disk.qcow2")
+    target_vm["disk_path"] = disk_path
+
+    if not os.path.exists(disk_path):
+        size_gb = int(target_vm.get("disk_size_gb", 32) or 32)
+        qemu_img = shutil.which("qemu-img") or "/usr/bin/qemu-img"
+        try:
+            subprocess.run([qemu_img, "create", "-f", "qcow2", disk_path, f"{size_gb}G"], check=True)
+        except Exception as e:
+            logger.warning(f"Could not create qcow2 disk: {e}")
+
+    has_kvm = False
+    for kvm_path in ("/dev/kvm", "/host/dev/kvm"):
+        if os.path.exists(kvm_path) and os.access(kvm_path, os.R_OK | os.W_OK):
+            has_kvm = True
+            break
+
+    ram_mb = int(float(target_vm.get("ram_gb", 2.0)) * 1024)
+    vcpus = str(target_vm.get("vcpus", 2))
+    vnc_display = max(1, vnc_port - 5900)
+
+    sock_path = f"/tmp/{vm_id}-serial.sock"
+    if os.path.exists(sock_path):
+        try:
+            os.remove(sock_path)
+        except OSError:
+            pass
+
+    cmd = [
+        qemu_bin,
+        "-name",
+        target_vm["name"],
+        "-m",
+        str(ram_mb),
+        "-smp",
+        vcpus,
+    ]
+    if has_kvm:
+        cmd.extend(["-enable-kvm", "-cpu", "host"])
+    else:
+        cmd.extend(["-accel", "tcg"])
+
+    if os.path.exists(disk_path):
+        cmd.extend(["-drive", f"file={disk_path},if=virtio,format=qcow2"])
+
+    iso_path = target_vm.get("iso_path")
+    if iso_path and os.path.exists(iso_path):
+        cmd.extend(["-cdrom", iso_path, "-boot", "order=dc,menu=on"])
+    else:
+        cmd.extend(["-boot", "order=c"])
+
+    cmd.extend(["-vnc", f"127.0.0.1:{vnc_display}", "-display", "none"])
+    cmd.extend(["-chardev", f"socket,id=serial0,path={sock_path},server=on,wait=off", "-serial", "chardev:serial0"])
+    ssh_fwd_port = 2220 + vnc_display
+    target_vm["ssh_port"] = ssh_fwd_port
+    cmd.extend(["-netdev", f"user,id=net0,hostfwd=tcp::{ssh_fwd_port}-:22", "-device", "virtio-net-pci,netdev=net0"])
+
+    for idx_s, share in enumerate(target_vm.get("host_shares", [])):
+        hp = share.get("host_path")
+        tag = share.get("mount_tag") or f"share{idx_s}"
+        mode = share.get("mode", "rw")
+        ro_flag = "readonly=on" if mode == "ro" else "readonly=off"
+        if hp and os.path.exists(hp):
+            cmd.extend(
+                [
+                    "-fsdev",
+                    f"local,id=fsdev{idx_s},path={hp},security_model=none,{ro_flag}",
+                    "-device",
+                    f"virtio-9p-pci,fsdev=fsdev{idx_s},mount_tag={tag}",
+                ]
+            )
+
+    for idx_d, sdisk in enumerate(target_vm.get("secondary_disks", [])):
+        sd_path = sdisk.get("path")
+        if not sd_path:
+            sd_path = os.path.join(vm_dir, f"{sdisk.get('name', f'disk_{idx_d}')}.qcow2")
+            sdisk["path"] = sd_path
+        if not os.path.exists(sd_path):
+            try:
+                qemu_img = shutil.which("qemu-img") or "/usr/bin/qemu-img"
+                subprocess.run([qemu_img, "create", "-f", "qcow2", sd_path, f"{sdisk.get('size_gb', 20)}G"], check=True)
+            except Exception:
+                pass
+        bus = sdisk.get("bus", "virtio")
+        if os.path.exists(sd_path):
+            cmd.extend(["-drive", f"file={sd_path},if={bus},format=qcow2"])
+
+    try:
+        proc = subprocess.Popen(
+            cmd,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+        )
+        time.sleep(0.3)
+        if proc.poll() is not None:
+            _, err = proc.communicate()
+            err_msg = err.decode("utf-8", errors="ignore") if err else "process exited immediately"
+            logger.warning(f"QEMU failed to start for VM '{target_vm['name']}': {err_msg}")
+            return False
+
+        _RUNNING_QEMU_PROCS[vm_id] = {
+            "proc": proc,
+            "pid": proc.pid,
+            "vnc_port": vnc_port,
+            "started_at": time.time(),
+        }
+        with open(os.path.join(vm_dir, "qemu.pid"), "w") as f:
+            f.write(str(proc.pid))
+        return True
+    except Exception as e:
+        logger.warning(f"Error starting QEMU for VM '{target_vm['name']}': {e}")
+        return False
+
+
+def _stop_qemu(vm_id: str, force: bool = False):
+    entry = _RUNNING_QEMU_PROCS.pop(vm_id, None)
+    proc = entry.get("proc") if entry else None
+    pid = entry.get("pid") if entry else None
+
+    if not pid:
+        pid_file = os.path.join(DATA_DIR, "vms", vm_id, "qemu.pid")
+        if os.path.exists(pid_file):
+            try:
+                with open(pid_file, "r") as f:
+                    pid = int(f.read().strip())
+            except Exception:
+                pass
+
+    if proc and proc.poll() is None:
+        if force:
+            proc.kill()
+        else:
+            proc.terminate()
+            try:
+                proc.wait(timeout=2.0)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+
+    if pid:
+        sig = signal.SIGKILL if force else signal.SIGTERM
+        try:
+            os.kill(pid, sig)
+        except OSError:
+            pass
+
+    pid_file = os.path.join(DATA_DIR, "vms", vm_id, "qemu.pid")
+    if os.path.exists(pid_file):
+        try:
+            os.remove(pid_file)
+        except OSError:
+            pass
+
+    sock_path = f"/tmp/{vm_id}-serial.sock"
+    if os.path.exists(sock_path):
+        try:
+            os.remove(sock_path)
+        except OSError:
+            pass
+
+
 @router.get("/{vm_id}", dependencies=[Depends(require_scope("system:view", "storage:read"))])
 def get_vm_detail(vm_id: str):
     """Retrieves detailed virtual machine configuration, attachments, and runtime state."""
@@ -924,8 +1140,7 @@ def get_vm_detail(vm_id: str):
     target = next((v for v in vms if v["id"] == vm_id), None)
     if not target:
         raise HTTPException(status_code=404, detail="Virtual machine not found.")
-    idx = next((i for i, v in enumerate(vms) if v["id"] == vm_id), 0)
-    vnc_port = 5900 + idx
+    vnc_port = _get_qemu_vnc_port(vms, vm_id)
     detail = dict(target)
     detail["vnc_port"] = vnc_port
     ip = target.get("ip_address") or ""
@@ -948,20 +1163,30 @@ def get_vm_connection_info(
     if not target_vm:
         raise HTTPException(status_code=404, detail="Virtual machine not found.")
 
-    idx = next((i for i, v in enumerate(vms) if v["id"] == vm_id), 0)
-    vnc_port = 5900 + idx
+    vnc_port = _get_qemu_vnc_port(vms, vm_id)
     ip = target_vm.get("ip_address") or ""
+    ssh_port = target_vm.get("ssh_port") or (2220 + (vnc_port - 5900))
+    is_iso_boot = bool(target_vm.get("iso_path"))
+
+    ssh_cmd = ""
+    if not is_iso_boot:
+        if ip:
+            ssh_cmd = f"ssh root@{ip}"
+        else:
+            ssh_cmd = f"ssh -p {ssh_port} root@10.40.30.249"
 
     return {
         "vm_id": vm_id,
         "name": target_vm["name"],
         "state": target_vm.get("state", "stopped"),
         "ip_address": ip,
-        "ssh_command": f"ssh root@{ip}" if ip else "",
+        "ssh_port": ssh_port,
+        "ssh_command": ssh_cmd,
         "vnc_port": vnc_port,
         "vnc_uri": f"vnc://10.40.30.249:{vnc_port}",
         "console_url": f"/api/vms/{vm_id}/console",
         "has_ip": bool(ip),
+        "is_iso_boot": is_iso_boot,
     }
 
 
@@ -1020,12 +1245,17 @@ async def websocket_vm_console(websocket: WebSocket, vm_id: str):
         await websocket.close(code=1008, reason="Unauthorized or expired console ticket")
         return
 
-    await websocket.accept()
+    subprotocol = None
+    if "binary" in websocket.headers.get("sec-websocket-protocol", ""):
+        subprotocol = "binary"
+    await websocket.accept(subprotocol=subprotocol)
 
     vms = _load_vms()
     target = next((v for v in vms if v["id"] == vm_id), None)
-    idx = vms.index(target) if target else 0
-    vnc_port = 5900 + idx
+    vnc_port = _get_qemu_vnc_port(vms, vm_id)
+    if target and target.get("state") == "running" and not _is_qemu_process_alive(vm_id):
+        _start_qemu(target, vnc_port)
+
     vnc_host = "127.0.0.1"
 
     from backend.services.console_proxy import stream_socket_to_websocket
@@ -1043,9 +1273,15 @@ async def websocket_vm_serial(websocket: WebSocket, vm_id: str):
 
     await websocket.accept()
 
+    vms = _load_vms()
+    target = next((v for v in vms if v["id"] == vm_id), None)
+    if target and target.get("state") == "running" and not _is_qemu_process_alive(vm_id):
+        vnc_port = _get_qemu_vnc_port(vms, vm_id)
+        _start_qemu(target, vnc_port)
+
     sock_candidates = [
-        f"/var/run/qemu/{vm_id}-serial.sock",
         f"/tmp/{vm_id}-serial.sock",
+        f"/var/run/qemu/{vm_id}-serial.sock",
         f"/tmp/zettnas-vms/{vm_id}/serial.sock",
     ]
     sock_path = next((p for p in sock_candidates if os.path.exists(p)), None)
@@ -1071,13 +1307,18 @@ def execute_vm_action(
 
     action = req.action
     current_state = target_vm.get("state", "stopped")
+    vnc_port = _get_qemu_vnc_port(vms, vm_id)
 
     if action == "start":
+        _start_qemu(target_vm, vnc_port)
         target_vm["state"] = "running"
         target_vm["uptime_seconds"] = 1
-        if not target_vm.get("ip_address"):
+        if target_vm.get("iso_path"):
+            target_vm["ip_address"] = ""
+        elif not target_vm.get("ip_address"):
             target_vm["ip_address"] = f"192.168.1.{100 + (hash(vm_id) % 150)}"
     elif action == "stop":
+        _stop_qemu(vm_id, force=False)
         target_vm["state"] = "stopped"
         target_vm["uptime_seconds"] = 0
     elif action == "pause":
@@ -1087,6 +1328,7 @@ def execute_vm_action(
         if current_state == "paused":
             target_vm["state"] = "running"
     elif action == "force_off":
+        _stop_qemu(vm_id, force=True)
         target_vm["state"] = "stopped"
         target_vm["uptime_seconds"] = 0
 
@@ -1106,6 +1348,7 @@ def delete_vm(vm_id: str, principal: AuthenticatedPrincipal = Depends(get_curren
     if target.get("state") == "running":
         raise HTTPException(status_code=400, detail="Cannot delete a running virtual machine. Stop it first.")
 
+    _stop_qemu(vm_id, force=True)
     vms = [v for v in vms if v["id"] != vm_id]
     _save_vms(vms)
     add_event("info", "VM Removed", f"VM '{target['name']}' was deleted.")

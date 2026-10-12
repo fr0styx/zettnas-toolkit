@@ -1,0 +1,1 @@
+import{F as e}from"./dashboard-BMHI20ny.js";export{e as initManagement};

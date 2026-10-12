@@ -292,7 +292,8 @@ async def post_tailscale_up(req: TailscaleUpRequest):
         accept_routes=req.accept_routes,
     )
     if res.get("status") == "error":
-        raise HTTPException(status_code=400, detail=res.get("output", "Tailscale connection failed"))
+        detail = res.get("output") or res.get("message") or "Tailscale connection failed"
+        raise HTTPException(status_code=400, detail=detail)
     return res
 
 
@@ -303,7 +304,8 @@ async def post_tailscale_down():
 
     res = await asyncio.to_thread(execute_tailscale_down)
     if res.get("status") == "error":
-        raise HTTPException(status_code=400, detail=res.get("output", "Tailscale disconnection failed"))
+        detail = res.get("output") or res.get("message") or "Tailscale disconnection failed"
+        raise HTTPException(status_code=400, detail=detail)
     return res
 
 

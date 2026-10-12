@@ -50,6 +50,8 @@ services:
       - 'c 226:* rwm'   # DRI / GPU rendering (/dev/dri/*)
       - 'c 188:* rwm'   # USB Serial (/dev/ttyUSB*)
       - 'c 166:* rwm'   # ACM Serial (/dev/ttyACM*)
+      - 'c 10:232 rwm'  # KVM hardware virtualization (/dev/kvm)
+      - 'c 10:* rwm'    # Misc character devices (KVM, vhost-net)
       - 'b 8:* rwm'     # SCSI/SATA block devices (/dev/sd*)
       - 'b 259:* rwm'   # NVMe block devices (/dev/nvme*)
     devices:

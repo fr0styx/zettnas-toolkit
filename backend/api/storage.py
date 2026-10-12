@@ -4,6 +4,7 @@ Platform Abstraction Layer (PAL) endpoints for storage pools, array topology,
 and network shares (Samba/NFS/WebDAV).
 """
 
+import logging
 from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
@@ -13,6 +14,8 @@ from backend.hardware.pal_storage import (
     PlatformCapabilityError,
     get_storage_platform,
 )
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/storage", tags=["Storage Subsystem & PAL"])
 
@@ -28,6 +31,16 @@ class StoragePoolCreateRequest(BaseModel):
     profile: str = "raid1"
     disks: List[str] = Field(default_factory=list)
     mountpoint: str = ""
+
+
+class StoragePoolExportRequest(BaseModel):
+    force: bool = False
+
+
+class StoragePoolImportRequest(BaseModel):
+    pool_id: str
+    fs_type: str = "zfs"
+    target_mount: Optional[str] = None
 
 
 class StorageShareCreateRequest(BaseModel):
@@ -226,6 +239,62 @@ def delete_storage_pool(pool_id: str) -> Dict[str, Any]:
         return adapter.destroy_pool(pool_id=pool_id)
     except PlatformCapabilityError as e:
         raise HTTPException(status_code=403, detail=str(e))
+
+
+@router.post(
+    "/pools/{pool_id}/export",
+    dependencies=[Depends(require_scope("storage:admin"))],
+)
+def export_storage_pool(pool_id: str, req: StoragePoolExportRequest = StoragePoolExportRequest()) -> Dict[str, Any]:
+    """
+    Gracefully flushes dirty write cache, terminates active handles,
+    and exports/unmounts a storage pool for safe physical detachment.
+    """
+    adapter = get_storage_platform()
+    try:
+        return adapter.export_pool(pool_id=pool_id, force=req.force)
+    except PlatformCapabilityError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except RuntimeError as e:
+        raise HTTPException(status_code=409, detail=str(e))
+    except Exception as e:
+        logger.error(f"[StorageAPI] Error exporting pool '{pool_id}': {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get(
+    "/pools/discover",
+    dependencies=[Depends(require_scope("storage:admin", "storage:read"))],
+)
+def discover_external_storage_pools() -> Dict[str, Any]:
+    """
+    Discovers unimported or detachable external storage pools (e.g. USB/Thunderbolt DAS).
+    """
+    adapter = get_storage_platform()
+    try:
+        discovered = adapter.discover_external_pools()
+        return {"status": "ok", "discovered_pools": discovered}
+    except Exception as e:
+        logger.warning(f"[StorageAPI] Error discovering external pools: {e}")
+        return {"status": "ok", "discovered_pools": []}
+
+
+@router.post(
+    "/pools/import",
+    dependencies=[Depends(require_scope("storage:admin"))],
+)
+def import_storage_pool(req: StoragePoolImportRequest) -> Dict[str, Any]:
+    """
+    Imports an external storage pool into the platform.
+    """
+    adapter = get_storage_platform()
+    try:
+        return adapter.import_pool(pool_id=req.pool_id, fs_type=req.fs_type, target_mount=req.target_mount)
+    except PlatformCapabilityError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except Exception as e:
+        logger.error(f"[StorageAPI] Error importing pool '{req.pool_id}': {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.delete("/shares/{name}", dependencies=[Depends(require_scope("shares:manage"))])

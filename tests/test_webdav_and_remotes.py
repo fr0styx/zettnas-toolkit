@@ -5,6 +5,7 @@ Tests for Universal WebDAV Engine and Rclone Remote Storage Subsystem (Sprint 4)
 import os
 import shutil
 import tempfile
+import time
 import unittest
 from unittest.mock import MagicMock, patch
 
@@ -155,6 +156,44 @@ class TestWebdavAndRemotes(unittest.TestCase):
         self.assertGreater(len(jobs), 0)
         self.assertEqual(jobs[-1]["id"], job["id"])
 
+    def test_rclone_create_and_delete_remote(self):
+        import configparser
+
+        res = self.rclone_engine.create_remote(
+            "my-onedrive",
+            "onedrive",
+            {
+                "token": '{"access_token": "secret-xyz", "expiry": "2030-01-01"}',
+                "drive_type": "personal",
+            },
+        )
+        self.assertEqual(res["status"], "ok")
+        self.assertEqual(res["name"], "my-onedrive")
+
+        cfg = configparser.RawConfigParser()
+        cfg.read(self.rclone_engine.config_file)
+        self.assertTrue(cfg.has_section("my-onedrive"))
+        self.assertEqual(cfg.get("my-onedrive", "type"), "onedrive")
+        self.assertEqual(cfg.get("my-onedrive", "drive_type"), "personal")
+        self.assertIn("secret-xyz", cfg.get("my-onedrive", "token"))
+
+        del_res = self.rclone_engine.delete_remote("my-onedrive")
+        self.assertEqual(del_res["status"], "ok")
+        cfg2 = configparser.RawConfigParser()
+        cfg2.read(self.rclone_engine.config_file)
+        self.assertFalse(cfg2.has_section("my-onedrive"))
+
+    @patch("shutil.which", return_value="/usr/bin/rclone")
+    @patch("subprocess.run")
+    def test_rclone_test_remote_config(self, mock_run, mock_which):
+        mock_run.return_value = MagicMock(returncode=0, stdout="file1.txt\nfolder1/\n", stderr="")
+        res = self.rclone_engine.test_remote_config(
+            "s3", {"provider": "AWS", "access_key_id": "k", "secret_access_key": "s"}
+        )
+        self.assertTrue(res["success"])
+        self.assertEqual(res["status"], "connected")
+        self.assertEqual(res["item_count"], 2)
+
 
 def test_api_webdav_status(client, auth_headers):
     resp = client.get("/api/webdav/status", headers=auth_headers)
@@ -178,6 +217,7 @@ def test_api_remotes_providers(client, auth_headers):
     data = resp.json()
     assert isinstance(data, list)
     assert any(p["type"] == "s3" for p in data)
+    assert any(p["type"] == "onedrive" for p in data)
 
 
 def test_api_remotes_list(client, auth_headers):
@@ -189,3 +229,63 @@ def test_api_remotes_list(client, auth_headers):
 def test_api_remotes_create_validation_error(client, auth_headers):
     resp = client.post("/api/remotes", json={"name": "bad name!", "type": "s3", "parameters": {}}, headers=auth_headers)
     assert resp.status_code == 400
+
+
+def test_api_remotes_test_candidate(client, auth_headers):
+    with patch("backend.services.rclone_engine.RcloneEngine.test_remote_config") as mock_test:
+        mock_test.return_value = {"status": "connected", "success": True, "item_count": 0}
+        resp = client.post("/api/remotes/test", json={"type": "s3", "parameters": {}}, headers=auth_headers)
+        assert resp.status_code == 200
+        assert resp.json()["success"] is True
+
+
+def test_api_remotes_oauth_lifecycle(client, auth_headers):
+    from backend.api.remotes import _ACTIVE_OAUTH_SESSIONS
+
+    session_id = "zos_mocktest123"
+    _ACTIVE_OAUTH_SESSIONS[session_id] = {
+        "proc": MagicMock(poll=MagicMock(return_value=None), kill=MagicMock()),
+        "provider_type": "onedrive",
+        "auth_url": "https://login.microsoftonline.com/mock",
+        "local_url": "http://127.0.0.1:53682/auth?state=xyz",
+        "port": 53682,
+        "state": "xyz",
+        "started_at": time.time(),
+        "token": None,
+        "error": None,
+        "completed": False,
+    }
+
+    # 1. Check status (in progress)
+    resp = client.get(f"/api/remotes/oauth/status/{session_id}", headers=auth_headers)
+    assert resp.status_code == 200
+    assert resp.json()["completed"] is False
+
+    # 2. Exchange code
+    _ACTIVE_OAUTH_SESSIONS[session_id]["token"] = '{"access_token": "secret_tok"}'
+    _ACTIVE_OAUTH_SESSIONS[session_id]["completed"] = True
+
+    with patch("urllib.request.urlopen"):
+        resp = client.post(
+            "/api/remotes/oauth/exchange",
+            json={"session_id": session_id, "redirect_url": "http://localhost:53682/?code=abc&state=xyz"},
+            headers=auth_headers,
+        )
+        assert resp.status_code == 200
+        assert resp.json()["status"] == "ok"
+        assert resp.json()["token"] == '{"access_token": "secret_tok"}'
+
+    # 3. Check status (completed)
+    resp = client.get(f"/api/remotes/oauth/status/{session_id}", headers=auth_headers)
+    assert resp.status_code == 200
+    assert resp.json()["completed"] is True
+
+    # 4. Cancel / cleanup
+    resp = client.delete(f"/api/remotes/oauth/{session_id}", headers=auth_headers)
+    assert resp.status_code == 200
+    assert session_id not in _ACTIVE_OAUTH_SESSIONS
+
+
+def test_api_remotes_oauth_status_not_found(client, auth_headers):
+    resp = client.get("/api/remotes/oauth/status/non_existent_session", headers=auth_headers)
+    assert resp.status_code == 404

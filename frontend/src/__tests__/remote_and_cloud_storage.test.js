@@ -204,4 +204,230 @@ describe('Sprint 4: Remote & Cloud Storage Subsystem (Frontend)', () => {
     expect(successCb).toHaveBeenCalled();
     expect(modal.style.display).toBe('none');
   });
+
+  it('handles openNewCloudRemoteModal window controls, textarea tokens, and connection test', async () => {
+    // Setup modal markup matching index.html
+    const modalHtml = `
+      <div id="modal-new-cloud-remote" class="smart-modal-backdrop os-window-overlay" style="display: none;">
+        <div class="smart-modal-window os-window cloud-remote-window" id="cloud-remote-window">
+          <div class="smart-modal-header" id="cloud-remote-window-header">
+            <span id="modal-remote-title">Connect Remote</span>
+            <div class="os-window-controls">
+              <button class="win-btn min-btn" id="modal-remote-min-btn"></button>
+              <button class="win-btn max-btn" id="modal-remote-max-btn"></button>
+              <button class="win-btn close-btn" id="modal-remote-close-btn"></button>
+            </div>
+          </div>
+          <form id="new-remote-form">
+            <select id="new-remote-provider-select"></select>
+            <div id="new-remote-provider-desc"></div>
+            <input type="text" id="new-remote-name" />
+            <div id="new-remote-dynamic-fields"></div>
+            <input type="checkbox" id="new-remote-auto-mount" checked />
+            <div id="new-remote-test-result" style="display: none;"></div>
+            <div id="new-remote-error-box" style="display: none;"></div>
+            <button type="button" id="modal-remote-cancel-btn"></button>
+            <button type="button" id="new-remote-test-btn">Test</button>
+            <button type="submit" id="new-remote-submit-btn">Save</button>
+          </form>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+    vi.spyOn(api, 'get').mockImplementation((url) => {
+      if (url === '/api/remotes/providers') {
+        return Promise.resolve([
+          {
+            type: 'onedrive',
+            name: 'Microsoft OneDrive & SharePoint',
+            category: 'Cloud Drives',
+            authorize_cmd: 'rclone authorize "onedrive"',
+            fields: [
+              { name: 'token', label: 'OAuth2 Token', type: 'textarea', required: true, help: 'Authorize help' },
+              { name: 'drive_type', label: 'Drive Type', type: 'select', options: ['personal', 'business'] },
+              { name: 'drive_id', label: 'Drive ID', type: 'text' }
+            ]
+          }
+        ]);
+      }
+      return Promise.reject(new Error(`Unknown url: ${url}`));
+    });
+
+    const postSpy = vi.spyOn(api, 'post').mockImplementation((url) => {
+      if (url === '/api/remotes/test') {
+        return Promise.resolve({ success: true, item_count: 5, items_sample: ['file.txt'] });
+      }
+      if (url === '/api/remotes') {
+        return Promise.resolve({ status: 'ok', name: 'my-onedrive', type: 'onedrive' });
+      }
+      if (url === '/api/remotes/my-onedrive/mount') {
+        return Promise.resolve({ status: 'mounted' });
+      }
+      return Promise.reject(new Error(`Unknown url: ${url}`));
+    });
+
+    const successCb = vi.fn();
+    await openNewCloudRemoteModal(successCb);
+
+    const winEl = document.getElementById('cloud-remote-window');
+    expect(winEl).not.toBeNull();
+
+    // Verify textarea rendered for token
+    const textarea = document.querySelector('#new-remote-dynamic-fields textarea[name="token"]');
+    expect(textarea).not.toBeNull();
+
+    // Verify copy button for authorize_cmd rendered
+    const copyBtn = document.querySelector('.remote-copy-cmd-btn');
+    expect(copyBtn).not.toBeNull();
+    expect(copyBtn.getAttribute('data-cmd')).toBe('rclone authorize "onedrive"');
+
+    // Test maximize toggle
+    const maxBtn = document.getElementById('modal-remote-max-btn');
+    maxBtn.click();
+    expect(winEl.dataset.maximized).toBe('true');
+    maxBtn.click();
+    expect(winEl.dataset.maximized).toBe('false');
+
+    // Test "Test Connection" button
+    const testBtn = document.getElementById('new-remote-test-btn');
+    textarea.value = '{"access_token":"mock"}';
+    testBtn.click();
+    await new Promise((r) => setTimeout(r, 20));
+
+    expect(postSpy).toHaveBeenCalledWith('/api/remotes/test', expect.objectContaining({ type: 'onedrive' }));
+    const testResult = document.getElementById('new-remote-test-result');
+    expect(testResult.textContent).toContain('Connection Verified');
+
+    // Test form submit
+    const nameInput = document.getElementById('new-remote-name');
+    nameInput.value = 'my-onedrive';
+    const form = document.getElementById('new-remote-form');
+    form.dispatchEvent(new Event('submit'));
+    await new Promise((r) => setTimeout(r, 20));
+
+    expect(postSpy).toHaveBeenCalledWith('/api/remotes', expect.objectContaining({
+      name: 'my-onedrive',
+      type: 'onedrive',
+      parameters: expect.objectContaining({ token: '{"access_token":"mock"}' })
+    }));
+    expect(postSpy).toHaveBeenCalledWith('/api/remotes/my-onedrive/mount', {});
+    expect(successCb).toHaveBeenCalled();
+  });
+
+  it('renders In-App Cloud OAuth & QR Code Assistant and exchanges code for token', async () => {
+    const modalHtml = `
+      <div id="modal-new-cloud-remote" class="smart-modal-backdrop os-window-overlay" style="display: none;">
+        <div class="smart-modal-window os-window cloud-remote-window" id="cloud-remote-window">
+          <div class="smart-modal-header" id="cloud-remote-window-header">
+            <span id="modal-remote-title">Connect Remote</span>
+            <div class="os-window-controls">
+              <button class="win-btn close-btn" id="modal-remote-close-btn"></button>
+            </div>
+          </div>
+          <form id="new-remote-form">
+            <select id="new-remote-provider-select"></select>
+            <div id="new-remote-provider-desc"></div>
+            <input type="text" id="new-remote-name" />
+            <div id="new-remote-dynamic-fields"></div>
+            <input type="checkbox" id="new-remote-auto-mount" checked />
+            <button type="submit" id="new-remote-submit-btn">Save</button>
+          </form>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+    vi.spyOn(api, 'get').mockImplementation((url) => {
+      if (url === '/api/remotes/providers') {
+        return Promise.resolve([
+          {
+            type: 'onedrive',
+            name: 'Microsoft OneDrive & SharePoint',
+            category: 'Cloud Drives',
+            authorize_cmd: 'rclone authorize "onedrive"',
+            fields: [
+              { name: 'token', label: 'OAuth2 Token', type: 'textarea', required: true },
+              { name: 'drive_type', label: 'Drive Type', type: 'select', options: ['personal', 'business'] }
+            ]
+          }
+        ]);
+      }
+      if (url.startsWith('/api/remotes/oauth/status/')) {
+        return Promise.resolve({ completed: false, token: null });
+      }
+      return Promise.reject(new Error(`Unknown url: ${url}`));
+    });
+
+    const postSpy = vi.spyOn(api, 'post').mockImplementation((url, body) => {
+      if (url === '/api/remotes/oauth/start') {
+        return Promise.resolve({
+          status: 'ok',
+          session_id: 'zos_test123',
+          provider_type: 'onedrive',
+          auth_url: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id=test',
+          redirect_port: 53682
+        });
+      }
+      if (url === '/api/remotes/oauth/exchange') {
+        return Promise.resolve({
+          status: 'ok',
+          token: '{"access_token":"mock_exchanged_token","expiry":"2026-10-13T00:00:00Z"}',
+          drive_type: 'personal',
+          session_id: body.session_id
+        });
+      }
+      return Promise.reject(new Error(`Unknown url: ${url}`));
+    });
+
+    await openNewCloudRemoteModal();
+
+    // 1. Assert Assistant Card is mounted
+    const card = document.querySelector('.oauth-assistant-card');
+    expect(card).not.toBeNull();
+    expect(card.textContent).toContain('Connect Microsoft OneDrive');
+    expect(card.textContent).toContain('No Terminal Required');
+
+    const browserBtn = document.getElementById('btn-oauth-browser');
+    const qrBtn = document.getElementById('btn-oauth-qr');
+    expect(browserBtn).not.toBeNull();
+    expect(qrBtn).not.toBeNull();
+    expect(browserBtn.textContent).toContain('1-Click Authorize with Microsoft');
+
+    // 2. Click QR Code button to trigger OAuth start & SVG generation
+    qrBtn.click();
+    await new Promise((r) => setTimeout(r, 20));
+
+    expect(postSpy).toHaveBeenCalledWith('/api/remotes/oauth/start', { provider_type: 'onedrive' });
+
+    const qrBox = document.getElementById('oauth-qr-box');
+    expect(qrBox.style.display).toBe('block');
+    const qrTarget = document.getElementById('oauth-qr-target');
+    expect(qrTarget.innerHTML).toContain('<svg');
+
+    const step2Box = document.getElementById('oauth-step2-box');
+    expect(step2Box.style.display).toBe('block');
+
+    // 3. Paste redirected URL and click Complete Authentication
+    const urlInput = document.getElementById('oauth-redirect-url');
+    const exchangeBtn = document.getElementById('btn-oauth-exchange');
+    urlInput.value = 'http://localhost:53682/?code=M.R3_mock_code&state=mock_state';
+
+    exchangeBtn.click();
+    await new Promise((r) => setTimeout(r, 20));
+
+    expect(postSpy).toHaveBeenCalledWith('/api/remotes/oauth/exchange', {
+      session_id: 'zos_test123',
+      redirect_url: 'http://localhost:53682/?code=M.R3_mock_code&state=mock_state'
+    });
+
+    // 4. Assert token textarea was auto-filled
+    const tokenTextarea = document.querySelector('textarea[name="token"]');
+    expect(tokenTextarea.value).toContain('mock_exchanged_token');
+
+    // 5. Assert status indicator shows success
+    const statusEl = document.getElementById('oauth-assistant-status');
+    expect(statusEl.textContent).toContain('Authentication Successful');
+  });
 });
+

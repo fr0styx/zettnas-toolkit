@@ -8,6 +8,7 @@ from abc import ABC, abstractmethod
 from enum import Enum
 import json
 import os
+import re
 import shutil
 import subprocess
 import time
@@ -36,6 +37,8 @@ class PlatformCapabilities(BaseModel):
     can_destroy_pools: bool = False
     can_manage_shares: bool = False
     can_trigger_scrub: bool = True
+    can_export_pools: bool = True
+    can_import_pools: bool = True
     supported_filesystems: List[str] = Field(default_factory=list)
     description: str = ""
 
@@ -215,6 +218,30 @@ class StoragePlatformAdapter(ABC):
     def get_pool_path(self, pool_id: str) -> str:
         """Returns the filesystem mountpoint path for the target storage pool."""
         ...
+
+    def export_pool(self, pool_id: str, force: bool = False) -> Dict[str, Any]:
+        """Safely flushes and exports/unmounts an external or detachable storage pool."""
+        raise PlatformCapabilityError(f"Pool export is not supported by {self.__class__.__name__}")
+
+    def import_pool(self, pool_id: str, fs_type: str = "zfs", target_mount: Optional[str] = None) -> Dict[str, Any]:
+        """Imports an external storage pool (e.g. from USB/TB DAS enclosure)."""
+        raise PlatformCapabilityError(f"Pool import is not supported by {self.__class__.__name__}")
+
+    def discover_external_pools(self) -> List[Dict[str, Any]]:
+        """Scans for unmounted/detached external storage pools available for import."""
+        return []
+
+    def _run_cmd(self, cmd: List[str]) -> Tuple[int, str, str]:
+        """Runs a system command with error capture."""
+        try:
+            res = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+            return res.returncode, res.stdout.strip(), res.stderr.strip()
+        except FileNotFoundError:
+            return 127, "", f"Command not found: {cmd[0]}"
+        except subprocess.TimeoutExpired:
+            return 124, "", "Command timed out"
+        except Exception as e:
+            return 1, "", str(e)
 
 
 def _parse_ini_sections(filepath: str) -> Dict[str, Dict[str, str]]:
@@ -645,6 +672,59 @@ class UnraidStorageAdapter(StoragePlatformAdapter):
     def destroy_pool(self, pool_id: str) -> Dict[str, Any]:
         raise PlatformCapabilityError("Observer mode active: Destroying pools is prohibited on Unraid appliance hosts.")
 
+    def export_pool(self, pool_id: str, force: bool = False) -> Dict[str, Any]:
+        if pool_id in ("unraid_array", "default_pool", "flash"):
+            raise PlatformCapabilityError(
+                "Observer mode active: The primary Unraid array must be stopped via the Unraid WebGUI Main tab."
+            )
+        code, out, _ = self._run_cmd(["zpool", "status", pool_id])
+        if code == 0:
+            self._run_cmd(["sync"])
+            exp_cmd = ["zpool", "export", "-f", pool_id] if force else ["zpool", "export", pool_id]
+            c, o, err = self._run_cmd(exp_cmd)
+            if c != 0:
+                raise RuntimeError(f"Failed to export zpool '{pool_id}': {err or 'busy or in use'}")
+            return {
+                "status": "exported",
+                "pool_id": pool_id,
+                "fs_type": "zfs",
+                "safe_to_disconnect": True,
+                "message": f"External storage pool '{pool_id}' safely exported and flushed. Safe to disconnect cable.",
+            }
+        raise PlatformCapabilityError(f"Pool '{pool_id}' is part of Unraid array or cannot be detached.")
+
+    def import_pool(self, pool_id: str, fs_type: str = "zfs", target_mount: Optional[str] = None) -> Dict[str, Any]:
+        if fs_type.lower() == "zfs":
+            code, out, err = self._run_cmd(["zpool", "import", "-f", pool_id])
+            if code != 0:
+                raise RuntimeError(f"Failed to import zpool '{pool_id}': {err or out}")
+            return {"status": "imported", "pool_id": pool_id, "fs_type": "zfs"}
+        raise PlatformCapabilityError("Non-ZFS external pools on Unraid must be mounted via Unassigned Devices.")
+
+    def discover_external_pools(self) -> List[Dict[str, Any]]:
+        discovered = []
+        code, out, _ = self._run_cmd(["zpool", "import"])
+        if code == 0 and out.strip():
+            current_pool = {}
+            for line in out.splitlines():
+                line_str = line.strip()
+                if line_str.startswith("pool:"):
+                    if current_pool.get("pool_id"):
+                        discovered.append(current_pool)
+                    current_pool = {
+                        "pool_id": line_str.split(":", 1)[1].strip(),
+                        "fs_type": "zfs",
+                        "status": "ONLINE",
+                        "detachable": True,
+                    }
+                elif line_str.startswith("id:") and current_pool:
+                    current_pool["numeric_id"] = line_str.split(":", 1)[1].strip()
+                elif line_str.startswith("state:") and current_pool:
+                    current_pool["status"] = line_str.split(":", 1)[1].strip()
+            if current_pool.get("pool_id"):
+                discovered.append(current_pool)
+        return discovered
+
     def create_share(
         self,
         name: str,
@@ -757,8 +837,61 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
             return 1, "", str(e)
 
     def _resolve_disk_path(self, disk: str) -> str:
-        """Resolves relative or bare disk names to canonical block device path."""
+        """
+        Resolves relative or bare disk names to canonical block device path,
+        strictly preferring persistent /dev/disk/by-id/ identifiers to prevent
+        device node shuffling from corrupting external USB/TB and SATA pools.
+        """
         d = disk.strip()
+        # If already specified as a by-id or by-path canonical path
+        if "/disk/by-" in d:
+            if os.path.exists(d):
+                return d
+            host_p = os.path.join(HOST_DEV, d.lstrip("/"))
+            if os.path.exists(host_p):
+                return host_p
+            return d
+
+        # Determine target dev name (e.g. "sda", "nvme1n1")
+        base_name = os.path.basename(d)
+
+        # Search for canonical persistent /dev/disk/by-id/ symlink
+        for by_id_dir in ["/dev/disk/by-id", os.path.join(HOST_DEV, "disk/by-id")]:
+            if os.path.isdir(by_id_dir):
+                try:
+                    candidates = []
+                    for entry in os.listdir(by_id_dir):
+                        # Skip partition links
+                        if re.search(r"-part\d+$", entry):
+                            continue
+                        link_path = os.path.join(by_id_dir, entry)
+                        try:
+                            target = os.path.realpath(link_path)
+                            if os.path.basename(target) == base_name:
+                                candidates.append(link_path)
+                        except OSError:
+                            continue
+
+                    if candidates:
+                        # Rank candidates: wwn- > ata- / nvme- > usb- > scsi-
+                        def _rank(p: str) -> int:
+                            name = os.path.basename(p)
+                            if name.startswith("wwn-"):
+                                return 0
+                            if name.startswith("ata-") or name.startswith("nvme-"):
+                                return 1
+                            if name.startswith("usb-"):
+                                return 2
+                            if name.startswith("scsi-"):
+                                return 3
+                            return 4
+
+                        candidates.sort(key=_rank)
+                        return candidates[0]
+                except Exception as e:
+                    logger.debug(f"[PAL] by-id resolution error for {disk}: {e}")
+
+        # Fallback to standard block device node
         if d.startswith("/"):
             if os.path.exists(d):
                 return d
@@ -766,6 +899,7 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
             if os.path.exists(host_disk):
                 return host_disk
             return d
+
         for base in [HOST_DEV, "/dev"]:
             cand = os.path.join(base, d)
             if os.path.exists(cand):
@@ -1220,6 +1354,110 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
             "mountpoint": target_mount,
             "unmount_code": code,
         }
+
+    def export_pool(self, pool_id: str, force: bool = False) -> Dict[str, Any]:
+        """Safely flushes dirty write cache, checks active file handles, and exports or unmounts a storage pool."""
+        code, _, _ = self._run_cmd(["zpool", "status", pool_id])
+        is_zfs = code == 0
+
+        target_mount = os.path.join(self._pool_path, pool_id) if pool_id != "default_pool" else self._pool_path
+        if is_zfs:
+            c_mnt, o_mnt, _ = self._run_cmd(["zfs", "get", "-H", "-o", "value", "mountpoint", pool_id])
+            if c_mnt == 0 and o_mnt.strip() and o_mnt.strip() != "none":
+                target_mount = o_mnt.strip()
+
+        # Check for active file handles holding the mountpoint
+        active_handles = []
+        if os.path.exists(target_mount):
+            c_fu, o_fu, _ = self._run_cmd(["fuser", "-m", target_mount])
+            if c_fu == 0 and o_fu.strip():
+                pids = o_fu.strip().split()
+                active_handles.extend([f"PID {p}" for p in pids[:10]])
+
+        if active_handles and not force:
+            raise RuntimeError(
+                f"Storage pool '{pool_id}' has {len(active_handles)} active process(es) holding open handles: "
+                f"{', '.join(active_handles)}. Specify force=true to unmount and export anyway."
+            )
+
+        # Flush filesystem write caches
+        self._run_cmd(["sync"])
+
+        if is_zfs:
+            exp_cmd = ["zpool", "export", "-f", pool_id] if force else ["zpool", "export", pool_id]
+            c_exp, _, err_exp = self._run_cmd(exp_cmd)
+            if c_exp != 0:
+                raise RuntimeError(f"Failed to export zpool '{pool_id}': {err_exp or 'busy or in use'}")
+            fs_type = "zfs"
+        else:
+            um_cmd = ["umount", "-f", target_mount] if force else ["umount", target_mount]
+            c_um, _, err_um = self._run_cmd(um_cmd)
+            if c_um != 0:
+                raise RuntimeError(f"Failed to unmount pool '{pool_id}': {err_um or 'busy or in use'}")
+            fs_type = "generic"
+
+        return {
+            "status": "exported",
+            "pool_id": pool_id,
+            "fs_type": fs_type,
+            "mountpoint": target_mount,
+            "safe_to_disconnect": True,
+            "message": f"Storage pool '{pool_id}' safely exported and flushed. Safe to disconnect cable.",
+        }
+
+    def import_pool(self, pool_id: str, fs_type: str = "zfs", target_mount: Optional[str] = None) -> Dict[str, Any]:
+        """Imports an external storage pool from an attached enclosure."""
+        fs_lower = fs_type.lower()
+        if fs_lower == "zfs":
+            code, out, err = self._run_cmd(["zpool", "import", "-f", pool_id])
+            if code != 0:
+                raise RuntimeError(f"Failed to import zpool '{pool_id}': {err or out}")
+            return {
+                "status": "imported",
+                "pool_id": pool_id,
+                "fs_type": "zfs",
+                "message": f"OpenZFS pool '{pool_id}' successfully imported.",
+            }
+        else:
+            self._run_cmd(["btrfs", "device", "scan"])
+            mnt = target_mount or os.path.join(self._pool_path, pool_id)
+            os.makedirs(mnt, exist_ok=True)
+            code, out, err = self._run_cmd(["mount", "-L", pool_id, mnt])
+            if code != 0:
+                code, out, err = self._run_cmd(["mount", f"/dev/disk/by-label/{pool_id}", mnt])
+            return {
+                "status": "imported" if code == 0 else "error",
+                "pool_id": pool_id,
+                "fs_type": fs_lower,
+                "mountpoint": mnt,
+                "message": f"Pool '{pool_id}' imported at {mnt}" if code == 0 else f"Failed to mount: {err}",
+            }
+
+    def discover_external_pools(self) -> List[Dict[str, Any]]:
+        """Scans for unmounted external storage pools available to import."""
+        discovered = []
+        code, out, _ = self._run_cmd(["zpool", "import"])
+        if code == 0 and out.strip():
+            current_pool = {}
+            for line in out.splitlines():
+                line_str = line.strip()
+                if line_str.startswith("pool:"):
+                    if current_pool.get("pool_id"):
+                        discovered.append(current_pool)
+                    current_pool = {
+                        "pool_id": line_str.split(":", 1)[1].strip(),
+                        "fs_type": "zfs",
+                        "status": "ONLINE",
+                        "detachable": True,
+                    }
+                elif line_str.startswith("id:") and current_pool:
+                    current_pool["numeric_id"] = line_str.split(":", 1)[1].strip()
+                elif line_str.startswith("state:") and current_pool:
+                    current_pool["status"] = line_str.split(":", 1)[1].strip()
+            if current_pool.get("pool_id"):
+                discovered.append(current_pool)
+
+        return discovered
 
     def create_share(
         self,

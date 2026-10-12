@@ -113,7 +113,10 @@ def test_mesh_vpn_status_detection():
         }
     )
 
-    with patch("subprocess.run") as mock_subproc:
+    with (
+        patch("backend.hardware.network._get_tailscale_container_info", return_value={"exists": False}),
+        patch("subprocess.run") as mock_subproc,
+    ):
 
         def side_effect(cmd, **kwargs):
             if cmd[:2] == ["tailscale", "status"]:
@@ -134,7 +137,10 @@ def test_mesh_vpn_status_detection():
 
 
 def test_tailscale_up_down_execution():
-    with patch("subprocess.run") as mock_subproc:
+    with (
+        patch("backend.hardware.network._get_tailscale_container_info", return_value={"exists": False}),
+        patch("subprocess.run") as mock_subproc,
+    ):
         mock_subproc.return_value = MagicMock(returncode=0, stdout="Success", stderr="")
         res_up = execute_tailscale_up(auth_key="tskey-auth-12345", hostname="nas-01")
         assert res_up["status"] == "success"

@@ -63,6 +63,24 @@ def test_get_mesh_vpn_status_container_running():
         assert status["tailscale"]["peers_count"] == 2
 
 
+def test_get_mesh_vpn_status_container_stopped():
+    with (
+        patch("backend.hardware.network._find_tailscale_bin", return_value=None),
+        patch(
+            "backend.hardware.network._get_tailscale_container_info",
+            return_value={"exists": True, "running": False, "id": "abc123def456"},
+        ),
+        patch("subprocess.run") as mock_subp,
+    ):
+        mock_subp.return_value = MagicMock(returncode=1, stdout="")
+        status = get_mesh_vpn_status()
+        assert status["tailscale"]["installed"] is True
+        assert status["tailscale"]["active"] is False
+        assert status["tailscale"]["backend_state"] == "Stopped"
+        assert status["tailscale"]["container_mode"] is True
+        assert status["tailscale"]["container_id"] == "abc123def456"
+
+
 def test_get_mesh_vpn_status_exit_node_and_routes_separation():
     mock_status_json = json.dumps(
         {
@@ -113,7 +131,10 @@ def test_get_mesh_vpn_status_exit_node_and_routes_separation():
 
 def test_execute_tailscale_up_needs_login():
     auth_text = "To authenticate, visit:\n\n\thttps://login.tailscale.com/a/sample123456\n"
-    with patch("backend.hardware.network._run_tailscale_cmd", return_value=(1, auth_text)):
+    with (
+        patch("backend.hardware.network._get_tailscale_container_info", return_value={"exists": False}),
+        patch("backend.hardware.network._run_tailscale_cmd", return_value=(1, auth_text)),
+    ):
         res = execute_tailscale_up()
         assert res["status"] == "needs_login"
         assert res["auth_url"] == "https://login.tailscale.com/a/sample123456"
@@ -127,23 +148,60 @@ def test_execute_tailscale_up_status_json_fallback():
             return 0, status_json
         return 1, "Some generic error without url"
 
-    with patch("backend.hardware.network._run_tailscale_cmd", side_effect=mock_cmd):
+    with (
+        patch("backend.hardware.network._get_tailscale_container_info", return_value={"exists": False}),
+        patch("backend.hardware.network._run_tailscale_cmd", side_effect=mock_cmd),
+    ):
         res = execute_tailscale_up()
         assert res["status"] == "needs_login"
         assert res["auth_url"] == "https://login.tailscale.com/a/fallback999"
 
 
 def test_execute_tailscale_up_success():
-    with patch("backend.hardware.network._run_tailscale_cmd", return_value=(0, "Success")):
+    with (
+        patch("backend.hardware.network._get_tailscale_container_info", return_value={"exists": False}),
+        patch("backend.hardware.network._run_tailscale_cmd", return_value=(0, "Success")),
+    ):
         res = execute_tailscale_up(auth_key="tskey-auth-123", hostname="my-nas")
         assert res["status"] == "success"
         assert res["code"] == 0
 
 
+def test_execute_tailscale_up_starts_stopped_container():
+    with (
+        patch(
+            "backend.hardware.network._get_tailscale_container_info",
+            return_value={"exists": True, "running": False, "id": "abc123def456"},
+        ),
+        patch("backend.services.container_mutator._docker_request", return_value=(204, {})) as mock_start,
+        patch("backend.hardware.network._run_tailscale_cmd", return_value=(0, "Success")),
+        patch("time.sleep"),
+    ):
+        res = execute_tailscale_up()
+        assert res["status"] == "success"
+        mock_start.assert_called_with("POST", "/containers/tailscale/start")
+
+
 def test_execute_tailscale_down():
-    with patch("backend.hardware.network._run_tailscale_cmd", return_value=(0, "Logged out")):
+    # Host CLI mode
+    with (
+        patch("backend.hardware.network._get_tailscale_container_info", return_value={"exists": False}),
+        patch("backend.hardware.network._run_tailscale_cmd", return_value=(0, "Logged out")),
+    ):
         res = execute_tailscale_down()
         assert res["status"] == "success"
+        assert res["code"] == 0
+
+    # Container mode
+    with (
+        patch("backend.hardware.network._get_tailscale_container_info", return_value={"exists": True, "running": True}),
+        patch("backend.hardware.network._run_tailscale_cmd", return_value=(0, "")),
+        patch("backend.services.container_mutator._docker_request", return_value=(204, {})) as mock_stop,
+    ):
+        res = execute_tailscale_down()
+        assert res["status"] == "success"
+        assert "stopped and disconnected" in res["output"]
+        mock_stop.assert_called_with("POST", "/containers/tailscale/stop?t=5")
 
 
 def test_deploy_tailscale_container_no_docker_socket():
@@ -236,6 +294,24 @@ def test_api_mesh_vpn_endpoints(client, token):
         )
         assert r.status_code == 200
         assert r.json()["status"] == "success"
+
+    # 3b. POST /api/network/mesh-vpn/tailscale/down
+    with patch(
+        "backend.hardware.network.execute_tailscale_down",
+        return_value={"status": "success", "code": 0, "output": "ok"},
+    ):
+        r = client.post("/api/network/mesh-vpn/tailscale/down", headers=headers)
+        assert r.status_code == 200
+        assert r.json()["status"] == "success"
+
+    # 3c. POST /api/network/mesh-vpn/tailscale/down failure with fallback
+    with patch(
+        "backend.hardware.network.execute_tailscale_down",
+        return_value={"status": "error", "code": 1, "output": ""},
+    ):
+        r = client.post("/api/network/mesh-vpn/tailscale/down", headers=headers)
+        assert r.status_code == 400
+        assert r.json()["detail"] == "Tailscale disconnection failed"
 
     # 4. POST /api/network/mesh-vpn/tailscale/set-routes
     with patch(

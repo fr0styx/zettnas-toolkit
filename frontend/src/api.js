@@ -45,7 +45,9 @@ export class ApiError extends Error {
   static async from(res) {
     let body = null;
     try { body = await res.json(); } catch (e) { /* non-JSON body */ }
-    const detail = body && typeof body.detail === 'string' ? body.detail : `HTTP ${res.status}: ${res.statusText}`;
+    const detail = (body && typeof body.detail === 'string' && body.detail.trim())
+      ? body.detail.trim()
+      : (res.statusText ? `HTTP ${res.status}: ${res.statusText}` : `Request failed (HTTP ${res.status})`);
     return new ApiError(detail, { status: res.status, error: (body && body.error) || 'error', body });
   }
 }

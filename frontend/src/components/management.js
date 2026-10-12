@@ -3952,6 +3952,7 @@ export async function fetchAndRenderWireguard() {
         }
 
         // 5. Taildrop Inbox
+        window._tsTaildropDir = ts.taildrop_dir || '/mnt/user/appdata/tailscale/taildrop';
         const taildropBadge = document.getElementById('ts-taildrop-badge');
         const taildropList = document.getElementById('ts-taildrop-list');
         const files = ts.taildrop_files || [];
@@ -3965,7 +3966,7 @@ export async function fetchAndRenderWireguard() {
             taildropList.innerHTML = files
               .map(
                 f => `
-              <div style="display:flex; justify-content:space-between; align-items:center; padding:5px 8px; border-bottom:1px solid rgba(255,255,255,0.05); font-size:11px;">
+              <div class="taildrop-file-item" data-path="${escapeHtml(f.path || '')}" style="display:flex; justify-content:space-between; align-items:center; padding:6px 8px; border-bottom:1px solid rgba(255,255,255,0.05); font-size:11px; cursor:pointer; border-radius:4px; transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'" title="Click to view folder in Files">
                 <span style="font-weight:600; color:#fff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:60%;" title="${escapeHtml(f.name)}">📄 ${escapeHtml(f.name)}</span>
                 <span style="color:var(--muted); font-size:10.5px;">${escapeHtml(f.size_formatted)} · ${escapeHtml(f.modified_at)}</span>
               </div>
@@ -4207,7 +4208,7 @@ export async function fetchAndRenderWireguard() {
           fetchAndRenderWireguard();
         }
       } catch (err) {
-        showToast(`Tailscale connection failed: ${err.message}`, 'error');
+        showToast(`Tailscale connection failed: ${err.message || 'Daemon error'}`, 'error');
       } finally {
         tsUpBtn.disabled = false;
         if (tsUpBtn.dataset.mode === 'login') {
@@ -4231,7 +4232,7 @@ export async function fetchAndRenderWireguard() {
         showToast('Disconnected from Tailscale mesh network.', 'info');
         fetchAndRenderWireguard();
       } catch (err) {
-        showToast(`Tailscale disconnection failed: ${err.message}`, 'error');
+        showToast(`Tailscale disconnection failed: ${err.message || 'Daemon error'}`, 'error');
       } finally {
         tsDownBtn.disabled = false;
       }
@@ -4368,21 +4369,42 @@ export async function fetchAndRenderWireguard() {
         port: 8082,
       });
       if (res && res.status === 'needs_approval' && res.approval_url) {
+        if (tsServeToggle) tsServeToggle.checked = Boolean(res.serve_enabled);
+        if (tsFunnelToggle) tsFunnelToggle.checked = Boolean(res.funnel_enabled);
         try {
           window.open(res.approval_url, '_blank', 'noopener,noreferrer');
         } catch (_) {}
-        showToast('Tailscale Serve requires Tailnet admin approval. Approval page opened.', 'info');
-      } else {
-        showToast(
-          serve
-            ? 'Tailscale HTTPS Serve enabled on port 8082.'
-            : 'Tailscale Serve disabled.',
-          'success'
+        const featName = res.feature === 'funnel' ? 'Funnel' : 'Serve';
+        showConfirmToast(
+          `Tailscale ${featName} Approval Required`,
+          `Tailscale ${featName} is not yet authorized on your Tailnet. Please approve this node in the Tailscale Admin Console:<br><br><a href="${escapeHtml(res.approval_url)}" target="_blank" rel="noopener noreferrer" style="color:#38bdf8; text-decoration:underline; font-weight:bold; word-break:break-all;">${escapeHtml(res.approval_url)}</a><br><br>After clicking Approve in Tailscale, re-enable this toggle to activate.`,
+          () => {
+            window.open(res.approval_url, '_blank', 'noopener,noreferrer');
+          },
+          null,
+          { confirmText: 'Open Approval Page', cancelText: 'Close' }
         );
+      } else if (res && res.status === 'error') {
+        if (tsServeToggle) tsServeToggle.checked = Boolean(res.serve_enabled);
+        if (tsFunnelToggle) tsFunnelToggle.checked = Boolean(res.funnel_enabled);
+        showToast(`Tailscale configuration error: ${res.error || 'Operation failed'}`, 'error');
+      } else {
+        if (serve && !res.serve_enabled) {
+          if (tsServeToggle) tsServeToggle.checked = false;
+          showToast('Tailscale Serve could not be activated. Check tailscaled daemon status.', 'warn');
+        } else {
+          showToast(
+            serve
+              ? 'Tailscale HTTPS Serve enabled on port 8082.'
+              : 'Tailscale Serve disabled.',
+            'success'
+          );
+        }
       }
       fetchAndRenderWireguard();
     } catch (e) {
       showToast(`Failed to configure Tailscale Serve: ${e.message}`, 'error');
+      fetchAndRenderWireguard();
     }
   }
   if (tsServeToggle && !tsServeToggle._bound) {
@@ -4446,13 +4468,31 @@ export async function fetchAndRenderWireguard() {
   if (btnTsTaildropOpen && !btnTsTaildropOpen._bound) {
     btnTsTaildropOpen._bound = true;
     btnTsTaildropOpen.addEventListener('click', () => {
-      const fmWin = document.getElementById('file-manager-window');
-      if (fmWin) {
-        if (window.bringToFront) window.bringToFront('file-manager-window');
-        fmWin.style.display = 'flex';
+      const targetDir = window._tsTaildropDir || '/mnt/user/appdata/tailscale/taildrop';
+      if (typeof window.openFileManager === 'function') {
+        window.openFileManager(targetDir);
+      } else if (typeof window.navigateToPath === 'function') {
+        window.navigateToPath(targetDir);
+      } else {
+        ZettEventBus.emit('window:open', { id: 'file-manager-window', path: targetDir });
       }
-      if (window.navigateToPath) {
-        window.navigateToPath('/mnt/user/appdata/tailscale/taildrop');
+    });
+  }
+
+  const taildropListEl = document.getElementById('ts-taildrop-list');
+  if (taildropListEl && !taildropListEl._bound) {
+    taildropListEl._bound = true;
+    taildropListEl.addEventListener('click', e => {
+      const item = e.target.closest('.taildrop-file-item');
+      if (item) {
+        const targetDir = window._tsTaildropDir || '/mnt/user/appdata/tailscale/taildrop';
+        if (typeof window.openFileManager === 'function') {
+          window.openFileManager(targetDir);
+        } else if (typeof window.navigateToPath === 'function') {
+          window.navigateToPath(targetDir);
+        } else {
+          ZettEventBus.emit('window:open', { id: 'file-manager-window', path: targetDir });
+        }
       }
     });
   }

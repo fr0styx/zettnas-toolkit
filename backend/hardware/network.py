@@ -2281,44 +2281,47 @@ def _get_tailscale_container_info() -> Dict[str, Any]:
 
 def _run_tailscale_cmd(args: List[str], timeout: float = 10.0) -> tuple[int, str]:
     """
-    Executes a Tailscale command using native host binary if present and connected to a daemon,
-    or falls back to Docker exec inside the 'tailscale' container.
+    Executes a Tailscale command using Docker exec if 'tailscale' container is running,
+    or falls back to native host binary if present and daemon is accessible.
     Returns (returncode, output_text).
     """
     c_info = _get_tailscale_container_info()
     use_container = bool(c_info.get("exists") and c_info.get("running"))
 
+    if use_container:
+        try:
+            from backend.services.compose_synthesizer import execute_in_container
+
+            # If command can block for approval (like serve or funnel activation),
+            # wrap with timeout so Docker exec returns output cleanly before timing out
+            cmd_list = ["tailscale"] + args
+            if args and args[0] in ("serve", "funnel") and len(args) > 1 and args[1] not in ("status", "reset"):
+                cmd_list = ["timeout", str(max(1, int(timeout))), "tailscale"] + args
+            res = execute_in_container("tailscale", cmd_list)
+            if res.get("success"):
+                exit_code = res.get("exit_code", 0)
+                out = (res.get("output") or "").strip()
+                return exit_code, out
+        except Exception as e:
+            logger.debug(f"[Tailscale] Container execution error: {e}")
+
+    # Fallback to native host binary
     ts_bin = _find_tailscale_bin()
     bin_cmd = ts_bin or "tailscale"
     try:
         r = subprocess.run([bin_cmd] + args, capture_output=True, text=True, timeout=timeout)
         out = ((r.stdout or "") + "\n" + (r.stderr or "")).strip()
-        if r.returncode == 0 or "login.tailscale.com" in out:
-            return r.returncode, out
-        if "failed to connect to local tailscaled" in out.lower() and use_container:
-            pass
-        else:
-            if not use_container or ts_bin:
-                return r.returncode, out
+        return r.returncode, out
+    except subprocess.TimeoutExpired as te:
+        out = ((te.stdout or "") + "\n" + (te.stderr or "")).strip()
+        return 1, out or "Command timed out"
     except FileNotFoundError:
         pass
     except Exception as e:
-        if not use_container:
-            return 1, str(e)
+        return 1, str(e)
 
-    # Fallback to docker exec inside 'tailscale' container
-    if use_container:
-        try:
-            from backend.services.compose_synthesizer import execute_in_container
-
-            res = execute_in_container("tailscale", ["tailscale"] + args)
-            if res.get("success"):
-                exit_code = res.get("exit_code", 0)
-                out = (res.get("output") or "").strip()
-                return exit_code, out
-            return 1, res.get("error", "Container execution failed")
-        except Exception as e:
-            return 1, str(e)
+    if c_info.get("exists"):
+        return 1, "Tailscale container is stopped"
 
     return 127, "tailscale CLI or running container not found"
 
@@ -2426,6 +2429,7 @@ def execute_tailscale_taildrop_receive() -> Dict[str, Any]:
         "directory": target_dir,
         "files": files,
         "count": len(files),
+        "received_count": len(files),
     }
 
 
@@ -2516,29 +2520,56 @@ def execute_tailscale_set_serve(serve: bool, funnel: bool = False, port: int = 8
     import re
 
     approval_url = ""
+    error_msg = ""
+    feature = "serve"
+    _code_s = 0
+    _code_f = 0
+
     # 1. Handle Serve
     if serve:
-        _code_s, out_s = _run_tailscale_cmd(["serve", "--bg", "--yes", str(port)], timeout=6.0)
+        _code_s, out_s = _run_tailscale_cmd(["serve", "--bg", "--yes", str(port)], timeout=3.0)
         m_s = re.search(r"https://login\.tailscale\.com/f/serve[^\s]+", out_s)
         if m_s:
             approval_url = m_s.group(0)
+            feature = "serve"
+        elif _code_s != 0 and "No serve config" not in out_s and "login.tailscale.com" not in out_s:
+            error_msg = out_s.strip()
     else:
-        _run_tailscale_cmd(["serve", "reset"], timeout=6.0)
+        _run_tailscale_cmd(["serve", "reset"], timeout=4.0)
 
     # 2. Handle Funnel
-    if funnel and serve:
-        _code_f, out_f = _run_tailscale_cmd(["funnel", "--bg", "--yes", str(port)], timeout=6.0)
+    if funnel and serve and not approval_url:
+        _code_f, out_f = _run_tailscale_cmd(["funnel", "--bg", "--yes", str(port)], timeout=3.0)
         m_f = re.search(r"https://login\.tailscale\.com/f/funnel[^\s]+", out_f)
         if m_f:
             approval_url = m_f.group(0)
-    else:
-        _run_tailscale_cmd(["funnel", "reset"], timeout=6.0)
+            feature = "funnel"
+        elif _code_f != 0 and "No serve config" not in out_f and "login.tailscale.com" not in out_f:
+            if not error_msg:
+                error_msg = out_f.strip()
+    elif not funnel:
+        _run_tailscale_cmd(["funnel", "reset"], timeout=4.0)
+
+    # Check actual status from tailscale daemon
+    sv_code, sv_out = _run_tailscale_cmd(["serve", "status", "--json"], timeout=3.0)
+    actual_serve = (sv_code == 0 and sv_out.strip().startswith("{") and len(sv_out.strip()) > 2) or (
+        _code_s == 0 and not approval_url and serve
+    )
+
+    actual_funnel = False
+    if actual_serve:
+        fn_code, fn_out = _run_tailscale_cmd(["funnel", "status", "--json"], timeout=3.0)
+        actual_funnel = (fn_code == 0 and "AllowFunnel" in fn_out) or (_code_f == 0 and funnel and serve)
 
     return {
-        "status": "ok" if not approval_url else "needs_approval",
-        "serve_enabled": serve,
-        "funnel_enabled": funnel and serve,
+        "status": "needs_approval"
+        if approval_url
+        else ("ok" if (actual_serve or not serve) else ("error" if error_msg else "pending")),
+        "serve_enabled": actual_serve,
+        "funnel_enabled": actual_funnel,
         "approval_url": approval_url,
+        "feature": feature,
+        "error": error_msg,
         "port": port,
     }
 
@@ -2565,6 +2596,27 @@ def execute_tailscale_reauth() -> Dict[str, Any]:
         "auth_url": auth_url,
         "output": out,
     }
+
+
+def _get_wireguard_status() -> Dict[str, Any]:
+    """Inspects host WireGuard network interfaces and status."""
+    wg_info = {
+        "installed": False,
+        "active": False,
+        "interfaces": [],
+    }
+    try:
+        r = subprocess.run(["wg", "show", "interfaces"], capture_output=True, text=True, timeout=3)
+        if r.returncode == 0:
+            wg_info["installed"] = True
+            ifaces = [i.strip() for i in r.stdout.strip().split() if i.strip()]
+            wg_info["interfaces"] = ifaces
+            wg_info["active"] = len(ifaces) > 0
+    except FileNotFoundError:
+        pass
+    except Exception as e:
+        logger.debug(f"[Network] Wireguard status query: {e}")
+    return wg_info
 
 
 def get_mesh_vpn_status() -> Dict[str, Any]:
@@ -2611,6 +2663,16 @@ def get_mesh_vpn_status() -> Dict[str, Any]:
     if c_info.get("exists"):
         ts_info["container_mode"] = True
         ts_info["container_id"] = c_info.get("id", "")
+        ts_info["installed"] = True
+        if not c_info.get("running"):
+            ts_info["active"] = False
+            ts_info["backend_state"] = "Stopped"
+            ts_info["taildrop_dir"] = get_taildrop_dir()
+            ts_info["detected_subnets"] = detect_local_subnets()
+            return {
+                "tailscale": ts_info,
+                "wireguard": _get_wireguard_status(),
+            }
 
     code, out = _run_tailscale_cmd(["status", "--json"], timeout=4.0)
     out_stripped = out.strip()
@@ -2735,29 +2797,15 @@ def get_mesh_vpn_status() -> Dict[str, Any]:
             ts_info["backend_state"] = "NeedsLogin"
         else:
             ts_info["backend_state"] = "Stopped"
+    elif c_info.get("exists"):
+        ts_info["installed"] = True
+        ts_info["backend_state"] = "Stopped"
     else:
         ts_info["installed"] = False
 
-    wg_info = {
-        "installed": False,
-        "active": False,
-        "interfaces": [],
-    }
-    try:
-        r = subprocess.run(["wg", "show", "interfaces"], capture_output=True, text=True, timeout=3)
-        if r.returncode == 0:
-            wg_info["installed"] = True
-            ifaces = [i.strip() for i in r.stdout.strip().split() if i.strip()]
-            wg_info["interfaces"] = ifaces
-            wg_info["active"] = len(ifaces) > 0
-    except FileNotFoundError:
-        pass
-    except Exception as e:
-        logger.debug(f"[Network] Wireguard status query: {e}")
-
     return {
         "tailscale": ts_info,
-        "wireguard": wg_info,
+        "wireguard": _get_wireguard_status(),
     }
 
 
@@ -2767,6 +2815,16 @@ def execute_tailscale_up(
     accept_routes: bool = True,
 ) -> Dict[str, Any]:
     """Connects host to the Zero-Trust Tailscale mesh network."""
+    c_info = _get_tailscale_container_info()
+    if c_info.get("exists") and not c_info.get("running"):
+        try:
+            from backend.services.container_mutator import _docker_request
+
+            _docker_request("POST", "/containers/tailscale/start")
+            time.sleep(2.0)
+        except Exception as e:
+            logger.debug(f"[Tailscale] Failed to start container before tailscale up: {e}")
+
     cmd = ["up", "--reset"]
     if auth_key:
         cmd.extend(["--authkey", auth_key])
@@ -2815,27 +2873,43 @@ def execute_tailscale_up(
         return {
             "status": "success",
             "code": 0,
-            "output": out,
+            "output": out or "Tailscale connected successfully",
         }
 
     if code == 127:
         return {"status": "error", "code": 127, "output": "tailscale CLI or container not found on host"}
 
-    return {"status": "error", "code": code, "output": out}
+    return {"status": "error", "code": code, "output": out or "Tailscale connection failed"}
 
 
 def execute_tailscale_down() -> Dict[str, Any]:
     """Disconnects host from the Zero-Trust Tailscale mesh network."""
+    c_info = _get_tailscale_container_info()
+    if c_info.get("exists"):
+        try:
+            from backend.services.container_mutator import _docker_request
+
+            if c_info.get("running"):
+                _run_tailscale_cmd(["down"], timeout=5.0)
+                _docker_request("POST", "/containers/tailscale/stop?t=5")
+            return {
+                "status": "success",
+                "code": 0,
+                "output": "Tailscale container stopped and disconnected",
+            }
+        except Exception as e:
+            return {"status": "error", "code": 1, "output": str(e)}
+
     code, out = _run_tailscale_cmd(["down"], timeout=10.0)
     if code == 0:
         return {
             "status": "success",
             "code": 0,
-            "output": out,
+            "output": out or "Tailscale disconnected successfully",
         }
     if code == 127:
         return {"status": "error", "code": 127, "output": "tailscale CLI or container not found on host"}
-    return {"status": "error", "code": code, "output": out}
+    return {"status": "error", "code": code, "output": out or "Tailscale disconnection failed"}
 
 
 def deploy_tailscale_container(

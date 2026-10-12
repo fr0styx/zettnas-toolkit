@@ -23,7 +23,14 @@ function updateFmSelectionToolbar() {
   const count = selectedPaths.size;
   if (count > 0) {
     bar.style.display = 'inline-flex';
-    countSpan.textContent = t('fm.selected_count', `${count} selected`).replace('{count}', count);
+    let totalBytes = 0;
+    fileList.forEach(f => {
+      if (selectedPaths.has(f.path) && !f.is_dir && typeof f.size === 'number') {
+        totalBytes += f.size;
+      }
+    });
+    const sizeStr = totalBytes > 0 ? ` (${formatBytes(totalBytes)})` : '';
+    countSpan.textContent = `✓ ${t('fm.selected_count', `${count} selected`).replace('{count}', count)}${sizeStr}`;
     if (bulkDelBtn) bulkDelBtn.textContent = `🗑️ ${t('fm.bulk_delete', `Delete (${count})`).replace('{count}', count)}`;
   } else {
     bar.style.display = 'none';
@@ -34,12 +41,32 @@ function updateRowSelectionUI() {
   const rows = document.querySelectorAll('.fm-row');
   rows.forEach(r => {
     const p = r.dataset.path;
-    if (p && selectedPaths.has(p)) {
+    const isSel = Boolean(p && selectedPaths.has(p));
+    if (isSel) {
       r.classList.add('selected');
     } else {
       r.classList.remove('selected');
     }
+    const chk = r.querySelector('.fm-row-checkbox');
+    if (chk) chk.checked = isSel;
   });
+
+  const masterChk = document.getElementById('fm-select-all-checkbox');
+  if (masterChk) {
+    const selectableFiles = fileList.filter(f => f.name !== '..');
+    const totalSelectable = selectableFiles.length;
+    const count = selectedPaths.size;
+    if (totalSelectable > 0 && count === totalSelectable) {
+      masterChk.checked = true;
+      masterChk.indeterminate = false;
+    } else if (count > 0) {
+      masterChk.checked = false;
+      masterChk.indeterminate = true;
+    } else {
+      masterChk.checked = false;
+      masterChk.indeterminate = false;
+    }
+  }
 }
 
 // Virtualized DOM logic
@@ -124,12 +151,15 @@ export function initFileManager() {
           </button>
           <div id="fm-selection-bar" style="display: none; align-items: center; gap: 6px; margin-left: 8px;">
             <span id="fm-selected-count" style="font-size: 11px; font-weight: 700; color: var(--accent-cyan, #0ea5e9); padding: 2px 8px; background: rgba(14,165,233,0.12); border-radius: 4px; border: 1px solid rgba(14,165,233,0.25);">0 selected</span>
+            <button id="fm-bulk-move-btn" class="btn-pill-toggle" style="padding: 3px 8px; font-size: 11px; background: rgba(14,165,233,0.15); border: 1px solid rgba(14,165,233,0.3); color: #38bdf8; border-radius: 4px; cursor: pointer;" title="Move Selected">📦 Move To...</button>
+            <button id="fm-bulk-zip-btn" class="btn-pill-toggle" style="padding: 3px 8px; font-size: 11px; background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.3); color: #4ade80; border-radius: 4px; cursor: pointer;" title="Download Selected">⬇️ Download</button>
             <button id="fm-bulk-delete-btn" class="btn-pill-toggle" style="padding: 3px 10px; font-size: 11px; background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.4); color: #f87171; border-radius: 4px; cursor: pointer;" title="Delete Selected">🗑️ Delete</button>
             <button id="fm-clear-sel-btn" class="fm-tool-btn" style="font-size: 11px; padding: 2px 6px;" title="Clear Selection">✕</button>
           </div>
         </div>
         <div class="fm-content">
           <div class="fm-header-row">
+            <div class="fm-col fm-col-check"><input type="checkbox" id="fm-select-all-checkbox" class="fm-checkbox" title="Select All" /></div>
             <div class="fm-col fm-col-name" data-i18n="fm.col_name">${t('fm.col_name', 'Name')}</div>
             <div class="fm-col fm-col-type" data-i18n="fm.col_type">Type</div>
             <div class="fm-col fm-col-size" data-i18n="fm.col_size">${t('fm.col_size', 'Size')}</div>
@@ -474,6 +504,49 @@ export function initFileManager() {
     });
   }
 
+  const bulkMoveBtn = document.getElementById('fm-bulk-move-btn');
+  if (bulkMoveBtn) {
+    bulkMoveBtn.addEventListener('click', () => {
+      const count = selectedPaths.size;
+      if (count === 0) return;
+      _clipboard = { items: Array.from(selectedPaths), action: 'move' };
+      showToast(t('fm.cut_items_toast', `Selected ${count} item(s) to move. Navigate to destination folder and click Paste.`), 'info');
+    });
+  }
+
+  const bulkZipBtn = document.getElementById('fm-bulk-zip-btn');
+  if (bulkZipBtn) {
+    bulkZipBtn.addEventListener('click', () => {
+      const paths = Array.from(selectedPaths);
+      if (paths.length === 0) return;
+      showToast(t('fm.downloading_items', `Downloading ${paths.length} item(s)...`), 'info');
+      for (const p of paths) {
+        const token = auth.getToken();
+        const url = `/api/fs/download?path=${encodeURIComponent(p)}${token ? `&token=${encodeURIComponent(token)}` : ''}`;
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = p.split('/').pop() || 'download';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      }
+    });
+  }
+
+  const masterChk = document.getElementById('fm-select-all-checkbox');
+  if (masterChk) {
+    masterChk.addEventListener('change', () => {
+      const selectableFiles = fileList.filter(f => f.name !== '..');
+      if (masterChk.checked) {
+        selectableFiles.forEach(f => selectedPaths.add(f.path));
+      } else {
+        selectedPaths.clear();
+      }
+      updateRowSelectionUI();
+      updateFmSelectionToolbar();
+    });
+  }
+
   const clearSelBtn = document.getElementById('fm-clear-sel-btn');
   if (clearSelBtn) {
     clearSelBtn.addEventListener('click', () => {
@@ -727,6 +800,7 @@ function renderViewport() {
     const isImage = file.name.match(/\.(jpeg|jpg|png|gif|webp|svg)$/i);
     const fileType = file.is_dir ? 'Folder' : (file.name.includes('.') ? file.name.split('.').pop().toUpperCase() : 'File');
     row.innerHTML = `
+      <div class="fm-col fm-col-check">${file.name !== '..' ? `<input type="checkbox" class="fm-checkbox fm-row-checkbox" ${selectedPaths.has(file.path) ? 'checked' : ''} data-path="${escPath}" title="Select item" />` : ''}</div>
       <div class="fm-col fm-col-name">${icon} <span class="fm-name-text">${escName}</span></div>
       <div class="fm-col fm-col-type">${file.name === '..' ? '--' : fileType}</div>
       <div class="fm-col fm-col-size">${file.is_dir ? '--' : formatBytes(file.size)}</div>
@@ -775,6 +849,18 @@ function renderViewport() {
 
     row.addEventListener('click', (e) => {
       if (e.target.closest('.fm-act-btn') || file.name === '..') return;
+      if (e.target.closest('.fm-checkbox')) {
+        const chk = e.target.closest('.fm-checkbox');
+        if (chk.checked) {
+          selectedPaths.add(file.path);
+        } else {
+          selectedPaths.delete(file.path);
+        }
+        lastSelectedIndex = i;
+        updateRowSelectionUI();
+        updateFmSelectionToolbar();
+        return;
+      }
       const idx = i;
       if (e.shiftKey && lastSelectedIndex !== -1) {
         const start = Math.min(lastSelectedIndex, idx);
@@ -1021,8 +1107,17 @@ export function showCollisionModal({ sources, destinationDir, action, conflicts,
   modal.classList.add('open');
 }
 
-window.openFileManager = (path = null) => {
+export function openFileManager(path = null) {
   ZettEventBus.emit('window:open', { id: 'file-manager-window', path: path || undefined });
+}
+window.openFileManager = openFileManager;
+
+window.navigateToPath = (path = null) => {
+  if (typeof window.openFileManager === 'function') {
+    window.openFileManager(path);
+  } else {
+    ZettEventBus.emit('window:open', { id: 'file-manager-window', path: path || undefined });
+  }
 };
 
 window.openRecycleBin = () => {

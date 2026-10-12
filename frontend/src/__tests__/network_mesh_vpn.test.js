@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { fetchAndRenderWireguard, renderTailscalePeersTable } from '../components/management.js';
 import { api } from '../api.js';
 import * as toast from '../toast.js';
+import { ZettEventBus } from '../event-bus.js';
 
 describe('Zero-Trust Mesh VPN Suite (WireGuard & Tailscale)', () => {
   let container;
@@ -295,6 +296,29 @@ describe('Zero-Trust Mesh VPN Suite (WireGuard & Tailscale)', () => {
     expect(wgHeader.style.display).toBe('flex');
   });
 
+  it('handles Tailscale disconnection and failure fallback', async () => {
+    vi.spyOn(api, 'get').mockResolvedValue({
+      tailscale: { installed: true, active: true, hostname: 'ts-node', ipv4: '100.80.20.10' },
+      wireguard: { installed: true, active: false },
+    });
+    const postSpy = vi.spyOn(api, 'post').mockResolvedValue({ status: 'success' });
+    const toastSpy = vi.spyOn(toast, 'showToast').mockImplementation(() => {});
+
+    await fetchAndRenderWireguard();
+
+    const downBtn = document.getElementById('btn-tailscale-down');
+    expect(downBtn.style.display).toBe('inline-block');
+
+    await downBtn.click();
+    expect(postSpy).toHaveBeenCalledWith('/api/network/mesh-vpn/tailscale/down');
+    expect(toastSpy).toHaveBeenCalledWith('Disconnected from Tailscale mesh network.', 'info');
+
+    // Error case
+    postSpy.mockRejectedValueOnce(new Error('Daemon stopped'));
+    await downBtn.click();
+    expect(toastSpy).toHaveBeenCalledWith('Tailscale disconnection failed: Daemon stopped', 'error');
+  });
+
   it('generates WireGuard client config with formatted .conf text, export button, and QR code SVG', async () => {
     vi.spyOn(api, 'get').mockResolvedValue({
       tailscale: { installed: true, active: true },
@@ -569,5 +593,73 @@ describe('Zero-Trust Mesh VPN Suite (WireGuard & Tailscale)', () => {
       expect(resSpan.textContent).toContain('12.4 ms');
     });
   });
+
+  it('handles Taildrop open files button and opens File Manager to taildrop folder', async () => {
+    let emittedEvent = null;
+    ZettEventBus.on('window:open', payload => {
+      emittedEvent = payload;
+    });
+
+    vi.spyOn(api, 'get').mockResolvedValue({
+      tailscale: {
+        installed: true,
+        active: true,
+        taildrop_dir: '/mnt/user/appdata/tailscale/taildrop',
+        taildrop_files_count: 2,
+        taildrop_files: [
+          { name: 'document.pdf', path: '/mnt/user/appdata/tailscale/taildrop/document.pdf', size_formatted: '1.2 MB', modified_at: '10 mins ago' },
+        ],
+      },
+      wireguard: { installed: true, active: false },
+    });
+
+    await fetchAndRenderWireguard();
+
+    const openBtn = document.getElementById('btn-ts-taildrop-open');
+    expect(openBtn).toBeTruthy();
+    openBtn.click();
+
+    expect(emittedEvent).toEqual({
+      id: 'file-manager-window',
+      path: '/mnt/user/appdata/tailscale/taildrop',
+    });
+  });
+
+  it('handles Tailscale Serve needs_approval response and keeps UI in sync', async () => {
+    const postSpy = vi.spyOn(api, 'post').mockResolvedValue({
+      status: 'needs_approval',
+      approval_url: 'https://login.tailscale.com/f/serve?node=test12345',
+      serve_enabled: false,
+      funnel_enabled: false,
+      feature: 'serve',
+      port: 8082,
+    });
+    vi.spyOn(api, 'get').mockResolvedValue({
+      tailscale: {
+        installed: true,
+        active: true,
+        serve_enabled: false,
+        funnel_enabled: false,
+      },
+      wireguard: { installed: true, active: false },
+    });
+
+    await fetchAndRenderWireguard();
+
+    const serveToggle = document.getElementById('ts-serve-toggle');
+    serveToggle.checked = true;
+    serveToggle.dispatchEvent(new Event('change'));
+
+    await vi.waitFor(() => {
+      expect(postSpy).toHaveBeenCalledWith('/api/network/mesh-vpn/tailscale/set-serve', {
+        serve: true,
+        funnel: false,
+        port: 8082,
+      });
+      // Toggle should reflect actual status (false)
+      expect(serveToggle.checked).toBe(false);
+    });
+  });
 });
+
 

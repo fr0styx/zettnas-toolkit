@@ -3,12 +3,14 @@ ZettNAS Toolkit - Rclone Cloud & Remote Storage Engine
 Universal userspace cloud integration (S3, B2, Google Drive, OneDrive, SFTP, WebDAV) via FUSE.
 """
 
+import configparser
 import json
 import logging
 import os
 import re
 import shutil
 import subprocess
+import tempfile
 import threading
 import time
 import uuid
@@ -88,15 +90,36 @@ CURATED_PROVIDERS = [
         "category": "Cloud Drives",
         "icon": "triangle",
         "description": "Mount or sync personal and Google Workspace / Shared Team Drives.",
+        "authorize_cmd": 'rclone authorize "drive"',
         "fields": [
-            {"name": "client_id", "label": "OAuth Client ID (Optional)", "type": "text", "required": False},
-            {"name": "client_secret", "label": "OAuth Client Secret (Optional)", "type": "password", "required": False},
+            {
+                "name": "token",
+                "label": "OAuth2 Token (JSON)",
+                "type": "textarea",
+                "placeholder": 'Paste the JSON token block from: rclone authorize "drive"\ne.g. {"access_token":"...","token_type":"Bearer","refresh_token":"...","expiry":"..."}',
+                "required": True,
+                "help": 'Run `rclone authorize "drive"` on a machine with a browser, authorize Google Drive, and paste the generated JSON token block here.',
+            },
             {
                 "name": "scope",
                 "label": "Access Scope",
                 "type": "select",
                 "options": ["drive", "drive.readonly", "drive.file"],
                 "default": "drive",
+                "required": False,
+            },
+            {
+                "name": "root_folder_id",
+                "label": "Root Folder ID or Shared Drive ID (Optional)",
+                "type": "text",
+                "placeholder": "Leave empty for root of My Drive",
+                "required": False,
+            },
+            {"name": "client_id", "label": "Custom OAuth Client ID (Optional)", "type": "text", "required": False},
+            {
+                "name": "client_secret",
+                "label": "Custom OAuth Client Secret (Optional)",
+                "type": "password",
                 "required": False,
             },
         ],
@@ -107,15 +130,36 @@ CURATED_PROVIDERS = [
         "category": "Cloud Drives",
         "icon": "cloud",
         "description": "Personal OneDrive, OneDrive for Business, and SharePoint Document Libraries.",
+        "authorize_cmd": 'rclone authorize "onedrive"',
         "fields": [
-            {"name": "client_id", "label": "OAuth Client ID (Optional)", "type": "text", "required": False},
-            {"name": "client_secret", "label": "OAuth Client Secret (Optional)", "type": "password", "required": False},
+            {
+                "name": "token",
+                "label": "OAuth2 Token (JSON)",
+                "type": "textarea",
+                "placeholder": 'Paste the JSON token block from: rclone authorize "onedrive"\ne.g. {"access_token":"...","token_type":"Bearer","refresh_token":"...","expiry":"..."}',
+                "required": True,
+                "help": 'Run `rclone authorize "onedrive"` on a machine with a browser, sign in to Microsoft, and paste the generated JSON token block here.',
+            },
             {
                 "name": "drive_type",
                 "label": "Drive Type",
                 "type": "select",
                 "options": ["personal", "business", "documentLibrary"],
                 "default": "personal",
+                "required": False,
+            },
+            {
+                "name": "drive_id",
+                "label": "Drive ID / SharePoint Library ID (Optional)",
+                "type": "text",
+                "placeholder": "Leave empty for default personal drive, or specify for SharePoint / Business",
+                "required": False,
+            },
+            {"name": "client_id", "label": "Custom Azure Client ID (Optional)", "type": "text", "required": False},
+            {
+                "name": "client_secret",
+                "label": "Custom Azure Client Secret (Optional)",
+                "type": "password",
                 "required": False,
             },
         ],
@@ -179,9 +223,50 @@ CURATED_PROVIDERS = [
         "category": "Cloud Drives",
         "icon": "box",
         "description": "Mount or sync personal and business Dropbox accounts.",
+        "authorize_cmd": 'rclone authorize "dropbox"',
         "fields": [
-            {"name": "client_id", "label": "App Key (Optional)", "type": "text", "required": False},
-            {"name": "client_secret", "label": "App Secret (Optional)", "type": "password", "required": False},
+            {
+                "name": "token",
+                "label": "OAuth2 Token (JSON)",
+                "type": "textarea",
+                "placeholder": 'Paste the JSON token block from: rclone authorize "dropbox"\ne.g. {"access_token":"...","token_type":"bearer","refresh_token":"...","expiry":"..."}',
+                "required": True,
+                "help": 'Run `rclone authorize "dropbox"` on a machine with a browser, authorize Dropbox, and paste the generated JSON token block here.',
+            },
+            {"name": "client_id", "label": "Custom App Key (Optional)", "type": "text", "required": False},
+            {"name": "client_secret", "label": "Custom App Secret (Optional)", "type": "password", "required": False},
+        ],
+    },
+    {
+        "type": "box",
+        "name": "Box.com",
+        "category": "Cloud Drives",
+        "icon": "package",
+        "description": "Enterprise cloud storage, personal Box vaults, and team collaboration folders.",
+        "authorize_cmd": 'rclone authorize "box"',
+        "fields": [
+            {
+                "name": "token",
+                "label": "OAuth2 Token (JSON)",
+                "type": "textarea",
+                "placeholder": 'Paste the JSON token block from: rclone authorize "box"\\ne.g. {"access_token":"...","token_type":"bearer","refresh_token":"...","expiry":"..."}',
+                "required": True,
+                "help": 'Run `rclone authorize "box"` on a machine with a browser, authorize Box, and paste the generated JSON token block here.',
+            },
+            {
+                "name": "box_sub_type",
+                "label": "Box Account Type",
+                "type": "select",
+                "options": ["user", "enterprise"],
+                "default": "user",
+            },
+            {"name": "client_id", "label": "Custom Client ID (Optional)", "type": "text", "required": False},
+            {
+                "name": "client_secret",
+                "label": "Custom Client Secret (Optional)",
+                "type": "password",
+                "required": False,
+            },
         ],
     },
 ]
@@ -297,37 +382,79 @@ class RcloneEngine:
 
         return os.path.ismount(mount_path)
 
+    def _obscure_password(self, password: str) -> str:
+        """Obscures plaintext password using rclone obscure if not already obscured."""
+        if not password:
+            return ""
+        try:
+            rclone_bin = self._get_rclone_bin()
+            # Check if already obscured
+            check = subprocess.run(
+                [rclone_bin, "reveal", password],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                timeout=3,
+            )
+            if check.returncode == 0 and check.stdout.strip():
+                # Already obscured
+                return password
+
+            proc = subprocess.run(
+                [rclone_bin, "obscure", password],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                timeout=3,
+            )
+            if proc.returncode == 0 and proc.stdout.strip():
+                return proc.stdout.strip()
+        except Exception as e:
+            logger.warning(f"[RCLONE] Failed obscuring password: {e}")
+        return password
+
     def create_remote(self, name: str, remote_type: str, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """Creates or updates a remote in rclone.conf."""
+        """Creates or updates a remote in rclone.conf via RawConfigParser."""
         if not VALID_REMOTE_NAME.fullmatch(name):
             raise ValueError(f"Invalid remote name: '{name}'. Must be 1-64 alphanumeric chars, dash, or underscore.")
 
-        rclone_bin = self._get_rclone_bin()
-        self._ensure_directories()
+        with self._lock:
+            self._ensure_directories()
+            cfg = configparser.RawConfigParser()
+            if os.path.exists(self.config_file):
+                try:
+                    cfg.read(self.config_file)
+                except Exception as e:
+                    logger.warning(f"[RCLONE] Reading existing rclone.conf failed: {e}")
 
-        cmd = [
-            rclone_bin,
-            "config",
-            "create",
-            name,
-            remote_type,
-            "--config",
-            self.config_file,
-            "--non-interactive",
-        ]
+            if not cfg.has_section(name):
+                cfg.add_section(name)
 
-        for k, v in parameters.items():
-            if v is not None and v != "":
-                cmd.append(f"{k}={v}")
+            cfg.set(name, "type", remote_type)
 
-        logger.info(f"[RCLONE] Creating remote '{name}' (type={remote_type})...")
-        proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=15)
-        if proc.returncode != 0:
-            err = proc.stderr.strip() or "Unknown error creating remote"
-            logger.error(f"[RCLONE] config create failed: {err}")
-            raise RuntimeError(f"Failed to create remote: {err}")
+            for k, v in parameters.items():
+                if v is None or v == "":
+                    continue
+                # If password field, obscure it
+                if k.lower() in ("pass", "password"):
+                    v = self._obscure_password(str(v))
+                elif k == "token" and isinstance(v, str):
+                    v_str = v.strip()
+                    try:
+                        token_obj = json.loads(v_str)
+                        v = json.dumps(token_obj)
+                    except Exception:
+                        v = v_str
+                cfg.set(name, k, str(v))
 
-        return {"status": "ok", "name": name, "type": remote_type}
+            # Atomic write
+            tmp_conf = f"{self.config_file}.tmp.{uuid.uuid4().hex[:8]}"
+            with open(tmp_conf, "w") as f:
+                cfg.write(f)
+            os.replace(tmp_conf, self.config_file)
+
+            logger.info(f"[RCLONE] Successfully saved remote '{name}' (type={remote_type}) to config.")
+            return {"status": "ok", "name": name, "type": remote_type}
 
     def delete_remote(self, name: str) -> Dict[str, Any]:
         """Unmounts and removes a remote from rclone.conf."""
@@ -337,14 +464,159 @@ class RcloneEngine:
             except Exception as e:
                 logger.warning(f"[RCLONE] Error unmounting {name} prior to deletion: {e}")
 
-        rclone_bin = self._get_rclone_bin()
-        cmd = [rclone_bin, "config", "delete", name, "--config", self.config_file]
-        proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=10)
-        if proc.returncode != 0:
-            err = proc.stderr.strip()
-            raise RuntimeError(f"Failed to delete remote: {err}")
+        with self._lock:
+            self._ensure_directories()
+            if os.path.exists(self.config_file):
+                cfg = configparser.RawConfigParser()
+                try:
+                    cfg.read(self.config_file)
+                    if cfg.has_section(name):
+                        cfg.remove_section(name)
+                        tmp_conf = f"{self.config_file}.tmp.{uuid.uuid4().hex[:8]}"
+                        with open(tmp_conf, "w") as f:
+                            cfg.write(f)
+                        os.replace(tmp_conf, self.config_file)
+                except Exception as e:
+                    logger.error(f"[RCLONE] Error removing remote from config: {e}")
 
-        return {"status": "ok", "deleted": name}
+            return {"status": "ok", "deleted": name}
+
+    def test_remote(self, name: str) -> Dict[str, Any]:
+        """Tests connectivity and credentials of an existing remote in rclone.conf."""
+        with self._lock:
+            self._ensure_directories()
+            rclone_bin = self._get_rclone_bin()
+            target_spec = f"{name}:"
+            cmd = [
+                rclone_bin,
+                "lsf",
+                target_spec,
+                "--config",
+                self.config_file,
+                "--max-depth",
+                "1",
+                "--contimeout",
+                "6s",
+                "--timeout",
+                "10s",
+                "--retries",
+                "1",
+            ]
+            try:
+                proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=12)
+                if proc.returncode == 0:
+                    items = [ln.strip() for ln in proc.stdout.splitlines() if ln.strip()]
+                    return {
+                        "status": "connected",
+                        "name": name,
+                        "success": True,
+                        "item_count": len(items),
+                        "items_sample": items[:5],
+                    }
+                else:
+                    err = proc.stderr.strip() or f"Failed with exit code {proc.returncode}"
+                    return {
+                        "status": "error",
+                        "name": name,
+                        "success": False,
+                        "error": err,
+                    }
+            except subprocess.TimeoutExpired:
+                return {
+                    "status": "timeout",
+                    "name": name,
+                    "success": False,
+                    "error": "Connection timed out after 12s. Please verify network or credentials.",
+                }
+            except Exception as e:
+                return {
+                    "status": "error",
+                    "name": name,
+                    "success": False,
+                    "error": str(e),
+                }
+
+    def test_remote_config(self, remote_type: str, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Tests connectivity and credentials of candidate remote configuration before saving."""
+        rclone_bin = self._get_rclone_bin()
+        test_sec = "_zett_test_temp"
+        cfg = configparser.RawConfigParser()
+        cfg.add_section(test_sec)
+        cfg.set(test_sec, "type", remote_type)
+
+        for k, v in parameters.items():
+            if v is None or v == "":
+                continue
+            if k.lower() in ("pass", "password"):
+                v = self._obscure_password(str(v))
+            elif k == "token" and isinstance(v, str):
+                v_str = v.strip()
+                try:
+                    token_obj = json.loads(v_str)
+                    v = json.dumps(token_obj)
+                except Exception:
+                    v = v_str
+            cfg.set(test_sec, k, str(v))
+
+        tmp_conf = None
+        try:
+            with tempfile.NamedTemporaryFile("w", suffix=".conf", delete=False) as f:
+                cfg.write(f)
+                tmp_conf = f.name
+
+            cmd = [
+                rclone_bin,
+                "lsf",
+                f"{test_sec}:",
+                "--config",
+                tmp_conf,
+                "--max-depth",
+                "1",
+                "--contimeout",
+                "6s",
+                "--timeout",
+                "10s",
+                "--retries",
+                "1",
+            ]
+            proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=12)
+            if proc.returncode == 0:
+                items = [ln.strip() for ln in proc.stdout.splitlines() if ln.strip()]
+                return {
+                    "status": "connected",
+                    "success": True,
+                    "type": remote_type,
+                    "item_count": len(items),
+                    "items_sample": items[:5],
+                }
+            else:
+                err = proc.stderr.strip() or f"Failed with exit code {proc.returncode}"
+                return {
+                    "status": "error",
+                    "success": False,
+                    "type": remote_type,
+                    "error": err,
+                }
+        except subprocess.TimeoutExpired:
+            return {
+                "status": "timeout",
+                "success": False,
+                "type": remote_type,
+                "error": "Connection timed out after 12s. Check endpoint, host, or credentials.",
+            }
+        except Exception as e:
+            return {
+                "status": "error",
+                "success": False,
+                "type": remote_type,
+                "error": str(e),
+            }
+        finally:
+            if tmp_conf and os.path.exists(tmp_conf):
+                try:
+                    os.unlink(tmp_conf)
+                except OSError:
+                    pass
 
     def mount_remote(
         self,

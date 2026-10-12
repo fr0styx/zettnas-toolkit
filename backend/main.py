@@ -62,6 +62,15 @@ def startup_system():
     read_ip()  # Pre-populate IP cache at startup
     detect_chassis_model()  # Pre-populate chassis model cache
 
+    # Auto-link host KVM and vhost-net nodes into container /dev if present
+    for node, host_node in [("/dev/kvm", "/host/dev/kvm"), ("/dev/vhost-net", "/host/dev/vhost-net")]:
+        if not os.path.exists(node) and os.path.exists(host_node):
+            try:
+                os.symlink(host_node, node)
+                logger.info(f"[KVM] Auto-linked {node} -> {host_node}")
+            except OSError as e:
+                logger.debug(f"[KVM] Could not link {node}: {e}")
+
     if is_using_default_password():
         logger.warning("=" * 60)
         logger.warning("[SECURITY WARNING] Default password ('admin') is active!")

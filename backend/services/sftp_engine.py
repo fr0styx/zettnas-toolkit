@@ -11,6 +11,7 @@ import os
 import re
 import socket
 import subprocess
+import time
 from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
 
@@ -44,7 +45,7 @@ class SFTPConfig(BaseModel):
 
 class SFTPStatus(BaseModel):
     running: bool
-    mode: str  # "native_sidecar", "host_sshd", "disabled"
+    mode: str  # "native_sidecar", "host_sshd", "subprocess", "disabled", "configured"
     port: int
     port_open: bool
     shares_count: int
@@ -76,6 +77,7 @@ class SFTPEngine:
             atomic_write_json(SFTP_CONFIG_FILE, self.DEFAULT_CONFIG)
         if not os.path.exists(SFTP_USERS_FILE):
             atomic_write_json(SFTP_USERS_FILE, [])
+        self._proc: Optional[subprocess.Popen] = None
 
     def get_config(self) -> Dict[str, Any]:
         cfg = dict(self.DEFAULT_CONFIG)
@@ -131,13 +133,48 @@ Match Group sftpusers
         return content
 
     def _check_port(self, port: int) -> bool:
-        """Checks if SFTP port is actively listening locally or on network interfaces."""
+        """Checks if SFTP port is actively listening locally, on host, or container gateway."""
+        candidates = ["127.0.0.1"]
+        # Check container default gateway
         try:
-            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                s.settimeout(0.5)
-                return s.connect_ex(("127.0.0.1", port)) == 0
+            with open("/proc/net/route") as f:
+                for line in f:
+                    fields = line.strip().split()
+                    if len(fields) >= 3 and fields[1] == "00000000":
+                        gw_hex = fields[2]
+                        gw_ip = socket.inet_ntoa(bytes.fromhex(gw_hex)[::-1])
+                        if gw_ip and gw_ip not in candidates:
+                            candidates.append(gw_ip)
+                        break
         except Exception:
-            return False
+            pass
+
+        # Check primary host IP
+        try:
+            from backend.hardware.network import get_network_topology
+
+            primary_ip = get_network_topology().get("summary", {}).get("primary_ip")
+            if primary_ip and primary_ip not in candidates:
+                candidates.append(primary_ip)
+        except Exception:
+            try:
+                with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+                    s.connect(("1.1.1.1", 80))
+                    hip = s.getsockname()[0]
+                    if hip and hip not in candidates:
+                        candidates.append(hip)
+            except Exception:
+                pass
+
+        for ip in candidates:
+            try:
+                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                    s.settimeout(0.35)
+                    if s.connect_ex((ip, port)) == 0:
+                        return True
+            except Exception:
+                continue
+        return False
 
     def list_users(self) -> List[Dict[str, Any]]:
         raw = read_json(SFTP_USERS_FILE, [])
@@ -174,6 +211,151 @@ Match Group sftpusers
         atomic_write_json(SFTP_USERS_FILE, filtered)
         return True
 
+    def _start_sidecar(self, port: int) -> bool:
+        """Starts or creates the zettnas-sftp sidecar container with host network mode."""
+        sock_path = "/var/run/docker.sock"
+        if not os.path.exists(sock_path):
+            return False
+
+        try:
+            from backend.services.container_mutator import _docker_request
+
+            # 1. Check if container already exists
+            code, c_data = _docker_request("GET", "/containers/zettnas-sftp/json")
+            if code == 200:
+                is_running = bool(c_data.get("State", {}).get("Running", False))
+                cmd = c_data.get("Config", {}).get("Cmd", [])
+                if is_running and f":{port}" in cmd:
+                    logger.info(f"[SFTP] Sidecar zettnas-sftp already running on port {port}")
+                    return True
+
+                if not is_running and f":{port}" in cmd:
+                    code_st, _ = _docker_request("POST", "/containers/zettnas-sftp/start")
+                    if code_st in (204, 200, 304):
+                        logger.info(f"[SFTP] Existing sidecar zettnas-sftp started on port {port}")
+                        return True
+
+                # Port mismatch or failure: recreate cleanly
+                _docker_request("POST", "/containers/zettnas-sftp/stop?t=2")
+                _docker_request("DELETE", "/containers/zettnas-sftp?force=true")
+
+            # 2. Inspect parent container for image and host volume bindings
+            code_tk, tk_info = _docker_request("GET", "/containers/zettnas-toolkit/json")
+            image = "ghcr.io/fr0styx/zettnas-toolkit:latest"
+            tk_binds = []
+            if code_tk == 200:
+                image = tk_info.get("Config", {}).get("Image") or image
+                tk_binds = tk_info.get("HostConfig", {}).get("Binds", []) or []
+
+            # 3. Determine host path for data directory
+            host_data_dir = None
+            for b in tk_binds:
+                parts = b.split(":")
+                if len(parts) >= 2 and parts[1] == "/app/data":
+                    host_data_dir = parts[0]
+                    break
+
+            if not host_data_dir:
+                if os.path.exists("/mnt/user/appdata/zettnas-toolkit/data"):
+                    host_data_dir = "/mnt/user/appdata/zettnas-toolkit/data"
+                else:
+                    host_data_dir = DATA_DIR
+
+            host_repo = os.path.dirname(host_data_dir) if host_data_dir else None
+
+            # 4. Construct binds for the sidecar
+            binds = [f"{host_data_dir}:/app/data:rw"]
+            for b in tk_binds:
+                if ":/mnt/user" in b or ":/mnt/storage" in b:
+                    if b not in binds:
+                        binds.append(b)
+
+            if not any(":/mnt/user" in b for b in binds) and os.path.exists("/mnt/user"):
+                binds.append("/mnt/user:/mnt/user:rw")
+            if not any(":/mnt/storage" in b for b in binds) and os.path.exists("/mnt/storage"):
+                binds.append("/mnt/storage:/mnt/storage:rw")
+
+            if host_repo and os.path.exists("/mnt/user/appdata/zettnas-toolkit/backend"):
+                binds.append(f"{host_repo}/backend:/app/backend:ro")
+
+            payload = {
+                "Image": image,
+                "Cmd": [
+                    "rclone",
+                    "serve",
+                    "sftp",
+                    "--addr",
+                    f":{port}",
+                    "--vfs-cache-mode",
+                    "writes",
+                    "--dir-cache-time",
+                    "10s",
+                    "--cache-dir",
+                    "/app/data/sftp/cache",
+                    "--auth-proxy",
+                    "/app/backend/services/rclone_auth_proxy.py",
+                ],
+                "HostConfig": {
+                    "NetworkMode": "host",
+                    "Binds": binds,
+                    "RestartPolicy": {"Name": "unless-stopped"},
+                },
+                "Labels": {
+                    "app": "zettnas-sftp",
+                    "managed-by": "zettnas-toolkit",
+                },
+            }
+
+            code_cr, resp_cr = _docker_request("POST", "/containers/create?name=zettnas-sftp", body=payload)
+            if code_cr in (201, 200):
+                code_st, resp_st = _docker_request("POST", "/containers/zettnas-sftp/start")
+                if code_st in (204, 200, 304):
+                    logger.info(f"[SFTP] Sidecar container zettnas-sftp started on host port {port}")
+                    return True
+                else:
+                    logger.error(f"[SFTP] Failed to start sidecar container: {code_st} {resp_st}")
+                    return False
+            else:
+                logger.error(f"[SFTP] Failed to create sidecar container: {code_cr} {resp_cr}")
+                return False
+
+        except Exception as e:
+            logger.warning(f"[SFTP] Exception in _start_sidecar: {e}")
+            return False
+
+    def _start_subprocess(self, port: int) -> bool:
+        """Starts local rclone SFTP server process as a fallback."""
+        auth_proxy = os.path.abspath(os.path.join(os.path.dirname(__file__), "rclone_auth_proxy.py"))
+        cache_dir = os.path.join(SFTP_DIR, "cache")
+        os.makedirs(cache_dir, exist_ok=True)
+        cmd = [
+            "rclone",
+            "serve",
+            "sftp",
+            "--addr",
+            f":{port}",
+            "--vfs-cache-mode",
+            "writes",
+            "--dir-cache-time",
+            "10s",
+            "--cache-dir",
+            cache_dir,
+            "--auth-proxy",
+            auth_proxy,
+        ]
+        try:
+            self._proc = subprocess.Popen(
+                cmd,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                start_new_session=True,
+            )
+            logger.info(f"[SFTP] Subprocess started (PID: {self._proc.pid}) on port {port}")
+            return True
+        except Exception as e:
+            logger.warning(f"[SFTP] Subprocess start failed: {e}")
+            return False
+
     def get_status(self) -> SFTPStatus:
         cfg = self.get_config()
         port = cfg.get("port", 2222)
@@ -196,21 +378,33 @@ Match Group sftpusers
             except Exception:
                 pass
 
-        running = enabled and (port_open or sidecar_status == "running")
-        mode = (
-            "native_sidecar"
-            if sidecar_detected
-            else ("host_sshd" if port_open else ("disabled" if not enabled else "configured"))
-        )
+        subprocess_running = bool(hasattr(self, "_proc") and self._proc and self._proc.poll() is None)
+        running = enabled and (port_open or sidecar_status == "running" or subprocess_running)
+
+        if not enabled:
+            mode = "disabled"
+        elif sidecar_status == "running":
+            mode = "native_sidecar"
+        elif port_open:
+            mode = "host_sshd"
+        elif subprocess_running:
+            mode = "subprocess"
+        else:
+            mode = "configured"
 
         # Primary host IP heuristic
         host_ip = "127.0.0.1"
         try:
-            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
-                s.connect(("1.1.1.1", 80))
-                host_ip = s.getsockname()[0]
+            from backend.hardware.network import get_network_topology
+
+            host_ip = get_network_topology().get("summary", {}).get("primary_ip") or "127.0.0.1"
         except Exception:
-            pass
+            try:
+                with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+                    s.connect(("1.1.1.1", 80))
+                    host_ip = s.getsockname()[0]
+            except Exception:
+                pass
 
         users = self.list_users()
         sample_user = users[0]["username"] if users else "username"
@@ -237,12 +431,62 @@ Match Group sftpusers
 
     def start(self) -> SFTPStatus:
         cfg = self.save_config({"enabled": True})
-        logger.info(f"[SFTP] Starting SFTP service on port {cfg.get('port', 2222)}...")
+        port = cfg.get("port", 2222)
+        logger.info(f"[SFTP] Starting SFTP service on port {port}...")
+
+        # 1. Try Docker sidecar first if Docker socket exists
+        started_sidecar = False
+        sock_path = "/var/run/docker.sock"
+        if os.path.exists(sock_path):
+            try:
+                started_sidecar = self._start_sidecar(port)
+            except Exception as e:
+                logger.warning(f"[SFTP] Could not start sidecar container: {e}")
+
+        # 2. Fallback to subprocess if sidecar did not start and port is not listening
+        if not started_sidecar and not self._check_port(port):
+            try:
+                self._start_subprocess(port)
+            except Exception as e:
+                logger.warning(f"[SFTP] Could not start fallback subprocess: {e}")
+
+        # 3. Wait up to 2.5s for service to listen on port
+        for _ in range(12):
+            if self._check_port(port):
+                break
+            time.sleep(0.2)
+
         return self.get_status()
 
     def stop(self) -> SFTPStatus:
         self.save_config({"enabled": False})
         logger.info("[SFTP] Stopping SFTP service...")
+
+        # 1. Stop Docker sidecar if Docker socket exists
+        sock_path = "/var/run/docker.sock"
+        if os.path.exists(sock_path):
+            try:
+                from backend.services.container_mutator import _docker_request
+
+                code, _ = _docker_request("GET", "/containers/zettnas-sftp/json")
+                if code == 200:
+                    _docker_request("POST", "/containers/zettnas-sftp/stop?t=2")
+            except Exception as e:
+                logger.warning(f"[SFTP] Failed to stop sidecar: {e}")
+
+        # 2. Terminate subprocess if active
+        if hasattr(self, "_proc") and self._proc:
+            try:
+                self._proc.terminate()
+                self._proc.wait(timeout=2)
+            except Exception:
+                try:
+                    self._proc.kill()
+                except Exception:
+                    pass
+            self._proc = None
+
+        time.sleep(0.3)
         return self.get_status()
 
     def restart(self) -> SFTPStatus:

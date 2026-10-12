@@ -75,6 +75,46 @@ def test_kvm_status_inspection():
     assert status["state"] in ("active", "restricted", "disabled")
 
 
+def test_kvm_status_active_when_rw():
+    from unittest.mock import mock_open, patch
+
+    def exists_side_effect(p):
+        return p in ("/host/dev/kvm", "/dev/kvm", "/host/proc/cpuinfo", "/host/proc/modules")
+
+    with (
+        patch("backend.api.vms.os.path.exists", side_effect=exists_side_effect),
+        patch("backend.api.vms.os.open", return_value=3),
+        patch("backend.api.vms.os.close"),
+        patch("backend.api.vms.os.symlink"),
+        patch("builtins.open", mock_open(read_data="flags: vmx\nkvm 123\nkvm_intel 456\n")),
+    ):
+        status = get_kvm_status()
+        assert status["state"] == "active"
+        assert status["kvm_rw"] is True
+        assert "KVM Accelerated: Active" in status["badge"]
+
+
+def test_kvm_status_restricted_when_cgroup_eperm():
+    from unittest.mock import mock_open, patch
+
+    def exists_side_effect(p):
+        return p in ("/host/dev/kvm", "/host/proc/cpuinfo", "/host/proc/modules")
+
+    def mock_open_eperm(path, flags):
+        raise PermissionError(1, "Operation not permitted")
+
+    with (
+        patch("backend.api.vms.os.path.exists", side_effect=exists_side_effect),
+        patch("backend.api.vms.os.open", side_effect=mock_open_eperm),
+        patch("backend.api.vms.os.symlink"),
+        patch("builtins.open", mock_open(read_data="flags: vmx\nkvm 123\nkvm_intel 456\n")),
+    ):
+        status = get_kvm_status()
+        assert status["state"] == "restricted"
+        assert status["cgroup_restricted"] is True
+        assert "Docker cgroup restricted" in status["badge"]
+
+
 def test_vms_api_crud_and_validation(client, auth_headers):
     # 1. Telemetry endpoint
     res = client.get("/api/vms/telemetry", headers=auth_headers)
@@ -120,21 +160,147 @@ def test_vms_api_crud_and_validation(client, auth_headers):
     assert created["state"] == "stopped"
     vm_id = created["id"]
 
-    # 5. Lifecycle Action: start -> running
+    # 5. Create VM with volume mappings & secondary disks
+    mapped_req = {
+        "name": "test-virtiofs-vm",
+        "description": "VM with VirtIO-FS and secondary disk",
+        "os_family": "linux",
+        "vcpus": 2,
+        "ram_gb": 2.0,
+        "disk_size_gb": 20,
+        "host_shares": [
+            {
+                "host_path": "/mnt/user/appdata",
+                "mount_tag": "appdata_share",
+                "driver": "virtiofs",
+                "mode": "rw",
+            }
+        ],
+        "secondary_disks": [
+            {
+                "name": "data-vol-1",
+                "size_gb": 40,
+                "format": "qcow2",
+                "bus": "virtio",
+            }
+        ],
+    }
+    res = client.post("/api/vms", json=mapped_req, headers=auth_headers)
+    assert res.status_code == 200
+    mapped_vm = res.json()
+    assert len(mapped_vm["host_shares"]) == 1
+    assert mapped_vm["host_shares"][0]["mount_tag"] == "appdata_share"
+    assert len(mapped_vm["secondary_disks"]) == 1
+
+    # 6. Lifecycle Action: start -> running
     res = client.post(f"/api/vms/{vm_id}/action", json={"action": "start"}, headers=auth_headers)
     assert res.status_code == 200
     assert res.json()["state"] == "running"
 
-    # 6. Action: pause -> paused
+    # 7. Connection info endpoint (SSH command, VNC, console)
+    res = client.get(f"/api/vms/{vm_id}/connection-info", headers=auth_headers)
+    assert res.status_code == 200
+    conn = res.json()
+    assert conn["vm_id"] == vm_id
+    assert "ssh_command" in conn
+    assert "vnc_port" in conn
+    assert "vnc_uri" in conn
+    assert conn["has_ip"] is True
+
+    # 8. Console token generation
+    res = client.post(f"/api/vms/{vm_id}/console/token", headers=auth_headers)
+    assert res.status_code == 200
+    tok = res.json()
+    assert "ticket" in tok
+    assert tok["ticket"].startswith("zct_")
+    assert "ws_url" in tok
+
+    # 9. Official ISO Catalog and download task
+    res = client.get("/api/vms/catalog", headers=auth_headers)
+    assert res.status_code == 200
+    catalog = res.json()
+    assert len(catalog) >= 5
+    ubuntu_item = next((c for c in catalog if c["id"] == "ubuntu-2404"), None)
+    assert ubuntu_item is not None
+    assert "download_url" in ubuntu_item
+    assert "downloaded" in ubuntu_item
+
+    # Start catalog download task
+    res = client.post("/api/vms/catalog/ubuntu-2404/download", headers=auth_headers)
+    assert res.status_code == 200
+    dl_res = res.json()
+    assert dl_res["status"] in ("started", "already_present")
+
+    # Catalog tasks listing
+    res = client.get("/api/vms/catalog/tasks", headers=auth_headers)
+    assert res.status_code == 200
+    tasks = res.json()
+    assert isinstance(tasks, list)
+
+    # Cancel/remove catalog task
+    if tasks and "task_id" in tasks[0]:
+        t_id = tasks[0]["task_id"]
+        del_task_res = client.delete(f"/api/vms/catalog/tasks/{t_id}", headers=auth_headers)
+        assert del_task_res.status_code == 200
+        assert del_task_res.json()["status"] in ("cancelling", "removed")
+
+    # 10. Individual VM detail endpoint
+    res = client.get(f"/api/vms/{vm_id}", headers=auth_headers)
+    assert res.status_code == 200
+    detail = res.json()
+    assert detail["id"] == vm_id
+    assert "vnc_port" in detail
+    assert "connection_summary" in detail
+
+    res = client.get("/api/vms/vm-nonexistent-id", headers=auth_headers)
+    assert res.status_code == 404
+
+    # 11. Streaming ISO upload with SHA-256 and format verification
+    sample_content = b"TEST_ISO_CONTENT_" * 64
+    res = client.post(
+        "/api/vms/isos/upload",
+        content=sample_content,
+        headers={**auth_headers, "x-filename": "test-sample.iso"},
+    )
+    assert res.status_code == 200
+    up_res = res.json()
+    assert up_res["filename"] == "test-sample.iso"
+    assert "sha256" in up_res
+    assert len(up_res["sha256"]) == 64
+    assert up_res["size_bytes"] == len(sample_content)
+
+    # Cleanup test upload
+    client.delete(f"/api/vms/isos?path={up_res['path']}", headers=auth_headers)
+
+    # 12. WebSocket ticket validation and single-use consumption
+    from backend.api.vms import _validate_console_ticket
+
+    assert _validate_console_ticket(tok["ticket"], vm_id) is True
+    # Second validation attempt fails because single-use ticket was consumed
+    assert _validate_console_ticket(tok["ticket"], vm_id) is False
+    assert _validate_console_ticket("invalid_ticket", vm_id) is False
+
+    # 13. Detailed KVM Diagnose endpoint with kvm_api_version
+    res = client.get("/api/vms/kvm/diagnose", headers=auth_headers)
+    assert res.status_code == 200
+    diag = res.json()
+    assert "hardware_virt" in diag
+    assert "cgroup_restricted" in diag
+    assert "badge" in diag
+    assert "kvm_api_version" in diag
+
+    # 14. Action: pause -> paused
     res = client.post(f"/api/vms/{vm_id}/action", json={"action": "pause"}, headers=auth_headers)
     assert res.status_code == 200
     assert res.json()["state"] == "paused"
 
-    # 7. Action: stop -> stopped
+    # 15. Action: stop -> stopped
     res = client.post(f"/api/vms/{vm_id}/action", json={"action": "stop"}, headers=auth_headers)
     assert res.status_code == 200
     assert res.json()["state"] == "stopped"
 
-    # 8. Delete stopped VM
+    # 16. Delete stopped VMs
     res = client.delete(f"/api/vms/{vm_id}", headers=auth_headers)
+    assert res.status_code == 200
+    res = client.delete(f"/api/vms/{mapped_vm['id']}", headers=auth_headers)
     assert res.status_code == 200

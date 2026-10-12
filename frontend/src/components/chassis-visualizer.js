@@ -6,6 +6,7 @@ import { announceA11y } from '../a11y.js';
 import { showToast, showConfirmToast } from '../toast.js';
 import { state } from '../state.js';
 import { makeDraggable, bringToFront, DockManager } from './dock.js';
+import QRCode from 'qrcode';
 
 /**
  * ZettNAS Physical Chassis Twin & Storage Topology Visualizer
@@ -1963,7 +1964,18 @@ export async function openNewCloudRemoteModal(onSuccess) {
     makeDraggable(winEl, headerEl, 'cloud-remote');
   }
 
+  let _currentOAuthSession = null;
+  let _oauthPollTimer = null;
+
   const close = () => {
+    if (_oauthPollTimer) {
+      clearInterval(_oauthPollTimer);
+      _oauthPollTimer = null;
+    }
+    if (_currentOAuthSession && _currentOAuthSession.session_id) {
+      api.delete(`/api/remotes/oauth/${_currentOAuthSession.session_id}`).catch(() => {});
+      _currentOAuthSession = null;
+    }
     if (typeof DockManager !== 'undefined' && DockManager.unregister) {
       DockManager.unregister('cloud-remote');
     }
@@ -2039,6 +2051,15 @@ export async function openNewCloudRemoteModal(onSuccess) {
       `).join('');
 
       const renderFields = () => {
+        if (_oauthPollTimer) {
+          clearInterval(_oauthPollTimer);
+          _oauthPollTimer = null;
+        }
+        if (_currentOAuthSession && _currentOAuthSession.session_id) {
+          api.delete(`/api/remotes/oauth/${_currentOAuthSession.session_id}`).catch(() => {});
+          _currentOAuthSession = null;
+        }
+
         const selectedType = providerSelect.value;
         const prov = providers.find((p) => p.type === selectedType) || providers[0];
         if (descEl) descEl.textContent = prov ? prov.description || '' : '';
@@ -2046,7 +2067,86 @@ export async function openNewCloudRemoteModal(onSuccess) {
         if (errorBox) errorBox.style.display = 'none';
 
         if (dynamicFields && prov) {
-          dynamicFields.innerHTML = (prov.fields || []).map((f) => {
+          const isOAuthProv = prov.type === 'onedrive' || prov.type === 'drive' || prov.type === 'dropbox' || prov.type === 'box' || Boolean(prov.authorize_cmd);
+          const provTitle = prov.type === 'onedrive'
+            ? 'Microsoft OneDrive'
+            : (prov.type === 'drive'
+              ? 'Google Drive'
+              : (prov.type === 'dropbox'
+                ? 'Dropbox'
+                : (prov.type === 'box' ? 'Box.com' : prov.name)));
+          const brandBtnLabel = prov.type === 'onedrive'
+            ? '1-Click Authorize with Microsoft'
+            : (prov.type === 'drive'
+              ? '1-Click Authorize with Google'
+              : (prov.type === 'dropbox'
+                ? '1-Click Authorize with Dropbox'
+                : (prov.type === 'box'
+                  ? '1-Click Authorize with Box'
+                  : `1-Click Authorize with ${prov.name}`)));
+
+          const oauthAssistantHtml = isOAuthProv ? `
+            <div class="oauth-assistant-card" style="margin-bottom: 16px; padding: 16px; background: rgba(14, 165, 233, 0.08); border: 1px solid rgba(14, 165, 233, 0.28); border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.25);">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 8px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="font-size: 18px;">🔑</span>
+                  <span style="font-size: 13px; font-weight: 700; color: #fff; letter-spacing: 0.3px;">Connect ${escapeHtml(provTitle)}</span>
+                </div>
+                <span style="font-size: 10px; padding: 2px 8px; background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 12px; font-weight: 600;">
+                  No Terminal Required · In-App OAuth
+                </span>
+              </div>
+
+              <!-- Step 1: 1-Click OR QR Code -->
+              <div id="oauth-step1-actions" style="margin-bottom: 14px;">
+                <button type="button" id="btn-oauth-browser" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 16px; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 7px; font-size: 12.5px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35); transition: all 0.2s;">
+                  <span>🌐 ${escapeHtml(brandBtnLabel)}</span>
+                </button>
+
+                <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin: 12px 0 10px 0; color: #64748b; font-size: 11px; font-weight: 700;">
+                  <span style="height: 1px; flex: 1; background: rgba(255,255,255,0.08);"></span>
+                  <span>— OR —</span>
+                  <span style="height: 1px; flex: 1; background: rgba(255,255,255,0.08);"></span>
+                </div>
+
+                <!-- QR Code Box -->
+                <div id="oauth-qr-box" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12px; background: rgba(0, 0, 0, 0.35); border: 1px dashed rgba(14, 165, 233, 0.35); border-radius: 8px;">
+                  <div id="oauth-qr-target" style="display: inline-flex; align-items: center; justify-content: center; padding: 8px; background: #ffffff; border-radius: 8px; min-width: 140px; min-height: 140px; box-shadow: 0 4px 14px rgba(0,0,0,0.6);">
+                    <div style="font-size: 11px; color: #0284c7; font-weight: 600;">⏳ Initializing QR code...</div>
+                  </div>
+                  <div style="font-size: 11px; font-weight: 600; color: #e2e8f0; margin-top: 8px; display: flex; align-items: center; gap: 6px;">
+                    <span>📱 Scan with your phone or tablet camera to sign in</span>
+                    <button type="button" id="btn-oauth-qr" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #38bdf8; font-size: 10px; padding: 2px 7px; border-radius: 4px; cursor: pointer;" title="Refresh QR Code">🔄 Refresh</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Step 2: Code Relay Input & Complete button -->
+              <div id="oauth-step2-box" style="padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, 0.08);">
+                <div style="font-size: 11.5px; font-weight: 700; color: #e2e8f0; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+                  <span style="color: #38bdf8;">Step 2:</span>
+                  <span>If browser says "This site can't be reached", paste the resulting URL from your address bar here:</span>
+                </div>
+                <div style="font-size: 11px; color: #94a3b8; line-height: 1.45; margin-bottom: 8px;">
+                  When Microsoft/Google finishes logging in, copy the full address from your browser address bar and paste it below:
+                </div>
+                <div style="display: flex; gap: 6px;">
+                  <input type="text" id="oauth-redirect-url" class="tz-select-input" placeholder="http://localhost:53682/?code=M.R3_... or full redirect URL" style="flex: 1; font-family: monospace; font-size: 11px;" />
+                  <button type="button" id="btn-oauth-paste" style="padding: 7px 12px; font-size: 11px; font-weight: 600; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #fff; border-radius: 5px; cursor: pointer; white-space: nowrap;">
+                    📋 Paste
+                  </button>
+                </div>
+                <button type="button" id="btn-oauth-exchange" style="margin-top: 10px; width: 100%; padding: 10px 14px; background: var(--ok2, #22c55e); color: #fff; font-size: 12px; font-weight: 700; border: none; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 14px rgba(34, 197, 94, 0.3);">
+                  <span>✓ Complete & Populate Token</span>
+                </button>
+              </div>
+
+              <!-- Status feedback pill -->
+              <div id="oauth-assistant-status" style="display: none; margin-top: 10px; padding: 8px 12px; border-radius: 6px; font-size: 11.5px; line-height: 1.45;"></div>
+            </div>
+          ` : '';
+
+          const fieldsHtml = (prov.fields || []).map((f) => {
             if (f.type === 'select') {
               const opts = (f.options || []).map((o) => `<option value="${o}" ${o === f.default ? 'selected' : ''}>${o}</option>`).join('');
               return `
@@ -2097,6 +2197,225 @@ export async function openNewCloudRemoteModal(onSuccess) {
               `;
             }
           }).join('');
+
+          dynamicFields.innerHTML = oauthAssistantHtml + fieldsHtml;
+
+          // Bind OAuth Assistant if present
+          if (isOAuthProv) {
+            const browserBtn = dynamicFields.querySelector('#btn-oauth-browser');
+            const qrBtn = dynamicFields.querySelector('#btn-oauth-qr');
+            const pasteBtn = dynamicFields.querySelector('#btn-oauth-paste');
+            const exchangeBtn = dynamicFields.querySelector('#btn-oauth-exchange');
+            const urlInput = dynamicFields.querySelector('#oauth-redirect-url');
+            const statusEl = dynamicFields.querySelector('#oauth-assistant-status');
+            const qrBox = dynamicFields.querySelector('#oauth-qr-box');
+            const qrTarget = dynamicFields.querySelector('#oauth-qr-target');
+            const step2Box = dynamicFields.querySelector('#oauth-step2-box');
+
+            const applyAcquiredToken = (token) => {
+              const tokenArea = dynamicFields.querySelector('textarea[name="token"]');
+              if (tokenArea) {
+                tokenArea.value = token;
+                tokenArea.dispatchEvent(new Event('input', { bubbles: true }));
+              }
+              const driveType = dynamicFields.querySelector('select[name="drive_type"]');
+              if (driveType) {
+                driveType.value = 'personal';
+              }
+              if (nameInput && !nameInput.value.trim()) {
+                nameInput.value = prov.type === 'onedrive' ? 'onedrive-personal' : `${prov.type}-cloud`;
+              }
+              if (statusEl) {
+                statusEl.style.display = 'block';
+                statusEl.style.background = 'rgba(34, 197, 94, 0.18)';
+                statusEl.style.border = '1px solid rgba(34, 197, 94, 0.4)';
+                statusEl.style.color = '#4ade80';
+                statusEl.innerHTML = '✅ <strong>Authentication Successful!</strong> Token verified & auto-populated below. You may now click <em>⚡ Test Connection</em> or <em>Save & Connect Remote</em>.';
+              }
+              const step1 = dynamicFields.querySelector('#oauth-step1-actions');
+              if (step1) step1.style.display = 'none';
+              if (qrBox) qrBox.style.display = 'none';
+              if (step2Box) step2Box.style.display = 'none';
+              playChirp(880, 0.12, 'sine');
+              showToast('Cloud credentials verified & token auto-populated!', 'info');
+            };
+
+            const startOAuth = async (isQr = false) => {
+              if (browserBtn) browserBtn.disabled = true;
+              if (qrBtn) qrBtn.disabled = true;
+
+              if (statusEl) {
+                statusEl.style.display = 'block';
+                statusEl.style.background = 'rgba(14, 165, 233, 0.15)';
+                statusEl.style.border = '1px solid rgba(14, 165, 233, 0.3)';
+                statusEl.style.color = '#38bdf8';
+                statusEl.innerHTML = '⏳ Contacting NAS to start OAuth authorization session...';
+              }
+
+              try {
+                const res = await api.post('/api/remotes/oauth/start', {
+                  provider_type: prov.type,
+                });
+
+                if (res && res.auth_url) {
+                  _currentOAuthSession = res;
+                  if (step2Box) step2Box.style.display = 'block';
+
+                  if (isQr) {
+                    if (qrBox && qrTarget) {
+                      qrBox.style.display = 'block';
+                      try {
+                        const svgStr = await QRCode.toString(res.auth_url, {
+                          type: 'svg',
+                          margin: 1,
+                          width: 170,
+                          color: { dark: '#000000', light: '#ffffff' }
+                        });
+                        qrTarget.innerHTML = svgStr;
+                      } catch (qErr) {
+                        qrTarget.innerHTML = `<a href="${escapeHtml(res.auth_url)}" target="_blank" style="color:#0284c7; text-decoration:underline;">Click here to open login link</a>`;
+                      }
+                    }
+                    if (statusEl) {
+                      statusEl.style.background = 'rgba(56, 189, 248, 0.12)';
+                      statusEl.style.border = '1px solid rgba(56, 189, 248, 0.3)';
+                      statusEl.style.color = '#38bdf8';
+                      statusEl.innerHTML = '📱 <strong>QR Code Ready:</strong> Scan with your phone camera to log in. Once signed in, copy the redirected URL and paste it in Step 2 below.';
+                    }
+                  } else {
+                    if (typeof window !== 'undefined' && window.open) {
+                      window.open(res.auth_url, '_blank');
+                    }
+                    if (statusEl) {
+                      statusEl.style.background = 'rgba(56, 189, 248, 0.12)';
+                      statusEl.style.border = '1px solid rgba(56, 189, 248, 0.3)';
+                      statusEl.style.color = '#38bdf8';
+                      statusEl.innerHTML = '🌐 <strong>Sign-in window opened:</strong> Log in to your account. When redirected, copy the address from your URL bar and paste it in Step 2 below.';
+                    }
+                  }
+
+                  if (_oauthPollTimer) clearInterval(_oauthPollTimer);
+                  _oauthPollTimer = setInterval(async () => {
+                    try {
+                      if (!_currentOAuthSession?.session_id) return;
+                      const st = await api.get(`/api/remotes/oauth/status/${_currentOAuthSession.session_id}`);
+                      if (st && st.completed && st.token) {
+                        clearInterval(_oauthPollTimer);
+                        _oauthPollTimer = null;
+                        applyAcquiredToken(st.token);
+                      }
+                    } catch (_) {}
+                  }, 2500);
+                }
+              } catch (err) {
+                if (statusEl) {
+                  statusEl.style.display = 'block';
+                  statusEl.style.background = 'rgba(239, 68, 68, 0.15)';
+                  statusEl.style.border = '1px solid rgba(239, 68, 68, 0.3)';
+                  statusEl.style.color = '#f87171';
+                  statusEl.innerHTML = `❌ Failed to start authorization: ${escapeHtml(err.message || 'Unknown error')}`;
+                }
+              } finally {
+                if (browserBtn) browserBtn.disabled = false;
+                if (qrBtn) qrBtn.disabled = false;
+              }
+            };
+
+            if (browserBtn) {
+              browserBtn.onclick = () => {
+                if (_currentOAuthSession && _currentOAuthSession.auth_url) {
+                  if (typeof window !== 'undefined' && window.open) {
+                    window.open(_currentOAuthSession.auth_url, '_blank');
+                  }
+                  if (statusEl) {
+                    statusEl.style.display = 'block';
+                    statusEl.style.background = 'rgba(56, 189, 248, 0.12)';
+                    statusEl.style.border = '1px solid rgba(56, 189, 248, 0.3)';
+                    statusEl.style.color = '#38bdf8';
+                    statusEl.innerHTML = '🌐 <strong>Sign-in window opened:</strong> Log in to your account. When redirected, copy the address from your URL bar and paste it in Step 2 below.';
+                  }
+                } else {
+                  startOAuth(false);
+                }
+              };
+            }
+            if (qrBtn) qrBtn.onclick = () => startOAuth(true);
+
+            if (pasteBtn && urlInput) {
+              pasteBtn.onclick = async () => {
+                try {
+                  if (navigator.clipboard && navigator.clipboard.readText) {
+                    const text = await navigator.clipboard.readText();
+                    if (text && text.trim()) {
+                      urlInput.value = text.trim();
+                      showToast('Pasted URL from clipboard', 'info');
+                      return;
+                    }
+                  }
+                } catch (_) {}
+                const manual = prompt('Paste the redirect URL from your browser address bar:');
+                if (manual && manual.trim()) {
+                  urlInput.value = manual.trim();
+                }
+              };
+            }
+
+            if (exchangeBtn && urlInput) {
+              exchangeBtn.onclick = async () => {
+                const rawUrl = urlInput.value.trim();
+                if (!rawUrl) {
+                  showToast('Please paste the redirect URL first', 'warning');
+                  return;
+                }
+                if (!_currentOAuthSession?.session_id) {
+                  showToast('No active authorization session. Please click 1-Click Authorize first.', 'warning');
+                  return;
+                }
+                exchangeBtn.disabled = true;
+                exchangeBtn.innerHTML = '<span>⏳ Exchanging Token...</span>';
+                if (statusEl) {
+                  statusEl.style.display = 'block';
+                  statusEl.style.background = 'rgba(14, 165, 233, 0.15)';
+                  statusEl.style.border = '1px solid rgba(14, 165, 233, 0.3)';
+                  statusEl.style.color = '#38bdf8';
+                  statusEl.innerHTML = '⏳ Contacting authorization server to exchange code for token...';
+                }
+
+                try {
+                  const exRes = await api.post('/api/remotes/oauth/exchange', {
+                    session_id: _currentOAuthSession.session_id,
+                    redirect_url: rawUrl,
+                  });
+
+                  if (exRes && exRes.token) {
+                    if (_oauthPollTimer) {
+                      clearInterval(_oauthPollTimer);
+                      _oauthPollTimer = null;
+                    }
+                    applyAcquiredToken(exRes.token);
+                  } else {
+                    throw new Error(exRes?.error || 'Token exchange failed');
+                  }
+                } catch (err) {
+                  if (statusEl) {
+                    statusEl.style.display = 'block';
+                    statusEl.style.background = 'rgba(239, 68, 68, 0.15)';
+                    statusEl.style.border = '1px solid rgba(239, 68, 68, 0.3)';
+                    statusEl.style.color = '#f87171';
+                    statusEl.innerHTML = `❌ Token Exchange Error: ${escapeHtml(err.message || 'Failed to exchange code')}`;
+                  }
+                } finally {
+                  exchangeBtn.disabled = false;
+                  exchangeBtn.innerHTML = '<span>✓ Complete & Populate Token</span>';
+                }
+              };
+            }
+
+            const isTest = (typeof process !== 'undefined' && process.env && (process.env.VITEST || process.env.NODE_ENV === 'test')) || (typeof window !== 'undefined' && window.__VITEST__);
+            if (!isTest) {
+              startOAuth(true);
+            }
+          }
 
           // Bind copy buttons inside dynamic fields
           dynamicFields.querySelectorAll('.remote-copy-cmd-btn').forEach((btn) => {

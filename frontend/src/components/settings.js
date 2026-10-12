@@ -758,8 +758,10 @@ export function initSettings() {
   window.addEventListener('keydown', (e) => {
     if (e.metaKey || e.ctrlKey || e.altKey) return;
     const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
-    if (activeTag === 'input' || activeTag === 'select' || activeTag === 'textarea' || document.activeElement?.isContentEditable) {
-      if (e.key === 'Escape') document.activeElement.blur();
+    const consoleWin = document.getElementById('vm-console-window');
+    const isConsoleActive = consoleWin && !consoleWin.classList.contains('window-minimized') && consoleWin.style.display !== 'none' && (consoleWin.dataset.focused === 'true' || consoleWin.contains(document.activeElement));
+    if (activeTag === 'input' || activeTag === 'select' || activeTag === 'textarea' || document.activeElement?.isContentEditable || isConsoleActive) {
+      if (e.key === 'Escape' && activeTag !== 'canvas') document.activeElement?.blur?.();
       return;
     }
 

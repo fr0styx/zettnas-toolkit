@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 """
-ZettNAS Toolkit - rclone WebDAV Auth Proxy.
-Authenticates incoming WebDAV requests dynamically using ZettNAS SQLite User Store.
-Mounts isolated home directories for standard users, and full pool for admins.
+ZettNAS Toolkit - rclone WebDAV & SFTP Auth Proxy.
+Authenticates incoming WebDAV/SFTP requests dynamically using:
+1. Dedicated SFTP User Store (data/sftp/users.json)
+2. ZettNAS SQLite User Store (users.db)
+3. System Admin fallback credentials
+Mounts isolated home directories or designated shares for standard users, and full pool for admins.
 """
 
 import json
@@ -31,45 +34,81 @@ def main():
 
     username = str(req.get("user") or "").strip()
     password = str(req.get("pass") or "")
+    public_key = str(req.get("public_key") or "").strip()
 
     if not username:
         sys.exit(1)
 
-    # 1. Check user in SQLite users.db
-    db_path = os.environ.get("USERS_DB_PATH") or getattr(config, "USERS_DB_PATH", None)
-    user = get_user_by_username(username, db_path=db_path)
+    pool_path = getattr(config, "POOL_PATH", "/mnt/user")
     authenticated = False
     is_admin = False
+    target_root = None
 
-    if user and user.get("status") == "active":
-        if verify_password(password, user.get("password_hash", "")):
-            authenticated = True
-            is_admin = user.get("role_id") in ("superadmin", "storage_admin")
+    # 1. Check dedicated SFTP User Store (data/sftp/users.json)
+    sftp_users_file = os.path.join(getattr(config, "DATA_DIR", "/app/data"), "sftp", "users.json")
+    if os.path.exists(sftp_users_file):
+        try:
+            with open(sftp_users_file, "r", encoding="utf-8") as f:
+                sftp_users = json.load(f)
+            if isinstance(sftp_users, list):
+                for u in sftp_users:
+                    if u.get("username", "").strip().lower() == username.lower() and u.get("enabled", True):
+                        u_pass = u.get("password")
+                        if u_pass and password:
+                            if u_pass == password or verify_password(password, u_pass):
+                                authenticated = True
+                        u_key = str(u.get("pubkey") or "").strip()
+                        if u_key and public_key:
+                            if u_key in public_key or public_key in u_key:
+                                authenticated = True
+                        if authenticated:
+                            shares = u.get("shares", [])
+                            if len(shares) == 1:
+                                s = shares[0]
+                                target_root = s if os.path.isabs(s) else os.path.join(pool_path, s)
+                            elif len(shares) > 1:
+                                target_root = pool_path
+                            else:
+                                target_root = os.path.join(pool_path, "homes", username.lower())
+                            break
+        except Exception:
+            pass
 
-    # 2. Fallback check for legacy admin credentials
+    # 2. Check user in SQLite users.db
+    if not authenticated:
+        db_path = os.environ.get("USERS_DB_PATH") or getattr(config, "USERS_DB_PATH", None)
+        user = get_user_by_username(username, db_path=db_path)
+        if user and user.get("status") == "active":
+            if password and verify_password(password, user.get("password_hash", "")):
+                authenticated = True
+                is_admin = user.get("role_id") in ("superadmin", "storage_admin")
+                if is_admin:
+                    target_root = pool_path
+                else:
+                    target_root = user.get("home_directory") or os.path.join(pool_path, "homes", username.lower())
+
+    # 3. Fallback check for legacy admin credentials
     if not authenticated and username.lower() in ("admin", getattr(config, "ZETTNAS_USERNAME", "admin").lower()):
-        if verify_password(password, config.STORED_PASSWORD_HASH) or password == (config.WEB_PASSWORD or "admin"):
+        if password and (
+            verify_password(password, config.STORED_PASSWORD_HASH) or password == (config.WEB_PASSWORD or "admin")
+        ):
             authenticated = True
             is_admin = True
+            target_root = pool_path
 
     if not authenticated:
         sys.exit(1)
 
-    # 3. Determine root path
-    pool_path = getattr(config, "POOL_PATH", "/mnt/user")
-    if is_admin:
-        root = pool_path
-    else:
-        root = user.get("home_directory") if user else ""
-        if not root:
-            root = os.path.join(pool_path, "homes", username.lower())
-
+    # 4. Resolve root path safely
+    root = target_root or pool_path
     try:
         os.makedirs(root, exist_ok=True)
     except OSError:
         pass
+    if not os.path.exists(root):
+        root = pool_path
 
-    # 4. Output rclone backend configuration
+    # 5. Output rclone backend configuration
     backend_config = {
         "type": "local",
         "_root": root,

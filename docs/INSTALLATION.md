@@ -124,6 +124,8 @@ Recommended for custom DIY homelab builds (Jonsbo N1/N2/N3/N4, Fractal Node 804,
          - 'c 226:* rwm'   # DRI GPU devices
          - 'c 188:* rwm'   # USB Serial (/dev/ttyUSB*)
          - 'c 166:* rwm'   # USB ACM Serial (/dev/ttyACM*)
+         - 'c 10:232 rwm'  # KVM hardware virtualization (/dev/kvm)
+         - 'c 10:* rwm'    # Misc character devices (KVM, vhost-net)
          - 'b 8:* rwm'     # SCSI/SATA hard drives (/dev/sd*)
          - 'b 259:* rwm'   # NVMe solid state drives (/dev/nvme*)
    ```
@@ -190,6 +192,8 @@ FygoOS provides a modern, turnkey private cloud OS with native Docker support.
          - 'c 226:* rwm'
          - 'c 188:* rwm'
          - 'c 166:* rwm'
+         - 'c 10:232 rwm'  # KVM hardware virtualization (/dev/kvm)
+         - 'c 10:* rwm'    # Misc character devices (KVM, vhost-net)
          - 'b 8:* rwm'
          - 'b 259:* rwm'
    ```

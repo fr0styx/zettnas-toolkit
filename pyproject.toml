@@ -13,6 +13,7 @@ dependencies = [
     "argon2-cffi>=23.1.0",
     "sse-starlette==3.5.0",
     "uvicorn==0.54.0",
+    "websockets>=13.0",
 ]
 
 [project.optional-dependencies]

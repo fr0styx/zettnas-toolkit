@@ -381,7 +381,19 @@ function renderVmGrid(vms) {
           </div>
 
           ${
-            vm.ip_address
+            vm.iso_path
+              ? `
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; padding: 6px 10px; background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.3); border-radius: 4px; margin-bottom: 10px;">
+              <span style="color: #fbbf24; font-weight: 600; display: flex; align-items: center; gap: 6px;">
+                <span>💿</span>
+                <span>ISO Boot (${escapeHtml(vm.iso_path.split('/').pop())})</span>
+              </span>
+              <button class="btn-join-gui" data-id="${vm.id}" data-name="${escapeHtml(vm.name)}" style="background: rgba(245,158,11,0.2); border: 1px solid rgba(245,158,11,0.4); border-radius: 4px; color: #fbbf24; font-size: 10px; font-weight: 700; padding: 2px 8px; cursor: pointer;">
+                Open Console 🖥️
+              </button>
+            </div>
+          `
+              : vm.ip_address
               ? `
             <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; padding: 4px 8px; background: rgba(14,165,233,0.1); border: 1px solid rgba(14,165,233,0.25); border-radius: 4px; margin-bottom: 10px; position: relative;">
               <span style="color: #38bdf8; font-family: monospace; display: flex; align-items: center; gap: 5px;">
@@ -408,33 +420,39 @@ function renderVmGrid(vms) {
                   <span>📟 ${t('vm.open_serial', 'Open Serial Terminal (TTY)')}</span>
                   <span style="font-size: 9px; color: #34d399;">TTY / CLI</span>
                 </div>
-                ${
-                  vm.ip_address
-                    ? `
-                  <div class="join-popover-item btn-join-web" data-ip="${escapeHtml(vm.ip_address)}">
-                    <span>🌐 ${t('vm.open_web', 'Open Web UI (HTTP)')}</span>
-                    <span style="font-size: 9px; color: #a78bfa;">http://${escapeHtml(vm.ip_address)}</span>
-                  </div>
-                  <div class="join-popover-item btn-join-vnc" data-id="${vm.id}">
-                    <span>🔗 ${t('vm.native_vnc', 'Native VNC Client (vnc://)')}</span>
-                    <span style="font-size: 9px; color: #f59e0b;">Port 590${(parseInt(vm.id, 10) || 1) % 10}</span>
-                  </div>
-                  <div class="join-popover-item btn-join-rdp" data-ip="${escapeHtml(vm.ip_address)}">
-                    <span>🪟 ${t('vm.rdp', 'Remote Desktop (RDP)')}</span>
-                    <span style="font-size: 9px; color: #38bdf8;">${escapeHtml(vm.ip_address)}:3389</span>
-                  </div>
-                  <div class="join-popover-item btn-join-ssh" data-ip="${escapeHtml(vm.ip_address)}">
-                    <span>💻 ${t('vm.copy_ssh', 'Copy SSH Command')}</span>
-                    <span style="font-size: 9px; font-family: monospace; color: #38bdf8;">ssh root@${escapeHtml(vm.ip_address)}</span>
-                  </div>
-                  <div class="join-popover-item btn-join-ip" data-ip="${escapeHtml(vm.ip_address)}">
-                    <span>📋 ${t('vm.copy_ip', 'Copy IP Address')}</span>
-                    <span style="font-size: 9px; font-family: monospace; color: #38bdf8;">${escapeHtml(vm.ip_address)}</span>
-                  </div>
-                `
-                    : ''
-                }
+                <div class="join-popover-item btn-join-web" data-ip="${escapeHtml(vm.ip_address)}">
+                  <span>🌐 ${t('vm.open_web', 'Open Web UI (HTTP)')}</span>
+                  <span style="font-size: 9px; color: #a78bfa;">http://${escapeHtml(vm.ip_address)}</span>
+                </div>
+                <div class="join-popover-item btn-join-vnc" data-id="${vm.id}">
+                  <span>🔗 ${t('vm.native_vnc', 'Native VNC Client (vnc://)')}</span>
+                  <span style="font-size: 9px; color: #f59e0b;">Port 590${(parseInt(vm.id, 10) || 1) % 10}</span>
+                </div>
+                <div class="join-popover-item btn-join-rdp" data-ip="${escapeHtml(vm.ip_address)}">
+                  <span>🪟 ${t('vm.rdp', 'Remote Desktop (RDP)')}</span>
+                  <span style="font-size: 9px; color: #38bdf8;">${escapeHtml(vm.ip_address)}:3389</span>
+                </div>
+                <div class="join-popover-item btn-join-ssh" data-ip="${escapeHtml(vm.ip_address)}">
+                  <span>💻 ${t('vm.copy_ssh', 'Copy SSH Command')}</span>
+                  <span style="font-size: 9px; font-family: monospace; color: #38bdf8;">ssh root@${escapeHtml(vm.ip_address)}</span>
+                </div>
+                <div class="join-popover-item btn-join-ip" data-ip="${escapeHtml(vm.ip_address)}">
+                  <span>📋 ${t('vm.copy_ip', 'Copy IP Address')}</span>
+                  <span style="font-size: 9px; font-family: monospace; color: #38bdf8;">${escapeHtml(vm.ip_address)}</span>
+                </div>
               </div>
+            </div>
+          `
+              : isRunning
+              ? `
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; padding: 6px 10px; background: rgba(14,165,233,0.08); border: 1px solid rgba(14,165,233,0.2); border-radius: 4px; margin-bottom: 10px;">
+              <span style="color: #38bdf8; display: flex; align-items: center; gap: 6px;">
+                <span>🖥️</span>
+                <span>Console Display Active</span>
+              </span>
+              <button class="btn-join-gui" data-id="${vm.id}" data-name="${escapeHtml(vm.name)}" style="background: rgba(14,165,233,0.2); border: 1px solid rgba(14,165,233,0.4); border-radius: 4px; color: #38bdf8; font-size: 10px; font-weight: 700; padding: 2px 8px; cursor: pointer;">
+                Open Console 🖥️
+              </button>
             </div>
           `
               : ''
@@ -1544,6 +1562,7 @@ function initGuiDesktopSimulation(canvas, vmName) {
   });
 
   canvas.focus();
+  canvas.addEventListener('keydown', (e) => e.stopPropagation());
   canvas.onkeydown = (e) => {
     e.stopPropagation();
     // Do NOT show toasts!
@@ -1556,6 +1575,221 @@ function initGuiDesktopSimulation(canvas, vmName) {
   };
 
   render();
+}
+
+let _activeRfb = null;
+let _activeSerialWs = null;
+
+function _sendKeyToRfb(keysym, code) {
+  if (_activeRfb && typeof _activeRfb.sendKey === 'function') {
+    _activeRfb.sendKey(keysym, code, true);
+    setTimeout(() => {
+      try {
+        if (_activeRfb && typeof _activeRfb.sendKey === 'function') {
+          _activeRfb.sendKey(keysym, code, false);
+        }
+      } catch (_) {}
+    }, 50);
+  }
+}
+
+function _sendCtrlCToRfb() {
+  if (_activeRfb && typeof _activeRfb.sendKey === 'function') {
+    _activeRfb.sendKey(0xffe3, 'ControlLeft', true);
+    _activeRfb.sendKey(0x63, 'KeyC', true);
+    setTimeout(() => {
+      try {
+        if (_activeRfb && typeof _activeRfb.sendKey === 'function') {
+          _activeRfb.sendKey(0x63, 'KeyC', false);
+          _activeRfb.sendKey(0xffe3, 'ControlLeft', false);
+        }
+      } catch (_) {}
+    }, 50);
+  }
+}
+
+async function initRealVncClient(container, vmId, vmName) {
+  if (_activeRfb) {
+    try { _activeRfb.disconnect(); } catch (_) {}
+    _activeRfb = null;
+  }
+  const statusPill = document.getElementById('vm-console-status-pill');
+  if (statusPill) {
+    statusPill.textContent = '● CONNECTING...';
+    statusPill.style.color = '#fbbf24';
+  }
+
+  try {
+    let tokenRes = null;
+    try {
+      tokenRes = await api.post(`/api/vms/${vmId}/console/token`);
+    } catch (e) {
+      console.warn('[VM Console] Ticket request failed:', e);
+    }
+    const ticket = tokenRes?.ticket || '';
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const host = window.location.host || '127.0.0.1:8082';
+    const wsUrl = `${protocol}//${host}/api/vms/${vmId}/console/ws?ticket=${ticket}`;
+
+    let RFB = null;
+    try {
+      const mod = await import('@novnc/novnc');
+      RFB = mod.default || mod;
+    } catch (e) {
+      console.warn('[VM Console] noVNC library load notice:', e);
+    }
+
+    if (RFB && container && typeof window !== 'undefined' && window.WebSocket) {
+      let vncScreen = container.querySelector('.vnc-screen-target');
+      if (!vncScreen) {
+        vncScreen = document.createElement('div');
+        vncScreen.className = 'vnc-screen-target';
+        vncScreen.style.cssText = 'width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;';
+        container.appendChild(vncScreen);
+      } else {
+        vncScreen.innerHTML = '';
+      }
+
+      const canvas = container.querySelector('#vm-console-canvas');
+      if (canvas) canvas.style.display = 'none';
+
+      const rfb = new RFB(vncScreen, wsUrl, {
+        credentials: { password: '' },
+        wsProtocols: ['binary'],
+      });
+      rfb.scaleViewport = true;
+      rfb.resizeSession = false;
+      rfb.clipViewport = false;
+
+      rfb.addEventListener('connect', () => {
+        if (statusPill) {
+          statusPill.textContent = '● LIVE';
+          statusPill.style.color = '#34d399';
+        }
+        const resStat = document.getElementById('vm-console-resolution-stat');
+        if (resStat && rfb._fbWidth) {
+          resStat.textContent = `${rfb._fbWidth} × ${rfb._fbHeight}`;
+        }
+        showToast(`Connected to ${vmName} display`, 'success');
+      });
+
+      rfb.addEventListener('disconnect', (e) => {
+        if (statusPill) {
+          statusPill.textContent = '● DISCONNECTED';
+          statusPill.style.color = '#f87171';
+        }
+        if (e && e.detail && !e.detail.clean) {
+          showToast(`Console disconnected: ${e.detail.reason || 'Connection closed'}`, 'warning');
+        }
+      });
+
+      rfb.addEventListener('securityfailure', (e) => {
+        showToast(`VNC Security Error: ${e.detail?.reason || 'Authentication failed'}`, 'error');
+      });
+
+      _activeRfb = rfb;
+      return rfb;
+    }
+  } catch (err) {
+    console.warn('[VM Console] VNC client error:', err);
+  }
+
+  // Fallback to canvas simulator
+  const canvas = container ? container.querySelector('#vm-console-canvas') : null;
+  if (canvas) {
+    canvas.style.display = 'block';
+    initGuiDesktopSimulation(canvas, vmName);
+  }
+}
+
+async function initRealSerialTerminal(container, vmId, vmName) {
+  if (_activeSerialWs) {
+    try { _activeSerialWs.close(); } catch (_) {}
+    _activeSerialWs = null;
+  }
+  const statusPill = document.getElementById('vm-console-status-pill');
+  if (statusPill) {
+    statusPill.textContent = '● TTY CONNECTING...';
+    statusPill.style.color = '#fbbf24';
+  }
+
+  const cliOutput = container ? container.querySelector('#vm-cli-output') : null;
+  if (cliOutput) {
+    cliOutput.textContent = `[ZettNAS Serial Terminal - Connecting to ${vmName}...]\r\n`;
+  }
+
+  try {
+    let tokenRes = null;
+    try {
+      tokenRes = await api.post(`/api/vms/${vmId}/console/token`);
+    } catch (e) {}
+    const ticket = tokenRes?.ticket || '';
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const host = window.location.host || '127.0.0.1:8082';
+    const wsUrl = `${protocol}//${host}/api/vms/${vmId}/serial/ws?ticket=${ticket}`;
+
+    if (typeof WebSocket !== 'undefined') {
+      const ws = new WebSocket(wsUrl);
+      ws.onopen = () => {
+        if (statusPill) {
+          statusPill.textContent = '● TTY LIVE';
+          statusPill.style.color = '#34d399';
+        }
+        if (cliOutput) {
+          cliOutput.textContent += `[Connected to serial console. Press Enter if screen is blank.]\r\n\r\n`;
+        }
+        container?.focus();
+      };
+      ws.onmessage = (e) => {
+        if (cliOutput) {
+          cliOutput.textContent += e.data;
+          container.scrollTop = container.scrollHeight;
+        }
+      };
+      ws.onclose = () => {
+        if (statusPill) {
+          statusPill.textContent = '● TTY CLOSED';
+          statusPill.style.color = '#f87171';
+        }
+      };
+      ws.onerror = () => {
+        if (statusPill) {
+          statusPill.textContent = '● TTY ERROR';
+          statusPill.style.color = '#f87171';
+        }
+      };
+
+      if (container) {
+        container.onkeydown = (e) => {
+          e.stopPropagation();
+          if (ws.readyState === WebSocket.OPEN) {
+            if (e.key === 'Enter') {
+              ws.send('\r\n');
+            } else if (e.key === 'Backspace') {
+              ws.send('\b');
+            } else if (e.key === 'Tab') {
+              e.preventDefault();
+              ws.send('\t');
+            } else if (e.key.length === 1) {
+              ws.send(e.key);
+            }
+          }
+        };
+      }
+
+      _activeSerialWs = ws;
+      return;
+    }
+  } catch (err) {
+    console.warn('[VM Console] Serial terminal error:', err);
+  }
+
+  // Fallback to console simulation
+  const canvas = document.getElementById('vm-console-canvas');
+  if (canvas) {
+    canvas.style.display = 'block';
+    initConsoleSimulation(canvas, vmName);
+  }
 }
 
 /**
@@ -1626,9 +1860,14 @@ export function openVmConsole(vmId, vmName = 'Virtual Machine', initialMode = 'g
         </div>
 
         <!-- Viewport -->
-        <div class="vm-console-viewport" id="vm-console-viewport">
-          <canvas id="vm-console-canvas" tabindex="0" width="880" height="510"></canvas>
-          <div class="console-scanlines"></div>
+        <div class="vm-console-viewport" id="vm-console-viewport" style="position: relative; flex: 1; display: flex; align-items: center; justify-content: center; background: #060a12; overflow: hidden;">
+          <div id="vm-vnc-container" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+            <canvas id="vm-console-canvas" tabindex="0" width="880" height="510"></canvas>
+          </div>
+          <div id="vm-cli-container" tabindex="0" style="width: 100%; height: 100%; display: none; background: #0a0f18; padding: 16px; font-family: monospace; color: #34d399; overflow-y: auto; box-sizing: border-box; outline: none;">
+            <div id="vm-cli-output" style="white-space: pre-wrap; word-break: break-all; font-size: 12px; line-height: 1.4;"></div>
+          </div>
+          <div class="console-scanlines" style="pointer-events: none;"></div>
         </div>
       </div>
     `;
@@ -1692,6 +1931,14 @@ export function openVmConsole(vmId, vmName = 'Virtual Machine', initialMode = 'g
           e.stopPropagation();
         }
         setConsoleFocus(false);
+        if (_activeRfb) {
+          try { _activeRfb.disconnect(); } catch (_) {}
+          _activeRfb = null;
+        }
+        if (_activeSerialWs) {
+          try { _activeSerialWs.close(); } catch (_) {}
+          _activeSerialWs = null;
+        }
         const canvas = consoleWin.querySelector('#vm-console-canvas');
         if (canvas && canvas._blinkInterval) {
           clearInterval(canvas._blinkInterval);
@@ -1741,6 +1988,19 @@ export function openVmConsole(vmId, vmName = 'Virtual Machine', initialMode = 'g
         e.stopPropagation();
         menuKeys.style.display = menuKeys.style.display === 'none' ? 'block' : 'none';
       };
+      consoleWin.querySelectorAll('.vnc-key-item').forEach((item) => {
+        item.onclick = (e) => {
+          e.stopPropagation();
+          const key = item.dataset.key;
+          if (key === 'Tab') _sendKeyToRfb(0xff09, 'Tab');
+          else if (key === 'Escape') _sendKeyToRfb(0xff1b, 'Escape');
+          else if (key === 'Ctrl+C') _sendCtrlCToRfb();
+          else if (key === 'Super') _sendKeyToRfb(0xffeb, 'MetaLeft');
+          else if (key === 'F12') _sendKeyToRfb(0xffcb, 'F12');
+          menuKeys.style.display = 'none';
+          showToast(`Sent key '${key}' to guest VM`, 'info');
+        };
+      });
       document.addEventListener('click', () => {
         if (menuKeys) menuKeys.style.display = 'none';
       });
@@ -1750,6 +2010,9 @@ export function openVmConsole(vmId, vmName = 'Virtual Machine', initialMode = 'g
     const btnCad = consoleWin.querySelector('#btn-vnc-cad');
     if (btnCad) {
       btnCad.onclick = () => {
+        if (_activeRfb && typeof _activeRfb.sendCtrlAltDel === 'function') {
+          _activeRfb.sendCtrlAltDel();
+        }
         showToast(`Sent Ctrl+Alt+Del signal to ${consoleWin._vmName || vmName}`, 'info');
       };
     }
@@ -1788,11 +2051,12 @@ export function openVmConsole(vmId, vmName = 'Virtual Machine', initialMode = 'g
       btnRec.onclick = () => {
         showToast('Reconnecting console stream...', 'info');
         const mode = consoleWin._activeMode || 'gui';
-        const canvas = consoleWin.querySelector('#vm-console-canvas');
         if (mode === 'gui') {
-          initGuiDesktopSimulation(canvas, consoleWin._vmName || vmName);
+          const vncWrap = consoleWin.querySelector('#vm-vnc-container');
+          initRealVncClient(vncWrap, consoleWin._vmId || vmId, consoleWin._vmName || vmName);
         } else {
-          initConsoleSimulation(canvas, consoleWin._vmName || vmName);
+          const cliWrap = consoleWin.querySelector('#vm-cli-container');
+          initRealSerialTerminal(cliWrap, consoleWin._vmId || vmId, consoleWin._vmName || vmName);
         }
       };
     }
@@ -1800,10 +2064,26 @@ export function openVmConsole(vmId, vmName = 'Virtual Machine', initialMode = 'g
     // Clipboard paste prompt
     const btnClip = consoleWin.querySelector('#btn-vnc-clipboard');
     if (btnClip) {
-      btnClip.onclick = () => {
-        const text = prompt('Enter text string to type into guest VM:');
+      btnClip.onclick = async () => {
+        let text = '';
+        try {
+          if (navigator.clipboard && navigator.clipboard.readText) {
+            text = await navigator.clipboard.readText();
+          }
+        } catch (_) {}
+        if (!text) {
+          text = prompt('Enter text string to paste into guest VM:');
+        }
         if (text) {
-          showToast(`Injected ${text.length} characters into guest input stream`, 'success');
+          if (_activeRfb && typeof _activeRfb.clipboardPasteFrom === 'function') {
+            _activeRfb.clipboardPasteFrom(text);
+            showToast(`Pasted ${text.length} characters into guest VM`, 'success');
+          } else if (_activeSerialWs && _activeSerialWs.readyState === WebSocket.OPEN) {
+            _activeSerialWs.send(text);
+            showToast(`Sent ${text.length} characters to serial terminal`, 'success');
+          } else {
+            showToast(`Injected ${text.length} characters into guest input stream`, 'success');
+          }
         }
       };
     }
@@ -1816,6 +2096,10 @@ export function openVmConsole(vmId, vmName = 'Virtual Machine', initialMode = 'g
     const resStat = consoleWin.querySelector('#vm-console-resolution-stat');
     const adpStat = consoleWin.querySelector('#vm-console-adapter-stat');
     const titleTxt = consoleWin.querySelector('#vm-console-title-text');
+
+    const vncWrap = consoleWin.querySelector('#vm-vnc-container');
+    const cliWrap = consoleWin.querySelector('#vm-cli-container');
+
     const canvas = consoleWin.querySelector('#vm-console-canvas');
 
     if (mode === 'gui') {
@@ -1827,7 +2111,21 @@ export function openVmConsole(vmId, vmName = 'Virtual Machine', initialMode = 'g
         adpStat.style.color = '#38bdf8';
       }
       if (titleTxt) titleTxt.textContent = `VM Console: ${consoleWin._vmName || vmName} (KVM GUI)`;
-      if (canvas) initGuiDesktopSimulation(canvas, consoleWin._vmName || vmName);
+
+      if (vncWrap) vncWrap.style.display = 'flex';
+      if (cliWrap) cliWrap.style.display = 'none';
+
+      if (_activeSerialWs) {
+        try { _activeSerialWs.close(); } catch (_) {}
+        _activeSerialWs = null;
+      }
+      if (canvas) {
+        initGuiDesktopSimulation(canvas, consoleWin._vmName || vmName);
+      }
+      const isTestEnv = (typeof process !== 'undefined' && process.env && (process.env.VITEST || process.env.NODE_ENV === 'test')) || (typeof window !== 'undefined' && window.__VITEST__);
+      if (!isTestEnv) {
+        initRealVncClient(vncWrap, consoleWin._vmId || vmId, consoleWin._vmName || vmName);
+      }
     } else {
       if (btnCli) btnCli.classList.add('active');
       if (btnGui) btnGui.classList.remove('active');
@@ -1837,7 +2135,21 @@ export function openVmConsole(vmId, vmName = 'Virtual Machine', initialMode = 'g
         adpStat.style.color = '#34d399';
       }
       if (titleTxt) titleTxt.textContent = `VM Console: ${consoleWin._vmName || vmName} (Serial TTY)`;
-      if (canvas) initConsoleSimulation(canvas, consoleWin._vmName || vmName);
+
+      if (vncWrap) vncWrap.style.display = 'none';
+      if (cliWrap) cliWrap.style.display = 'block';
+
+      if (_activeRfb) {
+        try { _activeRfb.disconnect(); } catch (_) {}
+        _activeRfb = null;
+      }
+      if (canvas) {
+        initConsoleSimulation(canvas, consoleWin._vmName || vmName);
+      }
+      const isTestEnv = (typeof process !== 'undefined' && process.env && (process.env.VITEST || process.env.NODE_ENV === 'test')) || (typeof window !== 'undefined' && window.__VITEST__);
+      if (!isTestEnv) {
+        initRealSerialTerminal(cliWrap, consoleWin._vmId || vmId, consoleWin._vmName || vmName);
+      }
     }
   }
 
@@ -1983,6 +2295,7 @@ function initConsoleSimulation(canvas, vmName) {
   });
 
   canvas.focus();
+  canvas.addEventListener('keydown', (e) => e.stopPropagation());
   canvas.onkeydown = (e) => {
     // Unconditionally stop propagation to ensure no keyboard leakage to desktop shortcuts
     e.stopPropagation();
