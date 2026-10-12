@@ -845,6 +845,140 @@ export async function fetchAndRenderStorageTopology(container) {
 }
 
 /**
+ * Builds HTML for Inbound SFTP Subsystem Server Card
+ */
+export function buildSftpCardHtml(sftpStatus, usersCount = 0, sampleUser = 'admin') {
+  const isRunning = Boolean(sftpStatus?.running);
+  const port = sftpStatus?.port || 2222;
+  const sftpPillClass = isRunning ? 'running' : 'stopped';
+  const sftpPillText = isRunning ? `🟢 RUNNING (Port ${port})` : '⚪ STOPPED';
+  const hostIp = window.location.hostname || '127.0.0.1';
+  const user = sampleUser || 'username';
+
+  const finderCmd = `sftp://${user}@${hostIp}:${port}/`;
+  const terminalCmd = `sftp -P ${port} ${user}@${hostIp}`;
+  const filezillaHint = `Host: ${hostIp} · Port: ${port} · Protocol: SFTP`;
+  const sshfsCmd = `sshfs -p ${port} ${user}@${hostIp}:/ /mnt/sftp`;
+
+  return `
+    <div class="webdav-server-card sftp-server-card" id="mgmt-sftp-subsystem-card">
+      <div class="webdav-card-header">
+        <div class="webdav-header-title">
+          <svg class="ic" style="width:18px; height:18px; fill:currentColor; color:var(--brand, #0ea5e9);"><use href="#i-storage"/></svg>
+          <span data-i18n="sftp.title">Inbound SFTP Subsystem</span>
+          <span class="webdav-status-pill ${sftpPillClass}">${sftpPillText}</span>
+        </div>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <button class="btn-pill-toggle btn-sftp-toggle-action" id="btn-sftp-header-toggle" style="padding:5px 12px; font-size:11px; font-weight:700; ${isRunning ? 'background:rgba(239,68,68,0.15); color:#f87171; border-color:rgba(239,68,68,0.3);' : ''}">
+            ${isRunning ? '⏹ Stop SFTP' : '▶ Start SFTP'}
+          </button>
+          <button class="btn-pill-toggle btn-sftp-users-action" id="btn-sftp-header-users" style="padding:5px 10px; font-size:11px; background:rgba(14,165,233,0.15); color:#38bdf8; border-color:rgba(14,165,233,0.3);" title="Manage SFTP users and permissions">
+            👥 Manage Users (${usersCount})
+          </button>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:16px; flex-wrap:wrap; font-size:11.5px; color:var(--muted); align-items:center;">
+        <span>Line-Rate Port: <strong style="color:#fff;">${port}</strong></span>
+        <span>Subsystem: <code style="color:#38bdf8;">internal-sftp</code></span>
+        <span>Isolation: <strong style="color:#fff;">Chroot Jail (/home/%u)</strong></span>
+        <span>Host Shell: <strong style="color:var(--alert, #ef4444);">Prohibited (No PTY)</strong></span>
+      </div>
+
+      <!-- Quick Connect Grid -->
+      <div class="webdav-quickconnect-grid">
+        <div class="webdav-qc-item">
+          <div class="webdav-qc-label">
+            <span>🍏 macOS Finder / Cyberduck</span>
+            <button class="btn-qc-copy" data-copy="${escapeHtml(finderCmd)}" title="Copy SFTP URL">📋 Copy</button>
+          </div>
+          <div class="webdav-qc-code">
+            <span>${escapeHtml(finderCmd)}</span>
+          </div>
+        </div>
+
+        <div class="webdav-qc-item">
+          <div class="webdav-qc-label">
+            <span>💻 Terminal / OpenSSH</span>
+            <button class="btn-qc-copy" data-copy="${escapeHtml(terminalCmd)}" title="Copy CLI Command">📋 Copy</button>
+          </div>
+          <div class="webdav-qc-code">
+            <span>${escapeHtml(terminalCmd)}</span>
+          </div>
+        </div>
+
+        <div class="webdav-qc-item">
+          <div class="webdav-qc-label">
+            <span>📁 FileZilla / WinSCP Client</span>
+            <button class="btn-qc-copy" data-copy="${escapeHtml(filezillaHint)}" title="Copy Connection Info">📋 Copy</button>
+          </div>
+          <div class="webdav-qc-code">
+            <span>${escapeHtml(filezillaHint)}</span>
+          </div>
+        </div>
+
+        <div class="webdav-qc-item">
+          <div class="webdav-qc-label">
+            <span>📜 SSHFS Mount (Linux/macOS)</span>
+            <button class="btn-qc-copy" data-copy="${escapeHtml(sshfsCmd)}" title="Copy SSHFS Mount Command">📋 Copy</button>
+          </div>
+          <div class="webdav-qc-code">
+            <span>${escapeHtml(sshfsCmd)}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * Binds interactivity to SFTP Subsystem Server Card
+ */
+export function bindSftpCardEvents(container, onRefresh) {
+  if (!container) return;
+
+  const card = container.querySelector('#mgmt-sftp-subsystem-card');
+  if (!card) return;
+
+  const toggleBtn = card.querySelector('.btn-sftp-toggle-action');
+  if (toggleBtn) {
+    toggleBtn.onclick = async () => {
+      toggleBtn.disabled = true;
+      try {
+        const status = await api.get('/api/sftp/status').catch(() => ({ running: false }));
+        const isRunning = Boolean(status.running);
+        await api.post('/api/sftp/toggle', { enabled: !isRunning });
+        showToast(`SFTP service ${!isRunning ? 'started' : 'stopped'}.`, 'success');
+        if (onRefresh) onRefresh();
+      } catch (err) {
+        showToast(`Failed to toggle SFTP: ${err.message}`, 'error');
+        toggleBtn.disabled = false;
+      }
+    };
+  }
+
+  const usersBtn = card.querySelector('.btn-sftp-users-action');
+  if (usersBtn) {
+    usersBtn.onclick = () => openSftpUsersModal(onRefresh);
+  }
+
+  card.querySelectorAll('.btn-qc-copy').forEach((btn) => {
+    btn.onclick = async (e) => {
+      e.stopPropagation();
+      const text = btn.dataset.copy;
+      if (text) {
+        const ok = await copyTextToClipboard(text);
+        if (ok) {
+          showToast('Copied to clipboard!', 'info');
+        } else {
+          showToast('Failed to copy to clipboard', 'warn');
+        }
+      }
+    };
+  });
+}
+
+/**
  * Fetches and renders Network Shares & Protocols
  */
 export async function fetchAndRenderNetworkShares(container) {
@@ -857,15 +991,20 @@ export async function fetchAndRenderNetworkShares(container) {
   `;
 
   try {
-    const [sharesData, platformData] = await Promise.all([
+    const [sharesData, platformData, sftpStatus, sftpUsersRes] = await Promise.all([
       api.get('/api/storage/shares'),
       api.get('/api/storage/platform').catch(() => ({})),
+      api.get('/api/sftp/status').catch(() => ({ running: false, port: 2222 })),
+      api.get('/api/sftp/users').catch(() => []),
     ]);
 
     const shares = sharesData.shares || [];
     const isObserver = sharesData.is_observer_mode ?? true;
     const platform = platformData.platform || sharesData.platform || 'unraid';
     const canManageShares = platformData?.capabilities?.can_manage_shares ?? (!isObserver);
+
+    const sftpUsers = Array.isArray(sftpUsersRes) ? sftpUsersRes : (sftpUsersRes?.users || []);
+    const sampleUser = sftpUsers[0]?.username || 'admin';
 
     const btnCreateShare = document.getElementById('btn-create-network-share');
     if (btnCreateShare) {
@@ -887,30 +1026,33 @@ export async function fetchAndRenderNetworkShares(container) {
       }
     }
 
-    if (shares.length === 0) {
-      container.innerHTML = `
-        <div class="empty-shares-box" style="text-align:center; padding:40px; color:var(--muted);">
-          <svg viewBox="0 0 24 24" width="32" height="32" style="margin:0 auto 10px; opacity:0.5;"><use href="#i-storage"/></svg>
-          <div>No active network shares detected on host.</div>
-        </div>
-      `;
-      return;
-    }
-
-    if (shares.length === 0) {
-      container.innerHTML = `
-        <div class="empty-shares-box" style="text-align:center; padding:40px; color:var(--muted);">
-          <svg viewBox="0 0 24 24" width="32" height="32" style="margin:0 auto 10px; opacity:0.5;"><use href="#i-storage"/></svg>
-          <div>No active network shares detected on host.</div>
-        </div>
-      `;
-      return;
-    }
-
+    let sftpCard = container.querySelector('#mgmt-sftp-subsystem-card');
     let grid = container.querySelector('.storage-shares-grid');
-    if (!grid) {
-      container.innerHTML = `<div class="storage-shares-grid"></div>`;
+    if (!grid || !sftpCard) {
+      container.innerHTML = `
+        ${buildSftpCardHtml(sftpStatus, sftpUsers.length, sampleUser)}
+        <div class="storage-shares-grid"></div>
+      `;
       grid = container.querySelector('.storage-shares-grid');
+      bindSftpCardEvents(container, () => fetchAndRenderNetworkShares(container));
+    } else {
+      const tempWrapper = document.createElement('div');
+      tempWrapper.innerHTML = buildSftpCardHtml(sftpStatus, sftpUsers.length, sampleUser);
+      const newCard = tempWrapper.firstElementChild;
+      if (newCard && sftpCard.parentNode) {
+        sftpCard.parentNode.replaceChild(newCard, sftpCard);
+        bindSftpCardEvents(container, () => fetchAndRenderNetworkShares(container));
+      }
+    }
+
+    if (shares.length === 0) {
+      grid.innerHTML = `
+        <div class="empty-shares-box" style="text-align:center; padding:40px; color:var(--muted); grid-column:1/-1;">
+          <svg viewBox="0 0 24 24" width="32" height="32" style="margin:0 auto 10px; opacity:0.5;"><use href="#i-storage"/></svg>
+          <div>No active network shares detected on host.</div>
+        </div>
+      `;
+      return;
     }
 
     bindSharesGridEvents(grid, container);
@@ -964,6 +1106,7 @@ function buildShareCardInner(s, canManageShares) {
       <span class="proto-tag ${s.export_smb ? 'proto-on' : 'proto-off'}" title="Samba SMB Protocol">SMB</span>
       <span class="proto-tag ${s.export_nfs ? 'proto-on' : 'proto-off'}" title="NFS Protocol">NFS</span>
       <span class="proto-tag proto-on" title="Universal WebDAV Port 8084">WebDAV :8084</span>
+      <span class="proto-tag proto-on" title="Inbound SFTP Subsystem Port 2222">SFTP :2222</span>
       ${s.cache_mode && s.cache_mode !== 'none' ? `
         <span class="share-cache-tag" title="Cache Tiering: ${s.cache_mode}">Cache: ${escapeHtml(s.cache_mode)}${s.cache_pool ? ` (${escapeHtml(s.cache_pool)})` : ''}</span>
       ` : ''}
@@ -1039,6 +1182,158 @@ function bindSharesGridEvents(grid, container) {
       }
     }
   });
+}
+
+export async function openSftpUsersModal(onSuccess) {
+  const modal = document.getElementById('modal-sftp-users');
+  if (!modal) return;
+
+  const closeBtn = document.getElementById('modal-sftp-close-btn');
+  const closeBottomBtn = document.getElementById('modal-sftp-close-bottom-btn');
+  const toggleBtn = document.getElementById('btn-sftp-toggle-service');
+  const statusText = document.getElementById('sftp-status-text');
+  const usersList = document.getElementById('sftp-users-list');
+  const copyBtn = document.getElementById('btn-copy-sftp-cmd');
+  const addForm = document.getElementById('sftp-add-user-form');
+  const quickHint = document.getElementById('sftp-quick-connect-hint');
+
+  function closeModal() {
+    modal.style.display = 'none';
+    modal.classList.remove('open');
+  }
+
+  if (closeBtn) closeBtn.onclick = closeModal;
+  if (closeBottomBtn) closeBottomBtn.onclick = closeModal;
+  modal.onclick = (e) => {
+    if (e.target === modal) closeModal();
+  };
+
+  const modalWin = modal.querySelector('.smart-modal-window');
+  const modalHdr = modal.querySelector('.smart-modal-header');
+  if (modalWin && modalHdr) makeDraggable(modalWin, modalHdr, 'sftp-users');
+
+  const hostIp = window.location.hostname || '127.0.0.1';
+
+  async function refreshSftpUI() {
+    try {
+      const [status, usersRes] = await Promise.all([
+        api.get('/api/sftp/status'),
+        api.get('/api/sftp/users').catch(() => []),
+      ]);
+
+      const isRunning = Boolean(status?.running);
+      if (statusText) {
+        statusText.innerHTML = isRunning
+          ? `<span style="color:var(--ok2, #22c55e);">● Running</span> on port ${status?.port || 2222}`
+          : `<span style="color:var(--muted);">○ Stopped</span> (Port ${status?.port || 2222})`;
+      }
+
+      if (toggleBtn) {
+        toggleBtn.textContent = isRunning ? 'Stop SFTP' : 'Start SFTP';
+        toggleBtn.style.background = isRunning ? 'rgba(239,68,68,0.15)' : 'rgba(34,197,94,0.15)';
+        toggleBtn.style.color = isRunning ? '#f87171' : '#4ade80';
+        toggleBtn.style.borderColor = isRunning ? 'rgba(239,68,68,0.3)' : 'rgba(34,197,94,0.3)';
+        toggleBtn.onclick = async () => {
+          toggleBtn.disabled = true;
+          try {
+            await api.post('/api/sftp/toggle', { enabled: !isRunning });
+            showToast(`SFTP service ${!isRunning ? 'started' : 'stopped'}.`, 'success');
+            await refreshSftpUI();
+            if (onSuccess) onSuccess();
+          } catch (err) {
+            showToast(`Failed to toggle SFTP: ${err.message}`, 'error');
+          } finally {
+            toggleBtn.disabled = false;
+          }
+        };
+      }
+
+      const users = Array.isArray(usersRes) ? usersRes : (usersRes?.users || []);
+      const sampleUser = users[0]?.username || 'username';
+      const port = status?.port || 2222;
+
+      if (quickHint) {
+        quickHint.textContent = `sftp -P ${port} ${sampleUser}@${hostIp}`;
+      }
+
+      if (copyBtn) {
+        copyBtn.onclick = () => {
+          copyTextToClipboard(`sftp -P ${port} ${sampleUser}@${hostIp}`);
+          showToast('SFTP command copied to clipboard.', 'info');
+        };
+      }
+
+      if (usersList) {
+        if (users.length === 0) {
+          usersList.innerHTML = `<div style="text-align:center; padding:16px; color:var(--muted); font-size:11px;">No SFTP users configured yet. Create one below.</div>`;
+        } else {
+          usersList.innerHTML = users.map((u) => `
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 12px; border-bottom:1px solid rgba(255,255,255,0.05); font-size:11px;">
+              <div>
+                <span style="font-weight:700; color:#fff;">${escapeHtml(u.username)}</span>
+                <span class="ci-badge" style="margin-left:6px; font-size:9px; background:rgba(255,255,255,0.06); color:var(--muted); padding:1px 5px; border-radius:3px;">
+                  ${u.read_only ? 'Read-Only' : 'Read/Write'}
+                </span>
+                <div style="font-size:10px; color:var(--muted); font-family:monospace; margin-top:2px;">
+                  Chroot: ${escapeHtml(u.home_dir || '/home/' + u.username)}
+                </div>
+              </div>
+              <button class="btn-pill-toggle btn-delete-sftp-user" data-user="${escapeHtml(u.username)}" style="padding:2px 8px; font-size:10px; background:rgba(239,68,68,0.15); color:#f87171; border:1px solid rgba(239,68,68,0.3);">
+                Delete
+              </button>
+            </div>
+          `).join('');
+
+          usersList.querySelectorAll('.btn-delete-sftp-user').forEach((btn) => {
+            btn.onclick = async () => {
+              const username = btn.dataset.user;
+              if (!confirm(`Delete SFTP user '${username}'?`)) return;
+              btn.disabled = true;
+              try {
+                await api.delete(`/api/sftp/users/${username}`);
+                showToast(`User '${username}' deleted.`, 'info');
+                await refreshSftpUI();
+                if (onSuccess) onSuccess();
+              } catch (err) {
+                showToast(`Failed to delete user: ${err.message}`, 'error');
+                btn.disabled = false;
+              }
+            };
+          });
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to load SFTP status/users:', err);
+    }
+  }
+
+  if (addForm) {
+    addForm.onsubmit = async (e) => {
+      e.preventDefault();
+      const uInput = document.getElementById('sftp-new-username');
+      const pInput = document.getElementById('sftp-new-password');
+      const roInput = document.getElementById('sftp-new-readonly');
+      const username = (uInput?.value || '').trim();
+      const password = (pInput?.value || '').trim();
+      const read_only = roInput?.checked || false;
+      if (!username || !password) return;
+
+      try {
+        await api.post('/api/sftp/users', { username, password, read_only });
+        showToast(`SFTP user '${username}' created.`, 'success');
+        uInput.value = '';
+        pInput.value = '';
+        await refreshSftpUI();
+        if (onSuccess) onSuccess();
+      } catch (err) {
+        showToast(`Failed to create SFTP user: ${err.message}`, 'error');
+      }
+    };
+  }
+
+  modal.style.display = 'flex';
+  modal.classList.add('open');
+  await refreshSftpUI();
 }
 
 /**
@@ -1132,10 +1427,15 @@ export async function fetchAndRenderRemoteStorage(container) {
   `;
 
   try {
-    const [webdavStatus, remotes] = await Promise.all([
+    const [webdavStatus, remotes, sftpStatus, sftpUsersRes] = await Promise.all([
       api.get('/api/webdav/status'),
-      api.get('/api/remotes')
+      api.get('/api/remotes'),
+      api.get('/api/sftp/status').catch(() => ({ running: false, port: 2222 })),
+      api.get('/api/sftp/users').catch(() => []),
     ]);
+
+    const sftpUsers = Array.isArray(sftpUsersRes) ? sftpUsersRes : (sftpUsersRes?.users || []);
+    const sampleUser = sftpUsers[0]?.username || 'admin';
 
     const isRunning = webdavStatus.running;
     const webdavPillClass = isRunning ? 'running' : 'stopped';
@@ -1292,7 +1592,10 @@ export async function fetchAndRenderRemoteStorage(container) {
           </div>
         </div>
 
-        <!-- Section 2: Connected Cloud & Remote Drives -->
+        <!-- Section 2: Inbound SFTP Subsystem -->
+        ${buildSftpCardHtml(sftpStatus, sftpUsers.length, sampleUser)}
+
+        <!-- Section 3: Connected Cloud & Remote Drives -->
         <div style="display:flex; flex-direction:column; gap:12px;">
           <div style="display:flex; justify-content:space-between; align-items:center;">
             <div style="font-size:13px; font-weight:800; color:#fff; letter-spacing:0.5px; text-transform:uppercase;">
@@ -1303,6 +1606,8 @@ export async function fetchAndRenderRemoteStorage(container) {
         </div>
       </div>
     `;
+
+    bindSftpCardEvents(container, () => fetchAndRenderRemoteStorage(container));
 
     // Event bindings
     // WebDAV toggle

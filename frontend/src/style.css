@@ -7784,7 +7784,18 @@ body.mobile-mode .btn-webui-badge {
   background: var(--track);
 }
 .fm-row.selected {
-  background: rgba(14, 165, 233, 0.2);
+  background: rgba(14, 165, 233, 0.28) !important;
+  border-left: 3px solid #00f0ff !important;
+  box-shadow: inset 0 0 0 1px rgba(0, 240, 255, 0.35), inset 0 0 12px rgba(0, 240, 255, 0.15) !important;
+  color: #ffffff !important;
+  font-weight: 500 !important;
+}
+.fm-row.selected .fm-col,
+.fm-row.selected .fm-name-text,
+.fm-row.selected .fm-col-size,
+.fm-row.selected .fm-col-type,
+.fm-row.selected .fm-col-date {
+  color: #ffffff !important;
 }
 .fm-col {
   white-space: nowrap;
@@ -9874,7 +9885,8 @@ body.theme-yak #console-window::-webkit-resizer:hover {
   gap: 20px;
 }
 
-.webdav-server-card {
+.webdav-server-card,
+.sftp-server-card {
   background: rgba(0, 0, 0, 0.35);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 10px;
@@ -9883,6 +9895,14 @@ body.theme-yak #console-window::-webkit-resizer:hover {
   flex-direction: column;
   gap: 14px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.sftp-server-card {
+  margin-bottom: 16px;
+}
+
+.remote-storage-container .sftp-server-card {
+  margin-bottom: 0;
 }
 
 .webdav-card-header {
