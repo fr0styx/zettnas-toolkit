@@ -578,13 +578,30 @@ export function generateSmartSparklineSvg(points = [], width = 280, height = 50)
 
   const hasErrors = values.some((v) => v > 0);
   const strokeColor = hasErrors ? '#f5b731' : '#3bf58b';
-  const fillColor = hasErrors ? 'rgba(245, 183, 49, 0.15)' : 'rgba(59, 245, 139, 0.12)';
+  const fillColor = hasErrors ? 'rgba(245, 183, 49, 0.15)' : 'rgba(59, 245, 139, 0.08)';
+
+  // For markers: if errors exist, highlight all error points. If healthy (val == 0), render clean start/end points
+  // in theme green rather than dozens of dense white circles that merge into a solid white bar.
+  let circlesHtml = '';
+  if (hasErrors) {
+    circlesHtml = coords
+      .filter((c) => c.val > 0)
+      .map((c) => `<circle cx="${c.x}" cy="${c.y}" r="3" fill="${strokeColor}" stroke="#0b1118" stroke-width="1"/>`)
+      .join('');
+  } else if (coords.length > 0) {
+    const first = coords[0];
+    const last = coords[coords.length - 1];
+    circlesHtml = `
+      <circle cx="${first.x}" cy="${first.y}" r="1.5" fill="${strokeColor}" opacity="0.6"/>
+      <circle cx="${last.x}" cy="${last.y}" r="2" fill="${strokeColor}"/>
+    `;
+  }
 
   return `
     <svg class="smart-sparkline-svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
       <path d="${areaD}" fill="${fillColor}"/>
-      <path d="${pathD}" fill="none" stroke="${strokeColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-      ${coords.map((c) => `<circle cx="${c.x}" cy="${c.y}" r="${c.val > 0 ? 3 : 1.5}" fill="${c.val > 0 ? strokeColor : '#ffffff'}"/>`).join('')}
+      <path d="${pathD}" fill="none" stroke="${strokeColor}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      ${circlesHtml}
     </svg>
   `;
 }
