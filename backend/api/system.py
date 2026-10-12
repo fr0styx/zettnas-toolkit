@@ -94,7 +94,7 @@ def _contained(path, must_exist=True):
 
 
 @router.get("/disk_detail")
-async def disk_detail(dev: str = "sda"):
+async def disk_detail(dev: str = "sda", wake: bool = False):
     if dev.startswith("/dev/"):
         dev = dev.replace("/dev/", "")
     m = re.match(r"^nv([0-9]+)$", dev)
@@ -102,7 +102,7 @@ async def disk_detail(dev: str = "sda"):
         dev = f"nvme{m.group(1)}n1"
     if not re.fullmatch(r"^(sd[a-z]{1,2}|nvme[0-9]+n[0-9]+)$", dev):
         raise HTTPException(status_code=400, detail="Invalid device parameter.")
-    return await asyncio.to_thread(fetch_disk_smart_detail, dev)
+    return await asyncio.to_thread(fetch_disk_smart_detail, dev, wake)
 
 
 @router.post("/disk_wake", dependencies=[Depends(require_scope("storage:write", "storage:admin"))])
@@ -115,7 +115,7 @@ async def disk_wake(payload: dict):
         dev = f"nvme{m.group(1)}n1"
     if not re.fullmatch(r"^(sd[a-z]{1,2}|nvme[0-9]+n[0-9]+)$", dev):
         raise HTTPException(status_code=400, detail="Invalid device parameter.")
-    detail = await asyncio.to_thread(fetch_disk_smart_detail, dev)
+    detail = await asyncio.to_thread(fetch_disk_smart_detail, dev, True)
     return {"success": True, "dev": dev, "detail": detail}
 
 

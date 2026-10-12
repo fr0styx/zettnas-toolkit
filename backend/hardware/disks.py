@@ -543,10 +543,19 @@ def poll_disk_smart(dev_name: str, is_nvme: bool):
         r = subprocess.run(cmd, capture_output=True, text=True, timeout=8)
         combined_out = ((r.stdout or "") + " " + (r.stderr or "")).upper()
 
-        if not is_nvme and ("DEVICE IS IN STANDBY" in combined_out or "DEVICE IS IN SLEEP" in combined_out):
+        is_standby = (not is_nvme) and (
+            r.returncode == 2
+            or (r.returncode & 2) != 0
+            or "DEVICE IS IN STANDBY" in combined_out
+            or "DEVICE IS IN SLEEP" in combined_out
+            or "STANDBY MODE" in combined_out
+            or "SLEEP MODE" in combined_out
+        )
+
+        if is_standby:
             prev_t, _ = Z_STATE.cached_smart_data.get(dev_name, (None, "standby"))
             Z_STATE.cached_smart_data[dev_name] = (prev_t, "standby")
-        elif r.stdout and (r.returncode == 0 or (r.returncode & 7) == 0 or r.stdout.strip().startswith("{")):
+        elif r.stdout and (r.returncode == 0 or (r.returncode & 7) == 0):
             temp, health, metrics = _parse_smart(r.stdout, is_nvme)
             _evaluate_smart_trends(dev_name, metrics)
             log_smart_metrics(int(now), dev_name, temp, metrics)
@@ -557,7 +566,15 @@ def poll_disk_smart(dev_name: str, is_nvme: bool):
             cmd_fallback = [c for c in cmd if c != "-j"]
             r_fb = subprocess.run(cmd_fallback, capture_output=True, text=True, timeout=8)
             fb_out = ((r_fb.stdout or "") + " " + (r_fb.stderr or "")).upper()
-            if not is_nvme and ("DEVICE IS IN STANDBY" in fb_out or "DEVICE IS IN SLEEP" in fb_out):
+            is_fb_standby = (not is_nvme) and (
+                r_fb.returncode == 2
+                or (r_fb.returncode & 2) != 0
+                or "DEVICE IS IN STANDBY" in fb_out
+                or "DEVICE IS IN SLEEP" in fb_out
+                or "STANDBY MODE" in fb_out
+                or "SLEEP MODE" in fb_out
+            )
+            if is_fb_standby:
                 prev_t, _ = Z_STATE.cached_smart_data.get(dev_name, (None, "standby"))
                 Z_STATE.cached_smart_data[dev_name] = (prev_t, "standby")
             elif r_fb.stdout and (r_fb.returncode == 0 or (r_fb.returncode & 7) == 0):
@@ -691,7 +708,7 @@ def read_disk_temps_and_io(allow_sync_poll: bool = False):
 VALID_DEV_PATTERN = re.compile(r"^(sd[a-z]+|nvme[0-9]+n[0-9]+|vd[a-z]+|xvd[a-z]+|[a-zA-Z0-9_\-\.:]+)$")
 
 
-def fetch_disk_smart_detail(dev_name):
+def fetch_disk_smart_detail(dev_name: str, wake_if_standby: bool = False):
     if not VALID_DEV_PATTERN.fullmatch(dev_name):
         return {"error": "Invalid device name format."}
 
@@ -703,6 +720,44 @@ def fetch_disk_smart_detail(dev_name):
             if d.get("dev") == dev_name:
                 dtype = d.get("smart_protocol") or dtype
                 break
+
+    # If the disk is currently marked in standby and caller didn't request a wake,
+    # probe with -n standby to avoid spinning up platters.
+    cached_temp, cached_health = Z_STATE.cached_smart_data.get(dev_name, (None, None))
+    if not is_nvme and not wake_if_standby and cached_health == "standby":
+        try:
+            r_sb = subprocess.run(
+                ["smartctl", "-n", "standby", "-i", "-d", dtype, dev],
+                capture_output=True,
+                text=True,
+                timeout=6,
+            )
+            sb_out = ((r_sb.stdout or "") + " " + (r_sb.stderr or "")).upper()
+            if (
+                r_sb.returncode == 2
+                or (r_sb.returncode & 2) != 0
+                or "DEVICE IS IN STANDBY" in sb_out
+                or "DEVICE IS IN SLEEP" in sb_out
+                or "STANDBY MODE" in sb_out
+                or "SLEEP MODE" in sb_out
+            ):
+                return {
+                    "dev": dev_name,
+                    "is_nvme": False,
+                    "model": "SATA HDD (Standby)",
+                    "serial": "Hidden while in standby",
+                    "power_on_hours": "Unknown (Standby)",
+                    "health": "STANDBY",
+                    "is_standby": True,
+                    "temp": cached_temp,
+                    "self_test_status": None,
+                    "metrics": {},
+                    "degradation": query_smart_velocity(dev_name),
+                    "nvme_endurance": None,
+                    "raw": "Device is in low-power STANDBY mode. Platters are not spinning.\nIssue a wake command to inspect live SMART counters.",
+                }
+        except Exception:
+            pass
 
     # For spinning HDDs, issue an asynchronous direct block read to trigger spin up without blocking the thread
     if not is_nvme:
@@ -814,13 +869,25 @@ def fetch_disk_smart_detail(dev_name):
     }
 
 
-def run_disk_smart_test(dev_name: str, test_type: str = "short"):
+def run_disk_smart_test(dev_name: str, test_type: str = "short", skip_if_standby: bool = False):
     """
     Triggers or aborts an active S.M.A.R.T. self-test on the target disk via smartctl.
     Supported types: 'short', 'long' (extended), 'abort'.
     """
     if not VALID_DEV_PATTERN.fullmatch(dev_name):
         return {"success": False, "error": "Invalid device name format."}
+
+    # Invariant: Never wake sleeping drive platters during automated scheduled self-tests
+    if skip_if_standby:
+        _, cached_health = Z_STATE.cached_smart_data.get(dev_name, (None, None))
+        if cached_health == "standby":
+            return {
+                "success": False,
+                "skipped": True,
+                "dev": dev_name,
+                "test_type": test_type,
+                "output": f"Drive {dev_name} is in standby mode. Skipping self-test to preserve platter sleep.",
+            }
 
     dev = _resolve_dev_path(dev_name)
     is_nvme = dev_name.startswith("nvme")

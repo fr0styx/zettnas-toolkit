@@ -190,6 +190,11 @@ class StoragePlatformAdapter(ABC):
         """Restores or rolls back a subvolume snapshot."""
         ...
 
+    @abstractmethod
+    def get_pool_path(self, pool_id: str) -> str:
+        """Returns the filesystem mountpoint path for the target storage pool."""
+        ...
+
 
 def _parse_ini_sections(filepath: str) -> Dict[str, Dict[str, str]]:
     """Helper to parse multi-section INI files like Unraid disks.ini and shares.ini."""
@@ -661,6 +666,15 @@ class UnraidStorageAdapter(StoragePlatformAdapter):
             "Observer mode active: Filesystem snapshots and rollbacks on Unraid are authoritatively managed by Unraid."
         )
 
+    def get_pool_path(self, pool_id: str) -> str:
+        """Returns root mountpoint for an Unraid array or cache pool."""
+        if pool_id and pool_id.startswith("cache_"):
+            pool_key = pool_id.replace("cache_", "")
+            for cand in [f"/mnt/{pool_key}", "/mnt/cache"]:
+                if os.path.exists(cand):
+                    return cand
+        return POOL_PATH or "/mnt/user"
+
 
 class GenericLinuxStorageAdapter(StoragePlatformAdapter):
     """
@@ -1123,6 +1137,13 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
             "code": code,
             "output": out or err,
         }
+
+    def get_pool_path(self, pool_id: str) -> str:
+        """Returns root mountpoint for a generic Linux storage pool."""
+        if not pool_id or pool_id in ("default_pool", "default"):
+            return self._pool_path
+        cand = os.path.join(self._pool_path, pool_id)
+        return cand if os.path.exists(cand) else self._pool_path
 
 
 class StoragePlatformDetector:

@@ -196,3 +196,56 @@ def test_discover_disks_skips_zero_size(monkeypatch, tmp_path):
     dev_names = [d["dev"] for d in discovered]
     assert "sda" in dev_names
     assert "sdc" not in dev_names
+
+
+def test_poll_disk_smart_exit_code_2_standby(monkeypatch):
+    import subprocess
+    import backend.hardware.disks as disks_mod
+    from backend.state import Z_STATE
+
+    class MockProcessResult:
+        returncode = 2
+        stdout = '{"smartctl": {"exit_status": 2, "messages": [{"string": "Device is in STANDBY mode, exit(2)"}]}}'
+        stderr = ""
+
+    monkeypatch.setattr(subprocess, "run", lambda *args, **kwargs: MockProcessResult())
+    Z_STATE.cached_smart_data["sdb"] = (35, "ok")
+    disks_mod.poll_disk_smart("sdb", is_nvme=False)
+
+    temp, health = Z_STATE.cached_smart_data.get("sdb", (None, None))
+    assert health == "standby"
+    assert temp == 35  # Preserved previous temperature
+
+
+def test_fetch_disk_smart_detail_standby_preservation(monkeypatch):
+    import subprocess
+    import backend.hardware.disks as disks_mod
+    from backend.state import Z_STATE
+
+    class MockStandbyProbe:
+        returncode = 2
+        stdout = "Device is in STANDBY mode"
+        stderr = ""
+
+    monkeypatch.setattr(subprocess, "run", lambda *args, **kwargs: MockStandbyProbe())
+    # Ensure Popen is not called to spin up drive
+    dd_called = []
+    monkeypatch.setattr(subprocess, "Popen", lambda *args, **kwargs: dd_called.append(args))
+
+    Z_STATE.cached_smart_data["sdc"] = (32, "standby")
+    detail = disks_mod.fetch_disk_smart_detail("sdc", wake_if_standby=False)
+
+    assert detail["health"] == "STANDBY"
+    assert detail["is_standby"] is True
+    assert len(dd_called) == 0  # dd spin up was safely skipped!
+
+
+def test_run_disk_smart_test_skip_if_standby():
+    import backend.hardware.disks as disks_mod
+    from backend.state import Z_STATE
+
+    Z_STATE.cached_smart_data["sdd"] = (None, "standby")
+    res = disks_mod.run_disk_smart_test("sdd", test_type="short", skip_if_standby=True)
+    assert res["skipped"] is True
+    assert res["success"] is False
+    assert "standby mode" in res["output"].lower()

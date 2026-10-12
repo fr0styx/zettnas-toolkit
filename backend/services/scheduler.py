@@ -28,8 +28,8 @@ def _run_scheduled_tasks():
                 unraid = read_unraid_status()
                 if not unraid.get("parity_check_running"):
                     for d in _discover_disks():
-                        run_disk_smart_test(d["dev"], "short")
-                    add_event("info", "Scheduled Task", "Monthly SMART short tests started on all disks.")
+                        run_disk_smart_test(d["dev"], "short", skip_if_standby=True)
+                    add_event("info", "Scheduled Task", "Monthly SMART short tests started (sleeping disks preserved).")
 
 
 def start_scheduler():

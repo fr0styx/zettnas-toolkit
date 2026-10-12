@@ -314,3 +314,22 @@ def test_storage_api_observer_mode_rejections(client, auth_headers):
         }
         resp = client.post("/api/storage/shares", json=share_payload, headers=auth_headers)
         assert resp.status_code == 403
+
+
+def test_pal_get_pool_path_implementations(tmp_path):
+    from backend.hardware.pal_storage import POOL_PATH
+
+    unraid_adapter = UnraidStorageAdapter()
+    # Unraid array defaults to /mnt/user or POOL_PATH
+    array_path = unraid_adapter.get_pool_path("unraid_array")
+    assert array_path == (POOL_PATH or "/mnt/user")
+
+    # Cache pool resolution falls back cleanly to POOL_PATH or /mnt/user when /mnt/cache is absent
+    cache_path = unraid_adapter.get_pool_path("cache_appdata")
+    assert cache_path in ("/mnt/cache", "/mnt/appdata", POOL_PATH or "/mnt/user")
+
+    # Generic Linux adapter
+    fake_pool = str(tmp_path / "storage")
+    linux_adapter = GenericLinuxStorageAdapter(pool_path=fake_pool)
+    assert linux_adapter.get_pool_path("default_pool") == fake_pool
+    assert linux_adapter.get_pool_path("") == fake_pool
