@@ -296,3 +296,59 @@ async def post_tailscale_down():
     if res.get("status") == "error":
         raise HTTPException(status_code=400, detail=res.get("output", "Tailscale disconnection failed"))
     return res
+
+
+class WireguardClientConfigRequest(BaseModel):
+    client_name: str = Field(default="mobile-client", max_length=64)
+    client_ip: str = Field(default="10.13.13.2/32")
+    server_endpoint: Optional[str] = Field(default="")
+    server_pubkey: Optional[str] = Field(default="")
+    dns: str = Field(default="1.1.1.1")
+    allowed_ips: str = Field(default="0.0.0.0/0, ::/0")
+    keepalive: int = Field(default=25, ge=0, le=3600)
+
+
+class WireguardSubnetRouteRequest(BaseModel):
+    enable: bool = Field(default=True)
+    iface: str = Field(default="wg0")
+    out_iface: str = Field(default="eth0")
+
+
+@router.post("/network/mesh-vpn/wireguard/client-config", dependencies=[Depends(require_scope("system:config"))])
+async def post_wireguard_client_config(req: WireguardClientConfigRequest):
+    """Generates a WireGuard client configuration file with keypair."""
+    from backend.hardware.network import generate_wireguard_client_config
+
+    return await asyncio.to_thread(
+        generate_wireguard_client_config,
+        client_name=req.client_name,
+        client_ip=req.client_ip,
+        server_endpoint=req.server_endpoint or "",
+        server_pubkey=req.server_pubkey or "",
+        dns=req.dns,
+        allowed_ips=req.allowed_ips,
+        keepalive=req.keepalive,
+    )
+
+
+@router.get("/network/mesh-vpn/wireguard/subnet-routing", dependencies=[Depends(require_scope("system:config"))])
+async def get_wireguard_subnet_routing():
+    """Gets current kernel IP packet forwarding state."""
+    from backend.hardware.network import get_ip_forwarding_status
+
+    status = await asyncio.to_thread(get_ip_forwarding_status)
+    return {"ip_forwarding": status}
+
+
+@router.post("/network/mesh-vpn/wireguard/subnet-routing", dependencies=[Depends(require_scope("system:config"))])
+async def post_wireguard_subnet_routing(req: WireguardSubnetRouteRequest):
+    """Enables or disables kernel IP forwarding and NAT for WireGuard subnet routing."""
+    from backend.hardware.network import toggle_wireguard_subnet_nat
+
+    res = await asyncio.to_thread(
+        toggle_wireguard_subnet_nat,
+        enable=req.enable,
+        iface=req.iface,
+        out_iface=req.out_iface,
+    )
+    return res

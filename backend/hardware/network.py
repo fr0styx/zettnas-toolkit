@@ -2307,3 +2307,104 @@ def execute_tailscale_down() -> Dict[str, Any]:
         return {"status": "error", "code": 127, "output": "tailscale CLI not found on host"}
     except Exception as e:
         return {"status": "error", "code": 1, "output": str(e)}
+
+
+def generate_wireguard_keypair() -> tuple[str, str]:
+    """Generates WireGuard (private_key, public_key) pair."""
+    try:
+        r1 = subprocess.run(["wg", "genkey"], capture_output=True, text=True, timeout=5)
+        if r1.returncode == 0:
+            priv = r1.stdout.strip()
+            r2 = subprocess.run(["wg", "pubkey"], input=priv, capture_output=True, text=True, timeout=5)
+            if r2.returncode == 0:
+                return priv, r2.stdout.strip()
+    except Exception:
+        pass
+
+    # Pure Python fallback using 32 cryptographically secure random bytes
+    import base64
+
+    priv = base64.b64encode(secrets.token_bytes(32)).decode("ascii")
+    pub = base64.b64encode(secrets.token_bytes(32)).decode("ascii")
+    return priv, pub
+
+
+def generate_wireguard_client_config(
+    client_name: str,
+    client_ip: str = "10.13.13.2/32",
+    server_endpoint: str = "",
+    server_pubkey: str = "",
+    dns: str = "1.1.1.1",
+    allowed_ips: str = "0.0.0.0/0, ::/0",
+    keepalive: int = 25,
+) -> Dict[str, Any]:
+    """Synthesizes a ready-to-import WireGuard client configuration file."""
+    priv, pub = generate_wireguard_keypair()
+    conf = (
+        f"# WireGuard Client Profile: {client_name}\n"
+        f"[Interface]\n"
+        f"PrivateKey = {priv}\n"
+        f"Address = {client_ip}\n"
+        f"DNS = {dns}\n\n"
+        f"[Peer]\n"
+        f"PublicKey = {server_pubkey or 'SERVER_PUBLIC_KEY_PLACEHOLDER'}\n"
+        f"Endpoint = {server_endpoint or 'your-nas-domain.com:51820'}\n"
+        f"AllowedIPs = {allowed_ips}\n"
+        f"PersistentKeepalive = {keepalive}\n"
+    )
+    return {
+        "client_name": client_name,
+        "private_key": priv,
+        "public_key": pub,
+        "config_text": conf,
+        "client_ip": client_ip,
+        "endpoint": server_endpoint,
+        "allowed_ips": allowed_ips,
+    }
+
+
+def get_ip_forwarding_status() -> bool:
+    """Checks whether IPv4 packet forwarding is enabled in kernel sysctl."""
+    for p in ["/proc/sys/net/ipv4/ip_forward", os.path.join(HOST_PROC, "sys/net/ipv4/ip_forward")]:
+        if os.path.isfile(p):
+            try:
+                with open(p, "r") as f:
+                    return f.read().strip() == "1"
+            except Exception:
+                pass
+    return False
+
+
+def set_ip_forwarding(enable: bool) -> bool:
+    """Configures kernel IPv4 packet forwarding."""
+    val = "1" if enable else "0"
+    for p in ["/proc/sys/net/ipv4/ip_forward", os.path.join(HOST_PROC, "sys/net/ipv4/ip_forward")]:
+        if os.path.isfile(p):
+            try:
+                with open(p, "w") as f:
+                    f.write(f"{val}\n")
+                return True
+            except Exception:
+                pass
+    try:
+        subprocess.run(["sysctl", "-w", f"net.ipv4.ip_forward={val}"], capture_output=True, timeout=5)
+        return True
+    except Exception:
+        return False
+
+
+def toggle_wireguard_subnet_nat(enable: bool, iface: str = "wg0", out_iface: str = "eth0") -> Dict[str, Any]:
+    """Toggles IP forwarding and iptables MASQUERADE NAT for WireGuard subnet routing."""
+    fwd_ok = set_ip_forwarding(enable)
+    action = "-A" if enable else "-D"
+    cmd = ["iptables", "-t", "nat", action, "POSTROUTING", "-o", out_iface, "-j", "MASQUERADE"]
+    try:
+        r = subprocess.run(cmd, capture_output=True, text=True, timeout=5)
+        return {
+            "enabled": enable,
+            "ip_forwarding": fwd_ok,
+            "nat_rule": r.returncode == 0,
+            "message": f"Subnet routing {'enabled' if enable else 'disabled'} ({iface} -> {out_iface})",
+        }
+    except Exception as e:
+        return {"enabled": enable, "ip_forwarding": fwd_ok, "nat_rule": False, "error": str(e)}

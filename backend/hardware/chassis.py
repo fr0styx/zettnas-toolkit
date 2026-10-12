@@ -391,6 +391,57 @@ class ChassisEngine:
         atomic_write_json(CHASSIS_MAP_FILE, payload)
         return {
             "success": True,
-            "message": "Chassis bay mapping updated successfully.",
+            "message": "Chassis bay mapping updated successfully",
             "config": payload,
         }
+
+    @classmethod
+    def get_appliance_bridge_status(cls) -> Dict[str, Any]:
+        """Discovers active hardware bridges for specialized NAS platforms."""
+        features = cls.detect_hardware_features()
+        vendor = features.get("sys_vendor", "").lower()
+        product = features.get("product_name", "").lower()
+
+        is_ugreen = "ugreen" in vendor or "dxp" in product
+        is_aoostar = "aoostar" in vendor or "wtr" in product
+        is_zettlabs = features.get("is_zettlabs", False)
+        is_cwwk = any(k in vendor or k in product for k in ("cwwk", "topton", "nas-"))
+
+        return {
+            "appliance_detected": features.get("is_custom_appliance", False),
+            "platform_bridges": {
+                "zettlabs": {
+                    "active": is_zettlabs,
+                    "subsystems": ["lcd_fb0", "mcu_argb", "mmio_copy_button"],
+                },
+                "aoostar": {
+                    "active": is_aoostar,
+                    "subsystems": ["lcd_portrait", "fan_pwm_dual_zone"],
+                },
+                "ugreen": {
+                    "active": is_ugreen,
+                    "subsystems": ["bay_led_indicators", "it87_ec_fan_curves", "pwr_button_monitor"],
+                },
+                "cwwk_topton": {
+                    "active": is_cwwk,
+                    "subsystems": ["multi_nic_fans", "superio_nct6775_pwm"],
+                },
+            },
+        }
+
+    @classmethod
+    def set_ugreen_bay_led(cls, slot: int, state: str = "on") -> bool:
+        """Controls Ugreen DXP front drive bay indicator LEDs via sysfs."""
+        val = "1" if state.lower() in ("on", "1", "blink") else "0"
+        for base in [HOST_SYS, "/sys", "/host/sys"]:
+            if not base or not os.path.exists(base):
+                continue
+            led_path = os.path.join(base, f"class/leds/ugreen::disk{slot}/brightness")
+            if os.path.exists(led_path):
+                try:
+                    with open(led_path, "w") as f:
+                        f.write(f"{val}\n")
+                    return True
+                except Exception:
+                    pass
+        return False

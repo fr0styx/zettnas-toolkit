@@ -24,3 +24,9 @@ def save_chassis_bay_map(request: ChassisBayMapRequest):
     Saves user-customized chassis profile, total bays, and drag-and-drop bay slot assignments.
     """
     return ChassisEngine.save_bay_mapping(request)
+
+
+@router.get("/bridges")
+def get_chassis_bridges():
+    """Returns detected hardware platform bridges (Zettlab, Aoostar, Ugreen, CWWK)."""
+    return ChassisEngine.get_appliance_bridge_status()

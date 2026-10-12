@@ -3,6 +3,7 @@ import { state } from '../state.js';
 import { t } from '../i18n.js';
 import { ZettEventBus } from '../event-bus.js';
 import { announceA11y } from '../a11y.js';
+import { showToast } from '../toast.js';
 import { openSpotlight, initSpotlight } from './spotlight.js';
 import {
   initDesktopShortcuts,
@@ -347,6 +348,212 @@ export function applyWindowSnap(dragEl, snapZone, winId) {
   if (typeof announceA11y === 'function') {
     announceA11y(`Window snapped to ${geom.label}`);
   }
+}
+
+export function getActiveWindowElement() {
+  const activeWin = document.querySelector('.active-window');
+  if (activeWin) return activeWin;
+  if (window.DockManager && window.DockManager.activeId) {
+    const w = window.DockManager.windows[window.DockManager.activeId];
+    if (w && w.el) {
+      return w.el.querySelector?.('#console-window, #management-window, .chassis-front-panel, .mgmt-app-window, .container-inspector-window, #container-inspector-window, #app-deploy-modal-window, .os-window, #file-manager-window, #notif-center-panel') || w.el;
+    }
+  }
+  const allWins = Array.from(document.querySelectorAll(DESKTOP_WINDOW_SELECTOR))
+    .filter((el) => {
+      const parent = el.closest?.('#console-modal-overlay, #management-modal-overlay, #container-inspector-overlay, #smart-modal-overlay, #stack-inspector-overlay, #stack-picker-overlay, #app-deploy-modal-overlay') || el;
+      return parent.style.display !== 'none' && !parent.classList.contains('hidden') && !parent.classList.contains('workspace-hidden');
+    })
+    .sort((a, b) => parseInt(b.style.zIndex || '0', 10) - parseInt(a.style.zIndex || '0', 10));
+  return allWins[0] || null;
+}
+
+export function restoreWindowSnap(dragEl, winId) {
+  if (!dragEl) return;
+  dragEl.dataset.snapped = '';
+  dragEl.style.transition = 'all 0.22s cubic-bezier(0.16, 1, 0.3, 1)';
+  if (dragEl._preSnapWidth) dragEl.style.width = dragEl._preSnapWidth;
+  if (dragEl._preSnapHeight) dragEl.style.height = dragEl._preSnapHeight;
+  setTimeout(() => {
+    dragEl.style.transition = 'none';
+  }, 250);
+
+  const id = winId || dragEl.dataset.windowId || dragEl.id;
+  if (id) {
+    saveWindowBounds(id, { snapped: '' });
+    saveOpenWindowsState();
+  }
+  if (typeof announceA11y === 'function') {
+    announceA11y('Window restored to normal size');
+  }
+}
+
+let _currentWorkspace = 1;
+export const WORKSPACES = [
+  { id: 1, name: 'Storage & Hardware', key: 'workspace.storage', defaultApps: ['console', 'smart', 'fm'] },
+  { id: 2, name: 'Applications & Stacks', key: 'workspace.apps', defaultApps: ['management', 'container-inspector', 'stack-inspector', 'app-deploy'] },
+  { id: 3, name: 'Network & Security', key: 'workspace.system', defaultApps: ['settings', 'notif-center', 'network'] },
+];
+
+export function getCurrentWorkspace() {
+  return _currentWorkspace;
+}
+
+export function switchWorkspace(wsId) {
+  if (wsId < 1 || wsId > 3) return;
+  _currentWorkspace = wsId;
+  try {
+    localStorage.setItem('zettnas_active_workspace', String(wsId));
+  } catch (_) {}
+
+  // Update switcher pills UI in topbar
+  document.querySelectorAll('.workspace-pill').forEach((pill) => {
+    const pId = parseInt(pill.dataset.workspace, 10);
+    const isActive = pId === wsId;
+    pill.classList.toggle('active', isActive);
+    pill.setAttribute('aria-selected', isActive ? 'true' : 'false');
+  });
+
+  // Filter visible windows according to workspace
+  const allWindows = document.querySelectorAll(DESKTOP_WINDOW_SELECTOR);
+  allWindows.forEach((winEl) => {
+    const parentOverlay = winEl.closest?.('#console-modal-overlay, #management-modal-overlay, #container-inspector-overlay, #smart-modal-overlay, #stack-inspector-overlay, #stack-picker-overlay, #app-deploy-modal-overlay') || winEl;
+    
+    // Determine assigned workspace
+    let assignedWs = parseInt(winEl.dataset.workspace, 10);
+    if (!assignedWs) {
+      const winId = (winEl.id || winEl.dataset.windowId || '').toLowerCase();
+      if (['console', 'smart', 'file-manager', 'fm', 'chassis'].some((s) => winId.includes(s))) {
+        assignedWs = 1;
+      } else if (['management', 'container-inspector', 'stack-inspector', 'app-deploy', 'docker'].some((s) => winId.includes(s))) {
+        assignedWs = 2;
+      } else if (['settings', 'notif', 'network'].some((s) => winId.includes(s))) {
+        assignedWs = 3;
+      } else {
+        assignedWs = 1;
+      }
+      winEl.dataset.workspace = String(assignedWs);
+    }
+
+    if (assignedWs === wsId) {
+      parentOverlay.classList.remove('workspace-hidden');
+    } else {
+      parentOverlay.classList.add('workspace-hidden');
+    }
+  });
+
+  if (typeof announceA11y === 'function') {
+    announceA11y(`Switched to Workspace ${wsId}`);
+  }
+  if (typeof showToast === 'function') {
+    showToast(`Switched to Workspace ${wsId}`, 'info', 1200);
+  }
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('zettnas:workspace-changed', { detail: { workspace: wsId } }));
+  }
+}
+
+export function initWorkspaceSwitcher() {
+  const switcher = document.getElementById('desktop-workspace-switcher');
+  if (!switcher) return;
+
+  switcher.querySelectorAll('.workspace-pill').forEach((pill) => {
+    pill.addEventListener('click', () => {
+      const ws = parseInt(pill.dataset.workspace, 10);
+      switchWorkspace(ws);
+    });
+  });
+
+  try {
+    const saved = parseInt(localStorage.getItem('zettnas_active_workspace') || '1', 10);
+    if (saved >= 1 && saved <= 3) {
+      switchWorkspace(saved);
+    }
+  } catch (_) {}
+}
+
+let _keyboardShortcutsInitialized = false;
+export function initWindowKeyboardShortcuts() {
+  if (_keyboardShortcutsInitialized) return;
+  _keyboardShortcutsInitialized = true;
+
+  window.addEventListener('keydown', (e) => {
+    // 1. Aero Snap 2.0: (Cmd/Win or Ctrl) + Option + [Arrow / 1-4]
+    if ((e.metaKey || e.ctrlKey) && e.altKey) {
+      const activeWin = getActiveWindowElement();
+      if (activeWin) {
+        let snapZone = null;
+        if (e.key === 'ArrowLeft') snapZone = 'left';
+        else if (e.key === 'ArrowRight') snapZone = 'right';
+        else if (e.key === 'ArrowUp') snapZone = 'maximize';
+        else if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          restoreWindowSnap(activeWin);
+          return;
+        } else if (e.key === '1') snapZone = 'top-left';
+        else if (e.key === '2') snapZone = 'top-right';
+        else if (e.key === '3') snapZone = 'bottom-left';
+        else if (e.key === '4') snapZone = 'bottom-right';
+
+        if (snapZone) {
+          e.preventDefault();
+          const geom = getSnapGeometry(snapZone);
+          if (geom) {
+            const ghost = getOrCreateSnapGhost();
+            ghost.style.display = 'flex';
+            ghost.style.left = `${geom.left}px`;
+            ghost.style.top = `${geom.top}px`;
+            ghost.style.width = `${geom.width}px`;
+            ghost.style.height = `${geom.height}px`;
+            const badge = ghost.querySelector('.snap-ghost-indicator');
+            if (badge) badge.textContent = geom.label;
+            setTimeout(() => {
+              ghost.style.display = 'none';
+            }, 180);
+          }
+          const winId = activeWin.dataset.windowId || activeWin.id;
+          applyWindowSnap(activeWin, snapZone, winId);
+          return;
+        }
+      }
+    }
+
+    // 2. Virtual Desktops / Workspace Switcher: Ctrl + (1-3 or Left/Right)
+    if (e.ctrlKey && !e.metaKey && !e.altKey) {
+      const isInput = e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable);
+      if (!isInput) {
+        if (e.key === '1') {
+          e.preventDefault();
+          switchWorkspace(1);
+        } else if (e.key === '2') {
+          e.preventDefault();
+          switchWorkspace(2);
+        } else if (e.key === '3') {
+          e.preventDefault();
+          switchWorkspace(3);
+        } else if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          switchWorkspace((_currentWorkspace % 3) + 1);
+        } else if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          switchWorkspace(_currentWorkspace === 1 ? 3 : _currentWorkspace - 1);
+        }
+      }
+    }
+
+    if (e.key === 'Escape') {
+      const detailOverlay = document.getElementById('event-detail-modal-overlay');
+      if (detailOverlay && detailOverlay.classList.contains('open')) {
+        if (window.closeEventDetailModal) window.closeEventDetailModal();
+        return;
+      }
+      const panel = document.getElementById('notif-center-panel');
+      if (panel && panel.style.display !== 'none') {
+        panel.style.display = 'none';
+        saveOpenWindowsState();
+      }
+    }
+  });
 }
 
 const WIN_BOUNDS_KEY = 'zettnas_window_bounds_v2';
@@ -2582,6 +2789,8 @@ export function initDockSystem() {
   initSnapAssistFlyout();
   initTopbarUserPill();
   initDockSettingsControls();
+  initWorkspaceSwitcher();
+  initWindowKeyboardShortcuts();
   const consoleModal = document.getElementById('console-window');
   const consoleHeader = document.querySelector('#console-window .chassis-panel-header');
   if (consoleModal) makeDraggable(consoleModal, consoleHeader, 'console');
@@ -3455,20 +3664,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  window.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      const detailOverlay = document.getElementById('event-detail-modal-overlay');
-      if (detailOverlay && detailOverlay.classList.contains('open')) {
-        if (window.closeEventDetailModal) window.closeEventDetailModal();
-        return;
-      }
-      const panel = document.getElementById('notif-center-panel');
-      if (panel && panel.style.display !== 'none') {
-        panel.style.display = 'none';
-        saveOpenWindowsState();
-      }
-    }
-  });
+  initWindowKeyboardShortcuts();
 
   ZettEventBus.on('stats:updated', () => {
     updateNotificationBadge();
@@ -3499,6 +3695,11 @@ window.applyDockSettings = applyDockSettings;
 window.initDockSettingsControls = initDockSettingsControls;
 window.getDockSettings = getDockSettings;
 window.initParabolicDockMagnification = initParabolicDockMagnification;
+window.getActiveWindowElement = getActiveWindowElement;
+window.restoreWindowSnap = restoreWindowSnap;
+window.getCurrentWorkspace = getCurrentWorkspace;
+window.switchWorkspace = switchWorkspace;
+window.initWorkspaceSwitcher = initWorkspaceSwitcher;
 
 if (typeof window !== 'undefined') {
   window.addEventListener('beforeunload', () => {

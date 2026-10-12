@@ -21,6 +21,8 @@ from backend.api.remotes import router as remotes_router
 from backend.api.samba import router as samba_router
 from backend.api.ups import router as ups_router
 from backend.api.network import router as network_router
+from backend.api.replication import router as replication_router
+from backend.api.media import router as media_router
 
 api_router = APIRouter()
 api_router.include_router(auth_router)
@@ -39,6 +41,8 @@ api_router.include_router(remotes_router)
 api_router.include_router(samba_router)
 api_router.include_router(ups_router)
 api_router.include_router(network_router)
+api_router.include_router(replication_router)
+api_router.include_router(media_router)
 
 __all__ = [
     "api_router",

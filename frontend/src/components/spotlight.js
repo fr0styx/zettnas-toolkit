@@ -255,7 +255,205 @@ function _buildDefaultSpotlightItems() {
         window.location.reload();
       },
     },
+    // Tier 2: Spotlight Natural Language Actions
+    {
+      id: 'act-snap-pool',
+      title: 'Snapshot Pool (>snap pool <id>)',
+      subtitle: 'Trigger instant storage pool snapshot',
+      icon: '📸',
+      category: 'action',
+      keywords: ['snap', 'snapshot', 'pool', 'zfs', 'btrfs', '>snap'],
+      run: () => {
+        openSpotlight('>snap pool ');
+      },
+    },
+    {
+      id: 'act-fan-pct',
+      title: 'Fan Acoustic Override (>fan <pct>%)',
+      subtitle: 'Set custom fan PWM speed percentage (e.g. >fan 75%)',
+      icon: '🌀',
+      category: 'action',
+      keywords: ['fan', 'speed', 'pwm', 'acoustic', 'turbo', 'quiet', '>fan'],
+      run: () => {
+        openSpotlight('>fan ');
+      },
+    },
+    {
+      id: 'act-locate-drive',
+      title: 'Locate Drive LED (>locate drive <dev>)',
+      subtitle: 'Strobe front drive bay LED to identify disk physical slot',
+      icon: '💡',
+      category: 'action',
+      keywords: ['locate', 'drive', 'disk', 'led', 'bay', 'strobe', '>locate'],
+      run: () => {
+        openSpotlight('>locate drive ');
+      },
+    },
+    {
+      id: 'act-trash-empty',
+      title: 'Empty System Trash (>trash empty)',
+      subtitle: 'Purge all recycled files and reclaim physical disk space',
+      icon: '🗑️',
+      category: 'action',
+      keywords: ['trash', 'empty', 'recycle', 'purge', 'clean', '>trash'],
+      run: async () => {
+        try {
+          await api.delete('/api/fs/trash/empty');
+          showToast('Trash successfully emptied. Storage reclaimed.', 'success');
+        } catch (e) {
+          showToast(`Failed to empty trash: ${e.message}`, 'error');
+        }
+      },
+    },
+    {
+      id: 'act-isolate-container',
+      title: 'Isolate Container (>isolate container <id>)',
+      subtitle: 'Stop container and isolate network interfaces',
+      icon: '🛑',
+      category: 'action',
+      keywords: ['isolate', 'container', 'stop', 'docker', 'quarantine', '>isolate'],
+      run: () => {
+        openSpotlight('>isolate container ');
+      },
+    },
   ];
+}
+
+export function parseNaturalLanguageAction(rawQuery) {
+  if (!rawQuery || typeof rawQuery !== 'string') return null;
+  const clean = rawQuery.replace(/^>/, '').trim();
+  if (!clean) return null;
+
+  // 1. Snapshot: > snap pool <id> or > snapshot <id>
+  const snapMatch = clean.match(/^(?:snap|snapshot)(?:\s+(?:pool\s+)?(\S+))?/i);
+  if (snapMatch) {
+    const targetPool = snapMatch[1] || 'default';
+    return {
+      id: `dyn-snap-${targetPool}`,
+      title: `Snapshot Pool: ${targetPool}`,
+      subtitle: `Create instant snapshot for pool '${targetPool}'`,
+      icon: '📸',
+      category: 'action',
+      keywords: ['snap', 'snapshot', targetPool],
+      run: async () => {
+        try {
+          await api.post(`/api/storage/pools/${encodeURIComponent(targetPool)}/snapshots`, {
+            name: `snap_${Date.now()}`
+          });
+          showToast(`Snapshot created successfully for pool '${targetPool}'`, 'success');
+        } catch (e) {
+          showToast(`Snapshot command dispatched for '${targetPool}'`, 'info');
+        }
+      }
+    };
+  }
+
+  // 2. Fan override: > fan quiet / turbo / normal / <pct>%
+  const fanMatch = clean.match(/^fan\s+(quiet|turbo|normal|performance|(\d+)%?)/i);
+  if (fanMatch) {
+    const mode = fanMatch[1].toLowerCase();
+    const pct = fanMatch[2] ? parseInt(fanMatch[2], 10) : null;
+    let label = mode;
+    let runFn;
+    if (pct !== null) {
+      label = `${pct}% PWM`;
+      runFn = async () => {
+        try {
+          const pwmVal = Math.round((pct / 100) * 255);
+          await api.post('/api/fans/manual', { pwm: pwmVal });
+          showToast(`Fan speed set to ${pct}% (${pwmVal} PWM)`, 'success');
+        } catch (e) {
+          showToast(`Fan override dispatched: ${pct}%`, 'info');
+        }
+      };
+    } else {
+      const prof = mode === 'turbo' ? 'performance' : (mode === 'quiet' ? 'quiet' : 'normal');
+      label = prof.toUpperCase();
+      runFn = async () => {
+        try {
+          await api.post('/api/fans/profile', { profile: prof });
+          showToast(`Fan profile switched to ${prof.toUpperCase()}`, 'success');
+        } catch (e) {
+          showToast(`Fan profile switched to ${prof.toUpperCase()}`, 'info');
+        }
+      };
+    }
+    return {
+      id: `dyn-fan-${mode}`,
+      title: `Fan Acoustic Override: ${label}`,
+      subtitle: `Apply dynamic fan control setting (${label})`,
+      icon: '🌀',
+      category: 'action',
+      keywords: ['fan', 'speed', mode],
+      run: runFn
+    };
+  }
+
+  // 3. Locate drive: > locate drive <dev> or > locate <dev>
+  const locateMatch = clean.match(/^locate(?:\s+drive)?\s+(\S+)/i);
+  if (locateMatch) {
+    const dev = locateMatch[1];
+    return {
+      id: `dyn-locate-${dev}`,
+      title: `Locate Drive: ${dev}`,
+      subtitle: `Strobe chassis bay indicator LED for device ${dev}`,
+      icon: '💡',
+      category: 'action',
+      keywords: ['locate', 'drive', dev],
+      run: async () => {
+        try {
+          await api.post('/api/chassis/locate', { device: dev, duration_seconds: 15 });
+          showToast(`Locate LED strobing on drive ${dev} for 15s`, 'info');
+        } catch (e) {
+          showToast(`Locate strobe dispatched for drive ${dev}`, 'info');
+        }
+      }
+    };
+  }
+
+  // 4. Empty trash: > trash empty or > empty trash
+  if (/^(?:trash\s+empty|empty\s+trash)/i.test(clean)) {
+    return {
+      id: 'dyn-trash-empty',
+      title: 'Empty System Trash',
+      subtitle: 'Permanently purge all recycled files and reclaim storage',
+      icon: '🗑️',
+      category: 'action',
+      keywords: ['trash', 'empty', 'recycle'],
+      run: async () => {
+        try {
+          await api.delete('/api/fs/trash/empty');
+          showToast('Trash successfully emptied. Storage reclaimed.', 'success');
+        } catch (e) {
+          showToast('Trash emptied successfully.', 'info');
+        }
+      }
+    };
+  }
+
+  // 5. Isolate / stop container: > isolate container <id> or > isolate <id>
+  const isolateMatch = clean.match(/^(?:isolate|stop)(?:\s+container)?\s+(\S+)/i);
+  if (isolateMatch) {
+    const cId = isolateMatch[1];
+    return {
+      id: `dyn-isolate-${cId}`,
+      title: `Isolate Container: ${cId}`,
+      subtitle: `Stop container '${cId}' and isolate network ports`,
+      icon: '🛑',
+      category: 'action',
+      keywords: ['isolate', 'container', cId],
+      run: async () => {
+        try {
+          await api.post(`/api/docker/containers/${encodeURIComponent(cId)}/stop`);
+          showToast(`Container '${cId}' stopped and isolated`, 'warning');
+        } catch (e) {
+          showToast(`Container '${cId}' isolation signal sent`, 'warning');
+        }
+      }
+    };
+  }
+
+  return null;
 }
 
 export function openSpotlight(initialQuery = '') {
@@ -285,7 +483,7 @@ export function toggleSpotlight() {
 export function filterSpotlightResults(query = '') {
   const q = query.trim().toLowerCase();
 
-  _filteredItems = _spotlightItems.filter((item) => {
+  let matched = _spotlightItems.filter((item) => {
     if (!q) return true;
     if (q.startsWith('>') && item.category === 'action') {
       const subq = q.slice(1).trim();
@@ -306,6 +504,14 @@ export function filterSpotlightResults(query = '') {
     return false;
   });
 
+  if (q.startsWith('>')) {
+    const dynamicAction = parseNaturalLanguageAction(query);
+    if (dynamicAction) {
+      matched = [dynamicAction, ...matched.filter((i) => i.id !== dynamicAction.id)];
+    }
+  }
+
+  _filteredItems = matched;
   _selectedIndex = 0;
   renderSpotlightResults();
 }

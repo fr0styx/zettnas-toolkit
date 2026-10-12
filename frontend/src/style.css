@@ -11842,3 +11842,150 @@ body.theme-yak .input-modern:focus {
     width: 100%;
   }
 }
+
+/* =========================================================================
+   TIER 2: VIRTUAL DESKTOPS / MULTI-WORKSPACE SWITCHER
+   ========================================================================= */
+.workspace-switcher {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 2px 4px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.workspace-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  padding: 3px 8px;
+  color: var(--muted, #94a3b8);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+
+.workspace-pill:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.workspace-pill.active {
+  color: #fff;
+  background: var(--brand, #00f0ff);
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.38);
+}
+
+.workspace-pill .ws-num {
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.workspace-pill.active .ws-num {
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+}
+
+.workspace-hidden {
+  display: none !important;
+}
+
+/* =========================================================================
+   TIER 2: MODULAR DESKTOP CANVAS WIDGETS
+   ========================================================================= */
+.widget-drive-temp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(62px, 1fr));
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.drive-temp-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 4px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  font-family: var(--font-mono, monospace);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.drive-temp-cell:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.drive-temp-bay {
+  font-size: 9px;
+  color: var(--muted, #94a3b8);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.drive-temp-val {
+  font-size: 11.5px;
+  font-weight: 800;
+  margin-top: 1px;
+}
+
+.drive-temp-cell.temp-cool .drive-temp-val {
+  color: var(--ok2, #25c2a0);
+}
+
+.drive-temp-cell.temp-warm .drive-temp-val {
+  color: var(--warn, #f5a623);
+}
+
+.drive-temp-cell.temp-hot .drive-temp-val {
+  color: var(--err, #eb5757);
+}
+
+.drive-temp-cell.temp-standby .drive-temp-val {
+  color: #38bdf8;
+  font-size: 10px;
+}
+
+.net-dial-svg-wrap {
+  position: relative;
+  width: 62px;
+  height: 62px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.circular-chart {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.net-dial-val {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 800;
+  font-family: var(--font-mono, monospace);
+  color: #fff;
+}
+

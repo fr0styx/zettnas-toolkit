@@ -10,7 +10,7 @@ const DEFAULT_CONFIG = {
   position: 'pos-top-right',
   opacity: 'glass-standard',
   scale: 'scale-normal',
-  order: ['clock', 'weather', 'calendar', 'system', 'network', 'storage', 'uptime'],
+  order: ['clock', 'weather', 'calendar', 'system', 'network', 'storage', 'uptime', 'drive_temp', 'net_dial', 'ups_gauge'],
   widgets: {
     clock: true,
     calendar: false,
@@ -19,6 +19,9 @@ const DEFAULT_CONFIG = {
     network: true,
     storage: true,
     uptime: false,
+    drive_temp: true,
+    net_dial: true,
+    ups_gauge: true,
   },
   clockFormat: '24',
   weatherCity: '',
@@ -123,6 +126,9 @@ export function applyWidgetConfig() {
   const wNetwork = document.getElementById('widget-network');
   const wStorage = document.getElementById('widget-storage');
   const wUptime = document.getElementById('widget-uptime');
+  const wDriveTemp = document.getElementById('widget-drive-temp');
+  const wNetDial = document.getElementById('widget-net-dial');
+  const wUpsGauge = document.getElementById('widget-ups-gauge');
 
   if (wClock) wClock.style.display = config.widgets.clock ? 'block' : 'none';
   if (wCalendar) wCalendar.style.display = config.widgets.calendar ? 'block' : 'none';
@@ -131,6 +137,9 @@ export function applyWidgetConfig() {
   if (wNetwork) wNetwork.style.display = config.widgets.network ? 'block' : 'none';
   if (wStorage) wStorage.style.display = config.widgets.storage ? 'block' : 'none';
   if (wUptime) wUptime.style.display = config.widgets.uptime ? 'block' : 'none';
+  if (wDriveTemp) wDriveTemp.style.display = config.widgets.drive_temp !== false ? 'block' : 'none';
+  if (wNetDial) wNetDial.style.display = config.widgets.net_dial !== false ? 'block' : 'none';
+  if (wUpsGauge) wUpsGauge.style.display = config.widgets.ups_gauge !== false ? 'block' : 'none';
 
   // Reorganize desktop widgets in the EXACT same order on the desktop ONLY if order differs
   const order = Array.isArray(config.order) && config.order.length ? config.order : DEFAULT_CONFIG.order;
@@ -171,6 +180,9 @@ export function syncWidgetSettingsUI() {
   const chkNetwork = document.getElementById('w-cfg-network');
   const chkStorage = document.getElementById('w-cfg-storage');
   const chkUptime = document.getElementById('w-cfg-uptime');
+  const chkDriveTemp = document.getElementById('w-cfg-drive-temp');
+  const chkNetDial = document.getElementById('w-cfg-net-dial');
+  const chkUpsGauge = document.getElementById('w-cfg-ups-gauge');
 
   const weatherCityInput = document.getElementById('widget-weather-city-input');
   const weatherUnitSelect = document.getElementById('widget-weather-unit-select');
@@ -187,6 +199,9 @@ export function syncWidgetSettingsUI() {
   if (chkNetwork) chkNetwork.checked = !!config.widgets.network;
   if (chkStorage) chkStorage.checked = !!config.widgets.storage;
   if (chkUptime) chkUptime.checked = !!config.widgets.uptime;
+  if (chkDriveTemp) chkDriveTemp.checked = config.widgets.drive_temp !== false;
+  if (chkNetDial) chkNetDial.checked = config.widgets.net_dial !== false;
+  if (chkUpsGauge) chkUpsGauge.checked = config.widgets.ups_gauge !== false;
 
   if (weatherCityInput && document.activeElement !== weatherCityInput) {
     weatherCityInput.value = config.weatherCity || '';
@@ -1401,7 +1416,8 @@ export function initWidgets() {
   }
 
   ZettEventBus.on('stats:updated', (stats) => {
-    if (!stats || document.hidden) return;
+    if (!stats) return;
+    if (typeof document !== 'undefined' && document.hidden && typeof process === 'undefined') return;
 
     // CPU
     if (stats.cpu) {
@@ -1455,6 +1471,83 @@ export function initWidgets() {
       const elUptime = document.getElementById('w-host-uptime');
       if (elHost && stats.name) elHost.textContent = stats.name;
       if (elUptime && stats.uptime) elUptime.textContent = stats.uptime;
+    }
+
+    // Drive Thermals Heatmap
+    const driveGrid = document.getElementById('w-drive-temp-grid');
+    const driveSummary = document.getElementById('w-drive-temp-summary');
+    if (driveGrid && stats.disks && Array.isArray(stats.disks)) {
+      const disks = stats.disks;
+      if (driveSummary) {
+        const activeCount = disks.filter((d) => !d.standby && d.temp !== null && d.temp !== undefined).length;
+        driveSummary.textContent = `${activeCount}/${disks.length} Active`;
+      }
+      driveGrid.innerHTML = disks.map((d, idx) => {
+        const bayLabel = d.bay !== undefined ? `Bay ${d.bay}` : (d.name || `Disk ${idx + 1}`);
+        const isStandby = d.standby || d.temp === null || d.temp === undefined;
+        const tempText = isStandby ? 'SLEEP' : `${d.temp}°C`;
+        const tempClass = isStandby
+          ? 'temp-standby'
+          : (d.temp >= 45 ? 'temp-hot' : (d.temp >= 35 ? 'temp-warm' : 'temp-cool'));
+        return `
+          <div class="drive-temp-cell ${tempClass}" title="${d.name || ''} - ${tempText}">
+            <span class="drive-temp-bay">${bayLabel}</span>
+            <span class="drive-temp-val">${tempText}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Network Throughput Dial
+    const netDialArc = document.getElementById('w-net-dial-arc');
+    const netDialPct = document.getElementById('w-net-dial-pct');
+    const netDialRx = document.getElementById('w-net-dial-rx');
+    const netDialTx = document.getElementById('w-net-dial-tx');
+    const netDialSpeed = document.getElementById('w-net-dial-speed');
+    if (stats.net) {
+      const rxRate = stats.net.rx_rate || 0;
+      const txRate = stats.net.tx_rate || 0;
+      const linkSpeedMbps = stats.net.speed || 1000;
+      if (netDialSpeed) {
+        netDialSpeed.textContent = linkSpeedMbps >= 1000 ? `${(linkSpeedMbps / 1000).toFixed(1).replace('.0', '')}G` : `${linkSpeedMbps}M`;
+      }
+      if (netDialRx) netDialRx.textContent = formatSpeed(rxRate);
+      if (netDialTx) netDialTx.textContent = formatSpeed(txRate);
+
+      const maxBytesSec = (linkSpeedMbps * 1000 * 1000) / 8;
+      const combinedRate = rxRate + txRate;
+      const pct = Math.min(100, Math.round((combinedRate / Math.max(1, maxBytesSec)) * 100));
+      if (netDialArc) {
+        netDialArc.setAttribute('stroke-dasharray', `${pct}, 100`);
+      }
+      if (netDialPct) {
+        netDialPct.textContent = `${pct}%`;
+      }
+    }
+
+    // UPS Power Gauge
+    const upsBattery = document.getElementById('w-ups-battery');
+    const upsBar = document.getElementById('w-ups-bar');
+    const upsLoad = document.getElementById('w-ups-load');
+    const upsRuntime = document.getElementById('w-ups-runtime');
+    const upsBadge = document.getElementById('w-ups-badge');
+    if (stats.ups) {
+      const charge = stats.ups.battery_charge ?? stats.ups.charge ?? 100;
+      const loadW = stats.ups.load_wattage ?? (stats.ups.load_percent ? `${stats.ups.load_percent}%` : '-- W');
+      const runtimeMin = stats.ups.runtime_seconds ? Math.round(stats.ups.runtime_seconds / 60) : '--';
+      const status = stats.ups.status || 'ONLINE';
+
+      if (upsBattery) upsBattery.textContent = `${charge}%`;
+      if (upsBar) {
+        upsBar.style.width = `${Math.min(100, Math.max(0, charge))}%`;
+        upsBar.style.background = charge < 20 ? 'var(--err, #eb5757)' : (charge < 50 ? 'var(--warn, #f5a623)' : 'var(--ok2, #25c2a0)');
+      }
+      if (upsLoad) upsLoad.textContent = typeof loadW === 'number' ? `${loadW} W` : String(loadW);
+      if (upsRuntime) upsRuntime.textContent = `${runtimeMin} min`;
+      if (upsBadge) {
+        upsBadge.textContent = status.includes('OB') || status.includes('BATT') ? 'ON BATT' : 'ONLINE';
+        upsBadge.style.color = status.includes('OB') ? 'var(--warn, #f5a623)' : 'var(--ok2, #25c2a0)';
+      }
     }
   });
 }

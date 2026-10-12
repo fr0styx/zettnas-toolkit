@@ -194,11 +194,11 @@
   })();
 </script>
 <style>html,body{color:#eaf1f8;background-color:#080c10;width:100%;height:100%;margin:0;padding:0;overflow:hidden}html.auth-required body{background:radial-gradient(circle at 50% 20%,#151d29 0%,#080c10 70%)!important}#login-overlay{z-index:999999;background:#080c10;justify-content:center;align-items:center;display:flex;position:fixed;inset:0}html.has-auth-session #login-overlay{display:none!important}html.auth-required #login-overlay{display:flex!important}html.is-desktop-locked #lock-overlay{opacity:1!important;display:flex!important}html.is-desktop-locked body{overflow:hidden!important}html.auth-required .studio-viewport-wrapper,html.auth-required .suite-navbar,html.auth-required #desktop-icons-container,html.auth-required .desktop-icons-container,html.auth-required .top-nav,html.auth-required #desktop-widgets-container,html.auth-required #os-dock-container,html.auth-required .workspace-panel,html.auth-required .smart-modal-backdrop,html.auth-required .os-window,html.auth-required .notif-center-window{display:none!important}</style>
-  <script type="module" crossorigin src="/assets/index-CoJ0xq7v.js"></script>
+  <script type="module" crossorigin src="/assets/index-CFd-ZUUM.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-hePW80VL.js">
-  <link rel="modulepreload" crossorigin href="/assets/dock-BSYpt1Y1.js">
-  <link rel="modulepreload" crossorigin href="/assets/users-Bd7zCyWR.js">
-  <link rel="stylesheet" crossorigin href="/assets/index-BIeB-eQl.css">
+  <link rel="modulepreload" crossorigin href="/assets/dock-Bpj4GVSU.js">
+  <link rel="modulepreload" crossorigin href="/assets/users-BMjQJ2mj.js">
+  <link rel="stylesheet" crossorigin href="/assets/index-Da9weVvh.css">
 </head>
 <body class="studio-workbench no-specular-glow">
 
@@ -443,6 +443,22 @@
       </div>
     </div>
 
+    <!-- Virtual Desktops Workspace Switcher -->
+    <div id="desktop-workspace-switcher" class="workspace-switcher" role="tablist" aria-label="Virtual Desktops">
+      <button class="workspace-pill active" data-workspace="1" role="tab" aria-selected="true" title="Workspace 1: Storage & Hardware (Ctrl+1)">
+        <span class="ws-num">1</span>
+        <span class="ws-label" data-i18n="workspace.storage">Storage</span>
+      </button>
+      <button class="workspace-pill" data-workspace="2" role="tab" aria-selected="false" title="Workspace 2: Applications & Stacks (Ctrl+2)">
+        <span class="ws-num">2</span>
+        <span class="ws-label" data-i18n="workspace.apps">Apps</span>
+      </button>
+      <button class="workspace-pill" data-workspace="3" role="tab" aria-selected="false" title="Workspace 3: Network & Security (Ctrl+3)">
+        <span class="ws-num">3</span>
+        <span class="ws-label" data-i18n="workspace.system">System</span>
+      </button>
+    </div>
+
     <div class="suite-telemetry-pills">
       <div id="unraid-array-pill" class="suite-pill hidden"><span class="pulse-dot" id="unraid-array-dot"></span> <span data-i18n="nav.array">Array</span>: <strong id="unraid-array-status">STARTED</strong></div>
       <div id="unraid-parity-pill" class="suite-pill hidden"><span class="pulse-dot" style="background:var(--accent-cyan,#00f0ff);box-shadow:0 0 6px var(--accent-cyan,#00f0ff)"></span> <span data-i18n="nav.parity">Parity</span>: <strong id="unraid-parity-status">0.0%</strong></div>
@@ -596,6 +612,65 @@
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <span style="font-size: 12px; color: var(--muted);">Uptime</span>
           <span style="font-size: 12px; font-weight: 600; font-family: var(--font-mono, monospace); color: #cbd5e1;" id="w-host-uptime">--</span>
+        </div>
+      </div>
+
+      <!-- 8. Drive Thermals Heatmap Widget -->
+      <div class="desktop-widget" id="widget-drive-temp">
+        <div class="widget-header">
+          <span class="widget-title"><svg class="ic" style="width:12px;height:12px;"><use href="#i-storage"/></svg> <span data-i18n="widget.drive_temp">Drive Thermals</span></span>
+          <span class="widget-badge" id="w-drive-temp-summary">-- Disks</span>
+        </div>
+        <div class="widget-drive-temp-grid" id="w-drive-temp-grid">
+          <div style="font-size: 11px; color: var(--muted); text-align: center; padding: 6px 0;">Scanning bays...</div>
+        </div>
+      </div>
+
+      <!-- 9. Network Throughput Dial Widget -->
+      <div class="desktop-widget" id="widget-net-dial">
+        <div class="widget-header">
+          <span class="widget-title"><svg class="ic" style="width:12px;height:12px;"><use href="#i-net"/></svg> <span data-i18n="widget.net_dial">Network Dial</span></span>
+          <span class="widget-badge" id="w-net-dial-speed">2.5G</span>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: space-around; gap: 8px;">
+          <div class="net-dial-svg-wrap">
+            <svg viewBox="0 0 36 36" class="circular-chart">
+              <path class="circle-bg" stroke="rgba(255,255,255,0.08)" stroke-width="3" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+              <path id="w-net-dial-arc" class="circle" stroke="var(--brand, #00f0ff)" stroke-width="3" stroke-dasharray="0, 100" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+            </svg>
+            <div class="net-dial-val" id="w-net-dial-pct">0%</div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 4px; font-size: 11px;">
+            <div style="display: flex; justify-content: space-between; gap: 8px;">
+              <span style="color: var(--brand, #00f0ff); font-weight: 600;">▼ RX</span>
+              <span style="font-family: var(--font-mono, monospace); font-weight: 700;" id="w-net-dial-rx">0 B/s</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; gap: 8px;">
+              <span style="color: var(--warn, #f5a623); font-weight: 600;">▲ TX</span>
+              <span style="font-family: var(--font-mono, monospace); font-weight: 700;" id="w-net-dial-tx">0 B/s</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 10. UPS Power Gauge Widget -->
+      <div class="desktop-widget" id="widget-ups-gauge">
+        <div class="widget-header">
+          <span class="widget-title"><svg class="ic" style="width:12px;height:12px;"><use href="#i-sliders"/></svg> <span data-i18n="widget.ups_gauge">UPS Power</span></span>
+          <span class="widget-badge" id="w-ups-badge">ONLINE</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          <div style="display: flex; justify-content: space-between; align-items: baseline;">
+            <span style="font-size: 11px; color: var(--muted);">Battery Charge</span>
+            <span style="font-size: 14px; font-weight: 800; font-family: var(--font-mono, monospace); color: var(--ok2, #25c2a0);" id="w-ups-battery">100%</span>
+          </div>
+          <div style="width: 100%; height: 5px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden;">
+            <div id="w-ups-bar" style="height: 100%; width: 100%; background: var(--ok2, #25c2a0); transition: width 0.3s ease;"></div>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2px; font-size: 11px;">
+            <span style="color: var(--muted);">Load: <strong style="color: #cbd5e1; font-family: var(--font-mono, monospace);" id="w-ups-load">-- W</strong></span>
+            <span style="color: var(--muted);">Runtime: <strong style="color: #cbd5e1; font-family: var(--font-mono, monospace);" id="w-ups-runtime">-- min</strong></span>
+          </div>
         </div>
       </div>
     </div>
@@ -3313,6 +3388,63 @@
                         </div>
                       </div>
                       <input type="checkbox" id="w-cfg-weather" checked style="width: 16px; height: 16px; cursor: pointer; accent-color: var(--ok2);">
+                    </div>
+
+                    <!-- Widget 8: Drive Thermals Heatmap -->
+                    <div class="widget-sortable-item" data-widget-id="drive_temp" draggable="true">
+                      <div class="widget-sortable-left">
+                        <div class="widget-drag-handle" title="Drag to reorder" aria-label="Drag to reorder">
+                          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                            <circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/>
+                            <circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/>
+                            <circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/>
+                          </svg>
+                        </div>
+                        <span style="font-size: 18px; margin: 0 4px;">🌡️</span>
+                        <div>
+                          <div style="font-size: 12.5px; font-weight: 700; color: #fff;" data-i18n="widget.drive_temp">Drive Thermals</div>
+                          <div style="font-size: 11px; color: var(--muted);" data-i18n="widget.drive_temp_desc">Real-time per-bay thermal heatmap and spindown status.</div>
+                        </div>
+                      </div>
+                      <input type="checkbox" id="w-cfg-drive-temp" checked style="width: 16px; height: 16px; cursor: pointer; accent-color: var(--ok2);">
+                    </div>
+
+                    <!-- Widget 9: Network Throughput Dial -->
+                    <div class="widget-sortable-item" data-widget-id="net_dial" draggable="true">
+                      <div class="widget-sortable-left">
+                        <div class="widget-drag-handle" title="Drag to reorder" aria-label="Drag to reorder">
+                          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                            <circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/>
+                            <circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/>
+                            <circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/>
+                          </svg>
+                        </div>
+                        <span style="font-size: 18px; margin: 0 4px;">🎛️</span>
+                        <div>
+                          <div style="font-size: 12.5px; font-weight: 700; color: #fff;" data-i18n="widget.net_dial">Network Dial</div>
+                          <div style="font-size: 11px; color: var(--muted);" data-i18n="widget.net_dial_desc">Real-time network throughput dial and bandwidth utilization.</div>
+                        </div>
+                      </div>
+                      <input type="checkbox" id="w-cfg-net-dial" checked style="width: 16px; height: 16px; cursor: pointer; accent-color: var(--ok2);">
+                    </div>
+
+                    <!-- Widget 10: UPS Power Gauge -->
+                    <div class="widget-sortable-item" data-widget-id="ups_gauge" draggable="true">
+                      <div class="widget-sortable-left">
+                        <div class="widget-drag-handle" title="Drag to reorder" aria-label="Drag to reorder">
+                          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                            <circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/>
+                            <circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/>
+                            <circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/>
+                          </svg>
+                        </div>
+                        <span style="font-size: 18px; margin: 0 4px;">🔋</span>
+                        <div>
+                          <div style="font-size: 12.5px; font-weight: 700; color: #fff;" data-i18n="widget.ups_gauge">UPS Power</div>
+                          <div style="font-size: 11px; color: var(--muted);" data-i18n="widget.ups_gauge_desc">Battery integrity, load wattage, and runtime monitor.</div>
+                        </div>
+                      </div>
+                      <input type="checkbox" id="w-cfg-ups-gauge" checked style="width: 16px; height: 16px; cursor: pointer; accent-color: var(--ok2);">
                     </div>
                   </div>
                 </div>
