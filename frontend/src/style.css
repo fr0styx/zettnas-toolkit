@@ -8239,6 +8239,197 @@ body.mobile-mode .btn-webui-badge {
   transform: scale(1.1);
 }
 
+/* File Explorer View Mode Toggle Group */
+.fm-view-mode-group {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  padding: 2px;
+  gap: 2px;
+  flex-shrink: 0;
+}
+.fm-view-mode-group .fm-tool-btn {
+  padding: 4px 6px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  transition: all 0.15s ease;
+  line-height: 1;
+}
+.fm-view-mode-group .fm-tool-btn:hover {
+  color: var(--fg);
+  background: rgba(255, 255, 255, 0.08);
+}
+.fm-view-mode-group .fm-tool-btn.active {
+  color: var(--accent-cyan, #00f0ff) !important;
+  background: rgba(0, 240, 255, 0.16) !important;
+  box-shadow: 0 0 8px rgba(0, 240, 255, 0.25);
+}
+
+/* File Explorer Icon/Grid Mode Scoping */
+.file-manager-window.fm-mode-icon .fm-header-row {
+  display: none !important;
+}
+.file-manager-window.fm-mode-icon .fm-spacer {
+  display: none !important;
+}
+.file-manager-window.fm-mode-icon .fm-list {
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
+  right: auto !important;
+  transform: none !important;
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)) !important;
+  gap: 12px !important;
+  padding: 16px !important;
+  align-content: start !important;
+  box-sizing: border-box !important;
+  min-height: 100% !important;
+  background: #0b111a !important;
+}
+
+/* Grid Card */
+.fm-grid-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 12px 8px 10px 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 8px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+  box-sizing: border-box;
+  text-align: center;
+  min-height: 122px;
+}
+.fm-grid-card:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.18);
+  transform: translateY(-1px);
+}
+.fm-grid-card.selected {
+  background: linear-gradient(135deg, rgba(0, 240, 255, 0.18) 0%, rgba(14, 165, 233, 0.09) 100%) !important;
+  border-color: var(--accent-cyan, #00f0ff) !important;
+  box-shadow: 0 0 14px rgba(0, 240, 255, 0.22), inset 0 0 8px rgba(0, 240, 255, 0.1) !important;
+}
+
+/* Checkbox inside card */
+.fm-grid-card .fm-card-checkbox {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  z-index: 3;
+  opacity: 0.15;
+  transition: opacity 0.15s ease;
+}
+.fm-grid-card:hover .fm-card-checkbox,
+.fm-grid-card.selected .fm-card-checkbox,
+.fm-grid-card .fm-card-checkbox:checked {
+  opacity: 1 !important;
+}
+
+/* Card Preview / Icon */
+.fm-card-preview {
+  width: 58px;
+  height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+  position: relative;
+  border-radius: 6px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.fm-card-preview svg {
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.45));
+}
+.fm-thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  background: rgba(0, 0, 0, 0.4);
+}
+.fm-fallback-img-icon {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Card Info */
+.fm-card-info {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  overflow: hidden;
+}
+.fm-card-name {
+  width: 100%;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fg);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0 2px;
+}
+.fm-grid-card.selected .fm-card-name {
+  color: #ffffff;
+  font-weight: 600;
+  text-shadow: 0 0 10px rgba(0, 240, 255, 0.4);
+}
+.fm-card-meta {
+  font-size: 10px;
+  color: var(--muted);
+  font-family: monospace;
+}
+.fm-grid-card.selected .fm-card-meta {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* Card Hover Actions */
+.fm-card-actions {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  display: flex;
+  gap: 2px;
+  opacity: 0;
+  pointer-events: none;
+  background: rgba(11, 17, 26, 0.9);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 5px;
+  padding: 2px 3px;
+  z-index: 4;
+  transition: opacity 0.15s ease;
+}
+.fm-grid-card:hover .fm-card-actions {
+  opacity: 1;
+  pointer-events: auto;
+}
+.fm-card-actions .fm-act-btn {
+  font-size: 0.82rem;
+  padding: 2px 3px;
+}
+
 /* Virtual Machine Manager Window - Solid, Premium Opaque Surface */
 #vm-manager-window.vm-manager-window,
 .vm-manager-window {

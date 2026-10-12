@@ -54,6 +54,7 @@ export class FileManagerWindow {
     this.dockId = dockId;
     this.isPrimary = isPrimary;
     this.currentPath = initialPath || (isPrimary ? (localStorage.getItem('zettnas_fm_last_path') || '/mnt/user') : '/mnt/user');
+    this.viewMode = localStorage.getItem('zettnas_fm_view_mode') || 'list';
     this.fileList = [];
     this.selectedPaths = new Set();
     this.lastSelectedIndex = -1;
@@ -82,6 +83,9 @@ export class FileManagerWindow {
     this.newFolderBtn = null;
     this.newWinBtn = null;
     this.organizeBtn = null;
+    this.btnViewList = null;
+    this.btnViewIcon = null;
+    this.headerRow = null;
     this.colName = null;
     this.colSize = null;
     this.colType = null;
@@ -157,6 +161,14 @@ export class FileManagerWindow {
               <button id="fm-organize-btn" class="fm-tool-btn fm-organize-btn" title="${t('fm.organize_media', 'Organize Media')}" data-i18n-title="fm.organize_media" aria-label="Organize Media">
                 <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
               </button>
+              <div class="fm-view-mode-group">
+                <button id="fm-btn-view-list" class="fm-tool-btn fm-btn-view-list ${this.viewMode === 'list' ? 'active' : ''}" title="${t('fm.view_list', 'List View')}" data-i18n-title="fm.view_list" aria-label="List View">
+                  <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+                </button>
+                <button id="fm-btn-view-icon" class="fm-tool-btn fm-btn-view-icon ${this.viewMode === 'icon' ? 'active' : ''}" title="${t('fm.view_icon', 'Icon View')}" data-i18n-title="fm.view_icon" aria-label="Icon View">
+                  <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                </button>
+              </div>
               <div id="fm-selection-bar" class="fm-selection-bar" style="display: none; align-items: center; gap: 6px; margin-left: 8px;">
                 <span id="fm-selected-count" class="fm-selected-count" style="font-size: 11px; font-weight: 700; color: var(--accent-cyan, #0ea5e9); padding: 2px 8px; background: rgba(14,165,233,0.12); border-radius: 4px; border: 1px solid rgba(14,165,233,0.25);">0 selected</span>
                 <button id="fm-bulk-move-btn" class="btn-pill-toggle fm-bulk-move-btn" style="padding: 3px 8px; font-size: 11px; background: rgba(14,165,233,0.15); border: 1px solid rgba(14,165,233,0.3); color: #38bdf8; border-radius: 4px; cursor: pointer;" title="Move Selected">📦 Move To...</button>
@@ -183,6 +195,7 @@ export class FileManagerWindow {
         document.body.insertAdjacentHTML('beforeend', primaryHtml);
       }
       this.windowEl = document.getElementById('file-manager-window');
+      if (this.viewMode === 'icon') this.windowEl?.classList.add('fm-mode-icon');
     } else {
       // Secondary window
       const secHtml = `
@@ -219,6 +232,14 @@ export class FileManagerWindow {
             <button class="fm-tool-btn fm-organize-btn" title="${t('fm.organize_media', 'Organize Media')}" data-i18n-title="fm.organize_media" aria-label="Organize Media">
               <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
             </button>
+            <div class="fm-view-mode-group">
+              <button class="fm-tool-btn fm-btn-view-list ${this.viewMode === 'list' ? 'active' : ''}" title="${t('fm.view_list', 'List View')}" data-i18n-title="fm.view_list" aria-label="List View">
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+              </button>
+              <button class="fm-tool-btn fm-btn-view-icon ${this.viewMode === 'icon' ? 'active' : ''}" title="${t('fm.view_icon', 'Icon View')}" data-i18n-title="fm.view_icon" aria-label="Icon View">
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+              </button>
+            </div>
             <div class="fm-selection-bar" style="display: none; align-items: center; gap: 6px; margin-left: 8px;">
               <span class="fm-selected-count" style="font-size: 11px; font-weight: 700; color: var(--accent-cyan, #0ea5e9); padding: 2px 8px; background: rgba(14,165,233,0.12); border-radius: 4px; border: 1px solid rgba(14,165,233,0.25);">0 selected</span>
               <button class="btn-pill-toggle fm-bulk-move-btn" style="padding: 3px 8px; font-size: 11px; background: rgba(14,165,233,0.15); border: 1px solid rgba(14,165,233,0.3); color: #38bdf8; border-radius: 4px; cursor: pointer;" title="Move Selected">📦 Move To...</button>
@@ -244,6 +265,7 @@ export class FileManagerWindow {
       `;
       document.body.insertAdjacentHTML('beforeend', secHtml);
       this.windowEl = document.getElementById(this.id);
+      if (this.viewMode === 'icon') this.windowEl?.classList.add('fm-mode-icon');
     }
   }
 
@@ -267,6 +289,9 @@ export class FileManagerWindow {
     this.newFolderBtn = this.windowEl.querySelector('.fm-new-folder-btn');
     this.newWinBtn = this.windowEl.querySelector('.fm-new-win-btn');
     this.organizeBtn = this.windowEl.querySelector('.fm-organize-btn');
+    this.btnViewList = this.windowEl.querySelector('.fm-btn-view-list');
+    this.btnViewIcon = this.windowEl.querySelector('.fm-btn-view-icon');
+    this.headerRow = this.windowEl.querySelector('.fm-header-row');
     this.colName = this.windowEl.querySelector('.fm-header-row .fm-col-name');
     this.colSize = this.windowEl.querySelector('.fm-header-row .fm-col-size');
     this.colType = this.windowEl.querySelector('.fm-header-row .fm-col-type');
@@ -399,6 +424,10 @@ export class FileManagerWindow {
       openMediaOrganizerModal(this.currentPath);
     });
 
+    // View mode buttons
+    this.btnViewList?.addEventListener('click', () => this.setViewMode('list'));
+    this.btnViewIcon?.addEventListener('click', () => this.setViewMode('icon'));
+
     // Path input and breadcrumbs
     if (this.pathInput) {
       const handlePathSubmit = () => {
@@ -436,7 +465,11 @@ export class FileManagerWindow {
 
     // Viewport scrolling
     if (this.viewport) {
-      this.viewport.addEventListener('scroll', () => this.renderViewport());
+      this.viewport.addEventListener('scroll', () => {
+        if (this.viewMode === 'list') {
+          this.renderViewport();
+        }
+      });
 
       this.viewport.addEventListener('click', (e) => {
         if (e.target === this.viewport || e.target === this.spacer || e.target === this.list) {
@@ -516,7 +549,7 @@ export class FileManagerWindow {
 
       this.viewport.addEventListener('mousedown', (e) => {
         if (e.button !== 0) return;
-        if (e.target.closest('.fm-row, .fm-act-btn, input, button, a')) return;
+        if (e.target.closest('.fm-row, .fm-grid-card, .fm-act-btn, input, button, a')) return;
 
         this.ensureFocus();
         const vRect = this.viewport.getBoundingClientRect();
@@ -556,8 +589,8 @@ export class FileManagerWindow {
           marqueeEl.style.height = `${height}px`;
 
           const mRect = { left, top, right: left + width, bottom: top + height };
-          const rows = this.viewport.querySelectorAll('.fm-row');
-          rows.forEach((r) => {
+          const items = this.viewport.querySelectorAll('.fm-row, .fm-grid-card');
+          items.forEach((r) => {
             const rTop = r.offsetTop;
             const rBottom = rTop + r.offsetHeight;
             const rLeft = r.offsetLeft;
@@ -805,6 +838,17 @@ export class FileManagerWindow {
 
   scrollIndexIntoView(idx) {
     if (!this.viewport || idx < 0) return;
+    if (this.viewMode === 'icon') {
+      const targetItem = this.fileList[idx];
+      if (targetItem) {
+        const card = this.viewport.querySelector(`.fm-grid-card[data-path="${targetItem.path}"]`);
+        if (card && typeof card.scrollIntoView === 'function') {
+          card.scrollIntoView({ block: 'nearest' });
+          return;
+        }
+      }
+      return;
+    }
     const targetTop = idx * ROW_HEIGHT;
     const targetBottom = targetTop + ROW_HEIGHT;
     const viewTop = this.viewport.scrollTop;
@@ -817,6 +861,59 @@ export class FileManagerWindow {
       this.viewport.scrollTop = Math.max(0, targetBottom - viewHeight);
     }
     this.renderViewport();
+  }
+
+  setViewMode(mode) {
+    if (this.viewMode === mode) return;
+    this.viewMode = mode;
+    try {
+      localStorage.setItem('zettnas_fm_view_mode', mode);
+    } catch (_) {}
+
+    if (this.windowEl) {
+      this.windowEl.classList.toggle('fm-mode-icon', mode === 'icon');
+    }
+    if (this.btnViewList) {
+      this.btnViewList.classList.toggle('active', mode === 'list');
+    }
+    if (this.btnViewIcon) {
+      this.btnViewIcon.classList.toggle('active', mode === 'icon');
+    }
+
+    // Sync across open FM instances
+    for (const inst of _fmInstances.values()) {
+      if (inst !== this && inst.viewMode !== mode) {
+        inst.viewMode = mode;
+        if (inst.windowEl) inst.windowEl.classList.toggle('fm-mode-icon', mode === 'icon');
+        if (inst.btnViewList) inst.btnViewList.classList.toggle('active', mode === 'list');
+        if (inst.btnViewIcon) inst.btnViewIcon.classList.toggle('active', mode === 'icon');
+        if (inst.spacer) {
+          inst.spacer.style.height = (mode === 'icon' ? 0 : inst.fileList.length * ROW_HEIGHT) + 'px';
+        }
+        inst.renderViewport();
+      }
+    }
+
+    if (this.spacer) {
+      this.spacer.style.height = (mode === 'icon' ? 0 : this.fileList.length * ROW_HEIGHT) + 'px';
+    }
+    this.renderViewport();
+    this.ensureFocus();
+  }
+
+  getGridColumnCount() {
+    if (this.viewMode !== 'icon' || !this.viewport) return 1;
+    const cards = this.viewport.querySelectorAll('.fm-grid-card');
+    if (cards.length >= 2) {
+      const firstTop = cards[0].offsetTop;
+      for (let i = 1; i < cards.length; i++) {
+        if (cards[i].offsetTop > firstTop) {
+          return i;
+        }
+      }
+      return cards.length;
+    }
+    return 1;
   }
 
   updateSelectionToolbar() {
@@ -842,13 +939,13 @@ export class FileManagerWindow {
 
   updateRowSelectionUI() {
     if (!this.viewport) return;
-    const rows = this.viewport.querySelectorAll('.fm-row');
-    rows.forEach((r) => {
+    const items = this.viewport.querySelectorAll('.fm-row, .fm-grid-card');
+    items.forEach((r) => {
       const p = r.dataset.path;
       const isSel = Boolean(p && this.selectedPaths.has(p));
       if (isSel) r.classList.add('selected');
       else r.classList.remove('selected');
-      const chk = r.querySelector('.fm-row-checkbox');
+      const chk = r.querySelector('.fm-row-checkbox, .fm-card-checkbox');
       if (chk) chk.checked = isSel;
     });
 
@@ -1022,11 +1119,181 @@ export class FileManagerWindow {
     if (!this.viewport || !this.list) return;
 
     if (this.fileList.length === 0) {
+      if (this.spacer) this.spacer.style.height = '0px';
       this.list.style.transform = 'none';
       this.list.innerHTML = `<div style="padding: 32px; text-align: center; color: var(--muted); font-size: 13px;">${escapeHtml(t('fm.empty_folder', 'This folder is empty.'))}</div>`;
       return;
     }
 
+    if (this.viewMode === 'icon') {
+      if (this.spacer) this.spacer.style.height = '0px';
+      this.list.style.transform = 'none';
+      this.list.innerHTML = '';
+      const token = (auth && typeof auth.getToken === 'function' ? auth.getToken() : null) || localStorage.getItem('zettnas_token') || '';
+
+      const folderSvg = '<svg viewBox="0 0 24 24" width="44" height="44" stroke="currentColor" stroke-width="1.5" fill="#eab308"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>';
+      const fileSvg = '<svg viewBox="0 0 24 24" width="40" height="40" stroke="currentColor" stroke-width="1.5" fill="none"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>';
+      const upSvg = '<svg viewBox="0 0 24 24" width="40" height="40" stroke="currentColor" stroke-width="1.5" fill="none"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>';
+
+      for (let i = 0; i < this.fileList.length; i++) {
+        const file = this.fileList[i];
+        const card = document.createElement('div');
+        card.className = 'fm-grid-card';
+        card.dataset.path = file.path;
+        card.dataset.name = file.name;
+        if (this.selectedPaths.has(file.path)) card.classList.add('selected');
+
+        const escName = escapeHtml(file.name);
+        const escPath = escapeHtml(file.path);
+        const isImage = Boolean(file.name.match(/\.(jpeg|jpg|png|gif|webp|svg)$/i));
+
+        let iconContent;
+        if (file.name === '..') {
+          iconContent = upSvg;
+        } else if (file.is_dir) {
+          iconContent = folderSvg;
+        } else if (isImage) {
+          const thumbUrl = `/api/fs/download?path=${encodeURIComponent(file.path)}&token=${token}`;
+          iconContent = `
+            <img src="${thumbUrl}" class="fm-thumb-img" loading="lazy" alt="${escName}" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';" />
+            <div class="fm-fallback-img-icon" style="display:none;">${fileSvg}</div>
+          `;
+        } else {
+          iconContent = fileSvg;
+        }
+
+        const metaText = file.name === '..' ? '--' : (file.is_dir ? 'Folder' : formatBytes(file.size));
+
+        card.innerHTML = `
+          ${file.name !== '..' ? `<input type="checkbox" class="fm-checkbox fm-card-checkbox" ${this.selectedPaths.has(file.path) ? 'checked' : ''} data-path="${escPath}" title="Select item" />` : ''}
+          <div class="fm-card-preview">${iconContent}</div>
+          <div class="fm-card-info">
+            <div class="fm-card-name" title="${escName}">${escName}</div>
+            <div class="fm-card-meta">${metaText}</div>
+          </div>
+          <div class="fm-card-actions">
+            ${(!file.is_dir && file.name !== '..' && isImage) ? `<button class="fm-act-btn" data-act="preview" data-path="${escPath}" title="Preview">👁️</button>` : ''}
+            ${!file.is_dir && file.name !== '..' ? `<button class="fm-act-btn" data-act="download" data-path="${escPath}" title="Download">⬇️</button>` : ''}
+            ${file.name !== '..' ? `<button class="fm-act-btn" data-act="rename" data-path="${escPath}" title="Rename">✏️</button>` : ''}
+            ${file.name !== '..' ? `<button class="fm-act-btn" data-act="delete" data-path="${escPath}" title="Delete">🗑️</button>` : ''}
+          </div>
+        `;
+
+        if (file.name !== '..') {
+          card.setAttribute('draggable', 'true');
+          card.addEventListener('dragstart', (e) => {
+            const paths = this.selectedPaths.has(file.path) ? Array.from(this.selectedPaths) : [file.path];
+            const payload = {
+              paths,
+              action: e.altKey ? 'copy' : 'move',
+              sourcePath: this.currentPath,
+              sourceInstanceId: this.id,
+            };
+            e.dataTransfer.setData('application/json', JSON.stringify(payload));
+            e.dataTransfer.setData('text/plain', paths.join('\n'));
+            e.dataTransfer.effectAllowed = 'copyMove';
+          });
+        }
+
+        if (file.is_dir && file.name !== '..') {
+          card.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            card.style.background = 'rgba(14, 165, 233, 0.22)';
+          });
+          card.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            card.style.background = '';
+          });
+          card.addEventListener('drop', async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            card.style.background = '';
+            const jsonStr = e.dataTransfer.getData('application/json');
+            if (jsonStr) {
+              try {
+                const payload = JSON.parse(jsonStr);
+                if (payload.paths && payload.paths.length > 0) {
+                  await executeTransferWithConflictCheck(payload.paths, file.path, payload.action || 'move');
+                  ZettEventBus.emit('fm:refresh');
+                }
+              } catch (_) {}
+            }
+          });
+        }
+
+        card.addEventListener('click', (e) => {
+          if (e.target.closest('.fm-act-btn') || file.name === '..') return;
+          this.ensureFocus();
+
+          if (e.target.closest('.fm-checkbox')) {
+            const chk = e.target.closest('.fm-checkbox');
+            if (chk.checked) {
+              this.selectedPaths.add(file.path);
+            } else {
+              this.selectedPaths.delete(file.path);
+            }
+            this.lastSelectedIndex = i;
+            if (this.selectionAnchorIndex === -1) this.selectionAnchorIndex = i;
+            try { chk.blur(); } catch (_) {}
+            this.ensureFocus();
+            this.updateRowSelectionUI();
+            this.updateSelectionToolbar();
+            return;
+          }
+
+          const idx = i;
+          if (e.shiftKey) {
+            if (this.selectionAnchorIndex === -1) {
+              this.selectionAnchorIndex = (this.lastSelectedIndex !== -1) ? this.lastSelectedIndex : idx;
+            }
+            const start = Math.min(this.selectionAnchorIndex, idx);
+            const end = Math.max(this.selectionAnchorIndex, idx);
+            if (!e.ctrlKey && !e.metaKey) {
+              this.selectedPaths.clear();
+            }
+            for (let j = start; j <= end; j++) {
+              if (this.fileList[j] && this.fileList[j].name !== '..') {
+                this.selectedPaths.add(this.fileList[j].path);
+              }
+            }
+            this.lastSelectedIndex = idx;
+          } else if (e.ctrlKey || e.metaKey) {
+            if (this.selectedPaths.has(file.path)) {
+              this.selectedPaths.delete(file.path);
+            } else {
+              this.selectedPaths.add(file.path);
+            }
+            this.lastSelectedIndex = idx;
+            this.selectionAnchorIndex = idx;
+          } else {
+            this.selectedPaths.clear();
+            this.selectedPaths.add(file.path);
+            this.lastSelectedIndex = idx;
+            this.selectionAnchorIndex = idx;
+          }
+          this.updateRowSelectionUI();
+          this.updateSelectionToolbar();
+        });
+
+        if (file.is_dir) {
+          card.addEventListener('dblclick', () => this.loadPath(file.path));
+        } else if (isImage) {
+          card.addEventListener('dblclick', () => this.handleAction('preview', file.path, file.name));
+        }
+
+        card.querySelectorAll('.fm-act-btn').forEach((btn) => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.handleAction(btn.dataset.act, btn.dataset.path, file.name);
+          });
+        });
+
+        this.list.appendChild(card);
+      }
+      return;
+    }
+
+    if (this.spacer) this.spacer.style.height = (this.fileList.length * ROW_HEIGHT) + 'px';
     const scrollTop = this.viewport.scrollTop;
     const viewportHeight = this.viewport.clientHeight || 400;
 
@@ -1319,6 +1586,102 @@ export class FileManagerWindow {
       e.stopPropagation();
       this.ensureFocus();
       if (!hasSelectableFiles) return;
+      const step = this.viewMode === 'icon' ? this.getGridColumnCount() : 1;
+
+      if (this.lastSelectedIndex === -1) {
+        const targetIdx = minSelectableIndex;
+        this.lastSelectedIndex = targetIdx;
+        this.selectionAnchorIndex = targetIdx;
+        this.selectedPaths.clear();
+        if (this.fileList[targetIdx] && this.fileList[targetIdx].name !== '..') {
+          this.selectedPaths.add(this.fileList[targetIdx].path);
+        }
+        this.scrollIndexIntoView(targetIdx);
+        this.updateRowSelectionUI();
+        this.updateSelectionToolbar();
+        return;
+      }
+
+      if (e.shiftKey) {
+        if (this.selectionAnchorIndex === -1) this.selectionAnchorIndex = this.lastSelectedIndex;
+        const nextIdx = Math.min(this.fileList.length - 1, this.lastSelectedIndex + step);
+        this.lastSelectedIndex = nextIdx;
+        this.selectedPaths.clear();
+        const start = Math.min(this.selectionAnchorIndex, this.lastSelectedIndex);
+        const end = Math.max(this.selectionAnchorIndex, this.lastSelectedIndex);
+        for (let j = start; j <= end; j++) {
+          if (this.fileList[j] && this.fileList[j].name !== '..') {
+            this.selectedPaths.add(this.fileList[j].path);
+          }
+        }
+        this.scrollIndexIntoView(this.lastSelectedIndex);
+        this.updateRowSelectionUI();
+        this.updateSelectionToolbar();
+      } else if (!e.ctrlKey && !e.metaKey) {
+        const targetIdx = Math.min(this.fileList.length - 1, this.lastSelectedIndex + step);
+        this.lastSelectedIndex = targetIdx;
+        this.selectionAnchorIndex = targetIdx;
+        this.selectedPaths.clear();
+        if (this.fileList[targetIdx] && this.fileList[targetIdx].name !== '..') {
+          this.selectedPaths.add(this.fileList[targetIdx].path);
+        }
+        this.scrollIndexIntoView(targetIdx);
+        this.updateRowSelectionUI();
+        this.updateSelectionToolbar();
+      }
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      e.stopPropagation();
+      this.ensureFocus();
+      if (!hasSelectableFiles) return;
+      const step = this.viewMode === 'icon' ? this.getGridColumnCount() : 1;
+
+      if (this.lastSelectedIndex === -1) {
+        const targetIdx = this.fileList.length - 1;
+        this.lastSelectedIndex = targetIdx;
+        this.selectionAnchorIndex = targetIdx;
+        this.selectedPaths.clear();
+        if (this.fileList[targetIdx] && this.fileList[targetIdx].name !== '..') {
+          this.selectedPaths.add(this.fileList[targetIdx].path);
+        }
+        this.scrollIndexIntoView(targetIdx);
+        this.updateRowSelectionUI();
+        this.updateSelectionToolbar();
+        return;
+      }
+
+      if (e.shiftKey) {
+        if (this.selectionAnchorIndex === -1) this.selectionAnchorIndex = this.lastSelectedIndex;
+        const prevIdx = Math.max(minSelectableIndex, this.lastSelectedIndex - step);
+        this.lastSelectedIndex = prevIdx;
+        this.selectedPaths.clear();
+        const start = Math.min(this.selectionAnchorIndex, this.lastSelectedIndex);
+        const end = Math.max(this.selectionAnchorIndex, this.lastSelectedIndex);
+        for (let j = start; j <= end; j++) {
+          if (this.fileList[j] && this.fileList[j].name !== '..') {
+            this.selectedPaths.add(this.fileList[j].path);
+          }
+        }
+        this.scrollIndexIntoView(this.lastSelectedIndex);
+        this.updateRowSelectionUI();
+        this.updateSelectionToolbar();
+      } else if (!e.ctrlKey && !e.metaKey) {
+        const targetIdx = Math.max(minSelectableIndex, this.lastSelectedIndex - step);
+        this.lastSelectedIndex = targetIdx;
+        this.selectionAnchorIndex = targetIdx;
+        this.selectedPaths.clear();
+        if (this.fileList[targetIdx] && this.fileList[targetIdx].name !== '..') {
+          this.selectedPaths.add(this.fileList[targetIdx].path);
+        }
+        this.scrollIndexIntoView(targetIdx);
+        this.updateRowSelectionUI();
+        this.updateSelectionToolbar();
+      }
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      e.stopPropagation();
+      this.ensureFocus();
+      if (!hasSelectableFiles) return;
 
       if (this.lastSelectedIndex === -1) {
         const targetIdx = minSelectableIndex;
@@ -1361,7 +1724,7 @@ export class FileManagerWindow {
         this.updateRowSelectionUI();
         this.updateSelectionToolbar();
       }
-    } else if (e.key === 'ArrowUp') {
+    } else if (e.key === 'ArrowLeft') {
       e.preventDefault();
       e.stopPropagation();
       this.ensureFocus();
@@ -1558,6 +1921,11 @@ export function getFmSelectionState() {
   };
 }
 
+export function getFmViewMode() {
+  const inst = getActiveFmInstance();
+  return inst ? inst.viewMode : 'list';
+}
+
 export function setFmStateForTesting(opts = {}) {
   const inst = getActiveFmInstance() || _fmInstances.get('file-manager-window');
   if (inst) {
@@ -1566,6 +1934,7 @@ export function setFmStateForTesting(opts = {}) {
     if (opts.lastSelectedIndex !== undefined) inst.lastSelectedIndex = opts.lastSelectedIndex;
     if (opts.selectionAnchorIndex !== undefined) inst.selectionAnchorIndex = opts.selectionAnchorIndex;
     if (opts.currentPath !== undefined) inst.currentPath = opts.currentPath;
+    if (opts.viewMode !== undefined) inst.viewMode = opts.viewMode;
   }
 }
 
