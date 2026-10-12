@@ -1451,17 +1451,17 @@ body.drawer-is-open .chassis-workbench-stage {
   height:26px;
   flex-shrink:0;
 }
-.h-left{display:flex;align-items:center;gap:9px}
-.nas-name{font-weight:800;font-size:19px;letter-spacing:.5px}
+.h-left{display:flex;align-items:center;gap:9px;flex:1 1 0;min-width:0}
+.nas-name{font-weight:800;font-size:19px;letter-spacing:.5px;white-space:nowrap}
 .pill{background:rgba(51,209,122,.15);color:var(--ok);font-size:10px;font-weight:700;
   padding:3px 9px;border-radius:11px;display:inline-flex;align-items:center;gap:5px;
-  border:1px solid rgba(51,209,122,.35)}
+  border:1px solid rgba(51,209,122,.35);white-space:nowrap}
 .pill-dot{width:6px;height:6px;border-radius:50%;background:var(--ok);box-shadow:0 0 6px var(--ok)}
 .pill.warn{background:rgba(245,183,49,.15);color:var(--warn);border-color:rgba(245,183,49,.4)}
 .pill.warn .pill-dot{background:var(--warn);box-shadow:0 0 6px var(--warn);animation:pulse 1.4s infinite}
 @keyframes pulse{50%{opacity:.35}}
-.clock{font-size:22px;font-weight:800;letter-spacing:1px;font-variant-numeric:tabular-nums;white-space:nowrap}
-.h-right{display:flex;align-items:center;gap:6px;font-size:13px;color:#cdd6e0;font-variant-numeric:tabular-nums}
+.clock{font-size:22px;font-weight:800;letter-spacing:1px;font-variant-numeric:tabular-nums;white-space:nowrap;text-align:center;flex-shrink:0}
+.h-right{display:flex;align-items:center;justify-content:flex-end;gap:6px;font-size:13px;color:#cdd6e0;font-variant-numeric:tabular-nums;flex:1 1 0;min-width:0}
 
 .cards{
   display:flex;

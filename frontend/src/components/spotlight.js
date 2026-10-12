@@ -327,22 +327,27 @@ export function parseNaturalLanguageAction(rawQuery) {
   // 1. Snapshot: > snap pool <id> or > snapshot <id>
   const snapMatch = clean.match(/^(?:snap|snapshot)(?:\s+(?:pool\s+)?(\S+))?/i);
   if (snapMatch) {
-    const targetPool = snapMatch[1] || 'default';
+    const rawTarget = snapMatch[1];
+    const targetPool = (!rawTarget || rawTarget.toLowerCase() === 'pool')
+      ? (state.latestStats?.storage?.pool_id || (state.latestStats?.unraid ? 'unraid_array' : 'default'))
+      : rawTarget;
     return {
       id: `dyn-snap-${targetPool}`,
       title: `Snapshot Pool: ${targetPool}`,
-      subtitle: `Create instant snapshot for pool '${targetPool}'`,
+      subtitle: `Create instant atomic snapshot for pool '${targetPool}'`,
       icon: '📸',
       category: 'action',
       keywords: ['snap', 'snapshot', targetPool],
       run: async () => {
         try {
-          await api.post(`/api/storage/pools/${encodeURIComponent(targetPool)}/snapshots`, {
+          const res = await api.post(`/api/storage/pools/${encodeURIComponent(targetPool)}/snapshots`, {
             name: `snap_${Date.now()}`
           });
-          showToast(`Snapshot created successfully for pool '${targetPool}'`, 'success');
+          const snapName = res?.snapshot_name || res?.name || `snap_${Date.now()}`;
+          showToast(`Snapshot '${snapName}' created for pool '${targetPool}'`, 'success', 3500);
         } catch (e) {
-          showToast(`Snapshot command dispatched for '${targetPool}'`, 'info');
+          const errMsg = e?.detail || e?.message || 'Observer Mode restricts direct snapshots on Unraid';
+          showToast(`Snapshot failed for '${targetPool}': ${errMsg}`, 'error', 4500);
         }
       }
     };

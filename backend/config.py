@@ -12,7 +12,24 @@ logger = logging.getLogger("ZettNAS")
 HOST_PROC = os.environ.get("HOST_PROC", "/host/proc")
 HOST_SYS = os.environ.get("HOST_SYS", "/host/sys")
 HOST_DEV = os.environ.get("HOST_DEV", "/host/dev")
-POOL_PATH = os.environ.get("POOL_PATH", "/mnt/user")
+_env_pool = os.environ.get("POOL_PATH")
+if not _env_pool:
+    if os.path.exists("/mnt/user") and (
+        os.path.ismount("/mnt/user") or (os.path.isdir("/mnt/user") and len(os.listdir("/mnt/user")) > 1)
+    ):
+        POOL_PATH = "/mnt/user"
+    elif os.path.exists("/mnt/storage"):
+        POOL_PATH = "/mnt/storage"
+    else:
+        POOL_PATH = "/mnt/user"
+elif (
+    _env_pool == "/mnt/storage"
+    and os.path.exists("/mnt/user")
+    and (os.path.ismount("/mnt/user") or (os.path.isdir("/mnt/user") and len(os.listdir("/mnt/user")) > 1))
+):
+    POOL_PATH = "/mnt/user"
+else:
+    POOL_PATH = _env_pool
 DISKS = os.environ.get("DISKS", "")
 OS_NVME = os.environ.get("OS_NVME", "nvme1n1")
 STATIC_DIR = os.path.realpath(os.path.join(os.path.dirname(os.path.dirname(__file__)), "static"))
@@ -81,7 +98,11 @@ RCLONE_CACHE_DIR = os.path.join(DATA_DIR, "rclone", "vfs_cache")
 
 # Folder browser / mkdir / copy destination are confined to these roots.
 _default_roots = f"{POOL_PATH},{REMOTES_PATH}" if os.environ.get("BROWSE_ROOTS") is None else os.environ["BROWSE_ROOTS"]
-ALLOWED_BROWSE_ROOTS = [p.strip() for p in _default_roots.split(",") if p.strip()]
+_roots_list = [p.strip() for p in _default_roots.split(",") if p.strip()]
+for _cand in ("/mnt", "/mnt/user", "/mnt/storage", "/mnt/remotes"):
+    if os.path.exists(_cand) and _cand not in _roots_list:
+        _roots_list.append(_cand)
+ALLOWED_BROWSE_ROOTS = _roots_list
 
 # OpenAPI docs (/docs, /redoc, /openapi.json): disabled unless explicitly enabled,
 # and always require authentication when enabled.

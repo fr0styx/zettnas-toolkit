@@ -282,7 +282,14 @@ export function initFileManager() {
   });
 
   document.getElementById('fm-up-btn')?.addEventListener('click', () => {
-    const parent = currentPath.substring(0, currentPath.lastIndexOf('/')) || '/mnt/user';
+    let parent = currentPath.substring(0, currentPath.lastIndexOf('/'));
+    if (!parent) {
+      if (currentPath !== '/mnt' && currentPath !== '/') {
+        parent = '/mnt';
+      } else {
+        parent = currentPath;
+      }
+    }
     loadPath(parent);
   });
 
@@ -498,6 +505,15 @@ async function loadPath(path) {
     const res = await api.get(`/api/browse?path=${encodeURIComponent(path)}&dirs_only=0`);
     currentPath = res.current;
     try { localStorage.setItem('zettnas_fm_last_path', currentPath); } catch (e) {}
+    if (res.roots && Array.isArray(res.roots)) {
+      window._fmRoots = res.roots;
+      const datalist = document.getElementById('fm-path-list');
+      if (datalist && datalist.dataset.populated !== res.roots.join(',')) {
+        datalist.dataset.populated = res.roots.join(',');
+        datalist.innerHTML = res.roots.map((r) => `<option value="${r}"></option>`).join('') +
+          `<option value="${res.current}/.RecycleBin"></option>`;
+      }
+    }
     selectedPaths.clear();
     lastSelectedIndex = -1;
     updateFmSelectionToolbar();
@@ -546,7 +562,11 @@ async function loadPath(path) {
           };
           span.onclick = (e) => {
             e.stopPropagation();
-            loadPath(p);
+            let targetPath = p;
+            if (targetPath === '/' && (!window._fmRoots || !window._fmRoots.includes('/'))) {
+              targetPath = (window._fmRoots && window._fmRoots.includes('/mnt')) ? '/mnt' : (window._fmRoots ? window._fmRoots[0] : '/mnt/user');
+            }
+            loadPath(targetPath);
           };
         }
         bcContainer.appendChild(span);
@@ -780,5 +800,13 @@ window.openFileManager = (path = null) => {
 };
 
 window.openRecycleBin = () => {
-  ZettEventBus.emit('window:open', { id: 'file-manager-window', path: '/mnt/user/.RecycleBin' });
+  let target = '/mnt/user/.RecycleBin';
+  if (window._fmRoots && window._fmRoots.length > 0) {
+    if (window._fmRoots.includes('/mnt/user')) target = '/mnt/user/.RecycleBin';
+    else if (window._fmRoots.includes('/mnt/storage')) target = '/mnt/storage/.RecycleBin';
+    else target = `${window._fmRoots[0].replace(/\/$/, '')}/.RecycleBin`;
+  } else if (currentPath && currentPath.startsWith('/mnt/storage')) {
+    target = '/mnt/storage/.RecycleBin';
+  }
+  ZettEventBus.emit('window:open', { id: 'file-manager-window', path: target });
 };

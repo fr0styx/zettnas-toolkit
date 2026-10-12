@@ -215,7 +215,7 @@ export function renderDisks(disks) {
 
   if (structureChanged) {
     row.innerHTML = '';
-    const order = ['os', 'data', 'cache'];
+    const order = ['data', 'os', 'cache'];
     const groups = order
       .map((r) => ({ role: r, items: disks.filter((d) => d.role === r) }))
       .filter((g) => g.items.length);

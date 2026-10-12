@@ -89,6 +89,12 @@ def _contained(path, must_exist=True):
     if real is None:
         raise HTTPException(status_code=403, detail="Path is outside the allowed folders.")
     if must_exist and not os.path.exists(real):
+        if os.path.basename(real.rstrip("/")) == ".RecycleBin":
+            try:
+                os.makedirs(real, exist_ok=True)
+                return real
+            except OSError:
+                pass
         raise HTTPException(status_code=404, detail="Path does not exist.")
     return real
 
