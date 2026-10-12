@@ -186,5 +186,47 @@ describe('Batch 3: Responsive Layout Overhaul & Touch Navigation (<1024px & Mobi
       expect(cssContent).toMatch(/#management-modal-overlay\s+#management-window[^{]*\{[^}]*max-width:\s*100%\s*!important/);
       expect(cssContent).toMatch(/#management-modal-overlay\s+\.mgmt-content-pane[^{]*\{[^}]*overflow-x:\s*hidden\s*!important/);
     });
+
+    it('enforces min-width: 0 !important on mobile windows to prevent viewport overflow', () => {
+      expect(cssContent).toMatch(/#management-modal-overlay\s+#management-window[^{]*\{[^}]*min-width:\s*0\s*!important/);
+      expect(cssContent).toMatch(/\.smart-modal-window:not\(#copy-toast\)[^{]*\{[^}]*min-width:\s*0\s*!important/);
+      expect(cssContent).toMatch(/\.os-window,\s*\.file-manager-window[^{]*\{[^}]*min-width:\s*0\s*!important/);
+    });
+
+    it('ensures .win-btn visual circle is compact (<=16px) with 44px touch pseudo-element', () => {
+      // Must not be in the 44px block
+      const mobile44pxBlock = cssContent.match(/\/\* Touch Hit Target Ergonomics[^*]*\*\/([\s\S]*?)\}/);
+      if (mobile44pxBlock) {
+        expect(mobile44pxBlock[1]).not.toContain('.win-btn');
+      }
+      expect(cssContent).toMatch(/\.win-btn\s*\{[^}]*width:\s*14px\s*!important/);
+      expect(cssContent).toMatch(/\.win-btn\s*\{[^}]*height:\s*14px\s*!important/);
+      expect(cssContent).toMatch(/\.win-btn\s*\{[^}]*overflow:\s*visible\s*!important/);
+      expect(cssContent).toMatch(/\.win-btn::before\s*\{[^}]*min-width:\s*44px\s*!important/);
+      expect(cssContent).toMatch(/\.win-btn::before\s*\{[^}]*min-height:\s*44px\s*!important/);
+    });
+  });
+
+  describe('JavaScript Mobile Window Sanitization', () => {
+    it('purges inline bounds when applySavedBounds runs on mobile', async () => {
+      const { applySavedBounds } = await import('../components/dock.js');
+      document.body.classList.add('mobile-mode');
+
+      const winEl = document.createElement('div');
+      winEl.id = 'management-window';
+      winEl.style.position = 'fixed';
+      winEl.style.left = '450px';
+      winEl.style.top = '180px';
+      winEl.style.width = '800px';
+      winEl.style.height = '600px';
+      document.body.appendChild(winEl);
+
+      applySavedBounds(winEl, 'management');
+
+      expect(winEl.style.left).toBe('');
+      expect(winEl.style.top).toBe('');
+      expect(winEl.style.width).toBe('');
+      expect(winEl.style.height).toBe('');
+    });
   });
 });

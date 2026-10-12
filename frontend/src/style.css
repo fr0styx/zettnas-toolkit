@@ -5671,7 +5671,13 @@ body.theme-yak .lcd-dot.active {
   /* General Modals on Mobile */
   .smart-modal-window:not(#copy-toast),
   #folder-browser-modal .smart-modal-window,
-  #setup-wizard-modal .smart-modal-window {
+  #setup-wizard-modal .smart-modal-window,
+  .container-inspector-window,
+  #container-inspector-window,
+  .stack-inspector-window,
+  #stack-inspector-window,
+  .app-deploy-window,
+  #app-deploy-modal-window {
     position: fixed !important;
     left: 50% !important;
     transform: translateX(-50%) !important;
@@ -5680,11 +5686,14 @@ body.theme-yak .lcd-dot.active {
     bottom: calc(env(safe-area-inset-bottom, 0px) + 64px) !important;
     width: 96vw !important;
     max-width: 96vw !important;
+    min-width: 0 !important;
     height: auto !important;
     max-height: calc(100dvh - 116px) !important;
+    min-height: 0 !important;
     margin: 0 !important;
     border-radius: 14px !important;
     overflow: hidden !important;
+    resize: none !important;
     display: flex !important;
     flex-direction: column !important;
     box-sizing: border-box !important;
@@ -5692,13 +5701,39 @@ body.theme-yak .lcd-dot.active {
 
   .smart-modal-header {
     flex-shrink: 0 !important;
+    height: 42px !important;
+    min-height: 42px !important;
+    max-height: 42px !important;
+    padding: 0 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+  }
+
+  .smart-modal-title {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    white-space: nowrap !important;
+    text-overflow: ellipsis !important;
   }
 
   .smart-modal-body {
     flex: 1 !important;
     min-height: 0 !important;
     overflow-y: auto !important;
+    overflow-x: hidden !important;
     -webkit-overflow-scrolling: touch !important;
+    box-sizing: border-box !important;
   }
 
   #copy-toast {
@@ -5753,38 +5788,77 @@ body.theme-yak .lcd-dot.active {
 
   .os-window-header {
     height: 42px !important;
+    min-height: 42px !important;
+    max-height: 42px !important;
     padding: 0 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
     flex-shrink: 0 !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
   }
 
   .os-window-title {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
     font-size: 13px !important;
+    font-weight: 700 !important;
+    white-space: nowrap !important;
+    text-overflow: ellipsis !important;
   }
 
   .os-window-controls {
     gap: 10px !important;
     align-items: center !important;
+    display: flex !important;
+    justify-content: flex-end !important;
+    flex-shrink: 0 !important;
+    margin-left: auto !important;
+    padding-right: 2px !important;
   }
 
   .win-btn {
-    width: 22px !important;
-    height: 22px !important;
-    min-width: 22px !important;
-    min-height: 22px !important;
-    background-size: 11px 11px !important;
-    background-repeat: no-repeat !important;
-    background-position: center !important;
+    width: 14px !important;
+    height: 14px !important;
+    min-width: 14px !important;
+    min-height: 14px !important;
+    max-width: 14px !important;
+    max-height: 14px !important;
+    border-radius: 50% !important;
     position: relative !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
     touch-action: manipulation !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background-size: 8px 8px !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    flex-shrink: 0 !important;
   }
 
   .win-btn::before {
     content: '' !important;
     position: absolute !important;
-    top: -11px !important;
-    bottom: -11px !important;
-    left: -11px !important;
-    right: -11px !important;
+    top: -15px !important;
+    bottom: -15px !important;
+    left: -15px !important;
+    right: -15px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+    cursor: pointer !important;
+    touch-action: manipulation !important;
+    z-index: 2 !important;
   }
 
   .win-btn.close-btn {
@@ -5792,7 +5866,7 @@ body.theme-yak .lcd-dot.active {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M3 3 L7 7 M7 3 L3 7' stroke='%234c0000' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E") !important;
     background-repeat: no-repeat !important;
     background-position: center !important;
-    background-size: 11px 11px !important;
+    background-size: 8px 8px !important;
   }
 
   .win-btn.min-btn {
@@ -5800,7 +5874,7 @@ body.theme-yak .lcd-dot.active {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M2 5 L8 5' stroke='%235c4300' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E") !important;
     background-repeat: no-repeat !important;
     background-position: center !important;
-    background-size: 11px 11px !important;
+    background-size: 8px 8px !important;
   }
 
   .win-btn.max-btn {
@@ -5808,7 +5882,7 @@ body.theme-yak .lcd-dot.active {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M2 4 L2 2 L4 2 M8 6 L8 8 L6 8 M2 2 L4.5 4.5 M8 8 L5.5 5.5' stroke='%23004d00' stroke-width='1.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
     background-repeat: no-repeat !important;
     background-position: center !important;
-    background-size: 11px 11px !important;
+    background-size: 8px 8px !important;
   }
 
   .fm-toolbar {
@@ -6002,7 +6076,9 @@ body.theme-yak .lcd-dot.active {
   }
 
   /* 3. System Management Window on Mobile */
-  #management-modal-overlay #management-window {
+  #management-modal-overlay #management-window,
+  #management-window,
+  .management-window {
     position: fixed !important;
     left: 50% !important;
     transform: translateX(-50%) !important;
@@ -6011,11 +6087,14 @@ body.theme-yak .lcd-dot.active {
     bottom: calc(env(safe-area-inset-bottom, 0px) + 64px) !important;
     width: 96vw !important;
     max-width: 96vw !important;
+    min-width: 0 !important;
     height: auto !important;
     max-height: calc(100dvh - 116px) !important;
+    min-height: 0 !important;
     margin: 0 !important;
     border-radius: 14px !important;
     overflow: hidden !important;
+    resize: none !important;
     display: flex !important;
     flex-direction: column !important;
     box-sizing: border-box !important;
@@ -6026,14 +6105,50 @@ body.theme-yak .lcd-dot.active {
   }
 
   #management-modal-overlay .management-window-header {
-    padding: 8px 12px !important;
-    height: 38px !important;
+    padding: 0 12px !important;
+    height: 42px !important;
+    min-height: 42px !important;
+    max-height: 42px !important;
     flex-shrink: 0 !important;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
   }
 
-  #management-modal-overlay .mgmt-header-title {
-    font-size: 12.5px !important;
+  #management-modal-overlay .mgmt-header-left {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+  }
+
+  #management-modal-overlay .mgmt-header-title,
+  #management-header-title-text {
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    display: inline-block !important;
+  }
+
+  #management-modal-overlay .mgmt-header-right {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 10px !important;
+    flex-shrink: 0 !important;
+    margin-left: auto !important;
+    padding-right: 2px !important;
   }
 
   #management-modal-overlay .management-window-body {
@@ -6328,7 +6443,6 @@ body.theme-yak .lcd-dot.active {
   .btn-pill-toggle,
   .btn-locate-topo,
   .mgmt-inner-tab,
-  .win-btn,
   .btn-webui-badge {
     min-height: 44px !important;
     min-width: 44px !important;
@@ -6673,7 +6787,13 @@ body.mobile-mode #desktop-widgets-container .cal-glance-bar {
   /* General Modals on Mobile */
   body.mobile-mode .smart-modal-window:not(#copy-toast),
   body.mobile-mode #folder-browser-modal .smart-modal-window,
-  body.mobile-mode #setup-wizard-modal .smart-modal-window {
+  body.mobile-mode #setup-wizard-modal .smart-modal-window,
+  body.mobile-mode .container-inspector-window,
+  body.mobile-mode #container-inspector-window,
+  body.mobile-mode .stack-inspector-window,
+  body.mobile-mode #stack-inspector-window,
+  body.mobile-mode .app-deploy-window,
+  body.mobile-mode #app-deploy-modal-window {
     position: fixed !important;
     left: 50% !important;
     transform: translateX(-50%) !important;
@@ -6682,11 +6802,14 @@ body.mobile-mode #desktop-widgets-container .cal-glance-bar {
     bottom: calc(env(safe-area-inset-bottom, 0px) + 64px) !important;
     width: 96vw !important;
     max-width: 96vw !important;
+    min-width: 0 !important;
     height: auto !important;
     max-height: calc(100dvh - 116px) !important;
+    min-height: 0 !important;
     margin: 0 !important;
     border-radius: 14px !important;
     overflow: hidden !important;
+    resize: none !important;
     display: flex !important;
     flex-direction: column !important;
     box-sizing: border-box !important;
@@ -6694,13 +6817,39 @@ body.mobile-mode #desktop-widgets-container .cal-glance-bar {
 
   body.mobile-mode .smart-modal-header {
     flex-shrink: 0 !important;
+    height: 42px !important;
+    min-height: 42px !important;
+    max-height: 42px !important;
+    padding: 0 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+  }
+
+  body.mobile-mode .smart-modal-title {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    white-space: nowrap !important;
+    text-overflow: ellipsis !important;
   }
 
   body.mobile-mode .smart-modal-body {
     flex: 1 !important;
     min-height: 0 !important;
     overflow-y: auto !important;
+    overflow-x: hidden !important;
     -webkit-overflow-scrolling: touch !important;
+    box-sizing: border-box !important;
   }
 
   body.mobile-mode #copy-toast {
@@ -6784,38 +6933,77 @@ body.mobile-mode #desktop-widgets-container .cal-glance-bar {
 
   body.mobile-mode .os-window-header {
     height: 42px !important;
+    min-height: 42px !important;
+    max-height: 42px !important;
     padding: 0 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
     flex-shrink: 0 !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
   }
 
   body.mobile-mode .os-window-title {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
     font-size: 13px !important;
+    font-weight: 700 !important;
+    white-space: nowrap !important;
+    text-overflow: ellipsis !important;
   }
 
   body.mobile-mode .os-window-controls {
     gap: 10px !important;
     align-items: center !important;
+    display: flex !important;
+    justify-content: flex-end !important;
+    flex-shrink: 0 !important;
+    margin-left: auto !important;
+    padding-right: 2px !important;
   }
 
   body.mobile-mode .win-btn {
-    width: 22px !important;
-    height: 22px !important;
-    min-width: 22px !important;
-    min-height: 22px !important;
-    background-size: 11px 11px !important;
-    background-repeat: no-repeat !important;
-    background-position: center !important;
+    width: 14px !important;
+    height: 14px !important;
+    min-width: 14px !important;
+    min-height: 14px !important;
+    max-width: 14px !important;
+    max-height: 14px !important;
+    border-radius: 50% !important;
     position: relative !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
     touch-action: manipulation !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background-size: 8px 8px !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    flex-shrink: 0 !important;
   }
 
   body.mobile-mode .win-btn::before {
     content: '' !important;
     position: absolute !important;
-    top: -11px !important;
-    bottom: -11px !important;
-    left: -11px !important;
-    right: -11px !important;
+    top: -15px !important;
+    bottom: -15px !important;
+    left: -15px !important;
+    right: -15px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+    cursor: pointer !important;
+    touch-action: manipulation !important;
+    z-index: 2 !important;
   }
 
   body.mobile-mode .win-btn.close-btn {
@@ -6823,7 +7011,7 @@ body.mobile-mode #desktop-widgets-container .cal-glance-bar {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M3 3 L7 7 M7 3 L3 7' stroke='%234c0000' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E") !important;
     background-repeat: no-repeat !important;
     background-position: center !important;
-    background-size: 11px 11px !important;
+    background-size: 8px 8px !important;
   }
 
   body.mobile-mode .win-btn.min-btn {
@@ -6831,7 +7019,7 @@ body.mobile-mode #desktop-widgets-container .cal-glance-bar {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M2 5 L8 5' stroke='%235c4300' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E") !important;
     background-repeat: no-repeat !important;
     background-position: center !important;
-    background-size: 11px 11px !important;
+    background-size: 8px 8px !important;
   }
 
   body.mobile-mode .win-btn.max-btn {
@@ -6839,7 +7027,7 @@ body.mobile-mode #desktop-widgets-container .cal-glance-bar {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M2 4 L2 2 L4 2 M8 6 L8 8 L6 8 M2 2 L4.5 4.5 M8 8 L5.5 5.5' stroke='%23004d00' stroke-width='1.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
     background-repeat: no-repeat !important;
     background-position: center !important;
-    background-size: 11px 11px !important;
+    background-size: 8px 8px !important;
   }
 
   body.mobile-mode .fm-toolbar {
@@ -7033,7 +7221,9 @@ body.mobile-mode #desktop-widgets-container .cal-glance-bar {
   }
 
   /* 3. System Management Window on Mobile */
-  body.mobile-mode #management-modal-overlay #management-window {
+  body.mobile-mode #management-modal-overlay #management-window,
+  body.mobile-mode #management-window,
+  body.mobile-mode .management-window {
     position: fixed !important;
     left: 50% !important;
     transform: translateX(-50%) !important;
@@ -7042,11 +7232,14 @@ body.mobile-mode #desktop-widgets-container .cal-glance-bar {
     bottom: calc(env(safe-area-inset-bottom, 0px) + 64px) !important;
     width: 96vw !important;
     max-width: 96vw !important;
+    min-width: 0 !important;
     height: auto !important;
     max-height: calc(100dvh - 116px) !important;
+    min-height: 0 !important;
     margin: 0 !important;
     border-radius: 14px !important;
     overflow: hidden !important;
+    resize: none !important;
     display: flex !important;
     flex-direction: column !important;
     box-sizing: border-box !important;
@@ -7057,14 +7250,50 @@ body.mobile-mode #desktop-widgets-container .cal-glance-bar {
   }
 
   body.mobile-mode #management-modal-overlay .management-window-header {
-    padding: 8px 12px !important;
-    height: 38px !important;
+    padding: 0 12px !important;
+    height: 42px !important;
+    min-height: 42px !important;
+    max-height: 42px !important;
     flex-shrink: 0 !important;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
   }
 
-  body.mobile-mode #management-modal-overlay .mgmt-header-title {
-    font-size: 12.5px !important;
+  body.mobile-mode #management-modal-overlay .mgmt-header-left {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+  }
+
+  body.mobile-mode #management-modal-overlay .mgmt-header-title,
+  body.mobile-mode #management-header-title-text {
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    display: inline-block !important;
+  }
+
+  body.mobile-mode #management-modal-overlay .mgmt-header-right {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 10px !important;
+    flex-shrink: 0 !important;
+    margin-left: auto !important;
+    padding-right: 2px !important;
   }
 
   body.mobile-mode #management-modal-overlay .management-window-body {
@@ -7357,7 +7586,6 @@ body.mobile-mode .btn-container-act,
 body.mobile-mode .btn-pill-toggle,
 body.mobile-mode .btn-locate-topo,
 body.mobile-mode .mgmt-inner-tab,
-body.mobile-mode .win-btn,
 body.mobile-mode .btn-webui-badge {
   min-height: 44px !important;
   min-width: 44px !important;

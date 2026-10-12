@@ -381,8 +381,26 @@ export function saveWindowBounds(id, bounds) {
   }
 }
 
+export function clearMobileInlineBounds(el) {
+  if (!el || !el.style) return;
+  el.style.removeProperty('top');
+  el.style.removeProperty('left');
+  el.style.removeProperty('right');
+  el.style.removeProperty('bottom');
+  el.style.removeProperty('width');
+  el.style.removeProperty('height');
+  el.style.removeProperty('margin');
+  if (el.style.transform && el.style.transform !== 'translateX(-50%)') {
+    el.style.removeProperty('transform');
+  }
+}
+
 export function applySavedBounds(dragEl, winId) {
-  if (!dragEl || dragEl.id === 'global-toast-container' || document.body.classList.contains('mobile-mode') || window.innerWidth <= 768) return;
+  if (!dragEl || dragEl.id === 'global-toast-container') return;
+  if (document.body.classList.contains('mobile-mode') || window.innerWidth <= 768) {
+    clearMobileInlineBounds(dragEl);
+    return;
+  }
   const id = winId || dragEl.id || dragEl.dataset.windowId;
   if (!id) return;
   const all = loadSavedWindowBounds();
@@ -2387,9 +2405,19 @@ window.bringToFront = bringToFront;
 
 let _isConsoleMaximized = false;
 let _consolePreMaxBounds = null;
+let _lastConsoleTouchTs = 0;
 
 export function toggleConsoleMaximize(e) {
-  if (e && e.preventDefault) { e.preventDefault(); e.stopPropagation(); }
+  if (e) {
+    if (e.type === 'click' && Date.now() - _lastConsoleTouchTs < 450) {
+      if (e.preventDefault) { e.preventDefault(); e.stopPropagation(); }
+      return;
+    }
+    if (e.type === 'touchend') {
+      _lastConsoleTouchTs = Date.now();
+    }
+    if (e.preventDefault) { e.preventDefault(); e.stopPropagation(); }
+  }
   const consoleModal = document.getElementById('console-window');
   if (!consoleModal) return;
   const consoleMax = document.getElementById('console-max');
@@ -2665,9 +2693,13 @@ export function initDockSystem() {
   const mobileToggleBtn = document.getElementById('mobile-view-toggle-btn');
   const storedMobile = localStorage.getItem('zettnas_mobile_mode');
   const isMobileInitial = storedMobile === '1' || (storedMobile === null && window.innerWidth <= 768);
+  const purgeAllMobileWindows = () => {
+    document.querySelectorAll('.os-window, .file-manager-window, #management-window, .management-window, .smart-modal-window, #console-window, .chassis-front-panel, #container-inspector-window, #stack-inspector-window, #app-deploy-modal-window, #notif-center-panel').forEach(clearMobileInlineBounds);
+  };
   if (isMobileInitial) {
     document.body.classList.add('mobile-mode');
     if (mobileToggleBtn) mobileToggleBtn.classList.add('active');
+    purgeAllMobileWindows();
     // On mobile load, start with a clean mobile desktop by minimizing the heavy console window
     if (consoleOverlay) {
       DockManager.minimize('console');
@@ -2680,6 +2712,9 @@ export function initDockSystem() {
       mobileToggleBtn.classList.toggle('active', isMobile);
       mobileToggleBtn.title = isMobile ? 'Mobile / Stacked View Active [Click for Desktop Windows]' : 'Toggle Mobile / Stacked Mode';
       localStorage.setItem('zettnas_mobile_mode', isMobile ? '1' : '0');
+      if (isMobile) {
+        purgeAllMobileWindows();
+      }
       if (window.refreshDesktopIconPositions) {
         window.refreshDesktopIconPositions();
       }

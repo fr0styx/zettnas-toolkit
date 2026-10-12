@@ -85,7 +85,7 @@ export function initFileManager() {
   // Inject the window HTML into the body if it doesn't exist
   if (!document.getElementById('file-manager-window')) {
     const html = `
-      <div id="file-manager-window" class="os-window file-manager-window" style="display: none; top: 100px; left: 150px; width: 800px; height: 600px;">
+      <div id="file-manager-window" class="os-window file-manager-window" style="display: none;">
         <div class="os-window-header">
           <div class="os-window-title">
             <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
@@ -145,14 +145,17 @@ export function initFileManager() {
 
   // Restore saved position and dimensions
   try {
-    const saved = JSON.parse(localStorage.getItem(BOUNDS_KEY) || 'null');
-    if (saved && saved.left != null && saved.top != null) {
-      const maxL = Math.max(24, window.innerWidth - (saved.width || 400) - 10);
-      const maxT = Math.max(56, window.innerHeight - (saved.height || 300) - 70);
-      fmWindow.style.left = Math.max(24, Math.min(maxL, saved.left)) + 'px';
-      fmWindow.style.top = Math.max(56, Math.min(maxT, saved.top)) + 'px';
-      if (saved.width) fmWindow.style.width = Math.min(window.innerWidth - 30, Math.max(480, saved.width)) + 'px';
-      if (saved.height) fmWindow.style.height = Math.min(window.innerHeight - 100, Math.max(320, saved.height)) + 'px';
+    const isMobile = document.body.classList.contains('mobile-mode') || window.innerWidth <= 768;
+    if (!isMobile) {
+      const saved = JSON.parse(localStorage.getItem(BOUNDS_KEY) || 'null');
+      if (saved && saved.left != null && saved.top != null) {
+        const maxL = Math.max(24, window.innerWidth - (saved.width || 400) - 10);
+        const maxT = Math.max(56, window.innerHeight - (saved.height || 300) - 70);
+        fmWindow.style.left = Math.max(24, Math.min(maxL, saved.left)) + 'px';
+        fmWindow.style.top = Math.max(56, Math.min(maxT, saved.top)) + 'px';
+        if (saved.width) fmWindow.style.width = Math.min(window.innerWidth - 30, Math.max(480, saved.width)) + 'px';
+        if (saved.height) fmWindow.style.height = Math.min(window.innerHeight - 100, Math.max(320, saved.height)) + 'px';
+      }
     }
   } catch (e) {}
 
@@ -221,8 +224,17 @@ export function initFileManager() {
 
   // Maximize button
   const maxBtn = document.getElementById('fm-max');
+  let _lastFmTouchTs = 0;
   const toggleMaxFm = (e) => {
     if (e) {
+      if (e.type === 'click' && Date.now() - _lastFmTouchTs < 450) {
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+      if (e.type === 'touchend') {
+        _lastFmTouchTs = Date.now();
+      }
       e.preventDefault();
       e.stopPropagation();
     }

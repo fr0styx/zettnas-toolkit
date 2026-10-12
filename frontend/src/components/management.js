@@ -4922,9 +4922,21 @@ export function initManagement() {
   const maxBtn = document.getElementById('management-max');
   let _isMaximized = false;
   let _preMaxBounds = null;
+  let _lastMgmtTouchTs = 0;
   if (maxBtn) {
     const handleMax = (e) => {
-      if (e) { e.preventDefault(); e.stopPropagation(); }
+      if (e) {
+        if (e.type === 'click' && Date.now() - _lastMgmtTouchTs < 450) {
+          e.preventDefault();
+          e.stopPropagation();
+          return;
+        }
+        if (e.type === 'touchend') {
+          _lastMgmtTouchTs = Date.now();
+        }
+        e.preventDefault();
+        e.stopPropagation();
+      }
       if (!_isMaximized) {
         _preMaxBounds = {
           left: win.style.left,
