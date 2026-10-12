@@ -1835,18 +1835,30 @@ export async function fetchAndRenderRemoteStorage(container) {
 
     // Delete remote
     container.querySelectorAll('.btn-remote-delete').forEach((btn) => {
-      btn.addEventListener('click', async () => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
         const name = btn.dataset.name;
-        if (confirm(`Are you sure you want to remove remote '${name}'? This will unmount and delete its stored credentials.`)) {
-          try {
-            await api.delete(`/api/remotes/${name}`);
-            playChirp(440, 0.1, 'sawtooth');
-            showToast(`Remote '${name}' deleted.`, 'info');
-            fetchAndRenderRemoteStorage(container);
-          } catch (e) {
-            showToast(`Failed to delete remote: ${e.message || 'Error'}`, 'error');
+        showConfirmToast(
+          t('remotes.delete_confirm_title', 'Delete Cloud Remote'),
+          t('remotes.delete_confirm_msg', `Are you sure you want to remove remote '${name}'? This will unmount the filesystem and delete its stored credentials.`).replace('{name}', escapeHtml(name)),
+          async () => {
+            try {
+              await api.delete(`/api/remotes/${name}`);
+              playChirp(440, 0.1, 'sawtooth');
+              showToast(t('remotes.deleted', `Remote '${name}' deleted successfully.`), 'info');
+              fetchAndRenderRemoteStorage(container);
+            } catch (err) {
+              showToast(t('remotes.delete_failed', `Failed to delete remote: ${err.message || 'Error'}`), 'error');
+            }
+          },
+          null,
+          {
+            okText: t('remotes.delete_btn', '🗑️ Delete Remote'),
+            cancelText: t('common.cancel', 'Cancel'),
+            icon: '🗑️'
           }
-        }
+        );
       });
     });
 
@@ -1937,6 +1949,11 @@ export async function openNewCloudRemoteModal(onSuccess) {
   if (errorBox) errorBox.style.display = 'none';
   if (testResult) testResult.style.display = 'none';
   if (nameInput) nameInput.value = '';
+  if (testBtn) {
+    testBtn.classList.remove('tested-green');
+    testBtn.disabled = false;
+    testBtn.innerHTML = '<span>⚡ Test Connection</span>';
+  }
 
   // Register with DockManager as a real desktop window
   if (typeof DockManager !== 'undefined' && DockManager.register) {
@@ -2574,13 +2591,14 @@ export async function openNewCloudRemoteModal(onSuccess) {
         });
 
         testBtn.disabled = true;
-        testBtn.innerHTML = '<span>⏳ Testing...</span>';
+        testBtn.classList.remove('tested-green');
+        testBtn.innerHTML = `<span>${t('remotes.test_btn_testing', '⏳ Testing Connection...')}</span>`;
         if (testResult) {
           testResult.style.display = 'block';
           testResult.style.background = 'rgba(56, 189, 248, 0.12)';
           testResult.style.border = '1px solid rgba(56, 189, 248, 0.3)';
           testResult.style.color = '#38bdf8';
-          testResult.textContent = 'Validating credentials and connecting to remote...';
+          testResult.innerHTML = '<span>🔄 Validating credentials and connecting to remote...</span>';
         }
 
         try {
@@ -2591,6 +2609,9 @@ export async function openNewCloudRemoteModal(onSuccess) {
 
           if (res && res.success) {
             playChirp(880, 0.12, 'sine');
+            testBtn.classList.add('tested-green');
+            testBtn.innerHTML = `<span>${t('remotes.test_btn_success', '✅ Connection Successful')}</span>`;
+            showToast(t('remotes.test_success', 'Connection test successful! Valid credentials and remote accessible.'), 'ok');
             if (res.drive_id) {
               const driveIdInput = dynamicFields?.querySelector('input[name="drive_id"]');
               if (driveIdInput && !driveIdInput.value) {
@@ -2606,38 +2627,61 @@ export async function openNewCloudRemoteModal(onSuccess) {
               }
             }
             if (testResult) {
-              testResult.style.background = 'rgba(34, 197, 94, 0.15)';
-              testResult.style.border = '1px solid rgba(34, 197, 94, 0.3)';
+              testResult.style.display = 'block';
+              testResult.style.background = 'rgba(34, 197, 94, 0.18)';
+              testResult.style.border = '1px solid rgba(34, 197, 94, 0.4)';
               testResult.style.color = '#4ade80';
               const sample = (res.items_sample && res.items_sample.length > 0)
                 ? ` (Files found: ${res.items_sample.slice(0, 3).join(', ')})`
                 : '';
-              testResult.innerHTML = `✅ <strong>Connection Verified!</strong> Valid credentials and remote accessible${sample}.`;
+              testResult.innerHTML = `✅ <strong>Connection Test Successful: Connection Verified!</strong> Valid credentials and remote accessible${sample}.`;
             }
           } else {
+            testBtn.classList.remove('tested-green');
+            testBtn.innerHTML = '<span>⚡ Test Connection</span>';
             if (testResult) {
+              testResult.style.display = 'block';
               testResult.style.background = 'rgba(239, 68, 68, 0.15)';
               testResult.style.border = '1px solid rgba(239, 68, 68, 0.3)';
               testResult.style.color = '#f87171';
               testResult.innerHTML = `❌ <strong>Connection Failed:</strong> ${escapeHtml(res?.error || 'Authentication error')}`;
             }
+            showToast(res?.error || 'Connection test failed', 'error');
           }
         } catch (err) {
+          testBtn.classList.remove('tested-green');
+          testBtn.innerHTML = '<span>⚡ Test Connection</span>';
           if (testResult) {
+            testResult.style.display = 'block';
             testResult.style.background = 'rgba(239, 68, 68, 0.15)';
             testResult.style.border = '1px solid rgba(239, 68, 68, 0.3)';
             testResult.style.color = '#f87171';
             testResult.innerHTML = `❌ <strong>Connection Failed:</strong> ${escapeHtml(err.message || 'Error communicating with host')}`;
           }
+          showToast(err.message || 'Error testing connection', 'error');
         } finally {
           testBtn.disabled = false;
-          testBtn.innerHTML = '<span>⚡ Test Connection</span>';
+          if (!testBtn.classList.contains('tested-green')) {
+            testBtn.innerHTML = '<span>⚡ Test Connection</span>';
+          }
         }
       };
     }
 
+    const resetTestGreen = () => {
+      if (testBtn && testBtn.classList.contains('tested-green')) {
+        testBtn.classList.remove('tested-green');
+        testBtn.innerHTML = '<span>⚡ Test Connection</span>';
+      }
+      if (testResult) {
+        testResult.style.display = 'none';
+      }
+    };
+
     const form = document.getElementById('new-remote-form');
     if (form) {
+      form.addEventListener('input', resetTestGreen);
+      form.addEventListener('change', resetTestGreen);
       form.onsubmit = async (e) => {
         e.preventDefault();
         const name = nameInput.value.trim();

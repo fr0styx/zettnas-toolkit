@@ -224,13 +224,17 @@ function _showTopConfirm(title, msg, onConfirm, onCancel, options = {}) {
     headerBg.style.background = "rgba(245, 158, 11, 0.14)";
     titleEl.style.color = "#fbbf24";
   } else {
-    titleEl.innerHTML = `<span>💬</span> ${title || "Confirm Action"}`;
+    const isDelete = options.icon === '🗑️' || (title && (title.toLowerCase().includes('delete') || title.toLowerCase().includes('remove') || title.toLowerCase().includes('destroy')));
+    const icon = options.icon || (isDelete ? '🗑️' : '💬');
+    titleEl.innerHTML = `<span>${icon}</span> ${title || "Confirm Action"}`;
     okBtn.innerHTML = options.okText || "Confirm";
     okBtn.style.background = "#ef4444";
     okBtn.style.border = "1px solid #dc2626";
     okBtn.style.color = "#fff";
     headerBg.style.background = "rgba(239, 68, 68, 0.1)";
     titleEl.style.color = "#ef4444";
+    card.style.borderColor = "rgba(239, 68, 68, 0.45)";
+    card.style.boxShadow = "0 24px 60px rgba(0, 0, 0, 0.9), 0 0 30px rgba(239, 68, 68, 0.15)";
   }
 
   cancelBtn.innerHTML = options.cancelText || "Cancel";

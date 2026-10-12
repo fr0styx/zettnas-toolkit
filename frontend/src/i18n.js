@@ -1024,7 +1024,13 @@ export const TRANSLATIONS = {
     "media.mode_copy": "Copy Files",
     "media.preview_btn": "Scan & Preview Diff",
     "media.apply_btn": "Execute Reorganization",
-    "media.success": "Media organization completed successfully."
+    "media.success": "Media organization completed successfully.",
+    "remotes.delete_confirm_title": "Delete Cloud Remote",
+    "remotes.delete_confirm_msg": "Are you sure you want to remove remote '{name}'? This will unmount the filesystem and delete its stored credentials.",
+    "remotes.delete_btn": "🗑️ Delete Remote",
+    "remotes.test_success": "Connection test successful! Valid credentials and remote accessible.",
+    "remotes.test_btn_success": "✅ Connection Successful",
+    "remotes.test_btn_testing": "⏳ Testing Connection..."
   },
   "de": {
     "net.wol_bios_title": "Hardware- & BIOS-Anforderung:",
@@ -2017,7 +2023,13 @@ export const TRANSLATIONS = {
     "media.mode_copy": "Dateien kopieren",
     "media.preview_btn": "Scannen & Vorschau",
     "media.apply_btn": "Umstrukturierung ausführen",
-    "media.success": "Medienorganisation erfolgreich abgeschlossen."
+    "media.success": "Medienorganisation erfolgreich abgeschlossen.",
+    "remotes.delete_confirm_title": "Cloud-Remote löschen",
+    "remotes.delete_confirm_msg": "Möchten Sie das Remote '{name}' wirklich entfernen? Das Dateisystem wird ausgehängt und die Zugangsdaten gelöscht.",
+    "remotes.delete_btn": "🗑️ Remote löschen",
+    "remotes.test_success": "Verbindungstest erfolgreich! Gültige Zugangsdaten und Remote erreichbar.",
+    "remotes.test_btn_success": "✅ Verbindung erfolgreich",
+    "remotes.test_btn_testing": "⏳ Verbindung wird getestet..."
   },
   "zh": {
     "net.wol_bios_title": "硬件与主板 BIOS 必备配置：",
@@ -3010,7 +3022,13 @@ export const TRANSLATIONS = {
     "media.mode_copy": "复制文件",
     "media.preview_btn": "扫描并预览差异",
     "media.apply_btn": "执行批量整理",
-    "media.success": "媒体文件整理成功完成。"
+    "media.success": "媒体文件整理成功完成。",
+    "remotes.delete_confirm_title": "删除云端存储",
+    "remotes.delete_confirm_msg": "确定要删除云端存储 '{name}' 吗？这将卸载该文件系统并清除已保存的凭证。",
+    "remotes.delete_btn": "🗑️ 删除存储",
+    "remotes.test_success": "连接测试成功！凭证有效且云端可正常访问。",
+    "remotes.test_btn_success": "✅ 连接成功",
+    "remotes.test_btn_testing": "⏳ 正在测试连接..."
   },
   "fr": {
     "net.wol_bios_title": "Configuration matérielle et BIOS requise :",
@@ -3993,7 +4011,13 @@ export const TRANSLATIONS = {
     "media.mode_copy": "Copier les fichiers",
     "media.preview_btn": "Analyser et prévisualiser",
     "media.apply_btn": "Exécuter l'organisation",
-    "media.success": "Organisation des médias terminée avec succès."
+    "media.success": "Organisation des médias terminée avec succès.",
+    "remotes.delete_confirm_title": "Supprimer le stockage distant",
+    "remotes.delete_confirm_msg": "Êtes-vous sûr de vouloir supprimer le stockage distant '{name}' ? Cela démontera le système de fichiers et effacera les identifiants.",
+    "remotes.delete_btn": "🗑️ Supprimer le stockage",
+    "remotes.test_success": "Test de connexion réussi ! Identifiants valides et stockage accessible.",
+    "remotes.test_btn_success": "✅ Connexion réussie",
+    "remotes.test_btn_testing": "⏳ Test de connexion en cours..."
   },
   "es": {
     "net.wol_bios_title": "Requisito de hardware y BIOS UEFI:",
@@ -4986,7 +5010,13 @@ export const TRANSLATIONS = {
     "media.mode_copy": "Copiar archivos",
     "media.preview_btn": "Escanear y previsualizar",
     "media.apply_btn": "Ejecutar reorganización",
-    "media.success": "Organización de medios completada con éxito."
+    "media.success": "Organización de medios completada con éxito.",
+    "remotes.delete_confirm_title": "Eliminar almacenamiento remoto",
+    "remotes.delete_confirm_msg": "¿Seguro que desea eliminar el almacenamiento remoto '{name}'? Esto desmontará el sistema de archivos y eliminará las credenciales guardadas.",
+    "remotes.delete_btn": "🗑️ Eliminar remoto",
+    "remotes.test_success": "¡Prueba de conexión exitosa! Credenciales válidas y almacenamiento accesible.",
+    "remotes.test_btn_success": "✅ Conexión exitosa",
+    "remotes.test_btn_testing": "⏳ Probando conexión..."
   }
 };
 

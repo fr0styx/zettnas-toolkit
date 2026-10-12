@@ -6,6 +6,7 @@ import {
 } from '../components/chassis-visualizer.js';
 import { ZettEventBus } from '../event-bus.js';
 import { api } from '../api.js';
+import * as toast from '../toast.js';
 
 describe('Sprint 4: Remote & Cloud Storage Subsystem (Frontend)', () => {
   let container;
@@ -428,6 +429,114 @@ describe('Sprint 4: Remote & Cloud Storage Subsystem (Frontend)', () => {
     // 5. Assert status indicator shows success
     const statusEl = document.getElementById('oauth-assistant-status');
     expect(statusEl.textContent).toContain('Authentication Successful');
+  });
+
+  it('handles deleting remote storage with showConfirmToast instead of window.confirm', async () => {
+    vi.spyOn(api, 'get').mockImplementation((url) => {
+      if (url === '/api/webdav/status') {
+        return Promise.resolve({ enabled: true, running: false, port: 8084 });
+      }
+      if (url === '/api/remotes') {
+        return Promise.resolve([
+          {
+            name: 'onedrive-personal',
+            type: 'onedrive',
+            is_mounted: false,
+            mount_path: '/mnt/remotes/onedrive-personal',
+          },
+        ]);
+      }
+      return Promise.reject(new Error(`Unknown url: ${url}`));
+    });
+
+    const confirmSpy = vi.spyOn(toast, 'showConfirmToast').mockImplementation((title, msg, onConfirm) => {
+      onConfirm();
+    });
+    const windowConfirmSpy = vi.spyOn(window, 'confirm');
+    const deleteSpy = vi.spyOn(api, 'delete').mockResolvedValue({ status: 'ok' });
+
+    await fetchAndRenderRemoteStorage(container);
+
+    const deleteBtn = container.querySelector('.btn-remote-delete');
+    expect(deleteBtn).not.toBeNull();
+    deleteBtn.click();
+
+    expect(windowConfirmSpy).not.toHaveBeenCalled();
+    expect(confirmSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Delete'),
+      expect.stringContaining('onedrive-personal'),
+      expect.any(Function),
+      null,
+      expect.objectContaining({ icon: '🗑️' })
+    );
+    expect(deleteSpy).toHaveBeenCalledWith('/api/remotes/onedrive-personal');
+  });
+
+  it('marks Test Connection button tested-green and displays persistent success banner', async () => {
+    const modalHtml = `
+      <div id="modal-new-cloud-remote" class="smart-modal-backdrop os-window-overlay" style="display: none;">
+        <div class="smart-modal-window os-window cloud-remote-window" id="cloud-remote-window">
+          <div class="smart-modal-header" id="cloud-remote-window-header">
+            <span id="modal-remote-title">Connect Remote</span>
+          </div>
+          <form id="new-remote-form">
+            <select id="new-remote-provider-select"></select>
+            <div id="new-remote-provider-desc"></div>
+            <input type="text" id="new-remote-name" />
+            <div id="new-remote-dynamic-fields"></div>
+            <div id="new-remote-test-result" style="display: none;"></div>
+            <div id="new-remote-error-box" style="display: none;"></div>
+            <button type="button" id="new-remote-test-btn">Test</button>
+            <button type="submit" id="new-remote-submit-btn">Save</button>
+          </form>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+    vi.spyOn(api, 'get').mockImplementation((url) => {
+      if (url === '/api/remotes/providers') {
+        return Promise.resolve([
+          {
+            type: 'onedrive',
+            name: 'Microsoft OneDrive',
+            fields: [
+              { name: 'token', label: 'Token', type: 'textarea' },
+              { name: 'drive_id', label: 'Drive ID', type: 'text' }
+            ]
+          }
+        ]);
+      }
+      return Promise.reject(new Error(`Unknown url: ${url}`));
+    });
+
+    vi.spyOn(api, 'post').mockImplementation((url) => {
+      if (url === '/api/remotes/test') {
+        return Promise.resolve({ success: true, item_count: 12, items_sample: ['doc.pdf'] });
+      }
+      return Promise.reject(new Error(`Unknown url: ${url}`));
+    });
+
+    await openNewCloudRemoteModal();
+
+    const testBtn = document.getElementById('new-remote-test-btn');
+    const testResult = document.getElementById('new-remote-test-result');
+    const form = document.getElementById('new-remote-form');
+
+    expect(testBtn.classList.contains('tested-green')).toBe(false);
+
+    testBtn.click();
+    await new Promise((r) => setTimeout(r, 20));
+
+    expect(testBtn.classList.contains('tested-green')).toBe(true);
+    expect(testBtn.textContent).toContain('Connection Successful');
+    expect(testResult.style.display).toBe('block');
+    expect(testResult.textContent).toContain('Connection Test Successful');
+
+    // Modifying form resets green state
+    form.dispatchEvent(new Event('input'));
+    expect(testBtn.classList.contains('tested-green')).toBe(false);
+    expect(testBtn.textContent).toContain('Test Connection');
   });
 });
 

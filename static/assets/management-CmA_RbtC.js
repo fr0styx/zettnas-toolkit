@@ -1,0 +1,1 @@
+import{F as e}from"./dashboard-Dcz32Ai9.js";export{e as initManagement};
