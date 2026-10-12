@@ -194,6 +194,21 @@ class TestWebdavAndRemotes(unittest.TestCase):
         self.assertEqual(res["status"], "connected")
         self.assertEqual(res["item_count"], 2)
 
+    @patch("shutil.which", return_value="/usr/bin/rclone")
+    @patch("subprocess.run")
+    def test_rclone_onedrive_auto_resolve_metadata(self, mock_run, mock_which):
+        mock_run.return_value = MagicMock(returncode=0, stdout="doc.pdf\n", stderr="")
+        with patch.object(
+            self.rclone_engine,
+            "_resolve_onedrive_metadata",
+            return_value={"token": '{"access_token":"abc"}', "drive_id": "drv_123", "drive_type": "personal"},
+        ) as mock_resolve:
+            res = self.rclone_engine.test_remote_config("onedrive", {"token": '{"access_token":"abc"}'})
+            mock_resolve.assert_called_once()
+            self.assertTrue(res["success"])
+            self.assertEqual(res["drive_id"], "drv_123")
+            self.assertEqual(res["drive_type"], "personal")
+
 
 def test_api_webdav_status(client, auth_headers):
     resp = client.get("/api/webdav/status", headers=auth_headers)

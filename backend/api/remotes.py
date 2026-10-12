@@ -4,6 +4,7 @@ REST endpoints for multi-cloud integration, FUSE mounts, and backup sync.
 """
 
 import asyncio
+import json
 import logging
 import os
 import re
@@ -321,6 +322,26 @@ async def start_oauth_session(req: OAuthStartRequest):
     }
 
 
+def _resolve_onedrive_drive_details(token_json_str: str) -> tuple[str, str]:
+    """Queries Microsoft Graph API to resolve drive_id and drive_type."""
+    try:
+        tok = json.loads(token_json_str) if isinstance(token_json_str, str) else token_json_str
+        acc = tok.get("access_token")
+        if not acc:
+            return "", "personal"
+        req = urllib.request.Request(
+            "https://graph.microsoft.com/v1.0/me/drive",
+            headers={"Authorization": f"Bearer {acc}", "Accept": "application/json"},
+        )
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            if resp.status == 200:
+                data = json.loads(resp.read().decode("utf-8"))
+                return data.get("id", ""), data.get("driveType", "personal")
+    except Exception as e:
+        logger.warning(f"[OAuth] Could not query Microsoft Graph for drive details: {e}")
+    return "", "personal"
+
+
 @router.post("/remotes/oauth/exchange", dependencies=[Depends(require_scope("storage:admin", "storage:write"))])
 async def exchange_oauth_code(req: OAuthExchangeRequest):
     """Receives redirected URL or code, forwards it to rclone's loopback listener, and returns JSON token."""
@@ -364,10 +385,14 @@ async def exchange_oauth_code(req: OAuthExchangeRequest):
 
     for _ in range(25):
         if session.get("completed") and session.get("token"):
+            drive_id, drive_type = "", "personal"
+            if session.get("provider_type") == "onedrive":
+                drive_id, drive_type = _resolve_onedrive_drive_details(session["token"])
             return {
                 "status": "ok",
                 "token": session["token"],
-                "drive_type": "personal",
+                "drive_id": drive_id,
+                "drive_type": drive_type or "personal",
                 "session_id": req.session_id,
             }
         if session.get("error"):
@@ -375,10 +400,14 @@ async def exchange_oauth_code(req: OAuthExchangeRequest):
         await asyncio.sleep(0.2)
 
     if session.get("token"):
+        drive_id, drive_type = "", "personal"
+        if session.get("provider_type") == "onedrive":
+            drive_id, drive_type = _resolve_onedrive_drive_details(session["token"])
         return {
             "status": "ok",
             "token": session["token"],
-            "drive_type": "personal",
+            "drive_id": drive_id,
+            "drive_type": drive_type or "personal",
             "session_id": req.session_id,
         }
 
@@ -392,10 +421,15 @@ async def get_oauth_session_status(session_id: str):
     session = _ACTIVE_OAUTH_SESSIONS.get(session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session expired or not found")
+    drive_id, drive_type = "", "personal"
+    if session.get("completed") and session.get("token") and session.get("provider_type") == "onedrive":
+        drive_id, drive_type = _resolve_onedrive_drive_details(session["token"])
     return {
         "session_id": session_id,
         "completed": bool(session.get("completed")),
         "token": session.get("token"),
+        "drive_id": drive_id,
+        "drive_type": drive_type or "personal",
         "error": session.get("error"),
     }
 

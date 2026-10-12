@@ -13,6 +13,8 @@ import subprocess
 import tempfile
 import threading
 import time
+import urllib.error
+import urllib.request
 import uuid
 from typing import Any, Dict, List, Optional
 
@@ -413,10 +415,87 @@ class RcloneEngine:
             logger.warning(f"[RCLONE] Failed obscuring password: {e}")
         return password
 
+    def _resolve_onedrive_metadata(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Auto-queries Microsoft Graph API to resolve drive_id and drive_type if missing."""
+        token_val = parameters.get("token")
+        if not token_val:
+            return parameters
+
+        access_token = None
+        try:
+            if isinstance(token_val, str):
+                tok_obj = json.loads(token_val.strip())
+            elif isinstance(token_val, dict):
+                tok_obj = token_val
+            else:
+                tok_obj = {}
+            access_token = tok_obj.get("access_token")
+        except Exception as e:
+            logger.debug(f"[OneDrive] Parsing token JSON failed: {e}")
+
+        if not access_token:
+            return parameters
+
+        # 1. Try /v1.0/me/drive
+        try:
+            req = urllib.request.Request(
+                "https://graph.microsoft.com/v1.0/me/drive",
+                headers={
+                    "Authorization": f"Bearer {access_token}",
+                    "Accept": "application/json",
+                },
+            )
+            with urllib.request.urlopen(req, timeout=6) as resp:
+                if resp.status == 200:
+                    data = json.loads(resp.read().decode("utf-8"))
+                    drive_id = data.get("id")
+                    drive_type = data.get("driveType", "personal")
+                    if drive_id:
+                        parameters["drive_id"] = drive_id
+                        parameters["drive_type"] = drive_type
+                        logger.info(f"[OneDrive] Auto-resolved drive_id={drive_id} (drive_type={drive_type})")
+                        return parameters
+        except Exception as e:
+            logger.warning(f"[OneDrive] Query /v1.0/me/drive failed: {e}")
+
+        # 2. Try /v1.0/me/drives (for multiple or business drives)
+        try:
+            req = urllib.request.Request(
+                "https://graph.microsoft.com/v1.0/me/drives",
+                headers={
+                    "Authorization": f"Bearer {access_token}",
+                    "Accept": "application/json",
+                },
+            )
+            with urllib.request.urlopen(req, timeout=6) as resp:
+                if resp.status == 200:
+                    data = json.loads(resp.read().decode("utf-8"))
+                    drives = data.get("value", [])
+                    if drives and isinstance(drives, list):
+                        first_drive = drives[0]
+                        drive_id = first_drive.get("id")
+                        drive_type = first_drive.get("driveType", "personal")
+                        if drive_id:
+                            parameters["drive_id"] = drive_id
+                            parameters["drive_type"] = drive_type
+                            logger.info(f"[OneDrive] Auto-resolved drive_id={drive_id} from /me/drives")
+                            return parameters
+        except Exception as e:
+            logger.warning(f"[OneDrive] Query /v1.0/me/drives failed: {e}")
+
+        if not parameters.get("drive_type"):
+            parameters["drive_type"] = "personal"
+
+        return parameters
+
     def create_remote(self, name: str, remote_type: str, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Creates or updates a remote in rclone.conf via RawConfigParser."""
         if not VALID_REMOTE_NAME.fullmatch(name):
             raise ValueError(f"Invalid remote name: '{name}'. Must be 1-64 alphanumeric chars, dash, or underscore.")
+
+        parameters = dict(parameters)
+        if remote_type == "onedrive" and not parameters.get("drive_id") and parameters.get("token"):
+            parameters = self._resolve_onedrive_metadata(parameters)
 
         with self._lock:
             self._ensure_directories()
@@ -538,6 +617,10 @@ class RcloneEngine:
 
     def test_remote_config(self, remote_type: str, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Tests connectivity and credentials of candidate remote configuration before saving."""
+        parameters = dict(parameters)
+        if remote_type == "onedrive" and not parameters.get("drive_id") and parameters.get("token"):
+            parameters = self._resolve_onedrive_metadata(parameters)
+
         rclone_bin = self._get_rclone_bin()
         test_sec = "_zett_test_temp"
         cfg = configparser.RawConfigParser()
@@ -588,6 +671,8 @@ class RcloneEngine:
                     "type": remote_type,
                     "item_count": len(items),
                     "items_sample": items[:5],
+                    "drive_id": parameters.get("drive_id"),
+                    "drive_type": parameters.get("drive_type"),
                 }
             else:
                 err = proc.stderr.strip() or f"Failed with exit code {proc.returncode}"

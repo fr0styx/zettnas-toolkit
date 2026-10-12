@@ -2256,7 +2256,7 @@ export async function openNewCloudRemoteModal(onSuccess) {
               };
             }
 
-            const applyAcquiredToken = (token) => {
+            const applyAcquiredToken = (token, drive_id = '', drive_type = 'personal') => {
               const tokenArea = dynamicFields.querySelector('textarea[name="token"]');
               if (tokenArea) {
                 tokenArea.value = token;
@@ -2264,7 +2264,13 @@ export async function openNewCloudRemoteModal(onSuccess) {
               }
               const driveType = dynamicFields.querySelector('select[name="drive_type"]');
               if (driveType) {
-                driveType.value = 'personal';
+                driveType.value = drive_type || 'personal';
+                driveType.dispatchEvent(new Event('change', { bubbles: true }));
+              }
+              const driveIdInput = dynamicFields.querySelector('input[name="drive_id"]');
+              if (driveIdInput && drive_id) {
+                driveIdInput.value = drive_id;
+                driveIdInput.dispatchEvent(new Event('input', { bubbles: true }));
               }
               if (nameInput && !nameInput.value.trim()) {
                 nameInput.value = prov.type === 'onedrive' ? 'onedrive-personal' : `${prov.type}-cloud`;
@@ -2359,7 +2365,7 @@ export async function openNewCloudRemoteModal(onSuccess) {
                       if (st && st.completed && st.token) {
                         clearInterval(_oauthPollTimer);
                         _oauthPollTimer = null;
-                        applyAcquiredToken(st.token);
+                        applyAcquiredToken(st.token, st.drive_id, st.drive_type);
                       }
                     } catch (_) {}
                   }, 2500);
@@ -2502,7 +2508,7 @@ export async function openNewCloudRemoteModal(onSuccess) {
                       clearInterval(_oauthPollTimer);
                       _oauthPollTimer = null;
                     }
-                    applyAcquiredToken(exRes.token);
+                    applyAcquiredToken(exRes.token, exRes.drive_id, exRes.drive_type);
                   } else {
                     throw new Error(exRes?.error || 'Token exchange failed');
                   }
@@ -2585,6 +2591,20 @@ export async function openNewCloudRemoteModal(onSuccess) {
 
           if (res && res.success) {
             playChirp(880, 0.12, 'sine');
+            if (res.drive_id) {
+              const driveIdInput = dynamicFields?.querySelector('input[name="drive_id"]');
+              if (driveIdInput && !driveIdInput.value) {
+                driveIdInput.value = res.drive_id;
+                driveIdInput.dispatchEvent(new Event('input', { bubbles: true }));
+              }
+            }
+            if (res.drive_type) {
+              const driveTypeSelect = dynamicFields?.querySelector('select[name="drive_type"]');
+              if (driveTypeSelect && !driveTypeSelect.value) {
+                driveTypeSelect.value = res.drive_type;
+                driveTypeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+              }
+            }
             if (testResult) {
               testResult.style.background = 'rgba(34, 197, 94, 0.15)';
               testResult.style.border = '1px solid rgba(34, 197, 94, 0.3)';
