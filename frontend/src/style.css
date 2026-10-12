@@ -11847,56 +11847,91 @@ body.theme-yak .input-modern:focus {
    TIER 2: VIRTUAL DESKTOPS / MULTI-WORKSPACE SWITCHER
    ========================================================================= */
 .workspace-switcher {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 4px;
-  background: rgba(255, 255, 255, 0.04);
+  gap: 3px;
+  background: rgba(0, 0, 0, 0.45);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 8px;
-  padding: 2px 4px;
+  padding: 2px 3px;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+  margin: 0 8px;
+  flex-shrink: 0;
 }
 
 .workspace-pill {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  justify-content: center;
+  min-width: 24px;
+  height: 22px;
+  padding: 0 4px;
   background: transparent;
-  border: none;
-  border-radius: 6px;
-  padding: 3px 8px;
+  border: 1px solid transparent;
+  border-radius: 5px;
   color: var(--muted, #94a3b8);
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1);
   user-select: none;
 }
 
 .workspace-pill:hover {
-  color: #fff;
+  color: #f8fafc;
   background: rgba(255, 255, 255, 0.08);
 }
 
 .workspace-pill.active {
-  color: #fff;
+  color: #0b1118;
   background: var(--brand, #00f0ff);
-  box-shadow: 0 0 12px rgba(0, 240, 255, 0.38);
+  border-color: transparent;
+  font-weight: 800;
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.35);
 }
 
 .workspace-pill .ws-num {
   font-family: var(--font-mono, monospace);
-  font-size: 10px;
-  font-weight: 700;
-  padding: 1px 4px;
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.12);
+  font-size: 11px;
+  font-weight: inherit;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+  color: inherit;
 }
 
 .workspace-pill.active .ws-num {
-  background: rgba(0, 0, 0, 0.35);
-  color: #fff;
+  background: transparent;
+  color: inherit;
+}
+
+.workspace-pill .ws-label {
+  display: none;
+}
+
+@media (max-width: 720px) {
+  .workspace-switcher {
+    margin: 0 4px;
+    padding: 1px 2px;
+    gap: 2px;
+  }
+  .workspace-pill {
+    min-width: 20px;
+    height: 20px;
+    font-size: 10px;
+  }
+}
+
+body.mobile-mode .workspace-switcher {
+  margin: 0 4px;
+  padding: 1px 2px;
+  gap: 2px;
+}
+body.mobile-mode .workspace-pill {
+  min-width: 20px;
+  height: 20px;
+  font-size: 10px;
 }
 
 .workspace-hidden,
