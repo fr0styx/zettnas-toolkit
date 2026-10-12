@@ -11899,8 +11899,23 @@ body.theme-yak .input-modern:focus {
   color: #fff;
 }
 
-.workspace-hidden {
+.workspace-hidden,
+.smart-modal-backdrop.workspace-hidden,
+#console-modal-overlay.workspace-hidden,
+#management-modal-overlay.workspace-hidden,
+#app-deploy-modal-overlay.workspace-hidden,
+#stack-inspector-overlay.workspace-hidden,
+#stack-picker-overlay.workspace-hidden,
+#container-inspector-overlay.workspace-hidden,
+#smart-modal-overlay.workspace-hidden,
+#led-drawer.workspace-hidden,
+.smart-modal-window.workspace-hidden,
+.os-window.workspace-hidden,
+.mgmt-app-window.workspace-hidden {
   display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
 }
 
 /* =========================================================================

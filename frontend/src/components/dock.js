@@ -442,11 +442,17 @@ export function switchWorkspace(wsId) {
     }
   });
 
+  const wsNames = {
+    1: t('workspace.storage', 'Storage'),
+    2: t('workspace.apps', 'Apps'),
+    3: t('workspace.system', 'System'),
+  };
+  const wsLabel = wsNames[wsId] || `Workspace ${wsId}`;
   if (typeof announceA11y === 'function') {
-    announceA11y(`Switched to Workspace ${wsId}`);
+    announceA11y(`Switched to Workspace ${wsId}: ${wsLabel}`);
   }
   if (typeof showToast === 'function') {
-    showToast(`Switched to Workspace ${wsId}`, 'info', 1200);
+    showToast(`Workspace ${wsId}: ${wsLabel}`, 'info', 1400);
   }
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent('zettnas:workspace-changed', { detail: { workspace: wsId } }));
