@@ -44,8 +44,12 @@ describe('Zero-Trust Mesh VPN Suite (WireGuard & Tailscale)', () => {
       <code id="wg-pubkey-display">--</code>
       <button id="btn-toggle-wg-subnet-nat"></button>
       <button id="btn-wg-gen-client-config"></button>
+      <button id="btn-copy-wg-conf"></button>
       <button id="btn-download-wg-conf"></button>
       <pre id="wg-conf-preview"></pre>
+      <div id="wg-qr-box" style="display:none;">
+        <div id="wg-qr-canvas-wrap"></div>
+      </div>
       <button id="btn-refresh-wireguard"></button>
 
       <div id="mesh-service-filter">
@@ -164,7 +168,8 @@ describe('Zero-Trust Mesh VPN Suite (WireGuard & Tailscale)', () => {
     expect(document.getElementById('tailscale-status-badge').textContent).toBe('Not Installed');
   });
 
-  it('triggers 1-click deploy POST and displays browser auth prompt on auth_url response', async () => {
+  it('triggers 1-click deploy POST via single button btn-tailscale-up and opens browser auth prompt', async () => {
+    const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
     vi.spyOn(api, 'get').mockResolvedValue({
       tailscale: { installed: false, active: false },
       wireguard: { installed: true, active: false },
@@ -181,8 +186,9 @@ describe('Zero-Trust Mesh VPN Suite (WireGuard & Tailscale)', () => {
     const hostInput = document.getElementById('ts-hostname-input');
     hostInput.value = 'zettnas-appliance';
 
-    const deployBtn = document.getElementById('btn-deploy-tailscale');
-    await deployBtn.click();
+    const upBtn = document.getElementById('btn-tailscale-up');
+    expect(upBtn.textContent).toBe('⚡ 1-Click Deploy Tailscale');
+    await upBtn.click();
 
     expect(postSpy).toHaveBeenCalledWith('/api/network/mesh-vpn/tailscale/deploy', {
       auth_key: null,
@@ -190,8 +196,38 @@ describe('Zero-Trust Mesh VPN Suite (WireGuard & Tailscale)', () => {
       accept_routes: true,
     });
 
+    expect(windowOpenSpy).toHaveBeenCalledWith('https://login.tailscale.com/a/oauth123', '_blank', 'noopener,noreferrer');
     expect(document.getElementById('ts-auth-prompt').style.display).toBe('block');
     expect(document.getElementById('ts-auth-link').href).toBe('https://login.tailscale.com/a/oauth123');
+    expect(upBtn.textContent).toBe('🔗 Log in to Tailscale');
+    windowOpenSpy.mockRestore();
+  });
+
+  it('renders NeedsLogin state with auth URL automatically and streamlines login action', async () => {
+    const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+    vi.spyOn(api, 'get').mockResolvedValue({
+      tailscale: {
+        installed: true,
+        active: false,
+        backend_state: 'NeedsLogin',
+        auth_url: 'https://login.tailscale.com/a/resume456',
+      },
+      wireguard: { installed: true, active: false },
+    });
+    vi.spyOn(toast, 'showToast').mockImplementation(() => {});
+
+    await fetchAndRenderWireguard();
+
+    expect(document.getElementById('tailscale-status-badge').textContent).toBe('Needs Login');
+    expect(document.getElementById('ts-auth-prompt').style.display).toBe('block');
+    expect(document.getElementById('ts-auth-link').href).toBe('https://login.tailscale.com/a/resume456');
+
+    const upBtn = document.getElementById('btn-tailscale-up');
+    expect(upBtn.textContent).toBe('🔗 Log in to Tailscale');
+
+    await upBtn.click();
+    expect(windowOpenSpy).toHaveBeenCalledWith('https://login.tailscale.com/a/resume456', '_blank', 'noopener,noreferrer');
+    windowOpenSpy.mockRestore();
   });
 
   it('filters services between all, tailscale, and wireguard', async () => {
@@ -216,5 +252,46 @@ describe('Zero-Trust Mesh VPN Suite (WireGuard & Tailscale)', () => {
 
     expect(tsHeader.style.display).toBe('none');
     expect(wgHeader.style.display).toBe('flex');
+  });
+
+  it('generates WireGuard client config with formatted .conf text, export button, and QR code SVG', async () => {
+    vi.spyOn(api, 'get').mockResolvedValue({
+      tailscale: { installed: true, active: true },
+      wireguard: { installed: true, active: true },
+    });
+
+    const mockConf = `[Interface]\nPrivateKey = privkey123\nAddress = 10.13.13.2/32\n\n[Peer]\nPublicKey = pubkey456\nEndpoint = 10.40.30.249:51820\nAllowedIPs = 0.0.0.0/0\n`;
+    vi.spyOn(api, 'post').mockImplementation(async (url) => {
+      if (url === '/api/network/mesh-vpn/wireguard/client-config') {
+        return {
+          client_name: 'test-client',
+          private_key: 'privkey123',
+          public_key: 'pubkey456',
+          config_text: mockConf,
+          config_content: mockConf,
+        };
+      }
+      return {};
+    });
+
+    await fetchAndRenderWireguard();
+
+    const genBtn = document.getElementById('btn-wg-gen-client-config');
+    genBtn.click();
+
+    await vi.waitFor(() => {
+      expect(document.getElementById('wg-conf-preview').textContent).toBe(mockConf);
+    });
+
+    const dlBtn = document.getElementById('btn-download-wg-conf');
+    expect(dlBtn.style.display).toBe('inline-block');
+
+    const copyBtn = document.getElementById('btn-copy-wg-conf');
+    expect(copyBtn.style.display).toBe('inline-block');
+
+    const qrBox = document.getElementById('wg-qr-box');
+    expect(qrBox.style.display).toBe('flex');
+    const qrWrap = document.getElementById('wg-qr-canvas-wrap');
+    expect(qrWrap.innerHTML).toContain('<svg');
   });
 });

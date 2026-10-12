@@ -16,6 +16,7 @@ import { api } from '../api.js';
 import { showToast, showConfirmToast } from '../toast.js';
 import { trapFocus, escapeHtml, copyTextToClipboard, reconcileKeyedTable } from '../utils.js';
 import { t, getLanguage } from '../i18n.js';
+import QRCode from 'qrcode';
 
 let _activeProfile = 'balanced';
 let _unbindMgmtTrap = null;
@@ -657,6 +658,14 @@ function _bindDockerEvents() {
   if (btnSources) {
     btnSources.addEventListener('click', () => {
       openAppSourcesModal();
+    });
+  }
+
+  // Sideload button
+  const btnSideload = document.getElementById('btn-sideload-app-package');
+  if (btnSideload) {
+    btnSideload.addEventListener('click', () => {
+      openSideloadAppModal();
     });
   }
 
@@ -1353,6 +1362,15 @@ export function renderAppCatalogGrid() {
       ? `<span class="ci-badge" style="font-size:8.5px; background:rgba(168,85,247,0.15); color:#c084fc; border:1px solid rgba(168,85,247,0.3); padding:1px 5px; border-radius:3px;">Stack</span>`
       : '';
 
+    let securityBadge = '';
+    if (app.security_rating === 'verified') {
+      securityBadge = `<span class="ci-badge" title="Verified Safe Sandbox" style="font-size:8.5px; background:rgba(34,197,94,0.15); color:#4ade80; border:1px solid rgba(34,197,94,0.3); padding:1px 5px; border-radius:3px;">🛡️ Safe</span>`;
+    } else if (app.security_rating === 'review_required') {
+      securityBadge = `<span class="ci-badge" title="${escapeHtml((app.security_flags || []).join('; '))}" style="font-size:8.5px; background:rgba(234,179,8,0.15); color:#facc15; border:1px solid rgba(234,179,8,0.3); padding:1px 5px; border-radius:3px;">⚠️ Review</span>`;
+    } else if (app.security_rating === 'elevated') {
+      securityBadge = `<span class="ci-badge" title="${escapeHtml((app.security_flags || []).join('; '))}" style="font-size:8.5px; background:rgba(239,68,68,0.15); color:#f87171; border:1px solid rgba(239,68,68,0.3); padding:1px 5px; border-radius:3px;">🚨 Elevated</span>`;
+    }
+
     const imageDisplay = app.image || (app.repository ? 'compose-stack' : 'container');
 
     return `
@@ -1369,6 +1387,7 @@ export function renderAppCatalogGrid() {
             <div style="display:flex; gap:4px; align-items:center; flex-shrink:0;">
               ${typeBadge}
               ${sourceBadge}
+              ${securityBadge}
               <span class="ci-badge" style="font-size:9px; text-transform:uppercase; background:rgba(255,255,255,0.06); color:#cbd5e1; padding:2px 6px; border-radius:4px;">${escapeHtml(app.category)}</span>
             </div>
           </div>
@@ -2756,6 +2775,150 @@ async function refreshSourcesUI() {
   }
 }
 
+export function openSideloadAppModal() {
+  const modal = document.getElementById('modal-sideload-app');
+  if (!modal) return;
+
+  const closeBtn = document.getElementById('modal-sideload-close-btn');
+  const cancelBtn = document.getElementById('modal-sideload-cancel-btn');
+  const tabUrl = document.getElementById('sideload-tab-url');
+  const tabPaste = document.getElementById('sideload-tab-paste');
+  const urlWrap = document.getElementById('sideload-input-url-wrap');
+  const pasteWrap = document.getElementById('sideload-input-paste-wrap');
+  const urlInput = document.getElementById('sideload-url-input');
+  const contentInput = document.getElementById('sideload-content-input');
+  const btnInspect = document.getElementById('btn-sideload-inspect');
+  const resultBox = document.getElementById('sideload-inspect-result');
+  const btnConfirm = document.getElementById('btn-sideload-confirm');
+
+  let activeTab = 'url';
+  let inspectedApp = null;
+
+  function closeModal() {
+    modal.style.display = 'none';
+    modal.classList.remove('open');
+    if (resultBox) resultBox.style.display = 'none';
+    if (btnConfirm) {
+      btnConfirm.disabled = true;
+      btnConfirm.style.opacity = '0.5';
+      btnConfirm.style.cursor = 'not-allowed';
+    }
+  }
+
+  if (closeBtn) closeBtn.onclick = closeModal;
+  if (cancelBtn) cancelBtn.onclick = closeModal;
+  modal.onclick = (e) => {
+    if (e.target === modal) closeModal();
+  };
+
+  if (tabUrl && tabPaste) {
+    tabUrl.onclick = () => {
+      activeTab = 'url';
+      tabUrl.classList.add('active');
+      tabPaste.classList.remove('active');
+      if (urlWrap) urlWrap.style.display = 'block';
+      if (pasteWrap) pasteWrap.style.display = 'none';
+    };
+    tabPaste.onclick = () => {
+      activeTab = 'paste';
+      tabPaste.classList.add('active');
+      tabUrl.classList.remove('active');
+      if (urlWrap) urlWrap.style.display = 'none';
+      if (pasteWrap) pasteWrap.style.display = 'block';
+    };
+  }
+
+  if (btnInspect) {
+    btnInspect.onclick = async () => {
+      const url = activeTab === 'url' ? (urlInput?.value || '').trim() : '';
+      const manifest = activeTab === 'paste' ? (contentInput?.value || '').trim() : '';
+      if (!url && !manifest) {
+        showToast('Please provide a URL or paste manifest YAML/JSON.', 'warning');
+        return;
+      }
+      btnInspect.disabled = true;
+      btnInspect.innerHTML = '<span>⏳</span> <span>Validating...</span>';
+      try {
+        const payload = url ? { url } : { manifest_content: manifest };
+        const res = await api.post('/api/docker/catalog/sideload', payload);
+        if (res.status === 'ok' && res.app) {
+          inspectedApp = res.app;
+          renderSideloadInspection(res.app, res.security_rating, res.security_flags, resultBox);
+          if (btnConfirm) {
+            btnConfirm.disabled = false;
+            btnConfirm.style.opacity = '1';
+            btnConfirm.style.cursor = 'pointer';
+          }
+        }
+      } catch (err) {
+        showToast(`Failed to inspect manifest: ${err.message}`, 'error');
+        if (resultBox) {
+          resultBox.style.display = 'block';
+          resultBox.innerHTML = `<div style="color:var(--alert, #ef4444); font-size:12px;">Inspection Failed: ${escapeHtml(err.message)}</div>`;
+        }
+      } finally {
+        btnInspect.disabled = false;
+        btnInspect.innerHTML = '🔍 <span>Inspect & Validate</span>';
+      }
+    };
+  }
+
+  if (btnConfirm) {
+    btnConfirm.onclick = () => {
+      if (!inspectedApp) return;
+      showToast(t('catalog.sideload_success', 'Application sideloaded successfully.'), 'success');
+      closeModal();
+      fetchAndRenderAppCatalog();
+    };
+  }
+
+  modal.style.display = 'flex';
+  modal.classList.add('open');
+}
+
+function renderSideloadInspection(app, rating, flags, container) {
+  if (!container) return;
+  container.style.display = 'block';
+
+  let badgeColor = '#4ade80';
+  let badgeBg = 'rgba(34,197,94,0.15)';
+  let badgeBorder = 'rgba(34,197,94,0.3)';
+  let badgeText = '🛡️ Verified Safe';
+
+  if (rating === 'review_required') {
+    badgeColor = '#facc15';
+    badgeBg = 'rgba(234,179,8,0.15)';
+    badgeBorder = 'rgba(234,179,8,0.3)';
+    badgeText = '⚠️ Review Required';
+  } else if (rating === 'elevated') {
+    badgeColor = '#f87171';
+    badgeBg = 'rgba(239,68,68,0.15)';
+    badgeBorder = 'rgba(239,68,68,0.3)';
+    badgeText = '🚨 Elevated Privileges Risk';
+  }
+
+  const flagsHtml = (flags && flags.length > 0)
+    ? `<div style="margin-top:8px; font-size:11px; background:rgba(0,0,0,0.3); border-radius:4px; padding:6px 10px;">
+        <div style="font-weight:700; color:${badgeColor}; margin-bottom:4px;">Security Audit Findings:</div>
+        <ul style="margin:0; padding-left:16px; color:#cbd5e1;">
+          ${flags.map((f) => `<li>${escapeHtml(f)}</li>`).join('')}
+        </ul>
+      </div>`
+    : `<div style="margin-top:8px; font-size:11px; color:#4ade80;">✓ Zero high-privilege risk flags detected. Standard isolated container sandbox.</div>`;
+
+  container.innerHTML = `
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+      <div style="font-weight:700; font-size:13px; color:#fff;">${escapeHtml(app.name)}</div>
+      <span class="ci-badge" style="font-size:10px; background:${badgeBg}; color:${badgeColor}; border:1px solid ${badgeBorder}; padding:2px 8px; border-radius:4px;">${badgeText}</span>
+    </div>
+    <div style="font-size:11px; color:var(--muted); line-height:1.4;">
+      <div><strong>Image:</strong> <code>${escapeHtml(app.image || 'compose-stack')}</code></div>
+      <div><strong>Type:</strong> ${escapeHtml(app.type || 'standalone')} · <strong>Default Port:</strong> ${escapeHtml(String(app.default_port || 'N/A'))}</div>
+    </div>
+    ${flagsHtml}
+  `;
+}
+
 export function renderUpsTelemetry(ups) {
   if (!ups) return;
   const upsVal = ups.battery_charge_pct != null ? `${ups.battery_charge_pct}%` : (ups.available ? 'Active' : 'Offline');
@@ -3584,8 +3747,10 @@ export async function fetchAndRenderWireguard() {
         }
         if (tsDeployBanner) tsDeployBanner.style.display = 'none';
         if (tsFormIntro) {
-          tsFormIntro.textContent = 'Join your Zero-Trust Tailnet with a pre-authenticated auth key:';
-          tsFormIntro.style.color = 'var(--muted)';
+          tsFormIntro.textContent = isNeedsLogin
+            ? 'Node authentication required. Click below to log in and link to your Tailnet:'
+            : 'Join your Zero-Trust Tailnet with a pre-authenticated auth key:';
+          tsFormIntro.style.color = isNeedsLogin ? '#f59e0b' : 'var(--muted)';
         }
         if (tsIpEl) tsIpEl.textContent = '--';
         if (tsCopyIpBtn) tsCopyIpBtn.style.display = 'none';
@@ -3595,9 +3760,33 @@ export async function fetchAndRenderWireguard() {
         if (tsConnectForm) tsConnectForm.style.display = 'flex';
         if (tsConnectedView) tsConnectedView.style.display = 'none';
         if (tsDownBtn) tsDownBtn.style.display = 'none';
-        if (tsUpBtn) {
-          tsUpBtn.textContent = '🚀 Connect Tailscale';
-          tsUpBtn.dataset.mode = 'connect';
+
+        if (isNeedsLogin) {
+          if (ts.auth_url) {
+            if (tsAuthPrompt) tsAuthPrompt.style.display = 'block';
+            if (tsAuthLink) tsAuthLink.href = ts.auth_url;
+            if (tsCopyAuthUrlBtn) {
+              tsCopyAuthUrlBtn.onclick = () => {
+                if (navigator.clipboard?.writeText) {
+                  navigator.clipboard.writeText(ts.auth_url);
+                  showToast('Authorization link copied to clipboard.', 'success');
+                }
+              };
+            }
+            startTailscaleAuthPolling();
+          }
+          if (tsUpBtn) {
+            tsUpBtn.textContent = '🔗 Log in to Tailscale';
+            tsUpBtn.dataset.mode = 'login';
+            tsUpBtn.dataset.authUrl = ts.auth_url || '';
+          }
+        } else {
+          if (tsAuthPrompt) tsAuthPrompt.style.display = 'none';
+          if (tsUpBtn) {
+            tsUpBtn.textContent = '🚀 Connect Tailscale';
+            tsUpBtn.dataset.mode = 'connect';
+            tsUpBtn.dataset.authUrl = '';
+          }
         }
       }
     }
@@ -3641,8 +3830,18 @@ export async function fetchAndRenderWireguard() {
       });
 
       if (res && res.auth_url) {
+        try {
+          window.open(res.auth_url, '_blank', 'noopener,noreferrer');
+        } catch (e) {
+          console.warn('Popup blocked, falling back to on-screen prompt:', e);
+        }
         if (tsAuthPrompt) tsAuthPrompt.style.display = 'block';
         if (tsAuthLink) tsAuthLink.href = res.auth_url;
+        if (tsUpBtn) {
+          tsUpBtn.dataset.authUrl = res.auth_url;
+          tsUpBtn.dataset.mode = 'login';
+          tsUpBtn.textContent = '🔗 Log in to Tailscale';
+        }
         if (tsCopyAuthUrlBtn) {
           tsCopyAuthUrlBtn.onclick = () => {
             if (navigator.clipboard?.writeText) {
@@ -3651,7 +3850,7 @@ export async function fetchAndRenderWireguard() {
             }
           };
         }
-        showToast('Tailscale deployed! Browser authorization required.', 'info');
+        showToast('Tailscale deployed! Opening authorization window...', 'info');
         startTailscaleAuthPolling();
       } else {
         showToast('Tailscale container deployed and connected!', 'success');
@@ -3663,7 +3862,11 @@ export async function fetchAndRenderWireguard() {
     } finally {
       if (btn) {
         btn.disabled = false;
-        btn.textContent = origText;
+        if (btn.dataset.mode === 'login') {
+          btn.textContent = '🔗 Log in to Tailscale';
+        } else {
+          btn.textContent = origText;
+        }
       }
     }
   }
@@ -3679,6 +3882,9 @@ export async function fetchAndRenderWireguard() {
           if (tsAuthPrompt) tsAuthPrompt.style.display = 'none';
           showToast('Tailscale node successfully authorized and connected!', 'success');
           fetchAndRenderWireguard();
+        } else if (mesh && mesh.tailscale && mesh.tailscale.auth_url && tsAuthLink && tsAuthLink.href !== mesh.tailscale.auth_url) {
+          tsAuthLink.href = mesh.tailscale.auth_url;
+          if (tsUpBtn) tsUpBtn.dataset.authUrl = mesh.tailscale.auth_url;
         }
       } catch (_) {}
     }, 2500);
@@ -3689,27 +3895,49 @@ export async function fetchAndRenderWireguard() {
     tsDeployBtn.addEventListener('click', () => deployTailscaleContainer(tsDeployBtn));
   }
 
-  // Tailscale Up handler
+  // Tailscale Up handler (single unified button for Deploy, Login, or Connect)
   if (tsUpBtn && !tsUpBtn._bound) {
     tsUpBtn._bound = true;
     tsUpBtn.addEventListener('click', async () => {
-      if (tsUpBtn.dataset.mode === 'deploy') {
+      const mode = tsUpBtn.dataset.mode;
+      if (mode === 'deploy') {
         return deployTailscaleContainer(tsUpBtn);
       }
+
       const authKey = tsAuthKeyInput ? tsAuthKeyInput.value.trim() : '';
       const hostname = tsHostnameInput ? tsHostnameInput.value.trim() : '';
       const acceptRoutes = tsAcceptRoutesCb ? tsAcceptRoutesCb.checked : true;
+
+      // If user clicked 'Log in to Tailscale' and we already have an authUrl stored
+      if (mode === 'login' && !authKey && tsUpBtn.dataset.authUrl) {
+        try {
+          window.open(tsUpBtn.dataset.authUrl, '_blank', 'noopener,noreferrer');
+        } catch (_) {}
+        startTailscaleAuthPolling();
+        return;
+      }
+
+      const origText = tsUpBtn.textContent;
       try {
         tsUpBtn.disabled = true;
-        tsUpBtn.textContent = '🚀 Connecting...';
+        tsUpBtn.textContent = mode === 'login' ? '🔗 Opening Login...' : '🚀 Connecting...';
         const res = await api.post('/api/network/mesh-vpn/tailscale/up', {
           auth_key: authKey || null,
           hostname: hostname || null,
           accept_routes: acceptRoutes,
         });
+
         if (res && res.auth_url) {
+          try {
+            window.open(res.auth_url, '_blank', 'noopener,noreferrer');
+          } catch (e) {
+            console.warn('Popup blocked, falling back to on-screen prompt:', e);
+          }
           if (tsAuthPrompt) tsAuthPrompt.style.display = 'block';
           if (tsAuthLink) tsAuthLink.href = res.auth_url;
+          tsUpBtn.dataset.authUrl = res.auth_url;
+          tsUpBtn.dataset.mode = 'login';
+          tsUpBtn.textContent = '🔗 Log in to Tailscale';
           if (tsCopyAuthUrlBtn) {
             tsCopyAuthUrlBtn.onclick = () => {
               if (navigator.clipboard?.writeText) {
@@ -3718,7 +3946,7 @@ export async function fetchAndRenderWireguard() {
               }
             };
           }
-          showToast('Browser authorization required. Click to log in.', 'info');
+          showToast('Tailscale login opened! Complete authorization in your browser.', 'info');
           startTailscaleAuthPolling();
         } else {
           showToast('Connected host to Tailscale mesh network.', 'success');
@@ -3729,7 +3957,13 @@ export async function fetchAndRenderWireguard() {
         showToast(`Tailscale connection failed: ${err.message}`, 'error');
       } finally {
         tsUpBtn.disabled = false;
-        tsUpBtn.textContent = tsUpBtn.dataset.mode === 'deploy' ? '⚡ 1-Click Deploy Tailscale' : '🚀 Connect Tailscale';
+        if (tsUpBtn.dataset.mode === 'login') {
+          tsUpBtn.textContent = '🔗 Log in to Tailscale';
+        } else if (tsUpBtn.dataset.mode === 'deploy') {
+          tsUpBtn.textContent = '⚡ 1-Click Deploy Tailscale';
+        } else {
+          tsUpBtn.textContent = '🚀 Connect Tailscale';
+        }
       }
     });
   }
@@ -3821,24 +4055,112 @@ export async function fetchAndRenderWireguard() {
           allowed_ips: '0.0.0.0/0',
           persistent_keepalive: 25,
         });
+
+        const confText = cfg.config_text || cfg.config_content || '';
         if (previewEl) {
-          previewEl.textContent = cfg.config_content || JSON.stringify(cfg, null, 2);
+          previewEl.textContent = confText || JSON.stringify(cfg, null, 2);
         }
         if (pubkeyEl && cfg.public_key) {
           pubkeyEl.textContent = cfg.public_key;
         }
-        if (dlBtn && cfg.config_content) {
+
+        const copyBtn = document.getElementById('btn-copy-wg-conf');
+        if (copyBtn && confText) {
+          copyBtn.style.display = 'inline-block';
+          copyBtn.onclick = async () => {
+            await copyTextToClipboard(confText);
+            showToast('WireGuard client config copied to clipboard.', 'success');
+          };
+        }
+
+        if (dlBtn && confText) {
           dlBtn.style.display = 'inline-block';
           dlBtn.onclick = () => {
-            const blob = new Blob([cfg.config_content], { type: 'text/plain' });
+            const blob = new Blob([confText], { type: 'text/plain' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'zettnas-client.conf';
+            a.download = `${cfg.client_name || 'zettnas-client'}.conf`;
             a.click();
             URL.revokeObjectURL(url);
+            showToast('Downloaded WireGuard .conf profile.', 'info');
           };
         }
+
+        // Render QR Code (inline thumbnail and interactive click to enlarge)
+        const qrBox = document.getElementById('wg-qr-box');
+        const qrCanvasWrap = document.getElementById('wg-qr-canvas-wrap');
+        const modalQr = document.getElementById('modal-wg-qr');
+        const modalQrWrap = document.getElementById('modal-wg-qr-wrap');
+        const modalQrCloseBtn = document.getElementById('modal-wg-qr-close-btn');
+        const modalQrCopyBtn = document.getElementById('modal-wg-qr-copy-btn');
+        const modalQrDlBtn = document.getElementById('modal-wg-qr-dl-btn');
+
+        if (qrBox && qrCanvasWrap && confText) {
+          try {
+            const svgString = await QRCode.toString(confText, {
+              type: 'svg',
+              margin: 1,
+              width: 120,
+              color: {
+                dark: '#000000',
+                light: '#ffffff',
+              },
+            });
+            qrCanvasWrap.innerHTML = svgString;
+            qrBox.style.display = 'flex';
+
+            const openQrModal = async () => {
+              if (!modalQr) return;
+              if (modalQrWrap) {
+                const largeSvg = await QRCode.toString(confText, {
+                  type: 'svg',
+                  margin: 2,
+                  width: 240,
+                  color: { dark: '#000000', light: '#ffffff' },
+                });
+                modalQrWrap.innerHTML = largeSvg;
+              }
+              const modalWin = modalQr.querySelector('.smart-modal-window');
+              const modalHdr = modalQr.querySelector('.smart-modal-header');
+              if (modalWin && modalHdr) makeDraggable(modalWin, modalHdr, 'modal-wg-qr');
+              modalQr.style.display = 'flex';
+              modalQr.classList.add('open');
+
+              const closeQrModal = () => {
+                modalQr.style.display = 'none';
+                modalQr.classList.remove('open');
+              };
+              if (modalQrCloseBtn) modalQrCloseBtn.onclick = closeQrModal;
+              modalQr.onclick = (e) => {
+                if (e.target === modalQr) closeQrModal();
+              };
+              if (modalQrCopyBtn) {
+                modalQrCopyBtn.onclick = async () => {
+                  await copyTextToClipboard(confText);
+                  showToast('Copied WireGuard config to clipboard.', 'success');
+                };
+              }
+              if (modalQrDlBtn) {
+                modalQrDlBtn.onclick = () => {
+                  const blob = new Blob([confText], { type: 'text/plain' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `${cfg.client_name || 'zettnas-client'}.conf`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                  showToast('Exported WireGuard .conf profile.', 'info');
+                };
+              }
+            };
+
+            qrCanvasWrap.onclick = openQrModal;
+          } catch (qrErr) {
+            console.warn('[WireGuard] QR generation error:', qrErr);
+          }
+        }
+
         showToast('WireGuard Curve25519 client profile generated.', 'success');
       } catch (err) {
         showToast(`Failed to generate WireGuard config: ${err.message}`, 'error');
