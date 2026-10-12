@@ -808,6 +808,7 @@ export function updateHardwareTelemetry(s) {
   const fbPill = $('fb-status-pill');
   const fbText = $('fb-status-text');
   const drawerBtn = $('drawer-toggle-btn');
+  const chassisDesktopIcon = $('chassis-desktop-icon') || document.getElementById('chassis-desktop-icon');
 
   const peripherals = s?.peripherals || {};
   const hardware = s?.hardware || {};
@@ -825,16 +826,74 @@ export function updateHardwareTelemetry(s) {
     }
   }
 
-  // FB pill visibility
+  // FB pill visibility & LCD resolution adaptation
   const hasFb = Boolean(peripherals.fb_active) || Boolean(hardware.has_lcd);
   if (fbPill) {
     if (hasFb) {
       fbPill.classList.remove('hidden');
       if (fbText) {
-        fbText.textContent = '/dev/fb0 (640x172)';
+        const res = hardware.lcd_resolution;
+        const resStr = res && res.width && res.height ? `${res.width}x${res.height}` : '640x172';
+        fbText.textContent = `/dev/fb0 (${resStr})`;
       }
     } else {
       fbPill.classList.add('hidden');
+    }
+  }
+
+  // ZettNAS Desktop Icon & Hardware LCD Invariant:
+  // The ZettNAS desktop icon should ONLY be visible if the hardware is a Zettlabs D4/D6/D6U/D8 NAS appliance
+  // OR another system with a similar physical LCD, taking display resolution into account for perfect data display.
+  const vendor = String(hardware.sys_vendor || s?.motherboard?.vendor || '').toLowerCase();
+  const product = String(
+    hardware.product_name || s?.motherboard?.product || s?.motherboard?.board || ''
+  ).toLowerCase();
+
+  const isZettlabs = Boolean(
+    hardware.is_zettlabs ||
+      vendor.includes('zettlab') ||
+      ['d4', 'd6', 'd6u', 'd8', 'zettbox', 'zettnas'].some((k) => product.includes(k)) ||
+      (hardware.is_custom_appliance && !vendor.includes('aoostar'))
+  );
+
+  const showZettnasIcon = isZettlabs || hasFb;
+
+  if (chassisDesktopIcon) {
+    if (showZettnasIcon) {
+      chassisDesktopIcon.style.removeProperty('display');
+      chassisDesktopIcon.classList.remove('hidden');
+
+      const res = hardware.lcd_resolution || { width: 640, height: 172, spec: '640 × 172 IPS' };
+      const specText = res.spec || `${res.width} × ${res.height} IPS`;
+      chassisDesktopIcon.setAttribute('title', `${t('dock.zettnas', 'ZettNAS')} (${specText})`);
+    } else {
+      chassisDesktopIcon.style.display = 'none';
+      chassisDesktopIcon.classList.add('hidden');
+
+      if (window.DockManager && window.DockManager.windows && window.DockManager.windows['console']) {
+        window.DockManager.closeWindow('console');
+      }
+    }
+  }
+
+  // Adaptive display resolution for perfect data rendering
+  if (hasFb && hardware.lcd_resolution) {
+    const { width, height, spec } = hardware.lcd_resolution;
+    const specEl = document.querySelector('.chassis-screen-spec');
+    if (specEl && spec && spec !== 'N/A') {
+      specEl.textContent = spec;
+    }
+    const screenEl = document.getElementById('screen');
+    if (screenEl && width > 0 && height > 0) {
+      screenEl.style.width = `${width}px`;
+      screenEl.style.height = `${height}px`;
+      screenEl.style.setProperty('--screen-w', `${width}px`);
+      screenEl.style.setProperty('--screen-h', `${height}px`);
+    }
+    const consoleWindow = document.getElementById('console-window');
+    if (consoleWindow && width > 0 && height > 0) {
+      consoleWindow.style.setProperty('--screen-w', `${width}px`);
+      consoleWindow.style.setProperty('--screen-h', `${height}px`);
     }
   }
 
@@ -842,12 +901,13 @@ export function updateHardwareTelemetry(s) {
   // Viewable only when custom hardware features (LCD, COPY button, SD card slot, MCU, or known custom appliance) are detected.
   const hasCustomHardware = Boolean(
     hardware.has_custom_hardware ||
-    peripherals.has_custom_hardware ||
-    hasMcu ||
-    hasFb ||
-    hardware.has_copy_button ||
-    hardware.has_sd_slot ||
-    hardware.is_custom_appliance
+      peripherals.has_custom_hardware ||
+      hasMcu ||
+      hasFb ||
+      hardware.has_copy_button ||
+      hardware.has_sd_slot ||
+      hardware.is_custom_appliance ||
+      isZettlabs
   );
 
   if (drawerBtn) {

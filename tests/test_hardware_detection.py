@@ -12,11 +12,13 @@ def test_detect_hardware_features_custom_appliance(monkeypatch):
 
     assert features["sys_vendor"] == "Zettlab"
     assert features["product_name"] == "D6 Ultra"
+    assert features["is_zettlabs"] is True
     assert features["is_custom_appliance"] is True
     assert features["has_copy_button"] is True
     assert features["has_sd_slot"] is True
     assert features["has_mcu"] is True
     assert features["has_custom_hardware"] is True
+    assert "lcd_resolution" in features
 
 
 def test_detect_hardware_features_generic_server(monkeypatch):
@@ -30,9 +32,11 @@ def test_detect_hardware_features_generic_server(monkeypatch):
 
     assert features["sys_vendor"] == "Dell Inc."
     assert features["product_name"] == "PowerEdge R730"
+    assert features["is_zettlabs"] is False
     assert features["is_custom_appliance"] is False
     assert features["has_lcd"] is False
     assert features["has_mcu"] is False
     assert features["has_copy_button"] is False
     assert features["has_sd_slot"] is False
     assert features["has_custom_hardware"] is False
+    assert features["lcd_resolution"]["spec"] == "N/A"

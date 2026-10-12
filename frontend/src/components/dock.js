@@ -2751,13 +2751,13 @@ export function initDraggableDesktopIcons() {
     const seen = new Set();
     defaultIds.forEach((id) => {
       const el = document.getElementById(id);
-      if (el) {
+      if (el && el.style.display !== 'none' && !el.classList.contains('hidden')) {
         elements.push({ id, el });
         seen.add(id);
       }
     });
     document.querySelectorAll('#desktop-icons-container .chassis-hero-box, .chassis-workbench-stage .chassis-hero-box').forEach((el) => {
-      if (el.id && !seen.has(el.id)) {
+      if (el.id && !seen.has(el.id) && el.style.display !== 'none' && !el.classList.contains('hidden')) {
         elements.push({ id: el.id, el });
         seen.add(el.id);
       }

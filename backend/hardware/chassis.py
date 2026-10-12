@@ -66,9 +66,11 @@ class ChassisEngine:
         product = cls._read_dmi_product_name().lower()
 
         # Check for known custom hardware brands / models
-        is_custom_appliance = bool(
-            "zettlab" in vendor or "aoostar" in vendor or any(k in product for k in ("d4", "d6", "d8", "wtr"))
+        is_zettlabs = bool(
+            "zettlab" in vendor
+            or any(k in product for k in ("d4", "d6", "d6u", "d6 ultra", "d8", "zettbox", "zettnas"))
         )
+        is_custom_appliance = bool(is_zettlabs or "aoostar" in vendor or any(k in product for k in ("wtr", "r1")))
 
         # LCD Framebuffer detection
         from backend.config import ENABLE_FB
@@ -81,6 +83,42 @@ class ChassisEngine:
                 or os.path.exists("/host/dev/fb0")
             )
         )
+
+        # LCD display resolution & geometry discovery
+        display_w, display_h, stride = 640, 172, 704
+        if has_lcd:
+            for base in (
+                os.path.join(HOST_SYS, "class/graphics/fb0") if HOST_SYS else None,
+                "/host/sys/class/graphics/fb0",
+                "/sys/class/graphics/fb0",
+            ):
+                if not base or not os.path.exists(base):
+                    continue
+                v_path = os.path.join(base, "virtual_size")
+                s_path = os.path.join(base, "stride")
+                if os.path.exists(v_path):
+                    try:
+                        with open(v_path, "r", encoding="utf-8", errors="replace") as f:
+                            parts = [int(x.strip()) for x in f.read().split(",") if x.strip()]
+                            if len(parts) == 2 and parts[0] > 0 and parts[1] > 0:
+                                display_w, display_h = max(parts), min(parts)
+                    except Exception:
+                        pass
+                if os.path.exists(s_path):
+                    try:
+                        with open(s_path, "r", encoding="utf-8", errors="replace") as f:
+                            s_val = int(f.read().strip())
+                            if s_val > 0:
+                                stride = s_val
+                    except Exception:
+                        pass
+
+        lcd_resolution = {
+            "width": display_w,
+            "height": display_h,
+            "stride": stride,
+            "spec": f"{display_w} × {display_h} IPS" if has_lcd else "N/A",
+        }
 
         # MCU / ARGB serial controller
         from backend.hardware.led import find_led_port
@@ -126,12 +164,14 @@ class ChassisEngine:
         return {
             "sys_vendor": cls._read_dmi_sys_vendor(),
             "product_name": cls._read_dmi_product_name(),
+            "is_zettlabs": is_zettlabs,
             "is_custom_appliance": is_custom_appliance,
             "has_lcd": has_lcd,
             "has_mcu": has_mcu,
             "has_copy_button": has_copy_button,
             "has_sd_slot": has_sd_slot,
             "has_custom_hardware": has_custom_hardware,
+            "lcd_resolution": lcd_resolution,
         }
 
     @classmethod

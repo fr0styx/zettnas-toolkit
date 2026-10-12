@@ -164,27 +164,39 @@ describe('Yak Wallpaper Switch, Card Reordering, and Dynamic Hardware Settings S
         <div id="mcu-status-pill" class="suite-pill hidden"><span class="pulse-dot"></span> MCU: <strong id="mcu-status-text">/dev/ttyACM0</strong></div>
         <div id="fb-status-pill" class="suite-pill hidden"><span class="pulse-dot"></span> FB: <strong id="fb-status-text">/dev/fb0 (640x172)</strong></div>
         <button id="drawer-toggle-btn" class="suite-toolkit-btn hidden">⚙ HARDWARE SETTINGS</button>
+        <div id="chassis-desktop-icon" class="chassis-hero-box chassis-desktop-icon" title="ZettNAS"></div>
+        <div class="chassis-front-panel" id="console-window">
+          <span class="chassis-screen-spec">640 × 172 IPS</span>
+          <div id="screen" class="hardware-screen-canvas" style="width: 640px; height: 172px;"></div>
+        </div>
       `;
     });
 
-    it('shows MCU pill, FB pill, and Hardware Settings button on ZETTLABS D6U / custom hardware equipment', () => {
+    it('shows MCU pill, FB pill, Hardware Settings button, and ZettNAS desktop icon on ZETTLABS D6U / custom hardware equipment', () => {
       const stats = {
         hardware: {
           sys_vendor: 'Zettlab',
           product_name: 'D6 Ultra',
+          is_zettlabs: true,
           is_custom_appliance: true,
           has_lcd: true,
           has_mcu: true,
           has_copy_button: true,
           has_sd_slot: true,
           has_custom_hardware: true,
+          lcd_resolution: {
+            width: 640,
+            height: 172,
+            stride: 704,
+            spec: '640 × 172 IPS',
+          },
         },
         peripherals: {
           fb_active: true,
           led_port: '/dev/ttyACM0',
           led_ready: true,
           has_custom_hardware: true,
-        }
+        },
       };
 
       updateHardwareTelemetry(stats);
@@ -193,32 +205,44 @@ describe('Yak Wallpaper Switch, Card Reordering, and Dynamic Hardware Settings S
       const fbPill = document.getElementById('fb-status-pill');
       const drawerBtn = document.getElementById('drawer-toggle-btn');
       const mcuText = document.getElementById('mcu-status-text');
+      const chassisIcon = document.getElementById('chassis-desktop-icon');
+      const fbText = document.getElementById('fb-status-text');
 
       expect(mcuPill.classList.contains('hidden')).toBe(false);
       expect(mcuText.textContent).toBe('/dev/ttyACM0');
       expect(fbPill.classList.contains('hidden')).toBe(false);
+      expect(fbText.textContent).toBe('/dev/fb0 (640x172)');
       expect(drawerBtn.classList.contains('hidden')).toBe(false);
       expect(drawerBtn.style.display).not.toBe('none');
+
+      // ZettNAS icon visible on Zettlabs D6U
+      expect(chassisIcon.style.display).not.toBe('none');
+      expect(chassisIcon.classList.contains('hidden')).toBe(false);
+      expect(chassisIcon.getAttribute('title')).toContain('640 × 172 IPS');
     });
 
-    it('hides MCU pill, FB pill, and Hardware Settings button on generic PC, Dell/HP servers, or VMs', () => {
+    it('hides MCU pill, FB pill, Hardware Settings button, and ZettNAS desktop icon on generic PC, Dell/HP servers, or VMs', () => {
       const stats = {
         hardware: {
           sys_vendor: 'Dell Inc.',
           product_name: 'PowerEdge R730',
+          is_zettlabs: false,
           is_custom_appliance: false,
           has_lcd: false,
           has_mcu: false,
           has_copy_button: false,
           has_sd_slot: false,
           has_custom_hardware: false,
+          lcd_resolution: {
+            spec: 'N/A',
+          },
         },
         peripherals: {
           fb_active: false,
           led_port: null,
           led_ready: false,
           has_custom_hardware: false,
-        }
+        },
       };
 
       updateHardwareTelemetry(stats);
@@ -226,11 +250,56 @@ describe('Yak Wallpaper Switch, Card Reordering, and Dynamic Hardware Settings S
       const mcuPill = document.getElementById('mcu-status-pill');
       const fbPill = document.getElementById('fb-status-pill');
       const drawerBtn = document.getElementById('drawer-toggle-btn');
+      const chassisIcon = document.getElementById('chassis-desktop-icon');
 
       expect(mcuPill.classList.contains('hidden')).toBe(true);
       expect(fbPill.classList.contains('hidden')).toBe(true);
       expect(drawerBtn.classList.contains('hidden')).toBe(true);
       expect(drawerBtn.style.display).toBe('none');
+
+      // ZettNAS icon hidden on generic hardware without physical LCD
+      expect(chassisIcon.style.display).toBe('none');
+      expect(chassisIcon.classList.contains('hidden')).toBe(true);
+    });
+
+    it('shows ZettNAS desktop icon and adapts display resolution when non-Zettlabs hardware has a physical LCD', () => {
+      const stats = {
+        hardware: {
+          sys_vendor: 'Supermicro',
+          product_name: 'Super Server',
+          is_zettlabs: false,
+          is_custom_appliance: false,
+          has_lcd: true,
+          has_mcu: false,
+          has_custom_hardware: true,
+          lcd_resolution: {
+            width: 480,
+            height: 320,
+            stride: 512,
+            spec: '480 × 320 IPS',
+          },
+        },
+        peripherals: {
+          fb_active: true,
+        },
+      };
+
+      updateHardwareTelemetry(stats);
+
+      const chassisIcon = document.getElementById('chassis-desktop-icon');
+      const fbText = document.getElementById('fb-status-text');
+      const specEl = document.querySelector('.chassis-screen-spec');
+      const screenEl = document.getElementById('screen');
+
+      // Visible because physical LCD is present
+      expect(chassisIcon.style.display).not.toBe('none');
+      expect(chassisIcon.getAttribute('title')).toContain('480 × 320 IPS');
+
+      // Adaptive display resolution for perfect display of data
+      expect(fbText.textContent).toBe('/dev/fb0 (480x320)');
+      expect(specEl.textContent).toBe('480 × 320 IPS');
+      expect(screenEl.style.width).toBe('480px');
+      expect(screenEl.style.height).toBe('320px');
     });
   });
 });

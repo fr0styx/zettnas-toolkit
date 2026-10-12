@@ -1317,9 +1317,9 @@ body.drawer-is-open .chassis-workbench-stage {
    HARDWARE SCREEN CANVAS (Pure 640x172 - Headless Capture Frame)
    ========================================================================= */
 #screen, #screen.hardware-screen-canvas {
-  width:640px;
-  height:172px;
-  background:var(--bg);
+  width: var(--screen-w, 640px);
+  height: var(--screen-h, 172px);
+  background: var(--bg);
   display:flex;
   flex-direction:column;
   justify-content:space-between;
