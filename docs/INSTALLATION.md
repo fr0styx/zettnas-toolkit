@@ -12,7 +12,8 @@ This document provides complete, step-by-step instructions for installing and ru
    - [Option B: Ubuntu / Debian / Generic Linux (Docker Compose)](#option-b-ubuntu--debian--generic-linux-docker-compose)
    - [Option C: FygoOS / Fygos NAS (App Center & Compose Stack)](#option-c-fygoos--fygos-nas-app-center--compose-stack)
    - [Option D: TrueNAS SCALE (Custom App / Compose)](#option-d-truenas-scale-custom-app--compose)
-   - [Option E: Standalone Docker CLI (`docker run`)](#option-e-standalone-docker-cli-docker-run)
+   - [Option E: UGOS (Ugreen NAS) & Observer Platforms](#option-e-ugos-ugreen-nas--observer-platforms)
+   - [Option F: Standalone Docker CLI (`docker run`)](#option-f-standalone-docker-cli-docker-run)
 4. [Hardware Device & Capability Mappings](#hardware-device--capability-mappings)
 5. [Headless Server Deployments (No LCD / ARGB)](#headless-server-deployments-no-lcd--argb)
 6. [Environment Variables Reference](#environment-variables-reference)
@@ -222,7 +223,45 @@ TrueNAS SCALE (Dragonfish & Electric Eel) supports custom Docker Compose applica
 
 ---
 
-### Option E: Standalone Docker CLI (`docker run`)
+### Option E: UGOS (Ugreen NAS) & Observer Platforms
+
+For **UGOS (Ugreen NAS OS)**, **FygoOS**, **ZettOS**, or **Proxmox VE**, ZettNAS Toolkit operates in **Non-Intrusive Observer Mode (`is_observer_mode = True`)**. It monitors storage pools, drive temperatures, S.M.A.R.T. health, and host metrics without modifying host configuration files or competing with native storage daemons.
+
+1. **Deploy Compose Stack**:
+   In UGOS Docker Manager or via SSH:
+   ```yaml
+   services:
+     zettnas-toolkit:
+       image: ghcr.io/fr0styx/zettnas-toolkit:latest
+       container_name: zettnas-toolkit
+       restart: unless-stopped
+       ports:
+         - "8082:8082"
+         - "8084:8084"
+       environment:
+         - PORT=8082
+         - ZETTNAS_OBSERVER_ADAPTER=ugos   # Explicitly set adapter or use 'auto'
+         - UPDATE_CHANNEL=stable
+       volumes:
+         - /proc:/host/proc:ro
+         - /sys:/host/sys:rw
+         - /dev:/host/dev:rw
+         - /volume1:/mnt/storage:rw
+         - /volume1/docker/zettnas/data:/app/data:rw
+         - /var/run/docker.sock:/var/run/docker.sock:ro
+       cap_add:
+         - SYS_RAWIO
+         - SYS_ADMIN
+       device_cgroup_rules:
+         - 'b 8:* rwm'
+         - 'b 259:* rwm'
+   ```
+
+2. Open `http://<ugos-ip>:8082`.
+
+---
+
+### Option F: Standalone Docker CLI (`docker run`)
 
 For rapid testing on any Linux host without Docker Compose:
 
@@ -306,6 +345,8 @@ ZettNAS Toolkit accesses physical hardware through Linux device nodes and `cgrou
 | `VM_ISO_DIR` | `/mnt/user/isos` | Directory for uploaded and downloaded guest ISO images |
 | `TAILSCALE_STATE_DIR` | `/app/data/tailscale` | State and configuration directory for embedded Tailscale mesh node |
 | `SFTP_PORT` | `2222` | Port for drop-in chrooted SFTP server |
+| `UPDATE_CHANNEL` | `stable` | Release update channel (`stable` for tagged releases, `edge` for latest main branch commits) |
+| `ZETTNAS_OBSERVER_ADAPTER` | `auto` | Force storage adapter mode (`auto`, `generic`, `fygoos`, `zettos`, `ugos`, `truenas`, `proxmox`, `unraid`) |
 
 ---
 
@@ -326,6 +367,14 @@ To expose ZettNAS Toolkit behind Nginx, Caddy, Traefik, or Cloudflare Tunnel:
 ---
 
 ## Upgrades & Maintenance
+
+### In-App Self-Updater (Web Desktop)
+Administrators can check for updates and trigger 1-click container self-updates directly from the Web Desktop:
+1. Open **Mission Control** → **System & Identity** → **System Updates**.
+2. Select your preferred channel:
+   - **Stable**: Official tagged production releases with changelog notes.
+   - **Edge**: Latest tested commits from the GitHub `main` branch.
+3. If an update is available, click **⚡ Update Now**. ZettNAS will pull the target container image via Docker socket, recreate the container, and verify daemon health.
 
 ### Upgrading via Docker Compose
 ```bash

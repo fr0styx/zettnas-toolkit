@@ -1,9 +1,43 @@
 # ZettNAS Toolkit - Release Changelog
 
 ## v1.8.0 (2026-10-13) - Stable
-### 💎 Enterprise Master Architecture: 7-Pillar Mission Control, Storage PAL, Thermal Watchdog & Frontend Acceleration
+### 💎 Enterprise Master Architecture: 7-Pillar Mission Control, Storage PAL, Dedicated Containers Window, Observer Mode & Self-Updater
 
-This comprehensive production milestone elevates ZettNAS Toolkit to consumer-grade enterprise maturity. Version 1.8.0 introduces the 7-Pillar Mission Control information architecture, advanced storage Platform Abstraction Layer (PAL) with Btrfs chunk allocation and OpenZFS pool member discovery, eMMC OS drive isolation for Zettlab D4 hardware, thermal fan watchdog scrub protections, QMP virtual machine block resize, real-time active listening socket telemetry, automated Samba sidecar user synchronization, full WAI-ARIA and WCAG 2.1 AA accessibility compliance, and complete 5-language dictionary parity (1,100 keys across EN, DE, ZH, FR, ES):
+This comprehensive production milestone elevates ZettNAS Toolkit to consumer-grade enterprise maturity. Version 1.8.0 introduces the 7-Pillar Mission Control information architecture, a dedicated Containers Desktop Window with bidirectional synchronization, the unified Option A UPS Power Integrity Cockpit, non-intrusive Observer Mode storage adapters for FygoOS, ZettOS, UGOS, TrueNAS SCALE, and Proxmox VE, an in-app self-updater with Stable vs. Edge channel selection, an automatic desktop icon collision avoidance and grid reallocation engine, advanced storage Platform Abstraction Layer (PAL) with Btrfs chunk allocation and OpenZFS pool member discovery, eMMC OS drive isolation for Zettlab D4 hardware, thermal fan watchdog scrub protections, QMP virtual machine block resize, real-time active listening socket telemetry, automated Samba sidecar user synchronization, full WAI-ARIA and WCAG 2.1 AA accessibility compliance, and complete 5-language dictionary parity (1,100 keys across EN, DE, ZH, FR, ES):
+
+- **Dedicated Containers Desktop Window & Dock Synchronization**:
+  - **Standalone Window App (`#containers-manager-window`)**: Registered with DockManager (`#i-chip`), taskbar, and Spotlight palette (`Cmd+K` -> `>containers`).
+  - **Permanent Desktop Icon**: Dedicated first-class desktop icon (`containers-desktop-icon`) anchored alongside Mission Control and Virtual Machines.
+  - **Two-Way Synchronization**: Seamless bidirectional sync between the dedicated Containers window and the embedded Mission Control Containers tab, featuring 1-click pop-out and return toggles.
+  - **Compose Stacks & App Catalog**: Full access to multi-container stack synthesis, live log streaming, container inspection, terminal console, and the 25+ 1-click app catalog from both surfaces.
+
+- **Unified UPS Power Integrity Cockpit (Option A)**:
+  - **Single-Screen Information Architecture**: Replaced multi-layer nested subtabs and drawers with a cohesive Power Cockpit in Mission Control (`#mgmt-pane-ups`).
+  - **2.5D Animated Digital Twin**: Dynamic SVG power flow visualizer (`#ups-flow-svg`) featuring animated electron particles showing real-time utility AC vs. battery energy flow.
+  - **Active Telemetry Grid**: Instant live status cards for battery charge %, estimated runtime, load wattage, line voltage, and operational state.
+  - **Inline Safe Shutdown Controls**: In-page policy configuration for battery percentage thresholds (5%–50%), runtime remaining minutes (2–30 min), and immediate graceful shutdown action toggles.
+  - **Interactive Battery Drills**: 1-click trigger buttons for on-demand UPS self-tests and simulated power outage drills with event logging.
+  - **Outage Event Ledger**: Historical table recording power events, grid failures, battery switchovers, and restoration timestamps.
+  - **Top-Bar Power Pill (`#top-ups-pill`)**: Real-time status badge with color-coded charging and battery level indicators for fast 1-click access from anywhere in the OS.
+  - **Universal NUT & APCUPSD Auto-Discovery**: Automatic fallback and detection across standard NUT daemons (port 3493) and Unraid APCUPSD daemons (`localhost:3551`).
+
+- **Universal Observer Mode Storage Adapters**:
+  - **Host OS Agnosticism**: Dedicated non-intrusive storage adapters for **FygoOS**, **ZettOS**, **UGOS (Ugreen NAS OS)**, **TrueNAS SCALE**, **Proxmox VE**, and **Generic Linux Observer**.
+  - **Non-Intrusive Telemetry (`is_observer_mode = True`)**: Discovers native storage pools, Btrfs subvolumes, ZFS vdevs, and drive topology without modifying host configs or interrupting host background services.
+  - **Dynamic Environment Override**: Optional manual adapter selection via `ZETTNAS_OBSERVER_ADAPTER` (`auto`, `generic`, `fygoos`, `zettos`, `ugos`, `truenas`, `proxmox`, `unraid`).
+
+- **Release Channel Opt-In & In-App Self-Updater**:
+  - **Stable vs. Edge Channels**: Administrators can choose between tagged production releases (**Stable**) or the latest GitHub commits (**Edge**) directly in Mission Control System & Identity.
+  - **Live Commit Inspection**: Compares running commit SHA against GitHub repository `origin/main` to surface available features and commit descriptions.
+  - **1-Click Self-Update Trigger (`POST /api/system/updates/apply`)**: Pulls target container image via Docker socket, orchestrates container recreation, and polls health check endpoints to ensure uninterrupted availability.
+
+- **Desktop Icon Collision Avoidance & Grid Alignment Engine**:
+  - **Spatial Collision Detection (`isPositionOccupied`)**: Computes Euclidean distance ($\Delta X < 80\text{px}$, $\Delta Y < 70\text{px}$) to identify overlapping icons.
+  - **Dynamic Slot Re-allocation (`findNextFreeSlot`)**: Automatically cascades colliding icons down the column (`top + 112px`), wrapping to adjacent columns if the screen height boundary is met.
+  - **Legacy Profile Migration**: Automatically migrates existing user browser profiles where icons were saved at legacy coordinates, eliminating overlaps between Containers, File Explorer, and Virtual Machines.
+  - **Drag & Drop Snapping Guard**: Dropping an icon on top of an existing icon automatically repels it to the nearest unoccupied grid slot.
+  - **Grid Snapping Guard**: `alignDesktopGrid()` tracks placed slots to prevent multiple icons from snapping into identical coordinates.
+  - **Shortcut Placement**: `calculateNextAvailablePosition()` inspects live DOM `.chassis-hero-box` elements, built-in definitions, and `localStorage` so newly added shortcuts never collide with existing apps.
 
 - **Mission Control Restructuring (The 7-Pillar Architecture)**:
   - **Seven Core Pillars**: Sidebar and HUB re-architected into 7 intuitive, discoverable domains: *Dashboard & Telemetry*, *Storage & Disks*, *Containers & Apps*, *Virtual Machines*, *Network & Sharing*, *Hardware & Power*, and *System & Identity*.
@@ -16,10 +50,9 @@ This comprehensive production milestone elevates ZettNAS Toolkit to consumer-gra
   - **eMMC OS Drive Isolation**: Automatic discovery and isolation of `/dev/mmcblk*` internal storage devices on Zettlab D4 and Aoostar appliances, preventing invalid and destructive SMART polling.
   - **Btrfs Chunk Allocation & Topology**: Accurate calculation of unallocated space, single vs raid1 metadata chunks, and data device usage.
   - **OpenZFS Physical Topology**: `zpool status -P` parsing into structured `PoolMember` objects with device paths, mirror groups, and vdev levels.
-  - **Observer Mode Adapters**: Dedicated storage adapters for TrueNAS SCALE and Proxmox VE operating in non-intrusive telemetry mode (`is_observer_mode = True`).
   - **Thermal Watchdog Scrub Safety**: Automatic Zero RPM inhibition during background Btrfs balances and ZFS scrubs to protect drives from overheating under sustained I/O load.
   - **Front Panel LCD & ARGB Subsystems**: Native 16bpp framebuffer auto-detection (`BGR;16`) for secondary LCD panels, ARGB speed double-inversion fix, and daytime lighting restore.
-  - **UPS Container Teardown Safety**: Preserved `zettnas-toolkit` container from sequential teardown during emergency AC power loss.
+  - **Zero-Wake Disk Safety**: All SMART and drive temperature queries strictly enforce `smartctl -n standby`, preserving disk spindown and platter sleep.
 
 - **Virtualization, Network & Sharing Hardening**:
   - **QMP VM Block Device Resize**: Explicit device ID assignment (`id=drive0`, `id=sdisk{idx}`) enabling reliable runtime disk expansion via QEMU QMP commands.
@@ -39,9 +72,9 @@ This comprehensive production milestone elevates ZettNAS Toolkit to consumer-gra
   - **100% 5-Language Parity**: 1,100 translation keys populated with 100% identical coverage across English, German, Simplified Chinese, French, and Spanish.
 
 - **Testing Pipeline & CI/CD Acceleration**:
-  - **Pytest Acceleration**: Argon2 test hashing optimizations and cached tokens reducing Pytest test execution times by > 50%.
+  - **Pytest Acceleration**: Argon2 test hashing optimizations and cached tokens reducing Pytest test execution times by > 50% across 620 tests.
   - **Isolated Worker Sandboxes**: Dynamic per-worker test sandboxes (`SANDBOX/data_{worker_id}`) enabling safe parallel test execution (`pytest -n auto`).
-  - **Vitest jsdom Optimization**: `pool: 'vmThreads'` and global canvas/ResizeObserver test polyfills reducing Vitest runtime by 65%.
+  - **Vitest jsdom Optimization**: `pool: 'vmThreads'` and global canvas/ResizeObserver test polyfills reducing Vitest runtime by 65% across 65 test files and 494 tests.
   - **Pre-Commit & Multi-Arch Hardening**: Container-aware path mapping in git pre-commit hooks, multi-arch `qemu-system-arm` Dockerfile provisioning, and GitHub Actions workflow concurrency controls.
 
 ## v1.7.0 (2026-10-12) - Stable

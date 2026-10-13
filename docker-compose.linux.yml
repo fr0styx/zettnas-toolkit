@@ -23,7 +23,7 @@ services:
       - /etc/hostname:/host/etc/hostname:ro
       
       # Storage root with bidirectional mount propagation
-      - /mnt/storage:/mnt/storage:rshared
+      - ${STORAGE_POOL_PATH:-/mnt/storage}:/mnt/storage:rw
       - /mnt/user:/mnt/user:rw
       - /var/local/emhttp:/var/local/emhttp:ro
       
@@ -42,6 +42,8 @@ services:
       - ENABLE_FB=1
       - LCD_FPS=10
       - NAS_NAME=${NAS_NAME:-}
+      - UPDATE_CHANNEL=${UPDATE_CHANNEL:-stable}
+      - ZETTNAS_OBSERVER_ADAPTER=${ZETTNAS_OBSERVER_ADAPTER:-auto}
     cap_add:
       - SYS_RAWIO
       - SYS_ADMIN

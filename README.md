@@ -21,19 +21,21 @@
 
 **ZettNAS Toolkit** (**NAS WORKBENCH**) is an enterprise-grade, hardware-agnostic orchestration platform, modern web desktop OS, and container/virtualization suite engineered for any NAS appliance or custom DIY homelab server (Aoostar, Zettlab, Fractal, Jonsbo, Supermicro, SilverStone) running Unraid, Debian, Ubuntu, TrueNAS SCALE, Proxmox, or Docker. It bridges low-level hardware intelligence with a fluid, multi-window desktop operating experience:
 
-* 🖥️ **Glassmorphic Web Desktop OS** — Fluid multi-window desktop with 8-zone Aero snap, macOS-style dock magnification, Spotlight command palette (`Cmd+K`), visual wallpaper gallery with drag-and-drop ingestion, and instant themes (Cyber Teal, Amber CRT, Emerald Matrix, Yak Bronze, and Pure OLED Black).
+* 🖥️ **Glassmorphic Web Desktop OS** — Fluid multi-window desktop with collision-free icon grid reallocation, 8-zone Aero snap, macOS-style dock magnification, Spotlight command palette (`Cmd+K`), visual wallpaper gallery, and instant themes (Cyber Teal, Amber CRT, Emerald Matrix, Yak Bronze, and Pure OLED Black).
+* 🐳 **Dedicated Containers Window & App Catalog** — Dedicated desktop window app (`#containers-manager-window`) with 2-way sync with Mission Control, Compose stack synthesis, live log streaming, interactive web terminal, and curated 25+ app catalog.
 * ⚡ **Virtual Machines & KVM Hypervisor** — Dedicated VM Manager desktop app (`#vm-manager-window`), dynamic elastic memory budgeting with safe host headroom calculation, curated 1-click official ISO catalog (Ubuntu, Debian, Alpine, Fedora, Windows, VirtIO), local drag-and-drop ISO ingestion, in-browser VNC web console (`#vm-console-window`), and 1-click SSH/VNC connection sheets.
+* 🔋 **Option A UPS Power Cockpit** — Unified single-screen Power Cockpit with 2.5D animated SVG digital twin (`#ups-flow-svg`), active telemetry grid, inline safe shutdown policy sliders, outage ledger, and top-bar status pill (`#top-ups-pill`).
+* 💾 **Universal Storage PAL & Observer Mode** — Platform Abstraction Layer (PAL) with non-intrusive Observer Mode adapters for FygoOS, ZettOS, UGOS, TrueNAS SCALE, Proxmox VE, and generic Linux; OpenZFS RAIDZ1/2/3, Btrfs RAID, Unraid array coexistence, and zero-wake ATA spindown safety (`smartctl -n standby`).
 * 📁 **File Explorer & Multi-Instance Grid** — Responsive Icon Grid View & sortable List View, multiple simultaneous window instances for cross-folder drag-and-drop, keyboard range selection (`Shift+Arrows`), non-destructive recursive directory merge (`CollisionPolicy.MERGE`), and trash/recycle bin handling.
+* 🔄 **In-App Self-Updater & Release Channels** — Administrators can inspect available updates and switch between Stable (official releases) and Edge (latest main branch commits) channels with 1-click container self-update.
 * ☁️ **Cloud Remote Gateway & In-App OAuth** — Direct in-app OAuth assistant with mobile QR pairing for OneDrive, Google Drive, Dropbox, Box, and Nextcloud; line-rate WebDAV server (Port `8084`); and FUSE cloud mounts.
 * 🌐 **Enterprise Networking & Zero-Trust Mesh** — Combined LAN throughput telemetry across physical NICs, 1-click Tailscale SSO with QR login, WireGuard mobile QR export, 802.1Q VLAN tagging, LACP link aggregation, and 30-second canary rollback watchdog.
 * 🛡️ **Enterprise Multi-User & Granular RBAC** — SQLite WAL user store (`users.db`), RFC 9106 Argon2id credential hashing, TOTP two-factor authentication (2FA), Reverse Proxy SSO (`X-Forwarded-User`), scoped API tokens with CIDR whitelisting, private `/homes/` isolation, and desktop auto-lock (`Cmd+L`).
 * ❄️ **Hardware HAL & Acoustic Zero-RPM Fans** — Dynamic Chassis Digital Twin (Aoostar, Zettlab D4/D6/D8, DIY), Zero RPM standby mode for spun-down drive bays, 6-point SVG fan curve designer, and hardware thermal watchdogs.
-* 💾 **Universal Storage, OpenZFS & Inbound SFTP** — Platform Abstraction Layer (PAL) with OpenZFS RAIDZ1/2/3 pool provisioning, Btrfs RAID, Unraid array coexistence, inbound chrooted SFTP server, WORM immutable ransomware snapshots, multi-protocol S.M.A.R.T. (SATA, NVMe, SAS, USB), and zero-wake ATA spindown safety (`smartctl -n standby`).
-* 🐳 **Docker Containers & Compose Stacks** — In-place Compose stack editor, live container log streaming, clickable update badges, 1-click batch updates with rollback protection, and curated 25+ app catalog.
 * 🔔 **Multi-Channel Alerts & 3-2-1 Hyper-Backup** — Unified Apprise alerting (Discord, Telegram, SMTP Email, ntfy, Pushover, Gotify, Webhooks), automated local/cloud snapshot schedules, retention pruning, and native NUT UPS emergency failsafes.
 * 📊 **Enterprise Standards: Redfish & SNMP** — Native DMTF Redfish REST API (`/redfish/v1/`) and SNMP v2c/v3 telemetry engine for unified homelab and enterprise infrastructure monitoring.
 * 📺 **Physical LCD & Media Automation** — Direct memory-mapped front-panel LCD rendering (`/dev/fb0`, 640×172), dynamic hardware button cycling, and front SD/TF card auto-detection with SHA-256 integrity verification.
-* 🌐 **Zero-Dependency Internationalization** — Full instant client-side localization across English, German, Simplified Chinese, French, and Spanish.
+* 🌐 **Zero-Dependency Internationalization** — Full instant client-side localization across English, German, Simplified Chinese, French, and Spanish with 100% dictionary parity.
 
 ---
 
@@ -58,9 +60,8 @@ When specialized appliance peripherals (physical front LCD, ARGB lightbar, or fr
 ## Installation & Deployment
 
 > [!IMPORTANT]  
-> [!IMPORTANT]  
 > **Default Credentials**: Username `admin` | Password `admin`  
-> *(You can update credentials or provision multi-user accounts anytime in **Mission Control** → **System & Security**).*
+> *(You can update credentials or provision multi-user accounts anytime in **Mission Control** → **System & Identity**).*
 
 ### 🚀 Quick Start (Docker Compose)
 
@@ -134,6 +135,8 @@ For complete endpoint specifications, parameter schemas, Server-Sent Events (SSE
 | **Cloud Remotes & WebDAV** | In-app OAuth assistant with mobile QR pairing, universal WebDAV port 8084 (`/api/webdav/*`), Rclone multi-cloud mounting (`/api/remotes/*`) for 20+ cloud backends (S3, B2, OneDrive, Google Drive). | [Details](docs/API.md#5-remote-cloud-storage--webdav) |
 | **Network, Virtual Switch & Mesh** | Combined LAN telemetry (`/api/network/combined-lan`), 1-click Tailscale mesh (`/api/network/tailscale/*`), WireGuard mobile QR export (`/api/network/wireguard/*`), 802.1Q VLANs & bonding. | [Details](docs/API.md#10-network-virtual-switch--mesh) |
 | **Hardware Controls & Fans** | 6-point fan curves & Zero RPM mode (`/api/fans`), WS2812B ARGB lightbar effects (`/api/led`), physical LCD brightness/pages (`/api/lcd/*`), S.M.A.R.T. tests (`/api/disk/*`). | [Details](docs/API.md#6-hardware-controls--diagnostics) |
+| **UPS & Power Integrity Cockpit** | Native NUT/APCUPSD telemetry (`/api/ups`), safe shutdown policies (`/api/system/ups/policy`), interactive drills (`/api/system/ups/drill`), and operating modes (`/api/system/ups/mode`). | [Details](docs/API.md#12-ups--power-integrity-cockpit) |
+| **System Updates & Self-Updater** | In-app release updates (`/api/system/updates`), 1-click self-update trigger (`/api/system/updates/apply`), and extended version & commit telemetry (`/api/system/about`). | [Details](docs/API.md#13-system-updates--self-updater) |
 | **Alerts & Hyper-Backup** | Apprise multi-channel alerts & test dispatch (`/api/notifications/*`), local/cloud snapshot schedules & 1-click restore (`/api/backup/*`), sanitized diagnostics bundle (`/api/system/diagnostics`). | [Details](docs/API.md#7-notifications-hyper-backup--diagnostics) |
 | **Media & Filesystem** | Icon grid & list view, multi-instance file manager, chunked file streaming (`/api/fs/upload`), front SD/TF auto-ingest (`/api/media_slots`, `/api/copy/*`), safe ejection. | [Details](docs/API.md#8-media-ingest--filesystem-management) |
 | **Enterprise Standards: Redfish & SNMP** | Out-of-band Redfish API (`/redfish/v1/Chassis/1/Thermal`, `/redfish/v1/Systems/1`), SNMP v2c/v3 telemetry daemon for enterprise observability platforms. | [Details](docs/API.md#11-enterprise-standards-redfish--snmp) |
@@ -148,15 +151,15 @@ The frontend is built with vanilla modern ES modules and bundled via Vite. The b
 ```bash
 npm install
 npm run build          # Compiles minified production assets to static/
-npm test               # Runs full Vitest + JSDOM frontend test suite (40 test files, 256 tests)
+npm test               # Runs full Vitest + JSDOM frontend test suite (65 test files, 494+ tests)
 npm run test:coverage  # Generates Vitest V8 code coverage report
 npm run dev            # Starts local Vite development server with hot module reload
 ```
 
 ### Backend Workflow & Pytest Suite
 ```bash
-# Run full Pytest test suite (422 unit and integration tests)
-docker exec -i zettnas-toolkit python3 -m pytest -q /mnt/user/appdata/zettnas-toolkit/tests
+# Run full Pytest test suite (620 unit and integration tests)
+docker exec -i zettnas-toolkit python3 -m pytest -q /app/tests
 
 # Run code style & formatting checks
 ruff check app.py backend tests

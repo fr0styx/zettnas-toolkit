@@ -212,6 +212,28 @@ Persistent scoped tokens can be provisioned and managed via `/api/tokens`.
 
 ---
 
+### 12. UPS & Power Integrity Cockpit
+
+| Endpoint | Method | Auth / Scope | Description |
+| :--- | :---: | :---: | :--- |
+| `/api/ups` | `GET` | `system:read` | Query active NUT or APCUPSD UPS status, battery %, load, runtime, and utility line voltage. |
+| `/api/system/ups/mode` | `GET` | `system:read` | Query detected UPS mode, driver daemon type, and connection endpoint. |
+| `/api/system/ups/mode` | `POST` | `system:admin`| Configure manual or auto UPS connection parameters (`nut_host`, `nut_port`, `nut_name`). |
+| `/api/system/ups/policy` | `POST` | `system:admin`| Save safe shutdown policies: battery threshold % (5%–50%), runtime remaining minutes (2–30 min), and immediate shutdown toggle. |
+| `/api/system/ups/drill` | `POST` | `system:admin`| Trigger interactive UPS drill: `self_test` (battery self-test) or `simulate_outage` (dry-run outage alert logging). |
+
+---
+
+### 13. System Updates & Self-Updater
+
+| Endpoint | Method | Auth / Scope | Description |
+| :--- | :---: | :---: | :--- |
+| `/api/system/updates` | `GET` | `system:read` | Query available releases across `stable` (GitHub Releases) and `edge` (GitHub `main` branch commits) channels. |
+| `/api/system/updates/apply` | `POST` | `system:manage` | Pull target Docker image and trigger seamless container recreation via Docker socket with health polling. |
+| `/api/system/about` | `GET` | Public | System identity information including `version`, `commit_sha`, `commit_short`, `branch`, `channel`, and `build_timestamp`. |
+
+---
+
 ## Response Formats & Error Handling
 
 Standard responses are returned as `application/json`. Errors adhere to standard HTTP status codes:

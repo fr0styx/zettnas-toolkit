@@ -37,6 +37,8 @@ services:
       - HOST_PROC=/host/proc
       - HOST_SYS=/host/sys
       - HOST_DEV=/host/dev
+      - UPDATE_CHANNEL=${UPDATE_CHANNEL:-stable}
+      - ZETTNAS_OBSERVER_ADAPTER=${ZETTNAS_OBSERVER_ADAPTER:-auto}
     tmpfs:
       - /host/sys/firmware:ro
       - /host/sys/kernel/debug:ro

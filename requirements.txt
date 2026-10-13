@@ -1,6 +1,6 @@
 Pillow==12.3.0
 playwright==1.63.0
-fastapi==0.143.0
+fastapi>=0.142.0
 uvicorn==0.54.0
 sse-starlette==3.5.0
 aiofiles==25.1.0

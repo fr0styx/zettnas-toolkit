@@ -96,6 +96,21 @@ The application starts four persistent background daemon threads upon startup vi
   1. Exposes standard in-memory Redfish endpoints (`/redfish/v1/Chassis/1/Thermal`, `/redfish/v1/Systems/1`, `/redfish/v1/Storage/1`) backed directly by the live telemetry state cache with zero subprocess forks.
   2. Implements standard MIB counters for automated ingestion into homelab and enterprise infrastructure monitoring tools.
 
+### 2.7 Storage Platform Abstraction Layer (PAL) & Observer Mode
+- **Adapters**: Unraid Array, Btrfs Active Provisioner, OpenZFS Engine, and Non-Intrusive Observer Mode adapters for FygoOS, ZettOS, UGOS (Ugreen NAS), TrueNAS SCALE, Proxmox VE, and Generic Linux.
+- **Responsibilities & Invariants**:
+  1. `is_observer_mode = True`: Discovers storage pools and volume topology without modifying host partitions or background services.
+  2. Spindown Safety: Strictly enforces `smartctl -n standby` (exit code 2) to prevent waking sleeping drive platters.
+  3. eMMC OS Drive Isolation: Auto-detects internal `/dev/mmcblk*` boot flash on Zettlab D4 hardware to avoid invalid S.M.A.R.T. commands.
+  4. Scrub Thermal Watchdog: Automatically suppresses Zero RPM fan modes during active filesystem scrubs and balances.
+
+### 2.8 In-App Self-Updater & Release Orchestration
+- **Dual Channels**: `stable` (official tagged releases) and `edge` (latest commits from GitHub `main`).
+- **Responsibilities**:
+  1. Inspects remote GitHub repository releases and commit SHAs without third-party dependencies.
+  2. Communicates with Docker Engine API over `/var/run/docker.sock` to pull updated image layers.
+  3. Spawns transient self-updater helper process to gracefully recreate the container with identical volume mounts and port bindings.
+
 ---
 
 ## 3. Data Persistence & State Model
@@ -137,5 +152,11 @@ The application starts four persistent background daemon threads upon startup vi
   - Uses a `MutationObserver` to automatically attach `role="button"`, `tabindex="0"`, and `aria-label` attributes across windows, modal triggers, and dock controls.
 - **Window Management & Docking (`frontend/src/components/dock.js`)**:
   - Full desktop windowing subsystem supporting drag, minimize to dock, restore, bring-to-front z-index stacking, and live window hover previews.
+- **Desktop Spatial Collision Avoidance & Grid Engine (`frontend/src/components/dock.js`)**:
+  - Computes spatial clearance ($\Delta X < 80\text{px}$, $\Delta Y < 70\text{px}$) to identify overlapping desktop icons.
+  - Dynamic slot reallocation (`findNextFreeSlot`) automatically cascades colliding icons down vertical grid columns without stacking.
+  - Snapping guard prevents multiple icons from dropping or snapping into identical grid slots.
+- **Keyed DOM Reconciliation Engine (`reconcileKeyedTable`)**:
+  - Preserves table row elements and selection state across telemetry polling cycles with pre-pruning of stale nodes.
 - **Frontend Testing Infrastructure**:
   - Unit tested with Vitest + JSDOM (`npm test`), verifying event handling, DOM diffing, and accessibility compliance.
