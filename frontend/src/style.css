@@ -12978,6 +12978,13 @@ body.theme-yak .input-modern:focus {
   transition: opacity 0.3s ease;
 }
 
+.ups-cockpit-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
 @media (max-width: 768px) {
   .ups-power-flow-container {
     flex-direction: column;
@@ -12989,6 +12996,9 @@ body.theme-yak .input-modern:focus {
   }
   .ups-flow-card {
     width: 100%;
+  }
+  .ups-cockpit-grid {
+    grid-template-columns: 1fr !important;
   }
 }
 

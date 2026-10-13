@@ -138,8 +138,20 @@ export function applyWidgetConfig() {
   if (wStorage) wStorage.style.display = config.widgets.storage ? 'block' : 'none';
   if (wUptime) wUptime.style.display = config.widgets.uptime ? 'block' : 'none';
   if (wDriveTemp) wDriveTemp.style.display = config.widgets.drive_temp !== false ? 'block' : 'none';
-  if (wNetDial) wNetDial.style.display = config.widgets.net_dial !== false ? 'block' : 'none';
-  if (wUpsGauge) wUpsGauge.style.display = config.widgets.ups_gauge !== false ? 'block' : 'none';
+  if (wUpsGauge) {
+    wUpsGauge.style.display = config.widgets.ups_gauge !== false ? 'block' : 'none';
+    if (!wUpsGauge.dataset.boundClick) {
+      wUpsGauge.dataset.boundClick = '1';
+      wUpsGauge.style.cursor = 'pointer';
+      wUpsGauge.title = 'Click to open Power & Battery Cockpit';
+      wUpsGauge.addEventListener('click', (e) => {
+        if (e.target.closest('.widget-handle') || e.target.closest('.widget-close') || e.target.closest('button')) return;
+        if (typeof window.openManagementWindow === 'function') {
+          window.openManagementWindow('mgmt-sec-ups');
+        }
+      });
+    }
+  }
 
   // Reorganize desktop widgets in the EXACT same order on the desktop ONLY if order differs
   const order = Array.isArray(config.order) && config.order.length ? config.order : DEFAULT_CONFIG.order;
@@ -1547,6 +1559,19 @@ export function initWidgets() {
       if (upsBadge) {
         upsBadge.textContent = status.includes('OB') || status.includes('BATT') ? 'ON BATT' : 'ONLINE';
         upsBadge.style.color = status.includes('OB') ? 'var(--warn, #f5a623)' : 'var(--ok2, #25c2a0)';
+      }
+
+      const wUpsGauge = document.getElementById('widget-ups-gauge');
+      if (wUpsGauge && !wUpsGauge.dataset.boundClick) {
+        wUpsGauge.dataset.boundClick = '1';
+        wUpsGauge.style.cursor = 'pointer';
+        wUpsGauge.title = 'Click to open Power & Battery Cockpit';
+        wUpsGauge.addEventListener('click', (e) => {
+          if (e.target.closest('.widget-handle') || e.target.closest('.widget-close') || e.target.closest('button')) return;
+          if (typeof window.openManagementWindow === 'function') {
+            window.openManagementWindow('mgmt-sec-ups');
+          }
+        });
       }
     }
   });

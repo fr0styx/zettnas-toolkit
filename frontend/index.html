@@ -152,6 +152,10 @@
               'mgmt-sec-docker': 'mgmt-sec-docker',
               'mgmt-pane-docker': 'mgmt-sec-docker',
               'mgmt-sec-ups': 'mgmt-sec-ups',
+              'mgmt-pane-ups': 'mgmt-sec-ups',
+              'mgmt-pane-hardware-ups': 'mgmt-sec-ups',
+              'ups': 'mgmt-sec-ups',
+              'power': 'mgmt-sec-ups',
               'mgmt-sec-system-group': 'mgmt-sec-system-group',
               'mgmt-sec-security': 'mgmt-sec-system-group',
               'mgmt-pane-security': 'mgmt-sec-system-group',
@@ -553,6 +557,7 @@
       <div id="unraid-mover-pill" class="suite-pill hidden"><span class="pulse-dot" style="background:var(--warn,#f5a623);box-shadow:0 0 6px var(--warn,#f5a623)"></span> <span data-i18n="nav.mover">Mover</span>: <strong id="unraid-mover-status">Active</strong></div>
       <div id="mcu-status-pill" class="suite-pill hidden"><span class="pulse-dot"></span> MCU: <strong id="mcu-status-text">/dev/ttyACM0</strong></div>
       <div id="fb-status-pill" class="suite-pill hidden"><span class="pulse-dot"></span> FB: <strong id="fb-status-text">/dev/fb0 (640x172)</strong></div>
+      <div id="topbar-ups-pill" class="suite-pill hidden" style="cursor:pointer;" title="Click to open Power & Battery Cockpit"><span class="pulse-dot" id="topbar-ups-dot" style="background:var(--ok2,#25c2a0);box-shadow:0 0 6px var(--ok2,#25c2a0)"></span> <span data-i18n="nav.ups">UPS</span>: <strong id="topbar-ups-text">--%</strong></div>
       <select id="suite-lang-select" class="language-picker-select tz-select-input" title="Select Display Language" style="width: auto; padding: 2px 6px; font-size: 11px; height: 26px; border-radius: 6px; cursor: pointer;">
         <option value="en">🇺🇸 EN</option>
         <option value="de">🇩🇪 DE</option>
@@ -2222,150 +2227,10 @@
 
 </aside>
 
-<!-- UPS Configuration Drawer -->
+<!-- Legacy Slide-Drawer Fallback / Testing Stubs (Hidden) -->
 <div id="ups-drawer-overlay" class="drawer-backdrop" style="display:none;"></div>
-<aside id="ups-config-drawer" class="slide-drawer" style="display:none; z-index:7100;">
-  <div class="drawer-header">
-    <div>
-      <div class="drawer-sub">ZettNAS • <span data-i18n="mgmt.ups_drawer_badge">POWER INTEGRITY</span></div>
-      <h2 class="drawer-title" data-i18n="mgmt.ups_drawer_title">UPS & Safe Shutdown Settings</h2>
-      <p class="drawer-subdesc" data-i18n="mgmt.ups_drawer_desc">Manage UPS drivers, battery thresholds, and automated atomic powerdown policies.</p>
-    </div>
-    <button id="btn-close-ups-drawer" class="btn-icon">✕</button>
-  </div>
-
-  <div class="drawer-cards-flow" style="padding: 16px 0; display:flex; flex-direction:column; gap:16px;">
-    <!-- 1-Click Auto Discovery -->
-    <div class="drawer-card">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-        <span style="font-weight:600; font-size:13px;" data-i18n="mgmt.ups_autodiscover_title">🔍 Hardware Auto-Discovery</span>
-        <button id="btn-ups-discover" class="btn-pill-toggle" data-i18n="mgmt.ups_btn_scan">Scan Hardware</button>
-      </div>
-      <p style="font-size:12px; color:var(--muted); margin:0 0 10px 0;" data-i18n="mgmt.ups_autodiscover_desc">Scans local USB HID ports and Docker host gateway for active power daemons.</p>
-      <div id="ups-discover-candidates" style="display:flex; flex-direction:column; gap:6px;"></div>
-    </div>
-
-    <!-- Operating Mode Selection -->
-    <div class="drawer-card">
-      <label style="font-weight:600; font-size:13px; display:block; margin-bottom:8px;" data-i18n="mgmt.ups_mode_title">Operating Mode</label>
-      <div class="ups-mode-chooser-grid">
-        <label class="ups-mode-option">
-          <input type="radio" name="ups-mode" value="auto" checked>
-          <span class="ups-mode-box">
-            <strong>Auto-Detect</strong>
-            <small>Probes apcupsd & NUT</small>
-          </span>
-        </label>
-        <label class="ups-mode-option">
-          <input type="radio" name="ups-mode" value="apcupsd_client">
-          <span class="ups-mode-box">
-            <strong>APCUPSD</strong>
-            <small>Unraid host :3551</small>
-          </span>
-        </label>
-        <label class="ups-mode-option">
-          <input type="radio" name="ups-mode" value="nut_client">
-          <span class="ups-mode-box">
-            <strong>NUT Client</strong>
-            <small>Network Tools :3493</small>
-          </span>
-        </label>
-        <label class="ups-mode-option">
-          <input type="radio" name="ups-mode" value="usb_hid">
-          <span class="ups-mode-box">
-            <strong>Direct USB</strong>
-            <small>USB HID cable</small>
-          </span>
-        </label>
-      </div>
-    </div>
-
-    <!-- Connection Details -->
-    <div class="drawer-card" id="ups-drawer-conn-card">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-        <span style="font-weight:700; font-size:13px; color:#f1f5f9;" data-i18n="mgmt.ups_conn_title">Connection Parameters</span>
-        <span id="ups-conn-disabled-badge" class="suite-badge" style="font-size:10px; display:none; color:var(--muted); border-color:rgba(255,255,255,0.15);" data-i18n="mgmt.ups_conn_not_required">Not required for Direct USB</span>
-      </div>
-      <div style="display:grid; grid-template-columns: 2fr 1fr; gap:12px; margin-bottom:12px;">
-        <div>
-          <label class="drawer-field-label" data-i18n="mgmt.ups_field_host">Host / IP</label>
-          <input type="text" id="ups-cfg-host" class="input-modern" placeholder="127.0.0.1" value="127.0.0.1">
-        </div>
-        <div>
-          <label class="drawer-field-label" data-i18n="mgmt.ups_field_port">Port</label>
-          <input type="number" id="ups-cfg-port" class="input-modern" placeholder="3551" value="3551">
-        </div>
-      </div>
-      <div style="margin-bottom:12px;">
-        <label class="drawer-field-label" data-i18n="mgmt.ups_field_name">UPS Name (NUT only)</label>
-        <input type="text" id="ups-cfg-name" class="input-modern" placeholder="ups" value="ups">
-      </div>
-      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
-        <div>
-          <label class="drawer-field-label" data-i18n="mgmt.ups_field_user">Username</label>
-          <input type="text" id="ups-cfg-user" class="input-modern" placeholder="Optional">
-        </div>
-        <div>
-          <label class="drawer-field-label" data-i18n="mgmt.ups_field_pass">Password</label>
-          <input type="password" id="ups-cfg-pass" class="input-modern" placeholder="••••••••">
-        </div>
-      </div>
-      <div style="margin-top:14px; display:flex; justify-content:flex-end;">
-        <button id="btn-ups-test-conn" class="btn-pill-toggle" style="padding:6px 14px; font-weight:600; display:inline-flex; align-items:center; gap:6px;" data-i18n="mgmt.ups_btn_test_conn">🔌 Test Connection</button>
-      </div>
-    </div>
-
-    <!-- Safe Powerdown Policy -->
-    <div class="drawer-card">
-      <div style="font-weight:700; font-size:13px; color:#f1f5f9; margin-bottom:12px;" data-i18n="mgmt.ups_policy_title">Safe Shutdown Policy</div>
-      <div style="display:flex; flex-direction:column; gap:12px; margin-bottom:14px;">
-        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-          <input type="radio" name="ups-policy" value="runtime_left" checked style="accent-color:var(--ok2, #25c2a0); width:16px; height:16px; cursor:pointer;">
-          <span style="font-size:12.5px; font-weight:600; color:var(--fg, #f1f5f9);"><strong data-i18n="mgmt.ups_policy_runtime">Shutdown when Estimated Runtime drops below:</strong></span>
-        </label>
-        <div style="display:flex; align-items:center; gap:12px; padding-left:24px;">
-          <input type="range" id="ups-slider-runtime" min="2" max="25" step="1" value="5" class="custom-slider" style="flex:1;">
-          <span id="ups-val-runtime" class="slider-val-badge">5 min</span>
-        </div>
-
-        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-top:4px;">
-          <input type="radio" name="ups-policy" value="battery_pct" style="accent-color:var(--ok2, #25c2a0); width:16px; height:16px; cursor:pointer;">
-          <span style="font-size:12.5px; font-weight:600; color:var(--fg, #f1f5f9);"><strong data-i18n="mgmt.ups_policy_batt">Shutdown when Battery Charge drops below:</strong></span>
-        </label>
-        <div style="display:flex; align-items:center; gap:12px; padding-left:24px;">
-          <input type="range" id="ups-slider-battery" min="10" max="50" step="5" value="20" class="custom-slider" style="flex:1;">
-          <span id="ups-val-battery" class="slider-val-badge">20 %</span>
-        </div>
-
-        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-top:4px;">
-          <input type="radio" name="ups-policy" value="timer" style="accent-color:var(--ok2, #25c2a0); width:16px; height:16px; cursor:pointer;">
-          <span style="font-size:12.5px; font-weight:600; color:var(--fg, #f1f5f9);"><strong data-i18n="mgmt.ups_policy_timer">Shutdown after Time on Battery exceeds:</strong></span>
-        </label>
-        <div style="display:flex; align-items:center; gap:12px; padding-left:24px;">
-          <input type="range" id="ups-slider-timer" min="60" max="900" step="30" value="300" class="custom-slider" style="flex:1;">
-          <span id="ups-val-timer" class="slider-val-badge">300 sec</span>
-        </div>
-      </div>
-
-      <!-- Failsafe Toggles -->
-      <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top:14px; display:flex; flex-direction:column; gap:12px;">
-        <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
-          <label for="ups-chk-docker" style="font-size:12px; font-weight:500; color:var(--fg, #eaf1f8); cursor:pointer; flex:1;" data-i18n="mgmt.ups_chk_docker">Gracefully terminate Docker database containers (flush WAL)</label>
-          <label class="switch"><input type="checkbox" id="ups-chk-docker" checked><span class="toggle-slider"></span></label>
-        </div>
-        <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
-          <label for="ups-chk-cutpower" style="font-size:12px; font-weight:500; color:var(--fg, #eaf1f8); cursor:pointer; flex:1;" data-i18n="mgmt.ups_chk_cutpower">Send cut-power command to UPS on halt (load.off.delay)</label>
-          <label class="switch"><input type="checkbox" id="ups-chk-cutpower"><span class="toggle-slider"></span></label>
-        </div>
-      </div>
-    </div>
-
-    <!-- Auto-save notification note -->
-    <div style="display:flex; justify-content:space-between; align-items:center; padding:2px 4px 6px; margin-top:2px;">
-      <span style="font-size:11px; color:var(--muted); opacity:0.8;">⚡ All parameters and thresholds save automatically.</span>
-      <span id="ups-save-status" class="ups-save-badge" style="display:none;" data-i18n="mgmt.ups_auto_saved">✓ Saved</span>
-    </div>
-  </div>
+<aside id="ups-config-drawer" class="slide-drawer" style="display:none;">
+  <button id="btn-close-ups-drawer" style="display:none;"></button>
 </aside>
 
 <div id="folder-browser-modal" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="folder-browser-title">
@@ -2670,10 +2535,15 @@
             <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_network">Network & Sharing</span>
             <span class="mgmt-sidebar-badge" id="mgmt-sidebar-net-badge" style="display:none;">Online</span>
           </button>
-          <!-- Pillar 6: Hardware & Power -->
-          <button class="mgmt-sidebar-item" role="tab" aria-selected="false" data-mgmt-target="mgmt-sec-hardware" title="Hardware & Power">
+          <!-- Pillar 6: Hardware & Profiles -->
+          <button class="mgmt-sidebar-item" role="tab" aria-selected="false" data-mgmt-target="mgmt-sec-hardware" title="Hardware & Profiles">
             <svg class="mgmt-sidebar-svg"><use href="#i-sliders"/></svg>
-            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_hardware">Hardware & Power</span>
+            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_hardware">Hardware & Profiles</span>
+          </button>
+          <!-- Pillar 7: Power & Battery -->
+          <button class="mgmt-sidebar-item" role="tab" aria-selected="false" data-mgmt-target="mgmt-sec-ups" title="Power & Battery">
+            <svg class="mgmt-sidebar-svg"><use href="#i-bolt"/></svg>
+            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_ups">Power & Battery</span>
             <span class="mgmt-sidebar-badge" id="mgmt-sidebar-ups-badge" style="display:none;">Power</span>
           </button>
           <!-- Pillar 7: System & Identity -->
@@ -2774,20 +2644,37 @@
             </div>
           </div>
 
-          <!-- Pillar 6: Hardware & Power -->
+          <!-- Pillar 6: Hardware & Profiles -->
           <div class="mgmt-app-card" data-mgmt-target="mgmt-sec-hardware" role="button" tabindex="0">
             <div class="mgmt-app-icon-wrap" style="background:rgba(37,194,160,0.12); color:var(--ok2); border-color:rgba(37,194,160,0.3);">
               <svg class="mgmt-app-svg"><use href="#i-sliders"/></svg>
             </div>
             <div class="mgmt-app-info">
               <div class="mgmt-app-title-row">
-                <span class="mgmt-app-title" data-i18n="mgmt.hub_hardware_title">Hardware & Power</span>
-                <span class="mgmt-app-pill" style="background:rgba(37,194,160,0.15); color:var(--ok2);" data-i18n="mgmt.hub_hardware_pill">Acoustics & Power</span>
+                <span class="mgmt-app-title" data-i18n="mgmt.hub_hardware_title">Hardware & Profiles</span>
+                <span class="mgmt-app-pill" style="background:rgba(37,194,160,0.15); color:var(--ok2);" data-i18n="mgmt.hub_hardware_pill">Acoustics & Host</span>
               </div>
-              <p class="mgmt-app-desc" data-i18n="mgmt.hub_hardware_desc">Acoustic fan curves, hardware performance profiles, host subsystem monitoring, and UPS battery protection.</p>
+              <p class="mgmt-app-desc" data-i18n="mgmt.hub_hardware_desc">Acoustic fan curves, hardware performance profiles, host subsystem monitoring, and chassis thermal tuning.</p>
             </div>
             <div class="mgmt-app-footer">
               <span class="mgmt-app-action" data-i18n="mgmt.hub_hardware_action">Tune Hardware ➔</span>
+            </div>
+          </div>
+
+          <!-- Pillar 7: Power & Battery -->
+          <div class="mgmt-app-card" data-mgmt-target="mgmt-sec-ups" role="button" tabindex="0">
+            <div class="mgmt-app-icon-wrap" style="background:rgba(245,166,35,0.12); color:var(--warn,#f5a623); border-color:rgba(245,166,35,0.3);">
+              <svg class="mgmt-app-svg"><use href="#i-bolt"/></svg>
+            </div>
+            <div class="mgmt-app-info">
+              <div class="mgmt-app-title-row">
+                <span class="mgmt-app-title" data-i18n="mgmt.hub_ups_title">Power & Battery</span>
+                <span class="mgmt-app-pill" style="background:rgba(245,166,35,0.15); color:var(--warn,#f5a623);" id="mgmt-hub-ups-pill" data-i18n="mgmt.hub_ups_pill">Online</span>
+              </div>
+              <p class="mgmt-app-desc" data-i18n="mgmt.hub_ups_desc">Real-time 2.5D power flow digital twin, battery runtime reserve, safe shutdown automation, and outage ledger.</p>
+            </div>
+            <div class="mgmt-app-footer">
+              <span class="mgmt-app-action" data-i18n="mgmt.hub_ups_action">Inspect Power ➔</span>
             </div>
           </div>
 
@@ -4493,10 +4380,6 @@
                 <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-screen"/></svg>
                 <span data-i18n="mgmt.subtab_hardware_lcd">Front LCD Screen</span>
               </button>
-              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-hardware-ups">
-                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-storage"/></svg>
-                <span data-i18n="mgmt.subtab_hardware_ups">UPS & Battery</span>
-              </button>
             </div>
 
             <div id="mgmt-pane-unraid" class="mgmt-tab-pane" style="display: block;">
@@ -4749,46 +4632,26 @@
                 </div>
               </div>
             </div>
-
-            <!-- Sub-tab 5: UPS & Power Subpane -->
-            <div id="mgmt-pane-hardware-ups" class="mgmt-tab-pane" style="display: none;">
-              <div class="mgmt-card-intro" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-                <div>
-                  <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-storage"/></svg> <span data-i18n="mgmt.subtab_hardware_ups">UPS Battery & Power Flow Telemetry</span></div>
-                  <div class="mgmt-card-intro-desc">Native Network UPS Tools (NUT) TCP client, real-time load wattage, battery charge, and ACPI safe powerdown.</div>
-                </div>
-                <button class="btn-pill-toggle" id="btn-open-full-ups-view">⚡ <span data-i18n="mgmt.hub_ups_action">Full UPS Suite ➔</span></button>
-              </div>
-              <div class="mgmt-detail-body">
-                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
-                  <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <div style="font-weight: 700; font-size: 13px; color: #fff;">Power Outage Protection</div>
-                    <span class="ci-badge" style="background: rgba(245,166,35,0.15); color: var(--warn); border: 1px solid rgba(245,166,35,0.3); font-size: 10px; font-weight: 700;">NUT TCP (3493)</span>
-                  </div>
-                  <div style="font-size: 11.5px; color: var(--muted); line-height: 1.5;">
-                    Communicates directly with the local or networked Network UPS Tools (NUT) daemon. Provides automated graceful unmounting and host shutdown before battery depletion.
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
 
-          <!-- 4. UPS & Power -->
+          <!-- 4. Power & Battery Cockpit -->
           <div id="mgmt-sec-ups" class="mgmt-detail-card" style="display: none;">
             <div class="mgmt-card-intro" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
               <div>
                 <div class="mgmt-card-intro-title">
-                  <svg class="ic"><use href="#i-storage"/></svg>
-                  <span data-i18n="mgmt.ups_sec_title">UPS & Power Integrity Telemetry</span>
+                  <svg class="ic"><use href="#i-bolt"/></svg>
+                  <span data-i18n="mgmt.ups_sec_title">Power & Battery Integrity Cockpit</span>
                 </div>
                 <div class="mgmt-card-intro-desc" data-i18n="mgmt.ups_sec_desc">
                   Universal power orchestration suite with real-time digital twin, multi-protocol HAL, and atomic safe shutdown.
                 </div>
               </div>
-              <div style="display:flex; align-items:center; gap:8px;">
-                <button class="btn-pill-toggle" id="btn-open-ups-config" title="Configure UPS and power policies" data-i18n="mgmt.ups_btn_config">⚙️ Configure UPS</button>
+              <div style="display:flex; align-items:center; flex-wrap:wrap; gap:8px;">
+                <button class="btn-pill-toggle" id="btn-ups-discover" title="Scan local USB ports and host gateway for power daemons" data-i18n="mgmt.ups_btn_scan">🔍 Scan Hardware</button>
                 <button class="btn-pill-toggle" id="btn-run-ups-selftest" title="Trigger 10s diagnostic battery self-test" data-i18n="mgmt.ups_btn_selftest">🔋 Self-Test</button>
+                <button class="btn-pill-toggle" id="btn-ups-simulate" title="Simulate 15s power outage drill" data-i18n="mgmt.ups_btn_simulate">⚠️ Simulate Drill</button>
                 <button class="btn-pill-toggle" id="btn-refresh-ups" title="Refresh UPS Telemetry" data-i18n="mgmt.refresh">🔄 Refresh</button>
+                <button id="btn-open-ups-config" style="display:none;" aria-hidden="true"></button>
               </div>
             </div>
 
@@ -4804,7 +4667,7 @@
               </div>
             </div>
 
-            <!-- 2.5D Power Flow Digital Twin -->
+            <!-- Tier 1: 2.5D Power Flow Digital Twin -->
             <div class="ups-power-flow-container" id="ups-power-flow-container">
               <div class="ups-flow-card" id="ups-card-grid">
                 <div class="ups-card-status-dot active" id="ups-grid-dot"></div>
@@ -4855,41 +4718,190 @@
               </div>
             </div>
 
-            <!-- Detailed Telemetry Grid -->
-            <div class="mgmt-detail-body" style="margin-top: 18px;">
-              <div class="unraid-details-grid">
-                <div class="unraid-detail-item">
-                  <span class="udi-label" data-i18n="mgmt.ups_daemon_status">Power Daemon Status</span>
-                  <span class="udi-val" id="mgmt-ups-status" style="color:var(--ok2);">ONLINE</span>
+            <!-- Tier 2: Split Workstation Grid (Side-by-Side) -->
+            <div id="ups-cockpit-config-section" class="ups-cockpit-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(360px, 1fr)); gap:16px; margin-top:16px;">
+              
+              <!-- Column 1: Inverter Telemetry & Connection Driver -->
+              <div class="drawer-card" style="display:flex; flex-direction:column; gap:14px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <div style="font-weight:700; font-size:13px; color:#fff; display:flex; align-items:center; gap:6px;">
+                    <svg class="ic" style="width:14px; height:14px; color:var(--ok2, #25c2a0);"><use href="#i-bolt"/></svg>
+                    <span>Inverter & Line Telemetry</span>
+                  </div>
+                  <span class="ci-badge" id="ups-driver-badge" style="background:rgba(37,194,160,0.15); color:var(--ok2); border:1px solid rgba(37,194,160,0.3); font-size:10px; font-weight:700;">HAL SYNC</span>
                 </div>
-                <div class="unraid-detail-item">
-                  <span class="udi-label" data-i18n="mgmt.ups_model">UPS Model</span>
-                  <span class="udi-val" id="mgmt-ups-model">Generic UPS</span>
+
+                <!-- Detailed Inverter Telemetry Grid -->
+                <div class="unraid-details-grid">
+                  <div class="unraid-detail-item">
+                    <span class="udi-label" data-i18n="mgmt.ups_daemon_status">Power Daemon Status</span>
+                    <span class="udi-val" id="mgmt-ups-status" style="color:var(--ok2);">ONLINE</span>
+                  </div>
+                  <div class="unraid-detail-item">
+                    <span class="udi-label" data-i18n="mgmt.ups_model">UPS Model</span>
+                    <span class="udi-val" id="mgmt-ups-model">Generic UPS</span>
+                  </div>
+                  <div class="unraid-detail-item">
+                    <span class="udi-label" data-i18n="mgmt.ups_protocol">Connection Protocol</span>
+                    <span class="udi-val" id="mgmt-ups-protocol">Auto / NIS</span>
+                  </div>
+                  <div class="unraid-detail-item">
+                    <span class="udi-label" data-i18n="mgmt.ups_battv">Battery Voltage</span>
+                    <span class="udi-val" id="mgmt-ups-battv">-- V</span>
+                  </div>
+                  <div class="unraid-detail-item">
+                    <span class="udi-label" data-i18n="mgmt.ups_linev">Line / Utility Voltage</span>
+                    <span class="udi-val" id="mgmt-ups-linev">-- V</span>
+                  </div>
+                  <div class="unraid-detail-item">
+                    <span class="udi-label" data-i18n="mgmt.ups_active_policy">Failsafe Policy</span>
+                    <span class="udi-val" id="mgmt-ups-policy">Runtime &lt; 5m</span>
+                  </div>
                 </div>
-                <div class="unraid-detail-item">
-                  <span class="udi-label" data-i18n="mgmt.ups_protocol">Connection Protocol</span>
-                  <span class="udi-val" id="mgmt-ups-protocol">Auto / NIS</span>
+
+                <!-- Operating Mode Selection -->
+                <div style="border-top:1px solid rgba(255,255,255,0.08); padding-top:12px;">
+                  <label style="font-weight:600; font-size:12px; display:block; margin-bottom:8px;" data-i18n="mgmt.ups_mode_title">Operating Mode</label>
+                  <div class="ups-mode-chooser-grid">
+                    <label class="ups-mode-option">
+                      <input type="radio" name="ups-mode" value="auto" checked>
+                      <span class="ups-mode-box">
+                        <strong>Auto-Detect</strong>
+                        <small>Probes daemons</small>
+                      </span>
+                    </label>
+                    <label class="ups-mode-option">
+                      <input type="radio" name="ups-mode" value="apcupsd_client">
+                      <span class="ups-mode-box">
+                        <strong>APCUPSD</strong>
+                        <small>Unraid host :3551</small>
+                      </span>
+                    </label>
+                    <label class="ups-mode-option">
+                      <input type="radio" name="ups-mode" value="nut_client">
+                      <span class="ups-mode-box">
+                        <strong>NUT Client</strong>
+                        <small>Network :3493</small>
+                      </span>
+                    </label>
+                    <label class="ups-mode-option">
+                      <input type="radio" name="ups-mode" value="usb_hid">
+                      <span class="ups-mode-box">
+                        <strong>Direct USB</strong>
+                        <small>USB HID cable</small>
+                      </span>
+                    </label>
+                  </div>
                 </div>
-                <div class="unraid-detail-item">
-                  <span class="udi-label" data-i18n="mgmt.ups_battv">Battery Voltage</span>
-                  <span class="udi-val" id="mgmt-ups-battv">-- V</span>
+
+                <!-- Connection Parameters Card -->
+                <div class="drawer-card" id="ups-drawer-conn-card" style="margin:0; background:rgba(0,0,0,0.25);">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <span style="font-weight:700; font-size:12px; color:#f1f5f9;" data-i18n="mgmt.ups_conn_title">Connection Parameters</span>
+                    <span id="ups-conn-disabled-badge" class="suite-badge" style="font-size:10px; display:none; color:var(--muted); border-color:rgba(255,255,255,0.15);" data-i18n="mgmt.ups_conn_not_required">Not required for Direct USB</span>
+                  </div>
+                  <div style="display:grid; grid-template-columns: 2fr 1fr; gap:10px; margin-bottom:10px;">
+                    <div>
+                      <label class="drawer-field-label" data-i18n="mgmt.ups_field_host">Host / IP</label>
+                      <input type="text" id="ups-cfg-host" class="input-modern" placeholder="127.0.0.1" value="127.0.0.1">
+                    </div>
+                    <div>
+                      <label class="drawer-field-label" data-i18n="mgmt.ups_field_port">Port</label>
+                      <input type="number" id="ups-cfg-port" class="input-modern" placeholder="3551" value="3551">
+                    </div>
+                  </div>
+                  <div style="margin-bottom:10px;">
+                    <label class="drawer-field-label" data-i18n="mgmt.ups_field_name">UPS Name (NUT only)</label>
+                    <input type="text" id="ups-cfg-name" class="input-modern" placeholder="ups" value="ups">
+                  </div>
+                  <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <div>
+                      <label class="drawer-field-label" data-i18n="mgmt.ups_field_user">Username</label>
+                      <input type="text" id="ups-cfg-user" class="input-modern" placeholder="Optional">
+                    </div>
+                    <div>
+                      <label class="drawer-field-label" data-i18n="mgmt.ups_field_pass">Password</label>
+                      <input type="password" id="ups-cfg-pass" class="input-modern" placeholder="••••••••">
+                    </div>
+                  </div>
+                  <div style="margin-top:12px; display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-size:11px; color:var(--muted);">Port :3551 (apcupsd) · :3493 (NUT)</span>
+                    <button id="btn-ups-test-conn" class="btn-pill-toggle" style="padding:5px 12px; font-weight:600; display:inline-flex; align-items:center; gap:6px;" data-i18n="mgmt.ups_btn_test_conn">🔌 Test Connection</button>
+                  </div>
                 </div>
-                <div class="unraid-detail-item">
-                  <span class="udi-label" data-i18n="mgmt.ups_linev">Line / Utility Voltage</span>
-                  <span class="udi-val" id="mgmt-ups-linev">-- V</span>
+
+                <!-- Discovered Hardware Candidates Container -->
+                <div id="ups-discover-candidates" style="display:flex; flex-direction:column; gap:6px;"></div>
+              </div>
+
+              <!-- Column 2: Automated Safe Shutdown Cockpit -->
+              <div class="drawer-card" style="display:flex; flex-direction:column; gap:14px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <div style="font-weight:700; font-size:13px; color:#fff; display:flex; align-items:center; gap:6px;">
+                    <svg class="ic" style="width:14px; height:14px; color:var(--warn, #f5a623);"><use href="#i-shield"/></svg>
+                    <span data-i18n="mgmt.ups_policy_title">Safe Shutdown Cockpit</span>
+                  </div>
+                  <div style="display:flex; align-items:center; gap:6px;">
+                    <span id="ups-save-status" class="ups-save-badge" style="display:none;" data-i18n="mgmt.ups_auto_saved">✓ Saved</span>
+                  </div>
                 </div>
-                <div class="unraid-detail-item">
-                  <span class="udi-label" data-i18n="mgmt.ups_active_policy">Failsafe Policy</span>
-                  <span class="udi-val" id="mgmt-ups-policy">Runtime &lt; 5m</span>
+
+                <p style="font-size:12px; color:var(--muted); margin:0;" data-i18n="mgmt.ups_drawer_desc">Configure automated atomic powerdown policies and emergency unmount thresholds.</p>
+
+                <!-- Trigger Policies & Sliders -->
+                <div style="display:flex; flex-direction:column; gap:12px;">
+                  <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                    <input type="radio" name="ups-policy" value="runtime_left" checked style="accent-color:var(--ok2, #25c2a0); width:16px; height:16px; cursor:pointer;">
+                    <span style="font-size:12px; font-weight:600; color:var(--fg, #f1f5f9);"><strong data-i18n="mgmt.ups_policy_runtime">Shutdown when Estimated Runtime drops below:</strong></span>
+                  </label>
+                  <div style="display:flex; align-items:center; gap:12px; padding-left:24px;">
+                    <input type="range" id="ups-slider-runtime" min="2" max="25" step="1" value="5" class="custom-slider" style="flex:1;">
+                    <span id="ups-val-runtime" class="slider-val-badge">5 min</span>
+                  </div>
+
+                  <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-top:4px;">
+                    <input type="radio" name="ups-policy" value="battery_pct" style="accent-color:var(--ok2, #25c2a0); width:16px; height:16px; cursor:pointer;">
+                    <span style="font-size:12px; font-weight:600; color:var(--fg, #f1f5f9);"><strong data-i18n="mgmt.ups_policy_batt">Shutdown when Battery Charge drops below:</strong></span>
+                  </label>
+                  <div style="display:flex; align-items:center; gap:12px; padding-left:24px;">
+                    <input type="range" id="ups-slider-battery" min="10" max="50" step="5" value="20" class="custom-slider" style="flex:1;">
+                    <span id="ups-val-battery" class="slider-val-badge">20 %</span>
+                  </div>
+
+                  <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-top:4px;">
+                    <input type="radio" name="ups-policy" value="timer" style="accent-color:var(--ok2, #25c2a0); width:16px; height:16px; cursor:pointer;">
+                    <span style="font-size:12px; font-weight:600; color:var(--fg, #f1f5f9);"><strong data-i18n="mgmt.ups_policy_timer">Shutdown after Time on Battery exceeds:</strong></span>
+                  </label>
+                  <div style="display:flex; align-items:center; gap:12px; padding-left:24px;">
+                    <input type="range" id="ups-slider-timer" min="60" max="900" step="30" value="300" class="custom-slider" style="flex:1;">
+                    <span id="ups-val-timer" class="slider-val-badge">300 sec</span>
+                  </div>
+                </div>
+
+                <!-- Failsafe Toggles -->
+                <div style="border-top:1px solid rgba(255,255,255,0.08); padding-top:14px; display:flex; flex-direction:column; gap:12px;">
+                  <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+                    <label for="ups-chk-docker" style="font-size:12px; font-weight:500; color:var(--fg, #eaf1f8); cursor:pointer; flex:1;" data-i18n="mgmt.ups_chk_docker">Gracefully terminate Docker database containers (flush WAL)</label>
+                    <label class="switch"><input type="checkbox" id="ups-chk-docker" checked><span class="toggle-slider"></span></label>
+                  </div>
+                  <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+                    <label for="ups-chk-cutpower" style="font-size:12px; font-weight:500; color:var(--fg, #eaf1f8); cursor:pointer; flex:1;" data-i18n="mgmt.ups_chk_cutpower">Send cut-power command to UPS on halt (load.off.delay)</label>
+                    <label class="switch"><input type="checkbox" id="ups-chk-cutpower"><span class="toggle-slider"></span></label>
+                  </div>
+                </div>
+
+                <!-- Auto-save note -->
+                <div style="margin-top:auto; padding-top:10px; border-top:1px dashed rgba(255,255,255,0.06); font-size:11px; color:var(--muted); opacity:0.85;">
+                  ⚡ All parameters and thresholds save automatically to host configuration.
                 </div>
               </div>
             </div>
 
-            <!-- Power Outage History & Analytics Table -->
+            <!-- Tier 3: Power Outage History & Analytics Table -->
             <div class="ups-events-section" style="margin-top: 24px;">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px;">
                 <div style="font-weight:600; font-size:13px; color:var(--text);" data-i18n="mgmt.ups_events_title">📜 Power Integrity & Outage Ledger</div>
-                <button class="btn-pill-toggle" id="btn-ups-simulate" title="Simulate 15s power outage drill" data-i18n="mgmt.ups_btn_simulate">⚠️ Simulate Outage Drill</button>
+                <span style="font-size:11px; color:var(--muted);">Real-time historical brownout, self-test & failsafe events</span>
               </div>
               <div class="table-container" style="max-height: 220px; overflow-y: auto;">
                 <table class="copy-history-table responsive-cards" id="ups-events-table">

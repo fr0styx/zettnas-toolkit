@@ -846,6 +846,44 @@ export function updateHardwareTelemetry(s) {
     }
   }
 
+  // Topbar UPS Pill visibility and telemetry
+  const upsPill = $('topbar-ups-pill');
+  const upsText = $('topbar-ups-text');
+  const upsDot = $('topbar-ups-dot');
+  const ups = s?.ups || {};
+  const hasUps = Boolean(ups.available || ups.connected || (ups.charge != null) || (ups.battery_charge != null) || (ups.battery_charge_pct != null));
+
+  if (upsPill) {
+    if (hasUps) {
+      upsPill.classList.remove('hidden');
+      const charge = ups.battery_charge_pct ?? ups.battery_charge ?? ups.charge ?? 100;
+      if (upsText) upsText.textContent = `${charge}%`;
+      if (upsDot) {
+        const onBatt = Boolean(ups.on_battery || (ups.status && (ups.status.includes('OB') || ups.status.includes('BATT'))));
+        if (onBatt) {
+          upsDot.style.background = 'var(--warn, #f5a623)';
+          upsDot.style.boxShadow = '0 0 6px var(--warn, #f5a623)';
+        } else if (charge <= 20) {
+          upsDot.style.background = 'var(--err, #eb5757)';
+          upsDot.style.boxShadow = '0 0 6px var(--err, #eb5757)';
+        } else {
+          upsDot.style.background = 'var(--ok2, #25c2a0)';
+          upsDot.style.boxShadow = '0 0 6px var(--ok2, #25c2a0)';
+        }
+      }
+      if (!upsPill.dataset.boundClick) {
+        upsPill.dataset.boundClick = '1';
+        upsPill.addEventListener('click', () => {
+          if (typeof window.openManagementWindow === 'function') {
+            window.openManagementWindow('mgmt-sec-ups');
+          }
+        });
+      }
+    } else {
+      upsPill.classList.add('hidden');
+    }
+  }
+
   // ZettNAS Desktop Icon & Hardware LCD Invariant:
   // The ZettNAS desktop icon should ONLY be visible if the hardware is a Zettlabs D4/D6/D6U/D8 NAS appliance
   // OR another system with a similar physical LCD, taking display resolution into account for perfect data display.

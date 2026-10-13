@@ -292,14 +292,17 @@ describe('Mission Control Navigation Restructure & Hardware Agnosticism', () => 
     expect(SUBPANE_MAP['mgmt-pane-network-wireguard']).toEqual({ section: 'mgmt-sec-network', pane: 'mgmt-pane-network-wireguard' });
     expect(SUBPANE_MAP['mgmt-pane-network-docker']).toEqual({ section: 'mgmt-sec-network', pane: 'mgmt-pane-network-docker' });
 
-    // Pillar 6: Hardware & Power
+    // Pillar 6: Hardware & Profiles
     expect(SUBPANE_MAP['hardware']).toEqual({ section: 'mgmt-sec-hardware', pane: 'mgmt-pane-unraid' });
-    expect(SUBPANE_MAP['power']).toEqual({ section: 'mgmt-sec-hardware', pane: 'mgmt-pane-hardware-ups' });
     expect(SUBPANE_MAP['mgmt-pane-hardware-fans']).toEqual({ section: 'mgmt-sec-hardware', pane: 'mgmt-pane-hardware-fans' });
     expect(SUBPANE_MAP['mgmt-pane-hardware-led']).toEqual({ section: 'mgmt-sec-hardware', pane: 'mgmt-pane-hardware-led' });
     expect(SUBPANE_MAP['mgmt-pane-hardware-lcd']).toEqual({ section: 'mgmt-sec-hardware', pane: 'mgmt-pane-hardware-lcd' });
-    expect(SUBPANE_MAP['mgmt-pane-hardware-ups']).toEqual({ section: 'mgmt-sec-hardware', pane: 'mgmt-pane-hardware-ups' });
+
+    // Dedicated Power & Battery Cockpit
+    expect(SUBPANE_MAP['power']).toEqual({ section: 'mgmt-sec-ups', pane: null });
+    expect(SUBPANE_MAP['mgmt-pane-hardware-ups']).toEqual({ section: 'mgmt-sec-ups', pane: null });
     expect(SUBPANE_MAP['mgmt-sec-ups']).toEqual({ section: 'mgmt-sec-ups', pane: null });
+    expect(SUBPANE_MAP['ups']).toEqual({ section: 'mgmt-sec-ups', pane: null });
 
     // Pillar 7: System & Identity
     expect(SUBPANE_MAP['system']).toEqual({ section: 'mgmt-sec-system-group', pane: 'mgmt-pane-security' });

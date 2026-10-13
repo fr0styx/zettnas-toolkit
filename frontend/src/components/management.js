@@ -81,9 +81,8 @@ export const SUBPANE_MAP = {
   'mgmt-pane-network-ports': { section: 'mgmt-sec-network', pane: 'mgmt-pane-network-ports' },
   'ports': { section: 'mgmt-sec-network', pane: 'mgmt-pane-network-ports' },
 
-  // --- Pillar 6: Hardware & Power ---
+  // --- Pillar 6: Hardware & Profiles ---
   'hardware': { section: 'mgmt-sec-hardware', pane: 'mgmt-pane-unraid' },
-  'power': { section: 'mgmt-sec-hardware', pane: 'mgmt-pane-hardware-ups' },
   'mgmt-sec-hardware': { section: 'mgmt-sec-hardware', pane: 'mgmt-pane-unraid' },
   'mgmt-pane-hardware': { section: 'mgmt-sec-hardware', pane: 'mgmt-pane-unraid' },
   'mgmt-sec-services': { section: 'mgmt-sec-hardware', pane: 'mgmt-pane-unraid' }, // Backward compat
@@ -92,7 +91,10 @@ export const SUBPANE_MAP = {
   'mgmt-pane-hardware-fans': { section: 'mgmt-sec-hardware', pane: 'mgmt-pane-hardware-fans' },
   'mgmt-pane-hardware-led': { section: 'mgmt-sec-hardware', pane: 'mgmt-pane-hardware-led' },
   'mgmt-pane-hardware-lcd': { section: 'mgmt-sec-hardware', pane: 'mgmt-pane-hardware-lcd' },
-  'mgmt-pane-hardware-ups': { section: 'mgmt-sec-hardware', pane: 'mgmt-pane-hardware-ups' },
+  'mgmt-pane-hardware-ups': { section: 'mgmt-sec-ups', pane: null },
+
+  // --- Pillar 7: Power & Battery (Dedicated 1st-Class Section) ---
+  'power': { section: 'mgmt-sec-ups', pane: null },
   'mgmt-sec-ups': { section: 'mgmt-sec-ups', pane: null },
   'ups': { section: 'mgmt-sec-ups', pane: null },
   'mgmt-pane-ups': { section: 'mgmt-sec-ups', pane: null },
@@ -2983,9 +2985,18 @@ export function renderUpsTelemetry(ups) {
   if (!ups) return;
   const upsVal = ups.battery_charge_pct != null ? `${ups.battery_charge_pct}%` : (ups.available ? 'Active' : 'Offline');
   const upsPill = document.getElementById('mgmt-hub-ups-pill');
-  if (upsPill) upsPill.textContent = upsVal;
+  if (upsPill) {
+    upsPill.textContent = upsVal;
+    if (ups.available && ups.battery_charge_pct != null) {
+      upsPill.style.background = ups.battery_charge_pct <= 20 ? 'rgba(235,87,87,0.15)' : 'rgba(37,194,160,0.15)';
+      upsPill.style.color = ups.battery_charge_pct <= 20 ? 'var(--err, #eb5757)' : 'var(--ok2, #25c2a0)';
+    }
+  }
   const sideUpsBadge = document.getElementById('mgmt-sidebar-ups-badge');
-  if (sideUpsBadge) sideUpsBadge.textContent = upsVal;
+  if (sideUpsBadge) {
+    sideUpsBadge.textContent = upsVal;
+    sideUpsBadge.style.display = ups.available ? 'inline-block' : 'none';
+  }
 
   const statusEl = document.getElementById('mgmt-ups-status');
   const modelEl = document.getElementById('mgmt-ups-model');
@@ -3309,7 +3320,28 @@ export function initUpsDrawerControls() {
   const btnOpen = document.getElementById('btn-open-ups-config');
   btnOpen?.addEventListener('click', (e) => {
     e.preventDefault();
-    openUpsDrawer();
+    const cfgSec = document.getElementById('ups-cockpit-config-section');
+    if (cfgSec) {
+      cfgSec.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      openUpsDrawer();
+    }
+  });
+
+  const btnRefresh = document.getElementById('btn-refresh-ups');
+  btnRefresh?.addEventListener('click', async () => {
+    try {
+      btnRefresh.disabled = true;
+      btnRefresh.textContent = 'Refreshing...';
+      await fetchAndRenderUpsTelemetry();
+      await loadUpsConfigToDrawer();
+      showToast('UPS telemetry & parameters updated', 'info');
+    } catch (err) {
+      console.debug('Failed to refresh UPS telemetry:', err);
+    } finally {
+      btnRefresh.disabled = false;
+      btnRefresh.textContent = '🔄 Refresh';
+    }
   });
 
   const btnClose = document.getElementById('btn-close-ups-drawer');
@@ -6818,14 +6850,15 @@ export function initManagement() {
     } else {
       stopDockerAutoRefresh();
       if (targetId === 'mgmt-sec-hardware' || targetId === 'mgmt-sec-services') {
-        sectionName = t('mgmt.hardware_title', 'Hardware & Power');
+        sectionName = t('mgmt.hardware_title', 'Hardware & Profiles');
         if (state.lastStats || state.latestStats) updateManagementTelemetry(state.lastStats || state.latestStats);
       } else if (targetId === 'mgmt-sec-storage') {
         sectionName = t('mgmt.storage_title', 'Storage & Disks');
       } else if (targetId === 'mgmt-sec-ups') {
-        sectionName = t('mgmt.sidebar_ups', 'UPS & Power');
+        sectionName = t('mgmt.sidebar_ups', 'Power & Battery');
         if (typeof fetchAndRenderUpsTelemetry === 'function') fetchAndRenderUpsTelemetry();
         else if (typeof fetchAndRenderUPS === 'function') fetchAndRenderUPS();
+        if (typeof loadUpsConfigToDrawer === 'function') loadUpsConfigToDrawer();
       } else if (targetId === 'mgmt-sec-system-group') {
         sectionName = t('mgmt.system_title', 'System & Identity');
       }
