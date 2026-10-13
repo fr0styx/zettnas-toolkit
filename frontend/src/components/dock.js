@@ -1100,6 +1100,7 @@ export function makeDraggable(dragEl, handleEl, customId) {
     dragEl.style.right = 'auto';
     dragEl.style.left = rect.left + 'px';
     dragEl.style.top = rect.top + 'px';
+    dragEl.classList.add('window-dragging');
 
     startX = rect.left;
     startY = rect.top;
@@ -1138,6 +1139,7 @@ export function makeDraggable(dragEl, handleEl, customId) {
     };
 
     const stopDrag = (eUp) => {
+      dragEl.classList.remove('window-dragging');
       ghost.style.display = 'none';
       window.removeEventListener('pointermove', drag);
       window.removeEventListener('pointerup', stopDrag);
@@ -2459,6 +2461,11 @@ export const DockManager = {
     // Atomically swap dock items without geometry collapse
     dock.replaceChildren(frag);
 
+    const dockButtons = Array.from(dock.querySelectorAll('.dock-item'));
+    dockButtons.forEach((btn, idx) => {
+      btn.setAttribute('tabindex', idx === 0 ? '0' : '-1');
+    });
+
     if (dock.classList.contains('dock-magnify-enabled')) {
       dock.querySelectorAll('.dock-item').forEach((item) => {
         item.style.setProperty('--dock-item-scale', '1');
@@ -3231,11 +3238,19 @@ export function initDockSystem() {
       if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
         e.preventDefault();
         const next = items[(activeIdx + 1) % items.length];
-        next?.focus();
+        if (next) {
+          items[activeIdx].setAttribute('tabindex', '-1');
+          next.setAttribute('tabindex', '0');
+          next.focus();
+        }
       } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
         e.preventDefault();
         const prev = items[(activeIdx - 1 + items.length) % items.length];
-        prev?.focus();
+        if (prev) {
+          items[activeIdx].setAttribute('tabindex', '-1');
+          prev.setAttribute('tabindex', '0');
+          prev.focus();
+        }
       }
     });
   }

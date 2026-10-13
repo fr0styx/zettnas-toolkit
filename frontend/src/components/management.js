@@ -6823,7 +6823,9 @@ export function initManagement() {
     if (parentCard) {
       if (desiredSubPane) {
         parentCard.querySelectorAll('.mgmt-inner-tab').forEach((t) => {
-          t.classList.toggle('active', t.dataset.tabTarget === desiredSubPane);
+          const isActive = t.dataset.tabTarget === desiredSubPane;
+          t.classList.toggle('active', isActive);
+          t.setAttribute('aria-selected', isActive ? 'true' : 'false');
         });
         parentCard.querySelectorAll('.mgmt-tab-pane').forEach((p) => {
           p.style.display = p.id === desiredSubPane ? 'block' : 'none';
@@ -6838,7 +6840,9 @@ export function initManagement() {
         if (activeTabBtn) {
           const paneId = activeTabBtn.dataset.tabTarget;
           parentCard.querySelectorAll('.mgmt-inner-tab').forEach((t) => {
-            t.classList.toggle('active', t === activeTabBtn);
+            const isActive = t === activeTabBtn;
+            t.classList.toggle('active', isActive);
+            t.setAttribute('aria-selected', isActive ? 'true' : 'false');
           });
           parentCard.querySelectorAll('.mgmt-tab-pane').forEach((p) => {
             p.style.display = p.id === paneId ? 'block' : 'none';
@@ -6864,8 +6868,12 @@ export function initManagement() {
       if (!parentCard) return;
       
       // Update tab buttons
-      parentCard.querySelectorAll('.mgmt-inner-tab').forEach(t => t.classList.remove('active'));
+      parentCard.querySelectorAll('.mgmt-inner-tab').forEach(t => {
+        t.classList.remove('active');
+        t.setAttribute('aria-selected', 'false');
+      });
       tab.classList.add('active');
+      tab.setAttribute('aria-selected', 'true');
       
       // Update tab panes
       const targetPaneId = tab.dataset.tabTarget;

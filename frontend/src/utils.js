@@ -1,6 +1,33 @@
 /**
- * Utility functions for HTML sanitization and UI helpers.
+ * Core UI Utilities
  */
+
+export function trapFocus(element) {
+  if (!element) return () => {};
+  const focusable = element.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+  if (!focusable.length) return () => {};
+
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+
+  function onKeyDown(e) {
+    if (e.key !== 'Tab') return;
+    if (e.shiftKey) {
+      if (document.activeElement === first) {
+        last.focus();
+        e.preventDefault();
+      }
+    } else {
+      if (document.activeElement === last) {
+        first.focus();
+        e.preventDefault();
+      }
+    }
+  }
+
+  element.addEventListener('keydown', onKeyDown);
+  return () => element.removeEventListener('keydown', onKeyDown);
+}
 
 export function escapeHtml(str) {
   if (str == null) return '';
@@ -12,125 +39,78 @@ export function escapeHtml(str) {
     .replace(/'/g, '&#039;');
 }
 
-export function sanitizeText(str) {
-  return escapeHtml(str);
-}
-
-/**
- * Traps keyboard focus within a container element for accessibility (a11y).
- * Handles Tab, Shift+Tab cycling, and optional Escape key dismissal.
- * Returns an unbind cleanup function.
- */
-export function trapFocus(element, onEscape = null) {
-  if (!element) return () => {};
-
-  const focusableSelector =
-    'button:not([disabled]):not([tabindex="-1"]), [href]:not([tabindex="-1"]), input:not([disabled]):not([tabindex="-1"]), select:not([disabled]):not([tabindex="-1"]), textarea:not([disabled]):not([tabindex="-1"]), [tabindex]:not([tabindex="-1"])';
-
-  function handleKeyDown(e) {
-    if (e.key === 'Escape' && onEscape) {
-      e.preventDefault();
-      onEscape();
-      return;
-    }
-    if (e.key !== 'Tab') return;
-
-    const focusables = Array.from(element.querySelectorAll(focusableSelector)).filter(
-      (el) => el.offsetParent !== null || el.offsetWidth > 0 || el.offsetHeight > 0
-    );
-    if (focusables.length === 0) return;
-
-    const first = focusables[0];
-    const last = focusables[focusables.length - 1];
-
-    if (e.shiftKey) {
-      if (document.activeElement === first || !element.contains(document.activeElement)) {
-        e.preventDefault();
-        last.focus();
-      }
-    } else {
-      if (document.activeElement === last || !element.contains(document.activeElement)) {
-        e.preventDefault();
-        first.focus();
-      }
-    }
-  }
-
-  element.addEventListener('keydown', handleKeyDown);
-
-  // Auto-focus first focusable element inside the modal
-  setTimeout(() => {
-    if (typeof document === 'undefined' || !element) return;
-    const first = element.querySelector(focusableSelector);
-    if (first && !element.contains(document.activeElement)) {
-      first.focus();
-    }
-  }, 60);
-
-  return () => {
-    element.removeEventListener('keydown', handleKeyDown);
-  };
-}
-
-/**
- * Safely copies text to the system clipboard across both secure HTTPS
- * and plain HTTP / LAN IP contexts with fallback to execCommand.
- */
 export async function copyTextToClipboard(text) {
-  if (!text) return false;
   if (navigator.clipboard && window.isSecureContext) {
-    try {
-      await navigator.clipboard.writeText(text);
-      return true;
-    } catch (_) {}
+    await navigator.clipboard.writeText(text);
+    return true;
   }
+  const textArea = document.createElement('textarea');
+  textArea.value = text;
+  textArea.style.position = 'fixed';
+  textArea.style.left = '-999999px';
+  textArea.style.top = '-999999px';
+  document.body.appendChild(textArea);
+  textArea.focus();
+  textArea.select();
+  let success = false;
   try {
-    const textarea = document.createElement('textarea');
-    textarea.value = text;
-    textarea.style.position = 'fixed';
-    textarea.style.top = '-9999px';
-    textarea.style.left = '-9999px';
-    textarea.style.opacity = '0';
-    textarea.setAttribute('readonly', '');
-    document.body.appendChild(textarea);
-    textarea.focus();
-    textarea.select();
-    const success = document.execCommand('copy');
-    document.body.removeChild(textarea);
-    return Boolean(success);
+    success = document.execCommand('copy');
   } catch (err) {
-    console.warn('[ZettNAS] Clipboard copy fallback failed:', err);
-    return false;
+    console.error('Fallback clipboard copy failed:', err);
   }
+  textArea.remove();
+  return success;
+}
+
+export function formatBytes(bytes, decimals = 1) {
+  if (bytes === 0 || !bytes) return '0 B';
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 }
 
 /**
- * Reconciles a table body or list container with an incoming dataset without wiping the DOM.
- * Preserves focused elements, button states, active hover, and active selection.
+ * Perform high-performance DOM reconciliation for dynamic table rows or lists.
+ * Reuses existing DOM nodes by key, updates their contents, and pre-prunes stale nodes
+ * to prevent layout thrashing and preserve selection / focus state.
  *
- * @param {HTMLElement} parentEl - The container element (e.g. tbody or list div)
- * @param {Array} items - Array of data objects
- * @param {Function} keyFn - Function returning a unique string/number key for each item
- * @param {Function} createRowFn - Function returning a new HTMLElement for an item
+ * @param {HTMLElement} parentEl - The container element (tbody, ul, div)
+ * @param {Array<Object>} items - The incoming dataset array
+ * @param {Function} keyFn - Function returning a unique string key for an item
+ * @param {Function} createRowFn - Function returning a newly created HTMLElement for an item
  * @param {Function} [updateRowFn] - Function updating an existing HTMLElement with the new item data
  */
 export function reconcileKeyedTable(parentEl, items, keyFn, createRowFn, updateRowFn) {
   if (!parentEl || !Array.isArray(items)) return;
+
+  const incomingKeys = new Set(items.map(item => String(keyFn(item))));
   const existingMap = new Map();
   const children = parentEl.children;
-  const len = children.length;
-  for (let i = 0; i < len; i++) {
+
+  // 1. Pre-prune stale nodes before insertion to eliminate cascading shift mutations
+  for (let i = children.length - 1; i >= 0; i--) {
     const child = children[i];
     const key = child.dataset?.key ?? child.dataset?.dev ?? child.dataset?.id;
-    if (key != null) existingMap.set(String(key), child);
+    if (key != null) {
+      const keyStr = String(key);
+      if (!incomingKeys.has(keyStr)) {
+        child.remove();
+      } else {
+        existingMap.set(keyStr, child);
+      }
+    } else {
+      // Untracked placeholder child (e.g. empty state row)
+      child.remove();
+    }
   }
 
-  const incomingKeys = new Set();
+  // 2. Iterate and re-order / insert / update rows with position accuracy
   const itemsCount = items.length;
   for (let index = 0; index < itemsCount; index++) {
     const item = items[index];
     const key = String(keyFn(item));
-    incomingKeys.add(key);
     let row = existingMap.get(key);
 
     if (row) {
@@ -143,18 +123,10 @@ export function reconcileKeyedTable(parentEl, items, keyFn, createRowFn, updateR
     }
 
     if (row) {
-      // Maintain exact ordering without thrashing
       const currentChild = children[index];
       if (currentChild !== row) {
         parentEl.insertBefore(row, currentChild || null);
       }
     }
   }
-
-  // Remove nodes that no longer exist in the incoming dataset
-  existingMap.forEach((row, key) => {
-    if (!incomingKeys.has(key)) {
-      row.remove();
-    }
-  });
 }

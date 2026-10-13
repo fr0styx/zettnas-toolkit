@@ -5,7 +5,9 @@
 
 :root{
   --bg:#0a0e13; --card:#141b24; --card-hi:#1b2430;
-  --fg:#eaf1f8; --muted:#78838f;
+  --fg:#eaf1f8; --muted:#8493a5;
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans CJK SC", "Noto Sans CJK JP", Arial, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   --ok:#33d17a; --ok2:#25c2a0; --warn:#f5b731; --crit:#f0553b;
   --desktop-ok2: var(--desktop-accent, var(--ok2));
   --lcd-ok2: var(--lcd-accent, #25c2a0);
@@ -121,7 +123,7 @@ body.theme-amber {
   --ok: #ffbe40;
   --ok2: #e09b20;
   --warn: #ff8c00;
-  --crit: #e63946;
+  --crit: #ff6b6b;
   --track: #2a1f0a;
   --brand: #ffbe40;
   --focus-ring: #ffbe40;
@@ -638,7 +640,7 @@ body.theme-yak {
   --ok2: #d48a37;
   --ok: #e6a254;
   --warn: #e07a38;
-  --crit: #e63946;
+  --crit: #ff6b6b;
   --track: #17291c;
   --focus-ring: #d48a37;
   --focus-shadow: 0 0 0 3px rgba(212, 138, 55, 0.35);
@@ -1314,6 +1316,18 @@ body.drawer-is-open .chassis-workbench-stage {
   40% { box-shadow: 0 0 35px rgba(37, 194, 160, 0.8), 0 25px 60px rgba(0, 0, 0, 0.85); }
   100% { box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8); }
 }
+
+.window-dragging {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  user-select: none !important;
+  cursor: grabbing !important;
+}
+
+.window-dragging * {
+  pointer-events: none !important;
+}
+
 .window-focus-pulse {
   animation: windowFocusPulse 0.8s ease-out !important;
 }
@@ -9135,6 +9149,8 @@ body.theme-yak .mgmt-inner-tab.active .ic {
 
 .mgmt-tab-pane {
   animation: fadeIn 0.15s ease;
+  content-visibility: auto;
+  contain-intrinsic-size: auto none auto 500px;
 }
 
 /* ==========================================================================

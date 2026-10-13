@@ -886,6 +886,15 @@ export class FileManagerWindow {
   }
 
   open(targetPath) {
+    if (!this.viewport || !this.list || !this.spacer) {
+      this.bindElements();
+    }
+    if (!this.resizeObserver && this.viewport && typeof ResizeObserver !== 'undefined') {
+      this.resizeObserver = new ResizeObserver(() => {
+        if (this.isOpen()) this.renderViewport();
+      });
+      this.resizeObserver.observe(this.viewport);
+    }
     if (window.DockManager) {
       if (!window.DockManager.windows[this.dockId]) {
         window.DockManager.register(this.dockId, this.windowEl, '#i-storage', this.getTitle());
@@ -973,11 +982,10 @@ export class FileManagerWindow {
       if (window.DockManager) {
         window.DockManager.unregister(this.dockId);
       }
+      this.viewport = null;
+      this.list = null;
+      this.spacer = null;
     }
-
-    this.viewport = null;
-    this.list = null;
-    this.spacer = null;
 
     if (_activeFmInstance === this) {
       _activeFmInstance = _fmInstances.get('file-manager-window') || _fmInstances.values().next().value || null;
@@ -1487,6 +1495,8 @@ export class FileManagerWindow {
 
       this.list.style.transform = `translateY(${startRow * rowPitch}px)`;
       this.list.innerHTML = '';
+      this.list.setAttribute('role', 'grid');
+      this.list.setAttribute('aria-label', 'File Explorer Grid');
       const token = (auth && typeof auth.getToken === 'function' ? auth.getToken() : null) || localStorage.getItem('zettnas_token') || '';
 
       const folderSvg = '<svg viewBox="0 0 24 24" width="44" height="44" stroke="currentColor" stroke-width="1.5" fill="#eab308"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>';
@@ -1500,7 +1510,11 @@ export class FileManagerWindow {
         card.dataset.path = file.path;
         card.dataset.name = file.name;
         card.dataset.index = i;
-        if (this.selectedPaths.has(file.path)) card.classList.add('selected');
+        card.setAttribute('role', 'row');
+        const isCardSelected = this.selectedPaths.has(file.path);
+        card.setAttribute('tabindex', isCardSelected ? '0' : '-1');
+        card.setAttribute('aria-selected', isCardSelected ? 'true' : 'false');
+        if (isCardSelected) card.classList.add('selected');
         if (_clipboard && _clipboard.action === 'move' && _clipboard.items && _clipboard.items.includes(file.path)) {
           card.classList.add('fm-cut-pending');
         }
@@ -1569,7 +1583,11 @@ export class FileManagerWindow {
       row.dataset.path = file.path;
       row.dataset.name = file.name;
       row.dataset.index = i;
-      if (this.selectedPaths.has(file.path)) row.classList.add('selected');
+      row.setAttribute('role', 'row');
+      const isRowSelected = this.selectedPaths.has(file.path);
+      row.setAttribute('tabindex', isRowSelected ? '0' : '-1');
+      row.setAttribute('aria-selected', isRowSelected ? 'true' : 'false');
+      if (isRowSelected) row.classList.add('selected');
       if (_clipboard && _clipboard.action === 'move' && _clipboard.items && _clipboard.items.includes(file.path)) {
         row.classList.add('fm-cut-pending');
       }
@@ -1670,6 +1688,31 @@ export class FileManagerWindow {
 
     const minSelectableIndex = (this.fileList[0]?.name === '..') ? 1 : 0;
     const hasSelectableFiles = this.fileList.length > minSelectableIndex;
+
+    // F2 -> Rename selected item (if exactly 1 item selected)
+    if (e.key === 'F2') {
+      if (this.selectedPaths.size === 1) {
+        e.preventDefault();
+        e.stopPropagation();
+        const selectedPath = Array.from(this.selectedPaths)[0];
+        const selectedFile = this.fileList.find((f) => f.path === selectedPath);
+        if (selectedFile && selectedFile.name !== '..') {
+          this.handleAction('rename', selectedFile.path, selectedFile.name);
+        }
+      }
+      return;
+    }
+
+    // Ctrl+F / Cmd+F -> Focus in-window search input
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f' && !e.shiftKey && !e.altKey) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (this.searchInput) {
+        this.searchInput.focus();
+        this.searchInput.select?.();
+      }
+      return;
+    }
 
     // Ctrl+N / Cmd+N -> Open New File Explorer Window
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'n' && !e.shiftKey && !e.altKey) {

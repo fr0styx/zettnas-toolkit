@@ -199,14 +199,14 @@
   })();
 </script>
 <style>html,body{color:#eaf1f8;background-color:#080c10;width:100%;height:100%;margin:0;padding:0;overflow:hidden}html.auth-required body{background:radial-gradient(circle at 50% 20%,#151d29 0%,#080c10 70%)!important}#login-overlay{z-index:999999;background:#080c10;justify-content:center;align-items:center;display:flex;position:fixed;inset:0}html.has-auth-session #login-overlay{display:none!important}html.auth-required #login-overlay{display:flex!important}html.is-desktop-locked #lock-overlay{opacity:1!important;display:flex!important}html.is-desktop-locked body{overflow:hidden!important}html.auth-required .studio-viewport-wrapper,html.auth-required .suite-navbar,html.auth-required #desktop-icons-container,html.auth-required .desktop-icons-container,html.auth-required .top-nav,html.auth-required #desktop-widgets-container,html.auth-required #os-dock-container,html.auth-required .smart-modal-backdrop,html.auth-required .os-window,html.auth-required .notif-center-window{display:none!important}</style>
-  <script type="module" crossorigin src="/assets/index-Btt_ArK3.js"></script>
+  <script type="module" crossorigin src="/assets/index-uJVs6KaQ.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-CbXtAM7H.js">
-  <link rel="modulepreload" crossorigin href="/assets/dock-JEZm0RfR.js">
-  <link rel="modulepreload" crossorigin href="/assets/dashboard-DTHpjTLs.js">
-  <link rel="modulepreload" crossorigin href="/assets/users-CxKjw5p_.js">
-  <link rel="modulepreload" crossorigin href="/assets/auth-BQMCpt5f.js">
-  <link rel="modulepreload" crossorigin href="/assets/vm-manager-DFxW9vhO.js">
-  <link rel="stylesheet" crossorigin href="/assets/index-1qw4JWBS.css">
+  <link rel="modulepreload" crossorigin href="/assets/dock-DUp8foia.js">
+  <link rel="modulepreload" crossorigin href="/assets/dashboard-B2RciUXm.js">
+  <link rel="modulepreload" crossorigin href="/assets/users-Dsxu_8GA.js">
+  <link rel="modulepreload" crossorigin href="/assets/auth-CC0SWYka.js">
+  <link rel="modulepreload" crossorigin href="/assets/vm-manager-B3MKulDm.js">
+  <link rel="stylesheet" crossorigin href="/assets/index-BHBqO1_W.css">
 </head>
 <body class="studio-workbench no-specular-glow">
 
@@ -2595,48 +2595,48 @@
     <div class="smart-modal-body management-window-body">
             <!-- LEFT SIDEBAR -->
       <aside class="mgmt-sidebar" id="mgmt-sidebar" aria-label="Management Navigation">
-        <div class="mgmt-sidebar-nav">
-          <button class="mgmt-sidebar-item active" data-mgmt-target="management-hub-view" title="HUB">
+        <div class="mgmt-sidebar-nav" role="tablist" aria-label="Management Navigation">
+          <button class="mgmt-sidebar-item active" role="tab" aria-selected="true" data-mgmt-target="management-hub-view" title="HUB">
             <svg class="mgmt-sidebar-svg"><use href="#i-grid"/></svg>
             <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_overview">HUB</span>
           </button>
           <!-- Pillar 1: Dashboard & Telemetry -->
-          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-activity" title="Dashboard & Telemetry">
+          <button class="mgmt-sidebar-item" role="tab" aria-selected="false" data-mgmt-target="mgmt-sec-activity" title="Dashboard & Telemetry">
             <svg class="mgmt-sidebar-svg"><use href="#i-cpu"/></svg>
             <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_activity">Dashboard & Telemetry</span>
           </button>
           <!-- Pillar 2: Storage & Disks -->
-          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-storage" title="Storage & Disks">
+          <button class="mgmt-sidebar-item" role="tab" aria-selected="false" data-mgmt-target="mgmt-sec-storage" title="Storage & Disks">
             <svg class="mgmt-sidebar-svg"><use href="#i-disk"/></svg>
             <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_storage">Storage & Disks</span>
             <span class="mgmt-sidebar-badge" id="mgmt-sidebar-storage-badge" style="display:none;">Drives</span>
           </button>
           <!-- Pillar 3: Containers & Apps -->
-          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-docker" title="Containers & Apps">
+          <button class="mgmt-sidebar-item" role="tab" aria-selected="false" data-mgmt-target="mgmt-sec-docker" title="Containers & Apps">
             <svg class="mgmt-sidebar-svg"><use href="#i-chip"/></svg>
             <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_containers">Containers & Apps</span>
             <span class="mgmt-sidebar-badge" id="mgmt-sidebar-docker-badge" style="display:none;">0 Active</span>
           </button>
           <!-- Pillar 4: Virtual Machines -->
-          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-vms" title="Virtual Machines">
+          <button class="mgmt-sidebar-item" role="tab" aria-selected="false" data-mgmt-target="mgmt-sec-vms" title="Virtual Machines">
             <svg class="mgmt-sidebar-svg"><use href="#i-vm"/></svg>
             <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_vms">Virtual Machines</span>
             <span class="mgmt-sidebar-badge" id="mgmt-sidebar-vms-badge" style="display:none;">0 VMs</span>
           </button>
           <!-- Pillar 5: Network & Sharing -->
-          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-network" title="Network & Sharing">
+          <button class="mgmt-sidebar-item" role="tab" aria-selected="false" data-mgmt-target="mgmt-sec-network" title="Network & Sharing">
             <svg class="mgmt-sidebar-svg"><use href="#i-net"/></svg>
             <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_network">Network & Sharing</span>
             <span class="mgmt-sidebar-badge" id="mgmt-sidebar-net-badge" style="display:none;">Online</span>
           </button>
           <!-- Pillar 6: Hardware & Power -->
-          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-hardware" title="Hardware & Power">
+          <button class="mgmt-sidebar-item" role="tab" aria-selected="false" data-mgmt-target="mgmt-sec-hardware" title="Hardware & Power">
             <svg class="mgmt-sidebar-svg"><use href="#i-sliders"/></svg>
             <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_hardware">Hardware & Power</span>
             <span class="mgmt-sidebar-badge" id="mgmt-sidebar-ups-badge" style="display:none;">Power</span>
           </button>
           <!-- Pillar 7: System & Identity -->
-          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-system-group" title="System & Identity">
+          <button class="mgmt-sidebar-item" role="tab" aria-selected="false" data-mgmt-target="mgmt-sec-system-group" title="System & Identity">
             <svg class="mgmt-sidebar-svg"><use href="#i-shield"/></svg>
             <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_system">System & Identity</span>
             <span class="mgmt-sidebar-badge alert-badge" id="mgmt-sidebar-sec-badge" style="display:none;">!</span>
@@ -2774,28 +2774,28 @@
           <!-- 1. Appearance -->
                   <!-- 1. Appearance -->
         <div id="mgmt-sec-wallpaper" class="mgmt-detail-card" style="display: none;">
-          <div class="mgmt-inner-tabs">
-            <button class="mgmt-inner-tab active" data-tab-target="mgmt-pane-wallpaper">
+          <div class="mgmt-inner-tabs" role="tablist">
+            <button class="mgmt-inner-tab active" role="tab" aria-selected="true" data-tab-target="mgmt-pane-wallpaper">
               <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-screen"/></svg>
               <span data-i18n="mgmt.subtab_wallpaper">Wallpaper</span>
             </button>
-            <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-theme">
+            <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-theme">
               <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-sliders"/></svg>
               <span data-i18n="mgmt.subtab_theme">Desktop Theme</span>
             </button>
-            <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-glass">
+            <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-glass">
               <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-sliders"/></svg>
               <span data-i18n="mgmt.subtab_glass">Glass & Effects</span>
             </button>
-            <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-dock">
+            <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-dock">
               <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-grid"/></svg>
               <span data-i18n="mgmt.subtab_dock">Dock & Desktop</span>
             </button>
-            <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-screensaver">
+            <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-screensaver">
               <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-clock"/></svg>
               <span data-i18n="mgmt.subtab_screensaver">Screensaver</span>
             </button>
-            <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-widgets">
+            <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-widgets">
               <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-grid"/></svg>
               <span data-i18n="mgmt.subtab_widgets">Widgets</span>
             </button>
@@ -3666,24 +3666,24 @@
           <!-- 3. Network & Virtual Switch Inspector (Standalone Top-Level Section) -->
           <div id="mgmt-sec-network" class="mgmt-detail-card" style="display: none;">
             <!-- Inner Tab Bar for Network & Switch -->
-            <div class="mgmt-inner-tabs">
-              <button class="mgmt-inner-tab active" data-tab-target="mgmt-pane-network">
+            <div class="mgmt-inner-tabs" role="tablist">
+              <button class="mgmt-inner-tab active" role="tab" aria-selected="true" data-tab-target="mgmt-pane-network">
                 <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-net"/></svg>
                 <span data-i18n="mgmt.subtab_network_physical">Switch & Physical</span>
               </button>
-              <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-network-wireguard">
+              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-network-wireguard">
                 <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-shield"/></svg>
                 <span data-i18n="mgmt.subtab_network_wireguard">WireGuard & Tailscale</span>
               </button>
-              <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-network-docker">
+              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-network-docker">
                 <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-docker"/></svg>
                 <span data-i18n="mgmt.subtab_network_docker">Docker Networks</span>
               </button>
-              <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-network-services">
+              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-network-services">
                 <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-storage"/></svg>
                 <span data-i18n="mgmt.subtab_network_services">File Sharing Services</span>
               </button>
-              <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-network-ports">
+              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-network-ports">
                 <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-terminal"/></svg>
                 <span data-i18n="mgmt.subtab_network_ports">Ports & Listeners</span>
               </button>
@@ -4362,16 +4362,16 @@
           <!-- Pillar 4: Virtual Machines & KVM Orchestration -->
           <div id="mgmt-sec-vms" class="mgmt-detail-card" style="display: none;">
             <!-- Inner Tab Bar for Virtual Machines -->
-            <div class="mgmt-inner-tabs">
-              <button class="mgmt-inner-tab active" data-tab-target="mgmt-pane-vms-list">
+            <div class="mgmt-inner-tabs" role="tablist">
+              <button class="mgmt-inner-tab active" role="tab" aria-selected="true" data-tab-target="mgmt-pane-vms-list">
                 <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-vm"/></svg>
                 <span data-i18n="mgmt.subtab_vms_fleet">Virtual Machines</span>
               </button>
-              <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-vms-create">
+              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-vms-create">
                 <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-plus"/></svg>
                 <span data-i18n="mgmt.subtab_vms_create">New Virtual Machine</span>
               </button>
-              <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-vms-kvm">
+              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-vms-kvm">
                 <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-cpu"/></svg>
                 <span data-i18n="mgmt.subtab_vms_kvm">KVM & Host Telemetry</span>
               </button>
@@ -4435,24 +4435,24 @@
 
           <!-- Pillar 6: Hardware & Power (Formerly Services / Unraid) -->
           <div id="mgmt-sec-hardware" class="mgmt-detail-card" style="display: none;">
-            <div class="mgmt-inner-tabs">
-              <button class="mgmt-inner-tab active" data-tab-target="mgmt-pane-unraid">
+            <div class="mgmt-inner-tabs" role="tablist">
+              <button class="mgmt-inner-tab active" role="tab" aria-selected="true" data-tab-target="mgmt-pane-unraid">
                 <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-sliders"/></svg>
                 <span data-i18n="mgmt.subtab_hardware_profiles">Host & Profiles</span>
               </button>
-              <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-hardware-fans">
+              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-hardware-fans">
                 <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-fan"/></svg>
                 <span data-i18n="mgmt.subtab_hardware_fans">Fans & Acoustics</span>
               </button>
-              <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-hardware-led">
+              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-hardware-led">
                 <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-bolt"/></svg>
                 <span data-i18n="mgmt.subtab_hardware_led">ARGB LED Lighting</span>
               </button>
-              <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-hardware-lcd">
+              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-hardware-lcd">
                 <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-screen"/></svg>
                 <span data-i18n="mgmt.subtab_hardware_lcd">Front LCD Screen</span>
               </button>
-              <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-hardware-ups">
+              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-hardware-ups">
                 <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-storage"/></svg>
                 <span data-i18n="mgmt.subtab_hardware_ups">UPS & Battery</span>
               </button>
@@ -4872,32 +4872,32 @@
 
           <!-- 5. Storage & Physical Chassis -->
           <div id="mgmt-sec-storage" class="mgmt-detail-card" style="display: none;">
-            <div class="mgmt-inner-tabs">
-              <button class="mgmt-inner-tab active" data-tab-target="mgmt-pane-chassis-twin">
+            <div class="mgmt-inner-tabs" role="tablist">
+              <button class="mgmt-inner-tab active" role="tab" aria-selected="true" data-tab-target="mgmt-pane-chassis-twin">
                 <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-disk"/></svg>
                 <span data-i18n="mgmt.subtab_chassis">Chassis Digital Twin</span>
               </button>
-              <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-storage-topo">
+              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-storage-topo">
                 <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-storage"/></svg>
                 <span data-i18n="mgmt.subtab_topo">Pool & Array Topology</span>
               </button>
-              <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-storage-shares">
+              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-storage-shares">
                 <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-storage"/></svg>
                 <span data-i18n="mgmt.subtab_shares">Network Shares</span>
               </button>
-              <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-storage-remotes">
+              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-storage-remotes">
                 <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-globe"/></svg>
                 <span data-i18n="mgmt.subtab_remotes">Remote & Cloud Storage</span>
               </button>
-              <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-storage-disks">
+              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-storage-disks">
                 <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-chip"/></svg>
                 <span data-i18n="mgmt.subtab_disks">Physical Disks Inventory</span>
               </button>
-              <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-copy">
+              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-copy">
                 <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-storage"/></svg>
                 <span data-i18n="mgmt.subtab_copy">Media Ingest</span>
               </button>
-              <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-storage-replication">
+              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-storage-replication">
                 <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-refresh"/></svg>
                 <span data-i18n="mgmt.subtab_replication">Replication</span>
               </button>
@@ -5095,32 +5095,32 @@
 
           <!-- 6. System -->
           <div id="mgmt-sec-system-group" class="mgmt-detail-card" style="display: none;">
-            <div class="mgmt-inner-tabs">
-              <button class="mgmt-inner-tab active" data-tab-target="mgmt-pane-security" id="mgmt-tab-security">
+            <div class="mgmt-inner-tabs" role="tablist">
+              <button class="mgmt-inner-tab active" role="tab" aria-selected="true" data-tab-target="mgmt-pane-security" id="mgmt-tab-security">
                 <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-chip"/></svg>
                 <span data-i18n="mgmt.subtab_security">Security</span>
               </button>
-              <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-users" id="mgmt-tab-users">
+              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-users" id="mgmt-tab-users">
                 <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-users"/></svg>
                 <span data-i18n="mgmt.subtab_users">Users & Roles</span>
               </button>
-              <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-backups" id="mgmt-tab-backups">
+              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-backups" id="mgmt-tab-backups">
                 <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-storage"/></svg>
                 <span data-i18n="mgmt.subtab_backups">Backups & Recovery</span>
               </button>
-              <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-notifications" id="mgmt-tab-notifications">
+              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-notifications" id="mgmt-tab-notifications">
                 <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-bell"/></svg>
                 <span data-i18n="mgmt.subtab_notifications">Notifications & Alerts</span>
               </button>
-              <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-events" id="mgmt-tab-events">
+              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-events" id="mgmt-tab-events">
                 <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-storage"/></svg>
                 <span data-i18n="mgmt.subtab_events">Event Log</span>
               </button>
-              <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-language" id="mgmt-tab-language">
+              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-language" id="mgmt-tab-language">
                 <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-globe"/></svg>
                 <span data-i18n="mgmt.subtab_language">Language & Region</span>
               </button>
-              <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-about" id="mgmt-tab-about">
+              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-about" id="mgmt-tab-about">
                 <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-globe"/></svg>
                 <span data-i18n="mgmt.subtab_about">About & Updates</span>
               </button>

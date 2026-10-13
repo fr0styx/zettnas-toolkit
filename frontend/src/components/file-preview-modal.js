@@ -5,6 +5,7 @@ import { showToast } from '../toast.js';
 
 let _activePreviewModal = null;
 let _previewAbortController = null;
+let _previewKeydownListener = null;
 
 export async function openFilePreviewModal(path, name) {
   closeFilePreviewModal();
@@ -49,14 +50,14 @@ export async function openFilePreviewModal(path, name) {
     if (e.target === overlay) handleClose();
   });
 
-  const onKeydown = (e) => {
+  _previewKeydownListener = (e) => {
     if (e.key === 'Escape') {
       e.preventDefault();
       e.stopPropagation();
-      handleClose();
+      closeFilePreviewModal();
     }
   };
-  window.addEventListener('keydown', onKeydown, { once: true });
+  window.addEventListener('keydown', _previewKeydownListener);
 
   _previewAbortController = new AbortController();
 
@@ -134,6 +135,10 @@ export async function openFilePreviewModal(path, name) {
 }
 
 export function closeFilePreviewModal() {
+  if (_previewKeydownListener) {
+    window.removeEventListener('keydown', _previewKeydownListener);
+    _previewKeydownListener = null;
+  }
   if (_previewAbortController) {
     _previewAbortController.abort();
     _previewAbortController = null;

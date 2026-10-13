@@ -1,0 +1,1 @@
+import{L as e}from"./dashboard-B2RciUXm.js";export{e as initManagement};
