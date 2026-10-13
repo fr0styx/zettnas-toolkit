@@ -7,6 +7,7 @@ import os
 import platform
 import re
 import shutil
+import socket
 import subprocess
 import sys
 import threading
@@ -2223,7 +2224,55 @@ async def system_shutdown():
     return {"status": "ok", "message": "System shutdown sequence initiated"}
 
 
-_last_update_check = {"ts": 0.0, "data": None}
+_last_update_check: Dict[str, Dict[str, Any]] = {
+    "stable": {"ts": 0.0, "data": None},
+    "edge": {"ts": 0.0, "data": None},
+}
+
+
+def _get_current_build_info() -> Dict[str, Any]:
+    """Returns detected build commit, build date, and container revision."""
+    commit = os.environ.get("BUILD_COMMIT", "")
+    created = os.environ.get("BUILD_DATE", "")
+
+    # Try inspecting self container for OCI revision label
+    if not commit:
+        try:
+            from backend.services.compose_synthesizer import fetch_container_raw_inspect
+
+            cid = socket.gethostname()
+            data = fetch_container_raw_inspect(cid) or fetch_container_raw_inspect("zettnas-toolkit")
+            if data and isinstance(data, dict):
+                labels = data.get("Config", {}).get("Labels", {})
+                commit = labels.get("org.opencontainers.image.revision", "")
+                created = labels.get("org.opencontainers.image.created", "")
+        except Exception:
+            pass
+
+    if not commit:
+        for p in ("/app/.git_commit", "data/.git_commit", ".git_commit"):
+            if os.path.exists(p):
+                try:
+                    with open(p, "r") as f:
+                        commit = f.read().strip()
+                except Exception:
+                    pass
+
+    if not commit:
+        try:
+            import subprocess
+
+            res = subprocess.run(["git", "rev-parse", "--short", "HEAD"], capture_output=True, text=True, timeout=2.0)
+            if res.returncode == 0 and res.stdout.strip():
+                commit = res.stdout.strip()
+        except Exception:
+            pass
+
+    return {
+        "commit": commit[:7] if commit else "",
+        "full_commit": commit,
+        "build_date": created,
+    }
 
 
 def _parse_version(v_str: str) -> list[int]:
@@ -2249,7 +2298,6 @@ def _is_newer_version(latest_str: str, current_str: str) -> bool:
 async def get_system_about():
     """Returns high-level system information, current version, chassis twin, and runtime stats."""
     import platform
-    import socket
     import sys
 
     from backend.hardware.storage import detect_chassis_model, get_chassis_friendly_name
@@ -2257,11 +2305,14 @@ async def get_system_about():
     chassis = detect_chassis_model()
     boot_time = getattr(Z_STATE, "boot_time", None) or time.time()
     uptime_secs = round(time.time() - boot_time, 1)
+    binfo = _get_current_build_info()
 
     return {
         "name": "ZettNAS Workbench",
         "version": __version__,
         "tag": f"v{__version__}",
+        "commit": binfo["commit"],
+        "build_date": binfo["build_date"],
         "release_channel": "stable",
         "chassis_model": get_chassis_friendly_name(chassis),
         "chassis_slug": chassis,
@@ -2277,19 +2328,80 @@ async def get_system_about():
 
 
 @router.get("/system/updates")
-async def check_system_updates(force: bool = False):
-    """Check GitHub Releases for newer ZettNAS releases with in-memory caching."""
+async def check_system_updates(force: bool = False, channel: str = "stable"):
+    """Check GitHub Releases (stable) or GitHub Commits on main (edge) with in-memory caching."""
     import httpx
 
+    channel_key = "edge" if str(channel or "").lower() == "edge" else "stable"
     now = time.time()
-    if not force and _last_update_check["data"] and (now - _last_update_check["ts"] < 600):
-        return _last_update_check["data"]
+    cache_entry = _last_update_check.get(channel_key, {"ts": 0.0, "data": None})
+    if not force and cache_entry.get("data") and (now - cache_entry.get("ts", 0) < 300):
+        return cache_entry["data"]
 
-    url = "https://api.github.com/repos/fr0styx/zettnas-toolkit/releases/latest"
+    binfo = _get_current_build_info()
+    current_commit = binfo["commit"]
+
     headers = {
         "Accept": "application/vnd.github.v3+json",
         "User-Agent": f"ZettNAS-Workbench/{__version__}",
     }
+
+    if channel_key == "edge":
+        url = "https://api.github.com/repos/fr0styx/zettnas-toolkit/commits/main"
+        try:
+            async with httpx.AsyncClient(timeout=8.0) as client:
+                resp = await client.get(url, headers=headers)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    latest_sha = data.get("sha", "")[:7]
+                    full_sha = data.get("sha", "")
+                    commit_obj = data.get("commit", {})
+                    msg = (commit_obj.get("message") or "").split("\n")[0]
+                    author = commit_obj.get("author", {}).get("name", "fr0styx")
+                    published_at = commit_obj.get("author", {}).get("date")
+
+                    # If current commit is known, compare hashes
+                    update_available = bool(
+                        current_commit and latest_sha and current_commit.lower() != latest_sha.lower()
+                    )
+                    result = {
+                        "channel": "edge",
+                        "current_version": __version__,
+                        "current_commit": current_commit,
+                        "latest_version": latest_sha,
+                        "latest_tag": f"main@{latest_sha}",
+                        "update_available": update_available,
+                        "release_name": f"main @ {latest_sha}: {msg}",
+                        "release_url": f"https://github.com/fr0styx/zettnas-toolkit/commit/{full_sha}",
+                        "published_at": published_at,
+                        "release_notes": f"Author: {author}\nCommit: {latest_sha}\nMessage: {msg}",
+                        "checked_at": now,
+                        "error": None,
+                    }
+                    _last_update_check["edge"] = {"ts": now, "data": result}
+                    return result
+                error_msg = f"GitHub API HTTP {resp.status_code}"
+        except Exception as e:
+            error_msg = str(e)
+
+        fallback = {
+            "channel": "edge",
+            "current_version": __version__,
+            "current_commit": current_commit,
+            "latest_version": current_commit or "unknown",
+            "latest_tag": f"main@{current_commit}" if current_commit else "main",
+            "update_available": False,
+            "release_name": "Edge Channel (Latest Commits)",
+            "release_url": "https://github.com/fr0styx/zettnas-toolkit/commits/main",
+            "published_at": None,
+            "release_notes": "",
+            "checked_at": now,
+            "error": error_msg,
+        }
+        return fallback
+
+    # Stable channel
+    url = "https://api.github.com/repos/fr0styx/zettnas-toolkit/releases/latest"
 
     try:
         async with httpx.AsyncClient(timeout=6.0) as client:
@@ -2301,7 +2413,9 @@ async def check_system_updates(force: bool = False):
                 update_available = _is_newer_version(clean_tag, __version__)
 
                 result = {
+                    "channel": "stable",
                     "current_version": __version__,
+                    "current_commit": current_commit,
                     "latest_version": clean_tag or tag,
                     "latest_tag": tag,
                     "update_available": update_available,
@@ -2313,8 +2427,7 @@ async def check_system_updates(force: bool = False):
                     "checked_at": now,
                     "error": None,
                 }
-                _last_update_check["ts"] = now
-                _last_update_check["data"] = result
+                _last_update_check["stable"] = {"ts": now, "data": result}
                 return result
             elif resp.status_code == 404:
                 # Fallback to tags endpoint if no releases are formally drafted
@@ -2326,7 +2439,9 @@ async def check_system_updates(force: bool = False):
                     clean_tag = latest_tag.lstrip("v")
                     update_available = _is_newer_version(clean_tag, __version__)
                     result = {
+                        "channel": "stable",
                         "current_version": __version__,
+                        "current_commit": current_commit,
                         "latest_version": clean_tag or latest_tag,
                         "latest_tag": latest_tag,
                         "update_available": update_available,
@@ -2337,8 +2452,7 @@ async def check_system_updates(force: bool = False):
                         "checked_at": now,
                         "error": None,
                     }
-                    _last_update_check["ts"] = now
-                    _last_update_check["data"] = result
+                    _last_update_check["stable"] = {"ts": now, "data": result}
                     return result
 
             error_msg = f"GitHub API HTTP {resp.status_code}"
@@ -2346,7 +2460,9 @@ async def check_system_updates(force: bool = False):
         error_msg = str(e)
 
     fallback = {
+        "channel": "stable",
         "current_version": __version__,
+        "current_commit": current_commit,
         "latest_version": __version__,
         "latest_tag": f"v{__version__}",
         "update_available": False,
@@ -2358,6 +2474,53 @@ async def check_system_updates(force: bool = False):
         "error": error_msg,
     }
     return fallback
+
+
+class ApplySystemUpdateRequest(BaseModel):
+    channel: str = "stable"
+    target_image: Optional[str] = None
+
+
+@router.post("/system/updates/apply", dependencies=[Depends(require_scope("system:power", "system:manage"))])
+async def post_apply_system_update(req: ApplySystemUpdateRequest):
+    """
+    Pulls the latest ZettNAS image and initiates a graceful self-update.
+    """
+    from backend.services.container_mutator import pull_container_image
+    from backend.services.self_updater import spawn_self_updater
+
+    channel = "edge" if req.channel.lower() == "edge" else "stable"
+    target_img = req.target_image or "ghcr.io/fr0styx/zettnas-toolkit:latest"
+
+    logger.info(f"[System Update] User initiated system update on '{channel}' channel using image '{target_img}'...")
+
+    # 1. Pull the image
+    try:
+        await asyncio.to_thread(pull_container_image, target_img, 300.0)
+    except Exception as exc:
+        logger.error(f"[System Update] Image pull failed: {exc}")
+        raise HTTPException(status_code=500, detail=f"Failed to pull image: {exc}")
+
+    # 2. Check if running inside container with docker socket access
+    sock_path = "/var/run/docker.sock"
+    if os.path.exists(sock_path):
+        spawned = await asyncio.to_thread(spawn_self_updater, target_img, "zettnas-toolkit", 2.5)
+        if spawned:
+            return {
+                "status": "restarting",
+                "channel": channel,
+                "target_image": target_img,
+                "auto_restarting": True,
+                "message": "Update downloaded. ZettNAS is recreating the container now and will reconnect shortly.",
+            }
+
+    return {
+        "status": "pulled",
+        "channel": channel,
+        "target_image": target_img,
+        "auto_restarting": False,
+        "message": "Latest image downloaded to host. Please restart container via Unraid or Docker Compose to finalize.",
+    }
 
 
 @router.get("/system/network-topology")

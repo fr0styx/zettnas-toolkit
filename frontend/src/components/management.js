@@ -7441,12 +7441,31 @@ export function initManagement() {
     });
   }
 
-  // Check for updates button
+  // Check for updates and release channel toggles
   const checkUpdatesBtn = document.getElementById('btn-check-updates');
   if (checkUpdatesBtn) {
     checkUpdatesBtn.addEventListener('click', () => {
       fetchAndRenderSystemAbout(true);
     });
+  }
+
+  const btnChanStable = document.getElementById('btn-channel-stable');
+  if (btnChanStable) {
+    btnChanStable.addEventListener('click', () => {
+      setUpdateChannel('stable');
+    });
+  }
+
+  const btnChanEdge = document.getElementById('btn-channel-edge');
+  if (btnChanEdge) {
+    btnChanEdge.addEventListener('click', () => {
+      setUpdateChannel('edge');
+    });
+  }
+
+  const applyUpdateBtn = document.getElementById('btn-apply-system-update');
+  if (applyUpdateBtn) {
+    applyUpdateBtn.addEventListener('click', applySystemUpdate);
   }
 
   // Diagnostics bundle buttons
@@ -7659,7 +7678,46 @@ export function initManagement() {
   });
 }
 
-export async function fetchAndRenderSystemAbout(force = false) {
+let _currentUpdateChannel = 'stable';
+try {
+  const saved = localStorage.getItem('zettnas_update_channel');
+  if (saved === 'edge' || saved === 'stable') _currentUpdateChannel = saved;
+} catch (e) {}
+
+let _lastUpdateData = null;
+
+export async function setUpdateChannel(channel) {
+  _currentUpdateChannel = channel === 'edge' ? 'edge' : 'stable';
+  try {
+    localStorage.setItem('zettnas_update_channel', _currentUpdateChannel);
+  } catch (e) {}
+  syncUpdateChannelUI();
+  return fetchAndRenderSystemAbout(true, _currentUpdateChannel);
+}
+
+function syncUpdateChannelUI() {
+  const btnStable = document.getElementById('btn-channel-stable');
+  const btnEdge = document.getElementById('btn-channel-edge');
+  if (btnStable && btnEdge) {
+    if (_currentUpdateChannel === 'edge') {
+      btnStable.classList.remove('active');
+      btnStable.style.background = 'transparent';
+      btnStable.style.color = 'var(--muted)';
+      btnEdge.classList.add('active');
+      btnEdge.style.background = 'rgba(14, 165, 233, 0.25)';
+      btnEdge.style.color = '#38bdf8';
+    } else {
+      btnEdge.classList.remove('active');
+      btnEdge.style.background = 'transparent';
+      btnEdge.style.color = 'var(--muted)';
+      btnStable.classList.add('active');
+      btnStable.style.background = 'rgba(37, 194, 160, 0.25)';
+      btnStable.style.color = '#25c2a0';
+    }
+  }
+}
+
+export async function fetchAndRenderSystemAbout(force = false, channelOverride = null) {
   const versionBadge = document.getElementById('about-version-badge');
   const chassisEl = document.getElementById('about-chassis-model');
   const hostEl = document.getElementById('about-host-platform');
@@ -7678,6 +7736,9 @@ export async function fetchAndRenderSystemAbout(force = false) {
   const btnIcon = document.getElementById('btn-check-updates-icon');
   const btnText = document.getElementById('btn-check-updates-text');
 
+  const channel = channelOverride || _currentUpdateChannel || 'stable';
+  syncUpdateChannelUI();
+
   if (btnIcon && btnText) {
     btnIcon.textContent = '⏳';
     btnText.textContent = 'Checking...';
@@ -7687,7 +7748,9 @@ export async function fetchAndRenderSystemAbout(force = false) {
   try {
     const about = await api.get('/api/system/about');
     if (about) {
-      if (versionBadge) versionBadge.textContent = `${about.tag || 'v' + about.version} • ${about.release_channel || 'Stable'}`;
+      const commitTag = about.commit ? ` (${about.commit})` : '';
+      const channelLabel = channel === 'edge' ? 'Edge (Rolling)' : (about.release_channel || 'Stable');
+      if (versionBadge) versionBadge.textContent = `${about.tag || 'v' + about.version}${commitTag} • ${channelLabel}`;
       if (chassisEl) chassisEl.textContent = about.chassis_model || 'Standard / DIY';
       if (hostEl) hostEl.textContent = `${about.hostname || 'NAS'} (${about.platform || 'Linux'})`;
       if (runtimeEl) runtimeEl.textContent = `${about.containerized ? 'Docker Container' : 'Native Host'} (Python ${about.python_version || '3.12'})`;
@@ -7704,27 +7767,52 @@ export async function fetchAndRenderSystemAbout(force = false) {
 
   // 2. Fetch update status
   try {
-    const data = await api.get(`/api/system/updates${force ? '?force=true' : ''}`);
+    const data = await api.get(`/api/system/updates?channel=${channel}${force ? '&force=true' : ''}`);
+    _lastUpdateData = data;
     if (data) {
+      const isEdge = data.channel === 'edge';
+      const applyBtn = document.getElementById('btn-apply-system-update');
+      const applyText = document.getElementById('btn-apply-update-text');
+
       if (data.update_available) {
         if (statusIcon) statusIcon.textContent = '🚀';
         if (statusTitle) {
-          statusTitle.textContent = `Update Available: ${data.latest_tag || 'v' + data.latest_version}`;
+          statusTitle.textContent = isEdge
+            ? `Update Available (Edge): ${data.latest_version}`
+            : `Update Available: ${data.latest_tag || 'v' + data.latest_version}`;
           statusTitle.style.color = 'var(--warn, #f5a623)';
         }
-        if (statusDesc) statusDesc.textContent = `A newer release of ZettNAS Workbench is available on GitHub.`;
+        if (statusDesc) {
+          statusDesc.textContent = isEdge
+            ? `Newer commit features are available on the main branch.`
+            : `A newer release of ZettNAS Workbench is available on GitHub.`;
+        }
         if (detailsBox) detailsBox.style.display = 'block';
         if (releaseTitle) releaseTitle.textContent = data.release_name || `Release ${data.latest_tag}`;
         if (releaseLink) releaseLink.href = data.release_url || 'https://github.com/fr0styx/zettnas-toolkit/releases';
         if (releaseNotes) releaseNotes.textContent = data.release_notes || 'No release notes provided.';
+
+        if (applyBtn && applyText) {
+          applyBtn.style.display = 'flex';
+          applyText.textContent = isEdge
+            ? `Install Latest Commit (${data.latest_version})`
+            : `Install Release ${data.latest_tag || 'v' + data.latest_version}`;
+        }
       } else {
         if (statusIcon) statusIcon.textContent = '✅';
         if (statusTitle) {
-          statusTitle.textContent = `ZettNAS Workbench is up to date`;
+          statusTitle.textContent = isEdge
+            ? `ZettNAS Workbench is up to date with main`
+            : `ZettNAS Workbench is up to date`;
           statusTitle.style.color = 'var(--ok2, #25c2a0)';
         }
-        if (statusDesc) statusDesc.textContent = `You are running the latest stable release (${data.latest_tag || 'v' + data.current_version}).`;
+        if (statusDesc) {
+          statusDesc.textContent = isEdge
+            ? `You are running the latest commit on the main branch (${data.latest_version || data.current_commit || 'latest'}).`
+            : `You are running the latest stable release (${data.latest_tag || 'v' + data.current_version}).`;
+        }
         if (detailsBox) detailsBox.style.display = 'none';
+        if (applyBtn) applyBtn.style.display = 'none';
       }
       if (lastCheckedEl && data.checked_at) {
         const timeStr = new Date(data.checked_at * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -7743,6 +7831,63 @@ export async function fetchAndRenderSystemAbout(force = false) {
       btnIcon.textContent = '🔄';
       btnText.textContent = 'Check for Updates';
     }
+  }
+}
+
+export async function applySystemUpdate() {
+  const applyBtn = document.getElementById('btn-apply-system-update');
+  const progressOverlay = document.getElementById('update-progress-overlay');
+  const progressTitle = document.getElementById('update-progress-title');
+  const progressDesc = document.getElementById('update-progress-desc');
+
+  const channel = _currentUpdateChannel || 'stable';
+  const targetTag = _lastUpdateData?.latest_tag || _lastUpdateData?.latest_version || 'latest';
+
+  const confirmed = window.confirm(
+    t(
+      'updates.confirm_msg',
+      `Update ZettNAS Workbench to ${targetTag} now? The container will pull the updated image and restart. Your data and settings are safely preserved.`
+    )
+  );
+  if (!confirmed) return;
+
+  if (applyBtn) applyBtn.disabled = true;
+  if (progressOverlay) progressOverlay.style.display = 'block';
+  if (progressTitle) progressTitle.textContent = t('updates.installing', 'Downloading & Applying Update...');
+  if (progressDesc) progressDesc.textContent = 'Pulling container image layers from GHCR...';
+
+  try {
+    const res = await api.post('/api/system/updates/apply', { channel });
+    showToast(res?.message || 'Update initiated. Reconnecting...', 'info');
+
+    if (progressDesc) progressDesc.textContent = res?.message || 'Restarting container and reconnecting...';
+
+    // Poll health endpoint until back online
+    let attempts = 0;
+    const maxAttempts = 40;
+    const interval = setInterval(async () => {
+      attempts++;
+      try {
+        const h = await fetch('/api/health', { cache: 'no-store' });
+        if (h.ok) {
+          clearInterval(interval);
+          if (progressTitle) progressTitle.textContent = '🎉 Update Complete!';
+          if (progressDesc) progressDesc.textContent = 'Reloading ZettNAS Workbench...';
+          showToast(t('updates.updated_success', 'ZettNAS updated successfully!'), 'success');
+          setTimeout(() => window.location.reload(), 1200);
+        }
+      } catch (e) {
+        if (attempts >= maxAttempts) {
+          clearInterval(interval);
+          if (progressDesc) progressDesc.textContent = 'Please refresh the page once the container has restarted.';
+          if (applyBtn) applyBtn.disabled = false;
+        }
+      }
+    }, 1500);
+  } catch (err) {
+    showToast(`Update failed: ${err.message}`, 'error');
+    if (progressOverlay) progressOverlay.style.display = 'none';
+    if (applyBtn) applyBtn.disabled = false;
   }
 }
 

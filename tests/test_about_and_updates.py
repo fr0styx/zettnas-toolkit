@@ -76,3 +76,48 @@ def test_check_system_updates_newer_available(client, auth_headers):
         assert data["latest_tag"] == "v9.9.9"
         assert data["release_name"] == "Release v9.9.9"
         assert "Exciting new features" in data["release_notes"]
+
+
+def test_check_system_updates_edge_channel(client, auth_headers):
+    mock_gh_commit = {
+        "sha": "9abc1234567890abcdef",
+        "commit": {
+            "message": "feat(core): high velocity storage metrics\nDetailed body...",
+            "author": {
+                "name": "fr0styx",
+                "date": "2026-10-13T21:00:00Z",
+            },
+        },
+    }
+    mock_resp = MagicMock()
+    mock_resp.status_code = 200
+    mock_resp.json.return_value = mock_gh_commit
+
+    with patch("httpx.AsyncClient.get", new_callable=AsyncMock) as mock_get:
+        mock_get.return_value = mock_resp
+        resp = client.get("/api/system/updates?force=true&channel=edge", headers=auth_headers)
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["channel"] == "edge"
+        assert data["latest_version"] == "9abc123"
+        assert "9abc123" in data["latest_tag"]
+        assert "high velocity storage metrics" in data["release_name"]
+
+
+def test_apply_system_update_endpoint(client, auth_headers):
+    with (
+        patch("backend.services.container_mutator.pull_container_image") as mock_pull,
+        patch("backend.services.self_updater.spawn_self_updater", return_value=True) as mock_spawn,
+        patch("os.path.exists", return_value=True),
+    ):
+        resp = client.post(
+            "/api/system/updates/apply",
+            json={"channel": "edge", "target_image": "ghcr.io/fr0styx/zettnas-toolkit:latest"},
+            headers=auth_headers,
+        )
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["status"] == "restarting"
+        assert data["auto_restarting"] is True
+        mock_pull.assert_called_once()
+        mock_spawn.assert_called_once()

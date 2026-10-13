@@ -5831,12 +5831,23 @@
             <div class="drawer-card" style="padding: 18px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
               <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:8px; margin-bottom:14px;">
                 <div>
-                  <span class="card-head-title" style="font-weight:700; font-size:14px; color:#fff; display:block; margin-bottom:2px;">Software Updates</span>
-                  <span style="font-size:11px; color:var(--muted);">Check for the latest stable releases, security patches, and features.</span>
+                  <span class="card-head-title" style="font-weight:700; font-size:14px; color:#fff; display:block; margin-bottom:2px;" data-i18n="updates.title">Software Updates</span>
+                  <span style="font-size:11px; color:var(--muted);" data-i18n="updates.subtitle">Check for the latest stable releases, security patches, or opt in to bleeding-edge commit features.</span>
                 </div>
-                <button id="btn-check-updates" class="btn-pill-toggle" style="display:flex; align-items:center; gap:6px; padding:6px 12px; font-size:11.5px; font-weight:600;">
-                  <span id="btn-check-updates-icon">🔄</span> <span id="btn-check-updates-text">Check for Updates</span>
-                </button>
+                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                  <!-- Release Channel Chooser -->
+                  <div style="display:inline-flex; align-items:center; background:rgba(0,0,0,0.35); padding:2px; border-radius:6px; border:1px solid rgba(255,255,255,0.1); font-size:11px;">
+                    <button id="btn-channel-stable" type="button" class="btn-channel-toggle active" style="padding:5px 10px; border-radius:4px; border:none; background:rgba(37,194,160,0.25); color:#25c2a0; font-weight:700; cursor:pointer;" title="Official SemVer releases (Recommended for production)">
+                      <span data-i18n="updates.channel_stable">🌟 Stable</span>
+                    </button>
+                    <button id="btn-channel-edge" type="button" class="btn-channel-toggle" style="padding:5px 10px; border-radius:4px; border:none; background:transparent; color:var(--muted); font-weight:600; cursor:pointer;" title="Rolling release channel tracking the latest commits on main">
+                      <span data-i18n="updates.channel_edge">⚡ Edge (Latest Commits)</span>
+                    </button>
+                  </div>
+                  <button id="btn-check-updates" class="btn-pill-toggle" style="display:flex; align-items:center; gap:6px; padding:6px 12px; font-size:11.5px; font-weight:600;">
+                    <span id="btn-check-updates-icon">🔄</span> <span id="btn-check-updates-text" data-i18n="updates.check_btn">Check for Updates</span>
+                  </button>
+                </div>
               </div>
 
               <div id="update-status-box" style="padding:14px; background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.06); border-radius:8px;">
@@ -5856,8 +5867,31 @@
                     <a id="update-release-link" href="https://github.com/fr0styx/zettnas-toolkit/releases" target="_blank" rel="noopener noreferrer" style="color:var(--accent-cyan, #0ea5e9); font-size:11px; text-decoration:none;">View on GitHub ↗</a>
                   </div>
                   <div id="update-release-notes" style="font-size:11px; color:#cbd5e1; max-height:160px; overflow-y:auto; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.04); border-radius:6px; padding:10px; font-family:var(--font-mono, monospace); line-height:1.45; white-space:pre-wrap;"></div>
+
+                  <!-- In-App Upgrade Action Bar -->
+                  <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-top:12px; padding:12px 14px; background:linear-gradient(135deg, rgba(37,194,160,0.12), rgba(14,165,233,0.12)); border:1px solid rgba(37,194,160,0.35); border-radius:6px;">
+                    <div>
+                      <div style="font-size:12px; font-weight:700; color:#fff;" data-i18n="updates.in_app_title">Direct In-App Upgrade</div>
+                      <div style="font-size:10.5px; color:var(--muted); margin-top:1px;" data-i18n="updates.in_app_desc">Download the latest container image and restart the workbench automatically.</div>
+                    </div>
+                    <button id="btn-apply-system-update" type="button" class="btn-pill-toggle" style="display:flex; align-items:center; gap:6px; padding:8px 16px; font-size:12px; font-weight:700; background:linear-gradient(135deg, #25c2a0, #0ea5e9); color:#000; border:none; border-radius:6px; cursor:pointer; box-shadow:0 4px 14px rgba(37,194,160,0.35);">
+                      <span id="btn-apply-update-icon">⚡</span>
+                      <span id="btn-apply-update-text" data-i18n="updates.btn_install_now">Install Update Now</span>
+                    </button>
+                  </div>
+
+                  <!-- In-App Update Progress Banner -->
+                  <div id="update-progress-overlay" style="display:none; margin-top:12px; padding:14px 16px; background:rgba(15,22,34,0.95); border:1px solid rgba(14,165,233,0.4); border-radius:8px; text-align:center;">
+                    <div style="font-size:22px; animation:spin 1.5s linear infinite; display:inline-block;">🔄</div>
+                    <div id="update-progress-title" style="font-size:12.5px; font-weight:700; color:#fff; margin-top:6px;" data-i18n="updates.installing">Downloading & Applying Update...</div>
+                    <div id="update-progress-desc" style="font-size:11px; color:var(--muted); margin-top:2px;">Pulling latest container image layers from GHCR and restarting workbench.</div>
+                    <div style="width:100%; height:4px; background:rgba(255,255,255,0.1); border-radius:2px; margin-top:10px; overflow:hidden;">
+                      <div id="update-progress-bar" style="width:60%; height:100%; background:linear-gradient(90deg, #25c2a0, #0ea5e9); animation:pulse 1.2s infinite ease-in-out;"></div>
+                    </div>
+                  </div>
+
                   <div style="margin-top:10px; padding:8px 12px; background:rgba(14,165,233,0.1); border:1px solid rgba(14,165,233,0.25); border-radius:6px; font-size:11px; color:#93c5fd;">
-                    💡 <strong>How to Update:</strong> Pull the new image and restart the container via Unraid's Docker tab (click container &rarr; <em>Force Update</em>), or run:
+                    💡 <strong>Alternative Host Update:</strong> In Unraid's Docker tab, click container &rarr; <em>Force Update</em>, or run:
                     <code style="display:block; margin-top:4px; background:rgba(0,0,0,0.4); padding:4px 8px; border-radius:4px; font-family:monospace; color:#38bdf8;">docker compose pull && docker compose up -d</code>
                   </div>
                 </div>
