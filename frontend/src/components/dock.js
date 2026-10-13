@@ -1440,7 +1440,90 @@ export const KNOWN_APPS = {
   }
 };
 
-export function showDockItemContextMenu(x, y, id, title, isPinned, isRunning) {
+export function toggleFmWindowSwitcher(anchorEl, fmWindows = []) {
+  let popover = document.getElementById('dock-fm-switcher');
+  if (popover) {
+    popover.remove();
+    return;
+  }
+  if (!fmWindows.length) return;
+
+  popover = document.createElement('div');
+  popover.id = 'dock-fm-switcher';
+  popover.className = 'dock-switcher-popover glassmorphic-panel';
+
+  const header = document.createElement('div');
+  header.className = 'dock-switcher-header';
+  header.innerHTML = `
+    <span>${t('dock.switcher_title', 'File Explorer Windows')} (${fmWindows.length})</span>
+    <button class="win-btn close-btn" style="width:14px; height:14px;" title="Close" aria-label="Close"></button>
+  `;
+  header.querySelector('.close-btn').onclick = () => popover.remove();
+  popover.appendChild(header);
+
+  fmWindows.forEach((w) => {
+    const item = document.createElement('div');
+    const isActive = DockManager.activeId === w.id && !w.minimized;
+    item.className = `dock-switcher-item ${isActive ? 'active' : ''}`;
+    const winTitle = w.title || 'File Explorer';
+    const folderName = winTitle.includes('(') ? winTitle.split('(')[1].replace(')', '') : winTitle;
+    let pathStr = '';
+    if (w.el && typeof w.el.querySelector === 'function') {
+      const pathInput = w.el.querySelector('.fm-path-input');
+      if (pathInput && pathInput.value) pathStr = pathInput.value;
+    }
+
+    item.innerHTML = `
+      <span class="dock-switcher-icon">📁</span>
+      <div class="dock-switcher-info">
+        <span class="dock-switcher-name">${escapeHtml(folderName)}</span>
+        ${pathStr ? `<span class="dock-switcher-path">${escapeHtml(pathStr)}</span>` : ''}
+      </div>
+      <button class="dock-switcher-close" title="Close Window" aria-label="Close Window">✕</button>
+    `;
+
+    item.addEventListener('click', (e) => {
+      if (e.target.closest('.dock-switcher-close')) return;
+      popover.remove();
+      DockManager.restore(w.id);
+      const innerWin = w.el?.querySelector?.('.file-manager-window') || w.el;
+      if (innerWin) bringToFront(innerWin);
+    });
+
+    item.querySelector('.dock-switcher-close').addEventListener('click', (e) => {
+      e.stopPropagation();
+      const closeBtn = w.el?.querySelector?.('.close-btn') || w.el?.querySelector?.('#fm-close');
+      if (closeBtn) closeBtn.click();
+      else DockManager.closeWindow(w.id);
+      popover.remove();
+    });
+
+    popover.appendChild(item);
+  });
+
+  document.body.appendChild(popover);
+
+  const rect = anchorEl.getBoundingClientRect();
+  const popW = 280;
+  const popH = popover.offsetHeight || 180;
+  let left = rect.left + (rect.width / 2) - (popW / 2);
+  left = Math.max(12, Math.min(window.innerWidth - popW - 12, left));
+  let top = rect.top - popH - 12;
+  if (top < 10) top = rect.bottom + 12;
+
+  popover.style.left = `${left}px`;
+  popover.style.top = `${top}px`;
+
+  const closeOnOutside = (e) => {
+    if (!popover.contains(e.target) && !anchorEl.contains(e.target)) {
+      popover.remove();
+      document.removeEventListener('pointerdown', closeOnOutside);
+    }
+  };
+  setTimeout(() => document.addEventListener('pointerdown', closeOnOutside), 50);
+}
+
+export function showDockItemContextMenu(x, y, id, title, isPinned, isRunning, openWindowsList = []) {
   const isApp = id && id !== 'home' && id !== 'notif';
   if (!isApp) return;
 
@@ -1456,35 +1539,83 @@ export function showDockItemContextMenu(x, y, id, title, isPinned, isRunning) {
   const pinIcon = isPinned ? '📌' : '📍';
   const openLabel = t('dock.open_app', 'Open');
   const closeLabel = t('dock.close_window', 'Close Window');
+  const isFmApp = id === 'fm' || (id && id.startsWith('fm-')) || (id && id.startsWith('file-manager-window'));
 
   let html = `
     <div class="ctx-item" id="dock-ctx-pin">
       <span style="font-size:12px; margin-right:6px;">${pinIcon}</span>
       <span>${escapeHtml(pinLabel)}</span>
     </div>
-    ${(id === 'fm' || (id && id.startsWith('fm-'))) ? `
+  `;
+
+  if (isFmApp) {
+    html += `
       <div class="ctx-item" id="dock-ctx-new-window">
         <span style="font-size:11px; margin-right:6px;">🪟</span>
-        <span>${escapeHtml(t('dock.new_fm_window', 'New Window'))}</span>
+        <span>${escapeHtml(t('dock.new_fm_window', 'New Window (Ctrl+N)'))}</span>
       </div>
-    ` : ''}
-    ${isRunning ? `
-      <div class="ctx-item" id="dock-ctx-close" style="color:var(--crit, #ff5c5c);">
-        <span style="font-size:11px; margin-right:6px;">✕</span>
-        <span>${escapeHtml(closeLabel)}</span>
-      </div>
-    ` : `
-      <div class="ctx-item" id="dock-ctx-open" style="color:var(--ok2, #25c2a0);">
-        <span style="font-size:11px; margin-right:6px;">▶</span>
-        <span>${escapeHtml(openLabel)}</span>
-      </div>
-    `}
-  `;
+    `;
+
+    if (openWindowsList && openWindowsList.length > 0) {
+      html += `<div style="height:1px; background:rgba(255,255,255,0.08); margin:4px 0;"></div>`;
+      html += `<div style="font-size:9.5px; color:var(--muted); padding:3px 10px; font-weight:700; text-transform:uppercase;">${escapeHtml(t('dock.open_windows', 'Open Windows'))}</div>`;
+      openWindowsList.forEach((w) => {
+        const wTitle = w.title || 'File Explorer';
+        const isCurrentActive = DockManager.activeId === w.id;
+        html += `
+          <div class="ctx-item dock-ctx-fm-win" data-win-id="${escapeHtml(w.id)}" style="display:flex; align-items:center; justify-content:space-between;">
+            <div style="display:flex; align-items:center; gap:6px; min-width:0; overflow:hidden;">
+              <span style="font-size:12px;">📁</span>
+              <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(wTitle)}</span>
+            </div>
+            ${isCurrentActive ? `<span style="color:var(--accent-cyan, #0ea5e9); font-size:10px;">✓</span>` : ''}
+          </div>
+        `;
+      });
+      html += `<div style="height:1px; background:rgba(255,255,255,0.08); margin:4px 0;"></div>`;
+      html += `
+        <div class="ctx-item" id="dock-ctx-close-all" style="color:var(--crit, #ff5c5c);">
+          <span style="font-size:11px; margin-right:6px;">✕</span>
+          <span>${escapeHtml(t('dock.close_all_windows', 'Close All Windows'))}</span>
+        </div>
+      `;
+    } else if (isRunning) {
+      html += `
+        <div class="ctx-item" id="dock-ctx-close" style="color:var(--crit, #ff5c5c);">
+          <span style="font-size:11px; margin-right:6px;">✕</span>
+          <span>${escapeHtml(closeLabel)}</span>
+        </div>
+      `;
+    } else {
+      html += `
+        <div class="ctx-item" id="dock-ctx-open" style="color:var(--ok2, #25c2a0);">
+          <span style="font-size:11px; margin-right:6px;">▶</span>
+          <span>${escapeHtml(openLabel)}</span>
+        </div>
+      `;
+    }
+  } else {
+    if (isRunning) {
+      html += `
+        <div class="ctx-item" id="dock-ctx-close" style="color:var(--crit, #ff5c5c);">
+          <span style="font-size:11px; margin-right:6px;">✕</span>
+          <span>${escapeHtml(closeLabel)}</span>
+        </div>
+      `;
+    } else {
+      html += `
+        <div class="ctx-item" id="dock-ctx-open" style="color:var(--ok2, #25c2a0);">
+          <span style="font-size:11px; margin-right:6px;">▶</span>
+          <span>${escapeHtml(openLabel)}</span>
+        </div>
+      `;
+    }
+  }
 
   menu.innerHTML = html;
   menu.style.display = 'block';
-  const menuW = 160;
-  const menuH = menu.offsetHeight || 72;
+  const menuW = 180;
+  const menuH = menu.offsetHeight || 90;
   const left = Math.max(10, Math.min(window.innerWidth - menuW - 10, x - (menuW / 2)));
   const top = Math.max(10, Math.min(window.innerHeight - menuH - 60, y - menuH - 8));
   menu.style.left = `${left}px`;
@@ -1511,6 +1642,30 @@ export function showDockItemContextMenu(x, y, id, title, isPinned, isRunning) {
     e.stopPropagation();
     if (typeof window.openNewFileManagerWindow === 'function') {
       window.openNewFileManagerWindow();
+    }
+    hideMenu();
+  });
+
+  document.querySelectorAll('.dock-ctx-fm-win').forEach((el) => {
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const winId = el.dataset.winId;
+      if (winId && DockManager.windows[winId]) {
+        DockManager.restore(winId);
+        const winEl = DockManager.windows[winId]?.el;
+        const innerWin = winEl?.querySelector?.('.file-manager-window') || winEl;
+        if (innerWin) bringToFront(innerWin);
+      }
+      hideMenu();
+    });
+  });
+
+  document.getElementById('dock-ctx-close-all')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (typeof window.closeAllFileManagerWindows === 'function') {
+      window.closeAllFileManagerWindows();
+    } else {
+      openWindowsList.forEach((w) => DockManager.closeWindow(w.id));
     }
     hideMenu();
   });
@@ -1595,11 +1750,15 @@ export const DockManager = {
 
   closeWindow(id) {
     if (id === 'fm') {
+      if (typeof window.closeAllFileManagerWindows === 'function') {
+        window.closeAllFileManagerWindows();
+        return;
+      }
       const fmClose = document.getElementById('fm-close');
       if (fmClose) { fmClose.click(); return; }
-    } else if (id && id.startsWith('fm-')) {
+    } else if (id && (id.startsWith('fm-') || id.startsWith('file-manager-window'))) {
       const win = this.windows[id]?.el;
-      const closeBtn = win?.querySelector('.close-btn');
+      const closeBtn = win?.querySelector('.close-btn') || win?.querySelector('#fm-close');
       if (closeBtn) { closeBtn.click(); return; }
     } else if (id === 'management') {
       const mgmtClose = document.getElementById('management-close');
@@ -1799,10 +1958,11 @@ export const DockManager = {
     this.activeId = id;
     const dock = document.getElementById('os-dock');
     if (!dock) return;
+    const isFm = id === 'fm' || (typeof id === 'string' && (id.startsWith('fm-') || id.startsWith('file-manager-window')));
     dock.querySelectorAll('.dock-item').forEach((item) => {
       const winId = item.dataset.windowId;
       if (!winId) return;
-      const isActive = winId === id;
+      const isActive = winId === id || (isFm && winId === 'fm');
       item.classList.toggle('active-window', isActive);
       const dot = item.querySelector('.dock-indicator-dot');
       if (dot) dot.classList.toggle('active-dot', isActive);
@@ -2150,15 +2310,89 @@ export const DockManager = {
 
     // Dynamic apps (pinned + running)
     const pinned = this.getPinnedApps();
+    const isFmAppId = (wId) => wId === 'fm' || (typeof wId === 'string' && (wId.startsWith('fm-') || wId.startsWith('file-manager-window')));
+
+    // Collect all open FM windows
+    const fmWindows = Object.entries(this.windows)
+      .filter(([k, v]) => isFmAppId(k) && !v.closed)
+      .map(([k, v]) => ({ id: k, ...v }));
+    const fmRunning = fmWindows.length > 0;
+
     const runningIds = Object.keys(this.windows).filter((id) => !this.windows[id].closed);
     const displayedIds = [...pinned];
+
+    // If any FM window is running and 'fm' isn't already in displayedIds, add 'fm'
+    if (fmRunning && !displayedIds.includes('fm')) {
+      displayedIds.push('fm');
+    }
+
     runningIds.forEach((id) => {
+      // Group all FM windows under 'fm'
+      if (isFmAppId(id)) return;
       if (!displayedIds.includes(id)) {
         displayedIds.push(id);
       }
     });
 
     displayedIds.forEach((id) => {
+      if (id === 'fm') {
+        const isRunning = fmRunning;
+        const isPinned = this.isPinned('fm');
+        const win = this.windows['fm'] || (KNOWN_APPS.fm ? {
+          icon: KNOWN_APPS.fm.icon,
+          title: KNOWN_APPS.fm.getTitle(),
+          minimized: !isRunning,
+          closed: !isRunning,
+        } : null);
+        if (!win) return;
+
+        const item = document.createElement('button');
+        item.type = 'button';
+        let cls = 'dock-item';
+        if (!isRunning) cls += ' pinned-closed';
+        else if (fmWindows.every((w) => w.minimized)) cls += ' minimized';
+        const isFmActive = isFmAppId(this.activeId) && isRunning && fmWindows.some((w) => !w.minimized);
+        if (isFmActive) cls += ' active-window';
+        item.className = cls;
+        item.setAttribute('aria-label', win.title);
+        item.dataset.windowId = 'fm';
+
+        let innerContent = `<svg><use href="${win.icon}"/></svg>`;
+        if (fmWindows.length > 1) {
+          innerContent += `<span class="dock-count-badge">${fmWindows.length}</span>`;
+        }
+        item.innerHTML = innerContent;
+
+        item.addEventListener('mousedown', (e) => e.stopPropagation());
+        item.addEventListener('mouseenter', () => showDockTooltip(item, 'fm', win.title, win.icon, !isRunning || fmWindows.every((w) => w.minimized), !isRunning));
+        item.addEventListener('focus', () => showDockTooltip(item, 'fm', win.title, win.icon, !isRunning || fmWindows.every((w) => w.minimized), !isRunning));
+        item.addEventListener('mouseleave', hideDockTooltip);
+        item.addEventListener('blur', hideDockTooltip);
+
+        item.addEventListener('click', () => {
+          hideDockTooltip();
+          if (!isRunning) {
+            if (KNOWN_APPS.fm?.launch) {
+              KNOWN_APPS.fm.launch();
+            }
+          } else if (fmWindows.length > 1) {
+            toggleFmWindowSwitcher(item, fmWindows);
+          } else if (fmWindows.length === 1) {
+            this.toggle(fmWindows[0].id);
+          }
+        });
+
+        item.addEventListener('contextmenu', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          hideDockTooltip();
+          showDockItemContextMenu(e.pageX, e.pageY, 'fm', win.title, isPinned, isRunning, fmWindows);
+        });
+
+        frag.appendChild(item);
+        return;
+      }
+
       const isRunning = !!(this.windows[id] && !this.windows[id].closed);
       const isPinned = this.isPinned(id);
       const win = this.windows[id] || (KNOWN_APPS[id] ? {

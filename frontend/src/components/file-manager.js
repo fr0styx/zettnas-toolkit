@@ -4,6 +4,7 @@ import { ZettEventBus } from '../event-bus.js';
 import { showToast, showConfirmToast, showPromptToast } from '../toast.js';
 import { t } from '../i18n.js';
 import { makeDraggable, bringToFront } from './dock.js';
+import { openFilePreviewModal } from './file-preview-modal.js';
 
 // Virtualized DOM constants
 const ROW_HEIGHT = 42;
@@ -11,7 +12,7 @@ const BUFFER = 5;
 const BOUNDS_KEY = 'zettnas_fm_bounds';
 
 // Shared clipboard across all File Explorer instances
-let _clipboard = { items: [], action: 'copy' };
+let _clipboard = { items: [], action: 'copy', sourceInstanceId: null };
 
 // Map of all active File Explorer instances: instanceId -> FileManagerWindow
 const _fmInstances = new Map();
@@ -45,8 +46,8 @@ export function getActiveFmInstance() {
 
 /**
  * FileManagerWindow represents an independent, full-featured File Explorer instance.
- * Supports arbitrary folder paths, multi-selection, virtualized rendering,
- * and inter-window drag-and-drop.
+ * Supports arbitrary folder paths, multi-selection, 2D virtualized rendering,
+ * navigation history stacks, client/server search, and inter-window drag-and-drop.
  */
 export class FileManagerWindow {
   constructor(id, dockId, initialPath, isPrimary = false) {
@@ -56,6 +57,7 @@ export class FileManagerWindow {
     this.currentPath = initialPath || (isPrimary ? (localStorage.getItem('zettnas_fm_last_path') || '/mnt/user') : '/mnt/user');
     this.viewMode = localStorage.getItem('zettnas_fm_view_mode') || 'list';
     this.fileList = [];
+    this.rawFileList = [];
     this.selectedPaths = new Set();
     this.lastSelectedIndex = -1;
     this.selectionAnchorIndex = -1;
@@ -64,6 +66,18 @@ export class FileManagerWindow {
     this.isMaximized = false;
     this.preMaxBounds = null;
 
+    // Navigation history stack
+    this.history = [];
+    this.historyIndex = -1;
+
+    // Search and lifecycle controllers
+    this.searchQuery = '';
+    this.isSearching = false;
+    this.abortController = null;
+    this.searchAbortController = null;
+    this.resizeObserver = null;
+
+    // Scoped DOM references
     this.windowEl = null;
     this.viewport = null;
     this.spacer = null;
@@ -78,8 +92,11 @@ export class FileManagerWindow {
     this.clearSelBtn = null;
     this.selectAllCheckbox = null;
     this.titleFolderSpan = null;
+    this.backBtn = null;
+    this.fwdBtn = null;
     this.upBtn = null;
     this.refreshBtn = null;
+    this.searchInput = null;
     this.newFolderBtn = null;
     this.newWinBtn = null;
     this.organizeBtn = null;
@@ -135,9 +152,17 @@ export class FileManagerWindow {
               </div>
             </div>
             <div class="fm-toolbar">
-              <button id="fm-up-btn" class="fm-tool-btn fm-up-btn" title="${t('fm.go_up', 'Go Up')}" data-i18n-title="fm.go_up" aria-label="Go Up">
-                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
-              </button>
+              <div class="fm-nav-btn-group" style="display:flex; align-items:center; gap:2px;">
+                <button class="fm-tool-btn fm-back-btn" title="${t('fm.back', 'Back')}" data-i18n-title="fm.back" aria-label="Back" disabled>
+                  <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                </button>
+                <button class="fm-tool-btn fm-fwd-btn" title="${t('fm.forward', 'Forward')}" data-i18n-title="fm.forward" aria-label="Forward" disabled>
+                  <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </button>
+                <button id="fm-up-btn" class="fm-tool-btn fm-up-btn" title="${t('fm.go_up', 'Go Up')}" data-i18n-title="fm.go_up" aria-label="Go Up">
+                  <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+                </button>
+              </div>
               <div class="fm-path-container" style="flex: 1; position: relative; display: flex; align-items: center; min-width: 0;">
                 <input type="text" id="fm-path-input" class="fm-path-input" spellcheck="false" list="fm-path-list" style="width: 100%; color: transparent;" />
                 <div id="fm-path-breadcrumbs" class="fm-path-breadcrumbs" style="position: absolute; left: 0; top: 0; bottom: 0; right: 30px; display: flex; align-items: center; padding-left: 8px; cursor: text; overflow: hidden; pointer-events: auto;"></div>
@@ -152,6 +177,10 @@ export class FileManagerWindow {
               <button id="fm-refresh-btn" class="fm-tool-btn fm-refresh-btn" title="${t('fm.refresh', 'Refresh')}" data-i18n-title="fm.refresh" aria-label="Refresh">
                 <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
               </button>
+              <div class="fm-search-wrap" style="position: relative; display: flex; align-items: center; margin: 0 4px;">
+                <input type="text" class="fm-search-input" placeholder="${t('fm.search_placeholder', 'Search...')}" style="width: 105px; font-size: 11px; padding: 3px 8px 3px 22px; border-radius: 6px; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.12); color: var(--fg); outline: none;" />
+                <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" style="position: absolute; left: 6px; color: var(--muted); pointer-events: none;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              </div>
               <button id="fm-new-folder-btn" class="fm-tool-btn fm-new-folder-btn" title="${t('fm.new_folder', 'New Folder')}" data-i18n-title="fm.new_folder" aria-label="New Folder">
                 <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path><line x1="12" y1="11" x2="12" y2="17"></line><line x1="9" y1="14" x2="15" y2="14"></line></svg>
               </button>
@@ -213,16 +242,35 @@ export class FileManagerWindow {
             </div>
           </div>
           <div class="fm-toolbar">
-            <button class="fm-tool-btn fm-up-btn" title="${t('fm.go_up', 'Go Up')}" data-i18n-title="fm.go_up" aria-label="Go Up">
-              <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
-            </button>
+            <div class="fm-nav-btn-group" style="display:flex; align-items:center; gap:2px;">
+              <button class="fm-tool-btn fm-back-btn" title="${t('fm.back', 'Back')}" data-i18n-title="fm.back" aria-label="Back" disabled>
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polyline points="15 18 9 12 15 6"></polyline></svg>
+              </button>
+              <button class="fm-tool-btn fm-fwd-btn" title="${t('fm.forward', 'Forward')}" data-i18n-title="fm.forward" aria-label="Forward" disabled>
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </button>
+              <button class="fm-tool-btn fm-up-btn" title="${t('fm.go_up', 'Go Up')}" data-i18n-title="fm.go_up" aria-label="Go Up">
+                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+              </button>
+            </div>
             <div class="fm-path-container" style="flex: 1; position: relative; display: flex; align-items: center; min-width: 0;">
-              <input type="text" class="fm-path-input" spellcheck="false" list="fm-path-list" style="width: 100%; color: transparent;" />
+              <input type="text" class="fm-path-input" spellcheck="false" list="${this.id}-path-list" style="width: 100%; color: transparent;" />
               <div class="fm-path-breadcrumbs" style="position: absolute; left: 0; top: 0; bottom: 0; right: 30px; display: flex; align-items: center; padding-left: 8px; cursor: text; overflow: hidden; pointer-events: auto;"></div>
+              <datalist id="${this.id}-path-list">
+                <option value="/mnt/user"></option>
+                <option value="/mnt/user/.RecycleBin"></option>
+                <option value="/boot"></option>
+                <option value="/mnt/user/appdata"></option>
+                <option value="/mnt/user/system"></option>
+              </datalist>
             </div>
             <button class="fm-tool-btn fm-refresh-btn" title="${t('fm.refresh', 'Refresh')}" data-i18n-title="fm.refresh" aria-label="Refresh">
               <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
             </button>
+            <div class="fm-search-wrap" style="position: relative; display: flex; align-items: center; margin: 0 4px;">
+              <input type="text" class="fm-search-input" placeholder="${t('fm.search_placeholder', 'Search...')}" style="width: 105px; font-size: 11px; padding: 3px 8px 3px 22px; border-radius: 6px; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.12); color: var(--fg); outline: none;" />
+              <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" style="position: absolute; left: 6px; color: var(--muted); pointer-events: none;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            </div>
             <button class="fm-tool-btn fm-new-folder-btn" title="${t('fm.new_folder', 'New Folder')}" data-i18n-title="fm.new_folder" aria-label="New Folder">
               <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path><line x1="12" y1="11" x2="12" y2="17"></line><line x1="9" y1="14" x2="15" y2="14"></line></svg>
             </button>
@@ -284,8 +332,11 @@ export class FileManagerWindow {
     this.clearSelBtn = this.windowEl.querySelector('.fm-clear-sel-btn');
     this.selectAllCheckbox = this.windowEl.querySelector('.fm-select-all-checkbox');
     this.titleFolderSpan = this.windowEl.querySelector('.fm-title-folder');
+    this.backBtn = this.windowEl.querySelector('.fm-back-btn');
+    this.fwdBtn = this.windowEl.querySelector('.fm-fwd-btn');
     this.upBtn = this.windowEl.querySelector('.fm-up-btn');
     this.refreshBtn = this.windowEl.querySelector('.fm-refresh-btn');
+    this.searchInput = this.windowEl.querySelector('.fm-search-input');
     this.newFolderBtn = this.windowEl.querySelector('.fm-new-folder-btn');
     this.newWinBtn = this.windowEl.querySelector('.fm-new-win-btn');
     this.organizeBtn = this.windowEl.querySelector('.fm-organize-btn');
@@ -386,18 +437,28 @@ export class FileManagerWindow {
       maxBtn.addEventListener('touchend', onMax);
     }
 
-    // Up button
-    this.upBtn?.addEventListener('click', () => {
-      let parent = this.currentPath.substring(0, this.currentPath.lastIndexOf('/'));
-      if (!parent) {
-        if (this.currentPath !== '/mnt' && this.currentPath !== '/') parent = '/mnt';
-        else parent = this.currentPath;
-      }
-      this.loadPath(parent);
-    });
+    // Navigation buttons
+    this.backBtn?.addEventListener('click', () => this.goBack());
+    this.fwdBtn?.addEventListener('click', () => this.goForward());
+    this.upBtn?.addEventListener('click', () => this.goUp());
 
     // Refresh button
     this.refreshBtn?.addEventListener('click', () => this.loadPath(this.currentPath));
+
+    // Search input
+    if (this.searchInput) {
+      this.searchInput.addEventListener('input', (e) => this.handleSearchInput(e.target.value));
+      this.searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          this.executeBackendSearch(e.target.value);
+        } else if (e.key === 'Escape') {
+          this.searchInput.value = '';
+          this.handleSearchInput('');
+          this.ensureFocus();
+        }
+      });
+    }
 
     // New Window button
     this.newWinBtn?.addEventListener('click', () => {
@@ -463,13 +524,19 @@ export class FileManagerWindow {
       });
     }
 
+    // ResizeObserver on viewport for dynamic virtual scroll recalculation
+    if (this.viewport && typeof ResizeObserver !== 'undefined') {
+      this.resizeObserver = new ResizeObserver(() => {
+        if (this.isOpen()) this.renderViewport();
+      });
+      this.resizeObserver.observe(this.viewport);
+    }
+
     // Viewport scrolling
     if (this.viewport) {
       this.viewport.addEventListener('scroll', () => {
-        if (this.viewMode === 'list') {
-          this.renderViewport();
-        }
-      });
+        this.renderViewport();
+      }, { passive: true });
 
       this.viewport.addEventListener('click', (e) => {
         if (e.target === this.viewport || e.target === this.spacer || e.target === this.list) {
@@ -482,20 +549,20 @@ export class FileManagerWindow {
         }
       });
 
-      // Viewport drag-and-drop file upload & inter-window drops
+      // Viewport dragover & drop
       this.viewport.addEventListener('dragover', (e) => {
         e.preventDefault();
-        this.viewport.style.background = 'rgba(255,255,255,0.05)';
+        this.viewport.classList.add('fm-drop-hover');
       });
 
       this.viewport.addEventListener('dragleave', (e) => {
         e.preventDefault();
-        this.viewport.style.background = 'transparent';
+        this.viewport.classList.remove('fm-drop-hover');
       });
 
       this.viewport.addEventListener('drop', async (e) => {
         e.preventDefault();
-        this.viewport.style.background = 'transparent';
+        this.viewport.classList.remove('fm-drop-hover');
 
         const jsonStr = e.dataTransfer.getData('application/json');
         if (jsonStr) {
@@ -509,127 +576,200 @@ export class FileManagerWindow {
           } catch (_) {}
         }
 
+        // File uploads from client OS
         if (!e.dataTransfer.files || e.dataTransfer.files.length === 0) return;
-
-        const token = auth.getToken();
+        const files = e.dataTransfer.files;
         let successCount = 0;
-        let failCount = 0;
+        showToast(t('fm.uploading_toast', `Uploading ${files.length} file(s)...`).replace('{count}', files.length), 'info');
 
-        for (let i = 0; i < e.dataTransfer.files.length; i++) {
-          const file = e.dataTransfer.files[i];
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
+          const formData = new FormData();
+          formData.append('file', file);
+          formData.append('destination_dir', this.currentPath);
+
           try {
-            const res = await window.fetch(
-              `/api/fs/upload?path=${encodeURIComponent(this.currentPath)}&filename=${encodeURIComponent(file.name)}`,
-              {
-                method: 'POST',
-                headers: token ? { Authorization: `Bearer ${token}` } : {},
-                body: file,
-              }
-            );
+            const res = await api.postRaw('/api/fs/upload', formData);
             if (!res.ok) throw await ApiError.from(res);
             successCount++;
           } catch (err) {
-            failCount++;
             showToast(`Failed to upload ${file.name}: ${err.message}`, 'error');
           }
         }
 
         if (successCount > 0) {
           showToast(`Successfully uploaded ${successCount} file(s)`, 'success');
+          this.loadPath(this.currentPath);
+          ZettEventBus.emit('fm:refresh');
         }
-        this.loadPath(this.currentPath);
-        ZettEventBus.emit('fm:refresh');
-      });
-
-      // Marquee / rubber-band selection on empty viewport space
-      let isMarquee = false;
-      let startX = 0;
-      let startY = 0;
-      let marqueeEl = null;
-
-      this.viewport.addEventListener('mousedown', (e) => {
-        if (e.button !== 0) return;
-        if (e.target.closest('.fm-row, .fm-grid-card, .fm-act-btn, input, button, a')) return;
-
-        this.ensureFocus();
-        const vRect = this.viewport.getBoundingClientRect();
-        startX = e.clientX - vRect.left + this.viewport.scrollLeft;
-        startY = e.clientY - vRect.top + this.viewport.scrollTop;
-        isMarquee = true;
-
-        if (!e.shiftKey && !e.ctrlKey && !e.metaKey) {
-          this.selectedPaths.clear();
-          this.lastSelectedIndex = -1;
-          this.selectionAnchorIndex = -1;
-          this.updateRowSelectionUI();
-          this.updateSelectionToolbar();
-        }
-
-        marqueeEl = document.createElement('div');
-        marqueeEl.className = 'fm-marquee-rect';
-        marqueeEl.style.left = `${startX}px`;
-        marqueeEl.style.top = `${startY}px`;
-        marqueeEl.style.width = '0px';
-        marqueeEl.style.height = '0px';
-        this.viewport.appendChild(marqueeEl);
-
-        const onMouseMove = (mEvt) => {
-          if (!isMarquee || !marqueeEl) return;
-          const curX = mEvt.clientX - vRect.left + this.viewport.scrollLeft;
-          const curY = mEvt.clientY - vRect.top + this.viewport.scrollTop;
-
-          const left = Math.min(startX, curX);
-          const top = Math.min(startY, curY);
-          const width = Math.abs(curX - startX);
-          const height = Math.abs(curY - startY);
-
-          marqueeEl.style.left = `${left}px`;
-          marqueeEl.style.top = `${top}px`;
-          marqueeEl.style.width = `${width}px`;
-          marqueeEl.style.height = `${height}px`;
-
-          const mRect = { left, top, right: left + width, bottom: top + height };
-          const items = this.viewport.querySelectorAll('.fm-row, .fm-grid-card');
-          items.forEach((r) => {
-            const rTop = r.offsetTop;
-            const rBottom = rTop + r.offsetHeight;
-            const rLeft = r.offsetLeft;
-            const rRight = rLeft + r.offsetWidth;
-
-            const overlaps = !(
-              mRect.right < rLeft ||
-              mRect.left > rRight ||
-              mRect.bottom < rTop ||
-              mRect.top > rBottom
-            );
-
-            const p = r.dataset.path;
-            if (p && r.dataset.name !== '..') {
-              if (overlaps) {
-                this.selectedPaths.add(p);
-              }
-            }
-          });
-          this.updateRowSelectionUI();
-          this.updateSelectionToolbar();
-        };
-
-        const onMouseUp = () => {
-          isMarquee = false;
-          if (marqueeEl) {
-            marqueeEl.remove();
-            marqueeEl = null;
-          }
-          document.removeEventListener('mousemove', onMouseMove);
-          document.removeEventListener('mouseup', onMouseUp);
-        };
-
-        document.addEventListener('mousemove', onMouseMove);
-        document.addEventListener('mouseup', onMouseUp);
       });
     }
 
-    // Column sorting
+    // Single-Root Event Delegation on this.list
+    if (this.list) {
+      this.list.addEventListener('click', (e) => {
+        const actBtn = e.target.closest('.fm-act-btn');
+        if (actBtn) {
+          e.stopPropagation();
+          const p = actBtn.dataset.path;
+          const file = this.fileList.find((f) => f.path === p);
+          this.handleAction(actBtn.dataset.act, p, file?.name || '');
+          return;
+        }
+
+        const item = e.target.closest('.fm-row, .fm-grid-card');
+        if (!item) return;
+        const p = item.dataset.path;
+        const file = this.fileList.find((f) => f.path === p);
+        if (!file || file.name === '..') return;
+
+        this.ensureFocus();
+
+        const chk = e.target.closest('.fm-checkbox');
+        if (chk) {
+          if (chk.checked) {
+            this.selectedPaths.add(file.path);
+          } else {
+            this.selectedPaths.delete(file.path);
+          }
+          const idx = this.fileList.findIndex((f) => f.path === p);
+          this.lastSelectedIndex = idx;
+          if (this.selectionAnchorIndex === -1) this.selectionAnchorIndex = idx;
+          try { chk.blur(); } catch (_) {}
+          this.ensureFocus();
+          this.updateRowSelectionUI();
+          this.updateSelectionToolbar();
+          return;
+        }
+
+        const idx = this.fileList.findIndex((f) => f.path === p);
+        if (e.shiftKey) {
+          if (this.selectionAnchorIndex === -1) {
+            this.selectionAnchorIndex = (this.lastSelectedIndex !== -1) ? this.lastSelectedIndex : idx;
+          }
+          const start = Math.min(this.selectionAnchorIndex, idx);
+          const end = Math.max(this.selectionAnchorIndex, idx);
+          if (!e.ctrlKey && !e.metaKey) {
+            this.selectedPaths.clear();
+          }
+          for (let j = start; j <= end; j++) {
+            if (this.fileList[j] && this.fileList[j].name !== '..') {
+              this.selectedPaths.add(this.fileList[j].path);
+            }
+          }
+          this.lastSelectedIndex = idx;
+        } else if (e.ctrlKey || e.metaKey) {
+          if (this.selectedPaths.has(file.path)) {
+            this.selectedPaths.delete(file.path);
+          } else {
+            this.selectedPaths.add(file.path);
+          }
+          this.lastSelectedIndex = idx;
+          this.selectionAnchorIndex = idx;
+        } else {
+          this.selectedPaths.clear();
+          this.selectedPaths.add(file.path);
+          this.lastSelectedIndex = idx;
+          this.selectionAnchorIndex = idx;
+        }
+        this.updateRowSelectionUI();
+        this.updateSelectionToolbar();
+      });
+
+      this.list.addEventListener('dblclick', (e) => {
+        const item = e.target.closest('.fm-row, .fm-grid-card');
+        if (!item) return;
+        const p = item.dataset.path;
+        const file = this.fileList.find((f) => f.path === p);
+        if (!file) return;
+
+        if (file.is_dir) {
+          this.loadPath(file.path);
+        } else {
+          this.handleAction('preview', file.path, file.name);
+        }
+      });
+
+      // Drag start from this window
+      this.list.addEventListener('dragstart', (e) => {
+        const item = e.target.closest('.fm-row, .fm-grid-card');
+        if (!item) return;
+        const p = item.dataset.path;
+        const file = this.fileList.find((f) => f.path === p);
+        if (!file || file.name === '..') {
+          e.preventDefault();
+          return;
+        }
+        const paths = this.selectedPaths.has(file.path) ? Array.from(this.selectedPaths) : [file.path];
+        const payload = {
+          paths,
+          action: e.altKey ? 'copy' : (e.shiftKey ? 'move' : 'move'),
+          sourcePath: this.currentPath,
+          sourceInstanceId: this.id,
+        };
+        window._activeDragPayload = payload;
+        e.dataTransfer.setData('application/json', JSON.stringify(payload));
+        e.dataTransfer.setData('text/plain', paths.join('\n'));
+        e.dataTransfer.effectAllowed = 'copyMove';
+
+        try {
+          const ghost = document.createElement('div');
+          ghost.className = 'fm-drag-ghost';
+          ghost.innerHTML = `<span>📁</span> <span class="fm-drag-ghost-count">${paths.length}</span>`;
+          document.body.appendChild(ghost);
+          if (e.dataTransfer.setDragImage) {
+            e.dataTransfer.setDragImage(ghost, 15, 15);
+          }
+          setTimeout(() => ghost.remove(), 0);
+        } catch (_) {}
+      });
+
+      // Drop on folder item inside this list
+      this.list.addEventListener('dragover', (e) => {
+        const folderItem = e.target.closest('.fm-row, .fm-grid-card');
+        if (folderItem) {
+          const p = folderItem.dataset.path;
+          const file = this.fileList.find((f) => f.path === p);
+          if (file && file.is_dir && file.name !== '..') {
+            e.preventDefault();
+            folderItem.classList.add('fm-drop-hover');
+            return;
+          }
+        }
+      });
+
+      this.list.addEventListener('dragleave', (e) => {
+        const folderItem = e.target.closest('.fm-row, .fm-grid-card');
+        if (folderItem) {
+          folderItem.classList.remove('fm-drop-hover');
+        }
+      });
+
+      this.list.addEventListener('drop', async (e) => {
+        const folderItem = e.target.closest('.fm-row, .fm-grid-card');
+        if (folderItem) {
+          const p = folderItem.dataset.path;
+          const file = this.fileList.find((f) => f.path === p);
+          if (file && file.is_dir && file.name !== '..') {
+            e.preventDefault();
+            e.stopPropagation();
+            folderItem.classList.remove('fm-drop-hover');
+            const jsonStr = e.dataTransfer.getData('application/json');
+            if (jsonStr) {
+              try {
+                const payload = JSON.parse(jsonStr);
+                if (payload.paths && payload.paths.length > 0) {
+                  await executeTransferWithConflictCheck(payload.paths, file.path, payload.action || 'move');
+                  ZettEventBus.emit('fm:refresh');
+                }
+              } catch (_) {}
+            }
+          }
+        }
+      });
+    }
+
+    // Column Header Sorting
     this.colName?.addEventListener('click', () => {
       if (this.currentSortBy === 'name') this.currentSortDir = this.currentSortDir === 'asc' ? 'desc' : 'asc';
       else { this.currentSortBy = 'name'; this.currentSortDir = 'asc'; }
@@ -638,7 +778,7 @@ export class FileManagerWindow {
 
     this.colSize?.addEventListener('click', () => {
       if (this.currentSortBy === 'size') this.currentSortDir = this.currentSortDir === 'asc' ? 'desc' : 'asc';
-      else { this.currentSortBy = 'size'; this.currentSortDir = 'desc'; }
+      else { this.currentSortBy = 'size'; this.currentSortDir = 'asc'; }
       this.loadPath(this.currentPath);
     });
 
@@ -648,65 +788,73 @@ export class FileManagerWindow {
       this.loadPath(this.currentPath);
     });
 
-    // Bulk action toolbar buttons
+    // Bulk Delete
     this.bulkDeleteBtn?.addEventListener('click', () => {
       const count = this.selectedPaths.size;
       if (count === 0) return;
-      const confirmTemplate = t('fm.confirm_bulk_delete', 'Are you sure you want to move {count} items to the Recycle Bin?');
-      const confirmMsg = confirmTemplate.replace('{count}', count);
+      const confirmMsg = t('fm.confirm_bulk_delete', `Are you sure you want to delete ${count} selected item(s)?`).replace('{count}', count);
       showConfirmToast(t('common.confirm', 'Confirm Action'), confirmMsg, async () => {
+        let success = 0, failed = 0;
         const targets = Array.from(this.selectedPaths);
-        let success = 0;
-        let failed = 0;
         for (const p of targets) {
           try {
             await api.post('/api/fs/delete', { path: p });
             success++;
-          } catch (_) {
-            failed++;
-          }
+          } catch (_) { failed++; }
         }
         this.selectedPaths.clear();
         this.lastSelectedIndex = -1;
-        this.updateSelectionToolbar();
+        this.selectionAnchorIndex = -1;
         this.loadPath(this.currentPath);
         ZettEventBus.emit('fm:refresh');
         if (failed > 0) {
           showToast(`Deleted ${success} items, failed to delete ${failed} items`, 'warning');
         } else {
-          const successMsg = t('fm.bulk_deleted_success', `Successfully moved ${success} items to Recycle Bin.`).replace('{count}', success);
-          showToast(successMsg, 'success');
+          showToast(t('fm.bulk_delete_success', `Successfully deleted ${success} items`).replace('{count}', success), 'success');
         }
       });
     });
 
+    // Bulk Move
     this.bulkMoveBtn?.addEventListener('click', () => {
       const count = this.selectedPaths.size;
       if (count === 0) return;
-      _clipboard = { items: Array.from(this.selectedPaths), action: 'move' };
+      _clipboard = { items: Array.from(this.selectedPaths), action: 'move', sourceInstanceId: this.id };
       showToast(t('fm.cut_items_toast', `Selected ${count} item(s) to move. Navigate to destination folder and click Paste.`), 'info');
+      this.updateRowSelectionUI();
     });
 
+    // Bulk Zip / Download
     this.bulkZipBtn?.addEventListener('click', () => {
       const paths = Array.from(this.selectedPaths);
       if (paths.length === 0) return;
-      showToast(t('fm.downloading_items', `Downloading ${paths.length} item(s)...`), 'info');
-      for (const p of paths) {
-        const token = auth.getToken();
-        const url = `/api/fs/download?path=${encodeURIComponent(p)}${token ? `&token=${encodeURIComponent(token)}` : ''}`;
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = p.split('/').pop() || 'download';
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
+      if (paths.length === 1) {
+        this.handleAction('download', paths[0], paths[0].split('/').pop());
+        return;
       }
+      showToast(t('fm.downloading_items', `Downloading ${paths.length} item(s)...`).replace('{count}', paths.length), 'info');
+      const token = (auth && typeof auth.getToken === 'function' ? auth.getToken() : null) || localStorage.getItem('zettnas_token') || '';
+      const qs = paths.map((p) => `paths=${encodeURIComponent(p)}`).join('&');
+      window.open(`/api/fs/download-zip?${qs}&token=${token}`, '_blank');
     });
 
-    this.selectAllCheckbox?.addEventListener('change', () => {
-      const selectableFiles = this.fileList.filter((f) => f.name !== '..');
+    // Clear Selection
+    this.clearSelBtn?.addEventListener('click', () => {
+      this.selectedPaths.clear();
+      this.lastSelectedIndex = -1;
+      this.selectionAnchorIndex = -1;
+      this.updateRowSelectionUI();
+      this.updateSelectionToolbar();
+      this.ensureFocus();
+    });
+
+    // Select All Checkbox
+    this.selectAllCheckbox?.addEventListener('click', (e) => {
+      e.stopPropagation();
       if (this.selectAllCheckbox.checked) {
-        selectableFiles.forEach((f) => this.selectedPaths.add(f.path));
+        this.fileList.forEach((f) => {
+          if (f.name !== '..') this.selectedPaths.add(f.path);
+        });
         this.lastSelectedIndex = this.fileList.length - 1;
         this.selectionAnchorIndex = (this.fileList[0]?.name === '..') ? 1 : 0;
       } else {
@@ -716,48 +864,25 @@ export class FileManagerWindow {
       }
       this.updateRowSelectionUI();
       this.updateSelectionToolbar();
+      this.ensureFocus();
     });
-
-    this.clearSelBtn?.addEventListener('click', () => {
-      this.selectedPaths.clear();
-      this.lastSelectedIndex = -1;
-      this.selectionAnchorIndex = -1;
-      this.updateRowSelectionUI();
-      this.updateSelectionToolbar();
-    });
-
-    // Window keydown
-    this.windowEl.addEventListener('keydown', (e) => this.handleKeydown(e));
   }
 
   ensureFocus() {
-    if (!this.windowEl || !this.viewport) return;
-    const active = document.activeElement;
-    const isTextInput = active && (
-      active.tagName === 'TEXTAREA' ||
-      active.tagName === 'SELECT' ||
-      active.isContentEditable ||
-      (active.tagName === 'INPUT' && active.type !== 'checkbox' && active.type !== 'radio')
-    );
-    if (isTextInput) return;
-
-    // Defocus any desktop icon to prevent focus leakage
-    document.querySelectorAll('.chassis-hero-box').forEach((el) => {
-      if (document.activeElement === el) {
-        try { el.blur(); } catch (_) {}
-      }
-    });
-
-    if (active && this.windowEl && !this.windowEl.contains(active)) {
-      try { active.blur(); } catch (_) {}
+    if (
+      document.activeElement &&
+      (document.activeElement.tagName === 'INPUT' ||
+       document.activeElement.tagName === 'TEXTAREA' ||
+       document.activeElement.tagName === 'SELECT' ||
+       document.activeElement.isContentEditable)
+    ) {
+      return;
     }
-    if (active && active.tagName === 'INPUT' && (active.type === 'checkbox' || active.type === 'radio')) {
-      try { active.blur(); } catch (_) {}
+    if (this.viewport && typeof this.viewport.focus === 'function') {
+      try {
+        this.viewport.focus({ preventScroll: true });
+      } catch (_) {}
     }
-
-    try {
-      this.viewport.focus({ preventScroll: true });
-    } catch (_) {}
   }
 
   open(targetPath) {
@@ -817,23 +942,116 @@ export class FileManagerWindow {
   }
 
   destroy() {
+    if (this.abortController) {
+      try { this.abortController.abort(); } catch (_) {}
+      this.abortController = null;
+    }
+    if (this.searchAbortController) {
+      try { this.searchAbortController.abort(); } catch (_) {}
+      this.searchAbortController = null;
+    }
+    if (this.resizeObserver) {
+      try { this.resizeObserver.disconnect(); } catch (_) {}
+      this.resizeObserver = null;
+    }
+
     if (this.isPrimary) {
-      this.windowEl.classList.add('window-minimized');
-      this.windowEl.style.setProperty('display', 'none', 'important');
+      this.windowEl?.classList.add('window-minimized');
+      this.windowEl?.style.setProperty('display', 'none', 'important');
+      this.history = [];
+      this.historyIndex = -1;
+      this.selectedPaths.clear();
+      this.lastSelectedIndex = -1;
+      this.selectionAnchorIndex = -1;
       if (window.DockManager) window.DockManager.unregister('fm');
-      return;
+    } else {
+      if (this.windowEl) {
+        this.windowEl.remove();
+        this.windowEl = null;
+      }
+      _fmInstances.delete(this.id);
+      if (window.DockManager) {
+        window.DockManager.unregister(this.dockId);
+      }
     }
-    if (this.windowEl) {
-      this.windowEl.remove();
-      this.windowEl = null;
-    }
+
     this.viewport = null;
-    _fmInstances.delete(this.id);
-    if (window.DockManager) {
-      window.DockManager.unregister(this.dockId);
-    }
+    this.list = null;
+    this.spacer = null;
+
     if (_activeFmInstance === this) {
       _activeFmInstance = _fmInstances.get('file-manager-window') || _fmInstances.values().next().value || null;
+    }
+  }
+
+  goBack() {
+    if (this.historyIndex > 0) {
+      this.historyIndex--;
+      const prevPath = this.history[this.historyIndex];
+      return this.loadPath(prevPath, true);
+    }
+    return Promise.resolve();
+  }
+
+  goForward() {
+    if (this.historyIndex < this.history.length - 1) {
+      this.historyIndex++;
+      const nextPath = this.history[this.historyIndex];
+      return this.loadPath(nextPath, true);
+    }
+    return Promise.resolve();
+  }
+
+  goUp() {
+    let parent = this.currentPath.substring(0, this.currentPath.lastIndexOf('/'));
+    if (!parent) {
+      if (this.currentPath !== '/mnt' && this.currentPath !== '/') parent = '/mnt';
+      else parent = this.currentPath;
+    }
+    return this.loadPath(parent);
+  }
+
+  updateNavButtons() {
+    if (this.backBtn) this.backBtn.disabled = this.historyIndex <= 0;
+    if (this.fwdBtn) this.fwdBtn.disabled = this.historyIndex >= this.history.length - 1;
+    if (this.upBtn) this.upBtn.disabled = (this.currentPath === '/' || this.currentPath === '');
+  }
+
+  handleSearchInput(val) {
+    this.searchQuery = (val || '').trim();
+    if (!this.searchQuery) {
+      this.isSearching = false;
+      this.fileList = [...this.rawFileList];
+    } else {
+      this.isSearching = true;
+      const q = this.searchQuery.toLowerCase();
+      this.fileList = this.rawFileList.filter((f) => f.name === '..' || f.name.toLowerCase().includes(q));
+    }
+    this.renderViewport();
+  }
+
+  async executeBackendSearch(query) {
+    const q = (query || '').trim();
+    if (!q) return;
+    if (this.searchAbortController) {
+      this.searchAbortController.abort();
+    }
+    this.searchAbortController = new AbortController();
+    try {
+      showToast(t('fm.searching', `Searching for "${q}"...`), 'info');
+      const res = await api.get(`/api/fs/search?path=${encodeURIComponent(this.currentPath)}&q=${encodeURIComponent(q)}`, {
+        signal: this.searchAbortController.signal,
+      });
+      if (res && Array.isArray(res.items)) {
+        this.fileList = res.items;
+        this.isSearching = true;
+        this.renderViewport();
+        showToast(t('fm.search_results', `Found ${res.items.length} item(s)`).replace('{count}', res.items.length), 'success');
+      }
+    } catch (err) {
+      if (err.name !== 'AbortError') {
+        showToast(`Search error: ${err.message}`, 'error');
+      }
     }
   }
 
@@ -848,20 +1066,16 @@ export class FileManagerWindow {
           return;
         }
       }
-      return;
     }
-    const targetTop = idx * ROW_HEIGHT;
-    const targetBottom = targetTop + ROW_HEIGHT;
-    const viewTop = this.viewport.scrollTop;
-    const viewHeight = this.viewport.clientHeight || 400;
-    const viewBottom = viewTop + viewHeight;
+    const targetScroll = idx * ROW_HEIGHT;
+    const currentScroll = this.viewport.scrollTop;
+    const viewportHeight = this.viewport.clientHeight || 400;
 
-    if (targetTop < viewTop) {
-      this.viewport.scrollTop = targetTop;
-    } else if (targetBottom > viewBottom) {
-      this.viewport.scrollTop = Math.max(0, targetBottom - viewHeight);
+    if (targetScroll < currentScroll) {
+      this.viewport.scrollTop = targetScroll;
+    } else if (targetScroll + ROW_HEIGHT > currentScroll + viewportHeight) {
+      this.viewport.scrollTop = targetScroll + ROW_HEIGHT - viewportHeight;
     }
-    this.renderViewport();
   }
 
   setViewMode(mode) {
@@ -881,23 +1095,17 @@ export class FileManagerWindow {
       this.btnViewIcon.classList.toggle('active', mode === 'icon');
     }
 
-    // Sync across open FM instances
+    // Synchronize view mode across all open FM instances
     for (const inst of _fmInstances.values()) {
       if (inst !== this && inst.viewMode !== mode) {
         inst.viewMode = mode;
         if (inst.windowEl) inst.windowEl.classList.toggle('fm-mode-icon', mode === 'icon');
         if (inst.btnViewList) inst.btnViewList.classList.toggle('active', mode === 'list');
         if (inst.btnViewIcon) inst.btnViewIcon.classList.toggle('active', mode === 'icon');
-        if (inst.spacer) {
-          inst.spacer.style.height = (mode === 'icon' ? 0 : inst.fileList.length * ROW_HEIGHT) + 'px';
-        }
         inst.renderViewport();
       }
     }
 
-    if (this.spacer) {
-      this.spacer.style.height = (mode === 'icon' ? 0 : this.fileList.length * ROW_HEIGHT) + 'px';
-    }
     this.renderViewport();
     this.ensureFocus();
   }
@@ -948,6 +1156,12 @@ export class FileManagerWindow {
       else r.classList.remove('selected');
       const chk = r.querySelector('.fm-row-checkbox, .fm-card-checkbox');
       if (chk) chk.checked = isSel;
+
+      if (_clipboard && _clipboard.action === 'move' && _clipboard.items && _clipboard.items.includes(p)) {
+        r.classList.add('fm-cut-pending');
+      } else {
+        r.classList.remove('fm-cut-pending');
+      }
     });
 
     if (this.selectAllCheckbox) {
@@ -967,16 +1181,186 @@ export class FileManagerWindow {
     }
   }
 
-  async loadPath(path) {
+  renderBreadcrumbs() {
+    if (!this.breadcrumbs) return;
+    this.breadcrumbs.innerHTML = '';
+    const parts = this.currentPath.split('/').filter(Boolean);
+    let built = '/';
+
+    const addSpan = (text, p, isLast) => {
+      const span = document.createElement('span');
+      span.textContent = text;
+      span.style.padding = '2px 4px';
+      span.style.borderRadius = '4px';
+      span.style.cursor = isLast ? 'text' : 'pointer';
+      span.style.color = isLast ? 'var(--accent-cyan, #0ea5e9)' : 'var(--fg)';
+      span.style.fontWeight = isLast ? 'bold' : 'normal';
+      span.style.fontFamily = 'monospace';
+
+      if (!isLast) {
+        span.onmouseover = () => {
+          span.style.background = 'rgba(255,255,255,0.1)';
+          span.style.textDecoration = 'underline';
+        };
+        span.onmouseout = () => {
+          span.style.background = 'transparent';
+          span.style.textDecoration = 'none';
+        };
+        span.onclick = (e) => {
+          e.stopPropagation();
+          let targetPath = p;
+          if (targetPath === '/' && (!window._fmRoots || !window._fmRoots.includes('/'))) {
+            targetPath = (window._fmRoots && window._fmRoots.includes('/mnt'))
+              ? '/mnt'
+              : (window._fmRoots ? window._fmRoots[0] : '/mnt/user');
+          }
+          this.loadPath(targetPath);
+        };
+      }
+      this.breadcrumbs.appendChild(span);
+    };
+
+    if (parts.length === 0) {
+      addSpan('/', '/', true);
+    } else if (parts.length <= 4) {
+      addSpan('/', '/', false);
+      parts.forEach((part, i) => {
+        built += part + '/';
+        const isLast = (i === parts.length - 1);
+        addSpan(part, built, isLast);
+        if (!isLast) {
+          const sep = document.createElement('span');
+          sep.textContent = '/';
+          sep.style.color = 'var(--muted)';
+          sep.style.fontFamily = 'monospace';
+          sep.style.margin = '0 2px';
+          this.breadcrumbs.appendChild(sep);
+        }
+      });
+    } else {
+      // Collapse middle parts if path is deep
+      addSpan('/', '/', false);
+      const sep0 = document.createElement('span');
+      sep0.textContent = '/';
+      sep0.style.color = 'var(--muted)';
+      sep0.style.margin = '0 2px';
+      this.breadcrumbs.appendChild(sep0);
+
+      // First segment
+      built += parts[0] + '/';
+      addSpan(parts[0], built, false);
+
+      const sep1 = document.createElement('span');
+      sep1.textContent = '/';
+      sep1.style.color = 'var(--muted)';
+      sep1.style.margin = '0 2px';
+      this.breadcrumbs.appendChild(sep1);
+
+      // Ellipsis dropdown pill for intermediate segments
+      const ellipsis = document.createElement('span');
+      ellipsis.textContent = '...';
+      ellipsis.className = 'fm-breadcrumb-ellipsis';
+      ellipsis.style.cssText = 'padding: 1px 5px; border-radius: 4px; background: rgba(255,255,255,0.08); cursor: pointer; font-size: 11px; margin: 0 2px;';
+      ellipsis.title = 'Show intermediate folders';
+      ellipsis.onclick = (e) => {
+        e.stopPropagation();
+        this.showBreadcrumbsDropdown(ellipsis, parts);
+      };
+      this.breadcrumbs.appendChild(ellipsis);
+
+      const sep2 = document.createElement('span');
+      sep2.textContent = '/';
+      sep2.style.color = 'var(--muted)';
+      sep2.style.margin = '0 2px';
+      this.breadcrumbs.appendChild(sep2);
+
+      // Last two segments
+      for (let i = parts.length - 2; i < parts.length; i++) {
+        const segPath = '/' + parts.slice(0, i + 1).join('/');
+        const isLast = (i === parts.length - 1);
+        addSpan(parts[i], segPath, isLast);
+        if (!isLast) {
+          const sepNext = document.createElement('span');
+          sepNext.textContent = '/';
+          sepNext.style.color = 'var(--muted)';
+          sepNext.style.margin = '0 2px';
+          this.breadcrumbs.appendChild(sepNext);
+        }
+      }
+    }
+  }
+
+  showBreadcrumbsDropdown(anchorEl, parts) {
+    let menu = document.getElementById('fm-breadcrumbs-dropdown');
+    if (menu) { menu.remove(); return; }
+    menu = document.createElement('div');
+    menu.id = 'fm-breadcrumbs-dropdown';
+    menu.className = 'os-context-menu';
+    menu.style.cssText = 'position: fixed; z-index: 10000; background: rgba(18,25,35,0.95); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 4px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); backdrop-filter: blur(12px); font-size: 11px; font-family: monospace; max-height: 200px; overflow-y: auto;';
+
+    for (let i = 1; i < parts.length - 2; i++) {
+      const segPath = '/' + parts.slice(0, i + 1).join('/');
+      const item = document.createElement('div');
+      item.className = 'ctx-item';
+      item.style.cssText = 'padding: 4px 8px; border-radius: 4px; cursor: pointer; color: #cbd5e1; display: flex; align-items: center; gap: 6px;';
+      item.innerHTML = `<span>📁</span> <span>${escapeHtml(parts[i])}</span>`;
+      item.onmouseover = () => { item.style.background = 'rgba(255,255,255,0.1)'; };
+      item.onmouseout = () => { item.style.background = 'transparent'; };
+      item.onclick = (e) => {
+        e.stopPropagation();
+        menu.remove();
+        this.loadPath(segPath);
+      };
+      menu.appendChild(item);
+    }
+
+    document.body.appendChild(menu);
+    const rect = anchorEl.getBoundingClientRect();
+    menu.style.left = `${rect.left}px`;
+    menu.style.top = `${rect.bottom + 4}px`;
+
+    const closeMenu = (e) => {
+      if (!menu.contains(e.target) && e.target !== anchorEl) {
+        menu.remove();
+        document.removeEventListener('pointerdown', closeMenu);
+      }
+    };
+    setTimeout(() => document.addEventListener('pointerdown', closeMenu), 50);
+  }
+
+  async loadPath(path, isNavigatingHistory = false) {
+    if (this.abortController) {
+      try { this.abortController.abort(); } catch (_) {}
+    }
+    this.abortController = new AbortController();
+
     try {
-      const res = await api.get(`/api/browse?path=${encodeURIComponent(path)}&dirs_only=0`);
+      const res = await api.get(`/api/browse?path=${encodeURIComponent(path)}&dirs_only=0`, {
+        signal: this.abortController.signal,
+      });
       this.currentPath = res.current;
       if (this.isPrimary) {
         try { localStorage.setItem('zettnas_fm_last_path', this.currentPath); } catch (_) {}
       }
+
+      // History update
+      if (!isNavigatingHistory) {
+        if (this.historyIndex === -1) {
+          this.history = [this.currentPath];
+          this.historyIndex = 0;
+        } else if (this.history[this.historyIndex] !== this.currentPath) {
+          if (this.historyIndex < this.history.length - 1) {
+            this.history = this.history.slice(0, this.historyIndex + 1);
+          }
+          this.history.push(this.currentPath);
+          this.historyIndex = this.history.length - 1;
+        }
+      }
+      this.updateNavButtons();
+
       if (res.roots && Array.isArray(res.roots)) {
         window._fmRoots = res.roots;
-        const datalist = document.getElementById('fm-path-list');
+        const datalist = this.windowEl.querySelector('datalist');
         if (datalist && datalist.dataset.populated !== res.roots.join(',')) {
           datalist.dataset.populated = res.roots.join(',');
           datalist.innerHTML = res.roots.map((r) => `<option value="${r}"></option>`).join('') +
@@ -1017,64 +1401,9 @@ export class FileManagerWindow {
       }
 
       // Render breadcrumbs
-      if (this.breadcrumbs) {
-        this.breadcrumbs.innerHTML = '';
-        const parts = this.currentPath.split('/').filter(Boolean);
-        let built = '/';
+      this.renderBreadcrumbs();
 
-        const addSpan = (text, p, isLast) => {
-          const span = document.createElement('span');
-          span.textContent = text;
-          span.style.padding = '2px 4px';
-          span.style.borderRadius = '4px';
-          span.style.cursor = isLast ? 'text' : 'pointer';
-          span.style.color = isLast ? '#0ea5e9' : 'var(--fg)';
-          span.style.fontWeight = isLast ? 'bold' : 'normal';
-          span.style.fontFamily = 'monospace';
-
-          if (!isLast) {
-            span.onmouseover = () => {
-              span.style.background = 'rgba(255,255,255,0.1)';
-              span.style.textDecoration = 'underline';
-            };
-            span.onmouseout = () => {
-              span.style.background = 'transparent';
-              span.style.textDecoration = 'none';
-            };
-            span.onclick = (e) => {
-              e.stopPropagation();
-              let targetPath = p;
-              if (targetPath === '/' && (!window._fmRoots || !window._fmRoots.includes('/'))) {
-                targetPath = (window._fmRoots && window._fmRoots.includes('/mnt'))
-                  ? '/mnt'
-                  : (window._fmRoots ? window._fmRoots[0] : '/mnt/user');
-              }
-              this.loadPath(targetPath);
-            };
-          }
-          this.breadcrumbs.appendChild(span);
-        };
-
-        if (parts.length === 0) {
-          addSpan('/', '/', true);
-        } else {
-          addSpan('/', '/', false);
-          parts.forEach((part, i) => {
-            built += part + '/';
-            const isLast = (i === parts.length - 1);
-            addSpan(part, built, isLast);
-            if (!isLast) {
-              const sep = document.createElement('span');
-              sep.textContent = '/';
-              sep.style.color = 'var(--muted)';
-              sep.style.fontFamily = 'monospace';
-              sep.style.margin = '0 2px';
-              this.breadcrumbs.appendChild(sep);
-            }
-          });
-        }
-      }
-
+      // Sort file list
       this.fileList = (res.dirs || []).sort((a, b) => {
         if (a.name === '..') return -1;
         if (b.name === '..') return 1;
@@ -1108,11 +1437,18 @@ export class FileManagerWindow {
         }
       });
 
+      this.rawFileList = [...this.fileList];
+      if (this.searchInput) this.searchInput.value = '';
+      this.searchQuery = '';
+      this.isSearching = false;
+
       if (this.spacer) this.spacer.style.height = (this.fileList.length * ROW_HEIGHT) + 'px';
       if (this.viewport) this.viewport.scrollTop = 0;
       this.renderViewport();
-    } catch (_) {
-      showToast(t('fm.err_access_denied', 'Access denied or path invalid'), 'error');
+    } catch (err) {
+      if (err.name !== 'AbortError') {
+        showToast(t('fm.err_access_denied', 'Access denied or path invalid'), 'error');
+      }
     }
   }
 
@@ -1127,8 +1463,29 @@ export class FileManagerWindow {
     }
 
     if (this.viewMode === 'icon') {
-      if (this.spacer) this.spacer.style.height = '0px';
-      this.list.style.transform = 'none';
+      const count = this.fileList.length;
+      const cellWidth = 110;
+      const cellHeight = 120;
+      const gap = 12;
+      const viewportWidth = this.viewport.clientWidth || 800;
+      const clientHeight = this.viewport.clientHeight || 600;
+      const columns = Math.max(1, Math.floor((viewportWidth + gap) / (cellWidth + gap)));
+      const totalRows = Math.ceil(count / columns);
+      const rowPitch = cellHeight + gap;
+      const totalHeight = totalRows * rowPitch;
+
+      if (this.spacer) {
+        this.spacer.style.height = `${totalHeight}px`;
+        this.spacer.style.display = 'block';
+      }
+
+      const scrollTop = this.viewport.scrollTop || 0;
+      const startRow = Math.max(0, Math.floor(scrollTop / rowPitch) - BUFFER);
+      const endRow = Math.min(totalRows, Math.ceil((scrollTop + clientHeight) / rowPitch) + BUFFER);
+      const startIndex = startRow * columns;
+      const endIndex = Math.min(count, endRow * columns);
+
+      this.list.style.transform = `translateY(${startRow * rowPitch}px)`;
       this.list.innerHTML = '';
       const token = (auth && typeof auth.getToken === 'function' ? auth.getToken() : null) || localStorage.getItem('zettnas_token') || '';
 
@@ -1136,13 +1493,17 @@ export class FileManagerWindow {
       const fileSvg = '<svg viewBox="0 0 24 24" width="40" height="40" stroke="currentColor" stroke-width="1.5" fill="none"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>';
       const upSvg = '<svg viewBox="0 0 24 24" width="40" height="40" stroke="currentColor" stroke-width="1.5" fill="none"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>';
 
-      for (let i = 0; i < this.fileList.length; i++) {
+      for (let i = startIndex; i < endIndex; i++) {
         const file = this.fileList[i];
         const card = document.createElement('div');
         card.className = 'fm-grid-card';
         card.dataset.path = file.path;
         card.dataset.name = file.name;
+        card.dataset.index = i;
         if (this.selectedPaths.has(file.path)) card.classList.add('selected');
+        if (_clipboard && _clipboard.action === 'move' && _clipboard.items && _clipboard.items.includes(file.path)) {
+          card.classList.add('fm-cut-pending');
+        }
 
         const escName = escapeHtml(file.name);
         const escPath = escapeHtml(file.path);
@@ -1182,120 +1543,17 @@ export class FileManagerWindow {
 
         if (file.name !== '..') {
           card.setAttribute('draggable', 'true');
-          card.addEventListener('dragstart', (e) => {
-            const paths = this.selectedPaths.has(file.path) ? Array.from(this.selectedPaths) : [file.path];
-            const payload = {
-              paths,
-              action: e.altKey ? 'copy' : 'move',
-              sourcePath: this.currentPath,
-              sourceInstanceId: this.id,
-            };
-            e.dataTransfer.setData('application/json', JSON.stringify(payload));
-            e.dataTransfer.setData('text/plain', paths.join('\n'));
-            e.dataTransfer.effectAllowed = 'copyMove';
-          });
         }
-
-        if (file.is_dir && file.name !== '..') {
-          card.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            card.style.background = 'rgba(14, 165, 233, 0.22)';
-          });
-          card.addEventListener('dragleave', (e) => {
-            e.preventDefault();
-            card.style.background = '';
-          });
-          card.addEventListener('drop', async (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            card.style.background = '';
-            const jsonStr = e.dataTransfer.getData('application/json');
-            if (jsonStr) {
-              try {
-                const payload = JSON.parse(jsonStr);
-                if (payload.paths && payload.paths.length > 0) {
-                  await executeTransferWithConflictCheck(payload.paths, file.path, payload.action || 'move');
-                  ZettEventBus.emit('fm:refresh');
-                }
-              } catch (_) {}
-            }
-          });
-        }
-
-        card.addEventListener('click', (e) => {
-          if (e.target.closest('.fm-act-btn') || file.name === '..') return;
-          this.ensureFocus();
-
-          if (e.target.closest('.fm-checkbox')) {
-            const chk = e.target.closest('.fm-checkbox');
-            if (chk.checked) {
-              this.selectedPaths.add(file.path);
-            } else {
-              this.selectedPaths.delete(file.path);
-            }
-            this.lastSelectedIndex = i;
-            if (this.selectionAnchorIndex === -1) this.selectionAnchorIndex = i;
-            try { chk.blur(); } catch (_) {}
-            this.ensureFocus();
-            this.updateRowSelectionUI();
-            this.updateSelectionToolbar();
-            return;
-          }
-
-          const idx = i;
-          if (e.shiftKey) {
-            if (this.selectionAnchorIndex === -1) {
-              this.selectionAnchorIndex = (this.lastSelectedIndex !== -1) ? this.lastSelectedIndex : idx;
-            }
-            const start = Math.min(this.selectionAnchorIndex, idx);
-            const end = Math.max(this.selectionAnchorIndex, idx);
-            if (!e.ctrlKey && !e.metaKey) {
-              this.selectedPaths.clear();
-            }
-            for (let j = start; j <= end; j++) {
-              if (this.fileList[j] && this.fileList[j].name !== '..') {
-                this.selectedPaths.add(this.fileList[j].path);
-              }
-            }
-            this.lastSelectedIndex = idx;
-          } else if (e.ctrlKey || e.metaKey) {
-            if (this.selectedPaths.has(file.path)) {
-              this.selectedPaths.delete(file.path);
-            } else {
-              this.selectedPaths.add(file.path);
-            }
-            this.lastSelectedIndex = idx;
-            this.selectionAnchorIndex = idx;
-          } else {
-            this.selectedPaths.clear();
-            this.selectedPaths.add(file.path);
-            this.lastSelectedIndex = idx;
-            this.selectionAnchorIndex = idx;
-          }
-          this.updateRowSelectionUI();
-          this.updateSelectionToolbar();
-        });
-
-        if (file.is_dir) {
-          card.addEventListener('dblclick', () => this.loadPath(file.path));
-        } else if (isImage) {
-          card.addEventListener('dblclick', () => this.handleAction('preview', file.path, file.name));
-        }
-
-        card.querySelectorAll('.fm-act-btn').forEach((btn) => {
-          btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            this.handleAction(btn.dataset.act, btn.dataset.path, file.name);
-          });
-        });
 
         this.list.appendChild(card);
       }
       return;
     }
 
-    if (this.spacer) this.spacer.style.height = (this.fileList.length * ROW_HEIGHT) + 'px';
-    const scrollTop = this.viewport.scrollTop;
+    // List view
+    const totalHeight = this.fileList.length * ROW_HEIGHT;
+    if (this.spacer) this.spacer.style.height = `${totalHeight}px`;
+    const scrollTop = this.viewport.scrollTop || 0;
     const viewportHeight = this.viewport.clientHeight || 400;
 
     const startIndex = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - BUFFER);
@@ -1310,7 +1568,11 @@ export class FileManagerWindow {
       row.className = 'fm-row';
       row.dataset.path = file.path;
       row.dataset.name = file.name;
+      row.dataset.index = i;
       if (this.selectedPaths.has(file.path)) row.classList.add('selected');
+      if (_clipboard && _clipboard.action === 'move' && _clipboard.items && _clipboard.items.includes(file.path)) {
+        row.classList.add('fm-cut-pending');
+      }
 
       const icon = file.is_dir
         ? '<svg viewBox="0 0 24 24" width="18" stroke="currentColor" fill="#eab308"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>'
@@ -1336,112 +1598,7 @@ export class FileManagerWindow {
 
       if (file.name !== '..') {
         row.setAttribute('draggable', 'true');
-        row.addEventListener('dragstart', (e) => {
-          const paths = this.selectedPaths.has(file.path) ? Array.from(this.selectedPaths) : [file.path];
-          const payload = {
-            paths,
-            action: e.altKey ? 'copy' : 'move',
-            sourcePath: this.currentPath,
-            sourceInstanceId: this.id,
-          };
-          e.dataTransfer.setData('application/json', JSON.stringify(payload));
-          e.dataTransfer.setData('text/plain', paths.join('\n'));
-          e.dataTransfer.effectAllowed = 'copyMove';
-        });
       }
-
-      if (file.is_dir && file.name !== '..') {
-        row.addEventListener('dragover', (e) => {
-          e.preventDefault();
-          row.style.background = 'rgba(14, 165, 233, 0.15)';
-        });
-        row.addEventListener('dragleave', (e) => {
-          e.preventDefault();
-          row.style.background = '';
-        });
-        row.addEventListener('drop', async (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          row.style.background = '';
-          const jsonStr = e.dataTransfer.getData('application/json');
-          if (jsonStr) {
-            try {
-              const payload = JSON.parse(jsonStr);
-              if (payload.paths && payload.paths.length > 0) {
-                await executeTransferWithConflictCheck(payload.paths, file.path, payload.action || 'move');
-                ZettEventBus.emit('fm:refresh');
-              }
-            } catch (_) {}
-          }
-        });
-      }
-
-      row.addEventListener('click', (e) => {
-        if (e.target.closest('.fm-act-btn') || file.name === '..') return;
-        this.ensureFocus();
-
-        if (e.target.closest('.fm-checkbox')) {
-          const chk = e.target.closest('.fm-checkbox');
-          if (chk.checked) {
-            this.selectedPaths.add(file.path);
-          } else {
-            this.selectedPaths.delete(file.path);
-          }
-          this.lastSelectedIndex = i;
-          if (this.selectionAnchorIndex === -1) this.selectionAnchorIndex = i;
-          try { chk.blur(); } catch (_) {}
-          this.ensureFocus();
-          this.updateRowSelectionUI();
-          this.updateSelectionToolbar();
-          return;
-        }
-
-        const idx = i;
-        if (e.shiftKey) {
-          if (this.selectionAnchorIndex === -1) {
-            this.selectionAnchorIndex = (this.lastSelectedIndex !== -1) ? this.lastSelectedIndex : idx;
-          }
-          const start = Math.min(this.selectionAnchorIndex, idx);
-          const end = Math.max(this.selectionAnchorIndex, idx);
-          if (!e.ctrlKey && !e.metaKey) {
-            this.selectedPaths.clear();
-          }
-          for (let j = start; j <= end; j++) {
-            if (this.fileList[j] && this.fileList[j].name !== '..') {
-              this.selectedPaths.add(this.fileList[j].path);
-            }
-          }
-          this.lastSelectedIndex = idx;
-        } else if (e.ctrlKey || e.metaKey) {
-          if (this.selectedPaths.has(file.path)) {
-            this.selectedPaths.delete(file.path);
-          } else {
-            this.selectedPaths.add(file.path);
-          }
-          this.lastSelectedIndex = idx;
-          this.selectionAnchorIndex = idx;
-        } else {
-          this.selectedPaths.clear();
-          this.selectedPaths.add(file.path);
-          this.lastSelectedIndex = idx;
-          this.selectionAnchorIndex = idx;
-        }
-        this.updateRowSelectionUI();
-        this.updateSelectionToolbar();
-      });
-
-      if (file.is_dir) {
-        row.addEventListener('dblclick', () => this.loadPath(file.path));
-      } else if (isImage) {
-        row.addEventListener('dblclick', () => this.handleAction('preview', file.path, file.name));
-      }
-
-      row.querySelectorAll('.fm-act-btn').forEach((btn) => {
-        btn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          this.handleAction(btn.dataset.act, btn.dataset.path, file.name);
-        });
-      });
 
       this.list.appendChild(row);
     }
@@ -1449,24 +1606,9 @@ export class FileManagerWindow {
 
   async handleAction(act, path, oldName) {
     if (act === 'preview') {
-      const token = localStorage.getItem('zettnas_token');
-      const url = `/api/fs/download?path=${encodeURIComponent(path)}&token=${token}`;
-      let previewModal = document.getElementById('fm-image-preview');
-      if (!previewModal) {
-        previewModal = document.createElement('div');
-        previewModal.id = 'fm-image-preview';
-        previewModal.style.cssText =
-          'position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 10000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px); cursor: zoom-out;';
-        previewModal.innerHTML = `<img style="max-width: 90%; max-height: 90%; object-fit: contain; border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,0.5);" />`;
-        previewModal.addEventListener('click', () => {
-          previewModal.style.display = 'none';
-        });
-        document.body.appendChild(previewModal);
-      }
-      previewModal.querySelector('img').src = url;
-      previewModal.style.display = 'flex';
+      openFilePreviewModal(path, oldName);
     } else if (act === 'download') {
-      const token = localStorage.getItem('zettnas_token');
+      const token = (auth && typeof auth.getToken === 'function' ? auth.getToken() : null) || localStorage.getItem('zettnas_token') || '';
       window.open(`/api/fs/download?path=${encodeURIComponent(path)}&token=${token}`, '_blank');
     } else if (act === 'delete') {
       const confirmTemplate = t(
@@ -1484,18 +1626,24 @@ export class FileManagerWindow {
         }
       });
     } else if (act === 'rename') {
-      const promptMsg = t('fm.prompt_rename', 'Enter new name:');
-      showPromptToast('Rename', promptMsg, oldName, async (newName) => {
-        if (newName && newName !== oldName) {
-          try {
-            await api.post('/api/fs/rename', { path, new_name: newName });
-            this.loadPath(this.currentPath);
-            ZettEventBus.emit('fm:refresh');
-          } catch (err) {
-            showToast(err.message, 'error');
+      showPromptToast(
+        t('fm.rename_title', 'Rename Item'),
+        t('fm.prompt_rename', 'Enter new name:'),
+        oldName,
+        async (newName) => {
+          if (newName && newName !== oldName) {
+            try {
+              const parent = path.substring(0, path.lastIndexOf('/'));
+              const newPath = parent ? `${parent}/${newName}` : `/${newName}`;
+              await api.post('/api/fs/rename', { old_path: path, new_path: newPath });
+              this.loadPath(this.currentPath);
+              ZettEventBus.emit('fm:refresh');
+            } catch (err) {
+              showToast(err.message, 'error');
+            }
           }
         }
-      });
+      );
     }
   }
 
@@ -1528,6 +1676,22 @@ export class FileManagerWindow {
       e.preventDefault();
       e.stopPropagation();
       openNewFileManagerWindow(this.currentPath);
+      return;
+    }
+
+    // Alt+Left / Backspace -> Back
+    if ((e.altKey || e.metaKey) && e.key === 'ArrowLeft') {
+      e.preventDefault();
+      e.stopPropagation();
+      this.goBack();
+      return;
+    }
+
+    // Alt+Right -> Forward
+    if ((e.altKey || e.metaKey) && e.key === 'ArrowRight') {
+      e.preventDefault();
+      e.stopPropagation();
+      this.goForward();
       return;
     }
 
@@ -1564,7 +1728,7 @@ export class FileManagerWindow {
       if (this.selectedPaths.size > 0) {
         e.preventDefault();
         e.stopPropagation();
-        _clipboard = { items: Array.from(this.selectedPaths), action: 'copy' };
+        _clipboard = { items: Array.from(this.selectedPaths), action: 'copy', sourceInstanceId: this.id };
         const msg = t('fm.copied_clipboard', `Copied ${this.selectedPaths.size} item(s) to clipboard`).replace('{count}', this.selectedPaths.size);
         showToast(msg, 'info');
       }
@@ -1572,9 +1736,10 @@ export class FileManagerWindow {
       if (this.selectedPaths.size > 0) {
         e.preventDefault();
         e.stopPropagation();
-        _clipboard = { items: Array.from(this.selectedPaths), action: 'move' };
+        _clipboard = { items: Array.from(this.selectedPaths), action: 'move', sourceInstanceId: this.id };
         const msg = t('fm.cut_clipboard', `Cut ${this.selectedPaths.size} item(s) to clipboard`).replace('{count}', this.selectedPaths.size);
         showToast(msg, 'info');
+        this.updateRowSelectionUI();
       }
     } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'v') {
       if (_clipboard && _clipboard.items && _clipboard.items.length > 0) {
@@ -1841,7 +2006,7 @@ export class FileManagerWindow {
       if (targetItem && targetItem.name !== '..') {
         if (targetItem.is_dir) {
           this.loadPath(targetItem.path);
-        } else if (targetItem.name.match(/\.(jpeg|jpg|png|gif|webp|svg)$/i)) {
+        } else {
           this.handleAction('preview', targetItem.path, targetItem.name);
         }
       }
@@ -1860,16 +2025,25 @@ export class FileManagerWindow {
       } else if (this.lastSelectedIndex >= 0 && this.fileList[this.lastSelectedIndex]) {
         targetItem = this.fileList[this.lastSelectedIndex];
       }
-      if (targetItem && !targetItem.is_dir && targetItem.name.match(/\.(jpeg|jpg|png|gif|webp|svg)$/i)) {
+      if (targetItem && !targetItem.is_dir && targetItem.name !== '..') {
         e.preventDefault();
         e.stopPropagation();
-        this.handleAction('preview', targetItem.path, targetItem.name);
+        openFilePreviewModal(targetItem.path, targetItem.name);
       }
     }
   }
 }
 
 export function ensureFmFocus(targetWin) {
+  if (
+    document.activeElement &&
+    (document.activeElement.tagName === 'INPUT' ||
+     document.activeElement.tagName === 'TEXTAREA' ||
+     document.activeElement.tagName === 'SELECT' ||
+     document.activeElement.isContentEditable)
+  ) {
+    return;
+  }
   const inst = (targetWin && targetWin.id && _fmInstances.get(targetWin.id)) || getActiveFmInstance();
   if (inst) {
     inst.ensureFocus();
@@ -1930,7 +2104,10 @@ export function getFmViewMode() {
 export function setFmStateForTesting(opts = {}) {
   const inst = getActiveFmInstance() || _fmInstances.get('file-manager-window');
   if (inst) {
-    if (opts.fileList) inst.fileList = opts.fileList;
+    if (opts.fileList) {
+      inst.fileList = opts.fileList;
+      inst.rawFileList = [...opts.fileList];
+    }
     if (opts.selectedPaths) inst.selectedPaths = new Set(opts.selectedPaths);
     if (opts.lastSelectedIndex !== undefined) inst.lastSelectedIndex = opts.lastSelectedIndex;
     if (opts.selectionAnchorIndex !== undefined) inst.selectionAnchorIndex = opts.selectionAnchorIndex;
@@ -1965,24 +2142,41 @@ export function openNewFileManagerWindow(path = null) {
   _fmInstances.set(instId, inst);
   inst.init();
 
-  // Cascade position relative to active window
-  const activeWin = getActiveFmInstance()?.windowEl;
-  if (activeWin) {
-    const rect = activeWin.getBoundingClientRect();
-    const nextLeft = Math.min(window.innerWidth - 500, Math.max(24, rect.left + 32));
-    const nextTop = Math.min(window.innerHeight - 380, Math.max(56, rect.top + 32));
-    inst.windowEl.style.left = `${nextLeft}px`;
-    inst.windowEl.style.top = `${nextTop}px`;
-    inst.windowEl.style.width = `${Math.max(500, rect.width || 720)}px`;
-    inst.windowEl.style.height = `${Math.max(360, rect.height || 520)}px`;
-  }
+  // Modulo cascade position
+  const count = _fmInstances.size - 1;
+  const maxLeft = Math.max(24, window.innerWidth - 680);
+  const maxTop = Math.max(56, window.innerHeight - 480);
+  const left = 24 + ((count * 32) % (maxLeft || 1));
+  const top = 56 + ((count * 32) % (maxTop || 1));
+
+  inst.windowEl.style.left = `${left}px`;
+  inst.windowEl.style.top = `${top}px`;
+  inst.windowEl.style.width = '720px';
+  inst.windowEl.style.height = '500px';
 
   inst.open();
   return inst;
 }
 window.openNewFileManagerWindow = openNewFileManagerWindow;
 
+export function closeAllFileManagerWindows() {
+  const instances = Array.from(_fmInstances.values());
+  instances.forEach((inst) => {
+    inst.destroy();
+  });
+  _activeFmInstance = null;
+}
+window.closeAllFileManagerWindows = closeAllFileManagerWindows;
+
 export function openFileManager(path = null) {
+  let primary = _fmInstances.get('file-manager-window');
+  if (!primary) {
+    initFileManager();
+    primary = _fmInstances.get('file-manager-window');
+  }
+  if (primary) {
+    primary.open(path);
+  }
   ZettEventBus.emit('window:open', { id: 'file-manager-window', path: path || undefined });
 }
 window.openFileManager = openFileManager;
@@ -2014,15 +2208,17 @@ export function initFileManager() {
 
   // Initialize primary instance
   const currentPath = localStorage.getItem('zettnas_fm_last_path') || '/mnt/user';
-  const primary = new FileManagerWindow('file-manager-window', 'fm', currentPath, true);
-  _fmInstances.set('file-manager-window', primary);
+  let primary = _fmInstances.get('file-manager-window');
+  if (!primary) {
+    primary = new FileManagerWindow('file-manager-window', 'fm', currentPath, true);
+    _fmInstances.set('file-manager-window', primary);
+  }
   _activeFmInstance = primary;
   primary.init();
 
   const fmIcon = document.getElementById('fm-desktop-icon');
   const openFm = (e) => {
     if (e && e.type === 'touchend') e.preventDefault();
-    // Blur desktop icons so they don't capture focus or outline
     document.querySelectorAll('.chassis-hero-box').forEach((el) => {
       try { el.blur(); } catch (_) {}
     });
@@ -2049,7 +2245,7 @@ export function initFileManager() {
     }
   });
 
-  // Cross-window and background sync: refresh all open File Explorer instances
+  // Cross-window sync: refresh all open File Explorer instances
   ZettEventBus.on('fm:refresh', () => {
     _fmInstances.forEach((inst) => {
       if (inst.isOpen()) {

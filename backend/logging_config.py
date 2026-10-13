@@ -54,7 +54,7 @@ ENV_VAR_PAIR_PATTERN = re.compile(
     re.IGNORECASE,
 )
 KEY_VALUE_IN_TEXT_PATTERN = re.compile(
-    r"((?:token|secret|password|passwd|api_key|private_key)\s*[:=]\s*['\"]?)[^'\",\s&]+(['\"]?)",
+    r"((?:token|secret|pass(?:word|wd)?|api_key|private_key)\s*[:=]\s*['\"]?)[^'\",\s&]+(['\"]?)",
     re.IGNORECASE,
 )
 

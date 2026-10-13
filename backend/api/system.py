@@ -7,13 +7,14 @@ import os
 import platform
 import re
 import shutil
+import subprocess
 import sys
 import threading
 import time
 import zipfile
 
 from fastapi import APIRouter, Depends, HTTPException, Request
-from fastapi.responses import FileResponse, Response
+from fastapi.responses import FileResponse, Response, StreamingResponse
 from pydantic import BaseModel, Field
 from typing import Any, Dict, List, Optional
 
@@ -21,6 +22,7 @@ import backend.config as config
 from backend import __version__
 from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
 from backend.api_tokens import generate_token, load_tokens, revoke_token
+from backend.logging_config import sanitize_string
 from backend.config import (
     ALLOWED_BROWSE_ROOTS,
     BUTTON_CFG_FILE,
@@ -183,6 +185,8 @@ def check_user_path_access(req_path: str, principal: Optional[AuthenticatedPrinc
 
     norm_path = os.path.normpath(str(req_path or "").strip()).replace("\\", "/")
     parts = [p for p in norm_path.split("/") if p]
+    if parts and parts[0] == "boot":
+        raise HTTPException(status_code=403, detail="Access to /boot requires storage:admin privileges.")
     if "homes" in parts:
         idx = parts.index("homes")
         if idx + 1 < len(parts):
@@ -190,6 +194,58 @@ def check_user_path_access(req_path: str, principal: Optional[AuthenticatedPrinc
             current_user = (principal.username or "").lower()
             if target_user != current_user:
                 raise HTTPException(status_code=403, detail="Access denied to another user's home folder.")
+
+
+def _scan_remote_dir_isolated(real: str, dirs_only: bool) -> List[Dict[str, Any]]:
+    """Scans a remote FUSE directory in an isolated subprocess with a 2.5s SIGKILL timeout.
+    Prevents stalled Rclone/WebDAV mounts from hanging the Python asyncio threadpool or workers.
+    """
+    cmd = [
+        sys.executable,
+        "-c",
+        (
+            "import os, sys, json\n"
+            "path = sys.argv[1]\n"
+            "dirs_only = sys.argv[2] == '1'\n"
+            "out = []\n"
+            "try:\n"
+            "    with os.scandir(path) as it:\n"
+            "        for e in it:\n"
+            "            try:\n"
+            "                is_dir = e.is_dir(follow_symlinks=False)\n"
+            "                if dirs_only and not is_dir:\n"
+            "                    continue\n"
+            "                sz = e.stat(follow_symlinks=False).st_size if not is_dir else 0\n"
+            "                out.append({'name': e.name, 'path': e.path, 'is_dir': is_dir, 'size': sz})\n"
+            "            except (OSError, PermissionError):\n"
+            "                pass\n"
+            "except Exception:\n"
+            "    sys.exit(2)\n"
+            "print(json.dumps(out))\n"
+        ),
+        real,
+        "1" if dirs_only else "0",
+    ]
+    try:
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        stdout, _ = proc.communicate(timeout=2.5)
+        if proc.returncode == 0 and stdout:
+            return json.loads(stdout.strip())
+        elif proc.returncode == 2:
+            raise HTTPException(status_code=500, detail="Unable to read remote directory.")
+        return []
+    except subprocess.TimeoutExpired:
+        proc.kill()
+        proc.communicate()
+        logger.warning(f"[FUSE] Remote scandir timed out after 2.5s for {real}")
+        raise HTTPException(
+            status_code=504,
+            detail={
+                "code": "FUSE_TIMEOUT",
+                "path": real,
+                "message": "Remote storage mount timed out after 2.5s. Storage endpoint may be unreachable.",
+            },
+        )
 
 
 def _handle_browse_logic(path: str, dirs_only: bool, principal: Optional[AuthenticatedPrincipal] = None):
@@ -200,13 +256,6 @@ def _handle_browse_logic(path: str, dirs_only: bool, principal: Optional[Authent
     root = root_for(real, ALLOWED_BROWSE_ROOTS)
     if root and real != root:
         out.append({"name": "..", "path": os.path.dirname(real), "is_dir": True, "size": 0})
-    try:
-        entries = os.listdir(real)
-    except PermissionError:
-        raise HTTPException(status_code=403, detail="Permission denied.")
-    except OSError as e:
-        logger.warning(f"[BROWSE] listdir failed for {real}: {e}")
-        raise HTTPException(status_code=500, detail="Unable to read directory.")
 
     is_admin = not principal or (
         principal.role_id in ("superadmin", "storage_admin")
@@ -214,6 +263,25 @@ def _handle_browse_logic(path: str, dirs_only: bool, principal: Optional[Authent
         or principal.has_scope("*")
     )
     is_homes_dir = os.path.basename(real.rstrip("/")) == "homes"
+
+    # FUSE Isolation for remote mounts under /mnt/remotes/*
+    if real.startswith("/mnt/remotes/") and real != "/mnt/remotes":
+        remote_entries = _scan_remote_dir_isolated(real, dirs_only)
+        remote_entries.sort(key=lambda x: x["name"])
+        for item in remote_entries:
+            if is_homes_dir and not is_admin and principal:
+                if item["name"].lower() != (principal.username or "").lower():
+                    continue
+            out.append(item)
+        return {"current": real, "roots": list(ALLOWED_BROWSE_ROOTS), "dirs": out}
+
+    try:
+        entries = os.listdir(real)
+    except PermissionError:
+        raise HTTPException(status_code=403, detail="Permission denied.")
+    except OSError as e:
+        logger.warning(f"[BROWSE] listdir failed for {real}: {e}")
+        raise HTTPException(status_code=500, detail="Unable to read directory.")
 
     if is_homes_dir and not is_admin and principal and principal.username:
         user_home_name = principal.username.lower()
@@ -255,6 +323,116 @@ async def browse(
 ):
     check_user_path_access(path, principal)
     return await asyncio.to_thread(_handle_browse_logic, path, dirs_only == "1", principal)
+
+
+@router.get("/fs/roots", dependencies=[Depends(require_scope("shares:read", "storage:read", "system:view"))])
+async def fs_roots(principal: AuthenticatedPrincipal = Depends(get_current_principal)):
+    """Authoritative platform-aware storage hierarchy for File Explorer.
+    Dynamically reports User Array, pools, cloud remotes, special folders, and boot partition.
+    Strict Spindown Safety: reads only filesystem mounts and directories; never invokes smartctl.
+    """
+
+    def _gather_roots():
+        res = {
+            "status": "ok",
+            "roots": list(ALLOWED_BROWSE_ROOTS),
+            "array": None,
+            "pools": [],
+            "remotes": [],
+            "system": [],
+            "special": [],
+        }
+
+        # 1. Main Array / Pool
+        if os.path.exists("/mnt/user"):
+            res["array"] = {"name": "User Array", "path": "/mnt/user", "available": True}
+        elif os.path.exists("/mnt/storage"):
+            res["array"] = {"name": "Storage Pool", "path": "/mnt/storage", "available": True}
+        elif ALLOWED_BROWSE_ROOTS:
+            res["array"] = {"name": "Main Pool", "path": ALLOWED_BROWSE_ROOTS[0], "available": True}
+
+        # 2. Additional Pools / Disks
+        pool_candidates = [
+            ("Cache Pool", "/mnt/cache"),
+            ("Fast Pool", "/mnt/fast"),
+            ("SSD Pool", "/mnt/ssd"),
+        ]
+        for name, p in pool_candidates:
+            if os.path.exists(p):
+                res["pools"].append({"name": name, "path": p, "available": True})
+
+        # Disks under /mnt/disks (Unassigned Devices)
+        if os.path.isdir("/mnt/disks"):
+            try:
+                for entry in sorted(os.listdir("/mnt/disks")):
+                    dp = os.path.join("/mnt/disks", entry)
+                    if os.path.isdir(dp) and not entry.startswith("."):
+                        res["pools"].append({"name": entry, "path": dp, "available": True})
+            except OSError:
+                pass
+
+        # Custom Pools under /mnt (e.g. pool1, pool2, nvme)
+        if os.path.isdir("/mnt"):
+            try:
+                known_subdirs = {
+                    "user",
+                    "storage",
+                    "remotes",
+                    "disks",
+                    "cache",
+                    "fast",
+                    "ssd",
+                }
+                for entry in sorted(os.listdir("/mnt")):
+                    if entry.lower() not in known_subdirs and not entry.startswith("."):
+                        p = os.path.join("/mnt", entry)
+                        if os.path.isdir(p):
+                            res["pools"].append({"name": entry, "path": p, "available": True})
+            except OSError:
+                pass
+
+        # 3. Cloud Remotes (config.REMOTES_PATH)
+        remotes_dir = getattr(config, "REMOTES_PATH", "/mnt/remotes")
+        if os.path.isdir(remotes_dir):
+            try:
+                for entry in sorted(os.listdir(remotes_dir)):
+                    rp = os.path.join(remotes_dir, entry)
+                    if not entry.startswith("."):
+                        res["remotes"].append({"name": entry, "path": rp, "available": os.path.exists(rp)})
+            except OSError:
+                pass
+
+        # 4. System (/boot) - Flash Boot
+        is_admin = principal and (
+            principal.role_id in ("superadmin", "storage_admin")
+            or principal.has_scope("storage:admin")
+            or principal.has_scope("*")
+        )
+        if os.path.exists("/boot"):
+            res["system"].append(
+                {
+                    "name": "Flash Boot (/boot)",
+                    "path": "/boot",
+                    "admin_only": True,
+                    "accessible": bool(is_admin),
+                }
+            )
+
+        # 5. Special Folders (Downloads, Media, Appdata, Recycle Bin)
+        base_arr = res["array"]["path"] if res["array"] else "/mnt/user"
+        special_candidates = [
+            ("Downloads", os.path.join(base_arr, "downloads"), "downloads"),
+            ("Media", os.path.join(base_arr, "media"), "media"),
+            ("Appdata", os.path.join(base_arr, "appdata"), "box"),
+            ("Recycle Bin", os.path.join(base_arr, ".RecycleBin"), "trash"),
+        ]
+        for name, p, icon in special_candidates:
+            if os.path.exists(p) or name == "Recycle Bin":
+                res["special"].append({"name": name, "path": p, "icon": icon, "available": True})
+
+        return res
+
+    return await asyncio.to_thread(_gather_roots)
 
 
 def _do_mkdir(path: str):
@@ -1206,13 +1384,23 @@ async def fs_delete(req: DeleteRequest, principal: AuthenticatedPrincipal = Depe
             real_root = ALLOWED_BROWSE_ROOTS[0]  # Fallback
 
         recycle_dir = os.path.join(real_root, ".RecycleBin")
+        files_dir = os.path.join(recycle_dir, "files")
+        info_dir = os.path.join(recycle_dir, "info")
         base_name = os.path.basename(target_unresolved)
         ts = int(time.time())
         dest_name = f"{ts}_{base_name}"
-        dest_path = os.path.join(recycle_dir, dest_name)
+        dest_path = os.path.join(files_dir, dest_name)
+        info_path = os.path.join(info_dir, f"{dest_name}.trashinfo")
 
         def _move_to_recycle():
-            os.makedirs(recycle_dir, exist_ok=True)
+            os.makedirs(files_dir, exist_ok=True)
+            os.makedirs(info_dir, exist_ok=True)
+            iso_now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+            try:
+                with open(info_path, "w", encoding="utf-8") as f_info:
+                    f_info.write(f"[Trash Info]\nPath={target_unresolved}\nDeletionDate={iso_now}\n")
+            except Exception as e_info:
+                logger.warning(f"[FS] Could not write .trashinfo: {e_info}")
             shutil.move(target_unresolved, dest_path)
 
         await asyncio.to_thread(_move_to_recycle)
@@ -1414,7 +1602,7 @@ async def fs_search(
 
 @router.get("/fs/trash", dependencies=[Depends(require_scope("shares:read", "storage:read", "system:view"))])
 async def fs_trash_list(principal: AuthenticatedPrincipal = Depends(get_current_principal)):
-    """Lists deleted items currently residing in the Recycle Bin."""
+    """Lists deleted items currently residing in the Recycle Bin with FreeDesktop .trashinfo metadata support."""
 
     def _scan_trash():
         items = []
@@ -1422,35 +1610,71 @@ async def fs_trash_list(principal: AuthenticatedPrincipal = Depends(get_current_
             recycle_dir = os.path.join(root_dir, ".RecycleBin")
             if not os.path.isdir(recycle_dir):
                 continue
-            try:
-                with os.scandir(recycle_dir) as it:
-                    for entry in it:
-                        if entry.name.startswith("."):
-                            continue
-                        name_parts = entry.name.split("_", 1)
-                        deleted_ts = 0
-                        orig_name = entry.name
-                        if len(name_parts) == 2 and name_parts[0].isdigit():
-                            deleted_ts = int(name_parts[0])
-                            orig_name = name_parts[1]
-                        try:
-                            st = entry.stat(follow_symlinks=False)
-                            is_dir = entry.is_dir(follow_symlinks=False)
-                            items.append(
-                                {
-                                    "id": entry.name,
-                                    "name": orig_name,
-                                    "path": entry.path,
-                                    "is_dir": is_dir,
-                                    "size": st.st_size if not is_dir else 0,
-                                    "deleted_at": deleted_ts or int(st.st_mtime),
-                                    "root_path": root_dir,
-                                }
-                            )
-                        except (OSError, PermissionError):
-                            pass
-            except (OSError, PermissionError):
-                pass
+
+            files_dir = os.path.join(recycle_dir, "files")
+            info_dir = os.path.join(recycle_dir, "info")
+            scan_dirs = [(files_dir, True)] if os.path.isdir(files_dir) else []
+            scan_dirs.append((recycle_dir, False))
+
+            seen_ids = set()
+            for s_dir, is_fd_dir in scan_dirs:
+                try:
+                    with os.scandir(s_dir) as it:
+                        for entry in it:
+                            if entry.name.startswith(".") or entry.name in ("files", "info"):
+                                continue
+                            if entry.name in seen_ids:
+                                continue
+                            seen_ids.add(entry.name)
+
+                            orig_name = entry.name
+                            deleted_ts = 0
+                            orig_path = ""
+
+                            if is_fd_dir:
+                                tinfo = os.path.join(info_dir, f"{entry.name}.trashinfo")
+                                if os.path.exists(tinfo):
+                                    try:
+                                        with open(tinfo, "r", encoding="utf-8") as f_meta:
+                                            for line in f_meta:
+                                                if line.startswith("Path="):
+                                                    orig_path = line.split("=", 1)[1].strip()
+                                                    orig_name = os.path.basename(orig_path)
+                                                elif line.startswith("DeletionDate="):
+                                                    date_str = line.split("=", 1)[1].strip()
+                                                    try:
+                                                        dt = datetime.fromisoformat(date_str.replace("Z", "+00:00"))
+                                                        deleted_ts = int(dt.timestamp())
+                                                    except Exception:
+                                                        pass
+                                    except Exception:
+                                        pass
+
+                            if not orig_path:
+                                parts = entry.name.split("_", 1)
+                                if len(parts) == 2 and parts[0].isdigit():
+                                    deleted_ts = int(parts[0])
+                                    orig_name = parts[1]
+
+                            try:
+                                st = entry.stat(follow_symlinks=False)
+                                is_dir = entry.is_dir(follow_symlinks=False)
+                                items.append(
+                                    {
+                                        "id": entry.name,
+                                        "name": orig_name,
+                                        "original_path": orig_path,
+                                        "path": entry.path,
+                                        "is_dir": is_dir,
+                                        "size": st.st_size if not is_dir else 0,
+                                        "deleted_at": deleted_ts or int(st.st_mtime),
+                                        "root_path": root_dir,
+                                    }
+                                )
+                            except (OSError, PermissionError):
+                                pass
+                except (OSError, PermissionError):
+                    pass
         items.sort(key=lambda x: x["deleted_at"], reverse=True)
         return {"items": items, "total": len(items)}
 
@@ -1464,25 +1688,58 @@ async def fs_trash_list(principal: AuthenticatedPrincipal = Depends(get_current_
 async def fs_trash_restore(
     req: TrashRestoreRequest, principal: AuthenticatedPrincipal = Depends(get_current_principal)
 ):
-    """Restores an item from the Recycle Bin back to its original or specified destination."""
+    """Restores an item from the Recycle Bin, reconstructing parent directories as needed."""
     item_id = os.path.basename(req.item_id.strip())
     if not item_id or item_id in (".", ".."):
         raise HTTPException(status_code=400, detail="Invalid item ID")
 
     def _do_restore():
         for root_dir in ALLOWED_BROWSE_ROOTS:
-            source_path = os.path.join(root_dir, ".RecycleBin", item_id)
-            if os.path.lexists(source_path):
-                parts = item_id.split("_", 1)
-                orig_name = parts[1] if (len(parts) == 2 and parts[0].isdigit()) else item_id
-                dest_dir = req.target_path if (req.target_path and os.path.isdir(req.target_path)) else root_dir
-                dest_path = os.path.join(dest_dir, orig_name)
+            recycle_dir = os.path.join(root_dir, ".RecycleBin")
+            fd_source = os.path.join(recycle_dir, "files", item_id)
+            legacy_source = os.path.join(recycle_dir, item_id)
+            source_path = (
+                fd_source if os.path.lexists(fd_source) else (legacy_source if os.path.lexists(legacy_source) else None)
+            )
+            if source_path:
+                info_file = os.path.join(recycle_dir, "info", f"{item_id}.trashinfo")
+                orig_path = ""
+                orig_name = item_id
+                if os.path.exists(info_file):
+                    try:
+                        with open(info_file, "r", encoding="utf-8") as f_meta:
+                            for line in f_meta:
+                                if line.startswith("Path="):
+                                    orig_path = line.split("=", 1)[1].strip()
+                                    orig_name = os.path.basename(orig_path)
+                    except Exception:
+                        pass
+                if not orig_path:
+                    parts = item_id.split("_", 1)
+                    orig_name = parts[1] if (len(parts) == 2 and parts[0].isdigit()) else item_id
+
+                if req.target_path and os.path.isdir(req.target_path):
+                    dest_dir = req.target_path
+                    dest_path = os.path.join(dest_dir, orig_name)
+                elif orig_path:
+                    dest_path = orig_path
+                    dest_dir = os.path.dirname(orig_path)
+                else:
+                    dest_dir = root_dir
+                    dest_path = os.path.join(dest_dir, orig_name)
+
+                os.makedirs(dest_dir, exist_ok=True)
 
                 if os.path.lexists(dest_path):
                     ts = int(time.time())
                     dest_path = os.path.join(dest_dir, f"restored_{ts}_{orig_name}")
 
                 shutil.move(source_path, dest_path)
+                if os.path.exists(info_file):
+                    try:
+                        os.remove(info_file)
+                    except OSError:
+                        pass
                 return {"status": "ok", "message": f"Restored {orig_name}", "path": dest_path}
         raise FileNotFoundError(f"Trash item '{item_id}' not found")
 
@@ -1506,7 +1763,24 @@ async def fs_trash_empty(principal: AuthenticatedPrincipal = Depends(get_current
         for root_dir in ALLOWED_BROWSE_ROOTS:
             recycle_dir = os.path.join(root_dir, ".RecycleBin")
             if os.path.isdir(recycle_dir):
+                for sub in ("files", "info"):
+                    sub_p = os.path.join(recycle_dir, sub)
+                    if os.path.isdir(sub_p):
+                        for entry in os.listdir(sub_p):
+                            p = os.path.join(sub_p, entry)
+                            try:
+                                if os.path.islink(p):
+                                    os.unlink(p)
+                                elif os.path.isdir(p):
+                                    shutil.rmtree(p)
+                                else:
+                                    os.remove(p)
+                                purged += 1
+                            except Exception as e:
+                                logger.warning(f"[FS] Could not purge {p}: {e}")
                 for entry in os.listdir(recycle_dir):
+                    if entry in ("files", "info"):
+                        continue
                     p = os.path.join(recycle_dir, entry)
                     try:
                         if os.path.islink(p):
@@ -1523,6 +1797,262 @@ async def fs_trash_empty(principal: AuthenticatedPrincipal = Depends(get_current
     res = await asyncio.to_thread(_do_empty)
     add_event("info", "File Explorer", f"Recycle Bin emptied ({res['purged_count']} items permanently deleted)")
     return res
+
+
+@router.get("/fs/preview", dependencies=[Depends(require_scope("shares:read", "storage:read", "system:view"))])
+async def fs_preview(path: str, principal: AuthenticatedPrincipal = Depends(get_current_principal)):
+    """Universal Quick Look preview generator.
+    Redacts sensitive credentials from config/text files. Generates 1KB hex dumps for binaries.
+    """
+    check_user_path_access(path, principal)
+    target = _contained(path, must_exist=True)
+    if os.path.isdir(target):
+        raise HTTPException(status_code=400, detail="Cannot preview a directory")
+
+    filename = os.path.basename(target)
+    ext = os.path.splitext(filename)[1].lower()
+    sz = os.path.getsize(target)
+
+    # 1. Image formats
+    image_exts = {".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg", ".bmp", ".ico", ".tiff"}
+    if ext in image_exts:
+        return {
+            "status": "ok",
+            "type": "image",
+            "path": target,
+            "name": filename,
+            "size": sz,
+            "ext": ext,
+            "url": f"/api/fs/download?path={target}",
+        }
+
+    # 2. Media (audio / video) formats
+    media_exts = {".mp4", ".mkv", ".webm", ".mov", ".avi", ".mp3", ".wav", ".ogg", ".flac", ".aac", ".m4a"}
+    if ext in media_exts:
+        return {
+            "status": "ok",
+            "type": "media",
+            "path": target,
+            "name": filename,
+            "size": sz,
+            "ext": ext,
+            "stream_url": f"/api/fs/stream?path={target}",
+        }
+
+    # 3. PDF
+    if ext == ".pdf":
+        return {
+            "status": "ok",
+            "type": "pdf",
+            "path": target,
+            "name": filename,
+            "size": sz,
+            "ext": ext,
+            "url": f"/api/fs/download?path={target}",
+        }
+
+    # 4. Text / Code / Config formats
+    text_exts = {
+        ".txt",
+        ".md",
+        ".json",
+        ".js",
+        ".mjs",
+        ".ts",
+        ".html",
+        ".css",
+        ".py",
+        ".sh",
+        ".yaml",
+        ".yml",
+        ".ini",
+        ".cfg",
+        ".conf",
+        ".env",
+        ".xml",
+        ".csv",
+        ".log",
+        ".toml",
+        ".sql",
+        ".c",
+        ".h",
+        ".cpp",
+        ".rs",
+        ".go",
+        ".dockerfile",
+    }
+
+    def _make_hex_dump(raw_bytes: bytes) -> List[str]:
+        lines = []
+        for i in range(0, len(raw_bytes), 16):
+            chunk = raw_bytes[i : i + 16]
+            hex_part = " ".join(f"{b:02x}" for b in chunk)
+            ascii_part = "".join(chr(b) if 32 <= b <= 126 else "." for b in chunk)
+            lines.append(f"{i:08x}  {hex_part:<48}  |{ascii_part}|")
+        return lines
+
+    if ext in text_exts or filename.startswith(".") or sz <= 1024 * 1024:
+        try:
+            with open(target, "rb") as f:
+                head = f.read(65536)
+            if b"\x00" not in head:
+                text_content = head.decode("utf-8", errors="replace")
+                sanitized = sanitize_string(text_content)
+                lines = sanitized.splitlines()
+                return {
+                    "status": "ok",
+                    "type": "text",
+                    "path": target,
+                    "name": filename,
+                    "size": sz,
+                    "ext": ext,
+                    "content": sanitized,
+                    "lines_count": len(lines),
+                    "truncated": sz > 65536,
+                }
+        except Exception as e:
+            logger.warning(f"[PREVIEW] Text read error for {target}: {e}")
+
+    # 5. Binary Hex Preview (1KB)
+    try:
+        with open(target, "rb") as f:
+            sample = f.read(1024)
+        dump = _make_hex_dump(sample)
+        return {
+            "status": "ok",
+            "type": "hex",
+            "path": target,
+            "name": filename,
+            "size": sz,
+            "ext": ext,
+            "hex_dump": dump,
+        }
+    except Exception as e:
+        logger.error(f"[PREVIEW] Hex dump error for {target}: {e}")
+        raise HTTPException(status_code=500, detail="Unable to generate preview")
+
+
+@router.get("/fs/stream")
+async def fs_stream(
+    path: str,
+    request: Request,
+    principal: AuthenticatedPrincipal = Depends(get_current_principal),
+):
+    """HTTP 206 Partial Content Range streaming for video and audio playback."""
+    check_user_path_access(path, principal)
+    target = _contained(path, must_exist=True)
+    if os.path.isdir(target):
+        raise HTTPException(status_code=400, detail="Cannot stream a directory")
+
+    file_size = os.path.getsize(target)
+    range_header = request.headers.get("range")
+
+    import mimetypes
+
+    content_type, _ = mimetypes.guess_type(target)
+    if not content_type:
+        content_type = "application/octet-stream"
+
+    if not range_header:
+
+        def iter_full():
+            with open(target, "rb") as f:
+                while chunk := f.read(65536):
+                    yield chunk
+
+        return StreamingResponse(
+            iter_full(),
+            media_type=content_type,
+            headers={
+                "Content-Length": str(file_size),
+                "Accept-Ranges": "bytes",
+            },
+        )
+
+    range_str = range_header.replace("bytes=", "").strip()
+    range_parts = range_str.split("-")
+    try:
+        start = int(range_parts[0]) if range_parts[0] else 0
+        end = int(range_parts[1]) if len(range_parts) > 1 and range_parts[1] else file_size - 1
+    except ValueError:
+        raise HTTPException(status_code=416, detail="Invalid range request")
+
+    start = max(0, start)
+    end = min(file_size - 1, end)
+    if start > end or start >= file_size:
+        raise HTTPException(
+            status_code=416,
+            detail="Requested range not satisfiable",
+            headers={"Content-Range": f"bytes */{file_size}"},
+        )
+
+    chunk_length = end - start + 1
+
+    def iter_range():
+        with open(target, "rb") as f:
+            f.seek(start)
+            remaining = chunk_length
+            while remaining > 0:
+                read_sz = min(remaining, 65536)
+                data = f.read(read_sz)
+                if not data:
+                    break
+                remaining -= len(data)
+                yield data
+
+    return StreamingResponse(
+        iter_range(),
+        status_code=206,
+        media_type=content_type,
+        headers={
+            "Content-Range": f"bytes {start}-{end}/{file_size}",
+            "Accept-Ranges": "bytes",
+            "Content-Length": str(chunk_length),
+        },
+    )
+
+
+@router.get("/fs/download-zip")
+def fs_download_zip(
+    paths: str,
+    principal: AuthenticatedPrincipal = Depends(get_current_principal),
+):
+    """Streams a zip archive containing multiple selected files or folders without staging on disk."""
+    path_list = [p.strip() for p in paths.split(",") if p.strip()]
+    if not path_list:
+        raise HTTPException(status_code=400, detail="No paths specified")
+
+    for p in path_list:
+        check_user_path_access(p, principal)
+        target = _contained(p, must_exist=True)
+        if resolve_within(target, ALLOWED_BROWSE_ROOTS) is None:
+            raise HTTPException(status_code=403, detail="Path outside allowed folders")
+
+    def _zip_generator():
+        buf = io.BytesIO()
+        with zipfile.ZipFile(buf, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
+            for p in path_list:
+                real_target = _contained(p, must_exist=True)
+                base = os.path.basename(real_target)
+                if os.path.isdir(real_target):
+                    for root_dir, _, files in os.walk(real_target):
+                        for f in files:
+                            fp = os.path.join(root_dir, f)
+                            rel = os.path.relpath(fp, os.path.dirname(real_target))
+                            zf.write(fp, arcname=rel)
+                else:
+                    zf.write(real_target, arcname=base)
+        buf.seek(0)
+        while chunk := buf.read(65536):
+            yield chunk
+
+    ts = int(time.time())
+    zip_name = f"download_{ts}.zip"
+    return StreamingResponse(
+        _zip_generator(),
+        media_type="application/zip",
+        headers={"Content-Disposition": f'attachment; filename="{zip_name}"'},
+    )
 
 
 class TokenCreateRequest(BaseModel):

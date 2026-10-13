@@ -963,16 +963,16 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
                 if not d.removable and d.role != "os":
                     members.append(
                         PoolMember(
-                            name=d.name,
-                            device=d.name,
+                            name=d.dev_name,
+                            device=d.dev_name,
                             id=d.serial or d.model,
                             type="Data",
                             role=d.role,
                             size_bytes=d.size_bytes,
-                            status="STANDBY" if d.spundown else "OK",
-                            rotational=d.rotational,
-                            spundown=d.spundown,
-                            temp_c=d.temp_c,
+                            status="OK",
+                            rotational=d.is_rotational,
+                            spundown=False,
+                            temp_c=None,
                         )
                     )
         except Exception as e:

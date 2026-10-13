@@ -1,0 +1,1 @@
+import{L as e}from"./dashboard-DDE8YHGJ.js";export{e as initManagement};

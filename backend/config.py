@@ -99,7 +99,7 @@ RCLONE_CACHE_DIR = os.path.join(DATA_DIR, "rclone", "vfs_cache")
 # Folder browser / mkdir / copy destination are confined to these roots.
 _default_roots = f"{POOL_PATH},{REMOTES_PATH}" if os.environ.get("BROWSE_ROOTS") is None else os.environ["BROWSE_ROOTS"]
 _roots_list = [p.strip() for p in _default_roots.split(",") if p.strip()]
-for _cand in ("/mnt", "/mnt/user", "/mnt/storage", "/mnt/remotes"):
+for _cand in ("/mnt", "/mnt/user", "/mnt/storage", "/mnt/remotes", "/mnt/cache", "/mnt/disks", "/boot"):
     if os.path.exists(_cand) and _cand not in _roots_list:
         _roots_list.append(_cand)
 ALLOWED_BROWSE_ROOTS = _roots_list
