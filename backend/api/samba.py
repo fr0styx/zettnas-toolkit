@@ -14,8 +14,9 @@ from backend.services.samba_engine import (
     get_samba_engine,
 )
 from backend.hardware.pal_storage import (
-    StoragePlatformDetector,
     PlatformType,
+    StoragePlatformDetector,
+    get_storage_platform,
 )
 
 router = APIRouter(prefix="/samba", tags=["Samba File Sharing"])
@@ -38,11 +39,11 @@ def get_samba_shares() -> List[SambaShareConfig]:
 @router.post("/shares", response_model=SambaShareConfig, dependencies=[Depends(require_scope("shares:manage"))])
 def create_or_update_samba_share(share: SambaShareConfig) -> SambaShareConfig:
     """Creates or updates a Samba share."""
-    platform = StoragePlatformDetector.detect()
-    if platform == PlatformType.UNRAID:
+    pal = get_storage_platform()
+    if pal.get_capabilities().is_observer_mode:
         raise HTTPException(
             status_code=403,
-            detail="Observer Mode active: Samba shares on Unraid must be configured in Unraid WebGUI.",
+            detail=f"Observer Mode active: Samba shares on {pal.get_platform_type().value} must be configured in host OS.",
         )
     try:
         engine = get_samba_engine()
@@ -54,11 +55,11 @@ def create_or_update_samba_share(share: SambaShareConfig) -> SambaShareConfig:
 @router.delete("/shares/{name}", dependencies=[Depends(require_scope("shares:manage"))])
 def delete_samba_share(name: str) -> Dict[str, Any]:
     """Deletes a configured Samba share."""
-    platform = StoragePlatformDetector.detect()
-    if platform == PlatformType.UNRAID:
+    pal = get_storage_platform()
+    if pal.get_capabilities().is_observer_mode:
         raise HTTPException(
             status_code=403,
-            detail="Observer Mode active: Modifying Unraid host shares from container is forbidden.",
+            detail=f"Observer Mode active: Modifying host shares on {pal.get_platform_type().value} from container is forbidden.",
         )
     engine = get_samba_engine()
     if engine.remove_share(name):

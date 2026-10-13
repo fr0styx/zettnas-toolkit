@@ -93,8 +93,16 @@ class SambaEngine:
         from backend.hardware.pal_storage import StoragePlatformDetector, PlatformType
 
         platform = StoragePlatformDetector.detect()
-        if platform == PlatformType.UNRAID:
-            return False, "Host is running Unraid with native SMB daemon on port 445."
+        if platform in (
+            PlatformType.UNRAID,
+            PlatformType.TRUENAS,
+            PlatformType.PROXMOX,
+            PlatformType.FYGOOS,
+            PlatformType.ZETTOS,
+            PlatformType.UGOS,
+            PlatformType.GENERIC_OBSERVER,
+        ):
+            return False, f"Host is running {platform.value} with native host storage/SMB services."
 
         sidecar_info = self.check_sidecar()
         is_sidecar_running = sidecar_info.get("detected") and sidecar_info.get("state") == "running"

@@ -24,6 +24,10 @@ class PlatformType(str, Enum):
     UNRAID = "unraid"
     TRUENAS = "truenas"
     PROXMOX = "proxmox"
+    FYGOOS = "fygoos"
+    ZETTOS = "zettos"
+    UGOS = "ugos"
+    GENERIC_OBSERVER = "generic_observer"
     UNKNOWN = "unknown"
 
 
@@ -1917,52 +1921,328 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
         return cand if os.path.exists(cand) else self._pool_path
 
 
-class StoragePlatformDetector:
-    """Detects the underlying NAS host OS and runtime environment."""
+class ObserverStorageAdapter(StoragePlatformAdapter):
+    """
+    Base class for all non-intrusive Observer Mode storage adapters (FygoOS, ZettOS, UGOS, Synology DSM, QTS, etc.).
+    Guarantees strict read-only auditing and raises PlatformCapabilityError on all mutating operations.
+    """
 
-    @staticmethod
-    def detect() -> PlatformType:
-        # 1. Unraid Detection
-        if _find_emhttp_dir() is not None:
-            return PlatformType.UNRAID
-        ident_candidates = ["/boot/config/ident.cfg", "/host/boot/config/ident.cfg"]
-        if any(os.path.isfile(p) for p in ident_candidates):
-            return PlatformType.UNRAID
+    def __init__(self, pool_path: Optional[str] = None):
+        self._pool_path = pool_path or POOL_PATH or "/mnt/storage"
 
-        # 2. Kernel/OS-release checks
-        proc_ver_path = os.path.join(HOST_PROC, "version")
-        if os.path.isfile(proc_ver_path):
-            try:
-                with open(proc_ver_path, "r", encoding="utf-8", errors="replace") as f:
-                    ver_text = f.read().lower()
-                    if "unraid" in ver_text:
-                        return PlatformType.UNRAID
-                    if "pve" in ver_text:
-                        return PlatformType.PROXMOX
-                    if "truenas" in ver_text:
-                        return PlatformType.TRUENAS
-            except Exception:
-                pass
+    def create_pool(
+        self,
+        name: str,
+        *args: Any,
+        **kwargs: Any,
+    ) -> Any:
+        plat = self.get_platform_type().value
+        raise PlatformCapabilityError(
+            f"Observer mode active: {plat} authoritatively manages storage pools and RAID arrays. "
+            "Provisioning pools from container is prohibited to prevent volume corruption."
+        )
 
-        os_release_paths = ["/etc/os-release", "/host/etc/os-release"]
-        for p in os_release_paths:
-            if os.path.isfile(p):
+    def destroy_pool(self, pool_id: str, *args: Any, **kwargs: Any) -> Any:
+        plat = self.get_platform_type().value
+        raise PlatformCapabilityError(f"Observer mode active: Destroying pools is prohibited on {plat} host.")
+
+    def create_share(
+        self,
+        name: str,
+        *args: Any,
+        **kwargs: Any,
+    ) -> Dict[str, Any]:
+        plat = self.get_platform_type().value
+        raise PlatformCapabilityError(
+            f"Observer mode active: Network shares on {plat} must be configured via host OS management."
+        )
+
+    def delete_share(self, name: str, *args: Any, **kwargs: Any) -> Dict[str, Any]:
+        plat = self.get_platform_type().value
+        raise PlatformCapabilityError(
+            f"Observer mode active: Deleting network shares on {plat} must be performed via host OS."
+        )
+
+    def rename_pool(self, pool_id: str, new_name: str, *args: Any, **kwargs: Any) -> Dict[str, Any]:
+        plat = self.get_platform_type().value
+        raise PlatformCapabilityError(
+            f"Observer mode active: Storage pool identifiers on {plat} are managed authoritatively by host OS."
+        )
+
+    def create_snapshot(
+        self,
+        pool_id: str,
+        *args: Any,
+        **kwargs: Any,
+    ) -> Dict[str, Any]:
+        plat = self.get_platform_type().value
+        raise PlatformCapabilityError(
+            f"Observer mode active: Filesystem snapshots on {plat} are managed authoritatively by host OS."
+        )
+
+    def list_snapshots(self, pool_id: str) -> List[Dict[str, Any]]:
+        return []
+
+    def delete_snapshot(
+        self,
+        pool_id: str,
+        *args: Any,
+        **kwargs: Any,
+    ) -> Dict[str, Any]:
+        plat = self.get_platform_type().value
+        raise PlatformCapabilityError(
+            f"Observer mode active: Snapshot deletion on {plat} must be performed via host OS."
+        )
+
+    def restore_snapshot(self, pool_id: str, *args: Any, **kwargs: Any) -> Dict[str, Any]:
+        plat = self.get_platform_type().value
+        raise PlatformCapabilityError(
+            f"Observer mode active: Snapshot restoration on {plat} must be performed via host OS."
+        )
+
+    def export_pool(self, pool_id: str, force: bool = False) -> Dict[str, Any]:
+        plat = self.get_platform_type().value
+        raise PlatformCapabilityError(f"Observer mode active: Pool detachment on {plat} must be performed via host OS.")
+
+    def import_pool(self, pool_id: str, fs_type: str = "zfs", target_mount: Optional[str] = None) -> Dict[str, Any]:
+        plat = self.get_platform_type().value
+        raise PlatformCapabilityError(f"Observer mode active: Pool import on {plat} must be performed via host OS.")
+
+    def discover_external_pools(self) -> List[Dict[str, Any]]:
+        return []
+
+    def get_pool_path(self, pool_id: str) -> str:
+        if not pool_id or pool_id in ("default_pool", "default"):
+            return self._pool_path
+        cand = os.path.join(self._pool_path, pool_id)
+        return cand if os.path.exists(cand) else self._pool_path
+
+    def _parse_mounts(self) -> List[Dict[str, str]]:
+        """Parses /proc/mounts to find mounted filesystems, filtering out virtual and pseudo mounts."""
+        mounts: List[Dict[str, str]] = []
+        mount_files = [os.path.join(HOST_PROC, "mounts"), "/proc/mounts"]
+        target_file = next((f for f in mount_files if os.path.isfile(f)), None)
+        if not target_file:
+            return mounts
+
+        skip_fstypes = {
+            "proc",
+            "sysfs",
+            "devtmpfs",
+            "devpts",
+            "tmpfs",
+            "overlay",
+            "cgroup",
+            "cgroup2",
+            "pstore",
+            "bpf",
+            "autofs",
+            "mqueue",
+            "hugetlbfs",
+            "debugfs",
+            "tracefs",
+            "securityfs",
+            "fusectl",
+            "configfs",
+            "binfmt_misc",
+            "squashfs",
+            "nsfs",
+            "ramfs",
+            "shfs",
+        }
+        skip_prefixes = ("/proc", "/sys", "/dev", "/run", "/var/lib/docker", "/var/lib/containerd")
+
+        try:
+            with open(target_file, "r", encoding="utf-8", errors="replace") as f:
+                for line in f:
+                    parts = line.strip().split()
+                    if len(parts) >= 3:
+                        dev, mp, fstype = parts[0], parts[1], parts[2]
+                        opts = parts[3] if len(parts) > 3 else ""
+                        if fstype in skip_fstypes:
+                            continue
+                        if any(mp.startswith(pfx) for pfx in skip_prefixes):
+                            continue
+                        mounts.append({"device": dev, "mountpoint": mp, "fstype": fstype, "options": opts})
+        except Exception as e:
+            logger.debug(f"[PAL] Error reading mounts from {target_file}: {e}")
+        return mounts
+
+    def _parse_mdstat(self) -> Dict[str, Dict[str, Any]]:
+        """Parses /proc/mdstat for active Linux software RAID arrays and rebuild/resync status."""
+        result: Dict[str, Dict[str, Any]] = {}
+        mdstat_files = [os.path.join(HOST_PROC, "mdstat"), "/proc/mdstat"]
+        target = next((f for f in mdstat_files if os.path.isfile(f)), None)
+        if not target:
+            return result
+
+        try:
+            with open(target, "r", encoding="utf-8", errors="replace") as f:
+                lines = f.readlines()
+
+            current_md: Optional[str] = None
+            for line in lines:
+                line_str = line.strip()
+                if not line_str or line_str.startswith("Personalities") or line_str.startswith("unused"):
+                    continue
+
+                if " : " in line_str and line_str.startswith("md"):
+                    parts = line_str.split(" : ")
+                    current_md = parts[0].strip()
+                    rest = parts[1].strip().split()
+                    state = rest[0] if len(rest) > 0 else "unknown"
+                    level = rest[1] if len(rest) > 1 else "unknown"
+                    members = []
+                    for token in rest[2:]:
+                        clean_disk = re.sub(r"\[\d+\]", "", token)
+                        members.append(clean_disk)
+                    result[current_md] = {
+                        "device": current_md,
+                        "state": state,
+                        "level": level,
+                        "members": members,
+                        "degraded": False,
+                        "sync_action": None,
+                        "progress_pct": 0.0,
+                    }
+                elif current_md and current_md in result:
+                    if re.search(r"\[[U_]+\]", line_str):
+                        bracket_match = re.search(r"\[([U_]+)\]", line_str)
+                        if bracket_match and "_" in bracket_match.group(1):
+                            result[current_md]["degraded"] = True
+                    for action in ("resync", "recovery", "check", "reshape"):
+                        if f"{action} = " in line_str:
+                            result[current_md]["sync_action"] = action
+                            pct_match = re.search(r"=\s*([0-9.]+)%", line_str)
+                            if pct_match:
+                                try:
+                                    result[current_md]["progress_pct"] = float(pct_match.group(1))
+                                except ValueError:
+                                    pass
+        except Exception as e:
+            logger.debug(f"[PAL] Error reading mdstat from {target}: {e}")
+        return result
+
+    def _discover_hal_disks(self) -> List[PoolMember]:
+        """Discovers non-OS physical disks safely via Hardware Abstraction Layer."""
+        members: List[PoolMember] = []
+        try:
+            from backend.hardware.hal import DiskDiscoveryHAL
+
+            hal_disks = DiskDiscoveryHAL.discover_physical_disks()
+            for d in hal_disks:
+                if not d.removable and d.role != "os":
+                    members.append(
+                        PoolMember(
+                            name=d.dev_name,
+                            device=d.dev_name,
+                            id=d.serial or d.model,
+                            type="Data",
+                            role=d.role,
+                            size_bytes=d.size_bytes,
+                            status="OK",
+                            rotational=d.is_rotational,
+                            spundown=False,
+                            temp_c=None,
+                        )
+                    )
+        except Exception as e:
+            logger.debug(f"[PAL] HAL disk discovery fallback: {e}")
+        return members
+
+    def _parse_smb_conf(self) -> List[NetworkShare]:
+        """Parses Samba configuration files to identify host-exported network shares."""
+        shares: List[NetworkShare] = []
+        candidates = [
+            "/etc/samba/smb.conf",
+            "/host/etc/samba/smb.conf",
+            "/etc/ugreen/samba/smb.conf",
+            "/host/etc/ugreen/samba/smb.conf",
+            "/etc/samba/smb.conf.user",
+        ]
+        target_conf = next((c for c in candidates if os.path.isfile(c)), None)
+        if not target_conf:
+            return shares
+
+        try:
+            sections = _parse_ini_sections(target_conf)
+            for sec_name, meta in sections.items():
+                if sec_name.lower() in ("global", "homes", "printers", "print$"):
+                    continue
+                share_path = meta.get("path", "")
+                if not share_path:
+                    continue
+
                 try:
-                    with open(p, "r", encoding="utf-8", errors="replace") as f:
-                        text = f.read().lower()
-                        if "unraid" in text:
-                            return PlatformType.UNRAID
-                        if "truenas" in text:
-                            return PlatformType.TRUENAS
-                        if "proxmox" in text:
-                            return PlatformType.PROXMOX
+                    u = shutil.disk_usage(share_path if os.path.exists(share_path) else "/")
+                    tot, usd, fre = u.total, u.used, u.free
                 except Exception:
-                    pass
+                    tot, usd, fre = 0, 0, 0
+                pct = round(usd / tot * 100, 1) if tot > 0 else 0.0
 
-        return PlatformType.GENERIC_LINUX
+                comment = meta.get("comment", "")
+                guest_ok = meta.get("guest ok", meta.get("public", "no")).lower() in ("yes", "true", "1")
+
+                shares.append(
+                    NetworkShare(
+                        name=sec_name,
+                        comment=comment,
+                        security="public" if guest_ok else "private",
+                        export_smb=True,
+                        export_nfs=False,
+                        export_webdav=True,
+                        mountpoint=share_path,
+                        used_bytes=usd,
+                        free_bytes=fre,
+                        total_bytes=tot,
+                        used_pct=pct,
+                    )
+                )
+        except Exception as e:
+            logger.debug(f"[PAL] Error reading smb.conf from {target_conf}: {e}")
+        return shares
+
+    def _discover_shares_from_dirs(self, base_dirs: List[str]) -> List[NetworkShare]:
+        """Discovers user shares by inspecting subdirectories of candidate storage roots."""
+        shares: List[NetworkShare] = []
+        seen_names = set()
+        for b in base_dirs:
+            if not os.path.isdir(b):
+                continue
+            try:
+                for entry in sorted(os.listdir(b)):
+                    if entry.startswith(".") or entry in seen_names:
+                        continue
+                    full_p = os.path.join(b, entry)
+                    if os.path.isdir(full_p):
+                        seen_names.add(entry)
+                        try:
+                            u = shutil.disk_usage(full_p)
+                            tot, usd, fre = u.total, u.used, u.free
+                        except Exception:
+                            tot, usd, fre = 0, 0, 0
+                        pct = round(usd / tot * 100, 1) if tot > 0 else 0.0
+                        shares.append(
+                            NetworkShare(
+                                name=entry,
+                                comment=f"Share on {b}",
+                                security="public",
+                                export_smb=True,
+                                export_nfs=False,
+                                export_webdav=True,
+                                mountpoint=full_p,
+                                used_bytes=usd,
+                                free_bytes=fre,
+                                total_bytes=tot,
+                                used_pct=pct,
+                            )
+                        )
+            except Exception as e:
+                logger.debug(f"[PAL] Error scanning storage directory {b}: {e}")
+        return shares
 
 
-class TrueNASStorageAdapter(GenericLinuxStorageAdapter):
+class TrueNASStorageAdapter(ObserverStorageAdapter):
     """
     TrueNAS SCALE Storage Platform Adapter.
     Operates in Observer Mode. TrueNAS Middleware authoritatively manages ZFS pools,
@@ -1989,19 +2269,21 @@ class TrueNASStorageAdapter(GenericLinuxStorageAdapter):
     def create_pool(
         self,
         name: str,
-        disks: List[str],
-        fs_type: str = "btrfs",
-        profile: str = "raid1",
-        mountpoint: Optional[str] = None,
-    ) -> StoragePool:
+        *args: Any,
+        **kwargs: Any,
+    ) -> Any:
         raise PlatformCapabilityError(
             "Pool creation is prohibited on TrueNAS SCALE in observer mode. Use TrueNAS Web UI to provision ZFS pools."
         )
 
-    def destroy_pool(self, pool_id: str, force: bool = False) -> bool:
+    def destroy_pool(self, pool_id: str, *args: Any, **kwargs: Any) -> Any:
         raise PlatformCapabilityError(
             "Pool destruction is prohibited on TrueNAS SCALE in observer mode. Use TrueNAS Web UI to manage ZFS pools."
         )
+
+    def is_storage_busy(self) -> bool:
+        code, out, _ = self._run_cmd(["zpool", "status"])
+        return code == 0 and ("scrub in progress" in out.lower() or "resilver in progress" in out.lower())
 
     def trigger_scrub(self, pool_id: str, action: str = "start") -> Dict[str, Any]:
         zp = pool_id if (pool_id and pool_id != "default_pool") else "boot-pool"
@@ -2033,8 +2315,75 @@ class TrueNASStorageAdapter(GenericLinuxStorageAdapter):
                 "raw": out or err,
             }
 
+    def list_pools(self) -> List[StoragePool]:
+        pools: List[StoragePool] = []
+        code, zout, _ = self._run_cmd(["zpool", "list", "-Hp", "-o", "name,size,alloc,free,health"])
+        if code == 0 and zout.strip():
+            hal_disks = self._discover_hal_disks()
+            for line in zout.strip().splitlines():
+                parts = line.split("\t")
+                if len(parts) >= 5:
+                    zp_name, zp_size, zp_alloc, zp_free, zp_health = (
+                        parts[0].strip(),
+                        parts[1].strip(),
+                        parts[2].strip(),
+                        parts[3].strip(),
+                        parts[4].strip(),
+                    )
+                    tot = int(zp_size) if zp_size.isdigit() else 0
+                    usd = int(zp_alloc) if zp_alloc.isdigit() else 0
+                    fre = int(zp_free) if zp_free.isdigit() else 0
+                    pct = round(usd / tot * 100, 1) if tot > 0 else 0.0
+                    pools.append(
+                        StoragePool(
+                            id=zp_name,
+                            name=f"{zp_name} (ZFS Pool)",
+                            pool_type="zfs_pool",
+                            fs_type="zfs",
+                            status="HEALTHY" if zp_health == "ONLINE" else zp_health,
+                            mountpoint=f"/mnt/{zp_name}",
+                            total_bytes=tot,
+                            used_bytes=usd,
+                            free_bytes=fre,
+                            used_pct=pct,
+                            members=hal_disks,
+                            parity_protected=True,
+                        )
+                    )
+        if not pools:
+            cand = self._pool_path if os.path.exists(self._pool_path) else "/"
+            try:
+                u = shutil.disk_usage(cand)
+                tot, usd, fre = u.total, u.used, u.free
+            except Exception:
+                tot, usd, fre = 0, 0, 0
+            pct = round(usd / tot * 100, 1) if tot > 0 else 0.0
+            pools.append(
+                StoragePool(
+                    id="boot-pool",
+                    name="boot-pool",
+                    pool_type="zfs_pool",
+                    fs_type="zfs",
+                    status="HEALTHY",
+                    mountpoint=cand,
+                    total_bytes=tot,
+                    used_bytes=usd,
+                    free_bytes=fre,
+                    used_pct=pct,
+                    members=self._discover_hal_disks(),
+                    parity_protected=True,
+                )
+            )
+        return pools
 
-class ProxmoxStorageAdapter(GenericLinuxStorageAdapter):
+    def list_shares(self) -> List[NetworkShare]:
+        shares = self._parse_smb_conf()
+        if not shares:
+            shares = self._discover_shares_from_dirs(["/mnt", self._pool_path])
+        return shares
+
+
+class ProxmoxStorageAdapter(ObserverStorageAdapter):
     """
     Proxmox VE Storage Platform Adapter.
     Operates in Observer Mode. Proxmox VE storage manager (pvesm) authoritatively
@@ -2061,19 +2410,812 @@ class ProxmoxStorageAdapter(GenericLinuxStorageAdapter):
     def create_pool(
         self,
         name: str,
-        disks: List[str],
-        fs_type: str = "btrfs",
-        profile: str = "raid1",
-        mountpoint: Optional[str] = None,
-    ) -> StoragePool:
+        *args: Any,
+        **kwargs: Any,
+    ) -> Any:
         raise PlatformCapabilityError(
             "Pool creation is prohibited on Proxmox VE in observer mode. Use Proxmox Web GUI to provision storage pools."
         )
 
-    def destroy_pool(self, pool_id: str, force: bool = False) -> bool:
+    def destroy_pool(self, pool_id: str, *args: Any, **kwargs: Any) -> Any:
         raise PlatformCapabilityError(
             "Pool destruction is prohibited on Proxmox VE in observer mode. Use Proxmox Web GUI to manage storage pools."
         )
+
+    def is_storage_busy(self) -> bool:
+        code, out, _ = self._run_cmd(["zpool", "status"])
+        return code == 0 and ("scrub in progress" in out.lower() or "resilver in progress" in out.lower())
+
+    def trigger_scrub(self, pool_id: str, action: str = "start") -> Dict[str, Any]:
+        zp = pool_id if (pool_id and pool_id != "default_pool") else "rpool"
+        if action == "start":
+            code, out, err = self._run_cmd(["zpool", "scrub", zp])
+            return {
+                "platform": "proxmox",
+                "pool_id": pool_id,
+                "action": action,
+                "status": "started" if code == 0 else "error",
+                "output": out or err,
+            }
+        elif action == "cancel":
+            code, out, err = self._run_cmd(["zpool", "scrub", "-s", zp])
+            return {
+                "platform": "proxmox",
+                "pool_id": pool_id,
+                "action": action,
+                "status": "cancelled" if code == 0 else "error",
+                "output": out or err,
+            }
+        else:
+            code, out, err = self._run_cmd(["zpool", "status", zp])
+            return {
+                "platform": "proxmox",
+                "pool_id": pool_id,
+                "action": "status",
+                "status": "active" if "scrub in progress" in out.lower() else "idle",
+                "raw": out or err,
+            }
+
+    def list_pools(self) -> List[StoragePool]:
+        pools: List[StoragePool] = []
+        code, zout, _ = self._run_cmd(["zpool", "list", "-Hp", "-o", "name,size,alloc,free,health"])
+        if code == 0 and zout.strip():
+            hal_disks = self._discover_hal_disks()
+            for line in zout.strip().splitlines():
+                parts = line.split("\t")
+                if len(parts) >= 5:
+                    zp_name, zp_size, zp_alloc, zp_free, zp_health = (
+                        parts[0].strip(),
+                        parts[1].strip(),
+                        parts[2].strip(),
+                        parts[3].strip(),
+                        parts[4].strip(),
+                    )
+                    tot = int(zp_size) if zp_size.isdigit() else 0
+                    usd = int(zp_alloc) if zp_alloc.isdigit() else 0
+                    fre = int(zp_free) if zp_free.isdigit() else 0
+                    pct = round(usd / tot * 100, 1) if tot > 0 else 0.0
+                    pools.append(
+                        StoragePool(
+                            id=zp_name,
+                            name=f"{zp_name} (Proxmox ZFS Storage)",
+                            pool_type="zfs_pool",
+                            fs_type="zfs",
+                            status="HEALTHY" if zp_health == "ONLINE" else zp_health,
+                            mountpoint=f"/{zp_name}",
+                            total_bytes=tot,
+                            used_bytes=usd,
+                            free_bytes=fre,
+                            used_pct=pct,
+                            members=hal_disks,
+                            parity_protected=True,
+                        )
+                    )
+        if not pools:
+            cand = self._pool_path if os.path.exists(self._pool_path) else "/"
+            try:
+                u = shutil.disk_usage(cand)
+                tot, usd, fre = u.total, u.used, u.free
+            except Exception:
+                tot, usd, fre = 0, 0, 0
+            pct = round(usd / tot * 100, 1) if tot > 0 else 0.0
+            pools.append(
+                StoragePool(
+                    id="local",
+                    name="local (PVE Storage Directory)",
+                    pool_type="single",
+                    fs_type="ext4",
+                    status="HEALTHY",
+                    mountpoint=cand,
+                    total_bytes=tot,
+                    used_bytes=usd,
+                    free_bytes=fre,
+                    used_pct=pct,
+                    members=self._discover_hal_disks(),
+                    parity_protected=False,
+                )
+            )
+        return pools
+
+    def list_shares(self) -> List[NetworkShare]:
+        shares = self._parse_smb_conf()
+        if not shares:
+            shares = self._discover_shares_from_dirs(["/mnt/pve", self._pool_path])
+        return shares
+
+
+class FygoOSStorageAdapter(ObserverStorageAdapter):
+    """
+    FygoOS Storage Platform Adapter.
+    Operates in Observer Mode. FygoOS authoritatively manages system volumes,
+    media directories, and external drives.
+    """
+
+    def get_platform_type(self) -> PlatformType:
+        return PlatformType.FYGOOS
+
+    def get_capabilities(self) -> PlatformCapabilities:
+        return PlatformCapabilities(
+            platform=PlatformType.FYGOOS,
+            is_observer_mode=True,
+            can_create_pools=False,
+            can_destroy_pools=False,
+            can_manage_shares=False,
+            can_trigger_scrub=False,
+            can_export_pools=False,
+            can_import_pools=False,
+            supported_filesystems=["btrfs", "ext4", "f2fs"],
+            description="Observer Mode: FygoOS host detected. Storage pools, external drives, and media directories are authoritatively managed by FygoOS. Telemetry and capacity auditing enabled.",
+        )
+
+    def is_storage_busy(self) -> bool:
+        return False
+
+    def trigger_scrub(self, pool_id: str, action: str = "start") -> Dict[str, Any]:
+        return {
+            "platform": "fygoos",
+            "pool_id": pool_id,
+            "action": action,
+            "status": "monitoring",
+            "message": "FygoOS manages volume integrity authoritatively.",
+        }
+
+    def list_pools(self) -> List[StoragePool]:
+        pools: List[StoragePool] = []
+        mounts = self._parse_mounts()
+        hal_disks = self._discover_hal_disks()
+
+        storage_roots = ["/media", "/mnt/storage", "/storage", "/volume1"]
+        checked_mounts = set()
+
+        for m in mounts:
+            mp = m.get("mountpoint", "")
+            fstype = m.get("fstype", "")
+            if fstype in ("ext4", "btrfs", "f2fs", "xfs"):
+                if any(mp.startswith(r) for r in storage_roots) or mp in storage_roots:
+                    try:
+                        u = shutil.disk_usage(mp)
+                        tot, usd, fre = u.total, u.used, u.free
+                    except Exception:
+                        continue
+                    if tot == 0:
+                        continue
+                    pct = round(usd / tot * 100, 1)
+                    checked_mounts.add(mp)
+                    p_id = os.path.basename(mp) or "fygoos_storage"
+                    pools.append(
+                        StoragePool(
+                            id=p_id,
+                            name=f"{p_id} (FygoOS Storage Volume)",
+                            pool_type="single" if fstype != "btrfs" else "btrfs_raid",
+                            fs_type=fstype,
+                            fs_profile="single",
+                            status="HEALTHY",
+                            mountpoint=mp,
+                            total_bytes=tot,
+                            used_bytes=usd,
+                            free_bytes=fre,
+                            used_pct=pct,
+                            members=hal_disks,
+                            parity_protected=fstype == "btrfs",
+                        )
+                    )
+
+        if not pools:
+            cand = self._pool_path if os.path.exists(self._pool_path) else "/"
+            try:
+                u = shutil.disk_usage(cand)
+                tot, usd, fre = u.total, u.used, u.free
+            except Exception:
+                tot, usd, fre = 0, 0, 0
+            pct = round(usd / tot * 100, 1) if tot > 0 else 0.0
+            pools.append(
+                StoragePool(
+                    id="fygoos_main",
+                    name="FygoOS Primary Storage",
+                    pool_type="single",
+                    fs_type="ext4",
+                    status="HEALTHY",
+                    mountpoint=cand,
+                    total_bytes=tot,
+                    used_bytes=usd,
+                    free_bytes=fre,
+                    used_pct=pct,
+                    members=hal_disks,
+                    parity_protected=False,
+                )
+            )
+
+        return pools
+
+    def list_shares(self) -> List[NetworkShare]:
+        shares = self._parse_smb_conf()
+        if not shares:
+            shares = self._discover_shares_from_dirs(["/media", "/mnt/storage", self._pool_path])
+        return shares
+
+
+class ZettOSStorageAdapter(ObserverStorageAdapter):
+    """
+    ZettOS Appliance Storage Platform Adapter.
+    Operates in Observer Mode. ZettOS authoritatively manages hybrid OpenZFS
+    and Btrfs storage pools, parity topologies, and network shares.
+    """
+
+    def get_platform_type(self) -> PlatformType:
+        return PlatformType.ZETTOS
+
+    def get_capabilities(self) -> PlatformCapabilities:
+        return PlatformCapabilities(
+            platform=PlatformType.ZETTOS,
+            is_observer_mode=True,
+            can_create_pools=False,
+            can_destroy_pools=False,
+            can_manage_shares=False,
+            can_trigger_scrub=True,
+            can_export_pools=False,
+            can_import_pools=False,
+            supported_filesystems=["zfs", "btrfs", "xfs"],
+            description="Observer Mode: ZettOS appliance host detected. Hybrid ZFS/Btrfs storage pools, parity groups, and shares are authoritatively managed by ZettOS. Telemetry and scrub monitoring enabled.",
+        )
+
+    def is_storage_busy(self) -> bool:
+        code, out, _ = self._run_cmd(["zpool", "status"])
+        if code == 0 and ("scrub in progress" in out.lower() or "resilver in progress" in out.lower()):
+            return True
+        code, out, _ = self._run_cmd(["btrfs", "scrub", "status", self._pool_path])
+        if code == 0 and (
+            "running" in out.lower() and "no scrub" not in out.lower() and "not running" not in out.lower()
+        ):
+            return True
+        return False
+
+    def trigger_scrub(self, pool_id: str, action: str = "start") -> Dict[str, Any]:
+        zp = pool_id if (pool_id and pool_id != "default_pool") else "tank"
+        if pool_id and ("zfs" in pool_id.lower() or "tank" in pool_id.lower()):
+            if action == "start":
+                code, out, err = self._run_cmd(["zpool", "scrub", zp])
+                return {
+                    "platform": "zettos",
+                    "pool_id": pool_id,
+                    "action": action,
+                    "status": "started" if code == 0 else "error",
+                    "output": out or err,
+                }
+            elif action == "cancel":
+                code, out, err = self._run_cmd(["zpool", "scrub", "-s", zp])
+                return {
+                    "platform": "zettos",
+                    "pool_id": pool_id,
+                    "action": action,
+                    "status": "cancelled" if code == 0 else "error",
+                    "output": out or err,
+                }
+            else:
+                code, out, err = self._run_cmd(["zpool", "status", zp])
+                return {
+                    "platform": "zettos",
+                    "pool_id": pool_id,
+                    "action": "status",
+                    "status": "active" if "scrub in progress" in out.lower() else "idle",
+                    "raw": out or err,
+                }
+        else:
+            target_path = self._pool_path
+            if action == "start":
+                code, out, err = self._run_cmd(["btrfs", "scrub", "start", target_path])
+                return {
+                    "platform": "zettos",
+                    "pool_id": pool_id,
+                    "action": action,
+                    "status": "started" if code == 0 else "error",
+                    "output": out or err,
+                }
+            elif action == "cancel":
+                code, out, err = self._run_cmd(["btrfs", "scrub", "cancel", target_path])
+                return {
+                    "platform": "zettos",
+                    "pool_id": pool_id,
+                    "action": action,
+                    "status": "cancelled" if code == 0 else "error",
+                    "output": out or err,
+                }
+            else:
+                code, out, err = self._run_cmd(["btrfs", "scrub", "status", target_path])
+                return {
+                    "platform": "zettos",
+                    "pool_id": pool_id,
+                    "action": "status",
+                    "status": "idle" if ("no scrub" in out.lower() or "not running" in out.lower()) else "active",
+                    "raw": out or err,
+                }
+
+    def list_pools(self) -> List[StoragePool]:
+        pools: List[StoragePool] = []
+        for cfg_cand in ["/etc/zettos/storage.json", "/host/etc/zettos/storage.json", "/etc/zettos/pools.json"]:
+            if os.path.isfile(cfg_cand):
+                try:
+                    with open(cfg_cand, "r", encoding="utf-8") as f:
+                        cfg_data = json.load(f)
+                        raw_list = cfg_data if isinstance(cfg_data, list) else cfg_data.get("pools", [])
+                        for p_dict in raw_list:
+                            pools.append(StoragePool(**p_dict))
+                except Exception as e:
+                    logger.debug(f"[PAL] Error reading ZettOS storage config: {e}")
+        if pools:
+            return pools
+
+        code, zout, _ = self._run_cmd(["zpool", "list", "-Hp", "-o", "name,size,alloc,free,health"])
+        if code == 0 and zout.strip():
+            hal_disks = self._discover_hal_disks()
+            for line in zout.strip().splitlines():
+                parts = line.split("\t")
+                if len(parts) >= 5:
+                    zp_name, zp_size, zp_alloc, zp_free, zp_health = (
+                        parts[0].strip(),
+                        parts[1].strip(),
+                        parts[2].strip(),
+                        parts[3].strip(),
+                        parts[4].strip(),
+                    )
+                    tot = int(zp_size) if zp_size.isdigit() else 0
+                    usd = int(zp_alloc) if zp_alloc.isdigit() else 0
+                    fre = int(zp_free) if zp_free.isdigit() else 0
+                    pct = round(usd / tot * 100, 1) if tot > 0 else 0.0
+                    pools.append(
+                        StoragePool(
+                            id=zp_name,
+                            name=f"{zp_name} (ZettOS ZFS Pool)",
+                            pool_type="zfs_pool",
+                            fs_type="zfs",
+                            status="HEALTHY" if zp_health == "ONLINE" else zp_health,
+                            mountpoint=f"/{zp_name}",
+                            total_bytes=tot,
+                            used_bytes=usd,
+                            free_bytes=fre,
+                            used_pct=pct,
+                            members=hal_disks,
+                            parity_protected=True,
+                        )
+                    )
+
+        if not pools:
+            cand = self._pool_path if os.path.exists(self._pool_path) else "/"
+            try:
+                u = shutil.disk_usage(cand)
+                tot, usd, fre = u.total, u.used, u.free
+            except Exception:
+                tot, usd, fre = 0, 0, 0
+            pct = round(usd / tot * 100, 1) if tot > 0 else 0.0
+            pools.append(
+                StoragePool(
+                    id="zettos_pool",
+                    name="ZettOS Main Storage Pool",
+                    pool_type="btrfs_raid",
+                    fs_type="btrfs",
+                    status="HEALTHY",
+                    mountpoint=cand,
+                    total_bytes=tot,
+                    used_bytes=usd,
+                    free_bytes=fre,
+                    used_pct=pct,
+                    members=self._discover_hal_disks(),
+                    parity_protected=True,
+                )
+            )
+
+        return pools
+
+    def list_shares(self) -> List[NetworkShare]:
+        shares: List[NetworkShare] = []
+        for s_cand in ["/etc/zettos/shares.json", "/host/etc/zettos/shares.json"]:
+            if os.path.isfile(s_cand):
+                try:
+                    with open(s_cand, "r", encoding="utf-8") as f:
+                        data = json.load(f)
+                        raw_list = data if isinstance(data, list) else data.get("shares", [])
+                        for s in raw_list:
+                            shares.append(NetworkShare(**s))
+                except Exception as e:
+                    logger.debug(f"[PAL] Error reading ZettOS shares config: {e}")
+        if shares:
+            return shares
+
+        shares = self._parse_smb_conf()
+        if not shares:
+            shares = self._discover_shares_from_dirs(["/mnt/user", "/mnt/storage", self._pool_path])
+        return shares
+
+
+class UgosStorageAdapter(ObserverStorageAdapter):
+    """
+    UGOS (UGREEN NAS OS) Storage Platform Adapter.
+    Operates in Observer Mode. UGOS authoritatively manages mdadm RAID volumes,
+    LVM thin-pools, and user shares under /volume1, /volume2, etc.
+    """
+
+    def get_platform_type(self) -> PlatformType:
+        return PlatformType.UGOS
+
+    def get_capabilities(self) -> PlatformCapabilities:
+        return PlatformCapabilities(
+            platform=PlatformType.UGOS,
+            is_observer_mode=True,
+            can_create_pools=False,
+            can_destroy_pools=False,
+            can_manage_shares=False,
+            can_trigger_scrub=True,
+            can_export_pools=False,
+            can_import_pools=False,
+            supported_filesystems=["btrfs", "ext4"],
+            description="Observer Mode: UGOS (UGREEN NAS OS) host detected. Storage pools, mdadm RAID groups, and LVM volumes are authoritatively managed by UGOS. Telemetry and RAID scrub monitoring enabled.",
+        )
+
+    def is_storage_busy(self) -> bool:
+        mdstats = self._parse_mdstat()
+        for md_info in mdstats.values():
+            if md_info.get("sync_action"):
+                return True
+        return False
+
+    def trigger_scrub(self, pool_id: str, action: str = "start") -> Dict[str, Any]:
+        mdstats = self._parse_mdstat()
+        busy = False
+        action_name = "idle"
+        pct = 0.0
+        for md_dev, info in mdstats.items():
+            if info.get("sync_action"):
+                busy = True
+                action_name = info["sync_action"]
+                pct = info.get("progress_pct", 0.0)
+                break
+
+        return {
+            "platform": "ugos",
+            "pool_id": pool_id,
+            "action": action,
+            "status": "active" if busy else "idle",
+            "sync_action": action_name,
+            "progress_pct": pct,
+            "message": "UGOS manages RAID resync and scrub authoritatively via kernel md/btrfs.",
+        }
+
+    def list_pools(self) -> List[StoragePool]:
+        pools: List[StoragePool] = []
+        mdstats = self._parse_mdstat()
+        mounts = self._parse_mounts()
+        hal_disks = {d.name: d for d in self._discover_hal_disks()}
+
+        volume_paths = []
+        for i in range(1, 10):
+            for base in ["", "/host", "/mnt"]:
+                cand = f"{base}/volume{i}"
+                if os.path.isdir(cand) and cand not in volume_paths:
+                    volume_paths.append(cand)
+
+        for m in mounts:
+            mp = m.get("mountpoint", "")
+            if re.match(r"^(/host|/mnt)?/volume\d+", mp) and mp not in volume_paths:
+                volume_paths.append(mp)
+
+        if not volume_paths:
+            volume_paths = [self._pool_path]
+
+        for v_path in sorted(volume_paths):
+            if not os.path.exists(v_path):
+                continue
+            vol_name = os.path.basename(v_path)
+            try:
+                u = shutil.disk_usage(v_path)
+                tot, usd, fre = u.total, u.used, u.free
+            except Exception:
+                tot, usd, fre = 0, 0, 0
+            pct = round(usd / tot * 100, 1) if tot > 0 else 0.0
+
+            fs_type = "btrfs"
+            for m in mounts:
+                if m.get("mountpoint") == v_path:
+                    fs_type = m.get("fstype", "btrfs")
+                    break
+
+            members: List[PoolMember] = []
+            raid_profile = "raid5"
+            status = "HEALTHY"
+
+            for md_dev, info in mdstats.items():
+                if info.get("degraded"):
+                    status = "DEGRADED"
+                raid_profile = info.get("level", raid_profile)
+                for member_name in info.get("members", []):
+                    clean_name = re.sub(r"\d+$", "", member_name)
+                    if clean_name in hal_disks:
+                        members.append(hal_disks[clean_name])
+                    else:
+                        members.append(
+                            PoolMember(
+                                name=member_name,
+                                device=clean_name,
+                                id=member_name,
+                                type="Data",
+                                role="data",
+                                status="OK" if status == "HEALTHY" else "DEGRADED",
+                            )
+                        )
+
+            if not members:
+                members = list(hal_disks.values())
+
+            parity_protected = raid_profile in ("raid1", "raid5", "raid6", "raid10")
+
+            pools.append(
+                StoragePool(
+                    id=vol_name,
+                    name=f"{vol_name.capitalize()} (UGOS Storage Pool)",
+                    pool_type="mdadm_btrfs" if fs_type == "btrfs" else "mdadm_raid",
+                    fs_type=fs_type,
+                    fs_profile=raid_profile,
+                    status=status,
+                    mountpoint=v_path,
+                    total_bytes=tot,
+                    used_bytes=usd,
+                    free_bytes=fre,
+                    used_pct=pct,
+                    members=members,
+                    parity_protected=parity_protected,
+                )
+            )
+
+        return pools
+
+    def list_shares(self) -> List[NetworkShare]:
+        shares = self._parse_smb_conf()
+        if not shares:
+            vol_dirs = [f"/volume{i}" for i in range(1, 10)] + [f"/host/volume{i}" for i in range(1, 10)]
+            existing_vols = [v for v in vol_dirs if os.path.isdir(v)]
+            shares = self._discover_shares_from_dirs(existing_vols or [self._pool_path])
+        return shares
+
+
+class GenericObserverStorageAdapter(ObserverStorageAdapter):
+    """
+    Generic Observer Storage Platform Adapter.
+    Operates in 100% non-intrusive Observer Mode on any Linux NAS OS (Synology DSM,
+    QNAP QTS, Asustor ADM, CasaOS, or unprivileged bare-metal host).
+    Strictly forbids block mutations while capturing non-intrusive pool and share telemetry.
+    """
+
+    def get_platform_type(self) -> PlatformType:
+        return PlatformType.GENERIC_OBSERVER
+
+    def get_capabilities(self) -> PlatformCapabilities:
+        return PlatformCapabilities(
+            platform=PlatformType.GENERIC_OBSERVER,
+            is_observer_mode=True,
+            can_create_pools=False,
+            can_destroy_pools=False,
+            can_manage_shares=False,
+            can_trigger_scrub=False,
+            can_export_pools=False,
+            can_import_pools=False,
+            supported_filesystems=["btrfs", "ext4", "xfs", "zfs"],
+            description="Observer Mode: Non-intrusive telemetry mode active. Storage pools and file shares are authoritatively managed by host OS. Block-level modifications are strictly disabled.",
+        )
+
+    def is_storage_busy(self) -> bool:
+        mdstats = self._parse_mdstat()
+        for md_info in mdstats.values():
+            if md_info.get("sync_action"):
+                return True
+        return False
+
+    def trigger_scrub(self, pool_id: str, action: str = "start") -> Dict[str, Any]:
+        return {
+            "platform": "generic_observer",
+            "pool_id": pool_id,
+            "action": action,
+            "status": "monitoring",
+            "message": "Host OS authoritatively manages storage scrub and parity verification.",
+        }
+
+    def list_pools(self) -> List[StoragePool]:
+        pools: List[StoragePool] = []
+        mounts = self._parse_mounts()
+        hal_disks = self._discover_hal_disks()
+
+        for m in mounts:
+            mp = m.get("mountpoint", "")
+            fstype = m.get("fstype", "")
+            if fstype not in ("ext4", "btrfs", "xfs", "zfs"):
+                continue
+            try:
+                u = shutil.disk_usage(mp)
+                tot, usd, fre = u.total, u.used, u.free
+            except Exception:
+                continue
+            if tot == 0:
+                continue
+            pct = round(usd / tot * 100, 1)
+
+            pool_id = os.path.basename(mp) or "storage_root"
+            pools.append(
+                StoragePool(
+                    id=pool_id,
+                    name=f"{pool_id} ({fstype.upper()} Volume)",
+                    pool_type="single",
+                    fs_type=fstype,
+                    fs_profile="single",
+                    status="HEALTHY",
+                    mountpoint=mp,
+                    total_bytes=tot,
+                    used_bytes=usd,
+                    free_bytes=fre,
+                    used_pct=pct,
+                    members=hal_disks,
+                    parity_protected=False,
+                )
+            )
+
+        if not pools:
+            cand = self._pool_path if os.path.exists(self._pool_path) else "/"
+            try:
+                u = shutil.disk_usage(cand)
+                tot, usd, fre = u.total, u.used, u.free
+            except Exception:
+                tot, usd, fre = 0, 0, 0
+            pct = round(usd / tot * 100, 1) if tot > 0 else 0.0
+            pools.append(
+                StoragePool(
+                    id="host_storage",
+                    name="Host Storage Volume",
+                    pool_type="single",
+                    fs_type="ext4",
+                    status="HEALTHY",
+                    mountpoint=cand,
+                    total_bytes=tot,
+                    used_bytes=usd,
+                    free_bytes=fre,
+                    used_pct=pct,
+                    members=hal_disks,
+                    parity_protected=False,
+                )
+            )
+
+        return pools
+
+    def list_shares(self) -> List[NetworkShare]:
+        shares = self._parse_smb_conf()
+        if not shares:
+            shares = self._discover_shares_from_dirs([self._pool_path, "/mnt", "/media"])
+        return shares
+
+
+class StoragePlatformDetector:
+    """Detects the underlying NAS host OS and runtime environment."""
+
+    @staticmethod
+    def detect() -> PlatformType:
+        # 0. Explicit Environment Override
+        env_platform = os.environ.get("ZETTNAS_PLATFORM", "").strip().lower()
+        if env_platform:
+            if env_platform in ("unraid",):
+                return PlatformType.UNRAID
+            if env_platform in ("truenas", "scale"):
+                return PlatformType.TRUENAS
+            if env_platform in ("proxmox", "pve"):
+                return PlatformType.PROXMOX
+            if env_platform in ("fygoos", "fyde", "fydeos"):
+                return PlatformType.FYGOOS
+            if env_platform in ("zettos", "zettlab"):
+                return PlatformType.ZETTOS
+            if env_platform in ("ugos", "ugreen"):
+                return PlatformType.UGOS
+            if env_platform in ("generic_observer", "observer", "readonly", "telemetry"):
+                return PlatformType.GENERIC_OBSERVER
+            if env_platform in ("generic_linux", "linux"):
+                return PlatformType.GENERIC_LINUX
+
+        # 1. Unraid Detection
+        if _find_emhttp_dir() is not None:
+            return PlatformType.UNRAID
+        ident_candidates = ["/boot/config/ident.cfg", "/host/boot/config/ident.cfg"]
+        if any(os.path.isfile(p) for p in ident_candidates):
+            return PlatformType.UNRAID
+
+        # 2. ZettOS Detection
+        zettos_candidates = [
+            "/etc/zettos-release",
+            "/host/etc/zettos-release",
+            "/etc/zettos/version",
+            "/host/etc/zettos/version",
+        ]
+        if any(os.path.isfile(p) for p in zettos_candidates):
+            return PlatformType.ZETTOS
+
+        # 3. FygoOS Detection
+        fygoos_candidates = [
+            "/etc/fygoos-release",
+            "/host/etc/fygoos-release",
+            "/etc/fyde-release",
+            "/host/etc/fyde-release",
+            "/var/run/fygoos",
+            "/host/var/run/fygoos",
+        ]
+        if any(os.path.exists(p) for p in fygoos_candidates):
+            return PlatformType.FYGOOS
+
+        # 4. UGOS (UGREEN NAS OS) Detection
+        ugos_candidates = [
+            "/etc/ugos-release",
+            "/host/etc/ugos-release",
+            "/etc/ugreen",
+            "/host/etc/ugreen",
+        ]
+        if any(os.path.exists(p) for p in ugos_candidates):
+            return PlatformType.UGOS
+
+        # 5. Kernel /proc/version checks
+        proc_ver_path = os.path.join(HOST_PROC, "version")
+        if os.path.isfile(proc_ver_path):
+            try:
+                with open(proc_ver_path, "r", encoding="utf-8", errors="replace") as f:
+                    ver_text = f.read().lower()
+                    if "unraid" in ver_text:
+                        return PlatformType.UNRAID
+                    if "zettos" in ver_text:
+                        return PlatformType.ZETTOS
+                    if "fygoos" in ver_text or "fydeos" in ver_text:
+                        return PlatformType.FYGOOS
+                    if "ugos" in ver_text or "ugreen" in ver_text:
+                        return PlatformType.UGOS
+                    if "pve" in ver_text:
+                        return PlatformType.PROXMOX
+                    if "truenas" in ver_text:
+                        return PlatformType.TRUENAS
+            except Exception:
+                pass
+
+        # 6. /etc/os-release checks
+        os_release_paths = ["/etc/os-release", "/host/etc/os-release"]
+        for p in os_release_paths:
+            if os.path.isfile(p):
+                try:
+                    with open(p, "r", encoding="utf-8", errors="replace") as f:
+                        text = f.read().lower()
+                        if "unraid" in text:
+                            return PlatformType.UNRAID
+                        if "zettos" in text:
+                            return PlatformType.ZETTOS
+                        if "fygoos" in text or "fydeos" in text:
+                            return PlatformType.FYGOOS
+                        if "ugos" in text or "ugreen" in text:
+                            return PlatformType.UGOS
+                        if "truenas" in text:
+                            return PlatformType.TRUENAS
+                        if "proxmox" in text:
+                            return PlatformType.PROXMOX
+                except Exception:
+                    pass
+
+        # 7. Other Appliance NAS (Synology, QNAP, Asustor, CasaOS) or Observer Mode env
+        other_nas_candidates = [
+            "/etc/synoinfo.conf",
+            "/host/etc/synoinfo.conf",
+            "/etc/config/uLinux.conf",
+            "/host/etc/config/uLinux.conf",
+            "/etc/nas.conf",
+            "/host/etc/nas.conf",
+            "/etc/casaos",
+            "/host/etc/casaos",
+        ]
+        if any(os.path.exists(p) for p in other_nas_candidates):
+            return PlatformType.GENERIC_OBSERVER
+
+        if os.environ.get("ZETTNAS_PAL_MODE", "").strip().lower() in ("observer", "readonly", "telemetry"):
+            return PlatformType.GENERIC_OBSERVER
+        if os.environ.get("ZETTNAS_OBSERVER_MODE") == "1":
+            return PlatformType.GENERIC_OBSERVER
+
+        return PlatformType.GENERIC_LINUX
 
 
 _CACHED_ADAPTER: Optional[StoragePlatformAdapter] = None
@@ -2094,6 +3236,14 @@ def get_storage_platform(force_refresh: bool = False) -> StoragePlatformAdapter:
         _CACHED_ADAPTER = TrueNASStorageAdapter()
     elif platform_type == PlatformType.PROXMOX:
         _CACHED_ADAPTER = ProxmoxStorageAdapter()
+    elif platform_type == PlatformType.FYGOOS:
+        _CACHED_ADAPTER = FygoOSStorageAdapter()
+    elif platform_type == PlatformType.ZETTOS:
+        _CACHED_ADAPTER = ZettOSStorageAdapter()
+    elif platform_type == PlatformType.UGOS:
+        _CACHED_ADAPTER = UgosStorageAdapter()
+    elif platform_type == PlatformType.GENERIC_OBSERVER:
+        _CACHED_ADAPTER = GenericObserverStorageAdapter()
     else:
         _CACHED_ADAPTER = GenericLinuxStorageAdapter()
 

@@ -29,6 +29,14 @@ def read_storage():
                 engine = "OpenZFS"
             elif pt == PlatformType.PROXMOX:
                 engine = "ZFS / LVM-Thin"
+            elif pt == PlatformType.FYGOOS:
+                engine = "FygoOS Storage Engine"
+            elif pt == PlatformType.ZETTOS:
+                engine = "ZettOS (ZFS / Btrfs Hybrid)"
+            elif pt == PlatformType.UGOS:
+                engine = "UGOS (mdadm / LVM / Btrfs)"
+            elif pt == PlatformType.GENERIC_OBSERVER:
+                engine = "Observer Telemetry Engine"
             else:
                 engine = "Btrfs Native Subvolumes"
         except Exception:
