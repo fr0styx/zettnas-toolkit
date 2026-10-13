@@ -1,5 +1,49 @@
 # ZettNAS Toolkit - Release Changelog
 
+## v1.8.0 (2026-10-13) - Stable
+### 💎 Enterprise Master Architecture: 7-Pillar Mission Control, Storage PAL, Thermal Watchdog & Frontend Acceleration
+
+This comprehensive production milestone elevates ZettNAS Toolkit to consumer-grade enterprise maturity. Version 1.8.0 introduces the 7-Pillar Mission Control information architecture, advanced storage Platform Abstraction Layer (PAL) with Btrfs chunk allocation and OpenZFS pool member discovery, eMMC OS drive isolation for Zettlab D4 hardware, thermal fan watchdog scrub protections, QMP virtual machine block resize, real-time active listening socket telemetry, automated Samba sidecar user synchronization, full WAI-ARIA and WCAG 2.1 AA accessibility compliance, and complete 5-language dictionary parity (1,100 keys across EN, DE, ZH, FR, ES):
+
+- **Mission Control Restructuring (The 7-Pillar Architecture)**:
+  - **Seven Core Pillars**: Sidebar and HUB re-architected into 7 intuitive, discoverable domains: *Dashboard & Telemetry*, *Storage & Disks*, *Containers & Apps*, *Virtual Machines*, *Network & Sharing*, *Hardware & Power*, and *System & Identity*.
+  - **Virtual Machines Pillar**: Dedicated first-class management center in Mission Control with active VM cards, resource telemetry, and 1-click creation wizard launcher.
+  - **File Sharing Services**: Centralized Samba (SMB), NFS exports, and WebDAV server configuration grouped under Network & Sharing.
+  - **Consolidated Hardware & Power Subsystems**: Thermal cooling fan curves, ARGB LED lightbar effects, front LCD dashboard controls, and UPS battery telemetry unified into Hardware & Power.
+  - **100% Backward Compatibility**: Complete preservation of all legacy `SUBPANE_MAP` routes and deep links (screensaver, wallpaper, theme, dock, glass, etc.).
+
+- **Storage Platform Abstraction Layer (PAL) & Hardware Safety**:
+  - **eMMC OS Drive Isolation**: Automatic discovery and isolation of `/dev/mmcblk*` internal storage devices on Zettlab D4 and Aoostar appliances, preventing invalid and destructive SMART polling.
+  - **Btrfs Chunk Allocation & Topology**: Accurate calculation of unallocated space, single vs raid1 metadata chunks, and data device usage.
+  - **OpenZFS Physical Topology**: `zpool status -P` parsing into structured `PoolMember` objects with device paths, mirror groups, and vdev levels.
+  - **Observer Mode Adapters**: Dedicated storage adapters for TrueNAS SCALE and Proxmox VE operating in non-intrusive telemetry mode (`is_observer_mode = True`).
+  - **Thermal Watchdog Scrub Safety**: Automatic Zero RPM inhibition during background Btrfs balances and ZFS scrubs to protect drives from overheating under sustained I/O load.
+  - **Front Panel LCD & ARGB Subsystems**: Native 16bpp framebuffer auto-detection (`BGR;16`) for secondary LCD panels, ARGB speed double-inversion fix, and daytime lighting restore.
+  - **UPS Container Teardown Safety**: Preserved `zettnas-toolkit` container from sequential teardown during emergency AC power loss.
+
+- **Virtualization, Network & Sharing Hardening**:
+  - **QMP VM Block Device Resize**: Explicit device ID assignment (`id=drive0`, `id=sdisk{idx}`) enabling reliable runtime disk expansion via QEMU QMP commands.
+  - **Orphaned VM Disk Purging**: Automatic cleanup of virtual disk images and snapshots on guest deletion (`purge_disks=True`).
+  - **Active Listening Ports Inspector**: Real-time host socket inspector correlating listening TCP and UDP ports with NAS services and Docker container port bindings.
+  - **WireGuard Peer Security**: Automatic redaction of private and preshared keys in WireGuard telemetry.
+  - **Automated Samba Sidecar Synchronization**: Event-driven user credentials synchronization directly to `smbpasswd` in the `zettnas-samba` sidecar container via Docker Exec API.
+
+- **Frontend Performance, Accessibility (a11y) & Localization (i18n)**:
+  - **Keyed DOM Reconciler Pre-Pruning**: Eliminated layout thrashing and cascading shift mutations in `reconcileKeyedTable()` by pre-pruning stale nodes before table insertion loops.
+  - **File Explorer Instance Lifecycle**: Resolved primary window teardown bug, ensuring idempotent re-binding of viewport and ResizeObserver upon re-opening.
+  - **GPU Compositing Optimization**: `.window-dragging` disabling expensive `backdrop-filter` and child pointer-events during window drag for fluid 60fps movement.
+  - **Offscreen Containment**: `content-visibility: auto` paired with `contain-intrinsic-size` on inactive Mission Control tabs.
+  - **WAI-ARIA Standards**: Complete `role="tablist"`, `role="tab"`, `role="tabpanel"`, and dynamic `aria-selected` tracking across sidebar and inner tabs; `role="grid"` and `role="row"` in File Explorer; W3C roving tabindex on Dock items.
+  - **Keyboard Ergonomics**: `F2` single-item rename hotkey and `Ctrl+F` / `Cmd+F` in-window search focus in File Explorer; unbind memory leak fix on Quick Look modal dismiss.
+  - **Theme Contrast Compliance**: `--muted: #8493a5` in Cyber Teal (WCAG AA compliant) and `--crit: #ff6b6b` in Amber CRT and Yak Bronze; system font fallback stacks.
+  - **100% 5-Language Parity**: 1,100 translation keys populated with 100% identical coverage across English, German, Simplified Chinese, French, and Spanish.
+
+- **Testing Pipeline & CI/CD Acceleration**:
+  - **Pytest Acceleration**: Argon2 test hashing optimizations and cached tokens reducing Pytest test execution times by > 50%.
+  - **Isolated Worker Sandboxes**: Dynamic per-worker test sandboxes (`SANDBOX/data_{worker_id}`) enabling safe parallel test execution (`pytest -n auto`).
+  - **Vitest jsdom Optimization**: `pool: 'vmThreads'` and global canvas/ResizeObserver test polyfills reducing Vitest runtime by 65%.
+  - **Pre-Commit & Multi-Arch Hardening**: Container-aware path mapping in git pre-commit hooks, multi-arch `qemu-system-arm` Dockerfile provisioning, and GitHub Actions workflow concurrency controls.
+
 ## v1.7.0 (2026-10-12) - Stable
 ### 🚀 Virtual Machines, File Explorer Grid View, Cloud OAuth Assistant & Enterprise Networking
 
