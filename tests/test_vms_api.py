@@ -304,3 +304,159 @@ def test_vms_api_crud_and_validation(client, auth_headers):
     assert res.status_code == 200
     res = client.delete(f"/api/vms/{mapped_vm['id']}", headers=auth_headers)
     assert res.status_code == 200
+
+
+def test_vm_reconciliation_cleans_phantom_running(client, auth_headers):
+    """Verifies that unmonitored or dead VMs marked 'running' are reconciled to 'stopped'."""
+    from backend.api.vms import _load_vms, _save_vms
+
+    # Create test VM
+    res = client.post(
+        "/api/vms",
+        json={"name": "phantom-test-vm", "vcpus": 1, "ram_gb": 1.0, "disk_size_gb": 10},
+        headers=auth_headers,
+    )
+    assert res.status_code == 200
+    vm_id = res.json()["id"]
+
+    # Directly simulate a stale persisted state of "running" without active process
+    vms = _load_vms()
+    for v in vms:
+        if v["id"] == vm_id:
+            v["state"] = "running"
+            v["uptime_seconds"] = 1200
+    _save_vms(vms)
+
+    # Calling list_vms must reconcile to stopped
+    res = client.get("/api/vms", headers=auth_headers)
+    assert res.status_code == 200
+    updated_vms = res.json()
+    target = next((v for v in updated_vms if v["id"] == vm_id), None)
+    assert target is not None
+    assert target["state"] == "stopped"
+    assert target["uptime_seconds"] == 0
+
+    # Clean up
+    client.delete(f"/api/vms/{vm_id}", headers=auth_headers)
+
+
+def test_vm_start_failure_raises_500_and_captures_error(client, auth_headers):
+    """Verifies that if QEMU startup fails, HTTP 500 is returned, state stays stopped, and error is logged."""
+    from unittest.mock import patch
+
+    res = client.post(
+        "/api/vms",
+        json={"name": "fail-test-vm", "vcpus": 1, "ram_gb": 1.0, "disk_size_gb": 10},
+        headers=auth_headers,
+    )
+    assert res.status_code == 200
+    vm_id = res.json()["id"]
+
+    simulated_err = "Could not access KVM kernel module: Operation not permitted"
+    with patch("backend.api.vms._start_qemu", return_value=(False, simulated_err)):
+        action_res = client.post(f"/api/vms/{vm_id}/action", json={"action": "start"}, headers=auth_headers)
+        assert action_res.status_code == 500
+        assert simulated_err in action_res.json()["detail"]
+
+    # Verify error query endpoint returns the captured error
+    err_res = client.get(f"/api/vms/{vm_id}/error", headers=auth_headers)
+    assert err_res.status_code == 200
+    err_data = err_res.json()
+    assert err_data["has_error"] is True
+    assert simulated_err in err_data["last_error"]
+
+    # Clean up
+    client.delete(f"/api/vms/{vm_id}", headers=auth_headers)
+
+
+def test_vm_expanded_lifecycle_actions(client, auth_headers):
+    """Tests restart, reboot, acpi_shutdown, and force_off lifecycle actions."""
+    res = client.post(
+        "/api/vms",
+        json={"name": "lifecycle-test-vm", "vcpus": 1, "ram_gb": 1.0, "disk_size_gb": 10},
+        headers=auth_headers,
+    )
+    assert res.status_code == 200
+    vm_id = res.json()["id"]
+
+    # Start
+    res = client.post(f"/api/vms/{vm_id}/action", json={"action": "start"}, headers=auth_headers)
+    assert res.status_code == 200
+    assert res.json()["state"] == "running"
+
+    # Restart
+    res = client.post(f"/api/vms/{vm_id}/action", json={"action": "restart"}, headers=auth_headers)
+    assert res.status_code == 200
+    assert res.json()["state"] == "running"
+
+    # Reboot
+    res = client.post(f"/api/vms/{vm_id}/action", json={"action": "reboot"}, headers=auth_headers)
+    assert res.status_code == 200
+    assert res.json()["state"] == "running"
+
+    # ACPI Shutdown
+    res = client.post(f"/api/vms/{vm_id}/action", json={"action": "acpi_shutdown"}, headers=auth_headers)
+    assert res.status_code == 200
+    assert res.json()["state"] == "stopped"
+
+    # Start and Force Off
+    client.post(f"/api/vms/{vm_id}/action", json={"action": "start"}, headers=auth_headers)
+    res = client.post(f"/api/vms/{vm_id}/action", json={"action": "force_off"}, headers=auth_headers)
+    assert res.status_code == 200
+    assert res.json()["state"] == "stopped"
+
+    # Clean up
+    client.delete(f"/api/vms/{vm_id}", headers=auth_headers)
+
+
+def test_vm_disk_resize_endpoint(client, auth_headers):
+    """Tests virtual disk expansion endpoint and validation rules."""
+    res = client.post(
+        "/api/vms",
+        json={"name": "resize-test-vm", "vcpus": 1, "ram_gb": 1.0, "disk_size_gb": 15},
+        headers=auth_headers,
+    )
+    assert res.status_code == 200
+    vm_id = res.json()["id"]
+
+    # Shrinking must fail with 400
+    res = client.post(f"/api/vms/{vm_id}/disk/resize", json={"new_size_gb": 10}, headers=auth_headers)
+    assert res.status_code == 400
+    assert "must be larger than current size" in res.json()["detail"]
+
+    # Expansion succeeds
+    res = client.post(f"/api/vms/{vm_id}/disk/resize", json={"new_size_gb": 30}, headers=auth_headers)
+    assert res.status_code == 200
+    data = res.json()
+    assert data["status"] == "ok"
+    assert data["previous_size_gb"] == 15
+    assert data["new_size_gb"] == 30
+
+    # Verify detail shows updated disk size
+    detail = client.get(f"/api/vms/{vm_id}", headers=auth_headers).json()
+    assert detail["disk_size_gb"] == 30
+
+    # Clean up
+    client.delete(f"/api/vms/{vm_id}", headers=auth_headers)
+
+
+def test_vm_qmp_status_endpoint(client, auth_headers):
+    """Tests QMP status inquiry endpoint."""
+    res = client.post(
+        "/api/vms",
+        json={"name": "qmp-status-vm", "vcpus": 1, "ram_gb": 1.0, "disk_size_gb": 10},
+        headers=auth_headers,
+    )
+    assert res.status_code == 200
+    vm_id = res.json()["id"]
+
+    # Query status of stopped VM
+    res = client.get(f"/api/vms/{vm_id}/status", headers=auth_headers)
+    assert res.status_code == 200
+    data = res.json()
+    assert data["vm_id"] == vm_id
+    assert data["state"] == "stopped"
+    assert data["running"] is False
+
+    # Clean up
+    client.delete(f"/api/vms/{vm_id}", headers=auth_headers)

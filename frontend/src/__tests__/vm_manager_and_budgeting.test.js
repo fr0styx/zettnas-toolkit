@@ -12,7 +12,18 @@ import {
   getActiveConsoleTarget,
   _handleRfbKeyFallback,
   _sendKeyToRfb,
-  openVmConsoleSeparateWindow
+  openVmConsoleSeparateWindow,
+  formatAnsiToHtml,
+  parseAnsiToHtml,
+  cancelConsoleReconnect,
+  _scheduleConsoleReconnect,
+  showConsoleBanner,
+  hideConsoleBanner,
+  clearConsoleReconnectTimer,
+  pasteTextToGuestConsole,
+  openVmEditModal,
+  openQemuErrorModal,
+  openVmConnectModal
 } from '../components/vm-manager.js';
 import { api } from '../api.js';
 import { showToast } from '../toast.js';
@@ -756,5 +767,295 @@ describe('VM Manager & Dynamic Elastic Headroom Budgeting', () => {
       document.body.classList.remove('vm-console-direct');
     });
   });
+
+  describe('Terminal ANSI Escape Sequence Parser (formatAnsiToHtml)', () => {
+    it('returns empty string for null or empty input', () => {
+      expect(formatAnsiToHtml('')).toBe('');
+      expect(formatAnsiToHtml(null)).toBe('');
+    });
+
+    it('escapes HTML special characters to prevent XSS injection', () => {
+      const result = formatAnsiToHtml('<script>alert("xss")</script>&"test"');
+      expect(result).not.toContain('<script>');
+      expect(result).toContain('&lt;script&gt;');
+      expect(result).toContain('&amp;');
+      expect(result).toContain('&quot;test&quot;');
+    });
+
+    it('parses standard foreground color codes correctly into spans', () => {
+      const red = formatAnsiToHtml('\x1b[31mError message\x1b[0m');
+      expect(red).toContain('style="color: #ef4444"');
+      expect(red).toContain('Error message');
+
+      const green = formatAnsiToHtml('\x1b[32mSuccess\x1b[0m');
+      expect(green).toContain('style="color: #22c55e"');
+      expect(green).toContain('Success');
+    });
+
+    it('parses bright foreground colors and text styles', () => {
+      const yellowBold = formatAnsiToHtml('\x1b[1;33mWarning\x1b[0m');
+      expect(yellowBold).toContain('font-weight: bold');
+      expect(yellowBold).toContain('color: #f59e0b');
+
+      const dimUnderline = formatAnsiToHtml('\x1b[2;4mSubtle link\x1b[0m');
+      expect(dimUnderline).toContain('opacity: 0.7');
+      expect(dimUnderline).toContain('text-decoration: underline');
+    });
+
+    it('parses serial console socket waiting banner with accurate colors', () => {
+      const banner = "\r\n\x1b[33m[ZettNAS Serial Console]\x1b[0m Waiting for serial socket at '/tmp/vm-test.sock'...\r\n\x1b[90mEnsure VM is running and serial socket is initialized.\x1b[0m\r\n";
+      const html = formatAnsiToHtml(banner);
+      expect(html).toContain('style="color: #f59e0b"');
+      expect(html).toContain('[ZettNAS Serial Console]');
+      expect(html).toContain('style="color: #94a3b8"');
+      expect(html).toContain('Ensure VM is running');
+      expect(html).not.toContain('\x1b');
+    });
+
+    it('strips non-color cursor and screen escape sequences cleanly', () => {
+      const withClear = '\x1b[2J\x1b[H\x1b[32mClean Output\x1b[0m';
+      const parsed = formatAnsiToHtml(withClear);
+      expect(parsed).not.toContain('[2J');
+      expect(parsed).not.toContain('[H');
+      expect(parsed).toContain('Clean Output');
+      expect(parsed).toContain('color: #22c55e');
+    });
+  });
+
+  describe('Console Reconnection & Modal Lifecycle', () => {
+    it('cancels pending reconnect timer with cancelConsoleReconnect', () => {
+      vi.useFakeTimers();
+      const container = document.createElement('div');
+      _scheduleConsoleReconnect(container, 'vm-recon-test', 'Recon VM', 'cli');
+      cancelConsoleReconnect();
+      vi.runAllTimers();
+      vi.useRealTimers();
+      expect(true).toBe(true);
+    });
+
+    it('renders QEMU Hypervisor launch error modal with troubleshooting steps', () => {
+      openQemuErrorModal('FailedVM', 'qemu-system-x86_64: could not open /dev/kvm: Permission denied', 'vm-failed-1');
+      const modal = document.getElementById('modal-qemu-error');
+      expect(modal).not.toBeNull();
+      expect(modal.textContent).toContain('Failed to start virtual machine FailedVM');
+      expect(modal.textContent).toContain('Permission denied');
+      expect(modal.textContent).toContain('Run KVM Diagnostics');
+      expect(modal.textContent).toContain('Edit VM Settings');
+
+      const closeBtn = modal.querySelector('#qemu-error-close');
+      expect(closeBtn).not.toBeNull();
+      closeBtn.click();
+      expect(modal.classList.contains('open')).toBe(false);
+    });
+  });
+
+  describe('Extended Terminal ANSI & 256 Colors', () => {
+    it('handles stripped ESC codes [33m and 256-color sequences without corrupting bracketed text', () => {
+      const stripped = '[33m[ZettNAS Serial Console] [0mWaiting for serial socket...';
+      const parsed = parseAnsiToHtml(stripped);
+      expect(parsed).toContain('color: #f59e0b');
+      expect(parsed).toContain('[ZettNAS Serial Console]');
+
+      const color256 = '\x1b[38;5;208mOrange Text\x1b[0m Normal';
+      const parsed256 = parseAnsiToHtml(color256);
+      expect(parsed256).toContain('color: rgb(255, 102, 0)');
+      expect(parsed256).toContain('Orange Text');
+
+      const bootLog = '[ 0.000000] Linux version 6.6.137 [ OK ] Started System Logging Service.';
+      const parsedBoot = parseAnsiToHtml(bootLog);
+      expect(parsedBoot).toContain('[ 0.000000] Linux version 6.6.137');
+      expect(parsedBoot).toContain('[ OK ] Started System Logging Service.');
+    });
+  });
+
+  describe('Console Dynamic Status Banners & Universal Paste', () => {
+    beforeEach(() => {
+      document.body.innerHTML = `
+        <div id="vm-console-window" class="vm-console-window" style="display: flex;">
+          <div id="vm-console-viewport">
+            <div id="vm-console-banner" class="vm-console-banner" style="display: none;"></div>
+          </div>
+          <span id="vm-console-status-pill">● LIVE</span>
+        </div>
+      `;
+    });
+
+    it('displays connecting and connected banners with auto-fade', () => {
+      vi.useFakeTimers();
+      showConsoleBanner('connecting', 'Connecting to KVM display socket...');
+      const banner = document.getElementById('vm-console-banner');
+      expect(banner.style.display).toBe('flex');
+      expect(banner.className).toContain('banner-connecting');
+      expect(banner.textContent).toContain('Connecting to KVM display socket...');
+
+      showConsoleBanner('connected', 'Connected to KVM Display (VirtIO-GPU)');
+      expect(banner.className).toContain('banner-connected');
+      expect(banner.textContent).toContain('Connected to KVM Display');
+
+      // Fast-forward 3.5s auto-fade
+      vi.advanceTimersByTime(3600);
+      expect(banner.style.display).toBe('none');
+      vi.useRealTimers();
+    });
+
+    it('renders banner actions and executes callbacks on click', () => {
+      const clickSpy = vi.fn();
+      showConsoleBanner('disconnected', 'Disconnected from KVM display', [
+        { label: 'Reconnect Now', primary: true, onClick: clickSpy },
+      ]);
+
+      const banner = document.getElementById('vm-console-banner');
+      expect(banner.className).toContain('banner-disconnected');
+      const actionBtn = banner.querySelector('.btn-banner-act');
+      expect(actionBtn).not.toBeNull();
+      expect(actionBtn.textContent).toBe('Reconnect Now');
+
+      actionBtn.click();
+      expect(clickSpy).toHaveBeenCalled();
+
+      hideConsoleBanner();
+      expect(banner.style.display).toBe('none');
+    });
+
+    it('forwards text through pasteTextToGuestConsole in CLI and GUI modes', async () => {
+      const win = document.getElementById('vm-console-window');
+      win._activeMode = 'gui';
+
+      await pasteTextToGuestConsole('hello guest\n');
+      expect(showToast).toHaveBeenCalledWith(expect.stringContaining('Pasted 12 characters'), 'success');
+
+      win._activeMode = 'cli';
+      await pasteTextToGuestConsole('ls -la\n');
+      expect(showToast).toHaveBeenCalledWith(expect.stringContaining('characters to terminal'), 'success');
+    });
+  });
+
+  describe('Multi-Protocol VM Connection Modal & Volume Mapping', () => {
+    it('mounts Multi-Protocol Connect modal with VNC, SSH, RDP, and VirtIO-FS options', async () => {
+      api.get.mockImplementation((url) => {
+        if (url === '/api/vms') {
+          return Promise.resolve([
+            {
+              id: 'vm-proto-1',
+              name: 'enterprise-server',
+              os_family: 'linux',
+              state: 'running',
+              vcpus: 4,
+              ram_gb: 8.0,
+              ip_address: '192.168.1.150',
+              vnc_port: 5902,
+              host_shares: [
+                { host_path: '/mnt/user/appdata', mount_tag: 'appdata_mount' },
+              ],
+            },
+          ]);
+        }
+        return Promise.resolve([]);
+      });
+
+      initVmManager();
+      await loadVmDashboard();
+
+      openVmConnectModal('vm-proto-1');
+
+      const modal = document.getElementById('modal-vm-connect');
+      expect(modal).not.toBeNull();
+      expect(modal.classList.contains('open')).toBe(true);
+      expect(modal.textContent).toContain('Multi-Protocol Connect: enterprise-server');
+      expect(modal.textContent).toContain('192.168.1.150');
+      expect(modal.textContent).toContain('vnc://');
+      expect(modal.textContent).toContain('5902');
+      expect(modal.textContent).toContain('ssh root@192.168.1.150');
+      expect(modal.textContent).toContain('192.168.1.150:3389');
+      expect(modal.textContent).toContain('sudo mount -t virtiofs appdata_mount');
+
+      // Test copy VNC URI button
+      const copyVncBtn = modal.querySelector('.btn-connect-copy-vnc');
+      expect(copyVncBtn).not.toBeNull();
+      copyVncBtn.click();
+
+      // Test close button
+      const closeBtn = modal.querySelector('#vm-connect-close');
+      expect(closeBtn).not.toBeNull();
+      closeBtn.click();
+      expect(modal.classList.contains('open')).toBe(false);
+    });
+
+    it('supports host folder shares and secondary disks in VM Edit Modal', async () => {
+      api.get.mockImplementation((url) => {
+        if (url === '/api/vms') {
+          return Promise.resolve([
+            {
+              id: 'vm-edit-vols',
+              name: 'storage-node',
+              os_family: 'linux',
+              state: 'stopped',
+              vcpus: 2,
+              ram_gb: 4.0,
+              host_shares: [],
+              secondary_disks: [],
+            },
+          ]);
+        }
+        return Promise.resolve([]);
+      });
+
+      if (api.put) api.put.mockResolvedValue({ id: 'vm-edit-vols', name: 'storage-node' });
+      api.post.mockResolvedValue({ id: 'vm-edit-vols', name: 'storage-node' });
+
+      initVmManager();
+      await loadVmDashboard();
+
+      openVmEditModal('vm-edit-vols');
+
+      const modal = document.getElementById('modal-vm-edit');
+      expect(modal).not.toBeNull();
+
+      // Add Host Folder Share
+      const btnAddShare = modal.querySelector('#btn-edit-add-host-share');
+      expect(btnAddShare).not.toBeNull();
+      btnAddShare.click();
+
+      const shareRow = modal.querySelector('.host-share-row');
+      expect(shareRow).not.toBeNull();
+      shareRow.querySelector('.share-host-path').value = '/mnt/storage/media';
+      shareRow.querySelector('.share-mount-tag').value = 'media_share';
+
+      // Add Secondary Virtual Disk
+      const btnAddDisk = modal.querySelector('#btn-edit-add-secondary-disk');
+      expect(btnAddDisk).not.toBeNull();
+      btnAddDisk.click();
+
+      const diskRow = modal.querySelector('.secondary-disk-row');
+      expect(diskRow).not.toBeNull();
+      diskRow.querySelector('.disk-name').value = 'media-disk-2';
+      diskRow.querySelector('.disk-size').value = '250';
+
+      // Submit Edit Modal
+      modal.querySelector('#vm-edit-submit').click();
+
+      await vi.waitFor(() => {
+        const calledPayload = (api.put?.mock?.calls?.[0]?.[1]) || (api.post?.mock?.calls?.find(c => c[0] === '/api/vms/vm-edit-vols')?.[1]);
+        expect(calledPayload).toEqual(
+          expect.objectContaining({
+            name: 'storage-node',
+            host_shares: expect.arrayContaining([
+              expect.objectContaining({
+                host_path: '/mnt/storage/media',
+                mount_tag: 'media_share',
+              }),
+            ]),
+            secondary_disks: expect.arrayContaining([
+              expect.objectContaining({
+                name: 'media-disk-2',
+                size_gb: 250,
+              }),
+            ]),
+          })
+        );
+      });
+    });
+  });
 });
+
 

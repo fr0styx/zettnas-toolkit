@@ -176,12 +176,20 @@ def validate_session(token: str) -> bool:
     if is_internal_token(token):
         return True
 
-    # 0. Single-use stream ticket
+    # 0. Single-use stream or VM console ticket
     if token.startswith("zst_"):
         from backend.api.auth import _STREAM_TICKETS, _STREAM_TICKETS_LOCK
 
         with _STREAM_TICKETS_LOCK:
             return token in _STREAM_TICKETS
+
+    if token.startswith("zct_"):
+        from backend.api.vms import _CONSOLE_TICKETS
+
+        entry = _CONSOLE_TICKETS.get(token)
+        if entry and entry.get("expires_at", 0) > time.time():
+            return True
+        return False
 
     # 1. Scoped or legacy API token
     if token.startswith("zat_"):
@@ -254,8 +262,8 @@ def extract_token(request: Request) -> str:
     if cookie_token:
         return cookie_token
 
-    # 3. Query string token (fallback for EventSource and docs)
-    return request.query_params.get("token", "").strip()
+    # 3. Query string token or ticket (fallback for EventSource, WebSockets and docs)
+    return request.query_params.get("token", "").strip() or request.query_params.get("ticket", "").strip()
 
 
 _PUBLIC_API_PATHS = {
@@ -318,6 +326,7 @@ async def auth_middleware(request: Request, call_next):
         path in _PUBLIC_API_PATHS
         or path.startswith("/api/wallpapers/download/")
         or path.startswith("/api/v1/wallpapers/download/")
+        or (path.startswith("/api/vms/") and (path.endswith("/console/ws") or path.endswith("/serial/ws")))
     )
 
     if is_docs and not config.ENABLE_API_DOCS:

@@ -35,6 +35,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     usbutils \
     rclone \
     fuse3 \
+    qemu-system-x86 \
+    qemu-utils \
+    libslirp0 \
     chromium \
     chromium-sandbox \
     libnss3 \
@@ -54,6 +57,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libasound2 \
     libgl1-mesa-dri \
     mesa-va-drivers \
+    qemu-system-x86 \
+    qemu-utils \
     fonts-liberation \
     fonts-noto-cjk \
     fonts-noto-color-emoji \

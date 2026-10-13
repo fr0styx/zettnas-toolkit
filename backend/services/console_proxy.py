@@ -17,7 +17,7 @@ async def stream_socket_to_websocket(ws: WebSocket, host: str, port: int, timeou
     Forwards binary frame buffers from QEMU to browser and user pointer/keyboard events back to QEMU.
     """
     reader, writer = None, None
-    for attempt in range(5):
+    for attempt in range(8):
         try:
             reader, writer = await asyncio.wait_for(
                 asyncio.open_connection(host, port),
@@ -25,11 +25,16 @@ async def stream_socket_to_websocket(ws: WebSocket, host: str, port: int, timeou
             )
             break
         except (OSError, asyncio.TimeoutError) as e:
-            if attempt < 4:
+            if attempt < 7:
                 await asyncio.sleep(0.5)
             else:
-                logger.warning(f"[ConsoleProxy] Failed connecting to VM VNC socket at {host}:{port} - {e}")
-                await ws.close(code=1011, reason=f"Cannot connect to VM display socket: {e}")
+                logger.warning(
+                    f"[ConsoleProxy] Failed connecting to VM VNC socket at {host}:{port} after 8 attempts - {e}"
+                )
+                try:
+                    await ws.close(code=1011, reason=f"Cannot connect to VM display socket: {e}")
+                except Exception:
+                    pass
                 return
 
     async def forward_tcp_to_ws():
@@ -79,18 +84,21 @@ async def stream_unix_socket_to_websocket(ws: WebSocket, socket_path: str, timeo
     Transmits ANSI terminal I/O for interactive serial console access.
     """
     reader, writer = None, None
-    for attempt in range(5):
+    for attempt in range(8):
         if not os.path.exists(socket_path):
-            if attempt < 4:
+            if attempt < 7:
                 await asyncio.sleep(0.5)
                 continue
             banner = (
                 f"\r\n\x1b[33m[ZettNAS Serial Console]\x1b[0m Waiting for serial socket at '{socket_path}'...\r\n"
                 f"\x1b[90mEnsure VM is running and serial socket is initialized.\x1b[0m\r\n"
             )
-            await ws.send_text(banner)
-            await asyncio.sleep(0.5)
-            await ws.close(code=1011, reason=f"Serial socket '{socket_path}' not available.")
+            try:
+                await ws.send_text(banner)
+                await asyncio.sleep(0.5)
+                await ws.close(code=1011, reason=f"Serial socket '{socket_path}' not available.")
+            except Exception:
+                pass
             return
 
         try:
@@ -100,11 +108,14 @@ async def stream_unix_socket_to_websocket(ws: WebSocket, socket_path: str, timeo
             )
             break
         except (OSError, asyncio.TimeoutError) as e:
-            if attempt < 4:
+            if attempt < 7:
                 await asyncio.sleep(0.5)
             else:
-                logger.warning(f"[ConsoleProxy] Failed opening UNIX socket {socket_path}: {e}")
-                await ws.close(code=1011, reason=f"Cannot connect to serial socket: {e}")
+                logger.warning(f"[ConsoleProxy] Failed opening UNIX socket {socket_path} after 8 attempts: {e}")
+                try:
+                    await ws.close(code=1011, reason=f"Cannot connect to serial socket: {e}")
+                except Exception:
+                    pass
                 return
 
     async def forward_sock_to_ws():
