@@ -229,4 +229,94 @@ describe('Mission Control Navigation Restructure & Hardware Agnosticism', () => 
     expect(sideBadge.textContent).toBe('2 Active');
     expect(sideBadge.style.display).toBe('inline-block');
   });
+
+  it('updates live VM count on Hub pill and sidebar badge (Pillar 4 Telemetry)', () => {
+    const hubPill = document.createElement('span');
+    hubPill.id = 'mgmt-hub-vms-pill';
+    hubPill.textContent = 'KVM';
+    document.body.appendChild(hubPill);
+
+    const sideBadge = document.createElement('span');
+    sideBadge.id = 'mgmt-sidebar-vms-badge';
+    sideBadge.style.display = 'none';
+    sideBadge.textContent = '-';
+    document.body.appendChild(sideBadge);
+
+    const mockStats = {
+      vms: [
+        { id: 'vm-ubuntu', name: 'Ubuntu Server', state: 'running' },
+        { id: 'vm-win11', name: 'Windows 11', state: 'running' },
+        { id: 'vm-truenas', name: 'TrueNAS Backup', state: 'stopped' }
+      ]
+    };
+
+    updateManagementTelemetry(mockStats);
+
+    expect(hubPill.textContent).toBe('2 Running');
+    expect(sideBadge.textContent).toBe('3 VMs');
+    expect(sideBadge.style.display).toBe('inline-block');
+
+    // Empty fleet hides badge
+    updateManagementTelemetry({ vms: [] });
+    expect(hubPill.textContent).toBe('0 Running');
+    expect(sideBadge.style.display).toBe('none');
+  });
+
+  it('verifies complete 7-Pillar SUBPANE_MAP coverage and subtab aliases', () => {
+    // Pillar 1: Dashboard & Telemetry
+    expect(SUBPANE_MAP['dashboard']).toEqual({ section: 'mgmt-sec-activity', pane: 'mgmt-pane-metrics' });
+    expect(SUBPANE_MAP['activity']).toEqual({ section: 'mgmt-sec-activity', pane: 'mgmt-pane-metrics' });
+    expect(SUBPANE_MAP['telemetry']).toEqual({ section: 'mgmt-sec-activity', pane: 'mgmt-pane-metrics' });
+
+    // Pillar 2: Storage & Disks
+    expect(SUBPANE_MAP['storage']).toEqual({ section: 'mgmt-sec-storage', pane: 'mgmt-pane-chassis-twin' });
+    expect(SUBPANE_MAP['mgmt-sec-storage']).toEqual({ section: 'mgmt-sec-storage', pane: 'mgmt-pane-chassis-twin' });
+    expect(SUBPANE_MAP['mgmt-pane-storage-shares']).toEqual({ section: 'mgmt-sec-storage', pane: 'mgmt-pane-storage-shares' });
+    expect(SUBPANE_MAP['mgmt-pane-storage-disks']).toEqual({ section: 'mgmt-sec-storage', pane: 'mgmt-pane-storage-disks' });
+
+    // Pillar 3: Containers & Apps
+    expect(SUBPANE_MAP['containers']).toEqual({ section: 'mgmt-sec-docker', pane: 'mgmt-pane-docker' });
+    expect(SUBPANE_MAP['apps']).toEqual({ section: 'mgmt-sec-docker', pane: 'mgmt-pane-docker' });
+
+    // Pillar 4: Virtual Machines
+    expect(SUBPANE_MAP['vms']).toEqual({ section: 'mgmt-sec-vms', pane: 'mgmt-pane-vms-list' });
+    expect(SUBPANE_MAP['vm-manager']).toEqual({ section: 'mgmt-sec-vms', pane: 'mgmt-pane-vms-list' });
+    expect(SUBPANE_MAP['mgmt-sec-vms']).toEqual({ section: 'mgmt-sec-vms', pane: 'mgmt-pane-vms-list' });
+    expect(SUBPANE_MAP['mgmt-pane-vms-list']).toEqual({ section: 'mgmt-sec-vms', pane: 'mgmt-pane-vms-list' });
+    expect(SUBPANE_MAP['mgmt-pane-vms-create']).toEqual({ section: 'mgmt-sec-vms', pane: 'mgmt-pane-vms-create' });
+    expect(SUBPANE_MAP['mgmt-pane-vms-kvm']).toEqual({ section: 'mgmt-sec-vms', pane: 'mgmt-pane-vms-kvm' });
+
+    // Pillar 5: Network & Sharing
+    expect(SUBPANE_MAP['network']).toEqual({ section: 'mgmt-sec-network', pane: 'mgmt-pane-network' });
+    expect(SUBPANE_MAP['mgmt-pane-network-services']).toEqual({ section: 'mgmt-sec-network', pane: 'mgmt-pane-network-services' });
+    expect(SUBPANE_MAP['mgmt-pane-network-wireguard']).toEqual({ section: 'mgmt-sec-network', pane: 'mgmt-pane-network-wireguard' });
+    expect(SUBPANE_MAP['mgmt-pane-network-docker']).toEqual({ section: 'mgmt-sec-network', pane: 'mgmt-pane-network-docker' });
+
+    // Pillar 6: Hardware & Power
+    expect(SUBPANE_MAP['hardware']).toEqual({ section: 'mgmt-sec-hardware', pane: 'mgmt-pane-unraid' });
+    expect(SUBPANE_MAP['power']).toEqual({ section: 'mgmt-sec-hardware', pane: 'mgmt-pane-hardware-ups' });
+    expect(SUBPANE_MAP['mgmt-pane-hardware-fans']).toEqual({ section: 'mgmt-sec-hardware', pane: 'mgmt-pane-hardware-fans' });
+    expect(SUBPANE_MAP['mgmt-pane-hardware-led']).toEqual({ section: 'mgmt-sec-hardware', pane: 'mgmt-pane-hardware-led' });
+    expect(SUBPANE_MAP['mgmt-pane-hardware-lcd']).toEqual({ section: 'mgmt-sec-hardware', pane: 'mgmt-pane-hardware-lcd' });
+    expect(SUBPANE_MAP['mgmt-pane-hardware-ups']).toEqual({ section: 'mgmt-sec-hardware', pane: 'mgmt-pane-hardware-ups' });
+    expect(SUBPANE_MAP['mgmt-sec-ups']).toEqual({ section: 'mgmt-sec-ups', pane: null });
+
+    // Pillar 7: System & Identity
+    expect(SUBPANE_MAP['system']).toEqual({ section: 'mgmt-sec-system-group', pane: 'mgmt-pane-security' });
+    expect(SUBPANE_MAP['mgmt-sec-system-group']).toEqual({ section: 'mgmt-sec-system-group', pane: 'mgmt-pane-security' });
+    expect(SUBPANE_MAP['mgmt-sec-security']).toEqual({ section: 'mgmt-sec-system-group', pane: 'mgmt-pane-security' });
+    expect(SUBPANE_MAP['mgmt-sec-users']).toEqual({ section: 'mgmt-sec-system-group', pane: 'mgmt-pane-users' });
+    expect(SUBPANE_MAP['mgmt-sec-backups']).toEqual({ section: 'mgmt-sec-system-group', pane: 'mgmt-pane-backups' });
+    expect(SUBPANE_MAP['mgmt-sec-notifications']).toEqual({ section: 'mgmt-sec-system-group', pane: 'mgmt-pane-notifications' });
+    expect(SUBPANE_MAP['mgmt-sec-events']).toEqual({ section: 'mgmt-sec-system-group', pane: 'mgmt-pane-events' });
+    expect(SUBPANE_MAP['mgmt-sec-language']).toEqual({ section: 'mgmt-sec-system-group', pane: 'mgmt-pane-language' });
+    expect(SUBPANE_MAP['mgmt-sec-about']).toEqual({ section: 'mgmt-sec-system-group', pane: 'mgmt-pane-about' });
+
+    // Desktop Context Menu Aliases (Peer Review Directive 3)
+    expect(SUBPANE_MAP['mgmt-pane-screensaver']).toEqual({ section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-screensaver' });
+    expect(SUBPANE_MAP['mgmt-pane-wallpaper']).toEqual({ section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-wallpaper' });
+    expect(SUBPANE_MAP['mgmt-pane-theme']).toEqual({ section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-theme' });
+    expect(SUBPANE_MAP['mgmt-pane-glass']).toEqual({ section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-glass' });
+    expect(SUBPANE_MAP['mgmt-pane-dock']).toEqual({ section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-dock' });
+  });
 });

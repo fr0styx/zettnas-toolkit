@@ -23,43 +23,16 @@ let _activeProfile = 'balanced';
 let _unbindMgmtTrap = null;
 
 export const SUBPANE_MAP = {
-  'mgmt-pane-wallpaper': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-wallpaper' },
-  'mgmt-pane-widgets': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-widgets' },
-  'mgmt-pane-theme': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-theme' },
-  'mgmt-sec-theme': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-theme' },
-  'mgmt-pane-glass': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-glass' },
-  'mgmt-sec-glass': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-glass' },
-  'mgmt-pane-dock': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-dock' },
-  'mgmt-sec-dock': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-dock' },
-  'mgmt-pane-screensaver': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-screensaver' },
-  'mgmt-sec-screensaver': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-screensaver' },
-  'mgmt-sec-wallpaper': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-wallpaper' },
-  'mgmt-pane-language': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-language' },
-  'mgmt-sec-language': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-language' },
+  // --- Pillar 1: Dashboard & Telemetry ---
+  'dashboard': { section: 'mgmt-sec-activity', pane: 'mgmt-pane-metrics' },
+  'activity': { section: 'mgmt-sec-activity', pane: 'mgmt-pane-metrics' },
+  'telemetry': { section: 'mgmt-sec-activity', pane: 'mgmt-pane-metrics' },
+  'mgmt-sec-activity': { section: 'mgmt-sec-activity', pane: 'mgmt-pane-metrics' },
   'mgmt-sec-metrics': { section: 'mgmt-sec-activity', pane: 'mgmt-pane-metrics' },
   'mgmt-pane-metrics': { section: 'mgmt-sec-activity', pane: 'mgmt-pane-metrics' },
-  'mgmt-sec-activity': { section: 'mgmt-sec-activity', pane: 'mgmt-pane-metrics' },
-  // Storage & Ingest
-  'mgmt-sec-copy': { section: 'mgmt-sec-storage', pane: 'mgmt-pane-copy' },
-  'mgmt-pane-copy': { section: 'mgmt-sec-storage', pane: 'mgmt-pane-copy' },
-  'mgmt-pane-storage-ingest': { section: 'mgmt-sec-storage', pane: 'mgmt-pane-copy' },
-  'mgmt-sec-ingest': { section: 'mgmt-sec-storage', pane: 'mgmt-pane-copy' },
-  // Network & Switch (First-Class Top-Level)
-  'mgmt-sec-network': { section: 'mgmt-sec-network', pane: 'mgmt-pane-network' },
-  'mgmt-pane-network': { section: 'mgmt-sec-network', pane: 'mgmt-pane-network' },
-  'mgmt-pane-network-physical': { section: 'mgmt-sec-network', pane: 'mgmt-pane-network' },
-  'mgmt-pane-network-wireguard': { section: 'mgmt-sec-network', pane: 'mgmt-pane-network-wireguard' },
-  'mgmt-pane-network-docker': { section: 'mgmt-sec-network', pane: 'mgmt-pane-network-docker' },
-  // Hardware & Profiles
-  'mgmt-sec-hardware': { section: 'mgmt-sec-hardware', pane: 'mgmt-pane-unraid' },
-  'mgmt-pane-hardware': { section: 'mgmt-sec-hardware', pane: 'mgmt-pane-unraid' },
-  'mgmt-sec-services': { section: 'mgmt-sec-hardware', pane: 'mgmt-pane-unraid' }, // Backward compat
-  'mgmt-sec-unraid': { section: 'mgmt-sec-hardware', pane: 'mgmt-pane-unraid' },
-  'mgmt-pane-unraid': { section: 'mgmt-sec-hardware', pane: 'mgmt-pane-unraid' },
-  // Apps & Containers (First-Class Top-Level)
-  'mgmt-sec-docker': { section: 'mgmt-sec-docker', pane: 'mgmt-pane-docker' },
-  'mgmt-pane-docker': { section: 'mgmt-sec-docker', pane: 'mgmt-pane-docker' },
-  'mgmt-sec-catalog': { section: 'mgmt-sec-docker', pane: 'mgmt-pane-docker' },
+
+  // --- Pillar 2: Storage & Disks ---
+  'storage': { section: 'mgmt-sec-storage', pane: 'mgmt-pane-chassis-twin' },
   'mgmt-sec-storage': { section: 'mgmt-sec-storage', pane: 'mgmt-pane-chassis-twin' },
   'mgmt-pane-chassis-twin': { section: 'mgmt-sec-storage', pane: 'mgmt-pane-chassis-twin' },
   'mgmt-pane-chassis': { section: 'mgmt-sec-storage', pane: 'mgmt-pane-storage-topo' },
@@ -70,22 +43,90 @@ export const SUBPANE_MAP = {
   'mgmt-pane-storage-shares': { section: 'mgmt-sec-storage', pane: 'mgmt-pane-storage-shares' },
   'mgmt-pane-storage-remotes': { section: 'mgmt-sec-storage', pane: 'mgmt-pane-storage-remotes' },
   'mgmt-pane-storage-disks': { section: 'mgmt-sec-storage', pane: 'mgmt-pane-storage-disks' },
-  'mgmt-sec-notifications': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-notifications' },
-  'mgmt-pane-notifications': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-notifications' },
-  'mgmt-sec-users': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-users' },
-  'mgmt-pane-users': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-users' },
+  'mgmt-sec-copy': { section: 'mgmt-sec-storage', pane: 'mgmt-pane-copy' },
+  'mgmt-pane-copy': { section: 'mgmt-sec-storage', pane: 'mgmt-pane-copy' },
+  'mgmt-pane-storage-ingest': { section: 'mgmt-sec-storage', pane: 'mgmt-pane-copy' },
+  'mgmt-sec-ingest': { section: 'mgmt-sec-storage', pane: 'mgmt-pane-copy' },
+  'mgmt-pane-storage-replication': { section: 'mgmt-sec-storage', pane: 'mgmt-pane-storage-replication' },
+
+  // --- Pillar 3: Containers & Apps ---
+  'containers': { section: 'mgmt-sec-docker', pane: 'mgmt-pane-docker' },
+  'docker': { section: 'mgmt-sec-docker', pane: 'mgmt-pane-docker' },
+  'apps': { section: 'mgmt-sec-docker', pane: 'mgmt-pane-docker' },
+  'mgmt-sec-docker': { section: 'mgmt-sec-docker', pane: 'mgmt-pane-docker' },
+  'mgmt-pane-docker': { section: 'mgmt-sec-docker', pane: 'mgmt-pane-docker' },
+  'mgmt-sec-catalog': { section: 'mgmt-sec-docker', pane: 'mgmt-pane-docker' },
+  'mgmt-pane-docker-compose': { section: 'mgmt-sec-docker', pane: 'mgmt-pane-docker' },
+  'mgmt-pane-docker-catalog': { section: 'mgmt-sec-docker', pane: 'mgmt-pane-docker' },
+  'mgmt-pane-docker-prune': { section: 'mgmt-sec-docker', pane: 'mgmt-pane-docker' },
+
+  // --- Pillar 4: Virtual Machines ---
+  'vms': { section: 'mgmt-sec-vms', pane: 'mgmt-pane-vms-list' },
+  'vm': { section: 'mgmt-sec-vms', pane: 'mgmt-pane-vms-list' },
+  'vm-manager': { section: 'mgmt-sec-vms', pane: 'mgmt-pane-vms-list' },
+  'mgmt-sec-vms': { section: 'mgmt-sec-vms', pane: 'mgmt-pane-vms-list' },
+  'mgmt-pane-vms-list': { section: 'mgmt-sec-vms', pane: 'mgmt-pane-vms-list' },
+  'mgmt-pane-vms-create': { section: 'mgmt-sec-vms', pane: 'mgmt-pane-vms-create' },
+  'mgmt-pane-vms-kvm': { section: 'mgmt-sec-vms', pane: 'mgmt-pane-vms-kvm' },
+
+  // --- Pillar 5: Network & Sharing ---
+  'network': { section: 'mgmt-sec-network', pane: 'mgmt-pane-network' },
+  'mgmt-sec-network': { section: 'mgmt-sec-network', pane: 'mgmt-pane-network' },
+  'mgmt-pane-network': { section: 'mgmt-sec-network', pane: 'mgmt-pane-network' },
+  'mgmt-pane-network-physical': { section: 'mgmt-sec-network', pane: 'mgmt-pane-network' },
+  'mgmt-pane-network-wireguard': { section: 'mgmt-sec-network', pane: 'mgmt-pane-network-wireguard' },
+  'mgmt-pane-network-docker': { section: 'mgmt-sec-network', pane: 'mgmt-pane-network-docker' },
+  'mgmt-pane-network-services': { section: 'mgmt-sec-network', pane: 'mgmt-pane-network-services' },
+
+  // --- Pillar 6: Hardware & Power ---
+  'hardware': { section: 'mgmt-sec-hardware', pane: 'mgmt-pane-unraid' },
+  'power': { section: 'mgmt-sec-hardware', pane: 'mgmt-pane-hardware-ups' },
+  'mgmt-sec-hardware': { section: 'mgmt-sec-hardware', pane: 'mgmt-pane-unraid' },
+  'mgmt-pane-hardware': { section: 'mgmt-sec-hardware', pane: 'mgmt-pane-unraid' },
+  'mgmt-sec-services': { section: 'mgmt-sec-hardware', pane: 'mgmt-pane-unraid' }, // Backward compat
+  'mgmt-sec-unraid': { section: 'mgmt-sec-hardware', pane: 'mgmt-pane-unraid' },
+  'mgmt-pane-unraid': { section: 'mgmt-sec-hardware', pane: 'mgmt-pane-unraid' },
+  'mgmt-pane-hardware-fans': { section: 'mgmt-sec-hardware', pane: 'mgmt-pane-hardware-fans' },
+  'mgmt-pane-hardware-led': { section: 'mgmt-sec-hardware', pane: 'mgmt-pane-hardware-led' },
+  'mgmt-pane-hardware-lcd': { section: 'mgmt-sec-hardware', pane: 'mgmt-pane-hardware-lcd' },
+  'mgmt-pane-hardware-ups': { section: 'mgmt-sec-hardware', pane: 'mgmt-pane-hardware-ups' },
+  'mgmt-sec-ups': { section: 'mgmt-sec-ups', pane: null },
+  'ups': { section: 'mgmt-sec-ups', pane: null },
+  'mgmt-pane-ups': { section: 'mgmt-sec-ups', pane: null },
+
+  // --- Pillar 7: System & Identity ---
+  'system': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-security' },
+  'mgmt-sec-system': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-backups' },
+  'mgmt-sec-system-group': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-security' },
+  'mgmt-pane-system': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-backups' },
   'mgmt-sec-security': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-security' },
   'mgmt-pane-security': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-security' },
-  'mgmt-sec-events': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-events' },
-  'mgmt-pane-events': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-events' },
+  'mgmt-sec-users': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-users' },
+  'mgmt-pane-users': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-users' },
   'mgmt-sec-backups': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-backups' },
   'mgmt-pane-backups': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-backups' },
-  'mgmt-sec-system': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-backups' },
-  'mgmt-pane-system': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-backups' },
+  'mgmt-sec-notifications': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-notifications' },
+  'mgmt-pane-notifications': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-notifications' },
+  'mgmt-sec-events': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-events' },
+  'mgmt-pane-events': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-events' },
+  'mgmt-sec-language': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-language' },
+  'mgmt-pane-language': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-language' },
   'mgmt-sec-about': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-about' },
   'mgmt-pane-about': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-about' },
-  'mgmt-sec-system-group': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-security' },
-  'mgmt-sec-ups': { section: 'mgmt-sec-ups', pane: null },
+
+  // --- Appearance (Preserving Wallpaper section compatibility) ---
+  'appearance': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-wallpaper' },
+  'mgmt-sec-wallpaper': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-wallpaper' },
+  'mgmt-pane-wallpaper': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-wallpaper' },
+  'mgmt-pane-widgets': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-widgets' },
+  'mgmt-pane-theme': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-theme' },
+  'mgmt-sec-theme': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-theme' },
+  'mgmt-pane-glass': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-glass' },
+  'mgmt-sec-glass': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-glass' },
+  'mgmt-pane-dock': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-dock' },
+  'mgmt-sec-dock': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-dock' },
+  'mgmt-pane-screensaver': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-screensaver' },
+  'mgmt-sec-screensaver': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-screensaver' },
 };
 
 export function updateManagementTelemetry(stats) {
@@ -361,6 +402,18 @@ export function updateManagementTelemetry(stats) {
     if (sideNetBadge) {
       sideNetBadge.textContent = ifaceLabel;
       sideNetBadge.style.display = 'inline-block';
+    }
+  }
+
+  // Update Virtual Machines pill in Hub and Left Sidebar
+  if (stats.vms && Array.isArray(stats.vms)) {
+    const runningCount = stats.vms.filter(v => v.state === 'running').length;
+    const vmsPill = document.getElementById('mgmt-hub-vms-pill');
+    if (vmsPill) vmsPill.textContent = `${runningCount} Running`;
+    const sideVmsBadge = document.getElementById('mgmt-sidebar-vms-badge');
+    if (sideVmsBadge) {
+      sideVmsBadge.textContent = `${stats.vms.length} VMs`;
+      sideVmsBadge.style.display = stats.vms.length > 0 ? 'inline-block' : 'none';
     }
   }
 
@@ -6496,9 +6549,199 @@ export function initManagement() {
       import('./users.js').then((m) => m.loadUsersPane(subTabId || 'users-pane-list'));
     } else if (paneId === 'mgmt-pane-about') {
       fetchAndRenderSystemAbout();
+    } else if (paneId === 'mgmt-pane-vms-list' || paneId === 'mgmt-pane-vms-create' || paneId === 'mgmt-pane-vms-kvm') {
+      fetchAndRenderMgmtVms();
+    } else if (paneId === 'mgmt-pane-hardware-ups') {
+      if (typeof fetchAndRenderUpsTelemetry === 'function') fetchAndRenderUpsTelemetry();
     }
   }
 
+  async function fetchAndRenderMgmtVms() {
+    const grid = document.getElementById('mgmt-vms-grid');
+    const empty = document.getElementById('mgmt-vms-empty');
+    const strip = document.getElementById('mgmt-vms-summary-strip');
+    const kvmBody = document.getElementById('mgmt-vms-kvm-body');
+    if (!grid && !strip) return;
+
+    try {
+      const [tel, list] = await Promise.all([
+        api.get('/api/vms/telemetry').catch(() => null),
+        api.get('/api/vms').catch(() => []),
+      ]);
+
+      const vmsList = Array.isArray(list) ? list : [];
+      const runningCount = vmsList.filter(v => v.state === 'running').length;
+      const hubPill = document.getElementById('mgmt-hub-vms-pill');
+      if (hubPill) hubPill.textContent = `${runningCount} Running`;
+      const sideBadge = document.getElementById('mgmt-sidebar-vms-badge');
+      if (sideBadge) {
+        sideBadge.textContent = `${vmsList.length} VMs`;
+        sideBadge.style.display = vmsList.length > 0 ? 'inline-block' : 'none';
+      }
+
+      if (strip) {
+        const kvmActive = tel?.kvm?.state === 'active';
+        const kvmColor = kvmActive ? 'var(--ok2, #25c2a0)' : (tel?.kvm?.state === 'restricted' ? 'var(--warn, #f5a623)' : 'var(--danger, #ff6b6b)');
+        const kvmBadge = tel?.kvm?.badge || (kvmActive ? 'KVM Acceleration Active' : 'Software Emulation');
+        const headroom = tel?.memory?.headroom_mb ? `${(tel.memory.headroom_mb / 1024).toFixed(1)} GB Safe Headroom` : 'Dynamic';
+        const cpuRatio = tel?.cpu?.ratio ? `${tel.cpu.ratio}:1 Allocation` : 'Optimal';
+
+        strip.innerHTML = `
+          <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 10px 14px;">
+            <div style="font-size: 10px; color: var(--muted); font-weight: 700; text-transform: uppercase;">HYPERVISOR ENGINE</div>
+            <div style="font-size: 13px; font-weight: 700; color: ${kvmColor}; margin-top: 4px; display: flex; align-items: center; gap: 6px;">
+              <span>⚡</span> <span>${escapeHtml(kvmBadge)}</span>
+            </div>
+          </div>
+          <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 10px 14px;">
+            <div style="font-size: 10px; color: var(--muted); font-weight: 700; text-transform: uppercase;">MEMORY CEILING</div>
+            <div style="font-size: 13px; font-weight: 700; color: var(--accent-cyan, #0ea5e9); margin-top: 4px;">
+              ${escapeHtml(headroom)}
+            </div>
+          </div>
+          <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 10px 14px;">
+            <div style="font-size: 10px; color: var(--muted); font-weight: 700; text-transform: uppercase;">vCPU OVERCOMMIT</div>
+            <div style="font-size: 13px; font-weight: 700; color: #fff; margin-top: 4px;">
+              ${escapeHtml(cpuRatio)}
+            </div>
+          </div>
+        `;
+      }
+
+      if (grid) {
+        if (vmsList.length === 0) {
+          grid.innerHTML = '';
+          if (empty) empty.style.display = 'block';
+        } else {
+          if (empty) empty.style.display = 'none';
+          grid.innerHTML = vmsList.map((vm) => {
+            const isRunning = vm.state === 'running';
+            const isPaused = vm.state === 'paused';
+            const statusColor = isRunning ? 'var(--ok2, #25c2a0)' : (isPaused ? 'var(--warn, #f5a623)' : 'var(--muted, #94a3b8)');
+            const statusBg = isRunning ? 'rgba(37,194,160,0.15)' : (isPaused ? 'rgba(245,166,35,0.15)' : 'rgba(255,255,255,0.06)');
+
+            const ramGb = vm.memory_mb ? (vm.memory_mb >= 1024 ? `${(vm.memory_mb / 1024).toFixed(0)} GB` : `${vm.memory_mb} MB`) : '1 GB';
+            const cores = vm.cores || 1;
+            const osType = vm.os_type || 'Linux';
+
+            return `
+              <div class="mgmt-vm-card" data-vm-id="${escapeHtml(vm.id)}" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 10px; transition: border-color 0.2s;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 18px;">🖥️</span>
+                    <div>
+                      <div style="font-weight: 700; font-size: 13px; color: #fff;">${escapeHtml(vm.name || vm.id)}</div>
+                      <div style="font-size: 10px; color: var(--muted);">${escapeHtml(osType)} • ${cores} vCPU • ${ramGb} RAM</div>
+                    </div>
+                  </div>
+                  <span style="padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; background: ${statusBg}; color: ${statusColor};">
+                    ${escapeHtml(vm.state || 'stopped')}
+                  </span>
+                </div>
+                <div style="display: flex; gap: 6px; margin-top: auto; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.05);">
+                  ${isRunning
+                    ? `<button class="btn-pill-toggle btn-vm-action-stop" data-vm-id="${escapeHtml(vm.id)}" style="flex:1; font-size:11px; padding:4px 6px; color:#f87171;" title="Stop VM">⏹ Stop</button>`
+                    : `<button class="btn-pill-toggle btn-vm-action-start" data-vm-id="${escapeHtml(vm.id)}" style="flex:1; font-size:11px; padding:4px 6px; color:var(--ok2);" title="Start VM">▶ Start</button>`
+                  }
+                  <button class="btn-pill-toggle btn-vm-action-console" data-vm-id="${escapeHtml(vm.id)}" data-vm-name="${escapeHtml(vm.name || vm.id)}" style="flex:1; font-size:11px; padding:4px 6px; color:var(--accent-cyan);" title="Open Web Console">📺 Console</button>
+                  <button class="btn-pill-toggle btn-vm-action-edit" data-vm-id="${escapeHtml(vm.id)}" style="font-size:11px; padding:4px 8px;" title="Edit VM Config">⚙️</button>
+                </div>
+              </div>
+            `;
+          }).join('');
+
+          grid.querySelectorAll('.btn-vm-action-start').forEach(btn => {
+            btn.addEventListener('click', async () => {
+              const id = btn.dataset.vmId;
+              try {
+                btn.disabled = true;
+                btn.textContent = '...';
+                await api.post(`/api/vms/${id}/start`);
+                showToast('VM started successfully', 'success');
+                fetchAndRenderMgmtVms();
+              } catch (err) {
+                showToast(`Failed to start VM: ${err.message}`, 'error');
+                btn.disabled = false;
+                btn.textContent = '▶ Start';
+              }
+            });
+          });
+
+          grid.querySelectorAll('.btn-vm-action-stop').forEach(btn => {
+            btn.addEventListener('click', async () => {
+              const id = btn.dataset.vmId;
+              try {
+                btn.disabled = true;
+                btn.textContent = '...';
+                await api.post(`/api/vms/${id}/stop`);
+                showToast('VM stop signal sent', 'info');
+                fetchAndRenderMgmtVms();
+              } catch (err) {
+                showToast(`Failed to stop VM: ${err.message}`, 'error');
+                btn.disabled = false;
+                btn.textContent = '⏹ Stop';
+              }
+            });
+          });
+
+          grid.querySelectorAll('.btn-vm-action-console').forEach(btn => {
+            btn.addEventListener('click', () => {
+              const id = btn.dataset.vmId;
+              const name = btn.dataset.vmName;
+              import('./vm-manager.js').then(m => {
+                if (typeof m.openVmConsole === 'function') {
+                  m.openVmConsole(id, name);
+                }
+              });
+            });
+          });
+
+          grid.querySelectorAll('.btn-vm-action-edit').forEach(btn => {
+            btn.addEventListener('click', () => {
+              const id = btn.dataset.vmId;
+              import('./vm-manager.js').then(m => {
+                if (typeof m.openVmEditModal === 'function') {
+                  m.openVmEditModal(id);
+                }
+              });
+            });
+          });
+        }
+      }
+
+      if (kvmBody && tel?.kvm) {
+        kvmBody.innerHTML = `
+          <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div style="font-weight: 700; font-size: 13px; color: #fff;">Hardware Virtualization Extension</div>
+              <span style="padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; background: ${tel.kvm.state === 'active' ? 'rgba(37,194,160,0.15)' : 'rgba(239,68,68,0.15)'}; color: ${tel.kvm.state === 'active' ? 'var(--ok2)' : 'var(--danger)'};">
+                ${escapeHtml(tel.kvm.badge || 'KVM')}
+              </span>
+            </div>
+            <div style="font-size: 11.5px; color: var(--muted); line-height: 1.5;">
+              ${escapeHtml(tel.kvm.details || 'Linux KVM hypervisor acceleration provides near bare-metal guest performance.')}
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-top: 6px;">
+              <div style="background: rgba(0,0,0,0.2); padding: 8px 12px; border-radius: 6px;">
+                <div style="font-size: 10px; color: var(--muted);">CPU Host Threads</div>
+                <div style="font-size: 14px; font-weight: 700; color: #fff; margin-top: 2px;">${tel.cpu?.host_threads || 8} Threads</div>
+              </div>
+              <div style="background: rgba(0,0,0,0.2); padding: 8px 12px; border-radius: 6px;">
+                <div style="font-size: 10px; color: var(--muted);">vhost-net Acceleration</div>
+                <div style="font-size: 14px; font-weight: 700; color: var(--ok2); margin-top: 2px;">Supported</div>
+              </div>
+              <div style="background: rgba(0,0,0,0.2); padding: 8px 12px; border-radius: 6px;">
+                <div style="font-size: 10px; color: var(--muted);">Default Network Bridge</div>
+                <div style="font-size: 14px; font-weight: 700; color: var(--accent-cyan); margin-top: 2px;">br0 / virbr0</div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+    } catch (err) {
+      console.warn('Failed to load VM telemetry in Mission Control:', err);
+    }
+  }
 
   function showSection(targetId, specificPane = null, subTabId = null) {
     const earlyStyle = document.getElementById('zettnas-mgmt-early-style');
@@ -6537,27 +6780,31 @@ export function initManagement() {
     if (targetId === 'mgmt-sec-wallpaper') {
       sectionName = t('mgmt.appearance_title', 'Appearance');
     } else if (targetId === 'mgmt-sec-activity') {
-      sectionName = t('mgmt.activity_title', 'Activity Monitor');
+      sectionName = t('mgmt.activity_title', 'Dashboard & Telemetry');
     } else if (targetId === 'mgmt-sec-network') {
-      sectionName = t('mgmt.network_sec_title', 'Network & Switch');
+      sectionName = t('mgmt.network_sec_title', 'Network & Sharing');
       fetchAndRenderNetworkTopology();
     } else if (targetId === 'mgmt-sec-docker') {
-      sectionName = t('mgmt.docker_title', 'Apps & Containers');
+      sectionName = t('mgmt.docker_title', 'Containers & Apps');
       fetchAndRenderDockerContainers();
       startDockerAutoRefresh();
+    } else if (targetId === 'mgmt-sec-vms') {
+      sectionName = t('mgmt.vms_title', 'Virtual Machines');
+      stopDockerAutoRefresh();
+      fetchAndRenderMgmtVms();
     } else {
       stopDockerAutoRefresh();
       if (targetId === 'mgmt-sec-hardware' || targetId === 'mgmt-sec-services') {
-        sectionName = t('mgmt.hardware_title', 'Hardware & Profiles');
+        sectionName = t('mgmt.hardware_title', 'Hardware & Power');
         if (state.lastStats || state.latestStats) updateManagementTelemetry(state.lastStats || state.latestStats);
       } else if (targetId === 'mgmt-sec-storage') {
-        sectionName = t('mgmt.storage_title', 'Storage & Chassis');
+        sectionName = t('mgmt.storage_title', 'Storage & Disks');
       } else if (targetId === 'mgmt-sec-ups') {
         sectionName = t('mgmt.sidebar_ups', 'UPS & Power');
         if (typeof fetchAndRenderUpsTelemetry === 'function') fetchAndRenderUpsTelemetry();
         else if (typeof fetchAndRenderUPS === 'function') fetchAndRenderUPS();
       } else if (targetId === 'mgmt-sec-system-group') {
-        sectionName = t('mgmt.system_title', 'System');
+        sectionName = t('mgmt.system_title', 'System & Identity');
       }
     }
 
@@ -6842,6 +7089,72 @@ export function initManagement() {
     });
   }
   initUpsDrawerControls();
+
+  // Virtual Machines refresh, launch window & create wizard buttons
+  const refreshVmBtn = document.getElementById('btn-mgmt-vm-refresh');
+  if (refreshVmBtn) {
+    refreshVmBtn.addEventListener('click', () => {
+      fetchAndRenderMgmtVms();
+      showToast('VM fleet refreshed.', 'info');
+    });
+  }
+
+  const launchVmWinBtn = document.getElementById('btn-mgmt-vm-launch-window');
+  if (launchVmWinBtn) {
+    launchVmWinBtn.addEventListener('click', () => {
+      if (typeof window.openVmManager === 'function') window.openVmManager();
+    });
+  }
+
+  const wireVmCreate = (btnId) => {
+    const btn = document.getElementById(btnId);
+    if (btn) {
+      btn.addEventListener('click', () => {
+        import('./vm-manager.js').then((m) => {
+          if (typeof m.openVmCreateModal === 'function') m.openVmCreateModal();
+        });
+      });
+    }
+  };
+  wireVmCreate('btn-mgmt-vm-create');
+  wireVmCreate('btn-mgmt-vm-create-empty');
+  wireVmCreate('btn-mgmt-vm-start-wizard');
+
+  // Hardware drawer shortcuts & cross-pillar navigators
+  const btnOpenFans = document.getElementById('btn-open-fans-drawer');
+  if (btnOpenFans) {
+    btnOpenFans.addEventListener('click', () => {
+      import('./settings.js').then((m) => m.openDrawer && m.openDrawer('tab-fans'));
+    });
+  }
+
+  const btnOpenLed = document.getElementById('btn-open-led-drawer');
+  if (btnOpenLed) {
+    btnOpenLed.addEventListener('click', () => {
+      import('./settings.js').then((m) => m.openDrawer && m.openDrawer('tab-led'));
+    });
+  }
+
+  const btnOpenLcd = document.getElementById('btn-open-lcd-drawer');
+  if (btnOpenLcd) {
+    btnOpenLcd.addEventListener('click', () => {
+      import('./settings.js').then((m) => m.openDrawer && m.openDrawer('tab-layout'));
+    });
+  }
+
+  const btnOpenFullUps = document.getElementById('btn-open-full-ups-view');
+  if (btnOpenFullUps) {
+    btnOpenFullUps.addEventListener('click', () => {
+      showSection('mgmt-sec-ups');
+    });
+  }
+
+  const btnGotoShares = document.getElementById('btn-goto-storage-shares');
+  if (btnGotoShares) {
+    btnGotoShares.addEventListener('click', () => {
+      showSection('mgmt-sec-storage', 'mgmt-pane-storage-shares');
+    });
+  }
 
   // Chassis digital twin refresh button
   const refreshChassisBtn = document.getElementById('btn-refresh-chassis');
@@ -8192,6 +8505,8 @@ export async function fetchAndRenderAppBackups(mountEl, filterApp = '') {
     mount.innerHTML = `<div style="padding: 16px; color: #f43f5e; font-size: 12px;">Failed to load application backups: ${escapeHtml(err.message)}</div>`;
   }
 }
+
+export const initManagementWindow = initManagement;
 
 
 

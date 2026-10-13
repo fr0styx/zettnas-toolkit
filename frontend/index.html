@@ -2641,41 +2641,45 @@
             <svg class="mgmt-sidebar-svg"><use href="#i-grid"/></svg>
             <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_overview">HUB</span>
           </button>
-          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-docker" title="Docker Fleet & App Catalog">
-            <svg class="mgmt-sidebar-svg"><use href="#i-chip"/></svg>
-            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_containers">Containers</span>
-            <span class="mgmt-sidebar-badge" id="mgmt-sidebar-docker-badge" style="display:none;">0 Active</span>
+          <!-- Pillar 1: Dashboard & Telemetry -->
+          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-activity" title="Dashboard & Telemetry">
+            <svg class="mgmt-sidebar-svg"><use href="#i-cpu"/></svg>
+            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_activity">Dashboard & Telemetry</span>
           </button>
-          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-storage" title="Storage & Physical Chassis">
+          <!-- Pillar 2: Storage & Disks -->
+          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-storage" title="Storage & Disks">
             <svg class="mgmt-sidebar-svg"><use href="#i-disk"/></svg>
-            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_storage">Storage & Chassis</span>
+            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_storage">Storage & Disks</span>
             <span class="mgmt-sidebar-badge" id="mgmt-sidebar-storage-badge" style="display:none;">Drives</span>
           </button>
-          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-network" title="Network & Virtual Switch">
+          <!-- Pillar 3: Containers & Apps -->
+          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-docker" title="Containers & Apps">
+            <svg class="mgmt-sidebar-svg"><use href="#i-chip"/></svg>
+            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_containers">Containers & Apps</span>
+            <span class="mgmt-sidebar-badge" id="mgmt-sidebar-docker-badge" style="display:none;">0 Active</span>
+          </button>
+          <!-- Pillar 4: Virtual Machines -->
+          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-vms" title="Virtual Machines">
+            <svg class="mgmt-sidebar-svg"><use href="#i-vm"/></svg>
+            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_vms">Virtual Machines</span>
+            <span class="mgmt-sidebar-badge" id="mgmt-sidebar-vms-badge" style="display:none;">0 VMs</span>
+          </button>
+          <!-- Pillar 5: Network & Sharing -->
+          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-network" title="Network & Sharing">
             <svg class="mgmt-sidebar-svg"><use href="#i-net"/></svg>
-            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_network">Network & Switch</span>
+            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_network">Network & Sharing</span>
             <span class="mgmt-sidebar-badge" id="mgmt-sidebar-net-badge" style="display:none;">Online</span>
           </button>
-          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-hardware" title="Acoustic Profiles & Host Subsystem">
+          <!-- Pillar 6: Hardware & Power -->
+          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-hardware" title="Hardware & Power">
             <svg class="mgmt-sidebar-svg"><use href="#i-sliders"/></svg>
-            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_hardware">Hardware & Profiles</span>
-          </button>
-          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-activity" title="Metrics & History">
-            <svg class="mgmt-sidebar-svg"><use href="#i-cpu"/></svg>
-            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_activity">Activity Monitor</span>
-          </button>
-          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-ups" title="UPS & Power Integrity">
-            <svg class="mgmt-sidebar-svg"><use href="#i-storage"/></svg>
-            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_ups">UPS & Power</span>
+            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_hardware">Hardware & Power</span>
             <span class="mgmt-sidebar-badge" id="mgmt-sidebar-ups-badge" style="display:none;">Power</span>
           </button>
-          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-wallpaper" title="Desktop Themes & Wallpapers">
-            <svg class="mgmt-sidebar-svg"><use href="#i-globe"/></svg>
-            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_appearance">Appearance</span>
-          </button>
-          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-system-group" title="System Settings & API">
-            <svg class="mgmt-sidebar-svg"><use href="#i-chip"/></svg>
-            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_system">System</span>
+          <!-- Pillar 7: System & Identity -->
+          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-system-group" title="System & Identity">
+            <svg class="mgmt-sidebar-svg"><use href="#i-shield"/></svg>
+            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_system">System & Identity</span>
             <span class="mgmt-sidebar-badge alert-badge" id="mgmt-sidebar-sec-badge" style="display:none;">!</span>
           </button>
         </div>
@@ -2685,116 +2689,31 @@
       <section class="mgmt-content-pane" id="mgmt-content-pane">
         <!-- HUB GRID VIEW (Shown by default) -->
         <div id="management-hub-view" class="management-hub-grid">
-          <!-- 1. Appearance -->
-          <div class="mgmt-app-card" data-mgmt-target="mgmt-sec-wallpaper" role="button" tabindex="0">
-            <div class="mgmt-app-icon-wrap mgmt-icon-wallpaper">
-              <svg class="mgmt-app-svg"><use href="#i-globe"/></svg>
-            </div>
-            <div class="mgmt-app-info">
-              <div class="mgmt-app-title-row">
-                <span class="mgmt-app-title" data-i18n="mgmt.hub_appearance_title">Appearance</span>
-                <span class="mgmt-app-pill" data-i18n="mgmt.hub_appearance_pill">Themes</span>
-              </div>
-              <p class="mgmt-app-desc" data-i18n="mgmt.hub_appearance_desc">Upload, manage, and customize desktop wallpapers and visual aesthetics.</p>
-            </div>
-            <div class="mgmt-app-footer">
-              <span class="mgmt-app-action" data-i18n="mgmt.hub_appearance_action">Configure ➔</span>
-            </div>
-          </div>
-
-          <!-- 2. Activity Monitor -->
+          <!-- Pillar 1: Dashboard & Telemetry -->
           <div class="mgmt-app-card" data-mgmt-target="mgmt-sec-activity" role="button" tabindex="0">
             <div class="mgmt-app-icon-wrap mgmt-icon-metrics">
               <svg class="mgmt-app-svg"><use href="#i-cpu"/></svg>
             </div>
             <div class="mgmt-app-info">
               <div class="mgmt-app-title-row">
-                <span class="mgmt-app-title" data-i18n="mgmt.hub_activity_title">Activity Monitor</span>
+                <span class="mgmt-app-title" data-i18n="mgmt.hub_activity_title">Dashboard & Telemetry</span>
                 <span class="mgmt-app-pill" data-i18n="mgmt.hub_activity_pill">Telemetry</span>
               </div>
-              <p class="mgmt-app-desc" data-i18n="mgmt.hub_activity_desc">Real-time and historical hardware performance metrics, thermals, and resource utilization.</p>
+              <p class="mgmt-app-desc" data-i18n="mgmt.hub_activity_desc">Real-time CPU, RAM, network bandwidth, storage IOPS, and historical load velocity.</p>
             </div>
             <div class="mgmt-app-footer">
-              <span class="mgmt-app-action" data-i18n="mgmt.hub_activity_action">View Activity ➔</span>
+              <span class="mgmt-app-action" data-i18n="mgmt.hub_activity_action">View Telemetry ➔</span>
             </div>
           </div>
 
-          <!-- Network & Switch -->
-          <div class="mgmt-app-card" data-mgmt-target="mgmt-sec-network" role="button" tabindex="0">
-            <div class="mgmt-app-icon-wrap" style="background:rgba(0,240,255,0.12); color:var(--accent-cyan,#00f0ff); border-color:rgba(0,240,255,0.3);">
-              <svg class="mgmt-app-svg"><use href="#i-net"/></svg>
-            </div>
-            <div class="mgmt-app-info">
-              <div class="mgmt-app-title-row">
-                <span class="mgmt-app-title" data-i18n="mgmt.hub_network_title">Network & Switch</span>
-                <span class="mgmt-app-pill" style="background:rgba(0,240,255,0.15); color:var(--accent-cyan,#00f0ff);" id="mgmt-hub-net-pill" data-i18n="mgmt.hub_network_pill">Topology</span>
-              </div>
-              <p class="mgmt-app-desc" data-i18n="mgmt.hub_network_desc">Visual hardware switch jack faceplate, link negotiation, host bridges, and Docker network topology.</p>
-            </div>
-            <div class="mgmt-app-footer">
-              <span class="mgmt-app-action" data-i18n="mgmt.hub_network_action">Inspect Network ➔</span>
-            </div>
-          </div>
-
-          <!-- 3. Containers (Promoted to 1st-Class Card) -->
-          <div class="mgmt-app-card" data-mgmt-target="mgmt-sec-docker" role="button" tabindex="0">
-            <div class="mgmt-app-icon-wrap" style="background:rgba(56,189,248,0.12); color:#38bdf8; border-color:rgba(56,189,248,0.3);">
-              <svg class="mgmt-app-svg"><use href="#i-chip"/></svg>
-            </div>
-            <div class="mgmt-app-info">
-              <div class="mgmt-app-title-row">
-                <span class="mgmt-app-title" data-i18n="mgmt.hub_docker_title">Containers</span>
-                <span class="mgmt-app-pill" id="mgmt-hub-docker-pill" style="background:rgba(56,189,248,0.15); color:#38bdf8;">0 Active</span>
-              </div>
-              <p class="mgmt-app-desc" data-i18n="mgmt.hub_docker_desc">Manage Docker fleet, inspect container logs, live port tuning, and 1-click curated app catalog.</p>
-            </div>
-            <div class="mgmt-app-footer">
-              <span class="mgmt-app-action" data-i18n="mgmt.hub_docker_action">Manage Containers ➔</span>
-            </div>
-          </div>
-
-          <!-- 4. Hardware & Profiles -->
-          <div class="mgmt-app-card" data-mgmt-target="mgmt-sec-hardware" role="button" tabindex="0">
-            <div class="mgmt-app-icon-wrap" style="background:rgba(37,194,160,0.12); color:var(--ok2); border-color:rgba(37,194,160,0.3);">
-              <svg class="mgmt-app-svg"><use href="#i-sliders"/></svg>
-            </div>
-            <div class="mgmt-app-info">
-              <div class="mgmt-app-title-row">
-                <span class="mgmt-app-title" data-i18n="mgmt.hub_hardware_title">Hardware & Profiles</span>
-                <span class="mgmt-app-pill" style="background:rgba(37,194,160,0.15); color:var(--ok2);">Acoustics</span>
-              </div>
-              <p class="mgmt-app-desc" data-i18n="mgmt.hub_hardware_desc">Acoustic fan curves, hardware performance profiles, and host subsystem monitoring.</p>
-            </div>
-            <div class="mgmt-app-footer">
-              <span class="mgmt-app-action" data-i18n="mgmt.hub_hardware_action">Tune Profiles ➔</span>
-            </div>
-          </div>
-
-          <!-- 4. UPS & Power Integrity -->
-          <div class="mgmt-app-card" data-mgmt-target="mgmt-sec-ups" role="button" tabindex="0">
-            <div class="mgmt-app-icon-wrap" style="background:rgba(245,166,35,0.12); color:var(--warn,#f5a623); border-color:rgba(245,166,35,0.3);">
-              <svg class="mgmt-app-svg"><use href="#i-storage"/></svg>
-            </div>
-            <div class="mgmt-app-info">
-              <div class="mgmt-app-title-row">
-                <span class="mgmt-app-title" data-i18n="mgmt.hub_ups_title">UPS & Power</span>
-                <span class="mgmt-app-pill" style="background:rgba(245,166,35,0.15); color:var(--warn,#f5a623);" id="mgmt-hub-ups-pill" data-i18n="mgmt.hub_ups_pill">Battery</span>
-              </div>
-              <p class="mgmt-app-desc" data-i18n="mgmt.hub_ups_desc">Monitor battery health, line voltage, estimated runtime, and power integrity status.</p>
-            </div>
-            <div class="mgmt-app-footer">
-              <span class="mgmt-app-action" data-i18n="mgmt.hub_ups_action">Inspect Power ➔</span>
-            </div>
-          </div>
-
-          <!-- 5. Storage & Chassis -->
+          <!-- Pillar 2: Storage & Disks -->
           <div class="mgmt-app-card" data-mgmt-target="mgmt-sec-storage" role="button" tabindex="0">
             <div class="mgmt-app-icon-wrap" style="background:rgba(59,245,139,0.12); color:#3bf58b; border-color:rgba(59,245,139,0.3);">
               <svg class="mgmt-app-svg"><use href="#i-disk"/></svg>
             </div>
             <div class="mgmt-app-info">
               <div class="mgmt-app-title-row">
-                <span class="mgmt-app-title" data-i18n="mgmt.hub_storage_title">Storage & Chassis</span>
+                <span class="mgmt-app-title" data-i18n="mgmt.hub_storage_title">Storage & Disks</span>
                 <span class="mgmt-app-pill" style="background:rgba(59,245,139,0.15); color:#3bf58b;" id="mgmt-hub-storage-pill" data-i18n="mgmt.hub_storage_pill">Hardware</span>
               </div>
               <p class="mgmt-app-desc" data-i18n="mgmt.hub_storage_desc">Interactive physical chassis digital twin, custom bay slot mapping, pool topology, and drive diagnostics.</p>
@@ -2804,18 +2723,86 @@
             </div>
           </div>
 
-          <!-- 6. System -->
+          <!-- Pillar 3: Containers & Apps -->
+          <div class="mgmt-app-card" data-mgmt-target="mgmt-sec-docker" role="button" tabindex="0">
+            <div class="mgmt-app-icon-wrap" style="background:rgba(56,189,248,0.12); color:#38bdf8; border-color:rgba(56,189,248,0.3);">
+              <svg class="mgmt-app-svg"><use href="#i-chip"/></svg>
+            </div>
+            <div class="mgmt-app-info">
+              <div class="mgmt-app-title-row">
+                <span class="mgmt-app-title" data-i18n="mgmt.hub_docker_title">Containers & Apps</span>
+                <span class="mgmt-app-pill" id="mgmt-hub-docker-pill" style="background:rgba(56,189,248,0.15); color:#38bdf8;">0 Active</span>
+              </div>
+              <p class="mgmt-app-desc" data-i18n="mgmt.hub_docker_desc">Manage Docker fleet, inspect container logs, live port tuning, and 1-click curated app catalog.</p>
+            </div>
+            <div class="mgmt-app-footer">
+              <span class="mgmt-app-action" data-i18n="mgmt.hub_docker_action">Manage Containers ➔</span>
+            </div>
+          </div>
+
+          <!-- Pillar 4: Virtual Machines -->
+          <div class="mgmt-app-card" data-mgmt-target="mgmt-sec-vms" role="button" tabindex="0">
+            <div class="mgmt-app-icon-wrap" style="background:rgba(168,85,247,0.12); color:#c084fc; border-color:rgba(168,85,247,0.3);">
+              <svg class="mgmt-app-svg"><use href="#i-vm"/></svg>
+            </div>
+            <div class="mgmt-app-info">
+              <div class="mgmt-app-title-row">
+                <span class="mgmt-app-title" data-i18n="mgmt.hub_vms_title">Virtual Machines</span>
+                <span class="mgmt-app-pill" id="mgmt-hub-vms-pill" style="background:rgba(168,85,247,0.15); color:#c084fc;">KVM</span>
+              </div>
+              <p class="mgmt-app-desc" data-i18n="mgmt.hub_vms_desc">Manage guest operating systems, web VNC/serial consoles, and hardware passthrough.</p>
+            </div>
+            <div class="mgmt-app-footer">
+              <span class="mgmt-app-action" data-i18n="mgmt.hub_vms_action">Manage VMs ➔</span>
+            </div>
+          </div>
+
+          <!-- Pillar 5: Network & Sharing -->
+          <div class="mgmt-app-card" data-mgmt-target="mgmt-sec-network" role="button" tabindex="0">
+            <div class="mgmt-app-icon-wrap" style="background:rgba(0,240,255,0.12); color:var(--accent-cyan,#00f0ff); border-color:rgba(0,240,255,0.3);">
+              <svg class="mgmt-app-svg"><use href="#i-net"/></svg>
+            </div>
+            <div class="mgmt-app-info">
+              <div class="mgmt-app-title-row">
+                <span class="mgmt-app-title" data-i18n="mgmt.hub_network_title">Network & Sharing</span>
+                <span class="mgmt-app-pill" style="background:rgba(0,240,255,0.15); color:var(--accent-cyan,#00f0ff);" id="mgmt-hub-net-pill" data-i18n="mgmt.hub_network_pill">Topology</span>
+              </div>
+              <p class="mgmt-app-desc" data-i18n="mgmt.hub_network_desc">Visual hardware switch jack faceplate, link negotiation, host bridges, and Docker network topology.</p>
+            </div>
+            <div class="mgmt-app-footer">
+              <span class="mgmt-app-action" data-i18n="mgmt.hub_network_action">Inspect Network ➔</span>
+            </div>
+          </div>
+
+          <!-- Pillar 6: Hardware & Power -->
+          <div class="mgmt-app-card" data-mgmt-target="mgmt-sec-hardware" role="button" tabindex="0">
+            <div class="mgmt-app-icon-wrap" style="background:rgba(37,194,160,0.12); color:var(--ok2); border-color:rgba(37,194,160,0.3);">
+              <svg class="mgmt-app-svg"><use href="#i-sliders"/></svg>
+            </div>
+            <div class="mgmt-app-info">
+              <div class="mgmt-app-title-row">
+                <span class="mgmt-app-title" data-i18n="mgmt.hub_hardware_title">Hardware & Power</span>
+                <span class="mgmt-app-pill" style="background:rgba(37,194,160,0.15); color:var(--ok2);" data-i18n="mgmt.hub_hardware_pill">Acoustics & Power</span>
+              </div>
+              <p class="mgmt-app-desc" data-i18n="mgmt.hub_hardware_desc">Acoustic fan curves, hardware performance profiles, host subsystem monitoring, and UPS battery protection.</p>
+            </div>
+            <div class="mgmt-app-footer">
+              <span class="mgmt-app-action" data-i18n="mgmt.hub_hardware_action">Tune Hardware ➔</span>
+            </div>
+          </div>
+
+          <!-- Pillar 7: System & Identity -->
           <div class="mgmt-app-card" data-mgmt-target="mgmt-sec-system-group" role="button" tabindex="0">
             <div class="mgmt-app-icon-wrap mgmt-icon-security">
-              <svg class="mgmt-app-svg"><use href="#i-chip"/></svg>
+              <svg class="mgmt-app-svg"><use href="#i-shield"/></svg>
               <span id="mgmt-hub-sec-badge" class="mgmt-hub-alert-badge" title="Default password active!" style="display: none;">!</span>
             </div>
             <div class="mgmt-app-info">
               <div class="mgmt-app-title-row">
-                <span class="mgmt-app-title" data-i18n="mgmt.hub_system_title">System</span>
+                <span class="mgmt-app-title" data-i18n="mgmt.hub_system_title">System & Identity</span>
                 <span class="mgmt-app-pill mgmt-pill-sec" data-i18n="mgmt.hub_system_pill">Admin</span>
               </div>
-              <p class="mgmt-app-desc" data-i18n="mgmt.hub_system_desc">Manage security, master password, event logs, configuration backups, and API tokens.</p>
+              <p class="mgmt-app-desc" data-i18n="mgmt.hub_system_desc">Manage security, master password, event logs, configuration backups, desktop aesthetics, and API tokens.</p>
             </div>
             <div class="mgmt-app-footer">
               <span class="mgmt-app-action" data-i18n="mgmt.hub_system_action">Manage System ➔</span>
@@ -3733,6 +3720,10 @@
                 <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-docker"/></svg>
                 <span data-i18n="mgmt.subtab_network_docker">Docker Networks</span>
               </button>
+              <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-network-services">
+                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-storage"/></svg>
+                <span data-i18n="mgmt.subtab_network_services">File Sharing Services</span>
+              </button>
             </div>
 
             <!-- Sub-tab 1: Visual Network & Physical Switch -->
@@ -4201,6 +4192,72 @@
                 </div>
               </div>
             </div>
+
+            <!-- Sub-tab 4: File Sharing Services (Samba / NFS / SFTP) -->
+            <div id="mgmt-pane-network-services" class="mgmt-tab-pane" style="display: none;">
+              <div class="mgmt-card-intro" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                <div>
+                  <div class="mgmt-card-intro-title">
+                    <svg class="ic"><use href="#i-storage"/></svg>
+                    <span data-i18n="mgmt.subtab_network_services">File Sharing Protocols & Daemon Services</span>
+                  </div>
+                  <div class="mgmt-card-intro-desc">
+                    Daemon status and line-rate protocol listeners for Samba (SMB3), NFSv4, and Inbound SFTP.
+                  </div>
+                </div>
+                <div style="display:flex; gap:8px; align-items:center;">
+                  <button class="btn-pill-toggle" id="btn-goto-storage-shares">📁 <span data-i18n="mgmt.subtab_shares">Manage Network Shares</span> ➔</button>
+                </div>
+              </div>
+              <div class="mgmt-detail-body">
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:12px;" id="network-services-grid">
+                  <!-- Samba SMB3 Card -->
+                  <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                      <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 18px;">🗂️</span>
+                        <div>
+                          <div style="font-weight: 700; font-size: 13px; color: #fff;">Samba (SMB3 / CIFS)</div>
+                          <div style="font-size: 10px; color: var(--muted);">Port 445 • macOS Time Machine (vfs_fruit)</div>
+                        </div>
+                      </div>
+                      <span class="ci-badge" style="background: rgba(37,194,160,0.15); color: var(--ok2); border: 1px solid rgba(37,194,160,0.3); font-size: 10px; font-weight: 700;">ACTIVE</span>
+                    </div>
+                    <div style="font-size: 11px; color: var(--muted); line-height: 1.4;">High-performance Windows & macOS network share access with isolated user permissions.</div>
+                  </div>
+
+                  <!-- NFSv4 Card -->
+                  <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                      <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 18px;">⚡</span>
+                        <div>
+                          <div style="font-weight: 700; font-size: 13px; color: #fff;">Network File System (NFSv4)</div>
+                          <div style="font-size: 10px; color: var(--muted);">Port 2049 • UNIX / Linux POSIX Mounts</div>
+                        </div>
+                      </div>
+                      <span class="ci-badge" style="background: rgba(37,194,160,0.15); color: var(--ok2); border: 1px solid rgba(37,194,160,0.3); font-size: 10px; font-weight: 700;">ACTIVE</span>
+                    </div>
+                    <div style="font-size: 11px; color: var(--muted); line-height: 1.4;">Line-rate kernel NFS exports scoped to client subnets with granular squash rules.</div>
+                  </div>
+
+                  <!-- Inbound SFTP Card -->
+                  <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                      <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 18px;">🔒</span>
+                        <div>
+                          <div style="font-weight: 700; font-size: 13px; color: #fff;">Inbound SFTP Daemon</div>
+                          <div style="font-size: 10px; color: var(--muted);">Port 2222 • Chrooted SSH Subsystem</div>
+                        </div>
+                      </div>
+                      <span class="ci-badge" style="background: rgba(37,194,160,0.15); color: var(--ok2); border: 1px solid rgba(37,194,160,0.3); font-size: 10px; font-weight: 700;">ACTIVE</span>
+                    </div>
+                    <div style="font-size: 11px; color: var(--muted); line-height: 1.4;">Chroot jail file transport over SSH key authentication without shell access.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
 
@@ -4301,8 +4358,105 @@
             </div>
           </div>
 
-          <!-- Hardware & Profiles (Formerly Services / Unraid) -->
+          <!-- Pillar 4: Virtual Machines & KVM Orchestration -->
+          <div id="mgmt-sec-vms" class="mgmt-detail-card" style="display: none;">
+            <!-- Inner Tab Bar for Virtual Machines -->
+            <div class="mgmt-inner-tabs">
+              <button class="mgmt-inner-tab active" data-tab-target="mgmt-pane-vms-list">
+                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-vm"/></svg>
+                <span data-i18n="mgmt.subtab_vms_fleet">Virtual Machines</span>
+              </button>
+              <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-vms-create">
+                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-plus"/></svg>
+                <span data-i18n="mgmt.subtab_vms_create">New Virtual Machine</span>
+              </button>
+              <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-vms-kvm">
+                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-cpu"/></svg>
+                <span data-i18n="mgmt.subtab_vms_kvm">KVM & Host Telemetry</span>
+              </button>
+            </div>
+
+            <!-- Subpane 1: VM Instances & Fleet -->
+            <div id="mgmt-pane-vms-list" class="mgmt-tab-pane" style="display: block;">
+              <div class="mgmt-card-intro" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                <div>
+                  <div class="mgmt-card-intro-title">
+                    <svg class="ic"><use href="#i-vm"/></svg>
+                    <span data-i18n="mgmt.vms_title">KVM Virtual Machine Fleet</span>
+                  </div>
+                  <div class="mgmt-card-intro-desc" data-i18n="mgmt.vms_desc">Manage guest operating systems, web VNC/serial consoles, and hardware passthrough.</div>
+                </div>
+                <div style="display:flex; gap:6px; align-items:center;">
+                  <button class="btn-pill-toggle" id="btn-mgmt-vm-refresh" title="Refresh VM Fleet">🔄 <span data-i18n="vm.refresh">Refresh</span></button>
+                  <button class="btn-pill-toggle" id="btn-mgmt-vm-launch-window" title="Open Dedicated Window">🪟 <span data-i18n="mgmt.open_dedicated_window">Open Window</span></button>
+                  <button class="btn-save-preset" id="btn-mgmt-vm-create" style="background:var(--accent-cyan,#0ea5e9); border-color:rgba(14,165,233,0.4); color:#fff; font-weight:700;">+ <span data-i18n="vm.create_btn">Create VM</span></button>
+                </div>
+              </div>
+              <div class="mgmt-detail-body">
+                <div id="mgmt-vms-summary-strip" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:10px; margin-bottom:14px;">
+                  <!-- Dynamic Headroom & KVM Status -->
+                </div>
+                <div id="mgmt-vms-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:12px;">
+                  <!-- Dynamic VM cards populated by fetchAndRenderMgmtVms -->
+                </div>
+                <div id="mgmt-vms-empty" style="display:none; text-align:center; padding:40px 20px; color:var(--muted); background:rgba(255,255,255,0.02); border:1px dashed rgba(255,255,255,0.08); border-radius:8px;">
+                  <div style="font-size:32px; margin-bottom:8px;">🖥️</div>
+                  <div style="font-weight:600; color:#fff; margin-bottom:4px;" data-i18n="vm.empty_title">No Virtual Machines Found</div>
+                  <div style="font-size:12px; margin-bottom:14px;" data-i18n="vm.empty_desc">Deploy Linux, Windows, or FreeBSD appliances with dedicated CPU cores and RAM.</div>
+                  <button class="btn-save-preset" id="btn-mgmt-vm-create-empty" style="background:var(--accent-cyan,#0ea5e9); color:#fff; font-size:12px;">+ <span data-i18n="vm.create_btn">Create Virtual Machine</span></button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Subpane 2: Create VM Wizard launcher -->
+            <div id="mgmt-pane-vms-create" class="mgmt-tab-pane" style="display: none;">
+              <div class="mgmt-card-intro">
+                <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-plus"/></svg> <span data-i18n="mgmt.subtab_vms_create">New Virtual Machine</span></div>
+                <div class="mgmt-card-intro-desc" data-i18n="vm.create_desc">Configure CPU cores, memory allocation, virtual disk storage, and boot media.</div>
+              </div>
+              <div class="mgmt-detail-body" style="padding:20px; text-align:center;">
+                <p style="color:var(--muted); margin-bottom:16px;">Launch the interactive Virtual Machine Creation Wizard to configure hardware allocation, memory budgeting, and OS installation.</p>
+                <button class="btn-save-preset" id="btn-mgmt-vm-start-wizard" style="background:var(--accent-cyan,#0ea5e9); color:#fff; font-size:13px; padding:8px 18px; font-weight:700;">🚀 <span data-i18n="vm.create_btn">Launch Create VM Wizard</span></button>
+              </div>
+            </div>
+
+            <!-- Subpane 3: KVM Host Telemetry & Diagnostics -->
+            <div id="mgmt-pane-vms-kvm" class="mgmt-tab-pane" style="display: none;">
+              <div class="mgmt-card-intro">
+                <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-cpu"/></svg> <span data-i18n="mgmt.subtab_vms_kvm">KVM & Host Hypervisor Telemetry</span></div>
+                <div class="mgmt-card-intro-desc">Hardware-assisted virtualization status, vhost-net acceleration, and host memory reservation safety.</div>
+              </div>
+              <div class="mgmt-detail-body" id="mgmt-vms-kvm-body">
+                <!-- Dynamically rendered KVM telemetry details -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Pillar 6: Hardware & Power (Formerly Services / Unraid) -->
           <div id="mgmt-sec-hardware" class="mgmt-detail-card" style="display: none;">
+            <div class="mgmt-inner-tabs">
+              <button class="mgmt-inner-tab active" data-tab-target="mgmt-pane-unraid">
+                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-sliders"/></svg>
+                <span data-i18n="mgmt.subtab_hardware_profiles">Host & Profiles</span>
+              </button>
+              <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-hardware-fans">
+                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-fan"/></svg>
+                <span data-i18n="mgmt.subtab_hardware_fans">Fans & Acoustics</span>
+              </button>
+              <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-hardware-led">
+                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-bolt"/></svg>
+                <span data-i18n="mgmt.subtab_hardware_led">ARGB LED Lighting</span>
+              </button>
+              <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-hardware-lcd">
+                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-screen"/></svg>
+                <span data-i18n="mgmt.subtab_hardware_lcd">Front LCD Screen</span>
+              </button>
+              <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-hardware-ups">
+                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-storage"/></svg>
+                <span data-i18n="mgmt.subtab_hardware_ups">UPS & Battery</span>
+              </button>
+            </div>
+
             <div id="mgmt-pane-unraid" class="mgmt-tab-pane" style="display: block;">
               <div class="mgmt-card-intro">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -4481,6 +4635,96 @@
                         </div>
                       </div>
                     </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Sub-tab 2: Fans & Acoustics -->
+            <div id="mgmt-pane-hardware-fans" class="mgmt-tab-pane" style="display: none;">
+              <div class="mgmt-card-intro" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                <div>
+                  <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-fan"/></svg> <span data-i18n="mgmt.subtab_hardware_fans">Thermal Watchdog & Acoustic Fan Curves</span></div>
+                  <div class="mgmt-card-intro-desc">Hardware PWM controls, tachometer RPM telemetry, Zero RPM drive bay standby safety, and 80°C emergency thermal clamp.</div>
+                </div>
+                <button class="btn-pill-toggle" id="btn-open-fans-drawer" title="Open Fan Curve Editor">⚙️ <span>Tune Fan Curves</span></button>
+              </div>
+              <div class="mgmt-detail-body">
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+                  <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div style="font-weight: 700; font-size: 13px; color: #fff;">Acoustic Fan Safety Guardrails</div>
+                    <span class="ci-badge" style="background: rgba(37,194,160,0.15); color: var(--ok2); border: 1px solid rgba(37,194,160,0.3); font-size: 10px; font-weight: 700;">ACTIVE SAFEGUARD</span>
+                  </div>
+                  <div style="font-size: 11.5px; color: var(--muted); line-height: 1.5;">
+                    • <strong>CPU Fan (pwm3) Inviolability:</strong> CPU cooling fan runs continuously and is strictly forbidden from zero RPM shutdown under all conditions.<br>
+                    • <strong>Emergency Thermal Clamp:</strong> If any drive, CPU, or motherboard zone reaches &ge; 80°C, fan speeds unconditionally clamp to 100% PWM (183 max).<br>
+                    • <strong>Zero RPM Standby Safety:</strong> Bay exhaust fans enter zero RPM mode only when all mechanical hard drives in the bay zone are in standby.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Sub-tab 3: ARGB LED Lighting -->
+            <div id="mgmt-pane-hardware-led" class="mgmt-tab-pane" style="display: none;">
+              <div class="mgmt-card-intro" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                <div>
+                  <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-bolt"/></svg> <span data-i18n="mgmt.subtab_hardware_led">Chassis ARGB LED Lighting Subsystem</span></div>
+                  <div class="mgmt-card-intro-desc">WS2812B serial microcontroller protocol (/dev/ttyACM0), reactive CPU thermals, and alert pulses.</div>
+                </div>
+                <button class="btn-pill-toggle" id="btn-open-led-drawer" title="Open LED Strip Settings">✨ <span>Configure Lighting</span></button>
+              </div>
+              <div class="mgmt-detail-body">
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+                  <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div style="font-weight: 700; font-size: 13px; color: #fff;">Chassis Lightbar Controller</div>
+                    <span class="ci-badge" style="background: rgba(0,240,255,0.15); color: var(--accent-cyan); border: 1px solid rgba(0,240,255,0.3); font-size: 10px; font-weight: 700;">SYNCED MCU</span>
+                  </div>
+                  <div style="font-size: 11.5px; color: var(--muted); line-height: 1.5;">
+                    Dynamic lighting effects synchronize across system power states, CPU thermal loads, disk rebuild activity, and silent night modes.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Sub-tab 4: Front-panel LCD -->
+            <div id="mgmt-pane-hardware-lcd" class="mgmt-tab-pane" style="display: none;">
+              <div class="mgmt-card-intro" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                <div>
+                  <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-screen"/></svg> <span data-i18n="mgmt.subtab_hardware_lcd">Front-Panel LCD Screen & Framebuffer</span></div>
+                  <div class="mgmt-card-intro-desc">Direct framebuffer rendering (/dev/fb0), RGB565 / BGR565 byte order, and backlight sleep timers.</div>
+                </div>
+                <button class="btn-pill-toggle" id="btn-open-lcd-drawer" title="Open LCD Settings">🖥️ <span>LCD Settings</span></button>
+              </div>
+              <div class="mgmt-detail-body">
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+                  <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div style="font-weight: 700; font-size: 13px; color: #fff;">Physical Framebuffer Display</div>
+                    <span class="ci-badge" style="background: rgba(37,194,160,0.15); color: var(--ok2); border: 1px solid rgba(37,194,160,0.3); font-size: 10px; font-weight: 700;">ISOLATED PALETTE</span>
+                  </div>
+                  <div style="font-size: 11.5px; color: var(--muted); line-height: 1.5;">
+                    Frame rendering is strictly scoped to #screen and #mini-lcd-canvas. Web desktop theme alterations never cascade into or corrupt the physical appliance display.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Sub-tab 5: UPS & Power Subpane -->
+            <div id="mgmt-pane-hardware-ups" class="mgmt-tab-pane" style="display: none;">
+              <div class="mgmt-card-intro" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                <div>
+                  <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-storage"/></svg> <span data-i18n="mgmt.subtab_hardware_ups">UPS Battery & Power Flow Telemetry</span></div>
+                  <div class="mgmt-card-intro-desc">Native Network UPS Tools (NUT) TCP client, real-time load wattage, battery charge, and ACPI safe powerdown.</div>
+                </div>
+                <button class="btn-pill-toggle" id="btn-open-full-ups-view">⚡ <span data-i18n="mgmt.hub_ups_action">Full UPS Suite ➔</span></button>
+              </div>
+              <div class="mgmt-detail-body">
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+                  <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div style="font-weight: 700; font-size: 13px; color: #fff;">Power Outage Protection</div>
+                    <span class="ci-badge" style="background: rgba(245,166,35,0.15); color: var(--warn); border: 1px solid rgba(245,166,35,0.3); font-size: 10px; font-weight: 700;">NUT TCP (3493)</span>
+                  </div>
+                  <div style="font-size: 11.5px; color: var(--muted); line-height: 1.5;">
+                    Communicates directly with the local or networked Network UPS Tools (NUT) daemon. Provides automated graceful unmounting and host shutdown before battery depletion.
                   </div>
                 </div>
               </div>
