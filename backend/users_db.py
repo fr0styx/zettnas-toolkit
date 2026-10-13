@@ -790,6 +790,23 @@ def revoke_user_session(raw_token: str, db_path: Optional[str] = None) -> None:
         conn.execute("DELETE FROM sessions WHERE session_id_hash = ?", (token_hash,))
 
 
+def revoke_session_by_hash(session_id_hash_prefix: str, user_id: str, db_path: Optional[str] = None) -> bool:
+    """Revokes a session by hash prefix and immediately purges it from in-memory cache."""
+    with users_db_session(db_path) as conn:
+        res = conn.execute(
+            "DELETE FROM sessions WHERE session_id_hash LIKE ? AND user_id = ?",
+            (f"{session_id_hash_prefix}%", user_id),
+        )
+        deleted = res.rowcount > 0
+    with _SESSION_CACHE_LOCK:
+        to_del = [
+            k for k, v in _SESSION_CACHE.items() if k.startswith(session_id_hash_prefix) and v.get("user_id") == user_id
+        ]
+        for k in to_del:
+            _SESSION_CACHE.pop(k, None)
+    return deleted
+
+
 def revoke_all_sessions_for_user(
     user_id: str, except_token: Optional[str] = None, db_path: Optional[str] = None
 ) -> None:

@@ -42,6 +42,7 @@ def main():
     pool_path = getattr(config, "POOL_PATH", "/mnt/user")
     authenticated = False
     is_admin = False
+    is_read_only = False
     target_root = None
 
     # 1. Check dedicated SFTP User Store (data/sftp/users.json)
@@ -59,15 +60,37 @@ def main():
                                 authenticated = True
                         u_key = str(u.get("pubkey") or "").strip()
                         if u_key and public_key:
-                            if u_key in public_key or public_key in u_key:
+                            u_parts = u_key.split()[:2]
+                            p_parts = str(public_key).strip().split()[:2]
+                            if u_parts and u_parts == p_parts:
                                 authenticated = True
                         if authenticated:
+                            is_read_only = bool(u.get("read_only", False))
                             shares = u.get("shares", [])
                             if len(shares) == 1:
                                 s = shares[0]
                                 target_root = s if os.path.isabs(s) else os.path.join(pool_path, s)
                             elif len(shares) > 1:
-                                target_root = pool_path
+                                data_dir = getattr(config, "DATA_DIR", "/app/data")
+                                user_chroot = os.path.join(data_dir, "sftp_chroot", username.lower())
+                                os.makedirs(user_chroot, exist_ok=True)
+                                for entry in os.listdir(user_chroot):
+                                    link_p = os.path.join(user_chroot, entry)
+                                    if os.path.islink(link_p) or os.path.isfile(link_p):
+                                        try:
+                                            os.unlink(link_p)
+                                        except OSError:
+                                            pass
+                                for s in shares:
+                                    target_s = s if os.path.isabs(s) else os.path.join(pool_path, s)
+                                    share_name = os.path.basename(s.rstrip("/\\"))
+                                    if os.path.exists(target_s):
+                                        link_target = os.path.join(user_chroot, share_name)
+                                        try:
+                                            os.symlink(target_s, link_target)
+                                        except OSError:
+                                            pass
+                                target_root = user_chroot
                             else:
                                 target_root = os.path.join(pool_path, "homes", username.lower())
                             break
@@ -82,6 +105,7 @@ def main():
             if password and verify_password(password, user.get("password_hash", "")):
                 authenticated = True
                 is_admin = user.get("role_id") in ("superadmin", "storage_admin")
+                is_read_only = user.get("role_id") == "guest"
                 if is_admin:
                     target_root = pool_path
                 else:
@@ -113,6 +137,8 @@ def main():
         "type": "local",
         "_root": root,
     }
+    if is_read_only:
+        backend_config["_read_only"] = True
     sys.stdout.write(json.dumps(backend_config))
     sys.stdout.flush()
     sys.exit(0)

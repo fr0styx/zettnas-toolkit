@@ -4,10 +4,12 @@ Provides WebDAV daemon controls, modern WebDAV Portal UI, and transparent HTTP p
 """
 
 import asyncio
+import hashlib
+import hmac
 import logging
 import os
 import urllib.parse
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, StreamingResponse
@@ -15,6 +17,7 @@ from pydantic import BaseModel, Field
 
 import backend.config as config
 from backend.auth import require_scope
+from backend.fsutil import resolve_within
 from backend.passwords import verify_password
 from backend.services.webdav_engine import get_webdav_engine
 from backend.services.webdav_portal import render_webdav_login, render_webdav_portal
@@ -23,6 +26,34 @@ logger = logging.getLogger("ZettNAS.WebDAVApi")
 
 router = APIRouter(tags=["WebDAV Storage"])
 proxy_router = APIRouter(tags=["WebDAV Proxy"], include_in_schema=False)
+
+
+def _sign_webdav_cookie(username: str, role_label: str) -> str:
+    """Creates an HMAC-SHA256 cryptographically signed session cookie."""
+    secret = getattr(config, "SECRET_KEY", "zettnas-webdav-fallback-secret")
+    payload = f"{username}:{role_label}"
+    sig = hmac.new(secret.encode("utf-8"), payload.encode("utf-8"), hashlib.sha256).hexdigest()
+    return f"{payload}:{sig}"
+
+
+def _verify_webdav_cookie(cookie_val: str) -> Optional[Tuple[str, str]]:
+    """Verifies HMAC signature of a WebDAV session cookie.
+    Gracefully rejects legacy/unsigned/corrupt cookies without throwing exceptions.
+    """
+    if not cookie_val or cookie_val.count(":") != 2:
+        return None
+    try:
+        username, role_label, sig = cookie_val.split(":", 2)
+        if not username or not role_label or not sig:
+            return None
+        secret = getattr(config, "SECRET_KEY", "zettnas-webdav-fallback-secret")
+        payload = f"{username}:{role_label}"
+        expected_sig = hmac.new(secret.encode("utf-8"), payload.encode("utf-8"), hashlib.sha256).hexdigest()
+        if hmac.compare_digest(sig, expected_sig):
+            return username, role_label
+    except Exception as e:
+        logger.debug(f"[WebDAV] Cookie signature verification failed: {e}")
+    return None
 
 
 class WebdavConfigRequest(BaseModel):
@@ -142,7 +173,7 @@ async def webdav_portal_login(request: Request):
         resp = RedirectResponse(url="/webdav/", status_code=303)
         resp.set_cookie(
             key="webdav_session",
-            value=f"{username}:{role_label}",
+            value=_sign_webdav_cookie(username, role_label),
             max_age=86400 * 7,
             httponly=True,
             samesite="lax",
@@ -227,9 +258,10 @@ def _get_webdav_portal_user(request: Request, cfg: Dict[str, Any]) -> Optional[D
 
     # 1. Check dedicated webdav_session cookie
     session_cookie = request.cookies.get("webdav_session")
-    if session_cookie and ":" in session_cookie:
-        username, _ = session_cookie.split(":", 1)
-        if username:
+    if session_cookie:
+        verified = _verify_webdav_cookie(session_cookie)
+        if verified:
+            username, _ = verified
             from backend.users_db import get_user_by_username
 
             user = get_user_by_username(username)
@@ -399,10 +431,11 @@ async def webdav_proxy_subpath(request: Request, path: str):
         root_path = os.path.abspath(home)
 
     clean_path = urllib.parse.unquote(path).strip("/")
-    abs_target = os.path.abspath(os.path.join(root_path, clean_path)) if clean_path else root_path
+    target = os.path.join(root_path, clean_path) if clean_path else root_path
+    abs_target = os.path.realpath(target)
 
-    # Security: Path traversal protection
-    if abs_target != root_path and not abs_target.startswith(root_path + os.sep):
+    # Security: Canonical path traversal & symlink escape protection
+    if resolve_within(abs_target, [root_path]) is None:
         logger.warning(f"[WEBDAV] Directory traversal attempt rejected: {path} -> {abs_target}")
         raise HTTPException(status_code=403, detail="Access denied: path traversal detected.")
 

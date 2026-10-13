@@ -53,7 +53,7 @@ def test_mask_and_unmask_notification_config():
     assert masked["smtp_pass"] == MASK_PLACEHOLDER
     assert masked["telegram_bot_token"] == MASK_PLACEHOLDER
     assert masked["ntfy_token"] == MASK_PLACEHOLDER
-    assert masked["discord_webhook_url"] == "https://discord.com/api/webhooks/123/abc"
+    assert masked["discord_webhook_url"] == MASK_PLACEHOLDER
 
     # Simulated incoming payload from UI with masked secrets preserved
     incoming = dict(masked)

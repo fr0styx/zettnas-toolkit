@@ -78,9 +78,30 @@ class SambaEngine:
 
     def __init__(self):
         os.makedirs(SAMBA_DIR, exist_ok=True)
+        private_dir = os.path.join(SAMBA_DIR, "private")
+        try:
+            os.makedirs(private_dir, mode=0o700, exist_ok=True)
+            os.chmod(private_dir, 0o700)
+        except OSError:
+            pass
         self._shares: Dict[str, SambaShareConfig] = {}
         self._load_shares()
         self._ensure_default_conf()
+
+    def can_run_sidecar(self) -> tuple[bool, str]:
+        """Pre-flight check to verify if zettnas-samba sidecar can bind port 445."""
+        from backend.hardware.pal_storage import StoragePlatformDetector, PlatformType
+
+        platform = StoragePlatformDetector.detect()
+        if platform == PlatformType.UNRAID:
+            return False, "Host is running Unraid with native SMB daemon on port 445."
+
+        sidecar_info = self.check_sidecar()
+        is_sidecar_running = sidecar_info.get("detected") and sidecar_info.get("state") == "running"
+        if not is_sidecar_running and self.check_port_445():
+            return False, "Port 445 is already bound on host by an existing SMB daemon."
+
+        return True, "Ready"
 
     def _ensure_default_conf(self) -> None:
         """Ensures smb.conf exists with initial configuration if missing."""

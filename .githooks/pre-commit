@@ -10,13 +10,13 @@ elif command -v docker >/dev/null 2>&1 && docker ps --format '{{.Names}}' | grep
   RUFF_CMD="docker exec -i zettnas-toolkit ruff"
 fi
 
-if [ -z "" ]; then
+if [ -z "$RUFF_CMD" ]; then
   exit 0
 fi
 
 STAGED_PY_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep '\.py$' || true)
 
-if [ -n "" ]; then
+if [ -n "$STAGED_PY_FILES" ]; then
   echo "🔍 [pre-commit] Formatting and verifying staged Python files with Ruff..."
   for f in $STAGED_PY_FILES; do
     if [ -f "$f" ]; then

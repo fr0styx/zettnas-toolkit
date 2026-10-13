@@ -456,6 +456,7 @@ def setup_mfa(request: Request):
     return {
         "status": "ok",
         "secret": secret,
+        "totp_secret": secret,
         "otpauth_uri": otpauth_uri,
         "qr_svg": qr_svg,
         "recovery_codes": recovery_codes,
@@ -951,12 +952,9 @@ def revoke_specific_session(session_id_hash: str, request: Request):
     if not user:
         return error_response(401, "Not authenticated.")
 
-    from backend.users_db import users_db_session
+    from backend.users_db import revoke_session_by_hash
 
-    with users_db_session() as conn:
-        conn.execute(
-            "DELETE FROM sessions WHERE session_id_hash LIKE ? AND user_id = ?", (f"{session_id_hash}%", user["id"])
-        )
+    revoke_session_by_hash(session_id_hash, user["id"])
     return {"status": "ok"}
 
 

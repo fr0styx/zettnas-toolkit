@@ -85,7 +85,10 @@ def _move_file_resilient(src: str, dst: str) -> None:
     except OSError as err:
         if err.errno == errno.EXDEV:
             # Cross-device link: stream copy with metadata then unlink source
-            shutil.copy2(src, dst)
+            if os.path.islink(src):
+                shutil.copy2(src, dst, follow_symlinks=False)
+            else:
+                shutil.copy2(src, dst)
             os.unlink(src)
         else:
             raise
@@ -115,7 +118,10 @@ def _transfer_single_file(
     if action == "move":
         _move_file_resilient(src, final_dst)
     else:
-        shutil.copy2(src, final_dst)
+        if os.path.islink(src):
+            shutil.copy2(src, final_dst, follow_symlinks=False)
+        else:
+            shutil.copy2(src, final_dst)
 
     return "renamed" if final_dst != dst else "transferred"
 

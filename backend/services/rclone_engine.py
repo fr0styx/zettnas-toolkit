@@ -35,6 +35,9 @@ SENSITIVE_KEYS = {
     "api_key",
     "private_key",
     "client_secret",
+    "key",
+    "application_key",
+    "app_key",
 }
 
 

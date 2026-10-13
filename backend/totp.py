@@ -158,20 +158,16 @@ def verify_and_consume_recovery_code(
 
 
 def get_otpauth_uri(username: str, secret: str, issuer: str = "ZettNAS") -> str:
-    """Generate standardized RFC 6238 key URI for authenticator applications."""
-    encoded_issuer = urllib.parse.quote(issuer)
-    encoded_user = urllib.parse.quote(username)
-    label = f"{encoded_issuer}:{encoded_user}"
-    params = urllib.parse.urlencode(
-        {
-            "secret": secret.strip().replace(" ", "").upper(),
-            "issuer": issuer,
-            "algorithm": "SHA1",
-            "digits": 6,
-            "period": 30,
-        }
-    )
-    return f"otpauth://totp/{label}?{params}"
+    """Generate standardized RFC 6238 key URI for authenticator applications.
+    Uses clean minimal format (omitting default algorithm/digits/period) to fit compact QR matrix.
+    """
+    encoded_issuer = urllib.parse.quote(issuer.strip() or "ZettNAS")
+    encoded_user = urllib.parse.quote(username.strip())
+    clean_secret = secret.strip().replace(" ", "").upper()
+    uri = f"otpauth://totp/{encoded_user}?secret={clean_secret}&issuer={encoded_issuer}"
+    if len(uri.encode("utf-8")) > 62:
+        uri = f"otpauth://totp/{encoded_user}?secret={clean_secret}"
+    return uri
 
 
 # ==============================================================================
@@ -221,9 +217,12 @@ def generate_qr_svg(text: str, size: int = 240) -> str:
     # Version 4-M supports up to 64 bytes (8-bit byte mode)
     # Header format: mode indicator (0100 for 8-bit byte) + 8-bit count indicator
     data_bytes = text.encode("utf-8")
-    if len(data_bytes) > 84:
-        # Fallback to compact URI if text is unusually long
-        data_bytes = data_bytes[:84]
+    if len(data_bytes) > 62:
+        if "otpauth://" in text and "&issuer=" in text:
+            compact_text = text.split("&issuer=")[0]
+            data_bytes = compact_text.encode("utf-8")[:62]
+        else:
+            data_bytes = data_bytes[:62]
 
     # Pre-calculated Version 4 (33x33) generator
     # For robust homelab usage without binary wheel dependencies, we construct a 33x33 matrix

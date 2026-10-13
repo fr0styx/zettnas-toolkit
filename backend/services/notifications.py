@@ -38,7 +38,7 @@ from backend.fsutil import atomic_write_json, read_json
 NOTIFICATIONS_FILE = os.path.join(DATA_DIR, "notifications.json")
 
 MASK_PLACEHOLDER = "********"
-SECRET_FIELDS = {"smtp_pass", "telegram_bot_token", "ntfy_token"}
+SECRET_FIELDS = {"smtp_pass", "telegram_bot_token", "ntfy_token", "discord_webhook_url", "webhook_url", "apprise_urls"}
 
 DEFAULT_NOTIFICATION_CONFIG: dict[str, Any] = {
     "enabled": False,
@@ -101,8 +101,12 @@ def mask_notification_config(cfg: dict[str, Any]) -> dict[str, Any]:
     """Return a copy of the notification config with secrets masked for safe UI display."""
     masked = dict(cfg)
     for field in SECRET_FIELDS:
-        if masked.get(field):
-            masked[field] = MASK_PLACEHOLDER
+        val = masked.get(field)
+        if val:
+            if isinstance(val, list):
+                masked[field] = [MASK_PLACEHOLDER if v else "" for v in val]
+            else:
+                masked[field] = MASK_PLACEHOLDER
     return masked
 
 
@@ -110,8 +114,14 @@ def unmask_notification_config(new_cfg: dict[str, Any], existing_cfg: dict[str, 
     """Restore existing secret values if the caller sent back the MASK_PLACEHOLDER."""
     resolved = dict(new_cfg)
     for field in SECRET_FIELDS:
-        if resolved.get(field) == MASK_PLACEHOLDER:
+        val = resolved.get(field)
+        if val == MASK_PLACEHOLDER:
             resolved[field] = existing_cfg.get(field, "")
+        elif isinstance(val, list):
+            exist_list = existing_cfg.get(field, [])
+            resolved[field] = [
+                exist_list[i] if (i < len(exist_list) and v == MASK_PLACEHOLDER) else v for i, v in enumerate(val)
+            ]
     return resolved
 
 

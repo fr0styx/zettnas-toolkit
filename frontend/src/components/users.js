@@ -640,7 +640,7 @@ async function start2FASetup() {
     const data = await res.json();
 
     qrContainer.innerHTML = data.qr_svg || '';
-    if (secretKeyEl) secretKeyEl.textContent = data.totp_secret || '';
+    if (secretKeyEl) secretKeyEl.textContent = data.secret || data.totp_secret || '';
 
     const form = document.getElementById('form-verify-2fa');
     if (form) {
@@ -657,7 +657,11 @@ async function start2FASetup() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
-            body: JSON.stringify({ code })
+            body: JSON.stringify({
+              secret: data.secret || data.totp_secret,
+              code,
+              recovery_codes: data.recovery_codes || []
+            })
           });
           const verifyData = await verifyRes.json();
           if (verifyRes.ok) {

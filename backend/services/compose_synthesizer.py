@@ -214,7 +214,7 @@ def format_compose_yaml(service_name: str, spec: Dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def get_container_compose_data(cid_or_name: str) -> Dict[str, Any]:
+def get_container_compose_data(cid_or_name: str, allow_unmasked: bool = False) -> Dict[str, Any]:
     """
     Returns Compose definition for a container, including both unmasked and masked YAML.
     """
@@ -245,18 +245,21 @@ def get_container_compose_data(cid_or_name: str) -> Dict[str, Any]:
     raw_yaml = disk_content if (source == "disk" and disk_content) else format_compose_yaml(srv_name, raw_spec)
     masked_yaml = format_compose_yaml(srv_name, masked_spec)
 
+    chosen_yaml = raw_yaml if allow_unmasked else masked_yaml
+    chosen_spec = raw_spec if allow_unmasked else masked_spec
+
     return {
         "container_id": inspect_data.get("Id", "")[:12],
         "name": raw_name,
         "source": source,
         "compose_file_path": compose_path if source == "disk" else None,
-        "compose_yaml": raw_yaml,
+        "compose_yaml": chosen_yaml,
         "masked_yaml": masked_yaml,
-        "service_spec": raw_spec,
+        "service_spec": chosen_spec,
     }
 
 
-def get_container_full_details(cid_or_name: str) -> Dict[str, Any]:
+def get_container_full_details(cid_or_name: str, allow_unmasked: bool = False) -> Dict[str, Any]:
     """
     Returns rich, structured inspector data for all tabs in the Container Inspector Modal.
     """
@@ -282,11 +285,12 @@ def get_container_full_details(cid_or_name: str) -> Dict[str, Any]:
         else:
             k, v = item, ""
         is_sec = is_secret_key(k)
+        masked_v = mask_secret_value(v) if is_sec else v
         envs.append(
             {
                 "key": k,
-                "value": v,
-                "masked_value": mask_secret_value(v) if is_sec else v,
+                "value": v if (allow_unmasked or not is_sec) else masked_v,
+                "masked_value": masked_v,
                 "is_secret": is_sec,
             }
         )

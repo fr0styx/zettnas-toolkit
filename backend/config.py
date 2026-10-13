@@ -89,6 +89,37 @@ ENABLE_PROXY_SSO = os.environ.get("ENABLE_PROXY_SSO", "0").lower() in ("1", "tru
 # Replaces the old "trust every request from 127.0.0.1" bypass.
 LCD_INTERNAL_TOKEN = secrets.token_urlsafe(32)
 
+# Persistent Cryptographic Secret Key for HMAC signing and session protection
+SECRET_KEY_FILE = os.path.join(DATA_DIR, "secret.key")
+
+
+def _get_or_create_secret_key() -> str:
+    env_key = os.environ.get("SECRET_KEY", "").strip()
+    if env_key:
+        return env_key
+    if os.path.exists(SECRET_KEY_FILE):
+        try:
+            with open(SECRET_KEY_FILE, "r", encoding="utf-8") as f:
+                k = f.read().strip()
+                if k:
+                    return k
+        except OSError as e:
+            logger.warning(f"Failed to read {SECRET_KEY_FILE}: {e}")
+
+    new_key = secrets.token_hex(32)
+    try:
+        os.makedirs(DATA_DIR, exist_ok=True)
+        flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC
+        fd = os.open(SECRET_KEY_FILE, flags, 0o600)
+        with open(fd, "w", encoding="utf-8") as f:
+            f.write(new_key)
+    except OSError as e:
+        logger.warning(f"Failed to persist {SECRET_KEY_FILE}: {e}")
+    return new_key
+
+
+SECRET_KEY = _get_or_create_secret_key()
+
 # Universal WebDAV & Remote Storage (Sprint 4)
 REMOTES_PATH = os.environ.get("REMOTES_PATH", "/mnt/remotes")
 WEBDAV_PORT = int(os.environ.get("WEBDAV_PORT", "8084"))

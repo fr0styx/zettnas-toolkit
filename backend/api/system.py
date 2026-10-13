@@ -183,17 +183,21 @@ def check_user_path_access(req_path: str, principal: Optional[AuthenticatedPrinc
     ):
         return
 
-    norm_path = os.path.normpath(str(req_path or "").strip()).replace("\\", "/")
-    parts = [p for p in norm_path.split("/") if p]
-    if parts and parts[0] == "boot":
-        raise HTTPException(status_code=403, detail="Access to /boot requires storage:admin privileges.")
-    if "homes" in parts:
-        idx = parts.index("homes")
-        if idx + 1 < len(parts):
-            target_user = parts[idx + 1].lower()
-            current_user = (principal.username or "").lower()
-            if target_user != current_user:
-                raise HTTPException(status_code=403, detail="Access denied to another user's home folder.")
+    # Check both input path and canonical realpath to prevent symlink traversal into restricted zones
+    raw_norm = os.path.normpath(str(req_path or "").strip()).replace("\\", "/")
+    real_norm = os.path.normpath(os.path.realpath(str(req_path or "").strip())).replace("\\", "/")
+
+    for candidate_path in (raw_norm, real_norm):
+        parts = [p for p in candidate_path.split("/") if p]
+        if parts and parts[0] == "boot":
+            raise HTTPException(status_code=403, detail="Access to /boot requires storage:admin privileges.")
+        if "homes" in parts:
+            idx = parts.index("homes")
+            if idx + 1 < len(parts):
+                target_user = parts[idx + 1].lower()
+                current_user = (principal.username or "").lower()
+                if target_user != current_user:
+                    raise HTTPException(status_code=403, detail="Access denied to another user's home folder.")
 
 
 def _scan_remote_dir_isolated(real: str, dirs_only: bool) -> List[Dict[str, Any]]:
@@ -726,24 +730,58 @@ async def post_docker_container_action(container_id: str, req: DockerActionReque
 
 
 @router.get("/docker/containers/{container_id}/compose")
-async def get_docker_container_compose(container_id: str):
+async def get_docker_container_compose(container_id: str, request: Request, unmask: bool = False):
     if not container_id or not re.match(r"^[a-zA-Z0-9_.-]{1,128}$", container_id):
         raise HTTPException(status_code=400, detail="Invalid container ID or name")
     from backend.services.compose_synthesizer import get_container_compose_data
 
-    data = await asyncio.to_thread(get_container_compose_data, container_id)
+    # Only unmask if explicitly requested AND caller has containers:manage or superadmin
+    allow_unmasked = False
+    if unmask:
+        sess = getattr(request.state, "session", None)
+        if not sess:
+            from backend.auth import extract_token, get_current_session
+
+            tok = extract_token(request)
+            sess = get_current_session(tok) if tok else None
+        if sess:
+            principal = AuthenticatedPrincipal(sess)
+            allow_unmasked = (
+                principal.role_id in ("superadmin", "storage_admin")
+                or principal.has_scope("containers:manage")
+                or principal.has_scope("*")
+            )
+
+    data = await asyncio.to_thread(get_container_compose_data, container_id, allow_unmasked=allow_unmasked)
     if "error" in data:
         raise HTTPException(status_code=404, detail=data["error"])
     return data
 
 
 @router.get("/docker/containers/{container_id}/details")
-async def get_docker_container_details(container_id: str):
+async def get_docker_container_details(container_id: str, request: Request, unmask: bool = False):
     if not container_id or not re.match(r"^[a-zA-Z0-9_.-]{1,128}$", container_id):
         raise HTTPException(status_code=400, detail="Invalid container ID or name")
     from backend.services.compose_synthesizer import get_container_full_details
 
-    data = await asyncio.to_thread(get_container_full_details, container_id)
+    # Only unmask if explicitly requested AND caller has containers:manage or superadmin
+    allow_unmasked = False
+    if unmask:
+        sess = getattr(request.state, "session", None)
+        if not sess:
+            from backend.auth import extract_token, get_current_session
+
+            tok = extract_token(request)
+            sess = get_current_session(tok) if tok else None
+        if sess:
+            principal = AuthenticatedPrincipal(sess)
+            allow_unmasked = (
+                principal.role_id in ("superadmin", "storage_admin")
+                or principal.has_scope("containers:manage")
+                or principal.has_scope("*")
+            )
+
+    data = await asyncio.to_thread(get_container_full_details, container_id, allow_unmasked=allow_unmasked)
     if "error" in data:
         raise HTTPException(status_code=404, detail=data["error"])
     return data
@@ -2038,9 +2076,26 @@ def fs_download_zip(
                     for root_dir, _, files in os.walk(real_target):
                         for f in files:
                             fp = os.path.join(root_dir, f)
+                            # Ensure symlinks inside directories do not escape allowed roots or user bounds
+                            if os.path.islink(fp):
+                                resolved_sym = os.path.realpath(fp)
+                                if resolve_within(resolved_sym, ALLOWED_BROWSE_ROOTS) is None:
+                                    continue
+                                try:
+                                    check_user_path_access(resolved_sym, principal)
+                                except HTTPException:
+                                    continue
                             rel = os.path.relpath(fp, os.path.dirname(real_target))
                             zf.write(fp, arcname=rel)
                 else:
+                    if os.path.islink(real_target):
+                        resolved_sym = os.path.realpath(real_target)
+                        if resolve_within(resolved_sym, ALLOWED_BROWSE_ROOTS) is None:
+                            continue
+                        try:
+                            check_user_path_access(resolved_sym, principal)
+                        except HTTPException:
+                            continue
                     zf.write(real_target, arcname=base)
         buf.seek(0)
         while chunk := buf.read(65536):
