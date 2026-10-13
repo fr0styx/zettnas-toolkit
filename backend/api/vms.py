@@ -892,6 +892,32 @@ def get_vms_telemetry():
     }
 
 
+def collect_vm_diagnostics() -> Dict[str, Any]:
+    """Aggregates hypervisor telemetry, VM fleet status, and error logs for diagnostics bundles."""
+    telemetry = get_vms_telemetry()
+    vms = _load_vms()
+    recent_errors: Dict[str, List[str]] = {}
+    for vm in vms:
+        vm_id = vm.get("id")
+        vm_dir = os.path.join(DATA_DIR, "vms", vm_id) if vm_id else None
+        if vm_dir and os.path.isdir(vm_dir):
+            err_log = os.path.join(vm_dir, "qemu_last_error.log")
+            if os.path.exists(err_log):
+                try:
+                    with open(err_log, "r", encoding="utf-8", errors="replace") as f:
+                        lines = f.readlines()
+                        if lines:
+                            recent_errors[vm_id] = [line.strip() for line in lines[-50:]]
+                except Exception:
+                    pass
+
+    return {
+        "hypervisor_telemetry": telemetry,
+        "vms_inventory": vms,
+        "recent_qemu_errors": recent_errors,
+    }
+
+
 @router.get("/kvm/diagnose", dependencies=[Depends(require_scope("system:view", "storage:read"))])
 def get_kvm_diagnose():
     """Returns detailed multi-tier KVM diagnostic report including host hardware and cgroup analysis."""

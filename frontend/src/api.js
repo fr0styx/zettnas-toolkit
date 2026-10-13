@@ -115,8 +115,9 @@ export const api = {
     if (!res.ok) throw await ApiError.from(res);
     return res.json();
   },
-  async downloadBlob(url, defaultFilename = 'download.zip') {
-    const res = await request(url, { method: 'GET' });
+  async downloadBlob(url, defaultFilename = 'download.zip', options = {}) {
+    const fetchOptions = { method: options.method || 'GET', ...options };
+    const res = await request(url, fetchOptions);
     if (!res.ok) throw await ApiError.from(res);
     const blob = await res.blob();
     const disposition = res.headers.get('content-disposition') || '';

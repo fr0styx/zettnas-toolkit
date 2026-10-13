@@ -43,20 +43,45 @@ APPRISE_URL_PATTERN = re.compile(
     re.IGNORECASE,
 )
 CREDENTIAL_URL_PATTERN = re.compile(r"(://[^:\s/@]+:)[^@\s/]+(@)", re.IGNORECASE)
+AWS_KEY_PATTERN = re.compile(r"\b(AKIA|ABIA|ACCA|ASIA)[0-9A-Z]{16}\b")
+SLACK_WEBHOOK_PATTERN = re.compile(r"https://hooks\.slack\.com/services/T[a-zA-Z0-9_]+/B[a-zA-Z0-9_]+/[a-zA-Z0-9_]+")
+WIREGUARD_KEY_PATTERN = re.compile(
+    r"((?:PrivateKey|PresharedKey)\s*=\s*)[A-Za-z0-9+/=]{20,}",
+    re.IGNORECASE,
+)
+ENV_VAR_PAIR_PATTERN = re.compile(
+    r"^([A-Za-z0-9_]*?(?:pass(?:word)?|token|secret|auth|bearer|key|jwt|credential|cert|api_key)[A-Za-z0-9_]*?)=(.*)$",
+    re.IGNORECASE,
+)
+KEY_VALUE_IN_TEXT_PATTERN = re.compile(
+    r"((?:token|secret|password|passwd|api_key|private_key)\s*[:=]\s*['\"]?)[^'\",\s&]+(['\"]?)",
+    re.IGNORECASE,
+)
 
 
 def sanitize_string(text: str) -> str:
     """Redacts passwords, tokens, webhooks, and private keys from strings."""
     if not text or not isinstance(text, str):
         return str(text or "")
+
     text = PRIVATE_KEY_BLOCK.sub("[REDACTED_PRIVATE_KEY_BLOCK]", text)
+    text = WIREGUARD_KEY_PATTERN.sub(r"\1[REDACTED_KEY]", text)
     text = DISCORD_WEBHOOK_PATTERN.sub(r"\1[REDACTED_WEBHOOK]", text)
+    text = SLACK_WEBHOOK_PATTERN.sub("https://hooks.slack.com/services/[REDACTED_WEBHOOK]", text)
     text = TELEGRAM_BOT_PATTERN.sub("bot[REDACTED_BOT_TOKEN]", text)
     text = APPRISE_URL_PATTERN.sub(r"\1[REDACTED]", text)
     text = CREDENTIAL_URL_PATTERN.sub(r"\1[REDACTED]\2", text)
+    text = AWS_KEY_PATTERN.sub("[REDACTED_AWS_KEY]", text)
     text = BEARER_PATTERN.sub("Bearer [REDACTED]", text)
     text = ZAT_TOKEN_PATTERN.sub("zat_[REDACTED]", text)
     text = URL_SECRET_PATTERN.sub(r"\1[REDACTED]", text)
+
+    # Handle KEY=VALUE environment variable lines (e.g. Docker container inspect)
+    env_match = ENV_VAR_PAIR_PATTERN.match(text)
+    if env_match:
+        return f"{env_match.group(1)}=[REDACTED]"
+
+    text = KEY_VALUE_IN_TEXT_PATTERN.sub(r"\1[REDACTED]\2", text)
     return text
 
 

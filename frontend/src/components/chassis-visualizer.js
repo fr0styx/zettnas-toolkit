@@ -880,12 +880,14 @@ function bindTopologyTreeEvents(tree, container) {
  */
 export async function fetchAndRenderStorageTopology(container) {
   if (!container) return;
-  container.innerHTML = `
-    <div style="text-align:center; padding:30px; color:var(--muted);">
-      <div class="loader-spinner" style="margin:0 auto 10px;"></div>
-      Scanning storage pools and array topology...
-    </div>
-  `;
+  if (!container.firstElementChild || container.querySelector('.loader-spinner')) {
+    container.innerHTML = `
+      <div style="text-align:center; padding:30px; color:var(--muted);">
+        <div class="loader-spinner" style="margin:0 auto 10px;"></div>
+        Scanning storage pools and array topology...
+      </div>
+    `;
+  }
 
   try {
     const [data, platformData, discoveredData] = await Promise.all([

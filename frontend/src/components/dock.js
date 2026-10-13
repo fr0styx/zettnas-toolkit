@@ -839,6 +839,26 @@ export function bringToFront(windowEl) {
     return;
   }
 
+  let foundId = null;
+  if (window.DockManager) {
+    Object.keys(window.DockManager.windows).forEach((id) => {
+      const wEl = window.DockManager.windows[id].el;
+      if (wEl === windowEl || (wEl && wEl.contains && wEl.contains(windowEl)) || (windowEl && windowEl.contains && windowEl.contains(wEl))) {
+        foundId = id;
+      }
+    });
+  }
+
+  // Fast-path guard: if already at top z-index and active, do not churn DOM or GPU layers
+  const curZ = parseInt(windowEl.style.zIndex || '0', 10);
+  const targetWin = windowEl.querySelector?.('#console-window, #management-window, .chassis-front-panel, .mgmt-app-window, .container-inspector-window, #container-inspector-window, #app-deploy-modal-window, #cloud-remote-window, .cloud-remote-window') || windowEl;
+  const isAlreadyActive = targetWin?.classList?.contains('active-window');
+  const isTopZ = curZ === activeWindowZIndex;
+
+  if (isTopZ && isAlreadyActive && (!window.DockManager || window.DockManager.activeId === foundId)) {
+    return;
+  }
+
   activeWindowZIndex++;
   if (activeWindowZIndex >= 4900) {
     // Linear re-normalization: sort open windows by their existing z-index and re-index from base 1000
@@ -872,16 +892,12 @@ export function bringToFront(windowEl) {
   }
 
   if (window.DockManager) {
-    let foundId = null;
-    Object.keys(window.DockManager.windows).forEach((id) => {
-      const wEl = window.DockManager.windows[id].el;
-      if (wEl === windowEl || (wEl && wEl.contains && wEl.contains(windowEl)) || (windowEl && windowEl.contains && windowEl.contains(wEl))) {
-        foundId = id;
-      }
-    });
     if (foundId) {
-      window.DockManager.activeId = foundId;
-      window.DockManager.render();
+      if (typeof window.DockManager.setActiveId === 'function') {
+        window.DockManager.setActiveId(foundId);
+      } else {
+        window.DockManager.activeId = foundId;
+      }
       saveOpenWindowsState();
     }
   }
@@ -891,7 +907,6 @@ export function bringToFront(windowEl) {
     document.querySelectorAll('.active-window').forEach((w) => {
       w.classList.remove('active-window');
     });
-    const targetWin = windowEl.querySelector?.('#console-window, #management-window, .chassis-front-panel, .mgmt-app-window, .container-inspector-window, #container-inspector-window, #app-deploy-modal-window, #cloud-remote-window, .cloud-remote-window') || windowEl;
     if (targetWin && targetWin.classList) targetWin.classList.add('active-window');
   } catch (e) {}
 }
@@ -916,15 +931,17 @@ export const handleWindowActivation = (e) => {
     // User clicked on empty desktop wallpaper or desktop icons/widgets
     document.querySelectorAll('.active-window').forEach((w) => w.classList.remove('active-window'));
     if (window.DockManager) {
-      window.DockManager.activeId = null;
-      window.DockManager.render();
+      if (typeof window.DockManager.setActiveId === 'function') {
+        window.DockManager.setActiveId(null);
+      } else {
+        window.DockManager.activeId = null;
+      }
     }
   }
 };
 
 if (typeof document !== 'undefined') {
   document.addEventListener('pointerdown', handleWindowActivation, { capture: true });
-  document.addEventListener('mousedown', handleWindowActivation);
 }
 
 function getOrCreateSnapGhost() {
@@ -986,10 +1003,6 @@ export function makeDraggable(dragEl, handleEl, customId) {
 
   let startX = 0, startY = 0, initialMouseX = 0, initialMouseY = 0;
   let activeSnap = null;
-
-  dragEl.addEventListener('pointerdown', () => {
-    bringToFront(dragEl);
-  }, { capture: true });
 
   handleEl.style.touchAction = 'none';
   handleEl.addEventListener('pointerdown', (e) => {
@@ -1782,13 +1795,27 @@ export const DockManager = {
     }
   },
 
+  setActiveId(id) {
+    this.activeId = id;
+    const dock = document.getElementById('os-dock');
+    if (!dock) return;
+    dock.querySelectorAll('.dock-item').forEach((item) => {
+      const winId = item.dataset.windowId;
+      if (!winId) return;
+      const isActive = winId === id;
+      item.classList.toggle('active-window', isActive);
+      const dot = item.querySelector('.dock-indicator-dot');
+      if (dot) dot.classList.toggle('active-dot', isActive);
+    });
+  },
+
   render() {
     const dockContainer = document.getElementById('os-dock-container');
     const dock = document.getElementById('os-dock');
     if (!dock || !dockContainer) return;
 
     dock.classList.add('active');
-    dock.innerHTML = '';
+    const frag = document.createDocumentFragment();
 
     let hoverTimeout = null;
 
@@ -2103,7 +2130,7 @@ export const DockManager = {
         winIds.forEach((id) => this.restore(id));
       }
     });
-    dock.appendChild(dashItem);
+    frag.appendChild(dashItem);
 
     // Spotlight Quick Launcher
     const spotItem = document.createElement('button');
@@ -2119,7 +2146,7 @@ export const DockManager = {
       hideDockTooltip();
       openSpotlight();
     });
-    dock.appendChild(spotItem);
+    frag.appendChild(spotItem);
 
     // Dynamic apps (pinned + running)
     const pinned = this.getPinnedApps();
@@ -2176,7 +2203,7 @@ export const DockManager = {
         showDockItemContextMenu(e.pageX, e.pageY, id, win.title, isPinned, isRunning);
       });
 
-      dock.appendChild(item);
+      frag.appendChild(item);
     });
 
     // Notification Center Button
@@ -2193,7 +2220,10 @@ export const DockManager = {
       hideDockTooltip();
       if (window.toggleNotificationCenter) window.toggleNotificationCenter();
     });
-    dock.appendChild(notifItem);
+    frag.appendChild(notifItem);
+
+    // Atomically swap dock items without geometry collapse
+    dock.replaceChildren(frag);
 
     if (dock.classList.contains('dock-magnify-enabled')) {
       dock.querySelectorAll('.dock-item').forEach((item) => {

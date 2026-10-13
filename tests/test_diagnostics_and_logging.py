@@ -200,3 +200,82 @@ def test_diagnostics_bundle_endpoint(client, auth_headers):
         assert isinstance(logs_text, str)
         # Ensure no raw passwords/tokens exist in logs text
         assert "zat_" not in logs_text or "zat_[REDACTED]" in logs_text
+
+
+def test_env_var_and_secret_sanitization():
+    # Docker inspect Env list sanitization
+    env_list = [
+        "MYSQL_ROOT_PASSWORD=superSecretPassword123",
+        "POSTGRES_PASSWORD=my_database_password",
+        "API_SECRET_KEY=secret_token_value_456",
+        "PATH=/usr/local/bin:/usr/bin:/bin",
+        "PORT=8080",
+    ]
+    cleaned = sanitize_dict(env_list)
+    assert cleaned[0] == "MYSQL_ROOT_PASSWORD=[REDACTED]"
+    assert cleaned[1] == "POSTGRES_PASSWORD=[REDACTED]"
+    assert cleaned[2] == "API_SECRET_KEY=[REDACTED]"
+    assert cleaned[3] == "PATH=/usr/local/bin:/usr/bin:/bin"
+    assert cleaned[4] == "PORT=8080"
+
+    # WireGuard private key
+    wg_str = "PrivateKey = YWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoxMjM0NTY3ODk="
+    assert sanitize_string(wg_str) == "PrivateKey = [REDACTED_KEY]"
+
+    # AWS access key
+    aws_str = "Credentials with AKIAIOSFODNN7EXAMPLE key"
+    assert sanitize_string(aws_str) == "Credentials with [REDACTED_AWS_KEY] key"
+
+
+def test_diagnostics_bundle_with_client_telemetry(client, auth_headers):
+    payload = {
+        "client_environment": {
+            "browser": {"user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"},
+            "screen_geometry": {"viewport_width": 1920, "viewport_height": 1080},
+            "gpu_telemetry": {"renderer": "Apple M1", "hardware_accelerated": True},
+        },
+        "frontend_logs": [
+            {
+                "ts": "2026-10-13T12:00:00Z",
+                "level": "error",
+                "source": "console.error",
+                "message": "Sample frontend error with zat_1234567890abcdef12345",
+            }
+        ],
+    }
+
+    res = client.post("/api/system/diagnostics-bundle", json=payload, headers=auth_headers)
+    assert res.status_code == 200
+    assert res.headers.get("Content-Type") == "application/zip"
+
+    zip_bytes = io.BytesIO(res.content)
+    with zipfile.ZipFile(zip_bytes, "r") as zf:
+        namelist = zf.namelist()
+        assert "client_environment.json" in namelist
+        assert "frontend_console_errors.log" in namelist
+        assert "kernel_telemetry.json" in namelist
+        assert "docker_diagnostics.json" in namelist
+        assert "vm_hypervisor.json" in namelist
+
+        client_env = json.loads(zf.read("client_environment.json").decode("utf-8"))
+        assert client_env["browser"]["user_agent"] == "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"
+
+        f_log = zf.read("frontend_console_errors.log").decode("utf-8")
+        assert "Sample frontend error" in f_log
+        assert "zat_[REDACTED]" in f_log
+
+
+def test_diagnostics_summary_endpoint(client, auth_headers):
+    res = client.get("/api/system/diagnostics-summary", headers=auth_headers)
+    assert res.status_code == 200
+    data = res.json()
+    assert "toolkit_version" in data
+    assert "platform" in data
+    assert "chassis" in data
+    assert "uptime_hours" in data
+    assert "memory" in data
+    assert "storage" in data
+    assert "docker" in data
+    assert "vms" in data
+    assert "support_markdown" in data
+    assert "### ZettNAS Toolkit Support Diagnostics" in data["support_markdown"]

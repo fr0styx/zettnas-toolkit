@@ -3511,6 +3511,10 @@ body.theme-oled #cloud-remote-window select option {
   position: relative;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
   transform: scale(var(--dock-item-scale, 1));
+}
+
+.os-dock.dock-magnify-enabled:hover .dock-item,
+.os-dock:not(.dock-magnify-enabled) .dock-item:hover {
   will-change: transform;
 }
 
@@ -11909,6 +11913,12 @@ body.desktop-locked #os-dock-container {
   pointer-events: none;
   z-index: 1;
   background: rgba(0, 0, 0, var(--wallpaper-dim, 0.15));
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  transition: background 0.2s ease;
+}
+
+html.has-wallpaper-blur #desktop-wallpaper-dimmer {
   backdrop-filter: blur(var(--wallpaper-blur, 0px));
   -webkit-backdrop-filter: blur(var(--wallpaper-blur, 0px));
   transition: background 0.2s ease, backdrop-filter 0.2s ease, -webkit-backdrop-filter 0.2s ease;

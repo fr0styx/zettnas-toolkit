@@ -16,6 +16,7 @@ import { api } from '../api.js';
 import { showToast, showConfirmToast } from '../toast.js';
 import { trapFocus, escapeHtml, copyTextToClipboard, reconcileKeyedTable } from '../utils.js';
 import { t, getLanguage } from '../i18n.js';
+import { collectClientEnvironment, getClientLogs } from '../client-logger.js';
 import QRCode from 'qrcode';
 
 let _activeProfile = 'balanced';
@@ -7044,10 +7045,30 @@ export function initManagement() {
     });
   }
 
-  // Diagnostics bundle download button
+  // Diagnostics bundle buttons
   const downloadDiagBtn = document.getElementById('btn-download-diagnostics');
   if (downloadDiagBtn) {
     downloadDiagBtn.addEventListener('click', downloadDiagnosticsBundle);
+  }
+  const previewDiagBtn = document.getElementById('btn-preview-diagnostics');
+  if (previewDiagBtn) {
+    previewDiagBtn.addEventListener('click', previewDiagnosticsSummary);
+  }
+  const copySupportMdBtn = document.getElementById('btn-copy-support-md');
+  if (copySupportMdBtn) {
+    copySupportMdBtn.addEventListener('click', copySupportMarkdown);
+  }
+  const closeDiagPreviewBtn = document.getElementById('diagnostics-preview-close');
+  if (closeDiagPreviewBtn) {
+    closeDiagPreviewBtn.addEventListener('click', closeDiagnosticsPreviewModal);
+  }
+  const closeDiagPreviewFooterBtn = document.getElementById('btn-diag-preview-close');
+  if (closeDiagPreviewFooterBtn) {
+    closeDiagPreviewFooterBtn.addEventListener('click', closeDiagnosticsPreviewModal);
+  }
+  const copyDiagPreviewBtn = document.getElementById('btn-diag-preview-copy');
+  if (copyDiagPreviewBtn) {
+    copyDiagPreviewBtn.addEventListener('click', copySupportMarkdown);
   }
 
   // Notification Center triggers
@@ -7328,19 +7349,115 @@ export async function downloadDiagnosticsBundle() {
 
   if (btn) btn.disabled = true;
   if (btnIcon) btnIcon.textContent = '⏳';
-  if (btnText) btnText.textContent = 'Generating Archive...';
+  if (btnText) btnText.textContent = t('diagnostics.generating', 'Generating Archive...');
 
-  showToast('Generating diagnostics bundle (scrubbing secrets)...', 'info');
+  showToast(t('diagnostics.toast_generating', 'Generating diagnostics bundle (scrubbing secrets)...'), 'info');
 
   try {
-    const filename = await api.downloadBlob('/api/system/diagnostics-bundle', 'zettnas_diagnostics.zip');
-    showToast(`Diagnostics bundle downloaded successfully (${filename}).`, 'success');
+    const clientEnv = collectClientEnvironment();
+    const frontendLogs = getClientLogs();
+    const payload = {
+      client_environment: clientEnv,
+      frontend_logs: frontendLogs,
+    };
+
+    let filename;
+    try {
+      filename = await api.downloadBlob('/api/system/diagnostics-bundle', 'zettnas_diagnostics.zip', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+    } catch (postErr) {
+      // Graceful fallback to GET if POST route is rejected by proxy
+      filename = await api.downloadBlob('/api/system/diagnostics-bundle', 'zettnas_diagnostics.zip');
+    }
+    showToast(t('diagnostics.download_success', 'Diagnostics bundle downloaded successfully') + ` (${filename}).`, 'success');
   } catch (err) {
-    showToast(`Failed to download diagnostics: ${err.message}`, 'error');
+    showToast(t('diagnostics.download_failed', 'Failed to download diagnostics') + `: ${err.message}`, 'error');
   } finally {
     if (btn) btn.disabled = false;
     if (btnIcon) btnIcon.textContent = '📦';
-    if (btnText) btnText.textContent = 'Download Diagnostics Bundle';
+    if (btnText) btnText.textContent = t('diagnostics.download_btn', 'Download Diagnostics Bundle');
+  }
+}
+
+export function closeDiagnosticsPreviewModal() {
+  const overlay = document.getElementById('diagnostics-preview-modal-overlay');
+  if (overlay) overlay.style.display = 'none';
+}
+
+export function openDiagnosticsPreviewModal(data) {
+  const overlay = document.getElementById('diagnostics-preview-modal-overlay');
+  const grid = document.getElementById('diagnostics-preview-grid');
+  const mdEl = document.getElementById('diagnostics-preview-md');
+  if (!overlay || !data) return;
+
+  if (mdEl) {
+    mdEl.textContent = data.support_markdown || 'No summary generated.';
+  }
+
+  if (grid) {
+    const memory = data.memory || {};
+    const storage = data.storage || {};
+    const docker = data.docker || {};
+    const vms = data.vms || {};
+
+    grid.innerHTML = `
+      <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:10px;">
+        <div style="font-size:9.5px; color:var(--muted); text-transform:uppercase; font-weight:700;">Host & OS</div>
+        <div style="font-size:12px; font-weight:800; color:#fff; margin-top:2px;">${escapeHtml(data.chassis || 'Appliance')}</div>
+        <div style="font-size:10px; color:var(--muted); margin-top:1px;">Uptime: ${data.uptime_hours || 0}h</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:10px;">
+        <div style="font-size:9.5px; color:var(--muted); text-transform:uppercase; font-weight:700;">Memory</div>
+        <div style="font-size:12px; font-weight:800; color:#fff; margin-top:2px;">${memory.used_percent || 0}% Used</div>
+        <div style="font-size:10px; color:var(--muted); margin-top:1px;">${Math.round((memory.total_bytes || 0) / (1024 ** 3))} GB RAM</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:10px;">
+        <div style="font-size:9.5px; color:var(--muted); text-transform:uppercase; font-weight:700;">Storage</div>
+        <div style="font-size:12px; font-weight:800; color:#fff; margin-top:2px;">${storage.pools_count || 0} Pools</div>
+        <div style="font-size:10px; color:var(--muted); margin-top:1px;">${storage.disks_count || 0} Drives (${storage.standby_count || 0} standby)</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:10px;">
+        <div style="font-size:9.5px; color:var(--muted); text-transform:uppercase; font-weight:700;">Docker Fleet</div>
+        <div style="font-size:12px; font-weight:800; color:#fff; margin-top:2px;">${docker.running || 0} / ${docker.total || 0} Running</div>
+        <div style="font-size:10px; color:${(docker.restarting || 0) > 0 ? 'var(--crit)' : 'var(--muted)'}; margin-top:1px;">${docker.restarting || 0} Restarting, ${docker.dead || 0} Dead</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:10px;">
+        <div style="font-size:9.5px; color:var(--muted); text-transform:uppercase; font-weight:700;">Virtual Machines</div>
+        <div style="font-size:12px; font-weight:800; color:#fff; margin-top:2px;">${vms.active_vm_count || 0} / ${vms.total_vm_count || 0} Active</div>
+        <div style="font-size:10px; color:var(--muted); margin-top:1px;">Headroom: Safe</div>
+      </div>
+    `;
+  }
+
+  overlay.style.display = 'flex';
+}
+
+export async function previewDiagnosticsSummary() {
+  try {
+    const data = await api.get('/api/system/diagnostics-summary');
+    openDiagnosticsPreviewModal(data);
+  } catch (err) {
+    showToast(`Failed to load diagnostics preview: ${err.message}`, 'error');
+  }
+}
+
+export async function copySupportMarkdown() {
+  try {
+    const data = await api.get('/api/system/diagnostics-summary');
+    const md = data?.support_markdown || '';
+    if (!md) throw new Error('No support markdown generated');
+
+    const copied = await copyTextToClipboard(md);
+    if (copied) {
+      showToast(t('diagnostics.copied', 'Support markdown copied to clipboard!'), 'success');
+    } else {
+      throw new Error('Clipboard copy failed');
+    }
+  } catch (err) {
+    showToast(`Failed to copy support markdown: ${err.message}`, 'error');
   }
 }
 

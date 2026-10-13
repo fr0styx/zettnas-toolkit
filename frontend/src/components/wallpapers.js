@@ -448,6 +448,7 @@ export function applyWallpaperReadability(dimPercent, blurPx, persist = true) {
     if (document.documentElement) {
       document.documentElement.style.setProperty('--wallpaper-dim', (dimPercent / 100).toFixed(2));
       document.documentElement.style.setProperty('--wallpaper-blur', `${blurPx}px`);
+      document.documentElement.classList.toggle('has-wallpaper-blur', blurPx > 0);
     }
     const dimVal = document.getElementById('wallpaper-dim-val');
     const dimSlider = document.getElementById('wallpaper-dim-slider');

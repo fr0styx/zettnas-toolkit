@@ -846,6 +846,46 @@
   </div>
 </div>
 
+<div id="diagnostics-preview-modal-overlay" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="diagnostics-preview-title" style="display: none; z-index: 9500;">
+  <div class="smart-modal-window diagnostics-preview-window" style="max-width: 680px; width: 92%; max-height: 85vh; display: flex; flex-direction: column; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(37, 194, 160, 0.2);">
+    <div class="smart-modal-header" id="diagnostics-preview-header" style="cursor: move;">
+      <span class="smart-modal-title" id="diagnostics-preview-title" style="display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 15px;">👁️</span>
+        <span data-i18n="diagnostics.modal_title">Diagnostics Summary Preview</span>
+      </span>
+      <div class="os-window-controls">
+        <button class="win-btn close-btn" id="diagnostics-preview-close" title="Close" aria-label="Close"></button>
+      </div>
+    </div>
+    <div class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; overflow-y: auto; padding: 18px 20px;">
+      <div style="font-size: 11px; color: var(--muted);" data-i18n="diagnostics.modal_desc">
+        Sanitized summary of host telemetry, storage pools, container fleet, and hypervisor state.
+      </div>
+      
+      <!-- Metrics Grid -->
+      <div id="diagnostics-preview-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px;">
+        <!-- Filled dynamically -->
+      </div>
+
+      <!-- Raw Markdown Box -->
+      <div>
+        <div style="font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;">SUPPORT MARKDOWN PREVIEW</div>
+        <pre id="diagnostics-preview-md" style="margin: 0; padding: 12px 14px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; font-family: monospace; font-size: 11px; color: #38bdf8; max-height: 200px; overflow-y: auto; white-space: pre-wrap; line-height: 1.5;"></pre>
+      </div>
+
+      <!-- Action Buttons -->
+      <div style="display: flex; justify-content: flex-end; gap: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.08);">
+        <button id="btn-diag-preview-copy" type="button" class="btn-pill-toggle" style="background: rgba(37,194,160,0.2); border-color: rgba(37,194,160,0.4); color: #fff; font-weight: 700; padding: 8px 16px; border-radius: 6px; cursor: pointer;">
+          📋 <span data-i18n="diagnostics.copy_btn">Copy Markdown to Clipboard</span>
+        </button>
+        <button id="btn-diag-preview-close" type="button" class="btn-pill-toggle" style="background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.15); color: #cbd5e1; padding: 8px 16px; border-radius: 6px; cursor: pointer;" data-i18n="diagnostics.close_btn">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="event-detail-modal-overlay" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="event-detail-title" style="display: none;">
   <div class="smart-modal-window event-detail-window" style="max-width: 580px; width: 92%; max-height: 85vh; display: flex; flex-direction: column; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(14, 165, 233, 0.15);">
     <div class="smart-modal-header" id="event-detail-header" style="cursor: move;">
@@ -5509,31 +5549,44 @@
 
             <!-- Observability & Diagnostics Bundle Card -->
             <div class="drawer-card" style="margin-top: 16px; padding: 18px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
-              <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:8px; margin-bottom:12px;">
+              <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px;">
                 <div>
                   <div style="font-weight:700; font-size:14px; color:#fff; display:flex; align-items:center; gap:8px;">
                     <svg class="ic" style="width:16px; height:16px; color:var(--ok2, #25c2a0);"><use href="#i-chip"/></svg>
-                    <span>Observability & Diagnostics Bundle</span>
+                    <span data-i18n="diagnostics.title">Observability & Diagnostics Bundle</span>
                   </div>
-                  <div style="font-size:11px; color:var(--muted); margin-top:2px;">
-                    Generate and download an encrypted, redacted diagnostic archive (&lt; 3s) for troubleshooting and system support.
+                  <div style="font-size:11px; color:var(--muted); margin-top:2px;" data-i18n="diagnostics.subtitle">
+                    Generate and download a sanitized, redacted diagnostic archive (&lt; 3s) for troubleshooting and system support.
                   </div>
                 </div>
-                <button id="btn-download-diagnostics" class="btn-pill-toggle" style="display:flex; align-items:center; gap:8px; padding:8px 16px; font-size:12px; font-weight:700; background:linear-gradient(135deg, rgba(37,194,160,0.2), rgba(14,165,233,0.2)); border:1px solid rgba(37,194,160,0.5); color:#fff; border-radius:6px; cursor:pointer;">
-                  <span id="btn-download-diagnostics-icon">📦</span>
-                  <span id="btn-download-diagnostics-text">Download Diagnostics Bundle</span>
-                </button>
+                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                  <button id="btn-preview-diagnostics" type="button" class="btn-pill-toggle" style="display:inline-flex; align-items:center; gap:6px; padding:7px 12px; font-size:11px; font-weight:600; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); color:#fff; border-radius:6px; cursor:pointer;" title="Preview collected system telemetry before downloading">
+                    <span>👁️</span>
+                    <span data-i18n="diagnostics.preview_btn">Preview Summary</span>
+                  </button>
+                  <button id="btn-copy-support-md" type="button" class="btn-pill-toggle" style="display:inline-flex; align-items:center; gap:6px; padding:7px 12px; font-size:11px; font-weight:600; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); color:#fff; border-radius:6px; cursor:pointer;" title="Copy sanitized system support markdown to clipboard for GitHub, Reddit, or Discord">
+                    <span>📋</span>
+                    <span data-i18n="diagnostics.copy_md_btn">Copy Support Markdown</span>
+                  </button>
+                  <button id="btn-download-diagnostics" type="button" class="btn-pill-toggle" style="display:flex; align-items:center; gap:8px; padding:8px 16px; font-size:12px; font-weight:700; background:linear-gradient(135deg, rgba(37,194,160,0.2), rgba(14,165,233,0.2)); border:1px solid rgba(37,194,160,0.5); color:#fff; border-radius:6px; cursor:pointer;">
+                    <span id="btn-download-diagnostics-icon">📦</span>
+                    <span id="btn-download-diagnostics-text" data-i18n="diagnostics.download_btn">Download Diagnostics Bundle</span>
+                  </button>
+                </div>
               </div>
 
               <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:10px; padding:12px; background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.05); border-radius:6px; font-size:11px;">
                 <div style="color:#cbd5e1;">
-                  <span style="color:var(--ok2, #25c2a0); font-weight:600;">✓</span> <strong>System & Hardware:</strong> Kernel, Chassis, Fans, UPS
+                  <span style="color:var(--ok2, #25c2a0); font-weight:600;">✓</span> <strong>System & Kernel:</strong> CPU, Governers, dmesg, UPS
                 </div>
                 <div style="color:#cbd5e1;">
-                  <span style="color:var(--ok2, #25c2a0); font-weight:600;">✓</span> <strong>Disks & SMART:</strong> Health, Thermals, Layout
+                  <span style="color:var(--ok2, #25c2a0); font-weight:600;">✓</span> <strong>Disks & SMART:</strong> Health, Thermals, Standby Safe
                 </div>
                 <div style="color:#cbd5e1;">
-                  <span style="color:var(--ok2, #25c2a0); font-weight:600;">✓</span> <strong>Network & Docker:</strong> NICs, Bridges, Stacks
+                  <span style="color:var(--ok2, #25c2a0); font-weight:600;">✓</span> <strong>Docker & VMs:</strong> Stacks, Conflicts, QEMU KVM
+                </div>
+                <div style="color:#cbd5e1;">
+                  <span style="color:var(--ok2, #25c2a0); font-weight:600;">✓</span> <strong>Client Observability:</strong> Browser, GPU, Logs
                 </div>
                 <div style="color:#cbd5e1;">
                   <span style="color:var(--accent-cyan, #0ea5e9); font-weight:600;">🔒</span> <strong>Privacy Scrubbed:</strong> Passwords, API tokens & keys redacted

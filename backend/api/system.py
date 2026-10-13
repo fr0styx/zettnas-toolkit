@@ -1787,22 +1787,10 @@ async def system_network_topology():
     return await asyncio.to_thread(get_network_topology)
 
 
-@router.get(
-    "/system/diagnostics-bundle",
-    dependencies=[Depends(require_scope("system:view", "system:read", "system:config"))],
-)
-async def generate_diagnostics_bundle():
-    """
-    Generates an in-memory zip archive containing complete sanitized system diagnostics:
-    - system_summary.json (platform, kernel, chassis, PAL mode, CPU/RAM, uptime)
-    - hardware_telemetry.json (thermals, fan PWM/RPM, UPS status, screen)
-    - storage_and_smart.json (disks layout, SMART attributes summary)
-    - network_topology.json (physical NICs, speeds, duplex, bridges, bonds, routes, Docker bridge networks)
-    - container_manifests.json (running containers and compose stacks with sensitive env vars redacted)
-    - notifications_summary.json (configured channels with webhooks/tokens redacted)
-    - system_events.json (last 100 system events)
-    - recent_logs.log (sanitized structured log lines)
-    """
+_DIAGNOSTICS_LOCK = asyncio.Lock()
+
+
+def _build_bundle_sync(payload_dict: Optional[Dict[str, Any]] = None) -> bytes:
     t0 = time.time()
 
     # 1. System summary
@@ -1862,33 +1850,64 @@ async def generate_diagnostics_bundle():
         "critical_temp_active": Z_STATE.critical_temp_active,
     }
 
-    # 3. Storage and SMART
-    layout = get_current_layout()
-    smart_data = Z_STATE.cached_smart_data or {}
-    storage_and_smart = {
-        "layout": layout,
-        "smart_telemetry": smart_data,
-    }
+    # 3. Storage and SMART (decoupled from UI card layout, strictly spindown safe)
+    from backend.hardware.storage_diagnostics import collect_storage_diagnostics
 
-    # 4. Network topology
+    storage_and_smart = collect_storage_diagnostics()
+
+    # 4. Kernel, CPU & Bus Telemetry
+    from backend.hardware.kernel_telemetry import collect_kernel_telemetry
+
+    kernel_telemetry = collect_kernel_telemetry()
+
+    # 5. Network topology
     from backend.hardware.network import get_network_topology
 
-    net_topology = await asyncio.to_thread(get_network_topology)
+    net_topology = get_network_topology()
 
-    # 5. Containers (sanitized)
-    containers = await asyncio.to_thread(read_docker_containers)
+    # 6. Docker Diagnostics & Container Manifests
+    from backend.services.docker_diagnostics import collect_docker_diagnostics
+
+    docker_diagnostics = collect_docker_diagnostics()
+    containers = read_docker_containers()
     sanitized_containers = sanitize_dict(containers)
 
-    # 6. Notifications (sanitized)
+    # 7. Virtual Machine Hypervisor Telemetry
+    from backend.api.vms import collect_vm_diagnostics
+
+    vm_hypervisor = collect_vm_diagnostics()
+
+    # 8. Notifications (sanitized)
     notif_cfg = read_json(NOTIFICATIONS_FILE, DEFAULT_NOTIFICATION_CONFIG)
     sanitized_notifs = sanitize_dict(notif_cfg)
 
-    # 7. System events (last 100)
+    # 9. System events (last 100)
     events = list(Z_STATE.event_log)
 
-    # 8. Recent logs
+    # 10. Recent logs
     log_lines = get_recent_logs(max_lines=1000)
     recent_logs_text = "\n".join(log_lines)
+
+    # Client-side telemetry if provided
+    client_env = None
+    frontend_logs_text = None
+    if payload_dict:
+        if "client_environment" in payload_dict and payload_dict["client_environment"]:
+            client_env = sanitize_dict(payload_dict["client_environment"])
+        if "frontend_logs" in payload_dict and payload_dict["frontend_logs"]:
+            f_logs = payload_dict["frontend_logs"]
+            f_lines = []
+            for item in f_logs:
+                ts = item.get("ts", "")
+                lvl = item.get("level", "info").upper()
+                src = item.get("source", "")
+                msg = item.get("message", "")
+                stack = item.get("stack", "")
+                line_str = f"[{ts}] [{lvl}] [{src}] {msg}"
+                if stack:
+                    line_str += f"\n  Stack: {stack}"
+                f_lines.append(sanitize_string(line_str))
+            frontend_logs_text = "\n".join(f_lines)
 
     # Compress into zip in memory
     zip_buf = io.BytesIO()
@@ -1896,15 +1915,163 @@ async def generate_diagnostics_bundle():
         zf.writestr("system_summary.json", json.dumps(sanitize_dict(system_summary), indent=2))
         zf.writestr("hardware_telemetry.json", json.dumps(sanitize_dict(hardware_telemetry), indent=2))
         zf.writestr("storage_and_smart.json", json.dumps(sanitize_dict(storage_and_smart), indent=2))
+        zf.writestr("kernel_telemetry.json", json.dumps(sanitize_dict(kernel_telemetry), indent=2))
+        zf.writestr("docker_diagnostics.json", json.dumps(sanitize_dict(docker_diagnostics), indent=2))
+        zf.writestr("vm_hypervisor.json", json.dumps(sanitize_dict(vm_hypervisor), indent=2))
         zf.writestr("network_topology.json", json.dumps(sanitize_dict(net_topology), indent=2))
         zf.writestr("container_manifests.json", json.dumps(sanitized_containers, indent=2))
         zf.writestr("notifications_summary.json", json.dumps(sanitized_notifs, indent=2))
         zf.writestr("system_events.json", json.dumps(sanitize_dict(events), indent=2))
         zf.writestr("recent_logs.log", sanitize_string(recent_logs_text))
 
+        if client_env is not None:
+            zf.writestr("client_environment.json", json.dumps(client_env, indent=2))
+        if frontend_logs_text is not None:
+            zf.writestr("frontend_console_errors.log", frontend_logs_text)
+
     zip_bytes = zip_buf.getvalue()
     elapsed = round(time.time() - t0, 3)
     logger.info(f"[DIAGNOSTICS] Generated bundle ({len(zip_bytes)} bytes) in {elapsed}s")
+    return zip_bytes
+
+
+def _build_summary_sync() -> Dict[str, Any]:
+    uptime_sec = 0.0
+    try:
+        if os.path.exists("/proc/uptime"):
+            with open("/proc/uptime", "r") as f:
+                uptime_sec = float(f.read().split()[0])
+        else:
+            uptime_sec = round(time.time() - Z_STATE.boot_time, 1)
+    except Exception:
+        uptime_sec = round(time.time() - Z_STATE.boot_time, 1)
+
+    ram = {}
+    try:
+        ram = read_mem()
+    except Exception:
+        pass
+
+    chassis = get_chassis_friendly_name(detect_chassis_model())
+
+    # Storage summary
+    from backend.hardware.storage_diagnostics import collect_storage_diagnostics
+
+    st = collect_storage_diagnostics()
+    disks = st.get("live_disk_telemetry", [])
+    standby_count = sum(1 for d in disks if d.get("standby"))
+    pools = st.get("pal_storage", {}).get("pools", [])
+
+    # Docker summary
+    from backend.services.docker_diagnostics import collect_docker_diagnostics
+
+    dock = collect_docker_diagnostics()
+    c_sum = dock.get("containers_summary", {})
+
+    # VM summary
+    from backend.api.vms import collect_vm_diagnostics
+
+    vms = collect_vm_diagnostics()
+    vm_tel = vms.get("hypervisor_telemetry", {})
+
+    # Generate Markdown
+    md_lines = [
+        "### ZettNAS Toolkit Support Diagnostics",
+        f"- **Toolkit Version:** `{__version__}`",
+        f"- **Host OS / Kernel:** `{platform.system()} {platform.release()} ({platform.machine()})`",
+        f"- **Chassis / Hardware:** `{chassis}`",
+        f"- **Uptime:** `{round(uptime_sec / 3600, 1)} hours`",
+        f"- **CPU / Cores:** `{os.cpu_count()} vCPUs`",
+        f"- **Memory Usage:** `{ram.get('used_percent', 0)}%` of `{round(ram.get('total_bytes', 0) / (1024**3), 1)} GB`",
+        f"- **Storage Topology:** `{len(pools)} pools`, `{len(disks)} drives` (`{standby_count} in standby`)",
+        f"- **Docker Fleet:** `{c_sum.get('total', 0)} total` (`{c_sum.get('running', 0)} running`, `{c_sum.get('restarting', 0)} restarting`, `{c_sum.get('dead', 0)} dead`)",
+        f"- **Virtual Machines:** `{vm_tel.get('total_vm_count', 0)} configured` (`{vm_tel.get('active_vm_count', 0)} running`)",
+    ]
+    if dock.get("port_conflicts"):
+        md_lines.append(f"- **Port Conflicts:** `⚠️ {len(dock['port_conflicts'])} conflict(s) detected`")
+
+    return {
+        "toolkit_version": __version__,
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "platform": f"{platform.system()} {platform.release()}",
+        "chassis": chassis,
+        "uptime_hours": round(uptime_sec / 3600, 1),
+        "memory": ram,
+        "storage": {
+            "pools_count": len(pools),
+            "disks_count": len(disks),
+            "standby_count": standby_count,
+        },
+        "docker": c_sum,
+        "vms": vm_tel,
+        "support_markdown": "\n".join(md_lines),
+    }
+
+
+@router.get(
+    "/system/diagnostics-summary",
+    dependencies=[Depends(require_scope("system:view", "system:read", "system:config"))],
+)
+async def get_diagnostics_summary():
+    """
+    Returns a fast diagnostic summary for in-browser inspection and support markdown generation.
+    """
+    return await asyncio.to_thread(_build_summary_sync)
+
+
+@router.get(
+    "/system/diagnostics-bundle",
+    dependencies=[Depends(require_scope("system:config"))],
+)
+async def get_diagnostics_bundle():
+    """Generates server-only diagnostics bundle via GET."""
+    async with _DIAGNOSTICS_LOCK:
+        zip_bytes = await asyncio.to_thread(_build_bundle_sync, None)
+
+    timestamp_str = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+    filename = f"zettnas_diagnostics_{timestamp_str}.zip"
+    return Response(
+        content=zip_bytes,
+        media_type="application/zip",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Content-Length": str(len(zip_bytes)),
+        },
+    )
+
+
+@router.post(
+    "/system/diagnostics-bundle",
+    dependencies=[Depends(require_scope("system:config"))],
+)
+async def post_diagnostics_bundle(request: Request):
+    """
+    Generates an in-memory zip archive containing complete sanitized system & client diagnostics:
+    - system_summary.json (platform, kernel, chassis, PAL mode, CPU/RAM, uptime)
+    - hardware_telemetry.json (thermals, fan PWM/RPM, UPS status, screen)
+    - storage_and_smart.json (disks layout, PAL pools, mounts audit, diskstats, SMART summary)
+    - kernel_telemetry.json (dmesg alerts, CPU governors, thermal throttles, PCI/USB buses, hwmon)
+    - docker_diagnostics.json (daemon health, system df, port conflicts, troubled container logs)
+    - vm_hypervisor.json (KVM status, dynamic memory headroom, VM inventory, QEMU errors)
+    - network_topology.json (physical NICs, speeds, duplex, bridges, bonds, routes, Docker bridge networks)
+    - container_manifests.json (running containers and compose stacks with sensitive env vars redacted)
+    - notifications_summary.json (configured channels with webhooks/tokens redacted)
+    - system_events.json (last 100 system events)
+    - recent_logs.log (sanitized structured log lines)
+    - client_environment.json (optional, browser User-Agent, screen geometry, WebGL GPU telemetry)
+    - frontend_console_errors.log (optional, sanitized client-side console errors ring buffer)
+    """
+    payload_dict = None
+    try:
+        body = await request.body()
+        if body:
+            payload_dict = json.loads(body)
+    except Exception as e:
+        logger.debug(f"[DIAGNOSTICS] Could not parse request body: {e}")
+
+    async with _DIAGNOSTICS_LOCK:
+        zip_bytes = await asyncio.to_thread(_build_bundle_sync, payload_dict)
 
     timestamp_str = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
     filename = f"zettnas_diagnostics_{timestamp_str}.zip"

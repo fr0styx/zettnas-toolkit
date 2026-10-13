@@ -51,7 +51,11 @@ describe('Batch 6: Observability, Structured Logging & Diagnostics Export', () =
 
     await downloadDiagnosticsBundle();
 
-    expect(downloadSpy).toHaveBeenCalledWith('/api/system/diagnostics-bundle', 'zettnas_diagnostics.zip');
+    expect(downloadSpy).toHaveBeenCalledWith(
+      '/api/system/diagnostics-bundle',
+      'zettnas_diagnostics.zip',
+      expect.objectContaining({ method: 'POST' })
+    );
     expect(toast.showToast).toHaveBeenCalledWith('Generating diagnostics bundle (scrubbing secrets)...', 'info');
     expect(toast.showToast).toHaveBeenCalledWith(`Diagnostics bundle downloaded successfully (${mockFilename}).`, 'success');
 
