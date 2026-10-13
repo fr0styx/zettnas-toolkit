@@ -26,7 +26,7 @@ import {
   openVmConnectModal
 } from '../components/vm-manager.js';
 import { api } from '../api.js';
-import { showToast } from '../toast.js';
+import { showToast, showPromptToast } from '../toast.js';
 
 vi.mock('../api.js', () => ({
   api: {
@@ -42,6 +42,7 @@ vi.mock('../api.js', () => ({
 vi.mock('../toast.js', () => ({
   showToast: vi.fn(),
   showConfirmToast: vi.fn(),
+  showPromptToast: vi.fn(),
 }));
 
 describe('VM Manager & Dynamic Elastic Headroom Budgeting', () => {
@@ -704,17 +705,24 @@ describe('VM Manager & Dynamic Elastic Headroom Budgeting', () => {
       hiddenInput.dispatchEvent(enterEvt);
     });
 
-    it('handles clipboard paste button by typing keystrokes into guest', async () => {
+    it('handles clipboard paste button by typing keystrokes into guest via glassmorphic prompt modal', async () => {
+      const promptSpy = vi.spyOn(window, 'prompt');
       openVmConsole('vm-test-paste', 'Paste VM', 'gui');
       const consoleWin = document.getElementById('vm-console-window');
       const btnClip = consoleWin.querySelector('#btn-vnc-clipboard');
       expect(btnClip).not.toBeNull();
 
-      // Mock prompt
-      vi.spyOn(window, 'prompt').mockReturnValue('root\n');
+      showPromptToast.mockImplementation((title, desc, defaultVal, onConfirm, onCancel, options) => {
+        expect(options.inputType).toBe('textarea');
+        expect(options.icon).toBe('📋');
+        onConfirm('root\n');
+      });
+
       btnClip.click();
 
       await vi.waitFor(() => {
+        expect(promptSpy).not.toHaveBeenCalled();
+        expect(showPromptToast).toHaveBeenCalled();
         expect(showToast).toHaveBeenCalledWith(
           expect.stringContaining('Pasted 5 characters into guest'),
           'success'

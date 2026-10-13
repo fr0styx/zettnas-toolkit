@@ -7,7 +7,7 @@
 import { api } from '../api.js';
 import { escapeHtml } from '../utils.js';
 import { ZettEventBus } from '../event-bus.js';
-import { showToast, showConfirmToast } from '../toast.js';
+import { showToast, showConfirmToast, showPromptToast } from '../toast.js';
 import { t } from '../i18n.js';
 import { makeDraggable, bringToFront } from './dock.js';
 
@@ -3641,11 +3641,26 @@ export function openVmConsole(vmId, vmName = 'Virtual Machine', initialMode = 'g
             text = await navigator.clipboard.readText();
           }
         } catch (_) {}
-        if (!text) {
-          text = prompt('Enter text string to paste into guest VM:');
-        }
         if (text) {
           await pasteTextToGuestConsole(text);
+        } else {
+          showPromptToast(
+            t('vm.paste_modal_title', 'Paste Text to Guest VM'),
+            t('vm.paste_modal_desc', 'Enter or paste the text string to send to the virtual machine console:'),
+            '',
+            async (val) => {
+              if (val) {
+                await pasteTextToGuestConsole(val);
+              }
+            },
+            null,
+            {
+              inputType: 'textarea',
+              icon: '📋',
+              okText: t('vm.paste_btn_action', '📋 Paste into VM'),
+              placeholder: t('vm.paste_placeholder', 'Type or paste commands, keys, or text here... (Ctrl+Enter to send)'),
+            }
+          );
         }
       };
     }

@@ -334,17 +334,24 @@ export function showPromptToast(title, msg, defaultVal, onConfirm, onCancel = nu
   const inputType = options.inputType || "text";
   const okText = options.okText || "Confirm";
   const cancelText = options.cancelText || "Cancel";
+  const icon = options.icon || "✏️";
+  const placeholder = options.placeholder || "";
+
+  const isTextarea = inputType === "textarea";
+  const inputHtml = isTextarea
+    ? `<textarea id="prompt-toast-input" placeholder="${escapeHtml(placeholder)}" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.6); border: 1px solid rgba(0, 240, 255, 0.4); padding: 9px 12px; color: white; border-radius: 6px; font-size: 13px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; outline: none; min-height: 96px; resize: vertical; line-height: 1.45;">${escapeHtml(defaultVal || '')}</textarea>`
+    : `<input type="${inputType}" id="prompt-toast-input" placeholder="${escapeHtml(placeholder)}" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.6); border: 1px solid rgba(0, 240, 255, 0.4); padding: 9px 12px; color: white; border-radius: 6px; font-size: 13px; outline: none;" value="${escapeHtml(defaultVal || '')}" />`;
 
   card.innerHTML = `
     <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; border-bottom: 1px solid rgba(255,255,255,0.08); background: rgba(0, 240, 255, 0.08);" id="confirm-toast-header-bg">
       <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--brand, #00f0ff);" id="confirm-toast-title">
-        <span>✏️</span> ${escapeHtml(title || "Rename")}
+        <span>${icon}</span> ${escapeHtml(title || "Rename")}
       </div>
       <button id="confirm-toast-close" style="background: transparent; border: none; color: #94a3b8; font-size: 18px; cursor: pointer; padding: 2px 6px; line-height: 1; border-radius: 4px;" title="Cancel">&times;</button>
     </div>
     <div style="padding: 16px 20px;">
       <div style="font-size: 12.5px; color: #cbd5e1; margin-bottom: 12px; line-height: 1.5;">${msg}</div>
-      <input type="${inputType}" id="prompt-toast-input" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.6); border: 1px solid rgba(0, 240, 255, 0.4); padding: 9px 12px; color: white; border-radius: 6px; font-size: 13px; outline: none;" value="${escapeHtml(defaultVal || '')}" />
+      ${inputHtml}
       <div style="display: flex; gap: 10px; margin-top: 16px; justify-content: flex-end; align-items: center;">
         <button id="confirm-toast-cancel" style="padding: 7px 16px; background: transparent; border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: #cbd5e1; font-size: 12px; font-weight: 600; cursor: pointer;">${escapeHtml(cancelText)}</button>
         <button id="confirm-toast-ok" style="padding: 7px 18px; background: var(--brand, #00f0ff); border: 1px solid var(--brand, #00f0ff); border-radius: 6px; color: #050b14; font-size: 12px; font-weight: 700; cursor: pointer;">${escapeHtml(okText)}</button>
@@ -353,10 +360,12 @@ export function showPromptToast(title, msg, defaultVal, onConfirm, onCancel = nu
   `;
 
   backdrop.style.display = "block";
-  card.style.display = "block";
+  card.style.display = "flex";
   card.style.pointerEvents = "auto";
 
   setTimeout(() => {
+    backdrop.classList.add("open");
+    card.classList.add("open");
     backdrop.style.opacity = "1";
     card.style.opacity = "1";
     card.style.transform = "translate(-50%, 0) scale(1)";
@@ -368,6 +377,8 @@ export function showPromptToast(title, msg, defaultVal, onConfirm, onCancel = nu
   }, 10);
 
   const cleanup = () => {
+    backdrop.classList.remove("open");
+    card.classList.remove("open");
     backdrop.style.opacity = "0";
     card.style.opacity = "0";
     card.style.pointerEvents = "none";
@@ -403,10 +414,21 @@ export function showPromptToast(title, msg, defaultVal, onConfirm, onCancel = nu
   document.getElementById("confirm-toast-cancel").onclick = onCancelClick;
   backdrop.onclick = onCancelClick;
   document.getElementById("confirm-toast-ok").onclick = onOkClick;
-  document.getElementById("prompt-toast-input").onkeydown = (e) => {
-    if (e.key === "Enter") {
-      onOkClick(e);
-    }
-  };
+  const inputEl = document.getElementById("prompt-toast-input");
+  if (inputEl) {
+    inputEl.onkeydown = (e) => {
+      if (isTextarea) {
+        if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+          e.preventDefault();
+          onOkClick(e);
+        }
+      } else {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          onOkClick(e);
+        }
+      }
+    };
+  }
   document.addEventListener("keydown", onKeyDown);
 }
