@@ -3599,9 +3599,11 @@ body.theme-oled #cloud-remote-window select option {
 .os-window.window-minimized,
 .file-manager-window.window-minimized,
 .vm-manager-window.window-minimized,
+.containers-manager-window.window-minimized,
 .os-window[style*="display: none"],
 .file-manager-window[style*="display: none"],
 .vm-manager-window[style*="display: none"],
+.containers-manager-window[style*="display: none"],
 .smart-modal-backdrop.window-minimized,
 .smart-modal-backdrop[style*="display: none"] {
   display: none !important;
@@ -6074,7 +6076,8 @@ body.theme-yak .lcd-dot.active {
   /* 1. File Explorer & VM Manager Window on Mobile */
   .os-window,
   .file-manager-window,
-  .vm-manager-window {
+  .vm-manager-window,
+  .containers-manager-window {
     position: fixed !important;
     left: 50% !important;
     transform: translateX(-50%) !important;
@@ -6099,9 +6102,11 @@ body.theme-yak .lcd-dot.active {
   .os-window.window-minimized,
   .file-manager-window.window-minimized,
   .vm-manager-window.window-minimized,
+  .containers-manager-window.window-minimized,
   .os-window[style*="display: none"],
   .file-manager-window[style*="display: none"],
-  .vm-manager-window[style*="display: none"] {
+  .vm-manager-window[style*="display: none"],
+  .containers-manager-window[style*="display: none"] {
     display: none !important;
     pointer-events: none !important;
     opacity: 0 !important;
@@ -7233,6 +7238,7 @@ body.mobile-mode #desktop-widgets-container .cal-glance-bar {
   body.mobile-mode .os-window,
   body.mobile-mode .file-manager-window,
   body.mobile-mode .vm-manager-window,
+  body.mobile-mode .containers-manager-window,
   body.mobile-mode #management-window,
   body.mobile-mode .management-window,
   body.mobile-mode #console-window,
@@ -7247,9 +7253,11 @@ body.mobile-mode #desktop-widgets-container .cal-glance-bar {
   body.mobile-mode .os-window.window-minimized,
   body.mobile-mode .file-manager-window.window-minimized,
   body.mobile-mode .vm-manager-window.window-minimized,
+  body.mobile-mode .containers-manager-window.window-minimized,
   body.mobile-mode .os-window[style*="display: none"],
   body.mobile-mode .file-manager-window[style*="display: none"],
-  body.mobile-mode .vm-manager-window[style*="display: none"] {
+  body.mobile-mode .vm-manager-window[style*="display: none"],
+  body.mobile-mode .containers-manager-window[style*="display: none"] {
     display: none !important;
     pointer-events: none !important;
     opacity: 0 !important;
@@ -8785,6 +8793,45 @@ body.theme-yak #vm-manager-window .vm-telemetry-header {
   background: #1e1713 !important;
 }
 body.theme-yak #vm-manager-window .vm-content-body {
+  background: #130f0c !important;
+}
+
+/* Dedicated Containers & Services Window - Solid, Premium Opaque Glass Surface */
+#containers-manager-window.containers-manager-window,
+.containers-manager-window {
+  display: flex;
+  flex-direction: column;
+  background: #0f1622 !important;
+  backdrop-filter: blur(28px) saturate(140%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(140%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 25px 65px rgba(0, 0, 0, 0.92) !important;
+}
+
+#containers-manager-window .os-window-header {
+  background: #141d2c !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+#containers-manager-window .containers-telemetry-header {
+  background: #101824 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+#containers-manager-window .containers-content-body {
+  background: #0b1019 !important;
+}
+
+body.theme-yak #containers-manager-window.containers-manager-window {
+  background: #191410 !important;
+}
+body.theme-yak #containers-manager-window .os-window-header {
+  background: #241c16 !important;
+}
+body.theme-yak #containers-manager-window .containers-telemetry-header {
+  background: #1e1713 !important;
+}
+body.theme-yak #containers-manager-window .containers-content-body {
   background: #130f0c !important;
 }
 

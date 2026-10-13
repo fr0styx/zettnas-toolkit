@@ -777,6 +777,16 @@
         </div>
       </div>
 
+      <div class="chassis-hero-box chassis-desktop-icon containers-desktop-icon" id="containers-desktop-icon" role="button" tabindex="0" title="Click to open Containers" data-i18n-title="dock.containers">
+        <div class="console-hero-box">
+          <svg class="console-hero-icon"><use href="#i-chip"/></svg>
+        </div>
+        <div class="desktop-icon-label">
+          <span class="icon-dot-status icon-dot-containers"></span>
+          <span class="icon-text" data-i18n="dock.containers">Containers</span>
+        </div>
+      </div>
+
       <div class="chassis-hero-box chassis-desktop-icon vm-desktop-icon" id="vm-desktop-icon" role="button" tabindex="0" title="Click to open Virtual Machines" data-i18n-title="dock.vm_manager">
         <div class="console-hero-box">
           <svg class="console-hero-icon"><use href="#i-vm"/></svg>
@@ -4199,6 +4209,7 @@
                   <div class="mgmt-card-intro-desc" data-i18n="mgmt.docker_sec_desc">Manage running containers or deploy curated homelab applications in 1-click.</div>
                 </div>
                 <div style="display:flex; gap:6px; align-items:center;">
+                  <button class="btn-pill-toggle" id="btn-mgmt-docker-launch-window" title="Open Dedicated Window">🪟 <span data-i18n="mgmt.open_dedicated_window">Open Window</span></button>
                   <button class="btn-pill-toggle" id="btn-view-docker-containers" style="display:none;">← Back to Containers</button>
                   <button class="btn-pill-toggle" id="btn-view-docker-catalog">📦 App Catalog <span id="catalog-total-badge" class="docker-count-badge" style="margin-left:4px;">25+</span></button>
                   <button class="btn-pill-toggle" id="btn-docker-prune" title="Clean up unused images, volumes, and stopped containers">🧹 Prune / Cleanup</button>

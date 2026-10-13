@@ -634,6 +634,17 @@ function _bindDockerEvents() {
   const containerPane = document.getElementById('mgmt-pane-docker');
   if (!containerPane || containerPane._dockerEventsBound) return;
 
+  const launchWinBtn = document.getElementById('btn-mgmt-docker-launch-window');
+  if (launchWinBtn) {
+    launchWinBtn.addEventListener('click', () => {
+      if (typeof window.openContainersManager === 'function') {
+        window.openContainersManager();
+      } else if (typeof window.openContainersWindow === 'function') {
+        window.openContainersWindow();
+      }
+    });
+  }
+
   const searchInput = document.getElementById('docker-search-input');
   if (searchInput) {
     searchInput.addEventListener('input', (e) => {
@@ -1316,17 +1327,22 @@ export function stopDockerAutoRefresh() {
 export async function fetchAndRenderDockerContainers(isBackground = false) {
   _bindDockerEvents();
   const tbody = document.getElementById('docker-containers-tbody');
-  if (!tbody) return;
+  const cwTbody = document.getElementById('cw-docker-containers-tbody');
+  if (!tbody && !cwTbody) return;
   try {
     const [list] = await Promise.all([
       api.get('/api/docker/containers'),
       (!isBackground || !_dockerUpdatesCache) ? refreshDockerUpdatesStatus().catch(() => {}) : Promise.resolve(),
     ]);
     _dockerContainersList = Array.isArray(list) ? list : [];
-    renderDockerContainersTable();
+    if (tbody) renderDockerContainersTable();
+    if (typeof window.renderContainersWindowTable === 'function') {
+      window.renderContainersWindowTable(_dockerContainersList);
+    }
   } catch (err) {
     if (!isBackground || _dockerContainersList.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--crit); padding:16px;">Failed to load containers: ${escapeHtml(err.message)}</td></tr>`;
+      if (tbody) tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--crit); padding:16px;">Failed to load containers: ${escapeHtml(err.message)}</td></tr>`;
+      if (cwTbody) cwTbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--crit); padding:16px;">Failed to load containers: ${escapeHtml(err.message)}</td></tr>`;
     } else {
       console.warn('Silent docker refresh error:', err);
     }
@@ -7167,6 +7183,17 @@ export function initManagement() {
   if (launchVmWinBtn) {
     launchVmWinBtn.addEventListener('click', () => {
       if (typeof window.openVmManager === 'function') window.openVmManager();
+    });
+  }
+
+  const launchDockerWinBtn = document.getElementById('btn-mgmt-docker-launch-window');
+  if (launchDockerWinBtn) {
+    launchDockerWinBtn.addEventListener('click', () => {
+      if (typeof window.openContainersManager === 'function') {
+        window.openContainersManager();
+      } else if (typeof window.openContainersWindow === 'function') {
+        window.openContainersWindow();
+      }
     });
   }
 

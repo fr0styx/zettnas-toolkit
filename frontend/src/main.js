@@ -33,6 +33,7 @@ import { initCommandPalette } from './components/command-palette.js';
 import { initWidgets } from './components/widgets.js';
 import { initFileManager } from './components/file-manager.js';
 import { initVmManager, openVmConsole } from './components/vm-manager.js';
+import { initContainersManager } from './components/containers-manager.js';
 import { initContainerModal } from './components/container-modal.js';
 import { initStackModal } from './components/stack-modal.js';
 import { initDesktopContextMenu } from './components/desktop-context-menu.js';
@@ -206,6 +207,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initWidgets();
   initFileManager();
   initVmManager();
+  initContainersManager();
   initContainerModal();
   initStackModal();
   initDesktopContextMenu();
