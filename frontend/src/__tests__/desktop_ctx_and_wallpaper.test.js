@@ -215,4 +215,73 @@ describe('Desktop Context Menu, Dock Context Menu, and Wallpaper Engine', () => 
     await Promise.resolve();
     expect(apiSpy).toHaveBeenCalledWith('/api/wallpapers/bahia.jpg');
   });
+
+  it('detects and resolves collisions when Containers and File Explorer or other icons share identical saved coordinates', () => {
+    // Simulate saved positions where Containers was saved at 301px, directly overlapping File Explorer at 301px
+    const legacyPositions = {
+      'management-desktop-icon': { left: 24, top: 77 },
+      'vm-desktop-icon': { left: 24, top: 189 },
+      'containers-desktop-icon': { left: 24, top: 301 },
+      'fm-desktop-icon': { left: 24, top: 301 },
+      'rb-desktop-icon': { left: 24, top: 413 },
+      'chassis-desktop-icon': { left: 24, top: 525 }
+    };
+    localStorage.setItem('zettnas_desktop_icon_positions_v3', JSON.stringify(legacyPositions));
+
+    initDraggableDesktopIcons();
+
+    const mc = document.getElementById('management-desktop-icon');
+    const containers = document.getElementById('containers-desktop-icon');
+    const vm = document.getElementById('vm-desktop-icon');
+    const fm = document.getElementById('fm-desktop-icon');
+    const rb = document.getElementById('rb-desktop-icon');
+    const chassis = document.getElementById('chassis-desktop-icon');
+
+    // Verify all icons are collision-free and properly slotted
+    expect(mc.style.top).toBe('77px');
+    expect(containers.style.top).toBe('189px');
+    expect(vm.style.top).toBe('301px');
+    expect(fm.style.top).toBe('413px');
+    expect(rb.style.top).toBe('525px');
+
+    // No two icons should share overlapping top and left coordinates
+    const allIcons = [mc, containers, vm, fm, rb, chassis];
+    for (let i = 0; i < allIcons.length; i++) {
+      for (let j = i + 1; j < allIcons.length; j++) {
+        const topA = parseFloat(allIcons[i].style.top);
+        const leftA = parseFloat(allIcons[i].style.left);
+        const topB = parseFloat(allIcons[j].style.top);
+        const leftB = parseFloat(allIcons[j].style.left);
+        const distance = Math.hypot(leftA - leftB, topA - topB);
+        expect(distance).toBeGreaterThanOrEqual(70);
+      }
+    }
+
+    // Verify persisted to localStorage without overlaps
+    const updated = JSON.parse(localStorage.getItem('zettnas_desktop_icon_positions_v3'));
+    expect(updated['containers-desktop-icon'].top).not.toBe(updated['fm-desktop-icon'].top);
+  });
+
+  it('alignDesktopGrid prevents two icons from snapping to the same grid coordinate', () => {
+    initDraggableDesktopIcons();
+    const containers = document.getElementById('containers-desktop-icon');
+    const fm = document.getElementById('fm-desktop-icon');
+
+    // Move both close to the same grid slot (24, 301)
+    containers.style.left = '28px';
+    containers.style.top = '305px';
+    fm.style.left = '20px';
+    fm.style.top = '295px';
+
+    window.alignDesktopGrid();
+
+    const topContainers = parseFloat(containers.style.top);
+    const leftContainers = parseFloat(containers.style.left);
+    const topFm = parseFloat(fm.style.top);
+    const leftFm = parseFloat(fm.style.left);
+
+    // They must not occupy the same position
+    const overlap = Math.abs(topContainers - topFm) < 60 && Math.abs(leftContainers - leftFm) < 70;
+    expect(overlap).toBe(false);
+  });
 });

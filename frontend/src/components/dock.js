@@ -3368,6 +3368,51 @@ export function initDraggableDesktopIcons() {
     }, 100);
   };
 
+  const isPositionOccupied = (left, top, placedList, excludeId) => {
+    return placedList.some((p) => {
+      if (excludeId && p.id === excludeId) return false;
+      return Math.abs(left - p.left) < 80 && Math.abs(top - p.top) < 70;
+    });
+  };
+
+  const findNextFreeSlot = (startLeft, startTop, placedList, maxLeft, maxTop, excludeId) => {
+    const GRID_X = 140;
+    const GRID_Y = 112;
+    const OFFSET_X = 24;
+    const OFFSET_Y = 77;
+    const startCol = Math.max(0, Math.round((startLeft - OFFSET_X) / GRID_X));
+    const startRow = Math.max(0, Math.round((startTop - OFFSET_Y) / GRID_Y));
+    const maxRows = Math.max(3, Math.floor((maxTop - OFFSET_Y) / GRID_Y) + 1);
+
+    // 1. Try subsequent rows down the current column first
+    for (let r = startRow + 1; r < maxRows; r++) {
+      const testLeft = OFFSET_X + startCol * GRID_X;
+      const testTop = OFFSET_Y + r * GRID_Y;
+      if (testLeft <= maxLeft && testTop <= maxTop && !isPositionOccupied(testLeft, testTop, placedList, excludeId)) {
+        return { left: testLeft, top: testTop };
+      }
+    }
+
+    // 2. Try other columns (wrap to next columns first, then earlier columns if needed)
+    for (let colOffset = 1; colOffset < 12; colOffset++) {
+      const col = (startCol + colOffset) % 12;
+      for (let r = 0; r < maxRows; r++) {
+        const testLeft = OFFSET_X + col * GRID_X;
+        const testTop = OFFSET_Y + r * GRID_Y;
+        if (testLeft <= maxLeft && testTop <= maxTop && !isPositionOccupied(testLeft, testTop, placedList, excludeId)) {
+          return { left: testLeft, top: testTop };
+        }
+      }
+    }
+
+    // 3. Fallback: nudge downwards
+    let fallbackTop = startTop + GRID_Y;
+    while (fallbackTop <= maxTop && isPositionOccupied(startLeft, fallbackTop, placedList, excludeId)) {
+      fallbackTop += GRID_Y;
+    }
+    return { left: startLeft, top: Math.min(fallbackTop, maxTop) };
+  };
+
   const alignGrid = () => {
     if (document.body.classList.contains('mobile-mode') || window.innerWidth <= 768) return;
     const GRID_X = 140;
@@ -3375,6 +3420,10 @@ export function initDraggableDesktopIcons() {
     const OFFSET_X = 24;
     const OFFSET_Y = 77;
     const icons = getAllIconElements();
+    const placedInGrid = [];
+    const maxLeft = Math.max(24, window.innerWidth - 136 - 10);
+    const maxTop = Math.max(77, window.innerHeight - 136 - 70);
+
     icons.forEach(({ id, el }) => {
       const rect = el.getBoundingClientRect();
       let snapLeft = OFFSET_X + Math.round((rect.left - OFFSET_X) / GRID_X) * GRID_X;
@@ -3382,7 +3431,16 @@ export function initDraggableDesktopIcons() {
 
       if (snapLeft < OFFSET_X) snapLeft = OFFSET_X;
       if (snapTop < OFFSET_Y) snapTop = OFFSET_Y;
+      snapLeft = Math.min(maxLeft, snapLeft);
+      snapTop = Math.min(maxTop, snapTop);
 
+      if (isPositionOccupied(snapLeft, snapTop, placedInGrid, id)) {
+        const freeSlot = findNextFreeSlot(snapLeft, snapTop, placedInGrid, maxLeft, maxTop, id);
+        snapLeft = freeSlot.left;
+        snapTop = freeSlot.top;
+      }
+
+      placedInGrid.push({ id, left: snapLeft, top: snapTop });
       el.style.left = snapLeft + 'px';
       el.style.top = snapTop + 'px';
       savedPositions[id] = { left: snapLeft, top: snapTop };
@@ -3602,52 +3660,99 @@ export function initDraggableDesktopIcons() {
 
   const refreshIconPositions = () => {
     const isMobile = document.body.classList.contains('mobile-mode') || window.innerWidth <= 768;
-    defaultIconConfigs.forEach(({ id, defaultLeft, defaultTop }) => {
-      const el = document.getElementById(id);
-      if (!el) return;
-      if (isMobile) {
+    const allIcons = getAllIconElements();
+    if (isMobile) {
+      allIcons.forEach(({ el }) => {
         el.style.removeProperty('position');
         el.style.removeProperty('left');
         el.style.removeProperty('top');
-      } else {
-        const saved = savedPositions[id];
-        // If Containers or VM icon was previously saved at top: 54/77 (above/overlapping Mission Control), reset to defaultTop
-        if ((id === 'vm-desktop-icon' || id === 'containers-desktop-icon') && saved && (saved.top < 100 || saved.top === 77)) {
-          saved.top = defaultTop;
-          saved.left = defaultLeft;
-        }
-        const curLeft = (saved && typeof saved.left === 'number') ? saved.left : defaultLeft;
-        const curTop = (saved && typeof saved.top === 'number') ? saved.top : defaultTop;
-        const maxLeft = Math.max(24, window.innerWidth - (el.offsetWidth || 136) - 10);
-        const maxTop = Math.max(77, window.innerHeight - (el.offsetHeight || 136) - 70);
-        const clampedLeft = Math.max(24, Math.min(maxLeft, curLeft));
-        const clampedTop = Math.max(77, Math.min(maxTop, curTop));
-        el.style.position = 'fixed';
-        el.style.left = `${clampedLeft}px`;
-        el.style.top = `${clampedTop}px`;
+      });
+      return;
+    }
+
+    // 1. Reset if saved top is above Mission Control (e.g. 54 or 77)
+    ['vm-desktop-icon', 'containers-desktop-icon'].forEach((k) => {
+      const s = savedPositions[k];
+      if (s && (s.top < 100 || s.top === 77)) {
+        delete savedPositions[k];
       }
     });
 
-    // Also handle clamping for any custom desktop shortcuts
-    getAllIconElements().forEach(({ id, el }) => {
-      if (defaultIconConfigs.some((d) => d.id === id)) return;
-      if (isMobile) {
-        el.style.removeProperty('position');
-        el.style.removeProperty('left');
-        el.style.removeProperty('top');
-      } else {
-        const saved = savedPositions[id];
-        if (saved && typeof saved.left === 'number' && typeof saved.top === 'number') {
-          const maxLeft = Math.max(24, window.innerWidth - (el.offsetWidth || 136) - 10);
-          const maxTop = Math.max(77, window.innerHeight - (el.offsetHeight || 136) - 70);
-          const clampedLeft = Math.max(24, Math.min(maxLeft, saved.left));
-          const clampedTop = Math.max(77, Math.min(maxTop, saved.top));
-          el.style.position = 'fixed';
-          el.style.left = `${clampedLeft}px`;
-          el.style.top = `${clampedTop}px`;
-        }
+    // 2. Legacy stack migration: In v1.7 before Containers was added, VM was at 189.
+    // If VM was saved at old default (left: 24, top: 189):
+    if (savedPositions['vm-desktop-icon'] && savedPositions['vm-desktop-icon'].left === 24 && savedPositions['vm-desktop-icon'].top === 189) {
+      const cPos = savedPositions['containers-desktop-icon'];
+      if (!cPos || (cPos.left === 24 && (cPos.top === 189 || cPos.top === 301))) {
+        savedPositions['containers-desktop-icon'] = { left: 24, top: 189 };
+        savedPositions['vm-desktop-icon'] = { left: 24, top: 301 };
+      }
+    }
+
+    // 3. If Containers was saved at top: 301 (old collision where Containers overlapped File Explorer):
+    if (savedPositions['containers-desktop-icon'] && savedPositions['containers-desktop-icon'].left === 24 && savedPositions['containers-desktop-icon'].top === 301) {
+      savedPositions['containers-desktop-icon'] = { left: 24, top: 189 };
+      if (!savedPositions['vm-desktop-icon'] || (savedPositions['vm-desktop-icon'].left === 24 && (savedPositions['vm-desktop-icon'].top === 189 || savedPositions['vm-desktop-icon'].top === 301))) {
+        savedPositions['vm-desktop-icon'] = { left: 24, top: 301 };
+      }
+    }
+
+    const placedIcons = [];
+    let hasChanges = false;
+
+    // Process all icons: default configs in order, then custom icons
+    const processedIds = new Set();
+    const iconsToProcess = [];
+
+    defaultIconConfigs.forEach((cfg) => {
+      const icon = allIcons.find((item) => item.id === cfg.id);
+      if (icon) {
+        iconsToProcess.push({ ...icon, defaultLeft: cfg.defaultLeft, defaultTop: cfg.defaultTop });
+        processedIds.add(cfg.id);
       }
     });
+
+    allIcons.forEach((icon) => {
+      if (!processedIds.has(icon.id)) {
+        iconsToProcess.push(icon);
+      }
+    });
+
+    iconsToProcess.forEach(({ id, el, defaultLeft = 24, defaultTop = 77 }) => {
+      const saved = savedPositions[id];
+      const curLeft = (saved && typeof saved.left === 'number') ? saved.left : defaultLeft;
+      const curTop = (saved && typeof saved.top === 'number') ? saved.top : defaultTop;
+
+      const maxLeft = Math.max(24, window.innerWidth - (el.offsetWidth || 136) - 10);
+      const maxTop = Math.max(77, window.innerHeight - (el.offsetHeight || 136) - 70);
+
+      let clampedLeft = Math.max(24, Math.min(maxLeft, curLeft));
+      let clampedTop = Math.max(77, Math.min(maxTop, curTop));
+
+      // Automatic collision avoidance & resolution against already placed icons
+      if (isPositionOccupied(clampedLeft, clampedTop, placedIcons, id)) {
+        const freeSlot = findNextFreeSlot(clampedLeft, clampedTop, placedIcons, maxLeft, maxTop, id);
+        clampedLeft = freeSlot.left;
+        clampedTop = freeSlot.top;
+      }
+
+      placedIcons.push({ id, left: clampedLeft, top: clampedTop });
+      el.style.position = 'fixed';
+      el.style.left = `${clampedLeft}px`;
+      el.style.top = `${clampedTop}px`;
+
+      if (!saved || saved.left !== clampedLeft || saved.top !== clampedTop) {
+        savedPositions[id] = { left: clampedLeft, top: clampedTop };
+        hasChanges = true;
+      }
+    });
+
+    if (hasChanges) {
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(savedPositions));
+      } catch (err) {
+        console.error('Failed to update desktop icon positions after collision resolution', err);
+      }
+    }
   };
   window.refreshDesktopIconPositions = refreshIconPositions;
 
@@ -3700,7 +3805,30 @@ export function initDraggableDesktopIcons() {
         if (dragThresholdPassed) {
           el.classList.remove('dragging');
           const finalRect = el.getBoundingClientRect();
-          savedPositions[id] = { left: Math.round(finalRect.left), top: Math.round(finalRect.top) };
+          let finalLeft = Math.round(finalRect.left);
+          let finalTop = Math.round(finalRect.top);
+
+          const maxLeft = Math.max(24, window.innerWidth - (el.offsetWidth || 136) - 10);
+          const maxTop = Math.max(77, window.innerHeight - (el.offsetHeight || 136) - 70);
+          finalLeft = Math.max(24, Math.min(maxLeft, finalLeft));
+          finalTop = Math.max(77, Math.min(maxTop, finalTop));
+
+          // Check if dropped position collides with any other visible icon
+          const otherIcons = getAllIconElements().filter((item) => item.id !== id);
+          const otherPositions = otherIcons.map((item) => {
+            const r = item.el.getBoundingClientRect();
+            return { id: item.id, left: Math.round(r.left), top: Math.round(r.top) };
+          });
+
+          if (isPositionOccupied(finalLeft, finalTop, otherPositions, id)) {
+            const freeSlot = findNextFreeSlot(finalLeft, finalTop, otherPositions, maxLeft, maxTop, id);
+            finalLeft = freeSlot.left;
+            finalTop = freeSlot.top;
+            el.style.left = `${finalLeft}px`;
+            el.style.top = `${finalTop}px`;
+          }
+
+          savedPositions[id] = { left: finalLeft, top: finalTop };
           try {
             localStorage.setItem(storageKey, JSON.stringify(savedPositions));
           } catch (err) {

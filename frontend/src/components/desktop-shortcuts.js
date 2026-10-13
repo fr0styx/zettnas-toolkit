@@ -129,6 +129,10 @@ export function saveCustomShortcuts(shortcuts) {
 }
 
 export function isShortcutActive(id) {
+  const builtIn = document.getElementById(id);
+  if (builtIn && builtIn.style.display !== 'none' && !builtIn.classList.contains('hidden') && !builtIn.classList.contains('custom-desktop-shortcut')) {
+    return true;
+  }
   const current = getCustomShortcuts();
   return current.some((s) => s.id === id);
 }
@@ -146,6 +150,48 @@ export function calculateNextAvailablePosition() {
 
   // Collect occupied grid slots
   const occupied = new Set();
+
+  // 1. Inspect all desktop icon elements currently rendered in the DOM
+  if (typeof document !== 'undefined') {
+    document.querySelectorAll('.chassis-hero-box').forEach((el) => {
+      if (el.style.display !== 'none' && !el.classList.contains('hidden')) {
+        let leftVal = parseFloat(el.style.left);
+        let topVal = parseFloat(el.style.top);
+        if (isNaN(leftVal) || isNaN(topVal)) {
+          const r = el.getBoundingClientRect();
+          if (r.width > 0 && r.height > 0 && r.left >= 0 && r.top >= 0) {
+            leftVal = r.left;
+            topVal = r.top;
+          }
+        }
+        if (!isNaN(leftVal) && !isNaN(topVal)) {
+          const col = Math.round((leftVal - OFFSET_X) / GRID_X);
+          const row = Math.round((topVal - OFFSET_Y) / GRID_Y);
+          occupied.add(`${col},${row}`);
+        }
+      }
+    });
+  }
+
+  // 2. Default built-in icons fallback if elements exist in DOM but styles are not yet computed
+  const defaultConfigs = [
+    { id: 'management-desktop-icon', col: 0, row: 0 },
+    { id: 'containers-desktop-icon', col: 0, row: 1 },
+    { id: 'vm-desktop-icon', col: 0, row: 2 },
+    { id: 'fm-desktop-icon', col: 0, row: 3 },
+    { id: 'rb-desktop-icon', col: 0, row: 4 },
+    { id: 'chassis-desktop-icon', col: 0, row: 5 },
+  ];
+  if (typeof document !== 'undefined') {
+    defaultConfigs.forEach(({ id, col, row }) => {
+      const el = document.getElementById(id);
+      if (el && el.style.display !== 'none' && !el.classList.contains('hidden')) {
+        occupied.add(`${col},${row}`);
+      }
+    });
+  }
+
+  // 3. Saved positions in localStorage
   try {
     const raw = localStorage.getItem(POSITIONS_STORAGE_KEY);
     if (raw) {
@@ -173,7 +219,7 @@ export function calculateNextAvailablePosition() {
     }
   }
 
-  return { left: OFFSET_X, top: OFFSET_Y + 4 * GRID_Y };
+  return { left: OFFSET_X + GRID_X, top: OFFSET_Y };
 }
 
 /**
@@ -260,6 +306,13 @@ export function addDesktopShortcut(shortcutDef) {
     return false;
   }
 
+  // Prevent duplicate if element with this ID already exists in DOM as a built-in desktop icon
+  const existingEl = document.getElementById(shortcutDef.id);
+  if (existingEl && existingEl.style.display !== 'none' && !existingEl.classList.contains('hidden') && !existingEl.classList.contains('custom-desktop-shortcut')) {
+    showToast(`"${shortcutDef.name}" is already on your desktop.`, 'info');
+    return false;
+  }
+
   // Calculate placement position
   const nextPos = calculateNextAvailablePosition();
 
@@ -334,7 +387,17 @@ export function initDesktopShortcuts() {
   const container = document.getElementById('desktop-icons-container');
   if (!container) return;
 
-  const shortcuts = getCustomShortcuts();
+  // Cleanup: if containers-desktop-icon is stored as a custom shortcut and the built-in icon is present,
+  // remove it from custom shortcuts to prevent duplication
+  const builtInContainers = document.getElementById('containers-desktop-icon');
+  let shortcuts = getCustomShortcuts();
+  if (builtInContainers && !builtInContainers.classList.contains('custom-desktop-shortcut')) {
+    if (shortcuts.some((s) => s.id === 'containers-desktop-icon')) {
+      shortcuts = shortcuts.filter((s) => s.id !== 'containers-desktop-icon');
+      saveCustomShortcuts(shortcuts);
+    }
+  }
+
   shortcuts.forEach((sc) => {
     if (!document.getElementById(sc.id)) {
       const el = createShortcutElement(sc);
