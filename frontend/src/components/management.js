@@ -7733,8 +7733,14 @@ export async function fetchAndRenderSystemAbout(force = false, channelOverride =
   const releaseLink = document.getElementById('update-release-link');
   const releaseNotes = document.getElementById('update-release-notes');
 
+  const btnCheck = document.getElementById('btn-check-updates');
   const btnIcon = document.getElementById('btn-check-updates-icon');
   const btnText = document.getElementById('btn-check-updates-text');
+
+  // Lock button width to prevent horizontal layout shift, keeping Stable/Edge toggle static in place
+  if (btnCheck && btnCheck.offsetWidth > 0) {
+    btnCheck.style.minWidth = `${Math.max(152, btnCheck.offsetWidth)}px`;
+  }
 
   const channel = channelOverride || _currentUpdateChannel || 'stable';
   syncUpdateChannelUI();
@@ -7742,6 +7748,9 @@ export async function fetchAndRenderSystemAbout(force = false, channelOverride =
   if (btnIcon && btnText) {
     btnIcon.textContent = '⏳';
     btnText.textContent = 'Checking...';
+  }
+  if (btnCheck) {
+    btnCheck.disabled = true;
   }
 
   // 1. Fetch system about telemetry
@@ -7830,6 +7839,9 @@ export async function fetchAndRenderSystemAbout(force = false, channelOverride =
     if (btnIcon && btnText) {
       btnIcon.textContent = '🔄';
       btnText.textContent = 'Check for Updates';
+    }
+    if (btnCheck) {
+      btnCheck.disabled = false;
     }
   }
 }

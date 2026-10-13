@@ -5834,17 +5834,17 @@
                   <span class="card-head-title" style="font-weight:700; font-size:14px; color:#fff; display:block; margin-bottom:2px;" data-i18n="updates.title">Software Updates</span>
                   <span style="font-size:11px; color:var(--muted);" data-i18n="updates.subtitle">Check for the latest stable releases, security patches, or opt in to bleeding-edge commit features.</span>
                 </div>
-                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
                   <!-- Release Channel Chooser -->
-                  <div style="display:inline-flex; align-items:center; background:rgba(0,0,0,0.35); padding:2px; border-radius:6px; border:1px solid rgba(255,255,255,0.1); font-size:11px;">
-                    <button id="btn-channel-stable" type="button" class="btn-channel-toggle active" style="padding:5px 10px; border-radius:4px; border:none; background:rgba(37,194,160,0.25); color:#25c2a0; font-weight:700; cursor:pointer;" title="Official SemVer releases (Recommended for production)">
+                  <div id="update-channel-chooser" style="display:inline-flex; align-items:center; background:rgba(0,0,0,0.35); padding:2px; border-radius:6px; border:1px solid rgba(255,255,255,0.1); font-size:11px; flex-shrink:0; white-space:nowrap;">
+                    <button id="btn-channel-stable" type="button" class="btn-channel-toggle active" style="padding:5px 12px; border-radius:4px; border:none; background:rgba(37,194,160,0.25); color:#25c2a0; font-weight:600; cursor:pointer; white-space:nowrap;" title="Official SemVer releases (Recommended for production)">
                       <span data-i18n="updates.channel_stable">🌟 Stable</span>
                     </button>
-                    <button id="btn-channel-edge" type="button" class="btn-channel-toggle" style="padding:5px 10px; border-radius:4px; border:none; background:transparent; color:var(--muted); font-weight:600; cursor:pointer;" title="Rolling release channel tracking the latest commits on main">
+                    <button id="btn-channel-edge" type="button" class="btn-channel-toggle" style="padding:5px 12px; border-radius:4px; border:none; background:transparent; color:var(--muted); font-weight:600; cursor:pointer; white-space:nowrap;" title="Rolling release channel tracking the latest commits on main">
                       <span data-i18n="updates.channel_edge">⚡ Edge (Latest Commits)</span>
                     </button>
                   </div>
-                  <button id="btn-check-updates" class="btn-pill-toggle" style="display:flex; align-items:center; gap:6px; padding:6px 12px; font-size:11.5px; font-weight:600;">
+                  <button id="btn-check-updates" class="btn-pill-toggle" style="display:inline-flex; align-items:center; justify-content:center; gap:6px; padding:6px 14px; font-size:11.5px; font-weight:600; min-width:152px; text-align:center; white-space:nowrap; box-sizing:border-box;">
                     <span id="btn-check-updates-icon">🔄</span> <span id="btn-check-updates-text" data-i18n="updates.check_btn">Check for Updates</span>
                   </button>
                 </div>

@@ -191,4 +191,19 @@ describe('System About & Software Updates Frontend Component', () => {
     expect(document.getElementById('update-status-desc').textContent).toBe('Network disconnected');
     expect(document.getElementById('btn-check-updates-text').textContent).toBe('Check for Updates');
   });
+
+  it('locks check updates button minWidth and prevents layout shift during checking', async () => {
+    const btnCheck = document.getElementById('btn-check-updates');
+    Object.defineProperty(btnCheck, 'offsetWidth', { configurable: true, value: 160 });
+
+    vi.spyOn(api, 'get').mockImplementation(async () => {
+      expect(parseInt(btnCheck.style.minWidth, 10)).toBeGreaterThanOrEqual(152);
+      expect(btnCheck.disabled).toBe(true);
+      return { channel: 'stable', update_available: false };
+    });
+
+    await fetchAndRenderSystemAbout();
+    expect(parseInt(btnCheck.style.minWidth, 10)).toBe(160);
+    expect(btnCheck.disabled).toBe(false);
+  });
 });
