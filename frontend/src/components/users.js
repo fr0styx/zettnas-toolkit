@@ -3,6 +3,7 @@
  * Handles User inventory, Role assignment, Session revocation, and TOTP 2FA setup.
  */
 
+import { auth } from '../api.js';
 import { escapeHtml } from '../utils.js';
 import { ZettEventBus } from '../event-bus.js';
 import { t } from '../i18n.js';
@@ -21,7 +22,10 @@ export function getCurrentUser() {
 
 export async function fetchCurrentProfile() {
   try {
-    const res = await window.fetch('/api/auth/me', { credentials: 'include' });
+    const token = auth.getToken();
+    const headers = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const res = await window.fetch('/api/auth/me', { credentials: 'include', headers });
     if (res.ok) {
       const data = await res.json();
       setCurrentUser(data);

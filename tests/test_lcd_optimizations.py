@@ -6,6 +6,7 @@ from backend.hardware.screen import (
     find_fb_device,
     get_effective_brightness,
     save_screen_state,
+    set_fb_blank,
     set_screen_brightness,
 )
 from backend.services.lcd_renderer import discover_fb_geometry
@@ -201,3 +202,15 @@ def test_find_fb_device_env_override():
         patch("builtins.open", mock_open()),
     ):
         assert find_fb_device() == "/dev/fb99"
+
+
+def test_set_fb_blank():
+    with (
+        patch("os.path.exists", side_effect=lambda p: p == "/sys/class/graphics/fb0/blank"),
+        patch("builtins.open", mock_open()) as m_open,
+    ):
+        assert set_fb_blank(True) is True
+        m_open().write.assert_called_with("0\n")
+
+        assert set_fb_blank(False) is True
+        m_open().write.assert_called_with("4\n")

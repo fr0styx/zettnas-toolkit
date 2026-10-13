@@ -13,8 +13,13 @@
 <script>
   (function() {
     try {
+      var params = new URLSearchParams(window.location.search);
+      var lcdToken = params.get('lcd_token');
+      if (lcdToken) {
+        try { localStorage.setItem('zettnas_token', lcdToken); } catch (e) {}
+      }
       var token = localStorage.getItem('zettnas_token');
-      var isLcd = window.location.search.indexOf('mode=lcd') !== -1 || window.location.search.indexOf('lcd_token=') !== -1;
+      var isLcd = window.location.search.indexOf('mode=lcd') !== -1 || !!lcdToken;
       if (token || isLcd) {
         document.documentElement.classList.add('has-auth-session');
       } else {

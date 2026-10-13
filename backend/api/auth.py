@@ -132,6 +132,17 @@ def _persist_security() -> None:
 def _get_authenticated_user(request: Request) -> Optional[Dict[str, Any]]:
     sess = getattr(request.state, "session", None)
     if sess and sess.get("user_id"):
+        if sess.get("is_system"):
+            return {
+                "id": sess["user_id"],
+                "username": sess["username"],
+                "display_name": "System Console",
+                "role_id": "superadmin",
+                "role_name": "SuperAdmin",
+                "scopes": ["*"],
+                "email": config.ZETTNAS_EMAIL,
+                "status": "active",
+            }
         return get_user_by_id(sess["user_id"])
     token = extract_token(request)
     if not token or not validate_session(token):
@@ -139,6 +150,17 @@ def _get_authenticated_user(request: Request) -> Optional[Dict[str, Any]]:
     sess = get_current_session(token)
     if not sess:
         return None
+    if sess.get("is_system"):
+        return {
+            "id": sess["user_id"],
+            "username": sess["username"],
+            "display_name": "System Console",
+            "role_id": "superadmin",
+            "role_name": "SuperAdmin",
+            "scopes": ["*"],
+            "email": config.ZETTNAS_EMAIL,
+            "status": "active",
+        }
     return get_user_by_id(sess["user_id"])
 
 

@@ -262,8 +262,12 @@ def extract_token(request: Request) -> str:
     if cookie_token:
         return cookie_token
 
-    # 3. Query string token or ticket (fallback for EventSource, WebSockets and docs)
-    return request.query_params.get("token", "").strip() or request.query_params.get("ticket", "").strip()
+    # 3. Query string token, ticket, or lcd_token (fallback for EventSource, WebSockets, LCD, and docs)
+    return (
+        request.query_params.get("token", "").strip()
+        or request.query_params.get("ticket", "").strip()
+        or request.query_params.get("lcd_token", "").strip()
+    )
 
 
 _PUBLIC_API_PATHS = {

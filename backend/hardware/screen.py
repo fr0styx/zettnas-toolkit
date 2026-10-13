@@ -164,6 +164,30 @@ def get_effective_brightness():
     return int(brightness)
 
 
+def set_fb_blank(power_on: bool) -> bool:
+    """Controls framebuffer display scanout via sysfs fb0/blank.
+
+    0 = FB_BLANK_UNBLANK (active display scanout enabled)
+    4 = FB_BLANK_POWERDOWN (controller scanout powered down)
+    """
+    bases = []
+    if HOST_SYS and os.path.exists(os.path.join(HOST_SYS, "class/graphics/fb0/blank")):
+        bases.append(os.path.join(HOST_SYS, "class/graphics/fb0/blank"))
+    bases.extend(["/host/sys/class/graphics/fb0/blank", "/sys/class/graphics/fb0/blank"])
+
+    val = "0\n" if power_on else "4\n"
+    success = False
+    for p in bases:
+        if os.path.exists(p):
+            try:
+                with open(p, "w") as f:
+                    f.write(val)
+                success = True
+            except OSError:
+                pass
+    return success
+
+
 def _apply_bl_power(bl_dir: str, power_on: bool):
     bl_power_path = os.path.join(bl_dir, "bl_power")
     if os.path.exists(bl_power_path):
@@ -177,6 +201,7 @@ def _apply_bl_power(bl_dir: str, power_on: bool):
 
 def set_screen_brightness(pct):
     pct = max(0, min(100, int(pct)))
+    set_fb_blank(pct > 0)
     backlight_dir = discover_backlight_dir()
     if not backlight_dir:
         return False

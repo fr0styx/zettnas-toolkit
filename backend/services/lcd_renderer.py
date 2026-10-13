@@ -12,6 +12,7 @@ from backend.config import ENABLE_FB, HOST_SYS, LCD_FORMAT, LCD_FPS, PORT, logge
 from backend.hardware.screen import (
     find_fb_device,
     get_effective_brightness,
+    set_fb_blank,
     set_screen_brightness,
 )
 from backend.state import Z_STATE
@@ -81,7 +82,9 @@ def render_lcd_loop():
     time.sleep(2)
     url = f"http://127.0.0.1:{PORT}/?mode=lcd&lcd_token={config.LCD_INTERNAL_TOKEN}"
 
-    set_screen_brightness(get_effective_brightness())
+    eff_bri = get_effective_brightness()
+    set_fb_blank(eff_bri > 0)
+    set_screen_brightness(eff_bri)
 
     fb_width, fb_height, stride = discover_fb_geometry()
     row_bytes = fb_width * 4
@@ -132,6 +135,20 @@ def render_lcd_loop():
                     executable_path=os.environ.get("PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH"),
                 )
                 context = browser.new_context(viewport={"width": fb_width, "height": fb_height}, device_scale_factor=1)
+                context.set_extra_http_headers({"Authorization": f"Bearer {config.LCD_INTERNAL_TOKEN}"})
+                try:
+                    context.add_cookies(
+                        [
+                            {
+                                "name": "zettnas_session",
+                                "value": config.LCD_INTERNAL_TOKEN,
+                                "domain": "127.0.0.1",
+                                "path": "/",
+                            }
+                        ]
+                    )
+                except Exception as e:
+                    logger.debug(f"[LCD] Failed to add internal session cookie: {e}")
                 page = context.new_page()
                 page.goto(url, wait_until="domcontentloaded", timeout=15000)
                 Z_STATE.lcd_renderer_active = True
@@ -155,9 +172,9 @@ def render_lcd_loop():
                             # Screen-off pause: 0 FPS when power is off, brightness is 0, or night mode is blanked
                             if get_effective_brightness() <= 0:
                                 if not screen_blanked:
+                                    set_fb_blank(False)
                                     try:
                                         fb_mem[:total_fb_bytes] = b"\x00" * total_fb_bytes
-                                        fb_mem.flush()
                                     except Exception:
                                         pass
                                     screen_blanked = True
@@ -166,7 +183,9 @@ def render_lcd_loop():
                                     Z_STATE.ui_wake.clear()
                                 continue
 
-                            screen_blanked = False
+                            if screen_blanked:
+                                set_fb_blank(True)
+                                screen_blanked = False
 
                             t0 = time.time()
 
