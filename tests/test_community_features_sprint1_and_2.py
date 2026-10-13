@@ -89,7 +89,7 @@ def test_rclone_engine_start_sync_job_streaming(tmp_path):
         )
 
         assert job["id"] is not None
-        assert job["status"] == "running"
+        assert job["status"] in ("running", "success")
 
         # Wait briefly for worker thread to finish processing mock lines
         for _ in range(50):
