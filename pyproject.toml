@@ -35,7 +35,7 @@ filterwarnings = [
 ]
 
 [tool.ruff]
-target-version = "1.8.0"
+target-version = "py312"
 line-length = 120
 
 [tool.ruff.lint]
