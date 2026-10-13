@@ -72,6 +72,11 @@ def graceful_docker_teardown(timeout_sec: int = 30):
         logger.warning(f"[UPS FAILSAFE] Stopping {len(running)} running Docker container(s) before poweroff...")
         for c in running:
             cid = c.get("id") or c.get("name")
+            cname = (c.get("name") or "").lower().lstrip("/")
+            # Never terminate self (zettnas-toolkit) prematurely during the container teardown phase
+            if cid in ("zettnas-toolkit", "zettnas") or cname.startswith("zettnas"):
+                logger.info(f"[UPS FAILSAFE] Preserving toolkit orchestrator container {cname} for final sequence.")
+                continue
             if cid:
                 try:
                     container_action(cid, "stop")

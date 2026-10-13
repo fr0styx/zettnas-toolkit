@@ -113,7 +113,7 @@ def _discover_disks():
             return name.startswith("sd")
 
     def classify(name):
-        if name == OS_NVME:
+        if name == OS_NVME or name.startswith("mmcblk"):
             return "os"
         return "data" if rota(name) else "cache"
 

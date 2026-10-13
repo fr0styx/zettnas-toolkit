@@ -118,6 +118,8 @@ class DiskDiscoveryHAL:
     @classmethod
     def _probe_smart_protocol(cls, dev_name: str, transport: str, controller: str) -> str:
         """Determines initial smartctl device protocol flag."""
+        if transport == "mmc" or dev_name.startswith("mmcblk"):
+            return "none"
         if transport == "nvme" or dev_name.startswith("nvme"):
             return "nvme"
         if controller == "mpt3sas" or transport == "sas":
@@ -149,8 +151,11 @@ class DiskDiscoveryHAL:
             if res.returncode == 0 and res.stdout.strip():
                 data = json.loads(res.stdout)
                 for item in data.get("blockdevices", []):
-                    # Filter for top-level physical disks (exclude partitions, lvm, loops, rom, zram)
-                    if item.get("type") in ("disk",) and not item.get("name", "").startswith(("loop", "zram", "ram")):
+                    # Filter for top-level physical disks (exclude partitions, lvm, loops, rom, zram, mmc boot/rpmb)
+                    bname = item.get("name", "")
+                    if item.get("type") in ("disk", "mmc") and not bname.startswith(
+                        ("loop", "zram", "ram", "mmcblk0boot", "mmcblk0rpmb", "mmcblk1boot", "mmcblk1rpmb")
+                    ):
                         lsblk_disks.append(item)
         except Exception as e:
             logger.debug(f"[DiskDiscoveryHAL] lsblk execution fallback: {e}")
@@ -160,8 +165,10 @@ class DiskDiscoveryHAL:
             block_dir = os.path.join(cls._resolve_sys_root(), "block")
             if os.path.exists(block_dir):
                 for name in sorted(os.listdir(block_dir)):
-                    # Supports sd[a-z]+ (including sdaa, sdab), nvme[0-9]+n[0-9]+, vd[a-z]+
-                    if re.match(r"^(sd[a-z]+|nvme[0-9]+n[0-9]+|vd[a-z]+)$", name):
+                    # Supports sd[a-z]+, nvme[0-9]+n[0-9]+, vd[a-z]+, mmcblk[0-9]+
+                    if re.match(r"^(sd[a-z]+|nvme[0-9]+n[0-9]+|vd[a-z]+|mmcblk[0-9]+)$", name) and not name.startswith(
+                        ("mmcblk0boot", "mmcblk0rpmb", "mmcblk1boot", "mmcblk1rpmb")
+                    ):
                         size_file = os.path.join(block_dir, name, "size")
                         sz_bytes = 0
                         if os.path.exists(size_file):
@@ -208,8 +215,15 @@ class DiskDiscoveryHAL:
             serial = (d.get("serial") or "Unknown").strip()
             vendor = (d.get("vendor") or "Generic").strip()
             wwn = d.get("wwn")
-            tran = (d.get("tran") or ("nvme" if kname.startswith("nvme") else "sata")).lower().strip()
-            controller = cls._probe_controller_driver(kname)
+            tran = (
+                (
+                    d.get("tran")
+                    or ("mmc" if kname.startswith("mmcblk") else ("nvme" if kname.startswith("nvme") else "sata"))
+                )
+                .lower()
+                .strip()
+            )
+            controller = "mmc" if kname.startswith("mmcblk") else cls._probe_controller_driver(kname)
             is_rot = bool(d.get("rota", True))
             sz = int(d.get("size") or 0)
             if sz == 0 and not bool(d.get("hotplug")):
@@ -225,7 +239,7 @@ class DiskDiscoveryHAL:
 
             # Role classification
             is_root = any(m in ("/", "/boot", "/boot/efi") for m in mountpoints)
-            if is_root or kname == OS_NVME:
+            if is_root or kname == OS_NVME or kname.startswith("mmcblk") or tran == "mmc":
                 role = "os"
             elif is_rot:
                 role = "data"

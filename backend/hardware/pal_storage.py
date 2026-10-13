@@ -907,12 +907,56 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
         return f"/dev/{d}"
 
     def is_storage_busy(self) -> bool:
-        """Checks if a scrub or balance is actively running."""
+        """Checks if a scrub or balance is actively running across Btrfs or OpenZFS pools."""
+        # Check Btrfs scrub (e.g. "scrub status for ...: running" vs "no scrub running")
         code, out, _ = self._run_cmd(["btrfs", "scrub", "status", self._pool_path])
-        return "running" in out.lower()
+        out_l = out.lower()
+        if code == 0 and ("running" in out_l and "no scrub" not in out_l and "not running" not in out_l):
+            return True
+        # Check Btrfs balance (e.g. "Balance on ... is running" vs "No balance found on ...")
+        code, out, _ = self._run_cmd(["btrfs", "balance", "status", self._pool_path])
+        out_l = out.lower()
+        if code == 0 and ("is running" in out_l or "balance running" in out_l):
+            return True
+        # Check OpenZFS scrub/resilver
+        code, out, _ = self._run_cmd(["zpool", "status"])
+        out_l = out.lower()
+        if code == 0 and ("scrub in progress" in out_l or "resilver in progress" in out_l):
+            return True
+        return False
 
     def trigger_scrub(self, pool_id: str, action: str = "start") -> Dict[str, Any]:
-        """Triggers or checks status of Btrfs scrub."""
+        """Triggers or checks status of Btrfs scrub (or ZFS if pool_id is prefixed with 'zfs:')."""
+        if pool_id and (pool_id.startswith("zfs:") or pool_id.startswith("zpool:")):
+            zp = pool_id.split(":", 1)[1]
+            if action == "start":
+                code, out, err = self._run_cmd(["zpool", "scrub", zp])
+                return {
+                    "platform": "zfs",
+                    "pool_id": pool_id,
+                    "action": action,
+                    "status": "started" if code == 0 else "error",
+                    "output": out or err,
+                }
+            elif action == "cancel":
+                code, out, err = self._run_cmd(["zpool", "scrub", "-s", zp])
+                return {
+                    "platform": "zfs",
+                    "pool_id": pool_id,
+                    "action": action,
+                    "status": "cancelled" if code == 0 else "error",
+                    "output": out or err,
+                }
+            else:
+                code, out, err = self._run_cmd(["zpool", "status", zp])
+                return {
+                    "platform": "zfs",
+                    "pool_id": pool_id,
+                    "action": "status",
+                    "status": "active" if "scrub in progress" in out.lower() else "idle",
+                    "raw": out or err,
+                }
+
         target_path = self._pool_path
         if action == "start":
             code, out, err = self._run_cmd(["btrfs", "scrub", "start", target_path])
@@ -939,9 +983,116 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
                 "platform": "generic_linux",
                 "pool_id": pool_id,
                 "action": "status",
-                "status": "idle" if "no scrub running" in out.lower() else "active",
+                "status": "idle" if ("no scrub running" in out.lower() or "not running" in out.lower()) else "active",
                 "raw": out or err,
             }
+
+    def _parse_zpool_members(self, zp_name: str) -> List[PoolMember]:
+        """Parses zpool status -P to construct PoolMember objects with real hardware device paths."""
+        members: List[PoolMember] = []
+        code, zstat, _ = self._run_cmd(["zpool", "status", "-P", zp_name])
+        if code != 0 or not zstat.strip():
+            return members
+
+        in_config = False
+        current_section = "data"
+        current_vdev = ""
+
+        for raw_line in zstat.splitlines():
+            line = raw_line.strip()
+            if not line:
+                continue
+
+            if line.startswith("config:"):
+                in_config = True
+                continue
+
+            if not in_config:
+                continue
+
+            if line.startswith("NAME") and "STATE" in line:
+                continue
+
+            if line in ("logs", "cache", "spares", "dedup", "special"):
+                current_section = line
+                current_vdev = ""
+                continue
+
+            parts = line.split()
+            if len(parts) >= 2:
+                name_token = parts[0]
+                state_token = parts[1]
+                reads = int(parts[2]) if len(parts) >= 3 and parts[2].isdigit() else 0
+                writes = int(parts[3]) if len(parts) >= 4 and parts[3].isdigit() else 0
+                cksum = int(parts[4]) if len(parts) >= 5 and parts[4].isdigit() else 0
+
+                if name_token == zp_name:
+                    continue
+
+                if any(name_token.startswith(prefix) for prefix in ("raidz", "mirror", "draid")):
+                    current_vdev = name_token
+                    continue
+
+                if (
+                    name_token.startswith("/dev/")
+                    or name_token.startswith("sd")
+                    or name_token.startswith("nvme")
+                    or name_token.startswith("vd")
+                ):
+                    dev_basename = os.path.basename(name_token)
+                    real_dev = dev_basename
+                    if os.path.exists(name_token):
+                        try:
+                            real_dev = os.path.basename(os.path.realpath(name_token))
+                        except Exception:
+                            pass
+
+                    clean_dev = (
+                        re.sub(r"p?\d+$", "", real_dev)
+                        if (real_dev.startswith("sd") or real_dev.startswith("nvme") or real_dev.startswith("vd"))
+                        else real_dev
+                    )
+
+                    m_role = "data"
+                    m_type = "Data"
+                    if current_section == "cache":
+                        m_role = "cache"
+                        m_type = "Cache"
+                    elif current_section == "logs":
+                        m_role = "log"
+                        m_type = "Log (SLOG)"
+                    elif current_section == "spares":
+                        m_role = "spare"
+                        m_type = "Hot Spare"
+                    elif current_section == "special":
+                        m_role = "metadata"
+                        m_type = "Special VDEV"
+                    elif "raidz" in current_vdev:
+                        m_role = "parity"
+                        m_type = "RAIDZ Member"
+                    elif "mirror" in current_vdev:
+                        m_role = "data"
+                        m_type = "Mirror Member"
+
+                    is_rot = not clean_dev.startswith("nvme")
+                    members.append(
+                        PoolMember(
+                            name=clean_dev,
+                            device=clean_dev,
+                            id=dev_basename,
+                            type=m_type,
+                            role=m_role,
+                            size_bytes=0,
+                            status="OK" if state_token == "ONLINE" else state_token,
+                            rotational=is_rot,
+                            spundown=False,
+                            num_reads=reads,
+                            num_writes=writes,
+                            num_errors=cksum,
+                        )
+                    )
+
+        return members
 
     def list_pools(self) -> List[StoragePool]:
         total, used, free = 0, 0, 0
@@ -978,20 +1129,30 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
         except Exception as e:
             logger.debug(f"[PAL] HAL disk discovery fallback for generic pools: {e}")
 
-        # Check btrfs filesystem show to detect profile
+        # Check btrfs filesystem df to detect exact chunk profile
         profile = "raid1" if len(members) >= 2 else "single"
-        code, out, _ = self._run_cmd(["btrfs", "filesystem", "show", self._pool_path])
-        if code == 0:
-            if "raid10" in out.lower():
-                profile = "raid10"
-            elif "raid1" in out.lower():
-                profile = "raid1"
-            elif "raid0" in out.lower():
-                profile = "raid0"
-            elif "single" in out.lower():
-                profile = "single"
+        code_df, out_df, _ = self._run_cmd(["btrfs", "filesystem", "df", self._pool_path])
+        if code_df == 0 and out_df.strip():
+            for line in out_df.strip().splitlines():
+                if line.startswith("Data,"):
+                    match = re.search(r"Data,\s*([A-Za-z0-9_]+):", line)
+                    if match:
+                        profile = match.group(1).lower()
+                        break
+        else:
+            # Fallback to btrfs filesystem show
+            code, out, _ = self._run_cmd(["btrfs", "filesystem", "show", self._pool_path])
+            if code == 0:
+                if "raid10" in out.lower():
+                    profile = "raid10"
+                elif "raid1" in out.lower():
+                    profile = "raid1"
+                elif "raid0" in out.lower():
+                    profile = "raid0"
+                elif "single" in out.lower():
+                    profile = "single"
 
-        parity_protected = profile in ("raid1", "raid10")
+        parity_protected = profile in ("raid1", "raid10", "raid5", "raid6")
 
         pools = [
             StoragePool(
@@ -1049,6 +1210,8 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
                     elif "mirror" in zstat_l:
                         z_profile = "mirror"
 
+                    z_members = self._parse_zpool_members(zp_name)
+
                     pools.append(
                         StoragePool(
                             id=zp_name,
@@ -1064,7 +1227,7 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
                             used_bytes=z_used,
                             free_bytes=z_free,
                             used_pct=z_pct,
-                            members=[],
+                            members=z_members,
                             parity_protected=z_profile in ("raidz1", "raidz2", "raidz3", "mirror"),
                             autotrim=True,
                             compression="zstd",
@@ -1799,6 +1962,120 @@ class StoragePlatformDetector:
         return PlatformType.GENERIC_LINUX
 
 
+class TrueNASStorageAdapter(GenericLinuxStorageAdapter):
+    """
+    TrueNAS SCALE Storage Platform Adapter.
+    Operates in Observer Mode. TrueNAS Middleware authoritatively manages ZFS pools,
+    datasets, permissions, and NFS/SMB shares.
+    """
+
+    def get_platform_type(self) -> PlatformType:
+        return PlatformType.TRUENAS
+
+    def get_capabilities(self) -> PlatformCapabilities:
+        return PlatformCapabilities(
+            platform=PlatformType.TRUENAS,
+            is_observer_mode=True,
+            can_create_pools=False,
+            can_destroy_pools=False,
+            can_manage_shares=False,
+            can_trigger_scrub=True,
+            can_export_pools=False,
+            can_import_pools=False,
+            supported_filesystems=["zfs"],
+            description="Observer Mode: TrueNAS SCALE host detected. ZFS pools, datasets, and shares are managed by TrueNAS Middleware. Telemetry and scrub monitoring enabled.",
+        )
+
+    def create_pool(
+        self,
+        name: str,
+        disks: List[str],
+        fs_type: str = "btrfs",
+        profile: str = "raid1",
+        mountpoint: Optional[str] = None,
+    ) -> StoragePool:
+        raise PlatformCapabilityError(
+            "Pool creation is prohibited on TrueNAS SCALE in observer mode. Use TrueNAS Web UI to provision ZFS pools."
+        )
+
+    def destroy_pool(self, pool_id: str, force: bool = False) -> bool:
+        raise PlatformCapabilityError(
+            "Pool destruction is prohibited on TrueNAS SCALE in observer mode. Use TrueNAS Web UI to manage ZFS pools."
+        )
+
+    def trigger_scrub(self, pool_id: str, action: str = "start") -> Dict[str, Any]:
+        zp = pool_id if (pool_id and pool_id != "default_pool") else "boot-pool"
+        if action == "start":
+            code, out, err = self._run_cmd(["zpool", "scrub", zp])
+            return {
+                "platform": "truenas",
+                "pool_id": pool_id,
+                "action": action,
+                "status": "started" if code == 0 else "error",
+                "output": out or err,
+            }
+        elif action == "cancel":
+            code, out, err = self._run_cmd(["zpool", "scrub", "-s", zp])
+            return {
+                "platform": "truenas",
+                "pool_id": pool_id,
+                "action": action,
+                "status": "cancelled" if code == 0 else "error",
+                "output": out or err,
+            }
+        else:
+            code, out, err = self._run_cmd(["zpool", "status", zp])
+            return {
+                "platform": "truenas",
+                "pool_id": pool_id,
+                "action": "status",
+                "status": "active" if "scrub in progress" in out.lower() else "idle",
+                "raw": out or err,
+            }
+
+
+class ProxmoxStorageAdapter(GenericLinuxStorageAdapter):
+    """
+    Proxmox VE Storage Platform Adapter.
+    Operates in Observer Mode. Proxmox VE storage manager (pvesm) authoritatively
+    manages ZFS thin-pools, LVM-thin, directory storages, and VM virtual disks.
+    """
+
+    def get_platform_type(self) -> PlatformType:
+        return PlatformType.PROXMOX
+
+    def get_capabilities(self) -> PlatformCapabilities:
+        return PlatformCapabilities(
+            platform=PlatformType.PROXMOX,
+            is_observer_mode=True,
+            can_create_pools=False,
+            can_destroy_pools=False,
+            can_manage_shares=False,
+            can_trigger_scrub=True,
+            can_export_pools=False,
+            can_import_pools=False,
+            supported_filesystems=["zfs", "btrfs", "ext4", "xfs"],
+            description="Observer Mode: Proxmox VE host detected. Storage pools and LVM/ZFS thin-pools are managed by PVE storage engine. Telemetry and scrub monitoring enabled.",
+        )
+
+    def create_pool(
+        self,
+        name: str,
+        disks: List[str],
+        fs_type: str = "btrfs",
+        profile: str = "raid1",
+        mountpoint: Optional[str] = None,
+    ) -> StoragePool:
+        raise PlatformCapabilityError(
+            "Pool creation is prohibited on Proxmox VE in observer mode. Use Proxmox Web GUI to provision storage pools."
+        )
+
+    def destroy_pool(self, pool_id: str, force: bool = False) -> bool:
+        raise PlatformCapabilityError(
+            "Pool destruction is prohibited on Proxmox VE in observer mode. Use Proxmox Web GUI to manage storage pools."
+        )
+
+
 _CACHED_ADAPTER: Optional[StoragePlatformAdapter] = None
 
 
@@ -1813,6 +2090,10 @@ def get_storage_platform(force_refresh: bool = False) -> StoragePlatformAdapter:
 
     if platform_type == PlatformType.UNRAID:
         _CACHED_ADAPTER = UnraidStorageAdapter()
+    elif platform_type == PlatformType.TRUENAS:
+        _CACHED_ADAPTER = TrueNASStorageAdapter()
+    elif platform_type == PlatformType.PROXMOX:
+        _CACHED_ADAPTER = ProxmoxStorageAdapter()
     else:
         _CACHED_ADAPTER = GenericLinuxStorageAdapter()
 

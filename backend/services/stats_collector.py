@@ -159,11 +159,20 @@ def stats_collector_daemon():
             t_nvme = max(active_nvme, default=None)
             nvme_over_ceiling = t_nvme is not None and t_nvme >= zero_rpm_nvme_ceiling
 
-            # Unraid Storage Subsystem Interlocks (Parity Check & Mover)
+            # Universal Storage Subsystem Interlocks (Unraid Parity/Mover, Btrfs Scrub, ZFS Scrub)
             unraid_status = read_unraid_status()
             mover_active = bool(unraid_status.get("mover", {}).get("active", False))
             parity_active = bool(unraid_status.get("parity_check", {}).get("active", False))
-            storage_busy = mover_active or parity_active
+            pal_busy = False
+            try:
+                from backend.hardware.pal_storage import get_storage_platform
+
+                pal_adapter = get_storage_platform()
+                if hasattr(pal_adapter, "is_storage_busy"):
+                    pal_busy = bool(pal_adapter.is_storage_busy())
+            except Exception:
+                pass
+            storage_busy = mover_active or parity_active or pal_busy
 
             curve_points = fan_cfg.get("curve_points", None)
             zone1_curve = fan_cfg.get("zone1_curve_points") or curve_points
@@ -538,6 +547,11 @@ def stats_collector_daemon():
             elif in_led_night:
                 send_led_packet(0, 0, 0, 0, 0, 0, 0, 0)
 
+            last_led_night = getattr(stats_collector_daemon, "_last_led_night", False)
+            if last_led_night and not in_led_night:
+                apply_led_state(cfg)
+            stats_collector_daemon._last_led_night = in_led_night
+
             disk_hold_rem = max(get_hold_remaining("pwm1", 120), get_hold_remaining("pwm2", 120))
             cpu_hold_rem = get_hold_remaining("pwm3", 90)
 
@@ -643,7 +657,7 @@ def stats_collector_daemon():
                 "security": {"is_default_password": is_using_default_password()},
                 "unraid": read_unraid_status(),
                 "docker": docker_list,
-                "ups": read_ups_status(),
+                "ups": (ups_stat := read_ups_status()),
                 "lcd": {
                     "page": Z_STATE.current_lcd_page,
                     "cycle_seconds": Z_STATE.lcd_cycle_seconds,
@@ -664,8 +678,14 @@ def stats_collector_daemon():
                 },
             }
 
-            # Evaluate alerts
+            # Evaluate alerts & UPS power watchdog
             evaluate_system_alerts(data["unraid"], data["ups"])
+            try:
+                from backend.services.ups_watchdog import check_ups_power_watchdog
+
+                check_ups_power_watchdog(data["ups"], now)
+            except Exception as ue:
+                logger.debug(f"[UPS Watchdog] Evaluation error: {ue}")
 
             with Z_STATE.lock:
                 Z_STATE.cached_stats = data

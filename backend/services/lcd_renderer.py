@@ -56,6 +56,29 @@ def discover_fb_geometry() -> tuple[int, int, int]:
     return default_w, default_h, default_stride
 
 
+def discover_fb_bpp() -> int:
+    """
+    Discovers bits_per_pixel from sysfs (/sys/class/graphics/fb0/bits_per_pixel).
+    Defaults to 32 (or 16 if 16-bit).
+    """
+    default_bpp = 32
+    bases = ["/sys/class/graphics/fb0", "/host/sys/class/graphics/fb0"]
+    if HOST_SYS and os.path.isdir(os.path.join(HOST_SYS, "class/graphics/fb0")):
+        bases.insert(0, os.path.join(HOST_SYS, "class/graphics/fb0"))
+
+    for base in bases:
+        bpp_file = os.path.join(base, "bits_per_pixel")
+        if os.path.exists(bpp_file):
+            try:
+                with open(bpp_file) as f:
+                    b_val = int(f.read().strip())
+                    if b_val in (16, 24, 32):
+                        return b_val
+            except (OSError, ValueError):
+                pass
+    return default_bpp
+
+
 def render_lcd_loop():
     """
     Active Framebuffer Streamer:
@@ -87,7 +110,8 @@ def render_lcd_loop():
     set_screen_brightness(eff_bri)
 
     fb_width, fb_height, stride = discover_fb_geometry()
-    row_bytes = fb_width * 4
+    bpp = discover_fb_bpp()
+    row_bytes = fb_width * (2 if bpp == 16 else 4)
     total_fb_bytes = fb_height * stride
 
     target_fps = max(1, LCD_FPS)
@@ -95,7 +119,7 @@ def render_lcd_loop():
     lcd_format = LCD_FORMAT
 
     logger.info(
-        f"[LCD] Starting active renderer: {fb_width}x{fb_height} @ {target_fps} FPS -> {fb_path} (stride {stride}, format {lcd_format})"
+        f"[LCD] Starting active renderer: {fb_width}x{fb_height} ({bpp}bpp) @ {target_fps} FPS -> {fb_path} (stride {stride}, format {lcd_format})"
     )
 
     chromium_args = [
@@ -213,8 +237,12 @@ def render_lcd_loop():
                             retry_delay = 2.0
 
                             with Image.open(io.BytesIO(raw_bytes)) as img:
-                                raw_mode = "BGRA" if img.mode == "RGBA" else "BGRX"
-                                fb_mem[:total_fb_bytes] = img.tobytes("raw", raw_mode, stride, 1)
+                                if bpp == 16:
+                                    rgb_img = img.convert("RGB")
+                                    fb_mem[:total_fb_bytes] = rgb_img.tobytes("raw", "BGR;16", stride, 1)
+                                else:
+                                    raw_mode = "BGRA" if img.mode == "RGBA" else "BGRX"
+                                    fb_mem[:total_fb_bytes] = img.tobytes("raw", raw_mode, stride, 1)
                                 try:
                                     fb_mem.flush()
                                 except Exception:

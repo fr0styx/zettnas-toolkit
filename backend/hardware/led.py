@@ -340,7 +340,18 @@ def find_led_port():
             except Exception:
                 pass
             return b
-    for p in ["/dev/ttyACM0", "/host/dev/ttyACM0", LED_PORT]:
+    candidates = [
+        "/dev/ttyACM0",
+        "/host/dev/ttyACM0",
+        "/dev/ttyACM1",
+        "/host/dev/ttyACM1",
+        "/dev/ttyUSB0",
+        "/host/dev/ttyUSB0",
+        "/dev/ttyUSB1",
+        "/host/dev/ttyUSB1",
+        LED_PORT,
+    ]
+    for p in candidates:
         if p and os.path.exists(p):
             return p
     return None
@@ -353,7 +364,7 @@ def send_led_packet(mode, r1, g1, b1, r2=0, g2=0, b2=0, speed=5):
             _close_serial_connection()
         return False, f"Device {port or 'ttyACM0'} not found"
 
-    raw_delay = (-speed) & 0xFF if speed is not None else 0xFB
+    raw_delay = speed & 0xFF if speed is not None else 0xFB
     payload = bytes([mode, r1, g1, b1, r2, g2, b2, raw_delay])
     crc = 0
     for byte in payload:
