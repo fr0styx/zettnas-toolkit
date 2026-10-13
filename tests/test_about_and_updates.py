@@ -25,6 +25,7 @@ def test_get_system_about_endpoint(client, auth_headers):
     assert data["tag"] == f"v{__version__}"
     assert data["release_channel"] == "stable"
     assert "chassis_model" in data
+    assert "chassis_slug" in data
     assert "hostname" in data
     assert "platform" in data
     assert "python_version" in data

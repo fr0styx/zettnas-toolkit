@@ -34,7 +34,13 @@ from backend.hardware.led import apply_led_state, find_led_port, send_led_packet
 from backend.hardware.memory import read_mem
 from backend.hardware.network import read_ip, read_network_rates
 from backend.hardware.screen import get_screen_state, is_in_time_window, set_screen_brightness
-from backend.hardware.storage import detect_chassis_model, get_current_layout, read_storage, read_uptime
+from backend.hardware.storage import (
+    detect_chassis_model,
+    get_chassis_friendly_name,
+    get_current_layout,
+    read_storage,
+    read_uptime,
+)
 from backend.hardware.unraid import read_unraid_status
 from backend.hardware.docker_stats import read_docker_containers
 from backend.hardware.host_telemetry import (
@@ -611,6 +617,7 @@ def stats_collector_daemon():
                 "uptime": read_uptime(),
                 "disks": disks,
                 "chassis": detect_chassis_model(),
+                "chassis_label": get_chassis_friendly_name(detect_chassis_model()),
                 "layout": get_current_layout(),
                 "copy_status": Z_STATE.copy_status,
                 "events": events_list,

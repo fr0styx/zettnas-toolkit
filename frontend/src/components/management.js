@@ -114,7 +114,10 @@ export function updateManagementTelemetry(stats) {
       stateEl.textContent = unraid.state;
       stateEl.style.color = unraid.color?.startsWith('green') ? 'var(--ok2)' : 'var(--warn)';
     }
-    if (srvEl) srvEl.textContent = `${unraid.server_name || stats.name || 'NAS'} (${unraid.model || stats.motherboard?.board || stats.chassis?.model || 'D6U'})`;
+    if (srvEl) {
+      const chassisName = stats.chassis_label || stats.motherboard?.board || (stats.chassis ? stats.chassis.toUpperCase() : 'D6U');
+      srvEl.textContent = `${unraid.server_name || stats.name || 'NAS'} (${unraid.model || chassisName})`;
+    }
     if (verEl) verEl.textContent = `Unraid ${unraid.version || ''}`;
     if (disksEl) {
       const d = unraid.disks || {};

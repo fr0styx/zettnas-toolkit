@@ -37,7 +37,7 @@ from backend.hardware.docker_stats import container_action, read_docker_containe
 from backend.hardware.fans import set_fan_pwm
 from backend.hardware.led import apply_led_state
 from backend.hardware.screen import get_screen_state, save_screen_state
-from backend.hardware.storage import detect_chassis_model, get_current_layout
+from backend.hardware.storage import detect_chassis_model, get_chassis_friendly_name, get_current_layout
 from backend.hardware.unraid import read_unraid_status
 from backend.hardware.ups import read_ups_status
 from backend.models.schemas import (
@@ -1667,7 +1667,7 @@ async def get_system_about():
     import socket
     import sys
 
-    from backend.hardware.storage import detect_chassis_model
+    from backend.hardware.storage import detect_chassis_model, get_chassis_friendly_name
 
     chassis = detect_chassis_model()
     boot_time = getattr(Z_STATE, "boot_time", None) or time.time()
@@ -1678,7 +1678,8 @@ async def get_system_about():
         "version": __version__,
         "tag": f"v{__version__}",
         "release_channel": "stable",
-        "chassis_model": chassis,
+        "chassis_model": get_chassis_friendly_name(chassis),
+        "chassis_slug": chassis,
         "hostname": socket.gethostname(),
         "platform": platform.platform(),
         "python_version": sys.version.split()[0],
@@ -1838,7 +1839,8 @@ async def generate_diagnostics_bundle():
             "processor": platform.processor(),
             "python_version": sys.version,
         },
-        "chassis_model": detect_chassis_model(),
+        "chassis_model": get_chassis_friendly_name(detect_chassis_model()),
+        "chassis_slug": detect_chassis_model(),
         "pal_capabilities": pal_caps,
         "cpu_count": os.cpu_count(),
         "memory": ram_stats,

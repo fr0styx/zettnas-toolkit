@@ -331,6 +331,11 @@ export function updateChassisImageForTheme() {
   };
   const chassis = (state.latestStats && state.latestStats.chassis) ? state.latestStats.chassis : 'd6u';
   chassisImg.src = modelMap[chassis] || 'img/chassis-d6u.webp';
+  const label = (state.latestStats && state.latestStats.chassis_label)
+    ? state.latestStats.chassis_label
+    : (chassis === 'd4' ? 'Zettlab D4 (4-Bay)' : chassis === 'd8u' ? 'Zettlab D8 Ultra (8-Bay)' : 'Zettlab D6 Ultra (6-Bay)');
+  chassisImg.alt = label;
+  chassisImg.title = label;
 }
 
 function _restoreNonYakWallpaper(wpLayer) {

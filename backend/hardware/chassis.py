@@ -64,16 +64,40 @@ class ChassisEngine:
         """
         vendor = cls._read_dmi_sys_vendor().lower()
         product = cls._read_dmi_product_name().lower()
+        board = cls._read_dmi_field("board_name").lower()
+        sku = cls._read_dmi_field("product_sku").lower()
+        family = cls._read_dmi_field("product_family").lower()
+        dmi_combined = f"{product} {board} {sku} {family} {vendor}"
 
         # Check for known custom hardware brands / models
         is_zettlabs = bool(
             "zettlab" in vendor
-            or any(k in product for k in ("d4", "d6", "d6u", "d6 ultra", "d8", "zettbox", "zettnas"))
+            or "zettos" in family
+            or any(
+                k in dmi_combined
+                for k in (
+                    "wy110",
+                    "wy120",
+                    "wy140",
+                    "d4",
+                    "d6",
+                    "d6u",
+                    "d6 ultra",
+                    "d8",
+                    "d8u",
+                    "zettbox",
+                    "zettnas",
+                )
+            )
         )
-        is_ugreen = bool("ugreen" in vendor or any(k in product for k in ("dxp", "ugos", "ugreen")))
-        is_minisforum = bool("minisforum" in vendor or any(k in product for k in ("ms-01", "ms-a1", "minisforum")))
+        is_ugreen = bool("ugreen" in vendor or any(k in dmi_combined for k in ("dxp", "ugos", "ugreen")))
+        is_minisforum = bool("minisforum" in vendor or any(k in dmi_combined for k in ("ms-01", "ms-a1", "minisforum")))
         is_custom_appliance = bool(
-            is_zettlabs or "aoostar" in vendor or any(k in product for k in ("wtr", "r1")) or is_ugreen or is_minisforum
+            is_zettlabs
+            or "aoostar" in vendor
+            or any(k in dmi_combined for k in ("wtr", "r1"))
+            or is_ugreen
+            or is_minisforum
         )
 
         # LCD Framebuffer detection
@@ -194,7 +218,11 @@ class ChassisEngine:
         Synthesizes active physical disks, user slot mappings, and hardware chassis status.
         """
         records: List[PhysicalDiskRecord] = DiskDiscoveryHAL.discover_physical_disks()
-        hdds = [r for r in records if r.transport != "nvme" and not r.dev_name.startswith("nvme")]
+        hdds = [
+            r
+            for r in records
+            if r.transport not in ("nvme", "usb") and not r.dev_name.startswith("nvme") and not r.removable
+        ]
         nvmes = [r for r in records if r.transport == "nvme" or r.dev_name.startswith("nvme")]
 
         cfg = cls.load_bay_mapping_config()
@@ -202,7 +230,49 @@ class ChassisEngine:
         configured_total_bays = cfg.get("total_bays")
         user_mappings: List[Dict[str, Any]] = cfg.get("mappings", [])
 
-        # 1. Determine Chassis Profile & Total Bays
+        # 1. Determine Friendly Chassis Model Label & Hardware Brand
+        dmi_prod = cls._read_dmi_product_name().lower()
+        dmi_board = cls._read_dmi_field("board_name").lower()
+        dmi_sku = cls._read_dmi_field("product_sku").lower()
+        vendor_lower = cls._read_dmi_sys_vendor().lower()
+
+        raw_prod = cls._read_dmi_product_name()
+
+        # Check explicit product name first, then fallback to board/sku
+        if "d4" in dmi_prod or "wy110" in dmi_prod:
+            chassis_model = "ZETTLAB D4"
+            friendly_label = "Zettlab D4 (4-Bay)"
+        elif "d8" in dmi_prod or "wy140" in dmi_prod:
+            chassis_model = "ZETTLAB D8"
+            friendly_label = "Zettlab D8 Ultra (8-Bay)"
+        elif "d6" in dmi_prod or "wy120" in dmi_prod:
+            chassis_model = "ZETTLAB D6"
+            friendly_label = "Zettlab D6 Ultra (6-Bay)"
+        elif "wy110" in dmi_board or "wy110" in dmi_sku or "d4" in dmi_board or "d4" in dmi_sku:
+            chassis_model = "ZETTLAB D4"
+            friendly_label = "Zettlab D4 (4-Bay)"
+        elif "wy140" in dmi_board or "wy140" in dmi_sku or "d8" in dmi_board or "d8" in dmi_sku:
+            chassis_model = "ZETTLAB D8"
+            friendly_label = "Zettlab D8 Ultra (8-Bay)"
+        elif "wy120" in dmi_board or "wy120" in dmi_sku or "d6" in dmi_board or "d6" in dmi_sku:
+            chassis_model = "ZETTLAB D6"
+            friendly_label = "Zettlab D6 Ultra (6-Bay)"
+        elif "wtr" in dmi_prod or "aoostar" in vendor_lower:
+            chassis_model = f"AOOSTAR WTR ({raw_prod})" if raw_prod else "AOOSTAR WTR"
+            friendly_label = chassis_model
+        elif "ugreen" in vendor_lower or any(k in f"{dmi_prod} {dmi_board}" for k in ("dxp", "ugreen")):
+            chassis_model = f"UGREEN DXP ({raw_prod.upper()})" if raw_prod else "UGREEN DXP"
+            friendly_label = chassis_model
+        elif "minisforum" in vendor_lower or any(
+            k in f"{dmi_prod} {dmi_board}" for k in ("ms-01", "ms-a1", "minisforum")
+        ):
+            chassis_model = f"MINISFORUM ({raw_prod.upper()})" if raw_prod else "MINISFORUM NAS"
+            friendly_label = chassis_model
+        else:
+            chassis_model = None
+            friendly_label = None
+
+        # 2. Determine Profile & Total Bays
         hdd_count = len(hdds)
         if configured_profile != "auto" and configured_profile in (
             "compact_dual",
@@ -212,7 +282,9 @@ class ChassisEngine:
         ):
             profile = configured_profile
         else:
-            if hdd_count <= 2:
+            if chassis_model in ("ZETTLAB D4", "ZETTLAB D6", "ZETTLAB D8"):
+                profile = "tower_desktop"
+            elif hdd_count <= 2:
                 profile = "compact_dual"
             elif hdd_count <= 6:
                 profile = "tower_desktop"
@@ -222,37 +294,32 @@ class ChassisEngine:
         if configured_total_bays and configured_total_bays >= 1:
             total_bays = configured_total_bays
         else:
-            if profile == "compact_dual":
+            if chassis_model == "ZETTLAB D4":
+                total_bays = 4
+            elif chassis_model == "ZETTLAB D6":
+                total_bays = 6
+            elif chassis_model == "ZETTLAB D8":
+                total_bays = 8
+            elif profile == "compact_dual":
                 total_bays = max(2, hdd_count)
             elif profile == "tower_desktop":
                 total_bays = 4 if hdd_count <= 4 else 6
             else:
                 total_bays = 8 if hdd_count <= 8 else (12 if hdd_count <= 12 else 24)
 
-        # 2. Determine Friendly Chassis Model Label
-        dmi_prod = cls._read_dmi_product_name()
-        dmi_lower = dmi_prod.lower()
-        vendor_lower = cls._read_dmi_sys_vendor().lower()
-        if "d8" in dmi_lower:
-            chassis_model = "ZETTLAB D8"
-        elif "d6" in dmi_lower:
-            chassis_model = "ZETTLAB D6"
-        elif "d4" in dmi_lower:
-            chassis_model = "ZETTLAB D4"
-        elif "wtr" in dmi_lower or "aoostar" in vendor_lower:
-            chassis_model = f"AOOSTAR WTR ({dmi_prod})" if dmi_prod else "AOOSTAR WTR"
-        elif "ugreen" in vendor_lower or any(k in dmi_lower for k in ("dxp", "ugreen")):
-            chassis_model = f"UGREEN DXP ({dmi_prod.upper()})" if dmi_prod else f"UGREEN DXP ({total_bays}-BAY)"
-        elif "minisforum" in vendor_lower or any(k in dmi_lower for k in ("ms-01", "ms-a1", "minisforum")):
-            chassis_model = f"MINISFORUM ({dmi_prod.upper()})" if dmi_prod else "MINISFORUM NAS"
-        elif profile == "compact_dual":
-            chassis_model = f"COMPACT DUAL ({total_bays}-BAY)"
-        elif profile == "tower_desktop":
-            chassis_model = f"DESKTOP TOWER ({total_bays}-BAY)"
-        elif profile == "rackmount_backplane":
-            chassis_model = f"ENTERPRISE RACK ({total_bays}-BAY)"
-        else:
-            chassis_model = f"STORAGE ENCLOSURE ({total_bays}-BAY)"
+        if not chassis_model:
+            if profile == "compact_dual":
+                chassis_model = f"COMPACT DUAL ({total_bays}-BAY)"
+                friendly_label = chassis_model
+            elif profile == "tower_desktop":
+                chassis_model = f"DESKTOP TOWER ({total_bays}-BAY)"
+                friendly_label = chassis_model
+            elif profile == "rackmount_backplane":
+                chassis_model = f"ENTERPRISE RACK ({total_bays}-BAY)"
+                friendly_label = chassis_model
+            else:
+                chassis_model = f"STORAGE ENCLOSURE ({total_bays}-BAY)"
+                friendly_label = chassis_model
 
         # 3. Build Drive Lookup Tables
         disk_by_canonical: Dict[str, PhysicalDiskRecord] = {r.canonical_id: r for r in hdds}
@@ -363,6 +430,7 @@ class ChassisEngine:
             "profile": profile,
             "total_bays": total_bays,
             "chassis_model": chassis_model,
+            "chassis_label": friendly_label,
             "bays": bays,
             "nvme_slots": nvme_slots,
             "available_drives": [

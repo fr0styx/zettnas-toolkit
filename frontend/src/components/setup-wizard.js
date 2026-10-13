@@ -151,8 +151,15 @@ export function openSetupWizard(stats = null) {
     const hwFb = document.getElementById('setup-hw-fb');
     const hwFans = document.getElementById('setup-hw-fans');
     const hwLeds = document.getElementById('setup-hw-leds');
-
-    if (hwModel) hwModel.textContent = currentStats.chassis || currentStats.model || currentStats.name || 'ZettNAS Hardware';
+    if (hwModel) {
+      const friendlyName = currentStats.chassis_label || (
+        currentStats.chassis === 'd4' ? 'Zettlab D4 (4-Bay)' :
+        currentStats.chassis === 'd6u' ? 'Zettlab D6 Ultra (6-Bay)' :
+        currentStats.chassis === 'd8u' ? 'Zettlab D8 Ultra (8-Bay)' :
+        (currentStats.chassis ? String(currentStats.chassis).toUpperCase() : (currentStats.model || currentStats.name || 'ZettNAS Hardware'))
+      );
+      hwModel.textContent = friendlyName;
+    }
 
     if (hwFb) {
       const fbActive = currentStats?.peripherals?.fb_active ?? (currentStats?.lcd_active && currentStats?.lcd?.page !== undefined);
