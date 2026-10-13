@@ -63,7 +63,14 @@ def read_unraid_status(force: bool = False) -> Dict[str, Any]:
             "color": "grey-off",
             "is_healthy": True,
             "disks": {"total": 0, "disabled": 0, "invalid": 0, "missing": 0, "new": 0},
-            "parity_check": {"active": False, "action": "", "progress_pct": 0, "errors": 0},
+            "parity_check": {
+                "active": False,
+                "paused": False,
+                "action": "",
+                "progress_pct": 0,
+                "errors": 0,
+                "speed": 0,
+            },
             "mover": {"active": False, "action": "", "total_files": 0, "remain_files": 0},
         }
         _CACHED_UNRAID_STATUS = fallback
@@ -104,7 +111,38 @@ def read_unraid_status(force: bool = False) -> Dict[str, Any]:
     resync_pos = _to_int("mdResyncPos")
     resync_size = _to_int("mdResyncSize")
     resync_corr = _to_int("mdResyncCorr")
-    resync_active = bool(resync_action and resync_action.strip() and resync_size > 0 and resync_pos < resync_size)
+    md_resync = _to_int("mdResync")
+
+    # In Unraid, mdResyncAction, mdResyncPos, and mdResyncSize persist in var.ini indefinitely
+    # after a parity check completes, pauses, or is cancelled.
+    # An active sync is ONLY executing if mdState is STARTED and mdResync (sync speed in KB/s) > 0.
+    has_md_resync = "mdResync" in var_data
+    if has_md_resync:
+        resync_active = bool(
+            md_state == "STARTED"
+            and md_resync > 0
+            and resync_action
+            and resync_action.strip()
+            and resync_size > 0
+            and resync_pos < resync_size
+        )
+    else:
+        resync_active = bool(
+            md_state == "STARTED"
+            and resync_action
+            and resync_action.strip()
+            and resync_size > 0
+            and resync_pos < resync_size
+        )
+
+    resync_paused = bool(
+        md_state == "STARTED"
+        and not resync_active
+        and resync_action
+        and resync_action.strip()
+        and resync_size > 0
+        and 0 < resync_pos < resync_size
+    )
     resync_pct = round((resync_pos / resync_size) * 100, 1) if resync_size > 0 else 0.0
 
     mover_active = var_data.get("shareMoverActive", "no").lower() == "yes"
@@ -138,9 +176,11 @@ def read_unraid_status(force: bool = False) -> Dict[str, Any]:
         },
         "parity_check": {
             "active": resync_active,
-            "action": resync_action,
-            "progress_pct": resync_pct,
-            "errors": resync_corr,
+            "paused": resync_paused,
+            "action": resync_action if (resync_active or resync_paused) else "",
+            "progress_pct": resync_pct if (resync_active or resync_paused) else 0.0,
+            "errors": resync_corr if (resync_active or resync_paused) else 0,
+            "speed": md_resync if resync_active else 0,
         },
         "mover": {
             "active": mover_active,

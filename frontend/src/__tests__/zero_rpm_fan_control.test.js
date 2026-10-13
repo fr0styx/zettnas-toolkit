@@ -164,6 +164,33 @@ describe('Zero RPM Workstation UI Badges & Readouts', () => {
     expect(badgeZ1.textContent).toBe('Zone 1: Standby (Cooling down)');
   });
 
+  it('displays remaining cooling down seconds when zone1_standby_rem is provided', () => {
+    const telemetry = {
+      fan_control: {
+        zone1_temp: 33,
+        zone1_pwm: 58,
+        zone1_zero_rpm: false,
+        zone1_standby: true,
+        zone1_standby_rem: 45,
+        zone2_temp: 34,
+        zone2_pwm: 58,
+        zone2_zero_rpm: false,
+        zone2_standby: true,
+        zone2_standby_rem: 45,
+        cpu_temp: 46,
+        cpu_pwm: 67,
+        ctrl_cpu_fan: true,
+        disk_hold_remaining: 0,
+        cpu_hold_remaining: 0,
+      }
+    };
+
+    updateFanCurveWorkstation(telemetry);
+
+    const badgeZ1 = document.getElementById('zero-rpm-badge-z1');
+    expect(badgeZ1.textContent).toBe('Zone 1: Standby (Cooling down 45s)');
+  });
+
   it('positions SVG thermal dots (curve-dot-cpu, curve-dot-z1, curve-dot-z2) accurately using tempToX', () => {
     const telemetry = {
       fan_control: {

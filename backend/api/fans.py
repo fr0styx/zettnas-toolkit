@@ -6,6 +6,7 @@ from backend.config import (
     FAN_ZERO_RPM_DEFAULT_NVME_CEILING,
     FAN_ZERO_RPM_DEFAULT_START_TEMP,
     FAN_ZERO_RPM_DEFAULT_STOP_TEMP,
+    FAN_ZERO_RPM_STOP_DELAY,
 )
 from backend.fsutil import atomic_write_json, read_json
 from backend.hardware.fans import sanitize_curve_points
@@ -23,6 +24,7 @@ FAN_DEFAULTS = {
     "zero_rpm_nvme_ceiling": FAN_ZERO_RPM_DEFAULT_NVME_CEILING,
     "zero_rpm_stop_temp": FAN_ZERO_RPM_DEFAULT_STOP_TEMP,
     "zero_rpm_start_temp": FAN_ZERO_RPM_DEFAULT_START_TEMP,
+    "zero_rpm_stop_delay": FAN_ZERO_RPM_STOP_DELAY,
 }
 VALID_PROFILES = {"auto", "quiet", "balanced", "performance", "full", "manual"}
 
@@ -59,6 +61,8 @@ def post_fans(req: FanConfigRequest):
         data["zero_rpm_stop_temp"] = max(25, min(45, int(data["zero_rpm_stop_temp"])))
     if data.get("zero_rpm_start_temp") is not None:
         data["zero_rpm_start_temp"] = max(30, min(55, int(data["zero_rpm_start_temp"])))
+    if data.get("zero_rpm_stop_delay") is not None:
+        data["zero_rpm_stop_delay"] = max(10, min(600, int(data["zero_rpm_stop_delay"])))
     for curve_field in (
         "curve_points",
         "nvme_curve_points",

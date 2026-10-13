@@ -153,7 +153,15 @@ export function updateFanCurveWorkstation(s) {
       badgeZ1.style.color = '#38bdf8';
       badgeZ1.style.borderColor = 'rgba(56, 189, 248, 0.4)';
     } else if (fc.zone1_standby) {
-      badgeZ1.textContent = 'Zone 1: Standby (Cooling down)';
+      let detail = ' (Cooling down)';
+      if (fc.storage_busy) {
+        detail = ' (Storage busy)';
+      } else if (fc.nvme_over_ceiling) {
+        detail = ' (NVMe cooling)';
+      } else if (fc.zone1_standby_rem !== undefined && fc.zone1_standby_rem > 0) {
+        detail = ` (Cooling down ${fc.zone1_standby_rem}s)`;
+      }
+      badgeZ1.textContent = `Zone 1: Standby${detail}`;
       badgeZ1.style.background = 'rgba(245, 183, 49, 0.15)';
       badgeZ1.style.color = 'var(--warn)';
       badgeZ1.style.borderColor = 'rgba(245, 183, 49, 0.4)';
@@ -171,7 +179,15 @@ export function updateFanCurveWorkstation(s) {
       badgeZ2.style.color = '#38bdf8';
       badgeZ2.style.borderColor = 'rgba(56, 189, 248, 0.4)';
     } else if (fc.zone2_standby) {
-      badgeZ2.textContent = 'Zone 2: Standby (Cooling down)';
+      let detail = ' (Cooling down)';
+      if (fc.storage_busy) {
+        detail = ' (Storage busy)';
+      } else if (fc.nvme_over_ceiling) {
+        detail = ' (NVMe cooling)';
+      } else if (fc.zone2_standby_rem !== undefined && fc.zone2_standby_rem > 0) {
+        detail = ` (Cooling down ${fc.zone2_standby_rem}s)`;
+      }
+      badgeZ2.textContent = `Zone 2: Standby${detail}`;
       badgeZ2.style.background = 'rgba(245, 183, 49, 0.15)';
       badgeZ2.style.color = 'var(--warn)';
       badgeZ2.style.borderColor = 'rgba(245, 183, 49, 0.4)';

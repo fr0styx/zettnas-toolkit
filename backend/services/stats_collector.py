@@ -115,12 +115,13 @@ def stats_collector_daemon():
             zero_rpm_nvme_ceiling = fan_cfg.get("zero_rpm_nvme_ceiling", FAN_ZERO_RPM_DEFAULT_NVME_CEILING)
             zero_rpm_stop_temp = fan_cfg.get("zero_rpm_stop_temp", FAN_ZERO_RPM_DEFAULT_STOP_TEMP)
             zero_rpm_start_temp = fan_cfg.get("zero_rpm_start_temp", FAN_ZERO_RPM_DEFAULT_START_TEMP)
+            zero_rpm_stop_delay = int(fan_cfg.get("zero_rpm_stop_delay", FAN_ZERO_RPM_STOP_DELAY))
 
             # Chassis Topology Resolution
             chassis_model = detect_chassis_model()
             sata_disks = [d for d in disks if d.get("role") == "data" or d.get("dev", "").startswith("sd")]
 
-            if chassis_model == "d4" or len(sata_disks) <= 4:
+            if chassis_model == "d4":
                 # ZettLab D4: Single exhaust fan (pwm1) cools ALL 4 bays
                 zone1_disks = sata_disks
                 zone2_disks = []
@@ -321,12 +322,23 @@ def stats_collector_daemon():
             z1_zero_rpm_ready = bool(
                 z1_eligible
                 and st1.get("standby_since", 0.0) > 0.0
-                and (now - st1["standby_since"]) >= FAN_ZERO_RPM_STOP_DELAY
+                and (now - st1["standby_since"]) >= zero_rpm_stop_delay
             )
             z2_zero_rpm_ready = bool(
                 z2_eligible
                 and st2.get("standby_since", 0.0) > 0.0
-                and (now - st2["standby_since"]) >= FAN_ZERO_RPM_STOP_DELAY
+                and (now - st2["standby_since"]) >= zero_rpm_stop_delay
+            )
+
+            z1_rem = (
+                max(0, int(zero_rpm_stop_delay - (now - st1["standby_since"])))
+                if (z1_eligible and st1.get("standby_since", 0.0) > 0 and not z1_zero_rpm_ready)
+                else 0
+            )
+            z2_rem = (
+                max(0, int(zero_rpm_stop_delay - (now - st2["standby_since"])))
+                if (z2_eligible and st2.get("standby_since", 0.0) > 0 and not z2_zero_rpm_ready)
+                else 0
             )
 
             if critical_override:
@@ -603,10 +615,17 @@ def stats_collector_daemon():
                     "zero_rpm_nvme_ceiling": zero_rpm_nvme_ceiling,
                     "zero_rpm_stop_temp": zero_rpm_stop_temp,
                     "zero_rpm_start_temp": zero_rpm_start_temp,
+                    "zero_rpm_stop_delay": zero_rpm_stop_delay,
                     "zone1_standby": z1_all_standby,
                     "zone2_standby": z2_all_standby,
+                    "zone1_eligible": z1_eligible,
+                    "zone2_eligible": z2_eligible,
+                    "zone1_standby_rem": z1_rem,
+                    "zone2_standby_rem": z2_rem,
                     "zone1_zero_rpm": active_pwm1 == 0,
                     "zone2_zero_rpm": active_pwm2 == 0,
+                    "storage_busy": storage_busy,
+                    "nvme_over_ceiling": nvme_over_ceiling,
                     "curve_points": fan_cfg.get("curve_points", None),
                     "nvme_curve_points": fan_cfg.get("nvme_curve_points", None),
                     "cpu_curve_points": fan_cfg.get("cpu_curve_points", None),

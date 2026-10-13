@@ -58,6 +58,7 @@ mdResyncAction="check P"
 mdResyncPos="5000000"
 mdResyncSize="10000000"
 mdResyncCorr="2"
+mdResync="145820"
 shareMoverActive="no"
 """
     )
@@ -67,9 +68,38 @@ shareMoverActive="no"
 
     assert status["available"] is True
     assert status["parity_check"]["active"] is True
+    assert status["parity_check"]["paused"] is False
     assert status["parity_check"]["action"] == "check P"
     assert status["parity_check"]["progress_pct"] == 50.0
     assert status["parity_check"]["errors"] == 2
+    assert status["parity_check"]["speed"] == 145820
+
+
+def test_unraid_parse_parity_check_idle_or_paused(tmp_path, monkeypatch):
+    emhttp_dir = tmp_path / "emhttp"
+    emhttp_dir.mkdir()
+    var_ini = emhttp_dir / "var.ini"
+    var_ini.write_text(
+        """mdColor="green-on"
+mdState="STARTED"
+mdResyncAction="check P"
+mdResyncPos="7401889556"
+mdResyncSize="21485322188"
+mdResyncCorr="1"
+mdResync="0"
+mdResyncDt="0"
+shareMoverActive="no"
+"""
+    )
+
+    monkeypatch.setattr("backend.hardware.unraid._find_emhttp_dir", lambda: str(emhttp_dir))
+    status = read_unraid_status(force=True)
+
+    assert status["available"] is True
+    assert status["parity_check"]["active"] is False
+    assert status["parity_check"]["paused"] is True
+    assert status["parity_check"]["action"] == "check P"
+    assert status["parity_check"]["speed"] == 0
 
 
 def test_unraid_parse_mover_active(tmp_path, monkeypatch):
