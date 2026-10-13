@@ -6679,15 +6679,6 @@ export function initManagement() {
 
   // Global helper to open / focus Management window
   window.openManagementWindow = (sectionId = null, paneId = null, subTabId = null) => {
-    overlay.classList.remove('workspace-hidden');
-    win.classList.remove('workspace-hidden');
-
-    const curWs = (typeof getCurrentWorkspace === 'function')
-      ? getCurrentWorkspace()
-      : ((typeof window !== 'undefined' && window.getCurrentWorkspace) ? window.getCurrentWorkspace() : 1);
-    overlay.dataset.workspace = String(curWs);
-    win.dataset.workspace = String(curWs);
-
     if (sectionId) {
       showSection(sectionId, paneId, subTabId);
     } else {
@@ -6974,9 +6965,6 @@ export function initManagement() {
     }
 
     const openReplModal = () => {
-      replModal.classList.remove('workspace-hidden');
-      const inner = replModal.querySelector('.smart-modal-window');
-      if (inner) inner.classList.remove('workspace-hidden');
       replModal.style.removeProperty('display');
       replModal.style.display = 'flex';
       replModal.classList.add('open');
@@ -7105,9 +7093,6 @@ export function initManagement() {
 
   if (btnOpenBackupJob && modalBackupJob) {
     btnOpenBackupJob.addEventListener('click', () => {
-      modalBackupJob.classList.remove('workspace-hidden');
-      const inner = modalBackupJob.querySelector('.smart-modal-window');
-      if (inner) inner.classList.remove('workspace-hidden');
       modalBackupJob.style.removeProperty('display');
       modalBackupJob.style.display = 'flex';
       modalBackupJob.classList.add('open');
@@ -7176,9 +7161,6 @@ export function initManagement() {
 
   if (btnOpenSnapshot && modalSnapshot) {
     btnOpenSnapshot.addEventListener('click', () => {
-      modalSnapshot.classList.remove('workspace-hidden');
-      const inner = modalSnapshot.querySelector('.smart-modal-window');
-      if (inner) inner.classList.remove('workspace-hidden');
       modalSnapshot.style.removeProperty('display');
       modalSnapshot.style.display = 'flex';
       modalSnapshot.classList.add('open');

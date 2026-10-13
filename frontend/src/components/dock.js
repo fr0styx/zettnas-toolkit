@@ -362,7 +362,7 @@ export function getActiveWindowElement() {
   const allWins = Array.from(document.querySelectorAll(DESKTOP_WINDOW_SELECTOR))
     .filter((el) => {
       const parent = el.closest?.('#console-modal-overlay, #management-modal-overlay, #container-inspector-overlay, #smart-modal-overlay, #stack-inspector-overlay, #stack-picker-overlay, #app-deploy-modal-overlay') || el;
-      return parent.style.display !== 'none' && !parent.classList.contains('hidden') && !parent.classList.contains('workspace-hidden');
+      return parent.style.display !== 'none' && !parent.classList.contains('hidden');
     })
     .sort((a, b) => parseInt(b.style.zIndex || '0', 10) - parseInt(a.style.zIndex || '0', 10));
   return allWins[0] || null;
@@ -388,102 +388,15 @@ export function restoreWindowSnap(dragEl, winId) {
   }
 }
 
-let _currentWorkspace = 1;
-export const WORKSPACES = [
-  { id: 1, name: 'Workspace 1', key: 'workspace.1' },
-  { id: 2, name: 'Workspace 2', key: 'workspace.2' },
-  { id: 3, name: 'Workspace 3', key: 'workspace.3' },
-];
+export const WORKSPACES = [];
 
 export function getCurrentWorkspace() {
-  return _currentWorkspace;
+  return 1;
 }
 
-export function switchWorkspace(wsId) {
-  if (wsId < 1 || wsId > 3) return;
-  _currentWorkspace = wsId;
-  try {
-    localStorage.setItem('zettnas_active_workspace', String(wsId));
-  } catch (_) {}
+export function switchWorkspace() {}
 
-  // Update switcher pills UI in topbar
-  document.querySelectorAll('.workspace-pill').forEach((pill) => {
-    const pId = parseInt(pill.dataset.workspace, 10);
-    const isActive = pId === wsId;
-    pill.classList.toggle('active', isActive);
-    pill.setAttribute('aria-selected', isActive ? 'true' : 'false');
-  });
-
-  // Filter visible windows according to workspace
-  const allWindows = document.querySelectorAll(DESKTOP_WINDOW_SELECTOR);
-  allWindows.forEach((winEl) => {
-    // If element is inside a transient modal dialog, skip and keep visible
-    if (winEl.closest?.('.smart-modal-backdrop:not(#console-modal-overlay):not(#management-modal-overlay):not(#app-deploy-modal-overlay):not(#container-inspector-overlay):not(#stack-inspector-overlay):not(#stack-picker-overlay), .modal-backdrop, [role="dialog"]:not(#console-modal-overlay):not(#management-modal-overlay)')) {
-      winEl.classList.remove('workspace-hidden');
-      return;
-    }
-
-    const parentOverlay = winEl.closest?.('#console-modal-overlay, #management-modal-overlay, #container-inspector-overlay, #smart-modal-overlay, #stack-inspector-overlay, #stack-picker-overlay, #app-deploy-modal-overlay') || winEl;
-    
-    // Determine assigned workspace
-    let assignedWs = parseInt(winEl.dataset.workspace, 10) || parseInt(parentOverlay.dataset.workspace, 10);
-    if (!assignedWs) {
-      const winId = (winEl.id || winEl.dataset.windowId || parentOverlay.id || '').toLowerCase();
-      if (winId.includes('console')) {
-        assignedWs = 1;
-      } else if (winId.includes('management')) {
-        assignedWs = 2;
-      } else {
-        assignedWs = _currentWorkspace;
-      }
-      winEl.dataset.workspace = String(assignedWs);
-      parentOverlay.dataset.workspace = String(assignedWs);
-    }
-
-    if (assignedWs === wsId) {
-      parentOverlay.classList.remove('workspace-hidden');
-      winEl.classList.remove('workspace-hidden');
-    } else {
-      parentOverlay.classList.add('workspace-hidden');
-      winEl.classList.add('workspace-hidden');
-    }
-  });
-
-  const wsNames = {
-    1: t('workspace.1', 'Workspace 1'),
-    2: t('workspace.2', 'Workspace 2'),
-    3: t('workspace.3', 'Workspace 3'),
-  };
-  const wsLabel = wsNames[wsId] || `Workspace ${wsId}`;
-  if (typeof announceA11y === 'function') {
-    announceA11y(`Switched to ${wsLabel}`);
-  }
-  if (typeof showToast === 'function') {
-    showToast(wsLabel, 'info', 1400);
-  }
-  if (typeof window !== 'undefined') {
-    window.dispatchEvent(new CustomEvent('zettnas:workspace-changed', { detail: { workspace: wsId } }));
-  }
-}
-
-export function initWorkspaceSwitcher() {
-  const switcher = document.getElementById('desktop-workspace-switcher');
-  if (!switcher) return;
-
-  switcher.querySelectorAll('.workspace-pill').forEach((pill) => {
-    pill.addEventListener('click', () => {
-      const ws = parseInt(pill.dataset.workspace, 10);
-      switchWorkspace(ws);
-    });
-  });
-
-  try {
-    const saved = parseInt(localStorage.getItem('zettnas_active_workspace') || '1', 10);
-    if (saved >= 1 && saved <= 3) {
-      switchWorkspace(saved);
-    }
-  } catch (_) {}
-}
+export function initWorkspaceSwitcher() {}
 
 let _keyboardShortcutsInitialized = false;
 export function initWindowKeyboardShortcuts() {
@@ -527,29 +440,6 @@ export function initWindowKeyboardShortcuts() {
           const winId = activeWin.dataset.windowId || activeWin.id;
           applyWindowSnap(activeWin, snapZone, winId);
           return;
-        }
-      }
-    }
-
-    // 2. Virtual Desktops / Workspace Switcher: Ctrl + (1-3 or Left/Right)
-    if (e.ctrlKey && !e.metaKey && !e.altKey) {
-      const isInput = e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable);
-      if (!isInput) {
-        if (e.key === '1') {
-          e.preventDefault();
-          switchWorkspace(1);
-        } else if (e.key === '2') {
-          e.preventDefault();
-          switchWorkspace(2);
-        } else if (e.key === '3') {
-          e.preventDefault();
-          switchWorkspace(3);
-        } else if (e.key === 'ArrowRight') {
-          e.preventDefault();
-          switchWorkspace((_currentWorkspace % 3) + 1);
-        } else if (e.key === 'ArrowLeft') {
-          e.preventDefault();
-          switchWorkspace(_currentWorkspace === 1 ? 3 : _currentWorkspace - 1);
         }
       }
     }
@@ -1854,9 +1744,6 @@ export const DockManager = {
       this.windows[id].el.style.removeProperty('display');
 
       const el = this.windows[id].el;
-      el.classList.remove('workspace-hidden');
-      const curWs = (typeof getCurrentWorkspace === 'function') ? getCurrentWorkspace() : (_currentWorkspace || 1);
-      el.dataset.workspace = String(curWs);
 
       if (el.classList.contains('os-window') || el.classList.contains('file-manager-window') || el.classList.contains('smart-modal-backdrop')) {
         el.style.setProperty('display', 'flex', 'important');
@@ -1866,8 +1753,6 @@ export const DockManager = {
         ? el
         : el.querySelector('.smart-modal-window, .chassis-front-panel, .os-window, .file-manager-window, .mgmt-app-window') || el;
       if (winEl) {
-        winEl.classList.remove('workspace-hidden');
-        winEl.dataset.workspace = String(curWs);
         winEl.classList.remove('window-minimized');
         winEl.style.removeProperty('display');
         bringToFront(winEl);
@@ -2100,7 +1985,7 @@ export const DockManager = {
       if (iconEl) iconEl.innerHTML = `<use href="${icon}"/>`;
       if (badgeEl) {
         if (id === 'home') {
-          badgeEl.textContent = 'Workspace';
+          badgeEl.textContent = 'Desktop';
           badgeEl.className = 'dock-tooltip-status active';
         } else if (id === 'notif') {
           const events = (state.latestStats && Array.isArray(state.latestStats.events)) ? state.latestStats.events : [];
@@ -2631,17 +2516,6 @@ export function toggleUserProfileFlyout(anchorEl) {
     });
 
     const openMgmtPane = (pane, subtab = null) => {
-      const curWs = (typeof getCurrentWorkspace === 'function') ? getCurrentWorkspace() : (_currentWorkspace || 1);
-      const mgmtOverlay = document.getElementById('management-modal-overlay');
-      const mgmtWin = document.getElementById('management-window');
-      if (mgmtOverlay) {
-        mgmtOverlay.classList.remove('workspace-hidden');
-        mgmtOverlay.dataset.workspace = String(curWs);
-      }
-      if (mgmtWin) {
-        mgmtWin.classList.remove('workspace-hidden');
-        mgmtWin.dataset.workspace = String(curWs);
-      }
       if (typeof window.openManagementWindow === 'function') {
         window.openManagementWindow(pane, null, subtab);
       } else {
@@ -2934,7 +2808,6 @@ export function initDockSystem() {
   initSnapAssistFlyout();
   initTopbarUserPill();
   initDockSettingsControls();
-  initWorkspaceSwitcher();
   initWindowKeyboardShortcuts();
   const consoleModal = document.getElementById('console-window');
   const consoleHeader = document.querySelector('#console-window .chassis-panel-header');

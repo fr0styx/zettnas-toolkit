@@ -28,26 +28,12 @@ import {
 } from '../components/widgets.js';
 import { ZettEventBus } from '../event-bus.js';
 
-describe('Tier 2: Aero Snap 2.0, Virtual Desktops, Spotlight Actions & Modular Widgets', () => {
+describe('Tier 2: Aero Snap 2.0, Single Desktop Invariant, Spotlight Actions & Modular Widgets', () => {
   beforeEach(() => {
     document.body.innerHTML = `
       <header class="suite-navbar">
         <div class="suite-brand">
           <div id="topbar-user-pill"></div>
-        </div>
-        <div id="desktop-workspace-switcher" class="workspace-switcher" role="tablist">
-          <button class="workspace-pill active" data-workspace="1" role="tab" aria-selected="true">
-            <span class="ws-num">1</span>
-            <span class="ws-label">Storage</span>
-          </button>
-          <button class="workspace-pill" data-workspace="2" role="tab" aria-selected="false">
-            <span class="ws-num">2</span>
-            <span class="ws-label">Apps</span>
-          </button>
-          <button class="workspace-pill" data-workspace="3" role="tab" aria-selected="false">
-            <span class="ws-num">3</span>
-            <span class="ws-label">System</span>
-          </button>
         </div>
       </header>
 
@@ -191,64 +177,63 @@ describe('Tier 2: Aero Snap 2.0, Virtual Desktops, Spotlight Actions & Modular W
     });
   });
 
-  describe('2. Virtual Desktops & Multi-Workspace Switcher', () => {
-    it('initializes workspace switcher and switches between virtual desktops', () => {
+  describe('2. Single Desktop Invariant & Removal of Workspaces', () => {
+    it('ensures workspace switcher is absent and getCurrentWorkspace returns 1', () => {
       initWorkspaceSwitcher();
       expect(getCurrentWorkspace()).toBe(1);
 
-      // Switch to Workspace 2 (Applications)
-      switchWorkspace(2);
-      expect(getCurrentWorkspace()).toBe(2);
-
-      const pill2 = document.querySelector('.workspace-pill[data-workspace="2"]');
-      expect(pill2.classList.contains('active')).toBe(true);
-
-      // Console (Workspace 1) should be hidden in Workspace 2
-      const consoleOverlay = document.getElementById('console-modal-overlay');
-      expect(consoleOverlay.classList.contains('workspace-hidden')).toBe(true);
-
-      // Management (Workspace 2) should be visible in Workspace 2
-      const mgmtOverlay = document.getElementById('management-modal-overlay');
-      expect(mgmtOverlay.classList.contains('workspace-hidden')).toBe(false);
-
-      // Switch back to Workspace 1
-      switchWorkspace(1);
-      expect(consoleOverlay.classList.contains('workspace-hidden')).toBe(false);
-      expect(mgmtOverlay.classList.contains('workspace-hidden')).toBe(true);
+      // Workspace switcher pills should not exist in the DOM
+      const switcher = document.getElementById('desktop-workspace-switcher');
+      expect(switcher).toBeNull();
+      const pills = document.querySelectorAll('.workspace-pill');
+      expect(pills.length).toBe(0);
     });
 
-    it('navigates workspaces via keyboard shortcuts (Ctrl+1..3, Ctrl+Arrows)', () => {
+    it('switchWorkspace is a safe no-op that never hides open windows', () => {
+      const consoleOverlay = document.getElementById('console-modal-overlay');
+      const mgmtOverlay = document.getElementById('management-modal-overlay');
+
+      switchWorkspace(2);
+      expect(getCurrentWorkspace()).toBe(1);
+      expect(consoleOverlay.classList.contains('workspace-hidden')).toBe(false);
+      expect(mgmtOverlay.classList.contains('workspace-hidden')).toBe(false);
+
+      switchWorkspace(3);
+      expect(getCurrentWorkspace()).toBe(1);
+      expect(consoleOverlay.classList.contains('workspace-hidden')).toBe(false);
+      expect(mgmtOverlay.classList.contains('workspace-hidden')).toBe(false);
+
+      switchWorkspace(1);
+      expect(getCurrentWorkspace()).toBe(1);
+      expect(consoleOverlay.classList.contains('workspace-hidden')).toBe(false);
+      expect(mgmtOverlay.classList.contains('workspace-hidden')).toBe(false);
+    });
+
+    it('does not capture or hijack Ctrl+1..3 or Ctrl+Arrows navigation', () => {
       initDockSystem();
-      initWorkspaceSwitcher();
 
       const evtCtrl2 = new KeyboardEvent('keydown', {
         key: '2',
         ctrlKey: true,
+        cancelable: true,
         bubbles: true,
       });
       window.dispatchEvent(evtCtrl2);
-      expect(getCurrentWorkspace()).toBe(2);
+      expect(evtCtrl2.defaultPrevented).toBe(false);
+      expect(getCurrentWorkspace()).toBe(1);
 
       const evtCtrlRight = new KeyboardEvent('keydown', {
         key: 'ArrowRight',
         ctrlKey: true,
+        cancelable: true,
         bubbles: true,
       });
       window.dispatchEvent(evtCtrlRight);
-      expect(getCurrentWorkspace()).toBe(3);
-
-      const evtCtrlLeft = new KeyboardEvent('keydown', {
-        key: 'ArrowLeft',
-        ctrlKey: true,
-        bubbles: true,
-      });
-      window.dispatchEvent(evtCtrlLeft);
-      expect(getCurrentWorkspace()).toBe(2);
+      expect(evtCtrlRight.defaultPrevented).toBe(false);
+      expect(getCurrentWorkspace()).toBe(1);
     });
 
-    it('ensures transient modal dialogs like replication pipelines are never hidden by workspace switching', () => {
-      initWorkspaceSwitcher();
-
+    it('ensures modal dialogs like replication pipelines are never hidden by workspace switching', () => {
       const replBackdrop = document.createElement('div');
       replBackdrop.id = 'modal-create-replication-pipeline';
       replBackdrop.className = 'smart-modal-backdrop';
@@ -257,7 +242,7 @@ describe('Tier 2: Aero Snap 2.0, Virtual Desktops, Spotlight Actions & Modular W
       replBackdrop.appendChild(replWindow);
       document.body.appendChild(replBackdrop);
 
-      // Switch across all 3 workspaces
+      // Attempting to switch workspaces does not affect visibility
       switchWorkspace(2);
       expect(replBackdrop.classList.contains('workspace-hidden')).toBe(false);
       expect(replWindow.classList.contains('workspace-hidden')).toBe(false);
