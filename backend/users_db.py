@@ -502,7 +502,15 @@ def create_user(
             ),
         )
 
-    return get_user_by_id(user_id, db_path)
+    ret = get_user_by_id(user_id, db_path)
+    if ret:
+        try:
+            from backend.services.samba_engine import get_samba_engine
+
+            get_samba_engine().sync_samba_user(username=username_clean, password=password)
+        except Exception:
+            pass
+    return ret
 
 
 def update_user_password(user_id: str, new_password: str, db_path: Optional[str] = None) -> bool:
@@ -520,6 +528,15 @@ def update_user_password(user_id: str, new_password: str, db_path: Optional[str]
     # Clear in-memory cache
     with _SESSION_CACHE_LOCK:
         _SESSION_CACHE.clear()
+    if res.rowcount > 0:
+        try:
+            user = get_user_by_id(user_id, db_path=db_path)
+            if user:
+                from backend.services.samba_engine import get_samba_engine
+
+                get_samba_engine().sync_samba_user(username=user["username"], password=new_password)
+        except Exception:
+            pass
     return res.rowcount > 0
 
 
@@ -587,6 +604,7 @@ def update_user_profile(
 
 def delete_user(user_id: str, db_path: Optional[str] = None) -> bool:
     """Deletes a user. Prevents deleting the last superadmin."""
+    target_user = get_user_by_id(user_id, db_path=db_path)
     with users_db_session(db_path) as conn:
         user = conn.execute("SELECT role_id FROM users WHERE id = ?", (user_id,)).fetchone()
         if not user:
@@ -596,6 +614,13 @@ def delete_user(user_id: str, db_path: Optional[str] = None) -> bool:
         conn.execute("DELETE FROM users WHERE id = ?", (user_id,))
         with _SESSION_CACHE_LOCK:
             _SESSION_CACHE.clear()
+        if target_user:
+            try:
+                from backend.services.samba_engine import get_samba_engine
+
+                get_samba_engine().sync_samba_user(username=target_user["username"], delete=True)
+            except Exception:
+                pass
         return True
 
 

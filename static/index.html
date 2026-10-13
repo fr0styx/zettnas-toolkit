@@ -199,13 +199,13 @@
   })();
 </script>
 <style>html,body{color:#eaf1f8;background-color:#080c10;width:100%;height:100%;margin:0;padding:0;overflow:hidden}html.auth-required body{background:radial-gradient(circle at 50% 20%,#151d29 0%,#080c10 70%)!important}#login-overlay{z-index:999999;background:#080c10;justify-content:center;align-items:center;display:flex;position:fixed;inset:0}html.has-auth-session #login-overlay{display:none!important}html.auth-required #login-overlay{display:flex!important}html.is-desktop-locked #lock-overlay{opacity:1!important;display:flex!important}html.is-desktop-locked body{overflow:hidden!important}html.auth-required .studio-viewport-wrapper,html.auth-required .suite-navbar,html.auth-required #desktop-icons-container,html.auth-required .desktop-icons-container,html.auth-required .top-nav,html.auth-required #desktop-widgets-container,html.auth-required #os-dock-container,html.auth-required .smart-modal-backdrop,html.auth-required .os-window,html.auth-required .notif-center-window{display:none!important}</style>
-  <script type="module" crossorigin src="/assets/index-CMKGhaCf.js"></script>
+  <script type="module" crossorigin src="/assets/index-Btt_ArK3.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-CbXtAM7H.js">
-  <link rel="modulepreload" crossorigin href="/assets/dock-Dl1iDgiU.js">
-  <link rel="modulepreload" crossorigin href="/assets/dashboard-BZZXoJck.js">
-  <link rel="modulepreload" crossorigin href="/assets/users-rPYLZBg2.js">
-  <link rel="modulepreload" crossorigin href="/assets/auth-ByfqZEE2.js">
-  <link rel="modulepreload" crossorigin href="/assets/vm-manager-CfG3-TcY.js">
+  <link rel="modulepreload" crossorigin href="/assets/dock-JEZm0RfR.js">
+  <link rel="modulepreload" crossorigin href="/assets/dashboard-DTHpjTLs.js">
+  <link rel="modulepreload" crossorigin href="/assets/users-CxKjw5p_.js">
+  <link rel="modulepreload" crossorigin href="/assets/auth-BQMCpt5f.js">
+  <link rel="modulepreload" crossorigin href="/assets/vm-manager-DFxW9vhO.js">
   <link rel="stylesheet" crossorigin href="/assets/index-1qw4JWBS.css">
 </head>
 <body class="studio-workbench no-specular-glow">
@@ -3683,6 +3683,10 @@
                 <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-storage"/></svg>
                 <span data-i18n="mgmt.subtab_network_services">File Sharing Services</span>
               </button>
+              <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-network-ports">
+                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-terminal"/></svg>
+                <span data-i18n="mgmt.subtab_network_ports">Ports & Listeners</span>
+              </button>
             </div>
 
             <!-- Sub-tab 1: Visual Network & Physical Switch -->
@@ -4214,6 +4218,44 @@
                     </div>
                     <div style="font-size: 11px; color: var(--muted); line-height: 1.4;">Chroot jail file transport over SSH key authentication without shell access.</div>
                   </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Sub-tab 5: Ports & Listeners -->
+            <div id="mgmt-pane-network-ports" class="mgmt-tab-pane" style="display: none;">
+              <div class="mgmt-card-intro" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                <div>
+                  <div class="mgmt-card-intro-title">
+                    <svg class="ic"><use href="#i-terminal"/></svg>
+                    <span data-i18n="mgmt.network_ports_title">Active Listening Ports & Sockets</span>
+                  </div>
+                  <div class="mgmt-card-intro-desc" data-i18n="mgmt.network_ports_desc">
+                    Real-time host socket inspector correlating listening TCP and UDP ports with NAS services and Docker containers.
+                  </div>
+                </div>
+                <div style="display:flex; gap:8px; align-items:center;">
+                  <input type="text" id="net-ports-search" class="ci-input" placeholder="Filter port, service, container..." style="width: 220px; font-size: 11px; padding: 4px 8px;">
+                  <button class="btn-pill-toggle" id="btn-refresh-net-ports">🔄 Refresh Ports</button>
+                </div>
+              </div>
+              <div class="mgmt-detail-body">
+                <div class="table-wrap" style="max-height: 480px; overflow-y: auto;">
+                  <table class="ci-table" id="table-net-listening-ports">
+                    <thead>
+                      <tr>
+                        <th style="width: 90px;">Port</th>
+                        <th style="width: 80px;">Proto</th>
+                        <th style="width: 140px;">Bind IP</th>
+                        <th>Service / Protocol</th>
+                        <th>Container / Process</th>
+                        <th style="width: 100px; text-align: right;">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody id="net-listening-ports-tbody">
+                      <tr><td colspan="6" style="text-align: center; color: var(--muted); padding: 24px;">Loading active listening sockets...</td></tr>
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </div>

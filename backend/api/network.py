@@ -468,3 +468,12 @@ async def post_wireguard_subnet_routing(req: WireguardSubnetRouteRequest):
         out_iface=req.out_iface,
     )
     return res
+
+
+@router.get("/network/ports/listening", dependencies=[Depends(require_scope("system:config", "system:read"))])
+async def get_listening_ports():
+    """Returns active listening TCP and UDP ports and mapped container services."""
+    from backend.hardware.network import get_active_listening_ports
+
+    ports = await asyncio.to_thread(get_active_listening_ports)
+    return {"ports": ports, "total": len(ports)}

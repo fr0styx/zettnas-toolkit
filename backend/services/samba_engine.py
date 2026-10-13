@@ -305,6 +305,99 @@ class SambaEngine:
 
         return False
 
+    def sync_samba_user(self, username: str, password: Optional[str] = None, delete: bool = False) -> bool:
+        """
+        Synchronizes a user into the Samba passdb database.
+        When delete=True, removes the user from passdb.
+        When password is provided, creates or updates the SMB credentials.
+        """
+        sidecar_info = self.check_sidecar()
+        docker_sock = "/var/run/docker.sock"
+
+        # 1. Try local execution if smbpasswd exists on the system
+        try:
+            if delete:
+                res = subprocess.run(["smbpasswd", "-x", username], capture_output=True, timeout=3)
+                if res.returncode == 0:
+                    logger.info(f"[SambaEngine] Removed user '{username}' from passdb.")
+                    return True
+            elif password:
+                subprocess.run(["adduser", "-D", "-H", username], capture_output=True, timeout=2)
+                p = subprocess.Popen(
+                    ["smbpasswd", "-a", "-s", username],
+                    stdin=subprocess.PIPE,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                )
+                p.communicate(f"{password}\n{password}\n", timeout=3)
+                if p.returncode == 0:
+                    logger.info(f"[SambaEngine] Synchronized user '{username}' into passdb.")
+                    return True
+        except (FileNotFoundError, subprocess.SubprocessError):
+            pass
+
+        # 2. Try docker exec into zettnas-samba container
+        if sidecar_info.get("detected") and os.path.exists(docker_sock):
+            try:
+                import httpx
+
+                transport = httpx.HTTPTransport(uds=docker_sock)
+                with httpx.Client(transport=transport, timeout=5.0) as client:
+                    cid = sidecar_info.get("id", "zettnas-samba")
+                    if delete:
+                        create_exec = client.post(
+                            f"http://localhost/containers/{cid}/exec",
+                            json={"Cmd": ["smbpasswd", "-x", username], "AttachStdout": True, "AttachStderr": True},
+                        )
+                        if create_exec.status_code == 201:
+                            exec_id = create_exec.json().get("Id")
+                            client.post(f"http://localhost/exec/{exec_id}/start", json={"Detach": False, "Tty": False})
+                            logger.info(f"[SambaEngine] Removed user '{username}' from sidecar passdb.")
+                            return True
+                    elif password:
+                        u_exec = client.post(
+                            f"http://localhost/containers/{cid}/exec",
+                            json={
+                                "Cmd": [
+                                    "sh",
+                                    "-c",
+                                    f"id -u {username} || adduser -D -H -u 1000 {username} 2>/dev/null || true",
+                                ],
+                                "AttachStdout": True,
+                                "AttachStderr": True,
+                            },
+                        )
+                        if u_exec.status_code == 201:
+                            client.post(
+                                f"http://localhost/exec/{u_exec.json().get('Id')}/start",
+                                json={"Detach": False, "Tty": False},
+                            )
+
+                        p_exec = client.post(
+                            f"http://localhost/containers/{cid}/exec",
+                            json={
+                                "Cmd": [
+                                    "sh",
+                                    "-c",
+                                    f"printf '%s\n%s\n' '{password}' '{password}' | smbpasswd -a -s {username}",
+                                ],
+                                "AttachStdout": True,
+                                "AttachStderr": True,
+                            },
+                        )
+                        if p_exec.status_code == 201:
+                            client.post(
+                                f"http://localhost/exec/{p_exec.json().get('Id')}/start",
+                                json={"Detach": False, "Tty": False},
+                            )
+                            logger.info(f"[SambaEngine] Synchronized user '{username}' into sidecar passdb.")
+                            return True
+            except Exception as e:
+                logger.debug(f"[SambaEngine] Docker exec passdb sync error: {e}")
+
+        return False
+
     def get_status(self) -> SambaStatus:
         """Returns comprehensive status of Samba file sharing service."""
         port_open = self.check_port_445()

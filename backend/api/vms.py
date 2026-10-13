@@ -746,6 +746,7 @@ class VmUpdateRequest(BaseModel):
     boot_order: Optional[str] = Field(None, pattern="^(iso|disk)$")
     autostart: Optional[bool] = None
     override_limits: Optional[bool] = None
+    secondary_disks: Optional[List[Dict[str, Any]]] = None
 
 
 class VmActionRequest(BaseModel):
@@ -1289,9 +1290,9 @@ def _start_qemu(target_vm: Dict[str, Any], vnc_port: int) -> Tuple[bool, Optiona
             c.extend(["-accel", "tcg", "-cpu", "qemu64"])
 
         disk_bus = target_vm.get("disk_bus", "virtio")
-        disk_fmt = target_vm.get("disk_format", "qcow2")
+        disk_fmt = target_vm.get("disk_format") or ("raw" if disk_path.endswith((".raw", ".img")) else "qcow2")
         if os.path.exists(disk_path):
-            c.extend(["-drive", f"file={disk_path},if={disk_bus},format={disk_fmt}"])
+            c.extend(["-drive", f"file={disk_path},if={disk_bus},format={disk_fmt},id=drive0"])
 
         iso_path = target_vm.get("iso_path")
         boot_order = target_vm.get("boot_order", "iso" if iso_path else "disk")
@@ -1363,8 +1364,9 @@ def _start_qemu(target_vm: Dict[str, Any], vnc_port: int) -> Tuple[bool, Optiona
                 except Exception:
                     pass
             sbus = sdisk.get("bus", "virtio")
+            sfmt = sdisk.get("format") or ("raw" if sd_path.endswith((".raw", ".img")) else "qcow2")
             if os.path.exists(sd_path):
-                c.extend(["-drive", f"file={sd_path},if={sbus},format=qcow2"])
+                c.extend(["-drive", f"file={sd_path},if={sbus},format={sfmt},id=sdisk{idx_d}"])
 
         return c
 
@@ -1550,6 +1552,9 @@ def update_vm(
 
     if req.override_limits is not None:
         target_vm["override_active"] = req.override_limits
+
+    if req.secondary_disks is not None:
+        target_vm["secondary_disks"] = req.secondary_disks
 
     _save_vms(vms)
     add_event("info", "VM Updated", f"VM '{target_vm['name']}' configuration updated.")
@@ -1944,13 +1949,14 @@ def resize_vm_disk(
             detail=f"Target disk size ({req.new_size_gb} GB) must be larger than current size ({current_size_gb} GB). Disk shrinking is not supported.",
         )
 
+    disk_fmt = "raw" if disk_path.endswith((".raw", ".img")) else "qcow2"
     if not os.path.exists(disk_path):
         # Create empty placeholder if it didn't exist yet
         try:
             qemu_img = shutil.which("qemu-img") or "/usr/bin/qemu-img"
             if os.path.exists(qemu_img) or shutil.which(qemu_img):
                 subprocess.run(
-                    [qemu_img, "create", "-f", "qcow2", disk_path, f"{req.new_size_gb}G"],
+                    [qemu_img, "create", "-f", disk_fmt, disk_path, f"{req.new_size_gb}G"],
                     check=True,
                     capture_output=True,
                 )
@@ -1964,7 +1970,7 @@ def resize_vm_disk(
         if os.path.exists(qemu_img) or shutil.which(qemu_img):
             try:
                 subprocess.run(
-                    [qemu_img, "resize", disk_path, f"{req.new_size_gb}G"],
+                    [qemu_img, "resize", "-f", disk_fmt, disk_path, f"{req.new_size_gb}G"],
                     check=True,
                     capture_output=True,
                     text=True,
@@ -1999,8 +2005,12 @@ def resize_vm_disk(
 
 
 @router.delete("/{vm_id}", dependencies=[Depends(require_scope("system:config", "storage:admin"))])
-def delete_vm(vm_id: str, principal: AuthenticatedPrincipal = Depends(get_current_principal)):
-    """Deletes a virtual machine definition."""
+def delete_vm(
+    vm_id: str,
+    purge_disks: bool = True,
+    principal: AuthenticatedPrincipal = Depends(get_current_principal),
+):
+    """Deletes a virtual machine definition and cleans up its virtual disk directory."""
     vms = _load_vms()
     target = next((v for v in vms if v["id"] == vm_id), None)
     if not target:
@@ -2012,5 +2022,10 @@ def delete_vm(vm_id: str, principal: AuthenticatedPrincipal = Depends(get_curren
     _stop_qemu(vm_id, force=True)
     vms = [v for v in vms if v["id"] != vm_id]
     _save_vms(vms)
+    if purge_disks:
+        vm_dir = os.path.join(DATA_DIR, "vms", vm_id)
+        if os.path.exists(vm_dir):
+            shutil.rmtree(vm_dir, ignore_errors=True)
+
     add_event("info", "VM Removed", f"VM '{target['name']}' was deleted.")
     return {"status": "ok"}

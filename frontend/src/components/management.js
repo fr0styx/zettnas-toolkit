@@ -13,6 +13,7 @@ import { fetchAndRenderMetrics } from './metrics-chart.js';
 import { bringToFront, DockManager, makeDraggable, saveWindowBounds, saveOpenWindowsState, showDockToast } from './dock.js';
 import { state } from '../state.js';
 import { api } from '../api.js';
+import { initNetworkPortsInspector, fetchListeningPorts } from './network-manager.js';
 import { showToast, showConfirmToast } from '../toast.js';
 import { trapFocus, escapeHtml, copyTextToClipboard, reconcileKeyedTable } from '../utils.js';
 import { t, getLanguage } from '../i18n.js';
@@ -77,6 +78,8 @@ export const SUBPANE_MAP = {
   'mgmt-pane-network-wireguard': { section: 'mgmt-sec-network', pane: 'mgmt-pane-network-wireguard' },
   'mgmt-pane-network-docker': { section: 'mgmt-sec-network', pane: 'mgmt-pane-network-docker' },
   'mgmt-pane-network-services': { section: 'mgmt-sec-network', pane: 'mgmt-pane-network-services' },
+  'mgmt-pane-network-ports': { section: 'mgmt-sec-network', pane: 'mgmt-pane-network-ports' },
+  'ports': { section: 'mgmt-sec-network', pane: 'mgmt-pane-network-ports' },
 
   // --- Pillar 6: Hardware & Power ---
   'hardware': { section: 'mgmt-sec-hardware', pane: 'mgmt-pane-unraid' },
@@ -5921,6 +5924,12 @@ export async function deleteVlanSubinterface(vlanName) {
 }
 
 export function initNetworkControls() {
+  initNetworkPortsInspector();
+  const portsBtn = document.querySelector('[data-tab-target="mgmt-pane-network-ports"]');
+  if (portsBtn && !portsBtn.dataset.boundFetch) {
+    portsBtn.dataset.boundFetch = '1';
+    portsBtn.addEventListener('click', () => fetchListeningPorts());
+  }
   const btnOpenHostIp = document.getElementById('btn-open-host-ip-modal');
   if (btnOpenHostIp && !btnOpenHostIp.dataset.bound) {
     btnOpenHostIp.dataset.bound = '1';

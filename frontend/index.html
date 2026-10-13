@@ -3724,6 +3724,10 @@
                 <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-storage"/></svg>
                 <span data-i18n="mgmt.subtab_network_services">File Sharing Services</span>
               </button>
+              <button class="mgmt-inner-tab" data-tab-target="mgmt-pane-network-ports">
+                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-terminal"/></svg>
+                <span data-i18n="mgmt.subtab_network_ports">Ports & Listeners</span>
+              </button>
             </div>
 
             <!-- Sub-tab 1: Visual Network & Physical Switch -->
@@ -4255,6 +4259,44 @@
                     </div>
                     <div style="font-size: 11px; color: var(--muted); line-height: 1.4;">Chroot jail file transport over SSH key authentication without shell access.</div>
                   </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Sub-tab 5: Ports & Listeners -->
+            <div id="mgmt-pane-network-ports" class="mgmt-tab-pane" style="display: none;">
+              <div class="mgmt-card-intro" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                <div>
+                  <div class="mgmt-card-intro-title">
+                    <svg class="ic"><use href="#i-terminal"/></svg>
+                    <span data-i18n="mgmt.network_ports_title">Active Listening Ports & Sockets</span>
+                  </div>
+                  <div class="mgmt-card-intro-desc" data-i18n="mgmt.network_ports_desc">
+                    Real-time host socket inspector correlating listening TCP and UDP ports with NAS services and Docker containers.
+                  </div>
+                </div>
+                <div style="display:flex; gap:8px; align-items:center;">
+                  <input type="text" id="net-ports-search" class="ci-input" placeholder="Filter port, service, container..." style="width: 220px; font-size: 11px; padding: 4px 8px;">
+                  <button class="btn-pill-toggle" id="btn-refresh-net-ports">🔄 Refresh Ports</button>
+                </div>
+              </div>
+              <div class="mgmt-detail-body">
+                <div class="table-wrap" style="max-height: 480px; overflow-y: auto;">
+                  <table class="ci-table" id="table-net-listening-ports">
+                    <thead>
+                      <tr>
+                        <th style="width: 90px;">Port</th>
+                        <th style="width: 80px;">Proto</th>
+                        <th style="width: 140px;">Bind IP</th>
+                        <th>Service / Protocol</th>
+                        <th>Container / Process</th>
+                        <th style="width: 100px; text-align: right;">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody id="net-listening-ports-tbody">
+                      <tr><td colspan="6" style="text-align: center; color: var(--muted); padding: 24px;">Loading active listening sockets...</td></tr>
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </div>

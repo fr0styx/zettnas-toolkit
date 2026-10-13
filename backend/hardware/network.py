@@ -83,7 +83,11 @@ def _format_speed(speed_val: Optional[int], is_up: bool = True) -> str:
     if not is_up or speed_val is None or speed_val <= 0:
         return "Disconnected" if not is_up else "Unknown"
     if speed_val >= 10000:
-        return f"{speed_val // 1000} Gbps"
+        if speed_val % 1000 == 0:
+            return f"{speed_val // 1000} Gbps"
+        return f"{speed_val / 1000:.1f} Gbps"
+    elif speed_val >= 5000:
+        return "5 Gbps"
     elif speed_val >= 2500:
         return "2.5 Gbps"
     elif speed_val >= 1000:
@@ -2599,11 +2603,13 @@ def execute_tailscale_reauth() -> Dict[str, Any]:
 
 
 def _get_wireguard_status() -> Dict[str, Any]:
-    """Inspects host WireGuard network interfaces and status."""
+    """Inspects host WireGuard network interfaces, peers, and telemetry."""
     wg_info = {
         "installed": False,
         "active": False,
         "interfaces": [],
+        "peers": [],
+        "peers_count": 0,
     }
     try:
         r = subprocess.run(["wg", "show", "interfaces"], capture_output=True, text=True, timeout=3)
@@ -2612,6 +2618,56 @@ def _get_wireguard_status() -> Dict[str, Any]:
             ifaces = [i.strip() for i in r.stdout.strip().split() if i.strip()]
             wg_info["interfaces"] = ifaces
             wg_info["active"] = len(ifaces) > 0
+
+            try:
+                r_dump = subprocess.run(["wg", "show", "all", "dump"], capture_output=True, text=True, timeout=3)
+                if r_dump.returncode == 0:
+                    peers = []
+                    now = int(time.time())
+                    for line in r_dump.stdout.splitlines():
+                        parts = line.strip().split("	")
+                        if len(parts) >= 8:
+                            iface = parts[0]
+                            pubkey = parts[1]
+                            endpoint = parts[3] if parts[3] != "(none)" else ""
+                            allowed_ips = (
+                                [ip.strip() for ip in parts[4].split(",") if ip.strip()]
+                                if len(parts) > 4 and parts[4] != "(none)"
+                                else []
+                            )
+                            try:
+                                latest_hs = int(parts[5]) if len(parts) > 5 else 0
+                            except ValueError:
+                                latest_hs = 0
+                            try:
+                                rx_bytes = int(parts[6]) if len(parts) > 6 else 0
+                            except ValueError:
+                                rx_bytes = 0
+                            try:
+                                tx_bytes = int(parts[7]) if len(parts) > 7 else 0
+                            except ValueError:
+                                tx_bytes = 0
+
+                            hs_age = (now - latest_hs) if latest_hs > 0 else None
+                            is_active = hs_age is not None and hs_age < 180
+
+                            peers.append(
+                                {
+                                    "interface": iface,
+                                    "public_key": pubkey[:8] + "..." if len(pubkey) > 8 else pubkey,
+                                    "endpoint": endpoint,
+                                    "allowed_ips": allowed_ips,
+                                    "latest_handshake": latest_hs,
+                                    "latest_handshake_age": hs_age,
+                                    "transfer_rx_bytes": rx_bytes,
+                                    "transfer_tx_bytes": tx_bytes,
+                                    "active": is_active,
+                                }
+                            )
+                    wg_info["peers"] = peers
+                    wg_info["peers_count"] = len(peers)
+            except Exception as e:
+                logger.debug(f"[Network] Wireguard dump query error: {e}")
     except FileNotFoundError:
         pass
     except Exception as e:
@@ -3186,3 +3242,131 @@ def toggle_wireguard_subnet_nat(enable: bool, iface: str = "wg0", out_iface: str
         }
     except Exception as e:
         return {"enabled": enable, "ip_forwarding": fwd_ok, "nat_rule": False, "error": str(e)}
+
+
+def get_active_listening_ports() -> List[Dict[str, Any]]:
+    """
+    Inspects active listening TCP and UDP ports on the host system.
+    Correlates ports with well-known services and active Docker containers.
+    """
+    import socket
+
+    known_services = {
+        21: "FTP",
+        22: "SSH",
+        53: "DNS",
+        80: "HTTP",
+        137: "NetBIOS Name",
+        138: "NetBIOS Datagram",
+        139: "NetBIOS Session / SMB",
+        443: "HTTPS",
+        445: "SMB / CIFS",
+        2049: "NFS",
+        3000: "App Dashboard",
+        3493: "NUT UPS Daemon",
+        5353: "mDNS / Bonjour",
+        5355: "LLMNR",
+        8080: "Web Proxy",
+        8082: "ZettNAS Web Desktop",
+        8084: "ZettNAS Terminal Proxy",
+        8096: "Jellyfin Media Server",
+        8888: "Jupyter / Web Service",
+        32400: "Plex Media Server",
+        51820: "WireGuard VPN",
+    }
+
+    def _parse_hex_ip(h: str) -> str:
+        try:
+            if len(h) == 8:
+                return socket.inet_ntoa(bytes.fromhex(h)[::-1])
+            elif len(h) == 32:
+                if h == "0" * 32:
+                    return "::"
+                parts = [h[i : i + 8] for i in range(0, 32, 8)]
+                raw_bytes = b"".join(bytes.fromhex(p)[::-1] for p in parts)
+                return socket.inet_ntop(socket.AF_INET6, raw_bytes)
+        except Exception:
+            pass
+        return "0.0.0.0"
+
+    container_map = {}
+    try:
+        from backend.hardware.docker_stats import read_docker_containers
+
+        containers = read_docker_containers()
+        for c in containers:
+            c_name = c.get("name", "")
+            for p in c.get("ports", []):
+                hp = p.get("host_port")
+                proto = p.get("proto", "tcp").lower()
+                if hp:
+                    container_map[(hp, proto)] = {
+                        "container": c_name,
+                        "container_id": c.get("id", "")[:12],
+                    }
+    except Exception:
+        pass
+
+    proc_bases = [HOST_PROC, "/proc"]
+    results = []
+    seen = set()
+
+    for proto, filename in [
+        ("tcp", "tcp"),
+        ("tcp6", "tcp6"),
+        ("udp", "udp"),
+        ("udp6", "udp6"),
+    ]:
+        is_udp = "udp" in proto
+        is_ipv6 = "6" in proto
+        target_state = "07" if is_udp else "0A"
+
+        for base in proc_bases:
+            p_file = os.path.join(base, "net", filename)
+            if os.path.exists(p_file):
+                try:
+                    with open(p_file, "r") as f:
+                        lines = f.readlines()
+                    for line in lines[1:]:
+                        parts = line.strip().split()
+                        if len(parts) >= 4:
+                            local_addr = parts[1]
+                            state = parts[3]
+                            if is_udp or state == target_state:
+                                if ":" in local_addr:
+                                    hex_ip, hex_port = local_addr.split(":", 1)
+                                    try:
+                                        port = int(hex_port, 16)
+                                        ip = _parse_hex_ip(hex_ip)
+                                    except ValueError:
+                                        continue
+
+                                    normalized_proto = "udp" if is_udp else "tcp"
+                                    dedup_key = (port, normalized_proto, ip)
+                                    if dedup_key in seen:
+                                        continue
+                                    seen.add(dedup_key)
+
+                                    c_info = container_map.get(
+                                        (port, normalized_proto), container_map.get((port, "tcp"), {})
+                                    )
+                                    service_name = known_services.get(port, c_info.get("container", "Unknown"))
+
+                                    results.append(
+                                        {
+                                            "port": port,
+                                            "protocol": normalized_proto,
+                                            "bind_address": ip,
+                                            "state": "LISTEN" if not is_udp else "ACTIVE",
+                                            "service": service_name,
+                                            "container": c_info.get("container", ""),
+                                            "container_id": c_info.get("container_id", ""),
+                                            "ipv6": is_ipv6,
+                                        }
+                                    )
+                    break
+                except Exception as e:
+                    logger.debug(f"[Network] Error parsing {p_file}: {e}")
+
+    results.sort(key=lambda x: (x["port"], x["protocol"]))
+    return results
