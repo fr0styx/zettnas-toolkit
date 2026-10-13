@@ -95,6 +95,7 @@ class LedConfigRequest(BaseModel):
 
 
 class ScreenConfigRequest(BaseModel):
+    power: bool | str | None = None
     brightness: int | None = Field(default=None, ge=0, le=100)
     night_mode: bool | None = None
     night_start: str | None = Field(default=None, pattern=r"^\d{1,2}:\d{2}$")

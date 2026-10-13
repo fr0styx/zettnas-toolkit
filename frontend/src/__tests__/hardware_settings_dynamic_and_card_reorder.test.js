@@ -1,4 +1,5 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { api } from '../api.js';
 import { state } from '../state.js';
 import { applyDesktopTheme, updateHardwareTelemetry } from '../components/dashboard.js';
 import { initSettings } from '../components/settings.js';
@@ -300,6 +301,68 @@ describe('Yak Wallpaper Switch, Card Reordering, and Dynamic Hardware Settings S
       expect(specEl.textContent).toBe('480 × 320 IPS');
       expect(screenEl.style.width).toBe('480px');
       expect(screenEl.style.height).toBe('320px');
+    });
+  });
+
+  describe('Requirement 4: Physical LCD Screen Power Toggle & 0% Backlight', () => {
+    it('toggles physical LCD screen off and back on, preserving brightness and updating badge', async () => {
+      document.body.innerHTML = `
+        <span id="lcd-renderer-badge" class="lcd-status-badge lcd-status-active">LCD: 10 FPS ACTIVE</span>
+        <span id="screen-bri-val" class="card-head-val">100%</span>
+        <button id="btn-toggle-screen-power" type="button" class="btn-pill-toggle">Turn Off</button>
+        <input type="range" id="screen-bri-slider" min="0" max="100" value="100" step="1">
+        <input type="checkbox" id="screen-night-toggle">
+        <input type="time" id="screen-night-start" value="23:00">
+        <input type="time" id="screen-night-end" value="07:00">
+        <input type="number" id="screen-night-bri" value="10">
+      `;
+
+      const getSpy = vi.spyOn(api, 'get').mockImplementation(async (url) => {
+        if (url === '/api/screen') {
+          return { power: true, brightness: 80, night_mode: false, night_start: '23:00', night_end: '07:00', night_brightness: 10 };
+        }
+        return {};
+      });
+      const postSpy = vi.spyOn(api, 'post').mockResolvedValue({});
+
+      initSettings();
+      await new Promise((r) => setTimeout(r, 20));
+
+      const briVal = document.getElementById('screen-bri-val');
+      const powerBtn = document.getElementById('btn-toggle-screen-power');
+      const slider = document.getElementById('screen-bri-slider');
+      const badge = document.getElementById('lcd-renderer-badge');
+
+      expect(slider.getAttribute('min')).toBe('0');
+      expect(briVal.textContent).toBe('80%');
+      expect(powerBtn.textContent).toBe('Turn Off');
+
+      // Click Turn Off
+      powerBtn.click();
+      await new Promise((r) => setTimeout(r, 20));
+
+      expect(briVal.textContent).toBe('OFF');
+      expect(powerBtn.textContent).toBe('Turn On');
+      expect(badge.textContent).toBe('LCD: SCREEN OFF');
+      expect(postSpy).toHaveBeenCalledWith(
+        '/api/screen',
+        expect.objectContaining({ power: false, brightness: 80 })
+      );
+
+      // Click Turn On -> restores 80%
+      powerBtn.click();
+      await new Promise((r) => setTimeout(r, 20));
+
+      expect(briVal.textContent).toBe('80%');
+      expect(powerBtn.textContent).toBe('Turn Off');
+      expect(badge.textContent).toBe('LCD: 10 FPS ACTIVE');
+      expect(postSpy).toHaveBeenCalledWith(
+        '/api/screen',
+        expect.objectContaining({ power: true, brightness: 80 })
+      );
+
+      getSpy.mockRestore();
+      postSpy.mockRestore();
     });
   });
 });

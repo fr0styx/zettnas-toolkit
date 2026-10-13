@@ -67,6 +67,16 @@ _cached_screen_state: dict | None = None
 _cached_screen_key: tuple[str, int, int] = ("", 0, 0)
 
 
+def _normalize_power(val) -> bool:
+    if isinstance(val, bool):
+        return val
+    if isinstance(val, str):
+        return val.strip().lower() not in ("off", "false", "0", "disabled")
+    if isinstance(val, (int, float)):
+        return bool(val)
+    return True
+
+
 def get_screen_state():
     global _cached_screen_state, _cached_screen_key
     try:
@@ -81,6 +91,7 @@ def get_screen_state():
             return dict(_cached_screen_state)
 
     state = {
+        "power": True,
         "brightness": 100,
         "night_mode": False,
         "night_start": "23:00",
@@ -90,9 +101,12 @@ def get_screen_state():
     if os.path.exists(SCREEN_STATE_FILE):
         try:
             with open(SCREEN_STATE_FILE) as f:
-                state.update(json.load(f))
+                loaded = json.load(f)
+                if isinstance(loaded, dict):
+                    state.update(loaded)
         except (json.JSONDecodeError, OSError):
             pass
+    state["power"] = _normalize_power(state.get("power", True))
     _cached_screen_state = state
     return dict(state)
 
@@ -142,10 +156,23 @@ def discover_backlight_dir():
 
 def get_effective_brightness():
     cfg = get_screen_state()
+    if not _normalize_power(cfg.get("power", True)):
+        return 0
     brightness = cfg.get("brightness", 100)
     if cfg.get("night_mode") and is_in_time_window(cfg.get("night_start", "23:00"), cfg.get("night_end", "07:00")):
         return int(cfg.get("night_brightness", 10))
     return int(brightness)
+
+
+def _apply_bl_power(bl_dir: str, power_on: bool):
+    bl_power_path = os.path.join(bl_dir, "bl_power")
+    if os.path.exists(bl_power_path):
+        try:
+            # Linux FB_BLANK_UNBLANK = 0 (power on), FB_BLANK_POWERDOWN = 4 (power off)
+            with open(bl_power_path, "w") as f:
+                f.write("0\n" if power_on else "4\n")
+        except Exception:
+            pass
 
 
 def set_screen_brightness(pct):
@@ -162,6 +189,7 @@ def set_screen_brightness(pct):
         target = int((pct / 100.0) * max_val)
         with open(os.path.join(backlight_dir, "brightness"), "w") as f:
             f.write(f"{target}\n")
+        _apply_bl_power(backlight_dir, pct > 0)
         return True
     except Exception as e:
         logger.warning(f"[SCREEN] Failed to set brightness in {backlight_dir}: {e}")
@@ -173,6 +201,7 @@ def set_screen_brightness(pct):
                 try:
                     with open(b_file, "w") as f:
                         f.write(f"{target}\n")
+                    _apply_bl_power(fallback_dir, pct > 0)
                     return True
                 except Exception as ex:
                     logger.warning(f"[SCREEN] Fallback write to {fallback_dir} also failed: {ex}")
@@ -182,7 +211,14 @@ def set_screen_brightness(pct):
 def save_screen_state(updates: dict):
     global _cached_screen_state, _cached_screen_key
     state = get_screen_state()
-    state.update(updates)
+    clean_updates = dict(updates)
+    if "power" in clean_updates:
+        clean_updates["power"] = _normalize_power(clean_updates["power"])
+    elif "brightness" in clean_updates and int(clean_updates["brightness"]) > 0:
+        clean_updates["power"] = True
+
+    state.update(clean_updates)
+    state["power"] = _normalize_power(state.get("power", True))
     atomic_write_json(SCREEN_STATE_FILE, state)
     try:
         st = os.stat(SCREEN_STATE_FILE)
@@ -192,4 +228,10 @@ def save_screen_state(updates: dict):
     _cached_screen_state = state
     eff_bri = get_effective_brightness()
     set_screen_brightness(eff_bri)
+    try:
+        from backend.state import Z_STATE
+
+        Z_STATE.ui_wake.set()
+    except Exception:
+        pass
     return dict(state)

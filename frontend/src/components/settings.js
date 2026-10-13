@@ -307,16 +307,57 @@ export function initSettings() {
   // --- Screen Backlight & Night Dimming ---
   const screenBriSlider = $('screen-bri-slider');
   const screenBriVal = $('screen-bri-val');
+  const screenPowerBtn = $('btn-toggle-screen-power');
   const screenNightToggle = $('screen-night-toggle');
   const screenNightStart = $('screen-night-start');
   const screenNightEnd = $('screen-night-end');
   const screenNightBri = $('screen-night-bri');
   const screenCarouselSelect = $('screen-carousel-select');
   let screenDebounce = null;
+  let screenPower = true;
+  let lastNonZeroBrightness = 100;
+
+  function updateScreenPowerUI() {
+    const bri = parseInt(screenBriSlider ? screenBriSlider.value : 100, 10);
+    if (bri > 0) {
+      lastNonZeroBrightness = bri;
+    }
+    const isOff = !screenPower || bri <= 0;
+    if (screenBriVal) {
+      screenBriVal.textContent = isOff ? 'OFF' : `${bri}%`;
+      screenBriVal.style.color = isOff ? 'var(--muted)' : '';
+    }
+    if (screenPowerBtn) {
+      const lblOn = t('settings.screen_turn_on');
+      const lblOff = t('settings.screen_turn_off');
+      screenPowerBtn.textContent = isOff
+        ? (lblOn !== 'settings.screen_turn_on' ? lblOn : 'Turn On')
+        : (lblOff !== 'settings.screen_turn_off' ? lblOff : 'Turn Off');
+      screenPowerBtn.style.borderColor = isOff ? 'rgba(37, 194, 160, 0.5)' : '';
+      screenPowerBtn.style.color = isOff ? 'var(--ok2, #25c2a0)' : '';
+    }
+    if (screenBriSlider) {
+      screenBriSlider.style.opacity = isOff ? '0.45' : '1';
+    }
+    const badge = $('lcd-renderer-badge');
+    if (badge && !badge.textContent.includes('NO /dev/fb0') && !badge.textContent.includes('DISABLED')) {
+      if (isOff) {
+        badge.textContent = 'LCD: SCREEN OFF';
+        badge.className = 'lcd-status-badge lcd-status-disabled';
+        badge.title = 'Physical LCD display is turned off (0 FPS).';
+      } else {
+        badge.textContent = 'LCD: 10 FPS ACTIVE';
+        badge.className = 'lcd-status-badge lcd-status-active';
+        badge.title = 'LCD direct output is actively streaming.';
+      }
+    }
+  }
 
   async function postScreenState() {
+    const bri = parseInt(screenBriSlider ? screenBriSlider.value : 100, 10);
     const payload = {
-      brightness: parseInt(screenBriSlider ? screenBriSlider.value : 100, 10),
+      power: screenPower && bri > 0,
+      brightness: bri,
       night_mode: screenNightToggle ? screenNightToggle.checked : false,
       night_start: screenNightStart ? screenNightStart.value : '23:00',
       night_end: screenNightEnd ? screenNightEnd.value : '07:00',
@@ -332,12 +373,18 @@ export function initSettings() {
   async function fetchScreenState() {
     try {
       const data = await api.get('/api/screen');
-      if (screenBriSlider && data.brightness !== undefined) screenBriSlider.value = data.brightness;
-      if (screenBriVal && screenBriSlider) screenBriVal.textContent = screenBriSlider.value + '%';
+      if (data.power !== undefined) {
+        screenPower = data.power !== false && data.power !== 'off';
+      }
+      if (screenBriSlider && data.brightness !== undefined) {
+        screenBriSlider.value = data.brightness;
+        if (data.brightness > 0) lastNonZeroBrightness = data.brightness;
+      }
       if (screenNightToggle) screenNightToggle.checked = Boolean(data.night_mode);
       if (screenNightStart && data.night_start) screenNightStart.value = data.night_start;
       if (screenNightEnd && data.night_end) screenNightEnd.value = data.night_end;
       if (screenNightBri && data.night_brightness !== undefined) screenNightBri.value = data.night_brightness;
+      updateScreenPowerUI();
     } catch (e) {
       console.warn('Failed to fetch screen state', e);
     }
@@ -354,6 +401,24 @@ export function initSettings() {
 
   fetchScreenState();
 
+  if (screenPowerBtn) {
+    screenPowerBtn.addEventListener('click', async () => {
+      const bri = parseInt(screenBriSlider ? screenBriSlider.value : 100, 10);
+      const currentlyOff = !screenPower || bri <= 0;
+      if (currentlyOff) {
+        screenPower = true;
+        if (screenBriSlider && bri <= 0) {
+          screenBriSlider.value = String(lastNonZeroBrightness || 100);
+        }
+      } else {
+        screenPower = false;
+      }
+      updateScreenPowerUI();
+      await postScreenState();
+      showToast(screenPower ? 'Physical LCD screen turned on' : 'Physical LCD screen turned off', 'info');
+    });
+  }
+
   if (screenCarouselSelect) {
     screenCarouselSelect.addEventListener('change', async (e) => {
       const secs = parseInt(e.target.value, 10);
@@ -368,11 +433,16 @@ export function initSettings() {
 
   if (screenBriSlider) {
     screenBriSlider.addEventListener('input', (e) => {
-      if (screenBriVal) screenBriVal.textContent = e.target.value + '%';
+      const val = parseInt(e.target.value, 10);
+      screenPower = val > 0;
+      updateScreenPowerUI();
       clearTimeout(screenDebounce);
       screenDebounce = setTimeout(postScreenState, 100);
     });
-    screenBriSlider.addEventListener('change', () => {
+    screenBriSlider.addEventListener('change', (e) => {
+      const val = parseInt(e.target.value, 10);
+      screenPower = val > 0;
+      updateScreenPowerUI();
       clearTimeout(screenDebounce);
       postScreenState();
     });

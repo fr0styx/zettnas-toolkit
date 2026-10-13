@@ -61,6 +61,10 @@ async function checkLcdStatus() {
         badge.textContent = 'LCD: NO /dev/fb0';
         badge.className = 'lcd-status-badge lcd-status-offline';
         badge.title = 'No framebuffer device detected at /dev/fb0.';
+      } else if (data.screen_off || data.power === false) {
+        badge.textContent = 'LCD: SCREEN OFF';
+        badge.className = 'lcd-status-badge lcd-status-disabled';
+        badge.title = 'Physical LCD display is turned off (0 FPS).';
       } else if (data.active) {
         badge.textContent = `LCD: ${data.fps} FPS ACTIVE`;
         badge.className = 'lcd-status-badge lcd-status-active';

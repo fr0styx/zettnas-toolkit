@@ -10,9 +10,9 @@ from playwright.sync_api import sync_playwright
 from backend import config
 from backend.config import ENABLE_FB, HOST_SYS, LCD_FORMAT, LCD_FPS, PORT, logger
 from backend.hardware.screen import (
-    discover_backlight_dir,
     find_fb_device,
     get_effective_brightness,
+    set_screen_brightness,
 )
 from backend.state import Z_STATE
 
@@ -81,13 +81,7 @@ def render_lcd_loop():
     time.sleep(2)
     url = f"http://127.0.0.1:{PORT}/?mode=lcd&lcd_token={config.LCD_INTERNAL_TOKEN}"
 
-    bl_dir = discover_backlight_dir()
-    if bl_dir:
-        try:
-            with open(os.path.join(bl_dir, "brightness"), "w") as bl_f:
-                bl_f.write("192000\n")
-        except OSError:
-            pass
+    set_screen_brightness(get_effective_brightness())
 
     fb_width, fb_height, stride = discover_fb_geometry()
     row_bytes = fb_width * 4
@@ -155,13 +149,24 @@ def render_lcd_loop():
                         prev_raw_b64 = None
                         idle_backoff = 0.0
                         max_idle_backoff = 1.0
+                        screen_blanked = False
 
                         while not Z_STATE.shutting_down:
-                            # Screen-off pause: 0 FPS when brightness is 0 or night mode is blanked
+                            # Screen-off pause: 0 FPS when power is off, brightness is 0, or night mode is blanked
                             if get_effective_brightness() <= 0:
+                                if not screen_blanked:
+                                    try:
+                                        fb_mem[:total_fb_bytes] = b"\x00" * total_fb_bytes
+                                        fb_mem.flush()
+                                    except Exception:
+                                        pass
+                                    screen_blanked = True
+                                    prev_raw_b64 = None
                                 if Z_STATE.ui_wake.wait(1.0):
                                     Z_STATE.ui_wake.clear()
                                 continue
+
+                            screen_blanked = False
 
                             t0 = time.time()
 

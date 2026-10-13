@@ -1620,11 +1620,14 @@
       <div class="draggable-card drawer-card" data-layout-card-id="sec-backlight">
         <div class="card-headline">
           <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <svg class="ic ic-sm" style="margin: 0 4px 0 2px;"><use href="#i-chip"/></svg><span data-i18n="settings.backlight_title">LCD Backlight & Night Dimming</span><button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
-          <span id="screen-bri-val" class="card-head-val">100%</span>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span id="screen-bri-val" class="card-head-val">100%</span>
+            <button id="btn-toggle-screen-power" type="button" class="btn-pill-toggle" data-i18n="settings.screen_turn_off" title="Turn physical LCD screen off or on">Turn Off</button>
+          </div>
         </div>
-        <div class="card-instruction" data-i18n="settings.backlight_desc">Control the physical front LCD display brightness and scheduled nighttime dimming.</div>
+        <div class="card-instruction" data-i18n="settings.backlight_desc">Control the physical front LCD display power, brightness, and scheduled nighttime dimming.</div>
         <div class="slider-row">
-          <input type="range" id="screen-bri-slider" min="5" max="100" value="100" step="1" class="custom-slider">
+          <input type="range" id="screen-bri-slider" min="0" max="100" value="100" step="1" class="custom-slider">
         </div>
         <div class="schedule-controls-row" style="margin-top:10px; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
           <div style="display:flex; align-items:center; gap:8px;">

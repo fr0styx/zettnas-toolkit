@@ -33,7 +33,11 @@ from backend.hardware.fans import apply_zone_pwm, calc_curve_pwm, get_hold_remai
 from backend.hardware.led import apply_led_state, find_led_port, send_led_packet
 from backend.hardware.memory import read_mem
 from backend.hardware.network import read_ip, read_network_rates
-from backend.hardware.screen import get_screen_state, is_in_time_window, set_screen_brightness
+from backend.hardware.screen import (
+    get_effective_brightness,
+    is_in_time_window,
+    set_screen_brightness,
+)
 from backend.hardware.storage import (
     detect_chassis_model,
     get_chassis_friendly_name,
@@ -395,11 +399,7 @@ def stats_collector_daemon():
                 )
 
             # Screen Backlight Management
-            screen_cfg = get_screen_state()
-            in_screen_night = screen_cfg.get("night_mode", False) and is_in_time_window(
-                screen_cfg.get("night_start", "23:00"), screen_cfg.get("night_end", "07:00")
-            )
-            target_bl = screen_cfg.get("night_brightness", 10) if in_screen_night else screen_cfg.get("brightness", 100)
+            target_bl = get_effective_brightness()
             set_screen_brightness(target_bl)
 
             # LED Lighting & Schedule

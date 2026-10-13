@@ -6,7 +6,11 @@ from fastapi.responses import JSONResponse, StreamingResponse
 
 from backend.config import ENABLE_FB, LCD_FPS, logger
 from backend.db import query_history
-from backend.hardware.screen import find_fb_device
+from backend.hardware.screen import (
+    find_fb_device,
+    get_effective_brightness,
+    get_screen_state,
+)
 from backend.services.broadcaster import broadcaster
 from backend.services.stats_collector import collect
 from backend.state import Z_STATE
@@ -17,12 +21,16 @@ router = APIRouter(tags=["Telemetry & Stats"])
 @router.get("/lcd_status")
 def get_lcd_status():
     fb_path = find_fb_device(writable_only=False)
+    scr = get_screen_state()
+    eff_bri = get_effective_brightness()
     return {
         "enabled": ENABLE_FB,
         "fb_present": bool(fb_path),
         "fb_path": fb_path,
         "fps": LCD_FPS,
         "active": Z_STATE.lcd_renderer_active,
+        "power": bool(scr.get("power", True)),
+        "screen_off": eff_bri <= 0,
     }
 
 
