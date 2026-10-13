@@ -1,0 +1,100 @@
+/* =========================================================================
+   STANDALONE DEDICATED VM CONSOLE WINDOW MODE (?mode=vm-console)
+   ========================================================================= */
+body.vm-console-direct,
+html:has(body.vm-console-direct) {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: 100vw !important;
+  max-height: 100vh !important;
+  overflow: hidden !important;
+  background: #060a12 !important;
+  background-image: none !important;
+  display: block !important;
+}
+
+body.vm-console-direct .suite-navbar,
+body.vm-console-direct #os-dock-container,
+body.vm-console-direct .chassis-workbench-stage,
+body.vm-console-direct .chassis-hero-box,
+body.vm-console-direct .chassis-desktop-icon,
+body.vm-console-direct #desktop-widgets-container,
+body.vm-console-direct .drawer-backdrop,
+body.vm-console-direct .slide-drawer,
+body.vm-console-direct #workspace-strip,
+body.vm-console-direct .dock-hover-tooltip,
+body.vm-console-direct #dock-hover-tooltip,
+body.vm-console-direct #desktop-context-menu,
+body.vm-console-direct #chassis-stage,
+body.vm-console-direct .studio-viewport-wrapper {
+  display: none !important;
+}
+
+body.vm-console-direct #vm-console-window,
+#vm-console-window.vm-console-standalone {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: 100vw !important;
+  max-height: 100vh !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  z-index: 9999 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  transform: none !important;
+  background: #060a12 !important;
+}
+
+/* In standalone direct mode, hide the popout button and minimize button */
+body.vm-console-direct #btn-vnc-popout,
+body.vm-console-direct #vm-console-min {
+  display: none !important;
+}
+
+/* Viewport fills remaining window space */
+body.vm-console-direct #vm-console-viewport,
+#vm-console-window.vm-console-standalone #vm-console-viewport {
+  flex: 1 1 auto !important;
+  height: calc(100vh - 78px) !important;
+  min-height: 0 !important;
+}
+
+/* Canvas and containers scale cleanly */
+body.vm-console-direct #vm-vnc-container,
+#vm-console-window.vm-console-standalone #vm-vnc-container {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+body.vm-console-direct .vnc-screen-target,
+#vm-console-window.vm-console-standalone .vnc-screen-target {
+  width: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+body.vm-console-direct .vnc-screen-target canvas,
+#vm-console-window.vm-console-standalone .vnc-screen-target canvas {
+  max-width: 100% !important;
+  max-height: 100% !important;
+  object-fit: contain !important;
+}
+
+body.vm-console-direct #vm-cli-container,
+#vm-console-window.vm-console-standalone #vm-cli-container {
+  width: 100% !important;
+  height: 100% !important;
+}

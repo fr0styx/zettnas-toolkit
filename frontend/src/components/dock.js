@@ -700,6 +700,7 @@ export function setWindowRestorationComplete(val = true) {
 
 export function saveOpenWindowsState() {
   if (!isWindowRestorationComplete) return;
+  if (state.isVmConsoleDirect || (typeof window !== 'undefined' && window.location.search.includes('mode=vm-console')) || (typeof document !== 'undefined' && document.body && document.body.classList.contains('vm-console-direct'))) return;
   if (document.body.classList.contains('mobile-mode') || window.innerWidth <= 768) return;
   try {
     const stateObj = {
@@ -774,7 +775,7 @@ export function saveOpenWindowsState() {
 }
 
 export function restoreOpenWindowsState() {
-  if (document.body.classList.contains('mobile-mode') || window.innerWidth <= 768) {
+  if (state.isVmConsoleDirect || (typeof window !== 'undefined' && window.location.search.includes('mode=vm-console')) || (typeof document !== 'undefined' && document.body && document.body.classList.contains('vm-console-direct')) || document.body.classList.contains('mobile-mode') || window.innerWidth <= 768) {
     isWindowRestorationComplete = true;
     return;
   }

@@ -11,7 +11,8 @@ import {
   focusActiveConsole,
   getActiveConsoleTarget,
   _handleRfbKeyFallback,
-  _sendKeyToRfb
+  _sendKeyToRfb,
+  openVmConsoleSeparateWindow
 } from '../components/vm-manager.js';
 import { api } from '../api.js';
 import { showToast } from '../toast.js';
@@ -708,6 +709,51 @@ describe('VM Manager & Dynamic Elastic Headroom Budgeting', () => {
           'success'
         );
       });
+    });
+
+    it('opens separate standalone window with openVmConsoleSeparateWindow', () => {
+      const openSpy = vi.spyOn(window, 'open').mockReturnValue({ focus: vi.fn() });
+      openVmConsoleSeparateWindow('vm-42', 'Alpine Test', 'cli');
+
+      expect(openSpy).toHaveBeenCalled();
+      const [url, target, features] = openSpy.mock.calls[0];
+      expect(url).toContain('mode=vm-console');
+      expect(url).toContain('vm=vm-42');
+      expect(url).toContain('name=Alpine%20Test');
+      expect(url).toContain('consoleMode=cli');
+      expect(target).toBe('vm_console_vm-42');
+      expect(features).toContain('resizable=yes');
+    });
+
+    it('handles pop out button in console toolbar', () => {
+      const openSpy = vi.spyOn(window, 'open').mockReturnValue({ focus: vi.fn() });
+      openVmConsole('vm-popout-test', 'Popout VM', 'gui');
+      const consoleWin = document.getElementById('vm-console-window');
+      const btnPopout = consoleWin.querySelector('#btn-vnc-popout');
+      expect(btnPopout).not.toBeNull();
+
+      btnPopout.click();
+      expect(openSpy).toHaveBeenCalled();
+      const [url] = openSpy.mock.calls[0];
+      expect(url).toContain('mode=vm-console');
+      expect(url).toContain('vm=vm-popout-test');
+      expect(consoleWin.classList.contains('window-minimized')).toBe(true);
+    });
+
+    it('supports standalone direct mode with window.close() on close button', () => {
+      document.body.classList.add('vm-console-direct');
+      const closeSpy = vi.spyOn(window, 'close').mockImplementation(() => {});
+
+      openVmConsole('vm-direct-test', 'Direct VM', 'gui');
+      const consoleWin = document.getElementById('vm-console-window');
+      expect(consoleWin.classList.contains('vm-console-standalone')).toBe(true);
+      expect(document.title).toContain('VM Console: Direct VM');
+
+      const closeBtn = consoleWin.querySelector('#vm-console-close');
+      expect(closeBtn).not.toBeNull();
+      closeBtn.click();
+      expect(closeSpy).toHaveBeenCalled();
+      document.body.classList.remove('vm-console-direct');
     });
   });
 });

@@ -388,9 +388,14 @@ function renderVmGrid(vms) {
                 <span>💿</span>
                 <span>ISO Boot (${escapeHtml(vm.iso_path.split('/').pop())})</span>
               </span>
-              <button class="btn-join-gui" data-id="${vm.id}" data-name="${escapeHtml(vm.name)}" style="background: rgba(245,158,11,0.2); border: 1px solid rgba(245,158,11,0.4); border-radius: 4px; color: #fbbf24; font-size: 10px; font-weight: 700; padding: 2px 8px; cursor: pointer;">
-                Open Console 🖥️
-              </button>
+              <div style="display: flex; gap: 4px;">
+                <button class="btn-join-gui" data-id="${vm.id}" data-name="${escapeHtml(vm.name)}" style="background: rgba(245,158,11,0.2); border: 1px solid rgba(245,158,11,0.4); border-radius: 4px; color: #fbbf24; font-size: 10px; font-weight: 700; padding: 2px 8px; cursor: pointer;">
+                  Open Console 🖥️
+                </button>
+                <button class="btn-join-separate" data-id="${vm.id}" data-name="${escapeHtml(vm.name)}" data-mode="gui" style="background: rgba(245,158,11,0.2); border: 1px solid rgba(245,158,11,0.4); border-radius: 4px; color: #fbbf24; font-size: 10px; font-weight: 700; padding: 2px 6px; cursor: pointer;" title="${t('vm.open_separate', 'Open in Separate Window')}">
+                  ↗
+                </button>
+              </div>
             </div>
           `
               : vm.ip_address
@@ -415,6 +420,10 @@ function renderVmGrid(vms) {
                 <div class="join-popover-item btn-join-gui" data-id="${vm.id}" data-name="${escapeHtml(vm.name)}">
                   <span>🖥️ ${t('vm.open_gui', 'Open KVM GUI Desktop (Display :0)')}</span>
                   <span style="font-size: 9px; color: #38bdf8;">noVNC</span>
+                </div>
+                <div class="join-popover-item btn-join-separate" data-id="${vm.id}" data-name="${escapeHtml(vm.name)}" data-mode="gui">
+                  <span>↗ ${t('vm.open_separate', 'Open in Separate Window')}</span>
+                  <span style="font-size: 9px; color: #38bdf8;">Pop Out</span>
                 </div>
                 <div class="join-popover-item btn-join-console" data-id="${vm.id}" data-name="${escapeHtml(vm.name)}">
                   <span>📟 ${t('vm.open_serial', 'Open Serial Terminal (TTY)')}</span>
@@ -450,9 +459,14 @@ function renderVmGrid(vms) {
                 <span>🖥️</span>
                 <span>Console Display Active</span>
               </span>
-              <button class="btn-join-gui" data-id="${vm.id}" data-name="${escapeHtml(vm.name)}" style="background: rgba(14,165,233,0.2); border: 1px solid rgba(14,165,233,0.4); border-radius: 4px; color: #38bdf8; font-size: 10px; font-weight: 700; padding: 2px 8px; cursor: pointer;">
-                Open Console 🖥️
-              </button>
+              <div style="display: flex; gap: 4px;">
+                <button class="btn-join-gui" data-id="${vm.id}" data-name="${escapeHtml(vm.name)}" style="background: rgba(14,165,233,0.2); border: 1px solid rgba(14,165,233,0.4); border-radius: 4px; color: #38bdf8; font-size: 10px; font-weight: 700; padding: 2px 8px; cursor: pointer;">
+                  Open Console 🖥️
+                </button>
+                <button class="btn-join-separate" data-id="${vm.id}" data-name="${escapeHtml(vm.name)}" data-mode="gui" style="background: rgba(14,165,233,0.2); border: 1px solid rgba(14,165,233,0.4); border-radius: 4px; color: #38bdf8; font-size: 10px; font-weight: 700; padding: 2px 6px; cursor: pointer;" title="${t('vm.open_separate', 'Open in Separate Window')}">
+                  ↗
+                </button>
+              </div>
             </div>
           `
               : ''
@@ -605,6 +619,18 @@ function renderVmGrid(vms) {
         showToast(`Copied ${ip} to clipboard`, 'info');
       }
       document.querySelectorAll('.vm-join-popover').forEach((p) => (p.style.display = 'none'));
+    };
+  });
+
+  grid.querySelectorAll('.btn-join-separate').forEach((btn) => {
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      const vmId = btn.dataset.id;
+      const targetVm = vmList.find((v) => v.id === vmId);
+      const name = targetVm ? targetVm.name : (btn.dataset.name || 'Virtual Machine');
+      const mode = btn.dataset.mode || 'gui';
+      document.querySelectorAll('.vm-join-popover').forEach((p) => (p.style.display = 'none'));
+      openVmConsoleSeparateWindow(vmId, name, mode);
     };
   });
 
@@ -2024,6 +2050,9 @@ export function openVmConsole(vmId, vmName = 'Virtual Machine', initialMode = 'g
             <button class="btn-console-act" id="btn-vnc-clipboard" title="Paste text to guest">
               <span>📋 Paste Text</span>
             </button>
+            <button class="btn-console-act" id="btn-vnc-popout" title="${t('vm.popout', 'Separate Window')}">
+              <span>↗ ${t('vm.popout', 'Separate Window')}</span>
+            </button>
             <button class="btn-console-act" id="btn-vnc-reconnect" title="Reconnect stream">
               <span>↻ Reconnect</span>
             </button>
@@ -2181,6 +2210,13 @@ export function openVmConsole(vmId, vmName = 'Virtual Machine', initialMode = 'g
         if (canvas && canvas._blinkInterval) {
           clearInterval(canvas._blinkInterval);
           canvas._blinkInterval = null;
+        }
+        if (document.body.classList.contains('vm-console-direct')) {
+          try {
+            window.close();
+          } catch (_) {}
+          document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#060a12;color:#94a3b8;font-family:sans-serif;font-size:14px;">Console disconnected. You can close this window.</div>';
+          return;
         }
         consoleWin.classList.add('window-minimized');
         consoleWin.classList.remove('open');
@@ -2347,6 +2383,18 @@ export function openVmConsole(vmId, vmName = 'Virtual Machine', initialMode = 'g
         }
       };
     }
+
+    // Pop out in separate window
+    const btnPopout = consoleWin.querySelector('#btn-vnc-popout');
+    if (btnPopout) {
+      btnPopout.onclick = () => {
+        const curId = consoleWin._vmId || vmId;
+        const curName = consoleWin._vmName || vmName;
+        const curMode = consoleWin._activeMode || 'gui';
+        openVmConsoleSeparateWindow(curId, curName, curMode);
+        if (closeBtn) closeBtn.click();
+      };
+    }
   }
 
   function setConsoleMode(mode) {
@@ -2429,8 +2477,48 @@ export function openVmConsole(vmId, vmName = 'Virtual Machine', initialMode = 'g
   consoleWin.style.setProperty('display', 'flex', 'important');
   bringToFront(consoleWin);
 
+  if (typeof document !== 'undefined' && document.body && document.body.classList.contains('vm-console-direct')) {
+    consoleWin.classList.add('vm-console-standalone');
+    document.title = `VM Console: ${vmName} - ZettNAS`;
+  }
+
   setConsoleMode(initialMode || 'gui');
   focusActiveConsole();
+}
+
+/**
+ * Opens VM Console in a dedicated separate native browser window
+ * @param {string} vmId
+ * @param {string} vmName
+ * @param {string} mode - 'gui' or 'cli'
+ */
+export function openVmConsoleSeparateWindow(vmId, vmName = 'Virtual Machine', mode = 'gui') {
+  const availW = (typeof window !== 'undefined' && window.screen && window.screen.availWidth) ? window.screen.availWidth : 1280;
+  const availH = (typeof window !== 'undefined' && window.screen && window.screen.availHeight) ? window.screen.availHeight : 800;
+  const width = Math.min(1366, Math.max(960, Math.floor(availW * 0.85)));
+  const height = Math.min(900, Math.max(680, Math.floor(availH * 0.85)));
+  const left = Math.max(0, Math.floor((availW - width) / 2));
+  const top = Math.max(0, Math.floor((availH - height) / 2));
+  const origin = (typeof window !== 'undefined' && window.location) ? window.location.origin : '';
+  const pathname = (typeof window !== 'undefined' && window.location) ? window.location.pathname : '/';
+  const url = `${origin}${pathname}?mode=vm-console&vm=${encodeURIComponent(vmId)}&name=${encodeURIComponent(vmName || '')}&consoleMode=${encodeURIComponent(mode || 'gui')}`;
+
+  if (typeof window !== 'undefined' && window.open) {
+    const win = window.open(
+      url,
+      `vm_console_${vmId}`,
+      `width=${width},height=${height},left=${left},top=${top},menubar=no,toolbar=no,location=no,status=no,resizable=yes,scrollbars=no`
+    );
+    if (win && win.focus) {
+      try { win.focus(); } catch (_) {}
+    }
+    return win;
+  }
+  return null;
+}
+
+if (typeof window !== 'undefined') {
+  window.openVmConsoleSeparateWindow = openVmConsoleSeparateWindow;
 }
 
 /**

@@ -4,6 +4,7 @@
  */
 import './style.css';
 import './lcd-direct.css';
+import './vm-console-direct.css';
 
 import { ZettEventBus } from './event-bus.js';
 import { auth, api } from './api.js';
@@ -28,7 +29,7 @@ import { initManagement } from './components/management.js';
 import { initCommandPalette } from './components/command-palette.js';
 import { initWidgets } from './components/widgets.js';
 import { initFileManager } from './components/file-manager.js';
-import { initVmManager } from './components/vm-manager.js';
+import { initVmManager, openVmConsole } from './components/vm-manager.js';
 import { initContainerModal } from './components/container-modal.js';
 import { initStackModal } from './components/stack-modal.js';
 import { initDesktopContextMenu } from './components/desktop-context-menu.js';
@@ -174,6 +175,12 @@ document.addEventListener('DOMContentLoaded', () => {
       screen.style.visibility = 'visible';
     }
   }
+
+  if (window.location.search.includes('mode=vm-console') || document.body.classList.contains('vm-console-direct')) {
+    state.isVmConsoleDirect = true;
+    document.body.classList.add('vm-console-direct');
+  }
+
   setWindowRestorationComplete(false);
   initI18n();
   initDockSystem();
@@ -204,12 +211,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const hasAuth = auth.hasToken() || state.isLcdDirect;
   if (hasAuth) {
-    restoreOpenWindowsState();
-    fetchDashboardLayout();
-    tick();
-    startSSE();
-    checkLcdStatus();
-    loadWallpapers();
+    if (state.isVmConsoleDirect) {
+      setWindowRestorationComplete(true);
+      const params = new URLSearchParams(window.location.search);
+      const vmId = params.get('vm') || '1';
+      const vmName = params.get('name') || 'Virtual Machine';
+      const consoleMode = params.get('consoleMode') || 'gui';
+      openVmConsole(vmId, vmName, consoleMode);
+    } else {
+      restoreOpenWindowsState();
+      fetchDashboardLayout();
+      tick();
+      startSSE();
+      checkLcdStatus();
+      loadWallpapers();
+    }
   } else {
     setWindowRestorationComplete(true);
     const overlay = document.getElementById('login-overlay');
@@ -220,7 +236,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   setInterval(() => {
-    if (auth.hasToken() || state.isLcdDirect) {
+    if (!state.isVmConsoleDirect && (auth.hasToken() || state.isLcdDirect)) {
       checkLcdStatus();
     }
   }, 10000);
@@ -247,6 +263,15 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   ZettEventBus.on('auth:login', () => {
+    if (state.isVmConsoleDirect) {
+      setWindowRestorationComplete(true);
+      const params = new URLSearchParams(window.location.search);
+      const vmId = params.get('vm') || '1';
+      const vmName = params.get('name') || 'Virtual Machine';
+      const consoleMode = params.get('consoleMode') || 'gui';
+      openVmConsole(vmId, vmName, consoleMode);
+      return;
+    }
     fetchDashboardLayout();
     tick();
     startSSE();

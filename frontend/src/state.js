@@ -56,6 +56,7 @@ export function fastEqual(a, b) {
 
 export const state = {
   isLcdDirect: typeof window !== 'undefined' && (window.location.search.includes('mode=lcd') || (typeof document !== 'undefined' && document.body && document.body.classList.contains('lcd-direct'))),
+  isVmConsoleDirect: typeof window !== 'undefined' && (window.location.search.includes('mode=vm-console') || (typeof document !== 'undefined' && document.body && document.body.classList.contains('vm-console-direct'))),
   desktopTheme: (typeof localStorage !== 'undefined' && localStorage.getItem('desktop_theme')) || 'cyber',
   desktopCustomAccent: (typeof localStorage !== 'undefined' && localStorage.getItem('desktop_custom_accent')) || '',
   lcdTheme: (typeof localStorage !== 'undefined' && localStorage.getItem('lcd_theme')) || 'cyber',

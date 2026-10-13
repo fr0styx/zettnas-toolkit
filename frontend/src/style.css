@@ -1,6 +1,7 @@
 @layer reset, base, layout, components, themes;
 
 @import "./lcd-direct.css";
+@import "./vm-console-direct.css";
 
 :root{
   --bg:#0a0e13; --card:#141b24; --card-hi:#1b2430;
