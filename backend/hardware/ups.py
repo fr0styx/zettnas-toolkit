@@ -367,11 +367,12 @@ def discover_ups_sources() -> List[Dict[str, Any]]:
                             "type": "usb_hid",
                             "mode": "usb_hid",
                             "title": f"{vendor_title} ({prod_name or pid})",
+                            "label": f"{vendor_title} ({prod_name or pid})",
                             "vendor_id": vid,
                             "product_id": pid,
                             "model": prod_name or vendor_title,
                             "host": "localhost",
-                            "port": 0,
+                            "port": 3551,
                             "description": f"Direct USB Device ({vid}:{pid})",
                             "is_usb": True,
                         }
@@ -387,9 +388,10 @@ def discover_ups_sources() -> List[Dict[str, Any]]:
                 "type": "usb_hid",
                 "mode": "usb_hid",
                 "title": f"USB HID Power Device ({os.path.basename(hiddev_nodes[0])})",
+                "label": f"USB HID Power Device ({os.path.basename(hiddev_nodes[0])})",
                 "model": "Generic USB HID UPS",
                 "host": "localhost",
-                "port": 0,
+                "port": 3551,
                 "description": f"Detected character node {hiddev_nodes[0]}",
                 "is_usb": True,
             }
@@ -412,6 +414,7 @@ def discover_ups_sources() -> List[Dict[str, Any]]:
                     "type": "apcupsd_client",
                     "mode": "apcupsd_client",
                     "title": f"APCUPSD Server @ {h}:3551",
+                    "label": f"APCUPSD Server @ {h}:3551",
                     "model": model,
                     "host": h,
                     "port": 3551,
@@ -432,6 +435,7 @@ def discover_ups_sources() -> List[Dict[str, Any]]:
                     "type": "nut_client",
                     "mode": "nut_client",
                     "title": f"Network UPS Tools (NUT) @ {h}:3493",
+                    "label": f"Network UPS Tools (NUT) @ {h}:3493",
                     "model": model,
                     "host": h,
                     "port": 3493,
@@ -456,8 +460,13 @@ def test_ups_connection(
 ) -> Dict[str, Any]:
     """Tests connection to a UPS daemon without modifying persistent configuration."""
     clean_host = (host or "127.0.0.1").strip()
-    clean_port = int(port or 3551)
+    try:
+        clean_port = int(port or 3551)
+    except (ValueError, TypeError):
+        clean_port = 3551
     clean_mode = (mode or "auto").lower()
+    if clean_port <= 0:
+        clean_port = 3493 if clean_mode in ("nut_client", "nut") else 3551
 
     raw: Dict[str, str] = {}
 
@@ -609,11 +618,15 @@ def read_ups_status(force: bool = False) -> Dict[str, Any]:
             "active_policy": cfg.get("shutdown_policy", "runtime_left"),
         }
         _CACHED_UPS = disabled_obj
-        _LAST_UPS_POLL = now + 12.0
+        _LAST_UPS_POLL = now
         return disabled_obj
 
     ups_host = cfg.get("host", "127.0.0.1")
-    ups_port = int(cfg.get("port", 3551))
+    raw_port = cfg.get("port")
+    try:
+        ups_port = int(raw_port) if raw_port is not None else 3551
+    except (ValueError, TypeError):
+        ups_port = 3551
     ups_mode = cfg.get("mode", "auto").lower()
     ups_name = cfg.get("ups_name", "ups")
     ups_user = cfg.get("username", "")
@@ -624,13 +637,14 @@ def read_ups_status(force: bool = False) -> Dict[str, Any]:
 
     # 1. If configured for NUT mode or NUT port 3493
     if ups_mode in ("nut_client", "nut") or ups_port == 3493:
-        raw = _query_nut_socket(ups_host, ups_port, ups_name=ups_name, username=ups_user, password=ups_pass)
+        target_port = ups_port if ups_port > 0 else 3493
+        raw = _query_nut_socket(ups_host, target_port, ups_name=ups_name, username=ups_user, password=ups_pass)
         if raw:
             protocol = "nut_socket"
         elif ups_host in ("127.0.0.1", "localhost"):
             gw = _get_docker_gateway()
             if gw and gw != ups_host:
-                raw = _query_nut_socket(gw, ups_port, ups_name=ups_name, username=ups_user, password=ups_pass)
+                raw = _query_nut_socket(gw, target_port, ups_name=ups_name, username=ups_user, password=ups_pass)
                 if raw:
                     protocol = "nut_socket"
         if not raw:
@@ -640,13 +654,14 @@ def read_ups_status(force: bool = False) -> Dict[str, Any]:
 
     # 2. If configured for APCUPSD mode or port 3551
     elif ups_mode in ("apcupsd_client", "apcupsd") or ups_port == 3551:
-        raw = _query_apcupsd_socket(ups_host, ups_port)
+        target_port = ups_port if ups_port > 0 else 3551
+        raw = _query_apcupsd_socket(ups_host, target_port)
         if raw:
             protocol = "apcupsd_socket"
         elif ups_host in ("127.0.0.1", "localhost"):
             gw = _get_docker_gateway()
             if gw and gw != ups_host:
-                raw = _query_apcupsd_socket(gw, ups_port)
+                raw = _query_apcupsd_socket(gw, target_port)
                 if raw:
                     protocol = "apcupsd_socket"
         if not raw:
@@ -654,26 +669,28 @@ def read_ups_status(force: bool = False) -> Dict[str, Any]:
             if raw:
                 protocol = "apcaccess_cli"
 
-    # 3. Default / Auto Mode: Probe apcupsd first, then NUT, then CLI
+    # 3. Default / Auto / Direct USB Mode: Probe apcupsd first, then NUT, then CLI
     else:
-        raw = _query_apcupsd_socket(ups_host, ups_port)
+        target_apc_port = ups_port if ups_port > 0 else 3551
+        raw = _query_apcupsd_socket(ups_host, target_apc_port)
         if raw:
             protocol = "apcupsd_socket"
         elif ups_host in ("127.0.0.1", "localhost"):
             gw = _get_docker_gateway()
             if gw and gw != ups_host:
-                raw = _query_apcupsd_socket(gw, ups_port)
+                raw = _query_apcupsd_socket(gw, target_apc_port)
                 if raw:
                     protocol = "apcupsd_socket"
 
         if not raw:
-            raw = _query_nut_socket(ups_host, 3493, ups_name=ups_name)
+            target_nut_port = ups_port if (ups_port > 0 and ups_port != 3551) else 3493
+            raw = _query_nut_socket(ups_host, target_nut_port, ups_name=ups_name)
             if raw:
                 protocol = "nut_socket"
             elif ups_host in ("127.0.0.1", "localhost"):
                 gw = _get_docker_gateway()
                 if gw and gw != ups_host:
-                    raw = _query_nut_socket(gw, 3493, ups_name=ups_name)
+                    raw = _query_nut_socket(gw, target_nut_port, ups_name=ups_name)
                     if raw:
                         protocol = "nut_socket"
 
@@ -705,7 +722,7 @@ def read_ups_status(force: bool = False) -> Dict[str, Any]:
             "failsafe_active": False,
         }
         _CACHED_UPS = status_obj
-        _LAST_UPS_POLL = now + 12.0
+        _LAST_UPS_POLL = now
         return status_obj
 
     def _extract_float(val: str):

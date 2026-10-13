@@ -3433,11 +3433,14 @@ export function initUpsDrawerControls() {
         return;
       }
       discoverContainer.innerHTML = candidates.map((cand, idx) => {
-        const typeLabel = cand.type === 'apcupsd' ? 'APCUPSD NIS' : (cand.type === 'nut' ? 'NUT Server' : 'USB HID Device');
+        const isApc = cand.type === 'apcupsd' || cand.type === 'apcupsd_client' || (cand.port === 3551);
+        const isNut = cand.type === 'nut' || cand.type === 'nut_client' || (cand.port === 3493);
+        const typeLabel = isApc ? 'APCUPSD NIS' : (isNut ? 'NUT Server' : 'USB HID Device');
         const hostPort = cand.port ? `${cand.host}:${cand.port}` : (cand.path || cand.host);
+        const displayTitle = cand.title || cand.label || typeLabel;
         return `<div class="ups-discover-item" data-idx="${idx}" style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.08); padding:8px 12px; border-radius:6px; cursor:pointer;">
           <div>
-            <div style="font-size:12px; font-weight:600; color:#fff;">${escapeHtml(cand.label || typeLabel)}</div>
+            <div style="font-size:12px; font-weight:600; color:#fff;">${escapeHtml(displayTitle)}</div>
             <div style="font-size:11px; color:var(--muted);">${escapeHtml(typeLabel)} • <code>${escapeHtml(hostPort)}</code></div>
           </div>
           <button type="button" class="btn-rect" style="font-size:11px; padding:3px 8px;">Apply</button>
@@ -3449,18 +3452,29 @@ export function initUpsDrawerControls() {
           const idx = parseInt(item.dataset.idx, 10);
           const cand = candidates[idx];
           if (!cand) return;
-          const targetMode = cand.type === 'apcupsd' ? 'apcupsd_client' : (cand.type === 'nut' ? 'nut_client' : 'usb_hid');
+          const isApc = cand.type === 'apcupsd' || cand.type === 'apcupsd_client' || (cand.port === 3551);
+          const isNut = cand.type === 'nut' || cand.type === 'nut_client' || (cand.port === 3493);
+          const targetMode = cand.mode || (isApc ? 'apcupsd_client' : (isNut ? 'nut_client' : 'usb_hid'));
           const radio = document.querySelector(`input[name="ups-mode"][value="${targetMode}"]`);
           if (radio) radio.checked = true;
           const hostEl = document.getElementById('ups-cfg-host');
           const portEl = document.getElementById('ups-cfg-port');
           const nameEl = document.getElementById('ups-cfg-name');
           if (hostEl && cand.host) hostEl.value = cand.host;
-          if (portEl && cand.port) portEl.value = cand.port;
+          if (portEl) {
+            if (cand.port && cand.port > 0) {
+              portEl.value = cand.port;
+            } else if (targetMode === 'apcupsd_client') {
+              portEl.value = 3551;
+            } else if (targetMode === 'nut_client') {
+              portEl.value = 3493;
+            }
+          }
           if (nameEl && cand.ups_name) nameEl.value = cand.ups_name;
           updateUpsConnCardState(targetMode);
           triggerImmediateSave();
-          showToast(`Applied ${cand.label || typeLabel} parameters!`, 'info');
+          const displayTitle = cand.title || cand.label || (isApc ? 'APCUPSD' : (isNut ? 'NUT' : 'USB HID'));
+          showToast(`Applied ${displayTitle} parameters!`, 'info');
         });
       });
     } catch (err) {
