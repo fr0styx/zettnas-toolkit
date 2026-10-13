@@ -7,7 +7,7 @@ if command -v ruff >/dev/null 2>&1; then
 elif [ -x "/usr/local/bin/ruff" ]; then
   RUFF_CMD="/usr/local/bin/ruff"
 elif command -v docker >/dev/null 2>&1 && docker ps --format '{{.Names}}' | grep -q '^zettnas-toolkit$'; then
-  RUFF_CMD="docker exec -i zettnas-toolkit ruff"
+  RUFF_CMD="docker"
 fi
 
 if [ -z "$RUFF_CMD" ]; then
@@ -20,21 +20,37 @@ if [ -n "$STAGED_PY_FILES" ]; then
   echo "🔍 [pre-commit] Formatting and verifying staged Python files with Ruff..."
   for f in $STAGED_PY_FILES; do
     if [ -f "$f" ]; then
-      $RUFF_CMD format "$f"
-      $RUFF_CMD check --fix --unsafe-fixes "$f" >/dev/null 2>&1 || true
+      if [ "$RUFF_CMD" = "docker" ]; then
+        docker exec -i zettnas-toolkit ruff format "/app/$f"
+        docker exec -i zettnas-toolkit ruff check --fix --unsafe-fixes "/app/$f" >/dev/null 2>&1 || true
+      else
+        $RUFF_CMD format "$f"
+        $RUFF_CMD check --fix --unsafe-fixes "$f" >/dev/null 2>&1 || true
+      fi
       git add "$f"
     fi
   done
 
   for f in $STAGED_PY_FILES; do
     if [ -f "$f" ]; then
-      if ! $RUFF_CMD check "$f"; then
-        echo "❌ [pre-commit] Ruff check failed on $f."
-        exit 1
-      fi
-      if ! $RUFF_CMD format --check "$f"; then
-        echo "❌ [pre-commit] Ruff format check failed on $f."
-        exit 1
+      if [ "$RUFF_CMD" = "docker" ]; then
+        if ! docker exec -i zettnas-toolkit ruff check "/app/$f"; then
+          echo "❌ [pre-commit] Ruff check failed on $f."
+          exit 1
+        fi
+        if ! docker exec -i zettnas-toolkit ruff format --check "/app/$f"; then
+          echo "❌ [pre-commit] Ruff format check failed on $f."
+          exit 1
+        fi
+      else
+        if ! $RUFF_CMD check "$f"; then
+          echo "❌ [pre-commit] Ruff check failed on $f."
+          exit 1
+        fi
+        if ! $RUFF_CMD format --check "$f"; then
+          echo "❌ [pre-commit] Ruff format check failed on $f."
+          exit 1
+        fi
       fi
     fi
   done

@@ -36,6 +36,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     rclone \
     fuse3 \
     qemu-system-x86 \
+    qemu-system-arm \
     qemu-utils \
     libslirp0 \
     chromium \
@@ -57,8 +58,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libasound2 \
     libgl1-mesa-dri \
     mesa-va-drivers \
-    qemu-system-x86 \
-    qemu-utils \
     fonts-liberation \
     fonts-noto-cjk \
     fonts-noto-color-emoji \

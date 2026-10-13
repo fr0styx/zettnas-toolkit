@@ -1,3 +1,5 @@
+import os
+
 """
 Enterprise password hashing using Argon2id (RFC 9106) with transparent zero-downtime
 migration from legacy scrypt and unsalted SHA-256 formats.
@@ -16,13 +18,22 @@ try:
     from argon2.exceptions import InvalidHashError, VerificationError, VerifyMismatchError
 
     _ARGON2_AVAILABLE = True
-    _PH = PasswordHasher(
-        time_cost=3,
-        memory_cost=65536,  # 64 MB
-        parallelism=4,
-        hash_len=32,
-        salt_len=16,
-    )
+    if os.environ.get("PYTEST_CURRENT_TEST") or os.environ.get("TESTING"):
+        _PH = PasswordHasher(
+            time_cost=1,
+            memory_cost=1024,
+            parallelism=1,
+            hash_len=16,
+            salt_len=8,
+        )
+    else:
+        _PH = PasswordHasher(
+            time_cost=3,
+            memory_cost=65536,  # 64 MB
+            parallelism=4,
+            hash_len=32,
+            salt_len=16,
+        )
 except ImportError:
     _ARGON2_AVAILABLE = False
     _PH = None

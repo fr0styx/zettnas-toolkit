@@ -17,7 +17,9 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
 
-SANDBOX = tempfile.mkdtemp(prefix="zettnas-tests-")
+worker_id = os.environ.get("PYTEST_XDIST_WORKER", "")
+prefix = f"zettnas-tests-{worker_id}-" if worker_id else "zettnas-tests-"
+SANDBOX = tempfile.mkdtemp(prefix=prefix)
 DATA_DIR = os.path.join(SANDBOX, "data")
 POOL_DIR = os.path.join(SANDBOX, "pool")
 OUTSIDE_DIR = os.path.join(SANDBOX, "outside")
@@ -135,6 +137,18 @@ def read_sysfs(hw, name):
         return f.read().strip()
 
 
+_CACHED_ADMIN_HASH = None
+
+
+def get_cached_admin_hash() -> str:
+    global _CACHED_ADMIN_HASH
+    if _CACHED_ADMIN_HASH is None:
+        from backend.passwords import hash_password
+
+        _CACHED_ADMIN_HASH = hash_password("admin")
+    return _CACHED_ADMIN_HASH
+
+
 @pytest.fixture
 def client():
     """FastAPI TestClient (lifespan not started: no hardware threads)."""
@@ -143,10 +157,9 @@ def client():
     import app as app_module
     from backend import config
     from backend.api import auth as auth_api
-    from backend.passwords import hash_password
 
     saved_hash = config.STORED_PASSWORD_HASH
-    config.STORED_PASSWORD_HASH = hash_password("admin")
+    config.STORED_PASSWORD_HASH = get_cached_admin_hash()
     auth_api._failures.clear()
     yield TestClient(app_module.app)
     auth_api._failures.clear()
