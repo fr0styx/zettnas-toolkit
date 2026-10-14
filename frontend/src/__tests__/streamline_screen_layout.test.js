@@ -398,21 +398,20 @@ describe('Streamline Minimalist / Big IP Screen Layout Suite', () => {
       expect(chips[2].querySelector('.sl-parity-tag')).toBeNull();
     });
 
-    it('renders orange parity pill [P] at lower end of disk tile in Classic Cards', () => {
+    it('renders clean disk tile in Classic Cards without redundant parity pill', () => {
       const pTile = diskTile({ name: 'sdb', role: 'parity', is_parity: true, parity_label: 'P', temp: 34, health: 'ok' });
       expect(pTile.classList.contains('disk-is-parity')).toBe(true);
       expect(pTile.classList.contains('r-parity')).toBe(true);
       expect(pTile.title).toContain('[PARITY]');
 
-      const pill = pTile.querySelector('.dt .parity-pill');
-      expect(pill).not.toBeNull();
-      expect(pill.textContent).toBe('P');
+      // Parity pill is removed to eliminate visual redundancy with group header and prevent clipping
+      expect(pTile.querySelector('.dt .parity-pill')).toBeNull();
 
-      // Parity drive in standby mode still shows parity pill alongside standby badge
+      // Parity drive in standby mode displays clean full-width standby badge without pill
       const pStandbyTile = diskTile({ name: 'sdb', role: 'parity', is_parity: true, parity_label: 'P', temp: null, health: 'standby', standby: true });
       expect(pStandbyTile.classList.contains('disk-is-parity')).toBe(true);
       expect(pStandbyTile.querySelector('.dt .standby-badge')).not.toBeNull();
-      expect(pStandbyTile.querySelector('.dt .parity-pill').textContent).toBe('P');
+      expect(pStandbyTile.querySelector('.dt .parity-pill')).toBeNull();
     });
 
     it('groups parity drives under dedicated PARITY section ahead of DATA in renderDisks', () => {
@@ -433,7 +432,7 @@ describe('Streamline Minimalist / Big IP Screen Layout Suite', () => {
       expect(groups[0].classList.contains('r-parity')).toBe(true);
       expect(groups[0].querySelector('.group-label').textContent).toContain('PARITY');
       expect(groups[0].querySelectorAll('.disk').length).toBe(1);
-      expect(groups[0].querySelector('.disk .parity-pill').textContent).toBe('P');
+      expect(groups[0].querySelector('.disk .parity-pill')).toBeNull();
 
       // Group 1: DATA
       expect(groups[1].dataset.role).toBe('data');
@@ -452,7 +451,7 @@ describe('Streamline Minimalist / Big IP Screen Layout Suite', () => {
 
       const updatedParityTile = row.querySelector('[data-dev="sdb"]');
       expect(updatedParityTile.classList.contains('disk-is-parity')).toBe(true);
-      expect(updatedParityTile.querySelector('.dt .parity-pill').textContent).toBe('P');
+      expect(updatedParityTile.querySelector('.dt .parity-pill')).toBeNull();
       expect(updatedParityTile.querySelector('.dt-temp').textContent).toContain('35');
     });
   });

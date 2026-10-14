@@ -179,13 +179,9 @@ export function diskTile(d) {
     ? `${d.name}${isParity ? ' [PARITY]' : ''} is in standby (spun-down)`
     : `Click to inspect S.M.A.R.T. health for ${d.name}${isParity ? ' [PARITY]' : ''}`;
 
-  const parityBadgeHtml = isParity
-    ? `<span class="parity-pill" title="Parity Protection Drive (${parityLbl})">${escapeHtml(parityLbl)}</span>`
-    : '';
-
   const tempHtml = isStandby
-    ? `<div class="dt s-standby"><span class="standby-badge">STANDBY</span>${parityBadgeHtml}</div>`
-    : `<div class="dt ${'s-' + lvl}"><span class="dt-temp">${t == null ? '--' : t}<span class="u">°C</span></span>${parityBadgeHtml}</div>`;
+    ? `<div class="dt s-standby"><span class="standby-badge">STANDBY</span></div>`
+    : `<div class="dt ${'s-' + lvl}"><span class="dt-temp">${t == null ? '--' : t}<span class="u">°C</span></span></div>`;
 
   const displayName = formatDiskDisplayName(d.name);
 
@@ -302,16 +298,12 @@ export function renderDisks(disks) {
       const nameEl = tile.querySelector('.dn');
       if (nameEl) nameEl.textContent = formatDiskDisplayName(d.name);
 
-      const parityBadgeHtml = isParity
-        ? `<span class="parity-pill" title="Parity Protection Drive (${parityLbl})">${escapeHtml(parityLbl)}</span>`
-        : '';
-
       const tempEl = tile.querySelector('.dt');
       if (tempEl) {
         tempEl.className = 'dt ' + (isStandby ? 's-standby' : 's-' + lvl);
         tempEl.innerHTML = isStandby
-          ? `<span class="standby-badge">STANDBY</span>${parityBadgeHtml}`
-          : `<span class="dt-temp">${t == null ? '--' : t}<span class="u">°C</span></span>${parityBadgeHtml}`;
+          ? `<span class="standby-badge">STANDBY</span>`
+          : `<span class="dt-temp">${t == null ? '--' : t}<span class="u">°C</span></span>`;
       }
 
       const indEl = tile.querySelector('.disk-indicators');
