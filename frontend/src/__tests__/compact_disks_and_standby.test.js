@@ -87,8 +87,13 @@ describe('Compact Disks Display & Standby Safety Suite', () => {
   });
 
   describe('Compact CSS styling invariants', () => {
-    it('hides redundant zZz in compact mode to free horizontal space for disk name', () => {
+    const lcdDirectCssPath = path.resolve(__dirname, '../lcd-direct.css');
+    const lcdDirectCssContent = fs.readFileSync(lcdDirectCssPath, 'utf8');
+
+    it('hides redundant zZz, disk-ic, and io-dot in compact mode to free horizontal space for disk name', () => {
       expect(cssContent).toMatch(/\.disks\.compact\s+\.standby-zzz\s*\{\s*display:\s*none\s*!important;\s*\}/);
+      expect(cssContent).toMatch(/\.disks\.compact\s+\.disk-ic\s*\{\s*display:\s*none\s*!important;\s*\}/);
+      expect(cssContent).toMatch(/\.disks\.compact\s+\.io-dot\s*\{\s*display:\s*none\s*!important;\s*\}/);
     });
 
     it('scales standby-badge down to 7.5px with overflow clipping to prevent "Y" overflow', () => {
@@ -100,6 +105,13 @@ describe('Compact Disks Display & Standby Safety Suite', () => {
     it('enforces tight gaps and padding on compact disk elements', () => {
       expect(cssContent).toMatch(/\.disks\.compact\s*\{\s*gap:\s*4px;\s*\}/);
       expect(cssContent).toMatch(/\.disks\.compact\s+\.disk\s*\{\s*padding:\s*2px\s+2\.5px;\s*\}/);
+    });
+
+    it('enforces compact rules on physical LCD via lcd-direct.css overrides', () => {
+      expect(lcdDirectCssContent).toMatch(/body\.lcd-direct[\s\S]*?\.disks\.compact[\s\S]*?gap:\s*4px\s*!important/);
+      expect(lcdDirectCssContent).toMatch(/body\.lcd-direct[\s\S]*?\.disks\.compact\s+\.disk[\s\S]*?padding:\s*2px\s+2\.5px\s*!important/);
+      expect(lcdDirectCssContent).toMatch(/body\.lcd-direct[\s\S]*?\.disks\.compact\s+\.disk-ic[\s\S]*?display:\s*none\s*!important/);
+      expect(lcdDirectCssContent).toMatch(/body\.lcd-direct[\s\S]*?\.disks\.compact\s+\.io-dot[\s\S]*?display:\s*none\s*!important/);
     });
   });
 

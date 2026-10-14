@@ -484,6 +484,48 @@ body.lcd-direct #screen .disk {
   border-radius: 6px !important;
 }
 
+body.lcd-direct #console-window #screen .disks.compact,
+body.lcd-direct #screen .disks.compact {
+  gap: 4px !important;
+}
+
+body.lcd-direct #console-window #screen .disks.compact .group-tiles,
+body.lcd-direct #screen .disks.compact .group-tiles {
+  gap: 4px !important;
+}
+
+body.lcd-direct #console-window #screen .disks.compact .disk,
+body.lcd-direct #screen .disks.compact .disk {
+  padding: 2px 2.5px !important;
+}
+
+body.lcd-direct #console-window #screen .disks.compact .disk-ic,
+body.lcd-direct #screen .disks.compact .disk-ic {
+  display: none !important;
+}
+
+body.lcd-direct #console-window #screen .disks.compact .dn,
+body.lcd-direct #screen .disks.compact .dn {
+  font-size: 9.5px !important;
+  letter-spacing: -0.2px !important;
+}
+
+body.lcd-direct #console-window #screen .disks.compact .standby-zzz,
+body.lcd-direct #screen .disks.compact .standby-zzz {
+  display: none !important;
+}
+
+body.lcd-direct #console-window #screen .disks.compact .io-dot,
+body.lcd-direct #screen .disks.compact .io-dot {
+  display: none !important;
+}
+
+body.lcd-direct #console-window #screen .disks.compact .standby-badge,
+body.lcd-direct #screen .disks.compact .standby-badge {
+  font-size: 7.5px !important;
+  letter-spacing: 0.1px !important;
+}
+
 body.lcd-direct #console-window #screen .group-div,
 body.lcd-direct #screen .group-div {
   width: 1px !important;

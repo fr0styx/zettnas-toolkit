@@ -1772,12 +1772,18 @@ body.drawer-is-open .chassis-workbench-stage {
 .disks.compact .group-tiles { gap: 4px; }
 .disks.compact .disk { padding: 2px 2.5px; }
 .disks.compact .dh { gap: 2px; }
-.disks.compact .disk-ic { width: 7.5px; height: 7.5px; flex: none; }
-.disks.compact .dn { font-size: 9px; font-weight: 800; letter-spacing: -0.2px; }
+.disks.compact .disk-ic { display: none !important; }
+.disks.compact .dn { font-size: 9.5px; font-weight: 800; letter-spacing: -0.2px; }
 .disks.compact .dt { font-size: 10.5px; }
 .disks.compact .disk-indicators { gap: 2px; }
 .disks.compact .hdot { width: 5px; height: 5px; }
 .disks.compact .standby-zzz { display: none !important; }
+.disks.compact .io-dot { display: none !important; }
+.disk:not(.io-active) .io-dot { display: none !important; }
+.disks.compact .disk.io-active .hdot {
+  box-shadow: 0 0 6px #00ffff, 0 0 10px #00ffff !important;
+  animation: ioBlink 0.3s ease-in-out infinite alternate;
+}
 .disks.compact .standby-badge {
   font-size: 7.5px;
   font-weight: 800;
