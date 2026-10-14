@@ -27,7 +27,7 @@ def test_under_populated_chassis_and_all_flash_zero_rpm():
         {"dev": "sda", "role": "data", "standby": True, "temp": None},
         {"dev": "sdb", "role": "data", "standby": True, "temp": None},
     ]
-    # D8 chassis logic with 2 drives
+    # D8U chassis logic with 2 drives
     midpoint = max(1, len(sata_disks_underpopulated) // 2)
     zone1 = sata_disks_underpopulated[:midpoint]
     zone2 = sata_disks_underpopulated[midpoint:]

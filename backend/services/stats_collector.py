@@ -130,7 +130,7 @@ def stats_collector_daemon():
                 zone1_disks = sata_disks
                 zone2_disks = []
             else:
-                # ZettLab D6U / D8: Dual fan split across Zone 1 (pwm1) and Zone 2 (pwm2)
+                # ZettLab D6U / D8U: Dual fan split across Zone 1 (pwm1) and Zone 2 (pwm2)
                 midpoint = max(1, len(sata_disks) // 2)
                 zone1_disks = sata_disks[:midpoint]
                 zone2_disks = sata_disks[midpoint:]

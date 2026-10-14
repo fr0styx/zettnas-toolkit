@@ -885,7 +885,7 @@ export function updateHardwareTelemetry(s) {
   }
 
   // ZettNAS Desktop Icon & Hardware LCD Invariant:
-  // The ZettNAS desktop icon should ONLY be visible if the hardware is a Zettlabs D4/D6/D6U/D8 NAS appliance
+  // The ZettNAS desktop icon should ONLY be visible if the hardware is a Zettlabs D4/D6/D6U/D8U NAS appliance
   // OR another system with a similar physical LCD, taking display resolution into account for perfect data display.
   const vendor = String(hardware.sys_vendor || s?.motherboard?.vendor || '').toLowerCase();
   const product = String(
@@ -895,7 +895,7 @@ export function updateHardwareTelemetry(s) {
   const isZettlabs = Boolean(
     hardware.is_zettlabs ||
       vendor.includes('zettlab') ||
-      ['d4', 'd6', 'd6u', 'd8', 'zettbox', 'zettnas'].some((k) => product.includes(k)) ||
+      ['d4', 'd6', 'd6u', 'd8u', 'd8 ultra', 'zettbox', 'zettnas'].some((k) => product.includes(k)) ||
       (hardware.is_custom_appliance && !vendor.includes('aoostar'))
   );
 

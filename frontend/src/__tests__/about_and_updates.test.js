@@ -52,7 +52,7 @@ describe('System About & Software Updates Frontend Component', () => {
           tag: 'v1.8.0',
           commit: '5c0639d',
           release_channel: 'Stable',
-          chassis_model: 'Zettlab D8 (8-Bay)',
+          chassis_model: 'Zettlab D8 Ultra (8-Bay)',
           hostname: 'ZettTower',
           platform: 'Linux 6.12.13-Unraid',
           containerized: true,
@@ -76,7 +76,7 @@ describe('System About & Software Updates Frontend Component', () => {
     await fetchAndRenderSystemAbout();
 
     expect(document.getElementById('about-version-badge').textContent).toBe('v1.8.0 (5c0639d) • Stable');
-    expect(document.getElementById('about-chassis-model').textContent).toBe('Zettlab D8 (8-Bay)');
+    expect(document.getElementById('about-chassis-model').textContent).toBe('Zettlab D8 Ultra (8-Bay)');
     expect(document.getElementById('about-host-platform').textContent).toBe('ZettTower (Linux 6.12.13-Unraid)');
     expect(document.getElementById('about-runtime-env').textContent).toBe('Docker Container (Python 3.12.15)');
     expect(document.getElementById('about-system-uptime').textContent).toBe('1d 1h 1m');

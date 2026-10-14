@@ -33,7 +33,9 @@ def is_zettlab_appliance() -> bool:
         product = ChassisEngine._read_dmi_product_name().lower()
         board = ChassisEngine._read_dmi_field("board_name").lower()
         dmi_str = f"{vendor} {product} {board}"
-        return any(k in dmi_str for k in ("zettlab", "zettos", "wy110", "wy120", "wy140", "d4", "d6", "d8", "aoostar"))
+        return any(
+            k in dmi_str for k in ("zettlab", "zettos", "wy110", "wy120", "wy140", "d4", "d6", "d6u", "d8u", "aoostar")
+        )
     except Exception:
         return False
 

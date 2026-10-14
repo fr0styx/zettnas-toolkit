@@ -130,7 +130,7 @@ export function renderChassisTwin(container, disks = [], options = {}) {
     else if (totalBays <= 6) profile = 'tower_desktop';
     else profile = 'rackmount_backplane';
 
-    chassisModel = options.model || (totalBays <= 4 ? 'ZETTLAB D4' : totalBays <= 6 ? 'ZETTLAB D6' : totalBays <= 8 ? 'ZETTLAB D8' : 'DIY STORAGE CHASSIS');
+    chassisModel = options.model || (totalBays <= 4 ? 'ZETTLAB D4' : totalBays <= 6 ? 'ZETTLAB D6' : totalBays <= 8 ? 'ZETTLAB D8U' : 'DIY STORAGE CHASSIS');
     bays = [];
     for (let i = 0; i < totalBays; i++) {
       const d = hdds[i];

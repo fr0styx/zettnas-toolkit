@@ -1,1 +1,0 @@
-import{L as e}from"./dashboard-PLE-uOHT.js";export{e as initManagement};

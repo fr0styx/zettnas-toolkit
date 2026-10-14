@@ -89,7 +89,7 @@ def get_chassis_friendly_name(slug_or_model: str) -> str:
         return "Zettlab D4 (4-Bay)"
     if s in ("d6u", "d6", "wy120", "nas-6", "6-bay") or "d6" in s:
         return "Zettlab D6 Ultra (6-Bay)"
-    if s in ("d8u", "d8", "wy140", "nas-8", "8-bay", "d8pro") or "d8" in s:
+    if s in ("d8u", "wy140", "nas-8", "8-bay") or "d8u" in s or "d8 ultra" in s:
         return "Zettlab D8 Ultra (8-Bay)"
     if "aoostar" in s or "wtr" in s:
         return "AOOSTAR WTR Enclosure"
@@ -186,8 +186,8 @@ def detect_chassis_model(force: bool = False):
         ):
             Z_STATE.cached_chassis_model = "d4"
             return "d4"
-        if any(k in dt_combined for k in ("wy140", "d8 ultra", "d8u", "d8 pro", "d8pro", "nas-8")) or (
-            "d8" in dt_combined and any(k in dt_combined for k in ("zettlab", "rk3588", "rockchip", "zettos"))
+        if any(k in dt_combined for k in ("wy140", "d8 ultra", "d8u", "nas-8")) or (
+            "d8u" in dt_combined and any(k in dt_combined for k in ("zettlab", "rk3588", "rockchip", "zettos"))
         ):
             Z_STATE.cached_chassis_model = "d8u"
             return "d8u"
@@ -204,9 +204,9 @@ def detect_chassis_model(force: bool = False):
         Z_STATE.cached_chassis_model = "d4"
         return "d4"
 
-    # D8 Motherboard (WY140 / 8-bay) check
-    if any(k in combined_dmi for k in ("wy140", "d8 ultra", "d8u", "d8 pro", "d8pro", "nas-8")) or (
-        "d8" in prod or "d8" in board or "d8" in sku
+    # D8U Motherboard (WY140 / 8-bay) check
+    if any(k in combined_dmi for k in ("wy140", "d8 ultra", "d8u", "nas-8")) or (
+        "d8u" in prod or "d8u" in board or "d8u" in sku
     ):
         Z_STATE.cached_chassis_model = "d8u"
         return "d8u"
@@ -220,7 +220,7 @@ def detect_chassis_model(force: bool = False):
 
     # 3. Hardware Fan Topology Check (Physical Zettlab Appliance)
     # Zettlab D4 hardware has ONLY 1 chassis fan channel (pwm1) and 1 CPU fan (pwm3).
-    # Zettlab D6U and D8 appliances have 2 chassis fan channels (pwm1 and pwm2) and 1 CPU fan (pwm3).
+    # Zettlab D6U and D8U appliances have 2 chassis fan channels (pwm1 and pwm2) and 1 CPU fan (pwm3).
     is_zettlab_brand = (
         "zettlab" in vendor
         or "zettlab" in board_vendor

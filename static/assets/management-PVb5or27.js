@@ -1,1 +1,0 @@
-import{R as e,Z as t}from"./dashboard-CU1U_0pz.js";export{e as initManagement,t as openDockerPruneModal};

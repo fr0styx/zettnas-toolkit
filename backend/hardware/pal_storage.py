@@ -2883,7 +2883,7 @@ class FygoOSStorageAdapter(ObserverStorageAdapter):
 class ZettOSStorageAdapter(ObserverStorageAdapter):
     """
     ZettOS Appliance Storage Platform Adapter.
-    Operates in Observer Mode across all Zettlab models (D4, D6, D6U, D8, D8U).
+    Operates in Observer Mode across all Zettlab models (D4, D6, D6U, D8U).
     ZettOS authoritatively manages multi-array mdadm RAID groups, bcache acceleration,
     OpenZFS pools, and network shares.
     """
@@ -3058,7 +3058,7 @@ class ZettOSStorageAdapter(ObserverStorageAdapter):
 
         claimed_mount_paths: set = set()
 
-        # 1. Discover mdadm Linux Software RAID arrays (e.g. md3 RAID5/6 on Zettlab D4/D6/D8)
+        # 1. Discover mdadm Linux Software RAID arrays (e.g. md3 RAID5/6 on Zettlab D4/D6/D8U)
         mdstats = self._parse_mdstat()
         hal_disks = {d.name: d for d in self._discover_hal_disks()}
         mounts = self._parse_mounts()

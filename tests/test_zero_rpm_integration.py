@@ -1,7 +1,7 @@
 """Integration and safety test suite for Zero RPM fan mode.
 
 Verifies:
-1. Chassis topology resolving (D4 single rear fan vs D6U/D8 dual zone split).
+1. Chassis topology resolving (D4 single rear fan vs D6U/D8U dual zone split).
 2. Spun-down disk standby interlock and single disk spinup breaking standby.
 3. NVMe wind-tunnel override revoking Zero RPM when M.2 SSD >= ceiling temp.
 4. 180s continuous anti-flutter delay gating before shutting off fans.
@@ -96,9 +96,9 @@ def test_d4_topology_requires_all_4_disks_in_standby():
     assert z1_all_standby is True
 
 
-def test_d8_topology_dual_zone_independence():
-    """On D6U/D8 chassis, Zone 1 (bays 1-4) and Zone 2 (bays 5+) operate independently."""
-    chassis_model = "D8"
+def test_d8u_topology_dual_zone_independence():
+    """On D6U/D8U chassis, Zone 1 (bays 1-4) and Zone 2 (bays 5+) operate independently."""
+    chassis_model = "D8U"
     disks = [
         {"name": "disk1", "bay": 1, "standby": True, "temp": 30},
         {"name": "disk2", "bay": 2, "standby": True, "temp": 31},

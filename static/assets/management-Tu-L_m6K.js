@@ -1,1 +1,0 @@
-import{R as e,Z as t}from"./dashboard-BWL4eLgg.js";export{e as initManagement,t as openDockerPruneModal};

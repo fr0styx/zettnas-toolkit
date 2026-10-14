@@ -102,8 +102,8 @@ class ChassisEngine:
                     "d6",
                     "d6u",
                     "d6 ultra",
-                    "d8",
                     "d8u",
+                    "d8 ultra",
                     "zettbox",
                     "zettnas",
                 )
@@ -184,7 +184,7 @@ class ChassisEngine:
             is_custom_appliance
             or (
                 (os.path.exists("/dev/mem") or os.path.exists(os.path.join(HOST_DEV, "mem")))
-                and ("zettlab" in vendor or any(k in product for k in ("d4", "d6", "d8")))
+                and ("zettlab" in vendor or any(k in product for k in ("d4", "d6", "d6u", "d8u")))
             )
         )
 
@@ -279,13 +279,16 @@ class ChassisEngine:
             chassis_model = "ZETTLAB D4"
             friendly_label = "Zettlab D4 (4-Bay)"
         elif (
-            "d8" in dmi_prod
+            "d8u" in dmi_prod
+            or "d8 ultra" in dmi_prod
             or "wy140" in dmi_prod
             or "wy140" in dt_model
-            or ("d8" in dt_model and any(k in dt_model for k in ("zettlab", "rk3588", "rockchip", "zettos")))
-            or any(k in dmi_prod for k in ("d8u", "d8 ultra", "d8 pro", "d8pro"))
+            or (
+                ("d8u" in dt_model or "d8 ultra" in dt_model)
+                and any(k in dt_model for k in ("zettlab", "rk3588", "rockchip", "zettos"))
+            )
         ):
-            chassis_model = "ZETTLAB D8"
+            chassis_model = "ZETTLAB D8U"
             friendly_label = "Zettlab D8 Ultra (8-Bay)"
         elif (
             "d6" in dmi_prod
@@ -299,8 +302,8 @@ class ChassisEngine:
         elif "wy110" in dmi_board or "wy110" in dmi_sku or "d4" in dmi_board or "d4" in dmi_sku:
             chassis_model = "ZETTLAB D4"
             friendly_label = "Zettlab D4 (4-Bay)"
-        elif "wy140" in dmi_board or "wy140" in dmi_sku or "d8" in dmi_board or "d8" in dmi_sku:
-            chassis_model = "ZETTLAB D8"
+        elif "wy140" in dmi_board or "wy140" in dmi_sku or "d8u" in dmi_board or "d8u" in dmi_sku:
+            chassis_model = "ZETTLAB D8U"
             friendly_label = "Zettlab D8 Ultra (8-Bay)"
         elif "wy120" in dmi_board or "wy120" in dmi_sku or "d6" in dmi_board or "d6" in dmi_sku:
             chassis_model = "ZETTLAB D6"
@@ -332,7 +335,7 @@ class ChassisEngine:
                     chassis_model = "ZETTLAB D6"
                     friendly_label = "Zettlab D6 Ultra (6-Bay)"
                 elif det_slug == "d8u":
-                    chassis_model = "ZETTLAB D8"
+                    chassis_model = "ZETTLAB D8U"
                     friendly_label = "Zettlab D8 Ultra (8-Bay)"
             except Exception:
                 pass
@@ -351,9 +354,7 @@ class ChassisEngine:
                 "ZETTLAB D4",
                 "ZETTLAB D6",
                 "ZETTLAB D6U",
-                "ZETTLAB D8",
                 "ZETTLAB D8U",
-                "ZETTLAB D8 PRO",
             ):
                 profile = "tower_desktop"
             elif hdd_count <= 2:
@@ -370,7 +371,7 @@ class ChassisEngine:
                 total_bays = 4
             elif chassis_model in ("ZETTLAB D6", "ZETTLAB D6U", "d6", "d6u"):
                 total_bays = 6
-            elif chassis_model in ("ZETTLAB D8", "ZETTLAB D8U", "ZETTLAB D8 PRO", "d8", "d8u", "d8pro"):
+            elif chassis_model in ("ZETTLAB D8U", "d8u"):
                 total_bays = 8
             elif profile == "compact_dual":
                 total_bays = max(2, hdd_count)

@@ -171,7 +171,7 @@ zettnasSysModel OBJECT-TYPE
     SYNTAX      DisplayString
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION "Hardware appliance model (e.g. D4, D6U, D8)"
+    DESCRIPTION "Hardware appliance model (e.g. D4, D6U, D8U)"
     ::= { zettnasObjects 1 }
 
 zettnasCpuTemp OBJECT-TYPE

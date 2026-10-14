@@ -232,7 +232,7 @@ def test_zettlab_d6_and_d6u_detection():
             assert status["chassis_label"] == "Zettlab D6 Ultra (6-Bay)"
 
 
-def test_zettlab_d8_and_d8u_detection():
+def test_zettlab_d8u_detection():
     """Verifies Zettlab D8 / D8U detection via Device Tree and drive counting excluding eMMC."""
     # 1. Device Tree check
     dt_content = "Zettlab D8 Ultra Octa-Bay NAS\0"
@@ -260,13 +260,13 @@ def test_zettlab_d8_and_d8u_detection():
     with patch.object(ChassisEngine, "_read_dmi_product_name", return_value="Zettlab D8 Ultra"):
         with patch("backend.hardware.chassis.DiskDiscoveryHAL.discover_physical_disks", return_value=mock_disks):
             status = ChassisEngine.get_chassis_status()
-            assert status["chassis_model"] == "ZETTLAB D8"
+            assert status["chassis_model"] == "ZETTLAB D8U"
             assert status["total_bays"] == 8
             assert status["chassis_label"] == "Zettlab D8 Ultra (8-Bay)"
 
 
 def test_zettos_adapter_multi_pool_discovery_d6_d8():
-    """Verifies multi-array discovery on D6/D8 with distinct names and no mount point collisions."""
+    """Verifies multi-array discovery on D6/D8U with distinct names and no mount point collisions."""
     adapter = ZettOSStorageAdapter(pool_path="/mnt/storage")
 
     mock_mdstat = {

@@ -19,7 +19,7 @@ if not _env_pool:
     ):
         POOL_PATH = "/mnt/user"
     else:
-        # Check ZettOS pool directories across all Zettlab appliance models (D4, D6, D6U, D8, D8U)
+        # Check ZettOS pool directories across all Zettlab appliance models (D4, D6, D6U, D8U)
         _found_pool = None
         for _zp in (
             "/zettos/pool/1",
