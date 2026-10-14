@@ -577,13 +577,48 @@ def _parse_smart(data, is_nvme: bool):
 
 
 def _resolve_dev_path(dev_name: str) -> str:
-    if dev_name.startswith("/"):
-        return dev_name
     base = HOST_DEV if os.path.exists(HOST_DEV) else "/dev"
-    by_id = os.path.join(base, "disk", "by-id", dev_name)
+    clean_name = dev_name
+    if clean_name.startswith("/host/dev/"):
+        clean_name = clean_name[len("/host/dev/") :]
+    elif clean_name.startswith("/dev/"):
+        clean_name = clean_name[len("/dev/") :]
+    elif clean_name.startswith("/"):
+        if os.path.exists(clean_name):
+            return clean_name
+        clean_name = os.path.basename(clean_name)
+
+    by_id = os.path.join(base, "disk", "by-id", clean_name)
     if os.path.exists(by_id):
         return by_id
-    return os.path.join(base, dev_name)
+    candidate = os.path.join(base, clean_name)
+    if os.path.exists(candidate):
+        return candidate
+    return candidate
+
+
+def _get_smart_device_type(dev_name: str, is_nvme: bool = False) -> str:
+    """
+    Resolves the smartctl device type (-d flag).
+    For NVMe namespace block devices, smartmontools requires the broadcast NSID 0xffffffff
+    ('nvme,0xffffffff') to correctly execute controller-level Device Self-Tests (Log 0x06).
+    """
+    clean = dev_name
+    if clean.startswith("/host/dev/"):
+        clean = clean[len("/host/dev/") :]
+    elif clean.startswith("/dev/"):
+        clean = clean[len("/dev/") :]
+
+    is_nv = is_nvme or clean.startswith("nvme")
+    dtype = "nvme,0xffffffff" if is_nv else "sat"
+    if Z_STATE.cached_disk_list:
+        for d in Z_STATE.cached_disk_list:
+            if d.get("dev") == clean or d.get("dev") == dev_name:
+                proto = d.get("smart_protocol")
+                if proto:
+                    return "nvme,0xffffffff" if proto == "nvme" else proto
+                break
+    return dtype
 
 
 def _handle_smart_failure(dev_name: str, now: float):
@@ -602,12 +637,7 @@ def poll_disk_smart(dev_name: str, is_nvme: bool):
     """Executes smartctl for a single disk in background and updates cached SMART data."""
     now = time.time()
     dev = _resolve_dev_path(dev_name)
-    dtype = "nvme" if is_nvme else "sat"
-    if Z_STATE.cached_disk_list:
-        for d in Z_STATE.cached_disk_list:
-            if d.get("dev") == dev_name:
-                dtype = d.get("smart_protocol") or dtype
-                break
+    dtype = _get_smart_device_type(dev_name, is_nvme)
 
     is_removable = False
     try:
@@ -836,16 +866,28 @@ def _parse_self_test_info(doc: dict | None, raw_text: str):
         nvme_st = doc.get("nvme_self_test_log", {})
         if nvme_st:
             nv_curr = nvme_st.get("current_self_test_operation", {})
-            nv_op = nv_curr.get("value", 0)
+            nv_op = (
+                nv_curr.get("value", 0)
+                if isinstance(nv_curr, dict)
+                else (int(nv_curr) if str(nv_curr).isdigit() else 0)
+            )
             if nv_op != 0:
                 in_progress = True
-                percent_completed = (
+                pct = (
                     nvme_st.get("current_self_test_completion_percent")
+                    or nvme_st.get("current_device_self_test_completion")
                     or nvme_st.get("current_self_test_completion")
-                    or 10
+                    or 0
                 )
+                if isinstance(pct, dict):
+                    pct = pct.get("value", 0)
+                percent_completed = int(pct)
                 percent_remaining = max(0, min(100, 100 - percent_completed))
-                status_text = nv_curr.get("string", "Self-test in progress")
+                status_text = (
+                    nv_curr.get("string", "Self-test in progress")
+                    if isinstance(nv_curr, dict)
+                    else "Self-test in progress"
+                )
 
     # 3. Fallback / supplementary check from raw_text
     for line in (raw_text or "").splitlines():
@@ -856,17 +898,22 @@ def _parse_self_test_info(doc: dict | None, raw_text: str):
                 status_text = txt
             if "in progress" in low and not ("no self-test in progress" in low or "not in progress" in low):
                 in_progress = True
-                m_rem = re.search(r"(\d+)%\s+(?:of test\s+)?remaining", low)
-                if m_rem:
-                    percent_remaining = int(m_rem.group(1))
-                    percent_completed = max(0, min(100, 100 - percent_remaining))
+                m_comp = re.search(r"(\d+)%\s+(?:completed|done)", low)
+                if m_comp:
+                    percent_completed = int(m_comp.group(1))
+                    percent_remaining = max(0, min(100, 100 - percent_completed))
                 else:
-                    m_val = re.search(r"\((\d+)\)", line)
-                    if m_val:
-                        val = int(m_val.group(1))
-                        if 241 <= val <= 249:
-                            percent_remaining = (val - 240) * 10
-                            percent_completed = max(0, min(100, 100 - percent_remaining))
+                    m_rem = re.search(r"(\d+)%\s+(?:of test\s+)?remaining", low)
+                    if m_rem:
+                        percent_remaining = int(m_rem.group(1))
+                        percent_completed = max(0, min(100, 100 - percent_remaining))
+                    else:
+                        m_val = re.search(r"\((\d+)\)", line)
+                        if m_val:
+                            val = int(m_val.group(1))
+                            if 241 <= val <= 249:
+                                percent_remaining = (val - 240) * 10
+                                percent_completed = max(0, min(100, 100 - percent_remaining))
             elif "aborted" in low:
                 is_aborted = True
         elif "short self-test routine recommended polling time:" in low and "short" not in polling_mins:
@@ -970,13 +1017,9 @@ def fetch_disk_smart_detail(dev_name: str, wake_if_standby: bool = False):
         return {"error": "Invalid device name format."}
 
     dev = _resolve_dev_path(dev_name)
-    is_nvme = dev_name.startswith("nvme")
-    dtype = "nvme" if is_nvme else "sat"
-    if Z_STATE.cached_disk_list:
-        for d in Z_STATE.cached_disk_list:
-            if d.get("dev") == dev_name:
-                dtype = d.get("smart_protocol") or dtype
-                break
+    clean_name = dev_name.removeprefix("/dev/").removeprefix("/host/dev/")
+    is_nvme = clean_name.startswith("nvme")
+    dtype = _get_smart_device_type(dev_name, is_nvme)
 
     # If the disk is currently marked in standby and caller didn't request a wake,
     # probe with -n standby to avoid spinning up platters.
@@ -1180,13 +1223,9 @@ def run_disk_smart_test(dev_name: str, test_type: str = "short", skip_if_standby
             }
 
     dev = _resolve_dev_path(dev_name)
-    is_nvme = dev_name.startswith("nvme")
-    dtype = "nvme" if is_nvme else "sat"
-    if Z_STATE.cached_disk_list:
-        for d in Z_STATE.cached_disk_list:
-            if d.get("dev") == dev_name:
-                dtype = d.get("smart_protocol") or dtype
-                break
+    clean_name = dev_name.removeprefix("/dev/").removeprefix("/host/dev/")
+    is_nvme = clean_name.startswith("nvme")
+    dtype = _get_smart_device_type(dev_name, is_nvme)
 
     test_type = (test_type or "short").lower().strip()
     if test_type in ("abort", "stop", "cancel"):
@@ -1206,8 +1245,9 @@ def run_disk_smart_test(dev_name: str, test_type: str = "short", skip_if_standby
             (r.returncode == 0)
             or ("testing has begun" in out.lower())
             or ("test routine started" in out.lower())
+            or ("self-test has begun" in out.lower())
             or ("self-test routine aborted" in out.lower())
-            or (action_name == "abort" and "aborted" in out.lower())
+            or (action_name == "abort" and ("aborted" in out.lower() or "no self-test" in out.lower()))
         )
         polling_mins = 1 if action_name == "short" else 20
 
@@ -1263,8 +1303,21 @@ def run_disk_smart_test(dev_name: str, test_type: str = "short", skip_if_standby
                     },
                 )
 
+        err_msg = None
+        if not success:
+            filtered_lines = [
+                line.strip()
+                for line in out.splitlines()
+                if line.strip()
+                and not line.startswith("smartctl")
+                and not line.startswith("Copyright")
+                and not line.startswith("===")
+            ]
+            err_msg = filtered_lines[-1] if filtered_lines else (r.stderr or "Device self-test failed to initiate.")
+
         return {
             "success": success,
+            "error": err_msg,
             "dev": dev_name,
             "test_type": action_name,
             "polling_minutes": polling_mins,
@@ -1359,13 +1412,9 @@ def check_active_smart_tests():
     for dev_name, test_info in active_items:
         try:
             dev = _resolve_dev_path(dev_name)
-            is_nvme = dev_name.startswith("nvme")
-            dtype = "nvme" if is_nvme else "sat"
-            if Z_STATE.cached_disk_list:
-                for d in Z_STATE.cached_disk_list:
-                    if d.get("dev") == dev_name:
-                        dtype = d.get("smart_protocol") or dtype
-                        break
+            clean_name = dev_name.removeprefix("/dev/").removeprefix("/host/dev/")
+            is_nvme = clean_name.startswith("nvme")
+            dtype = _get_smart_device_type(dev_name, is_nvme)
 
             doc = None
             try:

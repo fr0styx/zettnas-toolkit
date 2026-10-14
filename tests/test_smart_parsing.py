@@ -381,3 +381,62 @@ Self-test status: No self-test in progress
     assert len(log) == 1
     assert log[0]["type"] == "Short offline"
     assert log[0]["passed"] is True
+
+
+def test_parse_self_test_info_nvme_in_progress_json():
+    from backend.hardware.disks import _parse_self_test_info
+
+    doc = {
+        "nvme_self_test_log": {
+            "current_self_test_operation": {"value": 1, "string": "Short self-test in progress"},
+            "current_self_test_completion_percent": 25,
+            "table": [
+                {
+                    "self_test_code": {"value": 1, "string": "Short"},
+                    "self_test_result": {"value": 0, "string": "Completed without error"},
+                    "power_on_hours": 24,
+                }
+            ],
+        }
+    }
+    prog, log = _parse_self_test_info(doc, "")
+    assert prog["in_progress"] is True
+    assert prog["percent_completed"] == 25
+    assert prog["percent_remaining"] == 75
+    assert prog["status_text"] == "Short self-test in progress"
+    assert len(log) == 1
+    assert log[0]["passed"] is True
+
+
+def test_parse_self_test_info_nvme_in_progress_raw_text():
+    from backend.hardware.disks import _parse_self_test_info
+
+    raw_text = """
+=== START OF SMART DATA SECTION ===
+Self-test Log (NVMe Log 0x06)
+Self-test status: Short self-test in progress (30% completed)
+Num  Test_Description  Status                       Power_on_Hours  Failing_LBA  NSID Seg SCT Code
+ 0   Short             Completed without error                  24            -     -   -   -    -
+"""
+    prog, log = _parse_self_test_info({}, raw_text)
+    assert prog["in_progress"] is True
+    assert prog["percent_completed"] == 30
+    assert prog["percent_remaining"] == 70
+
+
+def test_get_smart_device_type_nvme_resolution():
+    from backend.hardware.disks import _get_smart_device_type
+
+    assert _get_smart_device_type("nvme2n1") == "nvme,0xffffffff"
+    assert _get_smart_device_type("/dev/nvme0n1") == "nvme,0xffffffff"
+    assert _get_smart_device_type("/host/dev/nvme1n1") == "nvme,0xffffffff"
+    assert _get_smart_device_type("sda") == "sat"
+
+
+def test_resolve_dev_path_handles_dev_and_host_dev():
+    from backend.hardware.disks import _resolve_dev_path
+
+    p1 = _resolve_dev_path("nvme2n1")
+    p2 = _resolve_dev_path("/dev/nvme2n1")
+    p3 = _resolve_dev_path("/host/dev/nvme2n1")
+    assert p1 == p2 == p3

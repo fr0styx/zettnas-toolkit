@@ -29,6 +29,7 @@ LABEL net.unraid.docker.shell="bash"
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     smartmontools \
+    nvme-cli \
     apcupsd \
     udev \
     sg3-utils \
