@@ -1,7 +1,7 @@
 import { api, auth, ApiError } from '../api.js';
 import { escapeHtml } from '../utils.js';
 import { ZettEventBus } from '../event-bus.js';
-import { showToast, showConfirmToast, showPromptToast } from '../toast.js';
+import { showToast, showConfirmToast, showPromptToast, showBottomSheet } from '../toast.js';
 import { t } from '../i18n.js';
 import { makeDraggable, bringToFront } from './dock.js';
 import { openFilePreviewModal } from './file-preview-modal.js';
@@ -162,6 +162,7 @@ export class FileManagerWindow {
                 <button id="fm-up-btn" class="fm-tool-btn fm-up-btn" title="${t('fm.go_up', 'Go Up')}" data-i18n-title="fm.go_up" aria-label="Go Up">
                   <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
                 </button>
+                <button type="button" class="fm-tool-btn fm-locations-btn" title="Quick Locations" aria-label="Quick Locations">📍</button>
               </div>
               <div class="fm-path-container" style="flex: 1; position: relative; display: flex; align-items: center; min-width: 0;">
                 <input type="text" id="fm-path-input" class="fm-path-input" spellcheck="false" list="fm-path-list" style="width: 100%; color: transparent;" />
@@ -206,7 +207,7 @@ export class FileManagerWindow {
                 <button id="fm-clear-sel-btn" class="fm-tool-btn fm-clear-sel-btn" style="font-size: 11px; padding: 2px 6px;" title="Clear Selection">✕</button>
               </div>
             </div>
-            <div class="fm-content">
+            <div class="fm-content" style="position: relative;">
               <div class="fm-header-row">
                 <div class="fm-col fm-col-check"><input type="checkbox" id="fm-select-all-checkbox" class="fm-checkbox fm-select-all-checkbox" title="Select All" /></div>
                 <div class="fm-col fm-col-name" data-i18n="fm.col_name">${t('fm.col_name', 'Name')}</div>
@@ -218,6 +219,8 @@ export class FileManagerWindow {
                 <div id="fm-spacer" class="fm-spacer"></div>
                 <div id="fm-list" class="fm-list"></div>
               </div>
+              <input type="file" class="fm-file-upload-input" multiple style="display: none;" />
+              <button type="button" class="fm-mobile-fab" title="Quick Actions" aria-label="Quick Actions" style="display: none;">+</button>
             </div>
           </div>
         `;
@@ -252,6 +255,7 @@ export class FileManagerWindow {
               <button class="fm-tool-btn fm-up-btn" title="${t('fm.go_up', 'Go Up')}" data-i18n-title="fm.go_up" aria-label="Go Up">
                 <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
               </button>
+              <button type="button" class="fm-tool-btn fm-locations-btn" title="Quick Locations" aria-label="Quick Locations">📍</button>
             </div>
             <div class="fm-path-container" style="flex: 1; position: relative; display: flex; align-items: center; min-width: 0;">
               <input type="text" class="fm-path-input" spellcheck="false" list="${this.id}-path-list" style="width: 100%; color: transparent;" />
@@ -296,7 +300,7 @@ export class FileManagerWindow {
               <button class="fm-tool-btn fm-clear-sel-btn" style="font-size: 11px; padding: 2px 6px;" title="Clear Selection">✕</button>
             </div>
           </div>
-          <div class="fm-content">
+          <div class="fm-content" style="position: relative;">
             <div class="fm-header-row">
               <div class="fm-col fm-col-check"><input type="checkbox" class="fm-checkbox fm-select-all-checkbox" title="Select All" /></div>
               <div class="fm-col fm-col-name" data-i18n="fm.col_name">${t('fm.col_name', 'Name')}</div>
@@ -308,12 +312,32 @@ export class FileManagerWindow {
               <div class="fm-spacer"></div>
               <div class="fm-list"></div>
             </div>
+            <input type="file" class="fm-file-upload-input" multiple style="display: none;" />
+            <button type="button" class="fm-mobile-fab" title="Quick Actions" aria-label="Quick Actions" style="display: none;">+</button>
           </div>
         </div>
       `;
       document.body.insertAdjacentHTML('beforeend', secHtml);
       this.windowEl = document.getElementById(this.id);
       if (this.viewMode === 'icon') this.windowEl?.classList.add('fm-mode-icon');
+    }
+    if (this.windowEl) {
+      if (!this.windowEl.querySelector('.fm-locations-btn')) {
+        const navGrp = this.windowEl.querySelector('.fm-nav-btn-group');
+        if (navGrp) {
+          navGrp.insertAdjacentHTML('beforeend', '<button type="button" class="fm-tool-btn fm-locations-btn" title="Quick Locations" aria-label="Quick Locations">📍</button>');
+        }
+      }
+      const contentEl = this.windowEl.querySelector('.fm-content');
+      if (contentEl) {
+        contentEl.style.position = 'relative';
+        if (!contentEl.querySelector('.fm-file-upload-input')) {
+          contentEl.insertAdjacentHTML('beforeend', '<input type="file" class="fm-file-upload-input" multiple style="display: none;" />');
+        }
+        if (!contentEl.querySelector('.fm-mobile-fab')) {
+          contentEl.insertAdjacentHTML('beforeend', '<button type="button" class="fm-mobile-fab" title="Quick Actions" aria-label="Quick Actions" style="display: none;">+</button>');
+        }
+      }
     }
   }
 
@@ -335,6 +359,7 @@ export class FileManagerWindow {
     this.backBtn = this.windowEl.querySelector('.fm-back-btn');
     this.fwdBtn = this.windowEl.querySelector('.fm-fwd-btn');
     this.upBtn = this.windowEl.querySelector('.fm-up-btn');
+    this.locationsBtn = this.windowEl.querySelector('.fm-locations-btn');
     this.refreshBtn = this.windowEl.querySelector('.fm-refresh-btn');
     this.searchInput = this.windowEl.querySelector('.fm-search-input');
     this.newFolderBtn = this.windowEl.querySelector('.fm-new-folder-btn');
@@ -346,6 +371,8 @@ export class FileManagerWindow {
     this.colName = this.windowEl.querySelector('.fm-header-row .fm-col-name');
     this.colSize = this.windowEl.querySelector('.fm-header-row .fm-col-size');
     this.colType = this.windowEl.querySelector('.fm-header-row .fm-col-type');
+    this.uploadInput = this.windowEl.querySelector('.fm-file-upload-input');
+    this.mobileFab = this.windowEl.querySelector('.fm-mobile-fab');
   }
 
   restoreSavedBounds() {
@@ -441,6 +468,63 @@ export class FileManagerWindow {
     this.backBtn?.addEventListener('click', () => this.goBack());
     this.fwdBtn?.addEventListener('click', () => this.goForward());
     this.upBtn?.addEventListener('click', () => this.goUp());
+
+    // Quick Locations Bottom Sheet
+    this.locationsBtn?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      showBottomSheet({
+        title: 'Quick Locations',
+        subtitle: `Current: ${this.currentPath}`,
+        items: [
+          { icon: '📁', label: 'User Shares (/mnt/user)', onClick: () => this.loadPath('/mnt/user') },
+          { icon: '⚙️', label: 'AppData (/mnt/user/appdata)', onClick: () => this.loadPath('/mnt/user/appdata') },
+          { icon: '💾', label: 'Boot Flash (/boot)', onClick: () => this.loadPath('/boot') },
+          { icon: '☁️', label: 'Cloud Remotes (/mnt/remotes)', onClick: () => this.loadPath('/mnt/remotes') },
+          { icon: '🗑️', label: 'Recycle Bin (/mnt/user/.RecycleBin)', onClick: () => this.loadPath('/mnt/user/.RecycleBin') },
+        ],
+      });
+    });
+
+    // Hidden file upload input
+    if (this.uploadInput) {
+      this.uploadInput.addEventListener('change', async (e) => {
+        const files = e.target.files;
+        if (files && files.length > 0) {
+          await this.uploadFiles(files);
+          this.uploadInput.value = '';
+        }
+      });
+    }
+
+    // Mobile Floating Action Button (+)
+    this.mobileFab?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const fabItems = [
+        { icon: '📁', label: t('fm.new_folder', 'New Folder'), onClick: () => this.newFolderBtn?.click() },
+        { icon: '⬆️', label: 'Upload File(s)', onClick: () => this.uploadInput?.click() },
+      ];
+      if (_clipboard && _clipboard.items && _clipboard.items.length > 0) {
+        fabItems.push({
+          icon: '📋',
+          label: `Paste Here (${_clipboard.items.length} item${_clipboard.items.length > 1 ? 's' : ''})`,
+          onClick: async () => {
+            await executeTransferWithConflictCheck(_clipboard.items, this.currentPath, _clipboard.action || 'copy');
+            if (_clipboard.action === 'move') _clipboard = { items: [], action: 'copy', sourceInstanceId: null };
+            this.loadPath(this.currentPath);
+            ZettEventBus.emit('fm:refresh');
+          },
+        });
+      }
+      fabItems.push(
+        { icon: '🎬', label: t('fm.organize_media', 'Organize Media'), onClick: () => this.organizeBtn?.click() },
+        { icon: '🔄', label: t('fm.refresh', 'Refresh'), onClick: () => this.loadPath(this.currentPath) }
+      );
+      showBottomSheet({
+        title: 'Folder Actions',
+        subtitle: this.currentPath,
+        items: fabItems,
+      });
+    });
 
     // Refresh button
     this.refreshBtn?.addEventListener('click', () => this.loadPath(this.currentPath));
@@ -578,30 +662,7 @@ export class FileManagerWindow {
 
         // File uploads from client OS
         if (!e.dataTransfer.files || e.dataTransfer.files.length === 0) return;
-        const files = e.dataTransfer.files;
-        let successCount = 0;
-        showToast(t('fm.uploading_toast', `Uploading ${files.length} file(s)...`).replace('{count}', files.length), 'info');
-
-        for (let i = 0; i < files.length; i++) {
-          const file = files[i];
-          const formData = new FormData();
-          formData.append('file', file);
-          formData.append('destination_dir', this.currentPath);
-
-          try {
-            const res = await api.postRaw('/api/fs/upload', formData);
-            if (!res.ok) throw await ApiError.from(res);
-            successCount++;
-          } catch (err) {
-            showToast(`Failed to upload ${file.name}: ${err.message}`, 'error');
-          }
-        }
-
-        if (successCount > 0) {
-          showToast(`Successfully uploaded ${successCount} file(s)`, 'success');
-          this.loadPath(this.currentPath);
-          ZettEventBus.emit('fm:refresh');
-        }
+        await this.uploadFiles(e.dataTransfer.files);
       });
     }
 
@@ -1552,6 +1613,7 @@ export class FileManagerWindow {
             ${!file.is_dir && file.name !== '..' ? `<button class="fm-act-btn" data-act="download" data-path="${escPath}" title="Download">⬇️</button>` : ''}
             ${file.name !== '..' ? `<button class="fm-act-btn" data-act="rename" data-path="${escPath}" title="Rename">✏️</button>` : ''}
             ${file.name !== '..' ? `<button class="fm-act-btn" data-act="delete" data-path="${escPath}" title="Delete">🗑️</button>` : ''}
+            ${file.name !== '..' ? `<button class="fm-act-btn fm-act-more-sheet" data-act="more-sheet" data-path="${escPath}" title="More Actions" style="display:none;">···</button>` : ''}
           </div>
         `;
 
@@ -1611,6 +1673,7 @@ export class FileManagerWindow {
           ${!file.is_dir && file.name !== '..' ? `<button class="fm-act-btn" data-act="download" data-path="${escPath}" title="Download">⬇️</button>` : ''}
           ${file.name !== '..' ? `<button class="fm-act-btn" data-act="rename" data-path="${escPath}" title="Rename">✏️</button>` : ''}
           ${file.name !== '..' ? `<button class="fm-act-btn" data-act="delete" data-path="${escPath}" title="Delete">🗑️</button>` : ''}
+          ${file.name !== '..' ? `<button class="fm-act-btn fm-act-more-sheet" data-act="more-sheet" data-path="${escPath}" title="More Actions" style="display:none;">···</button>` : ''}
         </div>
       `;
 
@@ -1622,8 +1685,102 @@ export class FileManagerWindow {
     }
   }
 
+  async uploadFiles(files) {
+    if (!files || files.length === 0) return;
+    let successCount = 0;
+    showToast(t('fm.uploading_toast', `Uploading ${files.length} file(s)...`).replace('{count}', files.length), 'info');
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('destination_dir', this.currentPath);
+
+      try {
+        const res = await api.postRaw('/api/fs/upload', formData);
+        if (!res.ok) throw await ApiError.from(res);
+        successCount++;
+      } catch (err) {
+        showToast(`Failed to upload ${file.name}: ${err.message}`, 'error');
+      }
+    }
+
+    if (successCount > 0) {
+      showToast(`Successfully uploaded ${successCount} file(s)`, 'success');
+      this.loadPath(this.currentPath);
+      ZettEventBus.emit('fm:refresh');
+    }
+  }
+
   async handleAction(act, path, oldName) {
-    if (act === 'preview') {
+    if (act === 'more-sheet') {
+      const file = this.fileList.find((f) => f.path === path);
+      const isDir = Boolean(file?.is_dir);
+      const isImage = Boolean(oldName && oldName.match(/\.(jpeg|jpg|png|gif|webp|svg)$/i));
+      const sheetItems = [];
+      if (isDir) {
+        sheetItems.push({
+          icon: '📂',
+          label: 'Open Folder',
+          onClick: () => this.loadPath(path),
+        });
+      } else {
+        if (isImage) {
+          sheetItems.push({
+            icon: '👁️',
+            label: 'Preview Image',
+            onClick: () => this.handleAction('preview', path, oldName),
+          });
+        } else {
+          sheetItems.push({
+            icon: '👁️',
+            label: 'Quick Look / Preview',
+            onClick: () => this.handleAction('preview', path, oldName),
+          });
+        }
+        sheetItems.push({
+          icon: '⬇️',
+          label: 'Download File',
+          onClick: () => this.handleAction('download', path, oldName),
+        });
+      }
+      sheetItems.push(
+        {
+          icon: '✏️',
+          label: t('fm.rename_title', 'Rename Item'),
+          onClick: () => this.handleAction('rename', path, oldName),
+        },
+        {
+          icon: '📋',
+          label: 'Copy Item',
+          onClick: () => {
+            _clipboard = { items: [path], action: 'copy', sourceInstanceId: this.id };
+            showToast(`Copied '${oldName}' to clipboard`, 'info');
+          },
+        },
+        {
+          icon: '✂️',
+          label: 'Cut / Move Item',
+          onClick: () => {
+            _clipboard = { items: [path], action: 'move', sourceInstanceId: this.id };
+            this.renderViewport();
+            showToast(`Cut '${oldName}' — open destination and tap + to Paste`, 'info');
+          },
+        },
+        {
+          icon: '🗑️',
+          label: 'Delete Item',
+          destructive: true,
+          onClick: () => this.handleAction('delete', path, oldName),
+        }
+      );
+      showBottomSheet({
+        title: oldName || path.split('/').pop(),
+        subtitle: isDir ? 'Folder' : (file ? formatBytes(file.size) : path),
+        items: sheetItems,
+      });
+      return;
+    } else if (act === 'preview') {
       openFilePreviewModal(path, oldName);
     } else if (act === 'download') {
       const token = (auth && typeof auth.getToken === 'function' ? auth.getToken() : null) || localStorage.getItem('zettnas_token') || '';

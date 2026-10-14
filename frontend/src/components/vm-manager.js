@@ -7,7 +7,7 @@
 import { api } from '../api.js';
 import { escapeHtml } from '../utils.js';
 import { ZettEventBus } from '../event-bus.js';
-import { showToast, showConfirmToast, showPromptToast } from '../toast.js';
+import { showToast, showConfirmToast, showPromptToast, showBottomSheet } from '../toast.js';
 import { t } from '../i18n.js';
 import { makeDraggable, bringToFront } from './dock.js';
 
@@ -89,7 +89,7 @@ export function initVmManager() {
             </div>
           </div>
 
-          <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 14px;">
+          <div class="vm-telemetry-budget-grid" style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 14px;">
             <!-- Memory Budget Card -->
             <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; padding: 10px 14px;">
               <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 6px;">
@@ -621,6 +621,7 @@ function renderVmGrid(vms) {
           `
               : ''
           }
+          <button type="button" class="btn-vm-more-sheet" data-id="${vm.id}" title="More Actions" style="display:none;">···</button>
         </div>
       </div>
     `;
@@ -628,6 +629,51 @@ function renderVmGrid(vms) {
     .join('');
 
   // Attach Action Handlers
+  grid.querySelectorAll('.btn-vm-more-sheet').forEach((btn) => {
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      const vmId = btn.dataset.id;
+      const targetVm = vmList.find((v) => v.id === vmId);
+      const name = targetVm ? targetVm.name : 'Virtual Machine';
+      const stateStr = (targetVm?.state || 'stopped').toLowerCase();
+      const isRunning = stateStr === 'running';
+      const isPaused = stateStr === 'paused';
+      const card = btn.closest('.vm-card');
+      const items = [];
+
+      if (isRunning) {
+        items.push(
+          { icon: '🖥️', label: t('vm.gui', 'KVM GUI'), onClick: () => openVmConsole(vmId, name, 'gui') },
+          { icon: '⌨️', label: t('vm.console', 'Console (Serial TTY)'), onClick: () => openVmConsole(vmId, name, 'cli') },
+          { icon: '⏸️', label: t('vm.pause', 'Pause VM'), onClick: () => card?.querySelector('.btn-vm-pause')?.click() },
+          { icon: '🔄', label: 'Restart VM', onClick: () => card?.querySelector('.btn-vm-restart')?.click() },
+          { icon: '⏻', label: 'ACPI Shutdown', onClick: () => card?.querySelector('.btn-vm-acpi')?.click() },
+          { icon: '⏹️', label: 'Force Stop (Hard Power Cut)', destructive: true, onClick: () => card?.querySelector('.btn-vm-force-off')?.click() },
+          { icon: '✏️', label: 'Edit VM Configuration', onClick: () => openVmEditModal(vmId) }
+        );
+      } else if (isPaused) {
+        items.push(
+          { icon: '▶️', label: t('vm.resume', 'Resume VM'), onClick: () => card?.querySelector('.btn-vm-resume')?.click() },
+          { icon: '⏻', label: 'ACPI Shutdown', onClick: () => card?.querySelector('.btn-vm-acpi')?.click() },
+          { icon: '⏹️', label: 'Force Stop (Hard Power Cut)', destructive: true, onClick: () => card?.querySelector('.btn-vm-force-off')?.click() },
+          { icon: '✏️', label: 'Edit VM Configuration', onClick: () => openVmEditModal(vmId) }
+        );
+      } else {
+        items.push(
+          { icon: '▶️', label: 'Start VM', onClick: () => card?.querySelector('.btn-vm-start')?.click() },
+          { icon: '✏️', label: 'Edit VM Configuration', onClick: () => openVmEditModal(vmId) },
+          { icon: '🗑️', label: t('vm.delete', 'Delete VM'), destructive: true, onClick: () => card?.querySelector('.btn-vm-delete')?.click() }
+        );
+      }
+
+      showBottomSheet({
+        title: name,
+        subtitle: `${stateStr.toUpperCase()} • ${targetVm?.vcpus || 2} vCPU • ${targetVm?.memory_mb || 2048} MB`,
+        items,
+      });
+    };
+  });
+
   grid.querySelectorAll('.btn-vm-action').forEach((btn) => {
     btn.onclick = async () => {
       const vmId = btn.dataset.id;
@@ -3544,6 +3590,22 @@ export function openVmConsole(vmId, vmName = 'Virtual Machine', initialMode = 'g
     if (btnKeys && menuKeys) {
       btnKeys.onclick = (e) => {
         e.stopPropagation();
+        const isMobile = document.body.classList.contains('mobile-mode') || window.innerWidth <= 768;
+        if (isMobile) {
+          showBottomSheet({
+            title: 'Send Special Key',
+            subtitle: consoleWin._vmName || vmName,
+            items: [
+              { icon: '⇥', label: 'Tab', onClick: () => { _sendKeyToRfb(0xff09, 'Tab'); showToast("Sent key 'Tab' to guest VM", 'info'); } },
+              { icon: '⎋', label: 'Escape', onClick: () => { _sendKeyToRfb(0xff1b, 'Escape'); showToast("Sent key 'Escape' to guest VM", 'info'); } },
+              { icon: '🛑', label: 'Ctrl + C', onClick: () => { _sendCtrlCToRfb(); showToast("Sent key 'Ctrl+C' to guest VM", 'info'); } },
+              { icon: '🪟', label: 'Super / Windows Key', onClick: () => { _sendKeyToRfb(0xffeb, 'MetaLeft'); showToast("Sent key 'Super' to guest VM", 'info'); } },
+              { icon: '⚙️', label: 'F12 (Boot Menu)', onClick: () => { _sendKeyToRfb(0xffcb, 'F12'); showToast("Sent key 'F12' to guest VM", 'info'); } },
+              { icon: '⚡', label: 'Ctrl + Alt + Del', destructive: true, onClick: () => { consoleWin.querySelector('#btn-vnc-cad')?.click(); } },
+            ],
+          });
+          return;
+        }
         menuKeys.style.display = menuKeys.style.display === 'none' ? 'block' : 'none';
       };
       consoleWin.querySelectorAll('.vnc-key-item').forEach((item) => {

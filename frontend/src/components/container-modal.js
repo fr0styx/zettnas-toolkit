@@ -145,6 +145,14 @@ export function initContainerModal() {
             <div id="ci-term-output" style="background:#030712; border:1px solid rgba(255,255,255,0.12); border-radius:6px 6px 0 0; height:310px; overflow-y:auto; padding:12px; font-family:var(--font-mono, monospace); font-size:11px; line-height:1.45; color:#a7f3d0; white-space:pre-wrap; word-break:break-word;">
               <span style="color:#64748b;"># Interactive Container Terminal Ready. Type commands below (e.g. ls -la, uname -a, ps aux)...</span>
             </div>
+            <div class="ci-term-mobile-keybar" style="display:flex; gap:6px; overflow-x:auto; background:#0b1120; border-left:1px solid rgba(255,255,255,0.12); border-right:1px solid rgba(255,255,255,0.12); padding:5px 8px; scrollbar-width:none;">
+              <button type="button" class="btn-pill-toggle ci-term-key-btn" data-cmd="ls -la" style="font-size:10px; padding:2px 8px; flex-shrink:0;">ls -la</button>
+              <button type="button" class="btn-pill-toggle ci-term-key-btn" data-cmd="ps aux" style="font-size:10px; padding:2px 8px; flex-shrink:0;">ps aux</button>
+              <button type="button" class="btn-pill-toggle ci-term-key-btn" data-cmd="df -h" style="font-size:10px; padding:2px 8px; flex-shrink:0;">df -h</button>
+              <button type="button" class="btn-pill-toggle ci-term-key-btn" data-key="ArrowUp" style="font-size:10px; padding:2px 8px; flex-shrink:0;">↑ Prev</button>
+              <button type="button" class="btn-pill-toggle ci-term-key-btn" data-key="ArrowDown" style="font-size:10px; padding:2px 8px; flex-shrink:0;">↓ Next</button>
+              <button type="button" class="btn-pill-toggle ci-term-key-btn" data-key="clear" style="font-size:10px; padding:2px 8px; flex-shrink:0;">🧹 Clear</button>
+            </div>
             <div style="display:flex; background:#0f172a; border:1px solid rgba(255,255,255,0.12); border-top:none; border-radius:0 0 6px 6px; padding:6px 10px; gap:8px; align-items:center;">
               <span style="color:#10b981; font-family:var(--font-mono, monospace); font-weight:bold; font-size:12px;">$</span>
               <input type="text" id="ci-term-input" placeholder="Type a command and press Enter..." style="flex:1; background:transparent; border:none; outline:none; color:#f8fafc; font-family:var(--font-mono, monospace); font-size:11.5px;" autocomplete="off" spellcheck="false">
@@ -333,6 +341,34 @@ export function initContainerModal() {
       }
     });
   }
+
+  overlay.querySelectorAll('.ci-term-key-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const cmd = btn.dataset.cmd;
+      const key = btn.dataset.key;
+      if (cmd && termInput) {
+        termInput.value = cmd;
+        executeTerminalCmd();
+      } else if (key === 'ArrowUp' && termInput) {
+        if (_termHistory.length && _termHistoryIdx > 0) {
+          _termHistoryIdx--;
+          termInput.value = _termHistory[_termHistoryIdx];
+        }
+        termInput.focus();
+      } else if (key === 'ArrowDown' && termInput) {
+        if (_termHistoryIdx < _termHistory.length - 1) {
+          _termHistoryIdx++;
+          termInput.value = _termHistory[_termHistoryIdx];
+        } else {
+          _termHistoryIdx = _termHistory.length;
+          termInput.value = '';
+        }
+        termInput.focus();
+      } else if (key === 'clear') {
+        clearTerminal();
+      }
+    });
+  });
 }
 
 export function closeContainerInspector() {
@@ -356,7 +392,13 @@ export function closeContainerInspector() {
 export async function switchContainerTab(tabTarget) {
   const overlay = document.getElementById('container-inspector-overlay');
   if (!overlay) return;
-  overlay.querySelectorAll('.ci-tab-btn').forEach((b) => b.classList.toggle('active', b.dataset.tab === tabTarget));
+  overlay.querySelectorAll('.ci-tab-btn').forEach((b) => {
+    const isActive = b.dataset.tab === tabTarget;
+    b.classList.toggle('active', isActive);
+    if (isActive && typeof b.scrollIntoView === 'function') {
+      try { b.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); } catch (_) {}
+    }
+  });
   _activeTab = tabTarget;
   overlay.querySelectorAll('.ci-pane').forEach((p) => {
     p.style.display = p.id === `ci-pane-${tabTarget}` ? 'block' : 'none';

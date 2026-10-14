@@ -479,6 +479,8 @@ export function showBottomSheet({ title, subtitle, items = [], onCancel = null }
 
   backdrop.style.display = "block";
   sheet.style.display = "flex";
+  sheet.style.transform = "";
+  sheet.style.transition = "";
 
   requestAnimationFrame(() => {
     backdrop.classList.add("open");
@@ -488,6 +490,8 @@ export function showBottomSheet({ title, subtitle, items = [], onCancel = null }
   const cleanup = () => {
     backdrop.classList.remove("open");
     sheet.classList.remove("open");
+    sheet.style.transform = "";
+    sheet.style.transition = "";
     setTimeout(() => {
       backdrop.style.display = "none";
       sheet.style.display = "none";
@@ -503,6 +507,51 @@ export function showBottomSheet({ title, subtitle, items = [], onCancel = null }
   const onKeyDown = (e) => {
     if (e.key === "Escape") onCancelClick();
   };
+
+  // Swipe-down-to-dismiss gesture on handle bar & header
+  const handleBar = sheet.querySelector(".sheet-handle-bar");
+  const headerBar = sheet.querySelector(".sheet-header");
+  let startY = 0;
+  let currentDy = 0;
+  let isDragging = false;
+
+  const onPointerDown = (e) => {
+    if (e.button !== undefined && e.button !== 0) return;
+    isDragging = true;
+    startY = e.clientY || (e.touches && e.touches[0] ? e.touches[0].clientY : 0);
+    currentDy = 0;
+    sheet.style.transition = "none";
+    if (e.currentTarget && typeof e.currentTarget.setPointerCapture === "function" && e.pointerId !== undefined) {
+      try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {}
+    }
+  };
+
+  const onPointerMove = (e) => {
+    if (!isDragging) return;
+    const clientY = e.clientY !== undefined ? e.clientY : (e.touches && e.touches[0] ? e.touches[0].clientY : startY);
+    currentDy = Math.max(0, clientY - startY);
+    sheet.style.transform = `translateY(${currentDy}px)`;
+  };
+
+  const onPointerEnd = (e) => {
+    if (!isDragging) return;
+    isDragging = false;
+    sheet.style.transition = "";
+    if (e.type !== "pointercancel" && currentDy > 70) {
+      sheet.style.transform = "";
+      onCancelClick();
+    } else {
+      sheet.style.transform = "";
+    }
+  };
+
+  [handleBar, headerBar].forEach((el) => {
+    if (!el) return;
+    el.addEventListener("pointerdown", onPointerDown);
+    el.addEventListener("pointermove", onPointerMove);
+    el.addEventListener("pointerup", onPointerEnd);
+    el.addEventListener("pointercancel", onPointerEnd);
+  });
 
   backdrop.onclick = onCancelClick;
   const cancelBtn = sheet.querySelector("#sheet-cancel-btn");

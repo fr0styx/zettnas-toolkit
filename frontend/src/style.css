@@ -5815,11 +5815,17 @@ body.theme-yak .lcd-dot.active {
     width: 100% !important;
     height: calc(100dvh - 48px) !important;
     max-height: calc(100dvh - 48px) !important;
-    overflow: hidden !important;
-    touch-action: none !important;
-    padding: 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    touch-action: pan-y !important;
+    padding: 12px 12px calc(72px + env(safe-area-inset-bottom, 0px)) 12px !important;
     margin: 0 !important;
-    overscroll-behavior: none !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 14px !important;
+    overscroll-behavior: contain !important;
   }
 
   .suite-telemetry-pills {
@@ -5829,22 +5835,22 @@ body.theme-yak .lcd-dot.active {
     display: none !important;
   }
 
-  /* Desktop Icons - Vertically stacked one below the other on the left */
+  /* Desktop Icons - Mobile Springboard 4-Column App Launcher Grid */
   .desktop-icons-container {
-    position: fixed !important;
-    top: 54px !important;
-    left: 8px !important;
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
     bottom: auto !important;
     right: auto !important;
-    width: 68px !important;
-    max-width: 68px !important;
+    width: 100% !important;
+    max-width: 100% !important;
     height: auto !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
     gap: 8px !important;
-    z-index: 30 !important;
-    pointer-events: none !important;
+    z-index: 20 !important;
+    pointer-events: auto !important;
+    flex-shrink: 0 !important;
   }
 
   .desktop-icons-container .chassis-hero-box,
@@ -5856,18 +5862,20 @@ body.theme-yak .lcd-dot.active {
     right: auto !important;
     bottom: auto !important;
     pointer-events: auto !important;
-    width: 66px !important;
-    max-width: 66px !important;
+    width: 100% !important;
+    max-width: none !important;
     height: auto !important;
-    padding: 5px 3px !important;
+    padding: 8px 4px !important;
     margin: 0 !important;
     transform: none !important;
-    border-radius: 8px !important;
+    border-radius: 10px !important;
     display: flex !important;
     flex-direction: column !important;
     align-items: center !important;
-    gap: 3px !important;
+    justify-content: center !important;
+    gap: 5px !important;
     cursor: pointer !important;
+    box-sizing: border-box !important;
   }
 
   .desktop-icons-container .chassis-hero-box:hover,
@@ -5883,24 +5891,24 @@ body.theme-yak .lcd-dot.active {
   }
 
   .desktop-icons-container .chassis-hero-img {
-    height: 32px !important;
+    height: 36px !important;
     max-width: 100% !important;
     object-fit: contain !important;
     margin: 0 auto !important;
   }
 
   .desktop-icons-container .console-hero-box {
-    width: 44px !important;
-    height: 32px !important;
-    border-radius: 6px !important;
+    width: 48px !important;
+    height: 36px !important;
+    border-radius: 8px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
   }
 
   .desktop-icons-container .console-hero-icon {
-    width: 18px !important;
-    height: 18px !important;
+    width: 20px !important;
+    height: 20px !important;
   }
 
   .desktop-icons-container .desktop-icon-label {
@@ -5913,125 +5921,135 @@ body.theme-yak .lcd-dot.active {
   }
 
   .desktop-icons-container .desktop-icon-label .icon-text {
-    font-size: 8px !important;
+    font-size: 9.5px !important;
+    font-weight: 600 !important;
     line-height: 1.15 !important;
     text-align: center !important;
-    white-space: normal !important;
-    word-break: break-word !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
   }
 
   .desktop-icons-container .icon-dot-status {
-    width: 4px !important;
-    height: 4px !important;
+    width: 5px !important;
+    height: 5px !important;
     flex-shrink: 0 !important;
   }
 
-  /* Desktop Widgets - Reduced compact footprint on mobile */
+  /* Desktop Widgets - Mobile 2-Column Glance Widget Grid */
   #desktop-widgets-container {
-    position: fixed !important;
-    top: 54px !important;
-    right: 8px !important;
+    position: relative !important;
+    top: auto !important;
+    right: auto !important;
     left: auto !important;
     bottom: auto !important;
-    width: 175px !important;
-    max-width: calc(100vw - 88px) !important;
-    max-height: calc(100dvh - 124px) !important;
-    overflow-y: auto !important;
-    scrollbar-width: none !important;
-    gap: 6px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: none !important;
+    overflow: visible !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
     transform: none !important;
     z-index: 20 !important;
+    flex-shrink: 0 !important;
   }
   #desktop-widgets-container::-webkit-scrollbar {
     display: none;
   }
 
+  #desktop-widgets-container #widget-calendar {
+    grid-column: 1 / -1 !important;
+  }
+
   #desktop-widgets-container .desktop-widget {
-    padding: 7px 9px !important;
-    border-radius: 9px !important;
+    padding: 10px 12px !important;
+    border-radius: 12px !important;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45) !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
   }
 
   #desktop-widgets-container .widget-header {
-    margin-bottom: 5px !important;
+    margin-bottom: 6px !important;
   }
 
   #desktop-widgets-container .widget-title {
-    font-size: 8.5px !important;
+    font-size: 9.5px !important;
     letter-spacing: 0.5px !important;
     gap: 4px !important;
   }
 
   #desktop-widgets-container .widget-title svg.ic {
-    width: 10px !important;
-    height: 10px !important;
+    width: 11px !important;
+    height: 11px !important;
   }
 
   #desktop-widgets-container .widget-badge {
-    font-size: 8px !important;
-    padding: 1px 4px !important;
-    border-radius: 3px !important;
+    font-size: 8.5px !important;
+    padding: 1px 5px !important;
+    border-radius: 4px !important;
   }
 
   #desktop-widgets-container span[id^="w-"] {
-    font-size: 10.5px !important;
+    font-size: 11px !important;
   }
 
   #desktop-widgets-container #w-net-rx,
   #desktop-widgets-container #w-net-tx {
-    font-size: 10.5px !important;
+    font-size: 11px !important;
   }
 
   #desktop-widgets-container span[style*="font-size: 12px"] {
-    font-size: 9px !important;
+    font-size: 10px !important;
   }
 
   #desktop-widgets-container span[style*="font-size: 10px"] {
-    font-size: 8px !important;
+    font-size: 9px !important;
   }
 
   #desktop-widgets-container div[style*="height: 4px"] {
-    height: 3px !important;
+    height: 3.5px !important;
   }
 
   #desktop-widgets-container div[style*="margin-top: 4px"] {
-    margin-top: 2px !important;
+    margin-top: 3px !important;
   }
 
   #desktop-widgets-container div[style*="gap: 6px"] {
-    gap: 3px !important;
+    gap: 4px !important;
   }
 
   #desktop-widgets-container #w-clock-time {
-    font-size: 18px !important;
+    font-size: 20px !important;
   }
   #desktop-widgets-container #w-clock-sec {
     font-size: 11px !important;
   }
   #desktop-widgets-container #w-weather-temp {
-    font-size: 15px !important;
+    font-size: 16px !important;
   }
   #desktop-widgets-container #w-weather-icon {
-    font-size: 18px !important;
+    font-size: 20px !important;
   }
   #desktop-widgets-container .cal-weekday {
-    font-size: 7.5px !important;
-    padding: 1px 0 !important;
+    font-size: 8.5px !important;
+    padding: 2px 0 !important;
   }
   #desktop-widgets-container .cal-day {
-    font-size: 8.5px !important;
-    padding: 1.5px 0 !important;
+    font-size: 10px !important;
+    padding: 3px 0 !important;
   }
   #desktop-widgets-container .cal-day.cal-holiday::after {
-    width: 2.5px !important;
-    height: 2.5px !important;
-    bottom: 0.5px !important;
+    width: 3px !important;
+    height: 3px !important;
+    bottom: 1px !important;
   }
   #desktop-widgets-container .cal-glance-bar {
-    font-size: 8.5px !important;
-    min-height: 16px !important;
-    padding-top: 3px !important;
-    margin-top: 4px !important;
+    font-size: 9.5px !important;
+    min-height: 18px !important;
+    padding-top: 4px !important;
+    margin-top: 6px !important;
   }
 
   /* General Modals on Mobile */
@@ -7084,11 +7102,17 @@ body.mobile-mode .chassis-workbench-stage {
   width: 100% !important;
   height: calc(100dvh - 48px) !important;
   max-height: calc(100dvh - 48px) !important;
-  overflow: hidden !important;
-  touch-action: none !important;
-  padding: 0 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y !important;
+  padding: 12px 12px calc(72px + env(safe-area-inset-bottom, 0px)) 12px !important;
   margin: 0 !important;
-  overscroll-behavior: none !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 14px !important;
+  overscroll-behavior: contain !important;
 }
 
 body.mobile-mode .suite-telemetry-pills {
@@ -7099,20 +7123,20 @@ body.mobile-mode .suite-pill:not(#unraid-array-pill) {
 }
 
 body.mobile-mode .desktop-icons-container {
-  position: fixed !important;
-  top: 54px !important;
-  left: 8px !important;
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
   bottom: auto !important;
   right: auto !important;
-  width: 68px !important;
-  max-width: 68px !important;
+  width: 100% !important;
+  max-width: 100% !important;
   height: auto !important;
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
   gap: 8px !important;
-  z-index: 30 !important;
-  pointer-events: none !important;
+  z-index: 20 !important;
+  pointer-events: auto !important;
+  flex-shrink: 0 !important;
 }
 
 body.mobile-mode .desktop-icons-container .chassis-hero-box,
@@ -7124,18 +7148,20 @@ body.mobile-mode .desktop-icons-container .management-desktop-icon {
   right: auto !important;
   bottom: auto !important;
   pointer-events: auto !important;
-  width: 66px !important;
-  max-width: 66px !important;
+  width: 100% !important;
+  max-width: none !important;
   height: auto !important;
-  padding: 5px 3px !important;
+  padding: 8px 4px !important;
   margin: 0 !important;
   transform: none !important;
-  border-radius: 8px !important;
+  border-radius: 10px !important;
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
-  gap: 3px !important;
+  justify-content: center !important;
+  gap: 5px !important;
   cursor: pointer !important;
+  box-sizing: border-box !important;
 }
 
 body.mobile-mode .desktop-icons-container .chassis-hero-box:hover,
@@ -7151,24 +7177,24 @@ body.mobile-mode .desktop-icons-container .management-desktop-icon:active {
 }
 
 body.mobile-mode .desktop-icons-container .chassis-hero-img {
-  height: 32px !important;
+  height: 36px !important;
   max-width: 100% !important;
   object-fit: contain !important;
   margin: 0 auto !important;
 }
 
 body.mobile-mode .desktop-icons-container .console-hero-box {
-  width: 44px !important;
-  height: 32px !important;
-  border-radius: 6px !important;
+  width: 48px !important;
+  height: 36px !important;
+  border-radius: 8px !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
 }
 
 body.mobile-mode .desktop-icons-container .console-hero-icon {
-  width: 18px !important;
-  height: 18px !important;
+  width: 20px !important;
+  height: 20px !important;
 }
 
 body.mobile-mode .desktop-icons-container .desktop-icon-label {
@@ -7181,124 +7207,134 @@ body.mobile-mode .desktop-icons-container .desktop-icon-label {
 }
 
 body.mobile-mode .desktop-icons-container .desktop-icon-label .icon-text {
-  font-size: 8px !important;
+  font-size: 9.5px !important;
+  font-weight: 600 !important;
   line-height: 1.15 !important;
   text-align: center !important;
-  white-space: normal !important;
-  word-break: break-word !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
 }
 
 body.mobile-mode .desktop-icons-container .icon-dot-status {
-  width: 4px !important;
-  height: 4px !important;
+  width: 5px !important;
+  height: 5px !important;
   flex-shrink: 0 !important;
 }
 
 body.mobile-mode #desktop-widgets-container {
-  position: fixed !important;
-  top: 54px !important;
-  right: 8px !important;
+  position: relative !important;
+  top: auto !important;
+  right: auto !important;
   left: auto !important;
   bottom: auto !important;
-  width: 175px !important;
-  max-width: calc(100vw - 88px) !important;
-  max-height: calc(100dvh - 124px) !important;
-  overflow-y: auto !important;
-  scrollbar-width: none !important;
-  gap: 6px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  max-height: none !important;
+  overflow: visible !important;
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 10px !important;
   transform: none !important;
   z-index: 20 !important;
+  flex-shrink: 0 !important;
 }
 body.mobile-mode #desktop-widgets-container::-webkit-scrollbar {
   display: none;
 }
 
+body.mobile-mode #desktop-widgets-container #widget-calendar {
+  grid-column: 1 / -1 !important;
+}
+
 body.mobile-mode #desktop-widgets-container .desktop-widget {
-  padding: 7px 9px !important;
-  border-radius: 9px !important;
+  padding: 10px 12px !important;
+  border-radius: 12px !important;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45) !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
 }
 
 body.mobile-mode #desktop-widgets-container .widget-header {
-  margin-bottom: 5px !important;
+  margin-bottom: 6px !important;
 }
 
 body.mobile-mode #desktop-widgets-container .widget-title {
-  font-size: 8.5px !important;
+  font-size: 9.5px !important;
   letter-spacing: 0.5px !important;
   gap: 4px !important;
 }
 
 body.mobile-mode #desktop-widgets-container .widget-title svg.ic {
-  width: 10px !important;
-  height: 10px !important;
+  width: 11px !important;
+  height: 11px !important;
 }
 
 body.mobile-mode #desktop-widgets-container .widget-badge {
-  font-size: 8px !important;
-  padding: 1px 4px !important;
-  border-radius: 3px !important;
+  font-size: 8.5px !important;
+  padding: 1px 5px !important;
+  border-radius: 4px !important;
 }
 
 body.mobile-mode #desktop-widgets-container span[id^="w-"] {
-  font-size: 10.5px !important;
+  font-size: 11px !important;
 }
 
 body.mobile-mode #desktop-widgets-container #w-net-rx,
 body.mobile-mode #desktop-widgets-container #w-net-tx {
-  font-size: 10.5px !important;
+  font-size: 11px !important;
 }
 
 body.mobile-mode #desktop-widgets-container span[style*="font-size: 12px"] {
-  font-size: 9px !important;
+  font-size: 10px !important;
 }
 
 body.mobile-mode #desktop-widgets-container span[style*="font-size: 10px"] {
-  font-size: 8px !important;
+  font-size: 9px !important;
 }
 
 body.mobile-mode #desktop-widgets-container div[style*="height: 4px"] {
-  height: 3px !important;
+  height: 3.5px !important;
 }
 
 body.mobile-mode #desktop-widgets-container div[style*="margin-top: 4px"] {
-  margin-top: 2px !important;
+  margin-top: 3px !important;
 }
 
 body.mobile-mode #desktop-widgets-container div[style*="gap: 6px"] {
-  gap: 3px !important;
+  gap: 4px !important;
 }
 
 body.mobile-mode #desktop-widgets-container #w-clock-time {
-  font-size: 18px !important;
+  font-size: 20px !important;
 }
 body.mobile-mode #desktop-widgets-container #w-clock-sec {
   font-size: 11px !important;
 }
 body.mobile-mode #desktop-widgets-container #w-weather-temp {
-  font-size: 15px !important;
+  font-size: 16px !important;
 }
 body.mobile-mode #desktop-widgets-container #w-weather-icon {
-  font-size: 18px !important;
+  font-size: 20px !important;
 }
 body.mobile-mode #desktop-widgets-container .cal-weekday {
-  font-size: 7.5px !important;
-  padding: 1px 0 !important;
+  font-size: 8.5px !important;
+  padding: 2px 0 !important;
 }
 body.mobile-mode #desktop-widgets-container .cal-day {
-  font-size: 8.5px !important;
-  padding: 1.5px 0 !important;
+  font-size: 10px !important;
+  padding: 3px 0 !important;
 }
 body.mobile-mode #desktop-widgets-container .cal-day.cal-holiday::after {
-  width: 2.5px !important;
-  height: 2.5px !important;
-  bottom: 0.5px !important;
+  width: 3px !important;
+  height: 3px !important;
+  bottom: 1px !important;
 }
 body.mobile-mode #desktop-widgets-container .cal-glance-bar {
-  font-size: 8.5px !important;
-  min-height: 16px !important;
-  padding-top: 3px !important;
-  margin-top: 4px !important;
+  font-size: 9.5px !important;
+  min-height: 18px !important;
+  padding-top: 4px !important;
+  margin-top: 6px !important;
 }
 
   /* General Modals on Mobile */
@@ -8318,6 +8354,9 @@ body.mobile-mode .btn-webui-badge {
   align-items: center;
   padding: 6px 0 10px 0;
   cursor: grab;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 .sheet-drag-handle {
   width: 36px;
@@ -8330,6 +8369,9 @@ body.mobile-mode .btn-webui-badge {
   margin-bottom: 10px;
   padding: 0 4px 8px 4px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 .sheet-title {
   font-size: 15px;
@@ -8445,10 +8487,277 @@ body.mobile-mode .btn-webui-badge {
   color: #fff;
 }
 
-/* Touch suppression of dock hover tooltip */
+/* =========================================================================
+   WAVE 2 MOBILE ERGONOMICS: FILE EXPLORER, VM MANAGER, TERMINAL & TOUCH
+   ========================================================================= */
+@media (max-width: 768px) {
+  /* File Explorer Mobile Actions & FAB */
+  .fm-col-actions .fm-act-btn:not(.fm-act-more-sheet),
+  .fm-card-actions .fm-act-btn:not(.fm-act-more-sheet) {
+    display: none !important;
+  }
+  .fm-act-more-sheet {
+    display: inline-flex !important;
+    min-width: 38px !important;
+    min-height: 34px !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-weight: 800 !important;
+    font-size: 14px !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.18) !important;
+    border-radius: 6px !important;
+    color: #e2e8f0 !important;
+  }
+  .fm-toolbar .fm-new-win-btn,
+  .fm-toolbar .fm-new-folder-btn,
+  .fm-toolbar .fm-organize-btn {
+    display: none !important;
+  }
+  .fm-mobile-fab {
+    display: flex !important;
+    position: absolute !important;
+    right: 16px !important;
+    bottom: 16px !important;
+    width: 48px !important;
+    height: 48px !important;
+    border-radius: 50% !important;
+    background: linear-gradient(135deg, var(--brand, #0ea5e9), var(--ok2, #25c2a0)) !important;
+    color: #fff !important;
+    font-size: 26px !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+    border: none !important;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.55) !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 40 !important;
+    cursor: pointer !important;
+    touch-action: manipulation !important;
+  }
+  .fm-mobile-fab:active {
+    transform: scale(0.92) !important;
+  }
+
+  /* VM Manager Mobile Cards & Console Keybar */
+  .vm-telemetry-budget-grid {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+  .vm-card-actions .btn-vm-pause,
+  .vm-card-actions .btn-vm-acpi,
+  .vm-card-actions .btn-vm-force-off,
+  .vm-card-actions .btn-vm-console,
+  .vm-card-actions .btn-vm-edit,
+  .vm-card-actions .btn-vm-delete {
+    display: none !important;
+  }
+  .btn-vm-more-sheet {
+    display: inline-flex !important;
+    min-width: 44px !important;
+    min-height: 38px !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-weight: 800 !important;
+    font-size: 14px !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 6px !important;
+    color: #e2e8f0 !important;
+    cursor: pointer !important;
+    touch-action: manipulation !important;
+  }
+  .vm-console-toolbar {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    gap: 8px !important;
+  }
+  .vm-console-toolbar::-webkit-scrollbar {
+    display: none !important;
+  }
+  .vm-console-toolbar .toolbar-stat:not(#vm-console-kbd-pill),
+  #btn-vnc-popout {
+    display: none !important;
+  }
+  .console-toolbar-left,
+  .console-toolbar-right {
+    flex-shrink: 0 !important;
+    flex-wrap: nowrap !important;
+  }
+
+  /* Container Inspector & Mission Control Disks Mobile Polish */
+  .ci-nav-tabs {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+  }
+  .ci-nav-tabs::-webkit-scrollbar {
+    display: none !important;
+  }
+  .ci-tab-btn {
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
+  }
+  #mgmt-sec-disks .btn-locate-row {
+    display: none !important;
+  }
+  #mgmt-sec-disks .btn-disk-more-sheet {
+    display: inline-flex !important;
+  }
+
+  /* Prevent iOS Safari automatic viewport zoom on form input focus */
+  input[type="text"],
+  input[type="password"],
+  input[type="number"],
+  input[type="email"],
+  input[type="search"],
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+body.mobile-mode .fm-col-actions .fm-act-btn:not(.fm-act-more-sheet),
+body.mobile-mode .fm-card-actions .fm-act-btn:not(.fm-act-more-sheet) {
+  display: none !important;
+}
+body.mobile-mode .fm-act-more-sheet {
+  display: inline-flex !important;
+  min-width: 38px !important;
+  min-height: 34px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-weight: 800 !important;
+  font-size: 14px !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  border-radius: 6px !important;
+  color: #e2e8f0 !important;
+}
+body.mobile-mode .fm-toolbar .fm-new-win-btn,
+body.mobile-mode .fm-toolbar .fm-new-folder-btn,
+body.mobile-mode .fm-toolbar .fm-organize-btn {
+  display: none !important;
+}
+body.mobile-mode .fm-mobile-fab {
+  display: flex !important;
+  position: absolute !important;
+  right: 16px !important;
+  bottom: 16px !important;
+  width: 48px !important;
+  height: 48px !important;
+  border-radius: 50% !important;
+  background: linear-gradient(135deg, var(--brand, #0ea5e9), var(--ok2, #25c2a0)) !important;
+  color: #fff !important;
+  font-size: 26px !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+  border: none !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.55) !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 40 !important;
+  cursor: pointer !important;
+  touch-action: manipulation !important;
+}
+body.mobile-mode .fm-mobile-fab:active {
+  transform: scale(0.92) !important;
+}
+
+body.mobile-mode .vm-telemetry-budget-grid {
+  grid-template-columns: 1fr !important;
+  gap: 8px !important;
+}
+body.mobile-mode .vm-card-actions .btn-vm-pause,
+body.mobile-mode .vm-card-actions .btn-vm-acpi,
+body.mobile-mode .vm-card-actions .btn-vm-force-off,
+body.mobile-mode .vm-card-actions .btn-vm-console,
+body.mobile-mode .vm-card-actions .btn-vm-edit,
+body.mobile-mode .vm-card-actions .btn-vm-delete {
+  display: none !important;
+}
+body.mobile-mode .btn-vm-more-sheet {
+  display: inline-flex !important;
+  min-width: 44px !important;
+  min-height: 38px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-weight: 800 !important;
+  font-size: 14px !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-radius: 6px !important;
+  color: #e2e8f0 !important;
+  cursor: pointer !important;
+  touch-action: manipulation !important;
+}
+body.mobile-mode .vm-console-toolbar {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  scrollbar-width: none !important;
+  gap: 8px !important;
+}
+body.mobile-mode .vm-console-toolbar::-webkit-scrollbar {
+  display: none !important;
+}
+body.mobile-mode .vm-console-toolbar .toolbar-stat:not(#vm-console-kbd-pill),
+body.mobile-mode #btn-vnc-popout {
+  display: none !important;
+}
+body.mobile-mode .console-toolbar-left,
+body.mobile-mode .console-toolbar-right {
+  flex-shrink: 0 !important;
+  flex-wrap: nowrap !important;
+}
+body.mobile-mode .ci-nav-tabs {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  scrollbar-width: none !important;
+}
+body.mobile-mode .ci-nav-tabs::-webkit-scrollbar {
+  display: none !important;
+}
+body.mobile-mode .ci-tab-btn {
+  flex-shrink: 0 !important;
+  white-space: nowrap !important;
+}
+body.mobile-mode #mgmt-sec-disks .btn-locate-row {
+  display: none !important;
+}
+body.mobile-mode #mgmt-sec-disks .btn-disk-more-sheet {
+  display: inline-flex !important;
+}
+body.mobile-mode input[type="text"],
+body.mobile-mode input[type="password"],
+body.mobile-mode input[type="number"],
+body.mobile-mode input[type="email"],
+body.mobile-mode input[type="search"],
+body.mobile-mode select,
+body.mobile-mode textarea {
+  font-size: 16px !important;
+}
+
+/* Touch suppression of dock hover tooltip & enlarged coarse pointer controls */
 @media (hover: none), (pointer: coarse) {
   #dock-hover-tooltip {
     display: none !important;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    width: 24px !important;
+    height: 24px !important;
+  }
+  .fan-curve-node {
+    r: 10px !important;
+    stroke-width: 6px !important;
   }
 }
 

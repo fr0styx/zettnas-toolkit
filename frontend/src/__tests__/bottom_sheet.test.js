@@ -122,4 +122,50 @@ describe('showBottomSheet - Mobile Bottom Sheet Component', () => {
     const backdrop = document.getElementById('mobile-sheet-backdrop');
     expect(backdrop.style.display).toBe('none');
   });
+
+  it('swiping down > 70px on the handle bar dismisses the sheet and calls onCancel', () => {
+    const onCancel = vi.fn();
+
+    showBottomSheet({
+      title: 'Swipe Test',
+      items: [{ icon: '🔍', label: 'Inspect' }],
+      onCancel
+    });
+
+    const sheet = document.getElementById('mobile-bottom-sheet');
+    const handleBar = sheet.querySelector('.sheet-handle-bar');
+    expect(handleBar).not.toBeNull();
+
+    handleBar.dispatchEvent(new MouseEvent('pointerdown', { clientY: 100, bubbles: true }));
+    handleBar.dispatchEvent(new MouseEvent('pointermove', { clientY: 190, bubbles: true }));
+    expect(sheet.style.transform).toContain('translateY(90px)');
+
+    handleBar.dispatchEvent(new MouseEvent('pointerup', { clientY: 190, bubbles: true }));
+    expect(onCancel).toHaveBeenCalledTimes(1);
+
+    vi.advanceTimersByTime(300);
+    expect(sheet.style.display).toBe('none');
+  });
+
+  it('swiping down < 70px snaps the sheet back without dismissing', () => {
+    const onCancel = vi.fn();
+
+    showBottomSheet({
+      title: 'Short Swipe Test',
+      items: [{ icon: '🔍', label: 'Inspect' }],
+      onCancel
+    });
+
+    const sheet = document.getElementById('mobile-bottom-sheet');
+    const handleBar = sheet.querySelector('.sheet-handle-bar');
+
+    handleBar.dispatchEvent(new MouseEvent('pointerdown', { clientY: 100, bubbles: true }));
+    handleBar.dispatchEvent(new MouseEvent('pointermove', { clientY: 140, bubbles: true }));
+    handleBar.dispatchEvent(new MouseEvent('pointerup', { clientY: 140, bubbles: true }));
+
+    expect(onCancel).not.toHaveBeenCalled();
+    expect(sheet.style.display).toBe('flex');
+    expect(sheet.style.transform).toBe('');
+  });
 });
+

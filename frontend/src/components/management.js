@@ -6398,9 +6398,10 @@ function buildDiskRowInner(d) {
       <span class="bay-temp-pill" style="color:${thermal.color}; border-color:${thermal.color};">${thermal.text}</span>
     </td>
     <td style="text-align:right;">
-      <div style="display:inline-flex; gap:6px;">
+      <div style="display:inline-flex; gap:6px; align-items:center;">
         <button class="btn-pill-toggle btn-locate-row" data-dev="${devName}" title="Locate Drive (Blink Bay LED)" style="padding:3px 8px; font-size:10.5px;">⚡ Locate</button>
         <button class="btn-pill-toggle btn-smart-row" data-dev="${devName}" title="View S.M.A.R.T. Diagnostics" style="padding:3px 8px; font-size:10.5px;">📊 S.M.A.R.T.</button>
+        <button type="button" class="btn-pill-toggle btn-disk-more-sheet" data-dev="${devName}" title="More Actions" style="display:none; padding:3px 8px; font-size:12px;">···</button>
       </div>
     </td>
   `;
@@ -6442,6 +6443,32 @@ function bindDiskTableEvents(tbody) {
   tbody._diskEventsBound = true;
 
   tbody.addEventListener('click', (e) => {
+    const moreBtn = e.target.closest('.btn-disk-more-sheet');
+    if (moreBtn) {
+      e.stopPropagation();
+      const dev = moreBtn.dataset.dev;
+      const row = moreBtn.closest('tr');
+      const modelText = row?.children?.[1]?.firstElementChild?.textContent?.trim() || 'Physical Disk';
+      const healthText = row?.querySelector('.bay-health-tag')?.textContent?.trim() || 'OK';
+      showBottomSheet({
+        title: `/dev/${dev}`,
+        subtitle: `${modelText} • ${healthText}`,
+        items: [
+          {
+            icon: '📊',
+            label: 'View S.M.A.R.T. Diagnostics',
+            onClick: () => row?.querySelector('.btn-smart-row')?.click(),
+          },
+          {
+            icon: '⚡',
+            label: 'Locate Drive (Blink Bay LED)',
+            onClick: () => row?.querySelector('.btn-locate-row')?.click(),
+          },
+        ],
+      });
+      return;
+    }
+
     const locateBtn = e.target.closest('.btn-locate-row');
     if (locateBtn) {
       const dev = locateBtn.dataset.dev;
@@ -6921,7 +6948,11 @@ export function initManagement() {
     if (targetTab) targetTab.classList.add('active');
 
     document.querySelectorAll('.mgmt-sidebar-item').forEach((b) => {
-      b.classList.toggle('active', b.dataset.mgmtTarget === targetId);
+      const isActive = b.dataset.mgmtTarget === targetId;
+      b.classList.toggle('active', isActive);
+      if (isActive && typeof b.scrollIntoView === 'function') {
+        try { b.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); } catch (_) {}
+      }
     });
 
     let sectionName = t('mgmt.title', 'Mission Control');
@@ -6966,6 +6997,9 @@ export function initManagement() {
           const isActive = t.dataset.tabTarget === desiredSubPane;
           t.classList.toggle('active', isActive);
           t.setAttribute('aria-selected', isActive ? 'true' : 'false');
+          if (isActive && typeof t.scrollIntoView === 'function') {
+            try { t.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); } catch (_) {}
+          }
         });
         parentCard.querySelectorAll('.mgmt-tab-pane').forEach((p) => {
           p.style.display = p.id === desiredSubPane ? 'block' : 'none';
@@ -7014,6 +7048,9 @@ export function initManagement() {
       });
       tab.classList.add('active');
       tab.setAttribute('aria-selected', 'true');
+      if (typeof tab.scrollIntoView === 'function') {
+        try { tab.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); } catch (_) {}
+      }
       
       // Update tab panes
       const targetPaneId = tab.dataset.tabTarget;
@@ -7032,6 +7069,9 @@ export function initManagement() {
 
   document.querySelectorAll('.mgmt-sidebar-item').forEach((item) => {
     item.addEventListener('click', () => {
+      if (typeof item.scrollIntoView === 'function') {
+        try { item.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); } catch (_) {}
+      }
       const targetId = item.dataset.mgmtTarget;
       if (targetId === 'management-hub-view') {
         showHub();
