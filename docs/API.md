@@ -143,7 +143,8 @@ Persistent scoped tokens can be provisioned and managed via `/api/tokens`.
 | `/api/backup/restore` | `POST` | `backup:write`| Restore system configuration from uploaded backup zip. |
 | `/api/backup/snapshots` | `GET` | `backup:read` | List local filesystem and cloud backup snapshots. |
 | `/api/backup/snapshots/create` | `POST` | `backup:write`| Create an immediate filesystem snapshot. |
-| `/api/system/diagnostics` | `GET` | `system:read` | Download 1-click sanitized system diagnostics bundle. |
+| `/api/system/diagnostics` | `GET` | `system:read` | Download 1-click sanitized system diagnostics bundle archive. |
+| `/api/system/diagnostics/summary` | `GET` | `system:read` | Retrieve executive health status banner, severity rollup, and component counts without generating full archive. |
 
 ---
 
@@ -216,7 +217,7 @@ Persistent scoped tokens can be provisioned and managed via `/api/tokens`.
 
 | Endpoint | Method | Auth / Scope | Description |
 | :--- | :---: | :---: | :--- |
-| `/api/ups` | `GET` | `system:read` | Query active NUT or APCUPSD UPS status, battery %, load, runtime, and utility line voltage. |
+| `/api/ups` | `GET` | `system:read` | Query UPS status, battery %, load, runtime, and voltage (direct USB HID `/dev/hidraw*`, NUT, or APCUPSD). |
 | `/api/system/ups/mode` | `GET` | `system:read` | Query detected UPS mode, driver daemon type, and connection endpoint. |
 | `/api/system/ups/mode` | `POST` | `system:admin`| Configure manual or auto UPS connection parameters (`nut_host`, `nut_port`, `nut_name`). |
 | `/api/system/ups/policy` | `POST` | `system:admin`| Save safe shutdown policies: battery threshold % (5%–50%), runtime remaining minutes (2–30 min), and immediate shutdown toggle. |

@@ -111,6 +111,38 @@ The application starts four persistent background daemon threads upon startup vi
   2. Communicates with Docker Engine API over `/var/run/docker.sock` to pull updated image layers.
   3. Spawns transient self-updater helper process to gracefully recreate the container with identical volume mounts and port bindings.
 
+### 2.9 Direct Userspace MMIO Fan Controller
+- **Target**: Physical register block at `0xFE0B0456` via `/dev/mem` (or `/host/dev/mem`).
+- **Responsibilities & Invariants**:
+  1. Operates directly on custom appliance hardware (Zettlab D4/D6/D6U/D8U, Aoostar) without kernel modules.
+  2. Dynamic fallback: auto-detects `hwmon` driver and routes commands to sysfs if present, falling back to MMIO when absent.
+  3. CPU Fan Inviolability: maintains $\ge 58\text{ PWM}$ when driven, or releases to motherboard EC auto control (`0`) when unmanaged.
+  4. Emergency Thermal Clamp: unconditionally clamps all fans to maximum PWM (`183`) at $\ge 80^\circ\text{C}$.
+  5. Optimized Cooldown & Anti-Flutter: downward hysteresis hold (20s/45s) and Zero RPM standby cooldown (30s) eliminate acoustic hunting.
+
+### 2.10 Zero-Dependency Direct USB HID Engine
+- **Target**: Connected USB HID power devices via `/dev/hidraw*` (WalleCube W180, OpenUPS, APC, CyberPower, Eaton).
+- **Responsibilities**:
+  1. Direct ioctl descriptor querying (`HIDIOCGRDESC`) and feature/interrupt report extraction without host daemons (`nut`/`apcupsd`).
+  2. Translates USB HID Power Device (`0x84`) and Battery System (`0x85`) usage pages into live battery charge %, AC power status, and voltage.
+  3. Provides proactive cgroup permission diagnostics if device nodes are inaccessible.
+
+### 2.11 Multi-Protocol S.M.A.R.T. Engine & Device Self-Test (DST)
+- **Protocols**: ATA/SATA (`-d sat`), NVMe (`-d nvme`), SCSI/SAS (`-d scsi`), and USB bridge protocols.
+- **Responsibilities**:
+  1. Non-invasive standby polling: strictly enforces `smartctl -n standby` to avoid waking sleeping drive platters.
+  2. NVMe Device Self-Test: initiates Short and Extended DST tests via controller admin commands with live percentage tracking.
+  3. Executive Diagnostic Reports: synthesizes structured report cards with health verdicts, tested sectors, and homelab remediation advice.
+  4. Activity Monitor Integration: publishes test lifecycle events and findings to the system audit ledger.
+
+### 2.12 System Observability & Sanitized Diagnostics Subsystem
+- **Bundle Format**: Standardized multi-layer ZIP archive (`zettnas_diagnostics_<timestamp>.zip`).
+- **Responsibilities & Invariants**:
+  1. Zero Spindown Disruption: preserves platter sleep states throughout diagnostic capture.
+  2. Deep Subsystem Coverage: collects kernel dmesg, MMIO fan registers, USB descriptors, Btrfs chunk allocation, ZFS pools, Docker stacks, and App Backups.
+  3. Comprehensive Secrets Redaction: recursively masks API tokens (`zat_****`), password hashes, private keys, bot credentials, and environment variables.
+  4. Executive Health Summary: computes instant in-browser health status banner and component count rollups without generating full archives.
+
 ---
 
 ## 3. Data Persistence & State Model

@@ -348,6 +348,7 @@ ZettNAS Toolkit accesses physical hardware through Linux device nodes and `cgrou
 | `/dev/hidraw*` | `c 240:*..245:* rwm` | Direct USB HID UPS telemetry (WalleCube, OpenUPS, APC, CyberPower) | Recommended for USB UPS |
 | `/dev/sd*` | `b 8:* rwm` | Physical SATA/SAS hard drives and SD/TF card slots | Recommended |
 | `/dev/nvme*` | `b 259:* rwm` | M.2 NVMe SSD storage and endurance telemetry | Recommended |
+| `/dev/mem` | `c 1:1 rwm` | Userspace physical MMIO fan controller (`0xFE0B0456`) and front copy button | Optional / Zettlab & Aoostar |
 | `/dev/fuse` | `--device /dev/fuse` | Rclone Multi-Cloud remote FUSE mounts | Optional |
 
 ---

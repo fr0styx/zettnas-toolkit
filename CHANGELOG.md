@@ -1,5 +1,51 @@
 # ZettNAS Toolkit - Release Changelog
 
+## v1.8.2 (2026-10-14) - Stable
+### 🛡️ System Observability & Diagnostics Overhaul, Native USB HID UPS Engine, NVMe S.M.A.R.T. Self-Test Reports, Optimized Fan Cooldown & Streamline Front LCD Layout
+
+Version 1.8.2 introduces an enterprise-grade system observability and diagnostics bundle, native direct USB HID UPS monitoring, executive S.M.A.R.T. self-test report cards with NVMe DST initiation, optimized Zero-RPM fan cooldown timers, a streamlined Big IP layout for the front-panel LCD, and expanded storage pool discovery across ZettOS and Zettlab D4/D6/D6U/D8U appliances:
+
+- **System Observability & Diagnostic Bundle Overhaul**:
+  - **Comprehensive Multi-Layer Diagnostics**: Revamped `/api/system/diagnostics` to generate an enterprise-grade system bundle covering 6 critical subsystems: Kernel & Hardware Telemetry, Storage PAL & S.M.A.R.T. Health, Docker Containers & Compose Stacks, Hypervisor & Virtualization, Network Topology, and Secrets Redaction.
+  - **Direct EC MMIO Fan Controller Diagnostics**: Queries raw EC memory-mapped registers (`0xFE0B0456`), active controller type (`MMIO` vs `hwmon`), per-zone PWM duties, tachometer RPMs, and downward hysteresis hold timers.
+  - **Direct USB HID UPS & Bus Telemetry**: Captures raw HID report descriptors (`0x84` Power Device, `0x85` Battery System), device manufacturer/product strings, and cgroup access permissions.
+  - **Storage PAL & Btrfs Allocation Profiles**: Collects Btrfs chunk allocation metrics (single vs raid1 metadata, allocated vs unallocated chunks), ZFS pool status summaries, and active storage mounts without waking sleeping drive platters (`-n standby`).
+  - **Docker Compose Stacks & App Backups Inventory**: Summarizes active Compose stacks (synthesized vs file-backed), manifest sizes, and per-app backup archive counts.
+  - **Container Exit Code Taxonomy & Failure Analysis**: Evaluates recent container exits to categorize failure root causes (OOM-killed, config syntax error, missing device permissions, runtime exception).
+  - **Executive Health Status Banner (`/api/system/diagnostics/summary`)**: Lightweight API endpoint providing instant health status rollup (`OPTIMAL`, `ATTENTION`, `DEGRADED`), component status counts, and actionable homelab warnings directly in Mission Control without generating full ZIP archives.
+  - **Secrets Redaction Invariant**: Recursive masking of sensitive tokens (`zat_****`), Argon2 password hashes, private keys, bot webhook URLs, SMTP credentials, and container environment variables.
+
+- **Native Direct USB HID UPS Subsystem & Device Permissions**:
+  - **Zero-Dependency USB HID Polling**: Direct ioctl descriptor querying (`HIDIOCGRDESC`) and feature/interrupt report extraction on `/dev/hidraw*` without requiring host daemons (`apcupsd` or `nut`).
+  - **Universal UPS Hardware Support**: Native plug-and-play support for WalleCube W180, OpenUPS, APC, CyberPower, and Eaton USB battery backup units.
+  - **Universal Container Cgroup Rules**: Added `'c 189:* rmw'` (USB Bus), `'c 180:* rmw'` (USB HID), and `'c 240:*..245:* rmw'` (hidraw) across `docker-compose.linux.yml`, `docker-compose.yml`, and `unraid/zettnas-toolkit.xml`.
+  - **Proactive Permission Guidance**: Surfaces actionable configuration tips in the UPS Power Cockpit if the container lacks cgroup access to USB device nodes.
+
+- **S.M.A.R.T. Self-Test Diagnostics & NVMe DST Execution**:
+  - **NVMe Device Self-Test (DST)**: Resolved NVMe device path canonicalization (`/dev/nvme0n1` vs `/dev/nvme0`) and initiation parameters to trigger Short and Extended DST tests via controller admin commands.
+  - **Executive Diagnostic Report Card**: Synthesizes test results into a structured report card displaying test verdict (`PASSED`, `WARNING`, `CRITICAL`), tested sector ranges, power-on hours, operating temperatures, and actionable homelab remediation guidance.
+  - **Activity Monitor Integration**: Dispatches test lifecycle events (`Started`, `Completed`, `Failed`) directly to the system audit ledger (`/api/events`), persisting diagnostic report details for review.
+  - **Segmented 3-Tab SMART Modal**: Re-architected modal body into *Health & Telemetry*, *Self-Test & Reports*, and *Raw SMART Data* tabs, eliminating vertical layout squashing.
+
+- **Acoustic Fan Control & Zero-RPM Optimization**:
+  - **Thermodynamically Optimized Cooldown**: Reduced Zero-RPM standby cooldown timer from 180s to 30s. When drives spin down from 7200 RPM to standby, heat generation drops >90% immediately, making long holds unnecessary.
+  - **Responsive Downward Hysteresis**: Reduced downward anti-flutter hold timer to 20s for disk zones (from 120s) and 45s for CPU package (from 90s), preventing acoustic cycling while remaining responsive to temperature drops.
+  - **Fixed Double-Hold Lock Bug**: Eliminated compounding delay bug where fans were held screaming at maximum RPM during cooldown instead of ramping smoothly to idle PWM.
+
+- **Physical LCD Framebuffer (`/dev/fb0`) Streamline Big IP Layout**:
+  - **Streamline Big IP Screen**: Toggleable high-visibility LCD layout featuring an oversized server IP badge with per-bay status chips.
+  - **Unified Glassmorphic Design**: Aligned LCD visual design language with the Web Desktop aesthetic.
+  - **Display Isolation & Rendering Polish**: Resolved preview blending overlap, CSS specificity conflicts, compact badge text truncation, and status pill warning colors.
+
+- **Platform Abstraction Layer (PAL) & Storage Topology Expansion**:
+  - **ZettOS mdadm RAID Discovery**: Automatic discovery and status parsing for ZettOS software RAID arrays (`/dev/md*`) and root mounts.
+  - **Expanded Chassis Detection**: Auto-detection support across Zettlab D4, D6, D6U, and D8 Ultra (D8U) appliances.
+  - **Authoritative 8-Bay Model Taxonomy**: Standardized 8-bay appliance models strictly to `D8U` across HAL, visualizer, and API.
+  - **Unraid Parity Drive Identification**: Automatic detection of Unraid parity drives with an adaptive orange `P` badge.
+  - **7-Column SMART Temperature Parsing**: Resolved parsing anomalies for extended 7-column `smartctl -x` attribute tables.
+
+---
+
 ## v1.8.1 (2026-10-14) - Stable
 ### 🚀 Direct Userspace MMIO Fan Controller, Front LCD Stability, Mobile Responsive Polish & Live SMART Self-Test Reports
 
