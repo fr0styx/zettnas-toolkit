@@ -259,6 +259,8 @@ def _parse_smart_json(doc: dict, is_nvme: bool):
     else:
         ata_table = doc.get("ata_smart_attributes", {}).get("table", [])
         if isinstance(ata_table, list):
+            temp_from_194 = None
+            temp_from_190 = None
             for attr in ata_table:
                 if not isinstance(attr, dict):
                     continue
@@ -272,14 +274,28 @@ def _parse_smart_json(doc: dict, is_nvme: bool):
                     offline = int(raw_val)
                 elif attr_id == 199:
                     crc = int(raw_val)
-                elif attr_id in (194, 190) and temp is None:
+                elif attr_id == 194:
                     try:
                         raw_str = attr.get("raw", {}).get("string", "")
                         digits = [int(x) for x in raw_str.split() if x.isdigit()]
                         if digits:
-                            temp = digits[0]
+                            t_val = digits[0]
                         else:
-                            temp = int(raw_val) & 0xFF
+                            t_val = int(raw_val) & 0xFF
+                        if 0 < t_val < 120:
+                            temp_from_194 = t_val
+                    except (ValueError, TypeError):
+                        pass
+                elif attr_id == 190:
+                    try:
+                        raw_str = attr.get("raw", {}).get("string", "")
+                        digits = [int(x) for x in raw_str.split() if x.isdigit()]
+                        if digits:
+                            t_val = digits[0]
+                        else:
+                            t_val = int(raw_val) & 0xFF
+                        if 0 < t_val < 120:
+                            temp_from_190 = t_val
                     except (ValueError, TypeError):
                         pass
                 elif attr_id == 12 and power_cycles is None:
@@ -297,6 +313,11 @@ def _parse_smart_json(doc: dict, is_nvme: bool):
                         tbr_tb = round((int(raw_val) * 512) / 1e12, 2)
                     except (ValueError, TypeError):
                         pass
+            if temp is None:
+                if temp_from_194 is not None:
+                    temp = temp_from_194
+                elif temp_from_190 is not None:
+                    temp = temp_from_190
 
         # Check for SAS / SCSI enterprise SMART data
         defect_list = doc.get("scsi_grown_defect_list")
@@ -351,8 +372,45 @@ def _parse_smart_json(doc: dict, is_nvme: bool):
     return temp, health, metrics
 
 
+def _extract_raw_val(cols: list[str]) -> int:
+    """Extracts raw integer value from either 7/8-column (smartctl -x / modern)
+    or 10-column (smartctl -A / legacy) ATA attribute row.
+
+    Layouts:
+    - 7/8-col (smartctl -x): ID(0) NAME(1) FLAGS(2) VAL(3) WORST(4) THRESH(5) FAIL(6) RAW_VALUE(7) [MIN/MAX/SUB_BYTES(8+)]
+    - 10-col  (smartctl -A): ID(0) NAME(1) FLAG(2) VAL(3) WORST(4) THRESH(5) TYPE(6) UPDATED(7) WHEN_FAILED(8) RAW_VALUE(9) [MIN/MAX(10+)]
+    """
+    if not cols or len(cols) < 8:
+        return 0
+
+    raw_col = None
+    # 1. Check for 10-column smartctl -A layout
+    if len(cols) >= 10 and (cols[6] in ("Pre-fail", "Old_age") or cols[7] in ("Always", "Offline")):
+        raw_col = cols[9]
+    # 2. Check for 7/8-column smartctl -x layout
+    elif len(cols) >= 8 and (len(cols[2]) == 6 or cols[6] in ("-", "NOW", "Past", "PAST")):
+        raw_col = cols[7]
+    # 3. Fallback heuristic: check if cols[9] or cols[7] contains the primary raw value
+    elif len(cols) >= 10 and not cols[7].lstrip("-").isdigit() and cols[9].lstrip("-").isdigit():
+        raw_col = cols[9]
+    elif len(cols) >= 8:
+        raw_col = cols[7]
+
+    if not raw_col:
+        return 0
+
+    token = raw_col.split("(")[0].split("/")[0].strip()
+    try:
+        return int(token)
+    except (ValueError, TypeError):
+        m = re.search(r"-?\d+", token)
+        return int(m.group(0)) if m else 0
+
+
 def _parse_smart_text(text: str, is_nvme: bool):
     temp = None
+    temp_from_194 = None
+    temp_from_190 = None
     passed = None
     realloc = pending = offline = crc = 0
     nvme_spare = None
@@ -369,26 +427,27 @@ def _parse_smart_text(text: str, is_nvme: bool):
         low = s.lower()
         if "overall-health" in low:
             passed = "passed" in low
-        if s.startswith("Temperature:"):
+        if s.startswith("Temperature:") or "current drive temperature:" in low or "current temperature:" in low:
             nums = [int(x) for x in s.split() if x.isdigit()]
-            if nums:
+            if nums and temp is None:
                 temp = nums[0]
-        elif ("Temperature_Celsius" in s or "Airflow_Temperature" in s) and temp is None:
-            cols = s.split()
-            if len(cols) >= 10 and cols[9].isdigit():
-                temp = int(cols[9])
-
-        def raw(cols):
-            return int(cols[9]) if len(cols) >= 10 and cols[9].lstrip("-").isdigit() else 0
+        elif "Temperature_Celsius" in s:
+            val = _extract_raw_val(s.split())
+            if 0 < val < 120:
+                temp_from_194 = val
+        elif "Airflow_Temperature" in s:
+            val = _extract_raw_val(s.split())
+            if 0 < val < 120:
+                temp_from_190 = val
 
         if "Reallocated_Sector_Ct" in s:
-            realloc = raw(s.split())
+            realloc = _extract_raw_val(s.split())
         elif "Current_Pending_Sector" in s:
-            pending = raw(s.split())
+            pending = _extract_raw_val(s.split())
         elif "Offline_Uncorrectable" in s:
-            offline = raw(s.split())
+            offline = _extract_raw_val(s.split())
         elif "UDMA_CRC_Error_Count" in s:
-            crc = raw(s.split())
+            crc = _extract_raw_val(s.split())
 
         if is_nvme:
 
@@ -443,6 +502,12 @@ def _parse_smart_text(text: str, is_nvme: bool):
                 m = re.search(r"power cycles:\s*([\d,]+)", s, re.IGNORECASE)
                 if m:
                     power_cycles = int(m.group(1).replace(",", ""))
+
+    if temp is None:
+        if temp_from_194 is not None:
+            temp = temp_from_194
+        elif temp_from_190 is not None:
+            temp = temp_from_190
 
     crit_temp = NVME_CRITICAL_TEMP if is_nvme else 60
     warn_temp = NVME_WARN_TEMP if is_nvme else 50
@@ -1009,10 +1074,11 @@ def fetch_disk_smart_detail(dev_name: str, wake_if_standby: bool = False):
                 "ATA S.M.A.R.T. commands. The device is online, responsive, and available for I/O."
             )
 
-    temp, smart_health, metrics = _parse_smart(raw_text, is_nvme)
+    temp, smart_health, metrics = _parse_smart(doc if doc else raw_text, is_nvme)
     if temp is not None or smart_health != "standby":
         Z_STATE.cached_smart_data[dev_name] = (temp, smart_health if smart_health != "standby" else "ok")
         Z_STATE.last_smart_scan[dev_name] = time.time()
+        Z_STATE.cached_smart_time[dev_name] = time.time()
         log_smart_metrics(int(time.time()), dev_name, temp, metrics)
 
     velocity = query_smart_velocity(dev_name)

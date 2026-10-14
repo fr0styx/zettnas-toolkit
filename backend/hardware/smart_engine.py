@@ -119,6 +119,8 @@ class SmartTelemetryEngine:
             metrics["offline"] = int(uncorr_read) + int(uncorr_write)
         else:
             # Standard ATA SMART Table Decoding
+            temp_from_194 = None
+            temp_from_190 = None
             for attr in doc.get("ata_smart_attributes", {}).get("table", []):
                 aid = attr.get("id")
                 raw_val = attr.get("raw", {}).get("value", 0)
@@ -130,13 +132,24 @@ class SmartTelemetryEngine:
                     metrics["offline"] = int(raw_val)
                 elif aid == 199:
                     metrics["crc"] = int(raw_val)
-                elif aid in (194, 190) and temp is None:
+                elif aid == 194:
                     raw_str = attr.get("raw", {}).get("string", "")
                     digits = [int(x) for x in raw_str.split() if x.isdigit()]
                     if digits:
-                        temp = digits[0]
+                        t_val = digits[0]
                     else:
-                        temp = int(raw_val) & 0xFF
+                        t_val = int(raw_val) & 0xFF
+                    if 0 < t_val < 120:
+                        temp_from_194 = t_val
+                elif aid == 190:
+                    raw_str = attr.get("raw", {}).get("string", "")
+                    digits = [int(x) for x in raw_str.split() if x.isdigit()]
+                    if digits:
+                        t_val = digits[0]
+                    else:
+                        t_val = int(raw_val) & 0xFF
+                    if 0 < t_val < 120:
+                        temp_from_190 = t_val
                 elif aid == 9:
                     hours = str(raw_val)
                 elif aid == 12:
@@ -151,6 +164,12 @@ class SmartTelemetryEngine:
                         metrics["tbr_tb"] = round((int(raw_val) * 512) / 1e12, 2)
                     except (ValueError, TypeError):
                         pass
+
+            if temp is None:
+                if temp_from_194 is not None:
+                    temp = temp_from_194
+                elif temp_from_190 is not None:
+                    temp = temp_from_190
 
         # Health verdict synthesis
         crit_temp = NVME_CRITICAL_TEMP if (is_nvme or protocol == "nvme") else HDD_CRITICAL_TEMP

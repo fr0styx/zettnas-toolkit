@@ -20,6 +20,36 @@ ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE      UPDATED  WHEN_
 """
 
 
+def ata_report_7col(temp=48, realloc=0, pending=0, offline=0, crc=0, passed=True):
+    verdict = "PASSED" if passed else "FAILED!"
+    return f"""smartctl 7.4 2023-08-01 r5530 [x86_64-linux] (local build)
+=== START OF READ SMART DATA SECTION ===
+SMART overall-health self-assessment test result: {verdict}
+
+Vendor Specific SMART Attributes with Thresholds:
+ID# ATTRIBUTE_NAME          FLAGS    VALUE WORST THRESH FAIL RAW_VALUE
+  1 Raw_Read_Error_Rate     POSR--   082   064   044    -    143612000
+  3 Spin_Up_Time            PO----   090   089   000    -    0
+  4 Start_Stop_Count        -O--CK   100   100   020    -    821
+  5 Reallocated_Sector_Ct   PO--CK   100   100   010    -    {realloc}
+  7 Seek_Error_Rate         POSR--   079   060   045    -    85646179
+  9 Power_On_Hours          -O--CK   098   098   000    -    2244
+ 10 Spin_Retry_Count        PO--C-   100   100   097    -    0
+ 12 Power_Cycle_Count       -O--CK   100   100   020    -    87
+ 18 Unknown_Attribute       PO-R--   100   100   050    -    0
+187 Reported_Uncorrect      -O--CK   100   100   000    -    0
+188 Command_Timeout         -O--CK   100   100   000    -    0
+190 Airflow_Temperature_Cel -O---K   064   049   000    -    36 (Min/Max 28/40)
+192 Power-Off_Retract_Count -O--CK   100   100   000    -    57
+193 Load_Cycle_Count        -O--CK   100   100   000    -    850
+194 Temperature_Celsius     -O---K   036   051   000    -    {temp} (0 20 0 0 0)
+197 Current_Pending_Sector  -O--C-   100   100   000    -    {pending}
+198 Offline_Uncorrectable   ----C-   100   100   000    -    {offline}
+199 UDMA_CRC_Error_Count    -OSRCK   200   200   000    -    {crc}
+200 Multi_Zone_Error_Rate   PO---K   100   100   001    -    0
+"""
+
+
 def nvme_report(temp=40, spare=100, spare_thresh=10, used=3, media_err=0, passed=True):
     verdict = "PASSED" if passed else "FAILED!"
     return f"""=== START OF SMART DATA SECTION ===
@@ -39,6 +69,35 @@ Media and Data Integrity Errors:    {media_err:,}
 def test_healthy_hdd():
     temp, health, _ = _parse_smart(ata_report(temp=35), is_nvme=False)
     assert (temp, health) == (35, "ok")
+
+
+def test_smartctl_x_7col_ironwolf_preserves_current_temp_over_lifetime_min():
+    """
+    Regression test for issue where opening and closing SMART modal for Seagate IronWolf
+    drives caused telemetry to drop from 48C to 20C (lifetime minimum secondary sub-byte).
+    """
+    temp, health, metrics = _parse_smart(ata_report_7col(temp=48), is_nvme=False)
+    assert temp == 48, f"Expected 48C current temp, but parsed lifetime min: {temp}"
+    assert health == "ok"
+    assert metrics["realloc"] == 0
+
+
+def test_smartctl_x_7col_realloc_and_pending_extraction():
+    _, health, metrics = _parse_smart(ata_report_7col(realloc=12, pending=4, crc=2), is_nvme=False)
+    assert metrics["realloc"] == 12
+    assert metrics["pending"] == 4
+    assert metrics["crc"] == 2
+    assert health == "crit"
+
+
+def test_attribute_194_precedence_over_190():
+    raw = """ID# ATTRIBUTE_NAME          FLAGS    VALUE WORST THRESH FAIL RAW_VALUE
+190 Airflow_Temperature_Cel -O---K   064   049   000    -    32 (Min/Max 28/40)
+194 Temperature_Celsius     -O---K   036   051   000    -    44 (0 22 0 0 0)
+"""
+    temp, health, _ = _parse_smart(raw, is_nvme=False)
+    assert temp == 44, f"Expected core temp 44C from attr 194 to take precedence over airflow 32C, got {temp}"
+    assert health == "ok"
 
 
 def test_hdd_temperature_from_raw_column_ignores_min_max_suffix():
