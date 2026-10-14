@@ -432,3 +432,93 @@ export function showPromptToast(title, msg, defaultVal, onConfirm, onCancel = nu
   }
   document.addEventListener("keydown", onKeyDown);
 }
+
+export function showBottomSheet({ title, subtitle, items = [], onCancel = null }) {
+  if (state.isLcdDirect || (typeof window !== 'undefined' && window.location.search.includes('mode=lcd')) || (document.body && document.body.classList.contains('lcd-direct'))) return;
+  if (!document.body) return;
+
+  let backdrop = document.getElementById("mobile-sheet-backdrop");
+  if (!backdrop) {
+    backdrop = document.createElement("div");
+    backdrop.id = "mobile-sheet-backdrop";
+    backdrop.className = "mobile-sheet-backdrop";
+    document.body.appendChild(backdrop);
+  }
+
+  let sheet = document.getElementById("mobile-bottom-sheet");
+  if (!sheet) {
+    sheet = document.createElement("div");
+    sheet.id = "mobile-bottom-sheet";
+    sheet.className = "mobile-bottom-sheet";
+    document.body.appendChild(sheet);
+  }
+
+  const itemsHtml = items.map((item, idx) => `
+    <button type="button" class="sheet-action-item ${item.destructive ? 'destructive' : ''}" data-index="${idx}">
+      <span class="sheet-action-icon">${item.icon || '•'}</span>
+      <span class="sheet-action-label">${escapeHtml(item.label || '')}</span>
+      <span class="sheet-action-arrow">›</span>
+    </button>
+  `).join('');
+
+  sheet.innerHTML = `
+    <div class="sheet-handle-bar">
+      <div class="sheet-drag-handle"></div>
+    </div>
+    <div class="sheet-header">
+      <div class="sheet-title">${escapeHtml(title || 'Actions')}</div>
+      ${subtitle ? `<div class="sheet-subtitle">${escapeHtml(subtitle)}</div>` : ''}
+    </div>
+    <div class="sheet-content">
+      ${itemsHtml}
+    </div>
+    <div class="sheet-footer">
+      <button type="button" class="sheet-cancel-btn" id="sheet-cancel-btn">${escapeHtml(t('common.cancel', 'Cancel'))}</button>
+    </div>
+  `;
+
+  backdrop.style.display = "block";
+  sheet.style.display = "flex";
+
+  requestAnimationFrame(() => {
+    backdrop.classList.add("open");
+    sheet.classList.add("open");
+  });
+
+  const cleanup = () => {
+    backdrop.classList.remove("open");
+    sheet.classList.remove("open");
+    setTimeout(() => {
+      backdrop.style.display = "none";
+      sheet.style.display = "none";
+    }, 250);
+    document.removeEventListener("keydown", onKeyDown);
+  };
+
+  const onCancelClick = () => {
+    cleanup();
+    if (onCancel) onCancel();
+  };
+
+  const onKeyDown = (e) => {
+    if (e.key === "Escape") onCancelClick();
+  };
+
+  backdrop.onclick = onCancelClick;
+  const cancelBtn = sheet.querySelector("#sheet-cancel-btn");
+  if (cancelBtn) cancelBtn.onclick = onCancelClick;
+
+  sheet.querySelectorAll(".sheet-action-item").forEach((btn) => {
+    btn.onclick = () => {
+      const idx = parseInt(btn.dataset.index, 10);
+      const item = items[idx];
+      cleanup();
+      if (item && typeof item.onClick === "function") {
+        item.onClick();
+      }
+    };
+  });
+
+  document.addEventListener("keydown", onKeyDown);
+}
+

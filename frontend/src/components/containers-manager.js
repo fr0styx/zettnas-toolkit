@@ -7,7 +7,7 @@
 import { api } from '../api.js';
 import { escapeHtml, reconcileKeyedTable } from '../utils.js';
 import { ZettEventBus } from '../event-bus.js';
-import { showToast, showConfirmToast } from '../toast.js';
+import { showToast, showConfirmToast, showBottomSheet } from '../toast.js';
 import { t } from '../i18n.js';
 import { makeDraggable, bringToFront } from './dock.js';
 import { openContainerInspector, openContainerDeleteModal } from './container-modal.js';
@@ -610,6 +610,7 @@ function buildCwContainerRowInner(c, currentHost) {
     : '';
   const backupBtn = `<button class="btn-container-act btn-docker-backup" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="backup" title="Backup App Data & Config">💾</button>`;
   const deleteBtn = `<button class="btn-container-act btn-docker-delete" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-image="${escapeHtml(c.image || '')}" data-action="delete" title="Destroy / Delete ${escapeHtml(c.name)}">🗑️</button>`;
+  const moreBtn = `<button class="btn-container-act btn-docker-more-sheet" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="more-sheet" title="More Actions">···</button>`;
   const actions = isRunning
     ? `
       ${inspectBtn}
@@ -620,6 +621,7 @@ function buildCwContainerRowInner(c, currentHost) {
       <button class="btn-container-act btn-docker-restart" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="restart" title="Restart ${escapeHtml(c.name)}">🔄</button>
       <button class="btn-container-act btn-docker-stop" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="stop" title="Stop ${escapeHtml(c.name)}">⏹</button>
       ${deleteBtn}
+      ${moreBtn}
     `
     : `
       ${inspectBtn}
@@ -629,6 +631,7 @@ function buildCwContainerRowInner(c, currentHost) {
       ${backupBtn}
       <button class="btn-container-act btn-docker-start" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="start" title="Start ${escapeHtml(c.name)}">▶</button>
       ${deleteBtn}
+      ${moreBtn}
     `;
 
   return `
@@ -731,6 +734,76 @@ function bindCwTableEvents(tbody) {
       }
 
       if (!cid || !act) return;
+
+      if (act === 'more-sheet') {
+        const c = _cwContainersList.find((item) => (item.id === cid || item.name === cname));
+        if (!c) return;
+        const updateInfo = _cwUpdatesCache?.containers?.[c.name] || _cwUpdatesCache?.containers?.[c.id];
+        const hasUpdate = Boolean(updateInfo?.has_update);
+
+        const items = [
+          {
+            icon: '🔍',
+            label: t('docker.inspect', 'Inspect & Overview'),
+            onClick: () => openContainerInspector(cid, cname, 'overview'),
+          },
+          {
+            icon: '📋',
+            label: t('docker.logs', 'View Container Logs'),
+            onClick: () => openContainerInspector(cid, cname, 'logs'),
+          },
+          {
+            icon: '📟',
+            label: t('docker.terminal', 'Web Terminal Console'),
+            onClick: () => openContainerInspector(cid, cname, 'terminal'),
+          },
+          {
+            icon: '✏️',
+            label: t('docker.edit', 'Edit Configuration'),
+            onClick: () => openContainerInspector(cid, cname, 'edit'),
+          },
+        ];
+
+        if (c.stack) {
+          items.push({
+            icon: '📁',
+            label: `Manage Stack: ${c.stack}`,
+            onClick: () => openStackModal(c.stack),
+          });
+        }
+
+        if (hasUpdate) {
+          items.push({
+            icon: '⬆️',
+            label: 'Update to Latest Image',
+            onClick: () => {
+              actBtn.parentElement.querySelector('[data-action="update-single"]')?.click();
+            },
+          });
+        }
+
+        items.push({
+          icon: '💾',
+          label: 'Backup App Data & Config',
+          onClick: () => {
+            actBtn.parentElement.querySelector('[data-action="backup"]')?.click();
+          },
+        });
+
+        items.push({
+          icon: '🗑️',
+          label: `Delete "${cname}"`,
+          destructive: true,
+          onClick: () => openContainerDeleteModal(cid, cname, c.image),
+        });
+
+        showBottomSheet({
+          title: cname,
+          subtitle: `State: ${(c.state || '').toUpperCase()} • ${c.image || 'Docker Container'}`,
+          items,
+        });
+        return;
+      }
 
       if (act === 'inspect') {
         openContainerInspector(cid, cname);

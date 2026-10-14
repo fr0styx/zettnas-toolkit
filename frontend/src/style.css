@@ -4116,6 +4116,17 @@ body.theme-oled #cloud-remote-window select option {
   transition: all 0.15s ease;
   margin-left: 4px;
 }
+.btn-docker-more-sheet {
+  display: none !important;
+  background: rgba(255, 255, 255, 0.08);
+  color: #e2e8f0;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+.btn-docker-more-sheet:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.4);
+  color: #fff;
+}
 .btn-docker-edit {
   background: rgba(254, 240, 138, 0.12);
   color: #fde047;
@@ -6034,19 +6045,23 @@ body.theme-yak .lcd-dot.active {
   .app-deploy-window,
   #app-deploy-modal-window {
     position: fixed !important;
-    left: 50% !important;
-    transform: translateX(-50%) !important;
-    top: 52px !important;
-    bottom: 64px !important;
-    bottom: calc(env(safe-area-inset-bottom, 0px) + 64px) !important;
-    width: 96vw !important;
-    max-width: 96vw !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: 48px !important;
+    bottom: 56px !important;
+    bottom: calc(56px + env(safe-area-inset-bottom, 0px)) !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
     min-width: 0 !important;
     height: auto !important;
-    max-height: calc(100dvh - 116px) !important;
+    max-height: calc(100dvh - 104px) !important;
     min-height: 0 !important;
     margin: 0 !important;
-    border-radius: 14px !important;
+    border-radius: 0 !important;
+    border-left: none !important;
+    border-right: none !important;
+    transform: none !important;
+    box-shadow: none !important;
     overflow: hidden !important;
     resize: none !important;
     display: flex !important;
@@ -6112,19 +6127,23 @@ body.theme-yak .lcd-dot.active {
   .vm-manager-window,
   .containers-manager-window {
     position: fixed !important;
-    left: 50% !important;
-    transform: translateX(-50%) !important;
-    top: 52px !important;
-    bottom: 64px !important;
-    bottom: calc(env(safe-area-inset-bottom, 0px) + 64px) !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: 48px !important;
+    bottom: 56px !important;
+    bottom: calc(56px + env(safe-area-inset-bottom, 0px)) !important;
     min-width: 0 !important;
     min-height: 0 !important;
-    width: 96vw !important;
-    max-width: 96vw !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
     height: auto !important;
-    max-height: calc(100dvh - 116px) !important;
+    max-height: calc(100dvh - 104px) !important;
     margin: 0 !important;
-    border-radius: 14px !important;
+    border-radius: 0 !important;
+    border-left: none !important;
+    border-right: none !important;
+    transform: none !important;
+    box-shadow: none !important;
     overflow: hidden !important;
     resize: none !important;
     display: flex !important;
@@ -6230,20 +6249,9 @@ body.theme-yak .lcd-dot.active {
     background-size: 8px 8px !important;
   }
 
-  .win-btn.min-btn {
-    background-color: #ffbd2e !important;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M2 5 L8 5' stroke='%235c4300' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E") !important;
-    background-repeat: no-repeat !important;
-    background-position: center !important;
-    background-size: 8px 8px !important;
-  }
-
+  .win-btn.min-btn,
   .win-btn.max-btn {
-    background-color: #28c840 !important;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M2 4 L2 2 L4 2 M8 6 L8 8 L6 8 M2 2 L4.5 4.5 M8 8 L5.5 5.5' stroke='%23004d00' stroke-width='1.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
-    background-repeat: no-repeat !important;
-    background-position: center !important;
-    background-size: 8px 8px !important;
+    display: none !important;
   }
 
   .fm-toolbar {
@@ -6441,19 +6449,23 @@ body.theme-yak .lcd-dot.active {
   #management-window,
   .management-window {
     position: fixed !important;
-    left: 50% !important;
-    transform: translateX(-50%) !important;
-    top: 52px !important;
-    bottom: 64px !important;
-    bottom: calc(env(safe-area-inset-bottom, 0px) + 64px) !important;
-    width: 96vw !important;
-    max-width: 96vw !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: 48px !important;
+    bottom: 56px !important;
+    bottom: calc(56px + env(safe-area-inset-bottom, 0px)) !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
     min-width: 0 !important;
     height: auto !important;
-    max-height: calc(100dvh - 116px) !important;
+    max-height: calc(100dvh - 104px) !important;
     min-height: 0 !important;
     margin: 0 !important;
-    border-radius: 14px !important;
+    border-radius: 0 !important;
+    border-left: none !important;
+    border-right: none !important;
+    transform: none !important;
+    box-shadow: none !important;
     overflow: hidden !important;
     resize: none !important;
     display: flex !important;
@@ -6620,18 +6632,86 @@ body.theme-yak .lcd-dot.active {
   }
 
   .os-dock-container {
-    bottom: 8px !important;
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 56px !important;
+    height: calc(56px + env(safe-area-inset-bottom, 0px)) !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    transform: none !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: stretch !important;
+    z-index: 9999 !important;
+    background: transparent !important;
+    pointer-events: none !important;
   }
   .os-dock {
-    max-width: 96vw !important;
-    padding: 4px 8px !important;
-    gap: 6px !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 100% !important;
+    border-radius: 0 !important;
+    border-left: none !important;
+    border-right: none !important;
+    border-bottom: none !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
+    background: rgba(10, 16, 26, 0.94) !important;
+    -webkit-backdrop-filter: blur(24px) !important;
+    backdrop-filter: blur(24px) !important;
+    padding: 0 4px calc(env(safe-area-inset-bottom, 0px)) 4px !important;
+    margin: 0 !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-around !important;
+    gap: 0 !important;
+    box-sizing: border-box !important;
+    pointer-events: auto !important;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5) !important;
     overflow-x: auto !important;
+    scrollbar-width: none !important;
+  }
+  .os-dock::-webkit-scrollbar {
+    display: none !important;
   }
   .dock-item {
-    width: 38px !important;
-    height: 38px !important;
-    min-width: 38px !important;
+    flex: 1 1 0 !important;
+    max-width: 72px !important;
+    height: 48px !important;
+    width: auto !important;
+    min-width: 44px !important;
+    border-radius: 8px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    position: relative !important;
+    padding: 4px 2px !important;
+    transition: background 0.15s ease, transform 0.15s ease !important;
+    transform: none !important;
+  }
+  .dock-item:active {
+    transform: scale(0.92) !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+  }
+  .dock-item.active-window::before,
+  .dock-item.active::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 20% !important;
+    right: 20% !important;
+    height: 3px !important;
+    border-radius: 0 0 3px 3px !important;
+    background: var(--brand, #25c2a0) !important;
+    box-shadow: 0 0 8px var(--brand, #25c2a0) !important;
+  }
+  #dock-hover-tooltip {
+    display: none !important;
   }
 
   #top-toast-container {
@@ -6781,6 +6861,82 @@ body.theme-yak .lcd-dot.active {
     padding-top: 8px !important;
     justify-content: flex-end !important;
     gap: 8px !important;
+  }
+
+  .docker-table tbody td:nth-child(2):not(:has(.docker-hw-badge)),
+  #mgmt-pane-docker table tbody td:nth-child(2):not(:has(.docker-hw-badge)) {
+    display: none !important;
+  }
+
+  .docker-actions-cell .btn-docker-inspect,
+  .docker-actions-cell .btn-docker-edit,
+  .docker-actions-cell .btn-docker-stack,
+  .docker-actions-cell .btn-docker-update-single,
+  .docker-actions-cell .btn-docker-backup,
+  .docker-actions-cell .btn-docker-delete {
+    display: none !important;
+  }
+
+  .btn-docker-more-sheet {
+    display: inline-flex !important;
+    min-height: 44px !important;
+    min-width: 44px !important;
+    align-items: center !important;
+    justify-content: center !important;
+    touch-action: manipulation !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    color: #e2e8f0 !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 6px !important;
+  }
+  .btn-docker-more-sheet:active {
+    background: rgba(255, 255, 255, 0.2) !important;
+    transform: scale(0.95) !important;
+  }
+
+  .cw-docker-filter-pills,
+  .docker-filter-pills {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scroll-snap-type: x mandatory !important;
+    scrollbar-width: none !important;
+    max-width: 100% !important;
+    padding-bottom: 4px !important;
+  }
+  .cw-docker-filter-pills::-webkit-scrollbar,
+  .docker-filter-pills::-webkit-scrollbar {
+    display: none !important;
+  }
+  .cw-docker-filter-pills .btn-pill-toggle,
+  .docker-filter-pills .btn-pill-toggle {
+    flex-shrink: 0 !important;
+    scroll-snap-align: start !important;
+    white-space: nowrap !important;
+  }
+
+  div:has(> #btn-cw-refresh),
+  div:has(> #btn-docker-stacks-menu) {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    max-width: 100% !important;
+    padding-bottom: 4px !important;
+  }
+  div:has(> #btn-cw-refresh)::-webkit-scrollbar,
+  div:has(> #btn-docker-stacks-menu)::-webkit-scrollbar {
+    display: none !important;
+  }
+  div:has(> #btn-cw-refresh) > button,
+  div:has(> #btn-docker-stacks-menu) > button,
+  div:has(> #btn-docker-stacks-menu) > div {
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
   }
 
   .docker-table tbody tr:has(td[colspan]),
@@ -7156,19 +7312,23 @@ body.mobile-mode #desktop-widgets-container .cal-glance-bar {
   body.mobile-mode .app-deploy-window,
   body.mobile-mode #app-deploy-modal-window {
     position: fixed !important;
-    left: 50% !important;
-    transform: translateX(-50%) !important;
-    top: 52px !important;
-    bottom: 64px !important;
-    bottom: calc(env(safe-area-inset-bottom, 0px) + 64px) !important;
-    width: 96vw !important;
-    max-width: 96vw !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: 48px !important;
+    bottom: 56px !important;
+    bottom: calc(56px + env(safe-area-inset-bottom, 0px)) !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
     min-width: 0 !important;
     height: auto !important;
-    max-height: calc(100dvh - 116px) !important;
+    max-height: calc(100dvh - 104px) !important;
     min-height: 0 !important;
     margin: 0 !important;
-    border-radius: 14px !important;
+    border-radius: 0 !important;
+    border-left: none !important;
+    border-right: none !important;
+    transform: none !important;
+    box-shadow: none !important;
     overflow: hidden !important;
     resize: none !important;
     display: flex !important;
@@ -7244,23 +7404,29 @@ body.mobile-mode #desktop-widgets-container .cal-glance-bar {
     resize: none !important;
   }
 
-  /* 1. File Explorer Window on Mobile */
+  /* 1. File Explorer & App Windows on Mobile */
   body.mobile-mode .os-window,
-  body.mobile-mode .file-manager-window {
+  body.mobile-mode .file-manager-window,
+  body.mobile-mode .vm-manager-window,
+  body.mobile-mode .containers-manager-window {
     position: fixed !important;
-    left: 50% !important;
-    transform: translateX(-50%) !important;
-    top: 52px !important;
-    bottom: 64px !important;
-    bottom: calc(env(safe-area-inset-bottom, 0px) + 64px) !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: 48px !important;
+    bottom: 56px !important;
+    bottom: calc(56px + env(safe-area-inset-bottom, 0px)) !important;
     min-width: 0 !important;
     min-height: 0 !important;
-    width: 96vw !important;
-    max-width: 96vw !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
     height: auto !important;
-    max-height: calc(100dvh - 116px) !important;
+    max-height: calc(100dvh - 104px) !important;
     margin: 0 !important;
-    border-radius: 14px !important;
+    border-radius: 0 !important;
+    border-left: none !important;
+    border-right: none !important;
+    transform: none !important;
+    box-shadow: none !important;
     overflow: hidden !important;
     resize: none !important;
     display: flex !important;
@@ -7381,20 +7547,9 @@ body.mobile-mode #desktop-widgets-container .cal-glance-bar {
     background-size: 8px 8px !important;
   }
 
-  body.mobile-mode .win-btn.min-btn {
-    background-color: #ffbd2e !important;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M2 5 L8 5' stroke='%235c4300' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E") !important;
-    background-repeat: no-repeat !important;
-    background-position: center !important;
-    background-size: 8px 8px !important;
-  }
-
+  body.mobile-mode .win-btn.min-btn,
   body.mobile-mode .win-btn.max-btn {
-    background-color: #28c840 !important;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M2 4 L2 2 L4 2 M8 6 L8 8 L6 8 M2 2 L4.5 4.5 M8 8 L5.5 5.5' stroke='%23004d00' stroke-width='1.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
-    background-repeat: no-repeat !important;
-    background-position: center !important;
-    background-size: 8px 8px !important;
+    display: none !important;
   }
 
   body.mobile-mode .fm-toolbar {
@@ -7592,19 +7747,23 @@ body.mobile-mode #desktop-widgets-container .cal-glance-bar {
   body.mobile-mode #management-window,
   body.mobile-mode .management-window {
     position: fixed !important;
-    left: 50% !important;
-    transform: translateX(-50%) !important;
-    top: 52px !important;
-    bottom: 64px !important;
-    bottom: calc(env(safe-area-inset-bottom, 0px) + 64px) !important;
-    width: 96vw !important;
-    max-width: 96vw !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: 48px !important;
+    bottom: 56px !important;
+    bottom: calc(56px + env(safe-area-inset-bottom, 0px)) !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
     min-width: 0 !important;
     height: auto !important;
-    max-height: calc(100dvh - 116px) !important;
+    max-height: calc(100dvh - 104px) !important;
     min-height: 0 !important;
     margin: 0 !important;
-    border-radius: 14px !important;
+    border-radius: 0 !important;
+    border-left: none !important;
+    border-right: none !important;
+    transform: none !important;
+    box-shadow: none !important;
     overflow: hidden !important;
     resize: none !important;
     display: flex !important;
@@ -7770,18 +7929,86 @@ body.mobile-mode #desktop-widgets-container .cal-glance-bar {
     flex-shrink: 0 !important;
   }
 body.mobile-mode .os-dock-container {
-  bottom: 8px !important;
+  position: fixed !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100vw !important;
+  max-width: 100vw !important;
+  height: 56px !important;
+  height: calc(56px + env(safe-area-inset-bottom, 0px)) !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  transform: none !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: stretch !important;
+  z-index: 9999 !important;
+  background: transparent !important;
+  pointer-events: none !important;
 }
 body.mobile-mode .os-dock {
-  max-width: 96vw !important;
-  padding: 4px 8px !important;
-  gap: 6px !important;
+  width: 100vw !important;
+  max-width: 100vw !important;
+  height: 100% !important;
+  border-radius: 0 !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-bottom: none !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
+  background: rgba(10, 16, 26, 0.94) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+  backdrop-filter: blur(24px) !important;
+  padding: 0 4px calc(env(safe-area-inset-bottom, 0px)) 4px !important;
+  margin: 0 !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-around !important;
+  gap: 0 !important;
+  box-sizing: border-box !important;
+  pointer-events: auto !important;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5) !important;
   overflow-x: auto !important;
+  scrollbar-width: none !important;
+}
+body.mobile-mode .os-dock::-webkit-scrollbar {
+  display: none !important;
 }
 body.mobile-mode .dock-item {
-  width: 38px !important;
-  height: 38px !important;
-  min-width: 38px !important;
+  flex: 1 1 0 !important;
+  max-width: 72px !important;
+  height: 48px !important;
+  width: auto !important;
+  min-width: 44px !important;
+  border-radius: 8px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: relative !important;
+  padding: 4px 2px !important;
+  transition: background 0.15s ease, transform 0.15s ease !important;
+  transform: none !important;
+}
+body.mobile-mode .dock-item:active {
+  transform: scale(0.92) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+body.mobile-mode .dock-item.active-window::before,
+body.mobile-mode .dock-item.active::before {
+  content: '' !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 20% !important;
+  right: 20% !important;
+  height: 3px !important;
+  border-radius: 0 0 3px 3px !important;
+  background: var(--brand, #25c2a0) !important;
+  box-shadow: 0 0 8px var(--brand, #25c2a0) !important;
+}
+body.mobile-mode #dock-hover-tooltip {
+  display: none !important;
 }
 
 body.mobile-mode #top-toast-container {
@@ -7933,6 +8160,82 @@ body.mobile-mode .copy-history-table.responsive-cards tbody td:last-child {
   gap: 8px !important;
 }
 
+body.mobile-mode .docker-table tbody td:nth-child(2):not(:has(.docker-hw-badge)),
+body.mobile-mode #mgmt-pane-docker table tbody td:nth-child(2):not(:has(.docker-hw-badge)) {
+  display: none !important;
+}
+
+body.mobile-mode .docker-actions-cell .btn-docker-inspect,
+body.mobile-mode .docker-actions-cell .btn-docker-edit,
+body.mobile-mode .docker-actions-cell .btn-docker-stack,
+body.mobile-mode .docker-actions-cell .btn-docker-update-single,
+body.mobile-mode .docker-actions-cell .btn-docker-backup,
+body.mobile-mode .docker-actions-cell .btn-docker-delete {
+  display: none !important;
+}
+
+body.mobile-mode .btn-docker-more-sheet {
+  display: inline-flex !important;
+  min-height: 44px !important;
+  min-width: 44px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  touch-action: manipulation !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #e2e8f0 !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-radius: 6px !important;
+}
+body.mobile-mode .btn-docker-more-sheet:active {
+  background: rgba(255, 255, 255, 0.2) !important;
+  transform: scale(0.95) !important;
+}
+
+body.mobile-mode .cw-docker-filter-pills,
+body.mobile-mode .docker-filter-pills {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  scroll-snap-type: x mandatory !important;
+  scrollbar-width: none !important;
+  max-width: 100% !important;
+  padding-bottom: 4px !important;
+}
+body.mobile-mode .cw-docker-filter-pills::-webkit-scrollbar,
+body.mobile-mode .docker-filter-pills::-webkit-scrollbar {
+  display: none !important;
+}
+body.mobile-mode .cw-docker-filter-pills .btn-pill-toggle,
+body.mobile-mode .docker-filter-pills .btn-pill-toggle {
+  flex-shrink: 0 !important;
+  scroll-snap-align: start !important;
+  white-space: nowrap !important;
+}
+
+body.mobile-mode div:has(> #btn-cw-refresh),
+body.mobile-mode div:has(> #btn-docker-stacks-menu) {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  scrollbar-width: none !important;
+  max-width: 100% !important;
+  padding-bottom: 4px !important;
+}
+body.mobile-mode div:has(> #btn-cw-refresh)::-webkit-scrollbar,
+body.mobile-mode div:has(> #btn-docker-stacks-menu)::-webkit-scrollbar {
+  display: none !important;
+}
+body.mobile-mode div:has(> #btn-cw-refresh) > button,
+body.mobile-mode div:has(> #btn-docker-stacks-menu) > button,
+body.mobile-mode div:has(> #btn-docker-stacks-menu) > div {
+  flex-shrink: 0 !important;
+  white-space: nowrap !important;
+}
+
 body.mobile-mode .docker-table tbody tr:has(td[colspan]),
 body.mobile-mode #mgmt-pane-docker table tbody tr:has(td[colspan]),
 body.mobile-mode #mgmt-sec-disks table tbody tr:has(td[colspan]) {
@@ -7963,6 +8266,191 @@ body.mobile-mode .btn-webui-badge {
 }
 
 
+
+/* =========================================================================
+   MOBILE BOTTOM SHEET COMPONENT (Mobile Modal Replacement)
+   ========================================================================= */
+.mobile-sheet-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 10050;
+  opacity: 0;
+  transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.mobile-sheet-backdrop.open {
+  opacity: 1;
+}
+
+.mobile-bottom-sheet {
+  display: none;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  max-width: 100vw;
+  max-height: 82dvh;
+  background: rgba(15, 23, 42, 0.96);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px 20px 0 0;
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.65);
+  z-index: 10051;
+  flex-direction: column;
+  box-sizing: border-box;
+  padding: 8px 16px calc(16px + env(safe-area-inset-bottom, 0px)) 16px;
+  transform: translateY(100%);
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+.mobile-bottom-sheet.open {
+  transform: translateY(0);
+}
+
+.sheet-handle-bar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 6px 0 10px 0;
+  cursor: grab;
+}
+.sheet-drag-handle {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.sheet-header {
+  margin-bottom: 10px;
+  padding: 0 4px 8px 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.sheet-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sheet-subtitle {
+  font-size: 11.5px;
+  color: #94a3b8;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sheet-content {
+  overflow-y: auto;
+  max-height: 52dvh;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 2px 0;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.sheet-action-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  color: #f1f5f9;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  box-sizing: border-box;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+  touch-action: manipulation;
+}
+.sheet-action-item:hover,
+.sheet-action-item:focus-visible {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.16);
+  outline: none;
+}
+.sheet-action-item:active {
+  transform: scale(0.98);
+  background: rgba(255, 255, 255, 0.12);
+}
+.sheet-action-item.destructive {
+  color: #fb7185;
+  background: rgba(244, 63, 94, 0.08);
+  border-color: rgba(244, 63, 94, 0.22);
+}
+.sheet-action-item.destructive:hover,
+.sheet-action-item.destructive:focus-visible {
+  background: rgba(244, 63, 94, 0.18);
+  border-color: #f43f5e;
+  color: #fff;
+}
+
+.sheet-action-icon {
+  font-size: 16px;
+  line-height: 1;
+  flex-shrink: 0;
+  width: 22px;
+  text-align: center;
+}
+.sheet-action-label {
+  flex: 1 1 auto;
+  font-weight: 600;
+}
+.sheet-action-arrow {
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 18px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.sheet-footer {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.sheet-cancel-btn {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  color: #cbd5e1;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  touch-action: manipulation;
+}
+.sheet-cancel-btn:hover,
+.sheet-cancel-btn:active {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+/* Touch suppression of dock hover tooltip */
+@media (hover: none), (pointer: coarse) {
+  #dock-hover-tooltip {
+    display: none !important;
+  }
+}
 
 /* Command Palette */
 .cmd-palette-overlay {
