@@ -166,6 +166,22 @@ def _discover_disks():
         except Exception as ex:
             logger.debug(f"Silenced exception: {ex}")
 
+    try:
+        from backend.hardware.unraid import get_unraid_disk_roles
+
+        unraid_roles = get_unraid_disk_roles()
+        if unraid_roles:
+            for entry in disks:
+                d_dev = entry["dev"]
+                base_dev = os.path.basename(d_dev)
+                u_info = unraid_roles.get(d_dev) or unraid_roles.get(base_dev)
+                if u_info and u_info.get("is_parity"):
+                    entry["role"] = "parity"
+                    entry["is_parity"] = True
+                    entry["parity_label"] = u_info.get("parity_label", "P")
+    except Exception as e:
+        logger.debug(f"[disks] Error applying unraid roles: {e}")
+
     Z_STATE.cached_disk_list = disks
     Z_STATE.cached_disk_list_time = now
     return disks
@@ -753,6 +769,9 @@ def read_disk_temps_and_io(allow_sync_poll: bool = False):
         curr_count = curr_io.get(dev_name, 0)
         io_active = (curr_count > prev_count) if prev_count > 0 else False
 
+        is_parity = bool(d.get("is_parity")) or role == "parity"
+        parity_label = d.get("parity_label", "P" if is_parity else "")
+
         out.append(
             {
                 "name": _short_name(dev_name, 0),
@@ -763,6 +782,8 @@ def read_disk_temps_and_io(allow_sync_poll: bool = False):
                 "standby": is_standby,
                 "active": io_active,
                 "is_nvme": is_nvme,
+                "is_parity": is_parity,
+                "parity_label": parity_label,
             }
         )
 

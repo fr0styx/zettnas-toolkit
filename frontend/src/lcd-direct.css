@@ -609,4 +609,12 @@ body.lcd-direct #console-window #screen.layout-streamline #streamline-container 
   flex: 1 1 0 !important;
 }
 
+body.lcd-direct #screen .parity-pill,
+body.lcd-direct #screen .sl-parity-tag {
+  color: #fb923c !important;
+  background: rgba(249, 115, 22, 0.28) !important;
+  border-color: rgba(249, 115, 22, 0.6) !important;
+  font-weight: 800 !important;
+}
+
 

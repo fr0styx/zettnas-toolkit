@@ -188,8 +188,75 @@ def read_unraid_status(force: bool = False) -> Dict[str, Any]:
             "total_files": total_files,
             "remain_files": remain_files,
         },
+        "parity_devices": [dev for dev, info in get_unraid_disk_roles().items() if info.get("is_parity")],
     }
 
     _CACHED_UNRAID_STATUS = res
     _LAST_UNRAID_POLL = now
+    return res
+
+
+_CACHED_UNRAID_ROLES: Dict[str, Dict[str, Any]] = {}
+_LAST_UNRAID_ROLES_POLL = 0.0
+_ROLES_CACHE_TTL = 5.0
+
+
+def get_unraid_disk_roles(force: bool = False) -> Dict[str, Dict[str, Any]]:
+    """
+    Parses Unraid /var/local/emhttp/disks.ini to extract authoritative disk roles
+    (e.g. Parity, Data, Cache, Boot) and parity labels.
+    """
+    global _CACHED_UNRAID_ROLES, _LAST_UNRAID_ROLES_POLL
+    now = time.time()
+    if not force and _CACHED_UNRAID_ROLES and (now - _LAST_UNRAID_ROLES_POLL < _ROLES_CACHE_TTL):
+        return _CACHED_UNRAID_ROLES
+
+    emhttp_dir = _find_emhttp_dir()
+    if not emhttp_dir:
+        return {}
+
+    disks_file = os.path.join(emhttp_dir, "disks.ini")
+    if not os.path.isfile(disks_file):
+        return {}
+
+    res: Dict[str, Dict[str, Any]] = {}
+    cur_sec = None
+    cur_data: Dict[str, str] = {}
+    try:
+        with open(disks_file, "r", encoding="utf-8", errors="replace") as f:
+            for raw_line in f:
+                line = raw_line.strip()
+                if line.startswith("[") and line.endswith("]"):
+                    if cur_sec and cur_data.get("device"):
+                        dev = cur_data["device"].strip()
+                        dtype = cur_data.get("type", "Data").strip()
+                        is_parity = dtype.lower() == "parity" or cur_sec.lower().startswith("parity")
+                        parity_lbl = "P2" if cur_sec.lower() == "parity2" else ("P" if is_parity else "")
+                        res[dev] = {
+                            "name": cur_sec,
+                            "type": dtype,
+                            "is_parity": is_parity,
+                            "parity_label": parity_lbl,
+                        }
+                    cur_sec = line[1:-1].strip('"').strip("'")
+                    cur_data = {}
+                elif "=" in line:
+                    key, val = line.split("=", 1)
+                    cur_data[key.strip()] = val.strip().strip('"').strip("'")
+            if cur_sec and cur_data.get("device"):
+                dev = cur_data["device"].strip()
+                dtype = cur_data.get("type", "Data").strip()
+                is_parity = dtype.lower() == "parity" or cur_sec.lower().startswith("parity")
+                parity_lbl = "P2" if cur_sec.lower() == "parity2" else ("P" if is_parity else "")
+                res[dev] = {
+                    "name": cur_sec,
+                    "type": dtype,
+                    "is_parity": is_parity,
+                    "parity_label": parity_lbl,
+                }
+    except Exception as e:
+        logger.debug(f"[Unraid] Error parsing disks.ini: {e}")
+
+    _CACHED_UNRAID_ROLES = res
+    _LAST_UNRAID_ROLES_POLL = now
     return res

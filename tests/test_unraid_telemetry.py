@@ -129,3 +129,76 @@ Action=Moving
     assert status["mover"]["action"] == "Moving"
     assert status["mover"]["total_files"] == 50
     assert status["mover"]["remain_files"] == 20
+
+
+def test_unraid_parse_disk_roles_and_parity(tmp_path, monkeypatch):
+    from backend.hardware.unraid import get_unraid_disk_roles
+
+    emhttp_dir = tmp_path / "emhttp"
+    emhttp_dir.mkdir()
+    var_ini = emhttp_dir / "var.ini"
+    var_ini.write_text(
+        """version="7.3.3"
+NAME="ZettNAS"
+mdColor="green-on"
+mdState="STARTED"
+shareMoverActive="no"
+"""
+    )
+    disks_ini = emhttp_dir / "disks.ini"
+    disks_ini.write_text(
+        """["parity"]
+name="parity"
+device="sdb"
+id="WDC_WD140EDFZ"
+type="Parity"
+status="DISK_OK"
+
+["parity2"]
+name="parity2"
+device="sdc"
+id="WDC_WD140EDFZ_2"
+type="Parity"
+status="DISK_OK"
+
+["disk1"]
+name="disk1"
+device="sda"
+id="WDC_WD80EMAZ"
+type="Data"
+status="DISK_OK"
+
+["cache"]
+name="cache"
+device="nvme0n1"
+id="Samsung_980_PRO"
+type="Cache"
+status="DISK_OK"
+"""
+    )
+
+    monkeypatch.setattr("backend.hardware.unraid._find_emhttp_dir", lambda: str(emhttp_dir))
+    roles = get_unraid_disk_roles(force=True)
+
+    assert "sdb" in roles
+    assert roles["sdb"]["is_parity"] is True
+    assert roles["sdb"]["parity_label"] == "P"
+    assert roles["sdb"]["type"] == "Parity"
+
+    assert "sdc" in roles
+    assert roles["sdc"]["is_parity"] is True
+    assert roles["sdc"]["parity_label"] == "P2"
+
+    assert "sda" in roles
+    assert roles["sda"]["is_parity"] is False
+    assert roles["sda"]["type"] == "Data"
+
+    assert "nvme0n1" in roles
+    assert roles["nvme0n1"]["is_parity"] is False
+    assert roles["nvme0n1"]["type"] == "Cache"
+
+    # Verify parity_devices in read_unraid_status
+    status = read_unraid_status(force=True)
+    assert "sdb" in status["parity_devices"]
+    assert "sdc" in status["parity_devices"]
+    assert "sda" not in status["parity_devices"]

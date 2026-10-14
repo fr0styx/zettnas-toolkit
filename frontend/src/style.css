@@ -1702,9 +1702,12 @@ body.drawer-is-open .chassis-workbench-stage {
 .group-tiles{display:grid;grid-template-columns:repeat(var(--n,1),1fr);gap:6px;flex:1}
 .group-div{width:1px;background:rgba(255,255,255,.08);align-self:stretch;margin:0 1px}
 
+.disk-group.r-parity .group-label{color:#f59e0b}
 .disk-group.r-data  .group-label{color:var(--ok2)}
 .disk-group.r-cache .group-label{color:#7aa2ff}
 .disk-group.r-os    .group-label{color:#c08cff}
+
+.disk.r-parity{border-left-color:#f59e0b}
 
 .disk{
   background:linear-gradient(160deg,var(--card-hi),var(--card));
@@ -1765,8 +1768,58 @@ body.drawer-is-open .chassis-workbench-stage {
 .disk.h-warn{border-top-color:var(--warn);border-right-color:var(--warn);border-bottom-color:var(--warn)}
 .disk.h-crit{border-top-color:var(--crit);border-right-color:var(--crit);border-bottom-color:var(--crit);box-shadow:0 0 8px rgba(240,85,59,.5);animation:pulse 1.2s infinite}
 
-.disk .dt{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;display:flex;align-items:baseline;gap:1px}
+.disk .dt{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;display:flex;align-items:center;justify-content:space-between;gap:2px}
+.disk .dt-temp{display:inline-flex;align-items:baseline;gap:1px}
 .disk .dt .u{font-size:8px;color:var(--muted);font-weight:600}
+
+.parity-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(249, 115, 22, 0.22);
+  color: #fb923c;
+  border: 1px solid rgba(249, 115, 22, 0.5);
+  border-radius: 3px;
+  font-size: 8px;
+  font-weight: 800;
+  padding: 0 3px;
+  line-height: 11px;
+  letter-spacing: 0.2px;
+  flex-shrink: 0;
+  box-shadow: 0 0 5px rgba(249, 115, 22, 0.25);
+  margin-left: auto;
+}
+
+.disks.compact .parity-pill {
+  font-size: 7px;
+  padding: 0 2px;
+  line-height: 9px;
+  border-radius: 2px;
+}
+
+.disk.disk-is-parity .standby-badge {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: auto;
+}
+
+.sl-parity-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(249, 115, 22, 0.22);
+  color: #fb923c;
+  border: 1px solid rgba(249, 115, 22, 0.5);
+  border-radius: 2.5px;
+  font-size: 7.5px;
+  font-weight: 800;
+  padding: 0 3px;
+  line-height: 10px;
+  letter-spacing: 0.2px;
+  flex-shrink: 0;
+  margin: 0 2px;
+  box-shadow: 0 0 5px rgba(249, 115, 22, 0.25);
+}
 
 .disks.compact { gap: 4px; }
 .disks.compact .group-tiles { gap: 4px; }

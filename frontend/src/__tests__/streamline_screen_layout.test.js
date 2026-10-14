@@ -8,7 +8,9 @@ import {
   syncScreenLayoutStyle,
   updateStreamlineLayout,
   updateStreamlineBayChips,
-  initDashboardClicks
+  initDashboardClicks,
+  diskTile,
+  renderDisks
 } from '../components/dashboard.js';
 import {
   syncLcdStyleUI,
@@ -318,5 +320,108 @@ describe('Streamline Minimalist / Big IP Screen Layout Suite', () => {
     // In lcd-direct.css, physical 172x640 panel overrides ensure streamline mode is applied
     expect(lcdDirectCss).toContain('body.lcd-direct #screen.layout-streamline');
     expect(lcdDirectCss).toContain('body.lcd-direct #screen.layout-streamline #streamline-container');
+  });
+
+  describe('Parity Drive Pill & Tag Identification (Classic & Streamline)', () => {
+    it('renders orange parity tag [P] or [P2] inside streamline bay chips', () => {
+      const disks = [
+        { name: 'sdb', role: 'parity', is_parity: true, parity_label: 'P', temp: 34, health: 'ok' },
+        { name: 'sdc', role: 'parity', is_parity: true, parity_label: 'P2', temp: 35, health: 'ok' },
+        { name: 'sda', role: 'data', is_parity: false, temp: 37, health: 'ok' },
+      ];
+
+      updateStreamlineBayChips(disks);
+
+      const bayRow = document.getElementById('sl-bay-row');
+      const chips = bayRow.querySelectorAll('.sl-bay-chip');
+      expect(chips.length).toBe(3);
+
+      // sdb: Parity 1
+      expect(chips[0].classList.contains('chip-parity')).toBe(true);
+      const tag0 = chips[0].querySelector('.sl-parity-tag');
+      expect(tag0).not.toBeNull();
+      expect(tag0.textContent).toBe('P');
+      expect(chips[0].title).toContain('[PARITY]');
+
+      // sdc: Parity 2
+      expect(chips[1].classList.contains('chip-parity')).toBe(true);
+      const tag1 = chips[1].querySelector('.sl-parity-tag');
+      expect(tag1).not.toBeNull();
+      expect(tag1.textContent).toBe('P2');
+
+      // sda: Data drive (no parity tag)
+      expect(chips[2].classList.contains('chip-parity')).toBe(false);
+      expect(chips[2].querySelector('.sl-parity-tag')).toBeNull();
+
+      // Test subsequent live updates (non-structural branch)
+      const updatedDisks = [
+        { name: 'sdb', role: 'parity', is_parity: true, parity_label: 'P', temp: 36, health: 'ok' },
+        { name: 'sdc', role: 'parity', is_parity: true, parity_label: 'P2', temp: 36, health: 'ok' },
+        { name: 'sda', role: 'data', is_parity: false, temp: 38, health: 'ok' },
+      ];
+      updateStreamlineBayChips(updatedDisks);
+
+      expect(chips[0].querySelector('.sl-parity-tag').textContent).toBe('P');
+      expect(chips[1].querySelector('.sl-parity-tag').textContent).toBe('P2');
+      expect(chips[2].querySelector('.sl-parity-tag')).toBeNull();
+    });
+
+    it('renders orange parity pill [P] at lower end of disk tile in Classic Cards', () => {
+      const pTile = diskTile({ name: 'sdb', role: 'parity', is_parity: true, parity_label: 'P', temp: 34, health: 'ok' });
+      expect(pTile.classList.contains('disk-is-parity')).toBe(true);
+      expect(pTile.classList.contains('r-parity')).toBe(true);
+      expect(pTile.title).toContain('[PARITY]');
+
+      const pill = pTile.querySelector('.dt .parity-pill');
+      expect(pill).not.toBeNull();
+      expect(pill.textContent).toBe('P');
+
+      // Parity drive in standby mode still shows parity pill alongside standby badge
+      const pStandbyTile = diskTile({ name: 'sdb', role: 'parity', is_parity: true, parity_label: 'P', temp: null, health: 'standby', standby: true });
+      expect(pStandbyTile.classList.contains('disk-is-parity')).toBe(true);
+      expect(pStandbyTile.querySelector('.dt .standby-badge')).not.toBeNull();
+      expect(pStandbyTile.querySelector('.dt .parity-pill').textContent).toBe('P');
+    });
+
+    it('groups parity drives under dedicated PARITY section ahead of DATA in renderDisks', () => {
+      const disks = [
+        { name: 'sda', role: 'data', is_parity: false, temp: 37, health: 'ok' },
+        { name: 'sdb', role: 'parity', is_parity: true, parity_label: 'P', temp: 34, health: 'ok' },
+        { name: 'nvme0n1', role: 'cache', is_parity: false, temp: 42, health: 'ok' },
+      ];
+
+      renderDisks(disks);
+
+      const row = document.getElementById('diskRow');
+      const groups = row.querySelectorAll('.disk-group');
+      expect(groups.length).toBe(3);
+
+      // Group 0: PARITY
+      expect(groups[0].dataset.role).toBe('parity');
+      expect(groups[0].classList.contains('r-parity')).toBe(true);
+      expect(groups[0].querySelector('.group-label').textContent).toContain('PARITY');
+      expect(groups[0].querySelectorAll('.disk').length).toBe(1);
+      expect(groups[0].querySelector('.disk .parity-pill').textContent).toBe('P');
+
+      // Group 1: DATA
+      expect(groups[1].dataset.role).toBe('data');
+      expect(groups[1].querySelector('.disk .parity-pill')).toBeNull();
+
+      // Group 2: CACHE
+      expect(groups[2].dataset.role).toBe('cache');
+
+      // Test subsequent live updates (non-structural branch)
+      const updatedDisks = [
+        { name: 'sda', role: 'data', is_parity: false, temp: 39, health: 'ok' },
+        { name: 'sdb', role: 'parity', is_parity: true, parity_label: 'P', temp: 35, health: 'ok' },
+        { name: 'nvme0n1', role: 'cache', is_parity: false, temp: 43, health: 'ok' },
+      ];
+      renderDisks(updatedDisks);
+
+      const updatedParityTile = row.querySelector('[data-dev="sdb"]');
+      expect(updatedParityTile.classList.contains('disk-is-parity')).toBe(true);
+      expect(updatedParityTile.querySelector('.dt .parity-pill').textContent).toBe('P');
+      expect(updatedParityTile.querySelector('.dt-temp').textContent).toContain('35');
+    });
   });
 });

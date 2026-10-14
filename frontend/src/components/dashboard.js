@@ -158,6 +158,7 @@ export function formatDiskDisplayName(name) {
 }
 
 const ROLE_META = {
+  parity: { label: 'PARITY', icon: '#i-shield', cls: 'r-parity' },
   data:  { label: 'DATA',  icon: '#i-disk', cls: 'r-data' },
   cache: { label: 'CACHE', icon: '#i-nvme', cls: 'r-cache' },
   os:    { label: 'OS',    icon: '#i-nvme', cls: 'r-os' },
@@ -165,18 +166,26 @@ const ROLE_META = {
 
 export function diskTile(d) {
   const isStandby = Boolean(d.standby || d.health === 'standby');
+  const isParity = Boolean(d.is_parity || d.role === 'parity');
+  const parityLbl = d.parity_label || 'P';
   const lvl = isStandby ? 'standby' : (d.health || lvlDisk(d.temp));
   const t = d.temp;
   const meta = ROLE_META[d.role] || ROLE_META.data;
   const w = isStandby ? 0 : (t == null ? 0 : Math.max(8, Math.min(100, ((t - 20) / 40) * 100)));
   const el = document.createElement('div');
-  el.className = 'disk ' + meta.cls + ' h-' + lvl + (d.active ? ' io-active' : '') + (isStandby ? ' disk-standby' : '');
+  el.className = 'disk ' + meta.cls + ' h-' + lvl + (d.active ? ' io-active' : '') + (isStandby ? ' disk-standby' : '') + (isParity ? ' disk-is-parity' : '');
   el.dataset.dev = d.dev || d.name;
-  el.title = isStandby ? `${d.name} is in standby (spun-down)` : `Click to inspect S.M.A.R.T. health for ${d.name}`;
+  el.title = isStandby
+    ? `${d.name}${isParity ? ' [PARITY]' : ''} is in standby (spun-down)`
+    : `Click to inspect S.M.A.R.T. health for ${d.name}${isParity ? ' [PARITY]' : ''}`;
+
+  const parityBadgeHtml = isParity
+    ? `<span class="parity-pill" title="Parity Protection Drive (${parityLbl})">${escapeHtml(parityLbl)}</span>`
+    : '';
 
   const tempHtml = isStandby
-    ? `<div class="dt s-standby"><span class="standby-badge">STANDBY</span></div>`
-    : `<div class="dt ${'s-' + lvl}">${t == null ? '--' : t}<span class="u">°C</span></div>`;
+    ? `<div class="dt s-standby"><span class="standby-badge">STANDBY</span>${parityBadgeHtml}</div>`
+    : `<div class="dt ${'s-' + lvl}"><span class="dt-temp">${t == null ? '--' : t}<span class="u">°C</span></span>${parityBadgeHtml}</div>`;
 
   const displayName = formatDiskDisplayName(d.name);
 
@@ -232,7 +241,7 @@ export function renderDisks(disks) {
 
   if (structureChanged) {
     row.innerHTML = '';
-    const order = ['data', 'os', 'cache'];
+    const order = ['parity', 'data', 'os', 'cache'];
     const groups = order
       .map((r) => ({ role: r, items: disks.filter((d) => d.role === r) }))
       .filter((g) => g.items.length);
@@ -249,7 +258,8 @@ export function renderDisks(disks) {
       lab.className = 'group-label';
       let roleLabel = meta.label;
       if (isYak) {
-        if (g.role === 'data') roleLabel = 'PARCELS';
+        if (g.role === 'parity') roleLabel = 'ESCORT';
+        else if (g.role === 'data') roleLabel = 'PARCELS';
         else if (g.role === 'cache') roleLabel = 'EXPRESS';
         else if (g.role === 'os') roleLabel = 'LOGISTICS';
       } else {
@@ -277,23 +287,31 @@ export function renderDisks(disks) {
       const tile = row.querySelector(`[data-dev="${devId}"]`);
       if (!tile) return;
       const isStandby = Boolean(d.standby || d.health === 'standby');
+      const isParity = Boolean(d.is_parity || d.role === 'parity');
+      const parityLbl = d.parity_label || 'P';
       const lvl = isStandby ? 'standby' : (d.health || lvlDisk(d.temp));
       const t = d.temp;
       const meta = ROLE_META[d.role] || ROLE_META.data;
       const w = isStandby ? 0 : (t == null ? 0 : Math.max(8, Math.min(100, ((t - 20) / 40) * 100)));
 
-      tile.className = 'disk ' + meta.cls + ' h-' + lvl + (d.active ? ' io-active' : '') + (isStandby ? ' disk-standby' : '');
-      tile.title = isStandby ? `${d.name} is in standby (spun-down)` : `Click to inspect S.M.A.R.T. health for ${d.name}`;
+      tile.className = 'disk ' + meta.cls + ' h-' + lvl + (d.active ? ' io-active' : '') + (isStandby ? ' disk-standby' : '') + (isParity ? ' disk-is-parity' : '');
+      tile.title = isStandby
+        ? `${d.name}${isParity ? ' [PARITY]' : ''} is in standby (spun-down)`
+        : `Click to inspect S.M.A.R.T. health for ${d.name}${isParity ? ' [PARITY]' : ''}`;
 
       const nameEl = tile.querySelector('.dn');
       if (nameEl) nameEl.textContent = formatDiskDisplayName(d.name);
+
+      const parityBadgeHtml = isParity
+        ? `<span class="parity-pill" title="Parity Protection Drive (${parityLbl})">${escapeHtml(parityLbl)}</span>`
+        : '';
 
       const tempEl = tile.querySelector('.dt');
       if (tempEl) {
         tempEl.className = 'dt ' + (isStandby ? 's-standby' : 's-' + lvl);
         tempEl.innerHTML = isStandby
-          ? `<span class="standby-badge">STANDBY</span>`
-          : `${t == null ? '--' : t}<span class="u">°C</span>`;
+          ? `<span class="standby-badge">STANDBY</span>${parityBadgeHtml}`
+          : `<span class="dt-temp">${t == null ? '--' : t}<span class="u">°C</span></span>${parityBadgeHtml}`;
       }
 
       const indEl = tile.querySelector('.disk-indicators');
@@ -753,13 +771,20 @@ export function updateStreamlineBayChips(disks) {
     row.innerHTML = '';
     disks.forEach((d) => {
       const isStandby = Boolean(d.standby || d.health === 'standby');
+      const isParity = Boolean(d.is_parity || d.role === 'parity');
+      const parityLbl = d.parity_label || 'P';
       const lvl = isStandby ? 'standby' : (d.health || lvlDisk(d.temp));
       const chip = document.createElement('div');
-      chip.className = 'sl-bay-chip h-' + lvl + (d.active ? ' io-active' : '') + (isStandby ? ' chip-standby' : '');
+      chip.className = 'sl-bay-chip h-' + lvl + (d.active ? ' io-active' : '') + (isStandby ? ' chip-standby' : '') + (isParity ? ' chip-parity' : '');
       chip.dataset.dev = d.dev || d.name;
       const devPathName = formatDiskDisplayName(d.name);
-      chip.title = isStandby ? `${d.name} is in standby (spun-down)` : `Disk ${d.name} (${devPathName}) - Click to inspect SMART`;
-      chip.innerHTML = `<span class="slot-lbl">${escapeHtml(devPathName)}</span><span class="slot-dot"></span>`;
+      chip.title = isStandby
+        ? `${d.name}${isParity ? ' [PARITY]' : ''} is in standby (spun-down)`
+        : `Disk ${d.name}${isParity ? ' [PARITY]' : ''} (${devPathName}) - Click to inspect SMART`;
+      const parityTag = isParity
+        ? `<span class="sl-parity-tag" title="Parity Protection Drive (${parityLbl})">${escapeHtml(parityLbl)}</span>`
+        : '';
+      chip.innerHTML = `<span class="slot-lbl">${escapeHtml(devPathName)}</span>${parityTag}<span class="slot-dot"></span>`;
       row.appendChild(chip);
     });
   } else {
@@ -768,14 +793,18 @@ export function updateStreamlineBayChips(disks) {
       const chip = row.querySelector(`[data-dev="${devId}"]`);
       if (!chip) return;
       const isStandby = Boolean(d.standby || d.health === 'standby');
+      const isParity = Boolean(d.is_parity || d.role === 'parity');
+      const parityLbl = d.parity_label || 'P';
       const lvl = isStandby ? 'standby' : (d.health || lvlDisk(d.temp));
-      chip.className = 'sl-bay-chip h-' + lvl + (d.active ? ' io-active' : '') + (isStandby ? ' chip-standby' : '');
+      chip.className = 'sl-bay-chip h-' + lvl + (d.active ? ' io-active' : '') + (isStandby ? ' chip-standby' : '') + (isParity ? ' chip-parity' : '');
       const devPathName = formatDiskDisplayName(d.name);
-      chip.title = isStandby ? `${d.name} is in standby (spun-down)` : `Disk ${d.name} (${devPathName}) - Click to inspect SMART`;
-      const lbl = chip.querySelector('.slot-lbl');
-      if (lbl && lbl.textContent !== devPathName) {
-        lbl.textContent = devPathName;
-      }
+      chip.title = isStandby
+        ? `${d.name}${isParity ? ' [PARITY]' : ''} is in standby (spun-down)`
+        : `Disk ${d.name}${isParity ? ' [PARITY]' : ''} (${devPathName}) - Click to inspect SMART`;
+      const parityTag = isParity
+        ? `<span class="sl-parity-tag" title="Parity Protection Drive (${parityLbl})">${escapeHtml(parityLbl)}</span>`
+        : '';
+      chip.innerHTML = `<span class="slot-lbl">${escapeHtml(devPathName)}</span>${parityTag}<span class="slot-dot"></span>`;
     });
   }
 }
