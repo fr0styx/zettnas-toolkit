@@ -16,8 +16,33 @@ def button_listener_daemon():
     COPY_OFFSET = 0x6C0
 
     try:
-        fd = os.open(os.path.join(HOST_DEV, "mem"), os.O_RDWR | os.O_SYNC)
+        mem_cands = [
+            "/dev/mem",
+            os.path.join(HOST_DEV, "mem"),
+            "/host/dev/mem",
+        ]
+        fd = None
+        last_err = None
+        for p in mem_cands:
+            if os.path.exists(p):
+                try:
+                    fd = os.open(p, os.O_RDWR | os.O_SYNC)
+                    break
+                except Exception as err:
+                    last_err = err
+                    continue
+        if fd is None:
+            if last_err:
+                raise last_err
+            fd = os.open(os.path.join(HOST_DEV, "mem"), os.O_RDWR | os.O_SYNC)
         mem = mmap.mmap(fd, 4096, offset=MMIO_BASE)
+    except PermissionError as pe:
+        logger.warning(
+            f"[ZettNAS] Hardware button mapping failed: {pe}. "
+            "Docker container lacks cgroup access to /dev/mem. "
+            "Add --device-cgroup-rule='c 1:1 rwm' to container Extra Parameters in Unraid."
+        )
+        return
     except Exception as e:
         logger.info(f"[ZettNAS] Hardware button mapping failed: {e}")
         return

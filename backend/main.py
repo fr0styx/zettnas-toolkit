@@ -62,14 +62,18 @@ def startup_system():
     read_ip()  # Pre-populate IP cache at startup
     detect_chassis_model()  # Pre-populate chassis model cache
 
-    # Auto-link host KVM and vhost-net nodes into container /dev if present
-    for node, host_node in [("/dev/kvm", "/host/dev/kvm"), ("/dev/vhost-net", "/host/dev/vhost-net")]:
+    # Auto-link host KVM, vhost-net, and mem nodes into container /dev if present
+    for node, host_node in [
+        ("/dev/kvm", "/host/dev/kvm"),
+        ("/dev/vhost-net", "/host/dev/vhost-net"),
+        ("/dev/mem", "/host/dev/mem"),
+    ]:
         if not os.path.exists(node) and os.path.exists(host_node):
             try:
                 os.symlink(host_node, node)
-                logger.info(f"[KVM] Auto-linked {node} -> {host_node}")
+                logger.info(f"[DEV] Auto-linked {node} -> {host_node}")
             except OSError as e:
-                logger.debug(f"[KVM] Could not link {node}: {e}")
+                logger.debug(f"[DEV] Could not link {node}: {e}")
 
     if is_using_default_password():
         logger.warning("=" * 60)

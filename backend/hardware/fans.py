@@ -27,6 +27,24 @@ def is_zettlab_appliance() -> bool:
     if force == "0":
         return False
     try:
+        from backend.hardware.storage import detect_chassis_model
+
+        model = detect_chassis_model()
+        if model in ("d4", "d6u", "d8u"):
+            return True
+    except Exception:
+        pass
+    try:
+        from backend.hardware.unraid import read_unraid_status
+
+        u_status = read_unraid_status()
+        if u_status and u_status.get("available"):
+            u_model = (u_status.get("model") or "").lower()
+            if any(k in u_model for k in ("zettlab", "d4", "d6", "d8", "wy110", "wy120", "wy140")):
+                return True
+    except Exception:
+        pass
+    try:
         from backend.hardware.chassis import ChassisEngine
 
         vendor = ChassisEngine._read_dmi_sys_vendor().lower()
@@ -66,6 +84,8 @@ class ZettlabMmioFanController:
         self._mm: Optional[mmap.mmap] = None
         self._lock = threading.Lock()
         self._failed_previously = False
+        self._last_failed_time = 0.0
+        self._logged_perm_warning = False
 
         self._base_page = self.PHYS_BASE_ADDR & ~(self.PAGE_SIZE - 1)
         self._page_offset = self.PHYS_BASE_ADDR - self._base_page
@@ -83,7 +103,8 @@ class ZettlabMmioFanController:
         with self._lock:
             if self._mm is not None:
                 return True
-            if self._failed_previously:
+            now = time.time()
+            if getattr(self, "_last_failed_time", 0.0) and (now - self._last_failed_time < 30.0):
                 return False
 
             for cand in self._get_candidate_paths():
@@ -107,6 +128,31 @@ class ZettlabMmioFanController:
                         f"[FANS-MMIO] Successfully memory-mapped hardware fan controller at 0x{self.PHYS_BASE_ADDR:X} via {cand}"
                     )
                     return True
+                except PermissionError as pe:
+                    if not getattr(self, "_logged_perm_warning", False):
+                        self._logged_perm_warning = True
+                        logger.warning(
+                            f"[FANS-MMIO] Permission denied opening {cand}: {pe}. "
+                            "Docker container lacks cgroup access to /dev/mem. "
+                            "Add --device-cgroup-rule='c 1:1 rwm' --device-cgroup-rule='c 1:* rwm' "
+                            "to container Extra Parameters in Unraid and ensure SYS_RAWIO capability is granted."
+                        )
+                        try:
+                            from backend.state import add_event
+
+                            add_event(
+                                "warning",
+                                "MMIO Fan Control Permission Denied",
+                                "Docker container lacks cgroup permission to access /dev/mem. "
+                                "Please add --device-cgroup-rule='c 1:1 rwm' to your container's Extra Parameters in Unraid.",
+                            )
+                        except Exception:
+                            pass
+                    if fd is not None:
+                        try:
+                            os.close(fd)
+                        except Exception:
+                            pass
                 except Exception as e:
                     logger.debug(f"[FANS-MMIO] Failed mapping {cand}: {e}")
                     if fd is not None:
@@ -115,7 +161,7 @@ class ZettlabMmioFanController:
                         except Exception:
                             pass
 
-            self._failed_previously = True
+            self._last_failed_time = now
             return False
 
     def is_available(self) -> bool:

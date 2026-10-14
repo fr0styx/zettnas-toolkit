@@ -109,6 +109,17 @@ class ChassisEngine:
                 )
             )
         )
+        if not is_zettlabs:
+            try:
+                from backend.hardware.unraid import read_unraid_status
+
+                u_status = read_unraid_status()
+                if u_status and u_status.get("available"):
+                    u_model = (u_status.get("model") or "").lower()
+                    if any(k in u_model for k in ("zettlab", "zettos", "wy110", "wy120", "wy140")):
+                        is_zettlabs = True
+            except Exception:
+                pass
         is_ugreen = bool("ugreen" in vendor or any(k in dmi_combined for k in ("dxp", "ugos", "ugreen")))
         is_minisforum = bool("minisforum" in vendor or any(k in dmi_combined for k in ("ms-01", "ms-a1", "minisforum")))
         is_custom_appliance = bool(
@@ -297,8 +308,24 @@ class ChassisEngine:
             or ("d6" in dt_model and any(k in dt_model for k in ("zettlab", "rk3588", "rockchip", "zettos")))
             or any(k in dmi_prod for k in ("d6u", "d6 ultra", "d6 pro"))
         ):
-            chassis_model = "ZETTLAB D6"
-            friendly_label = "Zettlab D6 Ultra (6-Bay)"
+            is_d8u = len(hdds) > 6
+            if not is_d8u:
+                try:
+                    from backend.hardware.unraid import read_unraid_status
+
+                    u_status = read_unraid_status()
+                    if u_status and u_status.get("available"):
+                        u_model = (u_status.get("model") or "").lower()
+                        if any(k in u_model for k in ("d8u", "d8 ultra", "nas-8", "8-bay", "d8")):
+                            is_d8u = True
+                except Exception:
+                    pass
+            if is_d8u:
+                chassis_model = "ZETTLAB D8U"
+                friendly_label = "Zettlab D8 Ultra (8-Bay)"
+            else:
+                chassis_model = "ZETTLAB D6"
+                friendly_label = "Zettlab D6 Ultra (6-Bay)"
         elif "wy110" in dmi_board or "wy110" in dmi_sku or "d4" in dmi_board or "d4" in dmi_sku:
             chassis_model = "ZETTLAB D4"
             friendly_label = "Zettlab D4 (4-Bay)"
@@ -306,8 +333,24 @@ class ChassisEngine:
             chassis_model = "ZETTLAB D8U"
             friendly_label = "Zettlab D8 Ultra (8-Bay)"
         elif "wy120" in dmi_board or "wy120" in dmi_sku or "d6" in dmi_board or "d6" in dmi_sku:
-            chassis_model = "ZETTLAB D6"
-            friendly_label = "Zettlab D6 Ultra (6-Bay)"
+            is_d8u = len(hdds) > 6
+            if not is_d8u:
+                try:
+                    from backend.hardware.unraid import read_unraid_status
+
+                    u_status = read_unraid_status()
+                    if u_status and u_status.get("available"):
+                        u_model = (u_status.get("model") or "").lower()
+                        if any(k in u_model for k in ("d8u", "d8 ultra", "nas-8", "8-bay", "d8")):
+                            is_d8u = True
+                except Exception:
+                    pass
+            if is_d8u:
+                chassis_model = "ZETTLAB D8U"
+                friendly_label = "Zettlab D8 Ultra (8-Bay)"
+            else:
+                chassis_model = "ZETTLAB D6"
+                friendly_label = "Zettlab D6 Ultra (6-Bay)"
         elif "wtr" in dmi_prod or "aoostar" in vendor_lower:
             chassis_model = f"AOOSTAR WTR ({raw_prod})" if raw_prod else "AOOSTAR WTR"
             friendly_label = chassis_model
@@ -331,12 +374,12 @@ class ChassisEngine:
                 if det_slug == "d4":
                     chassis_model = "ZETTLAB D4"
                     friendly_label = "Zettlab D4 (4-Bay)"
-                elif det_slug == "d6u":
-                    chassis_model = "ZETTLAB D6"
-                    friendly_label = "Zettlab D6 Ultra (6-Bay)"
                 elif det_slug == "d8u":
                     chassis_model = "ZETTLAB D8U"
                     friendly_label = "Zettlab D8 Ultra (8-Bay)"
+                elif det_slug == "d6u":
+                    chassis_model = "ZETTLAB D6"
+                    friendly_label = "Zettlab D6 Ultra (6-Bay)"
             except Exception:
                 pass
 

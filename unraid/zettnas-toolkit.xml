@@ -14,7 +14,7 @@
   <WebUI>http://[IP]:[PORT:8082]/</WebUI>
   <TemplateURL>https://raw.githubusercontent.com/fr0styx/zettnas-toolkit/main/unraid/zettnas-toolkit.xml</TemplateURL>
   <Icon>https://raw.githubusercontent.com/fr0styx/zettnas-toolkit/main/static/img/icon.png</Icon>
-  <ExtraParams>--restart=unless-stopped --cap-add=SYS_RAWIO --cap-add=SYS_ADMIN --device-cgroup-rule="c 29:* rwm" --device-cgroup-rule="c 226:* rwm" --device-cgroup-rule="c 188:* rwm" --device-cgroup-rule="c 166:* rwm" --device-cgroup-rule="c 10:232 rwm" --device-cgroup-rule="c 10:* rwm" --device-cgroup-rule="b 8:* rwm" --device-cgroup-rule="b 259:* rwm"</ExtraParams>
+  <ExtraParams>--restart=unless-stopped --cap-add=SYS_RAWIO --cap-add=SYS_ADMIN --device-cgroup-rule="c 1:1 rwm" --device-cgroup-rule="c 1:* rwm" --device-cgroup-rule="c 29:* rwm" --device-cgroup-rule="c 226:* rwm" --device-cgroup-rule="c 188:* rwm" --device-cgroup-rule="c 166:* rwm" --device-cgroup-rule="c 10:232 rwm" --device-cgroup-rule="c 10:* rwm" --device-cgroup-rule="b 8:* rwm" --device-cgroup-rule="b 259:* rwm"</ExtraParams>
   <PostArgs/>
   <CPUset/>
   <Config Name="WebUI Port" Target="8082" Default="8082" Mode="tcp" Description="Web interface &amp; telemetry API port" Type="Port" Display="always" Required="true" Mask="false">8082</Config>

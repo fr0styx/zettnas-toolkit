@@ -85,12 +85,12 @@ def get_chassis_friendly_name(slug_or_model: str) -> str:
     if not slug_or_model:
         return "Standard / DIY Enclosure"
     s = str(slug_or_model).strip().lower()
-    if s in ("d4", "wy110", "nas-4", "4-bay") or "d4" in s:
-        return "Zettlab D4 (4-Bay)"
-    if s in ("d6u", "d6", "wy120", "nas-6", "6-bay") or "d6" in s:
-        return "Zettlab D6 Ultra (6-Bay)"
-    if s in ("d8u", "wy140", "nas-8", "8-bay") or "d8u" in s or "d8 ultra" in s:
+    if any(k in s for k in ("d8u", "d8 ultra", "wy140", "nas-8", "8-bay", "d8")):
         return "Zettlab D8 Ultra (8-Bay)"
+    if any(k in s for k in ("d6u", "d6 ultra", "wy120", "nas-6", "6-bay", "d6")):
+        return "Zettlab D6 Ultra (6-Bay)"
+    if any(k in s for k in ("d4", "wy110", "nas-4", "4-bay")):
+        return "Zettlab D4 (4-Bay)"
     if "aoostar" in s or "wtr" in s:
         return "AOOSTAR WTR Enclosure"
     if "ugreen" in s or "dxp" in s:
@@ -165,6 +165,36 @@ def detect_chassis_model(force: bool = False):
     except Exception as e:
         logger.debug(f"[detect_chassis_model] Bay config check ignored: {e}")
 
+    # 1.5 Physical Bay Drive Count check for shared mainboards (e.g. WY120 used in both D6U and D8U)
+    bay_count = 0
+    try:
+        from backend.hardware.hal import DiskDiscoveryHAL
+
+        records = DiskDiscoveryHAL.discover_physical_disks()
+        bay_disks = [
+            r
+            for r in records
+            if r.transport not in ("nvme", "usb", "mmc")
+            and not r.dev_name.startswith(("nvme", "mmcblk", "loop", "ram", "zram"))
+            and r.role != "os"
+            and not r.removable
+        ]
+        bay_count = len(bay_disks)
+    except Exception:
+        try:
+            disks = _discover_disks()
+            bay_count = len(
+                [
+                    d
+                    for d in disks
+                    if not str(d.get("dev", "")).startswith(("nvme", "mmcblk", "loop", "ram", "zram"))
+                    and d.get("role") != "os"
+                    and d.get("transport") != "mmc"
+                ]
+            )
+        except Exception:
+            pass
+
     # 2. Comprehensive DMI & ARM64 Device Tree Hardware Identification
     prod = _read_dmi_text("product_name").lower()
     board = _read_dmi_text("board_name").lower()
@@ -194,6 +224,20 @@ def detect_chassis_model(force: bool = False):
         if any(k in dt_combined for k in ("wy120", "d6 ultra", "d6u", "d6 pro", "nas-6")) or (
             "d6" in dt_combined and any(k in dt_combined for k in ("zettlab", "rk3588", "rockchip", "zettos"))
         ):
+            if bay_count > 6:
+                Z_STATE.cached_chassis_model = "d8u"
+                return "d8u"
+            try:
+                from backend.hardware.unraid import read_unraid_status
+
+                u_status = read_unraid_status()
+                if u_status and u_status.get("available"):
+                    u_model = (u_status.get("model") or "").lower()
+                    if any(k in u_model for k in ("d8u", "d8 ultra", "nas-8", "8-bay", "d8")):
+                        Z_STATE.cached_chassis_model = "d8u"
+                        return "d8u"
+            except Exception:
+                pass
             Z_STATE.cached_chassis_model = "d6u"
             return "d6u"
 
@@ -215,6 +259,20 @@ def detect_chassis_model(force: bool = False):
     if any(k in combined_dmi for k in ("wy120", "d6 ultra", "d6u", "d6 pro", "nas-6")) or (
         "d6" in prod or "d6" in board or "d6" in sku
     ):
+        if bay_count > 6:
+            Z_STATE.cached_chassis_model = "d8u"
+            return "d8u"
+        try:
+            from backend.hardware.unraid import read_unraid_status
+
+            u_status = read_unraid_status()
+            if u_status and u_status.get("available"):
+                u_model = (u_status.get("model") or "").lower()
+                if any(k in u_model for k in ("d8u", "d8 ultra", "nas-8", "8-bay", "d8")):
+                    Z_STATE.cached_chassis_model = "d8u"
+                    return "d8u"
+        except Exception:
+            pass
         Z_STATE.cached_chassis_model = "d6u"
         return "d6u"
 
