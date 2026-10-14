@@ -199,6 +199,23 @@ export function updateFanCurveWorkstation(s) {
     }
   }
 
+  if (fc.zero_rpm_stop_delay !== undefined) {
+    const zeroRpmDelaySlider = $('zero-rpm-delay-slider');
+    const zeroRpmDelayValDisplay = $('zero-rpm-delay-val-display');
+    if (zeroRpmDelaySlider && document.activeElement !== zeroRpmDelaySlider) {
+      zeroRpmDelaySlider.value = fc.zero_rpm_stop_delay;
+      if (zeroRpmDelayValDisplay) zeroRpmDelayValDisplay.textContent = `${fc.zero_rpm_stop_delay}s`;
+    }
+  }
+  if (fc.cpu_hold_secs !== undefined) {
+    const cpuHoldSlider = $('cpu-hold-slider');
+    const cpuHoldValDisplay = $('cpu-hold-val-display');
+    if (cpuHoldSlider && document.activeElement !== cpuHoldSlider) {
+      cpuHoldSlider.value = fc.cpu_hold_secs;
+      if (cpuHoldValDisplay) cpuHoldValDisplay.textContent = `${fc.cpu_hold_secs}s`;
+    }
+  }
+
   const fanStatusBadge = $('fan-status-badge');
   if (fanStatusBadge && fc.driver_mode) {
     if (fc.driver_mode === 'mmio') {
@@ -331,9 +348,15 @@ export function initFanControl() {
   const fanPwmVal = $('fan-pwm-val-display') || $('fan-pwm-val');
   const cpuFanToggle = $('cpu-fan-toggle') || $('fan-ctrl-cpu');
   const zeroRpmToggle = $('zero-rpm-toggle');
+  const cpuHoldSlider = $('cpu-hold-slider');
+  const cpuHoldValDisplay = $('cpu-hold-val-display');
+  const zeroRpmDelaySlider = $('zero-rpm-delay-slider');
+  const zeroRpmDelayValDisplay = $('zero-rpm-delay-val-display');
   const fanCurveSvg = document.querySelector('.fan-curve-svg');
 
   let fanPwmDebounce = null;
+  let cpuHoldDebounce = null;
+  let zeroRpmDelayDebounce = null;
 
   const toggleFilter = (key) => {
     setZoneFilter(state.selectedZoneFilter === key ? 'all' : key);
@@ -405,6 +428,14 @@ export function initFanControl() {
 
       if (cpuFanToggle) cpuFanToggle.checked = !!data.ctrl_cpu_fan;
       if (zeroRpmToggle) zeroRpmToggle.checked = !!data.zero_rpm_enabled;
+      if (cpuHoldSlider && data.cpu_hold_secs !== undefined) {
+        cpuHoldSlider.value = data.cpu_hold_secs;
+        if (cpuHoldValDisplay) cpuHoldValDisplay.textContent = `${data.cpu_hold_secs}s`;
+      }
+      if (zeroRpmDelaySlider && data.zero_rpm_stop_delay !== undefined) {
+        zeroRpmDelaySlider.value = data.zero_rpm_stop_delay;
+        if (zeroRpmDelayValDisplay) zeroRpmDelayValDisplay.textContent = `${data.zero_rpm_stop_delay}s`;
+      }
       if (data.curve_points && data.curve_points.length > 0) {
         state.setCurvePoints(expandTo6Points(data.curve_points));
       } else {
@@ -429,9 +460,39 @@ export function initFanControl() {
     });
   }
 
+  if (cpuHoldSlider) {
+    cpuHoldSlider.addEventListener('input', (e) => {
+      const val = parseInt(e.target.value, 10);
+      if (cpuHoldValDisplay) cpuHoldValDisplay.textContent = `${val}s`;
+      clearTimeout(cpuHoldDebounce);
+      cpuHoldDebounce = setTimeout(async () => {
+        try {
+          await api.post('/api/fans', { cpu_hold_secs: val });
+        } catch (err) {
+          console.warn('Failed to update cpu hold delay', err);
+        }
+      }, 250);
+    });
+  }
+
   if (zeroRpmToggle) {
     zeroRpmToggle.addEventListener('change', (e) => {
       postFanPwm(currentFanProfile, undefined, undefined, undefined, undefined, undefined, e.target.checked);
+    });
+  }
+
+  if (zeroRpmDelaySlider) {
+    zeroRpmDelaySlider.addEventListener('input', (e) => {
+      const val = parseInt(e.target.value, 10);
+      if (zeroRpmDelayValDisplay) zeroRpmDelayValDisplay.textContent = `${val}s`;
+      clearTimeout(zeroRpmDelayDebounce);
+      zeroRpmDelayDebounce = setTimeout(async () => {
+        try {
+          await api.post('/api/fans', { zero_rpm_stop_delay: val });
+        } catch (err) {
+          console.warn('Failed to update zero rpm stop delay', err);
+        }
+      }, 250);
     });
   }
 

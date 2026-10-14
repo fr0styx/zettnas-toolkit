@@ -168,8 +168,8 @@ def test_nvme_ceiling_overrides_zero_rpm():
 # =========================================================================
 
 
-def test_anti_flutter_180s_delay_gating():
-    """Zero RPM requires 180 continuous seconds of cold standby before stopping fans."""
+def test_anti_flutter_delay_gating():
+    """Zero RPM requires continuous seconds of cold standby before stopping fans."""
     now = 1000.0
     st1 = Z_STATE.fan_state_tracker["pwm1"]
     st1["current"] = 67
@@ -184,21 +184,23 @@ def test_anti_flutter_180s_delay_gating():
 
     assert st1["standby_since"] == 1000.0
 
-    # At t=1050 (50s elapsed) -> Not ready
-    t_50 = 1050.0
-    z1_zero_rpm_ready_50 = bool(
-        z1_eligible and st1.get("standby_since", 0.0) > 0.0 and (t_50 - st1["standby_since"]) >= FAN_ZERO_RPM_STOP_DELAY
-    )
-    assert z1_zero_rpm_ready_50 is False
-
-    # At t=1180 (180s elapsed) -> Ready!
-    t_180 = 1180.0
-    z1_zero_rpm_ready_180 = bool(
+    # At half of delay elapsed -> Not ready
+    t_half = now + (FAN_ZERO_RPM_STOP_DELAY / 2)
+    z1_zero_rpm_ready_half = bool(
         z1_eligible
         and st1.get("standby_since", 0.0) > 0.0
-        and (t_180 - st1["standby_since"]) >= FAN_ZERO_RPM_STOP_DELAY
+        and (t_half - st1["standby_since"]) >= FAN_ZERO_RPM_STOP_DELAY
     )
-    assert z1_zero_rpm_ready_180 is True
+    assert z1_zero_rpm_ready_half is False
+
+    # At full delay elapsed -> Ready!
+    t_ready = now + FAN_ZERO_RPM_STOP_DELAY
+    z1_zero_rpm_ready = bool(
+        z1_eligible
+        and st1.get("standby_since", 0.0) > 0.0
+        and (t_ready - st1["standby_since"]) >= FAN_ZERO_RPM_STOP_DELAY
+    )
+    assert z1_zero_rpm_ready is True
 
     # Step 2: Sudden temperature spike or disk wake up breaks eligibility
     z1_eligible = False
@@ -327,3 +329,35 @@ def test_stall_watchdog_suppression_logic():
     cmd_pwm_spinup = FAN_KICKSTART_PWM
     is_suppressed_grace = (cmd_pwm_spinup == 0) or ((now - last_spinup_recent) < FAN_SPINUP_GRACE_SECS)
     assert is_suppressed_grace is True  # Suppressed by 6s grace window
+
+
+# =========================================================================
+# 8. Standby Cooldown Immediate Idle Step-Down & Fast-Path Tests
+# =========================================================================
+
+
+def test_standby_cooldown_bypasses_downward_hold_lock():
+    """When drives enter standby, fan must immediately drop to idle FAN_MIN_PWM without being locked at peak PWM."""
+    st = Z_STATE.fan_state_tracker["pwm1"]
+    st["current"] = FAN_MAX_PWM  # Fan was blasting at 183 PWM
+    now = 6000.0
+    st["last_up_time"] = now  # High speed hold timer just set
+
+    # In standby cooldown (eligible but not yet ready):
+    # Target is FAN_MIN_PWM (58) and hold is set to 0s to eliminate double-delay bug
+    with patch("time.time", return_value=now + 5.0):  # only 5s later (< 30s)
+        active_pwm = apply_zone_pwm(1, FAN_MIN_PWM, hold_secs=0, allow_zero=False)
+        assert active_pwm == FAN_MIN_PWM  # Immediately drops to 58 PWM whisper-quiet!
+        assert st["current"] == FAN_MIN_PWM
+
+
+def test_fast_path_delay_for_cold_drives():
+    """When zone temp is <= 32°C, effective cooldown delay is clamped to 15s."""
+    zero_rpm_stop_delay = 30
+    t_cold = 30
+    effective_cold = min(zero_rpm_stop_delay, 15) if t_cold <= 32 else zero_rpm_stop_delay
+    assert effective_cold == 15
+
+    t_warm = 34
+    effective_warm = min(zero_rpm_stop_delay, 15) if t_warm <= 32 else zero_rpm_stop_delay
+    assert effective_warm == 30

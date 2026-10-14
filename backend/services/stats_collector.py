@@ -8,6 +8,8 @@ import traceback
 from backend.config import (
     DB_PATH,
     ENABLE_FB,
+    FAN_CPU_HOLD_SECS,
+    FAN_DISK_HOLD_SECS,
     FAN_MAX_PWM,
     FAN_MIN_PWM,
     FAN_SPINUP_GRACE_SECS,
@@ -106,6 +108,8 @@ def stats_collector_daemon():
                 "zero_rpm_nvme_ceiling": FAN_ZERO_RPM_DEFAULT_NVME_CEILING,
                 "zero_rpm_stop_temp": FAN_ZERO_RPM_DEFAULT_STOP_TEMP,
                 "zero_rpm_start_temp": FAN_ZERO_RPM_DEFAULT_START_TEMP,
+                "disk_hold_secs": FAN_DISK_HOLD_SECS,
+                "cpu_hold_secs": FAN_CPU_HOLD_SECS,
             }
             loaded_fan_cfg = read_json_cached(FAN_STATE_FILE, {})
             if isinstance(loaded_fan_cfg, dict):
@@ -120,6 +124,8 @@ def stats_collector_daemon():
             zero_rpm_stop_temp = fan_cfg.get("zero_rpm_stop_temp", FAN_ZERO_RPM_DEFAULT_STOP_TEMP)
             zero_rpm_start_temp = fan_cfg.get("zero_rpm_start_temp", FAN_ZERO_RPM_DEFAULT_START_TEMP)
             zero_rpm_stop_delay = int(fan_cfg.get("zero_rpm_stop_delay", FAN_ZERO_RPM_STOP_DELAY))
+            disk_hold_secs = int(fan_cfg.get("disk_hold_secs", FAN_DISK_HOLD_SECS))
+            cpu_hold_secs = int(fan_cfg.get("cpu_hold_secs", FAN_CPU_HOLD_SECS))
 
             # Chassis Topology Resolution
             chassis_model = detect_chassis_model()
@@ -332,53 +338,80 @@ def stats_collector_daemon():
             else:
                 st2["standby_since"] = 0.0
 
+            # Standby Cooldown & Anti-Flutter Delay Resolution
+            # Dynamic fast-path: when drive bay is already at/below ambient equilibrium (<= 32°C),
+            # cooldown delay is safely reduced to 15s to verify stable platter halt without noise linger.
+            effective_delay_z1 = min(zero_rpm_stop_delay, 15) if t_zone1 <= 32 else zero_rpm_stop_delay
+            effective_delay_z2 = min(zero_rpm_stop_delay, 15) if t_zone2 <= 32 else zero_rpm_stop_delay
+
             z1_zero_rpm_ready = bool(
                 z1_eligible
                 and st1.get("standby_since", 0.0) > 0.0
-                and (now - st1["standby_since"]) >= zero_rpm_stop_delay
+                and (now - st1["standby_since"]) >= effective_delay_z1
             )
             z2_zero_rpm_ready = bool(
                 z2_eligible
                 and st2.get("standby_since", 0.0) > 0.0
-                and (now - st2["standby_since"]) >= zero_rpm_stop_delay
+                and (now - st2["standby_since"]) >= effective_delay_z2
             )
 
             z1_rem = (
-                max(0, int(zero_rpm_stop_delay - (now - st1["standby_since"])))
+                max(0, int(effective_delay_z1 - (now - st1["standby_since"])))
                 if (z1_eligible and st1.get("standby_since", 0.0) > 0 and not z1_zero_rpm_ready)
                 else 0
             )
             z2_rem = (
-                max(0, int(zero_rpm_stop_delay - (now - st2["standby_since"])))
+                max(0, int(effective_delay_z2 - (now - st2["standby_since"])))
                 if (z2_eligible and st2.get("standby_since", 0.0) > 0 and not z2_zero_rpm_ready)
                 else 0
             )
 
             if critical_override:
                 raw_pwm1 = raw_pwm2 = FAN_MAX_PWM
-                active_pwm1 = apply_zone_pwm(1, FAN_MAX_PWM, hold_secs=120, allow_zero=False)
-                active_pwm2 = apply_zone_pwm(2, FAN_MAX_PWM, hold_secs=120, allow_zero=False)
+                active_pwm1 = apply_zone_pwm(1, FAN_MAX_PWM, hold_secs=disk_hold_secs, allow_zero=False)
+                active_pwm2 = apply_zone_pwm(2, FAN_MAX_PWM, hold_secs=disk_hold_secs, allow_zero=False)
                 custom_pwms = {"pwm1": active_pwm1, "pwm2": active_pwm2}
                 if ctrl_cpu_fan:
-                    active_pwm3 = apply_zone_pwm(3, FAN_MAX_PWM, hold_secs=90, allow_zero=False)
+                    active_pwm3 = apply_zone_pwm(3, FAN_MAX_PWM, hold_secs=cpu_hold_secs, allow_zero=False)
                     custom_pwms["pwm3"] = active_pwm3
                 else:
                     active_pwm3 = 0
                 set_fan_pwm("auto", custom_pwms=custom_pwms, ctrl_cpu_fan=ctrl_cpu_fan, zero_rpm_allowed=False)
             elif profile == "auto":
-                target_pwm1 = 0 if z1_zero_rpm_ready else max(FAN_MIN_PWM, raw_pwm1)
-                target_pwm2 = 0 if z2_zero_rpm_ready else max(FAN_MIN_PWM, raw_pwm2)
+                # Standby and Zero-RPM target and hold resolution:
+                # 1. If zero-RPM ready -> drop to 0 PWM with 0s hold
+                # 2. If eligible for zero-RPM (cooldown phase) -> ramp directly down to FAN_MIN_PWM without being held at peak PWM
+                # 3. Else active spinning -> dynamic thermal curve with disk_hold_secs downward hysteresis hold
+                if z1_zero_rpm_ready:
+                    target_pwm1 = 0
+                    z1_hold = 0
+                elif z1_eligible:
+                    target_pwm1 = FAN_MIN_PWM
+                    z1_hold = 0
+                else:
+                    target_pwm1 = max(FAN_MIN_PWM, raw_pwm1)
+                    z1_hold = disk_hold_secs
+
+                if z2_zero_rpm_ready:
+                    target_pwm2 = 0
+                    z2_hold = 0
+                elif z2_eligible:
+                    target_pwm2 = FAN_MIN_PWM
+                    z2_hold = 0
+                else:
+                    target_pwm2 = max(FAN_MIN_PWM, raw_pwm2)
+                    z2_hold = disk_hold_secs
 
                 allow_zero_z1 = z1_zero_rpm_ready
                 allow_zero_z2 = z2_zero_rpm_ready
 
-                active_pwm1 = apply_zone_pwm(1, target_pwm1, hold_secs=120, allow_zero=allow_zero_z1)
-                active_pwm2 = apply_zone_pwm(2, target_pwm2, hold_secs=120, allow_zero=allow_zero_z2)
+                active_pwm1 = apply_zone_pwm(1, target_pwm1, hold_secs=z1_hold, allow_zero=allow_zero_z1)
+                active_pwm2 = apply_zone_pwm(2, target_pwm2, hold_secs=z2_hold, allow_zero=allow_zero_z2)
 
                 custom_pwms = {"pwm1": active_pwm1, "pwm2": active_pwm2}
 
                 if ctrl_cpu_fan:
-                    active_pwm3 = apply_zone_pwm(3, raw_pwm3, hold_secs=90, allow_zero=False)
+                    active_pwm3 = apply_zone_pwm(3, raw_pwm3, hold_secs=cpu_hold_secs, allow_zero=False)
                     custom_pwms["pwm3"] = active_pwm3
                 else:
                     active_pwm3 = 0
@@ -393,9 +426,11 @@ def stats_collector_daemon():
                 pct_map = {"quiet": 67, "balanced": 120, "performance": 155, "full": FAN_MAX_PWM}
                 man_pwm = pct_map.get(profile, int((fan_cfg.get("manual_pct", 60) / 100.0) * FAN_MAX_PWM))
                 man_pwm = max(FAN_MIN_PWM, min(FAN_MAX_PWM, man_pwm))
-                active_pwm1 = apply_zone_pwm(1, man_pwm, hold_secs=120, allow_zero=False)
-                active_pwm2 = apply_zone_pwm(2, man_pwm, hold_secs=120, allow_zero=False)
-                active_pwm3 = apply_zone_pwm(3, man_pwm, hold_secs=90, allow_zero=False) if ctrl_cpu_fan else 0
+                active_pwm1 = apply_zone_pwm(1, man_pwm, hold_secs=disk_hold_secs, allow_zero=False)
+                active_pwm2 = apply_zone_pwm(2, man_pwm, hold_secs=disk_hold_secs, allow_zero=False)
+                active_pwm3 = (
+                    apply_zone_pwm(3, man_pwm, hold_secs=cpu_hold_secs, allow_zero=False) if ctrl_cpu_fan else 0
+                )
                 custom_pwms = {"pwm1": active_pwm1, "pwm2": active_pwm2}
                 if ctrl_cpu_fan:
                     custom_pwms["pwm3"] = active_pwm3
@@ -552,8 +587,8 @@ def stats_collector_daemon():
                 apply_led_state(cfg)
             stats_collector_daemon._last_led_night = in_led_night
 
-            disk_hold_rem = max(get_hold_remaining("pwm1", 120), get_hold_remaining("pwm2", 120))
-            cpu_hold_rem = get_hold_remaining("pwm3", 90)
+            disk_hold_rem = max(get_hold_remaining("pwm1", disk_hold_secs), get_hold_remaining("pwm2", disk_hold_secs))
+            cpu_hold_rem = get_hold_remaining("pwm3", cpu_hold_secs)
 
             events_list = list(Z_STATE.event_log)
             docker_list = read_docker_containers()
@@ -622,6 +657,8 @@ def stats_collector_daemon():
                     "cpu_pwm": active_pwm3,
                     "disk_hold_remaining": disk_hold_rem,
                     "cpu_hold_remaining": cpu_hold_rem,
+                    "disk_hold_secs": disk_hold_secs,
+                    "cpu_hold_secs": cpu_hold_secs,
                     "ctrl_cpu_fan": ctrl_cpu_fan,
                     "profile": profile,
                     "temp_min": temp_min,

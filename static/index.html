@@ -203,13 +203,13 @@
   })();
 </script>
 <style>html,body{color:#eaf1f8;background-color:#080c10;width:100%;height:100%;margin:0;padding:0;overflow:hidden}html.auth-required body{background:radial-gradient(circle at 50% 20%,#151d29 0%,#080c10 70%)!important}#login-overlay{z-index:999999;background:#080c10;justify-content:center;align-items:center;display:flex;position:fixed;inset:0}html.has-auth-session #login-overlay{display:none!important}html.auth-required #login-overlay{display:flex!important}html.is-desktop-locked #lock-overlay{opacity:1!important;display:flex!important}html.is-desktop-locked body{overflow:hidden!important}html.auth-required .studio-viewport-wrapper,html.auth-required .suite-navbar,html.auth-required #desktop-icons-container,html.auth-required .desktop-icons-container,html.auth-required .top-nav,html.auth-required #desktop-widgets-container,html.auth-required #os-dock-container,html.auth-required .smart-modal-backdrop,html.auth-required .os-window,html.auth-required .notif-center-window{display:none!important}</style>
-  <script type="module" crossorigin src="/assets/index-Cmd5dfNz.js"></script>
+  <script type="module" crossorigin src="/assets/index-BdbJgP74.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-CbXtAM7H.js">
-  <link rel="modulepreload" crossorigin href="/assets/dock-D8AyDs4m.js">
-  <link rel="modulepreload" crossorigin href="/assets/dashboard-TwN-Jo_G.js">
-  <link rel="modulepreload" crossorigin href="/assets/users-Dw-U5sYu.js">
-  <link rel="modulepreload" crossorigin href="/assets/auth-CURgjDc3.js">
-  <link rel="modulepreload" crossorigin href="/assets/vm-manager-DTBxESVV.js">
+  <link rel="modulepreload" crossorigin href="/assets/dock-DsGw8J_4.js">
+  <link rel="modulepreload" crossorigin href="/assets/dashboard-uOowvar0.js">
+  <link rel="modulepreload" crossorigin href="/assets/users-C1Xp51Aj.js">
+  <link rel="modulepreload" crossorigin href="/assets/auth-CycTbU3S.js">
+  <link rel="modulepreload" crossorigin href="/assets/vm-manager-Uf7h1-ON.js">
   <link rel="stylesheet" crossorigin href="/assets/index-CS7-dLGu.css">
 </head>
 <body class="studio-workbench no-specular-glow">
@@ -2148,7 +2148,14 @@
           </label>
         </div>
         <div class="card-instruction" data-i18n="settings.control_cpu_desc">
-          When enabled, applies software thermal curve with a 90-second upward hold timer.
+          When enabled, applies software thermal curve with a 30-second anti-flutter hold timer.
+        </div>
+        <div class="slider-row" style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center;">
+          <label for="cpu-hold-slider" class="slider-label" style="opacity: 0.8; font-size: 11px; text-transform: uppercase; font-weight: 700; cursor: pointer;" data-i18n="settings.cpu_hold_label">Anti-Flutter Hold Delay</label>
+          <span id="cpu-hold-val-display" style="font-family: monospace; font-size: 12px; font-weight: 700; color: var(--ok2);">30s</span>
+        </div>
+        <div class="slider-row" style="margin-top: 4px;">
+          <input type="range" id="cpu-hold-slider" min="10" max="90" value="30" step="5" class="custom-slider" aria-label="Anti-Flutter Hold Delay">
         </div>
       </div>
 
@@ -2166,6 +2173,13 @@
         <div class="zero-rpm-status-row" style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
           <span id="zero-rpm-badge-z1" class="zero-rpm-badge" style="font-size:10px; padding:3px 8px; border-radius:4px; border:1px solid rgba(255,255,255,0.1); font-weight:600;">Zone 1: Active</span>
           <span id="zero-rpm-badge-z2" class="zero-rpm-badge" style="font-size:10px; padding:3px 8px; border-radius:4px; border:1px solid rgba(255,255,255,0.1); font-weight:600;">Zone 2: Active</span>
+        </div>
+        <div class="slider-row" style="margin-top: 12px; display: flex; justify-content: space-between; align-items: center;">
+          <label for="zero-rpm-delay-slider" class="slider-label" style="opacity: 0.8; font-size: 11px; text-transform: uppercase; font-weight: 700; cursor: pointer;" data-i18n="settings.zero_rpm_stop_delay_label">Standby Cooldown Delay</label>
+          <span id="zero-rpm-delay-val-display" style="font-family: monospace; font-size: 12px; font-weight: 700; color: var(--ok2);">30s</span>
+        </div>
+        <div class="slider-row" style="margin-top: 4px;">
+          <input type="range" id="zero-rpm-delay-slider" min="10" max="180" value="30" step="5" class="custom-slider" aria-label="Standby Cooldown Delay">
         </div>
       </div>
 

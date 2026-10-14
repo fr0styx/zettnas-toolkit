@@ -2188,7 +2188,14 @@
           </label>
         </div>
         <div class="card-instruction" data-i18n="settings.control_cpu_desc">
-          When enabled, applies software thermal curve with a 90-second upward hold timer.
+          When enabled, applies software thermal curve with a 30-second anti-flutter hold timer.
+        </div>
+        <div class="slider-row" style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center;">
+          <label for="cpu-hold-slider" class="slider-label" style="opacity: 0.8; font-size: 11px; text-transform: uppercase; font-weight: 700; cursor: pointer;" data-i18n="settings.cpu_hold_label">Anti-Flutter Hold Delay</label>
+          <span id="cpu-hold-val-display" style="font-family: monospace; font-size: 12px; font-weight: 700; color: var(--ok2);">30s</span>
+        </div>
+        <div class="slider-row" style="margin-top: 4px;">
+          <input type="range" id="cpu-hold-slider" min="10" max="90" value="30" step="5" class="custom-slider" aria-label="Anti-Flutter Hold Delay">
         </div>
       </div>
 
@@ -2206,6 +2213,13 @@
         <div class="zero-rpm-status-row" style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
           <span id="zero-rpm-badge-z1" class="zero-rpm-badge" style="font-size:10px; padding:3px 8px; border-radius:4px; border:1px solid rgba(255,255,255,0.1); font-weight:600;">Zone 1: Active</span>
           <span id="zero-rpm-badge-z2" class="zero-rpm-badge" style="font-size:10px; padding:3px 8px; border-radius:4px; border:1px solid rgba(255,255,255,0.1); font-weight:600;">Zone 2: Active</span>
+        </div>
+        <div class="slider-row" style="margin-top: 12px; display: flex; justify-content: space-between; align-items: center;">
+          <label for="zero-rpm-delay-slider" class="slider-label" style="opacity: 0.8; font-size: 11px; text-transform: uppercase; font-weight: 700; cursor: pointer;" data-i18n="settings.zero_rpm_stop_delay_label">Standby Cooldown Delay</label>
+          <span id="zero-rpm-delay-val-display" style="font-family: monospace; font-size: 12px; font-weight: 700; color: var(--ok2);">30s</span>
+        </div>
+        <div class="slider-row" style="margin-top: 4px;">
+          <input type="range" id="zero-rpm-delay-slider" min="10" max="180" value="30" step="5" class="custom-slider" aria-label="Standby Cooldown Delay">
         </div>
       </div>
 

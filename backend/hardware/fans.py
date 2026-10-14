@@ -6,6 +6,7 @@ import time
 from typing import List, Optional
 
 from backend.config import (
+    FAN_DISK_HOLD_SECS,
     FAN_FAILSAFE_PWM,
     FAN_KICKSTART_PWM,
     FAN_KICKSTART_SECS,
@@ -399,7 +400,7 @@ def calc_curve_pwm(
     return clamp_fan_pwm(val, allow_zero=allow_zero)
 
 
-def apply_zone_pwm(pwm_index, target_pwm, hold_secs=120, allow_zero=False):
+def apply_zone_pwm(pwm_index, target_pwm, hold_secs=FAN_DISK_HOLD_SECS, allow_zero=False):
     now = time.time()
     pwm_key = f"pwm{pwm_index}"
     # CPU fan (pwm3) is strictly forbidden from entering Zero RPM
@@ -454,7 +455,7 @@ def apply_zone_pwm(pwm_index, target_pwm, hold_secs=120, allow_zero=False):
     return current
 
 
-def get_hold_remaining(pwm_key, hold_secs=120):
+def get_hold_remaining(pwm_key, hold_secs=FAN_DISK_HOLD_SECS):
     state = Z_STATE.fan_state_tracker.get(pwm_key, {})
     last_up = state.get("last_up_time", 0.0)
     rem = hold_secs - (time.time() - last_up)

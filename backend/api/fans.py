@@ -2,6 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from backend.auth import require_scope
 from backend.config import (
+    FAN_CPU_HOLD_SECS,
+    FAN_DISK_HOLD_SECS,
     FAN_STATE_FILE,
     FAN_ZERO_RPM_DEFAULT_NVME_CEILING,
     FAN_ZERO_RPM_DEFAULT_START_TEMP,
@@ -25,6 +27,8 @@ FAN_DEFAULTS = {
     "zero_rpm_stop_temp": FAN_ZERO_RPM_DEFAULT_STOP_TEMP,
     "zero_rpm_start_temp": FAN_ZERO_RPM_DEFAULT_START_TEMP,
     "zero_rpm_stop_delay": FAN_ZERO_RPM_STOP_DELAY,
+    "disk_hold_secs": FAN_DISK_HOLD_SECS,
+    "cpu_hold_secs": FAN_CPU_HOLD_SECS,
 }
 VALID_PROFILES = {"auto", "quiet", "balanced", "performance", "full", "manual"}
 
@@ -63,6 +67,10 @@ def post_fans(req: FanConfigRequest):
         data["zero_rpm_start_temp"] = max(30, min(55, int(data["zero_rpm_start_temp"])))
     if data.get("zero_rpm_stop_delay") is not None:
         data["zero_rpm_stop_delay"] = max(10, min(600, int(data["zero_rpm_stop_delay"])))
+    if data.get("disk_hold_secs") is not None:
+        data["disk_hold_secs"] = max(5, min(300, int(data["disk_hold_secs"])))
+    if data.get("cpu_hold_secs") is not None:
+        data["cpu_hold_secs"] = max(5, min(300, int(data["cpu_hold_secs"])))
     for curve_field in (
         "curve_points",
         "nvme_curve_points",

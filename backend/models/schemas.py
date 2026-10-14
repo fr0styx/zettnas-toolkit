@@ -67,6 +67,8 @@ class FanConfigRequest(BaseModel):
     zero_rpm_stop_temp: int | None = Field(default=None, ge=25, le=45)
     zero_rpm_start_temp: int | None = Field(default=None, ge=30, le=55)
     zero_rpm_stop_delay: int | None = Field(default=None, ge=10, le=600)
+    disk_hold_secs: int | None = Field(default=None, ge=5, le=300)
+    cpu_hold_secs: int | None = Field(default=None, ge=5, le=300)
     curve_points: list[list[int]] | None = Field(default=None, max_length=12)
     nvme_curve_points: list[list[int]] | None = Field(default=None, max_length=12)
     cpu_curve_points: list[list[int]] | None = Field(default=None, max_length=12)
