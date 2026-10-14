@@ -8107,6 +8107,7 @@ export function closeDiagnosticsPreviewModal() {
 
 export function openDiagnosticsPreviewModal(data) {
   const overlay = document.getElementById('diagnostics-preview-modal-overlay');
+  const banner = document.getElementById('diagnostics-preview-banner');
   const grid = document.getElementById('diagnostics-preview-grid');
   const mdEl = document.getElementById('diagnostics-preview-md');
   if (!overlay || !data) return;
@@ -8115,11 +8116,76 @@ export function openDiagnosticsPreviewModal(data) {
     mdEl.textContent = data.support_markdown || 'No summary generated.';
   }
 
+  if (banner) {
+    const status = data.executive_status || 'HEALTHY';
+    const alerts = Array.isArray(data.alerts) ? data.alerts : [];
+
+    let borderColor = 'rgba(37, 194, 160, 0.3)';
+    let bgColor = 'rgba(37, 194, 160, 0.08)';
+    let badgeColor = 'var(--accent, #25c2a0)';
+    let icon = '🟢';
+    let title = t('diagnostics.status_healthy', 'SYSTEM HEALTHY');
+    let desc = t('diagnostics.status_healthy_desc', 'All hardware parameters, storage arrays, and containers are operating normally.');
+
+    if (status === 'CRITICAL') {
+      borderColor = 'rgba(239, 68, 68, 0.5)';
+      bgColor = 'rgba(239, 68, 68, 0.12)';
+      badgeColor = '#ef4444';
+      icon = '🚨';
+      title = t('diagnostics.status_critical', 'CRITICAL ISSUES DETECTED');
+      desc = t('diagnostics.status_critical_desc', 'Hardware failure, degraded drive arrays, or thermal clamp thresholds reached.');
+    } else if (status === 'ATTENTION_REQUIRED') {
+      borderColor = 'rgba(245, 158, 11, 0.4)';
+      bgColor = 'rgba(245, 158, 11, 0.1)';
+      badgeColor = '#f59e0b';
+      icon = '⚠️';
+      title = t('diagnostics.status_attention', 'ATTENTION REQUIRED');
+      desc = t('diagnostics.status_attention_desc', 'Non-critical system warnings, restarting containers, or hardware bus notices.');
+    }
+
+    let alertItemsHtml = '';
+    if (alerts.length > 0) {
+      alertItemsHtml = `
+        <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; gap: 4px;">
+          ${alerts
+            .map(
+              (a) => `
+            <div style="font-size: 11px; color: #f1f5f9; display: flex; align-items: flex-start; gap: 6px;">
+              <span style="font-size: 10px; margin-top: 2px;">${a.level === 'critical' ? '🔴' : '🟡'}</span>
+              <span>${escapeHtml(a.message || '')}</span>
+            </div>
+          `
+            )
+            .join('')}
+        </div>
+      `;
+    }
+
+    banner.innerHTML = `
+      <div style="padding: 10px 14px; background: ${bgColor}; border: 1px solid ${borderColor}; border-radius: 8px;">
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 14px;">${icon}</span>
+            <span style="font-size: 12px; font-weight: 800; color: ${badgeColor}; letter-spacing: 0.5px;">${escapeHtml(title)}</span>
+          </div>
+          <span style="font-size: 10px; color: var(--muted); font-family: monospace;">ZettOS Kernel ${escapeHtml(data.platform || '')}</span>
+        </div>
+        <div style="font-size: 11px; color: var(--muted); margin-top: 3px;">${escapeHtml(desc)}</div>
+        ${alertItemsHtml}
+      </div>
+    `;
+    banner.style.display = 'block';
+  }
+
   if (grid) {
     const memory = data.memory || {};
     const storage = data.storage || {};
     const docker = data.docker || {};
     const vms = data.vms || {};
+
+    const memPct = memory.pct !== undefined ? memory.pct : (memory.used_percent || 0);
+    const memTotalGb = memory.total_gb !== undefined ? memory.total_gb : Math.round((memory.total_bytes || 0) / (1024 ** 3));
+    const memUsedGb = memory.used_gb !== undefined ? memory.used_gb : Math.round((memory.used_bytes || 0) / (1024 ** 3));
 
     grid.innerHTML = `
       <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:10px;">
@@ -8129,13 +8195,13 @@ export function openDiagnosticsPreviewModal(data) {
       </div>
       <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:10px;">
         <div style="font-size:9.5px; color:var(--muted); text-transform:uppercase; font-weight:700;">Memory</div>
-        <div style="font-size:12px; font-weight:800; color:#fff; margin-top:2px;">${memory.used_percent || 0}% Used</div>
-        <div style="font-size:10px; color:var(--muted); margin-top:1px;">${Math.round((memory.total_bytes || 0) / (1024 ** 3))} GB RAM</div>
+        <div style="font-size:12px; font-weight:800; color:#fff; margin-top:2px;">${memPct}% Used</div>
+        <div style="font-size:10px; color:var(--muted); margin-top:1px;">${memUsedGb} / ${memTotalGb} GB RAM</div>
       </div>
       <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:10px;">
         <div style="font-size:9.5px; color:var(--muted); text-transform:uppercase; font-weight:700;">Storage</div>
         <div style="font-size:12px; font-weight:800; color:#fff; margin-top:2px;">${storage.pools_count || 0} Pools</div>
-        <div style="font-size:10px; color:var(--muted); margin-top:1px;">${storage.disks_count || 0} Drives (${storage.standby_count || 0} standby)</div>
+        <div style="font-size:10px; color:${(storage.degraded_disks?.length || 0) > 0 ? 'var(--crit)' : 'var(--muted)'}; margin-top:1px;">${storage.disks_count || 0} Drives (${storage.standby_count || 0} standby)</div>
       </div>
       <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:10px;">
         <div style="font-size:9.5px; color:var(--muted); text-transform:uppercase; font-weight:700;">Docker Fleet</div>

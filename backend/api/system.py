@@ -2616,11 +2616,29 @@ def _build_bundle_sync(payload_dict: Optional[Dict[str, Any]] = None) -> bytes:
     led_cfg = read_json(LED_STATE_FILE, {})
     ups_status = read_ups_status()
     screen_state = get_screen_state()
+    detailed_fans = {}
+    try:
+        from backend.hardware.fans import get_detailed_fan_telemetry
+
+        detailed_fans = get_detailed_fan_telemetry()
+    except Exception as e:
+        logger.debug(f"[Diagnostics] Error collecting fan telemetry: {e}")
+
+    detailed_ups = {}
+    try:
+        from backend.hardware.ups import get_ups_diagnostic_telemetry
+
+        detailed_ups = get_ups_diagnostic_telemetry()
+    except Exception as e:
+        logger.debug(f"[Diagnostics] Error collecting UPS telemetry: {e}")
+
     hardware_telemetry = {
         "fan_state_tracker": Z_STATE.fan_state_tracker,
         "fan_config": fan_cfg,
+        "fan_telemetry_detailed": detailed_fans,
         "led_config": led_cfg,
         "ups_status": ups_status,
+        "ups_telemetry_detailed": detailed_ups,
         "screen_state": screen_state,
         "fans_released": Z_STATE.fans_released,
         "critical_temp_active": Z_STATE.critical_temp_active,
@@ -2655,14 +2673,109 @@ def _build_bundle_sync(payload_dict: Optional[Dict[str, Any]] = None) -> bytes:
 
     # 8. Notifications (sanitized)
     notif_cfg = read_json(NOTIFICATIONS_FILE, DEFAULT_NOTIFICATION_CONFIG)
+    try:
+        from backend.services.notifications import mask_notification_config
+
+        notif_cfg = mask_notification_config(notif_cfg)
+    except Exception as e:
+        logger.debug(f"[Diagnostics] Error masking notification config: {e}")
     sanitized_notifs = sanitize_dict(notif_cfg)
 
     # 9. System events (last 100)
     events = list(Z_STATE.event_log)
+    if not events:
+        try:
+            events = read_json(EVENTS_FILE, [])
+        except Exception:
+            events = []
 
     # 10. Recent logs
     log_lines = get_recent_logs(max_lines=1000)
     recent_logs_text = "\n".join(log_lines)
+
+    # 11. Executive Health Assessment
+    degraded_disks = [
+        d.get("name") or d.get("device")
+        for d in storage_and_smart.get("live_disk_telemetry", [])
+        if d.get("smart_status") in ("degraded", "failing", "error")
+        or (isinstance(d.get("smart"), dict) and d.get("smart", {}).get("status") in ("degraded", "failing", "error"))
+    ]
+    troubled_containers = docker_diagnostics.get("containers_summary", {}).get("troubled_names", [])
+    has_cpu_throttle = kernel_telemetry.get("cpu_telemetry", {}).get("thermal_throttling_detected", False)
+    port_conflicts = docker_diagnostics.get("port_conflicts", [])
+    ups_blocked = detailed_ups.get("direct_usb_access", {}).get("permission_blocked", False)
+
+    alerts = []
+    if degraded_disks:
+        alerts.append(
+            {
+                "level": "critical",
+                "subsystem": "storage",
+                "message": f"Degraded SMART health detected on drive(s): {', '.join(degraded_disks)}",
+            }
+        )
+    if has_cpu_throttle:
+        alerts.append(
+            {
+                "level": "warning",
+                "subsystem": "cpu",
+                "message": "CPU thermal throttling events detected in host dmesg",
+            }
+        )
+    if troubled_containers:
+        alerts.append(
+            {
+                "level": "warning",
+                "subsystem": "docker",
+                "message": f"Docker container(s) restarting, dead, or failing: {', '.join(troubled_containers)}",
+            }
+        )
+    if port_conflicts:
+        alerts.append(
+            {
+                "level": "warning",
+                "subsystem": "network",
+                "message": f"Host port conflicts detected on {len(port_conflicts)} port(s)",
+            }
+        )
+    if ups_blocked:
+        alerts.append(
+            {
+                "level": "warning",
+                "subsystem": "ups",
+                "message": "UPS USB device detected but container lacks read/write permissions to /dev/hidraw*",
+            }
+        )
+
+    if any(a["level"] == "critical" for a in alerts):
+        exec_status = "CRITICAL"
+    elif alerts:
+        exec_status = "ATTENTION_REQUIRED"
+    else:
+        exec_status = "HEALTHY"
+
+    executive_summary = {
+        "status": exec_status,
+        "toolkit_version": __version__,
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "chassis": get_chassis_friendly_name(detect_chassis_model()),
+        "platform": f"{platform.system()} {platform.release()}",
+        "uptime_hours": round(uptime_sec / 3600, 1),
+        "alerts": alerts,
+        "metrics": {
+            "ram_pct": ram_stats.get("pct", 0),
+            "ram_used_gb": ram_stats.get("used_gb", 0),
+            "ram_total_gb": ram_stats.get("total_gb", 0),
+            "storage_pools": len(storage_and_smart.get("pal_storage", {}).get("pools", [])),
+            "storage_drives": len(storage_and_smart.get("live_disk_telemetry", [])),
+            "storage_standby": sum(1 for d in storage_and_smart.get("live_disk_telemetry", []) if d.get("standby")),
+            "docker_total": docker_diagnostics.get("containers_summary", {}).get("total", 0),
+            "docker_running": docker_diagnostics.get("containers_summary", {}).get("running", 0),
+            "docker_troubled": len(troubled_containers),
+            "vms_active": vm_hypervisor.get("hypervisor_telemetry", {}).get("active_vm_count", 0),
+            "vms_total": vm_hypervisor.get("hypervisor_telemetry", {}).get("total_vm_count", 0),
+        },
+    }
 
     # Client-side telemetry if provided
     client_env = None
@@ -2688,6 +2801,7 @@ def _build_bundle_sync(payload_dict: Optional[Dict[str, Any]] = None) -> bytes:
     # Compress into zip in memory
     zip_buf = io.BytesIO()
     with zipfile.ZipFile(zip_buf, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
+        zf.writestr("executive_summary.json", json.dumps(sanitize_dict(executive_summary), indent=2))
         zf.writestr("system_summary.json", json.dumps(sanitize_dict(system_summary), indent=2))
         zf.writestr("hardware_telemetry.json", json.dumps(sanitize_dict(hardware_telemetry), indent=2))
         zf.writestr("storage_and_smart.json", json.dumps(sanitize_dict(storage_and_smart), indent=2))
@@ -2728,6 +2842,16 @@ def _build_summary_sync() -> Dict[str, Any]:
     except Exception:
         pass
 
+    used_gb = ram.get("used_gb")
+    total_gb = ram.get("total_gb")
+    pct = ram.get("pct")
+    if pct is None:
+        pct = ram.get("used_percent", 0)
+    if total_gb is None:
+        total_gb = round(ram.get("total_bytes", 0) / (1024**3), 1)
+    if used_gb is None:
+        used_gb = round(ram.get("used_bytes", 0) / (1024**3), 1)
+
     chassis = get_chassis_friendly_name(detect_chassis_model())
 
     # Storage summary
@@ -2737,12 +2861,19 @@ def _build_summary_sync() -> Dict[str, Any]:
     disks = st.get("live_disk_telemetry", [])
     standby_count = sum(1 for d in disks if d.get("standby"))
     pools = st.get("pal_storage", {}).get("pools", [])
+    degraded_disks = [
+        d.get("name") or d.get("device")
+        for d in disks
+        if d.get("smart_status") in ("degraded", "failing", "error")
+        or (isinstance(d.get("smart"), dict) and d.get("smart", {}).get("status") in ("degraded", "failing", "error"))
+    ]
 
     # Docker summary
     from backend.services.docker_diagnostics import collect_docker_diagnostics
 
     dock = collect_docker_diagnostics()
     c_sum = dock.get("containers_summary", {})
+    troubled_names = c_sum.get("troubled_names", [])
 
     # VM summary
     from backend.api.vms import collect_vm_diagnostics
@@ -2750,19 +2881,94 @@ def _build_summary_sync() -> Dict[str, Any]:
     vms = collect_vm_diagnostics()
     vm_tel = vms.get("hypervisor_telemetry", {})
 
+    # Kernel & Throttling
+    has_cpu_throttle = False
+    try:
+        from backend.hardware.kernel_telemetry import collect_kernel_telemetry
+
+        kt = collect_kernel_telemetry()
+        has_cpu_throttle = kt.get("cpu_telemetry", {}).get("thermal_throttling_detected", False)
+    except Exception:
+        pass
+
+    # UPS telemetry
+    ups_tel = {}
+    try:
+        from backend.hardware.ups import get_ups_diagnostic_telemetry
+
+        ups_tel = get_ups_diagnostic_telemetry()
+    except Exception:
+        pass
+    ups_mode = ups_tel.get("mode", "disabled")
+    ups_connected = ups_tel.get("connected", False)
+    ups_permission_blocked = ups_tel.get("direct_usb_access", {}).get("permission_blocked", False)
+
+    # Compile Alerts
+    alerts = []
+    if degraded_disks:
+        alerts.append(
+            {
+                "level": "critical",
+                "message": f"Degraded SMART health detected on drive(s): {', '.join(degraded_disks)}",
+            }
+        )
+    if has_cpu_throttle:
+        alerts.append(
+            {
+                "level": "warning",
+                "message": "CPU thermal throttling events detected in host dmesg",
+            }
+        )
+    if troubled_names:
+        alerts.append(
+            {
+                "level": "warning",
+                "message": f"Containers requiring attention: {', '.join(troubled_names)}",
+            }
+        )
+    if dock.get("port_conflicts"):
+        alerts.append(
+            {
+                "level": "warning",
+                "message": f"Host port conflicts detected across {len(dock['port_conflicts'])} port(s)",
+            }
+        )
+    if ups_permission_blocked:
+        alerts.append(
+            {
+                "level": "warning",
+                "message": "UPS USB device detected but container lacks read/write permissions to /dev/hidraw*",
+            }
+        )
+
+    if any(a["level"] == "critical" for a in alerts):
+        executive_status = "CRITICAL"
+    elif alerts:
+        executive_status = "ATTENTION_REQUIRED"
+    else:
+        executive_status = "HEALTHY"
+
     # Generate Markdown
     md_lines = [
         "### ZettNAS Toolkit Support Diagnostics",
+        f"- **Health Status:** `{executive_status}`",
         f"- **Toolkit Version:** `{__version__}`",
         f"- **Host OS / Kernel:** `{platform.system()} {platform.release()} ({platform.machine()})`",
         f"- **Chassis / Hardware:** `{chassis}`",
         f"- **Uptime:** `{round(uptime_sec / 3600, 1)} hours`",
-        f"- **CPU / Cores:** `{os.cpu_count()} vCPUs`",
-        f"- **Memory Usage:** `{ram.get('used_percent', 0)}%` of `{round(ram.get('total_bytes', 0) / (1024**3), 1)} GB`",
-        f"- **Storage Topology:** `{len(pools)} pools`, `{len(disks)} drives` (`{standby_count} in standby`)",
-        f"- **Docker Fleet:** `{c_sum.get('total', 0)} total` (`{c_sum.get('running', 0)} running`, `{c_sum.get('restarting', 0)} restarting`, `{c_sum.get('dead', 0)} dead`)",
+        f"- **CPU / Cores:** `{os.cpu_count()} vCPUs`" + (" *(⚠️ Throttling Detected)*" if has_cpu_throttle else ""),
+        f"- **Memory Usage:** `{pct}%` (`{used_gb} GB` of `{total_gb} GB` RAM)",
+        f"- **Storage Topology:** `{len(pools)} pools`, `{len(disks)} drives` (`{standby_count} in standby`)"
+        + (f" — ⚠️ Degraded: `{', '.join(degraded_disks)}`" if degraded_disks else ""),
+        f"- **Docker Fleet:** `{c_sum.get('total', 0)} total` (`{c_sum.get('running', 0)} running`, `{c_sum.get('restarting', 0)} restarting`, `{c_sum.get('dead', 0)} dead`)"
+        + (f" — ⚠️ Needs Attention: `{', '.join(troubled_names)}`" if troubled_names else ""),
         f"- **Virtual Machines:** `{vm_tel.get('total_vm_count', 0)} configured` (`{vm_tel.get('active_vm_count', 0)} running`)",
     ]
+    if ups_mode != "disabled":
+        ups_status_str = "Connected (Online)" if ups_connected else "Standby / Offline"
+        if ups_permission_blocked:
+            ups_status_str += " — ⚠️ /dev/hidraw* Permission Blocked"
+        md_lines.append(f"- **UPS Protection:** `{ups_status_str}` ({ups_mode.upper()} mode)")
     if dock.get("port_conflicts"):
         md_lines.append(f"- **Port Conflicts:** `⚠️ {len(dock['port_conflicts'])} conflict(s) detected`")
 
@@ -2772,14 +2978,29 @@ def _build_summary_sync() -> Dict[str, Any]:
         "platform": f"{platform.system()} {platform.release()}",
         "chassis": chassis,
         "uptime_hours": round(uptime_sec / 3600, 1),
-        "memory": ram,
+        "executive_status": executive_status,
+        "alerts": alerts,
+        "memory": {
+            "used_gb": used_gb,
+            "total_gb": total_gb,
+            "pct": pct,
+            "used_percent": pct,
+            "total_bytes": int(total_gb * (1024**3)),
+            "used_bytes": int(used_gb * (1024**3)),
+        },
         "storage": {
             "pools_count": len(pools),
             "disks_count": len(disks),
             "standby_count": standby_count,
+            "degraded_disks": degraded_disks,
         },
         "docker": c_sum,
         "vms": vm_tel,
+        "ups": {
+            "mode": ups_mode,
+            "connected": ups_connected,
+            "permission_blocked": ups_permission_blocked,
+        },
         "support_markdown": "\n".join(md_lines),
     }
 

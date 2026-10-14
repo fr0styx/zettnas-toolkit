@@ -20,7 +20,7 @@ correlation_id_ctx: ContextVar[str] = ContextVar("correlation_id", default="")
 LOG_RING_BUFFER = collections.deque(maxlen=1000)
 
 SENSITIVE_KEY_PATTERN = re.compile(
-    r"(pass(word)?|token|secret|auth|bearer|key|jwt|credential|private|cert|api_key)",
+    r"(pass(word)?|token|secret|auth|bearer|key|jwt|credential|private|cert|api_key|psk|claim)",
     re.IGNORECASE,
 )
 URL_SECRET_PATTERN = re.compile(
@@ -33,16 +33,22 @@ DISCORD_WEBHOOK_PATTERN = re.compile(
 )
 TELEGRAM_BOT_PATTERN = re.compile(r"bot\d+:[A-Za-z0-9_-]+", re.IGNORECASE)
 BEARER_PATTERN = re.compile(r"Bearer\s+[A-Za-z0-9_.-]+", re.IGNORECASE)
+BASIC_AUTH_PATTERN = re.compile(r"Basic\s+[A-Za-z0-9+/=]{8,}", re.IGNORECASE)
+PASSWORD_HASH_PATTERN = re.compile(
+    r"\$(?:argon2(?:id|[id])?|2[aby]|6)\$v=\d+\$[^\s\"']+",
+    re.IGNORECASE,
+)
+WIFI_PSK_PATTERN = re.compile(r"((?:psk|wpa_passphrase)\s*[:=]\s*['\"]?)[^'\",\s&]+(['\"]?)", re.IGNORECASE)
 ZAT_TOKEN_PATTERN = re.compile(r"zat_[A-Za-z0-9_-]{16,}")
 PRIVATE_KEY_BLOCK = re.compile(
     r"-----BEGIN[ A-Z0-9_-]+PRIVATE KEY-----[\s\S]*?-----END[ A-Z0-9_-]+PRIVATE KEY-----",
     re.MULTILINE,
 )
 APPRISE_URL_PATTERN = re.compile(
-    r"((?:tgram|discord|prowl|pushover|slack|gotify)://)[^\s\"']+",
+    r"((?:tgram|telegram|discord|prowl|pushover|slack|gotify|ntfy|mailgun|twilio|matrix|mattermost)://)[^\s\"']+",
     re.IGNORECASE,
 )
-CREDENTIAL_URL_PATTERN = re.compile(r"(://[^:\s/@]+:)[^@\s/]+(@)", re.IGNORECASE)
+CREDENTIAL_URL_PATTERN = re.compile(r"(://[^:\s/@]*:)[^@\s/]+(@)", re.IGNORECASE)
 AWS_KEY_PATTERN = re.compile(r"\b(AKIA|ABIA|ACCA|ASIA)[0-9A-Z]{16}\b")
 SLACK_WEBHOOK_PATTERN = re.compile(r"https://hooks\.slack\.com/services/T[a-zA-Z0-9_]+/B[a-zA-Z0-9_]+/[a-zA-Z0-9_]+")
 WIREGUARD_KEY_PATTERN = re.compile(
@@ -50,22 +56,25 @@ WIREGUARD_KEY_PATTERN = re.compile(
     re.IGNORECASE,
 )
 ENV_VAR_PAIR_PATTERN = re.compile(
-    r"^([A-Za-z0-9_]*?(?:pass(?:word)?|token|secret|auth|bearer|key|jwt|credential|cert|api_key)[A-Za-z0-9_]*?)=(.*)$",
+    r"^([A-Za-z0-9_]*?(?:pass(?:word)?|token|secret|auth|bearer|key|jwt|credential|cert|api_key|webhook|psk|claim)[A-Za-z0-9_]*?)=(.*)$",
     re.IGNORECASE,
 )
 KEY_VALUE_IN_TEXT_PATTERN = re.compile(
-    r"((?:token|secret|pass(?:word|wd)?|api_key|private_key)\s*[:=]\s*['\"]?)[^'\",\s&]+(['\"]?)",
+    r"((?:token|secret|pass(?:word|wd)?|api_key|private_key|psk)\s*[:=]\s*['\"]?)[^'\",\s&]+(['\"]?)",
     re.IGNORECASE,
 )
 
 
 def sanitize_string(text: str) -> str:
-    """Redacts passwords, tokens, webhooks, and private keys from strings."""
+    """Redacts passwords, tokens, webhooks, hashes, and private keys from strings."""
     if not text or not isinstance(text, str):
         return str(text or "")
 
     text = PRIVATE_KEY_BLOCK.sub("[REDACTED_PRIVATE_KEY_BLOCK]", text)
+    text = PASSWORD_HASH_PATTERN.sub("[REDACTED_PASSWORD_HASH]", text)
+    text = BASIC_AUTH_PATTERN.sub("Basic [REDACTED_BASIC_AUTH]", text)
     text = WIREGUARD_KEY_PATTERN.sub(r"\1[REDACTED_KEY]", text)
+    text = WIFI_PSK_PATTERN.sub(r"\1[REDACTED]\2", text)
     text = DISCORD_WEBHOOK_PATTERN.sub(r"\1[REDACTED_WEBHOOK]", text)
     text = SLACK_WEBHOOK_PATTERN.sub("https://hooks.slack.com/services/[REDACTED_WEBHOOK]", text)
     text = TELEGRAM_BOT_PATTERN.sub("bot[REDACTED_BOT_TOKEN]", text)
@@ -75,6 +84,17 @@ def sanitize_string(text: str) -> str:
     text = BEARER_PATTERN.sub("Bearer [REDACTED]", text)
     text = ZAT_TOKEN_PATTERN.sub("zat_[REDACTED]", text)
     text = URL_SECRET_PATTERN.sub(r"\1[REDACTED]", text)
+
+    # Handle multiline string with KEY=VALUE lines
+    if "\n" in text:
+        lines = []
+        for line in text.splitlines():
+            env_m = ENV_VAR_PAIR_PATTERN.match(line.strip())
+            if env_m:
+                lines.append(f"{env_m.group(1)}=[REDACTED]")
+            else:
+                lines.append(sanitize_string(line) if ("=" in line or ":" in line) else line)
+        return "\n".join(lines)
 
     # Handle KEY=VALUE environment variable lines (e.g. Docker container inspect)
     env_match = ENV_VAR_PAIR_PATTERN.match(text)

@@ -277,21 +277,60 @@ def get_hwmon_details() -> List[Dict[str, Any]]:
 
 def get_peripheral_status() -> Dict[str, Any]:
     """
-    Checks physical appliance peripheral availability.
+    Checks physical appliance peripheral availability and read/write access permissions.
     """
-    fb0 = os.path.exists(os.path.join(HOST_DEV, "fb0")) or os.path.exists("/dev/fb0")
-    tty_acm = os.path.exists(os.path.join(HOST_DEV, "ttyACM0")) or os.path.exists("/dev/ttyACM0")
-    npu_accel = os.path.exists(os.path.join(HOST_DEV, "accel/accel0")) or os.path.exists("/dev/accel/accel0")
-    dri_render = os.path.exists(os.path.join(HOST_DEV, "dri/renderD128")) or os.path.exists("/dev/dri/renderD128")
-    kvm_node = os.path.exists(os.path.join(HOST_DEV, "kvm")) or os.path.exists("/dev/kvm")
+
+    def _check_dev(path_candidates: List[str]) -> Dict[str, Any]:
+        for p in path_candidates:
+            if os.path.exists(p):
+                accessible = os.access(p, os.R_OK | os.W_OK)
+                return {"present": True, "path": p, "accessible": accessible}
+        return {"present": False, "path": path_candidates[0] if path_candidates else "", "accessible": False}
 
     return {
-        "framebuffer_lcd_fb0": fb0,
-        "argb_serial_ttyACM0": tty_acm,
-        "intel_npu_accel0": npu_accel,
-        "gpu_render_d128": dri_render,
-        "kvm_acceleration_node": kvm_node,
+        "framebuffer_lcd_fb0": _check_dev([os.path.join(HOST_DEV, "fb0"), "/dev/fb0"]),
+        "argb_serial_ttyACM0": _check_dev([os.path.join(HOST_DEV, "ttyACM0"), "/dev/ttyACM0"]),
+        "intel_npu_accel0": _check_dev([os.path.join(HOST_DEV, "accel/accel0"), "/dev/accel/accel0"]),
+        "gpu_render_d128": _check_dev([os.path.join(HOST_DEV, "dri/renderD128"), "/dev/dri/renderD128"]),
+        "dev_mem": _check_dev([os.path.join(HOST_DEV, "mem"), "/dev/mem"]),
+        "kvm_acceleration_node": _check_dev([os.path.join(HOST_DEV, "kvm"), "/dev/kvm"]),
     }
+
+
+def get_media_slots_telemetry() -> Dict[str, Any]:
+    """Captures front SD/TF multi-LUN card slot insertion and SCSI polling states."""
+    try:
+        from backend.config import BUTTON_CFG_FILE
+        from backend.fsutil import read_json
+        from backend.services.copy_engine import _EJECTED_SLOTS, read_media_slots
+        from backend.state import Z_STATE
+
+        slots = read_media_slots()
+        btn_cfg = read_json(BUTTON_CFG_FILE, {})
+
+        # Check SCSI polling msecs
+        polling_states = {}
+        for slot_name in ("sd", "tf"):
+            dev_name = slots.get(slot_name, {}).get("dev")
+            if dev_name:
+                poll_f = os.path.join(HOST_SYS, f"block/{dev_name}/events_poll_msecs")
+                if os.path.exists(poll_f):
+                    try:
+                        with open(poll_f, "r") as f:
+                            polling_states[dev_name] = f.read().strip()
+                    except Exception:
+                        pass
+
+        return {
+            "slots": slots,
+            "ejected_slots": list(_EJECTED_SLOTS),
+            "scsi_polling_msecs": polling_states,
+            "auto_ingest_enabled": btn_cfg.get("auto_ingest", False),
+            "pending_ingest": getattr(Z_STATE, "pending_ingest", None),
+            "copy_active": getattr(Z_STATE, "copy_active", False),
+        }
+    except Exception as e:
+        return {"error": str(e)}
 
 
 def collect_kernel_telemetry() -> Dict[str, Any]:
@@ -299,11 +338,16 @@ def collect_kernel_telemetry() -> Dict[str, Any]:
     Main aggregator for kernel, CPU, buses, and hardware sensors.
     """
     t0 = time.time()
+    from backend.hardware.host_telemetry import get_gpu_telemetry, get_npu_telemetry
+
     return {
         "collection_time_seconds": round(time.time() - t0, 3),
         "dmesg_analysis": get_categorized_dmesg(max_lines=300),
         "cpu_telemetry": get_cpu_telemetry(),
+        "gpu_telemetry": get_gpu_telemetry(),
+        "npu_telemetry": get_npu_telemetry(),
         "hardware_buses": get_hardware_buses(),
         "hwmon_sensors": get_hwmon_details(),
+        "media_slots": get_media_slots_telemetry(),
         "peripherals": get_peripheral_status(),
     }

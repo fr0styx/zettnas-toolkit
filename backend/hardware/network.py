@@ -1941,6 +1941,9 @@ def get_network_topology() -> Dict[str, Any]:
             mode = _read_file(os.path.join(iface_dir, "bonding/mode"), "")
             slaves = _read_file(os.path.join(iface_dir, "bonding/slaves"), "").split()
             active_slave = _read_file(os.path.join(iface_dir, "bonding/active_slave"), "")
+            xmit_hash_policy = _read_file(os.path.join(iface_dir, "bonding/xmit_hash_policy"), "")
+            lacp_rate = _read_file(os.path.join(iface_dir, "bonding/lacp_rate"), "")
+            ad_num_ports = _read_file(os.path.join(iface_dir, "bonding/ad_num_ports"), "")
             miimon_str = _read_file(os.path.join(iface_dir, "bonding/miimon"), "100")
             try:
                 miimon_val = int(miimon_str) if miimon_str.isdigit() else 100
@@ -1973,6 +1976,9 @@ def get_network_topology() -> Dict[str, Any]:
                     "mode_title": mode_info.get("title", "Active-Backup"),
                     "slaves": slaves,
                     "active_slave": active_slave,
+                    "xmit_hash_policy": xmit_hash_policy,
+                    "lacp_rate": lacp_rate,
+                    "ad_num_ports": ad_num_ports,
                     "miimon": miimon_val,
                     "carrier": carrier,
                     "is_up": is_up,
@@ -2056,6 +2062,12 @@ def get_network_topology() -> Dict[str, Any]:
         "canary": get_canary_watchdog().get_status(),
     }
 
+    listening_ports = []
+    try:
+        listening_ports = get_active_listening_ports()
+    except Exception as e:
+        logger.debug(f"[Network Diagnostics] Error reading listening ports: {e}")
+
     return {
         "status": "ok",
         "summary": summary,
@@ -2065,6 +2077,7 @@ def get_network_topology() -> Dict[str, Any]:
         "vlans": vlans,
         "docker_networks": docker_networks,
         "routes": routes,
+        "listening_ports": listening_ports,
     }
 
 

@@ -11,10 +11,11 @@ const logRingBuffer = [];
 
 // Sensitive token & credential scrubbers
 const SCRUB_PATTERNS = [
-  /zat_[a-zA-Z0-9_\-]{20,}/g,
+  /zat_[a-zA-Z0-9_\-]{16,}/g,
   /Bearer\s+[a-zA-Z0-9_\-\.]+/gi,
+  /Basic\s+[a-zA-Z0-9+/=]{8,}/gi,
   /(password|passwd|token|secret|key|auth|api_key)=([^&\s"']+)/gi,
-  /(password|passwd|token|secret|key|auth|api_key)":\s*"([^"]+)"/gi,
+  /"(password|passwd|token|secret|key|auth|api_key)":\s*"([^"]+)"/gi,
 ];
 
 export function scrubClientString(str) {
@@ -26,14 +27,11 @@ export function scrubClientString(str) {
     }
   }
   let sanitized = str;
-  for (const pattern of SCRUB_PATTERNS) {
-    sanitized = sanitized.replace(pattern, (match, p1, p2) => {
-      if (p2 !== undefined) {
-        return `${p1}=***REDACTED***`;
-      }
-      return '***REDACTED***';
-    });
-  }
+  sanitized = sanitized.replace(/zat_[a-zA-Z0-9_\-]{16,}/g, 'zat_***REDACTED***');
+  sanitized = sanitized.replace(/Bearer\s+[a-zA-Z0-9_\-\.]+/gi, 'Bearer ***REDACTED***');
+  sanitized = sanitized.replace(/Basic\s+[a-zA-Z0-9+/=]{8,}/gi, 'Basic ***REDACTED***');
+  sanitized = sanitized.replace(/(password|passwd|token|secret|key|auth|api_key)=([^&\s"']+)/gi, '$1=***REDACTED***');
+  sanitized = sanitized.replace(/"(password|passwd|token|secret|key|auth|api_key)":\s*"([^"]+)"/gi, '"$1":"***REDACTED***"');
   return sanitized;
 }
 

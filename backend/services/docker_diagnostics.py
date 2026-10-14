@@ -153,7 +153,8 @@ def collect_docker_diagnostics() -> Dict[str, Any]:
 
     # 3. Containers Inspection & Port Conflict Detection
     host_port_map: Dict[str, List[str]] = {}
-    troubled_containers: List[Dict[str, str]] = []
+    troubled_containers: List[Dict[str, Any]] = []
+    troubled_names: List[str] = []
 
     containers_list = _docker_api_get("/containers/json?all=1")
     if isinstance(containers_list, list):
@@ -181,12 +182,35 @@ def collect_docker_diagnostics() -> Dict[str, Any]:
             is_troubled = status in ("restarting", "dead") or is_oom
 
             if is_troubled:
+                troubled_names.append(name)
+                # Inspect detailed state for exit code & OOM taxonomy
+                exit_code = None
+                error_msg = None
+                restart_count = 0
+                finished_at = None
+                try:
+                    c_inspect = _docker_api_get(f"/containers/{cid}/json", timeout=1.5)
+                    if isinstance(c_inspect, dict):
+                        c_state = c_inspect.get("State") or {}
+                        exit_code = c_state.get("ExitCode")
+                        if c_state.get("OOMKilled"):
+                            is_oom = True
+                        error_msg = c_state.get("Error")
+                        finished_at = c_state.get("FinishedAt")
+                        restart_count = c_inspect.get("RestartCount", 0)
+                except Exception:
+                    pass
+
                 troubled_containers.append(
                     {
                         "id": cid,
                         "name": name,
                         "status": status,
-                        "oom_killed": str(is_oom),
+                        "exit_code": exit_code,
+                        "oom_killed": is_oom,
+                        "restart_count": restart_count,
+                        "error": error_msg,
+                        "finished_at": finished_at,
                     }
                 )
 
@@ -211,6 +235,9 @@ def collect_docker_diagnostics() -> Dict[str, Any]:
                     }
                 )
 
+    result["containers_summary"]["troubled_names"] = troubled_names
+    result["troubled_containers"] = troubled_containers
+
     # 4. Fetch logs for troubled containers (last 50 lines)
     for tc in troubled_containers[:10]:
         c_id = tc["id"]
@@ -219,9 +246,61 @@ def collect_docker_diagnostics() -> Dict[str, Any]:
         if raw_logs:
             result["troubled_container_logs"][f"{c_name}_{c_id}"] = {
                 "status": tc["status"],
+                "exit_code": tc.get("exit_code"),
                 "oom_killed": tc["oom_killed"],
                 "tail_logs": sanitize_string(raw_logs),
             }
+
+    # 5. Stacks Summary (Synthesized & File-backed Compose Stacks)
+    stacks_summary: List[Dict[str, Any]] = []
+    try:
+        from backend.services.docker_stacks import list_all_stacks
+
+        raw_stacks = list_all_stacks()
+        for s in raw_stacks:
+            stacks_summary.append(
+                {
+                    "name": s.get("name"),
+                    "origin": s.get("origin"),
+                    "working_dir": s.get("working_dir"),
+                    "services": s.get("services", []),
+                    "total_count": s.get("total_count", 0),
+                    "running_count": s.get("running_count", 0),
+                    "status": s.get("status", "unknown"),
+                }
+            )
+    except Exception as e:
+        logger.debug(f"[Docker Diagnostics] Error listing stacks: {e}")
+    result["stacks_summary"] = stacks_summary
+
+    # 6. App Backups Summary
+    backups_summary: Dict[str, Any] = {
+        "total_backups": 0,
+        "total_size_bytes": 0,
+        "backups": [],
+    }
+    try:
+        from backend.services.app_backup import list_app_backups
+
+        raw_backups = list_app_backups()
+        backups_summary["total_backups"] = len(raw_backups)
+        backups_summary["total_size_bytes"] = sum(b.get("size_bytes", 0) for b in raw_backups if isinstance(b, dict))
+        for b in raw_backups:
+            backups_summary["backups"].append(
+                {
+                    "id": b.get("id"),
+                    "app_name": b.get("app_name"),
+                    "container_name": b.get("container_name"),
+                    "reason": b.get("reason"),
+                    "filename": b.get("filename"),
+                    "size_human": b.get("size_human"),
+                    "size_bytes": b.get("size_bytes"),
+                    "created_at_iso": b.get("created_at_iso"),
+                }
+            )
+    except Exception as e:
+        logger.debug(f"[Docker Diagnostics] Error listing app backups: {e}")
+    result["backups_summary"] = backups_summary
 
     result["collection_time_seconds"] = round(time.time() - t0, 3)
     return sanitize_dict(result)

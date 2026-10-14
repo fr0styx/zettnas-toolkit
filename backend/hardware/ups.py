@@ -1246,3 +1246,28 @@ def read_ups_status(force: bool = False) -> Dict[str, Any]:
     _CACHED_UPS = status_obj
     _LAST_UPS_POLL = now
     return status_obj
+
+
+def get_ups_diagnostic_telemetry() -> Dict[str, Any]:
+    """Audits local USB HID devices, cgroup permissions, report descriptors, and active daemon."""
+    audit = {
+        "active_status": read_ups_status(force=False),
+        "config": mask_ups_config(load_ups_config()),
+        "discovered_candidates": discover_ups_sources(),
+        "hidraw_nodes": [],
+        "cgroup_permission_ok": True,
+    }
+    # Check accessibility of /dev/hidraw* nodes
+    candidate_nodes = sorted(list(set(glob.glob("/dev/hidraw*") + glob.glob("/host/dev/hidraw*"))))
+    for h in candidate_nodes:
+        try:
+            fd = os.open(h, os.O_RDWR | os.O_NONBLOCK)
+            os.close(fd)
+            audit["hidraw_nodes"].append({"node": h, "accessible": True})
+        except PermissionError:
+            audit["hidraw_nodes"].append({"node": h, "accessible": False, "error": "PermissionDenied"})
+            audit["cgroup_permission_ok"] = False
+        except OSError as e:
+            audit["hidraw_nodes"].append({"node": h, "accessible": False, "error": str(e)})
+
+    return audit

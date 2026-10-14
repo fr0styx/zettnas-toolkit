@@ -3,7 +3,7 @@ import mmap
 import os
 import threading
 import time
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 from backend.config import (
     FAN_DISK_HOLD_SECS,
@@ -220,6 +220,38 @@ class ZettlabMmioFanController:
                 self._fd = None
             self._failed_previously = False
 
+    def read_raw_registers(self) -> Optional[Dict[str, Any]]:
+        """Reads raw 16-byte EC register aperture at 0xFE0B0456 and decodes registers safely."""
+        try:
+            if not self._ensure_mapped():
+                return None
+            with self._lock:
+                base = self._page_offset
+                raw_bytes = bytes(self._mm[base : base + 16])
+                rpm1 = (raw_bytes[0] << 8) | raw_bytes[1]
+                pwm1 = raw_bytes[2]
+                rpm2 = (raw_bytes[3] << 8) | raw_bytes[4]
+                pwm2 = raw_bytes[5]
+                rpm3 = (raw_bytes[6] << 8) | raw_bytes[7]
+                pwm3 = raw_bytes[8]
+                return {
+                    "phys_addr": f"0x{self.PHYS_BASE_ADDR:08X}",
+                    "raw_hex": raw_bytes.hex(),
+                    "decoded": {
+                        "fan1_rpm": rpm1 if rpm1 < 6000 else 0,
+                        "fan1_pwm": pwm1,
+                        "fan2_rpm": rpm2 if rpm2 < 6000 else 0,
+                        "fan2_pwm": pwm2,
+                        "fan3_rpm": rpm3 if rpm3 < 6000 else 0,
+                        "fan3_pwm": pwm3,
+                    },
+                }
+        except (PermissionError, FileNotFoundError, OSError):
+            return None
+        except Exception as e:
+            logger.debug(f"[FANS-MMIO] Error reading raw registers: {e}")
+            return None
+
 
 _mmio_controller: Optional[ZettlabMmioFanController] = None
 
@@ -229,6 +261,49 @@ def get_mmio_fan_controller() -> Optional[ZettlabMmioFanController]:
     if _mmio_controller is None:
         _mmio_controller = ZettlabMmioFanController()
     return _mmio_controller
+
+
+def get_detailed_fan_telemetry() -> Dict[str, Any]:
+    """Generates an enriched snapshot of fan controllers, hold timers, and Zero RPM state."""
+    from backend.config import FAN_DISK_HOLD_SECS, FAN_STATE_FILE
+    from backend.fsutil import read_json
+    from backend.state import Z_STATE
+
+    cfg = read_json(FAN_STATE_FILE, {})
+    driver_mode = getattr(Z_STATE, "fan_driver_mode", "none")
+    mmio_ctrl = get_mmio_fan_controller()
+    mmio_regs = None
+    if mmio_ctrl and is_zettlab_appliance():
+        mmio_regs = mmio_ctrl.read_raw_registers()
+
+    zones_telemetry = {}
+    now = time.time()
+    tracker = getattr(Z_STATE, "fan_state_tracker", {}) or {}
+    for pwm_key in ("pwm1", "pwm2", "pwm3"):
+        state = tracker.get(pwm_key, {})
+        last_up = state.get("last_up_time", 0.0)
+        kickstart_until = state.get("kickstart_until", 0.0)
+        hold_rem = max(0, int(FAN_DISK_HOLD_SECS - (now - last_up))) if last_up > 0 else 0
+        kickstart_active = now < kickstart_until
+        zones_telemetry[pwm_key] = {
+            "target_pwm": state.get("current", 0),
+            "hold_seconds_remaining": hold_rem,
+            "kickstart_active": kickstart_active,
+            "kickstart_seconds_remaining": max(0, round(kickstart_until - now, 1)) if kickstart_active else 0,
+            "standby_since": state.get("standby_since", 0.0),
+        }
+
+    return {
+        "active_driver_mode": driver_mode,
+        "is_appliance": is_zettlab_appliance(),
+        "fans_released": getattr(Z_STATE, "fans_released", False),
+        "thermal_watchdog_engaged": getattr(Z_STATE, "thermal_watchdog_engaged", False),
+        "critical_temp_active": getattr(Z_STATE, "critical_temp_active", False),
+        "known_active_fan_indices": sorted(list(getattr(Z_STATE, "known_active_fans", set()))),
+        "zones": zones_telemetry,
+        "mmio_registers": mmio_regs,
+        "fan_config": cfg,
+    }
 
 
 def clamp_fan_pwm(val: int, allow_zero: bool = False) -> int:

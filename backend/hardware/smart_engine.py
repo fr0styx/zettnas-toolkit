@@ -245,9 +245,15 @@ class SmartTelemetryEngine:
                 r = subprocess.run(cmd, capture_output=True, text=True, timeout=8)
                 combined = (r.stdout or "") + " " + (r.stderr or "")
 
-                if not is_nvme and (
-                    "DEVICE IS IN STANDBY" in combined.upper() or "DEVICE IS IN SLEEP" in combined.upper()
-                ):
+                is_standby = (not is_nvme) and (
+                    r.returncode == 2
+                    or (r.returncode & 2) != 0
+                    or "DEVICE IS IN STANDBY" in combined.upper()
+                    or "DEVICE IS IN SLEEP" in combined.upper()
+                    or "STANDBY MODE" in combined.upper()
+                    or "SLEEP MODE" in combined.upper()
+                )
+                if is_standby:
                     prev_t, _ = Z_STATE.cached_smart_data.get(dev_name, (None, "standby"))
                     Z_STATE.cached_smart_data[dev_name] = (prev_t, "standby")
                     return {
