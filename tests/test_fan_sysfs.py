@@ -77,5 +77,6 @@ def test_no_hwmon_is_harmless(fake_hwmon, monkeypatch):
     import backend.hardware.fans as fans
 
     monkeypatch.setattr(fans, "_find_hwmon", lambda: None)
+    monkeypatch.setattr(fans, "is_zettlab_appliance", lambda: False)
     assert fans.set_fan_pwm("auto", custom_pwms={"pwm1": 100}) is False
     assert fans.failsafe_release_fans("test") is False

@@ -122,6 +122,7 @@ Recommended for custom DIY homelab builds (Jonsbo N1/N2/N3/N4, Fractal Node 804,
          - SYS_RAWIO
          - SYS_ADMIN
        device_cgroup_rules:
+         - 'c 1:1 rwm'     # /dev/mem (Physical Memory-Mapped I/O for appliance fan and hardware control)
          - 'c 29:* rwm'    # Framebuffer (/dev/fb0)
          - 'c 226:* rwm'   # DRI GPU devices
          - 'c 188:* rwm'   # USB Serial (/dev/ttyUSB*)

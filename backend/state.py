@@ -66,6 +66,7 @@ class ZettState:
         self.static_cache = {}
         self.fans_released = False
         self.fans_locked = False
+        self.fan_driver_mode = "none"
         self.shutting_down = False
         self.collector_heartbeat = 0.0
         self.critical_temp_active = False

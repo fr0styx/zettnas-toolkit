@@ -612,6 +612,7 @@ def stats_collector_daemon():
                 },
                 "media_slots": (lambda s: (check_media_slot_transitions(s), s)[1])(read_media_slots()),
                 "fan_control": {
+                    "driver_mode": getattr(Z_STATE, "fan_driver_mode", "none"),
                     "zone1_temp": t_zone1,
                     "zone1_pwm": active_pwm1,
                     "zone2_temp": t_zone2,

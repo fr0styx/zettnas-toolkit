@@ -199,6 +199,29 @@ export function updateFanCurveWorkstation(s) {
     }
   }
 
+  const fanStatusBadge = $('fan-status-badge');
+  if (fanStatusBadge && fc.driver_mode) {
+    if (fc.driver_mode === 'mmio') {
+      fanStatusBadge.textContent = 'MMIO FALLBACK';
+      fanStatusBadge.title = 'Direct MMIO Memory Access (Userspace Fallback - No kernel module needed)';
+      fanStatusBadge.style.background = 'rgba(56, 189, 248, 0.15)';
+      fanStatusBadge.style.color = '#38bdf8';
+      fanStatusBadge.style.borderColor = 'rgba(56, 189, 248, 0.4)';
+    } else if (fc.driver_mode === 'hwmon') {
+      fanStatusBadge.textContent = 'KERNEL HWMON';
+      fanStatusBadge.title = 'Kernel module hwmon driver active';
+      fanStatusBadge.style.background = 'rgba(51, 209, 122, 0.15)';
+      fanStatusBadge.style.color = 'var(--ok)';
+      fanStatusBadge.style.borderColor = 'rgba(51, 209, 122, 0.35)';
+    } else {
+      fanStatusBadge.textContent = 'ONLINE';
+      fanStatusBadge.title = '';
+      fanStatusBadge.style.background = '';
+      fanStatusBadge.style.color = '';
+      fanStatusBadge.style.borderColor = '';
+    }
+  }
+
   const curveUpdateCooldown = (Date.now() - _lastCurveSaveTime) < 5000;
   if (!isDraggingCurve && !curveUpdateCooldown) {
     if (fc.curve_points && fc.curve_points.length > 0) {

@@ -79,6 +79,25 @@ The daemon traverses `/host/sys/class/hwmon/hwmon*` searching for compatible dri
 7. **Absolute CPU Fan Invariance**: CPU cooling (`pwm3`) is strictly isolated and immune to Zero RPM stop commands; it is unconditionally maintained at $\ge 58\text{ PWM}$ (~950 RPM) or higher at all times.
 8. **NVMe Wind-Tunnel & Subsystem Interlocks**: Zero RPM is automatically revoked if any M.2 NVMe SSD exceeds $50^\circ\text{C}$ to maintain convective wind-tunnel cooling, or during active Unraid `mover` or `parity_check` operations.
 
+### 3.3 Direct Userspace MMIO Fallback (`0xFE0B0456`)
+
+To ensure seamless fan control on modern Linux kernels (e.g. Unraid 7.3.3+, custom homelab kernels, or Alpine) where out-of-tree kernel modules (`zettlab_d8_fans.ko`) may not be compiled or loaded, ZettNAS Toolkit features a built-in **Direct Userspace MMIO Fallback Engine**:
+
+- **Physical Base Address**: `0xFE0B0456`
+- **Device Access**: `/dev/mem` (or container mount `/host/dev/mem`) with `cgroup2fs` rule `'c 1:1 rwm'` and `cap_add: [SYS_RAWIO]`.
+- **Register Architecture**:
+
+| Offset | Width | Access | Semantics | Description |
+|---|---|---|---|---|
+| `+0x00` | 16-bit BE | RO | RPM (`0..8000`) | Disk Zone 1 Tachometer (Bays 1–4) |
+| `+0x02` | 8-bit | RW | PWM (`0..183`) | Disk Zone 1 PWM Duty Cycle |
+| `+0x03` | 16-bit BE | RO | RPM (`0..8000`) | Disk Zone 2 Tachometer (Bays 5–8) |
+| `+0x05` | 8-bit | RW | PWM (`0..183`) | Disk Zone 2 PWM Duty Cycle |
+| `+0x06` | 16-bit BE | RO | RPM (`0..8000`) | CPU Package Fan Tachometer |
+| `+0x08` | 8-bit | RW | `0` = Auto, `58..183` = Manual | CPU Package Fan PWM Duty Cycle |
+
+- **Automatic Failover**: When `_find_hwmon()` detects no compatible kernel driver, `ZettlabMmioFanController` memory-maps the physical page on Zettlab/Aoostar hardware without requiring any kernel module rebuilds or host reboots.
+
 ---
 
 ## 4. Direct LCD Framebuffer (`/dev/fb0`)

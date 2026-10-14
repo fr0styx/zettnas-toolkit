@@ -1,5 +1,43 @@
 # ZettNAS Toolkit - Release Changelog
 
+## v1.8.1 (2026-10-14) - Stable
+### 🚀 Direct Userspace MMIO Fan Controller, Front LCD Stability, Mobile Responsive Polish & Live SMART Self-Test Reports
+
+Version 1.8.1 delivers critical hardware orchestration resilience, physical front-panel display fixes, mobile ergonomics enhancements, and interactive drive diagnostic tools:
+
+- **Direct Userspace MMIO Fan Controller (Tier 1 Fallback for Issue #18)**:
+  - **Kernel-Agnostic Fan Orchestration**: Direct physical memory mapping (`mmap`) of the hardware register block at `0xFE0B0456` via `/dev/mem` (or `/host/dev/mem`). Operates seamlessly on Unraid 7.3.3+, custom homelab kernels, or Alpine without requiring recompiled out-of-tree kernel modules (`zettlab_d8_fans.ko`).
+  - **Dual-Path Routing & Automatic Fallback**: Dynamically routes fan telemetry and PWM commands to the Linux `hwmon` driver if present, automatically falling back to the MMIO controller when the kernel module is absent.
+  - **16-bit Tachometers & 8-bit PWM**: High-precision RPM reading (Big-Endian 16-bit) and PWM duty control (`0..183`) across Disk Zone 1 (Bays 1–4), Disk Zone 2 (Bays 5–8), and CPU Package.
+  - **Strict Thermal Safety Invariants**:
+    - **CPU Fan Inviolability**: CPU fan is maintained at $\ge 58\text{ PWM}$ when manually driven, or released to motherboard EC auto mode via `0` when unmanaged.
+    - **Emergency $\ge 80^\circ\text{C}$ Thermal Clamp**: Unconditionally clamps all fans to maximum PWM (`183`) regardless of custom curves.
+    - **Zero RPM Spindown**: Safely halts disk bay fans only when assigned drives are in standby sleep and temperatures are cool.
+    - **Failsafe Release**: Sets disk fans to failsafe PWM and restores CPU firmware auto control on shutdown or process termination.
+  - **Container Device Permissions**: Added `'c 1:1 rwm'` under `device_cgroup_rules` in `docker-compose.linux.yml` and `docker-compose.yml` to grant access through cgroups v2 eBPF filters.
+  - **Desktop Status Badge**: Dynamic indicator badge in the Fan Settings drawer displaying `KERNEL HWMON` or `MMIO FALLBACK`.
+
+- **Physical LCD Framebuffer (`/dev/fb0`) & Screen Isolation**:
+  - **Viewport Alignment**: Resolved viewport clipping, truncated card layouts, and header offsets on physical 172×640 front-panel LCD screens.
+  - **Screensaver & Lock Screen Isolation**: Screen rendering pipeline is strictly decoupled from desktop lock states and screensaver timeouts, keeping physical telemetry gauges continuously visible.
+
+- **Mobile Viewport & Touch Ergonomics**:
+  - **Container List Scrolling**: Fixed touch and wheel scrolling on mobile viewports with native momentum scrolling and compact row layouts.
+  - **Virtual Machine List Scrolling**: Enabled smooth vertical scrolling and responsive header layouts for VM cards on phones and tablets.
+  - **Responsive System Console**: Re-architected the ZettNAS system console into a fluid, adaptive layout that scales cleanly to narrow mobile screens without clipping or horizontal overflow.
+
+- **S.M.A.R.T. Self-Test Progress & Execution Reports**:
+  - **Live Progress Bar**: Real-time progress bar tracking short and extended S.M.A.R.T. self-tests with estimated completion times.
+  - **Automatic Completion Polling**: Dynamically detects when self-tests finish and transitions the UI without requiring browser reloads.
+  - **Comprehensive Self-Test Report**: Dedicated report viewer dialog presenting past test results, S.M.A.R.T. error counts, and drive health verdicts.
+
+- **Desktop UI & CI/CD Hardening**:
+  - **Glassmorphic Paste Modal**: Replaced native browser prompt with an elegant glassmorphic modal for cloud-init and VM configuration snippets.
+  - **Channel Toggle Layout Stability**: Eliminated layout shifts during in-app background update checks.
+  - **Release CI Workflow**: Updated GitHub Actions to preserve tag and release builds by disabling `cancel-in-progress` on release tags.
+
+---
+
 ## v1.8.0 (2026-10-13) - Stable
 ### 💎 Enterprise Master Architecture: 7-Pillar Mission Control, Storage PAL, Dedicated Containers Window, Observer Mode & Self-Updater
 

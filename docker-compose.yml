@@ -46,6 +46,7 @@ services:
       - SYS_RAWIO   # Required for low-level SCSI/SATA SMART queries via SG_IO
       - SYS_ADMIN   # Required for NVMe ioctls (NVME_IOCTL_ADMIN_CMD) and camera media mount(2)/umount(2)
     device_cgroup_rules:
+      - 'c 1:1 rwm'     # /dev/mem (Physical Memory-Mapped I/O for appliance fan and button control)
       - 'c 29:* rwm'    # Framebuffer (/dev/fb0)
       - 'c 226:* rwm'   # DRI / GPU rendering (/dev/dri/*)
       - 'c 188:* rwm'   # USB Serial (/dev/ttyUSB0)
