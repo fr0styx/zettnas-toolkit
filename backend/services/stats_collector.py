@@ -804,5 +804,11 @@ def smart_poller_daemon():
                 break
             poll_all_disks_smart()
             read_ups_status()
+            try:
+                from backend.hardware.disks import check_active_smart_tests
+
+                check_active_smart_tests()
+            except Exception as st_e:
+                logger.debug(f"[SMART Poller] check_active_smart_tests threw: {st_e}")
         except Exception as e:
             logger.error(f"[SMART/UPS Poller] Polling cycle error: {e}")

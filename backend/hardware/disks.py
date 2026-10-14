@@ -5,6 +5,7 @@ import re
 import subprocess
 import threading
 import time
+from typing import Optional
 
 from backend.config import (
     DATA_DIR,
@@ -22,7 +23,12 @@ from backend.config import (
     SMART_POLL_INTERVAL_NVME,
     logger,
 )
-from backend.db import log_smart_metrics, query_smart_velocity
+from backend.db import (
+    get_latest_smart_test_result,
+    log_smart_metrics,
+    log_smart_test_result,
+    query_smart_velocity,
+)
 from backend.fsutil import atomic_write_json
 from backend.services.notifications import send_notification
 from backend.state import Z_STATE, add_event
@@ -833,8 +839,12 @@ def _parse_self_test_info(doc: dict | None, raw_text: str):
             nv_op = nv_curr.get("value", 0)
             if nv_op != 0:
                 in_progress = True
-                percent_completed = nvme_st.get("current_self_test_completion", 10)
-                percent_remaining = 100 - percent_completed
+                percent_completed = (
+                    nvme_st.get("current_self_test_completion_percent")
+                    or nvme_st.get("current_self_test_completion")
+                    or 10
+                )
+                percent_remaining = max(0, min(100, 100 - percent_completed))
                 status_text = nv_curr.get("string", "Self-test in progress")
 
     # 3. Fallback / supplementary check from raw_text
@@ -894,15 +904,27 @@ def _parse_self_test_info(doc: dict | None, raw_text: str):
         if not log_entries:
             nvme_log_table = doc.get("nvme_self_test_log", {}).get("table") or []
             for idx, entry in enumerate(nvme_log_table):
+                code_obj = entry.get("self_test_code") or entry.get("type") or {}
+                t_str = code_obj.get("string") if isinstance(code_obj, dict) else str(code_obj)
+                res_obj = entry.get("self_test_result") or entry.get("result") or {}
+                if isinstance(res_obj, dict):
+                    res_str = res_obj.get("string", "Completed")
+                    res_val = res_obj.get("value", 0)
+                else:
+                    res_str = str(res_obj)
+                    res_val = 0 if "error" not in res_str.lower() and "fail" not in res_str.lower() else 1
+                passed = res_val == 0
+                poh = entry.get("power_on_hours", entry.get("lifetime_hours", "-"))
+                failing_lba = entry.get("failing_lba", entry.get("lba_first_error", "-")) or "-"
                 log_entries.append(
                     {
                         "num": idx + 1,
-                        "type": entry.get("type", {}).get("string", "Self-test"),
-                        "status": entry.get("result", {}).get("string", "Completed"),
-                        "passed": entry.get("result", {}).get("value", 0) == 0,
-                        "lifetime_hours": entry.get("power_on_hours", "-"),
+                        "type": t_str or "Self-test",
+                        "status": res_str,
+                        "passed": passed,
+                        "lifetime_hours": poh,
                         "remaining_pct": 0,
-                        "lba_first_error": entry.get("failing_lba", "-") or "-",
+                        "lba_first_error": failing_lba,
                     }
                 )
 
@@ -995,6 +1017,7 @@ def fetch_disk_smart_detail(dev_name: str, wake_if_standby: bool = False):
                         "polling_minutes": {},
                     },
                     "self_test_log": [],
+                    "latest_report": get_latest_smart_test_result(dev_name),
                     "metrics": {},
                     "degradation": query_smart_velocity(dev_name),
                     "nvme_endurance": None,
@@ -1116,6 +1139,7 @@ def fetch_disk_smart_detail(dev_name: str, wake_if_standby: bool = False):
         "self_test_status": self_test_status or self_test_progress.get("status_text"),
         "self_test_progress": self_test_progress,
         "self_test_log": self_test_log,
+        "latest_report": get_latest_smart_test_result(dev_name),
         "metrics": metrics,
         "degradation": velocity,
         "nvme_endurance": (
@@ -1186,6 +1210,59 @@ def run_disk_smart_test(dev_name: str, test_type: str = "short", skip_if_standby
             or (action_name == "abort" and "aborted" in out.lower())
         )
         polling_mins = 1 if action_name == "short" else 20
+
+        if success:
+            model = "Disk"
+            serial = "Unknown"
+            if Z_STATE.cached_disk_list:
+                for d in Z_STATE.cached_disk_list:
+                    if d.get("dev") == dev_name:
+                        model = d.get("model") or model
+                        serial = d.get("serial") or serial
+                        break
+
+            if action_name == "abort":
+                with Z_STATE.lock:
+                    Z_STATE.active_smart_tests.pop(dev_name, None)
+                add_event(
+                    level="warning",
+                    title=f"S.M.A.R.T. Test Aborted: /dev/{dev_name}",
+                    message=f"Self-test on {model} ({serial}) was manually cancelled by operator.",
+                    details={
+                        "type": "smart_test_aborted",
+                        "dev": dev_name,
+                        "model": model,
+                        "serial": serial,
+                    },
+                )
+            else:
+                start_temp, _ = Z_STATE.cached_smart_data.get(dev_name, (None, None))
+                with Z_STATE.lock:
+                    Z_STATE.active_smart_tests[dev_name] = {
+                        "dev": dev_name,
+                        "test_type": action_name,
+                        "start_time": time.time(),
+                        "start_temp": start_temp,
+                        "model": model,
+                        "serial": serial,
+                        "is_nvme": is_nvme,
+                        "expected_minutes": polling_mins,
+                        "last_pct": 0,
+                    }
+                add_event(
+                    level="info",
+                    title=f"S.M.A.R.T. {action_name.title()} Test Started: /dev/{dev_name}",
+                    message=f"Integrity scan initiated on {model} ({serial}). Estimated duration: ~{polling_mins}m.",
+                    details={
+                        "type": "smart_test_start",
+                        "dev": dev_name,
+                        "test_type": action_name,
+                        "model": model,
+                        "serial": serial,
+                        "expected_minutes": polling_mins,
+                    },
+                )
+
         return {
             "success": success,
             "dev": dev_name,
@@ -1196,6 +1273,251 @@ def run_disk_smart_test(dev_name: str, test_type: str = "short", skip_if_standby
     except Exception as e:
         logger.error(f"[SMART] Failed to execute self-test action ({action_name}) on {dev_name}: {e}")
         return {"success": False, "error": str(e)}
+
+
+def generate_smart_test_report_markdown(
+    dev: str,
+    test_type: str,
+    status: str,
+    passed: bool,
+    model: str = "Unknown",
+    serial: str = "Unknown",
+    duration_sec: float = 0.0,
+    power_on_hours: int = 0,
+    temp_start: Optional[float] = None,
+    temp_end: Optional[float] = None,
+    lba_first_error: str = "-",
+    is_nvme: bool = False,
+    metrics: Optional[dict] = None,
+    recommendation: str = "",
+) -> str:
+    """Compiles an executive diagnostic report in clean GitHub-flavored markdown."""
+    generated_at = time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime())
+    mins = int(duration_sec // 60)
+    secs = int(duration_sec % 60)
+    dur_str = f"{mins}m {secs}s" if mins > 0 else f"{secs}s"
+    verdict = "PASSED" if passed else ("ABORTED" if "abort" in status.lower() else "FAILED")
+    verdict_emoji = "✓" if passed else ("⏹" if verdict == "ABORTED" else "✗")
+
+    md = f"# S.M.A.R.T. Diagnostic Report: /dev/{dev}\n"
+    md += f"**Execution Status**: {verdict_emoji} **{verdict}** ({status})\n"
+    md += f"**Generated**: {generated_at}\n\n"
+
+    md += "## Device Identification\n"
+    md += f"- **Device Node**: `/dev/{dev}`\n"
+    md += f"- **Drive Model**: {model}\n"
+    md += f"- **Serial Number**: {serial}\n"
+    md += f"- **Media Architecture**: {'PCIe NVMe Solid-State Drive' if is_nvme else 'SATA / SAS Drive'}\n"
+    md += f"- **Power-On Lifetime**: {power_on_hours:,} hours\n\n"
+
+    md += "## Test Execution Telemetry\n"
+    md += f"- **Routine**: {test_type.title()} Diagnostic Scan\n"
+    md += f"- **Duration**: {dur_str}\n"
+    if temp_start is not None or temp_end is not None:
+        t_s = f"{temp_start}°C" if temp_start is not None else "--"
+        t_e = f"{temp_end}°C" if temp_end is not None else "--"
+        md += f"- **Thermal Envelope**: {t_s} (start) -> {t_e} (completion)\n"
+    md += f"- **First Error LBA**: {lba_first_error}\n\n"
+
+    if is_nvme and metrics:
+        md += "## Solid-State Health & Endurance\n"
+        if metrics.get("nvme_spare") is not None:
+            md += f"- **Available Spare**: {metrics['nvme_spare']}%\n"
+        if metrics.get("nvme_used") is not None:
+            md += f"- **Percentage Used (Wear)**: {metrics['nvme_used']}%\n"
+        if metrics.get("nvme_media_err") is not None:
+            md += f"- **Media and Data Integrity Errors**: {metrics['nvme_media_err']}\n"
+        if metrics.get("tbw_tb") is not None:
+            md += f"- **Total Bytes Written**: {metrics['tbw_tb']} TB\n"
+        md += "\n"
+    elif metrics:
+        md += "## Platter Surface & Defect Telemetry\n"
+        md += f"- **Reallocated Sectors**: {metrics.get('realloc', 0)}\n"
+        md += f"- **Current Pending Sectors**: {metrics.get('pending', 0)}\n"
+        md += f"- **Offline Uncorrectable Sectors**: {metrics.get('offline', 0)}\n"
+        md += f"- **UDMA CRC Errors**: {metrics.get('crc', 0)}\n\n"
+
+    if recommendation:
+        md += "## Homelab Recommendation\n"
+        md += f"{recommendation}\n"
+
+    return md
+
+
+def check_active_smart_tests():
+    """
+    Background watcher invoked by stats_collector smart_poller_daemon.
+    Detects when in-flight self-tests finish on drive firmware, logs reports to DB,
+    and publishes completion/failure events into the System Event Ledger.
+    """
+    with Z_STATE.lock:
+        active_items = list(Z_STATE.active_smart_tests.items())
+
+    if not active_items:
+        return
+
+    for dev_name, test_info in active_items:
+        try:
+            dev = _resolve_dev_path(dev_name)
+            is_nvme = dev_name.startswith("nvme")
+            dtype = "nvme" if is_nvme else "sat"
+            if Z_STATE.cached_disk_list:
+                for d in Z_STATE.cached_disk_list:
+                    if d.get("dev") == dev_name:
+                        dtype = d.get("smart_protocol") or dtype
+                        break
+
+            doc = None
+            try:
+                rj = subprocess.run(
+                    ["smartctl", "-x", "-j", "-d", dtype, dev],
+                    capture_output=True,
+                    text=True,
+                    timeout=20,
+                )
+                if rj.stdout and rj.stdout.strip().startswith("{"):
+                    doc = json.loads(rj.stdout)
+            except Exception:
+                doc = None
+
+            try:
+                r = subprocess.run(
+                    ["smartctl", "-x", "-d", dtype, dev],
+                    capture_output=True,
+                    text=True,
+                    timeout=20,
+                )
+                raw_text = (r.stdout or "") + ("\n" + r.stderr if r.stderr else "")
+            except Exception as e:
+                raw_text = f"Error: {e}"
+
+            progress, log_entries = _parse_self_test_info(doc, raw_text)
+
+            if progress.get("in_progress"):
+                with Z_STATE.lock:
+                    if dev_name in Z_STATE.active_smart_tests:
+                        Z_STATE.active_smart_tests[dev_name]["last_pct"] = progress.get("percent_completed", 0)
+                continue
+
+            # Test completed, aborted, or finished!
+            with Z_STATE.lock:
+                Z_STATE.active_smart_tests.pop(dev_name, None)
+
+            start_time = test_info.get("start_time", time.time())
+            duration_sec = max(1.0, round(time.time() - start_time, 1))
+            test_type = test_info.get("test_type", "short")
+            model = test_info.get("model", "Drive")
+            serial = test_info.get("serial", "Unknown")
+            is_nvme_drive = test_info.get("is_nvme", is_nvme)
+            temp_start = test_info.get("start_temp")
+            temp_end, _ = Z_STATE.cached_smart_data.get(dev_name, (None, None))
+
+            # Determine pass/fail outcome
+            is_aborted = bool(progress.get("is_aborted"))
+            top_entry = log_entries[0] if log_entries else {}
+            lba_err = top_entry.get("lba_first_error", "-") if top_entry else "-"
+
+            if is_aborted:
+                status = "ABORTED"
+                passed = False
+                level = "warning"
+                title = f"S.M.A.R.T. {test_type.title()} Test Aborted: /dev/{dev_name}"
+                summary = f"Self-test on {model} ({serial}) was interrupted before completion."
+                rec = "Test was cancelled. Re-run Short or Extended test when array activity is low."
+            elif top_entry.get("passed", True) and lba_err == "-":
+                status = "PASSED"
+                passed = True
+                level = "success"
+                title = f"S.M.A.R.T. {test_type.title()} Test Passed: /dev/{dev_name}"
+                summary = f"Drive {model} ({serial}) passed all diagnostic routines without error."
+                rec = "Drive passed all internal mechanical, magnetic, and electronics checks. Safe for array storage."
+            else:
+                status = "FAILED"
+                passed = False
+                level = "error"
+                title = f"S.M.A.R.T. {test_type.title()} Test FAILED: /dev/{dev_name}"
+                summary = f"Defect detected on {model} ({serial})! First failing LBA: {lba_err}."
+                rec = f"CRITICAL: Hardware surface read failure detected at LBA {lba_err}. Immediately backup data and prepare disk replacement."
+
+            # Fetch metrics
+            _, _, metrics = {}, {}, {}
+            poh = 0
+            if doc:
+                from backend.hardware.smart_engine import SmartTelemetryEngine
+
+                _, _, metrics, _, _, hours_str = SmartTelemetryEngine.decode_smart_json(doc, is_nvme=is_nvme_drive)
+                poh = int(hours_str) if str(hours_str).isdigit() else 0
+
+            # Generate markdown report
+            report_md = generate_smart_test_report_markdown(
+                dev=dev_name,
+                test_type=test_type,
+                status=status,
+                passed=passed,
+                model=model,
+                serial=serial,
+                duration_sec=duration_sec,
+                power_on_hours=poh,
+                temp_start=temp_start,
+                temp_end=temp_end,
+                lba_first_error=lba_err,
+                is_nvme=is_nvme_drive,
+                metrics=metrics,
+                recommendation=rec,
+            )
+
+            # Persist to database
+            log_smart_test_result(
+                dev=dev_name,
+                test_type=test_type,
+                status=status,
+                passed=passed,
+                duration_sec=duration_sec,
+                power_on_hours=poh,
+                temp_start=temp_start,
+                temp_end=temp_end,
+                lba_first_error=lba_err,
+                model=model,
+                serial=serial,
+                is_nvme=is_nvme_drive,
+                summary=summary,
+                recommendation=rec,
+                report_markdown=report_md,
+                raw_details=top_entry,
+            )
+
+            # Publish to System Event Ledger
+            add_event(
+                level=level,
+                title=title,
+                message=summary,
+                details={
+                    "type": "smart_test_result",
+                    "dev": dev_name,
+                    "test_type": test_type,
+                    "status": status,
+                    "passed": passed,
+                    "duration_sec": duration_sec,
+                    "lba_first_error": lba_err,
+                    "report_markdown": report_md,
+                },
+            )
+
+            # If failed, send notification via Apprise
+            if not passed and not is_aborted:
+                try:
+                    send_notification(
+                        title=f"S.M.A.R.T. Hardware Failure: /dev/{dev_name}",
+                        message=f"{model} ({serial}) failed {test_type.title()} test at LBA {lba_err}. Data loss risk: Replace drive immediately.",
+                        level="critical",
+                        event_type="smart",
+                        dedup_key=f"smart_failure_{dev_name}",
+                    )
+                except Exception as notif_e:
+                    logger.warning(f"[SMART] Failed to dispatch notification: {notif_e}")
+
+        except Exception as e:
+            logger.error(f"[SMART] Error checking active self-test for {dev_name}: {e}")
 
 
 def locate_disk(dev_name: str, duration_sec: int = 5) -> dict:

@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   renderSelfTestLog,
+  renderSmartLatestReport,
+  switchSmartTab,
   updateSmartTestProgressUI,
   generateSmartReportMarkdown,
   copySmartReport,
@@ -20,6 +22,12 @@ describe('S.M.A.R.T. Self-Test Progress & Historical Report Suite', () => {
     container = document.createElement('div');
     container.innerHTML = `
       <div id="smart-modal-overlay" class="smart-modal-backdrop open">
+        <div id="smart-nav-tabs" class="smart-nav-tabs">
+          <button class="smart-tab-btn active" data-tab="health">Health &amp; Telemetry</button>
+          <button class="smart-tab-btn" data-tab="selftest">Self-Test &amp; Reports</button>
+          <button class="smart-tab-btn" data-tab="raw">Raw Telemetry</button>
+        </div>
+
         <div id="smart-actions-container">
           <button id="smart-btn-short-test">Short Test</button>
           <button id="smart-btn-extended-test">Extended Test</button>
@@ -27,29 +35,48 @@ describe('S.M.A.R.T. Self-Test Progress & Historical Report Suite', () => {
           <span id="smart-test-status"></span>
         </div>
 
-        <div id="smart-progress-card" class="smart-progress-card" style="display: none;">
-          <span class="smart-progress-pulse-dot" id="smart-progress-pulse"></span>
-          <span id="smart-progress-status-desc" class="smart-progress-status-desc"></span>
-          <span id="smart-progress-pct-label" class="smart-progress-pct-label">0%</span>
-          <span id="smart-progress-eta" class="smart-progress-eta" style="display: none;"></span>
-          <div class="smart-progress-track">
-            <div id="smart-progress-bar" class="smart-progress-bar" style="width: 0%;"></div>
+        <div id="smart-pane-health" class="smart-pane active"></div>
+
+        <div id="smart-pane-selftest" class="smart-pane">
+          <div id="smart-progress-card" class="smart-progress-card" style="display: none;">
+            <span class="smart-progress-pulse-dot" id="smart-progress-pulse"></span>
+            <span id="smart-progress-status-desc" class="smart-progress-status-desc"></span>
+            <span id="smart-progress-pct-label" class="smart-progress-pct-label">0%</span>
+            <span id="smart-progress-eta" class="smart-progress-eta" style="display: none;"></span>
+            <div class="smart-progress-track">
+              <div id="smart-progress-bar" class="smart-progress-bar" style="width: 0%;"></div>
+            </div>
+          </div>
+
+          <div id="smart-latest-report-card" class="smart-report-card" style="display: none;">
+            <div id="smart-report-badge"></div>
+            <div id="smart-report-meta"></div>
+            <div id="smart-report-lba"></div>
+            <div id="smart-report-temp"></div>
+            <div id="smart-report-hours"></div>
+            <div id="smart-report-type"></div>
+            <div id="smart-report-recommendation"></div>
+          </div>
+
+          <div id="smart-empty-hero" class="smart-empty-hero" style="display: none;"></div>
+
+          <div id="smart-test-history-card">
+            <span id="smart-test-count-badge">0</span>
+            <button id="smart-btn-copy-report">
+              <span id="smart-copy-report-icon">📋</span>
+              <span id="smart-copy-report-label">Copy Report</span>
+            </button>
+            <table id="smart-test-history-table">
+              <tbody id="smart-test-history-tbody"></tbody>
+            </table>
+            <div id="smart-test-history-empty" style="display: none;">No records</div>
           </div>
         </div>
 
-        <div id="smart-test-history-card">
-          <span id="smart-test-count-badge">0</span>
-          <button id="smart-btn-copy-report">
-            <span id="smart-copy-report-icon">📋</span>
-            <span id="smart-copy-report-label">Copy Report</span>
-          </button>
-          <table id="smart-test-history-table">
-            <tbody id="smart-test-history-tbody"></tbody>
-          </table>
-          <div id="smart-test-history-empty" style="display: none;">No records</div>
+        <div id="smart-pane-raw" class="smart-pane">
+          <input id="smart-raw-filter" />
+          <pre id="smart-raw-output"></pre>
         </div>
-
-        <pre id="smart-raw-output"></pre>
       </div>
     `;
     document.body.appendChild(container);
@@ -349,6 +376,139 @@ describe('S.M.A.R.T. Self-Test Progress & Historical Report Suite', () => {
       await vi.advanceTimersByTimeAsync(2000);
       expect(icon.textContent).toBe('📋');
       expect(label.textContent).toBe('Copy Report');
+    });
+  });
+
+  describe('switchSmartTab', () => {
+    it('activates target tab button and shows corresponding pane while deactivating others', () => {
+      switchSmartTab('selftest');
+
+      const tabs = document.querySelectorAll('.smart-tab-btn');
+      const healthTab = Array.from(tabs).find((t) => t.dataset.tab === 'health');
+      const selftestTab = Array.from(tabs).find((t) => t.dataset.tab === 'selftest');
+      const rawTab = Array.from(tabs).find((t) => t.dataset.tab === 'raw');
+
+      expect(selftestTab.classList.contains('active')).toBe(true);
+      expect(healthTab.classList.contains('active')).toBe(false);
+      expect(rawTab.classList.contains('active')).toBe(false);
+
+      const healthPane = document.getElementById('smart-pane-health');
+      const selftestPane = document.getElementById('smart-pane-selftest');
+      const rawPane = document.getElementById('smart-pane-raw');
+
+      expect(selftestPane.classList.contains('active')).toBe(true);
+      expect(healthPane.classList.contains('active')).toBe(false);
+      expect(rawPane.classList.contains('active')).toBe(false);
+
+      // Switch to raw
+      switchSmartTab('raw');
+      expect(rawPane.classList.contains('active')).toBe(true);
+      expect(selftestPane.classList.contains('active')).toBe(false);
+    });
+  });
+
+  describe('renderSmartLatestReport', () => {
+    it('displays the Executive Diagnostic Report Card when latest_report is provided', () => {
+      const mockData = {
+        dev: 'nvme1n1',
+        model: 'WD_BLACK SN7100 2TB',
+        power_on_hours: 1420,
+        temp: 39,
+        latest_report: {
+          test_type: 'short',
+          passed: true,
+          status: 'Completed without error',
+          power_on_hours: 1420,
+          temp_end: 39,
+          lba_first_error: '-',
+          recommendation: 'Drive passed all internal self-tests.',
+          ts: 1791398000
+        }
+      };
+
+      renderSmartLatestReport(mockData);
+
+      const card = document.getElementById('smart-latest-report-card');
+      const badge = document.getElementById('smart-report-badge');
+      const meta = document.getElementById('smart-report-meta');
+      const lbaEl = document.getElementById('smart-report-lba');
+      const tempEl = document.getElementById('smart-report-temp');
+      const hoursEl = document.getElementById('smart-report-hours');
+      const typeEl = document.getElementById('smart-report-type');
+      const recEl = document.getElementById('smart-report-recommendation');
+      const emptyHero = document.getElementById('smart-empty-hero');
+
+      expect(card.style.display).toBe('flex');
+      expect(emptyHero.style.display).toBe('none');
+      expect(badge.textContent).toContain('PASSED');
+      expect(meta.textContent).toContain('SHORT');
+      expect(meta.textContent).toContain('Completed without error');
+      expect(lbaEl.textContent).toContain('0 Defects Detected');
+      expect(tempEl.textContent).toBe('39°C');
+      expect(hoursEl.textContent).toBe('1,420 h');
+      expect(typeEl.textContent).toBe('Short');
+      expect(recEl.textContent).toContain('Drive passed all internal self-tests.');
+    });
+
+    it('displays failure verdict and defect readout when self-test detects an uncorrectable LBA error', () => {
+      const mockData = {
+        dev: 'sda',
+        model: 'Seagate Exos X20',
+        power_on_hours: 8900,
+        temp: 42,
+        latest_report: {
+          test_type: 'extended',
+          passed: false,
+          status: 'Completed: read failure',
+          power_on_hours: 8900,
+          temp_end: 43,
+          lba_first_error: '12498744',
+          recommendation: 'Critical uncorrectable sector found at LBA 12498744. Replace drive immediately.'
+        }
+      };
+
+      renderSmartLatestReport(mockData);
+
+      const badge = document.getElementById('smart-report-badge');
+      const lbaEl = document.getElementById('smart-report-lba');
+      const recEl = document.getElementById('smart-report-recommendation');
+
+      expect(badge.textContent).toContain('FAILED');
+      expect(badge.classList.contains('smart-report-badge-crit')).toBe(true);
+      expect(lbaEl.textContent).toBe('Error at LBA 12498744');
+      expect(recEl.textContent).toContain('Replace drive immediately.');
+    });
+
+    it('shows empty hero CTA when no self-test reports or logs exist on the drive', () => {
+      const mockData = {
+        dev: 'nvme0n1',
+        model: 'Samsung 990 PRO 1TB',
+        power_on_hours: 320,
+        latest_report: null,
+        self_test_log: []
+      };
+
+      renderSmartLatestReport(mockData);
+
+      const card = document.getElementById('smart-latest-report-card');
+      const emptyHero = document.getElementById('smart-empty-hero');
+
+      expect(card.style.display).toBe('none');
+      expect(emptyHero.style.display).toBe('flex');
+    });
+  });
+
+  describe('generateSmartReportMarkdown with rich latest_report', () => {
+    it('uses latest_report.report_markdown when present', () => {
+      const mockData = {
+        dev: 'nvme1n1',
+        latest_report: {
+          report_markdown: '# S.M.A.R.T. Diagnostic Report: /dev/nvme1n1\n\n**Verdict**: PASSED\n\nExecutive Diagnostic Summary.'
+        }
+      };
+
+      const md = generateSmartReportMarkdown(mockData);
+      expect(md).toBe('# S.M.A.R.T. Diagnostic Report: /dev/nvme1n1\n\n**Verdict**: PASSED\n\nExecutive Diagnostic Summary.');
     });
   });
 });

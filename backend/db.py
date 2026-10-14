@@ -112,6 +112,30 @@ def init_db():
                 )
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_ups_events_ts ON ups_events(ts DESC)")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS smart_test_history (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    ts INTEGER NOT NULL,
+                    dev TEXT NOT NULL,
+                    model TEXT DEFAULT '',
+                    serial TEXT DEFAULT '',
+                    is_nvme INTEGER NOT NULL DEFAULT 0,
+                    test_type TEXT NOT NULL,
+                    status TEXT NOT NULL,
+                    passed INTEGER NOT NULL DEFAULT 1,
+                    duration_sec REAL DEFAULT 0.0,
+                    power_on_hours INTEGER DEFAULT 0,
+                    temp_start REAL,
+                    temp_end REAL,
+                    lba_first_error TEXT DEFAULT '-',
+                    summary TEXT DEFAULT '',
+                    recommendation TEXT DEFAULT '',
+                    report_markdown TEXT DEFAULT '',
+                    raw_details_json TEXT DEFAULT ''
+                )
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_smart_test_history_dev_ts ON smart_test_history(dev, ts DESC)")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_smart_test_history_ts ON smart_test_history(ts DESC)")
     except Exception as e:
         logger.error(f"Failed to initialize database: {e}")
 
@@ -406,6 +430,114 @@ def log_smart_metrics(ts: int, dev: str, temp: float | None, metrics: dict, powe
         logger.info(f"[ZettNAS] DB Log SMART History Error: {db_e}")
 
 
+def log_smart_test_result(
+    dev: str,
+    test_type: str,
+    status: str,
+    passed: bool,
+    duration_sec: float = 0.0,
+    power_on_hours: int = 0,
+    temp_start: Optional[float] = None,
+    temp_end: Optional[float] = None,
+    lba_first_error: str = "-",
+    model: str = "",
+    serial: str = "",
+    is_nvme: bool = False,
+    summary: str = "",
+    recommendation: str = "",
+    report_markdown: str = "",
+    raw_details: Optional[dict] = None,
+) -> int:
+    """Logs a completed, failed, or aborted S.M.A.R.T. self-test into the persistent SQLite WAL database."""
+    ts = int(time.time())
+    raw_json = json.dumps(raw_details) if raw_details else ""
+    try:
+        with db_session() as conn:
+            cur = conn.execute(
+                """
+                INSERT INTO smart_test_history
+                (ts, dev, model, serial, is_nvme, test_type, status, passed, duration_sec, power_on_hours, temp_start, temp_end, lba_first_error, summary, recommendation, report_markdown, raw_details_json)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    ts,
+                    dev,
+                    model,
+                    serial,
+                    1 if is_nvme else 0,
+                    test_type,
+                    status,
+                    1 if passed else 0,
+                    float(duration_sec),
+                    int(power_on_hours),
+                    temp_start,
+                    temp_end,
+                    lba_first_error,
+                    summary,
+                    recommendation,
+                    report_markdown,
+                    raw_json,
+                ),
+            )
+            return cur.lastrowid or 0
+    except Exception as e:
+        logger.error(f"[ZettNAS] Failed to log smart test result for {dev}: {e}")
+        return 0
+
+
+def get_latest_smart_test_result(dev: str, conn: Optional[sqlite3.Connection] = None) -> Optional[dict]:
+    """Returns the most recent self-test record for a specific drive."""
+
+    def _query(c: sqlite3.Connection):
+        c.row_factory = sqlite3.Row
+        row = c.execute(
+            "SELECT * FROM smart_test_history WHERE dev = ? ORDER BY ts DESC LIMIT 1",
+            (dev,),
+        ).fetchone()
+        if not row:
+            return None
+        res = dict(row)
+        res["passed"] = bool(res["passed"])
+        res["is_nvme"] = bool(res["is_nvme"])
+        return res
+
+    try:
+        if conn is not None:
+            return _query(conn)
+        with db_session() as c:
+            return _query(c)
+    except Exception as e:
+        logger.error(f"[ZettNAS] Failed to get latest smart test result for {dev}: {e}")
+        return None
+
+
+def get_smart_test_history(dev: Optional[str] = None, limit: int = 20) -> List[dict]:
+    """Returns historical self-test runs across all drives or filtered by dev node."""
+    try:
+        with db_session() as conn:
+            conn.row_factory = sqlite3.Row
+            if dev:
+                rows = conn.execute(
+                    "SELECT * FROM smart_test_history WHERE dev = ? ORDER BY ts DESC LIMIT ?",
+                    (dev, limit),
+                ).fetchall()
+            else:
+                rows = conn.execute(
+                    "SELECT * FROM smart_test_history ORDER BY ts DESC LIMIT ?",
+                    (limit,),
+                ).fetchall()
+            out = []
+            for r in rows:
+                item = dict(r)
+                item["passed"] = bool(item["passed"])
+                item["is_nvme"] = bool(item["is_nvme"])
+                out.append(item)
+            return out
+    except Exception as e:
+        logger.error(f"[ZettNAS] Failed to query smart test history: {e}")
+        return []
+
+
 def query_smart_velocity(dev: str, conn: sqlite3.Connection = None) -> dict:
     """
     Predictive SMART degradation engine:
@@ -539,6 +671,22 @@ def query_smart_velocity(dev: str, conn: sqlite3.Connection = None) -> dict:
         elif (latest["reallocated_sectors"] or 0) > 0:
             status = "monitor"
             rec_text = f"Drive has {latest['reallocated_sectors']} historical reallocated sectors, but velocity is zero over the last 30 days."
+
+        # Check if the latest self-test for this drive failed
+        try:
+            latest_test_row = c.execute(
+                "SELECT test_type, status, passed, lba_first_error FROM smart_test_history WHERE dev = ? ORDER BY ts DESC LIMIT 1",
+                (dev,),
+            ).fetchone()
+            if latest_test_row and not latest_test_row["passed"] and str(latest_test_row["status"]).upper() == "FAILED":
+                status = "critical"
+                lba_err = latest_test_row["lba_first_error"] or "Unknown"
+                rec_text = (
+                    f"Critical hardware test failure detected: {str(latest_test_row['test_type']).title()} test "
+                    f"failed with surface defect at LBA {lba_err}. Plan disk replacement immediately."
+                )
+        except Exception:
+            pass
 
         # Historical sparkline points for 30-day velocity visualization
         history_rows = c.execute(

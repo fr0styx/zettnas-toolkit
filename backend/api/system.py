@@ -142,6 +142,34 @@ async def disk_smart_test(req: DiskSmartTestRequest):
     return await asyncio.to_thread(run_disk_smart_test, dev, test_type)
 
 
+@router.get("/disk/smart_tests")
+async def get_disk_smart_tests(dev: Optional[str] = None, limit: int = 20):
+    """Returns persistent historical self-test runs and latest diagnostic report."""
+    if dev:
+        if dev.startswith("/dev/"):
+            dev = dev.replace("/dev/", "")
+        m = re.match(r"^nv([0-9]+)$", dev)
+        if m:
+            dev = f"nvme{m.group(1)}n1"
+        if not re.fullmatch(r"^(sd[a-z]{1,2}|nvme[0-9]+n[0-9]+)$", dev):
+            raise HTTPException(status_code=400, detail="Invalid device parameter.")
+    from backend.db import get_latest_smart_test_result, get_smart_test_history
+
+    history = await asyncio.to_thread(get_smart_test_history, dev, limit)
+    latest = await asyncio.to_thread(get_latest_smart_test_result, dev) if dev else None
+    active = None
+    if dev:
+        with Z_STATE.lock:
+            active = Z_STATE.active_smart_tests.get(dev)
+    return {
+        "success": True,
+        "dev": dev,
+        "active_test": active,
+        "latest_report": latest,
+        "history": history,
+    }
+
+
 @router.post("/disk/locate", dependencies=[Depends(require_scope("storage:write", "storage:admin"))])
 async def disk_locate_endpoint(payload: dict):
     dev = str(payload.get("dev", "sda"))

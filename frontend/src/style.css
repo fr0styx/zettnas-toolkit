@@ -3702,6 +3702,158 @@ body.theme-oled #cloud-remote-window select option {
   padding: 12px; font-family: monospace; font-size: 10px; color: #94a3b8; overflow-x: auto; max-height: 220px;
 }
 
+/* SMART Modal Segmented Navigation */
+.smart-nav-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 8px 16px;
+  background: rgba(0, 0, 0, 0.35);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+.smart-tab-btn {
+  font-size: 11px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-weight: 600;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+.smart-tab-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.06);
+}
+.smart-tab-btn.active {
+  color: #fff;
+  background: rgba(14, 165, 233, 0.18);
+  border-color: rgba(14, 165, 233, 0.4);
+  box-shadow: 0 0 12px rgba(14, 165, 233, 0.2);
+}
+
+/* SMART Pane Container */
+.smart-panes-container {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.smart-pane {
+  display: none;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px 20px;
+  flex-direction: column;
+  gap: 14px;
+}
+.smart-pane.active {
+  display: flex;
+}
+
+/* Usable Diagnostic Report Card */
+.smart-report-card {
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  border-radius: 8px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  flex-shrink: 0;
+}
+.smart-report-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.smart-report-badge-pill {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  padding: 3px 10px;
+  border-radius: 4px;
+  background: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+}
+.smart-report-badge-warn {
+  background: rgba(245, 158, 11, 0.2);
+  color: #f59e0b;
+  border-color: rgba(245, 158, 11, 0.4);
+}
+.smart-report-badge-crit {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.4);
+}
+.smart-report-meta {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 600;
+}
+.smart-report-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+.smart-report-metric .lbl {
+  font-size: 8.5px;
+  font-weight: 800;
+  color: var(--muted);
+  display: block;
+}
+.smart-report-metric .val {
+  font-size: 11px;
+  font-weight: 700;
+  color: #e2e8f0;
+}
+.smart-report-recommendation {
+  font-size: 11px;
+  line-height: 1.45;
+  color: #cbd5e1;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border-left: 3px solid #10b981;
+  border-radius: 0 4px 4px 0;
+}
+
+/* Empty State Hero */
+.smart-empty-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 24px 16px;
+  gap: 8px;
+}
+.smart-empty-icon {
+  font-size: 28px;
+  filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.4));
+}
+.smart-empty-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #f1f5f9;
+}
+.smart-empty-desc {
+  font-size: 11px;
+  color: var(--muted);
+  max-width: 360px;
+  line-height: 1.4;
+}
+
 /* SMART Self-Test Progress Card */
 .smart-progress-card {
   background: rgba(15, 23, 42, 0.7);
@@ -3792,6 +3944,8 @@ body.theme-oled #cloud-remote-window select option {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  flex-shrink: 0;
+  min-height: 140px;
 }
 .smart-test-history-header {
   padding: 8px 12px;
@@ -3835,7 +3989,8 @@ body.theme-oled #cloud-remote-window select option {
   color: #fff;
 }
 .smart-test-history-table-wrap {
-  max-height: 180px;
+  min-height: 80px;
+  max-height: 220px;
   overflow-y: auto;
 }
 .smart-test-table {

@@ -119,6 +119,44 @@ window.addEventListener('DOMContentLoaded', () => {
     if (abortTestBtn) abortTestBtn.addEventListener("click", () => triggerTest("abort"));
     if (copyReportBtn) copyReportBtn.addEventListener("click", copySmartReport);
 
+    // Segmented S.M.A.R.T. Navigation Tabs
+    const smartTabs = document.querySelectorAll(".smart-tab-btn");
+    smartTabs.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        switchSmartTab(btn.dataset.tab);
+      });
+    });
+
+    // Raw Telemetry Search / Filter and Copy
+    const rawFilterInput = document.getElementById("smart-raw-filter");
+    const copyRawBtn = document.getElementById("smart-btn-copy-raw");
+    if (rawFilterInput) {
+      rawFilterInput.addEventListener("input", () => {
+        const q = rawFilterInput.value.toLowerCase().trim();
+        if (!smartRaw || !_currentSmartData || !_currentSmartData.raw) return;
+        if (!q) {
+          smartRaw.textContent = _currentSmartData.raw;
+          return;
+        }
+        const lines = _currentSmartData.raw.split("\n");
+        const matched = lines.filter((l) => l.toLowerCase().includes(q));
+        smartRaw.textContent = matched.length > 0 ? matched.join("\n") : `No attributes matched filter "${q}".`;
+      });
+    }
+    if (copyRawBtn) {
+      copyRawBtn.addEventListener("click", async () => {
+        if (!smartRaw || !smartRaw.textContent) return;
+        try {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(smartRaw.textContent);
+          }
+          showToast(t("modal.smart_raw_copied", "Raw SMART attributes copied to clipboard"), "ok");
+        } catch {
+          showToast("Failed to copy raw attributes", "error");
+        }
+      });
+    }
+
     // Event Detail Modal Setup
     _eventDetailOverlay = document.getElementById("event-detail-modal-overlay");
     const eventDetailClose = document.getElementById("event-detail-close");
@@ -142,7 +180,10 @@ window.addEventListener('DOMContentLoaded', () => {
     if (eventDetailCopyBtn) {
       eventDetailCopyBtn.addEventListener("click", async () => {
         if (!_currentEventDetailData) return;
-        const textToCopy = JSON.stringify(_currentEventDetailData, null, 2);
+        let textToCopy = JSON.stringify(_currentEventDetailData, null, 2);
+        if (_currentEventDetailData?.details?.report_markdown) {
+          textToCopy = _currentEventDetailData.details.report_markdown;
+        }
         try {
           if (navigator.clipboard && navigator.clipboard.writeText) {
             await navigator.clipboard.writeText(textToCopy);
@@ -174,20 +215,32 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+export function switchSmartTab(tabName) {
+  const smartTabs = document.querySelectorAll(".smart-tab-btn");
+  smartTabs.forEach((b) => b.classList.toggle("active", b.dataset.tab === tabName));
+  document.querySelectorAll(".smart-pane").forEach((pane) => {
+    pane.classList.toggle("active", pane.id === `smart-pane-${tabName}`);
+    pane.style.display = ""; // clear inline overrides
+  });
+}
+
 export function renderSelfTestLog(log) {
   const tbody = document.getElementById("smart-test-history-tbody");
   const empty = document.getElementById("smart-test-history-empty");
   const badge = document.getElementById("smart-test-count-badge");
+  const table = document.getElementById("smart-test-history-table");
   if (!tbody) return;
 
   if (!log || !Array.isArray(log) || log.length === 0) {
     tbody.innerHTML = "";
     if (empty) empty.style.display = "block";
+    if (table) table.style.display = "none";
     if (badge) badge.textContent = "0";
     return;
   }
 
   if (empty) empty.style.display = "none";
+  if (table) table.style.display = "table";
   if (badge) badge.textContent = String(log.length);
 
   const escapeHtml = (str) => {
@@ -233,6 +286,83 @@ export function renderSelfTestLog(log) {
       </tr>
     `;
   }).join("");
+}
+
+export function renderSmartLatestReport(data) {
+  const card = document.getElementById("smart-latest-report-card");
+  const emptyHero = document.getElementById("smart-empty-hero");
+  const badge = document.getElementById("smart-report-badge");
+  const meta = document.getElementById("smart-report-meta");
+  const lbaEl = document.getElementById("smart-report-lba");
+  const tempEl = document.getElementById("smart-report-temp");
+  const hoursEl = document.getElementById("smart-report-hours");
+  const typeEl = document.getElementById("smart-report-type");
+  const recEl = document.getElementById("smart-report-recommendation");
+  if (!card) return;
+
+  const report = data?.latest_report;
+  const topLog = data?.self_test_log && data.self_test_log.length > 0 ? data.self_test_log[0] : null;
+
+  if (!report && !topLog) {
+    card.style.display = "none";
+    if (emptyHero) emptyHero.style.display = "flex";
+    return;
+  }
+
+  if (emptyHero) emptyHero.style.display = "none";
+  card.style.display = "flex";
+
+  const passed = report ? report.passed : topLog ? topLog.passed : true;
+  const statusStr = report ? report.status : topLog ? topLog.status : "Completed";
+  const testType = report ? report.test_type : topLog ? topLog.type : "Self-test";
+  const lba = (report ? report.lba_first_error : topLog ? topLog.lba_first_error : "-") || "-";
+  const hours = (report ? report.power_on_hours : topLog ? topLog.lifetime_hours : data?.power_on_hours) || "--";
+  const temp = report && report.temp_end != null ? `${report.temp_end}°C` : data?.temp != null ? `${data.temp}°C` : "--";
+
+  if (badge) {
+    badge.className = "smart-report-badge-pill";
+    if (passed) {
+      badge.textContent = `✓ ${t("modal.smart_verdict_passed", "PASSED")}`;
+    } else if (statusStr.toLowerCase().includes("abort") || statusStr.toLowerCase().includes("cancel")) {
+      badge.classList.add("smart-report-badge-warn");
+      badge.textContent = `⏹ ${t("modal.smart_verdict_aborted", "ABORTED")}`;
+    } else {
+      badge.classList.add("smart-report-badge-crit");
+      badge.textContent = `✗ ${t("modal.smart_verdict_failed", "FAILED")}`;
+    }
+  }
+
+  if (meta) {
+    const timeStr = report && report.ts ? new Date(report.ts * 1000).toLocaleString() : "";
+    meta.textContent = `${testType.toUpperCase()} • ${statusStr}${timeStr ? ` • ${timeStr}` : ""}`;
+  }
+
+  if (lbaEl) {
+    lbaEl.textContent = lba === "-" ? t("modal.smart_zero_defects", "0 Defects Detected") : `Error at LBA ${lba}`;
+    lbaEl.style.color = lba === "-" ? "var(--ok, #10b981)" : "var(--crit, #ef4444)";
+  }
+
+  if (tempEl) tempEl.textContent = temp;
+  if (hoursEl) hoursEl.textContent = hours !== "--" ? `${Number(hours).toLocaleString()} h` : "--";
+  if (typeEl) typeEl.textContent = testType.charAt(0).toUpperCase() + testType.slice(1);
+
+  if (recEl) {
+    let rec = report?.recommendation || "";
+    if (!rec) {
+      if (passed) {
+        rec = t(
+          "modal.smart_rec_passed",
+          "Drive passed all internal mechanical, magnetic, and electronics checks. Safe for array storage."
+        );
+      } else {
+        rec = t(
+          "modal.smart_rec_failed",
+          "Critical surface read or media defect detected. Plan immediate backup and drive replacement."
+        );
+      }
+    }
+    recEl.textContent = `💡 ${rec}`;
+  }
 }
 
 export function updateSmartTestProgressUI(data, testType) {
@@ -379,6 +509,7 @@ export function startSmartPolling(devName, testType = 'short') {
 
       if (smartRaw && data.raw) smartRaw.textContent = data.raw;
       renderSelfTestLog(data.self_test_log);
+      renderSmartLatestReport(data);
       updateSmartTestProgressUI(data, testType);
 
       if (!data.self_test_progress?.in_progress) {
@@ -398,6 +529,9 @@ export function startSmartPolling(devName, testType = 'short') {
 
 export function generateSmartReportMarkdown(data) {
   if (!data) return "No S.M.A.R.T. data available.";
+  if (data.latest_report && data.latest_report.report_markdown) {
+    return data.latest_report.report_markdown;
+  }
   const dev = data.dev || "unknown";
   const model = data.model || "Unknown";
   const serial = data.serial || "Unknown";
@@ -538,6 +672,14 @@ async function openSmartModal(devName, forceWake = false) {
   const actionsBox = document.getElementById("smart-actions-container");
   if (actionsBox) actionsBox.style.display = "flex";
 
+  switchSmartTab("health");
+  const navTabs = document.getElementById("smart-nav-tabs");
+  if (navTabs) navTabs.style.display = "flex";
+  const rawFilterWrap = document.querySelector(".smart-raw-toolbar");
+  if (rawFilterWrap) rawFilterWrap.style.display = "flex";
+  const rawFilterInput = document.getElementById("smart-raw-filter");
+  if (rawFilterInput) rawFilterInput.value = "";
+
   if (smartTitle) smartTitle.innerHTML = `<svg class="ic"><use href="#i-disk"/></svg> ${t('modal.diag_title', 'S.M.A.R.T. Diagnostics')} • /dev/${devName}`;
   if (smartLbl1) smartLbl1.textContent = t('modal.smart_device_model', "DEVICE & MODEL");
   if (smartLbl2) smartLbl2.textContent = t('modal.smart_serial_metric', "SERIAL NUMBER");
@@ -569,6 +711,7 @@ async function openSmartModal(devName, forceWake = false) {
         }
       }
       renderSelfTestLog(data.self_test_log);
+      renderSmartLatestReport(data);
       updateSmartTestProgressUI(data);
 
       if (data.self_test_progress && data.self_test_progress.in_progress) {
@@ -715,6 +858,26 @@ function openMetricModal(type) {
 
   const actionsBox = document.getElementById("smart-actions-container");
   if (actionsBox) actionsBox.style.display = "none";
+
+  const navTabs = document.getElementById("smart-nav-tabs");
+  if (navTabs) navTabs.style.display = "none";
+  const healthPane = document.getElementById("smart-pane-health");
+  const selftestPane = document.getElementById("smart-pane-selftest");
+  const rawPane = document.getElementById("smart-pane-raw");
+  if (healthPane) {
+    healthPane.classList.add("active");
+    healthPane.style.display = "block";
+  }
+  if (selftestPane) {
+    selftestPane.classList.remove("active");
+    selftestPane.style.display = "none";
+  }
+  if (rawPane) {
+    rawPane.classList.add("active");
+    rawPane.style.display = "block";
+  }
+  const rawFilterWrap = document.querySelector(".smart-raw-toolbar");
+  if (rawFilterWrap) rawFilterWrap.style.display = "none";
 
   if (type === "storage") {
     smartTitle.innerHTML = `<svg class="ic"><use href="#i-disk"/></svg> ${t('modal.storage_diag', 'Storage Array Diagnostics')}`;
@@ -972,9 +1135,13 @@ export function openEventDetailModal(ev) {
     actionLabel = t("event_detail.action_smart", "Inspect S.M.A.R.T.");
     actionFn = () => {
       closeEventDetailModal();
-      const devMatch = searchStr.match(/\b(sd[a-z]|nvme\d+n\d+)\b/);
-      if (devMatch && typeof openSmartModal === "function") {
-        openSmartModal(devMatch[1]);
+      const dev = ev.details?.dev || (searchStr.match(/\b(sd[a-z]|nvme\d+n\d+)\b/) || [])[1];
+      if (dev && typeof openSmartModal === "function") {
+        openSmartModal(dev, true).then(() => {
+          if (typeof switchSmartTab === "function") {
+            switchSmartTab("selftest");
+          }
+        });
         return;
       }
       if (typeof window.openManagementWindow === "function") {
@@ -1087,10 +1254,14 @@ export function openEventDetailModal(ev) {
   if (messageEl) messageEl.textContent = ev.message || "--";
 
   if (rawEl) {
-    try {
-      rawEl.textContent = JSON.stringify(ev, null, 2);
-    } catch {
-      rawEl.textContent = String(ev);
+    if (ev.details && ev.details.report_markdown) {
+      rawEl.textContent = ev.details.report_markdown;
+    } else {
+      try {
+        rawEl.textContent = JSON.stringify(ev, null, 2);
+      } catch {
+        rawEl.textContent = String(ev);
+      }
     }
   }
 

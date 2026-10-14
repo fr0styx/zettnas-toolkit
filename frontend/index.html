@@ -845,73 +845,133 @@
         </div>
       </div>
     </div>
-    <div class="smart-modal-body">
-      <div class="smart-meta-grid" id="smart-modal-grid">
-        <div class="smart-meta-cell"><span class="lbl" id="smart-lbl-1" data-i18n="modal.smart_device_model">DEVICE & MODEL</span><span class="val" id="smart-meta-model">--</span></div>
-        <div class="smart-meta-cell"><span class="lbl" id="smart-lbl-2" data-i18n="modal.smart_serial_metric">SERIAL / METRIC</span><span class="val" id="smart-meta-serial">--</span></div>
-        <div class="smart-meta-cell"><span class="lbl" id="smart-lbl-3" data-i18n="modal.smart_health_status">HEALTH / STATUS</span><span class="val" id="smart-meta-health">--</span></div>
-        <div class="smart-meta-cell"><span class="lbl" id="smart-lbl-4" data-i18n="modal.smart_hours_readout">HOURS / READOUT</span><span class="val" id="smart-meta-hours">--</span></div>
-      </div>
-      <div id="smart-degradation-banner" style="display: none; margin: 8px 0; padding: 8px 10px; border-radius: 6px; font-size: 11px; line-height: 1.4; border: 1px solid rgba(255,255,255,0.08); background: rgba(0,0,0,0.25);"></div>
-      <div id="smart-actions-container" style="display: flex; gap: 8px; align-items: center; margin: 10px 0 6px 0; padding: 6px 8px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 6px;">
-        <span style="font-size: 9.5px; font-weight: 800; color: var(--muted); letter-spacing: 0.8px;" data-i18n="modal.smart_self_tests">SELF-TESTS:</span>
-        <button id="smart-btn-short-test" class="smart-test-action-btn" style="background: rgba(37,194,160,0.15); border: 1px solid var(--accent); color: var(--accent); font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 4px; cursor: pointer;" data-i18n="modal.smart_short_test">▶ Run Short Test (~2m)</button>
-        <button id="smart-btn-extended-test" class="smart-test-action-btn" style="background: rgba(52,152,219,0.15); border: 1px solid #3498db; color: #38bdf8; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 4px; cursor: pointer;" data-i18n="modal.smart_extended_test">▶ Run Extended Test</button>
-        <button id="smart-btn-abort-test" class="smart-test-action-btn" style="display: none; background: rgba(231,76,60,0.15); border: 1px solid #e74c3c; color: #ff6b6b; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 4px; cursor: pointer;" data-i18n="modal.smart_abort_test">⏹ Abort Test</button>
-        <span id="smart-test-status" style="font-size: 10px; color: var(--muted); margin-left: auto;"></span>
+    <!-- Segmented Navigation Tabs -->
+    <div class="smart-nav-tabs" id="smart-nav-tabs">
+      <button type="button" class="smart-tab-btn active" data-tab="health" id="smart-tab-btn-health">
+        <span class="tab-icon">🛡️</span> <span data-i18n="modal.smart_tab_health">Health & Velocity</span>
+      </button>
+      <button type="button" class="smart-tab-btn" data-tab="selftest" id="smart-tab-btn-selftest">
+        <span class="tab-icon">⚡</span> <span data-i18n="modal.smart_tab_selftest">Self-Test & Reports</span>
+      </button>
+      <button type="button" class="smart-tab-btn" data-tab="raw" id="smart-tab-btn-raw">
+        <span class="tab-icon">📜</span> <span data-i18n="modal.smart_tab_raw">Raw SMART Data</span>
+      </button>
+    </div>
+
+    <div class="smart-panes-container">
+      <!-- PANE 1: Health & Velocity -->
+      <div id="smart-pane-health" class="smart-pane active">
+        <div class="smart-meta-grid" id="smart-modal-grid">
+          <div class="smart-meta-cell"><span class="lbl" id="smart-lbl-1" data-i18n="modal.smart_device_model">DEVICE & MODEL</span><span class="val" id="smart-meta-model">--</span></div>
+          <div class="smart-meta-cell"><span class="lbl" id="smart-lbl-2" data-i18n="modal.smart_serial_metric">SERIAL / METRIC</span><span class="val" id="smart-meta-serial">--</span></div>
+          <div class="smart-meta-cell"><span class="lbl" id="smart-lbl-3" data-i18n="modal.smart_health_status">HEALTH / STATUS</span><span class="val" id="smart-meta-health">--</span></div>
+          <div class="smart-meta-cell"><span class="lbl" id="smart-lbl-4" data-i18n="modal.smart_hours_readout">HOURS / READOUT</span><span class="val" id="smart-meta-hours">--</span></div>
+        </div>
+        <div id="smart-degradation-banner" style="display: none; margin: 8px 0; padding: 8px 10px; border-radius: 6px; font-size: 11px; line-height: 1.4; border: 1px solid rgba(255,255,255,0.08); background: rgba(0,0,0,0.25);"></div>
       </div>
 
-      <!-- S.M.A.R.T. Active Self-Test Progress Card -->
-      <div id="smart-progress-card" class="smart-progress-card" style="display: none;">
-        <div class="smart-progress-header">
-          <div class="smart-progress-label-wrap">
-            <span class="smart-progress-pulse-dot" id="smart-progress-pulse"></span>
-            <span id="smart-progress-status-desc" class="smart-progress-status-desc" data-i18n="modal.smart_test_in_progress">Self-test in progress...</span>
+      <!-- PANE 2: Self-Test & Reports -->
+      <div id="smart-pane-selftest" class="smart-pane">
+        <div id="smart-actions-container" style="display: flex; gap: 8px; align-items: center; padding: 8px 10px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px;">
+          <span style="font-size: 9.5px; font-weight: 800; color: var(--muted); letter-spacing: 0.8px;" data-i18n="modal.smart_self_tests">SELF-TESTS:</span>
+          <button id="smart-btn-short-test" class="smart-test-action-btn" style="background: rgba(37,194,160,0.15); border: 1px solid var(--accent); color: var(--accent); font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 4px; cursor: pointer;" data-i18n="modal.smart_short_test">▶ Run Short Test (~2m)</button>
+          <button id="smart-btn-extended-test" class="smart-test-action-btn" style="background: rgba(52,152,219,0.15); border: 1px solid #3498db; color: #38bdf8; font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 4px; cursor: pointer;" data-i18n="modal.smart_extended_test">▶ Run Extended Test</button>
+          <button id="smart-btn-abort-test" class="smart-test-action-btn" style="display: none; background: rgba(231,76,60,0.15); border: 1px solid #e74c3c; color: #ff6b6b; font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 4px; cursor: pointer;" data-i18n="modal.smart_abort_test">⏹ Abort Test</button>
+          <span id="smart-test-status" style="font-size: 10px; color: var(--muted); margin-left: auto;"></span>
+        </div>
+
+        <!-- S.M.A.R.T. Active Self-Test Progress Card -->
+        <div id="smart-progress-card" class="smart-progress-card" style="display: none;">
+          <div class="smart-progress-header">
+            <div class="smart-progress-label-wrap">
+              <span class="smart-progress-pulse-dot" id="smart-progress-pulse"></span>
+              <span id="smart-progress-status-desc" class="smart-progress-status-desc" data-i18n="modal.smart_test_in_progress">Self-test in progress...</span>
+            </div>
+            <div class="smart-progress-meta-wrap">
+              <span id="smart-progress-pct-label" class="smart-progress-pct-label">0%</span>
+              <span id="smart-progress-eta" class="smart-progress-eta" style="display: none;"></span>
+            </div>
           </div>
-          <div class="smart-progress-meta-wrap">
-            <span id="smart-progress-pct-label" class="smart-progress-pct-label">0%</span>
-            <span id="smart-progress-eta" class="smart-progress-eta" style="display: none;"></span>
+          <div class="smart-progress-track">
+            <div id="smart-progress-bar" class="smart-progress-bar" style="width: 0%;"></div>
           </div>
         </div>
-        <div class="smart-progress-track">
-          <div id="smart-progress-bar" class="smart-progress-bar" style="width: 0%;"></div>
+
+        <!-- S.M.A.R.T. Executive Diagnostic Report Card -->
+        <div id="smart-latest-report-card" class="smart-report-card" style="display: none;">
+          <div class="smart-report-header">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="smart-report-badge-pill" id="smart-report-badge">✓ PASSED</span>
+              <span class="smart-report-meta" id="smart-report-meta">Short Test • Completed</span>
+            </div>
+            <button id="smart-btn-copy-report" type="button" class="smart-btn-copy-report" title="Copy formatted SMART report to clipboard">
+              <span id="smart-copy-report-icon">📋</span>
+              <span id="smart-copy-report-label" data-i18n="modal.smart_copy_report">Copy Report</span>
+            </button>
+          </div>
+          <div class="smart-report-grid">
+            <div class="smart-report-metric">
+              <span class="lbl" data-i18n="modal.smart_report_surface">SURFACE INTEGRITY</span>
+              <span class="val" id="smart-report-lba">0 Defects</span>
+            </div>
+            <div class="smart-report-metric">
+              <span class="lbl" data-i18n="modal.smart_report_temp">DRIVE TEMP</span>
+              <span class="val" id="smart-report-temp">--</span>
+            </div>
+            <div class="smart-report-metric">
+              <span class="lbl" data-i18n="modal.smart_report_hours">LIFETIME AT TEST</span>
+              <span class="val" id="smart-report-hours">--</span>
+            </div>
+            <div class="smart-report-metric">
+              <span class="lbl" data-i18n="modal.smart_report_routine">TEST ROUTINE</span>
+              <span class="val" id="smart-report-type">Short Offline</span>
+            </div>
+          </div>
+          <div class="smart-report-recommendation" id="smart-report-recommendation"></div>
+        </div>
+
+        <!-- S.M.A.R.T. Self-Test History Card -->
+        <div id="smart-test-history-card" class="smart-test-history-card">
+          <div class="smart-test-history-header">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="smart-test-history-title" data-i18n="modal.smart_test_history_title">SELF-TEST LOG & RESULTS</span>
+              <span class="smart-test-count-badge" id="smart-test-count-badge">0</span>
+            </div>
+          </div>
+          <div class="smart-test-history-table-wrap">
+            <table class="smart-test-table" id="smart-test-history-table">
+              <thead>
+                <tr>
+                  <th style="width: 38px;">#</th>
+                  <th data-i18n="modal.smart_col_type">Test Type</th>
+                  <th data-i18n="modal.smart_col_status">Status / Result</th>
+                  <th data-i18n="modal.smart_col_hours">Lifetime Hours</th>
+                  <th data-i18n="modal.smart_col_lba">First Error LBA</th>
+                </tr>
+              </thead>
+              <tbody id="smart-test-history-tbody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+            <div id="smart-test-history-empty" class="smart-test-history-empty" style="display: none;">
+              <div class="smart-empty-hero">
+                <div class="smart-empty-icon">🩺</div>
+                <div class="smart-empty-title" data-i18n="modal.smart_no_tests_title">No Historical Self-Tests Logged</div>
+                <div class="smart-empty-desc" data-i18n="modal.smart_no_tests_desc">Run a 2-minute Short Test to verify controller ASIC, servo tracking, and sector readability.</div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- S.M.A.R.T. Self-Test History & Report Card -->
-      <div id="smart-test-history-card" class="smart-test-history-card">
-        <div class="smart-test-history-header">
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <span class="smart-test-history-title" data-i18n="modal.smart_test_history_title">SELF-TEST LOG & RESULTS</span>
-            <span class="smart-test-count-badge" id="smart-test-count-badge">0</span>
-          </div>
-          <button id="smart-btn-copy-report" type="button" class="smart-btn-copy-report" title="Copy formatted SMART report to clipboard">
-            <span id="smart-copy-report-icon">📋</span>
-            <span id="smart-copy-report-label" data-i18n="modal.smart_copy_report">Copy Report</span>
-          </button>
+      <!-- PANE 3: Raw SMART Telemetry -->
+      <div id="smart-pane-raw" class="smart-pane">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+          <input type="text" id="smart-raw-filter" class="smart-raw-search-input" placeholder="Filter attributes (e.g. realloc, temp, pending, crc)..." style="flex: 1; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 6px 10px; font-size: 11px; color: #fff; font-family: monospace;" />
+          <button id="smart-btn-copy-raw" class="smart-test-action-btn" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #cbd5e1; font-size: 10px; font-weight: 600; padding: 5px 10px; border-radius: 4px; cursor: pointer;">📋 Copy Raw</button>
         </div>
-        <div class="smart-test-history-table-wrap">
-          <table class="smart-test-table" id="smart-test-history-table">
-            <thead>
-              <tr>
-                <th style="width: 38px;">#</th>
-                <th data-i18n="modal.smart_col_type">Test Type</th>
-                <th data-i18n="modal.smart_col_status">Status / Result</th>
-                <th data-i18n="modal.smart_col_hours">Lifetime Hours</th>
-                <th data-i18n="modal.smart_col_lba">First Error LBA</th>
-              </tr>
-            </thead>
-            <tbody id="smart-test-history-tbody">
-              <!-- Dynamically populated -->
-            </tbody>
-          </table>
-          <div id="smart-test-history-empty" class="smart-test-history-empty" style="display: none;" data-i18n="modal.smart_no_tests">
-            No self-test records logged for this drive.
-          </div>
-        </div>
+        <pre class="smart-raw-pre" id="smart-raw-output" style="max-height: none; flex: 1; margin: 0;">Querying telemetry...</pre>
       </div>
-      <span style="font-size:9px; font-weight:800; color:var(--muted); letter-spacing:1px;" id="smart-modal-raw-title" data-i18n="modal.smart_raw_telemetry">RAW TELEMETRY ATTRIBUTES</span>
-      <pre class="smart-raw-pre" id="smart-raw-output">Querying telemetry...</pre>
     </div>
   </div>
 </div>
