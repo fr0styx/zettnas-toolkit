@@ -18,29 +18,50 @@ if not _env_pool:
         os.path.ismount("/mnt/user") or (os.path.isdir("/mnt/user") and len(os.listdir("/mnt/user")) > 1)
     ):
         POOL_PATH = "/mnt/user"
-    elif os.path.exists("/zettos/pool/1") and os.path.isdir("/zettos/pool/1"):
-        POOL_PATH = "/zettos/pool/1"
-    elif os.path.exists("/zettos/pool") and os.path.isdir("/zettos/pool"):
-        POOL_PATH = "/zettos/pool"
-    elif os.path.exists("/mnt/storage"):
-        POOL_PATH = "/mnt/storage"
     else:
-        POOL_PATH = "/mnt/user"
+        # Check ZettOS pool directories across all Zettlab appliance models (D4, D6, D6U, D8, D8U)
+        _found_pool = None
+        for _zp in (
+            "/zettos/pool/1",
+            "/zettos/pool/data",
+            "/zettos/pool/storage",
+            "/zettos/pool/2",
+            "/zettos/pool",
+        ):
+            if os.path.exists(_zp) and os.path.isdir(_zp):
+                _found_pool = _zp
+                break
+        if _found_pool:
+            POOL_PATH = _found_pool
+        elif os.path.exists("/mnt/storage"):
+            POOL_PATH = "/mnt/storage"
+        else:
+            POOL_PATH = "/mnt/user"
 elif (
     _env_pool == "/mnt/storage"
     and os.path.exists("/mnt/user")
     and (os.path.ismount("/mnt/user") or (os.path.isdir("/mnt/user") and len(os.listdir("/mnt/user")) > 1))
 ):
     POOL_PATH = "/mnt/user"
-elif (
-    _env_pool == "/mnt/storage"
-    and not (
-        os.path.exists("/mnt/user")
-        and (os.path.ismount("/mnt/user") or (os.path.isdir("/mnt/user") and len(os.listdir("/mnt/user")) > 1))
-    )
-    and (os.path.exists("/zettos/pool/1") or os.path.exists("/zettos/pool"))
+elif _env_pool == "/mnt/storage" and not (
+    os.path.exists("/mnt/user")
+    and (os.path.ismount("/mnt/user") or (os.path.isdir("/mnt/user") and len(os.listdir("/mnt/user")) > 1))
 ):
-    POOL_PATH = "/zettos/pool/1" if os.path.exists("/zettos/pool/1") else "/zettos/pool"
+    _found_pool = None
+    for _zp in (
+        "/zettos/pool/1",
+        "/zettos/pool/data",
+        "/zettos/pool/storage",
+        "/zettos/pool/2",
+        "/zettos/pool",
+    ):
+        if os.path.exists(_zp) and os.path.isdir(_zp):
+            _found_pool = _zp
+            break
+    if _found_pool:
+        POOL_PATH = _found_pool
+    else:
+        POOL_PATH = _env_pool
 else:
     POOL_PATH = _env_pool
 DISKS = os.environ.get("DISKS", "")

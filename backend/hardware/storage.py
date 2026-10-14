@@ -85,11 +85,11 @@ def get_chassis_friendly_name(slug_or_model: str) -> str:
     if not slug_or_model:
         return "Standard / DIY Enclosure"
     s = str(slug_or_model).strip().lower()
-    if s in ("d4", "wy110", "nas-4", "4-bay"):
+    if s in ("d4", "wy110", "nas-4", "4-bay") or "d4" in s:
         return "Zettlab D4 (4-Bay)"
-    if s in ("d6u", "d6", "wy120", "nas-6", "6-bay"):
+    if s in ("d6u", "d6", "wy120", "nas-6", "6-bay") or "d6" in s:
         return "Zettlab D6 Ultra (6-Bay)"
-    if s in ("d8u", "d8", "wy140", "nas-8", "8-bay"):
+    if s in ("d8u", "d8", "wy140", "nas-8", "8-bay", "d8pro") or "d8" in s:
         return "Zettlab D8 Ultra (8-Bay)"
     if "aoostar" in s or "wtr" in s:
         return "AOOSTAR WTR Enclosure"
@@ -181,38 +181,38 @@ def detect_chassis_model(force: bool = False):
     dt_combined = f"{dt_model} {dt_compat}".strip()
 
     if dt_combined:
-        if any(k in dt_combined for k in ("wy110", "d4 ultra", "d4 pro", "nas-4")) or (
-            "d4" in dt_model and any(k in dt_combined for k in ("zettlab", "rk3588", "rockchip", "zettos"))
+        if any(k in dt_combined for k in ("wy110", "d4 ultra", "d4u", "d4 pro", "nas-4")) or (
+            "d4" in dt_combined and any(k in dt_combined for k in ("zettlab", "rk3588", "rockchip", "zettos"))
         ):
             Z_STATE.cached_chassis_model = "d4"
             return "d4"
-        if any(k in dt_combined for k in ("wy140", "d8 ultra", "d8u", "nas-8")) or (
-            "d8" in dt_model and any(k in dt_combined for k in ("zettlab", "rk3588", "rockchip", "zettos"))
+        if any(k in dt_combined for k in ("wy140", "d8 ultra", "d8u", "d8 pro", "d8pro", "nas-8")) or (
+            "d8" in dt_combined and any(k in dt_combined for k in ("zettlab", "rk3588", "rockchip", "zettos"))
         ):
             Z_STATE.cached_chassis_model = "d8u"
             return "d8u"
-        if any(k in dt_combined for k in ("wy120", "d6 ultra", "d6u", "nas-6")) or (
-            "d6" in dt_model and any(k in dt_combined for k in ("zettlab", "rk3588", "rockchip", "zettos"))
+        if any(k in dt_combined for k in ("wy120", "d6 ultra", "d6u", "d6 pro", "nas-6")) or (
+            "d6" in dt_combined and any(k in dt_combined for k in ("zettlab", "rk3588", "rockchip", "zettos"))
         ):
             Z_STATE.cached_chassis_model = "d6u"
             return "d6u"
 
     # D4 Motherboard (WY110 / N100 4-bay) check
-    if any(k in combined_dmi for k in ("wy110", "d4 ultra", "d4 pro", "nas-4")) or (
+    if any(k in combined_dmi for k in ("wy110", "d4 ultra", "d4 pro", "d4u", "nas-4")) or (
         "d4" in prod or "d4" in board or "d4" in sku
     ):
         Z_STATE.cached_chassis_model = "d4"
         return "d4"
 
     # D8 Motherboard (WY140 / 8-bay) check
-    if any(k in combined_dmi for k in ("wy140", "d8 ultra", "d8u", "nas-8")) or (
+    if any(k in combined_dmi for k in ("wy140", "d8 ultra", "d8u", "d8 pro", "d8pro", "nas-8")) or (
         "d8" in prod or "d8" in board or "d8" in sku
     ):
         Z_STATE.cached_chassis_model = "d8u"
         return "d8u"
 
     # D6 Motherboard (WY120 / i3-N305 6-bay) check
-    if any(k in combined_dmi for k in ("wy120", "d6 ultra", "d6u", "nas-6")) or (
+    if any(k in combined_dmi for k in ("wy120", "d6 ultra", "d6u", "d6 pro", "nas-6")) or (
         "d6" in prod or "d6" in board or "d6" in sku
     ):
         Z_STATE.cached_chassis_model = "d6u"

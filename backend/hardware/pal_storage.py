@@ -303,7 +303,7 @@ class StoragePlatformAdapter(ABC):
                 try:
                     if os.stat(path).st_dev == os.stat("/").st_dev:
                         u = shutil.disk_usage(path)
-                        if u.total < 64 * 1024 * 1024 * 1024:
+                        if u.total < 128 * 1024 * 1024 * 1024:
                             return True
                 except Exception:
                     pass
@@ -471,6 +471,113 @@ class StoragePlatformAdapter(ABC):
                     )
         except Exception as e:
             logger.debug(f"[PAL] HAL disk discovery fallback: {e}")
+        return members
+
+    def _parse_zpool_members(self, zp_name: str) -> List[PoolMember]:
+        """Parses zpool status -P to construct PoolMember objects with real hardware device paths."""
+        members: List[PoolMember] = []
+        code, zstat, _ = self._run_cmd(["zpool", "status", "-P", zp_name])
+        if code != 0 or not zstat.strip():
+            return members
+
+        in_config = False
+        current_section = "data"
+        current_vdev = ""
+
+        for raw_line in zstat.splitlines():
+            line = raw_line.strip()
+            if not line:
+                continue
+
+            if line.startswith("config:"):
+                in_config = True
+                continue
+
+            if not in_config:
+                continue
+
+            if line.startswith("NAME") and "STATE" in line:
+                continue
+
+            if line in ("logs", "cache", "spares", "dedup", "special"):
+                current_section = line
+                current_vdev = ""
+                continue
+
+            parts = line.split()
+            if len(parts) >= 2:
+                name_token = parts[0]
+                state_token = parts[1]
+                reads = int(parts[2]) if len(parts) >= 3 and parts[2].isdigit() else 0
+                writes = int(parts[3]) if len(parts) >= 4 and parts[3].isdigit() else 0
+                cksum = int(parts[4]) if len(parts) >= 5 and parts[4].isdigit() else 0
+
+                if name_token == zp_name:
+                    continue
+
+                if any(name_token.startswith(prefix) for prefix in ("raidz", "mirror", "draid")):
+                    current_vdev = name_token
+                    continue
+
+                if (
+                    name_token.startswith("/dev/")
+                    or name_token.startswith("sd")
+                    or name_token.startswith("nvme")
+                    or name_token.startswith("vd")
+                ):
+                    dev_basename = os.path.basename(name_token)
+                    real_dev = dev_basename
+                    if os.path.exists(name_token):
+                        try:
+                            real_dev = os.path.basename(os.path.realpath(name_token))
+                        except Exception:
+                            pass
+
+                    clean_dev = (
+                        re.sub(r"p?\d+$", "", real_dev)
+                        if (real_dev.startswith("sd") or real_dev.startswith("nvme") or real_dev.startswith("vd"))
+                        else real_dev
+                    )
+
+                    m_role = "data"
+                    m_type = "Data"
+                    if current_section == "cache":
+                        m_role = "cache"
+                        m_type = "Cache"
+                    elif current_section == "logs":
+                        m_role = "log"
+                        m_type = "Log (SLOG)"
+                    elif current_section == "spares":
+                        m_role = "spare"
+                        m_type = "Hot Spare"
+                    elif current_section == "special":
+                        m_role = "metadata"
+                        m_type = "Special VDEV"
+                    elif "raidz" in current_vdev:
+                        m_role = "parity"
+                        m_type = "RAIDZ Member"
+                    elif "mirror" in current_vdev:
+                        m_role = "data"
+                        m_type = "Mirror Member"
+
+                    is_rot = not clean_dev.startswith("nvme")
+                    members.append(
+                        PoolMember(
+                            name=clean_dev,
+                            device=clean_dev,
+                            id=dev_basename,
+                            type=m_type,
+                            role=m_role,
+                            size_bytes=0,
+                            status="OK" if state_token == "ONLINE" else state_token,
+                            rotational=is_rot,
+                            spundown=False,
+                            num_reads=reads,
+                            num_writes=writes,
+                            num_errors=cksum,
+                        )
+                    )
+
         return members
 
 
@@ -1217,121 +1324,18 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
                 "raw": out or err,
             }
 
-    def _parse_zpool_members(self, zp_name: str) -> List[PoolMember]:
-        """Parses zpool status -P to construct PoolMember objects with real hardware device paths."""
-        members: List[PoolMember] = []
-        code, zstat, _ = self._run_cmd(["zpool", "status", "-P", zp_name])
-        if code != 0 or not zstat.strip():
-            return members
-
-        in_config = False
-        current_section = "data"
-        current_vdev = ""
-
-        for raw_line in zstat.splitlines():
-            line = raw_line.strip()
-            if not line:
-                continue
-
-            if line.startswith("config:"):
-                in_config = True
-                continue
-
-            if not in_config:
-                continue
-
-            if line.startswith("NAME") and "STATE" in line:
-                continue
-
-            if line in ("logs", "cache", "spares", "dedup", "special"):
-                current_section = line
-                current_vdev = ""
-                continue
-
-            parts = line.split()
-            if len(parts) >= 2:
-                name_token = parts[0]
-                state_token = parts[1]
-                reads = int(parts[2]) if len(parts) >= 3 and parts[2].isdigit() else 0
-                writes = int(parts[3]) if len(parts) >= 4 and parts[3].isdigit() else 0
-                cksum = int(parts[4]) if len(parts) >= 5 and parts[4].isdigit() else 0
-
-                if name_token == zp_name:
-                    continue
-
-                if any(name_token.startswith(prefix) for prefix in ("raidz", "mirror", "draid")):
-                    current_vdev = name_token
-                    continue
-
-                if (
-                    name_token.startswith("/dev/")
-                    or name_token.startswith("sd")
-                    or name_token.startswith("nvme")
-                    or name_token.startswith("vd")
-                ):
-                    dev_basename = os.path.basename(name_token)
-                    real_dev = dev_basename
-                    if os.path.exists(name_token):
-                        try:
-                            real_dev = os.path.basename(os.path.realpath(name_token))
-                        except Exception:
-                            pass
-
-                    clean_dev = (
-                        re.sub(r"p?\d+$", "", real_dev)
-                        if (real_dev.startswith("sd") or real_dev.startswith("nvme") or real_dev.startswith("vd"))
-                        else real_dev
-                    )
-
-                    m_role = "data"
-                    m_type = "Data"
-                    if current_section == "cache":
-                        m_role = "cache"
-                        m_type = "Cache"
-                    elif current_section == "logs":
-                        m_role = "log"
-                        m_type = "Log (SLOG)"
-                    elif current_section == "spares":
-                        m_role = "spare"
-                        m_type = "Hot Spare"
-                    elif current_section == "special":
-                        m_role = "metadata"
-                        m_type = "Special VDEV"
-                    elif "raidz" in current_vdev:
-                        m_role = "parity"
-                        m_type = "RAIDZ Member"
-                    elif "mirror" in current_vdev:
-                        m_role = "data"
-                        m_type = "Mirror Member"
-
-                    is_rot = not clean_dev.startswith("nvme")
-                    members.append(
-                        PoolMember(
-                            name=clean_dev,
-                            device=clean_dev,
-                            id=dev_basename,
-                            type=m_type,
-                            role=m_role,
-                            size_bytes=0,
-                            status="OK" if state_token == "ONLINE" else state_token,
-                            rotational=is_rot,
-                            spundown=False,
-                            num_reads=reads,
-                            num_writes=writes,
-                            num_errors=cksum,
-                        )
-                    )
-
-        return members
-
     def list_pools(self) -> List[StoragePool]:
         pools: List[StoragePool] = []
         is_overlay = self._is_os_overlay_or_emmc(self._pool_path)
         hal_disks = {d.name: d for d in self._discover_hal_disks()}
         mounts = self._parse_mounts()
+        claimed_mount_paths: set = set()
 
         # 1. Discover mdadm Linux Software RAID arrays if present
         mdstats = self._parse_mdstat()
+        data_md_arrays = [m for m, i in mdstats.items() if i.get("size_bytes", 0) >= 20 * 1024 * 1024 * 1024]
+        has_multiple_md = len(data_md_arrays) > 1
+
         for md_dev, info in sorted(mdstats.items()):
             size_b = info.get("size_bytes", 0)
             if size_b < 20 * 1024 * 1024 * 1024:
@@ -1344,7 +1348,7 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
 
             members: List[PoolMember] = []
             for m_token in info.get("members", []):
-                clean_disk = re.sub(r"\d+$", "", m_token)
+                clean_disk = re.sub(r"p?\d+$", "", m_token)
                 if clean_disk in hal_disks:
                     members.append(hal_disks[clean_disk])
                 else:
@@ -1369,6 +1373,7 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
                 mp = m.get("mountpoint", "")
                 if md_dev in dev or dev == f"/dev/{md_dev}":
                     mount_path = mp
+                    claimed_mount_paths.add(mp)
                     break
 
             if mount_path and os.path.exists(mount_path):
@@ -1382,11 +1387,19 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
                 except Exception:
                     pass
 
-            friendly_name = (
-                f"Primary Storage Array ({level.upper()})"
-                if "nvme" not in str(members[0].device if members else "")
-                else f"NVMe Storage Array ({level.upper()})"
-            )
+            is_nvme_array = "nvme" in str(members[0].device if members else "")
+            if not has_multiple_md:
+                friendly_name = (
+                    f"Primary Storage Array ({level.upper()})"
+                    if not is_nvme_array
+                    else f"NVMe Storage Array ({level.upper()})"
+                )
+            else:
+                friendly_name = (
+                    f"Storage Array {md_dev.upper()} ({level.upper()})"
+                    if not is_nvme_array
+                    else f"NVMe Storage Array {md_dev.upper()} ({level.upper()})"
+                )
 
             pools.append(
                 StoragePool(
@@ -1416,7 +1429,7 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
             if dev.startswith("/dev/bcache") or (
                 dev.startswith(("/dev/sd", "/dev/nvme", "/dev/mapper")) and not dev.startswith("/dev/mmcblk")
             ):
-                if self._is_os_overlay_or_emmc(mp):
+                if self._is_os_overlay_or_emmc(mp) or mp in claimed_mount_paths:
                     continue
                 if any(p.id == os.path.basename(dev) or p.mountpoint == mp for p in pools):
                     continue
@@ -2870,8 +2883,9 @@ class FygoOSStorageAdapter(ObserverStorageAdapter):
 class ZettOSStorageAdapter(ObserverStorageAdapter):
     """
     ZettOS Appliance Storage Platform Adapter.
-    Operates in Observer Mode. ZettOS authoritatively manages hybrid OpenZFS
-    and Btrfs storage pools, parity topologies, and network shares.
+    Operates in Observer Mode across all Zettlab models (D4, D6, D6U, D8, D8U).
+    ZettOS authoritatively manages multi-array mdadm RAID groups, bcache acceleration,
+    OpenZFS pools, and network shares.
     """
 
     def get_platform_type(self) -> PlatformType:
@@ -2900,6 +2914,10 @@ class ZettOSStorageAdapter(ObserverStorageAdapter):
             "running" in out.lower() and "no scrub" not in out.lower() and "not running" not in out.lower()
         ):
             return True
+        mdstats = self._parse_mdstat()
+        for md_info in mdstats.values():
+            if md_info.get("sync_action"):
+                return True
         return False
 
     def trigger_scrub(self, pool_id: str, action: str = "start") -> Dict[str, Any]:
@@ -2931,6 +2949,67 @@ class ZettOSStorageAdapter(ObserverStorageAdapter):
                     "action": "status",
                     "status": "active" if "scrub in progress" in out.lower() else "idle",
                     "raw": out or err,
+                }
+        elif pool_id and (pool_id.startswith("md") or pool_id.startswith("/dev/md")):
+            clean_md = os.path.basename(pool_id)
+            mdstats = self._parse_mdstat()
+            md_info = mdstats.get(clean_md, {})
+            sync_action = md_info.get("sync_action")
+            progress_pct = md_info.get("progress_pct", 0.0)
+            if action == "start":
+                for base in [HOST_SYS, "/sys", "/host/sys"]:
+                    if not base:
+                        continue
+                    sa_path = os.path.join(base, "block", clean_md, "md/sync_action")
+                    if os.path.exists(sa_path):
+                        try:
+                            with open(sa_path, "w") as f:
+                                f.write("check\n")
+                            return {
+                                "platform": "zettos",
+                                "pool_id": pool_id,
+                                "action": action,
+                                "status": "started",
+                                "sync_action": "check",
+                            }
+                        except Exception:
+                            pass
+                return {
+                    "platform": "zettos",
+                    "pool_id": pool_id,
+                    "action": action,
+                    "status": "active" if sync_action else "monitoring",
+                    "sync_action": sync_action or "idle",
+                    "progress_pct": progress_pct,
+                    "message": "ZettOS manages RAID parity sync via kernel mdadm.",
+                }
+            elif action == "cancel":
+                for base in [HOST_SYS, "/sys", "/host/sys"]:
+                    if not base:
+                        continue
+                    sa_path = os.path.join(base, "block", clean_md, "md/sync_action")
+                    if os.path.exists(sa_path):
+                        try:
+                            with open(sa_path, "w") as f:
+                                f.write("idle\n")
+                            return {
+                                "platform": "zettos",
+                                "pool_id": pool_id,
+                                "action": action,
+                                "status": "cancelled",
+                                "sync_action": "idle",
+                            }
+                        except Exception:
+                            pass
+                return {"platform": "zettos", "pool_id": pool_id, "action": action, "status": "idle"}
+            else:
+                return {
+                    "platform": "zettos",
+                    "pool_id": pool_id,
+                    "action": "status",
+                    "status": "active" if sync_action else "idle",
+                    "sync_action": sync_action or "idle",
+                    "progress_pct": progress_pct,
                 }
         else:
             target_path = self._pool_path
@@ -2977,10 +3056,16 @@ class ZettOSStorageAdapter(ObserverStorageAdapter):
         if pools:
             return pools
 
-        # 1. Discover mdadm Linux Software RAID arrays (e.g. md3 RAID5 on Zettlab D4/D6/D8)
+        claimed_mount_paths: set = set()
+
+        # 1. Discover mdadm Linux Software RAID arrays (e.g. md3 RAID5/6 on Zettlab D4/D6/D8)
         mdstats = self._parse_mdstat()
         hal_disks = {d.name: d for d in self._discover_hal_disks()}
         mounts = self._parse_mounts()
+
+        # Count multi-array data pools to determine whether disambiguation is required
+        data_md_arrays = [m for m, i in mdstats.items() if i.get("size_bytes", 0) >= 20 * 1024 * 1024 * 1024]
+        has_multiple_md = len(data_md_arrays) > 1
 
         for md_dev, info in sorted(mdstats.items()):
             size_b = info.get("size_bytes", 0)
@@ -2996,7 +3081,7 @@ class ZettOSStorageAdapter(ObserverStorageAdapter):
             # Map members to physical HAL disks
             members: List[PoolMember] = []
             for m_token in info.get("members", []):
-                clean_disk = re.sub(r"\d+$", "", m_token)
+                clean_disk = re.sub(r"p?\d+$", "", m_token)
                 if clean_disk in hal_disks:
                     members.append(hal_disks[clean_disk])
                 else:
@@ -3023,13 +3108,30 @@ class ZettOSStorageAdapter(ObserverStorageAdapter):
                 mp = m.get("mountpoint", "")
                 if md_dev in dev or dev == f"/dev/{md_dev}":
                     mount_path = mp
+                    claimed_mount_paths.add(mp)
                     break
 
-            # Check known ZettOS pool directories
+            # Check known ZettOS pool directories without collision
             if not mount_path:
-                for cand_dir in ["/zettos/pool/1", "/zettos/pool/2", "/zettos/pool/data", "/mnt/storage", "/mnt/user"]:
-                    if os.path.exists(cand_dir) and not self._is_os_overlay_or_emmc(cand_dir):
+                for cand_dir in [
+                    f"/zettos/pool/{md_dev}",
+                    "/zettos/pool/1",
+                    "/zettos/pool/2",
+                    "/zettos/pool/3",
+                    "/zettos/pool/4",
+                    "/zettos/pool/data",
+                    "/zettos/pool/fast",
+                    "/zettos/pool/apps",
+                    "/mnt/storage",
+                    "/mnt/user",
+                ]:
+                    if (
+                        cand_dir not in claimed_mount_paths
+                        and os.path.exists(cand_dir)
+                        and not self._is_os_overlay_or_emmc(cand_dir)
+                    ):
                         mount_path = cand_dir
+                        claimed_mount_paths.add(cand_dir)
                         break
 
             if mount_path and os.path.exists(mount_path):
@@ -3043,11 +3145,19 @@ class ZettOSStorageAdapter(ObserverStorageAdapter):
                 except Exception:
                     pass
 
-            friendly_name = (
-                f"Primary Storage Array ({level.upper()})"
-                if "nvme" not in str(members[0].device if members else "")
-                else f"NVMe Storage Array ({level.upper()})"
-            )
+            is_nvme_array = "nvme" in str(members[0].device if members else "")
+            if not has_multiple_md:
+                friendly_name = (
+                    f"Primary Storage Array ({level.upper()})"
+                    if not is_nvme_array
+                    else f"NVMe Storage Array ({level.upper()})"
+                )
+            else:
+                friendly_name = (
+                    f"Storage Array {md_dev.upper()} ({level.upper()})"
+                    if not is_nvme_array
+                    else f"NVMe Storage Array {md_dev.upper()} ({level.upper()})"
+                )
 
             pools.append(
                 StoragePool(
@@ -3077,7 +3187,7 @@ class ZettOSStorageAdapter(ObserverStorageAdapter):
             if dev.startswith("/dev/bcache") or (
                 dev.startswith(("/dev/sd", "/dev/nvme", "/dev/mapper")) and not dev.startswith("/dev/mmcblk")
             ):
-                if self._is_os_overlay_or_emmc(mp):
+                if self._is_os_overlay_or_emmc(mp) or mp in claimed_mount_paths:
                     continue
                 # Don't duplicate if already added
                 if any(p.id == os.path.basename(dev) or p.mountpoint == mp for p in pools):
@@ -3092,6 +3202,7 @@ class ZettOSStorageAdapter(ObserverStorageAdapter):
                 if tot < 20 * 1024 * 1024 * 1024:
                     continue
 
+                claimed_mount_paths.add(mp)
                 pct = round(usd / tot * 100, 1) if tot > 0 else 0.0
 
                 pool_members = []
@@ -3103,7 +3214,7 @@ class ZettOSStorageAdapter(ObserverStorageAdapter):
 
                 dev_base = os.path.basename(dev)
                 p_name = (
-                    "Fast Storage & Apps Pool (Btrfs)"
+                    f"Fast Storage ({dev_base.upper()})"
                     if "bcache" in dev or "nvme" in dev
                     else f"{dev_base} ({fstype.upper()})"
                 )
@@ -3130,7 +3241,7 @@ class ZettOSStorageAdapter(ObserverStorageAdapter):
         if code == 0 and zout.strip():
             hal_disks_list = self._discover_hal_disks()
             for line in zout.strip().splitlines():
-                parts = line.split("\t")
+                parts = line.split("	")
                 if len(parts) >= 5:
                     zp_name, zp_size, zp_alloc, zp_free, zp_health = (
                         parts[0].strip(),
@@ -3143,6 +3254,7 @@ class ZettOSStorageAdapter(ObserverStorageAdapter):
                     usd = int(zp_alloc) if zp_alloc.isdigit() else 0
                     fre = int(zp_free) if zp_free.isdigit() else 0
                     pct = round(usd / tot * 100, 1) if tot > 0 else 0.0
+                    z_members = self._parse_zpool_members(zp_name) or hal_disks_list
                     pools.append(
                         StoragePool(
                             id=zp_name,
@@ -3155,7 +3267,7 @@ class ZettOSStorageAdapter(ObserverStorageAdapter):
                             used_bytes=usd,
                             free_bytes=fre,
                             used_pct=pct,
-                            members=hal_disks_list,
+                            members=z_members,
                             parity_protected=True,
                         )
                     )
@@ -3207,7 +3319,18 @@ class ZettOSStorageAdapter(ObserverStorageAdapter):
         shares = self._parse_smb_conf()
         if not shares:
             shares = self._discover_shares_from_dirs(
-                ["/zettos/pool/1", "/zettos/pool", "/zettos", "/mnt/user", "/mnt/storage", self._pool_path]
+                [
+                    "/zettos/pool/1",
+                    "/zettos/pool/2",
+                    "/zettos/pool/3",
+                    "/zettos/pool/data",
+                    "/zettos/pool/storage",
+                    "/zettos/pool",
+                    "/zettos",
+                    "/mnt/user",
+                    "/mnt/storage",
+                    self._pool_path,
+                ]
             )
         return shares
 
