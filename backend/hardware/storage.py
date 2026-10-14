@@ -363,5 +363,7 @@ def get_current_layout():
     }
     loaded = read_json_cached(DASH_LAYOUT_FILE, default=None)
     if isinstance(loaded, dict):
-        layout = loaded
+        layout.update(loaded)
+        if "style" not in loaded or not loaded["style"]:
+            layout["style"] = "classic"
     return layout

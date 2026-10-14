@@ -638,6 +638,7 @@ export function setScreenLayoutStyle(style, persist = true) {
   }
 
   syncScreenLayoutStyle();
+  applyDashboardLayout();
 
   if (persist) {
     persistDashboardLayout();
@@ -654,6 +655,11 @@ export function syncScreenLayoutStyle() {
   if (screen) {
     screen.classList.toggle('layout-streamline', isStreamline);
     screen.classList.toggle('layout-classic', !isStreamline);
+  }
+
+  if (typeof document !== 'undefined' && document.body) {
+    document.body.classList.toggle('layout-streamline', isStreamline);
+    document.body.classList.toggle('layout-classic', !isStreamline);
   }
 
   document.querySelectorAll('.mini-preview-inner').forEach((el) => {
@@ -907,18 +913,26 @@ export function applyStats(s) {
       setText($('netRx'), s.net.rx);
     }
 
-    if (s.layout && s.layout.version && s.layout.version !== state.activeLayoutVersion) {
-      state.activeLayoutVersion = s.layout.version;
-      if (s.layout.order) state.dashOrder = s.layout.order;
-      if (s.layout.vis) state.dashVis = s.layout.vis;
-      if (s.layout.sizes) state.dashSizes = s.layout.sizes;
-      if (s.layout.clock_format) state.clockFormat = s.layout.clock_format;
-      if (s.layout.timezone) state.currentTimezone = s.layout.timezone;
-      if (s.layout.style) {
-        state.screenLayoutStyle = s.layout.style;
-        syncScreenLayoutStyle();
+    if (s.layout) {
+      const layoutVer = s.layout.version;
+      const verChanged = Boolean(layoutVer && layoutVer !== state.activeLayoutVersion);
+      const styleChanged = Boolean(s.layout.style && s.layout.style !== state.screenLayoutStyle);
+      if (verChanged || styleChanged) {
+        if (layoutVer) state.activeLayoutVersion = layoutVer;
+        if (s.layout.order) state.dashOrder = s.layout.order;
+        if (s.layout.vis) state.dashVis = s.layout.vis;
+        if (s.layout.sizes) state.dashSizes = s.layout.sizes;
+        if (s.layout.clock_format) state.clockFormat = s.layout.clock_format;
+        if (s.layout.timezone) state.currentTimezone = s.layout.timezone;
+        if (s.layout.style) {
+          state.screenLayoutStyle = s.layout.style;
+          if (typeof localStorage !== 'undefined') {
+            try { localStorage.setItem('screen_layout_style', s.layout.style); } catch (e) {}
+          }
+          syncScreenLayoutStyle();
+        }
+        applyDashboardLayout();
       }
-      applyDashboardLayout();
     }
 
     updateMediaSlots(s.media_slots);

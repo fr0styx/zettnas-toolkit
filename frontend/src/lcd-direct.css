@@ -587,18 +587,66 @@ body.lcd-direct.lcd-theme-light #screen .mod-label {
 /* =========================================================================
    STREAMLINE BIG IP LAYOUT OVERRIDES (PHYSICAL 172x640 CAPTURE)
    ========================================================================= */
-body.lcd-direct #screen.layout-streamline > header,
-body.lcd-direct #console-window #screen.layout-streamline header,
-body.lcd-direct #screen.layout-streamline #dashboard-cards-container,
-body.lcd-direct #screen.layout-streamline .cards,
-body.lcd-direct #screen.layout-streamline #diskRow,
-body.lcd-direct #screen.layout-streamline .disks {
+/* Classic mode on physical LCD: explicitly hide streamline container */
+body.lcd-direct #console-window #screen:not(.layout-streamline) .streamline-container,
+body.lcd-direct #console-window #screen:not(.layout-streamline) #streamline-container,
+body.lcd-direct #screen:not(.layout-streamline) .streamline-container,
+body.lcd-direct #screen:not(.layout-streamline) #streamline-container,
+body.lcd-direct #console-window #screen.layout-classic .streamline-container,
+body.lcd-direct #console-window #screen.layout-classic #streamline-container,
+body.lcd-direct #screen.layout-classic .streamline-container,
+body.lcd-direct #screen.layout-classic #streamline-container {
   display: none !important;
   visibility: hidden !important;
 }
 
+/* Streamline mode on physical LCD: hide header, cards, disks with matching/higher specificity */
+body.lcd-direct #console-window #screen.layout-streamline header,
+body.lcd-direct #console-window #screen.layout-streamline > header,
+body.lcd-direct #screen.layout-streamline header,
+body.lcd-direct #screen.layout-streamline > header,
+body.lcd-direct.layout-streamline #console-window #screen header,
+body.lcd-direct.layout-streamline #screen header,
+body.lcd-direct #console-window #screen.layout-streamline .cards,
+body.lcd-direct #console-window #screen.layout-streamline #dashboard-cards-container,
+body.lcd-direct #screen.layout-streamline .cards,
+body.lcd-direct #screen.layout-streamline #dashboard-cards-container,
+body.lcd-direct.layout-streamline #console-window #screen .cards,
+body.lcd-direct.layout-streamline #screen .cards,
+body.lcd-direct #console-window #screen.layout-streamline .disks,
+body.lcd-direct #console-window #screen.layout-streamline #diskRow,
+body.lcd-direct #screen.layout-streamline .disks,
+body.lcd-direct #screen.layout-streamline #diskRow,
+body.lcd-direct.layout-streamline #console-window #screen .disks,
+body.lcd-direct.layout-streamline #screen .disks {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+body.lcd-direct #console-window #screen.layout-streamline,
+body.lcd-direct #screen.layout-streamline,
+body.lcd-direct.layout-streamline #screen {
+  padding: 4px 6px !important;
+}
+
+body.lcd-direct #console-window #screen.layout-streamline #lcd-viewport,
+body.lcd-direct #screen.layout-streamline #lcd-viewport,
+body.lcd-direct #console-window #screen.layout-streamline .lcd-page.active,
+body.lcd-direct #screen.layout-streamline .lcd-page.active {
+  height: 100% !important;
+  max-height: 100% !important;
+  gap: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  flex: 1 1 0 !important;
+}
+
 body.lcd-direct #screen.layout-streamline #streamline-container,
-body.lcd-direct #console-window #screen.layout-streamline #streamline-container {
+body.lcd-direct #screen.layout-streamline .streamline-container,
+body.lcd-direct #console-window #screen.layout-streamline #streamline-container,
+body.lcd-direct #console-window #screen.layout-streamline .streamline-container,
+body.lcd-direct.layout-streamline #screen #streamline-container,
+body.lcd-direct.layout-streamline #screen .streamline-container {
   display: flex !important;
   visibility: visible !important;
   flex-direction: column !important;
@@ -607,6 +655,7 @@ body.lcd-direct #console-window #screen.layout-streamline #streamline-container 
   height: 100% !important;
   min-height: 0 !important;
   flex: 1 1 0 !important;
+  box-sizing: border-box !important;
 }
 
 body.lcd-direct #screen .parity-pill,

@@ -311,15 +311,47 @@ describe('Streamline Minimalist / Big IP Screen Layout Suite', () => {
     const styleCss = fs.readFileSync(path.resolve(__dirname, '../style.css'), 'utf-8');
     const lcdDirectCss = fs.readFileSync(path.resolve(__dirname, '../lcd-direct.css'), 'utf-8');
 
-    // In style.css, streamline layout hides classic header, cards, diskRow
+    // In style.css, streamline layout hides classic header, cards, diskRow for screen and mini-preview
     expect(styleCss).toContain('#screen.layout-streamline > header');
     expect(styleCss).toContain('#screen.layout-streamline #dashboard-cards-container');
     expect(styleCss).toContain('#screen.layout-streamline #diskRow');
     expect(styleCss).toContain('#screen.layout-streamline #streamline-container');
+    expect(styleCss).toContain('.mini-preview-inner.layout-streamline .cards');
+    expect(styleCss).toContain('.mini-preview-inner.layout-streamline .disks');
+    expect(styleCss).toContain('.mini-preview-inner:not(.layout-streamline) .streamline-container');
 
-    // In lcd-direct.css, physical 172x640 panel overrides ensure streamline mode is applied
+    // In lcd-direct.css, physical 172x640 panel overrides ensure streamline mode is applied with high specificity
     expect(lcdDirectCss).toContain('body.lcd-direct #screen.layout-streamline');
-    expect(lcdDirectCss).toContain('body.lcd-direct #screen.layout-streamline #streamline-container');
+    expect(lcdDirectCss).toContain('body.lcd-direct #console-window #screen.layout-streamline .cards');
+    expect(lcdDirectCss).toContain('body.lcd-direct #console-window #screen.layout-streamline .disks');
+    expect(lcdDirectCss).toContain('body.lcd-direct #console-window #screen.layout-streamline #streamline-container');
+    expect(lcdDirectCss).toContain('body.lcd-direct #console-window #screen:not(.layout-streamline) .streamline-container');
+  });
+
+  it('syncs layout classes and isolation between #screen, document.body, and mini-preview-inner', () => {
+    document.body.className = '';
+    const screen = document.getElementById('screen');
+    const mini = document.getElementById('mini-preview-inner') || document.createElement('div');
+    mini.className = 'mini-preview-inner';
+    if (!mini.parentElement) document.body.appendChild(mini);
+
+    // Switch to streamline mode
+    setScreenLayoutStyle('streamline', false);
+    expect(state.screenLayoutStyle).toBe('streamline');
+    expect(screen.classList.contains('layout-streamline')).toBe(true);
+    expect(screen.classList.contains('layout-classic')).toBe(false);
+    expect(document.body.classList.contains('layout-streamline')).toBe(true);
+    expect(mini.classList.contains('layout-streamline')).toBe(true);
+    expect(mini.classList.contains('layout-classic')).toBe(false);
+
+    // Switch back to classic mode
+    setScreenLayoutStyle('classic', false);
+    expect(state.screenLayoutStyle).toBe('classic');
+    expect(screen.classList.contains('layout-classic')).toBe(true);
+    expect(screen.classList.contains('layout-streamline')).toBe(false);
+    expect(document.body.classList.contains('layout-classic')).toBe(true);
+    expect(mini.classList.contains('layout-classic')).toBe(true);
+    expect(mini.classList.contains('layout-streamline')).toBe(false);
   });
 
   describe('Parity Drive Pill & Tag Identification (Classic & Streamline)', () => {

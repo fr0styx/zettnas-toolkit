@@ -1916,6 +1916,7 @@ body.drawer-is-open .chassis-workbench-stage {
   box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
 }
 
+.streamline-container,
 #streamline-container {
   display: none;
   flex-direction: column;
@@ -1928,21 +1929,47 @@ body.drawer-is-open .chassis-workbench-stage {
   user-select: none;
 }
 
-#screen.layout-streamline > header,
-#screen.layout-streamline #dashboard-cards-container,
-#screen.layout-streamline #diskRow,
-body.lcd-direct #screen.layout-streamline > header,
-body.lcd-direct #screen.layout-streamline #dashboard-cards-container,
-body.lcd-direct #screen.layout-streamline #diskRow,
-.mini-preview-inner.layout-streamline > header,
-.mini-preview-inner.layout-streamline #dashboard-cards-container,
-.mini-preview-inner.layout-streamline #diskRow {
+/* Explicitly hide streamline layout elements in classic cards mode */
+#screen:not(.layout-streamline) .streamline-container,
+#screen:not(.layout-streamline) #streamline-container,
+#screen.layout-classic .streamline-container,
+#screen.layout-classic #streamline-container,
+.mini-preview-inner:not(.layout-streamline) .streamline-container,
+.mini-preview-inner:not(.layout-streamline) #streamline-container,
+.mini-preview-inner.layout-classic .streamline-container,
+.mini-preview-inner.layout-classic #streamline-container {
   display: none !important;
 }
 
+/* In streamline mode: hide classic header, cards, and disks (using both class and id selectors for mini-preview compatibility) */
+#screen.layout-streamline > header,
+#screen.layout-streamline header,
+#screen.layout-streamline #dashboard-cards-container,
+#screen.layout-streamline .cards,
+#screen.layout-streamline #diskRow,
+#screen.layout-streamline .disks,
+body.lcd-direct #screen.layout-streamline > header,
+body.lcd-direct #screen.layout-streamline header,
+body.lcd-direct #screen.layout-streamline #dashboard-cards-container,
+body.lcd-direct #screen.layout-streamline .cards,
+body.lcd-direct #screen.layout-streamline #diskRow,
+body.lcd-direct #screen.layout-streamline .disks,
+.mini-preview-inner.layout-streamline > header,
+.mini-preview-inner.layout-streamline header,
+.mini-preview-inner.layout-streamline #dashboard-cards-container,
+.mini-preview-inner.layout-streamline .cards,
+.mini-preview-inner.layout-streamline #diskRow,
+.mini-preview-inner.layout-streamline .disks {
+  display: none !important;
+}
+
+/* In streamline mode: show streamline container */
 #screen.layout-streamline #streamline-container,
+#screen.layout-streamline .streamline-container,
 body.lcd-direct #screen.layout-streamline #streamline-container,
-.mini-preview-inner.layout-streamline #streamline-container {
+body.lcd-direct #screen.layout-streamline .streamline-container,
+.mini-preview-inner.layout-streamline #streamline-container,
+.mini-preview-inner.layout-streamline .streamline-container {
   display: flex !important;
 }
 

@@ -20,6 +20,16 @@ export function applyDashboardLayout() {
   screenCanvasEl.classList.toggle('layout-streamline', isStreamline);
   screenCanvasEl.classList.toggle('layout-classic', !isStreamline);
 
+  if (typeof document !== 'undefined' && document.body) {
+    document.body.classList.toggle('layout-streamline', isStreamline);
+    document.body.classList.toggle('layout-classic', !isStreamline);
+  }
+
+  document.querySelectorAll('.mini-preview-inner').forEach((el) => {
+    el.classList.toggle('layout-streamline', isStreamline);
+    el.classList.toggle('layout-classic', !isStreamline);
+  });
+
   const cardMap = {};
   dashCardsContainer.querySelectorAll('.card').forEach((c) => {
     cardMap[c.dataset.metricId] = c;
@@ -133,6 +143,11 @@ export async function fetchDashboardLayout() {
     if (data.timezone) state.currentTimezone = data.timezone;
     if (data.style) {
       state.screenLayoutStyle = data.style;
+      if (typeof localStorage !== 'undefined') {
+        try {
+          localStorage.setItem('screen_layout_style', data.style);
+        } catch (e) {}
+      }
     }
   } catch (err) {
     console.warn('Failed to load layout from server:', err);
