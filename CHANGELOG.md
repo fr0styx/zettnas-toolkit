@@ -17,6 +17,11 @@ Version 1.8.1 delivers critical hardware orchestration resilience, physical fron
   - **Container Device Permissions**: Added `'c 1:1 rwm'` under `device_cgroup_rules` in `docker-compose.linux.yml` and `docker-compose.yml` to grant access through cgroups v2 eBPF filters.
   - **Desktop Status Badge**: Dynamic indicator badge in the Fan Settings drawer displaying `KERNEL HWMON` or `MMIO FALLBACK`.
 
+- **Direct USB HID UPS Subsystem & Universal Device Permissions**:
+  - **Zero-Dependency USB HID Protocol Engine**: Implemented `_parse_hid_report_descriptor()` and `_query_direct_usb()` in `backend/hardware/ups.py` using standard library `ioctl` on `/dev/hidraw*` to poll HID Power Device (`0x84`) and Battery System (`0x85`) report items directly from connected USB hardware (WalleCube W180, OpenUPS, APC, CyberPower, Eaton) without requiring external host daemons (`apcupsd`/`nut`).
+  - **Container Device Permissions & Auto-Linking**: Added `c 189:*` (USB Bus), `c 180:*` (HID dev), and `c 240:*..245:*` (hidraw) under `device_cgroup_rules` in `docker-compose.linux.yml` and `docker-compose.yml`. Auto-links `/host/dev/hidraw*` and `/host/dev/bus/usb` into container `/dev` at boot.
+  - **Proactive Permission Diagnostics**: Automatically displays an actionable permission guidance banner in the UPS Power Cockpit if the container lacks cgroup access, preventing silent failures.
+
 - **Physical LCD Framebuffer (`/dev/fb0`) & Screen Isolation**:
   - **Viewport Alignment**: Resolved viewport clipping, truncated card layouts, and header offsets on physical 172×640 front-panel LCD screens.
   - **Screensaver & Lock Screen Isolation**: Screen rendering pipeline is strictly decoupled from desktop lock states and screensaver timeouts, keeping physical telemetry gauges continuously visible.

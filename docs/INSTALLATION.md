@@ -123,10 +123,19 @@ Recommended for custom DIY homelab builds (Jonsbo N1/N2/N3/N4, Fractal Node 804,
          - SYS_ADMIN
        device_cgroup_rules:
          - 'c 1:1 rwm'     # /dev/mem (Physical Memory-Mapped I/O for appliance fan and hardware control)
+         - 'c 1:* rwm'     # Memory character devices (/dev/mem, /dev/port)
          - 'c 29:* rwm'    # Framebuffer (/dev/fb0)
          - 'c 226:* rwm'   # DRI GPU devices
          - 'c 188:* rwm'   # USB Serial (/dev/ttyUSB*)
          - 'c 166:* rwm'   # USB ACM Serial (/dev/ttyACM*)
+         - 'c 189:* rwm'   # USB Character Devices & Bus (/dev/bus/usb/*)
+         - 'c 180:* rwm'   # USB HID Devices (/dev/usb/hiddev*)
+         - 'c 240:* rwm'   # HIDRAW Character Devices (/dev/hidraw*)
+         - 'c 241:* rwm'   # HIDRAW Character Devices (/dev/hidraw*)
+         - 'c 242:* rwm'   # HIDRAW Character Devices (/dev/hidraw*)
+         - 'c 243:* rwm'   # HIDRAW Character Devices (/dev/hidraw*)
+         - 'c 244:* rwm'   # HIDRAW Character Devices (/dev/hidraw*)
+         - 'c 245:* rwm'   # HIDRAW Character Devices (/dev/hidraw*)
          - 'c 10:232 rwm'  # KVM hardware virtualization (/dev/kvm)
          - 'c 10:* rwm'    # Misc character devices (KVM, vhost-net)
          - 'b 8:* rwm'     # SCSI/SATA hard drives (/dev/sd*)
@@ -195,6 +204,14 @@ FygoOS provides a modern, turnkey private cloud OS with native Docker support.
          - 'c 226:* rwm'
          - 'c 188:* rwm'
          - 'c 166:* rwm'
+         - 'c 189:* rwm'   # USB Character Devices & Bus (/dev/bus/usb/*)
+         - 'c 180:* rwm'   # USB HID Devices (/dev/usb/hiddev*)
+         - 'c 240:* rwm'   # HIDRAW Character Devices (/dev/hidraw*)
+         - 'c 241:* rwm'   # HIDRAW Character Devices (/dev/hidraw*)
+         - 'c 242:* rwm'   # HIDRAW Character Devices (/dev/hidraw*)
+         - 'c 243:* rwm'   # HIDRAW Character Devices (/dev/hidraw*)
+         - 'c 244:* rwm'   # HIDRAW Character Devices (/dev/hidraw*)
+         - 'c 245:* rwm'   # HIDRAW Character Devices (/dev/hidraw*)
          - 'c 10:232 rwm'  # KVM hardware virtualization (/dev/kvm)
          - 'c 10:* rwm'    # Misc character devices (KVM, vhost-net)
          - 'b 8:* rwm'
@@ -254,6 +271,14 @@ For **UGOS (Ugreen NAS OS)**, **FygoOS**, **ZettOS**, or **Proxmox VE**, ZettNAS
          - SYS_RAWIO
          - SYS_ADMIN
        device_cgroup_rules:
+         - 'c 189:* rwm'   # USB Character Devices & Bus (/dev/bus/usb/*)
+         - 'c 180:* rwm'   # USB HID Devices (/dev/usb/hiddev*)
+         - 'c 240:* rwm'   # HIDRAW Character Devices (/dev/hidraw*)
+         - 'c 241:* rwm'   # HIDRAW Character Devices (/dev/hidraw*)
+         - 'c 242:* rwm'   # HIDRAW Character Devices (/dev/hidraw*)
+         - 'c 243:* rwm'   # HIDRAW Character Devices (/dev/hidraw*)
+         - 'c 244:* rwm'   # HIDRAW Character Devices (/dev/hidraw*)
+         - 'c 245:* rwm'   # HIDRAW Character Devices (/dev/hidraw*)
          - 'b 8:* rwm'
          - 'b 259:* rwm'
    ```
@@ -290,6 +315,14 @@ docker run -d \
   --device-cgroup-rule='c 226:* rwm' \
   --device-cgroup-rule='c 166:* rwm' \
   --device-cgroup-rule='c 188:* rwm' \
+  --device-cgroup-rule='c 189:* rwm' \
+  --device-cgroup-rule='c 180:* rwm' \
+  --device-cgroup-rule='c 240:* rwm' \
+  --device-cgroup-rule='c 241:* rwm' \
+  --device-cgroup-rule='c 242:* rwm' \
+  --device-cgroup-rule='c 243:* rwm' \
+  --device-cgroup-rule='c 244:* rwm' \
+  --device-cgroup-rule='c 245:* rwm' \
   --device-cgroup-rule='c 10:232 rwm' \
   --device-cgroup-rule='c 10:* rwm' \
   --device-cgroup-rule='b 8:* rwm' \
@@ -310,6 +343,9 @@ ZettNAS Toolkit accesses physical hardware through Linux device nodes and `cgrou
 | `/dev/kvm` | `c 10:232 rwm` | Hardware-assisted virtual machine acceleration (KVM) | Optional |
 | `/dev/ttyACM0` | `c 166:* rwm` | WS2812B ARGB chassis lightbar USB microcontroller | Optional |
 | `/dev/ttyUSB*` | `c 188:* rwm` | Alternative USB serial LED / MCU controllers | Optional |
+| `/dev/bus/usb/*` | `c 189:* rwm` | USB character devices and USB bus discovery | Optional / USB |
+| `/dev/usb/hiddev*` | `c 180:* rwm` | Legacy USB HID power devices | Optional / UPS |
+| `/dev/hidraw*` | `c 240:*..245:* rwm` | Direct USB HID UPS telemetry (WalleCube, OpenUPS, APC, CyberPower) | Recommended for USB UPS |
 | `/dev/sd*` | `b 8:* rwm` | Physical SATA/SAS hard drives and SD/TF card slots | Recommended |
 | `/dev/nvme*` | `b 259:* rwm` | M.2 NVMe SSD storage and endurance telemetry | Recommended |
 | `/dev/fuse` | `--device /dev/fuse` | Rclone Multi-Cloud remote FUSE mounts | Optional |
