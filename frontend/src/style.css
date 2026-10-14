@@ -1768,10 +1768,26 @@ body.drawer-is-open .chassis-workbench-stage {
 .disk .dt{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;display:flex;align-items:baseline;gap:1px}
 .disk .dt .u{font-size:8px;color:var(--muted);font-weight:600}
 
-.disks.compact .disk{padding:2px 4px}
-.disks.compact .dn{font-size:9.5px}
-.disks.compact .dt{font-size:11px}
-.disks.compact .disk-ic{width:8px;height:8px}
+.disks.compact { gap: 4px; }
+.disks.compact .group-tiles { gap: 4px; }
+.disks.compact .disk { padding: 2px 2.5px; }
+.disks.compact .dh { gap: 2px; }
+.disks.compact .disk-ic { width: 7.5px; height: 7.5px; flex: none; }
+.disks.compact .dn { font-size: 9px; font-weight: 800; letter-spacing: -0.2px; }
+.disks.compact .dt { font-size: 10.5px; }
+.disks.compact .disk-indicators { gap: 2px; }
+.disks.compact .hdot { width: 5px; height: 5px; }
+.disks.compact .standby-zzz { display: none !important; }
+.disks.compact .standby-badge {
+  font-size: 7.5px;
+  font-weight: 800;
+  letter-spacing: 0.1px;
+  text-align: center;
+  width: 100%;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+}
 .disk .db{height:3px;background:var(--track);border-radius:2px;overflow:hidden;margin-top:auto}
 .disk .db i{display:block;height:100%;border-radius:2px;transition:width .5s,background .3s}
 

@@ -142,6 +142,21 @@ export function renderFans(fans) {
   });
 }
 
+export function formatDiskDisplayName(name) {
+  if (!name) return '';
+  const str = String(name).trim().replace(/^\/dev\//, '');
+  const nvMatch = str.match(/^nvme(\d+)(?:n(\d+))?$/i);
+  if (nvMatch) {
+    const ctrl = nvMatch[1];
+    const ns = nvMatch[2];
+    if (ns && ns !== '1') return `nv${ctrl}n${ns}`;
+    return `nv${ctrl}`;
+  }
+  const mmcMatch = str.match(/^mmcblk(\d+)(?:p\d+)?$/i);
+  if (mmcMatch) return `mmc${mmcMatch[1]}`;
+  return str;
+}
+
 const ROLE_META = {
   data:  { label: 'DATA',  icon: '#i-disk', cls: 'r-data' },
   cache: { label: 'CACHE', icon: '#i-nvme', cls: 'r-cache' },
@@ -163,9 +178,11 @@ export function diskTile(d) {
     ? `<div class="dt s-standby"><span class="standby-badge">STANDBY</span></div>`
     : `<div class="dt ${'s-' + lvl}">${t == null ? '--' : t}<span class="u">°C</span></div>`;
 
+  const displayName = formatDiskDisplayName(d.name);
+
   el.innerHTML =
     `<div class="dh"><svg class="disk-ic"><use href="${meta.icon}"/></svg>` +
-    `<span class="dn">${escapeHtml(d.name)}</span>` +
+    `<span class="dn">${escapeHtml(displayName)}</span>` +
     `<div class="disk-indicators">` +
       (isStandby ? `<span class="standby-zzz" title="Spun-down / Standby">zZz</span>` : `<span class="io-dot" title="Active I/O"></span>`) +
       `<span class="hdot ${'dot-' + lvl}"></span>` +
@@ -188,7 +205,7 @@ export function renderDisks(disks) {
       const dev = tile.dataset.dev;
       const diskData = state.latestStats?.disks?.find((d) => (d.dev || d.name) === dev || d.name === dev || d.dev === dev);
       const isStandby = tile.classList.contains('disk-standby') || Boolean(diskData?.standby || diskData?.health === 'standby');
-      const diskName = tile.querySelector('.dn')?.textContent || diskData?.name || dev;
+      const diskName = diskData?.name || dev || tile.querySelector('.dn')?.textContent;
       if (isStandby) {
         showConfirmToast(
           'Drive in Standby Mode',
@@ -269,7 +286,7 @@ export function renderDisks(disks) {
       tile.title = isStandby ? `${d.name} is in standby (spun-down)` : `Click to inspect S.M.A.R.T. health for ${d.name}`;
 
       const nameEl = tile.querySelector('.dn');
-      if (nameEl) nameEl.textContent = d.name;
+      if (nameEl) nameEl.textContent = formatDiskDisplayName(d.name);
 
       const tempEl = tile.querySelector('.dt');
       if (tempEl) {
@@ -675,8 +692,8 @@ export function applyStats(s) {
     const memLvl = lvlUtil(s.mem.pct);
     setText($('memPct'), s.mem.pct);
     if ($('memPct') && $('memPct').parentElement) $('memPct').parentElement.className = 'arc-val s-' + memLvl;
-    setText($('memUsed'), s.mem.used_gb.toFixed(1) + 'G');
-    setText($('memTotal'), '/' + s.mem.total_gb.toFixed(0) + 'G');
+    setText($('memUsed'), s.mem.used_gb != null ? s.mem.used_gb.toFixed(1) + 'G' : (s.mem.used || ''));
+    setText($('memTotal'), s.mem.total_gb != null ? '/' + s.mem.total_gb.toFixed(0) + 'G' : (s.mem.total ? '/' + s.mem.total : ''));
     if ($('memArc')) setArc($('memArc'), s.mem.pct, memLvl);
 
     renderFans(s.fans);
@@ -718,7 +735,11 @@ export function applyStats(s) {
     }
 
     let anyWarn = [stLvl, cpuLvl, utilLvl, memLvl].includes('crit') ||
-      s.disks.some((d) => (d.health || lvlDisk(d.temp)) !== 'ok');
+      s.disks.some((d) => {
+        if (d.standby || d.health === 'standby') return false;
+        const h = d.health || lvlDisk(d.temp);
+        return h !== 'ok' && h !== 'standby';
+      });
     if ($('statusPill')) $('statusPill').className = 'pill' + (anyWarn ? ' warn' : '');
 
   } catch (e) {
