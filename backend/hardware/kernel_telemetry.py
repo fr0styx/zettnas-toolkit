@@ -185,11 +185,56 @@ def get_hardware_buses() -> Dict[str, Any]:
         except Exception as e:
             logger.debug(f"[DIAGNOSTICS] Failed reading USB bus: {e}")
 
+    power_supplies = []
+    psy_dir = os.path.join(HOST_SYS, "class/power_supply")
+    if os.path.exists(psy_dir):
+        try:
+            for p in sorted(os.listdir(psy_dir)):
+                p_path = os.path.join(psy_dir, p)
+                if os.path.isdir(p_path):
+                    entry = {"name": p}
+                    for attr in ("type", "online", "status", "capacity", "model_name", "manufacturer", "voltage_now"):
+                        attr_f = os.path.join(p_path, attr)
+                        if os.path.isfile(attr_f):
+                            try:
+                                with open(attr_f, "r") as f:
+                                    entry[attr] = f.read().strip()
+                            except Exception:
+                                pass
+                    power_supplies.append(entry)
+        except Exception as e:
+            logger.debug(f"[DIAGNOSTICS] Failed reading power_supply class: {e}")
+
+    hidraw_devs = []
+    hidraw_dir = os.path.join(HOST_SYS, "class/hidraw")
+    if os.path.exists(hidraw_dir):
+        try:
+            for h in sorted(os.listdir(hidraw_dir)):
+                uevent_f = os.path.join(hidraw_dir, h, "device/uevent")
+                entry = {"node": h}
+                if os.path.isfile(uevent_f):
+                    try:
+                        with open(uevent_f, "r") as f:
+                            for line in f:
+                                if "=" in line:
+                                    k, v = line.strip().split("=", 1)
+                                    if k in ("HID_ID", "HID_NAME", "HID_UNIQ", "DRIVER"):
+                                        entry[k] = v
+                    except Exception:
+                        pass
+                hidraw_devs.append(entry)
+        except Exception as e:
+            logger.debug(f"[DIAGNOSTICS] Failed reading hidraw class: {e}")
+
     return {
         "pci_devices_count": len(pci_devs),
         "pci_devices": pci_devs[:40],
         "usb_devices_count": len(usb_devs),
         "usb_devices": usb_devs,
+        "power_supplies_count": len(power_supplies),
+        "power_supplies": power_supplies,
+        "hidraw_devices_count": len(hidraw_devs),
+        "hidraw_devices": hidraw_devs,
     }
 
 

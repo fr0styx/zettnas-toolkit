@@ -3076,11 +3076,17 @@ function renderSideloadInspection(app, rating, flags, container) {
 
 export function renderUpsTelemetry(ups) {
   if (!ups) return;
-  const upsVal = ups.battery_charge_pct != null ? `${ups.battery_charge_pct}%` : (ups.available ? 'Active' : 'Offline');
+  const isPermErr = Boolean(ups.permission_error);
+  const upsVal = isPermErr
+    ? 'Perm Req'
+    : (ups.battery_charge_pct != null ? `${ups.battery_charge_pct}%` : (ups.available ? 'Active' : 'Offline'));
   const upsPill = document.getElementById('mgmt-hub-ups-pill');
   if (upsPill) {
     upsPill.textContent = upsVal;
-    if (ups.available && ups.battery_charge_pct != null) {
+    if (isPermErr) {
+      upsPill.style.background = 'rgba(235,87,87,0.15)';
+      upsPill.style.color = 'var(--err, #eb5757)';
+    } else if (ups.available && ups.battery_charge_pct != null) {
       upsPill.style.background = ups.battery_charge_pct <= 20 ? 'rgba(235,87,87,0.15)' : 'rgba(37,194,160,0.15)';
       upsPill.style.color = ups.battery_charge_pct <= 20 ? 'var(--err, #eb5757)' : 'var(--ok2, #25c2a0)';
     }
@@ -3088,7 +3094,11 @@ export function renderUpsTelemetry(ups) {
   const sideUpsBadge = document.getElementById('mgmt-sidebar-ups-badge');
   if (sideUpsBadge) {
     sideUpsBadge.textContent = upsVal;
-    sideUpsBadge.style.display = ups.available ? 'inline-block' : 'none';
+    sideUpsBadge.style.display = (ups.available || isPermErr) ? 'inline-block' : 'none';
+    if (isPermErr) {
+      sideUpsBadge.style.background = 'rgba(235,87,87,0.2)';
+      sideUpsBadge.style.color = 'var(--err, #eb5757)';
+    }
   }
 
   const statusEl = document.getElementById('mgmt-ups-status');
@@ -3102,8 +3112,10 @@ export function renderUpsTelemetry(ups) {
   const policyEl = document.getElementById('mgmt-ups-policy');
 
   if (statusEl) {
-    statusEl.textContent = ups.status || (ups.available ? 'ONLINE' : 'Offline');
-    statusEl.style.color = ups.available ? (ups.on_battery ? 'var(--warn)' : 'var(--ok2)') : 'var(--muted)';
+    statusEl.textContent = isPermErr ? 'Permission Required' : (ups.status || (ups.available ? 'ONLINE' : 'Offline'));
+    statusEl.style.color = isPermErr
+      ? 'var(--err, #eb5757)'
+      : (ups.available ? (ups.on_battery ? 'var(--warn)' : 'var(--ok2)') : 'var(--muted)');
   }
   if (modelEl) modelEl.textContent = ups.model || 'Generic UPS';
   if (chargeEl) {
@@ -3127,6 +3139,19 @@ export function renderUpsTelemetry(ups) {
   const gridDot = document.getElementById('ups-grid-dot');
   const emergencyBanner = document.getElementById('ups-emergency-banner');
   const emergencyCountdown = document.getElementById('ups-emergency-countdown');
+  const permBanner = document.getElementById('ups-permission-banner');
+  const permMsg = document.getElementById('ups-permission-msg');
+
+  if (permBanner) {
+    if (isPermErr) {
+      permBanner.style.display = 'flex';
+      if (permMsg && ups.permission_detail) {
+        permMsg.textContent = ups.permission_detail;
+      }
+    } else {
+      permBanner.style.display = 'none';
+    }
+  }
 
   if (twinLinev) twinLinev.textContent = ups.line_volts != null ? `${ups.line_volts} V` : (ups.available ? '120.0 V' : '-- V');
   if (twinGridStatus) {
@@ -3153,7 +3178,7 @@ export function renderUpsTelemetry(ups) {
   }
 
   if (gridDot) {
-    gridDot.className = 'ups-card-status-dot ' + (ups.on_battery ? 'danger' : (ups.available ? 'active' : ''));
+    gridDot.className = 'ups-card-status-dot ' + (isPermErr ? 'danger' : (ups.on_battery ? 'danger' : (ups.available ? 'active' : '')));
   }
 
   if (emergencyBanner) {
@@ -3558,10 +3583,13 @@ export function initUpsDrawerControls() {
         return;
       }
       discoverContainer.innerHTML = candidates.map((cand, idx) => {
-        const isApc = cand.type === 'apcupsd' || cand.type === 'apcupsd_client' || (cand.port === 3551);
-        const isNut = cand.type === 'nut' || cand.type === 'nut_client' || (cand.port === 3493);
-        const typeLabel = isApc ? 'APCUPSD NIS' : (isNut ? 'NUT Server' : 'USB HID Device');
-        const hostPort = cand.port ? `${cand.host}:${cand.port}` : (cand.path || cand.host);
+        const isUsb = Boolean(cand.is_usb || cand.type === 'usb_hid' || cand.mode === 'usb_hid');
+        const isApc = !isUsb && (cand.type === 'apcupsd' || cand.type === 'apcupsd_client' || cand.port === 3551);
+        const isNut = !isUsb && (cand.type === 'nut' || cand.type === 'nut_client' || cand.port === 3493);
+        const typeLabel = isUsb ? 'Direct USB HID' : (isApc ? 'APCUPSD NIS' : (isNut ? 'NUT Server' : 'USB HID Device'));
+        const hostPort = isUsb
+          ? (cand.description || `USB ${cand.vendor_id || ''}:${cand.product_id || ''}`)
+          : (cand.port ? `${cand.host}:${cand.port}` : (cand.path || cand.host || 'local'));
         const displayTitle = cand.title || cand.label || typeLabel;
         return `<div class="ups-discover-item" data-idx="${idx}" style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.08); padding:8px 12px; border-radius:6px; cursor:pointer;">
           <div>
@@ -3577,28 +3605,34 @@ export function initUpsDrawerControls() {
           const idx = parseInt(item.dataset.idx, 10);
           const cand = candidates[idx];
           if (!cand) return;
-          const isApc = cand.type === 'apcupsd' || cand.type === 'apcupsd_client' || (cand.port === 3551);
-          const isNut = cand.type === 'nut' || cand.type === 'nut_client' || (cand.port === 3493);
-          const targetMode = cand.mode || (isApc ? 'apcupsd_client' : (isNut ? 'nut_client' : 'usb_hid'));
+          const isUsb = Boolean(cand.is_usb || cand.type === 'usb_hid' || cand.mode === 'usb_hid');
+          const isApc = !isUsb && (cand.type === 'apcupsd' || cand.type === 'apcupsd_client' || cand.port === 3551);
+          const isNut = !isUsb && (cand.type === 'nut' || cand.type === 'nut_client' || cand.port === 3493);
+          const targetMode = isUsb ? 'usb_hid' : (cand.mode || (isApc ? 'apcupsd_client' : (isNut ? 'nut_client' : 'auto')));
           const radio = document.querySelector(`input[name="ups-mode"][value="${targetMode}"]`);
           if (radio) radio.checked = true;
           const hostEl = document.getElementById('ups-cfg-host');
           const portEl = document.getElementById('ups-cfg-port');
           const nameEl = document.getElementById('ups-cfg-name');
-          if (hostEl && cand.host) hostEl.value = cand.host;
-          if (portEl) {
-            if (cand.port && cand.port > 0) {
-              portEl.value = cand.port;
-            } else if (targetMode === 'apcupsd_client') {
-              portEl.value = 3551;
-            } else if (targetMode === 'nut_client') {
-              portEl.value = 3493;
+          if (isUsb) {
+            if (hostEl) hostEl.value = '';
+            if (portEl) portEl.value = '';
+          } else {
+            if (hostEl && cand.host) hostEl.value = cand.host;
+            if (portEl) {
+              if (cand.port && cand.port > 0) {
+                portEl.value = cand.port;
+              } else if (targetMode === 'apcupsd_client') {
+                portEl.value = 3551;
+              } else if (targetMode === 'nut_client') {
+                portEl.value = 3493;
+              }
             }
+            if (nameEl && cand.ups_name) nameEl.value = cand.ups_name;
           }
-          if (nameEl && cand.ups_name) nameEl.value = cand.ups_name;
           updateUpsConnCardState(targetMode);
           triggerImmediateSave();
-          const displayTitle = cand.title || cand.label || (isApc ? 'APCUPSD' : (isNut ? 'NUT' : 'USB HID'));
+          const displayTitle = cand.title || cand.label || (isUsb ? 'Direct USB HID' : (isApc ? 'APCUPSD' : (isNut ? 'NUT' : 'USB HID')));
           showToast(`Applied ${displayTitle} parameters!`, 'info');
         });
       });
@@ -3623,12 +3657,18 @@ export function initUpsDrawerControls() {
       const username = document.getElementById('ups-cfg-user')?.value.trim() || '';
       const passwordRaw = document.getElementById('ups-cfg-pass')?.value || '';
       const password = passwordRaw.startsWith('••') ? '' : passwordRaw;
+      const isUsbMode = (mode === 'usb_hid');
 
       const res = await api.post('/api/ups/test-connection', {
-        mode, host, port, ups_name, username, password
+        mode,
+        host: isUsbMode ? '' : host,
+        port: isUsbMode ? 0 : port,
+        ups_name: isUsbMode ? '' : ups_name,
+        username: isUsbMode ? '' : username,
+        password: isUsbMode ? '' : password
       });
 
-      if (res && res.connected) {
+      if (res && (res.connected || res.success)) {
         showToast(`Connection successful! (${res.model || res.status || 'ONLINE'})`, 'success');
         btnTest.textContent = '✓ Connected';
         setTimeout(() => { btnTest.textContent = '🔌 Test Connection'; }, 3000);

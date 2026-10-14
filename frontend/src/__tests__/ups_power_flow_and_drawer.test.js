@@ -25,9 +25,15 @@ describe('UPS Power Flow Digital Twin & Drawer Controls', () => {
         <span id="mgmt-ups-protocol">-</span>
         <span id="mgmt-ups-battv">-</span>
         <span id="mgmt-ups-policy">-</span>
+        <span id="mgmt-hub-ups-pill">-</span>
+        <span id="mgmt-sidebar-ups-badge" style="display:none;">-</span>
 
         <div id="ups-emergency-banner" style="display:none;">
           <span id="ups-emergency-countdown">--:--</span>
+        </div>
+
+        <div id="ups-permission-banner" style="display:none;">
+          <span id="ups-permission-msg"></span>
         </div>
 
         <div id="ups-power-flow-container">
@@ -357,5 +363,75 @@ describe('UPS Power Flow Digital Twin & Drawer Controls', () => {
     }));
     const connCard = document.getElementById('ups-drawer-conn-card');
     expect(connCard.classList.contains('disabled')).toBe(true);
+  });
+
+  it('renders permission_error banner and status when Docker lacks hidraw permissions', () => {
+    const ups = {
+      available: true,
+      permission_error: true,
+      permission_detail: 'Docker lacks permission to open /dev/hidraw0. Add device_cgroup_rules or privileged: true.',
+      status: 'Permission Required',
+      model: 'WalleCube (Smart UPS W180)',
+      on_battery: false,
+    };
+
+    renderUpsTelemetry(ups);
+
+    expect(document.getElementById('mgmt-ups-status').textContent).toBe('Permission Required');
+    expect(document.getElementById('mgmt-ups-status').style.color).toContain('eb5757');
+    expect(document.getElementById('mgmt-hub-ups-pill').textContent).toBe('Perm Req');
+
+    const permBanner = document.getElementById('ups-permission-banner');
+    expect(permBanner.style.display).toBe('flex');
+    expect(document.getElementById('ups-permission-msg').textContent).toContain('device_cgroup_rules');
+  });
+
+  it('handles direct USB discovery candidate selection without setting localhost or port', async () => {
+    vi.spyOn(api, 'get').mockResolvedValue({});
+    const postSpy = vi.spyOn(api, 'post').mockImplementation((url) => {
+      if (url === '/api/ups/discover') {
+        return Promise.resolve({
+          candidates: [
+            {
+              type: 'usb_hid',
+              mode: 'usb_hid',
+              title: 'WalleCube / OpenUPS (Smart UPS W180)',
+              label: 'WalleCube / OpenUPS (Smart UPS W180)',
+              vendor_id: '04d8',
+              product_id: 'd005',
+              is_usb: true,
+              host: '',
+              port: null,
+            },
+          ],
+        });
+      }
+      return Promise.resolve({ success: true });
+    });
+
+    initUpsDrawerControls();
+
+    const btnDiscover = document.getElementById('btn-ups-discover');
+    btnDiscover.click();
+
+    // Allow promise microtask to resolve
+    await new Promise((r) => setTimeout(r, 10));
+
+    const item = document.querySelector('.ups-discover-item');
+    expect(item).not.toBeNull();
+    expect(item.textContent).toContain('WalleCube');
+    expect(item.textContent).toContain('Direct USB HID');
+
+    // Clicking the item to apply
+    item.click();
+
+    const usbRadio = document.querySelector('input[name="ups-mode"][value="usb_hid"]');
+    expect(usbRadio.checked).toBe(true);
+    expect(document.getElementById('ups-cfg-host').value).toBe('');
+    expect(document.getElementById('ups-cfg-port').value).toBe('');
+
+    expect(postSpy).toHaveBeenCalledWith('/api/ups/config', expect.objectContaining({
+      mode: 'usb_hid',
+    }));
   });
 });

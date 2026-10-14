@@ -4814,6 +4814,15 @@
               </div>
             </div>
 
+            <!-- Permission Required Banner (Shown when direct USB device is detected but container lacks hidraw permissions) -->
+            <div id="ups-permission-banner" class="ups-permission-banner" style="display:none; margin-bottom:16px; background:rgba(235,87,87,0.12); border:1px solid rgba(235,87,87,0.3); border-radius:8px; padding:12px 16px; align-items:flex-start; gap:12px;">
+              <div style="font-size:20px; line-height:1;">⚠️</div>
+              <div style="flex:1;">
+                <div style="font-size:13px; font-weight:700; color:var(--err, #eb5757); margin-bottom:4px;" data-i18n="mgmt.ups_perm_title">USB DEVICE PERMISSION REQUIRED</div>
+                <div style="font-size:12px; color:var(--text); line-height:1.4;" id="ups-permission-msg" data-i18n="mgmt.ups_perm_desc">A direct USB UPS device was detected, but the container lacks permissions to open the HID character device. Please add device_cgroup_rules for hidraw (c 240:*..245:* rwm) or set privileged: true in your Docker configuration.</div>
+              </div>
+            </div>
+
             <!-- Tier 1: 2.5D Power Flow Digital Twin -->
             <div class="ups-power-flow-container" id="ups-power-flow-container">
               <div class="ups-flow-card" id="ups-card-grid">

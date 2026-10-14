@@ -10,7 +10,12 @@ import re
 import socket
 import subprocess
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Set, Tuple
+
+try:
+    import fcntl
+except ImportError:
+    fcntl = None  # Non-Unix fallback
 
 from backend.config import UPS_CONFIG_FILE, logger
 from backend.db import log_ups_event
@@ -46,6 +51,19 @@ KNOWN_UPS_VENDORS = {
     "09ae": "Tripp Lite",
     "0d9f": "Powercom",
     "06da": "Phoenixtec Power",
+    "04d8": "WalleCube / OpenUPS (Microchip)",
+    "047c": "Dell",
+    "0400": "National Semiconductor",
+    "04b4": "Cypress (HID UPS)",
+    "10af": "Trust",
+    "0001": "Fry's / Generic HID",
+    "0f03": "Unitek",
+    "14b0": "SOCA",
+    "03f0": "HP / Hewlett-Packard",
+    "0592": "Powerware",
+    "1d40": "Delta Energy Systems",
+    "2e51": "Mustek",
+    "048d": "ITE Tech",
 }
 
 
@@ -329,12 +347,353 @@ def _query_nut_cli(ups_name: str = "ups") -> Dict[str, str]:
     return {}
 
 
+def _parse_hid_report_descriptor(desc_bytes: bytes) -> Dict[Tuple[int, int], Tuple[int, int, int]]:
+    """
+    Parses binary USB HID report descriptor into a mapping of (usage_page, usage) -> (report_id, report_size, report_count).
+    Supports all standard HID Power Device (0x84) and Battery System (0x85) items.
+    """
+    pos = 0
+    usage_page = 0
+    report_id = 0
+    report_size = 8
+    report_count = 1
+    usages: List[Tuple[int, int]] = []
+    mapping: Dict[Tuple[int, int], Tuple[int, int, int]] = {}
+
+    while pos < len(desc_bytes):
+        b = desc_bytes[pos]
+        pos += 1
+        if b == 0xFE:  # Long item escape
+            size = desc_bytes[pos]
+            pos += 1 + 2 + size
+            continue
+        size = b & 0x03
+        if size == 3:
+            size = 4
+        typ = (b >> 2) & 0x03
+        tag = (b >> 4) & 0x0F
+        val = 0
+        if size > 0 and pos + size <= len(desc_bytes):
+            val = int.from_bytes(desc_bytes[pos : pos + size], "little", signed=False)
+            pos += size
+
+        if typ == 1:  # Global item
+            if tag == 0x00:
+                usage_page = val
+            elif tag == 0x08:
+                report_id = val
+            elif tag == 0x07:
+                report_size = val
+            elif tag == 0x09:
+                report_count = val
+        elif typ == 2:  # Local item
+            if tag == 0x00:
+                usages.append((usage_page, val))
+        elif typ == 0:  # Main item
+            if tag in (0x08, 0x09, 0x0B):  # Input, Output, Feature
+                for up, u in usages:
+                    key = (up, u)
+                    if key not in mapping:
+                        mapping[key] = (report_id, report_size, report_count)
+                usages = []
+    return mapping
+
+
+def _query_direct_usb(target_device: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Directly queries local USB HID Power Devices via sysfs and /dev/hidraw ioctl.
+    Supports WalleCube (04d8:d005 / OpenUPS), APC, CyberPower, Eaton, and standard USB HID UPS units.
+    Does not require external daemons (apcupsd/nut) or third-party pip libraries.
+    """
+    out: Dict[str, Any] = {}
+
+    # Layer 1: Check Linux sysfs power_supply class (e.g. /sys/class/power_supply/* or /host/sys/class/power_supply/*)
+    psy_roots = [p for p in ["/sys/class/power_supply", "/host/sys/class/power_supply"] if os.path.isdir(p)]
+    for root in psy_roots:
+        try:
+            for node in sorted(os.listdir(root)):
+                node_dir = os.path.join(root, node)
+                if not os.path.isdir(node_dir):
+                    continue
+                type_file = os.path.join(node_dir, "type")
+                psy_type = ""
+                if os.path.isfile(type_file):
+                    with open(type_file, "r") as f:
+                        psy_type = f.read().strip().upper()
+                if psy_type in ("UPS", "BATTERY") or "ups" in node.lower() or "battery" in node.lower():
+
+                    def _read_attr(name: str) -> Optional[str]:
+                        fp = os.path.join(node_dir, name)
+                        if os.path.isfile(fp):
+                            try:
+                                with open(fp, "r") as f:
+                                    return f.read().strip()
+                            except Exception:
+                                pass
+                        return None
+
+                    cap = _read_attr("capacity")
+                    status = _read_attr("status")
+                    online = _read_attr("online")
+                    v_now = _read_attr("voltage_now")
+                    mfr = _read_attr("manufacturer")
+                    model = _read_attr("model_name")
+                    time_left = _read_attr("time_to_empty_now")
+
+                    if cap or status or v_now:
+                        if cap and cap.isdigit():
+                            out["BCHARGE"] = cap
+                        if status:
+                            s_up = status.upper()
+                            if "DISCHARG" in s_up:
+                                out["STATUS"] = "OB"
+                            elif "CHARG" in s_up:
+                                out["STATUS"] = "ONLINE CHRG"
+                            else:
+                                out["STATUS"] = "ONLINE"
+                        elif online is not None:
+                            out["STATUS"] = "ONLINE" if online == "1" else "OB"
+                        if v_now and v_now.isdigit():
+                            volts = float(v_now) / 1_000_000.0
+                            if volts > 1.0:
+                                out["BATTV"] = str(round(volts, 1))
+                        if time_left and time_left.isdigit():
+                            out["TIMELEFT"] = str(round(float(time_left) / 60.0, 1))
+                        if model:
+                            out["MODEL"] = model
+                        if mfr:
+                            out["MFR"] = mfr
+                        out["PROTOCOL"] = "direct_usb_sysfs"
+                        return out
+        except Exception as e:
+            logger.debug(f"[Direct USB] sysfs power_supply scan error: {e}")
+
+    # Layer 2: Direct HIDRAW Query via fcntl ioctl
+    hidraw_roots = [p for p in ["/sys/class/hidraw", "/host/sys/class/hidraw"] if os.path.isdir(p)]
+    permission_error_info = None
+
+    if fcntl is not None:
+        for root in hidraw_roots:
+            try:
+                for node in sorted(os.listdir(root)):
+                    node_dir = os.path.join(root, node)
+                    uevent_file = os.path.join(node_dir, "device/uevent")
+                    if not os.path.isfile(uevent_file):
+                        continue
+
+                    vid, pid, hid_name = "", "", ""
+                    with open(uevent_file, "r") as f:
+                        for line in f:
+                            if line.startswith("HID_ID="):
+                                parts = line.strip().split("=")[1].split(":")
+                                if len(parts) >= 3:
+                                    vid = parts[1].lstrip("0").lower().zfill(4)
+                                    pid = parts[2].lstrip("0").lower().zfill(4)
+                            elif line.startswith("HID_NAME="):
+                                hid_name = line.strip().split("=", 1)[1].strip()
+
+                    is_ups = vid in KNOWN_UPS_VENDORS or any(
+                        k in hid_name.lower()
+                        for k in (
+                            "ups",
+                            "power",
+                            "battery",
+                            "wallecube",
+                            "open",
+                            "apc",
+                            "cyberpower",
+                            "eaton",
+                            "tripp",
+                        )
+                    )
+                    if not is_ups:
+                        continue
+
+                    char_cands = [f"/dev/{node}", f"/host/dev/{node}"]
+                    desc_file = os.path.join(node_dir, "device/report_descriptor")
+                    if not os.path.isfile(desc_file):
+                        continue
+
+                    fd = None
+                    for c_path in char_cands:
+                        if os.path.exists(c_path):
+                            try:
+                                fd = os.open(c_path, os.O_RDWR | os.O_NONBLOCK)
+                                break
+                            except PermissionError:
+                                permission_error_info = {
+                                    "MODEL": hid_name or KNOWN_UPS_VENDORS.get(vid, "USB UPS"),
+                                    "MFR": KNOWN_UPS_VENDORS.get(vid, "USB Power Device"),
+                                    "STATUS": "PERMISSION_REQUIRED",
+                                    "PROTOCOL": "direct_usb_hid",
+                                    "PERMISSION_ERROR": True,
+                                    "ERROR": (
+                                        f"Docker lacks permission to open {c_path}. "
+                                        "Add device_cgroup_rules for hidraw or run with privileged: true."
+                                    ),
+                                    "VENDOR_ID": vid,
+                                    "PRODUCT_ID": pid,
+                                }
+                            except OSError:
+                                pass
+
+                    if fd is not None:
+                        try:
+                            with open(desc_file, "rb") as df:
+                                desc_data = df.read()
+                            mapping = _parse_hid_report_descriptor(desc_data)
+                            reports_cache: Dict[int, Optional[bytearray]] = {}
+
+                            def _get_feature_report(rid: int) -> Optional[bytearray]:
+                                if rid not in reports_cache:
+                                    buf = bytearray(64)
+                                    buf[0] = rid
+                                    try:
+                                        # _IOC(3, ord('H'), 0x07, 64) = 0xc0404807
+                                        fcntl.ioctl(fd, 0xC0404807, buf)
+                                        reports_cache[rid] = buf
+                                    except Exception:
+                                        reports_cache[rid] = None
+                                return reports_cache[rid]
+
+                            # 1. RemainingCapacity (0x85, 0x66)
+                            if (0x85, 0x66) in mapping:
+                                rid, _, _ = mapping[(0x85, 0x66)]
+                                rep = _get_feature_report(rid)
+                                if rep and len(rep) > 1:
+                                    out["BCHARGE"] = str(rep[1])
+
+                            # 2. RunTimeToEmpty (0x85, 0x68)
+                            if (0x85, 0x68) in mapping:
+                                rid, _, _ = mapping[(0x85, 0x68)]
+                                rep = _get_feature_report(rid)
+                                if rep and len(rep) >= 4:
+                                    val_sec = int.from_bytes(rep[2:4], "little")
+                                    if val_sec > 0:
+                                        out["TIMELEFT"] = str(round(val_sec / 60.0, 1))
+
+                            # 3. Voltage: Input or Config (0x84, 0x57), (0x84, 0x30), (0x84, 0x04)
+                            for v_key in [(0x84, 0x57), (0x84, 0x30), (0x84, 0x04)]:
+                                if v_key in mapping:
+                                    rid, _, _ = mapping[v_key]
+                                    rep = _get_feature_report(rid)
+                                    if rep and len(rep) >= 3:
+                                        val = int.from_bytes(rep[1:3], "little")
+                                        if 80 <= val <= 260:
+                                            out["LINEV"] = str(val)
+                                            break
+                                        elif 800 <= val <= 2600:
+                                            out["LINEV"] = str(round(val / 10.0, 1))
+                                            break
+
+                            # 4. PercentLoad (0x84, 0x24)
+                            if (0x84, 0x24) in mapping:
+                                rid, _, _ = mapping[(0x84, 0x24)]
+                                rep = _get_feature_report(rid)
+                                if rep and len(rep) > 1 and rep[1] <= 100:
+                                    out["LOADPCT"] = str(rep[1])
+
+                            # 5. Status: ACPresent (0x84, 0xd0) or Discharging (0x84, 0xd2)
+                            status_parts = []
+                            is_ac = True
+                            if (0x84, 0xD0) in mapping:
+                                rid, _, _ = mapping[(0x84, 0xD0)]
+                                rep = _get_feature_report(rid)
+                                if rep and len(rep) > 1:
+                                    is_ac = bool(rep[1])
+
+                            if (0x84, 0xD2) in mapping:
+                                rid, _, _ = mapping[(0x84, 0xD2)]
+                                rep = _get_feature_report(rid)
+                                if rep and len(rep) > 1 and rep[1]:
+                                    status_parts.append("OB")
+                                    is_ac = False
+
+                            if (0x84, 0xD1) in mapping:
+                                rid, _, _ = mapping[(0x84, 0xD1)]
+                                rep = _get_feature_report(rid)
+                                if rep and len(rep) > 1 and rep[1]:
+                                    status_parts.append("CHRG")
+
+                            if is_ac and "OB" not in status_parts:
+                                status_parts.insert(0, "ONLINE")
+                            elif not is_ac and "OB" not in status_parts:
+                                status_parts.insert(0, "ONBATT")
+
+                            out["STATUS"] = " ".join(status_parts) if status_parts else "ONLINE"
+                            out["MODEL"] = hid_name or KNOWN_UPS_VENDORS.get(vid, "USB HID UPS")
+                            out["MFR"] = KNOWN_UPS_VENDORS.get(vid, "Generic USB")
+                            out["PROTOCOL"] = "direct_usb_hid"
+                            out["VENDOR_ID"] = vid
+                            out["PRODUCT_ID"] = pid
+                            return out
+                        finally:
+                            os.close(fd)
+            except Exception as e:
+                logger.debug(f"[Direct USB] hidraw scan error: {e}")
+
+    # If hidraw was discovered but access was blocked by cgroup permissions
+    if permission_error_info:
+        return permission_error_info
+
+    # Layer 3: Scan /sys/bus/usb/devices/ to detect connected USB UPS device metadata
+    usb_roots = [p for p in ["/sys/bus/usb/devices", "/host/sys/bus/usb/devices"] if os.path.isdir(p)]
+    for u_root in usb_roots:
+        try:
+            for d in sorted(os.listdir(u_root)):
+                d_path = os.path.join(u_root, d)
+                v_f = os.path.join(d_path, "idVendor")
+                p_f = os.path.join(d_path, "idProduct")
+                if os.path.isfile(v_f) and os.path.isfile(p_f):
+                    with open(v_f, "r") as f:
+                        vid = f.read().strip().lower()
+                    with open(p_f, "r") as f:
+                        pid = f.read().strip().lower()
+                    prod, mfr = "", ""
+                    if os.path.isfile(os.path.join(d_path, "product")):
+                        with open(os.path.join(d_path, "product"), "r") as f:
+                            prod = f.read().strip()
+                    if os.path.isfile(os.path.join(d_path, "manufacturer")):
+                        with open(os.path.join(d_path, "manufacturer"), "r") as f:
+                            mfr = f.read().strip()
+
+                    is_ups = (
+                        vid in KNOWN_UPS_VENDORS
+                        or "ups" in prod.lower()
+                        or "power" in prod.lower()
+                        or "battery" in prod.lower()
+                        or "wallecube" in mfr.lower()
+                    )
+                    if is_ups:
+                        vendor_name = KNOWN_UPS_VENDORS.get(vid, mfr or "Generic USB")
+                        model_name = prod or f"{vendor_name} UPS"
+                        return {
+                            "MODEL": model_name,
+                            "MFR": mfr or vendor_name,
+                            "STATUS": "ACTION_REQUIRED",
+                            "PROTOCOL": "direct_usb_sysfs",
+                            "PERMISSION_ERROR": True,
+                            "ERROR": (
+                                f"Direct USB device detected ({model_name}), but Docker lacks permission to open character device. "
+                                "Add device_cgroup_rules for hidraw or privileged: true in container configuration."
+                            ),
+                            "VENDOR_ID": vid,
+                            "PRODUCT_ID": pid,
+                        }
+        except Exception as e:
+            logger.debug(f"[Direct USB] sysfs usb scan error: {e}")
+
+    return out
+
+
 def discover_ups_sources() -> List[Dict[str, Any]]:
     """Auto-discovers locally connected USB HID UPS devices and active LAN power daemons."""
     candidates: List[Dict[str, Any]] = []
 
-    # 1. Probe USB HID devices in sysfs
-    usb_devices = glob.glob("/sys/bus/usb/devices/*")
+    # 1. Probe USB HID devices in sysfs (both container and host mounts)
+    usb_devices = glob.glob("/sys/bus/usb/devices/*") + glob.glob("/host/sys/bus/usb/devices/*")
+    seen_ids: Set[str] = set()
+
     for dev_path in usb_devices:
         try:
             vendor_file = os.path.join(dev_path, "idVendor")
@@ -344,6 +703,10 @@ def discover_ups_sources() -> List[Dict[str, Any]]:
                     vid = f.read().strip().lower()
                 with open(product_file, "r") as f:
                     pid = f.read().strip().lower()
+
+                dev_key = f"{vid}:{pid}"
+                if dev_key in seen_ids:
+                    continue
 
                 mfr = ""
                 mfr_file = os.path.join(dev_path, "manufacturer")
@@ -358,21 +721,25 @@ def discover_ups_sources() -> List[Dict[str, Any]]:
                         prod_name = f.read().strip()
 
                 is_ups_vendor = vid in KNOWN_UPS_VENDORS
-                is_ups_prod = "ups" in prod_name.lower() or "power" in prod_name.lower()
+                is_ups_prod = any(
+                    k in prod_name.lower() or k in mfr.lower() for k in ("ups", "power", "battery", "wallecube", "open")
+                )
 
                 if is_ups_vendor or is_ups_prod:
+                    seen_ids.add(dev_key)
                     vendor_title = KNOWN_UPS_VENDORS.get(vid, mfr or "Generic USB")
+                    model_title = prod_name or vendor_title
                     candidates.append(
                         {
                             "type": "usb_hid",
                             "mode": "usb_hid",
-                            "title": f"{vendor_title} ({prod_name or pid})",
-                            "label": f"{vendor_title} ({prod_name or pid})",
+                            "title": f"{vendor_title} ({model_title})",
+                            "label": f"{vendor_title} ({model_title})",
                             "vendor_id": vid,
                             "product_id": pid,
-                            "model": prod_name or vendor_title,
-                            "host": "localhost",
-                            "port": 3551,
+                            "model": model_title,
+                            "host": "",
+                            "port": None,
                             "description": f"Direct USB Device ({vid}:{pid})",
                             "is_usb": True,
                         }
@@ -380,7 +747,36 @@ def discover_ups_sources() -> List[Dict[str, Any]]:
         except Exception:
             continue
 
-    # 2. Check /dev/usb/hiddev* devices
+    # 2. Check /sys/class/power_supply devices
+    psy_paths = glob.glob("/sys/class/power_supply/*") + glob.glob("/host/sys/class/power_supply/*")
+    for p_dir in psy_paths:
+        try:
+            bname = os.path.basename(p_dir)
+            t_file = os.path.join(p_dir, "type")
+            psy_type = ""
+            if os.path.isfile(t_file):
+                with open(t_file, "r") as f:
+                    psy_type = f.read().strip().upper()
+            if (psy_type in ("UPS", "BATTERY") or "ups" in bname.lower()) and not any(
+                c.get("is_usb") for c in candidates
+            ):
+                candidates.append(
+                    {
+                        "type": "usb_hid",
+                        "mode": "usb_hid",
+                        "title": f"Linux Power Supply ({bname})",
+                        "label": f"Linux Power Supply ({bname})",
+                        "model": bname,
+                        "host": "",
+                        "port": None,
+                        "description": f"Detected sysfs power supply node {bname}",
+                        "is_usb": True,
+                    }
+                )
+        except Exception:
+            continue
+
+    # 3. Check /dev/usb/hiddev* devices
     hiddev_nodes = glob.glob("/dev/usb/hiddev*") + glob.glob("/host/dev/usb/hiddev*")
     if hiddev_nodes and not candidates:
         candidates.append(
@@ -390,14 +786,14 @@ def discover_ups_sources() -> List[Dict[str, Any]]:
                 "title": f"USB HID Power Device ({os.path.basename(hiddev_nodes[0])})",
                 "label": f"USB HID Power Device ({os.path.basename(hiddev_nodes[0])})",
                 "model": "Generic USB HID UPS",
-                "host": "localhost",
-                "port": 3551,
+                "host": "",
+                "port": None,
                 "description": f"Detected character node {hiddev_nodes[0]}",
                 "is_usb": True,
             }
         )
 
-    # 3. Probe LAN / Host apcupsd and NUT daemons
+    # 4. Probe LAN / Host apcupsd and NUT daemons
     hosts_to_test = ["127.0.0.1"]
     gw = _get_docker_gateway()
     if gw and gw not in hosts_to_test:
@@ -458,13 +854,44 @@ def test_ups_connection(
     username: str = "",
     password: str = "",
 ) -> Dict[str, Any]:
-    """Tests connection to a UPS daemon without modifying persistent configuration."""
+    """Tests connection to a UPS daemon or Direct USB without modifying persistent configuration."""
+    clean_mode = (mode or "auto").lower()
+
+    if clean_mode in ("usb_hid", "usb"):
+        raw = _query_direct_usb()
+        if raw:
+            if raw.get("PERMISSION_ERROR"):
+                return {
+                    "success": False,
+                    "connected": False,
+                    "error": raw.get(
+                        "ERROR",
+                        "Docker lacks permission to open /dev/hidraw. Add device_cgroup_rules or privileged: true.",
+                    ),
+                    "model": raw.get("MODEL", "USB UPS"),
+                }
+            bcharge_str = raw.get("BCHARGE", "")
+            m = re.search(r"([0-9]+(?:\.[0-9]+)?)", bcharge_str)
+            bcharge = float(m.group(1)) if m else None
+            return {
+                "success": True,
+                "connected": True,
+                "model": raw.get("MODEL", "USB HID UPS"),
+                "status": raw.get("STATUS", "ONLINE"),
+                "battery_charge_pct": bcharge,
+                "raw_keys": list(raw.keys()),
+            }
+        return {
+            "success": False,
+            "connected": False,
+            "error": "No USB UPS device detected on local USB bus. Ensure the USB data cable is securely connected to the host.",
+        }
+
     clean_host = (host or "127.0.0.1").strip()
     try:
         clean_port = int(port or 3551)
     except (ValueError, TypeError):
         clean_port = 3551
-    clean_mode = (mode or "auto").lower()
     if clean_port <= 0:
         clean_port = 3493 if clean_mode in ("nut_client", "nut") else 3551
 
@@ -495,6 +922,7 @@ def test_ups_connection(
         bcharge = float(m.group(1)) if m else None
         return {
             "success": True,
+            "connected": True,
             "model": raw.get("MODEL", raw.get("UPSNAME", "Generic UPS")),
             "status": raw.get("STATUS", "ONLINE"),
             "battery_charge_pct": bcharge,
@@ -502,6 +930,7 @@ def test_ups_connection(
         }
     return {
         "success": False,
+        "connected": False,
         "error": f"Unable to reach UPS daemon at {clean_host}:{clean_port}. Ensure service is running and accessible.",
     }
 
@@ -633,10 +1062,16 @@ def read_ups_status(force: bool = False) -> Dict[str, Any]:
     ups_pass = cfg.get("password", "")
 
     protocol = None
-    raw: Dict[str, str] = {}
+    raw: Dict[str, Any] = {}
+
+    # 0. If configured for Direct USB mode (usb_hid)
+    if ups_mode in ("usb_hid", "usb"):
+        raw = _query_direct_usb()
+        if raw:
+            protocol = raw.get("PROTOCOL", "direct_usb_hid")
 
     # 1. If configured for NUT mode or NUT port 3493
-    if ups_mode in ("nut_client", "nut") or ups_port == 3493:
+    elif ups_mode in ("nut_client", "nut") or ups_port == 3493:
         target_port = ups_port if ups_port > 0 else 3493
         raw = _query_nut_socket(ups_host, target_port, ups_name=ups_name, username=ups_user, password=ups_pass)
         if raw:
@@ -669,18 +1104,23 @@ def read_ups_status(force: bool = False) -> Dict[str, Any]:
             if raw:
                 protocol = "apcaccess_cli"
 
-    # 3. Default / Auto / Direct USB Mode: Probe apcupsd first, then NUT, then CLI
+    # 3. Default / Auto Mode: Probe direct USB first, then apcupsd, then NUT, then CLI
     else:
-        target_apc_port = ups_port if ups_port > 0 else 3551
-        raw = _query_apcupsd_socket(ups_host, target_apc_port)
-        if raw:
-            protocol = "apcupsd_socket"
-        elif ups_host in ("127.0.0.1", "localhost"):
-            gw = _get_docker_gateway()
-            if gw and gw != ups_host:
-                raw = _query_apcupsd_socket(gw, target_apc_port)
-                if raw:
-                    protocol = "apcupsd_socket"
+        raw = _query_direct_usb()
+        if raw and not raw.get("PERMISSION_ERROR"):
+            protocol = raw.get("PROTOCOL", "direct_usb_hid")
+
+        if not raw:
+            target_apc_port = ups_port if ups_port > 0 else 3551
+            raw = _query_apcupsd_socket(ups_host, target_apc_port)
+            if raw:
+                protocol = "apcupsd_socket"
+            elif ups_host in ("127.0.0.1", "localhost"):
+                gw = _get_docker_gateway()
+                if gw and gw != ups_host:
+                    raw = _query_apcupsd_socket(gw, target_apc_port)
+                    if raw:
+                        protocol = "apcupsd_socket"
 
         if not raw:
             target_nut_port = ups_port if (ups_port > 0 and ups_port != 3551) else 3493
@@ -725,25 +1165,60 @@ def read_ups_status(force: bool = False) -> Dict[str, Any]:
         _LAST_UPS_POLL = now
         return status_obj
 
-    def _extract_float(val: str):
-        if not val:
+    if raw.get("PERMISSION_ERROR"):
+        status_obj = {
+            "available": True,
+            "status": "Permission Required",
+            "model": raw.get("MODEL", "USB UPS"),
+            "battery_charge_pct": None,
+            "time_left_min": None,
+            "load_pct": None,
+            "line_volts": None,
+            "battery_volts": None,
+            "power_watts": None,
+            "battery_temp_c": None,
+            "line_freq_hz": None,
+            "protocol": protocol or "direct_usb",
+            "mode": ups_mode,
+            "on_battery": False,
+            "permission_error": True,
+            "permission_detail": raw.get("ERROR"),
+            "active_policy": cfg.get("shutdown_policy", "runtime_left"),
+            "failsafe_active": False,
+        }
+        _CACHED_UPS = status_obj
+        _LAST_UPS_POLL = now
+        return status_obj
+
+    def _extract_float(val: Any):
+        if val is None or val == "":
             return None
-        m = re.search(r"([0-9]+(?:\.[0-9]+)?)", val)
+        m = re.search(r"([0-9]+(?:\.[0-9]+)?)", str(val))
         return float(m.group(1)) if m else None
 
-    charge_pct = _extract_float(raw.get("BCHARGE", ""))
-    time_left = _extract_float(raw.get("TIMELEFT", ""))
-    load_pct = _extract_float(raw.get("LOADPCT", ""))
-    line_v = _extract_float(raw.get("LINEV", ""))
-    batt_v = _extract_float(raw.get("BATTV", ""))
-    batt_temp = _extract_float(raw.get("ITEMP", ""))
-    line_freq = _extract_float(raw.get("LINEFREQ", ""))
+    charge_pct = _extract_float(raw.get("BCHARGE"))
+    time_left = _extract_float(raw.get("TIMELEFT"))
+    load_pct = _extract_float(raw.get("LOADPCT"))
+    line_v = _extract_float(raw.get("LINEV"))
+    batt_v = _extract_float(raw.get("BATTV"))
+    batt_temp = _extract_float(raw.get("ITEMP"))
+    line_freq = _extract_float(raw.get("LINEFREQ"))
 
-    nom_power = _extract_float(raw.get("NOMPOWER", ""))
-    nominal_w = nom_power if nom_power is not None else 900.0
-    power_watts = round((load_pct / 100.0) * nominal_w, 1) if load_pct is not None else None
+    nom_power = _extract_float(raw.get("NOMPOWER"))
+    model_str = (raw.get("MODEL") or "").lower()
+    if nom_power is None:
+        if "w180" in model_str:
+            nom_power = 180.0
+        elif "w150" in model_str:
+            nom_power = 150.0
+        elif "w120" in model_str:
+            nom_power = 120.0
+        else:
+            nom_power = 900.0
 
-    status_str = raw.get("STATUS", "ONLINE").strip().upper()
+    power_watts = round((load_pct / 100.0) * nom_power, 1) if load_pct is not None else None
+
+    status_str = str(raw.get("STATUS", "ONLINE")).strip().upper()
     is_on_batt = any(k in status_str for k in ("OB", "ONBATT", "ON BATT", "LB", "LOWBATT"))
 
     status_obj = {

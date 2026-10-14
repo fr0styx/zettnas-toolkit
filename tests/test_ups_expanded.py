@@ -181,3 +181,97 @@ def test_api_endpoints_ups_telemetry_and_events(client, auth_headers):
     assert res_ev.status_code == 200
     ev_data = res_ev.json()
     assert "events" in ev_data
+
+
+def test_parse_hid_report_descriptor():
+    from backend.hardware.ups import _parse_hid_report_descriptor
+
+    # Standard HID Power Device descriptor excerpt:
+    # Usage Page (Power Device 0x84), Usage (Present Status 0x02), Collection...
+    # Usage Page (Battery System 0x85), Usage (RemainingCapacity 0x66), Report Size (8), Report Count (1), Feature (0x02)
+    sample_desc = bytes(
+        [
+            0x05,
+            0x85,  # Usage Page (Battery System 0x85)
+            0x09,
+            0x66,  # Usage (RemainingCapacity 0x66)
+            0x75,
+            0x08,  # Report Size (8)
+            0x95,
+            0x01,  # Report Count (1)
+            0x85,
+            0x01,  # Report ID (1)
+            0xB1,
+            0x02,  # Feature
+            0x09,
+            0x68,  # Usage (RunTimeToEmpty 0x68)
+            0x75,
+            0x10,  # Report Size (16)
+            0x95,
+            0x01,  # Report Count (1)
+            0x85,
+            0x02,  # Report ID (2)
+            0xB1,
+            0x02,  # Feature
+        ]
+    )
+    mapping = _parse_hid_report_descriptor(sample_desc)
+    assert (0x85, 0x66) in mapping
+    assert mapping[(0x85, 0x66)] == (1, 8, 1)  # (report_id, report_size, report_count)
+    assert (0x85, 0x68) in mapping
+    assert mapping[(0x85, 0x68)] == (2, 16, 1)
+
+
+@patch("backend.hardware.ups._query_direct_usb")
+def test_direct_usb_query_status(mock_direct):
+    mock_direct.return_value = {
+        "MODEL": "Smart UPS W180",
+        "MFR": "WalleCube",
+        "STATUS": "ONLINE",
+        "BCHARGE": "100",
+        "TIMELEFT": "180.0",
+        "LINEV": "120",
+        "LOADPCT": "12",
+        "PROTOCOL": "direct_usb_hid",
+    }
+    save_ups_config({"mode": "usb_hid"})
+    status = read_ups_status(force=True)
+    assert status["available"] is True
+    assert status["model"] == "Smart UPS W180"
+    assert status["battery_charge_pct"] == 100.0
+    assert status["time_left_min"] == 180.0
+    assert status["protocol"] == "direct_usb_hid"
+    assert status["power_watts"] == 21.6  # 12% of 180W nominal
+
+
+@patch("backend.hardware.ups._query_direct_usb")
+def test_direct_usb_permission_error_handling(mock_direct):
+    mock_direct.return_value = {
+        "MODEL": "Smart UPS W180",
+        "MFR": "WalleCube",
+        "STATUS": "PERMISSION_REQUIRED",
+        "PROTOCOL": "direct_usb_hid",
+        "PERMISSION_ERROR": True,
+        "ERROR": "Docker lacks permission to open /dev/hidraw0.",
+    }
+    save_ups_config({"mode": "usb_hid"})
+    status = read_ups_status(force=True)
+    assert status["available"] is True
+    assert status["permission_error"] is True
+    assert status["status"] == "Permission Required"
+    assert "Docker lacks permission" in status["permission_detail"]
+
+
+@patch("backend.hardware.ups._query_direct_usb")
+def test_test_ups_connection_direct_usb(mock_direct):
+    mock_direct.return_value = {
+        "MODEL": "Smart UPS W180",
+        "STATUS": "ONLINE",
+        "BCHARGE": "95",
+        "PROTOCOL": "direct_usb_hid",
+    }
+    res = exec_test_ups_connection(mode="usb_hid")
+    assert res["success"] is True
+    assert res["connected"] is True
+    assert res["model"] == "Smart UPS W180"
+    assert res["battery_charge_pct"] == 95.0

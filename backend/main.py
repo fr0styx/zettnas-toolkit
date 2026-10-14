@@ -5,6 +5,7 @@ Modular Backend Architecture
 
 import asyncio
 import atexit
+import glob
 import os
 import re
 import secrets
@@ -62,11 +63,13 @@ def startup_system():
     read_ip()  # Pre-populate IP cache at startup
     detect_chassis_model()  # Pre-populate chassis model cache
 
-    # Auto-link host KVM, vhost-net, and mem nodes into container /dev if present
+    # Auto-link host KVM, vhost-net, mem, and USB/HID nodes into container /dev if present
     for node, host_node in [
         ("/dev/kvm", "/host/dev/kvm"),
         ("/dev/vhost-net", "/host/dev/vhost-net"),
         ("/dev/mem", "/host/dev/mem"),
+        ("/dev/bus/usb", "/host/dev/bus/usb"),
+        ("/dev/usb", "/host/dev/usb"),
     ]:
         if not os.path.exists(node) and os.path.exists(host_node):
             try:
@@ -74,6 +77,16 @@ def startup_system():
                 logger.info(f"[DEV] Auto-linked {node} -> {host_node}")
             except OSError as e:
                 logger.debug(f"[DEV] Could not link {node}: {e}")
+
+    # Auto-link any character hidraw devices (/host/dev/hidraw*) into container /dev
+    for h_node in glob.glob("/host/dev/hidraw*"):
+        target_node = os.path.join("/dev", os.path.basename(h_node))
+        if not os.path.exists(target_node):
+            try:
+                os.symlink(h_node, target_node)
+                logger.info(f"[DEV] Auto-linked {target_node} -> {h_node}")
+            except OSError as e:
+                logger.debug(f"[DEV] Could not link {target_node}: {e}")
 
     if is_using_default_password():
         logger.warning("=" * 60)
