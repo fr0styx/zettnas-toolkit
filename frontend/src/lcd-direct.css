@@ -103,6 +103,7 @@ body.lcd-direct #console-window.window-minimized {
   opacity: 1 !important;
 }
 
+body.lcd-direct #console-window #screen,
 body.lcd-direct #screen,
 body.lcd-direct #screen.hardware-screen-canvas {
   display: flex !important;
@@ -117,6 +118,8 @@ body.lcd-direct #screen.hardware-screen-canvas {
   height: 172px !important;
   min-width: 640px !important;
   min-height: 172px !important;
+  max-width: 640px !important;
+  max-height: 172px !important;
   padding: 5px 12px 6px 12px !important;
   box-sizing: border-box !important;
   border: none !important;
@@ -129,6 +132,366 @@ body.lcd-direct #screen.hardware-screen-canvas {
   transform: rotate(90deg) translate(0, -172px) !important;
 }
 
+body.lcd-direct #console-window #screen header,
+body.lcd-direct #screen header {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  height: 26px !important;
+  min-height: 26px !important;
+  max-height: 26px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border-bottom: none !important;
+  width: 100% !important;
+  flex-shrink: 0 !important;
+}
+
+body.lcd-direct #console-window #screen .h-left,
+body.lcd-direct #screen .h-left {
+  display: flex !important;
+  align-items: center !important;
+  gap: 9px !important;
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+}
+
+body.lcd-direct #console-window #screen .nas-name,
+body.lcd-direct #screen .nas-name {
+  font-weight: 800 !important;
+  font-size: 19px !important;
+  letter-spacing: 0.5px !important;
+  white-space: nowrap !important;
+  max-width: none !important;
+}
+
+body.lcd-direct #console-window #screen .pill,
+body.lcd-direct #screen .pill {
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  padding: 3px 9px !important;
+  border-radius: 11px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  white-space: nowrap !important;
+}
+
+body.lcd-direct #console-window #screen .clock,
+body.lcd-direct #screen .clock {
+  font-size: 22px !important;
+  font-weight: 800 !important;
+  letter-spacing: 1px !important;
+  white-space: nowrap !important;
+  text-align: center !important;
+  flex-shrink: 0 !important;
+}
+
+body.lcd-direct #console-window #screen .h-right,
+body.lcd-direct #screen .h-right {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 6px !important;
+  font-size: 13px !important;
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+  width: auto !important;
+  margin-top: 0 !important;
+}
+
+body.lcd-direct #console-window #screen .lcd-page-dots,
+body.lcd-direct #screen .lcd-page-dots {
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+}
+
+body.lcd-direct #console-window #screen .lcd-dot,
+body.lcd-direct #screen .lcd-dot {
+  width: 14px !important;
+  height: 14px !important;
+  font-size: 8px !important;
+  line-height: 14px !important;
+}
+
+body.lcd-direct #console-window #screen #ip,
+body.lcd-direct #screen #ip {
+  font-size: 13px !important;
+  font-family: inherit !important;
+}
+
+body.lcd-direct #console-window #screen #lcd-viewport,
+body.lcd-direct #console-window #lcd-viewport,
+body.lcd-direct #screen #lcd-viewport {
+  position: relative !important;
+  width: 100% !important;
+  flex: 1 1 0 !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  height: auto !important;
+  min-height: 0 !important;
+}
+
+body.lcd-direct #console-window #screen .lcd-page,
+body.lcd-direct #console-window .lcd-page,
+body.lcd-direct #screen .lcd-page {
+  display: none !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+body.lcd-direct #console-window #screen .lcd-page.active,
+body.lcd-direct #console-window .lcd-page.active,
+body.lcd-direct #screen .lcd-page.active {
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+  height: 100% !important;
+  gap: 4px !important;
+}
+
+body.lcd-direct #console-window #screen .cards,
+body.lcd-direct #console-window .cards,
+body.lcd-direct #screen .cards {
+  display: flex !important;
+  flex-direction: row !important;
+  grid-template-columns: none !important;
+  gap: 5px !important;
+  flex: 1 1 0 !important;
+  min-height: 0 !important;
+  width: 100% !important;
+  align-items: stretch !important;
+}
+
+body.lcd-direct #console-window #screen .card,
+body.lcd-direct #console-window .card,
+body.lcd-direct #screen .card {
+  display: flex !important;
+  flex-direction: column !important;
+  grid-column: auto !important;
+  gap: 2px !important;
+  position: relative !important;
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  padding: 3px 6px !important;
+  box-sizing: border-box !important;
+}
+
+body.lcd-direct #console-window #screen .card.card-storage,
+body.lcd-direct #console-window .card.card-storage,
+body.lcd-direct #screen .card.card-storage {
+  grid-column: auto !important;
+  padding: 3px 6px !important;
+  flex: 1 1 0 !important;
+}
+
+body.lcd-direct #console-window #screen .card.card-compact,
+body.lcd-direct #screen .card.card-compact {
+  flex: 0.55 1 0 !important;
+}
+
+body.lcd-direct #console-window #screen .storage-body,
+body.lcd-direct #screen .storage-body {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+}
+
+body.lcd-direct #console-window #screen .donut,
+body.lcd-direct #screen .donut {
+  width: 38px !important;
+  height: 38px !important;
+  flex: none !important;
+}
+
+body.lcd-direct #console-window #screen .donut::before,
+body.lcd-direct #screen .donut::before {
+  width: 28px !important;
+  height: 28px !important;
+}
+
+body.lcd-direct #console-window #screen .donut span,
+body.lcd-direct #screen .donut span {
+  font-size: 11px !important;
+  font-weight: 800 !important;
+}
+
+body.lcd-direct #console-window #screen .storage-nums,
+body.lcd-direct #screen .storage-nums {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+  justify-content: center !important;
+}
+
+body.lcd-direct #console-window #screen .storage-nums div,
+body.lcd-direct #screen .storage-nums div {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: baseline !important;
+  gap: 3px !important;
+  min-width: 0 !important;
+}
+
+body.lcd-direct #console-window #screen .storage-nums .lbl,
+body.lcd-direct #screen .storage-nums .lbl {
+  font-size: 7.5px !important;
+  letter-spacing: 0.3px !important;
+  font-weight: 700 !important;
+}
+
+body.lcd-direct #console-window #screen .storage-nums .val,
+body.lcd-direct #screen .storage-nums .val {
+  font-size: 11.5px !important;
+  font-weight: 800 !important;
+}
+
+body.lcd-direct #console-window #screen .gauge-body,
+body.lcd-direct #screen .gauge-body {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  flex: 1 1 0 !important;
+}
+
+body.lcd-direct #console-window #screen .arc,
+body.lcd-direct #screen .arc {
+  width: 46px !important;
+  height: 46px !important;
+  flex: none !important;
+}
+
+body.lcd-direct #console-window #screen .arc::before,
+body.lcd-direct #screen .arc::before {
+  inset: 5px !important;
+}
+
+body.lcd-direct #console-window #screen .arc-val,
+body.lcd-direct #screen .arc-val {
+  font-size: 15px !important;
+  font-weight: 800 !important;
+}
+
+body.lcd-direct #console-window #screen .arc-val .u,
+body.lcd-direct #screen .arc-val .u {
+  font-size: 8.5px !important;
+}
+
+body.lcd-direct #console-window #screen .side,
+body.lcd-direct #screen .side {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 1px !important;
+  line-height: 1.1 !important;
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+}
+
+body.lcd-direct #console-window #screen .side .lbl,
+body.lcd-direct #screen .side .lbl {
+  font-size: 7.5px !important;
+}
+
+body.lcd-direct #console-window #screen .side .val,
+body.lcd-direct #screen .side .val {
+  font-size: 12.5px !important;
+}
+
+body.lcd-direct #console-window #screen .card-net .net-body,
+body.lcd-direct #screen .card-net .net-body {
+  gap: 2px !important;
+}
+
+body.lcd-direct #console-window #screen .card-net .net-row strong,
+body.lcd-direct #screen .card-net .net-row strong {
+  font-size: 13px !important;
+}
+
+body.lcd-direct #console-window #screen .card-net .net-row span,
+body.lcd-direct #screen .card-net .net-row span {
+  font-size: 9px !important;
+}
+
+body.lcd-direct #console-window #screen .card-fans .fan-row,
+body.lcd-direct #screen .card-fans .fan-row {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex: 1 !important;
+  width: 100% !important;
+  gap: 2px !important;
+}
+
+body.lcd-direct #console-window #screen .card-fans .fan .fv,
+body.lcd-direct #screen .card-fans .fan .fv {
+  font-size: 11px !important;
+}
+
+body.lcd-direct #console-window #screen .card-fans .fan .fan-ic,
+body.lcd-direct #screen .card-fans .fan .fan-ic {
+  width: 13px !important;
+  height: 13px !important;
+}
+
+body.lcd-direct #console-window #screen .uptime,
+body.lcd-direct #screen .uptime {
+  font-size: 8px !important;
+  margin-top: auto !important;
+}
+
+body.lcd-direct #console-window #screen .disks,
+body.lcd-direct #console-window .disks,
+body.lcd-direct #screen .disks {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: stretch !important;
+  gap: 6px !important;
+  height: 44px !important;
+  flex-shrink: 0 !important;
+  width: 100% !important;
+}
+
+body.lcd-direct #console-window #screen .disk-group,
+body.lcd-direct #console-window .disk-group,
+body.lcd-direct #screen .disk-group {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+  flex: var(--n, 1) 1 0 !important;
+  min-width: 0 !important;
+}
+
+body.lcd-direct #console-window #screen .group-tiles,
+body.lcd-direct #console-window .group-tiles,
+body.lcd-direct #screen .group-tiles {
+  display: grid !important;
+  grid-template-columns: repeat(var(--n, 1), 1fr) !important;
+  gap: 6px !important;
+  flex: 1 1 0 !important;
+}
+
+body.lcd-direct #console-window #screen .disk,
+body.lcd-direct #screen .disk {
+  padding: 3px 6px !important;
+  border-radius: 6px !important;
+}
+
+body.lcd-direct #console-window #screen .group-div,
+body.lcd-direct #screen .group-div {
+  width: 1px !important;
+  height: 100% !important;
+  display: block !important;
+}
+
+body.lcd-direct #console-window #screen *,
 body.lcd-direct #screen * {
   visibility: visible !important;
 }

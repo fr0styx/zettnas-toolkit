@@ -220,7 +220,7 @@ def serve_index(request: Request):
     with open(index_file, "r", encoding="utf-8") as f:
         html_str = f.read()
     if request.query_params.get("mode") == "lcd" or "mode=lcd" in str(request.query_params):
-        html_str = html_str.replace('<body class="studio-workbench">', '<body class="studio-workbench lcd-direct">')
+        html_str = html_str.replace('class="studio-workbench', 'class="studio-workbench lcd-direct')
     return Response(
         content=html_str,
         media_type="text/html",
