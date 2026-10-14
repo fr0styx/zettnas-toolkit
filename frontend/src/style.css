@@ -8863,6 +8863,68 @@ body.mobile-mode textarea {
   .docker-table.responsive-cards tbody tr {
     touch-action: pan-y !important;
   }
+
+  #vm-telemetry-header,
+  .vm-telemetry-header {
+    display: flex !important;
+    flex-direction: column !important;
+    flex-shrink: 0 !important;
+    gap: 8px !important;
+    padding: 8px 10px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .vm-telemetry-budget-grid {
+    grid-template-columns: 1fr !important;
+    gap: 6px !important;
+  }
+
+  .vm-action-btns-wrap {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    gap: 6px !important;
+    padding-bottom: 2px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  .vm-action-btns-wrap::-webkit-scrollbar {
+    display: none !important;
+  }
+  .vm-action-btns-wrap button {
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
+  }
+
+  #vm-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    width: 100% !important;
+    touch-action: pan-y !important;
+  }
+
+  #vm-grid .glassmorphic-card {
+    touch-action: pan-y !important;
+  }
+
+  .vm-card-actions .btn-vm-pause,
+  .vm-card-actions .btn-vm-acpi,
+  .vm-card-actions .btn-vm-force-off,
+  .vm-card-actions .btn-vm-console,
+  .vm-card-actions .btn-vm-edit,
+  .vm-card-actions .btn-vm-clone,
+  .vm-card-actions .btn-vm-delete,
+  .vm-card-actions .btn-vm-snapshot {
+    display: none !important;
+  }
+
+  .btn-vm-more-sheet {
+    display: inline-flex !important;
+  }
 }
 
 body.mobile-mode .containers-manager-window,
@@ -8978,6 +9040,48 @@ body.mobile-mode .docker-table.responsive-cards,
 body.mobile-mode .copy-history-table.responsive-cards,
 body.mobile-mode .docker-table.responsive-cards tbody,
 body.mobile-mode .docker-table.responsive-cards tbody tr {
+  touch-action: pan-y !important;
+}
+
+body.mobile-mode #vm-telemetry-header,
+body.mobile-mode .vm-telemetry-header {
+  display: flex !important;
+  flex-direction: column !important;
+  flex-shrink: 0 !important;
+  gap: 8px !important;
+  padding: 8px 10px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+body.mobile-mode .vm-action-btns-wrap {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  scrollbar-width: none !important;
+  gap: 6px !important;
+  padding-bottom: 2px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+body.mobile-mode .vm-action-btns-wrap::-webkit-scrollbar {
+  display: none !important;
+}
+body.mobile-mode .vm-action-btns-wrap button {
+  flex-shrink: 0 !important;
+  white-space: nowrap !important;
+}
+
+body.mobile-mode #vm-grid {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  width: 100% !important;
+  touch-action: pan-y !important;
+}
+
+body.mobile-mode #vm-grid .glassmorphic-card {
   touch-action: pan-y !important;
 }
 
@@ -9842,6 +9946,9 @@ body.mobile-mode .docker-table.responsive-cards tbody tr {
 #vm-manager-window .vm-telemetry-header {
   background: #101824 !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
 }
 
 #vm-manager-window .vm-content-body {
@@ -14576,14 +14683,14 @@ body.theme-yak .input-modern:focus {
   gap: 3px;
 }
 
-.vm-telemetry-header {
+.vm-telemetry-item .vm-telemetry-header {
   display: flex;
   justify-content: space-between;
   font-size: 9px;
   color: var(--muted);
 }
 
-.vm-telemetry-header .telemetry-val {
+.vm-telemetry-item .vm-telemetry-header .telemetry-val {
   color: #fff;
   font-weight: 700;
   font-family: monospace;

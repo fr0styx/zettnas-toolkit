@@ -124,7 +124,7 @@ export function initContainersManager() {
         </div>
 
         <!-- Table Body -->
-        <div class="containers-content-body" style="flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; touch-action: pan-y; padding: 14px 16px;">
+        <div class="containers-content-body" data-scrollable="true" style="flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; touch-action: pan-y; padding: 14px 16px;">
           <div class="cw-docker-table-wrap" style="overflow-x: auto; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px;">
             <table class="copy-history-table docker-table responsive-cards">
               <thead>

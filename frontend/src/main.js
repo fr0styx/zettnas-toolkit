@@ -298,13 +298,24 @@ document.addEventListener('DOMContentLoaded', () => {
     // Allow scrolling within designated scrollable containers (or data-scrollable="true")
     const scrollable = e.target.closest(
       '[data-scrollable="true"], [data-scrollable], ' +
+      '.vm-content-body, .containers-content-body, .chassis-workbench-stage, .mobile-bottom-sheet, ' +
       '.mgmt-content-pane, .fm-viewport, #console-window, .smart-modal-body, ' +
       '.smart-modal-window, .container-inspector-window, .ci-panes-container, #ci-logs-terminal, .ci-pane, ' +
       '.slide-drawer, #desktop-widgets-container, .os-dock, ' +
       'input, select, textarea, .mgmt-sidebar, .mgmt-inner-tabs, .drawer-tabs-nav, .smart-raw-pre'
     );
-    if (!scrollable) {
-      e.preventDefault();
+    if (scrollable) return;
+
+    // Check if target is inside an element with overflow-y/x auto or scroll
+    let el = e.target;
+    while (el && el !== document.body && el !== document.documentElement) {
+      if (el.scrollHeight > el.clientHeight || el.scrollWidth > el.clientWidth) {
+        const overflow = window.getComputedStyle(el).overflowY;
+        if (overflow === 'auto' || overflow === 'scroll') return;
+      }
+      el = el.parentElement;
     }
+
+    e.preventDefault();
   }, { passive: false });
 });
