@@ -6154,7 +6154,7 @@ body.theme-yak .lcd-dot.active {
     min-height: 0 !important;
     width: 100vw !important;
     max-width: 100vw !important;
-    height: auto !important;
+    height: calc(100dvh - 48px - 56px - env(safe-area-inset-bottom, 0px)) !important;
     max-height: calc(100dvh - 104px) !important;
     margin: 0 !important;
     border-radius: 0 !important;
@@ -7455,7 +7455,7 @@ body.mobile-mode #desktop-widgets-container .cal-glance-bar {
     min-height: 0 !important;
     width: 100vw !important;
     max-width: 100vw !important;
-    height: auto !important;
+    height: calc(100dvh - 48px - 56px - env(safe-area-inset-bottom, 0px)) !important;
     max-height: calc(100dvh - 104px) !important;
     margin: 0 !important;
     border-radius: 0 !important;
@@ -8744,6 +8744,241 @@ body.mobile-mode input[type="search"],
 body.mobile-mode select,
 body.mobile-mode textarea {
   font-size: 16px !important;
+}
+
+/* Containers & Services Window and VM Manager Mobile Touch Scrolling & Header Ergonomics */
+@media (max-width: 768px) {
+  .containers-manager-window,
+  .vm-manager-window {
+    height: calc(100dvh - 48px - 56px - env(safe-area-inset-bottom, 0px)) !important;
+    max-height: calc(100dvh - 104px) !important;
+  }
+
+  .containers-telemetry-header {
+    flex-shrink: 0 !important;
+    padding: 8px 10px !important;
+  }
+
+  .containers-telemetry-header > div:first-child {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+    margin-bottom: 8px !important;
+  }
+
+  .containers-telemetry-header > div:first-child > div:first-child {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+
+  .cw-action-btns-wrap,
+  .containers-telemetry-header > div:first-child > div:last-child {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    gap: 6px !important;
+    padding-bottom: 4px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  .cw-action-btns-wrap::-webkit-scrollbar,
+  .containers-telemetry-header > div:first-child > div:last-child::-webkit-scrollbar {
+    display: none !important;
+  }
+  .cw-action-btns-wrap button,
+  .containers-telemetry-header > div:first-child > div:last-child button {
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
+  }
+
+  .containers-telemetry-header > div:last-child {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+
+  .cw-docker-filter-pills {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    gap: 6px !important;
+    padding-bottom: 4px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  .cw-docker-filter-pills::-webkit-scrollbar {
+    display: none !important;
+  }
+  .cw-docker-filter-pills button {
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
+  }
+
+  .cw-docker-search-wrap,
+  .containers-telemetry-header > div:last-child > div:last-child {
+    width: 100% !important;
+  }
+  #cw-docker-search-input {
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .containers-content-body,
+  #containers-manager-window .containers-content-body,
+  .vm-content-body,
+  #vm-manager-window .vm-content-body {
+    flex: 1 1 0% !important;
+    min-height: 0 !important;
+    height: auto !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    touch-action: pan-y !important;
+    overscroll-behavior-y: contain !important;
+    padding: 10px 10px calc(24px + env(safe-area-inset-bottom, 0px)) 10px !important;
+  }
+
+  .cw-docker-table-wrap,
+  .containers-content-body > div,
+  #containers-manager-window .containers-content-body > div {
+    overflow-x: visible !important;
+    overflow-y: visible !important;
+    background: transparent !important;
+    border: none !important;
+    touch-action: pan-y !important;
+  }
+
+  .docker-table.responsive-cards,
+  .copy-history-table.responsive-cards,
+  .docker-table.responsive-cards tbody,
+  .docker-table.responsive-cards tbody tr {
+    touch-action: pan-y !important;
+  }
+}
+
+body.mobile-mode .containers-manager-window,
+body.mobile-mode .vm-manager-window {
+  height: calc(100dvh - 48px - 56px - env(safe-area-inset-bottom, 0px)) !important;
+  max-height: calc(100dvh - 104px) !important;
+}
+
+body.mobile-mode .containers-telemetry-header {
+  flex-shrink: 0 !important;
+  padding: 8px 10px !important;
+}
+
+body.mobile-mode .containers-telemetry-header > div:first-child {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 8px !important;
+  margin-bottom: 8px !important;
+}
+
+body.mobile-mode .containers-telemetry-header > div:first-child > div:first-child {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  flex-wrap: wrap !important;
+  gap: 6px !important;
+}
+
+body.mobile-mode .cw-action-btns-wrap,
+body.mobile-mode .containers-telemetry-header > div:first-child > div:last-child {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  scrollbar-width: none !important;
+  gap: 6px !important;
+  padding-bottom: 4px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+body.mobile-mode .cw-action-btns-wrap::-webkit-scrollbar,
+body.mobile-mode .containers-telemetry-header > div:first-child > div:last-child::-webkit-scrollbar {
+  display: none !important;
+}
+body.mobile-mode .cw-action-btns-wrap button,
+body.mobile-mode .containers-telemetry-header > div:first-child > div:last-child button {
+  flex-shrink: 0 !important;
+  white-space: nowrap !important;
+}
+
+body.mobile-mode .containers-telemetry-header > div:last-child {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 8px !important;
+}
+
+body.mobile-mode .cw-docker-filter-pills {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  scrollbar-width: none !important;
+  gap: 6px !important;
+  padding-bottom: 4px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+body.mobile-mode .cw-docker-filter-pills::-webkit-scrollbar {
+  display: none !important;
+}
+body.mobile-mode .cw-docker-filter-pills button {
+  flex-shrink: 0 !important;
+  white-space: nowrap !important;
+}
+
+body.mobile-mode .cw-docker-search-wrap,
+body.mobile-mode .containers-telemetry-header > div:last-child > div:last-child {
+  width: 100% !important;
+}
+body.mobile-mode #cw-docker-search-input {
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+body.mobile-mode .containers-content-body,
+body.mobile-mode #containers-manager-window .containers-content-body,
+body.mobile-mode .vm-content-body,
+body.mobile-mode #vm-manager-window .vm-content-body {
+  flex: 1 1 0% !important;
+  min-height: 0 !important;
+  height: auto !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y !important;
+  overscroll-behavior-y: contain !important;
+  padding: 10px 10px calc(24px + env(safe-area-inset-bottom, 0px)) 10px !important;
+}
+
+body.mobile-mode .cw-docker-table-wrap,
+body.mobile-mode .containers-content-body > div,
+body.mobile-mode #containers-manager-window .containers-content-body > div {
+  overflow-x: visible !important;
+  overflow-y: visible !important;
+  background: transparent !important;
+  border: none !important;
+  touch-action: pan-y !important;
+}
+
+body.mobile-mode .docker-table.responsive-cards,
+body.mobile-mode .copy-history-table.responsive-cards,
+body.mobile-mode .docker-table.responsive-cards tbody,
+body.mobile-mode .docker-table.responsive-cards tbody tr {
+  touch-action: pan-y !important;
 }
 
 /* Touch suppression of dock hover tooltip & enlarged coarse pointer controls */

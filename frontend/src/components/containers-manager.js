@@ -84,7 +84,7 @@ export function initContainersManager() {
             </div>
 
             <!-- Quick Action Buttons -->
-            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+            <div class="cw-action-btns-wrap" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
               <button id="btn-cw-refresh" class="btn-pill-toggle" title="Refresh Containers" style="display: inline-flex; align-items: center; gap: 5px;">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
                 <span data-i18n="mgmt.refresh">${t('mgmt.refresh', 'Refresh')}</span>
@@ -117,15 +117,15 @@ export function initContainersManager() {
               <button class="btn-pill-toggle cw-filter-btn" data-filter="compose"><span data-i18n="mgmt.docker_filter_compose">${t('mgmt.docker_filter_compose', 'Stacks')}</span> <span id="cw-pill-compose" class="docker-count-badge">0</span></button>
               <button class="btn-pill-toggle cw-filter-btn" data-filter="standalone"><span data-i18n="mgmt.docker_filter_standalone">${t('mgmt.docker_filter_standalone', 'Standalone')}</span> <span id="cw-pill-standalone" class="docker-count-badge">0</span></button>
             </div>
-            <div style="position: relative;">
+            <div class="cw-docker-search-wrap" style="position: relative;">
               <input type="text" id="cw-docker-search-input" placeholder="${t('mgmt.docker_search_placeholder', 'Search containers, images, ports...')}" class="tz-text-input" style="font-size: 11px; padding: 4px 10px; width: 220px; height: 26px; border-radius: 4px;">
             </div>
           </div>
         </div>
 
         <!-- Table Body -->
-        <div class="containers-content-body" style="flex: 1; overflow-y: auto; padding: 14px 16px;">
-          <div style="overflow-x: auto; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px;">
+        <div class="containers-content-body" style="flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; touch-action: pan-y; padding: 14px 16px;">
+          <div class="cw-docker-table-wrap" style="overflow-x: auto; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px;">
             <table class="copy-history-table docker-table responsive-cards">
               <thead>
                 <tr>
