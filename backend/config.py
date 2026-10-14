@@ -18,6 +18,10 @@ if not _env_pool:
         os.path.ismount("/mnt/user") or (os.path.isdir("/mnt/user") and len(os.listdir("/mnt/user")) > 1)
     ):
         POOL_PATH = "/mnt/user"
+    elif os.path.exists("/zettos/pool/1") and os.path.isdir("/zettos/pool/1"):
+        POOL_PATH = "/zettos/pool/1"
+    elif os.path.exists("/zettos/pool") and os.path.isdir("/zettos/pool"):
+        POOL_PATH = "/zettos/pool"
     elif os.path.exists("/mnt/storage"):
         POOL_PATH = "/mnt/storage"
     else:
@@ -28,6 +32,15 @@ elif (
     and (os.path.ismount("/mnt/user") or (os.path.isdir("/mnt/user") and len(os.listdir("/mnt/user")) > 1))
 ):
     POOL_PATH = "/mnt/user"
+elif (
+    _env_pool == "/mnt/storage"
+    and not (
+        os.path.exists("/mnt/user")
+        and (os.path.ismount("/mnt/user") or (os.path.isdir("/mnt/user") and len(os.listdir("/mnt/user")) > 1))
+    )
+    and (os.path.exists("/zettos/pool/1") or os.path.exists("/zettos/pool"))
+):
+    POOL_PATH = "/zettos/pool/1" if os.path.exists("/zettos/pool/1") else "/zettos/pool"
 else:
     POOL_PATH = _env_pool
 DISKS = os.environ.get("DISKS", "")
@@ -130,7 +143,17 @@ RCLONE_CACHE_DIR = os.path.join(DATA_DIR, "rclone", "vfs_cache")
 # Folder browser / mkdir / copy destination are confined to these roots.
 _default_roots = f"{POOL_PATH},{REMOTES_PATH}" if os.environ.get("BROWSE_ROOTS") is None else os.environ["BROWSE_ROOTS"]
 _roots_list = [p.strip() for p in _default_roots.split(",") if p.strip()]
-for _cand in ("/mnt", "/mnt/user", "/mnt/storage", "/mnt/remotes", "/mnt/cache", "/mnt/disks", "/boot"):
+for _cand in (
+    "/mnt",
+    "/mnt/user",
+    "/mnt/storage",
+    "/mnt/remotes",
+    "/mnt/cache",
+    "/mnt/disks",
+    "/boot",
+    "/zettos",
+    "/zettos/pool",
+):
     if os.path.exists(_cand) and _cand not in _roots_list:
         _roots_list.append(_cand)
 ALLOWED_BROWSE_ROOTS = _roots_list

@@ -10,17 +10,17 @@ from backend.state import Z_STATE
 
 def read_storage():
     try:
-        u = shutil.disk_usage(POOL_PATH)
-        total_gb = u.total / 1e9
-        used_gb = u.used / 1e9
-        pct = round(100 * u.used / u.total) if u.total else 0
-
-        def fmt(g):
-            return f"{g / 1000:.0f}TB" if g >= 1000 else f"{g:.0f}GB"
-
+        total_gb = 0.0
+        used_gb = 0.0
+        pct = 0
         engine = "Btrfs / OpenZFS"
+
         try:
-            from backend.hardware.pal_storage import PlatformType, StoragePlatformDetector
+            from backend.hardware.pal_storage import (
+                PlatformType,
+                StoragePlatformDetector,
+                get_storage_platform,
+            )
 
             pt = StoragePlatformDetector.detect()
             if pt == PlatformType.UNRAID:
@@ -39,8 +39,30 @@ def read_storage():
                 engine = "Observer Telemetry Engine"
             else:
                 engine = "Btrfs Native Subvolumes"
-        except Exception:
-            pass
+
+            adapter = get_storage_platform()
+            pools = adapter.list_pools()
+            # Filter real storage data pools (exclude OS boot / eMMC)
+            data_pools = [
+                p for p in pools if p.total_bytes > 0 and getattr(p, "pool_type", "") != "os_boot" and p.id != "os_boot"
+            ]
+            if data_pools:
+                total_bytes = sum(p.total_bytes for p in data_pools)
+                used_bytes = sum(p.used_bytes for p in data_pools)
+                total_gb = total_bytes / 1e9
+                used_gb = used_bytes / 1e9
+                pct = round(100 * used_bytes / total_bytes) if total_bytes > 0 else 0
+        except Exception as e:
+            logger.debug(f"[read_storage] PAL storage inspection fallback: {e}")
+
+        if total_gb <= 0.0:
+            u = shutil.disk_usage(POOL_PATH if os.path.exists(POOL_PATH) else "/")
+            total_gb = u.total / 1e9
+            used_gb = u.used / 1e9
+            pct = round(100 * u.used / u.total) if u.total else 0
+
+        def fmt(g):
+            return f"{g / 1000:.0f}TB" if g >= 1000 else f"{g:.0f}GB"
 
         return {"used": fmt(used_gb), "total": fmt(total_gb), "pct": pct, "engine": engine}
     except Exception:
@@ -99,6 +121,27 @@ def _read_dmi_text(field: str) -> str:
     return ""
 
 
+def _read_dt_text(field: str = "model") -> str:
+    candidates = [
+        os.path.join(HOST_PROC, "device-tree", field) if HOST_PROC else None,
+        os.path.join("/proc/device-tree", field),
+        os.path.join("/host/proc/device-tree", field),
+        os.path.join(HOST_SYS, "firmware/devicetree/base", field) if HOST_SYS else None,
+        os.path.join("/sys/firmware/devicetree/base", field),
+        os.path.join("/host/sys/firmware/devicetree/base", field),
+    ]
+    for p in candidates:
+        if p and os.path.exists(p):
+            try:
+                with open(p, "r", encoding="utf-8", errors="replace") as f:
+                    content = f.read().replace("\x00", " ").strip()
+                    if content and content.lower() != "default string":
+                        return content
+            except Exception:
+                pass
+    return ""
+
+
 def detect_chassis_model(force: bool = False):
     if not force and Z_STATE.cached_chassis_model is not None:
         return Z_STATE.cached_chassis_model
@@ -122,7 +165,7 @@ def detect_chassis_model(force: bool = False):
     except Exception as e:
         logger.debug(f"[detect_chassis_model] Bay config check ignored: {e}")
 
-    # 2. Comprehensive DMI Hardware Identification
+    # 2. Comprehensive DMI & ARM64 Device Tree Hardware Identification
     prod = _read_dmi_text("product_name").lower()
     board = _read_dmi_text("board_name").lower()
     sku = _read_dmi_text("product_sku").lower()
@@ -131,6 +174,28 @@ def detect_chassis_model(force: bool = False):
     board_vendor = _read_dmi_text("board_vendor").lower()
 
     combined_dmi = f"{prod} {board} {sku} {family} {vendor} {board_vendor}"
+
+    # ARM64 Device Tree model/compatible checks (Rockchip RK3588, Zettlab D4 ARM64 SBCs)
+    dt_model = _read_dt_text("model").lower()
+    dt_compat = _read_dt_text("compatible").lower()
+    dt_combined = f"{dt_model} {dt_compat}".strip()
+
+    if dt_combined:
+        if any(k in dt_combined for k in ("wy110", "d4 ultra", "d4 pro", "nas-4")) or (
+            "d4" in dt_model and any(k in dt_combined for k in ("zettlab", "rk3588", "rockchip", "zettos"))
+        ):
+            Z_STATE.cached_chassis_model = "d4"
+            return "d4"
+        if any(k in dt_combined for k in ("wy140", "d8 ultra", "d8u", "nas-8")) or (
+            "d8" in dt_model and any(k in dt_combined for k in ("zettlab", "rk3588", "rockchip", "zettos"))
+        ):
+            Z_STATE.cached_chassis_model = "d8u"
+            return "d8u"
+        if any(k in dt_combined for k in ("wy120", "d6 ultra", "d6u", "nas-6")) or (
+            "d6" in dt_model and any(k in dt_combined for k in ("zettlab", "rk3588", "rockchip", "zettos"))
+        ):
+            Z_STATE.cached_chassis_model = "d6u"
+            return "d6u"
 
     # D4 Motherboard (WY110 / N100 4-bay) check
     if any(k in combined_dmi for k in ("wy110", "d4 ultra", "d4 pro", "nas-4")) or (
@@ -156,7 +221,13 @@ def detect_chassis_model(force: bool = False):
     # 3. Hardware Fan Topology Check (Physical Zettlab Appliance)
     # Zettlab D4 hardware has ONLY 1 chassis fan channel (pwm1) and 1 CPU fan (pwm3).
     # Zettlab D6U and D8 appliances have 2 chassis fan channels (pwm1 and pwm2) and 1 CPU fan (pwm3).
-    is_zettlab_brand = "zettlab" in vendor or "zettlab" in board_vendor or "zettos" in family
+    is_zettlab_brand = (
+        "zettlab" in vendor
+        or "zettlab" in board_vendor
+        or "zettos" in family
+        or "zettlab" in dt_combined
+        or "zettos" in dt_combined
+    )
     if is_zettlab_brand:
         pwm2_found = False
         pwm1_found = False
@@ -180,7 +251,7 @@ def detect_chassis_model(force: bool = False):
             Z_STATE.cached_chassis_model = "d4"
             return "d4"
 
-    # 4. Fallback: Physical Internal Bay Drive Count (Filter out M.2 NVMe and USB drives!)
+    # 4. Fallback: Physical Internal Bay Drive Count (Filter out M.2 NVMe, USB, eMMC flash, and OS disks!)
     try:
         from backend.hardware.hal import DiskDiscoveryHAL
 
@@ -188,12 +259,23 @@ def detect_chassis_model(force: bool = False):
         bay_disks = [
             r
             for r in records
-            if r.transport not in ("nvme", "usb") and not r.dev_name.startswith("nvme") and not r.removable
+            if r.transport not in ("nvme", "usb", "mmc")
+            and not r.dev_name.startswith(("nvme", "mmcblk", "loop", "ram", "zram"))
+            and r.role != "os"
+            and not r.removable
         ]
         count = len(bay_disks)
     except Exception:
         disks = _discover_disks()
-        count = len([d for d in disks if not str(d.get("dev", "")).startswith("nvme") and d.get("role") != "os"])
+        count = len(
+            [
+                d
+                for d in disks
+                if not str(d.get("dev", "")).startswith(("nvme", "mmcblk", "loop", "ram", "zram"))
+                and d.get("role") != "os"
+                and d.get("transport") != "mmc"
+            ]
+        )
 
     if count > 6:
         Z_STATE.cached_chassis_model = "d8u"

@@ -78,7 +78,7 @@ class StoragePool(BaseModel):
     members: List[PoolMember] = Field(default_factory=list)
     parity_protected: bool = False
     autotrim: bool = False
-    compression: str = "off"
+    compression: Optional[str] = "off"
 
 
 class NetworkShare(BaseModel):
@@ -246,6 +246,232 @@ class StoragePlatformAdapter(ABC):
             return 124, "", "Command timed out"
         except Exception as e:
             return 1, "", str(e)
+
+    @staticmethod
+    def _is_os_overlay_or_emmc(path: str) -> bool:
+        """Returns True if path points to the root OS overlayfs or internal eMMC boot flash."""
+        if not path or not os.path.exists(path):
+            return False
+        try:
+            # 1. Check if path itself is mounted on overlay or mmcblk
+            for mf in [
+                os.path.join(HOST_PROC, "1/mounts") if HOST_PROC else None,
+                os.path.join(HOST_PROC, "mounts") if HOST_PROC else None,
+                "/proc/mounts",
+            ]:
+                if mf and os.path.isfile(mf):
+                    try:
+                        with open(mf, "r", encoding="utf-8", errors="replace") as f:
+                            for line in f:
+                                parts = line.strip().split()
+                                if len(parts) >= 4:
+                                    dev, mp, fstype, opts = parts[0], parts[1], parts[2], parts[3]
+                                    if mp == path:
+                                        if fstype == "overlay" and (
+                                            "lowerdir=/rom" in opts or "/zettlab" in opts or "upperdir=" in opts
+                                        ):
+                                            return True
+                                        if dev.startswith(("/dev/mmcblk", "mmcblk")):
+                                            return True
+                    except Exception:
+                        pass
+
+            # 2. Check if host rootfs is an OS overlay and path is on that same device
+            is_root_overlay_or_emmc = False
+            for mf in [
+                os.path.join(HOST_PROC, "1/mounts") if HOST_PROC else None,
+                os.path.join(HOST_PROC, "mounts") if HOST_PROC else None,
+                "/proc/mounts",
+            ]:
+                if mf and os.path.isfile(mf):
+                    try:
+                        with open(mf, "r", encoding="utf-8", errors="replace") as f:
+                            for line in f:
+                                parts = line.strip().split()
+                                if len(parts) >= 4 and parts[1] == "/":
+                                    dev, fstype, opts = parts[0], parts[2], parts[3]
+                                    if fstype == "overlay" and (
+                                        "lowerdir=/rom" in opts or "/zettlab" in opts or "upperdir=/zettlab" in opts
+                                    ):
+                                        is_root_overlay_or_emmc = True
+                                    elif dev.startswith(("/dev/mmcblk", "mmcblk")):
+                                        is_root_overlay_or_emmc = True
+                    except Exception:
+                        pass
+
+            if is_root_overlay_or_emmc:
+                try:
+                    if os.stat(path).st_dev == os.stat("/").st_dev:
+                        u = shutil.disk_usage(path)
+                        if u.total < 64 * 1024 * 1024 * 1024:
+                            return True
+                except Exception:
+                    pass
+        except Exception:
+            pass
+        return False
+
+    def _parse_mounts(self) -> List[Dict[str, str]]:
+        """Parses /proc/mounts to find mounted filesystems, filtering out virtual and pseudo mounts."""
+        mounts: List[Dict[str, str]] = []
+        mount_files = [
+            os.path.join(HOST_PROC, "1/mounts") if HOST_PROC else None,
+            os.path.join(HOST_PROC, "mounts") if HOST_PROC else None,
+            "/proc/mounts",
+        ]
+        seen_targets = set()
+        for target_file in mount_files:
+            if not target_file or not os.path.isfile(target_file):
+                continue
+
+            skip_fstypes = {
+                "proc",
+                "sysfs",
+                "devtmpfs",
+                "devpts",
+                "tmpfs",
+                "overlay",
+                "cgroup",
+                "cgroup2",
+                "pstore",
+                "bpf",
+                "autofs",
+                "mqueue",
+                "hugetlbfs",
+                "debugfs",
+                "tracefs",
+                "securityfs",
+                "fusectl",
+                "configfs",
+                "binfmt_misc",
+                "squashfs",
+                "nsfs",
+                "ramfs",
+                "shfs",
+            }
+            skip_prefixes = ("/proc", "/sys", "/dev", "/run", "/var/lib/docker", "/var/lib/containerd")
+
+            try:
+                with open(target_file, "r", encoding="utf-8", errors="replace") as f:
+                    for line in f:
+                        parts = line.strip().split()
+                        if len(parts) >= 3:
+                            dev, mp, fstype = parts[0], parts[1], parts[2]
+                            opts = parts[3] if len(parts) > 3 else ""
+                            if fstype in skip_fstypes:
+                                continue
+                            if any(mp.startswith(pfx) for pfx in skip_prefixes):
+                                continue
+                            key = (dev, mp)
+                            if key not in seen_targets:
+                                seen_targets.add(key)
+                                mounts.append({"device": dev, "mountpoint": mp, "fstype": fstype, "options": opts})
+            except Exception as e:
+                logger.debug(f"[PAL] Error reading mounts from {target_file}: {e}")
+        return mounts
+
+    def _parse_mdstat(self) -> Dict[str, Dict[str, Any]]:
+        """Parses /proc/mdstat for active Linux software RAID arrays and rebuild/resync status."""
+        result: Dict[str, Dict[str, Any]] = {}
+        mdstat_files = [os.path.join(HOST_PROC, "mdstat"), "/proc/mdstat"]
+        target = next((f for f in mdstat_files if os.path.isfile(f)), None)
+        if not target:
+            return result
+
+        try:
+            with open(target, "r", encoding="utf-8", errors="replace") as f:
+                lines = f.readlines()
+
+            current_md: Optional[str] = None
+            for line in lines:
+                line_str = line.strip()
+                if not line_str or line_str.startswith("Personalities") or line_str.startswith("unused"):
+                    continue
+
+                if " : " in line_str and line_str.startswith("md"):
+                    parts = line_str.split(" : ")
+                    current_md = parts[0].strip()
+                    rest = parts[1].strip().split()
+                    state = rest[0] if len(rest) > 0 else "unknown"
+                    level = rest[1] if len(rest) > 1 else "unknown"
+                    members = []
+                    for token in rest[2:]:
+                        clean_disk = re.sub(r"\[\d+\]", "", token)
+                        members.append(clean_disk)
+                    result[current_md] = {
+                        "device": current_md,
+                        "state": state,
+                        "level": level,
+                        "members": members,
+                        "blocks": 0,
+                        "size_bytes": 0,
+                        "degraded": False,
+                        "sync_action": None,
+                        "progress_pct": 0.0,
+                    }
+                elif current_md and current_md in result:
+                    blocks_match = re.search(r"(\d+)\s+blocks", line_str)
+                    if blocks_match:
+                        blks = int(blocks_match.group(1))
+                        result[current_md]["blocks"] = blks
+                        result[current_md]["size_bytes"] = blks * 1024
+
+                    if re.search(r"\[[U_]+\]", line_str):
+                        bracket_match = re.search(r"\[([U_]+)\]", line_str)
+                        if bracket_match and "_" in bracket_match.group(1):
+                            result[current_md]["degraded"] = True
+                    for action in ("resync", "recovery", "check", "reshape"):
+                        if f"{action} = " in line_str:
+                            result[current_md]["sync_action"] = action
+                            pct_match = re.search(r"=\s*([0-9.]+)%", line_str)
+                            if pct_match:
+                                try:
+                                    result[current_md]["progress_pct"] = float(pct_match.group(1))
+                                except ValueError:
+                                    pass
+
+            for md_dev, info in result.items():
+                if info.get("size_bytes", 0) == 0:
+                    for base in [HOST_SYS, "/sys", "/host/sys"]:
+                        if not base:
+                            continue
+                        sz_p = os.path.join(base, "block", md_dev, "size")
+                        if os.path.isfile(sz_p):
+                            try:
+                                info["size_bytes"] = int(open(sz_p).read().strip()) * 512
+                                break
+                            except Exception:
+                                pass
+        except Exception as e:
+            logger.debug(f"[PAL] Error reading mdstat from {target}: {e}")
+        return result
+
+    def _discover_hal_disks(self) -> List[PoolMember]:
+        """Discovers non-OS physical disks safely via Hardware Abstraction Layer."""
+        members: List[PoolMember] = []
+        try:
+            from backend.hardware.hal import DiskDiscoveryHAL
+
+            hal_disks = DiskDiscoveryHAL.discover_physical_disks()
+            for d in hal_disks:
+                if not d.removable and d.role != "os":
+                    members.append(
+                        PoolMember(
+                            name=d.dev_name,
+                            device=d.dev_name,
+                            id=d.serial or d.model,
+                            type="Data",
+                            role=d.role,
+                            size_bytes=d.size_bytes,
+                            status="OK",
+                            rotational=d.is_rotational,
+                            spundown=False,
+                            temp_c=None,
+                        )
+                    )
+        except Exception as e:
+            logger.debug(f"[PAL] HAL disk discovery fallback: {e}")
+        return members
 
 
 def _parse_ini_sections(filepath: str) -> Dict[str, Dict[str, str]]:
@@ -1099,86 +1325,145 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
         return members
 
     def list_pools(self) -> List[StoragePool]:
-        total, used, free = 0, 0, 0
-        try:
-            u = shutil.disk_usage(self._pool_path if os.path.exists(self._pool_path) else "/")
-            total, used, free = u.total, u.used, u.free
-        except Exception:
-            pass
-        pct = round(used / total * 100, 1) if total > 0 else 0.0
+        pools: List[StoragePool] = []
+        is_overlay = self._is_os_overlay_or_emmc(self._pool_path)
+        hal_disks = {d.name: d for d in self._discover_hal_disks()}
+        mounts = self._parse_mounts()
 
-        # Query physical disks from HAL to discover member disks
-        members: List[PoolMember] = []
-        try:
-            from backend.hardware.hal import DiskDiscoveryHAL
+        # 1. Discover mdadm Linux Software RAID arrays if present
+        mdstats = self._parse_mdstat()
+        for md_dev, info in sorted(mdstats.items()):
+            size_b = info.get("size_bytes", 0)
+            if size_b < 20 * 1024 * 1024 * 1024:
+                continue
 
-            hal_disks = DiskDiscoveryHAL.discover_physical_disks()
-            for d in hal_disks:
-                # Include non-removable disks that are data or cache
-                if not d.removable and d.role != "os":
+            level = info.get("level", "raid5").lower()
+            degraded = info.get("degraded", False)
+            status = "DEGRADED" if degraded else "HEALTHY"
+            parity = level in ("raid1", "raid5", "raid6", "raid10")
+
+            members: List[PoolMember] = []
+            for m_token in info.get("members", []):
+                clean_disk = re.sub(r"\d+$", "", m_token)
+                if clean_disk in hal_disks:
+                    members.append(hal_disks[clean_disk])
+                else:
                     members.append(
                         PoolMember(
-                            name=d.dev_name,
-                            device=d.dev_name,
-                            id=d.serial or d.model,
-                            type="Data",
-                            role=d.role,
-                            size_bytes=d.size_bytes,
-                            status="OK",
-                            rotational=d.is_rotational,
-                            spundown=False,
-                            temp_c=None,
+                            name=m_token,
+                            device=clean_disk,
+                            id=m_token,
+                            type="Data" if "nvme" not in clean_disk else "Cache",
+                            role="data" if "nvme" not in clean_disk else "cache",
+                            status="OK" if not degraded else "DEGRADED",
                         )
                     )
-        except Exception as e:
-            logger.debug(f"[PAL] HAL disk discovery fallback for generic pools: {e}")
 
-        # Check btrfs filesystem df to detect exact chunk profile
-        profile = "raid1" if len(members) >= 2 else "single"
-        code_df, out_df, _ = self._run_cmd(["btrfs", "filesystem", "df", self._pool_path])
-        if code_df == 0 and out_df.strip():
-            for line in out_df.strip().splitlines():
-                if line.startswith("Data,"):
-                    match = re.search(r"Data,\s*([A-Za-z0-9_]+):", line)
-                    if match:
-                        profile = match.group(1).lower()
-                        break
-        else:
-            # Fallback to btrfs filesystem show
-            code, out, _ = self._run_cmd(["btrfs", "filesystem", "show", self._pool_path])
-            if code == 0:
-                if "raid10" in out.lower():
-                    profile = "raid10"
-                elif "raid1" in out.lower():
-                    profile = "raid1"
-                elif "raid0" in out.lower():
-                    profile = "raid0"
-                elif "single" in out.lower():
-                    profile = "single"
+            mount_path = None
+            used_b = 0
+            free_b = size_b
+            pct = 0.0
 
-        parity_protected = profile in ("raid1", "raid10", "raid5", "raid6")
+            for m in mounts:
+                dev = m.get("device", "")
+                mp = m.get("mountpoint", "")
+                if md_dev in dev or dev == f"/dev/{md_dev}":
+                    mount_path = mp
+                    break
 
-        pools = [
-            StoragePool(
-                id="default_pool",
-                name="Primary Storage Pool",
-                pool_type="btrfs_raid" if len(members) >= 2 else "single",
-                fs_type="btrfs",
-                fs_profile=profile,
-                status="HEALTHY",
-                mountpoint=self._pool_path,
-                total_bytes=total,
-                used_bytes=used,
-                free_bytes=free,
-                used_pct=pct,
-                members=members,
-                parity_protected=parity_protected,
-                autotrim=True,
-                compression="zstd:1",
+            if mount_path and os.path.exists(mount_path):
+                try:
+                    u = shutil.disk_usage(mount_path)
+                    used_b = u.used
+                    free_b = u.free
+                    if u.total > 0:
+                        size_b = u.total
+                        pct = round(used_b / size_b * 100, 1)
+                except Exception:
+                    pass
+
+            friendly_name = (
+                f"Primary Storage Array ({level.upper()})"
+                if "nvme" not in str(members[0].device if members else "")
+                else f"NVMe Storage Array ({level.upper()})"
             )
-        ]
 
-        # 2. Discover OpenZFS pools
+            pools.append(
+                StoragePool(
+                    id=md_dev,
+                    name=friendly_name,
+                    pool_type=f"md_{level}",
+                    fs_type="btrfs" if mount_path and "btrfs" in str(mounts) else "mdraid",
+                    fs_profile=level,
+                    status=status,
+                    mountpoint=mount_path or f"/{md_dev}",
+                    total_bytes=size_b,
+                    used_bytes=used_b,
+                    free_bytes=free_b,
+                    used_pct=pct,
+                    members=members,
+                    parity_protected=parity,
+                    autotrim="nvme" in str(members),
+                    compression="zstd" if "btrfs" in str(mounts) else "off",
+                )
+            )
+
+        # 2. Discover bcache and block device mounts
+        for m in mounts:
+            dev = m.get("device", "")
+            mp = m.get("mountpoint", "")
+            fstype = m.get("fstype", "")
+            if dev.startswith("/dev/bcache") or (
+                dev.startswith(("/dev/sd", "/dev/nvme", "/dev/mapper")) and not dev.startswith("/dev/mmcblk")
+            ):
+                if self._is_os_overlay_or_emmc(mp):
+                    continue
+                if any(p.id == os.path.basename(dev) or p.mountpoint == mp for p in pools):
+                    continue
+
+                try:
+                    u = shutil.disk_usage(mp)
+                    tot, usd, fre = u.total, u.used, u.free
+                except Exception:
+                    continue
+
+                if tot < 20 * 1024 * 1024 * 1024:
+                    continue
+
+                pct = round(usd / tot * 100, 1) if tot > 0 else 0.0
+
+                pool_members = []
+                for d_name, d_rec in hal_disks.items():
+                    if d_rec.role == "cache" or "nvme" in d_name:
+                        pool_members.append(d_rec)
+                if not pool_members:
+                    pool_members = list(hal_disks.values())
+
+                dev_base = os.path.basename(dev)
+                p_name = (
+                    "Fast Storage & Apps Pool (Btrfs)"
+                    if "bcache" in dev or "nvme" in dev
+                    else f"{dev_base} ({fstype.upper()})"
+                )
+                pools.append(
+                    StoragePool(
+                        id=dev_base,
+                        name=p_name,
+                        pool_type="btrfs" if fstype == "btrfs" else "single",
+                        fs_type=fstype,
+                        fs_profile="single",
+                        status="HEALTHY",
+                        mountpoint=mp,
+                        total_bytes=tot,
+                        used_bytes=usd,
+                        free_bytes=fre,
+                        used_pct=pct,
+                        members=pool_members,
+                        parity_protected=True,
+                    )
+                )
+
+        # 3. Discover OpenZFS pools
         code, zout, _ = self._run_cmd(["zpool", "list", "-Hp", "-o", "name,size,alloc,free,health"])
         if code == 0 and zout.strip():
             for line in zout.strip().splitlines():
@@ -1237,6 +1522,86 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
                             compression="zstd",
                         )
                     )
+
+        # 4. Standard pool at self._pool_path
+        if not is_overlay:
+            total, used, free = 0, 0, 0
+            try:
+                u = shutil.disk_usage(self._pool_path if os.path.exists(self._pool_path) else "/")
+                total, used, free = u.total, u.used, u.free
+            except Exception:
+                pass
+            pct = round(used / total * 100, 1) if total > 0 else 0.0
+
+            members = list(hal_disks.values()) if hal_disks else self._discover_hal_disks()
+
+            profile = "raid1" if len(members) >= 2 else "single"
+            code_df, out_df, _ = self._run_cmd(["btrfs", "filesystem", "df", self._pool_path])
+            if code_df == 0 and out_df.strip():
+                for line in out_df.strip().splitlines():
+                    if line.startswith("Data,"):
+                        match = re.search(r"Data,\s*([A-Za-z0-9_]+):", line)
+                        if match:
+                            profile = match.group(1).lower()
+                            break
+            else:
+                code, out, _ = self._run_cmd(["btrfs", "filesystem", "show", self._pool_path])
+                if code == 0:
+                    if "raid10" in out.lower():
+                        profile = "raid10"
+                    elif "raid1" in out.lower():
+                        profile = "raid1"
+                    elif "raid0" in out.lower():
+                        profile = "raid0"
+                    elif "single" in out.lower():
+                        profile = "single"
+
+            parity_protected = profile in ("raid1", "raid10", "raid5", "raid6")
+
+            if not any(p.mountpoint == self._pool_path for p in pools):
+                pools.insert(
+                    0,
+                    StoragePool(
+                        id="default_pool",
+                        name="Primary Storage Pool",
+                        pool_type="btrfs_raid" if len(members) >= 2 else "single",
+                        fs_type="btrfs",
+                        fs_profile=profile,
+                        status="HEALTHY",
+                        mountpoint=self._pool_path,
+                        total_bytes=total,
+                        used_bytes=used,
+                        free_bytes=free,
+                        used_pct=pct,
+                        members=members,
+                        parity_protected=parity_protected,
+                        autotrim=True,
+                        compression="zstd:1",
+                    ),
+                )
+        elif not pools:
+            try:
+                u = shutil.disk_usage(self._pool_path if os.path.exists(self._pool_path) else "/")
+                total, used, free = u.total, u.used, u.free
+            except Exception:
+                total, used, free = 0, 0, 0
+            pct = round(used / total * 100, 1) if total > 0 else 0.0
+            pools.append(
+                StoragePool(
+                    id="system_flash",
+                    name="System Boot Flash (eMMC)",
+                    pool_type="os_boot",
+                    fs_type="overlay",
+                    status="HEALTHY",
+                    mountpoint=self._pool_path,
+                    total_bytes=total,
+                    used_bytes=used,
+                    free_bytes=free,
+                    used_pct=pct,
+                    members=[],
+                    parity_protected=False,
+                )
+            )
 
         return pools
 
@@ -2017,139 +2382,6 @@ class ObserverStorageAdapter(StoragePlatformAdapter):
         cand = os.path.join(self._pool_path, pool_id)
         return cand if os.path.exists(cand) else self._pool_path
 
-    def _parse_mounts(self) -> List[Dict[str, str]]:
-        """Parses /proc/mounts to find mounted filesystems, filtering out virtual and pseudo mounts."""
-        mounts: List[Dict[str, str]] = []
-        mount_files = [os.path.join(HOST_PROC, "mounts"), "/proc/mounts"]
-        target_file = next((f for f in mount_files if os.path.isfile(f)), None)
-        if not target_file:
-            return mounts
-
-        skip_fstypes = {
-            "proc",
-            "sysfs",
-            "devtmpfs",
-            "devpts",
-            "tmpfs",
-            "overlay",
-            "cgroup",
-            "cgroup2",
-            "pstore",
-            "bpf",
-            "autofs",
-            "mqueue",
-            "hugetlbfs",
-            "debugfs",
-            "tracefs",
-            "securityfs",
-            "fusectl",
-            "configfs",
-            "binfmt_misc",
-            "squashfs",
-            "nsfs",
-            "ramfs",
-            "shfs",
-        }
-        skip_prefixes = ("/proc", "/sys", "/dev", "/run", "/var/lib/docker", "/var/lib/containerd")
-
-        try:
-            with open(target_file, "r", encoding="utf-8", errors="replace") as f:
-                for line in f:
-                    parts = line.strip().split()
-                    if len(parts) >= 3:
-                        dev, mp, fstype = parts[0], parts[1], parts[2]
-                        opts = parts[3] if len(parts) > 3 else ""
-                        if fstype in skip_fstypes:
-                            continue
-                        if any(mp.startswith(pfx) for pfx in skip_prefixes):
-                            continue
-                        mounts.append({"device": dev, "mountpoint": mp, "fstype": fstype, "options": opts})
-        except Exception as e:
-            logger.debug(f"[PAL] Error reading mounts from {target_file}: {e}")
-        return mounts
-
-    def _parse_mdstat(self) -> Dict[str, Dict[str, Any]]:
-        """Parses /proc/mdstat for active Linux software RAID arrays and rebuild/resync status."""
-        result: Dict[str, Dict[str, Any]] = {}
-        mdstat_files = [os.path.join(HOST_PROC, "mdstat"), "/proc/mdstat"]
-        target = next((f for f in mdstat_files if os.path.isfile(f)), None)
-        if not target:
-            return result
-
-        try:
-            with open(target, "r", encoding="utf-8", errors="replace") as f:
-                lines = f.readlines()
-
-            current_md: Optional[str] = None
-            for line in lines:
-                line_str = line.strip()
-                if not line_str or line_str.startswith("Personalities") or line_str.startswith("unused"):
-                    continue
-
-                if " : " in line_str and line_str.startswith("md"):
-                    parts = line_str.split(" : ")
-                    current_md = parts[0].strip()
-                    rest = parts[1].strip().split()
-                    state = rest[0] if len(rest) > 0 else "unknown"
-                    level = rest[1] if len(rest) > 1 else "unknown"
-                    members = []
-                    for token in rest[2:]:
-                        clean_disk = re.sub(r"\[\d+\]", "", token)
-                        members.append(clean_disk)
-                    result[current_md] = {
-                        "device": current_md,
-                        "state": state,
-                        "level": level,
-                        "members": members,
-                        "degraded": False,
-                        "sync_action": None,
-                        "progress_pct": 0.0,
-                    }
-                elif current_md and current_md in result:
-                    if re.search(r"\[[U_]+\]", line_str):
-                        bracket_match = re.search(r"\[([U_]+)\]", line_str)
-                        if bracket_match and "_" in bracket_match.group(1):
-                            result[current_md]["degraded"] = True
-                    for action in ("resync", "recovery", "check", "reshape"):
-                        if f"{action} = " in line_str:
-                            result[current_md]["sync_action"] = action
-                            pct_match = re.search(r"=\s*([0-9.]+)%", line_str)
-                            if pct_match:
-                                try:
-                                    result[current_md]["progress_pct"] = float(pct_match.group(1))
-                                except ValueError:
-                                    pass
-        except Exception as e:
-            logger.debug(f"[PAL] Error reading mdstat from {target}: {e}")
-        return result
-
-    def _discover_hal_disks(self) -> List[PoolMember]:
-        """Discovers non-OS physical disks safely via Hardware Abstraction Layer."""
-        members: List[PoolMember] = []
-        try:
-            from backend.hardware.hal import DiskDiscoveryHAL
-
-            hal_disks = DiskDiscoveryHAL.discover_physical_disks()
-            for d in hal_disks:
-                if not d.removable and d.role != "os":
-                    members.append(
-                        PoolMember(
-                            name=d.dev_name,
-                            device=d.dev_name,
-                            id=d.serial or d.model,
-                            type="Data",
-                            role=d.role,
-                            size_bytes=d.size_bytes,
-                            status="OK",
-                            rotational=d.is_rotational,
-                            spundown=False,
-                            temp_c=None,
-                        )
-                    )
-        except Exception as e:
-            logger.debug(f"[PAL] HAL disk discovery fallback: {e}")
-        return members
-
     def _parse_smb_conf(self) -> List[NetworkShare]:
         """Parses Samba configuration files to identify host-exported network shares."""
         shares: List[NetworkShare] = []
@@ -2745,9 +2977,158 @@ class ZettOSStorageAdapter(ObserverStorageAdapter):
         if pools:
             return pools
 
+        # 1. Discover mdadm Linux Software RAID arrays (e.g. md3 RAID5 on Zettlab D4/D6/D8)
+        mdstats = self._parse_mdstat()
+        hal_disks = {d.name: d for d in self._discover_hal_disks()}
+        mounts = self._parse_mounts()
+
+        for md_dev, info in sorted(mdstats.items()):
+            size_b = info.get("size_bytes", 0)
+            # Skip small OS mirror / swap arrays (e.g. md0 94MB, md1 10GB)
+            if size_b < 20 * 1024 * 1024 * 1024:
+                continue
+
+            level = info.get("level", "raid5").lower()
+            degraded = info.get("degraded", False)
+            status = "DEGRADED" if degraded else "HEALTHY"
+            parity = level in ("raid1", "raid5", "raid6", "raid10")
+
+            # Map members to physical HAL disks
+            members: List[PoolMember] = []
+            for m_token in info.get("members", []):
+                clean_disk = re.sub(r"\d+$", "", m_token)
+                if clean_disk in hal_disks:
+                    members.append(hal_disks[clean_disk])
+                else:
+                    members.append(
+                        PoolMember(
+                            name=m_token,
+                            device=clean_disk,
+                            id=m_token,
+                            type="Data" if "nvme" not in clean_disk else "Cache",
+                            role="data" if "nvme" not in clean_disk else "cache",
+                            status="OK" if not degraded else "DEGRADED",
+                        )
+                    )
+
+            # Check if this md array (or a filesystem on it) is mounted
+            mount_path = None
+            used_b = 0
+            free_b = size_b
+            pct = 0.0
+
+            # Check container mounts for matching block device or subvolume
+            for m in mounts:
+                dev = m.get("device", "")
+                mp = m.get("mountpoint", "")
+                if md_dev in dev or dev == f"/dev/{md_dev}":
+                    mount_path = mp
+                    break
+
+            # Check known ZettOS pool directories
+            if not mount_path:
+                for cand_dir in ["/zettos/pool/1", "/zettos/pool/2", "/zettos/pool/data", "/mnt/storage", "/mnt/user"]:
+                    if os.path.exists(cand_dir) and not self._is_os_overlay_or_emmc(cand_dir):
+                        mount_path = cand_dir
+                        break
+
+            if mount_path and os.path.exists(mount_path):
+                try:
+                    u = shutil.disk_usage(mount_path)
+                    used_b = u.used
+                    free_b = u.free
+                    if u.total > 0:
+                        size_b = u.total
+                        pct = round(used_b / size_b * 100, 1)
+                except Exception:
+                    pass
+
+            friendly_name = (
+                f"Primary Storage Array ({level.upper()})"
+                if "nvme" not in str(members[0].device if members else "")
+                else f"NVMe Storage Array ({level.upper()})"
+            )
+
+            pools.append(
+                StoragePool(
+                    id=md_dev,
+                    name=friendly_name,
+                    pool_type=f"md_{level}",
+                    fs_type="btrfs" if mount_path and "btrfs" in str(mounts) else "mdraid",
+                    fs_profile=level,
+                    status=status,
+                    mountpoint=mount_path or f"/{md_dev}",
+                    total_bytes=size_b,
+                    used_bytes=used_b,
+                    free_bytes=free_b,
+                    used_pct=pct,
+                    members=members,
+                    parity_protected=parity,
+                    autotrim="nvme" in str(members),
+                    compression="zstd" if "btrfs" in str(mounts) else "off",
+                )
+            )
+
+        # 2. Discover bcache and block device mounts (e.g. /app/data on /dev/bcache2, btrfs)
+        for m in mounts:
+            dev = m.get("device", "")
+            mp = m.get("mountpoint", "")
+            fstype = m.get("fstype", "")
+            if dev.startswith("/dev/bcache") or (
+                dev.startswith(("/dev/sd", "/dev/nvme", "/dev/mapper")) and not dev.startswith("/dev/mmcblk")
+            ):
+                if self._is_os_overlay_or_emmc(mp):
+                    continue
+                # Don't duplicate if already added
+                if any(p.id == os.path.basename(dev) or p.mountpoint == mp for p in pools):
+                    continue
+
+                try:
+                    u = shutil.disk_usage(mp)
+                    tot, usd, fre = u.total, u.used, u.free
+                except Exception:
+                    continue
+
+                if tot < 20 * 1024 * 1024 * 1024:
+                    continue
+
+                pct = round(usd / tot * 100, 1) if tot > 0 else 0.0
+
+                pool_members = []
+                for d_name, d_rec in hal_disks.items():
+                    if d_rec.role == "cache" or "nvme" in d_name:
+                        pool_members.append(d_rec)
+                if not pool_members:
+                    pool_members = list(hal_disks.values())
+
+                dev_base = os.path.basename(dev)
+                p_name = (
+                    "Fast Storage & Apps Pool (Btrfs)"
+                    if "bcache" in dev or "nvme" in dev
+                    else f"{dev_base} ({fstype.upper()})"
+                )
+                pools.append(
+                    StoragePool(
+                        id=dev_base,
+                        name=p_name,
+                        pool_type="btrfs" if fstype == "btrfs" else "single",
+                        fs_type=fstype,
+                        fs_profile="single",
+                        status="HEALTHY",
+                        mountpoint=mp,
+                        total_bytes=tot,
+                        used_bytes=usd,
+                        free_bytes=fre,
+                        used_pct=pct,
+                        members=pool_members,
+                        parity_protected=True,
+                    )
+                )
+
+        # 3. Discover OpenZFS pools
         code, zout, _ = self._run_cmd(["zpool", "list", "-Hp", "-o", "name,size,alloc,free,health"])
         if code == 0 and zout.strip():
-            hal_disks = self._discover_hal_disks()
+            hal_disks_list = self._discover_hal_disks()
             for line in zout.strip().splitlines():
                 parts = line.split("\t")
                 if len(parts) >= 5:
@@ -2774,13 +3155,15 @@ class ZettOSStorageAdapter(ObserverStorageAdapter):
                             used_bytes=usd,
                             free_bytes=fre,
                             used_pct=pct,
-                            members=hal_disks,
+                            members=hal_disks_list,
                             parity_protected=True,
                         )
                     )
 
+        # 4. Fallback: only if no pools found at all
         if not pools:
             cand = self._pool_path if os.path.exists(self._pool_path) else "/"
+            is_overlay = self._is_os_overlay_or_emmc(cand)
             try:
                 u = shutil.disk_usage(cand)
                 tot, usd, fre = u.total, u.used, u.free
@@ -2789,18 +3172,18 @@ class ZettOSStorageAdapter(ObserverStorageAdapter):
             pct = round(usd / tot * 100, 1) if tot > 0 else 0.0
             pools.append(
                 StoragePool(
-                    id="zettos_pool",
-                    name="ZettOS Main Storage Pool",
-                    pool_type="btrfs_raid",
-                    fs_type="btrfs",
+                    id="system_flash" if is_overlay else "zettos_pool",
+                    name="System Boot Flash (eMMC)" if is_overlay else "ZettOS Main Storage Pool",
+                    pool_type="os_boot" if is_overlay else "btrfs_raid",
+                    fs_type="overlay" if is_overlay else "btrfs",
                     status="HEALTHY",
                     mountpoint=cand,
                     total_bytes=tot,
                     used_bytes=usd,
                     free_bytes=fre,
                     used_pct=pct,
-                    members=self._discover_hal_disks(),
-                    parity_protected=True,
+                    members=[] if is_overlay else self._discover_hal_disks(),
+                    parity_protected=not is_overlay,
                 )
             )
 
@@ -2823,7 +3206,9 @@ class ZettOSStorageAdapter(ObserverStorageAdapter):
 
         shares = self._parse_smb_conf()
         if not shares:
-            shares = self._discover_shares_from_dirs(["/mnt/user", "/mnt/storage", self._pool_path])
+            shares = self._discover_shares_from_dirs(
+                ["/zettos/pool/1", "/zettos/pool", "/zettos", "/mnt/user", "/mnt/storage", self._pool_path]
+            )
         return shares
 
 
@@ -3095,7 +3480,10 @@ class StoragePlatformDetector:
     @staticmethod
     def detect() -> PlatformType:
         # 0. Explicit Environment Override
-        env_platform = os.environ.get("ZETTNAS_PLATFORM", "").strip().lower()
+        env_platform = (
+            os.environ.get("ZETTNAS_PLATFORM", "").strip().lower()
+            or os.environ.get("ZETTNAS_OBSERVER_ADAPTER", "").strip().lower()
+        )
         if env_platform:
             if env_platform in ("unraid",):
                 return PlatformType.UNRAID
@@ -3105,7 +3493,7 @@ class StoragePlatformDetector:
                 return PlatformType.PROXMOX
             if env_platform in ("fygoos", "fyde", "fydeos"):
                 return PlatformType.FYGOOS
-            if env_platform in ("zettos", "zettlab"):
+            if env_platform in ("zettos", "zettlab", "zettlabs"):
                 return PlatformType.ZETTOS
             if env_platform in ("ugos", "ugreen"):
                 return PlatformType.UGOS
@@ -3127,9 +3515,46 @@ class StoragePlatformDetector:
             "/host/etc/zettos-release",
             "/etc/zettos/version",
             "/host/etc/zettos/version",
+            "/etc/zettos",
+            "/host/etc/zettos",
+            "/zettos",
+            "/host/zettos",
+            "/zettlab",
+            "/host/zettlab",
         ]
-        if any(os.path.isfile(p) for p in zettos_candidates):
+        if any(os.path.isfile(p) or os.path.exists(p) for p in zettos_candidates):
             return PlatformType.ZETTOS
+
+        # Check mount files for ZettOS / Zettlab rootfs signatures
+        for m_file in [
+            os.path.join(HOST_PROC, "1/mounts") if HOST_PROC else None,
+            os.path.join(HOST_PROC, "mounts") if HOST_PROC else None,
+            "/proc/mounts",
+        ]:
+            if m_file and os.path.isfile(m_file):
+                try:
+                    with open(m_file, "r", encoding="utf-8", errors="replace") as f:
+                        m_content = f.read()
+                        if "upperdir=/zettlab" in m_content or ("/rom" in m_content and "/zettlab" in m_content):
+                            return PlatformType.ZETTOS
+                        if "/zettos" in m_content:
+                            return PlatformType.ZETTOS
+                except Exception:
+                    pass
+
+        # Check kernel cmdline for ZettOS signatures
+        for cmd_file in [
+            os.path.join(HOST_PROC, "cmdline") if HOST_PROC else None,
+            "/proc/cmdline",
+        ]:
+            if cmd_file and os.path.isfile(cmd_file):
+                try:
+                    with open(cmd_file, "r", encoding="utf-8", errors="replace") as f:
+                        cmd_text = f.read().lower()
+                        if "zettos" in cmd_text or "zettlab" in cmd_text:
+                            return PlatformType.ZETTOS
+                except Exception:
+                    pass
 
         # 3. FygoOS Detection
         fygoos_candidates = [

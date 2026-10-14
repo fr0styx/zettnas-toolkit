@@ -49,7 +49,15 @@ class ChassisEngine:
 
     @classmethod
     def _read_dmi_product_name(cls) -> str:
-        return cls._read_dmi_field("product_name")
+        prod = cls._read_dmi_field("product_name")
+        if not prod:
+            try:
+                from backend.hardware.storage import _read_dt_text
+
+                prod = _read_dt_text("model")
+            except Exception:
+                pass
+        return prod
 
     @classmethod
     def _read_dmi_sys_vendor(cls) -> str:
@@ -67,12 +75,23 @@ class ChassisEngine:
         board = cls._read_dmi_field("board_name").lower()
         sku = cls._read_dmi_field("product_sku").lower()
         family = cls._read_dmi_field("product_family").lower()
-        dmi_combined = f"{product} {board} {sku} {family} {vendor}"
+
+        dt_text = ""
+        try:
+            from backend.hardware.storage import _read_dt_text
+
+            dt_text = f"{_read_dt_text('model')} {_read_dt_text('compatible')}".lower().strip()
+        except Exception:
+            pass
+
+        dmi_combined = f"{product} {board} {sku} {family} {vendor} {dt_text}"
 
         # Check for known custom hardware brands / models
         is_zettlabs = bool(
             "zettlab" in vendor
             or "zettos" in family
+            or "zettlab" in dt_text
+            or "zettos" in dt_text
             or any(
                 k in dmi_combined
                 for k in (
@@ -221,7 +240,10 @@ class ChassisEngine:
         hdds = [
             r
             for r in records
-            if r.transport not in ("nvme", "usb") and not r.dev_name.startswith("nvme") and not r.removable
+            if r.transport not in ("nvme", "usb", "mmc")
+            and not r.dev_name.startswith(("nvme", "mmcblk", "loop", "ram", "zram"))
+            and r.role != "os"
+            and not r.removable
         ]
         nvmes = [r for r in records if r.transport == "nvme" or r.dev_name.startswith("nvme")]
 
@@ -238,14 +260,37 @@ class ChassisEngine:
 
         raw_prod = cls._read_dmi_product_name()
 
-        # Check explicit product name first, then fallback to board/sku
-        if "d4" in dmi_prod or "wy110" in dmi_prod:
+        dt_model = ""
+        try:
+            from backend.hardware.storage import _read_dt_text
+
+            dt_model = f"{_read_dt_text('model')} {_read_dt_text('compatible')}".lower().strip()
+        except Exception:
+            pass
+
+        # Check explicit product name first, then fallback to board/sku/dt
+        if (
+            "d4" in dmi_prod
+            or "wy110" in dmi_prod
+            or "wy110" in dt_model
+            or ("d4" in dt_model and any(k in dt_model for k in ("zettlab", "rk3588", "rockchip", "zettos")))
+        ):
             chassis_model = "ZETTLAB D4"
             friendly_label = "Zettlab D4 (4-Bay)"
-        elif "d8" in dmi_prod or "wy140" in dmi_prod:
+        elif (
+            "d8" in dmi_prod
+            or "wy140" in dmi_prod
+            or "wy140" in dt_model
+            or ("d8" in dt_model and any(k in dt_model for k in ("zettlab", "rk3588", "rockchip", "zettos")))
+        ):
             chassis_model = "ZETTLAB D8"
             friendly_label = "Zettlab D8 Ultra (8-Bay)"
-        elif "d6" in dmi_prod or "wy120" in dmi_prod:
+        elif (
+            "d6" in dmi_prod
+            or "wy120" in dmi_prod
+            or "wy120" in dt_model
+            or ("d6" in dt_model and any(k in dt_model for k in ("zettlab", "rk3588", "rockchip", "zettos")))
+        ):
             chassis_model = "ZETTLAB D6"
             friendly_label = "Zettlab D6 Ultra (6-Bay)"
         elif "wy110" in dmi_board or "wy110" in dmi_sku or "d4" in dmi_board or "d4" in dmi_sku:

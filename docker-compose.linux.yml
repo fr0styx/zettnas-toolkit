@@ -25,6 +25,7 @@ services:
       # Storage root with bidirectional mount propagation
       - ${STORAGE_POOL_PATH:-/mnt/storage}:/mnt/storage:rw
       - /mnt/user:/mnt/user:rw
+      - /zettos:/zettos:rw
       - /var/local/emhttp:/var/local/emhttp:ro
       
       # Persistent application state and credentials
