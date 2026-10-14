@@ -150,6 +150,7 @@ class LayoutRequest(BaseModel):
     sizes: dict[str, str] = Field(default_factory=dict)
     clock_format: str = Field(default="24", pattern=r"^(12|24)$")
     timezone: str = Field(default="America/New_York", max_length=64, pattern=r"^[A-Za-z0-9_+\-/]+$")
+    style: str = Field(default="classic", pattern=r"^(classic|streamline)$")
 
 
 class StateRequest(BaseModel):

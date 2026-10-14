@@ -1829,6 +1829,379 @@ body.drawer-is-open .chassis-workbench-stage {
 }
 
 /* =========================================================================
+   STREAMLINE MINIMALIST ("BIG IP") SCREEN DASHBOARD LAYOUT
+   ========================================================================= */
+.lcd-style-picker-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+.lcd-style-chip {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  padding: 8px 12px;
+  color: var(--muted, #64748b);
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.lcd-style-chip:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.15);
+}
+.lcd-style-chip.active {
+  background: rgba(0, 240, 255, 0.12);
+  border-color: var(--brand, #00f0ff);
+  color: var(--brand, #00f0ff);
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+}
+
+#streamline-container {
+  display: none;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 4px 6px 4px 6px;
+  gap: 4px;
+  user-select: none;
+}
+
+#screen.layout-streamline > header,
+#screen.layout-streamline #dashboard-cards-container,
+#screen.layout-streamline #diskRow,
+body.lcd-direct #screen.layout-streamline > header,
+body.lcd-direct #screen.layout-streamline #dashboard-cards-container,
+body.lcd-direct #screen.layout-streamline #diskRow,
+.mini-preview-inner.layout-streamline > header,
+.mini-preview-inner.layout-streamline #dashboard-cards-container,
+.mini-preview-inner.layout-streamline #diskRow {
+  display: none !important;
+}
+
+#screen.layout-streamline #streamline-container,
+body.lcd-direct #screen.layout-streamline #streamline-container,
+.mini-preview-inner.layout-streamline #streamline-container {
+  display: flex !important;
+}
+
+/* Streamline Top Bar */
+.sl-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 20px;
+  flex-shrink: 0;
+}
+.sl-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sl-status-ring {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  border: 2px solid var(--ok2, #25c2a0);
+  background: transparent;
+  box-shadow: 0 0 6px var(--ok2, #25c2a0);
+  transition: all 0.25s ease;
+}
+.sl-status-ring.warn {
+  border-color: var(--warn, #ffb830);
+  box-shadow: 0 0 6px var(--warn, #ffb830);
+}
+.sl-status-ring.crit {
+  border-color: var(--crit, #ff4757);
+  box-shadow: 0 0 8px var(--crit, #ff4757);
+  animation: pulse 1.2s infinite;
+}
+.sl-nas-name {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--fg, #ffffff);
+  letter-spacing: -0.2px;
+}
+.sl-clock {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted, #64748b);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.5px;
+}
+
+/* Streamline Main Telemetry Deck */
+.sl-main-deck {
+  display: grid;
+  grid-template-columns: 180px 170px 1fr;
+  align-items: center;
+  gap: 12px;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* Zone 1: Storage Donut & Capacity Meta */
+.sl-zone-storage {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 6px;
+  transition: background 0.15s ease;
+}
+.sl-zone-storage:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+.sl-donut-wrap {
+  position: relative;
+  width: 58px;
+  height: 58px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.sl-donut-svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+.sl-donut-track {
+  fill: none;
+  stroke: var(--track, #1e293b);
+  stroke-width: 5.5;
+}
+.sl-donut-arc {
+  fill: none;
+  stroke: var(--brand, #00f0ff);
+  stroke-width: 5.5;
+  stroke-linecap: round;
+  stroke-dasharray: 163.36;
+  stroke-dashoffset: 163.36;
+  transition: stroke-dashoffset 0.6s ease;
+}
+#screen.lcd-theme-amethyst .sl-donut-arc,
+body.lcd-direct.lcd-theme-amethyst #screen .sl-donut-arc {
+  stroke: #c084fc;
+}
+#screen.lcd-theme-amber .sl-donut-arc,
+body.lcd-direct.lcd-theme-amber #screen .sl-donut-arc {
+  stroke: #ffbe40;
+}
+#screen.lcd-theme-emerald .sl-donut-arc,
+body.lcd-direct.lcd-theme-emerald #screen .sl-donut-arc {
+  stroke: #3bf58b;
+}
+#screen.lcd-theme-sapphire .sl-donut-arc,
+body.lcd-direct.lcd-theme-sapphire #screen .sl-donut-arc {
+  stroke: #38bdf8;
+}
+.sl-donut-pct {
+  position: absolute;
+  font-size: 12.5px;
+  font-weight: 800;
+  color: var(--fg, #ffffff);
+  font-variant-numeric: tabular-nums;
+}
+.sl-storage-meta {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1px;
+}
+.sl-meta-label {
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  color: var(--muted, #64748b);
+  text-transform: uppercase;
+}
+.sl-meta-used {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--fg, #ffffff);
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.sl-meta-total {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted, #64748b);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Zone 2: CPU & Memory Sliders */
+.sl-zone-compute {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+}
+.sl-bar-row {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: background 0.15s ease;
+}
+.sl-bar-row:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+.sl-bar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.sl-bar-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--muted, #64748b);
+}
+.sl-bar-val {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--fg, #ffffff);
+  font-variant-numeric: tabular-nums;
+}
+.sl-bar-track {
+  height: 7px;
+  background: var(--track, #1e293b);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.sl-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--ok2, #25c2a0), var(--brand, #00f0ff));
+  transition: width 0.5s ease;
+}
+#screen.lcd-theme-amethyst .sl-bar-fill,
+body.lcd-direct.lcd-theme-amethyst #screen .sl-bar-fill {
+  background: linear-gradient(90deg, #8b5cf6, #c084fc);
+}
+#screen.lcd-theme-amber .sl-bar-fill,
+body.lcd-direct.lcd-theme-amber #screen .sl-bar-fill {
+  background: linear-gradient(90deg, #d97706, #fbbf24);
+}
+#screen.lcd-theme-emerald .sl-bar-fill,
+body.lcd-direct.lcd-theme-emerald #screen .sl-bar-fill {
+  background: linear-gradient(90deg, #059669, #34d399);
+}
+#screen.lcd-theme-sapphire .sl-bar-fill,
+body.lcd-direct.lcd-theme-sapphire #screen .sl-bar-fill {
+  background: linear-gradient(90deg, #0284c7, #38bdf8);
+}
+
+/* Zone 3: Hero Prominent IP */
+.sl-zone-ip {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-end;
+  text-align: right;
+  padding-right: 4px;
+}
+.sl-ip-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  color: var(--muted, #64748b);
+  margin-bottom: -2px;
+}
+.sl-hero-ip {
+  font-size: 29px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.5px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  text-shadow: 0 0 16px rgba(0, 240, 255, 0.25);
+}
+
+/* Lower Deck: Bay Slot Matrix (Device Paths) */
+.sl-bay-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: 28px;
+  flex-shrink: 0;
+  overflow-x: hidden;
+}
+.sl-bay-chip {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 4px;
+  padding: 3px 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex: 1 1 0;
+  justify-content: space-between;
+  min-width: 0;
+}
+.sl-bay-chip:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.18);
+  transform: translateY(-1px);
+}
+.sl-bay-chip.chip-standby {
+  opacity: 0.65;
+  filter: saturate(0.6);
+}
+.sl-bay-chip .slot-lbl {
+  font-size: 9.5px;
+  font-weight: 800;
+  color: var(--fg, #eaf1f8);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sl-bay-chip .slot-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.sl-bay-chip.h-ok .slot-dot {
+  background: var(--ok2, #10b981);
+  box-shadow: 0 0 5px var(--ok2, #10b981);
+}
+.sl-bay-chip.chip-standby .slot-dot {
+  background: #4a5568;
+}
+.sl-bay-chip.h-warn .slot-dot {
+  background: var(--warn, #ffb830);
+  box-shadow: 0 0 5px var(--warn, #ffb830);
+}
+.sl-bay-chip.h-crit .slot-dot {
+  background: var(--crit, #ff4757);
+  box-shadow: 0 0 7px var(--crit, #ff4757);
+  animation: pulse 1.2s infinite;
+}
+.sl-bay-chip.io-active {
+  border-color: rgba(0, 255, 255, 0.4) !important;
+}
+.sl-bay-chip.io-active .slot-dot {
+  background: #00ffff !important;
+  box-shadow: 0 0 6px #00ffff, 0 0 10px #00ffff !important;
+  animation: ioBlink 0.3s ease-in-out infinite alternate;
+}
+
+/* =========================================================================
    TOOLKIT SLIDE DRAWER (520PX WIDTH & STABLE SCROLLBAR GUTTER)
    ========================================================================= */
 .drawer-backdrop {

@@ -8,7 +8,7 @@ import { api } from '../api.js';
 import { ZettEventBus } from '../event-bus.js';
 import { showConfirmToast, hideConfirmToast, showToast } from '../toast.js';
 import { updateFanCurveWorkstation } from './fan-control.js';
-import { syncMiniPreviewTelemetry, applyDashboardLayout } from './mini-preview.js';
+import { syncMiniPreviewTelemetry, applyDashboardLayout, persistDashboardLayout } from './mini-preview.js';
 import { renderEventLog } from './events.js';
 import { checkAndTriggerSetupWizard } from './setup-wizard.js';
 import { updateManagementTelemetry } from './management.js';
@@ -607,6 +607,179 @@ export function applyTheme(themeName, customAccent = null, textClarity = null) {
   }
 }
 
+export function setScreenLayoutStyle(style, persist = true) {
+  const normStyle = style === 'streamline' ? 'streamline' : 'classic';
+  state.screenLayoutStyle = normStyle;
+
+  if (typeof localStorage !== 'undefined') {
+    try {
+      localStorage.setItem('screen_layout_style', normStyle);
+    } catch (e) {
+      console.warn('Failed to persist screen_layout_style to localStorage:', e);
+    }
+  }
+
+  syncScreenLayoutStyle();
+
+  if (persist) {
+    persistDashboardLayout();
+  }
+
+  ZettEventBus.emit('screen:layout_style_changed', normStyle);
+}
+
+export function syncScreenLayoutStyle() {
+  const curStyle = state.screenLayoutStyle || 'classic';
+  const isStreamline = curStyle === 'streamline';
+
+  const screen = $('screen');
+  if (screen) {
+    screen.classList.toggle('layout-streamline', isStreamline);
+    screen.classList.toggle('layout-classic', !isStreamline);
+  }
+
+  document.querySelectorAll('.mini-preview-inner').forEach((el) => {
+    el.classList.toggle('layout-streamline', isStreamline);
+    el.classList.toggle('layout-classic', !isStreamline);
+  });
+}
+
+export function updateStreamlineLayout(s, anyWarn) {
+  if (!s) return;
+
+  // Header: Status Ring, NAS Name, Clock
+  const ring = $('sl-status-ring');
+  if (ring) {
+    const isCrit = (s.storage && s.storage.pct >= 90) ||
+      (s.cpu && s.cpu.temp >= 85) ||
+      (s.cpu && s.cpu.util >= 90) ||
+      (s.mem && s.mem.pct >= 90) ||
+      ((s.disks || []).some((d) => {
+        if (d.standby || d.health === 'standby') return false;
+        return (d.health || lvlDisk(d.temp)) === 'crit';
+      }));
+    ring.className = 'sl-status-ring ' + (isCrit ? 'crit' : anyWarn ? 'warn' : 'ok');
+  }
+
+  const nameEl = $('sl-nas-name');
+  if (nameEl) {
+    setText(nameEl, (s.name || 'ZETTNEXT').toUpperCase());
+  }
+
+  const clockEl = $('sl-clock');
+  if (clockEl) {
+    setText(clockEl, getLocalClock(state.currentTimezone, state.clockFormat));
+  }
+
+  // Zone 1: Storage Donut & Capacity
+  const stPct = s.storage ? (s.storage.pct ?? 0) : 0;
+  setText($('sl-storage-pct'), stPct + '%');
+  setText($('sl-storage-used'), s.storage?.used || '0TB');
+  setText($('sl-storage-total'), s.storage?.total ? `/ ${s.storage.total}` : '/ 0TB');
+
+  const arc = $('sl-storage-arc');
+  if (arc) {
+    const pct = Math.max(0, Math.min(100, stPct));
+    const circumference = 163.36; // 2 * pi * 26
+    const offset = circumference - (circumference * pct) / 100;
+    arc.style.strokeDashoffset = offset.toFixed(2);
+  }
+
+  // Zone 2: Compute Sliders (CPU & Memory)
+  const cpuPct = Math.round(s.cpu?.util ?? 0);
+  setText($('sl-cpu-val'), cpuPct + '%');
+  const cpuBar = $('sl-cpu-bar');
+  if (cpuBar) {
+    cpuBar.style.width = Math.max(0, Math.min(100, cpuPct)) + '%';
+  }
+
+  const memPct = Math.round(s.mem?.pct ?? 0);
+  setText($('sl-mem-val'), memPct + '%');
+  const memBar = $('sl-mem-bar');
+  if (memBar) {
+    memBar.style.width = Math.max(0, Math.min(100, memPct)) + '%';
+  }
+
+  // Zone 3: Hero Prominent IP
+  const ipEl = $('sl-hero-ip');
+  if (ipEl) {
+    setText(ipEl, s.ip || '0.0.0.0');
+  }
+
+  // Lower Deck: Bay Slot Row
+  if (s.disks) {
+    updateStreamlineBayChips(s.disks);
+  }
+}
+
+export function updateStreamlineBayChips(disks) {
+  const row = $('sl-bay-row');
+  if (!row) return;
+
+  if (!row._hasDelegatedClicks) {
+    row._hasDelegatedClicks = true;
+    row.addEventListener('click', (e) => {
+      const chip = e.target.closest('.sl-bay-chip');
+      if (!chip) return;
+      const dev = chip.dataset.dev;
+      const diskData = state.latestStats?.disks?.find((d) => (d.dev || d.name) === dev || d.name === dev || d.dev === dev);
+      const isStandby = chip.classList.contains('chip-standby') || Boolean(diskData?.standby || diskData?.health === 'standby');
+      const diskName = diskData?.name || dev || chip.querySelector('.slot-lbl')?.textContent;
+      if (isStandby) {
+        showConfirmToast(
+          'Drive in Standby Mode',
+          `Disk ${diskName} is currently sleeping. Querying S.M.A.R.T. data will wake it up, causing mechanical wear and consuming power. Are you sure you want to wake it?`,
+          () => {
+            showToast(`Waking disk ${diskName}...`, 'info');
+            ZettEventBus.emit('modal:smart:open', dev);
+          }
+        );
+      } else {
+        ZettEventBus.emit('modal:smart:open', dev);
+      }
+    });
+  }
+
+  if (!disks || disks.length === 0) {
+    row.innerHTML = '<span style="color:var(--muted);font-size:10px;">No Disks Detected</span>';
+    return;
+  }
+
+  const existingDevs = Array.from(row.querySelectorAll('.sl-bay-chip')).map((el) => el.dataset.dev);
+  const newDevs = disks.map((d) => d.dev || d.name);
+  const structureChanged = existingDevs.join(',') !== newDevs.join(',');
+
+  if (structureChanged) {
+    row.innerHTML = '';
+    disks.forEach((d) => {
+      const isStandby = Boolean(d.standby || d.health === 'standby');
+      const lvl = isStandby ? 'standby' : (d.health || lvlDisk(d.temp));
+      const chip = document.createElement('div');
+      chip.className = 'sl-bay-chip h-' + lvl + (d.active ? ' io-active' : '') + (isStandby ? ' chip-standby' : '');
+      chip.dataset.dev = d.dev || d.name;
+      const devPathName = formatDiskDisplayName(d.name);
+      chip.title = isStandby ? `${d.name} is in standby (spun-down)` : `Disk ${d.name} (${devPathName}) - Click to inspect SMART`;
+      chip.innerHTML = `<span class="slot-lbl">${escapeHtml(devPathName)}</span><span class="slot-dot"></span>`;
+      row.appendChild(chip);
+    });
+  } else {
+    disks.forEach((d) => {
+      const devId = d.dev || d.name;
+      const chip = row.querySelector(`[data-dev="${devId}"]`);
+      if (!chip) return;
+      const isStandby = Boolean(d.standby || d.health === 'standby');
+      const lvl = isStandby ? 'standby' : (d.health || lvlDisk(d.temp));
+      chip.className = 'sl-bay-chip h-' + lvl + (d.active ? ' io-active' : '') + (isStandby ? ' chip-standby' : '');
+      const devPathName = formatDiskDisplayName(d.name);
+      chip.title = isStandby ? `${d.name} is in standby (spun-down)` : `Disk ${d.name} (${devPathName}) - Click to inspect SMART`;
+      const lbl = chip.querySelector('.slot-lbl');
+      if (lbl && lbl.textContent !== devPathName) {
+        lbl.textContent = devPathName;
+      }
+    });
+  }
+}
+
 let _defaultPwdWarned = false;
 
 if (typeof document !== 'undefined') {
@@ -712,6 +885,10 @@ export function applyStats(s) {
       if (s.layout.sizes) state.dashSizes = s.layout.sizes;
       if (s.layout.clock_format) state.clockFormat = s.layout.clock_format;
       if (s.layout.timezone) state.currentTimezone = s.layout.timezone;
+      if (s.layout.style) {
+        state.screenLayoutStyle = s.layout.style;
+        syncScreenLayoutStyle();
+      }
       applyDashboardLayout();
     }
 
@@ -741,6 +918,8 @@ export function applyStats(s) {
         return h !== 'ok' && h !== 'standby';
       });
     if ($('statusPill')) $('statusPill').className = 'pill' + (anyWarn ? ' warn' : '');
+
+    updateStreamlineLayout(s, anyWarn);
 
   } catch (e) {
     console.error('Error applying stats:', e);
@@ -1591,6 +1770,15 @@ export function initDashboardClicks() {
   screen.querySelectorAll('.card-mem').forEach((el) => el.addEventListener('click', () => ZettEventBus.emit('modal:metric:open', 'mem')));
   screen.querySelectorAll('.card-fans').forEach((el) => el.addEventListener('click', () => ZettEventBus.emit('modal:metric:open', 'fans')));
   screen.querySelectorAll('.card-net').forEach((el) => el.addEventListener('click', () => ZettEventBus.emit('modal:metric:open', 'net')));
+
+  const slStorage = $('sl-zone-storage');
+  if (slStorage) slStorage.addEventListener('click', () => ZettEventBus.emit('modal:metric:open', 'storage'));
+  const slCpu = $('sl-cpu-row');
+  if (slCpu) slCpu.addEventListener('click', () => ZettEventBus.emit('modal:metric:open', 'cpu'));
+  const slMem = $('sl-mem-row');
+  if (slMem) slMem.addEventListener('click', () => ZettEventBus.emit('modal:metric:open', 'mem'));
+
+  syncScreenLayoutStyle();
 }
 
 window.addEventListener('zettnas:lang-changed', () => {

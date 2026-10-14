@@ -358,6 +358,7 @@ def get_current_layout():
         "sizes": {},
         "clock_format": "24",
         "timezone": "America/New_York",
+        "style": "classic",
         "version": 1,
     }
     loaded = read_json_cached(DASH_LAYOUT_FILE, default=None)

@@ -203,14 +203,14 @@
   })();
 </script>
 <style>html,body{color:#eaf1f8;background-color:#080c10;width:100%;height:100%;margin:0;padding:0;overflow:hidden}html.auth-required body{background:radial-gradient(circle at 50% 20%,#151d29 0%,#080c10 70%)!important}#login-overlay{z-index:999999;background:#080c10;justify-content:center;align-items:center;display:flex;position:fixed;inset:0}html.has-auth-session #login-overlay{display:none!important}html.auth-required #login-overlay{display:flex!important}html.is-desktop-locked #lock-overlay{opacity:1!important;display:flex!important}html.is-desktop-locked body{overflow:hidden!important}html.auth-required .studio-viewport-wrapper,html.auth-required .suite-navbar,html.auth-required #desktop-icons-container,html.auth-required .desktop-icons-container,html.auth-required .top-nav,html.auth-required #desktop-widgets-container,html.auth-required #os-dock-container,html.auth-required .smart-modal-backdrop,html.auth-required .os-window,html.auth-required .notif-center-window{display:none!important}</style>
-  <script type="module" crossorigin src="/assets/index-BGs9y-tX.js"></script>
+  <script type="module" crossorigin src="/assets/index-Cy7h2_9u.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-CbXtAM7H.js">
-  <link rel="modulepreload" crossorigin href="/assets/dock-CLOlOtEj.js">
-  <link rel="modulepreload" crossorigin href="/assets/dashboard-BMTtucwB.js">
-  <link rel="modulepreload" crossorigin href="/assets/users-DoW_-Y36.js">
-  <link rel="modulepreload" crossorigin href="/assets/auth-Lvm3SwMW.js">
-  <link rel="modulepreload" crossorigin href="/assets/vm-manager-CrqHXjv_.js">
-  <link rel="stylesheet" crossorigin href="/assets/index-BuU5dUe5.css">
+  <link rel="modulepreload" crossorigin href="/assets/dock-CimuDRB_.js">
+  <link rel="modulepreload" crossorigin href="/assets/dashboard-CephaAHQ.js">
+  <link rel="modulepreload" crossorigin href="/assets/users-AgQ1Wrfm.js">
+  <link rel="modulepreload" crossorigin href="/assets/auth-DcXpfEvl.js">
+  <link rel="modulepreload" crossorigin href="/assets/vm-manager-B48CaQZI.js">
+  <link rel="stylesheet" crossorigin href="/assets/index-yS0gWYIc.css">
 </head>
 <body class="studio-workbench no-specular-glow">
 
@@ -1575,6 +1575,18 @@
         </div>
         <div id="mini-lcd-canvas" class="mini-lcd-canvas">
           <div class="mini-preview-inner" id="mini-preview-inner"></div>
+        </div>
+      </div>
+
+      <div class="draggable-card drawer-card" data-layout-card-id="sec-lcd-style" id="sec-lcd-style">
+        <div class="card-headline">
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <svg class="ic ic-sm" style="margin: 0 4px 0 2px;"><use href="#i-storage"/></svg><span data-i18n="settings.lcd_layout_style_title">Screen Dashboard Style</span><button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
+          <span id="lcd-style-active-badge" class="preset-state-badge" style="color:var(--brand, #00f0ff); border-color:var(--brand, #00f0ff);">CLASSIC CARDS</span>
+        </div>
+        <div class="card-instruction" data-i18n="settings.lcd_layout_style_desc">Choose between the multi-card telemetry overview or the high-contrast streamline minimalist layout with hero IP display.</div>
+        <div class="lcd-style-picker-row" role="radiogroup" aria-label="Screen Dashboard Style">
+          <button type="button" class="lcd-style-chip active" data-screen-style="classic" title="Classic Cards"><svg class="ic ic-sm" style="margin-right:4px;"><use href="#i-apps"/></svg><span data-i18n="settings.style_classic">Classic Cards</span></button>
+          <button type="button" class="lcd-style-chip" data-screen-style="streamline" title="Streamline Big IP"><svg class="ic ic-sm" style="margin-right:4px;"><use href="#i-globe"/></svg><span data-i18n="settings.style_streamline">Streamline Big IP</span></button>
         </div>
       </div>
 
@@ -6051,6 +6063,62 @@
             </section>
 
             <section class="disks card-disks" id="diskRow" data-metric-id="metric-disks"></section>
+
+            <!-- Streamline Minimalist ("Big IP") Layout -->
+            <div class="streamline-container" id="streamline-container">
+              <div class="sl-header">
+                <div class="sl-header-left">
+                  <span class="sl-status-ring ok" id="sl-status-ring"></span>
+                  <span class="sl-nas-name" id="sl-nas-name">ZETTNEXT</span>
+                </div>
+                <div class="sl-clock" id="sl-clock">--:--</div>
+              </div>
+
+              <div class="sl-main-deck">
+                <div class="sl-zone-storage" id="sl-zone-storage" title="Click to view Storage diagnostics">
+                  <div class="sl-donut-wrap">
+                    <svg class="sl-donut-svg" viewBox="0 0 64 64">
+                      <circle class="sl-donut-track" cx="32" cy="32" r="26" />
+                      <circle class="sl-donut-arc" id="sl-storage-arc" cx="32" cy="32" r="26" />
+                    </svg>
+                    <span class="sl-donut-pct" id="sl-storage-pct">0%</span>
+                  </div>
+                  <div class="sl-storage-meta">
+                    <span class="sl-meta-label">CAPACITY</span>
+                    <strong class="sl-meta-used" id="sl-storage-used">0TB</strong>
+                    <span class="sl-meta-total" id="sl-storage-total">/ 0TB</span>
+                  </div>
+                </div>
+
+                <div class="sl-zone-compute">
+                  <div class="sl-bar-row" id="sl-cpu-row" title="Click to view CPU diagnostics">
+                    <div class="sl-bar-header">
+                      <span class="sl-bar-label">CPU</span>
+                      <span class="sl-bar-val" id="sl-cpu-val">0%</span>
+                    </div>
+                    <div class="sl-bar-track">
+                      <div class="sl-bar-fill sl-fill-cpu" id="sl-cpu-bar" style="width: 0%"></div>
+                    </div>
+                  </div>
+                  <div class="sl-bar-row" id="sl-mem-row" title="Click to view Memory diagnostics">
+                    <div class="sl-bar-header">
+                      <span class="sl-bar-label">Memory</span>
+                      <span class="sl-bar-val" id="sl-mem-val">0%</span>
+                    </div>
+                    <div class="sl-bar-track">
+                      <div class="sl-bar-fill sl-fill-mem" id="sl-mem-bar" style="width: 0%"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="sl-zone-ip">
+                  <span class="sl-ip-label">IP:</span>
+                  <div class="sl-hero-ip" id="sl-hero-ip">0.0.0.0</div>
+                </div>
+              </div>
+
+              <div class="sl-bay-row" id="sl-bay-row"></div>
+            </div>
           </div>
 
           <!-- Page 1: Drive Bay Matrix & S.M.A.R.T. Matrix -->

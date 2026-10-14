@@ -15,6 +15,11 @@ export function applyDashboardLayout() {
   const diskRowEl = $('diskRow');
   if (!dashCardsContainer || !screenCanvasEl) return;
 
+  const curStyle = state.screenLayoutStyle || 'classic';
+  const isStreamline = curStyle === 'streamline';
+  screenCanvasEl.classList.toggle('layout-streamline', isStreamline);
+  screenCanvasEl.classList.toggle('layout-classic', !isStreamline);
+
   const cardMap = {};
   dashCardsContainer.querySelectorAll('.card').forEach((c) => {
     cardMap[c.dataset.metricId] = c;
@@ -106,7 +111,8 @@ export async function persistDashboardLayout() {
       vis: state.dashVis,
       sizes: state.dashSizes,
       clock_format: state.clockFormat,
-      timezone: state.currentTimezone
+      timezone: state.currentTimezone,
+      style: state.screenLayoutStyle || 'classic'
     });
     if (resp.layout && resp.layout.version) {
       state.activeLayoutVersion = resp.layout.version;
@@ -125,6 +131,9 @@ export async function fetchDashboardLayout() {
     if (data.sizes) state.dashSizes = data.sizes;
     if (data.clock_format) state.clockFormat = data.clock_format;
     if (data.timezone) state.currentTimezone = data.timezone;
+    if (data.style) {
+      state.screenLayoutStyle = data.style;
+    }
   } catch (err) {
     console.warn('Failed to load layout from server:', err);
   }
@@ -250,6 +259,12 @@ export function syncMiniPreviewTelemetry() {
   const miniDiskRow = miniInner.querySelector('.disks');
   if (screenDiskRow && miniDiskRow) {
     miniDiskRow.innerHTML = stripIds(screenDiskRow.innerHTML);
+  }
+
+  const sStreamline = screenEl.querySelector('#streamline-container');
+  const mStreamline = miniInner.querySelector('.streamline-container');
+  if (sStreamline && mStreamline) {
+    mStreamline.innerHTML = stripIds(sStreamline.innerHTML);
   }
 }
 

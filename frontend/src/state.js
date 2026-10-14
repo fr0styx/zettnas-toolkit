@@ -73,6 +73,7 @@ export const state = {
 
   clockFormat: '24',
   currentTimezone: 'America/New_York',
+  screenLayoutStyle: (typeof localStorage !== 'undefined' && localStorage.getItem('screen_layout_style')) || 'classic',
   latestStats: null,
   activeLayoutVersion: 0,
   dashOrder: [...defaultDashOrder],

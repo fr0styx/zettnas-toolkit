@@ -6,7 +6,7 @@ import { api, auth, ApiError } from '../api.js';
 import { state, ZOOM_PROFILES } from '../state.js';
 import { ZettEventBus } from '../event-bus.js';
 import { showToast, showConfirmToast } from '../toast.js';
-import { applyTheme, applyDesktopTheme, applyLcdTheme } from './dashboard.js';
+import { applyTheme, applyDesktopTheme, applyLcdTheme, setScreenLayoutStyle } from './dashboard.js';
 import { applyDashboardLayout, persistDashboardLayout, fitMiniPreviewScale, syncMiniPreviewTelemetry } from './mini-preview.js';
 import { fetchAndRenderMetrics } from './metrics-chart.js';
 import { t } from '../i18n.js';
@@ -123,6 +123,7 @@ export function initSettings() {
 
   // --- Theme & Color Scheme Controls ---
   initThemeControls();
+  initLcdStyleControls();
 
   // --- Clock Format & Timezone ---
   const clockFmtBtn = $('clock-format-btn');
@@ -1117,10 +1118,48 @@ export function initLcdThemeControls() {
   syncLcdThemeUI();
 }
 
+export function syncLcdStyleUI() {
+  const container = $('sec-lcd-style') || document.querySelector('[data-layout-card-id="sec-lcd-style"]');
+  if (!container) return;
+  const curStyle = state.screenLayoutStyle || 'classic';
+  container.querySelectorAll('.lcd-style-chip').forEach((btn) => {
+    btn.classList.toggle('active', btn.dataset.screenStyle === curStyle);
+  });
+  const badge = $('lcd-style-active-badge');
+  if (badge) {
+    if (curStyle === 'streamline') {
+      badge.textContent = 'STREAMLINE BIG IP';
+    } else {
+      badge.textContent = 'CLASSIC CARDS';
+    }
+  }
+}
+
+export function initLcdStyleControls() {
+  const container = $('sec-lcd-style') || document.querySelector('[data-layout-card-id="sec-lcd-style"]');
+  if (!container) return;
+
+  container.querySelectorAll('.lcd-style-chip').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const style = btn.dataset.screenStyle;
+      if (!style) return;
+      setScreenLayoutStyle(style);
+      syncLcdStyleUI();
+    });
+  });
+
+  ZettEventBus.on('screen:layout_style_changed', () => {
+    syncLcdStyleUI();
+  });
+
+  syncLcdStyleUI();
+}
+
 // Backward compatibility alias
 export function syncThemeSettingsUI() {
   syncDesktopThemeUI();
   syncLcdThemeUI();
+  syncLcdStyleUI();
 }
 
 export function initThemeControls() {
@@ -1139,7 +1178,7 @@ export function gatherClientPreferences() {
       continue;
     }
     // Capture all ZettNAS desktop configurations, window positions, widgets, dock pinned apps, themes, and layout locks
-    if (key.startsWith('zettnas_') || key.startsWith('lcd_')) {
+    if (key.startsWith('zettnas_') || key.startsWith('lcd_') || key === 'screen_layout_style') {
       prefs[key] = localStorage.getItem(key);
     }
   }
@@ -1156,6 +1195,9 @@ export function applyClientPreferences(prefs) {
       console.warn('[BACKUP] Failed restoring preference key:', k, e);
     }
   });
+  if (prefs.screen_layout_style) {
+    setScreenLayoutStyle(prefs.screen_layout_style, false);
+  }
 }
 
 export async function syncClientPreferencesFromServerIfEmpty() {

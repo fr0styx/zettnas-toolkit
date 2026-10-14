@@ -1618,6 +1618,18 @@
         </div>
       </div>
 
+      <div class="draggable-card drawer-card" data-layout-card-id="sec-lcd-style" id="sec-lcd-style">
+        <div class="card-headline">
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <svg class="ic ic-sm" style="margin: 0 4px 0 2px;"><use href="#i-storage"/></svg><span data-i18n="settings.lcd_layout_style_title">Screen Dashboard Style</span><button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
+          <span id="lcd-style-active-badge" class="preset-state-badge" style="color:var(--brand, #00f0ff); border-color:var(--brand, #00f0ff);">CLASSIC CARDS</span>
+        </div>
+        <div class="card-instruction" data-i18n="settings.lcd_layout_style_desc">Choose between the multi-card telemetry overview or the high-contrast streamline minimalist layout with hero IP display.</div>
+        <div class="lcd-style-picker-row" role="radiogroup" aria-label="Screen Dashboard Style">
+          <button type="button" class="lcd-style-chip active" data-screen-style="classic" title="Classic Cards"><svg class="ic ic-sm" style="margin-right:4px;"><use href="#i-apps"/></svg><span data-i18n="settings.style_classic">Classic Cards</span></button>
+          <button type="button" class="lcd-style-chip" data-screen-style="streamline" title="Streamline Big IP"><svg class="ic ic-sm" style="margin-right:4px;"><use href="#i-globe"/></svg><span data-i18n="settings.style_streamline">Streamline Big IP</span></button>
+        </div>
+      </div>
+
       <div class="draggable-card drawer-card" data-layout-card-id="sec-lcd-theme" id="sec-lcd-theme">
         <div class="card-headline">
           <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <svg class="ic ic-sm" style="margin: 0 4px 0 2px;"><use href="#i-screen"/></svg><span data-i18n="settings.lcd_theme_title">LCD Screen Theme</span><button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
@@ -6092,6 +6104,62 @@
             </section>
 
             <section class="disks card-disks" id="diskRow" data-metric-id="metric-disks"></section>
+
+            <!-- Streamline Minimalist ("Big IP") Layout -->
+            <div class="streamline-container" id="streamline-container">
+              <div class="sl-header">
+                <div class="sl-header-left">
+                  <span class="sl-status-ring ok" id="sl-status-ring"></span>
+                  <span class="sl-nas-name" id="sl-nas-name">ZETTNEXT</span>
+                </div>
+                <div class="sl-clock" id="sl-clock">--:--</div>
+              </div>
+
+              <div class="sl-main-deck">
+                <div class="sl-zone-storage" id="sl-zone-storage" title="Click to view Storage diagnostics">
+                  <div class="sl-donut-wrap">
+                    <svg class="sl-donut-svg" viewBox="0 0 64 64">
+                      <circle class="sl-donut-track" cx="32" cy="32" r="26" />
+                      <circle class="sl-donut-arc" id="sl-storage-arc" cx="32" cy="32" r="26" />
+                    </svg>
+                    <span class="sl-donut-pct" id="sl-storage-pct">0%</span>
+                  </div>
+                  <div class="sl-storage-meta">
+                    <span class="sl-meta-label">CAPACITY</span>
+                    <strong class="sl-meta-used" id="sl-storage-used">0TB</strong>
+                    <span class="sl-meta-total" id="sl-storage-total">/ 0TB</span>
+                  </div>
+                </div>
+
+                <div class="sl-zone-compute">
+                  <div class="sl-bar-row" id="sl-cpu-row" title="Click to view CPU diagnostics">
+                    <div class="sl-bar-header">
+                      <span class="sl-bar-label">CPU</span>
+                      <span class="sl-bar-val" id="sl-cpu-val">0%</span>
+                    </div>
+                    <div class="sl-bar-track">
+                      <div class="sl-bar-fill sl-fill-cpu" id="sl-cpu-bar" style="width: 0%"></div>
+                    </div>
+                  </div>
+                  <div class="sl-bar-row" id="sl-mem-row" title="Click to view Memory diagnostics">
+                    <div class="sl-bar-header">
+                      <span class="sl-bar-label">Memory</span>
+                      <span class="sl-bar-val" id="sl-mem-val">0%</span>
+                    </div>
+                    <div class="sl-bar-track">
+                      <div class="sl-bar-fill sl-fill-mem" id="sl-mem-bar" style="width: 0%"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="sl-zone-ip">
+                  <span class="sl-ip-label">IP:</span>
+                  <div class="sl-hero-ip" id="sl-hero-ip">0.0.0.0</div>
+                </div>
+              </div>
+
+              <div class="sl-bay-row" id="sl-bay-row"></div>
+            </div>
           </div>
 
           <!-- Page 1: Drive Bay Matrix & S.M.A.R.T. Matrix -->
