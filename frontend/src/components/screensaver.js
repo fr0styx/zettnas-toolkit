@@ -4,6 +4,11 @@
  * idle inactivity timers, OLED burn-in drift protection, and wake-to-lock capabilities.
  */
 import { showToast } from '../toast.js';
+import { state } from '../state.js';
+
+function isLcdMode() {
+  return !!(state?.isLcdDirect || (typeof window !== 'undefined' && window.location.search.includes('mode=lcd')) || (typeof document !== 'undefined' && document.body && document.body.classList.contains('lcd-direct')));
+}
 
 let _screensaverInitialized = false;
 let _screensaverControlsBound = false;
@@ -48,7 +53,7 @@ export function applyScreensaverSettings(enabled, timeoutMinutes, mode, requireL
 }
 
 export function initScreensaverSystem() {
-  if (_screensaverInitialized) return;
+  if (_screensaverInitialized || isLcdMode()) return;
   _screensaverInitialized = true;
 
   // Load persisted configuration
@@ -107,6 +112,7 @@ export function initScreensaverSystem() {
 }
 
 export function activateScreensaver(isPreview = false) {
+  if (isLcdMode()) return;
   const container = document.getElementById('desktop-screensaver');
   if (!container) return;
 

@@ -5,6 +5,7 @@
 import { auth } from '../api.js';
 import { ZettEventBus } from '../event-bus.js';
 import { t } from '../i18n.js';
+import { state } from '../state.js';
 import { escapeHtml } from '../utils.js';
 import { fetchCurrentProfile, getCurrentUser, setCurrentUser } from './users.js';
 
@@ -16,11 +17,23 @@ let _clockInterval = null;
 
 const DEFAULT_IDLE_TIMEOUT_MS = 4 * 60 * 60 * 1000; // 4 hours default (can be set to Never / 7d in UI)
 
+export function isLcdMode() {
+  return !!(state?.isLcdDirect || (typeof window !== 'undefined' && window.location.search.includes('mode=lcd')) || (typeof document !== 'undefined' && document.body && document.body.classList.contains('lcd-direct')));
+}
+
 export function isDesktopLocked() {
   return _isLocked;
 }
 
 export function initAuth() {
+  if (isLcdMode()) {
+    try {
+      sessionStorage.removeItem('zettnas_desktop_locked');
+      localStorage.removeItem('zettnas_desktop_locked');
+    } catch (e) {}
+    return;
+  }
+
   const overlay = document.getElementById('login-overlay');
   const dock = document.getElementById('os-dock-container');
   const loginBtn = document.getElementById('login-btn');
@@ -538,6 +551,7 @@ export function initLockOverlay() {
 }
 
 export function lockDesktop() {
+  if (isLcdMode()) return;
   const lockOverlay = document.getElementById('lock-overlay');
   if (!lockOverlay) return;
 
@@ -713,6 +727,7 @@ export async function logout() {
 
 // Inactivity Idle Tracker
 function initInactivityTracker() {
+  if (isLcdMode()) return;
   const events = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'];
   events.forEach((evt) => {
     window.addEventListener(evt, resetInactivityTimer, { passive: true });
@@ -721,7 +736,7 @@ function initInactivityTracker() {
 }
 
 function resetInactivityTimer() {
-  if (_isLocked) return;
+  if (_isLocked || isLcdMode()) return;
   clearTimeout(_autoLockTimer);
 
   const timeoutMs = parseInt(localStorage.getItem('zettnas_auto_lock_timeout_ms') || `${DEFAULT_IDLE_TIMEOUT_MS}`, 10);

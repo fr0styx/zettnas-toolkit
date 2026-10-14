@@ -34,8 +34,21 @@ body.lcd-direct #confirm-toast-modal,
 body.lcd-direct #copy-toast,
 body.lcd-direct #copy-toast-backdrop,
 body.lcd-direct #desktop-widgets-container,
-body.lcd-direct #login-overlay {
+body.lcd-direct #login-overlay,
+body.lcd-direct #lock-overlay,
+body.lcd-direct .lock-overlay,
+body.lcd-direct #desktop-screensaver,
+body.lcd-direct .desktop-screensaver,
+body.lcd-direct #screensaver-overlay,
+body.lcd-direct .screensaver-overlay,
+body.lcd-direct #event-detail-modal-overlay,
+body.lcd-direct #diagnostics-preview-modal-overlay,
+body.lcd-direct .os-window:not(#console-window),
+body.lcd-direct .window-frame:not(#console-window) {
   display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
 }
 
 body.lcd-direct .studio-viewport-wrapper,

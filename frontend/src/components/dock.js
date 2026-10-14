@@ -665,7 +665,7 @@ export function saveOpenWindowsState() {
 }
 
 export function restoreOpenWindowsState() {
-  if (state.isVmConsoleDirect || (typeof window !== 'undefined' && window.location.search.includes('mode=vm-console')) || (typeof document !== 'undefined' && document.body && document.body.classList.contains('vm-console-direct')) || document.body.classList.contains('mobile-mode') || window.innerWidth <= 768) {
+  if (state.isLcdDirect || (typeof window !== 'undefined' && window.location.search.includes('mode=lcd')) || (typeof document !== 'undefined' && document.body && document.body.classList.contains('lcd-direct')) || state.isVmConsoleDirect || (typeof window !== 'undefined' && window.location.search.includes('mode=vm-console')) || (typeof document !== 'undefined' && document.body && document.body.classList.contains('vm-console-direct')) || document.body.classList.contains('mobile-mode') || window.innerWidth <= 768) {
     isWindowRestorationComplete = true;
     return;
   }

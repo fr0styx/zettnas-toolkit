@@ -167,6 +167,10 @@ document.addEventListener('DOMContentLoaded', () => {
   if (window.location.search.includes('mode=lcd') || document.body.classList.contains('lcd-direct')) {
     state.isLcdDirect = true;
     document.body.classList.add('lcd-direct');
+    try {
+      sessionStorage.removeItem('zettnas_desktop_locked');
+      localStorage.removeItem('zettnas_desktop_locked');
+    } catch (e) {}
     const overlay = document.getElementById('console-modal-overlay');
     const win = document.getElementById('console-window');
     const screen = document.getElementById('screen');
@@ -227,6 +231,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const vmName = params.get('name') || 'Virtual Machine';
       const consoleMode = params.get('consoleMode') || 'gui';
       openVmConsole(vmId, vmName, consoleMode);
+    } else if (state.isLcdDirect) {
+      setWindowRestorationComplete(true);
+      fetchDashboardLayout();
+      tick();
+      startSSE();
     } else {
       restoreOpenWindowsState();
       fetchDashboardLayout();
