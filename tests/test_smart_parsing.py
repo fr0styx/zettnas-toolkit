@@ -1,6 +1,6 @@
 """smartctl output parsing -> (temperature, health)."""
 
-from backend.hardware.disks import _parse_smart, _short_name
+from backend.hardware.disks import _parse_self_test_info, _parse_smart, _short_name
 
 
 def ata_report(temp=35, realloc=0, pending=0, offline=0, crc=0, passed=True):
@@ -249,3 +249,76 @@ def test_run_disk_smart_test_skip_if_standby():
     assert res["skipped"] is True
     assert res["success"] is False
     assert "standby mode" in res["output"].lower()
+
+
+def test_parse_self_test_info_ata_in_progress():
+    doc = {
+        "ata_smart_data": {
+            "self_test": {
+                "status": {
+                    "value": 244,
+                    "string": "Self-test routine in progress... 40% of test remaining",
+                    "passed": False,
+                },
+                "polling_minutes": {"short": 1, "extended": 180},
+            }
+        }
+    }
+    prog, log = _parse_self_test_info(doc, "")
+    assert prog["in_progress"] is True
+    assert prog["percent_remaining"] == 40
+    assert prog["percent_completed"] == 60
+    assert "40% of test remaining" in prog["status_text"]
+    assert prog["polling_minutes"]["short"] == 1
+
+
+def test_parse_self_test_info_ata_completed():
+    doc = {
+        "ata_smart_data": {
+            "self_test": {
+                "status": {
+                    "value": 0,
+                    "string": "Completed without error",
+                    "passed": True,
+                }
+            }
+        },
+        "ata_smart_self_test_log": {
+            "standard": {
+                "count": 1,
+                "table": [
+                    {
+                        "type": {"string": "Short offline"},
+                        "status": {"string": "Completed without error", "passed": True},
+                        "lifetime_hours": 2231,
+                    }
+                ],
+            }
+        },
+    }
+    prog, log = _parse_self_test_info(doc, "")
+    assert prog["in_progress"] is False
+    assert prog["percent_completed"] == 100
+    assert len(log) == 1
+    assert log[0]["num"] == 1
+    assert log[0]["type"] == "Short offline"
+    assert log[0]["passed"] is True
+    assert log[0]["lifetime_hours"] == 2231
+
+
+def test_parse_self_test_info_nvme_no_test_in_progress():
+    raw_text = """
+=== START OF SMART DATA SECTION ===
+SMART overall-health self-assessment test result: PASSED
+
+SMART Self-test log
+Num  Test_Description    Status                  Power_on_Hours  Failing_LBA
+  1  Short offline       Completed without error            120            -
+
+Self-test status: No self-test in progress
+"""
+    prog, log = _parse_self_test_info({}, raw_text)
+    assert prog["in_progress"] is False
+    assert len(log) == 1
+    assert log[0]["type"] == "Short offline"
+    assert log[0]["passed"] is True

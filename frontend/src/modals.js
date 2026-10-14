@@ -14,6 +14,9 @@ let _unbindSmartTrap = null;
 let _eventDetailOverlay = null;
 let _unbindEventDetailTrap = null;
 let _currentEventDetailData = null;
+let _currentSmartData = null;
+let _smartPollTimer = null;
+let _smartPollingDev = null;
 
 window.addEventListener('DOMContentLoaded', () => {
     smartOverlay = document.getElementById("smart-modal-overlay");
@@ -67,23 +70,39 @@ window.addEventListener('DOMContentLoaded', () => {
     const extTestBtn = document.getElementById("smart-btn-extended-test");
     const abortTestBtn = document.getElementById("smart-btn-abort-test");
     const testStatus = document.getElementById("smart-test-status");
+    const copyReportBtn = document.getElementById("smart-btn-copy-report");
 
     async function triggerTest(type) {
       if (!activeModalType || !activeModalType.startsWith("disk_")) return;
       const dev = activeModalType.replace("disk_", "");
       if (testStatus) testStatus.textContent = type === 'abort' ? 'Aborting test...' : `Starting ${type} test...`;
       try {
+        if (type === 'abort') {
+          stopSmartPolling();
+          const res = await api.post("/api/disk/smart_test", { dev, test_type: type });
+          if (res && res.success) {
+            showToast(`Self-test aborted on /dev/${dev}`, "ok");
+            updateSmartTestProgressUI({ self_test_progress: { is_aborted: true, percent_completed: 100, in_progress: false } }, type);
+          } else {
+            showToast(`Failed to abort: ${res?.error || 'Unknown error'}`, "error");
+          }
+          return;
+        }
+
         const res = await api.post("/api/disk/smart_test", { dev, test_type: type });
         if (res && res.success) {
-          if (type === 'abort') {
-            showToast(`Self-test aborted on /dev/${dev}`, "ok");
-            if (testStatus) testStatus.textContent = "Test Aborted";
-            if (abortTestBtn) abortTestBtn.style.display = "none";
-          } else {
-            showToast(`${type.toUpperCase()} self-test started on /dev/${dev}`, "ok");
-            if (testStatus) testStatus.textContent = `Running ${type} test`;
-            if (abortTestBtn) abortTestBtn.style.display = "inline-block";
-          }
+          showToast(`${type.toUpperCase()} self-test started on /dev/${dev}`, "ok");
+          const initData = {
+            self_test_progress: {
+              in_progress: true,
+              percent_completed: 0,
+              percent_remaining: 100,
+              status_text: `Running ${type} self-test...`,
+              polling_minutes: res.polling_minutes
+            }
+          };
+          updateSmartTestProgressUI(initData, type);
+          startSmartPolling(dev, type);
           if (smartRaw) smartRaw.textContent = `[S.M.A.R.T. Self-Test Action: ${type}]\n${res.output}\n\n` + smartRaw.textContent;
         } else {
           showToast(`Failed: ${res?.error || 'Unknown error'}`, "error");
@@ -98,6 +117,7 @@ window.addEventListener('DOMContentLoaded', () => {
     if (shortTestBtn) shortTestBtn.addEventListener("click", () => triggerTest("short"));
     if (extTestBtn) extTestBtn.addEventListener("click", () => triggerTest("long"));
     if (abortTestBtn) abortTestBtn.addEventListener("click", () => triggerTest("abort"));
+    if (copyReportBtn) copyReportBtn.addEventListener("click", copySmartReport);
 
     // Event Detail Modal Setup
     _eventDetailOverlay = document.getElementById("event-detail-modal-overlay");
@@ -154,6 +174,326 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+export function renderSelfTestLog(log) {
+  const tbody = document.getElementById("smart-test-history-tbody");
+  const empty = document.getElementById("smart-test-history-empty");
+  const badge = document.getElementById("smart-test-count-badge");
+  if (!tbody) return;
+
+  if (!log || !Array.isArray(log) || log.length === 0) {
+    tbody.innerHTML = "";
+    if (empty) empty.style.display = "block";
+    if (badge) badge.textContent = "0";
+    return;
+  }
+
+  if (empty) empty.style.display = "none";
+  if (badge) badge.textContent = String(log.length);
+
+  const escapeHtml = (str) => {
+    if (str == null) return "";
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  };
+
+  tbody.innerHTML = log.map((item) => {
+    let pillClass = "smart-test-status-passed";
+    let icon = "✓";
+    const statusText = item.status || "Unknown";
+    const low = statusText.toLowerCase();
+
+    if (item.passed) {
+      pillClass = "smart-test-status-passed";
+      icon = "✓";
+    } else if (low.includes("abort") || low.includes("interrupted") || low.includes("cancelled")) {
+      pillClass = "smart-test-status-aborted";
+      icon = "⏹";
+    } else if (low.includes("in progress") || low.includes("remaining") || low.includes("started")) {
+      pillClass = "smart-test-status-running";
+      icon = "⏳";
+    } else {
+      pillClass = "smart-test-status-failed";
+      icon = "✗";
+    }
+
+    const hours = item.lifetime_hours != null ? `${Number(item.lifetime_hours).toLocaleString()} h` : "--";
+    const lba = item.lba_first_error || "-";
+
+    return `
+      <tr>
+        <td style="color: var(--muted); font-weight: 700;">#${escapeHtml(item.num)}</td>
+        <td style="font-weight: 600;">${escapeHtml(item.type)}</td>
+        <td><span class="smart-test-status-pill ${pillClass}">${icon} ${escapeHtml(statusText)}</span></td>
+        <td>${escapeHtml(hours)}</td>
+        <td style="color: ${lba !== '-' ? 'var(--crit)' : 'inherit'};">${escapeHtml(lba)}</td>
+      </tr>
+    `;
+  }).join("");
+}
+
+export function updateSmartTestProgressUI(data, testType) {
+  const progressCard = document.getElementById("smart-progress-card");
+  const progressBar = document.getElementById("smart-progress-bar");
+  const pctLabel = document.getElementById("smart-progress-pct-label");
+  const statusDesc = document.getElementById("smart-progress-status-desc");
+  const pulseDot = document.getElementById("smart-progress-pulse");
+  const etaLabel = document.getElementById("smart-progress-eta");
+  const shortBtn = document.getElementById("smart-btn-short-test");
+  const extBtn = document.getElementById("smart-btn-extended-test");
+  const abortBtn = document.getElementById("smart-btn-abort-test");
+  const testStatus = document.getElementById("smart-test-status");
+
+  if (!progressCard || !progressBar) return;
+
+  const prog = data?.self_test_progress;
+
+  if (prog && prog.in_progress) {
+    progressCard.style.display = "flex";
+    const pct = Math.max(5, Math.min(99, prog.percent_completed || 0));
+    progressBar.style.width = `${pct}%`;
+    progressBar.style.background = "linear-gradient(90deg, #0ea5e9, #22c55e)";
+    if (pctLabel) pctLabel.textContent = `${prog.percent_completed || 0}%`;
+    if (statusDesc) statusDesc.textContent = prog.status_text || t("modal.smart_test_in_progress", "Self-test in progress...");
+    if (pulseDot) {
+      pulseDot.style.background = "var(--brand, #38bdf8)";
+      pulseDot.style.boxShadow = "0 0 10px var(--brand, #38bdf8)";
+      pulseDot.style.display = "inline-block";
+    }
+
+    if (etaLabel && prog.polling_minutes) {
+      const typeKey = (testType === 'long' || testType === 'extended') ? 'extended' : 'short';
+      const estMin = prog.polling_minutes[typeKey];
+      if (estMin) {
+        etaLabel.textContent = `~${estMin} min est.`;
+        etaLabel.style.display = "inline";
+      } else {
+        etaLabel.style.display = "none";
+      }
+    }
+
+    if (shortBtn) {
+      shortBtn.disabled = true;
+      shortBtn.style.opacity = "0.5";
+      shortBtn.style.cursor = "not-allowed";
+    }
+    if (extBtn) {
+      extBtn.disabled = true;
+      extBtn.style.opacity = "0.5";
+      extBtn.style.cursor = "not-allowed";
+    }
+    if (abortBtn) abortBtn.style.display = "inline-block";
+    if (testStatus) testStatus.textContent = `Running (${prog.percent_completed || 0}%)`;
+  } else if (prog && prog.is_aborted) {
+    progressCard.style.display = "flex";
+    progressBar.style.width = "100%";
+    progressBar.style.background = "linear-gradient(90deg, #f59e0b, #ef4444)";
+    if (pctLabel) pctLabel.textContent = "Aborted";
+    if (statusDesc) statusDesc.textContent = t("modal.smart_test_aborted", "Self-test aborted");
+    if (pulseDot) {
+      pulseDot.style.background = "var(--warn, #f59e0b)";
+      pulseDot.style.boxShadow = "none";
+    }
+    if (etaLabel) etaLabel.style.display = "none";
+
+    if (shortBtn) {
+      shortBtn.disabled = false;
+      shortBtn.style.opacity = "1";
+      shortBtn.style.cursor = "pointer";
+    }
+    if (extBtn) {
+      extBtn.disabled = false;
+      extBtn.style.opacity = "1";
+      extBtn.style.cursor = "pointer";
+    }
+    if (abortBtn) abortBtn.style.display = "none";
+    if (testStatus) testStatus.textContent = "Test Aborted";
+  } else if (prog && prog.percent_completed === 100 && _smartPollingDev) {
+    progressCard.style.display = "flex";
+    progressBar.style.width = "100%";
+    progressBar.style.background = "linear-gradient(90deg, #10b981, #22c55e)";
+    if (pctLabel) pctLabel.textContent = "100%";
+    if (statusDesc) statusDesc.textContent = `✓ ${t("modal.smart_test_completed", "Self-test completed successfully")}`;
+    if (pulseDot) {
+      pulseDot.style.background = "var(--ok, #10b981)";
+      pulseDot.style.boxShadow = "0 0 10px var(--ok, #10b981)";
+    }
+    if (etaLabel) etaLabel.style.display = "none";
+
+    if (shortBtn) {
+      shortBtn.disabled = false;
+      shortBtn.style.opacity = "1";
+      shortBtn.style.cursor = "pointer";
+    }
+    if (extBtn) {
+      extBtn.disabled = false;
+      extBtn.style.opacity = "1";
+      extBtn.style.cursor = "pointer";
+    }
+    if (abortBtn) abortBtn.style.display = "none";
+    if (testStatus) testStatus.textContent = "Completed";
+  } else {
+    progressCard.style.display = "none";
+    if (shortBtn) {
+      shortBtn.disabled = false;
+      shortBtn.style.opacity = "1";
+      shortBtn.style.cursor = "pointer";
+    }
+    if (extBtn) {
+      extBtn.disabled = false;
+      extBtn.style.opacity = "1";
+      extBtn.style.cursor = "pointer";
+    }
+    if (abortBtn) abortBtn.style.display = "none";
+    if (testStatus) testStatus.textContent = data?.self_test_status || "";
+  }
+}
+
+export function stopSmartPolling() {
+  if (_smartPollTimer) {
+    clearInterval(_smartPollTimer);
+    _smartPollTimer = null;
+  }
+  _smartPollingDev = null;
+}
+
+export function startSmartPolling(devName, testType = 'short') {
+  stopSmartPolling();
+  _smartPollingDev = devName;
+  if (!activeModalType) activeModalType = "disk_" + devName;
+
+  _smartPollTimer = setInterval(async () => {
+    if (!smartOverlay) smartOverlay = document.getElementById("smart-modal-overlay");
+    if (!smartOverlay || !smartOverlay.classList.contains("open") || (activeModalType && activeModalType !== "disk_" + devName)) {
+      stopSmartPolling();
+      return;
+    }
+    try {
+      const res = await api.request(`/api/disk_detail?dev=${encodeURIComponent(devName)}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      _currentSmartData = data;
+
+      if (smartRaw && data.raw) smartRaw.textContent = data.raw;
+      renderSelfTestLog(data.self_test_log);
+      updateSmartTestProgressUI(data, testType);
+
+      if (!data.self_test_progress?.in_progress) {
+        const isAborted = Boolean(data.self_test_progress?.is_aborted);
+        stopSmartPolling();
+        if (isAborted) {
+          showToast(t("modal.smart_test_aborted", `Self-test aborted on /dev/${devName}`), "warn");
+        } else {
+          showToast(t("modal.smart_test_completed", `Self-test completed on /dev/${devName}`), "ok");
+        }
+      }
+    } catch (err) {
+      console.warn("SMART polling tick error:", err);
+    }
+  }, 3000);
+}
+
+export function generateSmartReportMarkdown(data) {
+  if (!data) return "No S.M.A.R.T. data available.";
+  const dev = data.dev || "unknown";
+  const model = data.model || "Unknown";
+  const serial = data.serial || "Unknown";
+  const health = data.health || "UNKNOWN";
+  const hours = data.power_on_hours != null ? `${data.power_on_hours} hrs` : "Unknown";
+  const temp = data.temp != null ? `${data.temp}°C` : "N/A";
+  const status = data.self_test_status || "N/A";
+  const generatedAt = new Date().toISOString();
+
+  let md = `# S.M.A.R.T. Diagnostic Report: /dev/${dev}\n`;
+  md += `**Generated**: ${generatedAt}\n\n`;
+  md += `## Device Telemetry\n`;
+  md += `- **Device Node**: \`/dev/${dev}\`\n`;
+  md += `- **Drive Model**: ${model}\n`;
+  md += `- **Serial Number**: ${serial}\n`;
+  md += `- **Health Assessment**: **${health}**\n`;
+  md += `- **Operating Temperature**: ${temp}\n`;
+  md += `- **Power-On Lifetime**: ${hours}\n`;
+  md += `- **Latest Self-Test Status**: ${status}\n\n`;
+
+  if (data.nvme_endurance) {
+    const nv = data.nvme_endurance;
+    md += `## NVMe Solid-State Endurance\n`;
+    if (nv.tbw_tb != null) md += `- **Total Bytes Written (TBW)**: ${nv.tbw_tb} TB\n`;
+    if (nv.tbr_tb != null) md += `- **Total Bytes Read (TBR)**: ${nv.tbr_tb} TB\n`;
+    if (nv.percentage_used != null) md += `- **Wear Indicator**: ${nv.percentage_used}%\n`;
+    if (nv.available_spare != null) md += `- **Available Spare**: ${nv.available_spare}%\n`;
+    md += `\n`;
+  }
+
+  if (data.degradation) {
+    const deg = data.degradation;
+    md += `## SMART Velocity & Degradation Analysis\n`;
+    md += `- **Status**: ${deg.status ? deg.status.toUpperCase() : 'UNKNOWN'}\n`;
+    md += `- **Reallocated Sectors (7d Delta)**: +${deg.realloc_7d_delta || 0}\n`;
+    if (deg.recommendation) md += `- **Recommendation**: ${deg.recommendation}\n`;
+    md += `\n`;
+  }
+
+  const log = data.self_test_log || [];
+  md += `## Self-Test Results History (${log.length} Records)\n`;
+  if (log.length > 0) {
+    md += `| # | Test Type | Status / Result | Lifetime Hours | First Error LBA |\n`;
+    md += `|---|-----------|-----------------|----------------|-----------------|\n`;
+    log.forEach((e) => {
+      const eHours = e.lifetime_hours != null ? `${e.lifetime_hours} h` : "-";
+      md += `| ${e.num} | ${e.type} | ${e.status} | ${eHours} | ${e.lba_first_error || '-'} |\n`;
+    });
+  } else {
+    md += `*No historical self-test logs recorded on this drive.*\n`;
+  }
+
+  return md;
+}
+
+export async function copySmartReport() {
+  if (!_currentSmartData) {
+    showToast("No SMART data to export", "warn");
+    return;
+  }
+  const reportText = generateSmartReportMarkdown(_currentSmartData);
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(reportText);
+    } else {
+      const ta = document.createElement("textarea");
+      ta.value = reportText;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+    }
+
+    const btn = document.getElementById("smart-btn-copy-report");
+    const icon = document.getElementById("smart-copy-report-icon");
+    const label = document.getElementById("smart-copy-report-label");
+    if (icon) icon.textContent = "✓";
+    if (label) label.textContent = t("modal.smart_report_copied", "Report Copied!");
+    if (btn) {
+      btn.style.borderColor = "var(--ok2, #10b981)";
+      btn.style.color = "var(--ok2, #10b981)";
+    }
+    showToast(t("modal.smart_report_copied", "SMART report copied to clipboard"), "ok");
+    setTimeout(() => {
+      if (icon) icon.textContent = "📋";
+      if (label) label.textContent = t("modal.smart_copy_report", "Copy Report");
+      if (btn) {
+        btn.style.borderColor = "rgba(56, 189, 248, 0.3)";
+        btn.style.color = "#38bdf8";
+      }
+    }, 2000);
+  } catch (err) {
+    console.warn("Failed to copy SMART report:", err);
+    showToast("Failed to copy report", "error");
+  }
+}
 
 let _smartFetchController = null;
 
@@ -215,6 +555,7 @@ async function openSmartModal(devName, forceWake = false) {
     const res = await api.request(`/api/disk_detail?dev=${encodeURIComponent(devName)}`, { signal: _smartFetchController.signal });
     if (res.ok) {
       const data = await res.json();
+      _currentSmartData = data;
       if (smartModel) smartModel.textContent = data.model || "Unknown";
       if (smartSerial) smartSerial.textContent = data.serial || "Unknown";
       if (smartHealth) {
@@ -227,17 +568,15 @@ async function openSmartModal(devName, forceWake = false) {
           smartHealth.style.color = "var(--crit)";
         }
       }
-      const abortTestBtn = document.getElementById("smart-btn-abort-test");
-      const testStatus = document.getElementById("smart-test-status");
-      if (data.self_test_status) {
-        if (testStatus) testStatus.textContent = data.self_test_status;
-        const low = data.self_test_status.toLowerCase();
-        const inProg = low.includes("in progress") || low.includes("remaining") || low.includes("started");
-        if (abortTestBtn) abortTestBtn.style.display = inProg ? "inline-block" : "none";
+      renderSelfTestLog(data.self_test_log);
+      updateSmartTestProgressUI(data);
+
+      if (data.self_test_progress && data.self_test_progress.in_progress) {
+        startSmartPolling(devName);
       } else {
-        if (testStatus) testStatus.textContent = "";
-        if (abortTestBtn) abortTestBtn.style.display = "none";
+        stopSmartPolling();
       }
+
       if (smartHours) smartHours.textContent = data.power_on_hours || "Unknown";
       if (smartRaw) smartRaw.textContent = data.raw || "No raw output.";
 
@@ -419,8 +758,9 @@ function openMetricModal(type) {
   updateMetricModalLive();
 }
 
-function closeSmartModal() {
+export function closeSmartModal() {
   activeModalType = null;
+  stopSmartPolling();
   if (_smartFetchController) {
     _smartFetchController.abort();
     _smartFetchController = null;
@@ -788,9 +1128,17 @@ window.addEventListener('zettnas:lang-changed', () => {
         if (smartLbl3) smartLbl3.textContent = t('modal.smart_health_status', "HEALTH STATUS");
         if (smartLbl4) smartLbl4.textContent = t('modal.smart_hours_readout', "POWER-ON HOURS");
         if (smartRawTitle) smartRawTitle.textContent = t('modal.smart_raw_telemetry', "RAW SMART ATTRIBUTES");
+        const copyReportLabel = document.getElementById("smart-copy-report-label");
+        if (copyReportLabel) copyReportLabel.textContent = t('modal.smart_copy_report', "Copy Report");
+        if (_currentSmartData) {
+          renderSelfTestLog(_currentSmartData.self_test_log);
+          updateSmartTestProgressUI(_currentSmartData);
+        }
     } else {
         openMetricModal(activeModalType);
     }
 });
 
 window.openSmartModal = openSmartModal;
+window.closeSmartModal = closeSmartModal;
+export { openSmartModal };

@@ -860,6 +860,56 @@
         <button id="smart-btn-abort-test" class="smart-test-action-btn" style="display: none; background: rgba(231,76,60,0.15); border: 1px solid #e74c3c; color: #ff6b6b; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 4px; cursor: pointer;" data-i18n="modal.smart_abort_test">⏹ Abort Test</button>
         <span id="smart-test-status" style="font-size: 10px; color: var(--muted); margin-left: auto;"></span>
       </div>
+
+      <!-- S.M.A.R.T. Active Self-Test Progress Card -->
+      <div id="smart-progress-card" class="smart-progress-card" style="display: none;">
+        <div class="smart-progress-header">
+          <div class="smart-progress-label-wrap">
+            <span class="smart-progress-pulse-dot" id="smart-progress-pulse"></span>
+            <span id="smart-progress-status-desc" class="smart-progress-status-desc" data-i18n="modal.smart_test_in_progress">Self-test in progress...</span>
+          </div>
+          <div class="smart-progress-meta-wrap">
+            <span id="smart-progress-pct-label" class="smart-progress-pct-label">0%</span>
+            <span id="smart-progress-eta" class="smart-progress-eta" style="display: none;"></span>
+          </div>
+        </div>
+        <div class="smart-progress-track">
+          <div id="smart-progress-bar" class="smart-progress-bar" style="width: 0%;"></div>
+        </div>
+      </div>
+
+      <!-- S.M.A.R.T. Self-Test History & Report Card -->
+      <div id="smart-test-history-card" class="smart-test-history-card">
+        <div class="smart-test-history-header">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="smart-test-history-title" data-i18n="modal.smart_test_history_title">SELF-TEST LOG & RESULTS</span>
+            <span class="smart-test-count-badge" id="smart-test-count-badge">0</span>
+          </div>
+          <button id="smart-btn-copy-report" type="button" class="smart-btn-copy-report" title="Copy formatted SMART report to clipboard">
+            <span id="smart-copy-report-icon">📋</span>
+            <span id="smart-copy-report-label" data-i18n="modal.smart_copy_report">Copy Report</span>
+          </button>
+        </div>
+        <div class="smart-test-history-table-wrap">
+          <table class="smart-test-table" id="smart-test-history-table">
+            <thead>
+              <tr>
+                <th style="width: 38px;">#</th>
+                <th data-i18n="modal.smart_col_type">Test Type</th>
+                <th data-i18n="modal.smart_col_status">Status / Result</th>
+                <th data-i18n="modal.smart_col_hours">Lifetime Hours</th>
+                <th data-i18n="modal.smart_col_lba">First Error LBA</th>
+              </tr>
+            </thead>
+            <tbody id="smart-test-history-tbody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+          <div id="smart-test-history-empty" class="smart-test-history-empty" style="display: none;" data-i18n="modal.smart_no_tests">
+            No self-test records logged for this drive.
+          </div>
+        </div>
+      </div>
       <span style="font-size:9px; font-weight:800; color:var(--muted); letter-spacing:1px;" id="smart-modal-raw-title" data-i18n="modal.smart_raw_telemetry">RAW TELEMETRY ATTRIBUTES</span>
       <pre class="smart-raw-pre" id="smart-raw-output">Querying telemetry...</pre>
     </div>

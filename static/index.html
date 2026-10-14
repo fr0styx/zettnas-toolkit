@@ -203,14 +203,14 @@
   })();
 </script>
 <style>html,body{color:#eaf1f8;background-color:#080c10;width:100%;height:100%;margin:0;padding:0;overflow:hidden}html.auth-required body{background:radial-gradient(circle at 50% 20%,#151d29 0%,#080c10 70%)!important}#login-overlay{z-index:999999;background:#080c10;justify-content:center;align-items:center;display:flex;position:fixed;inset:0}html.has-auth-session #login-overlay{display:none!important}html.auth-required #login-overlay{display:flex!important}html.is-desktop-locked #lock-overlay{opacity:1!important;display:flex!important}html.is-desktop-locked body{overflow:hidden!important}html.auth-required .studio-viewport-wrapper,html.auth-required .suite-navbar,html.auth-required #desktop-icons-container,html.auth-required .desktop-icons-container,html.auth-required .top-nav,html.auth-required #desktop-widgets-container,html.auth-required #os-dock-container,html.auth-required .smart-modal-backdrop,html.auth-required .os-window,html.auth-required .notif-center-window{display:none!important}</style>
-  <script type="module" crossorigin src="/assets/index-ApA0PgTj.js"></script>
+  <script type="module" crossorigin src="/assets/index-BgNUuW4j.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-CbXtAM7H.js">
-  <link rel="modulepreload" crossorigin href="/assets/dock-YQXj5Yk4.js">
-  <link rel="modulepreload" crossorigin href="/assets/dashboard-DWWgYf92.js">
-  <link rel="modulepreload" crossorigin href="/assets/users-D5Yzi-S8.js">
-  <link rel="modulepreload" crossorigin href="/assets/auth-D0R67NcY.js">
-  <link rel="modulepreload" crossorigin href="/assets/vm-manager-FPKJz23W.js">
-  <link rel="stylesheet" crossorigin href="/assets/index-B5Ztiijk.css">
+  <link rel="modulepreload" crossorigin href="/assets/dock-SgpLB5R9.js">
+  <link rel="modulepreload" crossorigin href="/assets/dashboard-CU1U_0pz.js">
+  <link rel="modulepreload" crossorigin href="/assets/users-S2n23LPX.js">
+  <link rel="modulepreload" crossorigin href="/assets/auth-CxXN6m4A.js">
+  <link rel="modulepreload" crossorigin href="/assets/vm-manager-t5bK8q6L.js">
+  <link rel="stylesheet" crossorigin href="/assets/index-BEuSx8cB.css">
 </head>
 <body class="studio-workbench no-specular-glow">
 
@@ -819,6 +819,56 @@
         <button id="smart-btn-extended-test" class="smart-test-action-btn" style="background: rgba(52,152,219,0.15); border: 1px solid #3498db; color: #38bdf8; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 4px; cursor: pointer;" data-i18n="modal.smart_extended_test">▶ Run Extended Test</button>
         <button id="smart-btn-abort-test" class="smart-test-action-btn" style="display: none; background: rgba(231,76,60,0.15); border: 1px solid #e74c3c; color: #ff6b6b; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 4px; cursor: pointer;" data-i18n="modal.smart_abort_test">⏹ Abort Test</button>
         <span id="smart-test-status" style="font-size: 10px; color: var(--muted); margin-left: auto;"></span>
+      </div>
+
+      <!-- S.M.A.R.T. Active Self-Test Progress Card -->
+      <div id="smart-progress-card" class="smart-progress-card" style="display: none;">
+        <div class="smart-progress-header">
+          <div class="smart-progress-label-wrap">
+            <span class="smart-progress-pulse-dot" id="smart-progress-pulse"></span>
+            <span id="smart-progress-status-desc" class="smart-progress-status-desc" data-i18n="modal.smart_test_in_progress">Self-test in progress...</span>
+          </div>
+          <div class="smart-progress-meta-wrap">
+            <span id="smart-progress-pct-label" class="smart-progress-pct-label">0%</span>
+            <span id="smart-progress-eta" class="smart-progress-eta" style="display: none;"></span>
+          </div>
+        </div>
+        <div class="smart-progress-track">
+          <div id="smart-progress-bar" class="smart-progress-bar" style="width: 0%;"></div>
+        </div>
+      </div>
+
+      <!-- S.M.A.R.T. Self-Test History & Report Card -->
+      <div id="smart-test-history-card" class="smart-test-history-card">
+        <div class="smart-test-history-header">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="smart-test-history-title" data-i18n="modal.smart_test_history_title">SELF-TEST LOG & RESULTS</span>
+            <span class="smart-test-count-badge" id="smart-test-count-badge">0</span>
+          </div>
+          <button id="smart-btn-copy-report" type="button" class="smart-btn-copy-report" title="Copy formatted SMART report to clipboard">
+            <span id="smart-copy-report-icon">📋</span>
+            <span id="smart-copy-report-label" data-i18n="modal.smart_copy_report">Copy Report</span>
+          </button>
+        </div>
+        <div class="smart-test-history-table-wrap">
+          <table class="smart-test-table" id="smart-test-history-table">
+            <thead>
+              <tr>
+                <th style="width: 38px;">#</th>
+                <th data-i18n="modal.smart_col_type">Test Type</th>
+                <th data-i18n="modal.smart_col_status">Status / Result</th>
+                <th data-i18n="modal.smart_col_hours">Lifetime Hours</th>
+                <th data-i18n="modal.smart_col_lba">First Error LBA</th>
+              </tr>
+            </thead>
+            <tbody id="smart-test-history-tbody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+          <div id="smart-test-history-empty" class="smart-test-history-empty" style="display: none;" data-i18n="modal.smart_no_tests">
+            No self-test records logged for this drive.
+          </div>
+        </div>
       </div>
       <span style="font-size:9px; font-weight:800; color:var(--muted); letter-spacing:1px;" id="smart-modal-raw-title" data-i18n="modal.smart_raw_telemetry">RAW TELEMETRY ATTRIBUTES</span>
       <pre class="smart-raw-pre" id="smart-raw-output">Querying telemetry...</pre>

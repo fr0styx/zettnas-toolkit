@@ -708,6 +708,155 @@ def read_disk_temps_and_io(allow_sync_poll: bool = False):
 VALID_DEV_PATTERN = re.compile(r"^(sd[a-z]+|nvme[0-9]+n[0-9]+|vd[a-z]+|xvd[a-z]+|[a-zA-Z0-9_\-\.:]+)$")
 
 
+def _parse_self_test_info(doc: dict | None, raw_text: str):
+    in_progress = False
+    percent_remaining = None
+    percent_completed = 100
+    status_text = ""
+    is_aborted = False
+    polling_mins = {}
+
+    if doc:
+        # 1. ATA self-test status
+        ata_st = doc.get("ata_smart_data", {}).get("self_test", {})
+        if ata_st:
+            st_val = ata_st.get("status", {}).get("value", 0)
+            st_str = ata_st.get("status", {}).get("string", "")
+            polling_mins = ata_st.get("polling_minutes", {}) or {}
+            status_text = st_str
+            low_st = st_str.lower()
+            if 240 <= st_val <= 249 or (
+                "in progress" in low_st and "no self-test in progress" not in low_st and "not in progress" not in low_st
+            ):
+                in_progress = True
+                if 241 <= st_val <= 249:
+                    percent_remaining = (st_val - 240) * 10
+                else:
+                    percent_remaining = ata_st.get("remaining_percent", 90)
+                percent_completed = max(0, min(100, 100 - percent_remaining))
+            elif st_val == 0:
+                percent_remaining = 0
+                percent_completed = 100
+            elif st_val in (1, 2) or "aborted" in low_st:
+                is_aborted = True
+
+        # 2. NVMe self-test status
+        nvme_st = doc.get("nvme_self_test_log", {})
+        if nvme_st:
+            nv_curr = nvme_st.get("current_self_test_operation", {})
+            nv_op = nv_curr.get("value", 0)
+            if nv_op != 0:
+                in_progress = True
+                percent_completed = nvme_st.get("current_self_test_completion", 10)
+                percent_remaining = 100 - percent_completed
+                status_text = nv_curr.get("string", "Self-test in progress")
+
+    # 3. Fallback / supplementary check from raw_text
+    for line in (raw_text or "").splitlines():
+        low = line.lower()
+        if "self-test execution status:" in low or "self-test status:" in low:
+            txt = line.split(":", 1)[1].strip()
+            if not status_text:
+                status_text = txt
+            if "in progress" in low and not ("no self-test in progress" in low or "not in progress" in low):
+                in_progress = True
+                m_rem = re.search(r"(\d+)%\s+(?:of test\s+)?remaining", low)
+                if m_rem:
+                    percent_remaining = int(m_rem.group(1))
+                    percent_completed = max(0, min(100, 100 - percent_remaining))
+                else:
+                    m_val = re.search(r"\((\d+)\)", line)
+                    if m_val:
+                        val = int(m_val.group(1))
+                        if 241 <= val <= 249:
+                            percent_remaining = (val - 240) * 10
+                            percent_completed = max(0, min(100, 100 - percent_remaining))
+            elif "aborted" in low:
+                is_aborted = True
+        elif "short self-test routine recommended polling time:" in low and "short" not in polling_mins:
+            m_p = re.search(r"\((\s*\d+)\)\s*minutes", low)
+            if m_p:
+                polling_mins["short"] = int(m_p.group(1).strip())
+        elif "extended self-test routine recommended polling time:" in low and "extended" not in polling_mins:
+            m_p = re.search(r"\((\s*\d+)\)\s*minutes", low)
+            if m_p:
+                polling_mins["extended"] = int(m_p.group(1).strip())
+
+    # 4. Parse self-test log
+    log_entries = []
+    if doc:
+        ata_log_table = (
+            doc.get("ata_smart_self_test_log", {}).get("extended", {}).get("table")
+            or doc.get("ata_smart_self_test_log", {}).get("standard", {}).get("table")
+            or []
+        )
+        for idx, entry in enumerate(ata_log_table):
+            status_str = entry.get("status", {}).get("string", "Unknown")
+            passed = entry.get("status", {}).get("passed", True)
+            log_entries.append(
+                {
+                    "num": idx + 1,
+                    "type": entry.get("type", {}).get("string", "Offline"),
+                    "status": status_str,
+                    "passed": passed,
+                    "lifetime_hours": entry.get("lifetime_hours", "-"),
+                    "remaining_pct": entry.get("remaining_percent", 0),
+                    "lba_first_error": entry.get("lba_first_error", "-") or "-",
+                }
+            )
+
+        if not log_entries:
+            nvme_log_table = doc.get("nvme_self_test_log", {}).get("table") or []
+            for idx, entry in enumerate(nvme_log_table):
+                log_entries.append(
+                    {
+                        "num": idx + 1,
+                        "type": entry.get("type", {}).get("string", "Self-test"),
+                        "status": entry.get("result", {}).get("string", "Completed"),
+                        "passed": entry.get("result", {}).get("value", 0) == 0,
+                        "lifetime_hours": entry.get("power_on_hours", "-"),
+                        "remaining_pct": 0,
+                        "lba_first_error": entry.get("failing_lba", "-") or "-",
+                    }
+                )
+
+    # Fallback to text parsing if log_entries is still empty
+    if not log_entries:
+        for line in (raw_text or "").splitlines():
+            m = re.match(
+                r"^(?:#\s*)?(\d+)\s+([A-Za-z0-9_\s]+?)\s{2,}(Completed[^\d\n\r]+?|Aborted[^\d\n\r]+?|Failed[^\d\n\r]+?|In progress[^\d\n\r]+?|Self-test[^\d\n\r]+?|Interrupted[^\d\n\r]+?|Fatal[^\d\n\r]+?|Unknown[^\d\n\r]+?)\s+(?:(\d{1,2}%)\s+)?(\d+)\s+([0-9a-zA-Z_\-]+)",
+                line.strip(),
+            )
+            if m:
+                num, test_desc, status_str, remaining, hours, lba = m.groups()
+                status_clean = status_str.strip()
+                passed = "without error" in status_clean.lower() or (
+                    "completed" in status_clean.lower() and "error" not in status_clean.lower()
+                )
+                rem_pct = int(remaining.replace("%", "").strip()) if remaining else 0
+                log_entries.append(
+                    {
+                        "num": int(num),
+                        "type": test_desc.strip(),
+                        "status": status_clean,
+                        "passed": passed,
+                        "remaining_pct": rem_pct,
+                        "lifetime_hours": int(hours.strip()) if hours.strip().isdigit() else hours.strip(),
+                        "lba_first_error": lba.strip(),
+                    }
+                )
+
+    progress = {
+        "in_progress": in_progress,
+        "percent_remaining": percent_remaining,
+        "percent_completed": percent_completed,
+        "status_text": status_text or ("In progress" if in_progress else "Completed"),
+        "is_aborted": is_aborted,
+        "polling_minutes": polling_mins,
+    }
+    return progress, log_entries
+
+
 def fetch_disk_smart_detail(dev_name: str, wake_if_standby: bool = False):
     if not VALID_DEV_PATTERN.fullmatch(dev_name):
         return {"error": "Invalid device name format."}
@@ -751,6 +900,15 @@ def fetch_disk_smart_detail(dev_name: str, wake_if_standby: bool = False):
                     "is_standby": True,
                     "temp": cached_temp,
                     "self_test_status": None,
+                    "self_test_progress": {
+                        "in_progress": False,
+                        "percent_remaining": 0,
+                        "percent_completed": 100,
+                        "status_text": "Drive in standby",
+                        "is_aborted": False,
+                        "polling_minutes": {},
+                    },
+                    "self_test_log": [],
                     "metrics": {},
                     "degradation": query_smart_velocity(dev_name),
                     "nvme_endurance": None,
@@ -770,6 +928,14 @@ def fetch_disk_smart_detail(dev_name: str, wake_if_standby: bool = False):
         except Exception as e:
             logger.debug(f"Direct block wake read on {dev} threw: {e}")
 
+    doc = None
+    try:
+        rj = subprocess.run(["smartctl", "-x", "-j", "-d", dtype, dev], capture_output=True, text=True, timeout=25)
+        if rj.stdout and rj.stdout.strip().startswith("{"):
+            doc = json.loads(rj.stdout)
+    except Exception:
+        doc = None
+
     try:
         r = subprocess.run(["smartctl", "-x", "-d", dtype, dev], capture_output=True, text=True, timeout=25)
         raw_text = (r.stdout or "") + ("\n" + r.stderr if r.stderr else "")
@@ -782,18 +948,28 @@ def fetch_disk_smart_detail(dev_name: str, wake_if_standby: bool = False):
     health_verdict = "UNKNOWN"
     self_test_status = None
 
+    if doc:
+        model = doc.get("model_name") or doc.get("device", {}).get("model_name") or "Unknown"
+        serial = doc.get("serial_number") or "Unknown"
+        poh = doc.get("power_on_time", {}).get("hours")
+        if poh is not None:
+            power_hours = str(poh)
+        sm_status = doc.get("smart_status", {})
+        if "passed" in sm_status:
+            health_verdict = "PASSED" if sm_status["passed"] else "FAILED"
+
     for line in raw_text.splitlines():
         low = line.lower()
-        if "device model:" in low or "model number:" in low:
+        if model == "Unknown" and ("device model:" in low or "model number:" in low):
             model = line.split(":", 1)[1].strip()
-        elif "serial number:" in low:
+        elif serial == "Unknown" and "serial number:" in low:
             serial = line.split(":", 1)[1].strip()
-        elif "power on hours:" in low or "power_on_hours" in low:
+        elif power_hours == "Unknown" and ("power on hours:" in low or "power_on_hours" in low):
             parts = line.split()
             power_hours = parts[-1] if parts else "Unknown"
-        elif "overall-health" in low:
+        elif health_verdict == "UNKNOWN" and "overall-health" in low:
             health_verdict = "PASSED" if "passed" in low else "FAILED"
-        elif "smart health status:" in low:
+        elif health_verdict == "UNKNOWN" and "smart health status:" in low:
             health_verdict = "PASSED" if ("ok" in low or "passed" in low) else "FAILED"
         elif "self-test execution status:" in low or "self-test status:" in low:
             self_test_status = line.split(":", 1)[1].strip()
@@ -840,6 +1016,7 @@ def fetch_disk_smart_detail(dev_name: str, wake_if_standby: bool = False):
         log_smart_metrics(int(time.time()), dev_name, temp, metrics)
 
     velocity = query_smart_velocity(dev_name)
+    self_test_progress, self_test_log = _parse_self_test_info(doc, raw_text)
 
     return {
         "dev": dev_name,
@@ -849,7 +1026,9 @@ def fetch_disk_smart_detail(dev_name: str, wake_if_standby: bool = False):
         "power_on_hours": power_hours,
         "health": health_verdict,
         "temp": temp,
-        "self_test_status": self_test_status,
+        "self_test_status": self_test_status or self_test_progress.get("status_text"),
+        "self_test_progress": self_test_progress,
+        "self_test_log": self_test_log,
         "metrics": metrics,
         "degradation": velocity,
         "nvme_endurance": (
@@ -919,10 +1098,12 @@ def run_disk_smart_test(dev_name: str, test_type: str = "short", skip_if_standby
             or ("self-test routine aborted" in out.lower())
             or (action_name == "abort" and "aborted" in out.lower())
         )
+        polling_mins = 1 if action_name == "short" else 20
         return {
             "success": success,
             "dev": dev_name,
             "test_type": action_name,
+            "polling_minutes": polling_mins,
             "output": out.strip()[:1000],
         }
     except Exception as e:

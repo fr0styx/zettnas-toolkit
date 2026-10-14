@@ -3200,7 +3200,7 @@ body.theme-oled #cloud-remote-window select option {
   transform: translateZ(0);
   pointer-events: auto;
   background: #0f1620; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 14px;
-  width: 580px; height: 540px; min-width: 480px; min-height: 340px; max-width: 95vw; max-height: 88vh; display: flex; flex-direction: column;
+  width: 620px; height: 600px; min-width: 480px; min-height: 360px; max-width: 95vw; max-height: 90vh; display: flex; flex-direction: column;
   box-shadow: 0 25px 60px rgba(0,0,0,0.9); overflow: hidden;
   resize: both;
 }
@@ -3225,6 +3225,206 @@ body.theme-oled #cloud-remote-window select option {
 .smart-raw-pre {
   background: #080c11; border: 1px solid rgba(255,255,255,0.05); border-radius: 8px;
   padding: 12px; font-family: monospace; font-size: 10px; color: #94a3b8; overflow-x: auto; max-height: 220px;
+}
+
+/* SMART Self-Test Progress Card */
+.smart-progress-card {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: 8px;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  animation: fadeIn 0.25s ease-out;
+}
+.smart-progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+}
+.smart-progress-label-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.smart-progress-pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--brand, #38bdf8);
+  box-shadow: 0 0 10px var(--brand, #38bdf8);
+  animation: smartPulse 1.5s infinite;
+}
+@keyframes smartPulse {
+  0% { transform: scale(0.9); opacity: 0.7; }
+  50% { transform: scale(1.25); opacity: 1; box-shadow: 0 0 14px var(--brand, #38bdf8); }
+  100% { transform: scale(0.9); opacity: 0.7; }
+}
+.smart-progress-status-desc {
+  font-weight: 700;
+  color: #e2e8f0;
+}
+.smart-progress-meta-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+}
+.smart-progress-pct-label {
+  font-weight: 800;
+  color: var(--brand, #38bdf8);
+}
+.smart-progress-eta {
+  color: var(--muted);
+  font-size: 10px;
+}
+.smart-progress-track {
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+.smart-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #0ea5e9, #22c55e);
+  border-radius: 4px;
+  transition: width 0.4s ease;
+  position: relative;
+}
+.smart-progress-bar::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+  animation: smartShimmer 1.8s infinite;
+}
+@keyframes smartShimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* SMART Self-Test History Card */
+.smart-test-history-card {
+  background: #111827;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.smart-test-history-header {
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.smart-test-history-title {
+  font-size: 9.5px;
+  font-weight: 800;
+  color: var(--muted);
+  letter-spacing: 0.8px;
+}
+.smart-test-count-badge {
+  background: rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 10px;
+}
+.smart-btn-copy-report {
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: #38bdf8;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.2s ease;
+}
+.smart-btn-copy-report:hover {
+  background: rgba(56, 189, 248, 0.22);
+  border-color: #38bdf8;
+  color: #fff;
+}
+.smart-test-history-table-wrap {
+  max-height: 180px;
+  overflow-y: auto;
+}
+.smart-test-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10.5px;
+  text-align: left;
+}
+.smart-test-table th {
+  position: sticky;
+  top: 0;
+  background: #151f2b;
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 6px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.smart-test-table td {
+  padding: 6px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  color: #e2e8f0;
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+}
+.smart-test-table tr:hover td {
+  background: rgba(255, 255, 255, 0.02);
+}
+.smart-test-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 9.5px;
+  font-weight: 700;
+}
+.smart-test-status-passed {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+.smart-test-status-failed {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+.smart-test-status-aborted {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+.smart-test-status-running {
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+}
+.smart-test-history-empty {
+  padding: 18px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 11px;
 }
 
 /* =========================================================================
