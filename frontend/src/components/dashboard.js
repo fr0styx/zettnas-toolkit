@@ -663,7 +663,7 @@ export function syncScreenLayoutStyle() {
 export function updateStreamlineLayout(s, anyWarn) {
   if (!s) return;
 
-  // Header: Status Ring, NAS Name, Clock
+  // Header compat: Status Ring, NAS Name, Clock (for background sync & tests)
   const ring = $('sl-status-ring');
   if (ring) {
     const isCrit = (s.storage && s.storage.pct >= 90) ||
@@ -704,6 +704,9 @@ export function updateStreamlineLayout(s, anyWarn) {
   // Zone 2: Compute Sliders (CPU & Memory)
   const cpuPct = Math.round(s.cpu?.util ?? 0);
   setText($('sl-cpu-val'), cpuPct + '%');
+  const cpuTemp = s.cpu?.temp != null ? `${Math.round(s.cpu.temp)}°C` : '--°C';
+  setText($('sl-cpu-temp'), cpuTemp);
+
   const cpuBar = $('sl-cpu-bar');
   if (cpuBar) {
     cpuBar.style.width = Math.max(0, Math.min(100, cpuPct)) + '%';
@@ -711,15 +714,22 @@ export function updateStreamlineLayout(s, anyWarn) {
 
   const memPct = Math.round(s.mem?.pct ?? 0);
   setText($('sl-mem-val'), memPct + '%');
+  const memUsed = s.mem?.used || '--';
+  setText($('sl-mem-used'), memUsed);
+
   const memBar = $('sl-mem-bar');
   if (memBar) {
     memBar.style.width = Math.max(0, Math.min(100, memPct)) + '%';
   }
 
-  // Zone 3: Hero Prominent IP
+  // Zone 3: Hero Prominent IP & Network Throughput
   const ipEl = $('sl-hero-ip');
   if (ipEl) {
     setText(ipEl, s.ip || '0.0.0.0');
+  }
+  if (s.net) {
+    setText($('sl-net-tx'), s.net.tx || '0 KB/s');
+    setText($('sl-net-rx'), s.net.rx || '0 KB/s');
   }
 
   // Lower Deck: Bay Slot Row
@@ -765,24 +775,46 @@ export function updateStreamlineBayChips(disks) {
   const newDevs = disks.map((d) => d.dev || d.name);
   const structureChanged = existingDevs.join(',') !== newDevs.join(',');
 
+  const buildChipInner = (d) => {
+    const isStandby = Boolean(d.standby || d.health === 'standby');
+    const isParity = Boolean(d.is_parity || d.role === 'parity');
+    const roleKey = isParity ? 'parity' : (d.role || 'data');
+    const meta = ROLE_META[roleKey] || ROLE_META.data;
+    const devPathName = formatDiskDisplayName(d.name);
+    const roleLabel = isParity ? (d.parity_label === 'P2' ? 'PARITY 2' : 'PARITY') : meta.label;
+    const tempHtml = isStandby
+      ? `<span class="sl-chip-temp s-standby"><span class="standby-badge">STANDBY</span></span>`
+      : `<span class="sl-chip-temp">${d.temp == null ? '--' : d.temp + '°C'}</span>`;
+
+    return `<div class="sl-chip-top">` +
+      `<div class="sl-chip-ident">` +
+        `<svg class="sl-chip-ic"><use href="${meta.icon}"/></svg>` +
+        `<span class="slot-lbl">${escapeHtml(devPathName)}</span>` +
+      `</div>` +
+      `<span class="slot-dot"></span>` +
+    `</div>` +
+    `<div class="sl-chip-bottom">` +
+      `<span class="sl-chip-role">${escapeHtml(roleLabel)}</span>` +
+      tempHtml +
+    `</div>`;
+  };
+
   if (structureChanged) {
     row.innerHTML = '';
     disks.forEach((d) => {
       const isStandby = Boolean(d.standby || d.health === 'standby');
       const isParity = Boolean(d.is_parity || d.role === 'parity');
-      const parityLbl = d.parity_label || 'P';
+      const roleKey = isParity ? 'parity' : (d.role || 'data');
+      const meta = ROLE_META[roleKey] || ROLE_META.data;
       const lvl = isStandby ? 'standby' : (d.health || lvlDisk(d.temp));
       const chip = document.createElement('div');
-      chip.className = 'sl-bay-chip h-' + lvl + (d.active ? ' io-active' : '') + (isStandby ? ' chip-standby' : '') + (isParity ? ' chip-parity' : '');
+      chip.className = `sl-bay-chip ${meta.cls} h-${lvl}` + (d.active ? ' io-active' : '') + (isStandby ? ' chip-standby' : '') + (isParity ? ' chip-parity' : '');
       chip.dataset.dev = d.dev || d.name;
       const devPathName = formatDiskDisplayName(d.name);
       chip.title = isStandby
         ? `${d.name}${isParity ? ' [PARITY]' : ''} is in standby (spun-down)`
         : `Disk ${d.name}${isParity ? ' [PARITY]' : ''} (${devPathName}) - Click to inspect SMART`;
-      const parityTag = isParity
-        ? `<span class="sl-parity-tag" title="Parity Protection Drive (${parityLbl})">${escapeHtml(parityLbl)}</span>`
-        : '';
-      chip.innerHTML = `<span class="slot-lbl">${escapeHtml(devPathName)}</span>${parityTag}<span class="slot-dot"></span>`;
+      chip.innerHTML = buildChipInner(d);
       row.appendChild(chip);
     });
   } else {
@@ -792,17 +824,15 @@ export function updateStreamlineBayChips(disks) {
       if (!chip) return;
       const isStandby = Boolean(d.standby || d.health === 'standby');
       const isParity = Boolean(d.is_parity || d.role === 'parity');
-      const parityLbl = d.parity_label || 'P';
+      const roleKey = isParity ? 'parity' : (d.role || 'data');
+      const meta = ROLE_META[roleKey] || ROLE_META.data;
       const lvl = isStandby ? 'standby' : (d.health || lvlDisk(d.temp));
-      chip.className = 'sl-bay-chip h-' + lvl + (d.active ? ' io-active' : '') + (isStandby ? ' chip-standby' : '') + (isParity ? ' chip-parity' : '');
+      chip.className = `sl-bay-chip ${meta.cls} h-${lvl}` + (d.active ? ' io-active' : '') + (isStandby ? ' chip-standby' : '') + (isParity ? ' chip-parity' : '');
       const devPathName = formatDiskDisplayName(d.name);
       chip.title = isStandby
         ? `${d.name}${isParity ? ' [PARITY]' : ''} is in standby (spun-down)`
         : `Disk ${d.name}${isParity ? ' [PARITY]' : ''} (${devPathName}) - Click to inspect SMART`;
-      const parityTag = isParity
-        ? `<span class="sl-parity-tag" title="Parity Protection Drive (${parityLbl})">${escapeHtml(parityLbl)}</span>`
-        : '';
-      chip.innerHTML = `<span class="slot-lbl">${escapeHtml(devPathName)}</span>${parityTag}<span class="slot-dot"></span>`;
+      chip.innerHTML = buildChipInner(d);
     });
   }
 }
@@ -1812,6 +1842,8 @@ export function initDashboardClicks() {
   if (slCpu) slCpu.addEventListener('click', () => ZettEventBus.emit('modal:metric:open', 'cpu'));
   const slMem = $('sl-mem-row');
   if (slMem) slMem.addEventListener('click', () => ZettEventBus.emit('modal:metric:open', 'mem'));
+  const slIp = $('sl-zone-ip');
+  if (slIp) slIp.addEventListener('click', () => ZettEventBus.emit('modal:metric:open', 'net'));
 
   syncScreenLayoutStyle();
 }

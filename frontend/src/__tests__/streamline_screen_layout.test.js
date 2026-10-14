@@ -56,45 +56,73 @@ describe('Streamline Minimalist / Big IP Screen Layout Suite', () => {
           </div>
 
           <div class="sl-main-deck">
-            <div class="sl-zone-storage" id="sl-zone-storage">
-              <div class="sl-donut-wrap">
-                <svg class="sl-donut-svg" viewBox="0 0 64 64">
-                  <circle class="sl-donut-track" cx="32" cy="32" r="26" />
-                  <circle class="sl-donut-arc" id="sl-storage-arc" cx="32" cy="32" r="26" />
-                </svg>
-                <span class="sl-donut-pct" id="sl-storage-pct">0%</span>
+            <div class="card sl-card sl-card-storage" id="sl-zone-storage" data-metric-id="metric-storage">
+              <div class="card-title">
+                <svg class="ic"><use href="#i-disk"/></svg>
+                <span class="card-title-txt">STORAGE</span>
               </div>
-              <div class="sl-storage-meta">
-                <span class="sl-meta-label">CAPACITY</span>
-                <strong class="sl-meta-used" id="sl-storage-used">0TB</strong>
-                <span class="sl-meta-total" id="sl-storage-total">/ 0TB</span>
-              </div>
-            </div>
-
-            <div class="sl-zone-compute">
-              <div class="sl-bar-row" id="sl-cpu-row">
-                <div class="sl-bar-header">
-                  <span class="sl-bar-label">CPU</span>
-                  <span class="sl-bar-val" id="sl-cpu-val">0%</span>
+              <div class="sl-storage-body">
+                <div class="sl-donut-wrap">
+                  <svg class="sl-donut-svg" viewBox="0 0 64 64">
+                    <circle class="sl-donut-track" cx="32" cy="32" r="26" />
+                    <circle class="sl-donut-arc" id="sl-storage-arc" cx="32" cy="32" r="26" />
+                  </svg>
+                  <span class="sl-donut-pct" id="sl-storage-pct">0%</span>
                 </div>
-                <div class="sl-bar-track">
-                  <div class="sl-bar-fill sl-fill-cpu" id="sl-cpu-bar" style="width: 0%"></div>
-                </div>
-              </div>
-              <div class="sl-bar-row" id="sl-mem-row">
-                <div class="sl-bar-header">
-                  <span class="sl-bar-label">Memory</span>
-                  <span class="sl-bar-val" id="sl-mem-val">0%</span>
-                </div>
-                <div class="sl-bar-track">
-                  <div class="sl-bar-fill sl-fill-mem" id="sl-mem-bar" style="width: 0%"></div>
+                <div class="sl-storage-meta">
+                  <span class="sl-meta-label">CAPACITY</span>
+                  <strong class="sl-meta-used" id="sl-storage-used">0TB</strong>
+                  <span class="sl-meta-total" id="sl-storage-total">/ 0TB</span>
                 </div>
               </div>
             </div>
 
-            <div class="sl-zone-ip">
-              <span class="sl-ip-label">IP:</span>
-              <div class="sl-hero-ip" id="sl-hero-ip">0.0.0.0</div>
+            <div class="card sl-card sl-card-compute" id="sl-zone-compute" data-metric-id="metric-cpu">
+              <div class="card-title">
+                <svg class="ic"><use href="#i-cpu"/></svg>
+                <span class="card-title-txt">COMPUTE</span>
+              </div>
+              <div class="sl-compute-body">
+                <div class="sl-bar-row" id="sl-cpu-row">
+                  <div class="sl-bar-header">
+                    <span class="sl-bar-label">CPU</span>
+                    <div class="sl-bar-stat">
+                      <strong class="sl-bar-val" id="sl-cpu-val">0%</strong>
+                      <span class="sl-bar-sub" id="sl-cpu-temp">--°C</span>
+                    </div>
+                  </div>
+                  <div class="sl-bar-track">
+                    <div class="sl-bar-fill sl-fill-cpu" id="sl-cpu-bar" style="width: 0%"></div>
+                  </div>
+                </div>
+                <div class="sl-bar-row" id="sl-mem-row">
+                  <div class="sl-bar-header">
+                    <span class="sl-bar-label">Memory</span>
+                    <div class="sl-bar-stat">
+                      <strong class="sl-bar-val" id="sl-mem-val">0%</strong>
+                      <span class="sl-bar-sub" id="sl-mem-used">--</span>
+                    </div>
+                  </div>
+                  <div class="sl-bar-track">
+                    <div class="sl-bar-fill sl-fill-mem" id="sl-mem-bar" style="width: 0%"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card sl-card sl-card-ip" id="sl-zone-ip" data-metric-id="metric-net">
+              <div class="card-title">
+                <svg class="ic"><use href="#i-globe"/></svg>
+                <span class="card-title-txt">IP ADDRESS</span>
+              </div>
+              <div class="sl-ip-body">
+                <div class="sl-hero-ip" id="sl-hero-ip">0.0.0.0</div>
+                <div class="sl-net-rates" id="sl-net-rates">
+                  <span class="sl-net-item"><span class="sl-net-lbl">TX:</span> <strong id="sl-net-tx">0 KB/s</strong></span>
+                  <span class="sl-net-sep">•</span>
+                  <span class="sl-net-item"><span class="sl-net-lbl">RX:</span> <strong id="sl-net-rx">0 KB/s</strong></span>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -177,9 +205,11 @@ describe('Streamline Minimalist / Big IP Screen Layout Suite', () => {
 
     // Compute Zone
     expect(document.getElementById('sl-cpu-val').textContent).toBe('4%');
+    expect(document.getElementById('sl-cpu-temp').textContent).toBe('42°C');
     expect(document.getElementById('sl-cpu-bar').style.width).toBe('4%');
 
     expect(document.getElementById('sl-mem-val').textContent).toBe('18%');
+    expect(document.getElementById('sl-mem-used').textContent).toBe('5.7GB');
     expect(document.getElementById('sl-mem-bar').style.width).toBe('18%');
   });
 
@@ -265,7 +295,7 @@ describe('Streamline Minimalist / Big IP Screen Layout Suite', () => {
     expect(smartEventSpy).not.toHaveBeenCalled();
   });
 
-  it('delegates interactive clicks from streamline storage, CPU, and Memory zones to metrics modal', () => {
+  it('delegates interactive clicks from streamline storage, CPU, Memory, and IP zones to metrics modal', () => {
     initDashboardClicks();
 
     const metricEventSpy = vi.fn();
@@ -279,6 +309,9 @@ describe('Streamline Minimalist / Big IP Screen Layout Suite', () => {
 
     document.getElementById('sl-mem-row').click();
     expect(metricEventSpy.mock.calls[2][0]).toBe('mem');
+
+    document.getElementById('sl-zone-ip').click();
+    expect(metricEventSpy.mock.calls[3][0]).toBe('net');
   });
 
   it('syncs Settings Drawer style chips and active badge', () => {
@@ -355,7 +388,7 @@ describe('Streamline Minimalist / Big IP Screen Layout Suite', () => {
   });
 
   describe('Parity Drive Pill & Tag Identification (Classic & Streamline)', () => {
-    it('renders orange parity tag [P] or [P2] inside streamline bay chips', () => {
+    it('renders clean streamline bay chip with parity role styling, temp, and no redundant small P', () => {
       const disks = [
         { name: 'sdb', role: 'parity', is_parity: true, parity_label: 'P', temp: 34, health: 'ok' },
         { name: 'sdc', role: 'parity', is_parity: true, parity_label: 'P2', temp: 35, health: 'ok' },
@@ -370,20 +403,25 @@ describe('Streamline Minimalist / Big IP Screen Layout Suite', () => {
 
       // sdb: Parity 1
       expect(chips[0].classList.contains('chip-parity')).toBe(true);
-      const tag0 = chips[0].querySelector('.sl-parity-tag');
-      expect(tag0).not.toBeNull();
-      expect(tag0.textContent).toBe('P');
+      expect(chips[0].classList.contains('r-parity')).toBe(true);
       expect(chips[0].title).toContain('[PARITY]');
+      expect(chips[0].querySelector('.sl-parity-tag')).toBeNull();
+      expect(chips[0].querySelector('.sl-chip-role').textContent).toBe('PARITY');
+      expect(chips[0].querySelector('.sl-chip-temp').textContent).toBe('34°C');
 
       // sdc: Parity 2
       expect(chips[1].classList.contains('chip-parity')).toBe(true);
-      const tag1 = chips[1].querySelector('.sl-parity-tag');
-      expect(tag1).not.toBeNull();
-      expect(tag1.textContent).toBe('P2');
+      expect(chips[1].classList.contains('r-parity')).toBe(true);
+      expect(chips[1].querySelector('.sl-parity-tag')).toBeNull();
+      expect(chips[1].querySelector('.sl-chip-role').textContent).toBe('PARITY 2');
+      expect(chips[1].querySelector('.sl-chip-temp').textContent).toBe('35°C');
 
       // sda: Data drive (no parity tag)
       expect(chips[2].classList.contains('chip-parity')).toBe(false);
+      expect(chips[2].classList.contains('r-data')).toBe(true);
       expect(chips[2].querySelector('.sl-parity-tag')).toBeNull();
+      expect(chips[2].querySelector('.sl-chip-role').textContent).toBe('DATA');
+      expect(chips[2].querySelector('.sl-chip-temp').textContent).toBe('37°C');
 
       // Test subsequent live updates (non-structural branch)
       const updatedDisks = [
@@ -393,9 +431,12 @@ describe('Streamline Minimalist / Big IP Screen Layout Suite', () => {
       ];
       updateStreamlineBayChips(updatedDisks);
 
-      expect(chips[0].querySelector('.sl-parity-tag').textContent).toBe('P');
-      expect(chips[1].querySelector('.sl-parity-tag').textContent).toBe('P2');
-      expect(chips[2].querySelector('.sl-parity-tag')).toBeNull();
+      expect(chips[0].querySelector('.sl-chip-role').textContent).toBe('PARITY');
+      expect(chips[0].querySelector('.sl-chip-temp').textContent).toBe('36°C');
+      expect(chips[1].querySelector('.sl-chip-role').textContent).toBe('PARITY 2');
+      expect(chips[1].querySelector('.sl-chip-temp').textContent).toBe('36°C');
+      expect(chips[2].querySelector('.sl-chip-role').textContent).toBe('DATA');
+      expect(chips[2].querySelector('.sl-chip-temp').textContent).toBe('38°C');
     });
 
     it('renders clean disk tile in Classic Cards without redundant parity pill', () => {

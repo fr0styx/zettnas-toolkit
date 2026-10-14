@@ -600,13 +600,7 @@ body.lcd-direct #screen.layout-classic #streamline-container {
   visibility: hidden !important;
 }
 
-/* Streamline mode on physical LCD: hide header, cards, disks with matching/higher specificity */
-body.lcd-direct #console-window #screen.layout-streamline header,
-body.lcd-direct #console-window #screen.layout-streamline > header,
-body.lcd-direct #screen.layout-streamline header,
-body.lcd-direct #screen.layout-streamline > header,
-body.lcd-direct.layout-streamline #console-window #screen header,
-body.lcd-direct.layout-streamline #screen header,
+/* Streamline mode on physical LCD: hide cards and disks (keep header visible, only hide header's small IP) */
 body.lcd-direct #console-window #screen.layout-streamline .cards,
 body.lcd-direct #console-window #screen.layout-streamline #dashboard-cards-container,
 body.lcd-direct #screen.layout-streamline .cards,
@@ -621,6 +615,23 @@ body.lcd-direct.layout-streamline #console-window #screen .disks,
 body.lcd-direct.layout-streamline #screen .disks {
   display: none !important;
   visibility: hidden !important;
+}
+
+body.lcd-direct #console-window #screen.layout-streamline header #ip,
+body.lcd-direct #console-window #screen.layout-streamline header .h-right > svg,
+body.lcd-direct #screen.layout-streamline header #ip,
+body.lcd-direct #screen.layout-streamline header .h-right > svg,
+body.lcd-direct.layout-streamline #console-window #screen header #ip,
+body.lcd-direct.layout-streamline #screen header #ip {
+  display: none !important;
+}
+
+body.lcd-direct #console-window #screen.layout-streamline header,
+body.lcd-direct #screen.layout-streamline header,
+body.lcd-direct.layout-streamline #console-window #screen header,
+body.lcd-direct.layout-streamline #screen header {
+  display: flex !important;
+  visibility: visible !important;
 }
 
 body.lcd-direct #console-window #screen.layout-streamline,
@@ -658,11 +669,8 @@ body.lcd-direct.layout-streamline #screen .streamline-container {
   box-sizing: border-box !important;
 }
 
-body.lcd-direct #screen .sl-parity-tag {
-  color: #fb923c !important;
-  background: rgba(249, 115, 22, 0.28) !important;
-  border-color: rgba(249, 115, 22, 0.6) !important;
-  font-weight: 800 !important;
+body.lcd-direct #console-window #screen:not(.layout-streamline) .streamline-container {
+  display: none !important;
 }
 
 

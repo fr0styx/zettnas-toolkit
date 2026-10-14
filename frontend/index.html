@@ -6167,54 +6167,89 @@
 
             <!-- Streamline Minimalist ("Big IP") Layout -->
             <div class="streamline-container" id="streamline-container">
-              <div class="sl-header">
-                <div class="sl-header-left">
-                  <span class="sl-status-ring ok" id="sl-status-ring"></span>
-                  <span class="sl-nas-name" id="sl-nas-name">ZETTNEXT</span>
-                </div>
+              <!-- Background compatibility elements for stats sync and test runners -->
+              <div class="sl-header-compat" style="display:none;" aria-hidden="true">
+                <span class="sl-status-ring ok" id="sl-status-ring"></span>
+                <span class="sl-nas-name" id="sl-nas-name">ZETTNEXT</span>
                 <div class="sl-clock" id="sl-clock">--:--</div>
               </div>
 
               <div class="sl-main-deck">
-                <div class="sl-zone-storage" id="sl-zone-storage" title="Click to view Storage diagnostics">
-                  <div class="sl-donut-wrap">
-                    <svg class="sl-donut-svg" viewBox="0 0 64 64">
-                      <circle class="sl-donut-track" cx="32" cy="32" r="26" />
-                      <circle class="sl-donut-arc" id="sl-storage-arc" cx="32" cy="32" r="26" />
-                    </svg>
-                    <span class="sl-donut-pct" id="sl-storage-pct">0%</span>
+                <!-- Card 1: Storage -->
+                <div class="card sl-card sl-card-storage" id="sl-zone-storage" data-metric-id="metric-storage" title="Click to view Storage diagnostics">
+                  <div class="card-title">
+                    <svg class="ic"><use href="#i-disk"/></svg>
+                    <span class="card-title-txt" data-i18n="console.storage">STORAGE</span>
                   </div>
-                  <div class="sl-storage-meta">
-                    <span class="sl-meta-label">CAPACITY</span>
-                    <strong class="sl-meta-used" id="sl-storage-used">0TB</strong>
-                    <span class="sl-meta-total" id="sl-storage-total">/ 0TB</span>
-                  </div>
-                </div>
-
-                <div class="sl-zone-compute">
-                  <div class="sl-bar-row" id="sl-cpu-row" title="Click to view CPU diagnostics">
-                    <div class="sl-bar-header">
-                      <span class="sl-bar-label">CPU</span>
-                      <span class="sl-bar-val" id="sl-cpu-val">0%</span>
+                  <div class="sl-storage-body">
+                    <div class="sl-donut-wrap">
+                      <svg class="sl-donut-svg" viewBox="0 0 64 64">
+                        <circle class="sl-donut-track" cx="32" cy="32" r="26" />
+                        <circle class="sl-donut-arc" id="sl-storage-arc" cx="32" cy="32" r="26" />
+                      </svg>
+                      <span class="sl-donut-pct" id="sl-storage-pct">0%</span>
                     </div>
-                    <div class="sl-bar-track">
-                      <div class="sl-bar-fill sl-fill-cpu" id="sl-cpu-bar" style="width: 0%"></div>
-                    </div>
-                  </div>
-                  <div class="sl-bar-row" id="sl-mem-row" title="Click to view Memory diagnostics">
-                    <div class="sl-bar-header">
-                      <span class="sl-bar-label">Memory</span>
-                      <span class="sl-bar-val" id="sl-mem-val">0%</span>
-                    </div>
-                    <div class="sl-bar-track">
-                      <div class="sl-bar-fill sl-fill-mem" id="sl-mem-bar" style="width: 0%"></div>
+                    <div class="sl-storage-meta">
+                      <div class="sl-meta-row">
+                        <span class="sl-meta-lbl" data-i18n="console.used">USED</span>
+                        <strong class="sl-meta-val" id="sl-storage-used">0TB</strong>
+                      </div>
+                      <div class="sl-meta-row">
+                        <span class="sl-meta-lbl" data-i18n="console.total">TOTAL</span>
+                        <span class="sl-meta-val-sub" id="sl-storage-total">/ 0TB</span>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                <div class="sl-zone-ip">
-                  <span class="sl-ip-label">IP:</span>
-                  <div class="sl-hero-ip" id="sl-hero-ip">0.0.0.0</div>
+                <!-- Card 2: Compute -->
+                <div class="card sl-card sl-card-compute" id="sl-zone-compute" data-metric-id="metric-cpu" title="Click to view Compute diagnostics">
+                  <div class="card-title">
+                    <svg class="ic"><use href="#i-cpu"/></svg>
+                    <span class="card-title-txt" data-i18n="console.compute">COMPUTE</span>
+                  </div>
+                  <div class="sl-compute-body">
+                    <div class="sl-bar-row" id="sl-cpu-row" title="Click to view CPU diagnostics">
+                      <div class="sl-bar-header">
+                        <span class="sl-bar-label">CPU</span>
+                        <div class="sl-bar-stat">
+                          <strong class="sl-bar-val" id="sl-cpu-val">0%</strong>
+                          <span class="sl-bar-sub" id="sl-cpu-temp">--°C</span>
+                        </div>
+                      </div>
+                      <div class="sl-bar-track">
+                        <div class="sl-bar-fill sl-fill-cpu" id="sl-cpu-bar" style="width: 0%"></div>
+                      </div>
+                    </div>
+                    <div class="sl-bar-row" id="sl-mem-row" title="Click to view Memory diagnostics">
+                      <div class="sl-bar-header">
+                        <span class="sl-bar-label">MEMORY</span>
+                        <div class="sl-bar-stat">
+                          <strong class="sl-bar-val" id="sl-mem-val">0%</strong>
+                          <span class="sl-bar-sub" id="sl-mem-used">--</span>
+                        </div>
+                      </div>
+                      <div class="sl-bar-track">
+                        <div class="sl-bar-fill sl-fill-mem" id="sl-mem-bar" style="width: 0%"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Card 3: Hero Big IP -->
+                <div class="card sl-card sl-card-ip" id="sl-zone-ip" data-metric-id="metric-net" title="Click to view Network diagnostics">
+                  <div class="card-title">
+                    <svg class="ic"><use href="#i-globe"/></svg>
+                    <span class="card-title-txt" data-i18n="console.ip_address">IP ADDRESS</span>
+                  </div>
+                  <div class="sl-ip-body">
+                    <div class="sl-hero-ip" id="sl-hero-ip">0.0.0.0</div>
+                    <div class="sl-net-rates" id="sl-net-rates">
+                      <span class="sl-net-item"><span class="sl-net-lbl">TX:</span> <strong id="sl-net-tx">0 KB/s</strong></span>
+                      <span class="sl-net-sep">•</span>
+                      <span class="sl-net-item"><span class="sl-net-lbl">RX:</span> <strong id="sl-net-rx">0 KB/s</strong></span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
