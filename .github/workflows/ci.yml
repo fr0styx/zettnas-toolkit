@@ -209,12 +209,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v7
 
-      - name: Extract Release Notes from CHANGELOG.md
+      - name: Extract Release Notes and Title from CHANGELOG.md
+        id: extract_notes
         run: |
           python3 -c "
           import re, os
           tag = os.environ.get('GITHUB_REF_NAME', '')
           notes = ''
+          title = tag
           if os.path.exists('CHANGELOG.md') and tag:
               with open('CHANGELOG.md') as f:
                   text = f.read()
@@ -222,13 +224,22 @@ jobs:
               m = re.search(pattern, text, re.DOTALL)
               if m:
                   notes = m.group(1).strip()
+                  first_line = notes.splitlines()[0].strip() if notes else ''
+                  if first_line.startswith('###'):
+                      raw_title = re.sub(r'^###\s*', '', first_line).strip()
+                      clean_title = re.sub(r'^[^\w\s\(\)]+\s*', '', raw_title)
+                      if clean_title:
+                          title = f'{tag} - {clean_title}'
           with open('RELEASE_NOTES.md', 'w') as out:
               out.write(notes)
+          with open(os.environ.get('GITHUB_OUTPUT', '/dev/null'), 'a') as gh_out:
+              gh_out.write(f'title={title}\n')
           "
 
       - name: Create Release
         uses: softprops/action-gh-release@v3
         with:
+          name: ${{ steps.extract_notes.outputs.title }}
           body_path: RELEASE_NOTES.md
           generate_release_notes: true
           draft: false

@@ -1,5 +1,5 @@
 import { syncWidgetSettingsUI } from './widgets.js';
-import { syncDesktopThemeUI } from './settings.js';
+import { syncDesktopThemeUI, openDrawer } from './settings.js';
 import { openContainerInspector, openContainerDeleteModal } from './container-modal.js';
 import { openStackModal, openStackPickerModal } from './stack-modal.js';
 import { ZettEventBus } from '../event-bus.js';
@@ -7332,21 +7332,21 @@ export function initManagement() {
   const btnOpenFans = document.getElementById('btn-open-fans-drawer');
   if (btnOpenFans) {
     btnOpenFans.addEventListener('click', () => {
-      import('./settings.js').then((m) => m.openDrawer && m.openDrawer('tab-fans'));
+      openDrawer('tab-fans');
     });
   }
 
   const btnOpenLed = document.getElementById('btn-open-led-drawer');
   if (btnOpenLed) {
     btnOpenLed.addEventListener('click', () => {
-      import('./settings.js').then((m) => m.openDrawer && m.openDrawer('tab-led'));
+      openDrawer('tab-led');
     });
   }
 
   const btnOpenLcd = document.getElementById('btn-open-lcd-drawer');
   if (btnOpenLcd) {
     btnOpenLcd.addEventListener('click', () => {
-      import('./settings.js').then((m) => m.openDrawer && m.openDrawer('tab-layout'));
+      openDrawer('tab-layout');
     });
   }
 
