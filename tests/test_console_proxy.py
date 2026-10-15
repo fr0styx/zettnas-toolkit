@@ -50,3 +50,30 @@ def test_websocket_routes_unauthorized_without_ticket(client):
     with pytest.raises(Exception):
         with client.websocket_connect("/api/vms/vm-123/serial/ws?ticket=invalid_ticket") as ws:
             pass
+
+
+@pytest.mark.asyncio
+async def test_stream_unix_socket_crlf_normalization():
+    mock_ws = AsyncMock()
+    mock_ws.receive = AsyncMock(
+        side_effect=[
+            {"type": "websocket.receive", "text": "echo test\r\n"},
+            {"type": "websocket.receive", "bytes": b"status\r\n"},
+            {"type": "websocket.disconnect"},
+        ]
+    )
+    mock_writer = MagicMock()
+    mock_writer.write = MagicMock()
+    mock_writer.drain = AsyncMock()
+    mock_writer.wait_closed = AsyncMock()
+
+    mock_reader = AsyncMock()
+    mock_reader.read = AsyncMock(return_value=b"")
+
+    with patch("os.path.exists", return_value=True):
+        with patch("asyncio.open_unix_connection", return_value=(mock_reader, mock_writer)):
+            await stream_unix_socket_to_websocket(mock_ws, "/tmp/test.sock")
+
+    # Both text and bytes must have \r\n normalized to single \r for serial TTY line discipline
+    mock_writer.write.assert_any_call(b"echo test\r")
+    mock_writer.write.assert_any_call(b"status\r")

@@ -3589,7 +3589,7 @@ export async function pasteTextToGuestConsole(text) {
     }
   } else {
     if (_activeSerialWs && _activeSerialWs.readyState === WebSocket.OPEN) {
-      _activeSerialWs.send(text.replace(/\n/g, '\r\n'));
+      _activeSerialWs.send(text.replace(/\r?\n/g, '\r'));
       showToast(`Sent ${text.length} characters to serial terminal`, 'success');
     } else {
       showToast(`Sent ${text.length} characters to terminal`, 'success');
@@ -3972,13 +3972,16 @@ async function initRealSerialTerminal(container, vmId, vmName) {
           e.stopPropagation();
           if (ws.readyState === WebSocket.OPEN) {
             if (e.key === 'Enter') {
-              ws.send('\r\n');
+              e.preventDefault();
+              ws.send('\r');
             } else if (e.key === 'Backspace') {
+              e.preventDefault();
               ws.send('\b');
             } else if (e.key === 'Tab') {
               e.preventDefault();
               ws.send('\t');
             } else if (e.key === 'Escape') {
+              e.preventDefault();
               ws.send('\x1b');
             } else if (e.key === 'ArrowUp') {
               e.preventDefault();
@@ -4014,6 +4017,7 @@ async function initRealSerialTerminal(container, vmId, vmName) {
                 ws.send(String.fromCharCode(code));
               }
             } else if (e.key.length === 1 && !e.metaKey && !e.altKey) {
+              e.preventDefault();
               ws.send(e.key);
             }
           }
@@ -4197,7 +4201,7 @@ export function openVmConsole(vmId, vmName = 'Virtual Machine', initialMode = 'g
               else _sendKeyToRfb(ch.charCodeAt(0), null);
             }
           } else if (_activeSerialWs && _activeSerialWs.readyState === WebSocket.OPEN) {
-            _activeSerialWs.send(val);
+            _activeSerialWs.send(val.replace(/\r?\n/g, '\r'));
           }
           hiddenInput.value = '';
         }
@@ -4208,6 +4212,8 @@ export function openVmConsole(vmId, vmName = 'Virtual Machine', initialMode = 'g
           if (mode === 'gui') {
             _sendKeyToRfb(0xff08, 'Backspace');
           } else if (_activeSerialWs && _activeSerialWs.readyState === WebSocket.OPEN) {
+            e.preventDefault();
+            e.stopPropagation();
             _activeSerialWs.send('\b');
           }
         } else if (e.key === 'Enter') {
@@ -4215,7 +4221,9 @@ export function openVmConsole(vmId, vmName = 'Virtual Machine', initialMode = 'g
           if (mode === 'gui') {
             _sendKeyToRfb(0xff0d, 'Enter');
           } else if (_activeSerialWs && _activeSerialWs.readyState === WebSocket.OPEN) {
-            _activeSerialWs.send('\r\n');
+            e.preventDefault();
+            e.stopPropagation();
+            _activeSerialWs.send('\r');
           }
         }
       });
@@ -4920,20 +4928,25 @@ if (typeof window !== 'undefined' && !window._vmConsoleGlobalCaptureBound) {
         // Serial TTY mode
         const cliContainer = cw.querySelector('#vm-cli-container');
         if (cliContainer && cliContainer.style.display !== 'none') {
-          if (document.activeElement !== cliContainer) {
-            cliContainer.focus();
+          if (cliContainer === document.activeElement || cliContainer.contains(e.target)) {
+            return;
           }
-          if (cliContainer.onkeydown && e.target !== cliContainer) {
+          try { cliContainer.focus({ preventScroll: true }); } catch (_) {}
+          if (cliContainer.onkeydown) {
+            e.preventDefault();
+            e.stopPropagation();
             cliContainer.onkeydown(e);
           }
           return;
         }
         const simCanvas = cw.querySelector('#vm-console-canvas');
         if (simCanvas && simCanvas.style.display !== 'none') {
-          if (document.activeElement !== simCanvas) {
-            simCanvas.focus();
+          if (document.activeElement === simCanvas || simCanvas.contains(e.target)) {
+            return;
           }
-          if (simCanvas.onkeydown && e.target !== simCanvas) {
+          if (simCanvas.onkeydown) {
+            e.preventDefault();
+            e.stopPropagation();
             simCanvas.onkeydown(e);
           }
         }

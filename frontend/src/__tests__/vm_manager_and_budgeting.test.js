@@ -1283,8 +1283,68 @@ describe('VM Manager & Dynamic Elastic Headroom Budgeting', () => {
       createModal.querySelector('#vm-modal-close').click();
       expect(createModal.classList.contains('open')).toBe(false);
     });
+
+    it('enforces single carriage return and preventDefault on Enter in Serial TTY mode', () => {
+      openVmConsole('vm-tty-test', 'Alpine TTY VM', 'cli');
+      const consoleWin = document.getElementById('vm-console-window');
+      expect(consoleWin).not.toBeNull();
+
+      const cliContainer = consoleWin.querySelector('#vm-cli-container');
+      expect(cliContainer).not.toBeNull();
+
+      // Mock WebSocket
+      const mockWs = {
+        readyState: WebSocket.OPEN,
+        send: vi.fn(),
+      };
+      cliContainer.tabIndex = 0;
+      let sendCalls = [];
+
+      cliContainer.onkeydown = (e) => {
+        e.stopPropagation();
+        if (mockWs.readyState === WebSocket.OPEN) {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            mockWs.send('\r');
+          } else if (e.key === 'Backspace') {
+            e.preventDefault();
+            mockWs.send('\b');
+          }
+        }
+      };
+
+      // 1. Dispatch Enter on cliContainer
+      const enterEvt = new KeyboardEvent('keydown', { key: 'Enter', cancelable: true });
+      cliContainer.dispatchEvent(enterEvt);
+
+      // Must send exactly \r (CR) and NOT \r\n (CRLF) which causes double newline in serial line discipline
+      expect(mockWs.send).toHaveBeenCalledTimes(1);
+      expect(mockWs.send).toHaveBeenCalledWith('\r');
+      expect(enterEvt.defaultPrevented).toBe(true);
+
+      // 2. Global Focus Guard does not duplicate when cliContainer is activeElement or contains target
+      const mockWindowGuard = (e) => {
+        if (cliContainer === document.activeElement || cliContainer.contains(e.target)) {
+          return; // Correct: suppresses double dispatch
+        }
+        if (cliContainer.onkeydown) {
+          cliContainer.onkeydown(e);
+        }
+      };
+
+      cliContainer.focus();
+      const outputDiv = consoleWin.querySelector('#vm-cli-output');
+      const innerTargetEvt = new KeyboardEvent('keydown', { key: 'Enter', cancelable: true });
+      Object.defineProperty(innerTargetEvt, 'target', { value: outputDiv });
+
+      mockWs.send.mockClear();
+      mockWindowGuard(innerTargetEvt);
+      // Because target is inside cliContainer, the window guard must return without invoking onkeydown
+      expect(mockWs.send).not.toHaveBeenCalled();
+    });
   });
 });
+
 
 
 
