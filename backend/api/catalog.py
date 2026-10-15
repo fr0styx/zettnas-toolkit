@@ -32,6 +32,9 @@ class AppComposeRequest(BaseModel):
     host_port: Optional[int] = None
     storage_root: str = "/mnt/user/appdata"
     container_name: Optional[str] = None
+    env_overrides: Optional[Dict[str, str]] = None
+    volume_overrides: Optional[Dict[str, str]] = None
+    stack_services: Optional[Dict[str, Any]] = None
 
 
 class ContainerExecRequest(BaseModel):
@@ -155,12 +158,18 @@ async def post_docker_catalog_compose(app_id: str, req: Optional[AppComposeReque
     host_port = req.host_port if req else None
     storage_root = req.storage_root if req else "/mnt/user/appdata"
     container_name = req.container_name if req else None
+    env_overrides = req.env_overrides if req else None
+    volume_overrides = req.volume_overrides if req else None
+    stack_services = req.stack_services if req else None
     res = await asyncio.to_thread(
         generate_compose_for_app,
         app_id,
         host_port=host_port,
         storage_root=storage_root,
         container_name=container_name,
+        env_overrides=env_overrides,
+        volume_overrides=volume_overrides,
+        stack_services=stack_services,
     )
     if "error" in res:
         raise HTTPException(status_code=404, detail=res["error"])

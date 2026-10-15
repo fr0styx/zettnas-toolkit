@@ -1,7 +1,50 @@
 # ZettNAS Toolkit - Release Changelog
 
+## v1.9.0 (2026-10-15) - Stable
+### 🌟 Consumer-Grade Milestone Release: Interactive WebSocket Terminal, Setup Wizard & Security Advisor, Multi-Container Stacks, Client-Side Crypt Backups & Scrutiny S.M.A.R.T. Telemetry
+
+Version 1.9.0 is a milestone release delivering consumer-grade production readiness, complete hardware orchestration, interactive terminal tooling, enhanced container app synthesis, zero-knowledge cloud backups, and predictive disk failure intelligence:
+
+- **First-Run Setup Wizard & Mandatory Password Rotation**:
+  - **Interactive 5-Step Guided Onboarding**: Step 1 Hardware & Chassis Verification, Step 2 Administrator Password Rotation, Step 3 Host Operating Role Selection (Observer Mode vs Native Storage Manager), Step 4 UPS & Power Protection, and Step 5 Notification Channels.
+  - **Default Password Invariant & Barrier Enforcement**: Prevents accidental exposure of default `admin:admin` credentials by completely blocking dialog dismissal, escape key, and backdrop clicks until a secure password is created and salted via RFC 9106 Argon2id.
+  - **Zero-Downtime Session Refresh**: Automatically re-authenticates the administrator upon rotation and refreshes API tokens seamlessly without interrupting desktop workflows.
+
+- **Live Security Posture Advisor & Real-Time Grading**:
+  - **Comprehensive Security Score Engine (`/api/system/security-posture`)**: Continuously analyzes system state and computes a live security score (0–100), letter grade (A–F), and status category (`secure`, `good`, `warning`, `critical`).
+  - **5-Point Defense-in-Depth Evaluation**:
+    - *Default Password Check* (Weight: 35): Flags default `admin` credential hash.
+    - *Administrator 2FA / TOTP Check* (Weight: 15): Validates two-factor authentication setup for superadmin accounts.
+    - *HTTPS & Reverse Proxy Transport* (Weight: 15): Verifies TLS transport encryption and SSL offloading.
+    - *SMB Network Share Exposure* (Weight: 20): Identifies unauthenticated anonymous/guest access shares on the local LAN.
+    - *API Token Hygiene* (Weight: 15): Flags stale API tokens dormant for over 90 days.
+  - **Mission Control Security Cockpit**: Live interactive audit checklist displaying passed and actionable checks with direct navigation links to remediation tools.
+
+- **Interactive Bidirectional WebSocket Container Terminal**:
+  - **Native Docker Socket PTY Stream (`/api/docker/containers/{id}/terminal/ws`)**: Bidirectional terminal session via direct Docker engine socket hijack (`Upgrade: tcp`), full ANSI color support, real-time typing, and Enter-to-execute streaming.
+  - **Dynamic PTY Window Resize (`/exec/{id}/resize`)**: Synchronizes browser modal dimensions (columns/rows) dynamically with container pseudo-terminal allocation.
+  - **Multi-Token Authentication**: Secure authentication supporting session cookies and Bearer tokens for WebSocket upgrades.
+
+- **Multi-Container Compose Stacks & App Catalog Synthesizer**:
+  - **Dynamic Multi-Service Compose Synthesis**: Expands the built-in 1-click App Catalog to support multi-container stacks with companion databases and cache layers (e.g. Nextcloud + MariaDB + Redis, Vaultwarden, Immich).
+  - **Dependency Orchestration (`depends_on`)**: Resolves service startup order and network linkage automatically.
+  - **Customizable Environment & Storage Mounts**: Supports granular per-service `.env` overrides and dynamic share volume paths.
+
+- **Client-Side `rclone crypt` Encryption in Hyper-Backup**:
+  - **Zero-Knowledge Encrypted Offsite Sync**: Direct integration of `rclone crypt` overlays for hyper-backup cloud repositories.
+  - **Client-Side Encryption**: Encrypts all data locally with AES-XTS prior to transmission to cloud storage providers.
+  - **Automated Key Obfuscation**: Securely obscures passwords and directory encryption salts in `rclone.conf`.
+
+- **Scrutiny-Style S.M.A.R.T. Velocity & Scheduled Test Runner**:
+  - **Failure Probability Scoring & Risk Classification**: Real-time failure risk estimation (`low`, `moderate`, `high`, `critical`) and probability (0.00–0.99) based on attribute velocity across Reallocated Sectors (05), Pending Sectors (C5), Offline Uncorrectable (C6), CRC Errors (C7), and NVMe wear percentage.
+  - **Configurable Background Test Scheduler (`/api/storage/smart/schedule`)**: Configurable Short and Extended SMART test runner in `scheduler.py` with custom days, hours, and frequencies.
+  - **Thermal & Spindown Safety Invariant**: Strictly enforces `smartctl -n standby` across all scheduled tests, never spinning up sleeping drive platters.
+
+---
+
 ## v1.8.2 (2026-10-14) - Stable
 ### 🛡️ System Observability & Diagnostics Overhaul, Native USB HID UPS Engine, NVMe S.M.A.R.T. Self-Test Reports, Optimized Fan Cooldown & Streamline Front LCD Layout
+
 
 Version 1.8.2 introduces an enterprise-grade system observability and diagnostics bundle, native direct USB HID UPS monitoring, executive S.M.A.R.T. self-test report cards with NVMe DST initiation, optimized Zero-RPM fan cooldown timers, a streamlined Big IP layout for the front-panel LCD, and expanded storage pool discovery across ZettOS and Zettlab D4/D6/D6U/D8U appliances:
 

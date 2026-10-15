@@ -1,7 +1,8 @@
 /**
  * ZettNAS Toolkit - First-Run Setup Wizard
  * Guides the user through initial onboarding: hardware verification,
- * setting a secure administrator password, and initial configuration.
+ * setting a secure administrator password, host operating role,
+ * UPS detection, and notification channels.
  */
 import { api, auth } from '../api.js';
 import { state } from '../state.js';
@@ -28,7 +29,16 @@ export function initSetupWizard() {
   const btnSubmit = document.getElementById('setup-wizard-submit');
   const manualLaunchBtn = document.getElementById('btn-launch-setup-wizard');
 
+  const isPasswordDefault = () => {
+    const s = state.stats || state.latestStats;
+    return s?.security?.is_default_password === true;
+  };
+
   const closeWizard = (dismiss = true) => {
+    if (dismiss && isPasswordDefault()) {
+      showToast(t('setup.cannot_dismiss', 'Security Setup Required: Please configure a new administrator password before continuing.'), 'warning');
+      return;
+    }
     modal.classList.remove('open');
     if (dismiss) {
       sessionStorage.setItem('zettnas_wizard_dismissed', '1');
@@ -39,9 +49,29 @@ export function initSetupWizard() {
   if (btnSkip) btnSkip.addEventListener('click', () => closeWizard(true));
   if (manualLaunchBtn) {
     manualLaunchBtn.addEventListener('click', () => {
-      openSetupWizard();
+      openSetupWizard(null, true);
     });
   }
+
+  // Prevent backdrop clicks from bypassing setup when default password is in use
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      closeWizard(true);
+    }
+  });
+
+  // Guard Escape key when password is required
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal.classList.contains('open')) {
+      if (isPasswordDefault()) {
+        e.preventDefault();
+        e.stopPropagation();
+        showToast(t('setup.cannot_dismiss', 'Security Setup Required: Please configure a new administrator password before continuing.'), 'warning');
+      } else {
+        closeWizard(true);
+      }
+    }
+  }, true);
 
   if (btnSubmit) {
     btnSubmit.addEventListener('click', async () => {
@@ -79,22 +109,47 @@ export function initSetupWizard() {
       btnSubmit.disabled = true;
 
       try {
+        // 1. Update password
         await api.post('/api/security', {
           current_password: currentPwd || 'admin',
           new_password: newPwd
         });
 
-        // Re-authenticate with new password to refresh session token seamlessly
+        // 2. Save Host Mode Preference
+        const selectedMode = document.querySelector('input[name="setup-host-mode"]:checked')?.value || 'observer';
+        localStorage.setItem('zettnas_host_mode', selectedMode);
+
+        // 3. Save Notification Webhook if provided
+        const notifUrl = (document.getElementById('setup-notif-url')?.value || '').trim();
+        if (notifUrl) {
+          try {
+            await api.post('/api/notifications/config', {
+              urls: [notifUrl],
+              enabled: true
+            });
+          } catch (notifErr) {
+            console.warn('[SetupWizard] Failed to save notification URL:', notifErr);
+          }
+        }
+
+        // 4. Re-authenticate with new password to refresh session token seamlessly
         try {
           const loginRes = await api.post('/api/auth/login', { password: newPwd });
           if (loginRes && loginRes.token) {
             auth.setToken(loginRes.token);
           }
         } catch (authErr) {
-          console.warn('Re-auth failed after password change', authErr);
+          console.warn('[SetupWizard] Re-auth failed after password change', authErr);
         }
 
         localStorage.setItem('zettnas_wizard_completed', '1');
+        if (state.stats?.security) {
+          state.stats.security.is_default_password = false;
+        }
+        if (state.latestStats?.security) {
+          state.latestStats.security.is_default_password = false;
+        }
+
         closeWizard(false);
 
         const warnEl = document.getElementById('sec-default-pwd-warning');
@@ -117,7 +172,7 @@ export function checkAndTriggerSetupWizard(stats) {
     return;
   }
 
-  // Trigger only if default password is in use and not dismissed in this session
+  // Trigger if default password is in use and not dismissed in this session
   if (stats && stats.security && stats.security.is_default_password) {
     if (sessionStorage.getItem('zettnas_wizard_dismissed') === '1') {
       return;
@@ -129,21 +184,24 @@ export function checkAndTriggerSetupWizard(stats) {
   }
 }
 
-export function openSetupWizard(stats = null) {
+export function openSetupWizard(stats = null, forced = false) {
   const modal = document.getElementById('setup-wizard-modal');
   if (!modal) return;
 
   const currentStats = stats || state.stats || state.latestStats;
-  const isDefaultPwd = currentStats?.security?.is_default_password === true;
+  const isDefaultPwd = forced ? false : (currentStats?.security?.is_default_password === true);
   const skipBtn = document.getElementById('setup-wizard-skip');
   const closeBtn = document.getElementById('setup-wizard-close');
 
   if (isDefaultPwd) {
     if (skipBtn) skipBtn.style.display = 'none';
-    if (closeBtn) closeBtn.title = 'Security setup required: please change default admin password';
+    if (closeBtn) closeBtn.style.display = 'none';
   } else {
     if (skipBtn) skipBtn.style.display = 'inline-block';
-    if (closeBtn) closeBtn.title = 'Close dialog';
+    if (closeBtn) {
+      closeBtn.style.display = 'inline-block';
+      closeBtn.title = 'Close dialog';
+    }
   }
 
   if (currentStats) {
@@ -191,6 +249,23 @@ export function openSetupWizard(stats = null) {
       } else {
         hwLeds.textContent = 'WS2812B Controller Not Detected';
         hwLeds.style.color = 'var(--muted)';
+      }
+    }
+
+    // UPS Status
+    const upsBadge = document.getElementById('setup-ups-badge');
+    const upsText = document.getElementById('setup-ups-text');
+    if (upsBadge && upsText) {
+      const ups = currentStats?.ups;
+      const isOnline = ups && (ups.status === 'OL' || ups.status === 'online' || (ups.battery_charge && ups.battery_charge > 0));
+      if (isOnline) {
+        upsBadge.style.background = 'var(--ok2, #4ade80)';
+        upsText.textContent = `${t('setup.ups_detected', 'UPS Online & Monitored')} (${ups.model || ups.ups_name || 'NUT'}) - ${ups.battery_charge || 100}%`;
+        upsText.style.color = 'var(--ok2, #4ade80)';
+      } else {
+        upsBadge.style.background = 'var(--muted, #64748b)';
+        upsText.textContent = t('setup.ups_none', 'No UPS detected. You can configure a NUT host later in Settings.');
+        upsText.style.color = 'var(--muted, #94a3b8)';
       }
     }
   }

@@ -6787,6 +6787,7 @@ export function initManagement() {
     } else if (paneId === 'mgmt-pane-security') {
       if (typeof fetchAPITokens === 'function') fetchAPITokens();
       if (typeof renderApiTokens === 'function') renderApiTokens();
+      fetchAndRenderSecurityPosture();
     } else if (paneId === 'mgmt-pane-notifications') {
       fetchAndRenderNotificationConfig();
     } else if (paneId === 'mgmt-pane-users') {
@@ -7255,6 +7256,61 @@ export function initManagement() {
         window.openManagementWindow();
       }
     });
+  }
+
+  // Security Posture live check and badge rendering
+  async function fetchAndRenderSecurityPosture() {
+    const badge = document.getElementById('sec-advisor-score-badge');
+    const container = document.getElementById('sec-advisor-items');
+    if (!badge && !container) return;
+
+    try {
+      const data = await api.get('/api/system/security-posture');
+      if (!data) return;
+
+      if (badge) {
+        badge.textContent = `Score: ${data.score}/100 (Grade ${data.grade})`;
+        if (data.score >= 90) {
+          badge.style.background = 'rgba(37,194,160,0.15)';
+          badge.style.color = '#25c2a0';
+          badge.style.borderColor = 'rgba(37,194,160,0.3)';
+        } else if (data.score >= 75) {
+          badge.style.background = 'rgba(56,189,248,0.15)';
+          badge.style.color = '#38bdf8';
+          badge.style.borderColor = 'rgba(56,189,248,0.3)';
+        } else if (data.score >= 50) {
+          badge.style.background = 'rgba(234,179,8,0.15)';
+          badge.style.color = '#eab308';
+          badge.style.borderColor = 'rgba(234,179,8,0.3)';
+        } else {
+          badge.style.background = 'rgba(239,68,68,0.15)';
+          badge.style.color = '#ef4444';
+          badge.style.borderColor = 'rgba(239,68,68,0.3)';
+        }
+      }
+
+      if (container && Array.isArray(data.checks)) {
+        container.innerHTML = data.checks.map(c => {
+          const passIcon = c.passed ? '✔' : '✖';
+          const passColor = c.passed ? '#22c55e' : '#ef4444';
+          const badgeBg = c.passed ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)';
+          return `
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 10px; background:${badgeBg}; border:1px solid ${c.passed ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.3)'}; border-radius:6px;">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span style="color:${passColor}; font-weight:800; font-size:12px;">${passIcon}</span>
+                <div>
+                  <div style="font-weight:600; color:#f8fafc;">${escapeHtml(c.name)}</div>
+                  <div style="font-size:10.5px; color:${c.passed ? '#94a3b8' : '#fca5a5'};">${escapeHtml(c.details || '')}</div>
+                </div>
+              </div>
+              <span style="font-size:10px; font-weight:700; color:${passColor}; text-transform:uppercase;">${c.passed ? 'PASSED' : 'NEEDS ACTION'}</span>
+            </div>
+          `;
+        }).join('');
+      }
+    } catch (err) {
+      console.warn('[SecurityPosture] Failed to fetch posture:', err);
+    }
   }
 
   // Synchronize security alert badge on Security card and sidebar

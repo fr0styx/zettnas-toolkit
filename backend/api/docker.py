@@ -7,7 +7,7 @@ import socket
 import time
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, WebSocket
 from pydantic import BaseModel, Field
 
 from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
@@ -385,6 +385,45 @@ async def post_docker_container_exec(container_id: str, req: ContainerExecReques
     if not res.get("success"):
         raise HTTPException(status_code=400, detail=res.get("error", "Execution failed"))
     return res
+
+
+async def _authenticate_ws(websocket: WebSocket) -> bool:
+    token = (
+        websocket.query_params.get("token")
+        or websocket.query_params.get("ticket")
+        or websocket.cookies.get("zettnas_session")
+        or websocket.cookies.get("session_token")
+        or websocket.cookies.get("zat_token")
+    )
+    if not token:
+        return False
+    from backend.auth import get_current_session, validate_session
+    from backend.users_db import validate_scoped_api_token, validate_user_session
+
+    if get_current_session(token) or validate_session(token) or validate_user_session(token):
+        return True
+    if validate_scoped_api_token(token):
+        return True
+    return False
+
+
+@router.websocket("/docker/containers/{container_id}/terminal/ws")
+@router.websocket("/docker/containers/{container_id}/exec/ws")
+async def websocket_docker_terminal(websocket: WebSocket, container_id: str):
+    """
+    Interactive bidirectional WebSocket PTY terminal.
+    Streams ANSI stdout/stderr directly from container shell and pipes user keystrokes to stdin.
+    Supports resize control messages: {"type": "resize", "cols": 120, "rows": 40}.
+    """
+    if not await _authenticate_ws(websocket):
+        await websocket.close(code=1008, reason="Unauthorized")
+        return
+
+    await websocket.accept()
+    from backend.services.docker_terminal import stream_container_terminal
+
+    shell = websocket.query_params.get("shell") or "/bin/sh"
+    await stream_container_terminal(websocket, container_id, shell=shell)
 
 
 class DockerContainerDeleteRequest(BaseModel):

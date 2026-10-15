@@ -9,6 +9,7 @@ import { state } from '../state.js';
 import { escapeHtml } from '../utils.js';
 import { showToast } from '../toast.js';
 import { fetchCurrentProfile, getCurrentUser, setCurrentUser } from './users.js';
+import { openSetupWizard } from './setup-wizard.js';
 
 let _pendingMfaToken = null;
 let _selectedUser = null;
@@ -402,6 +403,12 @@ async function doLogin() {
       if (loginBtn) loginBtn.textContent = t('login.btn', 'SECURE LOGIN');
       loginPwd.value = '';
       ZettEventBus.emit('auth:login');
+
+      if (data.must_change_password || data.is_default_password || data.user?.must_change_password) {
+        setTimeout(() => {
+          openSetupWizard(null, false);
+        }, 350);
+      }
     } else {
       let msg = data.detail || t('login.invalid', 'INVALID CREDENTIALS');
       let holdMs = 2000;

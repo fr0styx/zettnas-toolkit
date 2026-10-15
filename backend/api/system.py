@@ -964,3 +964,15 @@ async def system_network_topology():
     from backend.hardware.network import get_network_topology
 
     return await asyncio.to_thread(get_network_topology)
+
+
+@router.get("/system/security-posture")
+async def system_security_posture(request: Request):
+    """
+    Evaluates real-time security posture across authentication, MFA, HTTPS,
+    guest network shares, and API credential hygiene.
+    Returns security score (0-100), letter grade (A-F), and actionable remediation issues.
+    """
+    from backend.services.security_advisor import evaluate_security_posture
+
+    return await asyncio.to_thread(evaluate_security_posture, request)

@@ -286,7 +286,7 @@ def migrate_legacy_data(db_path: Optional[str] = None) -> None:
                     password_hash,
                     "superadmin",
                     "active",
-                    1 if password_hash == hash_password("admin") else 0,
+                    1 if verify_password("admin", password_hash) else 0,
                     f"/mnt/user/homes/{admin_username}",
                     now,
                     now,

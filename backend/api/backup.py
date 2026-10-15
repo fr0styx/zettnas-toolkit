@@ -45,6 +45,8 @@ class BackupJobModel(BaseModel):
     schedule: str = Field("daily", description="'hourly', 'daily', 'weekly', or 'manual'")
     retention_count: int = Field(7, description="Number of historical snapshots to retain")
     enabled: bool = Field(True, description="Whether scheduled execution is active")
+    encrypted: bool = Field(False, description="Enable client-side rclone crypt encryption")
+    encryption_password: Optional[str] = Field(None, description="Password for client-side encryption")
 
 
 class SnapshotCreateModel(BaseModel):

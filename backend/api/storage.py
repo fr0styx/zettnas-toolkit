@@ -503,3 +503,59 @@ def restore_storage_snapshot(pool_id: str, req: StorageSnapshotRestoreRequest) -
         return res
     except PlatformCapabilityError as e:
         raise HTTPException(status_code=403, detail=str(e))
+
+
+class SmartScheduleUpdateRequest(BaseModel):
+    enabled: Optional[bool] = None
+    short_test_interval: Optional[str] = None
+    short_test_day: Optional[int] = None
+    short_test_hour: Optional[int] = None
+    extended_test_interval: Optional[str] = None
+    extended_test_day: Optional[int] = None
+    extended_test_hour: Optional[int] = None
+    skip_if_standby: Optional[bool] = None
+
+
+@router.get("/smart/schedule")
+def get_smart_test_schedule() -> Dict[str, Any]:
+    """
+    Returns current SMART test schedule, intervals, and last execution timestamps.
+    """
+    from backend.services.scheduler import get_smart_schedule
+
+    return get_smart_schedule()
+
+
+@router.post("/smart/schedule", dependencies=[Depends(require_scope("storage:admin"))])
+def update_smart_test_schedule(req: SmartScheduleUpdateRequest) -> Dict[str, Any]:
+    """
+    Configures automated Short and Extended SMART test schedules.
+    Preserves skip_if_standby=True invariant to never spin up sleeping drives.
+    """
+    from backend.services.scheduler import save_smart_schedule
+
+    payload = {k: v for k, v in req.model_dump().items() if v is not None}
+    return save_smart_schedule(payload)
+
+
+@router.get("/smart/failure-predictions")
+def get_smart_failure_predictions() -> List[Dict[str, Any]]:
+    """
+    Scrutiny-style failure probability analytics and historical attribute velocity
+    for all discovered storage drives.
+    """
+    from backend.db import query_smart_velocity
+    from backend.hardware.disks import _discover_disks
+
+    disks = _discover_disks()
+    predictions = []
+    for d in disks:
+        dev_name = d.get("dev", "")
+        if dev_name:
+            v_data = query_smart_velocity(dev_name)
+            v_data["model"] = d.get("model", "")
+            v_data["serial"] = d.get("serial", "")
+            v_data["type"] = d.get("type", "hdd")
+            v_data["status"] = d.get("status", "OK")
+            predictions.append(v_data)
+    return predictions

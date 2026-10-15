@@ -224,6 +224,8 @@ def _build_session_response(
     )
     logger.info(f"Successful login for '{user['username']}' from {ip} via {method}.")
 
+    is_def_pwd = is_using_default_password()
+    must_change = bool(user.get("must_change_password")) or is_def_pwd
     response_data = {
         "status": "ok",
         "token": token,
@@ -237,11 +239,12 @@ def _build_session_response(
             "scopes": user.get("scopes", []),
             "mfa_enabled": bool(user.get("mfa_enabled")),
             "idp_type": user.get("idp_type", "local"),
-            "must_change_password": bool(user.get("must_change_password")),
+            "must_change_password": must_change,
             "avatar_url": user.get("avatar_url", ""),
             "home_directory": user.get("home_directory", ""),
         },
-        "is_default_password": is_using_default_password(),
+        "must_change_password": must_change,
+        "is_default_password": is_def_pwd,
     }
     response = JSONResponse(content=response_data)
 
@@ -629,6 +632,7 @@ def request_stream_ticket(request: Request):
 @router.get("/auth/me")
 def get_current_user_profile(request: Request):
     user = _get_authenticated_user(request)
+    is_def_pwd = is_using_default_password()
     if not user:
         # Fallback for internal LCD token or legacy session
         return {
@@ -642,7 +646,8 @@ def get_current_user_profile(request: Request):
             "status": "active",
             "mfa_enabled": False,
             "idp_type": "local",
-            "is_default_password": is_using_default_password(),
+            "must_change_password": is_def_pwd,
+            "is_default_password": is_def_pwd,
             "preferences": {},
         }
     return {
@@ -656,12 +661,12 @@ def get_current_user_profile(request: Request):
         "status": user.get("status", "active"),
         "mfa_enabled": bool(user.get("mfa_enabled")),
         "idp_type": user.get("idp_type", "local"),
-        "must_change_password": bool(user.get("must_change_password")),
+        "must_change_password": bool(user.get("must_change_password")) or is_def_pwd,
         "avatar_url": user.get("avatar_url", ""),
         "home_directory": user.get("home_directory", ""),
         "storage_quota_bytes": user.get("storage_quota_bytes", 0),
         "preferences": user.get("preferences", {}),
-        "is_default_password": is_using_default_password(),
+        "is_default_password": is_def_pwd,
     }
 
 

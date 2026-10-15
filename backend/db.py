@@ -567,6 +567,14 @@ def query_smart_velocity(dev: str, conn: sqlite3.Connection = None) -> dict:
                 "realloc_current": 0,
                 "realloc_7d_delta": 0,
                 "realloc_30d_delta": 0,
+                "failure_probability": 0.0,
+                "failure_risk": "low",
+                "key_attributes": {
+                    "reallocated_sectors": 0,
+                    "pending_sectors": 0,
+                    "uncorrectable_sectors": 0,
+                    "crc_errors": 0,
+                },
                 "predictive_velocity": {
                     "sample_points": 0,
                     "realloc_slope_per_1000h": 0.0,
@@ -688,6 +696,29 @@ def query_smart_velocity(dev: str, conn: sqlite3.Connection = None) -> dict:
         except Exception:
             pass
 
+        # Compute Failure Probability Telemetry (Scrutiny-style degradation assessment)
+        if status == "critical" or shedding:
+            failure_prob = min(0.98, round(0.85 + (delta_7d * 0.02), 2))
+            failure_risk = "critical"
+        elif is_accelerating:
+            failure_prob = 0.72
+            failure_risk = "high"
+        elif stuck_pending:
+            failure_prob = 0.65
+            failure_risk = "high"
+        elif curr_nvme_wear is not None and curr_nvme_wear >= 90:
+            failure_prob = min(0.95, round(0.60 + ((curr_nvme_wear - 90) * 0.035), 2))
+            failure_risk = "high" if curr_nvme_wear >= 95 else "moderate"
+        elif delta_30d > 0:
+            failure_prob = min(0.48, round(0.25 + (delta_30d * 0.05), 2))
+            failure_risk = "moderate"
+        elif (latest["reallocated_sectors"] or 0) > 0:
+            failure_prob = 0.15
+            failure_risk = "moderate"
+        else:
+            failure_prob = 0.01
+            failure_risk = "low"
+
         # Historical sparkline points for 30-day velocity visualization
         history_rows = c.execute(
             "SELECT ts, temp, reallocated_sectors, pending_sectors, nvme_pct_used FROM smart_history WHERE dev = ? AND ts >= ? ORDER BY ts ASC",
@@ -707,6 +738,8 @@ def query_smart_velocity(dev: str, conn: sqlite3.Connection = None) -> dict:
         return {
             "dev": dev,
             "status": status,
+            "failure_probability": failure_prob,
+            "failure_risk": failure_risk,
             "shedding_sectors": shedding,
             "stuck_pending": stuck_pending,
             "realloc_current": curr_realloc,
@@ -714,6 +747,14 @@ def query_smart_velocity(dev: str, conn: sqlite3.Connection = None) -> dict:
             "realloc_30d_delta": delta_30d,
             "nvme_pct_used": curr_nvme_wear,
             "nvme_media_errors": curr_nvme_err,
+            "key_attributes": {
+                "05_reallocated_sectors": curr_realloc,
+                "c5_pending_sectors": latest["pending_sectors"] or 0,
+                "c6_offline_uncorrectable": latest["offline_uncorrectable"] or 0,
+                "c7_crc_errors": latest["crc_errors"] or 0,
+                "nvme_pct_used": curr_nvme_wear,
+                "power_on_hours": latest["power_on_hours"] or 0,
+            },
             "predictive_velocity": {
                 "sample_points": len(x_vals),
                 "realloc_slope_per_1000h": realloc_slope_per_1000h,
@@ -741,6 +782,14 @@ def query_smart_velocity(dev: str, conn: sqlite3.Connection = None) -> dict:
             "realloc_current": 0,
             "realloc_7d_delta": 0,
             "realloc_30d_delta": 0,
+            "failure_probability": 0.0,
+            "failure_risk": "low",
+            "key_attributes": {
+                "reallocated_sectors": 0,
+                "pending_sectors": 0,
+                "uncorrectable_sectors": 0,
+                "crc_errors": 0,
+            },
             "recommendation": "Unable to calculate velocity",
             "sparkline_points": [],
         }

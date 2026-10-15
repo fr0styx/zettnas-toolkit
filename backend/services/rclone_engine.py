@@ -274,6 +274,45 @@ CURATED_PROVIDERS = [
             },
         ],
     },
+    {
+        "type": "crypt",
+        "name": "Encrypted Remote (rclone crypt)",
+        "category": "Encryption & Security",
+        "icon": "shield-check",
+        "description": "Client-side encrypted overlay remote. Encrypts file contents and directory names before sending to any remote or storage path.",
+        "fields": [
+            {
+                "name": "remote",
+                "label": "Base Remote Path",
+                "type": "text",
+                "placeholder": "my-remote:path or /mnt/user/backups/crypt",
+                "required": True,
+            },
+            {"name": "password", "label": "Encryption Password", "type": "password", "required": True},
+            {
+                "name": "password2",
+                "label": "Salt / Secondary Password (Optional)",
+                "type": "password",
+                "required": False,
+            },
+            {
+                "name": "filename_encryption",
+                "label": "Filename Encryption",
+                "type": "select",
+                "options": ["standard", "obfuscate", "off"],
+                "default": "standard",
+                "required": False,
+            },
+            {
+                "name": "directory_name_encryption",
+                "label": "Directory Name Encryption",
+                "type": "select",
+                "options": ["true", "false"],
+                "default": "true",
+                "required": False,
+            },
+        ],
+    },
 ]
 
 
@@ -518,7 +557,7 @@ class RcloneEngine:
                 if v is None or v == "":
                     continue
                 # If password field, obscure it
-                if k.lower() in ("pass", "password"):
+                if k.lower() in ("pass", "password", "password2"):
                     v = self._obscure_password(str(v))
                 elif k == "token" and isinstance(v, str):
                     v_str = v.strip()
@@ -537,6 +576,29 @@ class RcloneEngine:
 
             logger.info(f"[RCLONE] Successfully saved remote '{name}' (type={remote_type}) to config.")
             return {"status": "ok", "name": name, "type": remote_type}
+
+    def create_crypt_remote(
+        self,
+        name: str,
+        base_remote_path: str,
+        password: str,
+        password2: Optional[str] = None,
+        filename_encryption: str = "standard",
+        directory_name_encryption: bool = True,
+    ) -> Dict[str, Any]:
+        """
+        Creates or updates an rclone crypt overlay remote wrapping a base remote or directory path.
+        All data written to this remote is encrypted on the client side with AES-XTS before transmission.
+        """
+        params = {
+            "remote": base_remote_path,
+            "password": password,
+            "filename_encryption": filename_encryption,
+            "directory_name_encryption": "true" if directory_name_encryption else "false",
+        }
+        if password2:
+            params["password2"] = password2
+        return self.create_remote(name, "crypt", params)
 
     def delete_remote(self, name: str) -> Dict[str, Any]:
         """Unmounts and removes a remote from rclone.conf."""
@@ -1040,3 +1102,21 @@ def get_rclone_engine() -> RcloneEngine:
     if _rclone_engine is None:
         _rclone_engine = RcloneEngine()
     return _rclone_engine
+
+
+def create_crypt_remote(
+    name: str,
+    base_remote_path: str,
+    password: str,
+    password2: Optional[str] = None,
+    filename_encryption: str = "standard",
+    directory_name_encryption: bool = True,
+) -> Dict[str, Any]:
+    return get_rclone_engine().create_crypt_remote(
+        name,
+        base_remote_path,
+        password,
+        password2=password2,
+        filename_encryption=filename_encryption,
+        directory_name_encryption=directory_name_encryption,
+    )

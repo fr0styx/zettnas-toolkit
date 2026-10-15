@@ -938,10 +938,14 @@ def generate_compose_for_app(
     host_port: Optional[int] = None,
     storage_root: str = "/mnt/user/appdata",
     container_name: Optional[str] = None,
+    env_overrides: Optional[Dict[str, str]] = None,
+    volume_overrides: Optional[Dict[str, str]] = None,
+    stack_services: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """
     Generates a valid Docker Compose definition for 1-click deployment.
-    Supports both standalone container templates and remote stack templates.
+    Supports both standalone container templates, multi-container stacks,
+    dynamic .env overrides, and share volume selection.
     """
     app = get_catalog_app(app_id)
     if not app:
@@ -981,13 +985,21 @@ def generate_compose_for_app(
                 except Exception:
                     pass
 
-    # Build volumes list with storage_slug
+    # Build volumes list with volume_overrides or default storage_slug
     volumes_list = []
-    for vol_key, vol_target in app.get("volumes", {}).items():
-        host_path = f"{storage_root.rstrip('/')}/{storage_slug}/{vol_key}"
+    app_volumes = dict(app.get("volumes", {}))
+    for vol_key, vol_target in app_volumes.items():
+        if volume_overrides and vol_key in volume_overrides:
+            host_path = volume_overrides[vol_key]
+        else:
+            host_path = f"{storage_root.rstrip('/')}/{storage_slug}/{vol_key}"
         volumes_list.append(f"{host_path}:{vol_target}")
 
-    environment_list = [f"{k}={v}" for k, v in app.get("env", {}).items()]
+    # Build environment with env_overrides
+    merged_env = dict(app.get("env", {}))
+    if env_overrides:
+        merged_env.update(env_overrides)
+    environment_list = [f"{k}={v}" for k, v in merged_env.items()]
 
     # Format ports
     ports_mapped = []
@@ -1010,18 +1022,25 @@ def generate_compose_for_app(
 
     image_name = app.get("image") or f"{service_name}:latest"
 
+    # Multi-container companion stack services
+    extra_services = dict(app.get("stack_services", {}))
+    if stack_services:
+        extra_services.update(stack_services)
+
+    main_service_def: Dict[str, Any] = {
+        "container_name": service_name,
+        "image": image_name,
+        "restart": "unless-stopped",
+        "ports": ports_mapped,
+        "environment": environment_list,
+        "volumes": volumes_list,
+    }
+    if extra_services:
+        main_service_def["depends_on"] = list(extra_services.keys())
+
     compose_dict = {
         "version": "3.8",
-        "services": {
-            service_name: {
-                "container_name": service_name,
-                "image": image_name,
-                "restart": "unless-stopped",
-                "ports": ports_mapped,
-                "environment": environment_list,
-                "volumes": volumes_list,
-            }
-        },
+        "services": {service_name: main_service_def},
     }
 
     yaml_lines = [
@@ -1044,6 +1063,58 @@ def generate_compose_for_app(
         yaml_lines.append("    volumes:")
         for vol_item in volumes_list:
             yaml_lines.append(f"      - {vol_item}")
+    if extra_services:
+        yaml_lines.append("    depends_on:")
+        for dep in extra_services.keys():
+            yaml_lines.append(f"      - {dep}")
+
+    # Append companion stack services
+    for s_name, s_def in extra_services.items():
+        clean_s_name = re.sub(r"[^a-zA-Z0-9_.-]+", "_", s_name)
+        s_image = s_def.get("image", f"{clean_s_name}:latest")
+        s_env = s_def.get("env", {})
+        s_env_list = [f"{k}={v}" for k, v in s_env.items()] if isinstance(s_env, dict) else (s_env or [])
+        s_vols = s_def.get("volumes", {})
+        s_vol_list = []
+        if isinstance(s_vols, dict):
+            for vk, vt in s_vols.items():
+                s_vol_list.append(f"{storage_root.rstrip('/')}/{storage_slug}/{clean_s_name}_{vk}:{vt}")
+        elif isinstance(s_vols, list):
+            s_vol_list = s_vols
+        s_ports = s_def.get("ports", [])
+
+        compose_dict["services"][clean_s_name] = {
+            "container_name": clean_s_name,
+            "image": s_image,
+            "restart": "unless-stopped",
+        }
+        if s_ports:
+            compose_dict["services"][clean_s_name]["ports"] = s_ports
+        if s_env_list:
+            compose_dict["services"][clean_s_name]["environment"] = s_env_list
+        if s_vol_list:
+            compose_dict["services"][clean_s_name]["volumes"] = s_vol_list
+
+        yaml_lines.extend(
+            [
+                f"  {clean_s_name}:",
+                f"    container_name: {clean_s_name}",
+                f"    image: {s_image}",
+                "    restart: unless-stopped",
+            ]
+        )
+        if s_ports:
+            yaml_lines.append("    ports:")
+            for p in s_ports:
+                yaml_lines.append(f'      - "{p}"')
+        if s_env_list:
+            yaml_lines.append("    environment:")
+            for e in s_env_list:
+                yaml_lines.append(f"      - {e}")
+        if s_vol_list:
+            yaml_lines.append("    volumes:")
+            for v in s_vol_list:
+                yaml_lines.append(f"      - {v}")
 
     return {
         "app_id": app_id,

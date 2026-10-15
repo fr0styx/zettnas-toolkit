@@ -203,13 +203,13 @@
   })();
 </script>
 <style>html,body{color:#eaf1f8;background-color:#080c10;width:100%;height:100%;margin:0;padding:0;overflow:hidden}html.auth-required body{background:radial-gradient(circle at 50% 20%,#151d29 0%,#080c10 70%)!important}#login-overlay{z-index:999999;background:#080c10;justify-content:center;align-items:center;display:flex;position:fixed;inset:0}html.has-auth-session #login-overlay{display:none!important}html.auth-required #login-overlay{display:flex!important}html.is-desktop-locked #lock-overlay{opacity:1!important;display:flex!important}html.is-desktop-locked body{overflow:hidden!important}html.auth-required .studio-viewport-wrapper,html.auth-required .suite-navbar,html.auth-required #desktop-icons-container,html.auth-required .desktop-icons-container,html.auth-required .top-nav,html.auth-required #desktop-widgets-container,html.auth-required #os-dock-container,html.auth-required .smart-modal-backdrop,html.auth-required .os-window,html.auth-required .notif-center-window{display:none!important}</style>
-  <script type="module" crossorigin src="/assets/index-BuxFVa2_.js"></script>
+  <script type="module" crossorigin src="/assets/index-CLki8F8J.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-CbXtAM7H.js">
-  <link rel="modulepreload" crossorigin href="/assets/dock-CyYRv-dU.js">
-  <link rel="modulepreload" crossorigin href="/assets/dashboard-8JXlwXhx.js">
-  <link rel="modulepreload" crossorigin href="/assets/users-WmEBTREP.js">
-  <link rel="modulepreload" crossorigin href="/assets/auth-CmrunEAo.js">
-  <link rel="modulepreload" crossorigin href="/assets/vm-manager-DEOXw3mW.js">
+  <link rel="modulepreload" crossorigin href="/assets/dock-B-nMVXPr.js">
+  <link rel="modulepreload" crossorigin href="/assets/setup-wizard--Wyl28mI.js">
+  <link rel="modulepreload" crossorigin href="/assets/dashboard-BlsZJFhx.js">
+  <link rel="modulepreload" crossorigin href="/assets/users-CPXTPzRS.js">
+  <link rel="modulepreload" crossorigin href="/assets/auth-B0H47wcE.js">
   <link rel="stylesheet" crossorigin href="/assets/index-BZSDJ-Kz.css">
 </head>
 <body class="studio-workbench no-specular-glow">
@@ -1596,6 +1596,40 @@
           </div>
         </div>
         <div id="setup-wizard-err" style="display: none; margin-top: 8px; font-size: 11.5px; color: var(--crit); font-weight: 600;"></div>
+      </div>
+
+      <div>
+        <div style="font-size: 11px; font-weight: 800; letter-spacing: 0.8px; color: #94a3b8; text-transform: uppercase; margin-bottom: 8px;" data-i18n="setup.step3_title">3. System Operating Mode</div>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <label style="display: flex; align-items: flex-start; gap: 10px; padding: 10px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; cursor: pointer;">
+            <input type="radio" name="setup-host-mode" value="observer" checked style="margin-top: 3px;">
+            <div>
+              <div style="font-size: 12px; font-weight: 700; color: #f8fafc;" data-i18n="setup.mode_observer">Observer Mode (Recommended for Unraid / TrueNAS / Proxmox)</div>
+              <div style="font-size: 11px; color: #94a3b8; line-height: 1.4;" data-i18n="setup.mode_observer_desc">Non-destructive hardware monitoring, thermal management, ARGB, LCD and Docker management.</div>
+            </div>
+          </label>
+          <label style="display: flex; align-items: flex-start; gap: 10px; padding: 10px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; cursor: pointer;">
+            <input type="radio" name="setup-host-mode" value="native" style="margin-top: 3px;">
+            <div>
+              <div style="font-size: 12px; font-weight: 700; color: #f8fafc;" data-i18n="setup.mode_native">Native Storage OS Mode</div>
+              <div style="font-size: 11px; color: #94a3b8; line-height: 1.4;" data-i18n="setup.mode_native_desc">Direct storage pool management (ZFS / Btrfs), disk formatting, and native network sharing.</div>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size: 11px; font-weight: 800; letter-spacing: 0.8px; color: #94a3b8; text-transform: uppercase; margin-bottom: 8px;" data-i18n="setup.step4_title">4. Power Protection & UPS</div>
+        <div id="setup-hw-ups" style="padding: 10px 12px; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; font-size: 11.5px; color: #94a3b8;">
+          <span id="setup-ups-badge" style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #64748b; margin-right: 6px;"></span>
+          <span id="setup-ups-text" data-i18n="setup.ups_none">Checking UPS status...</span>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size: 11px; font-weight: 800; letter-spacing: 0.8px; color: #94a3b8; text-transform: uppercase; margin-bottom: 8px;" data-i18n="setup.step5_title">5. Notification Alerts (Optional)</div>
+        <div style="font-size: 11.5px; color: #cbd5e1; margin-bottom: 8px;" data-i18n="setup.notif_desc">Receive instant alerts for power outages, failing drives, and emergency thermal clamps.</div>
+        <input id="setup-notif-url" type="text" placeholder="e.g., discord://webhook_id/token or tgram://bot_token/chat_id" data-i18n-placeholder="setup.notif_placeholder" class="input-text" style="width: 100%; font-size: 12px; padding: 8px 10px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: #fff;">
       </div>
 
       <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 6px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 16px;">

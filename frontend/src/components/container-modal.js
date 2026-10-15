@@ -5,13 +5,14 @@
  * Dynamic Docker Compose Synthesizer, and Live Log Console.
  */
 
-import { api } from '../api.js';
+import { api, auth } from '../api.js';
 import { showToast, showConfirmToast } from '../toast.js';
 import { escapeHtml, trapFocus } from '../utils.js';
 import { t } from '../i18n.js';
 import { bringToFront, makeDraggable, DockManager } from './dock.js';
 import { ZettEventBus } from '../event-bus.js';
 import { openStackModal } from './stack-modal.js';
+import { formatAnsiToHtml } from './vm-manager.js';
 
 let _activeCid = null;
 let _activeCname = null;
@@ -24,6 +25,7 @@ let _activeTab = 'overview';
 let _termHistory = [];
 let _termHistoryIdx = -1;
 let _activeDetails = null;
+let _activeTermWs = null;
 
 export function initContainerModal() {
   if (document.getElementById('container-inspector-overlay')) return;
@@ -384,9 +386,63 @@ export function closeContainerInspector() {
   if (DockManager) {
     DockManager.unregister('container-inspector');
   }
+  if (_activeTermWs) {
+    try { _activeTermWs.close(); } catch (_) {}
+    _activeTermWs = null;
+  }
   _activeCid = null;
   _activeCname = null;
   _activeComposeData = null;
+}
+
+export function connectContainerTerminalWs(cid) {
+  if (typeof WebSocket === 'undefined') return;
+  if (_activeTermWs) {
+    try { _activeTermWs.close(); } catch (_) {}
+    _activeTermWs = null;
+  }
+
+  const output = document.getElementById('ci-term-output');
+  if (!output || !cid) return;
+
+  const proto = (typeof window !== 'undefined' && window.location.protocol === 'https:') ? 'wss:' : 'ws:';
+  const host = typeof window !== 'undefined' ? window.location.host : '127.0.0.1:8082';
+  const token = auth.getToken() || '';
+  const wsUrl = `${proto}//${host}/api/docker/containers/${encodeURIComponent(cid)}/terminal/ws?token=${encodeURIComponent(token)}`;
+
+  try {
+    const ws = new WebSocket(wsUrl);
+    _activeTermWs = ws;
+
+    ws.onopen = () => {
+      const cols = Math.max(40, Math.floor((output.clientWidth || 600) / 7.5));
+      const rows = Math.max(10, Math.floor((output.clientHeight || 300) / 18));
+      try {
+        ws.send(JSON.stringify({ type: 'resize', cols, rows }));
+      } catch (_) {}
+    };
+
+    ws.onmessage = (event) => {
+      if (typeof event.data === 'string') {
+        const span = document.createElement('span');
+        span.innerHTML = formatAnsiToHtml(event.data);
+        output.appendChild(span);
+        output.scrollTop = output.scrollHeight;
+      }
+    };
+
+    ws.onerror = (err) => {
+      console.warn('[ContainerTerminal] WebSocket connection error:', err);
+    };
+
+    ws.onclose = () => {
+      if (_activeTermWs === ws) {
+        _activeTermWs = null;
+      }
+    };
+  } catch (e) {
+    console.warn('[ContainerTerminal] Failed to open WebSocket:', e);
+  }
 }
 
 export async function switchContainerTab(tabTarget) {
@@ -409,6 +465,7 @@ export async function switchContainerTab(tabTarget) {
   } else if (tabTarget === 'logs' && _activeCid) {
     await loadContainerLogs(_activeCid);
   } else if (tabTarget === 'terminal') {
+    if (_activeCid) connectContainerTerminalWs(_activeCid);
     const input = document.getElementById('ci-term-input');
     if (input) setTimeout(() => input.focus(), 60);
   } else if (tabTarget === 'edit' && _activeCid) {
@@ -427,6 +484,11 @@ export async function executeTerminalCmd() {
   _termHistory.push(cmd);
   _termHistoryIdx = _termHistory.length;
   input.value = '';
+
+  if (_activeTermWs && _activeTermWs.readyState === WebSocket.OPEN) {
+    _activeTermWs.send(cmd + '\n');
+    return;
+  }
 
   const timestamp = new Date().toLocaleTimeString();
   const cmdNode = document.createElement('div');

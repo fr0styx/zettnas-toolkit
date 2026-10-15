@@ -127,6 +127,13 @@ def startup_system():
     except Exception as e:
         logger.warning(f"Could not auto-start hyper-backup scheduler: {e}")
 
+    try:
+        from backend.services.scheduler import start_scheduler
+
+        start_scheduler()
+    except Exception as e:
+        logger.warning(f"Could not auto-start SMART test scheduler: {e}")
+
     # Backup in case the server exits without running the lifespan shutdown.
     # Registered here (not at import) so tooling that imports main.py is inert.
     atexit.register(lambda: Z_STATE.fans_locked or _shutdown_fans("exit"))

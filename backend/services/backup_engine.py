@@ -312,6 +312,23 @@ def execute_backup_job(job_id: str) -> Dict[str, Any]:
 
             dest_target = f"{remote_name}:{remote_path}"
             rclone = get_rclone_engine()
+
+            # Client-side rclone crypt encryption wrapper
+            if job.get("encrypted") and job.get("encryption_password"):
+                crypt_remote_name = f"crypt_{job_id[:8]}"
+                try:
+                    rclone.create_crypt_remote(
+                        name=crypt_remote_name,
+                        base_remote_path=dest_target,
+                        password=job["encryption_password"],
+                    )
+                    dest_target = f"{crypt_remote_name}:"
+                    logger.info(f"[HYPER-BACKUP] Initialized client-side encrypted crypt overlay: {dest_target}")
+                except Exception as crypt_err:
+                    logger.warning(
+                        f"[HYPER-BACKUP] Failed creating crypt overlay, falling back to base remote: {crypt_err}"
+                    )
+
             sync_job = rclone.start_sync_job(
                 src=source_dir,
                 dst=dest_target,
