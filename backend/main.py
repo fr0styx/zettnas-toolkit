@@ -252,6 +252,12 @@ app.include_router(api_router, prefix="/api")
 app.include_router(api_router, prefix="/api/v1")
 
 
+@app.api_route("/api/{unmatched_path:path}", methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"])
+@app.api_route("/api/v1/{unmatched_path:path}", methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"])
+def api_route_not_found(unmatched_path: str):
+    raise HTTPException(status_code=404, detail=f"API route '/api/{unmatched_path}' not found.")
+
+
 @app.get("/")
 @app.get("/index.html")
 def serve_index(request: Request):

@@ -460,3 +460,39 @@ def test_vm_qmp_status_endpoint(client, auth_headers):
 
     # Clean up
     client.delete(f"/api/vms/{vm_id}", headers=auth_headers)
+
+
+def test_vm_direct_action_endpoints(client, auth_headers):
+    """Tests convenience endpoints /{vm_id}/start, /{vm_id}/stop, and /{vm_id}/restart."""
+    res = client.post(
+        "/api/vms",
+        json={"name": "direct-action-vm", "vcpus": 1, "ram_gb": 1.0, "disk_size_gb": 10},
+        headers=auth_headers,
+    )
+    assert res.status_code == 200
+    vm_id = res.json()["id"]
+
+    # Test direct POST /api/vms/{vm_id}/start
+    res = client.post(f"/api/vms/{vm_id}/start", headers=auth_headers)
+    assert res.status_code == 200
+    assert res.json()["state"] == "running"
+
+    # Test direct POST /api/vms/{vm_id}/restart
+    res = client.post(f"/api/vms/{vm_id}/restart", headers=auth_headers)
+    assert res.status_code == 200
+    assert res.json()["state"] == "running"
+
+    # Test direct POST /api/vms/{vm_id}/stop
+    res = client.post(f"/api/vms/{vm_id}/stop", headers=auth_headers)
+    assert res.status_code == 200
+    assert res.json()["state"] == "stopped"
+
+    # Clean up
+    client.delete(f"/api/vms/{vm_id}", headers=auth_headers)
+
+
+def test_unmatched_api_route_returns_404_not_405(client, auth_headers):
+    """Verifies that non-existent /api routes return 404 rather than falling through to StaticFiles 405."""
+    res = client.post("/api/vms/nonexistent-vm-xyz/fake-subpath", headers=auth_headers)
+    assert res.status_code == 404
+    assert "not found" in res.json()["detail"].lower()

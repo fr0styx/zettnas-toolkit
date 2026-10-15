@@ -1176,21 +1176,21 @@ def _start_qemu(target_vm: Dict[str, Any], vnc_port: int) -> Tuple[bool, Optiona
     err_log_path = os.path.join(vm_dir, "qemu_last_error.log")
     full_log_path = os.path.join(vm_dir, "qemu.log")
 
+    # Graceful test mock fallback when running unit tests
+    if os.environ.get("ZETTNAS_TEST_MODE") == "1":
+        logger.info(f"Test environment: mocking QEMU start for VM '{target_vm['name']}'.")
+        _RUNNING_QEMU_PROCS[vm_id] = {
+            "proc": None,
+            "pid": 99999,
+            "vnc_port": vnc_port,
+            "started_at": time.time(),
+        }
+        with open(os.path.join(vm_dir, "qemu.pid"), "w") as f:
+            f.write("99999")
+        return True, None
+
     qemu_bin = shutil.which("qemu-system-x86_64") or "/usr/bin/qemu-system-x86_64"
     if not os.path.exists(qemu_bin) and not shutil.which(qemu_bin):
-        # Graceful test mock fallback when test runner lacks QEMU binaries
-        if os.environ.get("ZETTNAS_TEST_MODE") == "1":
-            logger.info(f"Test environment: mocking QEMU start for VM '{target_vm['name']}'.")
-            _RUNNING_QEMU_PROCS[vm_id] = {
-                "proc": None,
-                "pid": 99999,
-                "vnc_port": vnc_port,
-                "started_at": time.time(),
-            }
-            with open(os.path.join(vm_dir, "qemu.pid"), "w") as f:
-                f.write("99999")
-            return True, None
-
         err_msg = "qemu-system-x86_64 binary not found on host. Ensure qemu-system-x86 is installed."
         logger.error(f"[VM-{vm_id}] {err_msg}")
         with open(err_log_path, "w", encoding="utf-8") as f:
@@ -1801,6 +1801,33 @@ def execute_vm_action(
     _save_vms(vms)
     add_event("info", "VM State Changed", f"VM '{target_vm['name']}' action '{action}' executed.")
     return {"status": "ok", "state": target_vm["state"]}
+
+
+@router.post("/{vm_id}/start", dependencies=[Depends(require_scope("system:config", "storage:admin"))])
+def start_vm(
+    vm_id: str,
+    principal: AuthenticatedPrincipal = Depends(get_current_principal),
+):
+    """Starts the target virtual machine."""
+    return execute_vm_action(vm_id, VmActionRequest(action="start"), principal)
+
+
+@router.post("/{vm_id}/stop", dependencies=[Depends(require_scope("system:config", "storage:admin"))])
+def stop_vm(
+    vm_id: str,
+    principal: AuthenticatedPrincipal = Depends(get_current_principal),
+):
+    """Stops the target virtual machine."""
+    return execute_vm_action(vm_id, VmActionRequest(action="stop"), principal)
+
+
+@router.post("/{vm_id}/restart", dependencies=[Depends(require_scope("system:config", "storage:admin"))])
+def restart_vm(
+    vm_id: str,
+    principal: AuthenticatedPrincipal = Depends(get_current_principal),
+):
+    """Restarts the target virtual machine."""
+    return execute_vm_action(vm_id, VmActionRequest(action="restart"), principal)
 
 
 @router.get("/{vm_id}/error", dependencies=[Depends(require_scope("system:view", "storage:read"))])

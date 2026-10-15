@@ -6901,7 +6901,7 @@ export function initManagement() {
               try {
                 btn.disabled = true;
                 btn.textContent = '...';
-                await api.post(`/api/vms/${id}/start`);
+                await api.post(`/api/vms/${id}/action`, { action: 'start' });
                 showToast('VM started successfully', 'success');
                 fetchAndRenderMgmtVms();
               } catch (err) {
@@ -6918,7 +6918,7 @@ export function initManagement() {
               try {
                 btn.disabled = true;
                 btn.textContent = '...';
-                await api.post(`/api/vms/${id}/stop`);
+                await api.post(`/api/vms/${id}/action`, { action: 'stop' });
                 showToast('VM stop signal sent', 'info');
                 fetchAndRenderMgmtVms();
               } catch (err) {
