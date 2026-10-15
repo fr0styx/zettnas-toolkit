@@ -40,6 +40,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     qemu-system-arm \
     qemu-utils \
     ovmf \
+    qemu-system-modules-spice \
+    qemu-system-modules-opengl \
     libslirp0 \
     chromium \
     chromium-sandbox \
