@@ -70,8 +70,10 @@ ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium
 
 WORKDIR /app
 
-COPY requirements.txt .
-RUN --mount=type=cache,target=/root/.cache/pip pip install -r requirements.txt
+COPY requirements.txt requirements-dev.txt ./
+ARG DEV_BUILD=0
+RUN --mount=type=cache,target=/root/.cache/pip pip install -r requirements.txt \
+    && if [ "$DEV_BUILD" = "1" ]; then pip install -r requirements-dev.txt; fi
 
 # Copy Python backend application
 COPY pyproject.toml .

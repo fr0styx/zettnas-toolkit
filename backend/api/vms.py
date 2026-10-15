@@ -21,7 +21,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
 from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
-from backend.config import DATA_DIR, HOST_PROC, POOL_PATH, logger
+from backend.config import DATA_DIR, HOST_PROC, POOL_PATH, VM_ISO_DIR, logger
 from backend.fsutil import atomic_write_json, read_json, resolve_within
 from backend.state import Z_STATE, add_event
 
@@ -372,12 +372,18 @@ def get_kvm_status() -> Dict[str, Any]:
 
 def _get_target_iso_dir() -> str:
     """Returns the primary writable directory for storing ISO images."""
+    candidates = []
+    if VM_ISO_DIR and VM_ISO_DIR not in candidates:
+        candidates.append(VM_ISO_DIR)
     for d in [
         "/mnt/user/isos",
         "/mnt/storage/isos",
         os.path.join(POOL_PATH, "isos"),
         os.path.join(DATA_DIR, "isos"),
     ]:
+        if d not in candidates:
+            candidates.append(d)
+    for d in candidates:
         try:
             if not os.path.exists(d):
                 os.makedirs(d, exist_ok=True)
@@ -392,12 +398,18 @@ def _get_target_iso_dir() -> str:
 
 def scan_isos() -> List[Dict[str, Any]]:
     """Discovers bootable ISO and raw disk images in storage shares."""
-    iso_dirs = [
+    iso_dirs = []
+    if VM_ISO_DIR and VM_ISO_DIR not in iso_dirs:
+        iso_dirs.append(VM_ISO_DIR)
+    for d in [
         "/mnt/user/isos",
         "/mnt/user/system/isos",
         "/mnt/storage/isos",
         os.path.join(POOL_PATH, "isos"),
-    ]
+        os.path.join(DATA_DIR, "isos"),
+    ]:
+        if d not in iso_dirs:
+            iso_dirs.append(d)
     discovered = []
     seen = set()
 

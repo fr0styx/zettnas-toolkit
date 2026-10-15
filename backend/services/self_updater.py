@@ -77,9 +77,25 @@ def spawn_self_updater(
         return False
 
 
+def _rollback_container(target: str, rollback_name: str):
+    """Restores the previous container from rollback backup."""
+    logger.warning(f"[SelfUpdater Helper] Restoring '{rollback_name}' back to '{target}'...")
+    _docker_request("POST", f"/containers/{rollback_name}/rename?name={target}")
+    st_start, _ = _docker_request("POST", f"/containers/{target}/start")
+    if st_start in (200, 204):
+        logger.info(
+            f"[SelfUpdater Helper] Rollback successful. Container '{target}' restored to previous working version."
+        )
+    else:
+        logger.critical(
+            f"[SelfUpdater Helper] CRITICAL: Failed to restart rolled-back container '{target}' (status={st_start})!"
+        )
+
+
 def apply_update_from_helper(target: str, image: str, delay: float = 2.5):
     """
     Executed inside the ephemeral helper container to safely recreate the target container.
+    Implements atomic rename and automatic rollback if new container creation/start fails.
     """
     logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
     logger.info(f"[SelfUpdater Helper] Initialized. Waiting {delay}s for caller HTTP completion...")
@@ -93,11 +109,24 @@ def apply_update_from_helper(target: str, image: str, delay: float = 2.5):
     config = dict(inspect_data.get("Config") or {})
     host_config = dict(inspect_data.get("HostConfig") or {})
 
+    # Clean up any leftover rollback container from a previous run
+    rollback_name = f"{target}-rollback"
+    _docker_request("POST", f"/containers/{rollback_name}/stop?t=2")
+    _docker_request("DELETE", f"/containers/{rollback_name}?force=true")
+
     logger.info(f"[SelfUpdater Helper] Gracefully stopping container '{target}'...")
     _docker_request("POST", f"/containers/{target}/stop?t=15")
 
-    logger.info(f"[SelfUpdater Helper] Removing old container '{target}'...")
-    _docker_request("DELETE", f"/containers/{target}?v=false")
+    logger.info(
+        f"[SelfUpdater Helper] Renaming current container '{target}' to '{rollback_name}' for atomic rollback protection..."
+    )
+    st_ren, res_ren = _docker_request("POST", f"/containers/{target}/rename?name={rollback_name}")
+    if st_ren not in (200, 204):
+        logger.error(
+            f"[SelfUpdater Helper] Failed to rename container for rollback protection: status={st_ren}, res={res_ren}"
+        )
+        _docker_request("POST", f"/containers/{target}/start")
+        sys.exit(1)
 
     logger.info(f"[SelfUpdater Helper] Creating updated container '{target}' with image '{image}'...")
     create_body = dict(config)
@@ -106,17 +135,28 @@ def apply_update_from_helper(target: str, image: str, delay: float = 2.5):
 
     st_create, res_create = _docker_request("POST", f"/containers/create?name={target}", body=create_body)
     if st_create not in (200, 201) or not isinstance(res_create, dict):
-        logger.error(f"[SelfUpdater Helper] Failed to recreate container: status={st_create}, res={res_create}")
+        logger.error(
+            f"[SelfUpdater Helper] Failed to recreate container: status={st_create}, res={res_create}. Initiating automatic rollback..."
+        )
+        _rollback_container(target, rollback_name)
         sys.exit(1)
 
     new_cid = res_create.get("Id")
     logger.info(f"[SelfUpdater Helper] Starting newly recreated container '{target}' ({new_cid[:12]})...")
     st_start, _ = _docker_request("POST", f"/containers/{new_cid}/start")
-    if st_start in (200, 204):
-        logger.info(f"[SelfUpdater Helper] Container '{target}' successfully updated and started!")
-    else:
-        logger.error(f"[SelfUpdater Helper] Failed to start updated container: status={st_start}")
+    if st_start not in (200, 204):
+        logger.error(
+            f"[SelfUpdater Helper] Failed to start updated container: status={st_start}. Initiating automatic rollback..."
+        )
+        _docker_request("DELETE", f"/containers/{new_cid}?force=true")
+        _rollback_container(target, rollback_name)
         sys.exit(1)
+
+    logger.info(
+        f"[SelfUpdater Helper] Container '{target}' successfully updated and started! Removing temporary rollback container..."
+    )
+    _docker_request("DELETE", f"/containers/{rollback_name}?v=false")
+    logger.info(f"[SelfUpdater Helper] OTA update complete for '{target}'.")
 
 
 def main():
