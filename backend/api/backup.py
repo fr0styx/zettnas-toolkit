@@ -100,7 +100,7 @@ async def save_client_preferences(request: Request):
 # -------------------------------------------------------------------------
 
 
-@router.get("/system/backup", dependencies=[Depends(require_scope("backup:read", "backup:manage", "system:config"))])
+@router.get("/system/backup", dependencies=[Depends(require_scope("*"))])
 def download_backup():
     """Generates a zip archive of the configuration data directory."""
     buf = generate_backup_zip_stream()
@@ -117,7 +117,7 @@ def _safe_restore_archive(path: str) -> None:
         restore_backup_archive(archive_file)
 
 
-@router.post("/system/restore", dependencies=[Depends(require_scope("backup:write", "backup:manage", "system:config"))])
+@router.post("/system/restore", dependencies=[Depends(require_scope("*"))])
 async def restore_backup(request: Request):
     """Restores configuration from a zip archive."""
     tmp_path = None

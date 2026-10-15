@@ -164,7 +164,7 @@ async def webdav_portal_login(request: Request):
                     asyncio.create_task(asyncio.to_thread(engine.restart))
                 except Exception as e:
                     logger.warning(f"[WebDAV] Failed to sync master password: {e}")
-        elif password == (config.WEB_PASSWORD or "admin"):
+        elif config.WEB_PASSWORD and password == config.WEB_PASSWORD:
             authenticated = True
             is_admin = True
 
@@ -448,10 +448,18 @@ async def webdav_proxy_subpath(request: Request, path: str):
         is_raw_download = request.query_params.get("raw") == "1"
         disposition = "attachment" if is_raw_download else "inline"
         filename = os.path.basename(abs_target)
+        ext = os.path.splitext(filename)[1].lower()
+        if ext in (".html", ".htm", ".svg", ".xhtml", ".xml", ".js"):
+            disposition = "attachment"
+        headers = {
+            "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; sandbox",
+            "X-Content-Type-Options": "nosniff",
+        }
         return FileResponse(
             path=abs_target,
             filename=filename,
             content_disposition_type=disposition,
+            headers=headers,
         )
 
     # Path does not exist

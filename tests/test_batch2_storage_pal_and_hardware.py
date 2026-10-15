@@ -211,9 +211,10 @@ def test_led_speed_and_port_search():
         assert written_frame[9] == 12
 
     # Port search path includes ttyUSB
-    with patch("os.path.exists", side_effect=lambda p: p == "/dev/ttyUSB0"):
-        found = find_led_port()
-        assert found == "/dev/ttyUSB0"
+    with patch("backend.hardware.fans.is_zettlab_appliance", return_value=True):
+        with patch("os.path.exists", side_effect=lambda p: p == "/dev/ttyUSB0"):
+            found = find_led_port()
+            assert found == "/dev/ttyUSB0"
 
 
 def test_lcd_16bpp_framebuffer_support():

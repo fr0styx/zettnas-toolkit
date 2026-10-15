@@ -1021,10 +1021,9 @@ def fetch_disk_smart_detail(dev_name: str, wake_if_standby: bool = False):
     is_nvme = clean_name.startswith("nvme")
     dtype = _get_smart_device_type(dev_name, is_nvme)
 
-    # If the disk is currently marked in standby and caller didn't request a wake,
-    # probe with -n standby to avoid spinning up platters.
+    # If caller didn't explicitly request a wake, probe with -n standby to avoid spinning up platters.
     cached_temp, cached_health = Z_STATE.cached_smart_data.get(dev_name, (None, None))
-    if not is_nvme and not wake_if_standby and cached_health == "standby":
+    if not is_nvme and not wake_if_standby:
         try:
             r_sb = subprocess.run(
                 ["smartctl", "-n", "standby", "-i", "-d", dtype, dev],
@@ -1041,6 +1040,7 @@ def fetch_disk_smart_detail(dev_name: str, wake_if_standby: bool = False):
                 or "STANDBY MODE" in sb_out
                 or "SLEEP MODE" in sb_out
             ):
+                Z_STATE.cached_smart_data[dev_name] = (cached_temp, "standby")
                 return {
                     "dev": dev_name,
                     "is_nvme": False,
@@ -1069,8 +1069,8 @@ def fetch_disk_smart_detail(dev_name: str, wake_if_standby: bool = False):
         except Exception:
             pass
 
-    # For spinning HDDs, issue an asynchronous direct block read to trigger spin up without blocking the thread
-    if not is_nvme:
+    # For spinning HDDs, only issue a direct block read to trigger spinup if wake_if_standby was explicitly requested
+    if not is_nvme and wake_if_standby:
         try:
             subprocess.Popen(
                 ["dd", f"if={dev}", "of=/dev/null", "count=1", "bs=512", "iflag=direct"],
@@ -1081,15 +1081,58 @@ def fetch_disk_smart_detail(dev_name: str, wake_if_standby: bool = False):
             logger.debug(f"Direct block wake read on {dev} threw: {e}")
 
     doc = None
+    cmd_j = ["smartctl", "-x", "-j", "-d", dtype]
+    if not is_nvme and not wake_if_standby:
+        cmd_j.extend(["-n", "standby"])
+    cmd_j.append(dev)
+
     try:
-        rj = subprocess.run(["smartctl", "-x", "-j", "-d", dtype, dev], capture_output=True, text=True, timeout=25)
+        rj = subprocess.run(cmd_j, capture_output=True, text=True, timeout=25)
+        if not is_nvme and not wake_if_standby:
+            out_sb = ((rj.stdout or "") + " " + (rj.stderr or "")).upper()
+            if (
+                rj.returncode == 2
+                or (rj.returncode & 2) != 0
+                or "DEVICE IS IN STANDBY" in out_sb
+                or "DEVICE IS IN SLEEP" in out_sb
+            ):
+                Z_STATE.cached_smart_data[dev_name] = (cached_temp, "standby")
+                return {
+                    "dev": dev_name,
+                    "is_nvme": False,
+                    "model": "SATA HDD (Standby)",
+                    "serial": "Hidden while in standby",
+                    "power_on_hours": "Unknown (Standby)",
+                    "health": "STANDBY",
+                    "is_standby": True,
+                    "temp": cached_temp,
+                    "self_test_status": None,
+                    "self_test_progress": {
+                        "in_progress": False,
+                        "percent_remaining": 0,
+                        "percent_completed": 100,
+                        "status_text": "Drive in standby",
+                        "is_aborted": False,
+                        "polling_minutes": {},
+                    },
+                    "self_test_log": [],
+                    "latest_report": get_latest_smart_test_result(dev_name),
+                    "metrics": {},
+                    "degradation": query_smart_velocity(dev_name),
+                    "nvme_endurance": None,
+                    "raw": "Device is in low-power STANDBY mode. Platters are not spinning.\nIssue a wake command to inspect live SMART counters.",
+                }
         if rj.stdout and rj.stdout.strip().startswith("{"):
             doc = json.loads(rj.stdout)
     except Exception:
         doc = None
 
+    cmd_raw = ["smartctl", "-x", "-d", dtype]
+    if not is_nvme and not wake_if_standby:
+        cmd_raw.extend(["-n", "standby"])
+    cmd_raw.append(dev)
     try:
-        r = subprocess.run(["smartctl", "-x", "-d", dtype, dev], capture_output=True, text=True, timeout=25)
+        r = subprocess.run(cmd_raw, capture_output=True, text=True, timeout=25)
         raw_text = (r.stdout or "") + ("\n" + r.stderr if r.stderr else "")
     except Exception as e:
         raw_text = f"Error querying device: {e}"
@@ -1418,24 +1461,36 @@ def check_active_smart_tests():
 
             doc = None
             try:
+                cmd_j = ["smartctl", "-x", "-j", "-d", dtype]
+                if not is_nvme:
+                    cmd_j.extend(["-n", "standby"])
+                cmd_j.append(dev)
                 rj = subprocess.run(
-                    ["smartctl", "-x", "-j", "-d", dtype, dev],
+                    cmd_j,
                     capture_output=True,
                     text=True,
                     timeout=20,
                 )
+                if not is_nvme and (rj.returncode == 2 or (rj.returncode & 2) != 0):
+                    continue
                 if rj.stdout and rj.stdout.strip().startswith("{"):
                     doc = json.loads(rj.stdout)
             except Exception:
                 doc = None
 
             try:
+                cmd_raw = ["smartctl", "-x", "-d", dtype]
+                if not is_nvme:
+                    cmd_raw.extend(["-n", "standby"])
+                cmd_raw.append(dev)
                 r = subprocess.run(
-                    ["smartctl", "-x", "-d", dtype, dev],
+                    cmd_raw,
                     capture_output=True,
                     text=True,
                     timeout=20,
                 )
+                if not is_nvme and (r.returncode == 2 or (r.returncode & 2) != 0):
+                    continue
                 raw_text = (r.stdout or "") + ("\n" + r.stderr if r.stderr else "")
             except Exception as e:
                 raw_text = f"Error: {e}"

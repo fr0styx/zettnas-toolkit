@@ -10,6 +10,7 @@ import { applyTheme, applyDesktopTheme, applyLcdTheme, setScreenLayoutStyle } fr
 import { applyDashboardLayout, persistDashboardLayout, fitMiniPreviewScale, syncMiniPreviewTelemetry } from './mini-preview.js';
 import { fetchAndRenderMetrics } from './metrics-chart.js';
 import { t } from '../i18n.js';
+import { escapeHtml } from '../utils.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -1361,10 +1362,10 @@ async function renderApiTokens() {
       row.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 8px; background: rgba(0,0,0,0.2); border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);';
       row.innerHTML = `
         <div style="display:flex; flex-direction:column; gap:2px;">
-          <div style="font-size:11px; font-weight:700; color:#fff;">${t.name}</div>
-          <div style="font-size:10px; color:var(--muted); font-family:monospace;">${t.masked_token}</div>
+          <div style="font-size:11px; font-weight:700; color:#fff;">${escapeHtml(t.name)}</div>
+          <div style="font-size:10px; color:var(--muted); font-family:monospace;">${escapeHtml(t.masked_token)}</div>
         </div>
-        <button class="btn-rect danger" style="padding:4px 8px; font-size:10px;" data-id="${t.id}">Revoke</button>
+        <button class="btn-rect danger" style="padding:4px 8px; font-size:10px;" data-id="${escapeHtml(t.id)}">Revoke</button>
       `;
       
       row.querySelector('button').addEventListener('click', async () => {

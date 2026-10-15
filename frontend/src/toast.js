@@ -198,25 +198,28 @@ function _showTopConfirm(title, msg, onConfirm, onCancel, options = {}) {
   const isMedia = options.isMedia || (title && (title.toLowerCase().includes('media') || title.toLowerCase().includes('ingest') || title.toLowerCase().includes('card') || title.toLowerCase().includes('import')));
   const isUpdate = options.isUpdate || (title && (title.toLowerCase().includes('update') || title.toLowerCase().includes('upgrade')));
 
+  const safeTitle = escapeHtml(title || "Confirm Action");
+  const safeMsg = options.allowHtml ? (msg || "") : escapeHtml(msg || "");
+
   if (isMedia) {
-    titleEl.innerHTML = `<span>📷</span> ${title || "Media Card Ingest"}`;
-    okBtn.innerHTML = options.okText || "📥 Import Media";
+    titleEl.innerHTML = `<span>📷</span> ${safeTitle}`;
+    okBtn.innerHTML = options.okText ? escapeHtml(options.okText) : "📥 Import Media";
     okBtn.style.background = "linear-gradient(135deg, #0ea5e9, #25c2a0)";
     okBtn.style.border = "1px solid #0ea5e9";
     okBtn.style.color = "#fff";
     headerBg.style.background = "rgba(14, 165, 233, 0.12)";
     titleEl.style.color = "#38bdf8";
   } else if (isStandby) {
-    titleEl.innerHTML = `<span>⚡</span> ${title || "Confirm Action"}`;
-    okBtn.innerHTML = options.okText || "⚡ Wake & Inspect";
+    titleEl.innerHTML = `<span>⚡</span> ${safeTitle}`;
+    okBtn.innerHTML = options.okText ? escapeHtml(options.okText) : "⚡ Wake & Inspect";
     okBtn.style.background = "#fbbf24";
     okBtn.style.border = "1px solid #f59e0b";
     okBtn.style.color = "#0a0e13";
     headerBg.style.background = "rgba(245, 158, 11, 0.08)";
     titleEl.style.color = "#fbbf24";
   } else if (isUpdate) {
-    titleEl.innerHTML = `<span>⬆️</span> ${title || "Confirm Update"}`;
-    okBtn.innerHTML = options.okText || "⬆️ Update Now";
+    titleEl.innerHTML = `<span>⬆️</span> ${safeTitle}`;
+    okBtn.innerHTML = options.okText ? escapeHtml(options.okText) : "⬆️ Update Now";
     okBtn.style.background = "linear-gradient(135deg, #f59e0b, #d97706)";
     okBtn.style.border = "1px solid #f59e0b";
     okBtn.style.color = "#0a0e13";
@@ -226,8 +229,8 @@ function _showTopConfirm(title, msg, onConfirm, onCancel, options = {}) {
   } else {
     const isDelete = options.icon === '🗑️' || (title && (title.toLowerCase().includes('delete') || title.toLowerCase().includes('remove') || title.toLowerCase().includes('destroy')));
     const icon = options.icon || (isDelete ? '🗑️' : '💬');
-    titleEl.innerHTML = `<span>${icon}</span> ${title || "Confirm Action"}`;
-    okBtn.innerHTML = options.okText || "Confirm";
+    titleEl.innerHTML = `<span>${icon}</span> ${safeTitle}`;
+    okBtn.innerHTML = options.okText ? escapeHtml(options.okText) : "Confirm";
     okBtn.style.background = "#ef4444";
     okBtn.style.border = "1px solid #dc2626";
     okBtn.style.color = "#fff";
@@ -237,8 +240,8 @@ function _showTopConfirm(title, msg, onConfirm, onCancel, options = {}) {
     card.style.boxShadow = "0 24px 60px rgba(0, 0, 0, 0.9), 0 0 30px rgba(239, 68, 68, 0.15)";
   }
 
-  cancelBtn.innerHTML = options.cancelText || "Cancel";
-  msgEl.innerHTML = msg || "";
+  cancelBtn.innerHTML = options.cancelText ? escapeHtml(options.cancelText) : "Cancel";
+  msgEl.innerHTML = safeMsg;
 
   if (options.onEject && ejectBtn) {
     ejectBtn.style.display = "block";
@@ -350,7 +353,7 @@ export function showPromptToast(title, msg, defaultVal, onConfirm, onCancel = nu
       <button id="confirm-toast-close" style="background: transparent; border: none; color: #94a3b8; font-size: 18px; cursor: pointer; padding: 2px 6px; line-height: 1; border-radius: 4px;" title="Cancel">&times;</button>
     </div>
     <div style="padding: 16px 20px;">
-      <div style="font-size: 12.5px; color: #cbd5e1; margin-bottom: 12px; line-height: 1.5;">${msg}</div>
+      <div style="font-size: 12.5px; color: #cbd5e1; margin-bottom: 12px; line-height: 1.5;">${escapeHtml(msg || '')}</div>
       ${inputHtml}
       <div style="display: flex; gap: 10px; margin-top: 16px; justify-content: flex-end; align-items: center;">
         <button id="confirm-toast-cancel" style="padding: 7px 16px; background: transparent; border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: #cbd5e1; font-size: 12px; font-weight: 600; cursor: pointer;">${escapeHtml(cancelText)}</button>

@@ -9,6 +9,7 @@ import io
 import json
 import os
 import re
+import shlex
 import tarfile
 import time
 from typing import Any, Dict, List, Optional, Tuple
@@ -394,7 +395,7 @@ def execute_stack_action(stack_name: str, action: str) -> Dict[str, Any]:
 
     if action == "redeploy":
         if location_type == "dockhand" and working_dir:
-            cmd = f"cd {working_dir} && docker compose up -d"
+            cmd = f"cd {shlex.quote(working_dir)} && docker compose up -d"
             res = execute_in_container("dockhand", cmd)
             return {
                 "success": res.get("success", False),

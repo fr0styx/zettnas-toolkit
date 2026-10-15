@@ -203,14 +203,20 @@ def render_webdav_login(error_msg: Optional[str] = None) -> str:
 </html>"""
 
 
+from backend.fsutil import resolve_within
+
+
 def render_webdav_portal(current_subpath: str, root_path: str, username: str) -> str:
     clean_sub = current_subpath.strip("/")
-    abs_dir = os.path.abspath(os.path.join(root_path, clean_sub)) if clean_sub else os.path.abspath(root_path)
+    target = os.path.join(root_path, clean_sub) if clean_sub else root_path
 
     # Path traversal protection
-    if not abs_dir.startswith(os.path.abspath(root_path)):
+    resolved = resolve_within(target, [root_path])
+    if resolved is None or not os.path.exists(resolved):
         abs_dir = os.path.abspath(root_path)
         clean_sub = ""
+    else:
+        abs_dir = resolved
 
     items: List[Dict[str, Any]] = []
 

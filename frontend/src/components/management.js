@@ -1025,9 +1025,11 @@ function buildContainerRowInner(c, currentHost) {
   const portParts = [];
   if (c.webui_url && c.primary_port) {
     const resolvedUrl = c.webui_url.replace('[HOST]', currentHost);
-    portParts.push(
-      `<a href="${escapeHtml(resolvedUrl)}" target="_blank" rel="noopener noreferrer" class="btn-webui-badge" title="Open Web UI (Port ${c.primary_port})">🌐 :${c.primary_port} ↗</a>`
-    );
+    if (/^https?:\/\//i.test(resolvedUrl)) {
+      portParts.push(
+        `<a href="${escapeHtml(resolvedUrl)}" target="_blank" rel="noopener noreferrer" class="btn-webui-badge" title="Open Web UI (Port ${escapeHtml(String(c.primary_port))})">🌐 :${escapeHtml(String(c.primary_port))} ↗</a>`
+      );
+    }
   }
   // Additional public ports
   const otherPorts = (c.ports || []).filter(

@@ -729,27 +729,46 @@ async def create_new_user(
         return error_response(400, str(e), error="invalid_request")
 
 
+def _sanitize_user_dict(u: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+    if not u:
+        return None
+    res = dict(u)
+    res.pop("password_hash", None)
+    res.pop("mfa_secret", None)
+    res.pop("mfa_recovery_codes_json", None)
+    res.pop("token_hash", None)
+    return res
+
+
 @router.get("/users/{user_id}")
 def get_user_detail(user_id: str, request: Request):
+    current = _get_authenticated_user(request)
+    if not current:
+        return error_response(401, "Authentication required.", error="unauthorized")
+    if current["id"] != user_id and current.get("role_id") not in ("superadmin", "admin"):
+        return error_response(403, "Permission denied.", error="forbidden")
     target = get_user_by_id(user_id)
     if not target:
         raise HTTPException(status_code=404, detail="User not found.")
-    target.pop("password_hash", None)
-    return target
+    return _sanitize_user_dict(target)
 
 
 @router.put("/users/{user_id}")
 def update_user_endpoint(user_id: str, data: UserUpdateRequest, request: Request):
     current = _get_authenticated_user(request)
-    if current and current["id"] != user_id and current.get("role_id") not in ("superadmin", "admin"):
-        return error_response(403, "Permission denied.")
+    if not current:
+        return error_response(401, "Authentication required.", error="unauthorized")
+    if current["id"] != user_id and current.get("role_id") not in ("superadmin", "admin"):
+        return error_response(403, "Permission denied.", error="forbidden")
 
-    # Non-admins cannot alter their own role or status
+    # Non-admins cannot alter their own role, status, or storage quota
     role_to_set = data.role_id
     status_to_set = data.status
-    if current and current.get("role_id") not in ("superadmin", "admin"):
+    quota_to_set = data.storage_quota_bytes
+    if current.get("role_id") not in ("superadmin", "admin"):
         role_to_set = None
         status_to_set = None
+        quota_to_set = None
 
     ok = update_user_profile(
         user_id=user_id,
@@ -757,12 +776,12 @@ def update_user_endpoint(user_id: str, data: UserUpdateRequest, request: Request
         email=data.email,
         role_id=role_to_set,
         status=status_to_set,
-        storage_quota_bytes=data.storage_quota_bytes,
+        storage_quota_bytes=quota_to_set,
         preferences=data.preferences,
     )
     if not ok:
         raise HTTPException(status_code=404, detail="User not found.")
-    return {"status": "ok", "user": get_user_by_id(user_id)}
+    return {"status": "ok", "user": _sanitize_user_dict(get_user_by_id(user_id))}
 
 
 @router.post("/users/{user_id}/password")

@@ -23,14 +23,17 @@ class SmartTelemetryEngine:
     """
 
     @classmethod
-    def is_device_sleeping(cls, dev_path: str) -> bool:
+    def is_device_sleeping(cls, dev_path: str, protocol: Optional[str] = None) -> bool:
         """
         Non-invasive power mode query. Returns True if drive is in STANDBY or SLEEP mode.
         Executes smartctl -n standby or hdparm -C without triggering spindle spinup.
         """
         # 1. Primary check: smartctl -n standby -i
         try:
-            cmd = ["smartctl", "-n", "standby", "-i", dev_path]
+            cmd = ["smartctl", "-n", "standby", "-i"]
+            if protocol:
+                cmd.extend(["-d", protocol])
+            cmd.append(dev_path)
             r = subprocess.run(cmd, capture_output=True, text=True, timeout=5)
             # Exit code 2 indicates device is in STANDBY or SLEEP
             if (r.returncode & 2) != 0:
@@ -214,7 +217,7 @@ class SmartTelemetryEngine:
 
         # Spindown Safety Guard for rotational media
         if not is_nvme and not allow_wake:
-            if cls.is_device_sleeping(dev_path):
+            if cls.is_device_sleeping(dev_path, protocol=protocol):
                 prev_t, _ = Z_STATE.cached_smart_data.get(dev_name, (None, "standby"))
                 Z_STATE.cached_smart_data[dev_name] = (prev_t, "standby")
                 return {

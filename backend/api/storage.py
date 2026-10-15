@@ -136,6 +136,12 @@ def trigger_storage_scrub(req: StorageScrubRequest) -> Dict[str, Any]:
     Initiates or monitors non-destructive array parity check or filesystem scrub.
     """
     adapter = get_storage_platform()
+    caps = adapter.get_capabilities()
+    if not caps.can_trigger_scrub:
+        raise HTTPException(
+            status_code=403,
+            detail=f"Storage scrub is disabled on {adapter.get_platform_type().value}.",
+        )
     return adapter.trigger_scrub(pool_id=req.pool_id, action=req.action)
 
 
@@ -251,6 +257,12 @@ def export_storage_pool(pool_id: str, req: StoragePoolExportRequest = StoragePoo
     and exports/unmounts a storage pool for safe physical detachment.
     """
     adapter = get_storage_platform()
+    caps = adapter.get_capabilities()
+    if not caps.can_export_pools:
+        raise HTTPException(
+            status_code=403,
+            detail=f"Pool export is disabled on {adapter.get_platform_type().value} in Observer Mode.",
+        )
     try:
         return adapter.export_pool(pool_id=pool_id, force=req.force)
     except PlatformCapabilityError as e:
@@ -288,6 +300,12 @@ def import_storage_pool(req: StoragePoolImportRequest) -> Dict[str, Any]:
     Imports an external storage pool into the platform.
     """
     adapter = get_storage_platform()
+    caps = adapter.get_capabilities()
+    if not caps.can_import_pools:
+        raise HTTPException(
+            status_code=403,
+            detail=f"Pool import is disabled on {adapter.get_platform_type().value} in Observer Mode.",
+        )
     try:
         return adapter.import_pool(pool_id=req.pool_id, fs_type=req.fs_type, target_mount=req.target_mount)
     except PlatformCapabilityError as e:

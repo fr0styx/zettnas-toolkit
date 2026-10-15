@@ -288,13 +288,31 @@ def get_btrfs_allocation_breakdown(mounts: List[Dict[str, Any]]) -> List[Dict[st
     return btrfs_reports
 
 
-def get_zpool_status_summary() -> Optional[Dict[str, Any]]:
+def are_all_pool_disks_sleeping(disks: Optional[List[Dict[str, Any]]] = None) -> bool:
+    if not disks:
+        return False
+    hdds = [d for d in disks if not d.get("is_nvme", False) and not d.get("dev", "").startswith("nvme")]
+    if not hdds:
+        return False
+    return all(d.get("standby", False) for d in hdds)
+
+
+def get_zpool_status_summary(disks: Optional[List[Dict[str, Any]]] = None) -> Optional[Dict[str, Any]]:
     """
     Queries non-blocking ZFS pool status with strict 2.0s timeout to prevent hangs
     on corrupted or unresponsive OpenZFS pools.
+    Respects spindown safety: defers querying if all rotational disks are in standby.
     """
     if not shutil.which("zpool"):
         return None
+
+    if are_all_pool_disks_sleeping(disks):
+        return {
+            "state": "STANDBY",
+            "scan": "none (pool disks in standby)",
+            "errors": "none",
+            "message": "ZFS pool disks are in low-power standby mode. Status probe deferred to prevent disk spinup.",
+        }
 
     try:
         r = subprocess.run(
@@ -433,7 +451,7 @@ def collect_storage_diagnostics() -> Dict[str, Any]:
 
     # 7. Btrfs Chunk Allocations & ZFS Status
     btrfs_alloc = get_btrfs_allocation_breakdown(mounts)
-    zfs_status = get_zpool_status_summary()
+    zfs_status = get_zpool_status_summary(disks=live_disks)
 
     # 8. Recycle Bin Audit
     recycle_bin = get_recycle_bin_audit()

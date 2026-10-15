@@ -12,6 +12,12 @@ from backend.state import Z_STATE, add_event
 
 
 def button_listener_daemon():
+    from backend.hardware.fans import is_zettlab_appliance
+
+    if not is_zettlab_appliance():
+        logger.debug("[button_listener] Non-appliance hardware detected; skipping hardware button mapping.")
+        return
+
     MMIO_BASE = 0xE0D20000
     COPY_OFFSET = 0x6C0
 

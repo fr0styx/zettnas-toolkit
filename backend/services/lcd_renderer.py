@@ -91,8 +91,10 @@ def render_lcd_loop():
     if Z_STATE.shutting_down:
         return
 
-    if not ENABLE_FB:
-        logger.info("[LCD] Framebuffer disabled via ENABLE_FB=0. Running web-only.")
+    from backend.hardware.screen import is_auxiliary_lcd_present
+
+    if not is_auxiliary_lcd_present():
+        logger.info("[LCD] No auxiliary front-panel LCD detected or ENABLE_FB=0. Running web-only.")
         return
 
     fb_path = find_fb_device(writable_only=True)

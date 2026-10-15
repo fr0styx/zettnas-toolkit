@@ -22,7 +22,7 @@ from pydantic import BaseModel, Field
 
 from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
 from backend.config import DATA_DIR, HOST_PROC, POOL_PATH, logger
-from backend.fsutil import atomic_write_json, read_json
+from backend.fsutil import atomic_write_json, read_json, resolve_within
 from backend.state import Z_STATE, add_event
 
 router = APIRouter(prefix="/vms", tags=["Virtual Machines"])
@@ -1018,8 +1018,6 @@ def delete_iso_image(
     path: str,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
 ):
-    """Safely deletes an ISO image within authorized storage paths."""
-    real_path = os.path.abspath(path)
     allowed_dirs = [
         "/mnt/user/isos",
         "/mnt/user/system/isos",
@@ -1027,7 +1025,8 @@ def delete_iso_image(
         os.path.join(POOL_PATH, "isos"),
         os.path.join(DATA_DIR, "isos"),
     ]
-    if not any(real_path.startswith(ad) for ad in allowed_dirs):
+    real_path = resolve_within(path, allowed_dirs)
+    if not real_path:
         raise HTTPException(status_code=400, detail="Invalid ISO path outside authorized repositories.")
 
     if not os.path.exists(real_path):
@@ -1337,10 +1336,14 @@ def _start_qemu(target_vm: Dict[str, Any], vnc_port: int) -> Tuple[bool, Optiona
 
         for idx_s, share in enumerate(target_vm.get("host_shares", [])):
             hp = share.get("host_path")
-            tag = share.get("mount_tag") or f"share{idx_s}"
+            raw_tag = str(share.get("mount_tag") or f"share{idx_s}")
+            tag = re.sub(r"[^a-zA-Z0-9_-]", "_", raw_tag)
             mode = share.get("mode", "rw")
             ro_flag = "readonly=on" if mode == "ro" else "readonly=off"
             if hp and os.path.exists(hp):
+                if "," in hp or "\n" in hp or "\r" in hp:
+                    logger.warning(f"[VMs] Host share path contains prohibited characters: {hp}")
+                    continue
                 c.extend(
                     [
                         "-fsdev",
@@ -1599,7 +1602,9 @@ def get_vm_connection_info(
     }
 
 
-@router.post("/{vm_id}/console/token", dependencies=[Depends(require_scope("system:view", "storage:read"))])
+@router.post(
+    "/{vm_id}/console/token", dependencies=[Depends(require_scope("vms:write", "vms:manage", "system:config"))]
+)
 def create_console_token(
     vm_id: str,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),

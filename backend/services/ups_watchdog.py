@@ -58,6 +58,12 @@ def trigger_outage_simulation(duration_sec: int = 15) -> Dict[str, Any]:
     }
 
 
+def end_simulation_drill():
+    global _simulation_active, _simulation_end_ts
+    _simulation_active = False
+    _simulation_end_ts = 0.0
+
+
 def graceful_docker_teardown(timeout_sec: int = 30):
     """Gracefully stops running Docker containers, allowing databases to flush WAL."""
     try:
@@ -214,8 +220,8 @@ def check_ups_power_watchdog(ups_data: Dict[str, Any], now: float):
 
         elapsed = now - _outage_start_ts
 
-        # Debounce filter: only evaluate after 5 seconds to ignore momentary grid blips
-        if elapsed >= 5.0 and not _failsafe_engaged:
+        # Debounce filter: only evaluate after 5 seconds to ignore momentary grid blips (immediate for drills)
+        if (elapsed >= 5.0 or is_simulation_active()) and not _failsafe_engaged:
             # Policy evaluation
             policy_tripped = False
             trip_reason = ""
@@ -234,7 +240,18 @@ def check_ups_power_watchdog(ups_data: Dict[str, Any], now: float):
                 trip_reason = f"Time on battery exceeded threshold ({int(elapsed)}s >= {int(timer_thresh)}s)"
 
             if policy_tripped:
-                execute_atomic_failsafe_shutdown(charge, runtime, trip_reason)
+                if is_simulation_active():
+                    end_simulation_drill()
+                    logger.warning(
+                        f"[UPS SIMULATION DRILL] Safe shutdown policy tripped ({trip_reason}). Simulation drill completed successfully — host shutdown skipped."
+                    )
+                    add_event(
+                        "warning",
+                        "UPS Simulation Drill Completed",
+                        f"Failsafe shutdown policy tripped: {trip_reason}. Host shutdown was NOT executed because drill simulation mode is active.",
+                    )
+                else:
+                    execute_atomic_failsafe_shutdown(charge, runtime, trip_reason)
 
     elif is_online:
         # Power restored

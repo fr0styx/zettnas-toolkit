@@ -142,28 +142,29 @@ def _read_dt_text(field: str = "model") -> str:
     return ""
 
 
-def detect_chassis_model(force: bool = False):
-    if not force and Z_STATE.cached_chassis_model is not None:
+def detect_chassis_model(force: bool = False, allow_fallback: bool = True):
+    if not force and allow_fallback and Z_STATE.cached_chassis_model is not None:
         return Z_STATE.cached_chassis_model
 
     # 1. User manual bay mapping configuration override
-    try:
-        from backend.hardware.chassis import ChassisEngine
+    if allow_fallback:
+        try:
+            from backend.hardware.chassis import ChassisEngine
 
-        cfg = ChassisEngine.load_bay_mapping_config()
-        configured_bays = cfg.get("total_bays")
-        configured_profile = cfg.get("profile")
-        if configured_bays == 4 or configured_profile == "compact_dual":
-            Z_STATE.cached_chassis_model = "d4"
-            return "d4"
-        if configured_bays == 8:
-            Z_STATE.cached_chassis_model = "d8u"
-            return "d8u"
-        if configured_bays == 6:
-            Z_STATE.cached_chassis_model = "d6u"
-            return "d6u"
-    except Exception as e:
-        logger.debug(f"[detect_chassis_model] Bay config check ignored: {e}")
+            cfg = ChassisEngine.load_bay_mapping_config()
+            configured_bays = cfg.get("total_bays")
+            configured_profile = cfg.get("profile")
+            if configured_bays == 4 or configured_profile == "compact_dual":
+                Z_STATE.cached_chassis_model = "d4"
+                return "d4"
+            if configured_bays == 8:
+                Z_STATE.cached_chassis_model = "d8u"
+                return "d8u"
+            if configured_bays == 6:
+                Z_STATE.cached_chassis_model = "d6u"
+                return "d6u"
+        except Exception as e:
+            logger.debug(f"[detect_chassis_model] Bay config check ignored: {e}")
 
     # 1.5 Physical Bay Drive Count check for shared mainboards (e.g. WY120 used in both D6U and D8U)
     bay_count = 0
@@ -214,18 +215,21 @@ def detect_chassis_model(force: bool = False):
         if any(k in dt_combined for k in ("wy110", "d4 ultra", "d4u", "d4 pro", "nas-4")) or (
             "d4" in dt_combined and any(k in dt_combined for k in ("zettlab", "rk3588", "rockchip", "zettos"))
         ):
-            Z_STATE.cached_chassis_model = "d4"
+            if allow_fallback:
+                Z_STATE.cached_chassis_model = "d4"
             return "d4"
         if any(k in dt_combined for k in ("wy140", "d8 ultra", "d8u", "nas-8")) or (
             "d8u" in dt_combined and any(k in dt_combined for k in ("zettlab", "rk3588", "rockchip", "zettos"))
         ):
-            Z_STATE.cached_chassis_model = "d8u"
+            if allow_fallback:
+                Z_STATE.cached_chassis_model = "d8u"
             return "d8u"
         if any(k in dt_combined for k in ("wy120", "d6 ultra", "d6u", "d6 pro", "nas-6")) or (
             "d6" in dt_combined and any(k in dt_combined for k in ("zettlab", "rk3588", "rockchip", "zettos"))
         ):
             if bay_count > 6:
-                Z_STATE.cached_chassis_model = "d8u"
+                if allow_fallback:
+                    Z_STATE.cached_chassis_model = "d8u"
                 return "d8u"
             try:
                 from backend.hardware.unraid import read_unraid_status
@@ -234,33 +238,41 @@ def detect_chassis_model(force: bool = False):
                 if u_status and u_status.get("available"):
                     u_model = (u_status.get("model") or "").lower()
                     if any(k in u_model for k in ("d8u", "d8 ultra", "nas-8", "8-bay", "d8")):
-                        Z_STATE.cached_chassis_model = "d8u"
+                        if allow_fallback:
+                            Z_STATE.cached_chassis_model = "d8u"
                         return "d8u"
             except Exception:
                 pass
-            Z_STATE.cached_chassis_model = "d6u"
+            if allow_fallback:
+                Z_STATE.cached_chassis_model = "d6u"
             return "d6u"
 
-    # D4 Motherboard (WY110 / N100 4-bay) check
-    if any(k in combined_dmi for k in ("wy110", "d4 ultra", "d4 pro", "d4u", "nas-4")) or (
-        "d4" in prod or "d4" in board or "d4" in sku
+    # Identify whether vendor is an explicit appliance builder
+    is_appliance_vendor = any(k in combined_dmi for k in ("zettlab", "zettos", "aoostar", "zettbox", "zettnas"))
+
+    # D4 Motherboard (WY110 / N100 4-bay / Aoostar WTR) check
+    if any(k in combined_dmi for k in ("wy110", "d4 ultra", "d4 pro", "d4u", "nas-4", "wtr pro", "wtr-pro")) or (
+        is_appliance_vendor and any(k in (prod, board, sku) for k in ("d4", "d4u", "wtr", "wtr pro"))
     ):
-        Z_STATE.cached_chassis_model = "d4"
+        if allow_fallback:
+            Z_STATE.cached_chassis_model = "d4"
         return "d4"
 
     # D8U Motherboard (WY140 / 8-bay) check
     if any(k in combined_dmi for k in ("wy140", "d8 ultra", "d8u", "nas-8")) or (
-        "d8u" in prod or "d8u" in board or "d8u" in sku
+        is_appliance_vendor and any(k in (prod, board, sku) for k in ("d8", "d8u", "d8 ultra"))
     ):
-        Z_STATE.cached_chassis_model = "d8u"
+        if allow_fallback:
+            Z_STATE.cached_chassis_model = "d8u"
         return "d8u"
 
     # D6 Motherboard (WY120 / i3-N305 6-bay) check
     if any(k in combined_dmi for k in ("wy120", "d6 ultra", "d6u", "d6 pro", "nas-6")) or (
-        "d6" in prod or "d6" in board or "d6" in sku
+        is_appliance_vendor and any(k in (prod, board, sku) for k in ("d6", "d6u", "d6 ultra"))
     ):
         if bay_count > 6:
-            Z_STATE.cached_chassis_model = "d8u"
+            if allow_fallback:
+                Z_STATE.cached_chassis_model = "d8u"
             return "d8u"
         try:
             from backend.hardware.unraid import read_unraid_status
@@ -306,10 +318,14 @@ def detect_chassis_model(force: bool = False):
             except Exception:
                 pass
         if pwm1_found and not pwm2_found:
-            Z_STATE.cached_chassis_model = "d4"
+            if allow_fallback:
+                Z_STATE.cached_chassis_model = "d4"
             return "d4"
 
     # 4. Fallback: Physical Internal Bay Drive Count (Filter out M.2 NVMe, USB, eMMC flash, and OS disks!)
+    if not allow_fallback:
+        return "generic"
+
     try:
         from backend.hardware.hal import DiskDiscoveryHAL
 

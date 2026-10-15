@@ -386,6 +386,9 @@ async def _execute_code_exchange(session_id: str, redirect_url: str) -> Dict[str
     if not code:
         raise HTTPException(status_code=400, detail="Could not find 'code' parameter in provided URL.")
 
+    if state and req_state and req_state != state:
+        raise HTTPException(status_code=400, detail="OAuth state mismatch. Security verification failed.")
+
     fwd_url = f"http://127.0.0.1:{port}/?code={urllib.parse.quote(code)}&state={urllib.parse.quote(req_state)}"
     try:
         await asyncio.to_thread(lambda: urllib.request.urlopen(fwd_url, timeout=5))
@@ -397,13 +400,14 @@ async def _execute_code_exchange(session_id: str, redirect_url: str) -> Dict[str
             drive_id, drive_type = "", "personal"
             if session.get("provider_type") == "onedrive":
                 drive_id, drive_type = _resolve_onedrive_drive_details(session["token"])
-            return {
+            res = {
                 "status": "ok",
                 "token": session["token"],
                 "drive_id": drive_id,
                 "drive_type": drive_type or "personal",
                 "session_id": session_id,
             }
+            return res
         if session.get("error"):
             raise HTTPException(status_code=400, detail=f"Authentication failed: {session['error']}")
         await asyncio.sleep(0.2)

@@ -10,6 +10,7 @@ from backend.config import (
     ENABLE_FB,
     FAN_CPU_HOLD_SECS,
     FAN_DISK_HOLD_SECS,
+    FAN_FAILSAFE_PWM,
     FAN_MAX_PWM,
     FAN_MIN_PWM,
     FAN_SPINUP_GRACE_SECS,
@@ -136,10 +137,25 @@ def stats_collector_daemon():
                 zone1_disks = sata_disks
                 zone2_disks = []
             else:
-                # ZettLab D6U / D8U: Dual fan split across Zone 1 (pwm1) and Zone 2 (pwm2)
-                midpoint = max(1, len(sata_disks) // 2)
-                zone1_disks = sata_disks[:midpoint]
-                zone2_disks = sata_disks[midpoint:]
+                # ZettLab D6U / D8U or generic: Check if disks have physical bay numbers assigned
+                midpoint_bay = 4 if chassis_model == "d8u" else 3
+                z1_bays, z2_bays = [], []
+                has_bay_info = False
+                for d in sata_disks:
+                    b = d.get("bay")
+                    if b is not None and isinstance(b, int) and b > 0:
+                        has_bay_info = True
+                        if b <= midpoint_bay:
+                            z1_bays.append(d)
+                        else:
+                            z2_bays.append(d)
+                if has_bay_info and (z1_bays or z2_bays):
+                    zone1_disks = z1_bays
+                    zone2_disks = z2_bays
+                else:
+                    midpoint = max(1, len(sata_disks) // 2)
+                    zone1_disks = sata_disks[:midpoint]
+                    zone2_disks = sata_disks[midpoint:]
 
             # Standby state per zone
             if not sata_disks:
@@ -150,7 +166,11 @@ def stats_collector_daemon():
             else:
                 z1_all_standby = bool(zone1_disks) and all(d.get("standby", False) for d in zone1_disks)
                 # If zone2 has no disks installed (under-populated chassis), inherit zone1 standby
-                z2_all_standby = all(d.get("standby", False) for d in zone2_disks) if zone2_disks else z1_all_standby
+                z2_all_standby = (
+                    bool(zone2_disks) and all(d.get("standby", False) for d in zone2_disks)
+                    if zone2_disks
+                    else z1_all_standby
+                )
 
             # Active temperatures per zone (sleeping disks' cached temps are ignored unless critical >= 55)
             active_z1 = [d["temp"] for d in zone1_disks if d.get("temp") is not None and not d.get("standby", False)]
@@ -163,7 +183,8 @@ def stats_collector_daemon():
             nvme_disks = [d for d in disks if d.get("role") == "cache" or "nvme" in d.get("dev", "")]
             active_nvme = [d["temp"] for d in nvme_disks if d.get("temp") is not None and not d.get("standby", False)]
             t_nvme = max(active_nvme, default=None)
-            nvme_over_ceiling = t_nvme is not None and t_nvme >= zero_rpm_nvme_ceiling
+            # If NVMe disks are installed, their temperature must be readable and below ceiling to allow Zero RPM
+            nvme_over_ceiling = bool(nvme_disks and (t_nvme is None or t_nvme >= zero_rpm_nvme_ceiling))
 
             # Universal Storage Subsystem Interlocks (Unraid Parity/Mover, Btrfs Scrub, ZFS Scrub)
             unraid_status = read_unraid_status()
@@ -194,6 +215,7 @@ def stats_collector_daemon():
                 temp_max=temp_max,
                 curve_points=zone1_curve,
                 allow_zero=zero_rpm_enabled,
+                zone_key="zone1",
             )
             raw_pwm2 = calc_curve_pwm(
                 t_zone2,
@@ -203,6 +225,7 @@ def stats_collector_daemon():
                 temp_max=temp_max,
                 curve_points=zone2_curve,
                 allow_zero=zero_rpm_enabled,
+                zone_key="zone2",
             )
 
             if nvme_curve and t_nvme is not None:
@@ -214,6 +237,7 @@ def stats_collector_daemon():
                     temp_max=temp_max,
                     curve_points=nvme_curve,
                     allow_zero=False,
+                    zone_key="nvme",
                 )
                 raw_pwm1 = max(raw_pwm1, raw_nvme_pwm)
                 raw_pwm2 = max(raw_pwm2, raw_nvme_pwm)
@@ -225,7 +249,9 @@ def stats_collector_daemon():
                 raw_pwm1 = max(raw_pwm1, default_nvme_pwm)
                 raw_pwm2 = max(raw_pwm2, default_nvme_pwm)
 
-            if cpu_curve:
+            if cpu_temp is None or cpu_temp <= 0:
+                raw_pwm3 = FAN_FAILSAFE_PWM
+            elif cpu_curve:
                 raw_pwm3 = calc_curve_pwm(
                     cpu_temp,
                     min_pwm=FAN_MIN_PWM,
@@ -234,8 +260,9 @@ def stats_collector_daemon():
                     temp_max=85,
                     curve_points=cpu_curve,
                     allow_zero=False,
+                    zone_key="cpu",
                 )
-            elif cpu_temp >= 85:
+            elif cpu_temp >= 80:
                 raw_pwm3 = FAN_MAX_PWM
             elif cpu_temp >= 70:
                 raw_pwm3 = 145
@@ -245,7 +272,7 @@ def stats_collector_daemon():
                 raw_pwm3 = 85
 
             # Safety override: any spinning or solid state disk at/above its critical temperature,
-            # or CPU at/above 85°C, forces fans to 100% regardless of profile or curve.
+            # or CPU at/above 80°C, forces fans to 100% regardless of profile or curve.
             hot_disks = []
             for d in disks:
                 t = d.get("temp")
@@ -259,7 +286,7 @@ def stats_collector_daemon():
                     if t >= crit_thresh:
                         hot_disks.append((d, crit_thresh))
 
-            cpu_critical = cpu_temp is not None and cpu_temp >= 85
+            cpu_critical = cpu_temp is not None and cpu_temp >= 80
             critical_override = bool(hot_disks) or cpu_critical
             if critical_override and not Z_STATE.critical_temp_active:
                 reasons = []
@@ -271,7 +298,7 @@ def stats_collector_daemon():
                         )
                     )
                 if cpu_critical:
-                    reasons.append(f"CPU ({cpu_temp}°C >= 85°C)")
+                    reasons.append(f"CPU ({cpu_temp}°C >= 80°C)")
                 names = "; ".join(reasons)
                 logger.warning(f"[FANS] Critical temperature detected: {names}. Forcing fans to 100%.")
                 add_event(
@@ -425,6 +452,8 @@ def stats_collector_daemon():
             else:
                 pct_map = {"quiet": 67, "balanced": 120, "performance": 155, "full": FAN_MAX_PWM}
                 man_pwm = pct_map.get(profile, int((fan_cfg.get("manual_pct", 60) / 100.0) * FAN_MAX_PWM))
+                if critical_override:
+                    man_pwm = FAN_MAX_PWM
                 man_pwm = max(FAN_MIN_PWM, min(FAN_MAX_PWM, man_pwm))
                 active_pwm1 = apply_zone_pwm(1, man_pwm, hold_secs=disk_hold_secs, allow_zero=False)
                 active_pwm2 = apply_zone_pwm(2, man_pwm, hold_secs=disk_hold_secs, allow_zero=False)

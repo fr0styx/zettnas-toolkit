@@ -30,7 +30,7 @@ def is_zettlab_appliance() -> bool:
     try:
         from backend.hardware.storage import detect_chassis_model
 
-        model = detect_chassis_model()
+        model = detect_chassis_model(allow_fallback=False)
         if model in ("d4", "d6u", "d8u"):
             return True
     except Exception:
@@ -41,7 +41,22 @@ def is_zettlab_appliance() -> bool:
         u_status = read_unraid_status()
         if u_status and u_status.get("available"):
             u_model = (u_status.get("model") or "").lower()
-            if any(k in u_model for k in ("zettlab", "d4", "d6", "d8", "wy110", "wy120", "wy140")):
+            if any(
+                k in u_model
+                for k in (
+                    "zettlab",
+                    "zettos",
+                    "wy110",
+                    "wy120",
+                    "wy140",
+                    "d4 ultra",
+                    "d4u",
+                    "d6 ultra",
+                    "d6u",
+                    "d8 ultra",
+                    "d8u",
+                )
+            ):
                 return True
     except Exception:
         pass
@@ -53,7 +68,25 @@ def is_zettlab_appliance() -> bool:
         board = ChassisEngine._read_dmi_field("board_name").lower()
         dmi_str = f"{vendor} {product} {board}"
         return any(
-            k in dmi_str for k in ("zettlab", "zettos", "wy110", "wy120", "wy140", "d4", "d6", "d6u", "d8u", "aoostar")
+            k in dmi_str
+            for k in (
+                "zettlab",
+                "zettos",
+                "zettnas",
+                "zettbox",
+                "wy110",
+                "wy120",
+                "wy140",
+                "d4 ultra",
+                "d4 pro",
+                "d4u",
+                "d6 ultra",
+                "d6 pro",
+                "d6u",
+                "d8 ultra",
+                "d8u",
+                "aoostar",
+            )
         )
     except Exception:
         return False
@@ -426,6 +459,7 @@ def calc_curve_pwm(
     temp_max=50,
     curve_points=None,
     allow_zero=False,
+    zone_key=None,
 ):
     if temp is None or temp <= 0:
         # Thermal failsafe: missing, disconnected, or unreadable sensor data
@@ -438,13 +472,26 @@ def calc_curve_pwm(
     WATCHDOG_CEILING_TEMP = 80
     WATCHDOG_RELEASE_TEMP = 74
 
-    if temp >= WATCHDOG_CEILING_TEMP or (
-        getattr(Z_STATE, "thermal_watchdog_engaged", False) and temp > WATCHDOG_RELEASE_TEMP
-    ):
+    if not hasattr(Z_STATE, "zone_watchdog_engaged") or not isinstance(Z_STATE.zone_watchdog_engaged, dict):
+        Z_STATE.zone_watchdog_engaged = {}
+
+    engaged = (
+        Z_STATE.zone_watchdog_engaged.get(zone_key, False)
+        if zone_key
+        else getattr(Z_STATE, "thermal_watchdog_engaged", False)
+    )
+
+    if temp >= WATCHDOG_CEILING_TEMP or (engaged and temp > WATCHDOG_RELEASE_TEMP):
+        if zone_key:
+            Z_STATE.zone_watchdog_engaged[zone_key] = True
         Z_STATE.thermal_watchdog_engaged = True
         return max_pwm
     else:
-        Z_STATE.thermal_watchdog_engaged = False
+        if zone_key:
+            Z_STATE.zone_watchdog_engaged[zone_key] = False
+            Z_STATE.thermal_watchdog_engaged = any(Z_STATE.zone_watchdog_engaged.values())
+        else:
+            Z_STATE.thermal_watchdog_engaged = False
 
     pts = sanitize_curve_points(curve_points)
     if pts:
@@ -481,6 +528,10 @@ def apply_zone_pwm(pwm_index, target_pwm, hold_secs=FAN_DISK_HOLD_SECS, allow_ze
     # CPU fan (pwm3) is strictly forbidden from entering Zero RPM
     if pwm_key == "pwm3":
         allow_zero = False
+
+    # Emergency thermal clamp: if hardware is critical, force max PWM immediately
+    if getattr(Z_STATE, "critical_temp_active", False) or getattr(Z_STATE, "thermal_watchdog_engaged", False):
+        target_pwm = FAN_MAX_PWM
 
     if pwm_key not in Z_STATE.fan_state_tracker:
         Z_STATE.fan_state_tracker[pwm_key] = {

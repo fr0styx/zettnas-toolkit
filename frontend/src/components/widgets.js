@@ -1,6 +1,7 @@
 import { ZettEventBus } from '../event-bus.js';
 import { state } from '../state.js';
 import { showToast } from '../toast.js';
+import { escapeHtml } from '../utils.js';
 
 const STORAGE_KEY = 'zettnas_widgets_config';
 const WEATHER_CACHE_KEY = 'zettnas_weather_cache';
@@ -318,16 +319,6 @@ const COUNTRY_NAMES = {
 };
 
 const HOLIDAY_CACHE_PREFIX = 'zettnas_holidays_';
-
-function escapeHtml(str) {
-  if (!str) return '';
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
 
 export function getActiveCountry() {
   const cfg = _config || loadWidgetConfig();
@@ -992,10 +983,10 @@ function initWeatherCityAutocomplete() {
       html += `
         <div class="weather-city-item" data-idx="${idx}">
           <div>
-            <div class="weather-city-name">${item.name}</div>
-            <div class="weather-city-sub">${region}</div>
+            <div class="weather-city-name">${escapeHtml(item.name || '')}</div>
+            <div class="weather-city-sub">${escapeHtml(region)}</div>
           </div>
-          ${code ? `<span class="weather-city-badge">${code}</span>` : ''}
+          ${code ? `<span class="weather-city-badge">${escapeHtml(code)}</span>` : ''}
         </div>
       `;
     });
@@ -1502,8 +1493,8 @@ export function initWidgets() {
           ? 'temp-standby'
           : (d.temp >= 45 ? 'temp-hot' : (d.temp >= 35 ? 'temp-warm' : 'temp-cool'));
         return `
-          <div class="drive-temp-cell ${tempClass}" title="${d.name || ''} - ${tempText}">
-            <span class="drive-temp-bay">${bayLabel}</span>
+          <div class="drive-temp-cell ${tempClass}" title="${escapeHtml(d.name || '')} - ${tempText}">
+            <span class="drive-temp-bay">${escapeHtml(bayLabel)}</span>
             <span class="drive-temp-val">${tempText}</span>
           </div>
         `;

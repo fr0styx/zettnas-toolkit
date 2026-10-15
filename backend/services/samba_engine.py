@@ -319,6 +319,10 @@ class SambaEngine:
         When delete=True, removes the user from passdb.
         When password is provided, creates or updates the SMB credentials.
         """
+        if not re.fullmatch(r"^[a-zA-Z0-9_\-\.]{1,32}$", username):
+            logger.warning(f"[SambaEngine] Rejected invalid username for passdb sync: '{username}'")
+            return False
+
         sidecar_info = self.check_sidecar()
         docker_sock = "/var/run/docker.sock"
 
@@ -370,7 +374,9 @@ class SambaEngine:
                                 "Cmd": [
                                     "sh",
                                     "-c",
-                                    f"id -u {username} || adduser -D -H -u 1000 {username} 2>/dev/null || true",
+                                    'id -u "$1" >/dev/null 2>&1 || adduser -D -H -u 1000 "$1" 2>/dev/null || true',
+                                    "--",
+                                    username,
                                 ],
                                 "AttachStdout": True,
                                 "AttachStderr": True,
@@ -388,7 +394,10 @@ class SambaEngine:
                                 "Cmd": [
                                     "sh",
                                     "-c",
-                                    f"printf '%s\n%s\n' '{password}' '{password}' | smbpasswd -a -s {username}",
+                                    'printf "%s\\n%s\\n" "$1" "$1" | smbpasswd -a -s "$2"',
+                                    "--",
+                                    password,
+                                    username,
                                 ],
                                 "AttachStdout": True,
                                 "AttachStderr": True,

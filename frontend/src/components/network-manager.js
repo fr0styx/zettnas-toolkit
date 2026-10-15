@@ -3,6 +3,7 @@
  * Modular controller for host network adapters, virtual switching, and listening socket inspection.
  */
 import { api } from '../api.js';
+import { escapeHtml } from '../utils.js';
 
 let _cachedPorts = [];
 let _portsBound = false;
@@ -57,16 +58,16 @@ export function renderListeningPortsTable(ports, filter = '') {
     const containerCol = p.container
       ? `<div style="display:flex; align-items:center; gap:6px;">
            <span style="font-size: 12px;">🐳</span>
-           <span style="color: #60a5fa; font-weight: 600;">${p.container}</span>
+           <span style="color: #60a5fa; font-weight: 600;">${escapeHtml(p.container)}</span>
          </div>`
       : `<span style="color: var(--muted); font-size: 11px;">Host System / Kernel</span>`;
 
     return `
-      <tr data-port="${p.port}" data-proto="${p.protocol}">
-        <td><strong style="font-family: monospace; font-size: 13px; color: #fff;">:${p.port}</strong></td>
+      <tr data-port="${escapeHtml(String(p.port))}" data-proto="${escapeHtml(String(p.protocol))}">
+        <td><strong style="font-family: monospace; font-size: 13px; color: #fff;">:${escapeHtml(String(p.port))}</strong></td>
         <td>${protoBadge}</td>
-        <td><code style="font-size: 11px; color: var(--muted);">${p.bind_address}</code></td>
-        <td><span style="font-weight: 600; color: #e2e8f0;">${p.service || 'Unknown'}</span></td>
+        <td><code style="font-size: 11px; color: var(--muted);">${escapeHtml(String(p.bind_address))}</code></td>
+        <td><span style="font-weight: 600; color: #e2e8f0;">${escapeHtml(String(p.service || 'Unknown'))}</span></td>
         <td>${containerCol}</td>
         <td style="text-align: right;">${stateBadge}</td>
       </tr>

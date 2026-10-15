@@ -7,7 +7,7 @@ import time
 
 from backend.state import Z_STATE
 
-LED_PORT = os.environ.get("LED_PORT", "/dev/ttyACM0" if os.path.exists("/dev/ttyACM0") else "/host/dev/ttyACM0")
+LED_PORT = os.environ.get("LED_PORT", "")
 
 CRC_TABLE = [
     0x00,
@@ -327,7 +327,7 @@ def _get_serial_connection(port: str):
 
 
 def find_led_port():
-    env_port = os.environ.get("LED_PORT")
+    env_port = os.environ.get("LED_PORT", "").strip()
     if env_port and os.path.exists(env_port):
         return env_port
     by_ids = glob.glob("/dev/serial/by-id/*ZettOS_RGB*") + glob.glob("/host/dev/serial/by-id/*ZettOS_RGB*")
@@ -340,6 +340,13 @@ def find_led_port():
             except Exception:
                 pass
             return b
+
+    # Avoid capturing arbitrary serial devices (Zigbee dongles, 3D printers) on generic PCs
+    from backend.hardware.fans import is_zettlab_appliance
+
+    if not is_zettlab_appliance():
+        return None
+
     candidates = [
         "/dev/ttyACM0",
         "/host/dev/ttyACM0",
@@ -349,7 +356,6 @@ def find_led_port():
         "/host/dev/ttyUSB0",
         "/dev/ttyUSB1",
         "/host/dev/ttyUSB1",
-        LED_PORT,
     ]
     for p in candidates:
         if p and os.path.exists(p):

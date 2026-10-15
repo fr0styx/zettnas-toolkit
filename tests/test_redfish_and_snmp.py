@@ -16,7 +16,7 @@ def test_redfish_service_root(client):
     assert "Storage" in data
 
 
-def test_redfish_chassis_and_thermal(client):
+def test_redfish_chassis_and_thermal(client, auth_headers):
     # Seed cached stats
     Z_STATE.cached_stats = {
         "chassis": "d6u",
@@ -30,7 +30,7 @@ def test_redfish_chassis_and_thermal(client):
     }
 
     # 1. Chassis/1
-    res = client.get("/redfish/v1/Chassis/1")
+    res = client.get("/redfish/v1/Chassis/1", headers=auth_headers)
     assert res.status_code == 200
     chassis = res.json()
     assert chassis["Id"] == "1"
@@ -38,7 +38,7 @@ def test_redfish_chassis_and_thermal(client):
     assert chassis["ChassisType"] == "RackMount"
 
     # 2. Chassis/1/Thermal
-    res = client.get("/redfish/v1/Chassis/1/Thermal")
+    res = client.get("/redfish/v1/Chassis/1/Thermal", headers=auth_headers)
     assert res.status_code == 200
     thermal = res.json()
     assert "Temperatures" in thermal
@@ -54,9 +54,9 @@ def test_redfish_chassis_and_thermal(client):
     assert thermal["Fans"][0]["Reading"] == 1200
 
 
-def test_redfish_systems_and_storage(client):
+def test_redfish_systems_and_storage(client, auth_headers):
     # 1. Systems/1
-    res = client.get("/redfish/v1/Systems/1")
+    res = client.get("/redfish/v1/Systems/1", headers=auth_headers)
     assert res.status_code == 200
     sys_data = res.json()
     assert sys_data["Id"] == "1"
@@ -64,13 +64,13 @@ def test_redfish_systems_and_storage(client):
     assert "MemorySummary" in sys_data
 
     # 2. Storage/1
-    res = client.get("/redfish/v1/Storage/1")
+    res = client.get("/redfish/v1/Storage/1", headers=auth_headers)
     assert res.status_code == 200
     storage = res.json()
     assert "Drives" in storage
 
     # 3. Individual Drive
-    res = client.get("/redfish/v1/Storage/1/Drives/sda")
+    res = client.get("/redfish/v1/Storage/1/Drives/sda", headers=auth_headers)
     assert res.status_code == 200
     drive = res.json()
     assert drive["Id"] == "sda"

@@ -83,4 +83,4 @@ def read_cpu_temp():
             except Exception:
                 continue
 
-    return 0
+    return None

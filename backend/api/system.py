@@ -735,7 +735,10 @@ def set_system_profile(req: SystemProfileRequest):
     atomic_write_json(FAN_STATE_FILE, fan_cfg)
     atomic_write_json(LED_STATE_FILE, led_cfg)
 
-    set_fan_pwm(fan_cfg["profile"], fan_cfg.get("manual_pct", 60), ctrl_cpu_fan=fan_cfg.get("ctrl_cpu_fan", False))
+    if not Z_STATE.critical_temp_active:
+        set_fan_pwm(fan_cfg["profile"], fan_cfg.get("manual_pct", 60), ctrl_cpu_fan=fan_cfg.get("ctrl_cpu_fan", False))
+    else:
+        logger.warning("[FANS] Critical temperature active; preserving maximum fan PWM clamp.")
     apply_led_state(led_cfg)
     Z_STATE.ui_wake.set()
 
@@ -992,15 +995,25 @@ class StackActionRequest(BaseModel):
     action: str  # "restart", "stop", "start", "redeploy"
 
 
-@router.get("/docker/stacks")
+@router.get(
+    "/docker/stacks",
+    dependencies=[Depends(require_scope("containers:read", "containers:manage"))],
+)
 async def get_docker_stacks():
     from backend.services.docker_stacks import list_all_stacks
 
     return await asyncio.to_thread(list_all_stacks)
 
 
-@router.get("/docker/stacks/{stack_name}")
-async def get_docker_stack_details(stack_name: str):
+@router.get(
+    "/docker/stacks/{stack_name}",
+    dependencies=[Depends(require_scope("containers:read", "containers:manage"))],
+)
+async def get_docker_stack_details(
+    stack_name: str,
+    unmask: bool = False,
+    principal: AuthenticatedPrincipal = Depends(get_current_principal),
+):
     if not stack_name or not re.match(r"^[a-zA-Z0-9_.-]{1,128}$", stack_name):
         raise HTTPException(status_code=400, detail="Invalid stack name")
     from backend.services.docker_stacks import get_stack_details
@@ -1008,6 +1021,24 @@ async def get_docker_stack_details(stack_name: str):
     details = await asyncio.to_thread(get_stack_details, stack_name)
     if not details.get("containers") and not details.get("has_real_file"):
         raise HTTPException(status_code=404, detail=f"Stack '{stack_name}' not found")
+
+    can_unmask = principal and (
+        principal.role_id in ("superadmin", "admin")
+        or principal.has_scope("containers:manage")
+        or principal.has_scope("*")
+    )
+    if not (unmask and can_unmask):
+        if details.get("env_content"):
+            masked_lines = []
+            for line in details["env_content"].splitlines():
+                if "=" in line and not line.strip().startswith("#"):
+                    k, v = line.split("=", 1)
+                    if any(s in k.lower() for s in ("pass", "secret", "token", "key", "auth", "pwd")):
+                        masked_lines.append(f"{k}=••••••••")
+                        continue
+                masked_lines.append(line)
+            details["env_content"] = "\n".join(masked_lines)
+
     return details
 
 
@@ -1795,6 +1826,10 @@ async def fs_trash_restore(
                     dest_dir = root_dir
                     dest_path = os.path.join(dest_dir, orig_name)
 
+                dest_dir = _contained(dest_dir, must_exist=False)
+                dest_path = _contained(dest_path, must_exist=False)
+                check_user_path_access(dest_path, principal)
+
                 os.makedirs(dest_dir, exist_ok=True)
 
                 if os.path.lexists(dest_path):
@@ -1814,6 +1849,8 @@ async def fs_trash_restore(
         res = await asyncio.to_thread(_do_restore)
         add_event("success", "File Explorer", f"Restored {item_id} from Recycle Bin")
         return res
+    except HTTPException:
+        raise
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail="Item not found in Recycle Bin")
     except Exception as e:
@@ -2196,6 +2233,18 @@ def list_tokens(principal: AuthenticatedPrincipal = Depends(get_current_principa
 
 @router.post("/tokens", dependencies=[Depends(require_scope("users:write", "system:config"))])
 def create_token(req: TokenCreateRequest, principal: AuthenticatedPrincipal = Depends(get_current_principal)):
+    if principal and principal.role_id != "superadmin" and not principal.has_scope("*"):
+        caller_scopes = set(principal.scopes or [])
+        requested_scopes = set(req.scopes or [])
+        if "*" in requested_scopes and "*" not in caller_scopes:
+            raise HTTPException(status_code=403, detail="Cannot create wildcard token without wildcard privileges.")
+        unheld_scopes = requested_scopes - caller_scopes
+        if unheld_scopes:
+            raise HTTPException(
+                status_code=403,
+                detail=f"Cannot grant scopes you do not possess: {', '.join(sorted(unheld_scopes))}",
+            )
+
     user_id = principal.user_id if principal else "admin-00000000-0000-0000-0000-000000000001"
     try:
         from backend.users_db import create_scoped_api_token
@@ -2214,6 +2263,8 @@ def create_token(req: TokenCreateRequest, principal: AuthenticatedPrincipal = De
             "scopes": meta["scopes"],
             "masked_token": meta["masked_token"],
         }
+    except HTTPException:
+        raise
     except Exception as e:
         logger.warning(f"Falling back to legacy token generation: {e}")
         token = generate_token(req.name)
@@ -2222,20 +2273,24 @@ def create_token(req: TokenCreateRequest, principal: AuthenticatedPrincipal = De
 
 
 @router.delete("/tokens/{token_id}", dependencies=[Depends(require_scope("users:write", "system:config"))])
-def delete_token(token_id: str):
+def delete_token(token_id: str, principal: AuthenticatedPrincipal = Depends(get_current_principal)):
+    user_id = None
+    if principal and principal.role_id != "superadmin" and not principal.has_scope("*"):
+        user_id = principal.user_id
+
     revoked = False
     try:
         from backend.users_db import revoke_scoped_api_token
 
-        revoked = revoke_scoped_api_token(token_id)
+        revoked = revoke_scoped_api_token(token_id, user_id=user_id)
     except Exception as e:
         logger.warning(f"Could not revoke token via users_db: {e}")
-    if not revoked:
+    if not revoked and (not user_id or (principal and (principal.role_id == "superadmin" or principal.has_scope("*")))):
         revoked = revoke_token(token_id)
     if revoked:
         add_event("info", "Security", "Revoked an API token")
         return {"status": "ok"}
-    raise HTTPException(status_code=404, detail="Token not found")
+    raise HTTPException(status_code=404, detail="Token not found or unauthorized to revoke.")
 
 
 @router.post("/system/reboot", dependencies=[Depends(require_scope("system:power"))])

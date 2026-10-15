@@ -279,10 +279,10 @@ _PUBLIC_API_PATHS = {
     "/api/v1/auth/users-list",
     "/api/health",
     "/api/v1/health",
-    "/api/metrics",
-    "/api/v1/metrics",
     "/api/remotes/oauth/mobile-page",
     "/api/remotes/oauth/mobile-exchange",
+    "/redfish/v1",
+    "/redfish/v1/",
 }
 _DOCS_PATHS = {"/docs", "/redoc", "/openapi.json", "/docs/oauth2-redirect"}
 
@@ -324,7 +324,7 @@ async def auth_middleware(request: Request, call_next):
     if content_length and content_length.isdigit() and int(content_length) > config.MAX_BODY_BYTES:
         return error_response(413, "Request body too large.")
 
-    is_api = path.startswith("/api/")
+    is_api = path.startswith("/api/") or path.startswith("/redfish")
     is_docs = path in _DOCS_PATHS
     is_exempt = (
         path in _PUBLIC_API_PATHS

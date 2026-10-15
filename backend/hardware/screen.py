@@ -260,3 +260,48 @@ def save_screen_state(updates: dict):
     except Exception:
         pass
     return dict(state)
+
+
+def is_auxiliary_lcd_present() -> bool:
+    """
+    Checks if an embedded auxiliary LCD front-panel display is physically present.
+    To avoid hijacking a generic PC's primary HDMI/DisplayPort monitor (e.g. 1920x1080),
+    an auxiliary LCD is only considered present if:
+    1. ENABLE_FB is enabled in configuration, AND
+    2. A framebuffer character device exists, AND
+    3. Either the host is a recognized appliance (is_zettlab_appliance()), OR its geometry is <= 800x480.
+    """
+    from backend.config import ENABLE_FB
+
+    if not ENABLE_FB:
+        return False
+    fb_dev = find_fb_device(writable_only=False)
+    if not fb_dev:
+        return False
+
+    try:
+        from backend.hardware.fans import is_zettlab_appliance
+
+        if is_zettlab_appliance():
+            return True
+    except Exception:
+        pass
+
+    for base in (
+        os.path.join(HOST_SYS, "class/graphics/fb0") if HOST_SYS else None,
+        "/host/sys/class/graphics/fb0",
+        "/sys/class/graphics/fb0",
+    ):
+        if not base or not os.path.exists(base):
+            continue
+        v_path = os.path.join(base, "virtual_size")
+        if os.path.exists(v_path):
+            try:
+                with open(v_path, "r", encoding="utf-8", errors="replace") as f:
+                    parts = [int(x.strip()) for x in f.read().split(",") if x.strip()]
+                    if len(parts) == 2 and parts[0] > 0 and parts[1] > 0:
+                        w, h = max(parts), min(parts)
+                        return w <= 800 and h <= 480
+            except Exception:
+                pass
+    return False

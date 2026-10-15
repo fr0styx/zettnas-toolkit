@@ -628,6 +628,8 @@ class UnraidStorageAdapter(StoragePlatformAdapter):
             can_destroy_pools=False,
             can_manage_shares=False,
             can_trigger_scrub=True,
+            can_export_pools=False,
+            can_import_pools=False,
             supported_filesystems=["unraid", "btrfs", "zfs", "xfs"],
             description="Observer Mode: Unraid OS authoritatively manages array disks and shares. Modifying pools from container is prohibited to protect parity.",
         )

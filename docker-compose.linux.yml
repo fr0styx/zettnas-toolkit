@@ -78,10 +78,12 @@ services:
     network_mode: host                    # Line-rate 10GbE throughput + native WSD & Bonjour mDNS
     volumes:
       - /mnt/storage:/mnt/storage:rw
-      - ./data/samba/smb.conf:/etc/samba/smb.conf:ro
+      - ./data/samba:/etc/samba/zettnas:ro
       - ./data/samba/private:/var/lib/samba/private:rw
     environment:
       - USERID=1000
       - GROUPID=1000
+      - INCLUDE=/etc/samba/zettnas/smb.conf
+    command: ["-I", "/etc/samba/zettnas/smb.conf"]
     depends_on:
       - zettnas-toolkit

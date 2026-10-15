@@ -70,11 +70,13 @@ def read_json_cached(path: str, default: Any = None, max_age: float = 3.0) -> An
         return default
 
 
-def resolve_within(path: str, roots: Iterable[str]) -> str | None:
+def resolve_within(path: str, roots: Iterable[str] | str) -> str | None:
     """Return the canonical (symlink-resolved) path if it lies inside one of
     `roots`, otherwise None. Defeats `..` segments and symlink escapes."""
-    if not path:
+    if not path or not roots:
         return None
+    if isinstance(roots, (str, bytes)):
+        roots = [roots]
     real = os.path.realpath(path)
     for root in roots:
         real_root = os.path.realpath(root)
@@ -83,8 +85,12 @@ def resolve_within(path: str, roots: Iterable[str]) -> str | None:
     return None
 
 
-def root_for(path: str, roots: Iterable[str]) -> str | None:
+def root_for(path: str, roots: Iterable[str] | str) -> str | None:
     """Return the canonical root that contains `path` (already canonical)."""
+    if not path or not roots:
+        return None
+    if isinstance(roots, (str, bytes)):
+        roots = [roots]
     for root in roots:
         real_root = os.path.realpath(root)
         if path == real_root or path.startswith(real_root.rstrip(os.sep) + os.sep):

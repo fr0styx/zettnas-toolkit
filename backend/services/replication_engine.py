@@ -6,6 +6,7 @@ Supports bandwidth throttling, in-flight encryption over SSH/WireGuard, and rete
 
 from dataclasses import asdict, dataclass, field
 import os
+import re
 import shutil
 import subprocess
 import threading
@@ -193,6 +194,15 @@ class ReplicationEngine:
         tgt_user = job.get("target_user", "root")
         bw_limit = job.get("bandwidth_limit_kbps")
 
+        for name, val in [
+            ("source_pool", src_pool),
+            ("source_dataset", src_ds),
+            ("target_pool", tgt_pool),
+            ("target_dataset", tgt_ds),
+        ]:
+            if val and (not re.match(r"^[a-zA-Z0-9_\-\.\/]{1,256}$", val) or ".." in val):
+                raise ValueError(f"Invalid characters or traversal in {name}: '{val}'")
+
         try:
             # 1. Determine filesystem type: ZFS or Btrfs
             is_zfs = shutil.which("zfs") is not None
@@ -203,8 +213,8 @@ class ReplicationEngine:
 
             # Create destination command / path
             if tgt_type in ("remote_ssh", "remote_wireguard"):
-                if not tgt_host:
-                    raise ValueError("Target host is required for remote replication")
+                if not tgt_host or not re.match(r"^[a-zA-Z0-9_\-\.]{1,256}$", tgt_host):
+                    raise ValueError("Target host is required and must be a valid hostname/IP for remote replication")
                 remote_ssh_prefix = ["ssh", "-p", str(tgt_port), f"{tgt_user}@{tgt_host}"]
             else:
                 remote_ssh_prefix = []
@@ -218,29 +228,29 @@ class ReplicationEngine:
                 full_src = f"{src_pool}/{src_ds}".strip("/")
                 src_snap = f"{full_src}@{snap_tag}"
                 # Create snapshot first
-                subprocess.run(["zfs", "snapshot", src_snap], check=True, capture_output=True)
+                subprocess.run(["zfs", "snapshot", "--", src_snap], check=True, capture_output=True)
 
                 send_cmd = ["zfs", "send", "-v"]
                 if job.get("incremental"):
                     send_cmd.append("-i")
-                send_cmd.append(src_snap)
+                send_cmd.extend(["--", src_snap])
 
                 full_tgt = f"{tgt_pool}/{tgt_ds}".strip("/")
-                recv_cmd = remote_ssh_prefix + ["zfs", "receive", "-F", full_tgt]
+                recv_cmd = remote_ssh_prefix + ["zfs", "receive", "-F", "--", full_tgt]
             else:
                 # Btrfs pipeline
                 src_path = os.path.join("/mnt/storage", src_pool, src_ds)
                 snap_path = f"{src_path}/.snapshots/{snap_tag}"
                 os.makedirs(os.path.dirname(snap_path), exist_ok=True)
                 subprocess.run(
-                    ["btrfs", "subvolume", "snapshot", "-r", src_path, snap_path],
+                    ["btrfs", "subvolume", "snapshot", "-r", "--", src_path, snap_path],
                     check=True,
                     capture_output=True,
                 )
 
-                send_cmd = ["btrfs", "send", snap_path]
+                send_cmd = ["btrfs", "send", "--", snap_path]
                 tgt_path = os.path.join(tgt_pool or "/mnt/storage", tgt_ds)
-                recv_cmd = remote_ssh_prefix + ["btrfs", "receive", tgt_path]
+                recv_cmd = remote_ssh_prefix + ["btrfs", "receive", "--", tgt_path]
 
             # 3. Handle optional rate limiting
             pv_cmd = []

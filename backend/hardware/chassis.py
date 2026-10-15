@@ -131,16 +131,9 @@ class ChassisEngine:
         )
 
         # LCD Framebuffer detection
-        from backend.config import ENABLE_FB
+        from backend.hardware.screen import is_auxiliary_lcd_present
 
-        has_lcd = bool(
-            ENABLE_FB
-            and (
-                os.path.exists("/dev/fb0")
-                or os.path.exists(os.path.join(HOST_DEV, "fb0"))
-                or os.path.exists("/host/dev/fb0")
-            )
-        )
+        has_lcd = is_auxiliary_lcd_present()
 
         # LCD display resolution & geometry discovery
         display_w, display_h, stride = 640, 172, 704
@@ -182,12 +175,7 @@ class ChassisEngine:
         from backend.hardware.led import find_led_port
 
         led_port = find_led_port()
-        has_mcu = bool(
-            led_port is not None
-            or os.path.exists("/dev/ttyACM0")
-            or os.path.exists(os.path.join(HOST_DEV, "ttyACM0"))
-            or os.path.exists("/host/dev/ttyACM0")
-        )
+        has_mcu = bool(led_port is not None)
 
         # Physical COPY button
         # On Zettlab appliances it's mapped to MMIO /dev/mem

@@ -50,6 +50,14 @@ def evaluate_system_alerts(unraid_data, ups_data):
 
     # 2. UPS Power & Automated Failsafes
     if ups_data.get("available"):
+        try:
+            from backend.services.ups_watchdog import is_simulation_active
+
+            if is_simulation_active():
+                return
+        except Exception:
+            pass
+
         status = ups_data.get("status", "").upper()
         charge = ups_data.get("battery_charge_pct")
         runtime = ups_data.get("time_left_min")

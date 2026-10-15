@@ -1,1 +1,0 @@
-import{R as e,Z as t}from"./dashboard-BMTtucwB.js";export{e as initManagement,t as openDockerPruneModal};

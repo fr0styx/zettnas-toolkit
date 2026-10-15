@@ -3,7 +3,7 @@ import { state } from "./state.js";
 import { ZettEventBus } from './event-bus.js';
 import { api } from './api.js';
 import { DockManager, bringToFront, makeDraggable } from './components/dock.js';
-import { trapFocus } from './utils.js';
+import { trapFocus, escapeHtml } from './utils.js';
 import { t } from './i18n.js';
 import { generateSmartSparklineSvg, triggerLocateDisk } from './components/chassis-visualizer.js';
 // S.M.A.R.T. & INTERACTIVE METRIC DIAGNOSTIC MODAL CONTROLLER
@@ -680,7 +680,7 @@ async function openSmartModal(devName, forceWake = false) {
   const rawFilterInput = document.getElementById("smart-raw-filter");
   if (rawFilterInput) rawFilterInput.value = "";
 
-  if (smartTitle) smartTitle.innerHTML = `<svg class="ic"><use href="#i-disk"/></svg> ${t('modal.diag_title', 'S.M.A.R.T. Diagnostics')} • /dev/${devName}`;
+  if (smartTitle) smartTitle.innerHTML = `<svg class="ic"><use href="#i-disk"/></svg> ${t('modal.diag_title', 'S.M.A.R.T. Diagnostics')} • /dev/${escapeHtml(devName)}`;
   if (smartLbl1) smartLbl1.textContent = t('modal.smart_device_model', "DEVICE & MODEL");
   if (smartLbl2) smartLbl2.textContent = t('modal.smart_serial_metric', "SERIAL NUMBER");
   if (smartLbl3) smartLbl3.textContent = t('modal.smart_health_status', "HEALTH STATUS");
@@ -765,7 +765,7 @@ async function openSmartModal(devName, forceWake = false) {
               <div style="flex: 1;">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                   <div style="font-weight: 700; color: ${color}; text-transform: uppercase; font-size: 10px; letter-spacing: 0.5px;">
-                    ${deg.status.replace('_', ' ')} • SMART Velocity Analysis
+                    ${escapeHtml(deg.status.replace('_', ' '))} • SMART Velocity Analysis
                   </div>
                   <button id="smart-btn-locate-drive" style="background:rgba(56, 189, 248, 0.12); border:1px solid rgba(56, 189, 248, 0.35); color:#38bdf8; border-radius:4px; padding:2px 8px; cursor:pointer; font-weight:600; font-size:9.5px; display:flex; align-items:center; gap:4px;">
                     <svg viewBox="0 0 24 24" width="10" height="10"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="currentColor"/></svg>
@@ -773,7 +773,7 @@ async function openSmartModal(devName, forceWake = false) {
                   </button>
                 </div>
                 <div style="color: var(--text-secondary); margin-top: 2px;">
-                  ${deg.recommendation}
+                  ${escapeHtml(deg.recommendation || '')}
                 </div>
                 ${sparklineHtml}
               </div>
@@ -1293,7 +1293,7 @@ window.addEventListener('zettnas:lang-changed', () => {
     if (!smartOverlay || !smartOverlay.classList.contains('open') || !activeModalType) return;
     if (activeModalType.startsWith('disk_')) {
         const devName = activeModalType.replace('disk_', '');
-        if (smartTitle) smartTitle.innerHTML = `<svg class="ic"><use href="#i-disk"/></svg> ${t('modal.diag_title', 'S.M.A.R.T. Diagnostics')} • /dev/${devName}`;
+        if (smartTitle) smartTitle.innerHTML = `<svg class="ic"><use href="#i-disk"/></svg> ${t('modal.diag_title', 'S.M.A.R.T. Diagnostics')} • /dev/${escapeHtml(devName)}`;
         if (smartLbl1) smartLbl1.textContent = t('modal.smart_device_model', "DEVICE & MODEL");
         if (smartLbl2) smartLbl2.textContent = t('modal.smart_serial_metric', "SERIAL NUMBER");
         if (smartLbl3) smartLbl3.textContent = t('modal.smart_health_status', "HEALTH STATUS");
