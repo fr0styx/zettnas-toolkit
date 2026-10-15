@@ -138,11 +138,11 @@ async def stream_unix_socket_to_websocket(ws: WebSocket, socket_path: str, timeo
                 if message.get("type") == "websocket.disconnect":
                     break
                 if "text" in message and message["text"]:
-                    data_str = message["text"].replace("\r\n", "\r")
+                    data_str = message["text"].replace("\r\n", "\r").replace("\x08", "\x7f")
                     writer.write(data_str.encode("utf-8"))
                     await writer.drain()
                 elif "bytes" in message and message["bytes"]:
-                    data_bytes = message["bytes"].replace(b"\r\n", b"\r")
+                    data_bytes = message["bytes"].replace(b"\r\n", b"\r").replace(b"\x08", b"\x7f")
                     writer.write(data_bytes)
                     await writer.drain()
         except WebSocketDisconnect:

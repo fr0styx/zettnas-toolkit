@@ -23,7 +23,8 @@ import {
   pasteTextToGuestConsole,
   openVmEditModal,
   openQemuErrorModal,
-  openVmConnectModal
+  openVmConnectModal,
+  applyTerminalStream
 } from '../components/vm-manager.js';
 import { api } from '../api.js';
 import { showToast, showPromptToast } from '../toast.js';
@@ -1308,7 +1309,7 @@ describe('VM Manager & Dynamic Elastic Headroom Budgeting', () => {
             mockWs.send('\r');
           } else if (e.key === 'Backspace') {
             e.preventDefault();
-            mockWs.send('\b');
+            mockWs.send('\x7f');
           }
         }
       };
@@ -1340,7 +1341,47 @@ describe('VM Manager & Dynamic Elastic Headroom Budgeting', () => {
       mockWs.send.mockClear();
       mockWindowGuard(innerTargetEvt);
       // Because target is inside cliContainer, the window guard must return without invoking onkeydown
-      expect(mockWs.send).not.toHaveBeenCalled();
+      // 3. Backspace key sends \x7f for standard UNIX termios erase discipline
+      mockWs.send.mockClear();
+      const backspaceEvt = new KeyboardEvent('keydown', { key: 'Backspace', cancelable: true });
+      cliContainer.dispatchEvent(backspaceEvt);
+      expect(mockWs.send).toHaveBeenCalledTimes(1);
+      expect(mockWs.send).toHaveBeenCalledWith('\x7f');
+      expect(backspaceEvt.defaultPrevented).toBe(true);
+    });
+
+    it('correctly processes terminal backspace erase sequences and strips bell in applyTerminalStream', () => {
+      // 1. Erase single character
+      expect(applyTerminalStream('hello!', '\x08 \x08')).toBe('hello');
+
+      // 2. Erase multiple characters consecutively
+      expect(
+        applyTerminalStream('localhost:/# exping djdj', '\x08 \x08\x08 \x08\x08 \x08\x08 \x08')
+      ).toBe('localhost:/# exping ');
+
+      // 3. Erase with ANSI escape sequences intact
+      expect(
+        applyTerminalStream('\x1b[33mexping djdj\x1b[0m', '\x08 \x08\x08 \x08')
+      ).toBe('\x1b[33mexping dj\x1b[0m');
+
+      // 4. Erase in line ANSI sequence (\x08\x1b[K)
+      expect(applyTerminalStream('testing', '\x08\x1b[K')).toBe('testin');
+      expect(applyTerminalStream('testing', '\x08\x1b[0K')).toBe('testin');
+
+      // 5. Cursor left erase sequence (\x1b[D \x1b[D)
+      expect(applyTerminalStream('status', '\x1b[D \x1b[D')).toBe('statu');
+
+      // 6. Strip bell characters (\x07)
+      expect(applyTerminalStream('prompt$ ', '\x07')).toBe('prompt$ ');
+
+      // 7. Safety: does not erase across newline boundaries
+      expect(applyTerminalStream('line1\r\n', '\x08 \x08')).toBe('line1\r\n');
+
+      // 8. Fast path: text without backspace or bell returns unchanged
+      expect(applyTerminalStream('connected: ', 'welcome guest\r\n')).toBe('connected: welcome guest\r\n');
+
+      // 9. Multi-byte surrogate pair (emoji) deletion
+      expect(applyTerminalStream('hello 🚀', '\x08 \x08')).toBe('hello ');
     });
   });
 });

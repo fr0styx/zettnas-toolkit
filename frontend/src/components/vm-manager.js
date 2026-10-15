@@ -3769,6 +3769,86 @@ export function formatAnsiToHtml(raw) {
 
 export const parseAnsiToHtml = formatAnsiToHtml;
 
+/**
+ * Processes incoming serial terminal stream data, applying Backspace erase sequences
+ * (\x08 \x08, \x08\x1b[K, \x1b[D \x1b[D) and stripping terminal bell controls (\x07).
+ * Accurately deletes the preceding printable character while preserving ANSI escape sequences.
+ */
+export function applyTerminalStream(buffer, chunk) {
+  if (!chunk) return buffer || '';
+  let str = (buffer || '') + chunk;
+
+  // Fast path: if no backspace, erase, or bell sequences, return immediately
+  if (!str.includes('\x08') && !str.includes('\x1b[D') && !str.includes('\x07')) {
+    return str;
+  }
+
+  // Strip bell characters
+  str = str.replace(/\x07/g, '');
+
+  const ansiRegex = /(?:\x1b|\u001b)\[[?0-9;]*[a-zA-Z]/g;
+  // Matches \x08 \x08, \x08\x1b[K, \x08 \x1b[K, \x1b[D \x1b[D, etc.
+  const eraseRegex = /(?:\x08|\x1b\[D)(?: (?:\x08|\x1b\[D)|\x1b\[[?0-9;]*K| \x1b\[[?0-9;]*K)/;
+
+  while (true) {
+    const match = eraseRegex.exec(str);
+    if (!match) break;
+
+    const eraseStart = match.index;
+    const eraseEnd = eraseStart + match[0].length;
+
+    // Scan backward from eraseStart to find the visible character to delete,
+    // skipping any intervening ANSI escape sequences.
+    let targetIdx = -1;
+    let idx = eraseStart;
+
+    while (idx > 0) {
+      const lookback = str.slice(Math.max(0, idx - 32), idx);
+      const ansiMatches = [...lookback.matchAll(ansiRegex)];
+      let skippedAnsi = false;
+      if (ansiMatches.length > 0) {
+        const lastAnsi = ansiMatches[ansiMatches.length - 1];
+        if (lastAnsi.index + lastAnsi[0].length === lookback.length) {
+          idx -= lastAnsi[0].length;
+          skippedAnsi = true;
+        }
+      }
+      if (skippedAnsi) continue;
+
+      const ch = str[idx - 1];
+      if (ch === '\r' || ch === '\n') {
+        break;
+      }
+      targetIdx = idx - 1;
+      break;
+    }
+
+    if (targetIdx !== -1) {
+      let deleteLength = 1;
+      // Check for UTF-16 surrogate pairs (e.g. emojis)
+      if (targetIdx > 0) {
+        const code = str.charCodeAt(targetIdx);
+        if (code >= 0xdc00 && code <= 0xdfff) {
+          const prevCode = str.charCodeAt(targetIdx - 1);
+          if (prevCode >= 0xd800 && prevCode <= 0xdbff) {
+            targetIdx -= 1;
+            deleteLength = 2;
+          }
+        }
+      }
+      str = str.slice(0, targetIdx) + str.slice(targetIdx + deleteLength, eraseStart) + str.slice(eraseEnd);
+    } else {
+      str = str.slice(0, eraseStart) + str.slice(eraseEnd);
+    }
+  }
+
+  // Clean up any remaining lone backspaces (\x08 preceded by a non-newline char)
+  str = str.replace(/([^\r\n])\x08/g, '');
+  str = str.replace(/\x08/g, '');
+
+  return str;
+}
+
 async function initRealVncClient(container, vmId, vmName) {
   cancelConsoleReconnect();
   if (_activeRfb) {
@@ -3906,7 +3986,7 @@ async function initRealSerialTerminal(container, vmId, vmName) {
   const MAX_BUFFER_CHARS = 100000;
 
   const appendOutput = (chunk) => {
-    serialBuffer += chunk;
+    serialBuffer = applyTerminalStream(serialBuffer, chunk);
     if (serialBuffer.length > MAX_BUFFER_CHARS) {
       serialBuffer = serialBuffer.slice(serialBuffer.length - MAX_BUFFER_CHARS);
     }
@@ -3976,7 +4056,7 @@ async function initRealSerialTerminal(container, vmId, vmName) {
               ws.send('\r');
             } else if (e.key === 'Backspace') {
               e.preventDefault();
-              ws.send('\b');
+              ws.send('\x7f');
             } else if (e.key === 'Tab') {
               e.preventDefault();
               ws.send('\t');
@@ -4214,7 +4294,7 @@ export function openVmConsole(vmId, vmName = 'Virtual Machine', initialMode = 'g
           } else if (_activeSerialWs && _activeSerialWs.readyState === WebSocket.OPEN) {
             e.preventDefault();
             e.stopPropagation();
-            _activeSerialWs.send('\b');
+            _activeSerialWs.send('\x7f');
           }
         } else if (e.key === 'Enter') {
           const mode = consoleWin._activeMode || 'gui';

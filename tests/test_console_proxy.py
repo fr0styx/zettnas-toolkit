@@ -59,6 +59,8 @@ async def test_stream_unix_socket_crlf_normalization():
         side_effect=[
             {"type": "websocket.receive", "text": "echo test\r\n"},
             {"type": "websocket.receive", "bytes": b"status\r\n"},
+            {"type": "websocket.receive", "text": "bad\x08cmd"},
+            {"type": "websocket.receive", "bytes": b"raw\x08byte"},
             {"type": "websocket.disconnect"},
         ]
     )
@@ -74,6 +76,8 @@ async def test_stream_unix_socket_crlf_normalization():
         with patch("asyncio.open_unix_connection", return_value=(mock_reader, mock_writer)):
             await stream_unix_socket_to_websocket(mock_ws, "/tmp/test.sock")
 
-    # Both text and bytes must have \r\n normalized to single \r for serial TTY line discipline
+    # Both text and bytes must have \r\n normalized to single \r and \x08 normalized to \x7f
     mock_writer.write.assert_any_call(b"echo test\r")
     mock_writer.write.assert_any_call(b"status\r")
+    mock_writer.write.assert_any_call(b"bad\x7fcmd")
+    mock_writer.write.assert_any_call(b"raw\x7fbyte")
