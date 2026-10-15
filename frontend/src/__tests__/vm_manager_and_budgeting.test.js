@@ -1215,6 +1215,74 @@ describe('VM Manager & Dynamic Elastic Headroom Budgeting', () => {
         );
       });
     });
+
+    it('supports dragging and full OS window controls (minimize, maximize, close) on VM Edit and Create configuration modals', async () => {
+      const mockVm = {
+        id: 'vm-controls-test',
+        name: 'test-controls-vm',
+        vcpus: 2,
+        ram_gb: 4.0,
+        state: 'stopped',
+      };
+
+      // 1. Verify Edit Modal
+      openVmEditModal('vm-controls-test', mockVm);
+      const editModal = document.getElementById('modal-vm-edit');
+      expect(editModal).not.toBeNull();
+      expect(editModal.classList.contains('open')).toBe(true);
+
+      const editWin = editModal.querySelector('.smart-modal-window');
+      const editHdr = editModal.querySelector('.smart-modal-header');
+      expect(editWin).not.toBeNull();
+      expect(editHdr).not.toBeNull();
+
+      // Controls existence
+      const editControls = editModal.querySelector('.os-window-controls');
+      expect(editControls).not.toBeNull();
+      const editMinBtn = editModal.querySelector('#vm-edit-modal-min');
+      const editMaxBtn = editModal.querySelector('#vm-edit-modal-max');
+      const editCloseBtn = editModal.querySelector('#vm-edit-modal-close');
+      expect(editMinBtn).not.toBeNull();
+      expect(editMaxBtn).not.toBeNull();
+      expect(editCloseBtn).not.toBeNull();
+
+      // Maximize toggle
+      editMaxBtn.click();
+      expect(editWin.classList.contains('maximized')).toBe(true);
+      expect(editWin.style.width).toBe('100vw');
+
+      // Double-click header restores
+      editHdr.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+      expect(editWin.classList.contains('maximized')).toBe(false);
+
+      // Minimize button
+      editMinBtn.click();
+      expect(editModal.classList.contains('window-minimized')).toBe(true);
+
+      // Close button closes modal
+      editCloseBtn.click();
+      expect(editModal.classList.contains('open')).toBe(false);
+
+      // 2. Verify Create Modal Controls
+      openVmCreateModal();
+      const createModal = document.getElementById('modal-vm-create');
+      expect(createModal).not.toBeNull();
+      expect(createModal.querySelector('#vm-create-modal-min')).not.toBeNull();
+      expect(createModal.querySelector('#vm-create-modal-max')).not.toBeNull();
+      expect(createModal.querySelector('#vm-modal-close')).not.toBeNull();
+
+      // Create Maximize toggle
+      const createWin = createModal.querySelector('.smart-modal-window');
+      const createMaxBtn = createModal.querySelector('#vm-create-modal-max');
+      createMaxBtn.click();
+      expect(createWin.classList.contains('maximized')).toBe(true);
+      createMaxBtn.click();
+      expect(createWin.classList.contains('maximized')).toBe(false);
+
+      // Close create modal
+      createModal.querySelector('#vm-modal-close').click();
+      expect(createModal.classList.contains('open')).toBe(false);
+    });
   });
 });
 

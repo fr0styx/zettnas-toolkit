@@ -810,6 +810,8 @@ export function bringToFront(windowEl) {
     windowEl.id === 'app-deploy-modal-overlay' ||
     windowEl.id === 'modal-new-cloud-remote' ||
     windowEl.id === 'cloud-remote-window' ||
+    windowEl.id === 'modal-vm-edit' ||
+    windowEl.id === 'modal-vm-create' ||
     windowEl.classList?.contains('chassis-front-panel') ||
     windowEl.classList?.contains('management-window') ||
     windowEl.classList?.contains('mgmt-app-window') ||
@@ -818,8 +820,9 @@ export function bringToFront(windowEl) {
     windowEl.classList?.contains('stack-inspector-window') ||
     windowEl.classList?.contains('app-deploy-window') ||
     windowEl.classList?.contains('cloud-remote-window') ||
+    windowEl.classList?.contains('vm-modal-window') ||
     windowEl.classList?.contains('os-window') ||
-    windowEl.closest?.('#console-modal-overlay, #management-modal-overlay, #file-manager-window, #notif-center-panel, #container-inspector-window, #container-inspector-overlay, #stack-inspector-window, #stack-inspector-overlay, #stack-picker-window, #stack-picker-overlay, #app-deploy-modal-window, #app-deploy-modal-overlay, #modal-new-cloud-remote')
+    windowEl.closest?.('#console-modal-overlay, #management-modal-overlay, #file-manager-window, #notif-center-panel, #container-inspector-window, #container-inspector-overlay, #stack-inspector-window, #stack-inspector-overlay, #stack-picker-window, #stack-picker-overlay, #app-deploy-modal-window, #app-deploy-modal-overlay, #modal-new-cloud-remote, #modal-vm-edit, #modal-vm-create')
   );
 
   // Protect standalone modal backdrops & modal dialogs from being demoted into window z-index layer
@@ -851,7 +854,7 @@ export function bringToFront(windowEl) {
 
   // Fast-path guard: if already at top z-index and active, do not churn DOM or GPU layers
   const curZ = parseInt(windowEl.style.zIndex || '0', 10);
-  const targetWin = windowEl.querySelector?.('#console-window, #management-window, .chassis-front-panel, .mgmt-app-window, .container-inspector-window, #container-inspector-window, #app-deploy-modal-window, #cloud-remote-window, .cloud-remote-window') || windowEl;
+  const targetWin = windowEl.querySelector?.('#console-window, #management-window, .chassis-front-panel, .mgmt-app-window, .container-inspector-window, #container-inspector-window, #app-deploy-modal-window, #cloud-remote-window, .cloud-remote-window, .vm-modal-window') || windowEl;
   const isAlreadyActive = targetWin?.classList?.contains('active-window');
   const isTopZ = curZ === activeWindowZIndex;
 
@@ -911,7 +914,7 @@ export function bringToFront(windowEl) {
   } catch (e) {}
 }
 
-export const DESKTOP_WINDOW_SELECTOR = '#console-window, #management-window, #file-manager-window, .file-manager-window, #notif-center-panel, .container-inspector-window, #container-inspector-window, #stack-inspector-window, #stack-picker-window, #app-deploy-modal-window, #cloud-remote-window, .cloud-remote-window, .os-window';
+export const DESKTOP_WINDOW_SELECTOR = '#console-window, #management-window, #file-manager-window, .file-manager-window, #notif-center-panel, .container-inspector-window, #container-inspector-window, #stack-inspector-window, #stack-picker-window, #app-deploy-modal-window, #cloud-remote-window, .cloud-remote-window, .os-window, .vm-modal-window';
 
 export const handleWindowActivation = (e) => {
   // If the click directly targeted an overlay backdrop, do not activate it as a window
@@ -920,7 +923,9 @@ export const handleWindowActivation = (e) => {
     e.target.id === 'management-modal-overlay' ||
     e.target.id === 'console-modal-overlay' ||
     e.target.id === 'smart-modal-overlay' ||
-    e.target.id === 'modal-new-cloud-remote'
+    e.target.id === 'modal-new-cloud-remote' ||
+    e.target.id === 'modal-vm-edit' ||
+    e.target.id === 'modal-vm-create'
   )) {
     return;
   }

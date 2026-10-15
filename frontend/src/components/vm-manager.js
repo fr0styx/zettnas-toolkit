@@ -1012,13 +1012,17 @@ export function openVmEditModal(vmId, vmObj = null) {
 
     modal.innerHTML = `
       <div class="smart-modal-window vm-modal-window" style="max-width: 580px; width: 92%; max-height: 88vh; display: flex; flex-direction: column; overflow: hidden;">
-        <div class="smart-modal-header" style="cursor: move;">
-          <div class="smart-modal-title">
+        <div class="smart-modal-header" style="cursor: move; user-select: none; display: flex; justify-content: space-between; align-items: center;">
+          <div class="smart-modal-title" style="display: flex; align-items: center; gap: 8px;">
             <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-          <span>Edit VM Configuration: ${escapeHtml(targetVm.name)}</span>
+            <span>Edit VM Configuration: ${escapeHtml(targetVm.name)}</span>
+          </div>
+          <div class="os-window-controls" style="display: flex; gap: 6px; align-items: center;">
+            <button class="win-btn min-btn" id="vm-edit-modal-min" title="Minimize" aria-label="Minimize"></button>
+            <button class="win-btn max-btn" id="vm-edit-modal-max" title="Maximize" aria-label="Maximize"></button>
+            <button class="win-btn close-btn" id="vm-edit-modal-close" title="Close" aria-label="Close"></button>
+          </div>
         </div>
-        <button id="vm-edit-modal-close" class="modal-close-btn" style="background: none; border: none; color: var(--muted); cursor: pointer; font-size: 16px; padding: 4px 8px; border-radius: 4px;" title="Close" aria-label="Close">✕</button>
-      </div>
 
       <div class="smart-modal-body" style="flex: 1; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; gap: 14px; padding: 18px 22px;">
         ${isRunning ? `
@@ -1242,10 +1246,22 @@ export function openVmEditModal(vmId, vmObj = null) {
     </div>
   `;
 
+  modal.classList.remove('window-minimized');
   modal.classList.add('open');
+  modal.style.removeProperty('display');
   modal.style.display = 'flex';
 
+  const modalWin = modal.querySelector('.smart-modal-window');
+  const modalHdr = modal.querySelector('.smart-modal-header');
+
+  if (modalWin) {
+    modalWin.classList.remove('window-minimized');
+    modalWin.style.removeProperty('display');
+  }
+
   const closeBtn = modal.querySelector('#vm-edit-modal-close');
+  const minBtn = modal.querySelector('#vm-edit-modal-min');
+  const maxBtn = modal.querySelector('#vm-edit-modal-max');
   const cancelBtn = modal.querySelector('#vm-edit-cancel');
   const submitBtn = modal.querySelector('#vm-edit-submit');
 
@@ -1258,16 +1274,132 @@ export function openVmEditModal(vmId, vmObj = null) {
   const sliderMaxLabel = modal.querySelector('#vm-edit-slider-max-label');
   const overcommitWarning = modal.querySelector('#vm-edit-overcommit-warning');
 
+  // Make VM Configuration modal draggable & focusable
+  if (modalWin && modalHdr) {
+    makeDraggable(modalWin, modalHdr, 'modal-vm-edit');
+    modalWin.addEventListener('pointerdown', () => bringToFront(modalWin));
+    bringToFront(modalWin);
+  }
+
+  // Register in DockManager for window lifecycle (minimize & restore)
+  if (window.DockManager && typeof window.DockManager.register === 'function') {
+    window.DockManager.register(
+      'modal-vm-edit',
+      modal,
+      '#i-vm',
+      `Edit: ${targetVm.name || 'VM Configuration'}`
+    );
+  }
+
+  let onKeyDown = null;
   const close = () => {
     modal.classList.remove('open');
+    modal.classList.remove('window-minimized');
     modal.style.display = 'none';
+    if (modalWin) {
+      modalWin.classList.remove('window-minimized');
+    }
+    if (onKeyDown) {
+      document.removeEventListener('keydown', onKeyDown);
+      onKeyDown = null;
+    }
+    if (window.DockManager && typeof window.DockManager.unregister === 'function') {
+      window.DockManager.unregister('modal-vm-edit');
+    }
   };
+
+  onKeyDown = (e) => {
+    if (e.key === 'Escape' && modal.classList.contains('open')) {
+      close();
+    }
+  };
+  document.addEventListener('keydown', onKeyDown);
 
   if (closeBtn) closeBtn.onclick = close;
   if (cancelBtn) cancelBtn.onclick = close;
-  modal.onclick = (e) => {
-    if (e.target === modal) close();
-  };
+
+  // Minimize handler
+  if (minBtn) {
+    minBtn.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      modal.classList.add('window-minimized');
+      modal.classList.remove('open');
+      modal.style.setProperty('display', 'none', 'important');
+      if (modalWin) {
+        modalWin.classList.add('window-minimized');
+      }
+      if (window.DockManager && typeof window.DockManager.minimize === 'function') {
+        window.DockManager.minimize('modal-vm-edit');
+      }
+    };
+  }
+
+  // Maximize / Restore toggle handler
+  let isMax = false;
+  let preBounds = null;
+  if (maxBtn) {
+    maxBtn.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!isMax) {
+        preBounds = {
+          left: modalWin.style.left,
+          top: modalWin.style.top,
+          width: modalWin.style.width,
+          height: modalWin.style.height,
+          maxWidth: modalWin.style.maxWidth,
+          maxHeight: modalWin.style.maxHeight,
+          position: modalWin.style.position,
+          borderRadius: modalWin.style.borderRadius,
+        };
+        modalWin.classList.add('maximized');
+        modalWin.style.position = 'fixed';
+        modalWin.style.left = '0px';
+        modalWin.style.top = '36px';
+        modalWin.style.width = '100vw';
+        modalWin.style.height = 'calc(100vh - 36px - 72px)';
+        modalWin.style.maxWidth = '100vw';
+        modalWin.style.maxHeight = 'calc(100vh - 36px - 72px)';
+        modalWin.style.borderRadius = '0px';
+        maxBtn.setAttribute('title', 'Restore');
+        maxBtn.setAttribute('aria-label', 'Restore');
+        isMax = true;
+      } else {
+        modalWin.classList.remove('maximized');
+        if (preBounds) {
+          modalWin.style.left = preBounds.left || '';
+          modalWin.style.top = preBounds.top || '';
+          modalWin.style.width = preBounds.width || '92%';
+          modalWin.style.height = preBounds.height || '';
+          modalWin.style.maxWidth = preBounds.maxWidth || '580px';
+          modalWin.style.maxHeight = preBounds.maxHeight || '88vh';
+          modalWin.style.position = preBounds.position || '';
+          modalWin.style.borderRadius = preBounds.borderRadius || '14px';
+        } else {
+          modalWin.style.left = '';
+          modalWin.style.top = '';
+          modalWin.style.width = '92%';
+          modalWin.style.height = '';
+          modalWin.style.maxWidth = '580px';
+          modalWin.style.maxHeight = '88vh';
+          modalWin.style.position = '';
+          modalWin.style.borderRadius = '14px';
+        }
+        maxBtn.setAttribute('title', 'Maximize');
+        maxBtn.setAttribute('aria-label', 'Maximize');
+        isMax = false;
+      }
+    };
+  }
+
+  // Header double-click to toggle maximize
+  if (modalHdr) {
+    modalHdr.ondblclick = (e) => {
+      if (e.target.closest('button') || e.target.closest('input')) return;
+      if (maxBtn) maxBtn.click();
+    };
+  }
 
   if (ramSlider && ramDisplay) {
     ramSlider.oninput = () => {
@@ -2015,12 +2147,16 @@ export function openVmCreateModal() {
 
   modal.innerHTML = `
     <div class="smart-modal-window vm-modal-window" style="max-width: 580px; width: 92%; max-height: 88vh; display: flex; flex-direction: column; overflow: hidden;">
-      <div class="smart-modal-header" style="cursor: move;">
-        <div class="smart-modal-title">
+      <div class="smart-modal-header" style="cursor: move; user-select: none; display: flex; justify-content: space-between; align-items: center;">
+        <div class="smart-modal-title" style="display: flex; align-items: center; gap: 8px;">
           <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
           <span data-i18n="vm.create_btn">${escapeHtml(t('vm.create_btn', 'Create Virtual Machine'))}</span>
         </div>
-        <button id="vm-modal-close" class="modal-close-btn" style="background: none; border: none; color: var(--muted); cursor: pointer; font-size: 16px; padding: 4px 8px; border-radius: 4px;" title="Close" aria-label="Close">✕</button>
+        <div class="os-window-controls" style="display: flex; gap: 6px; align-items: center;">
+          <button class="win-btn min-btn" id="vm-create-modal-min" title="Minimize" aria-label="Minimize"></button>
+          <button class="win-btn max-btn" id="vm-create-modal-max" title="Maximize" aria-label="Maximize"></button>
+          <button class="win-btn close-btn" id="vm-modal-close" title="Close" aria-label="Close"></button>
+        </div>
       </div>
 
       <div class="smart-modal-body" style="flex: 1; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; gap: 14px; padding: 18px 22px;">
@@ -2272,15 +2408,39 @@ export function openVmCreateModal() {
   const modalHdr = modal.querySelector('.smart-modal-header');
   if (modalWin && modalHdr) {
     makeDraggable(modalWin, modalHdr, 'modal-vm-create');
+    modalWin.addEventListener('pointerdown', () => bringToFront(modalWin));
+    bringToFront(modalWin);
   }
+
+  // Register in DockManager for window lifecycle (minimize & restore)
+  if (window.DockManager && typeof window.DockManager.register === 'function') {
+    window.DockManager.register(
+      'modal-vm-create',
+      modal,
+      '#i-vm',
+      t('vm.create_btn', 'Create Virtual Machine')
+    );
+  }
+
+  const closeBtn = modal.querySelector('#vm-modal-close');
+  const minBtn = modal.querySelector('#vm-create-modal-min');
+  const maxBtn = modal.querySelector('#vm-create-modal-max');
+  const cancelBtn = modal.querySelector('#vm-create-cancel');
 
   let onKeyDown = null;
   const closeModal = () => {
     modal.classList.remove('open');
+    modal.classList.remove('window-minimized');
     modal.style.display = 'none';
+    if (modalWin) {
+      modalWin.classList.remove('window-minimized');
+    }
     if (onKeyDown) {
       document.removeEventListener('keydown', onKeyDown);
       onKeyDown = null;
+    }
+    if (window.DockManager && typeof window.DockManager.unregister === 'function') {
+      window.DockManager.unregister('modal-vm-create');
     }
   };
 
@@ -2291,15 +2451,91 @@ export function openVmCreateModal() {
   };
   document.addEventListener('keydown', onKeyDown);
 
-  modal.onclick = (e) => {
-    if (e.target === modal) closeModal();
-  };
-
-  const closeBtn = modal.querySelector('#vm-modal-close');
   if (closeBtn) closeBtn.onclick = closeModal;
-
-  const cancelBtn = modal.querySelector('#vm-create-cancel');
   if (cancelBtn) cancelBtn.onclick = closeModal;
+
+  // Minimize handler
+  if (minBtn) {
+    minBtn.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      modal.classList.add('window-minimized');
+      modal.classList.remove('open');
+      modal.style.setProperty('display', 'none', 'important');
+      if (modalWin) {
+        modalWin.classList.add('window-minimized');
+      }
+      if (window.DockManager && typeof window.DockManager.minimize === 'function') {
+        window.DockManager.minimize('modal-vm-create');
+      }
+    };
+  }
+
+  // Maximize / Restore toggle handler
+  let isCreateMax = false;
+  let preCreateBounds = null;
+  if (maxBtn) {
+    maxBtn.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!isCreateMax) {
+        preCreateBounds = {
+          left: modalWin.style.left,
+          top: modalWin.style.top,
+          width: modalWin.style.width,
+          height: modalWin.style.height,
+          maxWidth: modalWin.style.maxWidth,
+          maxHeight: modalWin.style.maxHeight,
+          position: modalWin.style.position,
+          borderRadius: modalWin.style.borderRadius,
+        };
+        modalWin.classList.add('maximized');
+        modalWin.style.position = 'fixed';
+        modalWin.style.left = '0px';
+        modalWin.style.top = '36px';
+        modalWin.style.width = '100vw';
+        modalWin.style.height = 'calc(100vh - 36px - 72px)';
+        modalWin.style.maxWidth = '100vw';
+        modalWin.style.maxHeight = 'calc(100vh - 36px - 72px)';
+        modalWin.style.borderRadius = '0px';
+        maxBtn.setAttribute('title', 'Restore');
+        maxBtn.setAttribute('aria-label', 'Restore');
+        isCreateMax = true;
+      } else {
+        modalWin.classList.remove('maximized');
+        if (preCreateBounds) {
+          modalWin.style.left = preCreateBounds.left || '';
+          modalWin.style.top = preCreateBounds.top || '';
+          modalWin.style.width = preCreateBounds.width || '92%';
+          modalWin.style.height = preCreateBounds.height || '';
+          modalWin.style.maxWidth = preCreateBounds.maxWidth || '580px';
+          modalWin.style.maxHeight = preCreateBounds.maxHeight || '88vh';
+          modalWin.style.position = preCreateBounds.position || '';
+          modalWin.style.borderRadius = preCreateBounds.borderRadius || '14px';
+        } else {
+          modalWin.style.left = '';
+          modalWin.style.top = '';
+          modalWin.style.width = '92%';
+          modalWin.style.height = '';
+          modalWin.style.maxWidth = '580px';
+          modalWin.style.maxHeight = '88vh';
+          modalWin.style.position = '';
+          modalWin.style.borderRadius = '14px';
+        }
+        maxBtn.setAttribute('title', 'Maximize');
+        maxBtn.setAttribute('aria-label', 'Maximize');
+        isCreateMax = false;
+      }
+    };
+  }
+
+  // Header double-click to toggle maximize
+  if (modalHdr) {
+    modalHdr.ondblclick = (e) => {
+      if (e.target.closest('button') || e.target.closest('input')) return;
+      if (maxBtn) maxBtn.click();
+    };
+  }
 
   // Real-time Slider Bindings
   const ramSlider = modal.querySelector('#vm-create-ram-slider');
@@ -2606,8 +2842,15 @@ export function openVmCreateModal() {
     };
   }
 
+  modal.classList.remove('window-minimized');
+  modal.style.removeProperty('display');
   modal.style.display = 'flex';
   modal.classList.add('open');
+  if (modalWin) {
+    modalWin.classList.remove('window-minimized');
+    modalWin.style.removeProperty('display');
+    bringToFront(modalWin);
+  }
 }
 
 /**
