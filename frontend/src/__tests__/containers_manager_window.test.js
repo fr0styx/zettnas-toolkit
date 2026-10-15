@@ -260,13 +260,22 @@ describe('Dedicated Containers Window & Desktop Icon Suite', () => {
     expect(win.style.display).toBe('flex');
   });
 
-  it('app catalog and stacks buttons trigger respective actions', () => {
+  it('app catalog button toggles between containers table and in-window app catalog', () => {
     initContainersManager();
-    window.openManagementSection = vi.fn();
 
     const catalogBtn = document.getElementById('btn-cw-catalog');
+    const tableWrap = document.querySelector('.cw-docker-table-wrap');
+    const catalogWrap = document.getElementById('cw-docker-catalog-wrap');
+
+    expect(catalogWrap.style.display).toBe('none');
     catalogBtn.click();
-    expect(window.openManagementSection).toHaveBeenCalledWith('mgmt-sec-docker', 'mgmt-pane-docker');
+    expect(tableWrap.style.display).toBe('none');
+    expect(catalogWrap.style.display).toBe('flex');
+
+    catalogBtn.click();
+    expect(tableWrap.style.display).toBe('block');
+    expect(catalogWrap.style.display).toBe('none');
   });
 });
+
 

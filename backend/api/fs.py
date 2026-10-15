@@ -678,7 +678,7 @@ async def fs_search(
                             scanned_count += 1
                             if scanned_count >= max_scanned:
                                 break
-                            if entry.name.startswith(".") and entry.name != ".RecycleBin":
+                            if entry.name.startswith("."):
                                 continue
 
                             is_match = query in entry.name.lower()

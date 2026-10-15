@@ -168,7 +168,9 @@ export function executeContextAction(action) {
       break;
 
     case 'wallpaper':
-      if (typeof window.openManagementSection === 'function') {
+      if (typeof window.openPersonalizationWindow === 'function') {
+        window.openPersonalizationWindow('wallpaper');
+      } else if (typeof window.openManagementSection === 'function') {
         window.openManagementSection('mgmt-sec-wallpaper', 'mgmt-pane-wallpaper');
       } else {
         ZettEventBus.emit('window:open', { id: 'management-window', section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-wallpaper' });
@@ -176,7 +178,9 @@ export function executeContextAction(action) {
       break;
 
     case 'theme':
-      if (typeof window.openManagementSection === 'function') {
+      if (typeof window.openPersonalizationWindow === 'function') {
+        window.openPersonalizationWindow('theme');
+      } else if (typeof window.openManagementSection === 'function') {
         window.openManagementSection('mgmt-sec-wallpaper', 'mgmt-pane-theme');
       } else {
         ZettEventBus.emit('window:open', { id: 'management-window', section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-theme' });
@@ -184,7 +188,9 @@ export function executeContextAction(action) {
       break;
 
     case 'glass':
-      if (typeof window.openManagementSection === 'function') {
+      if (typeof window.openPersonalizationWindow === 'function') {
+        window.openPersonalizationWindow('glass');
+      } else if (typeof window.openManagementSection === 'function') {
         window.openManagementSection('mgmt-sec-wallpaper', 'mgmt-pane-glass');
       } else {
         ZettEventBus.emit('window:open', { id: 'management-window', section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-glass' });
@@ -192,7 +198,9 @@ export function executeContextAction(action) {
       break;
 
     case 'dock':
-      if (typeof window.openManagementSection === 'function') {
+      if (typeof window.openPersonalizationWindow === 'function') {
+        window.openPersonalizationWindow('dock');
+      } else if (typeof window.openManagementSection === 'function') {
         window.openManagementSection('mgmt-sec-wallpaper', 'mgmt-pane-dock');
       } else {
         ZettEventBus.emit('window:open', { id: 'management-window', section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-dock' });
@@ -200,7 +208,9 @@ export function executeContextAction(action) {
       break;
 
     case 'screensaver':
-      if (typeof window.openManagementSection === 'function') {
+      if (typeof window.openPersonalizationWindow === 'function') {
+        window.openPersonalizationWindow('screensaver');
+      } else if (typeof window.openManagementSection === 'function') {
         window.openManagementSection('mgmt-sec-wallpaper', 'mgmt-pane-screensaver');
       } else {
         ZettEventBus.emit('window:open', { id: 'management-window', section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-screensaver' });

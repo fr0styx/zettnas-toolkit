@@ -1256,14 +1256,18 @@ export function setupWidgetSettingsEvents() {
   if (calCountryBadge) {
     calCountryBadge.addEventListener('click', (e) => {
       e.stopPropagation();
-      const mgmtBtn = document.querySelector('[data-mgmt-target="mgmt-sec-wallpaper"]');
-      if (mgmtBtn) mgmtBtn.click();
-      const widgetSubTab = document.querySelector('[data-subtab="mgmt-pane-widgets"]');
-      if (widgetSubTab) widgetSubTab.click();
-      const mgmtModal = document.getElementById('management-modal-overlay');
-      if (mgmtModal && (mgmtModal.style.display === 'none' || !mgmtModal.classList.contains('visible'))) {
-        const openMgmt = document.getElementById('dock-item-management');
-        if (openMgmt) openMgmt.click();
+      if (typeof window.openPersonalizationWindow === 'function') {
+        window.openPersonalizationWindow('widgets');
+      } else {
+        const mgmtBtn = document.querySelector('[data-mgmt-target="mgmt-sec-wallpaper"]');
+        if (mgmtBtn) mgmtBtn.click();
+        const widgetSubTab = document.querySelector('[data-subtab="mgmt-pane-widgets"]');
+        if (widgetSubTab) widgetSubTab.click();
+        const mgmtModal = document.getElementById('management-modal-overlay');
+        if (mgmtModal && (mgmtModal.style.display === 'none' || !mgmtModal.classList.contains('visible'))) {
+          const openMgmt = document.getElementById('dock-item-management');
+          if (openMgmt) openMgmt.click();
+        }
       }
     });
   }

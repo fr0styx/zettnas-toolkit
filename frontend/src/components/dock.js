@@ -1462,6 +1462,16 @@ export const KNOWN_APPS = {
         }
       }
     }
+  },
+  personalization: {
+    id: 'personalization',
+    icon: '#i-screen',
+    getTitle: () => t('dock.personalization', 'Desktop & Personalization'),
+    launch: (tab = null) => {
+      if (typeof window.openPersonalizationWindow === 'function') {
+        window.openPersonalizationWindow(tab);
+      }
+    }
   }
 };
 

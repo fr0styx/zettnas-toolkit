@@ -443,6 +443,16 @@ export function updateManagementTelemetry(stats) {
       currentPill.style.color = prof === 'performance' ? 'var(--warn)' : 'var(--ok2)';
     }
   }
+
+  // Peripheral Auto-Hiding (AGENTS.md §1.1)
+  const hasLcd = Boolean(stats?.peripherals?.fb_active) || Boolean(stats?.hardware?.has_lcd) || Boolean(stats?.lcd?.page !== undefined);
+  const hasLed = Boolean(stats?.peripherals?.led_ready) || Boolean(stats?.hardware?.has_mcu) || Boolean(stats?.peripherals?.led_port);
+
+  const ledTab = document.querySelector('.mgmt-inner-tab[data-tab-target="mgmt-pane-hardware-led"]');
+  if (ledTab) ledTab.style.display = hasLed ? '' : 'none';
+
+  const lcdTab = document.querySelector('.mgmt-inner-tab[data-tab-target="mgmt-pane-hardware-lcd"]');
+  if (lcdTab) lcdTab.style.display = hasLcd ? '' : 'none';
 }
 
 let _dockerContainersList = [];

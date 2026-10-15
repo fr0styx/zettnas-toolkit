@@ -12,6 +12,11 @@ import { t } from '../i18n.js';
 import { makeDraggable, bringToFront } from './dock.js';
 import { openContainerInspector, openContainerDeleteModal } from './container-modal.js';
 import { openStackModal, openStackPickerModal } from './stack-modal.js';
+import {
+  createContainerRow as createSharedContainerRow,
+  updateContainerRow as updateSharedContainerRow,
+  buildContainerRowInner as buildSharedContainerRowInner
+} from './docker-table.js';
 
 let containersWindow = null;
 let _cwContainersList = [];
@@ -22,6 +27,10 @@ let _cwSortCol = null;
 let _cwSortDir = 'asc';
 let _cwIsMax = false;
 let _cwPreMaxBounds = null;
+let _cwInCatalogView = false;
+let _cwCatalogApps = [];
+let _cwCatalogCategory = 'all';
+let _cwCatalogSearch = '';
 
 export function initContainersManager() {
   if (window._containersManagerInitialized) return;
@@ -151,6 +160,25 @@ export function initContainersManager() {
                 <tr><td colspan="6" style="text-align: center; color: var(--muted); padding: 24px;">Scanning Docker socket...</td></tr>
               </tbody>
             </table>
+          </div>
+          <div id="cw-docker-catalog-wrap" style="display: none; flex-direction: column; gap: 14px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 10px 14px;">
+              <div class="cw-catalog-filter-pills" style="display: flex; gap: 6px; flex-wrap: wrap;">
+                <button class="btn-pill-toggle cw-cat-btn active" data-cat="all">All</button>
+                <button class="btn-pill-toggle cw-cat-btn" data-cat="media">Media</button>
+                <button class="btn-pill-toggle cw-cat-btn" data-cat="productivity">Productivity</button>
+                <button class="btn-pill-toggle cw-cat-btn" data-cat="utilities">Utilities</button>
+                <button class="btn-pill-toggle cw-cat-btn" data-cat="security">Security</button>
+                <button class="btn-pill-toggle cw-cat-btn" data-cat="smart_home">Smart Home</button>
+                <button class="btn-pill-toggle cw-cat-btn" data-cat="downloaders">Downloaders</button>
+              </div>
+              <div style="position: relative;">
+                <input type="text" id="cw-catalog-search-input" placeholder="Search templates, apps, images..." class="tz-text-input" style="font-size: 11px; padding: 4px 10px; width: 220px; height: 26px; border-radius: 4px;">
+              </div>
+            </div>
+            <div id="cw-catalog-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px;">
+              <div style="text-align: center; color: var(--muted); padding: 24px; grid-column: 1 / -1;">Loading application catalog...</div>
+            </div>
           </div>
         </div>
       </div>
@@ -305,12 +333,51 @@ export function initContainersManager() {
   const btnCatalog = document.getElementById('btn-cw-catalog');
   if (btnCatalog) {
     btnCatalog.onclick = () => {
-      if (typeof window.openManagementSection === 'function') {
-        window.openManagementSection('mgmt-sec-docker', 'mgmt-pane-docker');
-        const mcCatalogBtn = document.getElementById('btn-view-docker-catalog');
-        if (mcCatalogBtn) mcCatalogBtn.click();
+      const tableWrap = containersWindow ? containersWindow.querySelector('.cw-docker-table-wrap') : null;
+      const catalogWrap = document.getElementById('cw-docker-catalog-wrap');
+      const searchWrap = containersWindow ? containersWindow.querySelector('.cw-docker-search-wrap') : null;
+      const filterPills = containersWindow ? containersWindow.querySelector('.cw-docker-filter-pills') : null;
+
+      _cwInCatalogView = !_cwInCatalogView;
+      if (_cwInCatalogView) {
+        if (tableWrap) tableWrap.style.display = 'none';
+        if (catalogWrap) catalogWrap.style.display = 'flex';
+        if (searchWrap) searchWrap.style.display = 'none';
+        if (filterPills) filterPills.style.display = 'none';
+        btnCatalog.innerHTML = '<span>🐳</span> <span>Container List</span>';
+        if (_cwCatalogApps.length === 0) {
+          loadCwCatalogData();
+        } else {
+          renderCwCatalogGrid();
+        }
+      } else {
+        if (tableWrap) tableWrap.style.display = 'block';
+        if (catalogWrap) catalogWrap.style.display = 'none';
+        if (searchWrap) searchWrap.style.display = 'block';
+        if (filterPills) filterPills.style.display = 'flex';
+        btnCatalog.innerHTML = '<span>📦</span> <span>App Catalog</span>';
       }
     };
+  }
+
+  // Catalog Category Filter Buttons
+  const catBtns = containersWindow.querySelectorAll('.cw-cat-btn');
+  catBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      catBtns.forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+      _cwCatalogCategory = btn.dataset.cat || 'all';
+      renderCwCatalogGrid();
+    });
+  });
+
+  // Catalog Search Input
+  const catSearchInput = document.getElementById('cw-catalog-search-input');
+  if (catSearchInput) {
+    catSearchInput.addEventListener('input', (e) => {
+      _cwCatalogSearch = (e.target.value || '').trim().toLowerCase();
+      renderCwCatalogGrid();
+    });
   }
 
   // Filter Buttons
@@ -390,6 +457,122 @@ export async function loadContainersData() {
   } catch (err) {
     showToast(`Failed to load containers: ${err.message}`, 'error');
   }
+}
+
+const categoryIcons = {
+  media: '🎬',
+  productivity: '📝',
+  utilities: '🛠️',
+  security: '🛡️',
+  smart_home: '🏠',
+  downloaders: '📥',
+  development: '💻',
+  monitoring: '📊',
+  storage: '💾',
+  network: '🌐',
+  other: '📦',
+};
+
+export async function loadCwCatalogData() {
+  const grid = document.getElementById('cw-catalog-grid');
+  if (!grid) return;
+  try {
+    const res = await api.get('/api/docker/catalog');
+    _cwCatalogApps = res.templates || res.apps || (Array.isArray(res) ? res : []);
+    renderCwCatalogGrid();
+  } catch (err) {
+    if (grid) {
+      grid.innerHTML = `<div style="text-align: center; color: var(--err, #ef4444); padding: 24px; grid-column: 1 / -1;">Failed to load catalog: ${escapeHtml(err.message)}</div>`;
+    }
+  }
+}
+
+export function renderCwCatalogGrid() {
+  const grid = document.getElementById('cw-catalog-grid');
+  if (!grid) return;
+
+  const filtered = _cwCatalogApps.filter((app) => {
+    if (_cwCatalogCategory !== 'all' && (app.category || '').toLowerCase() !== _cwCatalogCategory) {
+      return false;
+    }
+    if (_cwCatalogSearch) {
+      const q = _cwCatalogSearch.toLowerCase();
+      const n = (app.name || '').toLowerCase();
+      const d = (app.description || '').toLowerCase();
+      const img = (app.image || '').toLowerCase();
+      if (!n.includes(q) && !d.includes(q) && !img.includes(q)) return false;
+    }
+    return true;
+  });
+
+  if (filtered.length === 0) {
+    grid.innerHTML = `<div style="text-align: center; color: var(--muted); padding: 32px; grid-column: 1 / -1;">No applications found matching criteria.</div>`;
+    return;
+  }
+
+  grid.innerHTML = filtered.map((app) => {
+    const icon = categoryIcons[app.category] || '📦';
+    const logoHtml = app.logo
+      ? `<img src="${escapeHtml(app.logo)}" alt="${escapeHtml(app.name)}" style="width:24px; height:24px; object-fit:contain; border-radius:4px; vertical-align:middle; flex-shrink:0;" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='inline';" /><span style="font-size:20px; line-height:1; display:none;">${icon}</span>`
+      : `<span style="font-size:20px; line-height:1;">${icon}</span>`;
+
+    const sourceBadge = app.source_name && app.source_name !== 'Built-in'
+      ? `<span class="ci-badge" style="font-size:8.5px; background:rgba(14,165,233,0.15); color:#38bdf8; border:1px solid rgba(14,165,233,0.3); padding:1px 5px; border-radius:3px;">${escapeHtml(app.source_name)}</span>`
+      : `<span class="ci-badge" style="font-size:8.5px; background:rgba(37,194,160,0.15); color:var(--accent, #25c2a0); border:1px solid rgba(37,194,160,0.3); padding:1px 5px; border-radius:3px;">Built-in</span>`;
+
+    const typeBadge = app.type === 'stack'
+      ? `<span class="ci-badge" style="font-size:8.5px; background:rgba(168,85,247,0.15); color:#c084fc; border:1px solid rgba(168,85,247,0.3); padding:1px 5px; border-radius:3px;">Stack</span>`
+      : '';
+
+    let securityBadge = '';
+    if (app.security_rating === 'verified') {
+      securityBadge = `<span class="ci-badge" title="Verified Safe Sandbox" style="font-size:8.5px; background:rgba(34,197,94,0.15); color:#4ade80; border:1px solid rgba(34,197,94,0.3); padding:1px 5px; border-radius:3px;">🛡️ Safe</span>`;
+    } else if (app.security_rating === 'review_required') {
+      securityBadge = `<span class="ci-badge" title="${escapeHtml((app.security_flags || []).join('; '))}" style="font-size:8.5px; background:rgba(234,179,8,0.15); color:#facc15; border:1px solid rgba(234,179,8,0.3); padding:1px 5px; border-radius:3px;">⚠️ Review</span>`;
+    } else if (app.security_rating === 'elevated') {
+      securityBadge = `<span class="ci-badge" title="${escapeHtml((app.security_flags || []).join('; '))}" style="font-size:8.5px; background:rgba(239,68,68,0.15); color:#f87171; border:1px solid rgba(239,68,68,0.3); padding:1px 5px; border-radius:3px;">🚨 Elevated</span>`;
+    }
+
+    const imageDisplay = app.image || (app.repository ? 'compose-stack' : 'container');
+
+    return `
+      <div class="catalog-app-card" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:12px; display:flex; flex-direction:column; justify-content:space-between; gap:10px; transition:border-color 0.2s, background 0.2s;">
+        <div>
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:6px; margin-bottom:6px;">
+            <div style="display:flex; align-items:center; gap:8px; overflow:hidden;">
+              ${logoHtml}
+              <div style="overflow:hidden;">
+                <div style="font-size:12.5px; font-weight:700; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(app.name)}</div>
+                <code style="font-size:9.5px; color:var(--muted); font-family:var(--font-mono, monospace); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block;">${escapeHtml(imageDisplay)}</code>
+              </div>
+            </div>
+            <div style="display:flex; gap:4px; align-items:center; flex-shrink:0;">
+              ${typeBadge}
+              ${sourceBadge}
+              ${securityBadge}
+              <span class="ci-badge" style="font-size:9px; text-transform:uppercase; background:rgba(255,255,255,0.06); color:#cbd5e1; padding:2px 6px; border-radius:4px;">${escapeHtml(app.category)}</span>
+            </div>
+          </div>
+          <p style="font-size:11px; color:#94a3b8; line-height:1.4; margin:0 0 6px 0; min-height:32px;">${escapeHtml(app.description)}</p>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,0.06); padding-top:8px;">
+          <span style="font-size:10.5px; font-family:var(--font-mono, monospace); color:var(--accent-cyan, #00f0ff); background:rgba(0,240,255,0.08); padding:2px 6px; border-radius:4px;">Port :${app.default_port}</span>
+          <button class="btn-pill-toggle btn-deploy-app" data-appid="${escapeHtml(app.id)}" style="background:var(--brand, #0ea5e9); color:#fff; border:none; padding:3px 10px; font-weight:700; font-size:11px; cursor:pointer;">Deploy / Stack</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  grid.querySelectorAll('.btn-deploy-app').forEach((btn) => {
+    btn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const m = await import('./management.js');
+      if (typeof m.openAppDeployModal === 'function') {
+        m.openAppDeployModal(btn.dataset.appid);
+      }
+    });
+  });
 }
 
 function updateCwUpdatesUI(count) {
@@ -534,182 +717,18 @@ export function renderContainersWindowTable(containersList = null) {
 }
 
 function buildCwContainerRowInner(c, currentHost) {
-  const isRunning = c.state === 'running';
-  const badgeColor = isRunning ? 'var(--ok2)' : 'var(--muted)';
-  const badgeBg = isRunning ? 'rgba(37, 194, 160, 0.15)' : 'rgba(255, 255, 255, 0.05)';
-  const idShort = c.id ? c.id.slice(0, 12) : '';
-
-  // Stack & Name
-  let stackHtml = '';
-  if (c.stack) {
-    stackHtml = `<span class="docker-stack-pill clickable-stack-pill" data-stack="${escapeHtml(c.stack)}" title="Open & Edit Stack: ${escapeHtml(c.stack)}" style="cursor:pointer;">📁 ${escapeHtml(c.stack)}</span>`;
-  } else {
-    const originLabel = c.managed_by === 'unraid' ? 'Unraid' : 'Standalone';
-    stackHtml = `<span class="docker-origin-pill">${originLabel}</span>`;
-  }
-
-  // Hardware Badges
-  let hwHtml = '<span style="color:var(--muted); font-size:10px;">—</span>';
-  if (c.hardware_badges && c.hardware_badges.length > 0) {
-    hwHtml = c.hardware_badges
-      .map(
-        (b) =>
-          `<span class="docker-hw-badge docker-hw-${escapeHtml(b.id)}" title="${escapeHtml(b.label)}">${escapeHtml(b.label)}</span>`
-      )
-      .join('');
-  }
-
-  // Telemetry (CPU / RAM)
-  let telemHtml = '<span style="color:var(--muted); font-size:10px;">—</span>';
-  if (isRunning) {
-    const cpuStr = `${(c.cpu_pct || 0).toFixed(1)}%`;
-    const memStr = c.mem_used ? `${(c.mem_used / (1024 * 1024)).toFixed(0)} MB` : '--';
-    telemHtml = `<span class="docker-telemetry-pill"><span class="telem-cpu">${cpuStr}</span><span style="opacity:0.4;">•</span><span class="telem-mem">${memStr}</span></span>`;
-  }
-
-  // Ports & Web UI
-  let portsHtml = '<span style="color:var(--muted); font-size:10px;">—</span>';
-  const portParts = [];
-  if (c.webui_url && c.primary_port) {
-    const resolvedUrl = c.webui_url.replace('[HOST]', currentHost);
-    if (/^https?:\/\//i.test(resolvedUrl)) {
-      portParts.push(
-        `<a href="${escapeHtml(resolvedUrl)}" target="_blank" rel="noopener noreferrer" class="btn-webui-badge" title="Open Web UI (Port ${escapeHtml(String(c.primary_port))})">🌐 :${escapeHtml(String(c.primary_port))} ↗</a>`
-      );
-    }
-  }
-  const otherPorts = (c.ports || []).filter(
-    (p) => p.public_port && p.public_port !== c.primary_port
-  );
-  if (otherPorts.length > 0) {
-    const otherTags = otherPorts
-      .slice(0, 3)
-      .map((p) => `<span class="docker-port-tag">:${p.public_port}</span>`)
-      .join('');
-    portParts.push(otherTags);
-  }
-  if (portParts.length > 0) {
-    portsHtml = portParts.join(' ');
-  }
-
-  // Status & Uptime
-  const statusHtml = `
-    <div style="display:flex; align-items:center; gap:6px;">
-      <span class="docker-state-badge" style="display:inline-block; padding:2px 6px; border-radius:4px; font-size:9.5px; font-weight:700; background:${badgeBg}; color:${badgeColor}; text-transform:uppercase;">${escapeHtml(c.state)}</span>
-      <span class="docker-status-text" style="font-size:10px; color:#cbd5e1; max-width:110px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeHtml(c.status)}">${escapeHtml(c.status)}</span>
-    </div>
-  `;
-
-  // Actions
   const updateInfo = _cwUpdatesCache?.containers?.[c.name] || _cwUpdatesCache?.containers?.[c.id];
-  const hasUpdate = Boolean(updateInfo?.has_update);
-  const updateBadge = hasUpdate
-    ? `<button class="ci-badge badge-update-ready btn-container-act btn-docker-update-badge" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="update-single" title="Click to update ${escapeHtml(c.name)} to latest image">⬆️ UPDATE</button>`
-    : '';
-
-  const inspectBtn = `<button class="btn-container-act btn-docker-inspect" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="inspect" title="Inspect ${escapeHtml(c.name)}">🔍</button>`;
-  const editBtn = `<button class="btn-container-act btn-docker-edit" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="edit" title="Edit ${escapeHtml(c.name)}">✏️</button>`;
-  const stackBtn = c.stack
-    ? `<button class="btn-container-act btn-docker-stack" data-action="stack" data-stack="${escapeHtml(c.stack)}" title="Open & Edit Stack: ${escapeHtml(c.stack)}">📁</button>`
-    : '';
-  const updateBtn = hasUpdate
-    ? `<button class="btn-container-act btn-docker-update-single" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="update-single" title="Update ${escapeHtml(c.name)} to latest image">⬆️</button>`
-    : '';
-  const backupBtn = `<button class="btn-container-act btn-docker-backup" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="backup" title="Backup App Data & Config">💾</button>`;
-  const deleteBtn = `<button class="btn-container-act btn-docker-delete" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-image="${escapeHtml(c.image || '')}" data-action="delete" title="Destroy / Delete ${escapeHtml(c.name)}">🗑️</button>`;
-  const moreBtn = `<button class="btn-container-act btn-docker-more-sheet" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="more-sheet" title="More Actions">···</button>`;
-  const actions = isRunning
-    ? `
-      ${inspectBtn}
-      ${editBtn}
-      ${stackBtn}
-      ${updateBtn}
-      ${backupBtn}
-      <button class="btn-container-act btn-docker-restart" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="restart" title="Restart ${escapeHtml(c.name)}">🔄</button>
-      <button class="btn-container-act btn-docker-stop" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="stop" title="Stop ${escapeHtml(c.name)}">⏹</button>
-      ${deleteBtn}
-      ${moreBtn}
-    `
-    : `
-      ${inspectBtn}
-      ${editBtn}
-      ${stackBtn}
-      ${updateBtn}
-      ${backupBtn}
-      <button class="btn-container-act btn-docker-start" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="start" title="Start ${escapeHtml(c.name)}">▶</button>
-      ${deleteBtn}
-      ${moreBtn}
-    `;
-
-  return `
-    <td>
-      <div style="display:flex; align-items:baseline; gap:6px;">
-        <button class="btn-docker-name-link" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" style="background:none; border:none; padding:0; color:#fff; font-size:11.5px; font-weight:700; cursor:pointer; text-align:left; font-family:inherit;" title="Inspect ${escapeHtml(c.name)}">${escapeHtml(c.name)}</button>
-        <code style="font-size:9px; color:var(--muted); font-family:var(--font-mono, monospace);">${escapeHtml(idShort)}</code>
-        ${updateBadge}
-      </div>
-      <div>${stackHtml}</div>
-    </td>
-    <td>${hwHtml}</td>
-    <td class="docker-telemetry-cell">${telemHtml}</td>
-    <td>${portsHtml}</td>
-    <td class="docker-status-cell">${statusHtml}</td>
-    <td class="docker-actions-cell" style="text-align:right; white-space:nowrap;">${actions}</td>
-  `;
+  return buildSharedContainerRowInner(c, currentHost, updateInfo);
 }
 
 function createCwContainerRow(c, currentHost) {
-  const tr = document.createElement('tr');
-  const key = c.id || c.name || '';
-  tr.dataset.key = key;
-  tr.dataset.id = c.id || '';
-  tr.dataset.name = c.name || '';
-  tr.dataset.state = c.state || '';
   const updateInfo = _cwUpdatesCache?.containers?.[c.name] || _cwUpdatesCache?.containers?.[c.id];
-  tr.dataset.hasUpdate = updateInfo?.has_update ? '1' : '0';
-  tr.innerHTML = buildCwContainerRowInner(c, currentHost);
-  return tr;
+  return createSharedContainerRow(c, currentHost, updateInfo);
 }
 
 function updateCwContainerRow(tr, c, currentHost) {
   const updateInfo = _cwUpdatesCache?.containers?.[c.name] || _cwUpdatesCache?.containers?.[c.id];
-  const hasUpdate = Boolean(updateInfo?.has_update);
-  const prevHasUpdate = tr.dataset.hasUpdate === '1';
-
-  tr.dataset.id = c.id || '';
-  tr.dataset.name = c.name || '';
-
-  if (tr.dataset.state !== c.state || prevHasUpdate !== hasUpdate || !tr.children.length) {
-    tr.dataset.state = c.state || '';
-    tr.dataset.hasUpdate = hasUpdate ? '1' : '0';
-    tr.innerHTML = buildCwContainerRowInner(c, currentHost);
-    return;
-  }
-
-  const isRunning = c.state === 'running';
-  const telemCell = tr.querySelector('.docker-telemetry-cell');
-  if (telemCell) {
-    if (isRunning) {
-      const cpuStr = `${(c.cpu_pct || 0).toFixed(1)}%`;
-      const memStr = c.mem_used ? `${(c.mem_used / (1024 * 1024)).toFixed(0)} MB` : '--';
-      const cpuEl = telemCell.querySelector('.telem-cpu');
-      const memEl = telemCell.querySelector('.telem-mem');
-      if (cpuEl && memEl) {
-        cpuEl.textContent = cpuStr;
-        memEl.textContent = memStr;
-      } else {
-        telemCell.innerHTML = `<span class="docker-telemetry-pill"><span class="telem-cpu">${cpuStr}</span><span style="opacity:0.4;">•</span><span class="telem-mem">${memStr}</span></span>`;
-      }
-    } else {
-      telemCell.innerHTML = '<span style="color:var(--muted); font-size:10px;">—</span>';
-    }
-  }
-
-  const statusText = tr.querySelector('.docker-status-text');
-  if (statusText && statusText.textContent !== c.status) {
-    statusText.textContent = c.status;
-    statusText.title = c.status;
-  }
+  return updateSharedContainerRow(tr, c, currentHost, updateInfo);
 }
 
 function bindCwTableEvents(tbody) {

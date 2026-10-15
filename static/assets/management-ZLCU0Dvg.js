@@ -1,1 +1,0 @@
-import{R as e,Z as t}from"./dashboard-B6t3z649.js";export{e as initManagement,t as openDockerPruneModal};

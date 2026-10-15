@@ -15,6 +15,23 @@ import { escapeHtml } from '../utils.js';
 const $ = (id) => document.getElementById(id);
 
 export function openDrawer(tabId = null) {
+  if (tabId === 'tab-fans' && typeof window.openManagementWindow === 'function') {
+    window.openManagementWindow('mgmt-pane-hardware-fans');
+    return;
+  }
+  if (tabId === 'tab-led' && typeof window.openManagementWindow === 'function') {
+    window.openManagementWindow('mgmt-pane-hardware-led');
+    return;
+  }
+  if (tabId === 'tab-buttons' && typeof window.openManagementWindow === 'function') {
+    window.openManagementWindow('mgmt-pane-copy');
+    return;
+  }
+  if (tabId === 'tab-layout' && typeof window.openPersonalizationWindow === 'function') {
+    window.openPersonalizationWindow('console');
+    return;
+  }
+
   const drawer = $('led-drawer') || document.querySelector('.slide-drawer');
   const overlay = $('drawer-overlay') || document.querySelector('.drawer-backdrop');
   if (drawer && overlay) {
@@ -29,6 +46,8 @@ export function openDrawer(tabId = null) {
       fitMiniPreviewScale();
       syncMiniPreviewTelemetry();
     }, 100);
+  } else if (typeof window.openManagementWindow === 'function') {
+    window.openManagementWindow('mgmt-sec-hardware');
   }
 }
 window.openDrawer = openDrawer;
