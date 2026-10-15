@@ -362,3 +362,54 @@ ups.realpower.nominal: 180
     assert res.get("BCHARGE") == "99.0"
     assert res.get("MODEL") == "Smart UPS W180"
     assert res.get("NOMPOWER") == "180"
+
+
+def test_nut_socket_parsing_expanded_dc_variables():
+    from backend.hardware.ups import _query_nut_socket
+
+    mock_lines = [
+        'UPS w180 "DC UPS"',
+        "END LIST UPS",
+        'VAR w180 battery.charge "95"',
+        'VAR w180 battery.current "2.2"',
+        'VAR w180 output.voltage "12.2"',
+        'VAR w180 output.power.percent "15"',
+        'VAR w180 output.realpower.nominal "180"',
+        'VAR w180 ups.status "OL"',
+        "END LIST VAR w180",
+    ]
+
+    class FakeSocket:
+        def __init__(self):
+            self.data = ("\n".join(mock_lines) + "\n").encode("utf-8")
+            self.pos = 0
+
+        def connect(self, addr):
+            pass
+
+        def sendall(self, data):
+            pass
+
+        def recv(self, bufsize):
+            if self.pos >= len(self.data):
+                return b""
+            chunk = self.data[self.pos : self.pos + bufsize]
+            self.pos += len(chunk)
+            return chunk
+
+        def settimeout(self, t):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            pass
+
+    with patch("socket.socket", return_value=FakeSocket()):
+        res = _query_nut_socket("127.0.0.1", 3493)
+        assert res.get("BCHARGE") == "95"
+        assert res.get("BATTCURR") == "2.2"
+        assert res.get("OUTV") == "12.2"
+        assert res.get("LOADPCT") == "15"
+        assert res.get("NOMPOWER") == "180"

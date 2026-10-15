@@ -8124,16 +8124,27 @@ export async function applySystemUpdate() {
         const res = await api.post('/api/system/updates/apply', { channel, target_image: targetImage });
         showToast(res?.message || 'Update initiated. Reconnecting...', 'info');
 
+        if (res && res.auto_restarting === false) {
+          if (progressTitle) progressTitle.textContent = '📦 Image Pulled';
+          if (progressDesc) {
+            progressDesc.innerHTML = `${escapeHtml(res.message || 'Latest image downloaded.')}<br><br><span style="color:var(--brand,#00f0ff);font-weight:600;">Please restart the container in Unraid or Docker to finalize.</span>`;
+          }
+          if (applyBtn) applyBtn.disabled = false;
+          return;
+        }
+
         if (progressDesc) progressDesc.textContent = res?.message || 'Restarting container and reconnecting...';
 
         // Poll health endpoint until back online
         let attempts = 0;
-        const maxAttempts = 40;
+        let hasGoneDown = false;
+        const maxAttempts = 60;
         const interval = setInterval(async () => {
           attempts++;
           try {
             const h = await fetch('/api/health', { cache: 'no-store' });
-            if (h.ok) {
+            // Only declare update complete after the old container has dropped offline, or after grace period
+            if (h.ok && (hasGoneDown || attempts >= 8)) {
               clearInterval(interval);
               if (progressTitle) progressTitle.textContent = '🎉 Update Complete!';
               if (progressDesc) progressDesc.textContent = 'Reloading ZettNAS Workbench...';
@@ -8141,6 +8152,8 @@ export async function applySystemUpdate() {
               setTimeout(() => window.location.reload(), 1200);
             }
           } catch (e) {
+            hasGoneDown = true;
+            if (progressDesc) progressDesc.textContent = 'Container restarting with updated image...';
             if (attempts >= maxAttempts) {
               clearInterval(interval);
               if (progressDesc) progressDesc.textContent = 'Please refresh the page once the container has restarted.';

@@ -278,19 +278,26 @@ def _query_nut_socket(
                                 out["TIMELEFT"] = str(round(float(v_clean) / 60, 1))
                             except ValueError:
                                 pass
-                        elif k_clean == "ups.load":
+                        elif k_clean in ("ups.load", "output.load", "output.power.percent", "ups.load.nominal"):
                             out["LOADPCT"] = v_clean
-                        elif k_clean == "input.voltage":
+                        elif k_clean in ("input.voltage", "ups.input.voltage"):
                             out["LINEV"] = v_clean
-                        elif k_clean in ("output.voltage", "ups.output.voltage"):
+                        elif k_clean in ("output.voltage", "ups.output.voltage", "ups.voltage"):
                             out["OUTV"] = v_clean
                         elif k_clean in ("output.voltage.nominal", "ups.voltage.nominal", "output.voltage.target"):
                             out.setdefault("NOMOUTV", v_clean)
-                        elif k_clean in ("output.current", "ups.current", "output.current.nominal"):
+                        elif k_clean in (
+                            "output.current",
+                            "ups.output.current",
+                            "ups.current",
+                            "output.current.nominal",
+                        ):
                             out["OUTCURR"] = v_clean
-                        elif k_clean in ("output.realpower", "ups.realpower"):
+                        elif k_clean in ("battery.current", "ups.battery.current"):
+                            out.setdefault("BATTCURR", v_clean)
+                        elif k_clean in ("output.realpower", "ups.realpower", "output.power.real", "ups.power.real"):
                             out["REALPOWER"] = v_clean
-                        elif k_clean in ("output.power", "ups.power"):
+                        elif k_clean in ("output.power", "ups.power", "output.apparentpower", "ups.apparentpower"):
                             out["APPARENTPOWER"] = v_clean
                         elif k_clean == "battery.voltage":
                             out["BATTV"] = v_clean
@@ -300,11 +307,16 @@ def _query_nut_socket(
                             out.setdefault("MODEL", v_clean)
                         elif k_clean in ("ups.mfr", "device.mfr"):
                             out.setdefault("MFR", v_clean)
-                        elif k_clean in ("ups.realpower.nominal", "ups.power.nominal"):
+                        elif k_clean in (
+                            "ups.realpower.nominal",
+                            "ups.power.nominal",
+                            "output.realpower.nominal",
+                            "output.power.nominal",
+                        ):
                             out["NOMPOWER"] = v_clean
                         elif k_clean in ("battery.temperature", "ups.temperature"):
                             out["ITEMP"] = v_clean
-                        elif k_clean == "input.frequency":
+                        elif k_clean in ("input.frequency", "ups.input.frequency"):
                             out["LINEFREQ"] = v_clean
 
             if target_ups and "MODEL" not in out:
@@ -337,19 +349,21 @@ def _query_nut_cli(ups_name: str = "ups") -> Dict[str, str]:
                                 out["TIMELEFT"] = str(round(float(v_clean) / 60, 1))
                             except ValueError:
                                 pass
-                        elif k_clean == "ups.load":
+                        elif k_clean in ("ups.load", "output.load", "output.power.percent", "ups.load.nominal"):
                             out["LOADPCT"] = v_clean
-                        elif k_clean == "input.voltage":
+                        elif k_clean in ("input.voltage", "ups.input.voltage"):
                             out["LINEV"] = v_clean
-                        elif k_clean in ("output.voltage", "ups.output.voltage"):
+                        elif k_clean in ("output.voltage", "ups.output.voltage", "ups.voltage"):
                             out["OUTV"] = v_clean
                         elif k_clean in ("output.voltage.nominal", "ups.voltage.nominal", "output.voltage.target"):
                             out.setdefault("NOMOUTV", v_clean)
                         elif k_clean in ("output.current", "ups.current", "output.current.nominal"):
                             out["OUTCURR"] = v_clean
-                        elif k_clean in ("output.realpower", "ups.realpower"):
+                        elif k_clean in ("battery.current", "ups.battery.current"):
+                            out.setdefault("BATTCURR", v_clean)
+                        elif k_clean in ("output.realpower", "ups.realpower", "output.power.real", "ups.power.real"):
                             out["REALPOWER"] = v_clean
-                        elif k_clean in ("output.power", "ups.power"):
+                        elif k_clean in ("output.power", "ups.power", "output.apparentpower", "ups.apparentpower"):
                             out["APPARENTPOWER"] = v_clean
                         elif k_clean == "battery.voltage":
                             out["BATTV"] = v_clean
@@ -359,11 +373,16 @@ def _query_nut_cli(ups_name: str = "ups") -> Dict[str, str]:
                             out["MODEL"] = v_clean
                         elif k_clean in ("ups.mfr", "device.mfr"):
                             out["MFR"] = v_clean
-                        elif k_clean in ("ups.realpower.nominal", "ups.power.nominal"):
+                        elif k_clean in (
+                            "ups.realpower.nominal",
+                            "ups.power.nominal",
+                            "output.realpower.nominal",
+                            "output.power.nominal",
+                        ):
                             out["NOMPOWER"] = v_clean
                         elif k_clean in ("battery.temperature", "ups.temperature"):
                             out["ITEMP"] = v_clean
-                        elif k_clean == "input.frequency":
+                        elif k_clean in ("input.frequency", "ups.input.frequency"):
                             out["LINEFREQ"] = v_clean
                 return out
         except Exception:
@@ -1255,7 +1274,7 @@ def read_ups_status(force: bool = False) -> Dict[str, Any]:
     line_freq = _extract_float(raw.get("LINEFREQ"))
 
     out_v = _extract_float(raw.get("OUTV") or raw.get("OUTPUTV") or raw.get("NOMOUTV"))
-    out_curr = _extract_float(raw.get("OUTCURR") or raw.get("OUTPUT_A"))
+    out_curr = _extract_float(raw.get("OUTCURR") or raw.get("OUTPUT_A") or raw.get("BATTCURR"))
     direct_power = _extract_float(raw.get("REALPOWER") or raw.get("APPARENTPOWER"))
 
     effective_out_v = out_v
@@ -1264,6 +1283,8 @@ def read_ups_status(force: bool = False) -> Dict[str, Any]:
 
     nom_power = _extract_float(raw.get("NOMPOWER"))
     model_str = (raw.get("MODEL") or "").lower()
+    if nom_power is None and cfg.get("nominal_power_watts"):
+        nom_power = _extract_float(cfg.get("nominal_power_watts"))
     if nom_power is None:
         if "w180" in model_str:
             nom_power = 180.0
@@ -1271,6 +1292,8 @@ def read_ups_status(force: bool = False) -> Dict[str, Any]:
             nom_power = 150.0
         elif "w120" in model_str:
             nom_power = 120.0
+        elif effective_out_v is not None and effective_out_v <= 60.0:
+            nom_power = 180.0
         else:
             nom_power = 900.0
 
