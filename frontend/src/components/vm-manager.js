@@ -980,7 +980,7 @@ export function openQemuErrorModal(vmName, errorMsg, vmId = null) {
  * Opens VM Configuration / Edit Modal (#modal-vm-edit)
  * Allows modifying RAM, vCPUs, description, attached ISO, boot order, and autostart
  */
-export function openVmEditModal(vmId) {
+export function openVmEditModal(vmId, vmObj = null) {
   let modal = document.getElementById('modal-vm-edit');
   if (!modal) {
     modal = document.createElement('div');
@@ -991,28 +991,25 @@ export function openVmEditModal(vmId) {
     modal.className = 'smart-modal-backdrop';
   }
 
-  const targetVm = vmList.find((v) => v.id === vmId);
-  if (!targetVm) {
-    showToast(`Virtual machine '${vmId}' not found`, 'error');
-    return;
-  }
+  let targetVm = vmObj || vmList.find((v) => v.id === vmId);
 
-  const isRunning = targetVm.state === 'running';
-  const budget = vmTelemetry?.memory_budget || {
-    total_host_ram_gb: 32.0,
-    safe_max_vm_ram_gb: 28.8,
-    safe_slider_max_gb: 28,
-    safe_headroom_gb: 20.8,
-    override_max_ram_gb: 31.0,
-  };
-  const hostThreads = vmTelemetry?.cpu_capacity?.host_threads || 8;
-  const currentBootOrder = targetVm.boot_order || (targetVm.iso_path ? 'iso' : 'disk');
+  const renderModal = (targetVm) => {
+    const isRunning = targetVm.state === 'running';
+    const budget = vmTelemetry?.memory_budget || {
+      total_host_ram_gb: 32.0,
+      safe_max_vm_ram_gb: 28.8,
+      safe_slider_max_gb: 28,
+      safe_headroom_gb: 20.8,
+      override_max_ram_gb: 31.0,
+    };
+    const hostThreads = vmTelemetry?.cpu_capacity?.host_threads || 8;
+    const currentBootOrder = targetVm.boot_order || (targetVm.iso_path ? 'iso' : 'disk');
 
-  modal.innerHTML = `
-    <div class="smart-modal-window vm-modal-window" style="max-width: 580px; width: 92%; max-height: 88vh; display: flex; flex-direction: column;">
-      <div class="smart-modal-header" style="cursor: move;">
-        <div class="smart-modal-title">
-          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+    modal.innerHTML = `
+      <div class="smart-modal-window vm-modal-window" style="max-width: 580px; width: 92%; max-height: 88vh; display: flex; flex-direction: column;">
+        <div class="smart-modal-header" style="cursor: move;">
+          <div class="smart-modal-title">
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
           <span>Edit VM Configuration: ${escapeHtml(targetVm.name)}</span>
         </div>
         <button id="vm-edit-modal-close" class="modal-close-btn" style="background: none; border: none; color: var(--muted); cursor: pointer; font-size: 16px; padding: 4px 8px; border-radius: 4px;" title="Close" aria-label="Close">✕</button>
@@ -1337,6 +1334,7 @@ export function openVmEditModal(vmId) {
         showToast(`VM '${newName}' configuration updated`, 'success');
         close();
         loadVmDashboard();
+        window.dispatchEvent(new CustomEvent('vm-updated', { detail: { id: vmId } }));
       } catch (err) {
         showToast(`Failed to update VM: ${err.message || 'Error'}`, 'error');
       } finally {
@@ -1347,13 +1345,40 @@ export function openVmEditModal(vmId) {
       }
     };
   }
+};
+
+  if (targetVm) {
+    if (!vmList.some((v) => v.id === targetVm.id)) vmList.push(targetVm);
+    renderModal(targetVm);
+    return;
+  }
+
+  // Graceful auto-fetch when called outside of standalone VM Manager window
+  Promise.all([
+    api.get(`/api/vms/${vmId}`).catch(() => null),
+    (!vmIsos || vmIsos.length === 0) ? api.get('/api/vms/isos').catch(() => []) : Promise.resolve(vmIsos),
+    !vmTelemetry ? api.get('/api/vms/telemetry').catch(() => null) : Promise.resolve(vmTelemetry),
+  ])
+    .then(([direct, isos, tel]) => {
+      if (tel) vmTelemetry = tel;
+      if (Array.isArray(isos)) vmIsos = isos;
+      if (direct && direct.id) {
+        if (!vmList.some((v) => v.id === direct.id)) vmList.push(direct);
+        renderModal(direct);
+      } else {
+        showToast(`Virtual machine '${vmId}' not found`, 'error');
+      }
+    })
+    .catch((err) => {
+      showToast(`Virtual machine '${vmId}' not found: ${err.message || 'Error'}`, 'error');
+    });
 }
 
 /**
  * Opens Multi-Protocol VM Connection Modal (#modal-vm-connect)
  * Displays interactive quick-connect details for Web GUI, Serial TTY, Native VNC, SSH, RDP, and VirtIO-FS
  */
-export function openVmConnectModal(vmId) {
+export function openVmConnectModal(vmId, vmObj = null) {
   let modal = document.getElementById('modal-vm-connect');
   if (!modal) {
     modal = document.createElement('div');
@@ -1364,22 +1389,19 @@ export function openVmConnectModal(vmId) {
     modal.className = 'smart-modal-backdrop';
   }
 
-  const targetVm = vmList.find((v) => v.id === vmId);
-  if (!targetVm) {
-    showToast(`Virtual machine '${vmId}' not found`, 'error');
-    return;
-  }
+  let targetVm = vmObj || vmList.find((v) => v.id === vmId);
 
-  const name = targetVm.name || 'Virtual Machine';
-  const ip = targetVm.ip_address || '';
-  const vncPort = targetVm.vnc_port || 5900;
-  const hostIp = (typeof window !== 'undefined' && window.location) ? window.location.hostname : '127.0.0.1';
-  const vncUri = `vnc://${hostIp}:${vncPort}`;
-  const sshCmd = ip ? `ssh root@${ip}` : '';
-  const rdpUri = ip ? `${ip}:3389` : '';
-  const hostShares = targetVm.host_shares || [];
+  const renderConnectModal = (targetVm) => {
+    const name = targetVm.name || 'Virtual Machine';
+    const ip = targetVm.ip_address || '';
+    const vncPort = targetVm.vnc_port || 5900;
+    const hostIp = (typeof window !== 'undefined' && window.location) ? window.location.hostname : '127.0.0.1';
+    const vncUri = `vnc://${hostIp}:${vncPort}`;
+    const sshCmd = ip ? `ssh root@${ip}` : '';
+    const rdpUri = ip ? `${ip}:3389` : '';
+    const hostShares = targetVm.host_shares || [];
 
-  modal.innerHTML = `
+    modal.innerHTML = `
     <div class="smart-modal-window vm-modal-window" style="max-width: 640px; width: 92%; max-height: 88vh; display: flex; flex-direction: column;">
       <div class="smart-modal-header" style="cursor: move;">
         <div class="smart-modal-title" style="display: flex; align-items: center; gap: 8px;">
@@ -1586,6 +1608,26 @@ export function openVmConnectModal(vmId) {
       if (ok) showToast('Copied mount command to clipboard', 'info');
     };
   });
+  };
+
+  if (targetVm) {
+    if (!vmList.some((v) => v.id === targetVm.id)) vmList.push(targetVm);
+    renderConnectModal(targetVm);
+    return;
+  }
+
+  api.get(`/api/vms/${vmId}`)
+    .then((direct) => {
+      if (direct && direct.id) {
+        if (!vmList.some((v) => v.id === direct.id)) vmList.push(direct);
+        renderConnectModal(direct);
+      } else {
+        showToast(`Virtual machine '${vmId}' not found`, 'error');
+      }
+    })
+    .catch((err) => {
+      showToast(`Virtual machine '${vmId}' not found: ${err.message || 'Error'}`, 'error');
+    });
 }
 
 /**

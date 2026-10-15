@@ -6944,9 +6944,10 @@ export function initManagement() {
           grid.querySelectorAll('.btn-vm-action-edit').forEach(btn => {
             btn.addEventListener('click', () => {
               const id = btn.dataset.vmId;
+              const vmObj = vmsList.find(v => v.id === id);
               import('./vm-manager.js').then(m => {
                 if (typeof m.openVmEditModal === 'function') {
-                  m.openVmEditModal(id);
+                  m.openVmEditModal(id, vmObj);
                 }
               });
             });
@@ -7917,6 +7918,11 @@ export function initManagement() {
     } else if (hubView && hubView.style.display !== 'none') {
       showHub();
     }
+  });
+
+  // VM changes listener
+  window.addEventListener('vm-updated', () => {
+    fetchAndRenderMgmtVms();
   });
 }
 

@@ -4,7 +4,7 @@ export default defineConfig({
   root: 'frontend',
   build: {
     outDir: '../static',
-    emptyOutDir: true,
+    emptyOutDir: false,
     chunkSizeWarningLimit: 800,
     rollupOptions: {
       output: {

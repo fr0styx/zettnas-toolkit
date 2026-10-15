@@ -1063,6 +1063,45 @@ describe('VM Manager & Dynamic Elastic Headroom Budgeting', () => {
         );
       });
     });
+
+    it('opens VM edit modal seamlessly when invoked from external views with vmObj or direct API fallback', async () => {
+      const mockVm = {
+        id: 'vm-external-123',
+        name: 'external-alpine',
+        vcpus: 2,
+        ram_gb: 4.0,
+        state: 'running',
+        boot_order: 'disk',
+      };
+
+      // 1. Invoking with vmObj directly (Mission Control flow)
+      openVmEditModal('vm-external-123', mockVm);
+      const modal = document.getElementById('modal-vm-edit');
+      expect(modal).not.toBeNull();
+      expect(modal.querySelector('.smart-modal-title').textContent).toContain('external-alpine');
+      expect(modal.querySelector('#vm-edit-name').value).toBe('external-alpine');
+
+      // 2. Invoking without vmObj when vmId not yet in list triggers direct GET /api/vms/:id
+      api.get.mockImplementation((url) => {
+        if (url === '/api/vms/vm-direct-fallback') {
+          return Promise.resolve({
+            id: 'vm-direct-fallback',
+            name: 'fallback-vm',
+            vcpus: 1,
+            ram_gb: 2.0,
+            state: 'stopped',
+          });
+        }
+        if (url === '/api/vms/isos') return Promise.resolve([]);
+        if (url === '/api/vms/telemetry') return Promise.resolve({});
+        return Promise.resolve([]);
+      });
+
+      openVmEditModal('vm-direct-fallback');
+      await vi.waitFor(() => {
+        expect(modal.querySelector('#vm-edit-name')?.value).toBe('fallback-vm');
+      });
+    });
   });
 });
 
