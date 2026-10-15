@@ -670,17 +670,34 @@ def _get_current_build_info() -> Dict[str, Any]:
     commit = os.environ.get("BUILD_COMMIT", "")
     created = os.environ.get("BUILD_DATE", "")
 
-    # Try inspecting self container for OCI revision label
+    # Try inspecting self container and image for authoritative OCI revision label
     if not commit:
         try:
             from backend.services.compose_synthesizer import fetch_container_raw_inspect
+            from backend.services.container_mutator import _docker_request
 
             cid = socket.gethostname()
             data = fetch_container_raw_inspect(cid) or fetch_container_raw_inspect("zettnas-toolkit")
             if data and isinstance(data, dict):
-                labels = data.get("Config", {}).get("Labels", {})
-                commit = labels.get("org.opencontainers.image.revision", "")
-                created = labels.get("org.opencontainers.image.created", "")
+                # 1. Authoritative check on underlying image metadata
+                img_id = data.get("Image")
+                if img_id:
+                    try:
+                        st_img, img_data = _docker_request("GET", f"/images/{img_id}/json")
+                        if st_img == 200 and isinstance(img_data, dict):
+                            img_labels = img_data.get("Config", {}).get("Labels", {})
+                            commit = img_labels.get("org.opencontainers.image.revision", "")
+                            if not created:
+                                created = img_labels.get("org.opencontainers.image.created", "")
+                    except Exception:
+                        pass
+
+                # 2. Container labels fallback
+                if not commit:
+                    labels = data.get("Config", {}).get("Labels", {})
+                    commit = labels.get("org.opencontainers.image.revision", "")
+                    if not created:
+                        created = labels.get("org.opencontainers.image.created", "")
         except Exception:
             pass
 
@@ -794,10 +811,14 @@ async def check_system_updates(force: bool = False, channel: str = "stable"):
                     msg = (commit_obj.get("message") or "").split("\n")[0]
                     author = commit_obj.get("author", {}).get("name", "fr0styx")
                     published_at = commit_obj.get("author", {}).get("date")
-
-                    # If current commit is known, compare hashes
+                    # If current commit is known, compare hashes (support both 7-char prefix and full SHA)
                     update_available = bool(
-                        current_commit and latest_sha and current_commit.lower() != latest_sha.lower()
+                        current_commit
+                        and latest_sha
+                        and not (
+                            current_commit.lower().startswith(latest_sha[:7].lower())
+                            or latest_sha.lower().startswith(current_commit[:7].lower())
+                        )
                     )
                     result = {
                         "channel": "edge",
@@ -925,7 +946,16 @@ async def post_apply_system_update(req: ApplySystemUpdateRequest):
     from backend.services.self_updater import spawn_self_updater
 
     channel = "edge" if req.channel.lower() == "edge" else "stable"
-    target_img = req.target_image or "ghcr.io/fr0styx/zettnas-toolkit:latest"
+    if req.target_image:
+        target_img = req.target_image
+    elif channel == "edge":
+        target_img = "ghcr.io/fr0styx/zettnas-toolkit:edge"
+    else:
+        target_img = "ghcr.io/fr0styx/zettnas-toolkit:latest"
+
+    # Invalidate cached update check so immediate post-update checks reflect the new state
+    _last_update_check[channel]["data"] = None
+    _last_update_check[channel]["ts"] = 0.0
 
     logger.info(f"[System Update] User initiated system update on '{channel}' channel using image '{target_img}'...")
 
@@ -939,7 +969,19 @@ async def post_apply_system_update(req: ApplySystemUpdateRequest):
     # 2. Check if running inside container with docker socket access
     sock_path = "/var/run/docker.sock"
     if os.path.exists(sock_path):
-        spawned = await asyncio.to_thread(spawn_self_updater, target_img, "zettnas-toolkit", 2.5)
+        target_container = "zettnas-toolkit"
+        try:
+            from backend.services.compose_synthesizer import fetch_container_raw_inspect
+
+            self_info = fetch_container_raw_inspect(socket.gethostname()) or fetch_container_raw_inspect(
+                "zettnas-toolkit"
+            )
+            if self_info and self_info.get("Name"):
+                target_container = self_info["Name"].lstrip("/")
+        except Exception:
+            pass
+
+        spawned = await asyncio.to_thread(spawn_self_updater, target_img, target_container, 2.5)
         if spawned:
             return {
                 "status": "restarting",

@@ -133,6 +133,17 @@ def apply_update_from_helper(target: str, image: str, delay: float = 2.5):
     create_body["Image"] = image
     create_body["HostConfig"] = host_config
 
+    # Strip image-specific OCI build metadata and Compose hashes from container labels
+    # so the newly pulled image's authoritative labels take effect in the new container
+    labels = dict(config.get("Labels") or {})
+    for k in list(labels.keys()):
+        if k.startswith("org.opencontainers.image.") or k in (
+            "com.docker.compose.image",
+            "com.docker.compose.config-hash",
+        ):
+            labels.pop(k, None)
+    create_body["Labels"] = labels
+
     st_create, res_create = _docker_request("POST", f"/containers/create?name={target}", body=create_body)
     if st_create not in (200, 201) or not isinstance(res_create, dict):
         logger.error(

@@ -8118,7 +8118,10 @@ export async function applySystemUpdate() {
       if (progressDesc) progressDesc.textContent = 'Pulling container image layers from GHCR...';
 
       try {
-        const res = await api.post('/api/system/updates/apply', { channel });
+        const targetImage = channel === 'edge'
+          ? 'ghcr.io/fr0styx/zettnas-toolkit:edge'
+          : 'ghcr.io/fr0styx/zettnas-toolkit:latest';
+        const res = await api.post('/api/system/updates/apply', { channel, target_image: targetImage });
         showToast(res?.message || 'Update initiated. Reconnecting...', 'info');
 
         if (progressDesc) progressDesc.textContent = res?.message || 'Restarting container and reconnecting...';

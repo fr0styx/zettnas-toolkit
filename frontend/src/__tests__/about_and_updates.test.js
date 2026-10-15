@@ -181,7 +181,10 @@ describe('System About & Software Updates Frontend Component', () => {
     if (okBtn) okBtn.click();
     await Promise.resolve();
 
-    expect(postSpy).toHaveBeenCalledWith('/api/system/updates/apply', { channel: 'edge' });
+    expect(postSpy).toHaveBeenCalledWith('/api/system/updates/apply', {
+      channel: 'edge',
+      target_image: 'ghcr.io/fr0styx/zettnas-toolkit:edge',
+    });
     expect(document.getElementById('update-progress-overlay').style.display).toBe('block');
   });
 

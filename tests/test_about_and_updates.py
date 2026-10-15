@@ -112,12 +112,81 @@ def test_apply_system_update_endpoint(client, auth_headers):
     ):
         resp = client.post(
             "/api/system/updates/apply",
-            json={"channel": "edge", "target_image": "ghcr.io/fr0styx/zettnas-toolkit:latest"},
+            json={"channel": "edge", "target_image": "ghcr.io/fr0styx/zettnas-toolkit:edge"},
             headers=auth_headers,
         )
         assert resp.status_code == 200
         data = resp.json()
         assert data["status"] == "restarting"
         assert data["auto_restarting"] is True
-        mock_pull.assert_called_once()
-        mock_spawn.assert_called_once()
+        assert data["target_image"] == "ghcr.io/fr0styx/zettnas-toolkit:edge"
+        mock_pull.assert_called_once_with("ghcr.io/fr0styx/zettnas-toolkit:edge", 300.0)
+        mock_spawn.assert_called_once_with("ghcr.io/fr0styx/zettnas-toolkit:edge", "zettnas-toolkit", 2.5)
+
+
+def test_apply_system_update_edge_channel_defaults_to_edge_tag(client, auth_headers):
+    with (
+        patch("backend.services.container_mutator.pull_container_image") as mock_pull,
+        patch("backend.services.self_updater.spawn_self_updater", return_value=True) as mock_spawn,
+        patch("os.path.exists", return_value=True),
+    ):
+        resp = client.post(
+            "/api/system/updates/apply",
+            json={"channel": "edge"},
+            headers=auth_headers,
+        )
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["target_image"] == "ghcr.io/fr0styx/zettnas-toolkit:edge"
+        mock_pull.assert_called_once_with("ghcr.io/fr0styx/zettnas-toolkit:edge", 300.0)
+        mock_spawn.assert_called_once_with("ghcr.io/fr0styx/zettnas-toolkit:edge", "zettnas-toolkit", 2.5)
+
+
+def test_apply_system_update_stable_channel_defaults_to_latest_tag(client, auth_headers):
+    with (
+        patch("backend.services.container_mutator.pull_container_image") as mock_pull,
+        patch("backend.services.self_updater.spawn_self_updater", return_value=True) as mock_spawn,
+        patch("os.path.exists", return_value=True),
+    ):
+        resp = client.post(
+            "/api/system/updates/apply",
+            json={"channel": "stable"},
+            headers=auth_headers,
+        )
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["target_image"] == "ghcr.io/fr0styx/zettnas-toolkit:latest"
+        mock_pull.assert_called_once_with("ghcr.io/fr0styx/zettnas-toolkit:latest", 300.0)
+        mock_spawn.assert_called_once_with("ghcr.io/fr0styx/zettnas-toolkit:latest", "zettnas-toolkit", 2.5)
+
+
+def test_get_current_build_info_authoritative_image_inspect(monkeypatch):
+    from backend.api.system import _get_current_build_info
+
+    monkeypatch.delenv("BUILD_COMMIT", raising=False)
+    monkeypatch.delenv("BUILD_DATE", raising=False)
+
+    mock_container = {
+        "Image": "sha256:abcd1234abcd",
+        "Config": {
+            "Labels": {"org.opencontainers.image.revision": "old_stale_commit"},
+        },
+    }
+    mock_image_data = {
+        "Config": {
+            "Labels": {
+                "org.opencontainers.image.revision": "authoritative_new_commit_40char_long_sha",
+                "org.opencontainers.image.created": "2026-10-15T18:00:00Z",
+            }
+        }
+    }
+
+    with (
+        patch("backend.services.compose_synthesizer.fetch_container_raw_inspect", return_value=mock_container),
+        patch("backend.services.container_mutator._docker_request", return_value=(200, mock_image_data)),
+        patch("os.path.exists", return_value=False),
+    ):
+        info = _get_current_build_info()
+        assert info["commit"] == "authori"
+        assert info["full_commit"] == "authoritative_new_commit_40char_long_sha"
+        assert info["build_date"] == "2026-10-15T18:00:00Z"

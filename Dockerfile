@@ -78,11 +78,20 @@ ARG DEV_BUILD=0
 RUN --mount=type=cache,target=/root/.cache/pip pip install -r requirements.txt \
     && if [ "$DEV_BUILD" = "1" ]; then pip install -r requirements-dev.txt; fi
 
+# Build metadata arguments injected by CI
+ARG BUILD_COMMIT=""
+ARG BUILD_DATE=""
+ENV BUILD_COMMIT=${BUILD_COMMIT}
+ENV BUILD_DATE=${BUILD_DATE}
+
 # Copy Python backend application
 COPY pyproject.toml .
 COPY app.py .
 COPY backend/ ./backend/
 COPY static/ ./static/
+
+# Persist build commit into filesystem for non-Docker-socket runtime inspection
+RUN if [ -n "$BUILD_COMMIT" ]; then echo "$BUILD_COMMIT" > /app/.git_commit; fi
 
 # Overlay freshly built frontend distribution
 COPY --from=frontend-builder /build/static/ ./static/
