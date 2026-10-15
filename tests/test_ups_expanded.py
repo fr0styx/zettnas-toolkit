@@ -275,3 +275,90 @@ def test_test_ups_connection_direct_usb(mock_direct):
     assert res["connected"] is True
     assert res["model"] == "Smart UPS W180"
     assert res["battery_charge_pct"] == 95.0
+
+
+@patch("backend.hardware.ups._query_direct_usb")
+def test_w180_synthetic_power_and_load_derivation(mock_direct):
+    # W180 mini-UPS provides raw output voltage & current, but leaves ups.load null
+    mock_direct.return_value = {
+        "MODEL": "Smart UPS W180",
+        "MFR": "WalleCube",
+        "STATUS": "ONLINE",
+        "BCHARGE": "100",
+        "TIMELEFT": "120.0",
+        "OUTV": "12.0",
+        "OUTCURR": "2.5",
+        "PROTOCOL": "direct_usb_hid",
+    }
+    save_ups_config({"mode": "usb_hid"})
+    status = read_ups_status(force=True)
+    assert status["available"] is True
+    assert status["model"] == "Smart UPS W180"
+    assert status["nominal_power_watts"] == 180.0
+    assert status["output_volts"] == 12.0
+    assert status["output_amps"] == 2.5
+    # 12.0V * 2.5A = 30.0W
+    assert status["power_watts"] == 30.0
+    # (30.0W / 180W) * 100 = 16.7%
+    assert status["load_pct"] == 16.7
+
+
+@patch("backend.hardware.ups._query_direct_usb")
+def test_w180_realpower_derivation(mock_direct):
+    mock_direct.return_value = {
+        "MODEL": "Smart UPS W180",
+        "MFR": "WalleCube",
+        "STATUS": "ONLINE",
+        "BCHARGE": "90",
+        "TIMELEFT": "95.0",
+        "REALPOWER": "45.0",
+        "PROTOCOL": "direct_usb_sysfs",
+    }
+    save_ups_config({"mode": "usb_hid"})
+    status = read_ups_status(force=True)
+    assert status["available"] is True
+    assert status["nominal_power_watts"] == 180.0
+    assert status["power_watts"] == 45.0
+    # (45.0W / 180W) * 100 = 25.0%
+    assert status["load_pct"] == 25.0
+
+
+@patch("backend.hardware.ups._query_direct_usb")
+def test_w180_battery_voltage_fallback_when_output_voltage_missing(mock_direct):
+    # If OUTV is not explicit, fallback to BATTV * OUTCURR
+    mock_direct.return_value = {
+        "MODEL": "Smart UPS W180",
+        "STATUS": "ONLINE",
+        "BATTV": "12.5",
+        "OUTCURR": "2.0",
+        "PROTOCOL": "direct_usb_sysfs",
+    }
+    save_ups_config({"mode": "usb_hid"})
+    status = read_ups_status(force=True)
+    assert status["power_watts"] == 25.0  # 12.5V * 2.0A
+    assert status["load_pct"] == 13.9  # (25.0 / 180.0) * 100 = 13.88% -> 13.9%
+
+
+@patch("subprocess.run")
+def test_nut_cli_parsing_output_voltage_and_current(mock_run):
+    from backend.hardware.ups import _query_nut_cli
+
+    mock_run.return_value.returncode = 0
+    mock_run.return_value.stdout = """
+battery.charge: 99.0
+battery.runtime: 3600
+battery.voltage: 12.6
+output.voltage: 12.0
+output.current: 1.8
+output.realpower: 21.6
+ups.status: OL
+ups.model: Smart UPS W180
+ups.realpower.nominal: 180
+"""
+    res = _query_nut_cli("w180")
+    assert res.get("OUTV") == "12.0"
+    assert res.get("OUTCURR") == "1.8"
+    assert res.get("REALPOWER") == "21.6"
+    assert res.get("BCHARGE") == "99.0"
+    assert res.get("MODEL") == "Smart UPS W180"
+    assert res.get("NOMPOWER") == "180"

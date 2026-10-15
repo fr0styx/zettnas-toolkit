@@ -282,6 +282,16 @@ def _query_nut_socket(
                             out["LOADPCT"] = v_clean
                         elif k_clean == "input.voltage":
                             out["LINEV"] = v_clean
+                        elif k_clean in ("output.voltage", "ups.output.voltage"):
+                            out["OUTV"] = v_clean
+                        elif k_clean in ("output.voltage.nominal", "ups.voltage.nominal", "output.voltage.target"):
+                            out.setdefault("NOMOUTV", v_clean)
+                        elif k_clean in ("output.current", "ups.current", "output.current.nominal"):
+                            out["OUTCURR"] = v_clean
+                        elif k_clean in ("output.realpower", "ups.realpower"):
+                            out["REALPOWER"] = v_clean
+                        elif k_clean in ("output.power", "ups.power"):
+                            out["APPARENTPOWER"] = v_clean
                         elif k_clean == "battery.voltage":
                             out["BATTV"] = v_clean
                         elif k_clean == "ups.status":
@@ -331,16 +341,30 @@ def _query_nut_cli(ups_name: str = "ups") -> Dict[str, str]:
                             out["LOADPCT"] = v_clean
                         elif k_clean == "input.voltage":
                             out["LINEV"] = v_clean
+                        elif k_clean in ("output.voltage", "ups.output.voltage"):
+                            out["OUTV"] = v_clean
+                        elif k_clean in ("output.voltage.nominal", "ups.voltage.nominal", "output.voltage.target"):
+                            out.setdefault("NOMOUTV", v_clean)
+                        elif k_clean in ("output.current", "ups.current", "output.current.nominal"):
+                            out["OUTCURR"] = v_clean
+                        elif k_clean in ("output.realpower", "ups.realpower"):
+                            out["REALPOWER"] = v_clean
+                        elif k_clean in ("output.power", "ups.power"):
+                            out["APPARENTPOWER"] = v_clean
                         elif k_clean == "battery.voltage":
                             out["BATTV"] = v_clean
                         elif k_clean == "ups.status":
                             out["STATUS"] = v_clean
-                        elif k_clean == "ups.model":
+                        elif k_clean in ("ups.model", "device.model"):
                             out["MODEL"] = v_clean
+                        elif k_clean in ("ups.mfr", "device.mfr"):
+                            out["MFR"] = v_clean
                         elif k_clean in ("ups.realpower.nominal", "ups.power.nominal"):
                             out["NOMPOWER"] = v_clean
                         elif k_clean in ("battery.temperature", "ups.temperature"):
                             out["ITEMP"] = v_clean
+                        elif k_clean == "input.frequency":
+                            out["LINEFREQ"] = v_clean
                 return out
         except Exception:
             continue
@@ -436,11 +460,13 @@ def _query_direct_usb(target_device: Optional[str] = None) -> Dict[str, Any]:
                     status = _read_attr("status")
                     online = _read_attr("online")
                     v_now = _read_attr("voltage_now")
+                    curr_now = _read_attr("current_now")
+                    p_now = _read_attr("power_now")
                     mfr = _read_attr("manufacturer")
                     model = _read_attr("model_name")
                     time_left = _read_attr("time_to_empty_now")
 
-                    if cap or status or v_now:
+                    if cap or status or v_now or curr_now or p_now:
                         if cap and cap.isdigit():
                             out["BCHARGE"] = cap
                         if status:
@@ -457,6 +483,15 @@ def _query_direct_usb(target_device: Optional[str] = None) -> Dict[str, Any]:
                             volts = float(v_now) / 1_000_000.0
                             if volts > 1.0:
                                 out["BATTV"] = str(round(volts, 1))
+                                out.setdefault("OUTV", str(round(volts, 1)))
+                        if curr_now and curr_now.lstrip("-").isdigit():
+                            amps = abs(float(curr_now)) / 1_000_000.0
+                            if amps > 0:
+                                out["OUTCURR"] = str(round(amps, 2))
+                        if p_now and p_now.lstrip("-").isdigit():
+                            watts = abs(float(p_now)) / 1_000_000.0
+                            if watts > 0:
+                                out["REALPOWER"] = str(round(watts, 1))
                         if time_left and time_left.isdigit():
                             out["TIMELEFT"] = str(round(float(time_left) / 60.0, 1))
                         if model:
@@ -593,7 +628,20 @@ def _query_direct_usb(target_device: Optional[str] = None) -> Dict[str, Any]:
                                 if rep and len(rep) > 1 and rep[1] <= 100:
                                     out["LOADPCT"] = str(rep[1])
 
-                            # 5. Status: ACPresent (0x84, 0xd0) or Discharging (0x84, 0xd2)
+                            # 5. Output / Battery Current (0x84, 0x58), (0x85, 0x58), (0x85, 0x45)
+                            for c_key in [(0x84, 0x58), (0x85, 0x58), (0x85, 0x45)]:
+                                if c_key in mapping:
+                                    rid, _, _ = mapping[c_key]
+                                    rep = _get_feature_report(rid)
+                                    if rep and len(rep) >= 3:
+                                        val_raw = int.from_bytes(rep[1:3], "little")
+                                        if val_raw > 0:
+                                            out["OUTCURR"] = (
+                                                str(round(val_raw / 1000.0, 2)) if val_raw > 50 else str(val_raw)
+                                            )
+                                            break
+
+                            # 6. Status: ACPresent (0x84, 0xd0) or Discharging (0x84, 0xd2)
                             status_parts = []
                             is_ac = True
                             if (0x84, 0xD0) in mapping:
@@ -1174,6 +1222,8 @@ def read_ups_status(force: bool = False) -> Dict[str, Any]:
             "time_left_min": None,
             "load_pct": None,
             "line_volts": None,
+            "output_volts": None,
+            "output_amps": None,
             "battery_volts": None,
             "power_watts": None,
             "battery_temp_c": None,
@@ -1204,6 +1254,14 @@ def read_ups_status(force: bool = False) -> Dict[str, Any]:
     batt_temp = _extract_float(raw.get("ITEMP"))
     line_freq = _extract_float(raw.get("LINEFREQ"))
 
+    out_v = _extract_float(raw.get("OUTV") or raw.get("OUTPUTV") or raw.get("NOMOUTV"))
+    out_curr = _extract_float(raw.get("OUTCURR") or raw.get("OUTPUT_A"))
+    direct_power = _extract_float(raw.get("REALPOWER") or raw.get("APPARENTPOWER"))
+
+    effective_out_v = out_v
+    if effective_out_v is None:
+        effective_out_v = line_v if line_v is not None and line_v > 0 else batt_v
+
     nom_power = _extract_float(raw.get("NOMPOWER"))
     model_str = (raw.get("MODEL") or "").lower()
     if nom_power is None:
@@ -1216,7 +1274,18 @@ def read_ups_status(force: bool = False) -> Dict[str, Any]:
         else:
             nom_power = 900.0
 
-    power_watts = round((load_pct / 100.0) * nom_power, 1) if load_pct is not None else None
+    power_watts = None
+    if direct_power is not None and direct_power >= 0:
+        power_watts = round(direct_power, 1)
+    elif effective_out_v is not None and out_curr is not None and effective_out_v > 0 and out_curr >= 0:
+        power_watts = round(effective_out_v * out_curr, 1)
+
+    if load_pct is not None and power_watts is None and nom_power and nom_power > 0:
+        power_watts = round((load_pct / 100.0) * nom_power, 1)
+    elif load_pct is None and power_watts is not None and nom_power and nom_power > 0:
+        load_pct = round(max(0.0, min(150.0, (power_watts / nom_power) * 100.0)), 1)
+    elif load_pct is not None:
+        load_pct = round(max(0.0, min(150.0, load_pct)), 1)
 
     status_str = str(raw.get("STATUS", "ONLINE")).strip().upper()
     is_on_batt = any(k in status_str for k in ("OB", "ONBATT", "ON BATT", "LB", "LOWBATT"))
@@ -1229,6 +1298,8 @@ def read_ups_status(force: bool = False) -> Dict[str, Any]:
         "time_left_min": time_left,
         "load_pct": load_pct,
         "line_volts": line_v,
+        "output_volts": out_v or effective_out_v,
+        "output_amps": out_curr,
         "battery_volts": batt_v,
         "battery_temp_c": batt_temp,
         "line_freq_hz": line_freq,

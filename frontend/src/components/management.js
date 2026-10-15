@@ -3141,7 +3141,7 @@ export function renderUpsTelemetry(ups) {
   }
   if (runtimeEl) runtimeEl.textContent = ups.time_left_min != null ? `${ups.time_left_min} min` : 'N/A';
   if (loadEl) loadEl.textContent = ups.load_pct != null ? `${ups.load_pct}%` : 'N/A';
-  if (linevEl) linevEl.textContent = ups.line_volts != null ? `${ups.line_volts} V` : 'N/A';
+  if (linevEl) linevEl.textContent = ups.line_volts != null ? `${ups.line_volts} V` : (ups.output_volts != null ? `${ups.output_volts} V` : 'N/A');
   if (protocolEl) protocolEl.textContent = ups.protocol || 'Auto / NIS';
   if (battvEl) battvEl.textContent = ups.battery_volts != null ? `${ups.battery_volts} V` : 'N/A';
   if (policyEl) policyEl.textContent = ups.active_policy ? `Policy: ${ups.active_policy}` : 'Runtime < 5m';
@@ -3170,11 +3170,11 @@ export function renderUpsTelemetry(ups) {
     }
   }
 
-  if (twinLinev) twinLinev.textContent = ups.line_volts != null ? `${ups.line_volts} V` : (ups.available ? '120.0 V' : '-- V');
+  if (twinLinev) twinLinev.textContent = ups.line_volts != null ? `${ups.line_volts} V` : (ups.output_volts != null ? `${ups.output_volts} V` : (ups.available ? '120.0 V' : '-- V'));
   if (twinGridStatus) {
     twinGridStatus.textContent = ups.on_battery ? 'AC Mains Disconnected' : (ups.line_freq_hz ? `${ups.line_freq_hz} Hz Nominal` : '120V / 60Hz Nominal');
   }
-  if (twinWatts) twinWatts.textContent = ups.power_watts != null ? `${ups.power_watts} W` : (ups.load_pct != null ? `${Math.round(ups.load_pct * 9)} W` : '-- W');
+  if (twinWatts) twinWatts.textContent = ups.power_watts != null ? `${ups.power_watts} W` : (ups.load_pct != null ? `${Math.round(ups.load_pct * ((ups.nominal_power_watts || 900) / 100))} W` : '-- W');
   if (twinBattVolts) {
     const vStr = ups.battery_volts != null ? `${ups.battery_volts} V` : '-- V';
     const tStr = ups.battery_temp_c != null ? `${ups.battery_temp_c}°C` : '--°C';

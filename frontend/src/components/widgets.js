@@ -1541,9 +1541,9 @@ export function initWidgets() {
     const upsRuntime = document.getElementById('w-ups-runtime');
     const upsBadge = document.getElementById('w-ups-badge');
     if (stats.ups) {
-      const charge = stats.ups.battery_charge ?? stats.ups.charge ?? 100;
-      const loadW = stats.ups.load_wattage ?? (stats.ups.load_percent ? `${stats.ups.load_percent}%` : '-- W');
-      const runtimeMin = stats.ups.runtime_seconds ? Math.round(stats.ups.runtime_seconds / 60) : '--';
+      const charge = stats.ups.battery_charge_pct ?? stats.ups.battery_charge ?? stats.ups.charge ?? 100;
+      const loadW = stats.ups.power_watts ?? stats.ups.load_wattage ?? (stats.ups.load_pct != null ? `${stats.ups.load_pct}%` : (stats.ups.load_percent ? `${stats.ups.load_percent}%` : '-- W'));
+      const runtimeMin = stats.ups.time_left_min != null ? Math.round(stats.ups.time_left_min) : (stats.ups.runtime_seconds ? Math.round(stats.ups.runtime_seconds / 60) : '--');
       const status = stats.ups.status || 'ONLINE';
 
       if (upsBattery) upsBattery.textContent = `${charge}%`;
