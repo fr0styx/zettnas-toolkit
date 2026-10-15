@@ -5,7 +5,7 @@
 import { ZettEventBus } from './event-bus.js';
 import { state } from './state.js';
 import { t } from './i18n.js';
-import { escapeHtml } from './utils.js';
+import { escapeHtml, sanitizeModalHtml } from './utils.js';
 import { triggerHaptic } from './haptics.js';
 
 let _toastContainer = null;
@@ -199,7 +199,14 @@ function _showTopConfirm(title, msg, onConfirm, onCancel, options = {}) {
   const isUpdate = options.isUpdate || (title && (title.toLowerCase().includes('update') || title.toLowerCase().includes('upgrade')));
 
   const safeTitle = escapeHtml(title || "Confirm Action");
-  const safeMsg = options.allowHtml ? (msg || "") : escapeHtml(msg || "");
+  let safeMsg = "";
+  if (options.allowHtml === false) {
+    safeMsg = escapeHtml(msg || "");
+  } else if (options.allowHtml || (msg && /<[a-z0-9]+/i.test(msg))) {
+    safeMsg = sanitizeModalHtml(msg || "");
+  } else {
+    safeMsg = escapeHtml(msg || "");
+  }
 
   if (isMedia) {
     titleEl.innerHTML = `<span>📷</span> ${safeTitle}`;
@@ -345,6 +352,12 @@ export function showPromptToast(title, msg, defaultVal, onConfirm, onCancel = nu
     ? `<textarea id="prompt-toast-input" placeholder="${escapeHtml(placeholder)}" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.6); border: 1px solid rgba(0, 240, 255, 0.4); padding: 9px 12px; color: white; border-radius: 6px; font-size: 13px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; outline: none; min-height: 96px; resize: vertical; line-height: 1.45;">${escapeHtml(defaultVal || '')}</textarea>`
     : `<input type="${inputType}" id="prompt-toast-input" placeholder="${escapeHtml(placeholder)}" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.6); border: 1px solid rgba(0, 240, 255, 0.4); padding: 9px 12px; color: white; border-radius: 6px; font-size: 13px; outline: none;" value="${escapeHtml(defaultVal || '')}" />`;
 
+  const safePromptMsg = options.allowHtml === false
+    ? escapeHtml(msg || "")
+    : (options.allowHtml || (msg && /<[a-z0-9]+/i.test(msg)))
+      ? sanitizeModalHtml(msg || "")
+      : escapeHtml(msg || "");
+
   card.innerHTML = `
     <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; border-bottom: 1px solid rgba(255,255,255,0.08); background: rgba(0, 240, 255, 0.08);" id="confirm-toast-header-bg">
       <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--brand, #00f0ff);" id="confirm-toast-title">
@@ -353,7 +366,7 @@ export function showPromptToast(title, msg, defaultVal, onConfirm, onCancel = nu
       <button id="confirm-toast-close" style="background: transparent; border: none; color: #94a3b8; font-size: 18px; cursor: pointer; padding: 2px 6px; line-height: 1; border-radius: 4px;" title="Cancel">&times;</button>
     </div>
     <div style="padding: 16px 20px;">
-      <div style="font-size: 12.5px; color: #cbd5e1; margin-bottom: 12px; line-height: 1.5;">${escapeHtml(msg || '')}</div>
+      <div style="font-size: 12.5px; color: #cbd5e1; margin-bottom: 12px; line-height: 1.5;">${safePromptMsg}</div>
       ${inputHtml}
       <div style="display: flex; gap: 10px; margin-top: 16px; justify-content: flex-end; align-items: center;">
         <button id="confirm-toast-cancel" style="padding: 7px 16px; background: transparent; border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: #cbd5e1; font-size: 12px; font-weight: 600; cursor: pointer;">${escapeHtml(cancelText)}</button>

@@ -865,6 +865,7 @@ function bindCwTableEvents(tbody) {
             okText: '⬆️ Update Now',
             cancelText: 'Cancel',
             isUpdate: true,
+            allowHtml: true,
           }
         );
         return;

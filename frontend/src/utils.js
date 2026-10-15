@@ -60,6 +60,50 @@ export function escapeHtml(str) {
     .replace(/'/g, '&#039;');
 }
 
+export function sanitizeModalHtml(html) {
+  if (html == null) return '';
+  let clean = String(html)
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
+    .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '');
+
+  clean = clean.replace(/on\w+\s*=\s*(?:["'][^"']*["']|[^\s>]+)/gi, '');
+
+  const allowedTags = new Set(['strong', 'b', 'em', 'i', 'code', 'br', 'p', 'span', 'small', 'div', 'a', 'ul', 'ol', 'li']);
+
+  clean = clean.replace(/<(\/?)([a-z0-9]+)([^>]*)>/gi, (match, slash, tag, attrs) => {
+    const lower = tag.toLowerCase();
+    if (!allowedTags.has(lower)) return '';
+    if (slash) return `</${lower}>`;
+
+    let safeAttrs = '';
+    const styleMatch = attrs.match(/style\s*=\s*(["'])(.*?)\1/i);
+    if (styleMatch) {
+      const val = styleMatch[2].replace(/expression|javascript|url/gi, '');
+      safeAttrs += ` style="${val.replace(/"/g, '&quot;')}"`;
+    }
+
+    const classMatch = attrs.match(/class\s*=\s*(["'])(.*?)\1/i);
+    if (classMatch) {
+      safeAttrs += ` class="${classMatch[2].replace(/[^a-zA-Z0-9_\-\s]/g, '')}"`;
+    }
+
+    if (lower === 'a') {
+      const hrefMatch = attrs.match(/href\s*=\s*(["'])(.*?)\1/i);
+      if (hrefMatch) {
+        const href = hrefMatch[2].trim();
+        if (/^(https?:\/\/|mailto:|\/|#)/i.test(href)) {
+          safeAttrs += ` href="${href.replace(/"/g, '&quot;')}" target="_blank" rel="noopener noreferrer"`;
+        }
+      }
+    }
+
+    return `<${lower}${safeAttrs}>`;
+  });
+
+  return clean;
+}
+
 export async function copyTextToClipboard(text) {
   if (navigator.clipboard && window.isSecureContext) {
     await navigator.clipboard.writeText(text);

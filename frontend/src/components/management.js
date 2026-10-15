@@ -809,6 +809,7 @@ function _bindDockerEvents() {
           okText: '⬆️ Update All Now',
           cancelText: 'Cancel',
           isUpdate: true,
+          allowHtml: true,
         }
       );
     });
@@ -1315,6 +1316,7 @@ function bindDockerTableEvents(tbody) {
             okText: '⬆️ Update Now',
             cancelText: 'Cancel',
             isUpdate: true,
+            allowHtml: true,
           }
         );
         return;
@@ -3747,7 +3749,7 @@ export function initUpsDrawerControls() {
         }
       },
       null,
-      { okText: '⚠️ Start Drill', cancelText: 'Cancel' }
+      { okText: '⚠️ Start Drill', cancelText: 'Cancel', allowHtml: true }
     );
   });
 }
@@ -4643,7 +4645,7 @@ export async function fetchAndRenderWireguard() {
             window.open(res.approval_url, '_blank', 'noopener,noreferrer');
           },
           null,
-          { confirmText: 'Open Approval Page', cancelText: 'Close' }
+          { confirmText: 'Open Approval Page', cancelText: 'Close', allowHtml: true }
         );
       } else if (res && res.status === 'error') {
         if (tsServeToggle) tsServeToggle.checked = Boolean(res.serve_enabled);
@@ -9038,7 +9040,7 @@ export async function fetchAndRenderAppBackups(mountEl, filterApp = '') {
             }
           },
           null,
-          { okText: '🔄 Restore App Data', cancelText: 'Cancel' }
+          { okText: '🔄 Restore App Data', cancelText: 'Cancel', allowHtml: true }
         );
       });
     });
@@ -9061,7 +9063,7 @@ export async function fetchAndRenderAppBackups(mountEl, filterApp = '') {
             }
           },
           null,
-          { okText: '🗑 Delete Archive', cancelText: 'Cancel' }
+          { okText: '🗑 Delete Archive', cancelText: 'Cancel', allowHtml: true }
         );
       });
     });
