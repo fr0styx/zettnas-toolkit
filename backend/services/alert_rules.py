@@ -204,6 +204,9 @@ def evaluate_system_alerts(unraid_data, ups_data):
 
 def _signal_host_powerdown():
     """Triggers graceful host powerdown if trigger script or poweroff command is available."""
+    if os.environ.get("TESTING") == "1" or os.environ.get("ZETTNAS_TEST_MODE") == "1":
+        logger.info("[UPS FAILSAFE] Test mode active; skipping host powerdown.")
+        return
     # Check for custom host shutdown trigger script (e.g. mounted from Unraid host)
     for trigger_path in ("/host/powerdown", "/usr/local/sbin/powerdown", "/sbin/poweroff"):
         if os.path.exists(trigger_path) and os.access(trigger_path, os.X_OK):

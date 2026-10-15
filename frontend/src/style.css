@@ -16422,16 +16422,95 @@ body.theme-yak .input-modern:focus {
   letter-spacing: 0.5px;
 }
 
+.usb-select-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.usb-select-row select,
+.usb-select-row .tz-select {
+  flex: 1 1 0;
+  min-width: 0;
+  width: 0;
+  max-width: 100%;
+  padding: 7px 10px;
+  border-radius: 6px;
+  background: #1e293b;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+.usb-select-row .btn-attach-usb {
+  flex-shrink: 0;
+  white-space: nowrap;
+  padding: 6px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  background: rgba(14, 165, 233, 0.2);
+  border: 1px solid #38bdf8;
+  color: #38bdf8;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s ease;
+  box-sizing: border-box;
+}
+
+.usb-select-row .btn-attach-usb:hover {
+  background: rgba(14, 165, 233, 0.35);
+  color: #fff;
+  border-color: #0ea5e9;
+}
+
 .usb-custom-row {
   display: flex;
   gap: 6px;
   align-items: center;
   margin-top: 8px;
-  padding: 8px;
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px dashed rgba(255, 255, 255, 0.1);
+  margin-bottom: 8px;
+  padding: 8px 10px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px dashed rgba(255, 255, 255, 0.12);
   border-radius: 6px;
+  width: 100%;
+  box-sizing: border-box;
 }
+
+.usb-custom-row input {
+  box-sizing: border-box;
+}
+
+.usb-custom-row input.usb-custom-desc {
+  flex: 1 1 0;
+  min-width: 0;
+  width: 0;
+}
+
+.usb-custom-row .btn-custom-add {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.vm-modal-window {
+  overflow: hidden !important;
+}
+
+.vm-modal-window .smart-modal-body {
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+}
+
 
 
 

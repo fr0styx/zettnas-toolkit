@@ -1011,7 +1011,7 @@ export function openVmEditModal(vmId, vmObj = null) {
       : [];
 
     modal.innerHTML = `
-      <div class="smart-modal-window vm-modal-window" style="max-width: 580px; width: 92%; max-height: 88vh; display: flex; flex-direction: column;">
+      <div class="smart-modal-window vm-modal-window" style="max-width: 580px; width: 92%; max-height: 88vh; display: flex; flex-direction: column; overflow: hidden;">
         <div class="smart-modal-header" style="cursor: move;">
           <div class="smart-modal-title">
             <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
@@ -1020,7 +1020,7 @@ export function openVmEditModal(vmId, vmObj = null) {
         <button id="vm-edit-modal-close" class="modal-close-btn" style="background: none; border: none; color: var(--muted); cursor: pointer; font-size: 16px; padding: 4px 8px; border-radius: 4px;" title="Close" aria-label="Close">✕</button>
       </div>
 
-      <div class="smart-modal-body" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; padding: 18px 22px;">
+      <div class="smart-modal-body" style="flex: 1; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; gap: 14px; padding: 18px 22px;">
         ${isRunning ? `
           <div style="background: rgba(14,165,233,0.12); border: 1px solid rgba(14,165,233,0.3); border-radius: 6px; padding: 10px 14px; font-size: 11px; color: #38bdf8; display: flex; align-items: center; gap: 8px;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
@@ -1160,33 +1160,33 @@ export function openVmEditModal(vmId, vmObj = null) {
         </div>
 
         <!-- Host USB Passthrough -->
-        <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 12px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+        <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 12px; box-sizing: border-box; overflow: hidden;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; gap: 10px;">
             <div>
               <div style="font-size: 12px; font-weight: 700; color: #fff;" data-i18n="vm.usb_title">${t('vm.usb_title', 'Host USB Device Passthrough')}</div>
               <div style="font-size: 10px; color: var(--muted);" data-i18n="vm.usb_desc">${t('vm.usb_desc', 'Attach physical host USB peripherals directly into the guest VM.')}</div>
             </div>
-            <button type="button" id="btn-edit-toggle-custom-usb" class="btn-pill-toggle" style="padding: 3px 8px; font-size: 10px;">
+            <button type="button" id="btn-edit-toggle-custom-usb" class="btn-pill-toggle" style="padding: 4px 8px; font-size: 10px; white-space: nowrap; flex-shrink: 0;">
               + Custom VID:PID
             </button>
           </div>
 
           <!-- Dynamic host USB selector row -->
-          <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 8px;">
-            <select id="vm-edit-host-usb-select" class="tz-select" style="flex: 1; padding: 6px 8px; border-radius: 4px; background: #1e293b; border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 11px;">
+          <div class="usb-select-row">
+            <select id="vm-edit-host-usb-select" class="tz-select">
               <option value="">Scanning host USB devices...</option>
             </select>
-            <button type="button" id="btn-edit-add-usb-device" class="btn-console-act" style="padding: 5px 12px; font-size: 11px; background: rgba(14,165,233,0.2); border-color: #38bdf8; color: #38bdf8;">
-              ${t('vm.usb_add_btn', '+ Passthrough Device')}
+            <button type="button" id="btn-edit-add-usb-device" class="btn-attach-usb">
+              ${t('vm.usb_add_btn', '+ Attach Device')}
             </button>
           </div>
 
           <!-- Custom USB inputs (hidden by default) -->
           <div id="vm-edit-custom-usb-wrap" class="usb-custom-row" style="display: none;">
-            <input type="text" id="vm-edit-custom-vid" placeholder="VID (e.g. 10c4)" maxlength="4" style="width: 80px; padding: 5px 8px; border-radius: 4px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 11px;" />
-            <input type="text" id="vm-edit-custom-pid" placeholder="PID (e.g. ea60)" maxlength="4" style="width: 80px; padding: 5px 8px; border-radius: 4px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 11px;" />
-            <input type="text" id="vm-edit-custom-desc" placeholder="Device Label (e.g. Zigbee Dongle)" style="flex: 1; padding: 5px 8px; border-radius: 4px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 11px;" />
-            <button type="button" id="btn-edit-add-custom-usb" class="btn-console-act" style="padding: 4px 10px; font-size: 11px; background: rgba(16,185,129,0.2); border-color: #34d399; color: #34d399;">
+            <input type="text" id="vm-edit-custom-vid" placeholder="VID (10c4)" maxlength="4" style="width: 74px; flex-shrink: 0; padding: 5px 8px; border-radius: 4px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 11px;" />
+            <input type="text" id="vm-edit-custom-pid" placeholder="PID (ea60)" maxlength="4" style="width: 74px; flex-shrink: 0; padding: 5px 8px; border-radius: 4px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 11px;" />
+            <input type="text" id="vm-edit-custom-desc" class="usb-custom-desc" placeholder="Device Label (e.g. Zigbee Dongle)" style="padding: 5px 8px; border-radius: 4px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 11px;" />
+            <button type="button" id="btn-edit-add-custom-usb" class="btn-console-act btn-custom-add" style="padding: 4px 10px; font-size: 11px; background: rgba(16,185,129,0.2); border-color: #34d399; color: #34d399;">
               Add
             </button>
           </div>
@@ -2014,7 +2014,7 @@ export function openVmCreateModal() {
   const hostThreads = vmTelemetry?.cpu_capacity?.host_threads || 8;
 
   modal.innerHTML = `
-    <div class="smart-modal-window vm-modal-window" style="max-width: 580px; width: 92%; max-height: 88vh; display: flex; flex-direction: column;">
+    <div class="smart-modal-window vm-modal-window" style="max-width: 580px; width: 92%; max-height: 88vh; display: flex; flex-direction: column; overflow: hidden;">
       <div class="smart-modal-header" style="cursor: move;">
         <div class="smart-modal-title">
           <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
@@ -2023,7 +2023,7 @@ export function openVmCreateModal() {
         <button id="vm-modal-close" class="modal-close-btn" style="background: none; border: none; color: var(--muted); cursor: pointer; font-size: 16px; padding: 4px 8px; border-radius: 4px;" title="Close" aria-label="Close">✕</button>
       </div>
 
-      <div class="smart-modal-body" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; padding: 18px 22px;">
+      <div class="smart-modal-body" style="flex: 1; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; gap: 14px; padding: 18px 22px;">
         <!-- Step 1: General -->
         <div>
           <label style="display: block; font-size: 11px; font-weight: 700; color: var(--muted); margin-bottom: 6px;">VM Name *</label>
@@ -2225,33 +2225,33 @@ export function openVmCreateModal() {
         </div>
 
         <!-- Step 8: Host USB Device Passthrough -->
-        <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 12px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+        <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 12px; box-sizing: border-box; overflow: hidden;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; gap: 10px;">
             <div>
               <div style="font-size: 12px; font-weight: 700; color: #fff;" data-i18n="vm.usb_title">${t('vm.usb_title', 'Host USB Device Passthrough')}</div>
               <div style="font-size: 10px; color: var(--muted);" data-i18n="vm.usb_desc">${t('vm.usb_desc', 'Attach physical host USB peripherals directly into the guest VM.')}</div>
             </div>
-            <button type="button" id="btn-create-toggle-custom-usb" class="btn-pill-toggle" style="padding: 3px 8px; font-size: 10px;">
+            <button type="button" id="btn-create-toggle-custom-usb" class="btn-pill-toggle" style="padding: 4px 8px; font-size: 10px; white-space: nowrap; flex-shrink: 0;">
               + Custom VID:PID
             </button>
           </div>
 
           <!-- Dynamic host USB selector row -->
-          <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 8px;">
-            <select id="vm-create-host-usb-select" class="tz-select" style="flex: 1; padding: 6px 8px; border-radius: 4px; background: #1e293b; border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 11px;">
+          <div class="usb-select-row">
+            <select id="vm-create-host-usb-select" class="tz-select">
               <option value="">Scanning host USB devices...</option>
             </select>
-            <button type="button" id="btn-create-add-usb-device" class="btn-console-act" style="padding: 5px 12px; font-size: 11px; background: rgba(14,165,233,0.2); border-color: #38bdf8; color: #38bdf8;">
-              ${t('vm.usb_add_btn', '+ Passthrough Device')}
+            <button type="button" id="btn-create-add-usb-device" class="btn-attach-usb">
+              ${t('vm.usb_add_btn', '+ Attach Device')}
             </button>
           </div>
 
           <!-- Custom USB inputs (hidden by default) -->
           <div id="vm-create-custom-usb-wrap" class="usb-custom-row" style="display: none;">
-            <input type="text" id="vm-create-custom-vid" placeholder="VID (e.g. 10c4)" maxlength="4" style="width: 80px; padding: 5px 8px; border-radius: 4px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 11px;" />
-            <input type="text" id="vm-create-custom-pid" placeholder="PID (e.g. ea60)" maxlength="4" style="width: 80px; padding: 5px 8px; border-radius: 4px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 11px;" />
-            <input type="text" id="vm-create-custom-desc" placeholder="Device Label (e.g. Zigbee Dongle)" style="flex: 1; padding: 5px 8px; border-radius: 4px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 11px;" />
-            <button type="button" id="btn-create-add-custom-usb" class="btn-console-act" style="padding: 4px 10px; font-size: 11px; background: rgba(16,185,129,0.2); border-color: #34d399; color: #34d399;">
+            <input type="text" id="vm-create-custom-vid" placeholder="VID (10c4)" maxlength="4" style="width: 74px; flex-shrink: 0; padding: 5px 8px; border-radius: 4px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 11px;" />
+            <input type="text" id="vm-create-custom-pid" placeholder="PID (ea60)" maxlength="4" style="width: 74px; flex-shrink: 0; padding: 5px 8px; border-radius: 4px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 11px;" />
+            <input type="text" id="vm-create-custom-desc" class="usb-custom-desc" placeholder="Device Label (e.g. Zigbee Dongle)" style="padding: 5px 8px; border-radius: 4px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 11px;" />
+            <button type="button" id="btn-create-add-custom-usb" class="btn-console-act btn-custom-add" style="padding: 4px 10px; font-size: 11px; background: rgba(16,185,129,0.2); border-color: #34d399; color: #34d399;">
               Add
             </button>
           </div>

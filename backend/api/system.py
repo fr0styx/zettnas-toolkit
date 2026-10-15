@@ -572,6 +572,10 @@ def trigger_power_action(action: str) -> bool:
     Triggers host system reboot or shutdown.
     Checks host trigger scripts, container-host volume mounts, and system power commands.
     """
+    if os.environ.get("TESTING") == "1" or os.environ.get("ZETTNAS_TEST_MODE") == "1":
+        logger.info(f"[Power] Test mode active; harmlessly mocked host trigger for '{action}'")
+        return True
+
     if action == "reboot":
         triggers = [
             ["/host/reboot"],

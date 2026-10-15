@@ -60,13 +60,14 @@ def test_superadmin_full_access(client: TestClient):
     assert res.status_code == 200
 
     # System Power
-    res = client.post("/api/system/reboot", headers=headers)
-    assert res.status_code == 200
-    assert res.json()["status"] == "ok"
+    with patch("backend.api.system.trigger_power_action", return_value=True):
+        res = client.post("/api/system/reboot", headers=headers)
+        assert res.status_code == 200
+        assert res.json()["status"] == "ok"
 
-    res = client.post("/api/system/shutdown", headers=headers)
-    assert res.status_code == 200
-    assert res.json()["status"] == "ok"
+        res = client.post("/api/system/shutdown", headers=headers)
+        assert res.status_code == 200
+        assert res.json()["status"] == "ok"
 
 
 def test_storage_admin_permissions_and_restrictions(client: TestClient):
