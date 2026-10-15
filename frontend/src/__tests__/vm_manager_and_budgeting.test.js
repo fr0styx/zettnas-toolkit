@@ -829,6 +829,13 @@ describe('VM Manager & Dynamic Elastic Headroom Budgeting', () => {
       expect(parsed).toContain('Clean Output');
       expect(parsed).toContain('color: #22c55e');
     });
+
+    it('sanitizes dangling or orphaned escape sequences without leaking brackets into DOM', () => {
+      const orphaned = 'localhost:~# hol \x1b[ \x1b[';
+      const parsed = formatAnsiToHtml(orphaned);
+      expect(parsed).toBe('localhost:~# hol  ');
+      expect(parsed).not.toContain('[');
+    });
   });
 
   describe('Console Reconnection & Modal Lifecycle', () => {
@@ -1382,6 +1389,24 @@ describe('VM Manager & Dynamic Elastic Headroom Budgeting', () => {
 
       // 9. Multi-byte surrogate pair (emoji) deletion
       expect(applyTerminalStream('hello 🚀', '\x08 \x08')).toBe('hello ');
+
+      // 10. Erase in display ANSI sequence (\x08\x1b[J) used by Busybox ash on Alpine Linux
+      expect(applyTerminalStream('localhost:~# hol', '\x08\x1b[J')).toBe('localhost:~# ho');
+      expect(applyTerminalStream('localhost:~# ho', '\x08\x1b[J')).toBe('localhost:~# h');
+      expect(applyTerminalStream('localhost:~# h', '\x08\x1b[J')).toBe('localhost:~# ');
+
+      // 11. Multi-character consecutive ash backspaces
+      expect(applyTerminalStream('localhost:~# ', 'abc\x08\x1b[J\x08\x1b[J')).toBe('localhost:~# a');
+
+      // 12. Standalone lone \x08 backspace
+      expect(applyTerminalStream('hello', '\x08')).toBe('hell');
+
+      // 13. Sequential backspaces do not leave orphan \x1b[ fragments
+      let buf = 'localhost:~# hol';
+      buf = applyTerminalStream(buf, '\x08\x1b[J');
+      buf = applyTerminalStream(buf, '\x08\x1b[J');
+      expect(buf).toBe('localhost:~# h');
+      expect(buf).not.toContain('\x1b');
     });
   });
 });

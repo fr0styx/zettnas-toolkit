@@ -119,9 +119,9 @@ def test_mesh_vpn_status_detection():
     ):
 
         def side_effect(cmd, **kwargs):
-            if cmd[:2] == ["tailscale", "status"]:
+            if cmd and cmd[0].endswith("tailscale") and len(cmd) > 1 and cmd[1] == "status":
                 return MagicMock(returncode=0, stdout=mock_ts_json, stderr="")
-            elif cmd[:3] == ["wg", "show", "interfaces"]:
+            elif cmd and cmd[0] == "wg" and len(cmd) > 2 and cmd[1:3] == ["show", "interfaces"]:
                 return MagicMock(returncode=0, stdout="wg0 wg1\n", stderr="")
             return MagicMock(returncode=1, stdout="", stderr="")
 

@@ -3608,6 +3608,7 @@ class StoragePlatformDetector:
         env_platform = (
             os.environ.get("ZETTNAS_PLATFORM", "").strip().lower()
             or os.environ.get("ZETTNAS_OBSERVER_ADAPTER", "").strip().lower()
+            or os.environ.get("ZETTNAS_PAL_MODE", "").strip().lower()
         )
         if env_platform:
             if env_platform in ("unraid",):

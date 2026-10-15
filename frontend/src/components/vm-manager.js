@@ -3673,7 +3673,7 @@ export function formatAnsiToHtml(raw) {
   let openSpan = false;
   let result = '';
 
-  const regex = /(?:\x1b|\u001b)\[([\d;]*)m|(?:\x1b|\u001b)\[[\??0-9;]*[a-zA-Z]|\[(\d+(?:;\d+)*)m/g;
+  const regex = /(?:\x1b|\u001b)\[([\d;]*)m|(?:\x1b|\u001b)\[[?0-9;]*[a-zA-Z~@]|(?:\x1b|\u001b)\][^\x07\x1b]*(?:\x07|\x1b\\)|(?:\x1b|\u001b)[()#%][A-Za-z0-9]|(?:\x1b|\u001b)[=>cDEMNOZ78<]|\[(\d+(?:;\d+)*)m/g;
   let lastIndex = 0;
   let match;
 
@@ -3682,7 +3682,9 @@ export function formatAnsiToHtml(raw) {
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;');
+      .replace(/"/g, '&quot;')
+      // Strip any dangling unparsed escape fragments (e.g. orphan \x1b[ or lone \x1b)
+      .replace(/(?:\x1b|\u001b)\[?[?0-9;]*/g, '');
   };
 
   while ((match = regex.exec(raw)) !== null) {
@@ -3771,24 +3773,28 @@ export const parseAnsiToHtml = formatAnsiToHtml;
 
 /**
  * Processes incoming serial terminal stream data, applying Backspace erase sequences
- * (\x08 \x08, \x08\x1b[K, \x1b[D \x1b[D) and stripping terminal bell controls (\x07).
+ * (\x08 \x08, \x08\x1b[J, \x08\x1b[K, \x1b[D \x1b[D) and stripping terminal bell controls (\x07).
  * Accurately deletes the preceding printable character while preserving ANSI escape sequences.
  */
 export function applyTerminalStream(buffer, chunk) {
   if (!chunk) return buffer || '';
   let str = (buffer || '') + chunk;
 
-  // Fast path: if no backspace, erase, or bell sequences, return immediately
-  if (!str.includes('\x08') && !str.includes('\x1b[D') && !str.includes('\x07')) {
+  // Fast path: if no backspace, cursor-left, bell, or escape sequences, return immediately
+  if (!str.includes('\x08') && !str.includes('\x1b[D') && !str.includes('\x07') && !str.includes('\x1b[')) {
     return str;
   }
 
   // Strip bell characters
   str = str.replace(/\x07/g, '');
 
-  const ansiRegex = /(?:\x1b|\u001b)\[[?0-9;]*[a-zA-Z]/g;
-  // Matches \x08 \x08, \x08\x1b[K, \x08 \x1b[K, \x1b[D \x1b[D, etc.
-  const eraseRegex = /(?:\x08|\x1b\[D)(?: (?:\x08|\x1b\[D)|\x1b\[[?0-9;]*K| \x1b\[[?0-9;]*K)/;
+  const ansiRegex = /(?:\x1b|\u001b)\[[?0-9;]*[a-zA-Z~@]/g;
+  // Matches all backspace & cursor-left erase patterns:
+  // 1. \x08 \x08 (classic BS space BS)
+  // 2. \x08\x1b[...[a-zA-Z~@] or \x08 \x1b[... (BS followed by ED/EL erase such as \x08\x1b[J in Alpine BusyBox ash, \x08\x1b[K in Bash/Zsh)
+  // 3. \x1b[D \x1b[D or \x1b[D\x1b[... (Cursor Left erase)
+  // 4. Standalone \x08 (lone BS character)
+  const eraseRegex = /(?:\x08|\x1b\[D)(?: (?:\x08|\x1b\[D)|\x1b\[[?0-9;]*[a-zA-Z~@]| \x1b\[[?0-9;]*[a-zA-Z~@])?/;
 
   while (true) {
     const match = eraseRegex.exec(str);
@@ -3803,7 +3809,7 @@ export function applyTerminalStream(buffer, chunk) {
     let idx = eraseStart;
 
     while (idx > 0) {
-      const lookback = str.slice(Math.max(0, idx - 32), idx);
+      const lookback = str.slice(Math.max(0, idx - 64), idx);
       const ansiMatches = [...lookback.matchAll(ansiRegex)];
       let skippedAnsi = false;
       if (ansiMatches.length > 0) {
@@ -3842,9 +3848,8 @@ export function applyTerminalStream(buffer, chunk) {
     }
   }
 
-  // Clean up any remaining lone backspaces (\x08 preceded by a non-newline char)
-  str = str.replace(/([^\r\n])\x08/g, '');
-  str = str.replace(/\x08/g, '');
+  // Strip standalone trailing clear-to-end-of-line/screen codes (\x1b[K, \x1b[J)
+  str = str.replace(/(?:\x1b|\u001b)\[[?0-9;]*[JK]/g, '');
 
   return str;
 }
