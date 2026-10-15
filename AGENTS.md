@@ -41,6 +41,12 @@ This document serves as your operational blueprint, covering the architecture, d
   2. **Physical LCD Framebuffer (`/dev/fb0`) & Mini-LCD Canvas**: Dedicated palette scoped strictly to `#screen` and `#mini-lcd-canvas`.
 - Changes to the desktop appearance must **never** cascade into or corrupt the physical LCD front-panel display.
 
+### 1.6 Host Power & Test Execution Isolation Invariant
+- **Never trigger physical host power operations during test execution**:
+  - Test suites (`pytest`, `vitest`) must **never** trigger real host power transitions (`reboot`, `powerdown`, `shutdown`).
+  - `trigger_power_action()` in `backend/api/system.py` and `signal_host_powerdown()` in `backend/services/alert_rules.py` / `backend/services/ups_watchdog.py` unconditionally short-circuit if `TESTING == "1"` or `ZETTNAS_TEST_MODE == "1"`.
+  - All unit/integration tests exercising power endpoints (`/api/system/reboot`, `/api/system/shutdown`) **must** wrap calls in `unittest.mock.patch("backend.api.system.trigger_power_action", return_value=True)`.
+
 ---
 
 ## 2. Repository Layout & Key Directories
