@@ -166,7 +166,6 @@ describe('System About & Software Updates Frontend Component', () => {
   });
 
   it('triggers in-app system update when applySystemUpdate is called', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
     const postSpy = vi.spyOn(api, 'post').mockResolvedValue({
       status: 'restarting',
       auto_restarting: true,
@@ -176,6 +175,11 @@ describe('System About & Software Updates Frontend Component', () => {
     // Provide mock last update data
     await setUpdateChannel('edge');
     await applySystemUpdate();
+
+    // Confirm update via custom OS modal
+    const okBtn = document.getElementById('confirm-toast-ok');
+    if (okBtn) okBtn.click();
+    await Promise.resolve();
 
     expect(postSpy).toHaveBeenCalledWith('/api/system/updates/apply', { channel: 'edge' });
     expect(document.getElementById('update-progress-overlay').style.display).toBe('block');

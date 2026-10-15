@@ -291,21 +291,25 @@ describe('Tier 3: Advanced Virtual Switching, Bonding & 802.1Q VLAN Tagging', ()
     });
 
     it('deletes VLAN sub-interface after confirmation', async () => {
-      vi.spyOn(window, 'confirm').mockReturnValue(true);
       const delSpy = vi.spyOn(api, 'delete').mockResolvedValueOnce({ status: 'ok' });
       const toastSpy = vi.spyOn(toast, 'showToast').mockImplementation(() => {});
 
       await deleteVlanSubinterface('eth0.20');
+      const okBtn = document.getElementById('confirm-toast-ok');
+      if (okBtn) okBtn.click();
+      await Promise.resolve();
 
       expect(delSpy).toHaveBeenCalledWith('/api/network/vlan/eth0.20');
       expect(toastSpy).toHaveBeenCalledWith(expect.stringContaining('successfully'), 'success');
     });
 
     it('aborts VLAN deletion when confirmation is rejected', async () => {
-      vi.spyOn(window, 'confirm').mockReturnValue(false);
       const delSpy = vi.spyOn(api, 'delete');
 
       await deleteVlanSubinterface('eth0.20');
+      const cancelBtn = document.getElementById('confirm-toast-cancel');
+      if (cancelBtn) cancelBtn.click();
+      await Promise.resolve();
 
       expect(delSpy).not.toHaveBeenCalled();
     });

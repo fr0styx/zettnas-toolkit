@@ -5918,16 +5918,26 @@ export function getLanguage() {
   return _currentLang;
 }
 
-export function t(key, fallback = '') {
+export function t(key, fallback = '', params = null) {
+  let str = null;
   const dict = TRANSLATIONS[_currentLang] || TRANSLATIONS.en;
   if (dict && dict[key] != null) {
-    return dict[key];
+    str = dict[key];
+  } else {
+    const enDict = TRANSLATIONS.en;
+    if (enDict && enDict[key] != null) {
+      str = enDict[key];
+    } else {
+      str = fallback || key;
+    }
   }
-  const enDict = TRANSLATIONS.en;
-  if (enDict && enDict[key] != null) {
-    return enDict[key];
+
+  if (params && typeof params === 'object') {
+    for (const [pKey, pVal] of Object.entries(params)) {
+      str = str.replace(new RegExp(`\\{${pKey}\\}`, 'g'), String(pVal));
+    }
   }
-  return fallback || key;
+  return str;
 }
 
 export function setLanguage(lang) {

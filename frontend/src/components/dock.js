@@ -3085,8 +3085,31 @@ export function initSnapAssistFlyout() {
     });
   });
 
+  const MAX_BTN_SELECTOR = '.win-btn.max-btn, #console-max, #management-max, #fb-max, #smart-modal-max, #copy-toast-max, #setup-wizard-max';
+  const isMaxBtn = (el) => el && el.closest && el.closest(MAX_BTN_SELECTOR);
+
+  // High-performance event delegation replaces full-body subtree MutationObserver
+  if (document.body) {
+    document.body.addEventListener('mouseover', (e) => {
+      const btn = isMaxBtn(e.target);
+      if (btn) showFlyout(btn);
+    });
+    document.body.addEventListener('mouseout', (e) => {
+      const btn = isMaxBtn(e.target);
+      if (btn) scheduleHide();
+    });
+    document.body.addEventListener('focusin', (e) => {
+      const btn = isMaxBtn(e.target);
+      if (btn) showFlyout(btn);
+    });
+    document.body.addEventListener('focusout', (e) => {
+      const btn = isMaxBtn(e.target);
+      if (btn) scheduleHide();
+    });
+  }
+
   const attachToMaxButtons = () => {
-    const maxButtons = document.querySelectorAll('.win-btn.max-btn, #console-max, #management-max, #fb-max, #smart-modal-max, #copy-toast-max, #setup-wizard-max');
+    const maxButtons = document.querySelectorAll(MAX_BTN_SELECTOR);
     maxButtons.forEach((btn) => {
       if (btn._snapAssistBound) return;
       btn._snapAssistBound = true;
@@ -3098,13 +3121,6 @@ export function initSnapAssistFlyout() {
   };
 
   attachToMaxButtons();
-
-  if (window.MutationObserver && document.body) {
-    const observer = new MutationObserver(() => {
-      attachToMaxButtons();
-    });
-    observer.observe(document.body, { childList: true, subtree: true });
-  }
 
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && flyout.classList.contains('visible')) {

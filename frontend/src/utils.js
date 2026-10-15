@@ -2,23 +2,44 @@
  * Core UI Utilities
  */
 
-export function trapFocus(element) {
+export function trapFocus(element, onClose = null) {
   if (!element) return () => {};
-  const focusable = element.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
-  if (!focusable.length) return () => {};
 
-  const first = focusable[0];
-  const last = focusable[focusable.length - 1];
+  const FOCUSABLE_SELECTOR = 'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+  function getFocusableElements() {
+    return Array.from(element.querySelectorAll(FOCUSABLE_SELECTOR)).filter((el) => {
+      if (el.disabled) return false;
+      if (el.getAttribute('aria-hidden') === 'true') return false;
+      if (el.style && el.style.display === 'none') return false;
+      return true;
+    });
+  }
 
   function onKeyDown(e) {
+    if (e.key === 'Escape') {
+      if (typeof onClose === 'function') {
+        e.preventDefault();
+        onClose(e);
+      }
+      return;
+    }
+
     if (e.key !== 'Tab') return;
+
+    const focusable = getFocusableElements();
+    if (!focusable.length) return;
+
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+
     if (e.shiftKey) {
-      if (document.activeElement === first) {
+      if (document.activeElement === first || !element.contains(document.activeElement)) {
         last.focus();
         e.preventDefault();
       }
     } else {
-      if (document.activeElement === last) {
+      if (document.activeElement === last || !element.contains(document.activeElement)) {
         first.focus();
         e.preventDefault();
       }

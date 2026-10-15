@@ -7,6 +7,7 @@ import { ZettEventBus } from '../event-bus.js';
 import { t } from '../i18n.js';
 import { state } from '../state.js';
 import { escapeHtml } from '../utils.js';
+import { showToast } from '../toast.js';
 import { fetchCurrentProfile, getCurrentUser, setCurrentUser } from './users.js';
 
 let _pendingMfaToken = null;
@@ -499,12 +500,12 @@ async function submitMfaChallenge() {
       }
       ZettEventBus.emit('auth:login');
     } else {
-      alert(`2FA Verification Failed: ${data.detail || 'Invalid code'}`);
+      showToast(`2FA Verification Failed: ${data.detail || 'Invalid code'}`, 'error');
       codeInput.value = '';
       codeInput.focus();
     }
   } catch (err) {
-    alert(`Verification error: ${err.message}`);
+    showToast(`Verification error: ${err.message}`, 'error');
   } finally {
     if (btnSubmit) {
       btnSubmit.disabled = false;

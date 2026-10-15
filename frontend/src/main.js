@@ -50,6 +50,7 @@ let _pollAbortController = null;
 
 async function checkLcdStatus() {
   if (state.isLcdDirect) return;
+  if (state.latestStats?.hardware?.has_lcd === false) return;
   try {
     const data = await api.get('/api/lcd_status');
     const badge = document.getElementById('lcd-renderer-badge');
@@ -212,6 +213,42 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.classList.add('vm-console-direct');
   }
 
+  // Optimized Direct Modes: Avoid booting desktop window manager & apps
+  if (state.isVmConsoleDirect) {
+    setWindowRestorationComplete(true);
+    initI18n();
+    initAuth();
+    initVmManager();
+    initA11y();
+    if (auth.hasToken()) {
+      const params = new URLSearchParams(window.location.search);
+      const vmId = params.get('vm') || '1';
+      const vmName = params.get('name') || 'Virtual Machine';
+      const consoleMode = params.get('consoleMode') || 'gui';
+      openVmConsole(vmId, vmName, consoleMode);
+    } else {
+      const overlay = document.getElementById('login-overlay');
+      if (overlay) {
+        overlay.style.removeProperty('opacity');
+        overlay.style.display = 'flex';
+      }
+    }
+    return;
+  }
+
+  if (state.isLcdDirect) {
+    setWindowRestorationComplete(true);
+    initI18n();
+    initDashboardClicks();
+    initFanControl();
+    initLedControl();
+    applyLcdTheme(state.lcdTheme, state.lcdCustomAccent, state.lcdTextClarity);
+    fetchDashboardLayout();
+    tick();
+    startSSE();
+    return;
+  }
+
   setWindowRestorationComplete(false);
   initI18n();
   initDockSystem();
@@ -243,26 +280,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const hasAuth = auth.hasToken() || state.isLcdDirect;
   if (hasAuth) {
-    if (state.isVmConsoleDirect) {
-      setWindowRestorationComplete(true);
-      const params = new URLSearchParams(window.location.search);
-      const vmId = params.get('vm') || '1';
-      const vmName = params.get('name') || 'Virtual Machine';
-      const consoleMode = params.get('consoleMode') || 'gui';
-      openVmConsole(vmId, vmName, consoleMode);
-    } else if (state.isLcdDirect) {
-      setWindowRestorationComplete(true);
-      fetchDashboardLayout();
-      tick();
-      startSSE();
-    } else {
-      restoreOpenWindowsState();
-      fetchDashboardLayout();
-      tick();
-      startSSE();
-      checkLcdStatus();
-      loadWallpapers();
-    }
+    restoreOpenWindowsState();
+    fetchDashboardLayout();
+    tick();
+    startSSE();
+    checkLcdStatus();
+    loadWallpapers();
   } else {
     setWindowRestorationComplete(true);
     const overlay = document.getElementById('login-overlay');
@@ -296,15 +319,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   ZettEventBus.on('auth:login', () => {
-    if (state.isVmConsoleDirect) {
-      setWindowRestorationComplete(true);
-      const params = new URLSearchParams(window.location.search);
-      const vmId = params.get('vm') || '1';
-      const vmName = params.get('name') || 'Virtual Machine';
-      const consoleMode = params.get('consoleMode') || 'gui';
-      openVmConsole(vmId, vmName, consoleMode);
-      return;
-    }
     fetchDashboardLayout();
     tick();
     startSSE();
@@ -313,33 +327,4 @@ document.addEventListener('DOMContentLoaded', () => {
     DockManager.render();
     restoreOpenWindowsState();
   });
-
-  // Prevent background drag/bounce from scrolling the page and losing the navbar on mobile
-  document.addEventListener('touchmove', (e) => {
-    const isMobile = document.body.classList.contains('mobile-mode') || window.innerWidth <= 768;
-    if (!isMobile) return;
-
-    // Allow scrolling within designated scrollable containers (or data-scrollable="true")
-    const scrollable = e.target.closest(
-      '[data-scrollable="true"], [data-scrollable], ' +
-      '.vm-content-body, .containers-content-body, .chassis-workbench-stage, .mobile-bottom-sheet, ' +
-      '.mgmt-content-pane, .fm-viewport, #console-window, .smart-modal-body, ' +
-      '.smart-modal-window, .container-inspector-window, .ci-panes-container, #ci-logs-terminal, .ci-pane, ' +
-      '.slide-drawer, #desktop-widgets-container, .os-dock, ' +
-      'input, select, textarea, .mgmt-sidebar, .mgmt-inner-tabs, .drawer-tabs-nav, .smart-raw-pre'
-    );
-    if (scrollable) return;
-
-    // Check if target is inside an element with overflow-y/x auto or scroll
-    let el = e.target;
-    while (el && el !== document.body && el !== document.documentElement) {
-      if (el.scrollHeight > el.clientHeight || el.scrollWidth > el.clientWidth) {
-        const overflow = window.getComputedStyle(el).overflowY;
-        if (overflow === 'auto' || overflow === 'scroll') return;
-      }
-      el = el.parentElement;
-    }
-
-    e.preventDefault();
-  }, { passive: false });
 });

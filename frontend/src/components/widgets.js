@@ -1425,6 +1425,8 @@ export function initWidgets() {
   ZettEventBus.on('stats:updated', (stats) => {
     if (!stats) return;
     if (typeof document !== 'undefined' && document.hidden && typeof process === 'undefined') return;
+    const container = document.getElementById('desktop-widgets-container');
+    if (container && (container.style.display === 'none' || container.classList.contains('hidden') || _config?.enabled === false)) return;
 
     // CPU
     if (stats.cpu) {

@@ -139,9 +139,6 @@ describe('Batch 3 Community Features Suite', () => {
         safe_to_disconnect: true,
       });
 
-      // Mock window.confirm
-      vi.spyOn(window, 'confirm').mockReturnValue(true);
-
       await fetchAndRenderStorageTopology(container);
 
       const ejectBtn = container.querySelector('.btn-pool-export');
@@ -149,6 +146,8 @@ describe('Batch 3 Community Features Suite', () => {
       expect(ejectBtn.textContent).toContain('Safely Eject');
 
       ejectBtn.click();
+      const okBtn = document.getElementById('confirm-toast-ok');
+      if (okBtn) okBtn.click();
 
       await vi.waitFor(() => {
         expect(postSpy).toHaveBeenCalledWith('/api/storage/pools/ext_das_pool/export', { force: false });

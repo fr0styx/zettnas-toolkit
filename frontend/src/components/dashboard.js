@@ -84,15 +84,21 @@ export function renderFans(fans) {
       const html = fans.map((rpm, i) => {
         const dur = rpm > 0 ? Math.max(0.25, 2.0 - (rpm / max) * 1.7).toFixed(2) : 0;
         const label = FAN_LABELS[i] || (`F${i + 1}`);
+        const fc = state.latestStats?.fan_control || {};
+        const isPassive = (i === 0 && fc.zone1_zero_rpm) || (i === 1 && fc.zone2_zero_rpm);
+        const displayTxt = (rpm === 0 && isPassive) ? '0' : String(rpm);
+        const passiveStyle = (rpm === 0 && isPassive) ? ' style="color:#38bdf8"' : '';
+        const passiveClass = (rpm === 0 && isPassive) ? ' fan-passive' : '';
         return (
-          `<div class="fan">` +
+          `<div class="fan${passiveClass}">` +
           `<svg class="fan-ic${rpm > 0 ? ' spin' : ''}" style="--dur:${dur}s"><use href="#i-fan"/></svg>` +
-          `<span class="fv">${rpm}</span>` +
+          `<span class="fv"${passiveStyle}>${displayTxt}</span>` +
           `<span class="fl">${label}</span>` +
           `</div>`
         );
       }).join('');
       r.innerHTML = html;
+    } else {
       fans.forEach((rpm, i) => {
         const fanEl = existing[i];
         if (!fanEl) return;

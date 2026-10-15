@@ -2921,19 +2921,24 @@ async function refreshSourcesUI() {
 
     // Wire delete buttons
     listEl.querySelectorAll('.asm-btn-delete').forEach((btn) => {
-      btn.onclick = async () => {
+      btn.onclick = () => {
         const sid = btn.dataset.sourceid;
-        if (!confirm('Are you sure you want to delete this template source and all cached templates?')) return;
-        btn.disabled = true;
-        try {
-          await api.delete(`/api/docker/catalog/sources/${sid}`);
-          showToast('Source deleted successfully.', 'info');
-          await refreshSourcesUI();
-          fetchAndRenderAppCatalog();
-        } catch (err) {
-          showToast(`Failed to delete source: ${err.message}`, 'error');
-          btn.disabled = false;
-        }
+        showConfirmToast(
+          t('catalog.delete_source_title', 'Delete Template Source'),
+          t('catalog.delete_source_confirm', 'Are you sure you want to delete this template source and all cached templates?'),
+          async () => {
+            btn.disabled = true;
+            try {
+              await api.delete(`/api/docker/catalog/sources/${sid}`);
+              showToast('Source deleted successfully.', 'info');
+              await refreshSourcesUI();
+              fetchAndRenderAppCatalog();
+            } catch (err) {
+              showToast(`Failed to delete source: ${err.message}`, 'error');
+              btn.disabled = false;
+            }
+          }
+        );
       };
     });
 
@@ -3847,16 +3852,21 @@ export async function fetchAndRenderReplication() {
       });
 
       tbody.querySelectorAll('.btn-del-repl').forEach((btn) => {
-        btn.addEventListener('click', async () => {
+        btn.addEventListener('click', () => {
           const id = btn.dataset.id;
-          if (!confirm(`Delete replication pipeline '${id}'?`)) return;
-          try {
-            await api.delete(`/api/storage/replication/jobs/${encodeURIComponent(id)}`);
-            showToast(`Pipeline '${id}' deleted.`, 'success');
-            fetchAndRenderReplication();
-          } catch (e) {
-            showToast(`Delete failed: ${e.message}`, 'error');
-          }
+          showConfirmToast(
+            t('storage.delete_repl_title', 'Delete Replication Pipeline'),
+            `Delete replication pipeline '${id}'?`,
+            async () => {
+              try {
+                await api.delete(`/api/storage/replication/jobs/${encodeURIComponent(id)}`);
+                showToast(`Pipeline '${id}' deleted.`, 'success');
+                fetchAndRenderReplication();
+              } catch (e) {
+                showToast(`Delete failed: ${e.message}`, 'error');
+              }
+            }
+          );
         });
       });
     }
@@ -4666,15 +4676,19 @@ export async function fetchAndRenderWireguard() {
     tsFunnelToggle._bound = true;
     tsFunnelToggle.addEventListener('change', () => {
       if (tsFunnelToggle.checked) {
-        const ok = confirm(
-          'Warning: Enabling Public Internet Funnel exposes your ZettNAS desktop port 8082 to the public internet. Ensure your superadmin password and 2FA are strong. Do you want to proceed?'
+        showConfirmToast(
+          t('net.tailscale_funnel_warning_title', 'Enable Public Internet Funnel'),
+          'Warning: Enabling Public Internet Funnel exposes your ZettNAS desktop port 8082 to the public internet. Ensure your superadmin password and 2FA are strong. Do you want to proceed?',
+          () => {
+            triggerServeFunnelUpdate();
+          },
+          () => {
+            tsFunnelToggle.checked = false;
+          }
         );
-        if (!ok) {
-          tsFunnelToggle.checked = false;
-          return;
-        }
+      } else {
+        triggerServeFunnelUpdate();
       }
-      triggerServeFunnelUpdate();
     });
   }
 
@@ -6102,16 +6116,19 @@ export async function submitCreateVlan() {
 }
 
 export async function deleteVlanSubinterface(vlanName) {
-  if (!confirm(`${t('net.delete_vlan_confirm', 'Are you sure you want to delete VLAN sub-interface')} "${vlanName}"?`)) {
-    return;
-  }
-  try {
-    await api.delete(`/api/network/vlan/${encodeURIComponent(vlanName)}`);
-    showToast(t('net.vlan_deleted_toast', 'VLAN sub-interface removed successfully'), 'success');
-    fetchAndRenderNetworkTopology();
-  } catch (err) {
-    showToast(err.message || 'Failed to delete VLAN sub-interface', 'error');
-  }
+  showConfirmToast(
+    t('net.delete_vlan_title', 'Delete VLAN Sub-Interface'),
+    `${t('net.delete_vlan_confirm', 'Are you sure you want to delete VLAN sub-interface')} "${vlanName}"?`,
+    async () => {
+      try {
+        await api.delete(`/api/network/vlan/${encodeURIComponent(vlanName)}`);
+        showToast(t('net.vlan_deleted_toast', 'VLAN sub-interface removed successfully'), 'success');
+        fetchAndRenderNetworkTopology();
+      } catch (err) {
+        showToast(err.message || 'Failed to delete VLAN sub-interface', 'error');
+      }
+    }
+  );
 }
 
 export function initNetworkControls() {
@@ -8024,52 +8041,55 @@ export async function applySystemUpdate() {
   const channel = _currentUpdateChannel || 'stable';
   const targetTag = _lastUpdateData?.latest_tag || _lastUpdateData?.latest_version || 'latest';
 
-  const confirmed = window.confirm(
+  showConfirmToast(
+    t('updates.confirm_title', 'Apply System Update'),
     t(
       'updates.confirm_msg',
       `Update ZettNAS Workbench to ${targetTag} now? The container will pull the updated image and restart. Your data and settings are safely preserved.`
-    )
-  );
-  if (!confirmed) return;
+    ),
+    async () => {
+      if (applyBtn) applyBtn.disabled = true;
+      if (progressOverlay) progressOverlay.style.display = 'block';
+      if (progressTitle) progressTitle.textContent = t('updates.installing', 'Downloading & Applying Update...');
+      if (progressDesc) progressDesc.textContent = 'Pulling container image layers from GHCR...';
 
-  if (applyBtn) applyBtn.disabled = true;
-  if (progressOverlay) progressOverlay.style.display = 'block';
-  if (progressTitle) progressTitle.textContent = t('updates.installing', 'Downloading & Applying Update...');
-  if (progressDesc) progressDesc.textContent = 'Pulling container image layers from GHCR...';
-
-  try {
-    const res = await api.post('/api/system/updates/apply', { channel });
-    showToast(res?.message || 'Update initiated. Reconnecting...', 'info');
-
-    if (progressDesc) progressDesc.textContent = res?.message || 'Restarting container and reconnecting...';
-
-    // Poll health endpoint until back online
-    let attempts = 0;
-    const maxAttempts = 40;
-    const interval = setInterval(async () => {
-      attempts++;
       try {
-        const h = await fetch('/api/health', { cache: 'no-store' });
-        if (h.ok) {
-          clearInterval(interval);
-          if (progressTitle) progressTitle.textContent = '🎉 Update Complete!';
-          if (progressDesc) progressDesc.textContent = 'Reloading ZettNAS Workbench...';
-          showToast(t('updates.updated_success', 'ZettNAS updated successfully!'), 'success');
-          setTimeout(() => window.location.reload(), 1200);
-        }
-      } catch (e) {
-        if (attempts >= maxAttempts) {
-          clearInterval(interval);
-          if (progressDesc) progressDesc.textContent = 'Please refresh the page once the container has restarted.';
-          if (applyBtn) applyBtn.disabled = false;
-        }
+        const res = await api.post('/api/system/updates/apply', { channel });
+        showToast(res?.message || 'Update initiated. Reconnecting...', 'info');
+
+        if (progressDesc) progressDesc.textContent = res?.message || 'Restarting container and reconnecting...';
+
+        // Poll health endpoint until back online
+        let attempts = 0;
+        const maxAttempts = 40;
+        const interval = setInterval(async () => {
+          attempts++;
+          try {
+            const h = await fetch('/api/health', { cache: 'no-store' });
+            if (h.ok) {
+              clearInterval(interval);
+              if (progressTitle) progressTitle.textContent = '🎉 Update Complete!';
+              if (progressDesc) progressDesc.textContent = 'Reloading ZettNAS Workbench...';
+              showToast(t('updates.updated_success', 'ZettNAS updated successfully!'), 'success');
+              setTimeout(() => window.location.reload(), 1200);
+            }
+          } catch (e) {
+            if (attempts >= maxAttempts) {
+              clearInterval(interval);
+              if (progressDesc) progressDesc.textContent = 'Please refresh the page once the container has restarted.';
+              if (applyBtn) applyBtn.disabled = false;
+            }
+          }
+        }, 1500);
+      } catch (err) {
+        showToast(`Update failed: ${err.message}`, 'error');
+        if (progressOverlay) progressOverlay.style.display = 'none';
+        if (applyBtn) applyBtn.disabled = false;
       }
-    }, 1500);
-  } catch (err) {
-    showToast(`Update failed: ${err.message}`, 'error');
-    if (progressOverlay) progressOverlay.style.display = 'none';
-    if (applyBtn) applyBtn.disabled = false;
-  }
+    },
+    null,
+    { isUpdate: true }
+  );
 }
 
 export async function downloadDiagnosticsBundle() {

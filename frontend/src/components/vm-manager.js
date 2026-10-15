@@ -4614,21 +4614,25 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
       });
 
       localList.querySelectorAll('.btn-delete-iso').forEach((btn) => {
-        btn.onclick = async () => {
+        btn.onclick = () => {
           const path = btn.dataset.path;
           const name = btn.dataset.name;
-          if (confirm(`Are you sure you want to delete '${name}' from storage? This cannot be undone.`)) {
-            try {
-              await api.delete(`/api/vms/isos?path=${encodeURIComponent(path)}`);
-              showToast(`ISO '${name}' deleted successfully.`, 'info');
-              await loadVmDashboard();
-              renderLocalIsoList();
-              renderCatalogCards();
-              document.getElementById('fm-refresh-btn')?.click();
-            } catch (err) {
-              showToast(`Failed to delete ISO: ${err.message}`, 'error');
+          showConfirmToast(
+            t('vms.delete_iso_title', 'Delete ISO Image'),
+            `Are you sure you want to delete '${name}' from storage? This cannot be undone.`,
+            async () => {
+              try {
+                await api.delete(`/api/vms/isos?path=${encodeURIComponent(path)}`);
+                showToast(`ISO '${name}' deleted successfully.`, 'info');
+                await loadVmDashboard();
+                renderLocalIsoList();
+                renderCatalogCards();
+                document.getElementById('fm-refresh-btn')?.click();
+              } catch (err) {
+                showToast(`Failed to delete ISO: ${err.message}`, 'error');
+              }
             }
-          }
+          );
         };
       });
     }

@@ -182,7 +182,7 @@ body.theme-amethyst {
   --card: #180e28;
   --card-hi: #24153b;
   --fg: #fbf7ff;
-  --muted: #8b6ca8;
+  --muted: #b399cf;
   --ok: #c084fc;
   --ok2: #a855f7;
   --warn: #fb923c;
@@ -203,7 +203,7 @@ body.theme-crimson {
   --card: #220c12;
   --card-hi: #30131b;
   --fg: #fff1f2;
-  --muted: #9e636e;
+  --muted: #c48995;
   --ok: #fb7185;
   --ok2: #f43f5e;
   --warn: #f59e0b;
@@ -256,7 +256,7 @@ body.lcd-direct.lcd-theme-cyber {
   --card: #131b24;
   --card-hi: #1c2734;
   --fg: #eaf1f8;
-  --muted: #64748b;
+  --muted: #94a3b8;
   --ok: #00f0ff;
   --ok2: #25c2a0;
   --warn: #ffb830;
@@ -309,7 +309,7 @@ body.lcd-direct.lcd-theme-emerald {
   --card: #082012;
   --card-hi: #0c2e1a;
   --fg: #e6fced;
-  --muted: #288f57;
+  --muted: #38b56f;
   --ok: #3bf58b;
   --ok2: #24d673;
   --warn: #eab308;
@@ -343,7 +343,7 @@ body.lcd-direct.lcd-theme-amethyst {
   --card: #180e28;
   --card-hi: #24153b;
   --fg: #fbf7ff;
-  --muted: #8b6ca8;
+  --muted: #b399cf;
   --ok: #c084fc;
   --ok2: #a855f7;
   --warn: #fb923c;
@@ -360,7 +360,7 @@ body.lcd-direct.lcd-theme-crimson {
   --card: #220c12;
   --card-hi: #30131b;
   --fg: #fff1f2;
-  --muted: #9e636e;
+  --muted: #c48995;
   --ok: #fb7185;
   --ok2: #f43f5e;
   --warn: #f59e0b;

@@ -7,6 +7,7 @@ import { auth } from '../api.js';
 import { escapeHtml } from '../utils.js';
 import { ZettEventBus } from '../event-bus.js';
 import { t } from '../i18n.js';
+import { showToast, showConfirmToast, showPromptToast } from '../toast.js';
 import { initTopbarUserPill } from './dock.js';
 
 let _currentUser = null;
@@ -360,11 +361,12 @@ export function showAddUserModal() {
         if (res.ok) {
           closeModal(modal);
           loadUsersList();
+          showToast('User created successfully.', 'success');
         } else {
-          alert(`Error: ${result.detail || result.error || 'Failed to create user'}`);
+          showToast(`Error: ${result.detail || result.error || 'Failed to create user'}`, 'error');
         }
       } catch (err) {
-        alert(`Request failed: ${err.message}`);
+        showToast(`Request failed: ${err.message}`, 'error');
       } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = 'CREATE USER';
@@ -415,12 +417,13 @@ export function showEditUserModal(user) {
           closeModal(modal);
           loadUsersList();
           fetchCurrentProfile();
+          showToast('User updated successfully.', 'success');
         } else {
           const err = await res.json();
-          alert(`Error: ${err.detail || 'Failed to update user'}`);
+          showToast(`Error: ${err.detail || 'Failed to update user'}`, 'error');
         }
       } catch (err) {
-        alert(`Request failed: ${err.message}`);
+        showToast(`Request failed: ${err.message}`, 'error');
       } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = 'SAVE CHANGES';
@@ -444,7 +447,7 @@ export function showResetPasswordModal(userId, username) {
       const confirmPassword = document.getElementById('reset-pwd-confirm').value;
 
       if (newPassword !== confirmPassword) {
-        alert('Passwords do not match.');
+        showToast('Passwords do not match.', 'error');
         return;
       }
 
@@ -460,14 +463,14 @@ export function showResetPasswordModal(userId, username) {
           body: JSON.stringify({ new_password: newPassword })
         });
         if (res.ok) {
-          alert('Password successfully updated.');
+          showToast('Password successfully updated.', 'success');
           closeModal(modal);
         } else {
           const err = await res.json();
-          alert(`Error: ${err.detail || 'Failed to reset password'}`);
+          showToast(`Error: ${err.detail || 'Failed to reset password'}`, 'error');
         }
       } catch (err) {
-        alert(`Request failed: ${err.message}`);
+        showToast(`Request failed: ${err.message}`, 'error');
       } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = 'UPDATE PASSWORD';
@@ -486,33 +489,40 @@ async function toggleUserStatus(userId, newStatus) {
     });
     if (res.ok) {
       loadUsersList();
+      showToast('User status updated.', 'success');
     } else {
       const err = await res.json();
-      alert(`Could not change status: ${err.detail || 'Error'}`);
+      showToast(`Could not change status: ${err.detail || 'Error'}`, 'error');
     }
   } catch (err) {
-    alert(`Request failed: ${err.message}`);
+    showToast(`Request failed: ${err.message}`, 'error');
   }
 }
 
-async function confirmDeleteUser(userId, username) {
-  if (!confirm(`Are you sure you want to permanently delete user @${username}? This will remove their account and revoke all sessions.`)) {
-    return;
-  }
-  try {
-    const res = await window.fetch(`/api/users/${userId}`, {
-      method: 'DELETE',
-      credentials: 'include'
-    });
-    if (res.ok) {
-      loadUsersList();
-    } else {
-      const err = await res.json();
-      alert(`Could not delete user: ${err.detail || 'Error'}`);
-    }
-  } catch (err) {
-    alert(`Request failed: ${err.message}`);
-  }
+export function confirmDeleteUser(userId, username) {
+  showConfirmToast(
+    'Delete User',
+    `Are you sure you want to permanently delete user @${username}? This will remove their account and revoke all sessions.`,
+    async () => {
+      try {
+        const res = await window.fetch(`/api/users/${userId}`, {
+          method: 'DELETE',
+          credentials: 'include'
+        });
+        if (res.ok) {
+          loadUsersList();
+          showToast(`User @${username} deleted.`, 'success');
+        } else {
+          const err = await res.json();
+          showToast(`Could not delete user: ${err.detail || 'Error'}`, 'error');
+        }
+      } catch (err) {
+        showToast(`Request failed: ${err.message}`, 'error');
+      }
+    },
+    null,
+    { okText: 'Delete User', cancelText: 'Cancel' }
+  );
 }
 
 export async function loadSessionsList() {
@@ -568,17 +578,26 @@ export async function loadSessionsList() {
   }
 }
 
-async function revokeAllOtherSessions() {
-  if (!confirm('Revoke all other login sessions on other devices and browsers?')) return;
-  try {
-    const res = await window.fetch('/api/auth/sessions', { method: 'DELETE', credentials: 'include' });
-    if (res.ok) {
-      alert('All other sessions revoked.');
-      loadSessionsList();
-    }
-  } catch (err) {
-    alert(`Failed: ${err.message}`);
-  }
+export function revokeAllOtherSessions() {
+  showConfirmToast(
+    'Revoke Other Sessions',
+    'Revoke all other login sessions on other devices and browsers?',
+    async () => {
+      try {
+        const res = await window.fetch('/api/auth/sessions', { method: 'DELETE', credentials: 'include' });
+        if (res.ok) {
+          showToast('All other sessions revoked.', 'success');
+          loadSessionsList();
+        } else {
+          showToast('Failed to revoke other sessions.', 'error');
+        }
+      } catch (err) {
+        showToast(`Failed: ${err.message}`, 'error');
+      }
+    },
+    null,
+    { okText: 'Revoke Sessions', cancelText: 'Cancel' }
+  );
 }
 
 export async function load2FAStatus() {
@@ -688,10 +707,10 @@ async function start2FASetup() {
             load2FAStatus();
             fetchCurrentProfile();
           } else {
-            alert(`Verification failed: ${verifyData.detail || 'Invalid code'}`);
+            showToast(`Verification failed: ${verifyData.detail || 'Invalid code'}`, 'error');
           }
         } catch (err) {
-          alert(`Error: ${err.message}`);
+          showToast(`Error: ${err.message}`, 'error');
         } finally {
           verifyBtn.disabled = false;
           verifyBtn.textContent = 'VERIFY & ACTIVATE 2FA';
@@ -704,26 +723,33 @@ async function start2FASetup() {
   }
 }
 
-async function disable2FA() {
-  const pwd = prompt('Enter your account password to confirm disabling Two-Factor Authentication:');
-  if (!pwd) return;
-
-  try {
-    const res = await window.fetch('/api/auth/mfa/disable', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ password: pwd })
-    });
-    if (res.ok) {
-      alert('Two-Factor Authentication has been disabled.');
-      load2FAStatus();
-      fetchCurrentProfile();
-    } else {
-      const err = await res.json();
-      alert(`Could not disable 2FA: ${err.detail || 'Invalid password'}`);
-    }
-  } catch (err) {
-    alert(`Request failed: ${err.message}`);
-  }
+export function disable2FA() {
+  showPromptToast(
+    'Disable Two-Factor Authentication',
+    'Enter your account password to confirm disabling Two-Factor Authentication:',
+    '',
+    async (pwd) => {
+      if (!pwd) return;
+      try {
+        const res = await window.fetch('/api/auth/mfa/disable', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ password: pwd })
+        });
+        if (res.ok) {
+          showToast('Two-Factor Authentication has been disabled.', 'success');
+          load2FAStatus();
+          fetchCurrentProfile();
+        } else {
+          const err = await res.json();
+          showToast(`Could not disable 2FA: ${err.detail || 'Invalid password'}`, 'error');
+        }
+      } catch (err) {
+        showToast(`Request failed: ${err.message}`, 'error');
+      }
+    },
+    null,
+    { inputType: 'password', okText: 'Disable 2FA', cancelText: 'Cancel' }
+  );
 }

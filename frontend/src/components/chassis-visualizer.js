@@ -3,7 +3,7 @@ import { api } from '../api.js';
 import { t } from '../i18n.js';
 import { ZettEventBus } from '../event-bus.js';
 import { announceA11y } from '../a11y.js';
-import { showToast, showConfirmToast } from '../toast.js';
+import { showToast, showConfirmToast, showPromptToast } from '../toast.js';
 import { state } from '../state.js';
 import { makeDraggable, bringToFront, DockManager } from './dock.js';
 import QRCode from 'qrcode';
@@ -809,15 +809,21 @@ function bindTopologyTreeEvents(tree, container) {
     if (destroyBtn) {
       e.stopPropagation();
       const pid = destroyBtn.dataset.poolId;
-      if (confirm(`Are you sure you want to destroy pool '${pid}'? All mounted data will be unmounted.`)) {
-        try {
-          await api.delete(`/api/storage/pools/${pid}`);
-          showToast(`Pool '${pid}' destroyed.`, 'info');
-          fetchAndRenderStorageTopology(container);
-        } catch (err) {
-          showToast(err.message || 'Failed to destroy pool', 'error');
-        }
-      }
+      showConfirmToast(
+        'Destroy Pool',
+        `Are you sure you want to destroy pool '${pid}'? All mounted data will be unmounted.`,
+        async () => {
+          try {
+            await api.delete(`/api/storage/pools/${pid}`);
+            showToast(`Pool '${pid}' destroyed.`, 'info');
+            fetchAndRenderStorageTopology(container);
+          } catch (err) {
+            showToast(err.message || 'Failed to destroy pool', 'error');
+          }
+        },
+        null,
+        { okText: 'Destroy Pool', cancelText: 'Cancel' }
+      );
       return;
     }
 
@@ -825,32 +831,44 @@ function bindTopologyTreeEvents(tree, container) {
     if (exportBtn) {
       e.stopPropagation();
       const pid = exportBtn.dataset.poolId;
-      if (confirm(`Safely flush write cache and export/detach pool '${pid}'? Make sure no active file transfers are running.`)) {
-        try {
-          exportBtn.disabled = true;
-          exportBtn.textContent = '⏳ Ejecting...';
-          const res = await api.post(`/api/storage/pools/${encodeURIComponent(pid)}/export`, { force: false });
-          showToast(res.message || `Pool '${pid}' safely ejected. You may disconnect the cable.`, 'success');
-          fetchAndRenderStorageTopology(container);
-        } catch (err) {
-          if (err.message && err.message.includes('force=true')) {
-            if (confirm(`${err.message}\n\nDo you want to FORCE export and unmount anyway?`)) {
-              try {
-                const res = await api.post(`/api/storage/pools/${encodeURIComponent(pid)}/export`, { force: true });
-                showToast(res.message || `Pool '${pid}' safely ejected.`, 'success');
-                fetchAndRenderStorageTopology(container);
-              } catch (e2) {
-                showToast(e2.message || 'Failed to force eject pool', 'error');
-              }
+      showConfirmToast(
+        'Safely Eject Pool',
+        `Safely flush write cache and export/detach pool '${pid}'? Make sure no active file transfers are running.`,
+        async () => {
+          try {
+            exportBtn.disabled = true;
+            exportBtn.textContent = '⏳ Ejecting...';
+            const res = await api.post(`/api/storage/pools/${encodeURIComponent(pid)}/export`, { force: false });
+            showToast(res.message || `Pool '${pid}' safely ejected. You may disconnect the cable.`, 'success');
+            fetchAndRenderStorageTopology(container);
+          } catch (err) {
+            if (err.message && err.message.includes('force=true')) {
+              showConfirmToast(
+                'Force Export Pool',
+                `${err.message}\n\nDo you want to FORCE export and unmount anyway?`,
+                async () => {
+                  try {
+                    const res = await api.post(`/api/storage/pools/${encodeURIComponent(pid)}/export`, { force: true });
+                    showToast(res.message || `Pool '${pid}' safely ejected.`, 'success');
+                    fetchAndRenderStorageTopology(container);
+                  } catch (e2) {
+                    showToast(e2.message || 'Failed to force eject pool', 'error');
+                  }
+                },
+                null,
+                { okText: 'Force Eject', cancelText: 'Cancel' }
+              );
+            } else {
+              showToast(err.message || 'Failed to safely eject pool', 'error');
             }
-          } else {
-            showToast(err.message || 'Failed to safely eject pool', 'error');
+          } finally {
+            exportBtn.disabled = false;
+            exportBtn.textContent = '⏏️ Safely Eject';
           }
-        } finally {
-          exportBtn.disabled = false;
-          exportBtn.textContent = '⏏️ Safely Eject';
-        }
-      }
+        },
+        null,
+        { okText: 'Safely Eject', cancelText: 'Cancel' }
+      );
       return;
     }
 
@@ -1292,15 +1310,21 @@ function bindSharesGridEvents(grid, container) {
     if (delBtn) {
       e.stopPropagation();
       const sName = delBtn.dataset.shareName;
-      if (confirm(`Are you sure you want to remove share '${sName}'?`)) {
-        try {
-          await api.delete(`/api/storage/shares/${sName}`);
-          showToast(`Share '${sName}' removed.`, 'info');
-          fetchAndRenderNetworkShares(container);
-        } catch (err) {
-          showToast(err.message || 'Failed to delete share', 'error');
-        }
-      }
+      showConfirmToast(
+        'Remove Share',
+        `Are you sure you want to remove share '${sName}'?`,
+        async () => {
+          try {
+            await api.delete(`/api/storage/shares/${sName}`);
+            showToast(`Share '${sName}' removed.`, 'info');
+            fetchAndRenderNetworkShares(container);
+          } catch (err) {
+            showToast(err.message || 'Failed to delete share', 'error');
+          }
+        },
+        null,
+        { okText: 'Remove Share', cancelText: 'Cancel' }
+      );
     }
   });
 }
@@ -1406,19 +1430,26 @@ export async function openSftpUsersModal(onSuccess) {
           `).join('');
 
           usersList.querySelectorAll('.btn-delete-sftp-user').forEach((btn) => {
-            btn.onclick = async () => {
+            btn.onclick = () => {
               const username = btn.dataset.user;
-              if (!confirm(`Delete SFTP user '${username}'?`)) return;
-              btn.disabled = true;
-              try {
-                await api.delete(`/api/sftp/users/${username}`);
-                showToast(`User '${username}' deleted.`, 'info');
-                await refreshSftpUI();
-                if (onSuccess) onSuccess();
-              } catch (err) {
-                showToast(`Failed to delete user: ${err.message}`, 'error');
-                btn.disabled = false;
-              }
+              showConfirmToast(
+                'Delete SFTP User',
+                `Delete SFTP user '${username}'?`,
+                async () => {
+                  btn.disabled = true;
+                  try {
+                    await api.delete(`/api/sftp/users/${username}`);
+                    showToast(`User '${username}' deleted.`, 'info');
+                    await refreshSftpUI();
+                    if (onSuccess) onSuccess();
+                  } catch (err) {
+                    showToast(`Failed to delete user: ${err.message}`, 'error');
+                    btn.disabled = false;
+                  }
+                },
+                null,
+                { okText: 'Delete User', cancelText: 'Cancel' }
+              );
             };
           });
         }
@@ -2517,10 +2548,18 @@ export async function openNewCloudRemoteModal(onSuccess) {
                     }
                   }
                 } catch (_) {}
-                const manual = prompt('Paste the redirect URL from your browser address bar:');
-                if (manual && manual.trim()) {
-                  urlInput.value = manual.trim();
-                }
+                showPromptToast(
+                  'Paste Redirect URL',
+                  'Paste the redirect URL from your browser address bar:',
+                  '',
+                  (manual) => {
+                    if (manual && manual.trim()) {
+                      urlInput.value = manual.trim();
+                    }
+                  },
+                  null,
+                  { placeholder: 'http://localhost:53682/...' }
+                );
               };
             }
 
@@ -3158,36 +3197,48 @@ export async function openSnapshotsModal(poolId = 'default_pool') {
     if (tbody._eventsBound) return;
     tbody._eventsBound = true;
 
-    tbody.addEventListener('click', async (e) => {
+    tbody.addEventListener('click', (e) => {
       const restoreBtn = e.target.closest('.btn-snap-restore');
       if (restoreBtn) {
         const sName = restoreBtn.dataset.snap;
-        if (confirm(`Roll back subvolume to snapshot '${sName}'? Pre-existing state will be archived safely.`)) {
-          try {
-            await api.post(`/api/storage/pools/${pId}/snapshots/restore`, {
-              snapshot_name: sName,
-            });
-            showToast(`Snapshot '${sName}' reverted successfully!`, 'success');
-            onReload();
-          } catch (err) {
-            showToast(err.message || 'Failed to revert snapshot', 'error');
-          }
-        }
+        showConfirmToast(
+          'Revert Snapshot',
+          `Roll back subvolume to snapshot '${sName}'? Pre-existing state will be archived safely.`,
+          async () => {
+            try {
+              await api.post(`/api/storage/pools/${pId}/snapshots/restore`, {
+                snapshot_name: sName,
+              });
+              showToast(`Snapshot '${sName}' reverted successfully!`, 'success');
+              onReload();
+            } catch (err) {
+              showToast(err.message || 'Failed to revert snapshot', 'error');
+            }
+          },
+          null,
+          { okText: 'Revert Snapshot', cancelText: 'Cancel' }
+        );
         return;
       }
 
       const btn = e.target.closest('.btn-snap-del');
       if (!btn) return;
       const sName = btn.dataset.snap;
-      if (confirm(`Delete snapshot '${sName}'?`)) {
-        try {
-          await api.delete(`/api/storage/pools/${pId}/snapshots/${sName}`);
-          showToast(`Snapshot '${sName}' deleted.`, 'info');
-          onReload();
-        } catch (err) {
-          showToast(err.message || 'Failed to delete snapshot', 'error');
-        }
-      }
+      showConfirmToast(
+        'Delete Snapshot',
+        `Delete snapshot '${sName}'?`,
+        async () => {
+          try {
+            await api.delete(`/api/storage/pools/${pId}/snapshots/${sName}`);
+            showToast(`Snapshot '${sName}' deleted.`, 'info');
+            onReload();
+          } catch (err) {
+            showToast(err.message || 'Failed to delete snapshot', 'error');
+          }
+        },
+        null,
+        { okText: 'Delete Snapshot', cancelText: 'Cancel' }
+      );
     });
   }
 

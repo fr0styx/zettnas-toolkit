@@ -153,7 +153,6 @@ describe('Sprint 5: Generic Linux Active Provisioner & Samba Engine (Frontend)',
     });
 
     const deleteSpy = vi.spyOn(api, 'delete').mockResolvedValue({ status: 'deleted' });
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
 
     await fetchAndRenderNetworkShares(container);
 
@@ -163,6 +162,9 @@ describe('Sprint 5: Generic Linux Active Provisioner & Samba Engine (Frontend)',
     const delBtn = container.querySelector('.btn-share-delete');
     expect(delBtn).not.toBeNull();
     delBtn.click();
+    const okBtn = document.getElementById('confirm-toast-ok');
+    if (okBtn) okBtn.click();
+    await Promise.resolve();
 
     expect(deleteSpy).toHaveBeenCalledWith('/api/storage/shares/vault');
 
