@@ -60,7 +60,7 @@ from backend.hardware.host_telemetry import (
 from backend.hardware.ups import read_ups_status
 from backend.services.broadcaster import broadcaster
 from backend.services.copy_engine import check_media_slot_transitions, read_media_slots
-from backend.services.notifications import send_notification
+from backend.services.notifications import NOTIFICATIONS_FILE, send_notification
 from backend.state import Z_STATE, add_event
 from backend.services.alert_rules import evaluate_system_alerts
 
@@ -475,7 +475,117 @@ def stats_collector_daemon():
             target_bl = get_effective_brightness()
             set_screen_brightness(target_bl)
 
-            # LED Lighting & Schedule
+            # Evaluate hardware health, stalls, and thermal alerts (unconditionally)
+            notif_cfg = read_json_cached(NOTIFICATIONS_FILE, {})
+            if not isinstance(notif_cfg, dict):
+                notif_cfg = {}
+            cpu_crit_threshold = notif_cfg.get("cpu_temp_threshold", 85)
+            cpu_warn_threshold = max(50, cpu_crit_threshold - 10)
+
+            if not ctrl_cpu_fan:
+                Z_STATE.known_active_fans.discard(2)
+
+            stalled_fans = []
+            for i in Z_STATE.known_active_fans:
+                if i >= len(fans):
+                    continue
+                if i == 2 and not ctrl_cpu_fan:
+                    continue
+                rpm = fans[i]
+                if rpm == 0:
+                    pwm_key = f"pwm{i + 1}"
+                    st = Z_STATE.fan_state_tracker.get(pwm_key, {})
+                    cmd_pwm = st.get("current", 67)
+                    last_spinup = st.get("last_spinup_time", 0.0)
+                    # Suppress stall alert if the fan is commanded to 0 RPM (passive Zero RPM mode)
+                    # OR if it is within the 6.0-second spinup grace window
+                    is_suppressed = (cmd_pwm == 0) or ((now - last_spinup) < FAN_SPINUP_GRACE_SECS)
+                    if not is_suppressed:
+                        stalled_fans.append(i)
+
+            is_failing_fan = bool(stalled_fans)
+            is_crit = has_crit or (cpu_temp >= cpu_crit_threshold) or is_failing_fan
+            is_warn = (len(bad) > 0) or (cpu_temp >= cpu_warn_threshold)
+
+            if is_failing_fan:
+                stalled_names = [f"pwm{idx + 1}" for idx in stalled_fans]
+                add_event(
+                    "error",
+                    "Fan Stall Detected",
+                    f"One or more cooling fans have stalled (0 RPM): channels {stalled_names}.",
+                    details={"fans": fans, "stalled_channels": stalled_names},
+                )
+                _async_notify(
+                    title="ZettNAS Alert: Fan Stall Detected",
+                    message=f"Cooling fan stall detected on channels {stalled_names}.",
+                    level="critical",
+                    event_type="fan",
+                    dedup_key="fan_stall",
+                )
+
+            if cpu_temp >= cpu_crit_threshold:
+                add_event(
+                    "error",
+                    "CPU Thermal Critical",
+                    f"CPU temperature reached {cpu_temp}°C. Hardware throttling active.",
+                    details={"cpu_temp": cpu_temp},
+                )
+                _async_notify(
+                    title="ZettNAS Alert: CPU Thermal Critical",
+                    message=f"CPU temperature reached critical level: {cpu_temp}°C!",
+                    level="critical",
+                    event_type="temp",
+                    dedup_key="cpu_temp_crit",
+                )
+            elif cpu_temp >= cpu_warn_threshold:
+                add_event(
+                    "warning",
+                    "CPU Thermal Warning",
+                    f"CPU temperature is elevated ({cpu_temp}°C).",
+                    details={"cpu_temp": cpu_temp},
+                )
+                _async_notify(
+                    title="ZettNAS Warning: CPU Thermal Elevated",
+                    message=f"CPU temperature is elevated at {cpu_temp}°C.",
+                    level="warning",
+                    event_type="temp",
+                    dedup_key="cpu_temp_warn",
+                )
+
+            for d in bad:
+                d_name = d.get("name", "Unknown")
+                d_health = d.get("health", "warn")
+                d_temp = d.get("temp", 0)
+                if d_health == "crit":
+                    add_event(
+                        "error",
+                        f"Drive Critical: {d_name}",
+                        f"Drive reached critical health or extreme temp ({d_temp}°C)",
+                        details=d,
+                    )
+                    _async_notify(
+                        title=f"ZettNAS Alert: Drive Critical ({d_name})",
+                        message=f"Drive {d_name} has entered CRITICAL state ({d_temp}°C). Inspect S.M.A.R.T. health immediately.",
+                        level="critical",
+                        event_type="smart",
+                        dedup_key=f"drive_crit_{d_name}",
+                    )
+                elif d_health == "warn":
+                    add_event(
+                        "warning",
+                        f"Drive Warning: {d_name}",
+                        f"Drive is running hot or has warnings ({d_temp}°C)",
+                        details=d,
+                    )
+                    _async_notify(
+                        title=f"ZettNAS Warning: Drive Alert ({d_name})",
+                        message=f"Drive {d_name} is running hot or reported S.M.A.R.T. warnings ({d_temp}°C).",
+                        level="warning",
+                        event_type="smart",
+                        dedup_key=f"drive_warn_{d_name}",
+                    )
+
+            # LED Lighting & Schedule (runs only if hardware present/configured)
             cfg = read_json_cached(LED_STATE_FILE, {})
             if not isinstance(cfg, dict):
                 cfg = {}
@@ -485,109 +595,6 @@ def stats_collector_daemon():
             )
 
             if cfg.get("reactive", True):
-                if not ctrl_cpu_fan:
-                    Z_STATE.known_active_fans.discard(2)
-
-                stalled_fans = []
-                for i in Z_STATE.known_active_fans:
-                    if i >= len(fans):
-                        continue
-                    if i == 2 and not ctrl_cpu_fan:
-                        continue
-                    rpm = fans[i]
-                    if rpm == 0:
-                        pwm_key = f"pwm{i + 1}"
-                        st = Z_STATE.fan_state_tracker.get(pwm_key, {})
-                        cmd_pwm = st.get("current", 67)
-                        last_spinup = st.get("last_spinup_time", 0.0)
-                        # Suppress stall alert if the fan is commanded to 0 RPM (passive Zero RPM mode)
-                        # OR if it is within the 6.0-second spinup grace window
-                        is_suppressed = (cmd_pwm == 0) or ((now - last_spinup) < FAN_SPINUP_GRACE_SECS)
-                        if not is_suppressed:
-                            stalled_fans.append(i)
-
-                is_failing_fan = bool(stalled_fans)
-                is_crit = has_crit or (cpu_temp >= 85) or is_failing_fan
-                is_warn = (len(bad) > 0) or (cpu_temp >= 70)
-
-                if is_failing_fan:
-                    stalled_names = [f"pwm{idx + 1}" for idx in stalled_fans]
-                    add_event(
-                        "error",
-                        "Fan Stall Detected",
-                        f"One or more cooling fans have stalled (0 RPM): channels {stalled_names}.",
-                        details={"fans": fans, "stalled_channels": stalled_names},
-                    )
-                    _async_notify(
-                        title="ZettNAS Alert: Fan Stall Detected",
-                        message=f"Cooling fan stall detected on channels {stalled_names}.",
-                        level="critical",
-                        event_type="fan",
-                        dedup_key="fan_stall",
-                    )
-
-                if cpu_temp >= 85:
-                    add_event(
-                        "error",
-                        "CPU Thermal Critical",
-                        f"CPU temperature reached {cpu_temp}°C. Hardware throttling active.",
-                        details={"cpu_temp": cpu_temp},
-                    )
-                    _async_notify(
-                        title="ZettNAS Alert: CPU Thermal Critical",
-                        message=f"CPU temperature reached critical level: {cpu_temp}°C!",
-                        level="critical",
-                        event_type="temp",
-                        dedup_key="cpu_temp_crit",
-                    )
-                elif cpu_temp >= 75:
-                    add_event(
-                        "warning",
-                        "CPU Thermal Warning",
-                        f"CPU temperature is elevated ({cpu_temp}°C).",
-                        details={"cpu_temp": cpu_temp},
-                    )
-                    _async_notify(
-                        title="ZettNAS Warning: CPU Thermal Elevated",
-                        message=f"CPU temperature is elevated at {cpu_temp}°C.",
-                        level="warning",
-                        event_type="temp",
-                        dedup_key="cpu_temp_warn",
-                    )
-
-                for d in bad:
-                    d_name = d.get("name", "Unknown")
-                    d_health = d.get("health", "warn")
-                    d_temp = d.get("temp", 0)
-                    if d_health == "crit":
-                        add_event(
-                            "error",
-                            f"Drive Critical: {d_name}",
-                            f"Drive reached critical health or extreme temp ({d_temp}°C)",
-                            details=d,
-                        )
-                        _async_notify(
-                            title=f"ZettNAS Alert: Drive Critical ({d_name})",
-                            message=f"Drive {d_name} has entered CRITICAL state ({d_temp}°C). Inspect S.M.A.R.T. health immediately.",
-                            level="critical",
-                            event_type="smart",
-                            dedup_key=f"drive_crit_{d_name}",
-                        )
-                    elif d_health == "warn":
-                        add_event(
-                            "warning",
-                            f"Drive Warning: {d_name}",
-                            f"Drive is running hot or has warnings ({d_temp}°C)",
-                            details=d,
-                        )
-                        _async_notify(
-                            title=f"ZettNAS Warning: Drive Alert ({d_name})",
-                            message=f"Drive {d_name} is running hot or reported S.M.A.R.T. warnings ({d_temp}°C).",
-                            level="warning",
-                            event_type="smart",
-                            dedup_key=f"drive_warn_{d_name}",
-                        )
-
                 if is_crit:
                     Z_STATE.alert_active = True
                     send_led_packet(5, 255, 0, 0, 0, 0, 0, speed=10)

@@ -550,7 +550,7 @@ async def _do_copy(cfg):
                 Z_STATE.ui_wake.set()
 
                 Z_STATE.copy_confirm_event.clear()
-                Z_STATE.copy_confirm_event.wait(timeout=300.0)
+                await asyncio.to_thread(Z_STATE.copy_confirm_event.wait, 300.0)
 
                 if not Z_STATE.copy_confirm_event.is_set():
                     raise Exception("Aborted: Timed out waiting for overwrite confirmation.")
@@ -699,7 +699,7 @@ async def _do_copy(cfg):
         Z_STATE.pending_ingest = None
         Z_STATE.copy_active = False
         Z_STATE.ui_wake.set()
-        time.sleep(8)
+        await asyncio.sleep(8)
         if not getattr(Z_STATE, "copy_active", False):
             Z_STATE.copy_status = "idle"
             Z_STATE.ui_wake.set()

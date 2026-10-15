@@ -10,6 +10,7 @@ import json
 import os
 import re
 import shlex
+import subprocess
 import tarfile
 import time
 from typing import Any, Dict, List, Optional, Tuple
@@ -394,6 +395,25 @@ def execute_stack_action(stack_name: str, action: str) -> Dict[str, Any]:
         return {"success": False, "error": f"No containers found for stack '{stack_name}'"}
 
     if action == "redeploy":
+        compose_path = details.get("compose_path")
+        if compose_path and os.path.isfile(compose_path):
+            cwd = working_dir if (working_dir and os.path.isdir(working_dir)) else os.path.dirname(compose_path)
+            try:
+                p = subprocess.run(
+                    ["docker", "compose", "-f", compose_path, "up", "-d", "--remove-orphans"],
+                    cwd=cwd,
+                    capture_output=True,
+                    text=True,
+                    timeout=120,
+                )
+                return {
+                    "success": p.returncode == 0,
+                    "action": "redeploy",
+                    "output": p.stdout if p.returncode == 0 else (p.stderr or "Compose redeploy executed"),
+                }
+            except Exception as e:
+                logger.warning(f"[Stack Redeploy] Compose invocation failed: {e}")
+
         if location_type == "dockhand" and working_dir:
             cmd = f"cd {shlex.quote(working_dir)} && docker compose up -d"
             res = execute_in_container("dockhand", cmd)

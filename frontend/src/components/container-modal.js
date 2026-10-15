@@ -1101,13 +1101,21 @@ async function loadContainerCompose(cid) {
   }
 }
 
-function renderComposeCode() {
+async function renderComposeCode() {
   const codeEl = document.getElementById('ci-compose-code');
   const maskToggle = document.getElementById('ci-compose-mask-toggle');
   if (!codeEl || !_activeComposeData) return;
 
   const mask = maskToggle ? maskToggle.checked : true;
-  codeEl.textContent = mask ? _activeComposeData.masked_yaml : _activeComposeData.compose_yaml;
+  if (!mask && (!_activeComposeData.compose_yaml || _activeComposeData.compose_yaml === _activeComposeData.masked_yaml)) {
+    try {
+      const data = await api.get(`/api/docker/containers/${encodeURIComponent(_activeCid)}/compose?unmask=true`);
+      _activeComposeData = data;
+    } catch (e) {
+      showToast('Cannot unmask: insufficient permissions.', 'error');
+    }
+  }
+  codeEl.textContent = mask ? _activeComposeData.masked_yaml : (_activeComposeData.compose_yaml || _activeComposeData.masked_yaml);
 }
 
 async function loadContainerLogs(cid) {
@@ -1274,7 +1282,7 @@ async function renderContainerEditTab(cid) {
   if (!_activeDetails || (_activeDetails.overview && _activeDetails.overview.id !== cid && _activeDetails.overview.full_id !== cid)) {
     hostEl.innerHTML = '<div style="text-align:center; padding:30px; color:var(--muted);">Loading container configuration...</div>';
     try {
-      _activeDetails = await api.get(`/api/docker/containers/${encodeURIComponent(cid)}/details`);
+      _activeDetails = await api.get(`/api/docker/containers/${encodeURIComponent(cid)}/details?unmask=true`);
     } catch (e) {
       hostEl.innerHTML = `<div style="color:var(--crit); padding:20px;">Failed to load container details: ${escapeHtml(e.message)}</div>`;
       return;

@@ -355,13 +355,13 @@ function renderVmGrid(vms) {
       const vncPort = vm.vnc_port || (5901 + (vms.findIndex((v) => v.id === vm.id) % 10));
       const vncDisplay = Math.max(1, vncPort - 5900);
       const sshPort = vm.ssh_port || (2220 + vncDisplay);
-      const hostIp = (typeof window !== 'undefined' && window.location && window.location.hostname) || '10.40.30.249';
+      const hostIp = (typeof window !== 'undefined' && window.location && window.location.hostname) || 'localhost';
       const sshCmd = vm.ip_address ? `ssh root@${vm.ip_address}` : `ssh -p ${sshPort} root@${hostIp}`;
       const vncUri = `vnc://${hostIp}:${vncPort}`;
-      const qemuPid = vm.qemu_pid || (isRunning ? '3842' : null);
+      const qemuPid = vm.qemu_pid || null;
       const bootOrder = vm.boot_order || (vm.iso_path ? 'iso' : 'disk');
-      const cpuUsagePct = vm.cpu_usage_pct !== undefined ? vm.cpu_usage_pct : (isRunning ? 4.2 : 0.0);
-      const ramUsagePct = vm.ram_usage_pct !== undefined ? vm.ram_usage_pct : (isRunning ? 38.0 : 0.0);
+      const cpuUsagePct = vm.cpu_usage_pct !== undefined ? vm.cpu_usage_pct : 0.0;
+      const ramUsagePct = vm.ram_usage_pct !== undefined ? vm.ram_usage_pct : 0.0;
       const ramUsedGb = (parseFloat(vm.ram_gb || 2) * (parseFloat(ramUsagePct) / 100)).toFixed(1);
 
       const osIcon =

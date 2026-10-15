@@ -99,6 +99,25 @@ export async function tick() {
   }
 }
 
+export function stopSSE() {
+  if (_sseReconnectTimer) {
+    clearTimeout(_sseReconnectTimer);
+    _sseReconnectTimer = null;
+  }
+  if (_pollingTimer) {
+    clearInterval(_pollingTimer);
+    _pollingTimer = null;
+  }
+  if (_pollAbortController) {
+    _pollAbortController.abort();
+    _pollAbortController = null;
+  }
+  if (_sse) {
+    _sse.close();
+    _sse = null;
+  }
+}
+
 export function startSSE() {
   if (!auth.hasToken() && !state.isLcdDirect) {
     return;
@@ -262,21 +281,17 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('resize', fitMiniPreviewScale);
 
   ZettEventBus.on('auth:required', () => {
-    if (_sse) {
-      _sse.close();
-      _sse = null;
-    }
-    if (_pollingTimer) {
-      clearInterval(_pollingTimer);
-      _pollingTimer = null;
-    }
-    if (_sseReconnectTimer) {
-      clearTimeout(_sseReconnectTimer);
-      _sseReconnectTimer = null;
-    }
-    if (_pollAbortController) {
-      _pollAbortController.abort();
-      _pollAbortController = null;
+    stopSSE();
+  });
+
+  ZettEventBus.on('auth:locked', () => {
+    stopSSE();
+  });
+
+  ZettEventBus.on('auth:unlocked', () => {
+    if (auth.hasToken() || state.isLcdDirect) {
+      tick();
+      startSSE();
     }
   });
 

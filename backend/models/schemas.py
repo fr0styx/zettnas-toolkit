@@ -13,6 +13,7 @@ class LoginRequest(BaseModel):
 class MfaChallengeRequest(BaseModel):
     mfa_token: str
     mfa_code: str | None = None
+    code: str | None = None
     recovery_code: str | None = None
 
 

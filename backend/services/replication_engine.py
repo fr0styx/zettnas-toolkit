@@ -225,21 +225,38 @@ class ReplicationEngine:
 
             snap_tag = f"repl_{int(time.time())}"
             if is_zfs:
-                full_src = f"{src_pool}/{src_ds}".strip("/")
+                full_src = f"{src_pool}/{src_ds}".strip("/") if src_ds else src_pool
                 src_snap = f"{full_src}@{snap_tag}"
                 # Create snapshot first
                 subprocess.run(["zfs", "snapshot", "--", src_snap], check=True, capture_output=True)
 
-                send_cmd = ["zfs", "send", "-v"]
+                prev_snap = None
                 if job.get("incremental"):
-                    send_cmd.append("-i")
+                    try:
+                        res = subprocess.run(
+                            ["zfs", "list", "-H", "-t", "snapshot", "-o", "name", "-s", "creation", "-r", full_src],
+                            capture_output=True,
+                            text=True,
+                            check=True,
+                        )
+                        snaps = [s.strip() for s in res.stdout.splitlines() if s.strip() and s.strip() != src_snap]
+                        if snaps:
+                            prev_snap = snaps[-1]
+                    except Exception as snap_err:
+                        logger.debug(f"[Replication] Could not inspect previous snapshots for {full_src}: {snap_err}")
+
+                send_cmd = ["zfs", "send", "-v"]
+                if prev_snap:
+                    send_cmd.extend(["-i", prev_snap])
                 send_cmd.extend(["--", src_snap])
 
-                full_tgt = f"{tgt_pool}/{tgt_ds}".strip("/")
+                full_tgt = f"{tgt_pool}/{tgt_ds}".strip("/") if tgt_ds else tgt_pool
                 recv_cmd = remote_ssh_prefix + ["zfs", "receive", "-F", "--", full_tgt]
             else:
                 # Btrfs pipeline
-                src_path = os.path.join("/mnt/storage", src_pool, src_ds)
+                src_path = (
+                    os.path.join("/mnt/storage", src_pool, src_ds) if src_ds else os.path.join("/mnt/storage", src_pool)
+                )
                 snap_path = f"{src_path}/.snapshots/{snap_tag}"
                 os.makedirs(os.path.dirname(snap_path), exist_ok=True)
                 subprocess.run(
@@ -249,49 +266,58 @@ class ReplicationEngine:
                 )
 
                 send_cmd = ["btrfs", "send", "--", snap_path]
-                tgt_path = os.path.join(tgt_pool or "/mnt/storage", tgt_ds)
+                tgt_path = os.path.join(tgt_pool or "/mnt/storage", tgt_ds) if tgt_ds else (tgt_pool or "/mnt/storage")
                 recv_cmd = remote_ssh_prefix + ["btrfs", "receive", "--", tgt_path]
 
-            # 3. Handle optional rate limiting
-            pv_cmd = []
-            if bw_limit and shutil.which("pv"):
-                pv_cmd = ["pv", "-L", f"{bw_limit}k"]
-
-            # Execute pipeline: send_cmd | [pv] | recv_cmd
+            # Execute pipeline with real stream byte counting
             logger.info(f"[Replication] Pipeline: {' '.join(send_cmd)} -> {' '.join(recv_cmd)}")
             p1 = subprocess.Popen(send_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            if pv_cmd:
-                p2 = subprocess.Popen(
-                    pv_cmd,
-                    stdin=p1.stdout,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                )
-                p1.stdout.close()
-                p3 = subprocess.Popen(
-                    recv_cmd,
-                    stdin=p2.stdout,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                )
-                p2.stdout.close()
-                out, err = p3.communicate()
-            else:
-                p3 = subprocess.Popen(
-                    recv_cmd,
-                    stdin=p1.stdout,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                )
-                p1.stdout.close()
-                out, err = p3.communicate()
+            p3 = subprocess.Popen(
+                recv_cmd,
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+
+            total_bytes = 0
+
+            def _stream_pump():
+                nonlocal total_bytes
+                try:
+                    while True:
+                        chunk = p1.stdout.read(65536)
+                        if not chunk:
+                            break
+                        total_bytes += len(chunk)
+                        if p3.stdin:
+                            p3.stdin.write(chunk)
+                    if p3.stdin:
+                        p3.stdin.flush()
+                except (BrokenPipeError, OSError):
+                    pass
+                finally:
+                    try:
+                        if p3.stdin:
+                            p3.stdin.close()
+                    except Exception:
+                        pass
+
+            pump_thread = threading.Thread(target=_stream_pump, daemon=True)
+            pump_thread.start()
+            out3, err3 = p3.communicate()
+            pump_thread.join(timeout=10)
+            out1, err1 = p1.communicate()
 
             if p3.returncode != 0:
-                err_msg = err.decode("utf-8", errors="replace") if err else "Non-zero exit code"
+                err_msg = err3.decode("utf-8", errors="replace") if err3 else "Non-zero exit code"
                 raise RuntimeError(f"Replication receive failed: {err_msg}")
 
+            if p1.returncode != 0:
+                err_msg = err1.decode("utf-8", errors="replace") if err1 else "Non-zero exit code"
+                raise RuntimeError(f"Replication send failed: {err_msg}")
+
             # Completed successfully
-            self.update_job_status(job_id, "success", bytes_transferred=1024 * 1024)
+            self.update_job_status(job_id, "success", bytes_transferred=total_bytes)
             logger.info(f"[Replication] Job {job_id} succeeded.")
             try:
                 from backend.services.notifications import send_notification

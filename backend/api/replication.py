@@ -10,19 +10,19 @@ from pydantic import BaseModel, Field
 from backend.auth import require_scope
 from backend.services.replication_engine import get_replication_engine
 
-router = APIRouter(prefix="/api/storage/replication", tags=["Storage Replication"])
+router = APIRouter(prefix="/storage/replication", tags=["Storage Replication"])
 
 
 class ReplicationJobCreateRequest(BaseModel):
     name: str = Field(..., max_length=128)
     source_pool: str = Field(..., max_length=128)
-    source_dataset: str = Field(..., max_length=256)
+    source_dataset: str = Field(default="", max_length=256)
     target_type: str = Field(default="local", pattern=r"^(local|remote_ssh|remote_wireguard)$")
     target_host: Optional[str] = Field(default=None, max_length=256)
     target_port: int = Field(default=22, ge=1, le=65535)
     target_user: str = Field(default="root", max_length=64)
     target_pool: str = Field(..., max_length=128)
-    target_dataset: str = Field(..., max_length=256)
+    target_dataset: str = Field(default="", max_length=256)
     bandwidth_limit_kbps: Optional[int] = Field(default=None, ge=100)
     incremental: bool = Field(default=True)
     retention_count: int = Field(default=14, ge=1, le=365)

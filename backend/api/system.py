@@ -2293,18 +2293,92 @@ def delete_token(token_id: str, principal: AuthenticatedPrincipal = Depends(get_
     raise HTTPException(status_code=404, detail="Token not found or unauthorized to revoke.")
 
 
+def trigger_power_action(action: str) -> bool:
+    """
+    Triggers host system reboot or shutdown.
+    Checks host trigger scripts, container-host volume mounts, and system power commands.
+    """
+    if action == "reboot":
+        triggers = [
+            ["/host/reboot"],
+            ["/usr/local/sbin/reboot"],
+            ["reboot"],
+            ["shutdown", "-r", "now"],
+        ]
+    else:
+        triggers = [
+            ["/host/powerdown"],
+            ["/usr/local/sbin/powerdown"],
+            ["/sbin/poweroff"],
+            ["poweroff"],
+            ["shutdown", "-h", "now"],
+        ]
+
+    for cmd in triggers:
+        bin_path = cmd[0]
+        if os.path.exists(bin_path) and os.access(bin_path, os.X_OK):
+            try:
+                subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                logger.info(f"[Power] Executed host trigger: {cmd}")
+                return True
+            except Exception as e:
+                logger.error(f"[Power] Failed executing host trigger {cmd}: {e}")
+        elif shutil.which(bin_path):
+            try:
+                subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                logger.info(f"[Power] Executed command: {cmd}")
+                return True
+            except Exception as e:
+                logger.error(f"[Power] Failed executing command {cmd}: {e}")
+
+    try:
+        if os.path.exists("/proc/sysrq-trigger"):
+            with open("/proc/sysrq-trigger", "w") as f:
+                f.write("b" if action == "reboot" else "o")
+            return True
+    except Exception as e:
+        logger.debug(f"[Power] Sysrq fallback failed: {e}")
+
+    return False
+
+
 @router.post("/system/reboot", dependencies=[Depends(require_scope("system:power"))])
 async def system_reboot():
     """Trigger system reboot (requires system:power scope)."""
     add_event("warning", "System", "System reboot sequence initiated by authorized user")
-    return {"status": "ok", "message": "System reboot sequence initiated"}
+    success = await asyncio.to_thread(trigger_power_action, "reboot")
+    return {"status": "ok", "action_dispatched": success, "message": "System reboot sequence initiated"}
 
 
 @router.post("/system/shutdown", dependencies=[Depends(require_scope("system:power"))])
 async def system_shutdown():
     """Trigger system poweroff (requires system:power scope)."""
     add_event("warning", "System", "System shutdown sequence initiated by authorized user")
-    return {"status": "ok", "message": "System shutdown sequence initiated"}
+    success = await asyncio.to_thread(trigger_power_action, "shutdown")
+    return {"status": "ok", "action_dispatched": success, "message": "System shutdown sequence initiated"}
+
+
+@router.get("/system/disks")
+def get_system_disks() -> Dict[str, Any]:
+    """Compatibility endpoint returning physical disks discovered via HAL."""
+    from backend.hardware.hal import DiskDiscoveryHAL
+
+    records = DiskDiscoveryHAL.discover_physical_disks()
+    return {
+        "disks": [
+            {
+                "dev": r.dev_name,
+                "name": r.dev_name,
+                "size": getattr(r, "size_formatted", getattr(r, "size_human", "0 GB")),
+                "size_bytes": r.size_bytes,
+                "model": r.model,
+                "serial": r.serial,
+                "role": r.role,
+                "transport": r.transport,
+            }
+            for r in records
+        ]
+    }
 
 
 _last_update_check: Dict[str, Dict[str, Any]] = {

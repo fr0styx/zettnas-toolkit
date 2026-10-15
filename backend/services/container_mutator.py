@@ -345,7 +345,27 @@ def recreate_container(
             new_host_config["RestartPolicy"] = {"Name": pol}
 
     # Step 5: Prepare create payload based on current inspect
-    target_env = [e.strip() for e in env if e and e.strip()] if env is not None else config.get("Env", [])
+    orig_env_list = config.get("Env", []) or []
+    orig_env_map = {}
+    for item in orig_env_list:
+        if "=" in item:
+            k, v = item.split("=", 1)
+            orig_env_map[k] = v
+
+    if env is not None:
+        target_env = []
+        for e in env:
+            if not e or not e.strip():
+                continue
+            item = e.strip()
+            if "=" in item:
+                k, v = item.split("=", 1)
+                if v == "••••••••" and k in orig_env_map:
+                    target_env.append(f"{k}={orig_env_map[k]}")
+                    continue
+            target_env.append(item)
+    else:
+        target_env = orig_env_list
     create_body: Dict[str, Any] = {
         "Image": target_image,
         "Env": target_env,

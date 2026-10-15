@@ -283,8 +283,13 @@ export function initContainersManager() {
 
   const btnStacks = document.getElementById('btn-cw-stacks');
   if (btnStacks) {
-    btnStacks.onclick = () => {
-      openStackPickerModal();
+    btnStacks.onclick = async () => {
+      try {
+        const res = await api.get('/api/docker/stacks');
+        openStackPickerModal(res.stacks || []);
+      } catch (e) {
+        openStackPickerModal([]);
+      }
     };
   }
 

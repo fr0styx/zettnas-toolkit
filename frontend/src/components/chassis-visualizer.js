@@ -2861,11 +2861,19 @@ export async function openCreateStoragePoolModal(onSuccess) {
   if (disksContainer) {
     disksContainer.innerHTML = '<div style="color:var(--muted); font-size:11px;">Scanning available physical disks...</div>';
     try {
-      const disksRes = await api.get('/api/system/disks').catch(() => []);
-      const disksList = Array.isArray(disksRes) ? disksRes : (disksRes.disks || []);
-      const filtered = disksList.filter((d) => {
+      const overview = await api.get('/api/storage/overview').catch(() => null);
+      let disksList = overview?.unassigned_disks;
+      if (!disksList || disksList.length === 0) {
+        const disksRes = await api.get('/api/storage/disks').catch(() => null);
+        disksList = Array.isArray(disksRes) ? disksRes : (disksRes?.disks || null);
+      }
+      if (!disksList || disksList.length === 0) {
+        const legacyRes = await api.get('/api/system/disks').catch(() => []);
+        disksList = Array.isArray(legacyRes) ? legacyRes : (legacyRes?.disks || []);
+      }
+      const filtered = (disksList || []).filter((d) => {
         const n = String(d.dev || d.name || '').toLowerCase();
-        return !n.includes('loop') && !n.includes('zram') && !n.includes('boot');
+        return !n.includes('loop') && !n.includes('zram') && !n.includes('boot') && !d.assigned;
       });
 
       if (filtered.length === 0) {

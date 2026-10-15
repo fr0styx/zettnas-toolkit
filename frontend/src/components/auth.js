@@ -488,6 +488,15 @@ async function submitMfaChallenge() {
 
       _pendingMfaToken = null;
       codeInput.value = '';
+      if (_isLocked) {
+        _isLocked = false;
+        sessionStorage.removeItem('zettnas_desktop_locked');
+        document.documentElement.classList.remove('is-desktop-locked');
+        document.body.classList.remove('desktop-locked');
+        clearInterval(_clockInterval);
+        resetInactivityTimer();
+        ZettEventBus.emit('auth:unlocked');
+      }
       ZettEventBus.emit('auth:login');
     } else {
       alert(`2FA Verification Failed: ${data.detail || 'Invalid code'}`);
@@ -541,9 +550,9 @@ export function initLockOverlay() {
     });
   }
 
-  // Global hotkey: Cmd+L or Ctrl+L to lock screen
+  // Global hotkey: Ctrl+Alt+L to lock screen (safe cross-platform hotkey avoiding Cmd+L/Ctrl+L browser collisions)
   window.addEventListener('keydown', (e) => {
-    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'l') {
+    if ((e.metaKey || e.ctrlKey) && e.altKey && e.key.toLowerCase() === 'l') {
       e.preventDefault();
       lockDesktop();
     }
@@ -611,6 +620,20 @@ export async function unlockDesktop() {
     });
 
     const data = await res.json();
+    if (res.ok && data.status === 'mfa_required') {
+      _pendingMfaToken = data.mfa_token;
+      if (lockOverlay) lockOverlay.style.display = 'none';
+      clearInterval(_clockInterval);
+      const overlay = document.getElementById('login-overlay');
+      if (overlay) {
+        overlay.style.removeProperty('opacity');
+        overlay.style.display = 'flex';
+      }
+      showMfaChallengeView(username);
+      pwdInput.value = '';
+      return;
+    }
+
     if (res.ok && (data.status === 'ok' || data.token)) {
       if (data.token) auth.setToken(data.token);
       _isLocked = false;

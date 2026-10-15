@@ -666,45 +666,7 @@ def _load_vms() -> List[Dict[str, Any]]:
     """Loads configured virtual machines from persistent JSON storage with live state reconciliation."""
     vms = read_json(VMS_CONFIG_FILE, default=None)
     if vms is None:
-        # Initial default seeded VMs start in 'stopped' state to avoid phantom running states
-        default_vms = [
-            {
-                "id": "vm-ubuntu-server",
-                "name": "ubuntu-server",
-                "description": "Production Web & Microservices Appliance",
-                "os_family": "linux",
-                "state": "stopped",
-                "vcpus": 4,
-                "ram_gb": 4.0,
-                "disk_size_gb": 32,
-                "disk_format": "qcow2",
-                "disk_bus": "virtio",
-                "ip_address": "",
-                "bridge": "br0",
-                "mac": "52:54:00:12:34:56",
-                "autostart": False,
-                "uptime_seconds": 0,
-                "created_at": int(time.time()) - 130000,
-            },
-            {
-                "id": "vm-debian-sandbox",
-                "name": "debian-sandbox",
-                "description": "Isolated Development Sandbox",
-                "os_family": "linux",
-                "state": "stopped",
-                "vcpus": 2,
-                "ram_gb": 2.0,
-                "disk_size_gb": 20,
-                "disk_format": "qcow2",
-                "disk_bus": "virtio",
-                "ip_address": "",
-                "bridge": "br0",
-                "mac": "52:54:00:ab:cd:ef",
-                "autostart": False,
-                "uptime_seconds": 0,
-                "created_at": int(time.time()) - 80000,
-            },
-        ]
+        default_vms: List[Dict[str, Any]] = []
         atomic_write_json(VMS_CONFIG_FILE, default_vms)
         return default_vms
 
@@ -1488,6 +1450,12 @@ def _stop_qemu(vm_id: str, force: bool = False):
                 pass
 
 
+def _get_host_ip() -> str:
+    from backend.state import Z_STATE
+
+    return getattr(Z_STATE, "discovered_host_ip", None) or os.environ.get("HOST_IP") or "127.0.0.1"
+
+
 @router.get("/{vm_id}", dependencies=[Depends(require_scope("system:view", "storage:read"))])
 def get_vm_detail(vm_id: str):
     """Retrieves detailed virtual machine configuration, attachments, and runtime state."""
@@ -1495,6 +1463,7 @@ def get_vm_detail(vm_id: str):
     target = next((v for v in vms if v["id"] == vm_id), None)
     if not target:
         raise HTTPException(status_code=404, detail="Virtual machine not found.")
+
     vnc_port = _get_qemu_vnc_port(vms, vm_id)
     detail = dict(target)
     detail["vnc_port"] = vnc_port
@@ -1502,8 +1471,9 @@ def get_vm_detail(vm_id: str):
     detail["last_error"] = target.get("last_error")
     detail["network_mode"] = target.get("network_mode", "slirp")
     ip = target.get("ip_address") or ""
+    host_ip = _get_host_ip()
     detail["connection_summary"] = {
-        "vnc_uri": f"vnc://10.40.30.249:{vnc_port}",
+        "vnc_uri": f"vnc://{host_ip}:{vnc_port}",
         "web_console": f"/api/vms/{vm_id}/console",
         "ssh_command": f"ssh root@{ip}" if ip else "",
     }
@@ -1580,12 +1550,13 @@ def get_vm_connection_info(
     ssh_port = target_vm.get("ssh_port") or (2220 + (vnc_port - 5900))
     is_iso_boot = bool(target_vm.get("iso_path"))
 
+    host_ip = _get_host_ip()
     ssh_cmd = ""
     if not is_iso_boot:
         if ip:
             ssh_cmd = f"ssh root@{ip}"
         else:
-            ssh_cmd = f"ssh -p {ssh_port} root@10.40.30.249"
+            ssh_cmd = f"ssh -p {ssh_port} root@{host_ip}"
 
     return {
         "vm_id": vm_id,
@@ -1595,7 +1566,7 @@ def get_vm_connection_info(
         "ssh_port": ssh_port,
         "ssh_command": ssh_cmd,
         "vnc_port": vnc_port,
-        "vnc_uri": f"vnc://10.40.30.249:{vnc_port}",
+        "vnc_uri": f"vnc://{host_ip}:{vnc_port}",
         "console_url": f"/api/vms/{vm_id}/console",
         "has_ip": bool(ip),
         "is_iso_boot": is_iso_boot,

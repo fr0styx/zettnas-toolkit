@@ -173,7 +173,9 @@ def create_mfa_token(user_id: str, username: str, remember_me: bool) -> str:
     }
     raw = json.dumps(payload, separators=(",", ":")).encode("utf-8")
     b64 = base64.urlsafe_b64encode(raw).decode("ascii").rstrip("=")
-    key = (getattr(config, "STORED_PASSWORD_HASH", "") or "zettnas-mfa-default-key").encode("utf-8")
+    key = (
+        getattr(config, "SECRET_KEY", "") or getattr(config, "STORED_PASSWORD_HASH", "") or "zettnas-mfa-default-key"
+    ).encode("utf-8")
     sig = hmac.new(key, b64.encode("ascii"), hashlib.sha256).hexdigest()
     return f"mfa_{b64}.{sig}"
 
@@ -184,7 +186,11 @@ def verify_mfa_token(token: str) -> Optional[dict]:
     try:
         body = token[4:]
         b64, sig = body.split(".", 1)
-        key = (getattr(config, "STORED_PASSWORD_HASH", "") or "zettnas-mfa-default-key").encode("utf-8")
+        key = (
+            getattr(config, "SECRET_KEY", "")
+            or getattr(config, "STORED_PASSWORD_HASH", "")
+            or "zettnas-mfa-default-key"
+        ).encode("utf-8")
         expected_sig = hmac.new(key, b64.encode("ascii"), hashlib.sha256).hexdigest()
         if not hmac.compare_digest(sig, expected_sig):
             return None
@@ -226,6 +232,7 @@ def _build_session_response(
             "username": user["username"],
             "display_name": user["display_name"],
             "role": user["role_id"],
+            "role_id": user["role_id"],
             "role_name": user.get("role_name", "User"),
             "scopes": user.get("scopes", []),
             "mfa_enabled": bool(user.get("mfa_enabled")),
@@ -417,8 +424,9 @@ async def mfa_challenge(req: MfaChallengeRequest, request: Request):
     user_mfa = get_user_mfa(user["id"])
     mfa_ok = False
     method = "totp"
-    if req.mfa_code and user_mfa and user_mfa.get("mfa_secret"):
-        mfa_ok = verify_totp_code(user_mfa["mfa_secret"], req.mfa_code, user_id=user["id"])
+    code = req.mfa_code or req.code
+    if code and user_mfa and user_mfa.get("mfa_secret"):
+        mfa_ok = verify_totp_code(user_mfa["mfa_secret"], code, user_id=user["id"])
     if not mfa_ok and req.recovery_code:
         mfa_ok = consume_user_recovery_code(user["id"], req.recovery_code)
         method = "recovery_code"

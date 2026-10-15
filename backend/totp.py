@@ -164,10 +164,7 @@ def get_otpauth_uri(username: str, secret: str, issuer: str = "ZettNAS") -> str:
     encoded_issuer = urllib.parse.quote(issuer.strip() or "ZettNAS")
     encoded_user = urllib.parse.quote(username.strip())
     clean_secret = secret.strip().replace(" ", "").upper()
-    uri = f"otpauth://totp/{encoded_user}?secret={clean_secret}&issuer={encoded_issuer}"
-    if len(uri.encode("utf-8")) > 62:
-        uri = f"otpauth://totp/{encoded_user}?secret={clean_secret}"
-    return uri
+    return f"otpauth://totp/{encoded_user}?secret={clean_secret}&issuer={encoded_issuer}"
 
 
 # ==============================================================================
@@ -305,14 +302,23 @@ def generate_qr_svg(text: str, size: int = 240) -> str:
         pad_idx += 1
 
     # Reed Solomon error correction (2 blocks of 18 EC codewords for 4-M)
-    ec_words = _reed_solomon_compute_remainder(codewords[:32], 18) + _reed_solomon_compute_remainder(
-        codewords[32:64], 18
-    )
+    b1 = codewords[:32]
+    b2 = codewords[32:64]
+    ec1 = _reed_solomon_compute_remainder(b1, 18)
+    ec2 = _reed_solomon_compute_remainder(b2, 18)
+
+    # Standard QR interleaving (data words block 1, block 2, then EC words block 1, block 2)
+    interleaved_data = []
+    for i in range(32):
+        interleaved_data.append(b1[i])
+        interleaved_data.append(b2[i])
+    for i in range(18):
+        interleaved_data.append(ec1[i])
+        interleaved_data.append(ec2[i])
 
     # Final interleaved bit sequence
-    full_data = codewords + ec_words
     final_bits = []
-    for byte in full_data:
+    for byte in interleaved_data:
         for bit_idx in range(7, -1, -1):
             final_bits.append((byte >> bit_idx) & 1)
 
@@ -336,6 +342,50 @@ def generate_qr_svg(text: str, size: int = 240) -> str:
                     bit_ptr += 1
         upward = not upward
         right -= 2
+
+    # 7.5 Write 15-bit BCH Format Information bits (ECC Level M + Mask 0 = 0x5412)
+    format_bits = 0x5412
+    # Top-left copy around finder pattern
+    coords_tl = [
+        (8, 0),
+        (8, 1),
+        (8, 2),
+        (8, 3),
+        (8, 4),
+        (8, 5),
+        (8, 7),
+        (8, 8),
+        (7, 8),
+        (5, 8),
+        (4, 8),
+        (3, 8),
+        (2, 8),
+        (1, 8),
+        (0, 8),
+    ]
+    for bit_idx, (r, c) in enumerate(coords_tl):
+        modules[r][c] = bool((format_bits >> bit_idx) & 1)
+
+    # Top-right copy (bits 0..7) and bottom-left copy (bits 8..14)
+    coords_split = [
+        (8, width - 1),
+        (8, width - 2),
+        (8, width - 3),
+        (8, width - 4),
+        (8, width - 5),
+        (8, width - 6),
+        (8, width - 7),
+        (8, width - 8),
+        (width - 7, 8),
+        (width - 6, 8),
+        (width - 5, 8),
+        (width - 4, 8),
+        (width - 3, 8),
+        (width - 2, 8),
+        (width - 1, 8),
+    ]
+    for bit_idx, (r, c) in enumerate(coords_split):
+        modules[r][c] = bool((format_bits >> bit_idx) & 1)
 
     # 8. Render clean SVG paths
     path_d = []

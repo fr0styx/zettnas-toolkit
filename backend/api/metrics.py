@@ -39,28 +39,51 @@ def prometheus_metrics():
     # CPU
     cpu = stats.get("cpu", {})
     add_gauge("zettnas_cpu_temp_celsius", "CPU Temperature", cpu.get("temp"))
-    add_gauge("zettnas_cpu_usage_percent", "CPU Usage", cpu.get("usage"))
+    add_gauge("zettnas_cpu_usage_percent", "CPU Usage", cpu.get("util") if "util" in cpu else cpu.get("usage"))
     add_gauge("zettnas_cpu_power_watts", "CPU Power Consumption", cpu.get("power_w"))
 
     # RAM
     mem = stats.get("mem", {})
-    add_gauge("zettnas_memory_total_bytes", "Total RAM", mem.get("total"))
-    add_gauge("zettnas_memory_used_bytes", "Used RAM", mem.get("used"))
-    add_gauge("zettnas_memory_free_bytes", "Free RAM", mem.get("free"))
-    add_gauge("zettnas_memory_usage_percent", "RAM Usage", mem.get("percent"))
+    total_b = (mem["total_gb"] * 1024 * 1024 * 1024) if "total_gb" in mem else mem.get("total")
+    used_b = (mem["used_gb"] * 1024 * 1024 * 1024) if "used_gb" in mem else mem.get("used")
+    free_b = (total_b - used_b) if (total_b is not None and used_b is not None) else mem.get("free")
+    pct = mem.get("pct") if "pct" in mem else mem.get("percent")
+
+    add_gauge("zettnas_memory_total_bytes", "Total RAM", total_b)
+    add_gauge("zettnas_memory_used_bytes", "Used RAM", used_b)
+    add_gauge("zettnas_memory_free_bytes", "Free RAM", free_b)
+    add_gauge("zettnas_memory_usage_percent", "RAM Usage", pct)
 
     # Network
     net = stats.get("net", {})
     add_gauge("zettnas_network_rx_bytes", "Network Bytes Received", net.get("rx_bytes"))
     add_gauge("zettnas_network_tx_bytes", "Network Bytes Transmitted", net.get("tx_bytes"))
-    add_gauge("zettnas_network_combined_rx_bytes_sec", "Network Combined Rx Rate (Bytes/sec)", net.get("rx_rate"))
-    add_gauge("zettnas_network_combined_tx_bytes_sec", "Network Combined Tx Rate (Bytes/sec)", net.get("tx_rate"))
+    add_gauge(
+        "zettnas_network_combined_rx_bytes_sec",
+        "Network Combined Rx Rate (Bytes/sec)",
+        net.get("rx_bytes_sec") or net.get("rx_rate"),
+    )
+    add_gauge(
+        "zettnas_network_combined_tx_bytes_sec",
+        "Network Combined Tx Rate (Bytes/sec)",
+        net.get("tx_bytes_sec") or net.get("tx_rate"),
+    )
     for if_name, if_data in net.get("interfaces", {}).items():
         if_labels = {"interface": if_name}
         add_gauge("zettnas_network_interface_rx_bytes", "Interface Rx Bytes", if_data.get("rx_bytes"), if_labels)
         add_gauge("zettnas_network_interface_tx_bytes", "Interface Tx Bytes", if_data.get("tx_bytes"), if_labels)
-        add_gauge("zettnas_network_interface_rx_bytes_sec", "Interface Rx Rate", if_data.get("rx_rate"), if_labels)
-        add_gauge("zettnas_network_interface_tx_bytes_sec", "Interface Tx Rate", if_data.get("tx_rate"), if_labels)
+        add_gauge(
+            "zettnas_network_interface_rx_bytes_sec",
+            "Interface Rx Rate",
+            if_data.get("rx_bytes_sec") or if_data.get("rx_rate"),
+            if_labels,
+        )
+        add_gauge(
+            "zettnas_network_interface_tx_bytes_sec",
+            "Interface Tx Rate",
+            if_data.get("tx_bytes_sec") or if_data.get("tx_rate"),
+            if_labels,
+        )
 
     # Disks
     for d in stats.get("disks", []):

@@ -1,1 +1,0 @@
-import{R as e,Z as t}from"./dashboard-DpW27EX5.js";export{e as initManagement,t as openDockerPruneModal};

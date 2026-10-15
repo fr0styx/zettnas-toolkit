@@ -130,6 +130,79 @@ def get_storage_shares() -> Dict[str, Any]:
     }
 
 
+@router.get("/overview")
+def get_storage_overview() -> Dict[str, Any]:
+    """
+    Returns unified storage overview: pools, shares, platform info, and physical disk inventories.
+    """
+    from backend.hardware.hal import DiskDiscoveryHAL
+
+    adapter = get_storage_platform()
+    pools = adapter.list_pools()
+    shares = adapter.list_shares()
+    caps = adapter.get_capabilities()
+
+    assigned_devs = set()
+    for p in pools:
+        for m in getattr(p, "members", []):
+            name = (getattr(m, "device", "") or getattr(m, "name", "")).replace("/dev/", "")
+            if name:
+                assigned_devs.add(name)
+
+    records = DiskDiscoveryHAL.discover_physical_disks()
+    all_disks = []
+    unassigned = []
+    for r in records:
+        is_assigned = r.dev_name in assigned_devs or r.role == "os"
+        d_dict = {
+            "dev": r.dev_name,
+            "name": r.dev_name,
+            "size": getattr(r, "size_formatted", getattr(r, "size_human", "0 GB")),
+            "size_bytes": r.size_bytes,
+            "model": r.model,
+            "serial": r.serial,
+            "role": r.role,
+            "transport": r.transport,
+            "assigned": is_assigned,
+        }
+        all_disks.append(d_dict)
+        if not is_assigned:
+            unassigned.append(d_dict)
+
+    return {
+        "platform": adapter.get_platform_type().value,
+        "is_observer_mode": caps.is_observer_mode,
+        "is_busy": adapter.is_storage_busy(),
+        "pools": [p.model_dump() for p in pools],
+        "shares": [s.model_dump() for s in shares],
+        "disks": all_disks,
+        "unassigned_disks": unassigned,
+    }
+
+
+@router.get("/disks")
+def get_storage_disks() -> Dict[str, Any]:
+    """Returns detected physical disks discovered via DiskDiscoveryHAL."""
+    from backend.hardware.hal import DiskDiscoveryHAL
+
+    records = DiskDiscoveryHAL.discover_physical_disks()
+    return {
+        "disks": [
+            {
+                "dev": r.dev_name,
+                "name": r.dev_name,
+                "size": getattr(r, "size_formatted", getattr(r, "size_human", "0 GB")),
+                "size_bytes": r.size_bytes,
+                "model": r.model,
+                "serial": r.serial,
+                "role": r.role,
+                "transport": r.transport,
+            }
+            for r in records
+        ]
+    }
+
+
 @router.post("/scrub", dependencies=[Depends(require_scope("storage:admin"))])
 def trigger_storage_scrub(req: StorageScrubRequest) -> Dict[str, Any]:
     """

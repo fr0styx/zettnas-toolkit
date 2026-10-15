@@ -8254,7 +8254,7 @@ let _notificationConfig = null;
 
 export async function fetchAndRenderNotificationConfig() {
   try {
-    const res = await api.get('/notifications/config');
+    const res = await api.get('/api/notifications/config');
     _notificationConfig = res || {};
     renderNotificationConfigUI();
   } catch (err) {
@@ -8343,7 +8343,7 @@ export async function saveNotificationsConfig() {
   if (!isNaN(cd)) cfg.cooldown_seconds = Math.max(1, Math.min(1440, cd)) * 60;
 
   try {
-    const res = await api.post('/notifications/config', cfg);
+    const res = await api.post('/api/notifications/config', cfg);
     _notificationConfig = res.config || cfg;
     renderNotificationConfigUI();
     showToast(t('notif.saved_ok', 'Notification settings saved successfully!'), 'success');
@@ -8360,7 +8360,7 @@ export async function testAllNotificationChannels() {
     btn.textContent = '⏳ Testing...';
   }
   try {
-    const res = await api.post('/notifications/test', {});
+    const res = await api.post('/api/notifications/test', {});
     const channels = res?.tested_channels || {};
     const successList = Object.keys(channels).filter(k => channels[k]);
     if (successList.length > 0) {
@@ -8386,7 +8386,7 @@ export async function testSingleChannel(channel) {
     btn.textContent = '⏳';
   }
   try {
-    const res = await api.post('/notifications/test-channel', {
+    const res = await api.post('/api/notifications/test-channel', {
       channel: channel,
       config: _notificationConfig || {}
     });

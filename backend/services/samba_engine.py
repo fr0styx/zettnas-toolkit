@@ -244,7 +244,15 @@ class SambaEngine:
 
     def check_port_445(self) -> bool:
         """Tests if SMB port 445 is accepting TCP connections."""
-        targets = ["127.0.0.1", "localhost", "10.40.30.249"]
+        targets = ["127.0.0.1", "localhost"]
+        try:
+            from backend.state import Z_STATE
+
+            host_ip = getattr(Z_STATE, "discovered_host_ip", None) or os.environ.get("HOST_IP")
+            if host_ip and host_ip not in targets:
+                targets.append(host_ip)
+        except Exception:
+            pass
         for target in targets:
             try:
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
