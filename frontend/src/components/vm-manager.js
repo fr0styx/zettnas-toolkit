@@ -1004,6 +1004,11 @@ export function openVmEditModal(vmId, vmObj = null) {
     };
     const hostThreads = vmTelemetry?.cpu_capacity?.host_threads || 8;
     const currentBootOrder = targetVm.boot_order || (targetVm.iso_path ? 'iso' : 'disk');
+    const targetFirmware = targetVm.firmware || 'seabios';
+    const targetVideo = targetVm.video_adapter || targetVm.display_adapter || 'virtio-gpu';
+    let currentUsbDevices = Array.isArray(targetVm.usb_passthrough)
+      ? targetVm.usb_passthrough.map((d) => ({ ...d }))
+      : [];
 
     modal.innerHTML = `
       <div class="smart-modal-window vm-modal-window" style="max-width: 580px; width: 92%; max-height: 88vh; display: flex; flex-direction: column;">
@@ -1098,6 +1103,96 @@ export function openVmEditModal(vmId, vmObj = null) {
               </label>
             </div>
           </div>
+        </div>
+
+        <!-- Firmware & Boot Architecture -->
+        <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 12px;">
+          <div style="margin-bottom: 8px;">
+            <div style="font-size: 12px; font-weight: 700; color: #fff;" data-i18n="vm.firmware_title">${t('vm.firmware_title', 'Firmware & Boot Architecture')}</div>
+            <div style="font-size: 10px; color: var(--muted);" data-i18n="vm.firmware_desc">${t('vm.firmware_desc', 'Select hypervisor firmware initialization and virtual hardware security.')}</div>
+          </div>
+          <div class="vm-firmware-group">
+            <label class="firmware-label">
+              <div style="display: flex; align-items: center; gap: 6px; font-weight: 700;">
+                <input type="radio" name="vm-edit-firmware" value="seabios" ${targetFirmware === 'seabios' ? 'checked' : ''} />
+                <span data-i18n="vm.firmware_seabios">${t('vm.firmware_seabios', 'SeaBIOS (Legacy BIOS)')}</span>
+              </div>
+              <div class="firmware-label-sub">MBR partitions, older Linux & Windows 7/10</div>
+            </label>
+            <label class="firmware-label">
+              <div style="display: flex; align-items: center; gap: 6px; font-weight: 700;">
+                <input type="radio" name="vm-edit-firmware" value="uefi" ${targetFirmware === 'uefi' ? 'checked' : ''} />
+                <span data-i18n="vm.firmware_uefi">${t('vm.firmware_uefi', 'OVMF / UEFI (Modern / Win 11)')}</span>
+              </div>
+              <div class="firmware-label-sub">Pure 64-bit UEFI, NVRAM persistence, Secure Boot</div>
+            </label>
+          </div>
+
+          <!-- Virtual TPM 2.0 Toggle -->
+          <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center;">
+            <label style="font-size: 11px; color: #fff; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+              <input type="checkbox" id="vm-edit-tpm" ${targetVm.tpm_enabled ? 'checked' : ''} style="accent-color: var(--accent-cyan, #0ea5e9);" />
+              <span data-i18n="vm.tpm_title">${t('vm.tpm_title', 'Enable Virtual TPM 2.0 (vTPM)')}</span>
+            </label>
+            <span style="font-size: 9px; padding: 2px 6px; border-radius: 4px; background: rgba(14,165,233,0.15); color: #38bdf8; border: 1px solid rgba(14,165,233,0.3);">
+              🛡️ Windows 11 Ready
+            </span>
+          </div>
+        </div>
+
+        <!-- Display & Video Adapter -->
+        <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <div>
+              <div style="font-size: 12px; font-weight: 700; color: #fff;" data-i18n="vm.video_title">${t('vm.video_title', 'Display & Video Adapter')}</div>
+              <div style="font-size: 10px; color: var(--muted);">Select virtual GPU hardware adapter or headless console mode</div>
+            </div>
+            <span style="font-size: 9px; padding: 2px 6px; border-radius: 4px; background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3);">
+              GPU Accelerated
+            </span>
+          </div>
+          <select id="vm-edit-video-adapter" class="tz-select" style="width: 100%; padding: 8px 10px; border-radius: 6px; background: #1e293b; border: 1px solid rgba(255,255,255,0.12); color: #fff; font-size: 12px; box-sizing: border-box;">
+            <option value="virtio-gpu" ${targetVideo === 'virtio-gpu' ? 'selected' : ''}>VirtIO-GPU (Recommended / Linux 2D/3D Accel)</option>
+            <option value="qxl" ${targetVideo === 'qxl' ? 'selected' : ''}>QXL (SPICE / Windows Drivers)</option>
+            <option value="vga" ${targetVideo === 'vga' ? 'selected' : ''}>Standard VGA (Universal Compatibility)</option>
+            <option value="none" ${targetVideo === 'none' ? 'selected' : ''}>Headless (Serial Console Only - Zero VRAM)</option>
+          </select>
+        </div>
+
+        <!-- Host USB Passthrough -->
+        <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <div>
+              <div style="font-size: 12px; font-weight: 700; color: #fff;" data-i18n="vm.usb_title">${t('vm.usb_title', 'Host USB Device Passthrough')}</div>
+              <div style="font-size: 10px; color: var(--muted);" data-i18n="vm.usb_desc">${t('vm.usb_desc', 'Attach physical host USB peripherals directly into the guest VM.')}</div>
+            </div>
+            <button type="button" id="btn-edit-toggle-custom-usb" class="btn-pill-toggle" style="padding: 3px 8px; font-size: 10px;">
+              + Custom VID:PID
+            </button>
+          </div>
+
+          <!-- Dynamic host USB selector row -->
+          <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 8px;">
+            <select id="vm-edit-host-usb-select" class="tz-select" style="flex: 1; padding: 6px 8px; border-radius: 4px; background: #1e293b; border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 11px;">
+              <option value="">Scanning host USB devices...</option>
+            </select>
+            <button type="button" id="btn-edit-add-usb-device" class="btn-console-act" style="padding: 5px 12px; font-size: 11px; background: rgba(14,165,233,0.2); border-color: #38bdf8; color: #38bdf8;">
+              ${t('vm.usb_add_btn', '+ Passthrough Device')}
+            </button>
+          </div>
+
+          <!-- Custom USB inputs (hidden by default) -->
+          <div id="vm-edit-custom-usb-wrap" class="usb-custom-row" style="display: none;">
+            <input type="text" id="vm-edit-custom-vid" placeholder="VID (e.g. 10c4)" maxlength="4" style="width: 80px; padding: 5px 8px; border-radius: 4px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 11px;" />
+            <input type="text" id="vm-edit-custom-pid" placeholder="PID (e.g. ea60)" maxlength="4" style="width: 80px; padding: 5px 8px; border-radius: 4px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 11px;" />
+            <input type="text" id="vm-edit-custom-desc" placeholder="Device Label (e.g. Zigbee Dongle)" style="flex: 1; padding: 5px 8px; border-radius: 4px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 11px;" />
+            <button type="button" id="btn-edit-add-custom-usb" class="btn-console-act" style="padding: 4px 10px; font-size: 11px; background: rgba(16,185,129,0.2); border-color: #34d399; color: #34d399;">
+              Add
+            </button>
+          </div>
+
+          <!-- Attached USB devices list -->
+          <div id="vm-edit-usb-list" style="display: flex; flex-direction: column; gap: 6px; margin-top: 6px;"></div>
         </div>
 
         <!-- Host Folder Passthrough (VirtIO-FS / 9p) -->
@@ -1266,6 +1361,135 @@ export function openVmEditModal(vmId, vmObj = null) {
     }
   }
 
+  // Host USB Passthrough Device Management
+  const usbList = modal.querySelector('#vm-edit-usb-list');
+  const usbSelect = modal.querySelector('#vm-edit-host-usb-select');
+  const btnAddUsb = modal.querySelector('#btn-edit-add-usb-device');
+  const toggleCustomUsb = modal.querySelector('#btn-edit-toggle-custom-usb');
+  const customUsbWrap = modal.querySelector('#vm-edit-custom-usb-wrap');
+  const btnAddCustomUsb = modal.querySelector('#btn-edit-add-custom-usb');
+
+  const renderUsbList = () => {
+    if (!usbList) return;
+    usbList.innerHTML = '';
+    if (currentUsbDevices.length === 0) {
+      usbList.innerHTML = `
+        <div style="font-size: 10px; color: var(--muted); padding: 8px 10px; text-align: center; background: rgba(0,0,0,0.2); border-radius: 4px;" data-i18n="vm.usb_no_devices">
+          ${t('vm.usb_no_devices', 'No host USB devices attached to this VM.')}
+        </div>
+      `;
+      return;
+    }
+    currentUsbDevices.forEach((dev, idx) => {
+      const card = document.createElement('div');
+      card.className = 'usb-device-card';
+      card.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 8px; overflow: hidden;">
+          <span style="font-size: 14px;">🔌</span>
+          <div style="min-width: 0;">
+            <div style="font-size: 11px; font-weight: 700; color: #fff; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
+              ${escapeHtml(dev.description || dev.product || 'USB Device')}
+            </div>
+            <div style="font-size: 9px; color: var(--muted);">
+              ${escapeHtml(dev.manufacturer || 'Generic')} ${dev.bus ? `· Bus ${dev.bus} Dev ${dev.dev}` : ''}
+            </div>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span class="usb-vidpid-badge">${escapeHtml(dev.vendor_id)}:${escapeHtml(dev.product_id)}</span>
+          <button type="button" class="btn-remove-usb" data-idx="${idx}" style="background: none; border: none; color: #f87171; cursor: pointer; padding: 2px 6px; font-size: 12px;" title="Remove device">✕</button>
+        </div>
+      `;
+      card.querySelector('.btn-remove-usb').onclick = () => {
+        currentUsbDevices.splice(idx, 1);
+        renderUsbList();
+      };
+      usbList.appendChild(card);
+    });
+  };
+
+  renderUsbList();
+
+  // Load available host USB devices
+  api.get('/api/vms/usb-devices')
+    .then((devs) => {
+      if (!usbSelect) return;
+      usbSelect.innerHTML = '<option value="">-- Select connected host USB device --</option>';
+      if (Array.isArray(devs) && devs.length > 0) {
+        devs.forEach((d) => {
+          const opt = document.createElement('option');
+          opt.value = JSON.stringify({
+            vendor_id: d.vendor_id,
+            product_id: d.product_id,
+            description: d.description || d.product,
+            manufacturer: d.manufacturer,
+            bus: d.bus,
+            dev: d.dev,
+          });
+          const hubTag = d.is_root_hub ? ' [Root Hub]' : '';
+          opt.textContent = `[${d.vendor_id}:${d.product_id}] ${d.description || d.product}${hubTag}`;
+          usbSelect.appendChild(opt);
+        });
+      } else {
+        usbSelect.innerHTML = '<option value="">No USB devices detected on host</option>';
+      }
+    })
+    .catch(() => {
+      if (!usbSelect) return;
+      usbSelect.innerHTML = '<option value="">Failed to scan USB devices</option>';
+    });
+
+  if (btnAddUsb && usbSelect) {
+    btnAddUsb.onclick = () => {
+      const val = usbSelect.value;
+      if (!val) {
+        showToast('Select a host USB device to attach', 'warning');
+        return;
+      }
+      try {
+        const item = JSON.parse(val);
+        if (!currentUsbDevices.some((d) => d.vendor_id === item.vendor_id && d.product_id === item.product_id)) {
+          currentUsbDevices.push(item);
+          renderUsbList();
+          showToast(`Attached USB device: ${item.description || item.vendor_id}`, 'info');
+        } else {
+          showToast('Device is already attached to this VM', 'warning');
+        }
+      } catch (e) {
+        // ignore
+      }
+    };
+  }
+
+  if (toggleCustomUsb && customUsbWrap) {
+    toggleCustomUsb.onclick = () => {
+      const isHidden = customUsbWrap.style.display === 'none';
+      customUsbWrap.style.display = isHidden ? 'flex' : 'none';
+    };
+  }
+
+  if (btnAddCustomUsb) {
+    btnAddCustomUsb.onclick = () => {
+      const vid = modal.querySelector('#vm-edit-custom-vid')?.value?.trim().toLowerCase().replace('0x', '');
+      const pid = modal.querySelector('#vm-edit-custom-pid')?.value?.trim().toLowerCase().replace('0x', '');
+      const desc = modal.querySelector('#vm-edit-custom-desc')?.value?.trim() || `USB Device (${vid}:${pid})`;
+      if (!vid || !pid || !/^[0-9a-fA-F]{1,4}$/.test(vid) || !/^[0-9a-fA-F]{1,4}$/.test(pid)) {
+        showToast('Please enter valid 4-character hex VID and PID (e.g. 10c4, ea60)', 'warning');
+        return;
+      }
+      if (!currentUsbDevices.some((d) => d.vendor_id === vid && d.product_id === pid)) {
+        currentUsbDevices.push({ vendor_id: vid, product_id: pid, description: desc, manufacturer: 'Custom' });
+        renderUsbList();
+        modal.querySelector('#vm-edit-custom-vid').value = '';
+        modal.querySelector('#vm-edit-custom-pid').value = '';
+        modal.querySelector('#vm-edit-custom-desc').value = '';
+        showToast(`Added custom USB device [${vid}:${pid}]`, 'info');
+      } else {
+        showToast('Device is already attached to this VM', 'warning');
+      }
+    };
+  }
+
   if (submitBtn) {
     submitBtn.onclick = async () => {
       const newName = modal.querySelector('#vm-edit-name')?.value?.trim();
@@ -1274,6 +1498,9 @@ export function openVmEditModal(vmId, vmObj = null) {
       const newVcpus = parseInt(modal.querySelector('#vm-edit-vcpu-slider')?.value || targetVm.vcpus, 10);
       const newIso = modal.querySelector('#vm-edit-iso')?.value || null;
       const newBootOrder = modal.querySelector('input[name="vm-edit-boot-order"]:checked')?.value || 'iso';
+      const newFirmware = modal.querySelector('input[name="vm-edit-firmware"]:checked')?.value || targetVm.firmware || 'seabios';
+      const newVideoAdapter = modal.querySelector('#vm-edit-video-adapter')?.value || targetVm.video_adapter || 'virtio-gpu';
+      const newTpm = !!modal.querySelector('#vm-edit-tpm')?.checked;
       const newAutostart = modal.querySelector('#vm-edit-autostart')?.checked ?? targetVm.autostart;
       const overrideLimits = modal.querySelector('#vm-edit-override-toggle')?.checked ?? false;
 
@@ -1306,6 +1533,10 @@ export function openVmEditModal(vmId, vmObj = null) {
         vcpus: newVcpus,
         iso_path: newIso,
         boot_order: newBootOrder,
+        firmware: newFirmware,
+        video_adapter: newVideoAdapter,
+        tpm_enabled: newTpm,
+        usb_passthrough: currentUsbDevices,
         autostart: newAutostart,
         override_limits: overrideLimits,
         host_shares: hostShares,
@@ -1891,6 +2122,41 @@ export function openVmCreateModal() {
           </div>
         </div>
 
+        <!-- Firmware & Boot Architecture -->
+        <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 12px;">
+          <div style="margin-bottom: 8px;">
+            <div style="font-size: 12px; font-weight: 700; color: #fff;" data-i18n="vm.firmware_title">${t('vm.firmware_title', 'Firmware & Boot Architecture')}</div>
+            <div style="font-size: 10px; color: var(--muted);" data-i18n="vm.firmware_desc">${t('vm.firmware_desc', 'Select hypervisor firmware initialization and virtual hardware security.')}</div>
+          </div>
+          <div class="vm-firmware-group">
+            <label class="firmware-label">
+              <div style="display: flex; align-items: center; gap: 6px; font-weight: 700;">
+                <input type="radio" name="vm-create-firmware" value="seabios" checked />
+                <span data-i18n="vm.firmware_seabios">${t('vm.firmware_seabios', 'SeaBIOS (Legacy BIOS)')}</span>
+              </div>
+              <div class="firmware-label-sub">MBR partitions, older Linux & Windows 7/10</div>
+            </label>
+            <label class="firmware-label">
+              <div style="display: flex; align-items: center; gap: 6px; font-weight: 700;">
+                <input type="radio" name="vm-create-firmware" value="uefi" />
+                <span data-i18n="vm.firmware_uefi">${t('vm.firmware_uefi', 'OVMF / UEFI (Modern / Win 11)')}</span>
+              </div>
+              <div class="firmware-label-sub">Pure 64-bit UEFI, NVRAM persistence, Secure Boot</div>
+            </label>
+          </div>
+
+          <!-- Virtual TPM 2.0 Toggle -->
+          <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center;">
+            <label style="font-size: 11px; color: #fff; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+              <input type="checkbox" id="vm-create-tpm" style="accent-color: var(--accent-cyan, #0ea5e9);" />
+              <span data-i18n="vm.tpm_title">${t('vm.tpm_title', 'Enable Virtual TPM 2.0 (vTPM)')}</span>
+            </label>
+            <span style="font-size: 9px; padding: 2px 6px; border-radius: 4px; background: rgba(14,165,233,0.15); color: #38bdf8; border: 1px solid rgba(14,165,233,0.3);">
+              🛡️ Windows 11 Ready
+            </span>
+          </div>
+        </div>
+
         <!-- Step 4: Host Volume Mappings (VirtIO-FS / 9p) -->
         <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 12px;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -1931,7 +2197,7 @@ export function openVmCreateModal() {
         <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 12px;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
             <div>
-              <span style="font-size: 12px; font-weight: 700; color: #fff;">Display & Graphics (KVM GUI)</span>
+              <span style="font-size: 12px; font-weight: 700; color: #fff;" data-i18n="vm.video_title">${t('vm.video_title', 'Display & Video Adapter')}</span>
               <div style="font-size: 10px; color: var(--muted);">Virtual display adapter & video acceleration</div>
             </div>
             <span style="font-size: 9px; padding: 2px 6px; border-radius: 4px; background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3);">
@@ -1956,6 +2222,42 @@ export function openVmCreateModal() {
               </label>
             </div>
           </div>
+        </div>
+
+        <!-- Step 8: Host USB Device Passthrough -->
+        <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <div>
+              <div style="font-size: 12px; font-weight: 700; color: #fff;" data-i18n="vm.usb_title">${t('vm.usb_title', 'Host USB Device Passthrough')}</div>
+              <div style="font-size: 10px; color: var(--muted);" data-i18n="vm.usb_desc">${t('vm.usb_desc', 'Attach physical host USB peripherals directly into the guest VM.')}</div>
+            </div>
+            <button type="button" id="btn-create-toggle-custom-usb" class="btn-pill-toggle" style="padding: 3px 8px; font-size: 10px;">
+              + Custom VID:PID
+            </button>
+          </div>
+
+          <!-- Dynamic host USB selector row -->
+          <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 8px;">
+            <select id="vm-create-host-usb-select" class="tz-select" style="flex: 1; padding: 6px 8px; border-radius: 4px; background: #1e293b; border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 11px;">
+              <option value="">Scanning host USB devices...</option>
+            </select>
+            <button type="button" id="btn-create-add-usb-device" class="btn-console-act" style="padding: 5px 12px; font-size: 11px; background: rgba(14,165,233,0.2); border-color: #38bdf8; color: #38bdf8;">
+              ${t('vm.usb_add_btn', '+ Passthrough Device')}
+            </button>
+          </div>
+
+          <!-- Custom USB inputs (hidden by default) -->
+          <div id="vm-create-custom-usb-wrap" class="usb-custom-row" style="display: none;">
+            <input type="text" id="vm-create-custom-vid" placeholder="VID (e.g. 10c4)" maxlength="4" style="width: 80px; padding: 5px 8px; border-radius: 4px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 11px;" />
+            <input type="text" id="vm-create-custom-pid" placeholder="PID (e.g. ea60)" maxlength="4" style="width: 80px; padding: 5px 8px; border-radius: 4px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 11px;" />
+            <input type="text" id="vm-create-custom-desc" placeholder="Device Label (e.g. Zigbee Dongle)" style="flex: 1; padding: 5px 8px; border-radius: 4px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 11px;" />
+            <button type="button" id="btn-create-add-custom-usb" class="btn-console-act" style="padding: 4px 10px; font-size: 11px; background: rgba(16,185,129,0.2); border-color: #34d399; color: #34d399;">
+              Add
+            </button>
+          </div>
+
+          <!-- Attached USB devices list -->
+          <div id="vm-create-usb-list" style="display: flex; flex-direction: column; gap: 6px; margin-top: 6px;"></div>
         </div>
       </div>
 
@@ -2104,6 +2406,136 @@ export function openVmCreateModal() {
     };
   }
 
+  // Host USB Passthrough Device Management
+  let createUsbDevices = [];
+  const usbList = modal.querySelector('#vm-create-usb-list');
+  const usbSelect = modal.querySelector('#vm-create-host-usb-select');
+  const btnAddUsb = modal.querySelector('#btn-create-add-usb-device');
+  const toggleCustomUsb = modal.querySelector('#btn-create-toggle-custom-usb');
+  const customUsbWrap = modal.querySelector('#vm-create-custom-usb-wrap');
+  const btnAddCustomUsb = modal.querySelector('#btn-create-add-custom-usb');
+
+  const renderUsbList = () => {
+    if (!usbList) return;
+    usbList.innerHTML = '';
+    if (createUsbDevices.length === 0) {
+      usbList.innerHTML = `
+        <div style="font-size: 10px; color: var(--muted); padding: 8px 10px; text-align: center; background: rgba(0,0,0,0.2); border-radius: 4px;" data-i18n="vm.usb_no_devices">
+          ${t('vm.usb_no_devices', 'No host USB devices attached to this VM.')}
+        </div>
+      `;
+      return;
+    }
+    createUsbDevices.forEach((dev, idx) => {
+      const card = document.createElement('div');
+      card.className = 'usb-device-card';
+      card.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 8px; overflow: hidden;">
+          <span style="font-size: 14px;">🔌</span>
+          <div style="min-width: 0;">
+            <div style="font-size: 11px; font-weight: 700; color: #fff; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
+              ${escapeHtml(dev.description || dev.product || 'USB Device')}
+            </div>
+            <div style="font-size: 9px; color: var(--muted);">
+              ${escapeHtml(dev.manufacturer || 'Generic')} ${dev.bus ? `· Bus ${dev.bus} Dev ${dev.dev}` : ''}
+            </div>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span class="usb-vidpid-badge">${escapeHtml(dev.vendor_id)}:${escapeHtml(dev.product_id)}</span>
+          <button type="button" class="btn-remove-usb" data-idx="${idx}" style="background: none; border: none; color: #f87171; cursor: pointer; padding: 2px 6px; font-size: 12px;" title="Remove device">✕</button>
+        </div>
+      `;
+      card.querySelector('.btn-remove-usb').onclick = () => {
+        createUsbDevices.splice(idx, 1);
+        renderUsbList();
+      };
+      usbList.appendChild(card);
+    });
+  };
+
+  renderUsbList();
+
+  // Load available host USB devices
+  api.get('/api/vms/usb-devices')
+    .then((devs) => {
+      if (!usbSelect) return;
+      usbSelect.innerHTML = '<option value="">-- Select connected host USB device --</option>';
+      if (Array.isArray(devs) && devs.length > 0) {
+        devs.forEach((d) => {
+          const opt = document.createElement('option');
+          opt.value = JSON.stringify({
+            vendor_id: d.vendor_id,
+            product_id: d.product_id,
+            description: d.description || d.product,
+            manufacturer: d.manufacturer,
+            bus: d.bus,
+            dev: d.dev,
+          });
+          const hubTag = d.is_root_hub ? ' [Root Hub]' : '';
+          opt.textContent = `[${d.vendor_id}:${d.product_id}] ${d.description || d.product}${hubTag}`;
+          usbSelect.appendChild(opt);
+        });
+      } else {
+        usbSelect.innerHTML = '<option value="">No USB devices detected on host</option>';
+      }
+    })
+    .catch(() => {
+      if (!usbSelect) return;
+      usbSelect.innerHTML = '<option value="">Failed to scan USB devices</option>';
+    });
+
+  if (btnAddUsb && usbSelect) {
+    btnAddUsb.onclick = () => {
+      const val = usbSelect.value;
+      if (!val) {
+        showToast('Select a host USB device to attach', 'warning');
+        return;
+      }
+      try {
+        const item = JSON.parse(val);
+        if (!createUsbDevices.some((d) => d.vendor_id === item.vendor_id && d.product_id === item.product_id)) {
+          createUsbDevices.push(item);
+          renderUsbList();
+          showToast(`Attached USB device: ${item.description || item.vendor_id}`, 'info');
+        } else {
+          showToast('Device is already attached to this VM', 'warning');
+        }
+      } catch (e) {
+        // ignore
+      }
+    };
+  }
+
+  if (toggleCustomUsb && customUsbWrap) {
+    toggleCustomUsb.onclick = () => {
+      const isHidden = customUsbWrap.style.display === 'none';
+      customUsbWrap.style.display = isHidden ? 'flex' : 'none';
+    };
+  }
+
+  if (btnAddCustomUsb) {
+    btnAddCustomUsb.onclick = () => {
+      const vid = modal.querySelector('#vm-create-custom-vid')?.value?.trim().toLowerCase().replace('0x', '');
+      const pid = modal.querySelector('#vm-create-custom-pid')?.value?.trim().toLowerCase().replace('0x', '');
+      const desc = modal.querySelector('#vm-create-custom-desc')?.value?.trim() || `USB Device (${vid}:${pid})`;
+      if (!vid || !pid || !/^[0-9a-fA-F]{1,4}$/.test(vid) || !/^[0-9a-fA-F]{1,4}$/.test(pid)) {
+        showToast('Please enter valid 4-character hex VID and PID (e.g. 10c4, ea60)', 'warning');
+        return;
+      }
+      if (!createUsbDevices.some((d) => d.vendor_id === vid && d.product_id === pid)) {
+        createUsbDevices.push({ vendor_id: vid, product_id: pid, description: desc, manufacturer: 'Custom' });
+        renderUsbList();
+        modal.querySelector('#vm-create-custom-vid').value = '';
+        modal.querySelector('#vm-create-custom-pid').value = '';
+        modal.querySelector('#vm-create-custom-desc').value = '';
+        showToast(`Added custom USB device [${vid}:${pid}]`, 'info');
+      } else {
+        showToast('Device is already attached to this VM', 'warning');
+      }
+    };
+  }
+
   // Submit Handler
   const btnSubmit = modal.querySelector('#vm-create-submit');
   if (btnSubmit) {
@@ -2152,7 +2584,11 @@ export function openVmCreateModal() {
           bridge: modal.querySelector('#vm-create-bridge')?.value || 'br0',
           autostart: !!modal.querySelector('#vm-create-autostart')?.checked,
           override_limits: !!overrideToggle?.checked,
+          firmware: modal.querySelector('input[name="vm-create-firmware"]:checked')?.value || 'seabios',
+          video_adapter: modal.querySelector('#vm-create-gpu-driver')?.value || 'virtio-gpu',
           display_adapter: modal.querySelector('#vm-create-gpu-driver')?.value || 'virtio-gpu',
+          tpm_enabled: !!modal.querySelector('#vm-create-tpm')?.checked,
+          usb_passthrough: createUsbDevices,
           enable_gui: !!modal.querySelector('#vm-create-enable-gui')?.checked,
           host_shares,
           secondary_disks,

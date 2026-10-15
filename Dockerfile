@@ -39,6 +39,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     qemu-system-x86 \
     qemu-system-arm \
     qemu-utils \
+    ovmf \
     libslirp0 \
     chromium \
     chromium-sandbox \

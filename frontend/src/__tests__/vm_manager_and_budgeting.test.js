@@ -1102,7 +1102,121 @@ describe('VM Manager & Dynamic Elastic Headroom Budgeting', () => {
         expect(modal.querySelector('#vm-edit-name')?.value).toBe('fallback-vm');
       });
     });
+
+    it('renders and submits advanced configuration (firmware, TPM, video adapter, USB passthrough) in create and edit modals', async () => {
+      // 1. Test in Create Modal
+      api.get.mockImplementation((url) => {
+        if (url === '/api/vms/usb-devices') {
+          return Promise.resolve([
+            { vendor_id: '10c4', product_id: 'ea60', description: 'CP2102 Zigbee Dongle', manufacturer: 'Silicon Labs' },
+          ]);
+        }
+        return Promise.resolve([]);
+      });
+      api.post.mockResolvedValue({ id: 'vm-adv-new', name: 'win11-prod' });
+
+      initVmManager();
+      openVmCreateModal();
+
+      const createModal = document.getElementById('modal-vm-create');
+      expect(createModal).not.toBeNull();
+
+      // Configure Firmware & TPM
+      const uefiRadio = createModal.querySelector('input[name="vm-create-firmware"][value="uefi"]');
+      expect(uefiRadio).not.toBeNull();
+      uefiRadio.checked = true;
+
+      const tpmToggle = createModal.querySelector('#vm-create-tpm');
+      expect(tpmToggle).not.toBeNull();
+      tpmToggle.checked = true;
+
+      // Configure Video Adapter
+      const videoSelect = createModal.querySelector('#vm-create-gpu-driver');
+      expect(videoSelect).not.toBeNull();
+      videoSelect.value = 'qxl';
+
+      // Add Custom USB Device
+      const btnToggleCustom = createModal.querySelector('#btn-create-toggle-custom-usb');
+      btnToggleCustom.click();
+      createModal.querySelector('#vm-create-custom-vid').value = '10c4';
+      createModal.querySelector('#vm-create-custom-pid').value = 'ea60';
+      createModal.querySelector('#vm-create-custom-desc').value = 'Zigbee Gateway';
+      createModal.querySelector('#btn-create-add-custom-usb').click();
+
+      const usbCard = createModal.querySelector('.usb-device-card');
+      expect(usbCard).not.toBeNull();
+      expect(usbCard.textContent).toContain('Zigbee Gateway');
+      expect(usbCard.textContent).toContain('10c4:ea60');
+
+      // Submit Create
+      createModal.querySelector('#vm-create-name').value = 'win11-prod';
+      createModal.querySelector('#vm-create-submit').click();
+
+      await vi.waitFor(() => {
+        expect(api.post).toHaveBeenCalledWith(
+          '/api/vms',
+          expect.objectContaining({
+            name: 'win11-prod',
+            firmware: 'uefi',
+            tpm_enabled: true,
+            video_adapter: 'qxl',
+            usb_passthrough: expect.arrayContaining([
+              expect.objectContaining({
+                vendor_id: '10c4',
+                product_id: 'ea60',
+                description: 'Zigbee Gateway',
+              }),
+            ]),
+          })
+        );
+      });
+
+      // 2. Test in Edit Modal
+      const existingVm = {
+        id: 'vm-edit-adv',
+        name: 'win11-prod',
+        firmware: 'uefi',
+        tpm_enabled: true,
+        video_adapter: 'qxl',
+        usb_passthrough: [{ vendor_id: '10c4', product_id: 'ea60', description: 'Zigbee Gateway' }],
+      };
+
+      openVmEditModal('vm-edit-adv', existingVm);
+      const editModal = document.getElementById('modal-vm-edit');
+      expect(editModal).not.toBeNull();
+
+      expect(editModal.querySelector('input[name="vm-edit-firmware"][value="uefi"]').checked).toBe(true);
+      expect(editModal.querySelector('#vm-edit-tpm').checked).toBe(true);
+      expect(editModal.querySelector('#vm-edit-video-adapter').value).toBe('qxl');
+
+      // Add another custom USB device
+      editModal.querySelector('#btn-edit-toggle-custom-usb').click();
+      editModal.querySelector('#vm-edit-custom-vid').value = '1a86';
+      editModal.querySelector('#vm-edit-custom-pid').value = '7523';
+      editModal.querySelector('#vm-edit-custom-desc').value = 'USB Serial Converter';
+      editModal.querySelector('#btn-edit-add-custom-usb').click();
+
+      // Submit Edit Modal
+      editModal.querySelector('#vm-edit-submit').click();
+
+      await vi.waitFor(() => {
+        const calledPayload = (api.put?.mock?.calls?.[0]?.[1]) || (api.post?.mock?.calls?.find(c => c[0] === '/api/vms/vm-edit-adv')?.[1]);
+        expect(calledPayload).toEqual(
+          expect.objectContaining({
+            name: 'win11-prod',
+            firmware: 'uefi',
+            tpm_enabled: true,
+            video_adapter: 'qxl',
+            usb_passthrough: expect.arrayContaining([
+              expect.objectContaining({ vendor_id: '10c4', product_id: 'ea60' }),
+              expect.objectContaining({ vendor_id: '1a86', product_id: '7523' }),
+            ]),
+          })
+        );
+      });
+    });
   });
 });
+
 
 

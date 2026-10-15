@@ -457,6 +457,117 @@ def scan_bridges() -> List[str]:
     return sorted(list(set(found or ["br0", "virbr0"])))
 
 
+def scan_host_usb_devices() -> List[Dict[str, Any]]:
+    """
+    Discovers physical USB devices connected to the host via sysfs (/host/sys/bus/usb/devices or /sys/bus/usb/devices).
+    Returns list of devices sorted with physical peripherals first and root hubs last.
+    """
+    sys_paths = ["/host/sys/bus/usb/devices", "/sys/bus/usb/devices"]
+    usb_dir = next((p for p in sys_paths if os.path.isdir(p)), None)
+    if not usb_dir:
+        return []
+
+    devices = []
+    seen = set()
+
+    try:
+        entries = sorted(os.listdir(usb_dir))
+    except OSError:
+        return []
+
+    for entry in entries:
+        # Skip sub-interface descriptors (e.g. 1-0:1.0, 3-5:1.0)
+        if ":" in entry:
+            continue
+        dev_path = os.path.join(usb_dir, entry)
+        id_vendor_f = os.path.join(dev_path, "idVendor")
+        id_product_f = os.path.join(dev_path, "idProduct")
+        if not (os.path.exists(id_vendor_f) and os.path.exists(id_product_f)):
+            continue
+
+        try:
+            with open(id_vendor_f, "r", encoding="utf-8", errors="replace") as f:
+                vid = f.read().strip().lower()
+            with open(id_product_f, "r", encoding="utf-8", errors="replace") as f:
+                pid = f.read().strip().lower()
+        except OSError:
+            continue
+
+        def _read_prop(prop_name: str) -> str:
+            p = os.path.join(dev_path, prop_name)
+            if os.path.exists(p):
+                try:
+                    with open(p, "r", encoding="utf-8", errors="replace") as f:
+                        return f.read().strip()
+                except OSError:
+                    pass
+            return ""
+
+        mfr = _read_prop("manufacturer")
+        prod = _read_prop("product")
+        bus = _read_prop("busnum")
+        dev = _read_prop("devnum")
+        serial = _read_prop("serial")
+
+        is_root_hub = vid == "1d6b"
+        composite_key = f"{vid}:{pid}:{bus}:{dev}"
+        if composite_key in seen:
+            continue
+        seen.add(composite_key)
+
+        display_name = prod or (f"Root Hub ({bus})" if is_root_hub else f"USB Device ({vid}:{pid})")
+        mfr_name = mfr or ("Linux Foundation" if is_root_hub else "Generic")
+
+        devices.append(
+            {
+                "vendor_id": vid,
+                "product_id": pid,
+                "vendor_hex": f"0x{vid}",
+                "product_hex": f"0x{pid}",
+                "manufacturer": mfr_name,
+                "product": display_name,
+                "description": f"{mfr_name} {display_name}".strip(),
+                "bus": bus,
+                "dev": dev,
+                "serial": serial,
+                "is_root_hub": is_root_hub,
+                "sysfs_path": entry,
+            }
+        )
+
+    # Sort: physical devices first, then root hubs
+    return sorted(devices, key=lambda x: (x["is_root_hub"], x["description"].lower()))
+
+
+def _find_ovmf_firmware() -> Tuple[Optional[str], Optional[str]]:
+    """Discovers OVMF/EDK2 UEFI firmware binary and NVRAM variable template."""
+    code_candidates = [
+        "/usr/share/OVMF/OVMF_CODE_4M.ms.fd",
+        "/usr/share/OVMF/OVMF_CODE_4M.fd",
+        "/usr/share/qemu/ovmf-x64/OVMF_CODE-pure-efi.fd",
+        "/usr/share/qemu/ovmf-x64/OVMF_CODE-pure-efi-tpm.fd",
+        "/usr/share/qemu/edk2-x86_64-code.fd",
+        "/usr/share/OVMF/OVMF_CODE.fd",
+        "/usr/share/edk2-ovmf/x64/OVMF_CODE.fd",
+        "/usr/share/edk2/ovmf/OVMF_CODE.fd",
+        "/usr/share/ovmf/OVMF.fd",
+        "/usr/share/qemu/OVMF.fd",
+    ]
+    vars_candidates = [
+        "/usr/share/OVMF/OVMF_VARS_4M.ms.fd",
+        "/usr/share/OVMF/OVMF_VARS_4M.fd",
+        "/usr/share/qemu/ovmf-x64/OVMF_VARS-pure-efi.fd",
+        "/usr/share/qemu/ovmf-x64/OVMF_VARS-pure-efi-tpm.fd",
+        "/usr/share/qemu/edk2-x86_64-vars.fd",
+        "/usr/share/OVMF/OVMF_VARS.fd",
+        "/usr/share/edk2-ovmf/x64/OVMF_VARS.fd",
+        "/usr/share/edk2/ovmf/OVMF_VARS.fd",
+    ]
+    code_path = next((p for p in code_candidates if os.path.exists(p)), None)
+    vars_path = next((p for p in vars_candidates if os.path.exists(p)), None)
+    return code_path, vars_path
+
+
 _RUNNING_QEMU_PROCS: Dict[str, Dict[str, Any]] = {}
 _LAST_QEMU_ERRORS: Dict[str, str] = {}
 
@@ -709,6 +820,11 @@ class VmCreateRequest(BaseModel):
     host_shares: List[Dict[str, Any]] = Field(default_factory=list)
     secondary_disks: List[Dict[str, Any]] = Field(default_factory=list)
     boot_order: Optional[str] = Field("iso", pattern="^(iso|disk)$")
+    firmware: Optional[str] = Field("seabios", pattern="^(seabios|uefi)$")
+    video_adapter: Optional[str] = Field("virtio-gpu", pattern="^(virtio-gpu|qxl|vga|none)$")
+    display_adapter: Optional[str] = None
+    tpm_enabled: Optional[bool] = False
+    usb_passthrough: List[Dict[str, Any]] = Field(default_factory=list)
 
 
 class VmUpdateRequest(BaseModel):
@@ -721,6 +837,12 @@ class VmUpdateRequest(BaseModel):
     autostart: Optional[bool] = None
     override_limits: Optional[bool] = None
     secondary_disks: Optional[List[Dict[str, Any]]] = None
+    host_shares: Optional[List[Dict[str, Any]]] = None
+    firmware: Optional[str] = Field(None, pattern="^(seabios|uefi)$")
+    video_adapter: Optional[str] = Field(None, pattern="^(virtio-gpu|qxl|vga|none)$")
+    display_adapter: Optional[str] = None
+    tpm_enabled: Optional[bool] = None
+    usb_passthrough: Optional[List[Dict[str, Any]]] = None
 
 
 class VmActionRequest(BaseModel):
@@ -1100,6 +1222,12 @@ def get_network_bridges():
     return scan_bridges()
 
 
+@router.get("/usb-devices", dependencies=[Depends(require_scope("system:view", "storage:read"))])
+def get_host_usb_devices():
+    """Lists physical and virtual USB devices connected to the host."""
+    return scan_host_usb_devices()
+
+
 @router.post("", dependencies=[Depends(require_scope("system:config", "storage:admin"))])
 def create_vm(req: VmCreateRequest, principal: AuthenticatedPrincipal = Depends(get_current_principal)):
     """Provisions a new virtual machine with dynamic headroom validation and volume mappings."""
@@ -1144,6 +1272,11 @@ def create_vm(req: VmCreateRequest, principal: AuthenticatedPrincipal = Depends(
         "override_active": req.override_limits,
         "host_shares": req.host_shares,
         "secondary_disks": req.secondary_disks,
+        "boot_order": req.boot_order or "iso",
+        "firmware": req.firmware or "seabios",
+        "video_adapter": req.video_adapter or req.display_adapter or "virtio-gpu",
+        "tpm_enabled": bool(req.tpm_enabled),
+        "usb_passthrough": req.usb_passthrough or [],
         "created_at": int(time.time()),
     }
 
@@ -1262,6 +1395,31 @@ def _start_qemu(target_vm: Dict[str, Any], vnc_port: int) -> Tuple[bool, Optiona
         else:
             c.extend(["-accel", "tcg", "-cpu", "qemu64"])
 
+        firmware = target_vm.get("firmware", "seabios")
+        if firmware == "uefi":
+            code_path, vars_path = _find_ovmf_firmware()
+            if code_path:
+                if vars_path:
+                    vm_vars = os.path.join(vm_dir, "OVMF_VARS.fd")
+                    if not os.path.exists(vm_vars):
+                        try:
+                            shutil.copyfile(vars_path, vm_vars)
+                        except Exception as e:
+                            logger.warning(f"[VM-{vm_id}] Could not copy OVMF_VARS template: {e}")
+                    if os.path.exists(vm_vars):
+                        c.extend(
+                            [
+                                "-drive",
+                                f"if=pflash,format=raw,readonly=on,file={code_path}",
+                                "-drive",
+                                f"if=pflash,format=raw,file={vm_vars}",
+                            ]
+                        )
+                    else:
+                        c.extend(["-drive", f"if=pflash,format=raw,readonly=on,file={code_path}"])
+                else:
+                    c.extend(["-drive", f"if=pflash,format=raw,readonly=on,file={code_path}"])
+
         disk_bus = target_vm.get("disk_bus", "virtio")
         disk_fmt = target_vm.get("disk_format") or ("raw" if disk_path.endswith((".raw", ".img")) else "qcow2")
         if os.path.exists(disk_path):
@@ -1276,6 +1434,17 @@ def _start_qemu(target_vm: Dict[str, Any], vnc_port: int) -> Tuple[bool, Optiona
                 c.extend(["-cdrom", iso_path, "-boot", "order=dc,menu=on"])
         else:
             c.extend(["-boot", "order=c"])
+
+        # Video adapter & graphical display
+        video_adapter = target_vm.get("video_adapter") or target_vm.get("display_adapter") or "virtio-gpu"
+        if video_adapter == "none":
+            c.extend(["-vga", "none"])
+        elif video_adapter == "qxl":
+            c.extend(["-vga", "qxl"])
+        elif video_adapter == "vga":
+            c.extend(["-vga", "std"])
+        else:
+            c.extend(["-vga", "virtio"])
 
         # Display and Console sockets
         c.extend(["-vnc", f"127.0.0.1:{vnc_display}", "-display", "none"])
@@ -1344,6 +1513,32 @@ def _start_qemu(target_vm: Dict[str, Any], vnc_port: int) -> Tuple[bool, Optiona
             sfmt = sdisk.get("format") or ("raw" if sd_path.endswith((".raw", ".img")) else "qcow2")
             if os.path.exists(sd_path):
                 c.extend(["-drive", f"file={sd_path},if={sbus},format={sfmt},id=sdisk{idx_d}"])
+
+        # Host USB Passthrough Devices
+        usb_devices = target_vm.get("usb_passthrough", [])
+        if usb_devices:
+            if not os.path.exists("/dev/bus/usb") and os.path.exists("/host/dev/bus/usb"):
+                try:
+                    os.makedirs("/dev/bus", exist_ok=True)
+                    os.symlink("/host/dev/bus/usb", "/dev/bus/usb")
+                except OSError:
+                    pass
+            c.extend(["-device", "qemu-xhci,id=xhci"])
+            for idx_u, udev in enumerate(usb_devices):
+                raw_vid = str(udev.get("vendor_id", "")).strip().lower().replace("0x", "")
+                raw_pid = str(udev.get("product_id", "")).strip().lower().replace("0x", "")
+                if (
+                    raw_vid
+                    and raw_pid
+                    and re.match(r"^[0-9a-fA-F]{1,4}$", raw_vid)
+                    and re.match(r"^[0-9a-fA-F]{1,4}$", raw_pid)
+                ):
+                    c.extend(
+                        [
+                            "-device",
+                            f"usb-host,vendorid=0x{raw_vid},productid=0x{raw_pid},id=usb_pass_{idx_u}",
+                        ]
+                    )
 
         return c
 
@@ -1540,6 +1735,21 @@ def update_vm(
 
     if req.secondary_disks is not None:
         target_vm["secondary_disks"] = req.secondary_disks
+
+    if req.host_shares is not None:
+        target_vm["host_shares"] = req.host_shares
+
+    if req.firmware is not None:
+        target_vm["firmware"] = req.firmware
+
+    if req.video_adapter is not None or req.display_adapter is not None:
+        target_vm["video_adapter"] = req.video_adapter or req.display_adapter
+
+    if req.tpm_enabled is not None:
+        target_vm["tpm_enabled"] = bool(req.tpm_enabled)
+
+    if req.usb_passthrough is not None:
+        target_vm["usb_passthrough"] = req.usb_passthrough
 
     _save_vms(vms)
     add_event("info", "VM Updated", f"VM '{target_vm['name']}' configuration updated.")

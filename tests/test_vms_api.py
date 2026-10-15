@@ -496,3 +496,72 @@ def test_unmatched_api_route_returns_404_not_405(client, auth_headers):
     res = client.post("/api/vms/nonexistent-vm-xyz/fake-subpath", headers=auth_headers)
     assert res.status_code == 404
     assert "not found" in res.json()["detail"].lower()
+
+
+def test_host_usb_devices_discovery(client, auth_headers):
+    """Verifies discovery of host USB devices via /api/vms/usb-devices."""
+    res = client.get("/api/vms/usb-devices", headers=auth_headers)
+    assert res.status_code == 200
+    devices = res.json()
+    assert isinstance(devices, list)
+    for dev in devices:
+        assert "vendor_id" in dev
+        assert "product_id" in dev
+        assert "is_root_hub" in dev
+
+
+def test_vm_advanced_config_crud(client, auth_headers):
+    """Verifies creation and update of VM with firmware, video adapter, TPM, and USB passthrough."""
+    payload = {
+        "name": "adv-cfg-vm",
+        "vcpus": 2,
+        "ram_gb": 2.0,
+        "disk_size_gb": 20,
+        "firmware": "uefi",
+        "video_adapter": "qxl",
+        "tpm_enabled": True,
+        "usb_passthrough": [
+            {
+                "vendor_id": "051d",
+                "product_id": "0002",
+                "description": "APC Back-UPS RS",
+            }
+        ],
+    }
+    create_res = client.post("/api/vms", json=payload, headers=auth_headers)
+    assert create_res.status_code == 200
+    vm_data = create_res.json()
+    vm_id = vm_data["id"]
+
+    assert vm_data["firmware"] == "uefi"
+    assert vm_data["video_adapter"] == "qxl"
+    assert vm_data["tpm_enabled"] is True
+    assert len(vm_data["usb_passthrough"]) == 1
+    assert vm_data["usb_passthrough"][0]["vendor_id"] == "051d"
+
+    # Detail query
+    detail_res = client.get(f"/api/vms/{vm_id}", headers=auth_headers)
+    assert detail_res.status_code == 200
+    assert detail_res.json()["firmware"] == "uefi"
+    assert detail_res.json()["video_adapter"] == "qxl"
+
+    # Update VM to change video adapter and firmware
+    update_res = client.put(
+        f"/api/vms/{vm_id}",
+        json={
+            "firmware": "seabios",
+            "video_adapter": "virtio-gpu",
+            "tpm_enabled": False,
+            "usb_passthrough": [],
+        },
+        headers=auth_headers,
+    )
+    assert update_res.status_code == 200
+    updated = update_res.json()
+    assert updated["firmware"] == "seabios"
+    assert updated["video_adapter"] == "virtio-gpu"
+    assert updated["tpm_enabled"] is False
+    assert updated["usb_passthrough"] == []
+
+    # Clean up
+    client.delete(f"/api/vms/{vm_id}", headers=auth_headers)
