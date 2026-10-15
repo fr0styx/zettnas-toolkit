@@ -132,6 +132,19 @@ def get_current_session(token: str) -> Optional[Dict[str, Any]]:
         if tok:
             return tok
 
+    if token.startswith("zct_"):
+        from backend.api.vms import _CONSOLE_TICKETS
+
+        entry = _CONSOLE_TICKETS.get(token)
+        if entry and entry.get("expires_at", 0) > time.time():
+            return {
+                "user_id": entry.get("user_id", "admin-00000000-0000-0000-0000-000000000001"),
+                "username": entry.get("username", "admin"),
+                "role_id": "superadmin",
+                "scopes": ["vms:*", "system:view"],
+                "is_console_ticket": True,
+            }
+
     if token.startswith("zat_"):
         tok = validate_scoped_api_token(token)
         if tok:
@@ -385,18 +398,18 @@ async def auth_middleware(request: Request, call_next):
         if not token and is_docs:
             ref_qs = parse_qs(urlparse(request.headers.get("referer", "")).query)
             token = (ref_qs.get("token") or [""])[0]
-        if not validate_session(token):
+
+        sess = get_current_session(token)
+        if not sess:
             if path in ("/api/stats", "/api/stats/stream", "/api/metrics"):
                 logger.debug(f"Auth failed for client {client_host} accessing polling route {path}")
             else:
                 logger.warning(f"Auth failed for client {client_host} accessing {path}")
             return error_response(401, "Unauthorized. Please log in.")
 
-        sess = get_current_session(token)
-        if sess:
-            request.state.session = sess
-            request.state.user = sess
-            request.state.token = token
+        request.state.session = sess
+        request.state.user = sess
+        request.state.token = token
 
     return await call_next(request)
 

@@ -747,6 +747,14 @@ def create_user_session(
     return raw_token
 
 
+def _update_session_activity_sync(token_hash: str, now: float, db_path: Optional[str] = None) -> None:
+    try:
+        with users_db_session(db_path) as conn:
+            conn.execute("UPDATE sessions SET last_active_at = ? WHERE session_id_hash = ?", (now, token_hash))
+    except Exception as e:
+        logger.debug(f"Failed to update session last_active_at: {e}")
+
+
 def validate_user_session(raw_token: str, db_path: Optional[str] = None) -> Optional[Dict[str, Any]]:
     if not raw_token:
         return None
@@ -758,6 +766,13 @@ def validate_user_session(raw_token: str, db_path: Optional[str] = None) -> Opti
         if token_hash in _SESSION_CACHE:
             s = _SESSION_CACHE[token_hash]
             if s["expires_at"] > now:
+                if now - s.get("last_active_at", 0) > 60:
+                    s["last_active_at"] = now
+                    threading.Thread(
+                        target=_update_session_activity_sync,
+                        args=(token_hash, now, db_path),
+                        daemon=True,
+                    ).start()
                 return s
             else:
                 del _SESSION_CACHE[token_hash]

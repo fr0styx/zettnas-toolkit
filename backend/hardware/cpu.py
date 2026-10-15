@@ -10,8 +10,8 @@ def read_cpu_util():
         with open(os.path.join(HOST_PROC, "stat")) as f:
             parts = f.readline().split()[1:]
         vals = list(map(int, parts))
-        idle = vals[3] + (vals[4] if len(vals) > 4 else 0)
-        total = sum(vals)
+        idle = vals[3]
+        total = sum(vals[:8]) if len(vals) >= 8 else sum(vals)
         d_idle = idle - Z_STATE.prev["idle"]
         d_total = total - Z_STATE.prev["total"]
         Z_STATE.prev["idle"], Z_STATE.prev["total"] = idle, total

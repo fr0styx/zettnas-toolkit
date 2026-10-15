@@ -42,6 +42,9 @@ os.environ.update(
         "LED_PORT": os.path.join(FAKE_DEV, "ttyACM-missing"),
         "NAS_NAME": "TESTNAS",
         "WEB_PASSWORD": "admin",
+        "TESTING": "1",
+        "ZETTNAS_TEST_MODE": "1",
+        "ZETTNAS_FAST_HASH": "1",
     }
 )
 

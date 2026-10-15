@@ -484,7 +484,7 @@ def _is_qemu_process_alive(vm_id: str) -> bool:
                 os.kill(pid, 0)
                 return True
             except OSError:
-                if (os.environ.get("PYTEST_CURRENT_TEST") or os.environ.get("ZETTNAS_TEST_MODE")) and pid == 99999:
+                if os.environ.get("ZETTNAS_TEST_MODE") == "1" and pid == 99999:
                     return True
                 _RUNNING_QEMU_PROCS.pop(vm_id, None)
                 return False
@@ -497,7 +497,7 @@ def _is_qemu_process_alive(vm_id: str) -> bool:
             os.kill(pid, 0)
             return True
         except (ValueError, OSError):
-            if (os.environ.get("PYTEST_CURRENT_TEST") or os.environ.get("ZETTNAS_TEST_MODE")) and pid == 99999:
+            if os.environ.get("ZETTNAS_TEST_MODE") == "1" and pid == 99999:
                 return True
             try:
                 os.remove(pid_file)
@@ -1167,7 +1167,7 @@ def _start_qemu(target_vm: Dict[str, Any], vnc_port: int) -> Tuple[bool, Optiona
     qemu_bin = shutil.which("qemu-system-x86_64") or "/usr/bin/qemu-system-x86_64"
     if not os.path.exists(qemu_bin) and not shutil.which(qemu_bin):
         # Graceful test mock fallback when test runner lacks QEMU binaries
-        if os.environ.get("PYTEST_CURRENT_TEST") or os.environ.get("ZETTNAS_TEST_MODE"):
+        if os.environ.get("ZETTNAS_TEST_MODE") == "1":
             logger.info(f"Test environment: mocking QEMU start for VM '{target_vm['name']}'.")
             _RUNNING_QEMU_PROCS[vm_id] = {
                 "proc": None,

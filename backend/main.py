@@ -176,9 +176,21 @@ async def lifespan(app: FastAPI):
         Z_STATE.ui_wake.set()
         broadcaster.shutdown()
         close_notification_client()
+        try:
+            from backend.services.scheduler import stop_scheduler
+
+            stop_scheduler()
+        except Exception:
+            pass
         stop_backup_scheduler()
         try:
             get_webdav_engine().stop()
+        except Exception:
+            pass
+        try:
+            from backend.services.sftp_server import get_sftp_service
+
+            get_sftp_service().stop()
         except Exception:
             pass
         if not Z_STATE.fans_locked:

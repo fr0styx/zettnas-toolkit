@@ -18,13 +18,30 @@ from backend.fsutil import atomic_write_json, read_json
 from backend.hardware.pal_storage import PlatformCapabilityError, get_storage_platform
 from backend.services.rclone_engine import get_rclone_engine
 
+import tempfile
+import sqlite3
+
 # Files to exclude from configuration backups
 BACKUP_EXCLUSIONS = {
     "history.db",
     "history.db-shm",
     "history.db-wal",
+    "users.db-shm",
+    "users.db-wal",
     "sessions.json",
     "api_tokens.json",
+}
+
+HEAVY_BACKUP_DIRS = {
+    "__pycache__",
+    ".pytest_cache",
+    ".git",
+    "vms",
+    "isos",
+    "rclone",
+    "sftp",
+    "app_backups",
+    "trash",
 }
 
 MAX_RESTORE_BYTES = 50 * 1024 * 1024  # 50MB max cumulative restore size
@@ -34,15 +51,17 @@ BACKUP_JOBS_FILE = os.path.join(DATA_DIR, "backup_jobs.json")
 BACKUP_HISTORY_FILE = os.path.join(DATA_DIR, "backup_history.json")
 
 
-def generate_backup_zip_stream() -> io.BytesIO:
-    """Generates an in-memory zip archive of configuration files in DATA_DIR.
+def generate_backup_zip_stream() -> Any:
+    """Generates a spooled zip archive of configuration files in DATA_DIR.
 
-    Excludes volatile database histories, session tokens, and API tokens.
+    Excludes volatile database histories, session tokens, API tokens,
+    and heavy runtime directories (VMs, ISOs, cache, trash, app backups).
+    Uses SQLite backup API for consistent database snapshots.
     """
-    buf = io.BytesIO()
-    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
+    spool = tempfile.SpooledTemporaryFile(max_size=10 * 1024 * 1024)
+    with zipfile.ZipFile(spool, "w", zipfile.ZIP_DEFLATED) as z:
         for root, dirs, files in os.walk(DATA_DIR):
-            dirs[:] = [d for d in dirs if d not in {"__pycache__", ".pytest_cache", ".git"}]
+            dirs[:] = [d for d in dirs if d not in HEAVY_BACKUP_DIRS]
             for file in files:
                 if (
                     file in BACKUP_EXCLUSIONS
@@ -52,9 +71,23 @@ def generate_backup_zip_stream() -> io.BytesIO:
                     continue
                 file_path = os.path.join(root, file)
                 rel_path = os.path.relpath(file_path, DATA_DIR)
+                # For SQLite databases, capture a live consistent snapshot
+                if file.endswith(".db") and not file.startswith("."):
+                    try:
+                        mem_conn = sqlite3.connect(":memory:")
+                        with sqlite3.connect(file_path, timeout=5.0) as src_conn:
+                            src_conn.backup(mem_conn)
+                        if hasattr(mem_conn, "serialize"):
+                            z.writestr(rel_path, mem_conn.serialize())
+                        else:
+                            z.write(file_path, rel_path)
+                        mem_conn.close()
+                        continue
+                    except Exception as e:
+                        logger.debug(f"[BACKUP] Snapshot backup for {file} fell back to copy: {e}")
                 z.write(file_path, rel_path)
-    buf.seek(0)
-    return buf
+    spool.seek(0)
+    return spool
 
 
 def restore_backup_archive(archive_file: BinaryIO) -> None:
@@ -127,6 +160,9 @@ def save_backup_job(job_data: Dict[str, Any]) -> Dict[str, Any]:
         "remote_path": job_data.get("remote_path", "").strip(),
         "schedule": job_data.get("schedule", "daily"),  # "hourly", "daily", "weekly", "manual"
         "retention_count": max(1, int(job_data.get("retention_count", 7))),
+        "encryption_enabled": bool(job_data.get("encryption_enabled", False)),
+        "encryption_mode": str(job_data.get("encryption_mode", "none")),  # "none", "rclone_crypt", "aes256"
+        "bandwidth_limit_kbps": int(job_data.get("bandwidth_limit_kbps", 0)),
         "enabled": bool(job_data.get("enabled", True)),
         "last_run_at": job_data.get("last_run_at"),
         "last_status": job_data.get("last_status", "idle"),
@@ -264,11 +300,15 @@ def execute_backup_job(job_id: str) -> Dict[str, Any]:
 
         # Step 2: Trigger Rclone offsite sync if configured
         if dest_type == "remote" and remote_name:
-            # Determine source path
-            pool_path = pal.get_pool_path(pool_id)
-            source_dir = os.path.join(pool_path, "@shares", subvol) if subvol else pool_path
-            if not os.path.exists(source_dir):
-                source_dir = os.path.join(pool_path, subvol) if subvol else pool_path
+            # Determine source path - prioritize read-only snapshot directory for atomic point-in-time consistency
+            source_dir = None
+            if snap_result and isinstance(snap_result, dict):
+                source_dir = snap_result.get("snapshot_path") or snap_result.get("path")
+            if not source_dir or not os.path.exists(source_dir):
+                pool_path = pal.get_pool_path(pool_id)
+                source_dir = os.path.join(pool_path, "@shares", subvol) if subvol else pool_path
+                if not os.path.exists(source_dir):
+                    source_dir = os.path.join(pool_path, subvol) if subvol else pool_path
 
             dest_target = f"{remote_name}:{remote_path}"
             rclone = get_rclone_engine()

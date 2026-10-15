@@ -414,6 +414,23 @@ def restore_app_backup(
     app_name = manifest.get("app_name", "app")
     logger.info(f"[App Backup] Restored data for '{app_name}' from backup '{backup_id}'.")
 
+    app_recreated = False
+    if recreate_container and compose_yaml:
+        try:
+            from backend.config import DATA_DIR
+            from backend.services.docker_stacks import deploy_stack
+
+            stack_dir = os.path.join(DATA_DIR, "stacks", app_name)
+            os.makedirs(stack_dir, exist_ok=True)
+            compose_path = os.path.join(stack_dir, "docker-compose.yml")
+            with open(compose_path, "w", encoding="utf-8") as f:
+                f.write(compose_yaml)
+            deploy_stack(app_name, compose_yaml)
+            app_recreated = True
+            logger.info(f"[App Backup] Re-deployed app '{app_name}' from backup compose spec.")
+        except Exception as e:
+            logger.warning(f"[App Backup] Could not automatically recreate container for '{app_name}': {e}")
+
     return {
         "success": True,
         "backup_id": backup_id,
@@ -421,5 +438,6 @@ def restore_app_backup(
         "restored_mounts": extracted_mounts,
         "has_compose": bool(compose_yaml),
         "recreate_requested": recreate_container,
+        "recreated": app_recreated,
         "message": f"Successfully restored {len(extracted_mounts)} data volume(s) for '{app_name}'.",
     }

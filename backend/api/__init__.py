@@ -11,6 +11,10 @@ from backend.api.led import router as led_router
 from backend.api.notifications import router as notifications_router
 from backend.api.stats import router as stats_router
 from backend.api.system import router as system_router
+from backend.api.docker import router as docker_router
+from backend.api.catalog import router as catalog_router
+from backend.api.fs import router as fs_router
+from backend.api.diagnostics import router as diagnostics_router
 from backend.api.wallpapers import router as wallpapers_router
 from backend.api.metrics import router as metrics_router
 from backend.api.backup import router as backup_router
@@ -34,6 +38,10 @@ api_router.include_router(fans_router)
 api_router.include_router(led_router)
 api_router.include_router(wallpapers_router)
 api_router.include_router(system_router)
+api_router.include_router(docker_router)
+api_router.include_router(catalog_router)
+api_router.include_router(fs_router)
+api_router.include_router(diagnostics_router)
 api_router.include_router(notifications_router)
 api_router.include_router(metrics_router)
 api_router.include_router(backup_router)
@@ -59,6 +67,10 @@ __all__ = [
     "notifications_router",
     "wallpapers_router",
     "system_router",
+    "docker_router",
+    "catalog_router",
+    "fs_router",
+    "diagnostics_router",
     "metrics_router",
     "backup_router",
     "chassis_router",
@@ -68,4 +80,9 @@ __all__ = [
     "samba_router",
     "ups_router",
     "network_router",
+    "replication_router",
+    "media_router",
+    "sftp_router",
+    "vms_router",
+    "snmp_router",
 ]

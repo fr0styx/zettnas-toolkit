@@ -12,7 +12,23 @@ def read_mem():
                 info[k.strip()] = int(v.split()[0])
         total = info.get("MemTotal", 0) / 1024 / 1024
         avail = info.get("MemAvailable", 0) / 1024 / 1024
-        used = total - avail
+
+        # Reclaimable ZFS ARC cache accounting
+        arc_bytes = 0
+        arc_path = os.path.join(HOST_PROC, "spl/kstat/zfs/arcstats")
+        if os.path.exists(arc_path):
+            try:
+                with open(arc_path) as af:
+                    for aline in af:
+                        parts = aline.split()
+                        if len(parts) >= 3 and parts[0] == "size":
+                            arc_bytes = int(parts[2])
+                            break
+            except Exception:
+                pass
+        arc_gb = arc_bytes / (1024 * 1024 * 1024)
+        effective_avail = min(total, avail + arc_gb)
+        used = max(0.0, total - effective_avail)
         pct = round(100 * used / total) if total else 0
         return {"used_gb": round(used, 1), "total_gb": round(total, 1), "pct": pct}
     except Exception:

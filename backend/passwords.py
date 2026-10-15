@@ -18,7 +18,7 @@ try:
     from argon2.exceptions import InvalidHashError, VerificationError, VerifyMismatchError
 
     _ARGON2_AVAILABLE = True
-    if os.environ.get("PYTEST_CURRENT_TEST") or os.environ.get("TESTING"):
+    if os.environ.get("ZETTNAS_FAST_HASH") == "1" or os.environ.get("TESTING") == "1":
         _PH = PasswordHasher(
             time_cost=1,
             memory_cost=1024,
