@@ -3288,6 +3288,12 @@ if (typeof window !== 'undefined') window.closeUpsDrawer = closeUpsDrawer;
 
 let upsSaveDebounceTimer = null;
 let isUpsLoadingConfig = false;
+let isUpsConfigLoaded = false;
+
+export function setUpsConfigLoaded(val = true) {
+  isUpsConfigLoaded = Boolean(val);
+}
+if (typeof window !== 'undefined') window.setUpsConfigLoaded = setUpsConfigLoaded;
 
 export function updateUpsConnCardState(mode) {
   const connCard = document.getElementById('ups-drawer-conn-card');
@@ -3311,11 +3317,16 @@ export function updateUpsConnCardState(mode) {
 if (typeof window !== 'undefined') window.updateUpsConnCardState = updateUpsConnCardState;
 
 export async function saveUpsConfigFromDrawer() {
-  if (isUpsLoadingConfig) return;
+  if (isUpsLoadingConfig || !isUpsConfigLoaded) {
+    console.debug('[UPS] Skipping auto-save: config loading or not yet loaded.');
+    return;
+  }
   try {
     const mode = document.querySelector('input[name="ups-mode"]:checked')?.value || 'auto';
     const host = document.getElementById('ups-cfg-host')?.value.trim() || '127.0.0.1';
-    const port = parseInt(document.getElementById('ups-cfg-port')?.value, 10) || 3551;
+    let defaultPort = 3551;
+    if (mode === 'nut_client') defaultPort = 3493;
+    const port = parseInt(document.getElementById('ups-cfg-port')?.value, 10) || defaultPort;
     const ups_name = document.getElementById('ups-cfg-name')?.value.trim() || 'ups';
     const username = document.getElementById('ups-cfg-user')?.value.trim() || '';
     const passwordRaw = document.getElementById('ups-cfg-pass')?.value || '';
@@ -3402,7 +3413,7 @@ export async function loadUpsConfigToDrawer() {
     const passEl = document.getElementById('ups-cfg-pass');
 
     if (hostEl) hostEl.value = cfg.host || '127.0.0.1';
-    if (portEl) portEl.value = cfg.port || 3551;
+    if (portEl) portEl.value = cfg.port || (mode === 'nut_client' ? 3493 : 3551);
     if (nameEl) nameEl.value = cfg.ups_name || 'ups';
     if (userEl) userEl.value = cfg.username || '';
     if (passEl) passEl.value = cfg.password || '';
@@ -3446,6 +3457,7 @@ export async function loadUpsConfigToDrawer() {
     if (chkCutpower) {
       chkCutpower.checked = Boolean(cfg.poweroff_ups);
     }
+    isUpsConfigLoaded = true;
   } catch (err) {
     console.debug('Failed to load UPS config:', err);
   } finally {
@@ -3454,6 +3466,7 @@ export async function loadUpsConfigToDrawer() {
 }
 
 export function initUpsDrawerControls() {
+  const loadPromise = loadUpsConfigToDrawer();
   const btnOpen = document.getElementById('btn-open-ups-config');
   btnOpen?.addEventListener('click', (e) => {
     e.preventDefault();
@@ -3752,6 +3765,7 @@ export function initUpsDrawerControls() {
       { okText: '⚠️ Start Drill', cancelText: 'Cancel', allowHtml: true }
     );
   });
+  return loadPromise;
 }
 if (typeof window !== 'undefined') window.initUpsDrawerControls = initUpsDrawerControls;
 

@@ -112,6 +112,7 @@ def test_is_zettlab_appliance_d8u(monkeypatch):
 
 def test_mmio_fan_controller_permission_error(monkeypatch):
     """Verifies that PermissionError on /dev/mem logs an informative cgroup warning and records an event."""
+    monkeypatch.setenv("FORCE_ZETTLAB_MMIO", "1")
     ctrl = ZettlabMmioFanController("/dev/mem")
 
     monkeypatch.setattr("os.path.exists", lambda p: p == "/dev/mem")

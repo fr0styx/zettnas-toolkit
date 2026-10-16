@@ -9,11 +9,13 @@ import {
   initUpsDrawerControls,
   updateUpsConnCardState,
   saveUpsConfigFromDrawer,
+  setUpsConfigLoaded,
 } from '../components/management.js';
 import { api } from '../api.js';
 
 describe('UPS Power Flow Digital Twin & Drawer Controls', () => {
   beforeEach(() => {
+    setUpsConfigLoaded(false);
     document.body.innerHTML = `
       <div id="mgmt-sec-ups">
         <span id="mgmt-ups-status">-</span>
@@ -321,10 +323,17 @@ describe('UPS Power Flow Digital Twin & Drawer Controls', () => {
     expect(document.getElementById('ups-cfg-host').disabled).toBe(true);
   });
 
+  it('suppresses auto-save if configuration has not loaded yet (prevents race condition overwrites)', async () => {
+    setUpsConfigLoaded(false);
+    const postSpy = vi.spyOn(api, 'post').mockResolvedValue({ success: true });
+    await saveUpsConfigFromDrawer();
+    expect(postSpy).not.toHaveBeenCalled();
+  });
+
   it('automatically saves configuration when sliders, policy, or toggles change without needing a save button', async () => {
     vi.spyOn(api, 'get').mockResolvedValue({});
     const postSpy = vi.spyOn(api, 'post').mockResolvedValue({ success: true });
-    initUpsDrawerControls();
+    await initUpsDrawerControls();
 
     // 1. Moving slider
     const runtimeSlider = document.getElementById('ups-slider-runtime');
@@ -409,7 +418,7 @@ describe('UPS Power Flow Digital Twin & Drawer Controls', () => {
       return Promise.resolve({ success: true });
     });
 
-    initUpsDrawerControls();
+    await initUpsDrawerControls();
 
     const btnDiscover = document.getElementById('btn-ups-discover');
     btnDiscover.click();

@@ -12,11 +12,27 @@ from backend.state import Z_STATE, add_event
 
 
 def button_listener_daemon():
+    import platform
+
+    if platform.machine().lower() not in ("x86_64", "amd64"):
+        logger.debug("[button_listener] Non-x86_64 architecture detected; skipping MMIO hardware button mapping.")
+        return
+
     from backend.hardware.fans import is_zettlab_appliance
 
     if not is_zettlab_appliance():
         logger.debug("[button_listener] Non-appliance hardware detected; skipping hardware button mapping.")
         return
+
+    try:
+        from backend.hardware.storage import detect_chassis_model
+
+        model = detect_chassis_model(allow_fallback=False)
+        if model in ("d4", "generic", "diy"):
+            logger.debug(f"[button_listener] Chassis {model} does not use MMIO button mapping.")
+            return
+    except Exception:
+        pass
 
     MMIO_BASE = 0xE0D20000
     COPY_OFFSET = 0x6C0

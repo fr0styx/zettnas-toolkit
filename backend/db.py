@@ -134,10 +134,44 @@ def init_db():
                     raw_details_json TEXT DEFAULT ''
                 )
             """)
-            conn.execute("CREATE INDEX IF NOT EXISTS idx_smart_test_history_dev_ts ON smart_test_history(dev, ts DESC)")
-            conn.execute("CREATE INDEX IF NOT EXISTS idx_smart_test_history_ts ON smart_test_history(ts DESC)")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS app_config (
+                    key TEXT PRIMARY KEY,
+                    value_json TEXT NOT NULL,
+                    updated_at REAL NOT NULL
+                )
+            """)
     except Exception as e:
         logger.error(f"Failed to initialize database: {e}")
+
+
+def get_app_config_value(key: str, default: Any = None) -> Any:
+    """Retrieves a persistent configuration object from the SQLite database."""
+    try:
+        with db_session() as conn:
+            cur = conn.execute("SELECT value_json FROM app_config WHERE key = ?", (key,))
+            row = cur.fetchone()
+            if row and row[0]:
+                return json.loads(row[0])
+    except Exception as e:
+        logger.debug(f"[DB] Error getting app_config for {key}: {e}")
+    return default
+
+
+def set_app_config_value(key: str, val: Any) -> None:
+    """Persists a configuration object to the SQLite database with atomic transaction."""
+    try:
+        val_str = json.dumps(val)
+        now = time.time()
+        with db_session() as conn:
+            conn.execute(
+                """INSERT INTO app_config (key, value_json, updated_at)
+                   VALUES (?, ?, ?)
+                   ON CONFLICT(key) DO UPDATE SET value_json = excluded.value_json, updated_at = excluded.updated_at""",
+                (key, val_str, now),
+            )
+    except Exception as e:
+        logger.warning(f"[DB] Error saving app_config for {key}: {e}")
 
 
 def log_metrics(

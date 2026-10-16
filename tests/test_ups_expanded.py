@@ -7,8 +7,10 @@ connection testing, battery self-test, outage simulation, and event logs.
 import os
 from unittest.mock import patch
 
-from backend.config import UPS_CONFIG_FILE
-from backend.db import init_db, log_ups_event, query_ups_events
+import pytest
+
+from backend.config import POOL_PATH, UPS_CONFIG_FILE
+from backend.db import init_db, log_ups_event, query_ups_events, set_app_config_value
 from backend.hardware.ups import (
     DEFAULT_UPS_CONFIG,
     discover_ups_sources,
@@ -21,21 +23,53 @@ from backend.hardware.ups import (
 )
 
 
-def setup_function():
+@pytest.fixture(autouse=True)
+def clean_ups_state():
     init_db()
+    try:
+        set_app_config_value("ups_config", None)
+    except Exception:
+        pass
     if os.path.exists(UPS_CONFIG_FILE):
         try:
             os.remove(UPS_CONFIG_FILE)
         except Exception:
             pass
-
-
-def teardown_function():
+    backup_file = os.path.join(os.path.dirname(UPS_CONFIG_FILE), "ups_config.backup.json")
+    if os.path.exists(backup_file):
+        try:
+            os.remove(backup_file)
+        except Exception:
+            pass
+    if POOL_PATH:
+        p_mirror = os.path.join(POOL_PATH, ".zettnas", "ups_config.json")
+        if os.path.exists(p_mirror):
+            try:
+                os.remove(p_mirror)
+            except Exception:
+                pass
+    yield
+    try:
+        set_app_config_value("ups_config", None)
+    except Exception:
+        pass
     if os.path.exists(UPS_CONFIG_FILE):
         try:
             os.remove(UPS_CONFIG_FILE)
         except Exception:
             pass
+    if os.path.exists(backup_file):
+        try:
+            os.remove(backup_file)
+        except Exception:
+            pass
+    if POOL_PATH:
+        p_mirror = os.path.join(POOL_PATH, ".zettnas", "ups_config.json")
+        if os.path.exists(p_mirror):
+            try:
+                os.remove(p_mirror)
+            except Exception:
+                pass
 
 
 def test_default_config_loading_and_masking():

@@ -1,6 +1,7 @@
 import glob
 import mmap
 import os
+import platform
 import threading
 import time
 from typing import Any, Dict, List, Optional
@@ -92,6 +93,71 @@ def is_zettlab_appliance() -> bool:
         return False
 
 
+def is_zettlab_mmio_supported() -> bool:
+    """Verifies whether the host hardware and CPU architecture support direct MMIO
+    Embedded Controller register access at 0xFE0B0456.
+
+    Strictly restricted to x86_64 WY120 / D8 Ultra / D6 Ultra platforms.
+    Explicitly excluded on D4, ARM64, and generic hardware to prevent
+    bus aborts, Machine Check Exceptions (MCEs), and system freezes.
+    """
+    force = os.environ.get("FORCE_ZETTLAB_MMIO", "").strip()
+    if force == "1":
+        return True
+    if force == "0":
+        return False
+
+    if not is_zettlab_appliance():
+        return False
+
+    # 1. Architecture safeguard: MMIO aperture 0xFE0B0456 is strictly x86 physical address space
+    if platform.machine().lower() not in ("x86_64", "amd64"):
+        return False
+
+    # 2. Model safeguard: ONLY D8 Ultra and D6 Ultra (WY120 mainboard) have this EC aperture.
+    # D4 uses standard hwmon / Super I/O and must NEVER access 0xFE0B0456.
+    try:
+        from backend.hardware.storage import detect_chassis_model
+
+        model = detect_chassis_model(allow_fallback=False)
+        if model in ("d8u", "d6u"):
+            return True
+        if model in ("d4", "generic", "diy"):
+            return False
+    except Exception:
+        pass
+
+    # 3. Unraid model check
+    try:
+        from backend.hardware.unraid import read_unraid_status
+
+        u_status = read_unraid_status()
+        if u_status and u_status.get("available"):
+            u_model = (u_status.get("model") or "").lower()
+            if any(k in u_model for k in ("d8u", "d8 ultra", "wy120", "d6 ultra", "d6u", "wy140")):
+                return True
+            if any(k in u_model for k in ("d4", "d4u", "d4 ultra")):
+                return False
+    except Exception:
+        pass
+
+    # 4. DMI / motherboard string check: must specifically match D8U, D6U, or WY120
+    try:
+        from backend.hardware.chassis import ChassisEngine
+
+        board = ChassisEngine._read_dmi_field("board_name").lower()
+        prod = ChassisEngine._read_dmi_product_name().lower()
+        dmi_str = f"{board} {prod}"
+        if any(k in dmi_str for k in ("d4", "d4u", "d4 ultra")):
+            return False
+        if any(k in dmi_str for k in ("wy120", "d8 ultra", "d8u", "d6 ultra", "d6u")):
+            return True
+    except Exception:
+        pass
+
+    return False
+
+
 class ZettlabMmioFanController:
     """Direct Memory-Mapped I/O (MMIO) hardware fan controller for Zettlab & Aoostar NAS appliances.
 
@@ -134,6 +200,8 @@ class ZettlabMmioFanController:
         ]
 
     def _ensure_mapped(self) -> bool:
+        if not is_zettlab_mmio_supported():
+            return False
         with self._lock:
             if self._mm is not None:
                 return True
@@ -199,7 +267,7 @@ class ZettlabMmioFanController:
             return False
 
     def is_available(self) -> bool:
-        if not is_zettlab_appliance():
+        if not is_zettlab_mmio_supported():
             return False
         return self._ensure_mapped()
 
@@ -306,8 +374,15 @@ def get_detailed_fan_telemetry() -> Dict[str, Any]:
     driver_mode = getattr(Z_STATE, "fan_driver_mode", "none")
     mmio_ctrl = get_mmio_fan_controller()
     mmio_regs = None
-    if mmio_ctrl and is_zettlab_appliance():
-        mmio_regs = mmio_ctrl.read_raw_registers()
+    if (
+        mmio_ctrl
+        and is_zettlab_mmio_supported()
+        and (driver_mode == "mmio" or os.environ.get("FORCE_ZETTLAB_MMIO") == "1")
+    ):
+        try:
+            mmio_regs = mmio_ctrl.read_raw_registers()
+        except Exception as e:
+            logger.debug(f"[Diagnostics] MMIO register read skipped: {e}")
 
     zones_telemetry = {}
     now = time.time()
@@ -329,6 +404,7 @@ def get_detailed_fan_telemetry() -> Dict[str, Any]:
     return {
         "active_driver_mode": driver_mode,
         "is_appliance": is_zettlab_appliance(),
+        "mmio_supported": is_zettlab_mmio_supported(),
         "fans_released": getattr(Z_STATE, "fans_released", False),
         "thermal_watchdog_engaged": getattr(Z_STATE, "thermal_watchdog_engaged", False),
         "critical_temp_active": getattr(Z_STATE, "critical_temp_active", False),
@@ -413,7 +489,7 @@ def cleanup_stale_fan_trackers(active_keys=None):
         hw = _find_hwmon()
         if hw:
             active_keys = {os.path.basename(p) for p in glob.glob(os.path.join(hw, "pwm[1-9]"))}
-        elif is_zettlab_appliance():
+        elif is_zettlab_mmio_supported():
             active_keys = {"pwm1", "pwm2", "pwm3"}
         else:
             active_keys = set()

@@ -17,7 +17,7 @@ try:
 except ImportError:
     fcntl = None  # Non-Unix fallback
 
-from backend.config import UPS_CONFIG_FILE, logger
+from backend.config import DATA_DIR, POOL_PATH, UPS_CONFIG_FILE, logger
 from backend.db import log_ups_event
 from backend.fsutil import atomic_write_json, read_json
 
@@ -67,14 +67,133 @@ KNOWN_UPS_VENDORS = {
 }
 
 
+def _detect_host_nut_config(custom_dirs: Optional[List[str]] = None) -> Optional[Dict[str, Any]]:
+    """Inspects host /etc/nut configuration files (ups.conf, upsmon.conf)
+    and automatically extracts configured UPS names, hosts, and monitors.
+    """
+    nut_dirs = custom_dirs or ["/etc/nut", "/host/etc/nut"]
+    ups_name = None
+    host = "127.0.0.1"
+    port = 3493
+    user = ""
+    password = ""
+
+    for nd in nut_dirs:
+        if not os.path.isdir(nd):
+            continue
+        ups_conf = os.path.join(nd, "ups.conf")
+        if os.path.isfile(ups_conf):
+            try:
+                with open(ups_conf, "r", encoding="utf-8", errors="replace") as f:
+                    for line in f:
+                        line_str = line.strip()
+                        if line_str.startswith("[") and line_str.endswith("]"):
+                            cand = line_str[1:-1].strip()
+                            if cand and cand.lower() != "default":
+                                ups_name = cand
+                                break
+            except Exception:
+                pass
+
+        upsmon_conf = os.path.join(nd, "upsmon.conf")
+        if os.path.isfile(upsmon_conf):
+            try:
+                with open(upsmon_conf, "r", encoding="utf-8", errors="replace") as f:
+                    for line in f:
+                        line_str = line.strip()
+                        if line_str.startswith("MONITOR"):
+                            parts = line_str.split()
+                            if len(parts) >= 2:
+                                sys_target = parts[1]
+                                if "@" in sys_target:
+                                    u_name, u_host = sys_target.split("@", 1)
+                                    if u_name:
+                                        ups_name = u_name
+                                    if u_host:
+                                        if ":" in u_host:
+                                            h_part, p_part = u_host.split(":", 1)
+                                            host = h_part
+                                            try:
+                                                port = int(p_part)
+                                            except ValueError:
+                                                pass
+                                        else:
+                                            host = u_host
+                                if len(parts) >= 5:
+                                    user = parts[3]
+                                    password = parts[4]
+                            break
+            except Exception:
+                pass
+
+        if ups_name:
+            return {
+                "enabled": True,
+                "mode": "nut_client",
+                "host": host,
+                "port": port,
+                "ups_name": ups_name,
+                "username": user,
+                "password": password,
+            }
+    return None
+
+
 def load_ups_config() -> Dict[str, Any]:
-    """Loads persistent UPS configuration with fallback to environment variables."""
+    """Loads persistent UPS configuration across multi-tier storage:
+    1. Primary JSON state (UPS_CONFIG_FILE)
+    2. SQLite WAL database app_config table
+    3. Secondary backup JSON (ups_config.backup.json)
+    4. Pool-level persistent mirror (POOL_PATH/.zettnas/ups_config.json)
+    5. Host NUT auto-discovery (/etc/nut, /host/etc/nut)
+    6. Environment variables fallback
+    """
     cfg = dict(DEFAULT_UPS_CONFIG)
     stored = read_json(UPS_CONFIG_FILE, None)
-    if isinstance(stored, dict):
+
+    recovered_from_backup = False
+
+    # Tier 1: Primary JSON file
+    if isinstance(stored, dict) and (stored.get("host") or stored.get("mode")):
         cfg.update(stored)
-    else:
-        # Fallback to legacy environment variables if no config file exists yet
+        return cfg
+
+    # Tier 2: SQLite database
+    try:
+        from backend.db import get_app_config_value
+
+        db_cfg = get_app_config_value("ups_config")
+        if isinstance(db_cfg, dict) and (db_cfg.get("mode") or db_cfg.get("host") or db_cfg.get("ups_name")):
+            cfg.update(db_cfg)
+            recovered_from_backup = True
+    except Exception as e:
+        logger.debug(f"[UPS] Error querying db app_config: {e}")
+
+    # Tier 3: Local backup file in DATA_DIR
+    if not recovered_from_backup:
+        backup_file = os.path.join(DATA_DIR, "ups_config.backup.json")
+        b_stored = read_json(backup_file, None)
+        if isinstance(b_stored, dict):
+            cfg.update(b_stored)
+            recovered_from_backup = True
+
+    # Tier 4: Storage Pool Mirror (.zettnas)
+    if not recovered_from_backup and POOL_PATH and os.path.isdir(POOL_PATH):
+        pool_mirror = os.path.join(POOL_PATH, ".zettnas", "ups_config.json")
+        p_stored = read_json(pool_mirror, None)
+        if isinstance(p_stored, dict):
+            cfg.update(p_stored)
+            recovered_from_backup = True
+
+    # Tier 5: Host NUT configuration auto-detection
+    if not recovered_from_backup:
+        host_nut = _detect_host_nut_config()
+        if host_nut:
+            cfg.update(host_nut)
+            recovered_from_backup = True
+
+    # Tier 6: Legacy environment variables fallback
+    if not recovered_from_backup:
         env_host = os.getenv("UPS_HOST")
         env_port = os.getenv("UPS_PORT")
         env_nut_host = os.getenv("NUT_HOST")
@@ -93,6 +212,17 @@ def load_ups_config() -> Dict[str, Any]:
 
         if env_ups_name:
             cfg["ups_name"] = env_ups_name
+
+    # If recovered from an alternative tier, synchronize primary state file
+    if recovered_from_backup:
+        try:
+            atomic_write_json(UPS_CONFIG_FILE, cfg)
+            logger.info(
+                f"[UPS] Successfully recovered persistent UPS config (mode: {cfg.get('mode')}, host: {cfg.get('host')})"
+            )
+        except Exception as e:
+            logger.debug(f"[UPS] Could not write recovered config to file: {e}")
+
     return cfg
 
 
@@ -105,7 +235,7 @@ def mask_ups_config(cfg: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def save_ups_config(new_cfg: Dict[str, Any]) -> Dict[str, Any]:
-    """Saves persistent UPS configuration safely with password protection."""
+    """Saves persistent UPS configuration safely across primary, database, and secondary backup tiers."""
     global _CACHED_UPS, _LAST_UPS_POLL
     current = load_ups_config()
     merged = dict(current)
@@ -129,7 +259,34 @@ def save_ups_config(new_cfg: Dict[str, Any]) -> Dict[str, Any]:
             except (ValueError, TypeError):
                 pass
 
+    # Tier 1: Write primary file
     atomic_write_json(UPS_CONFIG_FILE, merged)
+
+    # Tier 2: Write SQLite app_config
+    try:
+        from backend.db import set_app_config_value
+
+        set_app_config_value("ups_config", merged)
+    except Exception as e:
+        logger.debug(f"[UPS] Error writing app_config to database: {e}")
+
+    # Tier 3: Write backup file in DATA_DIR
+    try:
+        backup_file = os.path.join(DATA_DIR, "ups_config.backup.json")
+        atomic_write_json(backup_file, merged)
+    except Exception as e:
+        logger.debug(f"[UPS] Error writing backup config file: {e}")
+
+    # Tier 4: Write pool mirror (.zettnas)
+    try:
+        if POOL_PATH and os.path.isdir(POOL_PATH):
+            pool_dir = os.path.join(POOL_PATH, ".zettnas")
+            os.makedirs(pool_dir, exist_ok=True)
+            pool_mirror = os.path.join(pool_dir, "ups_config.json")
+            atomic_write_json(pool_mirror, merged)
+    except Exception as e:
+        logger.debug(f"[UPS] Error writing pool mirror: {e}")
+
     _CACHED_UPS = {}
     _LAST_UPS_POLL = 0.0
     return mask_ups_config(merged)
@@ -262,9 +419,32 @@ def _query_nut_socket(
 
             s.sendall(f"LIST VAR {target_ups}\n".encode("utf-8"))
 
-            while True:
-                line = read_line()
-                if line is None or line.startswith("END LIST VAR") or line.startswith("ERR"):
+            first_line = read_line()
+            if first_line and first_line.startswith("ERR UNKNOWN-UPS"):
+                # Target UPS name was not recognized; discover available UPS names via LIST UPS
+                s.sendall(b"LIST UPS\n")
+                discovered_name = None
+                while True:
+                    line_ups = read_line()
+                    if line_ups is None or line_ups.startswith("ERR") or line_ups.startswith("END LIST UPS"):
+                        break
+                    if line_ups.startswith("UPS "):
+                        parts = line_ups.split()
+                        if len(parts) >= 2:
+                            discovered_name = parts[1]
+                            break
+                while True:
+                    line_ups = read_line()
+                    if line_ups is None or line_ups.startswith("END LIST UPS") or line_ups.startswith("ERR"):
+                        break
+                if discovered_name:
+                    target_ups = discovered_name
+                    s.sendall(f"LIST VAR {target_ups}\n".encode("utf-8"))
+                    first_line = read_line()
+
+            line = first_line
+            while line is not None:
+                if line.startswith("END LIST VAR") or line.startswith("ERR"):
                     break
                 if line.startswith(f"VAR {target_ups} "):
                     m = re.match(rf"^VAR\s+{re.escape(target_ups)}\s+(\S+)\s+(.*)$", line)
@@ -318,6 +498,7 @@ def _query_nut_socket(
                             out["ITEMP"] = v_clean
                         elif k_clean in ("input.frequency", "ups.input.frequency"):
                             out["LINEFREQ"] = v_clean
+                line = read_line()
 
             if target_ups and "MODEL" not in out:
                 out["UPSNAME"] = target_ups

@@ -113,31 +113,57 @@ def _build_bundle_sync(payload_dict: Optional[Dict[str, Any]] = None) -> bytes:
     }
 
     # 3. Storage and SMART (decoupled from UI card layout, strictly spindown safe)
-    from backend.hardware.storage_diagnostics import collect_storage_diagnostics
+    storage_and_smart = {}
+    try:
+        from backend.hardware.storage_diagnostics import collect_storage_diagnostics
 
-    storage_and_smart = collect_storage_diagnostics()
+        storage_and_smart = collect_storage_diagnostics()
+    except Exception as e:
+        logger.warning(f"[Diagnostics] Error collecting storage diagnostics: {e}")
+        storage_and_smart = {"error": str(e), "live_disk_telemetry": [], "pal_storage": {}}
 
     # 4. Kernel, CPU & Bus Telemetry
-    from backend.hardware.kernel_telemetry import collect_kernel_telemetry
+    kernel_telemetry = {}
+    try:
+        from backend.hardware.kernel_telemetry import collect_kernel_telemetry
 
-    kernel_telemetry = collect_kernel_telemetry()
+        kernel_telemetry = collect_kernel_telemetry()
+    except Exception as e:
+        logger.warning(f"[Diagnostics] Error collecting kernel telemetry: {e}")
+        kernel_telemetry = {"error": str(e)}
 
     # 5. Network topology
-    from backend.hardware.network import get_network_topology
+    net_topology = {}
+    try:
+        from backend.hardware.network import get_network_topology
 
-    net_topology = get_network_topology()
+        net_topology = get_network_topology()
+    except Exception as e:
+        logger.warning(f"[Diagnostics] Error collecting network topology: {e}")
+        net_topology = {"error": str(e)}
 
     # 6. Docker Diagnostics & Container Manifests
-    from backend.services.docker_diagnostics import collect_docker_diagnostics
+    docker_diagnostics = {}
+    sanitized_containers = []
+    try:
+        from backend.services.docker_diagnostics import collect_docker_diagnostics
 
-    docker_diagnostics = collect_docker_diagnostics()
-    containers = read_docker_containers()
-    sanitized_containers = sanitize_dict(containers)
+        docker_diagnostics = collect_docker_diagnostics()
+        containers = read_docker_containers()
+        sanitized_containers = sanitize_dict(containers)
+    except Exception as e:
+        logger.warning(f"[Diagnostics] Error collecting docker diagnostics: {e}")
+        docker_diagnostics = {"error": str(e), "containers_summary": {"total": 0, "running": 0, "troubled_names": []}}
 
     # 7. Virtual Machine Hypervisor Telemetry
-    from backend.api.vms import collect_vm_diagnostics
+    vm_hypervisor = {}
+    try:
+        from backend.api.vms import collect_vm_diagnostics
 
-    vm_hypervisor = collect_vm_diagnostics()
+        vm_hypervisor = collect_vm_diagnostics()
+    except Exception as e:
+        logger.warning(f"[Diagnostics] Error collecting VM diagnostics: {e}")
+        vm_hypervisor = {"error": str(e), "hypervisor_telemetry": {"active_vm_count": 0, "total_vm_count": 0}}
 
     # 8. Notifications (sanitized)
     notif_cfg = read_json(NOTIFICATIONS_FILE, DEFAULT_NOTIFICATION_CONFIG)
@@ -323,9 +349,13 @@ def _build_summary_sync() -> Dict[str, Any]:
     chassis = get_chassis_friendly_name(detect_chassis_model())
 
     # Storage summary
-    from backend.hardware.storage_diagnostics import collect_storage_diagnostics
+    st = {}
+    try:
+        from backend.hardware.storage_diagnostics import collect_storage_diagnostics
 
-    st = collect_storage_diagnostics()
+        st = collect_storage_diagnostics()
+    except Exception as e:
+        logger.debug(f"[Diagnostics] Summary storage collection error: {e}")
     disks = st.get("live_disk_telemetry", [])
     standby_count = sum(1 for d in disks if d.get("standby"))
     pools = st.get("pal_storage", {}).get("pools", [])
@@ -337,16 +367,24 @@ def _build_summary_sync() -> Dict[str, Any]:
     ]
 
     # Docker summary
-    from backend.services.docker_diagnostics import collect_docker_diagnostics
+    dock = {}
+    try:
+        from backend.services.docker_diagnostics import collect_docker_diagnostics
 
-    dock = collect_docker_diagnostics()
+        dock = collect_docker_diagnostics()
+    except Exception as e:
+        logger.debug(f"[Diagnostics] Summary docker collection error: {e}")
     c_sum = dock.get("containers_summary", {})
     troubled_names = c_sum.get("troubled_names", [])
 
     # VM summary
-    from backend.api.vms import collect_vm_diagnostics
+    vms = {}
+    try:
+        from backend.api.vms import collect_vm_diagnostics
 
-    vms = collect_vm_diagnostics()
+        vms = collect_vm_diagnostics()
+    except Exception as e:
+        logger.debug(f"[Diagnostics] Summary VM collection error: {e}")
     vm_tel = vms.get("hypervisor_telemetry", {})
 
     # Kernel & Throttling
