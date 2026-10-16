@@ -64,6 +64,10 @@ services:
       - 'c 10:* rwm'    # Misc character devices (KVM, vhost-net)
       - 'b 8:* rwm'     # SCSI/SATA block devices (/dev/sd*)
       - 'b 259:* rwm'   # NVMe block devices (/dev/nvme*)
+      - 'b 9:* rwm'     # Linux Software RAID block devices (/dev/md*)
+      - 'b 253:* rwm'   # Device-Mapper / LVM / Crypt block devices (/dev/dm-*)
+    devices:
+      - /dev/fuse:/dev/fuse
     logging:
       driver: "json-file"
       options:

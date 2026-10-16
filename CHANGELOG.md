@@ -1,5 +1,41 @@
 # ZettNAS Toolkit - Release Changelog
 
+## v1.9.1 (2026-10-16) - Stable
+### ⚡ Next-Gen VM Hypervisor & Window Controls, Multi-Tier Persistent UPS Engine, Hardware Safety Invariants & Turnkey OS Interoperability
+
+Version 1.9.1 delivers major hypervisor enhancements, rock-solid power and UPS persistence, hardware safety gatekeepers for custom NAS appliances, and turnkey operating system storage interoperability:
+
+- **Virtual Machines & Next-Gen Hypervisor Capabilities**:
+  - **Complete Desktop Window Management for VM Modals**: Integrated VM Creation and Configuration modals (`#modal-vm-create`, `#modal-vm-edit`) into the desktop window management subsystem (`dock.js`), enabling drag-and-drop repositioning, minimize to dock, maximize toggle, and clean `Escape` dismissal with high-contrast acrylic styling that eliminates visual background clash.
+  - **UEFI / OVMF Firmware & vTPM 2.0**: Added selectable boot firmware (`OVMF_CODE-pure-efi-tpm.fd`) and software TPM emulation (`vTPM 2.0`) to unlock full guest compatibility with modern operating systems, including Windows 11 and Linux secure boot.
+  - **Multi-Protocol Video Adapters & Display Acceleration**: Supported configurable virtual display cards (`virtio`, `qxl`, `std`, `bochs`), dynamic CPU topology (sockets, cores, threads), RAM ballooning, and Docker runtime inclusion of `qemu-ui-spice-core` and `qemu-ui-opengl`.
+  - **Host USB Device Passthrough**: Added hardware USB device discovery endpoint (`/api/vms/usb-devices`) with inline pass-through selector in VM inspector, accompanied by responsive layout drawer protection.
+  - **Interactive Serial TTY Console Hardening**:
+    - Resolved repetitive Enter keypresses by normalizing CR/LF translation in `console_proxy.py`.
+    - Implemented full backspace erase handling (`\b \b`) and eradicated stray `[[` escape sequence leakage in serial console sessions.
+  - **VM Action Route Resolution**: Fixed 405 Method Not Allowed error on VM start and stop endpoints and ensured seamless auto-loading of VM state when opened via deep links from Mission Control.
+
+- **Power & UPS Subsystem Persistence & Wattage Synthesis**:
+  - **Multi-Tier Persistent UPS Configuration**: Implemented dedicated SQLite persistence (`app_config` table in `history.db`) combined with a 6-tier recovery hierarchy (`/api/system/ups/config`), ensuring custom UPS host, port, protocol, and battery names survive container updates and reboots without regression.
+  - **Auto-Discovery Fallback on `ERR UNKNOWN-UPS`**: Automatically attempts local USB and gateway probing if a configured UPS daemon returns `ERR UNKNOWN-UPS`, preventing stalled telemetry connections.
+  - **DC & Homelab Mini-UPS Wattage Synthesis**: Dynamically computes host load percentage and real-time power draw (`W`) from output voltage (`output.voltage`) and output current (`output.current`) for DC UPS units (e.g. Aoostar W180) where standard AC power registers are absent.
+  - **Expanded NUT Telemetry Variables**: Added native parsing for non-standard battery voltage telemetry, float charge states, and status flags.
+
+- **Storage Platform Abstraction (PAL) & Interoperability**:
+  - **Accurate Used Space Calculation**: Overhauled storage pool capacity metrics across Linux Software RAID (mdraid) and LVM volume groups, utilizing live mount `statvfs` statistics to reflect actual used data rather than inflated raw block allocations.
+  - **Turnkey OS Native Samba Conflict Prevention**: Automatically detects if native host Samba (`smbd`/`nmbd` on port 445) is running on Unraid, TrueNAS, Debian, or other turnkey hosts and switches embedded Samba containers to passive standby, eliminating port binding collisions.
+
+- **Appliance Hardware Safety & Watchdog Invariants**:
+  - **Zettlab D4 MMIO Reboot Prevention**: Designed and deployed `is_zettlab_mmio_supported()` gatekeeper. Strictly blocks memory-mapped I/O access to `0xFE0B0456` on Zettlab D4 appliances, ARM64 SBCs, and generic motherboards, eliminating bus abort kernel faults and appliance reboots during diagnostic runs.
+  - **Host Power & Test Execution Isolation**: Enforced zero-power-action invariants in tests (`trigger_power_action()` unconditionally short-circuits during `TESTING="1"` or `ZETTNAS_TEST_MODE="1"`).
+
+- **Observability, Diagnostics & User Experience**:
+  - **Diagnostics Summary Preview Modal**: Fixed visibility lockout caused by `.smart-modal-backdrop:not(.open)` CSS specificity. Added visual loading spinner to `#btn-preview-diagnostics`, direct DOM clipboard copying, draggable modal header, and `Escape` key dismissal.
+  - **Confirmation Toast HTML Rendering**: Safely renders HTML markup in confirmation toasts for bolded and styled action prompts.
+  - **Self-Updater Streamlining**: Eliminated premature health check reload loops during updates, resolved GHCR Edge rolling image tag resolution, and pruned stale container labels upon recreation.
+
+---
+
 ## v1.9.0 (2026-10-15) - Stable
 ### 🌟 Consumer-Grade Milestone Release: Interactive WebSocket Terminal, Setup Wizard & Security Advisor, Multi-Container Stacks, Client-Side Crypt Backups & Scrutiny S.M.A.R.T. Telemetry
 

@@ -14,6 +14,7 @@ This document provides complete, step-by-step instructions for installing and ru
    - [Option D: TrueNAS SCALE (Custom App / Compose)](#option-d-truenas-scale-custom-app--compose)
    - [Option E: UGOS (Ugreen NAS) & Observer Platforms](#option-e-ugos-ugreen-nas--observer-platforms)
    - [Option F: Standalone Docker CLI (`docker run`)](#option-f-standalone-docker-cli-docker-run)
+   - [Option G: Building the Production Image from Source](#option-g-building-the-production-image-from-source)
 4. [Hardware Device & Capability Mappings](#hardware-device--capability-mappings)
 5. [Headless Server Deployments (No LCD / ARGB)](#headless-server-deployments-no-lcd--argb)
 6. [Environment Variables Reference](#environment-variables-reference)
@@ -140,6 +141,8 @@ Recommended for custom DIY homelab builds (Jonsbo N1/N2/N3/N4, Fractal Node 804,
          - 'c 10:* rwm'    # Misc character devices (KVM, vhost-net)
          - 'b 8:* rwm'     # SCSI/SATA hard drives (/dev/sd*)
          - 'b 259:* rwm'   # NVMe solid state drives (/dev/nvme*)
+         - 'b 9:* rwm'     # Linux Software RAID block devices (/dev/md*)
+         - 'b 253:* rwm'   # Device-Mapper / LVM / Crypt block devices (/dev/dm-*)
    ```
 
 4. **Launch**:
@@ -327,8 +330,44 @@ docker run -d \
   --device-cgroup-rule='c 10:* rwm' \
   --device-cgroup-rule='b 8:* rwm' \
   --device-cgroup-rule='b 259:* rwm' \
+  --device-cgroup-rule='b 9:* rwm' \
+  --device-cgroup-rule='b 253:* rwm' \
   ghcr.io/fr0styx/zettnas-toolkit:latest
 ```
+
+---
+
+### Option G: Building the Production Image from Source
+
+For developers, homelab maintainers, and air-gapped homelabs building custom images locally rather than pulling from GitHub Container Registry (GHCR):
+
+1. **Clone the Repository**:
+   ```bash
+   git clone https://github.com/fr0styx/zettnas-toolkit.git
+   cd zettnas-toolkit
+   mkdir -p data
+   ```
+
+2. **Build the Container Image**:
+   The multi-stage `Dockerfile` handles everything automatically:
+   - **Stage 1 (`frontend-builder`)**: Uses `node:24-alpine` to compile and bundle the glassmorphic web desktop via Vite into minified offline assets.
+   - **Stage 2 (`runtime`)**: Prepares `python:3.12-slim` with Linux system utilities (`smartmontools`, `nvme-cli`, `ovmf`, `qemu-system-x86`, `rclone`, `fuse3`), installs pip requirements, and overlays the built desktop assets.
+
+   ```bash
+   docker build -t zettnas-toolkit:local .
+   ```
+
+3. **Run with Docker Compose (Local Build)**:
+   You can build and start the entire stack in one command using `docker-compose.yml`:
+   ```bash
+   docker compose up -d --build
+   ```
+
+4. **Verify Container Health**:
+   ```bash
+   docker compose ps
+   curl -s http://localhost:8082/api/health
+   ```
 
 ---
 
@@ -348,6 +387,8 @@ ZettNAS Toolkit accesses physical hardware through Linux device nodes and `cgrou
 | `/dev/hidraw*` | `c 240:*..245:* rwm` | Direct USB HID UPS telemetry (WalleCube, OpenUPS, APC, CyberPower) | Recommended for USB UPS |
 | `/dev/sd*` | `b 8:* rwm` | Physical SATA/SAS hard drives and SD/TF card slots | Recommended |
 | `/dev/nvme*` | `b 259:* rwm` | M.2 NVMe SSD storage and endurance telemetry | Recommended |
+| `/dev/md*` | `b 9:* rwm` | Linux Software RAID (mdraid) arrays | Optional / Linux RAID |
+| `/dev/dm-*` | `b 253:* rwm` | Device-Mapper / LVM / Crypt volumes | Optional / LVM |
 | `/dev/mem` | `c 1:1 rwm` | Userspace physical MMIO fan controller (`0xFE0B0456`) and front copy button | Optional / Zettlab & Aoostar |
 | `/dev/fuse` | `--device /dev/fuse` | Rclone Multi-Cloud remote FUSE mounts | Optional |
 

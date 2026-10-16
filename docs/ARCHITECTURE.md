@@ -103,6 +103,8 @@ The application starts four persistent background daemon threads upon startup vi
   2. Spindown Safety: Strictly enforces `smartctl -n standby` (exit code 2) to prevent waking sleeping drive platters.
   3. eMMC OS Drive Isolation: Auto-detects internal `/dev/mmcblk*` boot flash on Zettlab D4 hardware to avoid invalid S.M.A.R.T. commands.
   4. Scrub Thermal Watchdog: Automatically suppresses Zero RPM fan modes during active filesystem scrubs and balances.
+  5. Native Samba Interoperability: Auto-detects active host Samba (`smbd`/`nmbd` on port 445) on turnkey operating systems and switches embedded Samba containers to standby to prevent port binding collisions.
+  6. Filesystem-Accurate Capacity: Calculates pool used space from active filesystem mount statistics (`statvfs`) rather than raw block device allocation tables to prevent capacity inflation on mdraid and LVM.
 
 ### 2.8 In-App Self-Updater & Release Orchestration
 - **Dual Channels**: `stable` (official tagged releases) and `edge` (latest commits from GitHub `main`).
@@ -110,22 +112,25 @@ The application starts four persistent background daemon threads upon startup vi
   1. Inspects remote GitHub repository releases and commit SHAs without third-party dependencies.
   2. Communicates with Docker Engine API over `/var/run/docker.sock` to pull updated image layers.
   3. Spawns transient self-updater helper process to gracefully recreate the container with identical volume mounts and port bindings.
+  4. Preserves running state and avoids premature healthcheck reloads during container restart.
 
 ### 2.9 Direct Userspace MMIO Fan Controller
 - **Target**: Physical register block at `0xFE0B0456` via `/dev/mem` (or `/host/dev/mem`).
 - **Responsibilities & Invariants**:
-  1. Operates directly on custom appliance hardware (Zettlab D4/D6/D6U/D8U, Aoostar) without kernel modules.
-  2. Dynamic fallback: auto-detects `hwmon` driver and routes commands to sysfs if present, falling back to MMIO when absent.
-  3. CPU Fan Inviolability: maintains $\ge 58\text{ PWM}$ when driven, or releases to motherboard EC auto control (`0`) when unmanaged.
-  4. Emergency Thermal Clamp: unconditionally clamps all fans to maximum PWM (`183`) at $\ge 80^\circ\text{C}$.
-  5. Optimized Cooldown & Anti-Flutter: downward hysteresis hold (20s/45s) and Zero RPM standby cooldown (30s) eliminate acoustic hunting.
+  1. Operates on verified appliance hardware (Zettlab D6/D6U/D8U, Aoostar WTR Pro) without kernel modules.
+  2. **D4 & Generic Hardware MMIO Gatekeeper**: `is_zettlab_mmio_supported()` strictly gates MMIO mapping by verifying motherboard DMI strings. Zettlab D4, ARM64, and non-supported chipsets are never permitted to touch `/dev/mem` aperture, preventing hardware bus aborts and unexpected reboots.
+  3. Dynamic fallback: auto-detects `hwmon` driver and routes commands to sysfs if present, falling back to MMIO when absent.
+  4. CPU Fan Inviolability: maintains $\ge 58\text{ PWM}$ when driven, or releases to motherboard EC auto control (`0`) when unmanaged.
+  5. Emergency Thermal Clamp: unconditionally clamps all fans to maximum PWM (`183`) at $\ge 80^\circ\text{C}$.
+  6. Optimized Cooldown & Anti-Flutter: downward hysteresis hold (20s/45s) and Zero RPM standby cooldown (30s) eliminate acoustic hunting.
 
-### 2.10 Zero-Dependency Direct USB HID Engine
-- **Target**: Connected USB HID power devices via `/dev/hidraw*` (WalleCube W180, OpenUPS, APC, CyberPower, Eaton).
-- **Responsibilities**:
+### 2.10 Zero-Dependency Direct USB HID & Multi-Tier Persistent UPS Engine
+- **Target**: Connected USB HID power devices via `/dev/hidraw*` (WalleCube W180, OpenUPS, APC, CyberPower, Eaton) or network NUT/APCUPSD daemons.
+- **Responsibilities & Persistence**:
   1. Direct ioctl descriptor querying (`HIDIOCGRDESC`) and feature/interrupt report extraction without host daemons (`nut`/`apcupsd`).
   2. Translates USB HID Power Device (`0x84`) and Battery System (`0x85`) usage pages into live battery charge %, AC power status, and voltage.
-  3. Provides proactive cgroup permission diagnostics if device nodes are inaccessible.
+  3. **Multi-Tier Persistence Hierarchy**: Stores UPS configuration in SQLite `history.db` (`app_config` table) and falls back through 6 tiers (env vars, host `/etc/nut`, auto-discovery) to guarantee persistence across container reboots.
+  4. **DC UPS Wattage Synthesis**: Dynamically calculates wattage and load percentage from `output.voltage` and `output.current` for DC homelab UPS units lacking explicit AC wattage registers.
 
 ### 2.11 Multi-Protocol S.M.A.R.T. Engine & Device Self-Test (DST)
 - **Protocols**: ATA/SATA (`-d sat`), NVMe (`-d nvme`), SCSI/SAS (`-d scsi`), and USB bridge protocols.

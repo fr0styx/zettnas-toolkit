@@ -23,16 +23,16 @@
 
 * 🖥️ **Glassmorphic Web Desktop OS** — Fluid multi-window desktop with collision-free icon grid reallocation, 8-zone Aero snap, macOS-style dock magnification, Spotlight command palette (`Cmd+K`), visual wallpaper gallery, and instant themes (Cyber Teal, Amber CRT, Emerald Matrix, Yak Bronze, and Pure OLED Black).
 * 🐳 **Dedicated Containers Window & App Catalog** — Dedicated desktop window app (`#containers-manager-window`) with 2-way sync with Mission Control, Compose stack synthesis, live log streaming, interactive web terminal, and curated 25+ app catalog.
-* ⚡ **Virtual Machines & KVM Hypervisor** — Dedicated VM Manager desktop app (`#vm-manager-window`), dynamic elastic memory budgeting with safe host headroom calculation, curated 1-click official ISO catalog (Ubuntu, Debian, Alpine, Fedora, Windows, VirtIO), local drag-and-drop ISO ingestion, in-browser VNC web console (`#vm-console-window`), and 1-click SSH/VNC connection sheets.
-* 🔋 **Option A UPS Power Cockpit & Native USB HID** — Unified single-screen Power Cockpit with 2.5D animated SVG digital twin (`#ups-flow-svg`), active telemetry grid, inline safe shutdown policy sliders, outage ledger, and top-bar status pill (`#top-ups-pill`). Supports zero-dependency native USB HID polling (`/dev/hidraw*`) as well as network NUT and APCUPSD daemons.
-* 💾 **Universal Storage PAL & S.M.A.R.T. Self-Tests** — Platform Abstraction Layer (PAL) with non-intrusive Observer Mode adapters for FygoOS, ZettOS, UGOS, TrueNAS SCALE, Proxmox VE, and generic Linux; OpenZFS RAIDZ1/2/3, Btrfs RAID, Unraid array coexistence, zero-wake ATA spindown safety (`smartctl -n standby`), and executive S.M.A.R.T. self-test reports with NVMe Device Self-Test (DST) execution.
+* ⚡ **Virtual Machines & Next-Gen KVM Hypervisor** — Dedicated VM Manager desktop app (`#vm-manager-window`), full window controls (drag, min, max, close), dynamic elastic memory budgeting with safe host headroom, curated 1-click official ISO catalog, in-browser VNC web console (`#vm-console-window`), interactive bidirectional Serial TTY console (`/api/vms/{id}/serial-ws`), UEFI/OVMF firmware, software vTPM 2.0 (Windows 11 ready), and direct host USB device passthrough.
+* 🔋 **Option A UPS Power Cockpit & Multi-Tier Persistence** — Unified single-screen Power Cockpit with 2.5D animated SVG digital twin (`#ups-flow-svg`), active telemetry grid, inline safe shutdown policy sliders, outage ledger, and top-bar status pill. Supports zero-dependency native USB HID (`/dev/hidraw*`), network NUT, and APCUPSD daemons with 6-tier SQLite persistent configuration and dynamic wattage synthesis for DC homelab UPS units.
+* 💾 **Universal Storage PAL & S.M.A.R.T. Self-Tests** — Platform Abstraction Layer (PAL) with non-intrusive Observer Mode adapters for FygoOS, ZettOS, UGOS, TrueNAS SCALE, Proxmox VE, and generic Linux; OpenZFS RAIDZ1/2/3, Btrfs RAID, Unraid array coexistence, turnkey native Samba conflict auto-resolution, filesystem-accurate pool capacity, zero-wake ATA spindown safety (`smartctl -n standby`), and executive S.M.A.R.T. self-test reports with NVMe Device Self-Test (DST).
 * 📁 **File Explorer & Multi-Instance Grid** — Responsive Icon Grid View & sortable List View, multiple simultaneous window instances for cross-folder drag-and-drop, keyboard range selection (`Shift+Arrows`), non-destructive recursive directory merge (`CollisionPolicy.MERGE`), and trash/recycle bin handling.
-* 🔄 **In-App Self-Updater & Release Channels** — Administrators can inspect available updates and switch between Stable (official releases) and Edge (latest main branch commits) channels with 1-click container self-update.
+* 🔄 **In-App Self-Updater & Release Channels** — Administrators can inspect available updates and switch between Stable (official releases) and Edge (latest main branch commits) channels with 1-click container self-update and zero premature reload loops.
 * ☁️ **Cloud Remote Gateway & In-App OAuth** — Direct in-app OAuth assistant with mobile QR pairing for OneDrive, Google Drive, Dropbox, Box, and Nextcloud; line-rate WebDAV server (Port `8084`); and FUSE cloud mounts.
 * 🌐 **Enterprise Networking & Zero-Trust Mesh** — Combined LAN throughput telemetry across physical NICs, 1-click Tailscale SSO with QR login, WireGuard mobile QR export, 802.1Q VLAN tagging, LACP link aggregation, and 30-second canary rollback watchdog.
 * 🛡️ **Enterprise Multi-User & Granular RBAC** — SQLite WAL user store (`users.db`), RFC 9106 Argon2id credential hashing, TOTP two-factor authentication (2FA), Reverse Proxy SSO (`X-Forwarded-User`), scoped API tokens with CIDR whitelisting, private `/homes/` isolation, and desktop auto-lock (`Cmd+L`).
-* ❄️ **Hardware HAL, MMIO & Acoustic Zero-RPM Fans** — Dynamic Chassis Digital Twin (Aoostar, Zettlab D4/D6/D6U/D8U, DIY), userspace direct MMIO fan controller (`0xFE0B0456`), Zero RPM standby mode with optimized 30s cooldown and anti-flutter hysteresis, 6-point SVG fan curve designer, and hardware thermal watchdogs.
-* 🔔 **Multi-Channel Alerts, Hyper-Backup & Diagnostics Overhaul** — Unified Apprise alerting (Discord, Telegram, SMTP Email, ntfy, Pushover, Gotify, Webhooks), automated local/cloud snapshot schedules, retention pruning, and comprehensive multi-layer system observability diagnostics bundle with executive health status rollup.
+* ❄️ **Hardware HAL, MMIO & Acoustic Zero-RPM Fans** — Dynamic Chassis Digital Twin (Aoostar, Zettlab D4/D6/D6U/D8U, DIY), userspace direct MMIO fan controller (`0xFE0B0456`) with strict D4 hardware safety gatekeeper (`is_zettlab_mmio_supported`), Zero RPM standby mode with optimized 30s cooldown and anti-flutter hysteresis, 6-point SVG fan curve designer, and hardware thermal watchdogs.
+* 🔔 **Multi-Channel Alerts, Hyper-Backup & Diagnostics Overhaul** — Unified Apprise alerting (Discord, Telegram, SMTP Email, ntfy, Pushover, Gotify, Webhooks), automated local/cloud snapshot schedules, retention pruning, and comprehensive multi-layer system observability diagnostics bundle with executive health summary preview modal.
 * 📊 **Enterprise Standards: Redfish & SNMP** — Native DMTF Redfish REST API (`/redfish/v1/`) and SNMP v2c/v3 telemetry engine for unified homelab and enterprise infrastructure monitoring.
 * 📺 **Physical LCD & Media Automation** — Direct memory-mapped front-panel LCD rendering (`/dev/fb0`, 640×172) with toggleable Streamline Big IP card layout, dynamic hardware button cycling, and front SD/TF card auto-detection with SHA-256 integrity verification.
 * 🌐 **Zero-Dependency Internationalization** — Full instant client-side localization across English, German, Simplified Chinese, French, and Spanish with 100% dictionary parity.
@@ -73,8 +73,11 @@ For Linux homelab servers, mini PCs, and custom NAS builds:
 git clone https://github.com/fr0styx/zettnas-toolkit.git && cd zettnas-toolkit
 mkdir -p data
 
-# 2. Launch production stack
+# 2. Launch production stack (pre-built GHCR image)
 docker compose -f docker-compose.linux.yml up -d
+
+# Or build locally from source with Docker Compose
+docker compose up -d --build
 ```
 Open your browser to `http://<server-ip>:8082`.
 
@@ -152,14 +155,14 @@ The frontend is built with vanilla modern ES modules and bundled via Vite. The b
 ```bash
 npm install
 npm run build          # Compiles minified production assets to static/
-npm test               # Runs full Vitest + JSDOM frontend test suite (73 test files, 565+ tests)
+npm test               # Runs full Vitest + JSDOM frontend test suite (75 test files, 591 tests)
 npm run test:coverage  # Generates Vitest V8 code coverage report
 npm run dev            # Starts local Vite development server with hot module reload
 ```
 
 ### Backend Workflow & Pytest Suite
 ```bash
-# Run full Pytest test suite (660 unit and integration tests)
+# Run full Pytest test suite (740+ unit and integration tests)
 docker exec -i zettnas-toolkit python3 -m pytest -q /app/tests
 
 # Run code style & formatting checks

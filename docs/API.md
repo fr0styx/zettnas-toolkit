@@ -144,7 +144,9 @@ Persistent scoped tokens can be provisioned and managed via `/api/tokens`.
 | `/api/backup/snapshots` | `GET` | `backup:read` | List local filesystem and cloud backup snapshots. |
 | `/api/backup/snapshots/create` | `POST` | `backup:write`| Create an immediate filesystem snapshot. |
 | `/api/system/diagnostics` | `GET` | `system:read` | Download 1-click sanitized system diagnostics bundle archive. |
-| `/api/system/diagnostics/summary` | `GET` | `system:read` | Retrieve executive health status banner, severity rollup, and component counts without generating full archive. |
+| `/api/system/diagnostics-bundle` | `POST` | `system:read` | Generate and stream sanitized diagnostics bundle zip with client telemetry overlay. |
+| `/api/system/diagnostics-summary` | `GET` | `system:read` | Executive health status rollup, metric grids, and sanitized support markdown preview. |
+| `/api/system/diagnostics/summary` | `GET` | `system:read` | Legacy alias for executive health status summary. |
 
 ---
 
@@ -172,10 +174,13 @@ Persistent scoped tokens can be provisioned and managed via `/api/tokens`.
 | Endpoint | Method | Auth / Scope | Description |
 | :--- | :---: | :---: | :--- |
 | `/api/vms` | `GET` | `vms:read` | Inventory all virtual machines, runtime states, vCPU, RAM, and assigned IPs. |
-| `/api/vms` | `POST` | `vms:manage` | Create a new virtual machine with disk image, ISO, and resource allocations. |
-| `/api/vms/{id}/action` | `POST` | `vms:manage` | VM lifecycle control actions: `start`, `stop`, `pause`, `resume`, `force-stop`. |
+| `/api/vms` | `POST` | `vms:manage` | Create a new virtual machine with disk image, ISO, UEFI/OVMF, vTPM, and allocations. |
+| `/api/vms/{id}` | `PUT` | `vms:manage` | Update VM resources, UEFI/OVMF firmware, vTPM, video adapter, and USB passthrough. |
+| `/api/vms/{id}/action` | `POST` | `vms:manage` | VM lifecycle control actions: `start`, `stop`, `pause`, `resume`, `force-stop`, `restart`. |
 | `/api/vms/{id}` | `DELETE` | `vms:manage` | Delete a virtual machine and optionally remove associated virtual disk files. |
 | `/api/vms/{id}/console` | `GET` | `vms:read` | Retrieve WebSocket VNC connection URL and credentials for Web Console. |
+| `/api/vms/{id}/serial-ws` | `WS` | `vms:read` | Interactive bidirectional serial TTY terminal WebSocket stream. |
+| `/api/vms/usb-devices` | `GET` | `vms:read` | Discover host physical USB devices available for direct guest passthrough. |
 | `/api/vms/budget` | `GET` | `vms:read` | Dynamic elastic budget calculation (host reserve, safe RAM/vCPU ceilings). |
 | `/api/vms/isos` | `GET` | `vms:read` | List local ISO images available in `/mnt/user/isos`. |
 | `/api/vms/isos` | `POST` | `vms:manage` | Multipart streaming upload for custom ISO installation images. |
@@ -218,6 +223,9 @@ Persistent scoped tokens can be provisioned and managed via `/api/tokens`.
 | Endpoint | Method | Auth / Scope | Description |
 | :--- | :---: | :---: | :--- |
 | `/api/ups` | `GET` | `system:read` | Query UPS status, battery %, load, runtime, and voltage (direct USB HID `/dev/hidraw*`, NUT, or APCUPSD). |
+| `/api/system/ups/config` | `GET` | `system:read` | Retrieve persistent UPS configuration and tier recovery status from SQLite `history.db`. |
+| `/api/system/ups/config` | `POST` | `system:admin`| Persist UPS connection settings across reboots with auto-discovery fallback on error. |
+| `/api/system/ups/discover` | `GET` | `system:admin`| Auto-probe local USB ports and network gateway for available UPS daemons. |
 | `/api/system/ups/mode` | `GET` | `system:read` | Query detected UPS mode, driver daemon type, and connection endpoint. |
 | `/api/system/ups/mode` | `POST` | `system:admin`| Configure manual or auto UPS connection parameters (`nut_host`, `nut_port`, `nut_name`). |
 | `/api/system/ups/policy` | `POST` | `system:admin`| Save safe shutdown policies: battery threshold % (5%–50%), runtime remaining minutes (2–30 min), and immediate shutdown toggle. |
