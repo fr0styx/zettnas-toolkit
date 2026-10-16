@@ -10,6 +10,8 @@ import json
 import os
 import re
 import shutil
+import sqlite3
+import struct
 import subprocess
 import time
 from typing import Any, Dict, List, Optional, Tuple
@@ -445,6 +447,257 @@ class StoragePlatformAdapter(ABC):
         except Exception as e:
             logger.debug(f"[PAL] Error reading mdstat from {target}: {e}")
         return result
+
+    def _parse_fs_superblock(self, device_path: str) -> Optional[Dict[str, Any]]:
+        """Directly parses filesystem superblocks from raw block device (Ext2/3/4, XFS, Btrfs)."""
+        if not device_path or not os.path.exists(device_path):
+            return None
+        try:
+            with open(device_path, "rb") as f:
+                # 1. Check XFS (offset 0)
+                f.seek(0)
+                hdr = f.read(160)
+                if len(hdr) >= 160 and hdr[:4] == b"XFSB":
+                    bsize = struct.unpack(">I", hdr[4:8])[0]
+                    dblocks = struct.unpack(">Q", hdr[8:16])[0]
+                    fdblocks = struct.unpack(">Q", hdr[0x90:0x98])[0] if len(hdr) >= 0x98 else 0
+                    tot = dblocks * bsize
+                    fre = fdblocks * bsize
+                    usd = max(0, tot - fre)
+                    pct = round(usd / tot * 100, 1) if tot > 0 else 0.0
+                    return {
+                        "fstype": "xfs",
+                        "total_bytes": tot,
+                        "free_bytes": fre,
+                        "used_bytes": usd,
+                        "used_pct": pct,
+                    }
+
+                # 2. Check Ext2/3/4 (offset 1024)
+                f.seek(1024)
+                sb = f.read(1024)
+                if len(sb) >= 1024 and struct.unpack("<H", sb[0x38:0x3A])[0] == 0xEF53:
+                    s_log_block_size = struct.unpack("<I", sb[0x18:0x1C])[0]
+                    bsize = 1024 << s_log_block_size
+                    blocks_lo = struct.unpack("<I", sb[0x04:0x08])[0]
+                    free_lo = struct.unpack("<I", sb[0x0C:0x10])[0]
+                    incompat = struct.unpack("<I", sb[0x60:0x64])[0] if len(sb) >= 0x64 else 0
+                    is_64bit = bool(incompat & 0x80)
+                    blocks_hi = struct.unpack("<I", sb[0x150:0x154])[0] if (is_64bit and len(sb) >= 0x154) else 0
+                    free_hi = struct.unpack("<I", sb[0x158:0x15C])[0] if (is_64bit and len(sb) >= 0x15C) else 0
+                    tot_blocks = (blocks_hi << 32) | blocks_lo
+                    fre_blocks = (free_hi << 32) | free_lo
+                    tot = tot_blocks * bsize
+                    fre = fre_blocks * bsize
+                    usd = max(0, tot - fre)
+                    pct = round(usd / tot * 100, 1) if tot > 0 else 0.0
+                    return {
+                        "fstype": "ext4",
+                        "total_bytes": tot,
+                        "free_bytes": fre,
+                        "used_bytes": usd,
+                        "used_pct": pct,
+                    }
+
+                # 3. Check Btrfs (offset 0x10000 = 65536)
+                f.seek(0x10000)
+                sb_btrfs = f.read(512)
+                if len(sb_btrfs) >= 512 and sb_btrfs[0x40:0x48] == b"_BHRfS_M":
+                    tot = struct.unpack("<Q", sb_btrfs[0x70:0x78])[0]
+                    usd = struct.unpack("<Q", sb_btrfs[0x78:0x80])[0]
+                    fre = max(0, tot - usd)
+                    pct = round(usd / tot * 100, 1) if tot > 0 else 0.0
+                    return {
+                        "fstype": "btrfs",
+                        "total_bytes": tot,
+                        "free_bytes": fre,
+                        "used_bytes": usd,
+                        "used_pct": pct,
+                    }
+        except (OSError, PermissionError, struct.error) as e:
+            logger.debug(f"[PAL] Superblock parse on {device_path} failed: {e}")
+        return None
+
+    def _read_casaos_storage_db(self) -> Dict[str, Dict[str, Any]]:
+        """Reads pool and raid storage records from CasaOS / ZettOS SQLite local-storage.db if available."""
+        result: Dict[str, Dict[str, Any]] = {}
+        db_candidates = [
+            "/var/lib/casaos/db/local-storage.db",
+            "/host/var/lib/casaos/db/local-storage.db",
+            "/var/lib/casaos/local-storage.db",
+            "/host/var/lib/casaos/local-storage.db",
+            "/DATA/.casaos/db/local-storage.db",
+            "/etc/casaos/local-storage.db",
+            "/host/etc/casaos/local-storage.db",
+        ]
+        target_db = next((c for c in db_candidates if os.path.isfile(c)), None)
+        if not target_db:
+            return result
+
+        try:
+            conn = sqlite3.connect(f"file:{target_db}?mode=ro", uri=True, timeout=2.0)
+            cursor = conn.cursor()
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+            tables = [r[0] for r in cursor.fetchall()]
+
+            for table in ("raids", "storage", "storages", "pools"):
+                if table in tables:
+                    cursor.execute(f"PRAGMA table_info({table});")
+                    cols = [c[1] for c in cursor.fetchall()]
+                    cursor.execute(f"SELECT * FROM {table};")
+                    for row in cursor.fetchall():
+                        row_dict = dict(zip(cols, row))
+                        keys = [
+                            row_dict.get("path"),
+                            row_dict.get("name"),
+                            row_dict.get("uuid"),
+                            row_dict.get("mount_point"),
+                        ]
+                        for k in keys:
+                            if k:
+                                str_k = str(k).strip()
+                                result[str_k] = row_dict
+                                result[os.path.basename(str_k)] = row_dict
+            conn.close()
+        except Exception as e:
+            logger.debug(f"[PAL] Could not read CasaOS local-storage.db: {e}")
+        return result
+
+    def _resolve_container_accessible_path(self, mount_path: str) -> Optional[str]:
+        """Resolves a host mount path to an accessible container path, testing various prefix candidates."""
+        if not mount_path:
+            return None
+        if os.path.exists(mount_path):
+            return mount_path
+
+        # Check host root prefixes
+        for pfx in ("/host/root", "/host"):
+            cand = os.path.join(pfx, mount_path.lstrip("/"))
+            if os.path.exists(cand):
+                return cand
+
+        # Check cross-mounted volume candidates (e.g. /media/Pool_2 -> /mnt/Pool_2, /zettos/Pool_2, etc.)
+        name = os.path.basename(mount_path.rstrip("/"))
+        if name:
+            for base_dir in ("/media", "/mnt", "/DATA", "/zettos", "/zettos/pool", "/mnt/storage", "/app/data"):
+                cand = os.path.join(base_dir, name)
+                if os.path.exists(cand):
+                    return cand
+
+        return None
+
+    def _get_mount_or_device_usage(
+        self,
+        mount_path: Optional[str],
+        dev_name: Optional[str] = None,
+        fallback_total: int = 0,
+    ) -> Tuple[int, int, int, float, Optional[str]]:
+        """
+        Determines (total_bytes, used_bytes, free_bytes, used_pct, resolved_fstype).
+        Uses a 5-tier discovery strategy:
+        1. Container accessible mountpoint via shutil.disk_usage()
+        2. Direct superblock inspection on block device or holders/partitions (ext4, xfs, btrfs)
+        3. CasaOS / ZettOS SQLite local-storage.db records
+        4. lsblk -b -J inspection
+        5. Fallback to fallback_total
+        """
+        clean_dev = os.path.basename(dev_name) if dev_name else ""
+
+        # Tier 1: Container accessible mountpoint
+        if mount_path:
+            acc_path = self._resolve_container_accessible_path(mount_path) or mount_path
+            try:
+                if not self._is_os_overlay_or_emmc(acc_path):
+                    u = shutil.disk_usage(acc_path)
+                    if u.total > 0:
+                        tot = u.total
+                        usd = u.used
+                        fre = u.free
+                        pct = round(usd / tot * 100, 1) if tot > 0 else 0.0
+                        return tot, usd, fre, pct, None
+            except Exception:
+                pass
+
+        # Tier 2: Superblock direct parsing on device candidates and holder/partitions
+        dev_candidates = []
+        if clean_dev:
+            for d_pfx in ("/dev", "/host/dev", "/dev/mapper", "/host/dev/mapper"):
+                cand = os.path.join(d_pfx, clean_dev)
+                if os.path.exists(cand) and cand not in dev_candidates:
+                    dev_candidates.append(cand)
+            # Check partition (e.g. md3p1)
+            for d_pfx in ("/dev", "/host/dev"):
+                cand = os.path.join(d_pfx, f"{clean_dev}p1")
+                if os.path.exists(cand) and cand not in dev_candidates:
+                    dev_candidates.append(cand)
+            # Check holders from sysfs
+            for s_base in (HOST_SYS, "/sys", "/host/sys"):
+                if not s_base:
+                    continue
+                holders_dir = os.path.join(s_base, "block", clean_dev, "holders")
+                if os.path.isdir(holders_dir):
+                    try:
+                        for h in os.listdir(holders_dir):
+                            for d_pfx in ("/dev", "/host/dev", "/dev/mapper", "/host/dev/mapper"):
+                                cand = os.path.join(d_pfx, h)
+                                if os.path.exists(cand) and cand not in dev_candidates:
+                                    dev_candidates.append(cand)
+                    except Exception:
+                        pass
+
+        for dev_node in dev_candidates:
+            sb = self._parse_fs_superblock(dev_node)
+            if sb and sb.get("total_bytes", 0) > 0:
+                tot = sb["total_bytes"]
+                usd = sb["used_bytes"]
+                fre = sb["free_bytes"]
+                pct = sb["used_pct"]
+                fstype = sb["fstype"]
+                return tot, usd, fre, pct, fstype
+
+        # Tier 3: CasaOS / ZettOS database records
+        db_records = self._read_casaos_storage_db()
+        for lookup_key in (clean_dev, mount_path, os.path.basename(mount_path or "")):
+            if lookup_key and lookup_key in db_records:
+                rec = db_records[lookup_key]
+                tot = int(rec.get("size") or rec.get("total_size") or rec.get("capacity") or 0)
+                usd = int(rec.get("used") or rec.get("used_size") or 0)
+                fre = int(rec.get("free") or rec.get("avail") or (tot - usd if tot >= usd else 0))
+                fstype = rec.get("fs_type") or rec.get("type") or None
+                if tot > 0 and usd > 0:
+                    pct = round(usd / tot * 100, 1)
+                    return tot, usd, fre, pct, fstype
+
+        # Tier 4: lsblk -b -J
+        if dev_candidates:
+            for dev_node in dev_candidates:
+                code, out, _ = self._run_cmd(
+                    ["lsblk", "-b", "-J", "-o", "NAME,PATH,FSTYPE,FSSIZE,FSUSED,FSAVAIL,FSUSE%", dev_node]
+                )
+                if code == 0 and out.strip():
+                    try:
+                        data = json.loads(out)
+                        bds = data.get("blockdevices") or []
+                        for bd in bds:
+                            fssize = bd.get("fssize")
+                            fsused = bd.get("fsused")
+                            fsavail = bd.get("fsavail")
+                            fstype = bd.get("fstype")
+                            if fssize and fsused is not None:
+                                tot = int(fssize)
+                                usd = int(fsused)
+                                fre = int(fsavail) if fsavail else max(0, tot - usd)
+                                pct = round(usd / tot * 100, 1) if tot > 0 else 0.0
+                                return tot, usd, fre, pct, fstype
+                    except Exception:
+                        pass
+
+        # Tier 5: Fallback
+        tot = fallback_total
+        usd = 0
+        fre = tot
+        pct = 0.0
+        return tot, usd, fre, pct, None
 
     def _discover_hal_disks(self) -> List[PoolMember]:
         """Discovers non-OS physical disks safely via Hardware Abstraction Layer."""
@@ -1366,28 +1619,33 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
                     )
 
             mount_path = None
-            used_b = 0
-            free_b = size_b
-            pct = 0.0
+            md_devices = {md_dev, f"/dev/{md_dev}"}
+            for s_base in (HOST_SYS, "/sys", "/host/sys"):
+                if not s_base:
+                    continue
+                holders_dir = os.path.join(s_base, "block", md_dev, "holders")
+                if os.path.isdir(holders_dir):
+                    try:
+                        for h in os.listdir(holders_dir):
+                            md_devices.add(h)
+                            md_devices.add(f"/dev/{h}")
+                            md_devices.add(f"/dev/mapper/{h}")
+                    except Exception:
+                        pass
 
             for m in mounts:
                 dev = m.get("device", "")
                 mp = m.get("mountpoint", "")
-                if md_dev in dev or dev == f"/dev/{md_dev}":
+                if any(target in dev for target in md_devices):
                     mount_path = mp
                     claimed_mount_paths.add(mp)
                     break
 
-            if mount_path and os.path.exists(mount_path):
-                try:
-                    u = shutil.disk_usage(mount_path)
-                    used_b = u.used
-                    free_b = u.free
-                    if u.total > 0:
-                        size_b = u.total
-                        pct = round(used_b / size_b * 100, 1)
-                except Exception:
-                    pass
+            size_b, used_b, free_b, pct, resolved_fstype = self._get_mount_or_device_usage(
+                mount_path=mount_path,
+                dev_name=md_dev,
+                fallback_total=size_b,
+            )
 
             is_nvme_array = "nvme" in str(members[0].device if members else "")
             if not has_multiple_md:
@@ -1408,7 +1666,7 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
                     id=md_dev,
                     name=friendly_name,
                     pool_type=f"md_{level}",
-                    fs_type="btrfs" if mount_path and "btrfs" in str(mounts) else "mdraid",
+                    fs_type=resolved_fstype or ("btrfs" if mount_path and "btrfs" in str(mounts) else "ext4"),
                     fs_profile=level,
                     status=status,
                     mountpoint=mount_path or f"/{md_dev}",
@@ -1419,7 +1677,7 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
                     members=members,
                     parity_protected=parity,
                     autotrim="nvme" in str(members),
-                    compression="zstd" if "btrfs" in str(mounts) else "off",
+                    compression="zstd" if "btrfs" in str(resolved_fstype or mounts) else "off",
                 )
             )
 
@@ -3100,15 +3358,25 @@ class ZettOSStorageAdapter(ObserverStorageAdapter):
 
             # Check if this md array (or a filesystem on it) is mounted
             mount_path = None
-            used_b = 0
-            free_b = size_b
-            pct = 0.0
+            md_devices = {md_dev, f"/dev/{md_dev}"}
+            for s_base in (HOST_SYS, "/sys", "/host/sys"):
+                if not s_base:
+                    continue
+                holders_dir = os.path.join(s_base, "block", md_dev, "holders")
+                if os.path.isdir(holders_dir):
+                    try:
+                        for h in os.listdir(holders_dir):
+                            md_devices.add(h)
+                            md_devices.add(f"/dev/{h}")
+                            md_devices.add(f"/dev/mapper/{h}")
+                    except Exception:
+                        pass
 
             # Check container mounts for matching block device or subvolume
             for m in mounts:
                 dev = m.get("device", "")
                 mp = m.get("mountpoint", "")
-                if md_dev in dev or dev == f"/dev/{md_dev}":
+                if any(target in dev for target in md_devices):
                     mount_path = mp
                     claimed_mount_paths.add(mp)
                     break
@@ -3136,16 +3404,11 @@ class ZettOSStorageAdapter(ObserverStorageAdapter):
                         claimed_mount_paths.add(cand_dir)
                         break
 
-            if mount_path and os.path.exists(mount_path):
-                try:
-                    u = shutil.disk_usage(mount_path)
-                    used_b = u.used
-                    free_b = u.free
-                    if u.total > 0:
-                        size_b = u.total
-                        pct = round(used_b / size_b * 100, 1)
-                except Exception:
-                    pass
+            size_b, used_b, free_b, pct, resolved_fstype = self._get_mount_or_device_usage(
+                mount_path=mount_path,
+                dev_name=md_dev,
+                fallback_total=size_b,
+            )
 
             is_nvme_array = "nvme" in str(members[0].device if members else "")
             if not has_multiple_md:
@@ -3166,7 +3429,7 @@ class ZettOSStorageAdapter(ObserverStorageAdapter):
                     id=md_dev,
                     name=friendly_name,
                     pool_type=f"md_{level}",
-                    fs_type="btrfs" if mount_path and "btrfs" in str(mounts) else "mdraid",
+                    fs_type=resolved_fstype or ("btrfs" if mount_path and "btrfs" in str(mounts) else "ext4"),
                     fs_profile=level,
                     status=status,
                     mountpoint=mount_path or f"/{md_dev}",
@@ -3177,7 +3440,7 @@ class ZettOSStorageAdapter(ObserverStorageAdapter):
                     members=members,
                     parity_protected=parity,
                     autotrim="nvme" in str(members),
-                    compression="zstd" if "btrfs" in str(mounts) else "off",
+                    compression="zstd" if "btrfs" in str(resolved_fstype or mounts) else "off",
                 )
             )
 
@@ -3195,17 +3458,17 @@ class ZettOSStorageAdapter(ObserverStorageAdapter):
                 if any(p.id == os.path.basename(dev) or p.mountpoint == mp for p in pools):
                     continue
 
-                try:
-                    u = shutil.disk_usage(mp)
-                    tot, usd, fre = u.total, u.used, u.free
-                except Exception:
-                    continue
-
+                tot, usd, fre, pct, resolved_fs = self._get_mount_or_device_usage(
+                    mount_path=mp,
+                    dev_name=os.path.basename(dev),
+                    fallback_total=0,
+                )
                 if tot < 20 * 1024 * 1024 * 1024:
                     continue
 
                 claimed_mount_paths.add(mp)
-                pct = round(usd / tot * 100, 1) if tot > 0 else 0.0
+                if resolved_fs:
+                    fstype = resolved_fs
 
                 pool_members = []
                 for d_name, d_rec in hal_disks.items():

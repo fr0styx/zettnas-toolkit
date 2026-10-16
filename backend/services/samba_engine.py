@@ -37,12 +37,13 @@ class SambaShareConfig(BaseModel):
 
 class SambaStatus(BaseModel):
     running: bool
-    mode: str  # "native_sidecar", "host_auditor", "disabled"
+    mode: str  # "native_sidecar", "host_auditor", "disabled", "host_native"
     port_445_open: bool
     shares_count: int
     sidecar_detected: bool = False
     sidecar_status: str = "not_found"
     config_path: str = SAMBA_CONF_FILE
+    native_samba_active: bool = False
 
 
 class SambaEngine:
@@ -86,7 +87,26 @@ class SambaEngine:
             pass
         self._shares: Dict[str, SambaShareConfig] = {}
         self._load_shares()
+        self.sync_sidecar_policy()
         self._ensure_default_conf()
+
+    def sync_sidecar_policy(self) -> tuple[bool, str]:
+        """Ensures disable_sidecar marker exists when host has native Samba active or is a turnkey OS."""
+        can_run, reason = self.can_run_sidecar()
+        marker_file = os.path.join(SAMBA_DIR, "disable_sidecar")
+        if not can_run:
+            try:
+                with open(marker_file, "w", encoding="utf-8") as f:
+                    f.write(f"disabled: {reason}\n")
+            except Exception as e:
+                logger.debug(f"[SambaEngine] Could not write disable_sidecar marker: {e}")
+        else:
+            if os.path.isfile(marker_file):
+                try:
+                    os.remove(marker_file)
+                except Exception:
+                    pass
+        return can_run, reason
 
     def can_run_sidecar(self) -> tuple[bool, str]:
         """Pre-flight check to verify if zettnas-samba sidecar can bind port 445."""
@@ -428,20 +448,36 @@ class SambaEngine:
         port_open = self.check_port_445()
         sidecar_info = self.check_sidecar()
         sidecar_detected = sidecar_info.get("detected", False)
+        is_sidecar_running = sidecar_detected and sidecar_info.get("state") == "running"
 
         from backend.hardware.pal_storage import StoragePlatformDetector, PlatformType
 
         platform = StoragePlatformDetector.detect()
+        is_turnkey = platform in (
+            PlatformType.UNRAID,
+            PlatformType.TRUENAS,
+            PlatformType.PROXMOX,
+            PlatformType.FYGOOS,
+            PlatformType.ZETTOS,
+            PlatformType.UGOS,
+            PlatformType.GENERIC_OBSERVER,
+        )
 
-        if platform == PlatformType.UNRAID:
-            mode = "host_auditor"
+        self.sync_sidecar_policy()
+        native_samba = is_turnkey or (port_open and not is_sidecar_running)
+
+        if is_turnkey:
+            mode = "host_native" if platform == PlatformType.ZETTOS else "host_auditor"
             running = port_open
-        elif sidecar_detected and sidecar_info.get("state") == "running":
+            sidecar_status = "standby_host_native" if sidecar_detected else sidecar_info.get("status", "not_found")
+        elif is_sidecar_running:
             mode = "native_sidecar"
             running = True
+            sidecar_status = sidecar_info.get("status", "running")
         else:
             mode = "native_sidecar" if platform == PlatformType.GENERIC_LINUX else "host_auditor"
             running = port_open
+            sidecar_status = sidecar_info.get("status", "not_found")
 
         return SambaStatus(
             running=running,
@@ -449,8 +485,9 @@ class SambaEngine:
             port_445_open=port_open,
             shares_count=len(self._shares),
             sidecar_detected=sidecar_detected,
-            sidecar_status=sidecar_info.get("status", "not_found"),
+            sidecar_status=sidecar_status,
             config_path=SAMBA_CONF_FILE,
+            native_samba_active=native_samba,
         )
 
 

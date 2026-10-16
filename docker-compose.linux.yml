@@ -67,6 +67,10 @@ services:
       - 'c 10:* rwm'    # Misc character devices (KVM, vhost-net)
       - 'b 8:* rwm'     # SCSI/SATA block devices (/dev/sd*)
       - 'b 259:* rwm'   # NVMe block devices (/dev/nvme*)
+      - 'b 9:* rwm'     # Linux Software RAID block devices (/dev/md*)
+      - 'b 253:* rwm'   # Device-Mapper / LVM / Crypt block devices (/dev/dm-*)
+      - 'b 252:* rwm'   # bcache block devices (/dev/bcache*)
+      - 'b 7:* rwm'     # Loop devices (/dev/loop*)
     devices:
       - /dev/fuse:/dev/fuse
       # - /dev/kvm:/dev/kvm  # Uncomment for direct /dev/kvm access if host has hardware virtualization
@@ -84,6 +88,15 @@ services:
       - USERID=1000
       - GROUPID=1000
       - INCLUDE=/etc/samba/zettnas/smb.conf
-    command: ["-I", "/etc/samba/zettnas/smb.conf"]
+    command:
+      - "sh"
+      - "-c"
+      - |
+        if [ -f /etc/samba/zettnas/disable_sidecar ] || (which nc >/dev/null 2>&1 && nc -z 127.0.0.1 445 2>/dev/null); then
+          echo "[ZettNAS Samba] Host OS has native Samba active on port 445. Standby mode active."
+          while true; do sleep 86400; done
+        else
+          exec /usr/bin/samba.sh -I /etc/samba/zettnas/smb.conf
+        fi
     depends_on:
       - zettnas-toolkit

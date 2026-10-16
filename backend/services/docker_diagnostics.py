@@ -180,6 +180,14 @@ def collect_docker_diagnostics() -> Dict[str, Any]:
                 result["containers_summary"]["oom_killed"] += 1
 
             is_troubled = status in ("restarting", "dead") or is_oom
+            if is_troubled and name == "zettnas-samba":
+                try:
+                    from backend.hardware.pal_storage import StoragePlatformDetector, PlatformType
+
+                    if StoragePlatformDetector.detect() != PlatformType.GENERIC_LINUX:
+                        is_troubled = False
+                except Exception:
+                    pass
 
             if is_troubled:
                 troubled_names.append(name)
