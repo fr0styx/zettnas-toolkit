@@ -35,10 +35,11 @@ def mock_mmio_controller(monkeypatch):
     ctrl._mm = fake_mm
     ctrl._failed_previously = False
 
-    # Force is_zettlab_appliance to True
+    # Force is_zettlab_appliance and is_zettlab_mmio_supported to True
     import backend.hardware.fans as fans_mod
 
     monkeypatch.setattr(fans_mod, "is_zettlab_appliance", lambda: True)
+    monkeypatch.setattr(fans_mod, "is_zettlab_mmio_supported", lambda: True)
     monkeypatch.setattr(fans_mod, "get_mmio_fan_controller", lambda: ctrl)
 
     return ctrl, fake_mm

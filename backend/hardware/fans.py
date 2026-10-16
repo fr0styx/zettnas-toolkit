@@ -200,11 +200,11 @@ class ZettlabMmioFanController:
         ]
 
     def _ensure_mapped(self) -> bool:
-        if not is_zettlab_mmio_supported():
-            return False
         with self._lock:
             if self._mm is not None:
                 return True
+            if not is_zettlab_mmio_supported():
+                return False
             now = time.time()
             if getattr(self, "_last_failed_time", 0.0) and (now - self._last_failed_time < 30.0):
                 return False
