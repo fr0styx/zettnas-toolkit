@@ -119,15 +119,17 @@ describe('Batch 6: Observability, Structured Logging & Diagnostics Export', () =
     expect(revokeObjectURLMock).toHaveBeenCalledWith('blob:http://localhost/fake-uuid');
   });
 
-  it('openDiagnosticsPreviewModal renders executive health banner and correct memory RAM metrics', async () => {
-    const { openDiagnosticsPreviewModal } = await import('../components/management.js');
+  it('openDiagnosticsPreviewModal adds open class, renders executive health banner and correct memory RAM metrics', async () => {
+    const { openDiagnosticsPreviewModal, closeDiagnosticsPreviewModal } = await import('../components/management.js');
 
     const modalContainer = document.createElement('div');
     modalContainer.innerHTML = `
-      <div id="diagnostics-preview-modal-overlay" style="display:none;">
-        <div id="diagnostics-preview-banner" style="display:none;"></div>
-        <div id="diagnostics-preview-grid"></div>
-        <pre id="diagnostics-preview-md"></pre>
+      <div id="diagnostics-preview-modal-overlay" class="smart-modal-backdrop" style="display:none;">
+        <div class="smart-modal-window">
+          <div id="diagnostics-preview-banner" style="display:none;"></div>
+          <div id="diagnostics-preview-grid"></div>
+          <pre id="diagnostics-preview-md"></pre>
+        </div>
       </div>
     `;
     document.body.appendChild(modalContainer);
@@ -171,6 +173,7 @@ describe('Batch 6: Observability, Structured Logging & Diagnostics Export', () =
     const md = document.getElementById('diagnostics-preview-md');
 
     expect(overlay.style.display).toBe('flex');
+    expect(overlay.classList.contains('open')).toBe(true);
     expect(banner.style.display).toBe('block');
     expect(banner.textContent).toContain('ATTENTION REQUIRED');
     expect(banner.textContent).toContain('zettnas-samba');
@@ -178,6 +181,83 @@ describe('Batch 6: Observability, Structured Logging & Diagnostics Export', () =
     expect(grid.innerHTML).toContain('7.2 / 58.4 GB RAM');
     expect(md.textContent).toContain('Memory Usage: 12%');
 
+    closeDiagnosticsPreviewModal();
+    expect(overlay.style.display).toBe('none');
+    expect(overlay.classList.contains('open')).toBe(false);
+
     modalContainer.remove();
+  });
+
+  it('previewDiagnosticsSummary manages button loading state and opens preview modal', async () => {
+    const { previewDiagnosticsSummary } = await import('../components/management.js');
+
+    const modalContainer = document.createElement('div');
+    modalContainer.innerHTML = `
+      <button id="btn-preview-diagnostics">
+        <span>👁️</span> <span>Preview Summary</span>
+      </button>
+      <div id="diagnostics-preview-modal-overlay" class="smart-modal-backdrop" style="display:none;">
+        <div class="smart-modal-window">
+          <div id="diagnostics-preview-banner"></div>
+          <div id="diagnostics-preview-grid"></div>
+          <pre id="diagnostics-preview-md"></pre>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modalContainer);
+
+    const mockSummary = {
+      executive_status: 'HEALTHY',
+      alerts: [],
+      chassis: 'Aoostar WTR Pro',
+      memory: { pct: 25, used_gb: 8, total_gb: 32 },
+      storage: { pools_count: 2, disks_count: 4, standby_count: 2 },
+      docker: { running: 5, total: 5 },
+      vms: { active_vm_count: 1, total_vm_count: 1 },
+      support_markdown: '### Health Status: All Systems Operational',
+    };
+
+    const getSpy = vi.spyOn(api, 'get').mockImplementation(async (url) => {
+      if (url === '/api/system/diagnostics-summary') {
+        const btn = document.getElementById('btn-preview-diagnostics');
+        expect(btn.disabled).toBe(true);
+        expect(btn.innerHTML).toContain('ci-spinner');
+        return mockSummary;
+      }
+      return {};
+    });
+
+    await previewDiagnosticsSummary();
+
+    expect(getSpy).toHaveBeenCalledWith('/api/system/diagnostics-summary');
+    const overlay = document.getElementById('diagnostics-preview-modal-overlay');
+    expect(overlay.style.display).toBe('flex');
+    expect(overlay.classList.contains('open')).toBe(true);
+
+    const btn = document.getElementById('btn-preview-diagnostics');
+    expect(btn.disabled).toBe(false);
+    expect(btn.innerHTML).toContain('Preview Summary');
+
+    modalContainer.remove();
+  });
+
+  it('copySupportMarkdown copies text from md element and displays success toast', async () => {
+    const { copySupportMarkdown } = await import('../components/management.js');
+    const utils = await import('../utils.js');
+    const copySpy = vi.spyOn(utils, 'copyTextToClipboard').mockResolvedValue(true);
+
+    const testContainer = document.createElement('div');
+    testContainer.innerHTML = `
+      <button id="btn-copy-support-md">Copy Support Markdown</button>
+      <pre id="diagnostics-preview-md">### ZettNAS System Report</pre>
+    `;
+    document.body.appendChild(testContainer);
+
+    await copySupportMarkdown();
+
+    expect(copySpy).toHaveBeenCalledWith('### ZettNAS System Report');
+    expect(toast.showToast).toHaveBeenCalledWith(expect.stringContaining('copied to clipboard'), 'success');
+
+    testContainer.remove();
   });
 });

@@ -445,6 +445,12 @@ export function initWindowKeyboardShortcuts() {
     }
 
     if (e.key === 'Escape') {
+      const diagOverlay = document.getElementById('diagnostics-preview-modal-overlay');
+      if (diagOverlay && diagOverlay.classList.contains('open')) {
+        diagOverlay.classList.remove('open');
+        diagOverlay.style.display = 'none';
+        return;
+      }
       const detailOverlay = document.getElementById('event-detail-modal-overlay');
       if (detailOverlay && detailOverlay.classList.contains('open')) {
         if (window.closeEventDetailModal) window.closeEventDetailModal();

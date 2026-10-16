@@ -7752,6 +7752,19 @@ export function initManagement() {
   if (copyDiagPreviewBtn) {
     copyDiagPreviewBtn.addEventListener('click', copySupportMarkdown);
   }
+  const diagPreviewOverlay = document.getElementById('diagnostics-preview-modal-overlay');
+  if (diagPreviewOverlay) {
+    diagPreviewOverlay.addEventListener('click', (e) => {
+      if (e.target === diagPreviewOverlay) {
+        closeDiagnosticsPreviewModal();
+      }
+    });
+    const diagWin = diagPreviewOverlay.querySelector('.smart-modal-window');
+    const diagHeader = document.getElementById('diagnostics-preview-header');
+    if (diagWin && diagHeader && typeof makeDraggable === 'function') {
+      makeDraggable(diagWin, diagHeader, 'diagnostics-preview');
+    }
+  }
 
   // Notification Center triggers
   const sendTestAlertBtn = document.getElementById('btn-send-test-alert');
@@ -8228,7 +8241,10 @@ export async function downloadDiagnosticsBundle() {
 
 export function closeDiagnosticsPreviewModal() {
   const overlay = document.getElementById('diagnostics-preview-modal-overlay');
-  if (overlay) overlay.style.display = 'none';
+  if (overlay) {
+    overlay.classList.remove('open');
+    overlay.style.display = 'none';
+  }
 }
 
 export function openDiagnosticsPreviewModal(data) {
@@ -8343,21 +8359,53 @@ export function openDiagnosticsPreviewModal(data) {
   }
 
   overlay.style.display = 'flex';
+  overlay.classList.remove('window-minimized');
+  overlay.classList.add('open');
+
+  const win = overlay.querySelector('.smart-modal-window');
+  if (win && typeof bringToFront === 'function') {
+    bringToFront(win);
+  }
 }
 
 export async function previewDiagnosticsSummary() {
+  const btn = document.getElementById('btn-preview-diagnostics');
+  const origHtml = btn ? btn.innerHTML : '';
   try {
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = `<span class="ci-spinner" style="display:inline-block; width:12px; height:12px; border:2px solid rgba(255,255,255,0.3); border-top-color:#fff; border-radius:50%; animation:spin 0.8s linear infinite;"></span> <span>${t('diagnostics.loading_preview', 'Loading Preview...')}</span>`;
+    }
     const data = await api.get('/api/system/diagnostics-summary');
     openDiagnosticsPreviewModal(data);
   } catch (err) {
     showToast(`Failed to load diagnostics preview: ${err.message}`, 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = origHtml;
+    }
   }
 }
 
 export async function copySupportMarkdown() {
+  const btn = document.getElementById('btn-copy-support-md');
+  const previewCopyBtn = document.getElementById('btn-diag-preview-copy');
+  const targetBtn = (previewCopyBtn && document.activeElement === previewCopyBtn) ? previewCopyBtn : btn;
+  const origHtml = targetBtn ? targetBtn.innerHTML : '';
   try {
-    const data = await api.get('/api/system/diagnostics-summary');
-    const md = data?.support_markdown || '';
+    const mdEl = document.getElementById('diagnostics-preview-md');
+    let md = '';
+    if (mdEl && mdEl.textContent && mdEl.textContent.trim().length > 0 && mdEl.textContent !== 'No summary generated.') {
+      md = mdEl.textContent;
+    } else {
+      if (targetBtn) {
+        targetBtn.disabled = true;
+        targetBtn.innerHTML = `<span class="ci-spinner" style="display:inline-block; width:12px; height:12px; border:2px solid rgba(255,255,255,0.3); border-top-color:#fff; border-radius:50%; animation:spin 0.8s linear infinite;"></span> <span>${t('diagnostics.copying_md', 'Copying...')}</span>`;
+      }
+      const data = await api.get('/api/system/diagnostics-summary');
+      md = data?.support_markdown || '';
+    }
     if (!md) throw new Error('No support markdown generated');
 
     const copied = await copyTextToClipboard(md);
@@ -8368,6 +8416,11 @@ export async function copySupportMarkdown() {
     }
   } catch (err) {
     showToast(`Failed to copy support markdown: ${err.message}`, 'error');
+  } finally {
+    if (targetBtn) {
+      targetBtn.disabled = false;
+      targetBtn.innerHTML = origHtml;
+    }
   }
 }
 
