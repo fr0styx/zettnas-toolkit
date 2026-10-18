@@ -29,9 +29,17 @@ describe('Mission Control 6-Pillar Information Architecture & Hardware Agnostici
           <div id="mgmt-pane-widgets">Widgets Content</div>
         </div>
       </div>
-      <div id="led-drawer" class="slide-drawer"></div>
+      <div id="led-drawer" class="slide-drawer">
+        <button class="drawer-tab-btn active" data-tab="tab-layout">Dashboard Layout</button>
+        <button class="drawer-tab-btn" data-tab="tab-led">LED Strip bar</button>
+        <button class="drawer-tab-btn" data-tab="tab-fans">Fans</button>
+        <button class="drawer-tab-btn" data-tab="tab-buttons">Copy Button</button>
+        <div id="tab-layout" class="drawer-tab-content active">Console Content</div>
+        <div id="tab-led" class="drawer-tab-content">LED Content</div>
+        <div id="tab-fans" class="drawer-tab-content">Fans Content</div>
+        <div id="tab-buttons" class="drawer-tab-content">Buttons Content</div>
+      </div>
       <div id="drawer-overlay" class="drawer-backdrop"></div>
-      <div id="tab-layout">Console Content</div>
     `;
     window._personalizationInitialized = false;
     window.DockManager = DockManager;
@@ -72,7 +80,18 @@ describe('Mission Control 6-Pillar Information Architecture & Hardware Agnostici
     });
   });
 
-  it('openDrawer routes legacy hardware tabs to Mission Control and layout to Personalization', () => {
+  it('openDrawer opens sliding drawer with tabs and falls back gracefully when drawer is missing', () => {
+    const drawer = document.getElementById('led-drawer');
+    const overlay = document.getElementById('drawer-overlay');
+
+    openDrawer('tab-fans');
+    expect(drawer.classList.contains('open')).toBe(true);
+    expect(overlay.classList.contains('open')).toBe(true);
+    expect(document.body.classList.contains('drawer-is-open')).toBe(true);
+
+    // Fallback when drawer is removed
+    drawer.remove();
+    overlay.remove();
     window.openManagementWindow = vi.fn();
     window.openPersonalizationWindow = vi.fn();
 
