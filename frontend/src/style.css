@@ -16943,6 +16943,70 @@ body.theme-yak .input-modern:focus {
 }
 
 /* =========================================================================
+   AI KNOWLEDGE & CHATBOT FULL-HEIGHT WORKSPACE
+   ========================================================================= */
+#management-detail-container.ai-active,
+#management-detail-container:has(#mgmt-sec-ai:not([style*="display: none"])) {
+  height: 100% !important;
+  flex: 1 !important;
+  min-height: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+#mgmt-sec-ai:not([style*="display: none"]) {
+  flex: 1 !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  box-sizing: border-box !important;
+}
+
+#mgmt-pane-ai-chat:not([style*="display: none"]) {
+  flex: 1 !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  padding-top: 10px !important;
+  box-sizing: border-box !important;
+}
+
+#mgmt-pane-ai-chat .ai-chat-card-container {
+  flex: 1 !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  box-sizing: border-box !important;
+}
+
+#mgmt-pane-ai-chat .ai-chat-header-row {
+  flex-shrink: 0 !important;
+}
+
+#ai-chat-messages-list {
+  flex: 1 !important;
+  min-height: 180px !important;
+  max-height: none !important;
+  overflow-y: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+}
+
+#mgmt-pane-ai-chat .ai-chat-composer-row {
+  flex-shrink: 0 !important;
+  margin-top: auto !important;
+}
+
+.ai-rag-initial-placeholder {
+  animation: fadeIn 0.25s ease;
+}
+
+/* =========================================================================
    SECURITY ADVISOR INTERACTIVE CHECKLIST & ELEMENT FOCUS PULSE
    ========================================================================= */
 .sec-advisor-item {

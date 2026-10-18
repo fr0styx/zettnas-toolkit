@@ -7128,7 +7128,12 @@ export function initManagement() {
     } else if (paneId === 'mgmt-pane-ai-rag' || paneId === 'mgmt-pane-ai-chat' || paneId === 'mgmt-pane-ai-visual' || paneId === 'mgmt-pane-ai-index') {
       fetchAndRenderAiStatus();
       if (paneId === 'mgmt-pane-ai-rag' || paneId === 'mgmt-pane-ai-visual') {
-        runAiVisualSearch();
+        const q = _getActiveAiSearchQuery();
+        if (q || _aiSelectedColor || _aiSelectedScene) {
+          runAiVisualSearch(q);
+        } else {
+          _renderAiRagInitialEmptyState();
+        }
       } else if (paneId === 'mgmt-pane-ai-chat') {
         const chatInput = document.getElementById('ai-chat-input');
         if (chatInput) setTimeout(() => chatInput.focus(), 50);
@@ -7341,13 +7346,23 @@ export function initManagement() {
     }
 
     if (hubView) hubView.style.display = 'none';
-    if (detailContainer) detailContainer.style.display = 'block';
+    const isAi = targetId === 'mgmt-sec-ai';
+    if (detailContainer) {
+      detailContainer.style.display = isAi ? 'flex' : 'block';
+      detailContainer.style.flexDirection = isAi ? 'column' : '';
+      detailContainer.style.height = isAi ? '100%' : '';
+      detailContainer.classList.toggle('ai-active', isAi);
+    }
     if (headerNav) headerNav.style.display = 'flex';
     if (backBtn) backBtn.style.display = 'inline-flex';
 
     document.querySelectorAll('.mgmt-detail-card').forEach((c) => {
       if (c.id === targetId) {
-        c.style.display = 'block';
+        c.style.display = c.id === 'mgmt-sec-ai' ? 'flex' : 'block';
+        if (c.id === 'mgmt-sec-ai') {
+          c.style.flexDirection = 'column';
+          c.style.height = '100%';
+        }
       } else {
         c.style.display = 'none';
       }
@@ -7415,7 +7430,7 @@ export function initManagement() {
           }
         });
         parentCard.querySelectorAll('.mgmt-tab-pane').forEach((p) => {
-          p.style.display = p.id === desiredSubPane ? 'block' : 'none';
+          p.style.display = p.id === desiredSubPane ? (p.id === 'mgmt-pane-ai-chat' ? 'flex' : 'block') : 'none';
         });
         triggerSubTabLoad(desiredSubPane, subTabId);
       } else {
@@ -7432,13 +7447,13 @@ export function initManagement() {
             t.setAttribute('aria-selected', isActive ? 'true' : 'false');
           });
           parentCard.querySelectorAll('.mgmt-tab-pane').forEach((p) => {
-            p.style.display = p.id === paneId ? 'block' : 'none';
+            p.style.display = p.id === paneId ? (p.id === 'mgmt-pane-ai-chat' ? 'flex' : 'block') : 'none';
           });
           triggerSubTabLoad(paneId, subTabId);
         } else {
           const singlePane = parentCard.querySelector('.mgmt-tab-pane');
           if (singlePane) {
-            singlePane.style.display = 'block';
+            singlePane.style.display = singlePane.id === 'mgmt-pane-ai-chat' ? 'flex' : 'block';
             triggerSubTabLoad(singlePane.id, subTabId);
           }
         }
@@ -7469,7 +7484,7 @@ export function initManagement() {
       const targetPaneId = tab.dataset.tabTarget;
       parentCard.querySelectorAll('.mgmt-tab-pane').forEach(p => {
         if (p.id === targetPaneId) {
-          p.style.display = 'block';
+          p.style.display = p.id === 'mgmt-pane-ai-chat' ? 'flex' : 'block';
         } else {
           p.style.display = 'none';
         }
@@ -11637,6 +11652,35 @@ function renderAiCategorySummaryCards(groups = {}) {
   container.innerHTML = '';
 }
 
+export function renderAiRagInitialEmptyState() {
+  _aiSelectedColor = '';
+  _aiSelectedScene = '';
+  const grid = document.getElementById('ai-visual-results-grid');
+  if (grid) {
+    grid.innerHTML = `
+      <div class="ai-rag-initial-placeholder" style="grid-column: 1 / -1; text-align: center; padding: 48px 20px; color: var(--muted, #94a3b8);">
+        <div style="font-size: 32px; margin-bottom: 10px; opacity: 0.85;">🔍</div>
+        <div style="font-size: 14px; font-weight: 600; color: #e2e8f0; margin-bottom: 6px;" data-i18n="ai.search_placeholder_prompt">${escapeHtml(t('ai.search_placeholder_prompt', 'Search Your NAS Knowledge & Media'))}</div>
+        <div style="font-size: 12px; color: var(--muted, #94a3b8); max-width: 480px; margin: 0 auto; line-height: 1.5;" data-i18n="ai.search_placeholder_sub">${escapeHtml(t('ai.search_placeholder_sub', 'Type a query above to search documents, recipes, photos, or audio, or ask Zetty a question. Results will appear here once you search.'))}</div>
+      </div>
+    `;
+  }
+  const banner = document.getElementById('ai-visual-intent-banner');
+  if (banner) banner.style.display = 'none';
+  const inspector = document.getElementById('ai-preview-inspector-pane');
+  if (inspector) inspector.style.display = 'none';
+  const splitLayout = document.getElementById('ai-search-split-layout');
+  if (splitLayout) splitLayout.style.gridTemplateColumns = 'minmax(0, 1fr)';
+  const answerCard = document.getElementById('ai-rag-answer-card');
+  if (answerCard) answerCard.style.display = 'none';
+  const structuredCard = document.getElementById('ai-rag-structured-card');
+  if (structuredCard) structuredCard.style.display = 'none';
+  const citationsGrid = document.getElementById('ai-rag-citations-grid');
+  if (citationsGrid) citationsGrid.style.display = 'none';
+  _aiLastResultsList = [];
+}
+export const _renderAiRagInitialEmptyState = renderAiRagInitialEmptyState;
+
 export async function runAiVisualSearch(rawQuery = null) {
   const visInput = document.getElementById('ai-visual-search-input')
     || document.getElementById('ai-visual-query-input')
@@ -11644,6 +11688,11 @@ export async function runAiVisualSearch(rawQuery = null) {
   const q = (rawQuery !== null ? rawQuery : (visInput ? visInput.value : '')).trim();
   const grid = document.getElementById('ai-visual-results-grid');
   if (!grid) return null;
+
+  if (!q && !_aiSelectedColor && !_aiSelectedScene) {
+    renderAiRagInitialEmptyState();
+    return { status: 'ok', results: [] };
+  }
 
   if (q) _recordAiSearchHistory(q);
 
@@ -12006,7 +12055,7 @@ export async function sendAiChatMessage(rawMessage = null) {
   } finally {
     if (sendBtn) {
       sendBtn.disabled = false;
-      sendBtn.innerHTML = `<span>🚀</span> <span data-i18n="ai.chat_send_btn">${escapeHtml(t('ai.chat_send_btn', 'Ask Copilot'))}</span>`;
+      sendBtn.innerHTML = `<span>🚀</span> <span data-i18n="ai.chat_send_btn">${escapeHtml(t('ai.chat_send_btn', 'Ask Zetty'))}</span>`;
     }
   }
 }

@@ -20,6 +20,7 @@ import {
   sendAiChatMessage,
   clearAiChatHistory,
   isAiThinkingModel,
+  renderAiRagInitialEmptyState,
 } from '../components/management.js';
 import { openFilePreviewModal, closeFilePreviewModal } from '../components/file-preview-modal.js';
 import { initSpotlight, filterSpotlightResults } from '../components/spotlight.js';
@@ -580,7 +581,7 @@ describe('ZettAI — Multi-Modal Local RAG & Visual Search Frontend Suite', () =
       <input id="ai-chat-input" value="" />
       <input type="checkbox" id="ai-chat-web-toggle" checked />
       <input type="checkbox" id="ai-chat-tools-toggle" checked />
-      <button id="btn-ai-chat-send">Ask Copilot</button>
+      <button id="btn-ai-chat-send">Ask Zetty</button>
       <button id="btn-ai-chat-clear">Clear Chat</button>
     `);
 
@@ -675,7 +676,7 @@ describe('ZettAI — Multi-Modal Local RAG & Visual Search Frontend Suite', () =
     document.body.innerHTML = `
       <div id="ai-chat-messages-list"></div>
       <input id="ai-chat-input" value="" />
-      <button id="btn-ai-chat-send">Ask Copilot</button>
+      <button id="btn-ai-chat-send">Ask Zetty</button>
       <button id="btn-ai-chat-clear">Clear Chat</button>
     `;
 
@@ -714,6 +715,48 @@ describe('ZettAI — Multi-Modal Local RAG & Visual Search Frontend Suite', () =
     expect(chatList.innerHTML).not.toContain('Sources:<br/>[1] Rust Documentation');
     expect(chatList.innerHTML).toContain('Rust Docs');
   });
+
+  it('suppresses initial RAG image/document previews until user performs a search, and labels button Ask Zetty', async () => {
+    // 1. Verify i18n label is Ask Zetty across all 5 languages
+    expect(TRANSLATIONS.en['ai.chat_send_btn']).toBe('Ask Zetty');
+    expect(TRANSLATIONS.de['ai.chat_send_btn']).toBe('Zetty fragen');
+    expect(TRANSLATIONS.zh['ai.chat_send_btn']).toBe('询问 Zetty');
+    expect(TRANSLATIONS.fr['ai.chat_send_btn']).toBe('Demander à Zetty');
+    expect(TRANSLATIONS.es['ai.chat_send_btn']).toBe('Preguntar a Zetty');
+
+    // 2. Set up RAG DOM
+    document.body.innerHTML = `
+      <input id="ai-rag-query-input" value="" />
+      <input id="ai-visual-search-input" value="" />
+      <div id="ai-visual-results-grid"></div>
+      <div id="ai-rag-answer-card" style="display:block;">Previous Answer</div>
+      <div id="ai-preview-inspector-pane" style="display:block;">Inspector</div>
+      <div id="ai-search-split-layout" style="display:grid; grid-template-columns: minmax(0, 1fr) 360px;"></div>
+      <button id="btn-ai-chat-send">Ask Zetty</button>
+      <div id="ai-chat-messages-list"></div>
+    `;
+
+    // 3. Verify renderAiRagInitialEmptyState renders placeholder and hides inspector/cards
+    renderAiRagInitialEmptyState();
+    const grid = document.getElementById('ai-visual-results-grid');
+    expect(grid.innerHTML).toContain('ai-rag-initial-placeholder');
+    expect(grid.innerHTML).toContain('Search Your NAS Knowledge');
+    expect(document.getElementById('ai-rag-answer-card').style.display).toBe('none');
+    expect(document.getElementById('ai-preview-inspector-pane').style.display).toBe('none');
+
+    // 4. Verify runAiVisualSearch('') does NOT call API when query and filters are empty
+    const postSpy = vi.spyOn(api, 'post');
+    const emptyRes = await runAiVisualSearch('');
+    expect(postSpy).not.toHaveBeenCalled();
+    expect(emptyRes.results).toEqual([]);
+    expect(grid.innerHTML).toContain('ai-rag-initial-placeholder');
+
+    // 5. Verify sendAiChatMessage resets button label to Ask Zetty
+    postSpy.mockResolvedValueOnce({ status: 'ok', reply: 'Hello from Zetty!' });
+    await sendAiChatMessage('Hi Zetty');
+    expect(document.getElementById('btn-ai-chat-send').innerHTML).toContain('Ask Zetty');
+  });
 });
+
 
 

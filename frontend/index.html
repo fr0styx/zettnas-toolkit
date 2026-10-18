@@ -6454,14 +6454,14 @@
             </div>
 
             <!-- Tab 1: Local Chatbot, NAS Hardware Copilot & Live Web Verification -->
-            <div id="mgmt-pane-ai-chat" class="mgmt-tab-pane" style="display: block; padding-top: 12px;">
-              <div style="background:rgba(15,23,42,0.52); border:1px solid rgba(99,102,241,0.35); border-radius:10px; padding:14px; display:flex; flex-direction:column; gap:10px;">
+            <div id="mgmt-pane-ai-chat" class="mgmt-tab-pane" style="display: flex; flex-direction: column; flex: 1; min-height: 0; height: 100%; padding-top: 10px; box-sizing: border-box;">
+              <div class="ai-chat-card-container" style="background:rgba(15,23,42,0.52); border:1px solid rgba(99,102,241,0.35); border-radius:10px; padding:14px; display:flex; flex-direction:column; gap:10px; flex:1; min-height:0; height:100%; box-sizing:border-box;">
                 <!-- Header: Active LLM Proof Badge + Web Search & NAS Hardware Tool Toggles -->
-                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; padding-bottom:10px; border-bottom:1px solid rgba(255,255,255,0.08);">
+                <div class="ai-chat-header-row" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; padding-bottom:10px; border-bottom:1px solid rgba(255,255,255,0.08); flex-shrink:0;">
                   <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
                     <span style="font-size:13px; font-weight:800; color:#fff;">💬 <span data-i18n="ai.chat_title">ZettAI Local Chatbot &amp; NAS Hardware Copilot</span></span>
                     <span id="ai-chat-active-model-badge" style="padding:3px 10px; border-radius:999px; font-size:10.5px; font-weight:700; background:rgba(16,185,129,0.16); color:#34d399; border:1px solid rgba(16,185,129,0.4);">
-                      🤖 Active LLM: qwen2.5:3b • ⚡ Tier 1 NPU
+                      🤖 Active LLM: DeepSeek-R1-Distill-Qwen-1.5B • ⚡ Tier 1 NPU
                     </span>
                   </div>
                   <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
@@ -6472,10 +6472,10 @@
                 </div>
 
                 <!-- Conversation Message Stream -->
-                <div id="ai-chat-messages-list" style="min-height:300px; max-height:480px; overflow-y:auto; display:flex; flex-direction:column; gap:10px; padding:10px; border-radius:8px; background:rgba(2,6,23,0.45); border:1px solid rgba(255,255,255,0.06);">
+                <div id="ai-chat-messages-list" style="flex:1; min-height:180px; max-height:none; overflow-y:auto; display:flex; flex-direction:column; gap:10px; padding:12px; border-radius:8px; background:rgba(2,6,23,0.45); border:1px solid rgba(255,255,255,0.06); box-sizing:border-box;">
                   <div class="ai-chat-msg ai-chat-msg-assistant" style="display:flex; flex-direction:column; gap:6px; padding:11px 14px; border-radius:10px; background:rgba(15,23,42,0.72); border:1px solid rgba(56,189,248,0.25);">
                     <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
-                      <span style="font-size:11px; font-weight:800; color:#38bdf8;">🤖 ZettAI Copilot</span>
+                      <span style="font-size:11px; font-weight:800; color:#38bdf8;">🤖 ZettAI Copilot (Zetty)</span>
                       <span style="font-size:9.5px; color:#6ee7b7; padding:1px 7px; border-radius:999px; background:rgba(16,185,129,0.14); border:1px solid rgba(16,185,129,0.35);">⚡ Ready • 🛠️ 8 NAS Tools • 🌐 Web Browse • 💤 0 Disk Wakeups</span>
                     </div>
                     <div style="font-size:12px; color:#e2e8f0; line-height:1.5;">
@@ -6485,10 +6485,10 @@
                 </div>
 
                 <!-- Chat Composer -->
-                <div style="display:flex; gap:8px; align-items:center;">
+                <div class="ai-chat-composer-row" style="display:flex; gap:8px; align-items:center; flex-shrink:0; margin-top:auto;">
                   <input type="text" id="ai-chat-input" class="tz-select-input" placeholder="Ask any question, browse the web to verify facts, or run a NAS hardware task (e.g. 'Set fan profile to balanced', 'Which disks are sleeping?')..." style="flex:1; height:38px; padding:0 12px; font-size:12.5px; border-radius:8px;" />
                   <button type="button" id="btn-ai-chat-send" class="btn-pill-toggle" style="height:38px; padding:0 18px; font-size:12px; font-weight:700; background:linear-gradient(135deg, rgba(99,102,241,0.35), rgba(14,165,233,0.35)); border:1px solid rgba(99,102,241,0.6); color:#fff; border-radius:8px; cursor:pointer; white-space:nowrap;">
-                    <span>🚀</span> <span data-i18n="ai.chat_send_btn">Send</span>
+                    <span>🚀</span> <span data-i18n="ai.chat_send_btn">Ask Zetty</span>
                   </button>
                 </div>
               </div>
@@ -6569,7 +6569,13 @@
 
                 <!-- Split-Pane Search Results Grid + Preview Inspector -->
                 <div id="ai-search-split-layout" style="display:grid; grid-template-columns:minmax(0, 1fr); gap:12px; align-items:start;">
-                  <div id="ai-visual-results-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:12px;"></div>
+                  <div id="ai-visual-results-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:12px;">
+                    <div class="ai-rag-initial-placeholder" style="grid-column: 1 / -1; text-align: center; padding: 48px 20px; color: var(--muted, #94a3b8);">
+                      <div style="font-size: 32px; margin-bottom: 10px; opacity: 0.85;">🔍</div>
+                      <div style="font-size: 14px; font-weight: 600; color: #e2e8f0; margin-bottom: 6px;" data-i18n="ai.search_placeholder_prompt">Search Your NAS Knowledge &amp; Media</div>
+                      <div style="font-size: 12px; color: var(--muted, #94a3b8); max-width: 480px; margin: 0 auto; line-height: 1.5;" data-i18n="ai.search_placeholder_sub">Type a query above to search documents, recipes, photos, or audio, or ask Zetty a question. Results will appear here once you search.</div>
+                    </div>
+                  </div>
                   <div id="ai-preview-inspector-pane" style="display:none; background:rgba(15,23,42,0.75); border:1px solid rgba(56,189,248,0.35); border-radius:10px; padding:14px; position:sticky; top:12px;"></div>
                 </div>
               </div>
