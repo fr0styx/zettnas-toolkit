@@ -1,5 +1,5 @@
 import { api, auth, ApiError } from '../api.js';
-import { escapeHtml } from '../utils.js';
+import { escapeHtml, copyTextToClipboard } from '../utils.js';
 import { ZettEventBus } from '../event-bus.js';
 import { showToast, showConfirmToast, showPromptToast, showBottomSheet } from '../toast.js';
 import { t } from '../i18n.js';
@@ -178,9 +178,10 @@ export class FileManagerWindow {
               <button id="fm-refresh-btn" class="fm-tool-btn fm-refresh-btn" title="${t('fm.refresh', 'Refresh')}" data-i18n-title="fm.refresh" aria-label="Refresh">
                 <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
               </button>
-              <div class="fm-search-wrap" style="position: relative; display: flex; align-items: center; margin: 0 4px;">
+              <div class="fm-search-wrap" style="position: relative; display: flex; align-items: center; gap: 3px; margin: 0 4px;">
                 <input type="text" class="fm-search-input" placeholder="${t('fm.search_placeholder', 'Search...')}" style="width: 105px; font-size: 11px; padding: 3px 8px 3px 22px; border-radius: 6px; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.12); color: var(--fg); outline: none;" />
                 <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" style="position: absolute; left: 6px; color: var(--muted); pointer-events: none;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <button type="button" class="fm-tool-btn fm-ai-search-toggle" title="Toggle ZettAI Semantic &amp; Visual RAG Search (Zero Disk Wake)" aria-label="AI Semantic Search" style="font-size: 10px; padding: 2px 5px; border-radius: 5px;">✨ AI</button>
               </div>
               <button id="fm-new-folder-btn" class="fm-tool-btn fm-new-folder-btn" title="${t('fm.new_folder', 'New Folder')}" data-i18n-title="fm.new_folder" aria-label="New Folder">
                 <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path><line x1="12" y1="11" x2="12" y2="17"></line><line x1="9" y1="14" x2="15" y2="14"></line></svg>
@@ -271,9 +272,10 @@ export class FileManagerWindow {
             <button class="fm-tool-btn fm-refresh-btn" title="${t('fm.refresh', 'Refresh')}" data-i18n-title="fm.refresh" aria-label="Refresh">
               <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
             </button>
-            <div class="fm-search-wrap" style="position: relative; display: flex; align-items: center; margin: 0 4px;">
+            <div class="fm-search-wrap" style="position: relative; display: flex; align-items: center; gap: 3px; margin: 0 4px;">
               <input type="text" class="fm-search-input" placeholder="${t('fm.search_placeholder', 'Search...')}" style="width: 105px; font-size: 11px; padding: 3px 8px 3px 22px; border-radius: 6px; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.12); color: var(--fg); outline: none;" />
               <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" style="position: absolute; left: 6px; color: var(--muted); pointer-events: none;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              <button type="button" class="fm-tool-btn fm-ai-search-toggle" title="Toggle ZettAI Semantic &amp; Visual RAG Search (Zero Disk Wake)" aria-label="AI Semantic Search" style="font-size: 10px; padding: 2px 5px; border-radius: 5px;">✨ AI</button>
             </div>
             <button class="fm-tool-btn fm-new-folder-btn" title="${t('fm.new_folder', 'New Folder')}" data-i18n-title="fm.new_folder" aria-label="New Folder">
               <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path><line x1="12" y1="11" x2="12" y2="17"></line><line x1="9" y1="14" x2="15" y2="14"></line></svg>
@@ -362,6 +364,8 @@ export class FileManagerWindow {
     this.locationsBtn = this.windowEl.querySelector('.fm-locations-btn');
     this.refreshBtn = this.windowEl.querySelector('.fm-refresh-btn');
     this.searchInput = this.windowEl.querySelector('.fm-search-input');
+    this.aiSearchToggle = this.windowEl.querySelector('.fm-ai-search-toggle');
+    this.aiSearchMode = false;
     this.newFolderBtn = this.windowEl.querySelector('.fm-new-folder-btn');
     this.newWinBtn = this.windowEl.querySelector('.fm-new-win-btn');
     this.organizeBtn = this.windowEl.querySelector('.fm-organize-btn');
@@ -421,10 +425,12 @@ export class FileManagerWindow {
     this.windowEl.addEventListener('mousedown', activate);
     this.windowEl.addEventListener('pointerdown', activate);
 
+    this._onSaveBounds = () => this.saveBounds();
+    this._onResize = () => this.renderViewport();
     if (this.isPrimary) {
-      window.addEventListener('mouseup', () => this.saveBounds());
+      window.addEventListener('mouseup', this._onSaveBounds);
     }
-    window.addEventListener('resize', () => this.renderViewport());
+    window.addEventListener('resize', this._onResize);
 
     // Controls
     const closeBtn = this.windowEl.querySelector('.close-btn');
@@ -529,7 +535,23 @@ export class FileManagerWindow {
     // Refresh button
     this.refreshBtn?.addEventListener('click', () => this.loadPath(this.currentPath));
 
-    // Search input
+    // Search input & ZettAI Semantic Toggle
+    if (this.aiSearchToggle) {
+      this.aiSearchToggle.addEventListener('click', () => {
+        this.aiSearchMode = !this.aiSearchMode;
+        this.aiSearchToggle.classList.toggle('active', this.aiSearchMode);
+        this.aiSearchToggle.style.color = this.aiSearchMode ? '#3bf58b' : '';
+        this.aiSearchToggle.style.borderColor = this.aiSearchMode ? 'rgba(59,245,139,0.4)' : '';
+        if (this.searchInput) {
+          this.searchInput.placeholder = this.aiSearchMode
+            ? t('ai.fm_placeholder', 'Ask AI (recipe, red car...)')
+            : t('fm.search_placeholder', 'Search...');
+          if (this.searchInput.value.trim()) {
+            this.executeBackendSearch(this.searchInput.value);
+          }
+        }
+      });
+    }
     if (this.searchInput) {
       this.searchInput.addEventListener('input', (e) => this.handleSearchInput(e.target.value));
       this.searchInput.addEventListener('keydown', (e) => {
@@ -1024,6 +1046,24 @@ export class FileManagerWindow {
       try { this.resizeObserver.disconnect(); } catch (_) {}
       this.resizeObserver = null;
     }
+    if (this._onSaveBounds) {
+      window.removeEventListener('mouseup', this._onSaveBounds);
+      this._onSaveBounds = null;
+    }
+    if (this._onResize) {
+      window.removeEventListener('resize', this._onResize);
+      this._onResize = null;
+    }
+    if (this._activeDropdownMenu) {
+      try {
+        this._activeDropdownMenu.remove();
+        if (this._activeDropdownClose) {
+          document.removeEventListener('pointerdown', this._activeDropdownClose);
+        }
+      } catch (_) {}
+      this._activeDropdownMenu = null;
+      this._activeDropdownClose = null;
+    }
 
     if (this.isPrimary) {
       this.windowEl?.classList.add('window-minimized');
@@ -1106,7 +1146,32 @@ export class FileManagerWindow {
       this.searchAbortController.abort();
     }
     this.searchAbortController = new AbortController();
+    const useAi = Boolean(this.aiSearchMode || q.startsWith('?') || /^ai:/i.test(q));
+    const cleanQ = q.replace(/^(\?|ai:\s*)/i, '').trim() || q;
     try {
+      if (useAi) {
+        showToast(`✨ ZettAI searching "${cleanQ}" (Zero Disk Wake)...`, 'info');
+        const aiRes = await api.post('/api/media/search', {
+          query: cleanQ,
+          path_prefix: this.currentPath && this.currentPath !== '/' ? this.currentPath : null,
+          limit: 50,
+        });
+        const items = (aiRes?.results || []).map((r) => ({
+          name: r.file_name || (r.file_path ? r.file_path.split('/').pop() : 'file'),
+          path: r.file_path,
+          is_dir: false,
+          size: r.file_size || 0,
+          ext: r.ext || '',
+          ai_score: r.score,
+          ai_excerpt: r.excerpt,
+          ai_file_id: r.file_id,
+        }));
+        this.fileList = items;
+        this.isSearching = true;
+        this.renderViewport();
+        showToast(t('fm.search_results', `Found ${items.length} item(s)`).replace('{count}', items.length), 'success');
+        return;
+      }
       showToast(t('fm.searching', `Searching for "${q}"...`), 'info');
       const res = await api.get(`/api/fs/search?path=${encodeURIComponent(this.currentPath)}&q=${encodeURIComponent(q)}`, {
         signal: this.searchAbortController.signal,
@@ -1392,8 +1457,14 @@ export class FileManagerWindow {
       if (!menu.contains(e.target) && e.target !== anchorEl) {
         menu.remove();
         document.removeEventListener('pointerdown', closeMenu);
+        if (this._activeDropdownMenu === menu) {
+          this._activeDropdownMenu = null;
+          this._activeDropdownClose = null;
+        }
       }
     };
+    this._activeDropdownMenu = menu;
+    this._activeDropdownClose = closeMenu;
     setTimeout(() => document.addEventListener('pointerdown', closeMenu), 50);
   }
 
@@ -1611,6 +1682,7 @@ export class FileManagerWindow {
           <div class="fm-card-actions">
             ${(!file.is_dir && file.name !== '..' && isImage) ? `<button class="fm-act-btn" data-act="preview" data-path="${escPath}" title="Preview">👁️</button>` : ''}
             ${!file.is_dir && file.name !== '..' ? `<button class="fm-act-btn" data-act="download" data-path="${escPath}" title="Download">⬇️</button>` : ''}
+            ${file.name !== '..' ? `<button class="fm-act-btn" data-act="share" data-path="${escPath}" title="Share via Link">🔗</button>` : ''}
             ${file.name !== '..' ? `<button class="fm-act-btn" data-act="rename" data-path="${escPath}" title="Rename">✏️</button>` : ''}
             ${file.name !== '..' ? `<button class="fm-act-btn" data-act="delete" data-path="${escPath}" title="Delete">🗑️</button>` : ''}
             ${file.name !== '..' ? `<button class="fm-act-btn fm-act-more-sheet" data-act="more-sheet" data-path="${escPath}" title="More Actions" style="display:none;">···</button>` : ''}
@@ -1671,6 +1743,7 @@ export class FileManagerWindow {
         <div class="fm-col fm-col-actions">
           ${(!file.is_dir && file.name !== '..' && isImage) ? `<button class="fm-act-btn" data-act="preview" data-path="${escPath}" title="Preview">👁️</button>` : ''}
           ${!file.is_dir && file.name !== '..' ? `<button class="fm-act-btn" data-act="download" data-path="${escPath}" title="Download">⬇️</button>` : ''}
+          ${file.name !== '..' ? `<button class="fm-act-btn" data-act="share" data-path="${escPath}" title="Share via Link">🔗</button>` : ''}
           ${file.name !== '..' ? `<button class="fm-act-btn" data-act="rename" data-path="${escPath}" title="Rename">✏️</button>` : ''}
           ${file.name !== '..' ? `<button class="fm-act-btn" data-act="delete" data-path="${escPath}" title="Delete">🗑️</button>` : ''}
           ${file.name !== '..' ? `<button class="fm-act-btn fm-act-more-sheet" data-act="more-sheet" data-path="${escPath}" title="More Actions" style="display:none;">···</button>` : ''}
@@ -1746,6 +1819,11 @@ export class FileManagerWindow {
       }
       sheetItems.push(
         {
+          icon: '🔗',
+          label: 'Create Public Share Link',
+          onClick: () => this.handleAction('share', path, oldName),
+        },
+        {
           icon: '✏️',
           label: t('fm.rename_title', 'Rename Item'),
           onClick: () => this.handleAction('rename', path, oldName),
@@ -1782,6 +1860,8 @@ export class FileManagerWindow {
       return;
     } else if (act === 'preview') {
       openFilePreviewModal(path, oldName);
+    } else if (act === 'share') {
+      openShareLinkModal(path, oldName);
     } else if (act === 'download') {
       const token = (auth && typeof auth.getToken === 'function' ? auth.getToken() : null) || localStorage.getItem('zettnas_token') || '';
       window.open(`/api/fs/download?path=${encodeURIComponent(path)}&token=${token}`, '_blank');
@@ -2772,3 +2852,154 @@ export function openMediaOrganizerModal(initialPath = '') {
   modal.style.display = 'flex';
   modal.classList.add('open');
 }
+
+export function openShareLinkModal(path, fileName) {
+  let modal = document.getElementById('modal-fm-share-link');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'modal-fm-share-link';
+    modal.className = 'modal-backdrop';
+    document.body.appendChild(modal);
+  }
+
+  const safeName = escapeHtml(fileName || path.split('/').pop());
+
+  modal.innerHTML = `
+    <div class="modal-dialog glassmorphic-panel" style="width: 480px; max-width: 92vw; padding: 24px; border-radius: 12px; box-shadow: 0 16px 40px rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.12); background: rgba(18, 25, 36, 0.95); backdrop-filter: blur(20px);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 12px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 20px;">🔗</span>
+          <h3 style="margin: 0; font-size: 15px; font-weight: 700; color: #fff;">Public Share Link</h3>
+        </div>
+        <button id="fm-share-close" class="modal-close-btn" style="background: none; border: none; color: var(--muted); font-size: 18px; cursor: pointer;">✕</button>
+      </div>
+
+      <div style="font-size: 12px; color: var(--muted); margin-bottom: 16px;">
+        Generate an instant, secure download link for <strong style="color: #fff;">${safeName}</strong> that can be shared with anyone.
+      </div>
+
+      <div id="fm-share-create-section">
+        <div class="form-group" style="margin-bottom: 14px;">
+          <label style="display: block; font-size: 11px; font-weight: 600; color: #94a3b8; margin-bottom: 6px;">Link Expiration</label>
+          <select id="fm-share-expires" style="width: 100%; padding: 8px 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: #fff; font-size: 12px;">
+            <option value="1">1 Hour</option>
+            <option value="24" selected>24 Hours (1 Day)</option>
+            <option value="168">7 Days</option>
+            <option value="720">30 Days</option>
+            <option value="0">Never Expires</option>
+          </select>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 14px;">
+          <label style="display: block; font-size: 11px; font-weight: 600; color: #94a3b8; margin-bottom: 6px;">Password Protection (Optional)</label>
+          <input type="password" id="fm-share-password" placeholder="Leave empty for public access" style="width: 100%; padding: 8px 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: #fff; font-size: 12px;" />
+        </div>
+
+        <div class="form-group" style="margin-bottom: 18px;">
+          <label style="display: block; font-size: 11px; font-weight: 600; color: #94a3b8; margin-bottom: 6px;">Max Downloads (Optional)</label>
+          <input type="number" id="fm-share-max-dl" min="1" placeholder="Unlimited" style="width: 100%; padding: 8px 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: #fff; font-size: 12px;" />
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px;">
+          <button id="fm-share-cancel" class="btn-pill-toggle" style="padding: 8px 16px; font-size: 12px;">Cancel</button>
+          <button id="fm-share-submit" class="btn-pill-toggle active" style="padding: 8px 18px; font-size: 12px; font-weight: 700; background: #0284c7; color: #fff; border-color: #38bdf8;">✨ Generate Share Link</button>
+        </div>
+      </div>
+
+      <div id="fm-share-result-section" style="display: none;">
+        <div style="padding: 12px; border-radius: 8px; background: rgba(14, 165, 233, 0.08); border: 1px solid rgba(14, 165, 233, 0.25); margin-bottom: 16px;">
+          <div style="font-size: 11px; color: #38bdf8; font-weight: 600; margin-bottom: 6px;">Link Generated Successfully!</div>
+          <div style="display: flex; gap: 8px;">
+            <input type="text" id="fm-share-url-output" readonly style="flex: 1; padding: 8px 10px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: #fff; font-size: 11.5px; font-family: monospace;" />
+            <button id="fm-share-copy-btn" class="btn-pill-toggle active" style="padding: 8px 14px; font-size: 12px; font-weight: 700; background: #0284c7; color: #fff; white-space: nowrap;">📋 Copy</button>
+          </div>
+        </div>
+        <div id="fm-share-meta-info" style="font-size: 11px; color: var(--muted); margin-bottom: 16px;"></div>
+        <div style="display: flex; justify-content: flex-end;">
+          <button id="fm-share-done" class="btn-pill-toggle" style="padding: 8px 18px; font-size: 12px;">Done</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  const closeModal = () => {
+    modal.style.display = 'none';
+    modal.classList.remove('open');
+  };
+
+  const closeBtn = modal.querySelector('#fm-share-close');
+  if (closeBtn) closeBtn.onclick = closeModal;
+  const cancelBtn = modal.querySelector('#fm-share-cancel');
+  if (cancelBtn) cancelBtn.onclick = closeModal;
+  modal.onclick = (e) => {
+    if (e.target === modal) closeModal();
+  };
+
+  const submitBtn = modal.querySelector('#fm-share-submit');
+  if (submitBtn) {
+    submitBtn.onclick = async () => {
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Generating...';
+
+      const expSelect = modal.querySelector('#fm-share-expires');
+      const expHours = expSelect ? parseInt(expSelect.value, 10) : 24;
+      const pwdInput = modal.querySelector('#fm-share-password');
+      const pwd = pwdInput ? pwdInput.value.trim() : '';
+      const maxDlInput = modal.querySelector('#fm-share-max-dl');
+      const maxDl = maxDlInput ? parseInt(maxDlInput.value, 10) : 0;
+
+      try {
+        const res = await api.post('/api/fs/share-links', {
+          path,
+          expires_hours: expHours > 0 ? expHours : null,
+          password: pwd || null,
+          max_downloads: maxDl > 0 ? maxDl : null,
+        });
+
+        const fullUrl = `${window.location.origin}${res.url}`;
+        const createSec = modal.querySelector('#fm-share-create-section');
+        const resSec = modal.querySelector('#fm-share-result-section');
+        if (createSec) createSec.style.display = 'none';
+        if (resSec) resSec.style.display = 'block';
+
+        const urlInput = modal.querySelector('#fm-share-url-output');
+        if (urlInput) urlInput.value = fullUrl;
+
+        // Auto-copy
+        copyTextToClipboard(fullUrl);
+        showToast('Share link generated and copied to clipboard!', 'success');
+
+        const copyBtn = modal.querySelector('#fm-share-copy-btn');
+        if (copyBtn) {
+          copyBtn.onclick = () => {
+            copyTextToClipboard(fullUrl);
+            showToast('Link copied to clipboard!', 'success');
+          };
+        }
+
+        const metaEl = modal.querySelector('#fm-share-meta-info');
+        if (metaEl) {
+          let metaText = res.expires_at ? `Expires in ${expHours} hour(s)` : 'Never expires';
+          if (res.has_password) metaText += ' • Password protected';
+          if (res.max_downloads) metaText += ` • Max ${res.max_downloads} download(s)`;
+          metaEl.textContent = metaText;
+        }
+
+        const doneBtn = modal.querySelector('#fm-share-done');
+        if (doneBtn) doneBtn.onclick = closeModal;
+      } catch (err) {
+        showToast(`Failed to create share link: ${err.message}`, 'error');
+        submitBtn.disabled = false;
+        submitBtn.textContent = '✨ Generate Share Link';
+      }
+    };
+  }
+
+  modal.style.display = 'flex';
+  modal.classList.add('open');
+}
+
+if (typeof window !== 'undefined') {
+  window.openShareLinkModal = openShareLinkModal;
+}
+

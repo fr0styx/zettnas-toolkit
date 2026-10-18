@@ -302,3 +302,7 @@ class SmartTelemetryEngine:
             "metrics": metrics,
             "raw": raw_text[:4000],
         }
+
+
+# Backwards compatibility alias
+SmartEngine = SmartTelemetryEngine

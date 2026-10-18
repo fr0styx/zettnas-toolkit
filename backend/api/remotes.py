@@ -70,16 +70,38 @@ async def get_storage_providers():
     return engine.get_providers()
 
 
+def _resolve_masked_oauth_parameters(type_name: str, params: Dict[str, Any]) -> Dict[str, Any]:
+    params = dict(params or {})
+    tok = params.get("token")
+    if isinstance(tok, str) and tok.startswith("********"):
+        # Check if reference contains session_id: ********oauth_ref:{session_id}
+        session_id = None
+        if "oauth_ref:" in tok:
+            session_id = tok.split("oauth_ref:", 1)[1].strip()
+        if session_id and session_id in _ACTIVE_OAUTH_SESSIONS:
+            real_tok = _ACTIVE_OAUTH_SESSIONS[session_id].get("token")
+            if real_tok:
+                params["token"] = real_tok
+                return params
+        # Fallback to the most recent completed session matching provider type
+        for _s_id, s_data in reversed(list(_ACTIVE_OAUTH_SESSIONS.items())):
+            if s_data.get("provider_type") == type_name and s_data.get("token"):
+                params["token"] = s_data["token"]
+                break
+    return params
+
+
 @router.post("/remotes", dependencies=[Depends(require_scope("storage:admin"))])
 async def create_cloud_remote(req: RemoteCreateRequest):
     """Creates or updates a remote cloud storage backend."""
     engine = get_rclone_engine()
+    parameters = _resolve_masked_oauth_parameters(req.type, req.parameters)
     try:
         return await asyncio.to_thread(
             engine.create_remote,
             req.name,
             req.type,
-            req.parameters,
+            parameters,
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -91,8 +113,9 @@ async def create_cloud_remote(req: RemoteCreateRequest):
 async def test_candidate_remote(req: RemoteTestRequest):
     """Tests connectivity and credentials of a remote configuration candidate before saving."""
     engine = get_rclone_engine()
+    parameters = _resolve_masked_oauth_parameters(req.type, req.parameters)
     try:
-        return await asyncio.to_thread(engine.test_remote_config, req.type, req.parameters)
+        return await asyncio.to_thread(engine.test_remote_config, req.type, parameters)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -256,10 +279,10 @@ async def start_oauth_session(req: OAuthStartRequest):
     raw_stderr = ""
     while time.time() - start_t < 4.0:
         if proc.poll() is not None:
-            _, err = proc.communicate()
+            _, err = await asyncio.to_thread(proc.communicate)
             raise HTTPException(status_code=500, detail=f"rclone authorize exited prematurely: {err}")
         try:
-            line = proc.stderr.readline()
+            line = await asyncio.to_thread(proc.stderr.readline)
             if line:
                 raw_stderr += line
                 m = re.search(r"http://127\.0\.0\.1:(\d+)/auth\?state=([a-zA-Z0-9_\-]+)", line)
@@ -276,17 +299,24 @@ async def start_oauth_session(req: OAuthStartRequest):
         proc.kill()
         raise HTTPException(status_code=500, detail=f"Failed to capture OAuth listener URL from rclone: {raw_stderr}")
 
-    try:
-
+    def _resolve_oauth_redirect(target_url: str) -> str:
         class NoRedirect(urllib.request.HTTPRedirectHandler):
             def redirect_request(self, req, fp, code, msg, headers, newurl):
                 return None
 
         opener = urllib.request.build_opener(NoRedirect)
         try:
-            opener.open(local_url)
+            opener.open(target_url)
         except urllib.error.HTTPError as e:
-            auth_url = e.headers.get("Location") or ""
+            return e.headers.get("Location") or ""
+        except Exception as e:
+            logger.warning(f"[OAuth] Could not resolve provider redirect: {e}")
+        return ""
+
+    try:
+        resolved = await asyncio.to_thread(_resolve_oauth_redirect, local_url)
+        if resolved:
+            auth_url = resolved
     except Exception as e:
         logger.warning(f"[OAuth] Could not resolve provider redirect: {e}")
 
@@ -745,10 +775,13 @@ async def get_oauth_session_status(session_id: str):
     drive_id, drive_type = "", "personal"
     if session.get("completed") and session.get("token") and session.get("provider_type") == "onedrive":
         drive_id, drive_type = _resolve_onedrive_drive_details(session["token"])
+    raw_token = session.get("token")
+    masked_token = f"********oauth_ref:{session_id}" if raw_token else None
     return {
         "session_id": session_id,
         "completed": bool(session.get("completed")),
-        "token": session.get("token"),
+        "token": masked_token,
+        "has_token": bool(raw_token),
         "drive_id": drive_id,
         "drive_type": drive_type or "personal",
         "error": session.get("error"),

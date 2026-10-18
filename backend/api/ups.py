@@ -5,6 +5,8 @@ connection testing, battery self-test execution, outage simulation, and event lo
 """
 
 import asyncio
+import ipaddress
+import socket
 from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
@@ -24,6 +26,25 @@ from backend.hardware.ups import (
 from backend.services.ups_watchdog import trigger_outage_simulation
 
 router = APIRouter(tags=["UPS & Power Integrity"])
+
+
+def _is_forbidden_ups_host(host_str: str) -> bool:
+    h = (host_str or "").strip()
+    if not h:
+        return False
+    try:
+        ip = ipaddress.ip_address(h)
+        return ip.is_link_local
+    except ValueError:
+        if h.lower() in ("metadata.google.internal",):
+            return True
+        try:
+            for info in socket.getaddrinfo(h, None):
+                if ipaddress.ip_address(info[4][0]).is_link_local:
+                    return True
+        except Exception:
+            pass
+    return False
 
 
 class UpsConfigRequest(BaseModel):
@@ -81,16 +102,18 @@ async def post_ups_configuration(req: UpsConfigRequest):
         raise HTTPException(status_code=500, detail=f"Failed to save UPS configuration: {e}")
 
 
-@router.post("/ups/discover")
+@router.post("/ups/discover", dependencies=[Depends(require_scope("system:config"))])
 async def post_ups_discover():
     """Auto-discovers connected USB HID power devices and active LAN power daemons."""
     candidates = await asyncio.to_thread(discover_ups_sources)
     return {"candidates": candidates, "count": len(candidates)}
 
 
-@router.post("/ups/test-connection")
+@router.post("/ups/test-connection", dependencies=[Depends(require_scope("system:config"))])
 async def post_ups_test_connection(req: UpsTestConnectionRequest):
     """Validates connection to a UPS daemon without altering persistent configuration."""
+    if _is_forbidden_ups_host(req.host):
+        raise HTTPException(status_code=400, detail="Probing link-local or cloud metadata addresses is forbidden.")
     res = await asyncio.to_thread(
         test_ups_connection,
         host=req.host,

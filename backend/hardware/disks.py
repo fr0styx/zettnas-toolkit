@@ -1250,13 +1250,26 @@ def run_disk_smart_test(dev_name: str, test_type: str = "short", skip_if_standby
     Triggers or aborts an active S.M.A.R.T. self-test on the target disk via smartctl.
     Supported types: 'short', 'long' (extended), 'abort'.
     """
-    if not VALID_DEV_PATTERN.fullmatch(dev_name):
+    clean_name = dev_name.removeprefix("/dev/").removeprefix("/host/dev/")
+    if not VALID_DEV_PATTERN.fullmatch(clean_name):
         return {"success": False, "error": "Invalid device name format."}
 
     # Invariant: Never wake sleeping drive platters during automated scheduled self-tests
     if skip_if_standby:
-        _, cached_health = Z_STATE.cached_smart_data.get(dev_name, (None, None))
-        if cached_health == "standby":
+        _, cached_health = Z_STATE.cached_smart_data.get(
+            dev_name, Z_STATE.cached_smart_data.get(clean_name, (None, None))
+        )
+        is_sleeping = cached_health == "standby"
+        if not is_sleeping:
+            try:
+                from backend.hardware.smart_engine import SmartEngine
+
+                dev_path = _resolve_dev_path(dev_name)
+                is_sleeping = SmartEngine.is_device_sleeping(dev_path)
+            except Exception:
+                pass
+
+        if is_sleeping:
             return {
                 "success": False,
                 "skipped": True,

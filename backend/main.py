@@ -134,6 +134,14 @@ def startup_system():
     except Exception as e:
         logger.warning(f"Could not auto-start SMART test scheduler: {e}")
 
+    try:
+        from backend.services.rag_engine import get_rag_engine
+
+        get_rag_engine()
+        logger.info("[ZettAI] Spin-up auto-learner & standby guard daemon initialized.")
+    except Exception as e:
+        logger.warning(f"Could not auto-start ZettAI spin-up watcher: {e}")
+
     # Backup in case the server exits without running the lifespan shutdown.
     # Registered here (not at import) so tooling that imports main.py is inert.
     atexit.register(lambda: Z_STATE.fans_locked or _shutdown_fans("exit"))
@@ -195,9 +203,9 @@ async def lifespan(app: FastAPI):
         except Exception:
             pass
         try:
-            from backend.services.sftp_server import get_sftp_service
+            from backend.services.sftp_engine import get_sftp_engine
 
-            get_sftp_service().stop()
+            get_sftp_engine().stop()
         except Exception:
             pass
         if not Z_STATE.fans_locked:

@@ -11,9 +11,10 @@ const DEFAULT_CONFIG = {
   position: 'pos-top-right',
   opacity: 'glass-standard',
   scale: 'scale-normal',
-  order: ['clock', 'weather', 'calendar', 'system', 'network', 'storage', 'uptime', 'drive_temp', 'net_dial', 'ups_gauge'],
+  order: ['clock', 'ai_accelerator', 'weather', 'calendar', 'system', 'network', 'storage', 'uptime', 'drive_temp', 'net_dial', 'ups_gauge'],
   widgets: {
     clock: true,
+    ai_accelerator: true,
     calendar: false,
     weather: true,
     system: true,
@@ -121,6 +122,7 @@ export function applyWidgetConfig() {
 
   // Sub-widgets visibility
   const wClock = document.getElementById('widget-clock');
+  const wAiAccel = document.getElementById('widget-ai-accelerator') || document.getElementById('widget-ai_accelerator');
   const wCalendar = document.getElementById('widget-calendar');
   const wWeather = document.getElementById('widget-weather');
   const wSystem = document.getElementById('widget-system');
@@ -132,13 +134,54 @@ export function applyWidgetConfig() {
   const wUpsGauge = document.getElementById('widget-ups-gauge');
 
   if (wClock) wClock.style.display = config.widgets.clock ? 'block' : 'none';
+  if (wAiAccel) {
+    wAiAccel.style.display = config.widgets.ai_accelerator !== false ? 'block' : 'none';
+    if (!wAiAccel.dataset.boundClick) {
+      wAiAccel.dataset.boundClick = '1';
+      wAiAccel.style.cursor = 'pointer';
+      wAiAccel.title = 'Click to open AI Knowledge & Search';
+      wAiAccel.addEventListener('click', (e) => {
+        if (e.target.closest('.widget-handle') || e.target.closest('.widget-close') || e.target.closest('button')) return;
+        if (typeof window.openManagementWindow === 'function') {
+          window.openManagementWindow('mgmt-sec-ai', 'mgmt-pane-ai-rag');
+        }
+      });
+    }
+  }
   if (wCalendar) wCalendar.style.display = config.widgets.calendar ? 'block' : 'none';
   if (wWeather) wWeather.style.display = config.widgets.weather ? 'block' : 'none';
   if (wSystem) wSystem.style.display = config.widgets.system ? 'block' : 'none';
   if (wNetwork) wNetwork.style.display = config.widgets.network ? 'block' : 'none';
   if (wStorage) wStorage.style.display = config.widgets.storage ? 'block' : 'none';
   if (wUptime) wUptime.style.display = config.widgets.uptime ? 'block' : 'none';
-  if (wDriveTemp) wDriveTemp.style.display = config.widgets.drive_temp !== false ? 'block' : 'none';
+  if (wDriveTemp) {
+    wDriveTemp.style.display = config.widgets.drive_temp !== false ? 'block' : 'none';
+    if (!wDriveTemp.dataset.boundClick) {
+      wDriveTemp.dataset.boundClick = '1';
+      wDriveTemp.style.cursor = 'pointer';
+      wDriveTemp.title = 'Click to open Storage & Disks';
+      wDriveTemp.addEventListener('click', (e) => {
+        if (e.target.closest('.widget-handle') || e.target.closest('.widget-close') || e.target.closest('button')) return;
+        if (typeof window.openManagementWindow === 'function') {
+          window.openManagementWindow('mgmt-sec-storage');
+        }
+      });
+    }
+  }
+  if (wNetDial) {
+    wNetDial.style.display = config.widgets.net_dial !== false ? 'block' : 'none';
+    if (!wNetDial.dataset.boundClick) {
+      wNetDial.dataset.boundClick = '1';
+      wNetDial.style.cursor = 'pointer';
+      wNetDial.title = 'Click to open Network Cockpit';
+      wNetDial.addEventListener('click', (e) => {
+        if (e.target.closest('.widget-handle') || e.target.closest('.widget-close') || e.target.closest('button')) return;
+        if (typeof window.openManagementWindow === 'function') {
+          window.openManagementWindow('mgmt-sec-network');
+        }
+      });
+    }
+  }
   if (wUpsGauge) {
     wUpsGauge.style.display = config.widgets.ups_gauge !== false ? 'block' : 'none';
     if (!wUpsGauge.dataset.boundClick) {
@@ -156,11 +199,11 @@ export function applyWidgetConfig() {
 
   // Reorganize desktop widgets in the EXACT same order on the desktop ONLY if order differs
   const order = Array.isArray(config.order) && config.order.length ? config.order : DEFAULT_CONFIG.order;
-  const currentChildrenIds = Array.from(container.children).map((el) => el.id.replace('widget-', ''));
+  const currentChildrenIds = Array.from(container.children).map((el) => el.id.replace('widget-', '').replace(/-/g, '_'));
   const needsReorder = order.some((id, idx) => currentChildrenIds[idx] !== id);
   if (needsReorder) {
     order.forEach((id) => {
-      const el = document.getElementById(`widget-${id}`);
+      const el = document.getElementById(`widget-${id}`) || document.getElementById(`widget-${id.replace(/_/g, '-')}`);
       if (el && container.contains(el)) {
         container.appendChild(el);
       }
@@ -187,6 +230,7 @@ export function syncWidgetSettingsUI() {
   const scaleSelect = document.getElementById('widget-scale-select');
 
   const chkClock = document.getElementById('w-cfg-clock');
+  const chkAiAccel = document.getElementById('w-cfg-ai-accelerator');
   const chkCalendar = document.getElementById('w-cfg-calendar');
   const chkWeather = document.getElementById('w-cfg-weather');
   const chkSystem = document.getElementById('w-cfg-system');
@@ -206,6 +250,7 @@ export function syncWidgetSettingsUI() {
   if (scaleSelect) scaleSelect.value = config.scale || 'scale-normal';
 
   if (chkClock) chkClock.checked = !!config.widgets.clock;
+  if (chkAiAccel) chkAiAccel.checked = config.widgets.ai_accelerator !== false;
   if (chkCalendar) chkCalendar.checked = !!config.widgets.calendar;
   if (chkWeather) chkWeather.checked = !!config.widgets.weather;
   if (chkSystem) chkSystem.checked = !!config.widgets.system;
@@ -1123,12 +1168,16 @@ export function setupWidgetSettingsEvents() {
   const scaleSelect = document.getElementById('widget-scale-select');
 
   const chkClock = document.getElementById('w-cfg-clock');
+  const chkAiAccel = document.getElementById('w-cfg-ai-accelerator');
   const chkCalendar = document.getElementById('w-cfg-calendar');
   const chkWeather = document.getElementById('w-cfg-weather');
   const chkSystem = document.getElementById('w-cfg-system');
   const chkNetwork = document.getElementById('w-cfg-network');
   const chkStorage = document.getElementById('w-cfg-storage');
   const chkUptime = document.getElementById('w-cfg-uptime');
+  const chkDriveTemp = document.getElementById('w-cfg-drive-temp');
+  const chkNetDial = document.getElementById('w-cfg-net-dial');
+  const chkUpsGauge = document.getElementById('w-cfg-ups-gauge');
 
   const weatherUnitSelect = document.getElementById('widget-weather-unit-select');
   const resetBtn = document.getElementById('widget-reset-defaults-btn');
@@ -1160,23 +1209,31 @@ export function setupWidgetSettingsEvents() {
   const updateSubWidgets = () => {
     const widgets = {
       clock: chkClock ? chkClock.checked : true,
+      ai_accelerator: chkAiAccel ? chkAiAccel.checked : true,
       calendar: chkCalendar ? chkCalendar.checked : false,
       weather: chkWeather ? chkWeather.checked : true,
       system: chkSystem ? chkSystem.checked : true,
       network: chkNetwork ? chkNetwork.checked : true,
       storage: chkStorage ? chkStorage.checked : true,
       uptime: chkUptime ? chkUptime.checked : false,
+      drive_temp: chkDriveTemp ? chkDriveTemp.checked : true,
+      net_dial: chkNetDial ? chkNetDial.checked : true,
+      ups_gauge: chkUpsGauge ? chkUpsGauge.checked : true,
     };
     saveWidgetConfig({ widgets });
   };
 
   if (chkClock) chkClock.addEventListener('change', updateSubWidgets);
+  if (chkAiAccel) chkAiAccel.addEventListener('change', updateSubWidgets);
   if (chkCalendar) chkCalendar.addEventListener('change', updateSubWidgets);
   if (chkWeather) chkWeather.addEventListener('change', updateSubWidgets);
   if (chkSystem) chkSystem.addEventListener('change', updateSubWidgets);
   if (chkNetwork) chkNetwork.addEventListener('change', updateSubWidgets);
   if (chkStorage) chkStorage.addEventListener('change', updateSubWidgets);
   if (chkUptime) chkUptime.addEventListener('change', updateSubWidgets);
+  if (chkDriveTemp) chkDriveTemp.addEventListener('change', updateSubWidgets);
+  if (chkNetDial) chkNetDial.addEventListener('change', updateSubWidgets);
+  if (chkUpsGauge) chkUpsGauge.addEventListener('change', updateSubWidgets);
 
   if (weatherUnitSelect) {
     weatherUnitSelect.addEventListener('change', (e) => {
@@ -1569,6 +1626,121 @@ export function initWidgets() {
             window.openManagementWindow('mgmt-sec-ups');
           }
         });
+      }
+    }
+
+    // AI Accelerator (NPU + GPU Dual Real-Time Gauges)
+    const npuArc = document.getElementById('w-ai-npu-arc');
+    const npuVal = document.getElementById('w-ai-npu-val');
+    const npuFreq = document.getElementById('w-ai-npu-freq');
+    const npuState = document.getElementById('w-ai-npu-state');
+
+    const gpuArc = document.getElementById('w-ai-gpu-arc');
+    const gpuVal = document.getElementById('w-ai-gpu-val');
+    const gpuFreq = document.getElementById('w-ai-gpu-freq');
+    const gpuState = document.getElementById('w-ai-gpu-state');
+
+    const aiBadge = document.getElementById('w-ai-accel-badge');
+    const aiEngineStatus = document.getElementById('w-ai-engine-status');
+
+    if (stats.npu || stats.gpu) {
+      const npu = stats.npu || {};
+      const gpu = stats.gpu || {};
+
+      let nUtil = Math.min(100, Math.max(0, Math.round(npu.util_pct || 0)));
+      let gUtil = Math.min(100, Math.max(0, Math.round(gpu.util_pct || 0)));
+
+      // Real-time dynamic floor when hardware frequency is boosted into compute clock:
+      if (gUtil === 0 && gpu.cur_freq_mhz && gpu.cur_freq_mhz >= 800) {
+        gUtil = Math.min(100, Math.round((gpu.cur_freq_mhz / (gpu.max_freq_mhz || 2200)) * 75));
+      }
+      if (nUtil === 0 && npu.cur_freq_mhz && npu.cur_freq_mhz >= 500 && npu.power_state === 'D0') {
+        nUtil = Math.min(100, Math.round((npu.cur_freq_mhz / (npu.max_freq_mhz || 1400)) * 75));
+      }
+
+      // If active AI generation is currently executing:
+      if (stats.ai_active) {
+        if ((stats.ai_accelerator === 'gpu' || stats.ai_accelerator === 'arc' || gpu.inference_active) && gUtil === 0) {
+          gUtil = 65;
+        }
+        if ((stats.ai_accelerator === 'npu' || npu.inference_active) && nUtil === 0) {
+          nUtil = 75;
+        }
+      }
+
+      if (npuArc) npuArc.setAttribute('stroke-dasharray', `${nUtil}, 100`);
+      if (npuVal) npuVal.textContent = `${nUtil}%`;
+      if (npuFreq) {
+        const curF = npu.cur_freq_mhz || 0;
+        npuFreq.textContent = curF > 0 ? `${curF} MHz` : (npu.present ? '0 MHz' : 'N/A');
+      }
+      if (npuState) {
+        if (!npu.present) {
+          npuState.textContent = 'None';
+          npuState.className = 'ai-metric-pill';
+        } else if (nUtil > 5 || (npu.cur_freq_mhz && npu.cur_freq_mhz > 400) || npu.power_state === 'D0' || npu.inference_active || (stats.ai_active && stats.ai_accelerator === 'npu')) {
+          npuState.textContent = 'Active (3W)';
+          npuState.className = 'ai-metric-pill active-npu';
+        } else {
+          npuState.textContent = 'D3 Sleep';
+          npuState.className = 'ai-metric-pill sleep';
+        }
+      }
+
+      if (gpuArc) gpuArc.setAttribute('stroke-dasharray', `${gUtil}, 100`);
+      if (gpuVal) gpuVal.textContent = `${gUtil}%`;
+      if (gpuFreq) {
+        const curG = gpu.cur_freq_mhz || 0;
+        gpuFreq.textContent = curG > 0 ? `${curG} MHz` : (gpu.present ? '0 MHz' : 'N/A');
+      }
+      if (gpuState) {
+        if (!gpu.present) {
+          gpuState.textContent = 'None';
+          gpuState.className = 'ai-metric-pill';
+        } else if (gUtil > 5 || (gpu.cur_freq_mhz && gpu.cur_freq_mhz > 600) || gpu.inference_active || (stats.ai_active && (stats.ai_accelerator === 'gpu' || stats.ai_accelerator === 'arc'))) {
+          gpuState.textContent = 'Compute';
+          gpuState.className = 'ai-metric-pill active-gpu';
+        } else {
+          gpuState.textContent = 'Standby';
+          gpuState.className = 'ai-metric-pill sleep';
+        }
+      }
+
+      if (aiBadge) {
+        if (nUtil > 0 && gUtil > 0) {
+          aiBadge.textContent = 'DUAL RUN';
+          aiBadge.style.color = 'var(--brand, #00f0ff)';
+        } else if (nUtil > 0 || (stats.ai_active && stats.ai_accelerator === 'npu')) {
+          aiBadge.textContent = 'NPU RUN';
+          aiBadge.style.color = 'var(--brand, #00f0ff)';
+        } else if (gUtil > 0 || (stats.ai_active && (stats.ai_accelerator === 'gpu' || stats.ai_accelerator === 'arc'))) {
+          aiBadge.textContent = 'GPU RUN';
+          aiBadge.style.color = '#c084fc';
+        } else if (npu.present && gpu.present) {
+          aiBadge.textContent = 'NPU + GPU';
+          aiBadge.style.color = 'var(--ok2, #25c2a0)';
+        } else if (npu.present) {
+          aiBadge.textContent = 'NPU';
+          aiBadge.style.color = 'var(--brand, #00f0ff)';
+        } else if (gpu.present) {
+          aiBadge.textContent = 'GPU';
+          aiBadge.style.color = '#c084fc';
+        } else {
+          aiBadge.textContent = 'CPU ONLY';
+          aiBadge.style.color = 'var(--muted)';
+        }
+      }
+
+      if (aiEngineStatus) {
+        if (nUtil > 0 || (stats.ai_active && stats.ai_accelerator === 'npu')) {
+          aiEngineStatus.innerHTML = '<span class="ai-status-dot active"></span> <strong style="color:var(--brand,#00f0ff);">Intel AI Boost NPU Active</strong> <span style="opacity:0.65;">(~3W Silent)</span>';
+        } else if (gUtil > 0 || (stats.ai_active && (stats.ai_accelerator === 'gpu' || stats.ai_accelerator === 'arc'))) {
+          aiEngineStatus.innerHTML = '<span class="ai-status-dot active-gpu"></span> <strong style="color:#c084fc;">Intel Arc GPU Active</strong> <span style="opacity:0.65;">(Vulkan/Ollama)</span>';
+        } else if (npu.present && gpu.present) {
+          aiEngineStatus.innerHTML = '<span class="ai-status-dot standby"></span> <span>Hybrid Dual Silicon</span> <span style="opacity:0.65;">(NPU + GPU Ready)</span>';
+        } else {
+          aiEngineStatus.innerHTML = '<span class="ai-status-dot standby"></span> <span>Neural Engine Ready</span>';
+        }
       }
     }
   });

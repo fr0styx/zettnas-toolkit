@@ -797,10 +797,17 @@ def update_user_endpoint(user_id: str, data: UserUpdateRequest, request: Request
     return {"status": "ok", "user": _sanitize_user_dict(get_user_by_id(user_id))}
 
 
-@router.post("/users/{user_id}/password")
+@router.post(
+    "/users/{user_id}/password",
+    dependencies=[Depends(require_scope("users:write", "users:manage", "shares:user_write"))],
+)
 async def change_user_password(user_id: str, data: UserPasswordChangeRequest, request: Request):
     current = _get_authenticated_user(request)
-    if current and current["id"] != user_id and current.get("role_id") not in ("superadmin", "admin"):
+    if not current:
+        return error_response(401, "Authentication required.")
+    if current.get("role_id") == "auditor":
+        return error_response(403, "Auditors are read-only and cannot change passwords.")
+    if current["id"] != user_id and current.get("role_id") not in ("superadmin", "admin"):
         return error_response(403, "Permission denied.")
 
     if len(data.new_password) < config.MIN_PASSWORD_LENGTH:
@@ -1011,7 +1018,10 @@ def get_security_audit_logs(request: Request, limit: int = 50, offset: int = 0):
 # ==============================================================================
 
 
-@router.get("/security")
+@router.get(
+    "/security",
+    dependencies=[Depends(require_scope("system:view", "users:read", "system:config"))],
+)
 def get_security():
     return {
         "username": config.ZETTNAS_USERNAME,
@@ -1021,7 +1031,10 @@ def get_security():
     }
 
 
-@router.post("/security")
+@router.post(
+    "/security",
+    dependencies=[Depends(require_scope("users:manage", "system:config"))],
+)
 async def post_security(data: SecurityUpdateRequest, request: Request):
     ip = _client_ip(request)
     remaining = _lockout_remaining(ip)

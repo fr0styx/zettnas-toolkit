@@ -17,7 +17,7 @@ from typing import Any, Dict, List, Optional
 
 from backend.config import DATA_DIR, POOL_PATH, logger
 from backend.fsutil import atomic_write_json, read_json
-from backend.services.compose_synthesizer import synthesize_compose_spec
+from backend.services.compose_synthesizer import format_compose_yaml, synthesize_compose_spec
 from backend.services.container_mutator import _docker_request
 
 APP_BACKUPS_REGISTRY_FILE = os.path.join(DATA_DIR, "app_backups.json")
@@ -148,7 +148,8 @@ def create_app_backup(
 
     # 1. Synthesize docker-compose.yml with complete settings
     try:
-        compose_yaml, _ = synthesize_compose_spec(inspect_data, mask_secrets=False)
+        srv_name, spec = synthesize_compose_spec(inspect_data, mask_secrets=False)
+        compose_yaml = format_compose_yaml(srv_name, spec)
     except Exception as e:
         logger.warning(f"[App Backup] Could not synthesize compose spec for '{cname}': {e}")
         compose_yaml = (

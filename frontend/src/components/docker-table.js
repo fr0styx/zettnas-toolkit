@@ -15,9 +15,9 @@ export function computeContainerRowSignature(c, updateInfo) {
   const hasUpdate = updateInfo?.has_update ? '1' : '0';
   const portsSig = (c.ports || []).map((p) => `${p.public_port || ''}:${p.private_port || ''}`).join(',');
   const hwSig = (c.hardware_badges || []).map((b) => b.id || '').join(',');
-  const cpuVal = (c.cpu_pct || 0).toFixed(1);
-  const memVal = c.mem_used || 0;
-  return `${c.id || ''}|${c.name || ''}|${c.state || ''}|${c.status || ''}|${hasUpdate}|${cpuVal}|${memVal}|${c.primary_port || ''}|${portsSig}|${hwSig}`;
+  const stack = c.stack || '';
+  const image = c.image || '';
+  return `${c.id || ''}|${c.name || ''}|${c.state || ''}|${hasUpdate}|${c.primary_port || ''}|${portsSig}|${hwSig}|${stack}|${image}`;
 }
 
 /**

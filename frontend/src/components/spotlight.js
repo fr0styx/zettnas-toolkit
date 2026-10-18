@@ -160,6 +160,19 @@ function _buildDefaultSpotlightItems() {
         if (rbIcon) rbIcon.click();
       },
     },
+    {
+      id: 'app-zettai',
+      title: 'ZettAI — Local RAG & Visual Search',
+      subtitle: 'Ask questions about recipes, docs & search photos by scene/color (NPU → GPU)',
+      icon: '🧠',
+      category: 'app',
+      keywords: ['ai', 'rag', 'search', 'recipe', 'photos', 'pool', 'beach', 'car', 'npu', 'gpu'],
+      run: () => {
+        if (typeof window.openManagementWindow === 'function') {
+          window.openManagementWindow('mgmt-sec-ai', 'mgmt-pane-ai-rag');
+        }
+      },
+    },
 
     // Direct Hardware & System Actions
     {
@@ -513,6 +526,43 @@ export function filterSpotlightResults(query = '') {
     const dynamicAction = parseNaturalLanguageAction(query);
     if (dynamicAction) {
       matched = [dynamicAction, ...matched.filter((i) => i.id !== dynamicAction.id)];
+    }
+  } else if (/^(\?|ask:|photo:|img:|doc:)/i.test(q)) {
+    const isPhoto = /^(photo:|img:)/i.test(q);
+    const cleanPrompt = query.replace(/^(\?|ask:|photo:|img:|doc:)\s*/i, '').trim();
+    if (cleanPrompt) {
+      const aiDynamicItem = {
+        id: `dyn-zettai-${isPhoto ? 'photo' : 'ask'}`,
+        title: isPhoto ? `Visual Search: "${cleanPrompt}"` : `Ask ZettAI RAG: "${cleanPrompt}"`,
+        subtitle: isPhoto
+          ? 'Search NAS photos by scene, object & perceptual HSV/LAB color (Zero Disk Wake)'
+          : 'Synthesize grounded answer with citations & structured recipe/doc cards',
+        icon: isPhoto ? '🖼️' : '✨',
+        category: 'ai',
+        keywords: ['ai', 'rag', cleanPrompt],
+        run: () => {
+          if (typeof window.openManagementWindow === 'function') {
+            window.openManagementWindow(
+              'mgmt-sec-ai',
+              isPhoto ? 'mgmt-pane-ai-visual' : 'mgmt-pane-ai-rag'
+            );
+            setTimeout(() => {
+              if (isPhoto) {
+                const visIn = document.getElementById('ai-visual-query-input');
+                const visBtn = document.getElementById('btn-ai-visual-search');
+                if (visIn) visIn.value = cleanPrompt;
+                if (visBtn) visBtn.click();
+              } else {
+                const askIn = document.getElementById('ai-rag-query-input');
+                const askBtn = document.getElementById('btn-ai-rag-ask');
+                if (askIn) askIn.value = cleanPrompt;
+                if (askBtn) askBtn.click();
+              }
+            }, 80);
+          }
+        },
+      };
+      matched = [aiDynamicItem, ...matched];
     }
   }
 

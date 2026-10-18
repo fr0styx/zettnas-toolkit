@@ -51,6 +51,10 @@ class StorageShareCreateRequest(BaseModel):
     read_only: bool = False
     export_smb: bool = True
     export_nfs: bool = False
+    quota_gb: Optional[int] = Field(default=0, description="Storage quota in GB (0 = unlimited)")
+    user_permissions: Optional[Dict[str, str]] = Field(
+        default_factory=dict, description="User permission matrix: {username: 'rw'|'ro'|'deny'}"
+    )
     nfs_squash: str = Field(default="no_root_squash", description="'no_root_squash', 'root_squash', or 'all_squash'")
     nfs_anonuid: int = Field(default=1000, description="Mapped UID for anonymous/squashed users")
     nfs_anongid: int = Field(default=1000, description="Mapped GID for anonymous/squashed users")
@@ -84,7 +88,7 @@ class StorageSnapshotRestoreRequest(BaseModel):
     target_subvol: str = ""
 
 
-@router.get("/platform")
+@router.get("/platform", dependencies=[Depends(require_scope("storage:read", "shares:read", "system:view"))])
 def get_storage_platform_info() -> Dict[str, Any]:
     """
     Returns platform classification (Unraid, TrueNAS, Generic Linux),
@@ -99,7 +103,7 @@ def get_storage_platform_info() -> Dict[str, Any]:
     }
 
 
-@router.get("/pools")
+@router.get("/pools", dependencies=[Depends(require_scope("storage:read", "system:view"))])
 def get_storage_pools() -> Dict[str, Any]:
     """
     Returns hierarchical storage pool and array topology, including parity protection,
@@ -115,7 +119,7 @@ def get_storage_pools() -> Dict[str, Any]:
     }
 
 
-@router.get("/shares")
+@router.get("/shares", dependencies=[Depends(require_scope("storage:read", "shares:read", "system:view"))])
 def get_storage_shares() -> Dict[str, Any]:
     """
     Returns network shares (Samba, NFS, WebDAV) with comment, security level,
@@ -130,7 +134,7 @@ def get_storage_shares() -> Dict[str, Any]:
     }
 
 
-@router.get("/overview")
+@router.get("/overview", dependencies=[Depends(require_scope("storage:read", "system:view"))])
 def get_storage_overview() -> Dict[str, Any]:
     """
     Returns unified storage overview: pools, shares, platform info, and physical disk inventories.
@@ -180,7 +184,7 @@ def get_storage_overview() -> Dict[str, Any]:
     }
 
 
-@router.get("/disks")
+@router.get("/disks", dependencies=[Depends(require_scope("storage:read", "system:view"))])
 def get_storage_disks() -> Dict[str, Any]:
     """Returns detected physical disks discovered via DiskDiscoveryHAL."""
     from backend.hardware.hal import DiskDiscoveryHAL
@@ -267,6 +271,8 @@ def create_storage_share(req: StorageShareCreateRequest) -> Dict[str, Any]:
             read_only=req.read_only,
             export_smb=req.export_smb,
             export_nfs=req.export_nfs,
+            quota_gb=req.quota_gb or 0,
+            user_permissions=req.user_permissions or {},
             nfs_squash=req.nfs_squash,
             nfs_anonuid=req.nfs_anonuid,
             nfs_anongid=req.nfs_anongid,
@@ -406,7 +412,7 @@ def delete_storage_share(name: str) -> Dict[str, Any]:
         raise HTTPException(status_code=403, detail=str(e))
 
 
-@router.get("/pools/{pool_id}/snapshots")
+@router.get("/pools/{pool_id}/snapshots", dependencies=[Depends(require_scope("storage:read", "storage:admin"))])
 def list_storage_snapshots(pool_id: str) -> List[Dict[str, Any]]:
     """
     Lists filesystem subvolume snapshots for a storage pool.
@@ -516,7 +522,7 @@ class SmartScheduleUpdateRequest(BaseModel):
     skip_if_standby: Optional[bool] = None
 
 
-@router.get("/smart/schedule")
+@router.get("/smart/schedule", dependencies=[Depends(require_scope("storage:read", "system:view"))])
 def get_smart_test_schedule() -> Dict[str, Any]:
     """
     Returns current SMART test schedule, intervals, and last execution timestamps.
@@ -538,7 +544,7 @@ def update_smart_test_schedule(req: SmartScheduleUpdateRequest) -> Dict[str, Any
     return save_smart_schedule(payload)
 
 
-@router.get("/smart/failure-predictions")
+@router.get("/smart/failure-predictions", dependencies=[Depends(require_scope("storage:read", "system:view"))])
 def get_smart_failure_predictions() -> List[Dict[str, Any]]:
     """
     Scrutiny-style failure probability analytics and historical attribute velocity

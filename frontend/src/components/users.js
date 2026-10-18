@@ -3,8 +3,8 @@
  * Handles User inventory, Role assignment, Session revocation, and TOTP 2FA setup.
  */
 
-import { auth } from '../api.js';
-import { escapeHtml } from '../utils.js';
+import { auth, apiFetch } from '../api.js';
+import { escapeHtml, trapFocus } from '../utils.js';
 import { ZettEventBus } from '../event-bus.js';
 import { t } from '../i18n.js';
 import { showToast, showConfirmToast, showPromptToast } from '../toast.js';
@@ -23,10 +23,7 @@ export function getCurrentUser() {
 
 export async function fetchCurrentProfile() {
   try {
-    const token = auth.getToken();
-    const headers = {};
-    if (token) headers['Authorization'] = `Bearer ${token}`;
-    const res = await window.fetch('/api/auth/me', { credentials: 'include', headers });
+    const res = await apiFetch('/api/auth/me', { credentials: 'include' });
     if (res.ok) {
       const data = await res.json();
       setCurrentUser(data);
@@ -88,10 +85,22 @@ export function openModal(modal) {
   if (!modal) return;
   modal.classList.add('open');
   modal.style.display = 'flex';
+  if (modal._unbindFocusTrap) {
+    try { modal._unbindFocusTrap(); } catch (_) {}
+    modal._unbindFocusTrap = null;
+  }
+  const modalWin = modal.querySelector('.modal-window, .mgmt-modal-window, .smart-modal-window') || modal;
+  modal._unbindFocusTrap = trapFocus(modalWin, () => closeModal(modal));
+  const firstInput = modal.querySelector('input:not([disabled]), select:not([disabled]), button:not([disabled])');
+  if (firstInput) setTimeout(() => firstInput.focus(), 50);
 }
 
 export function closeModal(modal) {
   if (!modal) return;
+  if (modal._unbindFocusTrap) {
+    try { modal._unbindFocusTrap(); } catch (_) {}
+    modal._unbindFocusTrap = null;
+  }
   modal.classList.remove('open');
   modal.style.display = 'none';
 }
@@ -215,7 +224,7 @@ export async function loadUsersList() {
   container.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 24px; color: var(--muted);">Loading users...</td></tr>';
 
   try {
-    const res = await window.fetch('/api/users', { credentials: 'include' });
+    const res = await apiFetch('/api/users', { credentials: 'include' });
     if (!res.ok) {
       if (res.status === 403) {
         container.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 24px; color: var(--crit);">Requires SuperAdmin or users:read permission.</td></tr>';
@@ -344,7 +353,7 @@ export function showAddUserModal() {
       submitBtn.textContent = 'CREATING...';
 
       try {
-        const res = await window.fetch('/api/users', {
+        const res = await apiFetch('/api/users', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
@@ -402,7 +411,7 @@ export function showEditUserModal(user) {
       submitBtn.textContent = 'SAVING...';
 
       try {
-        const res = await window.fetch(`/api/users/${user.id}`, {
+        const res = await apiFetch(`/api/users/${user.id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
@@ -456,7 +465,7 @@ export function showResetPasswordModal(userId, username) {
       submitBtn.textContent = 'UPDATING...';
 
       try {
-        const res = await window.fetch(`/api/users/${userId}/password`, {
+        const res = await apiFetch(`/api/users/${userId}/password`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
@@ -481,7 +490,7 @@ export function showResetPasswordModal(userId, username) {
 
 async function toggleUserStatus(userId, newStatus) {
   try {
-    const res = await window.fetch(`/api/users/${userId}`, {
+    const res = await apiFetch(`/api/users/${userId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -505,7 +514,7 @@ export function confirmDeleteUser(userId, username) {
     `Are you sure you want to permanently delete user @${username}? This will remove their account and revoke all sessions.`,
     async () => {
       try {
-        const res = await window.fetch(`/api/users/${userId}`, {
+        const res = await apiFetch(`/api/users/${userId}`, {
           method: 'DELETE',
           credentials: 'include'
         });
@@ -531,7 +540,7 @@ export async function loadSessionsList() {
   container.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 24px; color: var(--muted);">Loading sessions...</td></tr>';
 
   try {
-    const res = await window.fetch('/api/auth/sessions', { credentials: 'include' });
+    const res = await apiFetch('/api/auth/sessions', { credentials: 'include' });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     const sessions = data.sessions || [];
@@ -568,7 +577,7 @@ export async function loadSessionsList() {
     container.querySelectorAll('.btn-revoke-session').forEach((btn) => {
       btn.addEventListener('click', async () => {
         const sid = btn.dataset.id;
-        await window.fetch(`/api/auth/sessions/${sid}`, { method: 'DELETE', credentials: 'include' });
+        await apiFetch(`/api/auth/sessions/${sid}`, { method: 'DELETE', credentials: 'include' });
         loadSessionsList();
       });
     });
@@ -584,7 +593,7 @@ export function revokeAllOtherSessions() {
     'Revoke all other login sessions on other devices and browsers?',
     async () => {
       try {
-        const res = await window.fetch('/api/auth/sessions', { method: 'DELETE', credentials: 'include' });
+        const res = await apiFetch('/api/auth/sessions', { method: 'DELETE', credentials: 'include' });
         if (res.ok) {
           showToast('All other sessions revoked.', 'success');
           loadSessionsList();
@@ -605,7 +614,7 @@ export async function load2FAStatus() {
   if (!statusContainer) return;
 
   try {
-    const res = await window.fetch('/api/auth/mfa/status', { credentials: 'include' });
+    const res = await apiFetch('/api/auth/mfa/status', { credentials: 'include' });
     if (!res.ok) return;
     const data = await res.json();
     const isEnabled = !!data.mfa_enabled;
@@ -651,7 +660,7 @@ async function start2FASetup() {
   qrContainer.innerHTML = '<div style="color:var(--muted); padding:30px;">Generating secure TOTP key...</div>';
 
   try {
-    const res = await window.fetch('/api/auth/mfa/setup', {
+    const res = await apiFetch('/api/auth/mfa/setup', {
       method: 'POST',
       credentials: 'include'
     });
@@ -672,7 +681,7 @@ async function start2FASetup() {
         verifyBtn.textContent = 'VERIFYING...';
 
         try {
-          const verifyRes = await window.fetch('/api/auth/mfa/enable', {
+          const verifyRes = await apiFetch('/api/auth/mfa/enable', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
@@ -731,7 +740,7 @@ export function disable2FA() {
     async (pwd) => {
       if (!pwd) return;
       try {
-        const res = await window.fetch('/api/auth/mfa/disable', {
+        const res = await apiFetch('/api/auth/mfa/disable', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',

@@ -56,7 +56,8 @@ describe('Mission Control 6-Pillar Information Architecture & Hardware Agnostici
       'mgmt-sec-hardware',
       'mgmt-sec-ups',
       'mgmt-sec-system-group',
-      'mgmt-sec-wallpaper'
+      'mgmt-sec-wallpaper',
+      'mgmt-sec-ai'
     ]);
 
     keys.forEach((key) => {

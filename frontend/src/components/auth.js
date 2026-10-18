@@ -567,6 +567,11 @@ export function initLockOverlay() {
   });
 }
 
+if (typeof window !== 'undefined') {
+  window.lockDesktopScreen = lockDesktop;
+  window.lockDesktop = lockDesktop;
+}
+
 export function lockDesktop() {
   if (isLcdMode()) return;
   const lockOverlay = document.getElementById('lock-overlay');

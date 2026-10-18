@@ -34,7 +34,10 @@ def _resolve_container_action():
     return container_action
 
 
-@router.get("/docker/containers")
+@router.get(
+    "/docker/containers",
+    dependencies=[Depends(require_scope("containers:read", "containers:manage", "system:view"))],
+)
 async def get_docker_containers():
     fn = _resolve_read_docker_containers()
     return await asyncio.to_thread(fn)
@@ -52,7 +55,10 @@ async def post_docker_container_action(container_id: str, req: DockerActionReque
     return res
 
 
-@router.get("/docker/containers/{container_id}/compose")
+@router.get(
+    "/docker/containers/{container_id}/compose",
+    dependencies=[Depends(require_scope("containers:read", "containers:manage", "system:view"))],
+)
 async def get_docker_container_compose(container_id: str, request: Request, unmask: bool = False):
     if not container_id or not re.match(r"^[a-zA-Z0-9_.-]{1,128}$", container_id):
         raise HTTPException(status_code=400, detail="Invalid container ID or name")
@@ -81,7 +87,10 @@ async def get_docker_container_compose(container_id: str, request: Request, unma
     return data
 
 
-@router.get("/docker/containers/{container_id}/details")
+@router.get(
+    "/docker/containers/{container_id}/details",
+    dependencies=[Depends(require_scope("containers:read", "containers:manage", "system:view"))],
+)
 async def get_docker_container_details(container_id: str, request: Request, unmask: bool = False):
     if not container_id or not re.match(r"^[a-zA-Z0-9_.-]{1,128}$", container_id):
         raise HTTPException(status_code=400, detail="Invalid container ID or name")
@@ -110,7 +119,10 @@ async def get_docker_container_details(container_id: str, request: Request, unma
     return data
 
 
-@router.get("/docker/containers/{container_id}/logs")
+@router.get(
+    "/docker/containers/{container_id}/logs",
+    dependencies=[Depends(require_scope("containers:read", "containers:manage", "system:view"))],
+)
 async def get_docker_container_logs(container_id: str, tail: int = 200):
     if not container_id or not re.match(r"^[a-zA-Z0-9_.-]{1,128}$", container_id):
         raise HTTPException(status_code=400, detail="Invalid container ID or name")
@@ -277,6 +289,47 @@ async def post_docker_updates_apply_all():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+class DockerUpdatePolicyRequest(BaseModel):
+    name: Optional[str] = None
+    policy: Optional[str] = "notify"  # "notify", "auto", "off"
+    policies: Optional[Dict[str, str]] = None
+
+
+@router.get(
+    "/docker/updates/policies",
+    dependencies=[Depends(require_scope("containers:read", "system:view"))],
+)
+async def get_docker_update_policies():
+    from backend.services.docker_updates import get_container_update_policies
+
+    return await asyncio.to_thread(get_container_update_policies)
+
+
+@router.post(
+    "/docker/updates/policies",
+    dependencies=[Depends(require_scope("containers:manage"))],
+)
+async def post_docker_update_policies(req: DockerUpdatePolicyRequest):
+    from backend.services.docker_updates import set_container_update_policy
+
+    try:
+        if req.policies:
+            res = {}
+            for name, pol in req.policies.items():
+                res = await asyncio.to_thread(set_container_update_policy, name, pol)
+            return {"status": "success", "policies": res}
+        elif req.name:
+            res = await asyncio.to_thread(set_container_update_policy, req.name, req.policy or "notify")
+            return {"status": "success", "policies": res}
+        else:
+            raise HTTPException(status_code=400, detail="Must provide container 'name' or 'policies' dictionary.")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"[Docker] Failed setting update policy: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 class StackSaveRequest(BaseModel):
     compose_yaml: str
     env_content: Optional[str] = None
@@ -294,6 +347,29 @@ async def get_docker_stacks():
     from backend.services.docker_stacks import list_all_stacks
 
     return await asyncio.to_thread(list_all_stacks)
+
+
+def _mask_compose_yaml_secrets(yaml_text: str) -> str:
+    if not yaml_text:
+        return yaml_text
+    masked_lines = []
+    for line in yaml_text.splitlines():
+        line_s = line.strip()
+        if not line_s.startswith("#") and any(sep in line_s for sep in (":", "=")):
+            for pattern in ("pass", "secret", "token", "key", "auth", "pwd"):
+                if pattern in line_s.lower():
+                    # - KEY=VAL
+                    m = re.search(r"^(\s*-\s*[a-zA-Z0-9_-]+\s*=\s*)(.+)$", line)
+                    if m:
+                        line = f"{m.group(1)}••••••••"
+                        break
+                    # KEY: VAL
+                    m = re.search(r"^(\s*[a-zA-Z0-9_-]+\s*:\s*)(.+)$", line)
+                    if m:
+                        line = f"{m.group(1)}••••••••"
+                        break
+        masked_lines.append(line)
+    return "\n".join(masked_lines)
 
 
 @router.get(
@@ -329,6 +405,8 @@ async def get_docker_stack_details(
                         continue
                 masked_lines.append(line)
             details["env_content"] = "\n".join(masked_lines)
+        if details.get("compose_yaml"):
+            details["compose_yaml"] = _mask_compose_yaml_secrets(details["compose_yaml"])
 
     return details
 
@@ -363,7 +441,10 @@ async def post_docker_stack_action(stack_name: str, req: StackActionRequest):
     return res
 
 
-@router.get("/docker/check_port")
+@router.get(
+    "/docker/check_port",
+    dependencies=[Depends(require_scope("containers:read", "containers:manage", "system:view"))],
+)
 async def get_check_port(port: int, proto: str = "tcp"):
     from backend.services.container_mutator import check_port_available_detailed
 
@@ -387,7 +468,9 @@ async def post_docker_container_exec(container_id: str, req: ContainerExecReques
     return res
 
 
-async def _authenticate_ws(websocket: WebSocket) -> bool:
+async def _authenticate_ws(
+    websocket: WebSocket, required_scopes: tuple = ("containers:exec", "containers:manage")
+) -> bool:
     token = (
         websocket.query_params.get("token")
         or websocket.query_params.get("ticket")
@@ -397,14 +480,34 @@ async def _authenticate_ws(websocket: WebSocket) -> bool:
     )
     if not token:
         return False
-    from backend.auth import get_current_session, validate_session
+    from backend.auth import AuthenticatedPrincipal, get_current_session, validate_session
     from backend.users_db import validate_scoped_api_token, validate_user_session
 
-    if get_current_session(token) or validate_session(token) or validate_user_session(token):
-        return True
-    if validate_scoped_api_token(token):
-        return True
-    return False
+    sess = get_current_session(token)
+    if not sess:
+        sess = validate_user_session(token)
+    if not sess:
+        api_tok = validate_scoped_api_token(token)
+        if api_tok:
+            sess = {
+                "user_id": api_tok.get("user_id"),
+                "username": api_tok.get("username"),
+                "role_id": api_tok.get("role_id"),
+                "scopes": api_tok.get("scopes", []),
+                "is_api_token": True,
+            }
+    if not sess and validate_session(token):
+        sess = {
+            "user_id": "admin-00000000-0000-0000-0000-000000000001",
+            "username": "admin",
+            "role_id": "superadmin",
+            "scopes": ["*"],
+        }
+    if not sess:
+        return False
+
+    principal = AuthenticatedPrincipal(sess)
+    return principal.has_any_scope(*required_scopes)
 
 
 @router.websocket("/docker/containers/{container_id}/terminal/ws")
@@ -415,7 +518,11 @@ async def websocket_docker_terminal(websocket: WebSocket, container_id: str):
     Streams ANSI stdout/stderr directly from container shell and pipes user keystrokes to stdin.
     Supports resize control messages: {"type": "resize", "cols": 120, "rows": 40}.
     """
-    if not await _authenticate_ws(websocket):
+    if not container_id or not re.match(r"^[a-zA-Z0-9_.-]{1,128}$", container_id):
+        await websocket.close(code=1008, reason="Invalid container ID or name")
+        return
+
+    if not await _authenticate_ws(websocket, ("containers:exec", "containers:manage")):
         await websocket.close(code=1008, reason="Unauthorized")
         return
 
@@ -462,7 +569,10 @@ async def delete_docker_container(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/docker/system/df")
+@router.get(
+    "/docker/system/df",
+    dependencies=[Depends(require_scope("containers:read", "containers:manage", "system:view"))],
+)
 async def get_system_df():
     from backend.services.docker_cleanup import get_docker_system_df
 

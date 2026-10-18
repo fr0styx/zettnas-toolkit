@@ -6,14 +6,61 @@ individual container updates, and batch 'Update All' functionality with automate
 """
 
 from concurrent.futures import ThreadPoolExecutor
+import json
 import os
 import socket
 import threading
 import time
 from typing import Any, Dict, List, Optional
 
-from backend.config import logger
+from backend.config import DATA_DIR, logger
 from backend.services.container_mutator import _docker_request, pull_container_image, recreate_container
+
+# Container update policy configuration persistence
+DOCKER_POLICIES_FILE = os.path.join(DATA_DIR, "docker_update_policies.json")
+_policies_lock = threading.Lock()
+
+
+def get_container_update_policies() -> Dict[str, str]:
+    """Returns the map of container name/id to policy ('notify', 'auto', 'off')."""
+    with _policies_lock:
+        try:
+            if os.path.exists(DOCKER_POLICIES_FILE):
+                with open(DOCKER_POLICIES_FILE, "r", encoding="utf-8") as f:
+                    return json.load(f)
+        except Exception as e:
+            logger.warning(f"[Docker Updates] Error reading update policies: {e}")
+        return {}
+
+
+def get_container_update_policy(name_or_id: str) -> str:
+    """Returns the update policy for a container, defaulting to 'notify'."""
+    policies = get_container_update_policies()
+    return policies.get(name_or_id, policies.get("default", "notify"))
+
+
+def set_container_update_policy(name_or_id: str, policy: str) -> Dict[str, str]:
+    """Sets the update policy for a container ('notify', 'auto', 'off')."""
+    clean_policy = (policy or "notify").lower().strip()
+    if clean_policy not in ("notify", "auto", "off"):
+        raise ValueError("Invalid update policy. Must be 'notify', 'auto', or 'off'.")
+    with _policies_lock:
+        policies = {}
+        try:
+            if os.path.exists(DOCKER_POLICIES_FILE):
+                with open(DOCKER_POLICIES_FILE, "r", encoding="utf-8") as f:
+                    policies = json.load(f)
+        except Exception:
+            policies = {}
+        policies[name_or_id] = clean_policy
+        try:
+            os.makedirs(os.path.dirname(DOCKER_POLICIES_FILE), exist_ok=True)
+            with open(DOCKER_POLICIES_FILE, "w", encoding="utf-8") as f:
+                json.dump(policies, f, indent=2)
+        except Exception as e:
+            logger.error(f"[Docker Updates] Failed to save policies: {e}")
+        return policies
+
 
 # In-memory cache for update status
 _update_cache: Dict[str, Any] = {
@@ -36,12 +83,14 @@ def _check_container_image_update(c: dict) -> Dict[str, Any]:
     cid = c.get("Id", "")[:12]
     img = c.get("Image", "")
 
+    policy = get_container_update_policy(name)
     res: Dict[str, Any] = {
         "id": cid,
         "name": name,
         "image": img,
         "has_update": False,
         "status": "up_to_date",
+        "update_policy": policy,
         "remote_digest": None,
         "local_digest": None,
         "error": None,
@@ -49,6 +98,10 @@ def _check_container_image_update(c: dict) -> Dict[str, Any]:
 
     if not img:
         res["status"] = "unknown"
+        return res
+
+    if policy == "off":
+        res["status"] = "policy_off"
         return res
 
     # Pinned digests (e.g. image@sha256:...) cannot be auto-checked against a tag
@@ -119,6 +172,16 @@ def check_all_container_updates(force: bool = False) -> Dict[str, Any]:
         container_map: Dict[str, Any] = {}
         updates_count = 0
         for r in results:
+            if r.get("has_update") and r.get("update_policy") == "auto":
+                cname = r.get("name")
+                if cname and cname not in ("zettnas-toolkit", "zettnas"):
+                    try:
+                        update_single_container(cname)
+                        r["has_update"] = False
+                        r["status"] = "auto_updated"
+                    except Exception as e:
+                        logger.error(f"[Docker Updates] Auto-update failed for '{cname}': {e}")
+
             container_map[r["name"]] = r
             if r["id"]:
                 container_map[r["id"]] = r

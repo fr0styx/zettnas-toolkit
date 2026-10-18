@@ -177,8 +177,8 @@ def test_platform_detector_env_overrides():
         assert StoragePlatformDetector.detect() == PlatformType.GENERIC_OBSERVER
 
     with patch.dict(os.environ, {"ZETTNAS_PAL_MODE": "observer"}):
-        # Clear ZETTNAS_PLATFORM so PAL_MODE is checked
-        with patch.dict(os.environ, {"ZETTNAS_PLATFORM": ""}):
+        # Clear ZETTNAS_PLATFORM and ZETTNAS_OBSERVER_ADAPTER so PAL_MODE is checked
+        with patch.dict(os.environ, {"ZETTNAS_PLATFORM": "", "ZETTNAS_OBSERVER_ADAPTER": ""}):
             with patch("backend.hardware.pal_storage._find_emhttp_dir", return_value=None):
                 with patch("os.path.isfile", return_value=False):
                     assert StoragePlatformDetector.detect() == PlatformType.GENERIC_OBSERVER

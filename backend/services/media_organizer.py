@@ -206,6 +206,17 @@ def parse_media_filename(filename: str) -> Dict[str, Any]:
     }
 
 
+def _get_allowed_media_roots() -> List[str]:
+    from backend.config import ALLOWED_BROWSE_ROOTS
+
+    roots = list(ALLOWED_BROWSE_ROOTS)
+    if os.environ.get("TESTING") == "1" or os.environ.get("ZETTNAS_TEST_MODE") == "1":
+        for cand in ("/tmp", "/var/tmp"):
+            if os.path.exists(cand) and cand not in roots:
+                roots.append(cand)
+    return roots
+
+
 def preview_organize(
     source_dir: str,
     target_dir: Optional[str] = None,
@@ -215,10 +226,21 @@ def preview_organize(
     Scans source_dir for media files and calculates dry-run proposed destination paths.
     Safe and non-destructive: zero files are moved or altered.
     """
+    from backend.fsutil import resolve_within
+
+    allowed_roots = _get_allowed_media_roots()
     if not os.path.isdir(source_dir):
         raise ValueError(f"Source directory does not exist: {source_dir}")
 
+    resolved_src_root = resolve_within(source_dir, allowed_roots)
+    if not resolved_src_root:
+        raise ValueError(f"Source directory outside permitted storage roots: {source_dir}")
+
     dest_root = target_dir.strip() if target_dir else source_dir
+    resolved_dest_root = resolve_within(dest_root, allowed_roots)
+    if not resolved_dest_root:
+        raise ValueError(f"Target directory outside permitted storage roots: {dest_root}")
+
     items: List[Dict[str, Any]] = []
 
     for root, _, files in os.walk(source_dir):
@@ -228,6 +250,11 @@ def preview_organize(
                 continue
 
             full_src = os.path.join(root, f)
+            if os.path.islink(full_src):
+                continue
+            if not resolve_within(full_src, allowed_roots):
+                continue
+
             meta = parse_media_filename(f)
             if not meta.get("is_video"):
                 continue
@@ -274,6 +301,9 @@ def apply_organize(
     Executes physical reorganization (atomic move, copy, or hardlink).
     Preserves torrent seeding when hardlink=True.
     """
+    from backend.fsutil import resolve_within
+
+    allowed_roots = _get_allowed_media_roots()
     success_count = 0
     failed_items = []
 
@@ -282,6 +312,30 @@ def apply_organize(
         dst = it.get("destination_path")
         if not src or not dst or not os.path.isfile(src):
             failed_items.append({"source": src, "error": "Source file not found"})
+            continue
+
+        if os.path.islink(src):
+            failed_items.append({"source": src, "destination": dst, "error": "Symlink source is not permitted"})
+            continue
+
+        resolved_src = resolve_within(src, allowed_roots)
+        if not resolved_src:
+            failed_items.append(
+                {"source": src, "destination": dst, "error": "Source file outside permitted storage roots"}
+            )
+            continue
+
+        resolved_dst = resolve_within(dst, allowed_roots)
+        if not resolved_dst:
+            failed_items.append(
+                {"source": src, "destination": dst, "error": "Destination file outside permitted storage roots"}
+            )
+            continue
+
+        if os.path.islink(dst) or (os.path.exists(dst) and os.path.islink(dst)):
+            failed_items.append(
+                {"source": src, "destination": dst, "error": "Destination symlink collision is not permitted"}
+            )
             continue
 
         try:

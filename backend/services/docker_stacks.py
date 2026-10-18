@@ -311,6 +311,50 @@ def get_stack_details(stack_name: str) -> Dict[str, Any]:
     }
 
 
+def _restore_masked_stack_secrets(
+    new_compose: str, new_env: Optional[str], old_compose: str, old_env: str
+) -> Tuple[str, Optional[str]]:
+    """Restores unmasked secret values if the caller round-trips masked placeholders."""
+    restored_env = new_env
+    if new_env is not None and old_env:
+        old_env_map = {}
+        for line in old_env.splitlines():
+            line_s = line.strip()
+            if "=" in line_s and not line_s.startswith("#"):
+                k, v = line_s.split("=", 1)
+                old_env_map[k.strip()] = v.strip()
+
+        restored_lines = []
+        for line in new_env.splitlines():
+            line_s = line.strip()
+            if "=" in line_s and not line_s.startswith("#"):
+                k, v = line_s.split("=", 1)
+                k_clean = k.strip()
+                v_clean = v.strip()
+                if v_clean in ("••••••••", "********", "******") and k_clean in old_env_map:
+                    restored_lines.append(f"{k_clean}={old_env_map[k_clean]}")
+                    continue
+            restored_lines.append(line)
+        restored_env = "\n".join(restored_lines)
+
+    restored_compose = new_compose
+    if old_compose and ("••••••••" in new_compose or "********" in new_compose):
+        for placeholder in ("••••••••", "********"):
+            if placeholder not in restored_compose:
+                continue
+            for line in restored_compose.splitlines():
+                if placeholder in line:
+                    m = re.search(r"([a-zA-Z0-9_-]+)\s*[:=]\s*[\"']?" + re.escape(placeholder) + r"[\"']?", line)
+                    if m:
+                        key_name = m.group(1)
+                        old_m = re.search(r"\b" + re.escape(key_name) + r"\s*[:=]\s*([^\s#]+)", old_compose)
+                        if old_m:
+                            old_val = old_m.group(1).strip().strip('"').strip("'")
+                            restored_compose = restored_compose.replace(line, line.replace(placeholder, old_val))
+
+    return restored_compose, restored_env
+
+
 def save_stack_config(stack_name: str, compose_yaml: str, env_content: Optional[str] = None) -> Dict[str, Any]:
     """
     Validates and saves updated compose.yaml and .env for a stack.
@@ -325,6 +369,10 @@ def save_stack_config(stack_name: str, compose_yaml: str, env_content: Optional[
         return {"success": False, "error": f"Invalid YAML syntax: {e}"}
 
     details = get_stack_details(stack_name)
+    old_compose = details.get("compose_yaml") or ""
+    old_env = details.get("env_content") or ""
+    compose_yaml, env_content = _restore_masked_stack_secrets(compose_yaml, env_content, old_compose, old_env)
+
     location_type = details.get("location_type")
     config_file = details.get("config_file")
     working_dir = details.get("working_dir")
@@ -378,6 +426,22 @@ def save_stack_config(stack_name: str, compose_yaml: str, env_content: Optional[
         return {"success": False, "error": f"Failed creating stack directory: {e}"}
 
 
+def deploy_stack(stack_name: str, compose_yaml: str, env_content: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Saves a Compose stack configuration and redeploys it.
+    Used by App Backup restore and stack deployments.
+    """
+    save_res = save_stack_config(stack_name, compose_yaml, env_content)
+    if not save_res.get("success"):
+        return save_res
+    redeploy_res = execute_stack_action(stack_name, "redeploy")
+    return {
+        "success": redeploy_res.get("success", False),
+        "save": save_res,
+        "redeploy": redeploy_res,
+    }
+
+
 def execute_stack_action(stack_name: str, action: str) -> Dict[str, Any]:
     """
     Executes an action across an entire stack:
@@ -395,7 +459,7 @@ def execute_stack_action(stack_name: str, action: str) -> Dict[str, Any]:
         return {"success": False, "error": f"No containers found for stack '{stack_name}'"}
 
     if action == "redeploy":
-        compose_path = details.get("compose_path")
+        compose_path = details.get("config_file") or details.get("compose_path")
         if compose_path and os.path.isfile(compose_path):
             cwd = working_dir if (working_dir and os.path.isdir(working_dir)) else os.path.dirname(compose_path)
             try:

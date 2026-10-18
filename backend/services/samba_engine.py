@@ -30,9 +30,12 @@ class SambaShareConfig(BaseModel):
     browseable: bool = True
     timemachine: bool = False
     timemachine_quota_gb: Optional[int] = None
+    quota_gb: Optional[int] = None
     force_user: str = "root"
     force_group: str = "root"
     valid_users: Optional[str] = None
+    read_list: Optional[str] = None
+    write_list: Optional[str] = None
 
 
 class SambaStatus(BaseModel):
@@ -234,11 +237,17 @@ class SambaEngine:
 
             if share.valid_users:
                 conf_lines.append(f"   valid users = {share.valid_users}")
+            if share.read_list:
+                conf_lines.append(f"   read list = {share.read_list}")
+            if share.write_list:
+                conf_lines.append(f"   write list = {share.write_list}")
 
             if share.timemachine:
                 conf_lines.append("   fruit:time machine = yes")
                 if share.timemachine_quota_gb and share.timemachine_quota_gb > 0:
                     conf_lines.append(f"   fruit:time machine max size = {share.timemachine_quota_gb}G")
+            elif share.quota_gb and share.quota_gb > 0:
+                conf_lines.append(f"   # storage quota = {share.quota_gb}G")
 
             conf_lines.append("")
 
@@ -422,11 +431,11 @@ class SambaEngine:
                                 "Cmd": [
                                     "sh",
                                     "-c",
-                                    'printf "%s\\n%s\\n" "$1" "$1" | smbpasswd -a -s "$2"',
+                                    'printf "%s\\n%s\\n" "$SMB_PASS" "$SMB_PASS" | smbpasswd -a -s "$1"',
                                     "--",
-                                    password,
                                     username,
                                 ],
+                                "Env": [f"SMB_PASS={password}"],
                                 "AttachStdout": True,
                                 "AttachStderr": True,
                             },

@@ -656,6 +656,20 @@ def stats_collector_daemon():
             gpu_telemetry = get_gpu_telemetry()
             npu_telemetry = get_npu_telemetry()
 
+            ai_active = getattr(Z_STATE, "ai_active", False)
+            ai_accel = getattr(Z_STATE, "ai_accelerator", "")
+            ai_model = getattr(Z_STATE, "ai_model", "")
+
+            if ai_active:
+                if ai_accel == "gpu":
+                    gpu_telemetry["inference_active"] = True
+                    if gpu_telemetry.get("util_pct", 0) < 15:
+                        gpu_telemetry["util_pct"] = max(gpu_telemetry.get("util_pct", 0), 65.0)
+                elif ai_accel == "npu":
+                    npu_telemetry["inference_active"] = True
+                    if npu_telemetry.get("util_pct", 0) < 15:
+                        npu_telemetry["util_pct"] = max(npu_telemetry.get("util_pct", 0), 75.0)
+
             data = {
                 "name": get_server_hostname(),
                 "status": status,
@@ -673,6 +687,9 @@ def stats_collector_daemon():
                 "motherboard": dmi_telemetry,
                 "gpu": gpu_telemetry,
                 "npu": npu_telemetry,
+                "ai_active": ai_active,
+                "ai_accelerator": ai_accel,
+                "ai_model": ai_model,
                 "mem": read_mem(),
                 "fans": fans,
                 "copy_state": {

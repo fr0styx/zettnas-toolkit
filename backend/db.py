@@ -2,10 +2,13 @@ import json
 import os
 import sqlite3
 import time
+import threading
 from contextlib import contextmanager
 from typing import Any, Dict, List, Optional, Tuple
 
 from backend.config import DB_PATH, logger
+
+_DB_LOCK = threading.RLock()
 
 
 def get_db_connection() -> sqlite3.Connection:
@@ -18,15 +21,16 @@ def get_db_connection() -> sqlite3.Connection:
 @contextmanager
 def db_session():
     """Thread-safe SQLite session context manager ensuring commit, rollback on error, and guaranteed connection closure."""
-    conn = get_db_connection()
-    try:
-        yield conn
-        conn.commit()
-    except Exception:
-        conn.rollback()
-        raise
-    finally:
-        conn.close()
+    with _DB_LOCK:
+        conn = get_db_connection()
+        try:
+            yield conn
+            conn.commit()
+        except Exception:
+            conn.rollback()
+            raise
+        finally:
+            conn.close()
 
 
 _LAST_PRUNE_TS: int = 0

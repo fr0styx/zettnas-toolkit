@@ -2,6 +2,7 @@ import { ZettEventBus } from './event-bus.js';
 import { showToast } from './toast.js';
 import { api } from './api.js';
 import { DockManager, bringToFront } from './components/dock.js';
+import { trapFocus } from './utils.js';
 
 window.addEventListener('DOMContentLoaded', () => {
     const $ = (id) => document.getElementById(id);
@@ -161,7 +162,37 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  let customSelectCallback = null;
+  let _unbindFbTrap = null;
+
+  function openFbModal(initialPath, onSelect = null) {
+    customSelectCallback = typeof onSelect === "function" ? onSelect : null;
+    loadBrowsePath(initialPath || "/mnt/user/");
+    if (fbModal) {
+      fbModal.classList.remove("window-minimized");
+      fbModal.style.removeProperty("display");
+      fbModal.classList.add("open");
+      if (DockManager) DockManager.register("fb", fbModal, "#i-storage", "Folder Browser");
+      const modalWin = fbModal.querySelector(".smart-modal-window") || fbModal;
+      if (bringToFront) bringToFront(modalWin);
+      if (_unbindFbTrap) {
+        try { _unbindFbTrap(); } catch (_) {}
+        _unbindFbTrap = null;
+      }
+      _unbindFbTrap = trapFocus(modalWin, closeFbModal);
+      const searchInput = fbModal.querySelector("#fb-search-bar");
+      if (searchInput) setTimeout(() => searchInput.focus(), 60);
+    }
+  }
+
+  window.openFolderBrowser = openFbModal;
+
   function closeFbModal() {
+    if (_unbindFbTrap) {
+      try { _unbindFbTrap(); } catch (_) {}
+      _unbindFbTrap = null;
+    }
+    customSelectCallback = null;
     if (DockManager) DockManager.unregister("fb");
     if (fbModal) {
       fbModal.classList.remove("open");
@@ -174,14 +205,7 @@ window.addEventListener('DOMContentLoaded', () => {
     const handleBrowse = (e) => {
       if (e) e.preventDefault();
       const currentDst = (btnCopyDst && btnCopyDst.value) ? btnCopyDst.value : "/mnt/user/";
-      loadBrowsePath(currentDst || "/mnt/user/");
-      if (fbModal) {
-        fbModal.classList.remove("window-minimized");
-        fbModal.style.removeProperty("display");
-        fbModal.classList.add("open");
-        if (DockManager) DockManager.register("fb", fbModal, "#i-storage", "Folder Browser");
-        if (bringToFront) bringToFront(fbModal.querySelector(".smart-modal-window"));
-      }
+      openFbModal(currentDst || "/mnt/user/", null);
     };
     btnBrowseDst.addEventListener("click", handleBrowse);
     btnBrowseDst.addEventListener("touchend", handleBrowse);
@@ -212,11 +236,19 @@ window.addEventListener('DOMContentLoaded', () => {
 
   if (fbSelect) {
     fbSelect.addEventListener("click", () => {
+      const cb = customSelectCallback;
+      const selected = currentBrowsePath;
+      if (cb) {
+        closeFbModal();
+        try { cb(selected); } catch (err) { console.error(err); }
+        ZettEventBus.dispatchEvent(new CustomEvent('folder_selected', { detail: selected }));
+        return;
+      }
       if (btnCopyDst) {
-        btnCopyDst.value = currentBrowsePath;
+        btnCopyDst.value = selected;
       }
       closeFbModal();
-      ZettEventBus.dispatchEvent(new CustomEvent('folder_selected', { detail: currentBrowsePath }));
+      ZettEventBus.dispatchEvent(new CustomEvent('folder_selected', { detail: selected }));
       
       const btnCopySave = $("btn-copy-save");
       if (btnCopySave) {

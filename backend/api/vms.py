@@ -4,6 +4,7 @@ Provides KVM hypervisor telemetry, adaptive headroom calculations, ISO scanning,
 and VM lifecycle orchestration.
 """
 
+import asyncio
 import hashlib
 import os
 import re
@@ -1033,6 +1034,11 @@ def get_discovered_isos():
     return scan_isos()
 
 
+def _write_and_hash_chunk(f, data: bytes, hasher) -> None:
+    f.write(data)
+    hasher.update(data)
+
+
 @router.post("/isos/upload", dependencies=[Depends(require_scope("system:config", "storage:admin"))])
 async def upload_iso_file(
     request: Request,
@@ -1052,13 +1058,23 @@ async def upload_iso_file(
     total_written = 0
     hasher = hashlib.sha256()
 
+    buffer = bytearray()
+    CHUNK_FLUSH_SIZE = 4 * 1024 * 1024  # 4 MB
+
     try:
         with open(tmp_path, "wb") as f:
             async for chunk in request.stream():
                 if chunk:
-                    f.write(chunk)
-                    hasher.update(chunk)
+                    buffer.extend(chunk)
                     total_written += len(chunk)
+                    if len(buffer) >= CHUNK_FLUSH_SIZE:
+                        flush_bytes = bytes(buffer)
+                        buffer.clear()
+                        await asyncio.to_thread(_write_and_hash_chunk, f, flush_bytes, hasher)
+            if buffer:
+                flush_bytes = bytes(buffer)
+                buffer.clear()
+                await asyncio.to_thread(_write_and_hash_chunk, f, flush_bytes, hasher)
     except Exception as e:
         if os.path.exists(tmp_path):
             try:
@@ -1838,20 +1854,47 @@ def _validate_console_ticket(ticket: Optional[str], vm_id: str) -> bool:
         entry = _CONSOLE_TICKETS.pop(ticket)
         if entry.get("vm_id") == vm_id and entry.get("expires_at", 0) > now:
             return True
+    allowed_console_scopes = (
+        "*",
+        "vms:*",
+        "vms:console",
+        "vms:write",
+        "vms:manage",
+        "system:config",
+        "storage:admin",
+    )
     try:
-        from backend.auth import get_current_session
+        from backend.auth import AuthenticatedPrincipal, get_current_session
+        from backend.users_db import validate_scoped_api_token, validate_user_session
 
-        session = get_current_session(ticket)
-        if session:
-            return True
+        sess = get_current_session(ticket)
+        if not sess:
+            sess = validate_user_session(ticket)
+        if not sess:
+            api_tok = validate_scoped_api_token(ticket)
+            if api_tok:
+                sess = {
+                    "user_id": api_tok.get("user_id"),
+                    "username": api_tok.get("username"),
+                    "role_id": api_tok.get("role_id"),
+                    "scopes": api_tok.get("scopes", []),
+                    "is_api_token": True,
+                }
+        if sess:
+            principal = AuthenticatedPrincipal(sess)
+            if principal.has_any_scope(*allowed_console_scopes):
+                return True
     except Exception:
         pass
     try:
         from backend.api.auth import validate_and_consume_stream_ticket
+        from backend.auth import AuthenticatedPrincipal
 
         auth_entry = validate_and_consume_stream_ticket(ticket)
         if auth_entry:
-            return True
+            principal = AuthenticatedPrincipal(auth_entry)
+            if principal.has_any_scope(*allowed_console_scopes):
+                return True
     except Exception:
         pass
     return False

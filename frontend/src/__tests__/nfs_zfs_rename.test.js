@@ -144,6 +144,8 @@ describe('NFS Exports, OpenZFS RAIDZ Provisioning & Storage Pool Renaming', () =
       read_only: false,
       export_smb: true,
       export_nfs: true,
+      quota_gb: 0,
+      user_permissions: {},
       nfs_squash: 'no_root_squash',
       nfs_anonuid: 999,
       nfs_anongid: 999,

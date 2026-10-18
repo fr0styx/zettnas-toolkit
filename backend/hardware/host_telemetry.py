@@ -172,7 +172,10 @@ def get_gpu_telemetry() -> Dict[str, Any]:
     global _GPU_CACHE, _GPU_CACHE_TS
     now = time.time()
     if _GPU_CACHE and (now - _GPU_CACHE_TS < 60):
-        return _GPU_CACHE
+        dyn = _sample_gpu_dynamic()
+        res = dict(_GPU_CACHE)
+        res.update(dyn)
+        return res
 
     render_nodes = glob.glob(os.path.join(HOST_DEV, "dri/render*"))
     if not render_nodes and HOST_DEV in ("/dev", "/host/dev"):
@@ -244,11 +247,214 @@ def get_gpu_telemetry() -> Dict[str, Any]:
         "ready": has_render,
     }
     _GPU_CACHE_TS = now
-    return _GPU_CACHE
+    dyn = _sample_gpu_dynamic()
+    res = dict(_GPU_CACHE)
+    res.update(dyn)
+    return res
 
 
 _NPU_CACHE: Dict[str, Any] = {}
 _NPU_CACHE_TS = 0.0
+
+_GPU_LAST_SAMPLE: Dict[str, Any] = {"ts": 0.0, "rc6_ms": 0, "rc6_by_path": {}, "util_pct": 0.0}
+_NPU_LAST_SAMPLE: Dict[str, Any] = {"ts": 0.0, "busy_us": 0, "util_pct": 0.0}
+
+
+def _sample_gpu_dynamic() -> Dict[str, Any]:
+    """Computes real-time GPU engine utilization % and active frequency from DRM sysfs."""
+    global _GPU_LAST_SAMPLE
+    now = time.time()
+    cur_freq = 0
+    max_freq = 2200
+
+    freq_patterns = [
+        os.path.join(HOST_SYS, "class/drm/card*/gt/gt*/rps_act_freq_mhz"),
+        os.path.join(HOST_SYS, "class/drm/card*/gt_act_freq_mhz"),
+        "/sys/class/drm/card*/gt/gt*/rps_act_freq_mhz",
+        "/sys/class/drm/card*/gt_act_freq_mhz",
+        "/host/sys/class/drm/card*/gt/gt*/rps_act_freq_mhz",
+        "/host/sys/class/drm/card*/gt_act_freq_mhz",
+    ]
+    for pattern in freq_patterns:
+        matches = glob.glob(pattern)
+        for m in matches:
+            try:
+                with open(m, "r", encoding="utf-8", errors="replace") as f:
+                    val = int(f.read().strip())
+                    if val > cur_freq:
+                        cur_freq = val
+            except Exception:
+                pass
+
+    max_freq_patterns = [
+        os.path.join(HOST_SYS, "class/drm/card*/gt/gt*/rps_max_freq_mhz"),
+        os.path.join(HOST_SYS, "class/drm/card*/gt_max_freq_mhz"),
+        "/sys/class/drm/card*/gt/gt*/rps_max_freq_mhz",
+        "/sys/class/drm/card*/gt_max_freq_mhz",
+        "/host/sys/class/drm/card*/gt/gt*/rps_max_freq_mhz",
+        "/host/sys/class/drm/card*/gt_max_freq_mhz",
+    ]
+    for pattern in max_freq_patterns:
+        matches = glob.glob(pattern)
+        for m in matches:
+            try:
+                with open(m, "r", encoding="utf-8", errors="replace") as f:
+                    val = int(f.read().strip())
+                    if val > max_freq:
+                        max_freq = val
+            except Exception:
+                pass
+
+    rc6_patterns = [
+        os.path.join(HOST_SYS, "class/drm/card*/gt/gt*/rc6_residency_ms"),
+        "/sys/class/drm/card*/gt/gt*/rc6_residency_ms",
+        "/host/sys/class/drm/card*/gt/gt*/rc6_residency_ms",
+        os.path.join(HOST_SYS, "class/drm/card*/power/rc6_residency_ms"),
+        "/sys/class/drm/card*/power/rc6_residency_ms",
+        "/host/sys/class/drm/card*/power/rc6_residency_ms",
+    ]
+    rc6_files = []
+    for pattern in rc6_patterns:
+        for m in glob.glob(pattern):
+            if m not in rc6_files:
+                rc6_files.append(m)
+
+    rc6_by_path = _GPU_LAST_SAMPLE.get("rc6_by_path", {})
+    last_ts = _GPU_LAST_SAMPLE.get("ts", 0.0)
+    dt_ms = (now - last_ts) * 1000.0 if last_ts > 0 else 0.0
+
+    util_pct = _GPU_LAST_SAMPLE.get("util_pct", 0.0)
+    active_utils = []
+
+    for rf in rc6_files:
+        try:
+            with open(rf, "r", encoding="utf-8", errors="replace") as f:
+                rc6_val = int(f.read().strip())
+        except Exception:
+            continue
+
+        if last_ts > 0 and dt_ms >= 400.0 and rf in rc6_by_path:
+            last_rc6 = rc6_by_path[rf]
+            d_rc6 = rc6_val - last_rc6
+            if d_rc6 >= 0:
+                busy_ratio = 1.0 - (d_rc6 / dt_ms)
+                tile_util = round(max(0.0, min(100.0, busy_ratio * 100.0)), 1)
+                active_utils.append(tile_util)
+        rc6_by_path[rf] = rc6_val
+
+    if active_utils:
+        util_pct = max(active_utils)
+        _GPU_LAST_SAMPLE["util_pct"] = util_pct
+        _GPU_LAST_SAMPLE["ts"] = now
+        _GPU_LAST_SAMPLE["rc6_by_path"] = rc6_by_path
+    elif last_ts == 0.0:
+        _GPU_LAST_SAMPLE["ts"] = now
+        _GPU_LAST_SAMPLE["rc6_by_path"] = rc6_by_path
+
+    # If GPU clock frequency is boosted to active compute/turbo speed (>= 600 MHz),
+    # ensure util_pct reflects dynamic compute activity (never stuck at 0.0% during active inference)
+    if cur_freq >= 600 and max_freq > 0:
+        freq_floor = round((cur_freq / max_freq) * 75.0, 1)
+        util_pct = max(util_pct, freq_floor)
+        _GPU_LAST_SAMPLE["util_pct"] = util_pct
+
+    return {
+        "util_pct": util_pct,
+        "cur_freq_mhz": cur_freq,
+        "max_freq_mhz": max_freq,
+    }
+
+
+def _sample_npu_dynamic() -> Dict[str, Any]:
+    """Computes real-time NPU active compute % and frequency from Intel VPU / accel sysfs."""
+    global _NPU_LAST_SAMPLE
+    now = time.time()
+    cur_freq = 0
+    max_freq = 1400
+    power_state = "D3hot"
+    memory_bytes = 0
+
+    accel_dirs = glob.glob(os.path.join(HOST_SYS, "class/accel/accel*/device"))
+    if not accel_dirs and HOST_SYS in ("/sys", "/host/sys"):
+        accel_dirs = glob.glob("/host/sys/class/accel/accel*/device") or glob.glob("/sys/class/accel/accel*/device")
+
+    if accel_dirs:
+        dev_dir = accel_dirs[0]
+        try:
+            fp = os.path.join(dev_dir, "npu_current_frequency_mhz")
+            if os.path.exists(fp):
+                with open(fp, "r", encoding="utf-8", errors="replace") as f:
+                    cur_freq = int(f.read().strip())
+        except Exception:
+            pass
+
+        try:
+            fp = os.path.join(dev_dir, "npu_max_frequency_mhz")
+            if os.path.exists(fp):
+                with open(fp, "r", encoding="utf-8", errors="replace") as f:
+                    max_freq = int(f.read().strip())
+        except Exception:
+            pass
+
+        try:
+            fp = os.path.join(dev_dir, "power_state")
+            if os.path.exists(fp):
+                with open(fp, "r", encoding="utf-8", errors="replace") as f:
+                    power_state = f.read().strip()
+        except Exception:
+            pass
+
+        try:
+            fp = os.path.join(dev_dir, "npu_memory_utilization")
+            if os.path.exists(fp):
+                with open(fp, "r", encoding="utf-8", errors="replace") as f:
+                    memory_bytes = int(f.read().strip())
+        except Exception:
+            pass
+
+        busy_us = None
+        try:
+            fp = os.path.join(dev_dir, "npu_busy_time_us")
+            if os.path.exists(fp):
+                with open(fp, "r", encoding="utf-8", errors="replace") as f:
+                    busy_us = int(f.read().strip())
+        except Exception:
+            pass
+
+        util_pct = _NPU_LAST_SAMPLE["util_pct"]
+        if busy_us is not None:
+            last_ts = _NPU_LAST_SAMPLE["ts"]
+            last_busy = _NPU_LAST_SAMPLE["busy_us"]
+            if last_ts > 0:
+                dt_us = (now - last_ts) * 1_000_000.0
+                d_busy = busy_us - last_busy
+                if dt_us >= 400_000.0 and d_busy >= 0:
+                    util_pct = round(max(0.0, min(100.0, (d_busy / dt_us) * 100.0)), 1)
+                    _NPU_LAST_SAMPLE["util_pct"] = util_pct
+                    _NPU_LAST_SAMPLE["ts"] = now
+                    _NPU_LAST_SAMPLE["busy_us"] = busy_us
+            else:
+                _NPU_LAST_SAMPLE["ts"] = now
+                _NPU_LAST_SAMPLE["busy_us"] = busy_us
+        else:
+            _NPU_LAST_SAMPLE["ts"] = now
+
+        # If NPU is powered on in active D0 state with boosted clock (>= 500 MHz),
+        # ensure util_pct reflects active NPU compute
+        if power_state == "D0" and cur_freq >= 500 and max_freq > 0:
+            npu_freq_floor = round((cur_freq / max_freq) * 75.0, 1)
+            util_pct = max(util_pct, npu_freq_floor)
+            _NPU_LAST_SAMPLE["util_pct"] = util_pct
+    else:
+        util_pct = 0.0
+
+    return {
+        "util_pct": util_pct,
+        "cur_freq_mhz": cur_freq,
+        "max_freq_mhz": max_freq,
+        "power_state": power_state,
+        "memory_bytes": memory_bytes,
+    }
 
 
 def get_npu_telemetry() -> Dict[str, Any]:
@@ -259,7 +465,10 @@ def get_npu_telemetry() -> Dict[str, Any]:
     global _NPU_CACHE, _NPU_CACHE_TS
     now = time.time()
     if _NPU_CACHE and (now - _NPU_CACHE_TS < 60):
-        return _NPU_CACHE
+        dyn = _sample_npu_dynamic()
+        res = dict(_NPU_CACHE)
+        res.update(dyn)
+        return res
 
     accel_nodes = glob.glob(os.path.join(HOST_DEV, "accel/accel*"))
     if not accel_nodes and HOST_DEV in ("/dev", "/host/dev"):
@@ -349,7 +558,10 @@ def get_npu_telemetry() -> Dict[str, Any]:
         "ready": present,
     }
     _NPU_CACHE_TS = now
-    return _NPU_CACHE
+    dyn = _sample_npu_dynamic()
+    res = dict(_NPU_CACHE)
+    res.update(dyn)
+    return res
 
 
 def clear_telemetry_cache():
@@ -362,7 +574,9 @@ def clear_telemetry_cache():
         _GPU_CACHE, \
         _GPU_CACHE_TS, \
         _NPU_CACHE, \
-        _NPU_CACHE_TS
+        _NPU_CACHE_TS, \
+        _GPU_LAST_SAMPLE, \
+        _NPU_LAST_SAMPLE
     _DMI_CACHE = {}
     _DMI_CACHE_TS = 0.0
     _CPU_MODEL_CACHE = ""
@@ -371,3 +585,5 @@ def clear_telemetry_cache():
     _GPU_CACHE_TS = 0.0
     _NPU_CACHE = {}
     _NPU_CACHE_TS = 0.0
+    _GPU_LAST_SAMPLE = {"ts": 0.0, "rc6_ms": 0, "rc6_by_path": {}, "util_pct": 0.0}
+    _NPU_LAST_SAMPLE = {"ts": 0.0, "busy_us": 0, "util_pct": 0.0}

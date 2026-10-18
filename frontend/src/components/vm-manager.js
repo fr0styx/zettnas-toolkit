@@ -5,7 +5,7 @@
  */
 
 import { api } from '../api.js';
-import { escapeHtml } from '../utils.js';
+import { escapeHtml, trapFocus } from '../utils.js';
 import { ZettEventBus } from '../event-bus.js';
 import { showToast, showConfirmToast, showPromptToast, showBottomSheet } from '../toast.js';
 import { t } from '../i18n.js';
@@ -5245,6 +5245,10 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
           e.preventDefault();
           e.stopPropagation();
         }
+        if (modal._unbindTrap) {
+          try { modal._unbindTrap(); } catch (_) {}
+          modal._unbindTrap = null;
+        }
         modal.classList.add('window-minimized');
         modal.classList.remove('open');
         modal.style.setProperty('display', 'none', 'important');
@@ -5285,6 +5289,10 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
         if (e) {
           e.preventDefault();
           e.stopPropagation();
+        }
+        if (modal._unbindTrap) {
+          try { modal._unbindTrap(); } catch (_) {}
+          modal._unbindTrap = null;
         }
         modal.classList.add('window-minimized');
         modal.classList.remove('open');
@@ -5662,6 +5670,20 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
     modal.style.display = 'flex';
   }
   bringToFront(modal);
+
+  if (modal._unbindTrap) {
+    try { modal._unbindTrap(); } catch (_) {}
+    modal._unbindTrap = null;
+  }
+  modal._unbindTrap = trapFocus(modal, () => {
+    const closeBtn = modal.querySelector('#iso-modal-close');
+    if (closeBtn) closeBtn.click();
+    else {
+      modal.classList.add('window-minimized');
+      modal.classList.remove('open');
+      modal.style.setProperty('display', 'none', 'important');
+    }
+  });
 
   // Load and render both tabs
   renderLocalIsoList();

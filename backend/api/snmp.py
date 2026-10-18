@@ -52,7 +52,7 @@ class SnmpConfigRequest(BaseModel):
     enabled: bool = True
     port: int = Field(161, ge=1, le=65535)
     version: str = Field("v2c", pattern="^(v2c|v3|both)$")
-    community: Optional[str] = Field("public", min_length=1, max_length=64)
+    community: Optional[str] = Field(None, min_length=1, max_length=64)
     v3_user: Optional[str] = Field("zettnas_admin", min_length=1, max_length=64)
     v3_security_level: Optional[str] = Field("authPriv", pattern="^(noAuthNoPriv|authNoPriv|authPriv)$")
     v3_auth_protocol: Optional[str] = Field("SHA-256", pattern="^(MD5|SHA|SHA-256)$")
@@ -90,7 +90,14 @@ def get_snmp_config():
 def update_snmp_config(req: SnmpConfigRequest, principal: AuthenticatedPrincipal = Depends(get_current_principal)):
     """Updates SNMP daemon configuration."""
     cfg = _load_snmp_config()
-    cfg.update(req.model_dump(exclude_unset=True))
+    updates = req.model_dump(exclude_unset=True)
+    incoming_comm = updates.get("community")
+    if incoming_comm:
+        if "*" in incoming_comm or incoming_comm.strip() == "":
+            updates.pop("community", None)
+    elif "community" not in cfg:
+        updates["community"] = "public"
+    cfg.update(updates)
     atomic_write_json(SNMP_CONFIG_FILE, cfg)
     add_event("info", "SNMP Config", f"SNMP configuration updated ({req.version}, port {req.port}).")
     return {"status": "ok"}

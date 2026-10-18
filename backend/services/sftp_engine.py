@@ -176,23 +176,43 @@ Match Group sftpusers
                 continue
         return False
 
-    def list_users(self) -> List[Dict[str, Any]]:
+    def list_users(self, mask_passwords: bool = True) -> List[Dict[str, Any]]:
         raw = read_json(SFTP_USERS_FILE, [])
-        return raw if isinstance(raw, list) else []
+        if not isinstance(raw, list):
+            return []
+        if not mask_passwords:
+            return raw
+        masked = []
+        for u in raw:
+            item = dict(u)
+            if item.get("password"):
+                item["password"] = "********"
+            masked.append(item)
+        return masked
 
     def add_user(self, user_data: Dict[str, Any]) -> Dict[str, Any]:
         username = re.sub(r"[^a-zA-Z0-9_-]+", "", user_data.get("username", "").strip().lower())
         if len(username) < 2:
             raise ValueError("Username must be at least 2 alphanumeric characters.")
 
-        users = self.list_users()
+        users = self.list_users(mask_passwords=False)
         if any(u.get("username") == username for u in users):
             raise ValueError(f"SFTP user '{username}' already exists.")
+
+        raw_pw = user_data.get("password")
+        stored_pw = None
+        if raw_pw:
+            if raw_pw.startswith("$argon2"):
+                stored_pw = raw_pw
+            else:
+                from backend.passwords import hash_password
+
+                stored_pw = hash_password(raw_pw)
 
         user_entry = {
             "username": username,
             "display_name": user_data.get("display_name", username),
-            "password": user_data.get("password"),
+            "password": stored_pw,
             "pubkey": user_data.get("pubkey"),
             "shares": user_data.get("shares", []),
             "read_only": bool(user_data.get("read_only", False)),
@@ -201,7 +221,10 @@ Match Group sftpusers
         }
         users.append(user_entry)
         atomic_write_json(SFTP_USERS_FILE, users)
-        return user_entry
+        return_entry = dict(user_entry)
+        if return_entry.get("password"):
+            return_entry["password"] = "********"
+        return return_entry
 
     def delete_user(self, username: str) -> bool:
         users = self.list_users()

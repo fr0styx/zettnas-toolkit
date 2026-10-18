@@ -379,7 +379,8 @@ function _restoreNonYakWallpaper(wpLayer) {
   } else if (wpLayer.style.backgroundImage && wpLayer.style.backgroundImage.includes('yak.webp')) {
     const savedWp = (typeof localStorage !== 'undefined' ? localStorage.getItem('zettnas_active_wallpaper') : null);
     if (savedWp) {
-      wpLayer.style.setProperty('background-image', `url('/wallpapers/${savedWp}')`);
+      const wpUrl = savedWp.startsWith('/') || savedWp.startsWith('http') ? savedWp : `/api/wallpapers/download/${encodeURIComponent(savedWp)}`;
+      wpLayer.style.setProperty('background-image', `url('${wpUrl}')`);
     } else {
       wpLayer.style.removeProperty('background-image');
     }

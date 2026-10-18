@@ -40,7 +40,7 @@ def get_live_server_auth_token(base_url="http://127.0.0.1:8082"):
         except Exception:
             pass
 
-    # 2. If running where persistent sessions.json is mounted
+    # 2. If running where persistent users.db or sessions.json is mounted
     candidates = [
         os.environ.get("TEST_SERVER_DATA_DIR", ""),
         "/app/data",
@@ -50,6 +50,20 @@ def get_live_server_auth_token(base_url="http://127.0.0.1:8082"):
     for c in candidates:
         if not c:
             continue
+        u_file = os.path.join(c, "users.db")
+        if os.path.exists(u_file):
+            try:
+                from backend.users_db import create_user_session, get_user_by_username
+
+                user = get_user_by_username("admin", db_path=u_file)
+                user_id = user["id"] if user else "admin-00000000-0000-0000-0000-000000000001"
+                tok = create_user_session(
+                    user_id, "admin", ip="127.0.0.1", user_agent="test-runner", is_remembered=True, db_path=u_file
+                )
+                if tok:
+                    return tok
+            except Exception:
+                pass
         s_file = os.path.join(c, "sessions.json")
         if os.path.exists(s_file):
             tok = secrets.token_urlsafe(32)

@@ -7,7 +7,7 @@ let _activePreviewModal = null;
 let _previewAbortController = null;
 let _previewKeydownListener = null;
 
-export async function openFilePreviewModal(path, name) {
+export async function openFilePreviewModal(path, name, aiMeta = null) {
   closeFilePreviewModal();
 
   const fileName = name || (path ? path.split('/').filter(Boolean).pop() : 'Preview');
@@ -58,6 +58,35 @@ export async function openFilePreviewModal(path, name) {
     }
   };
   window.addEventListener('keydown', _previewKeydownListener);
+
+  if (aiMeta && aiMeta.standbySafe) {
+    metaEl.textContent = '💤 NVMe RAG Cache (Zero Disk Wake)';
+    const isPhoto = /\.(jpg|jpeg|png|webp|gif|bmp|heic)$/i.test(fileName);
+    const thumbHtml = isPhoto && aiMeta.thumbnailUrl
+      ? `<img src="${escapeHtml(aiMeta.thumbnailUrl)}" class="quicklook-img" alt="${escapeHtml(fileName)}" style="max-height:320px; border-radius:8px; object-fit:contain;" />`
+      : '';
+    const excerptHtml = aiMeta.excerpt
+      ? `<pre class="quicklook-code" style="width:100%; max-height:280px; overflow:auto;"><code>${escapeHtml(aiMeta.excerpt)}</code></pre>`
+      : '';
+    bodyEl.innerHTML = `
+      <div style="display:flex; flex-direction:column; align-items:center; gap:14px; width:100%; padding:12px;">
+        <div style="width:100%; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; padding:8px 12px; border-radius:8px; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.28); font-size:11.5px; color:#6ee7b7;">
+          <span>💤 <strong>Standby Guard Active:</strong> Showing cached NVMe index preview without spinning up physical array disks.</span>
+          <button type="button" class="btn-pill-toggle" id="btn-quicklook-wake-load" style="padding:4px 10px; font-size:11px; color:#38bdf8; border-color:rgba(56,189,248,0.4);">⚡ Load Full File from Disk</button>
+        </div>
+        ${thumbHtml}
+        ${excerptHtml}
+        <div style="font-size:10.5px; color:var(--muted); font-family:monospace;">${escapeHtml(path || '')}</div>
+      </div>
+    `;
+    const wakeBtn = bodyEl.querySelector('#btn-quicklook-wake-load');
+    if (wakeBtn) {
+      wakeBtn.addEventListener('click', () => {
+        openFilePreviewModal(path, name, null);
+      });
+    }
+    return;
+  }
 
   _previewAbortController = new AbortController();
 

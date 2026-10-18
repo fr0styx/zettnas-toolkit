@@ -640,16 +640,37 @@ export function initSettings() {
         itemsEl.innerHTML = adv.checks.map((chk) => {
           const icon = chk.status === 'pass' ? '✅' : (chk.status === 'fail' ? '❌' : (chk.status === 'warn' ? '⚠️' : 'ℹ️'));
           const color = chk.status === 'pass' ? 'var(--ok2, #25c2a0)' : (chk.status === 'fail' ? 'var(--crit, #ff5c5c)' : 'var(--warn, #f5a623)');
+          const isPass = chk.status === 'pass';
+          const actionText = isPass ? t('sec.action_review', 'Review ➔') : t('sec.action_configure', 'Configure ➔');
           return `
-            <div style="display:flex; align-items:flex-start; gap:8px; padding: 4px 0;">
-              <span>${icon}</span>
-              <div>
-                <span style="font-weight:600; color:#fff;">${escapeHtml(chk.title)}: </span>
-                <span style="color:${color};">${escapeHtml(chk.message)}</span>
+            <div class="sec-advisor-item ${isPass ? 'passed' : 'needs-action'}" data-check-id="${escapeHtml(chk.id)}" role="button" tabindex="0" title="${t('sec.click_to_configure', 'Click to configure')}" style="padding: 7px 10px; background: ${isPass ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)'}; border: 1px solid ${isPass ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.3)'}; border-radius: 6px;">
+              <div style="display:flex; align-items:center; gap:8px; flex:1; min-width:0;">
+                <span>${icon}</span>
+                <div style="min-width:0;">
+                  <span style="font-weight:600; color:#fff; font-size:11.5px;">${escapeHtml(chk.title)}: </span>
+                  <span style="color:${color}; font-size:10.5px;">${escapeHtml(chk.message)}</span>
+                </div>
               </div>
+              <span class="sec-advisor-action-pill">${actionText}</span>
             </div>
           `;
         }).join('');
+
+        itemsEl.querySelectorAll('.sec-advisor-item').forEach(item => {
+          const checkId = item.dataset.checkId;
+          const trigger = () => {
+            if (typeof window.handleSecurityAdvisorClick === 'function') {
+              window.handleSecurityAdvisorClick(checkId);
+            }
+          };
+          item.addEventListener('click', trigger);
+          item.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              trigger();
+            }
+          });
+        });
       }
 
       const disableAdminCont = $('sec-disable-admin-container');

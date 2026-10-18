@@ -991,10 +991,16 @@ export function makeDraggable(dragEl, handleEl, customId) {
     applySavedBounds(dragEl, winId);
   }
 
+  if (dragEl._draggableInitialized) {
+    return dragEl._cleanupDraggable;
+  }
+  dragEl._draggableInitialized = true;
+
   // Observe resizing to persist dimensions
+  let ro = null;
   if (window.ResizeObserver && winId) {
     let resizeTimer = null;
-    const ro = new ResizeObserver(() => {
+    ro = new ResizeObserver(() => {
       if (document.body.classList.contains('mobile-mode') || window.innerWidth <= 768) return;
       if (dragEl.dataset.snapped) return;
       clearTimeout(resizeTimer);
@@ -1010,13 +1016,14 @@ export function makeDraggable(dragEl, handleEl, customId) {
       }, 250);
     });
     ro.observe(dragEl);
+    dragEl._resizeObserver = ro;
   }
 
   let startX = 0, startY = 0, initialMouseX = 0, initialMouseY = 0;
   let activeSnap = null;
 
   handleEl.style.touchAction = 'none';
-  handleEl.addEventListener('pointerdown', (e) => {
+  const onPointerDown = (e) => {
     if (e.button !== 0 || e.target.closest('button') || e.target.closest('input') || e.target.closest('.modal-ctrl-btn')) return;
     bringToFront(dragEl);
     if (document.body.classList.contains('mobile-mode') || window.innerWidth <= 768) {
@@ -1180,9 +1187,9 @@ export function makeDraggable(dragEl, handleEl, customId) {
     window.addEventListener('pointermove', drag);
     window.addEventListener('pointerup', stopDrag);
     window.addEventListener('pointercancel', stopDrag);
-  });
+  };
 
-  handleEl.addEventListener('dblclick', (e) => {
+  const onDblClick = (e) => {
     if (e.target.closest('button') || e.target.closest('input') || e.target.closest('.modal-ctrl-btn')) return;
     if (document.body.classList.contains('mobile-mode') || window.innerWidth <= 768) return;
     if (dragEl.id === 'console-window') {
@@ -1222,7 +1229,23 @@ export function makeDraggable(dragEl, handleEl, customId) {
       });
       saveOpenWindowsState();
     }
-  });
+  };
+
+  handleEl.addEventListener('pointerdown', onPointerDown);
+  handleEl.addEventListener('dblclick', onDblClick);
+
+  const cleanup = () => {
+    handleEl.removeEventListener('pointerdown', onPointerDown);
+    handleEl.removeEventListener('dblclick', onDblClick);
+    if (ro) {
+      try { ro.disconnect(); } catch (_) {}
+      ro = null;
+    }
+    dragEl._draggableInitialized = false;
+    dragEl._cleanupDraggable = null;
+  };
+  dragEl._cleanupDraggable = cleanup;
+  return cleanup;
 }
 
 export function makeResizable(dragEl, resizerEl, customId, options = {}) {
@@ -1481,6 +1504,18 @@ export const KNOWN_APPS = {
     launch: (tab = null) => {
       if (typeof window.openPersonalizationWindow === 'function') {
         window.openPersonalizationWindow(tab);
+      }
+    }
+  },
+  zettai: {
+    id: 'zettai',
+    icon: '#i-search',
+    getTitle: () => t('dock.zettai', 'ZettAI Studio'),
+    launch: () => {
+      if (typeof window.openManagementWindow === 'function') {
+        window.openManagementWindow('mgmt-sec-ai-rag', 'mgmt-pane-ai-rag');
+      } else {
+        document.getElementById('management-desktop-icon')?.click();
       }
     }
   }
@@ -2064,6 +2099,7 @@ export const DockManager = {
           container.className = 'mini-screen-scaler';
           const clone = screenEl.cloneNode(true);
           clone.removeAttribute('id');
+          clone.classList.add('mini-preview-inner');
           clone.querySelectorAll('[id]').forEach((el) => el.removeAttribute('id'));
           container.appendChild(clone);
           return container;

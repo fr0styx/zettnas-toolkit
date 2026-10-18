@@ -144,6 +144,6 @@ export const api = {
   }
 };
 
-export { request };
+export { request, request as apiFetch };
 export default api;
 

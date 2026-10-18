@@ -74,7 +74,10 @@ def get_client_preferences():
     return {"status": "ok", "preferences": prefs}
 
 
-@router.post("/system/client-preferences")
+@router.post(
+    "/system/client-preferences",
+    dependencies=[Depends(require_scope("system:config", "shares:user_write"))],
+)
 async def save_client_preferences(request: Request):
     """Persists client UI preferences into DATA_DIR so they are preserved in backups and cross-device sync."""
     try:

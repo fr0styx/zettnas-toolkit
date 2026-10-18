@@ -75,6 +75,9 @@ class ZettState:
         self.lcd_cycle_seconds = 0
         self.last_lcd_cycle_time = time.time()
         self.active_smart_tests = {}
+        self.ai_active = False
+        self.ai_accelerator = ""
+        self.ai_model = ""
 
     def cycle_lcd_page(self, count: int = 4) -> int:
         with self.lock:

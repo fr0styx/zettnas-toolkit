@@ -98,13 +98,13 @@ class VlanCreateRequest(BaseModel):
     alias: Optional[str] = Field(default="", description="Friendly role/purpose alias for this VLAN")
 
 
-@router.get("/network/topology")
+@router.get("/network/topology", dependencies=[Depends(require_scope("system:view", "system:config"))])
 async def get_network_topology_endpoint():
     """Retrieve full host network topology, physical NICs, bridges, bonds, and Docker networks."""
     return await asyncio.to_thread(get_network_topology)
 
 
-@router.get("/network/port/{iface_name}")
+@router.get("/network/port/{iface_name}", dependencies=[Depends(require_scope("system:view", "system:config"))])
 async def get_port_config_endpoint(iface_name: str):
     """Retrieve configuration, live capabilities, and alias for a specific interface."""
     res = await asyncio.to_thread(get_port_config, iface_name)
@@ -147,7 +147,7 @@ async def delete_docker_network_endpoint(net_id_or_name: str):
     return res
 
 
-@router.get("/network/host/config")
+@router.get("/network/host/config", dependencies=[Depends(require_scope("system:view", "system:config"))])
 async def get_host_ip_config_endpoint():
     """Retrieve host IP assignment mode, primary interface, netmask, gateway, and DNS servers."""
     return await asyncio.to_thread(get_host_ip_config)
@@ -190,7 +190,7 @@ async def revert_host_ip_config_endpoint(req: Optional[HostIpRevertRequest] = No
     return res
 
 
-@router.get("/network/bond/{bond_name}")
+@router.get("/network/bond/{bond_name}", dependencies=[Depends(require_scope("system:view", "system:config"))])
 async def get_bond_config_endpoint(bond_name: str):
     """Retrieve configuration, operational mode, active slave, and candidates for a bonding group."""
     res = await asyncio.to_thread(get_bond_config, bond_name)
@@ -209,7 +209,7 @@ async def update_bond_config_endpoint(bond_name: str, req: BondConfigUpdateReque
     return res
 
 
-@router.get("/network/bridge/{br_name}")
+@router.get("/network/bridge/{br_name}", dependencies=[Depends(require_scope("system:view", "system:config"))])
 async def get_bridge_config_endpoint(br_name: str):
     """Retrieve configuration, STP state, forward delay, and members for a virtual bridge."""
     res = await asyncio.to_thread(get_bridge_config, br_name)
@@ -228,7 +228,7 @@ async def update_bridge_config_endpoint(br_name: str, req: BridgeConfigUpdateReq
     return res
 
 
-@router.get("/network/vlans")
+@router.get("/network/vlans", dependencies=[Depends(require_scope("system:view", "system:config"))])
 async def get_vlans_endpoint():
     """List all active and configured 802.1Q VLAN sub-interfaces."""
     return {"status": "ok", "vlans": await asyncio.to_thread(get_vlans)}

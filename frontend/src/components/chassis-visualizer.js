@@ -1186,11 +1186,21 @@ export async function fetchAndRenderNetworkShares(container) {
 
     if (shares.length === 0) {
       grid.innerHTML = `
-        <div class="empty-shares-box" style="text-align:center; padding:40px; color:var(--muted); grid-column:1/-1;">
-          <svg viewBox="0 0 24 24" width="32" height="32" style="margin:0 auto 10px; opacity:0.5;"><use href="#i-storage"/></svg>
-          <div>No active network shares detected on host.</div>
+        <div class="empty-shares-box" style="text-align:center; padding:48px 20px; color:var(--muted); grid-column:1/-1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px;">
+          <svg viewBox="0 0 24 24" width="36" height="36" style="margin:0 auto 4px; opacity:0.6;"><use href="#i-storage"/></svg>
+          <div style="font-size:14px; font-weight:600; color:var(--text, #fff);">${t('mgmt.shares_none_title', 'No Network Shares Configured')}</div>
+          <div style="font-size:12px; color:var(--muted, #94a3b8); max-width:440px; line-height:1.5;">${t('mgmt.shares_none_desc', 'Export folders across your local network via Samba (SMB), NFSv4, or secure SFTP for Windows, Mac, and Linux clients.')}</div>
+          ${canManageShares ? `
+            <button id="btn-empty-create-share" class="btn-pill-toggle" style="margin-top:6px; background:var(--brand, #0ea5e9); color:#fff; border-color:var(--brand, #0ea5e9); font-weight:600; padding:6px 16px; cursor:pointer;">
+              + ${t('mgmt.create_share', 'Create Network Share')}
+            </button>
+          ` : ''}
         </div>
       `;
+      const emptyCreateBtn = grid.querySelector('#btn-empty-create-share');
+      if (emptyCreateBtn) {
+        emptyCreateBtn.onclick = () => openCreateNetworkShareModal(() => fetchAndRenderNetworkShares(container));
+      }
       return;
     }
 
@@ -2997,7 +3007,12 @@ export function openCreateNetworkShareModal(onSuccess) {
   const errorBox = document.getElementById('create-share-error-box');
   const submitBtn = document.getElementById('create-share-submit-btn');
 
+  let _unbindTrap = null;
   const close = () => {
+    if (_unbindTrap) {
+      try { _unbindTrap(); } catch (_) {}
+      _unbindTrap = null;
+    }
     modal.classList.remove('open');
     modal.style.display = 'none';
   };
@@ -3005,12 +3020,15 @@ export function openCreateNetworkShareModal(onSuccess) {
   if (closeBtn) closeBtn.onclick = close;
   if (cancelBtn) cancelBtn.onclick = close;
 
-  const modalWin = modal.querySelector('.smart-modal-window');
+  const modalWin = modal.querySelector('.smart-modal-window') || modal;
   const modalHdr = modal.querySelector('.smart-modal-header');
   if (modalWin && modalHdr) makeDraggable(modalWin, modalHdr);
 
   modal.classList.add('open');
   modal.style.display = 'flex';
+  _unbindTrap = trapFocus(modalWin, close);
+  const firstInput = modal.querySelector('input:not([disabled]), select:not([disabled]), button:not([disabled])');
+  if (firstInput) setTimeout(() => firstInput.focus(), 60);
   if (errorBox) errorBox.style.display = 'none';
 
   const exportNfsCb = document.getElementById('create-share-export-nfs');
@@ -3023,6 +3041,47 @@ export function openCreateNetworkShareModal(onSuccess) {
     toggleNfs();
   }
 
+  const usersMatrix = document.getElementById('create-share-users-matrix');
+  const usersCount = document.getElementById('create-share-users-count');
+  if (usersMatrix) {
+    usersMatrix.innerHTML = '<div style="font-size:11px; color:var(--muted); padding:4px;">Loading user accounts...</div>';
+    api.get('/api/auth/users').then((data) => {
+      const users = Array.isArray(data) ? data : (data?.users || []);
+      if (!users.length) {
+        usersMatrix.innerHTML = '<div style="font-size:11px; color:var(--muted); padding:4px;">No custom users found. Defaulting to system access.</div>';
+        if (usersCount) usersCount.textContent = '0 Users';
+        return;
+      }
+      if (usersCount) usersCount.textContent = `${users.length} Users`;
+      usersMatrix.innerHTML = users.map((u) => {
+        const uname = u.username || u.name || 'user';
+        const role = u.role || 'user';
+        return `
+          <div class="user-perm-row" data-username="${uname}" style="display:flex; align-items:center; justify-content:space-between; padding:4px 6px; background:rgba(255,255,255,0.03); border-radius:4px; font-size:11px;">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span style="font-weight:600; color:#fff;">👤 ${uname}</span>
+              <span style="font-size:9.5px; padding:1px 5px; border-radius:3px; background:rgba(255,255,255,0.08); color:var(--muted);">${role}</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <label style="display:flex; align-items:center; gap:3px; cursor:pointer; font-size:10.5px; color:#3bf58b;">
+                <input type="radio" name="perm-${uname}" value="rw" checked style="accent-color:#3bf58b; width:12px; height:12px;" /> RW
+              </label>
+              <label style="display:flex; align-items:center; gap:3px; cursor:pointer; font-size:10.5px; color:#38bdf8;">
+                <input type="radio" name="perm-${uname}" value="ro" style="accent-color:#38bdf8; width:12px; height:12px;" /> RO
+              </label>
+              <label style="display:flex; align-items:center; gap:3px; cursor:pointer; font-size:10.5px; color:#f87171;">
+                <input type="radio" name="perm-${uname}" value="deny" style="accent-color:#f87171; width:12px; height:12px;" /> Deny
+              </label>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }).catch(() => {
+      usersMatrix.innerHTML = '<div style="font-size:11px; color:var(--muted); padding:4px;">Standard user access rules apply.</div>';
+      if (usersCount) usersCount.textContent = 'Standard';
+    });
+  }
+
   if (form) {
     form.onsubmit = async (e) => {
       e.preventDefault();
@@ -3031,6 +3090,8 @@ export function openCreateNetworkShareModal(onSuccess) {
       const name = document.getElementById('create-share-name')?.value.trim();
       const path = document.getElementById('create-share-path')?.value.trim() || '';
       const comment = document.getElementById('create-share-comment')?.value.trim() || '';
+      const quotaVal = parseInt(document.getElementById('create-share-quota-gb')?.value, 10);
+      const quotaGb = isNaN(quotaVal) ? 0 : Math.max(0, quotaVal);
       const security = document.getElementById('create-share-security')?.value || 'public';
       const readOnly = document.getElementById('create-share-readonly')?.checked ?? false;
       const isTm = document.getElementById('create-share-timemachine')?.checked ?? false;
@@ -3041,6 +3102,15 @@ export function openCreateNetworkShareModal(onSuccess) {
       const nfsAnongid = parseInt(document.getElementById('create-share-nfs-anongid')?.value, 10) || 1000;
       const nfsSync = (document.getElementById('create-share-nfs-sync')?.value || 'sync') === 'sync';
       const nfsClients = document.getElementById('create-share-nfs-clients')?.value.trim() || '*';
+
+      const userPermissions = {};
+      if (usersMatrix) {
+        usersMatrix.querySelectorAll('.user-perm-row').forEach((row) => {
+          const u = row.dataset.username;
+          const perm = row.querySelector(`input[name="perm-${u}"]:checked`)?.value || 'rw';
+          if (u) userPermissions[u] = perm;
+        });
+      }
 
       if (!name) return;
 
@@ -3058,6 +3128,8 @@ export function openCreateNetworkShareModal(onSuccess) {
           read_only: readOnly,
           export_smb: exportSmb,
           export_nfs: exportNfs,
+          quota_gb: quotaGb,
+          user_permissions: userPermissions,
           nfs_squash: nfsSquash,
           nfs_anonuid: nfsAnonuid,
           nfs_anongid: nfsAnongid,

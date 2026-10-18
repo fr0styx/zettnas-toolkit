@@ -350,7 +350,10 @@ def get_layout():
     return get_current_layout()
 
 
-@router.post("/layout")
+@router.post(
+    "/layout",
+    dependencies=[Depends(require_scope("system:config", "shares:user_write"))],
+)
 def post_layout(req: LayoutRequest):
     data = req.model_dump()
     data["sizes"] = {k: v for k, v in data["sizes"].items() if v in ("full", "compact")}
@@ -363,7 +366,10 @@ def post_layout(req: LayoutRequest):
     return {"status": "ok", "layout": data}
 
 
-@router.post("/state")
+@router.post(
+    "/state",
+    dependencies=[Depends(require_scope("system:config", "shares:user_write"))],
+)
 def post_state(req: StateRequest):
     if req.fb is not None:
         config.ENABLE_FB = bool(req.fb)
@@ -636,7 +642,7 @@ async def system_shutdown():
     return {"status": "ok", "action_dispatched": success, "message": "System shutdown sequence initiated"}
 
 
-@router.get("/system/disks")
+@router.get("/system/disks", dependencies=[Depends(require_scope("storage:read", "system:view"))])
 def get_system_disks() -> Dict[str, Any]:
     """Compatibility endpoint returning physical disks discovered via HAL."""
     from backend.hardware.hal import DiskDiscoveryHAL
@@ -1000,7 +1006,7 @@ async def post_apply_system_update(req: ApplySystemUpdateRequest):
     }
 
 
-@router.get("/system/network-topology")
+@router.get("/system/network-topology", dependencies=[Depends(require_scope("system:view", "system:config"))])
 async def system_network_topology():
     """
     Expose complete host networking topology, physical NIC carrier states,
@@ -1012,7 +1018,10 @@ async def system_network_topology():
     return await asyncio.to_thread(get_network_topology)
 
 
-@router.get("/system/security-posture")
+@router.get(
+    "/system/security-posture",
+    dependencies=[Depends(require_scope("system:view", "system:config", "users:read"))],
+)
 async def system_security_posture(request: Request):
     """
     Evaluates real-time security posture across authentication, MFA, HTTPS,

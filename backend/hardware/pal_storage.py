@@ -167,6 +167,8 @@ class StoragePlatformAdapter(ABC):
         read_only: bool = False,
         export_smb: bool = True,
         export_nfs: bool = False,
+        quota_gb: int = 0,
+        user_permissions: Optional[Dict[str, str]] = None,
         nfs_squash: str = "no_root_squash",
         nfs_anonuid: int = 1000,
         nfs_anongid: int = 1000,
@@ -1326,11 +1328,15 @@ class UnraidStorageAdapter(StoragePlatformAdapter):
         read_only: bool = False,
         export_smb: bool = True,
         export_nfs: bool = False,
+        quota_gb: int = 0,
+        user_permissions: Optional[Dict[str, str]] = None,
         nfs_squash: str = "no_root_squash",
         nfs_anonuid: int = 1000,
         nfs_anongid: int = 1000,
         nfs_sync: bool = True,
         nfs_clients: str = "*",
+        *args: Any,
+        **kwargs: Any,
     ) -> Dict[str, Any]:
         raise PlatformCapabilityError(
             "Observer mode active: Network shares on Unraid must be provisioned via the Unraid WebGUI "
@@ -2273,6 +2279,8 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
         read_only: bool = False,
         export_smb: bool = True,
         export_nfs: bool = False,
+        quota_gb: int = 0,
+        user_permissions: Optional[Dict[str, str]] = None,
         nfs_squash: str = "no_root_squash",
         nfs_anonuid: int = 1000,
         nfs_anongid: int = 1000,
@@ -2286,6 +2294,22 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
         except OSError as e:
             logger.warning(f"[PAL] Could not pre-create share dir {full_path}: {e}")
 
+        user_perms = user_permissions or {}
+        valid_users = None
+        read_list = None
+        write_list = None
+
+        if user_perms:
+            rw_users = [u for u, p in user_perms.items() if p == "rw"]
+            ro_users = [u for u, p in user_perms.items() if p == "ro"]
+            all_allowed = rw_users + ro_users
+            if all_allowed:
+                valid_users = " ".join(all_allowed)
+            if ro_users:
+                read_list = " ".join(ro_users)
+            if rw_users:
+                write_list = " ".join(rw_users)
+
         if export_smb:
             try:
                 from backend.services.samba_engine import SambaShareConfig, get_samba_engine
@@ -2298,6 +2322,10 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
                     read_only=read_only,
                     guest_ok=(security == "public"),
                     browseable=True,
+                    quota_gb=quota_gb if quota_gb > 0 else None,
+                    valid_users=valid_users,
+                    read_list=read_list,
+                    write_list=write_list,
                 )
                 engine.add_or_update_share(share_cfg)
             except Exception as e:
@@ -2332,6 +2360,8 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
             "read_only": read_only,
             "export_smb": export_smb,
             "export_nfs": export_nfs,
+            "quota_gb": quota_gb,
+            "user_permissions": user_perms,
         }
 
     def delete_share(self, name: str) -> Dict[str, Any]:
@@ -3867,12 +3897,13 @@ class StoragePlatformDetector:
 
     @staticmethod
     def detect() -> PlatformType:
-        # 0. Explicit Environment Override
-        env_platform = (
-            os.environ.get("ZETTNAS_PLATFORM", "").strip().lower()
-            or os.environ.get("ZETTNAS_OBSERVER_ADAPTER", "").strip().lower()
-            or os.environ.get("ZETTNAS_PAL_MODE", "").strip().lower()
-        )
+        obs_adapter = os.environ.get("ZETTNAS_OBSERVER_ADAPTER", "").strip().lower()
+        if obs_adapter == "auto":
+            obs_adapter = ""
+        pal_mode = os.environ.get("ZETTNAS_PAL_MODE", "").strip().lower()
+        if pal_mode == "auto":
+            pal_mode = ""
+        env_platform = os.environ.get("ZETTNAS_PLATFORM", "").strip().lower() or obs_adapter or pal_mode
         if env_platform:
             if env_platform in ("unraid",):
                 return PlatformType.UNRAID

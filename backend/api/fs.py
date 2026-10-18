@@ -2,13 +2,15 @@
 import aiofiles
 import asyncio
 from datetime import datetime, timezone
-import subprocess
+import hashlib
 import io
 import json
 import mimetypes
 import os
 import re
+import secrets
 import shutil
+import subprocess
 import sys
 import tempfile
 import time
@@ -88,6 +90,14 @@ def check_user_path_access(req_path: str, principal: Optional[AuthenticatedPrinc
                 current_user = (principal.username or "").lower()
                 if target_user != current_user:
                     raise HTTPException(status_code=403, detail="Access denied to another user home folder.")
+
+
+def user_can_access_path(req_path: str, principal: Optional[AuthenticatedPrincipal]) -> bool:
+    try:
+        check_user_path_access(req_path, principal)
+        return True
+    except HTTPException:
+        return False
 
 
 def _contained(path, must_exist=True):
@@ -680,6 +690,8 @@ async def fs_search(
                                 break
                             if entry.name.startswith("."):
                                 continue
+                            if not user_can_access_path(entry.path, principal):
+                                continue
 
                             is_match = query in entry.name.lower()
                             is_dir = entry.is_dir(follow_symlinks=False)
@@ -766,6 +778,11 @@ async def fs_trash_list(principal: AuthenticatedPrincipal = Depends(get_current_
                                 if len(parts) == 2 and parts[0].isdigit():
                                     deleted_ts = int(parts[0])
                                     orig_name = parts[1]
+
+                            if orig_path and not user_can_access_path(orig_path, principal):
+                                continue
+                            if not orig_path and not user_can_access_path(entry.path, principal):
+                                continue
 
                             try:
                                 st = entry.stat(follow_symlinks=False)
@@ -1008,10 +1025,13 @@ async def fs_preview(path: str, principal: AuthenticatedPrincipal = Depends(get_
             lines.append(f"{i:08x}  {hex_part:<48}  |{ascii_part}|")
         return lines
 
+    def _read_preview_bytes(file_path: str, count: int) -> bytes:
+        with open(file_path, "rb") as f:
+            return f.read(count)
+
     if ext in text_exts or filename.startswith(".") or sz <= 1024 * 1024:
         try:
-            with open(target, "rb") as f:
-                head = f.read(65536)
+            head = await asyncio.to_thread(_read_preview_bytes, target, 65536)
             if b"\x00" not in head:
                 text_content = head.decode("utf-8", errors="replace")
                 sanitized = sanitize_string(text_content)
@@ -1032,8 +1052,7 @@ async def fs_preview(path: str, principal: AuthenticatedPrincipal = Depends(get_
 
     # 5. Binary Hex Preview (1KB)
     try:
-        with open(target, "rb") as f:
-            sample = f.read(1024)
+        sample = await asyncio.to_thread(_read_preview_bytes, target, 1024)
         dump = _make_hex_dump(sample)
         return {
             "status": "ok",
@@ -1190,3 +1209,244 @@ def fs_download_zip(
         media_type="application/zip",
         headers={"Content-Disposition": f'attachment; filename="{zip_name}"'},
     )
+
+
+# --- Temporary Public Share Links Subsystem ---
+
+SHARE_LINKS_FILE = os.path.join(config.DATA_DIR, "shared_links.json")
+_SHARE_LOCK = asyncio.Lock()
+
+
+def _load_share_links() -> Dict[str, Any]:
+    try:
+        return read_json(SHARE_LINKS_FILE, {})
+    except Exception:
+        return {}
+
+
+def _save_share_links(links: Dict[str, Any]) -> None:
+    try:
+        atomic_write_json(SHARE_LINKS_FILE, links)
+    except Exception as e:
+        logger.error(f"[FS] Failed to persist share links: {e}")
+
+
+class CreateShareLinkRequest(BaseModel):
+    path: str
+    expires_hours: Optional[int] = None
+    max_downloads: Optional[int] = None
+    password: Optional[str] = None
+    label: Optional[str] = None
+
+
+@router.post(
+    "/fs/share-links",
+    dependencies=[Depends(require_scope("files:read", "files:write", "storage:read", "storage:admin"))],
+)
+@router.post(
+    "/share-links", dependencies=[Depends(require_scope("files:read", "files:write", "storage:read", "storage:admin"))]
+)
+async def create_share_link(
+    req: CreateShareLinkRequest,
+    principal: AuthenticatedPrincipal = Depends(get_current_principal),
+):
+    """Generates a secure, temporary or password-protected public share link for a file or folder."""
+    target_path = req.path.strip()
+    check_user_path_access(target_path, principal)
+    real_target = _contained(target_path, must_exist=True)
+
+    if resolve_within(real_target, ALLOWED_BROWSE_ROOTS) is None:
+        raise HTTPException(status_code=403, detail="Path outside allowed folders")
+
+    token = secrets.token_urlsafe(24)
+    now = time.time()
+    expires_at = (now + (req.expires_hours * 3600)) if req.expires_hours and req.expires_hours > 0 else None
+
+    password_hash = None
+    if req.password and req.password.strip():
+        password_hash = hashlib.sha256(req.password.strip().encode("utf-8")).hexdigest()
+
+    link_data = {
+        "token": token,
+        "path": target_path,
+        "is_dir": os.path.isdir(real_target),
+        "filename": os.path.basename(real_target),
+        "label": req.label or os.path.basename(real_target),
+        "created_by": principal.username,
+        "created_at": now,
+        "expires_at": expires_at,
+        "max_downloads": req.max_downloads if req.max_downloads and req.max_downloads > 0 else None,
+        "download_count": 0,
+        "has_password": password_hash is not None,
+        "password_hash": password_hash,
+    }
+
+    async with _SHARE_LOCK:
+        links = _load_share_links()
+        links[token] = link_data
+        _save_share_links(links)
+
+    sanitized = dict(link_data)
+    sanitized.pop("password_hash", None)
+    sanitized["url"] = f"/api/fs/shared/{token}"
+    return sanitized
+
+
+@router.get("/fs/share-links", dependencies=[Depends(require_scope("files:read", "storage:read", "storage:admin"))])
+@router.get("/share-links", dependencies=[Depends(require_scope("files:read", "storage:read", "storage:admin"))])
+async def list_share_links(
+    principal: AuthenticatedPrincipal = Depends(get_current_principal),
+):
+    """Lists active public share links created by the current user or all if admin."""
+    links = _load_share_links()
+    is_admin = principal.has_scope("superadmin") or principal.has_scope("storage:admin") or principal.has_scope("*")
+    now = time.time()
+
+    results = []
+    for token, item in links.items():
+        if not is_admin and item.get("created_by") != principal.username:
+            continue
+        expired = item.get("expires_at") and now > item["expires_at"]
+        limit_reached = item.get("max_downloads") and item.get("download_count", 0) >= item["max_downloads"]
+
+        res = dict(item)
+        res.pop("password_hash", None)
+        res["url"] = f"/api/fs/shared/{token}"
+        res["is_expired"] = bool(expired)
+        res["limit_reached"] = bool(limit_reached)
+        res["is_active"] = not expired and not limit_reached
+        results.append(res)
+
+    results.sort(key=lambda x: x.get("created_at", 0), reverse=True)
+    return results
+
+
+@router.delete("/fs/share-links/{token}", dependencies=[Depends(require_scope("files:write", "storage:admin"))])
+@router.delete("/share-links/{token}", dependencies=[Depends(require_scope("files:write", "storage:admin"))])
+async def revoke_share_link(
+    token: str,
+    principal: AuthenticatedPrincipal = Depends(get_current_principal),
+):
+    """Revokes and deletes an existing share link."""
+    async with _SHARE_LOCK:
+        links = _load_share_links()
+        if token not in links:
+            raise HTTPException(status_code=404, detail="Share link not found")
+        item = links[token]
+        is_admin = principal.has_scope("superadmin") or principal.has_scope("storage:admin") or principal.has_scope("*")
+        if not is_admin and item.get("created_by") != principal.username:
+            raise HTTPException(status_code=403, detail="Cannot revoke share link created by another user")
+        del links[token]
+        _save_share_links(links)
+
+    return {"status": "ok", "revoked": token}
+
+
+@router.get("/fs/shared/{token}")
+@router.get("/shared/{token}")
+async def access_shared_file(
+    token: str,
+    request: Request,
+    info: bool = False,
+    pwd: Optional[str] = None,
+):
+    """
+    Public access endpoint for shared files and folders.
+    Allows streaming the file or downloading a zip of a folder.
+    Supports password verification via 'X-Share-Password' header or 'pwd' query param.
+    """
+    links = _load_share_links()
+    if token not in links:
+        raise HTTPException(status_code=404, detail="Share link not found or revoked")
+
+    item = links[token]
+    now = time.time()
+
+    if item.get("expires_at") and now > item["expires_at"]:
+        raise HTTPException(status_code=410, detail="Share link has expired")
+
+    if item.get("max_downloads") and item.get("download_count", 0) >= item["max_downloads"]:
+        raise HTTPException(status_code=410, detail="Download limit reached for this share link")
+
+    if item.get("has_password"):
+        provided_pwd = request.headers.get("X-Share-Password") or pwd or ""
+        if not provided_pwd:
+            raise HTTPException(
+                status_code=401,
+                detail="Password required to access this share",
+                headers={"WWW-Authenticate": "ShareLink realm='Shared Resource'"},
+            )
+        cand_hash = hashlib.sha256(provided_pwd.strip().encode("utf-8")).hexdigest()
+        if cand_hash != item.get("password_hash"):
+            raise HTTPException(status_code=401, detail="Incorrect password for this share link")
+
+    target_path = item["path"]
+    try:
+        real_target = _contained(target_path, must_exist=True)
+    except HTTPException:
+        raise HTTPException(status_code=404, detail="Underlying shared file or folder is no longer available")
+
+    if resolve_within(real_target, ALLOWED_BROWSE_ROOTS) is None:
+        raise HTTPException(status_code=403, detail="Target path is outside allowed system roots")
+
+    is_dir = os.path.isdir(real_target)
+
+    if info:
+        size = 0
+        if not is_dir:
+            try:
+                size = os.path.getsize(real_target)
+            except OSError:
+                pass
+        return {
+            "token": token,
+            "filename": item.get("filename", os.path.basename(real_target)),
+            "label": item.get("label"),
+            "is_dir": is_dir,
+            "size_bytes": size,
+            "has_password": bool(item.get("has_password")),
+            "expires_at": item.get("expires_at"),
+            "download_count": item.get("download_count", 0),
+            "max_downloads": item.get("max_downloads"),
+        }
+
+    async with _SHARE_LOCK:
+        cur_links = _load_share_links()
+        if token in cur_links:
+            cur_links[token]["download_count"] = cur_links[token].get("download_count", 0) + 1
+            _save_share_links(cur_links)
+
+    if is_dir:
+        base_name = os.path.basename(real_target) or "shared_folder"
+
+        def _dir_zip_generator():
+            spool = tempfile.SpooledTemporaryFile(max_size=10 * 1024 * 1024)
+            try:
+                with zipfile.ZipFile(spool, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
+                    for root_dir, _, files in os.walk(real_target):
+                        for f in files:
+                            fp = os.path.join(root_dir, f)
+                            rel = os.path.relpath(fp, os.path.dirname(real_target))
+                            zf.write(fp, arcname=rel)
+                spool.seek(0)
+                while chunk := spool.read(65536):
+                    yield chunk
+            finally:
+                spool.close()
+
+        return StreamingResponse(
+            _dir_zip_generator(),
+            media_type="application/zip",
+            headers={"Content-Disposition": f'attachment; filename="{base_name}.zip"'},
+        )
+    else:
+        media_type, _ = mimetypes.guess_type(real_target)
+        if not media_type:
+            media_type = "application/octet-stream"
+        fname = os.path.basename(real_target)
+        return FileResponse(
+            real_target,
+            media_type=media_type,
+            filename=fname,
+            headers={"Content-Disposition": f'inline; filename="{fname}"'},
+        )

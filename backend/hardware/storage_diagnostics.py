@@ -466,7 +466,10 @@ def collect_storage_diagnostics() -> Dict[str, Any]:
     # 11. High-level Executive Summary
     standby_count = sum(1 for d in live_disks if d.get("standby"))
     degraded_disks = [
-        dev for dev, s in smart_diagnostics.items() if s.get("health") in ("warning", "failing", "degraded", "error")
+        dev
+        for dev, s in smart_diagnostics.items()
+        if str(s.get("health", "")).lower()
+        in ("warn", "crit", "warning", "failing", "degraded", "error", "critical", "failed")
     ]
     overall_status = "CRITICAL" if degraded_disks else "HEALTHY"
 

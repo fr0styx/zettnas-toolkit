@@ -140,8 +140,8 @@ def get_current_session(token: str) -> Optional[Dict[str, Any]]:
             return {
                 "user_id": entry.get("user_id", "admin-00000000-0000-0000-0000-000000000001"),
                 "username": entry.get("username", "admin"),
-                "role_id": "superadmin",
-                "scopes": ["vms:*", "system:view"],
+                "role_id": "vm_console",
+                "scopes": ["vms:console", "vms:read"],
                 "is_console_ticket": True,
             }
 
@@ -334,8 +334,22 @@ async def auth_middleware(request: Request, call_next):
 
     # Reject oversized bodies early (before the route reads them into memory).
     content_length = request.headers.get("content-length")
-    if content_length and content_length.isdigit() and int(content_length) > config.MAX_BODY_BYTES:
-        return error_response(413, "Request body too large.")
+    if content_length and content_length.isdigit():
+        cl_val = int(content_length)
+        norm_path = path.replace("/api/v1/", "/api/")
+        streaming_endpoints = (
+            "/api/fs/upload",
+            "/api/vms/isos/upload",
+            "/api/system/restore",
+            "/api/backup/upload",
+        )
+        limit = (
+            getattr(config, "MAX_UPLOAD_BYTES", 64 * 1024 * 1024 * 1024)
+            if any(norm_path.startswith(prefix) for prefix in streaming_endpoints)
+            else config.MAX_BODY_BYTES
+        )
+        if cl_val > limit:
+            return error_response(413, "Request body too large.")
 
     is_api = path.startswith("/api/") or path.startswith("/redfish")
     is_docs = path in _DOCS_PATHS

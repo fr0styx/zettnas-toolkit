@@ -139,6 +139,10 @@ function syncPersonalizationPanes() {
       const clone = src.cloneNode(true);
       clone.style.display = 'block';
       clone.id = `${targetId}-content`;
+      // Safeguard 2: Prefix IDs on cloned children so there are NEVER duplicate DOM IDs in the document
+      clone.querySelectorAll('[id]').forEach((el) => {
+        el.id = `p-clone-${el.id}`;
+      });
       dst.appendChild(clone);
     }
   };

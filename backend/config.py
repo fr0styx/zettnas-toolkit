@@ -198,6 +198,7 @@ ENABLE_API_DOCS = os.environ.get("ENABLE_API_DOCS", "0") == "1"
 # Reject request bodies larger than this (wallpaper uploads are base64 JSON).
 MAX_BODY_BYTES = int(os.environ.get("MAX_BODY_MB", "16")) * 1024 * 1024
 MAX_WALLPAPER_BYTES = int(os.environ.get("MAX_WALLPAPER_MB", "10")) * 1024 * 1024
+MAX_UPLOAD_BYTES = int(os.environ.get("MAX_UPLOAD_GB", "64")) * 1024 * 1024 * 1024
 
 # ---- Fan safety ----
 FAN_MIN_PWM = 58  # Lowest PWM the chassis fans reliably spin at

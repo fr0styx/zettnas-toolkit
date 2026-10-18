@@ -4,11 +4,12 @@ import io
 import os
 import re
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Depends, Request
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse
 from PIL import Image
 
+from backend.auth import require_scope
 from backend.config import MAX_WALLPAPER_BYTES, WALLPAPER_CONFIG_FILE, WALLPAPERS_DIR, logger
 from backend.errors import error_response
 from backend.fsutil import atomic_write_json, read_json
@@ -205,7 +206,10 @@ async def get_wallpaper_thumbnail(filename: str):
     )
 
 
-@router.post("/wallpapers/upload")
+@router.post(
+    "/wallpapers/upload",
+    dependencies=[Depends(require_scope("system:config", "shares:user_write"))],
+)
 async def upload_wallpaper(request: Request):
     try:
         body = await request.json()
@@ -262,7 +266,10 @@ async def upload_wallpaper(request: Request):
     return {"success": True, "url": f"/api/wallpapers/download/{final_name}", "filename": final_name}
 
 
-@router.post("/wallpapers/select")
+@router.post(
+    "/wallpapers/select",
+    dependencies=[Depends(require_scope("system:config", "shares:user_write"))],
+)
 def select_wallpaper(req: WallpaperSelectRequest):
     try:
         name = req.name if req.name is not None else req.filename
@@ -281,7 +288,10 @@ def select_wallpaper(req: WallpaperSelectRequest):
         return _fail(500, "Failed to select wallpaper.")
 
 
-@router.post("/wallpapers/rename")
+@router.post(
+    "/wallpapers/rename",
+    dependencies=[Depends(require_scope("system:config", "shares:user_write"))],
+)
 def rename_wallpaper(req: WallpaperRenameRequest):
     old_safe, old_path = _path_for(req.old_name)
     if not old_safe or not req.new_name:
@@ -316,7 +326,10 @@ def rename_wallpaper(req: WallpaperRenameRequest):
     return {"success": True, "new_name": new_name}
 
 
-@router.delete("/wallpapers/{filename}")
+@router.delete(
+    "/wallpapers/{filename}",
+    dependencies=[Depends(require_scope("system:config", "shares:user_write"))],
+)
 def delete_wallpaper(filename: str):
     safe, wp_path = _path_for(filename)
     if not safe:

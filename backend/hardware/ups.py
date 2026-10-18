@@ -5,6 +5,7 @@ APCUPSD NIS protocol, direct USB HID discovery, and enterprise SNMP monitoring.
 """
 
 import glob
+import ipaddress
 import os
 import re
 import socket
@@ -1137,6 +1138,32 @@ def test_ups_connection(
 
     clean_host = (host or "127.0.0.1").strip()
     try:
+        ip = ipaddress.ip_address(clean_host)
+        if ip.is_link_local:
+            return {
+                "success": False,
+                "connected": False,
+                "error": "Probing link-local or cloud metadata addresses is forbidden.",
+            }
+    except ValueError:
+        if clean_host.lower() in ("metadata.google.internal",):
+            return {
+                "success": False,
+                "connected": False,
+                "error": "Probing link-local or cloud metadata addresses is forbidden.",
+            }
+        try:
+            for info in socket.getaddrinfo(clean_host, None):
+                if ipaddress.ip_address(info[4][0]).is_link_local:
+                    return {
+                        "success": False,
+                        "connected": False,
+                        "error": "Probing link-local or cloud metadata addresses is forbidden.",
+                    }
+        except Exception:
+            pass
+
+    try:
         clean_port = int(port or 3551)
     except (ValueError, TypeError):
         clean_port = 3551
@@ -1494,6 +1521,18 @@ def read_ups_status(force: bool = False) -> Dict[str, Any]:
     status_str = str(raw.get("STATUS", "ONLINE")).strip().upper()
     is_on_batt = any(k in status_str for k in ("OB", "ONBATT", "ON BATT", "LB", "LOWBATT"))
 
+    cable_str = str(raw.get("CABLE", "")).lower()
+    driver_str = str(raw.get("DRIVER", "")).lower()
+    proto_str = str(protocol or "").lower()
+    is_usb = (
+        "usb" in cable_str
+        or "usb" in driver_str
+        or "hid" in driver_str
+        or "usb" in proto_str
+        or "hid" in proto_str
+        or ups_mode == "usb_hid"
+    )
+
     status_obj = {
         "available": True,
         "status": status_str,
@@ -1510,6 +1549,9 @@ def read_ups_status(force: bool = False) -> Dict[str, Any]:
         "nominal_power_watts": nom_power,
         "power_watts": power_watts,
         "protocol": protocol or "unknown",
+        "is_usb": is_usb,
+        "cable": raw.get("CABLE"),
+        "driver": raw.get("DRIVER"),
         "mode": ups_mode,
         "on_battery": is_on_batt,
         "active_policy": cfg.get("shutdown_policy", "runtime_left"),
