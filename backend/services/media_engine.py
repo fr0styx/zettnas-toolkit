@@ -491,6 +491,7 @@ def build_llm_recommendations(
     include_incompatible: bool = False,
     sort_by: str = "date",
     min_release_year: Optional[int] = 2026,
+    removed_models: Optional[List[str]] = None,
 ) -> Dict[str, Any]:
     """
     Generates industry-standard Hugging Face LLM & Multi-Modal model recommendations dynamically
@@ -509,6 +510,14 @@ def build_llm_recommendations(
     eff_ram = max(4.0, float(ram_gb or 16.0))
     safe_ai_ram_gb = round(eff_ram * 0.55, 1)
     active_norm = str(active_model or "hf.co/Kujira/Underdog-Saluki-27B-1.0-MTP-Abliterated-GGUF").strip().lower()
+
+    if removed_models is None:
+        try:
+            rag_cfg = get_rag_engine().get_config()
+            removed_models = rag_cfg.get("removed_models", [])
+        except Exception:
+            removed_models = []
+    removed_set = {str(r).lower().strip() for r in (removed_models or []) if r}
 
     if min_release_year and min_release_year >= 2026:
         if has_npu and has_gpu:
@@ -1223,12 +1232,26 @@ def build_llm_recommendations(
     warning_count = 0
 
     for m in catalog:
+        tag_lower = str(m.get("ollama_tag") or m.get("id") or "").lower()
+        hf_lower = str(m.get("hf_repo") or "").lower()
+        m_id_lower = str(m.get("id") or "").lower()
+
+        # Skip any model removed by user
+        keys_to_check = {
+            tag_lower,
+            hf_lower,
+            m_id_lower,
+            tag_lower.replace("hf.co/", ""),
+            m_id_lower.replace("hf.co/", ""),
+            f"hf.co/{hf_lower}",
+        }
+        if keys_to_check & removed_set:
+            continue
+
         # Strictly remove any older models released before 2026 (2024, 2025, etc.)
         if min_release_year and min_release_year >= 2026 and not is_model_2026_or_newer(m):
             continue
 
-        tag_lower = str(m.get("ollama_tag") or m.get("id") or "").lower()
-        hf_lower = str(m.get("hf_repo") or "").lower()
         is_sel = (
             tag_lower == active_norm
             or str(m.get("id", "")).lower() == active_norm
@@ -1647,7 +1670,25 @@ def pull_huggingface_model(repo_id: str, activate: bool = True) -> Dict[str, Any
     ]
     custom_list.insert(0, model_entry)
 
-    updates: Dict[str, Any] = {"custom_hf_models": custom_list[:25]}
+    removed_list = list(rag_cfg.get("removed_models") or [])
+    clean_repo_l = str(clean_repo).lower()
+    clean_removed = [
+        r
+        for r in removed_list
+        if str(r).lower()
+        not in (
+            clean_repo_l,
+            f"hf.co/{clean_repo_l}",
+            clean_repo_l.replace("hf.co/", ""),
+            str(model_entry.get("id", "")).lower(),
+            str(model_entry.get("ollama_tag", "")).lower(),
+        )
+    ]
+
+    updates: Dict[str, Any] = {
+        "custom_hf_models": custom_list[:25],
+        "removed_models": clean_removed,
+    }
     if activate:
         updates["active_model"] = model_entry["id"]
         updates["llm_model"] = model_entry["id"]
@@ -1660,6 +1701,7 @@ def pull_huggingface_model(repo_id: str, activate: bool = True) -> Dict[str, Any
         ram_gb=eff_ram,
         active_model=updated_cfg.get("active_model") or model_entry["id"],
         custom_models=updated_cfg.get("custom_hf_models", []),
+        removed_models=updated_cfg.get("removed_models", []),
     )
 
     return {
@@ -1668,6 +1710,110 @@ def pull_huggingface_model(repo_id: str, activate: bool = True) -> Dict[str, Any
         "fits_hardware": model_entry["fits_hardware"],
         "hardware_warning": model_entry["hardware_warning"],
         "warning_message": model_entry.get("warning_message"),
+        "active_model": updated_cfg.get("active_model"),
+        "llm_recommendations": recs,
+    }
+
+
+def remove_llm_model(model_id: str) -> Dict[str, Any]:
+    """
+    Removes/deletes a model from the ZettAI catalog:
+    1. Removes it from custom_hf_models (if user-pulled).
+    2. Adds its normalized tags to removed_models in rag_config so it no longer appears in recommendations.
+    3. Deletes it from local Ollama if present (via DELETE /api/delete).
+    4. If the removed model was the active model, safely falls back to the top remaining model or NPU model.
+    5. Returns updated recommendations and active_model.
+    """
+    clean_id = str(model_id or "").strip()
+    if not clean_id:
+        raise ValueError("Model identifier is required.")
+
+    rag = get_rag_engine()
+    rag_cfg = rag.get_config()
+
+    norm_target = clean_id.lower()
+    tag_norm = norm_target.replace("hf.co/", "")
+
+    # 1. Remove from custom_hf_models
+    custom_list = list(rag_cfg.get("custom_hf_models") or [])
+    updated_custom = [
+        c
+        for c in custom_list
+        if isinstance(c, dict)
+        and str(c.get("id", "")).lower() not in (norm_target, tag_norm, f"hf.co/{tag_norm}")
+        and str(c.get("ollama_tag", "")).lower() not in (norm_target, tag_norm, f"hf.co/{tag_norm}")
+        and str(c.get("hf_repo", "")).lower() not in (norm_target, tag_norm, f"hf.co/{tag_norm}")
+    ]
+
+    # 2. Add to removed_models
+    removed_list = list(rag_cfg.get("removed_models") or [])
+    new_removed = set(str(r).lower() for r in removed_list)
+    new_removed.add(norm_target)
+    new_removed.add(tag_norm)
+    if "/" in tag_norm:
+        new_removed.add(f"hf.co/{tag_norm}")
+
+    # 3. Best-effort deletion from Ollama if running
+    for base_url in ("http://127.0.0.1:11434", "http://localhost:11434"):
+        try:
+            del_url = f"{base_url}/api/delete"
+            for tag_candidate in (clean_id, tag_norm, norm_target):
+                d_payload = json.dumps({"name": tag_candidate}).encode("utf-8")
+                d_req = urllib.request.Request(
+                    del_url,
+                    data=d_payload,
+                    headers={"Content-Type": "application/json", "User-Agent": "ZettNAS-Toolkit/2.0"},
+                    method="DELETE",
+                )
+                with urllib.request.urlopen(d_req, timeout=1.5) as resp:
+                    if resp.status == 200:
+                        logger.info(f"[MediaEngine] Successfully deleted model {tag_candidate} from Ollama")
+                        break
+        except Exception:
+            pass
+
+    # 4. Check active model fallback if current active was deleted
+    current_active = str(rag_cfg.get("active_model", "")).strip().lower()
+    ram_bytes = read_total_ram_bytes()
+    eff_ram = max(4.0, round(ram_bytes / (1024**3), 1))
+    accel = detect_hardware_accelerator()
+
+    fallback_active = None
+    if current_active in (norm_target, tag_norm) or current_active.replace("hf.co/", "") == tag_norm:
+        temp_recs = build_llm_recommendations(
+            accel=accel,
+            ram_gb=eff_ram,
+            active_model="builtin-npu",
+            custom_models=updated_custom,
+            removed_models=sorted(list(new_removed)),
+        )
+        remaining = temp_recs.get("models") or []
+        if remaining:
+            fallback_active = remaining[0].get("id")
+        else:
+            fallback_active = "builtin-npu"
+
+    updates: Dict[str, Any] = {
+        "custom_hf_models": updated_custom,
+        "removed_models": sorted(list(new_removed)),
+    }
+    if fallback_active:
+        updates["active_model"] = fallback_active
+        updates["llm_model"] = fallback_active
+
+    updated_cfg = rag.update_config(updates)
+
+    recs = build_llm_recommendations(
+        accel=accel,
+        ram_gb=eff_ram,
+        active_model=updated_cfg.get("active_model") or fallback_active or "builtin-npu",
+        custom_models=updated_cfg.get("custom_hf_models", []),
+        removed_models=updated_cfg.get("removed_models", []),
+    )
+
+    return {
+        "status": "ok",
+        "removed_model": clean_id,
         "active_model": updated_cfg.get("active_model"),
         "llm_recommendations": recs,
     }

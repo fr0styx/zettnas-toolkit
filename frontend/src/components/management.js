@@ -9826,12 +9826,15 @@ export function renderAiLlmRecommendations(recData = {}, activeModel = '') {
         `}
         <div style="margin-top:auto; padding-top:5px; border-top:1px solid rgba(255,255,255,0.06); display:flex; justify-content:space-between; align-items:center; gap:6px;">
           <span style="font-size:9.5px; color:#94a3b8;">🔋 ${escapeHtml(m.power_profile || 'Low Power')} • 📅 ${escapeHtml(releaseDateText)}</span>
-          ${isAct
-            ? `<span style="font-size:10px; font-weight:800; color:${hasWarn ? '#fbbf24' : '#34d399'}; padding:2px 8px; border-radius:6px; background:${hasWarn ? 'rgba(245,158,11,0.18)' : 'rgba(16,185,129,0.18)'}; border:1px solid ${hasWarn ? 'rgba(245,158,11,0.45)' : 'rgba(16,185,129,0.4)'};">${hasWarn ? '⚠️ Active (Exceeds HW)' : '✓ Active'}</span>`
-            : isLiveHfResult
-              ? `<button type="button" class="btn-pill-toggle btn-ai-pull-hf-card" data-hf-repo="${escapeHtml(hfRepo)}" style="font-size:10px; font-weight:700; padding:2px 9px; background:${hasWarn ? 'rgba(245,158,11,0.18)' : 'rgba(250,204,21,0.18)'}; border:1px solid ${hasWarn ? 'rgba(245,158,11,0.5)' : 'rgba(250,204,21,0.48)'}; color:${hasWarn ? '#fbbf24' : '#fde047'}; cursor:pointer;">${hasWarn ? '⚠️ Pull Anyway (Unfit)' : '⬇️ Pull from HF'}</button>`
-              : `<button type="button" class="btn-pill-toggle btn-ai-activate-model" data-model-id="${escapeHtml(m.id)}" style="font-size:10px; font-weight:700; padding:2px 9px; background:${hasWarn ? 'rgba(245,158,11,0.16)' : 'rgba(14,165,233,0.18)'}; border:1px solid ${hasWarn ? 'rgba(245,158,11,0.45)' : 'rgba(14,165,233,0.45)'}; color:${hasWarn ? '#fbbf24' : '#38bdf8'}; cursor:pointer;">${hasWarn ? '⚠️ Activate Anyway' : '⚡ Activate'}</button>`
-          }
+          <div style="display:flex; align-items:center; gap:5px;">
+            ${isAct
+              ? `<span style="font-size:10px; font-weight:800; color:${hasWarn ? '#fbbf24' : '#34d399'}; padding:2px 8px; border-radius:6px; background:${hasWarn ? 'rgba(245,158,11,0.18)' : 'rgba(16,185,129,0.18)'}; border:1px solid ${hasWarn ? 'rgba(245,158,11,0.45)' : 'rgba(16,185,129,0.4)'};">${hasWarn ? '⚠️ Active (Exceeds HW)' : '✓ Active'}</span>`
+              : isLiveHfResult
+                ? `<button type="button" class="btn-pill-toggle btn-ai-pull-hf-card" data-hf-repo="${escapeHtml(hfRepo)}" style="font-size:10px; font-weight:700; padding:2px 9px; background:${hasWarn ? 'rgba(245,158,11,0.18)' : 'rgba(250,204,21,0.18)'}; border:1px solid ${hasWarn ? 'rgba(245,158,11,0.5)' : 'rgba(250,204,21,0.48)'}; color:${hasWarn ? '#fbbf24' : '#fde047'}; cursor:pointer;">${hasWarn ? '⚠️ Pull Anyway (Unfit)' : '⬇️ Pull from HF'}</button>`
+                : `<button type="button" class="btn-pill-toggle btn-ai-activate-model" data-model-id="${escapeHtml(m.id)}" style="font-size:10px; font-weight:700; padding:2px 9px; background:${hasWarn ? 'rgba(245,158,11,0.16)' : 'rgba(14,165,233,0.18)'}; border:1px solid ${hasWarn ? 'rgba(245,158,11,0.45)' : 'rgba(14,165,233,0.45)'}; color:${hasWarn ? '#fbbf24' : '#38bdf8'}; cursor:pointer;">${hasWarn ? '⚠️ Activate Anyway' : '⚡ Activate'}</button>`
+            }
+            <button type="button" class="btn-pill-toggle btn-ai-remove-model" data-model-id="${escapeHtml(m.id)}" data-model-name="${escapeHtml(m.name)}" title="Remove model from catalog and disk" aria-label="Remove model ${escapeHtml(m.name)}" style="font-size:10px; font-weight:700; padding:2px 7px; background:rgba(239,68,68,0.12); border:1px solid rgba(239,68,68,0.35); color:#fca5a5; cursor:pointer;">🗑️</button>
+          </div>
         </div>
       </div>
     `;
@@ -9850,6 +9853,41 @@ export function renderAiLlmRecommendations(recData = {}, activeModel = '') {
       if (repo) pullHuggingFaceModel(repo, true);
     });
   });
+
+  gridEl.querySelectorAll('.btn-ai-remove-model').forEach((btn) => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const mId = btn.dataset.modelId;
+      const mName = btn.dataset.modelName || mId;
+      if (!mId) return;
+      const confirmed = window.confirm(
+        `Are you sure you want to remove model "${mName}" from your ZettAI catalog?`
+      );
+      if (confirmed) {
+        await removeAiModel(mId);
+      }
+    });
+  });
+}
+
+export async function removeAiModel(modelId) {
+  const cleanId = String(modelId || '').trim();
+  if (!cleanId) return null;
+  try {
+    const res = await api.post('/api/media/models/remove', { model: cleanId, model_id: cleanId });
+    if (res) {
+      const recs = res.llm_recommendations || res.recommendations;
+      if (recs) {
+        renderAiLlmRecommendations(recs, res.active_model);
+      }
+      showToast(t('ai.model_removed_toast', `Model "${cleanId}" removed from catalog`), 'success');
+      await fetchAndRenderAiStatus();
+    }
+    return res;
+  } catch (err) {
+    showToast(`Failed to remove model: ${err.message}`, 'error');
+    return null;
+  }
 }
 
 export async function selectAiRecommendedModel(modelId) {

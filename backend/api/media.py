@@ -149,6 +149,11 @@ class ModelSelectRequest(BaseModel):
     model_id: Optional[str] = Field(default=None, max_length=256)
 
 
+class ModelRemoveRequest(BaseModel):
+    model: Optional[str] = Field(default=None, max_length=256)
+    model_id: Optional[str] = Field(default=None, max_length=256)
+
+
 class HuggingFacePullRequest(BaseModel):
     repo_id: str = Field(..., min_length=1, max_length=256)
     activate: bool = True
@@ -512,6 +517,48 @@ def pull_hf_release_model(req: HuggingFacePullRequest) -> Dict[str, Any]:
     """Pulls/registers a release model from https://huggingface.co and flags hardware fit warnings."""
     try:
         return pull_huggingface_model(repo_id=req.repo_id, activate=req.activate)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+
+@router.post(
+    "/media/models/remove",
+    dependencies=[Depends(require_scope("system:config", "storage:admin", "shares:user_write"))],
+)
+@router.post(
+    "/ai/models/remove",
+    dependencies=[Depends(require_scope("system:config", "storage:admin", "shares:user_write"))],
+)
+def remove_model_post_endpoint(req: ModelRemoveRequest) -> Dict[str, Any]:
+    """Removes a model from the ZettAI catalog and local storage."""
+    from backend.services.media_engine import remove_llm_model
+
+    model_tag = str(req.model or req.model_id or "").strip()
+    if not model_tag:
+        raise HTTPException(status_code=400, detail="Model identifier is required.")
+    try:
+        return remove_llm_model(model_tag)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+
+@router.delete(
+    "/media/models/{model_id:path}",
+    dependencies=[Depends(require_scope("system:config", "storage:admin", "shares:user_write"))],
+)
+@router.delete(
+    "/ai/models/{model_id:path}",
+    dependencies=[Depends(require_scope("system:config", "storage:admin", "shares:user_write"))],
+)
+def delete_model_endpoint(model_id: str) -> Dict[str, Any]:
+    """Removes a model from the ZettAI catalog and local storage."""
+    from backend.services.media_engine import remove_llm_model
+
+    clean_id = str(model_id or "").strip()
+    if not clean_id:
+        raise HTTPException(status_code=400, detail="Model identifier is required.")
+    try:
+        return remove_llm_model(clean_id)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
 

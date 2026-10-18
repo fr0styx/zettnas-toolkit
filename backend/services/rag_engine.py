@@ -2096,6 +2096,7 @@ class RagSearchEngine:
             "favorites": [],
             "search_history": [],
             "custom_hf_models": [],
+            "removed_models": [],
         }
         saved = read_json(RAG_CONFIG_PATH, {})
         if isinstance(saved, dict):
@@ -2141,6 +2142,7 @@ class RagSearchEngine:
             "favorites",
             "search_history",
             "custom_hf_models",
+            "removed_models",
         ):
             if k in updates and updates[k] is not None:
                 cfg[k] = updates[k]

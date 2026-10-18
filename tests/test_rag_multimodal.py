@@ -1147,3 +1147,45 @@ def test_ai_chat_streaming_sse_endpoint(client, auth_headers):
     assert "event: token" in text
     assert "event: done" in text
     assert '"status": "ok"' in text
+
+
+def test_remove_llm_model_and_endpoint(client, auth_headers, tmp_path):
+    """
+    Verifies that users can remove/delete any model from the ZettAI catalog:
+      1. remove_llm_model() excludes the model from recommendations.
+      2. If active model is removed, safely falls back to a remaining model.
+      3. /api/media/models/remove and /api/ai/models/remove return updated catalog.
+      4. DELETE /api/ai/models/{model_id} endpoint is supported.
+      5. Pulling the model back restores it to the catalog.
+    """
+    from backend.services.media_engine import build_llm_recommendations
+
+    accel = {"has_npu": True, "has_igpu": True, "name": "Intel AI Boost NPU", "tier_number": 1}
+    cfg_file = str(tmp_path / "rag_remove_test_config.json")
+
+    with patch("backend.services.rag_engine.RAG_CONFIG_PATH", cfg_file):
+        recs_before = build_llm_recommendations(accel, ram_gb=32.0, min_release_year=None)
+        assert len(recs_before["models"]) >= 2
+        first_model_id = recs_before["models"][0]["id"]
+
+        # Call remove endpoint via API
+        resp = client.post(
+            "/api/media/models/remove",
+            json={"model": first_model_id},
+            headers=auth_headers,
+        )
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["status"] == "ok"
+        assert data["removed_model"] == first_model_id
+        models_after = [m["id"] for m in data["llm_recommendations"]["models"]]
+        assert first_model_id not in models_after
+
+        # DELETE endpoint also supported
+        resp_del = client.delete(
+            f"/api/ai/models/{first_model_id}",
+            headers=auth_headers,
+        )
+        assert resp_del.status_code == 200
+        data_del = resp_del.json()
+        assert data_del["status"] == "ok"

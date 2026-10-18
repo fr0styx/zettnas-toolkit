@@ -12,6 +12,7 @@ import {
   renderAiWatchedFoldersAndShares,
   renderAiLlmRecommendations,
   selectAiRecommendedModel,
+  removeAiModel,
   searchHuggingFaceModels,
   pullHuggingFaceModel,
   openAiLearningResults,
@@ -442,6 +443,19 @@ describe('ZettAI — Multi-Modal Local RAG & Visual Search Frontend Suite', () =
 
     await selectAiRecommendedModel('qwen2.5vl:7b');
     expect(api.post).toHaveBeenCalledWith('/api/media/models/select', { model: 'qwen2.5vl:7b', model_id: 'qwen2.5vl:7b' });
+
+    // Test model removal
+    expect(gridHtml).toContain('btn-ai-remove-model');
+    vi.spyOn(api, 'post').mockResolvedValueOnce({
+      status: 'ok',
+      removed_model: 'qwen2.5vl:7b',
+      active_model: 'qwen2.5:3b',
+      llm_recommendations: { models: [] },
+    });
+    vi.spyOn(api, 'get').mockResolvedValueOnce({ status: 'ok', hardware: { tier_number: 1 } });
+
+    await removeAiModel('qwen2.5vl:7b');
+    expect(api.post).toHaveBeenCalledWith('/api/media/models/remove', { model: 'qwen2.5vl:7b', model_id: 'qwen2.5vl:7b' });
 
     // Test Hugging Face Hub search & pull with hardware warning
     vi.spyOn(api, 'get').mockResolvedValueOnce({
