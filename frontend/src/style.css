@@ -6509,6 +6509,12 @@ body.theme-yak .lcd-dot.active {
   border: 1px solid rgba(37, 194, 160, 0.25);
 }
 
+.docker-table-container {
+  width: 100%;
+  overflow-x: auto;
+  max-height: none;
+}
+
 /* Ingest History Table */
 .copy-history-table {
   width: 100%;
@@ -11853,6 +11859,15 @@ body.theme-yak #containers-manager-window .containers-content-body {
   padding: 4px;
   margin-bottom: 20px;
   max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.mgmt-inner-tabs::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 .mgmt-inner-tab {
@@ -16945,6 +16960,15 @@ body.theme-yak .input-modern:focus {
 /* =========================================================================
    AI KNOWLEDGE & CHATBOT FULL-HEIGHT WORKSPACE
    ========================================================================= */
+.mgmt-content-pane.ai-active,
+.mgmt-content-pane:has(#mgmt-sec-ai:not([style*="display: none"])) {
+  height: 100% !important;
+  overflow-y: hidden !important;
+  overflow-x: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
 #management-detail-container.ai-active,
 #management-detail-container:has(#mgmt-sec-ai:not([style*="display: none"])) {
   height: 100% !important;
@@ -16961,6 +16985,23 @@ body.theme-yak .input-modern:focus {
   display: flex !important;
   flex-direction: column !important;
   box-sizing: border-box !important;
+  overflow: hidden !important;
+}
+
+#mgmt-sec-ai #ai-telemetry-ribbon {
+  flex-shrink: 0 !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+#mgmt-sec-ai #ai-telemetry-ribbon::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+#mgmt-sec-ai > .mgmt-inner-tabs {
+  flex-shrink: 0 !important;
 }
 
 #mgmt-pane-ai-chat:not([style*="display: none"]) {
@@ -17000,6 +17041,40 @@ body.theme-yak .input-modern:focus {
 #mgmt-pane-ai-chat .ai-chat-composer-row {
   flex-shrink: 0 !important;
   margin-top: auto !important;
+}
+
+#mgmt-pane-ai-rag:not([style*="display: none"]),
+#mgmt-pane-ai-index:not([style*="display: none"]) {
+  flex: 1 !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  display: block !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  padding-top: 10px !important;
+  padding-right: 4px !important;
+  box-sizing: border-box !important;
+  scrollbar-width: thin !important;
+  scrollbar-color: rgba(37, 194, 160, 0.6) rgba(0, 0, 0, 0.25) !important;
+}
+
+#mgmt-pane-ai-rag::-webkit-scrollbar,
+#mgmt-pane-ai-index::-webkit-scrollbar {
+  width: 6px !important;
+  height: 6px !important;
+  display: block !important;
+}
+
+#mgmt-pane-ai-rag::-webkit-scrollbar-track,
+#mgmt-pane-ai-index::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.25) !important;
+  border-radius: 4px !important;
+}
+
+#mgmt-pane-ai-rag::-webkit-scrollbar-thumb,
+#mgmt-pane-ai-index::-webkit-scrollbar-thumb {
+  background: rgba(37, 194, 160, 0.6) !important;
+  border-radius: 4px !important;
 }
 
 .ai-rag-initial-placeholder {
@@ -17075,5 +17150,30 @@ body.theme-yak .input-modern:focus {
 .element-focus-pulse {
   animation: elementFocusPulse 1.4s ease-out !important;
   border-color: var(--brand, #38bdf8) !important;
+}
+
+/* AI Chatbot Real-time Tool & Thought Stream Enhancements */
+.ai-thought-disclosure summary {
+  transition: color 0.15s ease;
+}
+.ai-thought-disclosure[open] summary {
+  color: #d8b4fe !important;
+}
+.ai-chat-tool-pill {
+  transition: all 0.2s ease;
+}
+.ai-chat-tool-running {
+  animation: aiToolPulse 1.2s infinite ease-in-out;
+}
+@keyframes aiToolPulse {
+  0%, 100% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.03);
+    filter: drop-shadow(0 0 5px rgba(56, 189, 248, 0.55));
+  }
 }
 

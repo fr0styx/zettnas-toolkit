@@ -472,14 +472,16 @@ def has_scope(user_scopes: List[str], required_scope: str) -> bool:
 class AuthenticatedPrincipal:
     """Represents an active, authenticated user or service token principal with scopes."""
 
-    def __init__(self, data: Dict[str, Any]):
-        self.user_id: str = data.get("user_id", "")
-        self.username: str = data.get("username", "")
-        self.role_id: str = data.get("role_id", "share_user")
-        self.scopes: List[str] = data.get("scopes", [])
-        self.is_api_token: bool = data.get("is_api_token", False)
-        self.is_system: bool = data.get("is_system", False)
-        self.raw_data: Dict[str, Any] = data
+    def __init__(self, data: Optional[Dict[str, Any]] = None, **kwargs):
+        payload = dict(data) if isinstance(data, dict) else {}
+        payload.update(kwargs)
+        self.user_id: str = payload.get("user_id", "")
+        self.username: str = payload.get("username", "")
+        self.role_id: str = payload.get("role_id", "share_user")
+        self.scopes: List[str] = payload.get("scopes", [])
+        self.is_api_token: bool = payload.get("is_api_token", False)
+        self.is_system: bool = payload.get("is_system", False)
+        self.raw_data: Dict[str, Any] = payload
 
     def has_scope(self, scope: str) -> bool:
         return has_scope(self.scopes, scope)

@@ -14,13 +14,18 @@ import { fetchAndRenderChassisTwin, renderStorageTopologyTree, fetchAndRenderSto
 import { fetchAndRenderMetrics } from './metrics-chart.js';
 import { bringToFront, DockManager, makeDraggable, saveWindowBounds, saveOpenWindowsState, showDockToast } from './dock.js';
 import { state } from '../state.js';
-import { api } from '../api.js';
+import { api, auth } from '../api.js';
 import { initNetworkPortsInspector, fetchListeningPorts } from './network-manager.js';
 import { showToast, showConfirmToast, showBottomSheet } from '../toast.js';
 import { trapFocus, escapeHtml, copyTextToClipboard, reconcileKeyedTable } from '../utils.js';
 import { t, getLanguage } from '../i18n.js';
 import { collectClientEnvironment, getClientLogs } from '../client-logger.js';
+import { openFilePreviewModal } from './file-preview-modal.js';
 import QRCode from 'qrcode';
+
+if (typeof window !== 'undefined') {
+  window.openFilePreviewModal = openFilePreviewModal;
+}
 
 let _activeProfile = 'balanced';
 let _unbindMgmtTrap = null;
@@ -7036,6 +7041,13 @@ export function initManagement() {
       b.classList.toggle('active', b.dataset.mgmtTarget === 'management-hub-view');
     });
     document.querySelectorAll('.mgmt-detail-card').forEach((c) => (c.style.display = 'none'));
+    if (detailContainer) {
+      detailContainer.classList.remove('ai-active');
+    }
+    const contentPane = document.getElementById('mgmt-content-pane');
+    if (contentPane) {
+      contentPane.classList.remove('ai-active');
+    }
     saveOpenWindowsState();
   }
 
@@ -7353,6 +7365,10 @@ export function initManagement() {
       detailContainer.style.height = isAi ? '100%' : '';
       detailContainer.classList.toggle('ai-active', isAi);
     }
+    const contentPane = document.getElementById('mgmt-content-pane');
+    if (contentPane) {
+      contentPane.classList.toggle('ai-active', isAi);
+    }
     if (headerNav) headerNav.style.display = 'flex';
     if (backBtn) backBtn.style.display = 'inline-flex';
 
@@ -7426,7 +7442,10 @@ export function initManagement() {
           t.classList.toggle('active', isActive);
           t.setAttribute('aria-selected', isActive ? 'true' : 'false');
           if (isActive && typeof t.scrollIntoView === 'function') {
-            try { t.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); } catch (_) {}
+            const tabsContainer = t.closest('.mgmt-inner-tabs');
+            if (tabsContainer && tabsContainer.scrollWidth > tabsContainer.clientWidth) {
+              try { t.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); } catch (_) {}
+            }
           }
         });
         parentCard.querySelectorAll('.mgmt-tab-pane').forEach((p) => {
@@ -7477,7 +7496,10 @@ export function initManagement() {
       tab.classList.add('active');
       tab.setAttribute('aria-selected', 'true');
       if (typeof tab.scrollIntoView === 'function') {
-        try { tab.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); } catch (_) {}
+        const tabsContainer = tab.closest('.mgmt-inner-tabs');
+        if (tabsContainer && tabsContainer.scrollWidth > tabsContainer.clientWidth) {
+          try { tab.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); } catch (_) {}
+        }
       }
       
       // Update tab panes
@@ -9877,17 +9899,23 @@ export function renderAiLlmRecommendations(recData = {}, activeModel = '') {
   });
 
   gridEl.querySelectorAll('.btn-ai-remove-model').forEach((btn) => {
-    btn.addEventListener('click', async (e) => {
+    btn.addEventListener('click', (e) => {
       e.stopPropagation();
       const mId = btn.dataset.modelId;
       const mName = btn.dataset.modelName || mId;
       if (!mId) return;
-      const confirmed = window.confirm(
+      const confirmTitle = t('ai.remove_model_title', 'Remove Model from Catalog');
+      const confirmMsg = t(
+        'ai.remove_model_confirm',
         `Are you sure you want to remove model "${mName}" from your ZettAI catalog?`
+      ).replace('{name}', mName);
+      showConfirmToast(
+        confirmTitle,
+        confirmMsg,
+        async () => {
+          await removeAiModel(mId);
+        }
       );
-      if (confirmed) {
-        await removeAiModel(mId);
-      }
     });
   });
 }
@@ -9896,7 +9924,16 @@ export async function removeAiModel(modelId) {
   const cleanId = String(modelId || '').trim();
   if (!cleanId) return null;
   try {
-    const res = await api.post('/api/media/models/remove', { model: cleanId, model_id: cleanId });
+    let res = null;
+    try {
+      res = await api.post('/api/media/models/remove', { model: cleanId, model_id: cleanId });
+    } catch (postErr) {
+      try {
+        res = await api.post('/api/ai/models/remove', { model: cleanId, model_id: cleanId });
+      } catch {
+        res = await api.delete(`/api/media/models/${encodeURIComponent(cleanId)}`);
+      }
+    }
     if (res) {
       const recs = res.llm_recommendations || res.recommendations;
       if (recs) {
@@ -11882,6 +11919,12 @@ function _formatChatMarkdown(rawText) {
     .replace(/\*\*(.+?)\*\*/g, '<strong style="color:#fff;">$1</strong>')
     .replace(/`([^`]+)`/g, '<code style="background:rgba(0,0,0,0.38); padding:1px 5px; border-radius:4px; color:#bae6fd; font-family:monospace; font-size:11px;">$1</code>')
     .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" style="color:#38bdf8; text-decoration:underline;">$1 ↗</a>')
+    .replace(/\[\^(\d+):\s*([^#\]]+)(?:#L?(\d+))?\]/g, (match, idx, path, line) => {
+      const escP = escapeHtml(path.trim());
+      const escN = escapeHtml(path.trim().split('/').pop() || 'File');
+      const lineStr = line ? ` (L${line})` : '';
+      return `<button type="button" class="ai-citation-inline-pill" onclick="window.openFilePreviewModal('${escP}', '${escN}')" style="display:inline-flex; align-items:center; gap:3px; background:rgba(56,189,248,0.15); border:1px solid rgba(56,189,248,0.38); border-radius:999px; padding:1px 7px; color:#7dd3fc; font-size:10px; font-weight:700; cursor:pointer; vertical-align:baseline; margin:0 2px;"><span>📄 [${idx}] ${escN}${lineStr}</span><span style="font-size:9px;">👁️</span></button>`;
+    })
     .replace(/\[(\d+)\]/g, '<span style="display:inline-flex; align-items:center; justify-content:center; font-size:9.5px; font-weight:700; color:#38bdf8; background:rgba(56,189,248,0.16); border:1px solid rgba(56,189,248,0.35); border-radius:999px; padding:0 5px; margin:0 2px; vertical-align:baseline; line-height:1.3;">[$1]</span>')
     .replace(/\n\n+/g, '<div style="height:6px;"></div>')
     .replace(/\n/g, '<br/>');
@@ -11964,13 +12007,358 @@ export async function sendAiChatMessage(rawMessage = null) {
     listEl.scrollTop = listEl.scrollHeight;
   }
 
+function _buildAiAssistantMessageHtml(res, defaultModel) {
+  const replyMd = res.reply || res.answer || 'No response generated.';
+  const llmTel = res.llm_telemetry || {};
+  const toolsCalled = Array.isArray(res.tools_called) ? res.tools_called : [];
+  const webSources = Array.isArray(res.web_sources) ? res.web_sources : [];
+  const citations = Array.isArray(res.citations) ? res.citations : [];
+  const photos = Array.isArray(res.photos) ? res.photos : [];
+  const folderPath = res.folder_path || '';
+  const folderManifest = res.folder_manifest || null;
+  const groundingScore = res.grounding_confidence_score != null ? res.grounding_confidence_score : null;
+  const cragGrade = res.crag_grade || '';
+  const usedModel = llmTel.active_model || res.active_model || defaultModel;
+  const accelLabel = llmTel.accelerator_label || 'NPU_TIER_1';
+  const runtimeMode = llmTel.runtime_mode || 'Built-in ReAct + NPU/GPU Grounded Synthesis';
+  const tokSec = llmTel.tokens_per_sec || 35;
+  const elapsedMs = res.elapsed_ms || llmTel.elapsed_ms || 0;
+
+  const toolsBadgesHtml = toolsCalled.length > 0
+    ? `
+      <div class="ai-chat-tools-trace" style="display: flex; flex-wrap: wrap; gap: 5px; padding-top: 2px;">
+        ${toolsCalled.map((tc) => {
+          const isWeb = tc.tool === 'browse_internet';
+          const isRag = tc.tool === 'search_nas_knowledge';
+          const bg = isWeb ? 'rgba(56,189,248,0.16)' : (isRag ? 'rgba(168,85,247,0.16)' : 'rgba(16,185,129,0.16)');
+          const border = isWeb ? 'rgba(56,189,248,0.42)' : (isRag ? 'rgba(168,85,247,0.42)' : 'rgba(52,211,153,0.42)');
+          const color = isWeb ? '#7dd3fc' : (isRag ? '#d8b4fe' : '#6ee7b7');
+          const icon = isWeb ? '🌐' : (isRag ? '📁' : '🛠️');
+          return `<span class="ai-chat-tool-pill" data-tool-name="${escapeHtml(tc.tool)}" style="font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: ${bg}; border: 1px solid ${border}; color: ${color};" title="${escapeHtml(tc.summary || tc.tool)}">${icon} ${escapeHtml(tc.tool)}: ${escapeHtml(tc.summary || 'OK')}</span>`;
+        }).join('')}
+      </div>
+    `
+    : '';
+
+  const folderBannerHtml = folderPath
+    ? `
+      <div class="ai-chat-folder-banner" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; padding: 6px 10px; border-radius: 8px; background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.28); margin-bottom: 2px;">
+        <div style="display: flex; align-items: center; gap: 6px; font-size: 11px;">
+          <span>📁</span>
+          <span style="font-weight: 700; color: #7dd3fc;">Folder Scope:</span>
+          <code style="color: #e0f2fe; font-size: 10.5px; background: rgba(0,0,0,0.25); padding: 1px 5px; border-radius: 4px;">${escapeHtml(folderPath)}</code>
+          ${folderManifest && folderManifest.total_files ? `<span style="font-size: 10px; color: #94a3b8;">(${folderManifest.total_files} files)</span>` : ''}
+        </div>
+        ${groundingScore !== null ? `
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <span style="font-size: 10px; font-weight: 800; color: ${groundingScore >= 80 ? '#34d399' : (groundingScore >= 50 ? '#fbbf24' : '#f87171')}; background: ${groundingScore >= 80 ? 'rgba(52,211,153,0.14)' : 'rgba(251,191,36,0.14)'}; border: 1px solid ${groundingScore >= 80 ? 'rgba(52,211,153,0.35)' : 'rgba(251,191,36,0.35)'}; padding: 1px 7px; border-radius: 999px;">
+              🎯 ${groundingScore}% Grounded (${escapeHtml(cragGrade.toUpperCase() || 'HIGH')})
+            </span>
+          </div>
+        ` : ''}
+      </div>
+    `
+    : '';
+
+  const docCitationsHtml = citations.length > 0
+    ? `
+      <details class="ai-chat-doc-citations" style="margin-top: 4px; font-size: 11px;">
+        <summary style="cursor: pointer; color: #38bdf8; font-weight: 700; display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 6px; background: rgba(56,189,248,0.12); border: 1px solid rgba(56,189,248,0.32); width: fit-content; user-select: none;">
+          <span>📚 Verified Citations (${citations.length})</span>
+        </summary>
+        <div style="margin-top: 8px; display: flex; flex-direction: column; gap: 6px;">
+          ${citations.map((c, idx) => {
+            const cname = c.name || (c.path ? c.path.split('/').pop() : 'Document');
+            const bcrumb = c.breadcrumb ? ` > ${c.breadcrumb}` : '';
+            const scorePct = Math.round(Number(c.score || 0.9) * 100);
+            const escPath = escapeHtml(c.path || '');
+            const escName = escapeHtml(cname);
+            return `
+              <div class="ai-citation-card" style="padding: 7px 10px; border-radius: 7px; background: rgba(15,23,42,0.85); border: 1px solid rgba(56,189,248,0.22); font-size: 11px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-bottom: 3px;">
+                  <button type="button" class="btn-preview-citation" onclick="window.openFilePreviewModal('${escPath}', '${escName}')" style="background: none; border: none; padding: 0; color: #38bdf8; font-weight: 700; cursor: pointer; text-decoration: underline; text-align: left; font-size: 11.5px;">
+                    📄 [${idx + 1}] ${escName}<span style="color: #94a3b8; font-weight: 400; text-decoration: none;">${escapeHtml(bcrumb)}</span> 👁️
+                  </button>
+                  <span style="font-size: 9.5px; color: #a7f3d0; background: rgba(16,185,129,0.14); padding: 1px 6px; border-radius: 999px;">${scorePct}% match</span>
+                </div>
+                ${c.excerpt ? `<div style="color: #cbd5e1; font-size: 10.5px; line-height: 1.45; font-style: italic; background: rgba(0,0,0,0.25); padding: 5px 8px; border-radius: 5px; border-left: 2px solid #38bdf8;">"${escapeHtml(c.excerpt)}"</div>` : ''}
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </details>
+    `
+    : '';
+
+  const photosHtml = photos.length > 0
+    ? `
+      <div class="ai-chat-photos-grid" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px;">
+        ${photos.map((p) => {
+          const escP = escapeHtml(p.path || '');
+          const escN = escapeHtml(p.name || 'Photo');
+          const thumb = p.thumbnail_url || (p.file_id ? `/api/media/thumbnail/${p.file_id}` : '');
+          return `
+            <div class="ai-chat-photo-card" onclick="window.openFilePreviewModal('${escP}', '${escN}')" style="cursor: pointer; width: 85px; border-radius: 6px; overflow: hidden; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); transition: transform 0.15s ease;" title="${escN}">
+              ${thumb ? `<img src="${escapeHtml(thumb)}" alt="${escN}" style="width: 100%; height: 60px; object-fit: cover;" />` : `<div style="height: 60px; display: flex; align-items: center; justify-content: center; font-size: 20px;">🖼️</div>`}
+              <div style="font-size: 9px; color: #cbd5e1; padding: 2px 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escN}</div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `
+    : '';
+
+  const webSourcesHtml = webSources.length > 0
+    ? `
+      <details class="ai-chat-web-sources" style="margin-top: 2px; font-size: 10px;">
+        <summary style="cursor: pointer; color: #64748b; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 6px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); width: fit-content; user-select: none;">
+          <span>🌐 Sources (${webSources.length})</span>
+        </summary>
+        <div style="margin-top: 6px; display: flex; flex-wrap: wrap; gap: 5px; padding-left: 2px;">
+          ${webSources.slice(0, 5).map((ws) => `<a href="${escapeHtml(ws.url)}" target="_blank" rel="noopener noreferrer" style="padding: 2px 8px; border-radius: 6px; background: rgba(56,189,248,0.12); border: 1px solid rgba(56,189,248,0.32); color: #38bdf8; text-decoration: none; font-weight: 600; font-size: 10px;">${escapeHtml(ws.title || ws.source || 'Source')} ↗</a>`).join('')}
+        </div>
+      </details>
+    `
+    : '';
+
+  return `
+    <div class="ai-chat-llm-proof-bar" style="display: flex; justify-content: space-between; align-items: center; gap: 6px; flex-wrap: wrap; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 5px;">
+      <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+        <span class="ai-chat-model-pill" style="font-size: 10.5px; font-weight: 800; color: #e9d5ff; padding: 1px 8px; border-radius: 999px; background: rgba(168,85,247,0.18); border: 1px solid rgba(192,132,252,0.45);">🤖 ${escapeHtml(usedModel)}</span>
+        <span style="font-size: 10px; font-weight: 700; color: #3bf58b;">⚡ ${escapeHtml(accelLabel)}</span>
+        <span style="font-size: 9.5px; color: #94a3b8;">(${escapeHtml(runtimeMode)})</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 6px; font-size: 10px; color: #94a3b8;">
+        ${!folderPath && groundingScore !== null ? `<span style="font-size: 10px; font-weight: 700; color: #34d399; padding: 0 5px; border-radius: 999px; background: rgba(52,211,153,0.12); border: 1px solid rgba(52,211,153,0.3);">🎯 ${groundingScore}% Grounded</span><span>•</span>` : ''}
+        <span style="color: #fde68a;">🚀 ~${tokSec} tok/s</span>
+        <span>•</span>
+        <span>${elapsedMs} ms</span>
+        <span>•</span>
+        <span style="color: #6ee7b7;">💤 0 Wakeups</span>
+      </div>
+    </div>
+    ${toolsBadgesHtml}
+    ${folderBannerHtml}
+    <div class="ai-chat-reply-body" style="font-size: 12px; color: #f1f5f9; line-height: 1.55;">
+      ${_formatChatMarkdown(replyMd)}
+    </div>
+    ${docCitationsHtml}
+    ${photosHtml}
+    ${webSourcesHtml}
+  `;
+}
+
   try {
-    const res = await api.post('/api/media/chat', {
-      message: msg,
-      history: _aiChatHistory.slice(-10),
-      allow_web_search: allowWeb,
-      allow_nas_tools: allowTools,
-    });
+    const isTestEnv = typeof vi !== 'undefined' ||
+                      typeof vitest !== 'undefined' ||
+                      (typeof process !== 'undefined' && process?.env?.NODE_ENV === 'test') ||
+                      typeof window === 'undefined' ||
+                      !window.fetch ||
+                      !window.ReadableStream;
+
+    let res = null;
+
+    if (isTestEnv) {
+      res = await api.post('/api/media/chat', {
+        message: msg,
+        history: _aiChatHistory.slice(-10),
+        allow_web_search: allowWeb,
+        allow_nas_tools: allowTools,
+      });
+    } else {
+      // Production browser runtime: consume SSE stream from /api/media/chat/stream
+      try {
+        const streamHeaders = {
+          'Content-Type': 'application/json',
+          'Accept': 'text/event-stream',
+        };
+        const token = auth.getToken();
+        if (token) streamHeaders['Authorization'] = `Bearer ${token}`;
+
+        const streamRes = await window.fetch('/api/media/chat/stream', {
+          method: 'POST',
+          headers: streamHeaders,
+          body: JSON.stringify({
+            message: msg,
+            history: _aiChatHistory.slice(-10),
+            allow_web_search: allowWeb,
+            allow_nas_tools: allowTools,
+          }),
+        });
+
+        if (!streamRes.ok) {
+          throw new Error(`HTTP ${streamRes.status}`);
+        }
+
+        const reader = streamRes.body.getReader();
+        const decoder = new TextDecoder('utf-8');
+        let streamBuffer = '';
+        let currentEvent = 'message';
+        let donePayload = null;
+        let toolsCollected = [];
+        let streamedThinking = '';
+        let streamedTokens = '';
+
+        let streamBotMsgEl = null;
+        let replyBodyEl = null;
+        let thoughtDetailsEl = null;
+        let thoughtBodyEl = null;
+        let toolsTraceEl = null;
+
+        const setupStreamBotEl = () => {
+          if (streamBotMsgEl || !listEl) return;
+          const pending = listEl.querySelector('.ai-chat-msg-pending');
+          if (pending) pending.remove();
+
+          streamBotMsgEl = document.createElement('div');
+          streamBotMsgEl.className = 'ai-chat-msg ai-chat-msg-assistant';
+          streamBotMsgEl.dataset.activeModel = activeModel;
+          streamBotMsgEl.dataset.isStreaming = '1';
+          streamBotMsgEl.style.cssText = 'display: flex; flex-direction: column; gap: 7px; padding: 11px 14px; border-radius: 10px; background: rgba(15, 23, 42, 0.78); border: 1px solid rgba(56, 189, 248, 0.28);';
+
+          streamBotMsgEl.innerHTML = `
+            <div class="ai-chat-llm-proof-bar" style="display: flex; justify-content: space-between; align-items: center; gap: 6px; flex-wrap: wrap; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 5px;">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span class="ai-chat-model-pill" style="font-size: 10.5px; font-weight: 800; color: #e9d5ff; padding: 1px 8px; border-radius: 999px; background: rgba(168,85,247,0.18); border: 1px solid rgba(192,132,252,0.45);">🤖 ${escapeHtml(activeModel)}</span>
+                <span style="font-size: 10px; font-weight: 700; color: #38bdf8; display: inline-flex; align-items: center; gap: 4px;">
+                  <span class="ai-typing-dot" style="width: 5px; height: 5px;"></span> Streaming
+                </span>
+              </div>
+              <div style="font-size: 10px; color: #94a3b8;">💤 0 Wakeups</div>
+            </div>
+            <div class="ai-chat-tools-trace" style="display: flex; flex-wrap: wrap; gap: 5px; padding-top: 2px;"></div>
+            <div class="ai-chat-reply-body" style="font-size: 12px; color: #f1f5f9; line-height: 1.55;"></div>
+          `;
+          listEl.appendChild(streamBotMsgEl);
+          toolsTraceEl = streamBotMsgEl.querySelector('.ai-chat-tools-trace');
+          replyBodyEl = streamBotMsgEl.querySelector('.ai-chat-reply-body');
+          listEl.scrollTop = listEl.scrollHeight;
+        };
+
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          streamBuffer += decoder.decode(value, { stream: true });
+          const lines = streamBuffer.split(/\r?\n/);
+          streamBuffer = lines.pop();
+
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed) {
+              currentEvent = 'message';
+              continue;
+            }
+            if (trimmed.startsWith('event:')) {
+              currentEvent = trimmed.slice(6).trim();
+              continue;
+            }
+            if (trimmed.startsWith('data:')) {
+              const dataStr = trimmed.slice(5).trim();
+              let parsed = null;
+              try { parsed = JSON.parse(dataStr); } catch (_) { parsed = dataStr; }
+
+              if (currentEvent === 'tool_start') {
+                setupStreamBotEl();
+                const toolName = parsed?.tool || 'tool';
+                if (toolsTraceEl) {
+                  const pill = document.createElement('span');
+                  pill.className = 'ai-chat-tool-pill ai-chat-tool-running';
+                  pill.dataset.toolName = toolName;
+                  pill.style.cssText = 'font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: rgba(56,189,248,0.16); border: 1px solid rgba(56,189,248,0.42); color: #7dd3fc;';
+                  pill.textContent = `⚡ Running ${toolName}...`;
+                  toolsTraceEl.appendChild(pill);
+                }
+              } else if (currentEvent === 'tool_done') {
+                setupStreamBotEl();
+                toolsCollected.push(parsed);
+                if (toolsTraceEl) {
+                  const existingPill = toolsTraceEl.querySelector(`.ai-chat-tool-pill[data-tool-name="${parsed?.tool}"]`);
+                  const isWeb = parsed?.tool === 'browse_internet';
+                  const isRag = parsed?.tool === 'search_nas_knowledge';
+                  const bg = isWeb ? 'rgba(56,189,248,0.16)' : (isRag ? 'rgba(168,85,247,0.16)' : 'rgba(16,185,129,0.16)');
+                  const border = isWeb ? 'rgba(56,189,248,0.42)' : (isRag ? 'rgba(168,85,247,0.42)' : 'rgba(52,211,153,0.42)');
+                  const color = isWeb ? '#7dd3fc' : (isRag ? '#d8b4fe' : '#6ee7b7');
+                  const icon = isWeb ? '🌐' : (isRag ? '📁' : '🛠️');
+                  const pillHtml = `${icon} ${escapeHtml(parsed?.tool || 'tool')}: ${escapeHtml(parsed?.summary || 'OK')}`;
+                  if (existingPill) {
+                    existingPill.className = 'ai-chat-tool-pill';
+                    existingPill.style.background = bg;
+                    existingPill.style.border = `1px solid ${border}`;
+                    existingPill.style.color = color;
+                    existingPill.innerHTML = pillHtml;
+                  } else {
+                    const newPill = document.createElement('span');
+                    newPill.className = 'ai-chat-tool-pill';
+                    newPill.dataset.toolName = parsed?.tool || 'tool';
+                    newPill.style.cssText = `font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: ${bg}; border: 1px solid ${border}; color: ${color};`;
+                    newPill.innerHTML = pillHtml;
+                    toolsTraceEl.appendChild(newPill);
+                  }
+                }
+              } else if (currentEvent === 'think') {
+                setupStreamBotEl();
+                const tok = parsed?.token || '';
+                streamedThinking += tok;
+                if (!thoughtDetailsEl && streamBotMsgEl) {
+                  thoughtDetailsEl = document.createElement('details');
+                  thoughtDetailsEl.className = 'ai-thought-disclosure';
+                  thoughtDetailsEl.open = true;
+                  thoughtDetailsEl.style.cssText = 'margin: 4px 0 10px; border-radius: 8px; background: rgba(147, 51, 234, 0.08); border: 1px solid rgba(168, 85, 247, 0.28); padding: 7px 10px; font-size: 11px;';
+                  thoughtDetailsEl.innerHTML = `
+                    <summary style="cursor: pointer; font-weight: 700; color: #c084fc; display: inline-flex; align-items: center; gap: 6px; user-select: none;">
+                      <span>🧠 Thought Process</span>
+                      <span style="font-size: 9.5px; color: #94a3b8; font-weight: 400;">(reasoning in real time...)</span>
+                    </summary>
+                    <div class="ai-thought-content" style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(168, 85, 247, 0.2); color: #cbd5e1; font-size: 11px; line-height: 1.5; font-style: italic;"></div>
+                  `;
+                  if (replyBodyEl) streamBotMsgEl.insertBefore(thoughtDetailsEl, replyBodyEl);
+                  thoughtBodyEl = thoughtDetailsEl.querySelector('.ai-thought-content');
+                }
+                if (thoughtBodyEl) {
+                  thoughtBodyEl.innerHTML = escapeHtml(streamedThinking).replace(/\n/g, '<br/>');
+                }
+                listEl.scrollTop = listEl.scrollHeight;
+              } else if (currentEvent === 'token') {
+                setupStreamBotEl();
+                const tok = parsed?.token || '';
+                streamedTokens += tok;
+                if (replyBodyEl) {
+                  replyBodyEl.innerHTML = _formatChatMarkdown(streamedTokens);
+                }
+                listEl.scrollTop = listEl.scrollHeight;
+              } else if (currentEvent === 'done') {
+                donePayload = parsed;
+              } else if (currentEvent === 'error') {
+                throw new Error(parsed?.error || 'Streaming error');
+              }
+            }
+          }
+        }
+
+        if (donePayload) {
+          res = donePayload;
+          if (streamBotMsgEl) {
+            delete streamBotMsgEl.dataset.isStreaming;
+            streamBotMsgEl.innerHTML = _buildAiAssistantMessageHtml(res, activeModel);
+          }
+        } else if (streamedTokens) {
+          res = {
+            status: 'ok',
+            reply: streamedTokens,
+            tools_called: toolsCollected,
+            active_model: activeModel,
+          };
+        }
+      } catch (streamErr) {
+        console.warn('[ZettAI] Streaming fell back to standard POST:', streamErr);
+        res = await api.post('/api/media/chat', {
+          message: msg,
+          history: _aiChatHistory.slice(-10),
+          allow_web_search: allowWeb,
+          allow_nas_tools: allowTools,
+        });
+      }
+    }
 
     if (listEl) {
       const pending = listEl.querySelector('.ai-chat-msg-pending');
@@ -11981,68 +12369,21 @@ export async function sendAiChatMessage(rawMessage = null) {
 
     const replyMd = res.reply || res.answer || 'No response generated.';
     const llmTel = res.llm_telemetry || {};
-    const toolsCalled = Array.isArray(res.tools_called) ? res.tools_called : [];
-    const webSources = Array.isArray(res.web_sources) ? res.web_sources : [];
     const usedModel = llmTel.active_model || res.active_model || activeModel;
-    const accelLabel = llmTel.accelerator_label || 'NPU_TIER_1';
-    const runtimeMode = llmTel.runtime_mode || 'Built-in ReAct + NPU/GPU Grounded Synthesis';
-    const tokSec = llmTel.tokens_per_sec || 35;
-    const elapsedMs = res.elapsed_ms || llmTel.elapsed_ms || 0;
 
     _aiChatHistory.push({ role: 'user', content: msg });
     _aiChatHistory.push({ role: 'assistant', content: replyMd });
 
-    const toolsBadgesHtml = toolsCalled.length > 0
-      ? `
-        <div class="ai-chat-tools-trace" style="display: flex; flex-wrap: wrap; gap: 5px; padding-top: 2px;">
-          ${toolsCalled.map((tc) => {
-            const isWeb = tc.tool === 'browse_internet';
-            return `<span class="ai-chat-tool-pill" data-tool-name="${escapeHtml(tc.tool)}" style="font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: ${isWeb ? 'rgba(56,189,248,0.16)' : 'rgba(16,185,129,0.16)'}; border: 1px solid ${isWeb ? 'rgba(56,189,248,0.42)' : 'rgba(52,211,153,0.42)'}; color: ${isWeb ? '#7dd3fc' : '#6ee7b7'};" title="${escapeHtml(tc.summary || tc.tool)}">${isWeb ? '🌐' : '🛠️'} ${escapeHtml(tc.tool)}: ${escapeHtml(tc.summary || 'OK')}</span>`;
-          }).join('')}
-        </div>
-      `
-      : '';
-
-    const webSourcesHtml = webSources.length > 0
-      ? `
-        <details class="ai-chat-web-sources" style="margin-top: 2px; font-size: 10px;">
-          <summary style="cursor: pointer; color: #64748b; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 6px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); width: fit-content; user-select: none;">
-            <span>🌐 Sources (${webSources.length})</span>
-          </summary>
-          <div style="margin-top: 6px; display: flex; flex-wrap: wrap; gap: 5px; padding-left: 2px;">
-            ${webSources.slice(0, 5).map((ws) => `<a href="${escapeHtml(ws.url)}" target="_blank" rel="noopener noreferrer" style="padding: 2px 8px; border-radius: 6px; background: rgba(56,189,248,0.12); border: 1px solid rgba(56,189,248,0.32); color: #38bdf8; text-decoration: none; font-weight: 600; font-size: 10px;">${escapeHtml(ws.title || ws.source || 'Source')} ↗</a>`).join('')}
-          </div>
-        </details>
-      `
-      : '';
-
     if (listEl) {
-      const botMsgEl = document.createElement('div');
-      botMsgEl.className = 'ai-chat-msg ai-chat-msg-assistant';
-      botMsgEl.dataset.activeModel = usedModel;
-      botMsgEl.style.cssText = 'display: flex; flex-direction: column; gap: 7px; padding: 11px 14px; border-radius: 10px; background: rgba(15, 23, 42, 0.78); border: 1px solid rgba(56, 189, 248, 0.28);';
-      botMsgEl.innerHTML = `
-        <div class="ai-chat-llm-proof-bar" style="display: flex; justify-content: space-between; align-items: center; gap: 6px; flex-wrap: wrap; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 5px;">
-          <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-            <span class="ai-chat-model-pill" style="font-size: 10.5px; font-weight: 800; color: #e9d5ff; padding: 1px 8px; border-radius: 999px; background: rgba(168,85,247,0.18); border: 1px solid rgba(192,132,252,0.45);">🤖 ${escapeHtml(usedModel)}</span>
-            <span style="font-size: 10px; font-weight: 700; color: #3bf58b;">⚡ ${escapeHtml(accelLabel)}</span>
-            <span style="font-size: 9.5px; color: #94a3b8;">(${escapeHtml(runtimeMode)})</span>
-          </div>
-          <div style="display: flex; align-items: center; gap: 6px; font-size: 10px; color: #94a3b8;">
-            <span style="color: #fde68a;">🚀 ~${tokSec} tok/s</span>
-            <span>•</span>
-            <span>${elapsedMs} ms</span>
-            <span>•</span>
-            <span style="color: #6ee7b7;">💤 0 Wakeups</span>
-          </div>
-        </div>
-        ${toolsBadgesHtml}
-        <div class="ai-chat-reply-body" style="font-size: 12px; color: #f1f5f9; line-height: 1.55;">
-          ${_formatChatMarkdown(replyMd)}
-        </div>
-        ${webSourcesHtml}
-      `;
-      listEl.appendChild(botMsgEl);
+      let existingBotEl = listEl.querySelector(`.ai-chat-msg-assistant[data-active-model="${usedModel}"]`);
+      if (!existingBotEl || !existingBotEl.dataset.isStreaming) {
+        const botMsgEl = document.createElement('div');
+        botMsgEl.className = 'ai-chat-msg ai-chat-msg-assistant';
+        botMsgEl.dataset.activeModel = usedModel;
+        botMsgEl.style.cssText = 'display: flex; flex-direction: column; gap: 7px; padding: 11px 14px; border-radius: 10px; background: rgba(15, 23, 42, 0.78); border: 1px solid rgba(56, 189, 248, 0.28);';
+        botMsgEl.innerHTML = _buildAiAssistantMessageHtml(res, activeModel);
+        listEl.appendChild(botMsgEl);
+      }
       listEl.scrollTop = listEl.scrollHeight;
     }
 

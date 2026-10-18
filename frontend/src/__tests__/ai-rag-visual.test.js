@@ -26,6 +26,7 @@ import { openFilePreviewModal, closeFilePreviewModal } from '../components/file-
 import { initSpotlight, filterSpotlightResults } from '../components/spotlight.js';
 import { TRANSLATIONS } from '../i18n.js';
 import { api } from '../api.js';
+import * as toast from '../toast.js';
 
 describe('ZettAI — Multi-Modal Local RAG & Visual Search Frontend Suite', () => {
   beforeEach(() => {
@@ -445,8 +446,13 @@ describe('ZettAI — Multi-Modal Local RAG & Visual Search Frontend Suite', () =
     await selectAiRecommendedModel('qwen2.5vl:7b');
     expect(api.post).toHaveBeenCalledWith('/api/media/models/select', { model: 'qwen2.5vl:7b', model_id: 'qwen2.5vl:7b' });
 
-    // Test model removal
+    // Test model removal with software UI confirmation dialog (showConfirmToast) instead of browser confirm
     expect(gridHtml).toContain('btn-ai-remove-model');
+    let removePromise = null;
+    const confirmSpy = vi.spyOn(toast, 'showConfirmToast').mockImplementation((title, msg, onConfirm) => {
+      if (typeof onConfirm === 'function') removePromise = onConfirm();
+    });
+
     vi.spyOn(api, 'post').mockResolvedValueOnce({
       status: 'ok',
       removed_model: 'qwen2.5vl:7b',
@@ -455,7 +461,16 @@ describe('ZettAI — Multi-Modal Local RAG & Visual Search Frontend Suite', () =
     });
     vi.spyOn(api, 'get').mockResolvedValueOnce({ status: 'ok', hardware: { tier_number: 1 } });
 
-    await removeAiModel('qwen2.5vl:7b');
+    const removeBtn = document.querySelector('.btn-ai-remove-model[data-model-id="qwen2.5vl:7b"]');
+    expect(removeBtn).not.toBeNull();
+    removeBtn.click();
+    if (removePromise) await removePromise;
+
+    expect(confirmSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Remove Model'),
+      expect.stringContaining('from your ZettAI catalog'),
+      expect.any(Function)
+    );
     expect(api.post).toHaveBeenCalledWith('/api/media/models/remove', { model: 'qwen2.5vl:7b', model_id: 'qwen2.5vl:7b' });
 
     // Test Hugging Face Hub search & pull with hardware warning

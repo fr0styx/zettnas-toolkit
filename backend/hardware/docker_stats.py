@@ -492,8 +492,8 @@ def read_docker_containers(force: bool = False) -> List[Dict[str, Any]]:
 
 def container_action(container_id: str, action: str) -> Dict[str, Any]:
     global _CACHED_CONTAINERS, _LAST_DOCKER_POLL
-    # Sanitize container_id: alphanumeric only, 1-64 chars
-    if not container_id or not container_id.isalnum() or len(container_id) > 64:
+    # Sanitize container_id or name: alphanumeric, underscore, hyphen, dot, 1-128 chars
+    if not container_id or not re.match(r"^[a-zA-Z0-9_.-]{1,128}$", container_id):
         return {"success": False, "error": "Invalid container ID"}
 
     action = action.lower().strip()

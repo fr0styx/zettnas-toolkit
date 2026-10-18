@@ -4649,7 +4649,7 @@
                       </div>
                     </div>
                   </div>
-                  <div style="overflow-x:auto; max-height:420px; background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.06); border-radius:8px;">
+                  <div class="docker-table-container" style="overflow-x:auto; background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.06); border-radius:8px;">
                     <table class="copy-history-table docker-table responsive-cards">
                       <thead>
                         <tr>
@@ -4696,7 +4696,7 @@
                       <button class="btn-pill-toggle" id="btn-sideload-app-package" title="Sideload App Package from URL or Compose YAML">📥 Sideload</button>
                     </div>
                   </div>
-                  <div id="docker-catalog-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:12px; max-height:420px; overflow-y:auto; padding:2px;">
+                  <div id="docker-catalog-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:12px; overflow-y:auto; padding:2px;">
                     <div style="color:var(--muted); text-align:center; padding:30px; grid-column:1/-1;">Loading app catalog...</div>
                   </div>
                 </div>
@@ -6429,40 +6429,40 @@
 
           <!-- 8. AI Knowledge & Visual Search Engine (mgmt-sec-ai) -->
           <div id="mgmt-sec-ai" class="mgmt-detail-card" style="display: none;">
-            <!-- Sleek 1-Line Hardware Accelerator, Standby Guard & Sync Telemetry Ribbon -->
-            <div class="ai-telemetry-ribbon" id="ai-telemetry-ribbon" style="display:flex; flex-wrap:nowrap; align-items:center; justify-content:space-between; gap:8px; padding:7px 12px; margin-bottom:12px; background:rgba(15,23,42,0.55); border:1px solid rgba(14,165,233,0.28); border-radius:10px; white-space:nowrap; overflow-x:auto;">
-              <div style="display:flex; align-items:center; gap:8px; flex-wrap:nowrap; min-width:0;">
-                <span class="ai-tier-badge" id="ai-accel-chain-pill" style="display:inline-flex; align-items:center; gap:5px; padding:3px 9px; border-radius:999px; font-size:10.5px; font-weight:700; background:rgba(14,165,233,0.18); color:var(--accent-cyan,#00f0ff); border:1px solid rgba(14,165,233,0.35); flex-shrink:0;">
-                  <span>⚡</span>
+            <!-- Sleek 1-Line Hardware Accelerator, Standby Guard & Sync Telemetry Ribbon (Half-size ultra-compact) -->
+            <div class="ai-telemetry-ribbon" id="ai-telemetry-ribbon" style="display:flex; flex-wrap:nowrap; align-items:center; justify-content:space-between; gap:6px; padding:3px 10px; margin-bottom:8px; background:rgba(15,23,42,0.6); border:1px solid rgba(14,165,233,0.3); border-radius:7px; white-space:nowrap; overflow-x:auto; scrollbar-width:none; min-height:25px; box-sizing:border-box;">
+              <div style="display:flex; align-items:center; gap:6px; flex-wrap:nowrap; min-width:0;">
+                <span class="ai-tier-badge" id="ai-accel-chain-pill" style="display:inline-flex; align-items:center; gap:4px; padding:2px 7px; border-radius:999px; font-size:10px; font-weight:700; background:rgba(14,165,233,0.18); color:var(--accent-cyan,#00f0ff); border:1px solid rgba(14,165,233,0.4); flex-shrink:0;">
+                  <span style="font-size:10px;">⚡</span>
                   <span id="ai-accel-active-label">Tier 1: NPU ➔ GPU ➔ CPU</span>
                 </span>
-                <span id="ai-active-llm-pill" style="display:inline-flex; align-items:center; gap:5px; padding:3px 9px; border-radius:999px; font-size:10.5px; font-weight:700; background:rgba(99,102,241,0.18); color:#c7d2fe; border:1px solid rgba(99,102,241,0.38); flex-shrink:0;" title="Active LLM leveraged for RAG synthesis, NAS Hardware Copilot tools &amp; Web Chatbot">
-                  <span>🤖</span>
+                <span id="ai-active-llm-pill" style="display:inline-flex; align-items:center; gap:4px; padding:2px 7px; border-radius:999px; font-size:9.5px; font-weight:700; background:rgba(99,102,241,0.18); color:#c7d2fe; border:1px solid rgba(99,102,241,0.4); flex-shrink:0;" title="Active LLM leveraged for RAG synthesis, NAS Hardware Copilot tools &amp; Web Chatbot">
+                  <span style="font-size:10px;">🤖</span>
                   <span id="ai-active-llm-label">qwen2.5:3b</span>
                 </span>
-                <span id="ai-standby-guard-badge" style="display:inline-flex; align-items:center; gap:5px; padding:3px 9px; border-radius:999px; font-size:10.5px; font-weight:600; background:rgba(37,194,160,0.14); color:var(--ok2,#25c2a0); border:1px solid rgba(37,194,160,0.3); flex-shrink:0;" title="100% of RAG &amp; Photo queries read from NVMe SQLite WAL without spinning up sleeping HDDs">
-                  <span>🛡️💤</span>
+                <span id="ai-standby-guard-badge" style="display:inline-flex; align-items:center; gap:4px; padding:2px 7px; border-radius:999px; font-size:9.5px; font-weight:600; background:rgba(37,194,160,0.14); color:var(--ok2,#25c2a0); border:1px solid rgba(37,194,160,0.32); flex-shrink:0;" title="100% of RAG &amp; Photo queries read from NVMe SQLite WAL without spinning up sleeping HDDs">
+                  <span style="font-size:10px;">🛡️💤</span>
                   <span id="ai-standby-guard-text" data-i18n="ai.standby_guard_active">Standby Guard: Active (0 Wakeups)</span>
                 </span>
-                <span id="ai-index-status-pill" style="font-size:10.5px; color:var(--muted,#94a3b8); flex-shrink:0;">
+                <span id="ai-index-status-pill" style="font-size:10px; color:var(--muted,#94a3b8); flex-shrink:0; padding:0 2px;">
                   Indexed: <strong id="ai-stat-total-docs" style="color:#fff;">0</strong> Docs • <strong id="ai-stat-total-recipes" style="color:#fff;">0</strong> Recipes • <strong id="ai-stat-total-photos" style="color:#fff;">0</strong> Photos
-                </span>
-                <span id="ai-sync-state-badge" style="display:inline-flex; align-items:center; gap:5px; padding:3px 8px; border-radius:999px; font-size:10.5px; font-weight:700; background:rgba(148,163,184,0.14); color:#cbd5e1; border:1px solid rgba(148,163,184,0.28); flex-shrink:0;">
-                  <span id="ai-sync-state-dot" style="width:7px; height:7px; border-radius:50%; background:#94a3b8; display:inline-block;"></span>
-                  <span id="ai-sync-state-text" data-i18n="ai.sync_state_idle">Sync: Idle</span>
                 </span>
               </div>
               <div style="display:flex; align-items:center; gap:6px; flex-wrap:nowrap; flex-shrink:0;">
-                <button type="button" id="btn-ai-quick-sync" class="btn-pill-toggle" style="font-size:10.5px; padding:4px 10px; font-weight:700; background:rgba(37,194,160,0.18); border:1px solid rgba(37,194,160,0.45); color:var(--ok2,#25c2a0); cursor:pointer; white-space:nowrap;" title="Sync configured watched folders on running drives (skips sleeping HDDs)">
+                <span id="ai-sync-state-badge" style="display:inline-flex; align-items:center; gap:4px; padding:2px 7px; border-radius:999px; font-size:9.5px; font-weight:700; background:rgba(148,163,184,0.14); color:#cbd5e1; border:1px solid rgba(148,163,184,0.28); flex-shrink:0;">
+                  <span id="ai-sync-state-dot" style="width:6px; height:6px; border-radius:50%; background:#94a3b8; display:inline-block;"></span>
+                  <span id="ai-sync-state-text" data-i18n="ai.sync_state_idle">Sync: Idle</span>
+                </span>
+                <button type="button" id="btn-ai-quick-sync" class="btn-pill-toggle" style="font-size:9.5px; padding:2px 8px; font-weight:700; background:rgba(37,194,160,0.18); border:1px solid rgba(37,194,160,0.45); color:var(--ok2,#25c2a0); cursor:pointer; white-space:nowrap; border-radius:5px;" title="Sync configured watched folders on running drives (skips sleeping HDDs)">
                   <span>🔄</span> <span data-i18n="ai.sync_shares">Sync Active Shares</span>
                 </button>
-                <button type="button" id="btn-ai-sync-pause" class="btn-pill-toggle" style="display:none; font-size:10.5px; padding:4px 9px; font-weight:700; background:rgba(245,158,11,0.18); border:1px solid rgba(245,158,11,0.45); color:#fbbf24; cursor:pointer; white-space:nowrap;" title="Pause active indexing scan">
+                <button type="button" id="btn-ai-sync-pause" class="btn-pill-toggle" style="display:none; font-size:9.5px; padding:2px 7px; font-weight:700; background:rgba(245,158,11,0.18); border:1px solid rgba(245,158,11,0.45); color:#fbbf24; cursor:pointer; white-space:nowrap; border-radius:5px;" title="Pause active indexing scan">
                   <span>⏸</span> <span data-i18n="ai.pause_sync">Pause</span>
                 </button>
-                <button type="button" id="btn-ai-sync-resume" class="btn-pill-toggle" style="display:none; font-size:10.5px; padding:4px 9px; font-weight:700; background:rgba(37,194,160,0.2); border:1px solid rgba(37,194,160,0.5); color:#34d399; cursor:pointer; white-space:nowrap;" title="Resume paused indexing scan (only on running disks)">
+                <button type="button" id="btn-ai-sync-resume" class="btn-pill-toggle" style="display:none; font-size:9.5px; padding:2px 7px; font-weight:700; background:rgba(37,194,160,0.2); border:1px solid rgba(37,194,160,0.5); color:#34d399; cursor:pointer; white-space:nowrap; border-radius:5px;" title="Resume paused indexing scan (only on running disks)">
                   <span>▶</span> <span data-i18n="ai.resume_sync">Resume</span>
                 </button>
-                <button type="button" id="btn-ai-sync-stop" class="btn-pill-toggle" style="display:none; font-size:10.5px; padding:4px 9px; font-weight:700; background:rgba(239,68,68,0.18); border:1px solid rgba(239,68,68,0.45); color:#f87171; cursor:pointer; white-space:nowrap;" title="Stop active indexing scan immediately">
+                <button type="button" id="btn-ai-sync-stop" class="btn-pill-toggle" style="display:none; font-size:9.5px; padding:2px 7px; font-weight:700; background:rgba(239,68,68,0.18); border:1px solid rgba(239,68,68,0.45); color:#f87171; cursor:pointer; white-space:nowrap; border-radius:5px;" title="Stop active indexing scan immediately">
                   <span>⏹</span> <span data-i18n="ai.stop_sync">Stop</span>
                 </button>
               </div>
@@ -6526,7 +6526,7 @@
             </div>
 
             <!-- Tab 2: Unified Multi-Modal RAG (Documents, Recipes, Photos, Videos & Audio) -->
-            <div id="mgmt-pane-ai-rag" class="mgmt-tab-pane" style="display: none; padding-top: 12px;">
+            <div id="mgmt-pane-ai-rag" class="mgmt-tab-pane" style="display: none; padding-top: 10px;">
               <div class="ai-rag-composer" style="background:rgba(15,23,42,0.45); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:14px; margin-bottom:12px;">
                 <!-- Row 1: Omni-Search Input + Scope + Search & Ask + Visual Filters Drawer Toggle + Reset -->
                 <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:10px;">
@@ -6613,7 +6613,7 @@
             </div>
 
             <!-- Tab 3: Dedicated Configuration (Service Switch, Scope/Schedule/Standby Rules, Watched Shares & NPU/GPU Models) -->
-            <div id="mgmt-pane-ai-index" class="mgmt-tab-pane" style="display: none; padding-top: 12px;">
+            <div id="mgmt-pane-ai-index" class="mgmt-tab-pane" style="display: none; padding-top: 10px;">
               <!-- Section 1 (Top Priority): Service Switch, Learning Scope, Schedule & Standby/Spin-Up Rules -->
               <div style="background:rgba(15,23,42,0.5); border:1px solid rgba(14,165,233,0.3); border-radius:10px; padding:14px; margin-bottom:12px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px; padding-bottom:10px; border-bottom:1px solid rgba(255,255,255,0.07);">
@@ -6824,18 +6824,36 @@
                 </div>
 
                 <!-- Compact 3-Tier Hardware Acceleration Strip -->
-                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:8px; margin-bottom:10px;">
-                  <div style="background:rgba(15,23,42,0.6); border:1px solid rgba(14,165,233,0.28); border-radius:8px; padding:8px 11px;">
-                    <div style="font-size:10px; font-weight:700; color:var(--accent-cyan,#00f0ff); text-transform:uppercase;">Tier 1 • NPU Priority</div>
-                    <div id="ai-hw-tier1-status" style="font-size:11.5px; font-weight:700; color:#fff; margin-top:2px;">Probing NPU...</div>
+                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:12px; margin-bottom:14px;">
+                  <div style="background:rgba(15,23,42,0.65); border:1px solid rgba(14,165,233,0.38); border-radius:10px; padding:12px 16px; box-shadow:0 2px 8px rgba(14,165,233,0.08);">
+                    <div style="display:flex; align-items:center; justify-content:space-between; gap:6px;">
+                      <div style="font-size:12px; font-weight:800; color:var(--accent-cyan,#00f0ff); text-transform:uppercase; letter-spacing:0.5px; display:flex; align-items:center; gap:6px;">
+                        <span>⚡</span>
+                        <span>Tier 1 • NPU Priority</span>
+                      </div>
+                      <span style="font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:999px; background:rgba(14,165,233,0.18); color:var(--accent-cyan,#00f0ff); border:1px solid rgba(14,165,233,0.35);">Primary</span>
+                    </div>
+                    <div id="ai-hw-tier1-status" style="font-size:13px; font-weight:700; color:#fff; margin-top:6px; line-height:1.4;">Probing NPU...</div>
                   </div>
-                  <div style="background:rgba(15,23,42,0.6); border:1px solid rgba(56,189,248,0.22); border-radius:8px; padding:8px 11px;">
-                    <div style="font-size:10px; font-weight:700; color:#38bdf8; text-transform:uppercase;">Tier 2 • GPU Fallback</div>
-                    <div id="ai-hw-tier2-status" style="font-size:11.5px; font-weight:700; color:#fff; margin-top:2px;">Probing GPU...</div>
+                  <div style="background:rgba(15,23,42,0.65); border:1px solid rgba(56,189,248,0.32); border-radius:10px; padding:12px 16px; box-shadow:0 2px 8px rgba(56,189,248,0.06);">
+                    <div style="display:flex; align-items:center; justify-content:space-between; gap:6px;">
+                      <div style="font-size:12px; font-weight:800; color:#38bdf8; text-transform:uppercase; letter-spacing:0.5px; display:flex; align-items:center; gap:6px;">
+                        <span>🎮</span>
+                        <span>Tier 2 • GPU Fallback</span>
+                      </div>
+                      <span style="font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:999px; background:rgba(56,189,248,0.15); color:#38bdf8; border:1px solid rgba(56,189,248,0.3);">Secondary</span>
+                    </div>
+                    <div id="ai-hw-tier2-status" style="font-size:13px; font-weight:700; color:#fff; margin-top:6px; line-height:1.4;">Probing GPU...</div>
                   </div>
-                  <div style="background:rgba(15,23,42,0.6); border:1px solid rgba(37,194,160,0.22); border-radius:8px; padding:8px 11px;">
-                    <div style="font-size:10px; font-weight:700; color:var(--ok2,#25c2a0); text-transform:uppercase;">Tier 3 • Universal CPU</div>
-                    <div id="ai-hw-tier3-status" style="font-size:11.5px; font-weight:700; color:#fff; margin-top:2px;">Active &amp; Ready</div>
+                  <div style="background:rgba(15,23,42,0.65); border:1px solid rgba(37,194,160,0.32); border-radius:10px; padding:12px 16px; box-shadow:0 2px 8px rgba(37,194,160,0.06);">
+                    <div style="display:flex; align-items:center; justify-content:space-between; gap:6px;">
+                      <div style="font-size:12px; font-weight:800; color:var(--ok2,#25c2a0); text-transform:uppercase; letter-spacing:0.5px; display:flex; align-items:center; gap:6px;">
+                        <span>🖥️</span>
+                        <span>Tier 3 • Universal CPU</span>
+                      </div>
+                      <span style="font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:999px; background:rgba(37,194,160,0.15); color:var(--ok2,#25c2a0); border:1px solid rgba(37,194,160,0.3);">Universal</span>
+                    </div>
+                    <div id="ai-hw-tier3-status" style="font-size:13px; font-weight:700; color:#fff; margin-top:6px; line-height:1.4;">Active &amp; Ready</div>
                   </div>
                 </div>
 

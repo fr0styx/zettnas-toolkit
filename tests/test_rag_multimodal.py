@@ -14,6 +14,8 @@ import zipfile
 from pathlib import Path
 from unittest.mock import patch
 
+import pytest
+
 from PIL import Image, ImageDraw
 
 from backend.auth import AuthenticatedPrincipal
@@ -1189,3 +1191,150 @@ def test_remove_llm_model_and_endpoint(client, auth_headers, tmp_path):
         assert resp_del.status_code == 200
         data_del = resp_del.json()
         assert data_del["status"] == "ok"
+
+
+def test_docker_longest_running_and_conversational_affirmation():
+    """
+    Verifies that:
+      1. tool_list_docker_containers discovers containers and identifies the longest running container.
+      2. Asking 'whats my docker that has been running the longest' highlights the longest running container.
+      3. Follow-up conversational affirmations like 'Do that' resolve from context and NEVER trigger web browsing detour.
+      4. container_action accepts container names with underscores, hyphens, and dots.
+    """
+    from backend.hardware.docker_stats import container_action
+    from backend.services.ai_chat_agent import run_agentic_chat, tool_list_docker_containers
+
+    # 1. Check tool_list_docker_containers in test mode
+    dlist = tool_list_docker_containers()
+    assert dlist["status"] == "ok"
+    assert dlist["total"] >= 3
+    assert dlist["running"] >= 3
+    assert dlist["longest_running"] is not None
+    assert dlist["longest_running"]["name"] == "immich_server"
+
+    # 2. Check query for longest running container
+    chat_res = run_agentic_chat(
+        message="whats my docker that has been running the longest?",
+        allow_web_search=True,
+        allow_nas_tools=True,
+    )
+    assert chat_res["status"] == "ok"
+    assert "list_docker_containers" in [c["tool"] for c in chat_res["tools_called"]]
+    assert "browse_internet" not in [c["tool"] for c in chat_res["tools_called"]]
+    assert "Longest-Running Docker Container" in chat_res["reply"] or "immich_server" in chat_res["reply"]
+
+    # 3. Check conversational affirmation 'Do that' follow-up
+    history = [
+        {"role": "user", "content": "whats my docker that has been running the longest?"},
+        {
+            "role": "assistant",
+            "content": "Your container `immich_server` has been running the longest. Would you like me to check container details?",
+        },
+    ]
+    with patch("backend.services.ai_chat_agent.tool_browse_internet") as mock_web:
+        followup_res = run_agentic_chat(
+            message="Do that",
+            history=history,
+            allow_web_search=True,
+            allow_nas_tools=True,
+        )
+        assert followup_res["status"] == "ok"
+        # Must NOT call browse_internet (no detour into music or lyrics)
+        mock_web.assert_not_called()
+        # Must resolve to docker container tool from history
+        assert "list_docker_containers" in [c["tool"] for c in followup_res["tools_called"]]
+
+    # 4. Verify container_action accepts container names with hyphens and underscores
+    # (should either succeed or return a non-validation error, NOT 'Invalid container ID')
+    res_valid_name = container_action("immich_server", "start")
+    assert res_valid_name.get("error") != "Invalid container ID"
+
+    res_invalid = container_action("immich;rm -rf /", "start")
+    assert res_invalid.get("error") == "Invalid container ID"
+
+
+@pytest.mark.asyncio
+async def test_agentic_chatbot_revamped_workflow_and_peer_review_safeguards():
+    """
+    Verifies the peer-reviewed SOTA Agentic AI Chatbot workflow:
+      1. Fuzzy JSON repair for SLM tool calls (markdown fences, trailing commas, outer extraction).
+      2. DiscourseEntityStack bounded LRU eviction and coreference tracking.
+      3. ContextualQueryRewriter resolving affirmations to container & fan tools without web search.
+      4. EdgeTokenBudgeter mathematical partitions across 4GB, 8GB, and 16GB tiers.
+      5. EndpointRegistry 30s circuit breaker trip on repeated connection failures.
+      6. stream_agentic_chat guaranteed Z_STATE.ai_active cleanup on mid-stream generator close.
+    """
+    from backend.services.ai_chat_agent import (
+        ContextualQueryRewriter,
+        DiscourseEntityStack,
+        EdgeTokenBudgeter,
+        EndpointRegistry,
+        _safe_parse_tool_call_json,
+        stream_agentic_chat,
+    )
+    from backend.state import Z_STATE
+
+    # 1. Fuzzy JSON repair for SLMs
+    res_clean = _safe_parse_tool_call_json('{"action": "restart", "container": "immich",}')
+    assert res_clean.get("action") == "restart"
+    assert res_clean.get("container") == "immich"
+
+    res_fenced = _safe_parse_tool_call_json('```json\n{"profile": "quiet"}\n```')
+    assert res_fenced.get("profile") == "quiet"
+
+    res_prose = _safe_parse_tool_call_json('Here is the tool call: {"query": "NAS backup recipe"} please execute.')
+    assert res_prose.get("query") == "NAS backup recipe"
+
+    # 2. DiscourseEntityStack LRU capping
+    stack = DiscourseEntityStack(max_size=3)
+    stack.push("container", "immich")
+    stack.push("container", "sonarr")
+    stack.push("container", "plex")
+    stack.push("container", "radarr")  # pushes out immich
+    assert len(stack.all_items()) == 3
+    assert stack.get_most_recent("container")["name"] == "radarr"
+    assert [i["name"] for i in stack.all_items()] == ["radarr", "plex", "sonarr"]
+
+    # 3. ContextualQueryRewriter
+    assert ContextualQueryRewriter.is_affirmation("Do that")
+    assert ContextualQueryRewriter.is_affirmation("Yes please")
+    assert ContextualQueryRewriter.is_affirmation("Restart it")
+    assert not ContextualQueryRewriter.is_affirmation("Where did Kim Jong Un studied?")
+
+    # 4. EdgeTokenBudgeter
+    b_slm = EdgeTokenBudgeter.get_budget(4 * 1024**3, "qwen2.5:1.5b")
+    assert b_slm["context_window"] == 8192
+    assert b_slm["max_history_turns"] == 6
+
+    b_mid = EdgeTokenBudgeter.get_budget(8 * 1024**3, "qwen2.5:7b")
+    assert b_mid["context_window"] == 16384
+
+    b_max = EdgeTokenBudgeter.get_budget(32 * 1024**3, "qwen2.5:32b")
+    assert b_max["context_window"] == 32768
+
+    # 5. EndpointRegistry Circuit Breaker
+    reg = EndpointRegistry()
+    test_ep = "http://10.99.99.99:11434/api/chat"
+    assert not reg.is_tripped(test_ep)
+    reg.record_failure(test_ep)
+    assert not reg.is_tripped(test_ep)
+    reg.record_failure(test_ep)
+    assert reg.is_tripped(test_ep)
+    reg.record_success(test_ep)
+    assert not reg.is_tripped(test_ep)
+
+    # 6. Stream state cleanup on generator close
+    gen = stream_agentic_chat(
+        message="What is the CPU temp?",
+        allow_web_search=False,
+        allow_nas_tools=False,
+    )
+    # Start iterating to trigger entry and state set
+    first_chunk = await gen.asend(None)
+    assert first_chunk is not None
+    # Close generator abruptly (simulating client disconnect)
+    await gen.aclose()
+    # Invariant: Z_STATE.ai_active must be False
+    with Z_STATE.lock:
+        assert Z_STATE.ai_active is False
+        assert Z_STATE.ai_accelerator == ""

@@ -183,6 +183,13 @@ class MediaOrganizeApplyRequest(BaseModel):
     hardlink: bool = False
 
 
+class FolderAuditRequest(BaseModel):
+    folder_path: str = Field(..., min_length=1, max_length=1024)
+    query: Optional[str] = Field(default=None, max_length=1000)
+    mode: str = Field("comprehensive", pattern="^(comprehensive|targeted)$")
+    max_tokens: int = Field(default=4000, ge=500, le=16000)
+
+
 @router.get("/media/status", dependencies=[Depends(require_scope("system:read", "shares:read", "storage:read"))])
 @router.get("/ai/status", dependencies=[Depends(require_scope("system:read", "shares:read", "storage:read"))])
 def get_media_status() -> Dict[str, Any]:
@@ -543,6 +550,31 @@ def remove_model_post_endpoint(req: ModelRemoveRequest) -> Dict[str, Any]:
 
 
 @router.delete(
+    "/media/models/remove",
+    dependencies=[Depends(require_scope("system:config", "storage:admin", "shares:user_write"))],
+)
+@router.delete(
+    "/ai/models/remove",
+    dependencies=[Depends(require_scope("system:config", "storage:admin", "shares:user_write"))],
+)
+def remove_model_delete_explicit_endpoint(
+    model: Optional[str] = Query(default=None),
+    model_id: Optional[str] = Query(default=None),
+    req: Optional[ModelRemoveRequest] = None,
+) -> Dict[str, Any]:
+    """Removes a model from the ZettAI catalog and local storage via DELETE /remove."""
+    from backend.services.media_engine import remove_llm_model
+
+    model_tag = str((req.model if req else None) or (req.model_id if req else None) or model or model_id or "").strip()
+    if not model_tag:
+        raise HTTPException(status_code=400, detail="Model identifier is required.")
+    try:
+        return remove_llm_model(model_tag)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+
+@router.delete(
     "/media/models/{model_id:path}",
     dependencies=[Depends(require_scope("system:config", "storage:admin", "shares:user_write"))],
 )
@@ -740,6 +772,77 @@ async def ask_knowledge_base(
         elapsed_ms=float(res.get("elapsed_ms") or 12.0),
         answer_text=str(res.get("answer") or ""),
         tools_called=["search_nas_knowledge"],
+    )
+    return res
+
+
+@router.get(
+    "/media/folder/manifest",
+    dependencies=[Depends(require_scope("shares:read", "storage:read", "system:read"))],
+)
+@router.get(
+    "/ai/folder/manifest",
+    dependencies=[Depends(require_scope("shares:read", "storage:read", "system:read"))],
+)
+async def get_folder_manifest_endpoint(
+    folder_path: str = Query(..., min_length=1),
+    principal: AuthenticatedPrincipal = Depends(get_current_principal),
+) -> Dict[str, Any]:
+    """Retrieves the recursive structure outline and topic inventory for a folder from NVMe SQLite WAL."""
+    validated_path = _validate_media_path(folder_path, principal, must_exist=False)
+    rag = get_rag_engine()
+    manifest = await asyncio.to_thread(rag.get_folder_manifest, validated_path)
+    if not manifest:
+        return {"status": "not_indexed", "folder_path": validated_path, "manifest": None}
+    return {"status": "ok", "folder_path": validated_path, "manifest": manifest}
+
+
+@router.get(
+    "/media/manifests",
+    dependencies=[Depends(require_scope("shares:read", "storage:read", "system:read"))],
+)
+@router.get(
+    "/ai/manifests",
+    dependencies=[Depends(require_scope("shares:read", "storage:read", "system:read"))],
+)
+async def list_folder_manifests_endpoint(
+    limit: int = Query(50, ge=1, le=500),
+    principal: AuthenticatedPrincipal = Depends(get_current_principal),
+) -> Dict[str, Any]:
+    """Lists all indexed folder manifests and tree summaries across watched storage shares."""
+    rag = get_rag_engine()
+    manifests = await asyncio.to_thread(rag.list_folder_manifests, limit=limit)
+    from backend.api.fs import user_can_access_path
+
+    accessible = [m for m in manifests if user_can_access_path(m.get("folder_path", ""), principal)]
+    return {"status": "ok", "count": len(accessible), "manifests": accessible}
+
+
+@router.post(
+    "/media/folder/audit",
+    dependencies=[Depends(require_scope("shares:read", "storage:read", "system:read"))],
+)
+@router.post(
+    "/ai/folder/audit",
+    dependencies=[Depends(require_scope("shares:read", "storage:read", "system:read"))],
+)
+async def audit_folder_endpoint(
+    req: FolderAuditRequest,
+    principal: AuthenticatedPrincipal = Depends(get_current_principal),
+) -> Dict[str, Any]:
+    """
+    Executes hierarchical folder context aggregation (Mode A: targeted fact retrieval;
+    Mode B: comprehensive folder audit with MMR diversification) with 0 disk wakeups.
+    """
+    validated_path = _validate_media_path(req.folder_path, principal, must_exist=False)
+    rag = get_rag_engine()
+    res = await asyncio.to_thread(
+        rag.aggregate_folder_context,
+        folder_path=validated_path,
+        query=req.query,
+        mode=req.mode,
+        max_tokens=int(req.max_tokens or 4000),
+        principal=principal,
     )
     return res
 
