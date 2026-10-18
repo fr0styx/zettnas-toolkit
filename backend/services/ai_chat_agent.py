@@ -1247,10 +1247,12 @@ def _try_local_llm_completion(
             "openvino",
             "ov-",
             "-ov",
+            "deepseek-r1-distill-qwen-1.5b",
+            "deepseek-r1:1.5b",
+            "deepseek-r1-1.5b",
             "qwen2.5-1.5b",
             "qwen2.5:1.5b",
             "llama-3.2-1b",
-            "deepseek-r1-distill-qwen-1.5b",
         )
     )
     if is_npu_preferred:
@@ -1350,7 +1352,7 @@ def _try_local_llm_completion(
                         "model": model_to_use,
                         "messages": messages,
                         "temperature": 0.2,
-                        "max_tokens": 700,
+                        "max_tokens": 1024,
                     }
                 ).encode("utf-8")
 
@@ -1366,8 +1368,19 @@ def _try_local_llm_completion(
                 if runtime_kind == "openai_compatible":
                     choices = data.get("choices") or []
                     if choices and isinstance(choices[0], dict):
-                        content = choices[0].get("message", {}).get("content", "")
-                        toks = int(data.get("usage", {}).get("completion_tokens") or max(12, len(content.split())))
+                        msg = choices[0].get("message", {})
+                        content = msg.get("content", "") or ""
+                        reasoning = msg.get("reasoning_content", "") or ""
+                        if reasoning:
+                            if str(content).strip():
+                                if "<think>" not in str(content):
+                                    content = f"<think>\n{str(reasoning).strip()}\n</think>\n\n{str(content).strip()}"
+                            else:
+                                content = f"<think>\n{str(reasoning).strip()}\n</think>"
+                        toks = int(
+                            data.get("usage", {}).get("completion_tokens")
+                            or max(12, len(str(content).split()) + len(str(reasoning).split()))
+                        )
                         if is_ovms or ":8000" in url:
                             ovms_accel = {
                                 "active_tier": 1,
@@ -3183,7 +3196,7 @@ def run_agentic_chat(
 
     target_accel = "gpu"
     act_lower = active_model.lower()
-    if any(k in act_lower for k in ("npu", "openvino", "ovms", "1.5b")):
+    if any(k in act_lower for k in ("npu", "openvino", "ovms", "1.5b", "deepseek-r1", "r1-distill")):
         target_accel = "npu"
     elif any(k in act_lower for k in ("gpu", "arc", "cuda", "rocm", "underdog", "saluki", "woof", "qwen", "llama")):
         target_accel = "gpu"

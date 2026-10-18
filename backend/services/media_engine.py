@@ -555,7 +555,7 @@ def build_llm_recommendations(
                 "Onboard NPU Tier 1 active: INT4/INT8 quantized 1B–4B models and OpenVINO multi-modal embeddings "
                 "are recommended for maximum throughput and ultra-low thermal/power footprint."
             )
-            primary_rec = "qwen2.5:3b"
+            primary_rec = "deepseek-r1-distill-qwen-1.5b-npu-ov"
         elif has_gpu:
             tier_headline = f"{gpu_label} ({eff_ram:.1f} GB RAM)"
             advisor_summary = "Hardware GPU Tier 2 active: 3B–8B Q4_K_M models are recommended for fast local RAG synthesis and visual search."
@@ -912,28 +912,28 @@ def build_llm_recommendations(
             "recommended_for_gpu": False,
         },
         {
-            "id": "qwen2.5-1.5b-npu-ov",
-            "ollama_tag": "Qwen2.5-1.5B",
-            "hf_repo": "OpenVINO/Qwen2.5-1.5B-Instruct-int4-ov",
-            "hf_url": "https://huggingface.co/OpenVINO/Qwen2.5-1.5B-Instruct-int4-ov",
-            "name": "Qwen2.5 1.5B Instruct (OpenVINO NPU ~3W Silent)",
-            "family": "Qwen2.5",
+            "id": "deepseek-r1-distill-qwen-1.5b-npu-ov",
+            "ollama_tag": "DeepSeek-R1-Distill-Qwen-1.5B",
+            "hf_repo": "OpenVINO/DeepSeek-R1-Distill-Qwen-1.5B-int4-gq-ov",
+            "hf_url": "https://huggingface.co/OpenVINO/DeepSeek-R1-Distill-Qwen-1.5B-int4-gq-ov",
+            "name": "DeepSeek-R1 1.5B Reasoning (OpenVINO NPU ~3W Silent)",
+            "family": "DeepSeek-R1",
             "category": "npu_edge_llm",
-            "role": "Ultra-Low Power (<4W) Hardware Copilot & Conversational QA on Intel AI Boost NPU",
-            "params": "1.5B INT4",
-            "quantization": "OpenVINO INT4",
-            "est_ram_gb": 1.2,
+            "role": "Ultra-Low Power (<3W) Hardware Copilot & Chain-of-Thought Reasoning on Intel AI Boost NPU",
+            "params": "1.5B INT4-GQ",
+            "quantization": "OpenVINO INT4 Group-Quant",
+            "est_ram_gb": 1.1,
             "min_ram_gb": 4.0,
             "requires_dgpu_vram_gb": 0.0,
-            "created_at": "2026-01-15T00:00:00Z",
-            "release_date": "2026-01-15",
-            "release_date_str": "Jan 15, 2026",
-            "release_timestamp": 1768435200.0,
+            "created_at": "2026-02-10T00:00:00Z",
+            "release_date": "2026-02-10",
+            "release_date_str": "Feb 10, 2026",
+            "release_timestamp": 1770681600.0,
             "target_accelerator": "NPU" if has_npu else ("GPU" if has_gpu else "CPU"),
             "target_device": npu_label if has_npu else gpu_label,
-            "est_speed": "~45 tok/s (NPU)" if has_npu else "~30 tok/s (GPU)",
-            "power_profile": "Silent / Zero Fan (< 4W NPU)",
-            "capabilities": ["rag_qa", "chat", "telemetry", "multilingual"],
+            "est_speed": "~75 tok/s (NPU)" if has_npu else "~45 tok/s (GPU)",
+            "power_profile": "Silent / Zero Fan (< 3W NPU)",
+            "capabilities": ["reasoning", "rag_qa", "chat", "telemetry", "multilingual"],
             "recommended_for_npu": True,
             "recommended_for_gpu": False,
         },
