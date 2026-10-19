@@ -2,11 +2,11 @@ aiofiles==25.1.0
 apprise>=2.0.1
 argon2-cffi>=25.1.0
 exifread==3.5.1
-fastapi>=0.142.0
+fastapi>=0.143.2
 httpx>=0.28.1
 orjson>=3.13.0
 Pillow==12.3.0
-playwright==1.63.0
+playwright==1.64.0
 PyYAML>=6.0.3
 sse-starlette==3.5.0
 uvicorn==0.54.0
