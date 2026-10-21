@@ -462,8 +462,9 @@ export function initContainersManager() {
       const tbody = document.getElementById('cw-docker-containers-tbody');
       if (!tbody) return;
       if (selectAll.checked) {
-        const visibleIds = _cwContainersList.map((c) => c.id).filter(Boolean);
-        selectAllContainers(visibleIds);
+        // Only containers matching the current filter/search: a bulk delete must
+        // never hit containers the user could not see.
+        selectAllContainers(getCwFilteredContainerIds());
       } else {
         clearSelectedContainers();
       }
@@ -897,6 +898,7 @@ export function renderContainersWindowTable(containersList = null) {
   }
 
   if (filtered.length === 0) {
+    _cwFilteredList = [];
     tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--muted); padding:24px;">${t('mgmt.docker_no_matching', 'No containers match your search or filter.')}</td></tr>`;
     const cwTopScroll = document.getElementById('cw-docker-table-top-scroll');
     const cwStickyScroll = document.getElementById('cw-docker-table-sticky-scroll');
@@ -907,19 +909,16 @@ export function renderContainersWindowTable(containersList = null) {
 
   const currentHost = typeof window !== 'undefined' && window.location.hostname ? window.location.hostname : 'localhost';
 
-  if (tbody.firstElementChild && tbody.firstElementChild.querySelector('td[colspan]')) {
+  // Clear the "no containers" placeholder row, but never the virtual spacer rows:
+  // wiping those collapses the table and throws the scroll position to the top.
+  const firstRow = tbody.firstElementChild;
+  if (firstRow && !firstRow.classList.contains('cw-virtual-spacer') && firstRow.querySelector('td[colspan]')) {
     tbody.innerHTML = '';
   }
 
   bindCwTableEvents(tbody);
 
-  reconcileKeyedTable(
-    tbody,
-    filtered,
-    (c) => c.id || c.name,
-    (c) => createCwContainerRow(c, currentHost),
-    (tr, c) => updateCwContainerRow(tr, c, currentHost)
-  );
+  renderCwRows(tbody, filtered, currentHost);
 
   updateCwBulkBar();
 
@@ -929,6 +928,122 @@ export function renderContainersWindowTable(containersList = null) {
   if (cwWrap) {
     initSynchronizedTableScrollbars(cwWrap, cwTopScroll, cwStickyScroll);
   }
+}
+
+
+// ---- Large inventories: render only rows near the viewport ----
+// Below CW_VIRTUALIZE_MIN_ROWS the table renders every row as before. Above it,
+// spacer rows stand in for off-screen rows so the DOM stays small and the
+// scrollbar keeps its size. Selection lives in docker-table.js, not in the DOM,
+// so it survives rows scrolling out.
+export const CW_VIRTUALIZE_MIN_ROWS = 60;
+const CW_VIRTUAL_OVERSCAN = 8;
+const CW_DEFAULT_ROW_PX = 52;
+let _cwFilteredList = [];
+let _cwRowHeight = 0;
+let _cwLastWindow = '';
+let _cwVirtualScrollTarget = null;
+let _cwVirtualRafPending = false;
+
+function cwScrollParent(el) {
+  for (let p = el ? el.parentElement : null; p && p !== document.body; p = p.parentElement) {
+    // overflow-x:auto (the table wrap) also computes overflow-y:auto, so only
+    // accept an ancestor whose content actually overflows vertically.
+    const oy = getComputedStyle(p).overflowY;
+    if ((oy === 'auto' || oy === 'scroll') && p.scrollHeight > p.clientHeight + 1) return p;
+  }
+  return null;
+}
+
+function cwVirtualRange(total, tbody) {
+  const rowH = _cwRowHeight || CW_DEFAULT_ROW_PX;
+  const scroller = cwScrollParent(tbody);
+  const viewTop = scroller ? scroller.getBoundingClientRect().top : 0;
+  const viewport = (scroller && scroller.clientHeight) || window.innerHeight || 800;
+  const offset = Math.max(0, viewTop - tbody.getBoundingClientRect().top);
+  const start = Math.max(0, Math.floor(offset / rowH) - CW_VIRTUAL_OVERSCAN);
+  const end = Math.min(total, start + Math.ceil(viewport / rowH) + CW_VIRTUAL_OVERSCAN * 2);
+  return { start, end, rowH };
+}
+
+function createCwSpacerRow(item) {
+  const tr = document.createElement('tr');
+  tr.className = 'cw-virtual-spacer';
+  tr.setAttribute('aria-hidden', 'true');
+  tr.innerHTML = '<td colspan="7" style="padding:0;border:0;"></td>';
+  updateCwSpacerRow(tr, item);
+  return tr;
+}
+
+function updateCwSpacerRow(tr, item) {
+  const td = tr.firstElementChild;
+  if (td) td.style.height = `${item.height}px`;
+  tr.style.display = item.height > 0 ? '' : 'none';
+}
+
+function ensureCwVirtualScroll(tbody) {
+  const target = cwScrollParent(tbody) || window;
+  if (_cwVirtualScrollTarget === target) return;
+  if (_cwVirtualScrollTarget) _cwVirtualScrollTarget.removeEventListener('scroll', onCwVirtualScroll);
+  _cwVirtualScrollTarget = target;
+  target.addEventListener('scroll', onCwVirtualScroll, { passive: true });
+}
+
+function onCwVirtualScroll() {
+  if (_cwVirtualRafPending) return;
+  _cwVirtualRafPending = true;
+  requestAnimationFrame(() => {
+    _cwVirtualRafPending = false;
+    const tbody = document.getElementById('cw-docker-containers-tbody');
+    if (!tbody || _cwFilteredList.length < CW_VIRTUALIZE_MIN_ROWS) return;
+    const { start, end } = cwVirtualRange(_cwFilteredList.length, tbody);
+    if (`${start}:${end}:${_cwFilteredList.length}` === _cwLastWindow) return;
+    const currentHost = window.location.hostname || 'localhost';
+    renderCwRows(tbody, _cwFilteredList, currentHost);
+  });
+}
+
+function renderCwRows(tbody, filtered, currentHost) {
+  _cwFilteredList = filtered;
+  let items = filtered;
+  if (filtered.length >= CW_VIRTUALIZE_MIN_ROWS) {
+    ensureCwVirtualScroll(tbody);
+    const { start, end, rowH } = cwVirtualRange(filtered.length, tbody);
+    _cwLastWindow = `${start}:${end}:${filtered.length}`;
+    items = [
+      { __spacer: 'top', height: start * rowH },
+      ...filtered.slice(start, end),
+      { __spacer: 'bottom', height: (filtered.length - end) * rowH },
+    ];
+  } else {
+    _cwLastWindow = '';
+  }
+
+  reconcileKeyedTable(
+    tbody,
+    items,
+    (c) => (c.__spacer ? `__cw-spacer-${c.__spacer}` : c.id || c.name),
+    (c) => (c.__spacer ? createCwSpacerRow(c) : createCwContainerRow(c, currentHost)),
+    (tr, c) => (c.__spacer ? updateCwSpacerRow(tr, c) : updateCwContainerRow(tr, c, currentHost))
+  );
+
+  // Spacer maths uses the real row-to-row distance: it includes the gap between
+  // the card rows on phones (flex layout), which a row's own height does not.
+  const rows = tbody.querySelectorAll('tr:not(.cw-virtual-spacer)');
+  if (rows.length > 1) {
+    const first = rows[0].getBoundingClientRect().top;
+    const last = rows[rows.length - 1].getBoundingClientRect().top;
+    const stride = (last - first) / (rows.length - 1);
+    if (stride > 0) _cwRowHeight = stride;
+  } else if (rows.length === 1 && rows[0].offsetHeight > 0) {
+    _cwRowHeight = rows[0].offsetHeight;
+  }
+  // The real scroller may only overflow once spacers exist; re-attach if so.
+  if (filtered.length >= CW_VIRTUALIZE_MIN_ROWS) ensureCwVirtualScroll(tbody);
+}
+
+export function getCwFilteredContainerIds() {
+  return _cwFilteredList.map((c) => c.id).filter(Boolean);
 }
 
 function buildCwContainerRowInner(c, currentHost) {
