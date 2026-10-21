@@ -1797,19 +1797,6 @@ async def async_stop_qemu(vm_id: str, force: bool = False):
     await asyncio.to_thread(_sync_cleanup_qemu_process, vm_id, force=force)
 
 
-def _stop_qemu(vm_id: str, force: bool = False):
-    """Synchronous stop wrapper for backwards compatibility."""
-    if not force:
-        qmp_res = _qmp_command(vm_id, "system_powerdown", timeout=1.5)
-        if "return" in qmp_res:
-            logger.info(f"[VM-{vm_id}] ACPI powerdown signal sent via QMP.")
-            for _ in range(20):
-                time.sleep(0.1)
-                if not _is_qemu_process_alive(vm_id):
-                    break
-    _sync_cleanup_qemu_process(vm_id, force=force)
-
-
 def _get_host_ip() -> str:
     from backend.state import Z_STATE
 
@@ -2573,7 +2560,8 @@ def delete_vm(
     if target.get("state") == "running":
         raise HTTPException(status_code=400, detail="Cannot delete a running virtual machine. Stop it first.")
 
-    _stop_qemu(vm_id, force=True)
+    # Sync endpoint (runs in FastAPI's threadpool); a forced stop needs no ACPI wait.
+    _sync_cleanup_qemu_process(vm_id, force=True)
     vms = [v for v in vms if v["id"] != vm_id]
     _save_vms(vms)
     if purge_disks:

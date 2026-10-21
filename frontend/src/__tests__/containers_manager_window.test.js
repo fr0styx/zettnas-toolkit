@@ -6,7 +6,8 @@ import {
   loadContainersData,
   startCwAutoRefresh,
   stopCwAutoRefresh,
-  _resetCwAutoRefreshForTesting
+  _resetCwAutoRefreshForTesting,
+  CW_WATCHDOG_MS
 } from '../components/containers-manager.js';
 import { DockManager } from '../components/dock.js';
 import { ZettEventBus } from '../event-bus.js';
@@ -321,30 +322,61 @@ describe('Dedicated Containers Window & Desktop Icon Suite', () => {
     expect(cards[1].textContent).toContain('immich');
   });
 
-  it('startCwAutoRefresh periodically polls /api/docker/containers while window is open and pauses on minimize', async () => {
+  it('does not poll /api/docker/containers while the SSE stream is live', async () => {
     vi.useFakeTimers();
+    _resetCwAutoRefreshForTesting();
     initContainersManager();
-    openContainersManager();
-
     const getSpy = vi.spyOn(api, 'get').mockResolvedValue([]);
+    openContainersManager();
+    const containerCalls = () => getSpy.mock.calls.filter((c) => c[0] === '/api/docker/containers').length;
+    const afterOpen = containerCalls();
 
-    // Fast-forward 3500ms
-    await vi.advanceTimersByTimeAsync(3500);
-    let calls = getSpy.mock.calls.filter((c) => c[0] === '/api/docker/containers');
-    expect(calls.length).toBeGreaterThanOrEqual(1);
+    // Real SSE ticks every 1-2 s; simulate a minute of live stream.
+    for (let i = 0; i < 30; i++) {
+      ZettEventBus.emit('stats:updated', { docker: [] });
+      await vi.advanceTimersByTimeAsync(2000);
+    }
+    expect(containerCalls()).toBe(afterOpen);
 
-    await vi.advanceTimersByTimeAsync(3500);
-    calls = getSpy.mock.calls.filter((c) => c[0] === '/api/docker/containers');
-    expect(calls.length).toBeGreaterThanOrEqual(2);
+    stopCwAutoRefresh();
+    vi.useRealTimers();
+  });
 
-    // Minimize window
-    const minBtn = document.getElementById('containers-min');
-    minBtn.click();
+  it('falls back to HTTP when the SSE stream goes quiet, and pauses on minimize', async () => {
+    vi.useFakeTimers();
+    _resetCwAutoRefreshForTesting();
+    initContainersManager();
+    const getSpy = vi.spyOn(api, 'get').mockResolvedValue([]);
+    openContainersManager();
+    const containerCalls = () => getSpy.mock.calls.filter((c) => c[0] === '/api/docker/containers').length;
+    const afterOpen = containerCalls();
 
-    const callsBefore = calls.length;
-    await vi.advanceTimersByTimeAsync(7000);
-    calls = getSpy.mock.calls.filter((c) => c[0] === '/api/docker/containers');
-    expect(calls.length).toBe(callsBefore);
+    await vi.advanceTimersByTimeAsync(CW_WATCHDOG_MS);
+    expect(containerCalls()).toBe(afterOpen + 1);
+
+    document.getElementById('containers-min').click();
+    const beforeMin = containerCalls();
+    await vi.advanceTimersByTimeAsync(CW_WATCHDOG_MS * 3);
+    expect(containerCalls()).toBe(beforeMin);
+
+    stopCwAutoRefresh();
+    vi.useRealTimers();
+  });
+
+  it('fetches update status on open and then about once a minute', async () => {
+    vi.useFakeTimers();
+    _resetCwAutoRefreshForTesting();
+    initContainersManager();
+    const getSpy = vi.spyOn(api, 'get').mockResolvedValue({ updates_available_count: 0 });
+    openContainersManager();
+    const statusCalls = () => getSpy.mock.calls.filter((c) => c[0] === '/api/docker/updates/status').length;
+    expect(statusCalls()).toBe(1);
+
+    for (let i = 0; i < 4; i++) {
+      ZettEventBus.emit('stats:updated', { docker: [] });
+      await vi.advanceTimersByTimeAsync(CW_WATCHDOG_MS);
+    }
+    expect(statusCalls()).toBe(2);
 
     stopCwAutoRefresh();
     vi.useRealTimers();

@@ -5,7 +5,7 @@
  */
 
 import { api } from '../api.js';
-import { escapeHtml, trapFocus } from '../utils.js';
+import { escapeHtml, trapFocus, reconcileKeyedTable } from '../utils.js';
 import { ZettEventBus } from '../event-bus.js';
 import { showToast, showConfirmToast, showPromptToast, showBottomSheet } from '../toast.js';
 import { t } from '../i18n.js';
@@ -326,6 +326,48 @@ function renderTelemetry(tel) {
   }
 }
 
+// Fields that change the card's layout or content. When none of these change,
+// only the live CPU/RAM numbers are patched so popovers, focus and selection survive.
+function vmCardStructKey(vm, vms) {
+  return [
+    vms.findIndex((v) => v.id === vm.id),
+    vm.state,
+    vm.qemu_pid,
+    vm.name,
+    vm.description,
+    vm.os_family,
+    vm.boot_order,
+    vm.iso_path,
+    vm.ip_address,
+    vm.vcpus,
+    vm.ram_gb,
+    vm.disk_size_gb,
+    vm.disk_format,
+    vm.bridge,
+    vm.vnc_port,
+    vm.ssh_port,
+  ].join('|');
+}
+
+function vmCardFromHtml(html) {
+  const tpl = document.createElement('template');
+  tpl.innerHTML = html.trim();
+  return tpl.content.firstElementChild;
+}
+
+function patchVmCardTelemetry(card, vm) {
+  const cpuUsagePct = vm.cpu_usage_pct !== undefined ? vm.cpu_usage_pct : 0.0;
+  const ramUsagePct = vm.ram_usage_pct !== undefined ? vm.ram_usage_pct : 0.0;
+  const ramUsedGb = (parseFloat(vm.ram_gb || 2) * (parseFloat(ramUsagePct) / 100)).toFixed(1);
+  const vals = card.querySelectorAll('.vm-telemetry-row .telemetry-val');
+  if (vals[0]) vals[0].textContent = `${cpuUsagePct}%`;
+  if (vals[1]) vals[1].textContent = `${ramUsedGb} / ${vm.ram_gb} GB`;
+  const cpuFill = card.querySelector('.vm-telemetry-row .fill-cpu');
+  if (cpuFill) cpuFill.style.width = `${Math.min(100, Math.round(parseFloat(cpuUsagePct) * 4))}%`;
+  const ramFill = card.querySelector('.vm-telemetry-row .fill-ram');
+  if (ramFill) ramFill.style.width = `${Math.min(100, Math.round(ramUsagePct))}%`;
+}
+
 function renderVmGrid(vms) {
   const grid = document.getElementById('vm-grid');
   const emptyState = document.getElementById('vm-empty-state');
@@ -339,31 +381,37 @@ function renderVmGrid(vms) {
 
   if (emptyState) emptyState.style.display = 'none';
 
-  // Keyed DOM reconciliation check: avoid destroying DOM when telemetry/state is unchanged
-  const existingCards = new Map();
-  grid.querySelectorAll('.glassmorphic-card[data-vm-id]').forEach((c) => {
-    existingCards.set(c.dataset.vmId, c);
-  });
-
-  const currentIds = new Set(vms.map((v) => v.id));
-  let stateChanged = existingCards.size !== currentIds.size;
-  if (!stateChanged) {
-    for (const vm of vms) {
-      const card = existingCards.get(vm.id);
-      const stateKey = `${vm.state}|${vm.qemu_pid}|${vm.cpu_usage_pct}|${vm.ram_usage_pct}|${vm.ip_address}|${vm.vcpus}|${vm.ram_gb}|${vm.disk_size_gb}|${vm.name}`;
-      if (!card || card.dataset.stateKey !== stateKey) {
-        stateChanged = true;
-        break;
+  // Keyed reconciliation (AGENTS.md §1.3): keep each card node between refreshes,
+  // rebuild a single card only when its structure changes.
+  let needsBinding = false;
+  reconcileKeyedTable(
+    grid,
+    vms,
+    (vm) => vm.id,
+    (vm) => {
+      const card = vmCardFromHtml(buildVmCardHtml(vm, vms));
+      card.dataset.structKey = vmCardStructKey(vm, vms);
+      needsBinding = true;
+      return card;
+    },
+    (card, vm) => {
+      const structKey = vmCardStructKey(vm, vms);
+      if (card.dataset.structKey === structKey) {
+        patchVmCardTelemetry(card, vm);
+        return;
       }
-    }
-  }
+      const fresh = vmCardFromHtml(buildVmCardHtml(vm, vms));
+      card.innerHTML = fresh.innerHTML;
+      for (const { name, value } of Array.from(fresh.attributes)) card.setAttribute(name, value);
+      card.dataset.structKey = structKey;
+      needsBinding = true;
+    },
+  );
 
-  if (!stateChanged && existingCards.size > 0) {
-    return;
-  }
+  if (needsBinding) bindVmGridHandlers(grid);
+}
 
-  grid.innerHTML = vms
-    .map((vm) => {
+function buildVmCardHtml(vm, vms) {
       const stateKey = `${vm.state}|${vm.qemu_pid}|${vm.cpu_usage_pct}|${vm.ram_usage_pct}|${vm.ip_address}|${vm.vcpus}|${vm.ram_gb}|${vm.disk_size_gb}|${vm.name}`;
       const isRunning = vm.state === 'running';
       const isPaused = vm.state === 'paused';
@@ -661,9 +709,10 @@ function renderVmGrid(vms) {
         </div>
       </div>
     `;
-    })
-    .join('');
+}
 
+// Handlers use `onclick =`, so re-running this on kept cards never double-binds.
+function bindVmGridHandlers(grid) {
   // Attach Action Handlers
   grid.querySelectorAll('.btn-vm-more-sheet').forEach((btn) => {
     btn.onclick = (e) => {

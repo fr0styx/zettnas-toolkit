@@ -507,6 +507,7 @@ export function initContainersManager() {
   });
   ZettEventBus.on('stats:updated', (stats) => {
     if (!stats || !Array.isArray(stats.docker)) return;
+    _cwLastSseAt = Date.now();
     if (!containersWindow) {
       containersWindow = document.getElementById('containers-manager-window');
     }
@@ -532,9 +533,28 @@ export function initContainersManager() {
 let _cwAutoRefreshTimer = null;
 let _isCwAutoRefreshing = false;
 let _cwAutoRefreshCount = 0;
+let _cwLastSseAt = 0;
+
+// Live container data arrives over SSE (stats:updated), so there is no REST poll.
+// A slow watchdog refreshes update badges and falls back to HTTP only when the
+// stream has gone quiet.
+export const CW_WATCHDOG_MS = 15000;
+export const CW_SSE_STALE_MS = 10000;
+const CW_UPDATES_EVERY_TICKS = 4; // ~60 s
+
+function refreshCwUpdatesStatus() {
+  return api
+    .get('/api/docker/updates/status')
+    .then((res) => {
+      _cwUpdatesCache = res;
+      updateCwUpdatesUI(res?.updates_available_count || 0);
+    })
+    .catch(() => {});
+}
 
 export function startCwAutoRefresh() {
   if (_cwAutoRefreshTimer) return;
+  refreshCwUpdatesStatus();
   _cwAutoRefreshTimer = setInterval(async () => {
     if (typeof document !== 'undefined' && document.hidden) return;
     if (!containersWindow) {
@@ -553,22 +573,18 @@ export function startCwAutoRefresh() {
     _isCwAutoRefreshing = true;
     try {
       _cwAutoRefreshCount++;
-      if (_cwAutoRefreshCount % 6 === 0) {
-        api.get('/api/docker/updates/status').then((res) => {
-          _cwUpdatesCache = res;
-          updateCwUpdatesUI(res.updates_available_count || 0);
-        }).catch(() => {});
+      if (_cwAutoRefreshCount % CW_UPDATES_EVERY_TICKS === 0) {
+        refreshCwUpdatesStatus();
       }
-      // Telemetry arrives in real-time over SSE (stats:updated); fallback to HTTP poll only if empty
-      if (!_cwContainersList || _cwContainersList.length === 0) {
+      if (Date.now() - _cwLastSseAt > CW_SSE_STALE_MS) {
         await loadContainersData(true);
       }
     } catch (e) {
-      console.warn('CW background auto-refresh poll error:', e);
+      console.warn('CW watchdog refresh error:', e);
     } finally {
       _isCwAutoRefreshing = false;
     }
-  }, 3500);
+  }, CW_WATCHDOG_MS);
 }
 
 export function stopCwAutoRefresh() {
@@ -582,6 +598,7 @@ export function _resetCwAutoRefreshForTesting() {
   stopCwAutoRefresh();
   _isCwAutoRefreshing = false;
   _cwAutoRefreshCount = 0;
+  _cwLastSseAt = 0;
   _cwContainersList = [];
   _cwUpdatesCache = null;
 }
