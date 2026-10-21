@@ -480,13 +480,19 @@ def sync_catalog_source(source_id: str) -> Dict[str, Any]:
         return src
 
     try:
-        req = urllib.request.Request(
+        from backend.services.safe_fetch import safe_fetch
+
+        status, _hdrs, body = safe_fetch(
             url,
+            context="lan",
             headers={"User-Agent": "ZettNAS-Toolkit/1.5 (+https://github.com/fr0styx/zettnas-toolkit)"},
+            timeout=15,
+            max_bytes=20 * 1024 * 1024,
         )
-        with urllib.request.urlopen(req, timeout=15) as resp:
-            raw_text = resp.read().decode("utf-8", errors="replace")
-            data = json.loads(raw_text)
+        if status != 200:
+            raise ValueError(f"HTTP {status}")
+        raw_text = body.decode("utf-8", errors="replace")
+        data = json.loads(raw_text)
 
         templates = data.get("templates", []) if isinstance(data, dict) else (data if isinstance(data, list) else [])
 
@@ -664,9 +670,12 @@ def sideload_app_manifest(
         u = url.strip()
         if not u.startswith(("http://", "https://")):
             raise ValueError("URL must start with http:// or https://")
-        req = urllib.request.Request(u, headers={"User-Agent": "ZettNAS-Toolkit/1.0"})
-        with urllib.request.urlopen(req, timeout=15) as resp:
-            raw_text = resp.read().decode("utf-8", errors="replace")
+        from backend.services.safe_fetch import safe_fetch
+
+        status, _hdrs, body = safe_fetch(u, context="lan", headers={"User-Agent": "ZettNAS-Toolkit/1.0"}, timeout=15)
+        if status != 200:
+            raise ValueError(f"Could not download the manifest (HTTP {status})")
+        raw_text = body.decode("utf-8", errors="replace")
     elif manifest_content:
         raw_text = manifest_content.strip()
     else:

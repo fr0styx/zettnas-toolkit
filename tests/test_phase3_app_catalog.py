@@ -211,7 +211,7 @@ def test_add_sync_toggle_delete_custom_source(client, auth_headers, tmp_path):
     mock_resp.read.return_value = raw_json_bytes
     mock_resp.__enter__.return_value = mock_resp
 
-    with patch("urllib.request.urlopen", return_value=mock_resp):
+    with patch("backend.services.safe_fetch.safe_fetch", return_value=(200, {}, raw_json_bytes)):
         # 1. Add source
         add_res = client.post(
             "/api/docker/catalog/sources",

@@ -107,7 +107,10 @@ def test_feed_sync_and_ical_parsing(client, auth_headers):
 
     with (
         patch("backend.api.calendar.validate_public_url", return_value=(True, "")),
-        patch("urllib.request.urlopen", return_value=mock_resp),
+        patch(
+            "backend.services.safe_fetch.safe_fetch",
+            return_value=(200, {"content-type": "text/calendar; charset=utf-8"}, sample_ics.encode("utf-8")),
+        ),
     ):
         feed_payload = {
             "name": "Work Calendar",

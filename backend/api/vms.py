@@ -1055,8 +1055,14 @@ def _download_iso_worker(task_id: str, catalog_item: Dict[str, Any], target_dir:
     hasher = hashlib.sha256()
 
     try:
-        req = urllib.request.Request(url, headers={"User-Agent": "ZettNAS-Hypervisor/2.0"})
-        with urllib.request.urlopen(req, timeout=30) as resp, open(tmp_path, "wb") as f:
+        from backend.services.safe_fetch import safe_open
+
+        with (
+            safe_open(url, context="public", headers={"User-Agent": "ZettNAS-Hypervisor/2.0"}, timeout=30) as resp,
+            open(tmp_path, "wb") as f,
+        ):
+            if resp.status != 200:
+                raise ValueError(f"HTTP {resp.status}")
             content_len = resp.headers.get("Content-Length")
             if content_len:
                 try:

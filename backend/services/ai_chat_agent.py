@@ -2203,8 +2203,9 @@ def tool_browse_internet(query: str, max_results: int = 5) -> Dict[str, Any]:
             logger.warning(f"[AIChatAgent] Blocked SSRF attempt to non-public URL: {target_url}")
         else:
             try:
-                req = urllib.request.Request(target_url, headers=browser_headers)
-                with urllib.request.urlopen(req, timeout=5.0) as resp:
+                from backend.services.safe_fetch import safe_open
+
+                with safe_open(target_url, context="public", headers=browser_headers, timeout=5.0) as resp:
                     raw_body = resp.read(120_000).decode("utf-8", errors="replace")
                     title_m = re.search(r"<title[^>]*>(.*?)</title>", raw_body, flags=re.IGNORECASE | re.DOTALL)
                     page_title = _strip_html_tags(title_m.group(1)) if title_m else target_url

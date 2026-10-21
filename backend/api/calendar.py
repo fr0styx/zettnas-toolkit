@@ -193,16 +193,23 @@ async def _sync_single_feed(feed: Dict[str, Any]) -> List[Dict[str, Any]]:
         return []
 
     def _do_fetch() -> str:
-        req = urllib.request.Request(
+        from backend.services.safe_fetch import safe_fetch
+
+        status, hdrs, body = safe_fetch(
             raw_url,
+            context="public",
             headers={
                 "User-Agent": "ZettNAS-Calendar/1.0 (Home Cloud OS; +https://zettnas.local)",
                 "Accept": "text/calendar, text/plain, */*",
             },
+            timeout=12,
+            max_bytes=10 * 1024 * 1024,
         )
-        with urllib.request.urlopen(req, timeout=12) as resp:
-            charset = resp.headers.get_content_charset() or "utf-8"
-            return resp.read().decode(charset, errors="replace")
+        if status != 200:
+            raise ValueError(f"HTTP {status}")
+        ctype = hdrs.get("content-type", "")
+        charset = ctype.split("charset=", 1)[1].split(";")[0].strip() if "charset=" in ctype else "utf-8"
+        return body.decode(charset or "utf-8", errors="replace")
 
     try:
         ics_text = await asyncio.to_thread(_do_fetch)
