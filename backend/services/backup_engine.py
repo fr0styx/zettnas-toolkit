@@ -119,14 +119,10 @@ def restore_backup_archive(archive_file: BinaryIO) -> None:
             if not extracted_path.startswith(target_dir + os.sep) and extracted_path != target_dir:
                 raise ValueError(f"Illegal path in archive: {member.filename}")
 
-        # Safe extraction: use Python 3.12+ data filter if available
-        try:
-            z.extractall(target_dir, filter="data")
-        except TypeError:
-            # Fallback for Python versions prior to 3.12
-            for member in members:
-                if not member.is_dir():
-                    z.extract(member, target_dir)
+        # Every member was validated above (no symlinks, no paths outside target_dir).
+        for member in members:
+            if not member.is_dir():
+                z.extract(member, target_dir)
 
     logger.info("[BACKUP] Configuration restored successfully from backup archive.")
 

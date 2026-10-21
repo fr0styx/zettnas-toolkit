@@ -869,10 +869,21 @@ class TransferTaskManager:
                     if archive_size > 0 and (total_uncompressed / archive_size) > 100:
                         raise ValueError("Archive exceeds safe compression ratio (> 100:1)")
 
+                    # Check every member before writing anything (SEC-03): no paths,
+                    # links or link targets outside dest_dir, no device files.
                     for m in members:
                         target = os.path.abspath(os.path.join(dest_dir, m.name))
                         if os.path.commonpath([dest_dir, target]) != dest_dir:
                             raise ValueError(f"Tar-Slip path traversal attempt detected in: {m.name}")
+                        if m.isdev():
+                            raise ValueError(f"Device files are not allowed in archives: {m.name}")
+                        if m.issym() or m.islnk():
+                            if os.path.isabs(m.linkname):
+                                raise ValueError(f"Absolute link target not allowed: {m.name}")
+                            base = os.path.dirname(target) if m.issym() else dest_dir
+                            link_target = os.path.abspath(os.path.join(base, m.linkname))
+                            if os.path.commonpath([dest_dir, link_target]) != dest_dir:
+                                raise ValueError(f"Link pointing outside the destination: {m.name}")
 
                     task.total_files = len(members)
                     task.total_bytes = total_uncompressed
@@ -886,7 +897,8 @@ class TransferTaskManager:
                             time.sleep(0.2)
 
                         task.current_file = m.name
-                        tf.extract(m, dest_dir)
+                        # "data" filter: re-checks links at write time, drops setuid bits.
+                        tf.extract(m, dest_dir, filter="data")
                         task.processed_files += 1
                         task.processed_bytes += m.size
                         now = time.time()

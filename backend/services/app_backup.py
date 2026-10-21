@@ -159,8 +159,14 @@ def is_safe_tar_member(member: tarfile.TarInfo, target_dir: str) -> bool:
     extracted_abs = os.path.abspath(os.path.join(target_dir, member.name))
     if not (extracted_abs == target_abs or extracted_abs.startswith(target_abs + os.sep)):
         return False
+    if member.isdev():
+        return False
     if member.issym() or member.islnk():
-        link_abs = os.path.abspath(os.path.join(os.path.dirname(extracted_abs), member.linkname))
+        if os.path.isabs(member.linkname):
+            return False
+        # Symlinks resolve from their own folder, hard links from the archive root.
+        base = os.path.dirname(extracted_abs) if member.issym() else target_abs
+        link_abs = os.path.abspath(os.path.join(base, member.linkname))
         if not (link_abs == target_abs or link_abs.startswith(target_abs + os.sep)):
             return False
     return True
@@ -454,12 +460,8 @@ def restore_app_backup(
                     if is_safe_tar_member(m_copy, src):
                         members_to_extract.append(m_copy)
 
-            # Safe extraction
-            try:
-                tar.extractall(src, members=members_to_extract, filter="data")
-            except TypeError:
-                for m_item in members_to_extract:
-                    tar.extract(m_item, src)
+            # Safe extraction (Python 3.12+; never fall back to unfiltered extraction, SEC-03)
+            tar.extractall(src, members=members_to_extract, filter="data")
 
     app_name = manifest.get("app_name", "app")
     logger.info(f"[App Backup] Restored data for '{app_name}' from backup '{backup_id}'.")
