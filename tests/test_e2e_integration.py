@@ -15,6 +15,21 @@ import backend.config as config
 from backend.config import STATIC_DIR
 
 
+E2E_REQUIRED = os.environ.get("ZETTNAS_E2E_REQUIRED") == "1"
+
+
+def _skip_or_fail(reason):
+    """In CI (ZETTNAS_E2E_REQUIRED=1) a missing server or browser is a failure, not a skip."""
+    if E2E_REQUIRED:
+        pytest.fail(reason)
+    pytest.skip(reason)
+
+
+def test_e2e_server_reachable_when_required():
+    if E2E_REQUIRED and not is_server_reachable():
+        pytest.fail("ZETTNAS_E2E_REQUIRED=1 but the test server is not reachable on port 8082")
+
+
 def is_server_reachable(base_url="http://127.0.0.1:8082"):
     try:
         with urllib.request.urlopen(f"{base_url}/api/health", timeout=1.5) as resp:
@@ -97,7 +112,7 @@ def test_e2e_live_ui_and_lcd_geometry():
                 executable_path=executable_path,
             )
         except Exception as e:
-            pytest.skip(f"Playwright chromium browser not available on test runner: {e}")
+            _skip_or_fail(f"Playwright chromium browser not available on test runner: {e}")
 
         context = browser.new_context(viewport={"width": 172, "height": 640})
         page = context.new_page()
@@ -124,7 +139,7 @@ def test_e2e_live_ui_and_lcd_geometry():
 def test_e2e_live_desktop_session_and_badge():
     token = get_live_server_auth_token()
     if not token:
-        pytest.skip("Could not obtain auth token for live test server")
+        _skip_or_fail("Could not obtain auth token for live test server")
 
     executable_path = os.environ.get("PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH")
     with sync_playwright() as p:
@@ -135,7 +150,7 @@ def test_e2e_live_desktop_session_and_badge():
                 executable_path=executable_path,
             )
         except Exception as e:
-            pytest.skip(f"Playwright chromium browser not available on test runner: {e}")
+            _skip_or_fail(f"Playwright chromium browser not available on test runner: {e}")
 
         context = browser.new_context(
             viewport={"width": 1440, "height": 900},

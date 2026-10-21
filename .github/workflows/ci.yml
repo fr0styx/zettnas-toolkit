@@ -10,6 +10,7 @@ on:
 permissions:
   contents: write
   packages: write
+  id-token: write # keyless cosign signing (OIDC)
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -123,11 +124,11 @@ jobs:
               except Exception:
                   time.sleep(0.5)
           else:
-              print('Timed out waiting for test server.')
+              raise SystemExit('Timed out waiting for the test server.')
           "
 
-          # Execute full Playwright E2E Integration Suite
-          pytest tests/test_e2e_integration.py -v
+          # Execute full Playwright E2E Integration Suite; skips count as failures here
+          ZETTNAS_E2E_REQUIRED=1 pytest tests/test_e2e_integration.py -v
 
           # Shutdown background server cleanly
           kill $SERVER_PID || true
@@ -191,19 +192,53 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=sha,format=short
 
-      - name: Build and push Multi-Arch Docker image
+      # Push under the commit tag only; the public tags are added after the scan and signature.
+      - name: Build and push Multi-Arch Docker image (commit tag)
+        id: build
         uses: docker/build-push-action@v7
         with:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: ghcr.io/${{ github.repository }}:sha-${{ github.sha }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             BUILD_COMMIT=${{ github.sha }}
             BUILD_DATE=${{ steps.meta.outputs.created }}
+          provenance: mode=max
+          sbom: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      # Release gate (OPS-06): no Critical vulnerability that already has a fix.
+      - name: Scan image with Trivy
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ghcr.io/${{ github.repository }}@${{ steps.build.outputs.digest }}
+          severity: CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+          format: table
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+
+      # Keyless signature bound to this workflow's identity; nothing to keep secret.
+      - name: Sign image digest
+        run: cosign sign --yes "ghcr.io/${{ github.repository }}@${{ steps.build.outputs.digest }}"
+
+      - name: Publish tags for the verified digest
+        env:
+          TAGS: ${{ steps.meta.outputs.tags }}
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          args=()
+          while IFS= read -r tag; do
+            [ -n "$tag" ] && args+=(-t "$tag")
+          done <<< "$TAGS"
+          docker buildx imagetools create "${args[@]}" "ghcr.io/${{ github.repository }}@${DIGEST}"
+          echo "Published ${#args[@]} tag argument(s) for ${DIGEST}" >> "$GITHUB_STEP_SUMMARY"
+          echo "Verify: cosign verify ghcr.io/${{ github.repository }}@${DIGEST} --certificate-identity-regexp 'https://github.com/${{ github.repository }}/' --certificate-oidc-issuer https://token.actions.githubusercontent.com" >> "$GITHUB_STEP_SUMMARY"
 
   create-release:
     name: GitHub Release & Release Notes
