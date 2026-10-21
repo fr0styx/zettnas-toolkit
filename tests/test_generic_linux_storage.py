@@ -323,7 +323,14 @@ def test_api_pool_snapshots_and_lifecycle(client, auth_headers, monkeypatch, tmp
         "profile": "raid1",
         "disks": ["sdb", "sdc"],
         "mountpoint": mount_dir,
+        "confirm_name": "datapool",
+        "current_password": "admin",
     }
+    # Disk checks need real block devices (covered in test_sec08_disks.py)
+    from backend import config
+
+    monkeypatch.setattr("backend.hardware.disk_safety.check_disks", lambda disks, allow_erase=False: [])
+    monkeypatch.setattr(config, "POOL_PATH", str(tmp_path))
     create_pool_res = client.post("/api/storage/pools", json=pool_payload, headers=auth_headers)
     assert create_pool_res.status_code == 200
     assert create_pool_res.json()["name"] == "datapool"

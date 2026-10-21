@@ -28,6 +28,7 @@ _MAX_PENDING = 1000
 # action -> what the user is asked (target is filled in from path parameters)
 ACTIONS: Dict[str, str] = {
     "fs.trash.empty": "Permanently delete everything in the trash",
+    "storage.pool.create": "Create a storage pool, erasing the selected disks",
     "storage.pool.delete": "Delete storage pool {target}",
     "storage.snapshot.delete": "Delete snapshot {target}",
     "storage.snapshot.restore": "Roll the pool back to snapshot {target}; newer changes are lost",

@@ -9,6 +9,12 @@ import {
 } from '../components/chassis-visualizer.js';
 import { api } from '../api.js';
 
+// Pool creation asks for the typed pool name and the password (SEC-08); answer from a queue.
+vi.mock('../toast.js', async (importOriginal) => {
+  const mod = await importOriginal();
+  return { ...mod, showPromptToast: (title, msg, def, onOk) => onOk(globalThis.__promptAnswers?.shift() ?? '') };
+});
+
 describe('Sprint 5: Generic Linux Active Provisioner & Samba Engine (Frontend)', () => {
   let container;
 
@@ -221,6 +227,7 @@ describe('Sprint 5: Generic Linux Active Provisioner & Samba Engine (Frontend)',
     checkboxes[0].checked = true;
     checkboxes[1].checked = true;
 
+    globalThis.__promptAnswers = ['vault', 'my-password'];
     const form = document.getElementById('create-pool-form');
     form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
 
@@ -232,7 +239,9 @@ describe('Sprint 5: Generic Linux Active Provisioner & Samba Engine (Frontend)',
       profile: 'raid1',
       disks: ['sdb', 'sdc'],
       mountpoint: '/mnt/storage/vault',
-    });
+      confirm_name: 'vault',
+      current_password: 'my-password',
+    }, { confirmed: true });
     expect(successCalled).toBe(true);
   });
 });

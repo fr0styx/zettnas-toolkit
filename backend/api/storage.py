@@ -5,11 +5,14 @@ and network shares (Samba/NFS/WebDAV).
 """
 
 import logging
+import os
 from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
-from backend.auth import require_scope
+from backend import config
+from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
+from backend.errors import error_response
 from backend.confirmations import require_confirmation
 from backend.hardware.pal_storage import (
     PlatformCapabilityError,
@@ -32,6 +35,11 @@ class StoragePoolCreateRequest(BaseModel):
     profile: str = "raid1"
     disks: List[str] = Field(default_factory=list)
     mountpoint: str = ""
+    # Formatting is irreversible (SEC-08): the user types the pool name and their password,
+    # and must say so explicitly when the disks still hold data.
+    confirm_name: str = ""
+    current_password: str = ""
+    erase_existing_data: bool = False
 
 
 class StoragePoolExportRequest(BaseModel):
@@ -239,12 +247,23 @@ def update_storage_schedule_config(req: Dict[str, Any]) -> Dict[str, Any]:
     return save_smart_schedule(req)
 
 
-@router.post("/pools", dependencies=[Depends(require_scope("storage:admin"))])
-def create_storage_pool(req: StoragePoolCreateRequest) -> Dict[str, Any]:
+@router.post(
+    "/pools",
+    dependencies=[Depends(require_scope("storage:admin")), Depends(require_confirmation("storage.pool.create"))],
+)
+def create_storage_pool(
+    req: StoragePoolCreateRequest, principal: AuthenticatedPrincipal = Depends(get_current_principal)
+) -> Dict[str, Any]:
     """
     Creates a new storage pool. In Observer Mode (e.g. Unraid, TrueNAS),
     this operation is strictly rejected to protect host array parity.
     """
+    import re as _re
+
+    from backend.hardware.disk_safety import check_disks
+    from backend.passwords import verify_password
+    from backend.users_db import get_user_by_id
+
     adapter = get_storage_platform()
     caps = adapter.get_capabilities()
     if caps.is_observer_mode:
@@ -253,13 +272,44 @@ def create_storage_pool(req: StoragePoolCreateRequest) -> Dict[str, Any]:
             detail=f"Forbidden in Observer Mode on {adapter.get_platform_type().value}. "
             "Storage pools and RAID arrays must be managed authoritatively by the host OS.",
         )
+    if not _re.match(r"^[A-Za-z][A-Za-z0-9_-]{0,31}$", req.name or ""):
+        raise HTTPException(
+            status_code=400, detail="Pool name: letters, digits, - and _ (max 32), starting with a letter."
+        )
+    if req.fs_type.lower() not in ("btrfs", "zfs", "ext4", "xfs"):
+        raise HTTPException(status_code=400, detail="Unsupported filesystem.")
+    if req.confirm_name != req.name:
+        raise HTTPException(status_code=400, detail="Type the pool name to confirm that the disks will be erased.")
+    user = get_user_by_id(principal.user_id) if principal and principal.user_id else None
+    if not user or not verify_password(req.current_password or "", user.get("password_hash", "")):
+        raise HTTPException(status_code=403, detail="Current password is incorrect.")
+
+    mountpoint = (req.mountpoint or "").strip()
+    if mountpoint:
+        pool_root = os.path.realpath(getattr(config, "POOL_PATH", "") or "/mnt")
+        real_mp = os.path.realpath(mountpoint)
+        if not real_mp.startswith(pool_root.rstrip("/") + "/") or _re.search(r"[\x00-\x1f,]", mountpoint):
+            raise HTTPException(status_code=400, detail=f"The mount point must be inside {pool_root}.")
+
+    resolve = getattr(adapter, "_resolve_disk_path", None)
+    disks = [resolve(d) if resolve else (d if d.startswith("/") else f"/dev/{d}") for d in req.disks]
+    problems = check_disks(disks, allow_erase=req.erase_existing_data)
+    if problems:
+        return error_response(
+            409,
+            "These disks can't be formatted: " + "; ".join(f"{p['disk']}: {p['reason']}" for p in problems),
+            error="disks_not_safe",
+            problems=problems,
+            erasable=all(p.get("erasable") == "true" for p in problems),
+        )
+    logger.warning(f"[Storage] Creating pool '{req.name}' ({req.fs_type}) on {', '.join(disks)}")
     try:
         return adapter.create_pool(
             name=req.name,
             fs_type=req.fs_type,
             profile=req.profile,
             disks=req.disks,
-            mountpoint=req.mountpoint,
+            mountpoint=mountpoint,
         )
     except PlatformCapabilityError as e:
         raise HTTPException(status_code=403, detail=str(e))

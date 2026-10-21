@@ -2857,6 +2857,12 @@ if (typeof window !== 'undefined') {
 /**
  * Opens Create Storage Pool Modal (Generic Linux Active Provisioner)
  */
+function askPoolPrompt(title, msg, inputType) {
+  return new Promise((resolve) => {
+    showPromptToast(title, msg, '', (v) => resolve(v ? v.trim() : null), () => resolve(null), { inputType, okText: 'Continue' });
+  });
+}
+
 export async function openCreateStoragePoolModal(onSuccess) {
   const modal = document.getElementById('modal-create-storage-pool');
   if (!modal) return;
@@ -2970,19 +2976,42 @@ export async function openCreateStoragePoolModal(onSuccess) {
         return;
       }
 
+      // Formatting erases the disks (SEC-08): typed pool name + password, then an explicit
+      // second yes if the server finds existing data on them.
+      const typed = await askPoolPrompt(
+        'Erase and format disks',
+        `Every selected disk (${disks.join(', ')}) will be erased. Type the pool name "${name}" to confirm.`,
+        'text'
+      );
+      if (typed === null) return;
+      const password = await askPoolPrompt('Confirm with your password', 'Enter your ZettNAS password to create the pool.', 'password');
+      if (password === null) return;
+
       if (submitBtn) {
         submitBtn.disabled = true;
         submitBtn.textContent = 'Provisioning...';
       }
 
+      const body = { name, fs_type: fsType, profile, disks, mountpoint, confirm_name: typed, current_password: password };
       try {
-        await api.post('/api/storage/pools', {
-          name,
-          fs_type: fsType,
-          profile,
-          disks,
-          mountpoint,
-        });
+        try {
+          await api.post('/api/storage/pools', body, { confirmed: true });
+        } catch (err) {
+          if (err && err.error === 'disks_not_safe' && err.body && err.body.erasable) {
+            const erase = await new Promise((resolve) => {
+              showConfirmToast(
+                'Disks contain data',
+                `${escapeHtml(err.message)}<br><br>Erase everything on them and continue?`,
+                () => resolve(true),
+                () => resolve(false)
+              );
+            });
+            if (!erase) throw err;
+            await api.post('/api/storage/pools', { ...body, erase_existing_data: true }, { confirmed: true });
+          } else {
+            throw err;
+          }
+        }
 
         close();
         playChirp(880, 0.12, 'sine');
