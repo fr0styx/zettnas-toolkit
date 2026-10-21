@@ -12,7 +12,7 @@ import { t } from '../i18n.js';
 import { bringToFront, makeDraggable, DockManager } from './dock.js';
 import { ZettEventBus } from '../event-bus.js';
 import { openStackModal } from './stack-modal.js';
-import { formatAnsiToHtml } from './vm-manager.js';
+import { createTerminalView } from './terminal-view.js';
 
 let _activeCid = null;
 let _activeCname = null;
@@ -27,6 +27,9 @@ let _termHistory = [];
 let _termHistoryIdx = -1;
 let _activeDetails = null;
 let _activeTermWs = null;
+let _termView = null;
+let _termViewCid = null;
+const TERM_READY_MSG = '# Interactive Container Terminal Ready. Type commands below (e.g. ls -la, uname -a, ps aux)...';
 
 export function initContainerModal() {
   if (document.getElementById('container-inspector-overlay')) return;
@@ -148,9 +151,7 @@ export function initContainerModal() {
                 <button class="btn-pill-toggle" id="ci-term-clear-btn">🧹 Clear</button>
               </div>
             </div>
-            <div id="ci-term-output" style="background:#030712; border:1px solid rgba(255,255,255,0.12); border-radius:6px 6px 0 0; height:310px; overflow-y:auto; padding:12px; font-family:var(--font-mono, monospace); font-size:11px; line-height:1.45; color:#a7f3d0; white-space:pre-wrap; word-break:break-word;">
-              <span style="color:#64748b;"># Interactive Container Terminal Ready. Type commands below (e.g. ls -la, uname -a, ps aux)...</span>
-            </div>
+            <div id="ci-term-output" style="background:#030712; border:1px solid rgba(255,255,255,0.12); border-radius:6px 6px 0 0; height:310px; padding:6px 4px 6px 8px; box-sizing:border-box; overflow:hidden;"></div>
             <div class="ci-term-mobile-keybar" style="display:flex; gap:6px; overflow-x:auto; background:#0b1120; border-left:1px solid rgba(255,255,255,0.12); border-right:1px solid rgba(255,255,255,0.12); padding:5px 8px; scrollbar-width:none;">
               <button type="button" class="btn-pill-toggle ci-term-key-btn" data-cmd="ls -la" style="font-size:10px; padding:2px 8px; flex-shrink:0;">ls -la</button>
               <button type="button" class="btn-pill-toggle ci-term-key-btn" data-cmd="ps aux" style="font-size:10px; padding:2px 8px; flex-shrink:0;">ps aux</button>
@@ -412,6 +413,34 @@ export function closeContainerInspector() {
   _activeComposeData = null;
 }
 
+function sendTermResize(cols, rows) {
+  if (_activeTermWs && _activeTermWs.readyState === WebSocket.OPEN) {
+    try {
+      _activeTermWs.send(JSON.stringify({ type: 'resize', cols, rows }));
+    } catch (_) {}
+  }
+}
+
+function ensureContainerTermView() {
+  const host = document.getElementById('ci-term-output');
+  if (!host) return null;
+  const intact = host.querySelector('.zt-terminal-fallback, .zt-terminal-xterm');
+  if (_termView && _termView.host === host && intact) return _termView;
+  if (_termView) _termView.dispose();
+  _termView = createTerminalView(host, {
+    // Keystrokes go to the shell as binary frames, so they can never be
+    // mistaken for a JSON control message on the server.
+    onData: (d) => {
+      if (_activeTermWs && _activeTermWs.readyState === WebSocket.OPEN) {
+        _activeTermWs.send(new TextEncoder().encode(d));
+      }
+    },
+    onResize: (cols, rows) => sendTermResize(cols, rows),
+  });
+  _termView.writeln(`\x1b[90m${TERM_READY_MSG}\x1b[0m`);
+  return _termView;
+}
+
 export function connectContainerTerminalWs(cid) {
   if (typeof WebSocket === 'undefined') return;
   if (_activeTermWs) {
@@ -419,8 +448,13 @@ export function connectContainerTerminalWs(cid) {
     _activeTermWs = null;
   }
 
-  const output = document.getElementById('ci-term-output');
-  if (!output || !cid) return;
+  const view = ensureContainerTermView();
+  if (!view || !cid) return;
+  if (_termViewCid !== cid) {
+    view.clear();
+    view.writeln(`\x1b[90m${TERM_READY_MSG}\x1b[0m`);
+    _termViewCid = cid;
+  }
 
   const proto = (typeof window !== 'undefined' && window.location.protocol === 'https:') ? 'wss:' : 'ws:';
   const host = typeof window !== 'undefined' ? window.location.host : '127.0.0.1:8082';
@@ -429,23 +463,16 @@ export function connectContainerTerminalWs(cid) {
 
   try {
     const ws = new WebSocket(wsUrl);
+    ws.binaryType = 'arraybuffer';
     _activeTermWs = ws;
 
     ws.onopen = () => {
-      const cols = Math.max(40, Math.floor((output.clientWidth || 600) / 7.5));
-      const rows = Math.max(10, Math.floor((output.clientHeight || 300) / 18));
-      try {
-        ws.send(JSON.stringify({ type: 'resize', cols, rows }));
-      } catch (_) {}
+      const { cols, rows } = view.size();
+      sendTermResize(cols, rows);
     };
 
     ws.onmessage = (event) => {
-      if (typeof event.data === 'string') {
-        const span = document.createElement('span');
-        span.innerHTML = formatAnsiToHtml(event.data);
-        output.appendChild(span);
-        output.scrollTop = output.scrollHeight;
-      }
+      view.write(typeof event.data === 'string' ? event.data : new Uint8Array(event.data));
     };
 
     ws.onerror = (err) => {
@@ -455,6 +482,7 @@ export function connectContainerTerminalWs(cid) {
     ws.onclose = () => {
       if (_activeTermWs === ws) {
         _activeTermWs = null;
+        view.writeln('\r\n\x1b[90m[terminal session closed]\x1b[0m');
       }
     };
   } catch (e) {
@@ -496,8 +524,8 @@ export async function switchContainerTab(tabTarget) {
 
 export async function executeTerminalCmd() {
   const input = document.getElementById('ci-term-input');
-  const output = document.getElementById('ci-term-output');
-  if (!input || !output || !_activeCid) return;
+  const view = ensureContainerTermView();
+  if (!input || !view || !_activeCid) return;
 
   const cmd = input.value.trim();
   if (!cmd) return;
@@ -507,45 +535,27 @@ export async function executeTerminalCmd() {
   input.value = '';
 
   if (_activeTermWs && _activeTermWs.readyState === WebSocket.OPEN) {
-    _activeTermWs.send(cmd + '\n');
+    _activeTermWs.send(new TextEncoder().encode(cmd + '\r'));
     return;
   }
 
+  // No live session: run once through the exec API and print the result.
   const timestamp = new Date().toLocaleTimeString();
-  const cmdNode = document.createElement('div');
-  cmdNode.style.marginTop = '6px';
-  cmdNode.innerHTML = `<span style="color:#64748b; font-size:10px;">[${timestamp}]</span> <span style="color:#10b981; font-weight:bold;">$</span> <span style="color:#f1f5f9; font-weight:600;">${escapeHtml(cmd)}</span>`;
-  output.appendChild(cmdNode);
-
-  const runningNode = document.createElement('div');
-  runningNode.style.color = '#64748b';
-  runningNode.style.fontStyle = 'italic';
-  runningNode.textContent = 'Executing...';
-  output.appendChild(runningNode);
-  output.scrollTop = output.scrollHeight;
-
+  view.writeln(`\x1b[90m[${timestamp}]\x1b[0m \x1b[32;1m$\x1b[0m ${cmd}`);
   try {
     const res = await api.post(`/api/docker/containers/${_activeCid}/exec`, { cmd });
-    runningNode.remove();
-
-    const resultNode = document.createElement('div');
-    resultNode.style.color = '#a7f3d0';
-    resultNode.textContent = res.output || '(No output)';
-    output.appendChild(resultNode);
+    view.write(String(res.output || '(No output)').replace(/\r?\n/g, '\r\n'));
+    view.write('\r\n');
   } catch (err) {
-    runningNode.remove();
-    const errNode = document.createElement('div');
-    errNode.style.color = '#ef4444';
-    errNode.textContent = `Error: ${err.message || err}`;
-    output.appendChild(errNode);
+    view.writeln(`\x1b[31mError: ${err.message || err}\x1b[0m`);
   }
-  output.scrollTop = output.scrollHeight;
 }
 
 export function clearTerminal() {
-  const output = document.getElementById('ci-term-output');
-  if (output) {
-    output.innerHTML = '<span style="color:#64748b;"># Interactive Container Terminal Ready. Type commands below (e.g. ls -la, uname -a, ps aux)...</span>';
+  const view = ensureContainerTermView();
+  if (view) {
+    view.clear();
+    view.writeln(`\x1b[90m${TERM_READY_MSG}\x1b[0m`);
   }
 }
 

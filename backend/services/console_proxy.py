@@ -124,10 +124,9 @@ async def stream_unix_socket_to_websocket(ws: WebSocket, socket_path: str, timeo
                 data = await reader.read(4096)
                 if not data:
                     break
-                try:
-                    await ws.send_text(data.decode("utf-8", errors="replace"))
-                except Exception:
-                    await ws.send_bytes(data)
+                # Raw bytes: decoding each 4 KB chunk on its own garbles UTF-8
+                # characters split across reads; the browser terminal decodes the stream.
+                await ws.send_bytes(data)
         except Exception:
             pass
 

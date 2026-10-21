@@ -121,7 +121,7 @@ async def stream_container_terminal(
         if b"\r\n\r\n" in header_buf:
             leftover = header_buf.split(b"\r\n\r\n", 1)[1]
             if leftover:
-                await ws.send_text(leftover.decode("utf-8", errors="replace"))
+                await ws.send_bytes(leftover)
         else:
             await ws.send_text("\r\n\x1b[31m[Error] Docker upgrade protocol failed.\x1b[0m\r\n")
             writer.close()
@@ -140,8 +140,9 @@ async def stream_container_terminal(
                 data = await reader.read(4096)
                 if not data:
                     break
-                # Send raw ANSI terminal stream
-                await ws.send_text(data.decode("utf-8", errors="replace"))
+                # Raw bytes: per-chunk decoding garbles multi-byte UTF-8 split across
+                # reads; xterm.js in the browser decodes the stream as a whole.
+                await ws.send_bytes(data)
         except (asyncio.CancelledError, Exception):
             pass
 

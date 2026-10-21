@@ -10,6 +10,7 @@ import { ZettEventBus } from '../event-bus.js';
 import { showToast, showConfirmToast, showPromptToast, showBottomSheet } from '../toast.js';
 import { t } from '../i18n.js';
 import { makeDraggable, bringToFront } from './dock.js';
+import { createTerminalView } from './terminal-view.js';
 
 let vmWindow = null;
 let vmList = [];
@@ -3476,6 +3477,63 @@ export let _activeRfb = null;
 export let _activeSerialWs = null;
 export let _reconnectTimer = null;
 export let _serialBuffers = {};
+let _serialView = null;
+let _serialViewVmId = null;
+const SERIAL_TRANSCRIPT_MAX = 256 * 1024;
+
+// Key -> serial byte sequence, used when a key is typed while the terminal
+// itself does not have focus (the console window's global key guard).
+export function serialKeyToData(e) {
+  const map = {
+    Enter: '\r',
+    Backspace: '\x7f',
+    Tab: '\t',
+    Escape: '\x1b',
+    ArrowUp: '\x1b[A',
+    ArrowDown: '\x1b[B',
+    ArrowRight: '\x1b[C',
+    ArrowLeft: '\x1b[D',
+    Home: '\x1b[H',
+    End: '\x1b[F',
+    PageUp: '\x1b[5~',
+    PageDown: '\x1b[6~',
+    Delete: '\x1b[3~',
+  };
+  if (map[e.key]) return map[e.key];
+  if (e.ctrlKey && e.key && e.key.length === 1) {
+    const code = e.key.toLowerCase().charCodeAt(0) - 96;
+    return code >= 1 && code <= 26 ? String.fromCharCode(code) : null;
+  }
+  if (e.key && e.key.length === 1 && !e.metaKey && !e.altKey) return e.key;
+  return null;
+}
+
+function rememberSerialChunk(vmId, chunk) {
+  const list = _serialBuffers[vmId] || (_serialBuffers[vmId] = []);
+  list.push(chunk);
+  let total = list.reduce((n, c) => n + (c.length || c.byteLength || 0), 0);
+  while (total > SERIAL_TRANSCRIPT_MAX && list.length > 1) {
+    const old = list.shift();
+    total -= old.length || old.byteLength || 0;
+  }
+}
+
+function ensureSerialView(host, vmId) {
+  if (!host) return null;
+  const intact = host.querySelector('.zt-terminal-fallback, .zt-terminal-xterm');
+  if (_serialView && _serialView.host === host && _serialViewVmId === vmId && intact) return _serialView;
+  if (_serialView) _serialView.dispose();
+  _serialView = createTerminalView(host, {
+    theme: { background: '#0a0f18', cursorAccent: '#0a0f18' },
+    onData: (d) => {
+      if (_activeSerialWs && _activeSerialWs.readyState === WebSocket.OPEN) _activeSerialWs.send(d);
+    },
+  });
+  _serialViewVmId = vmId;
+  // Replay this VM's earlier output so a reconnect keeps the screen history.
+  for (const chunk of _serialBuffers[vmId] || []) _serialView.write(chunk);
+  return _serialView;
+}
 
 export function _sendKeyToRfb(keysym, code) {
   if (_activeRfb && typeof _activeRfb.sendKey === 'function') {
@@ -3553,6 +3611,10 @@ export function focusActiveConsole() {
       try { simCanvas.focus({ preventScroll: true }); } catch (_) {}
     }
   } else {
+    if (_serialView && _serialView.term) {
+      _serialView.focus();
+      return;
+    }
     const cliContainer = consoleWin.querySelector('#vm-cli-container');
     if (cliContainer) {
       cliContainer.tabIndex = 0;
@@ -4232,26 +4294,14 @@ async function initRealSerialTerminal(container, vmId, vmName) {
     statusPill.style.color = '#fbbf24';
   }
 
-  const cliOutput = container ? container.querySelector('#vm-cli-output') : null;
-  let serialBuffer = _serialBuffers[vmId] || `\x1b[36m[ZettNAS Serial Terminal - Connecting to ${vmName}...]\x1b[0m\r\n`;
-  const MAX_BUFFER_CHARS = 100000;
-
+  const host = container ? container.querySelector('#vm-cli-output') : null;
+  const view = ensureSerialView(host, vmId);
   const appendOutput = (chunk) => {
-    serialBuffer = applyTerminalStream(serialBuffer, chunk);
-    if (serialBuffer.length > MAX_BUFFER_CHARS) {
-      serialBuffer = serialBuffer.slice(serialBuffer.length - MAX_BUFFER_CHARS);
-    }
-    _serialBuffers[vmId] = serialBuffer;
-    if (cliOutput) {
-      cliOutput.innerHTML = formatAnsiToHtml(serialBuffer);
-      if (container) {
-        container.scrollTop = container.scrollHeight;
-      }
-    }
+    rememberSerialChunk(vmId, chunk);
+    if (view) view.write(chunk);
   };
-
-  if (cliOutput) {
-    cliOutput.innerHTML = formatAnsiToHtml(serialBuffer);
+  if (!(_serialBuffers[vmId] || []).length) {
+    appendOutput(`\x1b[36m[ZettNAS Serial Terminal - Connecting to ${vmName}...]\x1b[0m\r\n`);
   }
 
   try {
@@ -4261,23 +4311,23 @@ async function initRealSerialTerminal(container, vmId, vmName) {
     } catch (e) {}
     const ticket = tokenRes?.ticket || '';
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const host = window.location.host || '127.0.0.1:8082';
-    const wsUrl = `${protocol}//${host}/api/vms/${vmId}/serial/ws?ticket=${ticket}`;
+    const wsHost = window.location.host || '127.0.0.1:8082';
+    const wsUrl = `${protocol}//${wsHost}/api/vms/${vmId}/serial/ws?ticket=${ticket}`;
 
     if (typeof WebSocket !== 'undefined') {
       const ws = new WebSocket(wsUrl);
+      ws.binaryType = 'arraybuffer';
       ws.onopen = () => {
         if (statusPill) {
           statusPill.textContent = '● TTY LIVE';
           statusPill.style.color = '#34d399';
         }
         appendOutput(`\x1b[32m[Connected to serial console. Press Enter if screen is blank.]\x1b[0m\r\n\r\n`);
-        container?.focus();
+        if (view) view.focus();
+        else container?.focus();
       };
       ws.onmessage = (e) => {
-        if (e.data) {
-          appendOutput(e.data);
-        }
+        if (e.data) appendOutput(typeof e.data === 'string' ? e.data : new Uint8Array(e.data));
       };
       ws.onclose = () => {
         if (statusPill) {
@@ -4299,58 +4349,15 @@ async function initRealSerialTerminal(container, vmId, vmName) {
 
       if (container) {
         container.tabIndex = 0;
+        // Keys typed inside xterm never reach here (the view stops them); this
+        // only handles keys forwarded by the console window's key guard.
         container.onkeydown = (e) => {
           e.stopPropagation();
-          if (ws.readyState === WebSocket.OPEN) {
-            if (e.key === 'Enter') {
-              e.preventDefault();
-              ws.send('\r');
-            } else if (e.key === 'Backspace') {
-              e.preventDefault();
-              ws.send('\x7f');
-            } else if (e.key === 'Tab') {
-              e.preventDefault();
-              ws.send('\t');
-            } else if (e.key === 'Escape') {
-              e.preventDefault();
-              ws.send('\x1b');
-            } else if (e.key === 'ArrowUp') {
-              e.preventDefault();
-              ws.send('\x1b[A');
-            } else if (e.key === 'ArrowDown') {
-              e.preventDefault();
-              ws.send('\x1b[B');
-            } else if (e.key === 'ArrowRight') {
-              e.preventDefault();
-              ws.send('\x1b[C');
-            } else if (e.key === 'ArrowLeft') {
-              e.preventDefault();
-              ws.send('\x1b[D');
-            } else if (e.key === 'Home') {
-              e.preventDefault();
-              ws.send('\x1b[H');
-            } else if (e.key === 'End') {
-              e.preventDefault();
-              ws.send('\x1b[F');
-            } else if (e.key === 'PageUp') {
-              e.preventDefault();
-              ws.send('\x1b[5~');
-            } else if (e.key === 'PageDown') {
-              e.preventDefault();
-              ws.send('\x1b[6~');
-            } else if (e.key === 'Delete') {
-              e.preventDefault();
-              ws.send('\x1b[3~');
-            } else if (e.ctrlKey && e.key && e.key.length === 1) {
-              const code = e.key.toLowerCase().charCodeAt(0) - 96;
-              if (code >= 1 && code <= 26) {
-                e.preventDefault();
-                ws.send(String.fromCharCode(code));
-              }
-            } else if (e.key.length === 1 && !e.metaKey && !e.altKey) {
-              e.preventDefault();
-              ws.send(e.key);
-            }
+          const data = serialKeyToData(e);
+          if (data && ws.readyState === WebSocket.OPEN) {
+            e.preventDefault();
+            ws.send(data);
+            if (view) view.focus();
           }
         };
       }
@@ -4451,8 +4458,8 @@ export function openVmConsole(vmId, vmName = 'Virtual Machine', initialMode = 'g
           <div id="vm-vnc-container" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden;">
             <canvas id="vm-console-canvas" tabindex="0" width="880" height="510"></canvas>
           </div>
-          <div id="vm-cli-container" tabindex="0" style="width: 100%; height: 100%; display: none; background: #0a0f18; padding: 16px; font-family: monospace; color: #34d399; overflow-y: auto; box-sizing: border-box; outline: none;">
-            <div id="vm-cli-output" style="white-space: pre-wrap; word-break: break-all; font-size: 12px; line-height: 1.4;"></div>
+          <div id="vm-cli-container" tabindex="0" style="width: 100%; height: 100%; display: none; background: #0a0f18; padding: 10px 8px 10px 12px; color: #34d399; overflow: hidden; box-sizing: border-box; outline: none;">
+            <div id="vm-cli-output" style="width: 100%; height: 100%;"></div>
           </div>
           <div class="console-scanlines" style="pointer-events: none;"></div>
         </div>
