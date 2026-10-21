@@ -244,6 +244,14 @@ export async function loadVmDashboard() {
   }
 }
 
+// vTPM needs the swtpm emulator on the host; warn instead of promising Windows 11 support.
+function vtpmBadgeHtml() {
+  if (vmTelemetry?.kvm?.vtpm_available === false) {
+    return `<span class="vm-tpm-badge unavailable" title="${escapeHtml(t('vm.tpm_unavailable_hint', 'Install the swtpm package on the host (or update the container image) to use vTPM.'))}" style="font-size: 9px; padding: 2px 6px; border-radius: 4px; background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3);">⚠️ ${escapeHtml(t('vm.tpm_unavailable', 'swtpm not installed'))}</span>`;
+  }
+  return `<span class="vm-tpm-badge" style="font-size: 9px; padding: 2px 6px; border-radius: 4px; background: rgba(14,165,233,0.15); color: #38bdf8; border: 1px solid rgba(14,165,233,0.3);">🛡️ ${escapeHtml(t('vm.tpm_ready', 'Windows 11 Ready'))}</span>`;
+}
+
 function renderTelemetry(tel) {
   if (!tel) return;
 
@@ -1249,9 +1257,7 @@ export function openVmEditModal(vmId, vmObj = null) {
               <input type="checkbox" id="vm-edit-tpm" ${targetVm.tpm_enabled ? 'checked' : ''} style="accent-color: var(--accent-cyan, #0ea5e9);" />
               <span data-i18n="vm.tpm_title">${t('vm.tpm_title', 'Enable Virtual TPM 2.0 (vTPM)')}</span>
             </label>
-            <span style="font-size: 9px; padding: 2px 6px; border-radius: 4px; background: rgba(14,165,233,0.15); color: #38bdf8; border: 1px solid rgba(14,165,233,0.3);">
-              🛡️ Windows 11 Ready
-            </span>
+            ${vtpmBadgeHtml()}
           </div>
         </div>
 
@@ -2427,9 +2433,7 @@ export function openVmCreateModal() {
               <input type="checkbox" id="vm-create-tpm" style="accent-color: var(--accent-cyan, #0ea5e9);" />
               <span data-i18n="vm.tpm_title">${t('vm.tpm_title', 'Enable Virtual TPM 2.0 (vTPM)')}</span>
             </label>
-            <span style="font-size: 9px; padding: 2px 6px; border-radius: 4px; background: rgba(14,165,233,0.15); color: #38bdf8; border: 1px solid rgba(14,165,233,0.3);">
-              🛡️ Windows 11 Ready
-            </span>
+            ${vtpmBadgeHtml()}
           </div>
         </div>
 

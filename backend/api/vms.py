@@ -369,6 +369,7 @@ def get_kvm_status() -> Dict[str, Any]:
         "badge": badge,
         "remediation": remediation,
         "kvm_api_version": kvm_api_version,
+        "vtpm_available": _swtpm_binary() is not None,
     }
 
 
@@ -1355,6 +1356,76 @@ def _get_qemu_vnc_port(vms: List[Dict[str, Any]], vm_id: str) -> int:
     return 5900 + idx + 1
 
 
+def _swtpm_binary() -> Optional[str]:
+    """Path to the swtpm TPM emulator, or None when it is not installed."""
+    found = shutil.which("swtpm")
+    if found:
+        return found
+    return "/usr/bin/swtpm" if os.path.exists("/usr/bin/swtpm") else None
+
+
+def _prepare_vtpm(vm_id: str, vm_dir: str, wait_secs: float = 3.0) -> List[str]:
+    """Starts a swtpm TPM 2.0 emulator for the VM and returns the QEMU args that attach it.
+
+    Waits for swtpm to create its control socket instead of a fixed sleep, so
+    QEMU never races a slow start. Returns [] (VM boots without a TPM) when
+    swtpm is missing, fails to start, or does not come up in time.
+    """
+    swtpm_bin = _swtpm_binary()
+    if not swtpm_bin:
+        logger.warning(f"[VM-{vm_id}] swtpm binary not found on host; vTPM 2.0 cannot be initialized.")
+        return []
+
+    tpm_dir = os.path.join(vm_dir, "tpm")
+    os.makedirs(tpm_dir, exist_ok=True)
+    tpm_sock = os.path.join(tpm_dir, "swtpm.sock")
+    if os.path.exists(tpm_sock):
+        try:
+            os.remove(tpm_sock)
+        except OSError:
+            pass
+
+    swtpm_cmd = [
+        swtpm_bin,
+        "socket",
+        "--tpmstate",
+        f"dir={tpm_dir}",
+        "--ctrl",
+        f"type=unixio,path={tpm_sock}",
+        "--tpm2",
+        "--terminate",
+    ]
+    try:
+        proc = subprocess.Popen(swtpm_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except Exception as ex:
+        logger.warning(f"[VM-{vm_id}] Failed to spawn swtpm daemon: {ex}")
+        return []
+
+    deadline = time.monotonic() + wait_secs
+    while not os.path.exists(tpm_sock):
+        if proc.poll() is not None:
+            logger.warning(f"[VM-{vm_id}] swtpm exited early (code {proc.returncode}); booting without vTPM.")
+            return []
+        if time.monotonic() >= deadline:
+            logger.warning(f"[VM-{vm_id}] swtpm socket did not appear within {wait_secs:.0f}s; booting without vTPM.")
+            try:
+                proc.kill()
+            except Exception:
+                pass
+            return []
+        time.sleep(0.05)
+
+    logger.info(f"[VM-{vm_id}] Spawned swtpm vTPM 2.0 daemon on {tpm_sock}")
+    return [
+        "-chardev",
+        f"socket,id=chrtpm,path={tpm_sock}",
+        "-tpmdev",
+        "emulator,id=tpm0,chardev=chrtpm",
+        "-device",
+        "tpm-tis,tpmdev=tpm0",
+    ]
+
+
 def _start_qemu(target_vm: Dict[str, Any], vnc_port: int) -> Tuple[bool, Optional[str]]:
     vm_id = target_vm["id"]
     if _is_qemu_process_alive(vm_id):
@@ -1575,44 +1646,7 @@ def _start_qemu(target_vm: Dict[str, Any], vnc_port: int) -> Tuple[bool, Optiona
 
         # Virtual TPM 2.0 (swtpm daemon socket) for Windows 11 and BitLocker readiness
         if target_vm.get("tpm_enabled"):
-            swtpm_bin = shutil.which("swtpm") or "/usr/bin/swtpm"
-            if os.path.exists(swtpm_bin):
-                tpm_dir = os.path.join(vm_dir, "tpm")
-                os.makedirs(tpm_dir, exist_ok=True)
-                tpm_sock = os.path.join(tpm_dir, "swtpm.sock")
-                if os.path.exists(tpm_sock):
-                    try:
-                        os.remove(tpm_sock)
-                    except OSError:
-                        pass
-                swtpm_cmd = [
-                    swtpm_bin,
-                    "socket",
-                    "--tpmstate",
-                    f"dir={tpm_dir}",
-                    "--ctrl",
-                    f"type=unixio,path={tpm_sock}",
-                    "--tpm2",
-                    "--terminate",
-                ]
-                try:
-                    subprocess.Popen(swtpm_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                    time.sleep(0.2)
-                    c.extend(
-                        [
-                            "-chardev",
-                            f"socket,id=chrtpm,path={tpm_sock}",
-                            "-tpmdev",
-                            "emulator,id=tpm0,chardev=chrtpm",
-                            "-device",
-                            "tpm-tis,tpmdev=tpm0",
-                        ]
-                    )
-                    logger.info(f"[VM-{vm_id}] Spawning swtpm vTPM 2.0 daemon on {tpm_sock}")
-                except Exception as ex:
-                    logger.warning(f"[VM-{vm_id}] Failed to spawn swtpm daemon: {ex}")
-            else:
-                logger.warning(f"[VM-{vm_id}] swtpm binary not found on host; vTPM 2.0 cannot be initialized.")
+            c.extend(_prepare_vtpm(vm_id, vm_dir))
 
         for idx_d, sdisk in enumerate(target_vm.get("secondary_disks", [])):
             sd_path = sdisk.get("path")
