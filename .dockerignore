@@ -1,32 +1,24 @@
-# Version control & dev
-.git/
-.gitignore
-.github/
+# Allow-list: the image build only sees what is listed here (OPS-12).
+# Anything else in the working tree (data/, .git, secrets, node_modules,
+# local build output, scratch files) never reaches the build context.
+*
 
-# Python artifacts
-__pycache__/
-*.py[cod]
-*$py.class
-*.bak
-.pytest_cache/
+!app.py
+!pyproject.toml
+!requirements.txt
+!requirements.lock
+!requirements-dev.txt
+!package.json
+!package-lock.json
+!vite.config.mjs
+!backend/
+!frontend/
+!static/img/
+!static/manifest.json
 
-# Node / Frontend development (keep node_modules local)
-node_modules/
-
-# Environment and secrets
-.env
-.env.*
-!.env.example
-
-# Local state & runtime data
-data/
-*.log
-/tmp/
-.backup*/
-led_state.json
-fan_state.json
-dash_layout.json
-
-# OS artifacts
-.DS_Store
-Thumbs.db
+# Never, even inside allowed folders
+**/__pycache__/
+**/*.py[cod]
+**/.fuse_hidden*
+**/.DS_Store
+frontend/src/__tests__/

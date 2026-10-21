@@ -187,7 +187,8 @@ def test_e2e_live_desktop_session_and_badge():
 def test_e2e_html_structure_and_assets():
     """Verify built static bundle integrity and critical DOM elements."""
     index_path = os.path.join(STATIC_DIR, "index.html")
-    assert os.path.isfile(index_path), "index.html must exist in static/"
+    if not os.path.isfile(index_path):
+        _skip_or_fail("static/index.html is missing: run npm run build first")
 
     with open(index_path, "r", encoding="utf-8") as f:
         html = f.read()
@@ -204,6 +205,8 @@ def test_e2e_html_structure_and_assets():
 def test_e2e_batch3_dom_elements():
     """Verify Batch 3 desktop UX, notification center filtering, and file manager DOM structures."""
     index_path = os.path.join(STATIC_DIR, "index.html")
+    if not os.path.isfile(index_path):
+        _skip_or_fail("static/index.html is missing: run npm run build first")
     with open(index_path, "r", encoding="utf-8") as f:
         html = f.read()
 
@@ -218,6 +221,8 @@ def test_e2e_batch3_dom_elements():
 def test_e2e_batch4_dom_elements():
     """Verify Batch 4 custom fan presets bar and SMART degradation banner in built HTML."""
     index_path = os.path.join(STATIC_DIR, "index.html")
+    if not os.path.isfile(index_path):
+        _skip_or_fail("static/index.html is missing: run npm run build first")
     with open(index_path, "r", encoding="utf-8") as f:
         html = f.read()
 
@@ -231,6 +236,8 @@ def test_e2e_batch4_dom_elements():
 def test_e2e_batch5_dom_elements():
     """Verify Batch 5 UPS power telemetry and media slot auto-ingest controls in built HTML."""
     index_path = os.path.join(STATIC_DIR, "index.html")
+    if not os.path.isfile(index_path):
+        _skip_or_fail("static/index.html is missing: run npm run build first")
     with open(index_path, "r", encoding="utf-8") as f:
         html = f.read()
 
