@@ -617,6 +617,124 @@ def _resolve_vm_ip_by_mac(mac: str) -> Optional[str]:
     return None
 
 
+# ---- Guest IP discovery: QEMU Guest Agent first, host ARP table second ----
+
+VM_IP_TTL_SECS = 30.0
+_VM_IP_CACHE: Dict[str, Tuple[Optional[str], float]] = {}
+_VM_IP_REFRESHING: set = set()
+_VM_IP_LOCK = threading.Lock()
+_VM_IP_BACKGROUND = True  # tests switch this off to refresh synchronously
+
+
+def _qga_socket_path(vm_id: str) -> str:
+    return f"/tmp/{vm_id}-qga.sock"
+
+
+def _qga_command(vm_id: str, command: str, timeout: float = 1.0) -> Dict[str, Any]:
+    """Runs one QEMU Guest Agent command over the VM's virtio-serial channel.
+
+    The agent has no greeting, so a guest-sync with a random id is sent first and
+    replies are skipped until that id comes back; this drops stale output left by
+    an earlier, timed-out client. Returns {"error": ...} when the agent is not
+    running in the guest or does not answer within `timeout`.
+    """
+    import random
+    import socket
+
+    sock_path = _qga_socket_path(vm_id)
+    if not os.path.exists(sock_path):
+        return {"error": "guest agent socket not found"}
+
+    sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    sock.settimeout(timeout)
+    buf = b""
+
+    def read_json() -> Dict[str, Any]:
+        nonlocal buf
+        while b"\n" not in buf:
+            chunk = sock.recv(4096)
+            if not chunk:
+                raise ConnectionError("guest agent closed the connection")
+            buf += chunk
+        line, buf = buf.split(b"\n", 1)
+        return json.loads(line.decode("utf-8", errors="replace") or "{}")
+
+    try:
+        sock.connect(sock_path)
+        sync_id = random.randint(1, 2**31 - 1)
+        sock.sendall(json.dumps({"execute": "guest-sync", "arguments": {"id": sync_id}}).encode() + b"\n")
+        while read_json().get("return") != sync_id:
+            pass
+        sock.sendall(json.dumps({"execute": command}).encode() + b"\n")
+        return read_json()
+    except (OSError, ValueError, ConnectionError) as e:
+        return {"error": str(e) or e.__class__.__name__}
+    finally:
+        sock.close()
+
+
+def _qga_guest_ipv4(vm_id: str, mac: str = "") -> Optional[str]:
+    """Guest's IPv4 address from the agent, preferring the NIC with the VM's MAC."""
+    res = _qga_command(vm_id, "guest-network-get-interfaces")
+    ifaces = res.get("return")
+    if not isinstance(ifaces, list):
+        return None
+    want_mac = (mac or "").lower().strip()
+    candidates: List[Tuple[bool, str]] = []
+    for iface in ifaces:
+        if not isinstance(iface, dict) or iface.get("name") == "lo":
+            continue
+        same_nic = bool(want_mac) and str(iface.get("hardware-address", "")).lower() == want_mac
+        for addr in iface.get("ip-addresses") or []:
+            ip = str(addr.get("ip-address", ""))
+            if addr.get("ip-address-type") != "ipv4" or not ip:
+                continue
+            if ip.startswith("127.") or ip.startswith("169.254."):
+                continue
+            candidates.append((same_nic, ip))
+    if not candidates:
+        return None
+    candidates.sort(key=lambda c: not c[0])
+    return candidates[0][1]
+
+
+def _refresh_vm_ip(vm_id: str, mac: str) -> None:
+    try:
+        ip = _qga_guest_ipv4(vm_id, mac) or _resolve_vm_ip_by_mac(mac)
+    except Exception as e:
+        logger.debug(f"[VM-{vm_id}] IP refresh failed: {e}")
+        ip = None
+    with _VM_IP_LOCK:
+        _VM_IP_CACHE[vm_id] = (ip, time.monotonic() + VM_IP_TTL_SECS)
+        _VM_IP_REFRESHING.discard(vm_id)
+
+
+def _cached_vm_ip(vm: Dict[str, Any]) -> Optional[str]:
+    """Last known guest IP; refreshes in the background once older than VM_IP_TTL_SECS."""
+    vm_id = vm.get("id")
+    if not vm_id:
+        return None
+    with _VM_IP_LOCK:
+        entry = _VM_IP_CACHE.get(vm_id)
+        start = (entry is None or entry[1] <= time.monotonic()) and vm_id not in _VM_IP_REFRESHING
+        if start:
+            _VM_IP_REFRESHING.add(vm_id)
+    if start:
+        mac = vm.get("mac") or ""
+        if _VM_IP_BACKGROUND:
+            threading.Thread(target=_refresh_vm_ip, args=(vm_id, mac), daemon=True, name=f"vm-ip-{vm_id}").start()
+        else:
+            _refresh_vm_ip(vm_id, mac)
+        with _VM_IP_LOCK:
+            entry = _VM_IP_CACHE.get(vm_id, entry)
+    return entry[0] if entry else None
+
+
+def _forget_vm_ip(vm_id: str) -> None:
+    with _VM_IP_LOCK:
+        _VM_IP_CACHE.pop(vm_id, None)
+
+
 def _is_qemu_process_alive(vm_id: str) -> bool:
     """Checks whether the QEMU process for the specified VM is currently alive."""
     if vm_id in _RUNNING_QEMU_PROCS:
@@ -1066,7 +1184,13 @@ def get_kvm_diagnose():
 @router.get("", dependencies=[Depends(require_scope("system:view", "storage:read"))])
 def list_vms():
     """Lists configured virtual machines with live states and resource allocations."""
-    return _load_vms()
+    vms = _load_vms()
+    for vm in vms:
+        if vm.get("state") == "running":
+            ip = _cached_vm_ip(vm)
+            if ip:
+                vm["ip_address"] = ip
+    return vms
 
 
 @router.get("/isos", dependencies=[Depends(require_scope("system:view", "storage:read"))])
@@ -1488,7 +1612,8 @@ def _start_qemu(target_vm: Dict[str, Any], vnc_port: int) -> Tuple[bool, Optiona
 
     sock_path = f"/tmp/{vm_id}-serial.sock"
     qmp_path = f"/tmp/{vm_id}-qmp.sock"
-    for s in (sock_path, qmp_path):
+    qga_path = _qga_socket_path(vm_id)
+    for s in (sock_path, qmp_path, qga_path):
         if os.path.exists(s):
             try:
                 os.remove(s)
@@ -1590,6 +1715,17 @@ def _start_qemu(target_vm: Dict[str, Any], vnc_port: int) -> Tuple[bool, Optiona
         c.extend(["-chardev", f"socket,id=serial0,path={sock_path},server=on,wait=off", "-serial", "chardev:serial0"])
         c.extend(
             ["-chardev", f"socket,id=qmp0,path={qmp_path},server=on,wait=off", "-mon", "chardev=qmp0,mode=control"]
+        )
+        # QEMU Guest Agent channel: lets qemu-guest-agent in the VM report its IPs.
+        c.extend(
+            [
+                "-chardev",
+                f"socket,id=qga0,path={qga_path},server=on,wait=off",
+                "-device",
+                "virtio-serial-pci,id=qga-serial",
+                "-device",
+                "virtserialport,bus=qga-serial.0,chardev=qga0,name=org.qemu.guest_agent.0",
+            ]
         )
 
         # Network interface configuration
@@ -1808,7 +1944,8 @@ def _sync_cleanup_qemu_process(vm_id: str, force: bool = False):
         except OSError:
             pass
 
-    for s in (f"/tmp/{vm_id}-serial.sock", f"/tmp/{vm_id}-qmp.sock"):
+    _forget_vm_ip(vm_id)
+    for s in (f"/tmp/{vm_id}-serial.sock", f"/tmp/{vm_id}-qmp.sock", _qga_socket_path(vm_id)):
         if os.path.exists(s):
             try:
                 os.remove(s)
@@ -2296,6 +2433,7 @@ async def execute_vm_action(
     vnc_port = _get_qemu_vnc_port(vms, vm_id)
 
     if action == "start":
+        _forget_vm_ip(vm_id)
         ok, err_msg = await asyncio.to_thread(_start_qemu, target_vm, vnc_port)
         if not ok:
             target_vm["state"] = "stopped"
