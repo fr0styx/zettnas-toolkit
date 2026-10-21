@@ -25,6 +25,7 @@ from pydantic import BaseModel, Field
 from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
 from backend.config import DATA_DIR, HOST_PROC, POOL_PATH, VM_ISO_DIR, logger
 from backend.fsutil import atomic_write_json, read_json, resolve_within
+from backend.services.vm_engine import QmpEngine
 from backend.state import Z_STATE, add_event
 
 router = APIRouter(prefix="/vms", tags=["Virtual Machines"])
@@ -774,6 +775,32 @@ def _is_qemu_process_alive(vm_id: str) -> bool:
     return False
 
 
+_QMP_EVENT_LOG = {
+    "SHUTDOWN": ("info", "VM Shut Down", "VM '{name}' shut down ({reason})."),
+    "RESET": ("info", "VM Reset", "VM '{name}' was reset."),
+    "GUEST_PANICKED": ("warning", "VM Guest Crashed", "The guest OS in VM '{name}' crashed (kernel panic or BSOD)."),
+}
+
+
+def _on_qmp_event(vm_id: str, event: str, data: Dict[str, Any]) -> None:
+    """Logs notable QEMU events to the system event log."""
+    spec = _QMP_EVENT_LOG.get(event)
+    if not spec:
+        return
+    if event == "SHUTDOWN" and not data.get("guest", False):
+        return  # host-initiated stops are already logged by the action that caused them
+    name = next((v.get("name") for v in _load_vms() if v.get("id") == vm_id), None) or vm_id
+    level, title, message = spec
+    add_event(level, title, message.format(name=name, reason=str(data.get("reason") or "guest")))
+
+
+def _qmp_socket_path(vm_id: str) -> str:
+    return f"/tmp/{vm_id}-qmp.sock"
+
+
+_QMP_ENGINE = QmpEngine(_qmp_socket_path, on_event=_on_qmp_event)
+
+
 def _qmp_command(
     vm_id: str,
     command: str,
@@ -781,88 +808,11 @@ def _qmp_command(
     timeout: float = 2.5,
 ) -> Dict[str, Any]:
     """
-    Executes a QMP (QEMU Machine Protocol) command via the UNIX monitor socket.
-    Handles greeting handshake, qmp_capabilities negotiation, command dispatch,
-    event filtering, and response parsing.
+    Executes a QMP (QEMU Machine Protocol) command over the VM's persistent
+    monitor connection (backend/services/vm_engine.py). Returns QEMU's reply,
+    {"return": ...} or {"error": ...}.
     """
-    sock_path = f"/tmp/{vm_id}-qmp.sock"
-    if not os.path.exists(sock_path):
-        return {"error": f"QMP monitor socket '{sock_path}' not found."}
-
-    import json
-    import socket
-
-    sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-    sock.settimeout(timeout)
-    try:
-        sock.connect(sock_path)
-        # Read greeting banner
-        buf = b""
-        while b"\n" not in buf:
-            chunk = sock.recv(1024)
-            if not chunk:
-                return {"error": "Connection closed before QMP greeting."}
-            buf += chunk
-
-        # Send capabilities negotiation
-        sock.sendall(b'{"execute": "qmp_capabilities"}\n')
-
-        # Read capabilities response (skipping asynchronous events)
-        while True:
-            while b"\n" not in buf:
-                chunk = sock.recv(1024)
-                if not chunk:
-                    break
-                buf += chunk
-            if b"\n" not in buf:
-                break
-            line, buf = buf.split(b"\n", 1)
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                resp = json.loads(line.decode("utf-8", errors="replace"))
-                if "return" in resp:
-                    break
-            except Exception:
-                continue
-
-        # Send target command
-        payload = {"execute": command}
-        if arguments:
-            payload["arguments"] = arguments
-        sock.sendall(json.dumps(payload).encode("utf-8") + b"\n")
-
-        # Read response
-        while True:
-            while b"\n" not in buf:
-                chunk = sock.recv(4096)
-                if not chunk:
-                    break
-                buf += chunk
-            if b"\n" not in buf:
-                break
-            line, buf = buf.split(b"\n", 1)
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                resp = json.loads(line.decode("utf-8", errors="replace"))
-                # Filter async events
-                if "event" in resp and "return" not in resp and "error" not in resp:
-                    continue
-                return resp
-            except Exception:
-                continue
-
-        return {"error": "No valid response from QMP."}
-    except Exception as e:
-        return {"error": f"QMP command '{command}' failed: {e}"}
-    finally:
-        try:
-            sock.close()
-        except Exception:
-            pass
+    return _QMP_ENGINE.execute(vm_id, command, arguments, timeout)
 
 
 def _drain_stderr(proc: subprocess.Popen, log_path: str, err_log_path: str, vm_id: str):
@@ -1972,6 +1922,7 @@ def _start_qemu(target_vm: Dict[str, Any], vnc_port: int) -> Tuple[bool, Optiona
 
         t = threading.Thread(target=_drain_stderr, args=(proc, full_log_path, err_log_path, vm_id), daemon=True)
         t.start()
+        _QMP_ENGINE.watch(vm_id)
 
         return True, None
     except Exception as e:
@@ -2024,6 +1975,7 @@ def _sync_cleanup_qemu_process(vm_id: str, force: bool = False):
             pass
 
     _forget_vm_ip(vm_id)
+    _QMP_ENGINE.close(vm_id)
     for s in (f"/tmp/{vm_id}-serial.sock", f"/tmp/{vm_id}-qmp.sock", _qga_socket_path(vm_id)):
         if os.path.exists(s):
             try:
@@ -2035,7 +1987,7 @@ def _sync_cleanup_qemu_process(vm_id: str, force: bool = False):
 async def async_stop_qemu(vm_id: str, force: bool = False):
     """Asynchronously stops the QEMU process without blocking the FastAPI event loop."""
     if not force:
-        qmp_res = await asyncio.to_thread(_qmp_command, vm_id, "system_powerdown", 1.5)
+        qmp_res = await asyncio.to_thread(_qmp_command, vm_id, "system_powerdown", None, 1.5)
         if "return" in qmp_res:
             logger.info(f"[VM-{vm_id}] ACPI powerdown signal sent via QMP.")
             for _ in range(20):
@@ -2954,7 +2906,7 @@ async def create_vm_snapshot(vm_id: str, req: VmSnapshotCreateRequest):
 
     if is_running:
         cmd_str = f"savevm {name}"
-        qmp_res = await asyncio.to_thread(_qmp_command, vm_id, "human-monitor-command", 10.0, {"command-line": cmd_str})
+        qmp_res = await asyncio.to_thread(_qmp_command, vm_id, "human-monitor-command", {"command-line": cmd_str}, 10.0)
         if "error" in qmp_res:
             raise HTTPException(status_code=500, detail=f"QMP savevm failed: {qmp_res['error']}")
     else:
@@ -3004,7 +2956,7 @@ async def revert_vm_snapshot(vm_id: str, snapshot_name: str):
 
     if is_running:
         cmd_str = f"loadvm {name}"
-        qmp_res = await asyncio.to_thread(_qmp_command, vm_id, "human-monitor-command", 10.0, {"command-line": cmd_str})
+        qmp_res = await asyncio.to_thread(_qmp_command, vm_id, "human-monitor-command", {"command-line": cmd_str}, 10.0)
         if "error" in qmp_res:
             raise HTTPException(status_code=500, detail=f"QMP loadvm failed: {qmp_res['error']}")
     else:
@@ -3045,7 +2997,7 @@ async def delete_vm_snapshot(vm_id: str, snapshot_name: str):
 
     if is_running:
         cmd_str = f"delvm {name}"
-        qmp_res = await asyncio.to_thread(_qmp_command, vm_id, "human-monitor-command", 10.0, {"command-line": cmd_str})
+        qmp_res = await asyncio.to_thread(_qmp_command, vm_id, "human-monitor-command", {"command-line": cmd_str}, 10.0)
         if "error" in qmp_res:
             logger.warning(f"QMP delvm warning: {qmp_res['error']}")
     else:
