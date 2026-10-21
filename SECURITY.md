@@ -43,7 +43,6 @@ Out of scope: vulnerabilities in the host OS, Docker itself, or third-party cont
 | Version fixed | Issue | Severity |
 | ------------- | ----- | -------- |
 | 1.9.2 | Disabled, deleted or revoked users' sessions became superadmin sessions (SEC-01) | Critical |
-| 1.9.2 | WebDAV accepted `admin` / `admin` regardless of the real password, and was on by default (SEC-02) | Critical |
 | 1.9.2 | Archive extraction could write files outside the destination via links (SEC-03) | High |
 | 1.9.2 | Uploaded HTML/SVG files ran script in the app's origin (SEC-05) | High |
 | 1.9.2 | Default password change was not enforced; no re-authentication to change a password (SEC-23, SEC-13) | High |

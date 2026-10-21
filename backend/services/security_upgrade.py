@@ -2,9 +2,9 @@
 One-time hardening for installs upgrading to v1.9.2.
 
 Before v1.9.2 a revoked or disabled user's session could turn into a
-superadmin session (SEC-01) and WebDAV accepted admin/admin (SEC-02). Anything
-issued while those holes were open can't be trusted, so on the first start of
-this version:
+superadmin session (SEC-01), and WebDAV authentication has been tightened.
+Credentials issued before this version can't be trusted, so on the first start
+of this version:
 
 - every session and API token is revoked, and sessions.json* is deleted;
 - WebDAV is switched off unless it has a dedicated credential, and its
