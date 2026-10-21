@@ -46,6 +46,7 @@ from backend.services.media_engine import (
     read_total_ram_bytes,
 )
 from backend.services.rag_engine import (
+    _detected_host_ip,
     get_rag_engine,
     get_running_disks_list,
     get_sleeping_disks_list,
@@ -1695,7 +1696,7 @@ def tool_get_network_status() -> Dict[str, Any]:
             if iface.get("is_up")
         ]
         main_speed = active_ifaces[0].get("speed", "1 Gbps") if active_ifaces else "Unknown"
-        summary = f"IP: {ip_addr or '10.40.30.249'} ({len(active_ifaces)} active link(s), max {main_speed})"
+        summary = f"IP: {ip_addr or 'unknown'} ({len(active_ifaces)} active link(s), max {main_speed})"
         return {
             "tool": "get_network_status",
             "status": "ok",
@@ -3189,7 +3190,10 @@ def _format_tool_trace_summary(tr: Dict[str, Any], tool_name: str) -> str:
 
 def _get_docker_host_ips() -> List[str]:
     """Discovers likely host appliance and gateway IPs from inside the container."""
-    ips = ["172.17.0.1", "10.40.30.249", "127.0.0.1"]
+    ips = ["172.17.0.1", "127.0.0.1"]
+    host_ip = _detected_host_ip()
+    if host_ip and host_ip not in ips:
+        ips.insert(1, host_ip)
     try:
         with open("/proc/net/route") as f:
             for line in f:

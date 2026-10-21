@@ -988,6 +988,19 @@ def truncate_and_normalize_mrl(vec: List[float], target_dim: Optional[int]) -> L
 _CACHED_OLLAMA_HOST: Optional[str] = None
 
 
+def _detected_host_ip() -> Optional[str]:
+    """Returns this machine's LAN IP (HOST_IP env or auto-detected), or None."""
+    try:
+        from backend.hardware.network import read_ip
+
+        ip = (read_ip() or "").strip()
+    except Exception:
+        return None
+    if not ip or ip.startswith("127.") or ip == "0.0.0.0":
+        return None
+    return ip
+
+
 def _resolve_ollama_host(explicit_host: Optional[str] = None) -> str:
     """Discovers reachable Ollama host inside Docker bridge network or bare metal."""
     global _CACHED_OLLAMA_HOST
@@ -1017,8 +1030,8 @@ def _resolve_ollama_host(explicit_host: Optional[str] = None) -> str:
                         candidates.insert(0, gw)
     except Exception:
         pass
-    for extra in ("172.17.0.1", "10.40.30.249"):
-        if extra not in candidates:
+    for extra in ("172.17.0.1", _detected_host_ip()):
+        if extra and extra not in candidates:
             candidates.append(extra)
 
     for cand in candidates:
