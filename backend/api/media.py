@@ -957,10 +957,11 @@ async def chat_with_zettai_agent(
         try:
             from backend.services.ai_conversations_db import append_message, get_token_budgeted_history
 
+            # The stored conversation is the only history trusted for a saved chat (AI-19).
+            history = get_token_budgeted_history(req.conversation_id, uid, model_name=req.model)
             append_message(req.conversation_id, uid, "user", req.message)
-            if history is None:
-                history = get_token_budgeted_history(req.conversation_id, uid, model_name=req.model)
         except Exception as _db_ex:
+            history = []
             logger.warning(f"[AI Chat] Failed persisting user prompt: {_db_ex}")
 
     try:
@@ -1023,10 +1024,11 @@ async def chat_with_zettai_agent_stream(
         try:
             from backend.services.ai_conversations_db import append_message, get_token_budgeted_history
 
+            # The stored conversation is the only history trusted for a saved chat (AI-19).
+            history = get_token_budgeted_history(req.conversation_id, uid, model_name=req.model)
             append_message(req.conversation_id, uid, "user", req.message)
-            if history is None:
-                history = get_token_budgeted_history(req.conversation_id, uid, model_name=req.model)
         except Exception as _stream_db_ex:
+            history = []
             logger.warning(f"[AI Chat Stream] Failed user message prep: {_stream_db_ex}")
 
     generator = stream_agentic_chat(
@@ -1047,6 +1049,23 @@ async def chat_with_zettai_agent_stream(
             "X-Accel-Buffering": "no",
         },
     )
+
+
+@router.post(
+    "/ai/actions/{action_id}/confirm",
+    dependencies=[Depends(require_scope("shares:read", "storage:read", "system:read"))],
+)
+async def confirm_ai_action(
+    action_id: str,
+    principal: AuthenticatedPrincipal = Depends(get_current_principal),
+) -> Dict[str, Any]:
+    """Runs an action ZettAI proposed, after the user clicked Confirm (AI-01)."""
+    from backend.services.ai_actions import confirm_action
+
+    res = await asyncio.to_thread(confirm_action, action_id, principal)
+    if res.get("status") == "not_found":
+        raise HTTPException(status_code=410, detail=res.get("error"))
+    return res
 
 
 @router.get(

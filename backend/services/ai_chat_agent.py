@@ -726,15 +726,16 @@ _ENDPOINT_REGISTRY = EndpointRegistry()
 
 
 def _has_write_permission(principal: Any, required_scopes: Tuple[str, ...]) -> bool:
+    """No principal means no write access; scopes use the same wildcard rules as the API."""
     if principal is None:
-        return True
-    scopes = getattr(principal, "scopes", None) or []
-    if "*" in scopes or "admin" in scopes:
-        return True
+        return False
     role = str(getattr(principal, "role_id", "") or "").lower()
     if role in ("superadmin", "admin"):
         return True
-    return any(s in scopes for s in required_scopes)
+    from backend.auth import has_scope
+
+    scopes = list(getattr(principal, "scopes", None) or [])
+    return any(has_scope(scopes, s) for s in required_scopes)
 
 
 def _is_safe_public_url(url_str: str) -> bool:
@@ -3077,15 +3078,25 @@ def _synthesize_weather_grounded_answer(clean_msg: str, tr: Dict[str, Any]) -> s
     return "\n".join(lines)
 
 
-def execute_nas_tool(tool_name: str, args: Dict[str, Any], principal: Any = None) -> Dict[str, Any]:
+def execute_nas_tool(
+    tool_name: str, args: Dict[str, Any], principal: Any = None, confirmed: bool = False
+) -> Dict[str, Any]:
     """
     Safely dispatches a tool call with parameter validation, scope checks,
     and hardware safety invariants (standby preservation, CPU fan protection,
     container self-stop guard).
+
+    Tools that change the system only run with confirmed=True (the user clicked
+    Confirm); otherwise a proposal is returned (AI-01).
     """
     clean_name = str(tool_name or "").strip()
     if not isinstance(args, dict):
         args = _safe_parse_tool_call_json(args)
+
+    from backend.services.ai_actions import MUTATING_TOOLS, propose_action
+
+    if clean_name in MUTATING_TOOLS and not confirmed:
+        return propose_action(clean_name, args, principal)
 
     if clean_name == "get_system_telemetry":
         return tool_get_system_telemetry()
@@ -5338,7 +5349,9 @@ def run_agentic_chat(
                 if ctrl_match and ctrl_match.group(2) not in ("container", "docker", "it", "that", "this", "them"):
                     act_verb = ctrl_match.group(1)
                     c_name = ctrl_match.group(2)
-                    res_dctrl = tool_control_docker_container(c_name, act_verb, principal=principal)
+                    res_dctrl = execute_nas_tool(
+                        "control_docker_container", {"container": c_name, "action": act_verb}, principal=principal
+                    )
                     tool_results.append(res_dctrl)
                     tools_called.append("control_docker_container")
                 elif any(w in combined_prev for w in ("docker", "dockers", "container", "containers")):
@@ -5352,7 +5365,9 @@ def run_agentic_chat(
                     if fan_match and any(
                         w in clean_norm for w in ("do that", "yes", "sure", "run it", "proceed", "go ahead")
                     ):
-                        res_fan_set = tool_set_fan_profile(fan_match.group(1), principal=principal)
+                        res_fan_set = execute_nas_tool(
+                            "set_fan_profile", {"profile": fan_match.group(1)}, principal=principal
+                        )
                         tool_results.append(res_fan_set)
                         tools_called.append("set_fan_profile")
                     else:
@@ -5364,7 +5379,7 @@ def run_agentic_chat(
                     tool_results.append(res_disks)
                     tools_called.append("get_disks_and_standby_status")
                 elif any(w in combined_prev for w in ("ai sync", "indexing", "sync shares", "learning")):
-                    res_sync = tool_trigger_ai_sync("start", principal=principal)
+                    res_sync = execute_nas_tool("trigger_ai_sync", {"action": "start"}, principal=principal)
                     tool_results.append(res_sync)
                     tools_called.append("trigger_ai_sync")
 
@@ -5375,7 +5390,7 @@ def run_agentic_chat(
         )
         if fan_set_match and "set_fan_profile" not in tools_called:
             target_prof = fan_set_match.group(1)
-            res_fan_set = tool_set_fan_profile(target_prof, principal=principal)
+            res_fan_set = execute_nas_tool("set_fan_profile", {"profile": target_prof}, principal=principal)
             tool_results.append(res_fan_set)
             tools_called.append("set_fan_profile")
         elif "get_fan_and_thermal_status" not in tools_called and any(
@@ -5401,7 +5416,9 @@ def run_agentic_chat(
             act_verb = docker_ctrl_match.group(1)
             c_name = docker_ctrl_match.group(2)
             if c_name not in ("container", "docker", "sync", "indexing", "scan", "fan", "fans"):
-                res_dctrl = tool_control_docker_container(c_name, act_verb, principal=principal)
+                res_dctrl = execute_nas_tool(
+                    "control_docker_container", {"container": c_name, "action": act_verb}, principal=principal
+                )
                 tool_results.append(res_dctrl)
                 tools_called.append("control_docker_container")
 
@@ -5530,7 +5547,7 @@ def run_agentic_chat(
                 if "pause" in msg_lower
                 else ("resume" if "resume" in msg_lower else ("stop" if "stop" in msg_lower else "start"))
             )
-            res_sync = tool_trigger_ai_sync(sync_act, principal=principal)
+            res_sync = execute_nas_tool("trigger_ai_sync", {"action": sync_act}, principal=principal)
             tool_results.append(res_sync)
             tools_called.append("trigger_ai_sync")
 
@@ -5932,6 +5949,19 @@ def run_agentic_chat(
 
             for idx, tr in enumerate(tool_results):
                 tname = tr.get("tool") or (tools_called[idx] if idx < len(tools_called) else "")
+                if tr.get("status") == "confirmation_required":
+                    sections.append(
+                        f"### ⏸️ Confirmation Needed\n"
+                        f"- **{tr.get('summary')}** has not been run. Click **Confirm** below to run it."
+                    )
+                    continue
+                if tr.get("status") == "blocked" and tname in (
+                    "control_docker_container",
+                    "set_fan_profile",
+                    "trigger_ai_sync",
+                ):
+                    sections.append(f"### ⚠️ Action Not Run\n- {tr.get('error')}")
+                    continue
                 if tname == "set_fan_profile":
                     if tr.get("status") == "ok":
                         sections.append(
@@ -6127,7 +6157,13 @@ def run_agentic_chat(
             summary = f"{len(tr.get('sources') or [])} web source(s) verified"
         else:
             summary = str(tr.get("status", "ok"))
-        tools_called_trace.append({"tool": tname, "summary": summary, "status": tr.get("status", "ok")})
+        if tr.get("status") == "confirmation_required":
+            summary = f"Needs confirmation: {tr.get('summary')}"
+        trace_entry = {"tool": tname, "summary": summary, "status": tr.get("status", "ok")}
+        if tr.get("action_id"):
+            trace_entry["action_id"] = tr["action_id"]
+            trace_entry["action_summary"] = tr.get("summary")
+        tools_called_trace.append(trace_entry)
 
     telemetry = build_llm_execution_telemetry(
         active_model=active_model,

@@ -12338,6 +12338,48 @@ export async function runAiPathIndex(targetPath = null, respectStandby = true) {
 }
 
 
+// ZettAI proposes actions that change the system; they run only on this click (AI-01).
+let _aiConfirmHandlerBound = false;
+function _bindAiConfirmHandler() {
+  if (_aiConfirmHandlerBound || typeof document === 'undefined') return;
+  _aiConfirmHandlerBound = true;
+  document.addEventListener('click', async (e) => {
+    const btn = e.target?.closest?.('.ai-chat-confirm-action');
+    if (!btn || btn.disabled) return;
+    const actionId = btn.dataset.actionId;
+    const row = btn.closest('.ai-chat-action-proposal');
+    const status = row?.querySelector('.ai-chat-action-status');
+    row?.querySelectorAll('button').forEach((b) => { b.disabled = true; });
+    if (btn.dataset.decision === 'cancel') {
+      if (status) status.textContent = 'Cancelled';
+      return;
+    }
+    if (status) status.textContent = 'Running...';
+    try {
+      const out = await api.post(`/api/ai/actions/${encodeURIComponent(actionId)}/confirm`, {});
+      const ok = out && out.status === 'ok';
+      if (status) status.textContent = ok ? `Done: ${out.message || out.summary || 'OK'}` : `Not run: ${out?.error || out?.status || 'unknown error'}`;
+      showToast(ok ? `${out.summary || 'Action'} done` : `${out?.summary || 'Action'} failed: ${out?.error || ''}`, ok ? 'success' : 'error');
+    } catch (err) {
+      if (status) status.textContent = `Not run: ${err.message}`;
+      showToast(`Action failed: ${err.message}`, 'error');
+    }
+  });
+}
+
+function _buildAiActionProposalsHtml(toolsCalled) {
+  const proposals = toolsCalled.filter((tc) => tc && tc.action_id && tc.status === 'confirmation_required');
+  if (!proposals.length) return '';
+  _bindAiConfirmHandler();
+  return proposals.map((tc) => `
+      <div class="ai-chat-action-proposal" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding:8px 10px; border-radius:8px; background:rgba(245,158,11,0.10); border:1px solid rgba(251,191,36,0.38);">
+        <span style="font-size:12px; font-weight:700; color:#fde68a;">⏸️ ${escapeHtml(tc.action_summary || tc.tool)}</span>
+        <button type="button" class="btn ai-chat-confirm-action" data-action-id="${escapeHtml(tc.action_id)}" data-decision="confirm" style="font-size:11px; padding:3px 10px;">Confirm</button>
+        <button type="button" class="btn ai-chat-confirm-action" data-action-id="${escapeHtml(tc.action_id)}" data-decision="cancel" style="font-size:11px; padding:3px 10px; opacity:0.8;">Cancel</button>
+        <span class="ai-chat-action-status" style="font-size:11px; color:#cbd5e1;"></span>
+      </div>`).join('');
+}
+
 function _buildAiAssistantMessageHtml(res, defaultModel) {
   const replyMd = res.reply || res.answer || 'No response generated.';
   const llmTel = res.llm_telemetry || {};
@@ -12473,6 +12515,7 @@ function _buildAiAssistantMessageHtml(res, defaultModel) {
       </div>
     </div>
     ${toolsBadgesHtml}
+    ${_buildAiActionProposalsHtml(toolsCalled)}
     ${folderBannerHtml}
     <div class="ai-chat-reply-body" style="font-size: 12px; color: #f1f5f9; line-height: 1.55;">
       ${_formatChatMarkdown(replyMd)}
