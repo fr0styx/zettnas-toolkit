@@ -1,6 +1,6 @@
 # ZettNAS Toolkit - Release Changelog
 
-## v1.9.2 (unreleased) - Security Release
+## v1.9.2 (2026-10-21) - Stable (Security Release)
 ### 🔒 Critical security fixes. Upgrade now.
 
 This release contains important security fixes. **Everyone running 1.9.1 or earlier should upgrade.** See [SECURITY.md](SECURITY.md).
