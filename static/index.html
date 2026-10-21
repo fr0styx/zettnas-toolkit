@@ -137,8 +137,10 @@
               'mgmt-pane-screensaver': 'mgmt-sec-wallpaper',
               'mgmt-sec-screensaver': 'mgmt-sec-wallpaper',
               'mgmt-pane-widgets': 'mgmt-sec-wallpaper',
-              'mgmt-pane-language': 'mgmt-sec-system-group',
-              'mgmt-sec-language': 'mgmt-sec-system-group',
+              'mgmt-pane-calendar': 'mgmt-sec-wallpaper',
+              'mgmt-sec-calendar': 'mgmt-sec-wallpaper',
+              'mgmt-pane-language': 'mgmt-sec-wallpaper',
+              'mgmt-sec-language': 'mgmt-sec-wallpaper',
               'mgmt-sec-activity': 'mgmt-sec-activity',
               'mgmt-pane-metrics': 'mgmt-sec-activity',
               'mgmt-sec-copy': 'mgmt-sec-storage',
@@ -190,6 +192,11 @@
             subCss += '#management-hub-view { display: none !important; }\n';
             subCss += '#management-detail-container { display: block !important; }\n';
             subCss += '#' + sec + ' { display: block !important; }\n';
+            if (sec === 'mgmt-sec-activity' || sec === 'mgmt-sec-ups') {
+              subCss += '.mgmt-content-pane { padding-top: 20px !important; }\n';
+            } else {
+              subCss += '.mgmt-content-pane { padding-top: 0 !important; }\n';
+            }
             if (ap !== sec) {
               subCss += '#' + sec + ' .mgmt-inner-tab { background: transparent !important; color: #94a3b8 !important; border-color: transparent !important; }\n';
               subCss += '#' + sec + ' .mgmt-inner-tab[data-tab-target="' + ap + '"] { background: rgba(37, 194, 160, 0.16) !important; color: #fff !important; border-color: rgba(37, 194, 160, 0.4) !important; font-weight: 700 !important; }\n';
@@ -209,14 +216,16 @@
   })();
 </script>
 <style>html,body{color:#eaf1f8;background-color:#080c10;width:100%;height:100%;margin:0;padding:0;overflow:hidden}html.auth-required body{background:radial-gradient(circle at 50% 20%,#151d29 0%,#080c10 70%)!important}#login-overlay{z-index:999999;background:#080c10;justify-content:center;align-items:center;display:flex;position:fixed;inset:0}html.has-auth-session #login-overlay{display:none!important}html.auth-required #login-overlay{display:flex!important}html.is-desktop-locked #lock-overlay{opacity:1!important;display:flex!important}html.is-desktop-locked body{overflow:hidden!important}html.auth-required .studio-viewport-wrapper,html.auth-required .suite-navbar,html.auth-required #desktop-icons-container,html.auth-required .desktop-icons-container,html.auth-required .top-nav,html.auth-required #desktop-widgets-container,html.auth-required #os-dock-container,html.auth-required .smart-modal-backdrop,html.auth-required .os-window,html.auth-required .notif-center-window{display:none!important}</style>
-  <script type="module" crossorigin src="/assets/index-2LdcWIgA.js"></script>
+  <script type="module" crossorigin src="/assets/index-Cy_wr5M0.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-CbXtAM7H.js">
-  <link rel="modulepreload" crossorigin href="/assets/dock-LJQn8L3n.js">
-  <link rel="modulepreload" crossorigin href="/assets/setup-wizard-Dn7RXX_3.js">
-  <link rel="modulepreload" crossorigin href="/assets/dashboard-CO2VSfeq.js">
-  <link rel="modulepreload" crossorigin href="/assets/users-CiwGlUaG.js">
-  <link rel="modulepreload" crossorigin href="/assets/auth-aF0jyfqi.js">
-  <link rel="stylesheet" crossorigin href="/assets/index-Cx8BEWqo.css">
+  <link rel="modulepreload" crossorigin href="/assets/app-i18n-BvmM7mwQ.js">
+  <link rel="modulepreload" crossorigin href="/assets/dock-B2cmnvmz.js">
+  <link rel="modulepreload" crossorigin href="/assets/vendor-qrcode-Ca2H7ayG.js">
+  <link rel="modulepreload" crossorigin href="/assets/setup-wizard-BzbKDV32.js">
+  <link rel="modulepreload" crossorigin href="/assets/dashboard-U4e6lO2z.js">
+  <link rel="modulepreload" crossorigin href="/assets/users-BaI_663h.js">
+  <link rel="modulepreload" crossorigin href="/assets/auth--tnKfQ9S.js">
+  <link rel="stylesheet" crossorigin href="/assets/index-BnofZ7JM.css">
 </head>
 <body class="studio-workbench no-specular-glow">
 
@@ -336,6 +345,9 @@
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
+    <symbol id="i-chat" viewBox="0 0 24 24">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
     <symbol id="i-users" viewBox="0 0 24 24">
       <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       <circle cx="9" cy="7" r="4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -527,8 +539,6 @@
       <div id="unraid-array-pill" class="suite-pill hidden"><span class="pulse-dot" id="unraid-array-dot"></span> <span data-i18n="nav.array">Array</span>: <strong id="unraid-array-status">STARTED</strong></div>
       <div id="unraid-parity-pill" class="suite-pill hidden"><span class="pulse-dot" style="background:var(--accent-cyan,#00f0ff);box-shadow:0 0 6px var(--accent-cyan,#00f0ff)"></span> <span data-i18n="nav.parity">Parity</span>: <strong id="unraid-parity-status">0.0%</strong></div>
       <div id="unraid-mover-pill" class="suite-pill hidden"><span class="pulse-dot" style="background:var(--warn,#f5a623);box-shadow:0 0 6px var(--warn,#f5a623)"></span> <span data-i18n="nav.mover">Mover</span>: <strong id="unraid-mover-status">Active</strong></div>
-      <div id="mcu-status-pill" class="suite-pill hidden"><span class="pulse-dot"></span> MCU: <strong id="mcu-status-text">/dev/ttyACM0</strong></div>
-      <div id="fb-status-pill" class="suite-pill hidden"><span class="pulse-dot"></span> FB: <strong id="fb-status-text">/dev/fb0 (640x172)</strong></div>
       <div id="topbar-ups-pill" class="suite-pill hidden" style="cursor:pointer;" title="Click to open Power & Battery Cockpit"><span class="pulse-dot" id="topbar-ups-dot" style="background:var(--ok2,#25c2a0);box-shadow:0 0 6px var(--ok2,#25c2a0)"></span> <span data-i18n="nav.ups">UPS</span>: <strong id="topbar-ups-text">--%</strong></div>
       <div id="topbar-ai-accel-pill" class="suite-pill" style="cursor:pointer;" title="AI Knowledge & Visual Search Engine • Click to view NPU/GPU/CPU acceleration & Standby Guard"><span class="pulse-dot" id="topbar-ai-accel-dot" style="background:var(--accent-cyan,#00f0ff);box-shadow:0 0 6px var(--accent-cyan,#00f0ff)"></span> <span data-i18n="nav.ai">AI</span>: <strong id="topbar-ai-accel-text">NPU • Standby Safe</strong></div>
       <select id="suite-lang-select" class="language-picker-select tz-select-input" title="Select Display Language" style="width: auto; padding: 2px 6px; font-size: 11px; height: 26px; border-radius: 6px; cursor: pointer;">
@@ -552,7 +562,7 @@
         <!-- Desktop Widgets Layer -->
     <div id="desktop-widgets-container" class="pos-top-right glass-standard scale-normal">
       <!-- 1. Time Clock Widget -->
-      <div class="desktop-widget" id="widget-clock">
+      <div class="desktop-widget" id="widget-clock" role="button" tabindex="0" title="Click to change timezone & clock format" style="cursor: pointer;">
         <div class="widget-header">
           <span class="widget-title"><svg class="ic" style="width:12px;height:12px;"><use href="#i-clock"/></svg> <span data-i18n="widget.clock">Time Clock</span></span>
           <span class="widget-badge" id="w-clock-tz" title="Click to toggle 12h/24h" style="cursor: pointer; user-select: none;">24H</span>
@@ -614,6 +624,24 @@
           </div>
         </div>
 
+        <!-- Live Re-indexing Progress Box inside Widget -->
+        <div id="w-ai-reindex-strip" style="display:none; margin:8px 0 6px 0; padding:6px 10px; border-radius:6px; background:rgba(15,23,42,0.85); border:1px solid rgba(14,165,233,0.35); cursor:pointer;" title="Click to view Knowledge Base &amp; RAG Indexing">
+          <div style="display:flex; justify-content:space-between; align-items:center; font-size:10px; margin-bottom:4px;">
+            <div style="display:flex; align-items:center; gap:5px;">
+              <span class="pulsing-dot" style="width:6px; height:6px; border-radius:50%; background:#00f0ff; display:inline-block;"></span>
+              <strong style="color:#fff;" data-i18n="ai.reindex_label">Re-indexing</strong>
+              <span id="w-ai-reindex-chunks" style="color:#94a3b8; font-family:monospace; font-size:9.5px;">0 / 0</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span id="w-ai-reindex-eta" style="color:#fbbf24; font-size:9.5px;">ETA: --</span>
+              <strong id="w-ai-reindex-pct" style="color:var(--accent-cyan,#00f0ff); font-size:10.5px;">0%</strong>
+            </div>
+          </div>
+          <div style="height:4px; background:rgba(255,255,255,0.08); border-radius:999px; overflow:hidden;">
+            <div id="w-ai-reindex-bar" style="height:100%; width:0%; background:linear-gradient(90deg, #0ea5e9, #00f0ff); transition:width 0.3s ease;"></div>
+          </div>
+        </div>
+
         <!-- Active Engine / Silicon Status Strip -->
         <div class="ai-engine-footer" id="w-ai-engine-status">
           <span class="ai-status-dot standby"></span>
@@ -622,7 +650,7 @@
       </div>
 
       <!-- 2. Weather Widget -->
-      <div class="desktop-widget" id="widget-weather">
+      <div class="desktop-widget" id="widget-weather" role="button" tabindex="0" title="Click to open Weather & Widget Settings">
         <div class="widget-header">
           <span class="widget-title"><svg class="ic" style="width:12px;height:12px;"><use href="#i-weather"/></svg> <span data-i18n="widget.weather">Local Weather</span></span>
           <span class="widget-badge" id="w-weather-city" title="Detected location">--</span>
@@ -643,7 +671,7 @@
       </div>
 
       <!-- 3. Calendar Widget -->
-      <div class="desktop-widget" id="widget-calendar" style="display: none;">
+      <div class="desktop-widget" id="widget-calendar" role="button" tabindex="0" title="Click to view notes, reminders & calendar sync" style="display: none; cursor: pointer;">
         <div class="widget-header">
           <span class="widget-title">
             <svg class="ic" style="width:12px;height:12px;"><use href="#i-calendar"/></svg>
@@ -661,7 +689,7 @@
       </div>
 
       <!-- 4. System Widget -->
-      <div class="desktop-widget" id="widget-system">
+      <div class="desktop-widget" id="widget-system" role="button" tabindex="0" title="Click to open Dashboard & Telemetry">
         <div class="widget-header">
           <span class="widget-title"><svg class="ic" style="width:12px;height:12px;"><use href="#i-cpu"/></svg> <span data-i18n="widget.system">System Status</span></span>
         </div>
@@ -685,7 +713,7 @@
       </div>
       
       <!-- 5. Network Widget -->
-      <div class="desktop-widget" id="widget-network">
+      <div class="desktop-widget" id="widget-network" role="button" tabindex="0" title="Click to open Network & Switch Inspector">
         <div class="widget-header">
           <span class="widget-title"><svg class="ic" style="width:12px;height:12px;"><use href="#i-net"/></svg> <span data-i18n="widget.network">Network IO</span></span>
           <span class="widget-badge" id="w-net-iface">bond0</span>
@@ -703,7 +731,7 @@
       </div>
 
       <!-- 6. Storage Pool Widget -->
-      <div class="desktop-widget" id="widget-storage">
+      <div class="desktop-widget" id="widget-storage" role="button" tabindex="0" title="Click to open Storage Pool & Array Topology">
         <div class="widget-header">
           <span class="widget-title"><svg class="ic" style="width:12px;height:12px;"><use href="#i-storage"/></svg> <span data-i18n="widget.storage">Storage Pool</span></span>
           <span class="widget-badge" id="w-storage-status">ONLINE</span>
@@ -887,6 +915,19 @@
     <div class="smart-panes-container">
       <!-- PANE 1: Health & Velocity -->
       <div id="smart-pane-health" class="smart-pane active">
+        <div id="smart-standby-banner" style="display: none; margin-bottom: 12px; padding: 10px 14px; border-radius: 8px; font-size: 11px; line-height: 1.4; border: 1px solid rgba(234, 179, 8, 0.35); background: rgba(234, 179, 8, 0.12); align-items: center; justify-content: space-between; gap: 12px;">
+          <div>
+            <div style="color: #eab308; font-weight: 700; font-size: 11.5px; display: flex; align-items: center; gap: 6px;">
+              <span>💤</span> <span data-i18n="modal.smart_standby_title">Drive Platters in Low-Power Standby</span>
+            </div>
+            <div style="color: var(--muted); font-size: 10.5px; margin-top: 2px;" data-i18n="modal.smart_standby_desc">
+              Platters are spun down to save power and eliminate mechanical wear. S.M.A.R.T. telemetry is paused.
+            </div>
+          </div>
+          <button id="smart-btn-wake-modal" type="button" class="btn-primary" style="background: #eab308; color: #000; font-weight: 700; font-size: 10.5px; padding: 6px 14px; border-radius: 6px; cursor: pointer; border: none; white-space: nowrap; display: flex; align-items: center; gap: 4px;">
+            <span>⚡</span> <span data-i18n="modal.smart_wake_btn">Wake Drive</span>
+          </button>
+        </div>
         <div class="smart-meta-grid" id="smart-modal-grid">
           <div class="smart-meta-cell"><span class="lbl" id="smart-lbl-1" data-i18n="modal.smart_device_model">DEVICE & MODEL</span><span class="val" id="smart-meta-model">--</span></div>
           <div class="smart-meta-cell"><span class="lbl" id="smart-lbl-2" data-i18n="modal.smart_serial_metric">SERIAL / METRIC</span><span class="val" id="smart-meta-serial">--</span></div>
@@ -1801,8 +1842,9 @@
     <button class="drawer-tab-btn" data-tab="tab-led" data-i18n="settings.tab_led">LED Strip bar</button>
     <button class="drawer-tab-btn" data-tab="tab-fans" data-i18n="settings.tab_fans">Fans</button>
     <button class="drawer-tab-btn" data-tab="tab-buttons" data-i18n="settings.tab_buttons">Copy Button</button>
-    </div>
+  </div>
 
+  <div id="drawer-tabs-container">
   <div id="tab-layout" class="drawer-tab-content active">
     <div class="tab-sub-header">
       <span class="sub-title" data-i18n="settings.section_arrangement">Layout Section Arrangement</span>
@@ -2276,23 +2318,41 @@
               </linearGradient>
             </defs>
 
-            <line x1="38" y1="20" x2="285" y2="20" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
-            <line x1="38" y1="77" x2="285" y2="77" stroke="rgba(56,189,248,0.25)" stroke-width="1" stroke-dasharray="3,3"/>
+            <!-- Horizontal percentage guide gridlines -->
+            <line x1="38" y1="20" x2="285" y2="20" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+            <line x1="38" y1="36.8" x2="285" y2="36.8" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="2,2"/>
+            <line x1="38" y1="53.6" x2="285" y2="53.6" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="2,2"/>
+            <line x1="38" y1="70.4" x2="285" y2="70.4" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="2,2"/>
+            <line x1="38" y1="77.12" x2="285" y2="77.12" stroke="rgba(56,189,248,0.3)" stroke-width="1" stroke-dasharray="3,3"/>
+            <line x1="38" y1="87.2" x2="285" y2="87.2" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="2,2"/>
             <line x1="38" y1="104" x2="285" y2="104" stroke="rgba(56,189,248,0.4)" stroke-width="1"/>
 
-            <!-- Vertical temperature guide gridlines -->
-            <line x1="100" y1="20" x2="100" y2="104" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="2,2"/>
-            <line x1="161" y1="20" x2="161" y2="104" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="2,2"/>
-            <line x1="223" y1="20" x2="223" y2="104" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="2,2"/>
+            <!-- Vertical temperature guide gridlines (granular 5°C intervals) -->
+            <line x1="38" y1="20" x2="38" y2="104" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+            <line x1="79.2" y1="20" x2="79.2" y2="104" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="2,2"/>
+            <line x1="120.3" y1="20" x2="120.3" y2="104" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="2,2"/>
+            <line x1="161.5" y1="20" x2="161.5" y2="104" stroke="rgba(255,255,255,0.06)" stroke-width="1" stroke-dasharray="2,2"/>
+            <line x1="202.7" y1="20" x2="202.7" y2="104" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="2,2"/>
+            <line x1="243.8" y1="20" x2="243.8" y2="104" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="2,2"/>
+            <line x1="285" y1="20" x2="285" y2="104" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
             
-            <text x="32" y="23" fill="#78838f" font-size="8" text-anchor="end" font-weight="700">100%</text>
-            <text x="32" y="80" fill="#38bdf8" font-size="8" text-anchor="end" font-weight="700">32%</text>
-            <text x="32" y="107" fill="#38bdf8" font-size="8" text-anchor="end" font-weight="700">0%</text>
-            <text x="38" y="128" fill="#78838f" font-size="8" text-anchor="start" font-weight="700">30°C</text>
-            <text x="100" y="128" fill="#78838f" font-size="8" text-anchor="middle" font-weight="700">37.5°C</text>
-            <text x="161" y="128" fill="#78838f" font-size="8" text-anchor="middle" font-weight="700">45°C</text>
-            <text x="223" y="128" fill="#78838f" font-size="8" text-anchor="middle" font-weight="700">52.5°C</text>
-            <text x="285" y="128" fill="#78838f" font-size="8" text-anchor="end" font-weight="700">60°C+</text>
+            <!-- Y-Axis Percentage Labels -->
+            <text x="32" y="23" fill="#94a3b8" font-size="7.5" text-anchor="end" font-weight="700">100%</text>
+            <text x="32" y="39.5" fill="#64748b" font-size="7" text-anchor="end" font-weight="600">80%</text>
+            <text x="32" y="56.5" fill="#64748b" font-size="7" text-anchor="end" font-weight="600">60%</text>
+            <text x="32" y="73" fill="#64748b" font-size="7" text-anchor="end" font-weight="600">40%</text>
+            <text x="32" y="79.5" fill="#38bdf8" font-size="7.5" text-anchor="end" font-weight="700">32%</text>
+            <text x="32" y="90" fill="#64748b" font-size="7" text-anchor="end" font-weight="600">20%</text>
+            <text x="32" y="107" fill="#38bdf8" font-size="7.5" text-anchor="end" font-weight="700">0%</text>
+
+            <!-- X-Axis Temperature Labels (30°C to 60°C in 5°C increments) -->
+            <text x="38" y="128" fill="#78838f" font-size="7.5" text-anchor="start" font-weight="700">30°C</text>
+            <text x="79.2" y="128" fill="#78838f" font-size="7.5" text-anchor="middle" font-weight="700">35°C</text>
+            <text x="120.3" y="128" fill="#78838f" font-size="7.5" text-anchor="middle" font-weight="700">40°C</text>
+            <text x="161.5" y="128" fill="#78838f" font-size="7.5" text-anchor="middle" font-weight="700">45°C</text>
+            <text x="202.7" y="128" fill="#78838f" font-size="7.5" text-anchor="middle" font-weight="700">50°C</text>
+            <text x="243.8" y="128" fill="#78838f" font-size="7.5" text-anchor="middle" font-weight="700">55°C</text>
+            <text x="285" y="128" fill="#78838f" font-size="7.5" text-anchor="end" font-weight="700">60°C+</text>
 
             <path id="curve-area-path" d="M 38 100 L 115 100 L 257 20 L 285 20 L 285 100 Z" fill="url(#curveGradient)"/>
             <path id="curve-svg-path" d="M 38 100 L 115 100 L 257 20 L 285 20" fill="none" stroke="var(--ok2)" stroke-width="2.5" stroke-linecap="round"/>
@@ -2416,6 +2476,62 @@
           <input type="range" id="fan-pwm-slider" min="10" max="100" value="60" step="1" class="custom-slider">
         </div>
       </div>
+
+      <div class="draggable-card drawer-card" id="fan-card-acoustic" data-fan-card-id="fan-card-acoustic">
+        <div class="card-headline">
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <span data-i18n="settings.acoustic_calibration_title">Acoustic Resonance Calibration</span><button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
+          <span id="acoustic-sweep-badge" class="suite-badge" style="background:rgba(56,189,248,0.15); color:var(--accent, #38bdf8); border-color:rgba(56,189,248,0.35);">READY</span>
+        </div>
+        <div class="card-instruction" data-i18n="settings.acoustic_calibration_desc">
+          Automated PWM step test from 58 to 183 to detect chassis resonance frequencies and map acoustic RPM stability.
+        </div>
+        
+        <div class="acoustic-calibration-cockpit" style="margin-top:12px; display:flex; flex-direction:column; gap:10px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; gap:8px; align-items:center;">
+              <button id="btn-start-acoustic-sweep" class="btn-fan-action btn-fan-apply" type="button" style="height:28px; padding:0 12px; font-size:11px;">
+                <svg class="ic ic-xs"><use href="#i-bolt"/></svg>
+                <span data-i18n="settings.start_acoustic_sweep">Start Sweep</span>
+              </button>
+              <button id="btn-stop-acoustic-sweep" class="btn-fan-action btn-fan-delete" type="button" style="height:28px; padding:0 12px; font-size:11px; display:none;">
+                <svg class="ic ic-xs"><use href="#i-cross"/></svg>
+                <span data-i18n="settings.stop_acoustic_sweep">Stop</span>
+              </button>
+            </div>
+            <div style="display:flex; flex-direction:column; align-items:flex-end;">
+              <span id="acoustic-sweep-status" style="font-size:11px; font-weight:700; color:var(--text-dim, #94a3b8);">Idle</span>
+              <span id="acoustic-current-step" style="font-size:10px; font-family:monospace; color:var(--accent, #38bdf8);">Step --/--</span>
+            </div>
+          </div>
+
+          <!-- Progress bar -->
+          <div id="acoustic-progress-bar-wrap" style="height:4px; width:100%; background:rgba(255,255,255,0.06); border-radius:2px; overflow:hidden; display:none;">
+            <div id="acoustic-progress-bar" style="height:100%; width:0%; background:linear-gradient(90deg, #38bdf8, #25c2a0); transition:width 0.3s ease;"></div>
+          </div>
+
+          <!-- Visualizer chart -->
+          <div class="acoustic-chart-box" style="background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:8px; min-height:80px;">
+            <svg id="acoustic-chart-svg" viewBox="0 0 280 80" style="width:100%; height:80px; display:block;">
+              <!-- Grid lines -->
+              <line x1="25" y1="15" x2="275" y2="15" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+              <line x1="25" y1="40" x2="275" y2="40" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+              <line x1="25" y1="65" x2="275" y2="65" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+              <text x="20" y="18" fill="#64748b" font-size="7" text-anchor="end" font-family="monospace">2k</text>
+              <text x="20" y="43" fill="#64748b" font-size="7" text-anchor="end" font-family="monospace">1k</text>
+              <text x="20" y="68" fill="#64748b" font-size="7" text-anchor="end" font-family="monospace">0</text>
+              <text x="25" y="77" fill="#64748b" font-size="7" text-anchor="start" font-family="monospace">58 PWM</text>
+              <text x="275" y="77" fill="#64748b" font-size="7" text-anchor="end" font-family="monospace">183 PWM</text>
+              
+              <!-- Plot paths -->
+              <path id="acoustic-rpm-path" d="" fill="none" stroke="var(--accent, #38bdf8)" stroke-width="2" stroke-linecap="round"/>
+              <g id="acoustic-chart-points"></g>
+            </svg>
+            <div id="acoustic-results-summary" style="font-size:10px; color:var(--text-dim, #94a3b8); margin-top:4px; text-align:center;">
+              Run test to plot RPM linearity and identify acoustic rattle zones.
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -2446,6 +2562,7 @@
               <div style="display:flex; gap:6px; align-items:center;">
                 <span id="media-slot-info-badge" class="suite-badge" style="font-size:10px;">SLOTS EMPTY</span>
                 <button id="btn-media-rescan" type="button" class="btn-pill-toggle" style="padding: 2px 8px; font-size: 10px; margin: 0; height: 22px; cursor: pointer;" title="Rescan and re-detect inserted cards">🔄 Scan</button>
+                <button id="btn-media-copy-now" type="button" class="btn-pill-toggle" style="padding: 2px 8px; font-size: 10px; margin: 0; height: 22px; color: var(--ok2, #25c2a0); border-color: rgba(37,194,160,0.4); cursor: pointer;" title="Start media ingest now from inserted card">▶ Copy Now</button>
                 <button id="btn-media-eject" type="button" class="btn-pill-toggle" style="padding: 2px 8px; font-size: 10px; margin: 0; height: 22px; color: #f87171; border-color: rgba(239,68,68,0.3); cursor: pointer;" title="Safely unmount and eject card">⏏ Eject</button>
               </div>
             </div>
@@ -2513,6 +2630,7 @@
   
 
 
+  </div>
 </aside>
 
 
@@ -2744,19 +2862,19 @@
   
 <div id="copy-toast-backdrop" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 10000; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;"></div>
 
-<div id="copy-toast" class="smart-modal-window" style="position: fixed; bottom: 20px; right: 20px; width: 350px; z-index: 10001; opacity: 0; pointer-events: none; transition: opacity 0.3s ease, transform 0.3s ease; transform: translateY(20px); border-color: rgba(255,255,255,0.1);" role="alertdialog" aria-modal="true">
-  <div class="smart-modal-header" style="padding: 10px 15px; display: flex; justify-content: space-between; align-items: center;">
+<div id="copy-toast" class="smart-modal-window" style="position: fixed; bottom: 20px; right: 20px; width: 360px; max-width: 90vw; height: auto; min-height: 0; resize: none; z-index: 10001; opacity: 0; pointer-events: none; transition: opacity 0.3s ease, transform 0.3s ease; transform: translateY(20px); border-color: rgba(255,255,255,0.1);" role="alertdialog" aria-modal="true">
+  <div class="smart-modal-header" style="padding: 10px 14px; display: flex; justify-content: space-between; align-items: center;">
     <div class="smart-modal-title" style="display:flex; align-items:center;"><svg class="ic ic-sm" style="margin-right:4px;"><use href="#i-storage"/></svg> <span data-i18n="modal.copy_title">Media card ingest</span></div>
-    <div style="display:flex; gap:12px; align-items:center;">
-      <button id="copy-toast-pause" class="btn-icon" style="opacity: 0.8; cursor: pointer; border:none; background:none; color:var(--warn); font-weight:bold; font-size: 14px; margin-right: 4px;" aria-label="Pause copy">⏸</button>
+    <div style="display:flex; gap:10px; align-items:center;">
+      <button id="copy-toast-pause" class="btn-icon" style="opacity: 0.8; cursor: pointer; border:none; background:none; color:var(--warn); font-weight:bold; font-size: 14px; margin-right: 2px;" aria-label="Pause copy">⏸</button>
       <div class="os-window-controls">
         <button class="win-btn min-btn" id="copy-toast-min" title="Minimize" aria-label="Minimize"></button>
-        <button class="win-btn max-btn" id="copy-toast-max" title="Maximize" aria-label="Maximize"></button>
+        <button class="win-btn max-btn" id="copy-toast-max" title="Maximize" aria-label="Maximize" style="display:none;"></button>
         <button class="win-btn close-btn" id="copy-toast-cancel" title="Close" aria-label="Close"></button>
       </div>
     </div>
   </div>
-  <div class="smart-modal-body" style="padding: 15px; gap: 8px;">
+  <div class="smart-modal-body" style="padding: 12px 14px; gap: 8px;">
     <div style="display:flex; justify-content: space-between;">
       <span id="copy-toast-status" style="font-size: 11px; font-weight: 700; color: #fff; text-transform: uppercase;" data-i18n="modal.copying">Copying...</span>
       <span id="copy-toast-pct" style="font-size: 11px; font-weight: 700; color: var(--ok2);">0%</span>
@@ -3045,31 +3163,87 @@
           <!-- 1. Appearance -->
                   <!-- 1. Appearance -->
         <div id="mgmt-sec-wallpaper" class="mgmt-detail-card" style="display: none;">
-          <div class="mgmt-inner-tabs" role="tablist">
-            <button class="mgmt-inner-tab active" role="tab" aria-selected="true" data-tab-target="mgmt-pane-wallpaper">
-              <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-screen"/></svg>
-              <span data-i18n="mgmt.subtab_wallpaper">Wallpaper</span>
-            </button>
-            <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-theme">
-              <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-sliders"/></svg>
-              <span data-i18n="mgmt.subtab_theme">Desktop Theme</span>
-            </button>
-            <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-glass">
-              <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-sliders"/></svg>
-              <span data-i18n="mgmt.subtab_glass">Glass & Effects</span>
-            </button>
-            <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-dock">
-              <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-grid"/></svg>
-              <span data-i18n="mgmt.subtab_dock">Dock & Desktop</span>
-            </button>
-            <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-screensaver">
-              <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-clock"/></svg>
-              <span data-i18n="mgmt.subtab_screensaver">Screensaver</span>
-            </button>
-            <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-widgets">
-              <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-grid"/></svg>
-              <span data-i18n="mgmt.subtab_widgets">Widgets</span>
-            </button>
+          <div class="mgmt-sticky-subnav">
+            <div class="mgmt-inner-tabs" role="tablist">
+              <button class="mgmt-inner-tab active" role="tab" aria-selected="true" data-tab-target="mgmt-pane-wallpaper">
+                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-screen"/></svg>
+                <span data-i18n="mgmt.subtab_wallpaper">Wallpaper</span>
+              </button>
+              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-theme">
+                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-sliders"/></svg>
+                <span data-i18n="mgmt.subtab_theme">Desktop Theme</span>
+              </button>
+              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-glass">
+                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-sliders"/></svg>
+                <span data-i18n="mgmt.subtab_glass">Glass & Effects</span>
+              </button>
+              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-dock">
+                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-grid"/></svg>
+                <span data-i18n="mgmt.subtab_dock">Dock & Desktop</span>
+              </button>
+              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-screensaver">
+                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-clock"/></svg>
+                <span data-i18n="mgmt.subtab_screensaver">Screensaver</span>
+              </button>
+              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-widgets">
+                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-grid"/></svg>
+                <span data-i18n="mgmt.subtab_widgets">Widgets</span>
+              </button>
+              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-calendar" id="mgmt-tab-calendar">
+                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-calendar"/></svg>
+                <span data-i18n="mgmt.subtab_calendar">Calendar & Agenda</span>
+              </button>
+              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-language" id="mgmt-tab-language">
+                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-globe"/></svg>
+                <span data-i18n="mgmt.subtab_language">Time, Language & Region</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Master Interactive Live Desktop Twin Preview -->
+          <div class="desktop-twin-preview-wrapper" style="margin: 12px 16px 14px 16px; padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
+              <div style="display:flex; align-items:center; gap: 8px;">
+                <svg class="ic" style="width:14px; height:14px; color:var(--brand, #00f0ff);"><use href="#i-screen"/></svg>
+                <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.5px; color: #fff;" data-i18n="mgmt.preview_title">LIVE DESKTOP WORKSPACE TWIN</span>
+              </div>
+              <div style="display:flex; align-items:center; gap: 6px;">
+                <span id="dt-theme-badge" class="desktop-twin-badge" style="font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 12px; background: rgba(0,240,255,0.15); color: var(--brand, #00f0ff); border: 1px solid rgba(0,240,255,0.3);">CYBER TEAL</span>
+                <span style="font-size: 10px; color: var(--muted); font-family: var(--font-mono, monospace);">16:9 PREVIEW</span>
+              </div>
+            </div>
+
+            <div id="desktop-twin-viewport" class="desktop-twin-viewport">
+              <div id="dt-wallpaper" class="dt-wallpaper"></div>
+              <div id="dt-wallpaper-dimmer" class="dt-wallpaper-dimmer"></div>
+              
+              <!-- Mini Active Window Mockup -->
+              <div id="dt-window" class="dt-window">
+                <div class="dt-window-header">
+                  <div class="dt-window-controls">
+                    <span class="dt-win-dot dt-dot-red"></span>
+                    <span class="dt-win-dot dt-dot-yellow"></span>
+                    <span class="dt-win-dot dt-dot-green"></span>
+                  </div>
+                  <div class="dt-window-title">ZettNAS Workbench</div>
+                </div>
+                <div class="dt-window-body">
+                  <div class="dt-mock-chip"></div>
+                  <div class="dt-mock-line" style="width: 75%;"></div>
+                  <div class="dt-mock-line" style="width: 45%;"></div>
+                </div>
+              </div>
+
+              <!-- Mini Dock Mockup -->
+              <div id="dt-dock-container" class="dt-dock-container dt-dock-pos-bottom">
+                <div id="dt-dock" class="dt-dock">
+                  <div class="dt-dock-item"><div class="dt-dock-icon"></div></div>
+                  <div class="dt-dock-item active"><div class="dt-dock-icon"></div><span class="dt-dock-ind"></span></div>
+                  <div class="dt-dock-item"><div class="dt-dock-icon"></div></div>
+                  <div class="dt-dock-item"><div class="dt-dock-icon"></div></div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- Sub-tab 1: Wallpaper & Backgrounds Gallery -->
@@ -3088,6 +3262,11 @@
                 <!-- Toolbar: Filter & Actions -->
                 <div class="wallpaper-gallery-toolbar">
                   <div class="wallpaper-filter-pills">
+                    <button class="wallpaper-cat-pill active" data-cat="all">All</button>
+                    <button class="wallpaper-cat-pill" data-cat="gradient">Gradient</button>
+                    <button class="wallpaper-cat-pill" data-cat="scenic">Scenic</button>
+                    <button class="wallpaper-cat-pill" data-cat="cyber">Cyberpunk</button>
+                    <button class="wallpaper-cat-pill" data-cat="oled">OLED</button>
                     <span id="wallpaper-count-badge" class="wallpaper-count-badge">0 Wallpapers</span>
                   </div>
                   <div class="wallpaper-toolbar-actions">
@@ -3269,7 +3448,39 @@
                     <div style="display:flex; align-items:center; gap:6px; margin-left:auto;">
                       <input type="color" id="desktop-custom-color-picker" value="#00f0ff" style="width:28px; height:28px; border:none; padding:0; background:none; cursor:pointer; border-radius:4px;">
                       <span id="desktop-custom-hex-val" style="font-size:11px; font-family:monospace; color:var(--muted);">#00F0FF</span>
+                      <span id="desktop-contrast-badge" class="desktop-contrast-badge" style="font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; background: rgba(34, 197, 94, 0.15); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.35);">AA PASS</span>
                     </div>
+                  </div>
+                </div>
+
+                <!-- Wallpaper Harmony Palette Extractor -->
+                <div class="wallpaper-palette-extractor-wrap" style="margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.06);">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <div>
+                      <div style="font-size:10.5px; font-weight:700; color:var(--muted); letter-spacing:0.5px;" data-i18n="settings.wallpaper_harmony_label">WALLPAPER HARMONY PALETTE (WCAG 2.2 AA)</div>
+                      <div style="font-size:10px; color:var(--muted); margin-top:1px;" data-i18n="settings.wallpaper_harmony_desc">Extracts harmonious accents directly from active wallpaper.</div>
+                    </div>
+                    <button id="extract-palette-btn" class="btn-pill-toggle" style="font-size:10px; padding:3px 10px; display:inline-flex; align-items:center; gap:4px;">
+                      <svg class="ic" style="width:11px; height:11px;"><use href="#i-sliders"/></svg>
+                      <span data-i18n="settings.extract_palette_btn">🪄 Sample Wallpaper</span>
+                    </button>
+                  </div>
+                  <div id="wallpaper-extracted-chips" class="custom-color-chips" style="min-height: 28px; display:flex; gap:8px; align-items:center;">
+                    <span style="font-size:10.5px; color:var(--muted); font-style:italic;">Click "Sample Wallpaper" to extract colors...</span>
+                  </div>
+                </div>
+
+                <!-- Theme Backup, Sharing & Reset -->
+                <div class="theme-backup-share-wrap" style="margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.06); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                  <div>
+                    <div style="font-size:10.5px; font-weight:700; color:var(--muted); letter-spacing:0.5px;" data-i18n="settings.theme_backup_label">THEME BUNDLE & PRESETS</div>
+                    <div style="font-size:10px; color:var(--muted); margin-top:1px;" data-i18n="settings.theme_backup_desc">Export your custom appearance style to share or restore defaults.</div>
+                  </div>
+                  <div style="display:flex; gap:6px; align-items:center;">
+                    <input type="file" id="theme-import-file" accept=".json,.zett-theme.json" style="display:none;">
+                    <button type="button" id="theme-export-btn" class="btn-pill-toggle" style="font-size:10px; padding:3px 10px;" data-i18n="settings.theme_export_btn">⬆ Export Theme</button>
+                    <button type="button" id="theme-import-btn" class="btn-pill-toggle" style="font-size:10px; padding:3px 10px;" data-i18n="settings.theme_import_btn">⬇ Import Theme</button>
+                    <button type="button" id="theme-reset-all-btn" class="btn-pill-toggle danger" style="font-size:10px; padding:3px 10px; color:#ef4444;" data-i18n="settings.theme_reset_all_btn">↺ Restore Defaults</button>
                   </div>
                 </div>
               </div>
@@ -3360,6 +3571,25 @@
                         Renders an active specular accent rim around the active foreground window, docking bar, and modal sheets.
                       </div>
                     </div>
+                  </div>
+                </div>
+
+                <!-- Card 3: Performance & Hardware Efficiency Mode -->
+                <div class="drawer-card" style="padding: 16px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
+                  <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                      <div style="font-size: 13.5px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 6px;">
+                        <svg class="ic" style="width:14px; height:14px; color:var(--brand, #00f0ff);"><use href="#i-zap"/></svg>
+                        <span data-i18n="mgmt.eco_mode_title">Eco & Performance Mode</span>
+                      </div>
+                      <div style="font-size: 11.5px; color: var(--muted); margin-top: 2px;" data-i18n="mgmt.eco_mode_desc">
+                        Disables GPU-heavy backdrop blur filters for smoother 60 FPS performance on low-power homelab CPUs.
+                      </div>
+                    </div>
+                    <label class="switch-toggle" style="position:relative; display:inline-block; width:38px; height:20px; cursor:pointer;">
+                      <input type="checkbox" id="eco-mode-toggle" style="opacity:0; width:0; height:0;" aria-label="Toggle Eco & Performance Mode">
+                      <span class="slider-round" style="position:absolute; inset:0; background:rgba(255,255,255,0.15); border-radius:20px; transition:0.3s;"></span>
+                    </label>
                   </div>
                 </div>
 
@@ -3910,6 +4140,243 @@
               </div>
             </div>
           </div>
+
+          <!-- Sub-tab 7: Calendar & Day Reminders Pane -->
+          <div id="mgmt-pane-calendar" class="mgmt-tab-pane" style="display: none;">
+            <div class="mgmt-card-intro" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+              <div>
+                <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-calendar"/></svg> <span data-i18n="cal.modal_title">Calendar & Day Reminders</span></div>
+                <div class="mgmt-card-intro-desc" data-i18n="cal.modal_desc">Organize your schedule, track maintenance reminders, tasks, and sync external Google/iCal feeds.</div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <button type="button" id="btn-cal-sync-now" class="btn-pill-toggle" style="padding: 5px 12px; font-size: 11px; margin: 0; background: rgba(56,189,248,0.15); border-color: rgba(56,189,248,0.3); color: #38bdf8;" title="Sync external calendar feeds now">
+                  🔄 <span data-i18n="cal.sync_now">Sync Feeds</span>
+                </button>
+                <button type="button" id="btn-cal-export-ics" class="btn-pill-toggle" style="padding: 5px 12px; font-size: 11px; margin: 0;" title="Export all notes and events to .ics">
+                  📤 <span data-i18n="cal.export_ics">Export .ics</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="mgmt-detail-body" style="padding: 0; margin-top: 14px;">
+              <div id="modal-calendar-notes" class="drawer-card" style="padding: 0; background: rgba(255,255,255,0.03); border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); display: grid; grid-template-columns: 340px 1fr; min-height: 560px; overflow: hidden;">
+                
+                <!-- Left Column: Calendar View & Feeds Management -->
+                <div style="border-right: 1px solid rgba(255,255,255,0.08); background: rgba(0,0,0,0.2); padding: 18px; display: flex; flex-direction: column; gap: 16px; overflow-y: auto;">
+                  
+                  <!-- Month Navigator -->
+                  <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div id="modal-cal-month-title" style="font-size: 15px; font-weight: 800; color: #fff; letter-spacing: 0.5px;">October 2026</div>
+                    <div style="display: flex; align-items: center; gap: 4px;">
+                      <button type="button" id="btn-modal-cal-prev" class="btn-icon" style="padding: 3px 8px; font-size: 11px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); border-radius: 5px; color: #cbd5e1; cursor: pointer;">◀</button>
+                      <button type="button" id="btn-modal-cal-today" class="btn-pill-toggle" style="padding: 3px 8px; font-size: 10px; margin: 0;">Today</button>
+                      <button type="button" id="btn-modal-cal-next" class="btn-icon" style="padding: 3px 8px; font-size: 11px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); border-radius: 5px; color: #cbd5e1; cursor: pointer;">▶</button>
+                    </div>
+                  </div>
+
+                  <!-- Interactive Month Grid -->
+                  <div id="modal-cal-grid" class="modal-calendar-grid">
+                    <!-- Populated by JS -->
+                  </div>
+
+                  <!-- Legend / Indicators -->
+                  <div style="display: flex; align-items: center; gap: 12px; font-size: 10px; color: var(--muted); flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center; gap: 4px;"><span style="width: 7px; height: 7px; border-radius: 50%; background: #38bdf8;"></span> Note / Reminder</div>
+                    <div style="display: flex; align-items: center; gap: 4px;"><span style="width: 7px; height: 7px; border-radius: 50%; background: #10b981;"></span> Task</div>
+                    <div style="display: flex; align-items: center; gap: 4px;"><span style="width: 7px; height: 7px; border-radius: 50%; background: #eab308;"></span> Synced Feed</div>
+                    <div style="display: flex; align-items: center; gap: 4px;"><span style="width: 7px; height: 7px; border-radius: 50%; background: #ec4899;"></span> Holiday</div>
+                  </div>
+
+                  <div style="height: 1px; background: rgba(255,255,255,0.08);"></div>
+
+                  <!-- Connected External Calendar Feeds -->
+                  <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                      <span style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #94a3b8; letter-spacing: 0.5px;" data-i18n="cal.synced_feeds">Calendar Feeds (Google, iCal)</span>
+                      <button type="button" id="btn-toggle-add-feed" class="btn-pill-toggle" style="margin: 0; padding: 2px 8px; font-size: 10px;">+ Add Feed</button>
+                    </div>
+
+                    <!-- Add Feed Drawer / Form (hidden by default) -->
+                    <div id="cal-add-feed-form" style="display: none; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px; flex-direction: column; gap: 8px;">
+                      <input type="text" id="cal-feed-name-input" placeholder="Feed Name (e.g. Google Calendar)" style="width: 100%; border: 1px solid rgba(255,255,255,0.12); background: rgba(0,0,0,0.3); padding: 5px 8px; color: #fff; border-radius: 5px; font-size: 11px;" />
+                      <input type="url" id="cal-feed-url-input" placeholder="https://calendar.google.com/calendar/ical/.../basic.ics" style="width: 100%; border: 1px solid rgba(255,255,255,0.12); background: rgba(0,0,0,0.3); padding: 5px 8px; color: #fff; border-radius: 5px; font-size: 11px;" />
+                      <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <select id="cal-feed-color-select" style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.12); color: #fff; border-radius: 5px; font-size: 10px; padding: 3px 6px;">
+                          <option value="#38bdf8">🔵 Sky Blue</option>
+                          <option value="#10b981">🟢 Emerald</option>
+                          <option value="#f59e0b">🟡 Amber</option>
+                          <option value="#ec4899">🟣 Rose</option>
+                          <option value="#8b5cf6">🟣 Violet</option>
+                        </select>
+                        <div style="display: flex; gap: 6px;">
+                          <button type="button" id="btn-cancel-add-feed" class="btn-pill-toggle" style="padding: 3px 8px; font-size: 10px; margin: 0;">Cancel</button>
+                          <button type="button" id="btn-submit-add-feed" class="btn-pill-toggle" style="padding: 3px 10px; font-size: 10px; margin: 0; background: var(--ok2, #25c2a0); color: #000; border-color: var(--ok2, #25c2a0); font-weight: 700;">Connect & Sync</button>
+                        </div>
+                      </div>
+                      <div style="font-size: 9.5px; color: var(--muted); line-height: 1.3;">
+                        💡 <em>To sync Google Calendar: In Google Calendar Settings &gt; Integrate calendar &gt; Copy "Secret address in iCal format" (.ics) URL.</em>
+                      </div>
+                    </div>
+
+                    <!-- Connected Feeds List -->
+                    <div id="cal-feeds-list" style="display: flex; flex-direction: column; gap: 6px;">
+                      <!-- Rendered by JS -->
+                    </div>
+                  </div>
+
+                </div>
+
+                <!-- Right Column: Day Agenda, Notes, Tasks & Reminders -->
+                <div style="display: flex; flex-direction: column; height: 100%; overflow: hidden; background: rgba(0,0,0,0.15);">
+                  
+                  <!-- Agenda Header -->
+                  <div style="padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02);">
+                    <div>
+                      <div id="modal-cal-selected-date-str" style="font-size: 16px; font-weight: 800; color: #fff;">Monday, October 19, 2026</div>
+                      <div id="modal-cal-selected-sub" style="font-size: 11.5px; color: var(--muted); margin-top: 2px;">0 notes or reminders scheduled</div>
+                    </div>
+                    <div style="display: flex; gap: 6px;">
+                      <button type="button" id="btn-cal-filter-all" class="cal-filter-pill active" data-filter="all">All</button>
+                      <button type="button" id="btn-cal-filter-notes" class="cal-filter-pill" data-filter="note">Notes</button>
+                      <button type="button" id="btn-cal-filter-reminders" class="cal-filter-pill" data-filter="reminder">Reminders</button>
+                      <button type="button" id="btn-cal-filter-tasks" class="cal-filter-pill" data-filter="task">Tasks</button>
+                      <button type="button" id="btn-cal-filter-synced" class="cal-filter-pill" data-filter="synced">Synced</button>
+                    </div>
+                  </div>
+
+                  <!-- Add Note / Reminder Composer Box -->
+                  <div style="padding: 14px 20px; border-bottom: 1px solid rgba(255,255,255,0.08); background: rgba(0,0,0,0.25); display: flex; flex-direction: column; gap: 10px;">
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                      <input type="text" id="cal-new-note-title" placeholder="Add a note, reminder, or task for this day..." style="flex: 1; border: 1px solid rgba(255,255,255,0.14); background: rgba(0,0,0,0.3); padding: 7px 12px; color: #fff; border-radius: 6px; font-size: 12px; outline: none;" />
+                      <input type="time" id="cal-new-note-time" value="12:00" style="border: 1px solid rgba(255,255,255,0.14); background: rgba(0,0,0,0.3); padding: 6px 10px; color: #fff; border-radius: 6px; font-size: 11px; font-family: var(--font-mono, monospace);" />
+                      <select id="cal-new-note-type" style="border: 1px solid rgba(255,255,255,0.14); background: rgba(0,0,0,0.35); padding: 6px 10px; color: #fff; border-radius: 6px; font-size: 11px;">
+                        <option value="note">📝 Note</option>
+                        <option value="reminder">⏰ Reminder</option>
+                        <option value="task">📋 Task</option>
+                        <option value="event">📅 Event</option>
+                      </select>
+                      <button type="button" id="btn-cal-save-note" style="padding: 7px 16px; font-size: 11px; font-weight: 700; background: var(--brand, #00f0ff); color: #000; border: none; border-radius: 6px; cursor: pointer; white-space: nowrap;">+ Add</button>
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                      <input type="text" id="cal-new-note-desc" placeholder="Optional details / description..." style="flex: 1; border: 1px solid rgba(255,255,255,0.08); background: rgba(0,0,0,0.2); padding: 5px 10px; color: #cbd5e1; border-radius: 5px; font-size: 11px; outline: none;" />
+                      <input type="text" id="cal-new-note-category" placeholder="Category (e.g. Work, Maintenance)" style="width: 220px; border: 1px solid rgba(255,255,255,0.08); background: rgba(0,0,0,0.2); padding: 5px 10px; color: #cbd5e1; border-radius: 5px; font-size: 11px; outline: none;" />
+                    </div>
+                  </div>
+
+                  <!-- Agenda Items List -->
+                  <div id="modal-cal-agenda-list" style="flex: 1; overflow-y: auto; padding: 16px 20px; display: flex; flex-direction: column; gap: 8px;">
+                    <!-- Populated dynamically via JS -->
+                  </div>
+
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <!-- Sub-tab 8: Display Language, Timezone & Regional Settings Pane -->
+          <div id="mgmt-pane-language" class="mgmt-tab-pane" style="display: none;">
+            <div class="mgmt-card-intro">
+              <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-globe"/></svg> <span data-i18n="settings.language_title">Time, Language & Regional Settings</span></div>
+              <div class="mgmt-card-intro-desc" data-i18n="settings.language_desc">Select your preferred system language, desktop timezone, and clock display formatting.</div>
+            </div>
+            <div class="mgmt-detail-body" style="display: flex; flex-direction: column; gap: 16px;">
+              
+              <!-- Timezone & Clock Settings Card -->
+              <div id="modal-clock-timezone" class="drawer-card" style="padding: 20px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); max-width: 680px;">
+                <div class="card-headline" style="margin-bottom: 14px;">
+                  <span class="card-head-title" style="font-weight: 700; font-size: 14px; display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 16px;">🕒</span>
+                    <span data-i18n="tz.modal_title">Timezone & Clock Settings</span>
+                  </span>
+                  <div style="font-size: 12px; color: var(--muted); margin-top: 4px; line-height: 1.4;">
+                    Configure how dates and times are formatted across the desktop workspace, status bar, and container logs.
+                  </div>
+                </div>
+
+                <!-- Live Clock Preview Card -->
+                <div class="tz-preview-card" style="background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; position: relative; overflow: hidden; margin-bottom: 16px;">
+                  <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <div style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: var(--brand, #00f0ff); letter-spacing: 0.8px;" data-i18n="tz.preview_label">Active Clock Preview</div>
+                    <div style="display: flex; align-items: baseline; gap: 6px;">
+                      <div id="modal-tz-preview-time" style="font-size: 32px; font-weight: 800; font-family: var(--font-mono, monospace); color: #fff; line-height: 1;">--:--</div>
+                      <div id="modal-tz-preview-sec" style="font-size: 18px; opacity: 0.65; font-family: var(--font-mono, monospace); color: #fff;">:--</div>
+                      <div id="modal-tz-preview-ampm" style="font-size: 13px; font-weight: 800; color: var(--brand, #00f0ff);"></div>
+                    </div>
+                    <div id="modal-tz-preview-date" style="font-size: 12px; color: var(--muted); font-weight: 500;">--</div>
+                  </div>
+                  <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
+                    <div id="modal-tz-active-pill" class="suite-badge" style="background: rgba(0,240,255,0.15); color: var(--brand, #00f0ff); border-color: rgba(0,240,255,0.35); font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 6px;">Local Time (Auto)</div>
+                    <!-- 12H / 24H Toggle -->
+                    <div class="tz-format-toggle-group" style="display: flex; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 2px;">
+                      <button type="button" id="btn-tz-fmt-12" class="tz-fmt-btn" style="padding: 4px 10px; font-size: 11px; font-weight: 700; border: none; background: transparent; color: #94a3b8; border-radius: 4px; cursor: pointer;">12H</button>
+                      <button type="button" id="btn-tz-fmt-24" class="tz-fmt-btn active" style="padding: 4px 10px; font-size: 11px; font-weight: 700; border: none; background: var(--brand, #00f0ff); color: #000; border-radius: 4px; cursor: pointer;">24H</button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Quick Action / Auto-detect -->
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px;">
+                  <div style="font-size: 12px; font-weight: 700; color: #e2e8f0;" data-i18n="tz.select_heading">Select Desktop Timezone</div>
+                  <button type="button" id="btn-tz-use-browser" class="btn-pill-toggle" style="margin: 0; padding: 4px 10px; font-size: 11px; background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.15); color: #fff;">
+                    📍 <span data-i18n="tz.use_local">Use Local System Timezone</span>
+                  </button>
+                </div>
+
+                <!-- Search Input & Region Filter Pills -->
+                <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px;">
+                  <input type="text" id="tz-search-input" class="tz-select-input" placeholder="Search cities, countries, or timezones (e.g. New York, Tokyo, London, Berlin, UTC)..." style="width: 100%; border: 1px solid rgba(255,255,255,0.14); background: rgba(0,0,0,0.3); padding: 8px 12px; color: #fff; border-radius: 8px; font-size: 12px; outline: none;" />
+                  <div id="tz-region-pills" style="display: flex; gap: 6px; flex-wrap: wrap;">
+                    <button type="button" class="tz-region-pill active" data-region="all">All</button>
+                    <button type="button" class="tz-region-pill" data-region="Americas">Americas</button>
+                    <button type="button" class="tz-region-pill" data-region="Europe">Europe</button>
+                    <button type="button" class="tz-region-pill" data-region="Asia">Asia</button>
+                    <button type="button" class="tz-region-pill" data-region="Pacific">Pacific</button>
+                    <button type="button" class="tz-region-pill" data-region="UTC">UTC / GMT</button>
+                  </div>
+                </div>
+
+                <!-- Timezone List Scroll Area -->
+                <div id="tz-items-list" style="max-height: 240px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; background: rgba(0,0,0,0.25); display: flex; flex-direction: column; padding: 4px; margin-bottom: 12px;">
+                  <!-- Populated dynamically via JS -->
+                </div>
+
+                <!-- Custom IANA Input -->
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
+                  <label for="tz-custom-input" style="font-size: 11px; font-weight: 700; color: var(--muted); white-space: nowrap;">Custom IANA Timezone:</label>
+                  <input type="text" id="tz-custom-input" placeholder="e.g. America/Toronto, Asia/Seoul, UTC" style="flex: 1; border: 1px solid rgba(255,255,255,0.12); background: rgba(0,0,0,0.3); padding: 6px 10px; color: #fff; border-radius: 6px; font-size: 11px;" />
+                  <button type="button" id="btn-tz-apply-custom" class="btn-pill-toggle" style="padding: 6px 14px; font-size: 11px; margin: 0;">Apply</button>
+                </div>
+
+                <!-- Save Actions -->
+                <div style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 14px;">
+                  <button type="button" id="modal-clock-tz-cancel-btn" style="padding: 7px 16px; font-size: 11px; font-weight: 700; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); color: #fff; border-radius: 6px; cursor: pointer;">Reset Changes</button>
+                  <button type="button" id="modal-clock-tz-save-btn" style="padding: 7px 20px; font-size: 11px; font-weight: 700; background: var(--brand, #00f0ff); color: #000; border: none; border-radius: 6px; cursor: pointer;">Apply & Save</button>
+                </div>
+              </div>
+
+              <!-- Display Language & Localization Card -->
+              <div class="drawer-card" style="padding: 20px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); max-width: 680px;">
+                <div class="card-headline">
+                  <span class="card-head-title" style="font-weight: 700; font-size: 14px; margin-bottom: 8px; display: block;" data-i18n="settings.language_title">Display Language & Localization</span>
+                </div>
+                <div style="font-size: 12px; color: var(--muted); margin-bottom: 16px; line-height: 1.4;" data-i18n="settings.language_desc">
+                  Select your preferred language for the Web Studio desktop and hardware management controls.
+                </div>
+                <div style="margin-top: 10px;">
+                  <label style="display:block; font-size:10.5px; font-weight:700; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px;" data-i18n="settings.select_language">SYSTEM INTERFACE LANGUAGE</label>
+                  <select id="mgmt-lang-select" class="language-picker-select tz-select-input" style="width: 100%; padding: 10px 14px; font-size: 13px; cursor: pointer; border: 1px solid rgba(255,255,255,0.12); background: rgba(0,0,0,0.3); border-radius: 6px; color: #fff;">
+                    <option value="en">🇺🇸 English (US)</option>
+                    <option value="de">🇩🇪 Deutsch (German)</option>
+                    <option value="zh">🇨🇳 简体中文 (Simplified Chinese)</option>
+                    <option value="fr">🇫🇷 Français (French)</option>
+                    <option value="es">🇪🇸 Español (Spanish)</option>
+                  </select>
+                </div>
+              </div>
+
+            </div>
+          </div>
         </div>
 
           <!-- 2. Activity Monitor & Historical Telemetry -->
@@ -3956,27 +4423,29 @@
           <!-- 3. Network & Virtual Switch Inspector (Standalone Top-Level Section) -->
           <div id="mgmt-sec-network" class="mgmt-detail-card" style="display: none;">
             <!-- Inner Tab Bar for Network & Switch -->
-            <div class="mgmt-inner-tabs" role="tablist">
-              <button class="mgmt-inner-tab active" role="tab" aria-selected="true" data-tab-target="mgmt-pane-network">
-                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-net"/></svg>
-                <span data-i18n="mgmt.subtab_network_physical">Switch & Physical</span>
-              </button>
-              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-network-wireguard">
-                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-shield"/></svg>
-                <span data-i18n="mgmt.subtab_network_wireguard">WireGuard & Tailscale</span>
-              </button>
-              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-network-docker">
-                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-docker"/></svg>
-                <span data-i18n="mgmt.subtab_network_docker">Docker Networks</span>
-              </button>
-              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-network-services">
-                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-storage"/></svg>
-                <span data-i18n="mgmt.subtab_network_services">File Sharing Services</span>
-              </button>
-              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-network-ports">
-                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-terminal"/></svg>
-                <span data-i18n="mgmt.subtab_network_ports">Ports & Listeners</span>
-              </button>
+            <div class="mgmt-sticky-subnav">
+              <div class="mgmt-inner-tabs" role="tablist">
+                <button class="mgmt-inner-tab active" role="tab" aria-selected="true" data-tab-target="mgmt-pane-network">
+                  <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-net"/></svg>
+                  <span data-i18n="mgmt.subtab_network_physical">Switch & Physical</span>
+                </button>
+                <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-network-wireguard">
+                  <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-shield"/></svg>
+                  <span data-i18n="mgmt.subtab_network_wireguard">WireGuard & Tailscale</span>
+                </button>
+                <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-network-docker">
+                  <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-docker"/></svg>
+                  <span data-i18n="mgmt.subtab_network_docker">Docker Networks</span>
+                </button>
+                <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-network-services">
+                  <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-storage"/></svg>
+                  <span data-i18n="mgmt.subtab_network_services">File Sharing Services</span>
+                </button>
+                <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-network-ports">
+                  <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-terminal"/></svg>
+                  <span data-i18n="mgmt.subtab_network_ports">Ports & Listeners</span>
+                </button>
+              </div>
             </div>
 
             <!-- Sub-tab 1: Visual Network & Physical Switch -->
@@ -4555,16 +5024,18 @@
           <!-- Apps & Containers (Standalone Top-Level Section) -->
           <div id="mgmt-sec-docker" class="mgmt-detail-card" style="display: none;">
             <!-- Inner Tab Bar for Containers & App Catalog -->
-            <div class="mgmt-inner-tabs" role="tablist">
-              <button class="mgmt-inner-tab active" id="docker-inner-tab-containers" role="tab" aria-selected="true" data-tab-target="mgmt-pane-docker">
-                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-chip"/></svg>
-                <span data-i18n="mgmt.subtab_docker_containers">Containers & Stacks</span>
-              </button>
-              <button class="mgmt-inner-tab" id="docker-inner-tab-catalog" role="tab" aria-selected="false" data-tab-target="mgmt-pane-docker">
-                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-apps"/></svg>
-                <span data-i18n="mgmt.subtab_docker_catalog">App Store Catalog</span>
-                <span id="catalog-total-badge-tab" class="docker-count-badge" style="margin-left:4px;">25+</span>
-              </button>
+            <div class="mgmt-sticky-subnav">
+              <div class="mgmt-inner-tabs" role="tablist">
+                <button class="mgmt-inner-tab active" id="docker-inner-tab-containers" role="tab" aria-selected="true" data-tab-target="mgmt-pane-docker">
+                  <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-chip"/></svg>
+                  <span data-i18n="mgmt.subtab_docker_containers">Containers & Stacks</span>
+                </button>
+                <button class="mgmt-inner-tab" id="docker-inner-tab-catalog" role="tab" aria-selected="false" data-tab-target="mgmt-pane-docker-catalog">
+                  <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-apps"/></svg>
+                  <span data-i18n="mgmt.subtab_docker_catalog">App Store Catalog</span>
+                  <span id="catalog-total-badge-tab" class="docker-count-badge" style="margin-left:4px;">25+</span>
+                </button>
+              </div>
             </div>
 
             <div id="mgmt-pane-docker" class="mgmt-tab-pane" style="display: block;">
@@ -4608,12 +5079,20 @@
                       </div>
                     </div>
                   </div>
+                  <!-- Top Horizontal Scrollbar (Synchronized with table) -->
+                  <div class="docker-table-top-scroll" id="docker-table-top-scroll" style="display:none;" aria-label="Horizontal scrollbar (top)" title="Scroll table horizontally">
+                    <div class="docker-table-top-scroll-inner" id="docker-table-top-scroll-inner"></div>
+                  </div>
                   <div class="docker-table-container" style="overflow-x:auto; background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.06); border-radius:8px;">
                     <table class="copy-history-table docker-table responsive-cards">
                       <thead>
                         <tr>
-                          <th class="sortable-th" data-sort-col="name" role="columnheader" aria-sort="none" tabindex="0" title="Click to sort by Name / Stack">
-                            <span data-i18n="mgmt.tbl_name_id">Name / Stack</span><span class="docker-sort-indicator" aria-hidden="true"></span>
+                          <th class="sortable-th" data-sort-col="name" role="columnheader" aria-sort="none" tabindex="0" title="Click to sort by Name">
+                            <input type="checkbox" id="docker-select-all" title="Select All Containers" style="margin: 0 6px 0 0; cursor: pointer; accent-color: var(--brand, #0ea5e9); vertical-align: middle;">
+                            <span data-i18n="mgmt.tbl_name">Name</span><span class="docker-sort-indicator" aria-hidden="true"></span>
+                          </th>
+                          <th class="sortable-th" data-sort-col="stack" role="columnheader" aria-sort="none" tabindex="0" title="Click to sort by Stack / Type">
+                            <span data-i18n="mgmt.tbl_stack">Stack / Type</span><span class="docker-sort-indicator" aria-hidden="true"></span>
                           </th>
                           <th class="sortable-th" data-sort-col="hardware" role="columnheader" aria-sort="none" tabindex="0" title="Click to sort by Hardware">
                             <span data-i18n="mgmt.tbl_hardware">Hardware</span><span class="docker-sort-indicator" aria-hidden="true"></span>
@@ -4631,9 +5110,28 @@
                         </tr>
                       </thead>
                       <tbody id="docker-containers-tbody">
-                        <tr><td colspan="6" style="text-align:center; color:var(--muted); padding:20px;">Scanning Docker socket...</td></tr>
+                        <tr><td colspan="7" style="text-align:center; color:var(--muted); padding:20px;">Scanning Docker socket...</td></tr>
                       </tbody>
                     </table>
+                  </div>
+                  <!-- Sticky Bottom Horizontal Scrollbar (Sticky to viewport bottom) -->
+                  <div class="docker-table-sticky-scroll" id="docker-table-sticky-scroll" style="display:none;" aria-label="Horizontal scrollbar (bottom)" title="Scroll table horizontally">
+                    <div class="docker-table-sticky-scroll-inner" id="docker-table-sticky-scroll-inner"></div>
+                  </div>
+                  <div id="docker-bulk-bar" class="docker-floating-bulk-bar" style="display: none;">
+                    <div class="bulk-bar-info">
+                      <span id="docker-bulk-count" class="bulk-bar-count">0</span>
+                      <span>selected</span>
+                    </div>
+                    <div class="bulk-bar-actions">
+                      <button class="btn-bulk-action" data-bulk="start" title="Start selected containers">▶ Start</button>
+                      <button class="btn-bulk-action" data-bulk="stop" title="Stop selected containers">⏹ Stop</button>
+                      <button class="btn-bulk-action" data-bulk="restart" title="Restart selected containers">🔄 Restart</button>
+                      <button class="btn-bulk-action" data-bulk="pause" title="Pause selected containers">⏸ Pause</button>
+                      <button class="btn-bulk-action" data-bulk="unpause" title="Resume selected containers">⏵ Resume</button>
+                      <button class="btn-bulk-action btn-bulk-delete" data-bulk="delete" title="Delete selected containers">🗑️ Delete</button>
+                      <button class="btn-bulk-action btn-bulk-cancel" data-bulk="cancel" title="Deselect all">✕</button>
+                    </div>
                   </div>
                 </div>
 
@@ -4666,19 +5164,21 @@
           <!-- Pillar 4: Virtual Machines & KVM Orchestration -->
           <div id="mgmt-sec-vms" class="mgmt-detail-card" style="display: none;">
             <!-- Inner Tab Bar for Virtual Machines -->
-            <div class="mgmt-inner-tabs" role="tablist">
-              <button class="mgmt-inner-tab active" role="tab" aria-selected="true" data-tab-target="mgmt-pane-vms-list">
-                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-vm"/></svg>
-                <span data-i18n="mgmt.subtab_vms_fleet">Virtual Machines</span>
-              </button>
-              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-vms-kvm">
-                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-cpu"/></svg>
-                <span data-i18n="mgmt.subtab_vms_kvm">KVM & Host Telemetry</span>
-              </button>
-              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-vms-create" style="display:none;">
-                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-plus"/></svg>
-                <span data-i18n="mgmt.subtab_vms_create">New Virtual Machine</span>
-              </button>
+            <div class="mgmt-sticky-subnav">
+              <div class="mgmt-inner-tabs" role="tablist">
+                <button class="mgmt-inner-tab active" role="tab" aria-selected="true" data-tab-target="mgmt-pane-vms-list">
+                  <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-vm"/></svg>
+                  <span data-i18n="mgmt.subtab_vms_fleet">Virtual Machines</span>
+                </button>
+                <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-vms-kvm">
+                  <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-cpu"/></svg>
+                  <span data-i18n="mgmt.subtab_vms_kvm">KVM & Host Telemetry</span>
+                </button>
+                <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-vms-create" style="display:none;">
+                  <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-plus"/></svg>
+                  <span data-i18n="mgmt.subtab_vms_create">New Virtual Machine</span>
+                </button>
+              </div>
             </div>
 
             <!-- Subpane 1: VM Instances & Fleet -->
@@ -4740,23 +5240,29 @@
 
           <!-- Pillar 6: Hardware & Power (Formerly Services / Unraid) -->
           <div id="mgmt-sec-hardware" class="mgmt-detail-card" style="display: none;">
-            <div class="mgmt-inner-tabs" role="tablist">
-              <button class="mgmt-inner-tab active" role="tab" aria-selected="true" data-tab-target="mgmt-pane-unraid">
-                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-sliders"/></svg>
-                <span data-i18n="mgmt.subtab_hardware_profiles">Host & Profiles</span>
-              </button>
-              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-hardware-fans">
-                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-fan"/></svg>
-                <span data-i18n="mgmt.subtab_hardware_fans">Fans & Acoustics</span>
-              </button>
-              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-hardware-led">
-                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-bolt"/></svg>
-                <span data-i18n="mgmt.subtab_hardware_led">ARGB LED Lighting</span>
-              </button>
-              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-hardware-lcd">
-                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-screen"/></svg>
-                <span data-i18n="mgmt.subtab_hardware_lcd">Front LCD Screen</span>
-              </button>
+            <div class="mgmt-sticky-subnav">
+              <div class="mgmt-inner-tabs" role="tablist">
+                <button class="mgmt-inner-tab active" role="tab" aria-selected="true" data-tab-target="mgmt-pane-unraid">
+                  <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-sliders"/></svg>
+                  <span data-i18n="mgmt.subtab_hardware_profiles">Host & Profiles</span>
+                </button>
+                <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-hardware-lcd">
+                  <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-screen"/></svg>
+                  <span data-i18n="settings.tab_layout">Dashboard Layout</span>
+                </button>
+                <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-hardware-led">
+                  <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-bolt"/></svg>
+                  <span data-i18n="settings.tab_led">LED Strip bar</span>
+                </button>
+                <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-hardware-fans">
+                  <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-fan"/></svg>
+                  <span data-i18n="settings.tab_fans">Fans</span>
+                </button>
+                <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-hardware-copy">
+                  <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-storage"/></svg>
+                  <span data-i18n="settings.tab_buttons">Copy Button</span>
+                </button>
+              </div>
             </div>
 
             <div id="mgmt-pane-unraid" class="mgmt-tab-pane" style="display: block;">
@@ -4938,53 +5444,28 @@
                       </div>
                     </div>
                   </div>
-
-                  <!-- Front Panel Hardware Button (OTG / Ingest Copy) -->
-                  <div style="margin-top: 14px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                      <label style="font-size:10.5px; font-weight:700; color:var(--muted); letter-spacing:0.5px;" data-i18n="mgmt.subtab_copy_btn">FRONT PANEL COPY BUTTON & INGEST</label>
-                      <button class="btn-pill-toggle" id="btn-goto-copy-config" style="background:rgba(14,165,233,0.12); color:var(--brand, #0ea5e9); border-color:rgba(14,165,233,0.3); font-size:11px; padding:3px 10px; cursor:pointer;">
-                        ⚙️ <span data-i18n="mgmt.configure_copy_btn">Configure Ingest Workflow</span>
-                      </button>
-                    </div>
-                    <div class="gpu-transcode-card" style="border-left: 3px solid var(--brand, #0ea5e9); display:flex; justify-content:space-between; align-items:center; padding:12px 14px;">
-                      <div style="display:flex; align-items:center; gap:12px;">
-                        <div style="width:36px; height:36px; border-radius:8px; background:rgba(14,165,233,0.12); display:flex; align-items:center; justify-content:center; color:var(--brand, #0ea5e9);">
-                          <svg class="ic" style="width:20px; height:20px;"><use href="#i-storage"/></svg>
-                        </div>
-                        <div>
-                          <div style="font-weight:600; font-size:12.5px; color:var(--text, #fff);" data-i18n="mgmt.copy_btn_status_title">One-Touch Front Button (USB/SD Backup)</div>
-                          <div style="font-size:11px; color:var(--muted, #94a3b8); margin-top:2px;" data-i18n="mgmt.copy_btn_status_desc">Automated ingestion from front USB-C / SD card slots directly to protected storage shares.</div>
-                        </div>
-                      </div>
-                      <button class="btn-pill-toggle" id="btn-goto-copy-trigger" style="white-space:nowrap; background:transparent; border-color:var(--border, rgba(255,255,255,0.15)); font-size:11px; cursor:pointer;">
-                        <span data-i18n="mgmt.open_ingest">Open Settings →</span>
-                      </button>
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
 
-            <!-- Sub-tab 2: Fans & Acoustics -->
-            <div id="mgmt-pane-hardware-fans" class="mgmt-tab-pane" style="display: none;">
+            <!-- Sub-tab 2: Front-panel LCD / Dashboard Layout -->
+            <div id="mgmt-pane-hardware-lcd" class="mgmt-tab-pane" style="display: none;">
               <div class="mgmt-card-intro" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
                 <div>
-                  <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-fan"/></svg> <span data-i18n="mgmt.subtab_hardware_fans">Thermal Watchdog & Acoustic Fan Curves</span></div>
-                  <div class="mgmt-card-intro-desc">Hardware PWM controls, tachometer RPM telemetry, Zero RPM drive bay standby safety, and 80°C emergency thermal clamp.</div>
+                  <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-screen"/></svg> <span data-i18n="settings.tab_layout_title">Dashboard Layout</span></div>
+                  <div class="mgmt-card-intro-desc" data-i18n="settings.tab_layout_desc">Configure dashboard sizes, visibility, and layout presets.</div>
                 </div>
-                <button class="btn-pill-toggle" id="btn-open-fans-drawer" title="Open Fan Curve Editor">⚙️ <span>Tune Fan Curves</span></button>
+                <button class="btn-pill-toggle" id="btn-open-lcd-drawer" title="Open LCD Settings Drawer">🖥️ <span data-i18n="mgmt.open_drawer">Open Drawer</span></button>
               </div>
               <div class="mgmt-detail-body">
-                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+                <div id="mgmt-pane-hardware-lcd-slot" class="mgmt-hardware-tab-slot"></div>
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 8px; margin-top: 14px;">
                   <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <div style="font-weight: 700; font-size: 13px; color: #fff;">Acoustic Fan Safety Guardrails</div>
-                    <span class="ci-badge" style="background: rgba(37,194,160,0.15); color: var(--ok2); border: 1px solid rgba(37,194,160,0.3); font-size: 10px; font-weight: 700;">ACTIVE SAFEGUARD</span>
+                    <div style="font-weight: 700; font-size: 12px; color: #fff;">Physical Framebuffer Display</div>
+                    <span class="ci-badge" style="background: rgba(37,194,160,0.15); color: var(--ok2); border: 1px solid rgba(37,194,160,0.3); font-size: 10px; font-weight: 700;">ISOLATED PALETTE</span>
                   </div>
-                  <div style="font-size: 11.5px; color: var(--muted); line-height: 1.5;">
-                    • <strong>CPU Fan (pwm3) Inviolability:</strong> CPU cooling fan runs continuously and is strictly forbidden from zero RPM shutdown under all conditions.<br>
-                    • <strong>Emergency Thermal Clamp:</strong> If any drive, CPU, or motherboard zone reaches &ge; 80°C, fan speeds unconditionally clamp to 100% PWM (183 max).<br>
-                    • <strong>Zero RPM Standby Safety:</strong> Bay exhaust fans enter zero RPM mode only when all mechanical hard drives in the bay zone are in standby.
+                  <div style="font-size: 11px; color: var(--muted); line-height: 1.5;">
+                    Frame rendering is strictly scoped to #screen and #mini-lcd-canvas. Web desktop theme alterations never cascade into or corrupt the physical appliance display.
                   </div>
                 </div>
               </div>
@@ -4994,43 +5475,61 @@
             <div id="mgmt-pane-hardware-led" class="mgmt-tab-pane" style="display: none;">
               <div class="mgmt-card-intro" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
                 <div>
-                  <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-bolt"/></svg> <span data-i18n="mgmt.subtab_hardware_led">Chassis ARGB LED Lighting Subsystem</span></div>
-                  <div class="mgmt-card-intro-desc">WS2812B serial microcontroller protocol (/dev/ttyACM0), reactive CPU thermals, and alert pulses.</div>
+                  <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-bolt"/></svg> <span data-i18n="settings.tab_led_title">LED Strip bar</span></div>
+                  <div class="mgmt-card-intro-desc" data-i18n="settings.tab_led_desc">Adjust physical lighting and reactive hardware alerts.</div>
                 </div>
-                <button class="btn-pill-toggle" id="btn-open-led-drawer" title="Open LED Strip Settings">✨ <span>Configure Lighting</span></button>
+                <button class="btn-pill-toggle" id="btn-open-led-drawer" title="Open LED Strip Settings Drawer">✨ <span data-i18n="mgmt.open_drawer">Open Drawer</span></button>
               </div>
               <div class="mgmt-detail-body">
-                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+                <div id="mgmt-pane-hardware-led-slot" class="mgmt-hardware-tab-slot"></div>
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 8px; margin-top: 14px;">
                   <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <div style="font-weight: 700; font-size: 13px; color: #fff;">Chassis Lightbar Controller</div>
+                    <div style="font-weight: 700; font-size: 12px; color: #fff;">Chassis Lightbar Controller</div>
                     <span class="ci-badge" style="background: rgba(0,240,255,0.15); color: var(--accent-cyan); border: 1px solid rgba(0,240,255,0.3); font-size: 10px; font-weight: 700;">SYNCED MCU</span>
                   </div>
-                  <div style="font-size: 11.5px; color: var(--muted); line-height: 1.5;">
+                  <div style="font-size: 11px; color: var(--muted); line-height: 1.5;">
                     Dynamic lighting effects synchronize across system power states, CPU thermal loads, disk rebuild activity, and silent night modes.
                   </div>
                 </div>
               </div>
             </div>
 
-            <!-- Sub-tab 4: Front-panel LCD -->
-            <div id="mgmt-pane-hardware-lcd" class="mgmt-tab-pane" style="display: none;">
+            <!-- Sub-tab 4: Fans & Acoustics -->
+            <div id="mgmt-pane-hardware-fans" class="mgmt-tab-pane" style="display: none;">
               <div class="mgmt-card-intro" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
                 <div>
-                  <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-screen"/></svg> <span data-i18n="mgmt.subtab_hardware_lcd">Front-Panel LCD Screen & Framebuffer</span></div>
-                  <div class="mgmt-card-intro-desc">Direct framebuffer rendering (/dev/fb0), RGB565 / BGR565 byte order, and backlight sleep timers.</div>
+                  <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-fan"/></svg> <span data-i18n="settings.tab_fans_title">Fans</span></div>
+                  <div class="mgmt-card-intro-desc" data-i18n="settings.tab_fans_desc">Configure cooling thresholds and dynamic thermal curves.</div>
                 </div>
-                <button class="btn-pill-toggle" id="btn-open-lcd-drawer" title="Open LCD Settings">🖥️ <span>LCD Settings</span></button>
+                <button class="btn-pill-toggle" id="btn-open-fans-drawer" title="Open Fan Curve Editor Drawer">⚙️ <span data-i18n="mgmt.open_drawer">Open Drawer</span></button>
               </div>
               <div class="mgmt-detail-body">
-                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+                <div id="mgmt-pane-hardware-fans-slot" class="mgmt-hardware-tab-slot"></div>
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 10px; margin-top: 14px;">
                   <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <div style="font-weight: 700; font-size: 13px; color: #fff;">Physical Framebuffer Display</div>
-                    <span class="ci-badge" style="background: rgba(37,194,160,0.15); color: var(--ok2); border: 1px solid rgba(37,194,160,0.3); font-size: 10px; font-weight: 700;">ISOLATED PALETTE</span>
+                    <div style="font-weight: 700; font-size: 12px; color: #fff;">Acoustic Fan Safety Guardrails</div>
+                    <span class="ci-badge" style="background: rgba(37,194,160,0.15); color: var(--ok2); border: 1px solid rgba(37,194,160,0.3); font-size: 10px; font-weight: 700;">ACTIVE SAFEGUARD</span>
                   </div>
-                  <div style="font-size: 11.5px; color: var(--muted); line-height: 1.5;">
-                    Frame rendering is strictly scoped to #screen and #mini-lcd-canvas. Web desktop theme alterations never cascade into or corrupt the physical appliance display.
+                  <div style="font-size: 11px; color: var(--muted); line-height: 1.5;">
+                    • <strong>CPU Fan (pwm3) Inviolability:</strong> CPU cooling fan runs continuously and is strictly forbidden from zero RPM shutdown under all conditions.<br>
+                    • <strong>Emergency Thermal Clamp:</strong> If any drive, CPU, or motherboard zone reaches &ge; 80°C, fan speeds unconditionally clamp to 100% PWM (183 max).<br>
+                    • <strong>Zero RPM Standby Safety:</strong> Bay exhaust fans enter zero RPM mode only when all mechanical hard drives in the bay zone are in standby.
                   </div>
                 </div>
+              </div>
+            </div>
+
+            <!-- Sub-tab 5: Front Panel Copy Button -->
+            <div id="mgmt-pane-hardware-copy" class="mgmt-tab-pane" style="display: none;">
+              <div class="mgmt-card-intro" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                <div>
+                  <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-storage"/></svg> <span data-i18n="settings.tab_buttons_title">Copy Button</span></div>
+                  <div class="mgmt-card-intro-desc" data-i18n="settings.tab_buttons_desc">Assign SD card copy rules to the physical hardware button.</div>
+                </div>
+                <button class="btn-pill-toggle" id="btn-open-copy-drawer" title="Open Copy Button Settings Drawer">💾 <span data-i18n="mgmt.open_drawer">Open Drawer</span></button>
+              </div>
+              <div class="mgmt-detail-body">
+                <div id="mgmt-pane-hardware-copy-slot" class="mgmt-hardware-tab-slot"></div>
               </div>
             </div>
           </div>
@@ -5360,33 +5859,35 @@
 
           <!-- 5. Storage & Physical Chassis -->
           <div id="mgmt-sec-storage" class="mgmt-detail-card" style="display: none;">
-            <div class="mgmt-inner-tabs" role="tablist">
-              <button class="mgmt-inner-tab active" role="tab" aria-selected="true" data-tab-target="mgmt-pane-chassis-twin">
-                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-disk"/></svg>
-                <span data-i18n="mgmt.subtab_disks_chassis">Disks & 2.5D Chassis</span>
-              </button>
-              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-storage-topo">
-                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-storage"/></svg>
-                <span data-i18n="mgmt.subtab_pools_topology">Pools & Topology</span>
-              </button>
-              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-storage-shares">
-                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-storage"/></svg>
-                <span data-i18n="mgmt.subtab_shares_protocols">Shares & Protocols</span>
-              </button>
-              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-storage-remotes">
-                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-globe"/></svg>
-                <span data-i18n="mgmt.subtab_remotes">Remote & Cloud Storage</span>
-              </button>
-              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-copy">
-                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-storage"/></svg>
-                <span data-i18n="mgmt.subtab_copy">Media Ingest</span>
-              </button>
-              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-storage-disks" style="display:none;">
-                <span data-i18n="mgmt.subtab_disks">Physical Disks Inventory</span>
-              </button>
-              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-storage-replication" style="display:none;">
-                <span data-i18n="mgmt.subtab_replication">Replication</span>
-              </button>
+            <div class="mgmt-sticky-subnav">
+              <div class="mgmt-inner-tabs" role="tablist">
+                <button class="mgmt-inner-tab active" role="tab" aria-selected="true" data-tab-target="mgmt-pane-chassis-twin">
+                  <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-disk"/></svg>
+                  <span data-i18n="mgmt.subtab_disks_chassis">Disks & 2.5D Chassis</span>
+                </button>
+                <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-storage-topo">
+                  <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-storage"/></svg>
+                  <span data-i18n="mgmt.subtab_pools_topology">Pools & Topology</span>
+                </button>
+                <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-storage-shares">
+                  <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-storage"/></svg>
+                  <span data-i18n="mgmt.subtab_shares_protocols">Shares & Protocols</span>
+                </button>
+                <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-storage-remotes">
+                  <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-globe"/></svg>
+                  <span data-i18n="mgmt.subtab_remotes">Remote & Cloud Storage</span>
+                </button>
+                <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-copy">
+                  <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-storage"/></svg>
+                  <span data-i18n="mgmt.subtab_copy">Media Ingest</span>
+                </button>
+                <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-storage-disks" style="display:none;">
+                  <span data-i18n="mgmt.subtab_disks">Physical Disks Inventory</span>
+                </button>
+                <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-storage-replication" style="display:none;">
+                  <span data-i18n="mgmt.subtab_replication">Replication</span>
+                </button>
+              </div>
             </div>
 
             <!-- Sub-tab 1: Chassis Digital Twin -->
@@ -5597,35 +6098,33 @@
 
           <!-- 6. System -->
           <div id="mgmt-sec-system-group" class="mgmt-detail-card" style="display: none;">
-            <div class="mgmt-inner-tabs" role="tablist">
-              <button class="mgmt-inner-tab active" role="tab" aria-selected="true" data-tab-target="mgmt-pane-security" id="mgmt-tab-security">
-                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-chip"/></svg>
-                <span data-i18n="mgmt.subtab_security">Security</span>
-              </button>
-              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-users" id="mgmt-tab-users">
-                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-users"/></svg>
-                <span data-i18n="mgmt.subtab_users">Users & Roles</span>
-              </button>
-              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-backups" id="mgmt-tab-backups">
-                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-storage"/></svg>
-                <span data-i18n="mgmt.subtab_backups">Backups & Recovery</span>
-              </button>
-              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-notifications" id="mgmt-tab-notifications">
-                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-bell"/></svg>
-                <span data-i18n="mgmt.subtab_notifications">Notifications & Alerts</span>
-              </button>
-              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-events" id="mgmt-tab-events">
-                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-storage"/></svg>
-                <span data-i18n="mgmt.subtab_events">Event Log</span>
-              </button>
-              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-language" id="mgmt-tab-language">
-                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-globe"/></svg>
-                <span data-i18n="mgmt.subtab_language">Language & Region</span>
-              </button>
-              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-about" id="mgmt-tab-about">
-                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-globe"/></svg>
-                <span data-i18n="mgmt.subtab_about">About & Updates</span>
-              </button>
+            <div class="mgmt-sticky-subnav">
+              <div class="mgmt-inner-tabs" role="tablist">
+                <button class="mgmt-inner-tab active" role="tab" aria-selected="true" data-tab-target="mgmt-pane-security" id="mgmt-tab-security">
+                  <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-chip"/></svg>
+                  <span data-i18n="mgmt.subtab_security">Security</span>
+                </button>
+                <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-users" id="mgmt-tab-users">
+                  <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-users"/></svg>
+                  <span data-i18n="mgmt.subtab_users">Users & Roles</span>
+                </button>
+                <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-backups" id="mgmt-tab-backups">
+                  <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-storage"/></svg>
+                  <span data-i18n="mgmt.subtab_backups">Backups & Recovery</span>
+                </button>
+                <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-notifications" id="mgmt-tab-notifications">
+                  <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-bell"/></svg>
+                  <span data-i18n="mgmt.subtab_notifications">Notifications & Alerts</span>
+                </button>
+                <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-events" id="mgmt-tab-events">
+                  <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-storage"/></svg>
+                  <span data-i18n="mgmt.subtab_events">Event Log</span>
+                </button>
+                <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-about" id="mgmt-tab-about">
+                  <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-globe"/></svg>
+                  <span data-i18n="mgmt.subtab_about">About & Updates</span>
+                </button>
+              </div>
             </div>
             <div id="mgmt-pane-security" class="mgmt-tab-pane" style="display: block;">
           <div class="mgmt-card-intro">
@@ -6185,34 +6684,6 @@
           </div>
         </div>
 
-        <!-- 5c. Display Language & Localization Pane -->
-        <div id="mgmt-pane-language" class="mgmt-tab-pane" style="display: none;">
-          <div class="mgmt-card-intro">
-            <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-globe"/></svg> <span data-i18n="settings.language_title">Display Language & Localization</span></div>
-            <div class="mgmt-card-intro-desc" data-i18n="settings.language_desc">Select your preferred language for the Web Studio desktop and hardware management controls.</div>
-          </div>
-          <div class="mgmt-detail-body">
-            <div class="drawer-card" style="padding: 20px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); max-width: 520px;">
-              <div class="card-headline">
-                <span class="card-head-title" style="font-weight: 700; font-size: 14px; margin-bottom: 8px; display: block;" data-i18n="settings.language_title">Display Language & Localization</span>
-              </div>
-              <div style="font-size: 12px; color: var(--muted); margin-bottom: 16px; line-height: 1.4;" data-i18n="settings.language_desc">
-                Select your preferred language for the Web Studio desktop and hardware management controls.
-              </div>
-              <div style="margin-top: 10px;">
-                <label style="display:block; font-size:10.5px; font-weight:700; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px;" data-i18n="settings.select_language">SYSTEM INTERFACE LANGUAGE</label>
-                <select id="mgmt-lang-select" class="language-picker-select tz-select-input" style="width: 100%; padding: 10px 14px; font-size: 13px; cursor: pointer; border: 1px solid rgba(255,255,255,0.12); background: rgba(0,0,0,0.3); border-radius: 6px; color: #fff;">
-                  <option value="en">🇺🇸 English (US)</option>
-                  <option value="de">🇩🇪 Deutsch (German)</option>
-                  <option value="zh">🇨🇳 简体中文 (Simplified Chinese)</option>
-                  <option value="fr">🇫🇷 Français (French)</option>
-                  <option value="es">🇪🇸 Español (Spanish)</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <!-- 5d. About & Updates Pane -->
         <div id="mgmt-pane-about" class="mgmt-tab-pane" style="display: none;">
           <div class="mgmt-card-intro">
@@ -6388,104 +6859,133 @@
 
           <!-- 8. AI Knowledge & Visual Search Engine (mgmt-sec-ai) -->
           <div id="mgmt-sec-ai" class="mgmt-detail-card" style="display: none;">
-            <!-- Sleek 1-Line Hardware Accelerator, Standby Guard & Sync Telemetry Ribbon (Half-size ultra-compact) -->
-            <div class="ai-telemetry-ribbon" id="ai-telemetry-ribbon" style="display:flex; flex-wrap:nowrap; align-items:center; justify-content:space-between; gap:6px; padding:3px 10px; margin-bottom:8px; background:rgba(15,23,42,0.6); border:1px solid rgba(14,165,233,0.3); border-radius:7px; white-space:nowrap; overflow-x:auto; scrollbar-width:none; min-height:25px; box-sizing:border-box;">
-              <div style="display:flex; align-items:center; gap:6px; flex-wrap:nowrap; min-width:0;">
-                <span class="ai-tier-badge" id="ai-accel-chain-pill" style="display:inline-flex; align-items:center; gap:4px; padding:2px 7px; border-radius:999px; font-size:10px; font-weight:700; background:rgba(14,165,233,0.18); color:var(--accent-cyan,#00f0ff); border:1px solid rgba(14,165,233,0.4); flex-shrink:0;">
-                  <span style="font-size:10px;">⚡</span>
-                  <span id="ai-accel-active-label">Tier 1: NPU ➔ GPU ➔ CPU</span>
-                </span>
-                <span id="ai-active-llm-pill" style="display:inline-flex; align-items:center; gap:4px; padding:2px 7px; border-radius:999px; font-size:9.5px; font-weight:700; background:rgba(99,102,241,0.18); color:#c7d2fe; border:1px solid rgba(99,102,241,0.4); flex-shrink:0;" title="Active LLM leveraged for RAG synthesis, NAS Hardware Copilot tools &amp; Web Chatbot">
-                  <span style="font-size:10px;">🤖</span>
-                  <span id="ai-active-llm-label">qwen2.5:3b</span>
-                </span>
-                <span id="ai-standby-guard-badge" style="display:inline-flex; align-items:center; gap:4px; padding:2px 7px; border-radius:999px; font-size:9.5px; font-weight:600; background:rgba(37,194,160,0.14); color:var(--ok2,#25c2a0); border:1px solid rgba(37,194,160,0.32); flex-shrink:0;" title="100% of RAG &amp; Photo queries read from NVMe SQLite WAL without spinning up sleeping HDDs">
-                  <span style="font-size:10px;">🛡️💤</span>
-                  <span id="ai-standby-guard-text" data-i18n="ai.standby_guard_active">Standby Guard: Active (0 Wakeups)</span>
-                </span>
-                <span id="ai-index-status-pill" style="font-size:10px; color:var(--muted,#94a3b8); flex-shrink:0; padding:0 2px;">
-                  Indexed: <strong id="ai-stat-total-docs" style="color:#fff;">0</strong> Docs • <strong id="ai-stat-total-recipes" style="color:#fff;">0</strong> Recipes • <strong id="ai-stat-total-photos" style="color:#fff;">0</strong> Photos
-                </span>
-              </div>
-              <div style="display:flex; align-items:center; gap:6px; flex-wrap:nowrap; flex-shrink:0;">
-                <span id="ai-sync-state-badge" style="display:inline-flex; align-items:center; gap:4px; padding:2px 7px; border-radius:999px; font-size:9.5px; font-weight:700; background:rgba(148,163,184,0.14); color:#cbd5e1; border:1px solid rgba(148,163,184,0.28); flex-shrink:0;">
-                  <span id="ai-sync-state-dot" style="width:6px; height:6px; border-radius:50%; background:#94a3b8; display:inline-block;"></span>
-                  <span id="ai-sync-state-text" data-i18n="ai.sync_state_idle">Sync: Idle</span>
-                </span>
-                <button type="button" id="btn-ai-quick-sync" class="btn-pill-toggle" style="font-size:9.5px; padding:2px 8px; font-weight:700; background:rgba(37,194,160,0.18); border:1px solid rgba(37,194,160,0.45); color:var(--ok2,#25c2a0); cursor:pointer; white-space:nowrap; border-radius:5px;" title="Sync configured watched folders on running drives (skips sleeping HDDs)">
-                  <span>🔄</span> <span data-i18n="ai.sync_shares">Sync Active Shares</span>
+            <!-- Sticky Sub-Navigation Bar -->
+            <div class="mgmt-sticky-subnav">
+              <!-- 3-Tab Navigation Bar: Local Chatbot + Unified RAG + Dedicated Configuration -->
+              <div class="mgmt-inner-tabs" role="tablist">
+                <button class="mgmt-inner-tab active" role="tab" aria-selected="true" data-tab-target="mgmt-pane-ai-chat" id="mgmt-tab-ai-chat">
+                  <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-chat"/></svg>
+                  <span data-i18n="ai.tab_chat">Chatbot</span>
                 </button>
-                <button type="button" id="btn-ai-sync-pause" class="btn-pill-toggle" style="display:none; font-size:9.5px; padding:2px 7px; font-weight:700; background:rgba(245,158,11,0.18); border:1px solid rgba(245,158,11,0.45); color:#fbbf24; cursor:pointer; white-space:nowrap; border-radius:5px;" title="Pause active indexing scan">
-                  <span>⏸</span> <span data-i18n="ai.pause_sync">Pause</span>
+                <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-ai-rag" id="mgmt-tab-ai-rag">
+                  <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-search"/></svg>
+                  <span data-i18n="ai.tab_rag">RAG</span>
                 </button>
-                <button type="button" id="btn-ai-sync-resume" class="btn-pill-toggle" style="display:none; font-size:9.5px; padding:2px 7px; font-weight:700; background:rgba(37,194,160,0.2); border:1px solid rgba(37,194,160,0.5); color:#34d399; cursor:pointer; white-space:nowrap; border-radius:5px;" title="Resume paused indexing scan (only on running disks)">
-                  <span>▶</span> <span data-i18n="ai.resume_sync">Resume</span>
-                </button>
-                <button type="button" id="btn-ai-sync-stop" class="btn-pill-toggle" style="display:none; font-size:9.5px; padding:2px 7px; font-weight:700; background:rgba(239,68,68,0.18); border:1px solid rgba(239,68,68,0.45); color:#f87171; cursor:pointer; white-space:nowrap; border-radius:5px;" title="Stop active indexing scan immediately">
-                  <span>⏹</span> <span data-i18n="ai.stop_sync">Stop</span>
+                <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-ai-index" id="mgmt-tab-ai-index">
+                  <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-sliders"/></svg>
+                  <span data-i18n="ai.tab_index">Configuration</span>
                 </button>
               </div>
             </div>
 
-            <!-- 3-Tab Navigation Bar: Local Chatbot + Unified RAG + Dedicated Configuration -->
-            <div class="mgmt-inner-tabs" role="tablist">
-              <button class="mgmt-inner-tab active" role="tab" aria-selected="true" data-tab-target="mgmt-pane-ai-chat">
-                <span>💬</span>
-                <span data-i18n="ai.tab_chat">Chatbot</span>
-              </button>
-              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-ai-rag">
-                <span>🔍</span>
-                <span data-i18n="ai.tab_rag">RAG</span>
-              </button>
-              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-ai-index">
-                <span>⚙️</span>
-                <span data-i18n="ai.tab_index">Configuration</span>
-              </button>
+            <!-- Universal Re-indexing Progress Strip (Visible across Chatbot, RAG & Configuration tabs) -->
+            <div id="ai-reindex-universal-strip" style="display:none; margin:0 0 12px 0; padding:10px 14px; border-radius:10px; background:rgba(15,23,42,0.85); border:1px solid rgba(14,165,233,0.45); box-shadow:0 2px 12px rgba(0,0,0,0.4); box-sizing:border-box; width:100%; z-index:10;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; font-size:11.5px; flex-wrap:wrap; gap:8px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <span class="pulsing-dot" style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#00f0ff;"></span>
+                  <strong style="color:#fff;" data-i18n="ai.reindex_in_progress">Re-indexing Knowledge Base...</strong>
+                  <span id="ai-reindex-univ-chunks" style="font-size:11px; color:#cbd5e1; font-family:monospace;">0 / 0 chunks</span>
+                  <span style="font-size:10.5px; color:#34d399; margin-left:4px;">🔒 100% Standby-Safe</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:12px;">
+                  <span id="ai-reindex-univ-speed" style="font-size:11px; color:#94a3b8;">0 chunks/s</span>
+                  <span id="ai-reindex-univ-eta" style="font-size:11px; color:#fbbf24; font-weight:600;">ETA: --</span>
+                  <span id="ai-reindex-univ-pct" style="font-weight:800; color:var(--accent-cyan,#00f0ff); font-size:12px;">0%</span>
+                </div>
+              </div>
+              <div style="height:5px; background:rgba(255,255,255,0.1); border-radius:999px; overflow:hidden;">
+                <div id="ai-reindex-univ-bar" style="height:100%; width:0%; background:linear-gradient(90deg, #0ea5e9, #00f0ff); transition:width 0.3s ease;"></div>
+              </div>
             </div>
-
-            <!-- Tab 1: Local Chatbot, NAS Hardware Copilot & Live Web Verification -->
-            <div id="mgmt-pane-ai-chat" class="mgmt-tab-pane" style="display: flex; flex-direction: column; flex: 1; min-height: 0; height: 100%; padding-top: 10px; box-sizing: border-box;">
-              <div class="ai-chat-card-container" style="background:rgba(15,23,42,0.52); border:1px solid rgba(99,102,241,0.35); border-radius:10px; padding:14px; display:flex; flex-direction:column; gap:10px; flex:1; min-height:0; height:100%; box-sizing:border-box;">
-                <!-- Header: Active LLM Proof Badge + Web Search & NAS Hardware Tool Toggles -->
-                <div class="ai-chat-header-row" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; padding-bottom:10px; border-bottom:1px solid rgba(255,255,255,0.08); flex-shrink:0;">
-                  <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                    <span style="font-size:13px; font-weight:800; color:#fff;">💬 <span data-i18n="ai.chat_title">ZettAI Local Chatbot &amp; NAS Hardware Copilot</span></span>
-                    <span id="ai-chat-active-model-badge" style="padding:3px 10px; border-radius:999px; font-size:10.5px; font-weight:700; background:rgba(16,185,129,0.16); color:#34d399; border:1px solid rgba(16,185,129,0.4);">
-                      🤖 Active LLM: DeepSeek-R1-Distill-Qwen-1.5B • ⚡ Tier 1 NPU
-                    </span>
-                  </div>
-                  <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                    <button type="button" id="btn-ai-chat-clear" class="btn-pill-toggle" style="font-size:11px; padding:4px 10px; color:#94a3b8; cursor:pointer;" title="Clear conversation history">
-                      <span data-i18n="ai.chat_clear_btn">🗑️ Clear Chat</span>
+            <div id="mgmt-pane-ai-chat" class="mgmt-tab-pane" style="display: flex; flex-direction: column; flex: 1; min-height: 0; height: 100%; box-sizing: border-box;">
+              <div id="ai-chat-dual-container" class="ai-chat-dual-container">
+                
+                <!-- Left: Collapsible Conversation History Sidebar (260px) -->
+                <aside id="ai-chat-sidebar" class="ai-chat-sidebar">
+                  <!-- Sidebar Header: + New Chat & Collapse Toggle -->
+                  <div class="ai-sidebar-top-bar">
+                    <button type="button" id="btn-ai-chat-new" class="btn-pill-toggle btn-ai-new-chat" title="Start a fresh conversation thread">
+                      <span>✨</span> <span data-i18n="ai.new_chat">+ New Chat</span>
+                    </button>
+                    <button type="button" id="btn-ai-chat-sidebar-toggle" class="btn-ai-icon-toggle" title="Collapse sidebar">
+                      <span>◀</span>
                     </button>
                   </div>
-                </div>
 
-                <!-- Conversation Message Stream -->
-                <div id="ai-chat-messages-list" style="flex:1; min-height:180px; max-height:none; overflow-y:auto; display:flex; flex-direction:column; gap:10px; padding:12px; border-radius:8px; background:rgba(2,6,23,0.45); border:1px solid rgba(255,255,255,0.06); box-sizing:border-box;">
-                  <div class="ai-chat-msg ai-chat-msg-assistant" style="display:flex; flex-direction:column; gap:6px; padding:11px 14px; border-radius:10px; background:rgba(15,23,42,0.72); border:1px solid rgba(56,189,248,0.25);">
-                    <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
-                      <span style="font-size:11px; font-weight:800; color:#38bdf8;">🤖 ZettAI Copilot (Zetty)</span>
-                      <span style="font-size:9.5px; color:#6ee7b7; padding:1px 7px; border-radius:999px; background:rgba(16,185,129,0.14); border:1px solid rgba(16,185,129,0.35);">⚡ Ready • 🛠️ 8 NAS Tools • 🌐 Web Browse • 💤 0 Disk Wakeups</span>
+                  <!-- Search filter bar -->
+                  <div class="ai-sidebar-search-bar">
+                    <input type="text" id="ai-chat-search-input" class="ai-search-input" placeholder="Search conversations..." data-i18n-placeholder="ai.search_chats" />
+                  </div>
+
+                  <!-- Chronologically Grouped Threads List -->
+                  <div id="ai-chat-threads-list" class="ai-chat-threads-scroll">
+                    <!-- Dynamic thread cards rendered by management.js -->
+                  </div>
+
+                  <!-- Sidebar Footer: Stats & Clear All -->
+                  <div class="ai-sidebar-footer">
+                    <span id="ai-chat-thread-count" class="ai-thread-count-badge">0 chats</span>
+                    <button type="button" id="btn-ai-chat-clear-all" class="btn-ai-clear-all" title="Clear all conversation threads">
+                      <span>🗑️</span> <span data-i18n="ai.clear_all">Clear All</span>
+                    </button>
+                  </div>
+                </aside>
+
+                <!-- Right: Main Conversation Stage -->
+                <main id="ai-chat-main-stage" class="ai-chat-main-stage">
+                  <!-- Header: Sidebar Reveal + Active Thread Title + Active LLM Badge + Export & Clear -->
+                  <div class="ai-chat-header-row" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; padding-bottom:10px; border-bottom:1px solid rgba(255,255,255,0.08); flex-shrink:0;">
+                    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; min-width:0;">
+                      <button type="button" id="btn-ai-chat-sidebar-open" class="btn-ai-icon-toggle" style="display:none;" title="Expand conversation history">
+                        <span>▶</span>
+                      </button>
+                      <div class="ai-active-title-wrapper" style="display:flex; align-items:center; gap:6px; min-width:0;">
+                        <span id="ai-chat-active-title" class="ai-chat-active-title" title="Click pencil to rename">New Conversation</span>
+                        <button type="button" id="btn-ai-chat-rename" class="btn-ai-icon-action" title="Rename conversation">✏️</button>
+                      </div>
+                      <span id="ai-chat-active-model-badge" style="padding:3px 10px; border-radius:999px; font-size:10.5px; font-weight:700; background:rgba(16,185,129,0.16); color:#34d399; border:1px solid rgba(16,185,129,0.4); white-space:nowrap;">
+                        🤖 Active LLM: DeepSeek-R1-Distill-Qwen-1.5B • ⚡ Tier 1 NPU
+                      </span>
                     </div>
-                    <div style="font-size:12px; color:#e2e8f0; line-height:1.5;">
-                      Ask any question, verify facts across the web, or command your NAS hardware (e.g. check disk standby, change fan acoustic profiles, list Docker containers).
+
+                    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                      <!-- Export Menu -->
+                      <div class="dropdown-wrapper" style="position:relative; display:inline-block;">
+                        <button type="button" id="btn-ai-chat-export-toggle" class="btn-pill-toggle" style="font-size:11px; padding:4px 10px; color:#cbd5e1; cursor:pointer;" title="Export active conversation">
+                          <span>📥</span> <span data-i18n="ai.export_chat">Export</span>
+                        </button>
+                        <div id="ai-chat-export-menu" class="ai-dropdown-menu" style="display:none; position:absolute; right:0; top:100%; margin-top:4px; z-index:100; min-width:180px; background:var(--card-solid, #0f172a); border:1px solid var(--border, rgba(255,255,255,0.15)); border-radius:8px; box-shadow:0 10px 25px rgba(0,0,0,0.5); padding:4px 0;">
+                          <button type="button" id="btn-ai-chat-export-md" class="ai-menu-item" style="width:100%; text-align:left; background:transparent; border:none; padding:7px 12px; font-size:11.5px; color:#f1f5f9; cursor:pointer; display:flex; align-items:center; gap:8px;">
+                            <span>📝</span> <span data-i18n="ai.export_md">Export as Markdown (.md)</span>
+                          </button>
+                          <button type="button" id="btn-ai-chat-export-json" class="ai-menu-item" style="width:100%; text-align:left; background:transparent; border:none; padding:7px 12px; font-size:11.5px; color:#f1f5f9; cursor:pointer; display:flex; align-items:center; gap:8px;">
+                            <span>📦</span> <span data-i18n="ai.export_json">Export as JSON (.json)</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      <button type="button" id="btn-ai-chat-clear" class="btn-pill-toggle" style="font-size:11px; padding:4px 10px; color:#94a3b8; cursor:pointer;" title="Clear conversation history">
+                        <span data-i18n="ai.chat_clear_btn">🗑️ Clear Chat</span>
+                      </button>
                     </div>
                   </div>
-                </div>
 
-                <!-- Chat Composer -->
-                <div class="ai-chat-composer-row" style="display:flex; gap:8px; align-items:center; flex-shrink:0; margin-top:auto;">
-                  <input type="text" id="ai-chat-input" class="tz-select-input" placeholder="Ask any question, browse the web to verify facts, or run a NAS hardware task (e.g. 'Set fan profile to balanced', 'Which disks are sleeping?')..." style="flex:1; height:38px; padding:0 12px; font-size:12.5px; border-radius:8px;" />
-                  <button type="button" id="btn-ai-chat-send" class="btn-pill-toggle" style="height:38px; padding:0 18px; font-size:12px; font-weight:700; background:linear-gradient(135deg, rgba(99,102,241,0.35), rgba(14,165,233,0.35)); border:1px solid rgba(99,102,241,0.6); color:#fff; border-radius:8px; cursor:pointer; white-space:nowrap;">
-                    <span>🚀</span> <span data-i18n="ai.chat_send_btn">Ask Zetty</span>
-                  </button>
-                </div>
+                  <!-- Conversation Message Stream (Maintains exact test ID) -->
+                  <div id="ai-chat-messages-list" style="flex:1; min-height:180px; max-height:none; overflow-y:auto; display:flex; flex-direction:column; gap:10px; padding:12px; border-radius:8px; background:rgba(2,6,23,0.45); border:1px solid rgba(255,255,255,0.06); box-sizing:border-box;"></div>
+
+                  <!-- Chat Composer -->
+                  <div class="ai-chat-composer-row" style="display:flex; gap:8px; align-items:center; flex-shrink:0; margin-top:auto;">
+                    <input type="text" id="ai-chat-input" class="tz-select-input" placeholder="Ask any question, browse the web to verify facts, or run a NAS hardware task (e.g. 'Set fan profile to balanced', 'Which disks are sleeping?')..." style="flex:1; height:38px; padding:0 12px; font-size:12.5px; border-radius:8px;" />
+                    <button type="button" id="btn-ai-chat-send" class="btn-pill-toggle" style="height:38px; padding:0 18px; font-size:12px; font-weight:700; background:linear-gradient(135deg, rgba(99,102,241,0.35), rgba(14,165,233,0.35)); border:1px solid rgba(99,102,241,0.6); color:#fff; border-radius:8px; cursor:pointer; white-space:nowrap;">
+                      <span>🚀</span> <span data-i18n="ai.chat_send_btn">Ask Zetty</span>
+                    </button>
+                  </div>
+                </main>
               </div>
             </div>
 
             <!-- Tab 2: Unified Multi-Modal RAG (Documents, Recipes, Photos, Videos & Audio) -->
-            <div id="mgmt-pane-ai-rag" class="mgmt-tab-pane" style="display: none; padding-top: 10px;">
+            <div id="mgmt-pane-ai-rag" class="mgmt-tab-pane" style="display: none;">
               <div class="ai-rag-composer" style="background:rgba(15,23,42,0.45); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:14px; margin-bottom:12px;">
                 <!-- Row 1: Omni-Search Input + Scope + Search & Ask + Visual Filters Drawer Toggle + Reset -->
                 <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:10px;">
@@ -6572,7 +7072,45 @@
             </div>
 
             <!-- Tab 3: Dedicated Configuration (Service Switch, Scope/Schedule/Standby Rules, Watched Shares & NPU/GPU Models) -->
-            <div id="mgmt-pane-ai-index" class="mgmt-tab-pane" style="display: none; padding-top: 10px;">
+            <div id="mgmt-pane-ai-index" class="mgmt-tab-pane" style="display: none;">
+              <!-- Informational Live Telemetry Ribbon: Hardware Accelerator, Standby Guard & Index Status -->
+              <div class="ai-telemetry-ribbon" id="ai-telemetry-ribbon" style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px; padding:10px 14px; margin-bottom:12px; background:rgba(15,23,42,0.65); border:1px solid rgba(14,165,233,0.3); border-radius:10px; box-sizing:border-box;">
+                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; min-width:0;">
+                  <span class="ai-tier-badge" id="ai-accel-chain-pill" style="display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:999px; font-size:10.5px; font-weight:700; background:rgba(14,165,233,0.18); color:var(--accent-cyan,#00f0ff); border:1px solid rgba(14,165,233,0.4); flex-shrink:0;">
+                    <span style="font-size:11px;">⚡</span>
+                    <span id="ai-accel-active-label">Tier 1: NPU ➔ GPU ➔ CPU</span>
+                  </span>
+                  <span id="ai-active-llm-pill" style="display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:999px; font-size:10px; font-weight:700; background:rgba(99,102,241,0.18); color:#c7d2fe; border:1px solid rgba(99,102,241,0.4); flex-shrink:0;" title="Active LLM leveraged for RAG synthesis, NAS Hardware Copilot tools &amp; Web Chatbot">
+                    <span style="font-size:11px;">🤖</span>
+                    <span id="ai-active-llm-label">qwen2.5:3b</span>
+                  </span>
+                  <span id="ai-standby-guard-badge" style="display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:999px; font-size:10px; font-weight:600; background:rgba(37,194,160,0.14); color:var(--ok2,#25c2a0); border:1px solid rgba(37,194,160,0.32); flex-shrink:0;" title="100% of RAG &amp; Photo queries read from NVMe SQLite WAL without spinning up sleeping HDDs">
+                    <span style="font-size:11px;">🛡️💤</span>
+                    <span id="ai-standby-guard-text" data-i18n="ai.standby_guard_active">Standby Guard: Active (0 Wakeups)</span>
+                  </span>
+                  <span id="ai-index-status-pill" style="font-size:10.5px; color:var(--muted,#94a3b8); flex-shrink:0; padding:0 2px;">
+                    Indexed: <strong id="ai-stat-total-files" style="color:#fff;">0</strong> Files (<strong id="ai-stat-total-videos" style="color:#fff;">0</strong> Videos • <strong id="ai-stat-total-photos" style="color:#fff;">0</strong> Photos • <strong id="ai-stat-total-docs" style="color:#fff;">0</strong> Docs<span id="ai-stat-recipes-segment" style="display:none;"> • <strong id="ai-stat-total-recipes" style="color:#fff;">0</strong> Recipes</span>)
+                  </span>
+                </div>
+                <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; flex-shrink:0;">
+                  <span id="ai-sync-state-badge" style="display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:999px; font-size:10px; font-weight:700; background:rgba(148,163,184,0.14); color:#cbd5e1; border:1px solid rgba(148,163,184,0.28); flex-shrink:0;">
+                    <span id="ai-sync-state-dot" style="width:6px; height:6px; border-radius:50%; background:#94a3b8; display:inline-block;"></span>
+                    <span id="ai-sync-state-text" data-i18n="ai.sync_state_idle">Sync: Idle</span>
+                  </span>
+                  <button type="button" id="btn-ai-quick-sync" class="btn-pill-toggle" style="font-size:10px; padding:3px 10px; font-weight:700; background:rgba(37,194,160,0.18); border:1px solid rgba(37,194,160,0.45); color:var(--ok2,#25c2a0); cursor:pointer; white-space:nowrap; border-radius:6px;" title="Sync configured watched folders on running drives (skips sleeping HDDs)">
+                    <span>🔄</span> <span data-i18n="ai.sync_shares">Sync Active Shares</span>
+                  </button>
+                  <button type="button" id="btn-ai-sync-pause" class="btn-pill-toggle" style="display:none; font-size:10px; padding:3px 8px; font-weight:700; background:rgba(245,158,11,0.18); border:1px solid rgba(245,158,11,0.45); color:#fbbf24; cursor:pointer; white-space:nowrap; border-radius:6px;" title="Pause active indexing scan">
+                    <span>⏸</span> <span data-i18n="ai.pause_sync">Pause</span>
+                  </button>
+                  <button type="button" id="btn-ai-sync-resume" class="btn-pill-toggle" style="display:none; font-size:10px; padding:3px 8px; font-weight:700; background:rgba(37,194,160,0.2); border:1px solid rgba(37,194,160,0.5); color:#34d399; cursor:pointer; white-space:nowrap; border-radius:6px;" title="Resume paused indexing scan (only on running disks)">
+                    <span>▶</span> <span data-i18n="ai.resume_sync">Resume</span>
+                  </button>
+                  <button type="button" id="btn-ai-sync-stop" class="btn-pill-toggle" style="display:none; font-size:10px; padding:3px 8px; font-weight:700; background:rgba(239,68,68,0.18); border:1px solid rgba(239,68,68,0.45); color:#f87171; cursor:pointer; white-space:nowrap; border-radius:6px;" title="Stop active indexing scan immediately">
+                    <span>⏹</span> <span data-i18n="ai.stop_sync">Stop</span>
+                  </button>
+                </div>
+              </div>
               <!-- Section 1 (Top Priority): Service Switch, Learning Scope, Schedule & Standby/Spin-Up Rules -->
               <div style="background:rgba(15,23,42,0.5); border:1px solid rgba(14,165,233,0.3); border-radius:10px; padding:14px; margin-bottom:12px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px; padding-bottom:10px; border-bottom:1px solid rgba(255,255,255,0.07);">
@@ -6645,6 +7183,12 @@
                     <button type="button" id="btn-ai-learning-results" class="btn-pill-toggle" style="height:32px; padding:0 11px; font-size:11.5px; font-weight:700; background:rgba(99,102,241,0.16); border:1px solid rgba(99,102,241,0.4); color:#c7d2fe; border-radius:8px; cursor:pointer;" title="View AI Learning Results (Succeeded / Failed / Deferred files)">
                       <span>📊</span> <span data-i18n="ai.learning_results_btn">Learning Results</span>
                     </button>
+                    <button type="button" id="btn-ai-in-place-reindex" class="btn-pill-toggle" style="height:32px; padding:0 11px; font-size:11.5px; font-weight:700; background:rgba(34,197,94,0.18); border:1px solid rgba(34,197,94,0.45); color:#4ade80; border-radius:8px; cursor:pointer;" title="Re-embed all existing document chunks on SSD in-place with zero disk wakeups">
+                      <span>🔄</span> <span data-i18n="ai.btn_reindex">In-Place Re-index</span>
+                    </button>
+                    <button type="button" id="btn-ai-flush-index" class="btn-pill-toggle" style="height:32px; padding:0 11px; font-size:11.5px; font-weight:700; background:rgba(239,68,68,0.14); border:1px solid rgba(239,68,68,0.4); color:#fca5a5; border-radius:8px; cursor:pointer;" title="Flush existing RAG index, vector embeddings, and search catalog to start fresh">
+                      <span>🗑️</span> <span data-i18n="ai.flush_index_btn">Flush Index</span>
+                    </button>
                   </div>
                 </div>
 
@@ -6694,43 +7238,36 @@
                     <span style="font-size:10.5px; color:var(--muted,#94a3b8);" data-i18n="ai.watched_folders_hint">Checked folders are synced for RAG (Sleeping drives protected)</span>
                   </div>
 
-                  <div id="ai-watched-folders-dropdown-container" style="position:relative; width:100%;">
-                    <button type="button" id="btn-ai-watched-folders-dropdown" aria-expanded="false" style="width:100%; min-height:38px; padding:6px 12px; border-radius:8px; background:rgba(15,23,42,0.85); border:1px solid rgba(56,189,248,0.42); color:#f8fafc; font-size:12px; display:flex; justify-content:space-between; align-items:center; gap:10px; cursor:pointer; text-align:left;">
-                      <div style="display:flex; align-items:center; gap:8px; min-width:0; flex:1; overflow:hidden;">
-                        <span>📁</span>
-                        <span id="ai-watched-dropdown-summary" style="font-family:monospace; font-weight:700; color:#e2e8f0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Select Watched Folders for RAG...</span>
-                      </div>
-                      <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
-                        <span id="ai-watched-dropdown-count-badge" style="font-size:10.5px; font-weight:800; padding:2px 8px; border-radius:999px; background:rgba(37,194,160,0.2); border:1px solid rgba(37,194,160,0.45); color:#34d399;">1 Checked</span>
-                        <span id="ai-watched-dropdown-caret" style="font-size:11px; color:#38bdf8;">▾</span>
-                      </div>
-                    </button>
+                  <div style="display:flex; gap:8px; align-items:center; width:100%; flex-wrap:wrap;">
+                    <div id="ai-watched-folders-dropdown-container" style="position:relative; flex:1; min-width:240px;">
+                      <button type="button" id="btn-ai-watched-folders-dropdown" aria-expanded="false" style="width:100%; min-height:38px; padding:6px 12px; border-radius:8px; background:rgba(15,23,42,0.85); border:1px solid rgba(56,189,248,0.42); color:#f8fafc; font-size:12px; display:flex; justify-content:space-between; align-items:center; gap:10px; cursor:pointer; text-align:left;">
+                        <div style="display:flex; align-items:center; gap:8px; min-width:0; flex:1; overflow:hidden;">
+                          <span>📁</span>
+                          <span id="ai-watched-dropdown-summary" style="font-family:monospace; font-weight:700; color:#e2e8f0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Select Watched Folders for RAG...</span>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
+                          <span id="ai-watched-dropdown-count-badge" style="font-size:10.5px; font-weight:800; padding:2px 8px; border-radius:999px; background:rgba(37,194,160,0.2); border:1px solid rgba(37,194,160,0.45); color:#34d399;">1 Checked</span>
+                          <span id="ai-watched-dropdown-caret" style="font-size:11px; color:#38bdf8;">▾</span>
+                        </div>
+                      </button>
 
-                    <!-- Dropdown Menu: List of all available + watched folders with in-place check/uncheck -->
-                    <div id="ai-watched-folders-dropdown-menu" style="display:none; position:absolute; top:calc(100% + 4px); left:0; right:0; z-index:40; max-height:260px; overflow-y:auto; border-radius:9px; background:rgba(10,16,30,0.98); border:1px solid rgba(56,189,248,0.45); box-shadow:0 12px 28px rgba(0,0,0,0.65); padding:6px; flex-direction:column; gap:4px;">
-                      <div id="ai-discovered-shares-list" style="display:flex; flex-direction:column; gap:4px;"></div>
+                      <!-- Dropdown Menu: List of all available + watched folders with in-place check/uncheck -->
+                      <div id="ai-watched-folders-dropdown-menu" style="display:none; position:absolute; top:calc(100% + 4px); left:0; right:0; z-index:40; max-height:260px; overflow-y:auto; border-radius:9px; background:rgba(10,16,30,0.98); border:1px solid rgba(56,189,248,0.45); box-shadow:0 12px 28px rgba(0,0,0,0.65); padding:6px; flex-direction:column; gap:4px;">
+                        <div id="ai-discovered-shares-list" style="display:flex; flex-direction:column; gap:4px;"></div>
+                      </div>
                     </div>
+
+                    <button type="button" id="btn-ai-run-index" class="btn-pill-toggle" style="height:38px; padding:0 16px; font-size:11.5px; font-weight:700; background:rgba(37,194,160,0.22); border:1px solid rgba(37,194,160,0.5); color:#fff; border-radius:8px; cursor:pointer; white-space:nowrap; flex-shrink:0;" title="Index configured watched folders now (Standby Safe)">
+                      <span>🚀</span> <span data-i18n="ai.run_index_btn">Index Path Now</span>
+                    </button>
                   </div>
 
                   <!-- Compact active checked chips summary -->
                   <div id="ai-watched-folders-list" style="display:flex; flex-wrap:wrap; gap:6px;"></div>
-                </div>
 
-                <!-- Add / Browse / Index Specific Folder Row -->
-                <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; padding-top:6px; border-top:1px solid rgba(255,255,255,0.07);">
-                  <input type="text" id="ai-index-target-path" aria-label="Target folder path to index" class="tz-select-input" value="/mnt/user" placeholder="/mnt/user/recipes or /mnt/user/photos" style="flex:1; min-width:220px; height:34px; padding:0 12px; font-size:12px; border-radius:8px;" />
-                  <button type="button" id="btn-ai-browse-folder" class="btn-pill-toggle" style="height:34px; padding:0 12px; font-size:11.5px; font-weight:700; cursor:pointer;" title="Browse NAS folders">
-                    <span>📁</span> <span data-i18n="ai.browse_folder_btn">Browse...</span>
-                  </button>
-                  <button type="button" id="btn-ai-add-watched-folder" class="btn-pill-toggle" style="height:34px; padding:0 12px; font-size:11.5px; font-weight:700; background:rgba(14,165,233,0.18); border:1px solid rgba(14,165,233,0.45); color:#38bdf8; border-radius:8px; cursor:pointer;" title="Add this path to Watched Folders">
-                    <span>➕</span> <span data-i18n="ai.add_folder_btn">Add Folder</span>
-                  </button>
-                  <button type="button" id="btn-ai-run-index" class="btn-pill-toggle" style="height:34px; padding:0 14px; font-size:11.5px; font-weight:700; background:rgba(37,194,160,0.22); border:1px solid rgba(37,194,160,0.5); color:#fff; border-radius:8px; cursor:pointer;">
-                    <span>🚀</span> <span data-i18n="ai.run_index_btn">Index Path Now</span>
-                  </button>
+                  <div id="ai-index-run-feedback" style="font-size:11.5px; color:var(--ok2,#25c2a0);"></div>
+                  <div id="ai-index-db-summary" style="font-size:11px; color:var(--muted,#94a3b8); display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:4px; padding-top:6px; border-top:1px solid rgba(255,255,255,0.06);"></div>
                 </div>
-                <div id="ai-index-run-feedback" style="font-size:11.5px; color:var(--ok2,#25c2a0);"></div>
-                <div id="ai-index-db-summary" style="font-size:11px; color:var(--muted,#94a3b8); display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:4px; padding-top:6px; border-top:1px solid rgba(255,255,255,0.06);"></div>
               </div>
 
               <!-- How Your Selected LLM Is Leveraged (Moved from Chatbot to AI Configuration) -->
@@ -6857,6 +7394,83 @@
 
                 <!-- Compact 2-Column Hardware-Matched & Hugging Face LLM Rows -->
                 <div id="ai-llm-recommendations-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:8px;"></div>
+              </div>
+
+              <!-- Section 4: Embedding Model & Matryoshka Vector Index Scaling (Google DeepMind EmbeddingGemma 2) -->
+              <div style="background:var(--card); border:1px solid rgba(14,165,233,0.3); border-radius:10px; padding:14px; margin-top:12px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px; padding-bottom:10px; border-bottom:1px solid rgba(255,255,255,0.07);">
+                  <div>
+                    <div style="font-size:13px; font-weight:700; color:#fff;">🧬 Embedding Model &amp; Matryoshka Vector Scaling (MRL)</div>
+                    <div style="font-size:11.5px; color:var(--muted,#94a3b8); margin-top:2px;">Select embedding architectures, scale Matryoshka vector dimensions, and benchmark edge inference latency without disk platters spinning up.</div>
+                  </div>
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <button type="button" id="btn-ai-run-benchmark" class="btn-pill-toggle" style="font-size:11px; padding:5px 12px; font-weight:700; background:rgba(14,165,233,0.18); border:1px solid rgba(14,165,233,0.45); color:var(--accent-cyan,#00f0ff); cursor:pointer; border-radius:6px;">
+                      <span>⚡</span> <span data-i18n="ai.btn_run_benchmark">Run Latency Benchmark</span>
+                    </button>
+                    <button type="button" id="btn-ai-trigger-reindex" class="btn-pill-toggle" style="font-size:11px; padding:5px 12px; font-weight:700; background:rgba(34,197,94,0.18); border:1px solid rgba(34,197,94,0.45); color:#4ade80; cursor:pointer; border-radius:6px;" title="Re-embed all existing document chunks on SSD in-place with zero disk wakeups">
+                      <span>🔄</span> <span data-i18n="ai.btn_reindex">Re-index Knowledge Base</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:12px; margin-bottom:12px;">
+                  <!-- Model Selector -->
+                  <div style="display:flex; flex-direction:column; gap:6px; padding:10px 12px; border-radius:8px; background:var(--card-hi); border:1px solid rgba(255,255,255,0.07);">
+                    <label for="ai-embedding-model-select" style="font-size:11.5px; font-weight:700; color:#e2e8f0;" data-i18n="ai.embedding_model_label">Embedding Model:</label>
+                    <select id="ai-embedding-model-select" class="tz-select-input" style="height:32px; padding:0 10px; font-size:11.5px; border-radius:6px; background:rgba(15,23,42,0.95); color:#fff; border:1px solid rgba(255,255,255,0.15);">
+                      <option value="google/embeddinggemma-2">google/embeddinggemma-2 (740M Multimodal, 8K Context)</option>
+                      <option value="google/embeddinggemma-2-270m">google/embeddinggemma-2-270m (270M Text &amp; Code, Low RAM)</option>
+                      <option value="nomic-embed-text">nomic-embed-text (137M, 8K Context)</option>
+                      <option value="zett_lexical_384d">zett_lexical_384d (Deterministic Zero-RAM Fallback)</option>
+                    </select>
+                  </div>
+
+                  <!-- MRL Dimension Selector -->
+                  <div style="display:flex; flex-direction:column; gap:6px; padding:10px 12px; border-radius:8px; background:var(--card-hi); border:1px solid rgba(255,255,255,0.07);">
+                    <label for="ai-mrl-dimension-select" style="font-size:11.5px; font-weight:700; color:#e2e8f0;" data-i18n="ai.mrl_dimension_label">Matryoshka Truncation (MRL):</label>
+                    <select id="ai-mrl-dimension-select" class="tz-select-input" style="height:32px; padding:0 10px; font-size:11.5px; border-radius:6px; background:rgba(15,23,42,0.95); color:#fff; border:1px solid rgba(255,255,255,0.15);">
+                      <option value="768" data-i18n="ai.mrl_768_desc">768d — Full DeepMind Fidelity (100% Recall)</option>
+                      <option value="512" data-i18n="ai.mrl_512_desc">512d — Balanced (33% RAM Saving, 99.4% Recall)</option>
+                      <option value="256" data-i18n="ai.mrl_256_desc">256d — Efficient (66% RAM Saving, Recommended for N100)</option>
+                      <option value="128" data-i18n="ai.mrl_128_desc">128d — Ultra-Compact (83% RAM Saving, Low-RAM NAS)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Benchmark Results Card -->
+                <div id="ai-benchmark-results-card" style="display:none; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:10px; padding:12px; background:var(--card-hi); border:1px solid rgba(14,165,233,0.3); border-radius:8px; margin-bottom:10px;">
+                  <div>
+                    <div style="font-size:10px; color:var(--muted,#94a3b8); text-transform:uppercase;" data-i18n="ai.bm_metric_latency">Single-Chunk Latency</div>
+                    <div id="bm-latency" style="font-size:14px; font-weight:800; color:var(--accent-cyan,#00f0ff); margin-top:2px;">-- ms</div>
+                  </div>
+                  <div>
+                    <div style="font-size:10px; color:var(--muted,#94a3b8); text-transform:uppercase;" data-i18n="ai.bm_metric_throughput">Throughput</div>
+                    <div id="bm-throughput" style="font-size:14px; font-weight:800; color:#34d399; margin-top:2px;">-- chunks/s</div>
+                  </div>
+                  <div>
+                    <div style="font-size:10px; color:var(--muted,#94a3b8); text-transform:uppercase;" data-i18n="ai.bm_metric_tokens">Tokens / Sec</div>
+                    <div id="bm-tokens" style="font-size:14px; font-weight:800; color:#fbbf24; margin-top:2px;">-- tok/s</div>
+                  </div>
+                  <div>
+                    <div style="font-size:10px; color:var(--muted,#94a3b8); text-transform:uppercase;" data-i18n="ai.bm_metric_accel">Active Accelerator</div>
+                    <div id="bm-accel" style="font-size:13px; font-weight:700; color:#fff; margin-top:2px;">--</div>
+                  </div>
+                </div>
+
+                <!-- Live SSE Re-indexing Progress Bar -->
+                <div id="ai-reindex-progress-container" style="display:none; background:var(--card-hi); border:1px solid rgba(14,165,233,0.3); border-radius:8px; padding:10px 14px;">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; font-size:11px;">
+                    <span style="font-weight:700; color:#fff;" data-i18n="ai.reindex_in_progress">Re-indexing Knowledge Base...</span>
+                    <span id="ai-reindex-pct-label" style="font-weight:800; color:var(--accent-cyan,#00f0ff);">0%</span>
+                  </div>
+                  <div style="height:6px; background:rgba(255,255,255,0.1); border-radius:999px; overflow:hidden; margin-bottom:6px;">
+                    <div id="ai-reindex-progress-bar" style="height:100%; width:0%; background:var(--accent-cyan,#00f0ff); transition:width 0.3s ease;"></div>
+                  </div>
+                  <div style="display:flex; justify-content:space-between; font-size:10px; color:var(--muted,#94a3b8);">
+                    <span id="ai-reindex-speed-label">0 chunks/s</span>
+                    <span id="ai-reindex-eta-label">ETA: --</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -7044,7 +7658,7 @@
                 </div>
               </div>
 
-              <div class="sl-bay-row" id="sl-bay-row"></div>
+              <div class="sl-bay-row" id="sl-bay-row" data-metric-id="metric-disks"></div>
             </div>
           </div>
 
@@ -7974,6 +8588,10 @@
     <span class="context-menu-icon">➕</span>
     <span class="context-menu-label">Add Desktop Shortcut…</span>
   </div>
+  <div class="context-menu-item" role="menuitem" tabindex="0" data-action="add-widget">
+    <span class="context-menu-icon">🧩</span>
+    <span class="context-menu-label" data-i18n="ctx.add_widget">Add Widget…</span>
+  </div>
   <div class="context-menu-divider" role="separator"></div>
   <div class="context-menu-item" role="menuitem" tabindex="0" data-action="align-grid">
     <span class="context-menu-icon">📐</span>
@@ -8026,6 +8644,38 @@
   <div class="context-menu-item" role="menuitem" tabindex="0" data-action="lock">
     <span class="context-menu-icon">🔒</span>
     <span class="context-menu-label" data-i18n="ctx.lock">Lock Workspace</span>
+  </div>
+</div>
+
+<!-- Widget Right-Click Context Menu -->
+<div id="widget-context-menu" class="desktop-context-menu widget-context-menu" role="menu" aria-label="Widget Context Menu" style="display: none;">
+  <div class="context-menu-item danger" role="menuitem" tabindex="0" data-action="remove-widget" id="ctx-remove-widget-item">
+    <span class="context-menu-icon">🗑️</span>
+    <span class="context-menu-label" id="ctx-remove-widget-label" data-i18n="ctx.remove_widget">Remove Widget</span>
+  </div>
+  <div class="context-menu-divider" role="separator"></div>
+  <div class="context-menu-item" role="menuitem" tabindex="0" data-action="add-widget">
+    <span class="context-menu-icon">🧩</span>
+    <span class="context-menu-label" data-i18n="ctx.add_widget">Add Widget…</span>
+  </div>
+  <div class="context-menu-item" role="menuitem" tabindex="0" data-action="widget-settings">
+    <span class="context-menu-icon">⚙️</span>
+    <span class="context-menu-label" data-i18n="ctx.widget_settings">Widget Settings…</span>
+  </div>
+  <div class="context-menu-divider" role="separator"></div>
+  <div class="context-menu-item" role="menuitem" tabindex="0" data-action="wallpaper">
+    <span class="context-menu-icon">🖼️</span>
+    <span class="context-menu-label" data-i18n="ctx.wallpaper">Change Wallpaper & Style…</span>
+  </div>
+  <div class="context-menu-item" role="menuitem" tabindex="0" data-action="theme">
+    <span class="context-menu-icon">🎨</span>
+    <span class="context-menu-label" data-i18n="ctx.theme">Desktop Theme & Colors…</span>
+  </div>
+  <div class="context-menu-divider" role="separator"></div>
+  <div class="context-menu-item" role="menuitem" tabindex="0" data-action="spotlight">
+    <span class="context-menu-icon">⚡</span>
+    <span class="context-menu-label">Command Palette</span>
+    <kbd style="margin-left:auto; font-size:9.5px; opacity:0.6; padding:1px 4px; background:rgba(255,255,255,0.08); border-radius:3px;">⌘K</kbd>
   </div>
 </div>
 

@@ -302,3 +302,152 @@ def test_apply_zone_pwm_cpu_fan_cannot_zero():
     res = apply_zone_pwm(3, 0, hold_secs=0, allow_zero=True)
     # CPU fan forces allow_zero=False and clamps to FAN_MIN_PWM (58)
     assert res == FAN_MIN_PWM
+
+
+def test_start_and_get_acoustic_sweep():
+    from unittest.mock import patch
+    from backend.hardware.fans import (
+        start_acoustic_sweep,
+        get_acoustic_sweep_status,
+        stop_acoustic_sweep,
+    )
+
+    with (
+        patch("backend.hardware.fans.set_fan_pwm") as mock_set_pwm,
+        patch("backend.hardware.fans.read_fans", return_value=[1200, 1250, 2000]),
+    ):
+        # Run synchronous fast sweep for testing
+        status = start_acoustic_sweep(step_duration=0.01, pwm_step=40, run_in_background=False)
+        assert status["running"] is False
+        assert status["progress_pct"] == 100
+        assert len(status["results"]) > 0
+
+        # Verify steps span from 58 to 183
+        pwms = [r["pwm"] for r in status["results"]]
+        assert pwms[0] == 58
+        assert pwms[-1] == 183
+
+        # Verify results structure
+        first = status["results"][0]
+        assert "rpm_avg" in first
+        assert "stability_score" in first
+        assert "resonance_detected" in first
+        assert first["stability_score"] >= 0
+
+        # Verify fan control was restored to auto
+        assert any(c[0][0] == "auto" for c in mock_set_pwm.call_args_list)
+
+
+def test_stop_acoustic_sweep():
+    from backend.hardware.fans import stop_acoustic_sweep, get_acoustic_sweep_status
+
+    res = stop_acoustic_sweep()
+    assert res["success"] is True
+    st = get_acoustic_sweep_status()
+    assert st["running"] is False
+
+
+def test_start_acoustic_sweep_background():
+    from unittest.mock import patch
+    from backend.hardware.fans import (
+        start_acoustic_sweep,
+        get_acoustic_sweep_status,
+        stop_acoustic_sweep,
+    )
+
+    with (
+        patch("backend.hardware.fans.set_fan_pwm"),
+        patch("backend.hardware.fans.read_fans", return_value=[1200, 1250, 2000]),
+    ):
+        try:
+            res = start_acoustic_sweep(step_duration=5.0, pwm_step=25, run_in_background=True)
+            assert res["success"] is True
+            assert "status" in res
+            assert res["status"]["running"] is True
+            assert res["status"]["total_steps"] == 6
+
+            # Verify synchronous status check is running immediately
+            st = get_acoustic_sweep_status()
+            assert st["running"] is True
+            assert st["total_steps"] == 6
+            assert st["current_pwm"] == 58
+        finally:
+            stop_res = stop_acoustic_sweep()
+            assert stop_res["success"] is True
+
+        st_after = get_acoustic_sweep_status()
+        assert st_after["running"] is False
+
+
+def test_acoustic_sweep_custom_pwms_formatting():
+    from unittest.mock import patch
+    from backend.hardware.fans import start_acoustic_sweep, stop_acoustic_sweep
+
+    with (
+        patch("backend.hardware.fans.set_fan_pwm") as mock_set_pwm,
+        patch("backend.hardware.fans.read_fans", return_value=[1000, 1000, 2000]),
+    ):
+        # Run 1 fast step
+        start_acoustic_sweep(step_duration=0.01, pwm_step=150, run_in_background=False)
+        stop_acoustic_sweep()
+
+        # Check that set_fan_pwm was called with manual profile and custom_pwms containing pwm1 and pwm2
+        manual_calls = [c for c in mock_set_pwm.call_args_list if len(c[0]) > 0 and c[0][0] == "manual"]
+        assert len(manual_calls) > 0
+        last_manual_kwargs = manual_calls[0][1]
+        assert "custom_pwms" in last_manual_kwargs
+        pwms_dict = last_manual_kwargs["custom_pwms"]
+        assert "pwm1" in pwms_dict
+        assert "pwm2" in pwms_dict
+        assert 1 in pwms_dict
+        assert 2 in pwms_dict
+        assert pwms_dict["pwm1"] == 58
+
+
+def test_acoustic_sweep_api_endpoints():
+    from fastapi.testclient import TestClient
+    from unittest.mock import patch
+    from backend.main import app
+
+    client = TestClient(app)
+
+    with (
+        patch("backend.hardware.fans.set_fan_pwm"),
+        patch("backend.hardware.fans.read_fans", return_value=[1100, 1100, 2100]),
+        patch(
+            "backend.auth.validate_user_session",
+            return_value={"username": "root", "role_id": "superadmin", "scopes": ["*"]},
+        ),
+        patch(
+            "backend.auth.get_current_session",
+            return_value={"username": "root", "role_id": "superadmin", "scopes": ["*"]},
+        ),
+    ):
+        headers = {"Authorization": "Bearer test-session-token"}
+        try:
+            # Start sweep
+            resp = client.post(
+                "/api/fans/calibrate/acoustic", json={"step_duration": 5.0, "pwm_step": 25}, headers=headers
+            )
+            assert resp.status_code == 200
+            data = resp.json()
+            assert data["success"] is True
+
+            # Get sweep status
+            get_resp = client.get("/api/fans/calibrate/acoustic", headers=headers)
+            assert get_resp.status_code == 200
+            get_data = get_resp.json()
+            assert "running" in get_data
+            assert get_data["running"] is True
+
+            # Stop sweep
+            stop_resp = client.post("/api/fans/calibrate/acoustic/stop", headers=headers)
+            assert stop_resp.status_code == 200
+            assert stop_resp.json()["success"] is True
+
+            # Confirm stopped
+            get_resp2 = client.get("/api/fans/calibrate/acoustic", headers=headers)
+            assert get_resp2.status_code == 200
+            assert get_resp2.json()["running"] is False
+        finally:
+            client.post("/api/fans/calibrate/acoustic/stop", headers=headers)

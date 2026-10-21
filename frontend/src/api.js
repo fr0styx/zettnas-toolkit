@@ -116,6 +116,11 @@ export const api = {
     if (!res.ok) throw await ApiError.from(res);
     return res.json();
   },
+  async patch(url, body = {}, options = {}) {
+    const res = await request(url, { method: 'PATCH', body, ...options });
+    if (!res.ok) throw await ApiError.from(res);
+    return res.json();
+  },
   async delete(url, options = {}) {
     const res = await request(url, { method: 'DELETE', ...options });
     if (!res.ok) throw await ApiError.from(res);

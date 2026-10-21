@@ -19,7 +19,13 @@ from backend.hardware.docker_stats import UnixHTTPConnection
 from backend.services.compose_synthesizer import fetch_container_raw_inspect
 
 
-def _docker_request(method: str, path: str, body: Optional[dict] = None, timeout: float = 15.0) -> Tuple[int, Any]:
+def _docker_request(
+    method: str,
+    path: str,
+    body: Optional[dict] = None,
+    timeout: float = 15.0,
+    headers: Optional[Dict[str, str]] = None,
+) -> Tuple[int, Any]:
     """Helper for making synchronous HTTP requests over the Docker Unix socket."""
     sock_path = "/var/run/docker.sock"
     if not os.path.exists(sock_path):
@@ -43,11 +49,13 @@ def _docker_request(method: str, path: str, body: Optional[dict] = None, timeout
         path = path.replace(" ", "%20")
 
     conn = UnixHTTPConnection(sock_path, timeout=timeout)
-    headers = {"Content-Type": "application/json"} if body is not None else {}
+    req_headers = {"Content-Type": "application/json"} if body is not None else {}
+    if headers:
+        req_headers.update(headers)
     body_bytes = json.dumps(body).encode("utf-8") if body is not None else None
 
     try:
-        conn.request(method, path, body=body_bytes, headers=headers)
+        conn.request(method, path, body=body_bytes, headers=req_headers)
         res = conn.getresponse()
         raw = res.read().decode("utf-8", errors="replace")
         try:
@@ -426,12 +434,16 @@ def recreate_container(
         if status != 204:
             raise RuntimeError(f"Failed to start newly created container: {start_resp}")
 
-        # Step 9b: Liveness verification with grace period before removing backup
+        # Step 9b: Two-tier liveness and healthcheck verification with grace period before removing backup
         if grace_period_seconds > 0:
             logger.info(
                 f"[Container Recreate] Verifying container '{target_name}' liveness for {grace_period_seconds}s grace period..."
             )
             deadline = time.time() + grace_period_seconds
+            health_verified = False
+            has_healthcheck = False
+            last_health_status = ""
+
             while time.time() < deadline:
                 time.sleep(min(0.5, max(0.05, deadline - time.time())))
                 st_code, inspect_live = _docker_request("GET", f"/containers/{new_id}/json", timeout=timeout)
@@ -448,6 +460,38 @@ def recreate_container(
                         raise RuntimeError(
                             f"Container '{target_name}' failed liveness check: OOMKilled={live_state.get('OOMKilled')}, Dead={live_state.get('Dead')}"
                         )
+                    restart_count = live_state.get("RestartCount", 0)
+                    if restart_count > 0:
+                        raise RuntimeError(
+                            f"Container '{target_name}' crashed and restarted {restart_count} times during grace period"
+                        )
+
+                    # Two-tier healthcheck evaluator:
+                    # Tier 1: Check Docker HEALTHCHECK if defined on image or container
+                    cfg_health = inspect_live.get("Config", {}).get("Healthcheck")
+                    health_info = live_state.get("Health")
+                    if (cfg_health and cfg_health.get("Test")) or health_info is not None:
+                        has_healthcheck = True
+                        if health_info:
+                            last_health_status = str(health_info.get("Status", "")).lower()
+                            if last_health_status == "unhealthy":
+                                streak = health_info.get("FailingStreak", 0)
+                                raise RuntimeError(
+                                    f"Container '{target_name}' failed healthcheck: status is unhealthy (failing streak: {streak})"
+                                )
+                            elif last_health_status == "healthy":
+                                logger.info(
+                                    f"[Container Recreate] Container '{target_name}' passed healthcheck (Status: healthy)."
+                                )
+                                health_verified = True
+                                break
+                            # If still 'starting', continue polling until deadline or state transition
+
+            # If a Docker HEALTHCHECK was defined, require 'healthy' status before decommissioning backup container
+            if has_healthcheck and not health_verified:
+                raise RuntimeError(
+                    f"Container '{target_name}' failed healthcheck evaluation: expected 'healthy', but status remained '{last_health_status or 'starting'}' after {grace_period_seconds}s grace period"
+                )
 
         # Step 10: Success! Cleanup or retain backup
         if not keep_backup:

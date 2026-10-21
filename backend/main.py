@@ -15,6 +15,7 @@ from contextlib import asynccontextmanager
 
 import uvicorn
 from fastapi import FastAPI, HTTPException, Request, Response
+from fastapi.responses import ORJSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from backend import __version__
@@ -51,6 +52,9 @@ from backend.state import Z_STATE, _load_events, add_event
 
 def startup_system():
     """System initialization and background services launch."""
+    import gc
+
+    gc.set_threshold(50000, 10, 10)
     setup_structured_logging()
     read_cpu_util()
     if DATA_DIR:
@@ -142,6 +146,33 @@ def startup_system():
     except Exception as e:
         logger.warning(f"Could not auto-start ZettAI spin-up watcher: {e}")
 
+    # VM Autostart Background Daemon
+    def _autostart_vms():
+        try:
+            import time
+
+            time.sleep(3.0)  # Brief pause to allow storage and bridge initialization
+            from backend.api.vms import _load_vms, _start_qemu, _is_qemu_process_alive, _get_qemu_vnc_port, _save_vms
+
+            vms = _load_vms()
+            started_any = False
+            for vm in vms:
+                if vm.get("autostart") and vm.get("state") != "running":
+                    vm_id = vm.get("id")
+                    if not _is_qemu_process_alive(vm_id):
+                        vnc_port = _get_qemu_vnc_port(vms, vm_id)
+                        logger.info(f"[VM Autostart] Starting VM '{vm.get('name')}' (ID: {vm_id})...")
+                        ok, _ = _start_qemu(vm, vnc_port)
+                        if ok:
+                            vm["state"] = "running"
+                            started_any = True
+            if started_any:
+                _save_vms(vms)
+        except Exception as e:
+            logger.warning(f"[VM Autostart] Error starting autostart VMs: {e}")
+
+    threading.Thread(target=_autostart_vms, daemon=True, name="VmAutostart").start()
+
     # Backup in case the server exits without running the lifespan shutdown.
     # Registered here (not at import) so tooling that imports main.py is inert.
     atexit.register(lambda: Z_STATE.fans_locked or _shutdown_fans("exit"))
@@ -182,7 +213,19 @@ def _shutdown_fans(reason: str):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    broadcaster.set_loop(asyncio.get_running_loop())
+    import concurrent.futures
+    import multiprocessing
+
+    loop = asyncio.get_running_loop()
+    try:
+        cpu_cores = multiprocessing.cpu_count()
+    except Exception:
+        cpu_cores = 4
+    worker_count = min(64, max(16, cpu_cores * 4))
+    loop.set_default_executor(
+        concurrent.futures.ThreadPoolExecutor(max_workers=worker_count, thread_name_prefix="ZettAsyncWorker")
+    )
+    broadcaster.set_loop(loop)
     startup_system()
     try:
         yield
@@ -212,7 +255,14 @@ async def lifespan(app: FastAPI):
             _shutdown_fans("shutdown")
 
 
-app = FastAPI(title="ZettNAS Toolkit", version=__version__, docs_url="/docs", redoc_url="/redoc", lifespan=lifespan)
+app = FastAPI(
+    title="ZettNAS Toolkit",
+    version=__version__,
+    docs_url="/docs",
+    redoc_url="/redoc",
+    lifespan=lifespan,
+    default_response_class=ORJSONResponse,
+)
 
 # Consistent {error, detail, code} error responses
 register_error_handlers(app)
@@ -226,6 +276,8 @@ async def security_headers_middleware(request: Request, call_next):
     response.headers["X-Frame-Options"] = "SAMEORIGIN"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+    if request.url.scheme == "https" or request.headers.get("x-forwarded-proto", "").lower() == "https":
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
     return response
 
 

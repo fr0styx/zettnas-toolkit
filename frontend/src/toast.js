@@ -31,6 +31,50 @@ export function showToast(msg, type = "error") {
   ZettEventBus.emit('toast:show', { msg, type });
 }
 
+export function showActionToast(msg, actionText, onAction, durationMs = 10000) {
+  if (state.isLcdDirect || (typeof window !== 'undefined' && window.location.search.includes('mode=lcd')) || (document.body && document.body.classList.contains('lcd-direct'))) return;
+  if (!document.body) return;
+  triggerHaptic('light');
+  const container = _getOrCreateToastContainer();
+
+  const toast = document.createElement("div");
+  toast.className = "top-toast-item";
+  toast.style.borderLeft = `4px solid #38bdf8`;
+  toast.innerHTML = `
+    <div style="font-size: 20px; line-height: 1; flex-shrink: 0;">↺</div>
+    <div style="flex: 1; min-width: 0;">
+      <div style="font-size: 10px; font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 2px; color: #38bdf8;">NOTIFICATION</div>
+      <div style="font-size: 12.5px; color: #f1f5f9; line-height: 1.4; word-break: break-word;">${escapeHtml(msg)}</div>
+    </div>
+    <button class="top-toast-action-btn" style="background: rgba(56, 189, 248, 0.2); border: 1px solid #38bdf8; color: #38bdf8; font-size: 11px; font-weight: 700; cursor: pointer; padding: 4px 10px; border-radius: 4px; margin-right: 6px;">${escapeHtml(actionText)}</button>
+    <button class="top-toast-close" style="background: transparent; border: none; color: #94a3b8; font-size: 18px; cursor: pointer; padding: 2px 6px; line-height: 1; border-radius: 4px;" title="Dismiss">&times;</button>
+  `;
+
+  container.appendChild(toast);
+
+  const actionBtn = toast.querySelector(".top-toast-action-btn");
+  if (actionBtn) {
+    actionBtn.onclick = () => {
+      _dismissToastItem(toast);
+      if (typeof onAction === 'function') onAction();
+    };
+  }
+
+  const closeBtn = toast.querySelector(".top-toast-close");
+  if (closeBtn) {
+    closeBtn.onclick = () => _dismissToastItem(toast);
+  }
+
+  requestAnimationFrame(() => {
+    toast.classList.add("show");
+  });
+
+  const timer = setTimeout(() => {
+    _dismissToastItem(toast);
+  }, durationMs);
+  toast._dismissTimer = timer;
+}
+
 export function showConfirmToast(title, msg, onConfirm, onCancel, options = {}) {
   if (typeof msg === 'function') {
     options = onCancel || {};

@@ -4,10 +4,12 @@ import json
 import os
 import re
 import socket
+import struct
 import time
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, WebSocket
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
@@ -53,6 +55,43 @@ async def post_docker_container_action(container_id: str, req: DockerActionReque
     if not res.get("success"):
         raise HTTPException(status_code=400, detail=res.get("error", "Action failed"))
     return res
+
+
+class DockerBulkActionRequest(BaseModel):
+    action: str = Field(..., pattern="^(start|stop|restart|pause|unpause|delete)$")
+    container_ids: List[str] = Field(..., min_length=1, max_length=100)
+    force: bool = False
+
+
+@router.post(
+    "/docker/containers/bulk-action",
+    dependencies=[Depends(require_scope("containers:write", "containers:manage"))],
+)
+async def post_docker_bulk_action(req: DockerBulkActionRequest):
+    results = {}
+    fn = _resolve_container_action()
+    for cid in req.container_ids:
+        if not cid or not re.match(r"^[a-zA-Z0-9_.-]{1,128}$", cid):
+            results[cid] = {"success": False, "error": "Invalid container ID"}
+            continue
+        try:
+            if req.action == "delete":
+                from backend.services.docker_cleanup import destroy_container
+
+                res = await asyncio.to_thread(destroy_container, cid, force=req.force)
+            else:
+                res = await asyncio.to_thread(fn, cid, req.action)
+            results[cid] = res
+        except Exception as e:
+            results[cid] = {"success": False, "error": str(e)}
+
+    successful = sum(1 for r in results.values() if r.get("success"))
+    return {
+        "action": req.action,
+        "total": len(req.container_ids),
+        "successful": successful,
+        "results": results,
+    }
 
 
 @router.get(
@@ -129,6 +168,152 @@ async def get_docker_container_logs(container_id: str, tail: int = 200):
     from backend.services.compose_synthesizer import get_container_logs_chunk
 
     return await asyncio.to_thread(get_container_logs_chunk, container_id, tail)
+
+
+@router.get(
+    "/docker/containers/{container_id}/logs/stream",
+    dependencies=[Depends(require_scope("containers:read", "containers:manage", "system:view"))],
+)
+async def stream_docker_container_logs(
+    request: Request,
+    container_id: str,
+    tail: int = 100,
+    follow: bool = True,
+):
+    """
+    Streams multiplexed stdout/stderr container logs via Server-Sent Events (SSE).
+    Decodes Docker 8-byte framing into structured JSON events:
+    data: {"stream": "stdout"|"stderr", "ts": "...", "msg": "..."}
+    """
+    if not container_id or not re.match(r"^[a-zA-Z0-9_.-]{1,128}$", container_id):
+        raise HTTPException(status_code=400, detail="Invalid container ID or name")
+
+    tail_param = max(1, min(5000, int(tail)))
+
+    async def event_generator():
+        sock_path = "/var/run/docker.sock"
+        if not os.path.exists(sock_path):
+            from backend.services.compose_synthesizer import get_container_logs_chunk
+
+            chunk = await asyncio.to_thread(get_container_logs_chunk, container_id, tail_param)
+            for line in chunk.get("lines", []):
+                yield f"data: {json.dumps(line)}\n\n"
+            yield "event: done\ndata: {}\n\n"
+            return
+
+        reader = None
+        writer = None
+        try:
+            reader, writer = await asyncio.open_unix_connection(sock_path)
+            follow_flag = "1" if follow else "0"
+            req_str = (
+                f"GET /containers/{container_id}/logs?stdout=1&stderr=1&tail={tail_param}&follow={follow_flag}&timestamps=1 HTTP/1.1\r\n"
+                f"Host: localhost\r\n"
+                f"Connection: close\r\n\r\n"
+            )
+            writer.write(req_str.encode("utf-8"))
+            await writer.drain()
+
+            header_data = b""
+            while b"\r\n\r\n" not in header_data:
+                chunk = await reader.read(1024)
+                if not chunk:
+                    break
+                header_data += chunk
+
+            if not header_data:
+                yield "event: done\ndata: {}\n\n"
+                return
+
+            status_line = header_data.split(b"\r\n", 1)[0].decode("utf-8", errors="replace")
+            if " 200 " not in status_line:
+                yield f"event: error\ndata: {json.dumps({'error': f'Docker daemon returned {status_line}'})}\n\n"
+                return
+
+            _, body_prefix = header_data.split(b"\r\n\r\n", 1)
+            buf = bytearray(body_prefix)
+
+            while True:
+                if await request.is_disconnected():
+                    break
+
+                while len(buf) < 8:
+                    chunk = await reader.read(4096)
+                    if not chunk:
+                        break
+                    buf.extend(chunk)
+
+                if len(buf) < 8:
+                    break
+
+                stream_type = buf[0]
+                if stream_type not in (1, 2, 0):
+                    line_end = buf.find(b"\n")
+                    if line_end == -1:
+                        chunk = await reader.read(1024)
+                        if not chunk:
+                            raw_line = bytes(buf).decode("utf-8", errors="replace").strip()
+                            if raw_line:
+                                yield f"data: {json.dumps({'stream': 'stdout', 'ts': '', 'msg': raw_line})}\n\n"
+                            break
+                        buf.extend(chunk)
+                        continue
+                    raw_line = bytes(buf[:line_end]).decode("utf-8", errors="replace").strip("\r\n")
+                    del buf[: line_end + 1]
+                    if raw_line:
+                        yield f"data: {json.dumps({'stream': 'stdout', 'ts': '', 'msg': raw_line})}\n\n"
+                    continue
+
+                payload_len = struct.unpack(">I", buf[4:8])[0]
+                while len(buf) < 8 + payload_len:
+                    chunk = await reader.read(max(4096, (8 + payload_len) - len(buf)))
+                    if not chunk:
+                        break
+                    buf.extend(chunk)
+
+                if len(buf) < 8 + payload_len:
+                    break
+
+                payload = bytes(buf[8 : 8 + payload_len]).decode("utf-8", errors="replace")
+                del buf[: 8 + payload_len]
+
+                st_label = "stdout" if stream_type == 1 else ("stderr" if stream_type == 2 else "stdin")
+                clean_line = payload.strip("\r\n")
+                if not clean_line:
+                    continue
+
+                ts = ""
+                msg = clean_line
+                if len(clean_line) > 30 and clean_line[4] == "-" and clean_line[10] == "T" and " " in clean_line[:35]:
+                    parts = clean_line.split(" ", 1)
+                    ts = parts[0]
+                    msg = parts[1] if len(parts) > 1 else ""
+
+                yield f"data: {json.dumps({'stream': st_label, 'ts': ts, 'msg': msg})}\n\n"
+
+            yield "event: done\ndata: {}\n\n"
+        except asyncio.CancelledError:
+            pass
+        except Exception as e:
+            logger.error(f"[Docker Stream] Log stream error for {container_id}: {e}")
+            yield f"event: error\ndata: {json.dumps({'error': str(e)})}\n\n"
+        finally:
+            if writer:
+                try:
+                    writer.close()
+                    await writer.wait_closed()
+                except Exception:
+                    pass
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
 
 
 class DockerResourceUpdateRequest(BaseModel):
@@ -480,7 +665,26 @@ async def _authenticate_ws(
     )
     if not token:
         return False
-    from backend.auth import AuthenticatedPrincipal, get_current_session, validate_session
+
+    is_cookie_auth = (
+        not websocket.query_params.get("token")
+        and not websocket.query_params.get("ticket")
+        and bool(
+            websocket.cookies.get("zettnas_session")
+            or websocket.cookies.get("session_token")
+            or websocket.cookies.get("zat_token")
+        )
+    )
+    from backend.auth import (
+        AuthenticatedPrincipal,
+        get_current_session,
+        validate_session,
+        validate_websocket_origin,
+    )
+
+    if not validate_websocket_origin(websocket, is_cookie_auth=is_cookie_auth):
+        return False
+
     from backend.users_db import validate_scoped_api_token, validate_user_session
 
     sess = get_current_session(token)

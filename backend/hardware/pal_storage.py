@@ -1504,8 +1504,23 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
                 return cand
         return f"/dev/{d}"
 
+    _busy_cache_ts: float = 0.0
+    _busy_cache_val: bool = False
+
     def is_storage_busy(self) -> bool:
-        """Checks if a scrub or balance is actively running across Btrfs or OpenZFS pools."""
+        """Checks if a scrub or balance is actively running across Btrfs or OpenZFS pools (10s TTL cache)."""
+        if os.environ.get("TESTING") == "1" or os.environ.get("ZETTNAS_TEST_MODE") == "1":
+            return self._check_is_storage_busy_uncached()
+        now = time.time()
+        if now - getattr(self, "_busy_cache_ts", 0.0) < 10.0:
+            return getattr(self, "_busy_cache_val", False)
+
+        val = self._check_is_storage_busy_uncached()
+        self._busy_cache_ts = now
+        self._busy_cache_val = val
+        return val
+
+    def _check_is_storage_busy_uncached(self) -> bool:
         # Check Btrfs scrub (e.g. "scrub status for ...: running" vs "no scrub running")
         code, out, _ = self._run_cmd(["btrfs", "scrub", "status", self._pool_path])
         out_l = out.lower()
@@ -1525,6 +1540,7 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
 
     def trigger_scrub(self, pool_id: str, action: str = "start") -> Dict[str, Any]:
         """Triggers or checks status of Btrfs scrub (or ZFS if pool_id is prefixed with 'zfs:')."""
+        self._busy_cache_ts = 0.0
         if pool_id and (pool_id.startswith("zfs:") or pool_id.startswith("zpool:")):
             zp = pool_id.split(":", 1)[1]
             if action == "start":
@@ -2816,7 +2832,21 @@ class TrueNASStorageAdapter(ObserverStorageAdapter):
             "Pool destruction is prohibited on TrueNAS SCALE in observer mode. Use TrueNAS Web UI to manage ZFS pools."
         )
 
+    _busy_cache_ts: float = 0.0
+    _busy_cache_val: bool = False
+
     def is_storage_busy(self) -> bool:
+        if os.environ.get("TESTING") == "1" or os.environ.get("ZETTNAS_TEST_MODE") == "1":
+            return self._check_is_storage_busy_uncached()
+        now = time.time()
+        if now - getattr(self, "_busy_cache_ts", 0.0) < 10.0:
+            return getattr(self, "_busy_cache_val", False)
+        val = self._check_is_storage_busy_uncached()
+        self._busy_cache_ts = now
+        self._busy_cache_val = val
+        return val
+
+    def _check_is_storage_busy_uncached(self) -> bool:
         code, out, _ = self._run_cmd(["zpool", "status"])
         return code == 0 and ("scrub in progress" in out.lower() or "resilver in progress" in out.lower())
 
@@ -2957,7 +2987,21 @@ class ProxmoxStorageAdapter(ObserverStorageAdapter):
             "Pool destruction is prohibited on Proxmox VE in observer mode. Use Proxmox Web GUI to manage storage pools."
         )
 
+    _busy_cache_ts: float = 0.0
+    _busy_cache_val: bool = False
+
     def is_storage_busy(self) -> bool:
+        if os.environ.get("TESTING") == "1" or os.environ.get("ZETTNAS_TEST_MODE") == "1":
+            return self._check_is_storage_busy_uncached()
+        now = time.time()
+        if now - getattr(self, "_busy_cache_ts", 0.0) < 10.0:
+            return getattr(self, "_busy_cache_val", False)
+        val = self._check_is_storage_busy_uncached()
+        self._busy_cache_ts = now
+        self._busy_cache_val = val
+        return val
+
+    def _check_is_storage_busy_uncached(self) -> bool:
         code, out, _ = self._run_cmd(["zpool", "status"])
         return code == 0 and ("scrub in progress" in out.lower() or "resilver in progress" in out.lower())
 

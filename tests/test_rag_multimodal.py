@@ -665,13 +665,15 @@ def test_ai_chat_agent_tools_web_browsing_and_llm_telemetry(tmp_path):
         run_agentic_chat,
     )
 
-    assert len(AVAILABLE_NAS_TOOLS) == 9
+    assert len(AVAILABLE_NAS_TOOLS) >= 9
+    assert len(AVAILABLE_NAS_TOOLS) == 13
     tool_names = {t["name"] for t in AVAILABLE_NAS_TOOLS}
     assert "get_system_telemetry" in tool_names
     assert "get_disks_and_standby_status" in tool_names
     assert "set_fan_profile" in tool_names
     assert "list_docker_containers" in tool_names
     assert "browse_internet" in tool_names
+    assert "get_weather" in tool_names
 
     tel = build_llm_execution_telemetry(
         elapsed_ms=24.5,
@@ -1338,3 +1340,135 @@ async def test_agentic_chatbot_revamped_workflow_and_peer_review_safeguards():
     with Z_STATE.lock:
         assert Z_STATE.ai_active is False
         assert Z_STATE.ai_accelerator == ""
+
+
+def test_rag_flush_index_resets_database_cleanly(tmp_path):
+    """
+    Verifies that flush_index():
+      1. Stops running/paused syncs safely.
+      2. Wipes indexed_files, document_chunks, photo_assets, folder_manifests, rag_deferred_queue.
+      3. Rebuilds FTS5 virtual tables so subsequent queries return empty results without error.
+      4. Executes VACUUM and resets in-memory sync progress counters to idle.
+      5. Spindown safety: Operates 100% on local SQLite without waking or touching sleeping drives.
+    """
+    import sqlite3
+
+    db_file = str(tmp_path / "rag_flush_test.db")
+    cfg_file = str(tmp_path / "rag_config.json")
+    with patch("backend.services.rag_engine.RAG_CONFIG_PATH", cfg_file):
+        engine = RagSearchEngine(db_path=db_file)
+
+        # 1. Create files and index them
+        test_dir = tmp_path / "test_docs"
+        test_dir.mkdir(parents=True)
+        (test_dir / "note.md").write_text("# ZettNAS Documentation\nGuide for RAG knowledge base.\n")
+        (test_dir / "recipe.md").write_text("# Tomato Soup\nIngredients:\n- 4 tomatoes\n- 1 onion\n")
+
+        idx_res = engine.index_directory(str(test_dir), respect_standby=False)
+        assert idx_res["status"] == "completed"
+        assert idx_res["indexed_files"] >= 2
+
+        stats_before = engine.get_index_stats()
+        assert stats_before["total_files"] >= 2
+        assert stats_before["total_chunks"] >= 2
+
+        # 2. Call flush_index()
+        flush_res = engine.flush_index()
+        assert flush_res["status"] == "ok"
+        assert "successfully flushed clean" in flush_res["message"]
+
+        # 3. Check stats after flush
+        stats_after = engine.get_index_stats()
+        assert stats_after["total_files"] == 0
+        assert stats_after["total_chunks"] == 0
+        assert stats_after["total_photos"] == 0
+        assert stats_after["total_recipes"] == 0
+
+        # 4. Check sync progress reset to idle
+        prog = engine.get_sync_progress()
+        assert prog["state"] == "idle"
+        assert prog["indexed_files"] == 0
+
+        # 5. Direct SQLite verification
+        conn = sqlite3.connect(db_file)
+        cur = conn.cursor()
+        for tbl in ["indexed_files", "document_chunks", "photo_assets", "folder_manifests", "rag_deferred_queue"]:
+            cur.execute(f"SELECT COUNT(*) FROM {tbl};")
+            count = cur.fetchone()[0]
+            assert count == 0, f"Table {tbl} was not wiped clean, count={count}"
+
+        # FTS5 tables return 0 results
+        cur.execute("SELECT COUNT(*) FROM rag_chunks_fts;")
+        assert cur.fetchone()[0] == 0
+        conn.close()
+
+
+def test_api_rag_flush_endpoints(client, auth_headers, tmp_path):
+    """
+    Verifies that POST /api/ai/index/flush and POST /api/ai/index/control with action=flush
+    trigger flush_index() via the REST API and return ok status.
+    """
+    db_file = str(tmp_path / "rag_api_flush.db")
+    cfg_file = str(tmp_path / "rag_api_config.json")
+    with patch("backend.services.rag_engine.RAG_CONFIG_PATH", cfg_file):
+        engine = RagSearchEngine(db_path=db_file)
+
+        # Populate dummy file
+        test_dir = tmp_path / "share1"
+        test_dir.mkdir(parents=True)
+        (test_dir / "item.md").write_text("Test content for flush\nKey documentation line.\n")
+        engine.index_directory(str(test_dir), respect_standby=False)
+        assert engine.get_index_stats()["total_files"] >= 1
+
+        with patch("backend.api.media.get_rag_engine", return_value=engine):
+            # 1. Test POST /api/ai/index/flush
+            res = client.post("/api/ai/index/flush", headers=auth_headers)
+            assert res.status_code == 200
+            data = res.json()
+            assert data["status"] == "ok"
+            assert data["stats"]["total_files"] == 0
+
+            # 2. Re-index dummy file
+            engine.index_directory(str(test_dir), respect_standby=False)
+            assert engine.get_index_stats()["total_files"] >= 1
+
+            # 3. Test POST /api/ai/index/control with action="flush"
+            res_ctrl = client.post("/api/ai/index/control", json={"action": "flush"}, headers=auth_headers)
+            assert res_ctrl.status_code == 200
+            data_ctrl = res_ctrl.json()
+            assert data_ctrl["status"] == "ok"
+            assert data_ctrl["stats"]["total_files"] == 0
+
+
+def test_search_huggingface_embeddinggemma_priority():
+    """
+    Verifies that Google EmbeddingGemma 2 is present in the curated catalog,
+    is prioritized when searching for 'embeddinggemma' or pasting the Hugging Face URL,
+    and correctly passes 2026+ release filters with hardware evaluation.
+    """
+    from backend.services.media_engine import search_huggingface_models
+
+    # 1. Search for embeddinggemma
+    res_name = search_huggingface_models(query="embeddinggemma", limit=10, min_release_year=2026)
+    assert res_name["status"] == "ok"
+    assert len(res_name["models"]) >= 1
+    top_model = res_name["models"][0]
+    assert top_model["hf_repo"] == "google/embeddinggemma-2"
+    assert top_model["fits_hardware"] is True
+    assert top_model["hardware_warning"] is False
+    assert "release_date_str" in top_model
+
+    # 2. Search by full Hugging Face URL
+    res_url = search_huggingface_models(
+        query="https://huggingface.co/google/embeddinggemma-2",
+        limit=10,
+        min_release_year=2026,
+    )
+    assert res_url["status"] == "ok"
+    assert len(res_url["models"]) >= 1
+    assert res_url["models"][0]["hf_repo"] == "google/embeddinggemma-2"
+
+    # 3. Search by 'embedding'
+    res_embed = search_huggingface_models(query="embedding", limit=10, min_release_year=2026)
+    assert res_embed["status"] == "ok"
+    assert any(m["hf_repo"] == "google/embeddinggemma-2" for m in res_embed["models"])

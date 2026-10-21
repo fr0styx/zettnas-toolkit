@@ -6,15 +6,27 @@
 import { ZettEventBus } from '../event-bus.js';
 import { showToast } from '../toast.js';
 import { openAddDesktopShortcutModal } from './desktop-shortcuts.js';
+import {
+  getWidgetKeyFromElement,
+  getWidgetDisplayName,
+  removeWidget,
+  openWidgetSettings
+} from './widgets.js';
+import { t } from '../i18n.js';
 
 let _contextMenuInitialized = false;
+let _activeContextWidgetKey = null;
+let _activeContextWidgetEl = null;
+
+export function _resetDesktopContextMenuForTesting() {
+  _contextMenuInitialized = false;
+  _activeContextWidgetKey = null;
+  _activeContextWidgetEl = null;
+}
 
 export function initDesktopContextMenu() {
   if (_contextMenuInitialized) return;
   _contextMenuInitialized = true;
-
-  const menu = document.getElementById('desktop-context-menu');
-  if (!menu) return;
 
   // Global right-click handler
   document.addEventListener('contextmenu', (e) => {
@@ -24,7 +36,16 @@ export function initDesktopContextMenu() {
       return;
     }
 
-    // 2. Allow windows, modals, dock, navbar, and DESKTOP ICONS to handle their own context menus
+    // 2. Allow widgets to show dedicated widget context menu
+    const widgetEl = e.target.closest('.desktop-widget');
+    if (widgetEl) {
+      e.preventDefault();
+      const widgetKey = getWidgetKeyFromElement(widgetEl);
+      showWidgetContextMenu(e.clientX, e.clientY, widgetEl, widgetKey);
+      return;
+    }
+
+    // 3. Allow windows, modals, dock, navbar, and DESKTOP ICONS to handle their own context menus
     if (e.target.closest(
       '.os-window, .smart-modal-window, .notif-center-window, #os-dock, #os-dock-container, ' +
       '.suite-navbar, .smart-modal-backdrop, .chassis-hero-box, #desktop-ctx-menu, .dock-context-menu'
@@ -32,30 +53,52 @@ export function initDesktopContextMenu() {
       return;
     }
 
-    // 3. Prevent native menu on empty desktop space and display unified desktop context menu
-    e.preventDefault();
-    showDesktopContextMenu(e.clientX, e.clientY);
+    // 4. Prevent native menu on empty desktop space and display unified desktop context menu
+    const menu = document.getElementById('desktop-context-menu');
+    if (menu) {
+      e.preventDefault();
+      showDesktopContextMenu(e.clientX, e.clientY);
+    }
   });
 
   // Global dismiss handlers
   document.addEventListener('pointerdown', (e) => {
-    if (!menu.contains(e.target)) {
+    const menu = document.getElementById('desktop-context-menu');
+    const widgetMenu = document.getElementById('widget-context-menu');
+    const inMenu = menu && menu.contains(e.target);
+    const inWidgetMenu = widgetMenu && widgetMenu.contains(e.target);
+    if (!inMenu && !inWidgetMenu) {
       hideDesktopContextMenu();
+      hideWidgetContextMenu();
     }
   });
 
-  window.addEventListener('blur', hideDesktopContextMenu);
-  window.addEventListener('resize', hideDesktopContextMenu);
+  window.addEventListener('blur', () => {
+    hideDesktopContextMenu();
+    hideWidgetContextMenu();
+  });
+
+  window.addEventListener('resize', () => {
+    hideDesktopContextMenu();
+    hideWidgetContextMenu();
+  });
 
   document.addEventListener('keydown', (e) => {
-    if (menu.style.display !== 'none') {
+    const menu = document.getElementById('desktop-context-menu');
+    const widgetMenu = document.getElementById('widget-context-menu');
+    const isMenuOpen = menu && menu.style.display !== 'none';
+    const isWidgetMenuOpen = widgetMenu && widgetMenu.style.display !== 'none';
+
+    if (isMenuOpen || isWidgetMenuOpen) {
+      const activeMenu = isWidgetMenuOpen ? widgetMenu : menu;
       if (e.key === 'Escape') {
         hideDesktopContextMenu();
+        hideWidgetContextMenu();
       } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
         e.preventDefault();
-        navigateMenuItems(e.key === 'ArrowDown' ? 1 : -1);
+        navigateMenuItems(activeMenu, e.key === 'ArrowDown' ? 1 : -1);
       } else if (e.key === 'Enter') {
-        const focused = menu.querySelector('.context-menu-item:focus');
+        const focused = activeMenu.querySelector('.context-menu-item:focus');
         if (focused) {
           e.preventDefault();
           executeContextAction(focused.getAttribute('data-action'));
@@ -64,15 +107,16 @@ export function initDesktopContextMenu() {
     }
   });
 
-  // Bind menu item click actions
-  const items = menu.querySelectorAll('.context-menu-item');
-  items.forEach((item) => {
-    item.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const action = item.getAttribute('data-action');
-      executeContextAction(action);
-      hideDesktopContextMenu();
-    });
+  // Document-level event delegation for context menu item clicks
+  document.addEventListener('click', (e) => {
+    const item = e.target.closest?.('.context-menu-item');
+    if (!item) return;
+    const parentMenu = item.closest?.('#desktop-context-menu, #widget-context-menu');
+    if (!parentMenu) return;
+
+    e.stopPropagation();
+    const action = item.getAttribute('data-action');
+    executeContextAction(action);
   });
 }
 
@@ -81,6 +125,7 @@ export function showDesktopContextMenu(x, y) {
   if (!menu) return;
 
   // Ensure any other context menus are hidden
+  hideWidgetContextMenu();
   const iconCtx = document.getElementById('desktop-ctx-menu');
   if (iconCtx) iconCtx.style.display = 'none';
   const dockCtx = document.getElementById('dock-item-ctx-menu');
@@ -116,8 +161,55 @@ export function hideDesktopContextMenu() {
   }
 }
 
-function navigateMenuItems(direction) {
-  const menu = document.getElementById('desktop-context-menu');
+export function showWidgetContextMenu(x, y, widgetEl, widgetKey) {
+  const widgetMenu = document.getElementById('widget-context-menu');
+  if (!widgetMenu) return;
+
+  hideDesktopContextMenu();
+  const iconCtx = document.getElementById('desktop-ctx-menu');
+  if (iconCtx) iconCtx.style.display = 'none';
+  const dockCtx = document.getElementById('dock-item-ctx-menu');
+  if (dockCtx) dockCtx.style.display = 'none';
+
+  _activeContextWidgetKey = widgetKey || getWidgetKeyFromElement(widgetEl);
+  _activeContextWidgetEl = widgetEl || null;
+
+  const removeLabel = document.getElementById('ctx-remove-widget-label');
+  if (removeLabel) {
+    const displayName = getWidgetDisplayName(_activeContextWidgetKey);
+    const baseRemove = t('ctx.remove_widget', 'Remove Widget');
+    removeLabel.textContent = `${baseRemove} (${displayName})`;
+  }
+
+  widgetMenu.style.display = 'flex';
+  widgetMenu.setAttribute('aria-hidden', 'false');
+
+  const rect = widgetMenu.getBoundingClientRect();
+  const menuW = rect.width || 230;
+  const menuH = rect.height || 260;
+
+  const maxX = window.innerWidth - menuW - 12;
+  const maxY = window.innerHeight - menuH - 12;
+
+  const posX = Math.max(12, Math.min(x, maxX));
+  const posY = Math.max(12, Math.min(y, maxY));
+
+  widgetMenu.style.left = `${posX}px`;
+  widgetMenu.style.top = `${posY}px`;
+
+  const firstItem = widgetMenu.querySelector('.context-menu-item');
+  if (firstItem) firstItem.focus();
+}
+
+export function hideWidgetContextMenu() {
+  const widgetMenu = document.getElementById('widget-context-menu');
+  if (widgetMenu && widgetMenu.style.display !== 'none') {
+    widgetMenu.style.display = 'none';
+    widgetMenu.setAttribute('aria-hidden', 'true');
+  }
+}
+
+function navigateMenuItems(menu, direction) {
   if (!menu) return;
 
   const items = Array.from(menu.querySelectorAll('.context-menu-item'));
@@ -133,10 +225,32 @@ function navigateMenuItems(direction) {
 }
 
 export function executeContextAction(action) {
+  const widgetKeyToActOn = _activeContextWidgetKey;
   hideDesktopContextMenu();
+  hideWidgetContextMenu();
   if (!action) return;
 
   switch (action) {
+    case 'remove-widget':
+      if (widgetKeyToActOn) {
+        if (typeof window.removeWidget === 'function') {
+          window.removeWidget(widgetKeyToActOn);
+        } else {
+          removeWidget(widgetKeyToActOn);
+        }
+      }
+      break;
+
+    case 'add-widget':
+    case 'widgets':
+    case 'widget-settings':
+      if (typeof window.openWidgetSettings === 'function') {
+        window.openWidgetSettings();
+      } else {
+        openWidgetSettings();
+      }
+      break;
+
     case 'add-shortcut':
       if (typeof window.openAddDesktopShortcutModal === 'function') {
         window.openAddDesktopShortcutModal();
@@ -253,3 +367,9 @@ export function executeContextAction(action) {
       console.warn(`[CONTEXT MENU] Unhandled action: ${action}`);
   }
 }
+
+window.showDesktopContextMenu = showDesktopContextMenu;
+window.hideDesktopContextMenu = hideDesktopContextMenu;
+window.showWidgetContextMenu = showWidgetContextMenu;
+window.hideWidgetContextMenu = hideWidgetContextMenu;
+window.executeContextAction = executeContextAction;

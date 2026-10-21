@@ -84,6 +84,11 @@ class FanPresetCreate(BaseModel):
     cpu_curve_points: list[list[int]] | None = Field(default=None, max_length=12)
 
 
+class FanAcousticSweepRequest(BaseModel):
+    step_duration: float | None = Field(default=5.0, ge=0.01, le=30.0)
+    pwm_step: int | None = Field(default=25, ge=5, le=50)
+
+
 class LedConfigRequest(BaseModel):
     power: str | None = None
     brightness: int | None = None

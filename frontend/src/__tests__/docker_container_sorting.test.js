@@ -1,4 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import fs from 'fs';
+import path from 'path';
 import {
   fetchAndRenderDockerContainers,
   renderDockerContainersTable,
@@ -111,7 +113,10 @@ describe('Docker Container Table Column Sorting Suite', () => {
           <thead>
             <tr>
               <th class="sortable-th" data-sort-col="name" role="columnheader" aria-sort="none" tabindex="0">
-                <span>Name / Stack</span><span class="docker-sort-indicator"></span>
+                <span>Name</span><span class="docker-sort-indicator"></span>
+              </th>
+              <th class="sortable-th" data-sort-col="stack" role="columnheader" aria-sort="none" tabindex="0">
+                <span>Stack / Type</span><span class="docker-sort-indicator"></span>
               </th>
               <th class="sortable-th" data-sort-col="hardware" role="columnheader" aria-sort="none" tabindex="0">
                 <span>Hardware</span><span class="docker-sort-indicator"></span>
@@ -168,6 +173,22 @@ describe('Docker Container Table Column Sorting Suite', () => {
         'immich_machine_learning',
         'dockhand'
       ]);
+    });
+
+    it('sorts by Stack / Type ascending and descending', () => {
+      const items = [...mockContainers];
+      sortDockerContainers(items, 'stack', 'asc');
+      const stacksAsc = items.map((c) => c.stack || 'Standalone');
+      expect(stacksAsc).toEqual(['arr', 'arr', 'immich-prod', 'Standalone', 'Standalone']);
+      expect(items[0].name).toBe('jellyfin');
+      expect(items[1].name).toBe('qbittorrent');
+      expect(items[2].name).toBe('immich_machine_learning');
+      expect(items[3].name).toBe('dockhand');
+      expect(items[4].name).toBe('unraid-kernel-builder');
+
+      sortDockerContainers(items, 'stack', 'desc');
+      const stacksDesc = items.map((c) => c.stack || 'Standalone');
+      expect(stacksDesc).toEqual(['Standalone', 'Standalone', 'immich-prod', 'arr', 'arr']);
     });
 
     it('sorts by Hardware descending (hardware-accelerated containers first)', () => {
@@ -335,6 +356,79 @@ describe('Docker Container Table Column Sorting Suite', () => {
       expect(rows.length).toBe(2);
       expect(rows[0].innerHTML).toContain('jellyfin');
       expect(rows[1].innerHTML).toContain('qbittorrent');
+    });
+
+    it('clicking Stack / Type header sorts by stack ascending and descending', async () => {
+      vi.spyOn(api, 'get').mockResolvedValue(mockContainers);
+      await fetchAndRenderDockerContainers();
+
+      const thStack = document.querySelector('th[data-sort-col="stack"]');
+      expect(thStack).not.toBeNull();
+
+      // Click 1: sort by stack asc
+      thStack.click();
+
+      expect(thStack.classList.contains('active-sort')).toBe(true);
+      expect(thStack.getAttribute('aria-sort')).toBe('ascending');
+      expect(thStack.querySelector('.docker-sort-indicator').textContent).toBe('▲');
+
+      let rows = document.getElementById('docker-containers-tbody').querySelectorAll('tr');
+      expect(rows[0].querySelector('.docker-stack-cell').textContent).toContain('arr');
+      expect(rows[0].querySelector('.docker-name-cell').textContent).toContain('jellyfin');
+
+      // Click 2: sort by stack desc
+      thStack.click();
+
+      expect(thStack.getAttribute('aria-sort')).toBe('descending');
+      expect(thStack.querySelector('.docker-sort-indicator').textContent).toBe('▼');
+
+      rows = document.getElementById('docker-containers-tbody').querySelectorAll('tr');
+      expect(rows[0].querySelector('.docker-stack-cell').textContent).toContain('Standalone');
+    });
+
+    it('renders separate docker-name-cell and docker-stack-cell, and stop icon as 12x12 SVG', async () => {
+      vi.spyOn(api, 'get').mockResolvedValue(mockContainers);
+      await fetchAndRenderDockerContainers();
+
+      const rows = document.getElementById('docker-containers-tbody').querySelectorAll('tr');
+      expect(rows.length).toBe(mockContainers.length);
+
+      const firstRow = rows[0];
+      const nameCell = firstRow.querySelector('.docker-name-cell');
+      const stackCell = firstRow.querySelector('.docker-stack-cell');
+      expect(nameCell).not.toBeNull();
+      expect(stackCell).not.toBeNull();
+
+      // Stack pill should NOT be inside name cell
+      expect(nameCell.querySelector('.docker-stack-pill, .docker-origin-pill')).toBeNull();
+      // Stack pill should be in stack cell
+      expect(stackCell.querySelector('.docker-stack-pill, .docker-origin-pill')).not.toBeNull();
+
+      // Running containers should have stop button with 12x12 SVG inside .docker-actions-btn-group
+      const actionsCell = firstRow.querySelector('.docker-actions-cell');
+      expect(actionsCell).not.toBeNull();
+      const btnGroup = actionsCell.querySelector('.docker-actions-btn-group');
+      expect(btnGroup).not.toBeNull();
+
+      const stopBtn = btnGroup.querySelector('.btn-docker-stop');
+      expect(stopBtn).not.toBeNull();
+      const svg = stopBtn.querySelector('svg');
+      expect(svg).not.toBeNull();
+      expect(svg.getAttribute('width')).toBe('12');
+      expect(svg.getAttribute('height')).toBe('12');
+      expect(svg.querySelector('rect')).not.toBeNull();
+    });
+
+    it('verifies action buttons are grouped with vertical-align: middle and centered SVG to eliminate bottom padding drift', () => {
+      const cssPath = path.resolve(__dirname, '../../../frontend/src/style.css');
+      const cssContent = fs.readFileSync(cssPath, 'utf8');
+
+      expect(cssContent).toContain('.docker-actions-btn-group');
+      expect(cssContent).toMatch(/\.docker-actions-btn-group\s*\{[^}]*align-items:\s*center;/);
+      expect(cssContent).toMatch(/\.docker-actions-cell\s*\.btn-container-act\s*\{[^}]*vertical-align:\s*middle/);
+      expect(cssContent).toMatch(/\.btn-docker-stop\s*\{[^}]*vertical-align:\s*middle/);
+      expect(cssContent).toMatch(/\.btn-docker-start\s*\{[^}]*vertical-align:\s*middle/);
+      expect(cssContent).toMatch(/\.btn-docker-stop svg,\s*\.btn-docker-start svg\s*\{[^}]*margin:\s*0 auto;/);
     });
   });
 });

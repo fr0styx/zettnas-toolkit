@@ -5,38 +5,119 @@
 import { api, auth, ApiError } from '../api.js';
 import { state, ZOOM_PROFILES } from '../state.js';
 import { ZettEventBus } from '../event-bus.js';
-import { showToast, showConfirmToast } from '../toast.js';
-import { applyTheme, applyDesktopTheme, applyLcdTheme, setScreenLayoutStyle } from './dashboard.js';
+import { applyTheme, applyDesktopTheme, applyLcdTheme, setScreenLayoutStyle, hexToRgb, getContrastRatio, syncDesktopTwinPreview } from './dashboard.js';
 import { applyDashboardLayout, persistDashboardLayout, fitMiniPreviewScale, syncMiniPreviewTelemetry } from './mini-preview.js';
 import { fetchAndRenderMetrics } from './metrics-chart.js';
 import { t } from '../i18n.js';
 import { escapeHtml } from '../utils.js';
+import { showToast, showActionToast } from '../toast.js';
+import { applyGlassSettings, applyWallpaperReadability } from './wallpapers.js';
+import { applyDockSettings } from './dock.js';
+import { initGlassTimePickers } from './time-picker.js';
 
 const $ = (id) => document.getElementById(id);
 
+export function restoreHardwareTabsToManagement() {
+  const drawer = $('led-drawer') || document.querySelector('.slide-drawer');
+  if (drawer && drawer.classList.contains('open')) {
+    return;
+  }
+
+  const lcdSlot = $('mgmt-pane-hardware-lcd-slot');
+  const ledSlot = $('mgmt-pane-hardware-led-slot');
+  const fansSlot = $('mgmt-pane-hardware-fans-slot');
+  const copySlot = $('mgmt-pane-hardware-copy-slot');
+
+  const tabLayout = $('tab-layout');
+  const tabLed = $('tab-led');
+  const tabFans = $('tab-fans');
+  const tabButtons = $('tab-buttons');
+
+  if (lcdSlot && tabLayout && tabLayout.parentElement !== lcdSlot) {
+    lcdSlot.appendChild(tabLayout);
+  }
+  if (ledSlot && tabLed && tabLed.parentElement !== ledSlot) {
+    ledSlot.appendChild(tabLed);
+  }
+  if (fansSlot && tabFans && tabFans.parentElement !== fansSlot) {
+    fansSlot.appendChild(tabFans);
+  }
+  if (copySlot && tabButtons && tabButtons.parentElement !== copySlot) {
+    copySlot.appendChild(tabButtons);
+  }
+}
+window.restoreHardwareTabsToManagement = restoreHardwareTabsToManagement;
+
+export function mountTabsInDrawer(requestedTabId = null) {
+  const safeTabId = typeof requestedTabId === 'string' && requestedTabId.trim() ? requestedTabId.trim() : null;
+  const drawerContainer = $('drawer-tabs-container') || $('led-drawer') || document.querySelector('.slide-drawer');
+  if (!drawerContainer) return;
+
+  const tabLayout = $('tab-layout');
+  const tabLed = $('tab-led');
+  const tabFans = $('tab-fans');
+  const tabButtons = $('tab-buttons');
+
+  if (tabLayout && tabLayout.parentElement !== drawerContainer) {
+    drawerContainer.appendChild(tabLayout);
+  }
+  if (tabLed && tabLed.parentElement !== drawerContainer) {
+    drawerContainer.appendChild(tabLed);
+  }
+  if (tabFans && tabFans.parentElement !== drawerContainer) {
+    drawerContainer.appendChild(tabFans);
+  }
+  if (tabButtons && tabButtons.parentElement !== drawerContainer) {
+    drawerContainer.appendChild(tabButtons);
+  }
+
+  const activeBtn = document.querySelector('.drawer-tab-btn.active');
+  const activeTabId = safeTabId || (activeBtn ? activeBtn.dataset.tab : 'tab-layout');
+  [tabLayout, tabLed, tabFans, tabButtons].forEach((t) => {
+    if (t) {
+      if (t.id === activeTabId) {
+        t.classList.add('active');
+      } else {
+        t.classList.remove('active');
+      }
+    }
+  });
+}
+window.mountTabsInDrawer = mountTabsInDrawer;
+
 export function openDrawer(tabId = null) {
+  const safeTabId = typeof tabId === 'string' && tabId.trim() ? tabId.trim() : null;
   const drawer = $('led-drawer') || document.querySelector('.slide-drawer');
   const overlay = $('drawer-overlay') || document.querySelector('.drawer-backdrop');
   if (drawer && overlay) {
+    mountTabsInDrawer(safeTabId);
     drawer.classList.add('open');
     overlay.classList.add('open');
     document.body.classList.add('drawer-is-open');
-    if (tabId) {
-      const tabBtn = document.querySelector(`.drawer-tab-btn[data-tab="${tabId}"]`);
-      if (tabBtn) tabBtn.click();
+
+    const activeBtn = document.querySelector('.drawer-tab-btn.active');
+    const targetTabId = safeTabId || (activeBtn ? activeBtn.dataset.tab : 'tab-layout');
+    const tabBtn = document.querySelector(`.drawer-tab-btn[data-tab="${targetTabId}"]`);
+    if (tabBtn) {
+      tabBtn.click();
+    } else {
+      const targetContent = $(targetTabId);
+      if (targetContent) targetContent.classList.add('active');
     }
+
     setTimeout(() => {
       fitMiniPreviewScale();
       syncMiniPreviewTelemetry();
     }, 100);
   } else if (typeof window.openManagementWindow === 'function') {
-    if (tabId === 'tab-fans') {
+    const targetTab = safeTabId || 'tab-layout';
+    if (targetTab === 'tab-fans') {
       window.openManagementWindow('mgmt-pane-hardware-fans');
-    } else if (tabId === 'tab-led') {
+    } else if (targetTab === 'tab-led') {
       window.openManagementWindow('mgmt-pane-hardware-led');
-    } else if (tabId === 'tab-buttons') {
+    } else if (targetTab === 'tab-buttons') {
       window.openManagementWindow('mgmt-pane-copy');
-    } else if (tabId === 'tab-layout' && typeof window.openPersonalizationWindow === 'function') {
+    } else if (targetTab === 'tab-layout' && typeof window.openPersonalizationWindow === 'function') {
       window.openPersonalizationWindow('console');
     } else {
       window.openManagementWindow('mgmt-sec-hardware');
@@ -52,6 +133,11 @@ export function closeDrawer() {
     drawer.classList.remove('open');
     overlay.classList.remove('open');
     document.body.classList.remove('drawer-is-open');
+    restoreHardwareTabsToManagement();
+    setTimeout(() => {
+      fitMiniPreviewScale();
+      syncMiniPreviewTelemetry();
+    }, 50);
   }
 }
 window.closeDrawer = closeDrawer;
@@ -95,8 +181,8 @@ export function initSettings() {
 
   tabBtns.forEach((btn) => {
     btn.addEventListener('click', () => {
-      tabBtns.forEach((b) => b.classList.remove('active'));
-      tabContents.forEach((c) => c.classList.remove('active'));
+      document.querySelectorAll('.drawer-tab-btn').forEach((b) => b.classList.remove('active'));
+      document.querySelectorAll('.drawer-tab-content').forEach((c) => c.classList.remove('active'));
       btn.classList.add('active');
       const targetId = btn.dataset.tab;
       const targetContent = $(targetId);
@@ -105,8 +191,8 @@ export function initSettings() {
     });
   });
 
-  if (toggleBtn) toggleBtn.addEventListener('click', openDrawer);
-  if (suiteBtn) suiteBtn.addEventListener('click', openDrawer);
+  if (toggleBtn) toggleBtn.addEventListener('click', () => openDrawer());
+  if (suiteBtn) suiteBtn.addEventListener('click', () => openDrawer());
   if (closeBtn) closeBtn.addEventListener('click', closeDrawer);
   if (overlay) overlay.addEventListener('click', closeDrawer);
 
@@ -397,6 +483,7 @@ export function initSettings() {
       if (screenNightToggle) screenNightToggle.checked = Boolean(data.night_mode);
       if (screenNightStart && data.night_start) screenNightStart.value = data.night_start;
       if (screenNightEnd && data.night_end) screenNightEnd.value = data.night_end;
+      initGlassTimePickers($('tab-layout') || document);
       if (screenNightBri && data.night_brightness !== undefined) screenNightBri.value = data.night_brightness;
       updateScreenPowerUI();
     } catch (e) {
@@ -507,6 +594,7 @@ export function initSettings() {
     try {
       await api.post('/api/buttons', {
         enabled: btnCopyToggle ? btnCopyToggle.checked : false,
+        action: 'copy',
         source: btnCopySrc ? btnCopySrc.value : 'sd',
         dest: btnCopyDst ? btnCopyDst.value : '/mnt/user/',
         use_exif: btnCopyExif ? btnCopyExif.checked : true,
@@ -564,6 +652,34 @@ export function initSettings() {
         showToast(`Scan failed: ${err.message || err}`, 'error');
       } finally {
         setTimeout(() => { if (btnMediaRescan) btnMediaRescan.textContent = '🔄 Scan'; }, 1000);
+      }
+    });
+  }
+
+  const btnMediaCopyNow = $('btn-media-copy-now');
+  if (btnMediaCopyNow) {
+    btnMediaCopyNow.addEventListener('click', async () => {
+      const srcSlot = btnCopySrc ? btnCopySrc.value : 'sd';
+      const dstPath = btnCopyDst ? btnCopyDst.value : '/mnt/user/';
+      btnMediaCopyNow.disabled = true;
+      const origText = btnMediaCopyNow.textContent;
+      btnMediaCopyNow.textContent = 'Starting...';
+      try {
+        await api.post('/api/copy/start', {
+          source: srcSlot,
+          dest: dstPath,
+          use_exif: btnCopyExif ? btnCopyExif.checked : true,
+        });
+        showToast(t('media.copy_started', 'Starting ingest from media slot...'), 'success');
+      } catch (err) {
+        showToast(`Copy failed: ${err.message || err}`, 'error');
+      } finally {
+        setTimeout(() => {
+          if (btnMediaCopyNow) {
+            btnMediaCopyNow.disabled = false;
+            btnMediaCopyNow.textContent = origText;
+          }
+        }, 1500);
       }
     });
   }
@@ -896,6 +1012,8 @@ export function initSettings() {
     }
     syncThemeSettingsUI();
   });
+
+  restoreHardwareTabsToManagement();
 }
 
 let saveLcdDebounce = null;
@@ -978,13 +1096,367 @@ export function syncDesktopThemeUI() {
   if (picker && curAccent) {
     picker.value = curAccent;
   }
+  const currentAccentOrBrand = curAccent || (curTheme === 'amber' ? '#ffbe40' : curTheme === 'emerald' ? '#3bf58b' : curTheme === 'sapphire' ? '#38bdf8' : curTheme === 'amethyst' ? '#c084fc' : curTheme === 'crimson' ? '#fb7185' : curTheme === 'yak' ? '#d48a37' : '#00f0ff');
   if (hexVal) {
-    hexVal.textContent = (curAccent || (curTheme === 'amber' ? '#ffbe40' : curTheme === 'emerald' ? '#3bf58b' : curTheme === 'sapphire' ? '#38bdf8' : curTheme === 'amethyst' ? '#c084fc' : curTheme === 'crimson' ? '#fb7185' : curTheme === 'yak' ? '#d48a37' : '#00f0ff')).toUpperCase();
+    hexVal.textContent = currentAccentOrBrand.toUpperCase();
+  }
+
+  // Live WCAG 2.2 AA Contrast Badge calculation against active dark card surface
+  const contrastBadge = $('desktop-contrast-badge');
+  if (contrastBadge) {
+    const rgb = hexToRgb(currentAccentOrBrand);
+    const bg = curTheme === 'oled' ? [0, 0, 0] : [15, 23, 42];
+    const ratio = rgb ? getContrastRatio(rgb, bg) : 4.5;
+    if (ratio >= 7.0) {
+      contrastBadge.textContent = 'AAA PASS';
+      contrastBadge.style.background = 'rgba(34, 197, 94, 0.2)';
+      contrastBadge.style.color = '#22c55e';
+      contrastBadge.style.borderColor = 'rgba(34, 197, 94, 0.4)';
+    } else if (ratio >= 4.5) {
+      contrastBadge.textContent = 'AA PASS';
+      contrastBadge.style.background = 'rgba(34, 197, 94, 0.15)';
+      contrastBadge.style.color = '#22c55e';
+      contrastBadge.style.borderColor = 'rgba(34, 197, 94, 0.35)';
+    } else {
+      contrastBadge.textContent = 'LOW (' + ratio.toFixed(1) + ':1)';
+      contrastBadge.style.background = 'rgba(239, 68, 68, 0.15)';
+      contrastBadge.style.color = '#ef4444';
+      contrastBadge.style.borderColor = 'rgba(239, 68, 68, 0.35)';
+    }
   }
 
   document.querySelectorAll('.desktop-color-chip').forEach((chip) => {
     chip.classList.toggle('active', chip.dataset.color && chip.dataset.color.toLowerCase() === curAccent.toLowerCase());
   });
+}
+
+export function renderExtractedChips(colors) {
+  const container = $('wallpaper-extracted-chips');
+  if (!container) return;
+  container.innerHTML = '';
+  colors.forEach(hex => {
+    const btn = document.createElement('button');
+    btn.className = 'desktop-color-chip color-chip-btn';
+    btn.dataset.color = hex;
+    btn.style.background = hex;
+    btn.title = `Extracted: ${hex.toUpperCase()}`;
+    if (state.desktopCustomAccent && state.desktopCustomAccent.toLowerCase() === hex.toLowerCase()) {
+      btn.classList.add('active');
+    }
+    btn.addEventListener('click', () => {
+      applyDesktopTheme(state.desktopTheme, hex);
+      saveDesktopThemeToServer(state.desktopTheme, hex);
+      syncDesktopThemeUI();
+      container.querySelectorAll('.desktop-color-chip').forEach(c => c.classList.remove('active'));
+      btn.classList.add('active');
+    });
+    container.appendChild(btn);
+  });
+}
+
+export async function sampleWallpaperPalette() {
+  const container = $('wallpaper-extracted-chips');
+  if (!container) return;
+
+  let imgUrl = null;
+  const wpLayer = document.getElementById('desktop-wallpaper');
+  if (wpLayer && wpLayer.style.backgroundImage) {
+    const match = wpLayer.style.backgroundImage.match(/url\(["']?([^"']+)["']?\)/);
+    if (match) imgUrl = match[1];
+  }
+  if (!imgUrl && typeof localStorage !== 'undefined') {
+    const savedName = localStorage.getItem('zettnas_active_wallpaper');
+    if (savedName) {
+      imgUrl = `/api/wallpapers/download/${encodeURIComponent(savedName)}`;
+    }
+  }
+
+  if (!imgUrl) {
+    const fallbackPalette = ['#00f0ff', '#38bdf8', '#3bf58b', '#ffbe40', '#c084fc', '#f43f5e'];
+    renderExtractedChips(fallbackPalette);
+    showToast(t('settings.palette_sampled_default', 'Sampled default theme accents'), 'info');
+    return;
+  }
+
+  try {
+    container.innerHTML = `<span style="font-size:10.5px; color:var(--brand); display:flex; align-items:center; gap:6px;"><span class="spinner-inline" style="width:12px; height:12px; border-width:2px;"></span> Sampling wallpaper pixels...</span>`;
+
+    const img = new Image();
+    img.crossOrigin = 'Anonymous';
+    img.src = imgUrl;
+    await new Promise((resolve, reject) => {
+      img.onload = resolve;
+      img.onerror = reject;
+      setTimeout(resolve, 2500);
+    });
+
+    if (!img.naturalWidth) {
+      throw new Error('Image could not be rendered to canvas');
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 64;
+    canvas.height = 64;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    if (!ctx) throw new Error('Canvas 2D context unavailable');
+
+    ctx.drawImage(img, 0, 0, 64, 64);
+    const imgData = ctx.getImageData(0, 0, 64, 64).data;
+
+    const colorMap = new Map();
+    for (let i = 0; i < imgData.length; i += 16) {
+      const r = imgData[i];
+      const g = imgData[i + 1];
+      const b = imgData[i + 2];
+      const a = imgData[i + 3];
+      if (a < 128) continue;
+
+      const qr = Math.round(r / 32) * 32;
+      const qg = Math.round(g / 32) * 32;
+      const qb = Math.round(b / 32) * 32;
+
+      const maxVal = Math.max(qr, qg, qb);
+      const minVal = Math.min(qr, qg, qb);
+      const sat = maxVal === 0 ? 0 : (maxVal - minVal) / maxVal;
+      const lum = 0.2126 * (qr / 255) + 0.7152 * (qg / 255) + 0.0722 * (qb / 255);
+
+      if (lum < 0.15 || lum > 0.85 || sat < 0.2) continue;
+
+      const hex = '#' + [qr, qg, qb].map(x => Math.min(255, Math.max(0, x)).toString(16).padStart(2, '0')).join('');
+      colorMap.set(hex, (colorMap.get(hex) || 0) + 1);
+    }
+
+    let sorted = Array.from(colorMap.entries()).sort((a, b) => b[1] - a[1]).map(entry => entry[0]);
+    if (sorted.length < 5) {
+      const fillers = ['#00f0ff', '#38bdf8', '#3bf58b', '#ffbe40', '#c084fc', '#f43f5e'];
+      for (const f of fillers) {
+        if (!sorted.includes(f)) sorted.push(f);
+        if (sorted.length >= 6) break;
+      }
+    } else {
+      sorted = sorted.slice(0, 6);
+    }
+
+    renderExtractedChips(sorted);
+    showToast(t('settings.palette_extracted_success', 'Extracted 6 vibrant wallpaper accents!'), 'success');
+  } catch (err) {
+    console.warn('[PALETTE] Extraction fallback:', err);
+    const fallbackPalette = ['#00f0ff', '#38bdf8', '#3bf58b', '#ffbe40', '#c084fc', '#f43f5e'];
+    renderExtractedChips(fallbackPalette);
+    showToast(t('settings.palette_sampled_default', 'Sampled default theme accents'), 'info');
+  }
+}
+
+let _appearanceUndoSnapshot = null;
+let _appearanceUndoTimer = null;
+
+export function exportThemeBundle() {
+  let savedBlur = 24, savedOpacity = 72, savedRadius = '12px', savedGlow = false;
+  let savedDim = 15, savedBlurWp = 0;
+  let savedDockPos = 'bottom', savedDockSize = 'medium', savedDockMag = 1.4, savedDockAutoHide = false;
+  let savedEco = false;
+
+  try {
+    if (localStorage.getItem('zettnas_glass_blur') !== null) savedBlur = parseInt(localStorage.getItem('zettnas_glass_blur'), 10);
+    if (localStorage.getItem('zettnas_glass_opacity') !== null) savedOpacity = parseInt(localStorage.getItem('zettnas_glass_opacity'), 10);
+    if (localStorage.getItem('zettnas_window_radius')) savedRadius = localStorage.getItem('zettnas_window_radius');
+    if (localStorage.getItem('zettnas_window_glow') !== null) savedGlow = localStorage.getItem('zettnas_window_glow') === 'true';
+
+    if (localStorage.getItem('zettnas_wallpaper_dim') !== null) savedDim = parseInt(localStorage.getItem('zettnas_wallpaper_dim'), 10);
+    if (localStorage.getItem('zettnas_wallpaper_blur') !== null) savedBlurWp = parseInt(localStorage.getItem('zettnas_wallpaper_blur'), 10);
+
+    if (localStorage.getItem('zettnas_dock_position')) savedDockPos = localStorage.getItem('zettnas_dock_position');
+    if (localStorage.getItem('zettnas_dock_size')) savedDockSize = localStorage.getItem('zettnas_dock_size');
+    if (localStorage.getItem('zettnas_dock_magnification') !== null) savedDockMag = parseFloat(localStorage.getItem('zettnas_dock_magnification'));
+    if (localStorage.getItem('zettnas_dock_autohide') !== null) savedDockAutoHide = localStorage.getItem('zettnas_dock_autohide') === 'true';
+
+    if (localStorage.getItem('zettnas_eco_mode') !== null) savedEco = localStorage.getItem('zettnas_eco_mode') === 'true';
+  } catch (e) {}
+
+  const bundle = {
+    app: 'zettnas-toolkit',
+    format: 'zett-theme',
+    version: 1,
+    exported_at: new Date().toISOString(),
+    theme: state.desktopTheme || 'cyber',
+    custom_accent: state.desktopCustomAccent || '',
+    glass: {
+      blur: savedBlur,
+      opacity: savedOpacity,
+      radius: savedRadius,
+      glow: savedGlow
+    },
+    wallpaper: {
+      active_file: (typeof localStorage !== 'undefined' ? localStorage.getItem('zettnas_active_wallpaper') : null) || null,
+      dim: savedDim,
+      blur: savedBlurWp
+    },
+    dock: {
+      position: savedDockPos,
+      size: savedDockSize,
+      magnification: savedDockMag,
+      autohide: savedDockAutoHide
+    },
+    performance: {
+      eco_mode: savedEco
+    }
+  };
+
+  const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `zettnas-theme-${state.desktopTheme || 'cyber'}-${Date.now().toString(36)}.zett-theme.json`;
+  document.body.appendChild(a);
+  a.click();
+  URL.revokeObjectURL(url);
+  a.remove();
+  showToast(t('settings.theme_exported', 'Theme exported successfully!'), 'success');
+}
+
+export function importThemeBundle(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data || (data.format !== 'zett-theme' && !data.theme)) {
+        throw new Error('Invalid theme file format. Expected a .zett-theme.json bundle.');
+      }
+
+      // Snapshot current state for undo
+      takeAppearanceSnapshot();
+
+      // Apply theme
+      const targetTheme = data.theme || 'cyber';
+      const targetAccent = data.custom_accent !== undefined ? data.custom_accent : '';
+      applyDesktopTheme(targetTheme, targetAccent);
+      saveDesktopThemeToServer(targetTheme, targetAccent);
+
+      // Apply glass
+      if (data.glass) {
+        applyGlassSettings(data.glass.blur ?? 24, data.glass.opacity ?? 72, data.glass.radius ?? '12px', data.glass.glow ?? false, true);
+      }
+
+      // Apply wallpaper readability
+      if (data.wallpaper) {
+        applyWallpaperReadability(data.wallpaper.dim ?? 15, data.wallpaper.blur ?? 0, true);
+      }
+
+      // Apply dock settings
+      if (data.dock) {
+        applyDockSettings(data.dock.position || 'bottom', data.dock.size || 'medium', data.dock.magnification ?? 1.4, data.dock.autohide ?? false, true);
+      }
+
+      // Apply eco mode
+      if (data.performance) {
+        const isEco = !!data.performance.eco_mode;
+        if (isEco) document.body.setAttribute('data-performance-mode', 'eco');
+        else document.body.removeAttribute('data-performance-mode');
+        try { localStorage.setItem('zettnas_eco_mode', isEco ? 'true' : 'false'); } catch (err) {}
+        const ecoToggle = document.getElementById('eco-mode-toggle');
+        if (ecoToggle) ecoToggle.checked = isEco;
+      }
+
+      syncDesktopThemeUI();
+      if (typeof window.syncDesktopTwinPreview === 'function') {
+        window.syncDesktopTwinPreview({ theme: targetTheme, accent: targetAccent });
+      }
+
+      showToast(t('settings.theme_imported', 'Theme imported successfully!'), 'success');
+    } catch (err) {
+      showToast(t('settings.theme_import_failed', 'Failed to import theme: ') + err.message, 'error');
+    }
+  };
+  reader.readAsText(file);
+}
+
+function takeAppearanceSnapshot() {
+  try {
+    _appearanceUndoSnapshot = {
+      theme: state.desktopTheme || 'cyber',
+      customAccent: state.desktopCustomAccent || '',
+      glassBlur: localStorage.getItem('zettnas_glass_blur'),
+      glassOpacity: localStorage.getItem('zettnas_glass_opacity'),
+      windowRadius: localStorage.getItem('zettnas_window_radius'),
+      windowGlow: localStorage.getItem('zettnas_window_glow'),
+      wallpaperDim: localStorage.getItem('zettnas_wallpaper_dim'),
+      wallpaperBlur: localStorage.getItem('zettnas_wallpaper_blur'),
+      wallpaperFile: localStorage.getItem('zettnas_active_wallpaper'),
+      dockPos: localStorage.getItem('zettnas_dock_position'),
+      dockSize: localStorage.getItem('zettnas_dock_size'),
+      dockMag: localStorage.getItem('zettnas_dock_magnification'),
+      dockAutoHide: localStorage.getItem('zettnas_dock_autohide'),
+      ecoMode: localStorage.getItem('zettnas_eco_mode')
+    };
+  } catch (e) {}
+}
+
+export function restoreAppearanceDefaultsWithUndo() {
+  takeAppearanceSnapshot();
+
+  // 1. Reset theme to cyber
+  applyDesktopTheme('cyber', '');
+  saveDesktopThemeToServer('cyber', '');
+
+  // 2. Reset glass
+  applyGlassSettings(24, 72, '12px', false, true);
+
+  // 3. Reset wallpaper readability
+  applyWallpaperReadability(15, 0, true);
+
+  // 4. Reset dock
+  applyDockSettings('bottom', 'medium', 1.4, false, true);
+
+  // 5. Reset eco mode
+  document.body.removeAttribute('data-performance-mode');
+  try { localStorage.removeItem('zettnas_eco_mode'); } catch (err) {}
+  const ecoToggle = document.getElementById('eco-mode-toggle');
+  if (ecoToggle) ecoToggle.checked = false;
+
+  syncDesktopThemeUI();
+  if (typeof window.syncDesktopTwinPreview === 'function') {
+    window.syncDesktopTwinPreview({ theme: 'cyber', accent: '', wallpaperDim: 15, wallpaperBlur: 0, dockPos: 'bottom' });
+  }
+
+  // Show 10s undo toast
+  clearTimeout(_appearanceUndoTimer);
+  showActionToast('Appearance reset to factory defaults', '↺ Undo (10s)', () => {
+    if (!_appearanceUndoSnapshot) return;
+    const snap = _appearanceUndoSnapshot;
+    applyDesktopTheme(snap.theme, snap.customAccent);
+    saveDesktopThemeToServer(snap.theme, snap.customAccent);
+
+    applyGlassSettings(
+      snap.glassBlur !== null ? parseInt(snap.glassBlur, 10) : 24,
+      snap.glassOpacity !== null ? parseInt(snap.glassOpacity, 10) : 72,
+      snap.windowRadius || '12px',
+      snap.windowGlow === 'true',
+      true
+    );
+
+    applyWallpaperReadability(
+      snap.wallpaperDim !== null ? parseInt(snap.wallpaperDim, 10) : 15,
+      snap.wallpaperBlur !== null ? parseInt(snap.wallpaperBlur, 10) : 0,
+      true
+    );
+
+    applyDockSettings(
+      snap.dockPos || 'bottom',
+      snap.dockSize || 'medium',
+      snap.dockMag !== null ? parseFloat(snap.dockMag) : 1.4,
+      snap.dockAutoHide === 'true',
+      true
+    );
+
+    if (snap.ecoMode === 'true') {
+      document.body.setAttribute('data-performance-mode', 'eco');
+      try { localStorage.setItem('zettnas_eco_mode', 'true'); } catch (e) {}
+      if (ecoToggle) ecoToggle.checked = true;
+    }
+    syncDesktopThemeUI();
+    showToast(t('settings.theme_restored', 'Appearance settings restored!'), 'success');
+  }, 10000);
 }
 
 export function initDesktopThemeControls() {
@@ -1048,6 +1520,46 @@ export function initDesktopThemeControls() {
       applyDesktopTheme(state.desktopTheme, '');
       saveDesktopThemeToServer(state.desktopTheme, '');
       syncDesktopThemeUI();
+    });
+  }
+
+  // Hook Palette Extractor
+  const extractBtn = $('extract-palette-btn');
+  if (extractBtn) {
+    extractBtn.addEventListener('click', () => {
+      sampleWallpaperPalette();
+    });
+  }
+
+  // Hook Theme Export
+  const exportBtn = $('theme-export-btn');
+  if (exportBtn) {
+    exportBtn.addEventListener('click', () => {
+      exportThemeBundle();
+    });
+  }
+
+  // Hook Theme Import
+  const importBtn = $('theme-import-btn');
+  const importFileInput = $('theme-import-file');
+  if (importBtn && importFileInput) {
+    importBtn.addEventListener('click', () => {
+      importFileInput.click();
+    });
+    importFileInput.addEventListener('change', (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (file) {
+        importThemeBundle(file);
+        importFileInput.value = '';
+      }
+    });
+  }
+
+  // Hook Restore Defaults with Undo
+  const resetAllBtn = $('theme-reset-all-btn');
+  if (resetAllBtn) {
+    resetAllBtn.addEventListener('click', () => {
+      restoreAppearanceDefaultsWithUndo();
     });
   }
 

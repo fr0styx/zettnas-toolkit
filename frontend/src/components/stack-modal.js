@@ -240,10 +240,10 @@ export function switchStackTab(tabTarget) {
   });
 }
 
-export async function openStackModal(stackName) {
+export async function openStackModal(stackName, initialYaml = null) {
   initStackModal();
 
-  _activeStackName = stackName;
+  _activeStackName = typeof stackName === 'string' ? stackName : (stackName?.name || 'new-stack');
   const overlay = document.getElementById('stack-inspector-overlay');
   const win = document.getElementById('stack-inspector-window');
   if (!overlay || !win) return;
@@ -267,20 +267,57 @@ export async function openStackModal(stackName) {
 
   switchStackTab('compose');
 
-  document.getElementById('stack-header-title').textContent = `Stack: ${stackName}`;
+  if (initialYaml !== null) {
+    document.getElementById('stack-header-title').textContent = `Deploy Stack: ${_activeStackName}`;
+    const statusPill = document.getElementById('stack-header-status');
+    if (statusPill) statusPill.style.display = 'none';
+    const originPill = document.getElementById('stack-header-origin');
+    if (originPill) originPill.textContent = 'COPILOT TEMPLATE';
+    const pathLabel = document.getElementById('stack-path-label');
+    if (pathLabel) pathLabel.textContent = 'Ready to Deploy via Compose Engine';
+    const composeEd = document.getElementById('stack-compose-editor');
+    if (composeEd) composeEd.value = initialYaml;
+    const envEd = document.getElementById('stack-env-editor');
+    if (envEd) envEd.value = '';
+    const msgEl = document.getElementById('stack-modal-msg');
+    if (msgEl) msgEl.textContent = 'Loaded Copilot Compose template. Click "Save & Redeploy Stack" to deploy.';
+    return;
+  }
+
+  document.getElementById('stack-header-title').textContent = `Stack: ${_activeStackName}`;
   document.getElementById('stack-header-status').style.display = 'none';
   document.getElementById('stack-compose-editor').value = 'Loading stack configuration...';
   document.getElementById('stack-env-editor').value = '';
   document.getElementById('stack-modal-msg').textContent = 'Fetching stack setup...';
 
   try {
-    const data = await api.get(`/api/docker/stacks/${encodeURIComponent(stackName)}`);
+    const data = await api.get(`/api/docker/stacks/${encodeURIComponent(_activeStackName)}`);
     _activeStackDetails = data;
     renderStackDetails(data);
   } catch (err) {
     document.getElementById('stack-modal-msg').textContent = `Failed loading stack: ${err.message}`;
     showToast(`Failed loading stack: ${err.message}`, 'error');
   }
+}
+
+export function deployComposeStackSnippet(yamlCode) {
+  if (!yamlCode) return;
+  let deducedName = 'copilot-stack';
+  const matchContainer = yamlCode.match(/container_name:\s*([a-zA-Z0-9_-]+)/);
+  if (matchContainer && matchContainer[1]) {
+    deducedName = matchContainer[1];
+  } else {
+    const matchService = yamlCode.match(/services:\s*\r?\n\s+([a-zA-Z0-9_-]+):/);
+    if (matchService && matchService[1]) {
+      deducedName = matchService[1];
+    }
+  }
+  openStackModal(deducedName, yamlCode);
+  showToast('Copilot Compose stack loaded. Ready to deploy!', 'success');
+}
+
+if (typeof window !== 'undefined') {
+  window.deployComposeStackSnippet = deployComposeStackSnippet;
 }
 
 function renderStackDetails(data) {
@@ -444,8 +481,18 @@ async function triggerStackAction(action) {
   }
 }
 
-export function openStackPickerModal(stacks = []) {
+export async function openStackPickerModal(stacksInput = null) {
   initStackModal();
+  let stacks = Array.isArray(stacksInput) ? stacksInput : (stacksInput?.stacks || null);
+
+  if (!stacks) {
+    try {
+      const res = await api.get('/api/docker/stacks');
+      stacks = Array.isArray(res) ? res : (res?.stacks || []);
+    } catch {
+      stacks = [];
+    }
+  }
   let overlay = document.getElementById('stack-picker-overlay');
   if (!overlay) {
     overlay = document.createElement('div');

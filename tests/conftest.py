@@ -45,6 +45,9 @@ os.environ.update(
         "TESTING": "1",
         "ZETTNAS_TEST_MODE": "1",
         "ZETTNAS_FAST_HASH": "1",
+        # Never reach a real Ollama during tests: port 9 refuses at once, so
+        # embedding calls fail fast and take their fallback path.
+        "OLLAMA_HOST": "http://127.0.0.1:9",
     }
 )
 

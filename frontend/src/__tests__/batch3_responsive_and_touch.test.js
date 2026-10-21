@@ -228,5 +228,59 @@ describe('Batch 3: Responsive Layout Overhaul & Touch Navigation (<1024px & Mobi
       expect(winEl.style.width).toBe('');
       expect(winEl.style.height).toBe('');
     });
+
+    it('applies pure translateY without translateX(-50%) on left-pinned mobile windows and toggles .window-dragging', async () => {
+      const { makeDraggable } = await import('../components/dock.js');
+      document.body.classList.add('mobile-mode');
+
+      const mobileWin = document.createElement('div');
+      mobileWin.className = 'os-window file-manager-window';
+      mobileWin.id = 'test-fm-mobile';
+      mobileWin.style.position = 'fixed';
+      mobileWin.style.left = '0px';
+      mobileWin.style.width = '100vw';
+
+      const header = document.createElement('div');
+      header.className = 'os-window-header';
+      header.textContent = 'Files';
+      mobileWin.appendChild(header);
+      document.body.appendChild(mobileWin);
+
+      makeDraggable(mobileWin, header, 'test-fm-mobile');
+
+      // Pointer down
+      header.dispatchEvent(new PointerEvent('pointerdown', { clientX: 100, clientY: 50, button: 0, pointerId: 1, bubbles: true }));
+      expect(mobileWin.classList.contains('window-dragging')).toBe(true);
+
+      // Move down 40px
+      window.dispatchEvent(new PointerEvent('pointermove', { clientX: 100, clientY: 90, pointerId: 1, bubbles: true }));
+      expect(mobileWin.style.transform).toBe('translateY(30px)');
+      expect(mobileWin.style.transform).not.toContain('translateX');
+
+      // Release
+      window.dispatchEvent(new PointerEvent('pointerup', { clientX: 100, clientY: 90, pointerId: 1, bubbles: true }));
+      vi.advanceTimersByTime(250);
+      expect(mobileWin.classList.contains('window-dragging')).toBe(false);
+    });
+
+    it('preserves z-index of .smart-modal-backdrop without demoting it in bringToFront', async () => {
+      const { bringToFront } = await import('../components/dock.js');
+
+      const backdrop = document.createElement('div');
+      backdrop.className = 'smart-modal-backdrop';
+      backdrop.style.zIndex = '9000';
+
+      const dialog = document.createElement('div');
+      dialog.className = 'smart-modal-window';
+      backdrop.appendChild(dialog);
+      document.body.appendChild(backdrop);
+
+      bringToFront(dialog);
+
+      // Dialog is in modal range (9100)
+      expect(dialog.style.zIndex).toContain('9100');
+      // Backdrop MUST NOT be demoted by closest() in bringToFront
+      expect(backdrop.style.zIndex).toContain('9000');
+    });
   });
 });

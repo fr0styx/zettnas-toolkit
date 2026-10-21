@@ -91,18 +91,33 @@ def _resolve_masked_oauth_parameters(type_name: str, params: Dict[str, Any]) -> 
     return params
 
 
+def _broadcast_remotes_change(name: str, action: str) -> None:
+    """Broadcasts a real-time storage and remotes event to all connected SSE clients."""
+    try:
+        from backend.services.broadcaster import broadcaster
+        from backend.state import Z_STATE
+
+        update_payload = dict(Z_STATE.cached_stats) if Z_STATE.cached_stats else {}
+        update_payload["remotes_event"] = {"name": name, "action": action, "timestamp": time.time()}
+        broadcaster.broadcast(update_payload, full_data=update_payload)
+    except Exception as ex:
+        logger.debug(f"[REMOTES] Broadcast notification failed: {ex}")
+
+
 @router.post("/remotes", dependencies=[Depends(require_scope("storage:admin"))])
 async def create_cloud_remote(req: RemoteCreateRequest):
     """Creates or updates a remote cloud storage backend."""
     engine = get_rclone_engine()
     parameters = _resolve_masked_oauth_parameters(req.type, req.parameters)
     try:
-        return await asyncio.to_thread(
+        res = await asyncio.to_thread(
             engine.create_remote,
             req.name,
             req.type,
             parameters,
         )
+        _broadcast_remotes_change(req.name, "create")
+        return res
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
@@ -135,7 +150,9 @@ async def delete_cloud_remote(name: str):
     """Deletes a remote cloud storage backend."""
     engine = get_rclone_engine()
     try:
-        return await asyncio.to_thread(engine.delete_remote, name)
+        res = await asyncio.to_thread(engine.delete_remote, name)
+        _broadcast_remotes_change(name, "delete")
+        return res
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -148,7 +165,9 @@ async def mount_cloud_remote(name: str, req: Optional[RemoteMountRequest] = None
     vfs = req.vfs_cache if req else "writes"
     ro = req.read_only if req else False
     try:
-        return await asyncio.to_thread(engine.mount_remote, name, r_path, vfs, ro)
+        res = await asyncio.to_thread(engine.mount_remote, name, r_path, vfs, ro)
+        _broadcast_remotes_change(name, "mount")
+        return res
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -158,7 +177,9 @@ async def unmount_cloud_remote(name: str):
     """Unmounts /mnt/remotes/{name}."""
     engine = get_rclone_engine()
     try:
-        return await asyncio.to_thread(engine.unmount_remote, name)
+        res = await asyncio.to_thread(engine.unmount_remote, name)
+        _broadcast_remotes_change(name, "unmount")
+        return res
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

@@ -16,6 +16,12 @@ import {
   syncLcdStyleUI,
   initLcdStyleControls
 } from '../components/settings.js';
+import {
+  applyDashboardLayout,
+  syncMiniPreviewStructure,
+  syncMiniPreviewTelemetry,
+  setupMiniPreviewInteractivity
+} from '../components/mini-preview.js';
 import fs from 'fs';
 import path from 'path';
 
@@ -24,6 +30,7 @@ describe('Streamline Minimalist / Big IP Screen Layout Suite', () => {
     localStorage.clear();
     vi.spyOn(api, 'post').mockResolvedValue({ status: 'ok', layout: { version: 1 } });
     state.screenLayoutStyle = 'classic';
+    state.dashOrder = ['metric-storage', 'metric-cpu', 'metric-mem', 'metric-fans', 'metric-net', 'metric-disks'];
     state.currentTimezone = 'UTC';
     state.clockFormat = '24';
     state.latestStats = null;
@@ -126,7 +133,7 @@ describe('Streamline Minimalist / Big IP Screen Layout Suite', () => {
             </div>
           </div>
 
-          <div class="sl-bay-row" id="sl-bay-row"></div>
+          <div class="sl-bay-row" id="sl-bay-row" data-metric-id="metric-disks"></div>
         </div>
       </div>
 
@@ -286,6 +293,11 @@ describe('Streamline Minimalist / Big IP Screen Layout Suite', () => {
 
     // Click standby disk: triggers confirm toast to prevent spinup
     smartEventSpy.mockClear();
+    let onConfirmCb = null;
+    confirmToastSpy.mockImplementation((title, desc, onConfirm) => {
+      onConfirmCb = onConfirm;
+    });
+
     chips[1].click();
     expect(confirmToastSpy).toHaveBeenCalledWith(
       'Drive in Standby Mode',
@@ -293,6 +305,11 @@ describe('Streamline Minimalist / Big IP Screen Layout Suite', () => {
       expect.any(Function)
     );
     expect(smartEventSpy).not.toHaveBeenCalled();
+
+    // Invoking confirmation callback triggers modal with forceWake: true
+    expect(onConfirmCb).toBeTypeOf('function');
+    onConfirmCb();
+    expect(smartEventSpy).toHaveBeenCalledWith({ dev: '/dev/sdb', forceWake: true }, expect.anything());
   });
 
   it('delegates interactive clicks from streamline storage, CPU, Memory, and IP zones to metrics modal', () => {
@@ -494,6 +511,165 @@ describe('Streamline Minimalist / Big IP Screen Layout Suite', () => {
       expect(updatedParityTile.classList.contains('disk-is-parity')).toBe(true);
       expect(updatedParityTile.querySelector('.dt .parity-pill')).toBeNull();
       expect(updatedParityTile.querySelector('.dt-temp').textContent).toContain('35');
+    });
+  });
+
+  describe('Streamline Drag-and-Drop Layout & In-Place Telemetry Suite', () => {
+    it('reorders streamline deck and bay row in #screen and mini-preview when dashOrder changes', () => {
+      setScreenLayoutStyle('streamline', false);
+      state.dashOrder = ['metric-storage', 'metric-cpu', 'metric-mem', 'metric-fans', 'metric-net', 'metric-disks'];
+      state.dashVis = {
+        'metric-storage': true,
+        'metric-cpu': true,
+        'metric-mem': true,
+        'metric-fans': true,
+        'metric-net': true,
+        'metric-disks': true
+      };
+      state.dashSizes = {};
+
+      applyDashboardLayout();
+
+      const screenDeck = document.querySelector('#screen .sl-main-deck');
+      const miniDeck = document.querySelector('#mini-preview-inner .sl-main-deck');
+      expect(screenDeck).not.toBeNull();
+      expect(miniDeck).not.toBeNull();
+
+      // Default order: storage, compute, ip
+      let screenCards = Array.from(screenDeck.querySelectorAll('.sl-card')).map(c => c.dataset.metricId);
+      expect(screenCards).toEqual(['metric-storage', 'metric-cpu', 'metric-net']);
+
+      let miniCards = Array.from(miniDeck.querySelectorAll('.sl-card')).map(c => c.dataset.metricId);
+      expect(miniCards).toEqual(['metric-storage', 'metric-cpu', 'metric-net']);
+
+      // Change order: IP first, then COMPUTE, then STORAGE
+      state.dashOrder = ['metric-net', 'metric-cpu', 'metric-storage', 'metric-disks'];
+      applyDashboardLayout();
+
+      screenCards = Array.from(screenDeck.querySelectorAll('.sl-card')).map(c => c.dataset.metricId);
+      expect(screenCards).toEqual(['metric-net', 'metric-cpu', 'metric-storage']);
+
+      miniCards = Array.from(miniDeck.querySelectorAll('.sl-card')).map(c => c.dataset.metricId);
+      expect(miniCards).toEqual(['metric-net', 'metric-cpu', 'metric-storage']);
+
+      // Change order: Disks first, then IP, COMPUTE, STORAGE
+      state.dashOrder = ['metric-disks', 'metric-net', 'metric-cpu', 'metric-storage'];
+      applyDashboardLayout();
+
+      const screenBayRow = document.querySelector('#screen #sl-bay-row');
+      const miniBayRow = document.querySelector('#mini-preview-inner .sl-bay-row');
+      expect(screenBayRow.nextElementSibling).toBe(screenDeck);
+      expect(miniBayRow.nextElementSibling).toBe(miniDeck);
+    });
+
+    it('supports drag-and-drop reordering of streamline cards and bay row in mini-preview-inner', () => {
+      setScreenLayoutStyle('streamline', false);
+      state.dashOrder = ['metric-storage', 'metric-cpu', 'metric-mem', 'metric-fans', 'metric-net', 'metric-disks'];
+      applyDashboardLayout();
+
+      const mini = document.getElementById('mini-preview-inner');
+      const miniCards = mini.querySelectorAll('.sl-main-deck > .sl-card');
+      expect(miniCards.length).toBe(3);
+
+      const slStorage = miniCards[0]; // metric-storage
+      const slCompute = miniCards[1]; // metric-cpu
+
+      // Drag storage over compute and drop
+      const dataStore = {};
+      const dragStartEvt = new Event('dragstart', { bubbles: true });
+      dragStartEvt.dataTransfer = {
+        effectAllowed: '',
+        setData: (k, v) => { dataStore[k] = v; },
+        getData: (k) => dataStore[k]
+      };
+      slStorage.dispatchEvent(dragStartEvt);
+      expect(slStorage.classList.contains('mini-dragging')).toBe(true);
+
+      const dragOverEvt = new Event('dragover', { bubbles: true, cancelable: true });
+      dragOverEvt.dataTransfer = { dropEffect: '' };
+      slCompute.dispatchEvent(dragOverEvt);
+      expect(slCompute.classList.contains('mini-drag-over')).toBe(true);
+
+      const dropEvt = new Event('drop', { bubbles: true, cancelable: true });
+      slCompute.dispatchEvent(dropEvt);
+
+      // Verify state.dashOrder updated (storage swapped with compute)
+      expect(state.dashOrder.indexOf('metric-cpu')).toBeLessThan(state.dashOrder.indexOf('metric-storage'));
+      expect(api.post).toHaveBeenCalledWith('/api/layout', expect.objectContaining({
+        order: state.dashOrder,
+        style: 'streamline'
+      }));
+
+      // Now drag disk row onto a card to swap disks position
+      const miniBayRow = mini.querySelector('.sl-bay-row');
+      expect(miniBayRow).not.toBeNull();
+      const diskDragStart = new Event('dragstart', { bubbles: true });
+      diskDragStart.dataTransfer = {
+        effectAllowed: '',
+        setData: (k, v) => { dataStore[k] = v; },
+        getData: (k) => dataStore[k]
+      };
+      miniBayRow.dispatchEvent(diskDragStart);
+      expect(miniBayRow.classList.contains('mini-dragging')).toBe(true);
+
+      const diskDropOnCard = new Event('drop', { bubbles: true, cancelable: true });
+      slCompute.dispatchEvent(diskDropOnCard);
+
+      // Disks should now be first
+      expect(state.dashOrder.indexOf('metric-disks')).toBe(0);
+      const updatedScreenBayRow = document.querySelector('#screen #sl-bay-row');
+      const screenDeck = document.querySelector('#screen .sl-main-deck');
+      expect(updatedScreenBayRow.nextElementSibling).toBe(screenDeck);
+    });
+
+    it('syncMiniPreviewTelemetry preserves drag listeners and updates streamline cards and bay row in-place', () => {
+      setScreenLayoutStyle('streamline', false);
+      applyDashboardLayout();
+
+      const mini = document.getElementById('mini-preview-inner');
+      const initialCompute = mini.querySelector('.sl-card-compute');
+      const initialStorage = mini.querySelector('.sl-card-storage');
+      const initialIp = mini.querySelector('.sl-card-ip');
+      const slBayRowBefore = mini.querySelector('.sl-bay-row');
+      expect(initialCompute).not.toBeNull();
+      expect(initialStorage).not.toBeNull();
+      expect(initialIp).not.toBeNull();
+      expect(slBayRowBefore).not.toBeNull();
+
+      // Trigger telemetry sync
+      syncMiniPreviewTelemetry();
+
+      // Crucial: Exact same DOM nodes must be preserved to keep event listeners intact
+      expect(mini.querySelector('.sl-card-compute')).toBe(initialCompute);
+      expect(mini.querySelector('.sl-card-storage')).toBe(initialStorage);
+      expect(mini.querySelector('.sl-card-ip')).toBe(initialIp);
+      expect(mini.querySelector('.sl-bay-row')).toBe(slBayRowBefore);
+
+      // Update telemetry on screen
+      const stats = {
+        name: 'TEST-STREAMLINE',
+        ip: '192.168.1.100',
+        storage: { pct: 75, used: '3TB', total: '4TB' },
+        cpu: { util: 50, temp: 48 },
+        mem: { pct: 40, used: '8GB' },
+        net: { tx: '1.2 MB/s', rx: '4.5 MB/s' },
+        disks: [
+          { name: 'sda', dev: '/dev/sda', temp: 33, health: 'ok' }
+        ]
+      };
+      updateStreamlineLayout(stats, false);
+      syncMiniPreviewTelemetry();
+
+      // Mini preview inner elements should reflect updated text
+      expect(mini.querySelector('.sl-hero-ip').textContent).toBe('192.168.1.100');
+      expect(mini.querySelector('#sl-cpu-val, .sl-card-compute .sl-bar-val').textContent).toBe('50%');
+      expect(mini.querySelector('#sl-storage-pct, .sl-card-storage .sl-donut-pct').textContent).toBe('75%');
+
+      // Still the exact same DOM node references!
+      expect(mini.querySelector('.sl-card-compute')).toBe(initialCompute);
+      expect(mini.querySelector('.sl-card-storage')).toBe(initialStorage);
+      expect(mini.querySelector('.sl-card-ip')).toBe(initialIp);
+      expect(mini.querySelector('.sl-bay-row')).toBe(slBayRowBefore);
     });
   });
 });

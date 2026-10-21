@@ -8,6 +8,7 @@ Handles:
 100% Hardware & OS agnostic.
 """
 
+import io
 import json
 import os
 import tarfile
@@ -31,6 +32,13 @@ SYSTEM_MOUNT_PREFIXES = (
     "/proc",
     "/run",
     "/boot",
+    "/etc",
+    "/root",
+    "/usr",
+    "/bin",
+    "/sbin",
+    "/lib",
+    "/lib64",
     "/etc/localtime",
     "/etc/timezone",
 )
@@ -106,6 +114,43 @@ def remove_app_backup_record(backup_id: str) -> None:
     filtered = [r for r in registry if r.get("id") != backup_id]
     if len(filtered) != len(registry):
         atomic_write_json(APP_BACKUPS_REGISTRY_FILE, filtered)
+
+
+FORBIDDEN_RESTORE_PREFIXES = (
+    "/etc",
+    "/root",
+    "/usr",
+    "/bin",
+    "/sbin",
+    "/boot",
+    "/sys",
+    "/proc",
+    "/dev",
+    "/run",
+    "/var/run",
+    "/lib",
+    "/lib64",
+)
+
+
+def is_safe_restore_target_path(target_path: str) -> bool:
+    """
+    Validates that a restore target path does not target sensitive host system directories.
+    Strictly forbids /etc, /root, /usr, /bin, /boot, /sys, /proc, /dev, etc.
+    """
+    if not target_path or not isinstance(target_path, str):
+        return False
+    norm = os.path.abspath(os.path.normpath(target_path.strip()))
+    if norm in ("/", ""):
+        return False
+    real_norm = os.path.realpath(norm)
+    for p in FORBIDDEN_RESTORE_PREFIXES:
+        if norm == p or norm.startswith(p + "/") or real_norm == p or real_norm.startswith(p + "/"):
+            return False
+    for p in SYSTEM_MOUNT_PREFIXES:
+        if norm == p or norm.startswith(p + "/") or real_norm == p or real_norm.startswith(p + "/"):
+            return False
+    return True
 
 
 def is_safe_tar_member(member: tarfile.TarInfo, target_dir: str) -> bool:
@@ -387,6 +432,10 @@ def restore_app_backup(
             if not src or not arc_prefix:
                 continue
 
+            if not is_safe_restore_target_path(src):
+                logger.warning(f"[App Backup] Refusing to restore into unsafe system path: {src}")
+                continue
+
             os.makedirs(src, exist_ok=True)
             extracted_mounts.append(src)
 
@@ -442,3 +491,213 @@ def restore_app_backup(
         "recreated": app_recreated,
         "message": f"Successfully restored {len(extracted_mounts)} data volume(s) for '{app_name}'.",
     }
+
+
+# =========================================================================
+# Virtual Machine Backups & Hyper-Backup Integration
+# =========================================================================
+
+
+def get_vm_backup_base_dir() -> str:
+    """Returns root directory where VM disk and config archives are stored."""
+    nas_vm_backups = os.path.join(POOL_PATH, "vms", ".backups")
+    if os.path.exists(os.path.join(POOL_PATH, "vms")) and os.access(os.path.join(POOL_PATH, "vms"), os.W_OK):
+        path = nas_vm_backups
+    else:
+        path = os.path.join(DATA_DIR, "vm_backups")
+    os.makedirs(path, exist_ok=True)
+    return path
+
+
+def get_vm_backup_dir(vm_name: str) -> str:
+    clean_name = (vm_name or "unknown_vm").strip().replace(" ", "_")
+    base = get_vm_backup_base_dir()
+    d = os.path.join(base, clean_name)
+    os.makedirs(d, exist_ok=True)
+    return d
+
+
+def create_vm_backup(
+    vm_id: str,
+    reason: str = "on-demand",
+    custom_name: Optional[str] = None,
+) -> Dict[str, Any]:
+    """
+    Creates a full backup archive of a Virtual Machine:
+    1. Loads VM config from vms.json.
+    2. Identifies vm_dir and primary/secondary virtual disk files.
+    3. Archives configuration and disk images into a compressed tar.gz archive.
+    4. Registers record in persistent backup ledger.
+    """
+    vms_file = os.path.join(DATA_DIR, "vms.json")
+    vms_list = read_json(vms_file, default=[])
+    target_vm = next((v for v in vms_list if v.get("id") == vm_id), None)
+    if not target_vm:
+        raise ValueError(f"Virtual Machine with ID '{vm_id}' not found.")
+
+    raw_name = target_vm.get("name", "vm")
+    vname = custom_name or raw_name
+    vm_dir = target_vm.get("vm_dir") or os.path.join(DATA_DIR, "vms", vm_id)
+
+    backup_dir = get_vm_backup_dir(vname)
+    ts = time.strftime("%Y%m%d_%H%M%S")
+    backup_id = f"vbk_{vname}_{uuid.uuid4().hex[:8]}"
+    archive_filename = f"{vname}_{reason}_{ts}.tar.gz"
+    archive_filepath = os.path.join(backup_dir, archive_filename)
+
+    manifest: Dict[str, Any] = {
+        "backup_id": backup_id,
+        "type": "vm",
+        "app_name": vname,
+        "vm_id": vm_id,
+        "vm_name": raw_name,
+        "reason": reason,
+        "created_at": time.time(),
+        "created_at_iso": time.strftime("%Y-%m-%d %H:%M:%S"),
+        "vm_config": target_vm,
+        "vm_dir": vm_dir,
+    }
+
+    try:
+        with tarfile.open(archive_filepath, "w:gz") as tar:
+            # 1. Add manifest.json
+            manifest_bytes = json.dumps(manifest, indent=2).encode("utf-8")
+            ti = tarfile.TarInfo("manifest.json")
+            ti.size = len(manifest_bytes)
+            ti.mtime = int(time.time())
+            tar.addfile(ti, io.BytesIO(manifest_bytes))
+
+            # 2. Add vm_config.json
+            cfg_bytes = json.dumps(target_vm, indent=2).encode("utf-8")
+            ti_cfg = tarfile.TarInfo("vm_config.json")
+            ti_cfg.size = len(cfg_bytes)
+            ti_cfg.mtime = int(time.time())
+            tar.addfile(ti_cfg, io.BytesIO(cfg_bytes))
+
+            # 3. Add VM directory files (skip live sockets and pid files)
+            if os.path.exists(vm_dir):
+                for root, _, files in os.walk(vm_dir):
+                    for file in files:
+                        if file.endswith((".pid", ".sock", ".log")):
+                            continue
+                        full_path = os.path.join(root, file)
+                        rel_path = os.path.relpath(full_path, vm_dir)
+                        arcname = f"vm_data/{rel_path}"
+                        tar.add(full_path, arcname=arcname, recursive=False)
+
+        size_bytes = os.path.getsize(archive_filepath)
+        record: Dict[str, Any] = {
+            "id": backup_id,
+            "type": "vm",
+            "app_name": vname,
+            "vm_id": vm_id,
+            "vm_name": raw_name,
+            "reason": reason,
+            "filename": archive_filename,
+            "filepath": archive_filepath,
+            "size_bytes": size_bytes,
+            "size_formatted": _format_bytes(size_bytes),
+            "created_at": time.time(),
+            "created_at_iso": time.strftime("%Y-%m-%d %H:%M:%S"),
+        }
+        save_app_backup_record(record)
+        logger.info(f"[VM Backup] Created VM backup '{backup_id}' ({record['size_formatted']}) for {vname}")
+        return record
+    except Exception as e:
+        if os.path.exists(archive_filepath):
+            try:
+                os.remove(archive_filepath)
+            except Exception:
+                pass
+        logger.error(f"[VM Backup] Failed to create backup for {vname}: {e}")
+        raise
+
+
+def list_vm_backups(vm_id_or_name: Optional[str] = None) -> List[Dict[str, Any]]:
+    """Lists saved VM archives, optionally filtered by VM ID or name."""
+    registry = get_app_backups_registry()
+    vm_records = [r for r in registry if r.get("type") == "vm"]
+    if vm_id_or_name:
+        needle = vm_id_or_name.strip().lower()
+        vm_records = [
+            r
+            for r in vm_records
+            if needle in (r.get("vm_id") or "").lower()
+            or needle in (r.get("vm_name") or "").lower()
+            or needle in (r.get("app_name") or "").lower()
+        ]
+    return vm_records
+
+
+def restore_vm_backup(backup_id: str) -> Dict[str, Any]:
+    """
+    Restores a VM configuration and disk files from a backup archive.
+    """
+    registry = get_app_backups_registry()
+    record = next((r for r in registry if r.get("id") == backup_id and r.get("type") == "vm"), None)
+    if not record:
+        raise ValueError(f"VM backup record '{backup_id}' not found.")
+
+    filepath = record.get("filepath", "")
+    if not os.path.exists(filepath):
+        raise FileNotFoundError(f"Backup archive file '{filepath}' no longer exists on host disk.")
+
+    with tarfile.open(filepath, "r:gz") as tar:
+        manifest_member = next((m for m in tar.getmembers() if m.name == "manifest.json"), None)
+        if not manifest_member:
+            raise ValueError("Invalid VM backup archive: manifest.json missing.")
+        f = tar.extractfile(manifest_member)
+        manifest = json.loads(f.read().decode("utf-8")) if f else {}
+
+        vm_config = manifest.get("vm_config") or {}
+        vm_id = vm_config.get("id") or record.get("vm_id")
+        vm_dir = vm_config.get("vm_dir") or os.path.join(DATA_DIR, "vms", vm_id)
+        os.makedirs(vm_dir, exist_ok=True)
+
+        for member in tar.getmembers():
+            if not is_safe_tar_member(member, vm_dir):
+                logger.warning(f"[VM Restore] Skipping unsafe tar member: {member.name}")
+                continue
+            if member.name.startswith("vm_data/"):
+                sub_name = member.name[len("vm_data/") :]
+                dest_path = os.path.join(vm_dir, sub_name)
+                os.makedirs(os.path.dirname(dest_path), exist_ok=True)
+                if member.isfile():
+                    extracted_file = tar.extractfile(member)
+                    if extracted_file:
+                        with open(dest_path, "wb") as out_f:
+                            out_f.write(extracted_file.read())
+
+    # Ensure VM is in vms.json
+    if vm_config:
+        vms_file = os.path.join(DATA_DIR, "vms.json")
+        vms_list = read_json(vms_file, default=[])
+        idx = next((i for i, v in enumerate(vms_list) if v.get("id") == vm_id), None)
+        if idx is not None:
+            vms_list[idx] = vm_config
+        else:
+            vms_list.append(vm_config)
+        atomic_write_json(vms_file, vms_list)
+
+    return {
+        "success": True,
+        "backup_id": backup_id,
+        "vm_id": vm_id,
+        "vm_name": record.get("vm_name"),
+        "message": f"Successfully restored VM '{record.get('vm_name')}' from backup.",
+    }
+
+
+def delete_vm_backup(backup_id: str) -> bool:
+    """Deletes a VM backup archive from disk and updates registry."""
+    record = next((r for r in get_app_backups_registry() if r.get("id") == backup_id and r.get("type") == "vm"), None)
+    if not record:
+        return False
+    filepath = record.get("filepath", "")
+    if filepath and os.path.exists(filepath):
+        try:
+            os.remove(filepath)
+        except Exception as e:
+            logger.warning(f"[VM Backup] Could not delete archive file {filepath}: {e}")
+    remove_app_backup_record(backup_id)
+    return True

@@ -2,18 +2,47 @@
  * Core UI Utilities
  */
 
+export function isFocusableElementVisible(el) {
+  if (!el || el.disabled) return false;
+  if (el.getAttribute('aria-hidden') === 'true') return false;
+  if (el.hasAttribute('hidden')) return false;
+  if (el.style && (el.style.display === 'none' || el.style.visibility === 'hidden')) return false;
+
+  // Filter out elements residing inside hidden containers or inactive tabs
+  if (el.closest?.('[aria-hidden="true"], [hidden], .tab-pane:not(.active), .mgmt-tab-pane:not(.active), .mgmt-content-pane:not(.active)')) {
+    return false;
+  }
+  if (el.closest?.('[style*="display: none"], [style*="display:none"], [style*="visibility: hidden"], [style*="visibility:hidden"]')) {
+    return false;
+  }
+
+  // Modern browser checkVisibility API when available
+  if (typeof el.checkVisibility === 'function') {
+    try {
+      if (!el.checkVisibility({ checkOpacity: true, checkVisibilityCSS: true })) {
+        return false;
+      }
+    } catch (_) {
+      if (!el.checkVisibility()) return false;
+    }
+  }
+
+  // In standard browser engines, elements detached or hidden return null offsetParent
+  const isJSDOM = typeof navigator !== 'undefined' && (/jsdom/i.test(navigator.userAgent) || Boolean(window._jsdom));
+  if (!isJSDOM && el.offsetParent === null && el.style?.position !== 'fixed') {
+    return false;
+  }
+
+  return true;
+}
+
 export function trapFocus(element, onClose = null) {
   if (!element) return () => {};
 
   const FOCUSABLE_SELECTOR = 'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
   function getFocusableElements() {
-    return Array.from(element.querySelectorAll(FOCUSABLE_SELECTOR)).filter((el) => {
-      if (el.disabled) return false;
-      if (el.getAttribute('aria-hidden') === 'true') return false;
-      if (el.style && el.style.display === 'none') return false;
-      return true;
-    });
+    return Array.from(element.querySelectorAll(FOCUSABLE_SELECTOR)).filter(isFocusableElementVisible);
   }
 
   function onKeyDown(e) {

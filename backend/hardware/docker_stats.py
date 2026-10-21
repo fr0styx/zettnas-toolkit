@@ -66,10 +66,16 @@ class UnixHTTPConnection(http.client.HTTPConnection):
         self.sock.connect(self.socket_path)
 
 
-def _parse_ports_and_webui(raw_ports: list, labels: dict) -> Tuple[List[Dict[str, Any]], Optional[int], Optional[str]]:
+def _parse_ports_and_webui(
+    raw_ports: list,
+    labels: dict,
+    network_mode: str = "",
+    exposed_ports: Optional[dict] = None,
+) -> Tuple[List[Dict[str, Any]], Optional[int], Optional[str]]:
     """
     Parses container port bindings into a deduplicated, sorted list and resolves
     the primary Web UI port and URL template using universal heuristics.
+    Supports bridge/NAT published ports and host-network exposed ports.
     """
     parsed = []
     seen = set()
@@ -86,8 +92,26 @@ def _parse_ports_and_webui(raw_ports: list, labels: dict) -> Tuple[List[Dict[str
                     "private_port": priv,
                     "type": proto,
                     "ip": p.get("IP", "0.0.0.0"),
+                    "is_host_network": p.get("is_host_network", False),
                 }
             )
+
+    is_host = network_mode == "host" or "host" in str(network_mode).lower()
+    if not parsed and is_host and exposed_ports:
+        for ep in (exposed_ports or {}).keys():
+            port_part = ep.split("/")[0] if "/" in ep else ep
+            proto_part = ep.split("/")[1] if "/" in ep else "tcp"
+            if port_part.isdigit():
+                port_num = int(port_part)
+                parsed.append(
+                    {
+                        "public_port": port_num,
+                        "private_port": port_num,
+                        "type": proto_part.lower(),
+                        "ip": "host",
+                        "is_host_network": True,
+                    }
+                )
 
     # Sort so public ports appear first, ordered by port number
     parsed.sort(key=lambda x: (x["public_port"] is None, x["public_port"] or 0))
@@ -345,11 +369,12 @@ def _docker_telemetry_worker():
                     time.sleep(0.5)
                 continue
 
-            # Limit parallel queries to avoid burdening Docker daemon
-            cids = [c["Id"] for c in running if "Id" in c][:16]
-            with concurrent.futures.ThreadPoolExecutor(max_workers=min(4, len(cids))) as pool:
+            # Dynamic worker querying all running containers with adaptive concurrency
+            cids = [c["Id"] for c in running if "Id" in c]
+            max_parallel = min(8, max(2, len(cids) // 4)) if cids else 2
+            with concurrent.futures.ThreadPoolExecutor(max_workers=min(max_parallel, len(cids))) as pool:
                 future_to_cid = {pool.submit(_fetch_container_telemetry, cid): cid for cid in cids}
-                for fut in concurrent.futures.as_completed(future_to_cid, timeout=12.0):
+                for fut in concurrent.futures.as_completed(future_to_cid, timeout=15.0):
                     cid = future_to_cid[fut]
                     try:
                         telemetry = fut.result()
@@ -431,17 +456,23 @@ def read_docker_containers(force: bool = False) -> List[Dict[str, Any]]:
             labels = c.get("Labels", {}) or {}
             raw_mounts = c.get("Mounts", []) or []
 
-            # Ports & Universal WebUI resolution
-            ports, primary_port, webui_url = _parse_ports_and_webui(raw_ports, labels)
-
             # Stack & Origin classification
             stack, service, managed_by = _classify_stack(labels)
 
-            # Inspect data for hardware badges (fast cached query)
+            # Inspect data for hardware badges, networking & exposed ports (fast cached query)
             inspect_info = _fetch_container_inspect(cid_short, conn=conn)
             devices = inspect_info.get("HostConfig", {}).get("Devices", []) or []
             env = inspect_info.get("Config", {}).get("Env", []) or []
             runtime = inspect_info.get("HostConfig", {}).get("Runtime", "")
+            net_mode = c.get("HostConfig", {}).get("NetworkMode") or inspect_info.get("HostConfig", {}).get(
+                "NetworkMode", ""
+            )
+            exposed_ports = inspect_info.get("Config", {}).get("ExposedPorts") or {}
+
+            # Ports & Universal WebUI resolution (supports bridge NAT and host-mode exposed ports)
+            ports, primary_port, webui_url = _parse_ports_and_webui(
+                raw_ports, labels, network_mode=net_mode, exposed_ports=exposed_ports
+            )
 
             # HAL hardware badges (GPU, ROCm, NVIDIA, Coral, Serial)
             badges = _extract_hardware_badges(raw_mounts, devices, env, runtime=runtime)
@@ -467,6 +498,7 @@ def read_docker_containers(force: bool = False) -> List[Dict[str, Any]]:
                     "stack": stack,
                     "service": service,
                     "managed_by": managed_by,
+                    "network_mode": net_mode,
                     "ports": ports,
                     "primary_port": primary_port,
                     "webui_url": webui_url,

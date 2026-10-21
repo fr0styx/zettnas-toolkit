@@ -814,3 +814,180 @@ def failsafe_release_fans(reason="shutdown", lock=False):
         return True
 
     return False
+
+
+# ---- Automated Acoustic Fan Curve Calibration Sweep ----
+
+_calibration_lock = threading.Lock()
+_calibration_stop_event = threading.Event()
+_calibration_thread: Optional[threading.Thread] = None
+_calibration_state: Dict[str, Any] = {
+    "running": False,
+    "current_pwm": 0,
+    "progress_pct": 0,
+    "step": 0,
+    "total_steps": 0,
+    "results": [],
+    "completed_at": None,
+    "error": None,
+}
+
+
+def get_acoustic_sweep_status() -> Dict[str, Any]:
+    """Returns the current state and results of the acoustic fan sweep calibration."""
+    with _calibration_lock:
+        return dict(_calibration_state)
+
+
+def stop_acoustic_sweep() -> Dict[str, Any]:
+    """Stops the ongoing acoustic fan calibration sweep and restores automatic fan control."""
+    global _calibration_thread
+    _calibration_stop_event.set()
+    with _calibration_lock:
+        was_running = _calibration_state["running"]
+        _calibration_state["running"] = False
+    if was_running:
+        try:
+            set_fan_pwm("auto")
+        except Exception:
+            pass
+    return {"success": True, "message": "Acoustic sweep stopped"}
+
+
+def _run_acoustic_sweep_worker(step_duration: float, pwm_step: int, pwms: Optional[List[int]] = None):
+    global _calibration_state
+    _calibration_stop_event.clear()
+
+    # Generate PWM steps from FAN_MIN_PWM (58) to FAN_MAX_PWM (183)
+    if pwms is None:
+        pwms = list(range(FAN_MIN_PWM, FAN_MAX_PWM, max(1, pwm_step)))
+        if not pwms or pwms[-1] != FAN_MAX_PWM:
+            pwms.append(FAN_MAX_PWM)
+
+    with _calibration_lock:
+        _calibration_state["running"] = True
+        _calibration_state["step"] = 0
+        _calibration_state["total_steps"] = len(pwms)
+        _calibration_state["progress_pct"] = 0
+        _calibration_state["results"] = []
+        _calibration_state["error"] = None
+        _calibration_state["completed_at"] = None
+
+    results = []
+    try:
+        for idx, pwm in enumerate(pwms):
+            if _calibration_stop_event.is_set():
+                break
+
+            with _calibration_lock:
+                _calibration_state["current_pwm"] = pwm
+                _calibration_state["step"] = idx + 1
+                _calibration_state["progress_pct"] = int(round((idx / len(pwms)) * 100))
+
+            # Command chassis disk fans to test PWM while keeping CPU fan safe
+            pct_val = max(10, min(100, int(round((pwm / FAN_MAX_PWM) * 100))))
+            custom_pwms = {"pwm1": pwm, "pwm2": pwm, 1: pwm, 2: pwm}
+            try:
+                set_fan_pwm("manual", manual_pct=pct_val, custom_pwms=custom_pwms)
+            except Exception as e:
+                logger.warning(f"[Acoustic Sweep] Could not apply PWM {pwm}: {e}")
+
+            # Wait for stabilization (sampled across step_duration)
+            sample_interval = min(1.0, max(0.02, step_duration / 5.0))
+            deadline = time.time() + step_duration
+            rpm_samples: List[List[int]] = []
+
+            while time.time() < deadline:
+                if _calibration_stop_event.is_set():
+                    break
+                time.sleep(sample_interval)
+                sample_rpms = read_fans()
+                if sample_rpms:
+                    rpm_samples.append(sample_rpms)
+
+            if _calibration_stop_event.is_set():
+                break
+
+            # Calculate stability metrics across samples
+            latest_rpms = rpm_samples[-1] if rpm_samples else read_fans()
+            primary_readings = [s[0] for s in rpm_samples if s] if rpm_samples else [0]
+            avg_rpm = int(round(sum(primary_readings) / len(primary_readings))) if primary_readings else 0
+            rpm_jitter = max(primary_readings) - min(primary_readings) if primary_readings else 0
+
+            # Resonance detection: elevated jitter at operational RPM
+            resonance_detected = rpm_jitter > 120 and avg_rpm > 500
+
+            step_res = {
+                "pwm": pwm,
+                "pct": pct_val,
+                "rpms": latest_rpms,
+                "rpm_avg": avg_rpm,
+                "rpm_jitter": rpm_jitter,
+                "resonance_detected": resonance_detected,
+                "stability_score": max(0, min(100, 100 - int(rpm_jitter / 2))),
+            }
+            results.append(step_res)
+            with _calibration_lock:
+                _calibration_state["results"] = list(results)
+
+    except Exception as exc:
+        logger.error(f"[Acoustic Sweep] Calibration sweep error: {exc}")
+        with _calibration_lock:
+            _calibration_state["error"] = str(exc)
+    finally:
+        # Restore automatic fan control
+        try:
+            set_fan_pwm("auto")
+        except Exception:
+            pass
+        with _calibration_lock:
+            _calibration_state["running"] = False
+            if not _calibration_stop_event.is_set():
+                _calibration_state["progress_pct"] = 100
+                _calibration_state["completed_at"] = int(time.time())
+
+
+def start_acoustic_sweep(
+    step_duration: float = 5.0, pwm_step: int = 25, run_in_background: bool = True
+) -> Dict[str, Any]:
+    """
+    Initiates an automated acoustic fan calibration sweep from FAN_MIN_PWM to FAN_MAX_PWM.
+    """
+    global _calibration_thread
+    _calibration_stop_event.clear()
+
+    # Pre-calculate PWM steps
+    pwms = list(range(FAN_MIN_PWM, FAN_MAX_PWM, max(1, pwm_step)))
+    if not pwms or pwms[-1] != FAN_MAX_PWM:
+        pwms.append(FAN_MAX_PWM)
+
+    with _calibration_lock:
+        if _calibration_state["running"]:
+            return {"success": False, "error": "Calibration sweep is already running"}
+        _calibration_state["running"] = True
+        _calibration_state["step"] = 1
+        _calibration_state["total_steps"] = len(pwms)
+        _calibration_state["progress_pct"] = 0
+        _calibration_state["current_pwm"] = FAN_MIN_PWM
+        _calibration_state["results"] = []
+        _calibration_state["error"] = None
+        _calibration_state["completed_at"] = None
+
+    if run_in_background:
+        _calibration_thread = threading.Thread(
+            target=_run_acoustic_sweep_worker,
+            args=(step_duration, pwm_step, pwms),
+            daemon=True,
+            name="AcousticFanSweepThread",
+        )
+        _calibration_thread.start()
+        return {
+            "success": True,
+            "message": "Acoustic calibration sweep started",
+            "step_duration": step_duration,
+            "pwm_step": pwm_step,
+            "status": get_acoustic_sweep_status(),
+        }
+    else:
+        _run_acoustic_sweep_worker(step_duration, pwm_step, pwms)
+        return get_acoustic_sweep_status()

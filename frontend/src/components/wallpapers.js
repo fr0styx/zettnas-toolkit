@@ -28,6 +28,11 @@ export function setWallpaper(url, filename = null) {
       wpLayer.style.setProperty('background-image', `url('${url}')`);
       wpLayer.style.display = 'block';
     }
+    const dtWp = typeof document !== 'undefined' ? document.getElementById('dt-wallpaper') : null;
+    if (dtWp) {
+      dtWp.style.setProperty('background-image', `url('${url}')`);
+      dtWp.style.display = 'block';
+    }
     document.body.style.setProperty('background-image', `url('${url}')`, 'important');
     document.body.style.setProperty('background-size', 'cover', 'important');
     document.body.style.setProperty('background-position', 'center center', 'important');
@@ -40,6 +45,10 @@ export function setWallpaper(url, filename = null) {
     if (wpLayer) {
       wpLayer.style.removeProperty('background-image');
       wpLayer.style.display = 'none';
+    }
+    const dtWp = typeof document !== 'undefined' ? document.getElementById('dt-wallpaper') : null;
+    if (dtWp) {
+      dtWp.style.removeProperty('background-image');
     }
     document.body.style.removeProperty('background-image');
     document.body.style.removeProperty('background-size');
@@ -266,6 +275,38 @@ export function renderWallpaperGallery(files, active, version) {
 
     galleryEl.appendChild(card);
   });
+
+  filterGalleryByCategory(_activeCategory);
+}
+
+let _activeCategory = 'all';
+
+export function filterGalleryByCategory(cat = 'all') {
+  _activeCategory = cat;
+  document.querySelectorAll('.wallpaper-cat-pill').forEach((pill) => {
+    pill.classList.toggle('active', (pill.dataset.cat || pill.dataset.category) === cat);
+  });
+  const cards = document.querySelectorAll('.wallpaper-card');
+  let visibleCount = 0;
+  cards.forEach((card) => {
+    const fn = (card.getAttribute('data-filename') || '').toLowerCase();
+    let isMatch = true;
+    if (cat === 'gradient') {
+      isMatch = !fn || fn.includes('gradient');
+    } else if (cat === 'scenic') {
+      isMatch = fn.includes('nature') || fn.includes('mountain') || fn.includes('fjord') || fn.includes('landscape') || fn.includes('sea') || fn.includes('lake') || fn.includes('sunset') || fn.includes('aurora') || fn.includes('forest');
+    } else if (cat === 'cyber') {
+      isMatch = fn.includes('cyber') || fn.includes('matrix') || fn.includes('neon') || fn.includes('tokyo') || fn.includes('synth') || fn.includes('future') || fn.includes('amethyst');
+    } else if (cat === 'oled') {
+      isMatch = fn.includes('oled') || fn.includes('dark') || fn.includes('black') || fn.includes('space') || fn.includes('star');
+    }
+    card.style.display = isMatch ? 'flex' : 'none';
+    if (isMatch) visibleCount++;
+  });
+  const countBadge = document.getElementById('wallpaper-count-badge');
+  if (countBadge) {
+    countBadge.textContent = `${visibleCount} Background${visibleCount === 1 ? '' : 's'}`;
+  }
 }
 
 export function loadWallpapers() {
@@ -314,7 +355,17 @@ if (typeof window !== 'undefined') {
 }
 
 export async function uploadAndApplyWallpaper(file) {
-  if (!file) return;
+  if (!file) return false;
+  const MAX_BYTES = 15 * 1024 * 1024; // 15MB limit
+  if (file.size && file.size > MAX_BYTES) {
+    showToast('File size exceeds 15MB limit. Please choose a smaller image.', 'error');
+    return false;
+  }
+  const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/gif', 'image/svg+xml'];
+  if (file.type && !validTypes.includes(file.type)) {
+    showToast('Unsupported file format. Please upload JPG, PNG, WEBP, or AVIF.', 'error');
+    return false;
+  }
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = async (ev) => {
@@ -369,6 +420,15 @@ export function initWallpapers() {
   if (defaultBtn) {
     defaultBtn.addEventListener('click', () => selectWallpaper(''));
   }
+
+  const catPills = document.querySelectorAll('.wallpaper-cat-pill');
+  catPills.forEach((pill) => {
+    pill.addEventListener('click', () => {
+      const cat = pill.dataset.cat || 'all';
+      catPills.forEach((p) => p.classList.toggle('active', p === pill));
+      filterGalleryByCategory(cat);
+    });
+  });
 
   if (selectDropdown) {
     selectDropdown.addEventListener('change', (e) => {
@@ -459,6 +519,10 @@ export function applyWallpaperReadability(dimPercent, blurPx, persist = true) {
     if (dimSlider && parseInt(dimSlider.value, 10) !== dimPercent) dimSlider.value = dimPercent;
     if (blurVal) blurVal.textContent = `${blurPx}px`;
     if (blurSlider && parseInt(blurSlider.value, 10) !== blurPx) blurSlider.value = blurPx;
+
+    if (typeof window !== 'undefined' && typeof window.syncDesktopTwinPreview === 'function') {
+      window.syncDesktopTwinPreview({ wallpaperDim: dimPercent, wallpaperBlur: blurPx });
+    }
   }
 
   if (persist) {
@@ -468,6 +532,7 @@ export function applyWallpaperReadability(dimPercent, blurPx, persist = true) {
     } catch (e) {}
   }
 }
+if (typeof window !== 'undefined') window.applyWallpaperReadability = applyWallpaperReadability;
 
 export function initWallpaperReadabilityControls() {
   const dimSlider = document.getElementById('wallpaper-dim-slider');
@@ -554,6 +619,15 @@ export function applyGlassSettings(blurPx, opacityPercent, radiusPx, glowEnabled
       btn.classList.toggle('active', isMatch);
       btn.setAttribute('aria-checked', isMatch ? 'true' : 'false');
     });
+
+    if (typeof window !== 'undefined' && typeof window.syncDesktopTwinPreview === 'function') {
+      window.syncDesktopTwinPreview({
+        glassBlur: blurPx,
+        glassOpacity: opacityPercent,
+        windowRadius: radiusPx,
+        windowGlow: glowEnabled
+      });
+    }
   }
 
   if (persist) {
@@ -565,6 +639,7 @@ export function applyGlassSettings(blurPx, opacityPercent, radiusPx, glowEnabled
     } catch (e) {}
   }
 }
+if (typeof window !== 'undefined') window.applyGlassSettings = applyGlassSettings;
 
 export function initGlassControls() {
   const blurSlider = document.getElementById('glass-blur-slider');
@@ -646,9 +721,42 @@ export function initGlassControls() {
     });
   }
 
+  const ecoToggle = document.getElementById('eco-mode-toggle');
+  let savedEco = false;
+  try {
+    const e = localStorage.getItem('zettnas_eco_mode');
+    if (e !== null) savedEco = (e === 'true');
+  } catch (err) {}
+
+  if (savedEco) {
+    document.body.setAttribute('data-performance-mode', 'eco');
+    if (ecoToggle) ecoToggle.checked = true;
+  }
+
+  if (ecoToggle) {
+    ecoToggle.checked = savedEco;
+    ecoToggle.addEventListener('change', (e) => {
+      const isEco = e.target.checked;
+      if (isEco) {
+        document.body.setAttribute('data-performance-mode', 'eco');
+      } else {
+        document.body.removeAttribute('data-performance-mode');
+      }
+      try {
+        localStorage.setItem('zettnas_eco_mode', isEco ? 'true' : 'false');
+      } catch (err) {}
+      showToast(isEco ? 'Eco Mode enabled: GPU blur disabled' : 'Eco Mode disabled: Glass blur restored', 'info');
+    });
+  }
+
   if (resetBtn) {
     resetBtn.addEventListener('click', () => {
       applyGlassSettings(24, 72, '12px', false, true);
+      if (ecoToggle) ecoToggle.checked = false;
+      document.body.removeAttribute('data-performance-mode');
+      try {
+        localStorage.removeItem('zettnas_eco_mode');
+      } catch (e) {}
       showToast('Glass and visual effects reset to defaults', 'info');
     });
   }

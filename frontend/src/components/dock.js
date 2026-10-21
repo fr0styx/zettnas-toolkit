@@ -541,7 +541,7 @@ export function applySavedBounds(dragEl, winId) {
   dragEl.style.top = `${clampedTop}px`;
   dragEl.style.transform = 'none';
 
-  if (id === 'console' || id === 'console-window' || dragEl.id === 'console-window') {
+  if (id === 'console' || id === 'console-window' || dragEl.id === 'console-window' || id === 'copy-toast' || dragEl.id === 'copy-toast') {
     dragEl.style.removeProperty('width');
     dragEl.style.removeProperty('height');
     if (saved && (saved.width || saved.height)) {
@@ -818,6 +818,7 @@ export function bringToFront(windowEl) {
     windowEl.id === 'cloud-remote-window' ||
     windowEl.id === 'modal-vm-edit' ||
     windowEl.id === 'modal-vm-create' ||
+    windowEl.id === 'modal-vm-snapshots' ||
     windowEl.classList?.contains('chassis-front-panel') ||
     windowEl.classList?.contains('management-window') ||
     windowEl.classList?.contains('mgmt-app-window') ||
@@ -828,7 +829,7 @@ export function bringToFront(windowEl) {
     windowEl.classList?.contains('cloud-remote-window') ||
     windowEl.classList?.contains('vm-modal-window') ||
     windowEl.classList?.contains('os-window') ||
-    windowEl.closest?.('#console-modal-overlay, #management-modal-overlay, #file-manager-window, #notif-center-panel, #container-inspector-window, #container-inspector-overlay, #stack-inspector-window, #stack-inspector-overlay, #stack-picker-window, #stack-picker-overlay, #app-deploy-modal-window, #app-deploy-modal-overlay, #modal-new-cloud-remote, #modal-vm-edit, #modal-vm-create')
+    windowEl.closest?.('#console-modal-overlay, #management-modal-overlay, #file-manager-window, #notif-center-panel, #container-inspector-window, #container-inspector-overlay, #stack-inspector-window, #stack-inspector-overlay, #stack-picker-window, #stack-picker-overlay, #app-deploy-modal-window, #app-deploy-modal-overlay, #modal-new-cloud-remote, #modal-vm-edit, #modal-vm-create, #modal-vm-snapshots')
   );
 
   // Protect standalone modal backdrops & modal dialogs from being demoted into window z-index layer
@@ -890,7 +891,7 @@ export function bringToFront(windowEl) {
   windowEl.style.zIndex = zStr;
 
   // Elevate parent overlay wrapper if applicable
-  const parentOverlay = windowEl.closest?.('#console-modal-overlay, #management-modal-overlay, #container-inspector-overlay, #smart-modal-overlay, #stack-inspector-overlay, #stack-picker-overlay, #app-deploy-modal-overlay, #modal-new-cloud-remote, #vm-console-overlay, #vm-iso-manager-overlay, .smart-modal-backdrop');
+  const parentOverlay = windowEl.closest?.('#console-modal-overlay, #management-modal-overlay, #container-inspector-overlay, #smart-modal-overlay, #stack-inspector-overlay, #stack-picker-overlay, #app-deploy-modal-overlay, #modal-new-cloud-remote, #vm-console-overlay, #vm-iso-manager-overlay');
   if (parentOverlay && parentOverlay !== windowEl) {
     parentOverlay.style.zIndex = zStr;
   }
@@ -938,6 +939,9 @@ export const handleWindowActivation = (e) => {
   const windowEl = e.target.closest?.(DESKTOP_WINDOW_SELECTOR);
   if (windowEl) {
     bringToFront(windowEl);
+    document.querySelectorAll('.chassis-hero-box').forEach((el) => {
+      try { el.blur(); } catch (_) {}
+    });
   } else if (e.target.closest?.('#desktop') && !e.target.closest?.(DESKTOP_WINDOW_SELECTOR)) {
     // User clicked on empty desktop wallpaper or desktop icons/widgets
     document.querySelectorAll('.active-window').forEach((w) => w.classList.remove('active-window'));
@@ -1006,7 +1010,7 @@ export function makeDraggable(dragEl, handleEl, customId) {
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(() => {
         const rect = dragEl.getBoundingClientRect();
-        if (rect.width > 50 && rect.height > 50) {
+        if (rect.width > 50 && rect.height > 50 && winId !== 'copy-toast') {
           saveWindowBounds(winId, {
             width: Math.round(rect.width),
             height: Math.round(rect.height),
@@ -1035,12 +1039,22 @@ export function makeDraggable(dragEl, handleEl, customId) {
         handleEl.setPointerCapture?.(pointerId);
       } catch (_) {}
 
+      const isLeftPinnedMobile = dragEl.classList.contains('os-window') ||
+        dragEl.classList.contains('file-manager-window') ||
+        dragEl.classList.contains('vm-manager-window') ||
+        dragEl.classList.contains('containers-manager-window') ||
+        (window.innerWidth <= 768 && !dragEl.style.left?.includes('50%'));
+      const hasTranslateX50 = !isLeftPinnedMobile && Boolean((dragEl.style.transform || '').includes('translateX(-50%)') || dragEl.style.left === '50%');
+      const xPrefix = hasTranslateX50 ? 'translateX(-50%) ' : '';
+
+      dragEl.classList.add('window-dragging');
+
       const onTouchMove = (eMove) => {
         const dy = eMove.clientY - touchStartY;
         if (dy > 0) {
           currentDy = dy;
           dragEl.style.transition = 'none';
-          dragEl.style.transform = `translateX(-50%) translateY(${Math.round(dy * 0.75)}px)`;
+          dragEl.style.transform = `${xPrefix}translateY(${Math.round(dy * 0.75)}px)`;
           dragEl.style.opacity = String(Math.max(0.3, 1 - (dy / 300)));
         }
       };
@@ -1058,9 +1072,10 @@ export function makeDraggable(dragEl, handleEl, customId) {
         if (currentDy >= 70) {
           // Threshold passed: smooth spring exit & dismissal
           dragEl.style.transition = 'transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease';
-          dragEl.style.transform = 'translateX(-50%) translateY(260px)';
+          dragEl.style.transform = `${xPrefix}translateY(260px)`;
           dragEl.style.opacity = '0';
           setTimeout(() => {
+            dragEl.classList.remove('window-dragging');
             dragEl.style.removeProperty('transform');
             dragEl.style.removeProperty('opacity');
             dragEl.style.removeProperty('transition');
@@ -1075,13 +1090,16 @@ export function makeDraggable(dragEl, handleEl, customId) {
         } else if (currentDy > 0) {
           // Snap back to resting position
           dragEl.style.transition = 'transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease';
-          dragEl.style.transform = 'translateX(-50%) translateY(0)';
+          dragEl.style.transform = hasTranslateX50 ? 'translateX(-50%) translateY(0)' : 'translateY(0)';
           dragEl.style.opacity = '1';
           setTimeout(() => {
+            dragEl.classList.remove('window-dragging');
             dragEl.style.removeProperty('transform');
             dragEl.style.removeProperty('opacity');
             dragEl.style.removeProperty('transition');
-          }, 220);
+          }, 200);
+        } else {
+          dragEl.classList.remove('window-dragging');
         }
       };
 
@@ -1134,8 +1152,8 @@ export function makeDraggable(dragEl, handleEl, customId) {
       eMove.preventDefault();
       const dx = eMove.clientX - initialMouseX;
       const dy = eMove.clientY - initialMouseY;
-      dragEl.style.left = (startX + dx) + 'px';
-      dragEl.style.top = (startY + dy) + 'px';
+      dragEl.style.left = `${Math.round(startX + dx)}px`;
+      dragEl.style.top = `${Math.round(startY + dy)}px`;
 
       const zone = evaluateSnapZone(eMove.clientX, eMove.clientY);
       if (zone) {
@@ -2079,7 +2097,10 @@ export const DockManager = {
               <svg class="ic ic-sm" id="dock-tooltip-icon"><use href="#i-chip"/></svg>
               <span id="dock-tooltip-text">Window</span>
             </div>
-            <span class="dock-tooltip-status" id="dock-tooltip-badge">Active</span>
+            <div class="dock-tooltip-actions">
+              <span class="dock-tooltip-status" id="dock-tooltip-badge">Active</span>
+              <button type="button" class="dock-tooltip-close-btn" id="dock-tooltip-close-btn" title="${t('dock.close_window', 'Close Window')}" aria-label="${t('dock.close_window', 'Close Window')}">✕</button>
+            </div>
           </div>
           <div class="dock-tooltip-preview" id="dock-tooltip-preview-content"></div>
         `;
@@ -2091,103 +2112,130 @@ export const DockManager = {
       return tooltip;
     }
 
-    function generatePreviewForWindow(id) {
+    const APP_DESCRIPTIONS = {
+      fm: () => t('dock.desc_fm', 'File Explorer & Storage Shares'),
+      containers: () => t('dock.desc_containers', 'Docker Containers & Compose Stacks'),
+      vm: () => t('dock.desc_vm', 'KVM Virtual Machine Management'),
+      management: () => t('dock.desc_mgmt', 'Mission Control & System Settings'),
+      console: () => t('dock.desc_console', 'ZettNAS Appliance LCD Display'),
+      smart: () => t('dock.desc_smart', 'S.M.A.R.T. Health & Diagnostics'),
+      personalization: () => t('dock.desc_personalization', 'Appearance, Themes & Wallpapers'),
+      'cloud-remote': () => t('dock.desc_remotes', 'Cloud Storage & Remote Mounts'),
+      zettai: () => t('dock.desc_zettai', 'AI Knowledge & Visual Search'),
+      'app-deploy': () => 'App Deployment & Compose Stacks',
+    };
+
+    function resolveAppWindow(id) {
+      if (DockManager.windows[id]?.el) {
+        return DockManager.windows[id].el;
+      }
+      if (id === 'management') {
+        return document.getElementById('management-window') || document.querySelector('.management-window');
+      }
+      if (id === 'containers') {
+        return document.getElementById('containers-manager-window') || document.querySelector('.containers-manager-window');
+      }
+      if (id === 'vm') {
+        return document.getElementById('vm-manager-window') || document.querySelector('.vm-manager-window');
+      }
+      if (id === 'fm') {
+        return document.querySelector('.file-manager-window.active-window') || document.getElementById('file-manager-window') || document.querySelector('.file-manager-window');
+      }
       if (id === 'console') {
-        const screenEl = document.getElementById('screen');
-        if (screenEl) {
-          const container = document.createElement('div');
-          container.className = 'mini-screen-scaler';
-          const clone = screenEl.cloneNode(true);
-          clone.removeAttribute('id');
-          clone.classList.add('mini-preview-inner');
-          clone.querySelectorAll('[id]').forEach((el) => el.removeAttribute('id'));
-          container.appendChild(clone);
-          return container;
+        return document.getElementById('screen-window') || document.getElementById('screen');
+      }
+      if (id === 'smart') {
+        return document.getElementById('smart-modal-window') || document.querySelector('.smart-modal-window');
+      }
+      if (id === 'personalization') {
+        return document.getElementById('personalization-window') || document.querySelector('.personalization-window');
+      }
+      if (id === 'cloud-remote') {
+        return document.getElementById('cloud-remote-window');
+      }
+      if (id === 'app-deploy') {
+        return document.getElementById('app-deploy-modal-window');
+      }
+      return document.getElementById(id) || document.getElementById(`${id}-window`);
+    }
+
+    function isAppWindowRunning(id, winEl) {
+      if (DockManager.windows[id]) {
+        return !DockManager.windows[id].closed;
+      }
+      if (id === 'fm') {
+        const isFmAppId = (wId) => wId === 'fm' || (typeof wId === 'string' && (wId.startsWith('fm-') || wId.startsWith('file-manager-window')));
+        return Object.entries(DockManager.windows).some(([k, v]) => isFmAppId(k) && !v.closed);
+      }
+      if (winEl) {
+        const overlay = winEl.closest?.('.os-modal-overlay, .smart-modal-overlay, #console-modal-overlay, #management-modal-overlay') || winEl;
+        return overlay.style.display !== 'none' || overlay.classList.contains('open');
+      }
+      return false;
+    }
+
+    function generatePreviewForWindow(id, isRunning = true, isMinimized = false, title = '', icon = '') {
+      if (id === 'home') {
+        const container = document.createElement('div');
+        container.className = 'dock-preview-desktop-home';
+        const bgUrl = document.documentElement.style.getPropertyValue('--wallpaper-image') || '';
+        if (bgUrl && bgUrl !== 'none') {
+          container.style.backgroundImage = bgUrl;
+        } else {
+          container.style.background = 'radial-gradient(ellipse at 50% 40%, #1e293b 0%, #0a0e17 100%)';
         }
-      } else if (id === 'smart') {
-        const container = document.createElement('div');
-        container.className = 'dock-preview-summary';
-        const model = escapeHtml(document.getElementById('smart-meta-model')?.textContent || 'Drive Health');
-        const health = escapeHtml(document.getElementById('smart-meta-health')?.textContent || 'PASSED');
-        const hours = escapeHtml(document.getElementById('smart-meta-hours')?.textContent || '--');
-        const devTitle = escapeHtml(document.getElementById('smart-modal-title')?.textContent || 'Diagnostics');
+        const winIds = Object.keys(DockManager.windows);
+        const activeWins = winIds.filter((k) => !DockManager.windows[k].closed && !DockManager.windows[k].minimized);
+        const countStr = `${activeWins.length} ${t('dock.active_windows_count', 'Active Windows')}`;
         container.innerHTML = `
-          <div style="font-size:10px; font-weight:700; color:#fff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${devTitle}</div>
-          <div style="display:flex; justify-content:space-between; align-items:center; font-size:9px;">
-            <span style="color:var(--muted);">Status:</span>
-            <strong style="color:${health.includes('PASS') ? 'var(--ok)' : 'var(--crit)'}; font-weight:800;">${health}</strong>
+          <div class="dock-desktop-home-card">
+            <span style="font-size:18px; line-height:1;">🖥️</span>
+            <strong>${escapeHtml(t('dock.desktop_workspace', 'Desktop Workspace'))}</strong>
+            <span>${escapeHtml(countStr)}</span>
           </div>
-          <div style="display:flex; justify-content:space-between; align-items:center; font-size:9px;">
-            <span style="color:var(--muted);">Power-on:</span>
-            <span style="color:#cbd5e1;">${hours} hrs</span>
+          <div class="dock-preview-hover-overlay">
+            <div class="dock-preview-action-chip">
+              <span>↩ ${escapeHtml(t('dock.click_to_focus', 'Click to Bring to Front'))}</span>
+            </div>
           </div>
         `;
+        container.addEventListener('click', (e) => {
+          e.stopPropagation();
+          hideDockTooltip();
+          const anyOpen = winIds.some((k) => !DockManager.windows[k].minimized);
+          if (anyOpen) {
+            winIds.forEach((k) => DockManager.minimize(k));
+          } else {
+            winIds.forEach((k) => DockManager.restore(k));
+          }
+        });
         return container;
-      } else if (id === 'management') {
+      }
+
+      if (id === 'spotlight') {
         const container = document.createElement('div');
-        container.className = 'dock-preview-summary';
-        container.style.cssText = 'display:flex; align-items:center; gap:8px; height:100%;';
+        container.className = 'dock-preview-app-splash';
         container.innerHTML = `
-          <img src="img/chassis-d6u.webp" style="width:38px; height:auto; border-radius:4px; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));" alt="Chassis">
-          <div style="display:flex; flex-direction:column; gap:2px; overflow:hidden;">
-            <div style="font-size:10px; font-weight:700; color:#fff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Mission Control</div>
-            <div style="font-size:8px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Profiles • Containers • Storage</div>
+          <div class="dock-splash-icon-ring"><span style="font-size:20px; line-height:1;">🔍</span></div>
+          <div class="dock-splash-title">Command Palette</div>
+          <div class="dock-splash-desc">Press Cmd+K to search apps, files, containers & settings</div>
+          <div class="dock-preview-action-chip" style="margin-top:4px;">
+            <span>▶ Open Spotlight</span>
           </div>
         `;
+        container.addEventListener('click', (e) => {
+          e.stopPropagation();
+          hideDockTooltip();
+          openSpotlight();
+        });
         return container;
-      } else if (id === 'copy') {
+      }
+
+      if (id === 'notif') {
         const container = document.createElement('div');
-        container.className = 'dock-preview-summary';
-        const status = escapeHtml(document.getElementById('copy-toast-status')?.textContent || 'Ingest');
-        const pct = escapeHtml(document.getElementById('copy-toast-pct')?.textContent || '0%');
-        const file = escapeHtml(document.getElementById('copy-toast-file')?.textContent || 'Preparing...');
-        container.innerHTML = `
-          <div style="display:flex; justify-content:space-between; align-items:center; font-size:9px;">
-            <strong style="color:#fff;">${status}</strong>
-            <strong style="color:var(--ok2);">${pct}</strong>
-          </div>
-          <div style="background:rgba(255,255,255,0.12); height:4px; border-radius:2px; overflow:hidden; margin:4px 0;">
-            <div style="background:var(--ok2); height:100%; width:${pct};"></div>
-          </div>
-          <div style="font-size:8px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${file}</div>
-        `;
-        return container;
-      } else if (id === 'fb' || id === 'folder') {
-        const container = document.createElement('div');
-        container.className = 'dock-preview-summary';
-        const path = escapeHtml(document.getElementById('fb-current-path')?.textContent || '/mnt/user');
-        container.innerHTML = `
-          <div style="font-size:9px; font-weight:700; color:#fff;">Folder Destination</div>
-          <div style="font-family:monospace; font-size:8px; color:var(--ok2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-top:3px;">${path}</div>
-        `;
-        return container;
-      } else if (id === 'fm') {
-        const container = document.createElement('div');
-        container.className = 'dock-preview-summary';
-        const pathInput = document.getElementById('fm-path-input');
-        const path = pathInput ? pathInput.value : '/mnt/user';
-        container.innerHTML = `
-          <div style="font-size:10px; font-weight:700; color:#fff;">File Explorer</div>
-          <div style="font-family:monospace; font-size:9px; color:var(--accent-cyan, #0ea5e9); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-top:3px;">${path.replace(/</g, '&lt;')}</div>
-        `;
-        return container;
-      } else if (id === 'home') {
-        const container = document.createElement('div');
-        container.className = 'dock-preview-summary';
-        container.style.cssText = 'display:flex; align-items:center; gap:8px; height:100%;';
-        container.innerHTML = `
-          <img src="img/chassis-d6u.webp" style="width:42px; height:auto; border-radius:4px; filter:drop-shadow(0 2px 5px rgba(0,0,0,0.5));" alt="Chassis">
-          <div style="display:flex; flex-direction:column; gap:2px;">
-            <span style="font-size:10px; font-weight:700; color:#fff;">Desktop Home</span>
-            <span style="font-size:8px; color:var(--muted);">Click to clear / minimize all</span>
-          </div>
-        `;
-        return container;
-      } else if (id === 'notif') {
-        const container = document.createElement('div');
-        container.className = 'dock-preview-summary';
-        container.style.cssText = 'cursor:pointer;';
-        container.addEventListener('click', () => {
+        container.className = 'dock-preview-notif-feed';
+        container.addEventListener('click', (e) => {
+          e.stopPropagation();
           hideDockTooltip();
           if (window.toggleNotificationCenter) window.toggleNotificationCenter();
         });
@@ -2198,54 +2246,221 @@ export const DockManager = {
 
         if (events.length === 0) {
           container.innerHTML = `
-            <div style="display:flex; align-items:center; gap:6px;">
-              <span style="font-size:12px;">🔔</span>
-              <strong style="font-size:10px; color:#fff;">Notification Center</strong>
+            <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; gap:6px; text-align:center;">
+              <span style="font-size:24px;">🔔</span>
+              <strong style="font-size:11px; color:#fff;">${escapeHtml(t('dock.notifications', 'Notification Center'))}</strong>
+              <span style="font-size:9.5px; color:#94a3b8;">No recent system notifications</span>
             </div>
-            <div style="font-size:8.5px; color:var(--muted); margin-top:2px;">No recent system notifications</div>
           `;
           return container;
         }
 
-        const unread = events.filter((e) => !isEventChecked(e) && e.ts > clearedEventsTs);
-        const topEvent = unread.length > 0 ? unread[0] : events[0];
-
-        let icon = 'ℹ️';
-        let color = '#93c5fd';
-        if (topEvent.level === 'error') { icon = '❌'; color = 'var(--crit, #ff5c5c)'; }
-        else if (topEvent.level === 'warning') { icon = '⚠️'; color = 'var(--warn, #f5a623)'; }
-        else if (topEvent.level === 'success') { icon = '✅'; color = 'var(--ok2, #25c2a0)'; }
-
-        const title = escapeHtml(topEvent.title || 'Notification');
-        const msg = escapeHtml(topEvent.message || '');
-        const timeStr = topEvent.ts
-          ? new Date(topEvent.ts * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-          : '';
-
-        container.innerHTML = `
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:6px;">
-            <div style="display:flex; align-items:center; gap:5px; min-width:0; overflow:hidden;">
-              <span style="font-size:11px; line-height:1; flex-shrink:0;">${icon}</span>
-              <strong style="font-size:10px; color:${color}; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${title}</strong>
+        const itemsHtml = events.slice(0, 2).map((ev) => {
+          let nIcon = 'ℹ️';
+          let col = '#93c5fd';
+          if (ev.level === 'error') { nIcon = '❌'; col = 'var(--crit, #ff5c5c)'; }
+          else if (ev.level === 'warning') { nIcon = '⚠️'; col = 'var(--warn, #f5a623)'; }
+          else if (ev.level === 'success') { nIcon = '✅'; col = 'var(--ok2, #25c2a0)'; }
+          const timeStr = ev.ts ? new Date(ev.ts * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+          return `
+            <div class="dock-notif-feed-item">
+              <span style="font-size:12px; line-height:1; flex-shrink:0;">${nIcon}</span>
+              <div style="min-width:0; flex:1; overflow:hidden;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <strong class="dock-notif-feed-item-title" style="color:${col};">${escapeHtml(ev.title || 'Alert')}</strong>
+                  <span style="font-size:8px; color:var(--muted);">${timeStr}</span>
+                </div>
+                <div class="dock-notif-feed-item-msg">${escapeHtml(ev.message || '')}</div>
+              </div>
             </div>
-            <span style="font-size:8px; color:var(--muted); flex-shrink:0;">${timeStr}</span>
-          </div>
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:4px; margin-top:2px;">
-            <span style="font-size:9px; color:#cbd5e1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1;">${msg}</span>
-            ${unread.length > 1 ? `<span style="font-size:8px; color:var(--accent-cyan, #0ea5e9); font-weight:700; white-space:nowrap; flex-shrink:0;">+${unread.length - 1} more</span>` : ''}
-          </div>
-        `;
-        return container;
-      } else if (KNOWN_APPS[id]) {
-        const container = document.createElement('div');
-        container.className = 'dock-preview-summary';
-        const title = KNOWN_APPS[id].getTitle();
+          `;
+        }).join('');
+
         container.innerHTML = `
-          <div style="font-size:10px; font-weight:700; color:#fff;">${escapeHtml(title)}</div>
-          <div style="font-size:8.5px; color:var(--muted); margin-top:2px;">Click to open application</div>
+          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:3px;">
+            <span style="font-size:10px; font-weight:700; color:#fff;">Recent Alerts</span>
+            <span style="font-size:8.5px; color:var(--accent-cyan); font-weight:700;">${events.length} total</span>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:4px; overflow:hidden; flex:1;">
+            ${itemsHtml}
+          </div>
+          <div class="dock-preview-hover-overlay">
+            <div class="dock-preview-action-chip">
+              <span>🔔 Open Notification Center</span>
+            </div>
+          </div>
         `;
         return container;
       }
+
+      if (id === 'copy') {
+        const container = document.createElement('div');
+        container.className = 'dock-preview-summary';
+        const status = escapeHtml(document.getElementById('copy-toast-status')?.textContent || 'Ingest');
+        const pct = escapeHtml(document.getElementById('copy-toast-pct')?.textContent || '0%');
+        const file = escapeHtml(document.getElementById('copy-toast-file')?.textContent || 'Preparing...');
+        container.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:center; font-size:10px;">
+            <strong style="color:#fff;">${status}</strong>
+            <strong style="color:var(--ok2);">${pct}</strong>
+          </div>
+          <div style="background:rgba(255,255,255,0.12); height:6px; border-radius:3px; overflow:hidden; margin:6px 0;">
+            <div style="background:var(--ok2); height:100%; width:${pct};"></div>
+          </div>
+          <div style="font-size:9px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${file}</div>
+        `;
+        return container;
+      }
+
+      // Check running status
+      const winEl = resolveAppWindow(id);
+      const appRunning = isRunning || isAppWindowRunning(id, winEl);
+
+      if (appRunning && winEl) {
+        const winCard = winEl.querySelector('.smart-modal-window, .os-window, .management-window, .containers-manager-window, .vm-manager-window, .file-manager-window, #screen') || winEl;
+
+        let origW = parseInt(winCard.style?.width, 10) || winCard.offsetWidth;
+        let origH = parseInt(winCard.style?.height, 10) || winCard.offsetHeight;
+
+        if (!origW || origW < 300) {
+          if (id === 'management') origW = 1080;
+          else if (id === 'containers') origW = 1040;
+          else if (id === 'vm') origW = 960;
+          else if (id === 'fm') origW = 920;
+          else if (id === 'console') origW = 640;
+          else if (id === 'smart') origW = 760;
+          else origW = 960;
+        }
+        if (!origH || origH < 200) {
+          if (id === 'management') origH = 680;
+          else if (id === 'containers') origH = 660;
+          else if (id === 'vm') origH = 600;
+          else if (id === 'fm') origH = 580;
+          else if (id === 'console') origH = 172;
+          else if (id === 'smart') origH = 520;
+          else origH = 600;
+        }
+
+        const clone = winCard.cloneNode(true);
+        clone.removeAttribute('id');
+        clone.querySelectorAll('[id]').forEach((el) => el.removeAttribute('id'));
+        clone.querySelectorAll('[name]').forEach((el) => el.removeAttribute('name'));
+        clone.classList.remove('window-minimized', 'window-dragging', 'hidden');
+        clone.classList.add('dock-cloned-preview-win');
+        clone.style.setProperty('display', 'flex', 'important');
+        clone.style.setProperty('visibility', 'visible', 'important');
+        clone.style.setProperty('opacity', '1', 'important');
+        clone.style.setProperty('transform', 'none', 'important');
+        clone.style.setProperty('position', 'relative', 'important');
+        clone.style.setProperty('top', '0px', 'important');
+        clone.style.setProperty('left', '0px', 'important');
+        clone.style.setProperty('right', 'auto', 'important');
+        clone.style.setProperty('bottom', 'auto', 'important');
+        clone.style.setProperty('inset', 'auto', 'important');
+        clone.style.setProperty('width', `${origW}px`, 'important');
+        clone.style.setProperty('height', `${origH}px`, 'important');
+        clone.style.setProperty('max-width', 'none', 'important');
+        clone.style.setProperty('max-height', 'none', 'important');
+        clone.style.setProperty('min-width', '0', 'important');
+        clone.style.setProperty('min-height', '0', 'important');
+        clone.style.setProperty('pointer-events', 'none', 'important');
+        clone.style.setProperty('user-select', 'none', 'important');
+        clone.style.setProperty('margin', '0', 'important');
+        clone.style.setProperty('transition', 'none', 'important');
+        clone.style.setProperty('animation', 'none', 'important');
+
+        // Copy canvas graphics (e.g. system charts, LCD framebuffers)
+        const srcCanvases = winCard.querySelectorAll('canvas');
+        const cloneCanvases = clone.querySelectorAll('canvas');
+        srcCanvases.forEach((srcC, idx) => {
+          const dstC = cloneCanvases[idx];
+          if (dstC && srcC.width && srcC.height) {
+            dstC.width = srcC.width;
+            dstC.height = srcC.height;
+            const ctx = dstC.getContext('2d');
+            if (ctx) {
+              try { ctx.drawImage(srcC, 0, 0); } catch {}
+            }
+          }
+        });
+
+        const PREVIEW_MAX_W = 260;
+        const PREVIEW_MAX_H = 156;
+        const scale = Math.min(PREVIEW_MAX_W / origW, PREVIEW_MAX_H / origH);
+        const scaledW = origW * scale;
+        const scaledH = origH * scale;
+        const leftOffset = Math.max(0, Math.round((PREVIEW_MAX_W - scaledW) / 2));
+        const topOffset = Math.max(0, Math.round((PREVIEW_MAX_H - scaledH) / 2));
+
+        const scaler = document.createElement('div');
+        scaler.className = 'dock-preview-live-scaler';
+        scaler.style.width = `${origW}px`;
+        scaler.style.height = `${origH}px`;
+        scaler.style.transform = `scale(${scale})`;
+        scaler.style.transformOrigin = 'top left';
+        scaler.style.left = `${leftOffset}px`;
+        scaler.style.top = `${topOffset}px`;
+
+        scaler.appendChild(clone);
+
+        const container = document.createElement('div');
+        container.className = 'dock-preview-live-container';
+        container.appendChild(scaler);
+
+        const overlay = document.createElement('div');
+        overlay.className = 'dock-preview-hover-overlay';
+        const chip = document.createElement('div');
+        chip.className = 'dock-preview-action-chip';
+        chip.innerHTML = isMinimized
+          ? `<span>↩ ${escapeHtml(t('dock.click_to_restore', 'Click to Restore'))}</span>`
+          : `<span>🔍 ${escapeHtml(t('dock.click_to_focus', 'Click to Bring to Front'))}</span>`;
+        overlay.appendChild(chip);
+        container.appendChild(overlay);
+
+        container.addEventListener('click', (e) => {
+          e.stopPropagation();
+          hideDockTooltip();
+          if (id === 'fm') {
+            DockManager.restore('fm');
+            if (winCard) bringToFront(winCard);
+          } else {
+            DockManager.restore(id);
+            if (winCard) bringToFront(winCard);
+          }
+        });
+        return container;
+      }
+
+      // App is closed / pinned: show splash card
+      if (KNOWN_APPS[id] || title) {
+        const container = document.createElement('div');
+        container.className = 'dock-preview-app-splash';
+        const appObj = KNOWN_APPS[id];
+        const appTitle = appObj?.getTitle ? appObj.getTitle() : (title || id);
+        const appIcon = appObj?.icon || icon || '#i-chip';
+        const appDesc = (APP_DESCRIPTIONS[id] ? APP_DESCRIPTIONS[id]() : '') || 'Application';
+
+        container.innerHTML = `
+          <div class="dock-splash-icon-ring">
+            <svg><use href="${appIcon}"/></svg>
+          </div>
+          <div class="dock-splash-title">${escapeHtml(appTitle)}</div>
+          <div class="dock-splash-desc">${escapeHtml(appDesc)}</div>
+          <div class="dock-preview-action-chip" style="margin-top:4px;">
+            <span>▶ ${escapeHtml(t('dock.click_to_open', 'Click to open application'))}</span>
+          </div>
+        `;
+
+        container.addEventListener('click', (e) => {
+          e.stopPropagation();
+          hideDockTooltip();
+          if (appObj?.launch) {
+            appObj.launch();
+          }
+        });
+        return container;
+      }
+
       return null;
     }
 
@@ -2255,10 +2470,12 @@ export const DockManager = {
       const textEl = document.getElementById('dock-tooltip-text');
       const iconEl = document.getElementById('dock-tooltip-icon');
       const badgeEl = document.getElementById('dock-tooltip-badge');
+      const closeBtn = document.getElementById('dock-tooltip-close-btn');
       const previewEl = document.getElementById('dock-tooltip-preview-content');
 
       if (textEl) textEl.textContent = title;
       if (iconEl) iconEl.innerHTML = `<use href="${icon}"/>`;
+
       if (badgeEl) {
         if (id === 'home') {
           badgeEl.textContent = 'Desktop';
@@ -2273,17 +2490,33 @@ export const DockManager = {
             badgeEl.textContent = 'ALL CAUGHT UP';
             badgeEl.className = 'dock-tooltip-status active';
           }
+        } else if (id === 'spotlight') {
+          badgeEl.textContent = 'PALETTE';
+          badgeEl.className = 'dock-tooltip-status pinned';
         } else if (isClosed) {
-          badgeEl.textContent = 'Pinned';
-          badgeEl.className = 'dock-tooltip-status';
+          badgeEl.textContent = 'PINNED';
+          badgeEl.className = 'dock-tooltip-status pinned';
         } else {
-          badgeEl.textContent = isMinimized ? 'Minimized' : 'Active';
+          badgeEl.textContent = isMinimized ? 'MINIMIZED' : 'ACTIVE';
           badgeEl.className = 'dock-tooltip-status ' + (isMinimized ? 'minimized' : 'active');
         }
       }
 
+      if (closeBtn) {
+        if (isClosed || id === 'home' || id === 'notif' || id === 'spotlight') {
+          closeBtn.style.display = 'none';
+        } else {
+          closeBtn.style.display = 'flex';
+          closeBtn.onclick = (e) => {
+            e.stopPropagation();
+            hideDockTooltip();
+            DockManager.closeWindow(id);
+          };
+        }
+      }
+
       if (previewEl) {
-        const previewContent = generatePreviewForWindow(id);
+        const previewContent = generatePreviewForWindow(id, !isClosed, isMinimized, title, icon);
         if (previewContent) {
           if (typeof previewEl.replaceChildren === 'function') {
             previewEl.replaceChildren(previewContent);
@@ -2304,13 +2537,14 @@ export const DockManager = {
 
       const isAlreadyVisibleForThisItem = tooltip.classList.contains('visible') && tooltip.dataset.currentWindowId === id;
       tooltip.dataset.currentWindowId = id;
+      tooltip.dataset.dockPos = _dockPosition;
 
       if (!isAlreadyVisibleForThisItem) {
         const dockEl = document.getElementById('os-dock');
         const dockRect = dockEl ? dockEl.getBoundingClientRect() : null;
         const rect = dockItem.getBoundingClientRect();
-        const tooltipW = tooltip.offsetWidth || 210;
-        const tooltipH = tooltip.offsetHeight || 50;
+        const tooltipW = tooltip.offsetWidth || 280;
+        const tooltipH = tooltip.offsetHeight || 190;
 
         if (_dockPosition === 'left') {
           const leftPos = dockRect ? Math.round(dockRect.right + 12) : Math.round(rect.right + 12);
@@ -2319,16 +2553,22 @@ export const DockManager = {
           tooltip.style.left = `${leftPos}px`;
           tooltip.style.top = `${topPos}px`;
           tooltip.style.bottom = 'auto';
+
+          const arrowY = Math.max(16, Math.min(tooltipH - 16, Math.round((rect.top + (rect.height / 2)) - topPos)));
+          tooltip.style.setProperty('--arrow-y', `${arrowY}px`);
         } else if (_dockPosition === 'top') {
           const centerX = (dockEl && dockRect && typeof dockItem.offsetLeft === 'number')
             ? (dockRect.left + dockItem.offsetLeft - (dockEl.scrollLeft || 0) + (dockItem.offsetWidth / 2))
             : (rect.left + (rect.width / 2));
           let leftPos = Math.round(centerX - (tooltipW / 2));
-          leftPos = Math.max(24, Math.min(window.innerWidth - tooltipW - 10, leftPos));
+          leftPos = Math.max(16, Math.min(window.innerWidth - tooltipW - 16, leftPos));
           const topPos = dockRect ? Math.round(dockRect.bottom + 12) : Math.round(rect.bottom + 12);
           tooltip.style.left = `${leftPos}px`;
           tooltip.style.top = `${topPos}px`;
           tooltip.style.bottom = 'auto';
+
+          const arrowX = Math.max(16, Math.min(tooltipW - 16, Math.round(centerX - leftPos)));
+          tooltip.style.setProperty('--arrow-x', `${arrowX}px`);
         } else {
           // Bottom (Default)
           const centerX = (dockEl && dockRect && typeof dockItem.offsetLeft === 'number')
@@ -2336,7 +2576,7 @@ export const DockManager = {
             : (rect.left + (rect.width / 2));
 
           let leftPos = Math.round(centerX - (tooltipW / 2));
-          leftPos = Math.max(24, Math.min(window.innerWidth - tooltipW - 10, leftPos));
+          leftPos = Math.max(16, Math.min(window.innerWidth - tooltipW - 16, leftPos));
           const bottomPos = dockRect
             ? Math.max(10, Math.round(window.innerHeight - dockRect.top + 14))
             : Math.max(10, Math.round(window.innerHeight - rect.top + 10));
@@ -2344,6 +2584,9 @@ export const DockManager = {
           tooltip.style.left = `${leftPos}px`;
           tooltip.style.bottom = `${bottomPos}px`;
           tooltip.style.top = 'auto';
+
+          const arrowX = Math.max(16, Math.min(tooltipW - 16, Math.round(centerX - leftPos)));
+          tooltip.style.setProperty('--arrow-x', `${arrowX}px`);
         }
 
         tooltip.classList.add('visible');
@@ -2691,6 +2934,10 @@ export function applyDockSettings(position = 'bottom', magnification = true, max
 
     const autohideToggle = document.getElementById('dock-autohide-toggle');
     if (autohideToggle) autohideToggle.checked = _dockAutohide;
+
+    if (typeof window !== 'undefined' && typeof window.syncDesktopTwinPreview === 'function') {
+      window.syncDesktopTwinPreview({ dockPos: _dockPosition });
+    }
   }
 
   if (persist) {
@@ -3686,6 +3933,10 @@ export function initDraggableDesktopIcons() {
         <span style="font-size:11px; margin-right:6px;">🪟</span>
         <span>${escapeHtml(t('dock.new_fm_window', 'New Window'))}</span>
       </div>
+      <div class="ctx-item" id="ctx-add-widget">
+        <span style="font-size:11px; margin-right:6px;">🧩</span>
+        <span>${escapeHtml(t('ctx.add_widget', 'Add Widget…'))}</span>
+      </div>
       <div style="height:1px; background:rgba(255,255,255,0.08); margin:4px 0;"></div>
       <div class="ctx-item" id="ctx-align-grid">📐 ${t('desktop.align_grid', 'Align to Grid')}</div>
       <div class="ctx-item" id="ctx-sort-name">🔤 ${t('desktop.sort_name', 'Sort by Name')}</div>
@@ -3700,6 +3951,13 @@ export function initDraggableDesktopIcons() {
       ev.stopPropagation();
       hideMenu();
       if (typeof openSpotlight === 'function') openSpotlight();
+    });
+    document.getElementById('ctx-add-widget')?.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      hideMenu();
+      if (typeof window.openWidgetSettings === 'function') {
+        window.openWidgetSettings();
+      }
     });
     document.getElementById('ctx-open-mc')?.addEventListener('click', (ev) => {
       ev.stopPropagation();

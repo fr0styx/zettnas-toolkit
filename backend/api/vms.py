@@ -6,6 +6,7 @@ and VM lifecycle orchestration.
 
 import asyncio
 import hashlib
+import json
 import os
 import re
 import shutil
@@ -591,6 +592,30 @@ def _can_use_kvm() -> bool:
     return False
 
 
+def _resolve_vm_ip_by_mac(mac: str) -> Optional[str]:
+    """Inspects host ARP tables to find guest IP address matching its MAC."""
+    if os.environ.get("ZETTNAS_TEST_MODE") == "1" or os.environ.get("TESTING") == "1":
+        return f"192.168.1.{100 + (hash(mac) % 150)}" if mac else "192.168.1.100"
+    clean_mac = (mac or "").lower().strip()
+    if not clean_mac:
+        return None
+    arp_paths = ["/host/proc/net/arp", "/proc/net/arp"]
+    for arp_file in arp_paths:
+        if os.path.exists(arp_file):
+            try:
+                with open(arp_file, "r", encoding="utf-8", errors="ignore") as f:
+                    lines = f.readlines()
+                for line in lines[1:]:
+                    parts = line.split()
+                    if len(parts) >= 4 and parts[3].lower() == clean_mac:
+                        ip = parts[0]
+                        if ip and ip != "0.0.0.0":
+                            return ip
+            except Exception:
+                pass
+    return None
+
+
 def _is_qemu_process_alive(vm_id: str) -> bool:
     """Checks whether the QEMU process for the specified VM is currently alive."""
     if vm_id in _RUNNING_QEMU_PROCS:
@@ -826,6 +851,11 @@ class VmCreateRequest(BaseModel):
     display_adapter: Optional[str] = None
     tpm_enabled: Optional[bool] = False
     usb_passthrough: List[Dict[str, Any]] = Field(default_factory=list)
+    sockets: Optional[int] = Field(None, ge=1, le=16)
+    cores: Optional[int] = Field(None, ge=1, le=128)
+    threads: Optional[int] = Field(None, ge=1, le=4)
+    cpu_affinity: Optional[List[int]] = None
+    pci_passthrough: List[Dict[str, Any]] = Field(default_factory=list)
 
 
 class VmUpdateRequest(BaseModel):
@@ -844,6 +874,16 @@ class VmUpdateRequest(BaseModel):
     display_adapter: Optional[str] = None
     tpm_enabled: Optional[bool] = None
     usb_passthrough: Optional[List[Dict[str, Any]]] = None
+    sockets: Optional[int] = Field(None, ge=1, le=16)
+    cores: Optional[int] = Field(None, ge=1, le=128)
+    threads: Optional[int] = Field(None, ge=1, le=4)
+    cpu_affinity: Optional[List[int]] = None
+    pci_passthrough: Optional[List[Dict[str, Any]]] = None
+
+
+class VmSnapshotCreateRequest(BaseModel):
+    name: str = Field(..., pattern=r"^[a-zA-Z0-9_-]{1,64}$", description="Snapshot tag/name")
+    description: Optional[str] = Field(None, max_length=256)
 
 
 class VmActionRequest(BaseModel):
@@ -1397,6 +1437,18 @@ def _start_qemu(target_vm: Dict[str, Any], vnc_port: int) -> Tuple[bool, Optiona
     mac = target_vm.get("mac") or "52:54:00:12:34:56"
 
     def _build_cmd(force_slirp: bool = False) -> List[str]:
+        vcpus_val = target_vm.get("vcpus", 2)
+        sockets = target_vm.get("sockets")
+        cores = target_vm.get("cores")
+        threads = target_vm.get("threads")
+        if sockets and cores:
+            smp_parts = [f"{vcpus_val}", f"sockets={sockets}", f"cores={cores}"]
+            if threads:
+                smp_parts.append(f"threads={threads}")
+            smp_str = ",".join(smp_parts)
+        else:
+            smp_str = str(vcpus_val)
+
         c = [
             qemu_bin,
             "-name",
@@ -1404,7 +1456,7 @@ def _start_qemu(target_vm: Dict[str, Any], vnc_port: int) -> Tuple[bool, Optiona
             "-m",
             str(ram_mb),
             "-smp",
-            vcpus,
+            smp_str,
         ]
         if has_kvm:
             c.extend(["-enable-kvm", "-cpu", "host"])
@@ -1503,14 +1555,64 @@ def _start_qemu(target_vm: Dict[str, Any], vnc_port: int) -> Tuple[bool, Optiona
                 if "," in hp or "\n" in hp or "\r" in hp:
                     logger.warning(f"[VMs] Host share path contains prohibited characters: {hp}")
                     continue
+                # Confinement check: ensure share path is inside safe storage roots
+                from backend.fsutil import resolve_within
+                from backend.api.fs import ALLOWED_BROWSE_ROOTS
+
+                safe_roots = list(ALLOWED_BROWSE_ROOTS) + [DATA_DIR, "/mnt", "/app/data"]
+                safe_hp = resolve_within(hp, safe_roots)
+                if not safe_hp:
+                    logger.warning(f"[VMs] Host share path '{hp}' is outside permitted storage roots; omitting.")
+                    continue
                 c.extend(
                     [
                         "-fsdev",
-                        f"local,id=fsdev{idx_s},path={hp},security_model=none,{ro_flag}",
+                        f"local,id=fsdev{idx_s},path={safe_hp},security_model=none,{ro_flag}",
                         "-device",
                         f"virtio-9p-pci,fsdev=fsdev{idx_s},mount_tag={tag}",
                     ]
                 )
+
+        # Virtual TPM 2.0 (swtpm daemon socket) for Windows 11 and BitLocker readiness
+        if target_vm.get("tpm_enabled"):
+            swtpm_bin = shutil.which("swtpm") or "/usr/bin/swtpm"
+            if os.path.exists(swtpm_bin):
+                tpm_dir = os.path.join(vm_dir, "tpm")
+                os.makedirs(tpm_dir, exist_ok=True)
+                tpm_sock = os.path.join(tpm_dir, "swtpm.sock")
+                if os.path.exists(tpm_sock):
+                    try:
+                        os.remove(tpm_sock)
+                    except OSError:
+                        pass
+                swtpm_cmd = [
+                    swtpm_bin,
+                    "socket",
+                    "--tpmstate",
+                    f"dir={tpm_dir}",
+                    "--ctrl",
+                    f"type=unixio,path={tpm_sock}",
+                    "--tpm2",
+                    "--terminate",
+                ]
+                try:
+                    subprocess.Popen(swtpm_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    time.sleep(0.2)
+                    c.extend(
+                        [
+                            "-chardev",
+                            f"socket,id=chrtpm,path={tpm_sock}",
+                            "-tpmdev",
+                            "emulator,id=tpm0,chardev=chrtpm",
+                            "-device",
+                            "tpm-tis,tpmdev=tpm0",
+                        ]
+                    )
+                    logger.info(f"[VM-{vm_id}] Spawning swtpm vTPM 2.0 daemon on {tpm_sock}")
+                except Exception as ex:
+                    logger.warning(f"[VM-{vm_id}] Failed to spawn swtpm daemon: {ex}")
+            else:
+                logger.warning(f"[VM-{vm_id}] swtpm binary not found on host; vTPM 2.0 cannot be initialized.")
 
         for idx_d, sdisk in enumerate(target_vm.get("secondary_disks", [])):
             sd_path = sdisk.get("path")
@@ -1555,6 +1657,22 @@ def _start_qemu(target_vm: Dict[str, Any], vnc_port: int) -> Tuple[bool, Optiona
                             f"usb-host,vendorid=0x{raw_vid},productid=0x{raw_pid},id=usb_pass_{idx_u}",
                         ]
                     )
+
+        # Host PCI / GPU Passthrough (VFIO-PCI)
+        pci_devices = target_vm.get("pci_passthrough", [])
+        if pci_devices:
+            for idx_p, pdev in enumerate(pci_devices):
+                raw_slot = str(pdev.get("slot") or "").strip()
+                slot_clean = raw_slot.split("0000:")[-1] if "0000:" in raw_slot else raw_slot
+                if slot_clean and re.match(r"^[0-9a-fA-F]{2}:[0-9a-fA-F]{2}\.[0-9a-fA-F]$", slot_clean):
+                    c.extend(["-device", f"vfio-pci,host={slot_clean},id=vfio_pass_{idx_p}"])
+
+        affinity = target_vm.get("cpu_affinity")
+        if affinity and isinstance(affinity, list) and len(affinity) > 0:
+            aff_str = ",".join(str(int(x)) for x in affinity)
+            taskset_bin = shutil.which("taskset") or "/usr/bin/taskset"
+            if os.path.exists(taskset_bin):
+                c = [taskset_bin, "-c", aff_str] + c
 
         return c
 
@@ -1617,17 +1735,8 @@ def _start_qemu(target_vm: Dict[str, Any], vnc_port: int) -> Tuple[bool, Optiona
         return False, err_msg
 
 
-def _stop_qemu(vm_id: str, force: bool = False):
-    """Stops the QEMU process, attempting ACPI shutdown via QMP before SIGTERM/SIGKILL."""
-    if not force:
-        qmp_res = _qmp_command(vm_id, "system_powerdown", timeout=1.5)
-        if "return" in qmp_res:
-            logger.info(f"[VM-{vm_id}] ACPI powerdown signal sent via QMP.")
-            for _ in range(6):
-                time.sleep(0.5)
-                if not _is_qemu_process_alive(vm_id):
-                    break
-
+def _sync_cleanup_qemu_process(vm_id: str, force: bool = False):
+    """Terminates or kills the QEMU process and removes temporary sockets and PID files."""
     entry = _RUNNING_QEMU_PROCS.pop(vm_id, None)
     proc = entry.get("proc") if entry else None
     pid = entry.get("pid") if entry else None
@@ -1673,10 +1782,156 @@ def _stop_qemu(vm_id: str, force: bool = False):
                 pass
 
 
+async def async_stop_qemu(vm_id: str, force: bool = False):
+    """Asynchronously stops the QEMU process without blocking the FastAPI event loop."""
+    if not force:
+        qmp_res = await asyncio.to_thread(_qmp_command, vm_id, "system_powerdown", 1.5)
+        if "return" in qmp_res:
+            logger.info(f"[VM-{vm_id}] ACPI powerdown signal sent via QMP.")
+            for _ in range(20):
+                await asyncio.sleep(0.1)
+                is_alive = await asyncio.to_thread(_is_qemu_process_alive, vm_id)
+                if not is_alive:
+                    break
+
+    await asyncio.to_thread(_sync_cleanup_qemu_process, vm_id, force=force)
+
+
+def _stop_qemu(vm_id: str, force: bool = False):
+    """Synchronous stop wrapper for backwards compatibility."""
+    if not force:
+        qmp_res = _qmp_command(vm_id, "system_powerdown", timeout=1.5)
+        if "return" in qmp_res:
+            logger.info(f"[VM-{vm_id}] ACPI powerdown signal sent via QMP.")
+            for _ in range(20):
+                time.sleep(0.1)
+                if not _is_qemu_process_alive(vm_id):
+                    break
+    _sync_cleanup_qemu_process(vm_id, force=force)
+
+
 def _get_host_ip() -> str:
     from backend.state import Z_STATE
 
     return getattr(Z_STATE, "discovered_host_ip", None) or os.environ.get("HOST_IP") or "127.0.0.1"
+
+
+@router.get("/iommu-groups", dependencies=[Depends(require_scope("system:view", "storage:read"))])
+def get_host_iommu_groups():
+    """Scans Linux host sysfs /sys/kernel/iommu_groups to report IOMMU isolation groups and PCI devices."""
+    iommu_path = "/sys/kernel/iommu_groups"
+    if not os.path.exists(iommu_path):
+        iommu_path = "/host/sys/kernel/iommu_groups"
+
+    has_iommu = os.path.exists(iommu_path)
+    groups = []
+
+    if has_iommu:
+        try:
+            for group_dir in sorted(os.listdir(iommu_path), key=lambda x: int(x) if x.isdigit() else 999):
+                full_group = os.path.join(iommu_path, group_dir, "devices")
+                if not os.path.isdir(full_group):
+                    continue
+                devs = []
+                for pci_slot in sorted(os.listdir(full_group)):
+                    dev_path = os.path.join(full_group, pci_slot)
+                    vendor_id = ""
+                    device_id = ""
+                    dev_class = ""
+                    try:
+                        vfile = os.path.join(dev_path, "vendor")
+                        if os.path.exists(vfile):
+                            with open(vfile, "r") as f:
+                                vendor_id = f.read().strip().replace("0x", "")
+                        dfile = os.path.join(dev_path, "device")
+                        if os.path.exists(dfile):
+                            with open(dfile, "r") as f:
+                                device_id = f.read().strip().replace("0x", "")
+                        cfile = os.path.join(dev_path, "class")
+                        if os.path.exists(cfile):
+                            with open(cfile, "r") as f:
+                                dev_class = f.read().strip().replace("0x", "")
+                    except Exception:
+                        pass
+                    devs.append(
+                        {
+                            "slot": pci_slot,
+                            "vendor_id": vendor_id,
+                            "device_id": device_id,
+                            "class_code": dev_class,
+                            "name": f"PCI Device [{vendor_id}:{device_id}]",
+                        }
+                    )
+                groups.append(
+                    {
+                        "group_id": int(group_dir) if group_dir.isdigit() else group_dir,
+                        "devices": devs,
+                    }
+                )
+        except Exception as e:
+            logger.warning(f"Error scanning IOMMU groups: {e}")
+
+    return {
+        "iommu_enabled": has_iommu and len(groups) > 0,
+        "total_groups": len(groups),
+        "groups": groups,
+    }
+
+
+@router.get(
+    "/backups",
+    dependencies=[Depends(require_scope("system:view", "storage:read"))],
+)
+async def list_all_virtual_machine_backups():
+    """Lists all saved VM hyper-backup archives across all virtual machines."""
+    from backend.services.app_backup import list_vm_backups
+
+    try:
+        backups = await asyncio.to_thread(list_vm_backups)
+        return {"status": "ok", "backups": backups}
+    except Exception as e:
+        logger.error(f"[VM Backup] Failed listing all VM backups: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post(
+    "/backups/{backup_id}/restore",
+    dependencies=[Depends(require_scope("system:config", "storage:admin"))],
+)
+async def restore_virtual_machine_backup(backup_id: str):
+    """Restores VM configuration and disk images from hyper-backup archive."""
+    from backend.services.app_backup import restore_vm_backup
+
+    try:
+        res = await asyncio.to_thread(restore_vm_backup, backup_id)
+        return {"status": "ok", "result": res}
+    except ValueError as ve:
+        raise HTTPException(status_code=404, detail=str(ve))
+    except FileNotFoundError as fe:
+        raise HTTPException(status_code=404, detail=str(fe))
+    except Exception as e:
+        logger.error(f"[VM Backup] Restore failed for {backup_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.delete(
+    "/backups/{backup_id}",
+    dependencies=[Depends(require_scope("system:config", "storage:admin"))],
+)
+async def delete_virtual_machine_backup(backup_id: str):
+    """Deletes a VM hyper-backup archive from disk and updates registry."""
+    from backend.services.app_backup import delete_vm_backup
+
+    try:
+        ok = await asyncio.to_thread(delete_vm_backup, backup_id)
+        if not ok:
+            raise HTTPException(status_code=404, detail="Backup record not found.")
+        return {"status": "ok", "deleted": True, "backup_id": backup_id}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"[VM Backup] Failed deleting backup {backup_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/{vm_id}", dependencies=[Depends(require_scope("system:view", "storage:read"))])
@@ -1914,6 +2169,21 @@ async def websocket_vm_console(websocket: WebSocket, vm_id: str):
         await websocket.close(code=1008, reason="Unauthorized or expired console ticket")
         return
 
+    is_cookie_auth = (
+        not websocket.query_params.get("ticket")
+        and not websocket.query_params.get("token")
+        and bool(
+            websocket.cookies.get("session_token")
+            or websocket.cookies.get("zettnas_session")
+            or websocket.cookies.get("zat_token")
+        )
+    )
+    from backend.auth import validate_websocket_origin
+
+    if not validate_websocket_origin(websocket, is_cookie_auth=is_cookie_auth):
+        await websocket.close(code=1008, reason="Forbidden origin")
+        return
+
     subprotocols = [s.strip() for s in websocket.headers.get("sec-websocket-protocol", "").split(",") if s.strip()]
     subprotocol = "binary" if "binary" in subprotocols else (subprotocols[0] if subprotocols else None)
     await websocket.accept(subprotocol=subprotocol)
@@ -1948,6 +2218,21 @@ async def websocket_vm_serial(websocket: WebSocket, vm_id: str):
         await websocket.close(code=1008, reason="Unauthorized or expired serial ticket")
         return
 
+    is_cookie_auth = (
+        not websocket.query_params.get("ticket")
+        and not websocket.query_params.get("token")
+        and bool(
+            websocket.cookies.get("session_token")
+            or websocket.cookies.get("zettnas_session")
+            or websocket.cookies.get("zat_token")
+        )
+    )
+    from backend.auth import validate_websocket_origin
+
+    if not validate_websocket_origin(websocket, is_cookie_auth=is_cookie_auth):
+        await websocket.close(code=1008, reason="Forbidden origin")
+        return
+
     await websocket.accept()
 
     vms = _load_vms()
@@ -1974,7 +2259,7 @@ async def websocket_vm_serial(websocket: WebSocket, vm_id: str):
 
 
 @router.post("/{vm_id}/action", dependencies=[Depends(require_scope("system:config", "storage:admin"))])
-def execute_vm_action(
+async def execute_vm_action(
     vm_id: str,
     req: VmActionRequest,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
@@ -1990,7 +2275,7 @@ def execute_vm_action(
     vnc_port = _get_qemu_vnc_port(vms, vm_id)
 
     if action == "start":
-        ok, err_msg = _start_qemu(target_vm, vnc_port)
+        ok, err_msg = await asyncio.to_thread(_start_qemu, target_vm, vnc_port)
         if not ok:
             target_vm["state"] = "stopped"
             target_vm["last_error"] = err_msg
@@ -2004,27 +2289,28 @@ def execute_vm_action(
         target_vm["uptime_seconds"] = 1
         if target_vm.get("iso_path"):
             target_vm["ip_address"] = ""
-        elif not target_vm.get("ip_address"):
-            target_vm["ip_address"] = f"192.168.1.{100 + (hash(vm_id) % 150)}"
+        else:
+            resolved_ip = _resolve_vm_ip_by_mac(target_vm.get("mac") or "")
+            target_vm["ip_address"] = resolved_ip or target_vm.get("ip_address") or ""
 
     elif action == "stop":
-        _stop_qemu(vm_id, force=False)
+        await async_stop_qemu(vm_id, force=False)
         target_vm["state"] = "stopped"
         target_vm["uptime_seconds"] = 0
 
     elif action == "acpi_shutdown":
-        qmp_res = _qmp_command(vm_id, "system_powerdown")
+        qmp_res = await asyncio.to_thread(_qmp_command, vm_id, "system_powerdown")
         if "error" in qmp_res:
-            _stop_qemu(vm_id, force=False)
+            await async_stop_qemu(vm_id, force=False)
         target_vm["state"] = "stopped"
         target_vm["uptime_seconds"] = 0
 
     elif action in ("restart", "reboot"):
-        qmp_res = _qmp_command(vm_id, "system_reset")
+        qmp_res = await asyncio.to_thread(_qmp_command, vm_id, "system_reset")
         if "return" not in qmp_res:
-            _stop_qemu(vm_id, force=False)
-            time.sleep(0.5)
-            ok, err_msg = _start_qemu(target_vm, vnc_port)
+            await async_stop_qemu(vm_id, force=False)
+            await asyncio.sleep(0.5)
+            ok, err_msg = await asyncio.to_thread(_start_qemu, target_vm, vnc_port)
             if not ok:
                 target_vm["state"] = "stopped"
                 target_vm["last_error"] = err_msg
@@ -2038,16 +2324,16 @@ def execute_vm_action(
 
     elif action == "pause":
         if current_state == "running":
-            _qmp_command(vm_id, "stop")
+            await asyncio.to_thread(_qmp_command, vm_id, "stop")
             target_vm["state"] = "paused"
 
     elif action == "resume":
         if current_state == "paused":
-            _qmp_command(vm_id, "cont")
+            await asyncio.to_thread(_qmp_command, vm_id, "cont")
             target_vm["state"] = "running"
 
     elif action == "force_off":
-        _stop_qemu(vm_id, force=True)
+        await async_stop_qemu(vm_id, force=True)
         target_vm["state"] = "stopped"
         target_vm["uptime_seconds"] = 0
 
@@ -2057,30 +2343,30 @@ def execute_vm_action(
 
 
 @router.post("/{vm_id}/start", dependencies=[Depends(require_scope("system:config", "storage:admin"))])
-def start_vm(
+async def start_vm(
     vm_id: str,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
 ):
     """Starts the target virtual machine."""
-    return execute_vm_action(vm_id, VmActionRequest(action="start"), principal)
+    return await execute_vm_action(vm_id, VmActionRequest(action="start"), principal)
 
 
 @router.post("/{vm_id}/stop", dependencies=[Depends(require_scope("system:config", "storage:admin"))])
-def stop_vm(
+async def stop_vm(
     vm_id: str,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
 ):
     """Stops the target virtual machine."""
-    return execute_vm_action(vm_id, VmActionRequest(action="stop"), principal)
+    return await execute_vm_action(vm_id, VmActionRequest(action="stop"), principal)
 
 
 @router.post("/{vm_id}/restart", dependencies=[Depends(require_scope("system:config", "storage:admin"))])
-def restart_vm(
+async def restart_vm(
     vm_id: str,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
 ):
     """Restarts the target virtual machine."""
-    return execute_vm_action(vm_id, VmActionRequest(action="restart"), principal)
+    return await execute_vm_action(vm_id, VmActionRequest(action="restart"), principal)
 
 
 @router.get("/{vm_id}/error", dependencies=[Depends(require_scope("system:view", "storage:read"))])
@@ -2297,3 +2583,287 @@ def delete_vm(
 
     add_event("info", "VM Removed", f"VM '{target['name']}' was deleted.")
     return {"status": "ok"}
+
+
+# ---- VM Snapshots Lifecycle & Host IOMMU Groups ----
+
+
+def _get_vm_snapshots_metadata(vm_id: str) -> Dict[str, Any]:
+    meta_path = os.path.join(DATA_DIR, "vms", vm_id, "snapshots.json")
+    if os.path.exists(meta_path):
+        try:
+            with open(meta_path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return {}
+
+
+def _save_vm_snapshots_metadata(vm_id: str, data: Dict[str, Any]):
+    vm_dir = os.path.join(DATA_DIR, "vms", vm_id)
+    os.makedirs(vm_dir, exist_ok=True)
+    meta_path = os.path.join(vm_dir, "snapshots.json")
+    try:
+        atomic_write_json(meta_path, data)
+    except Exception as e:
+        logger.warning(f"[VM-{vm_id}] Failed saving snapshots metadata: {e}")
+
+
+def _list_qcow2_snapshots(disk_path: str) -> List[Dict[str, Any]]:
+    if not os.path.exists(disk_path):
+        return []
+    qemu_img = shutil.which("qemu-img") or "/usr/bin/qemu-img"
+    if not os.path.exists(qemu_img):
+        return []
+    try:
+        res = subprocess.run(
+            [qemu_img, "snapshot", "-l", "-U", disk_path],
+            capture_output=True,
+            text=True,
+            timeout=5.0,
+        )
+        lines = res.stdout.strip().splitlines()
+        snapshots = []
+        parsing = False
+        for line in lines:
+            if "ID" in line and "TAG" in line:
+                parsing = True
+                continue
+            if parsing and line.strip():
+                parts = line.split()
+                if len(parts) >= 2:
+                    snap_id = parts[0]
+                    snap_tag = parts[1]
+                    vm_size = parts[2] if len(parts) > 2 else "0 B"
+                    date_str = " ".join(parts[3:5]) if len(parts) >= 5 else ""
+                    snapshots.append(
+                        {
+                            "id": snap_id,
+                            "tag": snap_tag,
+                            "name": snap_tag,
+                            "vm_size": vm_size,
+                            "date": date_str,
+                        }
+                    )
+        return snapshots
+    except Exception as e:
+        logger.warning(f"Failed listing qcow2 snapshots: {e}")
+        return []
+
+
+@router.get("/{vm_id}/snapshots", dependencies=[Depends(require_scope("system:view", "storage:read"))])
+async def get_vm_snapshots(vm_id: str):
+    """Lists snapshots for target virtual machine with QCOW2 internal and saved metadata."""
+    vms = _load_vms()
+    target_vm = next((v for v in vms if v["id"] == vm_id), None)
+    if not target_vm:
+        raise HTTPException(status_code=404, detail="Virtual machine not found.")
+
+    vm_dir = os.path.join(DATA_DIR, "vms", vm_id)
+    disk_path = target_vm.get("disk_path") or os.path.join(vm_dir, "disk.qcow2")
+    raw_snaps = await asyncio.to_thread(_list_qcow2_snapshots, disk_path)
+    meta = await asyncio.to_thread(_get_vm_snapshots_metadata, vm_id)
+
+    enriched = []
+    for s in raw_snaps:
+        name = s["name"]
+        m = meta.get(name, {})
+        enriched.append(
+            {
+                **s,
+                "description": m.get("description", ""),
+                "created_at": m.get("created_at", s.get("date", "")),
+                "state_at_snapshot": m.get("state", "stopped"),
+            }
+        )
+
+    for name, m in meta.items():
+        if not any(s["name"] == name for s in enriched):
+            enriched.append(
+                {
+                    "id": m.get("id", name),
+                    "tag": name,
+                    "name": name,
+                    "vm_size": m.get("vm_size", "0 B"),
+                    "date": m.get("created_at", ""),
+                    "description": m.get("description", ""),
+                    "created_at": m.get("created_at", ""),
+                    "state_at_snapshot": m.get("state", "stopped"),
+                }
+            )
+
+    return enriched
+
+
+@router.post("/{vm_id}/snapshots", dependencies=[Depends(require_scope("system:config", "storage:admin"))])
+async def create_vm_snapshot(vm_id: str, req: VmSnapshotCreateRequest):
+    """Creates a live snapshot (savevm via QMP if running, qemu-img if stopped)."""
+    vms = _load_vms()
+    target_vm = next((v for v in vms if v["id"] == vm_id), None)
+    if not target_vm:
+        raise HTTPException(status_code=404, detail="Virtual machine not found.")
+
+    name = req.name.strip()
+    is_running = target_vm.get("state") == "running" and _is_qemu_process_alive(vm_id)
+    vm_dir = os.path.join(DATA_DIR, "vms", vm_id)
+    disk_path = target_vm.get("disk_path") or os.path.join(vm_dir, "disk.qcow2")
+
+    if is_running:
+        cmd_str = f"savevm {name}"
+        qmp_res = await asyncio.to_thread(_qmp_command, vm_id, "human-monitor-command", 10.0, {"command-line": cmd_str})
+        if "error" in qmp_res:
+            raise HTTPException(status_code=500, detail=f"QMP savevm failed: {qmp_res['error']}")
+    else:
+        if not os.path.exists(disk_path):
+            raise HTTPException(status_code=400, detail="Primary disk not found to snapshot.")
+        qemu_img = shutil.which("qemu-img") or "/usr/bin/qemu-img"
+        try:
+            await asyncio.to_thread(
+                subprocess.run,
+                [qemu_img, "snapshot", "-c", name, disk_path],
+                check=True,
+                capture_output=True,
+                text=True,
+                timeout=15.0,
+            )
+        except subprocess.CalledProcessError as e:
+            raise HTTPException(status_code=500, detail=f"qemu-img snapshot failed: {e.stderr or e}")
+
+    meta = await asyncio.to_thread(_get_vm_snapshots_metadata, vm_id)
+    meta[name] = {
+        "id": name,
+        "name": name,
+        "description": req.description or "",
+        "created_at": time.strftime("%Y-%m-%d %H:%M:%S"),
+        "state": target_vm.get("state", "stopped"),
+    }
+    await asyncio.to_thread(_save_vm_snapshots_metadata, vm_id, meta)
+    add_event("info", "VM Snapshot Created", f"Snapshot '{name}' created for VM '{target_vm['name']}'.")
+    return {"success": True, "name": name, "vm_id": vm_id}
+
+
+@router.post(
+    "/{vm_id}/snapshots/{snapshot_name}/revert",
+    dependencies=[Depends(require_scope("system:config", "storage:admin"))],
+)
+async def revert_vm_snapshot(vm_id: str, snapshot_name: str):
+    """Reverts virtual machine state to a named snapshot."""
+    vms = _load_vms()
+    target_vm = next((v for v in vms if v["id"] == vm_id), None)
+    if not target_vm:
+        raise HTTPException(status_code=404, detail="Virtual machine not found.")
+
+    name = snapshot_name.strip()
+    is_running = target_vm.get("state") == "running" and _is_qemu_process_alive(vm_id)
+    vm_dir = os.path.join(DATA_DIR, "vms", vm_id)
+    disk_path = target_vm.get("disk_path") or os.path.join(vm_dir, "disk.qcow2")
+
+    if is_running:
+        cmd_str = f"loadvm {name}"
+        qmp_res = await asyncio.to_thread(_qmp_command, vm_id, "human-monitor-command", 10.0, {"command-line": cmd_str})
+        if "error" in qmp_res:
+            raise HTTPException(status_code=500, detail=f"QMP loadvm failed: {qmp_res['error']}")
+    else:
+        if not os.path.exists(disk_path):
+            raise HTTPException(status_code=400, detail="Primary disk not found.")
+        qemu_img = shutil.which("qemu-img") or "/usr/bin/qemu-img"
+        try:
+            await asyncio.to_thread(
+                subprocess.run,
+                [qemu_img, "snapshot", "-a", name, disk_path],
+                check=True,
+                capture_output=True,
+                text=True,
+                timeout=15.0,
+            )
+        except subprocess.CalledProcessError as e:
+            raise HTTPException(status_code=500, detail=f"qemu-img revert failed: {e.stderr or e}")
+
+    add_event("info", "VM Snapshot Reverted", f"VM '{target_vm['name']}' reverted to snapshot '{name}'.")
+    return {"success": True, "name": name, "vm_id": vm_id}
+
+
+@router.delete(
+    "/{vm_id}/snapshots/{snapshot_name}",
+    dependencies=[Depends(require_scope("system:config", "storage:admin"))],
+)
+async def delete_vm_snapshot(vm_id: str, snapshot_name: str):
+    """Deletes a named snapshot."""
+    vms = _load_vms()
+    target_vm = next((v for v in vms if v["id"] == vm_id), None)
+    if not target_vm:
+        raise HTTPException(status_code=404, detail="Virtual machine not found.")
+
+    name = snapshot_name.strip()
+    is_running = target_vm.get("state") == "running" and _is_qemu_process_alive(vm_id)
+    vm_dir = os.path.join(DATA_DIR, "vms", vm_id)
+    disk_path = target_vm.get("disk_path") or os.path.join(vm_dir, "disk.qcow2")
+
+    if is_running:
+        cmd_str = f"delvm {name}"
+        qmp_res = await asyncio.to_thread(_qmp_command, vm_id, "human-monitor-command", 10.0, {"command-line": cmd_str})
+        if "error" in qmp_res:
+            logger.warning(f"QMP delvm warning: {qmp_res['error']}")
+    else:
+        if os.path.exists(disk_path):
+            qemu_img = shutil.which("qemu-img") or "/usr/bin/qemu-img"
+            try:
+                await asyncio.to_thread(
+                    subprocess.run,
+                    [qemu_img, "snapshot", "-d", name, disk_path],
+                    check=True,
+                    capture_output=True,
+                    text=True,
+                    timeout=15.0,
+                )
+            except Exception as e:
+                logger.warning(f"qemu-img delete snapshot warning: {e}")
+
+    meta = await asyncio.to_thread(_get_vm_snapshots_metadata, vm_id)
+    if name in meta:
+        del meta[name]
+        await asyncio.to_thread(_save_vm_snapshots_metadata, vm_id, meta)
+
+    add_event("info", "VM Snapshot Deleted", f"Snapshot '{name}' deleted for VM '{target_vm['name']}'.")
+    return {"success": True, "name": name, "vm_id": vm_id}
+
+
+class VmBackupRequest(BaseModel):
+    reason: str = Field("on-demand", description="'on-demand', 'scheduled', or 'pre-upgrade'")
+    custom_name: Optional[str] = Field(None, description="Optional custom name for the backup archive")
+
+
+@router.post(
+    "/{vm_id}/backup",
+    dependencies=[Depends(require_scope("system:config", "storage:admin"))],
+)
+async def backup_virtual_machine(vm_id: str, req: Optional[VmBackupRequest] = None):
+    """Takes a full hyper-backup of VM configuration and virtual disks."""
+    from backend.services.app_backup import create_vm_backup
+
+    reason = req.reason if req else "on-demand"
+    custom_name = req.custom_name if req else None
+    try:
+        record = await asyncio.to_thread(create_vm_backup, vm_id, reason=reason, custom_name=custom_name)
+        return {"status": "ok", "backup": record}
+    except ValueError as ve:
+        raise HTTPException(status_code=404, detail=str(ve))
+    except Exception as e:
+        logger.error(f"[VM Backup] Backup failed for {vm_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get(
+    "/{vm_id}/backups",
+    dependencies=[Depends(require_scope("system:view", "storage:read"))],
+)
+async def list_virtual_machine_backups(vm_id: str):
+    """Lists saved hyper-backup archives for target VM."""
+    from backend.services.app_backup import list_vm_backups
+
+    try:
+        backups = await asyncio.to_thread(list_vm_backups, vm_id)
+        return {"status": "ok", "vm_id": vm_id, "backups": backups}
+    except Exception as e:
+        logger.error(f"[VM Backup] Failed listing backups for {vm_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

@@ -1,6 +1,13 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { initDraggableDesktopIcons } from '../components/dock.js';
-import { initDesktopContextMenu, showDesktopContextMenu, hideDesktopContextMenu } from '../components/desktop-context-menu.js';
+import {
+  initDesktopContextMenu,
+  showDesktopContextMenu,
+  hideDesktopContextMenu,
+  showWidgetContextMenu,
+  hideWidgetContextMenu,
+  _resetDesktopContextMenuForTesting
+} from '../components/desktop-context-menu.js';
 import {
   SYSTEM_SHORTCUTS,
   addDesktopShortcut,
@@ -12,11 +19,13 @@ import {
   _resetShortcutsForTesting,
   SHORTCUTS_STORAGE_KEY
 } from '../components/desktop-shortcuts.js';
+import { loadWidgetConfig, saveWidgetConfig, applyWidgetConfig, removeWidget, openWidgetSettings } from '../components/widgets.js';
 
 describe('Desktop Shortcuts & Unified Context Menu Integration', () => {
   beforeEach(() => {
     localStorage.clear();
     _resetShortcutsForTesting();
+    _resetDesktopContextMenuForTesting();
 
     document.body.innerHTML = `
       <div id="os-dock-container">
@@ -33,13 +42,34 @@ describe('Desktop Shortcuts & Unified Context Menu Integration', () => {
             <div class="desktop-icon-label"><span class="icon-text">File Explorer</span></div>
           </div>
         </div>
+
+        <!-- Desktop Widgets Container & Sample Widgets -->
+        <div id="desktop-widgets-container" style="display:flex; position:absolute; right:20px; top:40px;">
+          <div id="widget-clock" class="desktop-widget" style="display:block;">
+            <div class="widget-clock-time">12:00</div>
+          </div>
+          <div id="widget-calendar" class="desktop-widget" style="display:block;">
+            <div class="widget-cal-header">October</div>
+          </div>
+        </div>
       </div>
 
       <!-- Unified Desktop Context Menu -->
       <div id="desktop-context-menu" class="desktop-context-menu" style="display:none; position:fixed;">
         <div class="context-menu-item" data-action="add-shortcut">Add Desktop Shortcut…</div>
+        <div class="context-menu-item" data-action="add-widget">Add Widget…</div>
         <div class="context-menu-item" data-action="align-grid">Align to Grid</div>
         <div class="context-menu-item" data-action="sort-name">Sort by Name</div>
+        <div class="context-menu-item" data-action="wallpaper">Change Wallpaper & Style…</div>
+      </div>
+
+      <!-- Widget Context Menu -->
+      <div id="widget-context-menu" class="desktop-context-menu widget-context-menu" style="display:none; position:fixed;">
+        <div class="context-menu-item danger" data-action="remove-widget" id="ctx-remove-widget-item">
+          <span id="ctx-remove-widget-label">Remove Widget</span>
+        </div>
+        <div class="context-menu-item" data-action="add-widget">Add Widget…</div>
+        <div class="context-menu-item" data-action="widget-settings">Widget Settings…</div>
         <div class="context-menu-item" data-action="wallpaper">Change Wallpaper & Style…</div>
       </div>
     `;
@@ -216,6 +246,186 @@ describe('Desktop Shortcuts & Unified Context Menu Integration', () => {
       const closeBtn = document.getElementById('btn-close-add-shortcut');
       closeBtn.click();
       expect(modal.style.display).toBe('none');
+    });
+  });
+
+  describe('Widget Context Menu & Add Widget Integration', () => {
+    it('right-clicking empty desktop shows Add Widget option in #desktop-context-menu', () => {
+      const desktop = document.getElementById('desktop');
+      const desktopMenu = document.getElementById('desktop-context-menu');
+      const widgetMenu = document.getElementById('widget-context-menu');
+
+      expect(desktopMenu.style.display).toBe('none');
+      expect(widgetMenu.style.display).toBe('none');
+
+      // Right-click empty desktop
+      const evt = new MouseEvent('contextmenu', {
+        bubbles: true,
+        cancelable: true,
+        clientX: 300,
+        clientY: 200
+      });
+      desktop.dispatchEvent(evt);
+
+      expect(desktopMenu.style.display).toBe('flex');
+      expect(widgetMenu.style.display).toBe('none');
+
+      const addWidgetItem = desktopMenu.querySelector('[data-action="add-widget"]');
+      expect(addWidgetItem).not.toBeNull();
+      expect(addWidgetItem.textContent).toContain('Add Widget');
+
+      // Clicking Add Widget calls openWidgetSettings
+      const openSettingsSpy = vi.fn();
+      window.openWidgetSettings = openSettingsSpy;
+
+      addWidgetItem.click();
+      expect(openSettingsSpy).toHaveBeenCalled();
+      expect(desktopMenu.style.display).toBe('none');
+    });
+
+    it('right-clicking a desktop widget opens #widget-context-menu with localized widget name', () => {
+      const clockWidget = document.getElementById('widget-clock');
+      const desktopMenu = document.getElementById('desktop-context-menu');
+      const widgetMenu = document.getElementById('widget-context-menu');
+      const removeLabel = document.getElementById('ctx-remove-widget-label');
+
+      const evt = new MouseEvent('contextmenu', {
+        bubbles: true,
+        cancelable: true,
+        clientX: 1100,
+        clientY: 60
+      });
+      clockWidget.dispatchEvent(evt);
+
+      expect(widgetMenu.style.display).toBe('flex');
+      expect(desktopMenu.style.display).toBe('none');
+      expect(removeLabel.textContent).toContain('Time Clock');
+    });
+
+    it('clicking Remove Widget hides the widget and updates widget config in localStorage', () => {
+      // Setup initial config with clock enabled
+      saveWidgetConfig({
+        enabled: true,
+        widgets: { clock: true, calendar: true }
+      });
+      applyWidgetConfig();
+
+      const clockWidget = document.getElementById('widget-clock');
+      expect(clockWidget.style.display).toBe('block');
+
+      // Right click clock widget
+      const evt = new MouseEvent('contextmenu', {
+        bubbles: true,
+        cancelable: true,
+        clientX: 1100,
+        clientY: 60
+      });
+      clockWidget.dispatchEvent(evt);
+
+      const widgetMenu = document.getElementById('widget-context-menu');
+      expect(widgetMenu.style.display).toBe('flex');
+
+      // Click Remove Widget
+      const removeItem = document.getElementById('ctx-remove-widget-item');
+      removeItem.click();
+
+      // Menu should be dismissed
+      expect(widgetMenu.style.display).toBe('none');
+
+      // Config in storage should have clock = false
+      const updatedConfig = loadWidgetConfig();
+      expect(updatedConfig.widgets.clock).toBe(false);
+
+      // DOM element should be hidden
+      expect(clockWidget.style.display).toBe('none');
+    });
+
+    it('right-clicking calendar widget dynamically identifies and removes calendar', () => {
+      saveWidgetConfig({
+        enabled: true,
+        widgets: { clock: true, calendar: true }
+      });
+      applyWidgetConfig();
+
+      const calWidget = document.getElementById('widget-calendar');
+      expect(calWidget.style.display).toBe('block');
+
+      // Right click calendar widget
+      const evt = new MouseEvent('contextmenu', {
+        bubbles: true,
+        cancelable: true,
+        clientX: 1100,
+        clientY: 120
+      });
+      calWidget.dispatchEvent(evt);
+
+      const widgetMenu = document.getElementById('widget-context-menu');
+      const removeLabel = document.getElementById('ctx-remove-widget-label');
+      expect(widgetMenu.style.display).toBe('flex');
+      expect(removeLabel.textContent).toContain('Calendar');
+
+      // Click Remove Widget
+      const removeItem = document.getElementById('ctx-remove-widget-item');
+      removeItem.click();
+
+      expect(widgetMenu.style.display).toBe('none');
+      const updatedConfig = loadWidgetConfig();
+      expect(updatedConfig.widgets.calendar).toBe(false);
+      expect(calWidget.style.display).toBe('none');
+    });
+
+    it('clicking Add Widget inside #widget-context-menu triggers openWidgetSettings', () => {
+      const clockWidget = document.getElementById('widget-clock');
+      const widgetMenu = document.getElementById('widget-context-menu');
+
+      const evt = new MouseEvent('contextmenu', {
+        bubbles: true,
+        cancelable: true,
+        clientX: 1100,
+        clientY: 60
+      });
+      clockWidget.dispatchEvent(evt);
+
+      expect(widgetMenu.style.display).toBe('flex');
+
+      const openSettingsSpy = vi.fn();
+      window.openWidgetSettings = openSettingsSpy;
+
+      const addWidgetItem = widgetMenu.querySelector('[data-action="add-widget"]');
+      addWidgetItem.click();
+
+      expect(openSettingsSpy).toHaveBeenCalled();
+      expect(widgetMenu.style.display).toBe('none');
+    });
+
+    it('dock fallback context menu includes Add Widget when #desktop-context-menu is absent', () => {
+      // Remove #desktop-context-menu and #widget-context-menu to simulate fallback environment
+      document.getElementById('desktop-context-menu')?.remove();
+      document.getElementById('widget-context-menu')?.remove();
+
+      const desktop = document.getElementById('desktop');
+      const evt = new MouseEvent('contextmenu', {
+        bubbles: true,
+        cancelable: true,
+        clientX: 400,
+        clientY: 300
+      });
+      desktop.dispatchEvent(evt);
+
+      const iconCtxMenu = document.getElementById('desktop-ctx-menu');
+      expect(iconCtxMenu).not.toBeNull();
+      expect(iconCtxMenu.style.display).toBe('block');
+
+      const fallbackAddWidget = document.getElementById('ctx-add-widget');
+      expect(fallbackAddWidget).not.toBeNull();
+      expect(fallbackAddWidget.textContent).toContain('Add Widget');
+
+      const openSettingsSpy = vi.fn();
+      window.openWidgetSettings = openSettingsSpy;
+
+      fallbackAddWidget.click();
+      expect(openSettingsSpy).toHaveBeenCalled();
+      expect(iconCtxMenu.style.display).toBe('none');
     });
   });
 });

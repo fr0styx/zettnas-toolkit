@@ -1,3 +1,4 @@
+import functools
 import aiofiles
 import asyncio
 from datetime import datetime, timezone
@@ -37,6 +38,7 @@ from backend.db import query_copy_history
 from backend.fsutil import atomic_write_json, read_json, resolve_within, root_for
 from backend.hardware.disks import fetch_disk_smart_detail, locate_disk, run_disk_smart_test
 from backend.hardware.docker_stats import container_action, read_docker_containers
+from backend.services.broadcaster import broadcaster
 from backend.hardware.fans import set_fan_pwm
 from backend.hardware.led import apply_led_state
 from backend.hardware.screen import get_screen_state, save_screen_state
@@ -211,6 +213,7 @@ def eject_media(req: EjectMediaRequest | None = None):
 
 BUTTON_DEFAULTS = {
     "enabled": False,
+    "action": "copy",
     "auto_ingest": False,
     "require_confirmation": True,
     "source": "sd",
@@ -324,6 +327,8 @@ def post_buttons(req: ButtonConfigRequest):
         if not os.path.isdir(real):
             raise HTTPException(status_code=400, detail="Destination must be a folder.")
         data["dest"] = real
+    if "enabled" in data and "action" not in data:
+        data["action"] = "copy" if data["enabled"] else "cycle_lcd"
     state.update(data)
     atomic_write_json(BUTTON_CFG_FILE, state)
     if data.get("auto_ingest") is False:
@@ -362,6 +367,10 @@ def post_layout(req: LayoutRequest):
     with Z_STATE.lock:
         if Z_STATE.cached_stats:
             Z_STATE.cached_stats["layout"] = data
+            stats_copy = dict(Z_STATE.cached_stats)
+        else:
+            stats_copy = {"layout": data}
+    broadcaster.broadcast(stats_copy, full_data=stats_copy)
     Z_STATE.ui_wake.set()
     return {"status": "ok", "layout": data}
 
@@ -671,7 +680,18 @@ _last_update_check: Dict[str, Dict[str, Any]] = {
 }
 
 
+@functools.lru_cache(maxsize=1)
+def _get_current_build_info_cached() -> Dict[str, Any]:
+    return _get_current_build_info_impl()
+
+
 def _get_current_build_info() -> Dict[str, Any]:
+    if os.environ.get("TESTING") == "1" or os.environ.get("ZETTNAS_TEST_MODE") == "1":
+        return _get_current_build_info_impl()
+    return _get_current_build_info_cached()
+
+
+def _get_current_build_info_impl() -> Dict[str, Any]:
     """Returns detected build commit, build date, and container revision."""
     commit = os.environ.get("BUILD_COMMIT", "")
     created = os.environ.get("BUILD_DATE", "")

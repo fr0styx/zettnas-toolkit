@@ -3,10 +3,12 @@
  * Manages physical and virtual lightbar effects, color hex palettes, speed, and schedule.
  */
 import { api } from '../api.js';
+import { initGlassTimePickers } from './time-picker.js';
 
 const $ = (id) => document.getElementById(id);
 
 export function initLedControl() {
+  initGlassTimePickers($('tab-led') || document);
   const previewBar = $('preview-bar') || $('led-live-preview-bar');
   const previewTxt = $('preview-state-txt') || $('led-preview-mode-txt');
   const slider = $('led-slider') || $('led-brightness-slider');
@@ -177,6 +179,7 @@ export function initLedControl() {
       if (ledNightToggle) ledNightToggle.checked = Boolean(data.night_mode);
       if (ledNightStart && data.night_start) ledNightStart.value = data.night_start;
       if (ledNightEnd && data.night_end) ledNightEnd.value = data.night_end;
+      initGlassTimePickers($('tab-led') || document);
 
       effectBtns.forEach((b) => b.classList.toggle('active', b.dataset.effect === currentMode));
       colorChips1.forEach((c) => c.classList.toggle('active', c.dataset.hex.toLowerCase() === currentColor.toLowerCase()));

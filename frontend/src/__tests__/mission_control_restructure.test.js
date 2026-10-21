@@ -312,7 +312,7 @@ describe('Mission Control Navigation Restructure & Hardware Agnosticism', () => 
     expect(SUBPANE_MAP['mgmt-sec-backups']).toEqual({ section: 'mgmt-sec-system-group', pane: 'mgmt-pane-backups' });
     expect(SUBPANE_MAP['mgmt-sec-notifications']).toEqual({ section: 'mgmt-sec-system-group', pane: 'mgmt-pane-notifications' });
     expect(SUBPANE_MAP['mgmt-sec-events']).toEqual({ section: 'mgmt-sec-system-group', pane: 'mgmt-pane-events' });
-    expect(SUBPANE_MAP['mgmt-sec-language']).toEqual({ section: 'mgmt-sec-system-group', pane: 'mgmt-pane-language' });
+    expect(SUBPANE_MAP['mgmt-sec-language']).toEqual({ section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-language' });
     expect(SUBPANE_MAP['mgmt-sec-about']).toEqual({ section: 'mgmt-sec-system-group', pane: 'mgmt-pane-about' });
 
     // Desktop Context Menu Aliases (Peer Review Directive 3)

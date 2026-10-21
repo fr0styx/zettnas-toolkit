@@ -10,20 +10,29 @@ import os
 import re
 import secrets
 import shutil
+import stat
 import subprocess
 import sys
 import tempfile
 import time
 import zipfile
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
-from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import FileResponse, Response, StreamingResponse
 from pydantic import BaseModel, Field
 
 from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
 import backend.config as config
 from backend.config import logger
+from backend.passwords import hash_password, verify_password
+
+try:
+    import pillow_heif
+
+    pillow_heif.register_heif_opener()
+except Exception:
+    pass
 
 
 class _AllowedBrowseRootsProxy:
@@ -69,20 +78,30 @@ router = APIRouter(tags=["File System & Shares"])
 
 
 def check_user_path_access(req_path: str, principal: Optional[AuthenticatedPrincipal]) -> None:
+    if not principal:
+        raise HTTPException(status_code=401, detail="Authentication required.")
     if (
-        not principal
-        or principal.has_scope("superadmin")
+        principal.has_scope("superadmin")
         or principal.has_scope("storage:admin")
         or principal.has_scope("shares:manage")
         or principal.has_scope("*")
     ):
         return
-    raw_norm = os.path.normpath(str(req_path or "").strip()).replace("\\", "/")
-    real_norm = os.path.normpath(os.path.realpath(str(req_path or "").strip())).replace("\\", "/")
-    for candidate_path in (raw_norm, real_norm):
+    raw_path = str(req_path or "").strip()
+    raw_norm = os.path.normpath(raw_path).replace("\\", "/")
+    candidates = [raw_norm]
+    # Only resolve symlinks for absolute paths: realpath() on a relative path
+    # resolves against the server's working directory, not a browse root.
+    if os.path.isabs(raw_path):
+        candidates.append(os.path.normpath(os.path.realpath(raw_path)).replace("\\", "/"))
+    for candidate_path in candidates:
         parts = [p for p in candidate_path.split("/") if p]
         if parts and parts[0] == "boot":
             raise HTTPException(status_code=403, detail="Access to /boot requires storage:admin privileges.")
+        if "appdata" in parts:
+            idx_app = parts.index("appdata")
+            if idx_app == 0 or (idx_app > 0 and parts[0] == "mnt"):
+                raise HTTPException(status_code=403, detail="Access to appdata requires storage:admin privileges.")
         if "homes" in parts:
             idx_homes = parts.index("homes")
             if idx_homes + 1 < len(parts):
@@ -142,7 +161,8 @@ def _scan_remote_dir_isolated(real: str, dirs_only: bool) -> List[Dict[str, Any]
             "                out.append({'name': e.name, 'path': e.path, 'is_dir': is_dir, 'size': sz})\n"
             "            except (OSError, PermissionError):\n"
             "                pass\n"
-            "except Exception:\n"
+            "except Exception as err:\n"
+            "    sys.stderr.write(str(err))\n"
             "    sys.exit(2)\n"
             "print(json.dumps(out))\n"
         ),
@@ -151,11 +171,12 @@ def _scan_remote_dir_isolated(real: str, dirs_only: bool) -> List[Dict[str, Any]
     ]
     try:
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        stdout, _ = proc.communicate(timeout=2.5)
+        stdout, stderr = proc.communicate(timeout=2.5)
         if proc.returncode == 0 and stdout:
             return json.loads(stdout.strip())
         elif proc.returncode == 2:
-            raise HTTPException(status_code=500, detail="Unable to read remote directory.")
+            detail = stderr.strip() if stderr else "Unable to read remote directory."
+            raise HTTPException(status_code=500, detail=f"Remote directory error: {detail}")
         return []
     except subprocess.TimeoutExpired:
         proc.kill()
@@ -178,7 +199,24 @@ def _handle_browse_logic(path: str, dirs_only: bool, principal: Optional[Authent
     out = []
     root = root_for(real, ALLOWED_BROWSE_ROOTS)
     if root and real != root:
-        out.append({"name": "..", "path": os.path.dirname(real), "is_dir": True, "size": 0})
+        parent_dir = os.path.dirname(real)
+        parent_mtime = 0.0
+        try:
+            parent_mtime = os.path.getmtime(parent_dir)
+        except OSError:
+            pass
+        out.append(
+            {
+                "name": "..",
+                "path": parent_dir,
+                "is_dir": True,
+                "size": 0,
+                "mtime": parent_mtime,
+                "mode": "0755",
+                "is_symlink": False,
+                "ext": "",
+            }
+        )
 
     is_admin = not principal or (
         principal.role_id in ("superadmin", "storage_admin")
@@ -195,16 +233,32 @@ def _handle_browse_logic(path: str, dirs_only: bool, principal: Optional[Authent
             if is_homes_dir and not is_admin and principal:
                 if item["name"].lower() != (principal.username or "").lower():
                     continue
+            if "mtime" not in item:
+                item["mtime"] = 0.0
+            if "mode" not in item:
+                item["mode"] = "0755" if item.get("is_dir") else "0644"
+            if "is_symlink" not in item:
+                item["is_symlink"] = False
+            if "ext" not in item:
+                item["ext"] = os.path.splitext(item["name"])[1].lower() if not item.get("is_dir") else ""
             out.append(item)
         return {"current": real, "roots": list(ALLOWED_BROWSE_ROOTS), "dirs": out}
 
+    use_scandir = False
+    scanned_entries = []
     try:
-        entries = os.listdir(real)
-    except PermissionError:
-        raise HTTPException(status_code=403, detail="Permission denied.")
-    except OSError as e:
-        logger.warning(f"[BROWSE] listdir failed for {real}: {e}")
-        raise HTTPException(status_code=500, detail="Unable to read directory.")
+        with os.scandir(real) as it:
+            scanned_entries = list(it)
+        use_scandir = True
+    except (TypeError, AttributeError, OSError):
+        try:
+            scanned_entries = os.listdir(real)
+            use_scandir = False
+        except PermissionError:
+            raise HTTPException(status_code=403, detail="Permission denied.")
+        except OSError as e:
+            logger.warning(f"[BROWSE] listdir failed for {real}: {e}")
+            raise HTTPException(status_code=500, detail="Unable to read directory.")
 
     if is_homes_dir and not is_admin and principal and principal.username:
         user_home_name = principal.username.lower()
@@ -212,29 +266,110 @@ def _handle_browse_logic(path: str, dirs_only: bool, principal: Optional[Authent
         if not os.path.exists(user_home_path):
             try:
                 os.makedirs(user_home_path, exist_ok=True)
-                if user_home_name not in entries:
-                    entries.append(user_home_name)
+                if not use_scandir and user_home_name not in scanned_entries:
+                    scanned_entries.append(user_home_name)
             except OSError as e:
                 logger.warning(f"[BROWSE] Failed to auto-provision home directory {user_home_path}: {e}")
 
-    for e in sorted(entries):
-        if is_homes_dir and not is_admin and principal:
-            if e.lower() != (principal.username or "").lower():
-                continue
-        full = os.path.join(real, e)
-        is_dir = os.path.isdir(full)
-        if dirs_only and not is_dir:
-            continue
-        # Hide symlinks that point outside the allowed roots.
-        if os.path.islink(full) and resolve_within(full, ALLOWED_BROWSE_ROOTS) is None:
-            continue
-        sz = 0
-        if not is_dir and not os.path.islink(full):
+    if use_scandir:
+        scanned_entries.sort(key=lambda x: x.name.lower())
+        for entry in scanned_entries:
+            e = entry.name
+            if is_homes_dir and not is_admin and principal:
+                if e.lower() != (principal.username or "").lower():
+                    continue
+            full = entry.path
             try:
-                sz = os.path.getsize(full)
+                is_dir = entry.is_dir(follow_symlinks=False)
+                if dirs_only and not is_dir:
+                    continue
+                is_symlink = entry.is_symlink()
+                if is_symlink and resolve_within(full, ALLOWED_BROWSE_ROOTS) is None:
+                    continue
+                st = entry.stat(follow_symlinks=False)
+                sz = st.st_size if not is_dir and not is_symlink else 0
+                mtime = st.st_mtime
+                mode = f"{stat.S_IMODE(st.st_mode):04o}" if hasattr(stat, "S_IMODE") else "0644"
+            except (OSError, PermissionError):
+                is_dir = True if real == "/mnt/remotes" else False
+                is_symlink = False
+                sz = 0
+                mtime = 0.0
+                mode = "0755" if real == "/mnt/remotes" else "0644"
+            ext = os.path.splitext(e)[1].lower() if not is_dir else ""
+            out.append(
+                {
+                    "name": e,
+                    "path": full,
+                    "is_dir": is_dir,
+                    "size": sz,
+                    "mtime": mtime,
+                    "mode": mode,
+                    "is_symlink": is_symlink,
+                    "ext": ext,
+                }
+            )
+    else:
+        for e in sorted(scanned_entries):
+            if is_homes_dir and not is_admin and principal:
+                if e.lower() != (principal.username or "").lower():
+                    continue
+            full = os.path.join(real, e)
+            is_dir = os.path.isdir(full)
+            if dirs_only and not is_dir:
+                continue
+            is_symlink = os.path.islink(full)
+            if is_symlink and resolve_within(full, ALLOWED_BROWSE_ROOTS) is None:
+                continue
+            sz = 0
+            mtime = 0.0
+            mode = "0755" if is_dir else "0644"
+            try:
+                st = os.stat(full, follow_symlinks=False)
+                if not is_dir and not is_symlink:
+                    sz = st.st_size
+                mtime = st.st_mtime
+                mode = f"{stat.S_IMODE(st.st_mode):04o}"
             except OSError:
                 pass
-        out.append({"name": e, "path": full, "is_dir": is_dir, "size": sz})
+            ext = os.path.splitext(e)[1].lower() if not is_dir else ""
+            out.append(
+                {
+                    "name": e,
+                    "path": full,
+                    "is_dir": is_dir,
+                    "size": sz,
+                    "mtime": mtime,
+                    "mode": mode,
+                    "is_symlink": is_symlink,
+                    "ext": ext,
+                }
+            )
+
+    if real == "/mnt/remotes":
+        try:
+            from backend.services.rclone_engine import get_rclone_engine
+
+            engine = get_rclone_engine()
+            existing_names = {x["name"] for x in out}
+            for r in engine.list_remotes():
+                if r.get("is_mounted") and r.get("name") not in existing_names:
+                    r_path = r.get("mount_path") or os.path.join(real, r["name"])
+                    out.append(
+                        {
+                            "name": r["name"],
+                            "path": r_path,
+                            "is_dir": True,
+                            "size": 0,
+                            "mtime": time.time(),
+                            "mode": "0755",
+                            "is_symlink": False,
+                            "ext": "",
+                        }
+                    )
+        except Exception:
+            pass
+
     return {"current": real, "roots": list(ALLOWED_BROWSE_ROOTS), "dirs": out}
 
 
@@ -314,16 +449,51 @@ async def fs_roots(principal: AuthenticatedPrincipal = Depends(get_current_princ
             except OSError:
                 pass
 
-        # 3. Cloud Remotes (config.REMOTES_PATH)
+        # 3. Cloud Remotes & Connected Drives
+        configured_remotes = {}
+        try:
+            from backend.services.rclone_engine import get_rclone_engine
+
+            engine = get_rclone_engine()
+            for r in engine.list_remotes():
+                configured_remotes[r["name"]] = r
+        except Exception as e:
+            logger.debug(f"[FS_ROOTS] rclone list_remotes failed: {e}")
+
         remotes_dir = getattr(config, "REMOTES_PATH", "/mnt/remotes")
         if os.path.isdir(remotes_dir):
             try:
                 for entry in sorted(os.listdir(remotes_dir)):
+                    if entry.startswith("."):
+                        continue
                     rp = os.path.join(remotes_dir, entry)
-                    if not entry.startswith("."):
-                        res["remotes"].append({"name": entry, "path": rp, "available": os.path.exists(rp)})
+                    conf = configured_remotes.get(entry, {})
+                    res["remotes"].append(
+                        {
+                            "name": entry,
+                            "path": rp,
+                            "type": conf.get("type", "cloud"),
+                            "available": os.path.exists(rp),
+                            "is_mounted": True,
+                        }
+                    )
             except OSError:
                 pass
+
+        for r_name, r_conf in configured_remotes.items():
+            if not any(r["name"] == r_name for r in res["remotes"]):
+                m_path = r_conf.get("mount_path") or os.path.join(remotes_dir, r_name)
+                is_mounted = bool(r_conf.get("is_mounted"))
+                if is_mounted or os.path.exists(m_path):
+                    res["remotes"].append(
+                        {
+                            "name": r_name,
+                            "path": m_path,
+                            "type": r_conf.get("type", "cloud"),
+                            "available": os.path.exists(m_path),
+                            "is_mounted": is_mounted,
+                        }
+                    )
 
         # 4. System (/boot) - Flash Boot
         is_admin = principal and (
@@ -592,6 +762,500 @@ async def fs_transfer(req: FsTransferRequest, principal: AuthenticatedPrincipal 
     return res
 
 
+class FsAsyncTransferRequest(BaseModel):
+    sources: list[str]
+    destination_dir: str
+    action: str = Field("copy", pattern="^(copy|move)$")
+    collision_policy: str = Field("merge", pattern="^(merge|overwrite|skip|keep_both)$")
+
+
+class ArchiveCreateRequest(BaseModel):
+    sources: list[str]
+    destination_dir: str
+    archive_name: str
+    format: str = Field("zip", pattern=r"^(zip|tar\.gz|tar)$")
+
+
+class ArchiveExtractRequest(BaseModel):
+    archive_path: str
+    destination_dir: str
+
+
+class ChecksumRequest(BaseModel):
+    path: str
+    algorithm: str = Field("sha256", pattern="^(sha256|sha1|md5)$")
+
+
+class FolderSizeRequest(BaseModel):
+    path: str
+    force_wake: bool = False
+
+
+class PermissionsUpdateRequest(BaseModel):
+    path: str
+    mode_octal: Optional[str] = None
+    owner: Optional[str] = None
+    group: Optional[str] = None
+    recursive: bool = False
+
+
+_FOLDER_SIZE_CACHE: Dict[str, Tuple[float, float, int, int, int]] = {}
+
+
+@router.post(
+    "/fs/transfer/async",
+    dependencies=[Depends(require_scope("shares:manage", "shares:user_write", "storage:write", "storage:admin"))],
+)
+async def fs_transfer_async(
+    req: FsAsyncTransferRequest,
+    principal: AuthenticatedPrincipal = Depends(get_current_principal),
+):
+    from backend.services.fs_transfer import transfer_manager
+
+    dest_canonical = resolve_within(req.destination_dir, ALLOWED_BROWSE_ROOTS)
+    if dest_canonical is None:
+        raise HTTPException(status_code=403, detail="Destination directory is outside allowed folders.")
+    check_user_path_access(req.destination_dir, principal)
+
+    is_admin = (
+        principal.role_id in ("superadmin", "storage_admin")
+        or principal.has_scope("shares:manage")
+        or principal.has_scope("*")
+    )
+
+    clean_sources = []
+    for src in req.sources:
+        src_canonical = resolve_within(src, ALLOWED_BROWSE_ROOTS)
+        if src_canonical is None:
+            raise HTTPException(status_code=403, detail=f"Source path {src} is outside allowed folders.")
+        check_user_path_access(src, principal)
+        if req.action == "move" and not is_admin and os.path.basename(src.rstrip("/")) == "homes":
+            raise HTTPException(status_code=403, detail="Cannot move root homes directory.")
+        clean_sources.append(src_canonical)
+
+    task = transfer_manager.submit_transfer(
+        sources=clean_sources,
+        destination_dir=dest_canonical,
+        action=req.action,
+        collision_policy=req.collision_policy,
+    )
+    add_event(
+        "info",
+        "File Explorer",
+        f"Queued background {req.action} of {len(clean_sources)} item(s) to {os.path.basename(dest_canonical)}",
+    )
+    return {"status": "ok", "task_id": task.id, "task": task.to_dict()}
+
+
+@router.post(
+    "/fs/archive/create",
+    dependencies=[Depends(require_scope("shares:manage", "shares:user_write", "storage:write", "storage:admin"))],
+)
+async def fs_archive_create(
+    req: ArchiveCreateRequest,
+    principal: AuthenticatedPrincipal = Depends(get_current_principal),
+):
+    from backend.services.fs_transfer import transfer_manager
+
+    dest_canonical = resolve_within(req.destination_dir, ALLOWED_BROWSE_ROOTS)
+    if dest_canonical is None:
+        raise HTTPException(status_code=403, detail="Destination directory is outside allowed folders.")
+    check_user_path_access(req.destination_dir, principal)
+
+    archive_name = os.path.basename(req.archive_name.strip())
+    if not archive_name or "/" in archive_name or "\\" in archive_name or archive_name in (".", ".."):
+        raise HTTPException(status_code=400, detail="Invalid archive name")
+
+    clean_sources = []
+    for src in req.sources:
+        src_canonical = resolve_within(src, ALLOWED_BROWSE_ROOTS)
+        if src_canonical is None:
+            raise HTTPException(status_code=403, detail=f"Source path {src} is outside allowed folders.")
+        check_user_path_access(src, principal)
+        clean_sources.append(src_canonical)
+
+    task = transfer_manager.submit_archive_create(
+        sources=clean_sources,
+        destination_dir=dest_canonical,
+        archive_name=archive_name,
+        fmt=req.format,
+    )
+    add_event(
+        "info",
+        "File Explorer",
+        f"Queued archive creation {archive_name} from {len(clean_sources)} item(s)",
+    )
+    return {"status": "ok", "task_id": task.id, "task": task.to_dict()}
+
+
+@router.post(
+    "/fs/archive/extract",
+    dependencies=[Depends(require_scope("shares:manage", "shares:user_write", "storage:write", "storage:admin"))],
+)
+async def fs_archive_extract(
+    req: ArchiveExtractRequest,
+    principal: AuthenticatedPrincipal = Depends(get_current_principal),
+):
+    from backend.services.fs_transfer import transfer_manager
+
+    dest_canonical = resolve_within(req.destination_dir, ALLOWED_BROWSE_ROOTS)
+    if dest_canonical is None:
+        raise HTTPException(status_code=403, detail="Destination directory is outside allowed folders.")
+    check_user_path_access(req.destination_dir, principal)
+
+    arc_canonical = resolve_within(req.archive_path, ALLOWED_BROWSE_ROOTS)
+    if arc_canonical is None or not os.path.isfile(arc_canonical):
+        raise HTTPException(status_code=404, detail="Archive file not found or outside allowed folders.")
+    check_user_path_access(req.archive_path, principal)
+
+    task = transfer_manager.submit_archive_extract(
+        archive_path=arc_canonical,
+        destination_dir=dest_canonical,
+    )
+    add_event(
+        "info",
+        "File Explorer",
+        f"Queued extraction of {os.path.basename(arc_canonical)} to {os.path.basename(dest_canonical)}",
+    )
+    return {"status": "ok", "task_id": task.id, "task": task.to_dict()}
+
+
+@router.get(
+    "/fs/transfers",
+    dependencies=[Depends(require_scope("shares:read", "storage:read", "system:view"))],
+)
+def fs_list_transfers(principal: AuthenticatedPrincipal = Depends(get_current_principal)):
+    from backend.services.fs_transfer import transfer_manager
+
+    return {"status": "ok", "tasks": transfer_manager.list_tasks()}
+
+
+@router.get("/fs/transfers/stream")
+async def fs_transfers_stream(
+    request: Request,
+    principal: AuthenticatedPrincipal = Depends(get_current_principal),
+):
+    from backend.services.fs_transfer import transfer_manager
+
+    loop = asyncio.get_running_loop()
+    queue = asyncio.Queue(maxsize=100)
+    transfer_manager.register_listener(queue, loop)
+
+    async def event_generator():
+        try:
+            initial_data = json.dumps({"event": "snapshot", "tasks": transfer_manager.list_tasks()})
+            yield f"event: snapshot\ndata: {initial_data}\n\n"
+
+            while True:
+                if await request.is_disconnected():
+                    break
+                try:
+                    payload = await asyncio.wait_for(queue.get(), timeout=15.0)
+                    evt_type = payload.get("event", "update")
+                    data_str = json.dumps(payload)
+                    yield f"event: {evt_type}\ndata: {data_str}\n\n"
+                except asyncio.TimeoutError:
+                    yield ": ping\n\n"
+        except asyncio.CancelledError:
+            pass
+        finally:
+            transfer_manager.unregister_listener(queue)
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
+
+
+@router.post(
+    "/fs/transfers/{task_id}/pause",
+    dependencies=[Depends(require_scope("shares:manage", "shares:user_write", "storage:write", "storage:admin"))],
+)
+def fs_pause_transfer(task_id: str, principal: AuthenticatedPrincipal = Depends(get_current_principal)):
+    from backend.services.fs_transfer import transfer_manager
+
+    ok = transfer_manager.pause_task(task_id)
+    if not ok:
+        raise HTTPException(status_code=404, detail="Task not found or cannot be paused")
+    return {"status": "ok", "paused": True}
+
+
+@router.post(
+    "/fs/transfers/{task_id}/resume",
+    dependencies=[Depends(require_scope("shares:manage", "shares:user_write", "storage:write", "storage:admin"))],
+)
+def fs_resume_transfer(task_id: str, principal: AuthenticatedPrincipal = Depends(get_current_principal)):
+    from backend.services.fs_transfer import transfer_manager
+
+    ok = transfer_manager.resume_task(task_id)
+    if not ok:
+        raise HTTPException(status_code=404, detail="Task not found or cannot be resumed")
+    return {"status": "ok", "resumed": True}
+
+
+@router.post(
+    "/fs/transfers/{task_id}/cancel",
+    dependencies=[Depends(require_scope("shares:manage", "shares:user_write", "storage:write", "storage:admin"))],
+)
+def fs_cancel_transfer(task_id: str, principal: AuthenticatedPrincipal = Depends(get_current_principal)):
+    from backend.services.fs_transfer import transfer_manager
+
+    ok = transfer_manager.cancel_task(task_id)
+    if not ok:
+        raise HTTPException(status_code=404, detail="Task not found or cannot be cancelled")
+    return {"status": "ok", "cancelled": True}
+
+
+@router.delete(
+    "/fs/transfers/completed",
+    dependencies=[Depends(require_scope("shares:manage", "shares:user_write", "storage:write", "storage:admin"))],
+)
+def fs_clear_completed_transfers(principal: AuthenticatedPrincipal = Depends(get_current_principal)):
+    from backend.services.fs_transfer import transfer_manager
+
+    cleared = transfer_manager.clear_completed_tasks()
+    return {"status": "ok", "cleared_count": cleared}
+
+
+@router.post(
+    "/fs/checksum",
+    dependencies=[Depends(require_scope("shares:read", "storage:read", "system:view"))],
+)
+async def fs_checksum(
+    req: ChecksumRequest,
+    principal: AuthenticatedPrincipal = Depends(get_current_principal),
+):
+    check_user_path_access(req.path, principal)
+    target = _contained(req.path, must_exist=True)
+    if os.path.isdir(target):
+        raise HTTPException(status_code=400, detail="Cannot compute checksum of a directory")
+
+    algo = req.algorithm.lower()
+    h = hashlib.new(algo)
+    file_size = os.path.getsize(target)
+
+    def _calc_hash():
+        with open(target, "rb") as f:
+            while chunk := f.read(256 * 1024):
+                h.update(chunk)
+        return h.hexdigest()
+
+    digest = await asyncio.to_thread(_calc_hash)
+    return {
+        "status": "ok",
+        "path": req.path,
+        "algorithm": algo,
+        "checksum": digest,
+        "size": file_size,
+    }
+
+
+@router.post(
+    "/fs/folder-size",
+    dependencies=[Depends(require_scope("shares:read", "storage:read", "system:view"))],
+)
+async def fs_folder_size(
+    req: FolderSizeRequest,
+    principal: AuthenticatedPrincipal = Depends(get_current_principal),
+):
+    check_user_path_access(req.path, principal)
+    target = _contained(req.path, must_exist=True)
+    if not os.path.isdir(target):
+        raise HTTPException(status_code=400, detail="Path is not a directory")
+
+    if not req.force_wake:
+        is_standby = False
+        try:
+            from backend.services.rag_engine import is_backing_disk_in_standby
+
+            is_standby = is_backing_disk_in_standby(target)
+        except Exception:
+            pass
+        if is_standby:
+            return {
+                "status": "standby",
+                "path": req.path,
+                "size": None,
+                "files_count": None,
+                "dirs_count": None,
+                "is_standby": True,
+                "cached": False,
+                "message": "Drive is in standby mode. Size calculation deferred to prevent spinup.",
+            }
+
+    now = time.time()
+    try:
+        cur_mtime = os.path.getmtime(target)
+    except OSError:
+        cur_mtime = 0.0
+
+    cached = _FOLDER_SIZE_CACHE.get(target)
+    if cached and (now - cached[0]) < 300.0 and cached[1] == cur_mtime:
+        return {
+            "status": "ok",
+            "path": req.path,
+            "size": cached[2],
+            "files_count": cached[3],
+            "dirs_count": cached[4],
+            "is_standby": False,
+            "cached": True,
+        }
+
+    def _compute_size():
+        total_sz = 0
+        f_count = 0
+        d_count = 0
+        for root, dirs, files in os.walk(target):
+            d_count += len(dirs)
+            for f in files:
+                f_path = os.path.join(root, f)
+                try:
+                    if not os.path.islink(f_path):
+                        total_sz += os.path.getsize(f_path)
+                    f_count += 1
+                except OSError:
+                    pass
+        return total_sz, f_count, d_count
+
+    total_sz, f_count, d_count = await asyncio.to_thread(_compute_size)
+    _FOLDER_SIZE_CACHE[target] = (now, cur_mtime, total_sz, f_count, d_count)
+
+    return {
+        "status": "ok",
+        "path": req.path,
+        "size": total_sz,
+        "files_count": f_count,
+        "dirs_count": d_count,
+        "is_standby": False,
+        "cached": False,
+    }
+
+
+@router.get(
+    "/fs/permissions",
+    dependencies=[Depends(require_scope("shares:read", "storage:read", "system:view"))],
+)
+def fs_get_permissions(
+    path: str,
+    principal: AuthenticatedPrincipal = Depends(get_current_principal),
+):
+    check_user_path_access(path, principal)
+    target = _contained(path, must_exist=True)
+    st = os.stat(target, follow_symlinks=False)
+    mode_int = st.st_mode
+    octal_str = f"{stat.S_IMODE(mode_int):04o}"
+    human_mode = stat.filemode(mode_int)
+
+    owner_name = str(st.st_uid)
+    group_name = str(st.st_gid)
+    try:
+        import pwd
+
+        owner_name = pwd.getpwuid(st.st_uid).pw_name
+    except Exception:
+        pass
+    try:
+        import grp
+
+        group_name = grp.getgrgid(st.st_gid).gr_name
+    except Exception:
+        pass
+
+    return {
+        "status": "ok",
+        "path": path,
+        "mode_octal": octal_str,
+        "mode_human": human_mode,
+        "owner": owner_name,
+        "group": group_name,
+        "uid": st.st_uid,
+        "gid": st.st_gid,
+        "is_dir": stat.S_ISDIR(mode_int),
+    }
+
+
+@router.put(
+    "/fs/permissions",
+    dependencies=[Depends(require_scope("shares:manage", "storage:admin"))],
+)
+async def fs_update_permissions(
+    req: PermissionsUpdateRequest,
+    principal: AuthenticatedPrincipal = Depends(get_current_principal),
+):
+    check_user_path_access(req.path, principal)
+    target = _contained(req.path, must_exist=True)
+
+    # Guard against modifying sensitive system directories and appdata root
+    normalized = os.path.abspath(target)
+    protected_system_prefixes = [
+        "/boot",
+        "/etc",
+        "/sys",
+        "/proc",
+        "/dev",
+        "/usr",
+        "/bin",
+        "/sbin",
+        "/var",
+        "/appdata",
+        "/mnt/user/appdata",
+    ]
+    if any(normalized == p or normalized.startswith(p + "/") for p in protected_system_prefixes):
+        raise HTTPException(
+            status_code=403,
+            detail="Modifying permissions on protected system roots or /appdata is forbidden",
+        )
+
+    mode_int = None
+    if req.mode_octal:
+        try:
+            mode_int = int(req.mode_octal, 8)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid octal mode string")
+
+    uid = -1
+    gid = -1
+    if req.owner:
+        try:
+            import pwd
+
+            uid = pwd.getpwnam(req.owner).pw_uid if not req.owner.isdigit() else int(req.owner)
+        except Exception:
+            raise HTTPException(status_code=400, detail=f"User {req.owner} not found")
+    if req.group:
+        try:
+            import grp
+
+            gid = grp.getgrnam(req.group).gr_gid if not req.group.isdigit() else int(req.group)
+        except Exception:
+            raise HTTPException(status_code=400, detail=f"Group {req.group} not found")
+
+    def _apply_permissions():
+        paths_to_update = [target]
+        if req.recursive and os.path.isdir(target):
+            for root, dirs, files in os.walk(target):
+                for d in dirs:
+                    paths_to_update.append(os.path.join(root, d))
+                for f in files:
+                    paths_to_update.append(os.path.join(root, f))
+        for p in paths_to_update:
+            try:
+                if mode_int is not None:
+                    os.chmod(p, mode_int)
+                if uid != -1 or gid != -1:
+                    os.chown(p, uid, gid)
+            except OSError as e:
+                logger.warning(f"[FS Permissions] Could not chmod/chown {p}: {e}")
+
+    await asyncio.to_thread(_apply_permissions)
+    return {"status": "ok", "path": req.path, "recursive": req.recursive}
+
+
 @router.get("/fs/download")
 def fs_download(path: str, principal: AuthenticatedPrincipal = Depends(get_current_principal)):
     check_user_path_access(path, principal)
@@ -627,17 +1291,190 @@ async def fs_upload(
     if os.path.islink(file_path) and resolve_within(file_path, ALLOWED_BROWSE_ROOTS) is None:
         raise HTTPException(status_code=403, detail="Destination symlink points outside allowed folders")
 
+    staging_file = os.path.join(target_canonical, f".zettnas_tmp_{secrets.token_hex(8)}_{filename}")
     try:
-        async with aiofiles.open(file_path, "wb") as f_out:
+        async with aiofiles.open(staging_file, "wb") as f_out:
             async for chunk in request.stream():
                 if chunk:
                     await f_out.write(chunk)
 
+        os.replace(staging_file, file_path)
         add_event("success", "File Explorer", f"Uploaded {filename} to {path}")
         return {"status": "ok", "message": "File uploaded"}
     except Exception as e:
+        if os.path.exists(staging_file):
+            try:
+                os.remove(staging_file)
+            except Exception:
+                pass
         logger.error(f"[FS] Upload failed: {e}")
         raise HTTPException(status_code=500, detail="Failed to upload file")
+
+
+class UploadInitRequest(BaseModel):
+    path: str
+    filename: str
+    total_size: int
+    total_chunks: int
+
+
+class UploadCompleteRequest(BaseModel):
+    upload_id: str
+    expected_sha256: Optional[str] = None
+
+
+_CHUNKED_UPLOADS: Dict[str, Dict[str, Any]] = {}
+_CHUNKED_UPLOADS_LOCK = asyncio.Lock()
+
+
+@router.post(
+    "/fs/upload/init",
+    dependencies=[Depends(require_scope("shares:manage", "shares:user_write", "storage:write", "storage:admin"))],
+)
+async def fs_upload_init(
+    req: UploadInitRequest,
+    principal: AuthenticatedPrincipal = Depends(get_current_principal),
+):
+    check_user_path_access(req.path, principal)
+    target_unresolved, _, _ = _safe_fs_target(req.path)
+    target_canonical = resolve_within(target_unresolved, ALLOWED_BROWSE_ROOTS)
+    if target_canonical is None or not os.path.isdir(target_canonical):
+        raise HTTPException(status_code=400, detail="Target path is not a valid directory within allowed folders")
+
+    filename = os.path.basename(req.filename)
+    if not filename or filename in (".", "..") or "/" in filename or "\\" in filename:
+        raise HTTPException(status_code=400, detail="Invalid filename")
+
+    upload_id = secrets.token_hex(16)
+    staging_dir = os.path.join(target_canonical, f".zettnas_staging_{upload_id}_{filename}")
+    os.makedirs(staging_dir, exist_ok=True)
+
+    async with _CHUNKED_UPLOADS_LOCK:
+        _CHUNKED_UPLOADS[upload_id] = {
+            "upload_id": upload_id,
+            "target_dir": target_canonical,
+            "staging_dir": staging_dir,
+            "filename": filename,
+            "total_size": req.total_size,
+            "total_chunks": req.total_chunks,
+            "chunks_received": set(),
+            "created_at": time.time(),
+            "created_by": principal.username,
+        }
+
+    return {
+        "status": "ok",
+        "upload_id": upload_id,
+        "chunk_size": 16 * 1024 * 1024,
+        "total_chunks": req.total_chunks,
+    }
+
+
+@router.post(
+    "/fs/upload/chunk",
+    dependencies=[Depends(require_scope("shares:manage", "shares:user_write", "storage:write", "storage:admin"))],
+)
+async def fs_upload_chunk(
+    request: Request,
+    upload_id: str,
+    chunk_index: int,
+    principal: AuthenticatedPrincipal = Depends(get_current_principal),
+):
+    async with _CHUNKED_UPLOADS_LOCK:
+        upload_info = _CHUNKED_UPLOADS.get(upload_id)
+        if not upload_info:
+            raise HTTPException(status_code=404, detail="Upload session not found or expired")
+        if upload_info.get("created_by") != principal.username and not principal.has_scope("storage:admin"):
+            raise HTTPException(status_code=403, detail="Not authorized to write to this upload")
+
+    staging_dir = upload_info["staging_dir"]
+    if not os.path.isdir(staging_dir):
+        raise HTTPException(status_code=404, detail="Staging directory missing for upload session")
+
+    chunk_path = os.path.join(staging_dir, f"chunk_{chunk_index:06d}")
+    async with aiofiles.open(chunk_path, "wb") as f_out:
+        async for content in request.stream():
+            if content:
+                await f_out.write(content)
+
+    async with _CHUNKED_UPLOADS_LOCK:
+        if upload_id in _CHUNKED_UPLOADS:
+            _CHUNKED_UPLOADS[upload_id]["chunks_received"].add(chunk_index)
+
+    return {"status": "ok", "chunk_index": chunk_index}
+
+
+@router.post(
+    "/fs/upload/complete",
+    dependencies=[Depends(require_scope("shares:manage", "shares:user_write", "storage:write", "storage:admin"))],
+)
+async def fs_upload_complete(
+    req: UploadCompleteRequest,
+    principal: AuthenticatedPrincipal = Depends(get_current_principal),
+):
+    async with _CHUNKED_UPLOADS_LOCK:
+        upload_info = _CHUNKED_UPLOADS.get(req.upload_id)
+        if not upload_info:
+            raise HTTPException(status_code=404, detail="Upload session not found or expired")
+
+    staging_dir = upload_info["staging_dir"]
+    target_dir = upload_info["target_dir"]
+    filename = upload_info["filename"]
+    total_chunks = upload_info["total_chunks"]
+    chunks_received = upload_info["chunks_received"]
+
+    if len(chunks_received) < total_chunks:
+        missing = set(range(total_chunks)) - chunks_received
+        raise HTTPException(status_code=400, detail=f"Upload incomplete. Missing {len(missing)} chunks")
+
+    final_target = os.path.join(target_dir, filename)
+    check_user_path_access(final_target, principal)
+    temp_assembly = os.path.join(target_dir, f".zettnas_tmp_{req.upload_id}_{filename}")
+
+    sha256 = hashlib.sha256()
+    try:
+        async with aiofiles.open(temp_assembly, "wb") as f_out:
+            for idx in range(total_chunks):
+                chunk_file = os.path.join(staging_dir, f"chunk_{idx:06d}")
+                if not os.path.exists(chunk_file):
+                    raise HTTPException(status_code=400, detail=f"Chunk file {idx} missing on disk")
+                async with aiofiles.open(chunk_file, "rb") as f_in:
+                    while b := await f_in.read(65536):
+                        sha256.update(b)
+                        await f_out.write(b)
+
+        computed_hash = sha256.hexdigest()
+        if req.expected_sha256 and req.expected_sha256.lower().strip() != computed_hash.lower():
+            if os.path.exists(temp_assembly):
+                os.remove(temp_assembly)
+            raise HTTPException(
+                status_code=400,
+                detail=f"SHA-256 integrity mismatch: expected {req.expected_sha256}, computed {computed_hash}",
+            )
+
+        os.replace(temp_assembly, final_target)
+        shutil.rmtree(staging_dir, ignore_errors=True)
+        async with _CHUNKED_UPLOADS_LOCK:
+            _CHUNKED_UPLOADS.pop(req.upload_id, None)
+
+        final_size = os.path.getsize(final_target)
+        add_event("success", "File Explorer", f"Completed chunked upload of {filename}")
+        return {
+            "status": "ok",
+            "filename": filename,
+            "size_bytes": final_size,
+            "sha256": computed_hash,
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        if os.path.exists(temp_assembly):
+            try:
+                os.remove(temp_assembly)
+            except Exception:
+                pass
+        logger.error(f"[FS] Chunked assembly failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to assemble uploaded chunks: {e}")
 
 
 class TrashRestoreRequest(BaseModel):
@@ -933,6 +1770,104 @@ async def fs_trash_empty(principal: AuthenticatedPrincipal = Depends(get_current
     return res
 
 
+def _extract_image_metadata(file_path: str) -> dict:
+    """Extracts resolution, megapixels, and EXIF camera parameters safely without loading large image buffers."""
+    meta = {}
+    try:
+        try:
+            import pillow_heif
+
+            pillow_heif.register_heif_opener()
+        except Exception:
+            pass
+        from PIL import ExifTags, Image
+
+        with Image.open(file_path) as img:
+            w, h = img.size
+            meta["width"] = w
+            meta["height"] = h
+            meta["dimensions"] = f"{w} × {h}"
+            mp = round((w * h) / 1_000_000, 1)
+            if mp > 0:
+                meta["megapixels"] = f"{mp} MP"
+            meta["color_mode"] = img.mode
+
+            exif = None
+            if hasattr(img, "getexif"):
+                try:
+                    exif = img.getexif()
+                except Exception:
+                    exif = None
+            if not exif:
+                raw_exif = getattr(img, "_getexif", None)
+                if callable(raw_exif):
+                    try:
+                        exif = raw_exif()
+                    except Exception:
+                        exif = None
+            if exif:
+                tag_map = {ExifTags.TAGS.get(k, k): v for k, v in exif.items()}
+                exif_data = {}
+
+                make = str(tag_map.get("Make") or "").strip()
+                model = str(tag_map.get("Model") or "").strip()
+                if make or model:
+                    if make and model.lower().startswith(make.lower()):
+                        camera = model
+                    else:
+                        camera = f"{make} {model}".strip()
+                    exif_data["camera"] = camera
+
+                lens = str(tag_map.get("LensModel") or tag_map.get("Lens") or "").strip()
+                if lens:
+                    exif_data["lens"] = lens
+
+                date_taken = str(tag_map.get("DateTimeOriginal") or tag_map.get("DateTime") or "").strip()
+                if date_taken:
+                    exif_data["date_taken"] = date_taken
+
+                exp = tag_map.get("ExposureTime")
+                if exp is not None:
+                    try:
+                        if isinstance(exp, tuple) and len(exp) == 2 and exp[1] != 0:
+                            num, den = exp
+                            exif_data["shutter_speed"] = f"{num}/{den}s" if num < den else f"{round(num / den, 1)}s"
+                        elif hasattr(exp, "numerator") and hasattr(exp, "denominator") and exp.denominator != 0:
+                            num, den = exp.numerator, exp.denominator
+                            exif_data["shutter_speed"] = f"{num}/{den}s" if num < den else f"{round(num / den, 1)}s"
+                        else:
+                            val = float(exp)
+                            exif_data["shutter_speed"] = f"1/{round(1 / val)}s" if 0 < val < 1 else f"{round(val, 1)}s"
+                    except Exception:
+                        exif_data["shutter_speed"] = str(exp)
+
+                fnum = tag_map.get("FNumber")
+                if fnum is not None:
+                    try:
+                        fval = float(fnum.numerator / fnum.denominator) if hasattr(fnum, "numerator") else float(fnum)
+                        exif_data["aperture"] = f"f/{fval:.1f}"
+                    except Exception:
+                        exif_data["aperture"] = f"f/{fnum}"
+
+                iso = tag_map.get("ISOSpeedRatings") or tag_map.get("PhotographicSensitivity")
+                if iso is not None:
+                    exif_data["iso"] = f"ISO {iso}"
+
+                flen = tag_map.get("FocalLength")
+                if flen is not None:
+                    try:
+                        fl_val = float(flen.numerator / flen.denominator) if hasattr(flen, "numerator") else float(flen)
+                        exif_data["focal_length"] = f"{round(fl_val)}mm"
+                    except Exception:
+                        exif_data["focal_length"] = f"{flen}mm"
+
+                if exif_data:
+                    meta["exif"] = exif_data
+    except Exception:
+        pass
+    return meta
+
+
 @router.get("/fs/preview", dependencies=[Depends(require_scope("shares:read", "storage:read", "system:view"))])
 async def fs_preview(path: str, principal: AuthenticatedPrincipal = Depends(get_current_principal)):
     """Universal Quick Look preview generator.
@@ -948,17 +1883,23 @@ async def fs_preview(path: str, principal: AuthenticatedPrincipal = Depends(get_
     sz = os.path.getsize(target)
 
     # 1. Image formats
-    image_exts = {".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg", ".bmp", ".ico", ".tiff"}
+    image_exts = {".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg", ".bmp", ".ico", ".tiff", ".heic", ".heif"}
     if ext in image_exts:
-        return {
+        is_heif = ext in {".heic", ".heif"}
+        preview_url = f"/api/fs/preview/image?path={target}" if is_heif else f"/api/fs/download?path={target}"
+        result = {
             "status": "ok",
             "type": "image",
             "path": target,
             "name": filename,
             "size": sz,
             "ext": ext,
-            "url": f"/api/fs/download?path={target}",
+            "url": preview_url,
+            "download_url": f"/api/fs/download?path={target}",
         }
+        img_meta = _extract_image_metadata(target)
+        result.update(img_meta)
+        return result
 
     # 2. Media (audio / video) formats
     media_exts = {".mp4", ".mkv", ".webm", ".mov", ".avi", ".mp3", ".wav", ".ogg", ".flac", ".aac", ".m4a"}
@@ -1066,6 +2007,73 @@ async def fs_preview(path: str, principal: AuthenticatedPrincipal = Depends(get_
     except Exception as e:
         logger.error(f"[PREVIEW] Hex dump error for {target}: {e}")
         raise HTTPException(status_code=500, detail="Unable to generate preview")
+
+
+@router.get(
+    "/fs/preview/image",
+    dependencies=[Depends(require_scope("shares:read", "storage:read", "system:view"))],
+)
+async def fs_preview_image(
+    path: str,
+    thumb: Optional[int] = None,
+    max_dim: Optional[int] = None,
+    principal: AuthenticatedPrincipal = Depends(get_current_principal),
+):
+    """Renders and transcodes image formats (including Apple HEIC/HEIF) on-the-fly to WebP for universal browser display.
+    Supports caching headers and optional downscaling for fast filmstrip thumbnails.
+    """
+    check_user_path_access(path, principal)
+    target = _contained(path, must_exist=True)
+    if os.path.isdir(target):
+        raise HTTPException(status_code=400, detail="Cannot preview a directory")
+
+    ext = os.path.splitext(target)[1].lower()
+
+    # If not HEIC/HEIF and not requesting downscaled thumb/max_dim, return standard file response
+    if ext not in {".heic", ".heif"} and not thumb and not max_dim:
+        return FileResponse(target)
+
+    def _transcode() -> bytes:
+        try:
+            import pillow_heif
+
+            pillow_heif.register_heif_opener()
+        except Exception:
+            pass
+        from PIL import Image, ImageOps
+
+        with Image.open(target) as img:
+            try:
+                img = ImageOps.exif_transpose(img)
+            except Exception:
+                pass
+            if img.mode not in ("RGB", "RGBA"):
+                img = img.convert("RGB")
+
+            limit = 256 if thumb else (min(max_dim, 3840) if max_dim else 2560)
+            w, h = img.size
+            if max(w, h) > limit:
+                img.thumbnail((limit, limit), Image.Resampling.LANCZOS)
+
+            buf = io.BytesIO()
+            img.save(buf, format="WEBP", quality=88, method=4)
+            return buf.getvalue()
+
+    try:
+        webp_bytes = await asyncio.to_thread(_transcode)
+        mtime = os.path.getmtime(target)
+        etag = f'"{hashlib.md5(f"{target}:{mtime}:{thumb}:{max_dim}".encode()).hexdigest()}"'
+        return Response(
+            content=webp_bytes,
+            media_type="image/webp",
+            headers={
+                "Cache-Control": "public, max-age=86400, stale-while-revalidate=3600",
+                "ETag": etag,
+            },
+        )
+    except Exception as e:
+        logger.error(f"[FS] Image preview transcode error for {target}: {e}")
+        return FileResponse(target)
 
 
 @router.get("/fs/stream")
@@ -1239,6 +2247,46 @@ class CreateShareLinkRequest(BaseModel):
     label: Optional[str] = None
 
 
+# Sliding-window rate limiter for shared link password attempts: IP -> list of timestamps
+_SHARE_PWD_ATTEMPTS: Dict[str, List[float]] = {}
+_SHARE_PWD_LOCK = asyncio.Lock()
+
+
+def _get_client_ip(request: Request) -> str:
+    forwarded = request.headers.get("X-Forwarded-For")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    client = request.client
+    return client.host if client else "127.0.0.1"
+
+
+async def _check_share_rate_limit(ip: str):
+    now = time.time()
+    async with _SHARE_PWD_LOCK:
+        attempts = _SHARE_PWD_ATTEMPTS.get(ip, [])
+        attempts = [t for t in attempts if now - t < 600]
+        _SHARE_PWD_ATTEMPTS[ip] = attempts
+        if len(attempts) >= 5:
+            raise HTTPException(
+                status_code=429,
+                detail="Too many failed password attempts. Please wait 10 minutes before retrying.",
+            )
+
+
+async def _record_failed_share_attempt(ip: str):
+    now = time.time()
+    async with _SHARE_PWD_LOCK:
+        attempts = _SHARE_PWD_ATTEMPTS.get(ip, [])
+        attempts = [t for t in attempts if now - t < 600]
+        attempts.append(now)
+        _SHARE_PWD_ATTEMPTS[ip] = attempts
+
+
+async def _reset_share_rate_limit(ip: str):
+    async with _SHARE_PWD_LOCK:
+        _SHARE_PWD_ATTEMPTS.pop(ip, None)
+
+
 @router.post(
     "/fs/share-links",
     dependencies=[Depends(require_scope("files:read", "files:write", "storage:read", "storage:admin"))],
@@ -1264,7 +2312,7 @@ async def create_share_link(
 
     password_hash = None
     if req.password and req.password.strip():
-        password_hash = hashlib.sha256(req.password.strip().encode("utf-8")).hexdigest()
+        password_hash = hash_password(req.password.strip())
 
     link_data = {
         "token": token,
@@ -1368,7 +2416,10 @@ async def access_shared_file(
     if item.get("max_downloads") and item.get("download_count", 0) >= item["max_downloads"]:
         raise HTTPException(status_code=410, detail="Download limit reached for this share link")
 
+    client_ip = _get_client_ip(request)
+
     if item.get("has_password"):
+        await _check_share_rate_limit(client_ip)
         provided_pwd = request.headers.get("X-Share-Password") or pwd or ""
         if not provided_pwd:
             raise HTTPException(
@@ -1376,9 +2427,11 @@ async def access_shared_file(
                 detail="Password required to access this share",
                 headers={"WWW-Authenticate": "ShareLink realm='Shared Resource'"},
             )
-        cand_hash = hashlib.sha256(provided_pwd.strip().encode("utf-8")).hexdigest()
-        if cand_hash != item.get("password_hash"):
+        expected_hash = item.get("password_hash") or ""
+        if not verify_password(provided_pwd.strip(), expected_hash):
+            await _record_failed_share_attempt(client_ip)
             raise HTTPException(status_code=401, detail="Incorrect password for this share link")
+        await _reset_share_rate_limit(client_ip)
 
     target_path = item["path"]
     try:
@@ -1418,6 +2471,22 @@ async def access_shared_file(
 
     if is_dir:
         base_name = os.path.basename(real_target) or "shared_folder"
+        real_target_abs = os.path.realpath(real_target)
+
+        # 5 GB safety check
+        total_uncompressed = 0
+        for root_dir, _, files in os.walk(real_target):
+            for f in files:
+                fp = os.path.join(root_dir, f)
+                try:
+                    total_uncompressed += os.path.getsize(fp)
+                except OSError:
+                    pass
+                if total_uncompressed > 5 * 1024 * 1024 * 1024:
+                    raise HTTPException(
+                        status_code=400,
+                        detail="Shared folder exceeds maximum download size limit (5 GB).",
+                    )
 
         def _dir_zip_generator():
             spool = tempfile.SpooledTemporaryFile(max_size=10 * 1024 * 1024)
@@ -1426,6 +2495,12 @@ async def access_shared_file(
                     for root_dir, _, files in os.walk(real_target):
                         for f in files:
                             fp = os.path.join(root_dir, f)
+                            real_fp = os.path.realpath(fp)
+                            if not (real_fp == real_target_abs or real_fp.startswith(real_target_abs + os.sep)):
+                                logger.warning(
+                                    f"[Share Download] Skipping symlink outside shared directory: {fp} -> {real_fp}"
+                                )
+                                continue
                             rel = os.path.relpath(fp, os.path.dirname(real_target))
                             zf.write(fp, arcname=rel)
                 spool.seek(0)

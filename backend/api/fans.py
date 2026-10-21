@@ -1,5 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 
+from typing import Optional
+
 from backend.auth import require_scope
 from backend.config import (
     FAN_CPU_HOLD_SECS,
@@ -11,8 +13,17 @@ from backend.config import (
     FAN_ZERO_RPM_STOP_DELAY,
 )
 from backend.fsutil import atomic_write_json, read_json
-from backend.hardware.fans import sanitize_curve_points
-from backend.models.schemas import FanConfigRequest, FanPresetCreate
+from backend.hardware.fans import (
+    get_acoustic_sweep_status,
+    sanitize_curve_points,
+    start_acoustic_sweep,
+    stop_acoustic_sweep,
+)
+from backend.models.schemas import (
+    FanAcousticSweepRequest,
+    FanConfigRequest,
+    FanPresetCreate,
+)
 
 router = APIRouter(tags=["Thermal & Fan Control"])
 
@@ -158,3 +169,35 @@ def apply_fan_preset(preset_name: str):
     fan_cfg["profile"] = "auto"
     atomic_write_json(FAN_STATE_FILE, fan_cfg)
     return {"success": True, "applied": preset_name, "fan_config": fan_cfg}
+
+
+@router.post(
+    "/fans/calibrate/acoustic",
+    dependencies=[Depends(require_scope("hardware:fans", "hardware:*", "system:config"))],
+)
+def start_acoustic_calibration(req: Optional[FanAcousticSweepRequest] = None):
+    """
+    Initiates an automated acoustic fan calibration sweep from 58 to 183 PWM
+    at 5-second intervals to map RPM stability and chassis harmonic resonance.
+    """
+    step_duration = req.step_duration if req and req.step_duration is not None else 5.0
+    pwm_step = req.pwm_step if req and req.pwm_step is not None else 25
+    res = start_acoustic_sweep(step_duration=step_duration, pwm_step=pwm_step, run_in_background=True)
+    if not res.get("success"):
+        raise HTTPException(status_code=409, detail=res.get("error", "Sweep already running"))
+    return res
+
+
+@router.get("/fans/calibrate/acoustic")
+def get_acoustic_calibration():
+    """Returns the live progress, state, and stability results of the acoustic sweep."""
+    return get_acoustic_sweep_status()
+
+
+@router.post(
+    "/fans/calibrate/acoustic/stop",
+    dependencies=[Depends(require_scope("hardware:fans", "hardware:*", "system:config"))],
+)
+def stop_acoustic_calibration():
+    """Aborts the acoustic calibration sweep and immediately restores normal fan curves."""
+    return stop_acoustic_sweep()

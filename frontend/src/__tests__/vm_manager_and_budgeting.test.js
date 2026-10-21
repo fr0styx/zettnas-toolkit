@@ -1224,6 +1224,60 @@ describe('VM Manager & Dynamic Elastic Headroom Budgeting', () => {
       });
     });
 
+    it('ensures Host USB Passthrough card has unclipped flex-shrink layout and custom VID:PID button toggles properly with Enter key support', async () => {
+      const vmObj = {
+        id: 'vm-usb-view-test',
+        name: 'usb-test-vm',
+        vcpus: 2,
+        ram_gb: 4.0,
+        state: 'stopped',
+        usb_passthrough: [],
+      };
+      openVmEditModal('vm-usb-view-test', vmObj);
+      const editModal = document.getElementById('modal-vm-edit');
+      expect(editModal).not.toBeNull();
+
+      const toggleBtn = editModal.querySelector('#btn-edit-toggle-custom-usb');
+      const customWrap = editModal.querySelector('#vm-edit-custom-usb-wrap');
+      const usbCard = toggleBtn.closest('.vm-config-card') || toggleBtn.closest('div[style*="border-radius: 8px"]');
+      expect(usbCard).not.toBeNull();
+      // Ensure overflow: hidden is not present on the card to prevent zero min-height collapse in flexbox
+      expect(usbCard.style.overflow).not.toBe('hidden');
+      expect(usbCard.style.flexShrink).toBe('0');
+
+      // Initially hidden
+      expect(customWrap.style.display).toBe('none');
+      expect(toggleBtn.classList.contains('active')).toBe(false);
+
+      // Click to toggle open
+      toggleBtn.click();
+      expect(customWrap.style.display).toBe('flex');
+      expect(toggleBtn.classList.contains('active')).toBe(true);
+      expect(toggleBtn.textContent).toContain('Custom VID:PID');
+
+      // Fill in custom VID:PID and press Enter to add
+      const vidInput = editModal.querySelector('#vm-edit-custom-vid');
+      const pidInput = editModal.querySelector('#vm-edit-custom-pid');
+      const descInput = editModal.querySelector('#vm-edit-custom-desc');
+      vidInput.value = '303a';
+      pidInput.value = '1001';
+      descInput.value = 'ESP32-S3 JTAG';
+
+      // Press Enter in descInput
+      descInput.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+
+      // Verify card was added to attached USB list
+      const attachedCard = editModal.querySelector('.usb-device-card');
+      expect(attachedCard).not.toBeNull();
+      expect(attachedCard.textContent).toContain('ESP32-S3 JTAG');
+      expect(attachedCard.textContent).toContain('303a:1001');
+
+      // Click to toggle close
+      toggleBtn.click();
+      expect(customWrap.style.display).toBe('none');
+      expect(toggleBtn.classList.contains('active')).toBe(false);
+    });
+
     it('supports dragging and full OS window controls (minimize, maximize, close) on VM Edit and Create configuration modals', async () => {
       const mockVm = {
         id: 'vm-controls-test',

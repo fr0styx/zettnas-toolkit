@@ -38,7 +38,9 @@ window.addEventListener('DOMContentLoaded', () => {
     if (smartRefreshBtn) {
       smartRefreshBtn.addEventListener("click", () => {
         if (activeModalType && activeModalType.startsWith("disk_")) {
-          openSmartModal(activeModalType.replace("disk_", ""));
+          const dev = activeModalType.replace("disk_", "");
+          showToast(`Refreshing disk /dev/${dev}...`, "info");
+          openSmartModal(dev, true);
         } else if (activeModalType) {
           openMetricModal(activeModalType);
         }
@@ -694,10 +696,28 @@ async function openSmartModal(devName, forceWake = false) {
   if (smartRaw) smartRaw.textContent = t('common.loading', "Loading...");
 
   try {
-    const res = await api.request(`/api/disk_detail?dev=${encodeURIComponent(devName)}`, { signal: _smartFetchController.signal });
+    const wakeParam = forceWake ? '&wake=true' : '';
+    const res = await api.request(`/api/disk_detail?dev=${encodeURIComponent(devName)}${wakeParam}`, { signal: _smartFetchController.signal });
     if (res.ok) {
       const data = await res.json();
       _currentSmartData = data;
+      const isStandby = Boolean(data.is_standby || data.health === "STANDBY");
+      const standbyBanner = document.getElementById("smart-standby-banner");
+      if (standbyBanner) {
+        if (isStandby) {
+          standbyBanner.style.display = "flex";
+          const wakeBtn = document.getElementById("smart-btn-wake-modal");
+          if (wakeBtn && !wakeBtn.dataset.bound) {
+            wakeBtn.dataset.bound = "1";
+            wakeBtn.addEventListener("click", () => {
+              showToast(`Waking disk /dev/${devName}...`, "info");
+              openSmartModal(devName, true);
+            });
+          }
+        } else {
+          standbyBanner.style.display = "none";
+        }
+      }
       if (smartModel) smartModel.textContent = data.model || "Unknown";
       if (smartSerial) smartSerial.textContent = data.serial || "Unknown";
       if (smartHealth) {

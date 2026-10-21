@@ -5,13 +5,16 @@ individual container updates, and batch 'Update All' functionality with automate
 100% OS-agnostic and hardware-agnostic.
 """
 
+import base64
 from concurrent.futures import ThreadPoolExecutor
+import hashlib
 import json
 import os
 import socket
 import threading
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
+import urllib.request
 
 from backend.config import DATA_DIR, logger
 from backend.services.container_mutator import _docker_request, pull_container_image, recreate_container
@@ -73,10 +76,157 @@ _update_lock = threading.Lock()
 CACHE_TTL_SECS = 300  # 5 minutes
 
 
+def load_docker_host_credentials() -> Dict[str, Any]:
+    """
+    Parses Docker host configuration credentials from standard paths:
+    1. DOCKER_CONFIG_JSON environment variable
+    2. ~/.docker/config.json
+    3. /root/.docker/config.json
+    4. /host/root/.docker/config.json
+    5. DATA_DIR/docker_config.json
+    Returns the parsed 'auths' dictionary.
+    """
+    candidates = [
+        os.environ.get("DOCKER_CONFIG_JSON"),
+        os.path.expanduser("~/.docker/config.json"),
+        "/root/.docker/config.json",
+        "/host/root/.docker/config.json",
+        os.path.join(DATA_DIR, "docker_config.json"),
+    ]
+
+    for p in candidates:
+        if p and os.path.isfile(p):
+            try:
+                with open(p, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    if isinstance(data, dict):
+                        auths = data.get("auths", {})
+                        if isinstance(auths, dict) and auths:
+                            return auths
+            except Exception as e:
+                logger.debug(f"[Docker Updates] Error reading docker config at {p}: {e}")
+    return {}
+
+
+def extract_registry_from_image(img: str) -> Tuple[str, str, str]:
+    """
+    Parses an image string into (registry, repository, tag).
+    Examples:
+    - ghcr.io/org/repo:1.0 -> ('ghcr.io', 'org/repo', '1.0')
+    - harbor.internal:8443/library/app:latest -> ('harbor.internal:8443', 'library/app', 'latest')
+    - library/ubuntu:22.04 -> ('docker.io', 'library/ubuntu', '22.04')
+    - nginx:alpine -> ('docker.io', 'library/nginx', 'alpine')
+    """
+    img_clean = img.strip()
+    tag = "latest"
+    if ":" in img_clean and not img_clean.endswith(":"):
+        img_no_tag, tag = img_clean.rsplit(":", 1)
+        if "/" in tag:
+            img_no_tag = img_clean
+            tag = "latest"
+    else:
+        img_no_tag = img_clean
+
+    parts = img_no_tag.split("/", 1)
+    if len(parts) == 2 and ("." in parts[0] or ":" in parts[0] or parts[0] == "localhost"):
+        registry = parts[0]
+        repo = parts[1]
+    else:
+        registry = "docker.io"
+        repo = img_no_tag if "/" in img_no_tag else f"library/{img_no_tag}"
+
+    return registry, repo, tag
+
+
+def get_registry_auth_for_image(img: str) -> Optional[Dict[str, Any]]:
+    """
+    Finds matching authentication configuration from Docker host credentials for the specified image.
+    """
+    registry, _, _ = extract_registry_from_image(img)
+    auths = load_docker_host_credentials()
+    if not auths:
+        return None
+
+    # Exact or normalized matching
+    candidate_keys = [
+        registry,
+        f"https://{registry}",
+        f"https://{registry}/v1/",
+        f"https://{registry}/v2/",
+        f"http://{registry}",
+        f"http://{registry}/v1/",
+    ]
+    if registry in ("docker.io", "index.docker.io"):
+        candidate_keys.extend(["https://index.docker.io/v1/", "index.docker.io", "docker.io"])
+
+    for k in candidate_keys:
+        if k in auths:
+            val = auths[k]
+            if isinstance(val, dict):
+                entry = dict(val)
+                entry.setdefault("serveraddress", k)
+                return entry
+
+    return None
+
+
+def get_registry_auth_header(img: str) -> Dict[str, str]:
+    """
+    Generates the X-Registry-Auth base64 JSON header required by Docker Engine API
+    for private repository queries.
+    """
+    auth_entry = get_registry_auth_for_image(img)
+    if not auth_entry:
+        return {}
+    try:
+        raw_json = json.dumps(auth_entry).encode("utf-8")
+        b64 = base64.b64encode(raw_json).decode("ascii")
+        return {"X-Registry-Auth": b64}
+    except Exception as e:
+        logger.warning(f"[Docker Updates] Failed to encode registry auth header: {e}")
+        return {}
+
+
+def query_remote_registry_v2_manifest(img: str, timeout: float = 10.0) -> Optional[str]:
+    """
+    Queries the remote OCI / Registry v2 manifest directly over HTTPS with Bearer or Basic authentication.
+    Returns the image digest (e.g. 'sha256:...'), or None if unreadable.
+    """
+    registry, repo, tag = extract_registry_from_image(img)
+    host = "registry-1.docker.io" if registry in ("docker.io", "index.docker.io") else registry
+    url = f"https://{host}/v2/{repo}/manifests/{tag}"
+
+    req = urllib.request.Request(url, method="GET")
+    req.add_header(
+        "Accept",
+        "application/vnd.docker.distribution.manifest.v2+json, application/vnd.oci.image.manifest.v1+json",
+    )
+
+    auth = get_registry_auth_for_image(img)
+    if auth:
+        if "auth" in auth:
+            req.add_header("Authorization", f"Basic {auth['auth']}")
+        elif "username" in auth and "password" in auth:
+            token = base64.b64encode(f"{auth['username']}:{auth['password']}".encode("utf-8")).decode("ascii")
+            req.add_header("Authorization", f"Basic {token}")
+
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            digest = resp.headers.get("Docker-Content-Digest")
+            if digest:
+                return digest
+            body = resp.read()
+            return f"sha256:{hashlib.sha256(body).hexdigest()}"
+    except Exception as e:
+        logger.debug(f"[Docker Updates] Direct registry v2 query failed for {img}: {e}")
+        return None
+
+
 def _check_container_image_update(c: dict) -> Dict[str, Any]:
     """
     Checks if a newer image exists on the remote registry for a single container.
-    Queries GET /distribution/{image}/json over the Docker socket without downloading layers.
+    Queries GET /distribution/{image}/json over the Docker socket with authenticated
+    headers from host Docker config credentials, falling back to direct registry v2 query.
     """
     names = c.get("Names", ["unknown"])
     name = names[0].lstrip("/") if names else "unknown"
@@ -110,20 +260,34 @@ def _check_container_image_update(c: dict) -> Dict[str, Any]:
         return res
 
     try:
-        # 1. Query remote descriptor digest from registry via Docker Engine daemon
-        st, dist = _docker_request("GET", f"/distribution/{img}/json", timeout=6.0)
-        if st == 200:
+        auth_headers = get_registry_auth_header(img)
+
+        # 1. Query remote descriptor digest from registry via Docker Engine daemon with X-Registry-Auth
+        st, dist = _docker_request(
+            "GET",
+            f"/distribution/{img}/json",
+            timeout=6.0,
+            headers=auth_headers if auth_headers else None,
+        )
+        remote_digest = None
+        if st == 200 and isinstance(dist, dict):
             desc = dist.get("Descriptor", {})
             remote_digest = desc.get("digest")
+
+        # Fallback to direct registry v2 query if Docker daemon did not return digest
+        if not remote_digest and (st in (401, 403, 404, 500) or st != 200):
+            remote_digest = query_remote_registry_v2_manifest(img)
+
+        if remote_digest:
             res["remote_digest"] = remote_digest
 
             # 2. Query local image details to check RepoDigests
             st2, img_data = _docker_request("GET", f"/images/{img}/json", timeout=6.0)
-            repo_digests = img_data.get("RepoDigests", []) if st2 == 200 else []
+            repo_digests = img_data.get("RepoDigests", []) if st2 == 200 and isinstance(img_data, dict) else []
             res["local_digest"] = repo_digests[0] if repo_digests else None
 
             # 3. If remote digest is known and none of local RepoDigests contain it, update is ready!
-            if remote_digest and not any(remote_digest in rd for rd in repo_digests):
+            if not any(remote_digest in rd for rd in repo_digests):
                 res["has_update"] = True
                 res["status"] = "update_available"
             else:
@@ -131,6 +295,8 @@ def _check_container_image_update(c: dict) -> Dict[str, Any]:
                 res["status"] = "up_to_date"
         elif st == 401 or st == 403:
             res["status"] = "auth_required"
+            if auth_headers:
+                res["error"] = "Private registry authentication rejected"
         elif st == 404:
             res["status"] = "not_found"
         else:

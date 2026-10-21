@@ -1,6 +1,6 @@
 from typing import Any
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
 from backend.auth import require_scope
@@ -80,6 +80,24 @@ def get_notifications():
 @router.post("/config", dependencies=[Depends(require_scope("system:config"))])
 def update_notifications(req: NotificationConfigModel):
     """Save notification settings, preserving existing secrets when masked."""
+    from backend.services.ssrf_guard import validate_notification_url
+
+    for url_val, label in [
+        (req.discord_webhook_url, "Discord Webhook"),
+        (req.webhook_url, "Webhook"),
+        (req.ntfy_url, "ntfy"),
+    ]:
+        if url_val and url_val.strip() and url_val.strip() != "https://ntfy.sh":
+            ok, err = validate_notification_url(url_val.strip())
+            if not ok:
+                raise HTTPException(status_code=400, detail=f"Invalid {label} URL: {err}")
+
+    for u in req.apprise_urls:
+        if u and u.strip():
+            ok, err = validate_notification_url(u.strip())
+            if not ok:
+                raise HTTPException(status_code=400, detail=f"Invalid Apprise URL '{u}': {err}")
+
     data = req.model_dump()
     save_notification_config(data)
     return {"status": "ok", "config": mask_notification_config(load_notification_config())}

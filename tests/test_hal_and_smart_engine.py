@@ -250,3 +250,53 @@ def test_predictive_smart_velocity_and_linear_regression(tmp_path):
     assert pred["realloc_slope_per_1000h"] > 15.0
     assert pred["realloc_r2"] > 0.9
     assert pred["is_accelerating"] is True
+
+
+def test_fetch_disk_smart_detail_wake_triggers_spinup_and_bypasses_standby_guard():
+    """Verifies wake_if_standby=True triggers spinup and bypasses -n standby check."""
+    from backend.hardware.disks import fetch_disk_smart_detail
+
+    mock_standby_resp = MagicMock()
+    mock_standby_resp.returncode = 2
+    mock_standby_resp.stdout = "Device is in STANDBY mode, exit(2)"
+    mock_standby_resp.stderr = ""
+
+    mock_active_resp = MagicMock()
+    mock_active_resp.returncode = 0
+    mock_active_resp.stdout = json.dumps(
+        {
+            "model_name": "ST22000DM000-3Y6103",
+            "serial_number": "ZXA0T9C8",
+            "smart_status": {"passed": True},
+            "temperature": {"current": 37},
+            "power_on_time": {"hours": 1240},
+        }
+    )
+    mock_active_resp.stderr = ""
+
+    # Case 1: wake_if_standby=False -> Respects standby mode
+    with patch("subprocess.run", return_value=mock_standby_resp) as mock_run:
+        res = fetch_disk_smart_detail("sda", wake_if_standby=False)
+        assert res["health"] == "STANDBY"
+        assert res["is_standby"] is True
+        assert res["model"] == "SATA HDD (Standby)"
+        # smartctl called with -n standby
+        call_args = mock_run.call_args[0][0]
+        assert "-n" in call_args and "standby" in call_args
+
+    # Case 2: wake_if_standby=True -> Bypasses standby guard, triggers spinup & returns live details
+    with (
+        patch("subprocess.Popen") as mock_popen,
+        patch("subprocess.run", return_value=mock_active_resp) as mock_run_active,
+    ):
+        res = fetch_disk_smart_detail("sda", wake_if_standby=True)
+        assert res["health"] == "PASSED"
+        assert res["model"] == "ST22000DM000-3Y6103"
+        assert res["serial"] == "ZXA0T9C8"
+        # Verify dd or mdcmd was triggered
+        assert mock_popen.called
+        # Verify smartctl was called WITHOUT -n standby
+        for call in mock_run_active.call_args_list:
+            cmd = call[0][0]
+            if "smartctl" in cmd[0]:
+                assert "-n" not in cmd

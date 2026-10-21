@@ -13,7 +13,7 @@ import shlex
 import subprocess
 import tarfile
 import time
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 import yaml
 
@@ -101,6 +101,142 @@ def _write_file_to_container(cid: str, dir_path: str, filename: str, content: st
         return False
 
 
+def _extract_depends_on_from_labels(labels: Dict[str, str]) -> List[str]:
+    """
+    Extracts service dependency names from Docker Compose labels
+    such as com.docker.compose.depends_on.
+    Handles JSON format and comma-separated/colon-delimited formats.
+    """
+    raw = (labels.get("com.docker.compose.depends_on") or "").strip()
+    if not raw:
+        return []
+    if raw.startswith("{") and raw.endswith("}"):
+        try:
+            parsed = json.loads(raw)
+            if isinstance(parsed, dict):
+                return [str(k) for k in parsed.keys()]
+        except Exception:
+            pass
+    deps: List[str] = []
+    for item in raw.split(","):
+        part = item.strip().split(":")[0].strip()
+        if part and part not in deps:
+            deps.append(part)
+    return deps
+
+
+def build_stack_dependency_dag(
+    containers: List[Dict[str, Any]], compose_yaml: Optional[str] = None
+) -> Dict[str, Set[str]]:
+    """
+    Builds a directed acyclic graph (DAG) mapping each service to its upstream dependencies.
+    Dependencies are extracted from compose.yaml if available, or container labels.
+    """
+    deps_map: Dict[str, Set[str]] = {}
+    service_names: Set[str] = set()
+
+    for c in containers:
+        svc = c.get("service") or c.get("name")
+        if svc:
+            service_names.add(svc)
+            if svc not in deps_map:
+                deps_map[svc] = set()
+            for d in c.get("depends_on", []):
+                deps_map[svc].add(d)
+
+    # Augment with compose_yaml if present
+    if compose_yaml:
+        try:
+            parsed = yaml.safe_load(compose_yaml)
+            if isinstance(parsed, dict):
+                services = parsed.get("services", {})
+                if isinstance(services, dict):
+                    for svc_name, svc_conf in services.items():
+                        if isinstance(svc_conf, dict):
+                            service_names.add(svc_name)
+                            if svc_name not in deps_map:
+                                deps_map[svc_name] = set()
+                            raw_deps = svc_conf.get("depends_on")
+                            if isinstance(raw_deps, list):
+                                for d in raw_deps:
+                                    deps_map[svc_name].add(str(d))
+                            elif isinstance(raw_deps, dict):
+                                for d in raw_deps.keys():
+                                    deps_map[svc_name].add(str(d))
+        except Exception as e:
+            logger.debug(f"[DockerStacks] Could not parse compose_yaml for DAG: {e}")
+
+    # Restrict dependencies to services actually part of this stack
+    clean_dag: Dict[str, Set[str]] = {}
+    for svc in service_names:
+        clean_dag[svc] = {d for d in deps_map.get(svc, set()) if d in service_names and d != svc}
+
+    return clean_dag
+
+
+def topological_sort_stack_containers(
+    containers: List[Dict[str, Any]], compose_yaml: Optional[str] = None, reverse: bool = False
+) -> List[Dict[str, Any]]:
+    """
+    Performs topological sort on containers based on service dependencies.
+    If reverse=False: upstream dependencies come first (start/restart order).
+    If reverse=True: downstream dependents come first (stop order).
+    Handles cyclic dependencies gracefully without dropping containers.
+    """
+    if not containers:
+        return []
+
+    dag = build_stack_dependency_dag(containers, compose_yaml)
+
+    # In-degree calculation for Kahn's algorithm
+    # u in dag[v] means v depends on u (u -> v). u is upstream, v is downstream.
+    in_degree: Dict[str, int] = {svc: 0 for svc in dag}
+    dependents: Dict[str, List[str]] = {svc: [] for svc in dag}
+
+    for v, upstreams in dag.items():
+        in_degree[v] = len(upstreams)
+        for u in upstreams:
+            dependents[u].append(v)
+
+    # Queue contains services with 0 in-degree (no upstream dependencies)
+    queue = [svc for svc, deg in in_degree.items() if deg == 0]
+    ordered_services: List[str] = []
+
+    while queue:
+        curr = queue.pop(0)
+        ordered_services.append(curr)
+        for downstream in dependents.get(curr, []):
+            in_degree[downstream] -= 1
+            if in_degree[downstream] == 0:
+                queue.append(downstream)
+
+    # Add any remaining services (in case of cyclic dependencies or unlinked nodes)
+    for svc in dag:
+        if svc not in ordered_services:
+            ordered_services.append(svc)
+
+    # Group containers by service
+    svc_to_containers: Dict[str, List[Dict[str, Any]]] = {}
+    for c in containers:
+        svc = c.get("service") or c.get("name")
+        svc_to_containers.setdefault(svc, []).append(c)
+
+    ordered_containers: List[Dict[str, Any]] = []
+    for svc in ordered_services:
+        if svc in svc_to_containers:
+            ordered_containers.extend(svc_to_containers[svc])
+
+    # Append any container not matched by service
+    for c in containers:
+        if c not in ordered_containers:
+            ordered_containers.append(c)
+
+    if reverse:
+        ordered_containers.reverse()
+
+    return ordered_containers
+
+
 def list_all_stacks() -> List[Dict[str, Any]]:
     """
     Discovers and groups all containers by their Compose / Orchestrator stack.
@@ -164,6 +300,7 @@ def list_all_stacks() -> List[Dict[str, Any]]:
         if service_entry not in stacks_map[stack]["services"]:
             stacks_map[stack]["services"].append(service_entry)
 
+        depends_on = _extract_depends_on_from_labels(labels)
         stacks_map[stack]["containers"].append(
             {
                 "id": cid,
@@ -174,6 +311,8 @@ def list_all_stacks() -> List[Dict[str, Any]]:
                 "image": image,
                 "ports": parsed_ports,
                 "webui_url": webui_url,
+                "labels": labels,
+                "depends_on": depends_on,
             }
         )
 
@@ -442,18 +581,88 @@ def deploy_stack(stack_name: str, compose_yaml: str, env_content: Optional[str] 
     }
 
 
+def execute_dependency_ordered_rolling_update(stack_name: str, wait_timeout: float = 30.0) -> Dict[str, Any]:
+    """
+    Performs a dependency-ordered rolling update of containers in a stack.
+    Services are restarted sequentially according to their topological DAG order,
+    waiting for each upstream service to reach a running and healthy state before
+    initiating the restart of downstream dependents.
+    """
+    details = get_stack_details(stack_name)
+    containers = details.get("containers", [])
+    if not containers:
+        return {"success": False, "error": f"No containers found for stack '{stack_name}'"}
+
+    compose_yaml = details.get("compose_yaml")
+    ordered = topological_sort_stack_containers(containers, compose_yaml, reverse=False)
+
+    results = []
+    for c in ordered:
+        cid = c["id"]
+        cname = c["name"]
+        logger.info(f"[Rolling Update] Restarting container '{cname}' ({cid[:12]})...")
+
+        st, _ = _docker_request("POST", f"/containers/{cid}/restart?t=10")
+        success = st in (200, 204, 304)
+
+        if success and wait_timeout > 0:
+            # Poll for running / healthy
+            deadline = time.time() + wait_timeout
+            while time.time() < deadline:
+                time.sleep(min(0.2, max(0.05, deadline - time.time())))
+                c_st, c_data = _docker_request("GET", f"/containers/{cid}/json", timeout=5.0)
+                if c_st == 200 and isinstance(c_data, dict):
+                    live_state = c_data.get("State", {})
+                    running = live_state.get("Running", False)
+                    health = live_state.get("Health")
+                    if health:
+                        h_status = str(health.get("Status", "")).lower()
+                        if h_status == "healthy":
+                            break
+                        elif h_status == "unhealthy":
+                            success = False
+                            break
+                    elif running:
+                        break
+                elif c_st in (200, 204) and not isinstance(c_data, dict):
+                    # Mocked or simple 204 response
+                    break
+
+        results.append(
+            {
+                "id": cid,
+                "name": cname,
+                "service": c.get("service", cname),
+                "success": success,
+            }
+        )
+
+    all_ok = all(r["success"] for r in results)
+    return {
+        "success": all_ok,
+        "action": "rolling_update",
+        "order": [r["name"] for r in results],
+        "details": results,
+    }
+
+
 def execute_stack_action(stack_name: str, action: str) -> Dict[str, Any]:
     """
     Executes an action across an entire stack:
-    - restart: Restarts all containers in the stack
-    - stop: Stops all containers in the stack
-    - start: Starts all containers in the stack
+    - restart: Restarts all containers in the stack in DAG dependency order
+    - stop: Stops all containers in the stack in reverse DAG dependency order
+    - start: Starts all containers in the stack in DAG dependency order
     - redeploy: Runs docker compose up -d (via dockhand or host)
+    - rolling_update: Executes dependency-ordered rolling update waiting for upstream health
     """
+    if action == "rolling_update":
+        return execute_dependency_ordered_rolling_update(stack_name)
+
     details = get_stack_details(stack_name)
     containers = details.get("containers", [])
     location_type = details.get("location_type")
     working_dir = details.get("working_dir")
+    compose_yaml = details.get("compose_yaml")
 
     if not containers and action != "redeploy":
         return {"success": False, "error": f"No containers found for stack '{stack_name}'"}
@@ -487,9 +696,10 @@ def execute_stack_action(stack_name: str, action: str) -> Dict[str, Any]:
                 "output": res.get("output", res.get("error", "")),
             }
         else:
-            # Fallback: sequential restart of all containers
+            # Fallback: sequential restart of all containers in dependency order
             restarted = []
-            for c in containers:
+            ordered = topological_sort_stack_containers(containers, compose_yaml, reverse=False)
+            for c in ordered:
                 cid = c["id"]
                 st, _ = _docker_request("POST", f"/containers/{cid}/restart?t=10")
                 if st in (204, 200):
@@ -500,8 +710,16 @@ def execute_stack_action(stack_name: str, action: str) -> Dict[str, Any]:
                 "output": f"Re-started {len(restarted)} services: {', '.join(restarted)}",
             }
 
+    # Order containers based on DAG dependencies
+    if action in ("restart", "start"):
+        ordered_containers = topological_sort_stack_containers(containers, compose_yaml, reverse=False)
+    elif action == "stop":
+        ordered_containers = topological_sort_stack_containers(containers, compose_yaml, reverse=True)
+    else:
+        return {"success": False, "error": f"Unsupported stack action '{action}'"}
+
     results = []
-    for c in containers:
+    for c in ordered_containers:
         cid = c["id"]
         if action == "restart":
             st, _ = _docker_request("POST", f"/containers/{cid}/restart?t=10")
@@ -509,8 +727,6 @@ def execute_stack_action(stack_name: str, action: str) -> Dict[str, Any]:
             st, _ = _docker_request("POST", f"/containers/{cid}/stop?t=10")
         elif action == "start":
             st, _ = _docker_request("POST", f"/containers/{cid}/start")
-        else:
-            return {"success": False, "error": f"Unsupported stack action '{action}'"}
 
         results.append(
             {

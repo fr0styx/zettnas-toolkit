@@ -1833,9 +1833,10 @@ export async function fetchAndRenderRemoteStorage(container) {
     // Open in File Explorer
     container.querySelectorAll('.btn-remote-reveal').forEach((btn) => {
       btn.addEventListener('click', () => {
-        const path = btn.dataset.path;
+        const path = btn.dataset.path || `/mnt/remotes/${btn.dataset.name || ''}`;
         playChirp(720, 0.08, 'triangle');
         ZettEventBus.emit('window:open', { id: 'file-manager-window', path });
+        ZettEventBus.emit('fm:refresh');
         showToast(`Opened ${path} in File Explorer`, 'info');
       });
     });
@@ -1851,6 +1852,8 @@ export async function fetchAndRenderRemoteStorage(container) {
           playChirp(800, 0.1, 'sine');
           showToast(`Remote '${name}' mounted to /mnt/remotes/${name}`, 'info');
           fetchAndRenderRemoteStorage(container);
+          ZettEventBus.emit('fm:refresh');
+          ZettEventBus.emit('storage:mount_changed', { name, path: `/mnt/remotes/${name}`, action: 'mount' });
         } catch (e) {
           showToast(`Mount failed: ${e.message || 'Error'}`, 'error');
           fetchAndRenderRemoteStorage(container);
@@ -1869,6 +1872,8 @@ export async function fetchAndRenderRemoteStorage(container) {
           playChirp(500, 0.1, 'sine');
           showToast(`Remote '${name}' unmounted.`, 'info');
           fetchAndRenderRemoteStorage(container);
+          ZettEventBus.emit('fm:refresh');
+          ZettEventBus.emit('storage:mount_changed', { name, path: `/mnt/remotes/${name}`, action: 'unmount' });
         } catch (e) {
           showToast(`Unmount failed: ${e.message || 'Error'}`, 'error');
           fetchAndRenderRemoteStorage(container);
@@ -1891,6 +1896,8 @@ export async function fetchAndRenderRemoteStorage(container) {
               playChirp(440, 0.1, 'sawtooth');
               showToast(t('remotes.deleted', `Remote '${name}' deleted successfully.`), 'info');
               fetchAndRenderRemoteStorage(container);
+              ZettEventBus.emit('fm:refresh');
+              ZettEventBus.emit('storage:mount_changed', { name, path: `/mnt/remotes/${name}`, action: 'delete' });
             } catch (err) {
               showToast(t('remotes.delete_failed', `Failed to delete remote: ${err.message || 'Error'}`), 'error');
             }
@@ -2822,6 +2829,8 @@ export async function openNewCloudRemoteModal(onSuccess) {
           close();
           playChirp(880, 0.12, 'sine');
           showToast(`Cloud remote '${name}' connected successfully!`, 'info');
+          ZettEventBus.emit('fm:refresh');
+          ZettEventBus.emit('storage:mount_changed', { name, path: `/mnt/remotes/${name}`, action: 'create' });
           if (onSuccess) onSuccess();
         } catch (err) {
           if (errorBox) {

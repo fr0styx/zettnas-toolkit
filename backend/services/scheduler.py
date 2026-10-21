@@ -22,6 +22,10 @@ DEFAULT_SMART_SCHEDULE: Dict[str, Any] = {
     "skip_if_standby": True,  # INVIOLABLE: never wake sleeping disks
     "last_short_run": 0,
     "last_extended_run": 0,
+    "scrub_interval": "disabled",  # "disabled", "monthly"
+    "scrub_day": 1,  # 1st of month
+    "scrub_hour": 4,  # 4 AM
+    "last_scrub_run": 0,
 }
 
 
@@ -36,20 +40,24 @@ def get_smart_schedule() -> Dict[str, Any]:
 
 
 def save_smart_schedule(cfg: Dict[str, Any]) -> Dict[str, Any]:
-    """Persist updated SMART test schedule configuration."""
+    """Persist updated SMART test and storage scrub schedule configuration."""
     current = get_smart_schedule()
 
     # Validate interval options
     valid_short = {"disabled", "daily", "weekly", "monthly"}
     valid_ext = {"disabled", "monthly"}
+    valid_scrub = {"disabled", "monthly"}
 
     short_int = str(cfg.get("short_test_interval", current["short_test_interval"])).lower()
     ext_int = str(cfg.get("extended_test_interval", current["extended_test_interval"])).lower()
+    scrub_int = str(cfg.get("scrub_interval", current.get("scrub_interval", "disabled"))).lower()
 
     if short_int not in valid_short:
         short_int = "monthly"
     if ext_int not in valid_ext:
         ext_int = "monthly"
+    if scrub_int not in valid_scrub:
+        scrub_int = "disabled"
 
     current["enabled"] = bool(cfg.get("enabled", current.get("enabled", True)))
     current["short_test_interval"] = short_int
@@ -59,11 +67,16 @@ def save_smart_schedule(cfg: Dict[str, Any]) -> Dict[str, Any]:
     current["extended_test_day"] = max(1, min(31, int(cfg.get("extended_test_day", current["extended_test_day"]))))
     current["extended_test_hour"] = max(0, min(23, int(cfg.get("extended_test_hour", current["extended_test_hour"]))))
     current["skip_if_standby"] = bool(cfg.get("skip_if_standby", True))
+    current["scrub_interval"] = scrub_int
+    current["scrub_day"] = max(1, min(31, int(cfg.get("scrub_day", current.get("scrub_day", 1)))))
+    current["scrub_hour"] = max(0, min(23, int(cfg.get("scrub_hour", current.get("scrub_hour", 4)))))
 
     if "last_short_run" in cfg:
         current["last_short_run"] = float(cfg["last_short_run"])
     if "last_extended_run" in cfg:
         current["last_extended_run"] = float(cfg["last_extended_run"])
+    if "last_scrub_run" in cfg:
+        current["last_scrub_run"] = float(cfg["last_scrub_run"])
 
     atomic_write_json(SMART_SCHEDULE_FILE, current)
     return current
@@ -141,6 +154,37 @@ def _run_scheduled_tasks():
                     "info",
                     "Scheduled Task",
                     f"Scheduled SMART extended tests started for {len(disks)} disks (sleeping disks preserved: {skip_standby}).",
+                )
+
+        # 3. Storage Scrub evaluation
+        scrub_interval = cfg.get("scrub_interval", "disabled")
+        scrub_day = int(cfg.get("scrub_day", 1))
+        scrub_hour = int(cfg.get("scrub_hour", 4))
+        last_scrub = float(cfg.get("last_scrub_run", 0))
+
+        should_run_scrub = False
+        if scrub_interval != "disabled" and (now - last_scrub > 86400):
+            if scrub_interval == "monthly" and t.tm_mday == scrub_day and t.tm_hour == scrub_hour:
+                should_run_scrub = True
+
+        if should_run_scrub:
+            from backend.hardware.pal_storage import get_storage_platform
+
+            adapter = get_storage_platform()
+            caps = adapter.get_capabilities()
+            if not caps.can_trigger_scrub:
+                logger.info(
+                    f"[Scheduler] Skipping scheduled scrub: platform {adapter.get_platform_type().value} does not permit direct scrub."
+                )
+            elif not adapter.is_storage_busy():
+                logger.info("[Scheduler] Starting scheduled storage scrub")
+                cfg["last_scrub_run"] = now
+                save_smart_schedule(cfg)
+                res = adapter.trigger_scrub(pool_id="default", action="start")
+                add_event(
+                    "info",
+                    "Scheduled Task",
+                    f"Scheduled storage scrub initiated on {adapter.get_platform_type().value}: {res.get('message', 'Started')}",
                 )
 
 

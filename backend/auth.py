@@ -530,3 +530,49 @@ def require_scope(*required_scopes: str):
         return principal
 
     return _dependency
+
+
+def validate_websocket_origin(websocket: Any, is_cookie_auth: bool = False) -> bool:
+    """Guards against Cross-Site WebSocket Hijacking (CSWSH).
+
+    If connection was authenticated via Cookie, Origin header is strictly verified against
+    the Host header, X-Forwarded-Host, and configured trusted domains/proxies.
+    If ticket/token auth is used (which an attacker cannot forge via CSWSH), absence of Origin is permitted.
+    """
+    origin = websocket.headers.get("origin")
+    if not origin:
+        if is_cookie_auth:
+            return False
+        return True
+
+    from urllib.parse import urlparse
+
+    try:
+        parsed_origin = urlparse(origin)
+    except Exception:
+        return False
+
+    origin_netloc = (parsed_origin.netloc or "").lower()
+    origin_host = (parsed_origin.hostname or "").lower()
+
+    host_header = (websocket.headers.get("host") or "").lower()
+    x_forwarded_host = (websocket.headers.get("x-forwarded-host") or "").lower()
+
+    allowed_hosts = {"localhost", "127.0.0.1", "::1", "testserver"}
+    if host_header:
+        allowed_hosts.add(host_header)
+        if ":" in host_header:
+            allowed_hosts.add(host_header.split(":")[0])
+    if x_forwarded_host:
+        allowed_hosts.add(x_forwarded_host)
+        if ":" in x_forwarded_host:
+            allowed_hosts.add(x_forwarded_host.split(":")[0])
+
+    if origin_netloc in allowed_hosts or origin_host in allowed_hosts:
+        return True
+
+    trusted_proxies = getattr(config, "TRUSTED_PROXIES", [])
+    if origin_host in trusted_proxies:
+        return True
+
+    return False

@@ -105,6 +105,22 @@ class TestDockerStatsEnriched(unittest.TestCase):
         path = _extract_appdata_path(mounts)
         self.assertEqual(path, "/mnt/user/appdata/docker/jellyfin")
 
+    def test_parse_ports_and_webui_host_mode_exposed_ports(self):
+        raw_ports = []
+        labels = {}
+        network_mode = "host"
+        exposed_ports = {"8085/tcp": {}}
+        parsed, primary_port, webui_url = _parse_ports_and_webui(
+            raw_ports, labels, network_mode=network_mode, exposed_ports=exposed_ports
+        )
+
+        self.assertEqual(len(parsed), 1)
+        self.assertEqual(parsed[0]["public_port"], 8085)
+        self.assertEqual(parsed[0]["private_port"], 8085)
+        self.assertTrue(parsed[0]["is_host_network"])
+        self.assertEqual(primary_port, 8085)
+        self.assertEqual(webui_url, "http://[HOST]:8085/")
+
     @patch("backend.hardware.docker_stats.os.path.exists")
     def test_read_docker_containers_socket_missing(self, mock_exists):
         mock_exists.return_value = False

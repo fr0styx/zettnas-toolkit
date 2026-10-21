@@ -6,6 +6,7 @@ import { api } from '../api.js';
 import { state } from '../state.js';
 import { ZettEventBus } from '../event-bus.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -82,6 +83,7 @@ export function renderCurveLines() {
       if (i < svgCoords.length) {
         handle.setAttribute('cx', svgCoords[i][0]);
         handle.setAttribute('cy', svgCoords[i][1]);
+        handle.setAttribute('title', `Node ${i + 1}: ${pts[i][0]}°C → ${pts[i][1]}% PWM`);
         handle.style.display = 'block';
       } else {
         handle.style.display = 'none';
@@ -562,6 +564,11 @@ export function initFanControl() {
         pts[dragIndex] = [t, p];
         state.setCurvePoints(pts);
         renderCurveLines();
+
+        const readout = $('curve-readout-text');
+        if (readout) {
+          readout.textContent = `Dragging Node ${dragIndex + 1}: ${t}°C • ${p}% PWM`;
+        }
       });
     }
 
@@ -793,5 +800,184 @@ export function initFanControl() {
   window.addEventListener('zettnas:lang-changed', () => {
     loadFanPresets();
   });
+  initAcousticCalibration();
   setTimeout(renderCurveLines, 400);
+}
+
+export function initAcousticCalibration() {
+  const btnStart = $('btn-start-acoustic-sweep');
+  const btnStop = $('btn-stop-acoustic-sweep');
+  const badge = $('acoustic-sweep-badge');
+  const statusEl = $('acoustic-sweep-status');
+  const stepEl = $('acoustic-current-step');
+  const progressWrap = $('acoustic-progress-bar-wrap');
+  const progressBar = $('acoustic-progress-bar');
+  const rpmPath = $('acoustic-rpm-path');
+  const pointsG = $('acoustic-chart-points');
+  const summaryEl = $('acoustic-results-summary');
+
+  if (!btnStart || !btnStop) return;
+
+  let pollInterval = null;
+  let wasRunning = false;
+
+  function renderAcousticResults(data) {
+    if (!data) return;
+    const results = data.results || [];
+
+    if (results.length > 0 && rpmPath && pointsG) {
+      let d = '';
+      let pointsHtml = '';
+      let hasResonance = false;
+
+      results.forEach((item, idx) => {
+        const pwmClamped = Math.max(58, Math.min(183, item.pwm || 58));
+        const x = 25 + ((pwmClamped - 58) / (183 - 58)) * 250;
+        const rpmClamped = Math.max(0, Math.min(2200, item.rpm_avg || 0));
+        const y = 65 - (rpmClamped / 2000) * 50;
+        const yClamped = Math.max(15, Math.min(65, y));
+
+        if (idx === 0) {
+          d += `M ${x.toFixed(1)} ${yClamped.toFixed(1)}`;
+        } else {
+          d += ` L ${x.toFixed(1)} ${yClamped.toFixed(1)}`;
+        }
+
+        const isRes = !!item.resonance_detected;
+        if (isRes) hasResonance = true;
+        const color = isRes ? '#f43f5e' : 'var(--accent, #38bdf8)';
+        pointsHtml += `<circle cx="${x.toFixed(1)}" cy="${yClamped.toFixed(1)}" r="3" fill="${color}" stroke="#0f172a" stroke-width="1.5"><title>PWM: ${item.pwm} (${item.pct}%), RPM: ${item.rpm_avg || 0}${isRes ? ' [Resonance!]' : ''}</title></circle>`;
+      });
+
+      rpmPath.setAttribute('d', d);
+      pointsG.innerHTML = pointsHtml;
+
+      if (summaryEl) {
+        if (hasResonance) {
+          summaryEl.innerHTML = `<span style="color:#f43f5e; font-weight:600;">⚠️ Chassis resonance detected at specific PWM steps. Consider adjusting curve around these frequencies.</span>`;
+        } else if (data.completed_at) {
+          summaryEl.innerHTML = `<span style="color:#22c55e; font-weight:600;">✓ Excellent acoustic linearity across entire 58–183 PWM range. No chassis harmonics detected.</span>`;
+        }
+      }
+    }
+
+    if (data.running) {
+      wasRunning = true;
+      btnStart.style.display = 'none';
+      btnStop.style.display = 'inline-flex';
+      btnStart.disabled = false;
+      if (progressWrap) progressWrap.style.display = 'block';
+      if (progressBar) progressBar.style.width = `${data.progress_pct || 0}%`;
+      if (badge) {
+        badge.textContent = 'RUNNING';
+        badge.style.background = 'rgba(234,179,8,0.15)';
+        badge.style.color = '#eab308';
+        badge.style.borderColor = 'rgba(234,179,8,0.35)';
+      }
+      if (statusEl) statusEl.textContent = t('settings.sweep_running') || 'Sweep Running...';
+      if (stepEl) stepEl.textContent = `Step ${data.step || 0}/${data.total_steps || 0} (${data.current_pwm || 58} PWM)`;
+    } else {
+      btnStart.style.display = 'inline-flex';
+      btnStop.style.display = 'none';
+      btnStop.disabled = false;
+      if (progressWrap) progressWrap.style.display = 'none';
+      if (badge) {
+        if (data.completed_at) {
+          badge.textContent = 'COMPLETE';
+          badge.style.background = 'rgba(34,197,94,0.15)';
+          badge.style.color = '#22c55e';
+          badge.style.borderColor = 'rgba(34,197,94,0.35)';
+        } else {
+          badge.textContent = 'READY';
+          badge.style.background = 'rgba(56,189,248,0.15)';
+          badge.style.color = 'var(--accent, #38bdf8)';
+          badge.style.borderColor = 'rgba(56,189,248,0.35)';
+        }
+      }
+      if (statusEl) {
+        statusEl.textContent = data.completed_at ? (t('settings.sweep_complete') || 'Calibration Complete') : 'Idle';
+      }
+      if (stepEl && data.completed_at) {
+        stepEl.textContent = `${data.results?.length || 0} Steps Analyzed`;
+      }
+      if (wasRunning && data.completed_at) {
+        wasRunning = false;
+        showToast(t('settings.sweep_complete') || 'Calibration Complete', 'success');
+      }
+    }
+  }
+
+  function startPolling() {
+    if (pollInterval) clearInterval(pollInterval);
+    const tick = async () => {
+      try {
+        const res = await api.get('/api/fans/calibrate/acoustic');
+        renderAcousticResults(res);
+        if (!res || !res.running) {
+          clearInterval(pollInterval);
+          pollInterval = null;
+        }
+      } catch (err) {
+        console.warn('Acoustic sweep poll error:', err);
+      }
+    };
+    pollInterval = setInterval(tick, 1000);
+  }
+
+  async function checkInitialStatus() {
+    try {
+      const res = await api.get('/api/fans/calibrate/acoustic');
+      renderAcousticResults(res);
+      if (res && res.running) {
+        startPolling();
+      }
+    } catch (_) {}
+  }
+
+  btnStart.addEventListener('click', async () => {
+    try {
+      btnStart.disabled = true;
+      // Immediate optimistic feedback so user gets instant visual confirmation
+      renderAcousticResults({
+        running: true,
+        step: 1,
+        total_steps: 6,
+        current_pwm: 58,
+        progress_pct: 0,
+        results: [],
+      });
+      showToast(t('settings.sweep_running') || 'Acoustic calibration started', 'info');
+
+      const res = await api.post('/api/fans/calibrate/acoustic', { step_duration: 3.0, pwm_step: 25 });
+      if (res && (res.status || res.running)) {
+        renderAcousticResults(res.status || res);
+      }
+      startPolling();
+    } catch (e) {
+      showToast(`Failed to start acoustic sweep: ${e.message || e}`, 'error');
+      renderAcousticResults({ running: false, completed_at: null, results: [] });
+    } finally {
+      btnStart.disabled = false;
+    }
+  });
+
+  btnStop.addEventListener('click', async () => {
+    try {
+      btnStop.disabled = true;
+      if (pollInterval) {
+        clearInterval(pollInterval);
+        pollInterval = null;
+      }
+      await api.post('/api/fans/calibrate/acoustic/stop');
+      const res = await api.get('/api/fans/calibrate/acoustic');
+      renderAcousticResults(res || { running: false, completed_at: null });
+      showToast(t('settings.sweep_stopped') || 'Acoustic calibration sweep stopped', 'warn');
+    } catch (e) {
+      showToast(`Failed to stop acoustic sweep: ${e.message || e}`, 'error');
+    } finally {
+      btnStop.disabled = false;
+    }
+  });
+
+  checkInitialStatus();
 }

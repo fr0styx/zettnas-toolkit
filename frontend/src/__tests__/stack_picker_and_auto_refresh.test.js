@@ -130,4 +130,36 @@ describe('Stack Picker Modal, Auto-Refresh & Context Menu Polishing', () => {
 
     vi.useRealTimers();
   });
+
+  it('openStackPickerModal fetches /api/docker/stacks automatically when called with null or empty', async () => {
+    const mockApiStacks = [
+      { name: 'arr', origin: 'compose', working_dir: '/mnt/user/appdata/arr', total_count: 5, running_count: 5, services: ['radarr'] }
+    ];
+    vi.spyOn(api, 'get').mockResolvedValue(mockApiStacks);
+
+    await openStackPickerModal(null);
+
+    expect(api.get).toHaveBeenCalledWith('/api/docker/stacks');
+    const overlay = document.getElementById('stack-picker-overlay');
+    expect(overlay).not.toBeNull();
+    expect(overlay.style.display).toBe('flex');
+    expect(overlay.querySelector('#stack-picker-badge').textContent).toBe('1 Stack');
+    expect(overlay.querySelector('.stack-picker-card strong').textContent).toBe('arr');
+  });
+
+  it('openStackPickerModal handles object with .stacks property as well as direct array', async () => {
+    const mockWrapped = {
+      stacks: [
+        { name: 'immich', origin: 'compose', working_dir: '/mnt/user/appdata/immich', total_count: 3, running_count: 3, services: ['web'] }
+      ]
+    };
+
+    await openStackPickerModal(mockWrapped);
+
+    const overlay = document.getElementById('stack-picker-overlay');
+    expect(overlay).not.toBeNull();
+    expect(overlay.querySelector('#stack-picker-badge').textContent).toBe('1 Stack');
+    expect(overlay.querySelector('.stack-picker-card strong').textContent).toBe('immich');
+  });
 });
+

@@ -13,7 +13,7 @@ This document serves as your operational blueprint, covering the architecture, d
 - **Universal Host OS**: Seamlessly coexists on **Unraid**, **Ubuntu/Debian**, **TrueNAS SCALE**, **Proxmox VE**, **Alpine**, and **FygoOS**.
 - **The Invariant**: **Never hardcode assumptions about host OS or physical peripherals.**
   - If a physical LCD (`/dev/fb0`), ARGB lightbar (`/dev/ttyACM0`), or front Copy button is missing, the application **must** run in headless mode without crashing, throwing unhandled exceptions, or spamming error logs.
-  - The UI must dynamically detect peripheral presence and hide appliance-only menus and top-bar status badges (`MCU`, `FB`) when hardware is not detected.
+  - The UI must dynamically detect peripheral presence and hide appliance-only menus, settings drawers, and desktop icons when hardware is not detected (MCU and FB raw peripheral badges are omitted from the top bar to maintain a clean desktop workspace).
   - Storage logic must adapt dynamically: show Unraid array widgets when on Unraid, and Btrfs RAID / ZFS / mdadm topology when on generic Linux.
 
 ### 1.2 Thermal & Disk Spindown Safety Invariant
@@ -111,39 +111,34 @@ zettnas-toolkit/
 
 ---
 
-## 3. Remote Development & Execution Protocol
+## 3. Development & Execution Protocol
 
-### 3.1 Primary Host Configuration
-- **Host Address**: `root@10.40.30.249` (Unraid test appliance).
-- **Host Repository Root**: `/mnt/user/appdata/zettnas-toolkit`.
-- **Local Mac Mount**: `/Volumes/appdata/zettnas-toolkit`.
-- **Live Container**: `zettnas-toolkit` running on `http://10.40.30.249:8082`.
+### 3.1 Where Commands Run
+- Run git, builds, linters and test suites **on the machine that physically hosts the repository** (your dev box or NAS), in the repository root.
+- Host-specific details (hostnames, IPs, SSH users, mount paths) are **never committed**. Keep them in your own untracked notes or shell environment, not in this file.
+- The examples below assume you are in the repository root and the app container is named `zettnas-toolkit` (the default `container_name` in the Compose files). Adjust if yours differs.
 
-### 3.2 Command Execution Rule
-> [!CRITICAL]  
-> **Always execute git commands, build scripts, and test suites via SSH on `root@10.40.30.249`:**
-> ```bash
-> ssh root@10.40.30.249 "cd /mnt/user/appdata/zettnas-toolkit && <command>"
-> ```
-> **Never run `git` locally inside `/Volumes/appdata/zettnas-toolkit`** across the SMB/network share, as network file locks can corrupt git index and loose objects.
+### 3.2 Network Share Rule
+> [!CRITICAL]
+> **Never run `git` (or builds/tests) inside a copy of the repo mounted over SMB/NFS** (e.g. a NAS share mounted on a laptop). Network file locking can corrupt the git index and loose objects, and editors leave `.fuse_hidden*` artifacts behind. Open a shell on the host that owns the files and run commands there.
 
 ### 3.3 The Frontend Build & Deploy Lifecycle
 Whenever you modify files in `frontend/src/` or `frontend/index.html`:
 1. **Run Vitest tests**:
    ```bash
-   ssh root@10.40.30.249 "cd /mnt/user/appdata/zettnas-toolkit && npm test"
+   npm test
    ```
 2. **Compile the production bundle**:
    ```bash
-   ssh root@10.40.30.249 "cd /mnt/user/appdata/zettnas-toolkit && npm run build"
+   npm run build
    ```
-3. **Copy built assets to the running container**:
+3. **Copy built assets to the running container** (dev deployments only):
    ```bash
-   ssh root@10.40.30.249 "docker cp /mnt/user/appdata/zettnas-toolkit/static/. zettnas-toolkit:/app/static/"
+   docker cp ./static/. zettnas-toolkit:/app/static/
    ```
-4. **Verify container response**:
+4. **Verify container response** (replace `8082` if you changed `PORT`):
    ```bash
-   ssh root@10.40.30.249 "curl -sI http://127.0.0.1:8082 | head -n 5"
+   curl -sI http://127.0.0.1:8082 | head -n 5
    ```
 
 ---
@@ -157,34 +152,35 @@ Before committing any changes or concluding a task, you **must** verify that all
 - **Backend (Pytest)**: 441+ unit and integration tests.
 
 ### 4.2 Running Verification & Tests
+All commands run from the repository root on the host (see §3.1).
 
 #### Step 1: Run Python Lint & Format Checks (Mandatory before every commit):
 ```bash
-ssh root@10.40.30.249 "cd /mnt/user/appdata/zettnas-toolkit && npm run lint"
+npm run lint
 ```
 To auto-fix any formatting issues automatically:
 ```bash
-ssh root@10.40.30.249 "cd /mnt/user/appdata/zettnas-toolkit && npm run format:py"
+npm run format:py
 ```
 
 #### Step 2: Run Full Frontend Test Suite:
 ```bash
-ssh root@10.40.30.249 "cd /mnt/user/appdata/zettnas-toolkit && npm test"
+npm test
 ```
 
 #### Step 3: Run Backend Pytest Suite:
 ```bash
-ssh root@10.40.30.249 "docker exec -i zettnas-toolkit python3 -m pytest -q /app/tests"
+docker exec -i zettnas-toolkit python3 -m pytest -q /app/tests
 ```
 
 #### Run Specific Frontend Test:
 ```bash
-ssh root@10.40.30.249 "cd /mnt/user/appdata/zettnas-toolkit && node ./node_modules/vitest/dist/cli.js run frontend/src/__tests__/<test_name>.test.js"
+node ./node_modules/vitest/dist/cli.js run frontend/src/__tests__/<test_name>.test.js
 ```
 
 #### Run Specific Backend Test:
 ```bash
-ssh root@10.40.30.249 "docker exec -i zettnas-toolkit python3 -m pytest -v /app/tests/test_docker_updates.py"
+docker exec -i zettnas-toolkit python3 -m pytest -v /app/tests/test_docker_updates.py
 ```
 
 ---
@@ -223,7 +219,7 @@ ssh root@10.40.30.249 "docker exec -i zettnas-toolkit python3 -m pytest -v /app/
 | Hard drives spin up unexpectedly | Running raw `smartctl -A /dev/sdX` without power mode checks | Always pass `-n standby` (`smartctl -n standby -A ...`). If exit code is 2, skip reading to preserve standby. |
 | CPU fan curve drops below safe threshold | Custom curve configured with 0 PWM at high temp | Hardware watchdog in `fans.py` overrides curve and enforces maximum PWM at $\ge 80^\circ\text{C}$. Never bypass this check. |
 | Container build fails with missing fonts on LCD | Missing CJK or Emoji font packages in Dockerfile | Debian packages `fonts-noto-cjk` and `fonts-noto-color-emoji` are required to prevent tofu box glyphs (`□□□`). |
-| Git commands freeze on `/Volumes/appdata` | SMB file locking across macOS network share | Run all git operations via SSH on `root@10.40.30.249`. |
+| Git commands freeze or the index corrupts | SMB/NFS file locking when the repo is used over a network share | Run all git operations in a shell on the host that owns the files (see §3.2). |
 
 ---
 

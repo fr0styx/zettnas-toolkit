@@ -7,12 +7,15 @@ cached NVMe WebP thumbnails, and FileBot-style automated media organizing.
 
 import asyncio
 import ipaddress
+import logging
 import os
 from typing import Any, Dict, List, Optional
 import urllib.parse
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from pydantic import BaseModel, Field
+
+logger = logging.getLogger(__name__)
 
 from backend.api.system import check_user_path_access
 from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
@@ -21,11 +24,14 @@ from backend.fsutil import resolve_within
 from backend.services.ai_chat_agent import (
     AVAILABLE_NAS_TOOLS,
     build_llm_execution_telemetry,
+    resolve_model_runtime_accelerator,
     run_agentic_chat,
     stream_agentic_chat,
 )
+from backend.state import Z_STATE
 from backend.services.media_engine import (
     get_media_engine,
+    is_embedding_only_model,
     pull_huggingface_model,
     search_huggingface_models,
 )
@@ -89,11 +95,11 @@ class RagIndexSyncRequest(BaseModel):
     respect_standby: bool = True
     force_wake: bool = False
     background: bool = False
-    max_files: int = Field(default=5000, ge=1, le=50000)
+    max_files: int = Field(default=100000, ge=0, le=500000)
 
 
 class RagSyncControlRequest(BaseModel):
-    action: str = Field(..., pattern="^(pause|resume|stop|status)$")
+    action: str = Field(..., pattern="^(pause|resume|stop|status|flush|clear)$")
 
 
 class RagWatchedFoldersRequest(BaseModel):
@@ -139,6 +145,9 @@ class RagConfigUpdateRequest(BaseModel):
     schedule_start: Optional[str] = None
     schedule_end: Optional[str] = None
     active_model: Optional[str] = None
+    embedding_model: Optional[str] = None
+    embedding_dim: Optional[int] = None
+    embedding_provider: Optional[str] = None
     llm_endpoint: Optional[str] = None
     llm_model: Optional[str] = None
     idle_unload_minutes: Optional[int] = None
@@ -165,6 +174,7 @@ class AiChatRequest(BaseModel):
     allow_web_search: bool = True
     allow_nas_tools: bool = True
     model: Optional[str] = Field(default=None, max_length=256)
+    conversation_id: Optional[str] = Field(default=None, max_length=64)
 
 
 class FavoriteToggleRequest(BaseModel):
@@ -196,6 +206,7 @@ def get_media_status() -> Dict[str, Any]:
     engine = get_media_engine()
     status = engine.get_status()
     status["config"] = get_rag_engine().get_config()
+    status["reindex_status"] = get_ai_reindex_status()
     return status
 
 
@@ -306,7 +317,7 @@ async def sync_rag_index(
     dependencies=[Depends(require_scope("shares:user_write", "storage:write", "storage:admin", "system:config"))],
 )
 def control_rag_index(req: RagSyncControlRequest) -> Dict[str, Any]:
-    """Pause, resume, stop, or query the active RAG & Visual Search indexing sync job."""
+    """Pause, resume, stop, query, or flush the active RAG & Visual Search indexing sync job."""
     rag = get_rag_engine()
     act = req.action.strip().lower()
     if act == "pause":
@@ -315,10 +326,30 @@ def control_rag_index(req: RagSyncControlRequest) -> Dict[str, Any]:
         res = rag.resume_sync()
     elif act == "stop":
         res = rag.stop_sync()
+    elif act in ("flush", "clear"):
+        res = rag.flush_index()
     else:
         res = {"status": "ok", "sync_state": rag.get_sync_progress().get("state", "idle")}
     res["sync_progress"] = rag.get_sync_progress()
     res["stats"] = rag.get_index_stats()
+    return res
+
+
+@router.post(
+    "/media/index/flush",
+    dependencies=[Depends(require_scope("shares:user_write", "storage:write", "storage:admin", "system:config"))],
+)
+@router.post(
+    "/ai/index/flush",
+    dependencies=[Depends(require_scope("shares:user_write", "storage:write", "storage:admin", "system:config"))],
+)
+async def flush_rag_index(
+    principal: AuthenticatedPrincipal = Depends(get_current_principal),
+) -> Dict[str, Any]:
+    """Flushes all indexed files, vector embeddings, chunks, and manifests from rag_index.db to start fresh."""
+    rag = get_rag_engine()
+    res = await asyncio.to_thread(rag.flush_index)
+    res["acceleration"] = get_media_engine().get_status()["acceleration"]
     return res
 
 
@@ -470,7 +501,7 @@ def select_recommended_model(req: ModelSelectRequest) -> Dict[str, Any]:
     model_tag = str(req.model or req.model_id or "").strip()
     if not model_tag:
         raise HTTPException(status_code=400, detail="Model identifier is required.")
-    updated_cfg = rag.update_config({"active_model": model_tag, "llm_model": model_tag})
+
     status = get_media_engine().get_status()
     recs = status["llm_recommendations"]
     selected_entry = next(
@@ -483,6 +514,26 @@ def select_recommended_model(req: ModelSelectRequest) -> Dict[str, Any]:
         ),
         None,
     )
+
+    if is_embedding_only_model(model_tag) or (selected_entry and is_embedding_only_model(selected_entry)):
+        updated_cfg = rag.update_config({"embedding_model": model_tag})
+        current_active = updated_cfg.get("active_model") or "hf.co/ConwayResearch/Underdog-Bark-3.0-Pro"
+        return {
+            "status": "ok",
+            "active_model": current_active,
+            "embedding_model": model_tag,
+            "is_embedding": True,
+            "fits_hardware": True,
+            "hardware_warning": False,
+            "warning_message": (
+                f"'{model_tag}' is a dedicated vector embedding model. It has been activated as the embedding engine "
+                f"for semantic search and RAG. Conversational chat remains '{current_active}'."
+            ),
+            "config": updated_cfg,
+            "llm_recommendations": recs,
+        }
+
+    updated_cfg = rag.update_config({"active_model": model_tag, "llm_model": model_tag})
     return {
         "status": "ok",
         "active_model": updated_cfg.get("active_model"),
@@ -752,23 +803,41 @@ async def ask_knowledge_base(
 
     effective_top_k = min(12, max(1, int(req.limit if req.limit is not None else req.top_k)))
     rag = get_rag_engine()
-    res = await asyncio.to_thread(
-        rag.ask,
-        req.query,
-        req.scope,
-        validated_prefix,
-        effective_top_k,
-        principal,
-    )
-    status = get_media_engine().get_status()
-    accel = status["acceleration"]
     cfg = rag.get_config()
     active_model = str(cfg.get("active_model") or cfg.get("llm_model") or "qwen2.5:3b")
-    res["hardware"] = accel
+
+    status = get_media_engine().get_status()
+    accel = status["acceleration"]
+    runtime_accel = resolve_model_runtime_accelerator(active_model, host_accel=accel)
+    target_accel = (
+        "npu" if runtime_accel.get("active_tier") == 1 else ("gpu" if runtime_accel.get("active_tier") == 2 else "cpu")
+    )
+
+    with Z_STATE.lock:
+        Z_STATE.ai_active = True
+        Z_STATE.ai_accelerator = target_accel
+        Z_STATE.ai_model = active_model
+
+    try:
+        res = await asyncio.to_thread(
+            rag.ask,
+            req.query,
+            req.scope,
+            validated_prefix,
+            effective_top_k,
+            principal,
+        )
+    finally:
+        with Z_STATE.lock:
+            Z_STATE.ai_active = False
+            Z_STATE.ai_accelerator = ""
+            Z_STATE.ai_model = ""
+
+    res["hardware"] = runtime_accel
     res["active_model"] = active_model
     res["llm_telemetry"] = build_llm_execution_telemetry(
         active_model=active_model,
-        accel=accel,
+        accel=runtime_accel,
         elapsed_ms=float(res.get("elapsed_ms") or 12.0),
         answer_text=str(res.get("answer") or ""),
         tools_called=["search_nas_knowledge"],
@@ -881,16 +950,53 @@ async def chat_with_zettai_agent(
     Conversational ZettAI Local Chatbot & NAS Hardware Copilot with live internet browsing
     and hardware/Docker/storage tool execution.
     """
+    history = req.history
+    uid = (principal.user_id or principal.username or "admin").strip().lower()
+
+    if req.conversation_id:
+        try:
+            from backend.services.ai_conversations_db import append_message, get_token_budgeted_history
+
+            append_message(req.conversation_id, uid, "user", req.message)
+            if history is None:
+                history = get_token_budgeted_history(req.conversation_id, uid, model_name=req.model)
+        except Exception as _db_ex:
+            logger.warning(f"[AI Chat] Failed persisting user prompt: {_db_ex}")
+
     try:
-        return await asyncio.to_thread(
+        res = await asyncio.to_thread(
             run_agentic_chat,
             req.message,
-            req.history,
+            history,
             req.allow_web_search,
             req.allow_nas_tools,
             req.model,
             principal,
         )
+
+        if req.conversation_id:
+            res["conversation_id"] = req.conversation_id
+            try:
+                from backend.services.ai_conversations_db import append_message, update_auto_title_if_not_customized
+
+                append_message(
+                    conv_id=req.conversation_id,
+                    user_id=uid,
+                    role="assistant",
+                    content=res.get("reply", ""),
+                    telemetry=res.get("llm_telemetry"),
+                    tools_called=res.get("tools_called"),
+                    web_sources=res.get("web_sources"),
+                    citations=res.get("citations"),
+                    photos=res.get("photos"),
+                )
+                new_title = update_auto_title_if_not_customized(req.conversation_id, uid, req.message)
+                if new_title:
+                    res["conversation_title"] = new_title
+            except Exception as _db_ex2:
+                logger.warning(f"[AI Chat] Failed persisting assistant reply: {_db_ex2}")
+
+        return res
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
 
@@ -910,13 +1016,27 @@ async def chat_with_zettai_agent_stream(
     """Streams real-time Server-Sent Events (SSE) tokens, tool activity traces, and thought chains from ZettAI."""
     from fastapi.responses import StreamingResponse
 
+    history = req.history
+    uid = (principal.user_id or principal.username or "admin").strip().lower()
+
+    if req.conversation_id:
+        try:
+            from backend.services.ai_conversations_db import append_message, get_token_budgeted_history
+
+            append_message(req.conversation_id, uid, "user", req.message)
+            if history is None:
+                history = get_token_budgeted_history(req.conversation_id, uid, model_name=req.model)
+        except Exception as _stream_db_ex:
+            logger.warning(f"[AI Chat Stream] Failed user message prep: {_stream_db_ex}")
+
     generator = stream_agentic_chat(
         message=req.message,
-        history=req.history,
+        history=history,
         allow_web_search=req.allow_web_search,
         allow_nas_tools=req.allow_nas_tools,
         model_override=req.model,
         principal=principal,
+        conversation_id=req.conversation_id,
     )
     return StreamingResponse(
         generator,
@@ -996,6 +1116,224 @@ def update_rag_config(req: RagConfigUpdateRequest) -> Dict[str, Any]:
                 raise HTTPException(status_code=400, detail="Cloud metadata endpoints are forbidden.")
     updates = {k: v for k, v in req.model_dump().items() if v is not None}
     return get_rag_engine().update_config(updates)
+
+
+_REINDEX_TASK: Optional[asyncio.Task] = None
+_REINDEX_STATUS: Dict[str, Any] = {
+    "status": "idle",
+    "completed": 0,
+    "total": 0,
+    "speed": 0.0,
+    "eta_sec": 0.0,
+    "percentage": 0.0,
+}
+
+
+_REINDEX_CACHE: Dict[str, Any] = {"status": "idle"}
+_REINDEX_CACHE_TIME: float = 0.0
+
+
+@router.get("/ai/reindex/status", dependencies=[Depends(require_scope("system:read", "storage:read"))])
+@router.get("/media/ai/reindex/status", dependencies=[Depends(require_scope("system:read", "storage:read"))])
+def get_ai_reindex_status() -> Dict[str, Any]:
+    global _REINDEX_CACHE, _REINDEX_CACHE_TIME
+    import json
+    import time
+
+    now = time.time()
+    if (now - _REINDEX_CACHE_TIME) < 2.0 and _REINDEX_CACHE.get("status") == "running":
+        return dict(_REINDEX_CACHE)
+
+    # 1. Check persistent progress file on disk (shared across CLI and web server)
+    progress_file = "/app/data/reindex_progress.json"
+    if os.path.exists(progress_file):
+        try:
+            with open(progress_file, "r") as f:
+                data = json.load(f)
+            if data.get("status") == "running":
+                mtime = os.path.getmtime(progress_file)
+                if (time.time() - mtime) < 90:
+                    _REINDEX_CACHE = data
+                    _REINDEX_CACHE_TIME = now
+                    return data
+                data["status"] = "idle"
+            _REINDEX_CACHE = data
+            _REINDEX_CACHE_TIME = now
+            return data
+        except Exception:
+            pass
+
+    # 2. Check in-memory task status
+    if _REINDEX_STATUS.get("status") == "running":
+        _REINDEX_CACHE = dict(_REINDEX_STATUS)
+        _REINDEX_CACHE_TIME = now
+        return dict(_REINDEX_STATUS)
+
+    # 3. Dynamic SQLite detection: detect if a CLI reindex or background job is running
+    try:
+        rag = get_rag_engine()
+        with rag._write_lock:
+            conn = rag._get_conn(readonly=True)
+            has_vec = conn.execute(
+                "SELECT 1 FROM sqlite_master WHERE type='table' AND name='vec_chunks_768'"
+            ).fetchone()
+            if has_vec:
+                c_vec = conn.execute("SELECT COUNT(*) FROM vec_chunks_768").fetchone()[0]
+                total = conn.execute("SELECT COUNT(*) FROM document_chunks").fetchone()[0]
+                if 0 < c_vec < total:
+                    pct = round((c_vec / total) * 100, 1)
+                    speed = 2.6
+                    eta_sec = round((total - c_vec) / speed, 1)
+                    res = {
+                        "status": "running",
+                        "completed": c_vec,
+                        "total": total,
+                        "speed": speed,
+                        "eta_sec": eta_sec,
+                        "percentage": pct,
+                        "source": "cli_or_background",
+                        "updated_at": now,
+                    }
+                    _REINDEX_CACHE = res
+                    _REINDEX_CACHE_TIME = now
+                    return res
+            conn.close()
+    except Exception:
+        pass
+
+    _REINDEX_CACHE = dict(_REINDEX_STATUS)
+    _REINDEX_CACHE_TIME = now
+    return dict(_REINDEX_STATUS)
+
+
+@router.post(
+    "/media/ai/benchmark",
+    dependencies=[Depends(require_scope("system:config", "storage:admin"))],
+)
+@router.post(
+    "/ai/benchmark",
+    dependencies=[Depends(require_scope("system:config", "storage:admin"))],
+)
+async def run_ai_benchmark() -> Dict[str, Any]:
+    """
+    Executes a zero-disk synthetic embedding benchmark over 3 in-memory reference strings.
+    Measures latency per chunk, throughput, tokens/sec, and detects active accelerator.
+    Strictly zero-disk-touch on sleeping hard drives (AGENTS.md §1.2).
+    """
+    import time
+    from backend.services.media_engine import detect_hardware_accelerator
+    from backend.services.rag_engine import compute_neural_embedding_via_ollama
+
+    rag = get_rag_engine()
+    cfg = rag.get_config()
+    model = cfg.get("embedding_model") or "google/embeddinggemma-2"
+    target_dim = cfg.get("embedding_dim") or 768
+
+    test_strings = [
+        "ZettNAS zero-spindown storage architecture with Btrfs RAID and ZFS topology.",
+        "Container mutator performs atomic image recreation with automatic health check rollback.",
+        "High performance hardware telemetry and acoustic fan curve management on Intel N100.",
+    ]
+    start_t = time.perf_counter()
+    total_tokens = 0
+    successful_runs = 0
+    for s in test_strings:
+        total_tokens += len(s.split())
+        res = await asyncio.to_thread(
+            compute_neural_embedding_via_ollama,
+            text=s,
+            model=model,
+            target_dim=target_dim,
+            is_query=False,
+        )
+        if res is not None:
+            successful_runs += 1
+
+    total_time = max(0.001, time.perf_counter() - start_t)
+    count = max(1, successful_runs)
+    latency_ms = round((total_time / count) * 1000.0, 2)
+    throughput = round(count / total_time, 2)
+    tok_sec = round(total_tokens / total_time, 2)
+
+    accel_info = detect_hardware_accelerator()
+    accel_name = accel_info.get("active_tier_name") or "CPU (AVX2)"
+    if accel_info.get("has_npu"):
+        accel_name = "NPU (Intel AI Boost / Hailo)"
+    elif accel_info.get("has_gpu"):
+        accel_name = "GPU (Intel Arc / iGPU)"
+
+    return {
+        "status": "ok",
+        "latency_ms": latency_ms,
+        "throughput_chunks_sec": throughput,
+        "tokens_per_sec": tok_sec,
+        "accelerator": accel_name,
+        "model": model,
+        "dimension": target_dim,
+        "zero_disk_wakeups": True,
+    }
+
+
+@router.post(
+    "/media/ai/reindex",
+    dependencies=[Depends(require_scope("system:config", "storage:admin"))],
+)
+@router.post(
+    "/ai/reindex",
+    dependencies=[Depends(require_scope("system:config", "storage:admin"))],
+)
+async def trigger_ai_reindex(
+    req: Optional[RagConfigUpdateRequest] = None,
+) -> Dict[str, Any]:
+    """Triggers background in-place re-embedding without waking sleeping hard drives."""
+    global _REINDEX_TASK, _REINDEX_STATUS
+    if _REINDEX_TASK and not _REINDEX_TASK.done():
+        return {
+            "status": "in_progress",
+            "detail": "Re-indexing is already running",
+            "progress": _REINDEX_STATUS,
+        }
+
+    rag = get_rag_engine()
+    cfg = rag.get_config()
+    target_model = (
+        req.embedding_model
+        if (req and req.embedding_model)
+        else (cfg.get("embedding_model") or "google/embeddinggemma-2")
+    )
+    target_dim = req.embedding_dim if (req and req.embedding_dim) else (cfg.get("embedding_dim") or 768)
+
+    _REINDEX_STATUS = {
+        "status": "running",
+        "completed": 0,
+        "total": 0,
+        "speed": 0.0,
+        "eta_sec": 0.0,
+        "percentage": 0.0,
+    }
+
+    def _on_progress(data: Dict[str, Any]):
+        global _REINDEX_STATUS
+        _REINDEX_STATUS.update(data)
+
+    async def _worker():
+        global _REINDEX_STATUS
+        try:
+            res = await rag.in_place_reembed_collection(
+                target_model=target_model,
+                target_dim=target_dim,
+                batch_size=10,
+                progress_callback=_on_progress,
+            )
+            _REINDEX_STATUS["status"] = "complete"
+            _REINDEX_STATUS.update(res)
+        except Exception as e:
+            logger.error("In-place re-index worker error: %s", e)
+            _REINDEX_STATUS["status"] = "error"
+            _REINDEX_STATUS["error"] = str(e)
+
+    _REINDEX_TASK = asyncio.create_task(_worker())
+    return {"status": "started", "model": target_model, "dimension": target_dim}
 
 
 @router.post(

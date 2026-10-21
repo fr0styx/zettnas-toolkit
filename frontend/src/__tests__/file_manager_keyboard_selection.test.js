@@ -298,4 +298,111 @@ describe('File Manager Keyboard Navigation & Multi-Selection', () => {
     expect(preventSpy).not.toHaveBeenCalled();
     input.remove();
   });
+
+  it('selects first two items when Shift + ArrowDown is pressed with no prior selection', () => {
+    setFmStateForTesting({
+      fileList: [...sampleFiles],
+      selectedPaths: [],
+      lastSelectedIndex: -1,
+      selectionAnchorIndex: -1,
+    });
+
+    const shiftDownEvt = new KeyboardEvent('keydown', {
+      key: 'ArrowDown',
+      shiftKey: true,
+      bubbles: true,
+      cancelable: true,
+    });
+    handleFmKeydown(shiftDownEvt);
+
+    expect(getFmSelectedPaths()).toEqual([
+      '/mnt/user/Document 1.docx',
+      '/mnt/user/Document 2.docx',
+    ]);
+    expect(getFmSelectionState().selectionAnchorIndex).toBe(1);
+    expect(getFmSelectionState().lastSelectedIndex).toBe(2);
+  });
+
+  it('reclaims focus from desktop icons when Shift + ArrowDown is pressed', () => {
+    const desktopIcon = document.getElementById('management-desktop-icon');
+    desktopIcon.focus();
+    expect(document.activeElement).toBe(desktopIcon);
+
+    const shiftDownEvt = new KeyboardEvent('keydown', {
+      key: 'ArrowDown',
+      shiftKey: true,
+      bubbles: true,
+      cancelable: true,
+    });
+    handleFmKeydown(shiftDownEvt);
+
+    // Desktop icon must have been blurred and focus brought into viewport
+    expect(document.activeElement).not.toBe(desktopIcon);
+    const viewport = document.getElementById('fm-viewport');
+    expect(document.activeElement).toBe(viewport);
+    expect(getFmSelectedPaths().length).toBeGreaterThan(0);
+  });
+
+  it('does not bail out when closed modals without inline styles exist in DOM (regression)', () => {
+    // Mimic production index.html where smart-modal-overlay has no inline style attribute
+    const smartModal = document.createElement('div');
+    smartModal.id = 'smart-modal-overlay';
+    smartModal.className = 'smart-modal-backdrop';
+    document.body.appendChild(smartModal);
+
+    setFmStateForTesting({
+      fileList: [...sampleFiles],
+      selectedPaths: ['/mnt/user/Document 1.docx'],
+      lastSelectedIndex: 1,
+      selectionAnchorIndex: 1,
+    });
+
+    const shiftDownEvt = new KeyboardEvent('keydown', {
+      key: 'ArrowDown',
+      shiftKey: true,
+      bubbles: true,
+      cancelable: true,
+    });
+    const preventSpy = vi.spyOn(shiftDownEvt, 'preventDefault');
+
+    handleFmKeydown(shiftDownEvt);
+
+    expect(preventSpy).toHaveBeenCalled();
+    expect(getFmSelectedPaths()).toEqual([
+      '/mnt/user/Document 1.docx',
+      '/mnt/user/Document 2.docx',
+    ]);
+
+    smartModal.remove();
+  });
+
+  it('correctly respects open modal dialogs and blocks keydown navigation', () => {
+    const smartModal = document.createElement('div');
+    smartModal.id = 'smart-modal-overlay';
+    smartModal.className = 'smart-modal-backdrop open';
+    document.body.appendChild(smartModal);
+
+    setFmStateForTesting({
+      fileList: [...sampleFiles],
+      selectedPaths: ['/mnt/user/Document 1.docx'],
+      lastSelectedIndex: 1,
+      selectionAnchorIndex: 1,
+    });
+
+    const shiftDownEvt = new KeyboardEvent('keydown', {
+      key: 'ArrowDown',
+      shiftKey: true,
+      bubbles: true,
+      cancelable: true,
+    });
+    const preventSpy = vi.spyOn(shiftDownEvt, 'preventDefault');
+
+    handleFmKeydown(shiftDownEvt);
+
+    // Modal is open, so keydown navigation must be skipped
+    expect(preventSpy).not.toHaveBeenCalled();
+    expect(getFmSelectedPaths()).toEqual(['/mnt/user/Document 1.docx']);
+
+    smartModal.remove();
+  });
 });

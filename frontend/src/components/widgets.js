@@ -2,6 +2,9 @@ import { ZettEventBus } from '../event-bus.js';
 import { state } from '../state.js';
 import { showToast } from '../toast.js';
 import { escapeHtml } from '../utils.js';
+import { t } from '../i18n.js';
+import { api, auth } from '../api.js';
+import { makeDraggable } from './dock.js';
 
 const STORAGE_KEY = 'zettnas_widgets_config';
 const WEATHER_CACHE_KEY = 'zettnas_weather_cache';
@@ -26,6 +29,7 @@ const DEFAULT_CONFIG = {
     ups_gauge: true,
   },
   clockFormat: '24',
+  clockTimezone: 'auto',
   weatherCity: '',
   weatherLat: null,
   weatherLon: null,
@@ -44,6 +48,18 @@ let _currentSuggestions = [];
 let _activeSuggestionIndex = -1;
 let _holidayData = {};
 let _currentHoverHoliday = null;
+
+// Timezone and Calendar Notes State
+let _calendarEventsMap = {};
+let _calendarFeeds = [];
+let _modalCalDate = new Date();
+let _modalCalSelectedDateKey = null;
+let _calActiveFilter = 'all';
+let _tempSelectedTz = 'auto';
+let _tempSelectedFormat = '24';
+let _tzPreviewTimer = null;
+let _tzActiveRegion = 'all';
+let _tzSearchQuery = '';
 
 function formatSpeed(bytesPerSec) {
   if (bytesPerSec === 0 || isNaN(bytesPerSec)) return '0 B/s';
@@ -89,6 +105,69 @@ export function saveWidgetConfig(newConfig) {
   syncWidgetSettingsUI();
   return _config;
 }
+window.saveWidgetConfig = saveWidgetConfig;
+
+export const WIDGET_NAMES = {
+  clock: 'Time Clock',
+  ai_accelerator: 'AI Accelerator',
+  calendar: 'Calendar',
+  weather: 'Local Weather',
+  system: 'System Status',
+  network: 'Network I/O',
+  storage: 'Storage Pool',
+  uptime: 'Host Uptime',
+  drive_temp: 'Disk Temperatures',
+  net_dial: 'Network Dial',
+  ups_gauge: 'UPS Gauge',
+};
+
+export function getWidgetKeyFromElement(el) {
+  if (!el) return null;
+  const widgetNode = el.closest ? el.closest('.desktop-widget') : null;
+  if (!widgetNode || !widgetNode.id) return null;
+  const id = widgetNode.id;
+  if (!id.startsWith('widget-')) return null;
+  const rawKey = id.replace('widget-', '');
+  if (rawKey === 'ai-accelerator' || rawKey === 'ai_accelerator') return 'ai_accelerator';
+  if (rawKey === 'drive-temp' || rawKey === 'drive_temp') return 'drive_temp';
+  if (rawKey === 'net-dial' || rawKey === 'net_dial') return 'net_dial';
+  if (rawKey === 'ups-gauge' || rawKey === 'ups_gauge') return 'ups_gauge';
+  return rawKey;
+}
+window.getWidgetKeyFromElement = getWidgetKeyFromElement;
+
+export function getWidgetDisplayName(widgetKey) {
+  if (!widgetKey) return 'Widget';
+  const i18nKey = `widget.${widgetKey}`;
+  const translated = t(i18nKey);
+  if (translated && translated !== i18nKey) return translated;
+  return WIDGET_NAMES[widgetKey] || 'Widget';
+}
+window.getWidgetDisplayName = getWidgetDisplayName;
+
+export function removeWidget(widgetKey) {
+  if (!widgetKey) return;
+  const config = _config || loadWidgetConfig();
+  const currentWidgets = Object.assign({}, config.widgets || {});
+  currentWidgets[widgetKey] = false;
+  saveWidgetConfig({ widgets: currentWidgets });
+  const name = getWidgetDisplayName(widgetKey);
+  const toastMsg = (t('widget.removed_toast') || '{name} removed from desktop').replace('{name}', name);
+  showToast(toastMsg, 'info');
+}
+window.removeWidget = removeWidget;
+
+export function openWidgetSettings() {
+  saveWidgetConfig({ enabled: true });
+  if (typeof window.openPersonalizationWindow === 'function') {
+    window.openPersonalizationWindow('widgets');
+  } else if (typeof window.openManagementSection === 'function') {
+    window.openManagementSection('mgmt-sec-wallpaper', 'mgmt-pane-widgets');
+  } else {
+    ZettEventBus.emit('window:open', { id: 'management-window', section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-widgets' });
+  }
+}
+window.openWidgetSettings = openWidgetSettings;
 
 export function applyWidgetConfig() {
   const container = document.getElementById('desktop-widgets-container');
@@ -133,37 +212,256 @@ export function applyWidgetConfig() {
   const wNetDial = document.getElementById('widget-net-dial');
   const wUpsGauge = document.getElementById('widget-ups-gauge');
 
-  if (wClock) wClock.style.display = config.widgets.clock ? 'block' : 'none';
+  if (wClock) {
+    wClock.style.display = config.widgets.clock ? 'block' : 'none';
+    if (!wClock.dataset.boundClick) {
+      wClock.dataset.boundClick = '1';
+      wClock.style.cursor = 'pointer';
+      wClock.title = 'Click to change timezone & clock format';
+      wClock.setAttribute('role', 'button');
+      wClock.setAttribute('tabindex', '0');
+      wClock.addEventListener('click', (e) => {
+        if (e.target.closest('.widget-handle') || e.target.closest('.widget-close') || e.target.closest('#w-clock-tz')) return;
+        openTimezoneModal();
+      });
+      wClock.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          if (e.target === wClock) {
+            e.preventDefault();
+            openTimezoneModal();
+          }
+        }
+      });
+    }
+  }
   if (wAiAccel) {
     wAiAccel.style.display = config.widgets.ai_accelerator !== false ? 'block' : 'none';
     if (!wAiAccel.dataset.boundClick) {
       wAiAccel.dataset.boundClick = '1';
       wAiAccel.style.cursor = 'pointer';
       wAiAccel.title = 'Click to open AI Knowledge & Search';
+      wAiAccel.setAttribute('role', 'button');
+      wAiAccel.setAttribute('tabindex', '0');
       wAiAccel.addEventListener('click', (e) => {
         if (e.target.closest('.widget-handle') || e.target.closest('.widget-close') || e.target.closest('button')) return;
         if (typeof window.openManagementWindow === 'function') {
           window.openManagementWindow('mgmt-sec-ai', 'mgmt-pane-ai-rag');
         }
       });
+      wAiAccel.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          if (e.target === wAiAccel) {
+            e.preventDefault();
+            if (typeof window.openManagementWindow === 'function') {
+              window.openManagementWindow('mgmt-sec-ai', 'mgmt-pane-ai-rag');
+            }
+          }
+        }
+      });
     }
   }
-  if (wCalendar) wCalendar.style.display = config.widgets.calendar ? 'block' : 'none';
-  if (wWeather) wWeather.style.display = config.widgets.weather ? 'block' : 'none';
-  if (wSystem) wSystem.style.display = config.widgets.system ? 'block' : 'none';
-  if (wNetwork) wNetwork.style.display = config.widgets.network ? 'block' : 'none';
-  if (wStorage) wStorage.style.display = config.widgets.storage ? 'block' : 'none';
-  if (wUptime) wUptime.style.display = config.widgets.uptime ? 'block' : 'none';
+  if (wCalendar) {
+    wCalendar.style.display = config.widgets.calendar ? 'block' : 'none';
+    if (!wCalendar.dataset.boundClick) {
+      wCalendar.dataset.boundClick = '1';
+      wCalendar.style.cursor = 'pointer';
+      wCalendar.title = 'Click to view notes, reminders & calendar sync';
+      wCalendar.setAttribute('role', 'button');
+      wCalendar.setAttribute('tabindex', '0');
+      wCalendar.addEventListener('click', (e) => {
+        if (e.target.closest('.widget-handle') || e.target.closest('.widget-close')) return;
+        if (e.target.closest('#w-cal-prev') || e.target.closest('#w-cal-next') || e.target.closest('#w-cal-country-badge') || e.target.closest('#w-cal-month')) return;
+        const dayCell = e.target.closest('.cal-day');
+        let selectedDateKey = null;
+        if (dayCell && dayCell.dataset.day) {
+          const day = parseInt(dayCell.dataset.day, 10);
+          if (dayCell.classList.contains('cal-other-month')) {
+            const year = _calViewDate.getFullYear();
+            const month = _calViewDate.getMonth();
+            const isPrev = day > 15;
+            const targetDate = isPrev ? new Date(year, month - 1, day) : new Date(year, month + 1, day);
+            selectedDateKey = toDateKey(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate());
+          } else {
+            selectedDateKey = toDateKey(_calViewDate.getFullYear(), _calViewDate.getMonth(), day);
+          }
+        } else if (e.target.closest('#w-cal-glance-bar')) {
+          const glance = e.target.closest('#w-cal-glance-bar');
+          if (glance?.dataset?.dateKey) {
+            selectedDateKey = glance.dataset.dateKey;
+          }
+        }
+        openCalendarModal(selectedDateKey);
+      });
+      wCalendar.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          if (e.target === wCalendar) {
+            e.preventDefault();
+            openCalendarModal();
+          }
+        }
+      });
+    }
+  }
+  if (wWeather) {
+    wWeather.style.display = config.widgets.weather ? 'block' : 'none';
+    if (!wWeather.dataset.boundClick) {
+      wWeather.dataset.boundClick = '1';
+      wWeather.style.cursor = 'pointer';
+      wWeather.title = 'Click to open Weather & Widget Settings';
+      wWeather.setAttribute('role', 'button');
+      wWeather.setAttribute('tabindex', '0');
+      wWeather.addEventListener('click', (e) => {
+        if (e.target.closest('#w-weather-temp') || e.target.closest('.widget-handle') || e.target.closest('.widget-close') || e.target.closest('button')) return;
+        if (typeof window.openManagementWindow === 'function') {
+          window.openManagementWindow('mgmt-sec-wallpaper', 'mgmt-pane-widgets');
+          setTimeout(() => {
+            const cityInput = document.getElementById('widget-weather-city-input');
+            if (cityInput) {
+              cityInput.focus();
+              cityInput.classList.add('element-focus-pulse');
+              setTimeout(() => cityInput.classList.remove('element-focus-pulse'), 1500);
+            }
+          }, 150);
+        }
+      });
+      wWeather.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          if (e.target === wWeather) {
+            e.preventDefault();
+            if (typeof window.openManagementWindow === 'function') {
+              window.openManagementWindow('mgmt-sec-wallpaper', 'mgmt-pane-widgets');
+            }
+          }
+        }
+      });
+    }
+  }
+  if (wSystem) {
+    wSystem.style.display = config.widgets.system ? 'block' : 'none';
+    if (!wSystem.dataset.boundClick) {
+      wSystem.dataset.boundClick = '1';
+      wSystem.style.cursor = 'pointer';
+      wSystem.title = 'Click to open Dashboard & Telemetry';
+      wSystem.setAttribute('role', 'button');
+      wSystem.setAttribute('tabindex', '0');
+      wSystem.addEventListener('click', (e) => {
+        if (e.target.closest('.widget-handle') || e.target.closest('.widget-close') || e.target.closest('button')) return;
+        if (typeof window.openManagementWindow === 'function') {
+          window.openManagementWindow('mgmt-sec-activity', 'mgmt-pane-metrics');
+        }
+      });
+      wSystem.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          if (e.target === wSystem) {
+            e.preventDefault();
+            if (typeof window.openManagementWindow === 'function') {
+              window.openManagementWindow('mgmt-sec-activity', 'mgmt-pane-metrics');
+            }
+          }
+        }
+      });
+    }
+  }
+  if (wNetwork) {
+    wNetwork.style.display = config.widgets.network ? 'block' : 'none';
+    if (!wNetwork.dataset.boundClick) {
+      wNetwork.dataset.boundClick = '1';
+      wNetwork.style.cursor = 'pointer';
+      wNetwork.title = 'Click to open Network & Switch Inspector';
+      wNetwork.setAttribute('role', 'button');
+      wNetwork.setAttribute('tabindex', '0');
+      wNetwork.addEventListener('click', (e) => {
+        if (e.target.closest('.widget-handle') || e.target.closest('.widget-close') || e.target.closest('button')) return;
+        if (typeof window.openManagementWindow === 'function') {
+          window.openManagementWindow('mgmt-sec-network', 'mgmt-pane-network');
+        }
+      });
+      wNetwork.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          if (e.target === wNetwork) {
+            e.preventDefault();
+            if (typeof window.openManagementWindow === 'function') {
+              window.openManagementWindow('mgmt-sec-network', 'mgmt-pane-network');
+            }
+          }
+        }
+      });
+    }
+  }
+  if (wStorage) {
+    wStorage.style.display = config.widgets.storage ? 'block' : 'none';
+    if (!wStorage.dataset.boundClick) {
+      wStorage.dataset.boundClick = '1';
+      wStorage.style.cursor = 'pointer';
+      wStorage.title = 'Click to open Storage Pool & Array Topology';
+      wStorage.setAttribute('role', 'button');
+      wStorage.setAttribute('tabindex', '0');
+      wStorage.addEventListener('click', (e) => {
+        if (e.target.closest('.widget-handle') || e.target.closest('.widget-close') || e.target.closest('button')) return;
+        if (typeof window.openManagementWindow === 'function') {
+          window.openManagementWindow('mgmt-sec-storage', 'mgmt-pane-storage-topo');
+        }
+      });
+      wStorage.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          if (e.target === wStorage) {
+            e.preventDefault();
+            if (typeof window.openManagementWindow === 'function') {
+              window.openManagementWindow('mgmt-sec-storage', 'mgmt-pane-storage-topo');
+            }
+          }
+        }
+      });
+    }
+  }
+  if (wUptime) {
+    wUptime.style.display = config.widgets.uptime ? 'block' : 'none';
+    if (!wUptime.dataset.boundClick) {
+      wUptime.dataset.boundClick = '1';
+      wUptime.style.cursor = 'pointer';
+      wUptime.title = 'Click to open Dashboard & Telemetry';
+      wUptime.setAttribute('role', 'button');
+      wUptime.setAttribute('tabindex', '0');
+      wUptime.addEventListener('click', (e) => {
+        if (e.target.closest('.widget-handle') || e.target.closest('.widget-close') || e.target.closest('button')) return;
+        if (typeof window.openManagementWindow === 'function') {
+          window.openManagementWindow('mgmt-sec-activity', 'mgmt-pane-metrics');
+        }
+      });
+      wUptime.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          if (e.target === wUptime) {
+            e.preventDefault();
+            if (typeof window.openManagementWindow === 'function') {
+              window.openManagementWindow('mgmt-sec-activity', 'mgmt-pane-metrics');
+            }
+          }
+        }
+      });
+    }
+  }
   if (wDriveTemp) {
     wDriveTemp.style.display = config.widgets.drive_temp !== false ? 'block' : 'none';
     if (!wDriveTemp.dataset.boundClick) {
       wDriveTemp.dataset.boundClick = '1';
       wDriveTemp.style.cursor = 'pointer';
       wDriveTemp.title = 'Click to open Storage & Disks';
+      wDriveTemp.setAttribute('role', 'button');
+      wDriveTemp.setAttribute('tabindex', '0');
       wDriveTemp.addEventListener('click', (e) => {
         if (e.target.closest('.widget-handle') || e.target.closest('.widget-close') || e.target.closest('button')) return;
         if (typeof window.openManagementWindow === 'function') {
           window.openManagementWindow('mgmt-sec-storage');
+        }
+      });
+      wDriveTemp.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          if (e.target === wDriveTemp) {
+            e.preventDefault();
+            if (typeof window.openManagementWindow === 'function') {
+              window.openManagementWindow('mgmt-sec-storage');
+            }
+          }
         }
       });
     }
@@ -174,10 +472,22 @@ export function applyWidgetConfig() {
       wNetDial.dataset.boundClick = '1';
       wNetDial.style.cursor = 'pointer';
       wNetDial.title = 'Click to open Network Cockpit';
+      wNetDial.setAttribute('role', 'button');
+      wNetDial.setAttribute('tabindex', '0');
       wNetDial.addEventListener('click', (e) => {
         if (e.target.closest('.widget-handle') || e.target.closest('.widget-close') || e.target.closest('button')) return;
         if (typeof window.openManagementWindow === 'function') {
           window.openManagementWindow('mgmt-sec-network');
+        }
+      });
+      wNetDial.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          if (e.target === wNetDial) {
+            e.preventDefault();
+            if (typeof window.openManagementWindow === 'function') {
+              window.openManagementWindow('mgmt-sec-network');
+            }
+          }
         }
       });
     }
@@ -188,10 +498,22 @@ export function applyWidgetConfig() {
       wUpsGauge.dataset.boundClick = '1';
       wUpsGauge.style.cursor = 'pointer';
       wUpsGauge.title = 'Click to open Power & Battery Cockpit';
+      wUpsGauge.setAttribute('role', 'button');
+      wUpsGauge.setAttribute('tabindex', '0');
       wUpsGauge.addEventListener('click', (e) => {
         if (e.target.closest('.widget-handle') || e.target.closest('.widget-close') || e.target.closest('button')) return;
         if (typeof window.openManagementWindow === 'function') {
           window.openManagementWindow('mgmt-sec-ups');
+        }
+      });
+      wUpsGauge.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          if (e.target === wUpsGauge) {
+            e.preventDefault();
+            if (typeof window.openManagementWindow === 'function') {
+              window.openManagementWindow('mgmt-sec-ups');
+            }
+          }
         }
       });
     }
@@ -292,6 +614,7 @@ export function updateClock() {
 
   const now = new Date();
   const format = _config?.clockFormat || state.clockFormat || '24';
+  const tz = _config?.clockTimezone || 'auto';
 
   const timeEl = document.getElementById('w-clock-time');
   const secEl = document.getElementById('w-clock-sec');
@@ -299,16 +622,50 @@ export function updateClock() {
   const dateEl = document.getElementById('w-clock-date');
   const tzBadge = document.getElementById('w-clock-tz');
 
-  let hours = now.getHours();
-  const minutes = String(now.getMinutes()).padStart(2, '0');
-  const seconds = String(now.getSeconds()).padStart(2, '0');
+  let hoursStr = '';
+  let minutes = '';
+  let seconds = '';
   let ampm = '';
+  let tzAbbr = '';
 
-  if (format === '12') {
-    ampm = hours >= 12 ? 'PM' : 'AM';
-    hours = hours % 12 || 12;
+  try {
+    const opts = {
+      hour: 'numeric',
+      minute: 'numeric',
+      second: 'numeric',
+      hour12: format === '12',
+    };
+    if (tz && tz !== 'auto') {
+      opts.timeZone = tz;
+    }
+    const formatter = new Intl.DateTimeFormat('en-US', opts);
+    const parts = formatter.formatToParts(now);
+    for (const part of parts) {
+      if (part.type === 'hour') hoursStr = part.value.padStart(2, '0');
+      else if (part.type === 'minute') minutes = part.value.padStart(2, '0');
+      else if (part.type === 'second') seconds = part.value.padStart(2, '0');
+      else if (part.type === 'dayPeriod') ampm = part.value.toUpperCase();
+    }
+    if (format === '12' && hoursStr.startsWith('0')) {
+      hoursStr = hoursStr.replace(/^0/, '');
+    }
+
+    if (tz && tz !== 'auto') {
+      const tzPart = new Intl.DateTimeFormat('en-US', { timeZone: tz, timeZoneName: 'short' })
+        .formatToParts(now)
+        .find((p) => p.type === 'timeZoneName');
+      if (tzPart) tzAbbr = tzPart.value;
+    }
+  } catch (e) {
+    let hours = now.getHours();
+    minutes = String(now.getMinutes()).padStart(2, '0');
+    seconds = String(now.getSeconds()).padStart(2, '0');
+    if (format === '12') {
+      ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12 || 12;
+    }
+    hoursStr = format === '12' ? String(hours) : String(hours).padStart(2, '0');
   }
-  const hoursStr = format === '12' ? String(hours) : String(hours).padStart(2, '0');
 
   if (timeEl && timeEl.childNodes[0]) {
     timeEl.childNodes[0].nodeValue = `${hoursStr}:${minutes}`;
@@ -321,19 +678,28 @@ export function updateClock() {
   }
   if (dateEl) {
     try {
-      const dateStr = new Intl.DateTimeFormat([], {
+      const dateOpts = {
         weekday: 'long',
         month: 'short',
         day: 'numeric',
         year: 'numeric',
-      }).format(now);
+      };
+      if (tz && tz !== 'auto') dateOpts.timeZone = tz;
+      const dateStr = new Intl.DateTimeFormat([], dateOpts).format(now);
       dateEl.textContent = dateStr;
     } catch (e) {
       dateEl.textContent = now.toDateString();
     }
   }
   if (tzBadge) {
-    tzBadge.textContent = format === '12' ? '12H' : '24H';
+    if (tz && tz !== 'auto') {
+      const city = tz.split('/').pop().replace(/_/g, ' ');
+      tzBadge.textContent = `${tzAbbr || city} • ${format === '12' ? '12H' : '24H'}`;
+      tzBadge.title = `Timezone: ${tz} (${tzAbbr || city}) - Click to change`;
+    } else {
+      tzBadge.textContent = format === '12' ? '12H' : '24H';
+      tzBadge.title = 'Local Timezone - Click to change';
+    }
   }
 }
 
@@ -733,6 +1099,11 @@ function renderGlanceBarForCurrentView() {
   glanceBar.className = 'cal-glance-bar';
   glanceBar.innerHTML = `<span class="cal-glance-bar-icon">✨</span> <span>${escapeHtml(target.dateStr)}: ${escapeHtml(target.name)}</span>`;
   glanceBar.title = `${target.dateStr}: ${target.name} (Official Holiday)`;
+  if (target && target.day) {
+    glanceBar.dataset.dateKey = toDateKey(year, month, target.day);
+  } else {
+    delete glanceBar.dataset.dateKey;
+  }
 }
 
 export function renderCalendar() {
@@ -793,7 +1164,14 @@ export function renderCalendar() {
     const isHoliday = !!holidayList && holidayList.length > 0;
     const holidayName = isHoliday ? holidayList.map((h) => h.name || h.localName).filter((v, idx, arr) => arr.indexOf(v) === idx).join(' / ') : '';
     const dateStr = `${new Intl.DateTimeFormat('en-US', { month: 'short' }).format(new Date(prevYear, prevMonthIdx, d))} ${d}`;
-    html += `<div class="cal-day cal-other-month${isHoliday ? ' cal-holiday' : ''}" data-day="${d}" ${isHoliday ? `data-holiday="${escapeHtml(holidayName)}" data-date-str="${dateStr}" title="${escapeHtml(holidayName)}"` : ''}>${d}</div>`;
+    let cls = 'cal-day cal-other-month';
+    if (isHoliday) cls += ' cal-holiday';
+    const dayEvents = _calendarEventsMap[key];
+    if (dayEvents && dayEvents.length > 0) {
+      cls += ' has-notes';
+      if (dayEvents.some((e) => e.type === 'task')) cls += ' has-task';
+    }
+    html += `<div class="${cls}" data-day="${d}" ${isHoliday ? `data-holiday="${escapeHtml(holidayName)}" data-date-str="${dateStr}" title="${escapeHtml(holidayName)}"` : ''}>${d}</div>`;
   }
 
   // Current month days
@@ -811,6 +1189,11 @@ export function renderCalendar() {
     let cls = 'cal-day';
     if (isToday) cls += ' cal-today';
     if (isHoliday) cls += ' cal-holiday';
+    const dayEvents = _calendarEventsMap[key];
+    if (dayEvents && dayEvents.length > 0) {
+      cls += ' has-notes';
+      if (dayEvents.some((e) => e.type === 'task')) cls += ' has-task';
+    }
 
     html += `<div class="${cls}" data-day="${d}" ${isHoliday ? `data-holiday="${escapeHtml(holidayName)}" data-date-str="${dateStr}" title="${escapeHtml(holidayName)}"` : ''}>${d}</div>`;
   }
@@ -824,7 +1207,14 @@ export function renderCalendar() {
     const isHoliday = !!holidayList && holidayList.length > 0;
     const holidayName = isHoliday ? holidayList.map((h) => h.name || h.localName).filter((v, idx, arr) => arr.indexOf(v) === idx).join(' / ') : '';
     const dateStr = `${new Intl.DateTimeFormat('en-US', { month: 'short' }).format(new Date(nextYear, nextMonthIdx, d))} ${d}`;
-    html += `<div class="cal-day cal-other-month${isHoliday ? ' cal-holiday' : ''}" data-day="${d}" ${isHoliday ? `data-holiday="${escapeHtml(holidayName)}" data-date-str="${dateStr}" title="${escapeHtml(holidayName)}"` : ''}>${d}</div>`;
+    let cls = 'cal-day cal-other-month';
+    if (isHoliday) cls += ' cal-holiday';
+    const dayEvents = _calendarEventsMap[key];
+    if (dayEvents && dayEvents.length > 0) {
+      cls += ' has-notes';
+      if (dayEvents.some((e) => e.type === 'task')) cls += ' has-task';
+    }
+    html += `<div class="${cls}" data-day="${d}" ${isHoliday ? `data-holiday="${escapeHtml(holidayName)}" data-date-str="${dateStr}" title="${escapeHtml(holidayName)}"` : ''}>${d}</div>`;
   }
 
   grid.innerHTML = html;
@@ -1255,7 +1645,8 @@ export function setupWidgetSettingsEvents() {
   // Interactive header controls
   const tzBadge = document.getElementById('w-clock-tz');
   if (tzBadge) {
-    tzBadge.addEventListener('click', () => {
+    tzBadge.addEventListener('click', (e) => {
+      e.stopPropagation();
       const curFmt = _config?.clockFormat || state.clockFormat || '24';
       const nextFmt = curFmt === '24' ? '12' : '24';
       state.clockFormat = nextFmt;
@@ -1351,7 +1742,8 @@ export function setupWidgetSettingsEvents() {
 
   const weatherTemp = document.getElementById('w-weather-temp');
   if (weatherTemp) {
-    weatherTemp.addEventListener('click', () => {
+    weatherTemp.addEventListener('click', (e) => {
+      e.stopPropagation();
       const curUnit = _config?.weatherUnit || 'c';
       const nextUnit = curUnit === 'c' ? 'f' : 'c';
       saveWidgetConfig({ weatherUnit: nextUnit });
@@ -1468,6 +1860,15 @@ export function initWidgets() {
   applyWidgetConfig();
   setupWidgetSettingsEvents();
   syncWidgetSettingsUI();
+  setupTimezoneModalEvents();
+  setupCalendarModalEvents();
+
+  // Pre-fetch calendar events for desktop widget dots
+  try {
+    const y = _calViewDate.getFullYear();
+    const m = _calViewDate.getMonth();
+    fetchCalendarEvents(toDateKey(y, m - 1, 1), toDateKey(y, m + 1, 28));
+  } catch (e) {}
 
   // Clock tick interval
   if (!_clockInterval) {
@@ -1742,6 +2143,1148 @@ export function initWidgets() {
           aiEngineStatus.innerHTML = '<span class="ai-status-dot standby"></span> <span>Neural Engine Ready</span>';
         }
       }
+
+      // Live Re-indexing Progress Strip in AI Accelerator Desktop Widget
+      const wReindexStrip = document.getElementById('w-ai-reindex-strip');
+      const wReindexChunks = document.getElementById('w-ai-reindex-chunks');
+      const wReindexEta = document.getElementById('w-ai-reindex-eta');
+      const wReindexPct = document.getElementById('w-ai-reindex-pct');
+      const wReindexBar = document.getElementById('w-ai-reindex-bar');
+      const topText = document.getElementById('topbar-ai-accel-text');
+      const topDot = document.getElementById('topbar-ai-accel-dot');
+
+      const reindex = stats.reindex_status;
+      if (reindex && reindex.status === 'running' && reindex.total > 0 && reindex.completed < reindex.total) {
+        const pct = reindex.percentage ?? Math.round((reindex.completed / reindex.total) * 100);
+        const etaSec = reindex.eta_sec || 0;
+        let etaText = 'ETA: --';
+        let etaShort = '';
+        if (etaSec > 0) {
+          if (etaSec < 60) {
+            etaText = `ETA: ${Math.round(etaSec)}s`;
+            etaShort = ` • ${Math.round(etaSec)}s`;
+          } else if (etaSec < 3600) {
+            const mins = Math.floor(etaSec / 60);
+            etaText = `ETA: ${mins}m`;
+            etaShort = ` • ${mins}m`;
+          } else {
+            const hrs = Math.floor(etaSec / 3600);
+            const mins = Math.round((etaSec % 3600) / 60);
+            etaText = `ETA: ${hrs}h ${mins}m`;
+            etaShort = ` • ${hrs}h ${mins}m`;
+          }
+        }
+
+        if (wReindexStrip) {
+          wReindexStrip.style.display = 'block';
+          if (wReindexBar) wReindexBar.style.width = `${pct}%`;
+          if (wReindexPct) wReindexPct.textContent = `${pct}%`;
+          if (wReindexChunks) wReindexChunks.textContent = `${(reindex.completed || 0).toLocaleString()} / ${(reindex.total || 0).toLocaleString()}`;
+          if (wReindexEta) wReindexEta.textContent = etaText;
+          if (!wReindexStrip.dataset.bound) {
+            wReindexStrip.dataset.bound = '1';
+            wReindexStrip.addEventListener('click', (e) => {
+              e.stopPropagation();
+              if (typeof window.openManagementWindow === 'function') {
+                window.openManagementWindow('mgmt-sec-ai', 'mgmt-pane-ai-index');
+              }
+            });
+          }
+        }
+        if (topText) {
+          topText.textContent = `Re-indexing ${pct}%${etaShort}`;
+        }
+        if (topDot) {
+          topDot.style.background = '#00f0ff';
+          topDot.style.boxShadow = '0 0 6px #00f0ff';
+        }
+      } else if (wReindexStrip) {
+        wReindexStrip.style.display = 'none';
+      }
     }
   });
 }
+
+/* =========================================================================
+   Timezone & Clock Modal Logic
+   ========================================================================= */
+
+export const TIMEZONES_CATALOG = [
+  { id: 'UTC', name: 'UTC / GMT', region: 'UTC', country: 'Universal' },
+  { id: 'America/New_York', name: 'New York (Eastern)', region: 'Americas', country: 'United States' },
+  { id: 'America/Chicago', name: 'Chicago (Central)', region: 'Americas', country: 'United States' },
+  { id: 'America/Denver', name: 'Denver (Mountain)', region: 'Americas', country: 'United States' },
+  { id: 'America/Los_Angeles', name: 'Los Angeles (Pacific)', region: 'Americas', country: 'United States' },
+  { id: 'America/Anchorage', name: 'Anchorage (Alaska)', region: 'Americas', country: 'United States' },
+  { id: 'Pacific/Honolulu', name: 'Honolulu (Hawaii)', region: 'Americas', country: 'United States' },
+  { id: 'America/Phoenix', name: 'Phoenix (MST - No DST)', region: 'Americas', country: 'United States' },
+  { id: 'America/Toronto', name: 'Toronto', region: 'Americas', country: 'Canada' },
+  { id: 'America/Vancouver', name: 'Vancouver', region: 'Americas', country: 'Canada' },
+  { id: 'America/Mexico_City', name: 'Mexico City', region: 'Americas', country: 'Mexico' },
+  { id: 'America/Bogota', name: 'Bogotá', region: 'Americas', country: 'Colombia' },
+  { id: 'America/Lima', name: 'Lima', region: 'Americas', country: 'Peru' },
+  { id: 'America/Santiago', name: 'Santiago', region: 'Americas', country: 'Chile' },
+  { id: 'America/Buenos_Aires', name: 'Buenos Aires', region: 'Americas', country: 'Argentina' },
+  { id: 'America/Sao_Paulo', name: 'São Paulo', region: 'Americas', country: 'Brazil' },
+  { id: 'Europe/London', name: 'London (GMT/BST)', region: 'Europe', country: 'United Kingdom' },
+  { id: 'Europe/Dublin', name: 'Dublin', region: 'Europe', country: 'Ireland' },
+  { id: 'Europe/Paris', name: 'Paris', region: 'Europe', country: 'France' },
+  { id: 'Europe/Berlin', name: 'Berlin', region: 'Europe', country: 'Germany' },
+  { id: 'Europe/Madrid', name: 'Madrid', region: 'Europe', country: 'Spain' },
+  { id: 'Europe/Rome', name: 'Rome', region: 'Europe', country: 'Italy' },
+  { id: 'Europe/Amsterdam', name: 'Amsterdam', region: 'Europe', country: 'Netherlands' },
+  { id: 'Europe/Brussels', name: 'Brussels', region: 'Europe', country: 'Belgium' },
+  { id: 'Europe/Zurich', name: 'Zurich', region: 'Europe', country: 'Switzerland' },
+  { id: 'Europe/Vienna', name: 'Vienna', region: 'Europe', country: 'Austria' },
+  { id: 'Europe/Stockholm', name: 'Stockholm', region: 'Europe', country: 'Sweden' },
+  { id: 'Europe/Oslo', name: 'Oslo', region: 'Europe', country: 'Norway' },
+  { id: 'Europe/Copenhagen', name: 'Copenhagen', region: 'Europe', country: 'Denmark' },
+  { id: 'Europe/Helsinki', name: 'Helsinki', region: 'Europe', country: 'Finland' },
+  { id: 'Europe/Warsaw', name: 'Warsaw', region: 'Europe', country: 'Poland' },
+  { id: 'Europe/Prague', name: 'Prague', region: 'Europe', country: 'Czechia' },
+  { id: 'Europe/Athens', name: 'Athens', region: 'Europe', country: 'Greece' },
+  { id: 'Europe/Bucharest', name: 'Bucharest', region: 'Europe', country: 'Romania' },
+  { id: 'Europe/Kyiv', name: 'Kyiv', region: 'Europe', country: 'Ukraine' },
+  { id: 'Europe/Istanbul', name: 'Istanbul', region: 'Europe', country: 'Turkey' },
+  { id: 'Europe/Moscow', name: 'Moscow', region: 'Europe', country: 'Russia' },
+  { id: 'Asia/Dubai', name: 'Dubai (GST)', region: 'Asia', country: 'United Arab Emirates' },
+  { id: 'Asia/Riyadh', name: 'Riyadh', region: 'Asia', country: 'Saudi Arabia' },
+  { id: 'Asia/Kolkata', name: 'New Delhi / Mumbai (IST)', region: 'Asia', country: 'India' },
+  { id: 'Asia/Bangkok', name: 'Bangkok (ICT)', region: 'Asia', country: 'Thailand' },
+  { id: 'Asia/Jakarta', name: 'Jakarta (WIB)', region: 'Asia', country: 'Indonesia' },
+  { id: 'Asia/Singapore', name: 'Singapore (SGT)', region: 'Asia', country: 'Singapore' },
+  { id: 'Asia/Hong_Kong', name: 'Hong Kong (HKT)', region: 'Asia', country: 'Hong Kong' },
+  { id: 'Asia/Shanghai', name: 'Beijing / Shanghai (CST)', region: 'Asia', country: 'China' },
+  { id: 'Asia/Taipei', name: 'Taipei', region: 'Asia', country: 'Taiwan' },
+  { id: 'Asia/Seoul', name: 'Seoul (KST)', region: 'Asia', country: 'South Korea' },
+  { id: 'Asia/Tokyo', name: 'Tokyo (JST)', region: 'Asia', country: 'Japan' },
+  { id: 'Australia/Perth', name: 'Perth (AWST)', region: 'Pacific', country: 'Australia' },
+  { id: 'Australia/Adelaide', name: 'Adelaide (ACST)', region: 'Pacific', country: 'Australia' },
+  { id: 'Australia/Sydney', name: 'Sydney (AEST)', region: 'Pacific', country: 'Australia' },
+  { id: 'Australia/Melbourne', name: 'Melbourne (AEST)', region: 'Pacific', country: 'Australia' },
+  { id: 'Australia/Brisbane', name: 'Brisbane (AEST - No DST)', region: 'Pacific', country: 'Australia' },
+  { id: 'Pacific/Auckland', name: 'Auckland / Wellington', region: 'Pacific', country: 'New Zealand' },
+  { id: 'Pacific/Fiji', name: 'Fiji', region: 'Pacific', country: 'Fiji' },
+  { id: 'Pacific/Guam', name: 'Guam', region: 'Pacific', country: 'Guam' },
+];
+
+export function openTimezoneModal() {
+  if (typeof window.openManagementWindow === 'function') {
+    window.openManagementWindow('mgmt-sec-wallpaper', 'mgmt-pane-language');
+  }
+
+  const modal = document.getElementById('modal-clock-timezone');
+  if (!modal) return;
+
+  setupTimezoneModalEvents();
+
+  const cfg = _config || loadWidgetConfig();
+  _tempSelectedTz = cfg.clockTimezone || 'auto';
+  _tempSelectedFormat = cfg.clockFormat || state.clockFormat || '24';
+  _tzSearchQuery = '';
+  _tzActiveRegion = 'all';
+
+  modal.classList.add('open');
+  if (modal.classList.contains('smart-modal-backdrop') || modal.style.display === 'none') {
+    modal.style.display = 'flex';
+  }
+
+  const searchInput = document.getElementById('tz-search-input');
+  if (searchInput) searchInput.value = '';
+
+  const pills = document.querySelectorAll('.tz-region-pill');
+  pills.forEach((p) => p.classList.toggle('active', p.dataset.region === 'all'));
+
+  updateTzModalPreview();
+  renderTimezoneList();
+
+  if (_tzPreviewTimer) clearInterval(_tzPreviewTimer);
+  _tzPreviewTimer = setInterval(updateTzModalPreview, 1000);
+}
+window.openTimezoneModal = openTimezoneModal;
+
+export function initTimezoneControls() {
+  const modal = document.getElementById('modal-clock-timezone');
+  if (!modal) return;
+
+  setupTimezoneModalEvents();
+
+  const cfg = _config || loadWidgetConfig();
+  _tempSelectedTz = cfg.clockTimezone || 'auto';
+  _tempSelectedFormat = cfg.clockFormat || state.clockFormat || '24';
+  _tzSearchQuery = '';
+  _tzActiveRegion = 'all';
+
+  const searchInput = document.getElementById('tz-search-input');
+  if (searchInput) searchInput.value = '';
+
+  const pills = document.querySelectorAll('.tz-region-pill');
+  pills.forEach((p) => p.classList.toggle('active', p.dataset.region === 'all'));
+
+  updateTzModalPreview();
+  renderTimezoneList();
+
+  if (_tzPreviewTimer) clearInterval(_tzPreviewTimer);
+  _tzPreviewTimer = setInterval(updateTzModalPreview, 1000);
+}
+window.initTimezoneControls = initTimezoneControls;
+
+export function closeTimezoneModal() {
+  const modal = document.getElementById('modal-clock-timezone');
+  if (modal) {
+    modal.classList.remove('open');
+    if (modal.classList.contains('smart-modal-backdrop')) {
+      modal.style.display = 'none';
+    }
+  }
+  if (_tzPreviewTimer) {
+    clearInterval(_tzPreviewTimer);
+    _tzPreviewTimer = null;
+  }
+}
+window.closeTimezoneModal = closeTimezoneModal;
+
+export function updateTzModalPreview() {
+  const timeEl = document.getElementById('modal-tz-preview-time');
+  const secEl = document.getElementById('modal-tz-preview-sec');
+  const ampmEl = document.getElementById('modal-tz-preview-ampm');
+  const dateEl = document.getElementById('modal-tz-preview-date');
+  const activePill = document.getElementById('modal-tz-active-pill');
+  if (!timeEl) return;
+
+  const now = new Date();
+  const tz = _tempSelectedTz;
+  const fmt12 = _tempSelectedFormat === '12';
+
+  let hoursStr = '';
+  let minutes = '';
+  let seconds = '';
+  let ampm = '';
+  let tzAbbr = '';
+
+  try {
+    const opts = {
+      hour: 'numeric',
+      minute: 'numeric',
+      second: 'numeric',
+      hour12: fmt12,
+    };
+    if (tz && tz !== 'auto') opts.timeZone = tz;
+    const parts = new Intl.DateTimeFormat('en-US', opts).formatToParts(now);
+    for (const part of parts) {
+      if (part.type === 'hour') hoursStr = part.value.padStart(2, '0');
+      else if (part.type === 'minute') minutes = part.value.padStart(2, '0');
+      else if (part.type === 'second') seconds = part.value.padStart(2, '0');
+      else if (part.type === 'dayPeriod') ampm = part.value.toUpperCase();
+    }
+    if (fmt12 && hoursStr.startsWith('0')) {
+      hoursStr = hoursStr.replace(/^0/, '');
+    }
+    if (tz && tz !== 'auto') {
+      const tzPart = new Intl.DateTimeFormat('en-US', { timeZone: tz, timeZoneName: 'short' })
+        .formatToParts(now)
+        .find((p) => p.type === 'timeZoneName');
+      if (tzPart) tzAbbr = tzPart.value;
+    }
+  } catch (e) {
+    let hours = now.getHours();
+    minutes = String(now.getMinutes()).padStart(2, '0');
+    seconds = String(now.getSeconds()).padStart(2, '0');
+    if (fmt12) {
+      ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12 || 12;
+    }
+    hoursStr = fmt12 ? String(hours) : String(hours).padStart(2, '0');
+  }
+
+  timeEl.textContent = `${hoursStr}:${minutes}`;
+  if (secEl) secEl.textContent = `:${seconds}`;
+  if (ampmEl) ampmEl.textContent = ampm;
+
+  if (dateEl) {
+    try {
+      const dateOpts = { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' };
+      if (tz && tz !== 'auto') dateOpts.timeZone = tz;
+      dateEl.textContent = new Intl.DateTimeFormat([], dateOpts).format(now);
+    } catch (e) {
+      dateEl.textContent = now.toDateString();
+    }
+  }
+
+  if (activePill) {
+    if (tz === 'auto') {
+      const localTz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'System Local';
+      activePill.textContent = `Local Time (${localTz})`;
+    } else {
+      activePill.textContent = `${tz} ${tzAbbr ? '(' + tzAbbr + ')' : ''}`;
+    }
+  }
+
+  const btn12 = document.getElementById('btn-tz-fmt-12');
+  const btn24 = document.getElementById('btn-tz-fmt-24');
+  if (btn12 && btn24) {
+    btn12.style.background = fmt12 ? 'var(--brand, #00f0ff)' : 'transparent';
+    btn12.style.color = fmt12 ? '#000' : '#94a3b8';
+    btn24.style.background = !fmt12 ? 'var(--brand, #00f0ff)' : 'transparent';
+    btn24.style.color = !fmt12 ? '#000' : '#94a3b8';
+  }
+}
+
+export function renderTimezoneList() {
+  const container = document.getElementById('tz-items-list');
+  if (!container) return;
+
+  const q = (_tzSearchQuery || '').toLowerCase().trim();
+  const region = _tzActiveRegion || 'all';
+
+  let filtered = TIMEZONES_CATALOG.filter((tz) => {
+    if (region !== 'all' && tz.region !== region) return false;
+    if (q) {
+      const matchName = tz.name.toLowerCase().includes(q);
+      const matchId = tz.id.toLowerCase().includes(q);
+      const matchCountry = tz.country.toLowerCase().includes(q);
+      if (!matchName && !matchId && !matchCountry) return false;
+    }
+    return true;
+  });
+
+  const now = new Date();
+  const is12H = _tempSelectedFormat === '12';
+
+  let html = '';
+  // Auto item at top
+  const isAutoSelected = _tempSelectedTz === 'auto';
+  const localIana = Intl.DateTimeFormat().resolvedOptions().timeZone || 'System Local';
+  html += `
+    <div class="tz-item-row ${isAutoSelected ? 'selected' : ''}" data-tz-id="auto">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 14px;">📍</span>
+        <div>
+          <div style="font-size: 12px; font-weight: 700; color: #fff;">Local System Timezone (Auto)</div>
+          <div style="font-size: 10.5px; color: var(--muted);">${escapeHtml(localIana)}</div>
+        </div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 12px; font-weight: 700; font-family: var(--font-mono, monospace); color: var(--brand, #00f0ff);">${isAutoSelected ? '✓ Active' : ''}</span>
+      </div>
+    </div>
+  `;
+
+  filtered.forEach((tz) => {
+    const isSelected = _tempSelectedTz === tz.id;
+    let timeStr = '--:--';
+    let tzAbbr = '';
+    try {
+      const opts = { hour: 'numeric', minute: 'numeric', hour12: is12H, timeZone: tz.id };
+      timeStr = new Intl.DateTimeFormat('en-US', opts).format(now);
+      const tzPart = new Intl.DateTimeFormat('en-US', { timeZone: tz.id, timeZoneName: 'short' })
+        .formatToParts(now)
+        .find((p) => p.type === 'timeZoneName');
+      if (tzPart) tzAbbr = tzPart.value;
+    } catch (e) {}
+
+    html += `
+      <div class="tz-item-row ${isSelected ? 'selected' : ''}" data-tz-id="${escapeHtml(tz.id)}">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 14px;">🌐</span>
+          <div>
+            <div style="font-size: 12px; font-weight: 700; color: #fff;">${escapeHtml(tz.name)}</div>
+            <div style="font-size: 10.5px; color: var(--muted);">${escapeHtml(tz.id)} • ${escapeHtml(tz.country)}</div>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 10px; color: #94a3b8; font-family: var(--font-mono, monospace);">${escapeHtml(tzAbbr)}</span>
+          <span style="font-size: 12px; font-weight: 700; font-family: var(--font-mono, monospace); color: ${isSelected ? 'var(--brand, #00f0ff)' : '#e2e8f0'};">${escapeHtml(timeStr)}</span>
+          <span style="font-size: 12px; color: var(--brand, #00f0ff);">${isSelected ? '✓' : ''}</span>
+        </div>
+      </div>
+    `;
+  });
+
+  if (!filtered.length && q) {
+    html = `<div style="text-align: center; color: var(--muted); padding: 25px; font-size: 12px;">No matching timezones found for "${escapeHtml(q)}". Try custom IANA below.</div>`;
+  }
+
+  container.innerHTML = html;
+}
+
+export function setupTimezoneModalEvents() {
+  const modal = document.getElementById('modal-clock-timezone');
+  if (!modal || modal.dataset.eventsBound) return;
+  modal.dataset.eventsBound = '1';
+
+  const win = modal.querySelector('.smart-modal-window');
+  const hdr = modal.querySelector('.smart-modal-header');
+  if (win && hdr && typeof makeDraggable === 'function') {
+    try {
+      makeDraggable(win, hdr);
+    } catch (e) {}
+  }
+
+  const closeBtn = document.getElementById('modal-clock-tz-close-btn');
+  const cancelBtn = document.getElementById('modal-clock-tz-cancel-btn');
+  const saveBtn = document.getElementById('modal-clock-tz-save-btn');
+  const useBrowserBtn = document.getElementById('btn-tz-use-browser');
+  const searchInput = document.getElementById('tz-search-input');
+  const customInput = document.getElementById('tz-custom-input');
+  const applyCustomBtn = document.getElementById('btn-tz-apply-custom');
+  const btn12 = document.getElementById('btn-tz-fmt-12');
+  const btn24 = document.getElementById('btn-tz-fmt-24');
+  const listContainer = document.getElementById('tz-items-list');
+
+  if (closeBtn) closeBtn.addEventListener('click', closeTimezoneModal);
+  if (cancelBtn) cancelBtn.addEventListener('click', closeTimezoneModal);
+
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) closeTimezoneModal();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && (modal.classList.contains('open') || modal.style.display === 'flex')) {
+      closeTimezoneModal();
+    }
+  });
+
+  if (btn12) {
+    btn12.addEventListener('click', () => {
+      _tempSelectedFormat = '12';
+      updateTzModalPreview();
+      renderTimezoneList();
+    });
+  }
+  if (btn24) {
+    btn24.addEventListener('click', () => {
+      _tempSelectedFormat = '24';
+      updateTzModalPreview();
+      renderTimezoneList();
+    });
+  }
+
+  if (useBrowserBtn) {
+    useBrowserBtn.addEventListener('click', () => {
+      _tempSelectedTz = 'auto';
+      updateTzModalPreview();
+      renderTimezoneList();
+    });
+  }
+
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      _tzSearchQuery = e.target.value;
+      renderTimezoneList();
+    });
+  }
+
+  const pills = document.querySelectorAll('.tz-region-pill');
+  pills.forEach((p) => {
+    p.addEventListener('click', () => {
+      pills.forEach((el) => el.classList.remove('active'));
+      p.classList.add('active');
+      _tzActiveRegion = p.dataset.region || 'all';
+      renderTimezoneList();
+    });
+  });
+
+  if (listContainer) {
+    listContainer.addEventListener('click', (e) => {
+      const row = e.target.closest('.tz-item-row');
+      if (!row || !row.dataset.tzId) return;
+      _tempSelectedTz = row.dataset.tzId;
+      updateTzModalPreview();
+      renderTimezoneList();
+    });
+  }
+
+  if (applyCustomBtn && customInput) {
+    applyCustomBtn.addEventListener('click', () => {
+      const val = customInput.value.trim();
+      if (!val) return;
+      try {
+        new Intl.DateTimeFormat(undefined, { timeZone: val });
+        _tempSelectedTz = val;
+        updateTzModalPreview();
+        renderTimezoneList();
+        showToast(`Selected custom timezone: ${val}`, 'info');
+      } catch (err) {
+        showToast(`Invalid IANA timezone: "${val}". Example: America/Toronto`, 'error');
+      }
+    });
+  }
+
+  if (saveBtn) {
+    saveBtn.addEventListener('click', () => {
+      saveWidgetConfig({
+        clockTimezone: _tempSelectedTz,
+        clockFormat: _tempSelectedFormat,
+      });
+      updateClock();
+      const tzName = _tempSelectedTz === 'auto' ? 'Local System Time' : _tempSelectedTz;
+      const msg = (t('tz.updated_toast') || 'Timezone updated to {tz}').replace('{tz}', tzName);
+      showToast(msg, 'success');
+      closeTimezoneModal();
+    });
+  }
+}
+
+/* =========================================================================
+   Calendar, Day Agenda, Reminders & Provider Sync Modal Logic
+   ========================================================================= */
+
+export async function fetchCalendarEvents(startDate, endDate) {
+  try {
+    let url = '/api/calendar/events';
+    if (startDate && endDate) url += `?start_date=${startDate}&end_date=${endDate}`;
+    const data = await api.get(url);
+    if (data && Array.isArray(data.events)) {
+      _calendarEventsMap = {};
+      data.events.forEach((ev) => {
+        if (!ev.date) return;
+        if (!_calendarEventsMap[ev.date]) _calendarEventsMap[ev.date] = [];
+        _calendarEventsMap[ev.date].push(ev);
+      });
+      renderCalendar();
+      if (document.getElementById('modal-calendar-notes')?.style.display !== 'none') {
+        renderModalCalendarGrid();
+        if (_modalCalSelectedDateKey) renderDayAgenda(_modalCalSelectedDateKey);
+      }
+    }
+  } catch (err) {
+    console.warn('Failed to fetch calendar events:', err);
+  }
+}
+window.fetchCalendarEvents = fetchCalendarEvents;
+
+export async function fetchCalendarFeeds() {
+  try {
+    const data = await api.get('/api/calendar/feeds');
+    if (data && Array.isArray(data.feeds)) {
+      _calendarFeeds = data.feeds;
+      renderFeedsList();
+    }
+  } catch (err) {
+    console.warn('Failed to fetch calendar feeds:', err);
+  }
+}
+window.fetchCalendarFeeds = fetchCalendarFeeds;
+
+export function openCalendarModal(initialDateKey) {
+  if (typeof window.openManagementWindow === 'function') {
+    window.openManagementWindow('mgmt-sec-wallpaper', 'mgmt-pane-calendar');
+  }
+
+  const modal = document.getElementById('modal-calendar-notes');
+  if (!modal) return;
+
+  setupCalendarModalEvents();
+
+  const now = new Date();
+  if (initialDateKey && /^\d{4}-\d{2}-\d{2}$/.test(initialDateKey)) {
+    const [y, m, d] = initialDateKey.split('-').map(Number);
+    _modalCalDate = new Date(y, m - 1, d);
+    _modalCalSelectedDateKey = initialDateKey;
+  } else {
+    _modalCalDate = new Date();
+    _modalCalSelectedDateKey = toDateKey(now.getFullYear(), now.getMonth(), now.getDate());
+  }
+
+  modal.classList.add('open');
+  if (modal.classList.contains('smart-modal-backdrop') || modal.style.display === 'none') {
+    modal.style.display = 'flex';
+  }
+
+  renderModalCalendarGrid();
+  renderDayAgenda(_modalCalSelectedDateKey);
+
+  // Fetch feeds and events for the current month
+  fetchCalendarFeeds();
+  const year = _modalCalDate.getFullYear();
+  const month = _modalCalDate.getMonth();
+  const startD = toDateKey(year, month - 1, 1);
+  const endD = toDateKey(year, month + 1, 28);
+  fetchCalendarEvents(startD, endD);
+}
+window.openCalendarModal = openCalendarModal;
+
+export function initCalendarView(initialDateKey) {
+  const modal = document.getElementById('modal-calendar-notes');
+  if (!modal) return;
+
+  setupCalendarModalEvents();
+
+  const now = new Date();
+  if (initialDateKey && /^\d{4}-\d{2}-\d{2}$/.test(initialDateKey)) {
+    const [y, m, d] = initialDateKey.split('-').map(Number);
+    _modalCalDate = new Date(y, m - 1, d);
+    _modalCalSelectedDateKey = initialDateKey;
+  } else {
+    _modalCalDate = new Date();
+    _modalCalSelectedDateKey = toDateKey(now.getFullYear(), now.getMonth(), now.getDate());
+  }
+
+  renderModalCalendarGrid();
+  renderDayAgenda(_modalCalSelectedDateKey);
+
+  fetchCalendarFeeds();
+  const year = _modalCalDate.getFullYear();
+  const month = _modalCalDate.getMonth();
+  const startD = toDateKey(year, month - 1, 1);
+  const endD = toDateKey(year, month + 1, 28);
+  fetchCalendarEvents(startD, endD);
+}
+window.initCalendarView = initCalendarView;
+
+export function closeCalendarModal() {
+  const modal = document.getElementById('modal-calendar-notes');
+  if (modal) {
+    modal.classList.remove('open');
+    if (modal.classList.contains('smart-modal-backdrop')) {
+      modal.style.display = 'none';
+    }
+  }
+  renderCalendar();
+}
+window.closeCalendarModal = closeCalendarModal;
+
+export function renderModalCalendarGrid() {
+  const grid = document.getElementById('modal-cal-grid');
+  const titleEl = document.getElementById('modal-cal-month-title');
+  if (!grid) return;
+
+  const year = _modalCalDate.getFullYear();
+  const month = _modalCalDate.getMonth();
+  const today = new Date();
+
+  if (titleEl) {
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    titleEl.textContent = `${monthNames[month]} ${year}`;
+  }
+
+  const country = getActiveCountry();
+  const holidaysYear = getHolidaysForYear(year, country);
+
+  const prevMonthDate = new Date(year, month - 1, 1);
+  const prevYear = prevMonthDate.getFullYear();
+  const prevMonthIdx = prevMonthDate.getMonth();
+  const prevHolidaysYear = prevYear !== year ? getHolidaysForYear(prevYear, country) : holidaysYear;
+
+  const nextMonthDate = new Date(year, month + 1, 1);
+  const nextYear = nextMonthDate.getFullYear();
+  const nextMonthIdx = nextMonthDate.getMonth();
+  const nextHolidaysYear = nextYear !== year ? getHolidaysForYear(nextYear, country) : holidaysYear;
+
+  const firstDay = new Date(year, month, 1).getDay(); // 0 is Sun
+  const totalDays = new Date(year, month + 1, 0).getDate();
+  const prevMonthTotalDays = new Date(year, month, 0).getDate();
+
+  let html = '';
+  const weekdays = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+  weekdays.forEach((d) => {
+    html += `<div class="cal-weekday">${d}</div>`;
+  });
+
+  // Previous month days
+  for (let i = firstDay - 1; i >= 0; i--) {
+    const d = prevMonthTotalDays - i;
+    const key = toDateKey(prevYear, prevMonthIdx, d);
+    const holidayList = prevHolidaysYear[key];
+    const isHoliday = !!holidayList && holidayList.length > 0;
+    const isSelected = key === _modalCalSelectedDateKey;
+    const dayEvents = _calendarEventsMap[key] || [];
+
+    let cls = 'cal-day cal-other-month';
+    if (isSelected) cls += ' cal-selected';
+    if (isHoliday) cls += ' cal-holiday';
+    if (dayEvents.length > 0) {
+      cls += ' has-notes';
+      if (dayEvents.some((e) => e.type === 'task')) cls += ' has-task';
+    }
+    html += `<div class="${cls}" data-date-key="${key}">${d}</div>`;
+  }
+
+  // Current month days
+  for (let d = 1; d <= totalDays; d++) {
+    const key = toDateKey(year, month, d);
+    const isToday = today.getFullYear() === year && today.getMonth() === month && today.getDate() === d;
+    const isSelected = key === _modalCalSelectedDateKey;
+    const holidayList = holidaysYear[key];
+    const isHoliday = !!holidayList && holidayList.length > 0;
+    const dayEvents = _calendarEventsMap[key] || [];
+
+    let cls = 'cal-day';
+    if (isToday) cls += ' cal-today';
+    if (isSelected) cls += ' cal-selected';
+    if (isHoliday) cls += ' cal-holiday';
+    if (dayEvents.length > 0) {
+      cls += ' has-notes';
+      if (dayEvents.some((e) => e.type === 'task')) cls += ' has-task';
+    }
+    html += `<div class="${cls}" data-date-key="${key}">${d}</div>`;
+  }
+
+  // Next month days
+  const cellsRendered = firstDay + totalDays;
+  const nextMonthPadding = (7 - (cellsRendered % 7)) % 7;
+  for (let d = 1; d <= nextMonthPadding; d++) {
+    const key = toDateKey(nextYear, nextMonthIdx, d);
+    const holidayList = nextHolidaysYear[key];
+    const isHoliday = !!holidayList && holidayList.length > 0;
+    const isSelected = key === _modalCalSelectedDateKey;
+    const dayEvents = _calendarEventsMap[key] || [];
+
+    let cls = 'cal-day cal-other-month';
+    if (isSelected) cls += ' cal-selected';
+    if (isHoliday) cls += ' cal-holiday';
+    if (dayEvents.length > 0) {
+      cls += ' has-notes';
+      if (dayEvents.some((e) => e.type === 'task')) cls += ' has-task';
+    }
+    html += `<div class="${cls}" data-date-key="${key}">${d}</div>`;
+  }
+
+  grid.innerHTML = html;
+}
+
+export function renderDayAgenda(dateKey) {
+  _modalCalSelectedDateKey = dateKey;
+  const titleEl = document.getElementById('modal-cal-selected-date-str');
+  const subEl = document.getElementById('modal-cal-selected-sub');
+  const listEl = document.getElementById('modal-cal-agenda-list');
+  if (!listEl) return;
+
+  // Format date nicely
+  try {
+    const [y, m, d] = dateKey.split('-').map(Number);
+    const parsedDate = new Date(y, m - 1, d);
+    const formattedDate = new Intl.DateTimeFormat([], {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric',
+    }).format(parsedDate);
+    if (titleEl) titleEl.textContent = formattedDate;
+  } catch (e) {
+    if (titleEl) titleEl.textContent = dateKey;
+  }
+
+  const allItems = _calendarEventsMap[dateKey] || [];
+  const filter = _calActiveFilter || 'all';
+
+  let items = allItems.filter((item) => {
+    if (filter === 'all') return true;
+    if (filter === 'synced') return item.source === 'synced';
+    return item.type === filter;
+  });
+
+  if (subEl) {
+    subEl.textContent = `${allItems.length} item(s) on agenda for this day`;
+  }
+
+  // Check holiday for this day
+  const [y, m, d] = dateKey.split('-').map(Number);
+  const country = getActiveCountry();
+  const holidays = getHolidaysForYear(y, country)[dateKey] || [];
+
+  let html = '';
+
+  if (holidays.length > 0) {
+    const hNames = holidays.map((h) => h.name || h.localName).join(' / ');
+    html += `
+      <div style="background: rgba(236,72,153,0.12); border: 1px solid rgba(236,72,153,0.3); border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 16px;">🎉</span>
+        <div>
+          <div style="font-size: 12px; font-weight: 700; color: #f472b6;">Official Holiday: ${escapeHtml(hNames)}</div>
+          <div style="font-size: 10.5px; color: var(--muted);">${escapeHtml(country)} Public Holiday</div>
+        </div>
+      </div>
+    `;
+  }
+
+  if (!items.length) {
+    html += `
+      <div style="text-align: center; color: var(--muted); padding: 40px 20px; font-size: 12px;">
+        <div style="font-size: 26px; margin-bottom: 8px;">📝</div>
+        <div style="font-weight: 600; color: #cbd5e1;">${t('cal.empty_agenda') || 'No notes or reminders for this day.'}</div>
+        <div style="font-size: 11px; margin-top: 4px;">Use the composer above to add a task, reminder, or note.</div>
+      </div>
+    `;
+  } else {
+    items.forEach((item) => {
+      const isTask = item.type === 'task';
+      const isCompleted = !!item.completed;
+      const isSynced = item.source === 'synced';
+      const timeStr = item.time || '';
+      const category = item.category || 'General';
+
+      let typeIcon = '📝';
+      if (item.type === 'reminder') typeIcon = '⏰';
+      else if (item.type === 'task') typeIcon = '📋';
+      else if (item.type === 'event') typeIcon = '📅';
+      if (isSynced) typeIcon = '🌐';
+
+      html += `
+        <div class="cal-agenda-card ${isCompleted ? 'completed' : ''}" data-item-id="${escapeHtml(item.id || '')}">
+          ${
+            isTask
+              ? `<input type="checkbox" class="cal-task-check" ${isCompleted ? 'checked' : ''} style="margin-top: 3px; cursor: pointer; accent-color: var(--ok2, #25c2a0); width: 15px; height: 15px;" />`
+              : `<span style="font-size: 15px; margin-top: 1px;">${typeIcon}</span>`
+          }
+          <div style="flex: 1; display: flex; flex-direction: column; gap: 3px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+              <span class="cal-agenda-title" style="font-size: 12.5px; font-weight: 700; color: #fff;">${escapeHtml(item.title)}</span>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                ${timeStr ? `<span style="font-size: 10px; font-weight: 700; font-family: var(--font-mono, monospace); background: rgba(255,255,255,0.08); padding: 2px 6px; border-radius: 4px; color: var(--brand, #00f0ff);">${escapeHtml(timeStr)}</span>` : ''}
+                ${isSynced ? `<span style="font-size: 9.5px; font-weight: 700; background: rgba(234,179,8,0.15); border: 1px solid rgba(234,179,8,0.3); color: #eab308; padding: 2px 6px; border-radius: 4px;">${escapeHtml(item.feed_name || 'Synced')}</span>` : `<span style="font-size: 9.5px; color: var(--muted); background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 4px;">${escapeHtml(category)}</span>`}
+                ${
+                  !isSynced
+                    ? `<button type="button" class="btn-cal-delete-note btn-icon" style="background: transparent; border: none; color: #ef4444; opacity: 0.7; cursor: pointer; font-size: 11px; padding: 2px 4px;" title="Delete Note">🗑️</button>`
+                    : ''
+                }
+              </div>
+            </div>
+            ${item.description ? `<div style="font-size: 11px; color: var(--muted); line-height: 1.3;">${escapeHtml(item.description)}</div>` : ''}
+          </div>
+        </div>
+      `;
+    });
+  }
+
+  listEl.innerHTML = html;
+}
+
+export function renderFeedsList() {
+  const container = document.getElementById('cal-feeds-list');
+  if (!container) return;
+
+  if (!_calendarFeeds.length) {
+    container.innerHTML = `
+      <div style="font-size: 11px; color: var(--muted); text-align: center; padding: 10px;">
+        No external calendar feeds synced. Click "+ Add Feed" to connect Google Calendar or Apple iCal.
+      </div>
+    `;
+    return;
+  }
+
+  let html = '';
+  _calendarFeeds.forEach((feed) => {
+    html += `
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px;" data-feed-id="${escapeHtml(feed.id)}">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="width: 8px; height: 8px; border-radius: 50%; background: ${escapeHtml(feed.color || '#38bdf8')};"></span>
+          <div>
+            <div style="font-size: 11.5px; font-weight: 700; color: #fff;">${escapeHtml(feed.name)}</div>
+            <div style="font-size: 9.5px; color: var(--muted);">${feed.event_count || 0} events • ${escapeHtml(feed.provider || 'iCal')}</div>
+          </div>
+        </div>
+        <button type="button" class="btn-cal-delete-feed btn-icon" style="background: transparent; border: none; color: #ef4444; opacity: 0.7; cursor: pointer; font-size: 11px; padding: 2px;" title="Delete Feed">🗑️</button>
+      </div>
+    `;
+  });
+  container.innerHTML = html;
+}
+
+export async function exportCalendarIcs() {
+  try {
+    const token = auth.getToken();
+    const res = await fetch('/api/calendar/export', {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    if (!res.ok) throw new Error('Failed to export calendar');
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `zettnas_calendar_${new Date().toISOString().split('T')[0]}.ics`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('Calendar exported (.ics)', 'success');
+  } catch (err) {
+    showToast('Failed to export calendar: ' + err.message, 'error');
+  }
+}
+window.exportCalendarIcs = exportCalendarIcs;
+
+export function setupCalendarModalEvents() {
+  const modal = document.getElementById('modal-calendar-notes');
+  if (!modal || modal.dataset.eventsBound) return;
+  modal.dataset.eventsBound = '1';
+
+  const win = modal.querySelector('.smart-modal-window');
+  const hdr = modal.querySelector('.smart-modal-header');
+  if (win && hdr && typeof makeDraggable === 'function') {
+    try {
+      makeDraggable(win, hdr);
+    } catch (e) {}
+  }
+
+  const closeBtn = document.getElementById('modal-cal-notes-close-btn');
+  const syncBtn = document.getElementById('btn-cal-sync-now');
+  const exportBtn = document.getElementById('btn-cal-export-ics');
+  const prevBtn = document.getElementById('btn-modal-cal-prev');
+  const nextBtn = document.getElementById('btn-modal-cal-next');
+  const todayBtn = document.getElementById('btn-modal-cal-today');
+  const grid = document.getElementById('modal-cal-grid');
+  const agendaList = document.getElementById('modal-cal-agenda-list');
+  const saveNoteBtn = document.getElementById('btn-cal-save-note');
+  const toggleFeedBtn = document.getElementById('btn-toggle-add-feed');
+  const cancelFeedBtn = document.getElementById('btn-cancel-add-feed');
+  const submitFeedBtn = document.getElementById('btn-submit-add-feed');
+  const addFeedForm = document.getElementById('cal-add-feed-form');
+  const feedsList = document.getElementById('cal-feeds-list');
+
+  if (closeBtn) closeBtn.addEventListener('click', closeCalendarModal);
+
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) closeCalendarModal();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && (modal.classList.contains('open') || modal.style.display === 'flex')) {
+      closeCalendarModal();
+    }
+  });
+
+  if (prevBtn) {
+    prevBtn.addEventListener('click', () => {
+      _modalCalDate.setMonth(_modalCalDate.getMonth() - 1);
+      renderModalCalendarGrid();
+      const y = _modalCalDate.getFullYear();
+      const m = _modalCalDate.getMonth();
+      fetchCalendarEvents(toDateKey(y, m - 1, 1), toDateKey(y, m + 1, 28));
+    });
+  }
+
+  if (nextBtn) {
+    nextBtn.addEventListener('click', () => {
+      _modalCalDate.setMonth(_modalCalDate.getMonth() + 1);
+      renderModalCalendarGrid();
+      const y = _modalCalDate.getFullYear();
+      const m = _modalCalDate.getMonth();
+      fetchCalendarEvents(toDateKey(y, m - 1, 1), toDateKey(y, m + 1, 28));
+    });
+  }
+
+  if (todayBtn) {
+    todayBtn.addEventListener('click', () => {
+      const now = new Date();
+      _modalCalDate = new Date();
+      _modalCalSelectedDateKey = toDateKey(now.getFullYear(), now.getMonth(), now.getDate());
+      renderModalCalendarGrid();
+      renderDayAgenda(_modalCalSelectedDateKey);
+      fetchCalendarEvents();
+    });
+  }
+
+  if (grid) {
+    grid.addEventListener('click', (e) => {
+      const cell = e.target.closest('.cal-day');
+      if (!cell || !cell.dataset.dateKey) return;
+      _modalCalSelectedDateKey = cell.dataset.dateKey;
+      renderModalCalendarGrid();
+      renderDayAgenda(_modalCalSelectedDateKey);
+    });
+  }
+
+  // Filter pills
+  const filterPills = modal.querySelectorAll('.cal-filter-pill');
+  filterPills.forEach((p) => {
+    p.addEventListener('click', () => {
+      filterPills.forEach((el) => el.classList.remove('active'));
+      p.classList.add('active');
+      _calActiveFilter = p.dataset.filter || 'all';
+      if (_modalCalSelectedDateKey) renderDayAgenda(_modalCalSelectedDateKey);
+    });
+  });
+
+  // Add Note composer
+  if (saveNoteBtn) {
+    saveNoteBtn.addEventListener('click', async () => {
+      const titleInput = document.getElementById('cal-new-note-title');
+      const timeInput = document.getElementById('cal-new-note-time');
+      const typeSelect = document.getElementById('cal-new-note-type');
+      const descInput = document.getElementById('cal-new-note-desc');
+      const catInput = document.getElementById('cal-new-note-category');
+
+      const title = titleInput?.value?.trim();
+      if (!title) {
+        showToast('Please enter a title for the note/reminder', 'warning');
+        if (titleInput) titleInput.focus();
+        return;
+      }
+
+      const payload = {
+        date: _modalCalSelectedDateKey,
+        time: timeInput?.value || '',
+        title: title,
+        type: typeSelect?.value || 'note',
+        description: descInput?.value?.trim() || '',
+        category: catInput?.value?.trim() || 'General',
+        completed: false,
+      };
+
+      try {
+        const res = await api.post('/api/calendar/notes', payload);
+        if (res && res.note) {
+          if (!_calendarEventsMap[_modalCalSelectedDateKey]) {
+            _calendarEventsMap[_modalCalSelectedDateKey] = [];
+          }
+          _calendarEventsMap[_modalCalSelectedDateKey].push(res.note);
+          if (titleInput) titleInput.value = '';
+          if (descInput) descInput.value = '';
+          renderModalCalendarGrid();
+          renderDayAgenda(_modalCalSelectedDateKey);
+          renderCalendar();
+          showToast(t('cal.note_added') || 'Note added successfully', 'success');
+        }
+      } catch (err) {
+        showToast('Failed to add note: ' + err.message, 'error');
+      }
+    });
+  }
+
+  // Task complete checkbox & Note delete in Agenda List
+  if (agendaList) {
+    agendaList.addEventListener('click', async (e) => {
+      const card = e.target.closest('.cal-agenda-card');
+      if (!card || !card.dataset.itemId) return;
+      const itemId = card.dataset.itemId;
+
+      // Delete note
+      if (e.target.closest('.btn-cal-delete-note')) {
+        try {
+          await api.delete(`/api/calendar/notes/${itemId}`);
+          if (_calendarEventsMap[_modalCalSelectedDateKey]) {
+            _calendarEventsMap[_modalCalSelectedDateKey] = _calendarEventsMap[_modalCalSelectedDateKey].filter(
+              (item) => item.id !== itemId
+            );
+          }
+          renderModalCalendarGrid();
+          renderDayAgenda(_modalCalSelectedDateKey);
+          renderCalendar();
+          showToast('Note deleted', 'info');
+        } catch (err) {
+          showToast('Failed to delete note: ' + err.message, 'error');
+        }
+        return;
+      }
+
+      // Toggle Task Checkbox
+      if (e.target.classList.contains('cal-task-check')) {
+        const checked = e.target.checked;
+        try {
+          await api.patch(`/api/calendar/notes/${itemId}`, { completed: checked });
+          const items = _calendarEventsMap[_modalCalSelectedDateKey] || [];
+          const item = items.find((i) => i.id === itemId);
+          if (item) item.completed = checked;
+          card.classList.toggle('completed', checked);
+        } catch (err) {
+          e.target.checked = !checked;
+          showToast('Failed to update task: ' + err.message, 'error');
+        }
+      }
+    });
+  }
+
+  // Toggle Add Feed Drawer
+  if (toggleFeedBtn && addFeedForm) {
+    toggleFeedBtn.addEventListener('click', () => {
+      const isHidden = addFeedForm.style.display === 'none';
+      addFeedForm.style.display = isHidden ? 'flex' : 'none';
+    });
+  }
+  if (cancelFeedBtn && addFeedForm) {
+    cancelFeedBtn.addEventListener('click', () => {
+      addFeedForm.style.display = 'none';
+    });
+  }
+
+  // Submit Add Feed Form
+  if (submitFeedBtn) {
+    submitFeedBtn.addEventListener('click', async () => {
+      const nameInput = document.getElementById('cal-feed-name-input');
+      const urlInput = document.getElementById('cal-feed-url-input');
+      const colorSelect = document.getElementById('cal-feed-color-select');
+
+      const name = nameInput?.value?.trim();
+      const url = urlInput?.value?.trim();
+      if (!name || !url) {
+        showToast('Please enter feed name and valid iCal (.ics) URL', 'warning');
+        return;
+      }
+
+      try {
+        submitFeedBtn.disabled = true;
+        submitFeedBtn.textContent = 'Connecting...';
+        const res = await api.post('/api/calendar/feeds', {
+          name,
+          url,
+          color: colorSelect?.value || '#38bdf8',
+          provider: 'google',
+          enabled: true,
+        });
+
+        if (res && res.status === 'ok') {
+          showToast(`Connected ${name} (${res.event_count || 0} events synced)`, 'success');
+          if (nameInput) nameInput.value = '';
+          if (urlInput) urlInput.value = '';
+          if (addFeedForm) addFeedForm.style.display = 'none';
+          fetchCalendarFeeds();
+          fetchCalendarEvents();
+        }
+      } catch (err) {
+        showToast('Failed to connect feed: ' + (err.body?.detail || err.message), 'error');
+      } finally {
+        submitFeedBtn.disabled = false;
+        submitFeedBtn.textContent = 'Connect & Sync';
+      }
+    });
+  }
+
+  // Delete feed
+  if (feedsList) {
+    feedsList.addEventListener('click', async (e) => {
+      const delBtn = e.target.closest('.btn-cal-delete-feed');
+      if (!delBtn) return;
+      const row = delBtn.closest('[data-feed-id]');
+      if (!row || !row.dataset.feedId) return;
+      const feedId = row.dataset.feedId;
+
+      try {
+        await api.delete(`/api/calendar/feeds/${feedId}`);
+        showToast('Calendar feed removed', 'info');
+        fetchCalendarFeeds();
+        fetchCalendarEvents();
+      } catch (err) {
+        showToast('Failed to delete feed: ' + err.message, 'error');
+      }
+    });
+  }
+
+  // Sync Feeds Now
+  if (syncBtn) {
+    syncBtn.addEventListener('click', async () => {
+      try {
+        syncBtn.disabled = true;
+        syncBtn.textContent = 'Syncing...';
+        const res = await api.post('/api/calendar/sync');
+        if (res && res.status === 'ok') {
+          showToast(`Synced ${res.synced_feeds} feed(s) with ${res.total_events} event(s)`, 'success');
+          fetchCalendarFeeds();
+          fetchCalendarEvents();
+        }
+      } catch (err) {
+        showToast('Sync failed: ' + err.message, 'error');
+      } finally {
+        syncBtn.disabled = false;
+        syncBtn.innerHTML = '🔄 Sync Feeds';
+      }
+    });
+  }
+
+  // Export .ics
+  if (exportBtn) {
+    exportBtn.addEventListener('click', exportCalendarIcs);
+  }
+}
+

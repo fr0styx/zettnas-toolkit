@@ -4,6 +4,7 @@ import os
 import sqlite3
 import time
 import traceback
+from typing import Any, Dict, List, Optional
 
 from backend.config import (
     DB_PATH,
@@ -32,6 +33,7 @@ from backend.fsutil import read_json, read_json_cached
 from backend.hardware.cpu import read_cpu_temp, read_cpu_util
 from backend.hardware.chassis import ChassisEngine
 from backend.hardware.disks import poll_all_disks_smart, read_disk_temps_and_io
+from backend.api.media import get_ai_reindex_status
 from backend.hardware.fans import apply_zone_pwm, calc_curve_pwm, get_hold_remaining, read_fans, set_fan_pwm
 from backend.hardware.led import apply_led_state, find_led_port, send_led_packet
 from backend.hardware.memory import read_mem
@@ -644,7 +646,15 @@ def stats_collector_daemon():
                 stats_collector_daemon._last_events_ts = top_event_ts
                 stats_collector_daemon._last_events_count = events_count
 
-            docker_summary = tuple((c.get("id"), c.get("state")) for c in docker_list)
+            docker_summary = tuple(
+                (
+                    c.get("id"),
+                    c.get("state"),
+                    round(float(c.get("cpu_pct", 0.0) or 0.0), 1),
+                    int(c.get("mem_used", 0) or 0) // (1024 * 1024),
+                )
+                for c in docker_list
+            )
             docker_changed = docker_summary != stats_collector_daemon._last_docker_summary
             if docker_changed:
                 stats_collector_daemon._last_docker_summary = docker_summary
@@ -690,6 +700,7 @@ def stats_collector_daemon():
                 "ai_active": ai_active,
                 "ai_accelerator": ai_accel,
                 "ai_model": ai_model,
+                "reindex_status": get_ai_reindex_status(),
                 "mem": read_mem(),
                 "fans": fans,
                 "copy_state": {
@@ -872,6 +883,66 @@ def collect():
     return data
 
 
+_SMART_VELOCITY_LAST_ALERT: Dict[str, float] = {}
+
+
+def evaluate_smart_velocity_alerts() -> List[Dict[str, Any]]:
+    """
+    Evaluates 7-day degradation velocity for all discovered disks.
+    If accelerating sector decay or active sector shedding is detected (realloc_7d_delta > 0 or shedding_sectors=True),
+    dispatches a CRITICAL_DRIVE_DEGRADATION push notification via Apprise with 24-hour alert deduplication.
+    """
+    from backend.db import query_smart_velocity
+    from backend.hardware.disks import _discover_disks
+    from backend.services.notifications import send_notification
+    from backend.state import add_event
+
+    now = time.time()
+    triggered_alerts: List[Dict[str, Any]] = []
+    try:
+        disks = _discover_disks()
+        for d in disks:
+            dev = d.get("dev")
+            if not dev:
+                continue
+            v = query_smart_velocity(dev)
+            if not isinstance(v, dict):
+                continue
+
+            realloc_7d = v.get("realloc_7d_delta", 0)
+            shedding = bool(v.get("shedding_sectors", False))
+            risk = str(v.get("failure_risk", "")).lower()
+            pred = v.get("predictive_velocity", {})
+            is_accel = bool(pred.get("is_accelerating", False))
+
+            if shedding or realloc_7d > 0 or risk == "critical" or is_accel:
+                last_alert_time = _SMART_VELOCITY_LAST_ALERT.get(dev, 0)
+                # 24-hour deduplication window (86400 seconds)
+                if now - last_alert_time >= 86400:
+                    _SMART_VELOCITY_LAST_ALERT[dev] = now
+                    title = f"⚠️ Critical Drive Degradation Detected: {dev}"
+                    msg = (
+                        f"Drive {dev} shows active media degradation: "
+                        f"{realloc_7d} reallocated sectors in the last 7 days. "
+                        f"Risk level: {risk.upper()}. "
+                        f"{v.get('recommendation', 'Plan replacement.')}"
+                    )
+                    add_event("critical", "Drive Degradation", msg)
+                    send_notification(
+                        {
+                            "type": "smart",
+                            "level": "critical",
+                            "title": title,
+                            "message": msg,
+                        }
+                    )
+                    triggered_alerts.append({"dev": dev, "realloc_7d_delta": realloc_7d, "risk": risk})
+    except Exception as ex:
+        logger.debug(f"[SMART Velocity] Alert evaluation error: {ex}")
+
+    return triggered_alerts
+
+
 def smart_poller_daemon():
     """
     Dedicated worker thread: decouples slow smartctl disk inspection and
@@ -881,6 +952,7 @@ def smart_poller_daemon():
     try:
         poll_all_disks_smart(force=True)
         read_ups_status(force=True)
+        evaluate_smart_velocity_alerts()
     except Exception as e:
         logger.debug(f"[SMART/UPS Poller] Initial scan error: {e}")
 
@@ -894,6 +966,7 @@ def smart_poller_daemon():
                 break
             poll_all_disks_smart()
             read_ups_status()
+            evaluate_smart_velocity_alerts()
             try:
                 from backend.hardware.disks import check_active_smart_tests
 

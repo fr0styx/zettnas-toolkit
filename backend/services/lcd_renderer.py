@@ -193,6 +193,7 @@ def render_lcd_loop():
                         idle_backoff = 0.0
                         max_idle_backoff = 1.0
                         screen_blanked = False
+                        last_layout_version = 0
 
                         while not Z_STATE.shutting_down:
                             # Screen-off pause: 0 FPS when power is off, brightness is 0, or night mode is blanked
@@ -222,9 +223,34 @@ def render_lcd_loop():
                                     # Adaptive FPS: frame unchanged, incrementally back off up to 1.0s
                                     idle_backoff = min(max_idle_backoff, idle_backoff + 0.1)
                                     sleep_time = max(frame_interval, idle_backoff)
+                                    woke = False
                                     if Z_STATE.ui_wake.wait(sleep_time):
                                         Z_STATE.ui_wake.clear()
                                         idle_backoff = 0.0
+                                        woke = True
+
+                                    with Z_STATE.lock:
+                                        cur_layout = (
+                                            Z_STATE.cached_stats.get("layout") if Z_STATE.cached_stats else None
+                                        )
+
+                                    cur_ver = cur_layout.get("version", 0) if isinstance(cur_layout, dict) else 0
+                                    if woke or (cur_ver and cur_ver != last_layout_version):
+                                        last_layout_version = cur_ver
+                                        try:
+                                            if cur_layout and hasattr(page, "evaluate"):
+                                                page.evaluate(
+                                                    """(layout) => {
+                                                        if (window.applyStats) {
+                                                            window.applyStats({ layout });
+                                                        } else if (window.fetchDashboardLayout) {
+                                                            window.fetchDashboardLayout();
+                                                        }
+                                                    }""",
+                                                    cur_layout,
+                                                )
+                                        except Exception as eval_e:
+                                            logger.debug(f"[LCD] Page layout evaluate error: {eval_e}")
                                     continue
 
                                 # Frame changed: reset idle backoff immediately

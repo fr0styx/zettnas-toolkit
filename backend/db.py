@@ -15,6 +15,9 @@ def get_db_connection() -> sqlite3.Connection:
     conn = sqlite3.connect(DB_PATH, timeout=15.0, check_same_thread=False)
     conn.execute("PRAGMA synchronous=NORMAL;")
     conn.execute("PRAGMA busy_timeout=15000;")
+    conn.execute("PRAGMA mmap_size=268435456;")
+    conn.execute("PRAGMA cache_size=-64000;")
+    conn.execute("PRAGMA temp_store=MEMORY;")
     return conn
 
 
@@ -138,6 +141,7 @@ def init_db():
                     raw_details_json TEXT DEFAULT ''
                 )
             """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_smart_test_history_dev_ts ON smart_test_history(dev, ts DESC)")
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS app_config (
                     key TEXT PRIMARY KEY,
@@ -839,7 +843,16 @@ def query_all_smart_velocities() -> dict:
     try:
         with db_session() as conn:
             conn.row_factory = sqlite3.Row
-            devs = [r[0] for r in conn.execute("SELECT DISTINCT dev FROM smart_history").fetchall()]
+            skip_scan_sql = """
+                WITH RECURSIVE cte AS (
+                    SELECT MIN(dev) AS dev FROM smart_history WHERE dev IS NOT NULL
+                    UNION ALL
+                    SELECT (SELECT MIN(dev) FROM smart_history WHERE dev > cte.dev AND dev IS NOT NULL)
+                    FROM cte WHERE dev IS NOT NULL
+                )
+                SELECT dev FROM cte WHERE dev IS NOT NULL;
+            """
+            devs = [r[0] for r in conn.execute(skip_scan_sql).fetchall()]
             for d in devs:
                 out[d] = query_smart_velocity(d, conn=conn)
     except Exception as e:

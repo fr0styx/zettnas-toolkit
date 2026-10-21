@@ -50,6 +50,44 @@ export function applyDashboardLayout() {
     }
   }
 
+  const allDecks = [
+    screenCanvasEl.querySelector('.sl-main-deck'),
+    ...document.querySelectorAll('.mini-preview-inner .sl-main-deck')
+  ].filter(Boolean);
+
+  allDecks.forEach((slDeck) => {
+    const slCardMap = {};
+    slDeck.querySelectorAll('.sl-card').forEach((c) => {
+      if (c.dataset.metricId) slCardMap[c.dataset.metricId] = c;
+    });
+
+    state.dashOrder.forEach((id) => {
+      if (slCardMap[id]) slDeck.appendChild(slCardMap[id]);
+    });
+
+    const parent = slDeck.parentElement;
+    const slBayRow = parent ? (parent.querySelector('#sl-bay-row') || parent.querySelector('.sl-bay-row')) : null;
+    if (slBayRow && parent) {
+      const disksIdx = state.dashOrder.indexOf('metric-disks');
+      const firstCardIdx = state.dashOrder.findIndex((id) => id !== 'metric-disks' && slCardMap[id]);
+      if (disksIdx !== -1 && firstCardIdx !== -1 && disksIdx < firstCardIdx) {
+        parent.insertBefore(slBayRow, slDeck);
+      } else {
+        parent.appendChild(slBayRow);
+      }
+    }
+
+    Object.keys(state.dashVis).forEach((id) => {
+      if (id !== 'metric-disks' && slCardMap[id]) {
+        slCardMap[id].classList.toggle('card-hidden', !state.dashVis[id]);
+      }
+    });
+
+    if (slBayRow) {
+      slBayRow.classList.toggle('card-hidden', state.dashVis['metric-disks'] === false);
+    }
+  });
+
   let allTopHidden = true;
   Object.keys(state.dashVis).forEach((id) => {
     if (id !== 'metric-disks' && cardMap[id]) {
@@ -219,11 +257,58 @@ export function syncMiniPreviewStructure() {
   if (sHeader && mHeader) mHeader.innerHTML = stripIds(sHeader.innerHTML);
 
   Object.keys(cardMap).forEach((id) => {
-    const sCard = screenEl.querySelector(`[data-metric-id="${id}"]`);
+    const sCard = screenEl.querySelector(`.cards > [data-metric-id="${id}"]`);
     if (sCard && cardMap[id]) {
       cardMap[id].innerHTML = stripIds(sCard.innerHTML);
     }
   });
+
+  const miniSlDeck = miniInner.querySelector('.sl-main-deck');
+  const miniSlBayRow = miniInner.querySelector('.sl-bay-row');
+  if (miniSlDeck) {
+    const slCardMap = {};
+    miniSlDeck.querySelectorAll('.sl-card').forEach((c) => {
+      if (c.dataset.metricId) slCardMap[c.dataset.metricId] = c;
+    });
+
+    state.dashOrder.forEach((id) => {
+      if (slCardMap[id]) miniSlDeck.appendChild(slCardMap[id]);
+    });
+
+    if (miniSlBayRow && miniSlDeck.parentElement) {
+      const disksIdx = state.dashOrder.indexOf('metric-disks');
+      const firstCardIdx = state.dashOrder.findIndex((id) => id !== 'metric-disks' && slCardMap[id]);
+      if (disksIdx !== -1 && firstCardIdx !== -1 && disksIdx < firstCardIdx) {
+        miniSlDeck.parentElement.insertBefore(miniSlBayRow, miniSlDeck);
+      } else {
+        miniSlDeck.parentElement.appendChild(miniSlBayRow);
+      }
+    }
+
+    Object.keys(state.dashVis).forEach((id) => {
+      if (id !== 'metric-disks' && slCardMap[id]) {
+        slCardMap[id].classList.toggle('card-hidden', !state.dashVis[id]);
+      }
+    });
+
+    if (miniSlBayRow) {
+      miniSlBayRow.classList.toggle('card-hidden', state.dashVis['metric-disks'] === false);
+    }
+
+    Object.keys(slCardMap).forEach((id) => {
+      const sCard = screenEl.querySelector(`.sl-main-deck > [data-metric-id="${id}"]`);
+      if (sCard && slCardMap[id]) {
+        slCardMap[id].innerHTML = stripIds(sCard.innerHTML);
+      }
+    });
+  }
+
+  const screenSlBayRow = screenEl.querySelector('#sl-bay-row');
+  if (screenSlBayRow && miniSlBayRow && screenSlBayRow.children.length > 0 && miniSlBayRow.children.length === 0) {
+    miniSlBayRow.innerHTML = stripIds(screenSlBayRow.innerHTML);
+  }
+
+  setupMiniPreviewInteractivity();
 
   miniInner.className = 'mini-preview-inner ' + screenEl.className;
   fitMiniPreviewScale();
@@ -279,7 +364,19 @@ export function syncMiniPreviewTelemetry() {
   const sStreamline = screenEl.querySelector('#streamline-container');
   const mStreamline = miniInner.querySelector('.streamline-container');
   if (sStreamline && mStreamline) {
-    mStreamline.innerHTML = stripIds(sStreamline.innerHTML);
+    mStreamline.querySelectorAll('.sl-card').forEach((c) => {
+      const id = c.dataset.metricId;
+      if (id) {
+        const sCard = sStreamline.querySelector(`.sl-main-deck > [data-metric-id="${id}"]`);
+        if (sCard) c.innerHTML = stripIds(sCard.innerHTML);
+      }
+    });
+
+    const sSlBayRow = sStreamline.querySelector('.sl-bay-row');
+    const mSlBayRow = mStreamline.querySelector('.sl-bay-row');
+    if (sSlBayRow && mSlBayRow) {
+      mSlBayRow.innerHTML = stripIds(sSlBayRow.innerHTML);
+    }
   }
 }
 
@@ -289,11 +386,15 @@ export function setupMiniPreviewInteractivity() {
 
   let draggedMetricId = null;
 
-  miniInner.querySelectorAll('.card, .disks').forEach((el) => {
+  const draggableItems = miniInner.querySelectorAll('.cards > .card, #diskRow, .disks, .sl-main-deck > .sl-card, .sl-bay-row');
+  draggableItems.forEach((el) => {
     const metricId = el.dataset.metricId;
     if (!metricId) return;
 
     el.setAttribute('draggable', 'true');
+
+    if (el._hasMiniDrag) return;
+    el._hasMiniDrag = true;
 
     el.addEventListener('dragstart', (e) => {
       e.stopPropagation();
@@ -309,7 +410,7 @@ export function setupMiniPreviewInteractivity() {
       isDraggingPreview = false;
       draggedMetricId = null;
       el.classList.remove('mini-dragging');
-      miniInner.querySelectorAll('.card, .disks').forEach((c) => c.classList.remove('mini-drag-over'));
+      draggableItems.forEach((c) => c.classList.remove('mini-drag-over'));
     });
 
     el.addEventListener('dragover', (e) => {
@@ -373,7 +474,8 @@ export function setupMiniPreviewInteractivity() {
   });
 
   const miniCardsContainer = miniInner.querySelector('.cards');
-  if (miniCardsContainer) {
+  if (miniCardsContainer && !miniCardsContainer._hasMiniDrop) {
+    miniCardsContainer._hasMiniDrop = true;
     miniCardsContainer.addEventListener('dragover', (e) => {
       if (!draggedMetricId) return;
       e.preventDefault();
@@ -440,32 +542,106 @@ export function setupMiniPreviewInteractivity() {
     });
   }
 
-  miniInner.addEventListener('dragover', (e) => {
-    if (!draggedMetricId) return;
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-  });
+  const miniSlDeck = miniInner.querySelector('.sl-main-deck');
+  if (miniSlDeck && !miniSlDeck._hasMiniDrop) {
+    miniSlDeck._hasMiniDrop = true;
+    miniSlDeck.addEventListener('dragover', (e) => {
+      if (!draggedMetricId) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+    });
 
-  miniInner.addEventListener('drop', (e) => {
-    if (!draggedMetricId) return;
-    const cardsEl = miniInner.querySelector('.cards');
-    const refRect = cardsEl ? cardsEl.getBoundingClientRect() : miniInner.getBoundingClientRect();
-    const isLowerHalf = e.clientY > (refRect.top + refRect.height / 2);
+    miniSlDeck.addEventListener('drop', (e) => {
+      if (!draggedMetricId) return;
+      if (draggedMetricId === 'metric-disks') {
+        e.preventDefault();
+        e.stopPropagation();
+        const wasFirst = state.dashOrder.indexOf('metric-disks') === 0;
+        const newOrder = state.dashOrder.filter((x) => x !== 'metric-disks');
+        if (wasFirst) newOrder.push('metric-disks');
+        else newOrder.unshift('metric-disks');
+        state.dashOrder = newOrder;
 
-    if (draggedMetricId === 'metric-disks') {
-      const wasFirst = state.dashOrder.indexOf('metric-disks') === 0;
-      const newOrder = state.dashOrder.filter((x) => x !== 'metric-disks');
-      if (wasFirst) newOrder.push('metric-disks');
-      else newOrder.unshift('metric-disks');
-      state.dashOrder = newOrder;
-      isDraggingPreview = false;
-      draggedMetricId = null;
-      try {
-        applyDashboardLayout();
-      } catch (err) {
-        console.error('applyDashboardLayout failed:', err);
+        isDraggingPreview = false;
+        draggedMetricId = null;
+        try {
+          applyDashboardLayout();
+        } catch (err) {
+          console.error('applyDashboardLayout failed:', err);
+        }
+        persistDashboardLayout();
+        return;
       }
-      persistDashboardLayout();
-    }
-  });
+
+      if (e.target === miniSlDeck || miniSlDeck.contains(e.target)) {
+        e.preventDefault();
+        const dropX = e.clientX;
+        const cards = Array.from(miniSlDeck.querySelectorAll('.sl-card'));
+        let closestCardId = null;
+        let minDiff = Infinity;
+        cards.forEach((c) => {
+          const cr = c.getBoundingClientRect();
+          const cardCenter = cr.left + cr.width / 2;
+          const diff = Math.abs(dropX - cardCenter);
+          if (diff < minDiff) {
+            minDiff = diff;
+            closestCardId = c.dataset.metricId;
+          }
+        });
+        if (closestCardId && closestCardId !== draggedMetricId) {
+          const oldIdx = state.dashOrder.indexOf(draggedMetricId);
+          const targetIdx = state.dashOrder.indexOf(closestCardId);
+          if (oldIdx !== -1 && targetIdx !== -1 && oldIdx !== targetIdx) {
+            const newOrder = [...state.dashOrder];
+            newOrder.splice(oldIdx, 1);
+            newOrder.splice(targetIdx, 0, draggedMetricId);
+            state.dashOrder = newOrder;
+            try {
+              applyDashboardLayout();
+            } catch (err) {
+              console.error('applyDashboardLayout failed:', err);
+            }
+            persistDashboardLayout();
+          }
+        }
+        isDraggingPreview = false;
+        draggedMetricId = null;
+      }
+    });
+  }
+
+  if (!miniInner._hasMiniDrop) {
+    miniInner._hasMiniDrop = true;
+    miniInner.addEventListener('dragover', (e) => {
+      if (!draggedMetricId) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+    });
+
+    miniInner.addEventListener('drop', (e) => {
+      if (!draggedMetricId) return;
+      if (draggedMetricId === 'metric-disks') {
+        const wasFirst = state.dashOrder.indexOf('metric-disks') === 0;
+        const newOrder = state.dashOrder.filter((x) => x !== 'metric-disks');
+        if (wasFirst) newOrder.push('metric-disks');
+        else newOrder.unshift('metric-disks');
+        state.dashOrder = newOrder;
+        isDraggingPreview = false;
+        draggedMetricId = null;
+        try {
+          applyDashboardLayout();
+        } catch (err) {
+          console.error('applyDashboardLayout failed:', err);
+        }
+        persistDashboardLayout();
+      }
+    });
+  }
 }
+
+if (typeof window !== 'undefined') {
+  window.applyDashboardLayout = applyDashboardLayout;
+  window.fetchDashboardLayout = fetchDashboardLayout;
+  window.state = state;
+}
+

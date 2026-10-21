@@ -30,6 +30,8 @@ from backend.api.media import router as media_router
 from backend.api.sftp import router as sftp_router
 from backend.api.vms import router as vms_router
 from backend.api.snmp import router as snmp_router
+from backend.api.ai_conversations import router as ai_conversations_router
+from backend.api.calendar import router as calendar_router
 
 api_router = APIRouter()
 api_router.include_router(auth_router)
@@ -57,6 +59,8 @@ api_router.include_router(media_router)
 api_router.include_router(sftp_router)
 api_router.include_router(vms_router)
 api_router.include_router(snmp_router)
+api_router.include_router(ai_conversations_router)
+api_router.include_router(calendar_router)
 
 __all__ = [
     "api_router",
@@ -85,4 +89,5 @@ __all__ = [
     "sftp_router",
     "vms_router",
     "snmp_router",
+    "ai_conversations_router",
 ]

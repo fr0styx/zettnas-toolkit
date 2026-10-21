@@ -68,14 +68,22 @@ from backend.users_db import (
 router = APIRouter(tags=["Authentication & Security"])
 
 # ---- Brute-force protection (per client IP and per username, exponential backoff) ----
-_FREE_ATTEMPTS = 5
+_FREE_ATTEMPTS_USER = 5
+_FREE_ATTEMPTS_IP = 30
 _MAX_LOCKOUT_SECS = 15 * 60
 _failures: Dict[str, Dict[str, Any]] = {}  # key -> {"count": int, "locked_until": float, "last_seen": float}
 _failures_lock = threading.Lock()
 
 
 def _client_ip(request: Request) -> str:
-    return request.client.host if request.client else "unknown"
+    from backend.auth import is_ip_in_trusted_proxies
+
+    client_host = request.client.host if request.client else "unknown"
+    if is_ip_in_trusted_proxies(client_host):
+        x_fwd = request.headers.get("x-forwarded-for")
+        if x_fwd:
+            return x_fwd.split(",")[0].strip()
+    return client_host
 
 
 def _lockout_remaining(key: str) -> int:
@@ -86,8 +94,9 @@ def _lockout_remaining(key: str) -> int:
         return max(0, int(entry["locked_until"] - time.time()))
 
 
-def _register_failure(key: str) -> None:
+def _register_failure(key: str, is_ip: bool = False) -> None:
     now = time.time()
+    threshold = _FREE_ATTEMPTS_IP if is_ip else _FREE_ATTEMPTS_USER
     with _failures_lock:
         if len(_failures) > 1000:
             expired = [
@@ -99,7 +108,7 @@ def _register_failure(key: str) -> None:
         entry = _failures.setdefault(key, {"count": 0, "locked_until": 0.0, "last_seen": now})
         entry["count"] += 1
         entry["last_seen"] = now
-        over = entry["count"] - _FREE_ATTEMPTS
+        over = entry["count"] - threshold
         if over >= 0:
             entry["locked_until"] = now + min(_MAX_LOCKOUT_SECS, 2**over * 5)
 
@@ -249,13 +258,14 @@ def _build_session_response(
     response = JSONResponse(content=response_data)
 
     ttl = 30 * 86400 if remember_me else config.SESSION_TTL
+    is_https = request.url.scheme == "https" or request.headers.get("x-forwarded-proto", "").lower() == "https"
     response.set_cookie(
         key="zettnas_session",
         value=token,
         max_age=ttl,
         httponly=True,
         samesite="lax",
-        secure=request.url.scheme == "https",
+        secure=is_https,
         path="/",
     )
     return response
@@ -317,8 +327,8 @@ async def login(req: LoginRequest, request: Request):
                 user = get_user_by_id(user["id"])
 
     if not ok or not user:
-        _register_failure(ip)
-        _register_failure(f"user:{target_username}")
+        _register_failure(ip, is_ip=True)
+        _register_failure(f"user:{target_username}", is_ip=False)
         log_security_event(
             "auth.login.failure",
             "failure",

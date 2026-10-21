@@ -231,3 +231,69 @@ def test_api_docker_stack_save_and_action(client, auth_headers):
         assert res_act.status_code == 200
         assert res_act.json()["success"] is True
         assert res_act.json()["action"] == "restart"
+
+
+def test_build_stack_dependency_dag_and_topological_sort():
+    from backend.services.docker_stacks import (
+        build_stack_dependency_dag,
+        topological_sort_stack_containers,
+    )
+
+    containers = [
+        {"id": "c_frontend", "name": "frontend", "service": "frontend", "depends_on": ["backend"]},
+        {"id": "c_backend", "name": "backend", "service": "backend", "depends_on": ["db", "redis"]},
+        {"id": "c_db", "name": "db", "service": "db", "depends_on": []},
+        {"id": "c_redis", "name": "redis", "service": "redis", "depends_on": []},
+    ]
+
+    dag = build_stack_dependency_dag(containers)
+    assert dag["db"] == set()
+    assert dag["redis"] == set()
+    assert dag["backend"] == {"db", "redis"}
+    assert dag["frontend"] == {"backend"}
+
+    # Start/restart order: upstream dependencies first
+    start_order = [c["service"] for c in topological_sort_stack_containers(containers, reverse=False)]
+    assert start_order.index("db") < start_order.index("backend")
+    assert start_order.index("redis") < start_order.index("backend")
+    assert start_order.index("backend") < start_order.index("frontend")
+
+    # Stop order: downstream dependents first
+    stop_order = [c["service"] for c in topological_sort_stack_containers(containers, reverse=True)]
+    assert stop_order.index("frontend") < stop_order.index("backend")
+    assert stop_order.index("backend") < stop_order.index("db")
+    assert stop_order.index("backend") < stop_order.index("redis")
+
+
+def test_execute_dependency_ordered_rolling_update():
+    from backend.services.docker_stacks import execute_dependency_ordered_rolling_update
+
+    mock_details = {
+        "name": "fullstack",
+        "containers": [
+            {"id": "web111", "name": "web", "service": "web", "depends_on": ["db"]},
+            {"id": "db000", "name": "db", "service": "db", "depends_on": []},
+        ],
+        "compose_yaml": "version: '3.8'\nservices:\n  web:\n    depends_on: ['db']\n  db:\n    image: postgres\n",
+    }
+
+    # db restarts first -> 204
+    # db inspect -> healthy
+    # web restarts second -> 204
+    # web inspect -> running
+    mock_responses = [
+        (204, b""),  # db restart
+        (200, {"State": {"Running": True, "Health": {"Status": "healthy"}}}),  # db inspect
+        (204, b""),  # web restart
+        (200, {"State": {"Running": True}}),  # web inspect
+    ]
+
+    with (
+        patch("backend.services.docker_stacks.get_stack_details", return_value=mock_details),
+        patch("backend.services.docker_stacks._docker_request", side_effect=mock_responses),
+    ):
+        res = execute_dependency_ordered_rolling_update("fullstack", wait_timeout=0.1)
+        assert res["success"] is True
+        assert res["action"] == "rolling_update"
+        # Verify db was updated before web
+        assert res["order"] == ["db", "web"]

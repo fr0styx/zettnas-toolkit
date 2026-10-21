@@ -223,7 +223,7 @@ export function renderDisks(disks) {
           `Disk ${diskName} is currently sleeping. Querying S.M.A.R.T. data will wake it up, causing mechanical wear and consuming power. Are you sure you want to wake it?`,
           () => {
             showToast(`Waking disk ${diskName}...`, 'info');
-            ZettEventBus.emit('modal:smart:open', dev);
+            ZettEventBus.emit('modal:smart:open', { dev, forceWake: true });
           }
         );
       } else {
@@ -450,14 +450,24 @@ export function applyDesktopTheme(themeName, customAccent = null) {
     }
   }
 
-  // Helper to parse hex to RGB
+  // Helper to parse hex to RGB with strict sanitization
   const hexToRgb = (hex) => {
-    if (!hex) return null;
+    if (!hex || typeof hex !== 'string') return null;
     let clean = hex.replace('#', '').trim();
+    if (!/^[0-9a-fA-F]{3}$|^[0-9a-fA-F]{6}$/.test(clean)) return null;
     if (clean.length === 3) clean = clean.split('').map(c => c + c).join('');
-    if (clean.length !== 6) return null;
     const num = parseInt(clean, 16);
+    if (isNaN(num)) return null;
     return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
+  };
+
+  const srgbToLinear = (c) => {
+    const s = c / 255;
+    return s <= 0.04045 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+  };
+
+  const getRelativeLuminance = (r, g, b) => {
+    return 0.2126 * srgbToLinear(r) + 0.7152 * srgbToLinear(g) + 0.0722 * srgbToLinear(b);
   };
 
   // Handle custom accent color override for desktop UI
@@ -466,12 +476,16 @@ export function applyDesktopTheme(themeName, customAccent = null) {
     const rgbStr = rgb ? `${rgb.r}, ${rgb.g}, ${rgb.b}` : null;
     const glowStr = rgb ? `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.35)` : '';
     const hoverStr = rgb ? `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.15)` : '';
+    const lum = rgb ? getRelativeLuminance(rgb.r, rgb.g, rgb.b) : 0.5;
+    const contrastFg = lum > 0.45 ? '#0b1118' : '#ffffff';
 
     if (typeof document !== 'undefined' && document.documentElement) {
       document.documentElement.style.setProperty('--brand', customAccent);
       document.documentElement.style.setProperty('--ok2', customAccent);
       document.documentElement.style.setProperty('--desktop-accent', customAccent);
+      document.documentElement.style.setProperty('--accent-contrast-fg', contrastFg);
       if (rgbStr) {
+        document.documentElement.style.setProperty('--brand-rgb', rgbStr);
         document.documentElement.style.setProperty('--accent-rgb', rgbStr);
         document.documentElement.style.setProperty('--accent-glow', glowStr);
         document.documentElement.style.setProperty('--accent-hover', hoverStr);
@@ -481,7 +495,9 @@ export function applyDesktopTheme(themeName, customAccent = null) {
       document.body.style.setProperty('--brand', customAccent);
       document.body.style.setProperty('--ok2', customAccent);
       document.body.style.setProperty('--desktop-accent', customAccent);
+      document.body.style.setProperty('--accent-contrast-fg', contrastFg);
       if (rgbStr) {
+        document.body.style.setProperty('--brand-rgb', rgbStr);
         document.body.style.setProperty('--accent-rgb', rgbStr);
         document.body.style.setProperty('--accent-glow', glowStr);
         document.body.style.setProperty('--accent-hover', hoverStr);
@@ -492,6 +508,8 @@ export function applyDesktopTheme(themeName, customAccent = null) {
       document.documentElement.style.removeProperty('--brand');
       document.documentElement.style.removeProperty('--ok2');
       document.documentElement.style.removeProperty('--desktop-accent');
+      document.documentElement.style.removeProperty('--accent-contrast-fg');
+      document.documentElement.style.removeProperty('--brand-rgb');
       document.documentElement.style.removeProperty('--accent-rgb');
       document.documentElement.style.removeProperty('--accent-glow');
       document.documentElement.style.removeProperty('--accent-hover');
@@ -500,6 +518,8 @@ export function applyDesktopTheme(themeName, customAccent = null) {
       document.body.style.removeProperty('--brand');
       document.body.style.removeProperty('--ok2');
       document.body.style.removeProperty('--desktop-accent');
+      document.body.style.removeProperty('--accent-contrast-fg');
+      document.body.style.removeProperty('--brand-rgb');
       document.body.style.removeProperty('--accent-rgb');
       document.body.style.removeProperty('--accent-glow');
       document.body.style.removeProperty('--accent-hover');
@@ -523,6 +543,76 @@ export function applyDesktopTheme(themeName, customAccent = null) {
   if (icon) icon.innerHTML = isYak ? '<use href="#i-yak"/>' : '<use href="#i-chip"/>';
 
   updateChassisImageForTheme();
+  syncDesktopTwinPreview({ theme: themeName, accent: customAccent });
+}
+
+export function syncDesktopTwinPreview(overrides = {}) {
+  if (typeof document === 'undefined') return;
+  const vp = document.getElementById('desktop-twin-viewport');
+  if (!vp) return;
+
+  const curTheme = overrides.theme || state.desktopTheme || 'cyber';
+  const curAccent = overrides.accent !== undefined ? overrides.accent : (state.desktopCustomAccent || '');
+  const themeBrandColor = curTheme === 'amber' ? '#ffbe40' : curTheme === 'emerald' ? '#3bf58b' : curTheme === 'sapphire' ? '#38bdf8' : curTheme === 'amethyst' ? '#c084fc' : curTheme === 'crimson' ? '#f43f5e' : curTheme === 'yak' ? '#d48a37' : curTheme === 'oled' ? '#00f0ff' : curTheme === 'light' ? '#0284c7' : '#00f0ff';
+  const activeColor = curAccent || themeBrandColor;
+  const rgb = hexToRgb(activeColor);
+
+  const badge = document.getElementById('dt-theme-badge');
+  if (badge) {
+    badge.textContent = curTheme.toUpperCase();
+    badge.style.color = activeColor;
+    badge.style.borderColor = activeColor;
+    badge.style.background = rgb ? `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.15)` : 'rgba(0, 240, 255, 0.15)';
+  }
+
+  const dtWp = document.getElementById('dt-wallpaper');
+  if (dtWp) {
+    const desktopWp = document.getElementById('desktop-wallpaper');
+    if (desktopWp && desktopWp.style.backgroundImage) {
+      dtWp.style.backgroundImage = desktopWp.style.backgroundImage;
+      dtWp.style.display = 'block';
+    } else if (overrides.wallpaperUrl) {
+      dtWp.style.backgroundImage = `url('${overrides.wallpaperUrl}')`;
+      dtWp.style.display = 'block';
+    } else if (overrides.wallpaperUrl === null) {
+      dtWp.style.removeProperty('background-image');
+    }
+    if (overrides.wallpaperBlur !== undefined) {
+      dtWp.style.setProperty('--preview-wp-blur', `${overrides.wallpaperBlur}px`);
+    }
+  }
+
+  const dtDim = document.getElementById('dt-wallpaper-dimmer');
+  if (dtDim && overrides.wallpaperDim !== undefined) {
+    dtDim.style.setProperty('--preview-wp-dim', (overrides.wallpaperDim / 100).toFixed(2));
+  }
+
+  const dtWin = document.getElementById('dt-window');
+  if (dtWin) {
+    if (rgb) {
+      dtWin.style.setProperty('--preview-accent-rgb', `${rgb.r}, ${rgb.g}, ${rgb.b}`);
+    }
+    if (overrides.glassBlur !== undefined) {
+      dtWin.style.setProperty('--preview-glass-blur', `${overrides.glassBlur}px`);
+    }
+    if (overrides.glassOpacity !== undefined) {
+      dtWin.style.setProperty('--preview-glass-opacity', (overrides.glassOpacity / 100).toFixed(2));
+    }
+    if (overrides.windowRadius !== undefined) {
+      dtWin.style.setProperty('--preview-window-radius', overrides.windowRadius);
+    }
+    if (overrides.windowGlow !== undefined) {
+      dtWin.style.setProperty('--preview-window-glow', overrides.windowGlow ? '1' : '0');
+    }
+  }
+
+  const dtDockCont = document.getElementById('dt-dock-container');
+  if (dtDockCont && overrides.dockPos !== undefined) {
+    dtDockCont.className = `dt-dock-container dt-dock-pos-${overrides.dockPos}`;
+  }
+}
+if (typeof window !== 'undefined') {
+  window.syncDesktopTwinPreview = syncDesktopTwinPreview;
 }
 
 export function applyLcdTheme(themeName, customAccent = null, textClarity = null) {
@@ -764,7 +854,7 @@ export function updateStreamlineBayChips(disks) {
           `Disk ${diskName} is currently sleeping. Querying S.M.A.R.T. data will wake it up, causing mechanical wear and consuming power. Are you sure you want to wake it?`,
           () => {
             showToast(`Waking disk ${diskName}...`, 'info');
-            ZettEventBus.emit('modal:smart:open', dev);
+            ZettEventBus.emit('modal:smart:open', { dev, forceWake: true });
           }
         );
       } else {
@@ -854,8 +944,17 @@ if (typeof document !== 'undefined') {
   });
 }
 
+let _lastRemotesEventTs = 0;
+
 export function applyStats(s) {
   try {
+    if (s && s.remotes_event) {
+      if (!_lastRemotesEventTs || s.remotes_event.timestamp !== _lastRemotesEventTs) {
+        _lastRemotesEventTs = s.remotes_event.timestamp;
+        ZettEventBus.emit('fm:refresh');
+        ZettEventBus.emit('storage:mount_changed', s.remotes_event);
+      }
+    }
     const changed = state.setStats(s);
     if (typeof document !== 'undefined' && document.hidden && !state.isLcdDirect) {
       return;
@@ -872,6 +971,32 @@ export function applyStats(s) {
         if (srvTheme !== state.lcdTheme || srvAccent !== (state.lcdCustomAccent || '') || srvClarity !== state.lcdTextClarity) {
           applyLcdTheme(srvTheme, srvAccent, srvClarity);
         }
+      }
+    }
+
+    if (s.layout) {
+      const layoutVer = s.layout.version;
+      const verChanged = Boolean(layoutVer && layoutVer !== state.activeLayoutVersion);
+      const styleChanged = Boolean(s.layout.style && s.layout.style !== state.screenLayoutStyle);
+      const orderChanged = Boolean(
+        s.layout.order &&
+        (!state.dashOrder || s.layout.order.length !== state.dashOrder.length || s.layout.order.some((id, idx) => id !== state.dashOrder[idx]))
+      );
+      if (verChanged || styleChanged || orderChanged) {
+        if (layoutVer) state.activeLayoutVersion = layoutVer;
+        if (s.layout.order) state.dashOrder = s.layout.order;
+        if (s.layout.vis) state.dashVis = s.layout.vis;
+        if (s.layout.sizes) state.dashSizes = s.layout.sizes;
+        if (s.layout.clock_format) state.clockFormat = s.layout.clock_format;
+        if (s.layout.timezone) state.currentTimezone = s.layout.timezone;
+        if (s.layout.style) {
+          state.screenLayoutStyle = s.layout.style;
+          if (typeof localStorage !== 'undefined') {
+            try { localStorage.setItem('screen_layout_style', s.layout.style); } catch (e) {}
+          }
+          syncScreenLayoutStyle();
+        }
+        applyDashboardLayout();
       }
     }
 
@@ -906,62 +1031,50 @@ export function applyStats(s) {
 
     updateChassisImageForTheme();
 
-    const stLvl = lvlFull(s.storage.pct);
-    setText($('storagePct'), s.storage.pct + '%');
-    setText($('stUsed'), s.storage.used);
-    setText($('stTotal'), s.storage.total);
-    const donut = $('donut');
-    if (donut) {
-      donut.style.setProperty('--pct', s.storage.pct);
-      donut.style.setProperty('--c', cssVar(stLvl));
+    let stLvl = 'ok';
+    if (s.storage) {
+      stLvl = lvlFull(s.storage.pct);
+      setText($('storagePct'), s.storage.pct + '%');
+      setText($('stUsed'), s.storage.used);
+      setText($('stTotal'), s.storage.total);
+      const donut = $('donut');
+      if (donut) {
+        donut.style.setProperty('--pct', s.storage.pct);
+        donut.style.setProperty('--c', cssVar(stLvl));
+      }
     }
 
-    const cpuLvl = lvlCpu(s.cpu.temp);
-    const utilLvl = lvlUtil(s.cpu.util);
-    setText($('cpuTemp'), s.cpu.temp);
-    if ($('cpuTemp') && $('cpuTemp').parentElement) $('cpuTemp').parentElement.className = 'arc-val ' + 's-' + cpuLvl;
-    if ($('cpuUtil')) {
-      setText($('cpuUtil'), s.cpu.util + '%');
-      $('cpuUtil').className = 'val s-' + utilLvl;
+    let cpuLvl = 'ok';
+    let utilLvl = 'ok';
+    if (s.cpu) {
+      cpuLvl = lvlCpu(s.cpu.temp);
+      utilLvl = lvlUtil(s.cpu.util);
+      setText($('cpuTemp'), s.cpu.temp);
+      if ($('cpuTemp') && $('cpuTemp').parentElement) $('cpuTemp').parentElement.className = 'arc-val ' + 's-' + cpuLvl;
+      if ($('cpuUtil')) {
+        setText($('cpuUtil'), s.cpu.util + '%');
+        $('cpuUtil').className = 'val s-' + utilLvl;
+      }
+      if ($('cpuArc')) setArc($('cpuArc'), (s.cpu.temp / 100) * 100, cpuLvl);
     }
-    if ($('cpuArc')) setArc($('cpuArc'), (s.cpu.temp / 100) * 100, cpuLvl);
 
-    const memLvl = lvlUtil(s.mem.pct);
-    setText($('memPct'), s.mem.pct);
-    if ($('memPct') && $('memPct').parentElement) $('memPct').parentElement.className = 'arc-val s-' + memLvl;
-    setText($('memUsed'), s.mem.used_gb != null ? s.mem.used_gb.toFixed(1) + 'G' : (s.mem.used || ''));
-    setText($('memTotal'), s.mem.total_gb != null ? '/' + s.mem.total_gb.toFixed(0) + 'G' : (s.mem.total ? '/' + s.mem.total : ''));
-    if ($('memArc')) setArc($('memArc'), s.mem.pct, memLvl);
+    let memLvl = 'ok';
+    if (s.mem) {
+      memLvl = lvlUtil(s.mem.pct);
+      setText($('memPct'), s.mem.pct);
+      if ($('memPct') && $('memPct').parentElement) $('memPct').parentElement.className = 'arc-val s-' + memLvl;
+      setText($('memUsed'), s.mem.used_gb != null ? s.mem.used_gb.toFixed(1) + 'G' : (s.mem.used || ''));
+      setText($('memTotal'), s.mem.total_gb != null ? '/' + s.mem.total_gb.toFixed(0) + 'G' : (s.mem.total ? '/' + s.mem.total : ''));
+      if ($('memArc')) setArc($('memArc'), s.mem.pct, memLvl);
+    }
 
-    renderFans(s.fans);
-    renderDisks(s.disks);
-    setText($('uptime'), 'up ' + s.uptime);
+    if (s.fans) renderFans(s.fans);
+    if (s.disks) renderDisks(s.disks);
+    if (s.uptime) setText($('uptime'), 'up ' + s.uptime);
 
     if (s.net) {
       setText($('netTx'), s.net.tx);
       setText($('netRx'), s.net.rx);
-    }
-
-    if (s.layout) {
-      const layoutVer = s.layout.version;
-      const verChanged = Boolean(layoutVer && layoutVer !== state.activeLayoutVersion);
-      const styleChanged = Boolean(s.layout.style && s.layout.style !== state.screenLayoutStyle);
-      if (verChanged || styleChanged) {
-        if (layoutVer) state.activeLayoutVersion = layoutVer;
-        if (s.layout.order) state.dashOrder = s.layout.order;
-        if (s.layout.vis) state.dashVis = s.layout.vis;
-        if (s.layout.sizes) state.dashSizes = s.layout.sizes;
-        if (s.layout.clock_format) state.clockFormat = s.layout.clock_format;
-        if (s.layout.timezone) state.currentTimezone = s.layout.timezone;
-        if (s.layout.style) {
-          state.screenLayoutStyle = s.layout.style;
-          if (typeof localStorage !== 'undefined') {
-            try { localStorage.setItem('screen_layout_style', s.layout.style); } catch (e) {}
-          }
-          syncScreenLayoutStyle();
-        }
-        applyDashboardLayout();
-      }
     }
 
     updateMediaSlots(s.media_slots);
@@ -1429,6 +1542,7 @@ export function updateLcdPages(s) {
 
 let copyToastMinimized = false;
 let copyToastInitialized = false;
+let _copySuccessDismissTimer = null;
 
 const confirmCopy = async (action) => {
   try {
@@ -1523,9 +1637,10 @@ function initCopyToastControls() {
   if (btnMin) {
     btnMin.addEventListener('click', () => {
       copyToastMinimized = !copyToastMinimized;
-      btnMin.textContent = copyToastMinimized ? '□' : '–';
       const toast = $('copy-toast');
-      if (toast) toast.style.transform = copyToastMinimized ? 'translateY(160px)' : 'translateY(0)';
+      if (toast) {
+        toast.classList.toggle('toast-minimized', copyToastMinimized);
+      }
     });
   }
 }
@@ -1642,7 +1757,8 @@ export function updateCopyToast(copyState) {
   if (active) {
     toast.style.opacity = '1';
     toast.style.pointerEvents = 'auto';
-    toast.style.transform = copyToastMinimized ? 'translateY(160px)' : 'translateY(0)';
+    toast.style.transform = 'translateY(0)';
+    toast.classList.toggle('toast-minimized', !!copyToastMinimized);
     if (backdrop && !copyToastMinimized && copyState.status === 'awaiting_confirmation') {
       backdrop.style.opacity = '1';
       backdrop.style.pointerEvents = 'auto';
@@ -1658,7 +1774,7 @@ export function updateCopyToast(copyState) {
 
     if ($('copy-toast-pct')) $('copy-toast-pct').textContent = copyState.status === 'awaiting_confirmation' ? 'WAIT' : `${pct}%`;
     if ($('copy-toast-bar')) $('copy-toast-bar').style.width = `${pct}%`;
-    if ($('copy-toast-file')) $('copy-toast-file').textContent = prog.file || 'Preparing files...';
+    if ($('copy-toast-file')) $('copy-toast-file').textContent = prog.file || (copyState.status === 'success' ? t('modal.copy_finished', 'Finished successfully.') : 'Preparing files...');
 
     let statusText = 'COPYING...';
     let barColor = 'var(--ok2)';
@@ -1685,6 +1801,10 @@ export function updateCopyToast(copyState) {
 
     if ($('copy-toast-status')) $('copy-toast-status').textContent = statusText;
     if ($('copy-toast-bar')) $('copy-toast-bar').style.background = barColor;
+
+    if ($('copy-toast-pause')) {
+      $('copy-toast-pause').style.display = (copyState.status === 'copying' || copyState.status === 'paused') ? 'inline-block' : 'none';
+    }
 
     if (copyState.status === 'copying' && total > 0 && prog.start > 0) {
       const elapsed = (Date.now() / 1000) - prog.start;
@@ -1731,7 +1851,54 @@ export function updateCopyToast(copyState) {
       const actionsDiv = $('copy-toast-actions');
       if (actionsDiv) actionsDiv.style.display = 'none';
     }
+
+    let doneActionsDiv = $('copy-toast-done-actions');
+    if (copyState.status === 'success' || copyState.status === 'error') {
+      if (!doneActionsDiv) {
+        doneActionsDiv = document.createElement('div');
+        doneActionsDiv.id = 'copy-toast-done-actions';
+        doneActionsDiv.style.cssText = 'display:flex; justify-content:flex-end; margin-top:6px;';
+        doneActionsDiv.innerHTML = `
+          <button id="copy-toast-dismiss-btn" class="btn-save-preset" style="padding: 4px 14px; font-size: 11px; cursor: pointer; border-radius: 6px; font-weight:600;">${copyState.status === 'success' ? t('btn.done', 'Done') : t('media.btn_dismiss', 'Dismiss')}</button>
+        `;
+        toast.querySelector('.smart-modal-body')?.appendChild(doneActionsDiv);
+        $('copy-toast-dismiss-btn')?.addEventListener('click', () => {
+          toast.style.opacity = '0';
+          toast.style.pointerEvents = 'none';
+          api.post('/api/copy/cancel').catch(() => {});
+        });
+      } else {
+        doneActionsDiv.style.display = 'flex';
+        const dismissBtn = $('copy-toast-dismiss-btn');
+        if (dismissBtn) dismissBtn.textContent = copyState.status === 'success' ? t('btn.done', 'Done') : t('media.btn_dismiss', 'Dismiss');
+      }
+    } else {
+      if (doneActionsDiv) doneActionsDiv.style.display = 'none';
+    }
+
+    if (copyState.status === 'success') {
+      if (!_copySuccessDismissTimer) {
+        _copySuccessDismissTimer = setTimeout(() => {
+          _copySuccessDismissTimer = null;
+          const currentToast = $('copy-toast');
+          if (currentToast && ($('copy-toast-status')?.textContent || '').toUpperCase().includes('SUCCESS')) {
+            currentToast.style.opacity = '0';
+            currentToast.style.pointerEvents = 'none';
+            api.post('/api/copy/cancel').catch(() => {});
+          }
+        }, 12000);
+      }
+    } else {
+      if (_copySuccessDismissTimer) {
+        clearTimeout(_copySuccessDismissTimer);
+        _copySuccessDismissTimer = null;
+      }
+    }
   } else {
+    if (_copySuccessDismissTimer) {
+      clearTimeout(_copySuccessDismissTimer);
+      _copySuccessDismissTimer = null;
+    }
     toast.style.opacity = '0';
     toast.style.pointerEvents = 'none';
     toast.style.transform = 'translateY(20px)';
@@ -1740,6 +1907,7 @@ export function updateCopyToast(copyState) {
       backdrop.style.pointerEvents = 'none';
     }
     copyToastMinimized = false;
+    toast.classList.remove('toast-minimized');
   }
 }
 
@@ -1870,4 +2038,46 @@ ZettEventBus.on('media:slot_ejected', (slot) => {
 ZettEventBus.on('media:slots_rescanned', () => {
   clearSlotEjected();
 });
+
+export function hexToRgb(hex) {
+  if (!hex || typeof hex !== 'string') return null;
+  let clean = hex.replace('#', '').trim();
+  if (!/^[0-9a-fA-F]{3}$|^[0-9a-fA-F]{6}$/.test(clean)) return null;
+  if (clean.length === 3) clean = clean.split('').map(c => c + c).join('');
+  const num = parseInt(clean, 16);
+  if (isNaN(num)) return null;
+  return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
+}
+
+export function srgbToLinear(c) {
+  const s = c / 255;
+  return s <= 0.04045 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+}
+
+export function getRelativeLuminance(r, g, b) {
+  return 0.2126 * srgbToLinear(r) + 0.7152 * srgbToLinear(g) + 0.0722 * srgbToLinear(b);
+}
+
+export function getContrastRatio(rgb1, rgb2) {
+  if (!rgb1 || !rgb2) return 1;
+  const r1 = Array.isArray(rgb1) ? rgb1[0] : rgb1.r;
+  const g1 = Array.isArray(rgb1) ? rgb1[1] : rgb1.g;
+  const b1 = Array.isArray(rgb1) ? rgb1[2] : rgb1.b;
+
+  const r2 = Array.isArray(rgb2) ? rgb2[0] : rgb2.r;
+  const g2 = Array.isArray(rgb2) ? rgb2[1] : rgb2.g;
+  const b2 = Array.isArray(rgb2) ? rgb2[2] : rgb2.b;
+
+  const l1 = getRelativeLuminance(r1, g1, b1);
+  const l2 = getRelativeLuminance(r2, g2, b2);
+  const bright = Math.max(l1, l2);
+  const dark = Math.min(l1, l2);
+  return (bright + 0.05) / (dark + 0.05);
+}
+
+if (typeof window !== 'undefined') {
+  window.applyStats = applyStats;
+}
+
+
 

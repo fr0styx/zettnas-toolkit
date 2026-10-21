@@ -222,6 +222,22 @@ def trigger_storage_scrub(req: StorageScrubRequest) -> Dict[str, Any]:
     return adapter.trigger_scrub(pool_id=req.pool_id, action=req.action)
 
 
+@router.get("/schedule", dependencies=[Depends(require_scope("storage:read"))])
+def get_storage_schedule_config() -> Dict[str, Any]:
+    """Retrieves current automated SMART self-test and storage scrub schedule."""
+    from backend.services.scheduler import get_smart_schedule
+
+    return get_smart_schedule()
+
+
+@router.put("/schedule", dependencies=[Depends(require_scope("storage:admin"))])
+def update_storage_schedule_config(req: Dict[str, Any]) -> Dict[str, Any]:
+    """Updates automated SMART self-test and storage scrub schedule."""
+    from backend.services.scheduler import save_smart_schedule
+
+    return save_smart_schedule(req)
+
+
 @router.post("/pools", dependencies=[Depends(require_scope("storage:admin"))])
 def create_storage_pool(req: StoragePoolCreateRequest) -> Dict[str, Any]:
     """

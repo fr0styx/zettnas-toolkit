@@ -302,6 +302,12 @@ describe('Yak Wallpaper Switch, Card Reordering, and Dynamic Hardware Settings S
       expect(screenEl.style.width).toBe('480px');
       expect(screenEl.style.height).toBe('320px');
     });
+
+    it('verifies MCU and FB pills are removed from the top bar in production index.html', () => {
+      const indexHtml = fs.readFileSync(path.resolve(__dirname, '../../index.html'), 'utf-8');
+      expect(indexHtml).not.toContain('id="mcu-status-pill"');
+      expect(indexHtml).not.toContain('id="fb-status-pill"');
+    });
   });
 
   describe('Requirement 4: Physical LCD Screen Power Toggle & 0% Backlight', () => {

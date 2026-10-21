@@ -1069,8 +1069,37 @@ def fetch_disk_smart_detail(dev_name: str, wake_if_standby: bool = False):
         except Exception:
             pass
 
-    # For spinning HDDs, only issue a direct block read to trigger spinup if wake_if_standby was explicitly requested
+    # For spinning HDDs, trigger hardware / kernel spinup if wake_if_standby was explicitly requested
     if not is_nvme and wake_if_standby:
+        # 1. Unraid kernel mdcmd spinup integration
+        try:
+            for md_path in ("/proc/mdcmd", "/host/proc/mdcmd"):
+                if os.path.exists(md_path) and os.access(md_path, os.W_OK):
+                    from backend.hardware.unraid import _find_emhttp_dir
+
+                    emhttp_dir = _find_emhttp_dir()
+                    if emhttp_dir:
+                        disks_ini = os.path.join(emhttp_dir, "disks.ini")
+                        if os.path.isfile(disks_ini):
+                            import configparser
+
+                            cp = configparser.ConfigParser()
+                            cp.read(disks_ini)
+                            for sec in cp.sections():
+                                dev_val = cp.get(sec, "device", fallback="").strip("\"'")
+                                if dev_val == clean_name:
+                                    idx = cp.get(sec, "idx", fallback="").strip("\"'")
+                                    if idx:
+                                        with open(md_path, "w") as f_cmd:
+                                            f_cmd.write(f"spinup {idx}\n")
+                                        logger.info(
+                                            f"[Storage] Issued Unraid spinup {idx} for /dev/{clean_name} to {md_path}"
+                                        )
+                                        break
+        except Exception as e:
+            logger.debug(f"Unraid mdcmd spinup attempt on {clean_name} threw: {e}")
+
+        # 2. Universal SATA PHY direct block read spinup
         try:
             subprocess.Popen(
                 ["dd", f"if={dev}", "of=/dev/null", "count=1", "bs=512", "iflag=direct"],

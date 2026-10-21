@@ -186,6 +186,46 @@ def test_fs_preview_redaction_and_hex(client, auth_headers, tmp_path):
         assert len(data_bin["hex_dump"]) >= 1
         assert "00000000" in data_bin["hex_dump"][0]
 
+        # 3. Image file with metadata
+        from PIL import Image
+
+        img_file = browse_root / "photo.jpg"
+        test_img = Image.new("RGB", (640, 480), color="red")
+        test_img.save(img_file, format="JPEG")
+
+        res_img = client.get(f"/api/fs/preview?path={img_file}", headers=auth_headers)
+        assert res_img.status_code == 200
+        data_img = res_img.json()
+        assert data_img["type"] == "image"
+        assert data_img["width"] == 640
+        assert data_img["height"] == 480
+        assert data_img["dimensions"] == "640 × 480"
+
+        # 4. HEIC image preview and transcoding
+        heic_file = browse_root / "photo.heic"
+        heic_img = Image.new("RGB", (800, 600), color="blue")
+        heic_img.save(heic_file, format="HEIF")
+
+        res_heic = client.get(f"/api/fs/preview?path={heic_file}", headers=auth_headers)
+        assert res_heic.status_code == 200
+        data_heic = res_heic.json()
+        assert data_heic["type"] == "image"
+        assert data_heic["ext"] == ".heic"
+        assert data_heic["dimensions"] == "800 × 600"
+        assert data_heic["url"] == f"/api/fs/preview/image?path={heic_file}"
+        assert data_heic["download_url"] == f"/api/fs/download?path={heic_file}"
+
+        # Direct image preview transcoding endpoint
+        res_preview_img = client.get(f"/api/fs/preview/image?path={heic_file}", headers=auth_headers)
+        assert res_preview_img.status_code == 200
+        assert res_preview_img.headers["content-type"] == "image/webp"
+        assert len(res_preview_img.content) > 100
+
+        # Thumbnail downscaling
+        res_thumb = client.get(f"/api/fs/preview/image?path={heic_file}&thumb=1", headers=auth_headers)
+        assert res_thumb.status_code == 200
+        assert res_thumb.headers["content-type"] == "image/webp"
+
 
 def test_fs_stream_partial_range(client, auth_headers, tmp_path):
     browse_root = tmp_path / "user"

@@ -3,7 +3,10 @@ import {
   initContainersManager,
   openContainersManager,
   renderContainersWindowTable,
-  loadContainersData
+  loadContainersData,
+  startCwAutoRefresh,
+  stopCwAutoRefresh,
+  _resetCwAutoRefreshForTesting
 } from '../components/containers-manager.js';
 import { DockManager } from '../components/dock.js';
 import { ZettEventBus } from '../event-bus.js';
@@ -32,9 +35,12 @@ describe('Dedicated Containers Window & Desktop Icon Suite', () => {
     window._containersManagerInitialized = false;
     window.DockManager = DockManager;
     DockManager.windows = {};
+    _resetCwAutoRefreshForTesting();
   });
 
   afterEach(() => {
+    stopCwAutoRefresh();
+    _resetCwAutoRefreshForTesting();
     vi.restoreAllMocks();
   });
 
@@ -276,6 +282,74 @@ describe('Dedicated Containers Window & Desktop Icon Suite', () => {
     expect(tableWrap.style.display).toBe('block');
     expect(catalogWrap.style.display).toBe('none');
   });
+
+  it('renders live sync status chip and has no manual refresh button in toolbar', () => {
+    initContainersManager();
+    const refreshBtn = document.getElementById('btn-cw-refresh');
+    expect(refreshBtn).toBeNull();
+
+    const statusChip = document.querySelector('.cw-docker-status-chip');
+    expect(statusChip).not.toBeNull();
+    expect(statusChip.textContent).toContain('Docker Socket Active');
+    expect(statusChip.textContent).toContain('Live Sync');
+  });
+
+  it('btn-cw-stacks handles direct array response from /api/docker/stacks and opens picker modal', async () => {
+    initContainersManager();
+    const mockStacks = [
+      { name: 'arr', origin: 'compose', working_dir: '/mnt/user/appdata/arr', total_count: 5, running_count: 5, services: ['radarr', 'sonarr'] },
+      { name: 'immich', origin: 'compose', working_dir: '/mnt/user/appdata/immich', total_count: 2, running_count: 2, services: ['web', 'db'] }
+    ];
+
+    vi.spyOn(api, 'get').mockImplementation(async (url) => {
+      if (url === '/api/docker/stacks') return mockStacks;
+      return [];
+    });
+
+    const btnStacks = document.getElementById('btn-cw-stacks');
+    expect(btnStacks).not.toBeNull();
+
+    await btnStacks.onclick();
+
+    const overlay = document.getElementById('stack-picker-overlay');
+    expect(overlay).not.toBeNull();
+    expect(overlay.style.display).toBe('flex');
+    expect(overlay.querySelector('#stack-picker-badge').textContent).toBe('2 Stacks');
+    const cards = overlay.querySelectorAll('.stack-picker-card');
+    expect(cards.length).toBe(2);
+    expect(cards[0].textContent).toContain('arr');
+    expect(cards[1].textContent).toContain('immich');
+  });
+
+  it('startCwAutoRefresh periodically polls /api/docker/containers while window is open and pauses on minimize', async () => {
+    vi.useFakeTimers();
+    initContainersManager();
+    openContainersManager();
+
+    const getSpy = vi.spyOn(api, 'get').mockResolvedValue([]);
+
+    // Fast-forward 3500ms
+    await vi.advanceTimersByTimeAsync(3500);
+    let calls = getSpy.mock.calls.filter((c) => c[0] === '/api/docker/containers');
+    expect(calls.length).toBeGreaterThanOrEqual(1);
+
+    await vi.advanceTimersByTimeAsync(3500);
+    calls = getSpy.mock.calls.filter((c) => c[0] === '/api/docker/containers');
+    expect(calls.length).toBeGreaterThanOrEqual(2);
+
+    // Minimize window
+    const minBtn = document.getElementById('containers-min');
+    minBtn.click();
+
+    const callsBefore = calls.length;
+    await vi.advanceTimersByTimeAsync(7000);
+    calls = getSpy.mock.calls.filter((c) => c[0] === '/api/docker/containers');
+    expect(calls.length).toBe(callsBefore);
+
+    stopCwAutoRefresh();
+    vi.useRealTimers();
+  });
 });
+
 
 

@@ -96,3 +96,71 @@ def test_update_all_containers_skips_toolkit(mock_single_update, mock_check_all)
     assert len(res["skipped"]) == 1
     assert res["skipped"][0]["name"] == "zettnas-toolkit"
     mock_single_update.assert_called_once_with("immich_server")
+
+
+def test_extract_registry_from_image():
+    from backend.services.docker_updates import extract_registry_from_image
+
+    assert extract_registry_from_image("ghcr.io/org/my-app:v1.2.3") == ("ghcr.io", "org/my-app", "v1.2.3")
+    assert extract_registry_from_image("harbor.local:8443/prod/api:latest") == (
+        "harbor.local:8443",
+        "prod/api",
+        "latest",
+    )
+    assert extract_registry_from_image("library/postgres:16-alpine") == ("docker.io", "library/postgres", "16-alpine")
+    assert extract_registry_from_image("ubuntu:latest") == ("docker.io", "library/ubuntu", "latest")
+
+
+@patch("backend.services.docker_updates.load_docker_host_credentials")
+def test_get_registry_auth_for_image_and_header(mock_load_creds):
+    import base64
+    import json
+    from backend.services.docker_updates import get_registry_auth_for_image, get_registry_auth_header
+
+    mock_load_creds.return_value = {
+        "ghcr.io": {"auth": "Z2hfdXNlcjpnaF90b2tlbg=="},
+        "https://index.docker.io/v1/": {"auth": "ZG9ja2VydXNlcjpkb2NrZXJwYXNz"},
+    }
+
+    auth_ghcr = get_registry_auth_for_image("ghcr.io/myteam/secret-app:1.0")
+    assert auth_ghcr is not None
+    assert auth_ghcr["auth"] == "Z2hfdXNlcjpnaF90b2tlbg=="
+
+    header_ghcr = get_registry_auth_header("ghcr.io/myteam/secret-app:1.0")
+    assert "X-Registry-Auth" in header_ghcr
+    decoded_auth = json.loads(base64.b64decode(header_ghcr["X-Registry-Auth"]).decode("utf-8"))
+    assert decoded_auth["auth"] == "Z2hfdXNlcjpnaF90b2tlbg=="
+
+    # Non-authenticated registry returns empty header
+    header_quay = get_registry_auth_header("quay.io/coreos/etcd:latest")
+    assert header_quay == {}
+
+
+@patch("backend.services.docker_updates.load_docker_host_credentials")
+@patch("backend.services.docker_updates._docker_request")
+def test_check_container_image_update_private_registry_authenticated(mock_docker_req, mock_load_creds):
+    mock_load_creds.return_value = {
+        "ghcr.io": {"auth": "dGVzdHVzZXI6dGVzdHBhc3M="},
+    }
+
+    # 1. Distribution returns digest
+    # 2. Local image inspect returns older digest
+    mock_docker_req.side_effect = [
+        (200, {"Descriptor": {"digest": "sha256:private99998888"}}),
+        (200, {"RepoDigests": ["ghcr.io/myteam/app@sha256:private11112222"]}),
+    ]
+
+    c = {
+        "Id": "priv12345678",
+        "Names": ["/private_app"],
+        "Image": "ghcr.io/myteam/app:latest",
+    }
+
+    res = _check_container_image_update(c)
+    assert res["has_update"] is True
+    assert res["status"] == "update_available"
+    assert res["remote_digest"] == "sha256:private99998888"
+
+    # Verify X-Registry-Auth header was passed to the distribution query
+    first_call_headers = mock_docker_req.call_args_list[0][1].get("headers", {})
+    assert "X-Registry-Auth" in first_call_headers

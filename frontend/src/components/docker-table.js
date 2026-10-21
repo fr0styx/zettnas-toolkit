@@ -7,6 +7,37 @@
 import { escapeHtml } from '../utils.js';
 import { t } from '../i18n.js';
 
+let _selectedContainerIds = new Set();
+
+export function getSelectedContainerIds() {
+  return Array.from(_selectedContainerIds);
+}
+
+export function isContainerSelected(cid) {
+  return _selectedContainerIds.has(cid);
+}
+
+export function toggleContainerSelected(cid, selected) {
+  if (selected === undefined) {
+    if (_selectedContainerIds.has(cid)) _selectedContainerIds.delete(cid);
+    else _selectedContainerIds.add(cid);
+  } else if (selected) {
+    _selectedContainerIds.add(cid);
+  } else {
+    _selectedContainerIds.delete(cid);
+  }
+}
+
+export function clearSelectedContainers() {
+  _selectedContainerIds.clear();
+}
+
+export function selectAllContainers(containerIds) {
+  for (const id of containerIds) {
+    if (id) _selectedContainerIds.add(id);
+  }
+}
+
 /**
  * Computes a deterministic string signature representing the dynamic state of a container row.
  * Used by updateContainerRow to verify if tr.innerHTML must be re-rendered without a full page reload.
@@ -21,15 +52,17 @@ export function computeContainerRowSignature(c, updateInfo) {
 }
 
 /**
- * Generates the inner HTML for a container row (6 columns).
+ * Generates the inner HTML for a container row (7 columns: Name, Stack, Hardware, CPU/RAM, Ports, Status, Actions).
  */
 export function buildContainerRowInner(c, currentHost, updateInfo = null) {
   const isRunning = c.state === 'running';
   const badgeColor = isRunning ? 'var(--ok2)' : 'var(--muted)';
   const badgeBg = isRunning ? 'rgba(37, 194, 160, 0.15)' : 'rgba(255, 255, 255, 0.05)';
   const idShort = c.id ? c.id.slice(0, 12) : '';
+  const isChecked = _selectedContainerIds.has(c.id);
+  const checkedAttr = isChecked ? 'checked' : '';
 
-  // Column 1: Stack & Name
+  // Column 2: Stack & Type
   let stackHtml = '';
   if (c.stack) {
     stackHtml = `<span class="docker-stack-pill clickable-stack-pill" data-stack="${escapeHtml(c.stack)}" title="Open & Edit Stack: ${escapeHtml(c.stack)}" style="cursor:pointer;">📁 ${escapeHtml(c.stack)}</span>`;
@@ -38,7 +71,7 @@ export function buildContainerRowInner(c, currentHost, updateInfo = null) {
     stackHtml = `<span class="docker-origin-pill">${originLabel}</span>`;
   }
 
-  // Column 2: Hardware Badges
+  // Column 3: Hardware Badges
   let hwHtml = '<span style="color:var(--muted); font-size:10px;">—</span>';
   if (c.hardware_badges && c.hardware_badges.length > 0) {
     hwHtml = c.hardware_badges
@@ -49,7 +82,7 @@ export function buildContainerRowInner(c, currentHost, updateInfo = null) {
       .join('');
   }
 
-  // Column 3: Telemetry (CPU / RAM)
+  // Column 4: Telemetry (CPU / RAM)
   let telemHtml = '<span style="color:var(--muted); font-size:10px;">—</span>';
   if (isRunning) {
     const cpuStr = `${(c.cpu_pct || 0).toFixed(1)}%`;
@@ -57,7 +90,7 @@ export function buildContainerRowInner(c, currentHost, updateInfo = null) {
     telemHtml = `<span class="docker-telemetry-pill"><span class="telem-cpu">${cpuStr}</span><span style="opacity:0.4;">•</span><span class="telem-mem">${memStr}</span></span>`;
   }
 
-  // Column 4: Ports & Web UI
+  // Column 5: Ports & Web UI
   let portsHtml = '<span style="color:var(--muted); font-size:10px;">—</span>';
   const portParts = [];
   if (c.webui_url && c.primary_port) {
@@ -82,7 +115,7 @@ export function buildContainerRowInner(c, currentHost, updateInfo = null) {
     portsHtml = portParts.join(' ');
   }
 
-  // Column 5: Status & Uptime
+  // Column 6: Status & Uptime
   const statusHtml = `
     <div style="display:flex; align-items:center; gap:6px;">
       <span class="docker-state-badge" style="display:inline-block; padding:2px 6px; border-radius:4px; font-size:9.5px; font-weight:700; background:${badgeBg}; color:${badgeColor}; text-transform:uppercase;">${escapeHtml(c.state)}</span>
@@ -90,7 +123,7 @@ export function buildContainerRowInner(c, currentHost, updateInfo = null) {
     </div>
   `;
 
-  // Column 6: Actions
+  // Column 7: Actions
   const hasUpdate = Boolean(updateInfo?.has_update);
   const updateBadge = hasUpdate
     ? `<button class="ci-badge badge-update-ready btn-container-act btn-docker-update-badge" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="update-single" title="Click to update ${escapeHtml(c.name)} to latest image">⬆️ UPDATE</button>`
@@ -115,7 +148,7 @@ export function buildContainerRowInner(c, currentHost, updateInfo = null) {
       ${updateBtn}
       ${backupBtn}
       <button class="btn-container-act btn-docker-restart" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="restart" title="Restart ${escapeHtml(c.name)}">🔄</button>
-      <button class="btn-container-act btn-docker-stop" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="stop" title="Stop ${escapeHtml(c.name)}">⏹</button>
+      <button class="btn-container-act btn-docker-stop" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="stop" title="Stop ${escapeHtml(c.name)}"><svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><rect x="1.5" y="1.5" width="13" height="13" rx="2.5"/></svg></button>
       ${deleteBtn}
       ${moreBtn}
     `
@@ -125,25 +158,26 @@ export function buildContainerRowInner(c, currentHost, updateInfo = null) {
       ${stackBtn}
       ${updateBtn}
       ${backupBtn}
-      <button class="btn-container-act btn-docker-start" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="start" title="Start ${escapeHtml(c.name)}">▶</button>
+      <button class="btn-container-act btn-docker-start" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="start" title="Start ${escapeHtml(c.name)}"><svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M4 2.8v10.4c0 .7.8 1.1 1.4.8l8.4-5.2c.6-.4.6-1.2 0-1.6L5.4 2c-.6-.4-1.4 0-1.4.8z"/></svg></button>
       ${deleteBtn}
       ${moreBtn}
     `;
 
   return `
     <td class="docker-name-cell">
-      <div style="display:flex; align-items:baseline; gap:6px;">
+      <div style="display:flex; align-items:center; gap:6px;">
+        <input type="checkbox" class="docker-row-select" data-id="${escapeHtml(c.id)}" ${checkedAttr} title="Select ${escapeHtml(c.name)}" style="margin:0; cursor:pointer; accent-color:var(--brand, #0ea5e9); flex-shrink:0;">
         <button class="btn-docker-name-link clickable-container-name" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" style="background:none; border:none; padding:0; color:#fff; font-size:11.5px; font-weight:700; cursor:pointer; text-align:left; font-family:inherit;" title="Inspect ${escapeHtml(c.name)}">${escapeHtml(c.name)}</button>
         <code style="font-size:9px; color:var(--muted); font-family:var(--font-mono, monospace);">${escapeHtml(idShort)}</code>
         ${updateBadge}
       </div>
-      <div>${stackHtml}</div>
     </td>
+    <td class="docker-stack-cell">${stackHtml}</td>
     <td class="docker-hw-cell">${hwHtml}</td>
     <td class="docker-telemetry-cell">${telemHtml}</td>
     <td class="docker-ports-cell">${portsHtml}</td>
     <td class="docker-status-cell">${statusHtml}</td>
-    <td class="docker-actions-cell" style="text-align:right; white-space:nowrap;">${actions}</td>
+    <td class="docker-actions-cell" style="text-align:right; white-space:nowrap;"><div class="docker-actions-btn-group">${actions}</div></td>
   `;
 }
 
@@ -161,6 +195,9 @@ export function createContainerRow(c, currentHost, updateInfo = null) {
   tr.dataset.hasUpdate = hasUpdate;
   tr.dataset.rowSig = computeContainerRowSignature(c, updateInfo);
   tr.innerHTML = buildContainerRowInner(c, currentHost, updateInfo);
+  if (_selectedContainerIds.has(c.id)) {
+    tr.classList.add('docker-row-selected');
+  }
   return tr;
 }
 
@@ -175,6 +212,18 @@ export function updateContainerRow(tr, c, currentHost, updateInfo = null) {
   tr.dataset.id = c.id || '';
   tr.dataset.name = c.name || '';
 
+  // Synchronize selection state on the row
+  const isChecked = _selectedContainerIds.has(c.id);
+  const chk = tr.querySelector('.docker-row-select');
+  if (chk && chk.checked !== isChecked) {
+    chk.checked = isChecked;
+  }
+  if (isChecked) {
+    tr.classList.add('docker-row-selected');
+  } else {
+    tr.classList.remove('docker-row-selected');
+  }
+
   // Check state and signature invariants
   if (
     tr.dataset.state !== c.state ||
@@ -186,6 +235,9 @@ export function updateContainerRow(tr, c, currentHost, updateInfo = null) {
     tr.dataset.hasUpdate = hasUpdate ? '1' : '0';
     tr.dataset.rowSig = newSig;
     tr.innerHTML = buildContainerRowInner(c, currentHost, updateInfo);
+    if (isChecked) {
+      tr.classList.add('docker-row-selected');
+    }
     return;
   }
 
@@ -199,8 +251,8 @@ export function updateContainerRow(tr, c, currentHost, updateInfo = null) {
       const cpuEl = telemCell.querySelector('.telem-cpu');
       const memEl = telemCell.querySelector('.telem-mem');
       if (cpuEl && memEl) {
-        cpuEl.textContent = cpuStr;
-        memEl.textContent = memStr;
+        if (cpuEl.textContent !== cpuStr) cpuEl.textContent = cpuStr;
+        if (memEl.textContent !== memStr) memEl.textContent = memStr;
       } else {
         telemCell.innerHTML = `<span class="docker-telemetry-pill"><span class="telem-cpu">${cpuStr}</span><span style="opacity:0.4;">•</span><span class="telem-mem">${memStr}</span></span>`;
       }
@@ -214,4 +266,107 @@ export function updateContainerRow(tr, c, currentHost, updateInfo = null) {
     statusText.textContent = c.status;
     statusText.title = c.status;
   }
+}
+
+/**
+ * Synchronizes horizontal scrolling between a table container and auxiliary top/bottom scrollbars.
+ * Ensures that users at the top of long container lists immediately see and can use horizontal scrollbars.
+ */
+export function initSynchronizedTableScrollbars(tableWrapEl, topScrollEl, stickyScrollEl) {
+  if (!tableWrapEl) return { update: () => {}, destroy: () => {} };
+
+  if (tableWrapEl._syncScrollbarsController) {
+    tableWrapEl._syncScrollbarsController.update();
+    return tableWrapEl._syncScrollbarsController;
+  }
+
+  const topInner = topScrollEl ? topScrollEl.querySelector('.docker-table-top-scroll-inner') || topScrollEl.firstElementChild : null;
+  const stickyInner = stickyScrollEl ? stickyScrollEl.querySelector('.docker-table-sticky-scroll-inner') || stickyScrollEl.firstElementChild : null;
+
+  let isSyncing = false;
+  let rafId = null;
+
+  function update() {
+    const table = tableWrapEl.querySelector('table');
+    if (!table) return;
+
+    const scrollWidth = Math.max(table.scrollWidth || 0, table.offsetWidth || 0, tableWrapEl.scrollWidth || 0);
+    const clientWidth = tableWrapEl.clientWidth || 0;
+    const needsScroll = clientWidth > 0 && scrollWidth > clientWidth + 3;
+
+    if (topScrollEl && topInner) {
+      if (needsScroll) {
+        topInner.style.width = `${scrollWidth}px`;
+        topScrollEl.style.display = 'block';
+        topScrollEl.scrollLeft = tableWrapEl.scrollLeft;
+      } else {
+        topScrollEl.style.display = 'none';
+      }
+    }
+
+    if (stickyScrollEl && stickyInner) {
+      if (needsScroll) {
+        stickyInner.style.width = `${scrollWidth}px`;
+        stickyScrollEl.style.display = 'block';
+        stickyScrollEl.scrollLeft = tableWrapEl.scrollLeft;
+      } else {
+        stickyScrollEl.style.display = 'none';
+      }
+    }
+  }
+
+  const syncFrom = (source, targets) => {
+    if (isSyncing) return;
+    isSyncing = true;
+    const pos = source.scrollLeft;
+    for (const t of targets) {
+      if (t && t.scrollLeft !== pos) {
+        t.scrollLeft = pos;
+      }
+    }
+    if (rafId) cancelAnimationFrame(rafId);
+    rafId = requestAnimationFrame(() => {
+      isSyncing = false;
+    });
+  };
+
+  const onTableScroll = () => syncFrom(tableWrapEl, [topScrollEl, stickyScrollEl]);
+  const onTopScroll = () => {
+    if (topScrollEl) syncFrom(topScrollEl, [tableWrapEl, stickyScrollEl]);
+  };
+  const onStickyScroll = () => {
+    if (stickyScrollEl) syncFrom(stickyScrollEl, [tableWrapEl, topScrollEl]);
+  };
+
+  tableWrapEl.addEventListener('scroll', onTableScroll, { passive: true });
+  if (topScrollEl) topScrollEl.addEventListener('scroll', onTopScroll, { passive: true });
+  if (stickyScrollEl) stickyScrollEl.addEventListener('scroll', onStickyScroll, { passive: true });
+
+  let resizeObserver = null;
+  if (typeof ResizeObserver !== 'undefined') {
+    resizeObserver = new ResizeObserver(() => {
+      update();
+    });
+    resizeObserver.observe(tableWrapEl);
+    const table = tableWrapEl.querySelector('table');
+    if (table) resizeObserver.observe(table);
+  }
+
+  // Initial update
+  update();
+
+  const controller = {
+    update,
+    destroy() {
+      tableWrapEl.removeEventListener('scroll', onTableScroll);
+      if (topScrollEl) topScrollEl.removeEventListener('scroll', onTopScroll);
+      if (stickyScrollEl) stickyScrollEl.removeEventListener('scroll', onStickyScroll);
+      if (resizeObserver) resizeObserver.disconnect();
+      if (rafId) cancelAnimationFrame(rafId);
+      delete tableWrapEl._syncScrollbarsController;
+    },
+  };
+
+  tableWrapEl._syncScrollbarsController = controller;
+  return controller;
 }

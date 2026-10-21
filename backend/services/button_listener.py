@@ -58,6 +58,7 @@ def button_listener_daemon():
                 raise last_err
             fd = os.open(os.path.join(HOST_DEV, "mem"), os.O_RDWR | os.O_SYNC)
         mem = mmap.mmap(fd, 4096, offset=MMIO_BASE)
+        logger.info(f"[ZettNAS] Successfully initialized MMIO hardware copy button listener on chassis {model}")
     except PermissionError as pe:
         logger.warning(
             f"[ZettNAS] Hardware button mapping failed: {pe}. "
@@ -76,35 +77,89 @@ def button_listener_daemon():
             current_state = (copy_val & 2) >> 1
 
             if current_state == 0 and last_state == 1:
+                # Hardware button mechanical debounce delay
+                time.sleep(0.05)
+                copy_val_check = struct.unpack("<I", mem[COPY_OFFSET : COPY_OFFSET + 4])[0]
+                if (copy_val_check & 2) >> 1 != 0:
+                    last_state = 1
+                    continue
+
                 cfg = {
                     "enabled": False,
                     "source": "sd",
                     "dest": "/mnt/user/",
                     "use_exif": True,
+                    "verify_checksum": True,
                     "on_collision": "skip",
-                    "action": "cycle_lcd",
+                    "action": "copy",
                 }
                 if os.path.exists(BUTTON_CFG_FILE):
                     try:
                         with open(BUTTON_CFG_FILE) as f:
-                            cfg.update(json.load(f))
-                    except (json.JSONDecodeError, OSError):
-                        pass
+                            saved = json.load(f)
+                            if isinstance(saved, dict):
+                                cfg.update(saved)
+                    except (json.JSONDecodeError, OSError) as read_err:
+                        logger.warning(f"[ButtonListener] Could not read {BUTTON_CFG_FILE}: {read_err}")
 
-                btn_action = cfg.get("action", "cycle_lcd")
-                if cfg.get("enabled") and not Z_STATE.copy_active and btn_action in ("copy", None):
-                    Z_STATE.copy_active = True
-                    Z_STATE.copy_status = "copying"
-                    Z_STATE.ui_wake.set()
-                    add_event("info", "Copy Started", "Starting ingest from SD Card reader...")
-                    threading.Thread(target=lambda c: asyncio.run(_do_copy(c)), args=(cfg,), daemon=True).start()
+                is_enabled = bool(cfg.get("enabled", False))
+                # Action defaults to "copy" if enabled, or "cycle_lcd" if disabled
+                btn_action = cfg.get("action")
+                if not btn_action:
+                    btn_action = "copy" if is_enabled else "cycle_lcd"
+
+                logger.info(
+                    f"[ButtonListener] Physical front button pressed: enabled={is_enabled}, "
+                    f"action={btn_action}, copy_active={Z_STATE.copy_active}"
+                )
+
+                if is_enabled and not Z_STATE.copy_active and btn_action == "copy":
+                    from backend.services.copy_engine import read_media_slots
+
+                    slots = read_media_slots()
+                    src_slot = str(cfg.get("source", "sd")).lower().strip()
+                    slot_info = slots.get(src_slot, {})
+                    card_size = slot_info.get("size", 0)
+
+                    if card_size > 0:
+                        Z_STATE.pending_ingest = None
+                        Z_STATE.copy_active = True
+                        Z_STATE.copy_status = "copying"
+                        Z_STATE.ui_wake.set()
+                        slot_label = "SD Card" if src_slot == "sd" else "TF Card (MicroSD)"
+                        target_dir = cfg.get("dest", "/mnt/user/")
+                        add_event(
+                            "info",
+                            "Copy Started",
+                            f"Physical COPY button pressed. Starting ingest from {slot_label} to {target_dir}...",
+                        )
+                        logger.info(f"[ButtonListener] Dispatched copy ingest thread for {slot_label} -> {target_dir}")
+                        threading.Thread(
+                            target=lambda c: asyncio.run(_do_copy(c)),
+                            args=(dict(cfg),),
+                            daemon=True,
+                            name="CopyWorker",
+                        ).start()
+                    else:
+                        add_event(
+                            "warning",
+                            "No Media Detected",
+                            f"Front-panel COPY button pressed, but no media card is detected in {src_slot.upper()} slot.",
+                        )
+                        new_page = Z_STATE.cycle_lcd_page()
+                        add_event(
+                            "info",
+                            "LCD Page Switched",
+                            f"Display cycled to Page {new_page} via front hardware button.",
+                        )
                 else:
                     new_page = Z_STATE.cycle_lcd_page()
                     add_event(
                         "info", "LCD Page Switched", f"Display cycled to Page {new_page} via front hardware button."
                     )
 
-            last_state = current_state
+                # Debounce to prevent multi-triggering while holding button down
+                time.sleep(0.3)
         except Exception as e:
             logger.debug(f"Silenced exception: {e}")
         time.sleep(0.1)

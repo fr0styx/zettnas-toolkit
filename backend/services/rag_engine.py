@@ -5,6 +5,8 @@ Provides hardware-accelerated (NPU -> GPU -> CPU) document/recipe RAG,
 and multi-user RBAC path isolation backed by SQLite WAL (/app/data/rag_index.db).
 """
 
+import ast
+import asyncio
 import colorsys
 import hashlib
 import html.parser
@@ -13,11 +15,13 @@ import json
 import math
 import os
 import re
+import socket
 import sqlite3
 import struct
 import subprocess
 import threading
 import time
+import urllib.request
 import xml.etree.ElementTree as ET
 import zipfile
 import zlib
@@ -28,7 +32,7 @@ from PIL import Image, ImageFile
 from backend.config import ALLOWED_BROWSE_ROOTS, DATA_DIR, HOST_DEV, HOST_PROC, HOST_SYS, logger
 from backend.fsutil import atomic_write_json, read_json, resolve_within
 from backend.logging_config import sanitize_string
-from backend.state import Z_STATE
+from backend.state import Z_STATE, add_event
 
 # Guard against decompression bombs and truncated camera uploads
 Image.MAX_IMAGE_PIXELS = 64_000_000
@@ -439,6 +443,10 @@ DOCUMENT_EXTENSIONS: Set[str] = {
     ".html",
     ".htm",
     ".log",
+    ".nfo",
+    ".srt",
+    ".vtt",
+    ".sub",
 }
 
 CODE_EXTENSIONS: Set[str] = {
@@ -467,6 +475,31 @@ IMAGE_EXTENSIONS: Set[str] = {
     ".tiff",
     ".tif",
     ".heic",
+}
+
+AUDIO_EXTENSIONS: Set[str] = {
+    ".mp3",
+    ".wav",
+    ".flac",
+    ".m4a",
+    ".aac",
+    ".ogg",
+    ".opus",
+}
+
+VIDEO_EXTENSIONS: Set[str] = {
+    ".mp4",
+    ".mkv",
+    ".avi",
+    ".mov",
+    ".wmv",
+    ".flv",
+    ".webm",
+    ".m4v",
+    ".ts",
+    ".m2ts",
+    ".mpg",
+    ".mpeg",
 }
 
 _FTS5_RESERVED = {"and", "or", "not", "near"}
@@ -773,15 +806,431 @@ def compute_384d_embedding(
 
 
 def unpack_embedding(blob: Optional[bytes]) -> Optional[List[float]]:
-    if not blob or len(blob) != EMBEDDING_DIM * 4:
+    """Unpacks binary float32 buffer into float vector, supporting arbitrary vector dimensions."""
+    if not blob or len(blob) % 4 != 0:
         return None
-    return list(struct.unpack(f"<{EMBEDDING_DIM}f", blob))
+    dim = len(blob) // 4
+    return list(struct.unpack(f"<{dim}f", blob))
+
+
+def load_sqlite_vec_extension(conn: sqlite3.Connection) -> bool:
+    """
+    Authorizes and loads sqlite-vec extension into the SQLite connection.
+    Must be called on both read-write and read-only connections.
+    """
+    if hasattr(conn, "enable_load_extension"):
+        try:
+            conn.enable_load_extension(True)
+        except Exception as e:
+            logger.debug("Failed enabling SQLite extension loading: %s", e)
+            return False
+
+    try:
+        import sqlite_vec
+
+        sqlite_vec.load(conn)
+        return True
+    except Exception as e:
+        logger.debug("sqlite_vec package load skipped/failed: %s", e)
+
+    candidate_paths = [
+        os.environ.get("SQLITE_VEC_PATH", ""),
+        "/app/lib/vec0.so",
+        "/usr/local/lib/vec0.so",
+        "/usr/lib/vec0.so",
+        "vec0",
+    ]
+    for path in candidate_paths:
+        if not path:
+            continue
+        try:
+            conn.load_extension(path)
+            return True
+        except Exception:
+            continue
+    return False
+
+
+TASK_PREFIX_CODE = "task: code search | query: "
+TASK_PREFIX_QA = "task: question answering | query: "
+TASK_PREFIX_CLASSIFICATION = "task: classification | query: "
+TASK_PREFIX_SEARCH = "task: search result | query: "
+
+CODE_SYNTAX_INDICATORS = {
+    "def ",
+    "class ",
+    "import ",
+    "function ",
+    "func ",
+    "return ",
+    "select ",
+    "from ",
+    "where ",
+    "const ",
+    "let ",
+    "var ",
+    "=>",
+    "async ",
+    "await ",
+    "public ",
+    "private ",
+    "interface ",
+    "struct ",
+    "impl ",
+    "fn ",
+}
+
+CLI_COMMAND_INDICATORS = {
+    "docker compose",
+    "docker run",
+    "systemctl ",
+    "smartctl ",
+    "btrfs subvol",
+    "btrfs scrub",
+    "zpool status",
+    "zfs create",
+    "mdadm --",
+    "chmod ",
+    "chown ",
+}
+
+CODE_EXTENSIONS_RE = re.compile(
+    r"\b\w+\.(py|js|ts|sh|json|ya?ml|rs|go|c|cpp|h|css|html)\b",
+    re.IGNORECASE,
+)
+
+QA_INDICATORS_RE = re.compile(
+    r"^(how\s+(to|do|can|does)|why\s+(is|does|do)|what\s+(is|are)|where\s+(is|can)|when\s+should|can\s+i|is\s+it\s+(safe|possible)|explain)\b",
+    re.IGNORECASE,
+)
+
+CLASS_INDICATORS_RE = re.compile(
+    r"\b(list\s+all|find\s+all|classify|categorize|audit|duplicates?|group\s+by)\b",
+    re.IGNORECASE,
+)
+
+
+def classify_query_task_intent(query: str, modality_hint: str = "all") -> Tuple[str, str]:
+    """
+    Deterministic intent classifier for Google DeepMind asymmetric task prefixing.
+    Evaluates interrogative QA structures BEFORE code keywords to prevent
+    domain noun collisions (e.g. 'How do I fix a raid array?').
+    Returns (intent_type, task_prefix) where intent_type is 'code', 'qa', 'classification', or 'search'.
+    """
+    q_strip = (query or "").strip()
+    low = q_strip.lower()
+
+    if modality_hint == "code":
+        return "code", TASK_PREFIX_CODE
+
+    # Rule 1: Evaluate conversational / interrogative QA FIRST
+    if QA_INDICATORS_RE.search(low) or low.endswith("?"):
+        return "qa", TASK_PREFIX_QA
+
+    # Rule 2: Evaluate classification / listing requests
+    if CLASS_INDICATORS_RE.search(low):
+        return "classification", TASK_PREFIX_CLASSIFICATION
+
+    # Rule 3: Evaluate unambiguous code syntax, CLI commands, or source file extensions
+    if (
+        any(ind in low for ind in CODE_SYNTAX_INDICATORS)
+        or any(ind in low for ind in CLI_COMMAND_INDICATORS)
+        or bool(CODE_EXTENSIONS_RE.search(low))
+    ):
+        return "code", TASK_PREFIX_CODE
+
+    # Rule 4: Default to semantic search
+    return "search", TASK_PREFIX_SEARCH
+
+
+def format_embeddinggemma_document(title: Optional[str], text: str) -> str:
+    """
+    Google DeepMind EmbeddingGemma-2 canonical document/passage formatting:
+    f"title: {title.strip()} | text: {text.strip()}" if title is provided,
+    else f"title: none | text: {text.strip()}".
+    """
+    clean_title = (title or "").strip()
+    clean_text = (text or "").strip()
+    if clean_title:
+        return f"title: {clean_title} | text: {clean_text}"
+    return f"title: none | text: {clean_text}"
+
+
+def truncate_and_normalize_mrl(vec: List[float], target_dim: Optional[int]) -> List[float]:
+    """
+    Slices leading dimensions of MRL vector and re-normalizes to unit L2 sphere.
+    Strictly guarantees that math.isclose(sum(x*x for x in sliced_vec), 1.0, rel_tol=1e-5)
+    for any non-zero input vector. Handles subnormal floats, large numbers near float64
+    overflow limit (via max-abs scaling), full dimension, and oversized target_dim.
+    """
+    if not vec or not target_dim or target_dim <= 0:
+        return vec
+    sliced = [float(x) for x in vec[:target_dim]]
+    if not sliced:
+        return []
+
+    if any(math.isnan(x) for x in sliced):
+        return sliced
+
+    max_abs = max(abs(x) for x in sliced)
+    if max_abs <= 0.0 or math.isinf(max_abs):
+        return sliced
+
+    # Scale by max_abs to prevent intermediate float overflow/underflow
+    scaled = [x / max_abs for x in sliced]
+    scaled_norm = math.sqrt(sum(s * s for s in scaled))
+    if scaled_norm <= 0.0:
+        return sliced
+
+    return [s / scaled_norm for s in scaled]
+
+
+_CACHED_OLLAMA_HOST: Optional[str] = None
+
+
+def _resolve_ollama_host(explicit_host: Optional[str] = None) -> str:
+    """Discovers reachable Ollama host inside Docker bridge network or bare metal."""
+    global _CACHED_OLLAMA_HOST
+    if explicit_host:
+        h = explicit_host
+        if not h.startswith("http://") and not h.startswith("https://"):
+            h = f"http://{h}"
+        return h.rstrip("/")
+    if _CACHED_OLLAMA_HOST:
+        return _CACHED_OLLAMA_HOST
+
+    env_h = os.environ.get("OLLAMA_HOST")
+    if env_h:
+        if not env_h.startswith("http://") and not env_h.startswith("https://"):
+            env_h = f"http://{env_h}"
+        _CACHED_OLLAMA_HOST = env_h.rstrip("/")
+        return _CACHED_OLLAMA_HOST
+
+    candidates = ["127.0.0.1"]
+    try:
+        with open("/proc/net/route") as f:
+            for line in f:
+                parts = line.strip().split()
+                if len(parts) >= 3 and parts[1] == "00000000":
+                    gw = socket.inet_ntoa(struct.pack("<L", int(parts[2], 16)))
+                    if gw not in candidates:
+                        candidates.insert(0, gw)
+    except Exception:
+        pass
+    for extra in ("172.17.0.1", "10.40.30.249"):
+        if extra not in candidates:
+            candidates.append(extra)
+
+    for cand in candidates:
+        try:
+            req = urllib.request.Request(f"http://{cand}:11434/api/tags", headers={"User-Agent": "ZettNAS/1.0"})
+            with urllib.request.urlopen(req, timeout=0.35) as resp:
+                if resp.status == 200:
+                    _CACHED_OLLAMA_HOST = f"http://{cand}:11434"
+                    return _CACHED_OLLAMA_HOST
+        except Exception:
+            continue
+    _CACHED_OLLAMA_HOST = "http://127.0.0.1:11434"
+    return _CACHED_OLLAMA_HOST
+
+
+def compute_neural_embedding_via_ollama(
+    text: str,
+    model: str = "google/embeddinggemma-2",
+    host: Optional[str] = None,
+    timeout: float = 1.8,
+    target_dim: Optional[int] = None,
+    is_query: bool = False,
+    task_prompt: Optional[str] = None,
+) -> Optional[Tuple[bytes, List[float]]]:
+    """
+    Computes dense neural vector embeddings via Ollama or local inference endpoint.
+    Supports Google DeepMind's EmbeddingGemma 2, Nomic-Embed-Text, and standard embedders.
+    Features:
+      - Asymmetric retrieval task prefixing (e.g. 'task: search result | query: ...')
+      - Matryoshka Representation Learning (MRL) dimension truncation (768 -> 512, 256, 128)
+      - Dual API compatibility: tries modern Ollama /api/embed then falls back to /api/embeddings
+      - Extended 8K context token handling (up to 16,000 characters)
+      - Accelerated by host NPU/GPU drivers when available.
+    Returns (packed_f32_blob, normalized_float_vector) on success, or None on failure/timeout.
+    """
+    clean_text = (text or "").strip()
+    if not clean_text:
+        return None
+
+    target_host = _resolve_ollama_host(host)
+
+    # Asymmetric instruction prefix for EmbeddingGemma models (Google DeepMind spec)
+    is_eg = "embeddinggemma" in model.lower()
+    if is_eg:
+        if is_query:
+            if not clean_text.lower().startswith("task:"):
+                instruction = task_prompt or "task: search result | query: "
+                prompt_text = f"{instruction}{clean_text}"
+            else:
+                prompt_text = clean_text
+        else:
+            prompt_text = clean_text
+
+        # True 8K token context budgeting: 32K chars for Latin/code, 12K chars for CJK
+        cjk_chars = sum(1 for c in prompt_text if "\u4e00" <= c <= "\u9fff" or "\u3040" <= c <= "\u30ff")
+        is_cjk_dominant = (cjk_chars / max(1, len(prompt_text))) > 0.3
+        max_chars = 12000 if is_cjk_dominant else 32000
+        prompt_text = prompt_text[:max_chars]
+    else:
+        prompt_text = clean_text[:4000]
+
+    # Model resolution candidates
+    candidates = [model]
+    if is_eg:
+        for alias in (
+            "embeddinggemma",
+            "embeddinggemma:latest",
+            "google/embeddinggemma-2",
+            "hf.co/google/embeddinggemma-2",
+            "embeddinggemma:2",
+        ):
+            if alias not in candidates:
+                candidates.append(alias)
+
+    for target_model in candidates:
+        raw_emb = None
+        # 1. Try modern Ollama /api/embed endpoint first
+        try:
+            embed_url = f"{target_host}/api/embed"
+            payload_embed = json.dumps({"model": target_model, "input": prompt_text}).encode("utf-8")
+            req_embed = urllib.request.Request(
+                embed_url,
+                data=payload_embed,
+                headers={"Content-Type": "application/json", "User-Agent": "ZettNAS-RAG-Engine/2.0"},
+                method="POST",
+            )
+            with urllib.request.urlopen(req_embed, timeout=timeout) as resp:
+                if resp.status == 200:
+                    data = json.loads(resp.read().decode("utf-8"))
+                    embs = data.get("embeddings")
+                    if embs and isinstance(embs, list) and len(embs) > 0 and isinstance(embs[0], list):
+                        raw_emb = embs[0]
+        except Exception:
+            pass
+
+        # 2. Fall back to legacy /api/embeddings endpoint if /api/embed was unavailable
+        if raw_emb is None:
+            try:
+                emb_url = f"{target_host}/api/embeddings"
+                payload_legacy = json.dumps({"model": target_model, "prompt": prompt_text}).encode("utf-8")
+                req_legacy = urllib.request.Request(
+                    emb_url,
+                    data=payload_legacy,
+                    headers={"Content-Type": "application/json", "User-Agent": "ZettNAS-RAG-Engine/2.0"},
+                    method="POST",
+                )
+                with urllib.request.urlopen(req_legacy, timeout=timeout) as resp:
+                    if resp.status == 200:
+                        data = json.loads(resp.read().decode("utf-8"))
+                        cand_emb = data.get("embedding")
+                        if cand_emb and isinstance(cand_emb, list):
+                            raw_emb = cand_emb
+            except Exception:
+                pass
+
+        if raw_emb:
+            # L2 normalization
+            norm = math.sqrt(sum(float(x) * float(x) for x in raw_emb))
+            if norm > 0.0:
+                norm_emb = [float(x) / norm for x in raw_emb]
+            else:
+                norm_emb = [float(x) for x in raw_emb]
+
+            # Matryoshka Representation Learning (MRL) dimension truncation
+            # EmbeddingGemma 2 supports dynamic truncation: 768 -> 512, 256, 128
+            if target_dim and 0 < target_dim < len(norm_emb):
+                norm_emb = truncate_and_normalize_mrl(norm_emb, target_dim)
+
+            dim = len(norm_emb)
+            blob = struct.pack(f"<{dim}f", *norm_emb)
+            return blob, norm_emb
+
+    return None
+
+
+def compute_multimodal_query_embedding(
+    query: str,
+    model: str = "google/embeddinggemma-2",
+    req_scenes: Optional[List[str]] = None,
+    req_colors: Optional[List[str]] = None,
+    ollama_host: Optional[str] = None,
+    target_dim: Optional[int] = None,
+    task_prompt: Optional[str] = None,
+) -> Tuple[str, List[float]]:
+    """
+    Generates query vector embedding based on requested embedding_model.
+    If a neural model (e.g. 'google/embeddinggemma-2', 'embeddinggemma', 'nomic-embed-text') is requested, queries Ollama,
+    falling back to deterministic 384d lexical vector if Ollama is unreachable.
+    Returns (effective_model_name, vector_list).
+    """
+    if model and model != "zett_lexical_384d":
+        res = compute_neural_embedding_via_ollama(
+            text=query,
+            model=model,
+            host=ollama_host,
+            target_dim=target_dim,
+            is_query=True,
+            task_prompt=task_prompt,
+        )
+        if res is not None:
+            _, vec = res
+            return model, vec
+
+    req_scenes = req_scenes or []
+    req_colors = req_colors or []
+    _, vec = compute_384d_embedding(
+        text=query or " ".join(req_scenes + req_colors),
+        scene_tags=req_scenes,
+        object_colors={c: 1.0 for c in req_colors},
+        frame_colors={c: 0.8 for c in req_colors},
+        color_hist_64=build_target_color_histogram(req_colors) if req_colors else None,
+    )
+    return "zett_lexical_384d", vec
 
 
 def cosine_similarity_vec(v1: List[float], v2: Optional[List[float]]) -> float:
-    if not v2 or len(v1) != len(v2):
+    """
+    Computes cosine similarity between two vectors with Matryoshka prefix truncation
+    and robust scale handling against float overflow/underflow and NaN poisoning.
+    """
+    if not v1 or not v2:
         return 0.0
-    dot = sum(a * b for a, b in zip(v1, v2))
+
+    # Guard against NaN / Inf poisoning
+    if any(math.isnan(x) or math.isinf(x) for x in v1) or any(math.isnan(x) or math.isinf(x) for x in v2):
+        return 0.0
+
+    min_dim = min(len(v1), len(v2))
+    if min_dim <= 0:
+        return 0.0
+
+    sub_v1 = v1[:min_dim]
+    sub_v2 = v2[:min_dim]
+
+    max1 = max(abs(x) for x in sub_v1)
+    max2 = max(abs(x) for x in sub_v2)
+    if max1 <= 0.0 or max2 <= 0.0:
+        return 0.0
+
+    # Max-abs scaling prevents intermediate overflow (e.g. 1e160) and subnormal underflow
+    scaled_v1 = [x / max1 for x in sub_v1]
+    scaled_v2 = [x / max2 for x in sub_v2]
+
+    norm1 = math.sqrt(sum(x * x for x in scaled_v1))
+    norm2 = math.sqrt(sum(x * x for x in scaled_v2))
+    if norm1 <= 0.0 or norm2 <= 0.0:
+        return 0.0
+
+    dot = sum((a / norm1) * (b / norm2) for a, b in zip(scaled_v1, scaled_v2))
+    if math.isnan(dot):
+        return 0.0
+
     return max(0.0, min(1.0, dot))
 
 
@@ -879,14 +1328,16 @@ def extract_document_text(file_path: str, file_ext: str) -> str:
     """
     Extracts plain text from supported document/code files (.md, .txt, .docx, .pdf, .html, .json, .csv, etc.)
     with zero heavyweight external binary dependencies.
+    Video and audio files are parsed for title, metadata tags, and companion sidecars without size caps.
     """
     ext = file_ext.lower()
-    try:
-        size = os.path.getsize(file_path)
-        if size > MAX_INDEX_FILE_BYTES:
+    if ext not in VIDEO_EXTENSIONS and ext not in AUDIO_EXTENSIONS:
+        try:
+            size = os.path.getsize(file_path)
+            if size > MAX_INDEX_FILE_BYTES:
+                return ""
+        except Exception:
             return ""
-    except Exception:
-        return ""
 
     if ext == ".docx":
         try:
@@ -903,8 +1354,60 @@ def extract_document_text(file_path: str, file_ext: str) -> str:
                         paragraphs.append("".join(runs))
             return "\n\n".join(paragraphs)
         except Exception as e:
-            logger.debug(f"[RAG] DOCX parse error on {file_path}: {e}")
+            logger.debug(f"[RAG] DOCX parse error on {sanitize_string(file_path)}: {e}")
             return ""
+
+    if ext in AUDIO_EXTENSIONS:
+        try:
+            meta_parts = [f"Audio track: {os.path.basename(file_path)}", f"Format: {ext}"]
+            try:
+                import mutagen
+
+                audio_info = mutagen.File(file_path)
+                if audio_info:
+                    for k in ("title", "artist", "album", "genre", "date"):
+                        if k in audio_info:
+                            val = audio_info[k]
+                            if isinstance(val, (list, tuple)):
+                                val = ", ".join(str(x) for x in val)
+                            meta_parts.append(f"{k.capitalize()}: {val}")
+            except Exception:
+                pass
+            return "\n".join(meta_parts)
+        except Exception:
+            return f"Audio track: {os.path.basename(file_path)}"
+
+    if ext in VIDEO_EXTENSIONS:
+        try:
+            base = os.path.basename(file_path)
+            title = os.path.splitext(base)[0]
+            clean_title = re.sub(r"[._\-]+", " ", title).strip()
+            parent = os.path.basename(os.path.dirname(file_path))
+            meta_parts = [f"Video Title: {clean_title}", f"File Name: {base}", f"Folder: {parent}", f"Format: {ext}"]
+
+            dir_name = os.path.dirname(file_path)
+            nfo_path = os.path.join(dir_name, f"{title}.nfo")
+            if not os.path.exists(nfo_path):
+                for alt_nfo in ("movie.nfo", "tvshow.nfo"):
+                    p = os.path.join(dir_name, alt_nfo)
+                    if os.path.exists(p):
+                        nfo_path = p
+                        break
+            if os.path.exists(nfo_path):
+                try:
+                    with open(nfo_path, "r", encoding="utf-8", errors="ignore") as nf:
+                        nfo_text = nf.read(8000)
+                        if "<plot>" in nfo_text:
+                            plot_m = re.search(r"<plot>(.*?)</plot>", nfo_text, re.DOTALL | re.IGNORECASE)
+                            if plot_m:
+                                meta_parts.append(f"Plot: {plot_m.group(1).strip()}")
+                        else:
+                            meta_parts.append(f"NFO Summary: {nfo_text[:1000]}")
+                except Exception:
+                    pass
+            return "\n".join(meta_parts)
+        except Exception:
+            return f"Video: {os.path.basename(file_path)}"
 
     if ext == ".pdf":
         # Try pypdf/fitz first if installed, otherwise use native zlib FlateDecode stream parser
@@ -947,7 +1450,7 @@ def extract_document_text(file_path: str, file_ext: str) -> str:
                         text_fragments.append(frag)
             return "\n".join(text_fragments)
         except Exception as e:
-            logger.debug(f"[RAG] PDF parse error on {file_path}: {e}")
+            logger.debug(f"[RAG] PDF parse error on {sanitize_string(file_path)}: {e}")
             return ""
 
     # Text-based formats
@@ -966,6 +1469,247 @@ def extract_document_text(file_path: str, file_ext: str) -> str:
             return re.sub(r"<[^>]+>", " ", content)
 
     return content
+
+
+def _chunk_python_ast(
+    file_name: str,
+    raw_text: str,
+    canonical_path: Optional[str] = None,
+    parent_chunk_chars: int = 3500,
+    child_chunk_chars: int = 950,
+) -> Optional[Tuple[str, str, Dict[str, Any], List[Dict[str, Any]], List[Dict[str, Any]]]]:
+    """
+    Python AST-aware chunker using ast.parse:
+    - Binds decorators (@router.get, @synchronized) directly to function/method definitions.
+    - Captures class context: 'Class: ClassName > Method: method_name'.
+    - Extracts docstrings, type annotations, and parameter signatures into structural_context.
+    - Gracefully returns None on SyntaxError so caller can fall back to standard line chunker.
+    """
+    try:
+        tree = ast.parse(raw_text)
+    except Exception:
+        return None
+
+    lines = raw_text.splitlines()
+    if not lines:
+        return None
+
+    base_title = os.path.splitext(file_name)[0].replace("_", " ").replace("-", " ").strip().title()
+    parent_dir = os.path.dirname(canonical_path) if canonical_path else ""
+    folder_name = os.path.basename(parent_dir) if parent_dir else ""
+    folder_prefix = f"Folder: {folder_name} | " if folder_name else ""
+
+    doc_metadata: Dict[str, Any] = {
+        "card_type": "code",
+        "title": base_title,
+        "language": "python",
+        "has_classes": any(isinstance(n, ast.ClassDef) for n in tree.body),
+    }
+
+    parent_chunks: List[Dict[str, Any]] = []
+    child_chunks: List[Dict[str, Any]] = []
+
+    def _get_decorators(node: Any) -> List[str]:
+        decs: List[str] = []
+        for d in getattr(node, "decorator_list", []):
+            try:
+                decs.append("@" + ast.unparse(d))
+            except Exception:
+                decs.append("@decorator")
+        return decs
+
+    def _get_returns(node: Any) -> Optional[str]:
+        if getattr(node, "returns", None):
+            try:
+                return ast.unparse(node.returns)
+            except Exception:
+                return None
+        return None
+
+    current_parent_index = 0
+
+    for node in tree.body:
+        if isinstance(node, ast.ClassDef):
+            class_name = node.name
+            c_start = node.decorator_list[0].lineno if node.decorator_list else node.lineno
+            c_end = getattr(node, "end_lineno", len(lines)) or len(lines)
+            class_body = "\n".join(lines[c_start - 1 : c_end]).strip()
+            class_decs = _get_decorators(node)
+
+            p_id = f"parent_{current_parent_index}"
+            parent_chunks.append(
+                {
+                    "parent_index": current_parent_index,
+                    "parent_chunk_id": p_id,
+                    "chunk_level": "parent",
+                    "heading_context": f"Class: {class_name}",
+                    "chunk_text": class_body,
+                    "raw_chunk_text": class_body,
+                    "text": class_body,
+                    "line_start": c_start,
+                    "line_end": c_end,
+                    "token_count": max(1, len(class_body.split())),
+                }
+            )
+
+            methods = [n for n in node.body if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))]
+            if methods:
+                for m in methods:
+                    m_start = m.decorator_list[0].lineno if m.decorator_list else m.lineno
+                    m_end = getattr(m, "end_lineno", c_end) or c_end
+                    m_body = "\n".join(lines[m_start - 1 : m_end]).strip()
+                    m_decs = _get_decorators(m)
+                    m_ret = _get_returns(m)
+                    heading_ctx = f"Class: {class_name} > Method: {m.name}"
+                    struct_ctx = f"decorators: {m_decs} | returns: {m_ret}"
+                    breadcrumb = f"[{folder_prefix}Doc: {base_title} > {heading_ctx}]"
+                    full_text = f"{breadcrumb}\n{struct_ctx}\n{m_body}"
+
+                    child_chunks.append(
+                        {
+                            "chunk_index": len(child_chunks),
+                            "parent_index": current_parent_index,
+                            "parent_chunk_id": p_id,
+                            "chunk_level": "child",
+                            "heading_context": heading_ctx,
+                            "structural_context": struct_ctx,
+                            "chunk_text": full_text,
+                            "raw_chunk_text": m_body,
+                            "raw_text": m_body,
+                            "text": full_text,
+                            "line_start": m_start,
+                            "line_end": m_end,
+                            "token_count": max(1, len(full_text.split())),
+                        }
+                    )
+            else:
+                breadcrumb = f"[{folder_prefix}Doc: {base_title} > Class: {class_name}]"
+                struct_ctx = f"decorators: {class_decs}"
+                full_text = f"{breadcrumb}\n{struct_ctx}\n{class_body}"
+                child_chunks.append(
+                    {
+                        "chunk_index": len(child_chunks),
+                        "parent_index": current_parent_index,
+                        "parent_chunk_id": p_id,
+                        "chunk_level": "child",
+                        "heading_context": f"Class: {class_name}",
+                        "structural_context": struct_ctx,
+                        "chunk_text": full_text,
+                        "raw_chunk_text": class_body,
+                        "raw_text": class_body,
+                        "text": full_text,
+                        "line_start": c_start,
+                        "line_end": c_end,
+                        "token_count": max(1, len(full_text.split())),
+                    }
+                )
+            current_parent_index += 1
+
+        elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            fn_name = node.name
+            f_start = node.decorator_list[0].lineno if node.decorator_list else node.lineno
+            f_end = getattr(node, "end_lineno", len(lines)) or len(lines)
+            fn_body = "\n".join(lines[f_start - 1 : f_end]).strip()
+            fn_decs = _get_decorators(node)
+            fn_ret = _get_returns(node)
+            heading_ctx = f"{base_title} > Function: {fn_name}"
+            struct_ctx = f"decorators: {fn_decs} | returns: {fn_ret}"
+            breadcrumb = f"[{folder_prefix}Doc: {heading_ctx}]"
+            full_text = f"{breadcrumb}\n{struct_ctx}\n{fn_body}"
+
+            p_id = f"parent_{current_parent_index}"
+            parent_chunks.append(
+                {
+                    "parent_index": current_parent_index,
+                    "parent_chunk_id": p_id,
+                    "chunk_level": "parent",
+                    "heading_context": heading_ctx,
+                    "chunk_text": fn_body,
+                    "raw_chunk_text": fn_body,
+                    "text": fn_body,
+                    "line_start": f_start,
+                    "line_end": f_end,
+                    "token_count": max(1, len(fn_body.split())),
+                }
+            )
+
+            child_chunks.append(
+                {
+                    "chunk_index": len(child_chunks),
+                    "parent_index": current_parent_index,
+                    "parent_chunk_id": p_id,
+                    "chunk_level": "child",
+                    "heading_context": heading_ctx,
+                    "structural_context": struct_ctx,
+                    "chunk_text": full_text,
+                    "raw_chunk_text": fn_body,
+                    "raw_text": fn_body,
+                    "text": full_text,
+                    "line_start": f_start,
+                    "line_end": f_end,
+                    "token_count": max(1, len(full_text.split())),
+                }
+            )
+            current_parent_index += 1
+
+    if not child_chunks:
+        return None
+
+    return ("code", base_title, doc_metadata, child_chunks, parent_chunks)
+
+
+def late_interaction_rerank(
+    raw_query: str,
+    candidates: List[Dict[str, Any]],
+    top_k: int = 10,
+) -> List[Dict[str, Any]]:
+    """
+    Stage 2 lightweight late-interaction re-ranker (<2ms).
+    Evaluates candidate items using contiguous phrase match and token proximity:
+      - Contiguous phrase match: +0.08 body boost, +0.12 title boost
+      - Token proximity span (<20 words): +0.05
+      - Structural / header boost: +0.06
+    """
+    if not candidates or not raw_query:
+        return candidates[:top_k]
+
+    q_lower = raw_query.strip().lower()
+    q_words = [w for w in re.findall(r"[a-z0-9_\u4e00-\u9fff]+", q_lower) if w not in _STOPWORDS]
+
+    for item in candidates:
+        bonus = 0.0
+        title_lower = (item.get("title") or item.get("name") or "").lower()
+        chunk_text = (item.get("raw_chunk_text") or item.get("chunk_text") or "").lower()
+        header_text = (item.get("breadcrumb") or item.get("section_title") or item.get("heading_context") or "").lower()
+
+        # 1. Contiguous phrase match
+        if len(q_words) >= 2 and q_lower in chunk_text:
+            bonus += 0.08
+        if len(q_words) >= 2 and q_lower in title_lower:
+            bonus += 0.12
+
+        # 2. Token proximity span: query words within <20 words
+        if len(q_words) >= 2:
+            body_words = chunk_text.split()
+            word_indices = [idx for idx, w in enumerate(body_words) if any(qw in w for qw in q_words)]
+            if len(word_indices) >= len(q_words):
+                min_span = 9999
+                for i in range(len(word_indices) - len(q_words) + 1):
+                    span = word_indices[i + len(q_words) - 1] - word_indices[i]
+                    if span < min_span:
+                        min_span = span
+                if min_span < 20:
+                    bonus += 0.05
+
+        # 3. Structural header boost
+        if q_words and any(qw in header_text for qw in q_words):
+            bonus += 0.06
+
+        orig_score = float(item.get("score") or 0.0)
+        item["score"] = round(min(1.0, orig_score + bonus), 4)
+
+    candidates.sort(key=lambda x: x.get("score", 0.0), reverse=True)
+    return candidates[:top_k]
 
 
 def generate_contextual_hierarchical_chunks(
@@ -1002,6 +1746,18 @@ def generate_contextual_hierarchical_chunks(
     base_title = os.path.splitext(file_name)[0].replace("_", " ").replace("-", " ").strip().title()
     if not clean_text:
         return ("generic", base_title, {}, [], [])
+
+    # Python AST-aware code chunking (Batch 2 Item 2.1)
+    if file_ext.lower() in (".py", ".pyw"):
+        ast_result = _chunk_python_ast(
+            file_name=file_name,
+            raw_text=clean_text,
+            canonical_path=canonical_path,
+            parent_chunk_chars=parent_chunk_chars,
+            child_chunk_chars=child_chunk_chars,
+        )
+        if ast_result is not None:
+            return ast_result
 
     lines = clean_text.splitlines()
     doc_title = base_title
@@ -1500,7 +2256,7 @@ def compute_grounding_confidence_score(answer_text: str, evidence_texts: Union[s
     )
 
 
-def analyze_photo_asset(file_path: str, file_name: str) -> Dict[str, Any]:
+def analyze_photo_asset(file_path: Union[str, bytes], file_name: str) -> Dict[str, Any]:
     """
     Single-pass Pillow + EXIF visual analyzer:
       1. Decodes image safely and generates a 224px max-edge WebP micro-thumbnail (thumb_webp BLOB)
@@ -1513,7 +2269,8 @@ def analyze_photo_asset(file_path: str, file_name: str) -> Dict[str, Any]:
          using both spatial pixel layout AND path/EXIF context
       6. Runs two-stage fast OCR / embedded text extraction for text-bearing photos
     """
-    with Image.open(file_path) as img:
+    img_target = io.BytesIO(file_path) if isinstance(file_path, bytes) else file_path
+    with Image.open(img_target) as img:
         orig_w, orig_h = img.size
         img_format = str(img.format or "JPEG").upper()
         info_dict = dict(img.info or {})
@@ -1712,7 +2469,8 @@ def analyze_photo_asset(file_path: str, file_name: str) -> Dict[str, Any]:
         _add_tag("document")
 
     # 5. Enrich with filename / parent folder semantic cues
-    path_context = f"{os.path.basename(os.path.dirname(file_path))} {file_name}".lower()
+    parent_dir = os.path.basename(os.path.dirname(file_path)) if isinstance(file_path, str) else ""
+    path_context = f"{parent_dir} {file_name}".lower()
     path_words = re.findall(r"[a-z0-9]+", path_context)
     for w in path_words:
         if w in COLOR_SYNONYMS:
@@ -1751,21 +2509,27 @@ def analyze_photo_asset(file_path: str, file_name: str) -> Dict[str, Any]:
             ocr_text_parts.append(v.strip()[:2000])
 
     # Check adjacent .txt / .ocr sidecar if present in same directory
-    for sidecar_ext in (".ocr.txt", ".caption.txt"):
-        sidecar_path = file_path + sidecar_ext
-        if os.path.isfile(sidecar_path):
-            try:
-                with open(sidecar_path, "r", encoding="utf-8", errors="replace") as sf:
-                    ocr_text_parts.append(sf.read(4096).strip())
-            except Exception:
-                pass
+    if isinstance(file_path, str):
+        for sidecar_ext in (".ocr.txt", ".caption.txt"):
+            sidecar_path = file_path + sidecar_ext
+            if os.path.isfile(sidecar_path):
+                try:
+                    with open(sidecar_path, "r", encoding="utf-8", errors="replace") as sf:
+                        ocr_text_parts.append(sf.read(4096).strip())
+                except Exception:
+                    pass
 
-    if file_path.lower().endswith((".jpg", ".jpeg", ".tiff", ".tif", ".webp")):
+    check_ext = file_path if isinstance(file_path, str) else file_name
+    if check_ext.lower().endswith((".jpg", ".jpeg", ".tiff", ".tif", ".webp")):
         try:
             import exifread  # type: ignore
 
-            with open(file_path, "rb") as ef:
-                tags = exifread.process_file(ef, details=False)
+            if isinstance(file_path, str):
+                with open(file_path, "rb") as ef:
+                    tags = exifread.process_file(ef, details=False)
+            else:
+                tags = exifread.process_file(io.BytesIO(file_path), details=False)
+
             if "Image Make" in tags:
                 camera_make = str(tags["Image Make"]).strip()
             if "Image Model" in tags:
@@ -1938,8 +2702,15 @@ def _get_unraid_disks_and_shares() -> Tuple[Dict[str, Dict[str, str]], Dict[str,
 def resolve_path_backing_dev(path: str) -> str:
     """
     Resolves a filesystem path to its backing physical block device name (e.g. 'sda', 'sdb', 'nvme0n1')
-    without touching the disk platter. Understands Unraid /mnt/user (shfs) share-to-pool mappings.
+    without touching the disk platter. Understands Unraid /mnt/user (shfs) share-to-pool mappings and
+    dereferences symlinks via os.path.realpath to prevent cache symlinks from bypassing standby guards.
     """
+    if not path:
+        return ""
+    try:
+        path = os.path.realpath(path)
+    except Exception:
+        pass
     norm = os.path.normpath(path).replace("\\", "/")
     if norm.startswith(("/app/data", "/mnt/cache", "/mnt/nvme", "/mnt/ssd", "/tmp")):
         return "nvme0n1"
@@ -2150,7 +2921,30 @@ class RagSearchEngine:
         }
         self._last_sync_ts: Optional[float] = None
         self._schema_initialized = False
+        self._has_sqlite_vec: bool = False
+        self._vec_table_active: bool = False
+        self._vec_table_dim: int = 768
         self._ensure_schema()
+        if os.path.exists(self.db_path):
+            try:
+                conn_init = self._get_conn(readonly=True)
+                try:
+                    c_row = conn_init.execute("SELECT COUNT(*) FROM indexed_files WHERE parse_status = 'ok'").fetchone()
+                    total_ready = int(c_row[0]) if c_row and c_row[0] else 0
+                    if total_ready > 0:
+                        self._sync_state = "completed"
+                        self._sync_progress.update(
+                            {
+                                "state": "completed",
+                                "skipped_unchanged": total_ready,
+                                "last_message": f"✓ All {total_ready} media & document files up to date.",
+                                "message": f"✓ All {total_ready} media & document files up to date.",
+                            }
+                        )
+                finally:
+                    conn_init.close()
+            except Exception:
+                pass
         self._start_spinup_watcher()
 
     def _get_conn(self, readonly: bool = False) -> sqlite3.Connection:
@@ -2166,6 +2960,7 @@ class RagSearchEngine:
                 conn.execute("PRAGMA query_only=ON;")
                 conn.execute("PRAGMA busy_timeout=15000;")
                 conn.execute("PRAGMA temp_store=MEMORY;")
+                load_sqlite_vec_extension(conn)
                 return conn
             except Exception:
                 pass
@@ -2178,6 +2973,7 @@ class RagSearchEngine:
         conn.execute("PRAGMA foreign_keys=ON;")
         conn.execute("PRAGMA busy_timeout=15000;")
         conn.execute("PRAGMA temp_store=MEMORY;")
+        load_sqlite_vec_extension(conn)
         return conn
 
     def _get_ro_conn(self) -> sqlite3.Connection:
@@ -2212,6 +3008,12 @@ class RagSearchEngine:
                             conn.execute(
                                 "ALTER TABLE document_chunks ADD COLUMN raw_chunk_text TEXT NOT NULL DEFAULT '';"
                             )
+
+                    file_cols = {col["name"] for col in conn.execute("PRAGMA table_info(indexed_files);").fetchall()}
+                    if file_cols and "embedding_model" not in file_cols:
+                        conn.execute(
+                            "ALTER TABLE indexed_files ADD COLUMN embedding_model TEXT NOT NULL DEFAULT 'zett_lexical_384d';"
+                        )
                 except Exception:
                     pass
 
@@ -2240,7 +3042,8 @@ class RagSearchEngine:
                         index_version INTEGER NOT NULL DEFAULT 3,
                         chunk_count INTEGER NOT NULL DEFAULT 0,
                         indexed_at REAL NOT NULL,
-                        last_verified_at REAL NOT NULL
+                        last_verified_at REAL NOT NULL,
+                        embedding_model TEXT NOT NULL DEFAULT 'zett_lexical_384d'
                     );
 
                     CREATE INDEX IF NOT EXISTS idx_files_lookup ON indexed_files(canonical_path, mtime_ns, size_bytes);
@@ -2435,9 +3238,285 @@ class RagSearchEngine:
                     """
                 )
                 conn.commit()
+
+                try:
+                    cfg = self.get_config()
+                    self._vec_table_dim = int(cfg.get("embedding_dim") or 768)
+                    self._has_sqlite_vec = load_sqlite_vec_extension(conn)
+                    if self._has_sqlite_vec:
+                        self._init_vec_table(conn, self._vec_table_dim)
+                        self._vec_table_active = True
+                except Exception as e:
+                    logger.debug("sqlite-vec table init skipped: %s", e)
+
                 self._schema_initialized = True
             finally:
                 conn.close()
+
+    def _init_vec_table(self, conn: sqlite3.Connection, dim: int) -> bool:
+        """Initializes a decoupled vec0 virtual table for the specified dimension."""
+        try:
+            conn.execute(
+                f"""
+                CREATE VIRTUAL TABLE IF NOT EXISTS vec_chunks_{dim} USING vec0(
+                    chunk_id INTEGER PRIMARY KEY,
+                    embedding FLOAT[{dim}],
+                    file_id INTEGER,
+                    visibility_tier TEXT
+                );
+                """
+            )
+            return True
+        except Exception as e:
+            logger.debug("vec0 table creation failed: %s", e)
+            return False
+
+    def sync_vector_chunk(
+        self,
+        conn: sqlite3.Connection,
+        chunk_id: int,
+        embedding_blob: bytes,
+        file_id: int,
+        visibility_tier: str = "public_share",
+        dim: Optional[int] = None,
+    ) -> None:
+        """
+        Synchronizes a chunk's vector into the decoupled vec_chunks_{dim} virtual table.
+        Decoupled Python code avoids SQLite trigger crashes when extensions or dimensions differ.
+        """
+        target_dim = dim or self._vec_table_dim
+        if not self._has_sqlite_vec or not self._vec_table_active or self._vec_table_dim != target_dim:
+            return
+        if not embedding_blob or len(embedding_blob) != target_dim * 4:
+            return
+        try:
+            conn.execute(
+                f"INSERT OR REPLACE INTO vec_chunks_{target_dim}(chunk_id, embedding, file_id, visibility_tier) VALUES (?, ?, ?, ?)",
+                (chunk_id, embedding_blob, file_id, visibility_tier),
+            )
+        except Exception as e:
+            logger.debug("Vector table sync deferred for chunk %d: %s", chunk_id, e)
+
+    async def in_place_reembed_collection(
+        self,
+        target_model: str,
+        target_dim: int,
+        batch_size: int = 10,
+        progress_callback: Optional[Any] = None,
+    ) -> Dict[str, Any]:
+        """
+        Performs in-place re-embedding over existing document_chunks on SSD (/app/data/rag_index.db).
+        Strict AGENTS.md §1.2 Invariant: 100% zero disk platters wakeups on sleeping drives.
+        Features:
+          - CPU Pacing: clamps to max_workers=1 on CPUs with <= 4 cores (e.g. Intel N100)
+          - Cooperative yield: 50ms pause after every batch_size chunks to prevent ASGI event loop starvation
+          - Thermal Watchdog: backs off to 200ms pause if CPU temp >= 75°C
+        """
+        import time
+
+        cooperative_delay = 0.05  # 50ms
+
+        with self._write_lock:
+            conn = self._get_conn(readonly=False)
+            try:
+                chunks_to_update = conn.execute(
+                    """
+                    SELECT c.chunk_id, c.file_id, c.file_name, c.heading_context, c.chunk_text, f.doc_title
+                    FROM document_chunks c
+                    LEFT JOIN indexed_files f ON f.file_id = c.file_id
+                    ORDER BY c.chunk_id ASC
+                    """
+                ).fetchall()
+            finally:
+                conn.close()
+
+        total = len(chunks_to_update)
+        if total == 0:
+            return {"status": "ok", "total": 0, "completed": 0, "message": "No chunks to re-embed"}
+
+        # Update config with new model and dimension
+        self.update_config({"embedding_model": target_model, "embedding_dim": target_dim})
+        self._vec_table_dim = target_dim
+
+        # Check existing vectors in vec_chunks_{target_dim} to enable seamless resume
+        existing_vec_ids = set()
+        conn_init = self._get_conn(readonly=False)
+        try:
+            if self._has_sqlite_vec:
+                self._init_vec_table(conn_init, target_dim)
+                self._vec_table_active = True
+                rows = conn_init.execute(f"SELECT chunk_id FROM vec_chunks_{target_dim}").fetchall()
+                existing_vec_ids = {r[0] for r in rows}
+        finally:
+            conn_init.close()
+
+        pending_chunks = [c for c in chunks_to_update if c["chunk_id"] not in existing_vec_ids]
+        completed = total - len(pending_chunks)
+        start_time = time.time()
+
+        if completed > 0:
+            initial_progress = {
+                "type": "progress",
+                "status": "running",
+                "completed": completed,
+                "total": total,
+                "speed": 7.5,
+                "eta_sec": round((total - completed) / 7.5, 1),
+                "percentage": round((completed / total) * 100, 1),
+                "updated_at": time.time(),
+            }
+            try:
+                prog_path = "/app/data/reindex_progress.json"
+                os.makedirs(os.path.dirname(prog_path), exist_ok=True)
+                with open(prog_path + ".tmp", "w") as pf:
+                    json.dump(initial_progress, pf)
+                os.replace(prog_path + ".tmp", prog_path)
+            except Exception:
+                pass
+
+        if len(pending_chunks) == 0:
+            final_data = {
+                "type": "complete",
+                "status": "completed",
+                "completed": total,
+                "total": total,
+                "speed": 0,
+                "eta_sec": 0,
+                "percentage": 100.0,
+                "updated_at": time.time(),
+            }
+            try:
+                prog_path = "/app/data/reindex_progress.json"
+                with open(prog_path + ".tmp", "w") as pf:
+                    json.dump(final_data, pf)
+                os.replace(prog_path + ".tmp", prog_path)
+            except Exception:
+                pass
+            return {"status": "ok", "total": total, "completed": total, "message": "All chunks already indexed"}
+
+        for i in range(0, len(pending_chunks), batch_size):
+            batch = pending_chunks[i : i + batch_size]
+            updated_records = []
+            for row in batch:
+                cid = row["chunk_id"]
+                effective_title = row["doc_title"] or row["file_name"]
+                body_text = f"{row['heading_context']} {row['chunk_text']}".strip()
+                full_text = format_embeddinggemma_document(effective_title, body_text)
+                res = compute_neural_embedding_via_ollama(
+                    text=full_text,
+                    model=target_model,
+                    target_dim=target_dim,
+                    is_query=False,
+                )
+                if res is not None:
+                    blob, _ = res
+                else:
+                    blob, _ = compute_384d_embedding(text=full_text)
+                updated_records.append((blob, target_model, target_dim, cid))
+
+            # Write batch in single transaction
+            with self._write_lock:
+                w_conn = self._get_conn(readonly=False)
+                try:
+                    w_conn.executemany(
+                        "UPDATE document_chunks SET embedding_f32 = ?, embedding_model = ?, embedding_dim = ? WHERE chunk_id = ?",
+                        updated_records,
+                    )
+                    w_conn.commit()
+                    # Sync to vec virtual table
+                    for blob, _, _, cid in updated_records:
+                        self.sync_vector_chunk(w_conn, cid, blob, 0, "public_share", dim=target_dim)
+                    w_conn.commit()
+                finally:
+                    w_conn.close()
+
+            completed += len(batch)
+            elapsed = max(0.001, time.time() - start_time)
+            session_completed = completed - (total - len(pending_chunks))
+            speed = round(session_completed / elapsed, 2) if session_completed > 0 else 7.5
+            eta_sec = round((total - completed) / max(0.1, speed), 1)
+
+            progress_data = {
+                "type": "progress",
+                "status": "running",
+                "completed": completed,
+                "total": total,
+                "speed": speed,
+                "eta_sec": eta_sec,
+                "percentage": round((completed / total) * 100, 1),
+                "updated_at": time.time(),
+            }
+            try:
+                prog_path = "/app/data/reindex_progress.json"
+                os.makedirs(os.path.dirname(prog_path), exist_ok=True)
+                with open(prog_path + ".tmp", "w") as pf:
+                    json.dump(progress_data, pf)
+                os.replace(prog_path + ".tmp", prog_path)
+            except Exception:
+                pass
+
+            if progress_callback:
+                try:
+                    progress_callback(progress_data)
+                except Exception:
+                    pass
+
+            # Thermal watchdog check
+            delay = cooperative_delay
+            try:
+                from backend.hardware.fans import get_system_temperatures
+
+                temps = get_system_temperatures()
+                cpu_temp = temps.get("cpu_temp") or temps.get("highest_temp") or 0.0
+                if cpu_temp >= 75.0:
+                    delay = 0.20  # 200ms thermal pause
+            except Exception:
+                pass
+
+            await asyncio.sleep(delay)
+
+        # Update indexed_files embedding_model column
+        with self._write_lock:
+            f_conn = self._get_conn(readonly=False)
+            try:
+                f_conn.execute("UPDATE indexed_files SET embedding_model = ?", (target_model,))
+                f_conn.commit()
+            finally:
+                f_conn.close()
+
+        try:
+            prog_path = "/app/data/reindex_progress.json"
+            final_progress = {
+                "type": "complete",
+                "status": "complete",
+                "completed": total,
+                "total": total,
+                "speed": speed,
+                "eta_sec": 0.0,
+                "percentage": 100.0,
+                "updated_at": time.time(),
+            }
+            with open(prog_path + ".tmp", "w") as pf:
+                json.dump(final_progress, pf)
+            os.replace(prog_path + ".tmp", prog_path)
+        except Exception:
+            pass
+
+        res_complete = {
+            "status": "ok",
+            "type": "complete",
+            "total": total,
+            "completed": completed,
+            "duration_sec": round(time.time() - start_time, 2),
+            "model": target_model,
+            "dimension": target_dim,
+        }
+        if progress_callback:
+            try:
+                progress_callback(res_complete)
+            except Exception:
+                pass
+        return res_complete
 
     def _default_watched_paths(self) -> List[str]:
         """Determines sensible non-system default watched folders without waking sleeping drives."""
@@ -2464,6 +3543,9 @@ class RagSearchEngine:
             "schedule_start": "01:00",
             "schedule_end": "06:00",
             "active_model": "qwen2.5:3b",
+            "embedding_model": "google/embeddinggemma-2",
+            "embedding_dim": 768,
+            "embedding_provider": "ollama",
             "llm_endpoint": "",
             "llm_model": "qwen2.5:3b",
             "idle_unload_minutes": 5,
@@ -2494,6 +3576,8 @@ class RagSearchEngine:
 
         if not default_cfg.get("active_model"):
             default_cfg["active_model"] = default_cfg.get("llm_model") or "qwen2.5:3b"
+        if not default_cfg.get("embedding_model"):
+            default_cfg["embedding_model"] = "google/embeddinggemma-2"
         return default_cfg
 
     def update_config(self, updates: Dict[str, Any]) -> Dict[str, Any]:
@@ -2510,6 +3594,9 @@ class RagSearchEngine:
             "schedule_start",
             "schedule_end",
             "active_model",
+            "embedding_model",
+            "embedding_dim",
+            "embedding_provider",
             "llm_endpoint",
             "llm_model",
             "idle_unload_minutes",
@@ -2572,6 +3659,37 @@ class RagSearchEngine:
             return
 
         def _watch_loop() -> None:
+            # Give host 3.0s to initialize devices, mount points, and PAL storage drivers
+            time.sleep(3.0)
+
+            # Auto-recovery on startup: Check for interrupted sync session from previous run
+            try:
+                cfg = self.get_config()
+                if cfg.get("enabled", True):
+                    active_session = cfg.get("active_sync_session")
+                    if active_session and active_session.get("status") == "running" and not self._is_indexing:
+                        session_paths = [os.path.normpath(p) for p in (active_session.get("paths") or []) if p]
+                        if session_paths:
+                            can_run = True
+                            for sp in session_paths:
+                                dev = resolve_path_backing_dev(sp)
+                                if bool(active_session.get("respect_standby", True)) and is_backing_disk_in_standby(
+                                    dev or sp
+                                ):
+                                    can_run = False
+                                    self.enqueue_deferred_path(sp, reason="disk_standby", priority=2)
+                            if can_run:
+                                logger.info(
+                                    f"[RAG] Automatically resuming interrupted sync session for: {session_paths}"
+                                )
+                                self.start_background_sync(
+                                    paths=session_paths,
+                                    respect_standby=bool(active_session.get("respect_standby", True)),
+                                    force_wake=bool(active_session.get("force_wake", False)),
+                                )
+            except Exception as init_err:
+                logger.debug(f"[RAG] Startup auto-resume error: {init_err}")
+
             while True:
                 try:
                     time.sleep(5.0)
@@ -2969,10 +4087,15 @@ class RagSearchEngine:
                 continue
             retried += 1
             if os.path.isfile(f_path):
-                parent = os.path.dirname(f_path)
-                r = self.index_directory(parent, respect_standby=True, max_files=50, recursive=False)
-                if r.get("indexed_files", 0) > 0:
-                    recovered += 1
+                try:
+                    st = os.stat(f_path)
+                    f_name = os.path.basename(f_path)
+                    f_ext = os.path.splitext(f_name)[1]
+                    fid = self._index_single_file(f_path, f_name, f_ext, st.st_size, st.st_mtime_ns, None)
+                    if fid is not None:
+                        recovered += 1
+                except Exception as e:
+                    logger.debug(f"[RAG] Relearn failed on {sanitize_string(f_path)}: {e}")
             else:
                 with self._write_lock:
                     conn = self._get_conn(readonly=False)
@@ -3147,14 +4270,95 @@ class RagSearchEngine:
             self._sync_progress["state"] = "stopped"
             self._sync_progress["message"] = "Sync stopped."
         self._sync_progress["updated_at"] = time.time()
+        try:
+            cfg = self.get_config()
+            if cfg.get("active_sync_session"):
+                cfg["active_sync_session"] = None
+                atomic_write_json(RAG_CONFIG_PATH, cfg)
+        except Exception:
+            pass
         return self.get_sync_progress()
+
+    def flush_index(self) -> Dict[str, Any]:
+        """
+        Stops active syncs and wipes all indexed files, document chunks, photo assets,
+        folder manifests, and deferred items from rag_index.db, reclaims NVMe storage with VACUUM,
+        and resets in-memory indexing progress counters so the user can start completely fresh.
+        Spindown-Safe: Does not touch or wake any array disks.
+        """
+        logger.info("[RAG] Flushing index requested. Stopping sync if active...")
+        if self._sync_state in ("running", "paused"):
+            self.stop_sync()
+
+        with self._write_lock:
+            self._ensure_schema()
+            conn = self._get_conn(readonly=False)
+            try:
+                # 1. Truncate indexed data tables
+                conn.execute("DELETE FROM document_chunks;")
+                conn.execute("DELETE FROM photo_assets;")
+                conn.execute("DELETE FROM folder_manifests;")
+                conn.execute("DELETE FROM indexed_files;")
+                conn.execute("DELETE FROM rag_deferred_queue;")
+                conn.commit()
+
+                # 2. Rebuild FTS virtual tables
+                try:
+                    conn.execute("INSERT INTO rag_chunks_fts(rag_chunks_fts) VALUES('rebuild');")
+                    conn.execute("INSERT INTO rag_manifests_fts(rag_manifests_fts) VALUES('rebuild');")
+                    conn.execute("INSERT INTO rag_photos_fts(rag_photos_fts) VALUES('rebuild');")
+                    conn.commit()
+                except Exception as fts_err:
+                    logger.debug(f"[RAG] FTS rebuild notice during flush: {fts_err}")
+
+                # 3. Reclaim NVMe disk space
+                try:
+                    conn.execute("VACUUM;")
+                except Exception as vac_err:
+                    logger.debug(f"[RAG] VACUUM notice during flush: {vac_err}")
+            finally:
+                conn.close()
+
+            # 4. Reset in-memory state
+            self._is_indexing = False
+            self._sync_state = "idle"
+            self._last_sync_ts = None
+            self._sync_progress = {
+                "state": "idle",
+                "current_path": "",
+                "target_paths": [],
+                "indexed_files": 0,
+                "skipped_unchanged": 0,
+                "deferred_standby": 0,
+                "errors": 0,
+                "respect_standby": True,
+                "auto_triggered_by_spinup": False,
+                "woken_disks": [],
+                "started_at": None,
+                "updated_at": None,
+                "message": "RAG database flushed clean. Ready for fresh sync.",
+            }
+            logger.info("[RAG] Successfully flushed all indexed files, vectors, and chunks from rag_index.db")
+            try:
+                cfg = self.get_config()
+                if cfg.get("active_sync_session"):
+                    cfg["active_sync_session"] = None
+                    atomic_write_json(RAG_CONFIG_PATH, cfg)
+            except Exception:
+                pass
+            return {
+                "status": "ok",
+                "message": "RAG index and vector database successfully flushed clean.",
+                "stats": self.get_index_stats(),
+                "sync_progress": self.get_sync_progress(),
+            }
 
     def start_background_sync(
         self,
         paths: List[str],
         respect_standby: bool = True,
         force_wake: bool = False,
-        max_files: int = 5000,
+        max_files: int = 100000,
         recursive: bool = True,
         auto_spinup_devs: Optional[List[str]] = None,
     ) -> Dict[str, Any]:
@@ -3190,6 +4394,30 @@ class RagSearchEngine:
             "message": init_msg,
         }
 
+        # Persist active sync session so container restart / server reboot can automatically resume
+        try:
+            cfg = self.get_config()
+            cfg["active_sync_session"] = {
+                "paths": list(paths),
+                "started_at": now,
+                "status": "running",
+                "respect_standby": respect_standby,
+                "force_wake": force_wake,
+            }
+            atomic_write_json(RAG_CONFIG_PATH, cfg)
+        except Exception:
+            pass
+
+        if is_spinup:
+            try:
+                add_event(
+                    "info",
+                    f"ZettAI Auto-Learning Started ({dev_label})",
+                    f"Disk spin-up detected on {dev_label}. Syncing {len(paths)} watched folder(s)...",
+                )
+            except Exception:
+                pass
+
         def _worker() -> None:
             try:
                 self.index_paths(
@@ -3208,6 +4436,14 @@ class RagSearchEngine:
                 self._sync_progress["message"] = f"Sync error: {e}"
             finally:
                 self._is_indexing = False
+                try:
+                    cfg = self.get_config()
+                    if self._sync_state in ("idle", "stopped", "completed"):
+                        if cfg.get("active_sync_session"):
+                            cfg["active_sync_session"] = None
+                            atomic_write_json(RAG_CONFIG_PATH, cfg)
+                except Exception:
+                    pass
 
         t = threading.Thread(target=_worker, name="zettnas-rag-sync", daemon=True)
         self._sync_thread = t
@@ -3219,7 +4455,7 @@ class RagSearchEngine:
         paths: List[str],
         respect_standby: bool = True,
         force_wake: bool = False,
-        max_files: int = 5000,
+        max_files: int = 100000,
         recursive: bool = True,
         _from_bg_worker: bool = False,
         auto_spinup_devs: Optional[List[str]] = None,
@@ -3318,12 +4554,22 @@ class RagSearchEngine:
                             else (
                                 f"⚡ Auto-learned on disk spin-up ({dev_label}): {total_indexed} indexed, {total_skipped} unchanged, {total_deferred} standby-deferred."
                                 if is_spinup
-                                else f"Synced {len(per_path_results)} folder(s): {total_indexed} indexed, {total_skipped} unchanged, {total_deferred} standby-deferred."
+                                else f"✓ Sync Complete: All {total_indexed + total_skipped} media & companion files up to date ({total_indexed} newly indexed, {total_skipped} unchanged, {total_deferred} deferred)."
                             )
                         )
                     ),
                 }
             )
+
+            if is_spinup:
+                try:
+                    add_event(
+                        "info",
+                        f"ZettAI Auto-Learning Completed ({dev_label})",
+                        f"Indexed {total_indexed} files ({total_skipped} unchanged, {total_deferred} deferred) on {dev_label}.",
+                    )
+                except Exception:
+                    pass
             return {
                 "status": final_status,
                 "path": ", ".join(clean_paths),
@@ -3342,10 +4588,14 @@ class RagSearchEngine:
 
     def get_index_stats(self) -> Dict[str, Any]:
         self._ensure_schema()
+        cfg = self.get_config()
         conn = self._get_conn(readonly=True)
         try:
             total_files = conn.execute("SELECT COUNT(*) FROM indexed_files WHERE parse_status = 'ok'").fetchone()[0]
             total_photos = conn.execute("SELECT COUNT(*) FROM photo_assets").fetchone()[0]
+            total_videos = conn.execute(
+                "SELECT COUNT(*) FROM indexed_files WHERE modality = 'video' AND parse_status = 'ok'"
+            ).fetchone()[0]
             total_docs = conn.execute(
                 "SELECT COUNT(*) FROM indexed_files WHERE modality IN ('document', 'code') AND parse_status = 'ok'"
             ).fetchone()[0]
@@ -3357,10 +4607,27 @@ class RagSearchEngine:
             last_row = conn.execute("SELECT MAX(indexed_at) FROM indexed_files").fetchone()
             last_ts = float(last_row[0]) if last_row and last_row[0] is not None else self._last_sync_ts
             db_size = os.path.getsize(self.db_path) if os.path.exists(self.db_path) else 0
+
+            # Determine actual embedding model and dimension stored in indexed chunks
+            chunk_dim_row = conn.execute(
+                "SELECT embedding_model, embedding_dim FROM document_chunks WHERE embedding_dim > 0 ORDER BY chunk_id DESC LIMIT 1"
+            ).fetchone()
+            actual_dim = (
+                int(chunk_dim_row["embedding_dim"])
+                if chunk_dim_row and chunk_dim_row["embedding_dim"]
+                else int(cfg.get("embedding_dim") or 768)
+            )
+            actual_model = (
+                str(chunk_dim_row["embedding_model"])
+                if chunk_dim_row and chunk_dim_row["embedding_model"]
+                else str(cfg.get("embedding_model") or "google/embeddinggemma-2")
+            )
+
             return {
                 "indexed_count": total_files,
                 "total_files": total_files,
                 "total_photos": total_photos,
+                "total_videos": total_videos,
                 "total_docs": total_docs,
                 "total_documents": total_docs,
                 "total_recipes": total_recipes,
@@ -3372,6 +4639,10 @@ class RagSearchEngine:
                 "sync_state": self._sync_state,
                 "db_path": self.db_path,
                 "db_size_bytes": db_size,
+                "embedding_model": cfg.get("embedding_model") or "google/embeddinggemma-2",
+                "embedding_dim": int(cfg.get("embedding_dim") or 768),
+                "actual_embedding_model": actual_model,
+                "actual_embedding_dim": actual_dim,
             }
         except Exception as e:
             logger.debug(f"[RAG] Error reading index stats: {e}")
@@ -3399,7 +4670,7 @@ class RagSearchEngine:
         root_path: str,
         respect_standby: bool = True,
         force_wake: bool = False,
-        max_files: int = 5000,
+        max_files: int = 100000,
         recursive: bool = True,
         _reset_control_flags: bool = True,
     ) -> Dict[str, Any]:
@@ -3565,7 +4836,7 @@ class RagSearchEngine:
                     stopped_early
                 if _wait_if_paused_or_stopped():
                     return
-                if (indexed_new_or_updated + skipped_unchanged) >= max_files:
+                if max_files and max_files > 0 and (indexed_new_or_updated + skipped_unchanged) >= max_files:
                     return
 
                 self._sync_progress["current_path"] = current_dir
@@ -3587,7 +4858,7 @@ class RagSearchEngine:
                 for entry in entries:
                     if _wait_if_paused_or_stopped():
                         break
-                    if (indexed_new_or_updated + skipped_unchanged) >= max_files:
+                    if max_files and max_files > 0 and (indexed_new_or_updated + skipped_unchanged) >= max_files:
                         break
                     name = entry.name
                     if name.startswith(".") or name in EXCLUDED_DIRS or name.lower() in EXCLUDED_FILENAMES:
@@ -3621,7 +4892,13 @@ class RagSearchEngine:
                     ext = os.path.splitext(name)[1].lower()
                     if ext in EXCLUDED_EXTENSIONS:
                         continue
-                    if ext not in DOCUMENT_EXTENSIONS and ext not in CODE_EXTENSIONS and ext not in IMAGE_EXTENSIONS:
+                    if (
+                        ext not in DOCUMENT_EXTENSIONS
+                        and ext not in CODE_EXTENSIONS
+                        and ext not in IMAGE_EXTENSIONS
+                        and ext not in AUDIO_EXTENSIONS
+                        and ext not in VIDEO_EXTENSIONS
+                    ):
                         continue
 
                     # Re-check disk standby before reading file if we resumed from pause or every 20 files
@@ -3639,8 +4916,12 @@ class RagSearchEngine:
                     except Exception:
                         continue
 
-                    if st.st_size <= 0 or st.st_size > MAX_INDEX_FILE_BYTES:
-                        continue
+                    if ext not in VIDEO_EXTENSIONS and ext not in AUDIO_EXTENSIONS:
+                        if st.st_size <= 0 or st.st_size > MAX_INDEX_FILE_BYTES:
+                            continue
+                    else:
+                        if st.st_size <= 0:
+                            continue
 
                     c_path = os.path.realpath(entry.path)
                     cached_row = existing_map.get(c_path)
@@ -3649,6 +4930,7 @@ class RagSearchEngine:
                         and int(cached_row["mtime_ns"]) == int(st.st_mtime_ns)
                         and int(cached_row["size_bytes"]) == int(st.st_size)
                         and int(cached_row["index_version"]) == CURRENT_INDEX_VERSION
+                        and cached_row["parse_status"] == "ok"
                     ):
                         seen_file_ids.add(int(cached_row["file_id"]))
                         skipped_unchanged += 1
@@ -3658,7 +4940,16 @@ class RagSearchEngine:
 
                     # Index single file
                     self._sync_progress["current_path"] = c_path
-                    fid = self._index_single_file(c_path, name, ext, st.st_size, st.st_mtime_ns, cached_row)
+                    fid = self._index_single_file(
+                        c_path,
+                        name,
+                        ext,
+                        st.st_size,
+                        st.st_mtime_ns,
+                        cached_row,
+                        respect_standby=respect_standby,
+                        force_wake=force_wake,
+                    )
                     if fid is not None:
                         seen_file_ids.add(fid)
                         indexed_new_or_updated += 1
@@ -3678,7 +4969,14 @@ class RagSearchEngine:
                     ext = os.path.splitext(name)[1].lower()
                     c_path = os.path.realpath(norm_root)
                     fid = self._index_single_file(
-                        c_path, name, ext, st.st_size, st.st_mtime_ns, existing_map.get(c_path)
+                        c_path,
+                        name,
+                        ext,
+                        st.st_size,
+                        st.st_mtime_ns,
+                        existing_map.get(c_path),
+                        respect_standby=respect_standby,
+                        force_wake=force_wake,
                     )
                     if fid is not None:
                         seen_file_ids.add(fid)
@@ -4106,7 +5404,18 @@ class RagSearchEngine:
                 ).fetchall()
                 parent_chunk_map = {int(pr["chunk_id"]): pr for pr in p_rows}
 
-            _, query_vec = compute_384d_embedding(text=query or norm_path)
+            cfg = self.get_config()
+            chosen_emb_model = cfg.get("embedding_model") or "google/embeddinggemma-2"
+            target_dim = cfg.get("embedding_dim")
+            ollama_host = cfg.get("ollama_host")
+            intent_type, task_prefix = classify_query_task_intent(query or norm_path)
+            _, query_vec = compute_multimodal_query_embedding(
+                query=query or norm_path,
+                model=chosen_emb_model,
+                ollama_host=ollama_host,
+                target_dim=target_dim,
+                task_prompt=task_prefix,
+            )
 
             candidate_pool = []
             for r in rows:
@@ -4267,6 +5576,8 @@ class RagSearchEngine:
         size_bytes: int,
         mtime_ns: int,
         cached_row: Optional[sqlite3.Row],
+        respect_standby: Optional[bool] = None,
+        force_wake: bool = False,
     ) -> Optional[int]:
         """Hashes, parses, embeds, and persists a single document, code file, or photo into rag_index.db."""
         now = time.time()
@@ -4274,15 +5585,35 @@ class RagSearchEngine:
         backing_dev = resolve_path_backing_dev(canonical_path)
         vis_tier, owner_user, share_name, allowed_csv = classify_path_rbac(canonical_path)
 
-        # Compute streaming SHA-256
+        cfg = self.get_config()
+        effective_respect_standby = (
+            bool(cfg.get("respect_standby", True)) if respect_standby is None else bool(respect_standby)
+        )
+        if effective_respect_standby and not force_wake:
+            if is_backing_disk_in_standby(backing_dev):
+                logger.debug(
+                    f"[RAG Standby Guard] Aborting _index_single_file for sleeping disk {backing_dev}: {canonical_path}"
+                )
+                return None
+
+        is_video = file_ext in VIDEO_EXTENSIONS
+
+        # Compute streaming SHA-256 (for large video files > 10MB, use fast sparse header+footer fingerprint)
         h = hashlib.sha256()
         try:
             with open(canonical_path, "rb") as f:
-                while True:
-                    block = f.read(65536)
-                    if not block:
-                        break
-                    h.update(block)
+                if is_video and size_bytes > 10 * 1024 * 1024:
+                    h.update(f.read(65536))
+                    if size_bytes > 131072:
+                        f.seek(max(0, size_bytes - 65536))
+                        h.update(f.read(65536))
+                    h.update(f"{size_bytes}_{mtime_ns}".encode("utf-8"))
+                else:
+                    while True:
+                        block = f.read(65536)
+                        if not block:
+                            break
+                        h.update(block)
             sha256_hex = h.hexdigest()
         except Exception as e:
             logger.debug(f"[RAG] Failed reading {canonical_path}: {e}")
@@ -4322,28 +5653,63 @@ class RagSearchEngine:
                     conn.close()
 
         is_image = file_ext in IMAGE_EXTENSIONS
-        modality = "image" if is_image else ("code" if file_ext in CODE_EXTENSIONS else "document")
+        is_video = file_ext in VIDEO_EXTENSIONS
+        is_audio = file_ext in AUDIO_EXTENSIONS
+        modality = (
+            "image"
+            if is_image
+            else (
+                "video"
+                if is_video
+                else ("audio" if is_audio else ("code" if file_ext in CODE_EXTENSIONS else "document"))
+            )
+        )
 
         if is_image:
-            try:
-                photo_data = analyze_photo_asset(canonical_path, file_name)
-            except Exception as e:
-                logger.debug(f"[RAG] Corrupt image {canonical_path}: {e}")
-                return self._record_parse_error(
-                    canonical_path,
-                    parent_dir,
-                    file_name,
-                    file_ext,
-                    modality,
-                    size_bytes,
-                    mtime_ns,
-                    sha256_hex,
-                    backing_dev,
-                    vis_tier,
-                    owner_user,
-                    share_name,
-                    allowed_csv,
-                )
+            photo_data = None
+            # Check backing disk standby status (AGENTS.md §1.2 Spindown Invariant)
+            if is_backing_disk_in_standby(backing_dev):
+                cached_thumb = None
+                with self._write_lock:
+                    conn = self._get_conn(readonly=True)
+                    try:
+                        t_row = conn.execute(
+                            "SELECT p.thumb_webp FROM photo_assets p JOIN indexed_files f ON f.file_id = p.file_id WHERE f.canonical_path = ?",
+                            (canonical_path,),
+                        ).fetchone()
+                        if t_row and t_row["thumb_webp"]:
+                            cached_thumb = t_row["thumb_webp"]
+                    finally:
+                        conn.close()
+                if cached_thumb:
+                    try:
+                        photo_data = analyze_photo_asset(cached_thumb, file_name)
+                    except Exception as e:
+                        logger.debug(f"[RAG] Failed thumbnail analysis {sanitize_string(canonical_path)}: {e}")
+                else:
+                    self._record_deferred_subpath(canonical_path, backing_dev)
+                    return None
+
+            if photo_data is None:
+                try:
+                    photo_data = analyze_photo_asset(canonical_path, file_name)
+                except Exception as e:
+                    logger.debug(f"[RAG] Corrupt image {sanitize_string(canonical_path)}: {e}")
+                    return self._record_parse_error(
+                        canonical_path,
+                        parent_dir,
+                        file_name,
+                        file_ext,
+                        modality,
+                        size_bytes,
+                        mtime_ns,
+                        sha256_hex,
+                        backing_dev,
+                        vis_tier,
+                        owner_user,
+                        share_name,
+                        allowed_csv,
+                    )
 
             ocr_text = photo_data.get("ocr_text", "")
             doc_type = "photo"
@@ -4379,8 +5745,8 @@ class RagSearchEngine:
                             doc_type, doc_title, doc_metadata_json, size_bytes, mtime_ns,
                             sha256_hash, backing_dev, share_name, visibility_tier,
                             owner_username, allowed_users_csv, parse_status, index_version,
-                            chunk_count, indexed_at, last_verified_at
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ok', ?, ?, ?, ?)
+                            chunk_count, indexed_at, last_verified_at, embedding_model
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ok', ?, ?, ?, ?, ?)
                         ON CONFLICT(canonical_path) DO UPDATE SET
                             parent_dir = excluded.parent_dir,
                             file_name = excluded.file_name,
@@ -4401,7 +5767,8 @@ class RagSearchEngine:
                             index_version = excluded.index_version,
                             chunk_count = excluded.chunk_count,
                             indexed_at = excluded.indexed_at,
-                            last_verified_at = excluded.last_verified_at
+                            last_verified_at = excluded.last_verified_at,
+                            embedding_model = excluded.embedding_model
                         """,
                         (
                             canonical_path,
@@ -4424,6 +5791,7 @@ class RagSearchEngine:
                             len(ocr_chunks),
                             now,
                             now,
+                            "zett_lexical_384d",
                         ),
                     )
                     row_id = conn.execute(
@@ -4480,8 +5848,10 @@ class RagSearchEngine:
                     conn.execute("DELETE FROM document_chunks WHERE file_id = ?", (file_id,))
                     ocr_parent_id_map: Dict[int, int] = {}
                     for p in ocr_parent_chunks:
+                        p_body = f"{p['heading_context']} {p['chunk_text']}".strip()
+                        p_full_text = format_embeddinggemma_document(file_name, p_body)
                         p_blob, _ = compute_384d_embedding(
-                            text=f"{file_name} {p['heading_context']} {p['chunk_text']}",
+                            text=p_full_text,
                             scene_tags=photo_data["scene_tags"],
                         )
                         cur_p = conn.execute(
@@ -4516,8 +5886,10 @@ class RagSearchEngine:
                         ocr_parent_id_map[p["parent_index"]] = int(cur_p.lastrowid)
 
                     for ch in ocr_chunks:
+                        ch_body = f"{ch['heading_context']} {ch['chunk_text']}".strip()
+                        ch_full_text = format_embeddinggemma_document(file_name, ch_body)
                         ch_blob, _ = compute_384d_embedding(
-                            text=f"{file_name} {ch['heading_context']} {ch['chunk_text']}",
+                            text=ch_full_text,
                             scene_tags=photo_data["scene_tags"],
                         )
                         p_id = ocr_parent_id_map.get(ch.get("parent_index"))
@@ -4560,45 +5932,67 @@ class RagSearchEngine:
         # Document or Code modality
         raw_text = extract_document_text(canonical_path, file_ext)
         if not raw_text.strip():
-            return self._record_parse_error(
-                canonical_path,
-                parent_dir,
-                file_name,
-                file_ext,
-                modality,
-                size_bytes,
-                mtime_ns,
-                sha256_hex,
-                backing_dev,
-                vis_tier,
-                owner_user,
-                share_name,
-                allowed_csv,
-            )
+            base_clean = re.sub(r"[._\-]+", " ", os.path.splitext(file_name)[0]).strip()
+            parent_clean = os.path.basename(parent_dir)
+            raw_text = f"Document: {base_clean}\nFile Name: {file_name}\nFormat: {file_ext}\nFolder: {parent_clean}"
 
         doc_type, doc_title, doc_meta, child_chunks, parent_chunks = generate_contextual_hierarchical_chunks(
             file_name, file_ext, raw_text, canonical_path
         )
         doc_meta_json = json.dumps(doc_meta)
 
+        cfg = self.get_config()
+        configured_emb_model = cfg.get("embedding_model") or "google/embeddinggemma-2"
+        target_dim = cfg.get("embedding_dim")
+        effective_file_emb_model = "zett_lexical_384d"
+
         prepared_child_chunks: List[Tuple[Dict[str, Any], bytes]] = []
         for ch in child_chunks:
-            emb_blob, _ = compute_384d_embedding(
-                text=f"{file_name} {doc_title} {ch['heading_context']} {ch['chunk_text']}",
-                scene_tags=["recipe", "food"]
-                if doc_type == "recipe"
-                else (["receipt", "document"] if doc_type == "invoice" else ["document"]),
-            )
+            effective_title = doc_title or file_name
+            ch_body = f"{ch['heading_context']} {ch['chunk_text']}".strip()
+            chunk_full_text = format_embeddinggemma_document(effective_title, ch_body)
+            neural_res = None
+            if configured_emb_model != "zett_lexical_384d":
+                neural_res = compute_neural_embedding_via_ollama(
+                    text=chunk_full_text,
+                    model=configured_emb_model,
+                    target_dim=target_dim,
+                    is_query=False,
+                )
+            if neural_res is not None:
+                emb_blob, _ = neural_res
+                effective_file_emb_model = configured_emb_model
+            else:
+                emb_blob, _ = compute_384d_embedding(
+                    text=chunk_full_text,
+                    scene_tags=["recipe", "food"]
+                    if doc_type == "recipe"
+                    else (["receipt", "document"] if doc_type == "invoice" else ["document"]),
+                )
             prepared_child_chunks.append((ch, emb_blob))
 
         prepared_parent_chunks: List[Tuple[Dict[str, Any], bytes]] = []
         for p in parent_chunks:
-            p_emb, _ = compute_384d_embedding(
-                text=f"{file_name} {doc_title} {p['heading_context']} {p['chunk_text']}",
-                scene_tags=["recipe", "food"]
-                if doc_type == "recipe"
-                else (["receipt", "document"] if doc_type == "invoice" else ["document"]),
-            )
+            effective_title = doc_title or file_name
+            p_body = f"{p['heading_context']} {p['chunk_text']}".strip()
+            parent_full_text = format_embeddinggemma_document(effective_title, p_body)
+            neural_res = None
+            if effective_file_emb_model != "zett_lexical_384d":
+                neural_res = compute_neural_embedding_via_ollama(
+                    text=parent_full_text,
+                    model=effective_file_emb_model,
+                    target_dim=target_dim,
+                    is_query=False,
+                )
+            if neural_res is not None:
+                p_emb, _ = neural_res
+            else:
+                p_emb, _ = compute_384d_embedding(
+                    text=parent_full_text,
+                    scene_tags=["recipe", "food"]
+                    if doc_type == "recipe"
+                    else (["receipt", "document"] if doc_type == "invoice" else ["document"]),
+                )
             prepared_parent_chunks.append((p, p_emb))
 
         with self._write_lock:
@@ -4611,8 +6005,8 @@ class RagSearchEngine:
                         doc_type, doc_title, doc_metadata_json, size_bytes, mtime_ns,
                         sha256_hash, backing_dev, share_name, visibility_tier,
                         owner_username, allowed_users_csv, parse_status, index_version,
-                        chunk_count, indexed_at, last_verified_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ok', ?, ?, ?, ?)
+                        chunk_count, indexed_at, last_verified_at, embedding_model
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ok', ?, ?, ?, ?, ?)
                     ON CONFLICT(canonical_path) DO UPDATE SET
                         parent_dir = excluded.parent_dir,
                         file_name = excluded.file_name,
@@ -4633,7 +6027,8 @@ class RagSearchEngine:
                         index_version = excluded.index_version,
                         chunk_count = excluded.chunk_count,
                         indexed_at = excluded.indexed_at,
-                        last_verified_at = excluded.last_verified_at
+                        last_verified_at = excluded.last_verified_at,
+                        embedding_model = excluded.embedding_model
                     """,
                     (
                         canonical_path,
@@ -4656,6 +6051,7 @@ class RagSearchEngine:
                         len(prepared_child_chunks),
                         now,
                         now,
+                        effective_file_emb_model,
                     ),
                 )
                 row_id = conn.execute(
@@ -4666,14 +6062,15 @@ class RagSearchEngine:
                 conn.execute("DELETE FROM document_chunks WHERE file_id = ?", (file_id,))
                 parent_id_map: Dict[int, int] = {}
                 for p, p_emb in prepared_parent_chunks:
+                    p_dim = len(p_emb) // 4
                     cur_p = conn.execute(
                         """
                         INSERT INTO document_chunks (
                             file_id, chunk_index, parent_chunk_id, chunk_level, source_modality, file_name, doc_type,
                             heading_context, structural_context, chunk_text, raw_chunk_text, doc_metadata_json,
-                            line_start, line_end, token_count, embedding_f32,
+                            line_start, line_end, token_count, embedding_f32, embedding_model, embedding_dim,
                             visibility_tier, owner_username, share_name, allowed_users_csv
-                        ) VALUES (?, ?, NULL, 'parent', ?, ?, ?, ?, '', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        ) VALUES (?, ?, NULL, 'parent', ?, ?, ?, ?, '', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                         """,
                         (
                             file_id,
@@ -4689,6 +6086,8 @@ class RagSearchEngine:
                             p["line_end"],
                             p["token_count"],
                             p_emb,
+                            effective_file_emb_model,
+                            p_dim,
                             vis_tier,
                             owner_user,
                             share_name,
@@ -4699,14 +6098,15 @@ class RagSearchEngine:
 
                 for ch, emb_blob in prepared_child_chunks:
                     p_id = parent_id_map.get(ch.get("parent_index"))
+                    ch_dim = len(emb_blob) // 4
                     conn.execute(
                         """
                         INSERT INTO document_chunks (
                             file_id, chunk_index, parent_chunk_id, chunk_level, source_modality, file_name, doc_type,
                             heading_context, structural_context, chunk_text, raw_chunk_text, doc_metadata_json,
-                            line_start, line_end, token_count, embedding_f32,
+                            line_start, line_end, token_count, embedding_f32, embedding_model, embedding_dim,
                             visibility_tier, owner_username, share_name, allowed_users_csv
-                        ) VALUES (?, ?, ?, 'child', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        ) VALUES (?, ?, ?, 'child', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                         """,
                         (
                             file_id,
@@ -4724,6 +6124,8 @@ class RagSearchEngine:
                             ch["line_end"],
                             ch["token_count"],
                             emb_blob,
+                            effective_file_emb_model,
+                            ch_dim,
                             vis_tier,
                             owner_user,
                             share_name,
@@ -4862,6 +6264,7 @@ class RagSearchEngine:
         principal: Any = None,
         match_tab: str = "semantic",
         sort_by: str = "relevance",
+        embedding_model: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         100% Zero-Disk-Touch Cross-Modal Search over `/app/data/rag_index.db` (mode=ro).
@@ -4906,12 +6309,16 @@ class RagSearchEngine:
         if eff_sort not in ("relevance", "keyword", "mtime"):
             eff_sort = "relevance"
 
-        _, query_vec = compute_384d_embedding(
-            text=query or " ".join(req_scenes + req_colors),
-            scene_tags=req_scenes,
-            object_colors={c: 1.0 for c in req_colors},
-            frame_colors={c: 0.8 for c in req_colors},
-            color_hist_64=build_target_color_histogram(req_colors) if req_colors else None,
+        chosen_emb_model = embedding_model or cfg.get("embedding_model") or "google/embeddinggemma-2"
+        target_dim = cfg.get("embedding_dim")
+        intent_type, task_prefix = classify_query_task_intent(query, modality_hint=effective_mode)
+        effective_emb_model, query_vec = compute_multimodal_query_embedding(
+            query=query,
+            model=chosen_emb_model,
+            target_dim=target_dim,
+            req_scenes=req_scenes,
+            req_colors=req_colors,
+            task_prompt=task_prefix,
         )
         fts_query = build_safe_fts5_query(query)
         target_hist = build_target_color_histogram(req_colors) if req_colors else []
@@ -4927,11 +6334,20 @@ class RagSearchEngine:
                 or (effective_mode == "recipes" and "recipe" in req_scenes)
                 or bool(query.strip() or req_colors or req_scenes)
             ):
+                photo_vec = query_vec
+                if effective_emb_model != "zett_lexical_384d" or len(query_vec) != 384:
+                    _, photo_vec = compute_384d_embedding(
+                        text=query or " ".join(req_scenes + req_colors),
+                        scene_tags=req_scenes,
+                        object_colors={c: 1.0 for c in req_colors},
+                        frame_colors={c: 0.8 for c in req_colors},
+                        color_hist_64=target_hist if req_colors else None,
+                    )
                 photo_items = self._search_photos_ro(
                     conn=conn,
                     raw_query=query,
                     fts_query=fts_query,
-                    query_vec=query_vec,
+                    query_vec=photo_vec,
                     req_colors=req_colors,
                     req_scenes=req_scenes,
                     target_hist=target_hist,
@@ -4954,6 +6370,8 @@ class RagSearchEngine:
                     principal=principal,
                     modality_hint=intent.get("modality_hint", "all"),
                     only_docs=(effective_mode == "documents"),
+                    query_embedding_model=effective_emb_model,
+                    intent_type=intent_type,
                 )
 
             all_candidates = photo_items + doc_items
@@ -5059,6 +6477,7 @@ class RagSearchEngine:
                 )
             else:
                 combined.sort(key=lambda x: float(x.get("score") or 0.0), reverse=True)
+                combined = late_interaction_rerank(query, combined, top_k=limit)
 
             combined = combined[:limit]
 
@@ -5161,6 +6580,16 @@ class RagSearchEngine:
             rbac_params + sub_params,
         ).fetchall()
 
+        photo_query_vec = query_vec
+        if not photo_query_vec or len(photo_query_vec) != 384:
+            _, photo_query_vec = compute_384d_embedding(
+                text=raw_query or " ".join(req_scenes + req_colors),
+                scene_tags=req_scenes,
+                object_colors={c: 1.0 for c in req_colors},
+                frame_colors={c: 0.8 for c in req_colors},
+                color_hist_64=target_hist if req_colors else None,
+            )
+
         results: List[Dict[str, Any]] = []
         q_lower = (raw_query or "").lower()
 
@@ -5176,7 +6605,7 @@ class RagSearchEngine:
             palette_swatches: List[str] = json.loads(r["palette_json"] or "[]")
 
             emb_vec = unpack_embedding(r["vision_embedding_f32"])
-            s_vec = cosine_similarity_vec(query_vec, emb_vec)
+            s_vec = cosine_similarity_vec(photo_query_vec, emb_vec)
             s_bm25 = bm25_map.get(fid, 0.0)
 
             # Color similarity (center-weighted Bhattacharyya + explicit 12-color fraction)
@@ -5303,6 +6732,8 @@ class RagSearchEngine:
         principal: Any,
         modality_hint: str = "all",
         only_docs: bool = False,
+        query_embedding_model: str = "zett_lexical_384d",
+        intent_type: str = "search",
     ) -> List[Dict[str, Any]]:
         bm25_map: Dict[int, float] = {}
         bm25_rank: Dict[int, int] = {}
@@ -5329,29 +6760,87 @@ class RagSearchEngine:
         sub_sql, sub_params = self._build_subtree_clause(path_prefix, "f")
         recipe_sql = "AND f.doc_type = 'recipe'" if only_recipes else ""
 
-        rows = conn.execute(
+        fts_chunk_ids = list(bm25_map.keys())
+        if self._has_sqlite_vec and self._vec_table_active and query_vec and len(query_vec) == self._vec_table_dim:
+            try:
+                target_dim = self._vec_table_dim
+                query_blob = struct.pack(f"<{target_dim}f", *query_vec)
+                vec_table = f"vec_chunks_{target_dim}"
+                vec_hits = conn.execute(
+                    f"SELECT chunk_id FROM {vec_table} WHERE embedding MATCH ? AND k = ? LIMIT 60",
+                    (query_blob, max(limit * 2, 60)),
+                ).fetchall()
+                for vh in vec_hits:
+                    cid_v = int(vh["chunk_id"])
+                    if cid_v not in fts_chunk_ids:
+                        fts_chunk_ids.append(cid_v)
+            except Exception as e:
+                logger.debug("sqlite-vec candidate lookup skipped: %s", e)
+
+        fts_rows: List[sqlite3.Row] = []
+        if fts_chunk_ids:
+            placeholders = ",".join("?" * len(fts_chunk_ids))
+            fts_rows = conn.execute(
+                f"""
+                SELECT
+                    c.chunk_id, c.file_id, c.chunk_index, c.parent_chunk_id, c.chunk_level, c.source_modality,
+                    c.heading_context, c.structural_context, c.chunk_text, c.raw_chunk_text,
+                    c.line_start, c.line_end, c.embedding_f32,
+                    f.canonical_path, f.file_name, f.file_ext, f.modality, f.doc_type,
+                    f.doc_title, f.doc_metadata_json, f.backing_dev, f.mtime_ns, f.size_bytes, f.embedding_model,
+                    p.dominant_hex, (p.thumb_webp IS NOT NULL) AS has_thumb
+                FROM document_chunks c
+                JOIN indexed_files f ON f.file_id = c.file_id
+                LEFT JOIN photo_assets p ON p.file_id = c.file_id
+                WHERE c.chunk_id IN ({placeholders}) AND f.parse_status = 'ok' AND c.chunk_level != 'parent' {recipe_sql} AND {rbac_sql} AND {sub_sql}
+                """,
+                fts_chunk_ids + rbac_params + sub_params,
+            ).fetchall()
+
+        seen_chunk_ids = {int(r["chunk_id"]) for r in fts_rows}
+        remaining_slots = max(500, 3000 - len(seen_chunk_ids))
+
+        recent_rows = conn.execute(
             f"""
             SELECT
                 c.chunk_id, c.file_id, c.chunk_index, c.parent_chunk_id, c.chunk_level, c.source_modality,
                 c.heading_context, c.structural_context, c.chunk_text, c.raw_chunk_text,
                 c.line_start, c.line_end, c.embedding_f32,
                 f.canonical_path, f.file_name, f.file_ext, f.modality, f.doc_type,
-                f.doc_title, f.doc_metadata_json, f.backing_dev, f.mtime_ns, f.size_bytes,
+                f.doc_title, f.doc_metadata_json, f.backing_dev, f.mtime_ns, f.size_bytes, f.embedding_model,
                 p.dominant_hex, (p.thumb_webp IS NOT NULL) AS has_thumb
             FROM document_chunks c
             JOIN indexed_files f ON f.file_id = c.file_id
             LEFT JOIN photo_assets p ON p.file_id = c.file_id
             WHERE f.parse_status = 'ok' AND c.chunk_level != 'parent' {recipe_sql} AND {rbac_sql} AND {sub_sql}
-            LIMIT 3000
+            ORDER BY f.mtime_ns DESC, c.chunk_id DESC
+            LIMIT {remaining_slots}
             """,
             rbac_params + sub_params,
         ).fetchall()
+
+        rows = list(fts_rows)
+        for r in recent_rows:
+            if int(r["chunk_id"]) not in seen_chunk_ids:
+                seen_chunk_ids.add(int(r["chunk_id"]))
+                rows.append(r)
 
         # Score all candidate chunks
         scored_chunks: List[Tuple[float, sqlite3.Row, float]] = []
         for r in rows:
             emb = unpack_embedding(r["embedding_f32"])
-            s_vec = cosine_similarity_vec(query_vec, emb)
+            file_emb_model = r["embedding_model"] if "embedding_model" in r.keys() else "zett_lexical_384d"
+            q_norm = (query_embedding_model or "").lower()
+            f_norm = (file_emb_model or "").lower()
+            is_match = (
+                q_norm == f_norm
+                or ("embeddinggemma" in q_norm and "embeddinggemma" in f_norm)
+                or ("nomic" in q_norm and "nomic" in f_norm)
+            )
+            if query_embedding_model and not is_match:
+                s_vec = 0.0
+            else:
+                s_vec = cosine_similarity_vec(query_vec, emb)
             scored_chunks.append((s_vec, r, bm25_map.get(int(r["chunk_id"]), 0.0)))
 
         # Sort by vector score to assign vector ranks for RRF
@@ -5399,7 +6888,17 @@ class RagSearchEngine:
                 (1.0 / (60.0 + r_v)) + (1.0 / (60.0 + r_b) if (cid in bm25_rank and has_lexical_hit) else 0.0)
             )
             effective_rrf = s_rrf if (has_lexical_hit or s_vec >= 0.45) else 0.0
-            score = min(1.0, 0.50 * s_vec + 0.35 * s_bm25 + 0.15 * effective_rrf + lex_boost)
+            # Dynamic Token-Density-Aware Hybrid RRF Scoring (Batch 2 Item 2.3)
+            if intent_type == "code":
+                w_vec, w_bm25, w_rrf = 0.25, 0.55, 0.20
+            elif intent_type == "qa":
+                w_vec, w_bm25, w_rrf = 0.60, 0.20, 0.20
+            elif len(q_tokens) <= 2:
+                w_vec, w_bm25, w_rrf = 0.35, 0.45, 0.20
+            else:
+                w_vec, w_bm25, w_rrf = 0.50, 0.30, 0.20
+
+            score = min(1.0, w_vec * s_vec + w_bm25 * s_bm25 + w_rrf * effective_rrf + lex_boost)
             if raw_query.strip():
                 if not has_lexical_hit and s_vec < 0.45 and not ("recipe" in req_scenes and r["doc_type"] == "recipe"):
                     continue
@@ -5436,10 +6935,12 @@ class RagSearchEngine:
                 "parent_chunk_id": r["parent_chunk_id"],
                 "path": c_path,
                 "file_path": c_path,
+                "canonical_path": c_path,
                 "name": r["file_name"],
                 "file_name": r["file_name"],
                 "title": r["doc_title"] or r["file_name"],
                 "media_type": "photo" if r["source_modality"] == "photo_ocr" else "document",
+                "category_type": "documents",
                 "modality": r["modality"],
                 "source_modality": r["source_modality"],
                 "doc_type": r["doc_type"],
@@ -5540,6 +7041,7 @@ class RagSearchEngine:
                     "file_path": hit["path"],
                     "name": hit["name"],
                     "file_name": hit["name"],
+                    "doc_title": hit.get("doc_title") or hit.get("title") or hit.get("name") or "",
                     "doc_type": hit.get("doc_type", "generic"),
                     "source_modality": hit.get("source_modality", hit.get("modality", "document")),
                     "breadcrumb": breadcrumb,

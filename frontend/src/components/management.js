@@ -1,9 +1,18 @@
 import { syncWidgetSettingsUI } from './widgets.js';
-import { syncDesktopThemeUI, openDrawer } from './settings.js';
+import { syncDesktopThemeUI, openDrawer, restoreHardwareTabsToManagement } from './settings.js';
 import { openContainerInspector, openContainerDeleteModal } from './container-modal.js';
 import { openStackModal, openStackPickerModal } from './stack-modal.js';
 import { ZettEventBus } from '../event-bus.js';
-import { createContainerRow, updateContainerRow } from './docker-table.js';
+import {
+  createContainerRow,
+  updateContainerRow,
+  getSelectedContainerIds,
+  isContainerSelected,
+  toggleContainerSelected,
+  clearSelectedContainers,
+  selectAllContainers,
+  initSynchronizedTableScrollbars,
+} from './docker-table.js';
 import { fitMiniPreviewScale, syncMiniPreviewTelemetry } from './mini-preview.js';
 import { fetchAndRenderChassisTwin, renderStorageTopologyTree, fetchAndRenderStorageTopology, fetchAndRenderNetworkShares, fetchAndRenderRemoteStorage, openNewCloudRemoteModal, openCreateStoragePoolModal, openCreateNetworkShareModal, openSnapshotsModal, triggerLocateDisk, getThermalLevel } from './chassis-visualizer.js';
 /**
@@ -16,7 +25,7 @@ import { bringToFront, DockManager, makeDraggable, saveWindowBounds, saveOpenWin
 import { state } from '../state.js';
 import { api, auth } from '../api.js';
 import { initNetworkPortsInspector, fetchListeningPorts } from './network-manager.js';
-import { showToast, showConfirmToast, showBottomSheet } from '../toast.js';
+import { showToast, showConfirmToast, showPromptToast, showBottomSheet } from '../toast.js';
 import { trapFocus, escapeHtml, copyTextToClipboard, reconcileKeyedTable } from '../utils.js';
 import { t, getLanguage } from '../i18n.js';
 import { collectClientEnvironment, getClientLogs } from '../client-logger.js';
@@ -65,8 +74,8 @@ export const SUBPANE_MAP = {
   'mgmt-pane-docker': { section: 'mgmt-sec-docker', pane: 'mgmt-pane-docker' },
   'mgmt-sec-catalog': { section: 'mgmt-sec-docker', pane: 'mgmt-pane-docker' },
   'mgmt-pane-docker-compose': { section: 'mgmt-sec-docker', pane: 'mgmt-pane-docker' },
-  'mgmt-pane-docker-catalog': { section: 'mgmt-sec-docker', pane: 'mgmt-pane-docker' },
-  'catalog': { section: 'mgmt-sec-docker', pane: 'mgmt-pane-docker' },
+  'mgmt-pane-docker-catalog': { section: 'mgmt-sec-docker', pane: 'mgmt-pane-docker-catalog' },
+  'catalog': { section: 'mgmt-sec-docker', pane: 'mgmt-pane-docker-catalog' },
   'mgmt-pane-docker-prune': { section: 'mgmt-sec-docker', pane: 'mgmt-pane-docker' },
 
   // --- Pillar 4: Virtual Machines ---
@@ -99,6 +108,7 @@ export const SUBPANE_MAP = {
   'mgmt-pane-hardware-fans': { section: 'mgmt-sec-hardware', pane: 'mgmt-pane-hardware-fans' },
   'mgmt-pane-hardware-led': { section: 'mgmt-sec-hardware', pane: 'mgmt-pane-hardware-led' },
   'mgmt-pane-hardware-lcd': { section: 'mgmt-sec-hardware', pane: 'mgmt-pane-hardware-lcd' },
+  'mgmt-pane-hardware-copy': { section: 'mgmt-sec-hardware', pane: 'mgmt-pane-hardware-copy' },
   'mgmt-pane-hardware-ups': { section: 'mgmt-sec-ups', pane: null },
 
   // --- Pillar 7: Power & Battery (Dedicated 1st-Class Section) ---
@@ -122,8 +132,6 @@ export const SUBPANE_MAP = {
   'mgmt-pane-notifications': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-notifications' },
   'mgmt-sec-events': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-events' },
   'mgmt-pane-events': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-events' },
-  'mgmt-sec-language': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-language' },
-  'mgmt-pane-language': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-language' },
   'mgmt-sec-about': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-about' },
   'mgmt-pane-about': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-about' },
 
@@ -140,6 +148,16 @@ export const SUBPANE_MAP = {
   'mgmt-sec-dock': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-dock' },
   'mgmt-pane-screensaver': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-screensaver' },
   'mgmt-sec-screensaver': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-screensaver' },
+  'mgmt-sec-calendar': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-calendar' },
+  'mgmt-pane-calendar': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-calendar' },
+  'calendar': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-calendar' },
+  'mgmt-sec-language': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-language' },
+  'mgmt-pane-language': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-language' },
+  'timezone': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-language' },
+  'clock': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-language' },
+  'time': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-language' },
+  'language': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-language' },
+  'region': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-language' },
 
   // --- Pillar 8: AI Knowledge & Visual Search (ZettAI) ---
   'ai': { section: 'mgmt-sec-ai', pane: 'mgmt-pane-ai-chat' },
@@ -597,6 +615,16 @@ export function sortDockerContainers(list, col = 'name', dir = 'asc') {
         return (a.name || '').localeCompare(b.name || '');
       }
 
+      case 'stack': {
+        const stackA = (a.stack || (a.managed_by === 'unraid' ? 'Unraid' : 'Standalone')).toLowerCase();
+        const stackB = (b.stack || (b.managed_by === 'unraid' ? 'Unraid' : 'Standalone')).toLowerCase();
+        const cmp = stackA.localeCompare(stackB);
+        if (cmp !== 0) return dir === 'desc' ? -cmp : cmp;
+        const nameA = (a.name || a.id || '').toLowerCase();
+        const nameB = (b.name || b.id || '').toLowerCase();
+        return nameA.localeCompare(nameB);
+      }
+
       case 'name':
       default: {
         const nameA = (a.name || a.id || '').toLowerCase();
@@ -639,8 +667,102 @@ export function updateDockerTableHeaderUI() {
   });
 }
 
+export function updateDockerBulkBar() {
+  const bar = document.getElementById('docker-bulk-bar');
+  const countEl = document.getElementById('docker-bulk-count');
+  const selectAll = document.getElementById('docker-select-all');
+  const selectedIds = getSelectedContainerIds();
+  const count = selectedIds.length;
+
+  if (bar) {
+    if (count > 0) {
+      bar.style.display = 'flex';
+      if (countEl) countEl.textContent = count;
+    } else {
+      bar.style.display = 'none';
+    }
+  }
+
+  if (selectAll) {
+    const totalVisible = _dockerContainersList.length;
+    if (count === 0) {
+      selectAll.checked = false;
+      selectAll.indeterminate = false;
+    } else if (count >= totalVisible && totalVisible > 0) {
+      selectAll.checked = true;
+      selectAll.indeterminate = false;
+    } else {
+      selectAll.checked = false;
+      selectAll.indeterminate = true;
+    }
+  }
+}
+
+export async function executeBulkContainerAction(action) {
+  const selectedIds = getSelectedContainerIds();
+  if (selectedIds.length === 0) {
+    showToast('No containers selected.', 'info');
+    return;
+  }
+
+  if (action === 'cancel') {
+    clearSelectedContainers();
+    renderDockerContainersTable();
+    updateDockerBulkBar();
+    return;
+  }
+
+  if (action === 'delete') {
+    showConfirmToast(
+      `Delete ${selectedIds.length} Containers`,
+      `Are you sure you want to permanently delete ${selectedIds.length} selected containers? This action cannot be undone.`,
+      async () => {
+        await _runBulkActionApi(action, selectedIds);
+      },
+      null,
+      { okText: '🗑️ Delete All', cancelText: 'Cancel' }
+    );
+    return;
+  }
+
+  if (action === 'stop') {
+    showConfirmToast(
+      `Stop ${selectedIds.length} Containers`,
+      `Are you sure you want to stop ${selectedIds.length} running containers?`,
+      async () => {
+        await _runBulkActionApi(action, selectedIds);
+      },
+      null,
+      { okText: '⏹ Stop All', cancelText: 'Cancel' }
+    );
+    return;
+  }
+
+  await _runBulkActionApi(action, selectedIds);
+}
+
+async function _runBulkActionApi(action, selectedIds) {
+  try {
+    showToast(`Executing bulk ${action} on ${selectedIds.length} containers...`, 'info');
+    const res = await api.post('/api/docker/containers/bulk-action', {
+      action,
+      container_ids: selectedIds,
+      force: action === 'delete',
+    });
+    const successful = res.successful || 0;
+    const total = res.total || selectedIds.length;
+    showToast(`Bulk ${action}: ${successful} of ${total} succeeded.`, successful === total ? 'success' : 'warn');
+    clearSelectedContainers();
+    await fetchAndRenderDockerContainers();
+    updateDockerBulkBar();
+  } catch (err) {
+    showToast(`Bulk ${action} failed: ${err.message}`, 'error');
+  }
+}
+
 export function _resetDockerStateForTesting() {
   stopDockerAutoRefresh();
+  clearSelectedContainers();
   const containerPane = document.getElementById('mgmt-pane-docker');
   if (containerPane) containerPane._dockerEventsBound = false;
   _dockerContainersList = [];
@@ -914,14 +1036,61 @@ function _bindDockerEvents() {
       renderDockerContainersTable();
     };
 
-    th.addEventListener('click', handleSort);
+    th.addEventListener('click', (e) => {
+      if (e.target.id === 'docker-select-all' || e.target.closest('#docker-select-all')) return;
+      handleSort();
+    });
     th.addEventListener('keydown', (e) => {
+      if (e.target.id === 'docker-select-all' || e.target.closest('#docker-select-all')) return;
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
         handleSort();
       }
     });
   });
+
+  // Select All Containers Checkbox
+  const selectAll = document.getElementById('docker-select-all');
+  if (selectAll && !selectAll._bound) {
+    selectAll._bound = true;
+    selectAll.addEventListener('change', (e) => {
+      e.stopPropagation();
+      const tbody = document.getElementById('docker-containers-tbody');
+      if (!tbody) return;
+      if (selectAll.checked) {
+        const visibleIds = _dockerContainersList.map((c) => c.id).filter(Boolean);
+        selectAllContainers(visibleIds);
+      } else {
+        clearSelectedContainers();
+      }
+      tbody.querySelectorAll('.docker-row-select').forEach((chk) => {
+        const cid = chk.dataset.id;
+        const isChecked = isContainerSelected(cid);
+        chk.checked = isChecked;
+        const tr = chk.closest('tr');
+        if (tr) {
+          if (isChecked) tr.classList.add('docker-row-selected');
+          else tr.classList.remove('docker-row-selected');
+        }
+      });
+      updateDockerBulkBar();
+    });
+  }
+
+  // Floating Bulk Action Bar Buttons
+  const bulkBar = document.getElementById('docker-bulk-bar');
+  if (bulkBar && !bulkBar._bound) {
+    bulkBar._bound = true;
+    bulkBar.addEventListener('click', (e) => {
+      const btn = e.target.closest('.btn-bulk-action');
+      if (!btn) return;
+      e.stopPropagation();
+      const action = btn.dataset.bulk;
+      if (action) {
+        executeBulkContainerAction(action);
+      }
+    });
+  }
 
   ZettEventBus.on('docker:containers-updated', () => {
     fetchAndRenderDockerContainers();
@@ -930,6 +1099,23 @@ function _bindDockerEvents() {
   ZettEventBus.on('docker:containers:refresh', () => {
     fetchAndRenderDockerContainers();
     refreshDockerUpdatesStatus();
+  });
+
+  ZettEventBus.on('stats:updated', (stats) => {
+    if (!stats || !Array.isArray(stats.docker)) return;
+    const mgmtWin = document.getElementById('management-window');
+    if (!mgmtWin) return;
+    if (
+      mgmtWin.style.display === 'none' ||
+      mgmtWin.classList.contains('minimized') ||
+      mgmtWin.classList.contains('window-minimized')
+    ) {
+      return;
+    }
+    const dockerSec = document.getElementById('mgmt-sec-docker');
+    if (!dockerSec || dockerSec.style.display === 'none') return;
+    _dockerContainersList = stats.docker;
+    renderDockerContainersTable();
   });
 
   containerPane._dockerEventsBound = true;
@@ -998,7 +1184,7 @@ export function renderDockerContainersTable() {
   }
 
   if (totalCount === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:36px 20px;">
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:36px 20px;">
       <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;">
         <div style="font-size:32px; opacity:0.8;">🐳</div>
         <div style="font-size:13.5px; font-weight:600; color:var(--text, #fff);">${t('mgmt.docker_none_title', 'No Docker Containers Deployed')}</div>
@@ -1015,6 +1201,7 @@ export function renderDockerContainersTable() {
         if (catBtn) catBtn.click();
       });
     }
+    updateDockerBulkBar();
     return;
   }
 
@@ -1054,7 +1241,12 @@ export function renderDockerContainersTable() {
   updateDockerTableHeaderUI();
 
   if (filtered.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--muted); padding:20px;">${t('mgmt.docker_no_matching', 'No containers match your search or filter.')}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--muted); padding:20px;">${t('mgmt.docker_no_matching', 'No containers match your search or filter.')}</td></tr>`;
+    const topScroll = document.getElementById('docker-table-top-scroll');
+    const stickyScroll = document.getElementById('docker-table-sticky-scroll');
+    if (topScroll) topScroll.style.display = 'none';
+    if (stickyScroll) stickyScroll.style.display = 'none';
+    updateDockerBulkBar();
     return;
   }
 
@@ -1073,11 +1265,32 @@ export function renderDockerContainersTable() {
     (c) => createContainerRow(c, currentHost, _dockerUpdatesCache?.containers?.[c.name] || _dockerUpdatesCache?.containers?.[c.id]),
     (tr, c) => updateContainerRow(tr, c, currentHost, _dockerUpdatesCache?.containers?.[c.name] || _dockerUpdatesCache?.containers?.[c.id])
   );
+  updateDockerBulkBar();
+
+  const tableWrap = document.querySelector('.docker-table-container');
+  const topScroll = document.getElementById('docker-table-top-scroll');
+  const stickyScroll = document.getElementById('docker-table-sticky-scroll');
+  if (tableWrap) {
+    initSynchronizedTableScrollbars(tableWrap, topScroll, stickyScroll);
+  }
 }
 
 function bindDockerTableEvents(tbody) {
   if (tbody._dockerTableEventsBound) return;
   tbody._dockerTableEventsBound = true;
+
+  tbody.addEventListener('change', (e) => {
+    if (e.target.classList.contains('docker-row-select')) {
+      const cid = e.target.dataset.id;
+      toggleContainerSelected(cid, e.target.checked);
+      const tr = e.target.closest('tr');
+      if (tr) {
+        if (e.target.checked) tr.classList.add('docker-row-selected');
+        else tr.classList.remove('docker-row-selected');
+      }
+      updateDockerBulkBar();
+    }
+  });
 
   tbody.addEventListener('click', async (e) => {
     const stackPill = e.target.closest('.clickable-stack-pill, .open-stack-btn');
@@ -1330,8 +1543,8 @@ export async function fetchAndRenderDockerContainers(isBackground = false) {
     }
   } catch (err) {
     if (!isBackground || _dockerContainersList.length === 0) {
-      if (tbody) tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--crit); padding:16px;">Failed to load containers: ${escapeHtml(err.message)}</td></tr>`;
-      if (cwTbody) cwTbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--crit); padding:16px;">Failed to load containers: ${escapeHtml(err.message)}</td></tr>`;
+      if (tbody) tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--crit); padding:16px;">Failed to load containers: ${escapeHtml(err.message)}</td></tr>`;
+      if (cwTbody) cwTbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--crit); padding:16px;">Failed to load containers: ${escapeHtml(err.message)}</td></tr>`;
     } else {
       console.warn('Silent docker refresh error:', err);
     }
@@ -6527,16 +6740,34 @@ function buildDiskRowInner(d) {
   `;
 }
 
+export function computeDiskRowSignature(d) {
+  const devName = d.dev || d.name || 'unknown';
+  const modelStr = d.model || 'Generic Disk';
+  const serialStr = d.serial && d.serial !== 'Unknown' ? d.serial : '--';
+  const transportStr = (d.transport || (devName.startsWith('nvme') ? 'nvme' : 'sata')).toUpperCase();
+  const driverStr = d.controller_driver || (devName.startsWith('nvme') ? 'nvme' : 'ahci');
+  const sizeStr = d.size_formatted || d.size || '--';
+  return `${devName}|${modelStr}|${serialStr}|${transportStr}|${driverStr}|${sizeStr}`;
+}
+
 function createDiskRow(d) {
   const devName = d.dev || d.name || 'unknown';
   const tr = document.createElement('tr');
   tr.dataset.key = devName;
   tr.dataset.dev = devName;
+  tr.dataset.rowSig = computeDiskRowSignature(d);
   tr.innerHTML = buildDiskRowInner(d);
   return tr;
 }
 
 function updateDiskRow(row, d) {
+  const newSig = computeDiskRowSignature(d);
+  if (row.dataset.rowSig !== newSig) {
+    row.dataset.rowSig = newSig;
+    row.innerHTML = buildDiskRowInner(d);
+    return;
+  }
+
   const isStandby = Boolean(d.standby || d.health === 'standby');
   const thermal = getThermalLevel(d.temp, isStandby);
   const healthStr = isStandby ? 'STANDBY' : (d.health ? String(d.health).toUpperCase() : 'OK');
@@ -7047,6 +7278,7 @@ export function initManagement() {
     const contentPane = document.getElementById('mgmt-content-pane');
     if (contentPane) {
       contentPane.classList.remove('ai-active');
+      contentPane.classList.remove('has-subnav');
     }
     saveOpenWindowsState();
   }
@@ -7082,6 +7314,13 @@ export function initManagement() {
       if (select && typeof getLanguage === 'function') {
         select.value = getLanguage();
       }
+      if (typeof window.initTimezoneControls === 'function') {
+        window.initTimezoneControls();
+      }
+    } else if (paneId === 'mgmt-pane-calendar') {
+      if (typeof window.initCalendarView === 'function') {
+        window.initCalendarView();
+      }
     } else if (paneId === 'mgmt-pane-metrics') {
       setTimeout(fetchAndRenderMetrics, 50);
     } else if (paneId === 'mgmt-pane-copy') {
@@ -7095,13 +7334,63 @@ export function initManagement() {
     } else if (paneId === 'mgmt-pane-unraid') {
       if (state.lastStats) updateManagementTelemetry(state.lastStats);
     } else if (paneId === 'mgmt-pane-hardware-lcd') {
+      if (typeof restoreHardwareTabsToManagement === 'function') restoreHardwareTabsToManagement();
       setTimeout(() => {
         fitMiniPreviewScale();
         syncMiniPreviewTelemetry();
       }, 50);
+    } else if (paneId === 'mgmt-pane-hardware-fans') {
+      if (typeof restoreHardwareTabsToManagement === 'function') restoreHardwareTabsToManagement();
+    } else if (paneId === 'mgmt-pane-hardware-led') {
+      if (typeof restoreHardwareTabsToManagement === 'function') restoreHardwareTabsToManagement();
+    } else if (paneId === 'mgmt-pane-hardware-copy') {
+      if (typeof restoreHardwareTabsToManagement === 'function') restoreHardwareTabsToManagement();
     } else if (paneId === 'mgmt-pane-docker') {
+      const wrapContainers = document.getElementById('docker-view-containers-wrap');
+      const wrapCatalog = document.getElementById('docker-view-catalog-wrap');
+      const btnContainers = document.getElementById('btn-view-docker-containers');
+      const btnCatalog = document.getElementById('btn-view-docker-catalog');
+      const tabContainers = document.getElementById('docker-inner-tab-containers');
+      const tabCatalog = document.getElementById('docker-inner-tab-catalog');
+      if (wrapContainers) wrapContainers.style.display = 'block';
+      if (wrapCatalog) wrapCatalog.style.display = 'none';
+      if (btnContainers) {
+        btnContainers.style.display = 'none';
+        btnContainers.classList.remove('active');
+      }
+      if (btnCatalog) btnCatalog.classList.remove('active');
+      if (tabContainers) {
+        tabContainers.classList.add('active');
+        tabContainers.setAttribute('aria-selected', 'true');
+      }
+      if (tabCatalog) {
+        tabCatalog.classList.remove('active');
+        tabCatalog.setAttribute('aria-selected', 'false');
+      }
       fetchAndRenderDockerContainers();
     } else if (paneId === 'mgmt-pane-docker-catalog') {
+      const wrapContainers = document.getElementById('docker-view-containers-wrap');
+      const wrapCatalog = document.getElementById('docker-view-catalog-wrap');
+      const btnContainers = document.getElementById('btn-view-docker-containers');
+      const btnCatalog = document.getElementById('btn-view-docker-catalog');
+      const tabContainers = document.getElementById('docker-inner-tab-containers');
+      const tabCatalog = document.getElementById('docker-inner-tab-catalog');
+      if (wrapContainers) wrapContainers.style.display = 'none';
+      if (wrapCatalog) wrapCatalog.style.display = 'block';
+      if (btnContainers) {
+        btnContainers.style.display = 'inline-flex';
+        btnContainers.textContent = '← Back to Containers';
+        btnContainers.classList.remove('active');
+      }
+      if (btnCatalog) btnCatalog.classList.add('active');
+      if (tabContainers) {
+        tabContainers.classList.remove('active');
+        tabContainers.setAttribute('aria-selected', 'false');
+      }
+      if (tabCatalog) {
+        tabCatalog.classList.add('active');
+        tabCatalog.setAttribute('aria-selected', 'true');
+      }
       fetchAndRenderAppCatalog();
     } else if (paneId === 'mgmt-pane-chassis-twin') {
       const mount = document.getElementById('mgmt-chassis-twin-mount');
@@ -7217,9 +7506,9 @@ export function initManagement() {
             const statusColor = isRunning ? 'var(--ok2, #25c2a0)' : (isPaused ? 'var(--warn, #f5a623)' : 'var(--muted, #94a3b8)');
             const statusBg = isRunning ? 'rgba(37,194,160,0.15)' : (isPaused ? 'rgba(245,166,35,0.15)' : 'rgba(255,255,255,0.06)');
 
-            const ramGb = vm.memory_mb ? (vm.memory_mb >= 1024 ? `${(vm.memory_mb / 1024).toFixed(0)} GB` : `${vm.memory_mb} MB`) : '1 GB';
-            const cores = vm.cores || 1;
-            const osType = vm.os_type || 'Linux';
+            const ramGb = vm.ram_gb ? `${vm.ram_gb} GB` : (vm.memory_mb ? (vm.memory_mb >= 1024 ? `${(vm.memory_mb / 1024).toFixed(0)} GB` : `${vm.memory_mb} MB`) : '1 GB');
+            const cores = vm.vcpus || vm.cores || 1;
+            const osType = vm.os_family ? (vm.os_family.charAt(0).toUpperCase() + vm.os_family.slice(1)) : (vm.os_type || 'Linux');
 
             return `
               <div class="mgmt-vm-card" data-vm-id="${escapeHtml(vm.id)}" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 10px; transition: border-color 0.2s;">
@@ -7368,6 +7657,9 @@ export function initManagement() {
     const contentPane = document.getElementById('mgmt-content-pane');
     if (contentPane) {
       contentPane.classList.toggle('ai-active', isAi);
+      const activeCard = document.getElementById(targetId);
+      const hasSubnav = activeCard ? !!activeCard.querySelector('.mgmt-sticky-subnav') : false;
+      contentPane.classList.toggle('has-subnav', hasSubnav);
     }
     if (headerNav) headerNav.style.display = 'flex';
     if (backBtn) backBtn.style.display = 'inline-flex';
@@ -7416,6 +7708,7 @@ export function initManagement() {
       stopDockerAutoRefresh();
       if (targetId === 'mgmt-sec-hardware' || targetId === 'mgmt-sec-services') {
         sectionName = t('mgmt.hardware_title', 'Hardware & Profiles');
+        if (typeof restoreHardwareTabsToManagement === 'function') restoreHardwareTabsToManagement();
         if (state.lastStats || state.latestStats) updateManagementTelemetry(state.lastStats || state.latestStats);
       } else if (targetId === 'mgmt-sec-storage') {
         sectionName = t('mgmt.storage_title', 'Storage & Disks');
@@ -7449,7 +7742,8 @@ export function initManagement() {
           }
         });
         parentCard.querySelectorAll('.mgmt-tab-pane').forEach((p) => {
-          p.style.display = p.id === desiredSubPane ? (p.id === 'mgmt-pane-ai-chat' ? 'flex' : 'block') : 'none';
+          const isMatch = p.id === desiredSubPane || (p.id === 'mgmt-pane-docker' && desiredSubPane === 'mgmt-pane-docker-catalog');
+          p.style.display = isMatch ? (p.id === 'mgmt-pane-ai-chat' ? 'flex' : 'block') : 'none';
         });
         triggerSubTabLoad(desiredSubPane, subTabId);
       } else {
@@ -7466,7 +7760,8 @@ export function initManagement() {
             t.setAttribute('aria-selected', isActive ? 'true' : 'false');
           });
           parentCard.querySelectorAll('.mgmt-tab-pane').forEach((p) => {
-            p.style.display = p.id === paneId ? (p.id === 'mgmt-pane-ai-chat' ? 'flex' : 'block') : 'none';
+            const isMatch = p.id === paneId || (p.id === 'mgmt-pane-docker' && paneId === 'mgmt-pane-docker-catalog');
+            p.style.display = isMatch ? (p.id === 'mgmt-pane-ai-chat' ? 'flex' : 'block') : 'none';
           });
           triggerSubTabLoad(paneId, subTabId);
         } else {
@@ -7505,13 +7800,20 @@ export function initManagement() {
       // Update tab panes
       const targetPaneId = tab.dataset.tabTarget;
       parentCard.querySelectorAll('.mgmt-tab-pane').forEach(p => {
-        if (p.id === targetPaneId) {
+        const isMatch = p.id === targetPaneId || (p.id === 'mgmt-pane-docker' && targetPaneId === 'mgmt-pane-docker-catalog');
+        if (isMatch) {
           p.style.display = p.id === 'mgmt-pane-ai-chat' ? 'flex' : 'block';
         } else {
           p.style.display = 'none';
         }
       });
       
+      // Reset scroll position to top of pane when switching sub-tabs
+      const contentPane = tab.closest('.mgmt-content-pane') || document.querySelector('.mgmt-content-pane');
+      if (contentPane && contentPane.scrollTop > 0) {
+        contentPane.scrollTop = 0;
+      }
+
       triggerSubTabLoad(targetPaneId);
       saveOpenWindowsState();
     });
@@ -7898,18 +8200,6 @@ export function initManagement() {
       }
     });
   }
-
-  // Front COPY button shortcut cards in Hardware Profiles pane
-  const gotoCopyBtns = [document.getElementById('btn-goto-copy-config'), document.getElementById('btn-goto-copy-trigger')];
-  gotoCopyBtns.forEach((btn) => {
-    if (btn) {
-      btn.addEventListener('click', () => {
-        if (typeof window.openManagementWindow === 'function') {
-          window.openManagementWindow('mgmt-sec-storage', 'mgmt-pane-copy');
-        }
-      });
-    }
-  });
 
   // Remote & Cloud Storage refresh button
   const refreshRemotesBtn = document.getElementById('btn-refresh-remotes');
@@ -8357,6 +8647,7 @@ export function initManagement() {
 
   // ZettAI Multi-Modal RAG & Visual Search Engine
   initAiKnowledgeEngine();
+  if (typeof restoreHardwareTabsToManagement === "function") restoreHardwareTabsToManagement();
 }
 
 let _currentUpdateChannel = 'stable';
@@ -9840,17 +10131,17 @@ export function renderAiLlmRecommendations(recData = {}, activeModel = '') {
 
     return `
       <div class="ai-llm-rec-card ${hasWarn ? 'ai-llm-hw-warning' : 'ai-llm-hw-ok'}" data-model-id="${escapeHtml(m.id)}" data-hf-repo="${escapeHtml(hfRepo)}" data-recommended="${isRec ? '1' : '0'}" data-active="${isAct ? '1' : '0'}" data-fits-hardware="${hasWarn ? '0' : '1'}" data-hardware-warning="${hasWarn ? '1' : '0'}" style="background:${bgCol}; border:1px solid ${borderCol}; border-radius:9px; padding:10px 12px; display:flex; flex-direction:column; gap:6px;">
-        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:6px;">
-          <div style="min-width:0;">
-            <div style="font-weight:800; font-size:12px; color:#fff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeHtml(m.name)}">${escapeHtml(m.name)}</div>
-            <div style="font-size:10px; color:var(--muted,#94a3b8); margin-top:1px; display:flex; align-items:center; gap:5px; flex-wrap:wrap;">
+        <div style="display:flex; flex-direction:column; gap:4px;">
+          <div style="font-weight:800; font-size:12.5px; color:#fff; word-break:break-word; line-height:1.35;" title="${escapeHtml(m.name)}">${escapeHtml(m.name)}</div>
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; flex-wrap:wrap;">
+            <div style="font-size:10px; color:var(--muted,#94a3b8); display:flex; align-items:center; gap:5px; flex-wrap:wrap;">
               <span>${escapeHtml(m.family || m.category || 'Hugging Face')} • ${escapeHtml(m.params || '')} • ${escapeHtml(m.quantization || '')}</span>
               ${hfRepo ? `<a href="${escapeHtml(hfUrl)}" target="_blank" rel="noopener noreferrer" style="color:#fde047; text-decoration:none; font-family:monospace; font-size:9.5px;" title="View on https://huggingface.co">🤗 ${escapeHtml(hfRepo)} ↗</a>` : ''}
             </div>
+            <span class="ai-model-fit-badge" style="font-size:9px; font-weight:700; padding:2px 8px; border-radius:999px; background:${badgeBg}; color:${badgeColor}; white-space:nowrap; display:inline-flex; align-items:center; gap:3px;">
+              ${escapeHtml(m.fit_badge || (hasWarn ? "⚠️ Doesn't Fit Hardware" : (isRec ? '★ Recommended' : '✓ Fits Hardware')))}
+            </span>
           </div>
-          <span class="ai-model-fit-badge" style="font-size:9.5px; font-weight:700; padding:2px 7px; border-radius:999px; background:${badgeBg}; color:${badgeColor}; white-space:nowrap;">
-            ${escapeHtml(m.fit_badge || (hasWarn ? "⚠️ Doesn't Fit Hardware" : (isRec ? '★ Recommended' : '✓ Fits Hardware')))}
-          </span>
         </div>
         <div style="display:flex; flex-wrap:wrap; gap:5px; font-size:9.5px;">
           <span style="padding:1px 6px; border-radius:4px; background:rgba(0,0,0,0.3); color:${hasWarn ? '#fca5a5' : '#6ee7b7'};">⚡ ${escapeHtml(m.target_device || 'NPU / GPU')}</span>
@@ -9982,7 +10273,7 @@ export async function searchHuggingFaceModels(query = '') {
     statusEl.textContent = `🤗 Searching https://huggingface.co release models${cleanQ ? ` for "${cleanQ}"` : ''}...`;
   }
   try {
-    const res = await api.get(`/api/media/models/huggingface/search?q=${encodeURIComponent(cleanQ)}&limit=14`);
+    const res = await api.get(`/api/media/models/huggingface/search?q=${encodeURIComponent(cleanQ)}&limit=18`);
     if (res && Array.isArray(res.models)) {
       const warnCount = res.models.filter((m) => m.fits_hardware === false || m.hardware_warning).length;
       if (statusEl) {
@@ -10131,6 +10422,13 @@ export function updateAiSyncProgressUi(syncProg = {}, standbyGuard = {}, zettaiS
   const isPaused = state === 'paused' || Boolean(syncProg.is_paused);
   const isStopped = state === 'stopped';
   const isDisabled = String(zettaiStatus || '').toLowerCase() === 'disabled' || syncProg.enabled === false;
+  const isComplete = !isRunning && !isPaused && !isStopped && !isDisabled && (
+    state === 'completed' ||
+    Number(syncProg.indexed_files || 0) > 0 ||
+    Number(syncProg.skipped_unchanged || 0) > 0 ||
+    String(syncProg.last_message || '').toLowerCase().includes('synced') ||
+    String(syncProg.last_message || '').toLowerCase().includes('complete')
+  );
 
   const stateBadge = document.getElementById('ai-sync-state-badge');
   const stateDot = document.getElementById('ai-sync-state-dot');
@@ -10156,6 +10454,11 @@ export function updateAiSyncProgressUi(syncProg = {}, standbyGuard = {}, zettaiS
       stateText.textContent = t('ai.sync_state_stopped', 'Sync: Stopped');
       stateBadge.style.borderColor = 'rgba(248,113,113,0.45)';
       stateBadge.style.color = '#fca5a5';
+    } else if (isComplete) {
+      stateDot.style.background = '#10b981';
+      stateText.textContent = t('ai.sync_state_complete', 'Sync: Complete (Up to Date)');
+      stateBadge.style.borderColor = 'rgba(16,185,129,0.45)';
+      stateBadge.style.color = '#6ee7b7';
     } else {
       stateDot.style.background = '#94a3b8';
       stateText.textContent = t('ai.sync_state_idle', 'Sync: Idle');
@@ -10200,7 +10503,9 @@ export function updateAiSyncProgressUi(syncProg = {}, standbyGuard = {}, zettaiS
           ? 'LEARNING'
           : isStopped
             ? 'STOPPED'
-            : (zettaiStatus ? String(zettaiStatus).toUpperCase() : 'IDLE');
+            : isComplete
+              ? 'COMPLETE'
+              : (zettaiStatus ? String(zettaiStatus).toUpperCase() : 'IDLE');
     statePill.textContent = pillLabel;
     statePill.style.background = isPaused
       ? 'rgba(245,158,11,0.22)'
@@ -10208,13 +10513,23 @@ export function updateAiSyncProgressUi(syncProg = {}, standbyGuard = {}, zettaiS
         ? 'rgba(37,194,160,0.22)'
         : isStopped
           ? 'rgba(239,68,68,0.22)'
-          : 'rgba(148,163,184,0.18)';
-    statePill.style.color = isPaused ? '#fbbf24' : isRunning ? '#34d399' : isStopped ? '#f87171' : '#e2e8f0';
+          : isComplete
+            ? 'rgba(16,185,129,0.22)'
+            : 'rgba(148,163,184,0.18)';
+    statePill.style.color = isPaused ? '#fbbf24' : isRunning ? '#34d399' : isStopped ? '#f87171' : isComplete ? '#34d399' : '#e2e8f0';
   }
 
   const curPathEl = document.getElementById('ai-index-current-path');
   if (curPathEl) {
-    const msg = syncProg.last_message || syncProg.current_path || 'Ready — Waiting for sync command (Sleeping drives protected)';
+    let msg = syncProg.last_message || syncProg.current_path || 'Ready — Waiting for sync command (Sleeping drives protected)';
+    if (syncProg.updated_at && (!syncProg.state || syncProg.state === 'idle' || syncProg.state === 'completed')) {
+      try {
+        const timeStr = new Date(syncProg.updated_at * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        if (!msg.includes('Finished at') && !msg.includes('Completed at')) {
+          msg += ` (Finished at ${timeStr})`;
+        }
+      } catch (_) {}
+    }
     curPathEl.textContent = msg;
   }
 
@@ -10380,6 +10695,9 @@ export function renderAiWatchedFoldersAndShares(watchedPaths = null, availableFo
 export async function controlAiSync(action) {
   const cleanAction = String(action || '').trim().toLowerCase();
   if (!cleanAction) return null;
+  if (cleanAction === 'flush' || cleanAction === 'clear') {
+    return flushAiIndex();
+  }
   const feedbackEl = document.getElementById('ai-index-run-feedback');
   try {
     const res = await api.post('/api/media/index/control', { action: cleanAction });
@@ -10399,6 +10717,41 @@ export async function controlAiSync(action) {
     showToast(`Sync control (${cleanAction}) failed: ${err.message}`, 'error');
     return null;
   }
+}
+
+export async function flushAiIndex() {
+  showConfirmToast(
+    t('ai.flush_index_confirm_title', 'Flush RAG Index & Start Fresh?'),
+    t(
+      'ai.flush_index_confirm_desc',
+      'Are you sure you want to flush the existing RAG knowledge base? This will wipe all indexed documents, code files, recipes, photos, vector embeddings, and cached search manifests from rag_index.db so you can perform a clean fresh sync.'
+    ),
+    async () => {
+      const feedbackEl = document.getElementById('ai-index-run-feedback');
+      if (feedbackEl) feedbackEl.textContent = '⏳ Flushing RAG index database...';
+      showToast('Flushing RAG index database...', 'info');
+      try {
+        const res = await api.post('/api/ai/index/flush');
+        await fetchAndRenderAiStatus();
+        if (feedbackEl) feedbackEl.textContent = '✓ RAG database flushed clean. Ready for fresh sync.';
+        showToast(
+          t('ai.flush_index_success_toast', 'RAG index database successfully flushed clean. Ready for fresh sync.'),
+          'success'
+        );
+        return res;
+      } catch (err) {
+        if (feedbackEl) feedbackEl.textContent = `✕ Flush failed: ${err.message}`;
+        showToast(`Failed to flush RAG index: ${err.message}`, 'error');
+        return null;
+      }
+    },
+    null,
+    {
+      okText: '🗑️ Flush & Reset',
+      cancelText: 'Cancel',
+      isDanger: true,
+    }
+  );
 }
 
 export async function addAiWatchedFolder(folderPath) {
@@ -10713,6 +11066,11 @@ export function initAiKnowledgeEngine() {
     btn.dataset.bound = '1';
     btn.addEventListener('click', () => controlAiSync('stop'));
   });
+  document.querySelectorAll('#btn-ai-flush-index, #btn-ai-flush-index-link').forEach((btn) => {
+    if (btn.dataset.bound) return;
+    btn.dataset.bound = '1';
+    btn.addEventListener('click', () => flushAiIndex());
+  });
 
   // Watched Folders Multi-Select Dropdown (#btn-ai-watched-folders-dropdown)
   const watchedDropdownBtn = document.getElementById('btn-ai-watched-folders-dropdown');
@@ -10960,8 +11318,9 @@ export function initAiKnowledgeEngine() {
     runIdxBtn.addEventListener('click', () => {
       const pathIn = document.getElementById('ai-index-target-path') || document.getElementById('ai-index-path-input');
       const respectCb = document.getElementById('ai-index-respect-standby') || document.getElementById('ai-respect-standby-cb');
+      const explicitPath = (pathIn && pathIn.value && pathIn.value.trim()) ? pathIn.value.trim() : null;
       runAiPathIndex(
-        pathIn ? pathIn.value.trim() : '/mnt/user',
+        explicitPath,
         respectCb ? Boolean(respectCb.checked) : true
       );
     });
@@ -11027,6 +11386,7 @@ export function initAiKnowledgeEngine() {
       }
     });
   }
+    initAiConversationControls();
   if (chatClearBtn && !chatClearBtn.dataset.bound) {
     chatClearBtn.dataset.bound = '1';
     chatClearBtn.addEventListener('click', () => {
@@ -11065,6 +11425,7 @@ export async function fetchAndRenderAiStatus() {
     const tierShort = tierNum === 1 ? 'NPU' : tierNum === 2 ? 'GPU' : 'CPU';
     const hwName = hw.name || hw.device_label || (tierNum === 1 ? 'Intel AI Boost NPU (/dev/accel/accel0)' : tierBadge);
     const totalFiles = stats.total_files ?? res.indexed_count ?? 0;
+    const totalVideos = stats.total_videos ?? cats.videos ?? 0;
     const totalDocs = stats.total_docs ?? stats.total_documents ?? cats.documents ?? 0;
     const totalRecipes = stats.total_recipes ?? cats.recipes ?? 0;
     const totalPhotos = stats.total_photos ?? cats.photos ?? 0;
@@ -11087,6 +11448,9 @@ export async function fetchAndRenderAiStatus() {
     if (schedStart && cfg.schedule_start) schedStart.value = cfg.schedule_start;
     const schedEnd = document.getElementById('ai-schedule-end-input');
     if (schedEnd && cfg.schedule_end) schedEnd.value = cfg.schedule_end;
+    if (typeof window !== 'undefined' && window.initGlassTimePickers) {
+      window.initGlassTimePickers(document.getElementById('mgmt-sec-ai') || document);
+    }
     const respectCbEl = document.getElementById('ai-index-respect-standby');
     if (respectCbEl && (cfg.respect_standby !== undefined || res.standby_guard?.respect_standby !== undefined)) {
       respectCbEl.checked = Boolean(cfg.respect_standby ?? res.standby_guard?.respect_standby ?? true);
@@ -11094,6 +11458,100 @@ export async function fetchAndRenderAiStatus() {
     const autoSpinupCbEl = document.getElementById('ai-auto-learn-spinup');
     if (autoSpinupCbEl && (cfg.auto_learn_on_spinup !== undefined || res.standby_guard?.auto_learn_on_spinup !== undefined)) {
       autoSpinupCbEl.checked = Boolean(cfg.auto_learn_on_spinup ?? res.standby_guard?.auto_learn_on_spinup ?? true);
+    }
+
+    // Hydrate Embedding Model & MRL Dimension selectors
+    const embModelSelect = document.getElementById('ai-embedding-model-select');
+    if (embModelSelect && (cfg.embedding_model || res.embedding_model)) {
+      embModelSelect.value = cfg.embedding_model || res.embedding_model || 'google/embeddinggemma-2';
+    }
+    const mrlDimSelect = document.getElementById('ai-mrl-dimension-select');
+    if (mrlDimSelect && (cfg.embedding_dim !== undefined || res.embedding_dim !== undefined)) {
+      mrlDimSelect.value = String(cfg.embedding_dim ?? res.embedding_dim ?? 768);
+    }
+
+    if (embModelSelect && !embModelSelect.dataset.bound) {
+      embModelSelect.dataset.bound = '1';
+      embModelSelect.addEventListener('change', async (e) => {
+        const val = e.target.value;
+        try {
+          await api.post('/api/ai/config', { embedding_model: val });
+          showToast(t('ai.config_saved') || 'Embedding model updated', 'success');
+        } catch (err) {
+          showToast('Failed to update embedding model: ' + err.message, 'error');
+        }
+      });
+    }
+
+    if (mrlDimSelect && !mrlDimSelect.dataset.bound) {
+      mrlDimSelect.dataset.bound = '1';
+      mrlDimSelect.addEventListener('change', async (e) => {
+        const val = parseInt(e.target.value, 10);
+        try {
+          await api.post('/api/ai/config', { embedding_dim: val });
+          showToast(t('ai.config_saved') || 'MRL dimension updated', 'success');
+        } catch (err) {
+          showToast('Failed to update MRL dimension: ' + err.message, 'error');
+        }
+      });
+    }
+
+    const btnBenchmark = document.getElementById('btn-ai-run-benchmark');
+    if (btnBenchmark && !btnBenchmark.dataset.bound) {
+      btnBenchmark.dataset.bound = '1';
+      btnBenchmark.addEventListener('click', async () => {
+        btnBenchmark.disabled = true;
+        const origHtml = btnBenchmark.innerHTML;
+        btnBenchmark.innerHTML = `<span>⏳</span> <span>${t('ai.benchmark_running') || 'Benchmarking Hardware...'}</span>`;
+        try {
+          const bRes = await api.post('/api/ai/benchmark');
+          if (bRes && bRes.status === 'ok') {
+            const card = document.getElementById('ai-benchmark-results-card');
+            if (card) card.style.display = 'grid';
+            const latEl = document.getElementById('bm-latency');
+            if (latEl) latEl.textContent = `${bRes.latency_ms} ms`;
+            const tpEl = document.getElementById('bm-throughput');
+            if (tpEl) tpEl.textContent = `${bRes.throughput_chunks_sec} chunks/s`;
+            const tokEl = document.getElementById('bm-tokens');
+            if (tokEl) tokEl.textContent = `${bRes.tokens_per_sec} tok/s`;
+            const accelEl = document.getElementById('bm-accel');
+            if (accelEl) accelEl.textContent = bRes.accelerator || 'CPU';
+            showToast('AI benchmark completed successfully', 'success');
+          }
+        } catch (err) {
+          showToast('Benchmark failed: ' + err.message, 'error');
+        } finally {
+          btnBenchmark.disabled = false;
+          btnBenchmark.innerHTML = origHtml;
+        }
+      });
+    }
+
+    // Bind In-Place Re-index buttons
+    const bindReindexBtn = (btnId) => {
+      const b = document.getElementById(btnId);
+      if (b && !b.dataset.bound) {
+        b.dataset.bound = '1';
+        b.addEventListener('click', async () => {
+          b.disabled = true;
+          try {
+            await triggerInPlaceReindex();
+          } finally {
+            setTimeout(() => { b.disabled = false; }, 2000);
+          }
+        });
+      }
+    };
+    bindReindexBtn('btn-ai-trigger-reindex');
+    bindReindexBtn('btn-ai-in-place-reindex');
+
+    // Check if in-place re-index is actively running
+    const reindexStatus = res && res.reindex_status;
+    if (reindexStatus && reindexStatus.status === 'running') {
+      try {
+        updateAiReindexProgress(reindexStatus);
+        _pollReindexProgress();
+      } catch (_) {}
     }
 
     // Render NPU & GPU LLM Recommendations
@@ -11125,9 +11583,10 @@ export async function fetchAndRenderAiStatus() {
     const topLabel = document.getElementById('topbar-ai-accel-label');
     const topDot = document.getElementById('topbar-ai-accel-dot');
     const topPill = document.getElementById('topbar-ai-accel-pill');
-    if (topText) topText.textContent = `${tierShort} • Standby Safe`;
+    const isReindexing = Boolean(reindexStatus && reindexStatus.status === 'running');
+    if (topText && !isReindexing) topText.textContent = `${tierShort} • Standby Safe`;
     if (topLabel) topLabel.textContent = `AI: ${tierShort}`;
-    if (topDot) {
+    if (topDot && !isReindexing) {
       topDot.style.background = tierNum === 1 ? '#3bf58b' : tierNum === 2 ? '#38bdf8' : '#a78bfa';
       topDot.style.boxShadow = tierNum === 1 ? '0 0 6px #3bf58b' : tierNum === 2 ? '0 0 6px #38bdf8' : '0 0 6px #a78bfa';
     }
@@ -11137,7 +11596,7 @@ export async function fetchAndRenderAiStatus() {
 
     // Sidebar & Hub Badges
     const sideBadge = document.getElementById('mgmt-sidebar-ai-badge');
-    if (sideBadge) sideBadge.textContent = tierShort;
+    if (sideBadge && !isReindexing) sideBadge.textContent = tierShort;
     const hubPill = document.getElementById('mgmt-hub-ai-pill');
     if (hubPill) {
       hubPill.textContent = `${tierBadge} • ${totalFiles} Files`;
@@ -11163,10 +11622,18 @@ export async function fetchAndRenderAiStatus() {
     }
 
     // Stats counters (both index.html and test IDs)
+    const statFilesPill = document.getElementById('ai-stat-total-files');
+    if (statFilesPill) statFilesPill.textContent = String(totalFiles);
+    const statVideos = document.getElementById('ai-stat-total-videos');
+    if (statVideos) statVideos.textContent = String(totalVideos);
     const statDocs = document.getElementById('ai-stat-total-docs');
     if (statDocs) statDocs.textContent = String(totalDocs);
     const statRecipes = document.getElementById('ai-stat-total-recipes');
     if (statRecipes) statRecipes.textContent = String(totalRecipes);
+    const statRecipesSeg = document.getElementById('ai-stat-recipes-segment');
+    if (statRecipesSeg) {
+      statRecipesSeg.style.display = totalRecipes > 0 ? 'inline' : 'none';
+    }
     const statTotalPhotos = document.getElementById('ai-stat-total-photos');
     if (statTotalPhotos) statTotalPhotos.textContent = String(totalPhotos);
 
@@ -11200,9 +11667,10 @@ export async function fetchAndRenderAiStatus() {
     });
 
     t3List.forEach((t3) => {
+      const dimFallback = stats.actual_embedding_dim || stats.embedding_dim || 768;
       t3.textContent = tierNum === 3
         ? `✓ ACTIVE: ${hwName} (${hw.execution_provider || 'CPUExecutionProvider'})`
-        : '✓ Ready as Universal Fallback (384-d Cross-Modal Hybrid Engine)';
+        : `✓ Ready as Universal Fallback (${dimFallback}-d EmbeddingGemma 2 MRL Engine)`;
       t3.style.color = tierNum === 3 ? '#c4b5fd' : 'var(--ok2, #25c2a0)';
     });
 
@@ -11214,12 +11682,24 @@ export async function fetchAndRenderAiStatus() {
       const defDetail = defItems.length > 0
         ? ` <span style="color:#fbbf24;">(${defItems.map((d) => `${escapeHtml(d.path)}${d.backing_dev ? ` [${escapeHtml(d.backing_dev)}]` : ''}`).join(', ')} — ⚡ auto-learns on spin-up)</span>`
         : (defCount > 0 ? ' <span style="color:#6ee7b7;">(⚡ auto-learns on spin-up)</span>' : '');
+      const dimLabel = stats.actual_embedding_dim || stats.embedding_dim || 768;
+      const modelRaw = stats.actual_embedding_model || stats.embedding_model || 'EmbeddingGemma 2';
+      const modelDisplayName = modelRaw.includes('embeddinggemma') ? 'EmbeddingGemma 2 MRL' : modelRaw;
+      const totalVideos = stats.total_videos || 0;
+      const videoDetail = totalVideos > 0 ? `, ${totalVideos} videos` : '';
       dbSummary.innerHTML = `
-        <div>• <strong>Indexed Files:</strong> ${totalFiles} (${totalDocs} documents/recipes, ${totalPhotos} photos)</div>
-        <div>• <strong>Semantic Chunks &amp; Vectors:</strong> ${totalChunks} (384-d Cross-Modal + FTS5 BM25)</div>
+        <div>• <strong>Indexed Files:</strong> ${totalFiles} (${totalDocs} documents/recipes, ${totalPhotos} photos${videoDetail})</div>
+        <div>• <strong>Semantic Chunks &amp; Vectors:</strong> ${totalChunks} (${dimLabel}-d ${escapeHtml(modelDisplayName)} + FTS5 BM25)</div>
         <div>• <strong>Deferred Standby Queue:</strong> ${defCount} path(s) waiting for drive wake${defDetail}</div>
-        <div>• <strong>NVMe Index Footprint:</strong> ${sizeKb} KB (<code>${escapeHtml(stats.db_path || '/app/data/rag_index.db')}</code>)</div>
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+          <span>• <strong>NVMe Index Footprint:</strong> ${sizeKb} KB (<code>${escapeHtml(stats.db_path || '/app/data/rag_index.db')}</code>)</span>
+          ${totalFiles > 0 || totalChunks > 0 ? `<button type="button" id="btn-ai-flush-index-link" class="btn-pill-toggle" style="padding:2px 8px; font-size:10.5px; font-weight:700; color:#fca5a5; border:1px solid rgba(239,68,68,0.35); background:rgba(239,68,68,0.12); border-radius:6px; cursor:pointer;" title="Flush existing RAG index, vector embeddings, and search catalog to start fresh"><span>🗑️</span> <span>Flush &amp; Start Fresh</span></button>` : ''}
+        </div>
       `;
+      const flushLink = dbSummary.querySelector('#btn-ai-flush-index-link');
+      if (flushLink) {
+        flushLink.addEventListener('click', () => flushAiIndex());
+      }
     }
 
     // Update Sync Progress & Transport Controls
@@ -11376,7 +11856,7 @@ export async function runAiRagAsk(rawQuestion, options = {}) {
       .replace(/\[(\d+)\]/g, '<span style="color:#38bdf8; font-weight:700;">[$1]</span>')
       .replace(/\n/g, '<br/>');
 
-    const hwTierLabel = res.hardware?.tier || res.hardware?.active_tier_name || 'NPU_TIER_1';
+    const hwTierLabel = res.hardware?.tier_code || res.hardware?.tier || res.hardware?.active_tier_name || 'NPU_TIER_1';
     const llmTel = res.llm_telemetry || {};
     const activeLlmId = llmTel.active_model || _aiLastActiveModel || 'qwen2.5:3b';
     const tokPerSec = llmTel.tokens_per_sec || 35;
@@ -11798,20 +12278,33 @@ export async function runAiVisualSearch(rawQuery = null) {
   }
 }
 
-export async function runAiPathIndex(targetPath = '/mnt/user', respectStandby = true) {
+export async function runAiPathIndex(targetPath = null, respectStandby = true) {
   const runBtns = [document.getElementById('btn-ai-run-index'), document.getElementById('btn-ai-run-index-path')].filter(Boolean);
   const feedbackEl = document.getElementById('ai-index-run-feedback');
   runBtns.forEach((b) => {
     b.disabled = true;
     b.innerHTML = '<span>⏳</span> <span>Indexing...</span>';
   });
+
+  let targets = [];
+  if (Array.isArray(targetPath) && targetPath.length > 0) {
+    targets = targetPath.filter(Boolean);
+  } else if (typeof targetPath === 'string' && targetPath.trim()) {
+    targets = [targetPath.trim()];
+  } else if (_aiWatchedPaths && _aiWatchedPaths.length > 0) {
+    targets = [..._aiWatchedPaths];
+  } else {
+    targets = ['/mnt/user'];
+  }
+
+  const displayTarget = targets.length === 1 ? targets[0] : `${targets.length} watched folder(s)`;
   if (feedbackEl) {
-    feedbackEl.textContent = `⏳ Scanning ${targetPath || '/mnt/user'} (Spindown-Safe Incremental Indexer)...`;
+    feedbackEl.textContent = `⏳ Scanning ${displayTarget} (Spindown-Safe Incremental Indexer)...`;
   }
   try {
     const res = await api.post('/api/media/index', {
-      path: targetPath || '/mnt/user',
-      paths: [targetPath || '/mnt/user'],
+      path: targets[0] || '/mnt/user',
+      paths: targets,
       respect_standby: Boolean(respectStandby),
       recursive: true,
     });
@@ -11819,9 +12312,10 @@ export async function runAiPathIndex(targetPath = '/mnt/user', respectStandby = 
       const indexedCount = res.indexed ?? res.indexed_files ?? 0;
       const skippedCount = res.skipped_unchanged ?? 0;
       const deferredCount = res.deferred_standby ?? 0;
+      const targetLabel = targets.length === 1 ? (res.path || targets[0]) : `${targets.length} watched folder(s)`;
       const msg = deferredCount > 0
         ? `Indexed ${indexedCount} file(s), ${skippedCount} unchanged (${deferredCount} deferred to protect sleeping drives).`
-        : `Indexed ${indexedCount} file(s) (${skippedCount} unchanged) on ${res.path || targetPath}.`;
+        : `Indexed ${indexedCount} file(s) (${skippedCount} unchanged) on ${targetLabel}.`;
       if (feedbackEl) {
         feedbackEl.textContent = `✓ ${msg}`;
       }
@@ -11838,174 +12332,11 @@ export async function runAiPathIndex(targetPath = '/mnt/user', respectStandby = 
   } finally {
     runBtns.forEach((b) => {
       b.disabled = false;
-      b.innerHTML = `<span>🚀</span> <span data-i18n="ai.run_index_btn">${escapeHtml(t('ai.index_now_btn', 'Index Path Now'))}</span>`;
+      b.innerHTML = `<span>🚀</span> <span data-i18n="ai.run_index_btn">${escapeHtml(t('ai.run_index_btn', 'Index Path Now'))}</span>`;
     });
   }
 }
 
-let _aiChatHistory = [];
-
-export function isAiThinkingModel(modelName) {
-  const m = String(modelName || '').toLowerCase();
-  return m.includes('r1') ||
-         m.includes('qwq') ||
-         m.includes('reason') ||
-         m.includes('thinking') ||
-         m.includes('saluki') ||
-         m.includes('cot') ||
-         m.includes('deepseek');
-}
-
-function _formatChatMarkdown(rawText) {
-  let text = String(rawText || '');
-  // Strip out any trailing verbose "Verified Web Sources" section
-  text = text.replace(/#{2,4}\s*🌐?\s*Verified\s+Web\s+Sources[\s\S]*$/i, '').trim();
-  // Strip out duplicate trailing text-based "Sources:\n[1] ... \n[2] ..." list
-  text = text.replace(/(?:\r?\n)+\s*(?:\*\*)?Sources:?(?:\*\*)?\s*(?:\r?\n)+(?:\s*\[\d+\][^\n]*\r?\n?)+$/i, '').trim();
-
-  // Extract <think>...</think> if present
-  let thoughtHtml = '';
-  const thinkMatch = text.match(/<think>([\s\S]*?)<\/think>/i);
-  if (thinkMatch) {
-    const thoughtContent = escapeHtml(thinkMatch[1].trim());
-    text = text.replace(/<think>[\s\S]*?<\/think>/i, '').trim();
-    thoughtHtml = `
-      <details class="ai-thought-disclosure" style="margin: 4px 0 10px; border-radius: 8px; background: rgba(147, 51, 234, 0.08); border: 1px solid rgba(168, 85, 247, 0.28); padding: 7px 10px; font-size: 11px;">
-        <summary style="cursor: pointer; font-weight: 700; color: #c084fc; display: inline-flex; align-items: center; gap: 6px; user-select: none;">
-          <span>🧠 Thought Process</span>
-          <span style="font-size: 9.5px; color: #94a3b8; font-weight: 400;">(click to view chain of thought)</span>
-        </summary>
-        <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(168, 85, 247, 0.2); color: #cbd5e1; font-size: 11px; line-height: 1.5; font-style: italic;">
-          ${thoughtContent.replace(/\n/g, '<br/>')}
-        </div>
-      </details>
-    `;
-  }
-
-  // Handle fenced code blocks before escaping HTML
-  const codeBlocks = [];
-  text = text.replace(/```([a-zA-Z0-9_-]*)\r?\n([\s\S]*?)```/g, (match, lang, code) => {
-    const idx = codeBlocks.length;
-    const cleanLang = (lang || 'code').trim();
-    codeBlocks.push({
-      lang: cleanLang,
-      code: code.trim(),
-    });
-    return `___CODE_BLOCK_${idx}___`;
-  });
-
-  let escaped = escapeHtml(text);
-
-  // Restore code blocks with glassmorphic container and copy button
-  escaped = escaped.replace(/___CODE_BLOCK_(\d+)___/g, (match, idxStr) => {
-    const item = codeBlocks[parseInt(idxStr, 10)];
-    if (!item) return match;
-    const escapedCode = escapeHtml(item.code);
-    return `<div class="ai-chat-code-block" style="margin: 8px 0; border-radius: 8px; background: rgba(2, 6, 23, 0.88); border: 1px solid rgba(56, 189, 248, 0.3); overflow: hidden;">
-      <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 10px; background: rgba(15, 23, 42, 0.95); border-bottom: 1px solid rgba(255, 255, 255, 0.08); font-size: 10.5px; color: #94a3b8; font-family: monospace;">
-        <span style="font-weight: 700; color: #7dd3fc;">${escapeHtml(item.lang)}</span>
-        <button type="button" class="btn-copy-code" onclick="navigator.clipboard.writeText(this.closest('.ai-chat-code-block').querySelector('code').innerText); this.textContent='✓ Copied'; setTimeout(() => this.textContent='Copy', 1600);" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.18); border-radius: 4px; color: #cbd5e1; font-size: 9.5px; padding: 2px 7px; cursor: pointer;">Copy</button>
-      </div>
-      <pre style="margin: 0; padding: 10px 12px; overflow-x: auto; font-family: 'JetBrains Mono', Consolas, monospace; font-size: 11.5px; line-height: 1.5; color: #e2e8f0;"><code>${escapedCode}</code></pre>
-    </div>`;
-  });
-
-  const formatted = escaped
-    .replace(/^####\s+(.+)$/gm, '<div style="font-size:12px; font-weight:800; color:#7dd3fc; margin:8px 0 3px;">$1</div>')
-    .replace(/^###\s+(.+)$/gm, '<div style="font-size:12.5px; font-weight:800; color:#38bdf8; margin:8px 0 4px;">$1</div>')
-    .replace(/^&gt;\s?(.*)$/gm, '<div style="border-left:2px solid rgba(168,85,247,0.55); padding-left:8px; margin:3px 0; color:#cbd5e1; font-size:11px; background:rgba(168,85,247,0.07); border-radius:0 4px 4px 0;">$1</div>')
-    .replace(/^[-*]\s+(.+)$/gm, '<div style="display:flex; align-items:flex-start; gap:6px; margin:3px 0 3px 4px;"><span style="color:#38bdf8; font-size:11px; line-height:1.5;">•</span><div style="flex:1;">$1</div></div>')
-    .replace(/^(\d+)\.\s+(.+)$/gm, '<div style="display:flex; align-items:flex-start; gap:6px; margin:3px 0 3px 4px;"><span style="color:#c084fc; font-weight:700; font-size:11px; line-height:1.5;">$1.</span><div style="flex:1;">$2</div></div>')
-    .replace(/\*\*(.+?)\*\*/g, '<strong style="color:#fff;">$1</strong>')
-    .replace(/`([^`]+)`/g, '<code style="background:rgba(0,0,0,0.38); padding:1px 5px; border-radius:4px; color:#bae6fd; font-family:monospace; font-size:11px;">$1</code>')
-    .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" style="color:#38bdf8; text-decoration:underline;">$1 ↗</a>')
-    .replace(/\[\^(\d+):\s*([^#\]]+)(?:#L?(\d+))?\]/g, (match, idx, path, line) => {
-      const escP = escapeHtml(path.trim());
-      const escN = escapeHtml(path.trim().split('/').pop() || 'File');
-      const lineStr = line ? ` (L${line})` : '';
-      return `<button type="button" class="ai-citation-inline-pill" onclick="window.openFilePreviewModal('${escP}', '${escN}')" style="display:inline-flex; align-items:center; gap:3px; background:rgba(56,189,248,0.15); border:1px solid rgba(56,189,248,0.38); border-radius:999px; padding:1px 7px; color:#7dd3fc; font-size:10px; font-weight:700; cursor:pointer; vertical-align:baseline; margin:0 2px;"><span>📄 [${idx}] ${escN}${lineStr}</span><span style="font-size:9px;">👁️</span></button>`;
-    })
-    .replace(/\[(\d+)\]/g, '<span style="display:inline-flex; align-items:center; justify-content:center; font-size:9.5px; font-weight:700; color:#38bdf8; background:rgba(56,189,248,0.16); border:1px solid rgba(56,189,248,0.35); border-radius:999px; padding:0 5px; margin:0 2px; vertical-align:baseline; line-height:1.3;">[$1]</span>')
-    .replace(/\n\n+/g, '<div style="height:6px;"></div>')
-    .replace(/\n/g, '<br/>');
-
-  return (thoughtHtml ? thoughtHtml : '') + formatted;
-}
-
-export function clearAiChatHistory() {
-  _aiChatHistory = [];
-  const listEl = document.getElementById('ai-chat-messages-list');
-  if (!listEl) return;
-  const activeModel = _aiLastActiveModel || 'qwen2.5:3b';
-  listEl.innerHTML = `
-    <div class="ai-chat-msg ai-chat-msg-assistant" style="display: flex; flex-direction: column; gap: 6px; padding: 11px 14px; border-radius: 10px; background: rgba(15, 23, 42, 0.72); border: 1px solid rgba(56, 189, 248, 0.25);">
-      <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap;">
-        <span style="font-size: 11px; font-weight: 800; color: #38bdf8;">🤖 ZettAI Copilot (${escapeHtml(activeModel)})</span>
-        <span style="font-size: 9.5px; color: #6ee7b7; padding: 1px 7px; border-radius: 999px; background: rgba(16,185,129,0.14); border: 1px solid rgba(16,185,129,0.35);">⚡ Ready • 🛠️ 8 NAS Tools • 🌐 Web Browse • 💤 0 Disk Wakeups</span>
-      </div>
-      <div style="font-size: 12px; color: #e2e8f0; line-height: 1.5;">
-        Conversation cleared. Ask me any question, verify facts on the web, or command your NAS hardware!
-      </div>
-    </div>
-  `;
-}
-
-export async function sendAiChatMessage(rawMessage = null) {
-  const inputEl = document.getElementById('ai-chat-input');
-  const sendBtn = document.getElementById('btn-ai-chat-send');
-  const listEl = document.getElementById('ai-chat-messages-list');
-
-  const msg = (rawMessage !== null && rawMessage !== undefined ? String(rawMessage) : (inputEl ? inputEl.value : '')).trim();
-  if (!msg) {
-    showToast(t('ai.enter_question', 'Please enter a question or command for the NAS Copilot.'), 'warn');
-    return null;
-  }
-
-  if (inputEl) inputEl.value = '';
-  if (sendBtn) {
-    sendBtn.disabled = true;
-    sendBtn.innerHTML = '<span><span class="ai-typing-dot" style="width:5px;height:5px;margin-right:3px;"></span></span> <span>Generating...</span>';
-  }
-
-  const allowWeb = true;
-  const allowTools = true;
-  const activeModel = _aiLastActiveModel || 'qwen2.5:3b';
-  const isThinking = isAiThinkingModel(activeModel);
-
-  if (listEl) {
-    const userMsgEl = document.createElement('div');
-    userMsgEl.className = 'ai-chat-msg ai-chat-msg-user';
-    userMsgEl.style.cssText = 'align-self: flex-end; max-width: 85%; padding: 9px 13px; border-radius: 10px; background: rgba(14, 165, 233, 0.22); border: 1px solid rgba(56, 189, 248, 0.45); color: #f8fafc; font-size: 12px; line-height: 1.45;';
-    userMsgEl.innerHTML = `<div style="font-size:10px; font-weight:700; color:#7dd3fc; margin-bottom:3px;">🧑 You</div><div>${escapeHtml(msg)}</div>`;
-    listEl.appendChild(userMsgEl);
-
-    const pendingEl = document.createElement('div');
-    pendingEl.className = 'ai-chat-msg ai-chat-msg-pending';
-    pendingEl.dataset.isThinking = isThinking ? '1' : '0';
-    if (isThinking) {
-      pendingEl.style.cssText = 'align-self: flex-start; max-width: 85%; padding: 10px 14px; border-radius: 10px; background: rgba(30, 20, 50, 0.75); border: 1px solid rgba(192, 132, 252, 0.4); display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(168, 85, 247, 0.15);';
-      pendingEl.innerHTML = `
-        <span class="ai-thinking-brain" style="font-size: 15px;">🧠</span>
-        <span style="font-size: 12px; font-weight: 700; color: #e9d5ff;">Thinking</span>
-        <span class="ai-thinking-dots" style="color: #c084fc; font-weight: 800; letter-spacing: 2px;">
-          <span class="ai-dot-1">.</span><span class="ai-dot-2">.</span><span class="ai-dot-3">.</span>
-        </span>
-        <span style="font-size: 10px; color: #d8b4fe; margin-left: 6px; padding: 1px 7px; border-radius: 999px; background: rgba(168, 85, 247, 0.2); border: 1px solid rgba(192, 132, 252, 0.35);">${escapeHtml(activeModel)}</span>
-      `;
-    } else {
-      pendingEl.style.cssText = 'align-self: flex-start; max-width: 85%; padding: 10px 14px; border-radius: 10px; background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); display: flex; align-items: center; gap: 9px; box-shadow: 0 4px 14px rgba(14, 165, 233, 0.12);';
-      pendingEl.innerHTML = `
-        <div class="ai-typing-indicator" style="display: inline-flex; align-items: center; gap: 4px;">
-          <span class="ai-typing-dot"></span>
-          <span class="ai-typing-dot"></span>
-          <span class="ai-typing-dot"></span>
-        </div>
-        <span style="font-size: 11px; color: #cbd5e1;">Processing with <strong style="color: #38bdf8;">${escapeHtml(activeModel)}</strong>...</span>
-      `;
-    }
-    listEl.appendChild(pendingEl);
-    listEl.scrollTop = listEl.scrollHeight;
-  }
 
 function _buildAiAssistantMessageHtml(res, defaultModel) {
   const replyMd = res.reply || res.answer || 'No response generated.';
@@ -12030,10 +12361,14 @@ function _buildAiAssistantMessageHtml(res, defaultModel) {
         ${toolsCalled.map((tc) => {
           const isWeb = tc.tool === 'browse_internet';
           const isRag = tc.tool === 'search_nas_knowledge';
-          const bg = isWeb ? 'rgba(56,189,248,0.16)' : (isRag ? 'rgba(168,85,247,0.16)' : 'rgba(16,185,129,0.16)');
-          const border = isWeb ? 'rgba(56,189,248,0.42)' : (isRag ? 'rgba(168,85,247,0.42)' : 'rgba(52,211,153,0.42)');
-          const color = isWeb ? '#7dd3fc' : (isRag ? '#d8b4fe' : '#6ee7b7');
-          const icon = isWeb ? '🌐' : (isRag ? '📁' : '🛠️');
+          const isCalc = tc.tool === 'calculate';
+          const isStorage = tc.tool === 'get_storage_status';
+          const isNet = tc.tool === 'get_network_status';
+          const isWeather = tc.tool === 'get_weather';
+          const bg = isCalc ? 'rgba(245,158,11,0.16)' : (isWeather ? 'rgba(14,165,233,0.18)' : (isWeb ? 'rgba(56,189,248,0.16)' : (isRag ? 'rgba(168,85,247,0.16)' : (isNet ? 'rgba(14,165,233,0.16)' : 'rgba(16,185,129,0.16)'))));
+          const border = isCalc ? 'rgba(251,191,36,0.42)' : (isWeather ? 'rgba(56,189,248,0.45)' : (isWeb ? 'rgba(56,189,248,0.42)' : (isRag ? 'rgba(168,85,247,0.42)' : (isNet ? 'rgba(56,189,248,0.42)' : 'rgba(52,211,153,0.42)'))));
+          const color = isCalc ? '#fde68a' : (isWeather ? '#38bdf8' : (isWeb ? '#7dd3fc' : (isRag ? '#d8b4fe' : (isNet ? '#7dd3fc' : '#6ee7b7'))));
+          const icon = isCalc ? '🧮' : (isWeather ? '⛅' : (isWeb ? '🌐' : (isRag ? '📁' : (isStorage ? '💽' : (isNet ? '🔌' : '🛠️')))));
           return `<span class="ai-chat-tool-pill" data-tool-name="${escapeHtml(tc.tool)}" style="font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: ${bg}; border: 1px solid ${border}; color: ${color};" title="${escapeHtml(tc.summary || tc.tool)}">${icon} ${escapeHtml(tc.tool)}: ${escapeHtml(tc.summary || 'OK')}</span>`;
         }).join('')}
       </div>
@@ -12148,13 +12483,681 @@ function _buildAiAssistantMessageHtml(res, defaultModel) {
   `;
 }
 
+let _activeConversationId = null;
+let _activeConversationTitle = 'New Conversation';
+let _aiConversations = [];
+let _aiActiveAbortController = null;
+let _aiActiveRequestId = 0;
+
+function _groupConversationsChronologically(convs) {
+  const now = Date.now();
+  const oneDayMs = 24 * 60 * 60 * 1000;
+  const groups = {
+    pinned: [],
+    today: [],
+    yesterday: [],
+    prev7Days: [],
+    older: [],
+  };
+
+  convs.forEach((c) => {
+    if (c.is_pinned) {
+      groups.pinned.push(c);
+      return;
+    }
+    const updatedMs = (c.updated_at || c.created_at || (now / 1000)) * 1000;
+    const diffMs = now - updatedMs;
+    const diffDays = Math.floor(diffMs / oneDayMs);
+
+    if (diffDays === 0) {
+      groups.today.push(c);
+    } else if (diffDays === 1) {
+      groups.yesterday.push(c);
+    } else if (diffDays <= 7) {
+      groups.prev7Days.push(c);
+    } else {
+      groups.older.push(c);
+    }
+  });
+
+  return groups;
+}
+
+export async function fetchAndRenderAiConversations(searchQuery = '') {
+  const listContainer = document.getElementById('ai-chat-threads-list');
+  const countBadge = document.getElementById('ai-chat-thread-count');
+  if (!listContainer) return;
+
   try {
-    const isTestEnv = typeof vi !== 'undefined' ||
-                      typeof vitest !== 'undefined' ||
-                      (typeof process !== 'undefined' && process?.env?.NODE_ENV === 'test') ||
-                      typeof window === 'undefined' ||
-                      !window.fetch ||
-                      !window.ReadableStream;
+    const res = await api.get('/api/ai/conversations', searchQuery ? { search: searchQuery } : {});
+    const convs = (res && res.conversations) ? res.conversations : [];
+    _aiConversations = convs;
+
+    if (countBadge) {
+      countBadge.textContent = `${convs.length} ${convs.length === 1 ? 'chat' : 'chats'}`;
+    }
+
+    if (convs.length === 0) {
+      listContainer.innerHTML = `<div class="ai-empty-threads">${escapeHtml(t('ai.no_chats', 'No conversations yet'))}</div>`;
+      return;
+    }
+
+    const groups = _groupConversationsChronologically(convs);
+    let html = '';
+
+    const renderGroup = (labelKey, defaultLabel, items, icon) => {
+      if (!items || items.length === 0) return '';
+      let gHtml = `<div class="ai-thread-group-header"><span>${icon}</span> <span>${escapeHtml(t(labelKey, defaultLabel))}</span></div>`;
+      items.forEach((c) => {
+        const isActive = c.id === _activeConversationId;
+        const pinIcon = c.is_pinned ? '📌' : '📍';
+        const pinTitle = c.is_pinned ? 'Unpin' : 'Pin';
+        gHtml += `
+          <div class="ai-thread-item ${isActive ? 'active' : ''}" data-conv-id="${escapeHtml(c.id)}">
+            <span class="ai-thread-title-text" title="${escapeHtml(c.title || 'New Conversation')}">${escapeHtml(c.title || 'New Conversation')}</span>
+            <div class="ai-thread-actions">
+              <button type="button" class="btn-ai-thread-action btn-ai-thread-pin" data-conv-id="${escapeHtml(c.id)}" data-pinned="${c.is_pinned ? '1' : '0'}" title="${pinTitle}">${pinIcon}</button>
+              <button type="button" class="btn-ai-thread-action btn-ai-thread-rename" data-conv-id="${escapeHtml(c.id)}" title="Rename">✏️</button>
+              <button type="button" class="btn-ai-thread-action btn-ai-thread-del" data-conv-id="${escapeHtml(c.id)}" title="Delete">🗑️</button>
+            </div>
+          </div>
+        `;
+      });
+      return gHtml;
+    };
+
+    html += renderGroup('ai.pinned', 'Pinned', groups.pinned, '📌');
+    html += renderGroup('ai.today', 'Today', groups.today, '📅');
+    html += renderGroup('ai.yesterday', 'Yesterday', groups.yesterday, '⏳');
+    html += renderGroup('ai.prev_7_days', 'Previous 7 Days', groups.prev7Days, '📆');
+    html += renderGroup('ai.older', 'Older', groups.older, '🗄️');
+
+    listContainer.innerHTML = html;
+
+    listContainer.querySelectorAll('.ai-thread-item').forEach((item) => {
+      const cid = item.dataset.convId;
+      item.addEventListener('click', (e) => {
+        if (e.target.closest('.ai-thread-actions')) return;
+        selectAiConversation(cid);
+      });
+    });
+
+    listContainer.querySelectorAll('.btn-ai-thread-pin').forEach((btn) => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const cid = btn.dataset.convId;
+        const isPinned = btn.dataset.pinned === '1';
+        try {
+          await api.patch(`/api/ai/conversations/${cid}`, { is_pinned: !isPinned });
+          await fetchAndRenderAiConversations(searchQuery);
+        } catch (err) {
+          showToast(`Pin failed: ${err.message}`, 'error');
+        }
+      });
+    });
+
+    listContainer.querySelectorAll('.btn-ai-thread-rename').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        renameAiConversation(btn.dataset.convId);
+      });
+    });
+
+    listContainer.querySelectorAll('.btn-ai-thread-del').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        deleteAiConversation(btn.dataset.convId);
+      });
+    });
+
+    if (!_activeConversationId && convs.length > 0) {
+      selectAiConversation(convs[0].id);
+    }
+  } catch (err) {
+    console.debug('[ZettAI] Failed loading conversations:', err);
+  }
+}
+
+export async function selectAiConversation(convId) {
+  if (!convId) return;
+  if (_aiActiveAbortController) {
+    _aiActiveAbortController.abort();
+    _aiActiveAbortController = null;
+  }
+  _activeConversationId = convId;
+
+  document.querySelectorAll('.ai-thread-item').forEach((el) => {
+    el.classList.toggle('active', el.dataset.convId === convId);
+  });
+
+  const listEl = document.getElementById('ai-chat-messages-list');
+  const titleEl = document.getElementById('ai-chat-active-title');
+
+  try {
+    const res = await api.get(`/api/ai/conversations/${convId}`);
+    if (!res || !res.conversation) return;
+    const conv = res.conversation;
+    _activeConversationTitle = conv.title || 'New Conversation';
+    if (titleEl) titleEl.textContent = _activeConversationTitle;
+
+    if (!listEl) return;
+    listEl.innerHTML = '';
+    _aiChatHistory = [];
+
+    const msgs = conv.messages || [];
+    msgs.forEach((m) => {
+      _aiChatHistory.push({ role: m.role, content: m.content });
+      if (m.role === 'user') {
+        const userMsgEl = document.createElement('div');
+        userMsgEl.className = 'ai-chat-msg ai-chat-msg-user';
+        userMsgEl.dataset.convId = convId;
+        userMsgEl.style.cssText = 'align-self: flex-end; max-width: 85%; padding: 9px 13px; border-radius: 10px; background: rgba(14, 165, 233, 0.22); border: 1px solid rgba(56, 189, 248, 0.45); color: #f8fafc; font-size: 12px; line-height: 1.45;';
+        userMsgEl.innerHTML = `<div style="font-size:10px; font-weight:700; color:#7dd3fc; margin-bottom:3px;">🧑 You</div><div>${escapeHtml(m.content)}</div>`;
+        listEl.appendChild(userMsgEl);
+      } else if (m.role === 'assistant') {
+        const botMsgEl = document.createElement('div');
+        botMsgEl.className = 'ai-chat-msg ai-chat-msg-assistant';
+        botMsgEl.dataset.convId = convId;
+        const modelName = m.telemetry?.active_model || conv.model || 'qwen2.5:3b';
+        botMsgEl.innerHTML = _buildAiAssistantMessageHtml({
+          reply: m.content,
+          llm_telemetry: m.telemetry,
+          tools_called: m.tools_called,
+          web_sources: m.web_sources,
+          citations: m.citations,
+          photos: m.photos,
+        }, modelName);
+        listEl.appendChild(botMsgEl);
+      }
+    });
+
+    listEl.scrollTop = listEl.scrollHeight;
+  } catch (err) {
+    console.debug('[ZettAI] Failed selecting conversation:', err);
+  }
+}
+
+export async function createNewAiConversation() {
+  if (_aiActiveAbortController) {
+    _aiActiveAbortController.abort();
+    _aiActiveAbortController = null;
+  }
+  try {
+    const res = await api.post('/api/ai/conversations', { title: 'New Conversation' });
+    if (res && res.conversation) {
+      _activeConversationId = res.conversation.id;
+      _activeConversationTitle = res.conversation.title || 'New Conversation';
+      const titleEl = document.getElementById('ai-chat-active-title');
+      if (titleEl) titleEl.textContent = _activeConversationTitle;
+      const listEl = document.getElementById('ai-chat-messages-list');
+      if (listEl) listEl.innerHTML = '';
+      _aiChatHistory = [];
+      await fetchAndRenderAiConversations();
+      const inputEl = document.getElementById('ai-chat-input');
+      if (inputEl) inputEl.focus();
+    }
+  } catch (err) {
+    showToast(`Could not start new chat: ${err.message}`, 'error');
+  }
+}
+
+export async function renameAiConversation(convId, customTitle = null) {
+  const targetId = convId || _activeConversationId;
+  if (!targetId) return;
+
+  let currentTitle = _activeConversationTitle;
+  const match = _aiConversations.find((c) => c.id === targetId);
+  if (match && match.title) currentTitle = match.title;
+
+  const performRename = async (titleToSet) => {
+    if (!titleToSet || !titleToSet.trim()) return;
+    try {
+      await api.patch(`/api/ai/conversations/${targetId}`, { title: titleToSet.trim() });
+      if (targetId === _activeConversationId) {
+        _activeConversationTitle = titleToSet.trim();
+        const titleEl = document.getElementById('ai-chat-active-title');
+        if (titleEl) titleEl.textContent = _activeConversationTitle;
+      }
+      await fetchAndRenderAiConversations();
+      showToast(t('ai.chat_renamed', 'Conversation renamed.'), 'success');
+    } catch (err) {
+      showToast(`Rename failed: ${err.message}`, 'error');
+    }
+  };
+
+  if (customTitle !== null) {
+    await performRename(customTitle);
+    return;
+  }
+
+  showPromptToast(
+    t('ai.rename_chat', 'Rename Chat'),
+    t('ai.rename_chat_prompt', 'Enter a new title for this conversation:'),
+    currentTitle,
+    async (val) => {
+      await performRename(val);
+    },
+    null,
+    {
+      okText: t('common.save', 'Save'),
+      cancelText: t('common.cancel', 'Cancel'),
+      icon: '✏️',
+    }
+  );
+}
+
+export async function deleteAiConversation(convId) {
+  const targetId = convId || _activeConversationId;
+  if (!targetId) return;
+
+  showConfirmToast(
+    t('ai.delete_chat', 'Delete Conversation'),
+    t('ai.confirm_delete_chat', 'Are you sure you want to delete this conversation?'),
+    async () => {
+      try {
+        await api.delete(`/api/ai/conversations/${targetId}`);
+        showToast(t('ai.chat_deleted', 'Conversation deleted.'), 'success');
+        if (targetId === _activeConversationId) {
+          _activeConversationId = null;
+          _activeConversationTitle = 'New Conversation';
+          const titleEl = document.getElementById('ai-chat-active-title');
+          if (titleEl) titleEl.textContent = 'New Conversation';
+          const listEl = document.getElementById('ai-chat-messages-list');
+          if (listEl) listEl.innerHTML = '';
+          _aiChatHistory = [];
+        }
+        await fetchAndRenderAiConversations();
+        if (!_activeConversationId && _aiConversations.length > 0) {
+          selectAiConversation(_aiConversations[0].id);
+        } else if (!_activeConversationId) {
+          await createNewAiConversation();
+        }
+      } catch (err) {
+        showToast(`Delete failed: ${err.message}`, 'error');
+      }
+    }
+  );
+}
+
+export async function clearAllAiConversations() {
+  showConfirmToast(
+    t('ai.clear_all', 'Clear All Conversations'),
+    t('ai.confirm_clear_all', 'Are you sure you want to delete all conversation history?'),
+    async () => {
+      try {
+        await api.delete('/api/ai/conversations');
+        _activeConversationId = null;
+        _activeConversationTitle = 'New Conversation';
+        _aiConversations = [];
+        _aiChatHistory = [];
+        const listEl = document.getElementById('ai-chat-messages-list');
+        if (listEl) listEl.innerHTML = '';
+        showToast(t('ai.all_cleared', 'All conversations cleared.'), 'success');
+        await createNewAiConversation();
+      } catch (err) {
+        showToast(`Clear all failed: ${err.message}`, 'error');
+      }
+    }
+  );
+}
+
+export async function exportActiveAiThread(format = 'markdown') {
+  if (!_activeConversationId) {
+    showToast(t('ai.no_active_conversation', 'No active conversation to export.'), 'warn');
+    return;
+  }
+  try {
+    const res = await api.get(`/api/ai/conversations/${_activeConversationId}`);
+    if (!res || !res.conversation) return;
+    const conv = res.conversation;
+    const title = conv.title || 'Conversation';
+    const dateStr = new Date((conv.created_at || (Date.now() / 1000)) * 1000).toLocaleString();
+
+    let content = '';
+    let mimeType = 'text/plain';
+    let ext = 'txt';
+
+    if (format === 'markdown') {
+      mimeType = 'text/markdown';
+      ext = 'md';
+      content = `# ${title}\n*Exported from ZettAI on ${dateStr}*\n\n---\n\n`;
+      (conv.messages || []).forEach((m) => {
+        if (m.role === 'user') {
+          content += `### 🧑 User:\n${m.content}\n\n`;
+        } else if (m.role === 'assistant') {
+          content += `### 🤖 ZettAI:\n${m.content}\n\n`;
+        }
+      });
+    } else {
+      mimeType = 'application/json';
+      ext = 'json';
+      content = JSON.stringify(conv, null, 2);
+    }
+
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const cleanFileName = title.toLowerCase().replace(/[^a-z0-9_-]/g, '_').slice(0, 40) || 'chat';
+    a.download = `zettai_${cleanFileName}.${ext}`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    showToast(`Exported conversation as ${ext.toUpperCase()}`, 'success');
+  } catch (err) {
+    showToast(`Export failed: ${err.message}`, 'error');
+  }
+}
+
+export function toggleAiSidebar() {
+  const sidebar = document.getElementById('ai-chat-sidebar');
+  const openBtn = document.getElementById('btn-ai-chat-sidebar-open');
+  if (!sidebar) return;
+  const isCollapsed = sidebar.classList.toggle('collapsed');
+  if (openBtn) {
+    openBtn.style.display = isCollapsed ? 'flex' : 'none';
+  }
+  try {
+    localStorage.setItem('zettnas_ai_sidebar_collapsed', isCollapsed ? '1' : '0');
+  } catch (_) {}
+}
+
+export function initAiConversationControls() {
+  const btnNew = document.getElementById('btn-ai-chat-new');
+  if (btnNew && !btnNew.dataset.bound) {
+    btnNew.dataset.bound = '1';
+    btnNew.addEventListener('click', () => createNewAiConversation());
+  }
+
+  const btnToggle = document.getElementById('btn-ai-chat-sidebar-toggle');
+  if (btnToggle && !btnToggle.dataset.bound) {
+    btnToggle.dataset.bound = '1';
+    btnToggle.addEventListener('click', () => toggleAiSidebar());
+  }
+
+  const btnOpen = document.getElementById('btn-ai-chat-sidebar-open');
+  if (btnOpen && !btnOpen.dataset.bound) {
+    btnOpen.dataset.bound = '1';
+    btnOpen.addEventListener('click', () => toggleAiSidebar());
+  }
+
+  const searchInput = document.getElementById('ai-chat-search-input');
+  if (searchInput && !searchInput.dataset.bound) {
+    searchInput.dataset.bound = '1';
+    let debounceTimer = null;
+    searchInput.addEventListener('input', () => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        fetchAndRenderAiConversations(searchInput.value.trim());
+      }, 200);
+    });
+  }
+
+  const btnClearAll = document.getElementById('btn-ai-chat-clear-all');
+  if (btnClearAll && !btnClearAll.dataset.bound) {
+    btnClearAll.dataset.bound = '1';
+    btnClearAll.addEventListener('click', () => clearAllAiConversations());
+  }
+
+  const btnRename = document.getElementById('btn-ai-chat-rename');
+  if (btnRename && !btnRename.dataset.bound) {
+    btnRename.dataset.bound = '1';
+    btnRename.addEventListener('click', () => renameAiConversation(_activeConversationId));
+  }
+
+  const titleEl = document.getElementById('ai-chat-active-title');
+  if (titleEl && !titleEl.dataset.bound) {
+    titleEl.dataset.bound = '1';
+    titleEl.addEventListener('dblclick', () => renameAiConversation(_activeConversationId));
+  }
+
+  const exportToggle = document.getElementById('btn-ai-chat-export-toggle');
+  const exportMenu = document.getElementById('ai-chat-export-menu');
+  if (exportToggle && exportMenu && !exportToggle.dataset.bound) {
+    exportToggle.dataset.bound = '1';
+    exportToggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      exportMenu.style.display = exportMenu.style.display === 'none' ? 'block' : 'none';
+    });
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('#ai-chat-export-menu') && !e.target.closest('#btn-ai-chat-export-toggle')) {
+        exportMenu.style.display = 'none';
+      }
+    });
+  }
+
+  const btnExportMd = document.getElementById('btn-ai-chat-export-md');
+  if (btnExportMd && !btnExportMd.dataset.bound) {
+    btnExportMd.dataset.bound = '1';
+    btnExportMd.addEventListener('click', () => {
+      if (exportMenu) exportMenu.style.display = 'none';
+      exportActiveAiThread('markdown');
+    });
+  }
+
+  const btnExportJson = document.getElementById('btn-ai-chat-export-json');
+  if (btnExportJson && !btnExportJson.dataset.bound) {
+    btnExportJson.dataset.bound = '1';
+    btnExportJson.addEventListener('click', () => {
+      if (exportMenu) exportMenu.style.display = 'none';
+      exportActiveAiThread('json');
+    });
+  }
+
+  try {
+    if (localStorage.getItem('zettnas_ai_sidebar_collapsed') === '1') {
+      const sidebar = document.getElementById('ai-chat-sidebar');
+      if (sidebar) sidebar.classList.add('collapsed');
+      if (btnOpen) btnOpen.style.display = 'flex';
+    }
+  } catch (_) {}
+
+  fetchAndRenderAiConversations().catch(() => {});
+}
+
+let _aiChatHistory = [];
+
+export function isAiThinkingModel(modelName) {
+  const m = String(modelName || '').toLowerCase();
+  return m.includes('r1') ||
+         m.includes('qwq') ||
+         m.includes('reason') ||
+         m.includes('thinking') ||
+         m.includes('saluki') ||
+         m.includes('cot') ||
+         m.includes('deepseek');
+}
+
+function _formatChatMarkdown(rawText) {
+  let text = String(rawText || '');
+  // Strip out any trailing verbose "Verified Web Sources" section
+  text = text.replace(/#{2,4}\s*🌐?\s*Verified\s+Web\s+Sources[\s\S]*$/i, '').trim();
+  // Strip out duplicate trailing text-based "Sources:\n[1] ... \n[2] ..." list
+  text = text.replace(/(?:\r?\n)+\s*(?:\*\*)?Sources:?(?:\*\*)?\s*(?:\r?\n)+(?:\s*\[\d+\][^\n]*\r?\n?)+$/i, '').trim();
+
+  // Extract <think>...</think> if present
+  let thoughtHtml = '';
+  const thinkMatch = text.match(/<think>([\s\S]*?)<\/think>/i);
+  if (thinkMatch) {
+    const thoughtContent = escapeHtml(thinkMatch[1].trim());
+    text = text.replace(/<think>[\s\S]*?<\/think>/i, '').trim();
+    thoughtHtml = `
+      <details class="ai-thought-disclosure" style="margin: 4px 0 10px; border-radius: 8px; background: rgba(147, 51, 234, 0.08); border: 1px solid rgba(168, 85, 247, 0.28); padding: 7px 10px; font-size: 11px;">
+        <summary style="cursor: pointer; font-weight: 700; color: #c084fc; display: inline-flex; align-items: center; gap: 6px; user-select: none;">
+          <span>🧠 Thought Process</span>
+          <span style="font-size: 9.5px; color: #94a3b8; font-weight: 400;">(click to view chain of thought)</span>
+        </summary>
+        <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(168, 85, 247, 0.2); color: #cbd5e1; font-size: 11px; line-height: 1.5; font-style: italic;">
+          ${thoughtContent.replace(/\n/g, '<br/>')}
+        </div>
+      </details>
+    `;
+    if (!text.trim()) {
+      text = '*(Thought process completed. No concluding response was emitted by the model.)*';
+    }
+  }
+
+  // Handle fenced code blocks before escaping HTML
+  const codeBlocks = [];
+  text = text.replace(/```([a-zA-Z0-9_-]*)\r?\n([\s\S]*?)```/g, (match, lang, code) => {
+    const idx = codeBlocks.length;
+    const cleanLang = (lang || 'code').trim();
+    codeBlocks.push({
+      lang: cleanLang,
+      code: code.trim(),
+    });
+    return `___CODE_BLOCK_${idx}___`;
+  });
+
+  let escaped = escapeHtml(text);
+
+  // Restore code blocks with glassmorphic container and copy/deploy buttons
+  escaped = escaped.replace(/___CODE_BLOCK_(\d+)___/g, (match, idxStr) => {
+    const item = codeBlocks[parseInt(idxStr, 10)];
+    if (!item) return match;
+    const escapedCode = escapeHtml(item.code);
+    const isComposeYaml =
+      item.lang === 'yaml' ||
+      item.lang === 'yml' ||
+      item.lang === 'compose' ||
+      item.lang === 'docker-compose' ||
+      (item.code.includes('services:') && (item.code.includes('image:') || item.code.includes('build:') || item.code.includes('ports:')));
+
+    const deployBtnHtml = isComposeYaml
+      ? `<button type="button" class="btn-deploy-stack-code" onclick="window.deployComposeStackSnippet && window.deployComposeStackSnippet(this.closest('.ai-chat-code-block').querySelector('code').innerText)" style="background: rgba(16, 185, 129, 0.22); border: 1px solid rgba(52, 211, 153, 0.45); border-radius: 4px; color: #6ee7b7; font-size: 9.5px; font-weight: 700; padding: 2px 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; margin-right: 6px;">🚀 Deploy Stack</button>`
+      : '';
+
+    return `<div class="ai-chat-code-block" style="margin: 8px 0; border-radius: 8px; background: rgba(2, 6, 23, 0.88); border: 1px solid rgba(56, 189, 248, 0.3); overflow: hidden;">
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 10px; background: rgba(15, 23, 42, 0.95); border-bottom: 1px solid rgba(255, 255, 255, 0.08); font-size: 10.5px; color: #94a3b8; font-family: monospace;">
+        <span style="font-weight: 700; color: #7dd3fc;">${escapeHtml(item.lang)}</span>
+        <div style="display: flex; align-items: center;">
+          ${deployBtnHtml}
+          <button type="button" class="btn-copy-code" onclick="navigator.clipboard.writeText(this.closest('.ai-chat-code-block').querySelector('code').innerText); this.textContent='✓ Copied'; setTimeout(() => this.textContent='Copy', 1600);" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.18); border-radius: 4px; color: #cbd5e1; font-size: 9.5px; padding: 2px 7px; cursor: pointer;">Copy</button>
+        </div>
+      </div>
+      <pre style="margin: 0; padding: 10px 12px; overflow-x: auto; font-family: 'JetBrains Mono', Consolas, monospace; font-size: 11.5px; line-height: 1.5; color: #e2e8f0;"><code>${escapedCode}</code></pre>
+    </div>`;
+  });
+
+  const formatted = escaped
+    .replace(/^####\s+(.+)$/gm, '<div style="font-size:12px; font-weight:800; color:#7dd3fc; margin:8px 0 3px;">$1</div>')
+    .replace(/^###\s+(.+)$/gm, '<div style="font-size:12.5px; font-weight:800; color:#38bdf8; margin:8px 0 4px;">$1</div>')
+    .replace(/^&gt;\s?(.*)$/gm, '<div style="border-left:2px solid rgba(168,85,247,0.55); padding-left:8px; margin:3px 0; color:#cbd5e1; font-size:11px; background:rgba(168,85,247,0.07); border-radius:0 4px 4px 0;">$1</div>')
+    .replace(/^[-*]\s+(.+)$/gm, '<div style="display:flex; align-items:flex-start; gap:6px; margin:3px 0 3px 4px;"><span style="color:#38bdf8; font-size:11px; line-height:1.5;">•</span><div style="flex:1;">$1</div></div>')
+    .replace(/^(\d+)\.\s+(.+)$/gm, '<div style="display:flex; align-items:flex-start; gap:6px; margin:3px 0 3px 4px;"><span style="color:#c084fc; font-weight:700; font-size:11px; line-height:1.5;">$1.</span><div style="flex:1;">$2</div></div>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong style="color:#fff;">$1</strong>')
+    .replace(/`([^`]+)`/g, '<code style="background:rgba(0,0,0,0.38); padding:1px 5px; border-radius:4px; color:#bae6fd; font-family:monospace; font-size:11px;">$1</code>')
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" style="color:#38bdf8; text-decoration:underline;">$1 ↗</a>')
+    .replace(/\[\^(\d+):\s*([^#\]]+)(?:#L?(\d+))?\]/g, (match, idx, path, line) => {
+      const escP = escapeHtml(path.trim());
+      const escN = escapeHtml(path.trim().split('/').pop() || 'File');
+      const lineStr = line ? ` (L${line})` : '';
+      return `<button type="button" class="ai-citation-inline-pill" onclick="window.openFilePreviewModal('${escP}', '${escN}')" style="display:inline-flex; align-items:center; gap:3px; background:rgba(56,189,248,0.15); border:1px solid rgba(56,189,248,0.38); border-radius:999px; padding:1px 7px; color:#7dd3fc; font-size:10px; font-weight:700; cursor:pointer; vertical-align:baseline; margin:0 2px;"><span>📄 [${idx}] ${escN}${lineStr}</span><span style="font-size:9px;">👁️</span></button>`;
+    })
+    .replace(/\[(\d+)\]/g, '<span style="display:inline-flex; align-items:center; justify-content:center; font-size:9.5px; font-weight:700; color:#38bdf8; background:rgba(56,189,248,0.16); border:1px solid rgba(56,189,248,0.35); border-radius:999px; padding:0 5px; margin:0 2px; vertical-align:baseline; line-height:1.3;">[$1]</span>')
+    .replace(/\n\n+/g, '<div style="height:6px;"></div>')
+    .replace(/\n/g, '<br/>');
+
+  return (thoughtHtml ? thoughtHtml : '') + formatted;
+}
+
+export function deployComposeStackSnippet(yamlCode) {
+  if (!yamlCode) return;
+  let deducedName = 'copilot-stack';
+  const matchContainer = yamlCode.match(/container_name:\s*([a-zA-Z0-9_-]+)/);
+  if (matchContainer && matchContainer[1]) {
+    deducedName = matchContainer[1];
+  } else {
+    const matchService = yamlCode.match(/services:\s*\r?\n\s+([a-zA-Z0-9_-]+):/);
+    if (matchService && matchService[1]) {
+      deducedName = matchService[1];
+    }
+  }
+  openStackModal(deducedName, yamlCode);
+  showToast(t('docker.stack_template_loaded', 'Stack template loaded into Compose editor.'), 'success');
+}
+
+if (typeof window !== 'undefined') {
+  window.deployComposeStackSnippet = deployComposeStackSnippet;
+}
+
+export function clearAiChatHistory() {
+  _aiChatHistory = [];
+  const listEl = document.getElementById('ai-chat-messages-list');
+  if (!listEl) return;
+  listEl.innerHTML = '';
+}
+
+export async function sendAiChatMessage(rawMessage = null) {
+  const inputEl = document.getElementById('ai-chat-input');
+  const sendBtn = document.getElementById('btn-ai-chat-send');
+  const listEl = document.getElementById('ai-chat-messages-list');
+
+  const msg = (rawMessage !== null && rawMessage !== undefined ? String(rawMessage) : (inputEl ? inputEl.value : '')).trim();
+  if (!msg) {
+    showToast(t('ai.enter_question', 'Please enter a question or command for the NAS Copilot.'), 'warn');
+    return null;
+  }
+
+  if (inputEl) inputEl.value = '';
+  if (sendBtn) {
+    sendBtn.disabled = true;
+    sendBtn.innerHTML = '<span><span class="ai-typing-dot" style="width:5px;height:5px;margin-right:3px;"></span></span> <span>Generating...</span>';
+  }
+
+  const allowWeb = true;
+  const allowTools = true;
+  const activeModel = _aiLastActiveModel || 'qwen2.5:3b';
+  const isThinking = isAiThinkingModel(activeModel);
+  let streamBotMsgEl = null;
+
+  if (listEl) {
+    const userMsgEl = document.createElement('div');
+    userMsgEl.className = 'ai-chat-msg ai-chat-msg-user';
+    userMsgEl.style.cssText = 'align-self: flex-end; max-width: 85%; padding: 9px 13px; border-radius: 10px; background: rgba(14, 165, 233, 0.22); border: 1px solid rgba(56, 189, 248, 0.45); color: #f8fafc; font-size: 12px; line-height: 1.45;';
+    userMsgEl.innerHTML = `<div style="font-size:10px; font-weight:700; color:#7dd3fc; margin-bottom:3px;">🧑 You</div><div>${escapeHtml(msg)}</div>`;
+    listEl.appendChild(userMsgEl);
+
+    const pendingEl = document.createElement('div');
+    pendingEl.className = 'ai-chat-msg ai-chat-msg-pending';
+    pendingEl.dataset.isThinking = isThinking ? '1' : '0';
+    if (isThinking) {
+      pendingEl.style.cssText = 'align-self: flex-start; max-width: 85%; padding: 10px 14px; border-radius: 10px; background: rgba(30, 20, 50, 0.75); border: 1px solid rgba(192, 132, 252, 0.4); display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(168, 85, 247, 0.15);';
+      pendingEl.innerHTML = `
+        <span class="ai-thinking-brain" style="font-size: 15px;">🧠</span>
+        <span style="font-size: 12px; font-weight: 700; color: #e9d5ff;">Thinking</span>
+        <span class="ai-thinking-dots" style="color: #c084fc; font-weight: 800; letter-spacing: 2px;">
+          <span class="ai-dot-1">.</span><span class="ai-dot-2">.</span><span class="ai-dot-3">.</span>
+        </span>
+        <span style="font-size: 10px; color: #d8b4fe; margin-left: 6px; padding: 1px 7px; border-radius: 999px; background: rgba(168, 85, 247, 0.2); border: 1px solid rgba(192, 132, 252, 0.35);">${escapeHtml(activeModel)}</span>
+      `;
+    } else {
+      pendingEl.style.cssText = 'align-self: flex-start; max-width: 85%; padding: 10px 14px; border-radius: 10px; background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); display: flex; align-items: center; gap: 9px; box-shadow: 0 4px 14px rgba(14, 165, 233, 0.12);';
+      pendingEl.innerHTML = `
+        <div class="ai-typing-indicator" style="display: inline-flex; align-items: center; gap: 4px;">
+          <span class="ai-typing-dot"></span>
+          <span class="ai-typing-dot"></span>
+          <span class="ai-typing-dot"></span>
+        </div>
+        <span style="font-size: 11px; color: #cbd5e1;">Processing with <strong style="color: #38bdf8;">${escapeHtml(activeModel)}</strong>...</span>
+      `;
+    }
+    listEl.appendChild(pendingEl);
+    listEl.scrollTop = listEl.scrollHeight;
+  }
+
+
+  try {
+    const isTestEnv = window.__forceAiStreamingTest
+      ? false
+      : (typeof vi !== 'undefined' ||
+         typeof vitest !== 'undefined' ||
+         (typeof process !== 'undefined' && process?.env?.NODE_ENV === 'test') ||
+         typeof window === 'undefined' ||
+         !window.fetch ||
+         !window.ReadableStream);
 
     let res = null;
 
@@ -12164,7 +13167,13 @@ function _buildAiAssistantMessageHtml(res, defaultModel) {
         history: _aiChatHistory.slice(-10),
         allow_web_search: allowWeb,
         allow_nas_tools: allowTools,
+        conversation_id: _activeConversationId,
       });
+      if (res && res.conversation_title && _activeConversationId) {
+        _activeConversationTitle = res.conversation_title;
+        const titleEl = document.getElementById('ai-chat-active-title');
+        if (titleEl) titleEl.textContent = res.conversation_title;
+      }
     } else {
       // Production browser runtime: consume SSE stream from /api/media/chat/stream
       try {
@@ -12175,6 +13184,14 @@ function _buildAiAssistantMessageHtml(res, defaultModel) {
         const token = auth.getToken();
         if (token) streamHeaders['Authorization'] = `Bearer ${token}`;
 
+        if (_aiActiveAbortController) {
+          _aiActiveAbortController.abort();
+          _aiActiveAbortController = null;
+        }
+        _aiActiveAbortController = new AbortController();
+        const currentConvId = _activeConversationId;
+        const currentReqId = ++_aiActiveRequestId;
+
         const streamRes = await window.fetch('/api/media/chat/stream', {
           method: 'POST',
           headers: streamHeaders,
@@ -12183,7 +13200,9 @@ function _buildAiAssistantMessageHtml(res, defaultModel) {
             history: _aiChatHistory.slice(-10),
             allow_web_search: allowWeb,
             allow_nas_tools: allowTools,
+            conversation_id: currentConvId,
           }),
+          signal: _aiActiveAbortController.signal,
         });
 
         if (!streamRes.ok) {
@@ -12199,7 +13218,7 @@ function _buildAiAssistantMessageHtml(res, defaultModel) {
         let streamedThinking = '';
         let streamedTokens = '';
 
-        let streamBotMsgEl = null;
+        streamBotMsgEl = null;
         let replyBodyEl = null;
         let thoughtDetailsEl = null;
         let thoughtBodyEl = null;
@@ -12212,6 +13231,7 @@ function _buildAiAssistantMessageHtml(res, defaultModel) {
 
           streamBotMsgEl = document.createElement('div');
           streamBotMsgEl.className = 'ai-chat-msg ai-chat-msg-assistant';
+          if (currentConvId) streamBotMsgEl.dataset.convId = currentConvId;
           streamBotMsgEl.dataset.activeModel = activeModel;
           streamBotMsgEl.dataset.isStreaming = '1';
           streamBotMsgEl.style.cssText = 'display: flex; flex-direction: column; gap: 7px; padding: 11px 14px; border-radius: 10px; background: rgba(15, 23, 42, 0.78); border: 1px solid rgba(56, 189, 248, 0.28);';
@@ -12257,7 +13277,20 @@ function _buildAiAssistantMessageHtml(res, defaultModel) {
               let parsed = null;
               try { parsed = JSON.parse(dataStr); } catch (_) { parsed = dataStr; }
 
-              if (currentEvent === 'tool_start') {
+              if (currentConvId && (_activeConversationId !== currentConvId || _aiActiveRequestId !== currentReqId)) {
+                try { reader.cancel(); } catch (_) {}
+                return null;
+              }
+
+              if (currentEvent === 'conversation_title') {
+                if (parsed?.title && currentConvId === _activeConversationId) {
+                  _activeConversationTitle = parsed.title;
+                  const titleEl = document.getElementById('ai-chat-active-title');
+                  if (titleEl) titleEl.textContent = parsed.title;
+                  const tItem = document.querySelector(`.ai-thread-item[data-conv-id="${currentConvId}"] .ai-thread-title-text`);
+                  if (tItem) tItem.textContent = parsed.title;
+                }
+              } else if (currentEvent === 'tool_start') {
                 setupStreamBotEl();
                 const toolName = parsed?.tool || 'tool';
                 if (toolsTraceEl) {
@@ -12275,10 +13308,14 @@ function _buildAiAssistantMessageHtml(res, defaultModel) {
                   const existingPill = toolsTraceEl.querySelector(`.ai-chat-tool-pill[data-tool-name="${parsed?.tool}"]`);
                   const isWeb = parsed?.tool === 'browse_internet';
                   const isRag = parsed?.tool === 'search_nas_knowledge';
-                  const bg = isWeb ? 'rgba(56,189,248,0.16)' : (isRag ? 'rgba(168,85,247,0.16)' : 'rgba(16,185,129,0.16)');
-                  const border = isWeb ? 'rgba(56,189,248,0.42)' : (isRag ? 'rgba(168,85,247,0.42)' : 'rgba(52,211,153,0.42)');
-                  const color = isWeb ? '#7dd3fc' : (isRag ? '#d8b4fe' : '#6ee7b7');
-                  const icon = isWeb ? '🌐' : (isRag ? '📁' : '🛠️');
+                  const isCalc = parsed?.tool === 'calculate';
+                  const isStorage = parsed?.tool === 'get_storage_status';
+                  const isNet = parsed?.tool === 'get_network_status';
+                  const isWeather = parsed?.tool === 'get_weather';
+                  const bg = isCalc ? 'rgba(245,158,11,0.16)' : (isWeather ? 'rgba(14,165,233,0.18)' : (isWeb ? 'rgba(56,189,248,0.16)' : (isRag ? 'rgba(168,85,247,0.16)' : (isNet ? 'rgba(14,165,233,0.16)' : 'rgba(16,185,129,0.16)'))));
+                  const border = isCalc ? 'rgba(251,191,36,0.42)' : (isWeather ? 'rgba(56,189,248,0.45)' : (isWeb ? 'rgba(56,189,248,0.42)' : (isRag ? 'rgba(168,85,247,0.42)' : (isNet ? 'rgba(56,189,248,0.42)' : 'rgba(52,211,153,0.42)'))));
+                  const color = isCalc ? '#fde68a' : (isWeather ? '#38bdf8' : (isWeb ? '#7dd3fc' : (isRag ? '#d8b4fe' : (isNet ? '#7dd3fc' : '#6ee7b7'))));
+                  const icon = isCalc ? '🧮' : (isWeather ? '⛅' : (isWeb ? '🌐' : (isRag ? '📁' : (isStorage ? '💽' : (isNet ? '🔌' : '🛠️')))));
                   const pillHtml = `${icon} ${escapeHtml(parsed?.tool || 'tool')}: ${escapeHtml(parsed?.summary || 'OK')}`;
                   if (existingPill) {
                     existingPill.className = 'ai-chat-tool-pill';
@@ -12351,11 +13388,16 @@ function _buildAiAssistantMessageHtml(res, defaultModel) {
         }
       } catch (streamErr) {
         console.warn('[ZettAI] Streaming fell back to standard POST:', streamErr);
+        if (streamBotMsgEl) {
+          streamBotMsgEl.remove();
+          streamBotMsgEl = null;
+        }
         res = await api.post('/api/media/chat', {
           message: msg,
           history: _aiChatHistory.slice(-10),
           allow_web_search: allowWeb,
           allow_nas_tools: allowTools,
+          conversation_id: _activeConversationId,
         });
       }
     }
@@ -12375,11 +13417,17 @@ function _buildAiAssistantMessageHtml(res, defaultModel) {
     _aiChatHistory.push({ role: 'assistant', content: replyMd });
 
     if (listEl) {
-      let existingBotEl = listEl.querySelector(`.ai-chat-msg-assistant[data-active-model="${usedModel}"]`);
-      if (!existingBotEl || !existingBotEl.dataset.isStreaming) {
+      if (streamBotMsgEl) {
+        // Streamed message bubble was already created and populated in listEl during the stream.
+        // Update model and conversation tracking dataset attributes without appending a duplicate element!
+        streamBotMsgEl.dataset.activeModel = usedModel;
+        if (_activeConversationId) streamBotMsgEl.dataset.convId = _activeConversationId;
+      } else {
+        // Non-streaming fallback (e.g. test environment or network fallback where streaming was bypassed)
         const botMsgEl = document.createElement('div');
         botMsgEl.className = 'ai-chat-msg ai-chat-msg-assistant';
         botMsgEl.dataset.activeModel = usedModel;
+        if (_activeConversationId) botMsgEl.dataset.convId = _activeConversationId;
         botMsgEl.style.cssText = 'display: flex; flex-direction: column; gap: 7px; padding: 11px 14px; border-radius: 10px; background: rgba(15, 23, 42, 0.78); border: 1px solid rgba(56, 189, 248, 0.28);';
         botMsgEl.innerHTML = _buildAiAssistantMessageHtml(res, activeModel);
         listEl.appendChild(botMsgEl);
@@ -12405,6 +13453,139 @@ function _buildAiAssistantMessageHtml(res, defaultModel) {
       sendBtn.disabled = false;
       sendBtn.innerHTML = `<span>🚀</span> <span data-i18n="ai.chat_send_btn">${escapeHtml(t('ai.chat_send_btn', 'Ask Zetty'))}</span>`;
     }
+  }
+}
+
+export function updateAiReindexProgress(data) {
+  const container = document.getElementById('ai-reindex-progress-container');
+  const topBanner = document.getElementById('ai-reindex-top-banner');
+  const univStrip = document.getElementById('ai-reindex-universal-strip');
+  const sidebarBadge = document.getElementById('mgmt-sidebar-ai-badge');
+  const topText = document.getElementById('topbar-ai-accel-text');
+
+  if (!data || data.status === 'idle' || data.type === 'complete' || (data.total > 0 && data.completed >= data.total)) {
+    if (container) container.style.display = 'none';
+    if (topBanner) topBanner.style.display = 'none';
+    if (univStrip) univStrip.style.display = 'none';
+    if (sidebarBadge && sidebarBadge.dataset.reindexing) {
+      sidebarBadge.textContent = 'NPU/GPU';
+      sidebarBadge.style.background = 'rgba(14,165,233,0.18)';
+      sidebarBadge.style.color = 'var(--accent-cyan,#00f0ff)';
+      delete sidebarBadge.dataset.reindexing;
+    }
+    return;
+  }
+
+  const pct = data.percentage ?? (data.total > 0 ? Math.round((data.completed / data.total) * 100) : 0);
+  const completed = data.completed ?? 0;
+  const total = data.total ?? 0;
+  const speed = data.speed !== undefined ? data.speed : 0;
+  const etaSec = data.eta_sec !== undefined ? data.eta_sec : 0;
+
+  let etaText = 'ETA: --';
+  if (etaSec > 0) {
+    if (etaSec < 60) {
+      etaText = `ETA: ${Math.round(etaSec)}s`;
+    } else if (etaSec < 3600) {
+      const mins = Math.floor(etaSec / 60);
+      const secs = Math.round(etaSec % 60);
+      etaText = `ETA: ${mins}m ${secs}s`;
+    } else {
+      const hrs = Math.floor(etaSec / 3600);
+      const mins = Math.round((etaSec % 3600) / 60);
+      etaText = `ETA: ${hrs}h ${mins}m`;
+    }
+  }
+
+  if (sidebarBadge) {
+    sidebarBadge.dataset.reindexing = '1';
+    sidebarBadge.textContent = `${pct}% Re-index`;
+    sidebarBadge.style.background = 'rgba(234, 179, 8, 0.2)';
+    sidebarBadge.style.color = '#fbbf24';
+  }
+
+  if (topText) {
+    topText.textContent = `Re-indexing ${pct}% • ${etaText}`;
+  }
+
+  // Update top banner
+  if (topBanner) {
+    topBanner.style.display = 'block';
+    const topBar = document.getElementById('ai-reindex-top-progress-bar');
+    if (topBar) topBar.style.width = `${pct}%`;
+    const topPct = document.getElementById('ai-reindex-top-pct-label');
+    if (topPct) topPct.textContent = `${pct}%`;
+    const topChunks = document.getElementById('ai-reindex-top-chunks-label');
+    if (topChunks) topChunks.textContent = `${completed.toLocaleString()} / ${total.toLocaleString()} chunks`;
+    const topSpeed = document.getElementById('ai-reindex-top-speed-label');
+    if (topSpeed) topSpeed.textContent = `${speed} chunks/s`;
+    const topEta = document.getElementById('ai-reindex-top-eta-label');
+    if (topEta) topEta.textContent = etaText;
+  }
+
+  // Update universal strip (visible across all tabs: Chatbot, RAG, Configuration)
+  if (univStrip) {
+    univStrip.style.display = 'block';
+    const uBar = document.getElementById('ai-reindex-univ-bar');
+    if (uBar) uBar.style.width = `${pct}%`;
+    const uPct = document.getElementById('ai-reindex-univ-pct');
+    if (uPct) uPct.textContent = `${pct}%`;
+    const uChunks = document.getElementById('ai-reindex-univ-chunks');
+    if (uChunks) uChunks.textContent = `${completed.toLocaleString()} / ${total.toLocaleString()} chunks`;
+    const uSpeed = document.getElementById('ai-reindex-univ-speed');
+    if (uSpeed) uSpeed.textContent = `${speed} chunks/s`;
+    const uEta = document.getElementById('ai-reindex-univ-eta');
+    if (uEta) uEta.textContent = etaText;
+  }
+
+  // Update bottom container in MRL card
+  if (container) {
+    container.style.display = 'block';
+    const bar = document.getElementById('ai-reindex-progress-bar');
+    if (bar) bar.style.width = `${pct}%`;
+    const pctLabel = document.getElementById('ai-reindex-pct-label');
+    if (pctLabel) pctLabel.textContent = `${pct}%`;
+    const speedLabel = document.getElementById('ai-reindex-speed-label');
+    if (speedLabel) speedLabel.textContent = `${speed} chunks/s`;
+    const etaLabel = document.getElementById('ai-reindex-eta-label');
+    if (etaLabel) etaLabel.textContent = etaText;
+  }
+}
+
+let _reindexPollTimer = null;
+export function _pollReindexProgress() {
+  if (_reindexPollTimer) return;
+  _reindexPollTimer = setInterval(async () => {
+    try {
+      const st = await api.get('/api/ai/reindex/status');
+      if (st) {
+        updateAiReindexProgress(st);
+        if (st.status !== 'running') {
+          clearInterval(_reindexPollTimer);
+          _reindexPollTimer = null;
+          if (st.percentage >= 100 || (st.total > 0 && st.completed >= st.total)) {
+            showToast(t('ai.reindex_completed', '✓ In-place re-indexing completed successfully!'), 'success');
+          }
+        }
+      }
+    } catch {
+      clearInterval(_reindexPollTimer);
+      _reindexPollTimer = null;
+    }
+  }, 1500);
+}
+
+export async function triggerInPlaceReindex() {
+  const container = document.getElementById('ai-reindex-progress-container');
+  if (container) container.style.display = 'block';
+  try {
+    const resp = await api.post('/api/ai/reindex');
+    if (resp && (resp.status === 'ok' || resp.status === 'in_progress')) {
+      showToast(t('ai.reindex_started', 'In-place re-indexing started in background'), 'success');
+      _pollReindexProgress();
+    }
+  } catch (err) {
+    showToast('Failed to trigger re-index: ' + err.message, 'error');
   }
 }
 

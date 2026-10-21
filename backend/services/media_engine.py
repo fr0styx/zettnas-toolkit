@@ -347,11 +347,21 @@ def _estimate_hf_model_specs(
     min_ram_gb = round(max(4.0, est_ram_gb * 2.0), 1)
     requires_dgpu_vram_gb = round(est_ram_gb, 1) if est_ram_gb > 12.0 else 0.0
 
+    is_embed = any(
+        k in repo_lower or k in tags_list or (pipeline_tag and k in pipeline_tag.lower())
+        for k in ("embedding", "embed", "feature-extraction", "sentence-similarity", "mrl")
+    )
     is_vision = any(
         k in repo_lower or k in tags_list or (pipeline_tag and k in pipeline_tag.lower())
         for k in ("vl", "vision", "clip", "image-text", "vlm", "llava", "pixtral")
     )
-    if params_b <= 4.2 and quant.startswith(("INT4", "INT8", "OpenVINO", "GGUF")):
+    if is_embed:
+        category = "embeddings_rag"
+        rec_npu = True
+        rec_gpu = True
+        est_ram_gb = round(max(0.2, (params_b * bytes_per_param) + 0.15), 1)
+        min_ram_gb = round(max(1.0, est_ram_gb * 2.0), 1)
+    elif params_b <= 4.2 and quant.startswith(("INT4", "INT8", "OpenVINO", "GGUF")):
         category = "npu_edge_llm"
         rec_npu = True
         rec_gpu = True
@@ -912,13 +922,13 @@ def build_llm_recommendations(
             "release_date": "2026-09-12",
             "release_date_str": "Sep 12, 2026",
             "release_timestamp": 1789214400.0,
-            "target_accelerator": "NPU" if has_npu else ("GPU" if has_gpu else "CPU"),
-            "target_device": npu_label if has_npu else gpu_label,
-            "est_speed": "~60 tok/s (NPU)" if has_npu else "~45 tok/s (GPU)",
-            "power_profile": "Ultra-Low (< 6W)",
+            "target_accelerator": "GPU" if has_gpu else "CPU",
+            "target_device": gpu_label if has_gpu else "Host CPU",
+            "est_speed": "~45 tok/s (GPU)" if has_gpu else "~20 tok/s (CPU)",
+            "power_profile": "Low Power (< 10W)",
             "capabilities": ["chat", "extractive_qa", "fast_tagging"],
-            "recommended_for_npu": True,
-            "recommended_for_gpu": False,
+            "recommended_for_npu": False,
+            "recommended_for_gpu": True,
         },
         {
             "id": "deepseek-r1-distill-qwen-1.5b-npu-ov",
@@ -964,13 +974,78 @@ def build_llm_recommendations(
             "release_date": "2026-10-15",
             "release_date_str": "Oct 15, 2026",
             "release_timestamp": 1792087200.0,
-            "target_accelerator": "NPU+GPU" if (has_npu and has_gpu) else ("NPU" if has_npu else "GPU"),
-            "target_device": f"{npu_label} + {gpu_label}"
-            if (has_npu and has_gpu)
-            else (npu_label if has_npu else gpu_label),
-            "est_speed": "~40 tok/s (Hybrid NPU/GPU)",
-            "power_profile": "Low Power (< 12W)",
+            "target_accelerator": "GPU" if has_gpu else "CPU",
+            "target_device": gpu_label if has_gpu else "Host CPU",
+            "est_speed": "~40 tok/s (GPU)" if has_gpu else "~15 tok/s (CPU)",
+            "power_profile": "Low Power (< 15W)",
             "capabilities": ["audio_synthesis", "speech", "multimodal", "chat"],
+            "recommended_for_npu": False,
+            "recommended_for_gpu": True,
+        },
+        {
+            "id": "google-embeddinggemma-2",
+            "ollama_tag": "hf.co/google/embeddinggemma-2",
+            "hf_repo": "google/embeddinggemma-2",
+            "hf_url": "https://huggingface.co/google/embeddinggemma-2",
+            "name": "Google EmbeddingGemma 2 (Multimodal Edge Embeddings)",
+            "family": "Google Gemma",
+            "category": "embeddings_rag",
+            "role": "SOTA 740M Multimodal & Text Embeddings with 8K Context & Matryoshka MRL for Zero-Spindown NAS RAG",
+            "params": "0.7B Multimodal",
+            "quantization": "FP16 / BF16 Safetensors",
+            "est_ram_gb": 0.6,
+            "min_ram_gb": 1.0,
+            "requires_dgpu_vram_gb": 0.0,
+            "created_at": "2026-10-06T14:00:00.000Z",
+            "release_date": "2026-10-06",
+            "release_date_str": "Oct 06, 2026",
+            "release_timestamp": 1791288000.0,
+            "target_accelerator": "NPU" if has_npu else ("GPU" if has_gpu else "CPU"),
+            "target_device": npu_label if has_npu else gpu_label,
+            "est_speed": "~90–120 tok/s (NPU)" if has_npu else "~70 tok/s (GPU)",
+            "power_profile": "Ultra-Low Power (< 8W)",
+            "capabilities": [
+                "feature-extraction",
+                "embeddings",
+                "rag_qa",
+                "multimodal",
+                "semantic_search",
+                "code_search",
+                "matryoshka_mrl",
+            ],
+            "recommended_for_npu": True,
+            "recommended_for_gpu": True,
+        },
+        {
+            "id": "google-embeddinggemma-2-270m",
+            "ollama_tag": "hf.co/google/embeddinggemma-2-270m",
+            "hf_repo": "google/embeddinggemma-2-270m",
+            "hf_url": "https://huggingface.co/google/embeddinggemma-2",
+            "name": "Google EmbeddingGemma 2 270M (Ultra-Light Text & Code)",
+            "family": "Google Gemma",
+            "category": "embeddings_rag",
+            "role": "Ultra-Compact 191MB RAM Text & Code Embeddings with 8K Context for Low-Power NAS",
+            "params": "270M",
+            "quantization": "Q4_K_M / INT8 GGUF",
+            "est_ram_gb": 0.25,
+            "min_ram_gb": 0.5,
+            "requires_dgpu_vram_gb": 0.0,
+            "created_at": "2026-10-06T14:00:00.000Z",
+            "release_date": "2026-10-06",
+            "release_date_str": "Oct 06, 2026",
+            "release_timestamp": 1791288000.0,
+            "target_accelerator": "NPU" if has_npu else ("GPU" if has_gpu else "CPU"),
+            "target_device": npu_label if has_npu else gpu_label,
+            "est_speed": "~140+ tok/s (NPU)" if has_npu else "~110 tok/s (CPU/iGPU)",
+            "power_profile": "Minimal (< 4W)",
+            "capabilities": [
+                "feature-extraction",
+                "embeddings",
+                "rag_qa",
+                "semantic_search",
+                "code_search",
+                "matryoshka_mrl",
+            ],
             "recommended_for_npu": True,
             "recommended_for_gpu": True,
         },
@@ -1361,6 +1436,32 @@ def _normalize_hf_repo_input(raw_input: str) -> str:
     return cleaned.strip("/")
 
 
+def is_embedding_only_model(model: Any) -> bool:
+    """
+    Returns True if the given model (ID string or model dict) is an embedding-only model
+    (e.g., feature-extraction, sentence-similarity, embeddinggemma, bge, nomic-embed)
+    which cannot perform conversational chat generation.
+    """
+    if isinstance(model, dict):
+        pipeline = str(model.get("pipeline_tag") or "").lower()
+        if pipeline in ("feature-extraction", "sentence-similarity"):
+            return True
+        caps = [str(c).lower() for c in model.get("capabilities", [])]
+        if "embedding" in caps or "feature-extraction" in caps or "sentence-similarity" in caps:
+            if not any(c in caps for c in ("text-generation", "conversational", "text2text-generation", "chat")):
+                return True
+        m_id = str(model.get("id") or model.get("hf_repo") or model.get("ollama_tag") or "").lower()
+    else:
+        m_id = str(model or "").lower()
+
+    if any(k in m_id for k in ("embedding", "bge-", "e5-", "gte-", "minilm", "nomic-embed", "sentence-transformers")):
+        if "instruct" not in m_id and "chat" not in m_id:
+            return True
+        if any(k in m_id for k in ("embeddinggemma", "bge-m3", "bge-large")):
+            return True
+    return False
+
+
 def _format_hf_api_item(
     item: Dict[str, Any],
     accel: Dict[str, Any],
@@ -1486,10 +1587,11 @@ def search_huggingface_models(
     active_norm = active_model.lower()
 
     clean_q = _normalize_hf_repo_input(query)
-    safe_limit = max(1, min(int(limit or 12), 30))
+    safe_limit = max(1, min(int(limit or 16), 50))
 
     results: List[Dict[str, Any]] = []
     source_mode = "huggingface_live"
+    exact_match_item: Optional[Dict[str, Any]] = None
 
     if os.environ.get("TESTING") != "1" and os.environ.get("ZETTNAS_TEST_MODE") != "1":
         try:
@@ -1504,13 +1606,16 @@ def search_huggingface_models(
                     with urllib.request.urlopen(req_exact, timeout=4.0) as resp:
                         exact_data = json.loads(resp.read().decode("utf-8"))
                         if isinstance(exact_data, dict) and exact_data.get("id"):
-                            results.append(_format_hf_api_item(exact_data, accel, eff_ram, active_norm))
+                            formatted_exact = _format_hf_api_item(exact_data, accel, eff_ram, active_norm)
+                            exact_match_item = formatted_exact
+                            results.append(formatted_exact)
                 except Exception:
                     pass
 
+            api_fetch_limit = min(60, max(40, safe_limit * 3))
             params = {
                 "search": clean_q or "Instruct GGUF",
-                "limit": str(safe_limit),
+                "limit": str(api_fetch_limit),
                 "sort": "downloads",
                 "direction": "-1",
                 "full": "true",
@@ -1532,8 +1637,6 @@ def search_huggingface_models(
                             continue
                         seen.add(rid)
                         results.append(_format_hf_api_item(item, accel, eff_ram, active_norm))
-                        if len(results) >= safe_limit:
-                            break
         except Exception as e:
             logger.debug(f"[MediaEngine] Live Hugging Face API search fallback ({e})")
             source_mode = "catalog_fallback"
@@ -1607,6 +1710,45 @@ def search_huggingface_models(
             key=lambda x: float(x.get("est_ram_gb") or x.get("vram_or_ram_gb") or 0.0),
             reverse=True,
         )
+
+    # Prioritize exact repo match, official author organization, or top canonical release if user queried a specific model
+    exact_target = clean_q.lower()
+    if exact_target and results:
+
+        def match_priority(m: Dict[str, Any]) -> tuple:
+            repo = str(m.get("hf_repo", "")).lower()
+            mid = str(m.get("id", "")).lower()
+            name = str(m.get("name", "")).lower()
+            dls = int(m.get("downloads", 0) or 0)
+
+            # Exact full repo match
+            if repo == exact_target or mid == exact_target:
+                return (4, dls)
+            # Exact model name match (e.g. org/exact_target)
+            if repo.endswith(f"/{exact_target}") or name == exact_target:
+                return (3, dls)
+            # Official organization match when searching query (e.g. google/..., qwen/..., deepseek-ai/..., meta-llama/...)
+            is_official_org = any(
+                repo.startswith(f"{org}/")
+                for org in ("google", "meta-llama", "qwen", "deepseek-ai", "mistralai", "microsoft")
+            )
+            if exact_target in repo and is_official_org:
+                return (2, dls)
+            # Query in repo name
+            if exact_target in repo:
+                return (1, dls)
+            return (0, dls)
+
+        best_score = max(match_priority(m)[0] for m in results)
+        if best_score >= 2:
+            matched = [m for m in results if match_priority(m)[0] >= 2]
+            matched.sort(key=lambda m: (match_priority(m)[0], int(m.get("downloads", 0) or 0)), reverse=True)
+            rest = [m for m in results if match_priority(m)[0] < 2]
+            results = matched + rest
+        elif exact_match_item and not any(
+            str(m.get("hf_repo", "")).lower() == exact_match_item.get("hf_repo", "").lower() for m in results
+        ):
+            results.insert(0, exact_match_item)
 
     return {
         "status": "ok",
@@ -1689,7 +1831,17 @@ def pull_huggingface_model(repo_id: str, activate: bool = True) -> Dict[str, Any
         "custom_hf_models": custom_list[:25],
         "removed_models": clean_removed,
     }
-    if activate:
+    is_embed = is_embedding_only_model(model_entry)
+    if is_embed:
+        model_entry["role"] = f"Vector Embedding Model ({model_entry.get('pipeline_tag') or 'embedding'})"
+        model_entry["category"] = "Embedding & Semantic Search"
+        model_entry["is_embedding"] = True
+        updates["embedding_model"] = model_entry["id"]
+        model_entry["warning_message"] = (
+            f"Configured '{model_entry['id']}' as vector embedding engine for semantic search & RAG. "
+            f"Conversational chat remains '{rag_cfg.get('active_model') or 'qwen2.5:3b'}'."
+        )
+    elif activate:
         updates["active_model"] = model_entry["id"]
         updates["llm_model"] = model_entry["id"]
         model_entry["is_selected"] = True
@@ -1869,6 +2021,7 @@ class MediaEngine:
             "objects": max(base_cats.get("objects", 0), rag_stats.get("total_photos", 0)),
             "albums": base_cats.get("albums", 0),
             "photos": rag_stats.get("total_photos", 0),
+            "videos": rag_stats.get("total_videos", 0),
             "documents": rag_stats.get("total_docs", 0),
             "recipes": rag_stats.get("total_recipes", 0),
             "chunks": rag_stats.get("total_chunks", 0),
@@ -1963,6 +2116,7 @@ class MediaEngine:
                         "objects": stats.get("total_photos", 0),
                         "albums": max(0, stats.get("total_photos", 0) // 10),
                         "photos": stats.get("total_photos", 0),
+                        "videos": stats.get("total_videos", 0),
                         "documents": stats.get("total_docs", 0),
                         "recipes": stats.get("total_recipes", 0),
                     },

@@ -21,6 +21,8 @@ import {
   clearAiChatHistory,
   isAiThinkingModel,
   renderAiRagInitialEmptyState,
+  flushAiIndex,
+  updateAiReindexProgress,
 } from '../components/management.js';
 import { openFilePreviewModal, closeFilePreviewModal } from '../components/file-preview-modal.js';
 import { initSpotlight, filterSpotlightResults } from '../components/spotlight.js';
@@ -673,7 +675,7 @@ describe('ZettAI — Multi-Modal Local RAG & Visual Search Frontend Suite', () =
 
     // 3. Clear chat history
     clearAiChatHistory();
-    expect(chatList.innerHTML).toContain('Conversation cleared');
+    expect(chatList.innerHTML).toBe('');
   });
 
   it('identifies thinking vs standard models and renders dynamic pending state, think disclosures, and code blocks', async () => {
@@ -771,7 +773,196 @@ describe('ZettAI — Multi-Modal Local RAG & Visual Search Frontend Suite', () =
     await sendAiChatMessage('Hi Zetty');
     expect(document.getElementById('btn-ai-chat-send').innerHTML).toContain('Ask Zetty');
   });
+
+  it('flushAiIndex requests confirmation and flushes RAG database via /api/ai/index/flush with 5-language localization', async () => {
+    // 1. Verify 5-language translations exist
+    for (const lang of ['en', 'de', 'zh', 'fr', 'es']) {
+      expect(TRANSLATIONS[lang]['ai.flush_index_btn']).toBeTruthy();
+      expect(TRANSLATIONS[lang]['ai.flush_index_confirm_title']).toBeTruthy();
+      expect(TRANSLATIONS[lang]['ai.flush_index_confirm_desc']).toBeTruthy();
+      expect(TRANSLATIONS[lang]['ai.flush_index_success_toast']).toBeTruthy();
+    }
+
+    // 2. Set up DOM
+    document.body.innerHTML = `
+      <div id="ai-index-run-feedback"></div>
+      <button id="btn-ai-flush-index">Flush Index</button>
+      <div id="ai-index-db-summary"></div>
+      <div id="topbar-ai-accel-pill"><span id="topbar-ai-accel-label">AI: NPU</span></div>
+      <span id="mgmt-sidebar-ai-badge">NPU</span>
+      <span id="mgmt-hub-ai-pill">NPU → GPU</span>
+      <span id="ai-active-tier-pill"></span>
+      <span id="ai-accel-device-label"></span>
+      <span id="ai-stat-files">15</span>
+      <span id="ai-stat-chunks">48</span>
+      <span id="ai-stat-photos">12</span>
+      <div id="ai-tier1-status"></div>
+      <div id="ai-tier2-status"></div>
+      <div id="ai-tier3-status"></div>
+      <span id="ai-sync-state-badge"><span id="ai-sync-state-dot"></span><span id="ai-sync-state-text"></span></span>
+      <span id="ai-index-sync-state-pill">IDLE</span>
+      <span id="ai-index-current-path"></span>
+      <strong id="ai-prog-indexed">15</strong>
+      <strong id="ai-prog-unchanged">0</strong>
+      <strong id="ai-prog-deferred">0</strong>
+      <div id="ai-watched-folders-list"></div>
+      <div id="ai-discovered-shares-list"></div>
+    `;
+
+    let confirmCb = null;
+    let confirmOpts = null;
+    const confirmSpy = vi.spyOn(toast, 'showConfirmToast').mockImplementation((title, desc, onConfirm, onCancel, opts) => {
+      confirmCb = onConfirm;
+      confirmOpts = opts;
+    });
+
+    const postSpy = vi.spyOn(api, 'post').mockResolvedValue({
+      status: 'ok',
+      message: 'RAG index and vector database successfully flushed clean.',
+      stats: { total_files: 0, total_chunks: 0, total_photos: 0 },
+      sync_progress: { state: 'idle', indexed_files: 0 },
+    });
+    vi.spyOn(api, 'get').mockResolvedValue({
+      status: 'ok',
+      hardware: { tier_number: 1, name: 'Intel AI Boost NPU' },
+      index_stats: { total_files: 0, total_chunks: 0, total_photos: 0 },
+      sync_progress: { state: 'idle' },
+    });
+
+    // 3. Trigger flushAiIndex directly
+    await flushAiIndex();
+
+    expect(confirmSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Flush RAG Index'),
+      expect.stringContaining('wipe all indexed documents'),
+      expect.any(Function),
+      null,
+      expect.objectContaining({ isDanger: true })
+    );
+    expect(confirmOpts.isDanger).toBe(true);
+
+    // 4. Simulate user confirming the dialog
+    expect(confirmCb).toBeTypeOf('function');
+    await confirmCb();
+
+    expect(postSpy).toHaveBeenCalledWith('/api/ai/index/flush');
+    const feedbackEl = document.getElementById('ai-index-run-feedback');
+    expect(feedbackEl.textContent).toContain('flushed clean');
+
+    // 5. Test controlAiSync('flush') and controlAiSync('clear')
+    confirmSpy.mockClear();
+    postSpy.mockClear();
+
+    await controlAiSync('flush');
+    expect(confirmSpy).toHaveBeenCalledTimes(1);
+
+    await controlAiSync('clear');
+    expect(confirmSpy).toHaveBeenCalledTimes(2);
+  });
+
+  it('hydrates embedding model, MRL dimension, runs benchmark and updates reindex progress UI', async () => {
+    // 1. Prepare DOM elements
+    const container = document.createElement('div');
+    container.innerHTML = `
+      <select id="ai-embedding-model-select">
+        <option value="google/embeddinggemma-2">EmbeddingGemma 2 (768d)</option>
+        <option value="google/embeddinggemma-2-270m">EmbeddingGemma 2 270M (512d)</option>
+      </select>
+      <select id="ai-mrl-dimension-select">
+        <option value="768">768-dim</option>
+        <option value="512">512-dim</option>
+        <option value="256">256-dim</option>
+        <option value="128">128-dim</option>
+      </select>
+      <button id="btn-ai-run-benchmark">Run AI Latency & Throughput Benchmark</button>
+      <div id="ai-benchmark-results-card" style="display: none;">
+        <span id="bm-latency">--</span>
+        <span id="bm-throughput">--</span>
+        <span id="bm-tokens">--</span>
+        <span id="bm-accel">--</span>
+      </div>
+      <div id="ai-reindex-progress-container" style="display: none;">
+        <div id="ai-reindex-progress-bar" style="width: 0%;"></div>
+        <span id="ai-reindex-pct-label">0%</span>
+        <span id="ai-reindex-speed-label">0 chunks/s</span>
+        <span id="ai-reindex-eta-label">ETA: --</span>
+      </div>
+    `;
+    document.body.appendChild(container);
+
+    const getSpy = vi.spyOn(api, 'get').mockResolvedValue({
+      status: 'ok',
+      hardware: { tier_number: 1, name: 'Intel AI Boost NPU' },
+      index_stats: { total_files: 10, total_chunks: 50, total_photos: 5 },
+      config: {
+        embedding_model: 'google/embeddinggemma-2-270m',
+        embedding_dim: 512,
+      },
+      sync_progress: { state: 'idle' },
+    });
+
+    const postSpy = vi.spyOn(api, 'post').mockImplementation(async (url, payload) => {
+      if (url === '/api/ai/benchmark') {
+        return {
+          status: 'ok',
+          latency_ms: 18.5,
+          throughput_chunks_sec: 54.05,
+          tokens_per_sec: 1420.2,
+          accelerator: 'NPU Tier 1 (Intel AI Boost)',
+          zero_disk_wakeups: true,
+        };
+      }
+      return { status: 'ok' };
+    });
+
+    // 2. Fetch and render status
+    await fetchAndRenderAiStatus();
+
+    const embSelect = document.getElementById('ai-embedding-model-select');
+    const mrlSelect = document.getElementById('ai-mrl-dimension-select');
+    expect(embSelect.value).toBe('google/embeddinggemma-2-270m');
+    expect(mrlSelect.value).toBe('512');
+
+    // 3. Test changing embedding model & MRL dim
+    embSelect.value = 'google/embeddinggemma-2';
+    embSelect.dispatchEvent(new Event('change'));
+    expect(postSpy).toHaveBeenCalledWith('/api/ai/config', { embedding_model: 'google/embeddinggemma-2' });
+
+    mrlSelect.value = '256';
+    mrlSelect.dispatchEvent(new Event('change'));
+    expect(postSpy).toHaveBeenCalledWith('/api/ai/config', { embedding_dim: 256 });
+
+    // 4. Test running benchmark
+    const btnBenchmark = document.getElementById('btn-ai-run-benchmark');
+    await btnBenchmark.click();
+
+    expect(postSpy).toHaveBeenCalledWith('/api/ai/benchmark');
+    const card = document.getElementById('ai-benchmark-results-card');
+    expect(card.style.display).toBe('grid');
+    expect(document.getElementById('bm-latency').textContent).toBe('18.5 ms');
+    expect(document.getElementById('bm-throughput').textContent).toBe('54.05 chunks/s');
+    expect(document.getElementById('bm-tokens').textContent).toBe('1420.2 tok/s');
+    expect(document.getElementById('bm-accel').textContent).toBe('NPU Tier 1 (Intel AI Boost)');
+
+    // 5. Test updateAiReindexProgress helper
+    updateAiReindexProgress({
+      total: 200,
+      completed: 100,
+      speed: 25.4,
+      eta_sec: 4,
+    });
+    const progContainer = document.getElementById('ai-reindex-progress-container');
+    expect(progContainer.style.display).toBe('block');
+    expect(document.getElementById('ai-reindex-progress-bar').style.width).toBe('50%');
+    expect(document.getElementById('ai-reindex-pct-label').textContent).toBe('50%');
+    expect(document.getElementById('ai-reindex-speed-label').textContent).toBe('25.4 chunks/s');
+    expect(document.getElementById('ai-reindex-eta-label').textContent).toBe('ETA: 4s');
+
+    // Test idle/complete hides progress
+    updateAiReindexProgress({ status: 'idle' });
+    expect(progContainer.style.display).toBe('none');
+
+    // Cleanup
+    document.body.removeChild(container);
+  });
 });
-
-
-

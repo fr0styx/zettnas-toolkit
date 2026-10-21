@@ -10,6 +10,7 @@ def share_sandbox(tmp_path, pool_tree):
     links_file = str(tmp_path / "shared_links.json")
     test_file = os.path.join(pool_tree, "media", "readme.txt")
 
+    fs_mod._SHARE_PWD_ATTEMPTS.clear()
     with (
         patch.object(fs_mod, "SHARE_LINKS_FILE", links_file),
         patch.object(fs_mod, "ALLOWED_BROWSE_ROOTS", [str(pool_tree)]),
@@ -19,6 +20,7 @@ def share_sandbox(tmp_path, pool_tree):
             "test_file": test_file,
             "pool_tree": pool_tree,
         }
+    fs_mod._SHARE_PWD_ATTEMPTS.clear()
 
 
 def test_create_and_access_public_share_link(client, auth_headers, share_sandbox):

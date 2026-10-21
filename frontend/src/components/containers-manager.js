@@ -15,7 +15,13 @@ import { openStackModal, openStackPickerModal } from './stack-modal.js';
 import {
   createContainerRow as createSharedContainerRow,
   updateContainerRow as updateSharedContainerRow,
-  buildContainerRowInner as buildSharedContainerRowInner
+  buildContainerRowInner as buildSharedContainerRowInner,
+  getSelectedContainerIds,
+  isContainerSelected,
+  toggleContainerSelected,
+  clearSelectedContainers,
+  selectAllContainers,
+  initSynchronizedTableScrollbars,
 } from './docker-table.js';
 
 let containersWindow = null;
@@ -79,8 +85,11 @@ export function initContainersManager() {
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
             <!-- Quick Status Badges -->
             <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-              <div style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3);">
-                <span>🐳</span> <span id="cw-stat-daemon">Docker Socket Active</span>
+              <div class="cw-docker-status-chip" style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3);">
+                <span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:#34d399; box-shadow:0 0 6px #34d399;"></span>
+                <span id="cw-stat-daemon">Docker Socket Active</span>
+                <span style="opacity:0.35;">•</span>
+                <span style="font-size:10px; color:#cbd5e1; font-weight:500;">Live Sync</span>
               </div>
               <div style="display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--muted);">
                 <span>Total: <strong id="cw-count-all" style="color: #fff;">0</strong></span>
@@ -94,10 +103,6 @@ export function initContainersManager() {
 
             <!-- Quick Action Buttons -->
             <div class="cw-action-btns-wrap" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-              <button id="btn-cw-refresh" class="btn-pill-toggle" title="Refresh Containers" style="display: inline-flex; align-items: center; gap: 5px;">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-                <span data-i18n="mgmt.refresh">${t('mgmt.refresh', 'Refresh')}</span>
-              </button>
               <button id="btn-cw-check-updates" class="btn-pill-toggle" title="Check remote registries for container image updates" style="display: inline-flex; align-items: center; gap: 5px;">
                 <span style="color: var(--ok2, #25c2a0);">✓</span> <span>Check Updates</span>
               </button>
@@ -134,12 +139,20 @@ export function initContainersManager() {
 
         <!-- Table Body -->
         <div class="containers-content-body" data-scrollable="true" style="flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; touch-action: pan-y; padding: 14px 16px;">
+          <!-- Top Horizontal Scrollbar (Synchronized with table) -->
+          <div class="docker-table-top-scroll" id="cw-docker-table-top-scroll" style="display:none;" aria-label="Horizontal scrollbar (top)" title="Scroll table horizontally">
+            <div class="docker-table-top-scroll-inner" id="cw-docker-table-top-scroll-inner"></div>
+          </div>
           <div class="cw-docker-table-wrap" style="overflow-x: auto; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px;">
             <table class="copy-history-table docker-table responsive-cards">
               <thead>
                 <tr>
-                  <th class="cw-sortable-th" data-sort-col="name" role="columnheader" aria-sort="none" tabindex="0" title="Click to sort by Name / Stack">
-                    <span data-i18n="mgmt.tbl_name_id">${t('mgmt.tbl_name_id', 'Name / Stack')}</span><span class="docker-sort-indicator" aria-hidden="true"></span>
+                  <th class="cw-sortable-th" data-sort-col="name" role="columnheader" aria-sort="none" tabindex="0" title="Click to sort by Name">
+                    <input type="checkbox" id="cw-docker-select-all" title="Select All Containers" style="margin: 0 6px 0 0; cursor: pointer; accent-color: var(--brand, #0ea5e9); vertical-align: middle;">
+                    <span data-i18n="mgmt.tbl_name">${t('mgmt.tbl_name', 'Name')}</span><span class="docker-sort-indicator" aria-hidden="true"></span>
+                  </th>
+                  <th class="cw-sortable-th" data-sort-col="stack" role="columnheader" aria-sort="none" tabindex="0" title="Click to sort by Stack / Type">
+                    <span data-i18n="mgmt.tbl_stack">${t('mgmt.tbl_stack', 'Stack / Type')}</span><span class="docker-sort-indicator" aria-hidden="true"></span>
                   </th>
                   <th class="cw-sortable-th" data-sort-col="hardware" role="columnheader" aria-sort="none" tabindex="0" title="Click to sort by Hardware">
                     <span data-i18n="mgmt.tbl_hardware">${t('mgmt.tbl_hardware', 'Hardware')}</span><span class="docker-sort-indicator" aria-hidden="true"></span>
@@ -157,9 +170,28 @@ export function initContainersManager() {
                 </tr>
               </thead>
               <tbody id="cw-docker-containers-tbody">
-                <tr><td colspan="6" style="text-align: center; color: var(--muted); padding: 24px;">Scanning Docker socket...</td></tr>
+                <tr><td colspan="7" style="text-align: center; color: var(--muted); padding: 24px;">Scanning Docker socket...</td></tr>
               </tbody>
             </table>
+          </div>
+          <!-- Sticky Bottom Horizontal Scrollbar (Sticky to viewport bottom) -->
+          <div class="docker-table-sticky-scroll" id="cw-docker-table-sticky-scroll" style="display:none;" aria-label="Horizontal scrollbar (bottom)" title="Scroll table horizontally">
+            <div class="docker-table-sticky-scroll-inner" id="cw-docker-table-sticky-scroll-inner"></div>
+          </div>
+          <div id="cw-docker-bulk-bar" class="docker-floating-bulk-bar" style="display: none;">
+            <div class="bulk-bar-info">
+              <span id="cw-docker-bulk-count" class="bulk-bar-count">0</span>
+              <span>selected</span>
+            </div>
+            <div class="bulk-bar-actions">
+              <button class="btn-bulk-action" data-bulk="start" title="Start selected containers">▶ Start</button>
+              <button class="btn-bulk-action" data-bulk="stop" title="Stop selected containers">⏹ Stop</button>
+              <button class="btn-bulk-action" data-bulk="restart" title="Restart selected containers">🔄 Restart</button>
+              <button class="btn-bulk-action" data-bulk="pause" title="Pause selected containers">⏸ Pause</button>
+              <button class="btn-bulk-action" data-bulk="unpause" title="Resume selected containers">⏵ Resume</button>
+              <button class="btn-bulk-action btn-bulk-delete" data-bulk="delete" title="Delete selected containers">🗑️ Delete</button>
+              <button class="btn-bulk-action btn-bulk-cancel" data-bulk="cancel" title="Deselect all">✕</button>
+            </div>
           </div>
           <div id="cw-docker-catalog-wrap" style="display: none; flex-direction: column; gap: 14px;">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 10px 14px;">
@@ -199,6 +231,7 @@ export function initContainersManager() {
         e.preventDefault();
         e.stopPropagation();
       }
+      stopCwAutoRefresh();
       if (containersWindow) {
         containersWindow.classList.add('window-minimized');
         containersWindow.classList.remove('open');
@@ -214,6 +247,7 @@ export function initContainersManager() {
         e.preventDefault();
         e.stopPropagation();
       }
+      stopCwAutoRefresh();
       if (containersWindow) {
         containersWindow.classList.add('window-minimized');
         containersWindow.classList.remove('open');
@@ -250,13 +284,6 @@ export function initContainersManager() {
   }
 
   // Quick Action Buttons
-  const btnRefresh = document.getElementById('btn-cw-refresh');
-  if (btnRefresh) {
-    btnRefresh.onclick = () => {
-      loadContainersData();
-      showToast('Containers refreshed.', 'info');
-    };
-  }
 
   const btnCheckUpdates = document.getElementById('btn-cw-check-updates');
   if (btnCheckUpdates) {
@@ -314,8 +341,13 @@ export function initContainersManager() {
     btnStacks.onclick = async () => {
       try {
         const res = await api.get('/api/docker/stacks');
-        openStackPickerModal(res.stacks || []);
+        const stacks = Array.isArray(res) ? res : (res?.stacks || []);
+        if (!stacks.length) {
+          showToast('No active Compose stacks found.', 'info');
+        }
+        openStackPickerModal(stacks);
       } catch (e) {
+        showToast(`Failed to load Compose stacks: ${e.message}`, 'error');
         openStackPickerModal([]);
       }
     };
@@ -403,7 +435,8 @@ export function initContainersManager() {
   // Table Sorting
   const sortHeaders = containersWindow.querySelectorAll('.cw-sortable-th');
   sortHeaders.forEach((th) => {
-    th.addEventListener('click', () => {
+    th.addEventListener('click', (e) => {
+      if (e.target.id === 'cw-docker-select-all' || e.target.closest('#cw-docker-select-all')) return;
       const col = th.dataset.sortCol;
       if (!col) return;
       if (_cwSortCol === col) {
@@ -421,11 +454,136 @@ export function initContainersManager() {
     });
   });
 
+  // Select All Containers Checkbox
+  const selectAll = document.getElementById('cw-docker-select-all');
+  if (selectAll) {
+    selectAll.addEventListener('change', (e) => {
+      e.stopPropagation();
+      const tbody = document.getElementById('cw-docker-containers-tbody');
+      if (!tbody) return;
+      if (selectAll.checked) {
+        const visibleIds = _cwContainersList.map((c) => c.id).filter(Boolean);
+        selectAllContainers(visibleIds);
+      } else {
+        clearSelectedContainers();
+      }
+      tbody.querySelectorAll('.docker-row-select').forEach((chk) => {
+        const cid = chk.dataset.id;
+        const isChecked = isContainerSelected(cid);
+        chk.checked = isChecked;
+        const tr = chk.closest('tr');
+        if (tr) {
+          if (isChecked) tr.classList.add('docker-row-selected');
+          else tr.classList.remove('docker-row-selected');
+        }
+      });
+      updateCwBulkBar();
+    });
+  }
+
+  // Floating Bulk Action Bar Buttons
+  const bulkBar = document.getElementById('cw-docker-bulk-bar');
+  if (bulkBar) {
+    bulkBar.addEventListener('click', (e) => {
+      const btn = e.target.closest('.btn-bulk-action');
+      if (!btn) return;
+      e.stopPropagation();
+      const action = btn.dataset.bulk;
+      if (action) {
+        executeBulkContainerAction(action);
+      }
+    });
+  }
+
+  // Live Event Bus Subscriptions for instant reactive updates
+  ZettEventBus.on('docker:action', () => {
+    loadContainersData(true);
+  });
+  ZettEventBus.on('docker:containers:refresh', () => {
+    loadContainersData(true);
+  });
+  ZettEventBus.on('docker:containers-updated', () => {
+    loadContainersData(true);
+  });
+  ZettEventBus.on('stats:updated', (stats) => {
+    if (!stats || !Array.isArray(stats.docker)) return;
+    if (!containersWindow) {
+      containersWindow = document.getElementById('containers-manager-window');
+    }
+    if (!containersWindow) return;
+    if (
+      containersWindow.style.display === 'none' ||
+      containersWindow.classList.contains('minimized') ||
+      containersWindow.classList.contains('window-minimized')
+    ) {
+      return;
+    }
+    _cwContainersList = stats.docker;
+    renderContainersWindowTable(_cwContainersList);
+  });
+
   // Enable drag and bringToFront
   if (containersWindow) {
     makeDraggable(containersWindow, containersWindow.querySelector('.os-window-header'));
     containersWindow.addEventListener('mousedown', () => bringToFront(containersWindow));
   }
+}
+
+let _cwAutoRefreshTimer = null;
+let _isCwAutoRefreshing = false;
+let _cwAutoRefreshCount = 0;
+
+export function startCwAutoRefresh() {
+  if (_cwAutoRefreshTimer) return;
+  _cwAutoRefreshTimer = setInterval(async () => {
+    if (typeof document !== 'undefined' && document.hidden) return;
+    if (!containersWindow) {
+      containersWindow = document.getElementById('containers-manager-window');
+    }
+    if (!containersWindow) return;
+    if (
+      containersWindow.style.display === 'none' ||
+      containersWindow.classList.contains('minimized') ||
+      containersWindow.classList.contains('window-minimized')
+    ) {
+      return;
+    }
+
+    if (_isCwAutoRefreshing) return;
+    _isCwAutoRefreshing = true;
+    try {
+      _cwAutoRefreshCount++;
+      if (_cwAutoRefreshCount % 6 === 0) {
+        api.get('/api/docker/updates/status').then((res) => {
+          _cwUpdatesCache = res;
+          updateCwUpdatesUI(res.updates_available_count || 0);
+        }).catch(() => {});
+      }
+      // Telemetry arrives in real-time over SSE (stats:updated); fallback to HTTP poll only if empty
+      if (!_cwContainersList || _cwContainersList.length === 0) {
+        await loadContainersData(true);
+      }
+    } catch (e) {
+      console.warn('CW background auto-refresh poll error:', e);
+    } finally {
+      _isCwAutoRefreshing = false;
+    }
+  }, 3500);
+}
+
+export function stopCwAutoRefresh() {
+  if (_cwAutoRefreshTimer) {
+    clearInterval(_cwAutoRefreshTimer);
+    _cwAutoRefreshTimer = null;
+  }
+}
+
+export function _resetCwAutoRefreshForTesting() {
+  stopCwAutoRefresh();
+  _isCwAutoRefreshing = false;
+  _cwAutoRefreshCount = 0;
+  _cwContainersList = [];
+  _cwUpdatesCache = null;
 }
 
 export function openContainersManager() {
@@ -446,16 +604,25 @@ export function openContainersManager() {
   containersWindow.style.display = 'flex';
   bringToFront(containersWindow);
   ZettEventBus.emit('window:open', { id: 'containers-manager-window' });
+  startCwAutoRefresh();
   loadContainersData();
 }
 
-export async function loadContainersData() {
+export async function loadContainersData(isBackground = false) {
   try {
     const list = await api.get('/api/docker/containers').catch(() => []);
     _cwContainersList = Array.isArray(list) ? list : [];
     renderContainersWindowTable(_cwContainersList);
   } catch (err) {
-    showToast(`Failed to load containers: ${err.message}`, 'error');
+    if (!isBackground || _cwContainersList.length === 0) {
+      showToast(`Failed to load containers: ${err.message}`, 'error');
+      const tbody = document.getElementById('cw-docker-containers-tbody');
+      if (tbody && _cwContainersList.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--crit, #ef4444); padding:24px;">Failed to load containers: ${escapeHtml(err.message)}</td></tr>`;
+      }
+    } else {
+      console.warn('Silent cw background refresh error:', err);
+    }
   }
 }
 
@@ -636,7 +803,11 @@ export function renderContainersWindowTable(containersList = null) {
   updateCwUpdatesUI(updatesCount);
 
   if (totalCount === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--muted); padding:24px;">${t('mgmt.docker_none', 'No Docker containers detected or socket not connected.')}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--muted); padding:24px;">${t('mgmt.docker_none', 'No Docker containers detected or socket not connected.')}</td></tr>`;
+    const cwTopScroll = document.getElementById('cw-docker-table-top-scroll');
+    const cwStickyScroll = document.getElementById('cw-docker-table-sticky-scroll');
+    if (cwTopScroll) cwTopScroll.style.display = 'none';
+    if (cwStickyScroll) cwStickyScroll.style.display = 'none';
     return;
   }
 
@@ -675,6 +846,9 @@ export function renderContainersWindowTable(containersList = null) {
       if (_cwSortCol === 'name') {
         va = (a.name || '').toLowerCase();
         vb = (b.name || '').toLowerCase();
+      } else if (_cwSortCol === 'stack') {
+        va = (a.stack || (a.managed_by === 'unraid' ? 'Unraid' : 'Standalone')).toLowerCase();
+        vb = (b.stack || (b.managed_by === 'unraid' ? 'Unraid' : 'Standalone')).toLowerCase();
       } else if (_cwSortCol === 'hardware') {
         va = (a.hardware_badges || []).map((b) => b.label).join(' ');
         vb = (b.hardware_badges || []).map((b) => b.label).join(' ');
@@ -690,12 +864,27 @@ export function renderContainersWindowTable(containersList = null) {
       }
       if (va < vb) return _cwSortDir === 'asc' ? -1 : 1;
       if (va > vb) return _cwSortDir === 'asc' ? 1 : -1;
+      if (_cwSortCol === 'name') {
+        const sa = (a.stack || '').toLowerCase();
+        const sb = (b.stack || '').toLowerCase();
+        if (sa < sb) return -1;
+        if (sa > sb) return 1;
+      } else if (_cwSortCol === 'stack') {
+        const na = (a.name || '').toLowerCase();
+        const nb = (b.name || '').toLowerCase();
+        if (na < nb) return -1;
+        if (na > nb) return 1;
+      }
       return 0;
     });
   }
 
   if (filtered.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--muted); padding:24px;">${t('mgmt.docker_no_matching', 'No containers match your search or filter.')}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--muted); padding:24px;">${t('mgmt.docker_no_matching', 'No containers match your search or filter.')}</td></tr>`;
+    const cwTopScroll = document.getElementById('cw-docker-table-top-scroll');
+    const cwStickyScroll = document.getElementById('cw-docker-table-sticky-scroll');
+    if (cwTopScroll) cwTopScroll.style.display = 'none';
+    if (cwStickyScroll) cwStickyScroll.style.display = 'none';
     return;
   }
 
@@ -714,6 +903,15 @@ export function renderContainersWindowTable(containersList = null) {
     (c) => createCwContainerRow(c, currentHost),
     (tr, c) => updateCwContainerRow(tr, c, currentHost)
   );
+
+  updateCwBulkBar();
+
+  const cwWrap = document.querySelector('.cw-docker-table-wrap');
+  const cwTopScroll = document.getElementById('cw-docker-table-top-scroll');
+  const cwStickyScroll = document.getElementById('cw-docker-table-sticky-scroll');
+  if (cwWrap) {
+    initSynchronizedTableScrollbars(cwWrap, cwTopScroll, cwStickyScroll);
+  }
 }
 
 function buildCwContainerRowInner(c, currentHost) {
@@ -734,6 +932,19 @@ function updateCwContainerRow(tr, c, currentHost) {
 function bindCwTableEvents(tbody) {
   if (tbody._cwTableEventsBound) return;
   tbody._cwTableEventsBound = true;
+
+  tbody.addEventListener('change', (e) => {
+    if (e.target.classList.contains('docker-row-select')) {
+      const cid = e.target.dataset.id;
+      toggleContainerSelected(cid, e.target.checked);
+      const tr = e.target.closest('tr');
+      if (tr) {
+        if (e.target.checked) tr.classList.add('docker-row-selected');
+        else tr.classList.remove('docker-row-selected');
+      }
+      updateCwBulkBar();
+    }
+  });
 
   tbody.addEventListener('click', async (e) => {
     const stackPill = e.target.closest('.clickable-stack-pill, .open-stack-btn');
@@ -921,4 +1132,97 @@ function bindCwTableEvents(tbody) {
       if (cid) openContainerInspector(cid, cname);
     }
   });
+}
+
+export function updateCwBulkBar() {
+  const bar = document.getElementById('cw-docker-bulk-bar');
+  const countEl = document.getElementById('cw-docker-bulk-count');
+  const selectAll = document.getElementById('cw-docker-select-all');
+  const selectedIds = getSelectedContainerIds();
+  const count = selectedIds.length;
+
+  if (bar) {
+    if (count > 0) {
+      bar.style.display = 'flex';
+      if (countEl) countEl.textContent = count;
+    } else {
+      bar.style.display = 'none';
+    }
+  }
+
+  if (selectAll) {
+    const totalVisible = _cwContainersList.length;
+    if (count === 0) {
+      selectAll.checked = false;
+      selectAll.indeterminate = false;
+    } else if (count >= totalVisible && totalVisible > 0) {
+      selectAll.checked = true;
+      selectAll.indeterminate = false;
+    } else {
+      selectAll.checked = false;
+      selectAll.indeterminate = true;
+    }
+  }
+}
+
+export async function executeBulkContainerAction(action) {
+  const selectedIds = getSelectedContainerIds();
+  if (selectedIds.length === 0) {
+    showToast('No containers selected.', 'info');
+    return;
+  }
+
+  if (action === 'cancel') {
+    clearSelectedContainers();
+    renderContainersWindowTable();
+    updateCwBulkBar();
+    return;
+  }
+
+  if (action === 'delete') {
+    showConfirmToast(
+      `Delete ${selectedIds.length} Containers`,
+      `Are you sure you want to permanently delete ${selectedIds.length} selected containers? This action cannot be undone.`,
+      async () => {
+        await _runBulkActionApi(action, selectedIds);
+      },
+      null,
+      { okText: '🗑️ Delete All', cancelText: 'Cancel' }
+    );
+    return;
+  }
+
+  if (action === 'stop') {
+    showConfirmToast(
+      `Stop ${selectedIds.length} Containers`,
+      `Are you sure you want to stop ${selectedIds.length} running containers?`,
+      async () => {
+        await _runBulkActionApi(action, selectedIds);
+      },
+      null,
+      { okText: '⏹ Stop All', cancelText: 'Cancel' }
+    );
+    return;
+  }
+
+  await _runBulkActionApi(action, selectedIds);
+}
+
+async function _runBulkActionApi(action, selectedIds) {
+  try {
+    showToast(`Executing bulk ${action} on ${selectedIds.length} containers...`, 'info');
+    const res = await api.post('/api/docker/containers/bulk-action', {
+      action,
+      container_ids: selectedIds,
+      force: action === 'delete',
+    });
+    const successful = res.successful || 0;
+    const total = res.total || selectedIds.length;
+    showToast(`Bulk ${action}: ${successful} of ${total} succeeded.`, successful === total ? 'success' : 'warn');
+    clearSelectedContainers();
+    await loadContainersData();
+    updateCwBulkBar();
+  } catch (err) {
+    showToast(`Bulk ${action} failed: ${err.message}`, 'error');
+  }
 }

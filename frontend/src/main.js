@@ -41,6 +41,7 @@ import { initDesktopDragAndDrop } from './components/desktop-drag-drop.js';
 import { initScreensaverSystem } from './components/screensaver.js';
 import { initI18n } from './i18n.js';
 import { initA11y } from './a11y.js';
+import { initGlassTimePickers } from './components/time-picker.js';
 
 let _sseRetryCount = 0;
 let _sse = null;
@@ -243,6 +244,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initFanControl();
     initLedControl();
     applyLcdTheme(state.lcdTheme, state.lcdCustomAccent, state.lcdTextClarity);
+    applyDashboardLayout();
     fetchDashboardLayout();
     tick();
     startSSE();
@@ -274,6 +276,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initDesktopDragAndDrop();
   initScreensaverSystem();
   initA11y();
+  initGlassTimePickers();
 
   applyDesktopTheme(state.desktopTheme, state.desktopCustomAccent);
   applyLcdTheme(state.lcdTheme, state.lcdCustomAccent, state.lcdTextClarity);

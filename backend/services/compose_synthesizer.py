@@ -316,6 +316,8 @@ def get_container_full_details(cid_or_name: str, allow_unmasked: bool = False) -
         )
 
     # Ports
+    net_mode = hc.get("NetworkMode", "bridge")
+    exposed_ports = cfg.get("ExposedPorts") or {}
     raw_ports = []
     for cont_p, bindings in (hc.get("PortBindings") or {}).items():
         if bindings:
@@ -337,7 +339,9 @@ def get_container_full_details(cid_or_name: str, allow_unmasked: bool = False) -
                     "IP": "0.0.0.0",
                 }
             )
-    ports, primary_port, webui_url = _parse_ports_and_webui(raw_ports, labels)
+    ports, primary_port, webui_url = _parse_ports_and_webui(
+        raw_ports, labels, network_mode=net_mode, exposed_ports=exposed_ports
+    )
 
     # Stack origin
     stack, service, managed_by = _classify_stack(labels)

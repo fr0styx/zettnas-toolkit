@@ -20,6 +20,7 @@ let _activeComposeData = null;
 let _activeLogLines = [];
 let _activeLogFilter = '';
 let _autoScrollLogs = true;
+let _logEventSource = null;
 let _unbindFocusTrap = null;
 let _activeTab = 'overview';
 let _termHistory = [];
@@ -121,6 +122,9 @@ export function initContainerModal() {
                 <input type="text" id="ci-logs-filter-input" placeholder="Filter output..." class="tz-text-input" style="font-size:11px; padding:3px 8px; width:160px;">
                 <label style="display:flex; align-items:center; gap:4px; font-size:10px; color:var(--muted); cursor:pointer;">
                   <input type="checkbox" id="ci-logs-autoscroll" checked> Auto-scroll
+                </label>
+                <label style="display:flex; align-items:center; gap:4px; font-size:10px; color:var(--accent-cyan, #00f0ff); cursor:pointer; font-weight:600;" title="Stream live container logs continuously via SSE">
+                  <input type="checkbox" id="ci-logs-stream-toggle"> <span>Live Follow</span>
                 </label>
               </div>
               <div style="display:flex; gap:6px;">
@@ -296,6 +300,18 @@ export function initContainerModal() {
     });
   }
 
+  const streamToggle = document.getElementById('ci-logs-stream-toggle');
+  if (streamToggle) {
+    streamToggle.addEventListener('change', (e) => {
+      if (e.target.checked) {
+        if (_activeCid) startLogStream(_activeCid);
+      } else {
+        stopLogStream();
+        if (_activeCid) loadContainerLogs(_activeCid);
+      }
+    });
+  }
+
   // Env search input
   const envSearchInput = document.getElementById('ci-env-search');
   if (envSearchInput) {
@@ -390,6 +406,7 @@ export function closeContainerInspector() {
     try { _activeTermWs.close(); } catch (_) {}
     _activeTermWs = null;
   }
+  stopLogStream();
   _activeCid = null;
   _activeCname = null;
   _activeComposeData = null;
@@ -459,6 +476,10 @@ export async function switchContainerTab(tabTarget) {
   overlay.querySelectorAll('.ci-pane').forEach((p) => {
     p.style.display = p.id === `ci-pane-${tabTarget}` ? 'block' : 'none';
   });
+
+  if (tabTarget !== 'logs') {
+    stopLogStream();
+  }
 
   if (tabTarget === 'compose' && _activeCid) {
     await loadContainerCompose(_activeCid);
@@ -826,13 +847,28 @@ function renderPortsTab(details) {
 
   const currentHost = typeof window !== 'undefined' && window.location.hostname ? window.location.hostname : 'localhost';
   const webUrl = details.webui_url ? details.webui_url.replace('[HOST]', currentHost) : null;
+  const isHostNet = details.overview?.network_mode === 'host' || (details.ports || []).some((p) => p.ip === 'host' || p.is_host_network);
+
+  const hostBanner = isHostNet
+    ? `
+      <div style="margin-bottom:14px; padding:12px; background:rgba(56, 189, 248, 0.08); border:1px solid rgba(56, 189, 248, 0.25); border-radius:6px; display:flex; align-items:flex-start; gap:10px;">
+        <span style="font-size:16px; line-height:1.2;">⚡</span>
+        <div>
+          <div style="font-weight:700; color:#38bdf8; font-size:12px;">Host Networking Mode Active</div>
+          <div style="font-size:10px; color:#cbd5e1; margin-top:2px; line-height:1.4;">
+            This container uses the host OS network stack directly (bypassing Docker's virtual bridge/NAT). Container services bind directly to host IP addresses without virtual port-forwarding rules.
+          </div>
+        </div>
+      </div>
+    `
+    : '';
 
   const webuiBanner = webUrl
     ? `
       <div style="margin-bottom:14px; padding:12px; background:rgba(0, 240, 255, 0.08); border:1px solid rgba(0, 240, 255, 0.25); border-radius:6px; display:flex; justify-content:space-between; align-items:center;">
         <div>
           <div style="font-weight:700; color:#fff; font-size:12px;">Web Interface Detected</div>
-          <div style="font-size:10px; color:var(--muted); margin-top:2px;">Service exposed on port ${details.primary_port}</div>
+          <div style="font-size:10px; color:var(--muted); margin-top:2px;">Service exposed on port ${details.primary_port}${isHostNet ? ' (Host Direct)' : ''}</div>
         </div>
         <a href="${escapeHtml(webUrl)}" target="_blank" rel="noopener noreferrer" class="btn-webui-badge" style="font-size:11px; padding:4px 10px;">
           🌐 Open Web UI ↗
@@ -844,7 +880,7 @@ function renderPortsTab(details) {
   const portsList = details.ports || [];
   let tableHtml = '';
   if (portsList.length === 0) {
-    tableHtml = '<div style="text-align:center; padding:20px; color:var(--muted);">No published port mappings configured for this container.</div>';
+    tableHtml = `<div style="text-align:center; padding:20px; color:var(--muted);">${isHostNet ? 'No exposed ports declared in image metadata. Container listens directly on host interfaces.' : 'No published port mappings configured for this container.'}</div>`;
   } else {
     tableHtml = `
       <div style="background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.06); border-radius:6px; overflow:hidden;">
@@ -860,13 +896,17 @@ function renderPortsTab(details) {
           <tbody>
             ${portsList.map((p) => {
               const isWeb = p.public_port === details.primary_port;
+              const isHost = p.ip === 'host' || p.is_host_network;
+              const hostLabel = isHost
+                ? `<span style="color:#38bdf8; font-weight:700;">Host Direct (:${p.public_port})</span>`
+                : (p.public_port ? `${escapeHtml(p.ip || '0.0.0.0')}:${p.public_port}` : '<span style="color:var(--muted);">None</span>');
               const directLink = p.public_port
                 ? `<a href="http://${currentHost}:${p.public_port}/" target="_blank" rel="noopener noreferrer" style="color:var(--accent-cyan,#00f0ff); font-size:10px;">http://${currentHost}:${p.public_port} ↗</a>`
                 : '—';
               return `
                 <tr>
-                  <td style="font-family:var(--font-mono, monospace); font-weight:700; color:#fff;">${p.public_port ? `${p.ip || '0.0.0.0'}:${p.public_port}` : '<span style="color:var(--muted);">None</span>'}</td>
-                  <td style="font-family:var(--font-mono, monospace);">${p.private_port}</td>
+                  <td style="font-family:var(--font-mono, monospace); font-size:11px;">${hostLabel}</td>
+                  <td style="font-family:var(--font-mono, monospace);">${p.private_port || '—'}</td>
                   <td><span class="ci-proto-tag" style="padding:1px 5px; border-radius:3px; background:rgba(255,255,255,0.08); font-size:9.5px; text-transform:uppercase;">${escapeHtml(p.type || 'tcp')}</span></td>
                   <td>${isWeb ? '<span style="color:var(--ok2); font-weight:700; font-size:10px;">✓ Primary Web UI</span>' : directLink}</td>
                 </tr>
@@ -876,67 +916,78 @@ function renderPortsTab(details) {
         </table>
       </div>
 
-      <!-- Port Reconfiguration Section (Phase 3) -->
-      <div class="ci-metric-card" style="margin-top:14px; background:rgba(0,0,0,0.35); border:1px solid rgba(255,255,255,0.08); padding:12px; border-radius:8px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-          <div style="font-size:11px; font-weight:700; color:#fff; text-transform:uppercase; letter-spacing:0.5px;">🔄 Reconfigure Ports (Atomic Clone & Recreate)</div>
-          <span style="font-size:9.5px; color:var(--warn); background:rgba(245,158,11,0.12); padding:2px 6px; border-radius:4px;">Rollback Protected</span>
+      ${isHostNet ? `
+        <div class="ci-metric-card" style="margin-top:14px; background:rgba(56,189,248,0.04); border:1px solid rgba(56,189,248,0.2); padding:12px; border-radius:8px;">
+          <div style="font-size:11px; font-weight:700; color:#38bdf8; text-transform:uppercase; letter-spacing:0.5px;">⚡ Host Networking Active</div>
+          <p style="font-size:10px; color:#cbd5e1; margin:4px 0 0 0; line-height:1.4;">
+            Port forwarding is bypassed in host mode. If you wish to map custom host ports (e.g. <code>8085:8080</code>), change <code>network_mode: host</code> to bridge mode in your compose file or container configuration.
+          </p>
         </div>
-        <p style="font-size:10px; color:var(--muted); margin:0 0 10px 0;">
-          Modify host port bindings. An atomic recreation stops, clones, and starts the container with updated ports while preserving all volume mounts.
-        </p>
-        <div style="display:flex; flex-direction:column; gap:8px;">
-          ${portsList.map((p, idx) => `
-            <div style="display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.03); padding:6px 10px; border-radius:6px;">
-              <span style="font-size:11px; color:#fff; font-family:var(--font-mono, monospace); width:130px;">Container :${p.private_port}/${p.type || 'tcp'}</span>
-              <span style="color:var(--muted);">➔</span>
-              <label style="font-size:10px; color:var(--muted);">Host Port:</label>
-              <input type="number" class="tz-text-input ci-port-input" data-idx="${idx}" data-cp="${p.private_port}" data-proto="${p.type || 'tcp'}" value="${p.public_port || ''}" style="width:90px; font-size:11px; padding:3px 6px;">
-              <span id="ci-port-check-${idx}" style="font-size:10px; color:var(--muted);"></span>
+      ` : `
+        <!-- Port Reconfiguration Section (Phase 3) -->
+        <div class="ci-metric-card" style="margin-top:14px; background:rgba(0,0,0,0.35); border:1px solid rgba(255,255,255,0.08); padding:12px; border-radius:8px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <div style="font-size:11px; font-weight:700; color:#fff; text-transform:uppercase; letter-spacing:0.5px;">🔄 Reconfigure Ports (Atomic Clone & Recreate)</div>
+            <span style="font-size:9.5px; color:var(--warn); background:rgba(245,158,11,0.12); padding:2px 6px; border-radius:4px;">Rollback Protected</span>
+          </div>
+          <p style="font-size:10px; color:var(--muted); margin:0 0 10px 0;">
+            Modify host port bindings. An atomic recreation stops, clones, and starts the container with updated ports while preserving all volume mounts.
+          </p>
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            ${portsList.map((p, idx) => `
+              <div style="display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.03); padding:6px 10px; border-radius:6px;">
+                <span style="font-size:11px; color:#fff; font-family:var(--font-mono, monospace); width:130px;">Container :${p.private_port}/${p.type || 'tcp'}</span>
+                <span style="color:var(--muted);">➔</span>
+                <label style="font-size:10px; color:var(--muted);">Host Port:</label>
+                <input type="number" class="tz-text-input ci-port-input" data-idx="${idx}" data-cp="${p.private_port}" data-proto="${p.type || 'tcp'}" value="${p.public_port || ''}" style="width:90px; font-size:11px; padding:3px 6px;">
+                <span id="ci-port-check-${idx}" style="font-size:10px; color:var(--muted);"></span>
+              </div>
+            `).join('')}
+            <div style="margin-top:6px;">
+              <button class="btn-pill-toggle" id="ci-btn-apply-ports" style="padding:6px 14px; font-weight:700; color:var(--accent-cyan,#00f0ff); border-color:var(--accent-cyan,#00f0ff); background:rgba(0,240,255,0.12);">
+                🚀 Recreate Container with New Ports
+              </button>
             </div>
-          `).join('')}
-          <div style="margin-top:6px;">
-            <button class="btn-pill-toggle" id="ci-btn-apply-ports" style="padding:6px 14px; font-weight:700; color:var(--accent-cyan,#00f0ff); border-color:var(--accent-cyan,#00f0ff); background:rgba(0,240,255,0.12);">
-              🚀 Recreate Container with New Ports
-            </button>
           </div>
         </div>
-      </div>
+      `}
     `;
   }
 
-  container.innerHTML = webuiBanner + tableHtml;
+  container.innerHTML = hostBanner + webuiBanner + tableHtml;
 
   // Wire Port availability checks and apply button
+  const _portCheckTimers = {};
   const foundInputs = container.querySelectorAll('.ci-port-input');
   foundInputs.forEach((input) => {
-    const handleInput = async (e) => {
+    const handleInput = (e) => {
       const idx = input.dataset.idx;
-      const proto = input.dataset.proto;
+      const proto = input.dataset.proto || 'tcp';
       const targetVal = e && e.target ? e.target.value : input.value;
       const val = parseInt(targetVal, 10);
       const statusEl = document.getElementById(`ci-port-check-${idx}`);
       if (!statusEl) return;
       if (isNaN(val) || val <= 0 || val > 65535) {
-        statusEl.textContent = 'Invalid port';
-        statusEl.style.color = 'var(--crit)';
+        statusEl.innerHTML = '<span class="ci-port-badge badge-crit" style="color:var(--crit); font-size:10px; padding:2px 6px; border-radius:4px; background:rgba(239,68,68,0.12);">Invalid port</span>';
         return;
       }
-      statusEl.textContent = 'Checking...';
-      statusEl.style.color = 'var(--muted)';
-      try {
-        const chk = await api.get(`/api/docker/check_port?port=${val}&proto=${proto}`);
-        if (chk && chk.available) {
-          statusEl.textContent = '✓ Available';
-          statusEl.style.color = 'var(--ok2)';
-        } else {
-          statusEl.textContent = '⚠️ In Use';
-          statusEl.style.color = 'var(--warn)';
+      statusEl.innerHTML = '<span style="color:var(--muted); font-size:10px;">Checking...</span>';
+
+      clearTimeout(_portCheckTimers[idx]);
+      _portCheckTimers[idx] = setTimeout(async () => {
+        try {
+          const chk = await api.get(`/api/docker/check_port?port=${val}&proto=${proto}`);
+          if (chk && chk.available) {
+            statusEl.innerHTML = `<span class="ci-port-badge badge-ok" style="color:var(--ok2); font-weight:600; font-size:10px; padding:2px 6px; border-radius:4px; background:rgba(34,197,94,0.12);">✓ Port ${val} Available</span>`;
+          } else {
+            const occupant = chk && chk.in_use_by ? ` (in use by ${escapeHtml(chk.in_use_by)})` : ' (in use)';
+            statusEl.innerHTML = `<span class="ci-port-badge badge-warn" style="color:var(--crit); font-weight:600; font-size:10px; padding:2px 6px; border-radius:4px; background:rgba(239,68,68,0.15);">⚠️ Port ${val} Conflict${occupant}</span>`;
+          }
+        } catch (err) {
+          console.error('[check_port error]', err);
+          statusEl.innerHTML = '';
         }
-      } catch (err) {
-        console.error('[check_port error]', err);
-        statusEl.textContent = '';
-      }
+      }, 250);
     };
     input.addEventListener('input', handleInput);
   });
@@ -1180,7 +1231,80 @@ async function renderComposeCode() {
   codeEl.textContent = mask ? _activeComposeData.masked_yaml : (_activeComposeData.compose_yaml || _activeComposeData.masked_yaml);
 }
 
+export function stopLogStream() {
+  if (_logEventSource) {
+    try {
+      _logEventSource.close();
+    } catch (_) {}
+    _logEventSource = null;
+  }
+}
+
+export function startLogStream(cid) {
+  stopLogStream();
+  if (!cid) return;
+  const tailSelect = document.getElementById('ci-logs-tail-select');
+  const tail = tailSelect ? tailSelect.value : 100;
+  const token = auth.getToken();
+  const url = `/api/docker/containers/${encodeURIComponent(cid)}/logs/stream?tail=${tail}&follow=1${token ? `&token=${encodeURIComponent(token)}` : ''}`;
+
+  const terminal = document.getElementById('ci-logs-terminal');
+  if (terminal && _activeLogLines.length === 0) {
+    terminal.innerHTML = '<div style="color:var(--muted); text-align:center; padding:20px;">Connecting live stream...</div>';
+  }
+
+  try {
+    _logEventSource = new EventSource(url);
+    _logEventSource.onmessage = (e) => {
+      try {
+        const item = JSON.parse(e.data);
+        if (item && item.msg !== undefined) {
+          _activeLogLines.push(item);
+          if (_activeLogLines.length > 2000) {
+            _activeLogLines.splice(0, _activeLogLines.length - 2000);
+          }
+          appendLogLine(item);
+        }
+      } catch (_) {}
+    };
+    _logEventSource.onerror = () => {
+      // Automatic retry handled by EventSource
+    };
+  } catch (err) {
+    console.warn('[Docker Logs] SSE stream error:', err);
+  }
+}
+
+export function appendLogLine(l) {
+  const terminal = document.getElementById('ci-logs-terminal');
+  if (!terminal) return;
+  const placeholder = terminal.querySelector('div[style*="text-align:center"]');
+  if (placeholder) {
+    terminal.innerHTML = '';
+  }
+  if (_activeLogFilter) {
+    const textMatch = (l.msg || '').toLowerCase().includes(_activeLogFilter) || (l.ts || '').toLowerCase().includes(_activeLogFilter);
+    if (!textMatch) return;
+  }
+  const tsHtml = l.ts ? `<span style="color:#00f0ff; opacity:0.6; margin-right:6px;">${escapeHtml(l.ts.slice(11, 19))}</span>` : '';
+  const color = l.stream === 'stderr' ? '#f87171' : '#e2e8f0';
+  const row = document.createElement('div');
+  row.style.cssText = `white-space:pre-wrap; word-break:break-all; color:${color}; margin-bottom:2px;`;
+  row.innerHTML = `${tsHtml}${escapeHtml(l.msg)}`;
+  terminal.appendChild(row);
+
+  if (_autoScrollLogs) {
+    terminal.scrollTop = terminal.scrollHeight;
+  }
+}
+
 async function loadContainerLogs(cid) {
+  const isStreamActive = document.getElementById('ci-logs-stream-toggle')?.checked;
+  if (isStreamActive) {
+    startLogStream(cid);
+    return;
+  }
+  stopLogStream();
   const terminal = document.getElementById('ci-logs-terminal');
   const tailSelect = document.getElementById('ci-logs-tail-select');
   const tail = tailSelect ? tailSelect.value : 200;

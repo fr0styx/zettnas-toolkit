@@ -370,7 +370,12 @@ describe('Container Inspector & Docker Compose Viewer - Phase 2', () => {
   it('pre-checks port availability and submits atomic port reconfiguration', async () => {
     vi.spyOn(api, 'get').mockImplementation(async (url) => {
       if (url.includes('/details')) return mockContainerDetails;
-      if (url.includes('/check_port')) return { port: 8097, proto: 'tcp', available: true };
+      if (url.includes('/check_port')) {
+        if (url.includes('port=8080')) {
+          return { port: 8080, proto: 'tcp', available: false, in_use_by: 'traefik' };
+        }
+        return { port: 8097, proto: 'tcp', available: true };
+      }
       return {};
     });
 
@@ -388,15 +393,31 @@ describe('Container Inspector & Docker Compose Viewer - Phase 2', () => {
     const portInputs = document.querySelectorAll('.ci-port-input');
     expect(portInputs.length).toBeGreaterThan(0);
 
-    // Edit first port
+    // Edit first port to available port 8097
     const firstInput = portInputs[0];
     firstInput.value = '8097';
     firstInput.dispatchEvent(new window.Event('input', { bubbles: true }));
 
-    // Wait for pre-check
+    // Wait for pre-check available badge
     const statusEl = document.getElementById('ci-port-check-0');
     await vi.waitFor(() => {
-      expect(statusEl.textContent).toBe('✓ Available');
+      expect(statusEl.textContent).toContain('Port 8097 Available');
+    });
+
+    // Test conflict detection with in_use_by container name
+    firstInput.value = '8080';
+    firstInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+
+    await vi.waitFor(() => {
+      expect(statusEl.textContent).toContain('Port 8080 Conflict');
+      expect(statusEl.textContent).toContain('traefik');
+    });
+
+    // Revert to 8097 and apply
+    firstInput.value = '8097';
+    firstInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+    await vi.waitFor(() => {
+      expect(statusEl.textContent).toContain('Port 8097 Available');
     });
 
     // Click Apply Ports button

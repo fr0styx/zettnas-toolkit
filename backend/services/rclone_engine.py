@@ -4,6 +4,7 @@ Universal userspace cloud integration (S3, B2, Google Drive, OneDrive, SFTP, Web
 """
 
 import configparser
+import errno
 import json
 import logging
 import os
@@ -403,8 +404,13 @@ class RcloneEngine:
 
     def _check_is_mounted(self, name: str, mount_path: str) -> bool:
         """Determines if a remote path is currently mounted via FUSE."""
-        if not os.path.exists(mount_path):
+        try:
+            os.stat(mount_path)
+        except OSError as err:
+            if err.errno in (errno.ENOTCONN, errno.ECONNABORTED, errno.EIO, errno.EPIPE):
+                return False
             return False
+
         # 1. Check in /proc/mounts
         try:
             if os.path.exists("/proc/mounts"):
@@ -779,6 +785,16 @@ class RcloneEngine:
         with self._lock:
             ensure_fuse_device()
             mount_path = os.path.join(self.remotes_dir, name)
+
+            # 1. Recover from stale hung FUSE mount if endpoint is disconnected
+            try:
+                os.stat(mount_path)
+            except OSError as err:
+                if err.errno in (errno.ENOTCONN, errno.ECONNABORTED, errno.EIO, errno.EPIPE):
+                    logger.warning(f"[RCLONE] Detected hung mount at {mount_path} ({err}); lazy unmounting...")
+                    subprocess.run(["umount", "-l", mount_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    time.sleep(0.3)
+
             if self._check_is_mounted(name, mount_path):
                 return {"status": "already_mounted", "path": mount_path}
 
@@ -786,6 +802,7 @@ class RcloneEngine:
             rclone_bin = self._get_rclone_bin()
 
             target_spec = f"{name}:{remote_path}" if remote_path else f"{name}:"
+            log_file = os.path.join(self.cache_dir, f"rclone_mount_{name}.log")
             cmd = [
                 rclone_bin,
                 "mount",
@@ -802,6 +819,10 @@ class RcloneEngine:
                 "30s",
                 "--poll-interval",
                 "1m",
+                "--log-file",
+                log_file,
+                "--log-level",
+                "NOTICE",
             ]
             if read_only:
                 cmd.append("--read-only")
@@ -811,14 +832,20 @@ class RcloneEngine:
                 proc = subprocess.Popen(
                     cmd,
                     stdout=subprocess.DEVNULL,
-                    stderr=subprocess.PIPE,
-                    text=True,
+                    stderr=subprocess.DEVNULL,
                 )
                 time.sleep(1.0)
                 if proc.poll() is not None:
-                    _, err = proc.communicate(timeout=1.0)
+                    err_msg = ""
+                    if os.path.exists(log_file):
+                        try:
+                            with open(log_file, "r") as lf:
+                                lines = lf.readlines()
+                                err_msg = "".join(lines[-15:]).strip()
+                        except Exception:
+                            pass
                     raise RuntimeError(
-                        f"Mount exited immediately: {err.strip() if err else 'code ' + str(proc.returncode)}"
+                        f"Mount exited immediately: {err_msg if err_msg else 'code ' + str(proc.returncode)}"
                     )
 
                 self._active_mounts[name] = {

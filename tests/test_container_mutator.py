@@ -331,3 +331,131 @@ def test_recreate_container_grace_period_crash_triggers_rollback(mock_docker_req
     calls = mock_docker_req.call_args_list
     assert any("/rename?name=jellyfin" in c[0][1] for c in calls)
     assert any(c[0][1] == "/containers/abc123fullid000111222333444/start" for c in calls)
+
+
+@patch("backend.services.container_mutator.fetch_container_raw_inspect")
+@patch("backend.services.container_mutator._docker_request")
+def test_recreate_container_healthcheck_success(mock_docker_req, mock_inspect):
+    from backend.services.container_mutator import recreate_container
+
+    mock_inspect.return_value = MOCK_INSPECT_DATA
+    # 1. Stop old -> 204
+    # 2. Rename old -> 204
+    # 3. Create new -> 201
+    # 4. Start new -> 204
+    # 5. Inspect liveness -> 200 (State.Health.Status = "healthy")
+    # 6. Delete backup -> 204
+    mock_docker_req.side_effect = [
+        (204, {}),
+        (204, {}),
+        (201, {"Id": "healthy_app_id"}),
+        (204, {}),
+        (
+            200,
+            {
+                "State": {
+                    "Running": True,
+                    "ExitCode": 0,
+                    "Health": {"Status": "healthy", "FailingStreak": 0},
+                },
+                "Config": {"Healthcheck": {"Test": ["CMD", "curl", "-f", "http://localhost:8096"]}},
+            },
+        ),
+        (204, {}),
+    ]
+
+    res = recreate_container(
+        "abc123fullid000111222333444",
+        name="jellyfin",
+        grace_period_seconds=0.1,
+    )
+    assert res["status"] == "success"
+    assert res["new_id"] == "healthy_app_"
+
+
+@patch("backend.services.container_mutator.fetch_container_raw_inspect")
+@patch("backend.services.container_mutator._docker_request")
+def test_recreate_container_healthcheck_unhealthy_triggers_rollback(mock_docker_req, mock_inspect):
+    from backend.services.container_mutator import recreate_container
+
+    mock_inspect.return_value = MOCK_INSPECT_DATA
+    # 1. Stop old -> 204
+    # 2. Rename old -> 204
+    # 3. Create new -> 201
+    # 4. Start new -> 204
+    # 5. Inspect liveness -> 200 (State.Health.Status = "unhealthy")
+    # Rollback begins:
+    # 6. Delete failed container -> 204
+    # 7. Rename backup back -> 204
+    # 8. Start original container -> 204
+    mock_docker_req.side_effect = [
+        (204, {}),
+        (204, {}),
+        (201, {"Id": "unhealthy_app_id"}),
+        (204, {}),
+        (
+            200,
+            {
+                "State": {
+                    "Running": True,
+                    "ExitCode": 0,
+                    "Health": {"Status": "unhealthy", "FailingStreak": 3},
+                },
+                "Config": {"Healthcheck": {"Test": ["CMD", "curl", "-f", "http://localhost:8096"]}},
+            },
+        ),
+        (204, {}),
+        (204, {}),
+        (204, {}),
+    ]
+
+    with pytest.raises(RuntimeError, match="status is unhealthy"):
+        recreate_container(
+            "abc123fullid000111222333444",
+            name="jellyfin",
+            grace_period_seconds=0.1,
+        )
+
+
+@patch("backend.services.container_mutator.fetch_container_raw_inspect")
+@patch("backend.services.container_mutator._docker_request")
+def test_recreate_container_healthcheck_stuck_starting_triggers_rollback(mock_docker_req, mock_inspect):
+    from backend.services.container_mutator import recreate_container
+
+    mock_inspect.return_value = MOCK_INSPECT_DATA
+    # 1. Stop old -> 204
+    # 2. Rename old -> 204
+    # 3. Create new -> 201
+    # 4. Start new -> 204
+    # 5. Inspect liveness -> 200 (State.Health.Status = "starting")
+    # Grace period expires while still starting -> Rollback begins:
+    # 6. Delete failed container -> 204
+    # 7. Rename backup back -> 204
+    # 8. Start original container -> 204
+    mock_docker_req.side_effect = [
+        (204, {}),
+        (204, {}),
+        (201, {"Id": "starting_app_id"}),
+        (204, {}),
+        (
+            200,
+            {
+                "State": {
+                    "Running": True,
+                    "ExitCode": 0,
+                    "Health": {"Status": "starting", "FailingStreak": 0},
+                },
+                "Config": {"Healthcheck": {"Test": ["CMD", "curl", "-f", "http://localhost:8096"]}},
+            },
+        ),
+        (204, {}),
+        (204, {}),
+        (204, {}),
+    ]
+
+    with pytest.raises(RuntimeError, match="expected 'healthy', but status remained 'starting'"):
+        recreate_container(
+            "abc123fullid000111222333444",
+            name="jellyfin",
+            grace_period_seconds=0.06,
+        )
