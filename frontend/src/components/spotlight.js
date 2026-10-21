@@ -6,8 +6,33 @@
 
 import { escapeHtml } from '../utils.js';
 import { api } from '../api.js';
-import { showToast } from '../toast.js';
+import { showToast, showConfirmToast } from '../toast.js';
 import { openContainerInspector } from './container-modal.js';
+
+// Destructive actions always ask first (FE-07).
+function confirmThen(title, msg, action) {
+  return new Promise((resolve, reject) => {
+    showConfirmToast(title, msg, async () => {
+      try {
+        await action();
+        resolve(true);
+      } catch (e) {
+        reject(e);
+      }
+    }, () => resolve(false));
+  });
+}
+
+function emptyTrash() {
+  return confirmThen('Empty Trash', 'Permanently delete everything in the trash? This cannot be undone.', async () => {
+    try {
+      await api.delete('/api/fs/trash/empty');
+      showToast('Trash emptied. Storage reclaimed.', 'success');
+    } catch (e) {
+      showToast(`Failed to empty trash: ${e.message}`, 'error');
+    }
+  });
+}
 
 let _spotlightItems = [];
 let _filteredItems = [];
@@ -309,14 +334,7 @@ function _buildDefaultSpotlightItems() {
       icon: '🗑️',
       category: 'action',
       keywords: ['trash', 'empty', 'recycle', 'purge', 'clean', '>trash'],
-      run: async () => {
-        try {
-          await api.delete('/api/fs/trash/empty');
-          showToast('Trash successfully emptied. Storage reclaimed.', 'success');
-        } catch (e) {
-          showToast(`Failed to empty trash: ${e.message}`, 'error');
-        }
-      },
+      run: () => emptyTrash(),
     },
     {
       id: 'act-isolate-container',
@@ -381,7 +399,7 @@ export function parseNaturalLanguageAction(rawQuery) {
           await api.post('/api/fans/manual', { pwm: pwmVal });
           showToast(`Fan speed set to ${pct}% (${pwmVal} PWM)`, 'success');
         } catch (e) {
-          showToast(`Fan override dispatched: ${pct}%`, 'info');
+          showToast(`Failed to set fan speed: ${e.message}`, 'error');
         }
       };
     } else {
@@ -392,7 +410,7 @@ export function parseNaturalLanguageAction(rawQuery) {
           await api.post('/api/fans/profile', { profile: prof });
           showToast(`Fan profile switched to ${prof.toUpperCase()}`, 'success');
         } catch (e) {
-          showToast(`Fan profile switched to ${prof.toUpperCase()}`, 'info');
+          showToast(`Failed to switch fan profile: ${e.message}`, 'error');
         }
       };
     }
@@ -423,7 +441,7 @@ export function parseNaturalLanguageAction(rawQuery) {
           await api.post('/api/chassis/locate', { device: dev, duration_seconds: 15 });
           showToast(`Locate LED strobing on drive ${dev} for 15s`, 'info');
         } catch (e) {
-          showToast(`Locate strobe dispatched for drive ${dev}`, 'info');
+          showToast(`Failed to locate drive ${dev}: ${e.message}`, 'error');
         }
       }
     };
@@ -438,14 +456,7 @@ export function parseNaturalLanguageAction(rawQuery) {
       icon: '🗑️',
       category: 'action',
       keywords: ['trash', 'empty', 'recycle'],
-      run: async () => {
-        try {
-          await api.delete('/api/fs/trash/empty');
-          showToast('Trash successfully emptied. Storage reclaimed.', 'success');
-        } catch (e) {
-          showToast('Trash emptied successfully.', 'info');
-        }
-      }
+      run: () => emptyTrash()
     };
   }
 
@@ -462,10 +473,12 @@ export function parseNaturalLanguageAction(rawQuery) {
       keywords: ['isolate', 'container', cId],
       run: async () => {
         try {
-          await api.post(`/api/docker/containers/${encodeURIComponent(cId)}/stop`);
-          showToast(`Container '${cId}' stopped and isolated`, 'warning');
+          const ok = await confirmThen('Stop Container', `Stop container '${cId}'?`, async () => {
+            await api.post(`/api/docker/containers/${encodeURIComponent(cId)}/stop`);
+          });
+          if (ok) showToast(`Container '${cId}' stopped`, 'warning');
         } catch (e) {
-          showToast(`Container '${cId}' isolation signal sent`, 'warning');
+          showToast(`Failed to stop container '${cId}': ${e.message}`, 'error');
         }
       }
     };
