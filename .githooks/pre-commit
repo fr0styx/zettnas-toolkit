@@ -1,59 +1,50 @@
-#!/bin/bash
-set -e
+#!/bin/sh
+# Checks the STAGED version of each Python file with Ruff (OPS-15).
+# It never rewrites or re-stages anything, so unstaged edits stay out of the
+# commit. Fix with `ruff format <file>` / `ruff check --fix <file>`, stage, retry.
+# Enable once per clone:  git config core.hooksPath .githooks
+set -u
 
-RUFF_CMD=""
-if command -v ruff >/dev/null 2>&1; then
-  RUFF_CMD="ruff"
-elif [ -x "/usr/local/bin/ruff" ]; then
-  RUFF_CMD="/usr/local/bin/ruff"
-elif command -v docker >/dev/null 2>&1 && docker ps --format '{{.Names}}' | grep -q '^zettnas-toolkit$'; then
-  RUFF_CMD="docker"
-fi
+files=$(git diff --cached --name-only --diff-filter=ACMR -- '*.py')
+[ -z "$files" ] && exit 0
 
-if [ -z "$RUFF_CMD" ]; then
+ruff_cmd() {
+  if command -v ruff >/dev/null 2>&1; then
+    ruff "$@"
+  elif command -v docker >/dev/null 2>&1 && docker ps --format '{{.Names}}' 2>/dev/null | grep -qx zettnas-toolkit; then
+    docker exec -i zettnas-toolkit ruff "$@"
+  else
+    return 127
+  fi
+}
+
+if ! ruff_cmd --version >/dev/null 2>&1; then
+  echo "[pre-commit] ruff is not available; skipping Python checks."
   exit 0
 fi
 
-STAGED_PY_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep '\.py$' || true)
+# Copy the staged versions into a scratch folder inside the repo, so any ruff
+# (including wrappers that run it in a container) sees the repo's config.
+root=$(git rev-parse --show-toplevel)
+tmp="$root/.git/ruff-staged"
+rm -rf "$tmp" && mkdir -p "$tmp"
+trap 'rm -rf "$tmp"' EXIT
+for f in $files; do
+  mkdir -p "$tmp/$(dirname "$f")"
+  git show ":$f" > "$tmp/$f"
+done
 
-if [ -n "$STAGED_PY_FILES" ]; then
-  echo "🔍 [pre-commit] Formatting and verifying staged Python files with Ruff..."
-  for f in $STAGED_PY_FILES; do
-    if [ -f "$f" ]; then
-      if [ "$RUFF_CMD" = "docker" ]; then
-        docker exec -i zettnas-toolkit ruff format "/app/$f"
-        docker exec -i zettnas-toolkit ruff check --fix --unsafe-fixes "/app/$f" >/dev/null 2>&1 || true
-      else
-        $RUFF_CMD format "$f"
-        $RUFF_CMD check --fix --unsafe-fixes "$f" >/dev/null 2>&1 || true
-      fi
-      git add "$f"
-    fi
-  done
+fail=0
+for f in $files; do
+  if ! ruff_cmd format --check --quiet "$tmp/$f" >/dev/null 2>&1; then
+    echo "[pre-commit] not formatted: $f  (run: ruff format $f)"
+    fail=1
+  fi
+  if ! ruff_cmd check --quiet "$tmp/$f" >/dev/null 2>&1; then
+    echo "[pre-commit] lint errors in $f  (run: ruff check $f)"
+    fail=1
+  fi
+done
 
-  for f in $STAGED_PY_FILES; do
-    if [ -f "$f" ]; then
-      if [ "$RUFF_CMD" = "docker" ]; then
-        if ! docker exec -i zettnas-toolkit ruff check "/app/$f"; then
-          echo "❌ [pre-commit] Ruff check failed on $f."
-          exit 1
-        fi
-        if ! docker exec -i zettnas-toolkit ruff format --check "/app/$f"; then
-          echo "❌ [pre-commit] Ruff format check failed on $f."
-          exit 1
-        fi
-      else
-        if ! $RUFF_CMD check "$f"; then
-          echo "❌ [pre-commit] Ruff check failed on $f."
-          exit 1
-        fi
-        if ! $RUFF_CMD format --check "$f"; then
-          echo "❌ [pre-commit] Ruff format check failed on $f."
-          exit 1
-        fi
-      fi
-    fi
-  done
-  echo "✅ [pre-commit] Staged Python files verified clean."
-fi
-exit 0
+[ "$fail" -eq 0 ] && echo "[pre-commit] staged Python files are clean."
+exit "$fail"

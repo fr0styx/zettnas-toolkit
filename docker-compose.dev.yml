@@ -13,3 +13,23 @@ services:
       - ./backend:/app/backend:ro
       - ./static:/app/static:ro
       - ./data:/app/data:rw
+
+  # Test runner (OPS-14): same image with the dev tools, the working tree mounted
+  # read-only, nothing shared with a running ZettNAS. Run with:
+  #   docker compose -f docker-compose.dev.yml --profile test run --rm zettnas-test
+  zettnas-test:
+    profiles: ["test"]
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        DEV_BUILD: "1"
+    image: zettnas-toolkit:test
+    working_dir: /src
+    volumes:
+      - ./:/src:ro
+    environment:
+      - TESTING=1
+      - PYTHONDONTWRITEBYTECODE=1
+    entrypoint: ["python3", "-m", "pytest", "-q", "-p", "no:cacheprovider"]
+    command: ["tests"]
