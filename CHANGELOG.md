@@ -1,5 +1,45 @@
 # ZettNAS Toolkit - Release Changelog
 
+## v1.9.2 (unreleased) - Security Release
+### 🔒 Critical security fixes. Upgrade now.
+
+This release fixes two critical and several high-severity issues. **Everyone running 1.9.1 or earlier should upgrade.** See [SECURITY.md](SECURITY.md).
+
+#### What happens when you upgrade
+
+On the first start of 1.9.2, ZettNAS runs a one-time hardening step:
+
+- **Everyone is signed out** and **all API tokens are revoked**. Create new tokens for any integrations (Home Assistant, scripts, monitoring).
+- **Every admin account must choose a new password** at the next login. Until then, that session can only change its password.
+- **WebDAV is turned off** unless you had set a dedicated WebDAV password. Turn it back on in Settings if you use it; WebDAV now accepts only real ZettNAS user accounts.
+- Credential files in the data folder are made readable by the container only.
+
+#### How to upgrade
+
+- **Unraid (Community Apps template):** Docker tab → **Check for Updates** → **Update** next to `zettnas-toolkit`. Your settings are kept.
+- **In-app updater:** use the update button in Settings. The update helper runs from the new image, so it uses the fixed update process below.
+- **Docker Compose / `docker run`:** `docker compose pull && docker compose up -d` (or pull `ghcr.io/fr0styx/zettnas-toolkit:latest` and recreate).
+
+Then sign in, set a new admin password, and re-enable WebDAV if you need it.
+
+#### Were you exposed?
+
+If port **8084** (WebDAV) was reachable from a network you don't fully trust, assume someone could have read, changed or deleted files in your shares: 1.9.1 does not keep WebDAV access logs. Check your router or firewall logs for connections to port 8084 from unknown addresses, look for files changed at unexpected times (for example `find /mnt/user/<share> -newermt "<date you installed ZettNAS>" -type f` on the host), and restore from backup if anything looks wrong.
+
+#### Fixes
+
+- **SEC-01 (Critical): revoked sessions became superadmin.** A legacy session store kept every login token; when a user was disabled or deleted or their session revoked, the token fell back to a superadmin session. The legacy store is removed and deleted from disk.
+- **SEC-02 (Critical): WebDAV accepted `admin` / `admin`.** The WebDAV auth proxy and web portal compared against the default password instead of the real one, and WebDAV was on by default. WebDAV now accepts only real accounts, refuses accounts that must change their password, locks out after repeated failures, uses expiring portal cookies, and is off by default.
+- **SEC-23 / SEC-13 (High): password change enforcement.** "Must change password" is now enforced by the server. Changing your own password requires the current one, and ends your other sessions.
+- **SEC-03 (High): archive extraction escape.** Extracting a tar with links pointing outside the destination could write anywhere in the container. Links and device files are now checked before extraction.
+- **SEC-05 (High): uploaded HTML/SVG ran script.** User files are now served with a sandbox policy, so opening an uploaded page can't act with your session.
+- **AI-01 / AI-19 (Medium): AI actions without confirmation.** ZettAI no longer restarts or stops containers, changes fan profiles or starts AI sync on its own; it shows **Confirm** / **Cancel** buttons. Saved chats always use the stored history.
+- **FE-07: Spotlight.** Emptying the trash and stopping a container ask first, and failures are shown as errors instead of success.
+- **SEC-14 / OPS-09:** credential files are private to the container; the install guide no longer suggests `chmod 666` on the Docker socket.
+- **Updater (OPS-01/02/04):** updates now use the new image's command, healthcheck and environment defaults (only your own settings are carried over), keep all networks and static IPs, and keep the previous container until the new one is healthy, restoring it automatically if not.
+
+---
+
 ## v1.9.1 (2026-10-16) - Stable
 ### ⚡ Next-Gen VM Hypervisor & Window Controls, Multi-Tier Persistent UPS Engine, Hardware Safety Invariants & Turnkey OS Interoperability
 
