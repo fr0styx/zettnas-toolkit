@@ -373,6 +373,22 @@ def _handle_browse_logic(path: str, dirs_only: bool, principal: Optional[Authent
     return {"current": real, "roots": list(ALLOWED_BROWSE_ROOTS), "dirs": out}
 
 
+def _user_file_headers(media_type: Optional[str]) -> Dict[str, str]:
+    """Headers for serving a user's file from the app's own origin (SEC-05).
+
+    A CSP sandbox stops an uploaded HTML or SVG file from running script with the
+    viewer's session when it is opened directly. It doesn't affect <img>, <video>
+    or <audio> embedding. PDFs are left out because Chrome won't render a PDF in a
+    sandboxed document.
+    """
+    headers = {"X-Content-Type-Options": "nosniff"}
+    if (media_type or "").split(";")[0].strip().lower() != "application/pdf":
+        headers["Content-Security-Policy"] = (
+            "sandbox; default-src 'none'; img-src 'self' data:; media-src 'self'; style-src 'unsafe-inline'"
+        )
+    return headers
+
+
 @router.get("/browse")
 async def browse(
     path: str = "",
@@ -1262,7 +1278,9 @@ def fs_download(path: str, principal: AuthenticatedPrincipal = Depends(get_curre
     target = _contained(path, must_exist=True)
     if os.path.isdir(target):
         raise HTTPException(status_code=400, detail="Cannot download a directory")
-    return FileResponse(target, filename=os.path.basename(target))
+    return FileResponse(
+        target, filename=os.path.basename(target), headers=_user_file_headers(mimetypes.guess_type(target)[0])
+    )
 
 
 @router.post(
@@ -2031,7 +2049,7 @@ async def fs_preview_image(
 
     # If not HEIC/HEIF and not requesting downscaled thumb/max_dim, return standard file response
     if ext not in {".heic", ".heif"} and not thumb and not max_dim:
-        return FileResponse(target)
+        return FileResponse(target, headers=_user_file_headers(mimetypes.guess_type(target)[0]))
 
     def _transcode() -> bytes:
         try:
@@ -2073,7 +2091,7 @@ async def fs_preview_image(
         )
     except Exception as e:
         logger.error(f"[FS] Image preview transcode error for {target}: {e}")
-        return FileResponse(target)
+        return FileResponse(target, headers=_user_file_headers(mimetypes.guess_type(target)[0]))
 
 
 @router.get("/fs/stream")
@@ -2110,6 +2128,7 @@ async def fs_stream(
             headers={
                 "Content-Length": str(file_size),
                 "Accept-Ranges": "bytes",
+                **_user_file_headers(content_type),
             },
         )
 
@@ -2152,6 +2171,7 @@ async def fs_stream(
             "Content-Range": f"bytes {start}-{end}/{file_size}",
             "Accept-Ranges": "bytes",
             "Content-Length": str(chunk_length),
+            **_user_file_headers(content_type),
         },
     )
 
@@ -2523,5 +2543,5 @@ async def access_shared_file(
             real_target,
             media_type=media_type,
             filename=fname,
-            headers={"Content-Disposition": f'inline; filename="{fname}"'},
+            headers={"Content-Disposition": f'inline; filename="{fname}"', **_user_file_headers(media_type)},
         )
