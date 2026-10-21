@@ -60,6 +60,15 @@ def startup_system():
     if DATA_DIR:
         os.makedirs(DATA_DIR, exist_ok=True)
 
+    # Refuse databases written by a newer ZettNAS before touching them (OPS-03).
+    from backend.db_schema import NewerDatabaseError, check_versions, stamp_versions
+
+    try:
+        check_versions()
+    except NewerDatabaseError as e:
+        logger.critical(f"[Main] {e}")
+        raise SystemExit(3) from e
+
     init_db()
     _load_security()
     purge_legacy_session_files()
@@ -70,6 +79,7 @@ def startup_system():
         security_upgrade.run_once()  # v1.9.2: revoke old credentials, disable unsafe WebDAV
     except Exception as e:
         logger.error(f"[Main] Security upgrade step failed: {e}")
+    stamp_versions()
     try:
         from backend.services.data_permissions import harden_data_permissions
 

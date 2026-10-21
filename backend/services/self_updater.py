@@ -24,6 +24,21 @@ def _docker_request(method: str, path: str, body: Optional[dict] = None, timeout
     return raw_req(method, path, body=body, timeout=timeout)
 
 
+HELPER_DATA_DIR = "/zettnas-data"
+APP_DATA_DIR = "/app/data"
+
+
+def _data_mount_source(container_name: str) -> Optional[str]:
+    """Host path mounted at /app/data in the target container, if any."""
+    st, data = _docker_request("GET", f"/containers/{container_name}/json")
+    if st != 200 or not isinstance(data, dict):
+        return None
+    for m in data.get("Mounts") or []:
+        if m.get("Destination") == APP_DATA_DIR and m.get("Source"):
+            return str(m["Source"])
+    return None
+
+
 def spawn_self_updater(
     target_image: str = "ghcr.io/fr0styx/zettnas-toolkit:latest",
     container_name: str = "zettnas-toolkit",
@@ -53,11 +68,18 @@ def spawn_self_updater(
             str(delay_seconds),
         ]
 
+        binds = ["/var/run/docker.sock:/var/run/docker.sock"]
+        data_src = _data_mount_source(container_name)
+        if data_src:
+            # The helper snapshots the data folder before the update and restores it on rollback (OPS-03).
+            binds.append(f"{data_src}:{HELPER_DATA_DIR}")
+            cmd.extend(["--data-dir", HELPER_DATA_DIR])
+
         create_body = {
             "Image": target_image,
             "Cmd": cmd,
             "HostConfig": {
-                "Binds": ["/var/run/docker.sock:/var/run/docker.sock"],
+                "Binds": binds,
                 "AutoRemove": True,
             },
         }
@@ -77,11 +99,24 @@ def spawn_self_updater(
         return False
 
 
-def _rollback_container(target: str, rollback_name: str, failed_id: Optional[str] = None):
-    """Removes a failed new container (if any) and restores the previous one."""
+def _rollback_container(
+    target: str,
+    rollback_name: str,
+    failed_id: Optional[str] = None,
+    snapshot: Optional[str] = None,
+    data_dir: Optional[str] = None,
+):
+    """Removes a failed new container (if any), restores the data snapshot and the previous container."""
     if failed_id:
         _docker_request("POST", f"/containers/{failed_id}/stop?t=5")
         _docker_request("DELETE", f"/containers/{failed_id}?force=true")
+    if snapshot and data_dir:
+        try:
+            from backend.services.data_snapshot import restore_snapshot
+
+            restore_snapshot(snapshot, data_dir)
+        except Exception as e:
+            logger.critical(f"[SelfUpdater Helper] Could not restore data snapshot {snapshot}: {e}")
     logger.warning(f"[SelfUpdater Helper] Restoring '{rollback_name}' back to '{target}'...")
     _docker_request("POST", f"/containers/{rollback_name}/rename?name={target}")
     st_start, _ = _docker_request("POST", f"/containers/{target}/start")
@@ -195,7 +230,7 @@ def _wait_until_healthy(cid: str) -> Tuple[bool, str]:
     return False, "timed out waiting for the container to become healthy"
 
 
-def apply_update_from_helper(target: str, image: str, delay: float = 2.5):
+def apply_update_from_helper(target: str, image: str, delay: float = 2.5, data_dir: Optional[str] = None):
     """
     Executed inside the ephemeral helper container (started from the new image)
     to recreate the target container. The old container is kept, renamed, until
@@ -222,6 +257,22 @@ def apply_update_from_helper(target: str, image: str, delay: float = 2.5):
     logger.info(f"[SelfUpdater Helper] Gracefully stopping container '{target}'...")
     _docker_request("POST", f"/containers/{target}/stop?t=15")
 
+    snapshot = None
+    if data_dir and os.path.isdir(data_dir):
+        try:
+            from backend.services.data_snapshot import take_snapshot
+
+            from_version = str((old_image_cfg.get("Labels") or {}).get("org.opencontainers.image.version") or "")
+            snapshot = take_snapshot(
+                data_dir,
+                label=f"from-{from_version or 'unknown'}",
+                extra={"from_version": from_version, "to_image": image},
+            )
+        except Exception as e:
+            logger.error(f"[SelfUpdater Helper] Could not snapshot the data folder ({e}); not updating.")
+            _docker_request("POST", f"/containers/{target}/start")
+            sys.exit(1)
+
     logger.info(f"[SelfUpdater Helper] Renaming '{target}' to '{rollback_name}' for rollback protection...")
     st_ren, res_ren = _docker_request("POST", f"/containers/{target}/rename?name={rollback_name}")
     if st_ren not in (200, 204):
@@ -243,20 +294,20 @@ def apply_update_from_helper(target: str, image: str, delay: float = 2.5):
         )
         if st_net not in (200, 201, 204):
             logger.error(f"[SelfUpdater Helper] Could not connect network '{net_name}': status={st_net}, res={res_net}")
-            _rollback_container(target, rollback_name, failed_id=new_cid)
+            _rollback_container(target, rollback_name, failed_id=new_cid, snapshot=snapshot, data_dir=data_dir)
             sys.exit(1)
 
     logger.info(f"[SelfUpdater Helper] Starting updated container '{target}' ({new_cid[:12]})...")
     st_start, _ = _docker_request("POST", f"/containers/{new_cid}/start")
     if st_start not in (200, 204):
         logger.error(f"[SelfUpdater Helper] Failed to start updated container: status={st_start}.")
-        _rollback_container(target, rollback_name, failed_id=new_cid)
+        _rollback_container(target, rollback_name, failed_id=new_cid, snapshot=snapshot, data_dir=data_dir)
         sys.exit(1)
 
     healthy, why = _wait_until_healthy(new_cid)
     if not healthy:
         logger.error(f"[SelfUpdater Helper] Updated container is not healthy ({why}). Rolling back...")
-        _rollback_container(target, rollback_name, failed_id=new_cid)
+        _rollback_container(target, rollback_name, failed_id=new_cid, snapshot=snapshot, data_dir=data_dir)
         sys.exit(1)
 
     logger.info(f"[SelfUpdater Helper] '{target}' is {why}. Removing the rollback container...")
@@ -270,10 +321,11 @@ def main():
     parser.add_argument("--target", default="zettnas-toolkit", help="Target container name")
     parser.add_argument("--image", default="ghcr.io/fr0styx/zettnas-toolkit:latest", help="Target Docker image")
     parser.add_argument("--delay", type=float, default=2.5, help="Delay seconds before stopping caller")
+    parser.add_argument("--data-dir", default=None, help="Target's data folder mounted into the helper")
     args = parser.parse_args()
 
     if args.apply:
-        apply_update_from_helper(args.target, args.image, args.delay)
+        apply_update_from_helper(args.target, args.image, args.delay, data_dir=args.data_dir)
     else:
         print("Self-updater helper invoked without --apply. Exiting.")
 
