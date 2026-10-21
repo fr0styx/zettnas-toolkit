@@ -930,6 +930,7 @@ export function initSettings() {
 
         if (payload.new_password) {
           localStorage.removeItem('zettnas_token');
+          localStorage.removeItem('zettnas_signed_in');
           setTimeout(() => window.location.reload(), 1000);
         }
       } catch (err) {
@@ -944,6 +945,7 @@ export function initSettings() {
     logoutBtn.addEventListener('click', async () => {
       try { await api.post('/api/auth/logout', {}); } catch (e) { /* session may already be gone */ }
       localStorage.removeItem('zettnas_token');
+          localStorage.removeItem('zettnas_signed_in');
       document.cookie = 'zettnas_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
       window.location.reload();
     });
@@ -1720,7 +1722,7 @@ export function gatherClientPreferences() {
     const key = localStorage.key(i);
     if (!key) continue;
     // Exclude volatile session tokens and temporary caches
-    if (key === 'zettnas_token' || key.startsWith('zettnas_weather_cache_') || key.startsWith('zettnas_holiday_cache_')) {
+    if (key === 'zettnas_token' || key === 'zettnas_signed_in' || key.startsWith('zettnas_weather_cache_') || key.startsWith('zettnas_holiday_cache_')) {
       continue;
     }
     // Capture all ZettNAS desktop configurations, window positions, widgets, dock pinned apps, themes, and layout locks
@@ -1734,7 +1736,7 @@ export function gatherClientPreferences() {
 export function applyClientPreferences(prefs) {
   if (!prefs || typeof prefs !== 'object' || typeof localStorage === 'undefined') return;
   Object.entries(prefs).forEach(([k, v]) => {
-    if (k === 'zettnas_token') return;
+    if (k === 'zettnas_token' || k === 'zettnas_signed_in') return;
     try {
       localStorage.setItem(k, typeof v === 'string' ? v : JSON.stringify(v));
     } catch (e) {

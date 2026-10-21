@@ -227,6 +227,10 @@ _default_pw_cache = {"hash": None, "value": False}
 
 # Sessions that must change their password are limited to the password-change
 # endpoints (SEC-23). Only the test suite turns this off.
+# Extra origins allowed to send cookie-authenticated writes (e.g. "https://nas.example.com"),
+# for reverse proxies that don't pass the original Host. Comma-separated.
+CSRF_TRUSTED_ORIGINS = [o.strip() for o in os.environ.get("CSRF_TRUSTED_ORIGINS", "").split(",") if o.strip()]
+
 ENFORCE_PASSWORD_CHANGE = not (
     os.environ.get("TESTING") == "1" and os.environ.get("ZETTNAS_ENFORCE_PASSWORD_CHANGE") == "0"
 )

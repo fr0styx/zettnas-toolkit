@@ -860,9 +860,9 @@ function navigateGallery(direction) {
 
 function triggerDownload() {
   if (!_currentPath) return;
-  const token = (auth && typeof auth.getToken === 'function' ? auth.getToken() : null) || localStorage.getItem('zettnas_token') || '';
+  const token = (auth && typeof auth.getToken === 'function' ? auth.getToken() : null) || '';
   const a = document.createElement('a');
-  a.href = `/api/fs/download?path=${encodeURIComponent(_currentPath)}&token=${encodeURIComponent(token)}`;
+  a.href = `/api/fs/download?path=${encodeURIComponent(_currentPath)}`;
   a.download = _currentName || 'download';
   document.body.appendChild(a);
   a.click();
@@ -881,11 +881,11 @@ async function triggerCopy() {
     return;
   }
 
-  const token = (auth && typeof auth.getToken === 'function' ? auth.getToken() : null) || localStorage.getItem('zettnas_token') || '';
+  const token = (auth && typeof auth.getToken === 'function' ? auth.getToken() : null) || '';
   const isHeif = /\.(heic|heif)$/i.test(_currentPath || '');
   const imgUrl = isHeif
-    ? `/api/fs/preview/image?path=${encodeURIComponent(_currentPath)}&token=${encodeURIComponent(token)}`
-    : `/api/fs/download?path=${encodeURIComponent(_currentPath)}&token=${encodeURIComponent(token)}`;
+    ? `/api/fs/preview/image?path=${encodeURIComponent(_currentPath)}`
+    : `/api/fs/download?path=${encodeURIComponent(_currentPath)}`;
 
   try {
     const resp = await fetch(imgUrl);

@@ -138,8 +138,10 @@ export function startSSE() {
     _sse = null;
   }
 
+  // EventSource can't send headers: the browser UI uses its session cookie; only the LCD
+  // renderer (in-memory internal token) identifies itself in the URL.
   const token = auth.getToken();
-  const url = token ? `/api/stats/stream?token=${encodeURIComponent(token)}` : '/api/stats/stream';
+  const url = token ? `/api/stats/stream?lcd_token=${encodeURIComponent(token)}` : '/api/stats/stream';
   _sse = new EventSource(url);
 
   _sse.onopen = () => {

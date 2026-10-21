@@ -32,6 +32,12 @@ proxy_router = APIRouter(tags=["WebDAV Proxy"], include_in_schema=False)
 WEBDAV_COOKIE_TTL = 12 * 3600
 
 
+def _request_is_https(request) -> bool:
+    from backend.auth import request_is_https
+
+    return request_is_https(request)
+
+
 def _sign_webdav_cookie(username: str, role_label: str, issued_at: Optional[int] = None) -> str:
     """Creates an HMAC-SHA256 signed, expiring session cookie: user:role:issued_at:sig."""
     secret = getattr(config, "SECRET_KEY", "zettnas-webdav-fallback-secret")
@@ -171,7 +177,7 @@ async def webdav_portal_login(request: Request):
             max_age=WEBDAV_COOKIE_TTL,
             httponly=True,
             samesite="lax",
-            secure=request.url.scheme == "https" or request.headers.get("x-forwarded-proto") == "https",
+            secure=_request_is_https(request),
         )
         return resp
     else:

@@ -1151,9 +1151,9 @@ export class FileManagerWindow {
         return;
       }
       showToast(t('fm.downloading_items', `Downloading ${paths.length} item(s)...`).replace('{count}', paths.length), 'info');
-      const token = (auth && typeof auth.getToken === 'function' ? auth.getToken() : null) || localStorage.getItem('zettnas_token') || '';
+      const token = (auth && typeof auth.getToken === 'function' ? auth.getToken() : null) || '';
       const qs = paths.map((p) => `paths=${encodeURIComponent(p)}`).join('&');
-      window.open(`/api/fs/download-zip?${qs}&token=${token}`, '_blank');
+      window.open(`/api/fs/download-zip?${qs}`, '_blank');
     });
 
     // Clear Selection
@@ -1980,7 +1980,7 @@ export class FileManagerWindow {
       this.list.innerHTML = '';
       this.list.setAttribute('role', 'grid');
       this.list.setAttribute('aria-label', 'File Explorer Grid');
-      const token = (auth && typeof auth.getToken === 'function' ? auth.getToken() : null) || localStorage.getItem('zettnas_token') || '';
+      const token = (auth && typeof auth.getToken === 'function' ? auth.getToken() : null) || '';
 
       const folderSvg = '<svg viewBox="0 0 24 24" width="44" height="44" stroke="currentColor" stroke-width="1.5" fill="#eab308"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>';
       const fileSvg = '<svg viewBox="0 0 24 24" width="40" height="40" stroke="currentColor" stroke-width="1.5" fill="none"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>';
@@ -2012,7 +2012,7 @@ export class FileManagerWindow {
         } else if (file.is_dir) {
           iconContent = folderSvg;
         } else if (isImage) {
-          const thumbUrl = `/api/fs/download?path=${encodeURIComponent(file.path)}&token=${token}`;
+          const thumbUrl = `/api/fs/download?path=${encodeURIComponent(file.path)}`;
           iconContent = `
             <img src="${thumbUrl}" class="fm-thumb-img" loading="lazy" alt="${escName}" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';" />
             <div class="fm-fallback-img-icon" style="display:none;">${fileSvg}</div>
@@ -2265,8 +2265,8 @@ export class FileManagerWindow {
     } else if (act === 'share') {
       openShareLinkModal(path, oldName);
     } else if (act === 'download') {
-      const token = (auth && typeof auth.getToken === 'function' ? auth.getToken() : null) || localStorage.getItem('zettnas_token') || '';
-      window.open(`/api/fs/download?path=${encodeURIComponent(path)}&token=${token}`, '_blank');
+      const token = (auth && typeof auth.getToken === 'function' ? auth.getToken() : null) || '';
+      window.open(`/api/fs/download?path=${encodeURIComponent(path)}`, '_blank');
     } else if (act === 'delete') {
       const confirmTemplate = t(
         'fm.confirm_delete',

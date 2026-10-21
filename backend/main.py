@@ -304,7 +304,9 @@ async def security_headers_middleware(request: Request, call_next):
     response.headers["X-Frame-Options"] = "SAMEORIGIN"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
-    if request.url.scheme == "https" or request.headers.get("x-forwarded-proto", "").lower() == "https":
+    from backend.auth import request_is_https
+
+    if request_is_https(request):
         response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
     return response
 

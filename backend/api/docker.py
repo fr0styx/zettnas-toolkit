@@ -672,9 +672,13 @@ async def post_docker_container_exec(container_id: str, req: ContainerExecReques
 async def _authenticate_ws(
     websocket: WebSocket, required_scopes: tuple = ("containers:exec", "containers:manage")
 ) -> bool:
+    from backend.auth import query_credential_allowed
+
+    query_token = query_credential_allowed(
+        websocket.query_params.get("ticket") or websocket.query_params.get("token") or ""
+    )
     token = (
-        websocket.query_params.get("token")
-        or websocket.query_params.get("ticket")
+        query_token
         or websocket.cookies.get("zettnas_session")
         or websocket.cookies.get("session_token")
         or websocket.cookies.get("zat_token")
@@ -682,14 +686,10 @@ async def _authenticate_ws(
     if not token:
         return False
 
-    is_cookie_auth = (
-        not websocket.query_params.get("token")
-        and not websocket.query_params.get("ticket")
-        and bool(
-            websocket.cookies.get("zettnas_session")
-            or websocket.cookies.get("session_token")
-            or websocket.cookies.get("zat_token")
-        )
+    is_cookie_auth = not query_token and bool(
+        websocket.cookies.get("zettnas_session")
+        or websocket.cookies.get("session_token")
+        or websocket.cookies.get("zat_token")
     )
     from backend.auth import (
         AuthenticatedPrincipal,

@@ -160,24 +160,76 @@ def invalidate_all_sessions():
         logger.warning(f"Could not clear sessions table: {e}")
 
 
+def query_credential_allowed(value: str) -> str:
+    """A credential in a URL is accepted only if it is short-lived or internal (SEC-16).
+
+    URLs end up in logs, browser history and Referer headers, so long-lived session
+    and API tokens are never read from them: only single-use stream tickets (zst_),
+    VM console tickets and the LCD renderer's internal token.
+    """
+    value = (value or "").strip()
+    if not value:
+        return ""
+    if value.startswith("zst_") or is_internal_token(value):
+        return value
+    try:
+        from backend.api.vms import _CONSOLE_TICKETS
+
+        if value in _CONSOLE_TICKETS:
+            return value
+    except Exception:
+        pass
+    return ""
+
+
 def extract_token(request: Request) -> str:
-    """Extract auth token from Authorization header, HttpOnly cookie, or query param."""
-    # 1. Authorization: Bearer <token>
+    """Auth token from the Authorization header, the HttpOnly session cookie, or a URL ticket."""
+    # 1. Authorization: Bearer <token> (API clients, the LCD renderer)
     header = request.headers.get("Authorization", "")
     if header.startswith("Bearer "):
         return header[7:].strip()
 
-    # 2. HttpOnly Session Cookie: zettnas_session
+    # 2. HttpOnly session cookie set at login (the web UI)
     cookie_token = request.cookies.get("zettnas_session", "").strip()
     if cookie_token:
         return cookie_token
 
-    # 3. Query string token, ticket, or lcd_token (fallback for EventSource, WebSockets, LCD, and docs)
-    return (
-        request.query_params.get("token", "").strip()
-        or request.query_params.get("ticket", "").strip()
-        or request.query_params.get("lcd_token", "").strip()
+    # 3. Single-use tickets / internal token only
+    return query_credential_allowed(
+        request.query_params.get("ticket", "")
+        or request.query_params.get("token", "")
+        or request.query_params.get("lcd_token", "")
     )
+
+
+def request_is_https(request: Request) -> bool:
+    """True for HTTPS, trusting X-Forwarded-Proto only from configured reverse proxies (SEC-17)."""
+    if request.url.scheme == "https":
+        return True
+    client = request.client.host if request.client else ""
+    return request.headers.get("x-forwarded-proto", "").lower() == "https" and is_ip_in_trusted_proxies(client)
+
+
+def _origin_matches_host(request: Request) -> bool:
+    """CSRF check for cookie-authenticated writes: Origin (or Referer) must be this server."""
+    host = (request.headers.get("host") or "").lower()
+    allowed = {host} | {o.lower().rstrip("/") for o in getattr(config, "CSRF_TRUSTED_ORIGINS", []) or []}
+    # Behind a reverse proxy that rewrites Host, trust X-Forwarded-Host from that proxy only.
+    client = request.client.host if request.client else ""
+    fwd_host = (request.headers.get("x-forwarded-host") or "").split(",")[0].strip().lower()
+    if fwd_host and is_ip_in_trusted_proxies(client):
+        allowed.add(fwd_host)
+    for header in ("origin", "referer"):
+        value = request.headers.get(header)
+        if value:
+            try:
+                parsed = urlparse(value)
+            except ValueError:
+                return False
+            return bool(parsed.netloc) and (
+                parsed.netloc.lower() in allowed or f"{parsed.scheme}://{parsed.netloc}".lower() in allowed
+            )
+    return False
 
 
 _PUBLIC_API_PATHS = {
@@ -333,9 +385,6 @@ async def auth_middleware(request: Request, call_next):
                     return await call_next(request)
 
         token = extract_token(request)
-        if not token and is_docs:
-            ref_qs = parse_qs(urlparse(request.headers.get("referer", "")).query)
-            token = (ref_qs.get("token") or [""])[0]
 
         sess = get_current_session(token)
         if not sess:
@@ -352,6 +401,17 @@ async def auth_middleware(request: Request, call_next):
             and not _allowed_while_password_change_pending(request.method, path, sess)
         ):
             return error_response(403, "Change your password before continuing.", error="password_change_required")
+
+        # CSRF (SEC-17): a write that authenticates only with the browser's cookie must
+        # come from this server's own pages. Bearer-token clients are not affected.
+        if (
+            request.method in ("POST", "PUT", "PATCH", "DELETE")
+            and not request.headers.get("Authorization", "").startswith("Bearer ")
+            and request.cookies.get("zettnas_session")
+            and not _origin_matches_host(request)
+        ):
+            logger.warning(f"[Auth] Blocked cross-site {request.method} {path} from {client_host}")
+            return error_response(403, "Cross-site request blocked.", error="csrf_blocked")
 
         request.state.session = sess
         request.state.user = sess

@@ -4,13 +4,43 @@
  */
 import { ZettEventBus } from './event-bus.js';
 
-const TOKEN_KEY = 'zettnas_token';
+// The web UI's session lives only in the HttpOnly cookie the server sets at login, so
+// page scripts (and any injected script) never see it (FE-05). localStorage keeps just a
+// "signed in" hint for the first paint. Only the on-device LCD renderer holds a token,
+// in memory, sent as a Bearer header.
+const LEGACY_TOKEN_KEY = 'zettnas_token';
+const SESSION_HINT_KEY = 'zettnas_signed_in';
+let _memoryToken = null;
+
+function _ls(fn) {
+  try {
+    return fn(window.localStorage);
+  } catch (e) {
+    return null;
+  }
+}
+
+_ls((ls) => {
+  if (ls.getItem(LEGACY_TOKEN_KEY)) {
+    ls.removeItem(LEGACY_TOKEN_KEY);
+    ls.setItem(SESSION_HINT_KEY, '1');
+  }
+});
 
 export const auth = {
-  getToken: () => localStorage.getItem(TOKEN_KEY),
-  setToken: (token) => localStorage.setItem(TOKEN_KEY, token),
-  clearToken: () => localStorage.removeItem(TOKEN_KEY),
-  hasToken: () => !!localStorage.getItem(TOKEN_KEY)
+  getToken: () => _memoryToken,
+  setToken: (token, { memory = false } = {}) => {
+    if (memory) _memoryToken = token;
+    _ls((ls) => ls.setItem(SESSION_HINT_KEY, '1'));
+  },
+  clearToken: () => {
+    _memoryToken = null;
+    _ls((ls) => {
+      ls.removeItem(SESSION_HINT_KEY);
+      ls.removeItem(LEGACY_TOKEN_KEY);
+    });
+  },
+  hasToken: () => !!_memoryToken || _ls((ls) => ls.getItem(SESSION_HINT_KEY) === '1') === true,
 };
 
 // The on-device LCD renderer (headless Chromium) authenticates with an
@@ -21,7 +51,7 @@ export const auth = {
     const params = new URLSearchParams(window.location.search);
     const lcdToken = params.get('lcd_token');
     if (lcdToken) {
-      auth.setToken(lcdToken);
+      auth.setToken(lcdToken, { memory: true });
       params.delete('lcd_token');
       const qs = params.toString();
       history.replaceState(null, '', window.location.pathname + (qs ? `?${qs}` : '') + window.location.hash);

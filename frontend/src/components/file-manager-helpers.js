@@ -214,7 +214,7 @@ export class FmSidebarTree {
 
   async loadRoots() {
     try {
-      const token = (auth && typeof auth.getToken === 'function' ? auth.getToken() : null) || localStorage.getItem('zettnas_token') || '';
+      const token = (auth && typeof auth.getToken === 'function' ? auth.getToken() : null) || '';
       const res = await fetch('/api/fs/roots', {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
@@ -451,7 +451,7 @@ export class FmInspector {
     if (!content) return;
 
     const count = this.fm.selectedPaths.size;
-    const token = (auth && typeof auth.getToken === 'function' ? auth.getToken() : null) || localStorage.getItem('zettnas_token') || '';
+    const token = (auth && typeof auth.getToken === 'function' ? auth.getToken() : null) || '';
 
     if (count === 0) {
       // Current folder info
@@ -506,7 +506,7 @@ export class FmInspector {
 
     const isImage = Boolean(item.name.match(/\.(jpeg|jpg|png|gif|webp|svg)$/i));
     const isVideo = Boolean(item.name.match(/\.(mp4|mkv|webm|mov|avi)$/i));
-    const thumbUrl = `/api/fs/download?path=${encodeURIComponent(item.path)}&token=${token}`;
+    const thumbUrl = `/api/fs/download?path=${encodeURIComponent(item.path)}`;
     const isGuarded = isGuardedSystemDir(item.path);
 
     let previewHtml = '';
@@ -863,7 +863,7 @@ export class FmInspector {
     const dlBtn = content.querySelector('#fm-insp-download-btn');
     if (dlBtn) {
       dlBtn.addEventListener('click', () => {
-        const url = `/api/fs/download?path=${encodeURIComponent(item.path)}&token=${token}`;
+        const url = `/api/fs/download?path=${encodeURIComponent(item.path)}`;
         window.open(url, '_blank');
       });
     }
@@ -920,7 +920,7 @@ export class FmTransfersCockpit {
     const clearBtn = el.querySelector('#fm-cockpit-clear-btn');
     if (clearBtn) {
       clearBtn.addEventListener('click', async () => {
-        const token = (auth && typeof auth.getToken === 'function' ? auth.getToken() : null) || localStorage.getItem('zettnas_token') || '';
+        const token = (auth && typeof auth.getToken === 'function' ? auth.getToken() : null) || '';
         await fetch('/api/fs/transfers/completed', {
           method: 'DELETE',
           headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -940,8 +940,8 @@ export class FmTransfersCockpit {
 
   connectSSE() {
     try {
-      const token = (auth && typeof auth.getToken === 'function' ? auth.getToken() : null) || localStorage.getItem('zettnas_token') || '';
-      const sseUrl = `/api/fs/transfers/stream?token=${encodeURIComponent(token)}`;
+      const token = (auth && typeof auth.getToken === 'function' ? auth.getToken() : null) || '';
+      const sseUrl = `/api/fs/transfers/stream`;
       this.eventSource = new EventSource(sseUrl);
 
       this.eventSource.addEventListener('snapshot', (e) => {
@@ -1033,7 +1033,7 @@ export class FmTransfersCockpit {
         e.stopPropagation();
         const act = btn.dataset.act;
         const tid = btn.dataset.id;
-        const token = (auth && typeof auth.getToken === 'function' ? auth.getToken() : null) || localStorage.getItem('zettnas_token') || '';
+        const token = (auth && typeof auth.getToken === 'function' ? auth.getToken() : null) || '';
         await fetch(`/api/fs/transfers/${tid}/${act}`, {
           method: 'POST',
           headers: token ? { Authorization: `Bearer ${token}` } : {},

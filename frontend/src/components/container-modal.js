@@ -459,7 +459,7 @@ export function connectContainerTerminalWs(cid) {
   const proto = (typeof window !== 'undefined' && window.location.protocol === 'https:') ? 'wss:' : 'ws:';
   const host = typeof window !== 'undefined' ? window.location.host : '127.0.0.1:8082';
   const token = auth.getToken() || '';
-  const wsUrl = `${proto}//${host}/api/docker/containers/${encodeURIComponent(cid)}/terminal/ws?token=${encodeURIComponent(token)}`;
+  const wsUrl = `${proto}//${host}/api/docker/containers/${encodeURIComponent(cid)}/terminal/ws`;
 
   try {
     const ws = new WebSocket(wsUrl);
@@ -1256,7 +1256,7 @@ export function startLogStream(cid) {
   const tailSelect = document.getElementById('ci-logs-tail-select');
   const tail = tailSelect ? tailSelect.value : 100;
   const token = auth.getToken();
-  const url = `/api/docker/containers/${encodeURIComponent(cid)}/logs/stream?tail=${tail}&follow=1${token ? `&token=${encodeURIComponent(token)}` : ''}`;
+  const url = `/api/docker/containers/${encodeURIComponent(cid)}/logs/stream?tail=${tail}&follow=1${token ? `` : ''}`;
 
   const terminal = document.getElementById('ci-logs-terminal');
   if (terminal && _activeLogLines.length === 0) {

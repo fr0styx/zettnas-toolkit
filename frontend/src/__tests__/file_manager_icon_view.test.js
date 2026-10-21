@@ -123,7 +123,8 @@ describe('File Manager Icon View & Grid Mode', () => {
     expect(imgEl).not.toBeNull();
     expect(imgEl.getAttribute('loading')).toBe('lazy');
     expect(imgEl.src).toContain('/api/fs/download?path=%2Fmnt%2Fuser%2Fvacation.jpg');
-    expect(imgEl.src).toContain('token=mock-token-xyz');
+    // Credentials never go in URLs (SEC-16); the session cookie authenticates thumbnails.
+    expect(imgEl.src).not.toContain("token=");
 
     // Card 4 is 'report.pdf' non-image
     expect(cards[4].dataset.name).toBe('report.pdf');

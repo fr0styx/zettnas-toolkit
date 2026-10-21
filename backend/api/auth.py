@@ -261,7 +261,9 @@ def _build_session_response(
     response = JSONResponse(content=response_data)
 
     ttl = 30 * 86400 if remember_me else config.SESSION_TTL
-    is_https = request.url.scheme == "https" or request.headers.get("x-forwarded-proto", "").lower() == "https"
+    from backend.auth import request_is_https
+
+    is_https = request_is_https(request)
     response.set_cookie(
         key="zettnas_session",
         value=token,
