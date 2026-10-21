@@ -10,9 +10,14 @@ import { initClientLogger } from './client-logger.js';
 initClientLogger();
 
 import { ZettEventBus } from './event-bus.js';
-import { auth, api } from './api.js';
+import { auth, api, setConfirmationHandler } from './api.js';
 import { state } from './state.js';
 import { showToast, showConfirmToast } from './toast.js';
+
+// Server-required confirmation for destructive actions (backend/confirmations.py).
+setConfirmationHandler((info) => new Promise((resolve) => {
+  showConfirmToast('Confirm action', `${info.summary || 'This action cannot be undone'}?`, () => resolve(true), () => resolve(false));
+}));
 import './folder-browser.js';
 import './modals.js';
 

@@ -8,6 +8,7 @@ from typing import Any, Dict, List
 from fastapi import APIRouter, Depends, HTTPException, Response
 
 from backend.auth import require_scope
+from backend.confirmations import require_confirmation
 from backend.services.samba_engine import (
     SambaShareConfig,
     SambaStatus,
@@ -52,7 +53,10 @@ def create_or_update_samba_share(share: SambaShareConfig) -> SambaShareConfig:
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.delete("/shares/{name}", dependencies=[Depends(require_scope("shares:manage"))])
+@router.delete(
+    "/shares/{name}",
+    dependencies=[Depends(require_scope("shares:manage")), Depends(require_confirmation("share.delete"))],
+)
 def delete_samba_share(name: str) -> Dict[str, Any]:
     """Deletes a configured Samba share."""
     pal = get_storage_platform()

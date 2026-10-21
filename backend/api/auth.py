@@ -6,6 +6,7 @@ import threading
 import time
 from typing import Any, Dict, List, Optional
 
+from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.responses import JSONResponse
 from starlette.concurrency import run_in_threadpool
@@ -23,6 +24,7 @@ from backend.auth import (
     revoke_session,
     validate_session,
 )
+from backend.confirmations import require_confirmation
 from backend.config import SECURITY_FILE, is_using_default_password, logger
 from backend.errors import error_response
 from backend.fsutil import atomic_write_json
@@ -640,6 +642,26 @@ def request_stream_ticket(request: Request):
     return {"status": "ok", "ticket": ticket, "expires_in": 60}
 
 
+class ConfirmationTokenRequest(BaseModel):
+    action: str
+    target: str = ""
+
+
+@router.post("/confirmations")
+def create_confirmation_token(
+    req: ConfirmationTokenRequest, principal: AuthenticatedPrincipal = Depends(get_current_principal)
+):
+    """Issues a single-use token for one destructive action (see backend/confirmations.py)."""
+    from backend.confirmations import ACTIONS, TOKEN_TTL_SECS, issue
+
+    try:
+        token = issue(principal, req.action, req.target)
+    except ValueError as e:
+        return error_response(400, str(e), error="bad_action")
+    summary = ACTIONS[req.action].format(target=req.target or "").strip()
+    return {"token": token, "expires_in": TOKEN_TTL_SECS, "summary": summary}
+
+
 @router.get("/auth/me")
 def get_current_user_profile(request: Request):
     user = _get_authenticated_user(request)
@@ -869,7 +891,10 @@ async def change_user_password(user_id: str, data: UserPasswordChangeRequest, re
     return {"status": "ok", "message": "Password updated successfully."}
 
 
-@router.delete("/users/{user_id}", dependencies=[Depends(require_scope("users:delete"))])
+@router.delete(
+    "/users/{user_id}",
+    dependencies=[Depends(require_scope("users:delete")), Depends(require_confirmation("users.delete"))],
+)
 def delete_user_endpoint(
     user_id: str,
     request: Request,

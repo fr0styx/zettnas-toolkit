@@ -23,6 +23,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
 from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
+from backend.confirmations import require_confirmation
 from backend.config import DATA_DIR, HOST_PROC, POOL_PATH, VM_ISO_DIR, logger
 from backend.fsutil import atomic_write_json, read_json, resolve_within
 from backend.services.vm_engine import QmpEngine
@@ -2108,7 +2109,10 @@ async def restore_virtual_machine_backup(backup_id: str):
 
 @router.delete(
     "/backups/{backup_id}",
-    dependencies=[Depends(require_scope("system:config", "storage:admin"))],
+    dependencies=[
+        Depends(require_scope("system:config", "storage:admin")),
+        Depends(require_confirmation("backup.delete")),
+    ],
 )
 async def delete_virtual_machine_backup(backup_id: str):
     """Deletes a VM hyper-backup archive from disk and updates registry."""
@@ -2753,7 +2757,10 @@ def resize_vm_disk(
     }
 
 
-@router.delete("/{vm_id}", dependencies=[Depends(require_scope("system:config", "storage:admin"))])
+@router.delete(
+    "/{vm_id}",
+    dependencies=[Depends(require_scope("system:config", "storage:admin")), Depends(require_confirmation("vm.delete"))],
+)
 def delete_vm(
     vm_id: str,
     purge_disks: bool = True,
@@ -2981,7 +2988,10 @@ async def revert_vm_snapshot(vm_id: str, snapshot_name: str):
 
 @router.delete(
     "/{vm_id}/snapshots/{snapshot_name}",
-    dependencies=[Depends(require_scope("system:config", "storage:admin"))],
+    dependencies=[
+        Depends(require_scope("system:config", "storage:admin")),
+        Depends(require_confirmation("storage.snapshot.delete")),
+    ],
 )
 async def delete_vm_snapshot(vm_id: str, snapshot_name: str):
     """Deletes a named snapshot."""

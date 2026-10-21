@@ -31,6 +31,7 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 addopts = "-v --tb=short"
 asyncio_mode = "auto"
+markers = ["real_confirmations: run the real destructive-action confirm flow"]
 filterwarnings = [
     "ignore::DeprecationWarning:starlette.testclient",
     "ignore::starlette.exceptions.StarletteDeprecationWarning",

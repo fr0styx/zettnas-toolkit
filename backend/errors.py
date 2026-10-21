@@ -72,3 +72,6 @@ def register_error_handlers(app) -> None:
     app.add_exception_handler(StarletteHTTPException, http_exception_handler)
     app.add_exception_handler(RequestValidationError, validation_exception_handler)
     app.add_exception_handler(Exception, unhandled_exception_handler)
+    from backend.confirmations import ConfirmationRequired, confirmation_required_handler
+
+    app.add_exception_handler(ConfirmationRequired, confirmation_required_handler)

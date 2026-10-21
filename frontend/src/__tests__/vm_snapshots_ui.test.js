@@ -105,7 +105,7 @@ describe('VM Snapshots & Hyper-Backup UI Modal', () => {
     api.delete.mockResolvedValueOnce({ success: true });
     api.get.mockResolvedValueOnce({ snapshots: [] });
     delBtn.click();
-    expect(api.delete).toHaveBeenCalledWith('/api/vms/vm-test-2/snapshots/snap-test-delete');
+    expect(api.delete).toHaveBeenCalledWith('/api/vms/vm-test-2/snapshots/snap-test-delete', { confirmed: true });
   });
 
   it('switches to Hyper-Backups tab and triggers backup creation', async () => {

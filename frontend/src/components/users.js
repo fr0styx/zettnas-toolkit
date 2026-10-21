@@ -526,6 +526,7 @@ export function confirmDeleteUser(userId, username) {
       try {
         const res = await apiFetch(`/api/users/${userId}`, {
           method: 'DELETE',
+          confirmed: true,
           credentials: 'include'
         });
         if (res.ok) {

@@ -844,7 +844,7 @@ function bindVmGridHandlers(grid) {
         `${t('vm.delete_confirm', 'Are you sure you want to delete virtual machine')} '${vmName}'?`,
         async () => {
           try {
-            await api.delete(`/api/vms/${vmId}`);
+            await api.delete(`/api/vms/${vmId}`, { confirmed: true });
             showToast(`VM '${vmName}' deleted`, 'success');
             loadVmDashboard();
           } catch (err) {
@@ -6223,7 +6223,7 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
             `Delete snapshot '${snapName}'? This action cannot be undone.`,
             async () => {
               try {
-                await api.delete(`/api/vms/${vmId}/snapshots/${encodeURIComponent(snapName)}`);
+                await api.delete(`/api/vms/${vmId}/snapshots/${encodeURIComponent(snapName)}`, { confirmed: true });
                 showToast(`Deleted snapshot '${snapName}'.`, 'success');
                 loadSnapshotsList();
               } catch (err) {
@@ -6318,7 +6318,7 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
             `Delete hyper-backup archive '${bId}'? This action cannot be undone.`,
             async () => {
               try {
-                await api.delete(`/api/vms/backups/${encodeURIComponent(bId)}`);
+                await api.delete(`/api/vms/backups/${encodeURIComponent(bId)}`, { confirmed: true });
                 showToast(`Deleted backup '${bId}'.`, 'success');
                 loadBackupsList();
               } catch (err) {

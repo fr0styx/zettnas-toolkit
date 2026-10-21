@@ -26,7 +26,7 @@ function confirmThen(title, msg, action) {
 function emptyTrash() {
   return confirmThen('Empty Trash', 'Permanently delete everything in the trash? This cannot be undone.', async () => {
     try {
-      await api.delete('/api/fs/trash/empty');
+      await api.delete('/api/fs/trash/empty', { confirmed: true });
       showToast('Trash emptied. Storage reclaimed.', 'success');
     } catch (e) {
       showToast(`Failed to empty trash: ${e.message}`, 'error');

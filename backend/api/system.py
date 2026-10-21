@@ -23,6 +23,7 @@ from typing import Any, Dict, List, Optional
 import backend.config as config
 from backend import __version__
 from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
+from backend.confirmations import require_confirmation
 from backend.api_tokens import load_tokens, revoke_token
 from backend.logging_config import sanitize_string
 from backend.config import (
@@ -633,7 +634,10 @@ def trigger_power_action(action: str) -> bool:
     return False
 
 
-@router.post("/system/reboot", dependencies=[Depends(require_scope("system:power"))])
+@router.post(
+    "/system/reboot",
+    dependencies=[Depends(require_scope("system:power")), Depends(require_confirmation("system.reboot"))],
+)
 async def system_reboot():
     """Trigger system reboot (requires system:power scope)."""
     add_event("warning", "System", "System reboot sequence initiated by authorized user")
@@ -641,7 +645,10 @@ async def system_reboot():
     return {"status": "ok", "action_dispatched": success, "message": "System reboot sequence initiated"}
 
 
-@router.post("/system/shutdown", dependencies=[Depends(require_scope("system:power"))])
+@router.post(
+    "/system/shutdown",
+    dependencies=[Depends(require_scope("system:power")), Depends(require_confirmation("system.shutdown"))],
+)
 async def system_shutdown():
     """Trigger system poweroff (requires system:power scope)."""
     add_event("warning", "System", "System shutdown sequence initiated by authorized user")
@@ -961,7 +968,13 @@ class ApplySystemUpdateRequest(BaseModel):
     target_image: Optional[str] = None
 
 
-@router.post("/system/updates/apply", dependencies=[Depends(require_scope("system:power", "system:manage"))])
+@router.post(
+    "/system/updates/apply",
+    dependencies=[
+        Depends(require_scope("system:power", "system:manage")),
+        Depends(require_confirmation("updates.apply")),
+    ],
+)
 async def post_apply_system_update(req: ApplySystemUpdateRequest):
     """
     Pulls the latest ZettNAS image and initiates a graceful self-update.
@@ -1063,7 +1076,13 @@ class RevertSystemUpdateRequest(BaseModel):
     current_password: str
 
 
-@router.post("/system/updates/revert", dependencies=[Depends(require_scope("system:power", "system:manage"))])
+@router.post(
+    "/system/updates/revert",
+    dependencies=[
+        Depends(require_scope("system:power", "system:manage")),
+        Depends(require_confirmation("updates.revert")),
+    ],
+)
 async def post_revert_system_update(
     req: RevertSystemUpdateRequest, principal: AuthenticatedPrincipal = Depends(get_current_principal)
 ):

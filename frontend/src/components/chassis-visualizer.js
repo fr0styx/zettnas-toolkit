@@ -814,7 +814,7 @@ function bindTopologyTreeEvents(tree, container) {
         `Are you sure you want to destroy pool '${pid}'? All mounted data will be unmounted.`,
         async () => {
           try {
-            await api.delete(`/api/storage/pools/${pid}`);
+            await api.delete(`/api/storage/pools/${pid}`, { confirmed: true });
             showToast(`Pool '${pid}' destroyed.`, 'info');
             fetchAndRenderStorageTopology(container);
           } catch (err) {
@@ -1325,7 +1325,7 @@ function bindSharesGridEvents(grid, container) {
         `Are you sure you want to remove share '${sName}'?`,
         async () => {
           try {
-            await api.delete(`/api/storage/shares/${sName}`);
+            await api.delete(`/api/storage/shares/${sName}`, { confirmed: true });
             showToast(`Share '${sName}' removed.`, 'info');
             fetchAndRenderNetworkShares(container);
           } catch (err) {
@@ -3289,7 +3289,7 @@ export async function openSnapshotsModal(poolId = 'default_pool') {
             try {
               await api.post(`/api/storage/pools/${pId}/snapshots/restore`, {
                 snapshot_name: sName,
-              });
+              }, { confirmed: true });
               showToast(`Snapshot '${sName}' reverted successfully!`, 'success');
               onReload();
             } catch (err) {
@@ -3310,7 +3310,7 @@ export async function openSnapshotsModal(poolId = 'default_pool') {
         `Delete snapshot '${sName}'?`,
         async () => {
           try {
-            await api.delete(`/api/storage/pools/${pId}/snapshots/${sName}`);
+            await api.delete(`/api/storage/pools/${pId}/snapshots/${sName}`, { confirmed: true });
             showToast(`Snapshot '${sName}' deleted.`, 'info');
             onReload();
           } catch (err) {

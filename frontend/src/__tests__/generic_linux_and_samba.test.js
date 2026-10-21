@@ -166,7 +166,7 @@ describe('Sprint 5: Generic Linux Active Provisioner & Samba Engine (Frontend)',
     if (okBtn) okBtn.click();
     await Promise.resolve();
 
-    expect(deleteSpy).toHaveBeenCalledWith('/api/storage/shares/vault');
+    expect(deleteSpy).toHaveBeenCalledWith('/api/storage/shares/vault', { confirmed: true });
 
     badge.remove();
     btnCreateShare.remove();

@@ -78,6 +78,19 @@ except Exception:
     pass
 
 
+@pytest.fixture(autouse=True)
+def _auto_confirm_destructive_actions(request, monkeypatch):
+    """Most API tests call destructive routes directly; treat them as confirmed.
+
+    Tests marked @pytest.mark.real_confirmations exercise the real 428 / token flow.
+    """
+    if request.node.get_closest_marker("real_confirmations"):
+        return
+    from backend import confirmations
+
+    monkeypatch.setattr(confirmations, "consume", lambda *a, **k: True)
+
+
 def pytest_sessionfinish(session, exitstatus):
     shutil.rmtree(SANDBOX, ignore_errors=True)
 

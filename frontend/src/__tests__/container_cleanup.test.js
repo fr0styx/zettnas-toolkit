@@ -82,7 +82,8 @@ describe('Container Deletion and Docker Prune Subsystem', () => {
     await confirmBtn.onclick();
 
     expect(deleteSpy).toHaveBeenCalledWith(
-      '/api/docker/containers/c123456789012?force=true&remove_volumes=true&remove_image=true&archive_data=true'
+      '/api/docker/containers/c123456789012?force=true&remove_volumes=true&remove_image=true&archive_data=true',
+      { confirmed: true }
     );
     expect(onDeletedMock).toHaveBeenCalled();
     expect(modal.classList.contains('open')).toBe(false);

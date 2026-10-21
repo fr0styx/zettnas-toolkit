@@ -2,7 +2,7 @@
  * ZettNAS Toolkit Settings & Preferences Controller
  * Handles settings drawer, tabs, screen backlight, timezone, hardware buttons, card layout locks, and security credentials.
  */
-import { api, auth, ApiError } from '../api.js';
+import { api, auth, ApiError, apiFetch } from '../api.js';
 import { state, ZOOM_PROFILES } from '../state.js';
 import { ZettEventBus } from '../event-bus.js';
 import { applyTheme, applyDesktopTheme, applyLcdTheme, setScreenLayoutStyle, hexToRgb, getContrastRatio, syncDesktopTwinPreview } from './dashboard.js';
@@ -1855,12 +1855,7 @@ export function initSystemTab() {
         t('settings.restore_confirm_desc', 'Are you sure you want to restore this configuration? This will restore all hardware settings, fan curves, layouts, widgets, and themes, and reload the interface.'),
         async () => {
           try {
-            const token = auth.getToken();
-            const res = await window.fetch('/api/system/restore', {
-              method: 'POST',
-              headers: token ? { 'Authorization': `Bearer ${token}` } : {},
-              body: file
-            });
+            const res = await apiFetch('/api/system/restore', { method: 'POST', body: file, confirmed: true });
             if (!res.ok) throw await ApiError.from(res);
             const data = await res.json();
 

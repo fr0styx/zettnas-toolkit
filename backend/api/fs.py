@@ -23,6 +23,7 @@ from fastapi.responses import FileResponse, Response, StreamingResponse
 from pydantic import BaseModel, Field
 
 from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
+from backend.confirmations import require_confirmation
 import backend.config as config
 from backend.config import logger
 from backend.passwords import hash_password, verify_password
@@ -1743,7 +1744,13 @@ async def fs_trash_restore(
         raise HTTPException(status_code=500, detail="Failed to restore item")
 
 
-@router.delete("/fs/trash/empty", dependencies=[Depends(require_scope("shares:manage", "storage:admin"))])
+@router.delete(
+    "/fs/trash/empty",
+    dependencies=[
+        Depends(require_scope("shares:manage", "storage:admin")),
+        Depends(require_confirmation("fs.trash.empty")),
+    ],
+)
 async def fs_trash_empty(principal: AuthenticatedPrincipal = Depends(get_current_principal)):
     """Permanently purges all items currently in the Recycle Bin across all browse roots."""
 

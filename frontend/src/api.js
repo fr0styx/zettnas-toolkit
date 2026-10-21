@@ -52,9 +52,28 @@ export class ApiError extends Error {
   }
 }
 
+// Destructive-action standard: the server answers 428 "confirmation_required" until the
+// request carries a single-use X-Confirm-Token. Callers that already asked the user pass
+// { confirmed: true }; otherwise the registered handler (the app's confirm dialog) asks first.
+let _confirmationHandler = null;
+
+export function setConfirmationHandler(fn) {
+  _confirmationHandler = typeof fn === 'function' ? fn : null;
+}
+
+async function _askToConfirm(info) {
+  if (_confirmationHandler) return Boolean(await _confirmationHandler(info));
+  if (typeof window !== 'undefined' && typeof window.confirm === 'function') {
+    return window.confirm(`${info.summary || 'This action cannot be undone'}?`);
+  }
+  return false;
+}
+
 async function request(endpoint, options = {}) {
   const url = endpoint;
   const config = { ...options };
+  delete config.confirmed;
+  delete config._confirmRetry;
   config.headers = { ...options.headers };
 
   const token = auth.getToken();
@@ -62,7 +81,9 @@ async function request(endpoint, options = {}) {
     config.headers['Authorization'] = `Bearer ${token}`;
   }
 
-  if (config.body && typeof config.body === 'object' && !(config.body instanceof FormData)) {
+  const isBinary = (typeof FormData !== 'undefined' && config.body instanceof FormData) ||
+    (typeof Blob !== 'undefined' && config.body instanceof Blob);
+  if (config.body && typeof config.body === 'object' && !isBinary) {
     if (!config.headers['Content-Type']) {
       config.headers['Content-Type'] = 'application/json';
     }
@@ -91,6 +112,31 @@ async function request(endpoint, options = {}) {
         if (dock) dock.style.display = 'none';
       }
       throw new ApiError('Unauthorized', { status: 401, error: 'unauthorized' });
+    }
+
+    if (res.status === 428 && !options._confirmRetry) {
+      let info = null;
+      try {
+        info = await res.clone().json();
+      } catch (e) {
+        info = null;
+      }
+      if (info && info.error === 'confirmation_required') {
+        const ok = options.confirmed === true || (await _askToConfirm(info));
+        if (!ok) throw new ApiError('Cancelled', { status: 428, error: 'cancelled' });
+        const tokenRes = await window.fetch('/api/confirmations', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+          body: JSON.stringify({ action: info.action, target: info.target || '' }),
+        });
+        if (!tokenRes.ok) throw await ApiError.from(tokenRes);
+        const { token: confirmToken } = await tokenRes.json();
+        return request(endpoint, {
+          ...options,
+          _confirmRetry: true,
+          headers: { ...options.headers, 'X-Confirm-Token': confirmToken },
+        });
+      }
     }
 
     return res;

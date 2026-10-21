@@ -8860,7 +8860,7 @@ export async function revertSystemUpdate() {
       const title = document.getElementById('update-progress-title');
       const desc = document.getElementById('update-progress-desc');
       try {
-        const res = await api.post('/api/system/updates/revert', { snapshot_id: prev.id, current_password: password });
+        const res = await api.post('/api/system/updates/revert', { snapshot_id: prev.id, current_password: password }, { confirmed: true });
         if (overlay) overlay.style.display = 'block';
         if (title) title.textContent = `Reverting to ${name}...`;
         if (desc) desc.textContent = res?.message || 'Restoring the previous version and reconnecting...';
@@ -8916,7 +8916,7 @@ export async function applySystemUpdate() {
         const targetImage = channel === 'edge'
           ? 'ghcr.io/fr0styx/zettnas-toolkit:edge'
           : 'ghcr.io/fr0styx/zettnas-toolkit:latest';
-        const res = await api.post('/api/system/updates/apply', { channel, target_image: targetImage });
+        const res = await api.post('/api/system/updates/apply', { channel, target_image: targetImage }, { confirmed: true });
         showToast(res?.message || 'Update initiated. Reconnecting...', 'info');
 
         if (res && res.auto_restarting === false) {
@@ -9735,7 +9735,7 @@ export async function fetchAndRenderSystemSnapshots(mountEl) {
         const poolId = btn.dataset.poolId || 'default';
         showConfirmToast(`Delete snapshot "${snapName}"?`, async () => {
           try {
-            await api.delete(`/api/backup/snapshots/${encodeURIComponent(poolId)}/${encodeURIComponent(snapName)}`);
+            await api.delete(`/api/backup/snapshots/${encodeURIComponent(poolId)}/${encodeURIComponent(snapName)}`, { confirmed: true });
             showToast(`Snapshot "${snapName}" deleted.`, 'success');
             fetchAndRenderSystemSnapshots(mount);
           } catch (err) {
@@ -9906,7 +9906,7 @@ export async function fetchAndRenderAppBackups(mountEl, filterApp = '') {
           `Are you sure you want to permanently delete backup archive <strong>${escapeHtml(filename)}</strong>? This cannot be undone.`,
           async () => {
             try {
-              await api.delete(`/api/backup/apps/${encodeURIComponent(backupId)}`);
+              await api.delete(`/api/backup/apps/${encodeURIComponent(backupId)}`, { confirmed: true });
               showToast(`Backup "${filename}" deleted.`, 'success');
               fetchAndRenderAppBackups(mount, document.getElementById('app-backups-filter-app')?.value || '');
             } catch (err) {

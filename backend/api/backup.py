@@ -11,6 +11,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 
 from backend.auth import require_scope
+from backend.confirmations import require_confirmation
 from backend.config import CLIENT_PREFS_FILE, logger
 from backend.fsutil import atomic_write_json, read_json
 from backend.hardware.pal_storage import PlatformCapabilityError, get_storage_platform
@@ -122,7 +123,9 @@ def _safe_restore_archive(path: str) -> None:
         restore_backup_archive(archive_file)
 
 
-@router.post("/system/restore", dependencies=[Depends(require_scope("*"))])
+@router.post(
+    "/system/restore", dependencies=[Depends(require_scope("*")), Depends(require_confirmation("system.restore"))]
+)
 async def restore_backup(request: Request):
     """Restores configuration from a zip archive."""
     tmp_path = None
@@ -281,7 +284,10 @@ def restore_pool_snapshot(req: SnapshotRestoreModel):
 
 @router.delete(
     "/backup/snapshots/{pool_id}/{snapshot_name}",
-    dependencies=[Depends(require_scope("backup:write", "backup:manage", "system:config", "storage:admin"))],
+    dependencies=[
+        Depends(require_scope("backup:write", "backup:manage", "system:config", "storage:admin")),
+        Depends(require_confirmation("storage.snapshot.delete")),
+    ],
 )
 def delete_pool_snapshot(pool_id: str, snapshot_name: str):
     """Deletes an atomic filesystem snapshot."""
@@ -401,7 +407,10 @@ async def restore_app_backup_endpoint(backup_id: str, req: Optional[AppRestoreRe
 
 @router.delete(
     "/backup/apps/{backup_id}",
-    dependencies=[Depends(require_scope("containers:manage", "backup:write", "backup:manage"))],
+    dependencies=[
+        Depends(require_scope("containers:manage", "backup:write", "backup:manage")),
+        Depends(require_confirmation("backup.delete")),
+    ],
 )
 async def delete_app_backup_endpoint(backup_id: str):
     """Deletes an application backup archive from disk and registry."""

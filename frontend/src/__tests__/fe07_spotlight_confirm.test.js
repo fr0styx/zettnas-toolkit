@@ -36,7 +36,7 @@ describe('FE-07: destructive Spotlight actions', () => {
     const done = parseNaturalLanguageAction('>trash empty').run();
     await confirms[0].onConfirm();
     await done;
-    expect(apiDelete).toHaveBeenCalledWith('/api/fs/trash/empty');
+    expect(apiDelete).toHaveBeenCalledWith('/api/fs/trash/empty', { confirmed: true });
     expect(toasts.map((t) => t.type)).toEqual(['error']);
   });
 

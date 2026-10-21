@@ -10,6 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
 from backend.auth import require_scope
+from backend.confirmations import require_confirmation
 from backend.hardware.pal_storage import (
     PlatformCapabilityError,
     get_storage_platform,
@@ -324,7 +325,10 @@ def rename_storage_pool(pool_id: str, req: StoragePoolRenameRequest) -> Dict[str
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.delete("/pools/{pool_id}", dependencies=[Depends(require_scope("storage:admin"))])
+@router.delete(
+    "/pools/{pool_id}",
+    dependencies=[Depends(require_scope("storage:admin")), Depends(require_confirmation("storage.pool.delete"))],
+)
 def delete_storage_pool(pool_id: str) -> Dict[str, Any]:
     """
     Destroys/unmounts a storage pool. Forbidden in Observer Mode.
@@ -410,7 +414,10 @@ def import_storage_pool(req: StoragePoolImportRequest) -> Dict[str, Any]:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.delete("/shares/{name}", dependencies=[Depends(require_scope("shares:manage"))])
+@router.delete(
+    "/shares/{name}",
+    dependencies=[Depends(require_scope("shares:manage")), Depends(require_confirmation("share.delete"))],
+)
 def delete_storage_share(name: str) -> Dict[str, Any]:
     """
     Deletes a network share configuration. Forbidden in Observer Mode.
@@ -462,7 +469,10 @@ def create_storage_snapshot(pool_id: str, req: StorageSnapshotCreateRequest) -> 
         raise HTTPException(status_code=403, detail=str(e))
 
 
-@router.delete("/pools/{pool_id}/snapshots/{snapshot_name}", dependencies=[Depends(require_scope("storage:admin"))])
+@router.delete(
+    "/pools/{pool_id}/snapshots/{snapshot_name}",
+    dependencies=[Depends(require_scope("storage:admin")), Depends(require_confirmation("storage.snapshot.delete"))],
+)
 def delete_storage_snapshot(pool_id: str, snapshot_name: str) -> Dict[str, Any]:
     """
     Deletes a Btrfs subvolume snapshot. Forbidden in Observer Mode or if WORM locked.
@@ -504,7 +514,10 @@ def break_glass_delete_snapshot(pool_id: str, req: StorageSnapshotBreakGlassDele
         raise HTTPException(status_code=403, detail=str(e))
 
 
-@router.post("/pools/{pool_id}/snapshots/restore", dependencies=[Depends(require_scope("storage:admin"))])
+@router.post(
+    "/pools/{pool_id}/snapshots/restore",
+    dependencies=[Depends(require_scope("storage:admin")), Depends(require_confirmation("storage.snapshot.restore"))],
+)
 def restore_storage_snapshot(pool_id: str, req: StorageSnapshotRestoreRequest) -> Dict[str, Any]:
     """
     Restores or rolls back a Btrfs subvolume snapshot. Forbidden in Observer Mode.

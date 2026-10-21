@@ -150,7 +150,8 @@ describe('Application Backups & Recovery UI (21a, 21b, 21c)', () => {
 
     // Verify API called with archive_data=true
     expect(deleteSpy).toHaveBeenCalledWith(
-      expect.stringContaining('archive_data=true')
+      expect.stringContaining('archive_data=true'),
+      { confirmed: true }
     );
   });
 
@@ -170,7 +171,8 @@ describe('Application Backups & Recovery UI (21a, 21b, 21c)', () => {
     confirmBtn.click();
 
     expect(deleteSpy).toHaveBeenCalledWith(
-      expect.stringContaining('archive_data=false')
+      expect.stringContaining('archive_data=false'),
+      { confirmed: true }
     );
   });
 });

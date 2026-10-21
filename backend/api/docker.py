@@ -13,6 +13,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
+from backend.confirmations import require_confirmation
 from backend.config import logger
 from backend.hardware.docker_stats import container_action, read_docker_containers
 from backend.models.schemas import DockerActionRequest
@@ -759,7 +760,13 @@ class DockerContainerDeleteRequest(BaseModel):
     archive_data: bool = True
 
 
-@router.delete("/docker/containers/{container_id}", dependencies=[Depends(require_scope("containers:manage"))])
+@router.delete(
+    "/docker/containers/{container_id}",
+    dependencies=[
+        Depends(require_scope("containers:manage")),
+        Depends(require_confirmation("docker.container.delete")),
+    ],
+)
 async def delete_docker_container(
     container_id: str,
     force: bool = False,

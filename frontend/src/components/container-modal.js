@@ -1451,7 +1451,7 @@ export function openContainerDeleteModal(cid, cname, imageRef = '', onDeleted = 
 
     try {
       const url = `/api/docker/containers/${encodeURIComponent(cid)}?force=${force}&remove_volumes=${removeVolumes}&remove_image=${removeImage}&archive_data=${archiveData}`;
-      const res = await api.delete(url);
+      const res = await api.delete(url, { confirmed: true });
       if (res?.archived && res?.archive) {
         showToast(`Container "${cname}" destroyed. App data & config safely archived!`, 'success');
       } else {
