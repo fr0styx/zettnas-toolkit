@@ -854,6 +854,26 @@ def _running_repo_digests() -> List[str]:
     return [d[len(prefix) :] for d in img.get("RepoDigests") or [] if d.startswith(prefix)]
 
 
+_IMAGE_REF_RE = re.compile(
+    r"^ghcr\.io/fr0styx/zettnas-toolkit(?::[A-Za-z0-9_][A-Za-z0-9_.-]{0,127})?(?:@sha256:[0-9a-f]{64})?$"
+)
+
+
+def _is_official_image_ref(ref: str) -> bool:
+    return bool(_IMAGE_REF_RE.match(str(ref or "").strip()))
+
+
+def _local_repo_digests(image_ref: str) -> List[str]:
+    """Registry digests of a local image that belong to our repository."""
+    from backend.services.container_mutator import _docker_request
+
+    st, img = _docker_request("GET", f"/images/{image_ref}/json")
+    if st != 200 or not isinstance(img, dict):
+        return []
+    prefix = _IMAGE_REPO + "@"
+    return [d[len(prefix) :] for d in img.get("RepoDigests") or [] if d.startswith(prefix)]
+
+
 @router.get("/system/updates")
 async def check_system_updates(force: bool = False, channel: str = "stable"):
     """Release/commit check, then a registry digest check (OPS-18).
@@ -1063,6 +1083,10 @@ async def post_apply_system_update(req: ApplySystemUpdateRequest):
 
     channel = "edge" if req.channel.lower() == "edge" else "stable"
     if req.target_image:
+        # Only this project's images: an update must never install an arbitrary image
+        # with full access to the Docker socket and host devices.
+        if not _is_official_image_ref(req.target_image):
+            raise HTTPException(status_code=400, detail=f"Updates can only install {_IMAGE_REPO} images.")
         target_img = req.target_image
     elif channel == "edge":
         target_img = "ghcr.io/fr0styx/zettnas-toolkit:edge"
@@ -1081,6 +1105,15 @@ async def post_apply_system_update(req: ApplySystemUpdateRequest):
     except Exception as exc:
         logger.error(f"[System Update] Image pull failed: {exc}")
         raise HTTPException(status_code=500, detail=f"Failed to pull image: {exc}")
+
+    # 1b. The pulled image must carry a digest from our registry repository.
+    try:
+        pulled = await asyncio.to_thread(_local_repo_digests, target_img)
+    except Exception as exc:
+        pulled = []
+        logger.warning(f"[System Update] Could not inspect the pulled image: {exc}")
+    if not pulled:
+        raise HTTPException(status_code=502, detail=f"The downloaded image is not from {_IMAGE_REPO}; not updating.")
 
     # 2. Check if running inside container with docker socket access
     sock_path = "/var/run/docker.sock"

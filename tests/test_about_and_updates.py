@@ -108,6 +108,7 @@ def test_apply_system_update_endpoint(client, auth_headers):
     with (
         patch("backend.services.container_mutator.pull_container_image") as mock_pull,
         patch("backend.services.self_updater.spawn_self_updater", return_value=True) as mock_spawn,
+        patch("backend.api.system._local_repo_digests", return_value=["sha256:" + "0" * 64]),
         patch("os.path.exists", return_value=True),
     ):
         resp = client.post(
@@ -128,6 +129,7 @@ def test_apply_system_update_edge_channel_defaults_to_edge_tag(client, auth_head
     with (
         patch("backend.services.container_mutator.pull_container_image") as mock_pull,
         patch("backend.services.self_updater.spawn_self_updater", return_value=True) as mock_spawn,
+        patch("backend.api.system._local_repo_digests", return_value=["sha256:" + "0" * 64]),
         patch("os.path.exists", return_value=True),
     ):
         resp = client.post(
@@ -146,6 +148,7 @@ def test_apply_system_update_stable_channel_defaults_to_latest_tag(client, auth_
     with (
         patch("backend.services.container_mutator.pull_container_image") as mock_pull,
         patch("backend.services.self_updater.spawn_self_updater", return_value=True) as mock_spawn,
+        patch("backend.api.system._local_repo_digests", return_value=["sha256:" + "0" * 64]),
         patch("os.path.exists", return_value=True),
     ):
         resp = client.post(
