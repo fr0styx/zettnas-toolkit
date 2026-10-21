@@ -11,7 +11,6 @@ from urllib.parse import parse_qs, urlparse
 from fastapi import Depends, HTTPException, Request
 
 from backend import config
-from backend.api_tokens import validate_api_token
 from backend.config import SESSION_TTL, SESSIONS_FILE, logger
 from backend.errors import error_response
 from backend.fsutil import atomic_write_json
@@ -33,13 +32,16 @@ except Exception as e:
 
 
 def purge_legacy_session_files() -> None:
-    """Deletes the pre-SQLite sessions.json store and its backups.
+    """Deletes the pre-SQLite sessions.json and api_tokens.json stores and their backups.
 
     Sessions now live only in the users DB. The old file held raw tokens and was
     honoured as a superadmin fallback (SEC-01), so it is removed at startup.
     """
     base = getattr(config, "SESSIONS_FILE", SESSIONS_FILE)
-    for path in (base, base + ".bak", base + ".tmp"):
+    # The pre-SQLite API token file granted superadmin to any token in it; scoped
+    # tokens live in the users DB now.
+    tokens_file = os.path.join(os.path.dirname(base), "api_tokens.json")
+    for path in (base, base + ".bak", base + ".tmp", tokens_file, tokens_file + ".tmp"):
         try:
             if os.path.lexists(path):
                 os.remove(path)
@@ -109,14 +111,6 @@ def get_current_session(token: str) -> Optional[Dict[str, Any]]:
                 "scopes": tok["scopes"],
                 "is_api_token": True,
             }
-        if validate_api_token(token):
-            return {
-                "user_id": "admin-00000000-0000-0000-0000-000000000001",
-                "username": config.ZETTNAS_USERNAME or "admin",
-                "role_id": "superadmin",
-                "scopes": ["*"],
-                "is_api_token": True,
-            }
 
     # Only the users DB decides: a revoked, expired or disabled user's session is gone.
     return validate_user_session(token)
@@ -144,13 +138,9 @@ def validate_session(token: str) -> bool:
             return True
         return False
 
-    # 1. Scoped or legacy API token
+    # 1. Scoped API token (users DB only)
     if token.startswith("zat_"):
-        if validate_scoped_api_token(token):
-            return True
-        if validate_api_token(token):
-            return True
-        return False
+        return bool(validate_scoped_api_token(token))
 
     # 2. SQLite user session (the only session store)
     return bool(validate_user_session(token))

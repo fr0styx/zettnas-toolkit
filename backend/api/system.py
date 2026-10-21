@@ -23,7 +23,7 @@ from typing import Any, Dict, List, Optional
 import backend.config as config
 from backend import __version__
 from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
-from backend.api_tokens import generate_token, load_tokens, revoke_token
+from backend.api_tokens import load_tokens, revoke_token
 from backend.logging_config import sanitize_string
 from backend.config import (
     ALLOWED_BROWSE_ROOTS,
@@ -555,10 +555,8 @@ def create_token(req: TokenCreateRequest, principal: AuthenticatedPrincipal = De
     except HTTPException:
         raise
     except Exception as e:
-        logger.warning(f"Falling back to legacy token generation: {e}")
-        token = generate_token(req.name)
-        add_event("success", "Security", f"Generated new API token: {req.name}")
-        return {"token": token, "name": req.name}
+        logger.error(f"Could not create API token: {e}")
+        raise HTTPException(status_code=500, detail="Could not create the API token.") from e
 
 
 @router.delete("/tokens/{token_id}", dependencies=[Depends(require_scope("users:write", "system:config"))])
