@@ -19886,3 +19886,92 @@ tr.docker-row-selected {
   color: #94a3b8;
 }
 
+
+/* ==========================================================================
+   Apps & Containers: only the container list scrolls (desktop)
+   While the Containers list is showing, the Management content pane stops
+   scrolling; the tabs, title row, filter toolbar and table header stay put and
+   the table box scrolls on its own. Other sections and the App Store tab keep
+   normal page scrolling. Phones keep page scrolling (a fixed header would take
+   most of the screen).
+   ========================================================================== */
+@media (min-width: 769px) {
+  body:not(.mobile-mode) .mgmt-content-pane:has(
+      > #management-detail-container > #mgmt-sec-docker:not([style*="display: none"])
+        #mgmt-pane-docker:not([style*="display: none"])
+        #docker-view-containers-wrap:not([style*="display: none"])
+    ) {
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column;
+    padding-bottom: 14px !important;
+  }
+
+  body:not(.mobile-mode) #management-detail-container:has(
+      > #mgmt-sec-docker:not([style*="display: none"])
+        #mgmt-pane-docker:not([style*="display: none"])
+        #docker-view-containers-wrap:not([style*="display: none"])
+    ) {
+    display: flex !important;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  body:not(.mobile-mode) #mgmt-sec-docker:not([style*="display: none"]):has(
+      #mgmt-pane-docker:not([style*="display: none"]) #docker-view-containers-wrap:not([style*="display: none"])
+    ) {
+    display: flex !important;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  body:not(.mobile-mode) #mgmt-sec-docker:has(#docker-view-containers-wrap:not([style*="display: none"]))
+    > .mgmt-sticky-subnav,
+  body:not(.mobile-mode) #mgmt-pane-docker:has(#docker-view-containers-wrap:not([style*="display: none"]))
+    > .mgmt-card-intro,
+  body:not(.mobile-mode) #docker-view-containers-wrap > .docker-toolbar,
+  body:not(.mobile-mode) #docker-view-containers-wrap > .docker-table-top-scroll,
+  body:not(.mobile-mode) #docker-view-containers-wrap > .docker-table-sticky-scroll {
+    flex: 0 0 auto;
+  }
+
+  body:not(.mobile-mode) #mgmt-pane-docker:not([style*="display: none"]):has(
+      #docker-view-containers-wrap:not([style*="display: none"])
+    ) {
+    display: flex !important;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  body:not(.mobile-mode) #mgmt-pane-docker:has(#docker-view-containers-wrap:not([style*="display: none"]))
+    > .mgmt-detail-body {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  body:not(.mobile-mode) #docker-view-containers-wrap:not([style*="display: none"]) {
+    display: flex !important; /* the app sets an inline display: block */
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  body:not(.mobile-mode) #docker-view-containers-wrap > .docker-table-container {
+    flex: 1 1 auto;
+    min-height: 120px;
+    overflow: auto !important;
+  }
+
+  /* Column headers stay visible while rows scroll beneath them. */
+  body:not(.mobile-mode) #docker-view-containers-wrap .docker-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: #080c13;
+  }
+}
