@@ -12,6 +12,7 @@ import { t } from '../i18n.js';
 import { makeDraggable, bringToFront } from './dock.js';
 import { openContainerInspector, openContainerDeleteModal } from './container-modal.js';
 import { openStackModal, openStackPickerModal } from './stack-modal.js';
+import { openNetworkMap } from './container-network-map.js';
 import {
   createContainerRow as createSharedContainerRow,
   updateContainerRow as updateSharedContainerRow,
@@ -111,6 +112,9 @@ export function initContainersManager() {
               </button>
               <button id="btn-cw-stacks" class="btn-pill-toggle" title="Manage Docker Compose Stacks" style="display: inline-flex; align-items: center; gap: 5px; color: var(--accent-cyan, #38bdf8);">
                 <span>📁</span> <span>Compose Stacks</span>
+              </button>
+              <button id="btn-cw-netmap" class="btn-pill-toggle" title="${t('cw.netmap_title', 'Container Network Map')}" style="display: inline-flex; align-items: center; gap: 5px;">
+                <span>🕸️</span> <span data-i18n="cw.netmap_btn">${t('cw.netmap_btn', 'Network Map')}</span>
               </button>
               <button id="btn-cw-prune" class="btn-pill-toggle" title="Clean up unused container images, stopped containers, and volumes">
                 <span>🧹</span> <span>Prune</span>
@@ -335,6 +339,9 @@ export function initContainersManager() {
       );
     };
   }
+
+  const btnNetmap = document.getElementById('btn-cw-netmap');
+  if (btnNetmap) btnNetmap.onclick = () => openNetworkMap();
 
   const btnStacks = document.getElementById('btn-cw-stacks');
   if (btnStacks) {

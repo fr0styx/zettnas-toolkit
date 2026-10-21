@@ -525,6 +525,21 @@ class StackActionRequest(BaseModel):
 
 
 @router.get(
+    "/docker/networks/topology",
+    dependencies=[Depends(require_scope("containers:read", "containers:manage", "system:view"))],
+)
+async def get_docker_network_topology():
+    """Docker networks with their attached containers and IPs, for the Network Map."""
+    from backend.services import docker_network_topology
+
+    try:
+        return await asyncio.to_thread(docker_network_topology.get_network_topology)
+    except Exception as e:
+        logger.warning(f"[Docker] Network topology unavailable: {e}")
+        raise HTTPException(status_code=503, detail="Docker network data is unavailable.")
+
+
+@router.get(
     "/docker/stacks",
     dependencies=[Depends(require_scope("containers:read", "containers:manage"))],
 )
