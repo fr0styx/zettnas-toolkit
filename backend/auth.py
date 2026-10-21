@@ -31,82 +31,36 @@ try:
 except Exception as e:
     logger.warning(f"Could not auto-initialize users DB on auth import: {e}")
 
-SESSIONS: Dict[str, Any] = {}
-_sessions_file_mtime_ns = 0
-_sessions_lock = threading.RLock()
 
+def purge_legacy_session_files() -> None:
+    """Deletes the pre-SQLite sessions.json store and its backups.
 
-def _load_sessions():
-    """Thread-safe cached session loader for legacy sessions.json fallback."""
-    global SESSIONS, _sessions_file_mtime_ns
-    with _sessions_lock:
+    Sessions now live only in the users DB. The old file held raw tokens and was
+    honoured as a superadmin fallback (SEC-01), so it is removed at startup.
+    """
+    base = SESSIONS_FILE
+    for path in (base, base + ".bak", base + ".tmp"):
         try:
-            if not os.path.exists(SESSIONS_FILE):
-                SESSIONS = {}
-                _sessions_file_mtime_ns = 0
-                return
-            mtime = os.stat(SESSIONS_FILE).st_mtime_ns
-            if mtime == _sessions_file_mtime_ns and SESSIONS:
-                return
-            with open(SESSIONS_FILE) as f:
-                raw = json.load(f)
-            now = time.time()
-            SESSIONS = {t: data for t, data in raw.items() if data.get("expires", 0) > now}
-            _sessions_file_mtime_ns = mtime
-        except (json.JSONDecodeError, OSError) as e:
-            logger.warning(f"Failed to load sessions.json: {e}")
-            SESSIONS = {}
-            _sessions_file_mtime_ns = 0
-
-
-def _save_sessions():
-    """Thread-safe session persistence with atomic cache synchronization."""
-    global _sessions_file_mtime_ns
-    with _sessions_lock:
-        try:
-            now = time.time()
-            valid = {t: data for t, data in SESSIONS.items() if data.get("expires", 0) > now}
-            atomic_write_json(SESSIONS_FILE, valid)
-            if os.path.exists(SESSIONS_FILE):
-                try:
-                    _sessions_file_mtime_ns = os.stat(SESSIONS_FILE).st_mtime_ns
-                except OSError:
-                    pass
+            if os.path.lexists(path):
+                os.remove(path)
+                logger.warning(f"[Auth] Removed legacy session store {os.path.basename(path)}")
         except OSError as e:
-            logger.warning(f"Failed to save sessions.json: {e}")
+            logger.warning(f"[Auth] Could not remove legacy session store {path}: {e}")
 
 
 def create_session(username: str, is_remembered: bool = False, ip: str = "", user_agent: str = "") -> str:
-    """Create session in SQLite user store and sync to legacy memory map."""
-    # Find user in SQLite
+    """Create a session for an existing user in the SQLite user store."""
     user = get_user_by_username(username)
     if not user:
-        user = get_user_by_username("admin")
-    user_id = user["id"] if user else "admin-00000000-0000-0000-0000-000000000001"
-
-    token = create_user_session(user_id, username, ip=ip, user_agent=user_agent, is_remembered=is_remembered)
-
-    now = time.time()
-    ttl = 30 * 86400 if is_remembered else SESSION_TTL
-    with _sessions_lock:
-        SESSIONS[token] = {"user": username, "created": now, "expires": now + ttl}
-    _save_sessions()
-    return token
+        # Never fall back to another account (previously: admin).
+        raise ValueError(f"Cannot create a session for unknown user '{username}'.")
+    return create_user_session(user["id"], user["username"], ip=ip, user_agent=user_agent, is_remembered=is_remembered)
 
 
 def revoke_session(token: str) -> None:
     if not token:
         return
     revoke_user_session(token)
-    with _sessions_lock:
-        target_token = None
-        for t in SESSIONS.keys():
-            if hmac.compare_digest(token, t):
-                target_token = t
-                break
-        if target_token:
-            del SESSIONS[target_token]
-            _save_sessions()
 
 
 def is_internal_token(token: str) -> bool:
@@ -164,22 +118,8 @@ def get_current_session(token: str) -> Optional[Dict[str, Any]]:
                 "is_api_token": True,
             }
 
-    sess = validate_user_session(token)
-    if sess:
-        return sess
-
-    # Fallback to in-memory legacy session
-    with _sessions_lock:
-        for t, data in SESSIONS.items():
-            if hmac.compare_digest(token, t):
-                if data.get("expires", 0) > time.time():
-                    return {
-                        "user_id": "admin-00000000-0000-0000-0000-000000000001",
-                        "username": data.get("user", "admin"),
-                        "role_id": "superadmin",
-                        "scopes": ["*"],
-                    }
-    return None
+    # Only the users DB decides: a revoked, expired or disabled user's session is gone.
+    return validate_user_session(token)
 
 
 def validate_session(token: str) -> bool:
@@ -212,45 +152,12 @@ def validate_session(token: str) -> bool:
             return True
         return False
 
-    # 2. SQLite User session
-    sess = validate_user_session(token)
-    if sess:
-        return True
-
-    # 3. Fallback to in-memory map or sessions.json
-    with _sessions_lock:
-        session = None
-        for t, data in SESSIONS.items():
-            if hmac.compare_digest(token, t):
-                session = data
-                break
-
-        if not session and os.path.exists(SESSIONS_FILE):
-            try:
-                mtime = os.stat(SESSIONS_FILE).st_mtime_ns
-                if mtime != _sessions_file_mtime_ns:
-                    _load_sessions()
-                    for t, data in SESSIONS.items():
-                        if hmac.compare_digest(token, t):
-                            session = data
-                            break
-            except OSError:
-                pass
-
-        if not session:
-            return False
-
-        if session.get("expires", 0) <= time.time():
-            revoke_session(token)
-            return False
-        return True
+    # 2. SQLite user session (the only session store)
+    return bool(validate_user_session(token))
 
 
 def invalidate_all_sessions():
-    global SESSIONS
-    with _sessions_lock:
-        SESSIONS = {}
-    _save_sessions()
+    purge_legacy_session_files()
     try:
         from backend.users_db import USERS_DB_PATH, _SESSION_CACHE, _SESSION_CACHE_LOCK, users_db_session
 

@@ -293,41 +293,7 @@ def migrate_legacy_data(db_path: Optional[str] = None) -> None:
                 ),
             )
 
-            # Ingest legacy active sessions from sessions.json
-            sess_file = getattr(config, "SESSIONS_FILE", os.path.join(DATA_DIR, "sessions.json"))
-            if os.path.exists(sess_file):
-                try:
-                    with open(sess_file, "r") as f:
-                        raw_sessions = json.load(f)
-                    migrated_sess = 0
-                    for token, sdata in raw_sessions.items():
-                        if isinstance(sdata, dict) and sdata.get("expires", 0) > now:
-                            thash = hashlib.sha256(token.encode("utf-8")).hexdigest()
-                            conn.execute(
-                                """
-                                INSERT OR REPLACE INTO sessions (
-                                    session_id_hash, user_id, username, created_at, expires_at,
-                                    last_active_at, ip_address, user_agent, is_remembered
-                                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                            """,
-                                (
-                                    thash,
-                                    admin_id,
-                                    sdata.get("user", admin_username),
-                                    sdata.get("created", now),
-                                    sdata.get("expires", now + 86400),
-                                    now,
-                                    "127.0.0.1",
-                                    "Migrated Legacy Session",
-                                    0,
-                                ),
-                            )
-                            migrated_sess += 1
-                    logger.info(f"Migrated {migrated_sess} active sessions from {sess_file}")
-                    # Safely backup legacy sessions file
-                    shutil.copy2(sess_file, sess_file + ".bak")
-                except Exception as e:
-                    logger.warning(f"Failed to migrate legacy sessions: {e}")
+            # Legacy sessions.json is not imported: users sign in again (SEC-01).
 
             # Ingest legacy API tokens from api_tokens.json
             tok_file = os.path.join(DATA_DIR, "api_tokens.json")
@@ -651,17 +617,6 @@ def disable_admin_user(admin_identifier: str = "admin", db_path: Optional[str] =
         keys_to_remove = [k for k, v in _SESSION_CACHE.items() if v.get("user_id") == admin_id]
         for k in keys_to_remove:
             _SESSION_CACHE.pop(k, None)
-
-    try:
-        from backend.auth import SESSIONS, _save_sessions, _sessions_lock
-
-        with _sessions_lock:
-            legacy_keys = [k for k, v in SESSIONS.items() if v.get("user") == admin["username"]]
-            for k in legacy_keys:
-                del SESSIONS[k]
-            _save_sessions()
-    except Exception as e:
-        logger.warning(f"Could not purge legacy sessions for disabled admin: {e}")
 
     log_security_event(
         "admin.account.disabled",

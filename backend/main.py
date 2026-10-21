@@ -20,7 +20,7 @@ from fastapi.staticfiles import StaticFiles
 
 from backend import __version__
 from backend.api import api_router
-from backend.auth import _load_sessions, auth_middleware
+from backend.auth import auth_middleware, purge_legacy_session_files
 from backend.logging_config import correlation_id_ctx, setup_structured_logging
 from backend.config import (
     COLLECTOR_WATCHDOG_SECS,
@@ -62,7 +62,7 @@ def startup_system():
 
     init_db()
     _load_security()
-    _load_sessions()
+    purge_legacy_session_files()
     _load_events()
     read_ip()  # Pre-populate IP cache at startup
     detect_chassis_model()  # Pre-populate chassis model cache
