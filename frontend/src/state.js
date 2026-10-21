@@ -54,6 +54,21 @@ export function fastEqual(a, b) {
   return true;
 }
 
+// The server sends container CPU/RAM/network changes as a compact `docker_tel`
+// map ({ id: { field: value } }) instead of the full list (backend/services/stats_delta.py).
+// Fold it into the container list we already hold; only changed containers get new objects.
+export function mergeDockerTelemetry(s, current) {
+  if (!s || !s.docker_tel) return s;
+  const { docker_tel: tel, ...rest } = s;
+  const base = Array.isArray(rest.docker)
+    ? rest.docker
+    : current && Array.isArray(current.docker)
+    ? current.docker
+    : null;
+  if (base) rest.docker = base.map((c) => (c && tel[c.id] ? { ...c, ...tel[c.id] } : c));
+  return rest;
+}
+
 export const state = {
   isLcdDirect: typeof window !== 'undefined' && (window.location.search.includes('mode=lcd') || (typeof document !== 'undefined' && document.body && document.body.classList.contains('lcd-direct'))),
   isVmConsoleDirect: typeof window !== 'undefined' && (window.location.search.includes('mode=vm-console') || (typeof document !== 'undefined' && document.body && document.body.classList.contains('vm-console-direct'))),
@@ -88,6 +103,7 @@ export const state = {
 
   setStats(s) {
     if (!s) return false;
+    s = mergeDockerTelemetry(s, this.latestStats);
     if (!this.latestStats) {
       this.latestStats = s;
       ZettEventBus.emit('stats:updated', this.latestStats);

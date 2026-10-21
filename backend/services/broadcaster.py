@@ -58,18 +58,33 @@ class StatsBroadcaster:
     async def unsubscribe(self, q: asyncio.Queue) -> None:
         self._subscribers.discard(q)
 
+    def _snapshot_payload(self) -> str | None:
+        if self._latest_full_data is None:
+            return None
+        try:
+            return f"data: {fast_dumps(self._latest_full_data)}\n\n"
+        except (TypeError, ValueError):
+            return None
+
     def _deliver(self, payload: str) -> None:
         self._latest_payload = payload
+        snapshot: str | None = None
         dead_queues = []
         for q in list(self._subscribers):
             try:
-                # If queue is full, drop oldest item to keep consumer real-time
                 if q.full():
-                    try:
-                        q.get_nowait()
-                    except asyncio.QueueEmpty:
-                        pass
-                q.put_nowait(payload)
+                    # Live messages are deltas, so a client that fell behind must not
+                    # just lose one: clear its backlog and resync it with a full snapshot.
+                    while not q.empty():
+                        try:
+                            q.get_nowait()
+                        except asyncio.QueueEmpty:
+                            break
+                    if snapshot is None:
+                        snapshot = self._snapshot_payload() or payload
+                    q.put_nowait(snapshot)
+                else:
+                    q.put_nowait(payload)
             except Exception as e:
                 logger.debug(f"[BROADCASTER] Failed delivering to subscriber: {e}")
                 dead_queues.append(q)

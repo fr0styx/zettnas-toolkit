@@ -61,6 +61,7 @@ from backend.hardware.host_telemetry import (
 )
 from backend.hardware.ups import read_ups_status
 from backend.services.broadcaster import broadcaster
+from backend.services.stats_delta import StatsDeltaEncoder
 from backend.services.copy_engine import check_media_slot_transitions, read_media_slots
 from backend.services.notifications import NOTIFICATIONS_FILE, send_notification
 from backend.state import Z_STATE, add_event
@@ -75,6 +76,9 @@ def _async_notify(**kwargs):
         _notify_executor.submit(send_notification, **kwargs)
     except Exception as e:
         logger.warning(f"[NOTIFY] Failed to queue async notification: {e}")
+
+
+_delta_encoder = StatsDeltaEncoder()
 
 
 def stats_collector_daemon():
@@ -631,34 +635,6 @@ def stats_collector_daemon():
             events_list = list(Z_STATE.event_log)
             docker_list = read_docker_containers()
 
-            if not hasattr(stats_collector_daemon, "_last_events_ts"):
-                stats_collector_daemon._last_events_ts = 0
-                stats_collector_daemon._last_events_count = -1
-                stats_collector_daemon._last_docker_summary = None
-
-            top_event_ts = events_list[0].get("ts", 0) if events_list else 0
-            events_count = len(events_list)
-            events_changed = (
-                top_event_ts != stats_collector_daemon._last_events_ts
-                or events_count != stats_collector_daemon._last_events_count
-            )
-            if events_changed:
-                stats_collector_daemon._last_events_ts = top_event_ts
-                stats_collector_daemon._last_events_count = events_count
-
-            docker_summary = tuple(
-                (
-                    c.get("id"),
-                    c.get("state"),
-                    round(float(c.get("cpu_pct", 0.0) or 0.0), 1),
-                    int(c.get("mem_used", 0) or 0) // (1024 * 1024),
-                )
-                for c in docker_list
-            )
-            docker_changed = docker_summary != stats_collector_daemon._last_docker_summary
-            if docker_changed:
-                stats_collector_daemon._last_docker_summary = docker_summary
-
             hw_features = ChassisEngine.detect_hardware_features()
             cpu_telemetry = get_cpu_telemetry()
             dmi_telemetry = get_dmi_telemetry()
@@ -792,15 +768,8 @@ def stats_collector_daemon():
             with Z_STATE.lock:
                 Z_STATE.cached_stats = data
 
-            broadcast_data = data
-            if not events_changed or not docker_changed:
-                broadcast_data = dict(data)
-                if not events_changed:
-                    del broadcast_data["events"]
-                if not docker_changed:
-                    del broadcast_data["docker"]
-
-            broadcaster.broadcast(broadcast_data, full_data=data)
+            # Send only what changed; clients merge it into their copy (see stats_delta.py).
+            broadcaster.broadcast(_delta_encoder.encode(data), full_data=data)
 
             now_ts = int(time.time())
             if not hasattr(stats_collector_daemon, "last_log"):

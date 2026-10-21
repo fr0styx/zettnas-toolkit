@@ -946,7 +946,20 @@ if (typeof document !== 'undefined') {
 
 let _lastRemotesEventTs = 0;
 
-export function applyStats(s) {
+// Live messages carry only changed keys, so render from the merged copy: every
+// reader sees full stats. `docker` and `events` keep their old meaning of
+// "present only when they changed", which the renderers rely on.
+export function statsView(raw) {
+  if (!raw || typeof raw !== 'object') return raw;
+  const view = { ...(state.latestStats || raw) };
+  if (!('docker' in raw) && !('docker_tel' in raw)) delete view.docker;
+  if (!('events' in raw)) delete view.events;
+  if (!('remotes_event' in raw)) delete view.remotes_event;
+  return view;
+}
+
+export function applyStats(raw) {
+  let s = raw;
   try {
     if (s && s.remotes_event) {
       if (!_lastRemotesEventTs || s.remotes_event.timestamp !== _lastRemotesEventTs) {
@@ -955,7 +968,8 @@ export function applyStats(s) {
         ZettEventBus.emit('storage:mount_changed', s.remotes_event);
       }
     }
-    const changed = state.setStats(s);
+    const changed = state.setStats(raw);
+    s = statsView(raw);
     if (typeof document !== 'undefined' && document.hidden && !state.isLcdDirect) {
       return;
     }
