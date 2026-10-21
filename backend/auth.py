@@ -236,6 +236,33 @@ def is_ip_in_trusted_proxies(client_ip: str, trusted_list: Optional[List[str]] =
     return False
 
 
+# What a session that must change its password may still reach (SEC-23).
+_PASSWORD_CHANGE_ALLOWED = {
+    ("GET", "/api/auth/me"),
+    ("POST", "/api/auth/logout"),
+    ("POST", "/api/auth/ticket"),
+    ("GET", "/api/security"),
+    ("POST", "/api/security"),
+    ("GET", "/api/stats"),
+    ("GET", "/api/stats/stream"),
+}
+
+
+def password_change_pending(sess: Dict[str, Any]) -> bool:
+    if not sess or sess.get("is_system") or sess.get("is_proxy_sso"):
+        return False
+    if sess.get("must_change_password"):
+        return True
+    return sess.get("role_id") == "superadmin" and config.is_using_default_password()
+
+
+def _allowed_while_password_change_pending(method: str, path: str, sess: Dict[str, Any]) -> bool:
+    norm = path.replace("/api/v1/", "/api/").rstrip("/") or "/"
+    if (method, norm) in _PASSWORD_CHANGE_ALLOWED or method == "OPTIONS":
+        return True
+    return method == "POST" and norm == f"/api/users/{sess.get('user_id')}/password"
+
+
 async def auth_middleware(request: Request, call_next):
     path = request.url.path
 
@@ -327,6 +354,14 @@ async def auth_middleware(request: Request, call_next):
             else:
                 logger.warning(f"Auth failed for client {client_host} accessing {path}")
             return error_response(401, "Unauthorized. Please log in.")
+
+        if (
+            getattr(config, "ENFORCE_PASSWORD_CHANGE", True)
+            and is_api
+            and password_change_pending(sess)
+            and not _allowed_while_password_change_pending(request.method, path, sess)
+        ):
+            return error_response(403, "Change your password before continuing.", error="password_change_required")
 
         request.state.session = sess
         request.state.user = sess

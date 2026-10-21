@@ -479,9 +479,13 @@ def create_user(
     return ret
 
 
-def update_user_password(user_id: str, new_password: str, db_path: Optional[str] = None) -> bool:
+def update_user_password(
+    user_id: str, new_password: str, db_path: Optional[str] = None, keep_token: Optional[str] = None
+) -> bool:
+    """Sets a new password and ends the user's sessions (except `keep_token`, the caller's own)."""
     new_hash = hash_password(new_password)
     now = time.time()
+    keep_hash = hashlib.sha256(keep_token.encode("utf-8")).hexdigest() if keep_token else ""
     with users_db_session(db_path) as conn:
         res = conn.execute(
             """
@@ -489,8 +493,7 @@ def update_user_password(user_id: str, new_password: str, db_path: Optional[str]
         """,
             (new_hash, now, user_id),
         )
-        # Also invalidate all active sessions for this user on password change
-        conn.execute("DELETE FROM sessions WHERE user_id = ?", (user_id,))
+        conn.execute("DELETE FROM sessions WHERE user_id = ? AND session_id_hash != ?", (user_id, keep_hash))
     # Clear in-memory cache
     with _SESSION_CACHE_LOCK:
         _SESSION_CACHE.clear()
@@ -673,7 +676,7 @@ def create_user_session(
 
         u_row = conn.execute(
             """
-            SELECT u.role_id, r.scopes_json
+            SELECT u.role_id, u.must_change_password, r.scopes_json
             FROM users u
             JOIN roles r ON u.role_id = r.id
             WHERE u.id = ?
@@ -683,6 +686,7 @@ def create_user_session(
 
         role_id = u_row["role_id"] if u_row else "share_user"
         scopes = json.loads(u_row["scopes_json"]) if u_row and u_row["scopes_json"] else []
+        must_change = bool(u_row["must_change_password"]) if u_row else False
 
     # Cache in memory
     session_data = {
@@ -695,6 +699,7 @@ def create_user_session(
         "last_active_at": now,
         "ip_address": ip,
         "user_agent": user_agent,
+        "must_change_password": must_change,
     }
     with _SESSION_CACHE_LOCK:
         _SESSION_CACHE[token_hash] = session_data
@@ -737,7 +742,7 @@ def validate_user_session(raw_token: str, db_path: Optional[str] = None) -> Opti
     with users_db_session(db_path) as conn:
         row = conn.execute(
             """
-            SELECT s.*, u.status, u.role_id, r.scopes_json
+            SELECT s.*, u.status, u.role_id, u.must_change_password, r.scopes_json
             FROM sessions s
             JOIN users u ON s.user_id = u.id
             JOIN roles r ON u.role_id = r.id
@@ -767,6 +772,7 @@ def validate_user_session(raw_token: str, db_path: Optional[str] = None) -> Opti
             "last_active_at": now,
             "ip_address": row["ip_address"],
             "user_agent": row["user_agent"],
+            "must_change_password": bool(row["must_change_password"]),
         }
 
         with _SESSION_CACHE_LOCK:

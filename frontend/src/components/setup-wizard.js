@@ -109,17 +109,42 @@ export function initSetupWizard() {
       btnSubmit.disabled = true;
 
       try {
-        // 1. Update password
-        await api.post('/api/security', {
-          current_password: currentPwd || 'admin',
-          new_password: newPwd
-        });
+        // 1. Update password. The server only lets this session change its
+        // password until it has done so (SEC-23).
+        let me = null;
+        try {
+          me = await api.get('/api/auth/me');
+        } catch (meErr) {
+          console.warn('[SetupWizard] Could not load the current user', meErr);
+        }
+        if (me && me.role && me.role !== 'superadmin') {
+          await api.post(`/api/users/${encodeURIComponent(me.id)}/password`, {
+            current_password: currentPwd,
+            new_password: newPwd
+          });
+        } else {
+          await api.post('/api/security', {
+            current_password: currentPwd || 'admin',
+            new_password: newPwd
+          });
+        }
 
-        // 2. Save Host Mode Preference
+        // 2. Re-authenticate with the new password: the change signed this session out.
+        try {
+          const loginBody = me?.username ? { username: me.username, password: newPwd } : { password: newPwd };
+          const loginRes = await api.post('/api/auth/login', loginBody);
+          if (loginRes && loginRes.token) {
+            auth.setToken(loginRes.token);
+          }
+        } catch (authErr) {
+          console.warn('[SetupWizard] Re-auth failed after password change', authErr);
+        }
+
+        // 3. Save Host Mode Preference
         const selectedMode = document.querySelector('input[name="setup-host-mode"]:checked')?.value || 'observer';
         localStorage.setItem('zettnas_host_mode', selectedMode);
 
-        // 3. Save Notification Webhook if provided
+        // 4. Save Notification Webhook if provided (needs the new session)
         const notifUrl = (document.getElementById('setup-notif-url')?.value || '').trim();
         if (notifUrl) {
           try {
@@ -130,16 +155,6 @@ export function initSetupWizard() {
           } catch (notifErr) {
             console.warn('[SetupWizard] Failed to save notification URL:', notifErr);
           }
-        }
-
-        // 4. Re-authenticate with new password to refresh session token seamlessly
-        try {
-          const loginRes = await api.post('/api/auth/login', { password: newPwd });
-          if (loginRes && loginRes.token) {
-            auth.setToken(loginRes.token);
-          }
-        } catch (authErr) {
-          console.warn('[SetupWizard] Re-auth failed after password change', authErr);
         }
 
         localStorage.setItem('zettnas_wizard_completed', '1');

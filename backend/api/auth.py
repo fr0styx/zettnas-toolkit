@@ -17,6 +17,7 @@ from backend.auth import (
     extract_token,
     get_current_principal,
     get_current_session,
+    has_scope,
     invalidate_all_sessions,
     require_scope,
     revoke_session,
@@ -807,23 +808,48 @@ def update_user_endpoint(user_id: str, data: UserUpdateRequest, request: Request
     return {"status": "ok", "user": _sanitize_user_dict(get_user_by_id(user_id))}
 
 
-@router.post(
-    "/users/{user_id}/password",
-    dependencies=[Depends(require_scope("users:write", "users:manage", "shares:user_write"))],
-)
+@router.post("/users/{user_id}/password")
 async def change_user_password(user_id: str, data: UserPasswordChangeRequest, request: Request):
+    sess_role = (getattr(request.state, "session", None) or {}).get("role_id")
+    if sess_role == "auditor":
+        return error_response(403, "Auditors are read-only and cannot change passwords.")
     current = _get_authenticated_user(request)
     if not current:
         return error_response(401, "Authentication required.")
     if current.get("role_id") == "auditor":
         return error_response(403, "Auditors are read-only and cannot change passwords.")
-    if current["id"] != user_id and current.get("role_id") not in ("superadmin", "admin"):
-        return error_response(403, "Permission denied.")
+    is_self = current["id"] == user_id
+    if not is_self:
+        # Resetting someone else's password is an admin action.
+        sess = getattr(request.state, "session", None) or {}
+        scopes = sess.get("scopes") or current.get("scopes") or []
+        if current.get("role_id") not in ("superadmin", "admin") or not any(
+            has_scope(scopes, s) for s in ("users:write", "users:manage")
+        ):
+            return error_response(403, "Permission denied.")
 
     if len(data.new_password) < config.MIN_PASSWORD_LENGTH:
         return error_response(400, f"Password must be at least {config.MIN_PASSWORD_LENGTH} characters.")
+    if data.new_password.lower() == "admin":
+        return error_response(400, "Please choose a password other than the default.", error="weak_password")
 
-    ok = update_user_password(user_id, data.new_password)
+    if is_self:
+        # Re-authenticate: a stolen session alone must not be able to take over the account (SEC-13).
+        lock_key = f"pwchange:{user_id}"
+        wait = _lockout_remaining(lock_key)
+        if wait > 0:
+            return _rate_limited(wait)
+        target_user = get_user_by_id(user_id)
+        stored = (target_user or {}).get("password_hash", "")
+        if not data.current_password or not await run_in_threadpool(verify_password, data.current_password, stored):
+            _register_failure(lock_key, is_ip=False)
+            return error_response(403, "Current password is incorrect.", error="invalid_credentials")
+        _clear_failures(lock_key)
+
+    # Ends every other session of the target user; keeps the caller's own when changing their own.
+    ok = update_user_password(
+        user_id, data.new_password, keep_token=getattr(request.state, "token", None) if is_self else None
+    )
     if not ok:
         raise HTTPException(status_code=404, detail="User not found.")
 

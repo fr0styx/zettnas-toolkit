@@ -225,6 +225,13 @@ COLLECTOR_WATCHDOG_SECS = int(os.environ.get("COLLECTOR_WATCHDOG_SECS", "20"))
 _default_pw_cache = {"hash": None, "value": False}
 
 
+# Sessions that must change their password are limited to the password-change
+# endpoints (SEC-23). Only the test suite turns this off.
+ENFORCE_PASSWORD_CHANGE = not (
+    os.environ.get("TESTING") == "1" and os.environ.get("ZETTNAS_ENFORCE_PASSWORD_CHANGE") == "0"
+)
+
+
 def is_using_default_password() -> bool:
     """True if the stored hash matches 'admin'. Cached per hash (scrypt is slow by design)."""
     if _default_pw_cache["hash"] != STORED_PASSWORD_HASH:

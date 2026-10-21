@@ -48,6 +48,7 @@ class UserUpdateRequest(BaseModel):
 
 class UserPasswordChangeRequest(BaseModel):
     new_password: str = Field(..., min_length=8)
+    current_password: str | None = None  # required when changing your own password
 
 
 class SecurityUpdateRequest(BaseModel):

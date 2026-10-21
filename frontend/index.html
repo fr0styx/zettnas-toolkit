@@ -2819,6 +2819,10 @@
       <button type="button" class="win-btn close-btn modal-close-btn" title="Close" aria-label="Close"></button>
     </div>
     <form id="form-reset-password" class="smart-modal-body" style="padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+      <div id="reset-pwd-current-wrap" style="display:none;">
+        <label style="display:block; font-size:10.5px; font-weight:700; color:var(--warn); margin-bottom:4px; letter-spacing:0.5px;">CURRENT PASSWORD</label>
+        <input type="password" id="reset-pwd-current" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff;" placeholder="Your current password" autocomplete="current-password">
+      </div>
       <div>
         <label style="display:block; font-size:10.5px; font-weight:700; color:var(--warn); margin-bottom:4px; letter-spacing:0.5px;">NEW PASSWORD</label>
         <input type="password" id="reset-pwd-input" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff;" placeholder="Min. 8 characters" minlength="8" required autocomplete="new-password">

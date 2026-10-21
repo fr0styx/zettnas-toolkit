@@ -448,6 +448,12 @@ export function showResetPasswordModal(userId, username) {
   document.getElementById('reset-pwd-username').textContent = `@${username}`;
 
   const form = document.getElementById('form-reset-password');
+  // Changing your own password needs the current one (SEC-13).
+  const isSelf = !!_currentUser && _currentUser.id === userId;
+  const currentWrap = document.getElementById('reset-pwd-current-wrap');
+  const currentInput = document.getElementById('reset-pwd-current');
+  if (currentWrap) currentWrap.style.display = isSelf ? '' : 'none';
+  if (currentInput) currentInput.required = isSelf;
   if (form) {
     form.reset();
     form.onsubmit = async (e) => {
@@ -469,10 +475,14 @@ export function showResetPasswordModal(userId, username) {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
-          body: JSON.stringify({ new_password: newPassword })
+          body: JSON.stringify(
+            isSelf
+              ? { new_password: newPassword, current_password: currentInput?.value || '' }
+              : { new_password: newPassword }
+          )
         });
         if (res.ok) {
-          showToast('Password successfully updated.', 'success');
+          showToast(isSelf ? 'Password updated. Your other sessions were signed out.' : 'Password updated. That user was signed out everywhere.', 'success');
           closeModal(modal);
         } else {
           const err = await res.json();
