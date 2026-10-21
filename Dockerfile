@@ -1,7 +1,8 @@
 # =========================================================================
 # Stage 1: Build modern offline-first frontend assets
 # =========================================================================
-FROM --platform=$BUILDPLATFORM node:24-alpine AS frontend-builder
+# Base images are pinned by digest (OPS-19); Dependabot proposes updates.
+FROM --platform=$BUILDPLATFORM node:24-alpine@sha256:6a1c190e17215d844926b0677f4bf87273ff7d5e54db06d3b5b5863ab0b09a3d AS frontend-builder
 
 WORKDIR /build
 
@@ -15,7 +16,7 @@ RUN npm run build
 # =========================================================================
 # Stage 2: Production runtime image
 # =========================================================================
-FROM python:3.12-slim
+FROM python:3.12-slim@sha256:cb33f7f771ecec2ef1225cf39b159591a040391bd73e4c01f00fdfc4c47611d2
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1
@@ -74,9 +75,9 @@ ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium
 
 WORKDIR /app
 
-COPY requirements.txt requirements-dev.txt ./
+COPY requirements.txt requirements.lock requirements-dev.txt ./
 ARG DEV_BUILD=0
-RUN --mount=type=cache,target=/root/.cache/pip pip install -r requirements.txt \
+RUN --mount=type=cache,target=/root/.cache/pip pip install --require-hashes -r requirements.lock \
     && if [ "$DEV_BUILD" = "1" ]; then pip install -r requirements-dev.txt; fi
 
 # Build metadata arguments injected by CI
