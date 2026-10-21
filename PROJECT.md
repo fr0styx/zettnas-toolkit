@@ -51,7 +51,7 @@ Status as of 2026-10-21. **COMPLETED** = in code with automated tests; **IMPLEME
 | 7 | **Container Bulk Action Bar & Batch API** | `docker-table.js`, `containers-manager.js` & `api/docker.py` | **COMPLETED** | Phase 2 | Blueprint §1.4 — `POST /api/docker/containers/bulk-action` |
 | 8 | **Real vTPM 2.0 via `swtpm` Daemon** | `backend/api/vms.py` | **COMPLETED** | Phase 2 | Blueprint §2.3 — swtpm installed in the image; launch waits for the socket; UI warns when swtpm is missing |
 | 9 | **Real IP Discovery (ARP / QGA)** | `backend/api/vms.py` | **COMPLETED** | Phase 2 | Blueprint §2.3 — QEMU Guest Agent channel first, host ARP table second; refreshed in the background |
-| 10 | **Zero-Copy Binary xterm.js Terminal** | `container-modal.js` & `vm-manager.js` | PLANNED | Phase 3 | Blueprint §4.4 |
+| 10 | **Zero-Copy Binary xterm.js Terminal** | `container-modal.js`, `vm-manager.js` & `terminal-view.js` | **COMPLETED** | Phase 3 | Blueprint §4.4 — xterm.js (lazy-loaded) for container shell and VM serial console; raw-byte WebSockets. WebGL renderer not added (DOM renderer) |
 | 11 | **Server-Sent Events Chunked Log Streaming** | `api/docker.py` & `container-modal.js` | **COMPLETED** | Phase 3 | Blueprint §1.4 — `GET /api/docker/containers/{id}/logs/stream` |
 | 12 | **Persistent Async QMP Engine** | `backend/services/vm_engine.py` | **COMPLETED** | Phase 4 | Blueprint §2.3 & §4.5 — `backend/services/vm_engine.py`: one connection per VM, id-matched replies, QEMU events to the event log |
 | 13 | **QCOW2 Live Snapshots & Revert** | `backend/api/vms.py` & `vm-manager.js` | **COMPLETED** | Phase 4 | Blueprint §2.3 — list, create, revert, delete |
@@ -71,7 +71,7 @@ Status as of 2026-10-21. **COMPLETED** = in code with automated tests; **IMPLEME
 | **M3** | **Verification & Quality Gate** | Ruff, Vitest and Pytest gates green on the host; test suite isolated from live Ollama. | **DONE** | 2026-10-21 |
 | **M4** | **Implementation Phase 1** | Telemetry un-capping, SSE delta pipeline, Mission Control schema fix, keyed VM grid, SSE-first containers refresh, non-blocking VM stop. | **DONE** | 2026-10-21 |
 | **M5** | **Implementation Phase 2** | Bulk Actions, vTPM 2.0 `swtpm`, guest IP discovery (agent + ARP), boot autostart. | **DONE** | 2026-10-21 |
-| **M6** | **Implementation Phase 3** | Live log streamer (done); zero-copy xterm.js WebGL terminal and noVNC latency tuning open. | IN_PROGRESS | Q1 2027 |
+| **M6** | **Implementation Phase 3** | Live log streamer and xterm.js terminals (done); noVNC latency tuning open. | IN_PROGRESS | Q1 2027 |
 | **M7** | **Implementation Phase 4** | Persistent Async QMP Engine, QCOW2 snapshots (live snapshots fixed), VM backups. | **DONE** | 2026-10-21 |
 | **M8** | **Implementation Phase 5** | Container Network Map, DOM-virtualized container table, VFIO-PCI GPU passthrough UI. | **DONE** | 2026-10-21 |
 
