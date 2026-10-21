@@ -210,6 +210,25 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      # The image that will be published must start and serve the app (OPS-08).
+      - name: Smoke-test the built image (amd64)
+        env:
+          IMAGE: ghcr.io/${{ github.repository }}@${{ steps.build.outputs.digest }}
+        run: |
+          docker run -d --name zettnas-smoke -p 18082:8082 -e PORT=8082 -e ENABLE_FB=0 "$IMAGE"
+          ok=0
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:18082/api/health >/dev/null; then ok=1; break; fi
+            sleep 2
+          done
+          if [ "$ok" != 1 ]; then docker logs zettnas-smoke | tail -80; exit 1; fi
+          curl -fsS -o /tmp/index.html http://127.0.0.1:18082/
+          grep -qi "<html" /tmp/index.html || { echo "index.html not served"; exit 1; }
+          code=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:18082/api/users)
+          [ "$code" = 401 ] || { echo "/api/users without a session returned $code, expected 401"; exit 1; }
+          if docker logs zettnas-smoke 2>&1 | grep -E "Traceback|CRITICAL"; then echo "errors in startup log"; exit 1; fi
+          docker rm -f zettnas-smoke
+
       # Release gate (OPS-06): no Critical vulnerability that already has a fix.
       - name: Scan image with Trivy
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
