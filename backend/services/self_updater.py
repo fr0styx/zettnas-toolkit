@@ -77,8 +77,11 @@ def spawn_self_updater(
         return False
 
 
-def _rollback_container(target: str, rollback_name: str):
-    """Restores the previous container from rollback backup."""
+def _rollback_container(target: str, rollback_name: str, failed_id: Optional[str] = None):
+    """Removes a failed new container (if any) and restores the previous one."""
+    if failed_id:
+        _docker_request("POST", f"/containers/{failed_id}/stop?t=5")
+        _docker_request("DELETE", f"/containers/{failed_id}?force=true")
     logger.warning(f"[SelfUpdater Helper] Restoring '{rollback_name}' back to '{target}'...")
     _docker_request("POST", f"/containers/{rollback_name}/rename?name={target}")
     st_start, _ = _docker_request("POST", f"/containers/{target}/start")
@@ -92,10 +95,111 @@ def _rollback_container(target: str, rollback_name: str):
         )
 
 
+# Container settings that normally come from the image. They are carried over only
+# when the user overrode them (they differ from the old image), so the new image's
+# own command, healthcheck, workdir etc. take effect (OPS-01).
+_IMAGE_DEFAULT_KEYS = ("Cmd", "Entrypoint", "Healthcheck", "WorkingDir", "User", "ExposedPorts", "StopSignal", "Shell")
+HEALTH_TIMEOUT_SECS = 300
+STABLE_RUN_SECS = 20
+
+
+def _image_config(image_ref: str) -> Dict[str, Any]:
+    st, data = _docker_request("GET", f"/images/{image_ref}/json")
+    if st == 200 and isinstance(data, dict):
+        return dict(data.get("Config") or {})
+    return {}
+
+
+def _endpoint_settings(net: Dict[str, Any], container_id: str) -> Dict[str, Any]:
+    ep: Dict[str, Any] = {}
+    aliases = [a for a in (net.get("Aliases") or []) if a and not container_id.startswith(a)]
+    if aliases:
+        ep["Aliases"] = aliases
+    if net.get("IPAMConfig"):
+        ep["IPAMConfig"] = net["IPAMConfig"]
+    if net.get("Links"):
+        ep["Links"] = net["Links"]
+    if net.get("DriverOpts"):
+        ep["DriverOpts"] = net["DriverOpts"]
+    if net.get("MacAddress") and net.get("IPAMConfig"):
+        ep["MacAddress"] = net["MacAddress"]
+    return ep
+
+
+def build_recreate_plan(
+    inspect_data: Dict[str, Any], old_image_cfg: Dict[str, Any], image: str
+) -> Tuple[Dict[str, Any], Dict[str, Dict[str, Any]]]:
+    """Returns (create body, extra networks to connect after create)."""
+    config = dict(inspect_data.get("Config") or {})
+    host_config = dict(inspect_data.get("HostConfig") or {})
+    container_id = str(inspect_data.get("Id") or "")
+
+    body: Dict[str, Any] = {k: v for k, v in config.items() if k != "Image"}
+    # Docker's default hostname is the container id; a new container gets its own.
+    if body.get("Hostname") and container_id.startswith(str(body["Hostname"])):
+        body.pop("Hostname")
+    for key in _IMAGE_DEFAULT_KEYS:
+        if key in body and body[key] == old_image_cfg.get(key):
+            body.pop(key)
+
+    # Only the variables the user added or changed; the new image supplies its own.
+    image_env = set(old_image_cfg.get("Env") or [])
+    body["Env"] = [e for e in (config.get("Env") or []) if e not in image_env]
+
+    image_labels = old_image_cfg.get("Labels") or {}
+    labels = {
+        k: v
+        for k, v in (config.get("Labels") or {}).items()
+        if image_labels.get(k) != v
+        and not k.startswith("org.opencontainers.image.")
+        and k not in ("com.docker.compose.image", "com.docker.compose.config-hash")
+    }
+    body["Labels"] = labels
+    body["Image"] = image
+    body["HostConfig"] = host_config
+
+    networks = dict((inspect_data.get("NetworkSettings") or {}).get("Networks") or {})
+    mode = str(host_config.get("NetworkMode") or "")
+    extra: Dict[str, Dict[str, Any]] = {}
+    if networks and not mode.startswith("container:") and mode not in ("host", "none"):
+        primary = mode if mode in networks else next(iter(networks))
+        body["NetworkingConfig"] = {"EndpointsConfig": {primary: _endpoint_settings(networks[primary], container_id)}}
+        for name, net in networks.items():
+            if name != primary:
+                extra[name] = _endpoint_settings(net, container_id)
+    return body, extra
+
+
+def _wait_until_healthy(cid: str) -> Tuple[bool, str]:
+    """Healthy if the image healthcheck passes, or (no healthcheck) it keeps running."""
+    deadline = time.time() + HEALTH_TIMEOUT_SECS
+    running_since: Optional[float] = None
+    while time.time() < deadline:
+        st, data = _docker_request("GET", f"/containers/{cid}/json")
+        state = (data.get("State") or {}) if st == 200 and isinstance(data, dict) else {}
+        if not state.get("Running"):
+            if state.get("Status") in ("exited", "dead"):
+                return False, f"container exited (code {state.get('ExitCode')})"
+            running_since = None
+        else:
+            health = (state.get("Health") or {}).get("Status")
+            if health == "healthy":
+                return True, "healthy"
+            if health == "unhealthy":
+                return False, "healthcheck reported unhealthy"
+            if not health:
+                running_since = running_since or time.time()
+                if time.time() - running_since >= STABLE_RUN_SECS:
+                    return True, "running"
+        time.sleep(3)
+    return False, "timed out waiting for the container to become healthy"
+
+
 def apply_update_from_helper(target: str, image: str, delay: float = 2.5):
     """
-    Executed inside the ephemeral helper container to safely recreate the target container.
-    Implements atomic rename and automatic rollback if new container creation/start fails.
+    Executed inside the ephemeral helper container (started from the new image)
+    to recreate the target container. The old container is kept, renamed, until
+    the new one is healthy, and restored if anything fails (OPS-01/02/04).
     """
     logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
     logger.info(f"[SelfUpdater Helper] Initialized. Waiting {delay}s for caller HTTP completion...")
@@ -106,8 +210,9 @@ def apply_update_from_helper(target: str, image: str, delay: float = 2.5):
         logger.error(f"[SelfUpdater Helper] Target container '{target}' not found (status={st})")
         sys.exit(1)
 
-    config = dict(inspect_data.get("Config") or {})
-    host_config = dict(inspect_data.get("HostConfig") or {})
+    old_image_ref = str(inspect_data.get("Image") or (inspect_data.get("Config") or {}).get("Image") or "")
+    old_image_cfg = _image_config(old_image_ref) if old_image_ref else {}
+    create_body, extra_networks = build_recreate_plan(inspect_data, old_image_cfg, image)
 
     # Clean up any leftover rollback container from a previous run
     rollback_name = f"{target}-rollback"
@@ -117,55 +222,44 @@ def apply_update_from_helper(target: str, image: str, delay: float = 2.5):
     logger.info(f"[SelfUpdater Helper] Gracefully stopping container '{target}'...")
     _docker_request("POST", f"/containers/{target}/stop?t=15")
 
-    logger.info(
-        f"[SelfUpdater Helper] Renaming current container '{target}' to '{rollback_name}' for atomic rollback protection..."
-    )
+    logger.info(f"[SelfUpdater Helper] Renaming '{target}' to '{rollback_name}' for rollback protection...")
     st_ren, res_ren = _docker_request("POST", f"/containers/{target}/rename?name={rollback_name}")
     if st_ren not in (200, 204):
-        logger.error(
-            f"[SelfUpdater Helper] Failed to rename container for rollback protection: status={st_ren}, res={res_ren}"
-        )
+        logger.error(f"[SelfUpdater Helper] Failed to rename container for rollback: status={st_ren}, res={res_ren}")
         _docker_request("POST", f"/containers/{target}/start")
         sys.exit(1)
 
     logger.info(f"[SelfUpdater Helper] Creating updated container '{target}' with image '{image}'...")
-    create_body = dict(config)
-    create_body["Image"] = image
-    create_body["HostConfig"] = host_config
-
-    # Strip image-specific OCI build metadata and Compose hashes from container labels
-    # so the newly pulled image's authoritative labels take effect in the new container
-    labels = dict(config.get("Labels") or {})
-    for k in list(labels.keys()):
-        if k.startswith("org.opencontainers.image.") or k in (
-            "com.docker.compose.image",
-            "com.docker.compose.config-hash",
-        ):
-            labels.pop(k, None)
-    create_body["Labels"] = labels
-
     st_create, res_create = _docker_request("POST", f"/containers/create?name={target}", body=create_body)
-    if st_create not in (200, 201) or not isinstance(res_create, dict):
-        logger.error(
-            f"[SelfUpdater Helper] Failed to recreate container: status={st_create}, res={res_create}. Initiating automatic rollback..."
-        )
+    if st_create not in (200, 201) or not isinstance(res_create, dict) or not res_create.get("Id"):
+        logger.error(f"[SelfUpdater Helper] Failed to recreate container: status={st_create}, res={res_create}.")
         _rollback_container(target, rollback_name)
         sys.exit(1)
+    new_cid = res_create["Id"]
 
-    new_cid = res_create.get("Id")
-    logger.info(f"[SelfUpdater Helper] Starting newly recreated container '{target}' ({new_cid[:12]})...")
+    for net_name, endpoint in extra_networks.items():
+        st_net, res_net = _docker_request(
+            "POST", f"/networks/{net_name}/connect", body={"Container": new_cid, "EndpointConfig": endpoint}
+        )
+        if st_net not in (200, 201, 204):
+            logger.error(f"[SelfUpdater Helper] Could not connect network '{net_name}': status={st_net}, res={res_net}")
+            _rollback_container(target, rollback_name, failed_id=new_cid)
+            sys.exit(1)
+
+    logger.info(f"[SelfUpdater Helper] Starting updated container '{target}' ({new_cid[:12]})...")
     st_start, _ = _docker_request("POST", f"/containers/{new_cid}/start")
     if st_start not in (200, 204):
-        logger.error(
-            f"[SelfUpdater Helper] Failed to start updated container: status={st_start}. Initiating automatic rollback..."
-        )
-        _docker_request("DELETE", f"/containers/{new_cid}?force=true")
-        _rollback_container(target, rollback_name)
+        logger.error(f"[SelfUpdater Helper] Failed to start updated container: status={st_start}.")
+        _rollback_container(target, rollback_name, failed_id=new_cid)
         sys.exit(1)
 
-    logger.info(
-        f"[SelfUpdater Helper] Container '{target}' successfully updated and started! Removing temporary rollback container..."
-    )
+    healthy, why = _wait_until_healthy(new_cid)
+    if not healthy:
+        logger.error(f"[SelfUpdater Helper] Updated container is not healthy ({why}). Rolling back...")
+        _rollback_container(target, rollback_name, failed_id=new_cid)
+        sys.exit(1)
+
+    logger.info(f"[SelfUpdater Helper] '{target}' is {why}. Removing the rollback container...")
     _docker_request("DELETE", f"/containers/{rollback_name}?v=false")
     logger.info(f"[SelfUpdater Helper] OTA update complete for '{target}'.")
 
