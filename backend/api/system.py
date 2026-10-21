@@ -810,8 +810,87 @@ async def get_system_about():
     }
 
 
+_IMAGE_REPO = "ghcr.io/fr0styx/zettnas-toolkit"
+_MANIFEST_ACCEPT = ", ".join(
+    [
+        "application/vnd.oci.image.index.v1+json",
+        "application/vnd.docker.distribution.manifest.list.v2+json",
+        "application/vnd.oci.image.manifest.v1+json",
+        "application/vnd.docker.distribution.manifest.v2+json",
+    ]
+)
+
+
+async def _registry_digest(tag: str) -> Optional[str]:
+    """Digest GHCR currently serves for a tag of our image (anonymous pull token)."""
+    import httpx
+
+    repo = _IMAGE_REPO.split("/", 1)[1]
+    async with httpx.AsyncClient(timeout=6.0) as client:
+        tok = await client.get("https://ghcr.io/token", params={"scope": f"repository:{repo}:pull"})
+        token = tok.json().get("token") if tok.status_code == 200 else None
+        if not token:
+            return None
+        res = await client.head(
+            f"https://ghcr.io/v2/{repo}/manifests/{tag}",
+            headers={"Authorization": f"Bearer {token}", "Accept": _MANIFEST_ACCEPT},
+        )
+        return res.headers.get("docker-content-digest") if res.status_code == 200 else None
+
+
+def _running_repo_digests() -> List[str]:
+    """Registry digests of the image this container runs (empty for a locally built image)."""
+    from backend.services.compose_synthesizer import fetch_container_raw_inspect
+    from backend.services.container_mutator import _docker_request
+
+    info = fetch_container_raw_inspect(socket.gethostname()) or fetch_container_raw_inspect("zettnas-toolkit") or {}
+    image_id = info.get("Image")
+    if not image_id:
+        return []
+    st, img = _docker_request("GET", f"/images/{image_id}/json")
+    if st != 200 or not isinstance(img, dict):
+        return []
+    prefix = _IMAGE_REPO + "@"
+    return [d[len(prefix) :] for d in img.get("RepoDigests") or [] if d.startswith(prefix)]
+
+
 @router.get("/system/updates")
 async def check_system_updates(force: bool = False, channel: str = "stable"):
+    """Release/commit check, then a registry digest check (OPS-18).
+
+    Version strings and commit hashes say a newer release exists; only the image
+    digest says whether the image this channel serves differs from the one running.
+    When both digests are known they decide update_available.
+    """
+    result = await _check_system_updates_by_version(force=force, channel=channel)
+    if result.get("digest_checked"):
+        return result
+    tag = "edge" if result.get("channel") == "edge" else "latest"
+    try:
+        remote = await _registry_digest(tag)
+    except Exception as e:
+        logger.debug(f"[System Update] Registry digest lookup failed: {e}")
+        remote = None
+    try:
+        local = await asyncio.to_thread(_running_repo_digests)
+    except Exception as e:
+        logger.debug(f"[System Update] Could not read the running image digest: {e}")
+        local = []
+    result["registry_digest"] = remote
+    result["running_digests"] = local
+    result["digest_checked"] = True
+    if remote and local:
+        newer_by_version = bool(result.get("update_available"))
+        result["update_available"] = remote not in local
+        result["update_basis"] = "digest"
+        if newer_by_version and not result["update_available"]:
+            result["note"] = "A newer version exists, but its image is not published for this channel yet."
+    else:
+        result["update_basis"] = "version"
+    return result
+
+
+async def _check_system_updates_by_version(force: bool = False, channel: str = "stable"):
     """Check GitHub Releases (stable) or GitHub Commits on main (edge) with in-memory caching."""
     import httpx
 
