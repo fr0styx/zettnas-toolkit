@@ -1113,6 +1113,9 @@ export function openVmEditModal(vmId, vmObj = null) {
     let currentUsbDevices = Array.isArray(targetVm.usb_passthrough)
       ? targetVm.usb_passthrough.map((d) => ({ ...d }))
       : [];
+    let currentPciDevices = Array.isArray(targetVm.pci_passthrough)
+      ? targetVm.pci_passthrough.map((d) => ({ ...d }))
+      : [];
 
     modal.innerHTML = `
       <div class="smart-modal-window vm-modal-window" style="max-width: 580px; width: 92%; max-height: 88vh; display: flex; flex-direction: column; overflow: hidden;">
@@ -1314,6 +1317,15 @@ export function openVmEditModal(vmId, vmObj = null) {
 
           <!-- Attached USB devices list -->
           <div id="vm-edit-usb-list" style="display: flex; flex-direction: column; gap: 6px; margin-top: 6px;"></div>
+        </div>
+
+        <!-- Host PCI / GPU Passthrough (VFIO) -->
+        <div class="vm-config-card vm-pci-card" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 12px; flex-shrink: 0;">
+          <div style="margin-bottom: 8px;">
+            <div style="font-size: 12px; font-weight: 700; color: #fff;" data-i18n="vm.pci_title">${t('vm.pci_title', 'PCI / GPU Passthrough (VFIO)')}</div>
+            <div style="font-size: 10px; color: var(--muted);" data-i18n="vm.pci_desc">${t('vm.pci_desc', 'Give the VM exclusive use of a host PCI device such as a GPU. The device must be bound to the vfio-pci driver on the host.')}</div>
+          </div>
+          <div id="vm-edit-pci-list" style="display: flex; flex-direction: column; gap: 4px;"></div>
         </div>
 
         <!-- Host Folder Passthrough (VirtIO-FS / 9p) -->
@@ -1617,6 +1629,73 @@ export function openVmEditModal(vmId, vmObj = null) {
     }
   }
 
+  // Host PCI / GPU passthrough (VFIO). Only devices the host has bound to vfio-pci
+  // can be picked; the rest show the driver they are on, so a host GPU, NIC or
+  // disk controller is never handed to a VM by accident.
+  const pciList = modal.querySelector('#vm-edit-pci-list');
+  const PCI_CLASS_LABELS = {
+    '0300': 'GPU', '0302': 'GPU', '0380': 'GPU', '0403': 'Audio', '0200': 'Network',
+    '0280': 'Wi-Fi', '0108': 'NVMe', '0106': 'SATA', '0104': 'RAID', '0c03': 'USB',
+  };
+  const PCI_HIDDEN_CLASSES = new Set(['0600', '0601', '0604']); // host/ISA/PCI bridges
+  const pciNote = (text, warn = false) =>
+    `<div class="vm-pci-note${warn ? ' warn' : ''}" style="font-size: 10px; padding: 6px 10px; border-radius: 4px; background: ${warn ? 'rgba(245,158,11,0.12)' : 'rgba(0,0,0,0.2)'}; color: ${warn ? '#fbbf24' : 'var(--muted)'};">${escapeHtml(text)}</div>`;
+  const renderPciList = (data) => {
+    if (!pciList) return;
+    if (!data || !data.iommu_enabled) {
+      pciList.innerHTML = pciNote(t('vm.pci_no_iommu', 'IOMMU is not enabled on this host, so PCI passthrough is unavailable.'), true);
+      return;
+    }
+    const selected = new Set(currentPciDevices.map((d) => d.slot));
+    const rows = [];
+    if (data.vfio_available === false) {
+      rows.push(pciNote(t('vm.pci_vfio_missing', '/dev/vfio is not available; pass it to the container to use PCI passthrough.'), true));
+    }
+    for (const group of data.groups || []) {
+      const devs = (group.devices || []).filter((d) => !PCI_HIDDEN_CLASSES.has(String(d.class_code || '').slice(0, 4)));
+      if (devs.length === 0) continue;
+      if (devs.length > 1) {
+        rows.push(`<div class="vm-pci-group-note" style="font-size: 9px; color: var(--muted); margin-top: 4px;">${escapeHtml(t('vm.pci_group_note', 'IOMMU group {group}: pass all of its devices together', { group: group.group_id }))}</div>`);
+      }
+      for (const dev of devs) {
+        const slot = String(dev.slot || '').replace(/^0000:/, '').toLowerCase();
+        const kind = PCI_CLASS_LABELS[String(dev.class_code || '').slice(0, 4)] || 'PCI';
+        const ready = Boolean(dev.vfio_ready);
+        const checked = selected.has(slot);
+        const driverText = ready
+          ? 'vfio-pci'
+          : t('vm.pci_needs_vfio', 'On {driver}; bind to vfio-pci first', { driver: dev.driver || t('vm.pci_no_driver', 'no driver') });
+        rows.push(`
+          <label class="vm-pci-row${ready ? '' : ' disabled'}" style="display: flex; align-items: center; gap: 8px; font-size: 11px; padding: 4px 8px; border-radius: 4px; background: rgba(0,0,0,0.2); cursor: ${ready || checked ? 'pointer' : 'not-allowed'}; opacity: ${ready || checked ? '1' : '0.6'};">
+            <input type="checkbox" class="vm-pci-check" data-slot="${escapeHtml(slot)}" data-name="${escapeHtml(`${kind} ${dev.name || ''}`.trim())}" ${checked ? 'checked' : ''} ${ready || checked ? '' : 'disabled'} />
+            <span style="font-weight: 700; color: #fff; min-width: 54px;">${escapeHtml(kind)}</span>
+            <span style="font-family: monospace; color: #38bdf8;">${escapeHtml(slot)}</span>
+            <span style="color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1;">${escapeHtml(dev.name || '')}</span>
+            <span class="vm-pci-driver" style="font-size: 9px; color: ${ready ? '#34d399' : '#fbbf24'}; white-space: nowrap;">${escapeHtml(driverText)}</span>
+          </label>
+        `);
+      }
+    }
+    if (rows.length === 0) rows.push(pciNote(t('vm.pci_none', 'No passthrough-capable PCI devices found.')));
+    pciList.innerHTML = rows.join('');
+    pciList.querySelectorAll('.vm-pci-check').forEach((cb) => {
+      cb.onchange = () => {
+        const slot = cb.dataset.slot;
+        currentPciDevices = currentPciDevices.filter((d) => d.slot !== slot);
+        if (cb.checked) currentPciDevices.push({ slot, name: cb.dataset.name || '' });
+      };
+    });
+  };
+  if (pciList) {
+    pciList.innerHTML = pciNote(t('vm.pci_scanning', 'Scanning host PCI devices...'));
+    api
+      .get('/api/vms/iommu-groups')
+      .then(renderPciList)
+      .catch(() => {
+        pciList.innerHTML = pciNote(t('vm.pci_scan_failed', 'Failed to scan host PCI devices.'), true);
+      });
+  }
+
   // Host USB Passthrough Device Management
   const usbList = modal.querySelector('#vm-edit-usb-list');
   const usbSelect = modal.querySelector('#vm-edit-host-usb-select');
@@ -1815,6 +1894,7 @@ export function openVmEditModal(vmId, vmObj = null) {
         video_adapter: newVideoAdapter,
         tpm_enabled: newTpm,
         usb_passthrough: currentUsbDevices,
+        pci_passthrough: currentPciDevices,
         autostart: newAutostart,
         override_limits: overrideLimits,
         host_shares: hostShares,

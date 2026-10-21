@@ -1458,6 +1458,7 @@ def create_vm(req: VmCreateRequest, principal: AuthenticatedPrincipal = Depends(
         "video_adapter": req.video_adapter or req.display_adapter or "virtio-gpu",
         "tpm_enabled": bool(req.tpm_enabled),
         "usb_passthrough": req.usb_passthrough or [],
+        "pci_passthrough": _sanitize_pci_list(req.pci_passthrough),
         "created_at": int(time.time()),
     }
 
@@ -1478,6 +1479,84 @@ _RUNNING_QEMU_PROCS: Dict[str, Dict[str, Any]] = {}
 def _get_qemu_vnc_port(vms: List[Dict[str, Any]], vm_id: str) -> int:
     idx = next((i for i, v in enumerate(vms) if v["id"] == vm_id), 0)
     return 5900 + idx + 1
+
+
+# ---- Host PCI / GPU passthrough (VFIO) ----
+
+_PCI_SLOT_RE = re.compile(r"^(?:[0-9a-fA-F]{4}:)?([0-9a-fA-F]{2}:[0-9a-fA-F]{2}\.[0-7])$")
+_PCI_SYSFS_BASES = ("/sys/bus/pci/devices", "/host/sys/bus/pci/devices")
+_VFIO_NODES = ("/dev/vfio/vfio", "/host/dev/vfio/vfio")
+
+
+def _normalize_pci_slot(raw: Any) -> Optional[str]:
+    """'0000:01:00.0' or '01:00.0' -> '01:00.0'; None for anything else."""
+    m = _PCI_SLOT_RE.match(str(raw or "").strip())
+    return m.group(1).lower() if m else None
+
+
+def _sanitize_pci_list(items: Any) -> List[Dict[str, str]]:
+    out: List[Dict[str, str]] = []
+    seen = set()
+    for item in items or []:
+        if not isinstance(item, dict):
+            continue
+        slot = _normalize_pci_slot(item.get("slot"))
+        if not slot or slot in seen:
+            continue
+        seen.add(slot)
+        out.append({"slot": slot, "name": str(item.get("name") or "")[:120]})
+    return out
+
+
+def _pci_device_driver(slot: str) -> str:
+    """Kernel driver currently bound to a PCI device ('' when none or unknown)."""
+    norm = _normalize_pci_slot(slot)
+    if not norm:
+        return ""
+    full = f"0000:{norm}"
+    for base in _PCI_SYSFS_BASES:
+        dev = os.path.join(base, full)
+        link = os.path.join(dev, "driver")
+        if os.path.islink(link):
+            return os.path.basename(os.readlink(link))
+        if os.path.exists(dev):
+            return ""
+    return ""
+
+
+def _vfio_available() -> bool:
+    return any(os.path.exists(p) for p in _VFIO_NODES)
+
+
+def _ensure_vfio_dev() -> bool:
+    """Makes /dev/vfio usable inside the container, linking the host node like /dev/kvm."""
+    if os.path.exists("/dev/vfio/vfio"):
+        return True
+    if os.path.isdir("/host/dev/vfio") and not os.path.lexists("/dev/vfio"):
+        try:
+            os.symlink("/host/dev/vfio", "/dev/vfio")
+        except OSError:
+            return False
+    return os.path.exists("/dev/vfio/vfio")
+
+
+def _pci_passthrough_problem(target_vm: Dict[str, Any]) -> Optional[str]:
+    """Why the VM's PCI passthrough cannot work right now, or None when it can.
+
+    QEMU only takes devices that the host has handed to vfio-pci; anything else
+    (a GPU on i915/nvidia, a SATA controller on ahci...) is still in host use.
+    """
+    devices = _sanitize_pci_list(target_vm.get("pci_passthrough"))
+    if not devices:
+        return None
+    for dev in devices:
+        driver = _pci_device_driver(dev["slot"])
+        if driver != "vfio-pci":
+            current = f"the '{driver}' driver" if driver else "no driver"
+            return f"PCI device {dev['slot']} is on {current}. Bind it to vfio-pci on the host before starting this VM."
+    if not _ensure_vfio_dev():
+        return "/dev/vfio is not available in the container. Pass it through (e.g. --device /dev/vfio) to use PCI passthrough."
+    return None
 
 
 def _swtpm_binary() -> Optional[str]:
@@ -1572,6 +1651,11 @@ def _start_qemu(target_vm: Dict[str, Any], vnc_port: int) -> Tuple[bool, Optiona
         with open(os.path.join(vm_dir, "qemu.pid"), "w") as f:
             f.write("99999")
         return True, None
+
+    pci_problem = _pci_passthrough_problem(target_vm)
+    if pci_problem:
+        logger.error(f"[VM-{vm_id}] {pci_problem}")
+        return False, pci_problem
 
     qemu_bin = shutil.which("qemu-system-x86_64") or "/usr/bin/qemu-system-x86_64"
     if not os.path.exists(qemu_bin) and not shutil.which(qemu_bin):
@@ -1828,14 +1912,9 @@ def _start_qemu(target_vm: Dict[str, Any], vnc_port: int) -> Tuple[bool, Optiona
                         ]
                     )
 
-        # Host PCI / GPU Passthrough (VFIO-PCI)
-        pci_devices = target_vm.get("pci_passthrough", [])
-        if pci_devices:
-            for idx_p, pdev in enumerate(pci_devices):
-                raw_slot = str(pdev.get("slot") or "").strip()
-                slot_clean = raw_slot.split("0000:")[-1] if "0000:" in raw_slot else raw_slot
-                if slot_clean and re.match(r"^[0-9a-fA-F]{2}:[0-9a-fA-F]{2}\.[0-9a-fA-F]$", slot_clean):
-                    c.extend(["-device", f"vfio-pci,host={slot_clean},id=vfio_pass_{idx_p}"])
+        # Host PCI / GPU Passthrough (VFIO-PCI); readiness is checked before launch.
+        for idx_p, pdev in enumerate(_sanitize_pci_list(target_vm.get("pci_passthrough"))):
+            c.extend(["-device", f"vfio-pci,host={pdev['slot']},id=vfio_pass_{idx_p}"])
 
         affinity = target_vm.get("cpu_affinity")
         if affinity and isinstance(affinity, list) and len(affinity) > 0:
@@ -2014,6 +2093,8 @@ def get_host_iommu_groups():
                     devs.append(
                         {
                             "slot": pci_slot,
+                            "driver": (drv := _pci_device_driver(pci_slot)),
+                            "vfio_ready": drv == "vfio-pci",
                             "vendor_id": vendor_id,
                             "device_id": device_id,
                             "class_code": dev_class,
@@ -2031,6 +2112,7 @@ def get_host_iommu_groups():
 
     return {
         "iommu_enabled": has_iommu and len(groups) > 0,
+        "vfio_available": _vfio_available(),
         "total_groups": len(groups),
         "groups": groups,
     }
@@ -2179,6 +2261,8 @@ def update_vm(
 
     if req.usb_passthrough is not None:
         target_vm["usb_passthrough"] = req.usb_passthrough
+    if req.pci_passthrough is not None:
+        target_vm["pci_passthrough"] = _sanitize_pci_list(req.pci_passthrough)
 
     _save_vms(vms)
     add_event("info", "VM Updated", f"VM '{target_vm['name']}' configuration updated.")
