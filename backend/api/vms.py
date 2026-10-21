@@ -31,6 +31,83 @@ from backend.state import Z_STATE, add_event
 
 router = APIRouter(prefix="/vms", tags=["Virtual Machines"])
 
+# ---- QEMU input confinement (SEC-07) ----
+# Paths and options from VM settings end up inside QEMU option strings, where a comma
+# starts a new option. Disks, ISOs and host shares must be regular files or folders
+# inside the VM and storage roots; host block devices and the app's data folder are out.
+_QEMU_UNSAFE = re.compile(r"[,\r\n\x00]")
+_DISK_BUSES = {"virtio", "sata", "nvme", "ide", "scsi"}
+_DISK_FORMATS = {"qcow2", "raw"}
+
+
+def _vm_disk_roots() -> List[str]:
+    from backend.api.fs import ALLOWED_BROWSE_ROOTS
+
+    roots = [os.path.join(DATA_DIR, "vms")] + [r for r in ALLOWED_BROWSE_ROOTS if r]
+    return [os.path.realpath(r) for r in roots]
+
+
+def _vm_iso_roots() -> List[str]:
+    return [os.path.realpath(r) for r in [VM_ISO_DIR, *(_vm_disk_roots())] if r]
+
+
+def _vm_share_roots() -> List[str]:
+    from backend.api.fs import ALLOWED_BROWSE_ROOTS
+
+    data = os.path.realpath(DATA_DIR)
+    return [os.path.realpath(r) for r in ALLOWED_BROWSE_ROOTS if r and os.path.realpath(r) != data]
+
+
+def _confined(path: Any, roots: List[str], want: str = "file") -> Optional[str]:
+    """realpath of `path` if it is safe to give QEMU, else None."""
+    if not isinstance(path, str) or not path.strip() or _QEMU_UNSAFE.search(path):
+        return None
+    real = os.path.realpath(path.strip())
+    if _QEMU_UNSAFE.search(real):
+        return None
+    if not any(real == r or real.startswith(r.rstrip("/") + "/") for r in roots):
+        return None
+    data = os.path.realpath(DATA_DIR)
+    vms_dir = os.path.join(data, "vms")
+    if (real == data or real.startswith(data + "/")) and not (real == vms_dir or real.startswith(vms_dir + "/")):
+        return None
+    if os.path.exists(real):
+        if want == "file" and not os.path.isfile(real):
+            return None
+        if want == "dir" and not os.path.isdir(real):
+            return None
+    return real
+
+
+def _validate_vm_inputs(
+    secondary_disks: Optional[List[Dict[str, Any]]] = None,
+    iso_path: Optional[str] = None,
+    host_shares: Optional[List[Dict[str, Any]]] = None,
+) -> None:
+    """Refuses VM settings that would reach host devices or inject QEMU options (400)."""
+    for i, d in enumerate(secondary_disks or []):
+        if not isinstance(d, dict):
+            raise HTTPException(status_code=400, detail=f"Secondary disk {i + 1} is not valid.")
+        if d.get("path") and not _confined(d.get("path"), _vm_disk_roots(), "file"):
+            raise HTTPException(
+                status_code=400,
+                detail=f"Secondary disk {i + 1}: use an image file inside the VM or storage folders (not a host device).",
+            )
+        if str(d.get("bus", "virtio")) not in _DISK_BUSES:
+            raise HTTPException(status_code=400, detail=f"Secondary disk {i + 1}: unsupported bus.")
+        if d.get("format") and str(d.get("format")) not in _DISK_FORMATS:
+            raise HTTPException(status_code=400, detail=f"Secondary disk {i + 1}: format must be qcow2 or raw.")
+        if d.get("name") and not re.match(r"^[A-Za-z0-9_-]{1,64}$", str(d.get("name"))):
+            raise HTTPException(status_code=400, detail=f"Secondary disk {i + 1}: invalid name.")
+    if iso_path and iso_path.strip() and not _confined(iso_path, _vm_iso_roots(), "file"):
+        raise HTTPException(status_code=400, detail="The ISO must be a file in the ISO or storage folders.")
+    for i, sh in enumerate(host_shares or []):
+        if not isinstance(sh, dict) or not _confined(sh.get("host_path"), _vm_share_roots(), "dir"):
+            raise HTTPException(status_code=400, detail=f"Host share {i + 1}: choose a folder inside the storage pool.")
+        if sh.get("mode", "rw") not in ("ro", "rw"):
+            raise HTTPException(status_code=400, detail=f"Host share {i + 1}: mode must be ro or rw.")
+
+
 VMS_CONFIG_FILE = os.path.join(DATA_DIR, "vms.json")
 KVM_GET_API_VERSION = 0xAE00
 
@@ -1155,7 +1232,7 @@ def _write_and_hash_chunk(f, data: bytes, hasher) -> None:
     hasher.update(data)
 
 
-@router.post("/isos/upload", dependencies=[Depends(require_scope("system:config", "storage:admin"))])
+@router.post("/isos/upload", dependencies=[Depends(require_scope("vms:manage", "system:config"))])
 async def upload_iso_file(
     request: Request,
     filename: Optional[str] = None,
@@ -1241,7 +1318,7 @@ async def upload_iso_file(
     }
 
 
-@router.delete("/isos", dependencies=[Depends(require_scope("system:config", "storage:admin"))])
+@router.delete("/isos", dependencies=[Depends(require_scope("vms:manage", "system:config"))])
 def delete_iso_image(
     path: str,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
@@ -1284,7 +1361,7 @@ def get_official_catalog():
     return results
 
 
-@router.post("/catalog/{catalog_id}/download", dependencies=[Depends(require_scope("system:config", "storage:admin"))])
+@router.post("/catalog/{catalog_id}/download", dependencies=[Depends(require_scope("vms:manage", "system:config"))])
 def download_official_iso(
     catalog_id: str,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
@@ -1329,7 +1406,7 @@ def get_catalog_download_tasks():
     return list(_DOWNLOAD_TASKS.values())
 
 
-@router.delete("/catalog/tasks/{task_id}", dependencies=[Depends(require_scope("system:config", "storage:admin"))])
+@router.delete("/catalog/tasks/{task_id}", dependencies=[Depends(require_scope("vms:manage", "system:config"))])
 def cancel_or_remove_catalog_task(
     task_id: str,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
@@ -1360,9 +1437,10 @@ def get_host_usb_devices():
     return scan_host_usb_devices()
 
 
-@router.post("", dependencies=[Depends(require_scope("system:config", "storage:admin"))])
+@router.post("", dependencies=[Depends(require_scope("vms:manage", "system:config"))])
 def create_vm(req: VmCreateRequest, principal: AuthenticatedPrincipal = Depends(get_current_principal)):
     """Provisions a new virtual machine with dynamic headroom validation and volume mappings."""
+    _validate_vm_inputs(req.secondary_disks, req.iso_path, req.host_shares)
     vms = _load_vms()
     if any(v["name"].lower() == req.name.lower() for v in vms):
         raise HTTPException(status_code=400, detail=f"Virtual machine '{req.name}' already exists.")
@@ -1724,7 +1802,9 @@ def _start_qemu(target_vm: Dict[str, Any], vnc_port: int) -> Tuple[bool, Optiona
         if os.path.exists(disk_path):
             c.extend(["-drive", f"file={disk_path},if={disk_bus},format={disk_fmt},id=drive0"])
 
-        iso_path = target_vm.get("iso_path")
+        iso_path = _confined(target_vm.get("iso_path"), _vm_iso_roots(), "file") if target_vm.get("iso_path") else None
+        if target_vm.get("iso_path") and not iso_path:
+            logger.warning(f"[VM-{vm_id}] ISO path is outside the ISO/storage folders; not attaching it.")
         boot_order = target_vm.get("boot_order", "iso" if iso_path else "disk")
         if iso_path and os.path.exists(iso_path):
             if boot_order == "disk":
@@ -1797,12 +1877,8 @@ def _start_qemu(target_vm: Dict[str, Any], vnc_port: int) -> Tuple[bool, Optiona
                 if "," in hp or "\n" in hp or "\r" in hp:
                     logger.warning(f"[VMs] Host share path contains prohibited characters: {hp}")
                     continue
-                # Confinement check: ensure share path is inside safe storage roots
-                from backend.fsutil import resolve_within
-                from backend.api.fs import ALLOWED_BROWSE_ROOTS
-
-                safe_roots = list(ALLOWED_BROWSE_ROOTS) + [DATA_DIR, "/mnt", "/app/data"]
-                safe_hp = resolve_within(hp, safe_roots)
+                # Confinement: storage folders only, never the app's data folder (SEC-07)
+                safe_hp = _confined(hp, _vm_share_roots(), "dir")
                 if not safe_hp:
                     logger.warning(f"[VMs] Host share path '{hp}' is outside permitted storage roots; omitting.")
                     continue
@@ -1824,6 +1900,9 @@ def _start_qemu(target_vm: Dict[str, Any], vnc_port: int) -> Tuple[bool, Optiona
             if not sd_path:
                 sd_path = os.path.join(vm_dir, f"{sdisk.get('name', f'disk_{idx_d}')}.qcow2")
                 sdisk["path"] = sd_path
+            if not _confined(sd_path, _vm_disk_roots(), "file"):
+                logger.warning(f"[VM-{vm_id}] Secondary disk {idx_d + 1} is outside the VM/storage folders; skipping.")
+                continue
             if not os.path.exists(sd_path):
                 try:
                     qemu_img = shutil.which("qemu-img") or "/usr/bin/qemu-img"
@@ -1832,8 +1911,13 @@ def _start_qemu(target_vm: Dict[str, Any], vnc_port: int) -> Tuple[bool, Optiona
                     )
                 except Exception:
                     pass
-            sbus = sdisk.get("bus", "virtio")
-            sfmt = sdisk.get("format") or ("raw" if sd_path.endswith((".raw", ".img")) else "qcow2")
+            safe_sd = _confined(sd_path, _vm_disk_roots(), "file")
+            sbus = str(sdisk.get("bus", "virtio"))
+            sfmt = str(sdisk.get("format") or ("raw" if str(sd_path).endswith((".raw", ".img")) else "qcow2"))
+            if not safe_sd or sbus not in _DISK_BUSES or sfmt not in _DISK_FORMATS:
+                logger.warning(f"[VM-{vm_id}] Secondary disk {idx_d + 1} has unsafe settings; not attaching it.")
+                continue
+            sd_path = safe_sd
             if os.path.exists(sd_path):
                 c.extend(["-drive", f"file={sd_path},if={sbus},format={sfmt},id=sdisk{idx_d}"])
 
@@ -2089,7 +2173,7 @@ async def list_all_virtual_machine_backups():
 
 @router.post(
     "/backups/{backup_id}/restore",
-    dependencies=[Depends(require_scope("system:config", "storage:admin"))],
+    dependencies=[Depends(require_scope("vms:manage", "system:config"))],
 )
 async def restore_virtual_machine_backup(backup_id: str):
     """Restores VM configuration and disk images from hyper-backup archive."""
@@ -2110,7 +2194,7 @@ async def restore_virtual_machine_backup(backup_id: str):
 @router.delete(
     "/backups/{backup_id}",
     dependencies=[
-        Depends(require_scope("system:config", "storage:admin")),
+        Depends(require_scope("vms:manage", "system:config")),
         Depends(require_confirmation("backup.delete")),
     ],
 )
@@ -2154,14 +2238,15 @@ def get_vm_detail(vm_id: str):
     return detail
 
 
-@router.put("/{vm_id}", dependencies=[Depends(require_scope("system:config", "storage:admin"))])
-@router.patch("/{vm_id}", dependencies=[Depends(require_scope("system:config", "storage:admin"))])
+@router.put("/{vm_id}", dependencies=[Depends(require_scope("vms:manage", "system:config"))])
+@router.patch("/{vm_id}", dependencies=[Depends(require_scope("vms:manage", "system:config"))])
 def update_vm(
     vm_id: str,
     req: VmUpdateRequest,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
 ):
     """Updates virtual machine configuration (RAM, vCPUs, name, description, ISO path, boot order, autostart)."""
+    _validate_vm_inputs(req.secondary_disks, req.iso_path, req.host_shares)
     vms = _load_vms()
     target_vm = next((v for v in vms if v["id"] == vm_id), None)
     if not target_vm:
@@ -2456,7 +2541,7 @@ async def websocket_vm_serial(websocket: WebSocket, vm_id: str):
     await stream_unix_socket_to_websocket(websocket, sock_path)
 
 
-@router.post("/{vm_id}/action", dependencies=[Depends(require_scope("system:config", "storage:admin"))])
+@router.post("/{vm_id}/action", dependencies=[Depends(require_scope("vms:manage", "system:config"))])
 async def execute_vm_action(
     vm_id: str,
     req: VmActionRequest,
@@ -2541,7 +2626,7 @@ async def execute_vm_action(
     return {"status": "ok", "state": target_vm["state"]}
 
 
-@router.post("/{vm_id}/start", dependencies=[Depends(require_scope("system:config", "storage:admin"))])
+@router.post("/{vm_id}/start", dependencies=[Depends(require_scope("vms:manage", "system:config"))])
 async def start_vm(
     vm_id: str,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
@@ -2550,7 +2635,7 @@ async def start_vm(
     return await execute_vm_action(vm_id, VmActionRequest(action="start"), principal)
 
 
-@router.post("/{vm_id}/stop", dependencies=[Depends(require_scope("system:config", "storage:admin"))])
+@router.post("/{vm_id}/stop", dependencies=[Depends(require_scope("vms:manage", "system:config"))])
 async def stop_vm(
     vm_id: str,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
@@ -2559,7 +2644,7 @@ async def stop_vm(
     return await execute_vm_action(vm_id, VmActionRequest(action="stop"), principal)
 
 
-@router.post("/{vm_id}/restart", dependencies=[Depends(require_scope("system:config", "storage:admin"))])
+@router.post("/{vm_id}/restart", dependencies=[Depends(require_scope("vms:manage", "system:config"))])
 async def restart_vm(
     vm_id: str,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
@@ -2664,8 +2749,8 @@ def get_vm_screenshot(vm_id: str):
         return FileResponse(ppm_path, media_type="image/x-portable-pixmap")
 
 
-@router.post("/{vm_id}/disk/resize", dependencies=[Depends(require_scope("system:config", "storage:admin"))])
-@router.post("/{vm_id}/resize-disk", dependencies=[Depends(require_scope("system:config", "storage:admin"))])
+@router.post("/{vm_id}/disk/resize", dependencies=[Depends(require_scope("vms:manage", "system:config"))])
+@router.post("/{vm_id}/resize-disk", dependencies=[Depends(require_scope("vms:manage", "system:config"))])
 def resize_vm_disk(
     vm_id: str,
     req: VmDiskResizeRequest,
@@ -2759,7 +2844,7 @@ def resize_vm_disk(
 
 @router.delete(
     "/{vm_id}",
-    dependencies=[Depends(require_scope("system:config", "storage:admin")), Depends(require_confirmation("vm.delete"))],
+    dependencies=[Depends(require_scope("vms:manage", "system:config")), Depends(require_confirmation("vm.delete"))],
 )
 def delete_vm(
     vm_id: str,
@@ -2898,7 +2983,7 @@ async def get_vm_snapshots(vm_id: str):
     return enriched
 
 
-@router.post("/{vm_id}/snapshots", dependencies=[Depends(require_scope("system:config", "storage:admin"))])
+@router.post("/{vm_id}/snapshots", dependencies=[Depends(require_scope("vms:manage", "system:config"))])
 async def create_vm_snapshot(vm_id: str, req: VmSnapshotCreateRequest):
     """Creates a live snapshot (savevm via QMP if running, qemu-img if stopped)."""
     vms = _load_vms()
@@ -2947,7 +3032,7 @@ async def create_vm_snapshot(vm_id: str, req: VmSnapshotCreateRequest):
 
 @router.post(
     "/{vm_id}/snapshots/{snapshot_name}/revert",
-    dependencies=[Depends(require_scope("system:config", "storage:admin"))],
+    dependencies=[Depends(require_scope("vms:manage", "system:config"))],
 )
 async def revert_vm_snapshot(vm_id: str, snapshot_name: str):
     """Reverts virtual machine state to a named snapshot."""
@@ -2989,7 +3074,7 @@ async def revert_vm_snapshot(vm_id: str, snapshot_name: str):
 @router.delete(
     "/{vm_id}/snapshots/{snapshot_name}",
     dependencies=[
-        Depends(require_scope("system:config", "storage:admin")),
+        Depends(require_scope("vms:manage", "system:config")),
         Depends(require_confirmation("storage.snapshot.delete")),
     ],
 )
@@ -3041,7 +3126,7 @@ class VmBackupRequest(BaseModel):
 
 @router.post(
     "/{vm_id}/backup",
-    dependencies=[Depends(require_scope("system:config", "storage:admin"))],
+    dependencies=[Depends(require_scope("vms:manage", "system:config"))],
 )
 async def backup_virtual_machine(vm_id: str, req: Optional[VmBackupRequest] = None):
     """Takes a full hyper-backup of VM configuration and virtual disks."""
