@@ -5,6 +5,7 @@ plus Hyper-Backup 3-2-1 automated pipelines (snapshots + Rclone offsite sync)
 and background scheduling.
 """
 
+import json
 import io
 import os
 import threading
@@ -21,7 +22,13 @@ from backend.services.rclone_engine import get_rclone_engine
 import tempfile
 import sqlite3
 
-# Files to exclude from configuration backups
+# -------------------------------------------------------------------------
+# Configuration backup ("app-config" export): users, settings, shares, stacks,
+# remotes and VM definitions in one archive, optionally encrypted.
+# -------------------------------------------------------------------------
+
+# Top-level files never exported: histories, live state, legacy credential
+# stores and the AI search index (large and rebuildable).
 BACKUP_EXCLUSIONS = {
     "history.db",
     "history.db-shm",
@@ -29,75 +36,207 @@ BACKUP_EXCLUSIONS = {
     "users.db-shm",
     "users.db-wal",
     "sessions.json",
+    "sessions.json.bak",
     "api_tokens.json",
+    "auth_lockout.json",
+    "auth_lockout.json.lock",
+    "reindex_progress.json",
+    "metrics.db",
+    "rag_index.db",
+    "rag_index.db-shm",
+    "rag_index.db-wal",
+    "ai_conversations.db-shm",
+    "ai_conversations.db-wal",
 }
+SKIP_SUFFIXES = (".pyc", ".tmp", ".swp", ".png", ".bmp", ".jpg", ".py", ".lock", "-wal", "-shm")
 
 HEAVY_BACKUP_DIRS = {
     "__pycache__",
     ".pytest_cache",
     ".git",
-    "vms",
     "isos",
-    "rclone",
-    "sftp",
     "app_backups",
+    "vm_backups",
     "trash",
+    "backups",
+    "catalog_cache",
+    "tailscale",
+    "taildrop",
+    "vfs_cache",
 }
+# VM folders hold disks; only their definitions and firmware/TPM state are exported.
+VM_DIR = "vms"
+VM_KEEP_SUFFIXES = (".json", ".fd", ".xml", ".conf", ".yaml", ".yml")
+VM_MAX_FILE_BYTES = 16 * 1024 * 1024
 
-MAX_RESTORE_BYTES = 50 * 1024 * 1024  # 50MB max cumulative restore size
+MAX_RESTORE_BYTES = 256 * 1024 * 1024
 MAX_MEMBER_COUNT = 1000
+MANIFEST_NAME = "zettnas-backup.json"
+FORMAT_VERSION = 2
+ENCRYPTED_MAGIC = b"ZETTBAK2"
 
 BACKUP_JOBS_FILE = os.path.join(DATA_DIR, "backup_jobs.json")
 BACKUP_HISTORY_FILE = os.path.join(DATA_DIR, "backup_history.json")
 
 
-def generate_backup_zip_stream() -> Any:
-    """Generates a spooled zip archive of configuration files in DATA_DIR.
+def _wanted(rel_path: str, size: int) -> bool:
+    parts = rel_path.split(os.sep)
+    name = parts[-1]
+    if any(p in HEAVY_BACKUP_DIRS for p in parts[:-1]):
+        return False
+    if len(parts) == 1 and name in BACKUP_EXCLUSIONS:
+        return False
+    if name.endswith(SKIP_SUFFIXES) or name.startswith((".tmp-", ".DS_Store")):
+        return False
+    if parts[0] == VM_DIR:
+        return name.endswith(VM_KEEP_SUFFIXES) and size <= VM_MAX_FILE_BYTES
+    return True
 
-    Excludes volatile database histories, session tokens, API tokens,
-    and heavy runtime directories (VMs, ISOs, cache, trash, app backups).
-    Uses SQLite backup API for consistent database snapshots.
+
+def _snapshot_db_bytes(path: str, clear_tables: tuple = ()) -> bytes:
+    """Consistent copy of a SQLite database, with some tables emptied in the copy."""
+    mem = sqlite3.connect(":memory:")
+    try:
+        with sqlite3.connect(f"file:{path}?mode=ro", uri=True, timeout=10.0) as src:
+            src.backup(mem)
+        for table in clear_tables:
+            try:
+                mem.execute(f"DELETE FROM {table}")
+            except sqlite3.Error:
+                pass
+        mem.commit()
+        return mem.serialize()
+    finally:
+        mem.close()
+
+
+def _derive_key(passphrase: str, salt: bytes) -> bytes:
+    from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
+
+    return Scrypt(salt=salt, length=32, n=2**15, r=8, p=1).derive(passphrase.encode("utf-8"))
+
+
+def encrypt_backup(data: bytes, passphrase: str) -> bytes:
+    from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+
+    salt, nonce = os.urandom(16), os.urandom(12)
+    return ENCRYPTED_MAGIC + salt + nonce + AESGCM(_derive_key(passphrase, salt)).encrypt(nonce, data, ENCRYPTED_MAGIC)
+
+
+def decrypt_backup(blob: bytes, passphrase: str) -> bytes:
+    from cryptography.exceptions import InvalidTag
+    from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+
+    if not blob.startswith(ENCRYPTED_MAGIC):
+        raise ValueError("Not an encrypted ZettNAS backup")
+    if not passphrase:
+        raise ValueError("This backup is encrypted: enter its passphrase")
+    head = len(ENCRYPTED_MAGIC)
+    salt, nonce, ct = blob[head : head + 16], blob[head + 16 : head + 28], blob[head + 28 :]
+    try:
+        return AESGCM(_derive_key(passphrase, salt)).decrypt(nonce, ct, ENCRYPTED_MAGIC)
+    except InvalidTag as e:
+        raise ValueError("Wrong passphrase, or the backup file is damaged") from e
+
+
+def generate_backup_zip_stream(passphrase: str = "") -> Any:
+    """Builds the configuration backup (zip, or encrypted when a passphrase is given).
+
+    Includes users (password hashes, roles, 2FA) without sessions or API tokens,
+    settings, share/NFS/SFTP/rclone configuration, compose stacks, VM definitions
+    and firmware state, and the install's secret key (needed to read encrypted
+    2FA secrets). Excludes histories, caches, the AI search index, VM disks and ISOs.
     """
+    from backend import __version__
+
+    try:
+        from backend.db_schema import SCHEMA_VERSIONS
+    except Exception:
+        SCHEMA_VERSIONS = {}
+
     spool = tempfile.SpooledTemporaryFile(max_size=10 * 1024 * 1024)
+    files: List[str] = []
     with zipfile.ZipFile(spool, "w", zipfile.ZIP_DEFLATED) as z:
-        for root, dirs, files in os.walk(DATA_DIR):
-            dirs[:] = [d for d in dirs if d not in HEAVY_BACKUP_DIRS]
-            for file in files:
-                if (
-                    file in BACKUP_EXCLUSIONS
-                    or file.endswith((".pyc", ".tmp", ".swp"))
-                    or file.startswith((".tmp-", ".DS_Store"))
-                ):
+        for root, dirs, names in os.walk(DATA_DIR):
+            dirs[:] = [d for d in dirs if d not in HEAVY_BACKUP_DIRS and not os.path.islink(os.path.join(root, d))]
+            for name in names:
+                file_path = os.path.join(root, name)
+                if os.path.islink(file_path):
                     continue
-                file_path = os.path.join(root, file)
                 rel_path = os.path.relpath(file_path, DATA_DIR)
-                # For SQLite databases, capture a live consistent snapshot
-                if file.endswith(".db") and not file.startswith("."):
+                try:
+                    size = os.path.getsize(file_path)
+                except OSError:
+                    continue
+                if not _wanted(rel_path, size):
+                    continue
+                if name.endswith(".db"):
                     try:
-                        mem_conn = sqlite3.connect(":memory:")
-                        with sqlite3.connect(file_path, timeout=5.0) as src_conn:
-                            src_conn.backup(mem_conn)
-                        if hasattr(mem_conn, "serialize"):
-                            z.writestr(rel_path, mem_conn.serialize())
-                        else:
-                            z.write(file_path, rel_path)
-                        mem_conn.close()
+                        clear = ("sessions", "api_tokens") if rel_path == "users.db" else ()
+                        z.writestr(rel_path, _snapshot_db_bytes(file_path, clear))
+                        files.append(rel_path)
                         continue
                     except Exception as e:
-                        logger.debug(f"[BACKUP] Snapshot backup for {file} fell back to copy: {e}")
+                        logger.debug(f"[BACKUP] Snapshot of {rel_path} fell back to a copy: {e}")
                 z.write(file_path, rel_path)
+                files.append(rel_path)
+        manifest = {
+            "format": FORMAT_VERSION,
+            "app_version": __version__,
+            "created_at": time.time(),
+            "schema_versions": {k: v[0] for k, v in SCHEMA_VERSIONS.items()},
+            "encrypted": bool(passphrase),
+            "files": files,
+        }
+        z.writestr(MANIFEST_NAME, json.dumps(manifest, indent=2))
     spool.seek(0)
-    return spool
+    if not passphrase:
+        return spool
+    data = spool.read()
+    spool.close()
+    out = tempfile.SpooledTemporaryFile(max_size=10 * 1024 * 1024)
+    out.write(encrypt_backup(data, passphrase))
+    out.seek(0)
+    return out
 
 
-def restore_backup_archive(archive_file: BinaryIO) -> None:
-    """Safely extracts a backup zip archive into DATA_DIR.
+def _check_archive_schema(z: "zipfile.ZipFile", names: set) -> None:
+    """Refuses a backup whose databases come from a newer ZettNAS than this one."""
+    try:
+        from backend.db_schema import SCHEMA_VERSIONS
+    except Exception:
+        return
+    for name, (known, _rebuildable) in SCHEMA_VERSIONS.items():
+        if name not in names:
+            continue
+        with tempfile.NamedTemporaryFile(suffix=".db") as tmp:
+            tmp.write(z.read(name))
+            tmp.flush()
+            try:
+                conn = sqlite3.connect(f"file:{tmp.name}?mode=ro", uri=True)
+                found = int(conn.execute("PRAGMA user_version").fetchone()[0])
+                conn.close()
+            except sqlite3.Error:
+                raise ValueError(f"{name} in the backup is not a valid database")
+        if found > known:
+            raise ValueError(f"The backup's {name} comes from a newer ZettNAS (schema v{found}); update first")
 
-    Performs zip-slip validation, symlink rejection, and size limitation
-    to ensure no malicious payloads escape DATA_DIR or exhaust disk storage.
+
+def restore_backup_archive(archive_file: BinaryIO, passphrase: str = "", snapshot: bool = True) -> Dict[str, Any]:
+    """Validates and restores a configuration backup into DATA_DIR.
+
+    Rejects zip-slip paths, symlinks, oversized archives and databases from a
+    newer version; restores only what an export can contain; saves the current
+    data to data/backups/pre-update/ first; and ends every session afterwards.
     """
     target_dir = os.path.abspath(DATA_DIR)
     os.makedirs(target_dir, exist_ok=True)
+
+    head = archive_file.read(len(ENCRYPTED_MAGIC))
+    archive_file.seek(0)
+    if head == ENCRYPTED_MAGIC:
+        blob = archive_file.read(MAX_RESTORE_BYTES + 1024)
+        archive_file = io.BytesIO(decrypt_backup(blob, passphrase))
 
     with zipfile.ZipFile(archive_file, "r") as z:
         members = z.infolist()
@@ -105,26 +244,61 @@ def restore_backup_archive(archive_file: BinaryIO) -> None:
             raise ValueError(f"Backup archive exceeds maximum allowable file count ({MAX_MEMBER_COUNT})")
 
         total_size = 0
+        selected = []
         for member in members:
-            # Check for symlink attribute (Unix mode 0o120000)
             if (member.external_attr >> 16) & 0o170000 == 0o120000:
                 raise ValueError(f"Symlinks are forbidden in backup archive: {member.filename}")
-
             total_size += member.file_size
             if total_size > MAX_RESTORE_BYTES:
-                raise ValueError("Backup archive exceeds maximum allowable uncompressed size (50MB)")
-
-            # Validate target path against directory traversal
+                raise ValueError("Backup archive exceeds maximum allowable uncompressed size (256MB)")
             extracted_path = os.path.abspath(os.path.join(target_dir, member.filename))
             if not extracted_path.startswith(target_dir + os.sep) and extracted_path != target_dir:
                 raise ValueError(f"Illegal path in archive: {member.filename}")
+            rel = os.path.relpath(extracted_path, target_dir)
+            if member.is_dir() or member.filename == MANIFEST_NAME:
+                continue
+            if _wanted(rel, member.file_size):
+                selected.append(member)
 
-        # Every member was validated above (no symlinks, no paths outside target_dir).
-        for member in members:
-            if not member.is_dir():
-                z.extract(member, target_dir)
+        _check_archive_schema(z, {m.filename for m in selected})
 
-    logger.info("[BACKUP] Configuration restored successfully from backup archive.")
+        snapshot_path = None
+        if snapshot:
+            try:
+                from backend.services.data_snapshot import take_snapshot
+
+                snapshot_path = take_snapshot(target_dir, label="pre-restore", extra={"kind": "restore"})
+            except Exception as e:
+                raise ValueError(f"Could not save the current data before restoring: {e}") from e
+
+        for member in selected:
+            dst = os.path.join(target_dir, member.filename)
+            for suffix in ("-wal", "-shm"):
+                if member.filename.endswith(".db") and os.path.exists(dst + suffix):
+                    os.remove(dst + suffix)
+            z.extract(member, target_dir)
+
+    # Sessions and API tokens from the backup's users DB (older exports kept them)
+    # must not come back.
+    if any(m.filename == "users.db" for m in selected):
+        try:
+            from backend.users_db import _SESSION_CACHE, _SESSION_CACHE_LOCK, _TOKEN_CACHE, _TOKEN_CACHE_LOCK
+
+            with sqlite3.connect(os.path.join(target_dir, "users.db"), timeout=15.0) as conn:
+                for table in ("sessions", "api_tokens"):
+                    try:
+                        conn.execute(f"DELETE FROM {table}")
+                    except sqlite3.Error:
+                        pass
+            with _SESSION_CACHE_LOCK:
+                _SESSION_CACHE.clear()
+            with _TOKEN_CACHE_LOCK:
+                _TOKEN_CACHE.clear()
+        except Exception as e:
+            logger.warning(f"[BACKUP] Could not reset sessions after restore: {e}")
+
+    logger.info(f"[BACKUP] Restored {len(selected)} file(s) from a configuration backup.")
+    return {"restored": len(selected), "snapshot": snapshot_path}
 
 
 # =========================================================================

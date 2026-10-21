@@ -10,7 +10,7 @@ import { applyDashboardLayout, persistDashboardLayout, fitMiniPreviewScale, sync
 import { fetchAndRenderMetrics } from './metrics-chart.js';
 import { t } from '../i18n.js';
 import { escapeHtml } from '../utils.js';
-import { showToast, showActionToast } from '../toast.js';
+import { showToast, showActionToast, showPromptToast } from '../toast.js';
 import { applyGlassSettings, applyWallpaperReadability } from './wallpapers.js';
 import { applyDockSettings } from './dock.js';
 import { initGlassTimePickers } from './time-picker.js';
@@ -1781,6 +1781,33 @@ export async function syncClientPreferencesFromServerIfEmpty() {
   }
 }
 
+// Optional passphrase for configuration backups (AES-256-GCM). Resolves to the
+// passphrase, '' for an unencrypted backup, or null when the user cancels.
+function askBackupPassphrase(title, msg, allowEmpty) {
+  return new Promise((resolve) => {
+    showPromptToast(title, msg, '', (value) => {
+      const v = (value || '').trim();
+      if (!v && !allowEmpty) return resolve(null);
+      if (v && v.length < 8) {
+        showToast('Use a passphrase of at least 8 characters.', 'error');
+        return resolve(null);
+      }
+      resolve(v);
+    }, () => resolve(null), { inputType: 'password', placeholder: allowEmpty ? 'Leave empty for no encryption' : 'Backup passphrase' });
+  });
+}
+
+const BACKUP_MAGIC = 'ZETTBAK2';
+
+async function isEncryptedBackup(file) {
+  try {
+    const head = await file.slice(0, BACKUP_MAGIC.length).text();
+    return head === BACKUP_MAGIC;
+  } catch (e) {
+    return false;
+  }
+}
+
 export function initSystemTab() {
   if (typeof renderApiTokens !== 'undefined') renderApiTokens();
   syncClientPreferencesFromServerIfEmpty();
@@ -1788,6 +1815,12 @@ export function initSystemTab() {
   if (btnDownload) {
     btnDownload.addEventListener('click', async () => {
       const origHtml = btnDownload.innerHTML;
+      const passphrase = await askBackupPassphrase(
+        'Encrypt this backup?',
+        'The backup holds users and password hashes, the server secret key, share and remote credentials. Enter a passphrase to encrypt it (recommended), or leave it empty.',
+        true
+      );
+      if (passphrase === null) return;
       try {
         btnDownload.disabled = true;
         btnDownload.innerHTML = `<span class="spinner-inline"></span> ${t('settings.generating_backup', 'Generating Backup...')}`;
@@ -1808,10 +1841,10 @@ export function initSystemTab() {
           console.warn('[BACKUP] Client preferences pre-backup sync warning:', syncErr);
         }
 
-        // 2. Fetch the backup archive stream
-        const res = await window.fetch('/api/system/backup', {
-          headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-        });
+        // 2. Fetch the backup archive stream (encrypted when a passphrase was given)
+        const res = passphrase
+          ? await apiFetch('/api/system/backup', { method: 'POST', body: { passphrase } })
+          : await apiFetch('/api/system/backup');
         if (!res.ok) throw await ApiError.from(res);
 
         const blob = await res.blob();
@@ -1845,17 +1878,30 @@ export function initSystemTab() {
     uploadInput.addEventListener('change', async (e) => {
       const file = e.target.files[0];
       if (!file) return;
-      if (!file.name.endsWith('.zip')) {
-        showToast('Please upload a .zip backup file.', 'error');
+      if (!file.name.endsWith('.zip') && !file.name.endsWith('.zettbak')) {
+        showToast('Please choose a ZettNAS backup (.zip or .zettbak).', 'error');
         uploadInput.value = '';
         return;
+      }
+      let restorePassphrase = '';
+      if (await isEncryptedBackup(file)) {
+        restorePassphrase = await askBackupPassphrase('Encrypted backup', 'Enter the passphrase this backup was made with.', false);
+        if (restorePassphrase === null) {
+          uploadInput.value = '';
+          return;
+        }
       }
       showConfirmToast(
         t('settings.restore_confirm_title', 'Restore Configuration'),
         t('settings.restore_confirm_desc', 'Are you sure you want to restore this configuration? This will restore all hardware settings, fan curves, layouts, widgets, and themes, and reload the interface.'),
         async () => {
           try {
-            const res = await apiFetch('/api/system/restore', { method: 'POST', body: file, confirmed: true });
+            const res = await apiFetch('/api/system/restore', {
+              method: 'POST',
+              body: file,
+              confirmed: true,
+              headers: restorePassphrase ? { 'X-Backup-Passphrase': restorePassphrase } : {},
+            });
             if (!res.ok) throw await ApiError.from(res);
             const data = await res.json();
 

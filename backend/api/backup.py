@@ -106,21 +106,38 @@ async def save_client_preferences(request: Request):
 # -------------------------------------------------------------------------
 
 
-@router.get("/system/backup", dependencies=[Depends(require_scope("*"))])
-def download_backup():
-    """Generates a zip archive of the configuration data directory."""
-    buf = generate_backup_zip_stream()
+class ConfigBackupRequest(BaseModel):
+    passphrase: str = ""
+
+
+def _backup_response(passphrase: str = "") -> StreamingResponse:
+    buf = generate_backup_zip_stream(passphrase=passphrase)
     ts = time.strftime("%Y%m%d_%H%M%S")
+    name = f"zettnas_backup_{ts}.zettbak" if passphrase else f"zettnas_backup_{ts}.zip"
     return StreamingResponse(
         buf,
-        media_type="application/zip",
-        headers={"Content-Disposition": f"attachment; filename=zettnas_backup_{ts}.zip"},
+        media_type="application/octet-stream" if passphrase else "application/zip",
+        headers={"Content-Disposition": f"attachment; filename={name}"},
     )
 
 
-def _safe_restore_archive(path: str) -> None:
+@router.get("/system/backup", dependencies=[Depends(require_scope("*"))])
+def download_backup():
+    """Configuration backup as a plain zip (users, settings, shares, stacks, VM definitions)."""
+    return _backup_response()
+
+
+@router.post("/system/backup", dependencies=[Depends(require_scope("*"))])
+def download_encrypted_backup(req: ConfigBackupRequest):
+    """Configuration backup, encrypted with the given passphrase (AES-256-GCM, scrypt)."""
+    if req.passphrase and len(req.passphrase) < 8:
+        raise HTTPException(status_code=400, detail="Use a passphrase of at least 8 characters.")
+    return _backup_response(req.passphrase)
+
+
+def _safe_restore_archive(path: str, passphrase: str = "") -> dict:
     with open(path, "rb") as archive_file:
-        restore_backup_archive(archive_file)
+        return restore_backup_archive(archive_file, passphrase=passphrase)
 
 
 @router.post(
@@ -138,12 +155,15 @@ async def restore_backup(request: Request):
                 if chunk:
                     await f_out.write(chunk)
 
-        await asyncio.to_thread(_safe_restore_archive, tmp_path)
+        result = await asyncio.to_thread(
+            _safe_restore_archive, tmp_path, request.headers.get("x-backup-passphrase", "")
+        )
         client_prefs = await asyncio.to_thread(read_json, CLIENT_PREFS_FILE, {})
 
         return {
             "status": "ok",
-            "message": "Restore successful. A reboot or page refresh may be required to apply all settings.",
+            "message": "Restore complete. Restart ZettNAS to apply everything; you will need to sign in again.",
+            "restored_files": (result or {}).get("restored"),
             "client_preferences": client_prefs,
         }
     except zipfile.BadZipFile:
