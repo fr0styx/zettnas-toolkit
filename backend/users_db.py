@@ -1039,13 +1039,26 @@ def get_user_mfa(user_id: str, db_path: Optional[str] = None) -> Optional[Dict[s
         if not row:
             return None
         rec_codes = json.loads(row["mfa_recovery_codes_json"] or "[]")
+        from backend.secret_box import SecretBoxError, unseal
+
+        try:
+            mfa_secret = unseal(row["mfa_secret"] or "")
+        except SecretBoxError as e:
+            logger.error(f"[Users] Two-factor secret for '{row['username']}' is unreadable: {e}")
+            mfa_secret = ""
         return {
             "user_id": row["id"],
             "username": row["username"],
             "mfa_enabled": bool(row["mfa_enabled"]),
-            "mfa_secret": row["mfa_secret"] or "",
+            "mfa_secret": mfa_secret,
             "recovery_codes_count": len(rec_codes),
         }
+
+
+def _seal_secret(secret: str) -> str:
+    from backend.secret_box import seal
+
+    return seal(secret)
 
 
 def enable_user_mfa(
@@ -1061,7 +1074,7 @@ def enable_user_mfa(
             SET mfa_enabled = 1, mfa_secret = ?, mfa_recovery_codes_json = ?, updated_at = ?
             WHERE id = ?
         """,
-            (secret.strip(), json.dumps(recovery_code_hashes), time.time(), user_id),
+            (_seal_secret(secret.strip()), json.dumps(recovery_code_hashes), time.time(), user_id),
         )
         return res.rowcount > 0
 

@@ -81,6 +81,12 @@ def startup_system():
         logger.error(f"[Main] Security upgrade step failed: {e}")
     stamp_versions()
     try:
+        from backend.secret_box import migrate_plaintext_mfa_secrets
+
+        migrate_plaintext_mfa_secrets()
+    except Exception as e:
+        logger.error(f"[Main] Could not encrypt stored two-factor secrets: {e}")
+    try:
         from backend.services.data_permissions import harden_data_permissions
 
         harden_data_permissions()
