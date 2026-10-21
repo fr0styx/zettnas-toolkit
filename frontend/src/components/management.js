@@ -8364,6 +8364,10 @@ export function initManagement() {
   if (applyUpdateBtn) {
     applyUpdateBtn.addEventListener('click', applySystemUpdate);
   }
+  const revertUpdateBtn = document.getElementById('btn-revert-system-update');
+  if (revertUpdateBtn) {
+    revertUpdateBtn.addEventListener('click', revertSystemUpdate);
+  }
 
   // Diagnostics bundle buttons
   const downloadDiagBtn = document.getElementById('btn-download-diagnostics');
@@ -8750,6 +8754,7 @@ export async function fetchAndRenderSystemAbout(force = false, channelOverride =
   try {
     const data = await api.get(`/api/system/updates?channel=${channel}${force ? '&force=true' : ''}`);
     _lastUpdateData = data;
+    refreshPreviousVersions();
     if (data) {
       const isEdge = data.channel === 'edge';
       const applyBtn = document.getElementById('btn-apply-system-update');
@@ -8816,6 +8821,74 @@ export async function fetchAndRenderSystemAbout(force = false, channelOverride =
       btnCheck.disabled = false;
     }
   }
+}
+
+// The newest version this install can go back to (a pre-update snapshot whose image is still on the host).
+let _previousVersion = null;
+
+export async function refreshPreviousVersions() {
+  const btn = document.getElementById('btn-revert-system-update');
+  const label = document.getElementById('btn-revert-update-text');
+  if (!btn) return null;
+  try {
+    const res = await api.get('/api/system/updates/previous');
+    _previousVersion = (res?.previous || []).find((p) => p.image_available) || null;
+  } catch (e) {
+    _previousVersion = null;
+  }
+  btn.style.display = _previousVersion ? 'flex' : 'none';
+  if (_previousVersion && label) {
+    label.textContent = _previousVersion.version ? `Revert to v${_previousVersion.version}` : 'Revert to previous version';
+  }
+  return _previousVersion;
+}
+
+export async function revertSystemUpdate() {
+  const prev = _previousVersion || (await refreshPreviousVersions());
+  if (!prev) {
+    showToast('No previous version is available on this host.', 'error');
+    return;
+  }
+  const name = prev.version ? `v${prev.version}` : 'the previous version';
+  showPromptToast(
+    'Revert to previous version',
+    `Go back to ${name}? Settings, users and other data return to how they were before the last update, so changes made since then are lost (a snapshot of the current data is kept). Enter your password to confirm.`,
+    '',
+    async (password) => {
+      if (!password) return;
+      const overlay = document.getElementById('update-progress-overlay');
+      const title = document.getElementById('update-progress-title');
+      const desc = document.getElementById('update-progress-desc');
+      try {
+        const res = await api.post('/api/system/updates/revert', { snapshot_id: prev.id, current_password: password });
+        if (overlay) overlay.style.display = 'block';
+        if (title) title.textContent = `Reverting to ${name}...`;
+        if (desc) desc.textContent = res?.message || 'Restoring the previous version and reconnecting...';
+        let attempts = 0;
+        let wentDown = false;
+        const timer = setInterval(async () => {
+          attempts++;
+          try {
+            const h = await fetch('/api/health', { cache: 'no-store' });
+            if (h.ok && (wentDown || attempts >= 8)) {
+              clearInterval(timer);
+              setTimeout(() => window.location.reload(), 1200);
+            }
+          } catch (e) {
+            wentDown = true;
+            if (attempts >= 80) {
+              clearInterval(timer);
+              if (desc) desc.textContent = 'Please refresh the page once ZettNAS has restarted.';
+            }
+          }
+        }, 1500);
+      } catch (err) {
+        showToast(`Revert failed: ${err.message}`, 'error');
+      }
+    },
+    null,
+    { inputType: 'password', okText: 'Revert', placeholder: 'Your password' }
+  );
 }
 
 export async function applySystemUpdate() {

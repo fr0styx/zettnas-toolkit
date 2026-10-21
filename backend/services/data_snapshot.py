@@ -47,7 +47,9 @@ def snapshot_root(data_dir: str) -> str:
     return os.path.join(data_dir, SNAPSHOT_SUBDIR)
 
 
-def take_snapshot(data_dir: str, label: str = "", extra: Optional[Dict[str, Any]] = None) -> str:
+def take_snapshot(
+    data_dir: str, label: str = "", extra: Optional[Dict[str, Any]] = None, protect: Optional[str] = None
+) -> str:
     root = snapshot_root(data_dir)
     safe_label = "".join(c if c.isalnum() or c in ".-_" else "_" for c in label)[:40]
     dest = os.path.join(root, time.strftime("%Y%m%d-%H%M%S") + (f"-{safe_label}" if safe_label else ""))
@@ -74,13 +76,14 @@ def take_snapshot(data_dir: str, label: str = "", extra: Optional[Dict[str, Any]
     manifest = {"created_at": time.time(), "label": label, "files": files, **(extra or {})}
     with open(os.path.join(dest, MANIFEST), "w", encoding="utf-8") as f:
         json.dump(manifest, f, indent=2)
-    _prune(root)
+    _prune(root, protect)
     logger.info(f"[Snapshot] Saved {len(files)} item(s) to {dest}")
     return dest
 
 
-def _prune(root: str) -> None:
-    snaps = sorted(d for d in os.listdir(root) if os.path.isdir(os.path.join(root, d)))
+def _prune(root: str, protect: Optional[str] = None) -> None:
+    keep_name = os.path.basename(os.path.normpath(protect)) if protect else None
+    snaps = sorted(d for d in os.listdir(root) if os.path.isdir(os.path.join(root, d)) and d != keep_name)
     for old in snaps[:-KEEP]:
         shutil.rmtree(os.path.join(root, old), ignore_errors=True)
 

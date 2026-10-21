@@ -1024,6 +1024,87 @@ async def post_apply_system_update(req: ApplySystemUpdateRequest):
     }
 
 
+def _previous_versions() -> List[Dict[str, Any]]:
+    from backend.services.container_mutator import _docker_request
+    from backend.services.data_snapshot import list_snapshots
+
+    out = []
+    for snap in list_snapshots(config.DATA_DIR):
+        image = snap.get("from_image") or ""
+        if not image or snap.get("kind") == "revert":
+            continue
+        available = False
+        try:
+            st, _ = _docker_request("GET", f"/images/{image}/json")
+            available = st == 200
+        except Exception:
+            available = False
+        out.append(
+            {
+                "id": snap["id"],
+                "created_at": snap.get("created_at"),
+                "version": snap.get("from_version") or "",
+                "image": image,
+                "tag": snap.get("from_tag") or "",
+                "image_available": available,
+            }
+        )
+    return out
+
+
+@router.get("/system/updates/previous", dependencies=[Depends(require_scope("system:power", "system:manage"))])
+async def get_previous_versions():
+    """Versions this install can go back to: a pre-update snapshot whose image is still on the host."""
+    return {"current_version": __version__, "previous": await asyncio.to_thread(_previous_versions)}
+
+
+class RevertSystemUpdateRequest(BaseModel):
+    snapshot_id: str
+    current_password: str
+
+
+@router.post("/system/updates/revert", dependencies=[Depends(require_scope("system:power", "system:manage"))])
+async def post_revert_system_update(
+    req: RevertSystemUpdateRequest, principal: AuthenticatedPrincipal = Depends(get_current_principal)
+):
+    """Goes back to the version before the last update and restores the data as it was then (OPS-01)."""
+    from backend.passwords import verify_password
+    from backend.services.self_updater import spawn_self_updater
+    from backend.users_db import get_user_by_id
+
+    user = get_user_by_id(principal.user_id) if principal and principal.user_id else None
+    if not user or not await asyncio.to_thread(verify_password, req.current_password, user.get("password_hash", "")):
+        raise HTTPException(status_code=403, detail="Current password is incorrect.")
+
+    match = next((p for p in await asyncio.to_thread(_previous_versions) if p["id"] == req.snapshot_id), None)
+    if not match:
+        raise HTTPException(status_code=404, detail="That previous version is not available.")
+    if not match["image_available"]:
+        raise HTTPException(status_code=409, detail="The previous image is no longer on this host.")
+
+    target_container = "zettnas-toolkit"
+    try:
+        from backend.services.compose_synthesizer import fetch_container_raw_inspect
+
+        self_info = fetch_container_raw_inspect(socket.gethostname()) or fetch_container_raw_inspect("zettnas-toolkit")
+        if self_info and self_info.get("Name"):
+            target_container = self_info["Name"].lstrip("/")
+    except Exception:
+        pass
+
+    logger.warning(f"[System Update] Reverting to {match['version'] or match['image']} (snapshot {match['id']})")
+    spawned = await asyncio.to_thread(spawn_self_updater, match["image"], target_container, 2.5, match["id"])
+    if not spawned:
+        raise HTTPException(status_code=500, detail="Could not start the revert.")
+    add_event("warning", "Updates", f"Reverting to {match['version'] or 'the previous version'}")
+    return {
+        "status": "restarting",
+        "version": match["version"],
+        "auto_restarting": True,
+        "message": "Reverting. ZettNAS is restoring the previous version and its data and will reconnect shortly.",
+    }
+
+
 @router.get("/system/network-topology", dependencies=[Depends(require_scope("system:view", "system:config"))])
 async def system_network_topology():
     """

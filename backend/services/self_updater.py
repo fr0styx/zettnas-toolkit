@@ -43,6 +43,7 @@ def spawn_self_updater(
     target_image: str = "ghcr.io/fr0styx/zettnas-toolkit:latest",
     container_name: str = "zettnas-toolkit",
     delay_seconds: float = 2.5,
+    restore_snapshot_id: Optional[str] = None,
 ) -> bool:
     """
     Spawns an ephemeral detached helper container from target_image that will
@@ -74,6 +75,13 @@ def spawn_self_updater(
             # The helper snapshots the data folder before the update and restores it on rollback (OPS-03).
             binds.append(f"{data_src}:{HELPER_DATA_DIR}")
             cmd.extend(["--data-dir", HELPER_DATA_DIR])
+            if restore_snapshot_id:
+                cmd.extend(
+                    ["--restore-from", os.path.join(HELPER_DATA_DIR, "backups", "pre-update", restore_snapshot_id)]
+                )
+        elif restore_snapshot_id:
+            logger.error("[SelfUpdater] Cannot revert: the data folder mount was not found.")
+            return False
 
         create_body = {
             "Image": target_image,
@@ -230,7 +238,13 @@ def _wait_until_healthy(cid: str) -> Tuple[bool, str]:
     return False, "timed out waiting for the container to become healthy"
 
 
-def apply_update_from_helper(target: str, image: str, delay: float = 2.5, data_dir: Optional[str] = None):
+def apply_update_from_helper(
+    target: str,
+    image: str,
+    delay: float = 2.5,
+    data_dir: Optional[str] = None,
+    restore_from: Optional[str] = None,
+):
     """
     Executed inside the ephemeral helper container (started from the new image)
     to recreate the target container. The old container is kept, renamed, until
@@ -266,10 +280,35 @@ def apply_update_from_helper(target: str, image: str, delay: float = 2.5, data_d
             snapshot = take_snapshot(
                 data_dir,
                 label=f"from-{from_version or 'unknown'}",
-                extra={"from_version": from_version, "to_image": image},
+                extra={
+                    "from_version": from_version,
+                    "from_image": old_image_ref,
+                    "from_tag": str((inspect_data.get("Config") or {}).get("Image") or ""),
+                    "to_image": image,
+                    "kind": "revert" if restore_from else "update",
+                },
+                protect=restore_from,
             )
         except Exception as e:
             logger.error(f"[SelfUpdater Helper] Could not snapshot the data folder ({e}); not updating.")
+            _docker_request("POST", f"/containers/{target}/start")
+            sys.exit(1)
+    elif restore_from:
+        logger.error("[SelfUpdater Helper] A revert needs the data folder; not reverting.")
+        _docker_request("POST", f"/containers/{target}/start")
+        sys.exit(1)
+
+    if restore_from:
+        # Revert: the previous version gets back the data exactly as it left it.
+        try:
+            from backend.services.data_snapshot import restore_snapshot
+
+            restore_snapshot(restore_from, data_dir)
+        except Exception as e:
+            logger.error(f"[SelfUpdater Helper] Could not restore {restore_from} ({e}); not reverting.")
+            from backend.services.data_snapshot import restore_snapshot as _undo
+
+            _undo(snapshot, data_dir)
             _docker_request("POST", f"/containers/{target}/start")
             sys.exit(1)
 
@@ -322,10 +361,13 @@ def main():
     parser.add_argument("--image", default="ghcr.io/fr0styx/zettnas-toolkit:latest", help="Target Docker image")
     parser.add_argument("--delay", type=float, default=2.5, help="Delay seconds before stopping caller")
     parser.add_argument("--data-dir", default=None, help="Target's data folder mounted into the helper")
+    parser.add_argument("--restore-from", default=None, help="Snapshot to restore before starting (revert)")
     args = parser.parse_args()
 
     if args.apply:
-        apply_update_from_helper(args.target, args.image, args.delay, data_dir=args.data_dir)
+        apply_update_from_helper(
+            args.target, args.image, args.delay, data_dir=args.data_dir, restore_from=args.restore_from
+        )
     else:
         print("Self-updater helper invoked without --apply. Exiting.")
 
