@@ -9,6 +9,7 @@ import { ZettEventBus } from '../event-bus.js';
 import { t } from '../i18n.js';
 import { showToast, showConfirmToast, showPromptToast } from '../toast.js';
 import { initTopbarUserPill } from './dock.js';
+import { openShareAccessModal } from './share-access.js';
 
 let _currentUser = null;
 
@@ -137,6 +138,9 @@ export function initUsersManagement() {
 
   const btnRefreshUsers = document.getElementById('btn-refresh-users');
   if (btnRefreshUsers) btnRefreshUsers.onclick = loadUsersList;
+
+  const btnShareAccess = document.getElementById('btn-share-access');
+  if (btnShareAccess) btnShareAccess.onclick = openShareAccessModal;
 
   const btnRefreshSessions = document.getElementById('btn-refresh-sessions');
   if (btnRefreshSessions) btnRefreshSessions.onclick = loadSessionsList;

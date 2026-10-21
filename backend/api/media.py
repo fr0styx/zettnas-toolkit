@@ -310,11 +310,11 @@ async def sync_rag_index(
 
 @router.post(
     "/media/index/control",
-    dependencies=[Depends(require_scope("shares:user_write", "storage:write", "storage:admin", "system:config"))],
+    dependencies=[Depends(require_scope("system:config", "ai:manage"))],
 )
 @router.post(
     "/ai/index/control",
-    dependencies=[Depends(require_scope("shares:user_write", "storage:write", "storage:admin", "system:config"))],
+    dependencies=[Depends(require_scope("system:config", "ai:manage"))],
 )
 def control_rag_index(req: RagSyncControlRequest) -> Dict[str, Any]:
     """Pause, resume, stop, query, or flush the active RAG & Visual Search indexing sync job."""
@@ -337,11 +337,11 @@ def control_rag_index(req: RagSyncControlRequest) -> Dict[str, Any]:
 
 @router.post(
     "/media/index/flush",
-    dependencies=[Depends(require_scope("shares:user_write", "storage:write", "storage:admin", "system:config"))],
+    dependencies=[Depends(require_scope("system:config", "ai:manage"))],
 )
 @router.post(
     "/ai/index/flush",
-    dependencies=[Depends(require_scope("shares:user_write", "storage:write", "storage:admin", "system:config"))],
+    dependencies=[Depends(require_scope("system:config", "ai:manage"))],
 )
 async def flush_rag_index(
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
@@ -355,11 +355,11 @@ async def flush_rag_index(
 
 @router.get(
     "/media/folders",
-    dependencies=[Depends(require_scope("system:read", "shares:read", "storage:read"))],
+    dependencies=[Depends(require_scope("system:config", "ai:manage"))],
 )
 @router.get(
     "/ai/folders",
-    dependencies=[Depends(require_scope("system:read", "shares:read", "storage:read"))],
+    dependencies=[Depends(require_scope("system:config", "ai:manage"))],
 )
 def get_watched_folders() -> Dict[str, Any]:
     """Returns configured watched/excluded RAG folders and discovered NAS shares with live disk standby state."""
@@ -378,11 +378,11 @@ def get_watched_folders() -> Dict[str, Any]:
 
 @router.post(
     "/media/folders",
-    dependencies=[Depends(require_scope("shares:user_write", "storage:write", "storage:admin", "system:config"))],
+    dependencies=[Depends(require_scope("system:config", "ai:manage"))],
 )
 @router.post(
     "/ai/folders",
-    dependencies=[Depends(require_scope("shares:user_write", "storage:write", "storage:admin", "system:config"))],
+    dependencies=[Depends(require_scope("system:config", "ai:manage"))],
 )
 def update_watched_folders(
     req: RagWatchedFoldersRequest,
@@ -489,11 +489,11 @@ def get_model_recommendations(
 
 @router.post(
     "/media/models/select",
-    dependencies=[Depends(require_scope("system:config", "storage:admin", "shares:user_write"))],
+    dependencies=[Depends(require_scope("system:config", "ai:manage"))],
 )
 @router.post(
     "/ai/models/select",
-    dependencies=[Depends(require_scope("system:config", "storage:admin", "shares:user_write"))],
+    dependencies=[Depends(require_scope("system:config", "ai:manage"))],
 )
 def select_recommended_model(req: ModelSelectRequest) -> Dict[str, Any]:
     """Selects and applies an LLM / multi-modal model for ZettAI, returning any hardware fit warnings."""
@@ -565,11 +565,11 @@ def search_hf_release_models(
 
 @router.post(
     "/media/models/huggingface/pull",
-    dependencies=[Depends(require_scope("system:config", "storage:admin", "shares:user_write"))],
+    dependencies=[Depends(require_scope("system:config", "ai:manage"))],
 )
 @router.post(
     "/ai/models/huggingface/pull",
-    dependencies=[Depends(require_scope("system:config", "storage:admin", "shares:user_write"))],
+    dependencies=[Depends(require_scope("system:config", "ai:manage"))],
 )
 def pull_hf_release_model(req: HuggingFacePullRequest) -> Dict[str, Any]:
     """Pulls/registers a release model from https://huggingface.co and flags hardware fit warnings."""
@@ -581,11 +581,11 @@ def pull_hf_release_model(req: HuggingFacePullRequest) -> Dict[str, Any]:
 
 @router.post(
     "/media/models/remove",
-    dependencies=[Depends(require_scope("system:config", "storage:admin", "shares:user_write"))],
+    dependencies=[Depends(require_scope("system:config", "ai:manage"))],
 )
 @router.post(
     "/ai/models/remove",
-    dependencies=[Depends(require_scope("system:config", "storage:admin", "shares:user_write"))],
+    dependencies=[Depends(require_scope("system:config", "ai:manage"))],
 )
 def remove_model_post_endpoint(req: ModelRemoveRequest) -> Dict[str, Any]:
     """Removes a model from the ZettAI catalog and local storage."""
@@ -602,11 +602,11 @@ def remove_model_post_endpoint(req: ModelRemoveRequest) -> Dict[str, Any]:
 
 @router.delete(
     "/media/models/remove",
-    dependencies=[Depends(require_scope("system:config", "storage:admin", "shares:user_write"))],
+    dependencies=[Depends(require_scope("system:config", "ai:manage"))],
 )
 @router.delete(
     "/ai/models/remove",
-    dependencies=[Depends(require_scope("system:config", "storage:admin", "shares:user_write"))],
+    dependencies=[Depends(require_scope("system:config", "ai:manage"))],
 )
 def remove_model_delete_explicit_endpoint(
     model: Optional[str] = Query(default=None),
@@ -627,11 +627,11 @@ def remove_model_delete_explicit_endpoint(
 
 @router.delete(
     "/media/models/{model_id:path}",
-    dependencies=[Depends(require_scope("system:config", "storage:admin", "shares:user_write"))],
+    dependencies=[Depends(require_scope("system:config", "ai:manage"))],
 )
 @router.delete(
     "/ai/models/{model_id:path}",
-    dependencies=[Depends(require_scope("system:config", "storage:admin", "shares:user_write"))],
+    dependencies=[Depends(require_scope("system:config", "ai:manage"))],
 )
 def delete_model_endpoint(model_id: str) -> Dict[str, Any]:
     """Removes a model from the ZettAI catalog and local storage."""
@@ -663,11 +663,11 @@ def get_zettai_learning_results(
 
 @router.post(
     "/media/learning/relearn-failed",
-    dependencies=[Depends(require_scope("shares:user_write", "storage:write", "storage:admin", "system:config"))],
+    dependencies=[Depends(require_scope("system:config", "ai:manage"))],
 )
 @router.post(
     "/ai/learning/relearn-failed",
-    dependencies=[Depends(require_scope("shares:user_write", "storage:write", "storage:admin", "system:config"))],
+    dependencies=[Depends(require_scope("system:config", "ai:manage"))],
 )
 async def relearn_failed_items() -> Dict[str, Any]:
     """Retries indexing failed files without waking sleeping drives."""

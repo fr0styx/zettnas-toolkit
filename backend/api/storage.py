@@ -315,6 +315,37 @@ def create_storage_pool(
         raise HTTPException(status_code=403, detail=str(e))
 
 
+class ShareAccessUpdate(BaseModel):
+    default_level: str = "write"
+    shares: Dict[str, Dict[str, Any]] = Field(default_factory=dict)
+
+
+@router.get("/share-access", dependencies=[Depends(require_scope("shares:manage"))])
+def get_share_access() -> Dict[str, Any]:
+    """Who can use which share in the file manager (SEC-10)."""
+    from backend.services.share_access import known_shares, load_config
+
+    cfg = load_config()
+    return {
+        "default_level": cfg["default_level"],
+        "levels": ["none", "read", "write"],
+        "shares": [
+            {"name": sh["name"], "path": sh["path"], **cfg["shares"].get(sh["name"], {"users": {}})}
+            for sh in known_shares()
+        ],
+    }
+
+
+@router.put("/share-access", dependencies=[Depends(require_scope("shares:manage"))])
+def put_share_access(req: ShareAccessUpdate) -> Dict[str, Any]:
+    from backend.services.share_access import save_config
+
+    try:
+        return save_config(req.model_dump())
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
 @router.post("/shares", dependencies=[Depends(require_scope("shares:manage"))])
 def create_storage_share(req: StorageShareCreateRequest) -> Dict[str, Any]:
     """

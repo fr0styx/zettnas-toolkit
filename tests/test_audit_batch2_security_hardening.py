@@ -118,7 +118,15 @@ def test_change_user_password_auditor_rejected(client, monkeypatch):
     assert res.status_code == 403
 
 
-def test_rag_learning_results_rbac_filtering():
+def test_rag_learning_results_rbac_filtering(monkeypatch):
+    # Share users only see files in shares granted to them (SEC-10); "documents" is one.
+    from backend.services import share_access
+
+    monkeypatch.setattr(
+        share_access,
+        "known_shares",
+        lambda: [{"name": "documents", "path": "/mnt/user/documents", "samba": None}],
+    )
     rag = get_rag_engine()
     rag._ensure_schema()
     conn = rag._get_conn()

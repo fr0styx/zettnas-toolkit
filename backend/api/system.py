@@ -339,7 +339,7 @@ def post_buttons(req: ButtonConfigRequest):
     return state
 
 
-@router.delete("/events/clear", dependencies=[Depends(require_scope("system:config", "audit:read"))])
+@router.delete("/events/clear", dependencies=[Depends(require_scope("system:config"))])
 def clear_events():
     with Z_STATE.lock:
         Z_STATE.event_log = []

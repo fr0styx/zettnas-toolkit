@@ -78,15 +78,23 @@ from backend.models.schemas import MkdirRequest
 router = APIRouter(tags=["File System & Shares"])
 
 
-def check_user_path_access(req_path: str, principal: Optional[AuthenticatedPrincipal]) -> None:
+def _is_files_admin(principal: Optional[AuthenticatedPrincipal]) -> bool:
+    return bool(
+        principal
+        and (
+            principal.has_scope("superadmin")
+            or principal.has_scope("storage:admin")
+            or principal.has_scope("shares:manage")
+            or principal.has_scope("*")
+        )
+    )
+
+
+def check_user_path_access(req_path: str, principal: Optional[AuthenticatedPrincipal], write: bool = False) -> None:
+    """Non-admins only reach their home and shares granted to them (SEC-10); write needs write access."""
     if not principal:
         raise HTTPException(status_code=401, detail="Authentication required.")
-    if (
-        principal.has_scope("superadmin")
-        or principal.has_scope("storage:admin")
-        or principal.has_scope("shares:manage")
-        or principal.has_scope("*")
-    ):
+    if _is_files_admin(principal):
         return
     raw_path = str(req_path or "").strip()
     raw_norm = os.path.normpath(raw_path).replace("\\", "/")
@@ -110,6 +118,21 @@ def check_user_path_access(req_path: str, principal: Optional[AuthenticatedPrinc
                 current_user = (principal.username or "").lower()
                 if target_user != current_user:
                     raise HTTPException(status_code=403, detail="Access denied to another user home folder.")
+
+    if not raw_path:
+        if write:
+            raise HTTPException(status_code=403, detail="Choose a folder you can write to.")
+        return  # default root listing; entries are filtered by share access
+    real = os.path.realpath(raw_path) if os.path.isabs(raw_path) else resolve_within(raw_path, ALLOWED_BROWSE_ROOTS)
+    if not real:
+        return  # _contained() answers 403/404 for paths outside the roots
+    from backend.services.share_access import level_for
+
+    level = level_for(principal.username or "", real)
+    if level == "none":
+        raise HTTPException(status_code=403, detail="You don't have access to this folder.")
+    if write and level != "write":
+        raise HTTPException(status_code=403, detail="You have read-only access to this folder.")
 
 
 def user_can_access_path(req_path: str, principal: Optional[AuthenticatedPrincipal]) -> bool:
@@ -194,6 +217,19 @@ def _scan_remote_dir_isolated(real: str, dirs_only: bool) -> List[Dict[str, Any]
 
 
 def _handle_browse_logic(path: str, dirs_only: bool, principal: Optional[AuthenticatedPrincipal] = None):
+    result = _handle_browse_logic_unfiltered(path, dirs_only, principal)
+    if principal is None or _is_files_admin(principal) or not isinstance(result, dict):
+        return result
+    from backend.services.share_access import level_for
+
+    username = principal.username or ""
+    result["dirs"] = [
+        e for e in result.get("dirs", []) if e.get("name") == ".." or level_for(username, e.get("path", "")) != "none"
+    ]
+    return result
+
+
+def _handle_browse_logic_unfiltered(path: str, dirs_only: bool, principal: Optional[AuthenticatedPrincipal] = None):
     real = _contained(path or ALLOWED_BROWSE_ROOTS[0])
     if not os.path.isdir(real):
         raise HTTPException(status_code=400, detail="Not a directory.")
@@ -567,7 +603,7 @@ def _do_mkdir(path: str):
     dependencies=[Depends(require_scope("shares:manage", "shares:user_write", "storage:write", "storage:admin"))],
 )
 def mkdir(req: MkdirRequest, principal: AuthenticatedPrincipal = Depends(get_current_principal)):
-    check_user_path_access(req.path, principal)
+    check_user_path_access(req.path, principal, write=True)
     import backend.api.system as sys_mod
 
     fn = (
@@ -634,7 +670,7 @@ def _safe_fs_target(req_path: str):
     dependencies=[Depends(require_scope("shares:manage", "shares:user_write", "storage:write", "storage:admin"))],
 )
 async def fs_rename(req: RenameRequest, principal: AuthenticatedPrincipal = Depends(get_current_principal)):
-    check_user_path_access(req.path, principal)
+    check_user_path_access(req.path, principal, write=True)
     target_unresolved, parent_canonical, _ = _safe_fs_target(req.path)
     new_name = str(req.new_name or "").strip()
     if not new_name or "/" in new_name or "\\" in new_name or new_name in (".", ".."):
@@ -649,7 +685,7 @@ async def fs_rename(req: RenameRequest, principal: AuthenticatedPrincipal = Depe
         raise HTTPException(status_code=403, detail="Cannot rename user home directory root.")
 
     dst = os.path.join(parent_canonical, new_name)
-    check_user_path_access(dst, principal)
+    check_user_path_access(dst, principal, write=True)
     if os.path.lexists(dst):
         raise HTTPException(status_code=400, detail="Destination already exists")
     try:
@@ -665,7 +701,7 @@ async def fs_rename(req: RenameRequest, principal: AuthenticatedPrincipal = Depe
     dependencies=[Depends(require_scope("shares:manage", "shares:user_write", "storage:write", "storage:admin"))],
 )
 async def fs_delete(req: DeleteRequest, principal: AuthenticatedPrincipal = Depends(get_current_principal)):
-    check_user_path_access(req.path, principal)
+    check_user_path_access(req.path, principal, write=True)
     target_unresolved, parent_canonical, _ = _safe_fs_target(req.path)
     is_admin = (
         principal.role_id in ("superadmin", "storage_admin")
@@ -753,7 +789,7 @@ async def fs_transfer(req: FsTransferRequest, principal: AuthenticatedPrincipal 
     dest_canonical = resolve_within(req.destination_dir, ALLOWED_BROWSE_ROOTS)
     if dest_canonical is None:
         raise HTTPException(status_code=403, detail="Destination directory is outside allowed folders.")
-    check_user_path_access(req.destination_dir, principal)
+    check_user_path_access(req.destination_dir, principal, write=True)
 
     is_admin = (
         principal.role_id in ("superadmin", "storage_admin")
@@ -765,7 +801,7 @@ async def fs_transfer(req: FsTransferRequest, principal: AuthenticatedPrincipal 
         src_canonical = resolve_within(src, ALLOWED_BROWSE_ROOTS)
         if src_canonical is None:
             raise HTTPException(status_code=403, detail=f"Source path {src} is outside allowed folders.")
-        check_user_path_access(src, principal)
+        check_user_path_access(src, principal, write=req.action == "move")
 
         if req.action == "move" and not is_admin and os.path.basename(src.rstrip("/")) == "homes":
             raise HTTPException(status_code=403, detail="Cannot move root homes directory.")
@@ -832,7 +868,7 @@ async def fs_transfer_async(
     dest_canonical = resolve_within(req.destination_dir, ALLOWED_BROWSE_ROOTS)
     if dest_canonical is None:
         raise HTTPException(status_code=403, detail="Destination directory is outside allowed folders.")
-    check_user_path_access(req.destination_dir, principal)
+    check_user_path_access(req.destination_dir, principal, write=True)
 
     is_admin = (
         principal.role_id in ("superadmin", "storage_admin")
@@ -845,12 +881,13 @@ async def fs_transfer_async(
         src_canonical = resolve_within(src, ALLOWED_BROWSE_ROOTS)
         if src_canonical is None:
             raise HTTPException(status_code=403, detail=f"Source path {src} is outside allowed folders.")
-        check_user_path_access(src, principal)
+        check_user_path_access(src, principal, write=req.action == "move")
         if req.action == "move" and not is_admin and os.path.basename(src.rstrip("/")) == "homes":
             raise HTTPException(status_code=403, detail="Cannot move root homes directory.")
         clean_sources.append(src_canonical)
 
     task = transfer_manager.submit_transfer(
+        owner=principal.username or "",
         sources=clean_sources,
         destination_dir=dest_canonical,
         action=req.action,
@@ -877,7 +914,7 @@ async def fs_archive_create(
     dest_canonical = resolve_within(req.destination_dir, ALLOWED_BROWSE_ROOTS)
     if dest_canonical is None:
         raise HTTPException(status_code=403, detail="Destination directory is outside allowed folders.")
-    check_user_path_access(req.destination_dir, principal)
+    check_user_path_access(req.destination_dir, principal, write=True)
 
     archive_name = os.path.basename(req.archive_name.strip())
     if not archive_name or "/" in archive_name or "\\" in archive_name or archive_name in (".", ".."):
@@ -892,6 +929,7 @@ async def fs_archive_create(
         clean_sources.append(src_canonical)
 
     task = transfer_manager.submit_archive_create(
+        owner=principal.username or "",
         sources=clean_sources,
         destination_dir=dest_canonical,
         archive_name=archive_name,
@@ -918,7 +956,7 @@ async def fs_archive_extract(
     dest_canonical = resolve_within(req.destination_dir, ALLOWED_BROWSE_ROOTS)
     if dest_canonical is None:
         raise HTTPException(status_code=403, detail="Destination directory is outside allowed folders.")
-    check_user_path_access(req.destination_dir, principal)
+    check_user_path_access(req.destination_dir, principal, write=True)
 
     arc_canonical = resolve_within(req.archive_path, ALLOWED_BROWSE_ROOTS)
     if arc_canonical is None or not os.path.isfile(arc_canonical):
@@ -926,6 +964,7 @@ async def fs_archive_extract(
     check_user_path_access(req.archive_path, principal)
 
     task = transfer_manager.submit_archive_extract(
+        owner=principal.username or "",
         archive_path=arc_canonical,
         destination_dir=dest_canonical,
     )
@@ -937,6 +976,19 @@ async def fs_archive_extract(
     return {"status": "ok", "task_id": task.id, "task": task.to_dict()}
 
 
+def _task_owner_filter(principal: Optional[AuthenticatedPrincipal]) -> Optional[str]:
+    """None (see every task) for admins, else the caller's username (SEC-11)."""
+    return None if _is_files_admin(principal) else (principal.username or "").lower() if principal else ""
+
+
+def _assert_task_owner(task_id: str, principal: Optional[AuthenticatedPrincipal]) -> None:
+    from backend.services.fs_transfer import transfer_manager
+
+    owner = _task_owner_filter(principal)
+    if owner is not None and transfer_manager.owner_of(task_id) not in (owner,):
+        raise HTTPException(status_code=404, detail="Task not found")
+
+
 @router.get(
     "/fs/transfers",
     dependencies=[Depends(require_scope("shares:read", "storage:read", "system:view"))],
@@ -944,7 +996,7 @@ async def fs_archive_extract(
 def fs_list_transfers(principal: AuthenticatedPrincipal = Depends(get_current_principal)):
     from backend.services.fs_transfer import transfer_manager
 
-    return {"status": "ok", "tasks": transfer_manager.list_tasks()}
+    return {"status": "ok", "tasks": transfer_manager.list_tasks(owner=_task_owner_filter(principal))}
 
 
 @router.get("/fs/transfers/stream")
@@ -960,7 +1012,8 @@ async def fs_transfers_stream(
 
     async def event_generator():
         try:
-            initial_data = json.dumps({"event": "snapshot", "tasks": transfer_manager.list_tasks()})
+            owner = _task_owner_filter(principal)
+            initial_data = json.dumps({"event": "snapshot", "tasks": transfer_manager.list_tasks(owner=owner)})
             yield f"event: snapshot\ndata: {initial_data}\n\n"
 
             while True:
@@ -968,6 +1021,8 @@ async def fs_transfers_stream(
                     break
                 try:
                     payload = await asyncio.wait_for(queue.get(), timeout=15.0)
+                    if owner is not None and (payload.get("task") or {}).get("owner") != owner:
+                        continue
                     evt_type = payload.get("event", "update")
                     data_str = json.dumps(payload)
                     yield f"event: {evt_type}\ndata: {data_str}\n\n"
@@ -996,6 +1051,7 @@ async def fs_transfers_stream(
 def fs_pause_transfer(task_id: str, principal: AuthenticatedPrincipal = Depends(get_current_principal)):
     from backend.services.fs_transfer import transfer_manager
 
+    _assert_task_owner(task_id, principal)
     ok = transfer_manager.pause_task(task_id)
     if not ok:
         raise HTTPException(status_code=404, detail="Task not found or cannot be paused")
@@ -1009,6 +1065,7 @@ def fs_pause_transfer(task_id: str, principal: AuthenticatedPrincipal = Depends(
 def fs_resume_transfer(task_id: str, principal: AuthenticatedPrincipal = Depends(get_current_principal)):
     from backend.services.fs_transfer import transfer_manager
 
+    _assert_task_owner(task_id, principal)
     ok = transfer_manager.resume_task(task_id)
     if not ok:
         raise HTTPException(status_code=404, detail="Task not found or cannot be resumed")
@@ -1022,6 +1079,7 @@ def fs_resume_transfer(task_id: str, principal: AuthenticatedPrincipal = Depends
 def fs_cancel_transfer(task_id: str, principal: AuthenticatedPrincipal = Depends(get_current_principal)):
     from backend.services.fs_transfer import transfer_manager
 
+    _assert_task_owner(task_id, principal)
     ok = transfer_manager.cancel_task(task_id)
     if not ok:
         raise HTTPException(status_code=404, detail="Task not found or cannot be cancelled")
@@ -1204,7 +1262,7 @@ async def fs_update_permissions(
     req: PermissionsUpdateRequest,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
 ):
-    check_user_path_access(req.path, principal)
+    check_user_path_access(req.path, principal, write=True)
     target = _contained(req.path, must_exist=True)
 
     # Guard against modifying sensitive system directories and appdata root
@@ -1294,7 +1352,7 @@ async def fs_upload(
     filename: str,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
 ):
-    check_user_path_access(path, principal)
+    check_user_path_access(path, principal, write=True)
     target_unresolved, _, _ = _safe_fs_target(path)
     target_canonical = resolve_within(target_unresolved, ALLOWED_BROWSE_ROOTS)
     if target_canonical is None or not os.path.isdir(target_canonical):
@@ -1306,7 +1364,7 @@ async def fs_upload(
         raise HTTPException(status_code=400, detail="Invalid filename")
 
     file_path = os.path.join(target_canonical, filename)
-    check_user_path_access(file_path, principal)
+    check_user_path_access(file_path, principal, write=True)
     if os.path.islink(file_path) and resolve_within(file_path, ALLOWED_BROWSE_ROOTS) is None:
         raise HTTPException(status_code=403, detail="Destination symlink points outside allowed folders")
 
@@ -1354,7 +1412,7 @@ async def fs_upload_init(
     req: UploadInitRequest,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
 ):
-    check_user_path_access(req.path, principal)
+    check_user_path_access(req.path, principal, write=True)
     target_unresolved, _, _ = _safe_fs_target(req.path)
     target_canonical = resolve_within(target_unresolved, ALLOWED_BROWSE_ROOTS)
     if target_canonical is None or not os.path.isdir(target_canonical):
@@ -1447,7 +1505,7 @@ async def fs_upload_complete(
         raise HTTPException(status_code=400, detail=f"Upload incomplete. Missing {len(missing)} chunks")
 
     final_target = os.path.join(target_dir, filename)
-    check_user_path_access(final_target, principal)
+    check_user_path_access(final_target, principal, write=True)
     temp_assembly = os.path.join(target_dir, f".zettnas_tmp_{req.upload_id}_{filename}")
 
     sha256 = hashlib.sha256()
@@ -1714,7 +1772,7 @@ async def fs_trash_restore(
 
                 dest_dir = _contained(dest_dir, must_exist=False)
                 dest_path = _contained(dest_path, must_exist=False)
-                check_user_path_access(dest_path, principal)
+                check_user_path_access(dest_path, principal, write=True)
 
                 os.makedirs(dest_dir, exist_ok=True)
 

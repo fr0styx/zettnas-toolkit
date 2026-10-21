@@ -335,6 +335,7 @@ class TransferTask:
         self.sources = sources
         self.destination = destination
         self.collision_policy = collision_policy
+        self.owner = ""  # username that started it; empty = system / admin
         self.status = TransferTaskStatus.PENDING
         self.total_bytes = 0
         self.processed_bytes = 0
@@ -357,6 +358,7 @@ class TransferTask:
     def to_dict(self) -> Dict[str, Any]:
         return {
             "id": self.id,
+            "owner": self.owner,
             "action": self.action,
             "sources": self.sources,
             "destination": self.destination,
@@ -418,10 +420,18 @@ class TransferTaskManager:
                     return t.to_dict()
         return None
 
-    def list_tasks(self) -> List[Dict[str, Any]]:
+    def owner_of(self, task_id: str) -> Optional[str]:
         with self._lock:
-            active = [t.to_dict() for t in self._tasks.values()]
-            historical = [t.to_dict() for t in self._history if t.id not in self._tasks]
+            task = self._tasks.get(task_id) or next((t for t in self._history if t.id == task_id), None)
+        return None if task is None else (task.owner or "")
+
+    def list_tasks(self, owner: Optional[str] = None) -> List[Dict[str, Any]]:
+        """All tasks, or only those started by `owner` when given."""
+        with self._lock:
+            active = [t.to_dict() for t in self._tasks.values() if owner is None or t.owner == owner]
+            historical = [
+                t.to_dict() for t in self._history if t.id not in self._tasks and (owner is None or t.owner == owner)
+            ]
         # Sort newest first
         return sorted(active + historical, key=lambda x: x["created_at"], reverse=True)
 
@@ -475,6 +485,7 @@ class TransferTaskManager:
         destination_dir: str,
         action: str = "copy",
         collision_policy: str = "merge",
+        owner: str = "",
     ) -> TransferTask:
         task_id = str(uuid.uuid4())
         task = TransferTask(
@@ -484,6 +495,7 @@ class TransferTaskManager:
             destination=destination_dir,
             collision_policy=collision_policy,
         )
+        task.owner = (owner or "").lower()
         with self._lock:
             self._tasks[task_id] = task
 
@@ -503,6 +515,7 @@ class TransferTaskManager:
         destination_dir: str,
         archive_name: str,
         fmt: str = "zip",
+        owner: str = "",
     ) -> TransferTask:
         task_id = str(uuid.uuid4())
         task = TransferTask(
@@ -512,6 +525,7 @@ class TransferTaskManager:
             destination=destination_dir,
             collision_policy="overwrite",
         )
+        task.owner = (owner or "").lower()
         with self._lock:
             self._tasks[task_id] = task
 
@@ -529,6 +543,7 @@ class TransferTaskManager:
         self,
         archive_path: str,
         destination_dir: str,
+        owner: str = "",
     ) -> TransferTask:
         task_id = str(uuid.uuid4())
         task = TransferTask(
@@ -538,6 +553,7 @@ class TransferTaskManager:
             destination=destination_dir,
             collision_policy="merge",
         )
+        task.owner = (owner or "").lower()
         with self._lock:
             self._tasks[task_id] = task
 
