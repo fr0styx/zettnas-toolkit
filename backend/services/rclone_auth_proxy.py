@@ -4,10 +4,13 @@ ZettNAS Toolkit - rclone WebDAV & SFTP Auth Proxy.
 Authenticates incoming WebDAV/SFTP requests dynamically using:
 1. Dedicated SFTP User Store (data/sftp/users.json)
 2. ZettNAS SQLite User Store (users.db)
-3. System Admin fallback credentials
+No default or legacy admin password is ever accepted (SEC-02). Accounts that
+still have to change their password, and usernames locked out after repeated
+failures, are refused.
 Mounts isolated home directories or designated shares for standard users, and full pool for admins.
 """
 
+import hmac
 import json
 import os
 import sys
@@ -20,6 +23,7 @@ if REPO_ROOT not in sys.path:
 
 from backend import config
 from backend.passwords import verify_password
+from backend.services import login_lockout
 from backend.users_db import get_user_by_username
 
 
@@ -39,6 +43,10 @@ def main():
     if not username:
         sys.exit(1)
 
+    lock_key = f"webdav:{username.lower()}"
+    if login_lockout.remaining(lock_key) > 0:
+        sys.exit(1)
+
     pool_path = getattr(config, "POOL_PATH", "/mnt/user")
     authenticated = False
     is_admin = False
@@ -56,7 +64,7 @@ def main():
                     if u.get("username", "").strip().lower() == username.lower() and u.get("enabled", True):
                         u_pass = u.get("password")
                         if u_pass and password:
-                            if u_pass == password or verify_password(password, u_pass):
+                            if hmac.compare_digest(str(u_pass), password) or verify_password(password, u_pass):
                                 authenticated = True
                         u_key = str(u.get("pubkey") or "").strip()
                         if u_key and public_key:
@@ -101,7 +109,7 @@ def main():
     if not authenticated:
         db_path = os.environ.get("USERS_DB_PATH") or getattr(config, "USERS_DB_PATH", None)
         user = get_user_by_username(username, db_path=db_path)
-        if user and user.get("status") == "active":
+        if user and user.get("status") == "active" and not user.get("must_change_password"):
             if password and verify_password(password, user.get("password_hash", "")):
                 authenticated = True
                 is_admin = user.get("role_id") in ("superadmin", "storage_admin")
@@ -111,17 +119,10 @@ def main():
                 else:
                     target_root = user.get("home_directory") or os.path.join(pool_path, "homes", username.lower())
 
-    # 3. Fallback check for legacy admin credentials
-    if not authenticated and username.lower() in ("admin", getattr(config, "ZETTNAS_USERNAME", "admin").lower()):
-        if password and (
-            verify_password(password, config.STORED_PASSWORD_HASH) or password == (config.WEB_PASSWORD or "admin")
-        ):
-            authenticated = True
-            is_admin = True
-            target_root = pool_path
-
     if not authenticated:
+        login_lockout.register_failure(lock_key)
         sys.exit(1)
+    login_lockout.clear(lock_key)
 
     # 4. Resolve root path safely
     root = target_root or pool_path

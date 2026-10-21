@@ -54,7 +54,7 @@ class TestWebdavAndRemotes(unittest.TestCase):
         cfg = self.webdav_engine.load_config()
         self.assertEqual(cfg["port"], config.WEBDAV_PORT)
         self.assertEqual(cfg["username"], "admin")
-        self.assertTrue(cfg["enabled"])
+        self.assertFalse(cfg["enabled"])  # WebDAV is opt-in (SEC-02)
 
         # Update config
         updated = self.webdav_engine.save_config({"port": 9090, "username": "nasuser", "read_only": True})

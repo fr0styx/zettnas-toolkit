@@ -6,6 +6,7 @@ Provides WebDAV daemon controls, modern WebDAV Portal UI, and transparent HTTP p
 import asyncio
 import hashlib
 import hmac
+import time
 import logging
 import os
 import urllib.parse
@@ -28,26 +29,33 @@ router = APIRouter(tags=["WebDAV Storage"])
 proxy_router = APIRouter(tags=["WebDAV Proxy"], include_in_schema=False)
 
 
-def _sign_webdav_cookie(username: str, role_label: str) -> str:
-    """Creates an HMAC-SHA256 cryptographically signed session cookie."""
+WEBDAV_COOKIE_TTL = 12 * 3600
+
+
+def _sign_webdav_cookie(username: str, role_label: str, issued_at: Optional[int] = None) -> str:
+    """Creates an HMAC-SHA256 signed, expiring session cookie: user:role:issued_at:sig."""
     secret = getattr(config, "SECRET_KEY", "zettnas-webdav-fallback-secret")
-    payload = f"{username}:{role_label}"
+    iat = int(issued_at if issued_at is not None else time.time())
+    payload = f"{username}:{role_label}:{iat}"
     sig = hmac.new(secret.encode("utf-8"), payload.encode("utf-8"), hashlib.sha256).hexdigest()
     return f"{payload}:{sig}"
 
 
 def _verify_webdav_cookie(cookie_val: str) -> Optional[Tuple[str, str]]:
-    """Verifies HMAC signature of a WebDAV session cookie.
-    Gracefully rejects legacy/unsigned/corrupt cookies without throwing exceptions.
+    """Verifies signature and age of a WebDAV session cookie.
+    Rejects legacy (non-expiring), unsigned, expired or corrupt cookies without raising.
     """
-    if not cookie_val or cookie_val.count(":") != 2:
+    if not cookie_val or cookie_val.count(":") != 3:
         return None
     try:
-        username, role_label, sig = cookie_val.split(":", 2)
-        if not username or not role_label or not sig:
+        username, role_label, iat_raw, sig = cookie_val.split(":", 3)
+        if not username or not role_label or not sig or not iat_raw.isdigit():
+            return None
+        age = time.time() - int(iat_raw)
+        if age < -60 or age > WEBDAV_COOKIE_TTL:
             return None
         secret = getattr(config, "SECRET_KEY", "zettnas-webdav-fallback-secret")
-        payload = f"{username}:{role_label}"
+        payload = f"{username}:{role_label}:{iat_raw}"
         expected_sig = hmac.new(secret.encode("utf-8"), payload.encode("utf-8"), hashlib.sha256).hexdigest()
         if hmac.compare_digest(sig, expected_sig):
             return username, role_label
@@ -128,55 +136,42 @@ async def webdav_portal_login(request: Request):
         username = ""
         password = ""
 
-    engine = get_webdav_engine()
-    cfg = engine.load_config()
-    expected_user = cfg.get("username", "admin") or "admin"
-    webdav_pass = cfg.get("password")
-
-    authenticated = False
-    is_admin = False
-
-    # 1. Check user in SQLite users.db
+    from backend.services import login_lockout
     from backend.users_db import get_user_by_username
 
+    lock_key = f"webdav:{username.lower()}"
+    wait = login_lockout.remaining(lock_key)
+    if wait > 0:
+        return HTMLResponse(
+            render_webdav_login(error_msg=f"Too many failed attempts. Try again in {wait} seconds."),
+            status_code=429,
+        )
+
+    # Only real ZettNAS accounts; no default, legacy or copied master password (SEC-02).
+    authenticated = False
+    is_admin = False
     user = get_user_by_username(username)
-    if user and user.get("status") == "active":
+    if user and user.get("status") == "active" and password:
         if verify_password(password, user.get("password_hash", "")):
+            if user.get("must_change_password"):
+                return HTMLResponse(
+                    render_webdav_login(error_msg="Change your ZettNAS password before using WebDAV."),
+                    status_code=403,
+                )
             authenticated = True
             is_admin = user.get("role_id") in ("superadmin", "storage_admin")
 
-    # 2. Fallback check for legacy admin credentials
-    if not authenticated and username.lower() in (
-        "admin",
-        expected_user.lower(),
-        getattr(config, "ZETTNAS_USERNAME", "admin").lower(),
-    ):
-        if webdav_pass and password == webdav_pass:
-            authenticated = True
-            is_admin = True
-        elif config.STORED_PASSWORD_HASH and verify_password(password, config.STORED_PASSWORD_HASH):
-            authenticated = True
-            is_admin = True
-            # Sync this password to webdav config if no dedicated password was set
-            if not webdav_pass and password != "admin":
-                try:
-                    engine.save_config({"password": password})
-                    asyncio.create_task(asyncio.to_thread(engine.restart))
-                except Exception as e:
-                    logger.warning(f"[WebDAV] Failed to sync master password: {e}")
-        elif config.WEB_PASSWORD and password == config.WEB_PASSWORD:
-            authenticated = True
-            is_admin = True
-
     if authenticated:
+        login_lockout.clear(lock_key)
         role_label = "admin" if is_admin else "user"
         resp = RedirectResponse(url="/webdav/", status_code=303)
         resp.set_cookie(
             key="webdav_session",
-            value=_sign_webdav_cookie(username, role_label),
-            max_age=86400 * 7,
+            value=_sign_webdav_cookie(user["username"], role_label),
+            max_age=WEBDAV_COOKIE_TTL,
             httponly=True,
             samesite="lax",
+            secure=request.url.scheme == "https" or request.headers.get("x-forwarded-proto") == "https",
         )
         return resp
     else:
@@ -273,14 +268,7 @@ def _get_webdav_portal_user(request: Request, cfg: Dict[str, Any]) -> Optional[D
                     "is_admin": is_admin,
                     "home_directory": user.get("home_directory"),
                 }
-
-            expected_user = cfg.get("username", "admin") or "admin"
-            if username.lower() in (
-                "admin",
-                expected_user.lower(),
-                getattr(config, "ZETTNAS_USERNAME", "admin").lower(),
-            ):
-                return {"username": username, "role_id": "superadmin", "is_admin": True}
+            # Unknown, disabled or deleted users get nothing (no admin-name fallback).
 
     # 2. Check active ZettNAS desktop session (session cookie, bearer token, or state)
     try:
@@ -315,7 +303,7 @@ async def _proxy_webdav(request: Request, path: str = ""):
     engine = get_webdav_engine()
     if not engine.is_running():
         cfg = engine.load_config()
-        if cfg.get("enabled", True):
+        if cfg.get("enabled", False):
             await asyncio.to_thread(engine.start)
         if not engine.is_running():
             raise HTTPException(

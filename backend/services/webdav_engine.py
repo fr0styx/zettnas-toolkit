@@ -47,12 +47,12 @@ class WebdavEngine:
     def get_default_config(self) -> Dict[str, Any]:
         root = config.POOL_PATH if os.path.exists(config.POOL_PATH) else "/mnt/user"
         return {
-            "enabled": True,
+            "enabled": False,  # opt-in: exposes every share over the network (SEC-02)
             "port": config.WEBDAV_PORT,
             "root_path": root,
             "read_only": False,
             "username": "admin",
-            "password": "",  # If empty, uses toolkit password or defaults to admin
+            "password": "",  # dedicated password for the no-proxy fallback mode only
             "auth_enabled": True,
         }
 
@@ -157,9 +157,11 @@ class WebdavEngine:
                 ]
                 if cfg.get("auth_enabled", True):
                     username = cfg.get("username", "admin") or "admin"
-                    password = cfg.get("password")
-                    if not password:
-                        password = config.WEB_PASSWORD or "admin"
+                    password = str(cfg.get("password") or "")
+                    if len(password) < 8 or password.lower() == "admin":
+                        self._last_error = "WebDAV needs a dedicated password of at least 8 characters."
+                        logger.error(f"[WEBDAV] Not starting: {self._last_error}")
+                        return self.get_status()
                     cmd.extend(["--user", username, "--pass", password])
 
             if cfg.get("read_only"):
@@ -219,7 +221,7 @@ class WebdavEngine:
 
     def start_if_enabled(self):
         cfg = self.load_config()
-        if cfg.get("enabled", True):
+        if cfg.get("enabled", False):
             self.start()
 
     def get_status(self) -> Dict[str, Any]:
@@ -235,7 +237,7 @@ class WebdavEngine:
         proxy_url = "/webdav/"
 
         return {
-            "enabled": bool(cfg.get("enabled", True)),
+            "enabled": bool(cfg.get("enabled", False)),
             "running": running,
             "pid": self._proc.pid if running and self._proc else None,
             "uptime_seconds": round(time.time() - self._started_at, 1) if running and self._started_at else None,
