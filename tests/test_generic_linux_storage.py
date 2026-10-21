@@ -191,7 +191,11 @@ def test_unraid_observer_mode_rejections():
 # ==============================================================================
 
 
-def test_samba_engine_conf_generation_and_timemachine(tmp_path):
+def test_samba_engine_conf_generation_and_timemachine(tmp_path, monkeypatch):
+    from backend import config
+
+    # Shares must live inside the storage pool (SEC-06)
+    monkeypatch.setattr(config, "POOL_PATH", str(tmp_path))
     engine = SambaEngine()
 
     # Add standard share

@@ -26,16 +26,80 @@ class SambaShareConfig(BaseModel):
     path: str
     comment: str = ""
     read_only: bool = False
-    guest_ok: bool = True
+    guest_ok: bool = False  # guests only when asked for (SEC-06)
     browseable: bool = True
     timemachine: bool = False
     timemachine_quota_gb: Optional[int] = None
     quota_gb: Optional[int] = None
-    force_user: str = "root"
-    force_group: str = "root"
+    force_user: str = "nobody"
+    force_group: str = "users"
     valid_users: Optional[str] = None
     read_list: Optional[str] = None
     write_list: Optional[str] = None
+
+
+_CONTROL_CHARS = re.compile(r"[\x00-\x1f\x7f]")
+_PRINCIPAL = re.compile(r"^[@+&]{0,2}[A-Za-z0-9][A-Za-z0-9._ -]{0,63}$")
+_UNIX_NAME = re.compile(r"^[a-z_][a-z0-9_.-]{0,31}$", re.IGNORECASE)
+_FORBIDDEN_PREFIXES = (
+    "/etc",
+    "/root",
+    "/app",
+    "/proc",
+    "/sys",
+    "/dev",
+    "/boot",
+    "/host",
+    "/usr",
+    "/bin",
+    "/sbin",
+    "/lib",
+)
+
+
+def _allowed_share_roots() -> List[str]:
+    from backend import config
+
+    roots = [getattr(config, "POOL_PATH", "") or ""]
+    roots += list(getattr(config, "ALLOWED_BROWSE_ROOTS", []) or [])
+    return [os.path.realpath(r) for r in roots if r]
+
+
+def validate_share(share: "SambaShareConfig") -> None:
+    """Rejects settings that would let a share expose system paths or inject smb.conf lines (SEC-06)."""
+    for field in ("name", "path", "comment", "force_user", "force_group", "valid_users", "read_list", "write_list"):
+        value = getattr(share, field) or ""
+        if _CONTROL_CHARS.search(value):
+            raise ValueError(f"'{field}' must not contain line breaks or control characters")
+    if "[" in share.comment or "]" in share.comment:
+        raise ValueError("'comment' must not contain square brackets")
+
+    path = (share.path or "").strip()
+    if not os.path.isabs(path):
+        raise ValueError("Share path must be an absolute path")
+    real = os.path.realpath(path)
+    roots = _allowed_share_roots()
+    inside = any(real == r or real.startswith(r.rstrip("/") + "/") for r in roots)
+    system_path = real == "/" or any(real == f or real.startswith(f + "/") for f in _FORBIDDEN_PREFIXES)
+    if not inside or system_path:
+        raise ValueError(f"Share path must be inside {', '.join(roots) or 'the storage pool'}")
+    share.path = real
+
+    for field in ("valid_users", "read_list", "write_list"):
+        value = getattr(share, field)
+        if not value:
+            continue
+        for principal in re.split(r"[,\s]+", value.strip()):
+            if principal and not _PRINCIPAL.match(principal):
+                raise ValueError(f"'{field}' contains an invalid user or group: {principal!r}")
+    for field in ("force_user", "force_group"):
+        value = (getattr(share, field) or "").strip()
+        if value and not _UNIX_NAME.match(value):
+            raise ValueError(f"'{field}' must be a plain user or group name")
+    for field in ("quota_gb", "timemachine_quota_gb"):
+        value = getattr(share, field)
+        if value is not None and not (0 <= int(value) <= 1_000_000):
+            raise ValueError(f"'{field}' is out of range")
 
 
 class SambaStatus(BaseModel):
@@ -163,7 +227,7 @@ class SambaEngine:
                 path=default_path,
                 comment="ZettNAS Primary Storage Pool",
                 read_only=False,
-                guest_ok=True,
+                guest_ok=False,
                 browseable=True,
                 timemachine=False,
             )
@@ -189,10 +253,11 @@ class SambaEngine:
 
     def add_or_update_share(self, share: SambaShareConfig) -> SambaShareConfig:
         """Adds or updates a Samba share and regenerates smb.conf."""
+        validate_share(share)
         # Validate name (safe SMB share name)
         clean_name = re.sub(r"[^a-zA-Z0-9_\-\.]", "_", share.name.strip())
-        if not clean_name:
-            raise ValueError("Share name cannot be empty or invalid")
+        if not clean_name or clean_name.lower() in ("global", "homes", "printers", "ipc$"):
+            raise ValueError("Share name cannot be empty, invalid or reserved")
         share.name = clean_name
 
         # Ensure directory exists if possible
@@ -223,6 +288,11 @@ class SambaEngine:
         conf_lines = [self._DEFAULT_GLOBAL_CONFIG.strip(), ""]
 
         for share in self._shares.values():
+            try:
+                validate_share(share)
+            except ValueError as e:
+                logger.error(f"[SambaEngine] Skipping share '{share.name}' with unsafe settings: {e}")
+                continue
             conf_lines.append(f"[{share.name}]")
             conf_lines.append(f"   path = {share.path}")
             if share.comment:
@@ -232,8 +302,10 @@ class SambaEngine:
             conf_lines.append(f"   guest ok = {'yes' if share.guest_ok else 'no'}")
             conf_lines.append("   create mask = 0775")
             conf_lines.append("   directory mask = 0775")
-            conf_lines.append(f"   force user = {share.force_user}")
-            conf_lines.append(f"   force group = {share.force_group}")
+            if share.force_user:
+                conf_lines.append(f"   force user = {share.force_user}")
+            if share.force_group:
+                conf_lines.append(f"   force group = {share.force_group}")
 
             if share.valid_users:
                 conf_lines.append(f"   valid users = {share.valid_users}")
