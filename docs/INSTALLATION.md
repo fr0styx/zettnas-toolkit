@@ -470,10 +470,12 @@ In the Unraid WebUI, navigate to **Docker**, click **Check for Updates**, and cl
 ## Troubleshooting & FAQ
 
 #### Q: The WebUI shows "Permission Denied" on `/var/run/docker.sock`
-**A**: Ensure your user or container runtime has access to the Docker socket. On Linux hosts, verify that the docker group has read/write permissions on the socket:
+**A**: Check that the socket is mounted (`-v /var/run/docker.sock:/var/run/docker.sock`) and that the container runs as root (the default) or as a user in the host's `docker` group:
 ```bash
-sudo chmod 666 /var/run/docker.sock
+ls -l /var/run/docker.sock      # usually root:docker, mode 660
+getent group docker             # the group id to pass with --group-add
 ```
+Do **not** run `chmod 666` on the socket: that gives every local user and every other container full root control of the host.
 
 #### Q: Hard drive temperatures are not showing or reading `--`
 **A**: Ensure `/dev` and `/sys` are mounted as specified in the compose file and that `cap_add: [SYS_RAWIO, SYS_ADMIN]` is present. ZettNAS uses `smartctl` with the `-n standby` flag to read drive temperatures safely without waking sleeping platters.

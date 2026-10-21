@@ -70,6 +70,12 @@ def startup_system():
         security_upgrade.run_once()  # v1.9.2: revoke old credentials, disable unsafe WebDAV
     except Exception as e:
         logger.error(f"[Main] Security upgrade step failed: {e}")
+    try:
+        from backend.services.data_permissions import harden_data_permissions
+
+        harden_data_permissions()
+    except Exception as e:
+        logger.warning(f"[Main] Could not tighten data permissions: {e}")
     read_ip()  # Pre-populate IP cache at startup
     detect_chassis_model()  # Pre-populate chassis model cache
 
