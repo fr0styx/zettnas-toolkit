@@ -38,7 +38,7 @@ def purge_legacy_session_files() -> None:
     Sessions now live only in the users DB. The old file held raw tokens and was
     honoured as a superadmin fallback (SEC-01), so it is removed at startup.
     """
-    base = SESSIONS_FILE
+    base = getattr(config, "SESSIONS_FILE", SESSIONS_FILE)
     for path in (base, base + ".bak", base + ".tmp"):
         try:
             if os.path.lexists(path):
