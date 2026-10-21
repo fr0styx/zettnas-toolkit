@@ -19974,4 +19974,34 @@ tr.docker-row-selected {
     z-index: 2;
     background: #080c13;
   }
+
+  /* One horizontal scrollbar: keep the synced bar under the table, hide the one
+     above it and the table box's own horizontal bar (the box still scrolls
+     sideways with a trackpad). scrollbar-color is reset because Chrome ignores
+     ::-webkit-scrollbar rules while an inherited scrollbar-color is set. */
+  body:not(.mobile-mode) #docker-view-containers-wrap > .docker-table-top-scroll {
+    display: none !important;
+  }
+
+  body:not(.mobile-mode) #docker-view-containers-wrap > .docker-table-container {
+    scrollbar-color: auto;
+  }
+
+  body:not(.mobile-mode) #docker-view-containers-wrap > .docker-table-container::-webkit-scrollbar {
+    width: 8px;
+    height: 0;
+  }
+
+  body:not(.mobile-mode) #docker-view-containers-wrap > .docker-table-container::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  body:not(.mobile-mode) #docker-view-containers-wrap > .docker-table-container::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.28);
+    border-radius: 4px;
+  }
+
+  body:not(.mobile-mode) #docker-view-containers-wrap > .docker-table-container::-webkit-scrollbar-thumb:hover {
+    background: rgba(148, 163, 184, 0.45);
+  }
 }
