@@ -922,31 +922,31 @@ Content-Type: application/json
 
 ## 10. Audit Verification & Test Execution Protocol
 
-All remediation steps and architectural requirements documented in this audit are independently verifiable using the following protocol on the primary test appliance (`root@10.40.30.249`):
+All remediation steps and architectural requirements documented in this audit are independently verifiable using the following protocol, run from the repository root on the host that owns the repo (see `AGENTS.md` §3.1):
 
 ### 10.1 Test Execution Commands
 
 ```bash
 # 1. Run Automated RAG Benchmark Evaluation Suite (Recall@K, MRR, MRL retention)
-ssh root@10.40.30.249 "docker exec -i zettnas-toolkit python3 -m pytest -v /app/tests/test_rag_benchmark_eval.py"
+docker exec -i zettnas-toolkit python3 -m pytest -v /app/tests/test_rag_benchmark_eval.py
 
 # 2. Run RAG & Token Budgeting Pytest Suite
-ssh root@10.40.30.249 "docker exec -i zettnas-toolkit python3 -m pytest -v /app/tests/test_rag_and_token_budgeting.py"
+docker exec -i zettnas-toolkit python3 -m pytest -v /app/tests/test_rag_and_token_budgeting.py
 
 # 3. Run Multimodal RAG & Zero-Disk-Touch Pytest Suite
-ssh root@10.40.30.249 "docker exec -i zettnas-toolkit python3 -m pytest -v /app/tests/test_rag_multimodal.py"
+docker exec -i zettnas-toolkit python3 -m pytest -v /app/tests/test_rag_multimodal.py
 
 # 4. Run AI Conversations & Agentic Chat Grounding Suite
-ssh root@10.40.30.249 "docker exec -i zettnas-toolkit python3 -m pytest -v /app/tests/test_ai_conversations.py"
+docker exec -i zettnas-toolkit python3 -m pytest -v /app/tests/test_ai_conversations.py
 
 # 5. Run Full Backend Pytest Suite (887+ tests)
-ssh root@10.40.30.249 "docker exec -i zettnas-toolkit python3 -m pytest -q /app/tests"
+docker exec -i zettnas-toolkit python3 -m pytest -q /app/tests
 
 # 6. Verify Python Lint & Format Checks (0 errors)
-ssh root@10.40.30.249 "cd /mnt/user/appdata/zettnas-toolkit && npm run lint"
+npm run lint
 
 # 7. Verify Zero Disk Spindown on Physical Host
-ssh root@10.40.30.249 "smartctl -n standby /dev/sdb"
+smartctl -n standby /dev/sdX
 # Verify: Exit code 2 (Device is in STANDBY mode, platters remained asleep)
 ```
 

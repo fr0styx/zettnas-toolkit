@@ -808,32 +808,32 @@ Synchronous `time.sleep()` loops in `backend/api/vms.py` block FastAPI worker th
 
 ### Objective Verification Protocols & Commands
 
-All development and verification gates must be executed remotely on the test appliance (`root@10.40.30.249`):
+Run all gates from the repository root on the host that owns the repo (see `AGENTS.md` §3.1):
 
 #### 1. Python Code Quality, Format & Lint Gate
 ```bash
-ssh root@10.40.30.249 "cd /mnt/user/appdata/zettnas-toolkit && npm run lint"
+npm run lint
 ```
 *Automated format fix if required:*
 ```bash
-ssh root@10.40.30.249 "cd /mnt/user/appdata/zettnas-toolkit && npm run format:py"
+npm run format:py
 ```
 
 #### 2. Frontend Vitest Unit & Component Test Suite
 ```bash
-ssh root@10.40.30.249 "cd /mnt/user/appdata/zettnas-toolkit && node ./node_modules/vitest/dist/cli.js run frontend/src/__tests__/vm_manager_and_budgeting.test.js frontend/src/__tests__/docker_container_management.test.js"
+node ./node_modules/vitest/dist/cli.js run frontend/src/__tests__/vm_manager_and_budgeting.test.js frontend/src/__tests__/docker_container_management.test.js
 ```
 
 #### 3. Backend Pytest Hypervisor & Container Test Suite
 ```bash
-ssh root@10.40.30.249 "docker exec -i zettnas-toolkit python3 -m pytest -q /app/tests/test_vms_api.py /app/tests/test_docker_updates.py /app/tests/test_docker_stats_enriched.py"
+docker exec -i zettnas-toolkit python3 -m pytest -q /app/tests/test_vms_api.py /app/tests/test_docker_updates.py /app/tests/test_docker_stats_enriched.py
 ```
 
 #### 4. Frontend Asset Compilation & Container Deployment Gate
 ```bash
-ssh root@10.40.30.249 "cd /mnt/user/appdata/zettnas-toolkit && npm run build"
-ssh root@10.40.30.249 "docker cp /mnt/user/appdata/zettnas-toolkit/static/. zettnas-toolkit:/app/static/"
-ssh root@10.40.30.249 "curl -sI http://127.0.0.1:8082 | head -n 5"
+npm run build
+docker cp ./static/. zettnas-toolkit:/app/static/
+curl -sI http://127.0.0.1:8082 | head -n 5
 ```
 
 ---
