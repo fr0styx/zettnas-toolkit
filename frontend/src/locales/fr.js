@@ -2091,5 +2091,18 @@ export default {
   "pwa.share_saved": "{saved} enregistré(s) dans votre dossier Inbox.",
   "pwa.share_partial": "{saved} enregistré(s) dans Inbox, {failed} en échec.",
   "pwa.share_login": "Connectez-vous, puis partagez à nouveau les fichiers.",
-  "pwa.share_error": "Impossible de lire les fichiers partagés."
+  "pwa.share_error": "Impossible de lire les fichiers partagés.",
+  "login.sso_btn": "Se connecter avec {label}",
+  "sso.title": "🔑 Authentification unique (OpenID Connect)",
+  "sso.desc": "Connexion via Authentik, Keycloak, Authelia ou un autre fournisseur OpenID Connect. Enregistrez ZettNAS chez lui avec cette URI de redirection : {uri}",
+  "sso.enabled": "Afficher le bouton d'authentification unique",
+  "sso.issuer": "URL de l'émetteur",
+  "sso.client_id": "ID client",
+  "sso.client_secret": "Secret client",
+  "sso.label": "Libellé du bouton",
+  "sso.admin_groups": "Groupes administrateurs (séparés par des virgules)",
+  "sso.public_url": "URL publique de ZettNAS (facultatif)",
+  "sso.save": "Enregistrer",
+  "sso.saved": "Réglages d'authentification unique enregistrés",
+  "sso.save_failed": "Échec de l'enregistrement : {error}"
 };

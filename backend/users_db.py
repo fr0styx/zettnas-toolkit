@@ -396,6 +396,25 @@ def get_user_by_username(username: str, db_path: str | None = None) -> dict[str,
         return res
 
 
+def get_user_by_idp(idp_type: str, idp_sub: str, db_path: str | None = None) -> dict[str, Any] | None:
+    """The user linked to this identity-provider subject (M6)."""
+    if not idp_sub:
+        return None
+    with users_db_session(db_path, readonly=True) as conn:
+        row = conn.execute(
+            "SELECT username FROM users WHERE idp_type = ? AND idp_sub = ?", (idp_type, idp_sub)
+        ).fetchone()
+    return get_user_by_username(row["username"], db_path) if row else None
+
+
+def set_user_idp(user_id: str, idp_type: str, idp_sub: str, db_path: str | None = None) -> None:
+    with users_db_session(db_path) as conn:
+        conn.execute(
+            "UPDATE users SET idp_type = ?, idp_sub = ?, updated_at = ? WHERE id = ?",
+            (idp_type, idp_sub, time.time(), user_id),
+        )
+
+
 def list_users(db_path: str | None = None) -> list[dict[str, Any]]:
     with users_db_session(db_path, readonly=True) as conn:
         rows = conn.execute("""

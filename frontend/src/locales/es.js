@@ -2091,5 +2091,18 @@ export default {
   "pwa.share_saved": "{saved} guardado(s) en tu carpeta Inbox.",
   "pwa.share_partial": "{saved} guardado(s) en Inbox, {failed} fallaron.",
   "pwa.share_login": "Inicia sesión y vuelve a compartir los archivos.",
-  "pwa.share_error": "No se pudieron leer los archivos compartidos."
+  "pwa.share_error": "No se pudieron leer los archivos compartidos.",
+  "login.sso_btn": "Iniciar sesión con {label}",
+  "sso.title": "🔑 Inicio de sesión único (OpenID Connect)",
+  "sso.desc": "Inicio de sesión con Authentik, Keycloak, Authelia u otro proveedor OpenID Connect. Registra ZettNAS allí con esta URI de redirección: {uri}",
+  "sso.enabled": "Mostrar el botón de inicio de sesión único",
+  "sso.issuer": "URL del emisor",
+  "sso.client_id": "ID de cliente",
+  "sso.client_secret": "Secreto de cliente",
+  "sso.label": "Texto del botón",
+  "sso.admin_groups": "Grupos de administradores (separados por comas)",
+  "sso.public_url": "URL pública de ZettNAS (opcional)",
+  "sso.save": "Guardar",
+  "sso.saved": "Ajustes de inicio de sesión único guardados",
+  "sso.save_failed": "No se pudo guardar: {error}"
 };

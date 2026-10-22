@@ -41,6 +41,7 @@ export function initAuth() {
   const dock = document.getElementById('os-dock-container');
   const loginBtn = document.getElementById('login-btn');
   const loginPwd = document.getElementById('login-password');
+  import('./sso.js').then((m) => m.initSsoLogin()).catch(() => {}); // M6
   const loginUser = document.getElementById('login-username');
   const rememberMe = document.getElementById('login-remember-me');
 

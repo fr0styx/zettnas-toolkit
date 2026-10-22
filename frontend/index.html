@@ -309,6 +309,8 @@
       </div>
 
       <button id="login-btn" class="suite-toolkit-btn" style="width: 100%; padding: 12px; font-size: 14px; font-weight: 700;" data-i18n="login.btn">SECURE LOGIN</button>
+      <button type="button" id="login-sso-btn" class="suite-toolkit-btn login-sso-btn" hidden>Sign in with SSO</button>
+      <p id="login-sso-error" class="login-sso-error" role="alert" hidden></p>
 
       <!-- Toggle Links -->
       <div style="margin-top: 16px; font-size: 11.5px;">
@@ -6240,6 +6242,7 @@
 
               <!-- Ransomware guard and blocked addresses (M4, M5) -->
               <div id="sec-guard-card" class="guard-card" aria-live="polite"></div>
+              <div id="sec-sso-card" class="guard-card"></div>
 
               <!-- Scoped API Tokens -->
               <div style="border-top: 1px solid rgba(255,255,255,0.06); margin-top: 14px; padding-top: 14px;">

@@ -2091,5 +2091,18 @@ export default {
   "pwa.share_saved": "{saved} saved to your Inbox folder.",
   "pwa.share_partial": "{saved} saved to your Inbox, {failed} failed.",
   "pwa.share_login": "Sign in, then share the files again.",
-  "pwa.share_error": "The shared files could not be read."
+  "pwa.share_error": "The shared files could not be read.",
+  "login.sso_btn": "Sign in with {label}",
+  "sso.title": "🔑 Single sign-on (OpenID Connect)",
+  "sso.desc": "Let people sign in with Authentik, Keycloak, Authelia or another OpenID Connect provider. Register ZettNAS there with this redirect URI: {uri}",
+  "sso.enabled": "Show the single sign-on button",
+  "sso.issuer": "Issuer URL",
+  "sso.client_id": "Client ID",
+  "sso.client_secret": "Client secret",
+  "sso.label": "Button label",
+  "sso.admin_groups": "Admin groups (comma-separated)",
+  "sso.public_url": "Public URL of ZettNAS (optional)",
+  "sso.save": "Save",
+  "sso.saved": "Single sign-on settings saved",
+  "sso.save_failed": "Could not save: {error}"
 };

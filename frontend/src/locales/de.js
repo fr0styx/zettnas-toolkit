@@ -2091,5 +2091,18 @@ export default {
   "pwa.share_saved": "{saved} in deinem Inbox-Ordner gespeichert.",
   "pwa.share_partial": "{saved} im Inbox gespeichert, {failed} fehlgeschlagen.",
   "pwa.share_login": "Melde dich an und teile die Dateien erneut.",
-  "pwa.share_error": "Die geteilten Dateien konnten nicht gelesen werden."
+  "pwa.share_error": "Die geteilten Dateien konnten nicht gelesen werden.",
+  "login.sso_btn": "Mit {label} anmelden",
+  "sso.title": "🔑 Single Sign-on (OpenID Connect)",
+  "sso.desc": "Anmeldung über Authentik, Keycloak, Authelia oder einen anderen OpenID-Connect-Anbieter. Registriere ZettNAS dort mit dieser Redirect-URI: {uri}",
+  "sso.enabled": "Single-Sign-on-Schaltfläche anzeigen",
+  "sso.issuer": "Issuer-URL",
+  "sso.client_id": "Client-ID",
+  "sso.client_secret": "Client-Secret",
+  "sso.label": "Beschriftung",
+  "sso.admin_groups": "Admin-Gruppen (durch Kommas getrennt)",
+  "sso.public_url": "Öffentliche URL von ZettNAS (optional)",
+  "sso.save": "Speichern",
+  "sso.saved": "Single-Sign-on-Einstellungen gespeichert",
+  "sso.save_failed": "Speichern fehlgeschlagen: {error}"
 };

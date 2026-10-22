@@ -2091,5 +2091,18 @@ export default {
   "pwa.share_saved": "已将 {saved} 个保存到你的 Inbox 文件夹。",
   "pwa.share_partial": "已保存 {saved} 个到 Inbox，{failed} 个失败。",
   "pwa.share_login": "请先登录，然后再次分享这些文件。",
-  "pwa.share_error": "无法读取分享的文件。"
+  "pwa.share_error": "无法读取分享的文件。",
+  "login.sso_btn": "使用 {label} 登录",
+  "sso.title": "🔑 单点登录（OpenID Connect）",
+  "sso.desc": "允许通过 Authentik、Keycloak、Authelia 或其他 OpenID Connect 提供方登录。请在提供方处用此重定向 URI 注册 ZettNAS：{uri}",
+  "sso.enabled": "显示单点登录按钮",
+  "sso.issuer": "Issuer 地址",
+  "sso.client_id": "客户端 ID",
+  "sso.client_secret": "客户端密钥",
+  "sso.label": "按钮文字",
+  "sso.admin_groups": "管理员组（用逗号分隔）",
+  "sso.public_url": "ZettNAS 的公开地址（可选）",
+  "sso.save": "保存",
+  "sso.saved": "单点登录设置已保存",
+  "sso.save_failed": "无法保存：{error}"
 };
