@@ -1,0 +1,41 @@
+{
+ "model": "zett_lexical_384d",
+ "overall": {
+  "recall@1": 0.565,
+  "recall@5": 0.66,
+  "mrr@10": 0.602,
+  "queries": 200
+ },
+ "by_language": {
+  "de": {
+   "recall@1": 0.65,
+   "recall@5": 0.725,
+   "mrr@10": 0.677,
+   "queries": 40
+  },
+  "en": {
+   "recall@1": 0.8,
+   "recall@5": 0.8,
+   "mrr@10": 0.8,
+   "queries": 40
+  },
+  "es": {
+   "recall@1": 0.75,
+   "recall@5": 0.9,
+   "mrr@10": 0.795,
+   "queries": 40
+  },
+  "fr": {
+   "recall@1": 0.6,
+   "recall@5": 0.85,
+   "mrr@10": 0.712,
+   "queries": 40
+  },
+  "zh": {
+   "recall@1": 0.025,
+   "recall@5": 0.025,
+   "mrr@10": 0.025,
+   "queries": 40
+  }
+ }
+}

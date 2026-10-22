@@ -1,0 +1,12 @@
+# Domótica de la casa: luces, persianas y termostato
+services:
+  homeassistant:
+    image: ghcr.io/home-assistant/home-assistant:2025.9
+    container_name: homeassistant
+    network_mode: host
+    volumes:
+      - ./config:/config
+      - /etc/localtime:/etc/localtime:ro
+    devices:
+      - /dev/ttyUSB0:/dev/ttyUSB0   # mando Zigbee Sonoff
+    restart: unless-stopped

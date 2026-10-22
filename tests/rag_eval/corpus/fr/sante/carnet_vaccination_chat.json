@@ -1,0 +1,12 @@
+{
+  "animal": "Minou",
+  "espece": "chat européen",
+  "ne_le": "2021-06-10",
+  "veterinaire": "Clinique des Tilleuls, Dr Martin",
+  "vaccins": [
+    {"nom": "typhus et coryza", "date": "2025-03-02", "rappel": "2026-03-02"},
+    {"nom": "leucose", "date": "2025-03-02", "rappel": "2026-03-02"}
+  ],
+  "vermifuge": "tous les trois mois, dernier le 15 septembre",
+  "puce": "250268500123456"
+}

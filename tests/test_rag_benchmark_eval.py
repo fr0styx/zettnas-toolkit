@@ -1,10 +1,8 @@
-"""tests/test_rag_benchmark_eval.py — Automated RAG Evaluation Benchmark Suite.
+"""tests/test_rag_benchmark_eval.py - unit tests for the retrieval maths and formatting helpers.
 
-Evaluates Precision@K, Recall@K, and Mean Reciprocal Rank (MRR) across a representative
-test set of technical NAS configurations, homelab docker setups, troubleshooting guides,
-and culinary recipes. Demonstrates verified empirical delta of Google DeepMind
-EmbeddingGemma-2 optimizations (asymmetric prefixes, title-conditioned passages,
-post-MRL L2 re-normalization, and token-density hybrid RRF).
+The "benchmark" here scores a deterministic simulated embedder, so it checks that the
+formatting, Matryoshka truncation and metric code behave as intended. It says nothing about
+real retrieval quality; that is measured by tests/rag_eval (see docs/RAG.md).
 """
 
 from __future__ import annotations
@@ -608,10 +606,11 @@ def test_deterministic_embedding_simulator_geometry():
     assert norm_raw < 0.99
 
 
-def test_rag_benchmark_baseline_vs_optimized_empirical_delta(temp_benchmark_engine):
+def test_rag_simulated_title_conditioning_delta(temp_benchmark_engine):
     """Evaluates all 16 benchmark queries across Baseline and Optimized pipelines.
 
-    Asserts verified empirical delta: Recall@3 delta >= +0.15 and MRR delta >= +0.15.
+    On the simulated embedder only (not a quality measurement): title conditioning and
+    normalisation should improve Recall@3 and MRR by at least 0.15.
     """
     # Ingest corpus twice: once as baseline, once as optimized in separate test representations
     base_doc_vecs = {}
@@ -681,7 +680,7 @@ def test_rag_benchmark_baseline_vs_optimized_empirical_delta(temp_benchmark_engi
     base_metrics = IRMetrics.evaluate_query_set(base_results, ground_truth)
     opt_metrics = IRMetrics.evaluate_query_set(opt_results, ground_truth)
 
-    # Empirical Delta Assertions
+    # Simulated delta assertions
     assert opt_metrics["recall@3"] >= base_metrics["recall@3"] + 0.15, (
         f"Recall@3 failed to achieve +0.15 delta: Base={base_metrics['recall@3']:.3f}, Opt={opt_metrics['recall@3']:.3f}"
     )

@@ -1,0 +1,10 @@
+{
+  "person": "Opa Heinz",
+  "hausarzt": "Dr. Lehmann, Tel. 089 1234567",
+  "medikamente": [
+    {"name": "Ramipril 5 mg", "morgens": 1, "abends": 0, "zweck": "Blutdruck"},
+    {"name": "Metformin 1000 mg", "morgens": 1, "abends": 1, "zweck": "Diabetes, zum Essen"},
+    {"name": "ASS 100", "morgens": 1, "abends": 0, "zweck": "Blutverdünnung"}
+  ],
+  "hinweis": "Rezept für Metformin läuft Ende des Monats aus, neues Rezept in der Praxis abholen."
+}

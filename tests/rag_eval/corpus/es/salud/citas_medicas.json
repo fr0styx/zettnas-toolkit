@@ -1,0 +1,10 @@
+{
+  "paciente": "Carmen Ruiz",
+  "centro_salud": "CS Benimaclet",
+  "citas": [
+    {"especialidad": "dermatología", "fecha": "2025-11-04", "hora": "10:30", "motivo": "revisión de lunares"},
+    {"especialidad": "oftalmología", "fecha": "2025-12-01", "hora": "09:15", "motivo": "graduar la vista"},
+    {"especialidad": "dentista", "fecha": "2025-11-20", "hora": "17:00", "motivo": "limpieza"}
+  ],
+  "tarjeta_sanitaria": "RUIZ CAR 0458"
+}

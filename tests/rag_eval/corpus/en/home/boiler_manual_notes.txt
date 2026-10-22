@@ -1,0 +1,8 @@
+Boiler service notes - Vaillant ecoTEC plus 832
+
+Annual service due every October. Last service 12 Oct, engineer Dave Morris, Gas Safe 581233.
+Pressure should sit between 1.0 and 1.5 bar when cold. If it drops below 0.8 the boiler
+shows fault F22. To repressurise: open the filling loop under the boiler slowly until the
+gauge reads 1.2 bar, then close both valves. Bleed radiators upstairs first if they are cold
+at the top. Fault F28 means ignition failed - check the gas meter is on, then press reset.
+Warranty runs until March 2029 as long as the yearly service is done.

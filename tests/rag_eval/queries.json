@@ -1,0 +1,1602 @@
+[
+ {
+  "id": "en/recipes/banana_bread.md#1",
+  "lang": "en",
+  "query": "how long do I bake the banana loaf",
+  "relevant": [
+   "en/recipes/banana_bread.md"
+  ]
+ },
+ {
+  "id": "en/recipes/banana_bread.md#2",
+  "lang": "en",
+  "query": "recipe that uses overripe bananas and walnuts",
+  "relevant": [
+   "en/recipes/banana_bread.md"
+  ]
+ },
+ {
+  "id": "en/recipes/banana_bread.md#3",
+  "lang": "en",
+  "query": "can I freeze slices of the banana cake",
+  "relevant": [
+   "en/recipes/banana_bread.md"
+  ]
+ },
+ {
+  "id": "en/recipes/banana_bread.md#4",
+  "lang": "en",
+  "query": "what oven temperature for grandma's bread",
+  "relevant": [
+   "en/recipes/banana_bread.md"
+  ]
+ },
+ {
+  "id": "en/recipes/banana_bread.md#5",
+  "lang": "en",
+  "query": "how much brown sugar goes in banana bread",
+  "relevant": [
+   "en/recipes/banana_bread.md"
+  ]
+ },
+ {
+  "id": "en/home/boiler_manual_notes.txt#1",
+  "lang": "en",
+  "query": "boiler pressure is low, how do I top it up",
+  "relevant": [
+   "en/home/boiler_manual_notes.txt"
+  ]
+ },
+ {
+  "id": "en/home/boiler_manual_notes.txt#2",
+  "lang": "en",
+  "query": "what does fault F22 mean on the boiler",
+  "relevant": [
+   "en/home/boiler_manual_notes.txt"
+  ]
+ },
+ {
+  "id": "en/home/boiler_manual_notes.txt#3",
+  "lang": "en",
+  "query": "when is the next gas boiler service",
+  "relevant": [
+   "en/home/boiler_manual_notes.txt"
+  ]
+ },
+ {
+  "id": "en/home/boiler_manual_notes.txt#4",
+  "lang": "en",
+  "query": "who serviced the heating last time",
+  "relevant": [
+   "en/home/boiler_manual_notes.txt"
+  ]
+ },
+ {
+  "id": "en/home/boiler_manual_notes.txt#5",
+  "lang": "en",
+  "query": "until when is the boiler warranty valid",
+  "relevant": [
+   "en/home/boiler_manual_notes.txt"
+  ]
+ },
+ {
+  "id": "en/finance/2025_household_budget.csv#1",
+  "lang": "en",
+  "query": "how much did we spend on groceries in February",
+  "relevant": [
+   "en/finance/2025_household_budget.csv"
+  ]
+ },
+ {
+  "id": "en/finance/2025_household_budget.csv#2",
+  "lang": "en",
+  "query": "monthly mortgage payment amount",
+  "relevant": [
+   "en/finance/2025_household_budget.csv"
+  ]
+ },
+ {
+  "id": "en/finance/2025_household_budget.csv#3",
+  "lang": "en",
+  "query": "when did we pay the car insurance renewal",
+  "relevant": [
+   "en/finance/2025_household_budget.csv"
+  ]
+ },
+ {
+  "id": "en/finance/2025_household_budget.csv#4",
+  "lang": "en",
+  "query": "nursery fees per month",
+  "relevant": [
+   "en/finance/2025_household_budget.csv"
+  ]
+ },
+ {
+  "id": "en/finance/2025_household_budget.csv#5",
+  "lang": "en",
+  "query": "deposit for the summer holiday cottage",
+  "relevant": [
+   "en/finance/2025_household_budget.csv"
+  ]
+ },
+ {
+  "id": "en/homelab/docker-compose-jellyfin.yml#1",
+  "lang": "en",
+  "query": "which port does the media server use",
+  "relevant": [
+   "en/homelab/docker-compose-jellyfin.yml"
+  ]
+ },
+ {
+  "id": "en/homelab/docker-compose-jellyfin.yml#2",
+  "lang": "en",
+  "query": "compose file for streaming movies to the TV",
+  "relevant": [
+   "en/homelab/docker-compose-jellyfin.yml"
+  ]
+ },
+ {
+  "id": "en/homelab/docker-compose-jellyfin.yml#3",
+  "lang": "en",
+  "query": "how is hardware transcoding passed into the container",
+  "relevant": [
+   "en/homelab/docker-compose-jellyfin.yml"
+  ]
+ },
+ {
+  "id": "en/homelab/docker-compose-jellyfin.yml#4",
+  "lang": "en",
+  "query": "where are the tv shows mounted for jellyfin",
+  "relevant": [
+   "en/homelab/docker-compose-jellyfin.yml"
+  ]
+ },
+ {
+  "id": "en/homelab/docker-compose-jellyfin.yml#5",
+  "lang": "en",
+  "query": "jellyfin docker configuration",
+  "relevant": [
+   "en/homelab/docker-compose-jellyfin.yml"
+  ]
+ },
+ {
+  "id": "en/work/meeting_notes_q3_planning.md#1",
+  "lang": "en",
+  "query": "who is responsible for the database migration",
+  "relevant": [
+   "en/work/meeting_notes_q3_planning.md"
+  ]
+ },
+ {
+  "id": "en/work/meeting_notes_q3_planning.md#2",
+  "lang": "en",
+  "query": "why was the mobile app rewrite delayed",
+  "relevant": [
+   "en/work/meeting_notes_q3_planning.md"
+  ]
+ },
+ {
+  "id": "en/work/meeting_notes_q3_planning.md#3",
+  "lang": "en",
+  "query": "deadline for moving billing off the old payment API",
+  "relevant": [
+   "en/work/meeting_notes_q3_planning.md"
+  ]
+ },
+ {
+  "id": "en/work/meeting_notes_q3_planning.md#4",
+  "lang": "en",
+  "query": "notes from the july planning meeting",
+  "relevant": [
+   "en/work/meeting_notes_q3_planning.md"
+  ]
+ },
+ {
+  "id": "en/work/meeting_notes_q3_planning.md#5",
+  "lang": "en",
+  "query": "when is the next planning meeting",
+  "relevant": [
+   "en/work/meeting_notes_q3_planning.md"
+  ]
+ },
+ {
+  "id": "en/scripts/backup_photos.py#1",
+  "lang": "en",
+  "query": "script that copies pictures to the usb drive",
+  "relevant": [
+   "en/scripts/backup_photos.py"
+  ]
+ },
+ {
+  "id": "en/scripts/backup_photos.py#2",
+  "lang": "en",
+  "query": "how are family photos backed up every night",
+  "relevant": [
+   "en/scripts/backup_photos.py"
+  ]
+ },
+ {
+  "id": "en/scripts/backup_photos.py#3",
+  "lang": "en",
+  "query": "rsync job for the photo library",
+  "relevant": [
+   "en/scripts/backup_photos.py"
+  ]
+ },
+ {
+  "id": "en/scripts/backup_photos.py#4",
+  "lang": "en",
+  "query": "what happens if the backup disk is not connected",
+  "relevant": [
+   "en/scripts/backup_photos.py"
+  ]
+ },
+ {
+  "id": "en/scripts/backup_photos.py#5",
+  "lang": "en",
+  "query": "python photo backup",
+  "relevant": [
+   "en/scripts/backup_photos.py"
+  ]
+ },
+ {
+  "id": "en/travel/japan_itinerary.html#1",
+  "lang": "en",
+  "query": "which flight do we take to Tokyo",
+  "relevant": [
+   "en/travel/japan_itinerary.html"
+  ]
+ },
+ {
+  "id": "en/travel/japan_itinerary.html#2",
+  "lang": "en",
+  "query": "when should I activate the rail pass",
+  "relevant": [
+   "en/travel/japan_itinerary.html"
+  ]
+ },
+ {
+  "id": "en/travel/japan_itinerary.html#3",
+  "lang": "en",
+  "query": "what time is the tea ceremony in Kyoto",
+  "relevant": [
+   "en/travel/japan_itinerary.html"
+  ]
+ },
+ {
+  "id": "en/travel/japan_itinerary.html#4",
+  "lang": "en",
+  "query": "plan for the trip to Japan in April",
+  "relevant": [
+   "en/travel/japan_itinerary.html"
+  ]
+ },
+ {
+  "id": "en/travel/japan_itinerary.html#5",
+  "lang": "en",
+  "query": "day trip to see the deer",
+  "relevant": [
+   "en/travel/japan_itinerary.html"
+  ]
+ },
+ {
+  "id": "en/health/vaccination_record_kids.json#1",
+  "lang": "en",
+  "query": "when did Lily get her second MMR jab",
+  "relevant": [
+   "en/health/vaccination_record_kids.json"
+  ]
+ },
+ {
+  "id": "en/health/vaccination_record_kids.json#2",
+  "lang": "en",
+  "query": "which vaccinations is Sam due next",
+  "relevant": [
+   "en/health/vaccination_record_kids.json"
+  ]
+ },
+ {
+  "id": "en/health/vaccination_record_kids.json#3",
+  "lang": "en",
+  "query": "children's immunisation history",
+  "relevant": [
+   "en/health/vaccination_record_kids.json"
+  ]
+ },
+ {
+  "id": "en/health/vaccination_record_kids.json#4",
+  "lang": "en",
+  "query": "date of the flu nasal spray",
+  "relevant": [
+   "en/health/vaccination_record_kids.json"
+  ]
+ },
+ {
+  "id": "en/health/vaccination_record_kids.json#5",
+  "lang": "en",
+  "query": "kids vaccine dates",
+  "relevant": [
+   "en/health/vaccination_record_kids.json"
+  ]
+ },
+ {
+  "id": "de/rezepte/kaesespaetzle.md#1",
+  "lang": "de",
+  "query": "wie mache ich Spätzle mit Käse",
+  "relevant": [
+   "de/rezepte/kaesespaetzle.md"
+  ]
+ },
+ {
+  "id": "de/rezepte/kaesespaetzle.md#2",
+  "lang": "de",
+  "query": "Rezept mit Bergkäse und Röstzwiebeln",
+  "relevant": [
+   "de/rezepte/kaesespaetzle.md"
+  ]
+ },
+ {
+  "id": "de/rezepte/kaesespaetzle.md#3",
+  "lang": "de",
+  "query": "wie lange kommen die Kässpätzle in den Ofen",
+  "relevant": [
+   "de/rezepte/kaesespaetzle.md"
+  ]
+ },
+ {
+  "id": "de/rezepte/kaesespaetzle.md#4",
+  "lang": "de",
+  "query": "wie viele Eier für den Spätzleteig",
+  "relevant": [
+   "de/rezepte/kaesespaetzle.md"
+  ]
+ },
+ {
+  "id": "de/rezepte/kaesespaetzle.md#5",
+  "lang": "de",
+  "query": "Allgäuer Nudelgericht mit Emmentaler",
+  "relevant": [
+   "de/rezepte/kaesespaetzle.md"
+  ]
+ },
+ {
+  "id": "de/auto/inspektion_golf.txt#1",
+  "lang": "de",
+  "query": "wann ist die nächste Inspektion beim Golf fällig",
+  "relevant": [
+   "de/auto/inspektion_golf.txt"
+  ]
+ },
+ {
+  "id": "de/auto/inspektion_golf.txt#2",
+  "lang": "de",
+  "query": "welches Motoröl wurde eingefüllt",
+  "relevant": [
+   "de/auto/inspektion_golf.txt"
+  ]
+ },
+ {
+  "id": "de/auto/inspektion_golf.txt#3",
+  "lang": "de",
+  "query": "bis wann gilt der TÜV",
+  "relevant": [
+   "de/auto/inspektion_golf.txt"
+  ]
+ },
+ {
+  "id": "de/auto/inspektion_golf.txt#4",
+  "lang": "de",
+  "query": "wo sind die Winterreifen eingelagert",
+  "relevant": [
+   "de/auto/inspektion_golf.txt"
+  ]
+ },
+ {
+  "id": "de/auto/inspektion_golf.txt#5",
+  "lang": "de",
+  "query": "was hat die letzte Werkstattrechnung gekostet",
+  "relevant": [
+   "de/auto/inspektion_golf.txt"
+  ]
+ },
+ {
+  "id": "de/finanzen/nebenkostenabrechnung_2024.csv#1",
+  "lang": "de",
+  "query": "wie hoch ist die Nachzahlung für die Nebenkosten",
+  "relevant": [
+   "de/finanzen/nebenkostenabrechnung_2024.csv"
+  ]
+ },
+ {
+  "id": "de/finanzen/nebenkostenabrechnung_2024.csv#2",
+  "lang": "de",
+  "query": "Kosten für Heizung in der Abrechnung",
+  "relevant": [
+   "de/finanzen/nebenkostenabrechnung_2024.csv"
+  ]
+ },
+ {
+  "id": "de/finanzen/nebenkostenabrechnung_2024.csv#3",
+  "lang": "de",
+  "query": "Grundsteuer Betrag",
+  "relevant": [
+   "de/finanzen/nebenkostenabrechnung_2024.csv"
+  ]
+ },
+ {
+  "id": "de/finanzen/nebenkostenabrechnung_2024.csv#4",
+  "lang": "de",
+  "query": "was kostet der Hausmeister im Jahr",
+  "relevant": [
+   "de/finanzen/nebenkostenabrechnung_2024.csv"
+  ]
+ },
+ {
+  "id": "de/finanzen/nebenkostenabrechnung_2024.csv#5",
+  "lang": "de",
+  "query": "Betriebskostenabrechnung 2024",
+  "relevant": [
+   "de/finanzen/nebenkostenabrechnung_2024.csv"
+  ]
+ },
+ {
+  "id": "de/homelab/nextcloud_compose.yml#1",
+  "lang": "de",
+  "query": "Konfiguration für die private Familien-Cloud",
+  "relevant": [
+   "de/homelab/nextcloud_compose.yml"
+  ]
+ },
+ {
+  "id": "de/homelab/nextcloud_compose.yml#2",
+  "lang": "de",
+  "query": "welche Datenbank nutzt Nextcloud",
+  "relevant": [
+   "de/homelab/nextcloud_compose.yml"
+  ]
+ },
+ {
+  "id": "de/homelab/nextcloud_compose.yml#3",
+  "lang": "de",
+  "query": "auf welchem Port läuft die Cloud",
+  "relevant": [
+   "de/homelab/nextcloud_compose.yml"
+  ]
+ },
+ {
+  "id": "de/homelab/nextcloud_compose.yml#4",
+  "lang": "de",
+  "query": "wo sind die Familiendokumente eingebunden",
+  "relevant": [
+   "de/homelab/nextcloud_compose.yml"
+  ]
+ },
+ {
+  "id": "de/homelab/nextcloud_compose.yml#5",
+  "lang": "de",
+  "query": "docker compose für nextcloud und postgres",
+  "relevant": [
+   "de/homelab/nextcloud_compose.yml"
+  ]
+ },
+ {
+  "id": "de/arbeit/protokoll_elternabend.md#1",
+  "lang": "de",
+  "query": "wohin geht die Klassenfahrt",
+  "relevant": [
+   "de/arbeit/protokoll_elternabend.md"
+  ]
+ },
+ {
+  "id": "de/arbeit/protokoll_elternabend.md#2",
+  "lang": "de",
+  "query": "wer wurde zum Elternsprecher gewählt",
+  "relevant": [
+   "de/arbeit/protokoll_elternabend.md"
+  ]
+ },
+ {
+  "id": "de/arbeit/protokoll_elternabend.md#3",
+  "lang": "de",
+  "query": "was kostet die Klassenfahrt pro Kind",
+  "relevant": [
+   "de/arbeit/protokoll_elternabend.md"
+  ]
+ },
+ {
+  "id": "de/arbeit/protokoll_elternabend.md#4",
+  "lang": "de",
+  "query": "Notizen vom Elternabend im September",
+  "relevant": [
+   "de/arbeit/protokoll_elternabend.md"
+  ]
+ },
+ {
+  "id": "de/arbeit/protokoll_elternabend.md#5",
+  "lang": "de",
+  "query": "brauchen die Kinder neue Hausschuhe",
+  "relevant": [
+   "de/arbeit/protokoll_elternabend.md"
+  ]
+ },
+ {
+  "id": "de/skripte/router_neustart.sh#1",
+  "lang": "de",
+  "query": "Skript das die Fritzbox neu startet",
+  "relevant": [
+   "de/skripte/router_neustart.sh"
+  ]
+ },
+ {
+  "id": "de/skripte/router_neustart.sh#2",
+  "lang": "de",
+  "query": "automatischer Neustart wenn das Internet ausfällt",
+  "relevant": [
+   "de/skripte/router_neustart.sh"
+  ]
+ },
+ {
+  "id": "de/skripte/router_neustart.sh#3",
+  "lang": "de",
+  "query": "wie oft wird die Verbindung geprüft",
+  "relevant": [
+   "de/skripte/router_neustart.sh"
+  ]
+ },
+ {
+  "id": "de/skripte/router_neustart.sh#4",
+  "lang": "de",
+  "query": "Shell Skript mit ping auf 1.1.1.1",
+  "relevant": [
+   "de/skripte/router_neustart.sh"
+  ]
+ },
+ {
+  "id": "de/skripte/router_neustart.sh#5",
+  "lang": "de",
+  "query": "Router automatisch rebooten",
+  "relevant": [
+   "de/skripte/router_neustart.sh"
+  ]
+ },
+ {
+  "id": "de/reisen/ostsee_urlaub.html#1",
+  "lang": "de",
+  "query": "wie lautet der Code für den Schlüsselkasten",
+  "relevant": [
+   "de/reisen/ostsee_urlaub.html"
+  ]
+ },
+ {
+  "id": "de/reisen/ostsee_urlaub.html#2",
+  "lang": "de",
+  "query": "Packliste für den Strandurlaub",
+  "relevant": [
+   "de/reisen/ostsee_urlaub.html"
+  ]
+ },
+ {
+  "id": "de/reisen/ostsee_urlaub.html#3",
+  "lang": "de",
+  "query": "wann ist die Anreise in Kühlungsborn",
+  "relevant": [
+   "de/reisen/ostsee_urlaub.html"
+  ]
+ },
+ {
+  "id": "de/reisen/ostsee_urlaub.html#4",
+  "lang": "de",
+  "query": "darf der Hund mit in die Ferienwohnung",
+  "relevant": [
+   "de/reisen/ostsee_urlaub.html"
+  ]
+ },
+ {
+  "id": "de/reisen/ostsee_urlaub.html#5",
+  "lang": "de",
+  "query": "Ausflüge an der Ostsee",
+  "relevant": [
+   "de/reisen/ostsee_urlaub.html"
+  ]
+ },
+ {
+  "id": "de/gesundheit/medikamentenplan_opa.json#1",
+  "lang": "de",
+  "query": "welche Tabletten nimmt Opa morgens",
+  "relevant": [
+   "de/gesundheit/medikamentenplan_opa.json"
+  ]
+ },
+ {
+  "id": "de/gesundheit/medikamentenplan_opa.json#2",
+  "lang": "de",
+  "query": "wann muss das neue Rezept für Metformin geholt werden",
+  "relevant": [
+   "de/gesundheit/medikamentenplan_opa.json"
+  ]
+ },
+ {
+  "id": "de/gesundheit/medikamentenplan_opa.json#3",
+  "lang": "de",
+  "query": "Medikament gegen Bluthochdruck",
+  "relevant": [
+   "de/gesundheit/medikamentenplan_opa.json"
+  ]
+ },
+ {
+  "id": "de/gesundheit/medikamentenplan_opa.json#4",
+  "lang": "de",
+  "query": "Telefonnummer vom Hausarzt",
+  "relevant": [
+   "de/gesundheit/medikamentenplan_opa.json"
+  ]
+ },
+ {
+  "id": "de/gesundheit/medikamentenplan_opa.json#5",
+  "lang": "de",
+  "query": "Medikamentenplan",
+  "relevant": [
+   "de/gesundheit/medikamentenplan_opa.json"
+  ]
+ },
+ {
+  "id": "zh/食谱/红烧肉.md#1",
+  "lang": "zh",
+  "query": "红烧肉怎么做",
+  "relevant": [
+   "zh/食谱/红烧肉.md"
+  ]
+ },
+ {
+  "id": "zh/食谱/红烧肉.md#2",
+  "lang": "zh",
+  "query": "炒糖色要用多少冰糖",
+  "relevant": [
+   "zh/食谱/红烧肉.md"
+  ]
+ },
+ {
+  "id": "zh/食谱/红烧肉.md#3",
+  "lang": "zh",
+  "query": "五花肉要炖多久",
+  "relevant": [
+   "zh/食谱/红烧肉.md"
+  ]
+ },
+ {
+  "id": "zh/食谱/红烧肉.md#4",
+  "lang": "zh",
+  "query": "妈妈做的家常肉菜谱",
+  "relevant": [
+   "zh/食谱/红烧肉.md"
+  ]
+ },
+ {
+  "id": "zh/食谱/红烧肉.md#5",
+  "lang": "zh",
+  "query": "红烧肉放哪些香料",
+  "relevant": [
+   "zh/食谱/红烧肉.md"
+  ]
+ },
+ {
+  "id": "zh/家庭/空调保养.txt#1",
+  "lang": "zh",
+  "query": "空调上次什么时候清洗的",
+  "relevant": [
+   "zh/家庭/空调保养.txt"
+  ]
+ },
+ {
+  "id": "zh/家庭/空调保养.txt#2",
+  "lang": "zh",
+  "query": "空调显示E1是什么意思",
+  "relevant": [
+   "zh/家庭/空调保养.txt"
+  ]
+ },
+ {
+  "id": "zh/家庭/空调保养.txt#3",
+  "lang": "zh",
+  "query": "空调保修到什么时候",
+  "relevant": [
+   "zh/家庭/空调保养.txt"
+  ]
+ },
+ {
+  "id": "zh/家庭/空调保养.txt#4",
+  "lang": "zh",
+  "query": "清洗空调的师傅电话",
+  "relevant": [
+   "zh/家庭/空调保养.txt"
+  ]
+ },
+ {
+  "id": "zh/家庭/空调保养.txt#5",
+  "lang": "zh",
+  "query": "空调滤网多久洗一次",
+  "relevant": [
+   "zh/家庭/空调保养.txt"
+  ]
+ },
+ {
+  "id": "zh/财务/家庭开支.csv#1",
+  "lang": "zh",
+  "query": "每个月房贷还多少",
+  "relevant": [
+   "zh/财务/家庭开支.csv"
+  ]
+ },
+ {
+  "id": "zh/财务/家庭开支.csv#2",
+  "lang": "zh",
+  "query": "春节发了多少红包",
+  "relevant": [
+   "zh/财务/家庭开支.csv"
+  ]
+ },
+ {
+  "id": "zh/财务/家庭开支.csv#3",
+  "lang": "zh",
+  "query": "孩子补习班的费用",
+  "relevant": [
+   "zh/财务/家庭开支.csv"
+  ]
+ },
+ {
+  "id": "zh/财务/家庭开支.csv#4",
+  "lang": "zh",
+  "query": "车险续保花了多少钱",
+  "relevant": [
+   "zh/财务/家庭开支.csv"
+  ]
+ },
+ {
+  "id": "zh/财务/家庭开支.csv#5",
+  "lang": "zh",
+  "query": "二月份买菜的开销",
+  "relevant": [
+   "zh/财务/家庭开支.csv"
+  ]
+ },
+ {
+  "id": "zh/家庭网络/群晖备份说明.md#1",
+  "lang": "zh",
+  "query": "NAS照片是怎么备份的",
+  "relevant": [
+   "zh/家庭网络/群晖备份说明.md"
+  ]
+ },
+ {
+  "id": "zh/家庭网络/群晖备份说明.md#2",
+  "lang": "zh",
+  "query": "异地备份放在哪里",
+  "relevant": [
+   "zh/家庭网络/群晖备份说明.md"
+  ]
+ },
+ {
+  "id": "zh/家庭网络/群晖备份说明.md#3",
+  "lang": "zh",
+  "query": "备份保留几个版本",
+  "relevant": [
+   "zh/家庭网络/群晖备份说明.md"
+  ]
+ },
+ {
+  "id": "zh/家庭网络/群晖备份说明.md#4",
+  "lang": "zh",
+  "query": "多久做一次恢复测试",
+  "relevant": [
+   "zh/家庭网络/群晖备份说明.md"
+  ]
+ },
+ {
+  "id": "zh/家庭网络/群晖备份说明.md#5",
+  "lang": "zh",
+  "query": "移动硬盘备份几点开始",
+  "relevant": [
+   "zh/家庭网络/群晖备份说明.md"
+  ]
+ },
+ {
+  "id": "zh/工作/项目周报.md#1",
+  "lang": "zh",
+  "query": "第三十七周的工作总结",
+  "relevant": [
+   "zh/工作/项目周报.md"
+  ]
+ },
+ {
+  "id": "zh/工作/项目周报.md#2",
+  "lang": "zh",
+  "query": "测试服务器为什么经常超时",
+  "relevant": [
+   "zh/工作/项目周报.md"
+  ]
+ },
+ {
+  "id": "zh/工作/项目周报.md#3",
+  "lang": "zh",
+  "query": "给客户演示是什么时候",
+  "relevant": [
+   "zh/工作/项目周报.md"
+  ]
+ },
+ {
+  "id": "zh/工作/项目周报.md#4",
+  "lang": "zh",
+  "query": "支付模块什么时候联调",
+  "relevant": [
+   "zh/工作/项目周报.md"
+  ]
+ },
+ {
+  "id": "zh/工作/项目周报.md#5",
+  "lang": "zh",
+  "query": "登录模块上线后的崩溃率",
+  "relevant": [
+   "zh/工作/项目周报.md"
+  ]
+ },
+ {
+  "id": "zh/脚本/清理下载.py#1",
+  "lang": "zh",
+  "query": "自动删除下载文件夹里的旧文件",
+  "relevant": [
+   "zh/脚本/清理下载.py"
+  ]
+ },
+ {
+  "id": "zh/脚本/清理下载.py#2",
+  "lang": "zh",
+  "query": "超过三十天的文件怎么清理",
+  "relevant": [
+   "zh/脚本/清理下载.py"
+  ]
+ },
+ {
+  "id": "zh/脚本/清理下载.py#3",
+  "lang": "zh",
+  "query": "清理下载目录的脚本",
+  "relevant": [
+   "zh/脚本/清理下载.py"
+  ]
+ },
+ {
+  "id": "zh/脚本/清理下载.py#4",
+  "lang": "zh",
+  "query": "定期删除旧下载",
+  "relevant": [
+   "zh/脚本/清理下载.py"
+  ]
+ },
+ {
+  "id": "zh/脚本/清理下载.py#5",
+  "lang": "zh",
+  "query": "python清理脚本",
+  "relevant": [
+   "zh/脚本/清理下载.py"
+  ]
+ },
+ {
+  "id": "zh/旅行/云南行程.html#1",
+  "lang": "zh",
+  "query": "去云南的行程安排",
+  "relevant": [
+   "zh/旅行/云南行程.html"
+  ]
+ },
+ {
+  "id": "zh/旅行/云南行程.html#2",
+  "lang": "zh",
+  "query": "玉龙雪山要带什么",
+  "relevant": [
+   "zh/旅行/云南行程.html"
+  ]
+ },
+ {
+  "id": "zh/旅行/云南行程.html#3",
+  "lang": "zh",
+  "query": "环洱海住在哪里",
+  "relevant": [
+   "zh/旅行/云南行程.html"
+  ]
+ },
+ {
+  "id": "zh/旅行/云南行程.html#4",
+  "lang": "zh",
+  "query": "国庆从上海飞哪里",
+  "relevant": [
+   "zh/旅行/云南行程.html"
+  ]
+ },
+ {
+  "id": "zh/旅行/云南行程.html#5",
+  "lang": "zh",
+  "query": "香格里拉去哪个国家公园",
+  "relevant": [
+   "zh/旅行/云南行程.html"
+  ]
+ },
+ {
+  "id": "zh/健康/体检报告摘要.json#1",
+  "lang": "zh",
+  "query": "体检血压结果",
+  "relevant": [
+   "zh/健康/体检报告摘要.json"
+  ]
+ },
+ {
+  "id": "zh/健康/体检报告摘要.json#2",
+  "lang": "zh",
+  "query": "胆固醇偏高要多久复查",
+  "relevant": [
+   "zh/健康/体检报告摘要.json"
+  ]
+ },
+ {
+  "id": "zh/健康/体检报告摘要.json#3",
+  "lang": "zh",
+  "query": "医生建议多运动",
+  "relevant": [
+   "zh/健康/体检报告摘要.json"
+  ]
+ },
+ {
+  "id": "zh/健康/体检报告摘要.json#4",
+  "lang": "zh",
+  "query": "空腹血糖正常吗",
+  "relevant": [
+   "zh/健康/体检报告摘要.json"
+  ]
+ },
+ {
+  "id": "zh/健康/体检报告摘要.json#5",
+  "lang": "zh",
+  "query": "李明的体检报告",
+  "relevant": [
+   "zh/健康/体检报告摘要.json"
+  ]
+ },
+ {
+  "id": "fr/recettes/quiche_lorraine.md#1",
+  "lang": "fr",
+  "query": "comment faire une quiche aux lardons",
+  "relevant": [
+   "fr/recettes/quiche_lorraine.md"
+  ]
+ },
+ {
+  "id": "fr/recettes/quiche_lorraine.md#2",
+  "lang": "fr",
+  "query": "combien d'œufs pour la quiche",
+  "relevant": [
+   "fr/recettes/quiche_lorraine.md"
+  ]
+ },
+ {
+  "id": "fr/recettes/quiche_lorraine.md#3",
+  "lang": "fr",
+  "query": "temps de cuisson de la quiche lorraine",
+  "relevant": [
+   "fr/recettes/quiche_lorraine.md"
+  ]
+ },
+ {
+  "id": "fr/recettes/quiche_lorraine.md#4",
+  "lang": "fr",
+  "query": "faut-il mettre du fromage dans la quiche",
+  "relevant": [
+   "fr/recettes/quiche_lorraine.md"
+  ]
+ },
+ {
+  "id": "fr/recettes/quiche_lorraine.md#5",
+  "lang": "fr",
+  "query": "recette de tarte salée de mamie",
+  "relevant": [
+   "fr/recettes/quiche_lorraine.md"
+  ]
+ },
+ {
+  "id": "fr/maison/contrat_box_internet.txt#1",
+  "lang": "fr",
+  "query": "combien coûte l'abonnement internet",
+  "relevant": [
+   "fr/maison/contrat_box_internet.txt"
+  ]
+ },
+ {
+  "id": "fr/maison/contrat_box_internet.txt#2",
+  "lang": "fr",
+  "query": "comment résilier la freebox",
+  "relevant": [
+   "fr/maison/contrat_box_internet.txt"
+  ]
+ },
+ {
+  "id": "fr/maison/contrat_box_internet.txt#3",
+  "lang": "fr",
+  "query": "débit de la fibre à la maison",
+  "relevant": [
+   "fr/maison/contrat_box_internet.txt"
+  ]
+ },
+ {
+  "id": "fr/maison/contrat_box_internet.txt#4",
+  "lang": "fr",
+  "query": "numéro de l'assistance internet",
+  "relevant": [
+   "fr/maison/contrat_box_internet.txt"
+  ]
+ },
+ {
+  "id": "fr/maison/contrat_box_internet.txt#5",
+  "lang": "fr",
+  "query": "où rendre le décodeur tv",
+  "relevant": [
+   "fr/maison/contrat_box_internet.txt"
+  ]
+ },
+ {
+  "id": "fr/finances/impots_2025.csv#1",
+  "lang": "fr",
+  "query": "montant de la taxe foncière",
+  "relevant": [
+   "fr/finances/impots_2025.csv"
+  ]
+ },
+ {
+  "id": "fr/finances/impots_2025.csv#2",
+  "lang": "fr",
+  "query": "crédit d'impôt pour la crèche",
+  "relevant": [
+   "fr/finances/impots_2025.csv"
+  ]
+ },
+ {
+  "id": "fr/finances/impots_2025.csv#3",
+  "lang": "fr",
+  "query": "dons aux associations déclarés",
+  "relevant": [
+   "fr/finances/impots_2025.csv"
+  ]
+ },
+ {
+  "id": "fr/finances/impots_2025.csv#4",
+  "lang": "fr",
+  "query": "combien d'impôt sur le revenu cette année",
+  "relevant": [
+   "fr/finances/impots_2025.csv"
+  ]
+ },
+ {
+  "id": "fr/finances/impots_2025.csv#5",
+  "lang": "fr",
+  "query": "déclaration d'impôts 2025",
+  "relevant": [
+   "fr/finances/impots_2025.csv"
+  ]
+ },
+ {
+  "id": "fr/homelab/pihole_compose.yml#1",
+  "lang": "fr",
+  "query": "bloqueur de publicité pour le réseau",
+  "relevant": [
+   "fr/homelab/pihole_compose.yml"
+  ]
+ },
+ {
+  "id": "fr/homelab/pihole_compose.yml#2",
+  "lang": "fr",
+  "query": "sur quel port est l'interface de pihole",
+  "relevant": [
+   "fr/homelab/pihole_compose.yml"
+  ]
+ },
+ {
+  "id": "fr/homelab/pihole_compose.yml#3",
+  "lang": "fr",
+  "query": "configuration dns pour bloquer les pubs",
+  "relevant": [
+   "fr/homelab/pihole_compose.yml"
+  ]
+ },
+ {
+  "id": "fr/homelab/pihole_compose.yml#4",
+  "lang": "fr",
+  "query": "où est stocké le mot de passe de pihole",
+  "relevant": [
+   "fr/homelab/pihole_compose.yml"
+  ]
+ },
+ {
+  "id": "fr/homelab/pihole_compose.yml#5",
+  "lang": "fr",
+  "query": "fichier compose pi-hole",
+  "relevant": [
+   "fr/homelab/pihole_compose.yml"
+  ]
+ },
+ {
+  "id": "fr/travail/compte_rendu_reunion.md#1",
+  "lang": "fr",
+  "query": "quand a lieu le salon de Lyon",
+  "relevant": [
+   "fr/travail/compte_rendu_reunion.md"
+  ]
+ },
+ {
+  "id": "fr/travail/compte_rendu_reunion.md#2",
+  "lang": "fr",
+  "query": "date de la formation au logiciel de facturation",
+  "relevant": [
+   "fr/travail/compte_rendu_reunion.md"
+  ]
+ },
+ {
+  "id": "fr/travail/compte_rendu_reunion.md#3",
+  "lang": "fr",
+  "query": "qui reprend les clients de Sophie",
+  "relevant": [
+   "fr/travail/compte_rendu_reunion.md"
+  ]
+ },
+ {
+  "id": "fr/travail/compte_rendu_reunion.md#4",
+  "lang": "fr",
+  "query": "budget marketing du trimestre",
+  "relevant": [
+   "fr/travail/compte_rendu_reunion.md"
+  ]
+ },
+ {
+  "id": "fr/travail/compte_rendu_reunion.md#5",
+  "lang": "fr",
+  "query": "notes de la réunion de mars",
+  "relevant": [
+   "fr/travail/compte_rendu_reunion.md"
+  ]
+ },
+ {
+  "id": "fr/scripts/sauvegarde_documents.sh#1",
+  "lang": "fr",
+  "query": "script de sauvegarde des papiers administratifs",
+  "relevant": [
+   "fr/scripts/sauvegarde_documents.sh"
+  ]
+ },
+ {
+  "id": "fr/scripts/sauvegarde_documents.sh#2",
+  "lang": "fr",
+  "query": "copie des documents vers le disque externe",
+  "relevant": [
+   "fr/scripts/sauvegarde_documents.sh"
+  ]
+ },
+ {
+  "id": "fr/scripts/sauvegarde_documents.sh#3",
+  "lang": "fr",
+  "query": "où est le journal de la sauvegarde",
+  "relevant": [
+   "fr/scripts/sauvegarde_documents.sh"
+  ]
+ },
+ {
+  "id": "fr/scripts/sauvegarde_documents.sh#4",
+  "lang": "fr",
+  "query": "que se passe-t-il si le disque externe est absent",
+  "relevant": [
+   "fr/scripts/sauvegarde_documents.sh"
+  ]
+ },
+ {
+  "id": "fr/scripts/sauvegarde_documents.sh#5",
+  "lang": "fr",
+  "query": "rsync des papiers le dimanche",
+  "relevant": [
+   "fr/scripts/sauvegarde_documents.sh"
+  ]
+ },
+ {
+  "id": "fr/voyages/bretagne_ete.html#1",
+  "lang": "fr",
+  "query": "où voir les macareux",
+  "relevant": [
+   "fr/voyages/bretagne_ete.html"
+  ]
+ },
+ {
+  "id": "fr/voyages/bretagne_ete.html#2",
+  "lang": "fr",
+  "query": "dates du gîte en Bretagne",
+  "relevant": [
+   "fr/voyages/bretagne_ete.html"
+  ]
+ },
+ {
+  "id": "fr/voyages/bretagne_ete.html#3",
+  "lang": "fr",
+  "query": "quelle crêperie réserver",
+  "relevant": [
+   "fr/voyages/bretagne_ete.html"
+  ]
+ },
+ {
+  "id": "fr/voyages/bretagne_ete.html#4",
+  "lang": "fr",
+  "query": "vacances d'été à Perros-Guirec",
+  "relevant": [
+   "fr/voyages/bretagne_ete.html"
+  ]
+ },
+ {
+  "id": "fr/voyages/bretagne_ete.html#5",
+  "lang": "fr",
+  "query": "faut-il prendre un ciré",
+  "relevant": [
+   "fr/voyages/bretagne_ete.html"
+  ]
+ },
+ {
+  "id": "fr/sante/carnet_vaccination_chat.json#1",
+  "lang": "fr",
+  "query": "quand faire le rappel de vaccin du chat",
+  "relevant": [
+   "fr/sante/carnet_vaccination_chat.json"
+  ]
+ },
+ {
+  "id": "fr/sante/carnet_vaccination_chat.json#2",
+  "lang": "fr",
+  "query": "numéro de puce de Minou",
+  "relevant": [
+   "fr/sante/carnet_vaccination_chat.json"
+  ]
+ },
+ {
+  "id": "fr/sante/carnet_vaccination_chat.json#3",
+  "lang": "fr",
+  "query": "vétérinaire du chat",
+  "relevant": [
+   "fr/sante/carnet_vaccination_chat.json"
+  ]
+ },
+ {
+  "id": "fr/sante/carnet_vaccination_chat.json#4",
+  "lang": "fr",
+  "query": "prochain vermifuge",
+  "relevant": [
+   "fr/sante/carnet_vaccination_chat.json"
+  ]
+ },
+ {
+  "id": "fr/sante/carnet_vaccination_chat.json#5",
+  "lang": "fr",
+  "query": "vaccins du chat",
+  "relevant": [
+   "fr/sante/carnet_vaccination_chat.json"
+  ]
+ },
+ {
+  "id": "es/recetas/tortilla_de_patatas.md#1",
+  "lang": "es",
+  "query": "cómo hacer tortilla de patatas",
+  "relevant": [
+   "es/recetas/tortilla_de_patatas.md"
+  ]
+ },
+ {
+  "id": "es/recetas/tortilla_de_patatas.md#2",
+  "lang": "es",
+  "query": "cuántos huevos lleva la tortilla",
+  "relevant": [
+   "es/recetas/tortilla_de_patatas.md"
+  ]
+ },
+ {
+  "id": "es/recetas/tortilla_de_patatas.md#3",
+  "lang": "es",
+  "query": "receta de la abuela con patatas y cebolla",
+  "relevant": [
+   "es/recetas/tortilla_de_patatas.md"
+  ]
+ },
+ {
+  "id": "es/recetas/tortilla_de_patatas.md#4",
+  "lang": "es",
+  "query": "cómo dar la vuelta a la tortilla",
+  "relevant": [
+   "es/recetas/tortilla_de_patatas.md"
+  ]
+ },
+ {
+  "id": "es/recetas/tortilla_de_patatas.md#5",
+  "lang": "es",
+  "query": "cuánto tiempo freír las patatas",
+  "relevant": [
+   "es/recetas/tortilla_de_patatas.md"
+  ]
+ },
+ {
+  "id": "es/casa/garantia_lavadora.txt#1",
+  "lang": "es",
+  "query": "hasta cuándo está en garantía la lavadora",
+  "relevant": [
+   "es/casa/garantia_lavadora.txt"
+  ]
+ },
+ {
+  "id": "es/casa/garantia_lavadora.txt#2",
+  "lang": "es",
+  "query": "qué significa el error E18",
+  "relevant": [
+   "es/casa/garantia_lavadora.txt"
+  ]
+ },
+ {
+  "id": "es/casa/garantia_lavadora.txt#3",
+  "lang": "es",
+  "query": "teléfono del servicio técnico de Bosch",
+  "relevant": [
+   "es/casa/garantia_lavadora.txt"
+  ]
+ },
+ {
+  "id": "es/casa/garantia_lavadora.txt#4",
+  "lang": "es",
+  "query": "dónde compramos la lavadora",
+  "relevant": [
+   "es/casa/garantia_lavadora.txt"
+  ]
+ },
+ {
+  "id": "es/casa/garantia_lavadora.txt#5",
+  "lang": "es",
+  "query": "cuánto detergente usar",
+  "relevant": [
+   "es/casa/garantia_lavadora.txt"
+  ]
+ },
+ {
+  "id": "es/finanzas/gastos_mensuales.csv#1",
+  "lang": "es",
+  "query": "cuánto pagamos de alquiler",
+  "relevant": [
+   "es/finanzas/gastos_mensuales.csv"
+  ]
+ },
+ {
+  "id": "es/finanzas/gastos_mensuales.csv#2",
+  "lang": "es",
+  "query": "gasto en el supermercado en marzo",
+  "relevant": [
+   "es/finanzas/gastos_mensuales.csv"
+  ]
+ },
+ {
+  "id": "es/finanzas/gastos_mensuales.csv#3",
+  "lang": "es",
+  "query": "cuánto costó el seguro del coche",
+  "relevant": [
+   "es/finanzas/gastos_mensuales.csv"
+  ]
+ },
+ {
+  "id": "es/finanzas/gastos_mensuales.csv#4",
+  "lang": "es",
+  "query": "gastos de las vacaciones de Semana Santa",
+  "relevant": [
+   "es/finanzas/gastos_mensuales.csv"
+  ]
+ },
+ {
+  "id": "es/finanzas/gastos_mensuales.csv#5",
+  "lang": "es",
+  "query": "cuota del gimnasio",
+  "relevant": [
+   "es/finanzas/gastos_mensuales.csv"
+  ]
+ },
+ {
+  "id": "es/homelab/home_assistant_compose.yml#1",
+  "lang": "es",
+  "query": "configuración de la domótica de casa",
+  "relevant": [
+   "es/homelab/home_assistant_compose.yml"
+  ]
+ },
+ {
+  "id": "es/homelab/home_assistant_compose.yml#2",
+  "lang": "es",
+  "query": "cómo está conectado el mando zigbee",
+  "relevant": [
+   "es/homelab/home_assistant_compose.yml"
+  ]
+ },
+ {
+  "id": "es/homelab/home_assistant_compose.yml#3",
+  "lang": "es",
+  "query": "contenedor de home assistant",
+  "relevant": [
+   "es/homelab/home_assistant_compose.yml"
+  ]
+ },
+ {
+  "id": "es/homelab/home_assistant_compose.yml#4",
+  "lang": "es",
+  "query": "qué versión de home assistant usamos",
+  "relevant": [
+   "es/homelab/home_assistant_compose.yml"
+  ]
+ },
+ {
+  "id": "es/homelab/home_assistant_compose.yml#5",
+  "lang": "es",
+  "query": "docker para controlar luces y persianas",
+  "relevant": [
+   "es/homelab/home_assistant_compose.yml"
+  ]
+ },
+ {
+  "id": "es/trabajo/acta_reunion_vecinos.md#1",
+  "lang": "es",
+  "query": "cuánto hay que pagar por el ascensor nuevo",
+  "relevant": [
+   "es/trabajo/acta_reunion_vecinos.md"
+  ]
+ },
+ {
+  "id": "es/trabajo/acta_reunion_vecinos.md#2",
+  "lang": "es",
+  "query": "quién será el presidente de la comunidad",
+  "relevant": [
+   "es/trabajo/acta_reunion_vecinos.md"
+  ]
+ },
+ {
+  "id": "es/trabajo/acta_reunion_vecinos.md#3",
+  "lang": "es",
+  "query": "qué días se limpia la escalera",
+  "relevant": [
+   "es/trabajo/acta_reunion_vecinos.md"
+  ]
+ },
+ {
+  "id": "es/trabajo/acta_reunion_vecinos.md#4",
+  "lang": "es",
+  "query": "acta de la junta de vecinos de octubre",
+  "relevant": [
+   "es/trabajo/acta_reunion_vecinos.md"
+  ]
+ },
+ {
+  "id": "es/trabajo/acta_reunion_vecinos.md#5",
+  "lang": "es",
+  "query": "dónde se pone el aparcabicis",
+  "relevant": [
+   "es/trabajo/acta_reunion_vecinos.md"
+  ]
+ },
+ {
+  "id": "es/scripts/aviso_disco_lleno.py#1",
+  "lang": "es",
+  "query": "aviso cuando el disco del NAS está lleno",
+  "relevant": [
+   "es/scripts/aviso_disco_lleno.py"
+  ]
+ },
+ {
+  "id": "es/scripts/aviso_disco_lleno.py#2",
+  "lang": "es",
+  "query": "script que manda un mensaje por Telegram",
+  "relevant": [
+   "es/scripts/aviso_disco_lleno.py"
+  ]
+ },
+ {
+  "id": "es/scripts/aviso_disco_lleno.py#3",
+  "lang": "es",
+  "query": "a partir de qué porcentaje avisa",
+  "relevant": [
+   "es/scripts/aviso_disco_lleno.py"
+  ]
+ },
+ {
+  "id": "es/scripts/aviso_disco_lleno.py#4",
+  "lang": "es",
+  "query": "alerta de espacio en disco",
+  "relevant": [
+   "es/scripts/aviso_disco_lleno.py"
+  ]
+ },
+ {
+  "id": "es/scripts/aviso_disco_lleno.py#5",
+  "lang": "es",
+  "query": "python aviso disco",
+  "relevant": [
+   "es/scripts/aviso_disco_lleno.py"
+  ]
+ },
+ {
+  "id": "es/viajes/escapada_asturias.html#1",
+  "lang": "es",
+  "query": "cuántos kilómetros tiene la ruta del Cares",
+  "relevant": [
+   "es/viajes/escapada_asturias.html"
+  ]
+ },
+ {
+  "id": "es/viajes/escapada_asturias.html#2",
+  "lang": "es",
+  "query": "a qué hora subir a los lagos de Covadonga",
+  "relevant": [
+   "es/viajes/escapada_asturias.html"
+  ]
+ },
+ {
+  "id": "es/viajes/escapada_asturias.html#3",
+  "lang": "es",
+  "query": "dónde comer fabada",
+  "relevant": [
+   "es/viajes/escapada_asturias.html"
+  ]
+ },
+ {
+  "id": "es/viajes/escapada_asturias.html#4",
+  "lang": "es",
+  "query": "casa rural en Cangas de Onís",
+  "relevant": [
+   "es/viajes/escapada_asturias.html"
+  ]
+ },
+ {
+  "id": "es/viajes/escapada_asturias.html#5",
+  "lang": "es",
+  "query": "viaje a Asturias en mayo",
+  "relevant": [
+   "es/viajes/escapada_asturias.html"
+  ]
+ },
+ {
+  "id": "es/salud/citas_medicas.json#1",
+  "lang": "es",
+  "query": "cuándo es la cita del dermatólogo",
+  "relevant": [
+   "es/salud/citas_medicas.json"
+  ]
+ },
+ {
+  "id": "es/salud/citas_medicas.json#2",
+  "lang": "es",
+  "query": "a qué hora es el dentista",
+  "relevant": [
+   "es/salud/citas_medicas.json"
+  ]
+ },
+ {
+  "id": "es/salud/citas_medicas.json#3",
+  "lang": "es",
+  "query": "citas médicas de Carmen",
+  "relevant": [
+   "es/salud/citas_medicas.json"
+  ]
+ },
+ {
+  "id": "es/salud/citas_medicas.json#4",
+  "lang": "es",
+  "query": "revisión de la vista",
+  "relevant": [
+   "es/salud/citas_medicas.json"
+  ]
+ },
+ {
+  "id": "es/salud/citas_medicas.json#5",
+  "lang": "es",
+  "query": "centro de salud de Carmen",
+  "relevant": [
+   "es/salud/citas_medicas.json"
+  ]
+ }
+]

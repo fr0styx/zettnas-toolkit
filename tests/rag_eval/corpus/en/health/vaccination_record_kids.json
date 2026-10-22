@@ -1,0 +1,15 @@
+{
+  "household": "Morgan family",
+  "children": [
+    {"name": "Lily", "born": "2019-05-02", "vaccines": [
+      {"name": "MMR first dose", "date": "2020-05-11"},
+      {"name": "MMR second dose", "date": "2022-09-30"},
+      {"name": "Flu nasal spray", "date": "2025-10-14"}
+    ]},
+    {"name": "Sam", "born": "2022-01-20", "vaccines": [
+      {"name": "6-in-1 third dose", "date": "2022-05-18"},
+      {"name": "MMR first dose", "date": "2023-01-25"}
+    ]}
+  ],
+  "next_due": "Sam: MMR second dose and pre-school booster at 3 years 4 months"
+}

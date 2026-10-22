@@ -1,0 +1,16 @@
+# Bloqueur de pubs pour tout le réseau de la maison
+services:
+  pihole:
+    image: pihole/pihole:2025.08.0
+    container_name: pihole
+    network_mode: bridge
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+      - "8081:80/tcp"
+    environment:
+      TZ: Europe/Paris
+      FTLCONF_webserver_api_password_file: /run/secrets/pihole_pw
+    volumes:
+      - ./etc-pihole:/etc/pihole
+    restart: unless-stopped

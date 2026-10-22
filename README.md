@@ -181,6 +181,8 @@ For remote test appliance execution rules and architectural invariants, see **[A
 * **[REST API Reference (docs/API.md)](docs/API.md)** — Complete endpoint specifications, live SSE telemetry contracts, card reader auto-ingest, and hardware control APIs.
 * **[System Architecture (docs/ARCHITECTURE.md)](docs/ARCHITECTURE.md)** — Threading model (`StatsCollector`, `LcdRenderer`, `ButtonListener`, `FanWatchdog`), SQLite WAL persistence, and data flow.
 * **[Hardware Protocol Reference (docs/HARDWARE_PROTOCOL.md)](docs/HARDWARE_PROTOCOL.md)** — WS2812B serial packet specifications, sysfs thermal & PWM mappings, and direct `/dev/fb0` memory buffers.
+* **[Document Search & Ask Zetty (docs/RAG.md)](docs/RAG.md)** — What gets indexed, vector types, measured retrieval quality, permissions, forgetting and retention.
+* **[Privacy & Data Flow (docs/PRIVACY.md)](docs/PRIVACY.md)** — Everything ZettNAS sends off the NAS, and when.
 * **[Reverse Proxy & TLS Guide (docs/REVERSE_PROXY.md)](docs/REVERSE_PROXY.md)** — Production configurations for Nginx, Caddy, Traefik, and Nginx Proxy Manager with SSE stream buffering disabled.
 * **[Contributing Guidelines](CONTRIBUTING.md)** — Pull request standards, local test environment, and automated test execution.
 

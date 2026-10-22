@@ -1,0 +1,16 @@
+# Media server stack for the living room TV
+services:
+  jellyfin:
+    image: jellyfin/jellyfin:10.10.7
+    container_name: jellyfin
+    ports:
+      - "8096:8096"
+    volumes:
+      - ./config:/config
+      - /mnt/user/media/movies:/media/movies:ro
+      - /mnt/user/media/tv:/media/tv:ro
+    devices:
+      - /dev/dri:/dev/dri   # Intel Quick Sync hardware transcoding
+    environment:
+      - TZ=Europe/London
+    restart: unless-stopped
