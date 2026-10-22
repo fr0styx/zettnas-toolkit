@@ -145,40 +145,26 @@ class TestV13Features(unittest.TestCase):
             config.STORED_PASSWORD_HASH = saved_hash
 
     def test_i18n_translation_keys_completeness(self):
-        import re
         import os
 
-        candidates = [
-            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "frontend", "src", "i18n.js"),
-            "/mnt/user/appdata/zettnas-toolkit/frontend/src/i18n.js",
-        ]
-        i18n_file = next((f for f in candidates if os.path.exists(f)), None)
-        if i18n_file is None:
-            return
-
-        content = open(i18n_file, "r", encoding="utf-8").read()
+        locales = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "frontend", "src", "locales"
+        )
         for lang in ("en", "de", "zh", "fr", "es"):
-            self.assertTrue(
-                f'"{lang}": {{' in content or f"{lang}: {{" in content,
-                f"Language {lang} should be defined in TRANSLATIONS",
-            )
-            # Ensure major translation keys are present in each language section
-            self.assertTrue('"dock.management":' in content or "'dock.management':" in content)
-            self.assertTrue('"mgmt.telemetry_title":' in content or "'mgmt.telemetry_title':" in content)
-            self.assertTrue('"settings.title":' in content or "'settings.title':" in content)
+            content = open(os.path.join(locales, f"{lang}.js"), encoding="utf-8").read()
+            for key in ("dock.management", "mgmt.telemetry_title", "settings.title"):
+                self.assertIn(f'"{key}":', content, f"{key} missing in {lang}")
 
     def test_batch3_features_and_translations(self):
         import os
 
-        candidates = [
-            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "frontend", "src", "i18n.js"),
-            "/mnt/user/appdata/zettnas-toolkit/frontend/src/i18n.js",
-        ]
-        i18n_file = next((f for f in candidates if os.path.exists(f)), None)
-        if i18n_file:
-            content = open(i18n_file, "r", encoding="utf-8").read()
+        locales = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "frontend", "src", "locales"
+        )
+        for lang in ("en", "de", "zh", "fr", "es"):
+            content = open(os.path.join(locales, f"{lang}.js"), encoding="utf-8").read()
             for key in ("notif.title", "notif.filter_all", "notif.clear_all", "fm.bulk_delete", "fm.selected_count"):
-                self.assertIn(f'"{key}":', content)
+                self.assertIn(f'"{key}":', content, f"{key} missing in {lang}")
 
     def test_batch4_features_and_telemetry(self):
         import time

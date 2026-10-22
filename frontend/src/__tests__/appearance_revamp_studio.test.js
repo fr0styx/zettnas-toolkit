@@ -25,7 +25,7 @@ import {
   filterGalleryByCategory,
   uploadAndApplyWallpaper
 } from '../components/wallpapers.js';
-import { TRANSLATIONS } from '../i18n.js';
+import { ALL_TRANSLATIONS as TRANSLATIONS } from '../locales/all.js';
 import * as toastModule from '../toast.js';
 
 describe('Appearance Studio & Desktop Personalization Revamp Suite', () => {

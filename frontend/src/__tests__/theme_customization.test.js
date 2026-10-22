@@ -2,7 +2,8 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { state } from '../state.js';
 import { applyTheme, applyDesktopTheme, applyLcdTheme } from '../components/dashboard.js';
 import { syncDesktopThemeUI, syncLcdThemeUI, syncThemeSettingsUI } from '../components/settings.js';
-import { t, TRANSLATIONS } from '../i18n.js';
+import { t } from '../i18n.js';
+import { ALL_TRANSLATIONS as TRANSLATIONS } from '../locales/all.js';
 import fs from 'fs';
 import path from 'path';
 

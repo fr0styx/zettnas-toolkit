@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { api } from '../api.js';
-import { TRANSLATIONS } from '../i18n.js';
+import { ALL_TRANSLATIONS as TRANSLATIONS } from '../locales/all.js';
 import {
   initStackModal,
   openStackModal,

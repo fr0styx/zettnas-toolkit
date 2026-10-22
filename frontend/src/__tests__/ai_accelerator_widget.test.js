@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { ZettEventBus } from '../event-bus.js';
 import { initWidgets, loadWidgetConfig, saveWidgetConfig, applyWidgetConfig } from '../components/widgets.js';
-import { TRANSLATIONS } from '../i18n.js';
+import { ALL_TRANSLATIONS as TRANSLATIONS } from '../locales/all.js';
 
 describe('AI Accelerator Desktop Widget (NPU + GPU Real-Time Gauges)', () => {
   beforeEach(() => {
