@@ -164,7 +164,7 @@ function _buildDefaultSpotlightItems() {
     {
       id: 'app-catalog',
       title: 'Homelab App Catalog',
-      subtitle: '25+ curated 1-click Docker applications',
+      subtitle: '75+ tested 1-click Docker applications',
       icon: '📦',
       category: 'app',
       keywords: ['docker', 'store', 'templates', 'jellyfin', 'plex', 'immich'],

@@ -9,10 +9,11 @@ from backend.services.docker_cleanup import (
 )
 
 
-def test_uptime_kuma_uses_next_tag():
+def test_uptime_kuma_uses_the_v2_tag():
+    # Uptime Kuma 2 is the stable line now; :2 follows its releases (it used the :next beta tag)
     app = get_catalog_app("uptime-kuma")
     assert app is not None
-    assert app["image"] == "louislam/uptime-kuma:next"
+    assert app["image"] == "louislam/uptime-kuma:2"
 
 
 def test_is_self_container():

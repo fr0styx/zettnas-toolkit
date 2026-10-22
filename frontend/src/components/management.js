@@ -1,4 +1,5 @@
 import { syncWidgetSettingsUI } from './widgets.js';
+import { catalogCardHtml, catalogChipsHtml, filterCatalog, isInstalled, bindCatalogChips } from './catalog-view.js';
 import { syncDesktopThemeUI, openDrawer, restoreHardwareTabsToManagement } from './settings.js';
 import { openContainerInspector, openContainerDeleteModal } from './container-modal.js';
 import { openStackModal, openStackPickerModal } from './stack-modal.js';
@@ -1551,9 +1552,12 @@ export async function fetchAndRenderAppCatalog() {
 
     const totalBadge = document.getElementById('catalog-total-badge');
     if (totalBadge) totalBadge.textContent = _catalogList.length;
+    const tabBadge = document.getElementById('catalog-total-badge-tab');
+    if (tabBadge) tabBadge.textContent = _catalogList.length;
     const allCount = document.getElementById('catalog-all-count');
     if (allCount) allCount.textContent = _catalogList.length;
     updateCatalogSourcesBadge();
+    renderCatalogChips();
 
     renderAppCatalogGrid();
   } catch (err) {
@@ -1561,91 +1565,45 @@ export async function fetchAndRenderAppCatalog() {
   }
 }
 
+/** Category chips with counts, built from the templates the server sent. */
+function renderCatalogChips() {
+  const pills = document.querySelector('#docker-view-catalog-wrap .catalog-filter-pills');
+  if (!pills) return;
+  if (_catalogCat !== 'all' && !_catalogList.some((a) => (a.category || 'other') === _catalogCat)) _catalogCat = 'all';
+  pills.innerHTML = catalogChipsHtml(_catalogList, _catalogCat, 'catalog-filter-btn', 'catalog-all-count');
+  bindCatalogChips(pills, '.catalog-filter-btn', (cat) => {
+    _catalogCat = cat;
+    renderAppCatalogGrid();
+  });
+}
+
+/** Opens the catalog with a search already typed, e.g. "reverse proxy" from the HTTPS guide. */
+export function presetCatalogSearch(query, tries = 30) {
+  _catalogSearchQuery = String(query || '').toLowerCase();
+  _catalogCat = 'all';
+  const input = document.getElementById('catalog-search-input');
+  if (input) input.value = query || '';
+  // Mission Control builds its panes on first open: switch to the catalog tab once it is wired
+  const tab = document.getElementById('docker-inner-tab-catalog');
+  if (tab && tab.dataset.bound === '1') {
+    tab.click(); // shows the catalog and loads it with the search above
+    renderCatalogChips();
+    renderAppCatalogGrid();
+  } else if (tries > 0) {
+    setTimeout(() => presetCatalogSearch(query, tries - 1), 100);
+  }
+}
+
 export function renderAppCatalogGrid() {
   const grid = document.getElementById('docker-catalog-grid');
   if (!grid) return;
 
-  const filtered = _catalogList.filter((app) => {
-    if (_catalogCat !== 'all' && app.category !== _catalogCat) return false;
-    if (_catalogSearchQuery) {
-      const q = _catalogSearchQuery;
-      const matchName = (app.name || '').toLowerCase().includes(q);
-      const matchDesc = (app.description || '').toLowerCase().includes(q);
-      const matchId = (app.id || '').toLowerCase().includes(q);
-      const matchImg = (app.image || '').toLowerCase().includes(q);
-      const matchSrc = (app.source_name || '').toLowerCase().includes(q);
-      if (!matchName && !matchDesc && !matchId && !matchImg && !matchSrc) return false;
-    }
-    return true;
-  });
-
+  const filtered = filterCatalog(_catalogList, _catalogCat, _catalogSearchQuery);
   if (filtered.length === 0) {
-    grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:var(--muted); padding:30px;">No applications match your search.</div>';
+    grid.innerHTML = '<div class="cat-empty">No applications match your search.</div>';
     return;
   }
-
-  const categoryIcons = {
-    media: '🎬',
-    photos: '📸',
-    cloud: '☁️',
-    automation: '⚡',
-    utilities: '🛠️',
-    downloads: '📥',
-    other: '📦',
-  };
-
-  grid.innerHTML = filtered.map((app) => {
-    const icon = categoryIcons[app.category] || '📦';
-    const logoHtml = app.logo
-      ? `<img src="${escapeHtml(app.logo)}" alt="${escapeHtml(app.name)}" style="width:24px; height:24px; object-fit:contain; border-radius:4px; vertical-align:middle; flex-shrink:0;" data-img-fallback="hide-show-next:inline" /><span style="font-size:20px; line-height:1; display:none;">${icon}</span>`
-      : `<span style="font-size:20px; line-height:1;">${icon}</span>`;
-
-    const sourceBadge = app.source_name && app.source_name !== 'Built-in'
-      ? `<span class="ci-badge" style="font-size:11px; background:rgba(14,165,233,0.15); color:#38bdf8; border:1px solid rgba(14,165,233,0.3); padding:1px 5px; border-radius:3px;">${escapeHtml(app.source_name)}</span>`
-      : `<span class="ci-badge" style="font-size:11px; background:rgba(37,194,160,0.15); color:var(--accent, #25c2a0); border:1px solid rgba(37,194,160,0.3); padding:1px 5px; border-radius:3px;">Built-in</span>`;
-
-    const typeBadge = app.type === 'stack'
-      ? `<span class="ci-badge" style="font-size:11px; background:rgba(168,85,247,0.15); color:#c084fc; border:1px solid rgba(168,85,247,0.3); padding:1px 5px; border-radius:3px;">Stack</span>`
-      : '';
-
-    let securityBadge = '';
-    if (app.security_rating === 'verified') {
-      securityBadge = `<span class="ci-badge" title="Verified Safe Sandbox" style="font-size:11px; background:rgba(34,197,94,0.15); color:#4ade80; border:1px solid rgba(34,197,94,0.3); padding:1px 5px; border-radius:3px;">🛡️ Safe</span>`;
-    } else if (app.security_rating === 'review_required') {
-      securityBadge = `<span class="ci-badge" title="${escapeHtml((app.security_flags || []).join('; '))}" style="font-size:11px; background:rgba(234,179,8,0.15); color:#facc15; border:1px solid rgba(234,179,8,0.3); padding:1px 5px; border-radius:3px;">⚠️ Review</span>`;
-    } else if (app.security_rating === 'elevated') {
-      securityBadge = `<span class="ci-badge" title="${escapeHtml((app.security_flags || []).join('; '))}" style="font-size:11px; background:rgba(239,68,68,0.15); color:#f87171; border:1px solid rgba(239,68,68,0.3); padding:1px 5px; border-radius:3px;">🚨 Elevated</span>`;
-    }
-
-    const imageDisplay = app.image || (app.repository ? 'compose-stack' : 'container');
-
-    return `
-      <div class="catalog-app-card" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:12px; display:flex; flex-direction:column; justify-content:space-between; gap:10px; transition:border-color 0.2s, background 0.2s;">
-        <div>
-          <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:6px; margin-bottom:6px;">
-            <div style="display:flex; align-items:center; gap:8px; overflow:hidden;">
-              ${logoHtml}
-              <div style="overflow:hidden;">
-                <div style="font-size:12.5px; font-weight:700; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(app.name)}</div>
-                <code style="font-size:11px; color:var(--muted); font-family:var(--font-mono, monospace); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block;">${escapeHtml(imageDisplay)}</code>
-              </div>
-            </div>
-            <div style="display:flex; gap:4px; align-items:center; flex-shrink:0;">
-              ${typeBadge}
-              ${sourceBadge}
-              ${securityBadge}
-              <span class="ci-badge" style="font-size:11px; text-transform:uppercase; background:rgba(255,255,255,0.06); color:#cbd5e1; padding:2px 6px; border-radius:4px;">${escapeHtml(app.category)}</span>
-            </div>
-          </div>
-          <p style="font-size:11px; color:#94a3b8; line-height:1.4; margin:0 0 6px 0; min-height:32px;">${escapeHtml(app.description)}</p>
-        </div>
-        <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,0.06); padding-top:8px;">
-          <span style="font-size:11px; font-family:var(--font-mono, monospace); color:var(--accent-cyan, #00f0ff); background:rgba(0,240,255,0.08); padding:2px 6px; border-radius:4px;">Port :${app.default_port}</span>
-          <button class="btn-pill-toggle btn-deploy-app catalog-deploy" data-appid="${escapeHtml(app.id)}">Deploy / Stack</button>
-        </div>
-      </div>
-    `;
-  }).join('');
+  grid.innerHTML = filtered.map((app) => catalogCardHtml(app, { installed: isInstalled(app, _dockerContainersList) })).join('');
 
   grid.querySelectorAll('.btn-deploy-app').forEach((btn) => {
     btn.addEventListener('click', (e) => {
@@ -1654,6 +1612,35 @@ export function renderAppCatalogGrid() {
       openAppDeployModal(btn.dataset.appid);
     });
   });
+}
+
+/** After a deploy: the login to use (generated passwords included), or where to connect. */
+function showDeployCredentials(successBox, data, hostPort) {
+  if (!successBox || !successBox.parentElement) return;
+  successBox.parentElement.querySelector('.adm-credentials')?.remove();
+  const c = data.credentials || {};
+  const rows = [];
+  if (data.has_webui === false) rows.push([t('catalog.connect_to', 'Connect to'), hostPort]);
+  if (c.user) rows.push([t('catalog.cred_user', 'User'), c.user]);
+  if (c.password) rows.push([t('catalog.cred_password', 'Password'), c.password]);
+  if (!rows.length && !c.note) return;
+  const box = document.createElement('div');
+  box.className = 'adm-credentials';
+  box.innerHTML = `<div class="adm-cred-title">🔑 ${escapeHtml(t('catalog.cred_title', 'Sign-in details'))}</div>` +
+    rows.map(([label, value], i) => `<div class="adm-cred-row"><span class="adm-cred-label">${escapeHtml(label)}</span><code class="adm-cred-val">${escapeHtml(value)}</code><button type="button" class="adm-cred-copy" data-i="${i}" aria-label="${escapeHtml(t('catalog.copy', 'Copy'))} ${escapeHtml(label)}">${escapeHtml(t('catalog.copy', 'Copy'))}</button></div>`).join('') +
+    (c.note ? `<div class="adm-cred-note">${escapeHtml(c.note)}</div>` : '') +
+    (c.password && /[A-Za-z0-9_-]{20,}/.test(c.password) ? `<div class="adm-cred-note">${escapeHtml(t('catalog.cred_saved', 'Saved in the app folder as .zettnas-secrets.json.'))}</div>` : '');
+  box.addEventListener('click', async (e) => {
+    const btn = e.target instanceof Element ? e.target.closest('.adm-cred-copy') : null;
+    if (!btn) return;
+    try {
+      await copyText(rows[Number(btn.dataset.i)][1]);
+      showToast(t('common.copied', 'Copied to clipboard!'), 'success');
+    } catch (_) {
+      showToast(t('toast.failed_to_copy', 'Failed to copy'), 'error');
+    }
+  });
+  successBox.insertAdjacentElement('afterend', box);
 }
 
 export async function openAppDeployModal(appId) {
@@ -2314,7 +2301,9 @@ export async function openAppDeployModal(appId) {
       if (webuiBtn) {
         webuiBtn.href = webUrl;
         webuiBtn.textContent = `🌐 Open Web UI (:${data.port || suggestedPort}) ↗`;
+        webuiBtn.style.display = data.has_webui === false ? 'none' : '';
       }
+      showDeployCredentials(successBox, data, `${window.location.hostname}:${data.port || suggestedPort}`);
 
       if (closeBtn) {
         closeBtn.disabled = false;
@@ -8521,6 +8510,7 @@ export function initManagement() {
     btnHttpsApps.addEventListener('click', () => {
       closeHttpsGuideModal();
       window.openManagementWindow('mgmt-sec-docker', 'mgmt-pane-docker-catalog');
+      presetCatalogSearch('reverse proxy');
     });
   }
   const btnHttpsPorts = document.getElementById('btn-https-guide-ports');

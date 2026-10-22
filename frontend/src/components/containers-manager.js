@@ -5,6 +5,7 @@
  */
 
 import { api } from '../api.js';
+import { catalogCardHtml, catalogChipsHtml, filterCatalog, isInstalled, bindCatalogChips } from './catalog-view.js';
 import { escapeHtml, reconcileKeyedTable } from '../utils.js';
 import { ZettEventBus } from '../event-bus.js';
 import { showToast, showConfirmToast, showBottomSheet } from '../toast.js';
@@ -648,20 +649,6 @@ export async function loadContainersData(isBackground = false) {
   }
 }
 
-const categoryIcons = {
-  media: '🎬',
-  productivity: '📝',
-  utilities: '🛠️',
-  security: '🛡️',
-  smart_home: '🏠',
-  downloaders: '📥',
-  development: '💻',
-  monitoring: '📊',
-  storage: '💾',
-  network: '🌐',
-  other: '📦',
-};
-
 export async function loadCwCatalogData() {
   const grid = document.getElementById('cw-catalog-grid');
   if (!grid) return;
@@ -679,78 +666,22 @@ export async function loadCwCatalogData() {
 export function renderCwCatalogGrid() {
   const grid = document.getElementById('cw-catalog-grid');
   if (!grid) return;
-
-  const filtered = _cwCatalogApps.filter((app) => {
-    if (_cwCatalogCategory !== 'all' && (app.category || '').toLowerCase() !== _cwCatalogCategory) {
-      return false;
-    }
-    if (_cwCatalogSearch) {
-      const q = _cwCatalogSearch.toLowerCase();
-      const n = (app.name || '').toLowerCase();
-      const d = (app.description || '').toLowerCase();
-      const img = (app.image || '').toLowerCase();
-      if (!n.includes(q) && !d.includes(q) && !img.includes(q)) return false;
-    }
-    return true;
-  });
-
-  if (filtered.length === 0) {
-    grid.innerHTML = `<div style="text-align: center; color: var(--muted); padding: 32px; grid-column: 1 / -1;">No applications found matching criteria.</div>`;
-    return;
+  const pills = document.querySelector('.cw-catalog-filter-pills');
+  if (pills) {
+    if (_cwCatalogCategory !== 'all' && !_cwCatalogApps.some((a) => (a.category || 'other') === _cwCatalogCategory)) _cwCatalogCategory = 'all';
+    pills.innerHTML = catalogChipsHtml(_cwCatalogApps, _cwCatalogCategory, 'cw-cat-btn');
+    bindCatalogChips(pills, '.cw-cat-btn', (cat) => {
+      _cwCatalogCategory = cat;
+      renderCwCatalogGrid();
+    });
   }
 
-  grid.innerHTML = filtered.map((app) => {
-    const icon = categoryIcons[app.category] || '📦';
-    const logoHtml = app.logo
-      ? `<img src="${escapeHtml(app.logo)}" alt="${escapeHtml(app.name)}" style="width:24px; height:24px; object-fit:contain; border-radius:4px; vertical-align:middle; flex-shrink:0;" data-img-fallback="hide-show-next:inline" /><span style="font-size:20px; line-height:1; display:none;">${icon}</span>`
-      : `<span style="font-size:20px; line-height:1;">${icon}</span>`;
-
-    const sourceBadge = app.source_name && app.source_name !== 'Built-in'
-      ? `<span class="ci-badge" style="font-size:11px; background:rgba(14,165,233,0.15); color:#38bdf8; border:1px solid rgba(14,165,233,0.3); padding:1px 5px; border-radius:3px;">${escapeHtml(app.source_name)}</span>`
-      : `<span class="ci-badge" style="font-size:11px; background:rgba(37,194,160,0.15); color:var(--accent, #25c2a0); border:1px solid rgba(37,194,160,0.3); padding:1px 5px; border-radius:3px;">Built-in</span>`;
-
-    const typeBadge = app.type === 'stack'
-      ? `<span class="ci-badge" style="font-size:11px; background:rgba(168,85,247,0.15); color:#c084fc; border:1px solid rgba(168,85,247,0.3); padding:1px 5px; border-radius:3px;">Stack</span>`
-      : '';
-
-    let securityBadge = '';
-    if (app.security_rating === 'verified') {
-      securityBadge = `<span class="ci-badge" title="Verified Safe Sandbox" style="font-size:11px; background:rgba(34,197,94,0.15); color:#4ade80; border:1px solid rgba(34,197,94,0.3); padding:1px 5px; border-radius:3px;">🛡️ Safe</span>`;
-    } else if (app.security_rating === 'review_required') {
-      securityBadge = `<span class="ci-badge" title="${escapeHtml((app.security_flags || []).join('; '))}" style="font-size:11px; background:rgba(234,179,8,0.15); color:#facc15; border:1px solid rgba(234,179,8,0.3); padding:1px 5px; border-radius:3px;">⚠️ Review</span>`;
-    } else if (app.security_rating === 'elevated') {
-      securityBadge = `<span class="ci-badge" title="${escapeHtml((app.security_flags || []).join('; '))}" style="font-size:11px; background:rgba(239,68,68,0.15); color:#f87171; border:1px solid rgba(239,68,68,0.3); padding:1px 5px; border-radius:3px;">🚨 Elevated</span>`;
-    }
-
-    const imageDisplay = app.image || (app.repository ? 'compose-stack' : 'container');
-
-    return `
-      <div class="catalog-app-card" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:12px; display:flex; flex-direction:column; justify-content:space-between; gap:10px; transition:border-color 0.2s, background 0.2s;">
-        <div>
-          <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:6px; margin-bottom:6px;">
-            <div style="display:flex; align-items:center; gap:8px; overflow:hidden;">
-              ${logoHtml}
-              <div style="overflow:hidden;">
-                <div style="font-size:12.5px; font-weight:700; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(app.name)}</div>
-                <code style="font-size:11px; color:var(--muted); font-family:var(--font-mono, monospace); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block;">${escapeHtml(imageDisplay)}</code>
-              </div>
-            </div>
-            <div style="display:flex; gap:4px; align-items:center; flex-shrink:0;">
-              ${typeBadge}
-              ${sourceBadge}
-              ${securityBadge}
-              <span class="ci-badge" style="font-size:11px; text-transform:uppercase; background:rgba(255,255,255,0.06); color:#cbd5e1; padding:2px 6px; border-radius:4px;">${escapeHtml(app.category)}</span>
-            </div>
-          </div>
-          <p style="font-size:11px; color:#94a3b8; line-height:1.4; margin:0 0 6px 0; min-height:32px;">${escapeHtml(app.description)}</p>
-        </div>
-        <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,0.06); padding-top:8px;">
-          <span style="font-size:11px; font-family:var(--font-mono, monospace); color:var(--accent-cyan, #00f0ff); background:rgba(0,240,255,0.08); padding:2px 6px; border-radius:4px;">Port :${app.default_port}</span>
-          <button class="btn-pill-toggle btn-deploy-app catalog-deploy" data-appid="${escapeHtml(app.id)}">Deploy / Stack</button>
-        </div>
-      </div>
-    `;
-  }).join('');
+  const filtered = filterCatalog(_cwCatalogApps, _cwCatalogCategory, _cwCatalogSearch);
+  if (filtered.length === 0) {
+    grid.innerHTML = '<div class="cat-empty">No applications found matching criteria.</div>';
+    return;
+  }
+  grid.innerHTML = filtered.map((app) => catalogCardHtml(app, { installed: isInstalled(app, _cwContainersList) })).join('');
 
   grid.querySelectorAll('.btn-deploy-app').forEach((btn) => {
     btn.addEventListener('click', async (e) => {

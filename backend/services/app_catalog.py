@@ -10,319 +10,9 @@ from typing import Any, Optional
 from backend.config import DATA_DIR, docker_sock, logger
 from backend.fsutil import atomic_write_json, read_json
 from backend.hardware.docker_stats import UnixHTTPConnection
+from backend.services.catalog_templates import CURATED_APP_CATALOG
 from backend.services.container_mutator import _docker_request, check_port_available, check_port_available_detailed
 from backend.state import add_event
-
-CURATED_APP_CATALOG: list[dict[str, Any]] = [
-    # Media & Streaming
-    {
-        "id": "jellyfin",
-        "name": "Jellyfin Media Server",
-        "category": "media",
-        "description": "Free, open-source media streaming system for movies, TV shows, and music.",
-        "image": "jellyfin/jellyfin:latest",
-        "default_port": 8096,
-        "webui_path": "/web/index.html",
-        "env": {"PUID": "1000", "PGID": "100", "TZ": "UTC"},
-        "volumes": {"config": "/config", "cache": "/cache", "media": "/media"},
-    },
-    {
-        "id": "plex",
-        "name": "Plex Media Server",
-        "category": "media",
-        "description": "Organize your video, music, and photo collections and stream them to all your devices.",
-        "image": "lscr.io/linuxserver/plex:latest",
-        "default_port": 32400,
-        "webui_path": "/web",
-        "env": {"PUID": "1000", "PGID": "100", "VERSION": "docker"},
-        "volumes": {"config": "/config", "media": "/tv", "movies": "/movies"},
-    },
-    {
-        "id": "emby",
-        "name": "Emby Server",
-        "category": "media",
-        "description": "Personal media server with live TV, multi-screen streaming, and mobile sync.",
-        "image": "emby/embyserver:latest",
-        "default_port": 8096,
-        "webui_path": "/",
-        "env": {"UID": "1000", "GID": "100"},
-        "volumes": {"config": "/config", "media": "/mnt/share1"},
-    },
-    {
-        "id": "audiobookshelf",
-        "name": "Audiobookshelf",
-        "category": "media",
-        "description": "Self-hosted audiobook and podcast server with progress tracking and mobile apps.",
-        "image": "ghcr.io/advplyr/audiobookshelf:latest",
-        "default_port": 13378,
-        "webui_path": "/",
-        "env": {"AUDIOBOOKSHELF_UID": "1000", "AUDIOBOOKSHELF_GID": "100"},
-        "volumes": {"config": "/config", "metadata": "/metadata", "audiobooks": "/audiobooks"},
-    },
-    {
-        "id": "calibre-web",
-        "name": "Calibre-Web",
-        "category": "media",
-        "description": "Web app for browsing, reading, and downloading eBooks stored in a Calibre database.",
-        "image": "lscr.io/linuxserver/calibre-web:latest",
-        "default_port": 8083,
-        "webui_path": "/",
-        "env": {"PUID": "1000", "PGID": "100", "DOCKER_MODS": "linuxserver/mods:universal-calibre"},
-        "volumes": {"config": "/config", "books": "/books"},
-    },
-    # Cloud & Photos
-    {
-        "id": "immich",
-        "name": "Immich Photo Backup",
-        "category": "photos",
-        "description": "High-performance self-hosted photo and video backup solution with AI search.",
-        "image": "ghcr.io/immich-app/immich-server:release",
-        "default_port": 2283,
-        "webui_path": "/",
-        # Full stack (M3): server, machine learning, Valkey and Postgres on a private network
-        "env": {
-            "DB_HOSTNAME": "database",
-            "DB_USERNAME": "postgres",
-            "DB_PASSWORD": "{{secret:db_password}}",
-            "DB_DATABASE_NAME": "immich",
-            "REDIS_HOSTNAME": "redis",
-            "IMMICH_MACHINE_LEARNING_URL": "http://machine-learning:3003",
-        },
-        "volumes": {"library": "/data"},
-        "stack_services": {
-            "database": {
-                "image": "ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0",
-                "env": {
-                    "POSTGRES_PASSWORD": "{{secret:db_password}}",
-                    "POSTGRES_USER": "postgres",
-                    "POSTGRES_DB": "immich",
-                    "POSTGRES_INITDB_ARGS": "--data-checksums",
-                },
-                "volumes": {"pgdata": "/var/lib/postgresql/data"},
-                "shm_size": 134217728,
-            },
-            "redis": {"image": "docker.io/valkey/valkey:8-bookworm"},
-            "machine-learning": {
-                "image": "ghcr.io/immich-app/immich-machine-learning:release",
-                "volumes": {"model-cache": "/cache"},
-            },
-        },
-        "sso_doc": "docs/SSO.md#immich",
-    },
-    {
-        "id": "photoprism",
-        "name": "PhotoPrism",
-        "category": "photos",
-        "description": "AI-powered photos app for decentralized web with face recognition and world map.",
-        "image": "photoprism/photoprism:latest",
-        "default_port": 2342,
-        "webui_path": "/",
-        "env": {"PHOTOPRISM_ADMIN_USER": "admin", "PHOTOPRISM_AUTH_MODE": "password"},
-        "volumes": {"storage": "/photoprism/storage", "originals": "/photoprism/originals"},
-    },
-    {
-        "id": "nextcloud",
-        "name": "Nextcloud Hub",
-        "category": "cloud",
-        "description": "Self-hosted productivity platform for files, calendars, contacts, and office docs.",
-        "image": "lscr.io/linuxserver/nextcloud:latest",
-        "default_port": 8080,
-        "webui_path": "/",
-        "env": {"PUID": "1000", "PGID": "100"},
-        "volumes": {"config": "/config", "data": "/data"},
-    },
-    {
-        "id": "owncloud",
-        "name": "ownCloud Infinite Scale",
-        "category": "cloud",
-        "description": "Cloud native file sync and share built in Go with microservices architecture.",
-        "image": "owncloud/ocis:latest",
-        "default_port": 9200,
-        "webui_path": "/",
-        "env": {"OCIS_INSECURE": "true"},
-        "volumes": {"data": "/var/lib/ocis"},
-    },
-    # Smart Home & Automation
-    {
-        "id": "homeassistant",
-        "name": "Home Assistant",
-        "category": "automation",
-        "description": "Open source home automation that puts local control and privacy first.",
-        "image": "ghcr.io/home-assistant/home-assistant:stable",
-        "default_port": 8123,
-        "webui_path": "/",
-        "env": {"TZ": "UTC"},
-        "volumes": {"config": "/config"},
-    },
-    {
-        "id": "nodered",
-        "name": "Node-RED",
-        "category": "automation",
-        "description": "Flow-based visual programming for wiring hardware devices, APIs, and online services.",
-        "image": "nodered/node-red:latest",
-        "default_port": 1880,
-        "webui_path": "/",
-        "env": {"TZ": "UTC"},
-        "volumes": {"data": "/data"},
-    },
-    {
-        "id": "scrypted",
-        "name": "Scrypted",
-        "category": "automation",
-        "description": "High-performance video integration platform for HomeKit, Google Home, and Alexa.",
-        "image": "koush/scrypted:latest",
-        "default_port": 10443,
-        "webui_path": "/",
-        "env": {},
-        "volumes": {"server-volume": "/server/volume"},
-    },
-    {
-        "id": "zigbee2mqtt",
-        "name": "Zigbee2MQTT",
-        "category": "automation",
-        "description": "Bridge Zigbee devices directly to MQTT without proprietary vendor hubs.",
-        "image": "koenkk/zigbee2mqtt:latest",
-        "default_port": 8080,
-        "webui_path": "/",
-        "env": {"TZ": "UTC"},
-        "volumes": {"data": "/app/data"},
-    },
-    # Network & Utilities
-    {
-        "id": "vaultwarden",
-        "name": "Vaultwarden",
-        "category": "utilities",
-        "description": "Lightweight, full-featured Bitwarden compatible password and secrets manager in Rust.",
-        "image": "vaultwarden/server:latest",
-        "default_port": 8088,
-        "webui_path": "/",
-        "env": {"WEBSOCKET_ENABLED": "true"},
-        "volumes": {"data": "/data"},
-    },
-    {
-        "id": "pihole",
-        "name": "Pi-hole DNS Sinkhole",
-        "category": "network",
-        "description": "Network-wide ad and telemetry blocking via local DNS sinkhole.",
-        "image": "pihole/pihole:latest",
-        "default_port": 8080,
-        "webui_path": "/admin",
-        "env": {"TZ": "UTC", "WEBPASSWORD": "admin"},
-        "volumes": {"etc-pihole": "/etc/pihole", "etc-dnsmasq.d": "/etc/dnsmasq.d"},
-    },
-    {
-        "id": "adguardhome",
-        "name": "AdGuard Home",
-        "category": "network",
-        "description": "Network-wide software for blocking ads, tracking, and parental control.",
-        "image": "adguard/adguardhome:latest",
-        "default_port": 3000,
-        "webui_path": "/",
-        "env": {},
-        "volumes": {"work": "/opt/adguardhome/work", "conf": "/opt/adguardhome/conf"},
-    },
-    {
-        "id": "nginx-proxy-manager",
-        "name": "Nginx Proxy Manager",
-        "category": "network",
-        "description": "Intuitive web interface for reverse proxying, SSL certs, and access lists.",
-        "image": "jc21/nginx-proxy-manager:latest",
-        "default_port": 81,
-        "webui_path": "/",
-        "env": {},
-        "volumes": {"data": "/data", "letsencrypt": "/etc/letsencrypt"},
-    },
-    {
-        "id": "uptime-kuma",
-        "name": "Uptime Kuma",
-        "category": "utilities",
-        "description": "Self-hosted monitoring tool with notification integrations and status pages.",
-        "image": "louislam/uptime-kuma:next",
-        "default_port": 3001,
-        "webui_path": "/",
-        "env": {},
-        "volumes": {"data": "/app/data"},
-    },
-    # Download & Media Management
-    {
-        "id": "radarr",
-        "name": "Radarr",
-        "category": "downloads",
-        "description": "Automated movie collection manager for Usenet and BitTorrent.",
-        "image": "lscr.io/linuxserver/radarr:latest",
-        "default_port": 7878,
-        "webui_path": "/",
-        "env": {"PUID": "1000", "PGID": "100"},
-        "volumes": {"config": "/config", "movies": "/movies", "downloads": "/downloads"},
-    },
-    {
-        "id": "sonarr",
-        "name": "Sonarr",
-        "category": "downloads",
-        "description": "Smart TV series manager and grabber for Usenet and BitTorrent.",
-        "image": "lscr.io/linuxserver/sonarr:latest",
-        "default_port": 8989,
-        "webui_path": "/",
-        "env": {"PUID": "1000", "PGID": "100"},
-        "volumes": {"config": "/config", "tv": "/tv", "downloads": "/downloads"},
-    },
-    {
-        "id": "prowlarr",
-        "name": "Prowlarr",
-        "category": "downloads",
-        "description": "Indexer proxy for Usenet and Torrent indexers with seamless Arr app integration.",
-        "image": "lscr.io/linuxserver/prowlarr:latest",
-        "default_port": 9696,
-        "webui_path": "/",
-        "env": {"PUID": "1000", "PGID": "100"},
-        "volumes": {"config": "/config"},
-    },
-    {
-        "id": "bazarr",
-        "name": "Bazarr",
-        "category": "downloads",
-        "description": "Companion application to Sonarr and Radarr that manages and downloads subtitles.",
-        "image": "lscr.io/linuxserver/bazarr:latest",
-        "default_port": 6767,
-        "webui_path": "/",
-        "env": {"PUID": "1000", "PGID": "100"},
-        "volumes": {"config": "/config", "movies": "/movies", "tv": "/tv"},
-    },
-    {
-        "id": "qbittorrent",
-        "name": "qBittorrent",
-        "category": "downloads",
-        "description": "Fast, feature-rich BitTorrent client with built-in search engine and web UI.",
-        "image": "lscr.io/linuxserver/qbittorrent:latest",
-        "default_port": 8085,
-        "webui_path": "/",
-        "env": {"PUID": "1000", "PGID": "100", "WEBUI_PORT": "8085"},
-        "volumes": {"config": "/config", "downloads": "/downloads"},
-    },
-    {
-        "id": "transmission",
-        "name": "Transmission",
-        "category": "downloads",
-        "description": "Lightweight, reliable BitTorrent client with remote web control.",
-        "image": "lscr.io/linuxserver/transmission:latest",
-        "default_port": 9091,
-        "webui_path": "/transmission/web/",
-        "env": {"PUID": "1000", "PGID": "100"},
-        "volumes": {"config": "/config", "downloads": "/downloads", "watch": "/watch"},
-    },
-    {
-        "id": "sabnzbd",
-        "name": "SABnzbd",
-        "category": "downloads",
-        "description": "Automated Usenet binary newsreader with automated post-processing and web GUI.",
-        "image": "lscr.io/linuxserver/sabnzbd:latest",
-        "default_port": 8080,
-        "webui_path": "/",
-        "env": {"PUID": "1000", "PGID": "100"},
-        "volumes": {"config": "/config", "downloads": "/downloads", "incomplete": "/incomplete-downloads"},
-    },
-]
-
 
 CATALOG_SOURCES_FILE = os.path.join(DATA_DIR, "catalog_sources.json")
 CATALOG_CACHE_DIR = os.path.join(DATA_DIR, "catalog_cache")
@@ -893,8 +583,9 @@ def get_all_catalog_apps() -> list[dict[str, Any]]:
             item.setdefault("source_id", "builtin")
             item.setdefault("source_name", "Built-in")
             item.setdefault("app_slug", item["id"])
-            item.setdefault("type", "standalone")
+            item.setdefault("type", "stack" if item.get("stack_services") else "standalone")
             item.setdefault("logo", "")
+            item.pop("seed_files", None)  # starter files stay on the server
             apps.append(item)
 
     # 2. Custom Sources
@@ -1245,6 +936,57 @@ def _pull_image_blocking(image: str) -> tuple[bool, str]:
         conn.close()
 
 
+def _write_seed_files(app: dict[str, Any], app_dir: str) -> None:
+    """Writes a template's starter files (e.g. a Caddyfile) once; never overwrites the user's."""
+    for vol_key, files in (app.get("seed_files") or {}).items():
+        if vol_key not in (app.get("volumes") or {}) or not isinstance(files, dict):
+            continue
+        base = os.path.realpath(os.path.join(app_dir, vol_key))
+        for rel, content in files.items():
+            target = os.path.realpath(os.path.join(base, rel))
+            if not target.startswith(base + os.sep) or os.path.exists(target):
+                continue
+            os.makedirs(os.path.dirname(target), exist_ok=True)
+            with open(target, "w", encoding="utf-8") as fh:
+                fh.write(str(content))
+
+
+def _own_volumes(app: dict[str, Any], app_dir: str) -> None:
+    """Hands the app's folders to the user its image runs as (e.g. "1000:1000" for Node-RED).
+
+    Only each folder itself and the files we seeded; existing data inside is never re-owned."""
+    m = re.fullmatch(r"(\d+):(\d+)", str(app.get("volume_owner") or ""))
+    if not m:
+        return
+    uid, gid = int(m.group(1)), int(m.group(2))
+    for vol_key in app.get("volumes") or {}:
+        path = os.path.join(app_dir, vol_key)
+        try:
+            os.chown(path, uid, gid)
+            for rel in (app.get("seed_files") or {}).get(vol_key, {}):
+                seeded = os.path.join(path, rel)
+                if os.path.exists(seeded):
+                    os.chown(seeded, uid, gid)
+        except OSError as err:
+            logger.warning(f"[AppCatalog] Could not give {path} to {uid}:{gid}: {err}")
+
+
+def _apply_runtime_options(create_body: dict[str, Any], app: dict[str, Any]) -> None:
+    """Command, capabilities, kernel settings and devices a template asks for."""
+    host = create_body.setdefault("HostConfig", {})
+    if isinstance(app.get("command"), list) and app["command"]:
+        create_body["Cmd"] = [str(c) for c in app["command"]]
+    if app.get("cap_add"):
+        host["CapAdd"] = [str(c) for c in app["cap_add"]]
+    if isinstance(app.get("sysctls"), dict) and app["sysctls"]:
+        host["Sysctls"] = {str(k): str(v) for k, v in app["sysctls"].items()}
+    devices = [
+        d for d in (app.get("devices") or []) if isinstance(d, str) and d.startswith("/dev/") and os.path.exists(d)
+    ]
+    if devices:  # only what this host has, e.g. /dev/dri for hardware transcoding
+        host["Devices"] = [{"PathOnHost": d, "PathInContainer": d, "CgroupPermissions": "rwm"} for d in devices]
+
+
 def _deploy_companions(
     app: dict[str, Any], service_name: str, app_dir: str, secrets_map: dict[str, str], replace_existing: bool
 ) -> Iterator[dict[str, Any]]:
@@ -1290,6 +1032,10 @@ def _deploy_companions(
         host_cfg: dict[str, Any] = {"Binds": binds, "RestartPolicy": {"Name": "unless-stopped"}, "NetworkMode": network}
         if s_def.get("shm_size"):
             host_cfg["ShmSize"] = int(s_def["shm_size"])
+        if isinstance(s_def.get("command"), list):
+            host_cfg_cmd = [str(c) for c in s_def["command"]]
+        else:
+            host_cfg_cmd = None
         body = {
             "Image": image,
             "Env": [f"{k}={_fill_secrets(str(v), secrets_map)}" for k, v in (s_def.get("env") or {}).items()],
@@ -1297,6 +1043,8 @@ def _deploy_companions(
             "NetworkingConfig": {"EndpointsConfig": {network: {"Aliases": [s_name]}}},
             "Labels": {"com.docker.compose.project": service_name, "com.docker.compose.service": s_name},
         }
+        if host_cfg_cmd:
+            body["Cmd"] = host_cfg_cmd
         st, resp = _docker_request("POST", f"/containers/create?name={cname}", body=body)
         if st != 201:
             yield {"error": f"Could not create {cname}: {resp}"}
@@ -1371,6 +1119,8 @@ def stream_deploy_catalog_app(
             vol_host_path = os.path.join(app_dir, vol_key)
             os.makedirs(vol_host_path, exist_ok=True)
             binds.append(f"{vol_host_path}:{vol_target}:rw")
+        _write_seed_files(app, app_dir)
+        _own_volumes(app, app_dir)
 
         comp_info = generate_compose_for_app(
             app_id, host_port=port, storage_root=resolved_root, container_name=service_name
@@ -1426,6 +1176,25 @@ def stream_deploy_catalog_app(
                 "step": "error",
                 "percent": 0,
                 "message": f"Deployment aborted: Host port {port} is already in use by {in_use_by}. Please choose an available port in configuration.",
+                "error": "Port in use",
+                "done": True,
+            }
+            return
+
+    # Fixed extra ports (e.g. 443 for a proxy, 53 for DNS) must be free too
+    for p_str in app.get("ports") or []:
+        m = re.match(r"^(\d+):(\d+)(?:/([a-zA-Z0-9]+))?$", str(p_str).strip())
+        if not m:
+            continue
+        hp, cp, proto = int(m.group(1)), int(m.group(2)), (m.group(3) or "tcp")
+        if hp == int(app.get("default_port", 0)) or cp == int(app.get("default_port", 0)):
+            continue  # the main port, checked above
+        ok_extra, used_by = check_port_available_detailed(hp, proto=proto)
+        if not ok_extra and not (replace_existing and has_existing and used_by == f"container '{service_name}'"):
+            yield {
+                "step": "error",
+                "percent": 0,
+                "message": f"Deployment aborted: {app['name']} also needs host port {hp}/{proto}, which is in use by {used_by}.",
                 "error": "Port in use",
                 "done": True,
             }
@@ -1640,7 +1409,7 @@ def stream_deploy_catalog_app(
             "com.docker.compose.project": service_name,
             "com.docker.compose.service": service_name,
             "net.unraid.docker.managed": "dockerman",
-            "net.unraid.docker.webui": f"http://[IP]:[PORT:{port}]{app.get('webui_path', '/')}",
+            "net.unraid.docker.webui": f"{app.get('webui_scheme', 'http')}://[IP]:[PORT:{port}]{(app.get('webui_path') or '/')}",
             "net.unraid.docker.icon": app.get("logo")
             or f"https://raw.githubusercontent.com/fr0styx/zettnas-toolkit/main/static/img/icons/{app_id}.png",
         },
@@ -1648,6 +1417,7 @@ def stream_deploy_catalog_app(
 
     if network_name:
         create_body["HostConfig"]["NetworkMode"] = network_name
+    _apply_runtime_options(create_body, app)
     st, create_resp = _docker_request(
         "POST", f"/containers/create?name={service_name}", body=create_body, headers={"X-ZettNAS-Elevated": "1"}
     )
@@ -1708,7 +1478,11 @@ def stream_deploy_catalog_app(
     except Exception:
         logger.debug("backend.services.app_catalog.stream_deploy_catalog_app: ignored error", exc_info=True)
 
-    webui_url = f"http://[HOST]:{port}{app.get('webui_path', '/')}"
+    webui_url = f"{app.get('webui_scheme', 'http')}://[HOST]:{port}{(app.get('webui_path') or '/')}"
+    credentials = None
+    if isinstance(app.get("credentials"), dict):
+        credentials = {k: _fill_secrets(str(v), secrets_map) for k, v in app["credentials"].items()}
+        _save_stack_secrets(app_dir, secrets_map)
 
     yield {
         "step": "success",
@@ -1718,6 +1492,8 @@ def stream_deploy_catalog_app(
         "container_name": service_name,
         "port": port,
         "webui_url": webui_url,
+        "credentials": credentials,
+        "has_webui": app.get("webui_path", "/") is not None,
         "is_running": is_running,
         "done": True,
     }
