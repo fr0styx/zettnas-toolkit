@@ -4,8 +4,13 @@ Optional cross-encoder reranking for the AI index (AI-13).
 Ollama has no rerank API, but OpenVINO Model Server (/v3/rerank), Infinity (/rerank),
 Hugging Face TEI (/rerank) and Cohere-compatible servers do. When `rerank_endpoint` is
 set in the AI config, the top candidates of a search are sent there with the query and
-re-ordered by the model's relevance score (blended 70/30 with the original score). If
-the reranker is slow or down, search keeps its original order.
+re-ordered by a blend of both scores. If the reranker is slow or down, search keeps its
+original order.
+
+The blend gives the reranker only RERANK_WEIGHT of the say, on min-max-scaled scores. On
+SciFact with EmbeddingGemma, a 70% sigmoid blend cut nDCG@10 from 78.3 to 66.5 and 20%
+scaled kept it at 78.8: a good embedding model is already hard to beat, so the reranker
+should nudge close calls, not override the first ranking.
 """
 
 import math
@@ -17,6 +22,7 @@ import httpx
 from backend.config import logger
 
 TIMEOUT_S = 4.0
+RERANK_WEIGHT = 0.2
 
 
 def _norm(scores: list[float]) -> list[float]:
@@ -61,6 +67,7 @@ def rerank_scores(
         "texts": docs,
         "top_n": len(docs),
         "return_documents": False,
+        "truncate": True,  # TEI rejects inputs past the model's length otherwise
     }
     if cfg.get("rerank_model"):
         payload["model"] = cfg["rerank_model"]
@@ -81,6 +88,11 @@ def rerank_scores(
             c.close()
 
 
+def _scaled(xs: list[float]) -> list[float]:
+    lo, hi = min(xs), max(xs)
+    return [0.0 if hi <= lo else (x - lo) / (hi - lo) for x in xs]
+
+
 def rerank_items(
     query: str, items: list[dict[str, Any]], cfg: dict[str, Any], client: httpx.Client | None = None
 ) -> list[dict[str, Any]]:
@@ -96,8 +108,13 @@ def rerank_items(
     scores = rerank_scores(query, docs, cfg, client)
     if scores is None:
         return items
-    for it, s in zip(head, scores, strict=True):
+    first = [float(it.get("score") or 0.0) for it in head]
+    lo, hi = min(first), max(first)
+    mixed = [(1 - RERANK_WEIGHT) * a + RERANK_WEIGHT * b for a, b in zip(_scaled(first), _scaled(scores), strict=True)]
+    for it, s, m in zip(head, scores, mixed, strict=True):
         it["rerank_score"] = round(s, 4)
-        it["score"] = round(0.3 * float(it.get("score") or 0.0) + 0.7 * s, 4)
-    head.sort(key=lambda it: it["score"], reverse=True)
+        # back on the original scale, so these still compare fairly with photo results
+        it["score"] = round(lo + m * (hi - lo), 4)
+    order = sorted(range(len(head)), key=lambda i: mixed[i], reverse=True)
+    head = [head[i] for i in order]
     return head + tail
