@@ -32,6 +32,9 @@ Out of scope: vulnerabilities in the host OS, Docker itself, or third-party cont
 
 ## Hardening recommendations
 
+See [docs/THREAT_MODEL.md](docs/THREAT_MODEL.md) for what ZettNAS defends against and what it doesn't.
+
+
 - Change the initial `admin` password on first login (1.9.2 and later enforce this).
 - Don't publish the web UI (port 8080) or WebDAV (port 8084) to the internet; use a VPN or a reverse proxy with its own authentication.
 - Leave WebDAV off unless you need it. Give WebDAV users their own accounts.
