@@ -12,9 +12,12 @@ permissions:
   packages: write
   id-token: write # keyless cosign signing (OIDC)
 
+# Pushes get one run per commit and are never cancelled, so every commit on main shows
+# its own test result (cancelled jobs count as failed checks on GitHub). Pull requests
+# still cancel superseded runs. Only the newest commit builds images: see still-latest.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name == 'pull_request' && 'pr' || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   NODE_OPTIONS: "--no-deprecation"
@@ -167,9 +170,30 @@ jobs:
           # Shutdown background server cleanly
           kill $SERVER_PID || true
 
+  # After the tests pass: is this commit still the tip of main? If not, a newer commit will
+  # build and publish the images, so this one skips the build (skipped, not failed).
+  still-latest:
+    name: Still the latest commit?
+    needs: [lint-and-test, frontend, e2e-integration]
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    outputs:
+      latest: ${{ steps.check.outputs.latest }}
+    steps:
+      - id: check
+        run: |
+          if [ "${{ github.ref }}" != "refs/heads/main" ]; then echo "latest=true" >> "$GITHUB_OUTPUT"; exit 0; fi
+          tip=$(git ls-remote "https://github.com/${{ github.repository }}" refs/heads/main | cut -f1)
+          if [ "$tip" = "${{ github.sha }}" ]; then
+            echo "latest=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "latest=false" >> "$GITHUB_OUTPUT"
+            echo "main has moved on to ${tip:0:7}; that commit builds the images." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
   build-and-push:
     name: Build & Push Multi-Arch GHCR Container (${{ matrix.variant }})
-    needs: [lint-and-test, frontend, e2e-integration]
+    needs: [lint-and-test, frontend, e2e-integration, still-latest]
     # full: the default image. core: no VMs or LCD renderer, published as -core tags (OPS-11)
     strategy:
       fail-fast: false
@@ -179,7 +203,7 @@ jobs:
             suffix: ""
           - variant: core
             suffix: "-core"
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/tags/stable')
+    if: github.event_name == 'push' && needs.still-latest.outputs.latest == 'true' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/tags/stable')
     runs-on: ubuntu-latest
     env:
       DOCKER_CLIENT_TIMEOUT: "120"
@@ -305,9 +329,17 @@ jobs:
           TAGS: ${{ steps.meta.outputs.tags }}
           DIGEST: ${{ steps.build.outputs.digest }}
         run: |
+          # A build that finished after a newer commit landed must not move edge/main back
+          moving_ok=1
+          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            tip=$(git ls-remote "https://github.com/${{ github.repository }}" refs/heads/main | cut -f1)
+            [ "$tip" = "${{ github.sha }}" ] || moving_ok=0
+          fi
           args=()
           while IFS= read -r tag; do
-            [ -n "$tag" ] && args+=(-t "$tag")
+            [ -z "$tag" ] && continue
+            if [ "$moving_ok" = 0 ] && [[ "$tag" != *":sha-"* ]]; then continue; fi
+            args+=(-t "$tag")
           done <<< "$TAGS"
           docker buildx imagetools create "${args[@]}" "ghcr.io/${{ github.repository }}@${DIGEST}"
           echo "Published ${#args[@]} tag argument(s) for ${DIGEST}" >> "$GITHUB_STEP_SUMMARY"
