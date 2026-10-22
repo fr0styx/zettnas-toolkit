@@ -41,6 +41,7 @@ import { initCommandPalette } from './components/command-palette.js';
 import { initWidgets } from './components/widgets.js';
 import { initFileManager } from './components/file-manager.js';
 import { lazyWindow } from './lazy-windows.js';
+import { installWindowFocus } from './window-focus.js';
 import { initContainersManager } from './components/containers-manager.js';
 import { initContainerModal } from './components/container-modal.js';
 import { initStackModal } from './components/stack-modal.js';
@@ -267,6 +268,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setWindowRestorationComplete(false);
   initI18n();
   initDockSystem();
+  installWindowFocus(DockManager);
   initAuth();
   initUsersManagement();
   initDashboardClicks();
