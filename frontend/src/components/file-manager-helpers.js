@@ -11,6 +11,7 @@ import { formatBytes, executeTransferWithConflictCheck } from './file-manager.js
 import { openFilePreviewModal } from './file-preview-modal.js';
 import { auth, api } from '../api.js';
 import { thumbKind, previewUrl } from './viewer-kit.js';
+import { canPlayHere, describeMedia, mediaInfoUrl } from './media-support.js';
 import { showToast } from '../toast.js';
 
 import { formatDateTime } from '../format.js';
@@ -738,6 +739,7 @@ export class FmInspector {
         <div class="fm-inspector-row"><span>Modified:</span> <span>${dateModified}</span></div>
         <div class="fm-inspector-row"><span>Mode:</span> <span id="fm-insp-mode">${item.mode || '--'}</span></div>
         <div class="fm-inspector-row"><span>Owner:</span> <span id="fm-insp-owner">Loading...</span></div>
+        ${isVideo ? '<div id="fm-insp-media" class="fm-inspector-media" aria-live="polite"></div>' : ''}
         <button type="button" id="fm-insp-go-perms-btn" class="btn-pill-toggle" style="width: 100%; font-size: 11px; padding: 3px 8px; margin-top: 8px;">🔒 Edit Permissions & Mode</button>
       </div>
 
@@ -775,6 +777,20 @@ export class FmInspector {
         this.activeTab = 'permissions';
         this.update();
       });
+    }
+
+    // Video details: duration, resolution, codecs, and whether this browser plays it as is
+    const mediaEl = content.querySelector('#fm-insp-media');
+    if (mediaEl) {
+      api.get(mediaInfoUrl(item.path)).then((info) => {
+        if (!mediaEl.isConnected) return;
+        mediaEl.replaceChildren(...describeMedia(info, canPlayHere(info, item.name)).map(([label, value]) => {
+          const row = document.createElement('div');
+          row.className = 'fm-inspector-row';
+          row.append(Object.assign(document.createElement('span'), { textContent: `${label}:` }), ' ', Object.assign(document.createElement('span'), { textContent: value }));
+          return row;
+        }));
+      }).catch((err) => console.warn('Video details unavailable:', err));
     }
 
     // Fetch POSIX permissions

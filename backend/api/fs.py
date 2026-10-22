@@ -21,6 +21,7 @@ import aiofiles
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import FileResponse, Response, StreamingResponse
 from pydantic import BaseModel, Field
+from starlette.concurrency import iterate_in_threadpool
 
 import backend.config as config
 from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
@@ -74,7 +75,7 @@ ALLOWED_BROWSE_ROOTS = _AllowedBrowseRootsProxy()
 from backend.fsutil import atomic_write_json, read_json, resolve_within, root_for
 from backend.logging_config import sanitize_string
 from backend.models.schemas import MkdirRequest
-from backend.services import thumbs
+from backend.services import media_info, thumbs, video_compat
 from backend.state import add_event
 
 router = APIRouter(tags=["File System & Shares"])
@@ -2205,6 +2206,47 @@ async def fs_preview_image(
         content=data,
         media_type="image/webp",
         headers={"Cache-Control": "private, max-age=86400, stale-while-revalidate=3600", "ETag": etag},
+    )
+
+
+@router.get(
+    "/fs/media/info",
+    dependencies=[Depends(require_scope("shares:read", "storage:read", "system:view"))],
+)
+async def fs_media_info(path: str, principal: AuthenticatedPrincipal = Depends(get_current_principal)):
+    """Duration, resolution, codecs, frame rate and rotation of a video or audio file."""
+    check_user_path_access(path, principal)
+    target = _contained(path, must_exist=True)
+    if os.path.isdir(target):
+        raise HTTPException(status_code=400, detail="Not a file")
+    info = await asyncio.to_thread(media_info.probe, target)
+    if info is None:
+        raise HTTPException(status_code=415, detail="Not a video or audio file")
+    return info
+
+
+@router.get(
+    "/fs/stream/compat",
+    dependencies=[Depends(require_scope("shares:read", "storage:read", "system:view"))],
+)
+async def fs_stream_compat(
+    path: str,
+    start: float = 0.0,
+    principal: AuthenticatedPrincipal = Depends(get_current_principal),
+):
+    """The video converted to H.264/AAC in fragmented MP4 while it plays, from `start` seconds."""
+    check_user_path_access(path, principal)
+    target = _contained(path, must_exist=True)
+    if os.path.isdir(target) or thumbs.kind(target) != "video":
+        raise HTTPException(status_code=415, detail="Not a video file")
+    try:
+        chunks, _stop = video_compat.stream(target, max(0.0, min(start, 7 * 24 * 3600)))
+    except video_compat.Busy as e:
+        raise HTTPException(status_code=503, detail=str(e)) from e
+    return StreamingResponse(
+        iterate_in_threadpool(chunks),
+        media_type="video/mp4",
+        headers={"Cache-Control": "no-store", "X-Content-Type-Options": "nosniff"},
     )
 
 

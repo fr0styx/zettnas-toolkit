@@ -190,109 +190,18 @@ def render_lcd_loop():
                 shot_params = {"format": "jpeg" if lcd_format == "jpeg" else "png", "optimizeForSpeed": True}
                 if lcd_format == "jpeg":
                     shot_params["quality"] = 95
+                retry_delay = 2.0
 
                 with open(fb_path, "r+b") as fb_file:
                     fb_mem = mmap.mmap(fb_file.fileno(), total_fb_bytes, mmap.MAP_SHARED, mmap.PROT_WRITE)
                     try:
-                        # Pre-fill line padding once
-                        fb_mem[:total_fb_bytes] = b"\x00" * total_fb_bytes
-                        prev_raw_b64 = None
-                        idle_backoff = 0.0
-                        max_idle_backoff = 1.0
-                        screen_blanked = False
-                        last_layout_version = 0
-
-                        while not Z_STATE.shutting_down:
-                            # Screen-off pause: 0 FPS when power is off, brightness is 0, or night mode is blanked
-                            if get_effective_brightness() <= 0:
-                                if not screen_blanked:
-                                    set_fb_blank(False)
-                                    try:
-                                        fb_mem[:total_fb_bytes] = b"\x00" * total_fb_bytes
-                                    except Exception:
-                                        logger.debug(
-                                            "backend.services.lcd_renderer.render_lcd_loop: ignored error",
-                                            exc_info=True,
-                                        )
-                                    screen_blanked = True
-                                    prev_raw_b64 = None
-                                if Z_STATE.ui_wake.wait(1.0):
-                                    Z_STATE.ui_wake.clear()
-                                continue
-
-                            if screen_blanked:
-                                set_fb_blank(True)
-                                screen_blanked = False
-
-                            t0 = time.time()
-
-                            try:
-                                res = cdp.send("Page.captureScreenshot", shot_params)
-                                raw_b64 = res.get("data")
-                                if raw_b64 and raw_b64 == prev_raw_b64:
-                                    # Adaptive FPS: frame unchanged, incrementally back off up to 1.0s
-                                    idle_backoff = min(max_idle_backoff, idle_backoff + 0.1)
-                                    sleep_time = max(frame_interval, idle_backoff)
-                                    woke = False
-                                    if Z_STATE.ui_wake.wait(sleep_time):
-                                        Z_STATE.ui_wake.clear()
-                                        idle_backoff = 0.0
-                                        woke = True
-
-                                    with Z_STATE.lock:
-                                        cur_layout = (
-                                            Z_STATE.cached_stats.get("layout") if Z_STATE.cached_stats else None
-                                        )
-
-                                    cur_ver = cur_layout.get("version", 0) if isinstance(cur_layout, dict) else 0
-                                    if woke or (cur_ver and cur_ver != last_layout_version):
-                                        last_layout_version = cur_ver
-                                        try:
-                                            if cur_layout and hasattr(page, "evaluate"):
-                                                page.evaluate(
-                                                    """(layout) => {
-                                                        if (window.applyStats) {
-                                                            window.applyStats({ layout });
-                                                        } else if (window.fetchDashboardLayout) {
-                                                            window.fetchDashboardLayout();
-                                                        }
-                                                    }""",
-                                                    cur_layout,
-                                                )
-                                        except Exception as eval_e:
-                                            logger.debug(f"[LCD] Page layout evaluate error: {eval_e}")
-                                    continue
-
-                                # Frame changed: reset idle backoff immediately
-                                idle_backoff = 0.0
-                                prev_raw_b64 = raw_b64
-                                raw_bytes = base64.b64decode(raw_b64)
-                            except Exception:
-                                # Fallback if CDP session encounters an issue
-                                raw_bytes = page.screenshot(type="png", animations="disabled")
-
-                            # Successfully rendered a frame, reset restart backoff
-                            retry_delay = 2.0
-
-                            with Image.open(io.BytesIO(raw_bytes)) as img:
-                                if bpp == 16:
-                                    rgb_img = img.convert("RGB")
-                                    fb_mem[:total_fb_bytes] = rgb_img.tobytes("raw", "BGR;16", stride, 1)
-                                else:
-                                    raw_mode = "BGRA" if img.mode == "RGBA" else "BGRX"
-                                    fb_mem[:total_fb_bytes] = img.tobytes("raw", raw_mode, stride, 1)
-                                try:
-                                    fb_mem.flush()
-                                except Exception:
-                                    logger.debug(
-                                        "backend.services.lcd_renderer.render_lcd_loop: ignored error", exc_info=True
-                                    )
-
-                            elapsed = time.time() - t0
-                            sleep_time = max(0.01, frame_interval - elapsed)
-                            if Z_STATE.ui_wake.wait(sleep_time):
-                                Z_STATE.ui_wake.clear()
-                                idle_backoff = 0.0
+                        fb = _Framebuffer(fb_mem, total_fb_bytes, stride, bpp)
+                        fb.clear()
+                        streamed = LCD_CAPTURE != "poll" and _screencast_frames(
+                            page, cdp, fb, shot_params["format"], frame_interval, fb_width, fb_height
+                        )
+                        if not streamed:
+                            _poll_frames(page, cdp, fb, shot_params, frame_interval)
                     finally:
                         try:
                             fb_mem.close()
@@ -312,3 +221,182 @@ def render_lcd_loop():
 
     Z_STATE.lcd_renderer_active = False
     logger.info("[LCD] Active render loop terminated cleanly.")
+
+
+# ---------------------------------------------------------------------------
+# Frame capture. "screencast" (default): Chromium sends a frame only when the
+# page repaints, so a static screen costs almost nothing and a change shows at
+# once. Each frame is acknowledged one frame interval after the previous one,
+# which keeps LCD_FPS as the upper limit. "poll": the previous behaviour, a
+# screenshot every frame interval with a back-off to 1 FPS while unchanged.
+# ---------------------------------------------------------------------------
+
+LCD_CAPTURE = os.environ.get("ZETTNAS_LCD_CAPTURE", "screencast").strip().lower()
+_NO_FRAME_FALLBACK_S = 5.0
+
+
+class _Framebuffer:
+    def __init__(self, fb_mem, total_bytes: int, stride: int, bpp: int):
+        self.mem = fb_mem
+        self.total = total_bytes
+        self.stride = stride
+        self.bpp = bpp
+
+    def clear(self) -> None:
+        self.mem[: self.total] = b"\x00" * self.total
+
+    def write(self, raw_bytes: bytes) -> None:
+        with Image.open(io.BytesIO(raw_bytes)) as img:
+            if self.bpp == 16:
+                self.mem[: self.total] = img.convert("RGB").tobytes("raw", "BGR;16", self.stride, 1)
+            else:
+                raw_mode = "BGRA" if img.mode == "RGBA" else "BGRX"
+                self.mem[: self.total] = img.tobytes("raw", raw_mode, self.stride, 1)
+        try:
+            self.mem.flush()
+        except Exception:
+            logger.debug("[LCD] framebuffer flush failed", exc_info=True)
+
+
+class _LayoutPusher:
+    """Hands a changed dashboard layout to the page (applyStats) when the UI wakes it or it changes."""
+
+    def __init__(self, page):
+        self.page = page
+        self.version = 0
+
+    def push(self, woke: bool) -> None:
+        with Z_STATE.lock:
+            layout = Z_STATE.cached_stats.get("layout") if Z_STATE.cached_stats else None
+        ver = layout.get("version", 0) if isinstance(layout, dict) else 0
+        if not (woke or (ver and ver != self.version)):
+            return
+        self.version = ver
+        if not layout or not hasattr(self.page, "evaluate"):
+            return
+        try:
+            self.page.evaluate(
+                """(layout) => {
+                    if (window.applyStats) {
+                        window.applyStats({ layout });
+                    } else if (window.fetchDashboardLayout) {
+                        window.fetchDashboardLayout();
+                    }
+                }""",
+                layout,
+            )
+        except Exception as e:
+            logger.debug(f"[LCD] Page layout evaluate error: {e}")
+
+
+def _screen_off(fb: "_Framebuffer", blanked: bool) -> bool:
+    """Handles brightness 0 / power off / night blanking. Returns the new 'blanked' state."""
+    if get_effective_brightness() <= 0:
+        if not blanked:
+            set_fb_blank(False)
+            try:
+                fb.clear()
+            except Exception:
+                logger.debug("[LCD] clearing the framebuffer failed", exc_info=True)
+        return True
+    if blanked:
+        set_fb_blank(True)
+    return False
+
+
+def _poll_frames(page, cdp, fb: "_Framebuffer", shot_params: dict, frame_interval: float) -> None:
+    """Screenshot every frame interval; back off to 1 FPS while nothing changes."""
+    prev_raw_b64 = None
+    idle_backoff = 0.0
+    blanked = False
+    layout = _LayoutPusher(page)
+    while not Z_STATE.shutting_down:
+        blanked = _screen_off(fb, blanked)
+        if blanked:
+            prev_raw_b64 = None
+            if Z_STATE.ui_wake.wait(1.0):
+                Z_STATE.ui_wake.clear()
+            continue
+        t0 = time.time()
+        try:
+            raw_b64 = cdp.send("Page.captureScreenshot", shot_params).get("data")
+            if raw_b64 and raw_b64 == prev_raw_b64:
+                idle_backoff = min(1.0, idle_backoff + 0.1)
+                woke = Z_STATE.ui_wake.wait(max(frame_interval, idle_backoff))
+                if woke:
+                    Z_STATE.ui_wake.clear()
+                    idle_backoff = 0.0
+                layout.push(woke)
+                continue
+            idle_backoff = 0.0
+            prev_raw_b64 = raw_b64
+            raw_bytes = base64.b64decode(raw_b64)
+        except Exception:
+            raw_bytes = page.screenshot(type="png", animations="disabled")
+        fb.write(raw_bytes)
+        if Z_STATE.ui_wake.wait(max(0.01, frame_interval - (time.time() - t0))):
+            Z_STATE.ui_wake.clear()
+
+
+def _screencast_frames(page, cdp, fb: "_Framebuffer", fmt: str, frame_interval: float, width: int, height: int) -> bool:
+    """
+    Frames pushed by Chromium when the page repaints. Returns False if no frame ever
+    arrived (the caller then polls instead), True when it stopped for shutdown.
+    """
+    pending: list[dict] = []
+    params = {"format": fmt, "maxWidth": width, "maxHeight": height, "everyNthFrame": 1}
+    if fmt == "jpeg":
+        params["quality"] = 95
+
+    def on_frame(event: dict) -> None:
+        pending[:] = [event]  # keep only the newest frame
+
+    cdp.on("Page.screencastFrame", on_frame)
+    layout = _LayoutPusher(page)
+    blanked = False
+    casting = False
+    started = time.time()
+    got_frame = False
+    last_write = 0.0
+    try:
+        while not Z_STATE.shutting_down:
+            now_blanked = _screen_off(fb, blanked)
+            if now_blanked != blanked or not casting:
+                if now_blanked and casting:
+                    cdp.send("Page.stopScreencast")
+                    casting = False
+                elif not now_blanked and not casting:
+                    cdp.send("Page.startScreencast", params)
+                    casting = True
+                    started = time.time()
+            blanked = now_blanked
+            if blanked:
+                if Z_STATE.ui_wake.wait(1.0):
+                    Z_STATE.ui_wake.clear()
+                continue
+            page.wait_for_timeout(50)  # lets Playwright deliver the frame events
+            woke = Z_STATE.ui_wake.is_set()
+            if woke:
+                Z_STATE.ui_wake.clear()
+            layout.push(woke)
+            if not pending:
+                if not got_frame and time.time() - started > _NO_FRAME_FALLBACK_S:
+                    logger.info("[LCD] No screencast frames from Chromium; capturing by screenshots instead.")
+                    return False
+                continue
+            event = pending.pop()
+            got_frame = True
+            fb.write(base64.b64decode(event["data"]))
+            # Chromium sends the next frame only after this one is acknowledged: wait out the frame interval
+            wait_ms = (frame_interval - (time.time() - last_write)) * 1000
+            if wait_ms > 1:
+                page.wait_for_timeout(wait_ms)
+            last_write = time.time()
+            cdp.send("Page.screencastFrameAck", {"sessionId": event["sessionId"]})
+        return True
+    finally:
+        if casting:
+            try:
+                cdp.send("Page.stopScreencast")
+            except Exception:
+                logger.debug("[LCD] stopScreencast failed", exc_info=True)

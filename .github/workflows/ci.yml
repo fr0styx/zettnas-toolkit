@@ -138,7 +138,12 @@ jobs:
           PORT: "8082"
           WEB_PASSWORD: "admin"
           DATA_DIR: "${{ github.workspace }}/data"
+          # A browsable folder for the explorer and viewer accessibility checks (sample photos go here)
+          POOL_PATH: "${{ github.workspace }}/e2e-pool"
+          BROWSE_ROOTS: "${{ github.workspace }}/e2e-pool"
+          ZETTNAS_E2E_MEDIA_DIR: "${{ github.workspace }}/e2e-pool"
         run: |
+          mkdir -p "$ZETTNAS_E2E_MEDIA_DIR"
           annotate() {
             body=$( (echo "$2"; echo '--- server warnings ---'; grep -v 'Auth failed' /tmp/zn-server.log | grep -E 'WARNING|ERROR|CRITICAL|Traceback|Error' | tail -n 25; echo '--- server log ---'; tail -n 15 /tmp/zn-server.log) | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')
             echo "::error title=$1::$body"

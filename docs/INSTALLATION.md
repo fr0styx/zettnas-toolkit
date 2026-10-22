@@ -462,6 +462,7 @@ ZettNAS Toolkit accesses physical hardware through Linux device nodes and `cgrou
 | `SFTP_PORT` | `2222` | Port for drop-in chrooted SFTP server |
 | `UPDATE_CHANNEL` | `stable` | Release update channel (`stable` for tagged releases, `edge` for latest main branch commits) |
 | `ZETTNAS_OBSERVER_ADAPTER` | `auto` | Force storage adapter mode (`auto`, `generic`, `fygoos`, `zettos`, `ugos`, `truenas`, `proxmox`, `unraid`) |
+| `ZETTNAS_LCD_CAPTURE` | `screencast` | How the front LCD gets frames: `screencast` (Chromium sends one only when the screen changes) or `poll` (a screenshot every frame) |
 | `ZETTNAS_THUMB_CACHE_MB` | `1024` | Disk space for photo and video thumbnails (`data/cache/thumbs`); the least recently used are removed first |
 
 ---

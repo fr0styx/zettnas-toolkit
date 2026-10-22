@@ -2286,7 +2286,7 @@ body.theme-yak #containers-manager-window .containers-content-body {
 }
 .os-window-controls {
   display: flex;
-  gap: 8px;
+  gap: 12px; /* 12px dots, 24px apart: WCAG 2.2 target spacing */
   align-items: center;
 }
 .win-btn {

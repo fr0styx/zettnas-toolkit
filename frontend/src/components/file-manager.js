@@ -2089,7 +2089,8 @@ export class FileManagerWindow {
 
         const metaText = file.name === '..' ? '--' : (file.is_dir ? 'Folder' : formatBytes(file.size));
 
-        card.innerHTML = `
+        // One grid cell per card (a row of the grid); display: contents keeps the card's layout
+        card.innerHTML = `<div class="fm-card-cell" role="gridcell">
           ${file.name !== '..' ? `<input type="checkbox" class="fm-checkbox fm-card-checkbox" ${this.selectedPaths.has(file.path) ? 'checked' : ''} data-path="${escPath}" title="Select item" />` : ''}
           <div class="fm-card-preview">${iconContent}</div>
           <div class="fm-card-info">
@@ -2104,7 +2105,7 @@ export class FileManagerWindow {
             ${file.name !== '..' ? `<button class="fm-act-btn" data-act="delete" data-path="${escPath}" title="Delete">🗑️</button>` : ''}
             ${file.name !== '..' ? `<button class="fm-act-btn fm-act-more-sheet" data-act="more-sheet" data-path="${escPath}" title="More Actions" style="display:none;">···</button>` : ''}
           </div>
-        `;
+        </div>`;
 
         if (file.name !== '..') {
           card.setAttribute('draggable', 'true');
@@ -2129,6 +2130,9 @@ export class FileManagerWindow {
     this.list.style.transform = `translateY(${startIndex * pitch}px)`;
     this.list.innerHTML = '';
 
+    this.list.setAttribute('role', 'grid');
+    this.list.setAttribute('aria-label', 'Files');
+    this.list.setAttribute('aria-multiselectable', 'true');
     for (let i = startIndex; i < endIndex; i++) {
       const file = this.fileList[i];
       const row = document.createElement('div');
@@ -2186,6 +2190,7 @@ export class FileManagerWindow {
           ${file.name !== '..' ? `<button class="fm-act-btn fm-act-more-sheet" data-act="more-sheet" data-path="${escPath}" title="More Actions" aria-label="More Actions">···</button>` : ''}
         </div>
       `;
+      row.querySelectorAll(':scope > .fm-col').forEach((cell) => cell.setAttribute('role', 'gridcell'));
 
       if (file.name !== '..') {
         row.setAttribute('draggable', 'true');

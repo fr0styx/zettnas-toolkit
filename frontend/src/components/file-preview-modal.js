@@ -4,6 +4,7 @@ import { t } from '../i18n.js';
 import { showToast } from '../toast.js';
 
 import { formatBytes } from '../format.js';
+import { canPlayHere, codecName, compatStreamUrl, formatDuration, mediaInfoUrl } from './media-support.js';
 import {
   ICONS,
   isImageName,
@@ -171,7 +172,7 @@ export async function openFilePreviewModal(path, name, aiMeta = null, fileList =
             <button type="button" class="quicklook-btn" id="ql-zoom-out" title="${t('preview.zoom_out', 'Zoom Out (-)')}" aria-label="${t('preview.zoom_out', 'Zoom Out (-)')}">${ICONS.zoomOut}</button>
             <span class="quicklook-zoom-pill" id="quicklook-zoom-pill" title="${t('preview.fit', 'Fit to screen')}">Fit</span>
             <button type="button" class="quicklook-btn" id="ql-zoom-in" title="${t('preview.zoom_in', 'Zoom In (+)')}" aria-label="${t('preview.zoom_in', 'Zoom In (+)')}">${ICONS.zoomIn}</button>
-            <button type="button" class="quicklook-btn" id="ql-actual-size" title="${t('preview.actual_size', '100%')}" aria-label="${t('preview.actual_size', '100%')}">1:1</button>
+            <button type="button" class="quicklook-btn" id="ql-actual-size" title="${t('preview.actual_size', '100%')}" aria-label="1:1 (${t('preview.actual_size', '100%')})">1:1</button>
             <button type="button" class="quicklook-btn" id="ql-rotate-ccw" title="${t('preview.rotate_ccw', 'Rotate 90° Left')}" aria-label="${t('preview.rotate_ccw', 'Rotate 90° Left')}">${ICONS.rotateLeft}</button>
             <button type="button" class="quicklook-btn" id="ql-rotate-cw" title="${t('preview.rotate_cw', 'Rotate 90° Right (R)')}" aria-label="${t('preview.rotate_cw', 'Rotate 90° Right (R)')}">${ICONS.rotateRight}</button>
             <button type="button" class="quicklook-btn" id="ql-flip-h" title="${t('preview.flip', 'Flip Horizontally')}" aria-label="${t('preview.flip', 'Flip Horizontally')}">${ICONS.flip}</button>
@@ -542,7 +543,21 @@ async function loadCurrentItem() {
         metaEl.textContent = `${isVideo ? 'Video' : 'Audio'}${szStr}`;
         const streamUrl = `/api/fs/stream?path=${encodeURIComponent(_currentPath)}`;
         if (isVideo) {
-          renderVideoPlayer(bodyEl, streamUrl, res);
+          // Formats this browser can't play (iPhone HEVC in Firefox, MKV, AC-3 audio…) stream converted
+          const forPath = _currentPath;
+          let media = null;
+          try {
+            media = await api.get(mediaInfoUrl(forPath));
+          } catch (err) {
+            console.warn('Video details unavailable:', err);
+          }
+          if (forPath !== _currentPath) return; // moved on to another file meanwhile
+          const compat = media ? !canPlayHere(media, _currentName) : false;
+          if (media && media.video) {
+            const v = media.video;
+            metaEl.textContent = `Video${szStr} • ${v.width}×${v.height} • ${codecName(v.codec)}${media.duration ? ` • ${formatDuration(media.duration)}` : ''}`;
+          }
+          renderVideoPlayer(bodyEl, compat ? compatStreamUrl(forPath, 0) : streamUrl, { ...res, media, compat });
           addGalleryNav(bodyEl);
         } else {
           bodyEl.innerHTML = `
@@ -1158,11 +1173,44 @@ function renderVideoPlayer(container, streamUrl, meta) {
   }
 
   const videoPath = _currentPath;
+  // A converted stream starts at the second it was asked for: keep that offset, take the
+  // length from the file's details, and seek by restarting the stream.
+  const clock = { compat: !!(meta && meta.compat), offset: 0, duration: (meta && meta.media && meta.media.duration) || 0 };
+  const getTime = () => (videoEl ? videoEl.currentTime || 0 : 0) + (clock.compat ? clock.offset : 0);
+  const getDur = () => (clock.compat ? clock.duration : (videoEl && Number.isFinite(videoEl.duration) ? videoEl.duration : clock.duration)) || 0;
+  function seekTo(seconds) {
+    if (!videoEl) return;
+    const target = Math.max(0, Math.min(getDur() || seconds, seconds));
+    if (!clock.compat) {
+      videoEl.currentTime = target;
+      return;
+    }
+    const wasPlaying = !videoEl.paused;
+    clock.offset = target;
+    videoEl.src = compatStreamUrl(videoPath, target);
+    if (wasPlaying) {
+      const p = videoEl.play();
+      if (p && typeof p.catch === 'function') p.catch(() => {});
+    }
+  }
+  function onVideoError() {
+    if (!clock.compat && meta && meta.media && meta.media.video) {
+      // The browser said it could play it but couldn't: switch to the converted stream
+      const at = getTime();
+      clock.compat = true;
+      clock.duration = clock.duration || (videoEl && Number.isFinite(videoEl.duration) ? videoEl.duration : 0);
+      showBadge(t('video.converting', 'Converted for this browser'), 2500);
+      seekTo(at);
+      return;
+    }
+    showUnplayableVideo(container, meta);
+  }
   if (videoEl) {
+    if (clock.compat) videoEl.addEventListener('loadeddata', () => showBadge(t('video.converting', 'Converted for this browser'), 2500), { once: true });
     videoEl.addEventListener('loadedmetadata', () => {
-      const at = getResume(videoPath, videoEl.duration);
+      const at = getResume(videoPath, getDur());
       if (at) {
-        videoEl.currentTime = at;
+        seekTo(at);
         const mm = Math.floor(at / 60);
         const ss = String(Math.floor(at % 60)).padStart(2, '0');
         showBadge(t('video.resumed', 'Continuing at {time}', { time: `${mm}:${ss}` }), 2500);
@@ -1170,13 +1218,13 @@ function renderVideoPlayer(container, streamUrl, meta) {
     }, { once: true });
     let lastSaved = 0;
     videoEl.addEventListener('timeupdate', () => {
-      if (Math.abs(videoEl.currentTime - lastSaved) >= 5) {
-        lastSaved = videoEl.currentTime;
-        setResume(videoPath, videoEl.currentTime, videoEl.duration);
+      if (Math.abs(getTime() - lastSaved) >= 5) {
+        lastSaved = getTime();
+        setResume(videoPath, getTime(), getDur());
       }
     });
-    videoEl.addEventListener('ended', () => setResume(videoPath, 0, videoEl.duration));
-    videoEl.addEventListener('error', () => showUnplayableVideo(container, meta));
+    videoEl.addEventListener('ended', () => setResume(videoPath, 0, getDur()));
+    videoEl.addEventListener('error', onVideoError);
     addSubtitles(videoEl, videoPath);
   }
 
@@ -1242,15 +1290,15 @@ function renderVideoPlayer(container, streamUrl, meta) {
 
   function seekDelta(seconds) {
     if (!videoEl) return;
-    const target = Math.max(0, Math.min(videoEl.duration || 0, videoEl.currentTime + seconds));
-    videoEl.currentTime = target;
+    const target = Math.max(0, Math.min(getDur(), getTime() + seconds));
+    seekTo(target);
     showBadge(seconds > 0 ? `↻ +${seconds}s` : `↺ ${seconds}s`);
     resetHudTimer();
   }
 
   function seekPercent(pct) {
-    if (!videoEl || !videoEl.duration) return;
-    videoEl.currentTime = Math.max(0, Math.min(videoEl.duration, pct * videoEl.duration));
+    if (!videoEl || !getDur()) return;
+    seekTo(Math.max(0, Math.min(getDur(), pct * getDur())));
     showBadge(`${Math.round(pct * 100)}%`);
     resetHudTimer();
   }
@@ -1312,12 +1360,15 @@ function renderVideoPlayer(container, streamUrl, meta) {
 
   // Scrubber events
   let isDraggingScrub = false;
+  let pendingSeek = null;
   function seekFromEvent(e) {
-    if (!videoEl || !videoEl.duration || !scrubContainer) return;
+    if (!videoEl || !getDur() || !scrubContainer) return;
     const rect = scrubContainer.getBoundingClientRect();
     const clientX = e.clientX ?? (e.touches && e.touches[0]?.clientX) ?? 0;
     const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
-    videoEl.currentTime = ratio * videoEl.duration;
+    // A converted stream restarts on every seek, so while dragging it only seeks on release
+    if (clock.compat && isDraggingScrub) pendingSeek = ratio * getDur();
+    else seekTo(ratio * getDur());
     if (progressBar) progressBar.style.width = `${ratio * 100}%`;
     if (thumbEl) thumbEl.style.left = `${ratio * 100}%`;
   }
@@ -1332,6 +1383,10 @@ function renderVideoPlayer(container, streamUrl, meta) {
     };
     const onUp = () => {
       isDraggingScrub = false;
+      if (pendingSeek !== null) {
+        seekTo(pendingSeek);
+        pendingSeek = null;
+      }
       scrubContainer?.classList.remove('is-dragging');
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('pointerup', onUp);
@@ -1345,8 +1400,8 @@ function renderVideoPlayer(container, streamUrl, meta) {
     const rect = scrubContainer.getBoundingClientRect();
     const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
     tooltipEl.style.left = `${ratio * 100}%`;
-    if (videoEl?.duration) {
-      tooltipEl.textContent = formatMediaTime(ratio * videoEl.duration);
+    if (getDur()) {
+      tooltipEl.textContent = formatMediaTime(ratio * getDur());
     }
   });
 
@@ -1356,26 +1411,26 @@ function renderVideoPlayer(container, streamUrl, meta) {
   videoEl?.addEventListener('ended', () => updatePlayState(false));
 
   videoEl?.addEventListener('timeupdate', () => {
-    if (!isDraggingScrub && videoEl.duration) {
-      const pct = (videoEl.currentTime / videoEl.duration) * 100;
+    if (!isDraggingScrub && getDur()) {
+      const pct = Math.min(100, (getTime() / getDur()) * 100);
       if (progressBar) progressBar.style.width = `${pct}%`;
       if (thumbEl) thumbEl.style.left = `${pct}%`;
     }
     if (timeEl) {
-      timeEl.textContent = `${formatMediaTime(videoEl.currentTime)} / ${formatMediaTime(videoEl.duration || 0)}`;
+      timeEl.textContent = `${formatMediaTime(getTime())} / ${formatMediaTime(getDur())}`;
     }
   });
 
   videoEl?.addEventListener('progress', () => {
-    if (videoEl.duration && videoEl.buffered && videoEl.buffered.length > 0 && bufferBar) {
-      const end = videoEl.buffered.end(videoEl.buffered.length - 1);
-      bufferBar.style.width = `${(end / videoEl.duration) * 100}%`;
+    if (getDur() && videoEl.buffered && videoEl.buffered.length > 0 && bufferBar) {
+      const end = videoEl.buffered.end(videoEl.buffered.length - 1) + (clock.compat ? clock.offset : 0);
+      bufferBar.style.width = `${Math.min(100, (end / getDur()) * 100)}%`;
     }
   });
 
   videoEl?.addEventListener('loadedmetadata', () => {
     if (timeEl) {
-      timeEl.textContent = `${formatMediaTime(videoEl.currentTime)} / ${formatMediaTime(videoEl.duration || 0)}`;
+      timeEl.textContent = `${formatMediaTime(getTime())} / ${formatMediaTime(getDur())}`;
     }
   });
 
