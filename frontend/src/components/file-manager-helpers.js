@@ -15,6 +15,7 @@ import { canPlayHere, describeMedia, mediaInfoUrl } from './media-support.js';
 import { showToast } from '../toast.js';
 
 import { formatDateTime } from '../format.js';
+import { transferCenter } from './transfer-center.js';
 export function isGuardedSystemDir(path) {
   if (!path) return false;
   const normalized = String(path).replace(/\\/g, '/').toLowerCase();
@@ -889,175 +890,29 @@ export class FmInspector {
 }
 
 /**
- * 4. Background Transfer Queue Cockpit
- * Real-time SSE streaming of transfers, velocity in MB/s, ETA, and Pause/Resume/Cancel controls.
+ * 4. Transfers panel for one explorer window: all windows share transfer-center.js.
  */
 export class FmTransfersCockpit {
   constructor(fmWindow) {
     this.fm = fmWindow;
-    this.cockpitEl = null;
-    this.badgeEl = null;
-    this.eventSource = null;
-    this.tasks = [];
-    this.isOpen = false;
-    this.init();
-  }
-
-  init() {
-    this.createCockpitDOM();
-    this.connectSSE();
+    transferCenter.connect();
+    transferCenter.ensureDom();
   }
 
   createCockpitDOM() {
-    let el = document.getElementById('fm-transfers-cockpit');
-    if (!el) {
-      const html = `
-        <div id="fm-transfers-cockpit" class="fm-transfers-cockpit" style="display: none; position: fixed; right: 20px; bottom: 60px; width: 340px; max-height: 420px; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; box-shadow: 0 20px 50px rgba(0,0,0,0.8); z-index: 9200; flex-direction: column; overflow: hidden; font-family: inherit;">
-          <div class="fm-cockpit-header" style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.08); background: rgba(0,0,0,0.2);">
-            <div style="font-size: 12px; font-weight: 700; color: var(--fg); display: flex; align-items: center; gap: 6px;">
-              <span>⇄</span> Transfers & Tasks
-            </div>
-            <div style="display: flex; align-items: center; gap: 6px;">
-              <button type="button" id="fm-cockpit-clear-btn" style="background: none; border: none; font-size: 11px; color: var(--muted); cursor: pointer;" title="Clear Completed">Clear</button>
-              <button type="button" id="fm-cockpit-close-btn" style="background: none; border: none; font-size: 14px; color: var(--muted); cursor: pointer;">✕</button>
-            </div>
-          </div>
-          <div class="fm-cockpit-body" style="flex: 1; overflow-y: auto; padding: 8px;">
-            <!-- Task items rendered here -->
-          </div>
-        </div>
-      `;
-      document.body.insertAdjacentHTML('beforeend', html);
-      el = document.getElementById('fm-transfers-cockpit');
-    }
-    this.cockpitEl = el;
+    transferCenter.ensureDom();
+  }
 
-    const closeBtn = el.querySelector('#fm-cockpit-close-btn');
-    if (closeBtn) closeBtn.addEventListener('click', () => this.toggle(false));
-
-    const clearBtn = el.querySelector('#fm-cockpit-clear-btn');
-    if (clearBtn) {
-      clearBtn.addEventListener('click', async () => {
-        const token = (auth && typeof auth.getToken === 'function' ? auth.getToken() : null) || '';
-        await fetch('/api/fs/transfers/completed', {
-          method: 'DELETE',
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
-        this.tasks = this.tasks.filter((t) => t.status === 'running' || t.status === 'paused');
-        this.render();
-      });
-    }
+  get isOpen() {
+    return transferCenter.isOpen;
   }
 
   toggle(show = null) {
-    this.isOpen = show !== null ? show : !this.isOpen;
-    if (this.cockpitEl) {
-      this.cockpitEl.style.display = this.isOpen ? 'flex' : 'none';
-    }
-  }
-
-  connectSSE() {
-    try {
-      const token = (auth && typeof auth.getToken === 'function' ? auth.getToken() : null) || '';
-      const sseUrl = `/api/fs/transfers/stream`;
-      this.eventSource = new EventSource(sseUrl);
-
-      this.eventSource.addEventListener('snapshot', (e) => {
-        try {
-          const data = JSON.parse(e.data);
-          this.tasks = data.tasks || [];
-          this.render();
-        } catch (_) {}
-      });
-
-      this.eventSource.addEventListener('task_update', (e) => {
-        try {
-          const data = JSON.parse(e.data);
-          if (data && data.task) {
-            const idx = this.tasks.findIndex((t) => t.id === data.task.id);
-            if (idx >= 0) {
-              this.tasks[idx] = data.task;
-            } else {
-              this.tasks.unshift(data.task);
-            }
-            this.render();
-          }
-        } catch (_) {}
-      });
-
-      this.eventSource.onerror = () => {
-        // Auto-reconnect handled natively by EventSource
-      };
-    } catch (_) {}
+    return transferCenter.toggle(show);
   }
 
   render() {
-    const activeTasks = this.tasks.filter((t) => t.status === 'running' || t.status === 'paused');
-    const badgeCount = activeTasks.length;
-
-    // Update toolbar button badge
-    document.querySelectorAll('.fm-transfers-count-badge').forEach((badge) => {
-      badge.textContent = badgeCount > 0 ? String(badgeCount) : '';
-      badge.style.display = badgeCount > 0 ? 'inline-block' : 'none';
-    });
-
-    if (!this.cockpitEl) return;
-    const body = this.cockpitEl.querySelector('.fm-cockpit-body');
-    if (!body) return;
-
-    if (!this.tasks.length) {
-      body.innerHTML = '<div style="text-align: center; color: var(--muted); font-size: 11px; padding: 24px 0;">No active transfers</div>';
-      return;
-    }
-
-    body.innerHTML = this.tasks.slice(0, 10).map((t) => {
-      const isRunning = t.status === 'running';
-      const isPaused = t.status === 'paused';
-      const isDone = t.status === 'completed';
-      const isFailed = t.status === 'failed';
-      const isCancelled = t.status === 'cancelled';
-
-      const statusColor = isDone ? '#22c55e' : (isFailed ? '#ef4444' : (isRunning ? '#0ea5e9' : '#eab308'));
-      const speedStr = t.speed_bps > 1024 ? `${(t.speed_bps / (1024 * 1024)).toFixed(1)} MB/s` : '';
-      const etaStr = t.eta_seconds != null && t.eta_seconds > 0 ? `${Math.round(t.eta_seconds)}s remaining` : '';
-
-      return `
-        <div class="fm-task-card" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 6px; padding: 8px 10px; margin-bottom: 6px;">
-          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
-            <span style="font-size: 11px; font-weight: 700; color: ${statusColor}; text-transform: uppercase;">${t.action}</span>
-            <span style="font-size: 11px; color: var(--muted);">${t.percent}%</span>
-          </div>
-          <div style="font-size: 11px; color: var(--fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${escapeHtml(t.current_file || t.destination)}">
-            ${escapeHtml(t.current_file ? t.current_file.split('/').pop() : t.destination)}
-          </div>
-          <div class="fm-progress-bar-wrap" style="height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin: 6px 0; overflow: hidden;">
-            <div style="height: 100%; width: ${t.percent}%; background: ${statusColor}; transition: width 0.2s;"></div>
-          </div>
-          <div style="display: flex; align-items: center; justify-content: space-between; font-size: 11px; color: var(--muted);">
-            <span>${speedStr} ${etaStr ? '• ' + etaStr : ''}</span>
-            <div style="display: flex; gap: 4px;">
-              ${isRunning ? `<button class="fm-task-btn" data-act="pause" data-id="${t.id}" style="background:none; border:none; color:var(--fg); cursor:pointer;">⏸</button>` : ''}
-              ${isPaused ? `<button class="fm-task-btn" data-act="resume" data-id="${t.id}" style="background:none; border:none; color:#22c55e; cursor:pointer;">▶</button>` : ''}
-              ${!isDone && !isFailed && !isCancelled ? `<button class="fm-task-btn" data-act="cancel" data-id="${t.id}" style="background:none; border:none; color:#ef4444; cursor:pointer;">✕</button>` : ''}
-            </div>
-          </div>
-        </div>
-      `;
-    }).join('');
-
-    // Bind pause/resume/cancel
-    body.querySelectorAll('.fm-task-btn').forEach((btn) => {
-      btn.addEventListener('click', async (e) => {
-        e.stopPropagation();
-        const act = btn.dataset.act;
-        const tid = btn.dataset.id;
-        const token = (auth && typeof auth.getToken === 'function' ? auth.getToken() : null) || '';
-        await fetch(`/api/fs/transfers/${tid}/${act}`, {
-          method: 'POST',
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
-      });
-    });
+    transferCenter.render();
   }
 }
 

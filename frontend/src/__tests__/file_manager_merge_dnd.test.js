@@ -41,8 +41,8 @@ describe('File Manager Merge & DnD Parity', () => {
       if (url === '/api/fs/conflict-check') {
         return Promise.resolve({ has_conflict: false, conflicts: [] });
       }
-      if (url === '/api/fs/transfer') {
-        return Promise.resolve({ status: 'ok', transferred: 2 });
+      if (url === '/api/fs/transfer/async') {
+        return Promise.resolve({ status: 'ok', task_id: 't2' });
       }
       return Promise.resolve({});
     });
@@ -53,7 +53,7 @@ describe('File Manager Merge & DnD Parity', () => {
       sources: ['/mnt/user/a.txt', '/mnt/user/b.txt'],
       destination_dir: '/mnt/user/destination',
     });
-    expect(api.post).toHaveBeenCalledWith('/api/fs/transfer', {
+    expect(api.post).toHaveBeenCalledWith('/api/fs/transfer/async', {
       sources: ['/mnt/user/a.txt', '/mnt/user/b.txt'],
       destination_dir: '/mnt/user/destination',
       action: 'copy',
@@ -106,7 +106,7 @@ describe('File Manager Merge & DnD Parity', () => {
   });
 
   it('triggers transfer with selected policy upon button click', async () => {
-    api.post.mockResolvedValue({ status: 'ok', transferred: 1 });
+    api.post.mockResolvedValue({ status: 'ok', task_id: 't1' });
     const onResolved = vi.fn();
 
     showCollisionModal({
@@ -123,7 +123,7 @@ describe('File Manager Merge & DnD Parity', () => {
 
     // Allow promise tick
     await vi.waitFor(() => {
-      expect(api.post).toHaveBeenCalledWith('/api/fs/transfer', {
+      expect(api.post).toHaveBeenCalledWith('/api/fs/transfer/async', {
         sources: ['/mnt/user/folderA'],
         destination_dir: '/mnt/user/folderB',
         action: 'move',

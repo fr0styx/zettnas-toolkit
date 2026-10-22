@@ -835,6 +835,9 @@ class FsAsyncTransferRequest(BaseModel):
     destination_dir: str
     action: str = Field("copy", pattern="^(copy|move)$")
     collision_policy: str = Field("merge", pattern="^(merge|overwrite|skip|keep_both)$")
+    # New names for the items, one per source (e.g. "Report copy.pdf" for a duplicate)
+    target_names: list[str] | None = None
+    kind: str = Field("", pattern="^(|copy|move|duplicate)$")
 
 
 class ArchiveCreateRequest(BaseModel):
@@ -901,12 +904,22 @@ async def fs_transfer_async(
             raise HTTPException(status_code=403, detail="Cannot move root homes directory.")
         clean_sources.append(src_canonical)
 
+    names = req.target_names
+    if names is not None:
+        if len(names) != len(req.sources):
+            raise HTTPException(status_code=400, detail="target_names must give one name per source")
+        for name in names:
+            if not name or name in (".", "..") or "/" in name or "\\" in name or "\x00" in name or len(name) > 255:
+                raise HTTPException(status_code=400, detail="Invalid target name")
+
     task = transfer_manager.submit_transfer(
         owner=principal.username or "",
         sources=clean_sources,
         destination_dir=dest_canonical,
         action=req.action,
         collision_policy=req.collision_policy,
+        target_names=names,
+        kind=req.kind,
     )
     add_event(
         "info",

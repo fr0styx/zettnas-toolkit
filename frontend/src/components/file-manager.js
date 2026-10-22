@@ -13,6 +13,7 @@ import { showToast, showConfirmToast, showPromptToast, showBottomSheet } from '.
 import { t } from '../i18n.js';
 import { makeDraggable, bringToFront } from './dock.js';
 import { openFilePreviewModal } from './file-preview-modal.js';
+import { transferCenter } from './transfer-center.js';
 import { thumbKind, thumbUrl } from './viewer-kit.js';
 
 import { formatBytes as formatSize, formatDateTime } from '../format.js';
@@ -1175,24 +1176,11 @@ export class FileManagerWindow {
       if (count === 0) return;
       const confirmMsg = t('fm.confirm_bulk_delete', `Are you sure you want to delete ${count} selected item(s)?`).replace('{count}', count);
       showConfirmToast(t('common.confirm', 'Confirm Action'), confirmMsg, async () => {
-        let success = 0, failed = 0;
         const targets = Array.from(this.selectedPaths);
-        for (const p of targets) {
-          try {
-            await api.post('/api/fs/delete', { path: p });
-            success++;
-          } catch (_) { failed++; }
-        }
         this.selectedPaths.clear();
         this.lastSelectedIndex = -1;
         this.selectionAnchorIndex = -1;
-        this.loadPath(this.currentPath);
-        ZettEventBus.emit('fm:refresh');
-        if (failed > 0) {
-          showToast(t('toast.deleted_items_failed_to_delete_items', 'Deleted {success} items, failed to delete {failed} items', { success: success, failed: failed }), 'warning');
-        } else {
-          showToast(t('fm.bulk_delete_success', `Successfully deleted ${success} items`).replace('{count}', success), 'success');
-        }
+        await this.deleteWithProgress(targets);
       });
     });
 
@@ -2204,15 +2192,26 @@ export class FileManagerWindow {
   async uploadFiles(files, targetPath = null) {
     if (!files || files.length === 0) return;
     const destDir = targetPath || this.currentPath;
+    const list = Array.from(files);
+    const totalBytes = list.reduce((sum, f) => sum + (f.size || 0), 0);
+    let cancelled = false;
+    const job = transferCenter.startLocal({
+      kind: 'upload',
+      label: t('transfers.uploading', 'Uploading {count} file(s) to {dest}', { count: list.length, dest: destDir.split('/').pop() || '/' }),
+      totalFiles: list.length,
+      totalBytes,
+      cancel: () => { cancelled = true; },
+    });
     let successCount = 0;
-    showToast(t('fm.uploading_toast', `Uploading ${files.length} file(s)...`).replace('{count}', files.length), 'info');
+    let doneBytes = 0;
+    const errors = [];
 
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-
+    for (let i = 0; i < list.length && !cancelled; i++) {
+      const file = list[i];
+      job.progress({ current: file.name });
       try {
         if (file.size > 16 * 1024 * 1024) {
-          await this._uploadFileChunked(file, destDir);
+          await this._uploadFileChunked(file, destDir, (sent) => job.progress({ bytes: doneBytes + sent }), () => cancelled);
         } else {
           // The upload API takes the folder and name in the query and the file as the body
           const res = await api.postRaw(fsUploadUrl(destDir, file.name), file);
@@ -2220,18 +2219,19 @@ export class FileManagerWindow {
         }
         successCount++;
       } catch (err) {
-        showToast(t('toast.failed_to_upload', 'Failed to upload {name}: {error}', { name: file.name, error: err.message }), 'error');
+        if (!cancelled) errors.push(`${file.name}: ${err.message}`);
       }
+      doneBytes += file.size || 0;
+      job.progress({ files: i + 1, bytes: doneBytes });
     }
 
-    if (successCount > 0) {
-      showToast(t('toast.successfully_uploaded_file_s', 'Successfully uploaded {successCount} file(s)', { successCount: successCount }), 'success');
-      this.loadPath(this.currentPath);
-      ZettEventBus.emit('fm:refresh');
-    }
+    if (cancelled) job.finish('cancelled');
+    else if (errors.length && !successCount) job.finish('failed', errors[0]);
+    else job.finish('completed', errors.length ? `${errors.length} file(s) failed: ${errors[0]}` : null);
+    if (successCount > 0) this.loadPath(this.currentPath);
   }
 
-  async _uploadFileChunked(file, destDir) {
+  async _uploadFileChunked(file, destDir, onProgress = null, isCancelled = null) {
     const CHUNK_SIZE = 16 * 1024 * 1024;
     const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
     const initRes = await api.post('/api/fs/upload/init', {
@@ -2252,6 +2252,8 @@ export class FileManagerWindow {
         headers: { 'Content-Type': 'application/octet-stream' },
       });
       if (!chunkRes.ok) throw await ApiError.from(chunkRes);
+      if (onProgress) onProgress(end);
+      if (isCancelled && isCancelled()) throw new Error('Cancelled');
     }
 
     const completeRes = await api.post('/api/fs/upload/complete', {
@@ -2347,13 +2349,7 @@ export class FileManagerWindow {
       );
       const confirmMsg = confirmTemplate.replace('{name}', oldName);
       showConfirmToast(t('common.confirm', 'Confirm Action'), confirmMsg, async () => {
-        try {
-          await api.post('/api/fs/delete', { path });
-          this.loadPath(this.currentPath);
-          ZettEventBus.emit('fm:refresh');
-        } catch (err) {
-          showToast(err.message, 'error');
-        }
+        await this.deleteWithProgress([path]);
       });
     } else if (act === 'rename') {
       showPromptToast(
@@ -2845,8 +2841,8 @@ export class FileManagerWindow {
 
   async duplicateSelected() {
     const paths = Array.from(this.selectedPaths);
-    if (paths.length === 0) return;
-
+    // One background copy per folder, each item renamed "name copy.ext" next to the original
+    const byParent = new Map();
     for (const p of paths) {
       const file = this.fileList.find((f) => f.path === p);
       if (!file || file.name === '..') continue;
@@ -2854,19 +2850,21 @@ export class FileManagerWindow {
       const lastDot = oldName.lastIndexOf('.');
       const stem = (file.is_dir || lastDot <= 0) ? oldName : oldName.substring(0, lastDot);
       const ext = (file.is_dir || lastDot <= 0) ? '' : oldName.substring(lastDot);
-      const newName = `${stem} copy${ext}`;
-      const parent = p.substring(0, p.lastIndexOf('/')) || this.currentPath;
-      const newPath = `${parent}/${newName}`;
-
-      try {
-        await api.post('/api/fs/copy', { source: p, destination: newPath });
-      } catch (err) {
-        showToast(t('toast.duplicate_failed', 'Duplicate failed: {error}', { error: err.message }), 'error');
-      }
+      const parent = p.substring(0, p.lastIndexOf('/')) || '/';
+      if (!byParent.has(parent)) byParent.set(parent, { sources: [], names: [] });
+      byParent.get(parent).sources.push(p);
+      byParent.get(parent).names.push(`${stem} copy${ext}`);
     }
-
-    this.loadPath(this.currentPath);
-    ZettEventBus.emit('fm:refresh');
+    for (const [parent, { sources, names }] of byParent) {
+      await transferCenter.startTransfer({
+        sources,
+        destinationDir: parent,
+        action: 'copy',
+        policy: 'keep_both',
+        targetNames: names,
+        kind: 'duplicate',
+      });
+    }
   }
 
   triggerRename(file) {
@@ -2954,16 +2952,22 @@ export class FileManagerWindow {
 
   async createArchive(paths, type = 'zip') {
     if (!paths || paths.length === 0) return;
-    showToast(t('fm.creating_archive', 'Creating archive...'), 'info');
+    const fmt = type === 'tar.gz' || type === 'tar' ? type : 'zip';
+    const first = paths[0].replace(/\/+$/, '').split('/').pop();
+    const stem = paths.length === 1 ? first.replace(/\.[^.]+$/, '') || first : t('fm.archive_default_name', 'Archive');
+    const archiveName = `${stem}.${fmt}`;
     try {
       const res = await api.post('/api/fs/archive/create', {
-        paths,
-        archive_type: type,
+        sources: paths,
         destination_dir: this.currentPath,
+        archive_name: archiveName,
+        format: fmt,
       });
-      showToast(t('fm.archive_created', 'Archive created: {name}', { name: res.archive_name || 'archive' }), 'success');
-      this.loadPath(this.currentPath);
-      ZettEventBus.emit('fm:refresh');
+      transferCenter.followServerTask(
+        res,
+        { action: 'archive_create', kind: 'archive_create', sources: paths, destination: `${this.currentPath}/${archiveName}` },
+        { label: t('transfers.zipping', 'Creating {name}', { name: archiveName }) },
+      );
     } catch (err) {
       showToast(t('toast.archive_creation_failed', 'Archive creation failed: {error}', { error: err.message }), 'error');
     }
@@ -2971,19 +2975,47 @@ export class FileManagerWindow {
 
   async extractArchive(archivePath, destDir = null) {
     const targetDir = destDir || this.currentPath;
-    showToast(t('fm.extracting_archive', 'Extracting archive...'), 'info');
+    const name = archivePath.split('/').pop();
     try {
       const res = await api.post('/api/fs/archive/extract', {
         archive_path: archivePath,
         destination_dir: targetDir,
       });
-      const count = res.extracted_count != null ? res.extracted_count : 1;
-      showToast(t('fm.archive_extracted', 'Extracted {count} item(s)', { count }), 'success');
-      this.loadPath(this.currentPath);
-      ZettEventBus.emit('fm:refresh');
+      transferCenter.followServerTask(
+        res,
+        { action: 'archive_extract', kind: 'archive_extract', sources: [archivePath], destination: targetDir },
+        { label: t('transfers.extracting', 'Extracting {name}', { name }) },
+      );
     } catch (err) {
       showToast(t('toast.extraction_failed', 'Extraction failed: {error}', { error: err.message }), 'error');
     }
+  }
+
+  /** Deletes items one by one, showing progress when it takes a while. */
+  async deleteWithProgress(targets, { permanent = false } = {}) {
+    const job = transferCenter.startLocal({
+      kind: permanent ? 'delete' : 'trash',
+      label: permanent
+        ? t('transfers.deleting', 'Deleting {count} item(s)', { count: targets.length })
+        : t('transfers.trashing', 'Moving {count} item(s) to the Recycle Bin', { count: targets.length }),
+      totalFiles: targets.length,
+    });
+    let success = 0;
+    const errors = [];
+    for (const p of targets) {
+      job.progress({ current: p.split('/').pop() });
+      try {
+        await api.post('/api/fs/delete', permanent ? { path: p, permanent: true } : { path: p });
+        success++;
+      } catch (err) {
+        errors.push(`${p.split('/').pop()}: ${err.message}`);
+      }
+      job.progress({ files: success + errors.length });
+    }
+    if (errors.length && !success) job.finish('failed', errors[0]);
+    else job.finish('completed', errors.length ? `${errors.length} item(s) failed: ${errors[0]}` : null);
+    this.loadPath(this.currentPath);
+    return { success, failed: errors.length };
   }
 
   bulkDelete(isPermanent = false) {
@@ -2993,22 +3025,9 @@ export class FileManagerWindow {
       ? `Are you sure you want to PERMANENTLY delete ${count} selected item(s)? This cannot be undone.`
       : t('fm.confirm_bulk_delete', `Are you sure you want to delete ${count} selected item(s)?`).replace('{count}', count);
     showConfirmToast(t('common.confirm', 'Confirm Action'), confirmMsg, async () => {
-      let success = 0, failed = 0;
       const targets = Array.from(this.selectedPaths);
-      for (const p of targets) {
-        try {
-          await api.post('/api/fs/delete', { path: p, permanent: isPermanent });
-          success++;
-        } catch (_) { failed++; }
-      }
       this.clearSelection();
-      this.loadPath(this.currentPath);
-      ZettEventBus.emit('fm:refresh');
-      if (failed > 0) {
-        showToast(t('toast.deleted_items_failed', 'Deleted {success} items, failed {failed}', { success: success, failed: failed }), 'warning');
-      } else {
-        showToast(t('fm.bulk_delete_success', `Successfully deleted ${success} items`).replace('{count}', success), 'success');
-      }
+      await this.deleteWithProgress(targets, { permanent: isPermanent });
     });
   }
 
@@ -3434,19 +3453,7 @@ export async function executeTransferWithConflictCheck(sources, destinationDir, 
     });
 
     if (!checkRes.has_conflict) {
-      const res = await api.post('/api/fs/transfer', {
-        sources: validSources,
-        destination_dir: destinationDir,
-        action,
-        collision_policy: 'merge',
-      });
-      const count = res.transferred != null ? res.transferred : validSources.length;
-      if (res.errors && res.errors.length > 0) {
-        showToast(t('toast.transferred_item_s_with_error_s', 'Transferred {count} item(s) with {count2} error(s): {error}', { count: count, count2: res.errors.length, error: res.errors[0].error }), 'warning');
-      } else {
-        showToast(t('fm.transfer_success', `Successfully transferred ${count} item(s)`).replace('{count}', count), 'success');
-      }
-      ZettEventBus.emit('fm:refresh');
+      await transferCenter.startTransfer({ sources: validSources, destinationDir, action, policy: 'merge' });
       return;
     }
 
@@ -3538,23 +3545,15 @@ export function showCollisionModal({ sources, destinationDir, action, conflicts,
 
   const executeWithPolicy = async (policy) => {
     closeModal();
-    try {
-      const res = await api.post('/api/fs/transfer', {
-        sources,
-        destination_dir: destinationDir,
-        action,
-        collision_policy: policy,
-      });
-      const count = res.transferred != null ? res.transferred : sources.length;
-      if (res.errors && res.errors.length > 0) {
-        showToast(t('toast.transferred_item_s_with_error_s', 'Transferred {count} item(s) with {count2} error(s): {error}', { count: count, count2: res.errors.length, error: res.errors[0].error }), 'warning');
-      } else {
-        showToast(t('fm.transfer_success', `Successfully transferred ${count} item(s)`).replace('{count}', count), 'success');
-      }
-      if (typeof onResolved === 'function') onResolved({ destinationDir, sources, action, policy });
-    } catch (err) {
-      showToast(t('toast.transfer_failed', 'Transfer failed: {error}', { error: err.message }), 'error');
-    }
+    await transferCenter.startTransfer({
+      sources,
+      destinationDir,
+      action,
+      policy,
+      onDone: () => {
+        if (typeof onResolved === 'function') onResolved({ destinationDir, sources, action, policy });
+      },
+    });
   };
 
   const btnClose = modal.querySelector('#fm-collision-close');

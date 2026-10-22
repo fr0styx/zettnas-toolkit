@@ -89,7 +89,7 @@ describe('File Manager Drag and Drop Comprehensive Suite', () => {
 
     api.post.mockImplementation((url) => {
       if (url === '/api/fs/conflict-check') return Promise.resolve({ has_conflict: false, conflicts: [] });
-      if (url === '/api/fs/transfer') return Promise.resolve({ status: 'ok', transferred: 2 });
+      if (url === '/api/fs/transfer/async') return Promise.resolve({ status: 'ok', task_id: 't2' });
       return Promise.resolve({});
     });
 
@@ -103,7 +103,7 @@ describe('File Manager Drag and Drop Comprehensive Suite', () => {
 
     await inst.viewport.dispatchEvent(dropEvent);
 
-    expect(api.post).toHaveBeenCalledWith('/api/fs/transfer', {
+    expect(api.post).toHaveBeenCalledWith('/api/fs/transfer/async', {
       sources: ['/mnt/user/homes/alice/Document.docx', '/mnt/user/homes/alice/photo.jpg'],
       destination_dir: '/mnt/remotes/onedrive-personal',
       action: 'move',
@@ -121,7 +121,7 @@ describe('File Manager Drag and Drop Comprehensive Suite', () => {
 
     api.post.mockImplementation((url) => {
       if (url === '/api/fs/conflict-check') return Promise.resolve({ has_conflict: false, conflicts: [] });
-      if (url === '/api/fs/transfer') return Promise.resolve({ status: 'ok', transferred: 1 });
+      if (url === '/api/fs/transfer/async') return Promise.resolve({ status: 'ok', task_id: 't1' });
       return Promise.resolve({});
     });
 
@@ -145,7 +145,7 @@ describe('File Manager Drag and Drop Comprehensive Suite', () => {
 
     await inst.viewport.dispatchEvent(dropEvent);
 
-    expect(api.post).toHaveBeenCalledWith('/api/fs/transfer', {
+    expect(api.post).toHaveBeenCalledWith('/api/fs/transfer/async', {
       sources: ['/mnt/user/homes/alice/Doc1.docx'],
       destination_dir: '/mnt/remotes/onedrive-personal/Documents',
       action: 'move',
@@ -166,7 +166,7 @@ describe('File Manager Drag and Drop Comprehensive Suite', () => {
 
     api.post.mockImplementation((url) => {
       if (url === '/api/fs/conflict-check') return Promise.resolve({ has_conflict: false, conflicts: [] });
-      if (url === '/api/fs/transfer') return Promise.resolve({ status: 'ok', transferred: 1 });
+      if (url === '/api/fs/transfer/async') return Promise.resolve({ status: 'ok', task_id: 't1' });
       return Promise.resolve({});
     });
 
@@ -186,7 +186,7 @@ describe('File Manager Drag and Drop Comprehensive Suite', () => {
 
     expect(userSharesItem.classList.contains('fm-tree-drop-hover')).toBe(false);
     await vi.waitFor(() => {
-      expect(api.post).toHaveBeenCalledWith('/api/fs/transfer', {
+      expect(api.post).toHaveBeenCalledWith('/api/fs/transfer/async', {
         sources: ['/mnt/remotes/onedrive-personal/Book.xlsx'],
         destination_dir: '/mnt/user',
         action: 'move',
@@ -207,7 +207,7 @@ describe('File Manager Drag and Drop Comprehensive Suite', () => {
 
     api.post.mockImplementation((url) => {
       if (url === '/api/fs/conflict-check') return Promise.resolve({ has_conflict: false, conflicts: [] });
-      if (url === '/api/fs/transfer') return Promise.resolve({ status: 'ok', transferred: 1 });
+      if (url === '/api/fs/transfer/async') return Promise.resolve({ status: 'ok', task_id: 't1' });
       return Promise.resolve({});
     });
 
@@ -224,7 +224,7 @@ describe('File Manager Drag and Drop Comprehensive Suite', () => {
     Object.defineProperty(dropEvent, 'dataTransfer', { value: { getData: vi.fn(() => '') } });
     await remotesCrumb.dispatchEvent(dropEvent);
 
-    expect(api.post).toHaveBeenCalledWith('/api/fs/transfer', {
+    expect(api.post).toHaveBeenCalledWith('/api/fs/transfer/async', {
       sources: ['/mnt/remotes/onedrive-personal/Book.xlsx'],
       destination_dir: '/mnt/remotes',
       action: 'move',

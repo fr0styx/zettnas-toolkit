@@ -110,3 +110,59 @@
   box-sizing: border-box; resize: none;
 }
 .fm-share-popover .fm-share-body { display: block; padding: 16px 20px; }
+
+/* Transfers panel (transfer-center.js): a pop-up window at the bottom right */
+.fm-transfers-layer { z-index: 9400; }
+.fm-transfers-layer .fm-transfers-window {
+  right: 20px; bottom: 84px;
+  width: 380px; height: auto; min-width: 0; min-height: 0;
+  max-width: calc(100vw - 24px); max-height: min(460px, calc(100vh - 140px));
+  resize: none;
+}
+.fm-transfers-window .smart-modal-header { padding: 10px 14px; }
+.fm-transfers-window .fm-cockpit-body { padding: 10px; gap: 8px; }
+.fm-transfers-clear {
+  background: none; border: none; color: var(--muted); font-size: 11px; cursor: pointer; padding: 4px 2px;
+}
+.fm-transfers-clear:hover { color: var(--fg); }
+.fm-transfers-empty { text-align: center; color: var(--muted); font-size: 12px; padding: 24px 0; }
+.fm-task-card {
+  background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 8px; padding: 10px 12px;
+}
+.fm-task-head { display: flex; align-items: center; gap: 8px; }
+.fm-task-title {
+  flex: 1; min-width: 0; font-size: 12px; font-weight: 700; color: var(--fg);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.fm-task-pct { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.fm-task-card.is-completed .fm-task-pct { color: #22c55e; }
+.fm-task-bar {
+  position: relative; height: 6px; margin: 8px 0 6px; border-radius: 3px;
+  background: rgba(255, 255, 255, 0.1); overflow: hidden;
+}
+.fm-task-fill { height: 100%; border-radius: 3px; background: var(--accent-cyan, #0ea5e9); transition: width 0.25s ease; }
+.fm-task-card.is-completed .fm-task-fill { background: #22c55e; }
+.fm-task-card.is-failed .fm-task-fill { background: #ef4444; }
+.fm-task-card.is-paused .fm-task-fill { background: #eab308; }
+.fm-task-card.is-cancelled .fm-task-fill { background: rgba(255, 255, 255, 0.3); }
+.fm-task-bar.is-indeterminate .fm-task-fill { position: absolute; width: 30%; animation: fm-task-indeterminate 1.2s ease-in-out infinite; }
+@keyframes fm-task-indeterminate { from { left: -30%; } to { left: 100%; } }
+@media (prefers-reduced-motion: reduce) {
+  .fm-task-bar.is-indeterminate .fm-task-fill { animation: none; left: 0; width: 100%; opacity: 0.5; }
+}
+.fm-task-file {
+  font-size: 11px; color: var(--muted); font-family: monospace; margin-bottom: 4px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.fm-task-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 11px; color: var(--muted); }
+.fm-task-status { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fm-task-card.is-failed .fm-task-status { white-space: normal; color: #fca5a5; }
+.fm-task-btns { display: flex; gap: 4px; flex-shrink: 0; }
+.fm-task-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border-radius: 6px; cursor: pointer; font-size: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(255, 255, 255, 0.04); color: var(--fg);
+}
+.fm-task-btn:hover { background: rgba(255, 255, 255, 0.1); }
+
