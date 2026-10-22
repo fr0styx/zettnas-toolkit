@@ -4,6 +4,7 @@ import os
 from unittest.mock import MagicMock, patch
 
 import backend.api.vms as vms
+import backend.services.vm_host as vm_host
 
 
 class FakeProc:
@@ -22,7 +23,7 @@ class FakeProc:
 
 
 def test_missing_swtpm_returns_no_args(tmp_path):
-    with patch.object(vms, "_swtpm_binary", return_value=None):
+    with patch.object(vm_host, "_swtpm_binary", return_value=None):
         assert vms._prepare_vtpm("vm1", str(tmp_path)) == []
 
 
@@ -30,7 +31,7 @@ def test_swtpm_args_attached_once_socket_appears(tmp_path):
     sock = os.path.join(str(tmp_path), "tpm", "swtpm.sock")
     popen = MagicMock(side_effect=lambda cmd, **kw: FakeProc(sock_path=sock))
     with (
-        patch.object(vms, "_swtpm_binary", return_value="/usr/bin/swtpm"),
+        patch.object(vm_host, "_swtpm_binary", return_value="/usr/bin/swtpm"),
         patch.object(vms.subprocess, "Popen", popen),
     ):
         args = vms._prepare_vtpm("vm1", str(tmp_path))
@@ -60,7 +61,7 @@ def test_stale_socket_is_removed_before_start(tmp_path):
         return FakeProc(sock_path=str(stale))
 
     with (
-        patch.object(vms, "_swtpm_binary", return_value="/usr/bin/swtpm"),
+        patch.object(vm_host, "_swtpm_binary", return_value="/usr/bin/swtpm"),
         patch.object(vms.subprocess, "Popen", fake_popen),
     ):
         assert vms._prepare_vtpm("vm1", str(tmp_path))
@@ -69,7 +70,7 @@ def test_stale_socket_is_removed_before_start(tmp_path):
 
 def test_swtpm_exiting_early_boots_without_tpm(tmp_path):
     with (
-        patch.object(vms, "_swtpm_binary", return_value="/usr/bin/swtpm"),
+        patch.object(vm_host, "_swtpm_binary", return_value="/usr/bin/swtpm"),
         patch.object(vms.subprocess, "Popen", return_value=FakeProc(exit_code=1)),
     ):
         assert vms._prepare_vtpm("vm1", str(tmp_path)) == []
@@ -78,7 +79,7 @@ def test_swtpm_exiting_early_boots_without_tpm(tmp_path):
 def test_swtpm_socket_timeout_kills_daemon(tmp_path):
     proc = FakeProc()
     with (
-        patch.object(vms, "_swtpm_binary", return_value="/usr/bin/swtpm"),
+        patch.object(vm_host, "_swtpm_binary", return_value="/usr/bin/swtpm"),
         patch.object(vms.subprocess, "Popen", return_value=proc),
     ):
         assert vms._prepare_vtpm("vm1", str(tmp_path), wait_secs=0.1) == []
@@ -87,14 +88,14 @@ def test_swtpm_socket_timeout_kills_daemon(tmp_path):
 
 def test_popen_failure_boots_without_tpm(tmp_path):
     with (
-        patch.object(vms, "_swtpm_binary", return_value="/usr/bin/swtpm"),
+        patch.object(vm_host, "_swtpm_binary", return_value="/usr/bin/swtpm"),
         patch.object(vms.subprocess, "Popen", side_effect=OSError("exec format error")),
     ):
         assert vms._prepare_vtpm("vm1", str(tmp_path)) == []
 
 
 def test_kvm_status_reports_vtpm_availability():
-    with patch.object(vms, "_swtpm_binary", return_value=None):
+    with patch.object(vm_host, "_swtpm_binary", return_value=None):
         assert vms.get_kvm_status()["vtpm_available"] is False
-    with patch.object(vms, "_swtpm_binary", return_value="/usr/bin/swtpm"):
+    with patch.object(vm_host, "_swtpm_binary", return_value="/usr/bin/swtpm"):
         assert vms.get_kvm_status()["vtpm_available"] is True

@@ -44,4 +44,4 @@ def test_console_websocket_starts_qemu_in_a_thread():
 
     for fn in (vms.websocket_vm_console, vms.websocket_vm_serial):
         src = inspect.getsource(fn)
-        assert "await asyncio.to_thread(_start_qemu" in src and "= _start_qemu(" not in src
+        assert "await asyncio.to_thread(vm_qemu._start_qemu" in src and "= vm_qemu._start_qemu(" not in src

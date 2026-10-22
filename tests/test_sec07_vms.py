@@ -19,6 +19,8 @@ def roots(tmp_path, monkeypatch):
     monkeypatch.setattr("backend.api.fs.ALLOWED_BROWSE_ROOTS", [str(pool)])
     monkeypatch.setattr(vms, "DATA_DIR", str(data))
     monkeypatch.setattr(vms, "VM_ISO_DIR", str(pool / "isos"))
+    monkeypatch.setattr("backend.services.vm_store.DATA_DIR", str(data))
+    monkeypatch.setattr("backend.services.vm_store.VM_ISO_DIR", str(pool / "isos"))
     return pool, data
 
 

@@ -163,7 +163,7 @@ raises is logged with its traceback and restarted after 1 s, 2 s, 4 s … up to 
 the method and path against an allow-list, and inspects container-create and exec
 bodies for host-level settings. See SECURITY.md for the policy.
 
-### 2.14 AI modules
+### 2.14 AI and VM modules
 
 | Module | Holds |
 | ------ | ----- |
@@ -177,6 +177,11 @@ bodies for host-level settings. See SECURITY.md for the policy.
 | `ai_chat_agent.py` | Ask Zetty orchestration, LLM runtime, answer synthesis |
 | `chat_tools.py` | Tool registry: definition, handler and permission policy per tool |
 | `chat_web_tools.py` | Web search and weather tools |
+| `api/vms.py` | VM HTTP routes and console WebSockets |
+| `vm_store.py` | VM settings storage, input confinement, shared QEMU process state |
+| `vm_host.py` | Host capabilities: budget, KVM, ISOs, bridges, USB/PCI passthrough, firmware, vTPM |
+| `vm_guest.py` | VM IP discovery (ARP, guest agent) |
+| `vm_qemu.py` | QEMU command line, start/stop, QMP, vms.json |
 
 ## 3. Data Persistence & State Model
 

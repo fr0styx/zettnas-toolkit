@@ -187,8 +187,8 @@ def test_vm_disk_expansion_and_raw_format(tmp_path):
         return m
 
     with (
-        patch.object(vms_mod, "_load_vms", return_value=[mock_vm]),
-        patch.object(vms_mod, "_save_vms"),
+        patch("backend.services.vm_qemu._load_vms", return_value=[mock_vm]),
+        patch("backend.services.vm_qemu._save_vms"),
         patch.object(vms_mod, "DATA_DIR", str(tmp_path)),
         patch("subprocess.run", side_effect=fake_subprocess_run),
         patch("shutil.which", return_value="/usr/bin/qemu-img"),

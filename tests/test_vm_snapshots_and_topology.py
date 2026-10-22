@@ -80,7 +80,7 @@ def test_iommu_groups_scanner(auth_client, tmp_path, monkeypatch):
             assert "groups" in data
 
 
-@patch("backend.api.vms._load_vms")
+@patch("backend.services.vm_qemu._load_vms")
 @patch("backend.api.vms._save_vm_snapshots_metadata")
 @patch("backend.api.vms._get_vm_snapshots_metadata")
 def test_vm_snapshots_lifecycle(mock_get_meta, mock_save_meta, mock_load, auth_client):

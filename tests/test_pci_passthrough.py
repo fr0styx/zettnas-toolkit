@@ -4,6 +4,7 @@ import os
 from unittest.mock import patch
 
 import backend.api.vms as vms
+import backend.services.vm_host as vm_host
 
 
 def _fake_sysfs(tmp_path, devices):
@@ -43,7 +44,7 @@ def test_sanitize_drops_bad_and_duplicate_slots():
 
 def test_driver_lookup(tmp_path):
     bases = _fake_sysfs(tmp_path, {"0000:01:00.0": "vfio-pci", "0000:00:02.0": "i915", "0000:05:00.0": None})
-    with patch.object(vms, "_PCI_SYSFS_BASES", bases):
+    with patch.object(vm_host, "_PCI_SYSFS_BASES", bases):
         assert vms._pci_device_driver("01:00.0") == "vfio-pci"
         assert vms._pci_device_driver("0000:00:02.0") == "i915"
         assert vms._pci_device_driver("05:00.0") == ""
@@ -53,7 +54,7 @@ def test_driver_lookup(tmp_path):
 def test_problem_when_device_still_on_host_driver(tmp_path):
     bases = _fake_sysfs(tmp_path, {"0000:00:02.0": "i915"})
     vm = {"pci_passthrough": [{"slot": "00:02.0"}]}
-    with patch.object(vms, "_PCI_SYSFS_BASES", bases):
+    with patch.object(vm_host, "_PCI_SYSFS_BASES", bases):
         msg = vms._pci_passthrough_problem(vm)
     assert "00:02.0" in msg and "'i915'" in msg and "vfio-pci" in msg
 
@@ -61,14 +62,17 @@ def test_problem_when_device_still_on_host_driver(tmp_path):
 def test_problem_when_vfio_node_missing(tmp_path):
     bases = _fake_sysfs(tmp_path, {"0000:01:00.0": "vfio-pci"})
     vm = {"pci_passthrough": [{"slot": "01:00.0"}]}
-    with patch.object(vms, "_PCI_SYSFS_BASES", bases), patch.object(vms, "_ensure_vfio_dev", return_value=False):
+    with (
+        patch.object(vm_host, "_PCI_SYSFS_BASES", bases),
+        patch.object(vm_host, "_ensure_vfio_dev", return_value=False),
+    ):
         assert "/dev/vfio" in vms._pci_passthrough_problem(vm)
 
 
 def test_ready_device_has_no_problem(tmp_path):
     bases = _fake_sysfs(tmp_path, {"0000:01:00.0": "vfio-pci"})
     vm = {"pci_passthrough": [{"slot": "01:00.0"}]}
-    with patch.object(vms, "_PCI_SYSFS_BASES", bases), patch.object(vms, "_ensure_vfio_dev", return_value=True):
+    with patch.object(vm_host, "_PCI_SYSFS_BASES", bases), patch.object(vm_host, "_ensure_vfio_dev", return_value=True):
         assert vms._pci_passthrough_problem(vm) is None
     assert vms._pci_passthrough_problem({"pci_passthrough": []}) is None
 

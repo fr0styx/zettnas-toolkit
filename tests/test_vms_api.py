@@ -353,7 +353,7 @@ def test_vm_start_failure_raises_500_and_captures_error(client, auth_headers):
     vm_id = res.json()["id"]
 
     simulated_err = "Could not access KVM kernel module: Operation not permitted"
-    with patch("backend.api.vms._start_qemu", return_value=(False, simulated_err)):
+    with patch("backend.services.vm_qemu._start_qemu", return_value=(False, simulated_err)):
         action_res = client.post(f"/api/vms/{vm_id}/action", json={"action": "start"}, headers=auth_headers)
         assert action_res.status_code == 500
         assert simulated_err in action_res.json()["detail"]

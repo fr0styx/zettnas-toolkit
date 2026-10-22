@@ -31,958 +31,83 @@ from backend.state import Z_STATE, add_event
 
 router = APIRouter(prefix="/vms", tags=["Virtual Machines"])
 
-# ---- QEMU input confinement (SEC-07) ----
-# Paths and options from VM settings end up inside QEMU option strings, where a comma
-# starts a new option. Disks, ISOs and host shares must be regular files or folders
-# inside the VM and storage roots; host block devices and the app's data folder are out.
-_QEMU_UNSAFE = re.compile(r"[,\r\n\x00]")
-_DISK_BUSES = {"virtio", "sata", "nvme", "ide", "scsi"}
-_DISK_FORMATS = {"qcow2", "raw"}
-
-
-def _vm_disk_roots() -> list[str]:
-    from backend.api.fs import ALLOWED_BROWSE_ROOTS
-
-    roots = [os.path.join(DATA_DIR, "vms")] + [r for r in ALLOWED_BROWSE_ROOTS if r]
-    return [os.path.realpath(r) for r in roots]
-
-
-def _vm_iso_roots() -> list[str]:
-    return [os.path.realpath(r) for r in [VM_ISO_DIR, *(_vm_disk_roots())] if r]
-
-
-def _vm_share_roots() -> list[str]:
-    from backend.api.fs import ALLOWED_BROWSE_ROOTS
-
-    data = os.path.realpath(DATA_DIR)
-    return [os.path.realpath(r) for r in ALLOWED_BROWSE_ROOTS if r and os.path.realpath(r) != data]
-
-
-def _confined(path: Any, roots: list[str], want: str = "file") -> str | None:
-    """realpath of `path` if it is safe to give QEMU, else None."""
-    if not isinstance(path, str) or not path.strip() or _QEMU_UNSAFE.search(path):
-        return None
-    real = os.path.realpath(path.strip())
-    if _QEMU_UNSAFE.search(real):
-        return None
-    if not any(real == r or real.startswith(r.rstrip("/") + "/") for r in roots):
-        return None
-    data = os.path.realpath(DATA_DIR)
-    vms_dir = os.path.join(data, "vms")
-    if (real == data or real.startswith(data + "/")) and not (real == vms_dir or real.startswith(vms_dir + "/")):
-        return None
-    if os.path.exists(real):
-        if want == "file" and not os.path.isfile(real):
-            return None
-        if want == "dir" and not os.path.isdir(real):
-            return None
-    return real
-
-
-def _validate_vm_inputs(
-    secondary_disks: list[dict[str, Any]] | None = None,
-    iso_path: str | None = None,
-    host_shares: list[dict[str, Any]] | None = None,
-) -> None:
-    """Refuses VM settings that would reach host devices or inject QEMU options (400)."""
-    for i, d in enumerate(secondary_disks or []):
-        if not isinstance(d, dict):
-            raise HTTPException(status_code=400, detail=f"Secondary disk {i + 1} is not valid.")
-        if d.get("path") and not _confined(d.get("path"), _vm_disk_roots(), "file"):
-            raise HTTPException(
-                status_code=400,
-                detail=f"Secondary disk {i + 1}: use an image file inside the VM or storage folders (not a host device).",
-            )
-        if str(d.get("bus", "virtio")) not in _DISK_BUSES:
-            raise HTTPException(status_code=400, detail=f"Secondary disk {i + 1}: unsupported bus.")
-        if d.get("format") and str(d.get("format")) not in _DISK_FORMATS:
-            raise HTTPException(status_code=400, detail=f"Secondary disk {i + 1}: format must be qcow2 or raw.")
-        if d.get("name") and not re.match(r"^[A-Za-z0-9_-]{1,64}$", str(d.get("name"))):
-            raise HTTPException(status_code=400, detail=f"Secondary disk {i + 1}: invalid name.")
-    if iso_path and iso_path.strip() and not _confined(iso_path, _vm_iso_roots(), "file"):
-        raise HTTPException(status_code=400, detail="The ISO must be a file in the ISO or storage folders.")
-    for i, sh in enumerate(host_shares or []):
-        if not isinstance(sh, dict) or not _confined(sh.get("host_path"), _vm_share_roots(), "dir"):
-            raise HTTPException(status_code=400, detail=f"Host share {i + 1}: choose a folder inside the storage pool.")
-        if sh.get("mode", "rw") not in ("ro", "rw"):
-            raise HTTPException(status_code=400, detail=f"Host share {i + 1}: mode must be ro or rw.")
-
-
-VMS_CONFIG_FILE = os.path.join(DATA_DIR, "vms.json")
-KVM_GET_API_VERSION = 0xAE00
-
-# In-memory transient caches for download jobs and web console tickets
-_DOWNLOAD_TASKS: dict[str, dict[str, Any]] = {}
-_ABORT_DOWNLOAD_TASKS: set = set()
-_CONSOLE_TICKETS: dict[str, dict[str, Any]] = {}
-
-# Curated Official Operating System ISO Catalog
-OFFICIAL_ISO_CATALOG: list[dict[str, Any]] = [
-    {
-        "id": "ubuntu-2404",
-        "name": "Ubuntu Server 24.04.1 LTS",
-        "distribution": "Ubuntu",
-        "version": "24.04.1",
-        "category": "linux",
-        "badge": "Official Canonical",
-        "architecture": "x86_64",
-        "kernel": "Linux 6.8",
-        "description": "Enterprise-grade cloud and container host with modern Linux 6.8 kernel and cloud-init.",
-        "download_url": "https://releases.ubuntu.com/24.04.1/ubuntu-24.04.1-live-server-amd64.iso",
-        "filename": "ubuntu-24.04.1-live-server-amd64.iso",
-        "size_bytes": 2831155200,
-        "size_formatted": "2.6 GB",
-        "sha256": "e240e4b801f7bb68c20d1356b60968ad0c33a41d00d828e74ceb3364a0317be9",
-        "recommended_specs": {"min_vcpus": 2, "min_ram_gb": 2.0, "min_disk_gb": 25, "recommended_bus": "virtio"},
-    },
-    {
-        "id": "debian-12",
-        "name": "Debian 12.7.0 (Bookworm) Netinst",
-        "distribution": "Debian",
-        "version": "12.7.0",
-        "category": "linux",
-        "badge": "Stable Minimal",
-        "architecture": "x86_64",
-        "kernel": "Linux 6.1 LTS",
-        "description": "Rock-solid, universal operating system with minimal memory footprint and high package stability.",
-        "download_url": "https://cdimage.debian.org/cdimage/archive/12.7.0/amd64/iso-cd/debian-12.7.0-amd64-netinst.iso",
-        "filename": "debian-12.7.0-amd64-netinst.iso",
-        "size_bytes": 660602880,
-        "size_formatted": "630 MB",
-        "sha256": "8fde79cfc6b20a696200fc5c15219cf6d721e8feb367e9e0e33a79d1cb68fa83",
-        "recommended_specs": {"min_vcpus": 1, "min_ram_gb": 1.0, "min_disk_gb": 10, "recommended_bus": "virtio"},
-    },
-    {
-        "id": "alpine-320",
-        "name": "Alpine Linux 3.20.3",
-        "distribution": "Alpine",
-        "version": "3.20.3",
-        "category": "linux",
-        "badge": "Micro Hypervisor",
-        "architecture": "x86_64",
-        "kernel": "Linux 6.6 LTS",
-        "description": "Ultra-lightweight security-oriented Linux based on musl libc and busybox. Boots in 400ms.",
-        "download_url": "https://dl-cdn.alpinelinux.org/alpine/v3.20/releases/x86_64/alpine-standard-3.20.3-x86_64.iso",
-        "filename": "alpine-standard-3.20.3-x86_64.iso",
-        "size_bytes": 219152384,
-        "size_formatted": "209 MB",
-        "sha256": "c66fc1e0470781f8ecbab8eb9cc8d906066171a5e0c6c1ab20aedc7061836d27",
-        "recommended_specs": {"min_vcpus": 1, "min_ram_gb": 0.5, "min_disk_gb": 4, "recommended_bus": "virtio"},
-    },
-    {
-        "id": "fedora-40",
-        "name": "Fedora Server 40",
-        "distribution": "Fedora",
-        "version": "40",
-        "category": "linux",
-        "badge": "Modern Enterprise",
-        "architecture": "x86_64",
-        "kernel": "Linux 6.8",
-        "description": "Cutting-edge Linux server platform with native systemd, Podman containerization, and Cockpit.",
-        "download_url": "https://download.fedoraproject.org/pub/fedora/linux/releases/40/Server/x86_64/iso/Fedora-Server-dvd-x86_64-40-1.14.iso",
-        "filename": "Fedora-Server-dvd-x86_64-40-1.14.iso",
-        "size_bytes": 2684354560,
-        "size_formatted": "2.5 GB",
-        "sha256": "9b12d59265f2423a268673f848ce1c9e83ecf2bb3ef64fc6c8e3bf5d4cecb2e3",
-        "recommended_specs": {"min_vcpus": 2, "min_ram_gb": 2.0, "min_disk_gb": 20, "recommended_bus": "virtio"},
-    },
-    {
-        "id": "truenas-scale",
-        "name": "TrueNAS SCALE 24.04.2",
-        "distribution": "TrueNAS",
-        "version": "24.04.2",
-        "category": "storage",
-        "badge": "Scale-Out NAS",
-        "architecture": "x86_64",
-        "kernel": "Linux 6.6 LTS",
-        "description": "Debian-based open hyper-converged scale-out storage, ZFS pools, and containerized apps.",
-        "download_url": "https://download.sys.truenas.net/TrueNAS-SCALE-Dragonfish/24.04.2/TrueNAS-SCALE-24.04.2.iso",
-        "filename": "TrueNAS-SCALE-24.04.2.iso",
-        "size_bytes": 1824522240,
-        "size_formatted": "1.7 GB",
-        "sha256": "f62b7194f489fef39ffbe3dcbca1823ebce1bc98914c62c2f42be709f18dd12",
-        "recommended_specs": {"min_vcpus": 2, "min_ram_gb": 8.0, "min_disk_gb": 32, "recommended_bus": "virtio"},
-    },
-    {
-        "id": "virtio-win",
-        "name": "VirtIO Windows Guest Tools",
-        "distribution": "VirtIO",
-        "version": "0.1.262",
-        "category": "drivers",
-        "badge": "KVM Drivers",
-        "architecture": "x86_64 / x86",
-        "kernel": "WHQL Signed",
-        "description": "Essential Red Hat signed VirtIO storage (viostor), network (NetKVM), and memory balloon drivers.",
-        "download_url": "https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso",
-        "filename": "virtio-win-stable.iso",
-        "size_bytes": 681574400,
-        "size_formatted": "650 MB",
-        "sha256": "893c52a0a289456208bb53258c465f2991873ea895ad602058863f6a27e7f606",
-        "recommended_specs": {"min_vcpus": 1, "min_ram_gb": 0.5, "min_disk_gb": 1, "recommended_bus": "sata"},
-    },
-    {
-        "id": "win-server-2022",
-        "name": "Windows Server 2022 Evaluation",
-        "distribution": "Windows",
-        "version": "2022",
-        "category": "windows",
-        "badge": "Microsoft Eval",
-        "architecture": "x86_64",
-        "kernel": "NT 10.0",
-        "description": "Official Microsoft 180-day trial evaluation ISO for enterprise testing and Active Directory.",
-        "download_url": "https://software-download.microsoft.com/download/pr/SERVER_EVAL_x64FRE_en-us.iso",
-        "filename": "Windows_Server_2022_Eval_x64.iso",
-        "size_bytes": 5044944896,
-        "size_formatted": "4.7 GB",
-        "sha256": "3e4fa6d8c76191985d03d85d1f1f76039726d10732a1bc7d7cf4924fe723660d",
-        "recommended_specs": {"min_vcpus": 4, "min_ram_gb": 8.0, "min_disk_gb": 64, "recommended_bus": "sata"},
-    },
-]
-
-
-def _get_host_memory_bytes() -> int:
-    """Read total host memory in bytes from /proc/meminfo or system state."""
-    mem_info = "/host/proc/meminfo" if os.path.exists("/host/proc/meminfo") else "/proc/meminfo"
-    if os.path.exists(mem_info):
-        try:
-            with open(mem_info, encoding="utf-8", errors="replace") as f:
-                for line in f:
-                    if line.startswith("MemTotal:"):
-                        parts = line.split()
-                        return int(parts[1]) * 1024
-        except (OSError, ValueError, IndexError):
-            pass
-
-    # Fallback to cached stats
-    cached = getattr(Z_STATE, "cached_stats", {})
-    if cached and "mem" in cached and cached["mem"].get("total_gb"):
-        return int(cached["mem"]["total_gb"] * (1024**3))
-
-    return 32 * 1024 * 1024 * 1024  # Standard default 32GB
-
-
-def calculate_vm_budget(total_ram_bytes: int, running_vms: list[dict[str, Any]]) -> dict[str, Any]:
-    """
-    Evaluates the Dynamic Elastic Headroom Reserve Formula:
-    Host Reserve = max(2.0 GB, 0.10 * Total RAM GB)
-    Safe Max VM Allocatable RAM = Total RAM GB - Host Reserve
-    Remaining Safe Headroom = max(0, Safe Max VM Allocatable RAM - Allocated VM RAM)
-    """
-    total_ram_gb = total_ram_bytes / (1024**3)
-    host_reserve_gb = max(2.0, round(0.10 * total_ram_gb, 2))
-    safe_max_vm_ram_gb = max(0.0, round(total_ram_gb - host_reserve_gb, 2))
-
-    # Allocated RAM in currently running VMs
-    allocated_vm_ram_gb = 0.0
-    for vm in running_vms:
-        if vm.get("state") in ("running", "paused"):
-            allocated_vm_ram_gb += float(vm.get("ram_gb", 0.0))
-
-    allocated_vm_ram_gb = round(allocated_vm_ram_gb, 2)
-    safe_headroom_gb = max(0.0, round(safe_max_vm_ram_gb - allocated_vm_ram_gb, 2))
-    safe_slider_max_gb = int(safe_max_vm_ram_gb)
-
-    return {
-        "total_host_ram_gb": round(total_ram_gb, 2),
-        "host_reserve_gb": host_reserve_gb,
-        "host_reserve_pct": 10.0 if total_ram_gb >= 20.0 else round((host_reserve_gb / total_ram_gb) * 100, 1),
-        "safe_max_vm_ram_gb": safe_max_vm_ram_gb,
-        "safe_slider_max_gb": safe_slider_max_gb,
-        "allocated_vm_ram_gb": allocated_vm_ram_gb,
-        "safe_headroom_gb": safe_headroom_gb,
-        "override_max_ram_gb": max(1.0, round(total_ram_gb - 1.0, 2)),
-    }
-
-
-def calculate_cpu_capacity(host_threads: int, running_vms: list[dict[str, Any]]) -> dict[str, Any]:
-    """
-    Evaluates CPU thread allocation and overcommit ratio:
-    R_cpu = (Allocated vCPUs) / (Host Threads)
-    """
-    allocated_vcpus = sum(int(vm.get("vcpus", 1)) for vm in running_vms if vm.get("state") in ("running", "paused"))
-    ratio = round(allocated_vcpus / max(1, host_threads), 2)
-
-    if ratio <= 1.0:
-        status = "nominal"
-        badge = "1:1 Physical Mapping"
-    elif ratio <= 2.0:
-        status = "moderate_overcommit"
-        badge = f"Overcommit: {ratio}x"
-    else:
-        status = "heavy_overcommit"
-        badge = f"Heavy Overcommit: {ratio}x"
-
-    return {
-        "host_threads": host_threads,
-        "allocated_vcpus": allocated_vcpus,
-        "overcommit_ratio": ratio,
-        "status": status,
-        "badge": badge,
-        "recommended_max_vcpus": host_threads,
-        "override_max_vcpus": min(64, host_threads * 4),
-    }
-
-
-def get_kvm_status() -> dict[str, Any]:
-    """Inspects /dev/kvm presence, host kernel modules, and CPU virtualization flags with multi-tier diagnosis."""
-    # Auto-link host KVM and vhost-net nodes if present
-    for node, host_node in [("/dev/kvm", "/host/dev/kvm"), ("/dev/vhost-net", "/host/dev/vhost-net")]:
-        if not os.path.exists(node) and os.path.exists(host_node):
-            try:
-                os.symlink(host_node, node)
-            except OSError:
-                pass
-
-    kvm_candidates = ["/dev/kvm", "/host/dev/kvm"]
-    kvm_present = any(os.path.exists(p) for p in kvm_candidates)
-
-    found_node = None
-    kvm_rw = False
-    cgroup_restricted = False
-    probe_error = None
-    kvm_api_version = None
-
-    for p in kvm_candidates:
-        if os.path.exists(p):
-            found_node = p
-            try:
-                fd = os.open(p, os.O_RDWR)
-                kvm_rw = True
-                try:
-                    import fcntl
-
-                    kvm_api_version = fcntl.ioctl(fd, KVM_GET_API_VERSION, 0)
-                except Exception:
-                    kvm_api_version = 12
-                finally:
-                    os.close(fd)
-                if p == "/host/dev/kvm" and not os.path.exists("/dev/kvm"):
-                    try:
-                        os.symlink(p, "/dev/kvm")
-                    except OSError:
-                        pass
-                break
-            except PermissionError as pe:
-                if pe.errno == 1:
-                    cgroup_restricted = True
-                probe_error = f"PermissionError: errno={pe.errno} ({os.strerror(pe.errno)})"
-            except OSError as oe:
-                probe_error = f"OSError: {oe}"
-
-    vmx = False
-    svm = False
-    for cpu_path in [os.path.join(HOST_PROC, "cpuinfo"), "/host/proc/cpuinfo", "/proc/cpuinfo"]:
-        if os.path.exists(cpu_path):
-            try:
-                with open(cpu_path, encoding="utf-8", errors="replace") as f:
-                    content = f.read()
-                    vmx = "vmx" in content
-                    svm = "svm" in content
-                break
-            except OSError:
-                pass
-
-    hardware_virt = vmx or svm
-
-    kvm_mod = False
-    vendor_mod = False
-    for mod_path in [os.path.join(HOST_PROC, "modules"), "/host/proc/modules", "/proc/modules"]:
-        if os.path.exists(mod_path):
-            try:
-                with open(mod_path, encoding="utf-8", errors="replace") as f:
-                    content = f.read()
-                    kvm_mod = "kvm " in content
-                    vendor_mod = ("kvm_intel " in content) or ("kvm_amd " in content)
-                break
-            except OSError:
-                pass
-
-    host_kvm_ready = hardware_virt and (kvm_mod or kvm_present)
-
-    if kvm_present and kvm_rw:
-        state = "active"
-        substate = "active"
-        badge = "KVM Accelerated: Active (" + ("Intel VT-x" if vmx else ("AMD-V" if svm else "Hardware Virt")) + ")"
-        remediation = None
-    elif hardware_virt:
-        state = "restricted"
-        if cgroup_restricted or (found_node and not kvm_rw):
-            substate = "container_restricted"
-            badge = "KVM: Host Ready (Docker cgroup restricted)"
-            remediation = (
-                "Hardware virtualization is active on the host, but the Docker container cgroup "
-                "blocks access to /dev/kvm. Add '--device /dev/kvm' to Extra Parameters in your "
-                "Unraid container template, or add devices: ['/dev/kvm:/dev/kvm'] and "
-                "device_cgroup_rules: ['c 10:232 rwm'] to docker-compose.yml."
-            )
-        elif not vendor_mod and not kvm_mod:
-            substate = "module_missing"
-            badge = "KVM Kernel Module Missing"
-            remediation = "Run 'modprobe kvm_intel' (or 'modprobe kvm_amd') on the host to load the KVM kernel module."
-        else:
-            substate = "restricted"
-            badge = "KVM Emulation: Device restricted or module missing"
-            remediation = "Ensure /dev/kvm exists on the host and has read/write permissions."
-    else:
-        state = "disabled"
-        substate = "bios_disabled"
-        badge = "Hardware Virtualization Disabled in BIOS"
-        remediation = (
-            "Reboot your server and enable Intel Virtualization Technology (VT-x) or AMD SVM in the BIOS/UEFI settings."
-        )
-
-    return {
-        "device_present": kvm_present,
-        "device_writable": kvm_rw,
-        "kvm_rw": kvm_rw,
-        "device_node": found_node,
-        "intel_vtx": vmx,
-        "amd_v": svm,
-        "hardware_virt": hardware_virt,
-        "module_loaded": kvm_mod and vendor_mod,
-        "host_kvm_ready": host_kvm_ready,
-        "cgroup_restricted": cgroup_restricted,
-        "probe_error": probe_error,
-        "state": state,
-        "substate": substate,
-        "badge": badge,
-        "remediation": remediation,
-        "kvm_api_version": kvm_api_version,
-        "vtpm_available": _swtpm_binary() is not None,
-        # The core image has no QEMU (OPS-11)
-        "qemu_available": bool(shutil.which("qemu-system-x86_64") or os.path.exists("/usr/bin/qemu-system-x86_64")),
-        "image_variant": _image_variant(),
-    }
-
-
-def _image_variant() -> str:
-    from backend.config import IMAGE_VARIANT
-
-    return IMAGE_VARIANT
-
-
-def _get_target_iso_dir() -> str:
-    """Returns the primary writable directory for storing ISO images."""
-    candidates = []
-    if VM_ISO_DIR and VM_ISO_DIR not in candidates:
-        candidates.append(VM_ISO_DIR)
-    for d in [
-        "/mnt/user/isos",
-        "/mnt/storage/isos",
-        os.path.join(POOL_PATH, "isos"),
-        os.path.join(DATA_DIR, "isos"),
-    ]:
-        if d not in candidates:
-            candidates.append(d)
-    for d in candidates:
-        try:
-            if not os.path.exists(d):
-                os.makedirs(d, exist_ok=True)
-            if os.access(d, os.W_OK):
-                return d
-        except OSError:
-            pass
-    fallback = os.path.join(DATA_DIR, "isos")
-    os.makedirs(fallback, exist_ok=True)
-    return fallback
-
-
-def scan_isos() -> list[dict[str, Any]]:
-    """Discovers bootable ISO and raw disk images in storage shares."""
-    iso_dirs = []
-    if VM_ISO_DIR and VM_ISO_DIR not in iso_dirs:
-        iso_dirs.append(VM_ISO_DIR)
-    for d in [
-        "/mnt/user/isos",
-        "/mnt/user/system/isos",
-        "/mnt/storage/isos",
-        os.path.join(POOL_PATH, "isos"),
-        os.path.join(DATA_DIR, "isos"),
-    ]:
-        if d not in iso_dirs:
-            iso_dirs.append(d)
-    discovered = []
-    seen = set()
-
-    for d in iso_dirs:
-        if os.path.isdir(d):
-            try:
-                for root, _, files in os.walk(d):
-                    for f in files:
-                        if f.lower().endswith((".iso", ".img")):
-                            p = os.path.join(root, f)
-                            if p not in seen:
-                                seen.add(p)
-                                try:
-                                    stat = os.stat(p)
-                                    size_gb = round(stat.st_size / (1024**3), 2)
-                                    discovered.append(
-                                        {
-                                            "name": f,
-                                            "path": p,
-                                            "size_bytes": stat.st_size,
-                                            "size_formatted": f"{size_gb} GB",
-                                            "mtime": stat.st_mtime,
-                                        }
-                                    )
-                                except OSError:
-                                    pass
-            except OSError:
-                pass
-
-    return sorted(discovered, key=lambda x: x["name"].lower())
-
-
-def scan_bridges() -> list[str]:
-    """Inspects Linux kernel network bridges for virtual machine attachment."""
-    net_dirs = ["/host/sys/class/net", "/sys/class/net"]
-    found = []
-    for nd in net_dirs:
-        if os.path.isdir(nd):
-            try:
-                for iface in os.listdir(nd):
-                    if os.path.isdir(os.path.join(nd, iface, "bridge")) or iface.startswith(("br", "virbr")):
-                        found.append(iface)
-            except OSError:
-                pass
-    return sorted(list(set(found or ["br0", "virbr0"])))
-
-
-def scan_host_usb_devices() -> list[dict[str, Any]]:
-    """
-    Discovers physical USB devices connected to the host via sysfs (/host/sys/bus/usb/devices or /sys/bus/usb/devices).
-    Returns list of devices sorted with physical peripherals first and root hubs last.
-    """
-    sys_paths = ["/host/sys/bus/usb/devices", "/sys/bus/usb/devices"]
-    usb_dir = next((p for p in sys_paths if os.path.isdir(p)), None)
-    if not usb_dir:
-        return []
-
-    devices = []
-    seen = set()
-
-    try:
-        entries = sorted(os.listdir(usb_dir))
-    except OSError:
-        return []
-
-    for entry in entries:
-        # Skip sub-interface descriptors (e.g. 1-0:1.0, 3-5:1.0)
-        if ":" in entry:
-            continue
-        dev_path = os.path.join(usb_dir, entry)
-        id_vendor_f = os.path.join(dev_path, "idVendor")
-        id_product_f = os.path.join(dev_path, "idProduct")
-        if not (os.path.exists(id_vendor_f) and os.path.exists(id_product_f)):
-            continue
-
-        try:
-            with open(id_vendor_f, encoding="utf-8", errors="replace") as f:
-                vid = f.read().strip().lower()
-            with open(id_product_f, encoding="utf-8", errors="replace") as f:
-                pid = f.read().strip().lower()
-        except OSError:
-            continue
-
-        def _read_prop(prop_name: str) -> str:
-            p = os.path.join(dev_path, prop_name)  # noqa: B023
-            if os.path.exists(p):
-                try:
-                    with open(p, encoding="utf-8", errors="replace") as f:
-                        return f.read().strip()
-                except OSError:
-                    pass
-            return ""
-
-        mfr = _read_prop("manufacturer")
-        prod = _read_prop("product")
-        bus = _read_prop("busnum")
-        dev = _read_prop("devnum")
-        serial = _read_prop("serial")
-
-        is_root_hub = vid == "1d6b"
-        composite_key = f"{vid}:{pid}:{bus}:{dev}"
-        if composite_key in seen:
-            continue
-        seen.add(composite_key)
-
-        display_name = prod or (f"Root Hub ({bus})" if is_root_hub else f"USB Device ({vid}:{pid})")
-        mfr_name = mfr or ("Linux Foundation" if is_root_hub else "Generic")
-
-        devices.append(
-            {
-                "vendor_id": vid,
-                "product_id": pid,
-                "vendor_hex": f"0x{vid}",
-                "product_hex": f"0x{pid}",
-                "manufacturer": mfr_name,
-                "product": display_name,
-                "description": f"{mfr_name} {display_name}".strip(),
-                "bus": bus,
-                "dev": dev,
-                "serial": serial,
-                "is_root_hub": is_root_hub,
-                "sysfs_path": entry,
-            }
-        )
-
-    # Sort: physical devices first, then root hubs
-    return sorted(devices, key=lambda x: (x["is_root_hub"], x["description"].lower()))
-
-
-def _find_ovmf_firmware() -> tuple[str | None, str | None]:
-    """Discovers OVMF/EDK2 UEFI firmware binary and NVRAM variable template."""
-    code_candidates = [
-        "/usr/share/OVMF/OVMF_CODE_4M.ms.fd",
-        "/usr/share/OVMF/OVMF_CODE_4M.fd",
-        "/usr/share/qemu/ovmf-x64/OVMF_CODE-pure-efi.fd",
-        "/usr/share/qemu/ovmf-x64/OVMF_CODE-pure-efi-tpm.fd",
-        "/usr/share/qemu/edk2-x86_64-code.fd",
-        "/usr/share/OVMF/OVMF_CODE.fd",
-        "/usr/share/edk2-ovmf/x64/OVMF_CODE.fd",
-        "/usr/share/edk2/ovmf/OVMF_CODE.fd",
-        "/usr/share/ovmf/OVMF.fd",
-        "/usr/share/qemu/OVMF.fd",
-    ]
-    vars_candidates = [
-        "/usr/share/OVMF/OVMF_VARS_4M.ms.fd",
-        "/usr/share/OVMF/OVMF_VARS_4M.fd",
-        "/usr/share/qemu/ovmf-x64/OVMF_VARS-pure-efi.fd",
-        "/usr/share/qemu/ovmf-x64/OVMF_VARS-pure-efi-tpm.fd",
-        "/usr/share/qemu/edk2-x86_64-vars.fd",
-        "/usr/share/OVMF/OVMF_VARS.fd",
-        "/usr/share/edk2-ovmf/x64/OVMF_VARS.fd",
-        "/usr/share/edk2/ovmf/OVMF_VARS.fd",
-    ]
-    code_path = next((p for p in code_candidates if os.path.exists(p)), None)
-    vars_path = next((p for p in vars_candidates if os.path.exists(p)), None)
-    return code_path, vars_path
-
-
-_RUNNING_QEMU_PROCS: dict[str, dict[str, Any]] = {}
-_LAST_QEMU_ERRORS: dict[str, str] = {}
-
-
-def _can_use_kvm() -> bool:
-    """Verifies KVM hardware acceleration availability by testing character device read/write open."""
-    for kvm_path in ("/dev/kvm", "/host/dev/kvm"):
-        if os.path.exists(kvm_path):
-            try:
-                fd = os.open(kvm_path, os.O_RDWR)
-                os.close(fd)
-                if kvm_path == "/host/dev/kvm" and not os.path.exists("/dev/kvm"):
-                    try:
-                        os.symlink(kvm_path, "/dev/kvm")
-                    except OSError:
-                        pass
-                return True
-            except (PermissionError, OSError):
-                continue
-    return False
-
-
-def _resolve_vm_ip_by_mac(mac: str) -> str | None:
-    """Inspects host ARP tables to find guest IP address matching its MAC."""
-    if os.environ.get("ZETTNAS_TEST_MODE") == "1" or os.environ.get("TESTING") == "1":
-        return f"192.168.1.{100 + (hash(mac) % 150)}" if mac else "192.168.1.100"
-    clean_mac = (mac or "").lower().strip()
-    if not clean_mac:
-        return None
-    arp_paths = ["/host/proc/net/arp", "/proc/net/arp"]
-    for arp_file in arp_paths:
-        if os.path.exists(arp_file):
-            try:
-                with open(arp_file, encoding="utf-8", errors="ignore") as f:
-                    lines = f.readlines()
-                for line in lines[1:]:
-                    parts = line.split()
-                    if len(parts) >= 4 and parts[3].lower() == clean_mac:
-                        ip = parts[0]
-                        if ip and ip != "0.0.0.0":
-                            return ip
-            except Exception:
-                logger.debug("backend.api.vms._resolve_vm_ip_by_mac: ignored error", exc_info=True)
-    return None
-
+# Split into service modules (ARC-01); names stay importable from here.
+from backend.services import vm_guest, vm_host, vm_qemu, vm_store  # noqa: E402, F401
+from backend.services.vm_guest import (  # noqa: E402, F401
+    _VM_IP_BACKGROUND,
+    _VM_IP_CACHE,
+    _VM_IP_LOCK,
+    _VM_IP_REFRESHING,
+    VM_IP_TTL_SECS,
+    _cached_vm_ip,
+    _forget_vm_ip,
+    _qga_command,
+    _qga_guest_ipv4,
+    _qga_socket_path,
+    _refresh_vm_ip,
+    _resolve_vm_ip_by_mac,
+)
+from backend.services.vm_host import (  # noqa: E402, F401
+    _PCI_SLOT_RE,
+    _PCI_SYSFS_BASES,
+    _VFIO_NODES,
+    _can_use_kvm,
+    _ensure_vfio_dev,
+    _find_ovmf_firmware,
+    _get_host_ip,
+    _get_host_memory_bytes,
+    _get_target_iso_dir,
+    _image_variant,
+    _normalize_pci_slot,
+    _pci_device_driver,
+    _pci_passthrough_problem,
+    _sanitize_pci_list,
+    _swtpm_binary,
+    _vfio_available,
+    calculate_cpu_capacity,
+    calculate_vm_budget,
+    get_kvm_status,
+    scan_bridges,
+    scan_host_usb_devices,
+    scan_isos,
+)
+from backend.services.vm_qemu import (  # noqa: E402, F401
+    _QMP_ENGINE,
+    _QMP_EVENT_LOG,
+    _drain_stderr,
+    _get_qemu_vnc_port,
+    _is_qemu_process_alive,
+    _load_vms,
+    _on_qmp_event,
+    _prepare_vtpm,
+    _qmp_command,
+    _qmp_socket_path,
+    _reconcile_vm_states,
+    _save_vms,
+    _start_qemu,
+    _sync_cleanup_qemu_process,
+    async_stop_qemu,
+)
+from backend.services.vm_store import (  # noqa: E402, F401
+    _ABORT_DOWNLOAD_TASKS,
+    _CONSOLE_TICKETS,
+    _DISK_BUSES,
+    _DISK_FORMATS,
+    _DOWNLOAD_TASKS,
+    _LAST_QEMU_ERRORS,
+    _QEMU_UNSAFE,
+    _RUNNING_QEMU_PROCS,
+    KVM_GET_API_VERSION,
+    OFFICIAL_ISO_CATALOG,
+    VMS_CONFIG_FILE,
+    _confined,
+    _validate_vm_inputs,
+    _vm_disk_roots,
+    _vm_iso_roots,
+    _vm_share_roots,
+)
 
 # ---- Guest IP discovery: QEMU Guest Agent first, host ARP table second ----
-
-VM_IP_TTL_SECS = 30.0
-_VM_IP_CACHE: dict[str, tuple[str | None, float]] = {}
-_VM_IP_REFRESHING: set = set()
-_VM_IP_LOCK = threading.Lock()
-_VM_IP_BACKGROUND = True  # tests switch this off to refresh synchronously
-
-
-def _qga_socket_path(vm_id: str) -> str:
-    return f"/tmp/{vm_id}-qga.sock"
-
-
-def _qga_command(vm_id: str, command: str, timeout: float = 1.0) -> dict[str, Any]:
-    """Runs one QEMU Guest Agent command over the VM's virtio-serial channel.
-
-    The agent has no greeting, so a guest-sync with a random id is sent first and
-    replies are skipped until that id comes back; this drops stale output left by
-    an earlier, timed-out client. Returns {"error": ...} when the agent is not
-    running in the guest or does not answer within `timeout`.
-    """
-    import random
-    import socket
-
-    sock_path = _qga_socket_path(vm_id)
-    if not os.path.exists(sock_path):
-        return {"error": "guest agent socket not found"}
-
-    sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-    sock.settimeout(timeout)
-    buf = b""
-
-    def read_json() -> dict[str, Any]:
-        nonlocal buf
-        while b"\n" not in buf:
-            chunk = sock.recv(4096)
-            if not chunk:
-                raise ConnectionError("guest agent closed the connection")
-            buf += chunk
-        line, buf = buf.split(b"\n", 1)
-        return json.loads(line.decode("utf-8", errors="replace") or "{}")
-
-    try:
-        sock.connect(sock_path)
-        sync_id = random.randint(1, 2**31 - 1)
-        sock.sendall(json.dumps({"execute": "guest-sync", "arguments": {"id": sync_id}}).encode() + b"\n")
-        while read_json().get("return") != sync_id:
-            pass
-        sock.sendall(json.dumps({"execute": command}).encode() + b"\n")
-        return read_json()
-    except (OSError, ValueError, ConnectionError) as e:
-        return {"error": str(e) or e.__class__.__name__}
-    finally:
-        sock.close()
-
-
-def _qga_guest_ipv4(vm_id: str, mac: str = "") -> str | None:
-    """Guest's IPv4 address from the agent, preferring the NIC with the VM's MAC."""
-    res = _qga_command(vm_id, "guest-network-get-interfaces")
-    ifaces = res.get("return")
-    if not isinstance(ifaces, list):
-        return None
-    want_mac = (mac or "").lower().strip()
-    candidates: list[tuple[bool, str]] = []
-    for iface in ifaces:
-        if not isinstance(iface, dict) or iface.get("name") == "lo":
-            continue
-        same_nic = bool(want_mac) and str(iface.get("hardware-address", "")).lower() == want_mac
-        for addr in iface.get("ip-addresses") or []:
-            ip = str(addr.get("ip-address", ""))
-            if addr.get("ip-address-type") != "ipv4" or not ip:
-                continue
-            if ip.startswith("127.") or ip.startswith("169.254."):
-                continue
-            candidates.append((same_nic, ip))
-    if not candidates:
-        return None
-    candidates.sort(key=lambda c: not c[0])
-    return candidates[0][1]
-
-
-def _refresh_vm_ip(vm_id: str, mac: str) -> None:
-    try:
-        ip = _qga_guest_ipv4(vm_id, mac) or _resolve_vm_ip_by_mac(mac)
-    except Exception as e:
-        logger.debug(f"[VM-{vm_id}] IP refresh failed: {e}")
-        ip = None
-    with _VM_IP_LOCK:
-        _VM_IP_CACHE[vm_id] = (ip, time.monotonic() + VM_IP_TTL_SECS)
-        _VM_IP_REFRESHING.discard(vm_id)
-
-
-def _cached_vm_ip(vm: dict[str, Any]) -> str | None:
-    """Last known guest IP; refreshes in the background once older than VM_IP_TTL_SECS."""
-    vm_id = vm.get("id")
-    if not vm_id:
-        return None
-    with _VM_IP_LOCK:
-        entry = _VM_IP_CACHE.get(vm_id)
-        start = (entry is None or entry[1] <= time.monotonic()) and vm_id not in _VM_IP_REFRESHING
-        if start:
-            _VM_IP_REFRESHING.add(vm_id)
-    if start:
-        mac = vm.get("mac") or ""
-        if _VM_IP_BACKGROUND:
-            threading.Thread(target=_refresh_vm_ip, args=(vm_id, mac), daemon=True, name=f"vm-ip-{vm_id}").start()
-        else:
-            _refresh_vm_ip(vm_id, mac)
-        with _VM_IP_LOCK:
-            entry = _VM_IP_CACHE.get(vm_id, entry)
-    return entry[0] if entry else None
-
-
-def _forget_vm_ip(vm_id: str) -> None:
-    with _VM_IP_LOCK:
-        _VM_IP_CACHE.pop(vm_id, None)
-
-
-def _is_qemu_process_alive(vm_id: str) -> bool:
-    """Checks whether the QEMU process for the specified VM is currently alive."""
-    if vm_id in _RUNNING_QEMU_PROCS:
-        entry = _RUNNING_QEMU_PROCS[vm_id]
-        proc = entry.get("proc")
-        if proc:
-            if proc.poll() is None:
-                return True
-            else:
-                _RUNNING_QEMU_PROCS.pop(vm_id, None)
-                return False
-        pid = entry.get("pid")
-        if pid:
-            try:
-                os.kill(pid, 0)
-                return True
-            except OSError:
-                if os.environ.get("ZETTNAS_TEST_MODE") == "1" and pid == 99999:
-                    return True
-                _RUNNING_QEMU_PROCS.pop(vm_id, None)
-                return False
-
-    pid_file = os.path.join(DATA_DIR, "vms", vm_id, "qemu.pid")
-    if os.path.exists(pid_file):
-        try:
-            with open(pid_file) as f:
-                pid = int(f.read().strip())
-            os.kill(pid, 0)
-            return True
-        except (ValueError, OSError):
-            if os.environ.get("ZETTNAS_TEST_MODE") == "1" and pid == 99999:
-                return True
-            try:
-                os.remove(pid_file)
-            except OSError:
-                pass
-    return False
-
-
-_QMP_EVENT_LOG = {
-    "SHUTDOWN": ("info", "VM Shut Down", "VM '{name}' shut down ({reason})."),
-    "RESET": ("info", "VM Reset", "VM '{name}' was reset."),
-    "GUEST_PANICKED": ("warning", "VM Guest Crashed", "The guest OS in VM '{name}' crashed (kernel panic or BSOD)."),
-}
-
-
-def _on_qmp_event(vm_id: str, event: str, data: dict[str, Any]) -> None:
-    """Logs notable QEMU events to the system event log."""
-    spec = _QMP_EVENT_LOG.get(event)
-    if not spec:
-        return
-    if event == "SHUTDOWN" and not data.get("guest", False):
-        return  # host-initiated stops are already logged by the action that caused them
-    name = next((v.get("name") for v in _load_vms() if v.get("id") == vm_id), None) or vm_id
-    level, title, message = spec
-    add_event(level, title, message.format(name=name, reason=str(data.get("reason") or "guest")))
-
-
-def _qmp_socket_path(vm_id: str) -> str:
-    return f"/tmp/{vm_id}-qmp.sock"
-
-
-_QMP_ENGINE = QmpEngine(_qmp_socket_path, on_event=_on_qmp_event)
-
-
-def _qmp_command(
-    vm_id: str,
-    command: str,
-    arguments: dict[str, Any] | None = None,
-    timeout: float = 2.5,
-) -> dict[str, Any]:
-    """
-    Executes a QMP (QEMU Machine Protocol) command over the VM's persistent
-    monitor connection (backend/services/vm_engine.py). Returns QEMU's reply,
-    {"return": ...} or {"error": ...}.
-    """
-    return _QMP_ENGINE.execute(vm_id, command, arguments, timeout)
-
-
-def _drain_stderr(proc: subprocess.Popen, log_path: str, err_log_path: str, vm_id: str):
-    """Background daemon thread to drain QEMU stderr, prevent pipe stall, and log unexpected termination."""
-    try:
-        if not proc or not proc.stderr:
-            return
-        with open(log_path, "a", encoding="utf-8") as lf:
-            for line in iter(proc.stderr.readline, b""):
-                text = line.decode("utf-8", errors="replace")
-                lf.write(text)
-                lf.flush()
-        proc.wait()
-        rc = proc.returncode
-        if rc not in (0, None, -signal.SIGTERM, -signal.SIGKILL):
-            err_msg = f"QEMU process exited abnormally with return code {rc}."
-            logger.warning(f"[VM-{vm_id}] {err_msg}")
-            with open(err_log_path, "w", encoding="utf-8") as ef:
-                ef.write(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] {err_msg}\n")
-            _LAST_QEMU_ERRORS[vm_id] = err_msg
-    except Exception:
-        logger.debug("backend.api.vms._drain_stderr: ignored error", exc_info=True)
-
-
-def _reconcile_vm_states(vms: list[dict[str, Any]]) -> bool:
-    """
-    Reconciles in-memory/persisted VM state against actual live QEMU process execution.
-    Cleans up phantom 'running' states and captures last recorded errors.
-    Returns True if any VM was mutated and requires persistence.
-    """
-    changed = False
-    for vm in vms:
-        vm_id = vm.get("id")
-        current_state = vm.get("state", "stopped")
-        is_alive = _is_qemu_process_alive(vm_id)
-
-        # Check for recorded error logs
-        vm_dir = os.path.join(DATA_DIR, "vms", vm_id)
-        err_log = os.path.join(vm_dir, "qemu_last_error.log")
-        if os.path.exists(err_log):
-            try:
-                with open(err_log, encoding="utf-8", errors="replace") as f:
-                    content = f.read().strip()
-                    if content:
-                        vm["last_error"] = content
-            except OSError:
-                pass
-
-        if current_state in ("running", "paused") and not is_alive:
-            logger.info(
-                f"[VM-Reconcile] VM '{vm.get('name')}' ({vm_id}) was marked '{current_state}' but no live process exists. Reconciling to 'stopped'."
-            )
-            vm["state"] = "stopped"
-            vm["uptime_seconds"] = 0
-            changed = True
-        elif current_state == "stopped" and is_alive:
-            vm["state"] = "running"
-            changed = True
-
-        if vm.get("state") == "running" and vm_id in _RUNNING_QEMU_PROCS:
-            started = _RUNNING_QEMU_PROCS[vm_id].get("started_at")
-            if started:
-                vm["uptime_seconds"] = max(1, int(time.time() - started))
-
-    return changed
-
-
-def _load_vms() -> list[dict[str, Any]]:
-    """Loads configured virtual machines from persistent JSON storage with live state reconciliation."""
-    vms = read_json(VMS_CONFIG_FILE, default=None)
-    if vms is None:
-        default_vms: list[dict[str, Any]] = []
-        atomic_write_json(VMS_CONFIG_FILE, default_vms)
-        return default_vms
-
-    if _reconcile_vm_states(vms):
-        _save_vms(vms)
-
-    return vms
-
-
-def _save_vms(vms: list[dict[str, Any]]) -> None:
-    atomic_write_json(VMS_CONFIG_FILE, vms)
 
 
 # ---- Request / Response Models ----
@@ -1175,13 +300,13 @@ def _download_iso_worker(task_id: str, catalog_item: dict[str, Any], target_dir:
 @router.get("/telemetry", dependencies=[Depends(require_scope("system:view", "storage:read"))])
 def get_vms_telemetry():
     """Returns KVM hypervisor acceleration state, dynamic memory headroom budget, and CPU capacity."""
-    total_mem = _get_host_memory_bytes()
-    vms = _load_vms()
+    total_mem = vm_host._get_host_memory_bytes()
+    vms = vm_qemu._load_vms()
     host_threads = os.cpu_count() or 8
 
-    budget = calculate_vm_budget(total_mem, vms)
-    cpu_cap = calculate_cpu_capacity(host_threads, vms)
-    kvm = get_kvm_status()
+    budget = vm_host.calculate_vm_budget(total_mem, vms)
+    cpu_cap = vm_host.calculate_cpu_capacity(host_threads, vms)
+    kvm = vm_host.get_kvm_status()
 
     return {
         "kvm": kvm,
@@ -1195,7 +320,7 @@ def get_vms_telemetry():
 def collect_vm_diagnostics() -> dict[str, Any]:
     """Aggregates hypervisor telemetry, VM fleet status, and error logs for diagnostics bundles."""
     telemetry = get_vms_telemetry()
-    vms = _load_vms()
+    vms = vm_qemu._load_vms()
     recent_errors: dict[str, list[str]] = {}
     for vm in vms:
         vm_id = vm.get("id")
@@ -1221,16 +346,16 @@ def collect_vm_diagnostics() -> dict[str, Any]:
 @router.get("/kvm/diagnose", dependencies=[Depends(require_scope("system:view", "storage:read"))])
 def get_kvm_diagnose():
     """Returns detailed multi-tier KVM diagnostic report including host hardware and cgroup analysis."""
-    return get_kvm_status()
+    return vm_host.get_kvm_status()
 
 
 @router.get("", dependencies=[Depends(require_scope("system:view", "storage:read"))])
 def list_vms():
     """Lists configured virtual machines with live states and resource allocations."""
-    vms = _load_vms()
+    vms = vm_qemu._load_vms()
     for vm in vms:
         if vm.get("state") == "running":
-            ip = _cached_vm_ip(vm)
+            ip = vm_guest._cached_vm_ip(vm)
             if ip:
                 vm["ip_address"] = ip
     return vms
@@ -1239,7 +364,7 @@ def list_vms():
 @router.get("/isos", dependencies=[Depends(require_scope("system:view", "storage:read"))])
 def get_discovered_isos():
     """Lists available ISO and OS installation images."""
-    return scan_isos()
+    return vm_host.scan_isos()
 
 
 def _write_and_hash_chunk(f, data: bytes, hasher) -> None:
@@ -1254,7 +379,7 @@ async def upload_iso_file(
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
 ):
     """Streams uploaded ISO file directly into NAS storage (/mnt/user/isos)."""
-    target_dir = _get_target_iso_dir()
+    target_dir = vm_host._get_target_iso_dir()
     raw_name = filename or request.headers.get("x-filename") or f"uploaded-{uuid.uuid4().hex[:6]}.iso"
     clean_name = os.path.basename(raw_name)
     if not clean_name.lower().endswith((".iso", ".img")):
@@ -1364,7 +489,7 @@ def delete_iso_image(
 @router.get("/catalog", dependencies=[Depends(require_scope("system:view", "storage:read"))])
 def get_official_catalog():
     """Lists curated official distribution images with local cache detection."""
-    local_isos = scan_isos()
+    local_isos = vm_host.scan_isos()
     local_filenames = {iso["name"].lower() for iso in local_isos}
 
     results = []
@@ -1386,7 +511,7 @@ def download_official_iso(
     if not item:
         raise HTTPException(status_code=404, detail=f"Catalog ISO '{catalog_id}' not found.")
 
-    target_dir = _get_target_iso_dir()
+    target_dir = vm_host._get_target_iso_dir()
     final_path = os.path.join(target_dir, item["filename"])
     if os.path.exists(final_path):
         return {
@@ -1443,25 +568,25 @@ def cancel_or_remove_catalog_task(
 @router.get("/bridges", dependencies=[Depends(require_scope("system:view", "storage:read"))])
 def get_network_bridges():
     """Lists available host network bridges."""
-    return scan_bridges()
+    return vm_host.scan_bridges()
 
 
 @router.get("/usb-devices", dependencies=[Depends(require_scope("system:view", "storage:read"))])
 def get_host_usb_devices():
     """Lists physical and virtual USB devices connected to the host."""
-    return scan_host_usb_devices()
+    return vm_host.scan_host_usb_devices()
 
 
 @router.post("", dependencies=[Depends(require_scope("vms:manage", "system:config"))])
 def create_vm(req: VmCreateRequest, principal: AuthenticatedPrincipal = Depends(get_current_principal)):
     """Provisions a new virtual machine with dynamic headroom validation and volume mappings."""
-    _validate_vm_inputs(req.secondary_disks, req.iso_path, req.host_shares)
-    vms = _load_vms()
+    vm_store._validate_vm_inputs(req.secondary_disks, req.iso_path, req.host_shares)
+    vms = vm_qemu._load_vms()
     if any(v["name"].lower() == req.name.lower() for v in vms):
         raise HTTPException(status_code=400, detail=f"Virtual machine '{req.name}' already exists.")
 
-    total_mem = _get_host_memory_bytes()
-    budget = calculate_vm_budget(total_mem, vms)
+    total_mem = vm_host._get_host_memory_bytes()
+    budget = vm_host.calculate_vm_budget(total_mem, vms)
 
     # Validate RAM allocation against safe headroom unless overridden
     if not req.override_limits and req.ram_gb > budget["safe_headroom_gb"]:
@@ -1502,12 +627,12 @@ def create_vm(req: VmCreateRequest, principal: AuthenticatedPrincipal = Depends(
         "video_adapter": req.video_adapter or req.display_adapter or "virtio-gpu",
         "tpm_enabled": bool(req.tpm_enabled),
         "usb_passthrough": req.usb_passthrough or [],
-        "pci_passthrough": _sanitize_pci_list(req.pci_passthrough),
+        "pci_passthrough": vm_host._sanitize_pci_list(req.pci_passthrough),
         "created_at": int(time.time()),
     }
 
     vms.append(new_vm)
-    _save_vms(vms)
+    vm_qemu._save_vms(vms)
 
     add_event(
         "info",
@@ -1517,596 +642,7 @@ def create_vm(req: VmCreateRequest, principal: AuthenticatedPrincipal = Depends(
     return new_vm
 
 
-_RUNNING_QEMU_PROCS: dict[str, dict[str, Any]] = {}
-
-
-def _get_qemu_vnc_port(vms: list[dict[str, Any]], vm_id: str) -> int:
-    idx = next((i for i, v in enumerate(vms) if v["id"] == vm_id), 0)
-    return 5900 + idx + 1
-
-
 # ---- Host PCI / GPU passthrough (VFIO) ----
-
-_PCI_SLOT_RE = re.compile(r"^(?:[0-9a-fA-F]{4}:)?([0-9a-fA-F]{2}:[0-9a-fA-F]{2}\.[0-7])$")
-_PCI_SYSFS_BASES = ("/sys/bus/pci/devices", "/host/sys/bus/pci/devices")
-_VFIO_NODES = ("/dev/vfio/vfio", "/host/dev/vfio/vfio")
-
-
-def _normalize_pci_slot(raw: Any) -> str | None:
-    """'0000:01:00.0' or '01:00.0' -> '01:00.0'; None for anything else."""
-    m = _PCI_SLOT_RE.match(str(raw or "").strip())
-    return m.group(1).lower() if m else None
-
-
-def _sanitize_pci_list(items: Any) -> list[dict[str, str]]:
-    out: list[dict[str, str]] = []
-    seen = set()
-    for item in items or []:
-        if not isinstance(item, dict):
-            continue
-        slot = _normalize_pci_slot(item.get("slot"))
-        if not slot or slot in seen:
-            continue
-        seen.add(slot)
-        out.append({"slot": slot, "name": str(item.get("name") or "")[:120]})
-    return out
-
-
-def _pci_device_driver(slot: str) -> str:
-    """Kernel driver currently bound to a PCI device ('' when none or unknown)."""
-    norm = _normalize_pci_slot(slot)
-    if not norm:
-        return ""
-    full = f"0000:{norm}"
-    for base in _PCI_SYSFS_BASES:
-        dev = os.path.join(base, full)
-        link = os.path.join(dev, "driver")
-        if os.path.islink(link):
-            return os.path.basename(os.readlink(link))
-        if os.path.exists(dev):
-            return ""
-    return ""
-
-
-def _vfio_available() -> bool:
-    return any(os.path.exists(p) for p in _VFIO_NODES)
-
-
-def _ensure_vfio_dev() -> bool:
-    """Makes /dev/vfio usable inside the container, linking the host node like /dev/kvm."""
-    if os.path.exists("/dev/vfio/vfio"):
-        return True
-    if os.path.isdir("/host/dev/vfio") and not os.path.lexists("/dev/vfio"):
-        try:
-            os.symlink("/host/dev/vfio", "/dev/vfio")
-        except OSError:
-            return False
-    return os.path.exists("/dev/vfio/vfio")
-
-
-def _pci_passthrough_problem(target_vm: dict[str, Any]) -> str | None:
-    """Why the VM's PCI passthrough cannot work right now, or None when it can.
-
-    QEMU only takes devices that the host has handed to vfio-pci; anything else
-    (a GPU on i915/nvidia, a SATA controller on ahci...) is still in host use.
-    """
-    devices = _sanitize_pci_list(target_vm.get("pci_passthrough"))
-    if not devices:
-        return None
-    for dev in devices:
-        driver = _pci_device_driver(dev["slot"])
-        if driver != "vfio-pci":
-            current = f"the '{driver}' driver" if driver else "no driver"
-            return f"PCI device {dev['slot']} is on {current}. Bind it to vfio-pci on the host before starting this VM."
-    if not _ensure_vfio_dev():
-        return "/dev/vfio is not available in the container. Pass it through (e.g. --device /dev/vfio) to use PCI passthrough."
-    return None
-
-
-def _swtpm_binary() -> str | None:
-    """Path to the swtpm TPM emulator, or None when it is not installed."""
-    found = shutil.which("swtpm")
-    if found:
-        return found
-    return "/usr/bin/swtpm" if os.path.exists("/usr/bin/swtpm") else None
-
-
-def _prepare_vtpm(vm_id: str, vm_dir: str, wait_secs: float = 3.0) -> list[str]:
-    """Starts a swtpm TPM 2.0 emulator for the VM and returns the QEMU args that attach it.
-
-    Waits for swtpm to create its control socket instead of a fixed sleep, so
-    QEMU never races a slow start. Returns [] (VM boots without a TPM) when
-    swtpm is missing, fails to start, or does not come up in time.
-    """
-    swtpm_bin = _swtpm_binary()
-    if not swtpm_bin:
-        logger.warning(f"[VM-{vm_id}] swtpm binary not found on host; vTPM 2.0 cannot be initialized.")
-        return []
-
-    tpm_dir = os.path.join(vm_dir, "tpm")
-    os.makedirs(tpm_dir, exist_ok=True)
-    tpm_sock = os.path.join(tpm_dir, "swtpm.sock")
-    if os.path.exists(tpm_sock):
-        try:
-            os.remove(tpm_sock)
-        except OSError:
-            pass
-
-    swtpm_cmd = [
-        swtpm_bin,
-        "socket",
-        "--tpmstate",
-        f"dir={tpm_dir}",
-        "--ctrl",
-        f"type=unixio,path={tpm_sock}",
-        "--tpm2",
-        "--terminate",
-    ]
-    try:
-        proc = subprocess.Popen(swtpm_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    except Exception as ex:
-        logger.warning(f"[VM-{vm_id}] Failed to spawn swtpm daemon: {ex}")
-        return []
-
-    deadline = time.monotonic() + wait_secs
-    while not os.path.exists(tpm_sock):
-        if proc.poll() is not None:
-            logger.warning(f"[VM-{vm_id}] swtpm exited early (code {proc.returncode}); booting without vTPM.")
-            return []
-        if time.monotonic() >= deadline:
-            logger.warning(f"[VM-{vm_id}] swtpm socket did not appear within {wait_secs:.0f}s; booting without vTPM.")
-            try:
-                proc.kill()
-            except Exception:
-                logger.debug("backend.api.vms._prepare_vtpm: ignored error", exc_info=True)
-            return []
-        time.sleep(0.05)
-
-    logger.info(f"[VM-{vm_id}] Spawned swtpm vTPM 2.0 daemon on {tpm_sock}")
-    return [
-        "-chardev",
-        f"socket,id=chrtpm,path={tpm_sock}",
-        "-tpmdev",
-        "emulator,id=tpm0,chardev=chrtpm",
-        "-device",
-        "tpm-tis,tpmdev=tpm0",
-    ]
-
-
-def _start_qemu(target_vm: dict[str, Any], vnc_port: int) -> tuple[bool, str | None]:
-    vm_id = target_vm["id"]
-    if _is_qemu_process_alive(vm_id):
-        return True, None
-
-    vm_dir = os.path.join(DATA_DIR, "vms", vm_id)
-    os.makedirs(vm_dir, exist_ok=True)
-    err_log_path = os.path.join(vm_dir, "qemu_last_error.log")
-    full_log_path = os.path.join(vm_dir, "qemu.log")
-
-    # Graceful test mock fallback when running unit tests
-    if os.environ.get("ZETTNAS_TEST_MODE") == "1":
-        logger.info(f"Test environment: mocking QEMU start for VM '{target_vm['name']}'.")
-        _RUNNING_QEMU_PROCS[vm_id] = {
-            "proc": None,
-            "pid": 99999,
-            "vnc_port": vnc_port,
-            "started_at": time.time(),
-        }
-        with open(os.path.join(vm_dir, "qemu.pid"), "w") as f:
-            f.write("99999")
-        return True, None
-
-    pci_problem = _pci_passthrough_problem(target_vm)
-    if pci_problem:
-        logger.error(f"[VM-{vm_id}] {pci_problem}")
-        return False, pci_problem
-
-    qemu_bin = shutil.which("qemu-system-x86_64") or "/usr/bin/qemu-system-x86_64"
-    if not os.path.exists(qemu_bin) and not shutil.which(qemu_bin):
-        err_msg = (
-            "This is the core ZettNAS image, which has no virtual machine support. Switch to the full image (:latest)."
-            if _image_variant() == "core"
-            else "qemu-system-x86_64 binary not found on host. Ensure qemu-system-x86 is installed."
-        )
-        logger.error(f"[VM-{vm_id}] {err_msg}")
-        with open(err_log_path, "w", encoding="utf-8") as f:
-            f.write(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] {err_msg}\n")
-        target_vm["last_error"] = err_msg
-        _LAST_QEMU_ERRORS[vm_id] = err_msg
-        return False, err_msg
-
-    disk_path = target_vm.get("disk_path") or os.path.join(vm_dir, "disk.qcow2")
-    target_vm["disk_path"] = disk_path
-
-    if not os.path.exists(disk_path):
-        size_gb = int(target_vm.get("disk_size_gb", 32) or 32)
-        qemu_img = shutil.which("qemu-img") or "/usr/bin/qemu-img"
-        try:
-            subprocess.run(
-                [qemu_img, "create", "-f", "qcow2", disk_path, f"{size_gb}G"], check=True, capture_output=True
-            )
-        except Exception as e:
-            err_msg = f"Failed to initialize primary disk: {e}"
-            logger.error(f"[VM-{vm_id}] {err_msg}")
-            with open(err_log_path, "w", encoding="utf-8") as f:
-                f.write(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] {err_msg}\n")
-            target_vm["last_error"] = err_msg
-            _LAST_QEMU_ERRORS[vm_id] = err_msg
-            return False, err_msg
-
-    has_kvm = _can_use_kvm()
-    target_vm["kvm_accelerated"] = has_kvm
-    target_vm["acceleration"] = "kvm" if has_kvm else "tcg"
-
-    ram_mb = int(float(target_vm.get("ram_gb", 2.0)) * 1024)
-    vcpus = str(target_vm.get("vcpus", 2))
-    vnc_display = max(1, vnc_port - 5900)
-
-    sock_path = f"/tmp/{vm_id}-serial.sock"
-    qmp_path = f"/tmp/{vm_id}-qmp.sock"
-    qga_path = _qga_socket_path(vm_id)
-    for s in (sock_path, qmp_path, qga_path):
-        if os.path.exists(s):
-            try:
-                os.remove(s)
-            except OSError:
-                pass
-
-    # Network Bridge inspection vs user-mode SLIRP fallback
-    bridge_name = target_vm.get("bridge", "br0")
-    tun_writable = os.path.exists("/dev/net/tun") and os.access("/dev/net/tun", os.R_OK | os.W_OK)
-    bridge_helper = shutil.which("qemu-bridge-helper") or "/usr/lib/qemu/qemu-bridge-helper"
-    has_bridge_helper = os.path.exists(bridge_helper) and os.access(bridge_helper, os.X_OK)
-    active_bridges = scan_bridges()
-    use_bridge = (bridge_name in active_bridges) and tun_writable and has_bridge_helper
-
-    ssh_fwd_port = 2220 + vnc_display
-    target_vm["ssh_port"] = ssh_fwd_port
-    mac = target_vm.get("mac") or "52:54:00:12:34:56"
-
-    def _build_cmd(force_slirp: bool = False) -> list[str]:
-        vcpus_val = target_vm.get("vcpus", 2)
-        sockets = target_vm.get("sockets")
-        cores = target_vm.get("cores")
-        threads = target_vm.get("threads")
-        if sockets and cores:
-            smp_parts = [f"{vcpus_val}", f"sockets={sockets}", f"cores={cores}"]
-            if threads:
-                smp_parts.append(f"threads={threads}")
-            smp_str = ",".join(smp_parts)
-        else:
-            smp_str = str(vcpus_val)
-
-        c = [
-            qemu_bin,
-            "-name",
-            target_vm["name"],
-            "-m",
-            str(ram_mb),
-            "-smp",
-            smp_str,
-        ]
-        if has_kvm:
-            c.extend(["-enable-kvm", "-cpu", "host"])
-        else:
-            c.extend(["-accel", "tcg", "-cpu", "qemu64"])
-
-        firmware = target_vm.get("firmware", "seabios")
-        if firmware == "uefi":
-            code_path, vars_path = _find_ovmf_firmware()
-            if code_path:
-                if vars_path:
-                    vm_vars = os.path.join(vm_dir, "OVMF_VARS.fd")
-                    if not os.path.exists(vm_vars):
-                        try:
-                            shutil.copyfile(vars_path, vm_vars)
-                        except Exception as e:
-                            logger.warning(f"[VM-{vm_id}] Could not copy OVMF_VARS template: {e}")
-                    if os.path.exists(vm_vars):
-                        c.extend(
-                            [
-                                "-drive",
-                                f"if=pflash,format=raw,readonly=on,file={code_path}",
-                                "-drive",
-                                f"if=pflash,format=raw,file={vm_vars}",
-                            ]
-                        )
-                    else:
-                        c.extend(["-drive", f"if=pflash,format=raw,readonly=on,file={code_path}"])
-                else:
-                    c.extend(["-drive", f"if=pflash,format=raw,readonly=on,file={code_path}"])
-
-        disk_bus = target_vm.get("disk_bus", "virtio")
-        disk_fmt = target_vm.get("disk_format") or ("raw" if disk_path.endswith((".raw", ".img")) else "qcow2")
-        if os.path.exists(disk_path):
-            c.extend(["-drive", f"file={disk_path},if={disk_bus},format={disk_fmt},id=drive0"])
-
-        iso_path = _confined(target_vm.get("iso_path"), _vm_iso_roots(), "file") if target_vm.get("iso_path") else None
-        if target_vm.get("iso_path") and not iso_path:
-            logger.warning(f"[VM-{vm_id}] ISO path is outside the ISO/storage folders; not attaching it.")
-        boot_order = target_vm.get("boot_order", "iso" if iso_path else "disk")
-        if iso_path and os.path.exists(iso_path):
-            if boot_order == "disk":
-                c.extend(["-cdrom", iso_path, "-boot", "order=cd,menu=on"])
-            else:
-                c.extend(["-cdrom", iso_path, "-boot", "order=dc,menu=on"])
-        else:
-            c.extend(["-boot", "order=c"])
-
-        # Video adapter & graphical display
-        video_adapter = target_vm.get("video_adapter") or target_vm.get("display_adapter") or "virtio-gpu"
-        if video_adapter == "none":
-            c.extend(["-vga", "none"])
-        elif video_adapter == "qxl":
-            c.extend(["-vga", "qxl"])
-        elif video_adapter == "vga":
-            c.extend(["-vga", "std"])
-        else:
-            c.extend(["-vga", "virtio"])
-
-        # Display and Console sockets
-        c.extend(["-vnc", f"127.0.0.1:{vnc_display}", "-display", "none"])
-        c.extend(["-chardev", f"socket,id=serial0,path={sock_path},server=on,wait=off", "-serial", "chardev:serial0"])
-        c.extend(
-            ["-chardev", f"socket,id=qmp0,path={qmp_path},server=on,wait=off", "-mon", "chardev=qmp0,mode=control"]
-        )
-        # QEMU Guest Agent channel: lets qemu-guest-agent in the VM report its IPs.
-        c.extend(
-            [
-                "-chardev",
-                f"socket,id=qga0,path={qga_path},server=on,wait=off",
-                "-device",
-                "virtio-serial-pci,id=qga-serial",
-                "-device",
-                "virtserialport,bus=qga-serial.0,chardev=qga0,name=org.qemu.guest_agent.0",
-            ]
-        )
-
-        # Network interface configuration
-        if use_bridge and not force_slirp:
-            target_vm["network_mode"] = "bridge"
-            target_vm["network_note"] = f"Bridged to {bridge_name}"
-            c.extend(
-                [
-                    "-netdev",
-                    f"bridge,id=net0,br={bridge_name},helper={bridge_helper}",
-                    "-device",
-                    f"virtio-net-pci,netdev=net0,mac={mac}",
-                ]
-            )
-        else:
-            target_vm["network_mode"] = "slirp"
-            target_vm["network_note"] = f"User-mode SLIRP (Host :{ssh_fwd_port} -> Guest :22)"
-            c.extend(
-                [
-                    "-netdev",
-                    f"user,id=net0,hostfwd=tcp::{ssh_fwd_port}-:22",
-                    "-device",
-                    f"virtio-net-pci,netdev=net0,mac={mac}",
-                ]
-            )
-
-        for idx_s, share in enumerate(target_vm.get("host_shares", [])):
-            hp = share.get("host_path")
-            raw_tag = str(share.get("mount_tag") or f"share{idx_s}")
-            tag = re.sub(r"[^a-zA-Z0-9_-]", "_", raw_tag)
-            mode = share.get("mode", "rw")
-            ro_flag = "readonly=on" if mode == "ro" else "readonly=off"
-            if hp and os.path.exists(hp):
-                if "," in hp or "\n" in hp or "\r" in hp:
-                    logger.warning(f"[VMs] Host share path contains prohibited characters: {hp}")
-                    continue
-                # Confinement: storage folders only, never the app's data folder (SEC-07)
-                safe_hp = _confined(hp, _vm_share_roots(), "dir")
-                if not safe_hp:
-                    logger.warning(f"[VMs] Host share path '{hp}' is outside permitted storage roots; omitting.")
-                    continue
-                c.extend(
-                    [
-                        "-fsdev",
-                        f"local,id=fsdev{idx_s},path={safe_hp},security_model=none,{ro_flag}",
-                        "-device",
-                        f"virtio-9p-pci,fsdev=fsdev{idx_s},mount_tag={tag}",
-                    ]
-                )
-
-        # Virtual TPM 2.0 (swtpm daemon socket) for Windows 11 and BitLocker readiness
-        if target_vm.get("tpm_enabled"):
-            c.extend(_prepare_vtpm(vm_id, vm_dir))
-
-        for idx_d, sdisk in enumerate(target_vm.get("secondary_disks", [])):
-            sd_path = sdisk.get("path")
-            if not sd_path:
-                sd_path = os.path.join(vm_dir, f"{sdisk.get('name', f'disk_{idx_d}')}.qcow2")
-                sdisk["path"] = sd_path
-            if not _confined(sd_path, _vm_disk_roots(), "file"):
-                logger.warning(f"[VM-{vm_id}] Secondary disk {idx_d + 1} is outside the VM/storage folders; skipping.")
-                continue
-            if not os.path.exists(sd_path):
-                try:
-                    qemu_img = shutil.which("qemu-img") or "/usr/bin/qemu-img"
-                    subprocess.run(
-                        [qemu_img, "create", "-f", "qcow2", sd_path, f"{sdisk.get('size_gb', 20)}G"], check=True
-                    )
-                except Exception:
-                    logger.debug("backend.api.vms._start_qemu._build_cmd: ignored error", exc_info=True)
-            safe_sd = _confined(sd_path, _vm_disk_roots(), "file")
-            sbus = str(sdisk.get("bus", "virtio"))
-            sfmt = str(sdisk.get("format") or ("raw" if str(sd_path).endswith((".raw", ".img")) else "qcow2"))
-            if not safe_sd or sbus not in _DISK_BUSES or sfmt not in _DISK_FORMATS:
-                logger.warning(f"[VM-{vm_id}] Secondary disk {idx_d + 1} has unsafe settings; not attaching it.")
-                continue
-            sd_path = safe_sd
-            if os.path.exists(sd_path):
-                c.extend(["-drive", f"file={sd_path},if={sbus},format={sfmt},id=sdisk{idx_d}"])
-
-        # Host USB Passthrough Devices
-        usb_devices = target_vm.get("usb_passthrough", [])
-        if usb_devices:
-            if not os.path.exists("/dev/bus/usb") and os.path.exists("/host/dev/bus/usb"):
-                try:
-                    os.makedirs("/dev/bus", exist_ok=True)
-                    os.symlink("/host/dev/bus/usb", "/dev/bus/usb")
-                except OSError:
-                    pass
-            c.extend(["-device", "qemu-xhci,id=xhci"])
-            for idx_u, udev in enumerate(usb_devices):
-                raw_vid = str(udev.get("vendor_id", "")).strip().lower().replace("0x", "")
-                raw_pid = str(udev.get("product_id", "")).strip().lower().replace("0x", "")
-                if (
-                    raw_vid
-                    and raw_pid
-                    and re.match(r"^[0-9a-fA-F]{1,4}$", raw_vid)
-                    and re.match(r"^[0-9a-fA-F]{1,4}$", raw_pid)
-                ):
-                    c.extend(
-                        [
-                            "-device",
-                            f"usb-host,vendorid=0x{raw_vid},productid=0x{raw_pid},id=usb_pass_{idx_u}",
-                        ]
-                    )
-
-        # Host PCI / GPU Passthrough (VFIO-PCI); readiness is checked before launch.
-        for idx_p, pdev in enumerate(_sanitize_pci_list(target_vm.get("pci_passthrough"))):
-            c.extend(["-device", f"vfio-pci,host={pdev['slot']},id=vfio_pass_{idx_p}"])
-
-        affinity = target_vm.get("cpu_affinity")
-        if affinity and isinstance(affinity, list) and len(affinity) > 0:
-            aff_str = ",".join(str(int(x)) for x in affinity)
-            taskset_bin = shutil.which("taskset") or "/usr/bin/taskset"
-            if os.path.exists(taskset_bin):
-                c = [taskset_bin, "-c", aff_str] + c
-
-        return c
-
-    cmd = _build_cmd(force_slirp=False)
-    try:
-        proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
-        time.sleep(0.4)
-        if proc.poll() is not None:
-            _, err = proc.communicate()
-            err_msg = err.decode("utf-8", errors="replace").strip() if err else "process exited immediately"
-
-            # Fallback to SLIRP if bridge failed
-            if use_bridge:
-                logger.warning(
-                    f"Bridge network failed for VM '{target_vm['name']}'. Retrying with user-mode SLIRP: {err_msg}"
-                )
-                cmd = _build_cmd(force_slirp=True)
-                proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
-                time.sleep(0.4)
-                if proc.poll() is not None:
-                    _, err2 = proc.communicate()
-                    err_msg = err2.decode("utf-8", errors="replace").strip() if err2 else err_msg
-
-            if proc.poll() is not None:
-                logger.error(f"QEMU failed to start for VM '{target_vm['name']}': {err_msg}")
-                with open(err_log_path, "w", encoding="utf-8") as f:
-                    f.write(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] QEMU start failure:\n{err_msg}\n")
-                target_vm["last_error"] = err_msg
-                _LAST_QEMU_ERRORS[vm_id] = err_msg
-                return False, err_msg
-
-        _RUNNING_QEMU_PROCS[vm_id] = {
-            "proc": proc,
-            "pid": proc.pid,
-            "vnc_port": vnc_port,
-            "started_at": time.time(),
-        }
-        _LAST_QEMU_ERRORS.pop(vm_id, None)
-        with open(os.path.join(vm_dir, "qemu.pid"), "w") as f:
-            f.write(str(proc.pid))
-
-        if os.path.exists(err_log_path):
-            try:
-                os.remove(err_log_path)
-            except OSError:
-                pass
-        target_vm["last_error"] = None
-
-        t = threading.Thread(target=_drain_stderr, args=(proc, full_log_path, err_log_path, vm_id), daemon=True)
-        t.start()
-        _QMP_ENGINE.watch(vm_id)
-
-        return True, None
-    except Exception as e:
-        err_msg = str(e)
-        logger.error(f"Exception spawning QEMU for VM '{target_vm['name']}': {err_msg}")
-        with open(err_log_path, "w", encoding="utf-8") as f:
-            f.write(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] Exception starting QEMU: {err_msg}\n")
-        target_vm["last_error"] = err_msg
-        _LAST_QEMU_ERRORS[vm_id] = err_msg
-        return False, err_msg
-
-
-def _sync_cleanup_qemu_process(vm_id: str, force: bool = False):
-    """Terminates or kills the QEMU process and removes temporary sockets and PID files."""
-    entry = _RUNNING_QEMU_PROCS.pop(vm_id, None)
-    proc = entry.get("proc") if entry else None
-    pid = entry.get("pid") if entry else None
-
-    if not pid:
-        pid_file = os.path.join(DATA_DIR, "vms", vm_id, "qemu.pid")
-        if os.path.exists(pid_file):
-            try:
-                with open(pid_file) as f:
-                    pid = int(f.read().strip())
-            except Exception:
-                logger.debug("backend.api.vms._sync_cleanup_qemu_process: ignored error", exc_info=True)
-
-    if proc and proc.poll() is None:
-        if force:
-            proc.kill()
-        else:
-            proc.terminate()
-            try:
-                proc.wait(timeout=2.0)
-            except subprocess.TimeoutExpired:
-                proc.kill()
-
-    if pid:
-        sig = signal.SIGKILL if force else signal.SIGTERM
-        try:
-            os.kill(pid, sig)
-        except OSError:
-            pass
-
-    pid_file = os.path.join(DATA_DIR, "vms", vm_id, "qemu.pid")
-    if os.path.exists(pid_file):
-        try:
-            os.remove(pid_file)
-        except OSError:
-            pass
-
-    _forget_vm_ip(vm_id)
-    _QMP_ENGINE.close(vm_id)
-    for s in (f"/tmp/{vm_id}-serial.sock", f"/tmp/{vm_id}-qmp.sock", _qga_socket_path(vm_id)):
-        if os.path.exists(s):
-            try:
-                os.remove(s)
-            except OSError:
-                pass
-
-
-async def async_stop_qemu(vm_id: str, force: bool = False):
-    """Asynchronously stops the QEMU process without blocking the FastAPI event loop."""
-    if not force:
-        qmp_res = await asyncio.to_thread(_qmp_command, vm_id, "system_powerdown", None, 1.5)
-        if "return" in qmp_res:
-            logger.info(f"[VM-{vm_id}] ACPI powerdown signal sent via QMP.")
-            for _ in range(20):
-                await asyncio.sleep(0.1)
-                is_alive = await asyncio.to_thread(_is_qemu_process_alive, vm_id)
-                if not is_alive:
-                    break
-
-    await asyncio.to_thread(_sync_cleanup_qemu_process, vm_id, force=force)
-
-
-def _get_host_ip() -> str:
-    from backend.state import Z_STATE
-
-    return getattr(Z_STATE, "discovered_host_ip", None) or os.environ.get("HOST_IP") or "127.0.0.1"
 
 
 @router.get("/iommu-groups", dependencies=[Depends(require_scope("system:view", "storage:read"))])
@@ -2149,7 +685,7 @@ def get_host_iommu_groups():
                     devs.append(
                         {
                             "slot": pci_slot,
-                            "driver": (drv := _pci_device_driver(pci_slot)),
+                            "driver": (drv := vm_host._pci_device_driver(pci_slot)),
                             "vfio_ready": drv == "vfio-pci",
                             "vendor_id": vendor_id,
                             "device_id": device_id,
@@ -2168,7 +704,7 @@ def get_host_iommu_groups():
 
     return {
         "iommu_enabled": has_iommu and len(groups) > 0,
-        "vfio_available": _vfio_available(),
+        "vfio_available": vm_host._vfio_available(),
         "total_groups": len(groups),
         "groups": groups,
     }
@@ -2236,19 +772,19 @@ async def delete_virtual_machine_backup(backup_id: str):
 @router.get("/{vm_id}", dependencies=[Depends(require_scope("system:view", "storage:read"))])
 def get_vm_detail(vm_id: str):
     """Retrieves detailed virtual machine configuration, attachments, and runtime state."""
-    vms = _load_vms()
+    vms = vm_qemu._load_vms()
     target = next((v for v in vms if v["id"] == vm_id), None)
     if not target:
         raise HTTPException(status_code=404, detail="Virtual machine not found.")
 
-    vnc_port = _get_qemu_vnc_port(vms, vm_id)
+    vnc_port = vm_qemu._get_qemu_vnc_port(vms, vm_id)
     detail = dict(target)
     detail["vnc_port"] = vnc_port
-    detail["is_alive"] = _is_qemu_process_alive(vm_id)
+    detail["is_alive"] = vm_qemu._is_qemu_process_alive(vm_id)
     detail["last_error"] = target.get("last_error")
     detail["network_mode"] = target.get("network_mode", "slirp")
     ip = target.get("ip_address") or ""
-    host_ip = _get_host_ip()
+    host_ip = vm_host._get_host_ip()
     detail["connection_summary"] = {
         "vnc_uri": f"vnc://{host_ip}:{vnc_port}",
         "web_console": f"/api/vms/{vm_id}/console",
@@ -2265,13 +801,13 @@ def update_vm(
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
 ):
     """Updates virtual machine configuration (RAM, vCPUs, name, description, ISO path, boot order, autostart)."""
-    _validate_vm_inputs(req.secondary_disks, req.iso_path, req.host_shares)
-    vms = _load_vms()
+    vm_store._validate_vm_inputs(req.secondary_disks, req.iso_path, req.host_shares)
+    vms = vm_qemu._load_vms()
     target_vm = next((v for v in vms if v["id"] == vm_id), None)
     if not target_vm:
         raise HTTPException(status_code=404, detail="Virtual machine not found.")
 
-    is_running = _is_qemu_process_alive(vm_id) or target_vm.get("state") == "running"
+    is_running = vm_qemu._is_qemu_process_alive(vm_id) or target_vm.get("state") == "running"
 
     if req.name is not None and req.name.strip():
         new_name = req.name.strip()
@@ -2322,9 +858,9 @@ def update_vm(
     if req.usb_passthrough is not None:
         target_vm["usb_passthrough"] = req.usb_passthrough
     if req.pci_passthrough is not None:
-        target_vm["pci_passthrough"] = _sanitize_pci_list(req.pci_passthrough)
+        target_vm["pci_passthrough"] = vm_host._sanitize_pci_list(req.pci_passthrough)
 
-    _save_vms(vms)
+    vm_qemu._save_vms(vms)
     add_event("info", "VM Updated", f"VM '{target_vm['name']}' configuration updated.")
     return target_vm
 
@@ -2335,17 +871,17 @@ def get_vm_connection_info(
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
 ):
     """Returns multi-protocol access credentials (SSH, VNC, Web Console) for a target VM."""
-    vms = _load_vms()
+    vms = vm_qemu._load_vms()
     target_vm = next((v for v in vms if v["id"] == vm_id), None)
     if not target_vm:
         raise HTTPException(status_code=404, detail="Virtual machine not found.")
 
-    vnc_port = _get_qemu_vnc_port(vms, vm_id)
+    vnc_port = vm_qemu._get_qemu_vnc_port(vms, vm_id)
     ip = target_vm.get("ip_address") or ""
     ssh_port = target_vm.get("ssh_port") or (2220 + (vnc_port - 5900))
     is_iso_boot = bool(target_vm.get("iso_path"))
 
-    host_ip = _get_host_ip()
+    host_ip = vm_host._get_host_ip()
     ssh_cmd = ""
     if not is_iso_boot:
         if ip:
@@ -2376,7 +912,7 @@ def create_console_token(
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
 ):
     """Issues single-use ephemeral ticket for noVNC / serial console WebSocket streaming."""
-    vms = _load_vms()
+    vms = vm_qemu._load_vms()
     target_vm = next((v for v in vms if v["id"] == vm_id), None)
     if not target_vm:
         raise HTTPException(status_code=404, detail="Virtual machine not found.")
@@ -2490,11 +1026,11 @@ async def websocket_vm_console(websocket: WebSocket, vm_id: str):
     subprotocol = "binary" if "binary" in subprotocols else (subprotocols[0] if subprotocols else None)
     await websocket.accept(subprotocol=subprotocol)
 
-    vms = _load_vms()
+    vms = vm_qemu._load_vms()
     target = next((v for v in vms if v["id"] == vm_id), None)
-    vnc_port = _get_qemu_vnc_port(vms, vm_id)
-    if target and target.get("state") == "running" and not _is_qemu_process_alive(vm_id):
-        ok, err = await asyncio.to_thread(_start_qemu, target, vnc_port)
+    vnc_port = vm_qemu._get_qemu_vnc_port(vms, vm_id)
+    if target and target.get("state") == "running" and not vm_qemu._is_qemu_process_alive(vm_id):
+        ok, err = await asyncio.to_thread(vm_qemu._start_qemu, target, vnc_port)
         if not ok:
             await websocket.close(code=1011, reason=f"VM startup failed: {err}")
             return
@@ -2537,11 +1073,11 @@ async def websocket_vm_serial(websocket: WebSocket, vm_id: str):
 
     await websocket.accept()
 
-    vms = _load_vms()
+    vms = vm_qemu._load_vms()
     target = next((v for v in vms if v["id"] == vm_id), None)
-    if target and target.get("state") == "running" and not _is_qemu_process_alive(vm_id):
-        vnc_port = _get_qemu_vnc_port(vms, vm_id)
-        ok, err = await asyncio.to_thread(_start_qemu, target, vnc_port)
+    if target and target.get("state") == "running" and not vm_qemu._is_qemu_process_alive(vm_id):
+        vnc_port = vm_qemu._get_qemu_vnc_port(vms, vm_id)
+        ok, err = await asyncio.to_thread(vm_qemu._start_qemu, target, vnc_port)
         if not ok:
             await websocket.close(code=1011, reason=f"VM startup failed: {err}")
             return
@@ -2567,22 +1103,22 @@ async def execute_vm_action(
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
 ):
     """Executes lifecycle action on target VM: start, stop, restart, reboot, acpi_shutdown, pause, resume, force_off."""
-    vms = _load_vms()
+    vms = vm_qemu._load_vms()
     target_vm = next((v for v in vms if v["id"] == vm_id), None)
     if not target_vm:
         raise HTTPException(status_code=404, detail="Virtual machine not found.")
 
     action = req.action
     current_state = target_vm.get("state", "stopped")
-    vnc_port = _get_qemu_vnc_port(vms, vm_id)
+    vnc_port = vm_qemu._get_qemu_vnc_port(vms, vm_id)
 
     if action == "start":
-        _forget_vm_ip(vm_id)
-        ok, err_msg = await asyncio.to_thread(_start_qemu, target_vm, vnc_port)
+        vm_guest._forget_vm_ip(vm_id)
+        ok, err_msg = await asyncio.to_thread(vm_qemu._start_qemu, target_vm, vnc_port)
         if not ok:
             target_vm["state"] = "stopped"
             target_vm["last_error"] = err_msg
-            _save_vms(vms)
+            vm_qemu._save_vms(vms)
             raise HTTPException(
                 status_code=500,
                 detail=f"Failed to start virtual machine '{target_vm['name']}': {err_msg}",
@@ -2593,31 +1129,31 @@ async def execute_vm_action(
         if target_vm.get("iso_path"):
             target_vm["ip_address"] = ""
         else:
-            resolved_ip = _resolve_vm_ip_by_mac(target_vm.get("mac") or "")
+            resolved_ip = vm_guest._resolve_vm_ip_by_mac(target_vm.get("mac") or "")
             target_vm["ip_address"] = resolved_ip or target_vm.get("ip_address") or ""
 
     elif action == "stop":
-        await async_stop_qemu(vm_id, force=False)
+        await vm_qemu.async_stop_qemu(vm_id, force=False)
         target_vm["state"] = "stopped"
         target_vm["uptime_seconds"] = 0
 
     elif action == "acpi_shutdown":
-        qmp_res = await asyncio.to_thread(_qmp_command, vm_id, "system_powerdown")
+        qmp_res = await asyncio.to_thread(vm_qemu._qmp_command, vm_id, "system_powerdown")
         if "error" in qmp_res:
-            await async_stop_qemu(vm_id, force=False)
+            await vm_qemu.async_stop_qemu(vm_id, force=False)
         target_vm["state"] = "stopped"
         target_vm["uptime_seconds"] = 0
 
     elif action in ("restart", "reboot"):
-        qmp_res = await asyncio.to_thread(_qmp_command, vm_id, "system_reset")
+        qmp_res = await asyncio.to_thread(vm_qemu._qmp_command, vm_id, "system_reset")
         if "return" not in qmp_res:
-            await async_stop_qemu(vm_id, force=False)
+            await vm_qemu.async_stop_qemu(vm_id, force=False)
             await asyncio.sleep(0.5)
-            ok, err_msg = await asyncio.to_thread(_start_qemu, target_vm, vnc_port)
+            ok, err_msg = await asyncio.to_thread(vm_qemu._start_qemu, target_vm, vnc_port)
             if not ok:
                 target_vm["state"] = "stopped"
                 target_vm["last_error"] = err_msg
-                _save_vms(vms)
+                vm_qemu._save_vms(vms)
                 raise HTTPException(
                     status_code=500,
                     detail=f"Failed to restart VM '{target_vm['name']}': {err_msg}",
@@ -2627,20 +1163,20 @@ async def execute_vm_action(
 
     elif action == "pause":
         if current_state == "running":
-            await asyncio.to_thread(_qmp_command, vm_id, "stop")
+            await asyncio.to_thread(vm_qemu._qmp_command, vm_id, "stop")
             target_vm["state"] = "paused"
 
     elif action == "resume":
         if current_state == "paused":
-            await asyncio.to_thread(_qmp_command, vm_id, "cont")
+            await asyncio.to_thread(vm_qemu._qmp_command, vm_id, "cont")
             target_vm["state"] = "running"
 
     elif action == "force_off":
-        await async_stop_qemu(vm_id, force=True)
+        await vm_qemu.async_stop_qemu(vm_id, force=True)
         target_vm["state"] = "stopped"
         target_vm["uptime_seconds"] = 0
 
-    _save_vms(vms)
+    vm_qemu._save_vms(vms)
     add_event("info", "VM State Changed", f"VM '{target_vm['name']}' action '{action}' executed.")
     return {"status": "ok", "state": target_vm["state"]}
 
@@ -2675,7 +1211,7 @@ async def restart_vm(
 @router.get("/{vm_id}/error", dependencies=[Depends(require_scope("system:view", "storage:read"))])
 def get_vm_error(vm_id: str):
     """Returns the last recorded QEMU error or startup failure log for a virtual machine."""
-    vms = _load_vms()
+    vms = vm_qemu._load_vms()
     target_vm = next((v for v in vms if v["id"] == vm_id), None)
     if not target_vm:
         raise HTTPException(status_code=404, detail="Virtual machine not found.")
@@ -2701,12 +1237,12 @@ def get_vm_error(vm_id: str):
 @router.get("/{vm_id}/status", dependencies=[Depends(require_scope("system:view", "storage:read"))])
 def get_vm_qmp_status(vm_id: str):
     """Queries live QMP monitor socket for hypervisor execution state and vCPU threads."""
-    vms = _load_vms()
+    vms = vm_qemu._load_vms()
     target_vm = next((v for v in vms if v["id"] == vm_id), None)
     if not target_vm:
         raise HTTPException(status_code=404, detail="Virtual machine not found.")
 
-    is_alive = _is_qemu_process_alive(vm_id)
+    is_alive = vm_qemu._is_qemu_process_alive(vm_id)
     if not is_alive:
         return {
             "vm_id": vm_id,
@@ -2716,8 +1252,8 @@ def get_vm_qmp_status(vm_id: str):
             "running": False,
         }
 
-    qmp_status = _qmp_command(vm_id, "query-status")
-    qmp_cpus = _qmp_command(vm_id, "query-cpus-fast")
+    qmp_status = vm_qemu._qmp_command(vm_id, "query-status")
+    qmp_cpus = vm_qemu._qmp_command(vm_id, "query-cpus-fast")
 
     return {
         "vm_id": vm_id,
@@ -2732,18 +1268,18 @@ def get_vm_qmp_status(vm_id: str):
 @router.get("/{vm_id}/screenshot", dependencies=[Depends(require_scope("system:view", "storage:read"))])
 def get_vm_screenshot(vm_id: str):
     """Captures and returns a live graphical screendump of the VM via QMP screendump."""
-    vms = _load_vms()
+    vms = vm_qemu._load_vms()
     target_vm = next((v for v in vms if v["id"] == vm_id), None)
     if not target_vm:
         raise HTTPException(status_code=404, detail="Virtual machine not found.")
 
-    if not _is_qemu_process_alive(vm_id):
+    if not vm_qemu._is_qemu_process_alive(vm_id):
         raise HTTPException(status_code=400, detail="Cannot capture screenshot: VM is not running.")
 
     vm_dir = os.path.join(DATA_DIR, "vms", vm_id)
     ppm_path = os.path.join(vm_dir, "screen.ppm")
 
-    qmp_res = _qmp_command(vm_id, "screendump", {"filename": ppm_path})
+    qmp_res = vm_qemu._qmp_command(vm_id, "screendump", {"filename": ppm_path})
     if "error" in qmp_res:
         raise HTTPException(status_code=500, detail=f"QMP screendump failed: {qmp_res['error']}")
 
@@ -2780,7 +1316,7 @@ def resize_vm_disk(
     Expands a virtual machine virtual disk (qcow2/raw) using qemu-img resize.
     Dynamically notifies hypervisor via QMP block_resize if the VM is running.
     """
-    vms = _load_vms()
+    vms = vm_qemu._load_vms()
     target_vm = next((v for v in vms if v["id"] == vm_id), None)
     if not target_vm:
         raise HTTPException(status_code=404, detail="Virtual machine not found.")
@@ -2836,17 +1372,17 @@ def resize_vm_disk(
             except subprocess.CalledProcessError as e:
                 raise HTTPException(status_code=500, detail=f"qemu-img resize failed: {e.stderr or e}") from e
 
-    if _is_qemu_process_alive(vm_id):
+    if vm_qemu._is_qemu_process_alive(vm_id):
         new_bytes = req.new_size_gb * 1024 * 1024 * 1024
         device_tag = "drive0" if disk_index == 0 else f"sdisk{disk_index - 1}"
-        _qmp_command(vm_id, "block_resize", {"device": device_tag, "size": new_bytes})
+        vm_qemu._qmp_command(vm_id, "block_resize", {"device": device_tag, "size": new_bytes})
 
     if disk_index == 0:
         target_vm["disk_size_gb"] = req.new_size_gb
     else:
         target_vm["secondary_disks"][disk_index - 1]["size_gb"] = req.new_size_gb
 
-    _save_vms(vms)
+    vm_qemu._save_vms(vms)
     add_event(
         "info",
         "VM Disk Resized",
@@ -2872,7 +1408,7 @@ def delete_vm(
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
 ):
     """Deletes a virtual machine definition and cleans up its virtual disk directory."""
-    vms = _load_vms()
+    vms = vm_qemu._load_vms()
     target = next((v for v in vms if v["id"] == vm_id), None)
     if not target:
         raise HTTPException(status_code=404, detail="Virtual machine not found.")
@@ -2881,9 +1417,9 @@ def delete_vm(
         raise HTTPException(status_code=400, detail="Cannot delete a running virtual machine. Stop it first.")
 
     # Sync endpoint (runs in FastAPI's threadpool); a forced stop needs no ACPI wait.
-    _sync_cleanup_qemu_process(vm_id, force=True)
+    vm_qemu._sync_cleanup_qemu_process(vm_id, force=True)
     vms = [v for v in vms if v["id"] != vm_id]
-    _save_vms(vms)
+    vm_qemu._save_vms(vms)
     if purge_disks:
         vm_dir = os.path.join(DATA_DIR, "vms", vm_id)
         if os.path.exists(vm_dir):
@@ -2962,7 +1498,7 @@ def _list_qcow2_snapshots(disk_path: str) -> list[dict[str, Any]]:
 @router.get("/{vm_id}/snapshots", dependencies=[Depends(require_scope("system:view", "storage:read"))])
 async def get_vm_snapshots(vm_id: str):
     """Lists snapshots for target virtual machine with QCOW2 internal and saved metadata."""
-    vms = _load_vms()
+    vms = vm_qemu._load_vms()
     target_vm = next((v for v in vms if v["id"] == vm_id), None)
     if not target_vm:
         raise HTTPException(status_code=404, detail="Virtual machine not found.")
@@ -3006,19 +1542,21 @@ async def get_vm_snapshots(vm_id: str):
 @router.post("/{vm_id}/snapshots", dependencies=[Depends(require_scope("vms:manage", "system:config"))])
 async def create_vm_snapshot(vm_id: str, req: VmSnapshotCreateRequest):
     """Creates a live snapshot (savevm via QMP if running, qemu-img if stopped)."""
-    vms = _load_vms()
+    vms = vm_qemu._load_vms()
     target_vm = next((v for v in vms if v["id"] == vm_id), None)
     if not target_vm:
         raise HTTPException(status_code=404, detail="Virtual machine not found.")
 
     name = req.name.strip()
-    is_running = target_vm.get("state") == "running" and _is_qemu_process_alive(vm_id)
+    is_running = target_vm.get("state") == "running" and vm_qemu._is_qemu_process_alive(vm_id)
     vm_dir = os.path.join(DATA_DIR, "vms", vm_id)
     disk_path = target_vm.get("disk_path") or os.path.join(vm_dir, "disk.qcow2")
 
     if is_running:
         cmd_str = f"savevm {name}"
-        qmp_res = await asyncio.to_thread(_qmp_command, vm_id, "human-monitor-command", {"command-line": cmd_str}, 10.0)
+        qmp_res = await asyncio.to_thread(
+            vm_qemu._qmp_command, vm_id, "human-monitor-command", {"command-line": cmd_str}, 10.0
+        )
         if "error" in qmp_res:
             raise HTTPException(status_code=500, detail=f"QMP savevm failed: {qmp_res['error']}")
     else:
@@ -3056,19 +1594,21 @@ async def create_vm_snapshot(vm_id: str, req: VmSnapshotCreateRequest):
 )
 async def revert_vm_snapshot(vm_id: str, snapshot_name: str):
     """Reverts virtual machine state to a named snapshot."""
-    vms = _load_vms()
+    vms = vm_qemu._load_vms()
     target_vm = next((v for v in vms if v["id"] == vm_id), None)
     if not target_vm:
         raise HTTPException(status_code=404, detail="Virtual machine not found.")
 
     name = snapshot_name.strip()
-    is_running = target_vm.get("state") == "running" and _is_qemu_process_alive(vm_id)
+    is_running = target_vm.get("state") == "running" and vm_qemu._is_qemu_process_alive(vm_id)
     vm_dir = os.path.join(DATA_DIR, "vms", vm_id)
     disk_path = target_vm.get("disk_path") or os.path.join(vm_dir, "disk.qcow2")
 
     if is_running:
         cmd_str = f"loadvm {name}"
-        qmp_res = await asyncio.to_thread(_qmp_command, vm_id, "human-monitor-command", {"command-line": cmd_str}, 10.0)
+        qmp_res = await asyncio.to_thread(
+            vm_qemu._qmp_command, vm_id, "human-monitor-command", {"command-line": cmd_str}, 10.0
+        )
         if "error" in qmp_res:
             raise HTTPException(status_code=500, detail=f"QMP loadvm failed: {qmp_res['error']}")
     else:
@@ -3100,19 +1640,21 @@ async def revert_vm_snapshot(vm_id: str, snapshot_name: str):
 )
 async def delete_vm_snapshot(vm_id: str, snapshot_name: str):
     """Deletes a named snapshot."""
-    vms = _load_vms()
+    vms = vm_qemu._load_vms()
     target_vm = next((v for v in vms if v["id"] == vm_id), None)
     if not target_vm:
         raise HTTPException(status_code=404, detail="Virtual machine not found.")
 
     name = snapshot_name.strip()
-    is_running = target_vm.get("state") == "running" and _is_qemu_process_alive(vm_id)
+    is_running = target_vm.get("state") == "running" and vm_qemu._is_qemu_process_alive(vm_id)
     vm_dir = os.path.join(DATA_DIR, "vms", vm_id)
     disk_path = target_vm.get("disk_path") or os.path.join(vm_dir, "disk.qcow2")
 
     if is_running:
         cmd_str = f"delvm {name}"
-        qmp_res = await asyncio.to_thread(_qmp_command, vm_id, "human-monitor-command", {"command-line": cmd_str}, 10.0)
+        qmp_res = await asyncio.to_thread(
+            vm_qemu._qmp_command, vm_id, "human-monitor-command", {"command-line": cmd_str}, 10.0
+        )
         if "error" in qmp_res:
             logger.warning(f"QMP delvm warning: {qmp_res['error']}")
     else:

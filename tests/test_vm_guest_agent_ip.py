@@ -10,6 +10,8 @@ from unittest.mock import patch
 import pytest
 
 import backend.api.vms as vms
+import backend.services.vm_guest as vm_guest
+import backend.services.vm_qemu as vm_qemu
 
 IFACES = [
     {"name": "lo", "ip-addresses": [{"ip-address-type": "ipv4", "ip-address": "127.0.0.1"}]},
@@ -69,7 +71,7 @@ class FakeAgent:
 def agent_dir(monkeypatch):
     # AF_UNIX paths must stay short, so use a short temp dir.
     d = tempfile.mkdtemp(prefix="qga")
-    monkeypatch.setattr(vms, "_qga_socket_path", lambda vm_id: os.path.join(d, f"{vm_id}.sock"))
+    monkeypatch.setattr(vm_guest, "_qga_socket_path", lambda vm_id: os.path.join(d, f"{vm_id}.sock"))
     yield d
 
 
@@ -116,26 +118,26 @@ def test_silent_agent_times_out(agent_dir):
 
 
 def test_cached_ip_prefers_agent_then_arp(monkeypatch):
-    monkeypatch.setattr(vms, "_VM_IP_BACKGROUND", False)
+    monkeypatch.setattr(vm_guest, "_VM_IP_BACKGROUND", False)
     vms._forget_vm_ip("vmA")
     vm = {"id": "vmA", "mac": "52:54:00:aa:bb:cc", "state": "running"}
     with (
-        patch.object(vms, "_qga_guest_ipv4", return_value="192.0.2.50"),
-        patch.object(vms, "_resolve_vm_ip_by_mac", return_value="192.0.2.99"),
+        patch.object(vm_guest, "_qga_guest_ipv4", return_value="192.0.2.50"),
+        patch.object(vm_guest, "_resolve_vm_ip_by_mac", return_value="192.0.2.99"),
     ):
         assert vms._cached_vm_ip(vm) == "192.0.2.50"
 
     vms._forget_vm_ip("vmA")
     with (
-        patch.object(vms, "_qga_guest_ipv4", return_value=None),
-        patch.object(vms, "_resolve_vm_ip_by_mac", return_value="192.0.2.99"),
+        patch.object(vm_guest, "_qga_guest_ipv4", return_value=None),
+        patch.object(vm_guest, "_resolve_vm_ip_by_mac", return_value="192.0.2.99"),
     ):
         assert vms._cached_vm_ip(vm) == "192.0.2.99"
     vms._forget_vm_ip("vmA")
 
 
 def test_cached_ip_is_reused_until_ttl(monkeypatch):
-    monkeypatch.setattr(vms, "_VM_IP_BACKGROUND", False)
+    monkeypatch.setattr(vm_guest, "_VM_IP_BACKGROUND", False)
     vms._forget_vm_ip("vmB")
     vm = {"id": "vmB", "mac": "", "state": "running"}
     calls = []
@@ -144,7 +146,7 @@ def test_cached_ip_is_reused_until_ttl(monkeypatch):
         calls.append(vm_id)
         return "192.0.2.7"
 
-    with patch.object(vms, "_qga_guest_ipv4", side_effect=agent):
+    with patch.object(vm_guest, "_qga_guest_ipv4", side_effect=agent):
         assert vms._cached_vm_ip(vm) == "192.0.2.7"
         assert vms._cached_vm_ip(vm) == "192.0.2.7"
     assert calls == ["vmB"]
@@ -152,7 +154,7 @@ def test_cached_ip_is_reused_until_ttl(monkeypatch):
 
 
 def test_list_vms_overlays_live_ip_for_running_vms(monkeypatch):
-    monkeypatch.setattr(vms, "_VM_IP_BACKGROUND", False)
+    monkeypatch.setattr(vm_guest, "_VM_IP_BACKGROUND", False)
     stored = [
         {"id": "r1", "state": "running", "mac": "m1", "ip_address": ""},
         {"id": "s1", "state": "stopped", "mac": "m2", "ip_address": "10.0.0.9"},
@@ -160,8 +162,8 @@ def test_list_vms_overlays_live_ip_for_running_vms(monkeypatch):
     for v in stored:
         vms._forget_vm_ip(v["id"])
     with (
-        patch.object(vms, "_load_vms", return_value=[dict(v) for v in stored]),
-        patch.object(vms, "_qga_guest_ipv4", return_value="192.0.2.21"),
+        patch.object(vm_qemu, "_load_vms", return_value=[dict(v) for v in stored]),
+        patch.object(vm_guest, "_qga_guest_ipv4", return_value="192.0.2.21"),
     ):
         out = vms.list_vms()
     assert out[0]["ip_address"] == "192.0.2.21"
