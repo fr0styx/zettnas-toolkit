@@ -447,6 +447,31 @@ To expose ZettNAS Toolkit behind Nginx, Caddy, Traefik, or Cloudflare Tunnel:
 
 ---
 
+## Local AI runtimes
+
+ZettAI talks to an Ollama or OpenVINO Model Server (OVMS) runtime. It looks for one only on this NAS: `OLLAMA_HOST` / `LLM_HOST` if you set them, containers named `zettnas-ollama`, `ollama`, `zettnas-ovms` or `ovms` on a shared Docker network, then the Docker host itself. It never sends prompts to your router or other machines on the LAN unless you point `OLLAMA_HOST` there.
+
+Neither runtime has a password. Don't publish their ports (11434, 8000) to the LAN; attach them to the ZettNAS network instead:
+
+```yaml
+services:
+  zettnas-ollama:
+    image: ollama/ollama
+    networks: [zettnas]
+    volumes:
+      - ./ollama:/root/.ollama
+    # no "ports:" section: only ZettNAS can reach it
+
+networks:
+  zettnas:
+    external: true
+    name: zettnas-toolkit_default   # the network your ZettNAS container is on
+```
+
+The Security Advisor warns when an AI container publishes a port on all interfaces. Web search and weather are off in chat unless you turn on **Web**, and answers that used outside services say so.
+
+---
+
 ## Upgrades & Maintenance
 
 ### In-App Self-Updater (Web Desktop)

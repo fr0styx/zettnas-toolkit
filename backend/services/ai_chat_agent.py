@@ -19,6 +19,7 @@ import asyncio
 import hashlib
 import html
 import ipaddress
+import contextvars
 import json
 import math
 import operator as op
@@ -2140,7 +2141,15 @@ def _normalize_web_query_and_topic(raw_query: str) -> Tuple[str, str]:
     return (topic, expanded_q)
 
 
+# Web access for the current chat turn (AI-06). Tools that leave the NAS check it,
+# whichever path calls them (keyword routing or the model's own tool calls).
+_WEB_ALLOWED: contextvars.ContextVar = contextvars.ContextVar("zettnas_ai_web_allowed", default=False)
+_WEB_BLOCKED_MSG = "Web access is off for this chat. Turn on Web to let ZettAI search the internet or get the weather."
+
+
 def tool_browse_internet(query: str, max_results: int = 5) -> Dict[str, Any]:
+    if not _WEB_ALLOWED.get():
+        return {"tool": "browse_internet", "status": "blocked", "error": _WEB_BLOCKED_MSG, "sources": []}
     """
     Searches live internet sources (Wikipedia full intro + Infobox fact parser,
     DuckDuckGo live HTML web search, DuckDuckGo Instant Answer API, and direct HTTPS URLs)
@@ -2798,7 +2807,26 @@ def _parse_single_wttr_response(data: Dict[str, Any], query_fallback: str) -> Di
     }
 
 
+def _external_services(tool_results: List[Dict[str, Any]]) -> List[str]:
+    """Services outside the NAS this turn actually contacted, for the "data left this device" note."""
+    out: List[str] = []
+    for tr in tool_results:
+        if tr.get("status") == "blocked":
+            continue
+        if tr.get("tool") == "get_weather":
+            out.append("wttr.in (weather)")
+        elif tr.get("tool") == "browse_internet":
+            out.append("web search")
+            for src in tr.get("sources") or []:
+                host = urllib.parse.urlparse(str(src.get("url") or "")).hostname
+                if host and host not in out:
+                    out.append(host)
+    return out[:8]
+
+
 def tool_get_weather(location: str) -> Dict[str, Any]:
+    if not _WEB_ALLOWED.get():
+        return {"tool": "get_weather", "status": "blocked", "error": _WEB_BLOCKED_MSG, "location": location}
     """
     Fetches live meteorological weather conditions with intelligent country disambiguation.
     Guarantees zero hard drive spin-ups (zero_disk_wakeups: True).
@@ -3201,28 +3229,10 @@ def _format_tool_trace_summary(tr: Dict[str, Any], tool_name: str) -> str:
 
 
 def _get_docker_host_ips() -> List[str]:
-    """Discovers likely host appliance and gateway IPs from inside the container."""
-    ips = ["172.17.0.1", "127.0.0.1"]
-    host_ip = _detected_host_ip()
-    if host_ip and host_ip not in ips:
-        ips.insert(1, host_ip)
-    try:
-        with open("/proc/net/route") as f:
-            for line in f:
-                fields = line.strip().split()
-                if len(fields) >= 3 and fields[1] == "00000000":
-                    gw_hex = fields[2]
-                    gw_ip = socket.inet_ntoa(struct.pack("<L", int(gw_hex, 16)))
-                    if gw_ip not in ips:
-                        ips.insert(0, gw_ip)
-    except Exception:
-        pass
-    env_host = os.environ.get("OLLAMA_HOST") or os.environ.get("LLM_HOST")
-    if env_host:
-        h = env_host.replace("http://", "").replace("https://", "").split(":")[0]
-        if h and h not in ips:
-            ips.insert(0, h)
-    return ips
+    """Hosts that may run this NAS's AI runtime; never a LAN router (AI-05, see ai_endpoints)."""
+    from backend.services.ai_endpoints import candidate_hosts
+
+    return candidate_hosts(_detected_host_ip())
 
 
 _ACTIVE_ENDPOINT_CACHE: Dict[str, Tuple[str, str, float]] = {}  # cache_key -> (runtime_kind, url, expire_timestamp)
@@ -5278,7 +5288,7 @@ def _build_structured_llm_context(tool_results: List[Dict[str, Any]]) -> str:
 def run_agentic_chat(
     message: str,
     history: Optional[List[Dict[str, Any]]] = None,
-    allow_web_search: bool = True,
+    allow_web_search: bool = False,
     allow_nas_tools: bool = True,
     model_override: Optional[str] = None,
     principal: Any = None,
@@ -5292,6 +5302,7 @@ def run_agentic_chat(
       3. Synthesizes the final response using the selected LLM (via local Ollama/OpenAI runtime
          when available, or the model-aware ReAct synthesis engine) and returns full `llm_telemetry`.
     """
+    _WEB_ALLOWED.set(bool(allow_web_search))
     t0 = time.perf_counter()
     clean_msg = str(message or "").strip()
     if not clean_msg:
@@ -6193,6 +6204,8 @@ def run_agentic_chat(
         "elapsed_ms": round(elapsed_ms, 1),
         "llm_telemetry": telemetry,
         "tools_called": tools_called_trace,
+        "external_services": _external_services(tool_results),
+        "web_allowed": bool(allow_web_search),
         "tool_names": tools_called,
         "tool_results": tool_results,
         "web_sources": web_sources,
@@ -6209,7 +6222,7 @@ def run_agentic_chat(
 async def stream_agentic_chat(
     message: str,
     history: Optional[List[Dict[str, Any]]] = None,
-    allow_web_search: bool = True,
+    allow_web_search: bool = False,
     allow_nas_tools: bool = True,
     model_override: Optional[str] = None,
     principal: Any = None,

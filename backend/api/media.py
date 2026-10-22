@@ -172,7 +172,7 @@ class HuggingFacePullRequest(BaseModel):
 class AiChatRequest(BaseModel):
     message: str = Field(..., min_length=1, max_length=2000)
     history: Optional[List[Dict[str, Any]]] = None
-    allow_web_search: bool = True
+    allow_web_search: bool = False  # web search and weather leave the NAS (AI-06)
     allow_nas_tools: bool = True
     model: Optional[str] = Field(default=None, max_length=256)
     conversation_id: Optional[str] = Field(default=None, max_length=64)

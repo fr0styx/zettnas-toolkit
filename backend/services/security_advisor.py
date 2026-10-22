@@ -94,10 +94,9 @@ def evaluate_security_posture(request: Optional[Request] = None) -> Dict[str, An
     if getattr(config, "ENABLE_PROXY_SSO", False):
         is_https = True
     elif request:
-        proto = request.headers.get("x-forwarded-proto", "").lower()
-        ssl_header = request.headers.get("x-forwarded-ssl", "").lower()
-        if proto == "https" or ssl_header == "on" or request.url.scheme == "https":
-            is_https = True
+        from backend.auth import request_is_https
+
+        is_https = request_is_https(request)  # forwarded headers only from trusted proxies
 
     checks.append(
         {
@@ -205,6 +204,35 @@ def evaluate_security_posture(request: Optional[Request] = None) -> Dict[str, An
             }
         )
 
+    # AI runtimes reachable from the LAN (AI-18, weight 10)
+    exposed = exposed_ai_runtimes()
+    checks.append(
+        {
+            "id": "ai_runtime_exposure",
+            "name": "AI Runtime Network Exposure",
+            "category": "AI",
+            "passed": not exposed,
+            "penalty": 10 if exposed else 0,
+            "severity": "medium" if exposed else "info",
+            "details": "AI runtimes are not published on the network"
+            if not exposed
+            else "Published to the network: " + ", ".join(exposed),
+        }
+    )
+    if exposed:
+        issues.append(
+            {
+                "id": "sec-issue-ai-runtime-exposure",
+                "title": "AI runtime open to the network without a password",
+                "severity": "medium",
+                "description": "Ollama / OpenVINO Model Server answer anyone on your network: they can read your prompts' context, "
+                "use your hardware, and pull or delete models. " + ", ".join(exposed),
+                "remediation": "Remove the published ports and put the AI container on the same Docker network as ZettNAS "
+                "(ZettNAS finds zettnas-ollama / zettnas-ovms by name), or publish to 127.0.0.1 only.",
+                "action_url": "https://github.com/fr0styx/zettnas-toolkit/blob/main/docs/INSTALLATION.md#local-ai-runtimes",
+            }
+        )
+
     # Total Score Calculation
     total_penalty = sum(c["penalty"] for c in checks)
     score = max(0, min(100, 100 - total_penalty))
@@ -233,3 +261,38 @@ def evaluate_security_posture(request: Optional[Request] = None) -> Dict[str, An
         "issues": issues,
         "evaluated_at": now,
     }
+
+
+_AI_IMAGE_HINTS = (
+    "ollama",
+    "openvino/model_server",
+    "ovms",
+    "vllm",
+    "localai",
+    "llama.cpp",
+    "llama-cpp",
+    "text-generation",
+)
+
+
+def exposed_ai_runtimes() -> List[str]:
+    """Containers that look like AI runtimes and publish a port on all interfaces."""
+    try:
+        from backend.services.container_mutator import _docker_request
+
+        st, containers = _docker_request("GET", "/containers/json")
+    except Exception:
+        return []
+    if st != 200 or not isinstance(containers, list):
+        return []
+    out: List[str] = []
+    for c in containers:
+        name = ((c.get("Names") or ["?"])[0] or "?").lstrip("/")
+        image = str(c.get("Image") or "").lower()
+        if not any(h in image or h in name.lower() for h in _AI_IMAGE_HINTS):
+            continue
+        for port in c.get("Ports") or []:
+            if port.get("PublicPort") and port.get("IP") in ("0.0.0.0", "::", "", None):
+                out.append(f"{name}:{port['PublicPort']}")
+                break
+    return out

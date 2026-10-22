@@ -12453,6 +12453,31 @@ function _buildAiActionProposalsHtml(toolsCalled) {
       </div>`).join('');
 }
 
+function _buildAiExternalNoteHtml(res) {
+  const ext = Array.isArray(res?.external_services) ? res.external_services : [];
+  if (!ext.length) return '';
+  return `<div class="ai-chat-external-note" style="font-size:10.5px; color:#fbbf24; padding-top:2px;" title="This answer used services outside your NAS">🌐 Data left this device: ${escapeHtml(ext.join(', '))}</div>`;
+}
+
+// Remember the Web toggle per browser (a convenience; the server default is off).
+function _initAiWebToggle() {
+  const el = document.getElementById('ai-chat-web-toggle');
+  if (!el || el.dataset.bound) return;
+  el.dataset.bound = '1';
+  try {
+    el.checked = localStorage.getItem('zettnas_ai_web') === '1';
+  } catch (e) { /* storage blocked */ }
+  el.addEventListener('change', () => {
+    try {
+      localStorage.setItem('zettnas_ai_web', el.checked ? '1' : '0');
+    } catch (e) { /* storage blocked */ }
+  });
+}
+if (typeof document !== 'undefined') {
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _initAiWebToggle);
+  else _initAiWebToggle();
+}
+
 function _buildAiAssistantMessageHtml(res, defaultModel) {
   const replyMd = res.reply || res.answer || 'No response generated.';
   const llmTel = res.llm_telemetry || {};
@@ -12588,6 +12613,7 @@ function _buildAiAssistantMessageHtml(res, defaultModel) {
       </div>
     </div>
     ${toolsBadgesHtml}
+    ${_buildAiExternalNoteHtml(res)}
     ${_buildAiActionProposalsHtml(toolsCalled)}
     ${folderBannerHtml}
     <div class="ai-chat-reply-body" style="font-size: 12px; color: #f1f5f9; line-height: 1.55;">
@@ -13223,7 +13249,8 @@ export async function sendAiChatMessage(rawMessage = null) {
     sendBtn.innerHTML = '<span><span class="ai-typing-dot" style="width:5px;height:5px;margin-right:3px;"></span></span> <span>Generating...</span>';
   }
 
-  const allowWeb = true;
+  // Web search and weather send the question outside the NAS: only when the user turns it on (AI-06).
+  const allowWeb = !!document.getElementById('ai-chat-web-toggle')?.checked;
   const allowTools = true;
   const activeModel = _aiLastActiveModel || 'qwen2.5:3b';
   const isThinking = isAiThinkingModel(activeModel);

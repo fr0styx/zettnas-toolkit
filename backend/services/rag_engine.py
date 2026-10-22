@@ -1019,20 +1019,9 @@ def _resolve_ollama_host(explicit_host: Optional[str] = None) -> str:
         _CACHED_OLLAMA_HOST = env_h.rstrip("/")
         return _CACHED_OLLAMA_HOST
 
-    candidates = ["127.0.0.1"]
-    try:
-        with open("/proc/net/route") as f:
-            for line in f:
-                parts = line.strip().split()
-                if len(parts) >= 3 and parts[1] == "00000000":
-                    gw = socket.inet_ntoa(struct.pack("<L", int(parts[2], 16)))
-                    if gw not in candidates:
-                        candidates.insert(0, gw)
-    except Exception:
-        pass
-    for extra in ("172.17.0.1", _detected_host_ip()):
-        if extra and extra not in candidates:
-            candidates.append(extra)
+    from backend.services.ai_endpoints import candidate_hosts
+
+    candidates = candidate_hosts(_detected_host_ip())  # never a LAN router (AI-05)
 
     for cand in candidates:
         try:
