@@ -75,3 +75,15 @@ body.theme-light {
 .zn-table { width: 100%; border-collapse: collapse; font-size: var(--zn-fs); color: var(--zn-text); }
 .zn-table th { text-align: left; color: var(--zn-text-muted); font-weight: 600; padding: 3px 6px; border-bottom: 1px solid var(--zn-line-strong); }
 .zn-table td { padding: 3px 6px; border-bottom: 1px solid var(--zn-line); }
+
+/* Pop-up windows (dialog-chrome.js) */
+/* A pop-up that leaves the rest of the page usable: no dimmed backdrop, clicks pass around it */
+.dlg-modeless {
+  position: fixed; inset: 0; z-index: var(--z-modal-backdrop, 9000);
+  display: none; pointer-events: none;
+}
+.dlg-modeless.open { display: block; }
+.dlg-modeless > .smart-modal-window { position: absolute; margin: 0; pointer-events: auto; }
+/* The title bar drags the window */
+.dialog-chrome-header { cursor: move; user-select: none; }
+.dialog-chrome-header :is(button, input, select, a) { cursor: pointer; }

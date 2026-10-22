@@ -42,6 +42,7 @@ import { initWidgets } from './components/widgets.js';
 import { initFileManager } from './components/file-manager.js';
 import { lazyWindow } from './lazy-windows.js';
 import { installWindowFocus } from './window-focus.js';
+import { installDialogChrome } from './dialog-chrome.js';
 import { initContainersManager } from './components/containers-manager.js';
 import { initContainerModal } from './components/container-modal.js';
 import { initStackModal } from './components/stack-modal.js';
@@ -283,6 +284,7 @@ document.addEventListener('DOMContentLoaded', () => {  if (window.location.searc
   setWindowRestorationComplete(false);
   initI18n();
   initDockSystem();
+  installDialogChrome();
   installWindowFocus(DockManager);
   initAuth();
   initUsersManagement();

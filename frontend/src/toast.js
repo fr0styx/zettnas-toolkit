@@ -75,6 +75,11 @@ export function showActionToast(msg, actionText, onAction, durationMs = 10000) {
   toast._dismissTimer = timer;
 }
 
+// A dialog that was dragged opens in its usual place next time
+function resetDraggedPosition(el) {
+  for (const prop of ["position", "left", "top", "right", "bottom", "margin", "transition"]) el.style.removeProperty(prop);
+}
+
 export function showConfirmToast(title, msg, onConfirm, onCancel, options = {}) {
   if (typeof msg === 'function') {
     options = onCancel || {};
@@ -204,6 +209,7 @@ function _showTopConfirm(title, msg, onConfirm, onCancel, options = {}) {
   if (!card) {
     card = document.createElement("div");
     card.id = "confirm-toast-modal";
+    card.dataset.dialogChrome = "alert"; // standard title bar and close button (dialog-chrome.js)
     document.body.appendChild(card);
   }
   if (card.dataset.mode !== "confirm") {
@@ -213,11 +219,11 @@ function _showTopConfirm(title, msg, onConfirm, onCancel, options = {}) {
     card.setAttribute("aria-labelledby", "confirm-toast-title");
     card.setAttribute("aria-describedby", "confirm-toast-msg");
     card.innerHTML = `
-      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; border-bottom: 1px solid rgba(255,255,255,0.08); background: rgba(14, 165, 233, 0.1);" id="confirm-toast-header-bg">
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; border-bottom: 1px solid rgba(255,255,255,0.08); background: rgba(14, 165, 233, 0.1);" id="confirm-toast-header-bg" data-dialog-header>
         <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: #0ea5e9;" id="confirm-toast-title">
           Confirm Action
         </div>
-        <button id="confirm-toast-close" style="background: transparent; border: none; color: #94a3b8; font-size: 18px; cursor: pointer; padding: 2px 6px; line-height: 1; border-radius: 4px;" title="Cancel">&times;</button>
+        <button type="button" id="confirm-toast-close" class="win-btn close-btn" title="Cancel" aria-label="Close"></button>
       </div>
       <div style="padding: 16px 20px;">
         <div id="confirm-toast-msg" style="font-size: 12.5px; color: #cbd5e1; line-height: 1.55; word-break: break-word;"></div>
@@ -301,6 +307,7 @@ function _showTopConfirm(title, msg, onConfirm, onCancel, options = {}) {
     ejectBtn.style.display = "none";
   }
 
+  resetDraggedPosition(card);
   backdrop.style.display = "block";
   card.style.display = "block";
   card.style.pointerEvents = "auto";
@@ -377,6 +384,7 @@ export function showPromptToast(title, msg, defaultVal, onConfirm, onCancel = nu
   if (!card) {
     card = document.createElement("div");
     card.id = "confirm-toast-modal";
+    card.dataset.dialogChrome = "alert"; // standard title bar and close button (dialog-chrome.js)
     document.body.appendChild(card);
   }
 
@@ -403,11 +411,11 @@ export function showPromptToast(title, msg, defaultVal, onConfirm, onCancel = nu
       : escapeHtml(msg || "");
 
   card.innerHTML = `
-    <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; border-bottom: 1px solid rgba(255,255,255,0.08); background: rgba(0, 240, 255, 0.08);" id="confirm-toast-header-bg">
+    <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; border-bottom: 1px solid rgba(255,255,255,0.08); background: rgba(0, 240, 255, 0.08);" id="confirm-toast-header-bg" data-dialog-header>
       <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--brand, #00f0ff);" id="confirm-toast-title">
         <span>${icon}</span> ${escapeHtml(title || "Rename")}
       </div>
-      <button id="confirm-toast-close" style="background: transparent; border: none; color: #94a3b8; font-size: 18px; cursor: pointer; padding: 2px 6px; line-height: 1; border-radius: 4px;" title="Cancel">&times;</button>
+      <button type="button" id="confirm-toast-close" class="win-btn close-btn" title="Cancel" aria-label="Close"></button>
     </div>
     <div style="padding: 16px 20px;">
       <div style="font-size: 12.5px; color: #cbd5e1; margin-bottom: 12px; line-height: 1.5;">${safePromptMsg}</div>
@@ -419,6 +427,7 @@ export function showPromptToast(title, msg, defaultVal, onConfirm, onCancel = nu
     </div>
   `;
 
+  resetDraggedPosition(card);
   backdrop.style.display = "block";
   card.style.display = "flex";
   card.style.pointerEvents = "auto";

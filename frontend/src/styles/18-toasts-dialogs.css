@@ -89,7 +89,6 @@
   display: flex !important;
   opacity: 1 !important;
   pointer-events: auto !important;
-  transform: translate(-50%, 0) !important;
 }
 
 

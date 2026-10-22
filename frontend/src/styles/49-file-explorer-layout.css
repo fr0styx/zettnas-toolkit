@@ -102,9 +102,11 @@
 /* Icon view cards: the grid cell wrapper takes no space of its own */
 .fm-card-cell { display: contents; }
 
-/* Share link pop-over: opens next to the button that was clicked, above every window */
-.fm-share-layer { position: fixed; inset: 0; z-index: 9500; display: none; }
+/* Share link window: opens next to the button that was clicked, above the explorer windows */
+.fm-share-layer { z-index: 9500; }
 .fm-share-layer .fm-share-popover {
-  position: absolute; margin: 0; box-sizing: border-box;
-  max-height: calc(100vh - 24px); overflow: auto;
+  width: 480px; height: auto; min-width: 0; min-height: 0;
+  max-width: calc(100vw - 24px); max-height: calc(100vh - 24px);
+  box-sizing: border-box; resize: none;
 }
+.fm-share-popover .fm-share-body { display: block; padding: 16px 20px; }

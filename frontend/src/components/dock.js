@@ -632,7 +632,7 @@ export function saveOpenWindowsState() {
     if (DockManager && DockManager.windows) {
       Object.keys(DockManager.windows).forEach((id) => {
         const win = DockManager.windows[id];
-        if (win && !win.closed) {
+        if (win && !win.closed && !win.transient) {
           stateObj.windows[id] = {
             minimized: !!win.minimized,
             open: true
@@ -823,6 +823,8 @@ export function restoreOpenWindowsState() {
 
 export function bringToFront(windowEl) {
   if (!windowEl) return;
+  // Confirmations and prompts sit in their own layer above their backdrop
+  if (windowEl.dataset?.dialogChrome === 'alert') return;
 
   const isDesktopApp = Boolean(
     windowEl.id === 'console-window' ||
@@ -1873,6 +1875,10 @@ export const DockManager = {
   },
 
   closeWindow(id) {
+    if (typeof this.windows[id]?.onClose === 'function') {
+      this.windows[id].onClose(); // a pop-up parked in the dock closes through its own close button
+      return;
+    }
     if (id === 'fm') {
       if (typeof window.closeAllFileManagerWindows === 'function') {
         window.closeAllFileManagerWindows();

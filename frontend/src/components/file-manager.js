@@ -3761,7 +3761,8 @@ export function placePopover(pop, anchorRect, gap = 8, margin = 12) {
 
 function shareAnchorRect(anchorEl) {
   const el = anchorEl || (_lastPointer && Date.now() - _lastPointer.t < 3000 ? _lastPointer.el?.closest('button, .fm-ctx-item, [data-act]') : null);
-  if (el && el.isConnected) return el.getBoundingClientRect();
+  const rect = el && el.isConnected ? el.getBoundingClientRect() : null;
+  if (rect && (rect.width || rect.height)) return rect; // a closed menu's item has no size
   if (_lastPointer && Date.now() - _lastPointer.t < 3000) {
     return { left: _lastPointer.x, right: _lastPointer.x, top: _lastPointer.y, bottom: _lastPointer.y };
   }
@@ -3776,21 +3777,20 @@ export function openShareLinkModal(path, fileName, anchorEl = null) {
     modal.id = 'modal-fm-share-link';
     document.body.appendChild(modal);
   }
-  // A transparent layer above every window: the pop-over sits on it, a click outside closes it
-  modal.className = 'fm-share-layer';
+  // A pop-up window that does not block the rest: it stays open until closed, like other windows
+  modal.className = 'dlg-modeless fm-share-layer';
 
   const safeName = escapeHtml(fileName || path.split('/').pop());
 
   modal.innerHTML = `
-    <div class="modal-dialog glassmorphic-panel fm-share-popover" role="dialog" aria-labelledby="fm-share-title" style="width: 480px; max-width: calc(100vw - 24px); padding: 24px; border-radius: 12px; box-shadow: 0 16px 40px rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.12); background: rgba(18, 25, 36, 0.95); backdrop-filter: blur(20px);">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 12px;">
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <span style="font-size: 20px;">🔗</span>
-          <h3 id="fm-share-title" style="margin: 0; font-size: 15px; font-weight: 700; color: #fff;">Public Share Link</h3>
+    <div class="smart-modal-window fm-share-popover" role="dialog" aria-labelledby="fm-share-title" data-dock-icon="#i-globe">
+      <div class="smart-modal-header">
+        <span class="smart-modal-title" id="fm-share-title"><span aria-hidden="true">🔗</span> Public Share Link</span>
+        <div class="os-window-controls">
+          <button type="button" id="fm-share-close" class="win-btn close-btn" title="Close" aria-label="Close"></button>
         </div>
-        <button id="fm-share-close" class="modal-close-btn" style="background: none; border: none; color: var(--muted); font-size: 18px; cursor: pointer;">✕</button>
       </div>
-
+      <div class="smart-modal-body fm-share-body">
       <div style="font-size: 12px; color: var(--muted); margin-bottom: 16px;">
         Generate an instant, secure download link for <strong style="color: #fff;">${safeName}</strong> that can be shared with anyone.
       </div>
@@ -3836,25 +3836,26 @@ export function openShareLinkModal(path, fileName, anchorEl = null) {
           <button id="fm-share-done" class="btn-pill-toggle" style="padding: 8px 18px; font-size: 12px;">Done</button>
         </div>
       </div>
+      </div>
     </div>
   `;
 
-  const onKey = (e) => {
-    if (e.key === 'Escape') closeModal();
-  };
   const closeModal = () => {
-    document.removeEventListener('keydown', onKey, true);
     modal.style.display = 'none';
     modal.classList.remove('open');
   };
+  // Esc closes it while it has focus
+  modal.querySelector('.fm-share-popover')?.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      e.stopPropagation();
+      closeModal();
+    }
+  });
 
   const closeBtn = modal.querySelector('#fm-share-close');
   if (closeBtn) closeBtn.onclick = closeModal;
   const cancelBtn = modal.querySelector('#fm-share-cancel');
   if (cancelBtn) cancelBtn.onclick = closeModal;
-  modal.onclick = (e) => {
-    if (e.target === modal) closeModal();
-  };
 
   const submitBtn = modal.querySelector('#fm-share-submit');
   if (submitBtn) {
@@ -3918,11 +3919,10 @@ export function openShareLinkModal(path, fileName, anchorEl = null) {
     };
   }
 
-  modal.style.display = 'block';
+  modal.style.display = 'flex';
   modal.classList.add('open');
   const pop = modal.querySelector('.fm-share-popover');
   if (pop) placePopover(pop, anchorRect);
-  document.addEventListener('keydown', onKey, true);
   modal.querySelector('#fm-share-expires')?.focus();
 }
 

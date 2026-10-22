@@ -70,19 +70,28 @@ export async function openShareAccessModal() {
   if (backdrop) backdrop.remove();
   backdrop = document.createElement('div');
   backdrop.id = 'share-access-modal';
-  backdrop.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:10050; display:flex; align-items:center; justify-content:center;';
+  backdrop.className = 'smart-modal-backdrop open';
+  backdrop.style.zIndex = '10050';
   backdrop.innerHTML = `
-    <div role="dialog" aria-modal="true" aria-labelledby="share-access-title" style="background:var(--panel, #11161d); border:1px solid rgba(255,255,255,0.12); border-radius:10px; padding:16px; max-width:min(900px, 94vw); max-height:86vh; overflow:auto; color:#fff;">
-      <div id="share-access-title" style="font-size:14px; font-weight:800; margin-bottom:10px;">Share access</div>
-      <div id="share-access-body">${buildShareAccessHtml(data, plain)}</div>
-      <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:14px;">
-        <button type="button" id="share-access-cancel" class="btn-pill-toggle" style="padding:6px 12px; font-size:11px;">Cancel</button>
-        <button type="button" id="share-access-save" class="btn-save-preset" style="padding:6px 14px; font-size:11.5px;">Save</button>
+    <div class="smart-modal-window share-access-window" role="dialog" aria-modal="true" aria-labelledby="share-access-title" style="width:min(900px, 94vw); height:auto; min-width:0; min-height:0; max-height:86vh;">
+      <div class="smart-modal-header">
+        <span class="smart-modal-title" id="share-access-title"><svg class="ic ic-sm"><use href="#i-users"/></svg> Share access</span>
+        <div class="os-window-controls">
+          <button type="button" id="share-access-close" class="win-btn close-btn" title="Close" aria-label="Close"></button>
+        </div>
+      </div>
+      <div class="smart-modal-body">
+        <div id="share-access-body">${buildShareAccessHtml(data, plain)}</div>
+        <div style="display:flex; justify-content:flex-end; gap:8px;">
+          <button type="button" id="share-access-cancel" class="btn-pill-toggle" style="padding:6px 12px; font-size:11px;">Cancel</button>
+          <button type="button" id="share-access-save" class="btn-save-preset" style="padding:6px 14px; font-size:11.5px;">Save</button>
+        </div>
       </div>
     </div>`;
   document.body.appendChild(backdrop);
   const close = () => backdrop.remove();
   backdrop.querySelector('#share-access-cancel').onclick = close;
+  backdrop.querySelector('#share-access-close').onclick = close;
   backdrop.addEventListener('click', (e) => { if (e.target === backdrop) close(); });
   backdrop.querySelector('#share-access-save').onclick = async () => {
     try {

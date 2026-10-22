@@ -1082,6 +1082,14 @@ export class FmContextMenu {
     this.menuEl = el;
 
     document.addEventListener('click', () => this.hide());
+    // Any press outside the menu closes it: dragging a window never produces a click
+    document.addEventListener('pointerdown', (e) => {
+      if (this.menuEl && !this.menuEl.contains(e.target)) this.hide();
+    }, true);
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') this.hide();
+    });
+    window.addEventListener('blur', () => this.hide());
     window.addEventListener('resize', () => this.hide());
   }
 
@@ -1113,7 +1121,7 @@ export class FmContextMenu {
       <div class="fm-ctx-group">
         ${hasSelection ? `<div class="fm-ctx-item" data-act="archive-create">🗜️ Create Archive (.zip)</div>` : ''}
         ${isZip ? `<div class="fm-ctx-item" data-act="archive-extract">📦 Extract Archive Here</div>` : ''}
-        ${isSingle && !isDir ? `<div class="fm-ctx-item" data-act="share">🔗 Share Link</div>` : ''}
+        ${isSingle ? `<div class="fm-ctx-item" data-act="share">🔗 Share Link…</div>` : ''}
         ${isSingle && !isDir ? `<div class="fm-ctx-item" data-act="checksum">🛡️ Compute SHA-256</div>` : ''}
       </div>
       <div class="fm-ctx-divider"></div>
