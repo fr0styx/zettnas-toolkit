@@ -497,17 +497,17 @@ def evaluate_model_hardware_fit(
 def build_llm_recommendations(
     accel: Dict[str, Any],
     ram_gb: float,
-    active_model: str = "hf.co/Kujira/Underdog-Saluki-27B-1.0-MTP-Abliterated-GGUF",
+    active_model: str = "qwen2.5:3b",
     custom_models: Optional[List[Dict[str, Any]]] = None,
     include_incompatible: bool = False,
     sort_by: str = "date",
-    min_release_year: Optional[int] = 2026,
+    min_release_year: Optional[int] = None,
     removed_models: Optional[List[str]] = None,
 ) -> Dict[str, Any]:
     """
     Generates industry-standard Hugging Face LLM & Multi-Modal model recommendations dynamically
     tailored to the NAS's detected onboard NPU, GPU, and system memory headroom, flagging any
-    models that do not fit the user's hardware. Filters out older pre-2026 models by default.
+    models that do not fit the user's hardware. Built-in entries are mainstream models with their licences (AI-16).
     """
     has_npu = bool(accel.get("has_npu"))
     has_dgpu = bool(accel.get("has_cuda") or accel.get("has_rocm"))
@@ -520,7 +520,7 @@ def build_llm_recommendations(
     )
     eff_ram = max(4.0, float(ram_gb or 16.0))
     safe_ai_ram_gb = round(eff_ram * 0.55, 1)
-    active_norm = str(active_model or "hf.co/Kujira/Underdog-Saluki-27B-1.0-MTP-Abliterated-GGUF").strip().lower()
+    active_norm = str(active_model or "qwen2.5:3b").strip().lower()
 
     if removed_models is None:
         try:
@@ -530,63 +530,31 @@ def build_llm_recommendations(
             removed_models = []
     removed_set = {str(r).lower().strip() for r in (removed_models or []) if r}
 
-    if min_release_year and min_release_year >= 2026:
-        if has_npu and has_gpu:
-            tier_headline = f"{npu_label} + {gpu_label} ({eff_ram:.1f} GB RAM)"
-            advisor_summary = (
-                "Dual-accelerator topology detected: Tier 1 NPU accelerates continuous multi-modal indexing & "
-                "INT4 edge models (<10W), while Tier 2 GPU runs 27B MTP frontier reasoning."
-            )
-            primary_rec = (
-                "hf.co/Kujira/Underdog-Saluki-27B-1.0-MTP-Abliterated-GGUF"
-                if eff_ram >= 16.0
-                else "hf.co/ConwayResearch/Underdog-Woof-4B-1.1"
-            )
-        elif has_npu:
-            tier_headline = f"{npu_label} ({eff_ram:.1f} GB RAM)"
-            advisor_summary = (
-                "Onboard NPU Tier 1 active: Underdog-Woof INT4 models (2B–4B) are recommended for maximum "
-                "tokens-per-second throughput and ultra-low thermal footprint."
-            )
-            primary_rec = "hf.co/ConwayResearch/Underdog-Woof-4B-1.1"
-        elif has_gpu:
-            tier_headline = f"{gpu_label} ({eff_ram:.1f} GB RAM)"
-            advisor_summary = "Hardware GPU Tier 2 active: Underdog Saluki 27B MTP GGUF models are recommended for fast local RAG synthesis."
-            primary_rec = (
-                "hf.co/Kujira/Underdog-Saluki-27B-1.0-MTP-Abliterated-GGUF"
-                if eff_ram >= 16.0
-                else "hf.co/ConwayResearch/Underdog-Woof-4B-1.1"
-            )
-        else:
-            tier_headline = f"CPU AVX2/NEON Execution ({eff_ram:.1f} GB RAM)"
-            advisor_summary = "Software CPU execution active: Underdog-Woof 2B ultra-low power model is recommended to preserve NAS responsiveness."
-            primary_rec = "hf.co/ConwayResearch/Underdog-Woof-2B-1.1"
+    if has_npu and has_gpu:
+        tier_headline = f"{npu_label} + {gpu_label} ({eff_ram:.1f} GB RAM)"
+        advisor_summary = (
+            "Dual-accelerator topology detected: Tier 1 NPU handles continuous <8W multi-modal indexing & "
+            "INT4/INT8 edge inference, while Tier 2 GPU accelerates 7B–14B conversational RAG synthesis."
+        )
+        primary_rec = "qwen2.5:7b" if eff_ram >= 16.0 else "qwen2.5:3b"
+    elif has_npu:
+        tier_headline = f"{npu_label} ({eff_ram:.1f} GB RAM)"
+        advisor_summary = (
+            "Onboard NPU Tier 1 active: INT4/INT8 quantized 1B–4B models and OpenVINO multi-modal embeddings "
+            "are recommended for maximum throughput and ultra-low thermal/power footprint."
+        )
+        primary_rec = "deepseek-r1-distill-qwen-1.5b-npu-ov"
+    elif has_gpu:
+        tier_headline = f"{gpu_label} ({eff_ram:.1f} GB RAM)"
+        advisor_summary = "Hardware GPU Tier 2 active: 3B–8B Q4_K_M models are recommended for fast local RAG synthesis and visual search."
+        primary_rec = "qwen2.5:7b" if eff_ram >= 16.0 else "qwen2.5:3b"
     else:
-        if has_npu and has_gpu:
-            tier_headline = f"{npu_label} + {gpu_label} ({eff_ram:.1f} GB RAM)"
-            advisor_summary = (
-                "Dual-accelerator topology detected: Tier 1 NPU handles continuous <8W multi-modal indexing & "
-                "INT4/INT8 edge inference, while Tier 2 GPU accelerates 7B–14B conversational RAG synthesis."
-            )
-            primary_rec = "qwen2.5:7b" if eff_ram >= 16.0 else "qwen2.5:3b"
-        elif has_npu:
-            tier_headline = f"{npu_label} ({eff_ram:.1f} GB RAM)"
-            advisor_summary = (
-                "Onboard NPU Tier 1 active: INT4/INT8 quantized 1B–4B models and OpenVINO multi-modal embeddings "
-                "are recommended for maximum throughput and ultra-low thermal/power footprint."
-            )
-            primary_rec = "deepseek-r1-distill-qwen-1.5b-npu-ov"
-        elif has_gpu:
-            tier_headline = f"{gpu_label} ({eff_ram:.1f} GB RAM)"
-            advisor_summary = "Hardware GPU Tier 2 active: 3B–8B Q4_K_M models are recommended for fast local RAG synthesis and visual search."
-            primary_rec = "qwen2.5:7b" if eff_ram >= 16.0 else "qwen2.5:3b"
-        else:
-            tier_headline = f"CPU AVX2/NEON Execution ({eff_ram:.1f} GB RAM)"
-            advisor_summary = (
-                "Software CPU execution active: Built-in lightweight 384-d embeddings and 1.5B–3B Q4 quantized models "
-                "are recommended to preserve NAS responsiveness."
-            )
-            primary_rec = "builtin-npu"
+        tier_headline = f"CPU AVX2/NEON Execution ({eff_ram:.1f} GB RAM)"
+        advisor_summary = (
+            "Software CPU execution active: Built-in lightweight 384-d embeddings and 1.5B–3B Q4 quantized models "
+            "are recommended to preserve NAS responsiveness."
+        )
+        primary_rec = "qwen2.5:3b" if eff_ram >= 8.0 else "builtin-npu"
 
     catalog: List[Dict[str, Any]] = [
         # --- Tier 1: NPU / Low-Power Edge Models (0.4B - 4B) ---
@@ -597,6 +565,7 @@ def build_llm_recommendations(
             "hf_url": "https://huggingface.co/OpenVINO/clip-vit-base-patch16-int8-ov",
             "name": "ZettAI Built-in Multi-Modal Engine (CLIP + MiniLM INT8)",
             "family": "OpenVINO / ONNX Native",
+            "license": "MIT (CLIP) / Apache-2.0 (MiniLM)",
             "category": "builtin_npu",
             "role": "Instant Semantic Search, Visual Photo Indexing & Extractive QA",
             "params": "0.4B INT8",
@@ -623,6 +592,7 @@ def build_llm_recommendations(
             "hf_url": "https://huggingface.co/Qwen/Qwen2.5-3B-Instruct-GGUF",
             "name": "Qwen2.5 3B Instruct (NPU INT4 Edge)",
             "family": "Qwen2.5",
+            "license": "Qwen Research License (non-commercial)",
             "category": "npu_edge_llm",
             "role": "Fast Knowledge QA, Summarization & Multilingual Chat (EN/ZH/DE/FR/ES)",
             "params": "3.1B",
@@ -649,6 +619,7 @@ def build_llm_recommendations(
             "hf_url": "https://huggingface.co/meta-llama/Llama-3.2-3B-Instruct",
             "name": "Llama 3.2 3B Instruct (NPU / iGPU Optimized)",
             "family": "Meta Llama 3.2",
+            "license": "Llama 3.2 Community License",
             "category": "npu_edge_llm",
             "role": "Low-Latency Conversational Assistant & File Tagging",
             "params": "3.2B",
@@ -675,6 +646,7 @@ def build_llm_recommendations(
             "hf_url": "https://huggingface.co/OpenVINO/Phi-3.5-mini-instruct-int4-ov",
             "name": "Phi-3.5 Mini 3.8B Instruct (128K Context)",
             "family": "Microsoft Phi-3.5",
+            "license": "MIT",
             "category": "npu_edge_llm",
             "role": "Long-Context PDF/Contract Analysis & Recipe Extraction on NPU/iGPU",
             "params": "3.8B",
@@ -701,6 +673,7 @@ def build_llm_recommendations(
             "hf_url": "https://huggingface.co/google/gemma-3-4b-it-qat-q4_0-gguf",
             "name": "Google Gemma 3 4B Instruct QAT (Multimodal Edge)",
             "family": "Google Gemma 3",
+            "license": "Gemma Terms of Use",
             "category": "npu_edge_llm",
             "role": "Quantization-Aware Vision & Document QA with 128K Context Window",
             "params": "4.0B VL",
@@ -728,6 +701,7 @@ def build_llm_recommendations(
             "hf_url": "https://huggingface.co/Qwen/Qwen2.5-7B-Instruct-GGUF",
             "name": "Qwen2.5 7B Instruct (iGPU / Hybrid Workhorse)",
             "family": "Qwen2.5",
+            "license": "Apache-2.0",
             "category": "gpu_balanced_llm",
             "role": "High-Accuracy Grounded RAG, Code & Complex Document Synthesis",
             "params": "7.6B",
@@ -754,6 +728,7 @@ def build_llm_recommendations(
             "hf_url": "https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct",
             "name": "Qwen2.5-VL 7B Vision-Language (NPU + iGPU Hybrid)",
             "family": "Qwen2.5-VL",
+            "license": "Apache-2.0",
             "category": "vision_multimodal",
             "role": "Deep Photo Scene Understanding, Receipt/Invoice OCR & Visual Q&A",
             "params": "7.8B VL",
@@ -782,6 +757,7 @@ def build_llm_recommendations(
             "hf_url": "https://huggingface.co/mistralai/Mistral-Nemo-Instruct-2407-GGUF",
             "name": "Mistral NeMo 12B Instruct (128K Context RAG)",
             "family": "Mistral AI / NVIDIA",
+            "license": "Apache-2.0",
             "category": "gpu_balanced_llm",
             "role": "Enterprise Document Synthesis, Legal/Financial Summarization & Tekken Tokenizer",
             "params": "12.2B",
@@ -808,6 +784,7 @@ def build_llm_recommendations(
             "hf_url": "https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-14B-GGUF",
             "name": "DeepSeek-R1 Distill Qwen 14B (Reasoning Workstation)",
             "family": "DeepSeek-R1",
+            "license": "MIT (Qwen 2.5 base licence also applies)",
             "category": "high_capacity_llm",
             "role": "Deep Chain-of-Thought Reasoning & Multi-Document Cross-Verification",
             "params": "14.8B",
@@ -828,116 +805,13 @@ def build_llm_recommendations(
             "recommended_for_gpu": True,
         },
         {
-            "id": "underdog-saluki-27b",
-            "ollama_tag": "hf.co/Kujira/Underdog-Saluki-27B-1.0-MTP-Abliterated-GGUF",
-            "hf_repo": "Kujira/Underdog-Saluki-27B-1.0-MTP-Abliterated-GGUF",
-            "hf_url": "https://huggingface.co/Kujira/Underdog-Saluki-27B-1.0-MTP-Abliterated-GGUF",
-            "name": "Underdog Saluki 27B 1.0 MTP Abliterated (IQ2 GGUF Edge)",
-            "family": "ConwayResearch Underdog",
-            "category": "high_capacity_llm",
-            "role": "ConwayResearch Frontier Reasoning & Multi-Token Prediction (MTP) Quantized by Kujira",
-            "params": "27B MTP",
-            "quantization": "IQ2 / 2-Bit GGUF",
-            "est_ram_gb": 8.6,
-            "min_ram_gb": 16.0,
-            "requires_dgpu_vram_gb": 0.0,
-            "created_at": "2026-10-09T09:12:10.000Z",
-            "release_date": "2026-10-09",
-            "release_date_str": "Oct 09, 2026",
-            "release_timestamp": 1791537130.0,
-            "target_accelerator": "GPU (Shared Aperture)" if has_gpu else "CPU",
-            "target_device": gpu_label if has_gpu else npu_label,
-            "est_speed": "~18–30 tok/s (iGPU/GPU)" if has_gpu else "~7–10 tok/s (CPU)",
-            "power_profile": "Balanced (~20–28W)",
-            "capabilities": ["deep_reasoning", "mtp_prediction", "rag_qa", "chat", "multilingual"],
-            "recommended_for_npu": False,
-            "recommended_for_gpu": True,
-        },
-        {
-            "id": "underdog-saluki-27b-mtp",
-            "ollama_tag": "hf.co/Kujira/Underdog-Saluki-27B-1.0-MTP-GGUF",
-            "hf_repo": "Kujira/Underdog-Saluki-27B-1.0-MTP-GGUF",
-            "hf_url": "https://huggingface.co/Kujira/Underdog-Saluki-27B-1.0-MTP-GGUF",
-            "name": "Underdog Saluki 27B 1.0 MTP GGUF",
-            "family": "ConwayResearch Underdog",
-            "category": "high_capacity_llm",
-            "role": "High-Throughput Multi-Token Prediction Conversational Engine",
-            "params": "27B MTP",
-            "quantization": "IQ2 / 2-Bit GGUF",
-            "est_ram_gb": 8.6,
-            "min_ram_gb": 16.0,
-            "requires_dgpu_vram_gb": 0.0,
-            "created_at": "2026-10-08T09:12:10.000Z",
-            "release_date": "2026-10-08",
-            "release_date_str": "Oct 08, 2026",
-            "release_timestamp": 1791450730.0,
-            "target_accelerator": "GPU (Shared Aperture)" if has_gpu else "CPU",
-            "target_device": gpu_label if has_gpu else npu_label,
-            "est_speed": "~18–30 tok/s (iGPU/GPU)",
-            "power_profile": "Balanced (~20–28W)",
-            "capabilities": ["deep_reasoning", "mtp_prediction", "rag_qa", "chat"],
-            "recommended_for_npu": False,
-            "recommended_for_gpu": True,
-        },
-        {
-            "id": "underdog-woof-4b",
-            "ollama_tag": "hf.co/ConwayResearch/Underdog-Woof-4B-1.1",
-            "hf_repo": "ConwayResearch/Underdog-Woof-4B-1.1",
-            "hf_url": "https://huggingface.co/ConwayResearch/Underdog-Woof-4B-1.1",
-            "name": "Underdog Woof 4B 1.1 (NPU Edge)",
-            "family": "ConwayResearch Underdog",
-            "category": "npu_edge_llm",
-            "role": "Ultra Low-Power Conversational Assistant & Document Tagging",
-            "params": "4.2B",
-            "quantization": "INT4 / Q4_K_M",
-            "est_ram_gb": 3.4,
-            "min_ram_gb": 8.0,
-            "requires_dgpu_vram_gb": 0.0,
-            "created_at": "2026-09-12T14:30:00.000Z",
-            "release_date": "2026-09-12",
-            "release_date_str": "Sep 12, 2026",
-            "release_timestamp": 1789223400.0,
-            "target_accelerator": "NPU" if has_npu else ("GPU" if has_gpu else "CPU"),
-            "target_device": npu_label if has_npu else gpu_label,
-            "est_speed": "~40–50 tok/s (NPU)" if has_npu else "~35 tok/s (GPU)",
-            "power_profile": "Low Power (< 10W)",
-            "capabilities": ["rag_qa", "chat", "fast_tagging", "multilingual"],
-            "recommended_for_npu": True,
-            "recommended_for_gpu": True,
-        },
-        {
-            "id": "underdog-woof-2b",
-            "ollama_tag": "hf.co/ConwayResearch/Underdog-Woof-2B-1.1",
-            "hf_repo": "ConwayResearch/Underdog-Woof-2B-1.1",
-            "hf_url": "https://huggingface.co/ConwayResearch/Underdog-Woof-2B-1.1",
-            "name": "Underdog Woof 2B 1.1 (Ultra-Low Power NPU)",
-            "family": "ConwayResearch Underdog",
-            "category": "npu_edge_llm",
-            "role": "Instantaneous Edge Reasoning & Real-Time Telemetry Analysis",
-            "params": "2.1B",
-            "quantization": "INT4 / Q4_K_M",
-            "est_ram_gb": 1.8,
-            "min_ram_gb": 4.0,
-            "requires_dgpu_vram_gb": 0.0,
-            "created_at": "2026-09-12T12:00:00.000Z",
-            "release_date": "2026-09-12",
-            "release_date_str": "Sep 12, 2026",
-            "release_timestamp": 1789214400.0,
-            "target_accelerator": "GPU" if has_gpu else "CPU",
-            "target_device": gpu_label if has_gpu else "Host CPU",
-            "est_speed": "~45 tok/s (GPU)" if has_gpu else "~20 tok/s (CPU)",
-            "power_profile": "Low Power (< 10W)",
-            "capabilities": ["chat", "extractive_qa", "fast_tagging"],
-            "recommended_for_npu": False,
-            "recommended_for_gpu": True,
-        },
-        {
             "id": "deepseek-r1-distill-qwen-1.5b-npu-ov",
             "ollama_tag": "DeepSeek-R1-Distill-Qwen-1.5B",
             "hf_repo": "OpenVINO/DeepSeek-R1-Distill-Qwen-1.5B-int4-gq-ov",
             "hf_url": "https://huggingface.co/OpenVINO/DeepSeek-R1-Distill-Qwen-1.5B-int4-gq-ov",
             "name": "DeepSeek-R1 1.5B Reasoning (OpenVINO NPU ~3W Silent)",
             "family": "DeepSeek-R1",
+            "license": "MIT (Qwen 2.5 base licence also applies)",
             "category": "npu_edge_llm",
             "role": "Ultra-Low Power (<3W) Hardware Copilot & Chain-of-Thought Reasoning on Intel AI Boost NPU",
             "params": "1.5B INT4-GQ",
@@ -958,87 +832,28 @@ def build_llm_recommendations(
             "recommended_for_gpu": False,
         },
         {
-            "id": "underdog-bark-3.0-pro",
-            "ollama_tag": "hf.co/ConwayResearch/Underdog-Bark-3.0-Pro",
-            "hf_repo": "ConwayResearch/Underdog-Bark-3.0-Pro",
-            "hf_url": "https://huggingface.co/ConwayResearch/Underdog-Bark-3.0-Pro",
-            "name": "Underdog Bark 3.0 Pro (Multimodal Voice & Audio)",
-            "family": "ConwayResearch Underdog",
-            "category": "vision_multimodal",
-            "role": "Real-Time Audio Synthesis, Voice Dialog & Neural Audio Transcription",
-            "params": "3.5B Multimodal",
-            "quantization": "INT4 / Q4_K_M",
-            "est_ram_gb": 3.2,
-            "min_ram_gb": 8.0,
-            "requires_dgpu_vram_gb": 0.0,
-            "created_at": "2026-10-15T18:00:00.000Z",
-            "release_date": "2026-10-15",
-            "release_date_str": "Oct 15, 2026",
-            "release_timestamp": 1792087200.0,
-            "target_accelerator": "GPU" if has_gpu else "CPU",
-            "target_device": gpu_label if has_gpu else "Host CPU",
-            "est_speed": "~40 tok/s (GPU)" if has_gpu else "~15 tok/s (CPU)",
-            "power_profile": "Low Power (< 15W)",
-            "capabilities": ["audio_synthesis", "speech", "multimodal", "chat"],
-            "recommended_for_npu": False,
-            "recommended_for_gpu": True,
-        },
-        {
-            "id": "google-embeddinggemma-2",
-            "ollama_tag": "hf.co/google/embeddinggemma-2",
-            "hf_repo": "google/embeddinggemma-2",
-            "hf_url": "https://huggingface.co/google/embeddinggemma-2",
-            "name": "Google EmbeddingGemma 2 (Multimodal Edge Embeddings)",
+            "id": "embeddinggemma",
+            "ollama_tag": "embeddinggemma",
+            "hf_repo": "google/embeddinggemma-300m",
+            "hf_url": "https://huggingface.co/google/embeddinggemma-300m",
+            "name": "Google EmbeddingGemma 300M (text embeddings)",
             "family": "Google Gemma",
+            "license": "Gemma Terms of Use",
             "category": "embeddings_rag",
-            "role": "SOTA 740M Multimodal & Text Embeddings with 8K Context & Matryoshka MRL for Zero-Spindown NAS RAG",
-            "params": "0.7B Multimodal",
-            "quantization": "FP16 / BF16 Safetensors",
+            "role": "Text embeddings for document search; 2,048-token input, Matryoshka sizes 768/512/256/128",
+            "params": "0.3B",
+            "quantization": "BF16",
             "est_ram_gb": 0.6,
             "min_ram_gb": 1.0,
             "requires_dgpu_vram_gb": 0.0,
-            "created_at": "2026-10-06T14:00:00.000Z",
-            "release_date": "2026-10-06",
-            "release_date_str": "Oct 06, 2026",
-            "release_timestamp": 1791288000.0,
+            "created_at": "2025-09-04T00:00:00Z",
+            "release_date": "2025-09-04",
+            "release_date_str": "Sep 04, 2025",
+            "release_timestamp": 1756944000.0,
             "target_accelerator": "NPU" if has_npu else ("GPU" if has_gpu else "CPU"),
             "target_device": npu_label if has_npu else gpu_label,
-            "est_speed": "~90–120 tok/s (NPU)" if has_npu else "~70 tok/s (GPU)",
-            "power_profile": "Ultra-Low Power (< 8W)",
-            "capabilities": [
-                "feature-extraction",
-                "embeddings",
-                "rag_qa",
-                "multimodal",
-                "semantic_search",
-                "code_search",
-                "matryoshka_mrl",
-            ],
-            "recommended_for_npu": True,
-            "recommended_for_gpu": True,
-        },
-        {
-            "id": "google-embeddinggemma-2-270m",
-            "ollama_tag": "hf.co/google/embeddinggemma-2-270m",
-            "hf_repo": "google/embeddinggemma-2-270m",
-            "hf_url": "https://huggingface.co/google/embeddinggemma-2",
-            "name": "Google EmbeddingGemma 2 270M (Ultra-Light Text & Code)",
-            "family": "Google Gemma",
-            "category": "embeddings_rag",
-            "role": "Ultra-Compact 191MB RAM Text & Code Embeddings with 8K Context for Low-Power NAS",
-            "params": "270M",
-            "quantization": "Q4_K_M / INT8 GGUF",
-            "est_ram_gb": 0.25,
-            "min_ram_gb": 0.5,
-            "requires_dgpu_vram_gb": 0.0,
-            "created_at": "2026-10-06T14:00:00.000Z",
-            "release_date": "2026-10-06",
-            "release_date_str": "Oct 06, 2026",
-            "release_timestamp": 1791288000.0,
-            "target_accelerator": "NPU" if has_npu else ("GPU" if has_gpu else "CPU"),
-            "target_device": npu_label if has_npu else gpu_label,
-            "est_speed": "~140+ tok/s (NPU)" if has_npu else "~110 tok/s (CPU/iGPU)",
-            "power_profile": "Minimal (< 4W)",
+            "est_speed": "",
+            "power_profile": "Low",
             "capabilities": [
                 "feature-extraction",
                 "embeddings",
@@ -1048,84 +863,6 @@ def build_llm_recommendations(
                 "matryoshka_mrl",
             ],
             "recommended_for_npu": True,
-            "recommended_for_gpu": True,
-        },
-        {
-            "id": "underdog-saluki-27b-iq2",
-            "ollama_tag": "hf.co/satoshifukimoto/Underdog-Saluki-27B-1.0-IQ2-mix-NInfer-v3",
-            "hf_repo": "satoshifukimoto/Underdog-Saluki-27B-1.0-IQ2-mix-NInfer-v3",
-            "hf_url": "https://huggingface.co/satoshifukimoto/Underdog-Saluki-27B-1.0-IQ2-mix-NInfer-v3",
-            "name": "Underdog Saluki 27B 1.0 IQ2-mix (NInfer-v3)",
-            "family": "satoshifukimoto",
-            "category": "high_capacity_llm",
-            "role": "Extreme Memory-Efficient IQ2 Quantization for 16GB+ Unified Host Memory",
-            "params": "27B VL",
-            "quantization": "IQ2 / 2-Bit GGUF",
-            "est_ram_gb": 8.4,
-            "min_ram_gb": 16.8,
-            "requires_dgpu_vram_gb": 0.0,
-            "created_at": "2026-10-09T11:20:00.000Z",
-            "release_date": "2026-10-09",
-            "release_date_str": "Oct 09, 2026",
-            "release_timestamp": 1791544800.0,
-            "target_accelerator": "GPU (Shared Aperture)" if has_gpu else "CPU",
-            "target_device": gpu_label if has_gpu else npu_label,
-            "est_speed": "~18–25 tok/s (iGPU/GPU)",
-            "power_profile": "Balanced (~22W)",
-            "capabilities": ["deep_reasoning", "rag_qa", "chat", "image-text-to-text"],
-            "recommended_for_npu": False,
-            "recommended_for_gpu": True,
-        },
-        {
-            "id": "underdog-27b-sharp",
-            "ollama_tag": "hf.co/blackfan23/Underdog-27B-1.1-Sharp",
-            "hf_repo": "blackfan23/Underdog-27B-1.1-Sharp",
-            "hf_url": "https://huggingface.co/blackfan23/Underdog-27B-1.1-Sharp",
-            "name": "Underdog 27B 1.1 Sharp (High Precision Edge)",
-            "family": "blackfan23",
-            "category": "high_capacity_llm",
-            "role": "Sharpened Edge Reasoning, Complex Code Analysis & Precise Citations",
-            "params": "27.2B",
-            "quantization": "Q3_K_M",
-            "est_ram_gb": 11.2,
-            "min_ram_gb": 24.0,
-            "requires_dgpu_vram_gb": 0.0,
-            "created_at": "2026-10-11T16:45:00.000Z",
-            "release_date": "2026-10-11",
-            "release_date_str": "Oct 11, 2026",
-            "release_timestamp": 1791737100.0,
-            "target_accelerator": "GPU" if has_gpu else "CPU",
-            "target_device": gpu_label if has_gpu else npu_label,
-            "est_speed": "~14–20 tok/s (iGPU Shared Memory)",
-            "power_profile": "Performance (~28W)",
-            "capabilities": ["deep_reasoning", "code", "rag_qa", "citations"],
-            "recommended_for_npu": False,
-            "recommended_for_gpu": True,
-        },
-        {
-            "id": "huihui-underdog-saluki-swift",
-            "ollama_tag": "hf.co/NateVoid/Huihui-Qwen3.8-27B-abliterated-Underdog-Saluki-Swift-1.5-IQ2-Ninfer",
-            "hf_repo": "NateVoid/Huihui-Qwen3.8-27B-abliterated-Underdog-Saluki-Swift-1.5-IQ2-Ninfer",
-            "hf_url": "https://huggingface.co/NateVoid/Huihui-Qwen3.8-27B-abliterated-Underdog-Saluki-Swift-1.5-IQ2-Ninfer",
-            "name": "Huihui Qwen3.8 Underdog Saluki Swift 1.5 (IQ2 Ninfer)",
-            "family": "NateVoid",
-            "category": "high_capacity_llm",
-            "role": "Swift 1.5 Abliterated Hybrid Architecture with High Token Throughput",
-            "params": "27B Swift",
-            "quantization": "IQ2 / 2-Bit GGUF",
-            "est_ram_gb": 8.5,
-            "min_ram_gb": 16.0,
-            "requires_dgpu_vram_gb": 0.0,
-            "created_at": "2026-10-16T10:15:00.000Z",
-            "release_date": "2026-10-16",
-            "release_date_str": "Oct 16, 2026",
-            "release_timestamp": 1792145700.0,
-            "target_accelerator": "GPU (Shared Aperture)" if has_gpu else "CPU",
-            "target_device": gpu_label if has_gpu else npu_label,
-            "est_speed": "~20–32 tok/s (iGPU/GPU)",
-            "power_profile": "Balanced (~22W)",
-            "capabilities": ["deep_reasoning", "chat", "rag_qa", "code"],
-            "recommended_for_npu": False,
             "recommended_for_gpu": True,
         },
     ]
@@ -1140,6 +877,7 @@ def build_llm_recommendations(
                     "hf_url": "https://huggingface.co/google/gemma-3-27b-it-qat-q4_0-gguf",
                     "name": "Google Gemma 3 27B Instruct QAT (Discrete GPU Class)",
                     "family": "Google Gemma 3",
+                    "license": "Gemma Terms of Use",
                     "category": "high_capacity_llm",
                     "role": "Heavy Multimodal Vision-Language & Research Reasoning (Requires 24GB+ dGPU)",
                     "params": "27.0B VL",
@@ -1166,6 +904,7 @@ def build_llm_recommendations(
                     "hf_url": "https://huggingface.co/Qwen/Qwen2.5-32B-Instruct-GGUF",
                     "name": "Qwen2.5 32B Instruct (24GB+ Discrete GPU Workstation)",
                     "family": "Qwen2.5",
+                    "license": "Apache-2.0",
                     "category": "high_capacity_llm",
                     "role": "Repository-Scale Code Architecture & Complex Multi-Hop Synthesis",
                     "params": "32.5B",
@@ -1192,6 +931,7 @@ def build_llm_recommendations(
                     "hf_url": "https://huggingface.co/meta-llama/Llama-3.3-70B-Instruct-GGUF",
                     "name": "Meta Llama 3.3 70B Instruct (48GB+ VRAM Server Class)",
                     "family": "Meta Llama 3.3",
+                    "license": "Llama 3.3 Community License",
                     "category": "high_capacity_llm",
                     "role": "Frontier-Grade Knowledge Synthesis (Exceeds Standard NAS Memory & NPU/iGPU)",
                     "params": "70.6B",
@@ -1218,6 +958,7 @@ def build_llm_recommendations(
                     "hf_url": "https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Llama-70B-GGUF",
                     "name": "DeepSeek-R1 Distill Llama 70B (48GB+ VRAM Server Class)",
                     "family": "DeepSeek-R1",
+                    "license": "MIT (Llama 3.3 base licence also applies)",
                     "category": "high_capacity_llm",
                     "role": "Frontier Chain-of-Thought Mathematical & Scientific Verification",
                     "params": "70.6B",
@@ -1244,6 +985,7 @@ def build_llm_recommendations(
                     "hf_url": "https://huggingface.co/meta-llama/Llama-3.1-405B-Instruct-FP8",
                     "name": "Meta Llama 3.1 405B Instruct FP8 (Datacenter Cluster Only)",
                     "family": "Meta Llama 3.1",
+                    "license": "Llama 3.1 Community License",
                     "category": "high_capacity_llm",
                     "role": "405-Billion Parameter Datacenter Frontier Model (Requires 8x H100 / 256GB+ VRAM)",
                     "params": "405B",
@@ -1259,32 +1001,6 @@ def build_llm_recommendations(
                     "target_device": "Requires 256GB+ VRAM / 512GB+ RAM",
                     "est_speed": "Cannot fit in NAS memory",
                     "power_profile": "Datacenter (> 1200W)",
-                    "capabilities": ["deep_reasoning", "frontier_llm"],
-                    "recommended_for_npu": False,
-                    "recommended_for_gpu": False,
-                },
-                {
-                    "id": "underdog-saluki-27b-bf16",
-                    "ollama_tag": "hf.co/rty813/Underdog-Saluki-27B-1.0-bf16",
-                    "hf_repo": "rty813/Underdog-Saluki-27B-1.0-bf16",
-                    "hf_url": "https://huggingface.co/rty813/Underdog-Saluki-27B-1.0-bf16",
-                    "name": "Underdog Saluki 27B 1.0 BF16 Unquantized (48GB+ dGPU)",
-                    "family": "rty813",
-                    "category": "high_capacity_llm",
-                    "role": "Full Precision Unquantized 27B (Exceeds Standard Edge Memory & NPU)",
-                    "params": "27.0B FP16",
-                    "quantization": "BF16 Native",
-                    "est_ram_gb": 54.0,
-                    "min_ram_gb": 96.0,
-                    "requires_dgpu_vram_gb": 48.0,
-                    "created_at": "2026-10-13T10:00:00.000Z",
-                    "release_date": "2026-10-13",
-                    "release_date_str": "Oct 13, 2026",
-                    "release_timestamp": 1791885600.0,
-                    "target_accelerator": "Multi-GPU (48GB+ VRAM)",
-                    "target_device": "Requires 48GB+ VRAM / 96GB+ RAM",
-                    "est_speed": "~22 tok/s (Dual 24GB GPU) · <0.5 tok/s (Swap/CPU)",
-                    "power_profile": "Datacenter Class (350W+)",
                     "capabilities": ["deep_reasoning", "frontier_llm"],
                     "recommended_for_npu": False,
                     "recommended_for_gpu": False,
@@ -1571,7 +1287,7 @@ def search_huggingface_models(
     query: str = "",
     limit: int = 12,
     sort_by: str = "date",
-    min_release_year: Optional[int] = 2026,
+    min_release_year: Optional[int] = None,
 ) -> Dict[str, Any]:
     """
     Searches the live https://huggingface.co/api/models database of release models

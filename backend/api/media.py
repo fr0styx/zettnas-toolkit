@@ -487,9 +487,9 @@ def update_watched_folders(
     "/ai/models/recommendations",
     dependencies=[Depends(require_scope("system:read", "shares:read", "storage:read"))],
 )
-def get_model_recommendations(
+async def get_model_recommendations(
     sort_by: str = Query(default="date", max_length=32),
-    min_year: Optional[int] = Query(default=2026),
+    min_year: Optional[int] = Query(default=None),
 ) -> Dict[str, Any]:
     """Returns hardware-aware LLM & Multi-Modal model recommendations based on onboard NPU, GPU, and RAM."""
     status = get_media_engine().get_status()
@@ -501,11 +501,23 @@ def get_model_recommendations(
     recs = build_llm_recommendations(
         accel=accel,
         ram_gb=ram_gb,
-        active_model=rag_cfg.get("active_model") or "hf.co/Kujira/Underdog-Saluki-27B-1.0-MTP-Abliterated-GGUF",
+        active_model=rag_cfg.get("active_model") or "qwen2.5:3b",
         custom_models=rag_cfg.get("custom_hf_models", []),
         sort_by=sort_by,
         min_release_year=min_year,
     )
+    # Say which catalog models are actually installed in the runtime (AI-03)
+    try:
+        from backend.services.model_installer import installed_models, is_installed
+
+        inst = await asyncio.to_thread(installed_models)
+        if inst.get("reachable"):
+            for m in recs.get("models", []):
+                tag = str(m.get("ollama_tag") or m.get("id") or "")
+                m["installed"] = tag == "builtin-npu" or is_installed(tag, inst["models"])
+        recs["runtime_reachable"] = bool(inst.get("reachable"))
+    except Exception:
+        pass
     return {
         "status": "ok",
         "acceleration": status["acceleration"],
@@ -543,7 +555,7 @@ def select_recommended_model(req: ModelSelectRequest) -> Dict[str, Any]:
 
     if is_embedding_only_model(model_tag) or (selected_entry and is_embedding_only_model(selected_entry)):
         updated_cfg = rag.update_config({"embedding_model": model_tag})
-        current_active = updated_cfg.get("active_model") or "hf.co/ConwayResearch/Underdog-Bark-3.0-Pro"
+        current_active = updated_cfg.get("active_model") or "qwen2.5:3b"
         return {
             "status": "ok",
             "active_model": current_active,
@@ -583,7 +595,7 @@ def search_hf_release_models(
     q: str = Query(default="", max_length=200),
     limit: int = Query(default=12, ge=1, le=30),
     sort_by: str = Query(default="date", max_length=32),
-    min_year: Optional[int] = Query(default=2026),
+    min_year: Optional[int] = Query(default=None),
 ) -> Dict[str, Any]:
     """Searches https://huggingface.co release models and evaluates hardware fit against NAS NPU/GPU/RAM."""
     return search_huggingface_models(query=q, limit=limit, sort_by=sort_by, min_release_year=min_year)
@@ -603,6 +615,48 @@ def pull_hf_release_model(req: HuggingFacePullRequest) -> Dict[str, Any]:
         return pull_huggingface_model(repo_id=req.repo_id, activate=req.activate)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
+
+
+class ModelInstallRequest(BaseModel):
+    model: str = Field(..., min_length=1, max_length=200)
+
+
+@router.get("/ai/models/installed", dependencies=[Depends(require_scope("system:read", "ai:manage", "system:config"))])
+async def list_installed_models() -> Dict[str, Any]:
+    """Models the Ollama runtime has installed, and copies of one model under another name (AI-16)."""
+    from backend.services.model_installer import installed_models
+
+    return await asyncio.to_thread(installed_models)
+
+
+@router.post("/ai/models/install", dependencies=[Depends(require_scope("system:config", "ai:manage"))])
+async def install_model(
+    req: ModelInstallRequest, principal: AuthenticatedPrincipal = Depends(get_current_principal)
+) -> Dict[str, Any]:
+    """Downloads a model into Ollama in the background; poll the job for progress (AI-03)."""
+    from backend.services.model_installer import start_install
+
+    try:
+        return start_install(req.model, requested_by=principal.username or "")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get("/ai/models/install/{job_id}", dependencies=[Depends(require_scope("system:config", "ai:manage"))])
+def get_install_job(job_id: str) -> Dict[str, Any]:
+    from backend.services.model_installer import get_job
+
+    job = get_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="No such install job.")
+    return job
+
+
+@router.post("/ai/models/install/{job_id}/cancel", dependencies=[Depends(require_scope("system:config", "ai:manage"))])
+def cancel_install_job(job_id: str) -> Dict[str, Any]:
+    from backend.services.model_installer import cancel_job
+
+    return {"cancelled": cancel_job(job_id)}
 
 
 @router.post(
@@ -1283,7 +1337,7 @@ async def run_ai_benchmark() -> Dict[str, Any]:
 
     rag = get_rag_engine()
     cfg = rag.get_config()
-    model = cfg.get("embedding_model") or "google/embeddinggemma-2"
+    model = cfg.get("embedding_model") or "embeddinggemma"
     target_dim = cfg.get("embedding_dim") or 768
 
     test_strings = [
@@ -1354,9 +1408,7 @@ async def trigger_ai_reindex(
     rag = get_rag_engine()
     cfg = rag.get_config()
     target_model = (
-        req.embedding_model
-        if (req and req.embedding_model)
-        else (cfg.get("embedding_model") or "google/embeddinggemma-2")
+        req.embedding_model if (req and req.embedding_model) else (cfg.get("embedding_model") or "embeddinggemma")
     )
     target_dim = req.embedding_dim if (req and req.embedding_dim) else (cfg.get("embedding_dim") or 768)
 

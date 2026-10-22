@@ -1039,7 +1039,7 @@ def _resolve_ollama_host(explicit_host: Optional[str] = None) -> str:
 
 def compute_neural_embedding_via_ollama(
     text: str,
-    model: str = "google/embeddinggemma-2",
+    model: str = "embeddinggemma",
     host: Optional[str] = None,
     timeout: float = 1.8,
     target_dim: Optional[int] = None,
@@ -1078,7 +1078,8 @@ def compute_neural_embedding_via_ollama(
         # True 8K token context budgeting: 32K chars for Latin/code, 12K chars for CJK
         cjk_chars = sum(1 for c in prompt_text if "\u4e00" <= c <= "\u9fff" or "\u3040" <= c <= "\u30ff")
         is_cjk_dominant = (cjk_chars / max(1, len(prompt_text))) > 0.3
-        max_chars = 12000 if is_cjk_dominant else 32000
+        # EmbeddingGemma reads 2,048 tokens; more text is silently cut by the runtime (AI-11)
+        max_chars = 2500 if is_cjk_dominant else 6000
         prompt_text = prompt_text[:max_chars]
     else:
         prompt_text = clean_text[:4000]
@@ -1204,7 +1205,7 @@ def compute_neural_embeddings_batch(
     if time.time() < _EMBED_BREAKER["until"]:
         return None
     target_host = _resolve_ollama_host(host)
-    limit = 32000 if "embeddinggemma" in model.lower() else 4000
+    limit = 6000 if "embeddinggemma" in model.lower() else 4000
     clean = [(t or " ").strip()[:limit] or " " for t in texts]
     out: List[bytes] = []
     for start in range(0, len(clean), max(1, batch_size)):
@@ -1244,7 +1245,7 @@ def compute_neural_embeddings_batch(
 
 def compute_multimodal_query_embedding(
     query: str,
-    model: str = "google/embeddinggemma-2",
+    model: str = "embeddinggemma",
     req_scenes: Optional[List[str]] = None,
     req_colors: Optional[List[str]] = None,
     ollama_host: Optional[str] = None,
@@ -3631,7 +3632,7 @@ class RagSearchEngine:
             "schedule_start": "01:00",
             "schedule_end": "06:00",
             "active_model": "qwen2.5:3b",
-            "embedding_model": "google/embeddinggemma-2",
+            "embedding_model": "embeddinggemma",
             "embedding_dim": 768,
             "embedding_provider": "ollama",
             "llm_endpoint": "",
@@ -3665,7 +3666,7 @@ class RagSearchEngine:
         if not default_cfg.get("active_model"):
             default_cfg["active_model"] = default_cfg.get("llm_model") or "qwen2.5:3b"
         if not default_cfg.get("embedding_model"):
-            default_cfg["embedding_model"] = "google/embeddinggemma-2"
+            default_cfg["embedding_model"] = "embeddinggemma"
         return default_cfg
 
     def update_config(self, updates: Dict[str, Any]) -> Dict[str, Any]:
@@ -4778,7 +4779,7 @@ class RagSearchEngine:
             actual_model = (
                 str(chunk_dim_row["embedding_model"])
                 if chunk_dim_row and chunk_dim_row["embedding_model"]
-                else str(cfg.get("embedding_model") or "google/embeddinggemma-2")
+                else str(cfg.get("embedding_model") or "embeddinggemma")
             )
 
             return {
@@ -4797,7 +4798,7 @@ class RagSearchEngine:
                 "sync_state": self._sync_state,
                 "db_path": self.db_path,
                 "db_size_bytes": db_size,
-                "embedding_model": cfg.get("embedding_model") or "google/embeddinggemma-2",
+                "embedding_model": cfg.get("embedding_model") or "embeddinggemma",
                 "embedding_dim": int(cfg.get("embedding_dim") or 768),
                 "actual_embedding_model": actual_model,
                 "actual_embedding_dim": actual_dim,
@@ -5563,7 +5564,7 @@ class RagSearchEngine:
                 parent_chunk_map = {int(pr["chunk_id"]): pr for pr in p_rows}
 
             cfg = self.get_config()
-            chosen_emb_model = cfg.get("embedding_model") or "google/embeddinggemma-2"
+            chosen_emb_model = cfg.get("embedding_model") or "embeddinggemma"
             target_dim = cfg.get("embedding_dim")
             ollama_host = cfg.get("ollama_host")
             intent_type, task_prefix = classify_query_task_intent(query or norm_path)
@@ -6100,7 +6101,7 @@ class RagSearchEngine:
         doc_meta_json = json.dumps(doc_meta)
 
         cfg = self.get_config()
-        configured_emb_model = cfg.get("embedding_model") or "google/embeddinggemma-2"
+        configured_emb_model = cfg.get("embedding_model") or "embeddinggemma"
         target_dim = cfg.get("embedding_dim")
         effective_file_emb_model = "zett_lexical_384d"
 
@@ -6450,7 +6451,7 @@ class RagSearchEngine:
         if eff_sort not in ("relevance", "keyword", "mtime"):
             eff_sort = "relevance"
 
-        chosen_emb_model = embedding_model or cfg.get("embedding_model") or "google/embeddinggemma-2"
+        chosen_emb_model = embedding_model or cfg.get("embedding_model") or "embeddinggemma"
         target_dim = cfg.get("embedding_dim")
         intent_type, task_prefix = classify_query_task_intent(query, modality_hint=effective_mode)
         effective_emb_model, query_vec = compute_multimodal_query_embedding(

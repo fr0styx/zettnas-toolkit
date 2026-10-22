@@ -865,8 +865,8 @@ describe('ZettAI — Multi-Modal Local RAG & Visual Search Frontend Suite', () =
     const container = document.createElement('div');
     container.innerHTML = `
       <select id="ai-embedding-model-select">
-        <option value="google/embeddinggemma-2">EmbeddingGemma 2 (768d)</option>
-        <option value="google/embeddinggemma-2-270m">EmbeddingGemma 2 270M (512d)</option>
+        <option value="embeddinggemma">EmbeddingGemma 300M</option>
+        <option value="nomic-embed-text">nomic-embed-text</option>
       </select>
       <select id="ai-mrl-dimension-select">
         <option value="768">768-dim</option>
@@ -920,13 +920,13 @@ describe('ZettAI — Multi-Modal Local RAG & Visual Search Frontend Suite', () =
 
     const embSelect = document.getElementById('ai-embedding-model-select');
     const mrlSelect = document.getElementById('ai-mrl-dimension-select');
-    expect(embSelect.value).toBe('google/embeddinggemma-2-270m');
+    expect(embSelect.value).toBe('embeddinggemma'); // legacy name maps to the real model
     expect(mrlSelect.value).toBe('512');
 
     // 3. Test changing embedding model & MRL dim
-    embSelect.value = 'google/embeddinggemma-2';
+    embSelect.value = 'nomic-embed-text';
     embSelect.dispatchEvent(new Event('change'));
-    expect(postSpy).toHaveBeenCalledWith('/api/ai/config', { embedding_model: 'google/embeddinggemma-2' });
+    expect(postSpy).toHaveBeenCalledWith('/api/ai/config', { embedding_model: 'nomic-embed-text' });
 
     mrlSelect.value = '256';
     mrlSelect.dispatchEvent(new Event('change'));

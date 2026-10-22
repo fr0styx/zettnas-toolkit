@@ -235,7 +235,7 @@ def test_rag_config_embedding_model_and_dimensions(temp_rag_engine):
     """Verifies get_config and update_config support embedding_model, embedding_dim, and provider."""
     cfg = temp_rag_engine.get_config()
     assert "embedding_model" in cfg
-    assert cfg["embedding_model"] == "google/embeddinggemma-2"
+    assert cfg["embedding_model"] == "embeddinggemma"
 
     updated = temp_rag_engine.update_config(
         {
@@ -491,7 +491,7 @@ def test_cosine_similarity_mrl_mismatch_fallback():
 
 
 def test_token_budgeting_8k_character_cap():
-    """Verifies English text up to 32,000 characters is preserved and CJK is safely capped at 12,000."""
+    """EmbeddingGemma reads 2,048 tokens: English is capped at 6,000 characters and CJK at 2,500 (AI-11)."""
     captured_payloads = []
 
     def mock_urlopen(req, timeout=None):
@@ -514,7 +514,7 @@ def test_token_budgeting_8k_character_cap():
             is_query=False,
         )
         assert len(captured_payloads) == 1
-        assert len(captured_payloads[0]["input"]) == 32000
+        assert len(captured_payloads[0]["input"]) == 6000
 
         # CJK document
         compute_neural_embedding_via_ollama(
@@ -523,7 +523,7 @@ def test_token_budgeting_8k_character_cap():
             is_query=False,
         )
         assert len(captured_payloads) == 2
-        assert len(captured_payloads[1]["input"]) == 12000
+        assert len(captured_payloads[1]["input"]) == 2500
 
 
 def test_relational_inserts_succeed_without_sqlite_vec(temp_rag_engine):

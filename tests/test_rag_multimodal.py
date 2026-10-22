@@ -791,68 +791,40 @@ def test_agentic_chat_factual_web_query_and_false_positive_suppression():
 
 def test_agentic_chat_self_identity_no_internet_search():
     """
-    Verifies that asking self-identity / creator questions ('Who created you?', 'Who is Underdog?')
-    never triggers blind DuckDuckGo web search (which would return Isaiah 43:1), and instead
-    directly answers with ZettAI Copilot, active model (Underdog-Saluki-27B by ConwayResearch/Kujira),
-    and local hardware execution context with 0 disk wakeups.
+    "Who created you?" is answered locally, never by a web search, and only with facts the NAS
+    can back up: no invented creators for models whose family isn't known (AI-02, AI-16).
     """
     from backend.services.ai_chat_agent import _is_self_identity_question, run_agentic_chat
 
-    # 1. Intent classifier tests
     assert _is_self_identity_question("who created you") is True
     assert _is_self_identity_question("Who created you?") is True
     assert _is_self_identity_question("who made you") is True
     assert _is_self_identity_question("who are you") is True
     assert _is_self_identity_question("what model are you") is True
-    assert _is_self_identity_question("who is underdog") is True
-    assert _is_self_identity_question("who created saluki") is True
     assert _is_self_identity_question("who created python") is False
     assert _is_self_identity_question("who created linux") is False
     assert _is_self_identity_question("who is the president of france") is False
 
-    # 2. Chat execution with Underdog model active
     with patch("backend.services.ai_chat_agent.tool_browse_internet") as mock_browse:
         mock_browse.side_effect = AssertionError("browse_internet should NEVER be called for self-identity questions!")
-
-        res = run_agentic_chat(
-            message="Who created you?",
-            allow_web_search=True,
-            allow_nas_tools=True,
-            model_override="hf.co/Kujira/Underdog-Saluki-27B-1.0-MTP-Abliterated-GGUF",
-        )
-
-        assert res["status"] == "ok"
-        # Tool check: browse_internet was skipped, get_system_telemetry was called
-        tool_names = [t["tool"] for t in res["tools_called"]]
-        assert "browse_internet" not in tool_names
-        assert "get_system_telemetry" in tool_names
-
-        # Content verification: mentions Underdog, ConwayResearch, Kujira, ZettAI, and ZettNAS
-        reply = res["reply"]
-        assert "ZettAI Copilot" in reply
-        assert "Underdog-Saluki-27B" in reply
-        assert "ConwayResearch" in reply
-        assert "Kujira" in reply
-        assert "ZettNAS" in reply
-        # Must NOT contain external religious text from DuckDuckGo
-        assert "Isaiah" not in reply
-        assert "Jacob" not in reply
-        assert "Israel" not in reply
-        assert res["llm_telemetry"]["llm_invoked"] is False
+        for model, creator in (("qwen2.5:7b", "Alibaba"), ("hf.co/SomeUser/Mystery-27B-GGUF", "SomeUser")):
+            res = run_agentic_chat(
+                message="Who created you?", allow_web_search=True, allow_nas_tools=True, model_override=model
+            )
+            assert res["status"] == "ok"
+            tool_names = [t["tool"] for t in res["tools_called"]]
+            assert "browse_internet" not in tool_names
+            reply = res["reply"]
+            assert "ZettAI" in reply and "ZettNAS" in reply
+            assert creator in reply
+            assert "Isaiah" not in reply
+            assert "0 hard drive wakeups" not in reply.lower()
 
 
 def test_huggingface_model_release_dates_and_sorting():
-    """
-    Verifies that Hugging Face catalog models have release dates, release timestamps,
-    and can be ordered by release date (newest first).
-    """
-    from backend.services.media_engine import (
-        _parse_hf_date,
-        build_llm_recommendations,
-        search_huggingface_models,
-    )
+    """Catalog models carry release dates and licences and sort newest first (AI-16)."""
+    from backend.services.media_engine import _parse_hf_date, build_llm_recommendations
 
-    # 1. Date parser verification
     disp, ts, iso = _parse_hf_date("2026-10-08T09:12:10.000Z")
     assert disp == "Oct 08, 2026"
     assert ts > 1790000000.0
@@ -862,117 +834,52 @@ def test_huggingface_model_release_dates_and_sorting():
     assert "Sep 19, 2024" in disp_simple
     assert ts_s > 1700000000.0
 
-    # 2. Recommendations sorted by date (newest first)
     accel = {"has_npu": True, "has_igpu": True, "active_tier": 1, "device_label": "Intel AI Boost NPU"}
-    recs_date = build_llm_recommendations(accel=accel, ram_gb=32.0, sort_by="date")
-    models = recs_date["models"]
+    models = build_llm_recommendations(accel=accel, ram_gb=32.0, sort_by="date")["models"]
     assert len(models) >= 8
-
-    # All models must have release_date_str and release_timestamp
     for m in models:
-        assert "release_date_str" in m
-        assert "release_timestamp" in m
-        assert isinstance(m["release_timestamp"], (int, float))
-
-    # Verification: 2026 release model ranks #1
-    assert "2026" in models[0]["release_date_str"]
-    assert any(name in models[0]["name"] for name in ("Underdog", "Saluki", "Huihui", "Bark", "Woof"))
-
-    # Timestamps should be monotonically decreasing (or equal)
+        assert "release_date_str" in m and isinstance(m["release_timestamp"], (int, float))
+        assert m.get("license"), m["id"]
     timestamps = [m["release_timestamp"] for m in models]
-    for i in range(len(timestamps) - 1):
-        assert timestamps[i] >= timestamps[i + 1]
-
-    # 3. Search HF models sorted by date
-    search_res = search_huggingface_models(query="Underdog", limit=10, sort_by="date")
-    assert search_res["status"] == "ok"
-    assert len(search_res["models"]) >= 1
-    assert "release_date_str" in search_res["models"][0]
+    assert timestamps == sorted(timestamps, reverse=True)
 
 
 def test_remove_models_released_before_2026():
     """
-    Verifies that all models released before 2026 (2024, 2025, or earlier)
-    are strictly removed by default from recommendations and catalog views.
+    The built-in catalog is mainstream models only: no "abliterated" (safety-removed) or
+    small community re-uploads, and mainstream models aren't hidden by a release-year filter (AI-16).
     """
-    from backend.services.media_engine import build_llm_recommendations, is_model_2026_or_newer
+    from backend.services.media_engine import build_llm_recommendations
 
-    accel = {
-        "has_npu": True,
-        "has_igpu": True,
-        "name": "Intel AI Boost NPU (/dev/accel/accel0)",
-        "secondary_gpu": "Intel Arc / QuickSync iGPU (/dev/dri/renderD128)",
-        "tier_number": 1,
-    }
-    recs = build_llm_recommendations(accel=accel, ram_gb=58.4, sort_by="date")
-    models = recs["models"]
-    assert len(models) >= 4
-
-    # Every single returned model must be 2026 or newer
-    for m in models:
-        assert is_model_2026_or_newer(m) is True
-        rel_str = str(m.get("release_date_str") or m.get("release_date") or "")
-        assert not any(yr in rel_str for yr in ("2020", "2021", "2022", "2023", "2024", "2025")), (
-            f"Pre-2026 model found: {m.get('name')} with date {rel_str}"
-        )
-        assert m.get("release_timestamp", 0) >= 1767225600.0 or "Recent" in rel_str
-
-    # Legacy pre-2026 models must NOT be present
-    model_ids = {m["id"] for m in models} | {m.get("hf_repo", "") for m in models}
-    for old_id in (
-        "builtin-npu",
-        "qwen2.5:3b",
-        "llama3.2:3b",
-        "phi3.5:3.8b",
-        "gemma3:4b",
-        "qwen2.5:7b",
-        "qwen2.5vl:7b",
-        "mistral-nemo:12b",
-        "deepseek-r1:14b",
-    ):
-        assert old_id not in model_ids
-
-    # Modern 2026 models MUST be present
-    assert any("underdog" in mid.lower() or "saluki" in mid.lower() for mid in model_ids)
-    assert any("woof" in mid.lower() for mid in model_ids)
+    accel = {"has_npu": True, "has_igpu": True, "name": "Intel AI Boost NPU", "tier_number": 1}
+    recs = build_llm_recommendations(accel=accel, ram_gb=58.4, sort_by="date", include_incompatible=True)
+    ids = {m["id"] for m in recs["models"]} | {m.get("ollama_tag", "") for m in recs["models"]}
+    for expected in ("qwen2.5:3b", "llama3.2:3b", "gemma3:4b", "qwen2.5:7b", "embeddinggemma"):
+        assert expected in ids
+    text = " ".join(
+        str(v) for m in recs["models"] for v in (m.get("id"), m.get("ollama_tag"), m.get("hf_repo"))
+    ).lower()
+    for banned in ("abliterated", "underdog", "saluki", "huihui"):
+        assert banned not in text
+    assert "abliterated" not in str(recs.get("primary_recommendation", "")).lower()
 
 
 def test_agentic_chat_local_autonomous_reasoning_and_coding_with_tools_disabled():
     """
-    Verifies that when the user disables Browse Internet and NAS Hardware Tools:
-      1. Asking life purpose returns the 4 Sovereign Pillars (Data Sovereignty, Hardware Guardianship, Local Intelligence).
-      2. Asking age returns the 2026 Genesis and Underdog-Saluki / Woof architecture.
-      3. Asking for the president of the Dominican Republic answers Luis Abinader and PRM directly.
-      4. Asking for a disk temperature script returns a standby-safe Python script with `smartctl -n standby`.
-      5. Asking for storage architecture compares ZFS vs Unraid vs Btrfs.
-      6. Zero generic placeholder sentences are returned.
+    With tools and web off and no language model, identity questions get a short factual answer
+    (no invented release dates or guarantees) and other questions say no model answered (AI-02).
     """
+    from backend import __version__
     from backend.services.ai_chat_agent import run_agentic_chat
 
-    # 1. Life Purpose Inquiry
-    res_purpose = run_agentic_chat(
-        message="What is your life purpose",
-        allow_web_search=False,
-        allow_nas_tools=False,
-    )
-    assert res_purpose["status"] == "ok"
-    assert "sovereign" in res_purpose["reply"].lower()
-    assert "data sovereignty" in res_purpose["reply"].lower()
-    assert "0 hard drive wakeups" in res_purpose["reply"].lower()
-    assert "I checked your NAS state and web sources" not in res_purpose["reply"]
+    for question in ("What is your life purpose", "How old are you?"):
+        res = run_agentic_chat(message=question, allow_web_search=False, allow_nas_tools=False)
+        assert res["status"] == "ok"
+        reply = res["reply"]
+        assert "ZettAI" in reply
+        assert "2.0" not in reply.replace(__version__, "")
+        assert "0 hard drive wakeups" not in reply.lower() and "sovereign" not in reply.lower()
 
-    # 2. Age Inquiry
-    res_age = run_agentic_chat(
-        message="How old are you?",
-        allow_web_search=False,
-        allow_nas_tools=False,
-    )
-    assert res_age["status"] == "ok"
-    assert "2026" in res_age["reply"]
-    assert "ZettNAS Toolkit 2.0" in res_age["reply"]
-    assert "I checked your NAS state and web sources" not in res_age["reply"]
-
-    # 3-5. Without a language model, ZettAI says so instead of returning canned "answers" (AI-02)
     for question in (
         "Who is the president of the Dominican Republic?",
         "Write a python script to check disk temperatures",
@@ -1405,34 +1312,17 @@ def test_api_rag_flush_endpoints(client, auth_headers, tmp_path):
 
 
 def test_search_huggingface_embeddinggemma_priority():
-    """
-    Verifies that Google EmbeddingGemma 2 is present in the curated catalog,
-    is prioritized when searching for 'embeddinggemma' or pasting the Hugging Face URL,
-    and correctly passes 2026+ release filters with hardware evaluation.
-    """
+    """EmbeddingGemma (300M, the real model) is in the catalog and found by name, URL or "embedding" (AI-16)."""
     from backend.services.media_engine import search_huggingface_models
 
-    # 1. Search for embeddinggemma
-    res_name = search_huggingface_models(query="embeddinggemma", limit=10, min_release_year=2026)
-    assert res_name["status"] == "ok"
-    assert len(res_name["models"]) >= 1
-    top_model = res_name["models"][0]
-    assert top_model["hf_repo"] == "google/embeddinggemma-2"
-    assert top_model["fits_hardware"] is True
-    assert top_model["hardware_warning"] is False
-    assert "release_date_str" in top_model
+    res_name = search_huggingface_models(query="embeddinggemma", limit=10)
+    assert res_name["status"] == "ok" and res_name["models"]
+    top = res_name["models"][0]
+    assert top["hf_repo"] == "google/embeddinggemma-300m"
+    assert top["fits_hardware"] is True and top["hardware_warning"] is False
 
-    # 2. Search by full Hugging Face URL
-    res_url = search_huggingface_models(
-        query="https://huggingface.co/google/embeddinggemma-2",
-        limit=10,
-        min_release_year=2026,
-    )
-    assert res_url["status"] == "ok"
-    assert len(res_url["models"]) >= 1
-    assert res_url["models"][0]["hf_repo"] == "google/embeddinggemma-2"
+    res_url = search_huggingface_models(query="https://huggingface.co/google/embeddinggemma-300m", limit=10)
+    assert res_url["models"] and res_url["models"][0]["hf_repo"] == "google/embeddinggemma-300m"
 
-    # 3. Search by 'embedding'
-    res_embed = search_huggingface_models(query="embedding", limit=10, min_release_year=2026)
-    assert res_embed["status"] == "ok"
-    assert any(m["hf_repo"] == "google/embeddinggemma-2" for m in res_embed["models"])
+    res_embed = search_huggingface_models(query="embedding", limit=10)
+    assert any(m["hf_repo"] == "google/embeddinggemma-300m" for m in res_embed["models"])

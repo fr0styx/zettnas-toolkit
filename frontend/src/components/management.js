@@ -10066,7 +10066,7 @@ export function renderAiLlmRecommendations(recData = {}, activeModel = '') {
   }
 
   const allModelsRaw = Array.isArray(recData.models) ? recData.models : [];
-  const currentActive = activeModel || recData.active_model || _aiLastActiveModel || 'hf.co/Kujira/Underdog-Saluki-27B-1.0-MTP-Abliterated-GGUF';
+  const currentActive = activeModel || recData.active_model || _aiLastActiveModel || 'qwen2.5:3b';
   _aiLastActiveModel = currentActive;
 
   // Filter out any models that do not fit the user's hardware from the catalog,
@@ -10237,6 +10237,8 @@ export function renderAiLlmRecommendations(recData = {}, activeModel = '') {
           <div style="display:flex; align-items:center; gap:5px;">
             ${isAct
               ? `<span style="font-size:10px; font-weight:800; color:${hasWarn ? '#fbbf24' : '#34d399'}; padding:2px 8px; border-radius:6px; background:${hasWarn ? 'rgba(245,158,11,0.18)' : 'rgba(16,185,129,0.18)'}; border:1px solid ${hasWarn ? 'rgba(245,158,11,0.45)' : 'rgba(16,185,129,0.4)'};">${hasWarn ? '⚠️ Active (Exceeds HW)' : '✓ Active'}</span>`
+              : (m.installed === false && m.ollama_tag && m.ollama_tag !== 'builtin-npu')
+                ? `<button type="button" class="btn-pill-toggle btn-ai-install-model" data-model-id="${escapeHtml(m.id)}" data-model-tag="${escapeHtml(m.ollama_tag)}" title="${escapeHtml(t('ai.install_model_title', 'Download this model into Ollama'))}" style="font-size:10px; font-weight:700; padding:2px 9px; background:rgba(250,204,21,0.18); border:1px solid rgba(250,204,21,0.48); color:#fde047; cursor:pointer;">⬇️ ${escapeHtml(t('ai.install_model', 'Install'))}</button>`
               : isLiveHfResult
                 ? `<button type="button" class="btn-pill-toggle btn-ai-pull-hf-card" data-hf-repo="${escapeHtml(hfRepo)}" style="font-size:10px; font-weight:700; padding:2px 9px; background:${hasWarn ? 'rgba(245,158,11,0.18)' : 'rgba(250,204,21,0.18)'}; border:1px solid ${hasWarn ? 'rgba(245,158,11,0.5)' : 'rgba(250,204,21,0.48)'}; color:${hasWarn ? '#fbbf24' : '#fde047'}; cursor:pointer;">${hasWarn ? '⚠️ Pull Anyway (Unfit)' : '⬇️ Pull from HF'}</button>`
                 : `<button type="button" class="btn-pill-toggle btn-ai-activate-model" data-model-id="${escapeHtml(m.id)}" style="font-size:10px; font-weight:700; padding:2px 9px; background:${hasWarn ? 'rgba(245,158,11,0.16)' : 'rgba(14,165,233,0.18)'}; border:1px solid ${hasWarn ? 'rgba(245,158,11,0.45)' : 'rgba(14,165,233,0.45)'}; color:${hasWarn ? '#fbbf24' : '#38bdf8'}; cursor:pointer;">${hasWarn ? '⚠️ Activate Anyway' : '⚡ Activate'}</button>`
@@ -10253,6 +10255,10 @@ export function renderAiLlmRecommendations(recData = {}, activeModel = '') {
       const mId = btn.dataset.modelId;
       if (mId) selectAiRecommendedModel(mId);
     });
+  });
+
+  gridEl.querySelectorAll('.btn-ai-install-model').forEach((btn) => {
+    btn.addEventListener('click', () => installAiModel(btn.dataset.modelTag, btn, btn.dataset.modelId));
   });
 
   gridEl.querySelectorAll('.btn-ai-pull-hf-card').forEach((btn) => {
@@ -10282,6 +10288,37 @@ export function renderAiLlmRecommendations(recData = {}, activeModel = '') {
       );
     });
   });
+}
+
+/** Downloads a model into Ollama and shows progress on the button; then offers Activate (AI-03). */
+export async function installAiModel(tag, btn = null, modelId = null, { pollMs = 1000 } = {}) {
+  if (!tag) return null;
+  const label = (txt) => { if (btn) btn.textContent = txt; };
+  try {
+    if (btn) btn.disabled = true;
+    let job = await api.post('/api/ai/models/install', { model: tag });
+    while (job && ['starting', 'downloading', 'verifying'].includes(job.state)) {
+      label(job.state === 'verifying' ? t('ai.install_verifying', 'Checking…') : `⬇️ ${Math.floor(job.percent || 0)}%`);
+      await new Promise((r) => setTimeout(r, pollMs));
+      job = await api.get(`/api/ai/models/install/${encodeURIComponent(job.id)}`);
+    }
+    if (job?.state === 'done') {
+      showToast(t('ai.install_done', `${tag} installed.`), 'success');
+      if (btn) {
+        btn.disabled = false;
+        btn.classList.remove('btn-ai-install-model');
+        btn.textContent = `⚡ ${t('ai.activate', 'Activate')}`;
+        btn.onclick = () => selectAiRecommendedModel(modelId || tag);
+      }
+    } else {
+      throw new Error(job?.error || job?.status || 'Install failed');
+    }
+    return job;
+  } catch (err) {
+    showToast(`${t('ai.install_failed', 'Could not install model')}: ${err.message}`, 'error');
+    if (btn) { btn.disabled = false; label(`⬇️ ${t('ai.install_model', 'Install')}`); }
+    return null;
+  }
 }
 
 export async function removeAiModel(modelId) {
@@ -11581,7 +11618,9 @@ export async function fetchAndRenderAiStatus() {
     // Hydrate Embedding Model & MRL Dimension selectors
     const embModelSelect = document.getElementById('ai-embedding-model-select');
     if (embModelSelect && (cfg.embedding_model || res.embedding_model)) {
-      embModelSelect.value = cfg.embedding_model || res.embedding_model || 'google/embeddinggemma-2';
+      const embVal = cfg.embedding_model || res.embedding_model || 'embeddinggemma';
+      // older installs saved the name "google/embeddinggemma-2" for the same model
+      embModelSelect.value = /embeddinggemma/i.test(embVal) ? 'embeddinggemma' : embVal;
     }
     const mrlDimSelect = document.getElementById('ai-mrl-dimension-select');
     if (mrlDimSelect && (cfg.embedding_dim !== undefined || res.embedding_dim !== undefined)) {

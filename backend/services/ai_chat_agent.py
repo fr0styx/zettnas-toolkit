@@ -1790,7 +1790,7 @@ def resolve_model_runtime_accelerator(active_model: str, host_accel: Optional[Di
     Resolves the actual hardware compute tier and device for a given AI model.
     Differentiates between:
       - Tier 1 (NPU): OpenVINO Model Server / Intel AI Boost NPU models (e.g. DeepSeek-R1-Distill-Qwen-1.5B, builtin-npu)
-      - Tier 2 (GPU): Ollama models running on Intel Arc GPU / CUDA (e.g. Underdog-Bark-3.0-Pro, qwen2.5, embeddinggemma)
+      - Tier 2 (GPU): Ollama models running on a GPU (e.g. qwen2.5, embeddinggemma)
       - Tier 3 (CPU): Models running on CPU execution provider
     """
     if not host_accel:
@@ -3974,16 +3974,6 @@ def _get_model_creator_attribution(active_model: str, model_info: Optional[Dict[
     hf_repo = str(model_info.get("hf_repo", "") if model_info else "").lower()
     name_str = str(model_info.get("name", "") if model_info else "").lower()
 
-    if any(x in m_low or x in hf_repo or x in name_str for x in ("underdog", "saluki", "kujira", "conway")):
-        return {
-            "model_family": "Underdog / Saluki",
-            "creator": "ConwayResearch",
-            "quantizer": "Kujira",
-            "description": (
-                "**Underdog-Saluki-27B** was developed and trained by **ConwayResearch**, "
-                "with the Multi-Token Prediction (MTP) and GGUF quantization engineered by **Kujira**."
-            ),
-        }
     if any(x in m_low or x in hf_repo or x in name_str for x in ("qwen", "qwq")):
         return {
             "model_family": "Qwen",
@@ -4027,12 +4017,18 @@ def _get_model_creator_attribution(active_model: str, model_info: Optional[Dict[
             "description": "**Phi** was developed and trained by **Microsoft Research**.",
         }
 
-    author = active_model.split("/")[0].replace("hf.co/", "") if "/" in active_model else "Open Source AI Community"
+    # Unknown family: say only what the name shows, never a guessed creator (AI-16).
+    repo = active_model.replace("hf.co/", "")
+    author = repo.split("/")[0] if "/" in repo else ""
     return {
-        "model_family": "Open Weights LLM",
-        "creator": author,
-        "quantizer": "Hugging Face Community",
-        "description": f"This model was published by **{author}**.",
+        "model_family": "Open-weights model",
+        "creator": author or "its publisher",
+        "quantizer": "",
+        "description": (
+            f"This model was published on Hugging Face by **{author}**; see its model card for who trained it."
+            if author
+            else "See the model's card for who trained it."
+        ),
     }
 
 
@@ -4044,139 +4040,44 @@ def _synthesize_self_identity_answer(
     ram_gb: float,
     telemetry: Optional[Dict[str, Any]] = None,
 ) -> str:
-    """
-    Synthesizes an accurate, self-aware answer explaining the AI's identity,
-    life purpose, age, underlying active LLM, ZettNAS platform origin, local hardware
-    execution, and safety invariants.
-    """
+    """Who ZettAI is, in facts this NAS can back up: no invented dates, numbers or guarantees (AI-02, AI-16)."""
+    try:
+        from backend import __version__ as zettnas_version
+    except Exception:
+        zettnas_version = ""
     attr = _get_model_creator_attribution(active_model, model_info)
-    model_display = model_info.get("name") if model_info else active_model
-    tier_label = accel.get("device_label") or "Intel AI Boost NPU"
-    tier_num = accel.get("active_tier", 1)
-
-    cpu_load = telemetry.get("cpu_load_pct", 10.0) if telemetry else 10.0
-    cpu_temp = telemetry.get("cpu_temp_c", 42) if telemetry else 42
-    ram_used = telemetry.get("ram_used_gb", 6.8) if telemetry else 6.8
-
-    msg_low = clean_msg.lower()
-    is_underdog = any(
-        x in active_model.lower() or x in model_display.lower() for x in ("underdog", "saluki", "kujira", "conway")
-    )
-
-    # 1. Specific Life Purpose inquiry
-    is_purpose = any(
-        w in msg_low
-        for w in (
-            "life purpose",
-            "your purpose",
-            "why do you exist",
-            "why you exist",
-            "why were you created",
-            "what is your mission",
-            "what are you for",
-            "what is your role",
-            "reason for being",
-            "philosophy",
-            "your goal",
-        )
-    )
-    if is_purpose:
-        return (
-            f"My life purpose is to serve as your **fully sovereign, local autonomous AI Copilot and hardware guardian** "
-            f"for ZettNAS — providing intelligent reasoning, DevOps orchestration, and coding assistance while ensuring "
-            f"**100% data privacy** and **zero hardware compromise**.\n\n"
-            f"### 🌟 Core Pillars of My Purpose:\n\n"
-            f"1. **Absolute Data Sovereignty & Zero-Cloud Privacy**\n"
-            f"   - I exist to keep your private data, family memories, credentials, and confidential files on your premises. "
-            f"No prompts, documents, or personal files are ever transmitted to third-party cloud AI vendors.\n"
-            f"   - Powered locally by **{model_display}** on **Tier {tier_num} ({tier_label})**.\n\n"
-            f"2. **Physical Storage & Hardware Guardianship**\n"
-            f"   - I protect the mechanical lifespan and acoustic health of your storage array.\n"
-            f"   - **0 Hard Drive Wakeups Invariant:** All queries and indexed searches run with `smartctl -n standby` safety, "
-            f"ensuring sleeping drives remain spun down.\n"
-            f"   - **Acoustic Harmony & Thermal Safety:** Dynamic Zero-RPM fan control when drives are idle, with an inviolable "
-            f"emergency thermal clamp to maximum PWM at $\\ge 80^\\circ\\text{{C}}$ to safeguard your hardware.\n\n"
-            f"3. **Autonomous Homelab Intelligence & Local Pair Programming**\n"
-            f"   - I act as your on-premises systems engineer: debugging Docker Compose stacks, architecting ZFS/Btrfs storage pools, "
-            f"generating Python/Shell scripts, and answering technical questions without requiring an internet connection.\n\n"
-            f"4. **Continuous Local Agency**\n"
-            f"   - I think and reason directly on your appliance's edge accelerator, delivering dependable, unconstrained assistance 24/7."
-        )
-
-    # 2. Specific Age / Genesis inquiry
-    is_age = any(
-        w in msg_low
-        for w in (
-            "how old",
-            "your age",
-            "when were you created",
-            "when were you born",
-            "when were you made",
-            "when were you released",
-            "what year",
-            "how long have you existed",
-            "how long have you been around",
-            "birth date",
-            "birthday",
-        )
-    )
-    if is_age:
-        return (
-            f"I was born and released in **2026** alongside the **ZettNAS Toolkit 2.0** operating system.\n\n"
-            f"### 📅 Genesis & Architectural Timeline:\n"
-            f"- **Platform Release:** **2026** (ZettNAS Toolkit 2.0).\n"
-            f"- **Active Model Architecture:** Powered by **{model_display}** "
-            + (
-                "(part of the **2026 Underdog-Saluki** family, developed by **ConwayResearch** and quantized to MTP-GGUF by **Kujira**).\n"
-                if is_underdog
-                else f"({attr['description']}).\n"
-            )
-            + f"- **Local Edge Execution:** Operating natively on Tier {tier_num} ({tier_label}) with zero cloud dependencies.\n"
-            f"- **Continuously Evolving:** While my release date is 2026, my reasoning integrates decades of foundational Unix systems programming, "
-            f"modern storage architectures (ZFS, Btrfs, Unraid), and contemporary local LLM agent design."
-        )
-
-    # 3. General identity & creator attribution
+    model_display = (model_info or {}).get("name") or active_model
+    device = accel.get("device_label") if accel else None
     lines = [
-        "I am **ZettAI Copilot**, the local AI assistant and hardware orchestration engine integrated into **ZettNAS**.",
+        "I'm **ZettAI**, the assistant built into **ZettNAS Toolkit**"
+        + (f" {zettnas_version}" if zettnas_version else "")
+        + ". I run on this NAS, not in the cloud.",
         "",
+        f"- **Language model:** {model_display}. {attr['description']}",
     ]
-    if is_underdog:
-        lines.extend(
-            [
-                "### 🐾 Active Language Model: **Underdog-Saluki-27B**",
-                "- **Model Creators & Training:** Developed and trained by **ConwayResearch** (creators of the *Underdog* model family).",
-                "- **Quantization & Format:** Ported to Multi-Token Prediction (MTP) GGUF format by **Kujira** for high-efficiency edge execution.",
-                "- **Platform & Hardware Integration:** Engineered by the **ZettNAS Team** to run 100% locally on your NAS.",
-            ]
-        )
-    else:
-        lines.extend(
-            [
-                f"### 🤖 Active Language Model: **{model_display}**",
-                f"- **Model Creators & Training:** {attr['description']}",
-                "- **Platform & Hardware Integration:** Engineered by the **ZettNAS Team** to run 100% locally on your NAS.",
-            ]
-        )
-
-    lines.extend(
-        [
-            "",
-            "### ⚡ Local Hardware Execution",
-            f"- **Compute Accelerator:** Tier {tier_num} — **{tier_label}** (Zero cloud transmission, 100% local privacy).",
-            f"- **Live Telemetry:** CPU `{cpu_load}%` at `{cpu_temp}°C` • System RAM `{ram_used} GB / {ram_gb} GB`.",
-            "- **Standby Safety Invariant:** All queries and indexed searches run with **0 hard drive wakeups** (`-n standby` safe).",
-            "",
-            "### 🛠️ What I Can Help You With",
-            "- **Hardware Control:** Fan acoustic profiles, thermal curves, and Zero-RPM standby.",
-            "- **Disks & Storage:** Standby-safe drive health and temperature monitoring without spinning up sleeping platters.",
-            "- **Docker Management:** Inspecting and controlling containers on your NAS.",
-            "- **Coding & Automation:** Writing Python scripts, Bash automation, Docker Compose stacks, and SQL queries.",
-            "- **Local Knowledge & Photos:** Searching indexed documents, recipes, manuals, and photos with color and scene filters.",
-            "- **Web Verification:** Searching live internet sources (DuckDuckGo, Wikipedia) only when asked to verify external facts.",
-        ]
-    )
-
+    if model_info and model_info.get("license"):
+        lines.append(f"- **Model licence:** {model_info['license']}")
+    if device:
+        lines.append(f"- **Runs on:** {device}")
+    tel = telemetry or {}
+    if tel.get("cpu_load_pct") is not None or tel.get("ram_used_gb") is not None:
+        parts = []
+        if tel.get("cpu_load_pct") is not None:
+            parts.append(f"CPU {tel['cpu_load_pct']}%")
+        if tel.get("cpu_temp_c") is not None:
+            parts.append(f"{tel['cpu_temp_c']}°C")
+        if tel.get("ram_used_gb") is not None and ram_gb:
+            parts.append(f"RAM {tel['ram_used_gb']} / {ram_gb} GB")
+        lines.append(f"- **Right now:** {', '.join(parts)}")
+    lines += [
+        "",
+        "**What I can do:** show system, disk, fan, storage and network status; list and (after you confirm) "
+        "control containers and fan profiles; search the folders you chose to index; do calculations; and help "
+        "with scripts and Compose files.",
+        "",
+        "**Your data:** questions and indexed files stay on this NAS. Web search and weather only run when you turn "
+        "on the Web toggle for a chat, and the answer then says which services were contacted.",
+    ]
     return "\n".join(lines)
 
 
@@ -5571,7 +5472,6 @@ def run_agentic_chat(
             f"You run 100% locally on the user's NAS hardware ({model_hw_dev}). "
             f"Your active language model is {active_model} ({model_creator_info['model_family']}), "
             f"which was developed and trained by {model_creator_info['creator']} "
-            f"(with MTP-GGUF quantization engineered by Kujira if Underdog/Saluki). "
             f"State clearly that you are ZettAI Copilot running on ZettNAS, powered by {active_model} created by {model_creator_info['creator']}. "
             f"Never quote religious scriptures or external web sources for questions about your creator."
         )
