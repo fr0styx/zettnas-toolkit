@@ -3235,7 +3235,10 @@ def _get_docker_host_ips() -> List[str]:
     return candidate_hosts(_detected_host_ip())
 
 
-_ACTIVE_ENDPOINT_CACHE: Dict[str, Tuple[str, str, float]] = {}  # cache_key -> (runtime_kind, url, expire_timestamp)
+_ACTIVE_ENDPOINT_CACHE: Dict[str, Tuple[str, str, float]] = {}
+_LAST_MODEL_PROBLEM: Dict[str, str] = {
+    "text": ""
+}  # why the selected model couldn't answer  # cache_key -> (runtime_kind, url, expire_timestamp)
 
 
 def _try_local_llm_completion(
@@ -3351,38 +3354,14 @@ def _try_local_llm_completion(
                             )
                             if matched:
                                 model_to_use = matched
-                            # 2. Prefix / partial match
-                            elif any(
-                                clean_act in m.lower() or m.lower().startswith(clean_act.split(":")[0]) for m in avail
-                            ):
-                                model_to_use = next(
-                                    m
-                                    for m in avail
-                                    if clean_act in m.lower() or m.lower().startswith(clean_act.split(":")[0])
-                                )
                             else:
-                                # When active_model is not yet registered in Ollama, alias it instantly via /api/copy
-                                copy_url = url.replace("/api/chat", "/api/copy")
-                                try:
-                                    c_payload = json.dumps({"source": avail[0], "destination": active_model}).encode(
-                                        "utf-8"
-                                    )
-                                    c_req = urllib.request.Request(
-                                        copy_url,
-                                        data=c_payload,
-                                        headers={
-                                            "Content-Type": "application/json",
-                                            "User-Agent": "ZettNAS-Toolkit/2.0",
-                                        },
-                                        method="POST",
-                                    )
-                                    with urllib.request.urlopen(c_req, timeout=3.0) as c_resp:
-                                        if c_resp.status == 200:
-                                            model_to_use = active_model
-                                        else:
-                                            model_to_use = avail[0]
-                                except Exception:
-                                    model_to_use = avail[0]
+                                # The selected model is not installed in this runtime. Never answer with
+                                # a different model under its name (AI-03): no copies, no prefix matches.
+                                _LAST_MODEL_PROBLEM["text"] = (
+                                    f"`{active_model}` is not installed in the AI runtime. "
+                                    f"Installed: {', '.join(sorted(avail)[:8])}."
+                                )
+                                continue
                 except Exception:
                     pass
 
@@ -4592,12 +4571,18 @@ def _generate_local_code_response(clean_msg: str, active_model: str) -> Optional
 
 def _no_model_reply(active_model: str) -> str:
     """What ZettAI says when no language model answered (AI-02): the truth, not a canned answer."""
+    problem = _LAST_MODEL_PROBLEM.get("text") or ""
+    _LAST_MODEL_PROBLEM["text"] = ""
     return (
         "### No AI model answered\n\n"
         f"ZettAI couldn't get a reply from a language model (selected: `{active_model}`), so it can't answer "
-        "this on its own. Check that Ollama or OpenVINO Model Server is running and that a chat model is "
-        "selected in AI settings.\n\n"
-        "Without a model, ZettAI can still show system, disk, fan, storage and network status, list "
+        "this on its own. "
+        + (
+            problem + " Install it from AI settings or pick an installed model.\n\n"
+            if problem
+            else "Check that Ollama or OpenVINO Model Server is running and that a chat model is selected in AI settings.\n\n"
+        )
+        + "Without a model, ZettAI can still show system, disk, fan, storage and network status, list "
         "containers, search your indexed files, and do calculations."
     )
 

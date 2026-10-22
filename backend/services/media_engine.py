@@ -13,6 +13,7 @@ import os
 import re
 import threading
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 from typing import Any, Dict, List, Optional, Tuple
@@ -1905,8 +1906,15 @@ def remove_llm_model(model_id: str) -> Dict[str, Any]:
     if "/" in tag_norm:
         new_removed.add(f"hf.co/{tag_norm}")
 
-    # 3. Best-effort deletion from Ollama if running
-    for base_url in ("http://127.0.0.1:11434", "http://localhost:11434"):
+    # 3. Delete from the Ollama runtime ZettNAS actually talks to (AI-17)
+    deleted_from_runtime = False
+    try:
+        from backend.services.rag_engine import _resolve_ollama_host
+
+        runtime_hosts = [_resolve_ollama_host()]
+    except Exception:
+        runtime_hosts = ["http://127.0.0.1:11434"]
+    for base_url in runtime_hosts:
         try:
             del_url = f"{base_url}/api/delete"
             for tag_candidate in (clean_id, tag_norm, norm_target):
@@ -1917,10 +1925,14 @@ def remove_llm_model(model_id: str) -> Dict[str, Any]:
                     headers={"Content-Type": "application/json", "User-Agent": "ZettNAS-Toolkit/2.0"},
                     method="DELETE",
                 )
-                with urllib.request.urlopen(d_req, timeout=1.5) as resp:
-                    if resp.status == 200:
-                        logger.info(f"[MediaEngine] Successfully deleted model {tag_candidate} from Ollama")
-                        break
+                try:
+                    with urllib.request.urlopen(d_req, timeout=5.0) as resp:
+                        if resp.status == 200:
+                            logger.info(f"[MediaEngine] Deleted model {tag_candidate} from Ollama at {base_url}")
+                            deleted_from_runtime = True
+                            break
+                except urllib.error.HTTPError:
+                    continue
         except Exception:
             pass
 
@@ -1966,6 +1978,7 @@ def remove_llm_model(model_id: str) -> Dict[str, Any]:
     return {
         "status": "ok",
         "removed_model": clean_id,
+        "deleted_from_runtime": deleted_from_runtime,
         "active_model": updated_cfg.get("active_model"),
         "llm_recommendations": recs,
     }
