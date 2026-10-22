@@ -59,6 +59,38 @@ function isPreviewableFile(filename) {
   return IMAGE_EXTS.has(ext) || MEDIA_EXTS.has(ext);
 }
 
+
+// On a phone the toolbar scrolls sideways. Fade the cut-off edge and show a chevron
+// button, so the tools past the edge (Download, Fullscreen) can be found.
+export function bindToolbarScrollHint(toolbar, moreBtn) {
+  if (!toolbar) return;
+  const update = () => {
+    const max = toolbar.scrollWidth - toolbar.clientWidth;
+    const left = toolbar.scrollLeft > 2;
+    const right = max - toolbar.scrollLeft > 2;
+    toolbar.classList.toggle('ql-more-left', left);
+    toolbar.classList.toggle('ql-more-right', right);
+    if (moreBtn) {
+      moreBtn.hidden = !left && !right;
+      moreBtn.classList.toggle('is-back', !right && left);
+    }
+  };
+  toolbar.addEventListener('scroll', update, { passive: true });
+  if (moreBtn) {
+    moreBtn.addEventListener('click', () => {
+      const atEnd = toolbar.scrollWidth - toolbar.clientWidth - toolbar.scrollLeft <= 2;
+      toolbar.scrollBy({ left: atEnd ? -toolbar.scrollWidth : toolbar.clientWidth * 0.8, behavior: 'smooth' });
+    });
+  }
+  if (typeof ResizeObserver !== 'undefined') {
+    const ro = new ResizeObserver(update);
+    ro.observe(toolbar);
+    toolbar.querySelectorAll('.quicklook-btn-group').forEach((g) => ro.observe(g));
+  }
+  update();
+  return update;
+}
+
 export async function openFilePreviewModal(path, name, aiMeta = null, fileList = null) {
   closeFilePreviewModal();
 
@@ -152,6 +184,7 @@ export async function openFilePreviewModal(path, name, aiMeta = null, fileList =
             <button type="button" class="quicklook-btn" id="ql-maximize-btn" title="${t('preview.maximize', 'Fullscreen (F)')}" aria-label="${t('preview.maximize', 'Fullscreen (F)')}">${ICONS.maximize}</button>
           </div>
         </div>
+        <button type="button" class="quicklook-toolbar-more" id="quicklook-toolbar-more" hidden title="${t('preview.more_tools', 'More tools')}" aria-label="${t('preview.more_tools', 'More tools')}"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button>
         <button type="button" class="quicklook-close-btn" id="quicklook-close-btn" title="${t('preview.close', 'Close (Esc)')}" aria-label="${t('preview.close', 'Close (Esc)')}">${ICONS.close}</button>
       </div>
       <div class="quicklook-body" id="quicklook-body">
@@ -172,6 +205,7 @@ export async function openFilePreviewModal(path, name, aiMeta = null, fileList =
 
   document.body.appendChild(overlay);
   _activePreviewModal = overlay;
+  bindToolbarScrollHint(overlay.querySelector('#quicklook-toolbar'), overlay.querySelector('#quicklook-toolbar-more'));
 
   bindModalGlobalEvents(overlay);
 

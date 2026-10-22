@@ -19,6 +19,7 @@ export default {
   "preview.flip": "水平翻转",
   "preview.info": "照片及 EXIF 详情",
   "preview.download": "下载",
+  "preview.more_tools": "更多工具",
   "preview.copy": "复制图片",
   "preview.maximize": "全屏",
   "preview.restore": "退出全屏",

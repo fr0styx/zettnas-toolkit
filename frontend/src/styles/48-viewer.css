@@ -66,3 +66,26 @@
   .quicklook-markdown { padding: 16px; font-size: 13.5px; }
 }
 
+
+/* Toolbar that scrolls sideways: fade the cut-off edge, chevron to reveal the rest */
+.quicklook-toolbar.ql-more-right { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); }
+.quicklook-toolbar.ql-more-left { -webkit-mask-image: linear-gradient(to left, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(to left, #000 calc(100% - 28px), transparent); }
+.quicklook-toolbar.ql-more-left.ql-more-right { -webkit-mask-image: linear-gradient(to right, transparent, #000 28px, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(to right, transparent, #000 28px, #000 calc(100% - 28px), transparent); }
+.quicklook-toolbar-more {
+  flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center;
+  min-width: 36px; min-height: 36px; padding: 0; border: none; border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08); color: #e2e8f0; cursor: pointer;
+}
+.quicklook-toolbar-more[hidden] { display: none; }
+.quicklook-toolbar-more.is-back svg { transform: scaleX(-1); }
+.quicklook-toolbar-more:focus-visible { outline: 2px solid #38bdf8; outline-offset: 2px; }
+
+/* Touch screens: video controls a finger can hit; they wrap to a second row on a phone */
+@media (pointer: coarse) {
+  .quicklook-btn, .quicklook-toolbar-more, .quicklook-header > .quicklook-close-btn { min-width: 44px; min-height: 44px; }
+  .quicklook-vctrl-btn { min-width: 44px; min-height: 44px; }
+  .quicklook-vctrl-pill { min-width: 48px; min-height: 40px; }
+  .quicklook-video-scrub-container { height: 28px; }
+  .quicklook-video-controls-row { flex-wrap: wrap; row-gap: 2px; }
+  .quicklook-video-controls-row > .quicklook-video-ctrl-group:last-child { margin-left: auto; }
+}

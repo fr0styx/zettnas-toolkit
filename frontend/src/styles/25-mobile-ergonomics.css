@@ -9,8 +9,8 @@
   }
   .fm-act-more-sheet {
     display: inline-flex !important;
-    min-width: 38px !important;
-    min-height: 34px !important;
+    min-width: 44px !important;
+    min-height: 40px !important;
     align-items: center !important;
     justify-content: center !important;
     font-weight: 800 !important;
@@ -139,8 +139,8 @@ body.mobile-mode .fm-card-actions .fm-act-btn:not(.fm-act-more-sheet) {
 }
 body.mobile-mode .fm-act-more-sheet {
   display: inline-flex !important;
-  min-width: 38px !important;
-  min-height: 34px !important;
+  min-width: 44px !important;
+  min-height: 40px !important;
   align-items: center !important;
   justify-content: center !important;
   font-weight: 800 !important;

@@ -56,7 +56,12 @@
   .fm-path-container { order: 20; flex: 1 1 100%; min-height: 30px; }
 }
 @media (max-width: 640px) {
-  .quicklook-title { flex: 0 1 34%; }
+  /* Two header rows on a phone: name and close on top, tools underneath */
+  .quicklook-header { flex-wrap: wrap; row-gap: 4px; }
+  .quicklook-title { order: 1; flex: 1 1 0; min-width: 0; }
+  .quicklook-header > .quicklook-close-btn { order: 2; }
+  .quicklook-toolbar { order: 3; flex: 1 1 calc(100% - 52px); }
+  .quicklook-toolbar-more { order: 4; }
   .quicklook-video-vol-slider, #ql-video-loop-btn, #ql-video-pip-btn { display: none; }
   .quicklook-video-controls-row { gap: 4px; }
   .quicklook-video-ctrl-group { gap: 2px; }
@@ -67,4 +72,20 @@
 .fm-col-actions { min-width: 160px; justify-content: flex-end; }
 @container fmwin (max-width: 760px) {
   .fm-col-actions { min-width: 0; }
+}
+
+/* Touch screens: controls a finger can hit (44px is the usual minimum). In a narrow
+   window the toolbar becomes three rows: navigation, search, then views and path. */
+@media (pointer: coarse) {
+  @container fmwin (max-width: 760px) {
+    .fm-toolbar .fm-tool-btn { min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
+    .fm-view-mode-group .fm-tool-btn { min-width: 40px; min-height: 40px; }
+    .fm-search-wrap { order: 10; flex: 1 1 100%; min-height: 40px; }
+    .fm-search-input { flex: 1 1 auto; width: auto; min-height: 36px; }
+    .fm-view-mode-group, .fm-aux-tool-group { order: 30; }
+    .fm-path-container { order: 40; flex: 1 1 120px; min-height: 40px; }
+    .fm-path-input, .fm-path-breadcrumbs { min-height: 36px; }
+    .fm-col-check { width: 44px; min-width: 44px; max-width: 44px; }
+    .fm-checkbox { opacity: 0.8; }
+  }
 }

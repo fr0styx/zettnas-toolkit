@@ -512,6 +512,29 @@ export function clearMobileInlineBounds(el) {
   }
 }
 
+let _wasNarrowScreen = typeof window !== 'undefined'
+  && (window.innerWidth <= 768 || document.body.classList.contains('mobile-mode'));
+
+// Phone layout clears window positions. When the screen widens past it (a narrow browser
+// window made wider, a tablet turned), put open windows back where they were saved, or at
+// least below the navigation bar.
+export function restoreWindowsAfterWiden() {
+  const narrow = window.innerWidth <= 768 || document.body.classList.contains('mobile-mode');
+  const widened = _wasNarrowScreen && !narrow;
+  _wasNarrowScreen = narrow;
+  if (!widened) return;
+  const bar = document.querySelector('.suite-navbar, #suite-navbar');
+  const barBottom = bar ? Math.round(bar.getBoundingClientRect().bottom) : 48;
+  document.querySelectorAll('.os-window').forEach((win) => {
+    if (win.dataset.snapped || win.classList.contains('maximized') || getComputedStyle(win).display === 'none') return;
+    if (!win.style.top) applySavedBounds(win, win.dataset.windowId || win.id);
+    const r = win.getBoundingClientRect();
+    if (r.width === 0 || (r.top >= barBottom && r.left >= 0)) return;
+    win.style.left = `${Math.max(24, Math.round((window.innerWidth - r.width) / 2))}px`;
+    win.style.top = `${barBottom + 8}px`;
+  });
+}
+
 export function applySavedBounds(dragEl, winId) {
   if (!dragEl || dragEl.id === 'global-toast-container') return;
   if (document.body.classList.contains('mobile-mode') || window.innerWidth <= 768) {
@@ -3569,6 +3592,9 @@ export function initDockSystem() {
       localStorage.setItem('zettnas_mobile_mode', isMobile ? '1' : '0');
       if (isMobile) {
         purgeAllMobileWindows();
+      } else {
+        // Back to desktop windows: the resize handlers put each window where it was saved.
+        window.dispatchEvent(new Event('resize'));
       }
       if (window.refreshDesktopIconPositions) {
         window.refreshDesktopIconPositions();
@@ -4193,6 +4219,7 @@ export function initDraggableDesktopIcons() {
 
   window.addEventListener('resize', () => {
     refreshIconPositions();
+    restoreWindowsAfterWiden();
   });
 
   initDesktopLasso();

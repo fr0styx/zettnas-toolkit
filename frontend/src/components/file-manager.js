@@ -534,6 +534,27 @@ export class FileManagerWindow {
     } catch (_) {}
   }
 
+  isTouchTap(e) {
+    const type = (e && e.pointerType) || this._lastPointerType;
+    return type === 'touch' && !e.shiftKey && !e.ctrlKey && !e.metaKey;
+  }
+
+  openListItem(file) {
+    if (file.is_dir) {
+      this.loadPath(file.path);
+    } else {
+      this.handleAction('preview', file.path, file.name);
+    }
+  }
+
+  // A window opened while the screen was narrow has no position; give it its saved one back.
+  restoreAfterWiden() {
+    const narrow = document.body.classList.contains('mobile-mode') || window.innerWidth <= 768;
+    const widened = this._wasNarrow && !narrow;
+    this._wasNarrow = narrow;
+    if (widened && this.isPrimary && !this.isMaximized) this.restoreSavedBounds();
+  }
+
   saveBounds() {
     if (this.isMaximized || !this.isPrimary) return;
     if (document.body.classList.contains('mobile-mode') || window.innerWidth <= 768) return;
@@ -568,7 +589,11 @@ export class FileManagerWindow {
     this.windowEl.addEventListener('pointerdown', activate);
 
     this._onSaveBounds = () => this.saveBounds();
-    this._onResize = () => this.renderViewport();
+    this._wasNarrow = document.body.classList.contains('mobile-mode') || window.innerWidth <= 768;
+    this._onResize = () => {
+      this.renderViewport();
+      this.restoreAfterWiden();
+    };
     if (this.isPrimary) {
       window.addEventListener('mouseup', this._onSaveBounds);
     }
@@ -964,6 +989,9 @@ export class FileManagerWindow {
 
     // Single-Root Event Delegation on this.list
     if (this.list) {
+      // Touch screens: a tap opens (like a phone's Files app); the mouse keeps
+      // click-to-select and double-click-to-open.
+      this.list.addEventListener('pointerdown', (e) => { this._lastPointerType = e.pointerType; }, { passive: true });
       this.list.addEventListener('click', (e) => {
         const actBtn = e.target.closest('.fm-act-btn');
         if (actBtn) {
@@ -978,7 +1006,8 @@ export class FileManagerWindow {
         if (!item) return;
         const p = item.dataset.path;
         const file = this.fileList.find((f) => f.path === p);
-        if (!file || file.name === '..') return;
+        const touchTap = this.isTouchTap(e);
+        if (!file || (file.name === '..' && !touchTap)) return;
 
         bringToFront(this.windowEl);
         _activeFmInstance = this;
@@ -989,6 +1018,21 @@ export class FileManagerWindow {
 
         const chk = e.target.closest('.fm-checkbox');
         const chkCell = e.target.closest('.fm-col-check');
+        if (touchTap && !chk && !chkCell) {
+          if (Date.now() - (this._touchOpenAt || 0) < 450) return; // second tap of a double-tap
+          if (this.selectedPaths.size === 0 || file.name === '..') {
+            this._touchOpenAt = Date.now();
+            this.openListItem(file);
+            return;
+          }
+          // While items are selected, a tap adds or removes one, like the checkbox.
+          if (this.selectedPaths.has(file.path)) this.selectedPaths.delete(file.path);
+          else this.selectedPaths.add(file.path);
+          this.lastSelectedIndex = this.fileList.findIndex((f) => f.path === p);
+          this.updateRowSelectionUI();
+          this.updateSelectionToolbar();
+          return;
+        }
         if (chk || chkCell) {
           e.stopPropagation();
           const isSelected = this.selectedPaths.has(file.path);
@@ -1044,17 +1088,13 @@ export class FileManagerWindow {
       });
 
       this.list.addEventListener('dblclick', (e) => {
+        if (this._lastPointerType === 'touch') return; // the tap already opened it
         const item = e.target.closest('.fm-row, .fm-grid-card');
         if (!item) return;
         const p = item.dataset.path;
         const file = this.fileList.find((f) => f.path === p);
         if (!file) return;
-
-        if (file.is_dir) {
-          this.loadPath(file.path);
-        } else {
-          this.handleAction('preview', file.path, file.name);
-        }
+        this.openListItem(file);
       });
 
       // Drag start & end from this window

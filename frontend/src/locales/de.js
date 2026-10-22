@@ -19,6 +19,7 @@ export default {
   "preview.flip": "Horizontal spiegeln",
   "preview.info": "Foto- & EXIF-Details",
   "preview.download": "Herunterladen",
+  "preview.more_tools": "Weitere Werkzeuge",
   "preview.copy": "Bild kopieren",
   "preview.maximize": "Vollbild",
   "preview.restore": "Vollbild verlassen",

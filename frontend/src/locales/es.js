@@ -19,6 +19,7 @@ export default {
   "preview.flip": "Voltear horizontalmente",
   "preview.info": "Detalles de foto y EXIF",
   "preview.download": "Descargar",
+  "preview.more_tools": "Más herramientas",
   "preview.copy": "Copiar imagen",
   "preview.maximize": "Pantalla completa",
   "preview.restore": "Salir de pantalla completa",
