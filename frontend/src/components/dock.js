@@ -11,6 +11,7 @@ import {
   openAddDesktopShortcutModal
 } from './desktop-shortcuts.js';
 import { hideDesktopContextMenu } from './desktop-context-menu.js';
+import { formatDateTime, formatTime } from '../format.js';
 /**
  * ZettNAS Toolkit Dock & Window Manager
  * Handles floating modal registration, minimize/restore, dragging, and z-index depth stacking.
@@ -2261,7 +2262,7 @@ export const DockManager = {
           if (ev.level === 'error') { nIcon = '❌'; col = 'var(--crit, #ff5c5c)'; }
           else if (ev.level === 'warning') { nIcon = '⚠️'; col = 'var(--warn, #f5a623)'; }
           else if (ev.level === 'success') { nIcon = '✅'; col = 'var(--ok2, #25c2a0)'; }
-          const timeStr = ev.ts ? new Date(ev.ts * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+          const timeStr = formatTime(ev.ts, undefined, '');
           return `
             <div class="dock-notif-feed-item">
               <span style="font-size:12px; line-height:1; flex-shrink:0;">${nIcon}</span>
@@ -4414,7 +4415,7 @@ export function renderNotificationCenter() {
           <span style="font-size:9.5px; color:var(--muted); opacity:0.8; margin-left:6px; flex-shrink:0;">🔍</span>
         </div>
         <div class="notif-center-msg" style="font-size:10px; color:${isChecked ? 'var(--muted)' : '#fff'}; line-height:1.4; word-break:break-word;">${escapeHtml(e.message)}</div>
-        <div style="font-size:9px; color:var(--muted); margin-top:2px;">${dt.toLocaleString()}</div>
+        <div style="font-size:9px; color:var(--muted); margin-top:2px;">${formatDateTime(dt)}</div>
       </div>
       ${!isChecked ? `<div class="notif-unread-dot" style="width:6px; height:6px; border-radius:50%; background:var(--brand, #0ea5e9); margin-left:auto; margin-top:6px; flex-shrink:0;"></div>` : ''}
     `;

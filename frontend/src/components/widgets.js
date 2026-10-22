@@ -6,6 +6,7 @@ import { t } from '../i18n.js';
 import { api, auth } from '../api.js';
 import { makeDraggable } from './dock.js';
 
+import { formatDate, formatNumber } from '../format.js';
 const STORAGE_KEY = 'zettnas_widgets_config';
 const WEATHER_CACHE_KEY = 'zettnas_weather_cache';
 
@@ -685,7 +686,7 @@ export function updateClock() {
         year: 'numeric',
       };
       if (tz && tz !== 'auto') dateOpts.timeZone = tz;
-      const dateStr = new Intl.DateTimeFormat([], dateOpts).format(now);
+      const dateStr = formatDate(now, dateOpts);
       dateEl.textContent = dateStr;
     } catch (e) {
       dateEl.textContent = now.toDateString();
@@ -1076,7 +1077,7 @@ function renderGlanceBarForCurrentView() {
     const holidayList = holidaysYear[key];
     if (holidayList && holidayList.length > 0) {
       const name = holidayList.map((h) => h.name || h.localName).filter((v, idx, arr) => arr.indexOf(v) === idx).join(' / ');
-      const dateStr = `${new Intl.DateTimeFormat('en-US', { month: 'short' }).format(new Date(year, month, d))} ${d}`;
+      const dateStr = `${formatDate(new Date(year, month, d))} ${d}`;
       monthHolidays.push({ day: d, name, dateStr });
     }
   }
@@ -1163,7 +1164,7 @@ export function renderCalendar() {
     const holidayList = prevHolidaysYear[key];
     const isHoliday = !!holidayList && holidayList.length > 0;
     const holidayName = isHoliday ? holidayList.map((h) => h.name || h.localName).filter((v, idx, arr) => arr.indexOf(v) === idx).join(' / ') : '';
-    const dateStr = `${new Intl.DateTimeFormat('en-US', { month: 'short' }).format(new Date(prevYear, prevMonthIdx, d))} ${d}`;
+    const dateStr = `${formatDate(new Date(prevYear, prevMonthIdx, d))} ${d}`;
     let cls = 'cal-day cal-other-month';
     if (isHoliday) cls += ' cal-holiday';
     const dayEvents = _calendarEventsMap[key];
@@ -1184,7 +1185,7 @@ export function renderCalendar() {
     const holidayList = holidaysYear[key];
     const isHoliday = !!holidayList && holidayList.length > 0;
     const holidayName = isHoliday ? holidayList.map((h) => h.name || h.localName).filter((v, idx, arr) => arr.indexOf(v) === idx).join(' / ') : '';
-    const dateStr = `${new Intl.DateTimeFormat('en-US', { month: 'short' }).format(new Date(year, month, d))} ${d}`;
+    const dateStr = `${formatDate(new Date(year, month, d))} ${d}`;
 
     let cls = 'cal-day';
     if (isToday) cls += ' cal-today';
@@ -1206,7 +1207,7 @@ export function renderCalendar() {
     const holidayList = nextHolidaysYear[key];
     const isHoliday = !!holidayList && holidayList.length > 0;
     const holidayName = isHoliday ? holidayList.map((h) => h.name || h.localName).filter((v, idx, arr) => arr.indexOf(v) === idx).join(' / ') : '';
-    const dateStr = `${new Intl.DateTimeFormat('en-US', { month: 'short' }).format(new Date(nextYear, nextMonthIdx, d))} ${d}`;
+    const dateStr = `${formatDate(new Date(nextYear, nextMonthIdx, d))} ${d}`;
     let cls = 'cal-day cal-other-month';
     if (isHoliday) cls += ' cal-holiday';
     const dayEvents = _calendarEventsMap[key];
@@ -2179,7 +2180,7 @@ export function initWidgets() {
           wReindexStrip.style.display = 'block';
           if (wReindexBar) wReindexBar.style.width = `${pct}%`;
           if (wReindexPct) wReindexPct.textContent = `${pct}%`;
-          if (wReindexChunks) wReindexChunks.textContent = `${(reindex.completed || 0).toLocaleString()} / ${(reindex.total || 0).toLocaleString()}`;
+          if (wReindexChunks) wReindexChunks.textContent = `${formatNumber(reindex.completed || 0)} / ${formatNumber(reindex.total || 0)}`;
           if (wReindexEta) wReindexEta.textContent = etaText;
           if (!wReindexStrip.dataset.bound) {
             wReindexStrip.dataset.bound = '1';
@@ -2405,7 +2406,7 @@ export function updateTzModalPreview() {
     try {
       const dateOpts = { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' };
       if (tz && tz !== 'auto') dateOpts.timeZone = tz;
-      dateEl.textContent = new Intl.DateTimeFormat([], dateOpts).format(now);
+      dateEl.textContent = formatDate(now, dateOpts);
     } catch (e) {
       dateEl.textContent = now.toDateString();
     }

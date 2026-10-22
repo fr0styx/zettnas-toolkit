@@ -6,6 +6,7 @@ import { DockManager, bringToFront, makeDraggable } from './components/dock.js';
 import { trapFocus, escapeHtml } from './utils.js';
 import { t } from './i18n.js';
 import { generateSmartSparklineSvg, triggerLocateDisk } from './components/chassis-visualizer.js';
+import { formatDateTime, formatNumber } from './format.js';
 // S.M.A.R.T. & INTERACTIVE METRIC DIAGNOSTIC MODAL CONTROLLER
 
 let activeModalType = null;
@@ -275,7 +276,7 @@ export function renderSelfTestLog(log) {
       icon = "✗";
     }
 
-    const hours = item.lifetime_hours != null ? `${Number(item.lifetime_hours).toLocaleString()} h` : "--";
+    const hours = item.lifetime_hours != null ? `${formatNumber(item.lifetime_hours)} h` : "--";
     const lba = item.lba_first_error || "-";
 
     return `
@@ -335,7 +336,7 @@ export function renderSmartLatestReport(data) {
   }
 
   if (meta) {
-    const timeStr = report && report.ts ? new Date(report.ts * 1000).toLocaleString() : "";
+    const timeStr = report ? formatDateTime(report.ts, undefined, "") : "";
     meta.textContent = `${testType.toUpperCase()} • ${statusStr}${timeStr ? ` • ${timeStr}` : ""}`;
   }
 
@@ -345,7 +346,7 @@ export function renderSmartLatestReport(data) {
   }
 
   if (tempEl) tempEl.textContent = temp;
-  if (hoursEl) hoursEl.textContent = hours !== "--" ? `${Number(hours).toLocaleString()} h` : "--";
+  if (hoursEl) hoursEl.textContent = hours !== "--" ? `${formatNumber(hours)} h` : "--";
   if (typeEl) typeEl.textContent = testType.charAt(0).toUpperCase() + testType.slice(1);
 
   if (recEl) {
@@ -1267,7 +1268,7 @@ export function openEventDetailModal(ev) {
 
   const dt = new Date(ts * 1000);
   if (relTimeEl) relTimeEl.textContent = relText;
-  if (localTimeEl) localTimeEl.textContent = dt.toLocaleString();
+  if (localTimeEl) localTimeEl.textContent = formatDateTime(dt);
   if (epochEl) epochEl.textContent = `${ts} (${dt.toISOString()})`;
 
   if (headlineEl) headlineEl.textContent = ev.title || "System Notification";

@@ -1,4 +1,5 @@
-// Translation lint (FE-13). Fails when:
+// Translation lint (FE-13, FE-14). Fails when:
+//  - code formats dates or numbers with toLocale*String() instead of format.js;
 //  - code or markup uses a key that en.js doesn't define;
 //  - a language is missing a key, or has keys en.js doesn't;
 //  - a translation drops or invents a {placeholder};
@@ -37,6 +38,12 @@ for (const file of files) {
     if (!(key in en)) errors.push(`${rel}: key "${key}" is not defined in locales/en.js`);
   }
   rawToasts += [...src.matchAll(/showToast\(\s*['"`]/g)].length;
+  if (!rel.endsWith('format.js')) {
+    for (const m of src.matchAll(/\.toLocale(?:Date|Time)?String\(/g)) {
+      const line = src.slice(0, m.index).split('\n').length;
+      errors.push(`${rel}:${line}: use formatDateTime/formatDate/formatTime/formatNumber from format.js, not toLocale*String() (FE-14)`);
+    }
+  }
 }
 
 const placeholders = (s) => [...String(s).matchAll(/\{([a-zA-Z0-9_]+)\}/g)].map((m) => m[1]).sort().join(',');

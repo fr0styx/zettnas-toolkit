@@ -2009,5 +2009,6 @@ export default {
   "toast.delivered_in_ms": "✓ {channel}: Delivered in {latency_ms}ms",
   "toast.zettai_searching": "✨ ZettAI searching \"{cleanQ}\"...",
   "toast.sd_card_detected_gb_ready_for": "📷 SD Card Detected ({value} GB): Ready for import",
-  "toast.tf_microsd_detected_gb_ready_for": "📷 TF (MicroSD) Detected ({value} GB): Ready for import"
+  "toast.tf_microsd_detected_gb_ready_for": "📷 TF (MicroSD) Detected ({value} GB): Ready for import",
+  "common.never": "Never"
 };

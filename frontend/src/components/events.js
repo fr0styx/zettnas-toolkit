@@ -7,6 +7,7 @@ import { showToast, showConfirmToast } from '../toast.js';
 import { escapeHtml } from '../utils.js';
 
 import { t } from '../i18n.js';
+import { formatDateTime } from '../format.js';
 let _lastEventHash = '';
 let _expandedEvents = new Set();
 let _currentFilter = 'all';
@@ -37,7 +38,7 @@ export function renderEventLog(events) {
 
   filtered.forEach((e) => {
     const dt = new Date(e.ts * 1000);
-    const timeStr = dt.toLocaleString();
+    const timeStr = formatDateTime(dt);
     let color = '#e2e8f0';
     let icon = 'ℹ️';
     if (e.level === 'error') { color = 'var(--crit)'; icon = '❌'; }

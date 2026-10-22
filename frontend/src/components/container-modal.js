@@ -14,6 +14,7 @@ import { ZettEventBus } from '../event-bus.js';
 import { openStackModal } from './stack-modal.js';
 import { createTerminalView } from './terminal-view.js';
 
+import { formatDateTime, formatTime } from '../format.js';
 let _activeCid = null;
 let _activeCname = null;
 let _activeComposeData = null;
@@ -540,7 +541,7 @@ export async function executeTerminalCmd() {
   }
 
   // No live session: run once through the exec API and print the result.
-  const timestamp = new Date().toLocaleTimeString();
+  const timestamp = formatTime(new Date(), { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   view.writeln(`\x1b[90m[${timestamp}]\x1b[0m \x1b[32;1m$\x1b[0m ${cmd}`);
   try {
     const res = await api.post(`/api/docker/containers/${_activeCid}/exec`, { cmd });
@@ -655,7 +656,7 @@ async function loadContainerDetails(cid) {
         <div class="ci-metric-card" style="background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.06); padding:10px; border-radius:6px;">
           <div style="font-size:10px; color:var(--muted); text-transform:uppercase; font-weight:700;">State & Uptime</div>
           <div style="font-size:13px; font-weight:700; color:#fff; margin-top:3px;">${escapeHtml(ov.state || 'unknown')}</div>
-          <div style="font-size:10px; color:var(--muted); margin-top:2px;">Started: ${escapeHtml(ov.started_at ? new Date(ov.started_at).toLocaleString() : 'N/A')}</div>
+          <div style="font-size:10px; color:var(--muted); margin-top:2px;">Started: ${escapeHtml(formatDateTime(ov.started_at, undefined, 'N/A'))}</div>
         </div>
         <div class="ci-metric-card" style="background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.06); padding:10px; border-radius:6px;">
           <div style="font-size:10px; color:var(--muted); text-transform:uppercase; font-weight:700;">Network IP</div>

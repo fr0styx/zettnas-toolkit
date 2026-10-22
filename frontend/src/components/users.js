@@ -11,6 +11,7 @@ import { showToast, showConfirmToast, showPromptToast } from '../toast.js';
 import { initTopbarUserPill } from './dock.js';
 import { openShareAccessModal } from './share-access.js';
 
+import { formatDateTime } from '../format.js';
 let _currentUser = null;
 
 export function setCurrentUser(user) {
@@ -566,8 +567,8 @@ export async function loadSessionsList() {
     }
 
     container.innerHTML = sessions.map((s) => {
-      const createdStr = s.created_at ? new Date(s.created_at * 1000).toLocaleString() : '--';
-      const lastStr = s.last_active_at ? new Date(s.last_active_at * 1000).toLocaleString() : '--';
+      const createdStr = formatDateTime(s.created_at);
+      const lastStr = formatDateTime(s.last_active_at);
       const isCurrent = !!s.is_current;
 
       return `

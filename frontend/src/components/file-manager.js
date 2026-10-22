@@ -14,6 +14,7 @@ import { t } from '../i18n.js';
 import { makeDraggable, bringToFront } from './dock.js';
 import { openFilePreviewModal } from './file-preview-modal.js';
 
+import { formatBytes as formatSize, formatDateTime } from '../format.js';
 // Virtualized DOM constants
 const ROW_HEIGHT = 42;
 const BUFFER = 5;
@@ -28,11 +29,7 @@ let _fmInstanceSeq = 1;
 let _activeFmInstance = null;
 
 export function formatBytes(bytes) {
-  if (bytes === 0) return '0 B';
-  const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  return formatSize(bytes, { decimals: 2 });
 }
 
 export function getActiveFmInstance() {
@@ -2098,9 +2095,7 @@ export class FileManagerWindow {
       const escPath = escapeHtml(file.path);
       const isImage = file.name.match(/\.(jpeg|jpg|png|gif|webp|svg)$/i);
       const fileType = file.is_dir ? (isRemoteDir ? 'Cloud Drive' : (isDiskDir ? 'Disk Drive' : 'Folder')) : (file.name.includes('.') ? file.name.split('.').pop().toUpperCase() : 'File');
-      const mtimeStr = file.mtime ? new Date(file.mtime * 1000).toLocaleString(undefined, {
-        year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
-      }) : '--';
+      const mtimeStr = formatDateTime(file.mtime, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 
       row.innerHTML = `
         <div class="fm-col fm-col-check">${file.name !== '..' ? `<input type="checkbox" class="fm-checkbox fm-row-checkbox" ${this.selectedPaths.has(file.path) ? 'checked' : ''} data-path="${escPath}" title="Select item" />` : ''}</div>

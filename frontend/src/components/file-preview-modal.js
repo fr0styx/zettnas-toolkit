@@ -3,6 +3,7 @@ import { escapeHtml } from '../utils.js';
 import { t } from '../i18n.js';
 import { showToast } from '../toast.js';
 
+import { formatBytes } from '../format.js';
 let _activePreviewModal = null;
 let _previewAbortController = null;
 let _previewKeydownListener = null;
@@ -1329,11 +1330,7 @@ export function closeFilePreviewModal() {
 }
 
 function formatSize(bytes) {
-  if (bytes === 0) return '0 B';
-  const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  return formatBytes(bytes, { decimals: 2 });
 }
 
 window.openFilePreviewModal = openFilePreviewModal;

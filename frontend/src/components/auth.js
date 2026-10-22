@@ -11,6 +11,7 @@ import { showToast } from '../toast.js';
 import { fetchCurrentProfile, getCurrentUser, setCurrentUser } from './users.js';
 import { openSetupWizard } from './setup-wizard.js';
 
+import { formatDate, formatTime } from '../format.js';
 let _pendingMfaToken = null;
 let _selectedUser = null;
 let _autoLockTimer = null;
@@ -693,10 +694,10 @@ function updateLockClock() {
   const dateEl = document.getElementById('lock-date');
   const now = new Date();
   if (clockEl) {
-    clockEl.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    clockEl.textContent = formatTime(now);
   }
   if (dateEl) {
-    dateEl.textContent = now.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' });
+    dateEl.textContent = formatDate(now, { weekday: 'long', month: 'long', day: 'numeric' });
   }
 }
 

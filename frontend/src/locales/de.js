@@ -2009,5 +2009,6 @@ export default {
   "toast.delivered_in_ms": "✓ {channel}: zugestellt in {latency_ms} ms",
   "toast.zettai_searching": "✨ ZettAI sucht „{cleanQ}“...",
   "toast.sd_card_detected_gb_ready_for": "📷 SD-Karte erkannt ({value} GB): bereit zum Import",
-  "toast.tf_microsd_detected_gb_ready_for": "📷 MicroSD-Karte erkannt ({value} GB): bereit zum Import"
+  "toast.tf_microsd_detected_gb_ready_for": "📷 MicroSD-Karte erkannt ({value} GB): bereit zum Import",
+  "common.never": "Nie"
 };

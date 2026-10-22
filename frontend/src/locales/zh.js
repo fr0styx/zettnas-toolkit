@@ -2009,5 +2009,6 @@ export default {
   "toast.delivered_in_ms": "✓ {channel}：{latency_ms} 毫秒内送达",
   "toast.zettai_searching": "✨ ZettAI 正在搜索“{cleanQ}”...",
   "toast.sd_card_detected_gb_ready_for": "📷 检测到 SD 卡（{value} GB）：可以导入",
-  "toast.tf_microsd_detected_gb_ready_for": "📷 检测到 TF（MicroSD）卡（{value} GB）：可以导入"
+  "toast.tf_microsd_detected_gb_ready_for": "📷 检测到 TF（MicroSD）卡（{value} GB）：可以导入",
+  "common.never": "从未"
 };

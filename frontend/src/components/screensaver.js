@@ -7,6 +7,7 @@ import { showToast } from '../toast.js';
 import { state } from '../state.js';
 
 import { t } from '../i18n.js';
+import { formatDate, formatTime } from '../format.js';
 function isLcdMode() {
   return !!(state?.isLcdDirect || (typeof window !== 'undefined' && window.location.search.includes('mode=lcd')) || (typeof document !== 'undefined' && document.body && document.body.classList.contains('lcd-direct')));
 }
@@ -259,10 +260,10 @@ function startRetroClock(clockEl) {
   const update = () => {
     const d = new Date();
     if (timeEl) {
-      timeEl.textContent = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+      timeEl.textContent = formatTime(d, { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
     }
     if (dateEl) {
-      dateEl.textContent = d.toLocaleDateString([], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      dateEl.textContent = formatDate(d, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
     }
   };
 

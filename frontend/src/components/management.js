@@ -32,6 +32,7 @@ import { collectClientEnvironment, getClientLogs } from '../client-logger.js';
 import { openFilePreviewModal } from './file-preview-modal.js';
 import QRCode from 'qrcode';
 
+import { formatBytes as formatSize, formatDateTime, formatNumber, formatTime } from '../format.js';
 if (typeof window !== 'undefined') {
   window.openFilePreviewModal = openFilePreviewModal;
 }
@@ -3342,7 +3343,7 @@ export async function fetchAndRenderUpsEvents() {
       return;
     }
     tbody.innerHTML = events.map(ev => {
-      const dateStr = ev.ts ? new Date(ev.ts * 1000).toLocaleString() : '--';
+      const dateStr = formatDateTime(ev.ts);
       let typeBadge = `<span class="badge" style="background:rgba(0,240,255,0.15); border:1px solid #00f0ff; color:#00f0ff; padding:2px 8px; border-radius:4px; font-size:11px;">${escapeHtml(ev.event_type)}</span>`;
       if (ev.event_type.includes('OUTAGE') || ev.event_type.includes('FAILSAFE')) {
         typeBadge = `<span class="badge" style="background:rgba(245,166,35,0.15); border:1px solid #f5a623; color:#f5a623; padding:2px 8px; border-radius:4px; font-size:11px;">${escapeHtml(ev.event_type)}</span>`;
@@ -4028,7 +4029,7 @@ export async function fetchAndRenderCopyHistory() {
     }
     tbody.innerHTML = history.map((item) => {
       const d = new Date(item.ts * 1000);
-      const timeStr = d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const timeStr = formatDateTime(d);
       const sizeMB = (item.total_bytes / (1024 * 1024)).toFixed(1);
       const durStr = item.duration_sec ? `${item.duration_sec.toFixed(1)}s` : '--';
       const isSuccess = item.status === 'success';
@@ -4143,7 +4144,7 @@ export async function fetchAndRenderReplication() {
         histTbody.innerHTML = history
           .slice(0, 20)
           .map((h) => {
-            const dt = h.timestamp ? new Date(h.timestamp * 1000).toLocaleString() : '--';
+            const dt = formatDateTime(h.timestamp);
             const isOk = h.status === 'success';
             return `
             <tr>
@@ -5297,12 +5298,7 @@ export async function fetchAndRenderNetworkTopology() {
   const kpiDocker = document.getElementById('net-kpi-docker');
   const kpiContainers = document.getElementById('net-kpi-containers');
 
-  function fmtBytes(bytes) {
-    if (!bytes || bytes <= 0) return '0 B';
-    const units = ['B', 'KB', 'MB', 'GB', 'TB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(1024));
-    return (bytes / Math.pow(1024, i)).toFixed(i === 0 ? 0 : 1) + ' ' + units[i];
-  }
+  const fmtBytes = (bytes) => formatSize(bytes);
 
   try {
     const topo = await api.get('/api/system/network-topology');
@@ -5432,8 +5428,8 @@ export async function fetchAndRenderNetworkTopology() {
                 ${nic.master ? `<span class="network-member-pill" style="color:var(--accent-cyan); border-color:rgba(56,189,248,0.3);">${escapeHtml(nic.master)}</span>` : '<span style="color:var(--muted);">Standalone</span>'}
               </td>
               <td style="font-family:var(--font-mono, monospace); font-size:11px;">
-                <div>↓ ${rxFmt} <span style="font-size:9.5px; color:var(--muted);">(${nic.rx_packets?.toLocaleString() || 0} pkts)</span></div>
-                <div>↑ ${txFmt} <span style="font-size:9.5px; color:var(--muted);">(${nic.tx_packets?.toLocaleString() || 0} pkts)</span></div>
+                <div>↓ ${rxFmt} <span style="font-size:9.5px; color:var(--muted);">(${formatNumber(nic.rx_packets || 0)} pkts)</span></div>
+                <div>↑ ${txFmt} <span style="font-size:9.5px; color:var(--muted);">(${formatNumber(nic.tx_packets || 0)} pkts)</span></div>
               </td>
               <td style="font-size:11px; color:var(--muted);">
                 <div>${escapeHtml(nic.driver || 'Generic')}</div>
@@ -8801,7 +8797,7 @@ export async function fetchAndRenderSystemAbout(force = false, channelOverride =
         if (applyBtn) applyBtn.style.display = 'none';
       }
       if (lastCheckedEl && data.checked_at) {
-        const timeStr = new Date(data.checked_at * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const timeStr = formatTime(data.checked_at);
         lastCheckedEl.textContent = `Checked: ${timeStr}`;
       }
     }
@@ -9554,7 +9550,7 @@ export async function fetchAndRenderBackupJobs(mountEl) {
         statusHtml = `<span style="color: var(--muted); font-size: 11px;">Idle</span>`;
       }
 
-      const lastRunStr = job.last_run_at ? new Date(job.last_run_at * 1000).toLocaleString() : 'Never';
+      const lastRunStr = formatDateTime(job.last_run_at, undefined, t('common.never', 'Never'));
 
       return `
         <tr style="border-bottom: 1px solid rgba(255,255,255,0.06); font-size: 11.5px;">
@@ -9666,7 +9662,7 @@ export async function fetchAndRenderSystemSnapshots(mountEl) {
     }
 
     const rowsHtml = snaps.map(s => {
-      const createdDate = s.created_at ? new Date(s.created_at * 1000).toLocaleString() : 'N/A';
+      const createdDate = formatDateTime(s.created_at, undefined, 'N/A');
       const poolId = s.pool_id || 'default';
       return `
         <tr style="border-bottom: 1px solid rgba(255,255,255,0.06); font-size: 11.5px;">
@@ -9794,7 +9790,7 @@ export async function fetchAndRenderAppBackups(mountEl, filterApp = '') {
         ? `<span class="badge" style="background: rgba(239,68,68,0.15); color: #fca5a5; border: 1px solid rgba(239,68,68,0.3); font-size: 10px; padding: 2px 6px; border-radius: 4px;">⚠️ Auto-Archive (Uninstall)</span>`
         : `<span class="badge" style="background: rgba(249, 115, 22, 0.15); color: #fb923c; border: 1px solid rgba(249, 115, 22, 0.35); font-size: 10px; padding: 2px 6px; border-radius: 4px;">💾 On-Demand</span>`;
 
-      const createdDate = b.created_at_epoch ? new Date(b.created_at_epoch * 1000).toLocaleString() : (b.created_at ? new Date(b.created_at).toLocaleString() : 'N/A');
+      const createdDate = formatDateTime(b.created_at_epoch || b.created_at, undefined, 'N/A');
       const sizeStr = b.archive_size_formatted || (b.archive_size_bytes ? `${(b.archive_size_bytes / (1024 * 1024)).toFixed(1)} MB` : '--');
       const stackHtml = b.stack ? `<span style="font-size:10px; color:var(--muted); margin-left:6px;">(Stack: <code>${escapeHtml(b.stack)}</code>)</span>` : '';
       const mountsCount = b.mounts_count || (b.mounts ? b.mounts.length : 0);
@@ -10634,7 +10630,7 @@ export function updateAiSyncProgressUi(syncProg = {}, standbyGuard = {}, zettaiS
     let msg = syncProg.last_message || syncProg.current_path || 'Ready — Waiting for sync command (Sleeping drives protected)';
     if (syncProg.updated_at && (!syncProg.state || syncProg.state === 'idle' || syncProg.state === 'completed')) {
       try {
-        const timeStr = new Date(syncProg.updated_at * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        const timeStr = formatTime(syncProg.updated_at, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
         if (!msg.includes('Finished at') && !msg.includes('Completed at')) {
           msg += ` (Finished at ${timeStr})`;
         }
@@ -13036,7 +13032,7 @@ export async function exportActiveAiThread(format = 'markdown') {
     if (!res || !res.conversation) return;
     const conv = res.conversation;
     const title = conv.title || 'Conversation';
-    const dateStr = new Date((conv.created_at || (Date.now() / 1000)) * 1000).toLocaleString();
+    const dateStr = formatDateTime(conv.created_at || Date.now());
 
     let content = '';
     let mimeType = 'text/plain';
@@ -13780,7 +13776,7 @@ export function updateAiReindexProgress(data) {
     const topPct = document.getElementById('ai-reindex-top-pct-label');
     if (topPct) topPct.textContent = `${pct}%`;
     const topChunks = document.getElementById('ai-reindex-top-chunks-label');
-    if (topChunks) topChunks.textContent = `${completed.toLocaleString()} / ${total.toLocaleString()} chunks`;
+    if (topChunks) topChunks.textContent = `${formatNumber(completed)} / ${formatNumber(total)} chunks`;
     const topSpeed = document.getElementById('ai-reindex-top-speed-label');
     if (topSpeed) topSpeed.textContent = `${speed} chunks/s`;
     const topEta = document.getElementById('ai-reindex-top-eta-label');
@@ -13795,7 +13791,7 @@ export function updateAiReindexProgress(data) {
     const uPct = document.getElementById('ai-reindex-univ-pct');
     if (uPct) uPct.textContent = `${pct}%`;
     const uChunks = document.getElementById('ai-reindex-univ-chunks');
-    if (uChunks) uChunks.textContent = `${completed.toLocaleString()} / ${total.toLocaleString()} chunks`;
+    if (uChunks) uChunks.textContent = `${formatNumber(completed)} / ${formatNumber(total)} chunks`;
     const uSpeed = document.getElementById('ai-reindex-univ-speed');
     if (uSpeed) uSpeed.textContent = `${speed} chunks/s`;
     const uEta = document.getElementById('ai-reindex-univ-eta');

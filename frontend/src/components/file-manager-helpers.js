@@ -12,6 +12,7 @@ import { openFilePreviewModal } from './file-preview-modal.js';
 import { auth, api } from '../api.js';
 import { showToast } from '../toast.js';
 
+import { formatDateTime } from '../format.js';
 export function isGuardedSystemDir(path) {
   if (!path) return false;
   const normalized = String(path).replace(/\\/g, '/').toLowerCase();
@@ -520,7 +521,7 @@ export class FmInspector {
       previewHtml = '<div style="font-size: 48px; margin-bottom: 8px;">📄</div>';
     }
 
-    const dateModified = item.mtime ? new Date(item.mtime * 1000).toLocaleString() : '--';
+    const dateModified = formatDateTime(item.mtime);
 
     const tabsHeaderHtml = `
       <div class="fm-inspector-tabs" style="display: flex; gap: 4px; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 6px;">

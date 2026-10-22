@@ -8,6 +8,7 @@ import { state } from '../state.js';
 import { makeDraggable, bringToFront, DockManager } from './dock.js';
 import QRCode from 'qrcode';
 
+import { formatBytes as formatSize, formatDateTime } from '../format.js';
 /**
  * ZettNAS Physical Chassis Twin & Storage Topology Visualizer
  * - Parametric SVG chassis twin (Compact Dual, Desktop Tower, Enterprise Rackmount)
@@ -608,15 +609,8 @@ export function generateSmartSparklineSvg(points = [], width = 280, height = 50)
 }
 
 export function formatBytes(bytes) {
-  if (bytes == null || isNaN(bytes) || bytes <= 0) return '0 B';
-  const units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
-  let i = 0;
-  let val = Number(bytes);
-  while (val >= 1000 && i < units.length - 1) {
-    val /= 1000;
-    i++;
-  }
-  return `${val.toFixed(i === 0 ? 0 : 1)} ${units[i]}`;
+  // Disk capacity is labelled the way disk makers do: powers of 1000.
+  return formatSize(bytes, { si: true, fixed: true });
 }
 
 export function formatNumber(num) {
@@ -3270,7 +3264,7 @@ export async function openSnapshotsModal(poolId = 'default_pool') {
         snaps,
         (s) => s.name,
         (s) => {
-          const dt = s.created_at ? new Date(s.created_at * 1000).toLocaleString() : '--';
+          const dt = formatDateTime(s.created_at);
           const tr = document.createElement('tr');
           tr.dataset.key = s.name;
           tr.innerHTML = `
@@ -3291,7 +3285,7 @@ export async function openSnapshotsModal(poolId = 'default_pool') {
           return tr;
         },
         (tr, s) => {
-          const dt = s.created_at ? new Date(s.created_at * 1000).toLocaleString() : '--';
+          const dt = formatDateTime(s.created_at);
           const pathTd = tr.children[1];
           if (pathTd) pathTd.textContent = s.path;
           const dtTd = tr.children[2];
