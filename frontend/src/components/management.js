@@ -11444,6 +11444,11 @@ export function initAiKnowledgeEngine() {
   const chatSendBtn = document.getElementById('btn-ai-chat-send');
   const chatInput = document.getElementById('ai-chat-input');
   const chatClearBtn = document.getElementById('btn-ai-chat-clear');
+  const chatStopBtn = document.getElementById('btn-ai-chat-stop');
+  if (chatStopBtn && !chatStopBtn.dataset.bound) {
+    chatStopBtn.dataset.bound = '1';
+    chatStopBtn.addEventListener('click', () => stopAiChatGeneration());
+  }
   if (chatSendBtn && !chatSendBtn.dataset.bound) {
     chatSendBtn.dataset.bound = '1';
     chatSendBtn.addEventListener('click', () => {
@@ -12608,8 +12613,6 @@ function _buildAiAssistantMessageHtml(res, defaultModel) {
         ${tokSec ? `<span style="color: #fde68a;">🚀 ${tokSec} tok/s</span>` : ''}
         <span>•</span>
         <span>${elapsedMs} ms</span>
-        <span>•</span>
-        <span style="color: #6ee7b7;">💤 0 Wakeups</span>
       </div>
     </div>
     ${toolsBadgesHtml}
@@ -12630,6 +12633,7 @@ let _activeConversationTitle = 'New Conversation';
 let _aiConversations = [];
 let _aiActiveAbortController = null;
 let _aiActiveRequestId = 0;
+let _aiStopRequested = false;
 
 function _groupConversationsChronologically(convs) {
   const now = Date.now();
@@ -13232,6 +13236,15 @@ export function clearAiChatHistory() {
   listEl.innerHTML = '';
 }
 
+/** Stops the answer being generated; the server stops the model when the stream closes (AI-12). */
+export function stopAiChatGeneration() {
+  if (!_aiActiveAbortController) return false;
+  _aiStopRequested = true;
+  _aiActiveAbortController.abort();
+  _aiActiveAbortController = null;
+  return true;
+}
+
 export async function sendAiChatMessage(rawMessage = null) {
   const inputEl = document.getElementById('ai-chat-input');
   const sendBtn = document.getElementById('btn-ai-chat-send');
@@ -13319,7 +13332,12 @@ export async function sendAiChatMessage(rawMessage = null) {
       }
     } else {
       // Production browser runtime: consume SSE stream from /api/media/chat/stream
+      let partialReply = '';
+      let partialTools = [];
+      const stopBtn = document.getElementById('btn-ai-chat-stop');
+      _aiStopRequested = false;
       try {
+        if (stopBtn) stopBtn.hidden = false;
         const streamHeaders = {
           'Content-Type': 'application/json',
           'Accept': 'text/event-stream',
@@ -13387,7 +13405,6 @@ export async function sendAiChatMessage(rawMessage = null) {
                   <span class="ai-typing-dot" style="width: 5px; height: 5px;"></span> Streaming
                 </span>
               </div>
-              <div style="font-size: 10px; color: #94a3b8;">💤 0 Wakeups</div>
             </div>
             <div class="ai-chat-tools-trace" style="display: flex; flex-wrap: wrap; gap: 5px; padding-top: 2px;"></div>
             <div class="ai-chat-reply-body" style="font-size: 12px; color: #f1f5f9; line-height: 1.55;"></div>
@@ -13447,6 +13464,7 @@ export async function sendAiChatMessage(rawMessage = null) {
               } else if (currentEvent === 'tool_done') {
                 setupStreamBotEl();
                 toolsCollected.push(parsed);
+                partialTools = toolsCollected;
                 if (toolsTraceEl) {
                   const existingPill = toolsTraceEl.querySelector(`.ai-chat-tool-pill[data-tool-name="${parsed?.tool}"]`);
                   const isWeb = parsed?.tool === 'browse_internet';
@@ -13498,10 +13516,16 @@ export async function sendAiChatMessage(rawMessage = null) {
                   thoughtBodyEl.innerHTML = escapeHtml(streamedThinking).replace(/\n/g, '<br/>');
                 }
                 listEl.scrollTop = listEl.scrollHeight;
+              } else if (currentEvent === 'reset') {
+                // The model chose to use tools: what it streamed so far wasn't the answer.
+                streamedTokens = '';
+                partialReply = '';
+                if (replyBodyEl) replyBodyEl.innerHTML = '';
               } else if (currentEvent === 'token') {
                 setupStreamBotEl();
                 const tok = parsed?.token || '';
                 streamedTokens += tok;
+                partialReply = streamedTokens;
                 if (replyBodyEl) {
                   replyBodyEl.innerHTML = _formatChatMarkdown(streamedTokens);
                 }
@@ -13530,6 +13554,21 @@ export async function sendAiChatMessage(rawMessage = null) {
           };
         }
       } catch (streamErr) {
+        if (streamErr && streamErr.name === 'AbortError') {
+          // Stopped by the user (or replaced by a newer request): never re-send the question.
+          if (!_aiStopRequested) return null;
+          res = {
+            status: 'ok',
+            stopped: true,
+            reply: `${partialReply}${partialReply ? '\n\n' : ''}_${t('ai.stopped', 'Stopped.')}_`,
+            tools_called: partialTools,
+            active_model: activeModel,
+          };
+          if (streamBotMsgEl) {
+            delete streamBotMsgEl.dataset.isStreaming;
+            streamBotMsgEl.innerHTML = _buildAiAssistantMessageHtml(res, activeModel);
+          }
+        } else {
         console.warn('[ZettAI] Streaming fell back to standard POST:', streamErr);
         if (streamBotMsgEl) {
           streamBotMsgEl.remove();
@@ -13542,6 +13581,9 @@ export async function sendAiChatMessage(rawMessage = null) {
           allow_nas_tools: allowTools,
           conversation_id: _activeConversationId,
         });
+        }
+      } finally {
+        if (stopBtn) stopBtn.hidden = true;
       }
     }
 

@@ -671,7 +671,7 @@ describe('ZettAI — Multi-Modal Local RAG & Visual Search Frontend Suite', () =
     expect(chatList.innerHTML).toContain('get_disks_and_standby_status');
     expect(chatList.innerHTML).toContain('browse_internet');
     expect(chatList.innerHTML).toContain('Linux kernel — Wikipedia');
-    expect(chatList.innerHTML).toContain('0 Wakeups');
+    expect(chatList.innerHTML).not.toContain('0 Wakeups');
 
     // 3. Clear chat history
     clearAiChatHistory();

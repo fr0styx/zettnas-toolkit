@@ -3306,10 +3306,156 @@ def _get_docker_host_ips() -> List[str]:
     return candidate_hosts(_detected_host_ip())
 
 
-_ACTIVE_ENDPOINT_CACHE: Dict[str, Tuple[str, str, float]] = {}
-_LAST_MODEL_PROBLEM: Dict[str, str] = {
-    "text": ""
-}  # why the selected model couldn't answer  # cache_key -> (runtime_kind, url, expire_timestamp)
+_ACTIVE_ENDPOINT_CACHE: Dict[str, Tuple[str, str, float]] = {}  # cache_key -> (runtime_kind, url, expires)
+_LAST_MODEL_PROBLEM: Dict[str, str] = {"text": ""}  # why the selected model couldn't answer
+
+# Live streaming (AI-12): when a sink is set, LLM replies are streamed and each piece is passed to
+# sink(kind, text) with kind "token", "think" or "reset" (drop what was streamed: the model chose
+# tools instead). Setting the cancel event stops generation at the next chunk.
+_TOKEN_SINK: contextvars.ContextVar = contextvars.ContextVar("zettnas_ai_token_sink", default=None)
+_CANCEL_EVENT: contextvars.ContextVar = contextvars.ContextVar("zettnas_ai_cancel", default=None)
+
+
+def _cancelled() -> bool:
+    ev = _CANCEL_EVENT.get()
+    return bool(ev is not None and ev.is_set())
+
+
+class _ThinkSplitter:
+    """Splits streamed text into answer tokens and <think>/<thought>/<reasoning> text."""
+
+    OPEN = ("<think>", "<thought>", "<reasoning>")
+
+    def __init__(self, sink):
+        self.sink = sink
+        self.buf = ""
+        self.close_tag = ""
+        self.emitted = False
+
+    @staticmethod
+    def _held(buf: str, tags) -> int:
+        """Length of a trailing partial tag to hold back until more text arrives."""
+        best = 0
+        for tag in tags:
+            for k in range(min(len(tag) - 1, len(buf)), 0, -1):
+                if buf.endswith(tag[:k]):
+                    best = max(best, k)
+                    break
+        return best
+
+    def _emit(self, kind: str, text: str) -> None:
+        if text:
+            self.sink(kind, text)
+            if kind == "token":
+                self.emitted = True
+
+    def feed(self, text: str) -> None:
+        self.buf += text
+        while self.buf:
+            kind = "think" if self.close_tag else "token"
+            if self.close_tag:
+                i, tag = self.buf.find(self.close_tag), self.close_tag
+                tags = (self.close_tag,)
+            else:
+                hits = [(self.buf.find(t), t) for t in self.OPEN if t in self.buf]
+                i, tag = min(hits) if hits else (-1, "")
+                tags = self.OPEN
+            if i == -1:
+                keep = self._held(self.buf, tags)
+                self._emit(kind, self.buf[: len(self.buf) - keep])
+                self.buf = self.buf[len(self.buf) - keep :]
+                return
+            self._emit(kind, self.buf[:i])
+            self.buf = self.buf[i + len(tag) :]
+            self.close_tag = "" if self.close_tag else "</" + tag[1:]
+
+    def flush(self) -> None:
+        self._emit("think" if self.close_tag else "token", self.buf)
+        self.buf = ""
+
+
+def _read_llm_stream(resp: Any, runtime_kind: str) -> Dict[str, Any]:
+    """Reads a streamed Ollama (NDJSON) or OpenAI-compatible (SSE) reply, passing pieces to the
+    token sink as they arrive, and returns it in the same shape as a non-streamed reply."""
+    sink = _TOKEN_SINK.get() or (lambda kind, text: None)
+    splitter = _ThinkSplitter(sink)
+    content: List[str] = []
+    thinking: List[str] = []
+    ollama_calls: List[Any] = []
+    oa_calls: Dict[int, Dict[str, Any]] = {}
+    final: Dict[str, Any] = {}
+    is_openai = runtime_kind == "openai_compatible"
+    for raw in resp:
+        if _cancelled():
+            final["cancelled"] = True
+            break
+        line = raw.decode("utf-8", errors="replace").strip() if isinstance(raw, bytes) else str(raw).strip()
+        if not line:
+            continue
+        if is_openai:
+            if not line.startswith("data:"):
+                continue
+            line = line[5:].strip()
+            if line == "[DONE]":
+                break
+        try:
+            chunk = json.loads(line)
+        except ValueError:
+            continue
+        if is_openai:
+            if chunk.get("usage"):
+                final["usage"] = chunk["usage"]
+            if chunk.get("model"):
+                final["model"] = chunk["model"]
+            for choice in chunk.get("choices") or []:
+                delta = choice.get("delta") or {}
+                if delta.get("reasoning_content"):
+                    thinking.append(delta["reasoning_content"])
+                    sink("think", delta["reasoning_content"])
+                if delta.get("content"):
+                    content.append(delta["content"])
+                    splitter.feed(delta["content"])
+                for tc in delta.get("tool_calls") or []:
+                    slot = oa_calls.setdefault(
+                        int(tc.get("index", len(oa_calls))),
+                        {"id": tc.get("id"), "type": "function", "function": {"name": "", "arguments": ""}},
+                    )
+                    fn = tc.get("function") or {}
+                    if tc.get("id"):
+                        slot["id"] = tc["id"]
+                    slot["function"]["name"] += fn.get("name") or ""
+                    slot["function"]["arguments"] += fn.get("arguments") or ""
+        else:
+            msg = chunk.get("message") or {}
+            if msg.get("thinking"):
+                thinking.append(msg["thinking"])
+                sink("think", msg["thinking"])
+            if msg.get("content"):
+                content.append(msg["content"])
+                splitter.feed(msg["content"])
+            if msg.get("tool_calls"):
+                ollama_calls.extend(msg["tool_calls"])
+            if chunk.get("done"):
+                for k in ("eval_count", "eval_duration", "prompt_eval_count"):
+                    if chunk.get(k) is not None:
+                        final[k] = chunk[k]
+                break
+    splitter.flush()
+    calls = ollama_calls or [oa_calls[k] for k in sorted(oa_calls)]
+    if calls and splitter.emitted:
+        sink("reset", "")
+    text = "".join(content)
+    if is_openai:
+        return {
+            "choices": [{"message": {"content": text, "reasoning_content": "".join(thinking), "tool_calls": calls}}],
+            "usage": final.get("usage") or {},
+            "model": final.get("model"),
+        }
+    if thinking and "<think>" not in text:
+        text = f"<think>\n{''.join(thinking)}\n</think>\n\n{text}"
+    out = {"message": {"content": text, "tool_calls": calls}}
+    out.update({k: v for k, v in final.items() if k != "cancelled"})
+    return out
 
 
 def _try_local_llm_completion(
@@ -3397,7 +3543,10 @@ def _try_local_llm_completion(
         other_eps = [ep for ep in candidate_endpoints if ":8000" not in ep[1]]
         candidate_endpoints = ovms_eps + other_eps
 
+    streaming = _TOKEN_SINK.get() is not None
     for runtime_kind, url in candidate_endpoints:
+        if _cancelled():
+            break
         if _ENDPOINT_REGISTRY.is_tripped(url):
             continue
         try:
@@ -3439,7 +3588,7 @@ def _try_local_llm_completion(
                 ollama_req_body: Dict[str, Any] = {
                     "model": model_to_use,
                     "messages": messages,
-                    "stream": False,
+                    "stream": streaming,
                     "options": {"temperature": 0.2, "num_ctx": _context_window_for(messages, tools)},
                 }
                 if tools:
@@ -3484,6 +3633,9 @@ def _try_local_llm_completion(
                 }
                 if tools and not is_ovms:
                     openai_req_body["tools"] = tools
+                if streaming:
+                    openai_req_body["stream"] = True
+                    openai_req_body["stream_options"] = {"include_usage": True}
                 payload = json.dumps(openai_req_body).encode("utf-8")
 
             req = urllib.request.Request(
@@ -3494,7 +3646,10 @@ def _try_local_llm_completion(
             )
             # Give local neural generation up to 45s
             with urllib.request.urlopen(req, timeout=45.0) as resp:
-                data = json.loads(resp.read().decode("utf-8", errors="replace"))
+                if streaming:
+                    data = _read_llm_stream(resp, runtime_kind)
+                else:
+                    data = json.loads(resp.read().decode("utf-8", errors="replace"))
                 if runtime_kind == "openai_compatible":
                     choices = data.get("choices") or []
                     if choices and isinstance(choices[0], dict):
@@ -5888,17 +6043,58 @@ async def stream_agentic_chat(
         Z_STATE.ai_accelerator = target_accel
         Z_STATE.ai_model = active_model
 
+    cancel_event = threading.Event()
     try:
-        # Run run_agentic_chat safely across worker thread
-        res = await asyncio.to_thread(
-            run_agentic_chat,
-            clean_msg,
-            history,
-            allow_web_search,
-            allow_nas_tools,
-            model_override,
-            principal,
-        )
+        loop = asyncio.get_running_loop()
+        queue: asyncio.Queue = asyncio.Queue()
+
+        def _sink(kind: str, text: str) -> None:
+            loop.call_soon_threadsafe(queue.put_nowait, (kind, text))
+
+        sink_token = _TOKEN_SINK.set(_sink)
+        cancel_token = _CANCEL_EVENT.set(cancel_event)
+        try:
+            # The worker thread gets a copy of this context, with the sink and cancel event.
+            chat_task = asyncio.ensure_future(
+                asyncio.to_thread(
+                    run_agentic_chat,
+                    clean_msg,
+                    history,
+                    allow_web_search,
+                    allow_nas_tools,
+                    model_override,
+                    principal,
+                )
+            )
+        finally:
+            _TOKEN_SINK.reset(sink_token)
+            _CANCEL_EVENT.reset(cancel_token)
+
+        streamed_answer = False
+        streamed_think = False
+
+        def _event(kind: str, text: str) -> str:
+            nonlocal streamed_answer, streamed_think
+            if kind == "reset":
+                streamed_answer = False
+                return f"event: reset\ndata: {json.dumps({})}\n\n"
+            if kind == "think":
+                streamed_think = True
+            else:
+                streamed_answer = True
+            return f"event: {'think' if kind == 'think' else 'token'}\ndata: {json.dumps({'token': text})}\n\n"
+
+        while True:
+            getter = asyncio.ensure_future(queue.get())
+            done_set, _ = await asyncio.wait({chat_task, getter}, return_when=asyncio.FIRST_COMPLETED)
+            if getter in done_set:
+                yield _event(*getter.result())
+                continue
+            getter.cancel()
+            break
+        while not queue.empty():
+            yield _event(*queue.get_nowait())
+        res = chat_task.result()
 
         # Stream tool events with tool_start and tool_done
         for tc in res.get("tools_called", []):
@@ -5911,7 +6107,7 @@ async def stream_agentic_chat(
 
         # Extract reasoning blocks (<think>, <thought>, <reasoning>), closed or unclosed
         think_text, reply = extract_and_strip_reasoning(reply)
-        if think_text:
+        if think_text and not streamed_think:
             yield f"event: think\ndata: {json.dumps({'token': think_text})}\n\n"
 
         if not reply:
@@ -5929,12 +6125,10 @@ async def stream_agentic_chat(
             if not reply:
                 reply = "I processed your request, but no additional output text was generated."
 
-        # Stream response tokens
-        words = reply.split(" ")
-        for idx, w in enumerate(words):
-            suffix = " " if idx < len(words) - 1 else ""
-            yield f"event: token\ndata: {json.dumps({'token': w + suffix})}\n\n"
-            await asyncio.sleep(0.005)
+        # Answers that didn't come from a streaming model (tools only, no model) are sent in one piece;
+        # the done event carries the final formatted reply either way.
+        if not streamed_answer:
+            yield f"event: token\ndata: {json.dumps({'token': reply})}\n\n"
 
         if conversation_id:
             res["conversation_id"] = conversation_id
@@ -5967,7 +6161,8 @@ async def stream_agentic_chat(
         yield f"event: done\ndata: {json.dumps(res)}\n\n"
 
     except (asyncio.CancelledError, GeneratorExit):
-        logger.info("[ZettAI] Client cancelled or disconnected mid-stream; state cleanup guaranteed")
+        cancel_event.set()  # stops the model at its next chunk (AI-12)
+        logger.info("[ZettAI] Client cancelled or disconnected mid-stream; generation stopped")
         if conversation_id:
             try:
                 from backend.services.ai_conversations_db import append_message
@@ -5990,6 +6185,7 @@ async def stream_agentic_chat(
         logger.error(f"[ZettAI] Streaming exception: {ex}")
         yield f"event: error\ndata: {json.dumps({'error': str(ex)})}\n\n"
     finally:
+        cancel_event.set()
         with Z_STATE.lock:
             Z_STATE.ai_active = False
             Z_STATE.ai_accelerator = ""
