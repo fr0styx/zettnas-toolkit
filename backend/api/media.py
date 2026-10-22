@@ -631,6 +631,37 @@ async def list_installed_models() -> dict[str, Any]:
     return await asyncio.to_thread(installed_models)
 
 
+class BenchmarkApplyRequest(BaseModel):
+    tier: str = Field(..., pattern="^(fast|balanced)$")
+
+
+@router.get("/ai/models/benchmark", dependencies=[Depends(require_scope("system:read", "ai:manage", "system:config"))])
+def get_model_benchmark() -> dict[str, Any]:
+    """Last benchmark results, the recommended tiers and a running job (D2)."""
+    from backend.services import model_benchmark
+
+    return model_benchmark.status()
+
+
+@router.post("/ai/models/benchmark", dependencies=[Depends(require_scope("system:config", "ai:manage"))])
+def start_model_benchmark() -> dict[str, Any]:
+    from backend.services import model_benchmark
+
+    return model_benchmark.start()
+
+
+@router.post("/ai/models/benchmark/apply", dependencies=[Depends(require_scope("system:config", "ai:manage"))])
+def apply_model_tier(req: BenchmarkApplyRequest) -> dict[str, Any]:
+    """Makes the recommended model of a tier Ask Zetty's chat model."""
+    from backend.services import model_benchmark
+
+    name = (model_benchmark.load_results().get("recommended") or {}).get(req.tier)
+    if not name:
+        raise HTTPException(status_code=409, detail="Run a benchmark first.")
+    get_rag_engine().update_config({"active_model": name})
+    return {"active_model": name, "tier": req.tier}
+
+
 @router.post("/ai/models/install", dependencies=[Depends(require_scope("system:config", "ai:manage"))])
 async def install_model(
     req: ModelInstallRequest, principal: AuthenticatedPrincipal = Depends(get_current_principal)

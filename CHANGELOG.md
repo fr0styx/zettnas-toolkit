@@ -29,6 +29,7 @@
 - Opening a VM console no longer stalls the rest of the UI while the VM starts.
 - Indexing respects sleeping disks on ZFS, Btrfs, mdadm and LVM, not only Unraid. Folders whose disks can't be identified are treated as asleep.
 - **Use ZettNAS from Claude, Cursor and other AI clients (MCP).** They get the same tools as Ask Zetty within your permissions; changes come back as a link you confirm in ZettNAS. Every assistant action is in the security audit log. See docs/MCP.md.
+- **Benchmark your AI models.** AI → Models measures how fast each installed model writes on your hardware and where it runs, and can pick the largest one that still answers at reading speed.
 - **Photo search understands what's in a picture.** With a vision model installed (for example Gemma 3 4B), ZettNAS describes each photo and reads the text in it while the NAS is idle, so you can search for "receipt" or "kids at the beach". Off switch under AI settings.
 - Ask Zetty finds Chinese, Japanese and Korean text (search quality for Chinese went from 3% to 85% in the test set).
 

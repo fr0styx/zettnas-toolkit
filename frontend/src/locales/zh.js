@@ -2117,5 +2117,22 @@ export default {
   "ai.mcp_done": "已完成：{summary}",
   "ai.mcp_failed": "该操作未执行。",
   "ai.mcp_expired": "该请求已过期或属于其他账户。",
-  "ai.confirm": "确认"
+  "ai.confirm": "确认",
+  "bench.title": "⏱️ 测试已安装模型",
+  "bench.run": "开始测试",
+  "bench.running": "正在测试 {done}/{total}…",
+  "bench.started": "测试已开始。每个模型都会加载一次，可能需要几分钟。",
+  "bench.desc": "测量每个聊天模型在这台 NAS 上的生成速度和运行位置。“均衡”是仍能达到阅读速度的最大模型。",
+  "bench.model": "模型",
+  "bench.speed": "词元/秒",
+  "bench.first": "首个词元",
+  "bench.where": "运行于",
+  "bench.failed": "失败",
+  "bench.gpu": "GPU",
+  "bench.split": "GPU + CPU",
+  "bench.cpu": "CPU",
+  "bench.when": "测量于 {when}",
+  "bench.use_balanced": "使用均衡：{model}",
+  "bench.use_fast": "使用最快：{model}",
+  "bench.applied": "Ask Zetty 现在使用 {model}"
 };

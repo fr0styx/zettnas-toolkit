@@ -2117,5 +2117,22 @@ export default {
   "ai.mcp_done": "Fait : {summary}",
   "ai.mcp_failed": "L'action n'a pas été exécutée.",
   "ai.mcp_expired": "Cette demande a expiré ou appartient à un autre compte.",
-  "ai.confirm": "Confirmer"
+  "ai.confirm": "Confirmer",
+  "bench.title": "⏱️ Mesurer les modèles installés",
+  "bench.run": "Lancer la mesure",
+  "bench.running": "En cours : {done} sur {total}…",
+  "bench.started": "Mesure lancée. Chaque modèle est chargé une fois, cela peut prendre quelques minutes.",
+  "bench.desc": "Mesure la vitesse d'écriture de chaque modèle de chat sur ce NAS et où il tourne. « Équilibré » est le plus grand modèle qui écrit encore à la vitesse de lecture.",
+  "bench.model": "Modèle",
+  "bench.speed": "Jetons/s",
+  "bench.first": "Premier jeton",
+  "bench.where": "Tourne sur",
+  "bench.failed": "échec",
+  "bench.gpu": "GPU",
+  "bench.split": "GPU + CPU",
+  "bench.cpu": "CPU",
+  "bench.when": "Mesuré le {when}",
+  "bench.use_balanced": "Utiliser l'équilibré : {model}",
+  "bench.use_fast": "Utiliser le plus rapide : {model}",
+  "bench.applied": "Ask Zetty utilise maintenant {model}"
 };

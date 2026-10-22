@@ -10949,6 +10949,7 @@ function _getActiveAiSearchQuery() {
 }
 
 export function initAiKnowledgeEngine() {
+  import('./model-bench.js').then((m) => m.renderModelBench()).catch(() => {}); // D2
   renderAiSearchHistory();
 
   const topbarPill = document.getElementById('topbar-ai-accel-pill');

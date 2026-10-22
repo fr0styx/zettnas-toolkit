@@ -2117,5 +2117,22 @@ export default {
   "ai.mcp_done": "Done: {summary}",
   "ai.mcp_failed": "The action did not run.",
   "ai.mcp_expired": "That request expired or belongs to another account.",
-  "ai.confirm": "Confirm"
+  "ai.confirm": "Confirm",
+  "bench.title": "⏱️ Benchmark installed models",
+  "bench.run": "Run benchmark",
+  "bench.running": "Running {done} of {total}…",
+  "bench.started": "Benchmark started. Each model is loaded once, so this can take a few minutes.",
+  "bench.desc": "Measures how fast each chat model writes on this NAS and where it runs. \"Balanced\" is the largest model that still writes at reading speed.",
+  "bench.model": "Model",
+  "bench.speed": "Tokens/s",
+  "bench.first": "First token",
+  "bench.where": "Runs on",
+  "bench.failed": "failed",
+  "bench.gpu": "GPU",
+  "bench.split": "GPU + CPU",
+  "bench.cpu": "CPU",
+  "bench.when": "Measured {when}",
+  "bench.use_balanced": "Use balanced: {model}",
+  "bench.use_fast": "Use fastest: {model}",
+  "bench.applied": "Ask Zetty now uses {model}"
 };

@@ -2117,5 +2117,22 @@ export default {
   "ai.mcp_done": "Hecho: {summary}",
   "ai.mcp_failed": "La acción no se ejecutó.",
   "ai.mcp_expired": "Esa solicitud caducó o pertenece a otra cuenta.",
-  "ai.confirm": "Confirmar"
+  "ai.confirm": "Confirmar",
+  "bench.title": "⏱️ Medir los modelos instalados",
+  "bench.run": "Iniciar medición",
+  "bench.running": "En curso: {done} de {total}…",
+  "bench.started": "Medición iniciada. Cada modelo se carga una vez, puede tardar unos minutos.",
+  "bench.desc": "Mide qué tan rápido escribe cada modelo de chat en este NAS y dónde se ejecuta. «Equilibrado» es el modelo más grande que aún escribe a velocidad de lectura.",
+  "bench.model": "Modelo",
+  "bench.speed": "Tokens/s",
+  "bench.first": "Primer token",
+  "bench.where": "Se ejecuta en",
+  "bench.failed": "falló",
+  "bench.gpu": "GPU",
+  "bench.split": "GPU + CPU",
+  "bench.cpu": "CPU",
+  "bench.when": "Medido el {when}",
+  "bench.use_balanced": "Usar equilibrado: {model}",
+  "bench.use_fast": "Usar el más rápido: {model}",
+  "bench.applied": "Ask Zetty ahora usa {model}"
 };
