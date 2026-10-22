@@ -223,3 +223,15 @@
 .fm-loc-path { font-size: 11px; color: var(--muted, #94a3b8); font-family: monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .fm-loc-check { color: var(--accent-cyan, #0ea5e9); font-weight: 700; }
 
+/* Favorite folders */
+.fm-fav-item { position: relative; }
+.fm-fav-item.is-missing { opacity: 0.5; }
+.fm-fav-remove {
+  margin-left: auto; width: 22px; height: 22px; flex-shrink: 0; border: none; border-radius: 4px;
+  background: transparent; color: var(--muted, #94a3b8); cursor: pointer; font-size: 11px; opacity: 0;
+}
+.fm-fav-item:hover .fm-fav-remove, .fm-fav-remove:focus-visible { opacity: 1; }
+.fm-fav-remove:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
+.fm-loc-sep { height: 1px; margin: 4px 6px; background: rgba(255, 255, 255, 0.1); }
+.fm-loc-item.is-action .fm-loc-name { font-weight: 500; color: var(--accent-cyan, #0ea5e9); }
+

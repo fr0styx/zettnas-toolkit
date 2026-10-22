@@ -2295,5 +2295,13 @@ export default {
   "fm.loc_user_shares": "User Shares",
   "fm.loc_appdata": "AppData",
   "fm.loc_boot": "Boot Flash",
-  "fm.loc_remotes": "Cloud Remotes"
+  "fm.loc_remotes": "Cloud Remotes",
+  "fm.favorites": "Favorites",
+  "fm.fav_add": "Add to Favorites",
+  "fm.fav_remove": "Remove from Favorites",
+  "fm.fav_add_here": "Add this folder to Favorites",
+  "fm.fav_remove_here": "Remove this folder from Favorites",
+  "fm.fav_added": "Added {name} to Favorites",
+  "fm.fav_removed": "Removed {name} from Favorites",
+  "fm.fav_missing": "This folder is no longer available"
 };

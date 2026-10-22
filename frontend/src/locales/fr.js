@@ -2295,5 +2295,13 @@ export default {
   "fm.loc_user_shares": "Partages utilisateur",
   "fm.loc_appdata": "AppData",
   "fm.loc_boot": "Clé de démarrage",
-  "fm.loc_remotes": "Distants cloud"
+  "fm.loc_remotes": "Distants cloud",
+  "fm.favorites": "Favoris",
+  "fm.fav_add": "Ajouter aux favoris",
+  "fm.fav_remove": "Retirer des favoris",
+  "fm.fav_add_here": "Ajouter ce dossier aux favoris",
+  "fm.fav_remove_here": "Retirer ce dossier des favoris",
+  "fm.fav_added": "{name} ajouté aux favoris",
+  "fm.fav_removed": "{name} retiré des favoris",
+  "fm.fav_missing": "Ce dossier n'est plus disponible"
 };

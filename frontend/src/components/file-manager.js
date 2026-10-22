@@ -14,6 +14,7 @@ import { t } from '../i18n.js';
 import { makeDraggable, bringToFront } from './dock.js';
 import { openFilePreviewModal } from './file-preview-modal.js';
 import { transferCenter } from './transfer-center.js';
+import { favorites, isFavorite, toggleFavorite, closestPath } from './fm-favorites.js';
 import { thumbKind, thumbUrl } from './viewer-kit.js';
 
 import { formatBytes as formatSize, formatDateTime } from '../format.js';
@@ -677,13 +678,22 @@ export class FileManagerWindow {
         if (pool.available !== false) places.push({ icon: pool.type === 'disk' ? '💽' : '⚡', name: pool.name, path: pool.path });
       });
       places.push({ icon: '🗑️', name: t('dock.recycle_bin', 'Recycle Bin'), path: '/mnt/user/.RecycleBin' });
+      favorites().forEach((f) => places.push({ icon: '⭐', name: f.name, path: f.path, favorite: true }));
+      const here = this.currentPath;
+      const starred = isFavorite(here);
+      places.push({
+        icon: starred ? '☆' : '⭐',
+        name: starred ? t('fm.fav_remove_here', 'Remove this folder from Favorites') : t('fm.fav_add_here', 'Add this folder to Favorites'),
+        path: here,
+        action: () => toggleFavorite(here),
+      });
 
       const isPhone = document.body.classList.contains('mobile-mode') || window.innerWidth <= 768;
       if (isPhone) {
         showBottomSheet({
           title: t('fm.quick_locations', 'Quick Locations'),
           subtitle: `Current: ${this.currentPath}`,
-          items: places.map((pl) => ({ icon: pl.icon, label: `${pl.name} (${pl.path})`, onClick: () => this.loadPath(pl.path) })),
+          items: places.map((pl) => ({ icon: pl.icon, label: pl.action ? pl.name : `${pl.name} (${pl.path})`, onClick: () => (pl.action ? pl.action() : this.loadPath(pl.path)) })),
         });
         return;
       }
@@ -1834,12 +1844,14 @@ export class FileManagerWindow {
     menu.className = 'fm-loc-menu';
     menu.setAttribute('role', 'menu');
     menu.setAttribute('aria-label', t('fm.quick_locations', 'Quick Locations'));
-    const here = (this.currentPath || '').replace(/\/+$/, '');
+    // Only the closest place is the current one (/mnt/user/appdata, not also /mnt/user)
+    const currentPath = closestPath(places.filter((pl) => !pl.action).map((pl) => pl.path), this.currentPath);
     menu.innerHTML = places.map((pl, i) => {
-      const current = here === pl.path || here.startsWith(pl.path + '/');
-      return `<button type="button" class="fm-loc-item${current ? ' is-current' : ''}" role="menuitem" data-idx="${i}" title="${escapeHtml(pl.path)}">
+      const current = !pl.action && pl.path === currentPath;
+      const sep = (pl.favorite && !places[i - 1]?.favorite) || (pl.action && i > 0) ? '<div class="fm-loc-sep" role="separator"></div>' : '';
+      return `${sep}<button type="button" class="fm-loc-item${current ? ' is-current' : ''}${pl.action ? ' is-action' : ''}" role="menuitem" data-idx="${i}" title="${escapeHtml(pl.path)}">
         <span class="fm-loc-icon" aria-hidden="true">${pl.icon}</span>
-        <span class="fm-loc-text"><span class="fm-loc-name">${escapeHtml(pl.name)}</span><span class="fm-loc-path">${escapeHtml(pl.path)}</span></span>
+        <span class="fm-loc-text"><span class="fm-loc-name">${escapeHtml(pl.name)}</span>${pl.action ? '' : `<span class="fm-loc-path">${escapeHtml(pl.path)}</span>`}</span>
         ${current ? '<span class="fm-loc-check" aria-hidden="true">✓</span>' : ''}
       </button>`;
     }).join('');
@@ -1895,7 +1907,8 @@ export class FileManagerWindow {
       if (!item) return;
       const pl = places[Number(item.dataset.idx)];
       close();
-      if (pl) this.loadPath(pl.path);
+      if (pl?.action) pl.action();
+      else if (pl) this.loadPath(pl.path);
     });
     document.addEventListener('pointerdown', onOutside, true);
     document.addEventListener('keydown', onKey, true);

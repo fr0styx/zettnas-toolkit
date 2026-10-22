@@ -2295,5 +2295,13 @@ export default {
   "fm.loc_user_shares": "Benutzerfreigaben",
   "fm.loc_appdata": "AppData",
   "fm.loc_boot": "Boot-Stick",
-  "fm.loc_remotes": "Cloud-Ziele"
+  "fm.loc_remotes": "Cloud-Ziele",
+  "fm.favorites": "Favoriten",
+  "fm.fav_add": "Zu Favoriten hinzufügen",
+  "fm.fav_remove": "Aus Favoriten entfernen",
+  "fm.fav_add_here": "Diesen Ordner zu Favoriten hinzufügen",
+  "fm.fav_remove_here": "Diesen Ordner aus Favoriten entfernen",
+  "fm.fav_added": "{name} zu Favoriten hinzugefügt",
+  "fm.fav_removed": "{name} aus Favoriten entfernt",
+  "fm.fav_missing": "Dieser Ordner ist nicht mehr verfügbar"
 };

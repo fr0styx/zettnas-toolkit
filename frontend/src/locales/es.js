@@ -2295,5 +2295,13 @@ export default {
   "fm.loc_user_shares": "Recursos compartidos",
   "fm.loc_appdata": "AppData",
   "fm.loc_boot": "Flash de arranque",
-  "fm.loc_remotes": "Remotos en la nube"
+  "fm.loc_remotes": "Remotos en la nube",
+  "fm.favorites": "Favoritos",
+  "fm.fav_add": "Añadir a favoritos",
+  "fm.fav_remove": "Quitar de favoritos",
+  "fm.fav_add_here": "Añadir esta carpeta a favoritos",
+  "fm.fav_remove_here": "Quitar esta carpeta de favoritos",
+  "fm.fav_added": "{name} añadida a favoritos",
+  "fm.fav_removed": "{name} quitada de favoritos",
+  "fm.fav_missing": "Esta carpeta ya no está disponible"
 };

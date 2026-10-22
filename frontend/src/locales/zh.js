@@ -2295,5 +2295,13 @@ export default {
   "fm.loc_user_shares": "用户共享",
   "fm.loc_appdata": "AppData",
   "fm.loc_boot": "启动闪存",
-  "fm.loc_remotes": "云端远程"
+  "fm.loc_remotes": "云端远程",
+  "fm.favorites": "收藏夹",
+  "fm.fav_add": "添加到收藏夹",
+  "fm.fav_remove": "从收藏夹移除",
+  "fm.fav_add_here": "将此文件夹添加到收藏夹",
+  "fm.fav_remove_here": "将此文件夹从收藏夹移除",
+  "fm.fav_added": "已将 {name} 添加到收藏夹",
+  "fm.fav_removed": "已将 {name} 从收藏夹移除",
+  "fm.fav_missing": "此文件夹已不可用"
 };

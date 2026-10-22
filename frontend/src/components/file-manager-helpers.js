@@ -16,6 +16,7 @@ import { showToast } from '../toast.js';
 
 import { formatDateTime } from '../format.js';
 import { transferCenter } from './transfer-center.js';
+import { favorites, loadFavorites, removeFavorite, isFavorite, toggleFavorite } from './fm-favorites.js';
 export function isGuardedSystemDir(path) {
   if (!path) return false;
   const normalized = String(path).replace(/\\/g, '/').toLowerCase();
@@ -191,6 +192,8 @@ export class FmSidebarTree {
     this.remotes = [];
     this.expandedPaths = new Set(['/mnt/user']);
     this._onMountChanged = () => this.refresh();
+    this._onFavorites = () => this.render();
+    ZettEventBus.on('fm:favorites', this._onFavorites);
     ZettEventBus.on('fm:refresh', this._onMountChanged);
     ZettEventBus.on('storage:mount_changed', this._onMountChanged);
     this.init();
@@ -198,7 +201,7 @@ export class FmSidebarTree {
 
   async init() {
     if (!this.container) return;
-    await this.loadRoots();
+    await Promise.all([this.loadRoots(), loadFavorites()]);
     this.render();
   }
 
@@ -209,6 +212,10 @@ export class FmSidebarTree {
   }
 
   destroy() {
+    if (this._onFavorites) {
+      ZettEventBus.off('fm:favorites', this._onFavorites);
+      this._onFavorites = null;
+    }
     if (this._onMountChanged) {
       ZettEventBus.off('fm:refresh', this._onMountChanged);
       ZettEventBus.off('storage:mount_changed', this._onMountChanged);
@@ -290,6 +297,17 @@ export class FmSidebarTree {
         </div>
       </div>
 
+      ${favorites().length ? `
+      <div class="fm-tree-group fm-tree-favorites" style="margin-top: 12px;">
+        <div class="fm-tree-group-title">${t('fm.favorites', 'Favorites')}</div>
+        ${favorites().map((f) => `
+          <div class="fm-tree-item fm-fav-item ${this.fm.currentPath === f.path ? 'active' : ''}${f.available === false ? ' is-missing' : ''}" data-path="${escapeHtml(f.path)}" title="${escapeHtml(f.available === false ? t('fm.fav_missing', 'This folder is no longer available') : f.path)}">
+            <span class="fm-tree-icon">⭐</span>
+            <span class="fm-tree-label">${escapeHtml(f.name)}</span>
+            <button type="button" class="fm-fav-remove" data-fav-remove="${escapeHtml(f.path)}" title="${escapeHtml(t('fm.fav_remove', 'Remove from Favorites'))}" aria-label="${escapeHtml(t('fm.fav_remove', 'Remove from Favorites'))}: ${escapeHtml(f.name)}">✕</button>
+          </div>`).join('')}
+      </div>` : ''}
+
       <div class="fm-tree-group" style="margin-top: 12px;">
         <div class="fm-tree-group-title">Storage & Remotes</div>
         <div class="fm-tree-item ${isCloudActive ? 'active' : ''}" data-path="/mnt/remotes">
@@ -326,6 +344,13 @@ export class FmSidebarTree {
     treeScroll.innerHTML = html;
 
     // Click and Drag & Drop handlers for tree items
+    treeScroll.querySelectorAll('[data-fav-remove]').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        removeFavorite(btn.dataset.favRemove);
+      });
+    });
+
     treeScroll.querySelectorAll('.fm-tree-item').forEach((item) => {
       item.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -978,6 +1003,8 @@ export class FmContextMenu {
         ${isZip ? `<div class="fm-ctx-item" data-act="archive-extract">📦 Extract Archive Here</div>` : ''}
         ${isSingle ? `<div class="fm-ctx-item" data-act="share">🔗 Share Link…</div>` : ''}
         ${isSingle && !isDir ? `<div class="fm-ctx-item" data-act="checksum">🛡️ Compute SHA-256</div>` : ''}
+        ${isSingle && isDir ? `<div class="fm-ctx-item" data-act="fav-toggle">${isFavorite(fileItem.path) ? `☆ ${escapeHtml(t('fm.fav_remove', 'Remove from Favorites'))}` : `⭐ ${escapeHtml(t('fm.fav_add', 'Add to Favorites'))}`}</div>` : ''}
+        ${!fileItem ? `<div class="fm-ctx-item" data-act="fav-toggle-here">${isFavorite(this.fm.currentPath) ? `☆ ${escapeHtml(t('fm.fav_remove_here', 'Remove this folder from Favorites'))}` : `⭐ ${escapeHtml(t('fm.fav_add_here', 'Add this folder to Favorites'))}`}</div>` : ''}
       </div>
       <div class="fm-ctx-divider"></div>
       <div class="fm-ctx-group">
@@ -1068,6 +1095,12 @@ export class FmContextMenu {
             }, 100);
           }
         }
+        break;
+      case 'fav-toggle':
+        if (item && item.is_dir) toggleFavorite(item.path, item.name);
+        break;
+      case 'fav-toggle-here':
+        toggleFavorite(this.fm.currentPath);
         break;
       case 'trash':
         this.fm.bulkDelete();
