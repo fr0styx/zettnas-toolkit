@@ -15,6 +15,7 @@ import logging
 import os
 import shutil
 import sqlite3
+import stat
 import time
 from typing import Any, Optional
 
@@ -47,6 +48,19 @@ def snapshot_root(data_dir: str) -> str:
     return os.path.join(data_dir, SNAPSHOT_SUBDIR)
 
 
+def _skip_special_files(directory: str, names: list[str]) -> list[str]:
+    """Sockets, FIFOs and device nodes can't be copied (e.g. Samba's msg.sock); they hold no data."""
+    skip = []
+    for n in names:
+        try:
+            mode = os.lstat(os.path.join(directory, n)).st_mode
+        except OSError:
+            continue
+        if stat.S_ISSOCK(mode) or stat.S_ISFIFO(mode) or stat.S_ISCHR(mode) or stat.S_ISBLK(mode):
+            skip.append(n)
+    return skip
+
+
 def take_snapshot(
     data_dir: str, label: str = "", extra: dict[str, Any] | None = None, protect: str | None = None
 ) -> str:
@@ -70,7 +84,7 @@ def take_snapshot(
     for name in INCLUDE_DIRS:
         src = os.path.join(data_dir, name)
         if os.path.isdir(src) and not os.path.islink(src):
-            shutil.copytree(src, os.path.join(dest, name), symlinks=True)
+            shutil.copytree(src, os.path.join(dest, name), symlinks=True, ignore=_skip_special_files)
             files.append(name + "/")
 
     manifest = {"created_at": time.time(), "label": label, "files": files, **(extra or {})}
