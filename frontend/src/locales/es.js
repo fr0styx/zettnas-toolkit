@@ -2169,5 +2169,9 @@ export default {
   "ai.rerank_label": "Reordenador (opcional, OVMS / TEI / Infinity)",
   "ai.rerank_endpoint": "URL del reordenador",
   "ai.rerank_model": "Modelo de reordenación",
-  "ai.rerank_saved": "Reordenador guardado"
+  "ai.rerank_saved": "Reordenador guardado",
+  "sso.immich_title": "Immich",
+  "sso.immich_url": "Dirección de Immich",
+  "sso.immich_connect": "Usar este inicio de sesión en Immich",
+  "sso.immich_done": "Listo. Añade estas URI de redirección en tu proveedor: {uris}"
 };

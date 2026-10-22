@@ -2169,5 +2169,9 @@ export default {
   "ai.rerank_label": "重排序模型（可选，OVMS / TEI / Infinity）",
   "ai.rerank_endpoint": "重排序地址",
   "ai.rerank_model": "重排序模型",
-  "ai.rerank_saved": "重排序设置已保存"
+  "ai.rerank_saved": "重排序设置已保存",
+  "sso.immich_title": "Immich",
+  "sso.immich_url": "Immich 地址",
+  "sso.immich_connect": "让 Immich 使用此登录方式",
+  "sso.immich_done": "完成。请在你的提供方处添加这些重定向 URI：{uris}"
 };

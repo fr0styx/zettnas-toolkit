@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, Field
 
-from backend.auth import require_scope
+from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
 from backend.config import logger
 from backend.services import oidc
 
@@ -136,3 +136,46 @@ def ldap_test() -> dict[str, Any]:
     from backend.services import ldap_auth
 
     return ldap_auth.test_connection()
+
+
+class ImmichConnect(BaseModel):
+    immich_url: str = Field(..., max_length=256, pattern=r"^https?://")
+    client_id: str = Field(default="", max_length=256)
+    client_secret: str = Field(default="", max_length=512)
+
+
+def _immich_app_dir() -> str:
+    """The Immich app folder from its container's /data mount, or appdata/immich."""
+    import os
+
+    try:
+        from backend.services.container_mutator import _docker_request
+
+        st, info = _docker_request("GET", "/containers/immich/json")
+        if st == 200:
+            for m in info.get("Mounts") or []:
+                if m.get("Destination") == "/data" and m.get("Source"):
+                    return os.path.dirname(m["Source"].rstrip("/"))
+    except Exception:
+        logger.debug("oidc: immich container not found", exc_info=True)
+    return "/mnt/user/appdata/immich"
+
+
+@router.post("/apps/immich", dependencies=[Depends(require_scope("users:write", "system:config"))])
+def connect_immich(req: ImmichConnect, principal: AuthenticatedPrincipal = Depends(get_current_principal)):
+    """Turns on sign-in with ZettNAS's provider in a freshly installed Immich (M3)."""
+    from backend.services import immich_sso
+    from backend.users_db import get_user_by_username
+
+    me = get_user_by_username(principal.username) or {}
+    try:
+        return immich_sso.connect(
+            req.immich_url,
+            me.get("email") or "",
+            _immich_app_dir(),
+            oidc.load_config(),
+            req.client_id,
+            req.client_secret,
+        )
+    except immich_sso.ImmichSsoError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e

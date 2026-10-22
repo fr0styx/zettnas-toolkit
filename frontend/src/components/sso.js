@@ -107,6 +107,33 @@ export async function renderSsoPanel() {
     }
   });
   host.append(title, desc, form);
+  if (cfg.enabled) host.append(immichBlock());
+}
+
+/** One click: Immich uses the same sign-in provider (M3). */
+function immichBlock() {
+  const box = Object.assign(document.createElement('div'), { className: 'sso-form' });
+  box.append(Object.assign(document.createElement('div'), { className: 'guard-title guard-sub', textContent: t('sso.immich_title', 'Immich') }));
+  const url = Object.assign(document.createElement('input'), {
+    className: 'tz-select-input',
+    type: 'url',
+    value: `${window.location.protocol}//${window.location.hostname}:2283`,
+  });
+  url.setAttribute('aria-label', t('sso.immich_url', 'Immich address'));
+  const btn = Object.assign(document.createElement('button'), { type: 'button', className: 'btn-pill-toggle', textContent: t('sso.immich_connect', 'Use this sign-in for Immich') });
+  const out = Object.assign(document.createElement('div'), { className: 'guard-muted' });
+  out.setAttribute('aria-live', 'polite');
+  btn.addEventListener('click', async () => {
+    out.textContent = '…';
+    try {
+      const r = await api.post('/api/auth/oidc/apps/immich', { immich_url: url.value.trim() });
+      out.textContent = t('sso.immich_done', 'Done. Add these redirect URIs at your provider: {uris}', { uris: r.redirect_uris.join('  ') });
+    } catch (err) {
+      out.textContent = err.message;
+    }
+  });
+  box.append(url, btn, out);
+  return box;
 }
 
 const LDAP_FIELDS = [

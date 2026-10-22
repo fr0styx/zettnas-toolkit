@@ -2169,5 +2169,9 @@ export default {
   "ai.rerank_label": "Reranker (optional, OVMS / TEI / Infinity)",
   "ai.rerank_endpoint": "Reranker URL",
   "ai.rerank_model": "Reranker model",
-  "ai.rerank_saved": "Reranker saved"
+  "ai.rerank_saved": "Reranker saved",
+  "sso.immich_title": "Immich",
+  "sso.immich_url": "Immich address",
+  "sso.immich_connect": "Use this sign-in for Immich",
+  "sso.immich_done": "Done. Add these redirect URIs at your provider: {uris}"
 };

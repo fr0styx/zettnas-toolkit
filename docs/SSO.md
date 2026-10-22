@@ -73,13 +73,22 @@ password.
 
 The one-click Immich app installs the whole stack: the server, machine learning, Valkey
 and Postgres on a private network, with a generated database password (kept in
-`appdata/immich/.zettnas-secrets.json`). To sign in to Immich with the same provider:
+`appdata/immich/.zettnas-secrets.json`).
 
-1. At the provider, create a second application for Immich with these redirect URIs:
-   `app.immich:///oauth-callback`, `http://<nas-address>:2283/auth/login` and
-   `http://<nas-address>:2283/user-settings` (use your HTTPS address if you have one).
-2. In Immich, open **Administration → Settings → Authentication → OAuth**, turn it on,
-   and enter the same issuer URL, the Immich client ID and secret, and scope
-   `openid email profile`. Turn on **Auto register** so family members get an Immich
-   account on first sign-in.
-3. Set the button text to match ZettNAS (for example "Sign in with Authentik").
+To sign in to Immich with the same provider, open **Security → Single sign-on** and click
+**Use this sign-in for Immich** right after installing it. ZettNAS then, through Immich's
+API:
+
+1. creates Immich's first admin with your ZettNAS email and a generated password (kept in
+   the same secrets file; you can sign in with your provider instead);
+2. turns on OAuth in Immich with ZettNAS's issuer and client, with auto-register on, so
+   family members get an Immich account on first sign-in. Other Immich settings stay as
+   they are and remain editable in Immich.
+
+At the provider, add Immich's redirect URIs to the ZettNAS client (or use a separate
+client and pass its ID and secret): `app.immich:///oauth-callback`,
+`http://<nas-address>:2283/auth/login` and `http://<nas-address>:2283/user-settings`.
+
+If Immich already has an admin that ZettNAS didn't create, turn OAuth on by hand under
+**Administration → Settings → Authentication → OAuth** with the same issuer, client and
+scope `openid email profile`.

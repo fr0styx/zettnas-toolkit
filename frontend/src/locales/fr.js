@@ -2169,5 +2169,9 @@ export default {
   "ai.rerank_label": "Reclasseur (facultatif, OVMS / TEI / Infinity)",
   "ai.rerank_endpoint": "URL du reclasseur",
   "ai.rerank_model": "Modèle de reclassement",
-  "ai.rerank_saved": "Reclasseur enregistré"
+  "ai.rerank_saved": "Reclasseur enregistré",
+  "sso.immich_title": "Immich",
+  "sso.immich_url": "Adresse d'Immich",
+  "sso.immich_connect": "Utiliser cette connexion pour Immich",
+  "sso.immich_done": "Terminé. Ajoutez ces URI de redirection chez votre fournisseur : {uris}"
 };
