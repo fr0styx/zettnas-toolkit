@@ -6,6 +6,7 @@
 
 import { escapeHtml } from '../utils.js';
 import { api } from '../api.js';
+import { state } from '../state.js';
 import { showToast, showConfirmToast } from '../toast.js';
 import { openContainerInspector } from './container-modal.js';
 

@@ -176,83 +176,79 @@ async function request(endpoint, options = {}) {
     config.signal = ctrl.signal;
   }
 
+  let res;
   try {
-    let res;
-    try {
-      res = await window.fetch(url, config);
-    } catch (netErr) {
-      if (timedOut) {
-        throw new ApiError(`The server did not answer within ${Math.round(timeoutMs / 1000)} s.`, { status: 0, error: 'timeout' });
-      }
-      if (netErr && netErr.name !== 'AbortError') reportOffline();
-      throw netErr;
-    } finally {
-      if (timer) clearTimeout(timer);
+    res = await window.fetch(url, config);
+  } catch (netErr) {
+    if (timedOut) {
+      throw new ApiError(`The server did not answer within ${Math.round(timeoutMs / 1000)} s.`, { status: 0, error: 'timeout' });
     }
-    reportOnline();
-
-    if (res.status === 401 && sentInEpoch !== _authEpoch) {
-      // Sent before the latest sign-in: the new session is fine.
-      throw new ApiError('Unauthorized', { status: 401, error: 'unauthorized' });
-    }
-    if (res.status === 401) {
-      const isLcd = typeof window !== 'undefined' && (
-        window.location.search.includes('mode=lcd') ||
-        (typeof document !== 'undefined' && document.body && document.body.classList.contains('lcd-direct'))
-      );
-      if (!isLcd) {
-        auth.clearToken();
-        document.documentElement.classList.remove('has-auth-session');
-        document.documentElement.classList.add('auth-required');
-        ZettEventBus.emit('auth:required', { url });
-        const overlay = document.getElementById('login-overlay');
-        if (overlay) {
-          overlay.style.removeProperty('opacity');
-          overlay.style.display = 'flex';
-        }
-        const dock = document.getElementById('os-dock-container');
-        if (dock) dock.style.display = 'none';
-        // A change the user made isn't lost: after they sign in again (as the same
-        // person) it is sent once more. Reads just fail; the UI reloads them.
-        if (method !== 'GET' && method !== 'HEAD' && !options._reauthRetry && (await waitForSignIn(REAUTH_WAIT_MS))) {
-          const who = _sessionUser();
-          if (!userAtSend || !who || who === userAtSend) {
-            return request(endpoint, { ...options, _reauthRetry: true });
-          }
-        }
-      }
-      throw new ApiError('Unauthorized', { status: 401, error: 'unauthorized' });
-    }
-
-    if (res.status === 428 && !options._confirmRetry) {
-      let info = null;
-      try {
-        info = await res.clone().json();
-      } catch (e) {
-        info = null;
-      }
-      if (info && info.error === 'confirmation_required') {
-        const ok = options.confirmed === true || (await _askToConfirm(info));
-        if (!ok) throw new ApiError('Cancelled', { status: 428, error: 'cancelled' });
-        const tokenRes = await window.fetch('/api/confirmations', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-          body: JSON.stringify({ action: info.action, target: info.target || '' }),
-        });
-        if (!tokenRes.ok) throw await ApiError.from(tokenRes);
-        const { token: confirmToken } = await tokenRes.json();
-        return request(endpoint, {
-          ...options,
-          _confirmRetry: true,
-          headers: { ...options.headers, 'X-Confirm-Token': confirmToken },
-        });
-      }
-    }
-
-    return res;
-  } catch (err) {
-    throw err;
+    if (netErr && netErr.name !== 'AbortError') reportOffline();
+    throw netErr;
+  } finally {
+    if (timer) clearTimeout(timer);
   }
+  reportOnline();
+
+  if (res.status === 401 && sentInEpoch !== _authEpoch) {
+    // Sent before the latest sign-in: the new session is fine.
+    throw new ApiError('Unauthorized', { status: 401, error: 'unauthorized' });
+  }
+  if (res.status === 401) {
+    const isLcd = typeof window !== 'undefined' && (
+      window.location.search.includes('mode=lcd') ||
+      (typeof document !== 'undefined' && document.body && document.body.classList.contains('lcd-direct'))
+    );
+    if (!isLcd) {
+      auth.clearToken();
+      document.documentElement.classList.remove('has-auth-session');
+      document.documentElement.classList.add('auth-required');
+      ZettEventBus.emit('auth:required', { url });
+      const overlay = document.getElementById('login-overlay');
+      if (overlay) {
+        overlay.style.removeProperty('opacity');
+        overlay.style.display = 'flex';
+      }
+      const dock = document.getElementById('os-dock-container');
+      if (dock) dock.style.display = 'none';
+      // A change the user made isn't lost: after they sign in again (as the same
+      // person) it is sent once more. Reads just fail; the UI reloads them.
+      if (method !== 'GET' && method !== 'HEAD' && !options._reauthRetry && (await waitForSignIn(REAUTH_WAIT_MS))) {
+        const who = _sessionUser();
+        if (!userAtSend || !who || who === userAtSend) {
+          return request(endpoint, { ...options, _reauthRetry: true });
+        }
+      }
+    }
+    throw new ApiError('Unauthorized', { status: 401, error: 'unauthorized' });
+  }
+
+  if (res.status === 428 && !options._confirmRetry) {
+    let info = null;
+    try {
+      info = await res.clone().json();
+    } catch (e) {
+      info = null;
+    }
+    if (info && info.error === 'confirmation_required') {
+      const ok = options.confirmed === true || (await _askToConfirm(info));
+      if (!ok) throw new ApiError('Cancelled', { status: 428, error: 'cancelled' });
+      const tokenRes = await window.fetch('/api/confirmations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({ action: info.action, target: info.target || '' }),
+      });
+      if (!tokenRes.ok) throw await ApiError.from(tokenRes);
+      const { token: confirmToken } = await tokenRes.json();
+      return request(endpoint, {
+        ...options,
+        _confirmRetry: true,
+        headers: { ...options.headers, 'X-Confirm-Token': confirmToken },
+      });
+    }
+  }
+
+  return res;
 }
 
 export const api = {

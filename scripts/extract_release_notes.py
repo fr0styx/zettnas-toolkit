@@ -33,7 +33,10 @@ def extract(text: str, tag: str, repo: str = ""):
 def main():
     tag = os.environ.get("GITHUB_REF_NAME", "") or (sys.argv[1] if len(sys.argv) > 1 else "")
     repo = os.environ.get("GITHUB_REPOSITORY", "")
-    text = open("CHANGELOG.md", encoding="utf-8").read() if os.path.exists("CHANGELOG.md") else ""
+    text = ""
+    if os.path.exists("CHANGELOG.md"):
+        with open("CHANGELOG.md", encoding="utf-8") as f:
+            text = f.read()
     title, notes = extract(text, tag, repo)
     with open("RELEASE_NOTES.md", "w", encoding="utf-8") as out:
         out.write(notes)

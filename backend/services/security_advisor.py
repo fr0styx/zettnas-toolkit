@@ -131,11 +131,10 @@ def evaluate_security_posture(request: Request | None = None) -> dict[str, Any]:
         from backend.services.samba_engine import get_samba_engine
 
         engine = get_samba_engine()
-        shares = engine.get_shares()
-        for s_name, share in shares.items():
+        for share in engine.list_shares():
             if getattr(share, "guest_ok", False):
                 has_guest_shares = True
-                guest_share_names.append(s_name)
+                guest_share_names.append(share.name)
     except Exception as e:
         logger.debug(f"[SecurityAdvisor] Failed checking SMB guest shares: {e}")
 

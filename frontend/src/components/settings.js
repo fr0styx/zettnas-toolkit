@@ -10,7 +10,7 @@ import { applyDashboardLayout, persistDashboardLayout, fitMiniPreviewScale, sync
 import { fetchAndRenderMetrics } from './metrics-chart.js';
 import { t } from '../i18n.js';
 import { escapeHtml } from '../utils.js';
-import { showToast, showActionToast, showPromptToast } from '../toast.js';
+import { showToast, showActionToast, showPromptToast, showConfirmToast } from '../toast.js';
 import { applyGlassSettings, applyWallpaperReadability } from './wallpapers.js';
 import { applyDockSettings } from './dock.js';
 import { initGlassTimePickers } from './time-picker.js';
@@ -1932,7 +1932,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
-async function renderApiTokens() {
+export async function renderApiTokens() {
   const list = document.getElementById('api-tokens-list');
   if (!list) return;
   

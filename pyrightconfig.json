@@ -1,0 +1,8 @@
+{
+  "include": ["backend", "app.py"],
+  "exclude": ["**/__pycache__", "tests"],
+  "pythonVersion": "3.12",
+  "typeCheckingMode": "basic",
+  "reportMissingImports": "warning",
+  "reportMissingModuleSource": "none"
+}

@@ -30,7 +30,7 @@ import { initUsersManagement } from './components/users.js';
 import { applyStats, applyTheme, applyDesktopTheme, applyLcdTheme, initDashboardClicks } from './components/dashboard.js';
 import { initFanControl } from './components/fan-control.js';
 import { initLedControl } from './components/led-control.js';
-import { fetchDashboardLayout, fitMiniPreviewScale } from './components/mini-preview.js';
+import { applyDashboardLayout, fetchDashboardLayout, fitMiniPreviewScale } from './components/mini-preview.js';
 import { initWallpapers, loadWallpapers } from './components/wallpapers.js';
 import { initEvents } from './components/events.js';
 import { initSettings, openDrawer, closeDrawer } from './components/settings.js';

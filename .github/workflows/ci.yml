@@ -40,7 +40,10 @@ jobs:
           pip install httpx playwright
 
       - name: Run Ruff Lint
-        run: ruff check app.py backend tests
+        run: ruff check app.py backend tests scripts
+
+      - name: Pyright type check, no file may get worse (OPS-24)
+        run: python scripts/pyright_ratchet.py
 
       - name: Run Ruff Format Check
         run: ruff format --check app.py backend tests
@@ -76,6 +79,9 @@ jobs:
 
       - name: Translation lint (FE-13)
         run: npm run lint:i18n
+
+      - name: ESLint (OPS-24)
+        run: npm run lint:js
 
   e2e-integration:
     name: Headless Playwright E2E Integration

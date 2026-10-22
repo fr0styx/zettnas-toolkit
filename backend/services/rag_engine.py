@@ -3553,10 +3553,9 @@ class RagSearchEngine:
             # Thermal watchdog check
             delay = cooperative_delay
             try:
-                from backend.hardware.fans import get_system_temperatures
+                from backend.hardware.cpu import read_cpu_temp
 
-                temps = get_system_temperatures()
-                cpu_temp = temps.get("cpu_temp") or temps.get("highest_temp") or 0.0
+                cpu_temp = read_cpu_temp() or 0.0
                 if cpu_temp >= 75.0:
                     delay = 0.20  # 200ms thermal pause
             except Exception:
@@ -5726,6 +5725,23 @@ class RagSearchEngine:
             }
         finally:
             conn.close()
+
+    def _record_deferred_subpath(self, subpath: str, dev: str) -> None:
+        """Queues a file or folder on a sleeping disk to be learned when the disk spins up."""
+        with self._write_lock:
+            conn = self._get_conn(readonly=False)
+            try:
+                conn.execute(
+                    """
+                    INSERT INTO rag_deferred_queue(target_path, backing_dev, reason, queued_at, priority)
+                    VALUES (?, ?, 'disk_standby', ?, 0)
+                    ON CONFLICT(target_path) DO UPDATE SET queued_at = excluded.queued_at
+                    """,
+                    (subpath, dev, time.time()),
+                )
+                conn.commit()
+            finally:
+                conn.close()
 
     def _index_single_file(
         self,

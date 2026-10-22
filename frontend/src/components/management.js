@@ -5234,7 +5234,7 @@ export async function fetchAndRenderWireguard() {
       try {
         natBtn.disabled = true;
         const curStatus = await api.get('/api/network/mesh-vpn/wireguard/subnet-routing');
-        const nextState = !Boolean(curStatus.enabled);
+        const nextState = !curStatus.enabled;
         const res = await api.post('/api/network/mesh-vpn/wireguard/subnet-routing', {
           enabled: nextState,
           interface: 'wg0',
@@ -7379,8 +7379,7 @@ export function initManagement() {
       fetchAndRenderSystemSnapshots();
       fetchAndRenderAppBackups();
     } else if (paneId === 'mgmt-pane-security') {
-      if (typeof fetchAPITokens === 'function') fetchAPITokens();
-      if (typeof renderApiTokens === 'function') renderApiTokens();
+      import('./settings.js').then((m) => m.renderApiTokens && m.renderApiTokens()).catch(() => {});
       fetchAndRenderSecurityPosture();
     } else if (paneId === 'mgmt-pane-notifications') {
       fetchAndRenderNotificationConfig();
@@ -7680,8 +7679,7 @@ export function initManagement() {
         sectionName = t('mgmt.storage_title', 'Storage & Disks');
       } else if (targetId === 'mgmt-sec-ups') {
         sectionName = t('mgmt.sidebar_ups', 'Power & Battery');
-        if (typeof fetchAndRenderUpsTelemetry === 'function') fetchAndRenderUpsTelemetry();
-        else if (typeof fetchAndRenderUPS === 'function') fetchAndRenderUPS();
+        fetchAndRenderUpsTelemetry();
         if (typeof loadUpsConfigToDrawer === 'function') loadUpsConfigToDrawer();
       } else if (targetId === 'mgmt-sec-system-group') {
         sectionName = t('mgmt.system_title', 'System & Identity');
@@ -9169,7 +9167,7 @@ export async function fetchAndRenderNotificationConfig() {
     _notificationConfig = res || {};
     renderNotificationConfigUI();
   } catch (err) {
-    logger.error('Failed to load notification config:', err);
+    console.error('Failed to load notification config:', err);
     showToast(t('notif.load_fail', 'Failed to load notification settings'), 'error');
   }
 }
@@ -9259,7 +9257,7 @@ export async function saveNotificationsConfig() {
     renderNotificationConfigUI();
     showToast(t('notif.saved_ok', 'Notification settings saved successfully!'), 'success');
   } catch (err) {
-    logger.error('Failed to save notification settings:', err);
+    console.error('Failed to save notification settings:', err);
     showToast(err.message || 'Failed to save notifications', 'error');
   }
 }

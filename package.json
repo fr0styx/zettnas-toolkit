@@ -10,9 +10,10 @@
     "dev": "node ./node_modules/vite/bin/vite.js",
     "budget": "node frontend/scripts/check-budget.mjs static",
     "lint:i18n": "node frontend/scripts/i18n-lint.mjs",
+    "lint:js": "eslint frontend vite.config.mjs vitest.config.mjs eslint.config.mjs --max-warnings 71",
     "lint:py": "ruff check app.py backend tests",
     "format:py": "ruff format app.py backend tests",
-    "lint": "ruff check app.py backend tests && ruff format --check app.py backend tests",
+    "lint": "ruff check app.py backend tests scripts && ruff format --check app.py backend tests scripts",
     "check:all": "npm run lint && npm test"
   },
   "repository": {
@@ -27,8 +28,11 @@
   },
   "homepage": "https://github.com/fr0styx/zettnas-toolkit#readme",
   "devDependencies": {
+    "@eslint/js": "9.30.1",
     "@vitest/coverage-v8": "^5.0.3",
     "axe-core": "4.10.3",
+    "eslint": "9.30.1",
+    "globals": "15.14.0",
     "jsdom": "^30.1.2",
     "vite": "^8.3.4",
     "vitest": "^5.0.3"

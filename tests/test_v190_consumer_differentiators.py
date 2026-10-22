@@ -69,7 +69,8 @@ def test_security_posture_evaluation_default_password():
     mock_samba = MagicMock()
     mock_share = MagicMock()
     mock_share.guest_ok = True
-    mock_samba.get_shares.return_value = {"public_share": mock_share}
+    mock_share.name = "public_share"
+    mock_samba.list_shares.return_value = [mock_share]
 
     with (
         patch("backend.services.security_advisor.is_using_default_password", return_value=True),
@@ -89,7 +90,8 @@ def test_security_posture_evaluation_hardened():
     mock_samba = MagicMock()
     mock_share = MagicMock()
     mock_share.guest_ok = False
-    mock_samba.get_shares.return_value = {"secure_vault": mock_share}
+    mock_share.name = "secure_vault"
+    mock_samba.list_shares.return_value = [mock_share]
 
     with (
         patch("backend.services.security_advisor.is_using_default_password", return_value=False),

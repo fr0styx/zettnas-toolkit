@@ -354,7 +354,7 @@ async def login(req: LoginRequest, request: Request):
                     user = create_user(
                         username=target_username,
                         password=req.password,
-                        display_name=config.NAS_NAME or "Administrator",
+                        display_name=getattr(config, "NAS_NAME", None) or "Administrator",
                         role_id="superadmin",
                     )
                 except Exception:
