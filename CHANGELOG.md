@@ -1,5 +1,60 @@
 # ZettNAS Toolkit - Release Changelog
 
+## v1.9.3 (2026-10-22) - Stable
+### 🛡️ Security hardening, safer updates, and an honest, permission-aware Ask Zetty
+
+Recommended for everyone on 1.9.2. Read **Before you upgrade**: a few things that used to work loosely are now stricter.
+
+#### Before you upgrade
+
+- **Scripts and integrations must send tokens in a header.** API tokens in the URL (`?token=…`) are no longer accepted; use `Authorization: Bearer <token>`. Browser sessions now live only in a secure cookie.
+- **Cross-site requests are refused.** Writes authenticated by the browser cookie must come from ZettNAS's own pages. If you reach ZettNAS through a proxy on another hostname, add it to `CSRF_TRUSTED_ORIGINS`.
+- **Non-admin users only reach their home folder and shares.** Existing shares keep working (the default level is "write"), but folders outside any share are now admin-only. Set per-share levels under **Users → Share access**.
+- **Virtual machines have their own permission.** The StorageAdmin role no longer controls VMs; give custom roles `vms:manage` if they need it.
+- **Password-protected share links** take the password in the page or a header, not `?pwd=` in the link.
+- **Ask Zetty uses web search only when you turn on Web** in a chat, and only answers with the model you selected; install it from **AI → Models** if it isn't there.
+
+#### Updates and backups
+
+- **Revert to the previous version** from Settings. Data is snapshotted before every update, and a newer database is never opened by an older version.
+- "Update available" is decided by image digest, and the in-app updater installs only this project's signed images.
+- Release images are built from pinned base images and hash-locked dependencies, smoke-tested, scanned for critical vulnerabilities, and signed before they're published.
+- Complete, encrypted backup of the app configuration, and a safer restore.
+
+#### Security
+
+- **SEC-16 / SEC-17 / FE-05:** cookie-only browser sessions, a CSRF check, and no tokens in URLs, logs or browser history.
+- **SEC-10 / SEC-11:** per-share file access for non-admins; tighter scopes for logs, AI controls and transfers.
+- **SEC-07:** VM disks, ISOs and host shares are confined to storage folders; QEMU options are validated.
+- **SEC-06 / SEC-08:** Samba share settings are validated before writing `smb.conf`; disks in use can't be formatted into a pool.
+- **SEC-12:** one safe fetcher for user-supplied URLs, blocking local and metadata addresses.
+- **FE-08 / FE-09 / SEC-19–21:** HTML from apps and users is sanitised; login and share-link fixes.
+- Destructive actions (deleting pools, shares, users, VMs, backups; reboot; update) need a server-checked confirmation.
+- Two-factor secrets are encrypted at rest; the legacy token file is retired.
+- Security alerts for failed logins, new tokens and role changes go to your notification channels; costly routes are rate-limited.
+- Report-only Content-Security-Policy, and a guide for HTTPS with a Caddy sidecar.
+- Pillow 13.0.0 fixes a critical JPEG decoder vulnerability.
+
+#### Ask Zetty
+
+- Only offers the tools your role allows, and every action still waits for **Confirm**. Text from files, photos, web pages and containers is treated as data, never as instructions. A 52-case prompt-injection test runs in CI.
+- Answers stream as the model writes them, with a **Stop** button that stops the model.
+- No canned answers or invented numbers: if no model answered, it says so; speeds and token counts are shown only when measured.
+- **Install** downloads a model into Ollama with progress and checks it worked. The catalog lists mainstream models with their licences.
+- Stays on the NAS unless you turn on **Web**; the answer lists any outside service used. Security Advisor warns if an AI runtime is reachable from your network without authentication.
+- Ollama's context window is sized to the prompt, so long documents aren't cut silently.
+- Document indexing embeds in batches and never mixes vector types in one file. New **Forget folder**, and a setting to delete chats after 7–365 days.
+- AI-written Compose files that ask for host access (privileged, Docker socket, host network, …) show a warning before deploying.
+- New [docs/RAG.md](docs/RAG.md) with measured search quality on a 200-question, five-language test set, and [docs/PRIVACY.md](docs/PRIVACY.md) listing everything ZettNAS sends off the NAS.
+
+#### Fixes
+
+- Staying signed in across reloads; a 401 from a request sent before sign-in no longer signs you out.
+- The stats collector keeps running on machines without a CPU temperature sensor.
+- Chinese and Japanese web search snippets are no longer dropped.
+
+---
+
 ## v1.9.2 (2026-10-21) - Stable (Security Release)
 ### 🔒 Critical security fixes. Upgrade now.
 
