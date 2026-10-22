@@ -11,6 +11,9 @@
 
 - **New `latest-core` and `edge-core` images** (about 500 MB instead of 1.7 GB) leave out virtual machines and the front-LCD renderer. The updater stays on the variant you run. See docs/INSTALLATION.md.
 
+- **Ransomware guard.** Mass renames or deletes, files renamed to ransomware extensions, ransom notes or a changed guard file freeze writes, snapshot pools that support it, block the source address and send a critical alert. Optional guard files catch attacks over SMB and NFS. See SECURITY.md.
+- **Repeated failed sign-ins block the address** for an hour (web and WebDAV). Trusted networks are set with `ZETTNAS_TRUSTED_IPS`; blocked addresses are listed under Security.
+
 #### Reliability
 
 - Background services (stats, SMART, fans, LCD, buttons) restart on their own after a crash, and `/api/health` shows their state.

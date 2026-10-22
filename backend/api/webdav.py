@@ -4,6 +4,7 @@ Provides WebDAV daemon controls, modern WebDAV Portal UI, and transparent HTTP p
 """
 
 import asyncio
+import base64
 import hashlib
 import hmac
 import logging
@@ -182,6 +183,10 @@ async def webdav_portal_login(request: Request):
         )
         return resp
     else:
+        from backend.auth import client_ip
+        from backend.services import ip_block
+
+        ip_block.record_auth_failure(client_ip(request), "WebDAV")  # M5
         return HTMLResponse(
             render_webdav_login(error_msg="Invalid WebDAV username or password."),
             status_code=200,
@@ -303,7 +308,28 @@ def _get_webdav_portal_user(request: Request, cfg: dict[str, Any]) -> dict[str, 
     return None
 
 
+def _observe_webdav_write(request: Request, path: str) -> None:
+    """Feeds WebDAV renames, deletes and writes to the ransomware guard (M4)."""
+    kind = {"MOVE": "rename", "DELETE": "delete", "PUT": "write"}.get(request.method)
+    if not kind:
+        return
+    from backend.auth import client_ip
+    from backend.services.ransomware_guard import get_guard
+
+    dest = request.headers.get("destination", "")
+    new_path = urllib.parse.unquote(dest.split("/webdav/", 1)[1]) if "/webdav/" in dest else ""
+    user = ""
+    auth = request.headers.get("authorization", "")
+    if auth.lower().startswith("basic "):
+        try:
+            user = base64.b64decode(auth[6:]).decode("utf-8", "replace").split(":", 1)[0]
+        except ValueError:
+            user = ""
+    get_guard().observe(kind, path, user=user, ip=client_ip(request), new_path=new_path)
+
+
 async def _proxy_webdav(request: Request, path: str = ""):
+    _observe_webdav_write(request, path)
     engine = get_webdav_engine()
     if not engine.is_running():
         cfg = engine.load_config()

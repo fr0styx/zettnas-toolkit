@@ -38,6 +38,33 @@ Out of scope: vulnerabilities in the host OS, Docker itself, or third-party cont
 - Mount the Docker socket only into ZettNAS, and never `chmod 666` it. ZettNAS reaches it through its allow-list proxy (see below).
 - Keep the appdata folder private: it holds the session-signing key and password hashes.
 
+## Ransomware guard and blocked addresses
+
+**Ransomware guard** (Security → Ransomware guard, on by default). It watches changes
+made through ZettNAS: the file manager, uploads and WebDAV. With **guard files** turned
+on, it also places `!ZettNAS-guard-file.docx` in each share and checks it every 30
+seconds, which catches attacks over SMB and NFS too. It reacts to:
+
+- 150 renames or permanent deletes in 60 seconds from one user or address
+  (moving files to the Recycle Bin doesn't count);
+- 10 files renamed to known ransomware extensions, or ransom notes written, in 60
+  seconds;
+- a guard file that changed or disappeared.
+
+It then freezes writes: the file manager and WebDAV answer 423, ZettNAS's own Samba
+shares turn read-only, and the SFTP service stops. Next it snapshots pools where
+ZettNAS manages snapshots (Btrfs and ZFS on generic Linux; on Unraid, snapshots are
+Unraid's job), blocks the source address for 24 hours, and sends a critical alert to
+every notification channel. Unraid's own SMB shares aren't changed: use guard files
+for early warning there. An admin lifts the freeze under Security.
+
+**Blocked addresses.** An address with 20 failed sign-ins (web or WebDAV) in 15
+minutes is blocked for an hour. Blocked addresses get 403 from the web app and WebDAV
+and are denied by ZettNAS's Samba. Loopback and the networks in `ZETTNAS_TRUSTED_IPS`
+(comma-separated, for example `192.168.1.10,10.0.0.0/24`) are never blocked. If you
+lock yourself out, run
+`docker exec zettnas-toolkit python3 -m backend.services.ip_block --unblock <address>`.
+
 ## Privileges and root-equivalent roles
 
 ZettNAS runs as root in its container with raw-disk and hardware access, because it

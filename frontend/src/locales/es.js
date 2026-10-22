@@ -2070,5 +2070,22 @@ export default {
   "ai.vision_saved": "Ajuste de descripción de fotos guardado",
   "toast.ai_vision_failed": "No se pudo guardar el ajuste de descripción de fotos: {error}",
   "ai.vision_no_model": "Instala un modelo de visión (por ejemplo gemma3 o qwen2.5vl) en IA → Modelos.",
-  "ai.vision_progress": "{done} de {total} fotos descritas"
+  "ai.vision_progress": "{done} de {total} fotos descritas",
+  "guard.title": "🛡️ Protección contra ransomware",
+  "guard.desc": "Detiene todas las escrituras, crea instantáneas donde se puede, bloquea la dirección y te avisa si se renombran o borran muchos archivos, aparecen extensiones de ransomware o cambia un archivo vigía.",
+  "guard.enabled": "Vigilar ransomware",
+  "guard.canaries": "Colocar archivos vigía en las carpetas compartidas ({count} colocados). Detecta también ataques por SMB y NFS.",
+  "guard.frozen": "Las escrituras están congeladas.",
+  "guard.frozen_reason": "{reason} ({when}). Origen: {user} desde {ip}.",
+  "guard.unfreeze": "Levantar el bloqueo",
+  "guard.unfreeze_confirm": "Levanta el bloqueo solo cuando el equipo que hizo los cambios esté limpio. ¿Continuar?",
+  "guard.unfrozen": "Las escrituras vuelven a estar permitidas",
+  "guard.saved": "Ajustes de la protección guardados",
+  "guard.save_failed": "No se pudo guardar: {error}",
+  "guard.load_failed": "No se pudo cargar la protección: {error}",
+  "guard.blocked_title": "Direcciones bloqueadas",
+  "guard.none_blocked": "Ninguna. Una dirección con 20 inicios de sesión fallidos en 15 minutos se bloquea una hora.",
+  "guard.until": "hasta {when}",
+  "guard.unblock": "Desbloquear",
+  "guard.unblock_ip": "Desbloquear {ip}"
 };

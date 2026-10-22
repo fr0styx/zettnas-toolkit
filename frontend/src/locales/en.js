@@ -2070,5 +2070,22 @@ export default {
   "ai.vision_saved": "Photo captioning setting saved",
   "toast.ai_vision_failed": "Could not save the photo captioning setting: {error}",
   "ai.vision_no_model": "Install a vision model (for example gemma3 or qwen2.5vl) under AI → Models.",
-  "ai.vision_progress": "{done} of {total} photos described"
+  "ai.vision_progress": "{done} of {total} photos described",
+  "guard.title": "🛡️ Ransomware guard",
+  "guard.desc": "Stops all writes, snapshots pools that support it, blocks the address and alerts you when files are renamed or deleted en masse, renamed to ransomware extensions, or a guard file changes.",
+  "guard.enabled": "Watch for ransomware",
+  "guard.canaries": "Place guard files in shares ({count} placed). Catches attacks over SMB and NFS too.",
+  "guard.frozen": "Writes are frozen.",
+  "guard.frozen_reason": "{reason} ({when}). Source: {user} from {ip}.",
+  "guard.unfreeze": "Lift the freeze",
+  "guard.unfreeze_confirm": "Only lift the freeze after the computer that made the changes is cleaned up. Continue?",
+  "guard.unfrozen": "Writes are allowed again",
+  "guard.saved": "Ransomware guard settings saved",
+  "guard.save_failed": "Could not save: {error}",
+  "guard.load_failed": "Could not load the ransomware guard: {error}",
+  "guard.blocked_title": "Blocked addresses",
+  "guard.none_blocked": "None. Addresses with 20 failed sign-ins in 15 minutes are blocked for an hour.",
+  "guard.until": "until {when}",
+  "guard.unblock": "Unblock",
+  "guard.unblock_ip": "Unblock {ip}"
 };

@@ -7380,6 +7380,7 @@ export function initManagement() {
       fetchAndRenderAppBackups();
     } else if (paneId === 'mgmt-pane-security') {
       import('./settings.js').then((m) => m.renderApiTokens && m.renderApiTokens()).catch(() => {});
+      import('./guard-panel.js').then((m) => m.renderGuardPanel()).catch(() => {});
       fetchAndRenderSecurityPosture();
     } else if (paneId === 'mgmt-pane-notifications') {
       fetchAndRenderNotificationConfig();

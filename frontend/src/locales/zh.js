@@ -2070,5 +2070,22 @@ export default {
   "ai.vision_saved": "照片描述设置已保存",
   "toast.ai_vision_failed": "无法保存照片描述设置：{error}",
   "ai.vision_no_model": "请在 AI → 模型 中安装视觉模型（例如 gemma3 或 qwen2.5vl）。",
-  "ai.vision_progress": "已描述 {done}/{total} 张照片"
+  "ai.vision_progress": "已描述 {done}/{total} 张照片",
+  "guard.title": "🛡️ 勒索软件防护",
+  "guard.desc": "当大量文件被重命名或删除、文件被改成勒索软件扩展名或守护文件被修改时，停止所有写入、在支持的存储池上创建快照、封锁来源地址并提醒你。",
+  "guard.enabled": "监测勒索软件",
+  "guard.canaries": "在共享中放置守护文件（已放置 {count} 个），也能发现通过 SMB 和 NFS 的攻击。",
+  "guard.frozen": "写入已冻结。",
+  "guard.frozen_reason": "{reason}（{when}）。来源：{user}，地址 {ip}。",
+  "guard.unfreeze": "解除冻结",
+  "guard.unfreeze_confirm": "请先清理造成这些更改的电脑，再解除冻结。继续吗？",
+  "guard.unfrozen": "已重新允许写入",
+  "guard.saved": "勒索软件防护设置已保存",
+  "guard.save_failed": "无法保存：{error}",
+  "guard.load_failed": "无法加载勒索软件防护：{error}",
+  "guard.blocked_title": "已封锁的地址",
+  "guard.none_blocked": "无。15 分钟内登录失败 20 次的地址会被封锁 1 小时。",
+  "guard.until": "直到 {when}",
+  "guard.unblock": "解除封锁",
+  "guard.unblock_ip": "解除封锁 {ip}"
 };

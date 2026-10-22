@@ -2070,5 +2070,22 @@ export default {
   "ai.vision_saved": "Réglage des descriptions de photos enregistré",
   "toast.ai_vision_failed": "Impossible d'enregistrer le réglage des descriptions : {error}",
   "ai.vision_no_model": "Installez un modèle de vision (par ex. gemma3 ou qwen2.5vl) dans IA → Modèles.",
-  "ai.vision_progress": "{done} photos décrites sur {total}"
+  "ai.vision_progress": "{done} photos décrites sur {total}",
+  "guard.title": "🛡️ Protection anti-rançongiciel",
+  "guard.desc": "Bloque toutes les écritures, crée des instantanés quand c'est possible, bloque l'adresse et vous alerte en cas de renommages ou suppressions massifs, d'extensions de rançongiciel ou de fichier sentinelle modifié.",
+  "guard.enabled": "Surveiller les rançongiciels",
+  "guard.canaries": "Placer des fichiers sentinelles dans les partages ({count} placés). Détecte aussi les attaques via SMB et NFS.",
+  "guard.frozen": "Les écritures sont gelées.",
+  "guard.frozen_reason": "{reason} ({when}). Source : {user} depuis {ip}.",
+  "guard.unfreeze": "Lever le gel",
+  "guard.unfreeze_confirm": "Ne levez le gel qu'après avoir nettoyé l'ordinateur à l'origine des changements. Continuer ?",
+  "guard.unfrozen": "Les écritures sont de nouveau autorisées",
+  "guard.saved": "Réglages de la protection enregistrés",
+  "guard.save_failed": "Échec de l'enregistrement : {error}",
+  "guard.load_failed": "Impossible de charger la protection : {error}",
+  "guard.blocked_title": "Adresses bloquées",
+  "guard.none_blocked": "Aucune. Une adresse avec 20 échecs de connexion en 15 minutes est bloquée une heure.",
+  "guard.until": "jusqu'au {when}",
+  "guard.unblock": "Débloquer",
+  "guard.unblock_ip": "Débloquer {ip}"
 };

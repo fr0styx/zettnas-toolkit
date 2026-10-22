@@ -1,3 +1,4 @@
+import contextvars
 import hashlib
 import hmac
 import json
@@ -321,8 +322,38 @@ def _allowed_while_password_change_pending(method: str, path: str, sess: dict[st
     return method == "POST" and norm == f"/api/users/{sess.get('user_id')}/password"
 
 
+_WEBDAV_WRITE_METHODS = {"PUT", "DELETE", "MOVE", "COPY", "MKCOL", "PROPPATCH"}
+_FS_READONLY_POSTS = ("/api/fs/conflict-check", "/api/fs/checksum", "/api/fs/folder-size")
+CLIENT_IP_CTX: contextvars.ContextVar[str] = contextvars.ContextVar("zettnas_client_ip", default="")
+
+
+def _is_file_write(path: str, method: str) -> bool:
+    """Requests that change files: refused while the ransomware guard has frozen writes (M4)."""
+    norm = path.replace("/api/v1/", "/api/")
+    if norm.startswith("/webdav"):
+        return method in _WEBDAV_WRITE_METHODS
+    if norm.startswith("/api/fs/") and method in ("POST", "PUT", "DELETE", "PATCH"):
+        return not norm.startswith(_FS_READONLY_POSTS) and "/share-links" not in norm
+    return False
+
+
 async def auth_middleware(request: Request, call_next):
     path = request.url.path
+
+    # Blocked addresses (M5) and the ransomware write freeze (M4) come first
+    ip = client_ip(request)
+    CLIENT_IP_CTX.set(ip)
+    from backend.services import ip_block
+
+    if ip_block.is_blocked(ip):
+        return error_response(403, "This address is blocked. An admin can unblock it under Security.")
+    if _is_file_write(path, request.method):
+        from backend.services.ransomware_guard import get_guard
+
+        if get_guard().frozen:
+            return error_response(
+                423, "Writes are frozen by the ransomware guard. An admin can lift the freeze under Security."
+            )
 
     # Reject oversized bodies early (before the route reads them into memory).
     content_length = request.headers.get("content-length")

@@ -292,7 +292,15 @@ class SambaEngine:
 
     def generate_and_save_conf(self) -> str:
         """Generates the full smb.conf text and saves it to disk."""
-        conf_lines = [self._DEFAULT_GLOBAL_CONFIG.strip(), ""]
+        conf_lines = [self._DEFAULT_GLOBAL_CONFIG.strip()]
+        from backend.services import ip_block
+        from backend.services.ransomware_guard import get_guard
+
+        blocked = [b["ip"] for b in ip_block.list_blocks()]
+        if blocked:
+            conf_lines.append(f"   hosts deny = {' '.join(blocked)}")  # M5
+        frozen = get_guard().frozen  # M4: every share read-only while frozen
+        conf_lines.append("")
 
         for share in self._shares.values():
             try:
@@ -305,7 +313,7 @@ class SambaEngine:
             if share.comment:
                 conf_lines.append(f"   comment = {share.comment}")
             conf_lines.append(f"   browseable = {'yes' if share.browseable else 'no'}")
-            conf_lines.append(f"   read only = {'yes' if share.read_only else 'no'}")
+            conf_lines.append(f"   read only = {'yes' if share.read_only or frozen else 'no'}")
             conf_lines.append(f"   guest ok = {'yes' if share.guest_ok else 'no'}")
             conf_lines.append("   create mask = 0775")
             conf_lines.append("   directory mask = 0775")

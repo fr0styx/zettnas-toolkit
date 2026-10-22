@@ -20029,3 +20029,16 @@ tr.docker-row-selected {
 .zn-offline-banner[hidden] {
   display: none;
 }
+
+
+/* Ransomware guard panel (M4, M5) */
+.guard-card { border-top: 1px solid rgba(255,255,255,0.06); margin-top: 14px; padding-top: 14px; display: flex; flex-direction: column; gap: 8px; }
+.guard-title { font-weight: 700; font-size: 12.5px; color: #fff; }
+.guard-sub { margin-top: 6px; }
+.guard-muted { font-size: 11px; color: #94a3b8; line-height: 1.4; }
+.guard-toggle { display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: #cbd5e1; cursor: pointer; }
+.guard-alert { padding: 10px 12px; border-radius: 8px; background: rgba(235,87,87,0.18); border: 1px solid rgba(235,87,87,0.5); color: #fecaca; font-size: 11.5px; line-height: 1.45; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.guard-unfreeze { margin-left: auto; }
+.guard-blocks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.guard-blocks li { display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: #e2e8f0; }
+.guard-blocks li button { margin-left: auto; }

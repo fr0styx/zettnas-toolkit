@@ -2070,5 +2070,22 @@ export default {
   "ai.vision_saved": "Einstellung für Fotobeschreibungen gespeichert",
   "toast.ai_vision_failed": "Einstellung für Fotobeschreibungen nicht gespeichert: {error}",
   "ai.vision_no_model": "Installiere ein Bildmodell (z. B. gemma3 oder qwen2.5vl) unter KI → Modelle.",
-  "ai.vision_progress": "{done} von {total} Fotos beschrieben"
+  "ai.vision_progress": "{done} von {total} Fotos beschrieben",
+  "guard.title": "🛡️ Ransomware-Schutz",
+  "guard.desc": "Stoppt alle Schreibzugriffe, erstellt Snapshots wo möglich, sperrt die Adresse und alarmiert dich, wenn massenhaft umbenannt oder gelöscht wird, Dateien Ransomware-Endungen bekommen oder eine Wächterdatei geändert wird.",
+  "guard.enabled": "Auf Ransomware achten",
+  "guard.canaries": "Wächterdateien in Freigaben ablegen ({count} abgelegt). Erkennt auch Angriffe über SMB und NFS.",
+  "guard.frozen": "Schreibzugriffe sind gesperrt.",
+  "guard.frozen_reason": "{reason} ({when}). Quelle: {user} von {ip}.",
+  "guard.unfreeze": "Sperre aufheben",
+  "guard.unfreeze_confirm": "Hebe die Sperre erst auf, wenn der verursachende Computer bereinigt ist. Fortfahren?",
+  "guard.unfrozen": "Schreibzugriffe sind wieder erlaubt",
+  "guard.saved": "Einstellungen des Ransomware-Schutzes gespeichert",
+  "guard.save_failed": "Speichern fehlgeschlagen: {error}",
+  "guard.load_failed": "Ransomware-Schutz konnte nicht geladen werden: {error}",
+  "guard.blocked_title": "Gesperrte Adressen",
+  "guard.none_blocked": "Keine. Adressen mit 20 fehlgeschlagenen Anmeldungen in 15 Minuten werden eine Stunde gesperrt.",
+  "guard.until": "bis {when}",
+  "guard.unblock": "Entsperren",
+  "guard.unblock_ip": "{ip} entsperren"
 };

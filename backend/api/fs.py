@@ -615,6 +615,16 @@ def mkdir(req: MkdirRequest, principal: AuthenticatedPrincipal = Depends(get_cur
     return fn(req.path)
 
 
+def _observe(kind: str, path: str, principal: Any, new_path: str = "") -> None:
+    """Feeds file-manager changes to the ransomware guard (M4)."""
+    from backend.auth import CLIENT_IP_CTX
+    from backend.services.ransomware_guard import get_guard
+
+    get_guard().observe(
+        kind, path, user=getattr(principal, "username", "") or "", ip=CLIENT_IP_CTX.get(), new_path=new_path
+    )
+
+
 class RenameRequest(BaseModel):
     path: str
     new_name: str
@@ -689,6 +699,7 @@ async def fs_rename(req: RenameRequest, principal: AuthenticatedPrincipal = Depe
     check_user_path_access(dst, principal, write=True)
     if os.path.lexists(dst):
         raise HTTPException(status_code=400, detail="Destination already exists")
+    _observe("rename", target_unresolved, principal, new_path=dst)
     try:
         await asyncio.to_thread(os.rename, target_unresolved, dst)
         return {"status": "ok"}
@@ -715,6 +726,7 @@ async def fs_delete(req: DeleteRequest, principal: AuthenticatedPrincipal = Depe
     try:
         if "/.RecycleBin/" in target_unresolved.replace("\\", "/") or target_unresolved.endswith(".RecycleBin"):
             # Hard delete if already in recycle bin
+            _observe("delete", target_unresolved, principal)  # only permanent deletes count (M4)
             if os.path.islink(target_unresolved):
                 await asyncio.to_thread(os.unlink, target_unresolved)
             elif os.path.isdir(target_unresolved):

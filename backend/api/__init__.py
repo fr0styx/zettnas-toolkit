@@ -23,6 +23,7 @@ from backend.api.notifications import router as notifications_router
 from backend.api.remotes import router as remotes_router
 from backend.api.replication import router as replication_router
 from backend.api.samba import router as samba_router
+from backend.api.security import router as security_router
 from backend.api.sftp import router as sftp_router
 from backend.api.snmp import router as snmp_router
 from backend.api.stats import router as stats_router
@@ -52,6 +53,7 @@ api_router.include_router(storage_router)
 api_router.include_router(webdav_router)
 api_router.include_router(remotes_router)
 api_router.include_router(samba_router)
+api_router.include_router(security_router)
 api_router.include_router(ups_router)
 api_router.include_router(network_router)
 api_router.include_router(replication_router)

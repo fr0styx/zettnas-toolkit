@@ -1,6 +1,7 @@
 import base64
 import hashlib
 import hmac
+import ipaddress
 import json
 import os
 import threading
@@ -124,6 +125,13 @@ def _lockout_remaining(key: str) -> int:
 
 def _register_failure(key: str, is_ip: bool = False) -> None:
     now = time.time()
+    try:
+        ipaddress.ip_address(key)
+        from backend.services import ip_block
+
+        ip_block.record_auth_failure(key, "web")  # M5
+    except ValueError:
+        logger.debug("auth: failure key is not an address", exc_info=False)
     threshold = _FREE_ATTEMPTS_IP if is_ip else _FREE_ATTEMPTS_USER
     with _failures_lock:
         if len(_failures) > 1000:

@@ -187,6 +187,9 @@ def startup_system():
         from backend.services.vision_queue import vision_daemon
 
         supervise("VisionCaptioner", vision_daemon)  # AI-14, idle-only
+        from backend.services.ransomware_guard import guard_daemon
+
+        supervise("RansomwareGuard", guard_daemon)  # M4: guard-file checks
 
     try:
         get_webdav_engine().start_if_enabled()
