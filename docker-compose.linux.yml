@@ -76,27 +76,35 @@ services:
       # - /dev/kvm:/dev/kvm  # Uncomment for direct /dev/kvm access if host has hardware virtualization
 
   zettnas-samba:
-    image: dperson/samba:latest
+    # Maintained Samba on Alpine (github.com/crazy-max/docker-samba); dperson/samba stopped at 2021.
+    # ZettNAS writes the whole smb.conf; this container only runs it.
+    image: crazymax/samba:4.23.8
     container_name: zettnas-samba
     restart: unless-stopped
-    network_mode: host                    # Line-rate 10GbE throughput + native WSD & Bonjour mDNS
+    network_mode: host                    # Line-rate 10GbE throughput + Windows (WSD) discovery
     volumes:
       - /mnt/storage:/mnt/storage:rw
       - ./data/samba:/etc/samba/zettnas:ro
       - ./data/samba/private:/var/lib/samba/private:rw
-    environment:
-      - USERID=1000
-      - GROUPID=1000
-      - INCLUDE=/etc/samba/zettnas/smb.conf
+    entrypoint: ["/bin/sh", "-c"]
     command:
-      - "sh"
-      - "-c"
       - |
-        if [ -f /etc/samba/zettnas/disable_sidecar ] || (which nc >/dev/null 2>&1 && nc -z 127.0.0.1 445 2>/dev/null); then
-          echo "[ZettNAS Samba] Host OS has native Samba active on port 445. Standby mode active."
+        CONF=/etc/samba/zettnas/smb.conf
+        if [ -f /etc/samba/zettnas/disable_sidecar ] || nc -z 127.0.0.1 445 2>/dev/null; then
+          echo "[ZettNAS Samba] The host already serves SMB on port 445. Standby mode."
           while true; do sleep 86400; done
-        else
-          exec /usr/bin/samba.sh -I /etc/samba/zettnas/smb.conf
         fi
+        until [ -f "$$CONF" ]; do
+          echo "[ZettNAS Samba] Waiting for ZettNAS to write $$CONF..."
+          sleep 5
+        done
+        mkdir -p /var/lib/samba/private /var/log/samba /run/samba
+        # Unix accounts live only in this container: recreate them from Samba's user database
+        pdbedit -L 2>/dev/null | while IFS=: read -r user uid _; do
+          [ -n "$$user" ] && ! id -u "$$user" >/dev/null 2>&1 && { adduser -D -H -u "$$uid" "$$user" 2>/dev/null || adduser -D -H "$$user"; }
+        done
+        nmbd --daemon --configfile="$$CONF" || echo "[ZettNAS Samba] nmbd did not start (NetBIOS names only)"
+        wsdd2 -d -w || echo "[ZettNAS Samba] wsdd2 did not start (Windows network discovery only)"
+        exec smbd --foreground --no-process-group --debug-stdout --configfile="$$CONF"
     depends_on:
       - zettnas-toolkit

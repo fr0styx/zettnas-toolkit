@@ -39,3 +39,10 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 3
+
+  # Images pinned in the compose files (the Samba sidecar)
+  - package-ecosystem: "docker-compose"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 3

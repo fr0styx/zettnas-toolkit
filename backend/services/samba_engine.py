@@ -498,7 +498,7 @@ class SambaEngine:
                                 "Cmd": [
                                     "sh",
                                     "-c",
-                                    'id -u "$1" >/dev/null 2>&1 || adduser -D -H -u 1000 "$1" 2>/dev/null || true',
+                                    'id -u "$1" >/dev/null 2>&1 || adduser -D -H -u 1000 "$1" 2>/dev/null || adduser -D -H "$1"',  # 1000 once, then the next free id
                                     "--",
                                     username,
                                 ],
