@@ -30,7 +30,6 @@ import { trapFocus, escapeHtml, copyTextToClipboard, reconcileKeyedTable } from 
 import { t, getLanguage } from '../i18n.js';
 import { collectClientEnvironment, getClientLogs } from '../client-logger.js';
 import { openFilePreviewModal } from './file-preview-modal.js';
-import QRCode from 'qrcode';
 
 import { formatBytes as formatSize, formatDateTime, formatNumber, formatTime } from '../format.js';
 if (typeof window !== 'undefined') {
@@ -5185,6 +5184,8 @@ export async function fetchAndRenderWireguard() {
 
         if (qrBox && qrCanvasWrap && confText) {
           try {
+            // the QR library loads only when a QR code is shown (FE-02)
+            const { default: QRCode } = await import('qrcode');
             const svgString = await QRCode.toString(confText, {
               type: 'svg',
               margin: 1,
@@ -5200,6 +5201,7 @@ export async function fetchAndRenderWireguard() {
             const openQrModal = async () => {
               if (!modalQr) return;
               if (modalQrWrap) {
+                const { default: QRCode } = await import('qrcode');
                 const largeSvg = await QRCode.toString(confText, {
                   type: 'svg',
                   margin: 2,
@@ -10026,7 +10028,7 @@ function _updateAiVisualFilterBadge() {
 }
 
 let _aiLastLlmRecommendations = null;
-let _aiLastActiveModel = 'qwen2.5:3b';
+let _aiLastActiveModel = ''; // the model the server reported; never a made-up default (FE-15)
 let _aiActiveHfFilter = 'all';
 let _aiModelsSortBy = 'date';
 let _aiSortListenerAttached = false;
@@ -10062,7 +10064,7 @@ export function renderAiLlmRecommendations(recData = {}, activeModel = '') {
   }
 
   const allModelsRaw = Array.isArray(recData.models) ? recData.models : [];
-  const currentActive = activeModel || recData.active_model || _aiLastActiveModel || 'qwen2.5:3b';
+  const currentActive = activeModel || recData.active_model || _aiLastActiveModel || '';
   _aiLastActiveModel = currentActive;
 
   // Filter out any models that do not fit the user's hardware from the catalog,
@@ -11708,19 +11710,19 @@ export async function fetchAndRenderAiStatus() {
     }
 
     // Render NPU & GPU LLM Recommendations
-    const activeModelId = res.active_model || cfg.llm_model || _aiLastActiveModel || 'qwen2.5:3b';
+    const activeModelId = res.active_model || cfg.llm_model || _aiLastActiveModel || '';
     _aiLastActiveModel = activeModelId;
     const activeLlmLabel = document.getElementById('ai-active-llm-label');
     const activeLlmPill = document.getElementById('ai-active-llm-pill');
     if (activeLlmLabel) {
-      activeLlmLabel.textContent = activeModelId;
+      activeLlmLabel.textContent = activeModelId || '—';
     }
     if (activeLlmPill) {
       activeLlmPill.title = `Active Local LLM: ${activeModelId} on ${hwName} — Leveraged by RAG Synthesis & NAS Copilot Chatbot`;
     }
     const chatModelBadge = document.getElementById('ai-chat-active-model-badge');
     if (chatModelBadge) {
-      chatModelBadge.textContent = `🤖 ${activeModelId} (${tierShort} Tier ${tierNum})`;
+      chatModelBadge.textContent = activeModelId ? `🤖 ${activeModelId} (${tierShort} Tier ${tierNum})` : '🤖 —';
     }
     if (res.llm_recommendations) {
       renderAiLlmRecommendations(res.llm_recommendations, activeModelId);
@@ -11737,7 +11739,7 @@ export async function fetchAndRenderAiStatus() {
     const topDot = document.getElementById('topbar-ai-accel-dot');
     const topPill = document.getElementById('topbar-ai-accel-pill');
     const isReindexing = Boolean(reindexStatus && reindexStatus.status === 'running');
-    if (topText && !isReindexing) topText.textContent = `${tierShort} • Standby Safe`;
+    if (topText && !isReindexing) topText.textContent = cfg.respect_standby === false ? tierShort : `${tierShort} • Standby Safe`;
     if (topLabel) topLabel.textContent = `AI: ${tierShort}`;
     if (topDot && !isReindexing) {
       topDot.style.background = tierNum === 1 ? '#3bf58b' : tierNum === 2 ? '#38bdf8' : '#a78bfa';
@@ -12011,7 +12013,7 @@ export async function runAiRagAsk(rawQuestion, options = {}) {
 
     const hwTierLabel = res.hardware?.tier_code || res.hardware?.tier || res.hardware?.active_tier_name || '—';
     const llmTel = res.llm_telemetry || {};
-    const activeLlmId = llmTel.active_model || _aiLastActiveModel || 'qwen2.5:3b';
+    const activeLlmId = llmTel.active_model || _aiLastActiveModel || '—';
     const tokPerSec = llmTel.tokens_per_sec || null;
     const combinedHtml = `
       <div class="ai-rag-synthesis-box" style="background: rgba(15,23,42,0.65); border: 1px solid rgba(56,189,248,0.28); border-radius: 10px; padding: 12px 15px; display: flex; flex-direction: column; gap: 10px;">
@@ -12879,7 +12881,7 @@ export async function selectAiConversation(convId) {
         const botMsgEl = document.createElement('div');
         botMsgEl.className = 'ai-chat-msg ai-chat-msg-assistant';
         botMsgEl.dataset.convId = convId;
-        const modelName = m.telemetry?.active_model || conv.model || 'qwen2.5:3b';
+        const modelName = m.telemetry?.active_model || conv.model || '—';
         botMsgEl.innerHTML = _buildAiAssistantMessageHtml({
           reply: m.content,
           llm_telemetry: m.telemetry,
@@ -13340,7 +13342,7 @@ export async function sendAiChatMessage(rawMessage = null) {
   // Web search and weather send the question outside the NAS: only when the user turns it on (AI-06).
   const allowWeb = !!document.getElementById('ai-chat-web-toggle')?.checked;
   const allowTools = true;
-  const activeModel = _aiLastActiveModel || 'qwen2.5:3b';
+  const activeModel = _aiLastActiveModel || '—';
   const isThinking = isAiThinkingModel(activeModel);
   let streamBotMsgEl = null;
 

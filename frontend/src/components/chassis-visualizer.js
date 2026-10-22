@@ -6,7 +6,6 @@ import { announceA11y } from '../a11y.js';
 import { showToast, showConfirmToast, showPromptToast } from '../toast.js';
 import { state } from '../state.js';
 import { makeDraggable, bringToFront, DockManager } from './dock.js';
-import QRCode from 'qrcode';
 
 import { formatBytes as formatSize, formatDateTime } from '../format.js';
 /**
@@ -2359,6 +2358,7 @@ export async function openNewCloudRemoteModal(onSuccess) {
               try {
                 const origin = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : 'http://127.0.0.1:8082';
                 const mobileUrl = `${origin}/api/remotes/oauth/mobile-page?sid=${encodeURIComponent(session.session_id)}`;
+                const { default: QRCode } = await import('qrcode');
                 const svgStr = await QRCode.toString(mobileUrl, {
                   type: 'svg',
                   margin: 1,
