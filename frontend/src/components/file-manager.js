@@ -2011,7 +2011,7 @@ export class FileManagerWindow {
         } else if (isImage) {
           const thumbUrl = `/api/fs/download?path=${encodeURIComponent(file.path)}`;
           iconContent = `
-            <img src="${thumbUrl}" class="fm-thumb-img" loading="lazy" alt="${escName}" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';" />
+            <img src="${thumbUrl}" class="fm-thumb-img" loading="lazy" alt="${escName}" data-img-fallback="hide-show-next:flex" />
             <div class="fm-fallback-img-icon" style="display:none;">${fileSvg}</div>
           `;
         } else {

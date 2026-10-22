@@ -305,13 +305,13 @@ async def security_headers_middleware(request: Request, call_next):
     response.headers["X-Frame-Options"] = "SAMEORIGIN"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
-    # Report-only CSP for the UI pages (FE-06); user files keep their own sandbox policy (SEC-05)
+    # Enforced CSP for the UI pages (FE-06); user files keep their own sandbox policy (SEC-05)
     if "content-security-policy" not in response.headers and response.headers.get("content-type", "").startswith(
         "text/html"
     ):
         from backend.csp import policy
 
-        response.headers["Content-Security-Policy-Report-Only"] = policy()
+        response.headers["Content-Security-Policy"] = policy()
     from backend.auth import request_is_https
 
     if request_is_https(request):

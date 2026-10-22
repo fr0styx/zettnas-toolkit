@@ -1632,7 +1632,7 @@ export function renderAppCatalogGrid() {
   grid.innerHTML = filtered.map((app) => {
     const icon = categoryIcons[app.category] || '📦';
     const logoHtml = app.logo
-      ? `<img src="${escapeHtml(app.logo)}" alt="${escapeHtml(app.name)}" style="width:24px; height:24px; object-fit:contain; border-radius:4px; vertical-align:middle; flex-shrink:0;" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='inline';" /><span style="font-size:20px; line-height:1; display:none;">${icon}</span>`
+      ? `<img src="${escapeHtml(app.logo)}" alt="${escapeHtml(app.name)}" style="width:24px; height:24px; object-fit:contain; border-radius:4px; vertical-align:middle; flex-shrink:0;" data-img-fallback="hide-show-next:inline" /><span style="font-size:20px; line-height:1; display:none;">${icon}</span>`
       : `<span style="font-size:20px; line-height:1;">${icon}</span>`;
 
     const sourceBadge = app.source_name && app.source_name !== 'Built-in'
@@ -4492,7 +4492,7 @@ export async function fetchAndRenderWireguard() {
             taildropList.innerHTML = files
               .map(
                 f => `
-              <div class="taildrop-file-item" data-path="${escapeHtml(f.path || '')}" style="display:flex; justify-content:space-between; align-items:center; padding:6px 8px; border-bottom:1px solid rgba(255,255,255,0.05); font-size:11px; cursor:pointer; border-radius:4px; transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'" title="Click to view folder in Files">
+              <div class="taildrop-file-item" data-path="${escapeHtml(f.path || '')}" style="display:flex; justify-content:space-between; align-items:center; padding:6px 8px; border-bottom:1px solid rgba(255,255,255,0.05); font-size:11px; cursor:pointer; border-radius:4px; transition:background 0.2s;" data-hover-bg title="Click to view folder in Files">
                 <span style="font-weight:600; color:#fff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:60%;" title="${escapeHtml(f.name)}">📄 ${escapeHtml(f.name)}</span>
                 <span style="color:var(--muted); font-size:10.5px;">${escapeHtml(f.size_formatted)} · ${escapeHtml(f.modified_at)}</span>
               </div>
@@ -9523,7 +9523,7 @@ export async function fetchAndRenderBackupJobs(mountEl) {
           <div style="font-size: 11.5px; color: var(--muted); max-width: 400px; margin: 0 auto 12px; line-height: 1.4;">
             Automate snapshot rotation and offsite cloud backups to protect against drive failure, ransomware, or accidental deletion.
           </div>
-          <button type="button" class="btn-rect primary" onclick="document.getElementById('btn-open-create-backup-job')?.click()" style="font-size: 11px; padding: 6px 14px;">
+          <button type="button" class="btn-rect primary" data-action="click-target" data-target="btn-open-create-backup-job" style="font-size: 11px; padding: 6px 14px;">
             Configure First Pipeline
           </button>
         </div>
@@ -12104,7 +12104,7 @@ function buildVisualPhotoCardHtml(item) {
     <div class="ai-visual-photo-card" data-path="${escapeHtml(fPath)}" data-name="${escapeHtml(fName)}" data-file-id="${fId}" data-category="${escapeHtml(fCat)}" data-favorite="${isFav ? '1' : '0'}" data-excerpt="${escapeHtml(item.excerpt || '')}" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.09); border-radius: 9px; overflow: hidden; cursor: pointer; display: flex; flex-direction: column; transition: transform 0.15s, border-color 0.15s;">
       <div style="height: 125px; background: rgba(0,0,0,0.4); position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden;">
         ${isPhoto
-          ? `<img src="${escapeHtml(thumbUrl)}" alt="${escapeHtml(fName)}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'" />`
+          ? `<img src="${escapeHtml(thumbUrl)}" alt="${escapeHtml(fName)}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover;" data-img-fallback="hide" />`
           : `<div style="display:flex; flex-direction:column; align-items:center; gap:6px; padding:10px; text-align:center;">
                <span style="font-size:30px;">${catIcon}</span>
                <span style="font-size:10px; color:#94a3b8; max-height:42px; overflow:hidden;">${escapeHtml((item.excerpt || fPath).slice(0, 75))}</span>
@@ -12153,7 +12153,7 @@ export function renderAiPreviewInspector(item) {
     </div>
     ${isPhoto
       ? `<div style="height:170px; border-radius:8px; background:rgba(0,0,0,0.45); overflow:hidden; margin-bottom:10px; display:flex; align-items:center; justify-content:center;">
-           <img src="${escapeHtml(thumbUrl)}" alt="${escapeHtml(fName)}" style="width:100%; height:100%; object-fit:cover;" onerror="this.style.display='none'" />
+           <img src="${escapeHtml(thumbUrl)}" alt="${escapeHtml(fName)}" style="width:100%; height:100%; object-fit:cover;" data-img-fallback="hide" />
          </div>`
       : ''
     }
@@ -12631,7 +12631,7 @@ function _buildAiAssistantMessageHtml(res, defaultModel) {
             return `
               <div class="ai-citation-card" style="padding: 7px 10px; border-radius: 7px; background: rgba(15,23,42,0.85); border: 1px solid rgba(56,189,248,0.22); font-size: 11px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-bottom: 3px;">
-                  <button type="button" class="btn-preview-citation" onclick="window.openFilePreviewModal('${escPath}', '${escName}')" style="background: none; border: none; padding: 0; color: #38bdf8; font-weight: 700; cursor: pointer; text-decoration: underline; text-align: left; font-size: 11.5px;">
+                  <button type="button" class="btn-preview-citation" data-action="open-file-preview" data-path="${escPath}" data-name="${escName}" style="background: none; border: none; padding: 0; color: #38bdf8; font-weight: 700; cursor: pointer; text-decoration: underline; text-align: left; font-size: 11.5px;">
                     📄 [${idx + 1}] ${escName}<span style="color: #94a3b8; font-weight: 400; text-decoration: none;">${escapeHtml(bcrumb)}</span> 👁️
                   </button>
                   <span style="font-size: 9.5px; color: #a7f3d0; background: rgba(16,185,129,0.14); padding: 1px 6px; border-radius: 999px;">${scorePct}% match</span>
@@ -12653,7 +12653,7 @@ function _buildAiAssistantMessageHtml(res, defaultModel) {
           const escN = escapeHtml(p.name || 'Photo');
           const thumb = p.thumbnail_url || (p.file_id ? `/api/media/thumbnail/${p.file_id}` : '');
           return `
-            <div class="ai-chat-photo-card" onclick="window.openFilePreviewModal('${escP}', '${escN}')" style="cursor: pointer; width: 85px; border-radius: 6px; overflow: hidden; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); transition: transform 0.15s ease;" title="${escN}">
+            <div class="ai-chat-photo-card" data-action="open-file-preview" data-path="${escP}" data-name="${escN}" style="cursor: pointer; width: 85px; border-radius: 6px; overflow: hidden; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); transition: transform 0.15s ease;" title="${escN}">
               ${thumb ? `<img src="${escapeHtml(thumb)}" alt="${escN}" style="width: 100%; height: 60px; object-fit: cover;" />` : `<div style="height: 60px; display: flex; align-items: center; justify-content: center; font-size: 20px;">🖼️</div>`}
               <div style="font-size: 9px; color: #cbd5e1; padding: 2px 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escN}</div>
             </div>
@@ -13247,7 +13247,7 @@ function _formatChatMarkdown(rawText) {
       (item.code.includes('services:') && (item.code.includes('image:') || item.code.includes('build:') || item.code.includes('ports:')));
 
     const deployBtnHtml = isComposeYaml
-      ? `<button type="button" class="btn-deploy-stack-code" onclick="window.deployComposeStackSnippet && window.deployComposeStackSnippet(this.closest('.ai-chat-code-block').querySelector('code').innerText)" style="background: rgba(16, 185, 129, 0.22); border: 1px solid rgba(52, 211, 153, 0.45); border-radius: 4px; color: #6ee7b7; font-size: 9.5px; font-weight: 700; padding: 2px 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; margin-right: 6px;">🚀 Deploy Stack</button>`
+      ? `<button type="button" class="btn-deploy-stack-code" data-action="deploy-compose-code" style="background: rgba(16, 185, 129, 0.22); border: 1px solid rgba(52, 211, 153, 0.45); border-radius: 4px; color: #6ee7b7; font-size: 9.5px; font-weight: 700; padding: 2px 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; margin-right: 6px;">🚀 Deploy Stack</button>`
       : '';
 
     return `<div class="ai-chat-code-block" style="margin: 8px 0; border-radius: 8px; background: rgba(2, 6, 23, 0.88); border: 1px solid rgba(56, 189, 248, 0.3); overflow: hidden;">
@@ -13255,7 +13255,7 @@ function _formatChatMarkdown(rawText) {
         <span style="font-weight: 700; color: #7dd3fc;">${escapeHtml(item.lang)}</span>
         <div style="display: flex; align-items: center;">
           ${deployBtnHtml}
-          <button type="button" class="btn-copy-code" onclick="navigator.clipboard.writeText(this.closest('.ai-chat-code-block').querySelector('code').innerText); this.textContent='✓ Copied'; setTimeout(() => this.textContent='Copy', 1600);" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.18); border-radius: 4px; color: #cbd5e1; font-size: 9.5px; padding: 2px 7px; cursor: pointer;">Copy</button>
+          <button type="button" class="btn-copy-code" data-action="copy-code" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.18); border-radius: 4px; color: #cbd5e1; font-size: 9.5px; padding: 2px 7px; cursor: pointer;">Copy</button>
         </div>
       </div>
       <pre style="margin: 0; padding: 10px 12px; overflow-x: auto; font-family: 'JetBrains Mono', Consolas, monospace; font-size: 11.5px; line-height: 1.5; color: #e2e8f0;"><code>${escapedCode}</code></pre>
@@ -13275,7 +13275,7 @@ function _formatChatMarkdown(rawText) {
       const escP = escapeHtml(path.trim());
       const escN = escapeHtml(path.trim().split('/').pop() || 'File');
       const lineStr = line ? ` (L${line})` : '';
-      return `<button type="button" class="ai-citation-inline-pill" onclick="window.openFilePreviewModal('${escP}', '${escN}')" style="display:inline-flex; align-items:center; gap:3px; background:rgba(56,189,248,0.15); border:1px solid rgba(56,189,248,0.38); border-radius:999px; padding:1px 7px; color:#7dd3fc; font-size:10px; font-weight:700; cursor:pointer; vertical-align:baseline; margin:0 2px;"><span>📄 [${idx}] ${escN}${lineStr}</span><span style="font-size:9px;">👁️</span></button>`;
+      return `<button type="button" class="ai-citation-inline-pill" data-action="open-file-preview" data-path="${escP}" data-name="${escN}" style="display:inline-flex; align-items:center; gap:3px; background:rgba(56,189,248,0.15); border:1px solid rgba(56,189,248,0.38); border-radius:999px; padding:1px 7px; color:#7dd3fc; font-size:10px; font-weight:700; cursor:pointer; vertical-align:baseline; margin:0 2px;"><span>📄 [${idx}] ${escN}${lineStr}</span><span style="font-size:9px;">👁️</span></button>`;
     })
     .replace(/\[(\d+)\]/g, '<span style="display:inline-flex; align-items:center; justify-content:center; font-size:9.5px; font-weight:700; color:#38bdf8; background:rgba(56,189,248,0.16); border:1px solid rgba(56,189,248,0.35); border-radius:999px; padding:0 5px; margin:0 2px; vertical-align:baseline; line-height:1.3;">[$1]</span>')
     .replace(/\n\n+/g, '<div style="height:6px;"></div>')

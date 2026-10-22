@@ -1,11 +1,11 @@
 """
-Content-Security-Policy for the web UI, report-only for now (FE-06).
+Content-Security-Policy for the web UI, enforced (FE-06).
 
-The UI still has an inline bootstrap script and a few inline event handlers,
-so an enforced policy would break it. Browsers report what an enforced policy
-would block to /api/csp-report; those reports show what is left to fix before
-Batch 4 switches to enforcement. The inline bootstrap script is allowed by its
-SHA-256 hash, read from the built index.html at startup.
+Scripts run only from this server, plus the one inline bootstrap script, which is
+allowed by its SHA-256 hash read from the built index.html at startup. There are no
+inline event handlers (see frontend/src/dom-actions.js). Inline styles are still
+allowed. The browser may contact only this server and the weather and public-holiday
+services the desktop widgets use. Violations are reported to /api/csp-report.
 """
 
 import base64
@@ -47,11 +47,13 @@ def policy() -> str:
         [
             "default-src 'self'",
             f"script-src {scripts}",
-            "style-src 'self' 'unsafe-inline'",  # ~5,000 inline styles; phase 2 removes them
+            "style-src 'self' 'unsafe-inline'",  # inline styles are still used throughout the UI
             "img-src 'self' data: blob: https:",
             "media-src 'self' blob:",
             "font-src 'self' data:",
-            "connect-src 'self' ws: wss:",
+            # desktop widgets: weather and public holidays (see docs/PRIVACY.md)
+            "connect-src 'self' ws: wss: https://api.open-meteo.com https://geocoding-api.open-meteo.com "
+            "https://date.nager.at",
             "worker-src 'self' blob:",
             "object-src 'none'",
             "base-uri 'self'",

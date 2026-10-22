@@ -226,7 +226,7 @@ export function renderWallpaperGallery(files, active, version) {
 
     card.innerHTML = `
       <div class="wallpaper-card-thumb-wrap">
-        <img class="wallpaper-card-thumb" src="${thumbUrl}" alt="${f}" loading="lazy" onerror="this.onerror=null; this.src='${fullUrl}';">
+        <img class="wallpaper-card-thumb" src="${thumbUrl}" alt="${f}" loading="lazy" data-img-fallback="${fullUrl}">
         <div class="wallpaper-card-active-indicator" style="${isActive ? 'display:flex;' : 'display:none;'}">
           <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
           <span>ACTIVE</span>

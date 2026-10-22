@@ -182,6 +182,11 @@ def test_e2e_live_desktop_session_and_badge():
         # Sign in through the real login form: the session must arrive as an HttpOnly
         # cookie and never be readable from page scripts (FE-05).
         context = browser.new_context(viewport={"width": 1440, "height": 900})
+        # Record anything the enforced Content-Security-Policy blocks (FE-06)
+        context.add_init_script(
+            "window.__csp = []; document.addEventListener('securitypolicyviolation', "
+            "e => window.__csp.push(e.violatedDirective + ' ' + e.blockedURI + ' ' + e.sourceFile + ':' + e.lineNumber));"
+        )
         page = context.new_page()
         page.goto("http://127.0.0.1:8082/", wait_until="domcontentloaded", timeout=12000)
         if page.is_visible("#login-toggle-manual"):
@@ -221,6 +226,10 @@ def test_e2e_live_desktop_session_and_badge():
         # Check dock container exists
         dock = _wait("#os-dock-container")
         assert dock is not None
+
+        page.wait_for_timeout(1500)
+        violations = page.evaluate("() => window.__csp || []")
+        assert violations == [], f"CSP violations: {violations}"
 
         browser.close()
 

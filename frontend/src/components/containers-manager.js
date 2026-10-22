@@ -705,7 +705,7 @@ export function renderCwCatalogGrid() {
   grid.innerHTML = filtered.map((app) => {
     const icon = categoryIcons[app.category] || '📦';
     const logoHtml = app.logo
-      ? `<img src="${escapeHtml(app.logo)}" alt="${escapeHtml(app.name)}" style="width:24px; height:24px; object-fit:contain; border-radius:4px; vertical-align:middle; flex-shrink:0;" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='inline';" /><span style="font-size:20px; line-height:1; display:none;">${icon}</span>`
+      ? `<img src="${escapeHtml(app.logo)}" alt="${escapeHtml(app.name)}" style="width:24px; height:24px; object-fit:contain; border-radius:4px; vertical-align:middle; flex-shrink:0;" data-img-fallback="hide-show-next:inline" /><span style="font-size:20px; line-height:1; display:none;">${icon}</span>`
       : `<span style="font-size:20px; line-height:1;">${icon}</span>`;
 
     const sourceBadge = app.source_name && app.source_name !== 'Built-in'

@@ -7,6 +7,9 @@ import './lcd-direct.css';
 import './vm-console-direct.css';
 
 import { initClientLogger } from './client-logger.js';
+import { installDomActions } from './dom-actions.js';
+
+installDomActions();
 initClientLogger();
 
 import { ZettEventBus } from './event-bus.js';

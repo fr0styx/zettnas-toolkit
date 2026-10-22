@@ -20005,3 +20005,8 @@ tr.docker-row-selected {
     background: rgba(148, 163, 184, 0.45);
   }
 }
+
+/* replaces inline onmouseover handlers (FE-06) */
+[data-hover-bg]:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+}
