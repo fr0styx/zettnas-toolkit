@@ -2284,5 +2284,11 @@ export default {
   "preview.software": "Software",
   "preview.body_serial": "Camera serial",
   "preview.lens_serial": "Lens serial",
-  "preview.file_path": "File path"
+  "preview.file_path": "File path",
+  "fm.selection_actions": "Selection actions",
+  "fm.clear_selection": "Clear selection (Esc)",
+  "fm.share_link": "Share link",
+  "fm.move_to": "Move to…",
+  "fm.download": "Download",
+  "fm.delete": "Delete"
 };

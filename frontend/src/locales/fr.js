@@ -2284,5 +2284,11 @@ export default {
   "preview.software": "Logiciel",
   "preview.body_serial": "N° de série boîtier",
   "preview.lens_serial": "N° de série objectif",
-  "preview.file_path": "Chemin du fichier"
+  "preview.file_path": "Chemin du fichier",
+  "fm.selection_actions": "Actions sur la sélection",
+  "fm.clear_selection": "Désélectionner (Échap)",
+  "fm.share_link": "Lien de partage",
+  "fm.move_to": "Déplacer vers…",
+  "fm.download": "Télécharger",
+  "fm.delete": "Supprimer"
 };

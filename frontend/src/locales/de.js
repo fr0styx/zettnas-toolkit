@@ -2284,5 +2284,11 @@ export default {
   "preview.software": "Software",
   "preview.body_serial": "Kamera-Seriennr.",
   "preview.lens_serial": "Objektiv-Seriennr.",
-  "preview.file_path": "Dateipfad"
+  "preview.file_path": "Dateipfad",
+  "fm.selection_actions": "Aktionen für Auswahl",
+  "fm.clear_selection": "Auswahl aufheben (Esc)",
+  "fm.share_link": "Link teilen",
+  "fm.move_to": "Verschieben nach…",
+  "fm.download": "Herunterladen",
+  "fm.delete": "Löschen"
 };

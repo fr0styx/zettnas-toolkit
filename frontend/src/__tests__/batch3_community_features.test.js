@@ -88,7 +88,7 @@ describe('Batch 3 Community Features Suite', () => {
       // Selection toolbar action shortcuts exist
       const moveBtn = document.getElementById('fm-bulk-move-btn');
       expect(moveBtn).not.toBeNull();
-      expect(moveBtn.textContent).toContain('Move To...');
+      expect(moveBtn.textContent).toContain('Move to');
 
       const zipBtn = document.getElementById('fm-bulk-zip-btn');
       expect(zipBtn).not.toBeNull();

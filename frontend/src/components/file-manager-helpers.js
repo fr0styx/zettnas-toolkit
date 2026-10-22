@@ -286,7 +286,7 @@ export class FmSidebarTree {
         </div>
         <div class="fm-tree-item ${this.fm.currentPath.includes('.RecycleBin') ? 'active' : ''}" data-path="/mnt/user/.RecycleBin">
           <span class="fm-tree-icon">🗑️</span>
-          <span class="fm-tree-label">${t('fm.empty_trash', 'Recycle Bin')}</span>
+          <span class="fm-tree-label">${t('dock.recycle_bin', 'Recycle Bin')}</span>
         </div>
       </div>
 

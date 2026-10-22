@@ -2284,5 +2284,11 @@ export default {
   "preview.software": "软件",
   "preview.body_serial": "机身序列号",
   "preview.lens_serial": "镜头序列号",
-  "preview.file_path": "文件路径"
+  "preview.file_path": "文件路径",
+  "fm.selection_actions": "所选项目操作",
+  "fm.clear_selection": "取消选择 (Esc)",
+  "fm.share_link": "分享链接",
+  "fm.move_to": "移动到…",
+  "fm.download": "下载",
+  "fm.delete": "删除"
 };

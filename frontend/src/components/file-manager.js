@@ -60,6 +60,34 @@ export function fsUploadUrl(dir, name) {
   return `/api/fs/upload?path=${encodeURIComponent(dir)}&filename=${encodeURIComponent(name)}`;
 }
 
+const SEL_ICONS = {
+  clear: '<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.2" fill="none" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>',
+  share: '<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>',
+  download: '<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>',
+  move: '<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" aria-hidden="true"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path><polyline points="12 11 15 14 12 17"></polyline><line x1="8" y1="14" x2="15" y2="14"></line></svg>',
+  trash: '<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" aria-hidden="true"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg>',
+};
+
+/**
+ * The selection actions: a pill floating at the bottom of the file area while items are
+ * selected, so the toolbar keeps its room. Labels show when the pane is wide enough.
+ */
+function selectionBarHtml(withIds) {
+  const id = (name) => (withIds ? ` id="${name}"` : '');
+  const btn = (name, cls, icon, label, extra = '') =>
+    `<button type="button"${id(name)} class="fm-sel-btn ${cls}" title="${escapeHtml(label)}" aria-label="${escapeHtml(label)}"${extra}>${icon}<span class="fm-sel-label">${escapeHtml(label)}</span></button>`;
+  return `
+    <div${id('fm-selection-bar')} class="fm-selection-bar" role="toolbar" aria-label="${escapeHtml(t('fm.selection_actions', 'Selection actions'))}" style="display: none;">
+      <button type="button"${id('fm-clear-sel-btn')} class="fm-sel-btn fm-sel-clear fm-clear-sel-btn" title="${escapeHtml(t('fm.clear_selection', 'Clear selection (Esc)'))}" aria-label="${escapeHtml(t('fm.clear_selection', 'Clear selection (Esc)'))}">${SEL_ICONS.clear}</button>
+      <span${id('fm-selected-count')} class="fm-selected-count" aria-live="polite">0 selected</span>
+      <span class="fm-sel-divider" aria-hidden="true"></span>
+      ${btn('fm-bulk-share-btn', 'fm-bulk-share-btn', SEL_ICONS.share, t('fm.share_link', 'Share link'))}
+      ${btn('fm-bulk-zip-btn', 'fm-bulk-zip-btn', SEL_ICONS.download, t('fm.download', 'Download'))}
+      ${btn('fm-bulk-move-btn', 'fm-bulk-move-btn', SEL_ICONS.move, t('fm.move_to', 'Move to…'))}
+      ${btn('fm-bulk-delete-btn', 'fm-sel-danger fm-bulk-delete-btn', SEL_ICONS.trash, t('fm.delete', 'Delete'))}
+    </div>`;
+}
+
 export class FileManagerWindow {
   constructor(id, dockId, initialPath, isPrimary = false) {
     this.id = id;
@@ -234,15 +262,9 @@ export class FileManagerWindow {
                   <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
                 </button>
               </div>
-              <div id="fm-selection-bar" class="fm-selection-bar" style="display: none; align-items: center; gap: 6px; margin-left: 8px;">
-                <span id="fm-selected-count" class="fm-selected-count" style="font-size: 11px; font-weight: 700; color: var(--accent-cyan, #0ea5e9); padding: 2px 8px; background: rgba(14,165,233,0.12); border-radius: 4px; border: 1px solid rgba(14,165,233,0.25);">0 selected</span>
-                <button id="fm-bulk-move-btn" class="btn-pill-toggle fm-bulk-move-btn" style="padding: 3px 8px; font-size: 11px; background: rgba(14,165,233,0.15); border: 1px solid rgba(14,165,233,0.3); color: #38bdf8; border-radius: 4px; cursor: pointer;" title="Move Selected">📦 Move To...</button>
-                <button id="fm-bulk-zip-btn" class="btn-pill-toggle fm-bulk-zip-btn" style="padding: 3px 8px; font-size: 11px; background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.3); color: #4ade80; border-radius: 4px; cursor: pointer;" title="Download Selected">⬇️ Download</button>
-                <button id="fm-bulk-delete-btn" class="btn-pill-toggle fm-bulk-delete-btn" style="padding: 3px 10px; font-size: 11px; background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.4); color: #f87171; border-radius: 4px; cursor: pointer;" title="Delete Selected">🗑️ Delete</button>
-                <button id="fm-clear-sel-btn" class="fm-tool-btn fm-clear-sel-btn" style="font-size: 11px; padding: 2px 6px;" title="Clear Selection">✕</button>
-              </div>
             </div>
             <div class="fm-content" style="position: relative; display: flex; flex-direction: column;">
+              ${selectionBarHtml(true)}
               <div class="fm-3pane-layout" style="display: flex; flex: 1; min-height: 0; width: 100%; position: relative; overflow: hidden;">
                 <div class="fm-sidebar-tree">
                   <div class="fm-tree-scroll"></div>
@@ -356,15 +378,9 @@ export class FileManagerWindow {
                 <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
               </button>
             </div>
-            <div class="fm-selection-bar" style="display: none; align-items: center; gap: 6px; margin-left: 8px;">
-              <span class="fm-selected-count" style="font-size: 11px; font-weight: 700; color: var(--accent-cyan, #0ea5e9); padding: 2px 8px; background: rgba(14,165,233,0.12); border-radius: 4px; border: 1px solid rgba(14,165,233,0.25);">0 selected</span>
-              <button class="btn-pill-toggle fm-bulk-move-btn" style="padding: 3px 8px; font-size: 11px; background: rgba(14,165,233,0.15); border: 1px solid rgba(14,165,233,0.3); color: #38bdf8; border-radius: 4px; cursor: pointer;" title="Move Selected">📦 Move To...</button>
-              <button class="btn-pill-toggle fm-bulk-zip-btn" style="padding: 3px 8px; font-size: 11px; background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.3); color: #4ade80; border-radius: 4px; cursor: pointer;" title="Download Selected">⬇️ Download</button>
-              <button class="btn-pill-toggle fm-bulk-delete-btn" style="padding: 3px 10px; font-size: 11px; background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.4); color: #f87171; border-radius: 4px; cursor: pointer;" title="Delete Selected">🗑️ Delete</button>
-              <button class="fm-tool-btn fm-clear-sel-btn" style="font-size: 11px; padding: 2px 6px;" title="Clear Selection">✕</button>
-            </div>
           </div>
           <div class="fm-content" style="position: relative; display: flex; flex-direction: column;">
+              ${selectionBarHtml(false)}
             <div class="fm-3pane-layout" style="display: flex; flex: 1; min-height: 0; width: 100%; position: relative; overflow: hidden;">
               <div class="fm-sidebar-tree">
                 <div class="fm-tree-scroll"></div>
@@ -455,6 +471,7 @@ export class FileManagerWindow {
     this.bulkMoveBtn = this.windowEl.querySelector('.fm-bulk-move-btn');
     this.bulkZipBtn = this.windowEl.querySelector('.fm-bulk-zip-btn');
     this.clearSelBtn = this.windowEl.querySelector('.fm-clear-sel-btn');
+    this.bulkShareBtn = this.windowEl.querySelector('.fm-bulk-share-btn');
     this.selectAllCheckbox = this.windowEl.querySelector('.fm-select-all-checkbox');
     this.titleFolderSpan = this.windowEl.querySelector('.fm-title-folder');
     this.backBtn = this.windowEl.querySelector('.fm-back-btn');
@@ -1184,13 +1201,25 @@ export class FileManagerWindow {
       });
     });
 
-    // Bulk Move
+    // Move to…: pick a folder, then move in the background with progress
     this.bulkMoveBtn?.addEventListener('click', () => {
-      const count = this.selectedPaths.size;
-      if (count === 0) return;
-      _clipboard = { items: Array.from(this.selectedPaths), action: 'move', sourceInstanceId: this.id };
-      showToast(t('fm.cut_items_toast', `Selected ${count} item(s) to move. Navigate to destination folder and click Paste.`), 'info');
-      this.updateRowSelectionUI();
+      const paths = Array.from(this.selectedPaths);
+      if (paths.length === 0) return;
+      if (typeof window.openFolderBrowser !== 'function') {
+        _clipboard = { items: paths, action: 'move', sourceInstanceId: this.id };
+        showToast(t('fm.cut_items_toast', `Selected ${paths.length} item(s) to move. Navigate to destination folder and click Paste.`), 'info');
+        return;
+      }
+      window.openFolderBrowser(this.currentPath, (dest) => {
+        const target = String(dest || '').replace(/\/+$/, '') || '/';
+        executeTransferWithConflictCheck(paths, target, 'move');
+      });
+    });
+
+    // Share link (one item)
+    this.bulkShareBtn?.addEventListener('click', () => {
+      const [p] = Array.from(this.selectedPaths);
+      if (p) openShareLinkModal(p, p.split('/').pop(), this.bulkShareBtn);
     });
 
     // Bulk Zip / Download
@@ -1586,17 +1615,20 @@ export class FileManagerWindow {
     if (!this.selectionBar || !this.selectedCount) return;
     const count = this.selectedPaths.size;
     if (count > 0) {
-      this.selectionBar.style.display = 'inline-flex';
+      this.selectionBar.style.display = 'flex';
       let totalBytes = 0;
       this.fileList.forEach((f) => {
         if (this.selectedPaths.has(f.path) && !f.is_dir && typeof f.size === 'number') {
           totalBytes += f.size;
         }
       });
-      const sizeStr = totalBytes > 0 ? ` (${formatBytes(totalBytes)})` : '';
-      this.selectedCount.textContent = `✓ ${t('fm.selected_count', `${count} selected`).replace('{count}', count)}${sizeStr}`;
+      const label = t('fm.selected_count', `${count} selected`).replace('{count}', count);
+      this.selectedCount.innerHTML = escapeHtml(label) + (totalBytes > 0 ? `<span class="fm-sel-size"> · ${escapeHtml(formatBytes(totalBytes))}</span>` : '');
+      if (this.bulkShareBtn) this.bulkShareBtn.hidden = count !== 1; // a share link is for one item
       if (this.bulkDeleteBtn) {
-        this.bulkDeleteBtn.textContent = `🗑️ ${t('fm.bulk_delete', `Delete (${count})`).replace('{count}', count)}`;
+        const del = count > 1 ? t('fm.bulk_delete', `Delete (${count})`).replace('{count}', count) : t('fm.delete', 'Delete');
+        this.bulkDeleteBtn.title = del;
+        this.bulkDeleteBtn.setAttribute('aria-label', del);
       }
     } else {
       this.selectionBar.style.display = 'none';

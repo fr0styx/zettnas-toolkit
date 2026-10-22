@@ -166,3 +166,40 @@
 }
 .fm-task-btn:hover { background: rgba(255, 255, 255, 0.1); }
 
+/* Selection actions: a pill floating at the bottom of the file area (Drive/Dropbox-style) */
+.fm-content { container-type: inline-size; }
+.fm-selection-bar {
+  position: absolute; left: 50%; bottom: 14px; z-index: 30;
+  transform: translateX(-50%);
+  display: flex; align-items: center; gap: 2px;
+  max-width: calc(100% - 24px); padding: 4px 6px;
+  background: rgba(15, 23, 42, 0.96); border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 999px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  animation: fm-sel-in 0.16s ease-out;
+}
+@keyframes fm-sel-in { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, 0); } }
+@media (prefers-reduced-motion: reduce) { .fm-selection-bar { animation: none; } }
+.fm-selected-count {
+  padding: 0 8px 0 4px; font-size: 12px; font-weight: 700; color: #e2e8f0;
+  white-space: nowrap; font-variant-numeric: tabular-nums;
+}
+.fm-sel-size { color: #94a3b8; font-weight: 600; }
+.fm-sel-divider { width: 1px; height: 20px; margin: 0 4px; background: rgba(255, 255, 255, 0.14); }
+.fm-sel-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  min-width: 32px; height: 32px; padding: 0 8px; border: none; border-radius: 999px;
+  background: transparent; color: #cbd5e1; font-size: 12px; font-weight: 600; cursor: pointer;
+  white-space: nowrap;
+}
+.fm-sel-btn:hover { background: rgba(255, 255, 255, 0.09); color: #fff; }
+.fm-sel-btn:focus-visible { outline: 2px solid var(--accent-cyan, #0ea5e9); outline-offset: 1px; }
+.fm-sel-btn[hidden] { display: none; }
+.fm-sel-clear { padding: 0; width: 32px; color: #94a3b8; }
+.fm-sel-danger { color: #f87171; }
+.fm-sel-danger:hover { background: rgba(239, 68, 68, 0.16); color: #fca5a5; }
+/* Labels only when the file area has room; icons and tooltips otherwise */
+.fm-sel-label { display: none; }
+@container (min-width: 620px) { .fm-sel-label { display: inline; } }
+@container (max-width: 420px) { .fm-sel-size { display: none; } }
+
