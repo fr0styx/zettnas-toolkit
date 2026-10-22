@@ -27,10 +27,10 @@ describe('Batch 9: Frontend Hardening & Architecture', () => {
 
       // Crucial: Must NEVER equal className!
       expect(emptyClassCard.getAttribute('aria-label')).not.toBe('mgmt-card interactive mb-4 os-dock-item');
-      expect(emptyClassCard.getAttribute('aria-hidden')).toBe('true');
+      expect(emptyClassCard.hasAttribute('aria-hidden')).toBe(false); // FE-10: never hide a control
 
       expect(dataCard.getAttribute('aria-label')).toBe('System Health');
-      expect(actionDisk.getAttribute('aria-label')).toBe('eject disk');
+      expect(actionDisk.hasAttribute('aria-label')).toBe(false); // no guessing from data-action (FE-10)
     });
   });
 

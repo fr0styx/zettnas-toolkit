@@ -2059,5 +2059,7 @@ export default {
   "docker.bulk_delete_ok": "删除",
   "docker.bulk_stop_title": "停止 {count} 个容器",
   "docker.bulk_stop_confirm": "停止所选的 {count} 个容器？",
-  "docker.bulk_stop_ok": "停止"
+  "docker.bulk_stop_ok": "停止",
+  "setup.current_password": "当前密码",
+  "fm.path_input_label": "文件夹路径"
 };

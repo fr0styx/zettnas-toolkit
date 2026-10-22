@@ -134,7 +134,7 @@ function updateSummaryStrip(data) {
   pills.push(`
     <div class="device-metric-pill" title="Combined LAN Throughput (all physical interfaces)">
       <span class="dmp-name">Net:</span>
-      <span class="dmp-val">↓ ${formatRate(rxRate)} · ↑ ${formatRate(txRate)} <span style="opacity:0.65; font-size:10px;">(Combined)</span></span>
+      <span class="dmp-val">↓ ${formatRate(rxRate)} · ↑ ${formatRate(txRate)} <span style="opacity:0.65; font-size:11px;">(Combined)</span></span>
     </div>
   `);
 

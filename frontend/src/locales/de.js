@@ -2059,5 +2059,7 @@ export default {
   "docker.bulk_delete_ok": "Löschen",
   "docker.bulk_stop_title": "{count} Container stoppen",
   "docker.bulk_stop_confirm": "Die {count} ausgewählten Container stoppen?",
-  "docker.bulk_stop_ok": "Stoppen"
+  "docker.bulk_stop_ok": "Stoppen",
+  "setup.current_password": "Aktuelles Passwort",
+  "fm.path_input_label": "Ordnerpfad"
 };

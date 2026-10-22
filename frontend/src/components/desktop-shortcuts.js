@@ -572,7 +572,7 @@ function renderSystemShortcutsList(overlay) {
           <div style="min-width:0;">
             <div style="display:flex; align-items:center; gap:6px;">
               <span style="font-size:13px; font-weight:700; color:#fff;">${escapeHtml(s.name)}</span>
-              ${s.badge ? `<span style="font-size:9px; padding:1px 5px; border-radius:3px; background:rgba(255,255,255,0.08); color:var(--muted); font-family:var(--font-mono, monospace); text-transform:uppercase;">${escapeHtml(s.badge)}</span>` : ''}
+              ${s.badge ? `<span style="font-size:11px; padding:1px 5px; border-radius:3px; background:rgba(255,255,255,0.08); color:var(--muted); font-family:var(--font-mono, monospace); text-transform:uppercase;">${escapeHtml(s.badge)}</span>` : ''}
             </div>
             <div style="font-size:11px; color:var(--muted); line-height:1.35; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(s.desc)}</div>
           </div>

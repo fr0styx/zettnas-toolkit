@@ -91,7 +91,7 @@ export function initContainersManager() {
                 <span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:#34d399; box-shadow:0 0 6px #34d399;"></span>
                 <span id="cw-stat-daemon">Docker Socket Active</span>
                 <span style="opacity:0.35;">•</span>
-                <span style="font-size:10px; color:#cbd5e1; font-weight:500;">Live Sync</span>
+                <span style="font-size:11px; color:#cbd5e1; font-weight:500;">Live Sync</span>
               </div>
               <div style="display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--muted);">
                 <span>Total: <strong id="cw-count-all" style="color: #fff;">0</strong></span>
@@ -120,7 +120,7 @@ export function initContainersManager() {
               <button id="btn-cw-prune" class="btn-pill-toggle" title="Clean up unused container images, stopped containers, and volumes">
                 <span>🧹</span> <span>Prune</span>
               </button>
-              <button id="btn-cw-catalog" class="btn-save-preset" style="background: var(--accent-cyan, #0ea5e9); border-color: rgba(14, 165, 233, 0.4); color: #fff; font-weight: 700;">
+              <button id="btn-cw-catalog" class="btn-save-preset" style="background: #0369a1; border-color: rgba(14, 165, 233, 0.4); color: #fff; font-weight: 700;">
                 <span>📦</span> <span>App Catalog</span>
               </button>
             </div>
@@ -710,20 +710,20 @@ export function renderCwCatalogGrid() {
       : `<span style="font-size:20px; line-height:1;">${icon}</span>`;
 
     const sourceBadge = app.source_name && app.source_name !== 'Built-in'
-      ? `<span class="ci-badge" style="font-size:8.5px; background:rgba(14,165,233,0.15); color:#38bdf8; border:1px solid rgba(14,165,233,0.3); padding:1px 5px; border-radius:3px;">${escapeHtml(app.source_name)}</span>`
-      : `<span class="ci-badge" style="font-size:8.5px; background:rgba(37,194,160,0.15); color:var(--accent, #25c2a0); border:1px solid rgba(37,194,160,0.3); padding:1px 5px; border-radius:3px;">Built-in</span>`;
+      ? `<span class="ci-badge" style="font-size:11px; background:rgba(14,165,233,0.15); color:#38bdf8; border:1px solid rgba(14,165,233,0.3); padding:1px 5px; border-radius:3px;">${escapeHtml(app.source_name)}</span>`
+      : `<span class="ci-badge" style="font-size:11px; background:rgba(37,194,160,0.15); color:var(--accent, #25c2a0); border:1px solid rgba(37,194,160,0.3); padding:1px 5px; border-radius:3px;">Built-in</span>`;
 
     const typeBadge = app.type === 'stack'
-      ? `<span class="ci-badge" style="font-size:8.5px; background:rgba(168,85,247,0.15); color:#c084fc; border:1px solid rgba(168,85,247,0.3); padding:1px 5px; border-radius:3px;">Stack</span>`
+      ? `<span class="ci-badge" style="font-size:11px; background:rgba(168,85,247,0.15); color:#c084fc; border:1px solid rgba(168,85,247,0.3); padding:1px 5px; border-radius:3px;">Stack</span>`
       : '';
 
     let securityBadge = '';
     if (app.security_rating === 'verified') {
-      securityBadge = `<span class="ci-badge" title="Verified Safe Sandbox" style="font-size:8.5px; background:rgba(34,197,94,0.15); color:#4ade80; border:1px solid rgba(34,197,94,0.3); padding:1px 5px; border-radius:3px;">🛡️ Safe</span>`;
+      securityBadge = `<span class="ci-badge" title="Verified Safe Sandbox" style="font-size:11px; background:rgba(34,197,94,0.15); color:#4ade80; border:1px solid rgba(34,197,94,0.3); padding:1px 5px; border-radius:3px;">🛡️ Safe</span>`;
     } else if (app.security_rating === 'review_required') {
-      securityBadge = `<span class="ci-badge" title="${escapeHtml((app.security_flags || []).join('; '))}" style="font-size:8.5px; background:rgba(234,179,8,0.15); color:#facc15; border:1px solid rgba(234,179,8,0.3); padding:1px 5px; border-radius:3px;">⚠️ Review</span>`;
+      securityBadge = `<span class="ci-badge" title="${escapeHtml((app.security_flags || []).join('; '))}" style="font-size:11px; background:rgba(234,179,8,0.15); color:#facc15; border:1px solid rgba(234,179,8,0.3); padding:1px 5px; border-radius:3px;">⚠️ Review</span>`;
     } else if (app.security_rating === 'elevated') {
-      securityBadge = `<span class="ci-badge" title="${escapeHtml((app.security_flags || []).join('; '))}" style="font-size:8.5px; background:rgba(239,68,68,0.15); color:#f87171; border:1px solid rgba(239,68,68,0.3); padding:1px 5px; border-radius:3px;">🚨 Elevated</span>`;
+      securityBadge = `<span class="ci-badge" title="${escapeHtml((app.security_flags || []).join('; '))}" style="font-size:11px; background:rgba(239,68,68,0.15); color:#f87171; border:1px solid rgba(239,68,68,0.3); padding:1px 5px; border-radius:3px;">🚨 Elevated</span>`;
     }
 
     const imageDisplay = app.image || (app.repository ? 'compose-stack' : 'container');
@@ -736,20 +736,20 @@ export function renderCwCatalogGrid() {
               ${logoHtml}
               <div style="overflow:hidden;">
                 <div style="font-size:12.5px; font-weight:700; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(app.name)}</div>
-                <code style="font-size:9.5px; color:var(--muted); font-family:var(--font-mono, monospace); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block;">${escapeHtml(imageDisplay)}</code>
+                <code style="font-size:11px; color:var(--muted); font-family:var(--font-mono, monospace); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block;">${escapeHtml(imageDisplay)}</code>
               </div>
             </div>
             <div style="display:flex; gap:4px; align-items:center; flex-shrink:0;">
               ${typeBadge}
               ${sourceBadge}
               ${securityBadge}
-              <span class="ci-badge" style="font-size:9px; text-transform:uppercase; background:rgba(255,255,255,0.06); color:#cbd5e1; padding:2px 6px; border-radius:4px;">${escapeHtml(app.category)}</span>
+              <span class="ci-badge" style="font-size:11px; text-transform:uppercase; background:rgba(255,255,255,0.06); color:#cbd5e1; padding:2px 6px; border-radius:4px;">${escapeHtml(app.category)}</span>
             </div>
           </div>
           <p style="font-size:11px; color:#94a3b8; line-height:1.4; margin:0 0 6px 0; min-height:32px;">${escapeHtml(app.description)}</p>
         </div>
         <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,0.06); padding-top:8px;">
-          <span style="font-size:10.5px; font-family:var(--font-mono, monospace); color:var(--accent-cyan, #00f0ff); background:rgba(0,240,255,0.08); padding:2px 6px; border-radius:4px;">Port :${app.default_port}</span>
+          <span style="font-size:11px; font-family:var(--font-mono, monospace); color:var(--accent-cyan, #00f0ff); background:rgba(0,240,255,0.08); padding:2px 6px; border-radius:4px;">Port :${app.default_port}</span>
           <button class="btn-pill-toggle btn-deploy-app" data-appid="${escapeHtml(app.id)}" style="background:var(--brand, #0ea5e9); color:#fff; border:none; padding:3px 10px; font-weight:700; font-size:11px; cursor:pointer;">Deploy / Stack</button>
         </div>
       </div>

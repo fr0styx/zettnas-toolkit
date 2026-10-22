@@ -18,7 +18,7 @@ function levelSelect(attrs, value, withInherit) {
 
 export function buildShareAccessHtml(data, users) {
   const userNames = users.map((u) => String(u.username || '').toLowerCase()).filter(Boolean);
-  const head = userNames.map((u) => `<th style="padding:6px 8px; font-size:10.5px;">${escapeHtml(u)}</th>`).join('');
+  const head = userNames.map((u) => `<th style="padding:6px 8px; font-size:11px;">${escapeHtml(u)}</th>`).join('');
   const rows = (data.shares || []).map((s) => {
     const cells = userNames
       .map((u) => `<td style="padding:4px 8px;">${levelSelect(`data-share="${escapeHtml(s.name)}" data-user="${escapeHtml(u)}"`, (s.users || {})[u] || 'inherit', true)}</td>`)
@@ -36,7 +36,7 @@ export function buildShareAccessHtml(data, users) {
       <thead><tr style="color:var(--muted); text-transform:uppercase;"><th style="padding:6px 8px; text-align:left;">Share</th><th style="padding:6px 8px;">Default</th>${head}</tr></thead>
       <tbody>${rows || `<tr><td colspan="${2 + userNames.length}" style="padding:10px; color:var(--muted);">No shares found.</td></tr>`}</tbody>
     </table></div>
-    <div style="font-size:10.5px; color:var(--muted); margin-top:8px;">Admins always have full access. Users always have their own home folder. "inherit" uses the share's Samba user lists, then the share default, then the setting above.</div>`;
+    <div style="font-size:11px; color:var(--muted); margin-top:8px;">Admins always have full access. Users always have their own home folder. "inherit" uses the share's Samba user lists, then the share default, then the setting above.</div>`;
 }
 
 export function collectShareAccess(root) {

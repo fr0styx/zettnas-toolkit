@@ -147,7 +147,7 @@ function ensureOverlay() {
         <div style="display:flex; align-items:center; gap:8px;">
           <span style="font-size:16px;">🕸️</span>
           <span style="font-weight:700; color:#fff; font-size:13.5px;" data-i18n="cw.netmap_title">${escapeHtml(t('cw.netmap_title', 'Container Network Map'))}</span>
-          <span id="netmap-summary" style="font-size:10px; color:var(--muted);"></span>
+          <span id="netmap-summary" style="font-size:11px; color:var(--muted);"></span>
         </div>
         <div class="os-window-controls">
           <button class="win-btn close-btn" id="netmap-close-btn" title="Close" aria-label="Close"></button>

@@ -28,7 +28,7 @@ export function initStackModal() {
           <div style="display:flex; align-items:center; gap:8px; min-width:0;">
             <span style="font-size:16px;">📁</span>
             <span id="stack-header-title" style="font-weight:700; color:#fff; font-size:13.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Stack Inspector</span>
-            <span id="stack-header-origin" class="ci-badge" style="font-size:9.5px; padding:2px 7px; border-radius:4px; font-weight:700; background:rgba(14,165,233,0.15); color:var(--accent-cyan, #38bdf8); border:1px solid rgba(56,189,248,0.3);">Compose Stack</span>
+            <span id="stack-header-origin" class="ci-badge" style="font-size:11px; padding:2px 7px; border-radius:4px; font-weight:700; background:rgba(14,165,233,0.15); color:var(--accent-cyan, #38bdf8); border:1px solid rgba(56,189,248,0.3);">Compose Stack</span>
             <span id="stack-header-status" class="ci-state-pill" style="display:none;"></span>
           </div>
           <div class="os-window-controls" style="display:flex; gap:6px; align-items:center;">
@@ -389,13 +389,13 @@ function renderServicesList(containers) {
   containers.forEach((c) => {
     const isRunning = c.state === 'running';
     const stateBadge = isRunning
-      ? '<span style="font-size:10px; color:#10b981; font-weight:700;">● Running</span>'
-      : '<span style="font-size:10px; color:#ef4444; font-weight:700;">● Stopped</span>';
+      ? '<span style="font-size:11px; color:#10b981; font-weight:700;">● Running</span>'
+      : '<span style="font-size:11px; color:#ef4444; font-weight:700;">● Stopped</span>';
 
     const portsHtml = (c.ports || []).map((p) => {
       const hp = p.host_port ? `${p.host_port}➔` : '';
-      return `<code style="font-size:9.5px; background:rgba(255,255,255,0.06); padding:1px 4px; border-radius:3px;">${hp}${p.container_port}/${p.proto}</code>`;
-    }).join(' ') || '<span style="font-size:10px; color:var(--muted);">Host Network / None</span>';
+      return `<code style="font-size:11px; background:rgba(255,255,255,0.06); padding:1px 4px; border-radius:3px;">${hp}${p.container_port}/${p.proto}</code>`;
+    }).join(' ') || '<span style="font-size:11px; color:var(--muted);">Host Network / None</span>';
 
     html += `
       <div class="drawer-card" style="padding:12px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:8px; display:flex; flex-direction:column; gap:8px;">
@@ -406,18 +406,18 @@ function renderServicesList(containers) {
           <div>${stateBadge}</div>
         </div>
 
-        <div style="font-size:10.5px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeHtml(c.image)}">
+        <div style="font-size:11px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeHtml(c.image)}">
           🖼️ ${escapeHtml(c.image)}
         </div>
 
         <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;">
-          <span style="font-size:10px; color:var(--muted);">Ports:</span>
+          <span style="font-size:11px; color:var(--muted);">Ports:</span>
           ${portsHtml}
         </div>
 
         <div style="display:flex; justify-content:flex-end; gap:6px; margin-top:4px;">
-          ${c.webui_url ? `<a href="${escapeHtml(c.webui_url)}" target="_blank" rel="noopener noreferrer" class="btn-pill-toggle" style="font-size:10px; padding:2px 8px; text-decoration:none; color:var(--accent-cyan, #38bdf8);">🌐 WebUI</a>` : ''}
-          <button class="btn-pill-toggle stack-inspect-container-btn" data-cid="${escapeHtml(c.id)}" style="font-size:10px; padding:2px 8px;">🔍 Inspect Container</button>
+          ${c.webui_url ? `<a href="${escapeHtml(c.webui_url)}" target="_blank" rel="noopener noreferrer" class="btn-pill-toggle" style="font-size:11px; padding:2px 8px; text-decoration:none; color:var(--accent-cyan, #38bdf8);">🌐 WebUI</a>` : ''}
+          <button class="btn-pill-toggle stack-inspect-container-btn" data-cid="${escapeHtml(c.id)}" style="font-size:11px; padding:2px 8px;">🔍 Inspect Container</button>
         </div>
       </div>
     `;
@@ -534,7 +534,7 @@ export async function openStackPickerModal(stacksInput = null) {
           <div style="display:flex; align-items:center; gap:8px;">
             <span style="font-size:16px;">📁</span>
             <span style="font-weight:700; color:#fff; font-size:13.5px;">Docker Compose Stacks</span>
-            <span id="stack-picker-badge" class="ci-badge" style="font-size:9.5px; padding:2px 7px; border-radius:4px; font-weight:700; background:rgba(14,165,233,0.15); color:var(--accent-cyan, #38bdf8); border:1px solid rgba(56,189,248,0.3);">0 Stacks</span>
+            <span id="stack-picker-badge" class="ci-badge" style="font-size:11px; padding:2px 7px; border-radius:4px; font-weight:700; background:rgba(14,165,233,0.15); color:var(--accent-cyan, #38bdf8); border:1px solid rgba(56,189,248,0.3);">0 Stacks</span>
           </div>
           <div class="os-window-controls">
             <button class="win-btn close-btn" id="stack-picker-close-btn" title="Close" aria-label="Close"></button>
@@ -612,18 +612,18 @@ export async function openStackPickerModal(stacksInput = null) {
 
       let statusPill = '';
       if (isAllRunning) {
-        statusPill = `<span style="display:inline-flex; align-items:center; gap:5px; font-size:10.5px; color:var(--ok2, #10b981); background:rgba(16,185,129,0.12); padding:2px 8px; border-radius:12px; border:1px solid rgba(16,185,129,0.3); font-weight:600;"><span style="width:6px; height:6px; border-radius:50%; background:var(--ok2, #10b981); box-shadow:0 0 6px var(--ok2, #10b981);"></span> ${s.running_count}/${s.total_count} Running</span>`;
+        statusPill = `<span style="display:inline-flex; align-items:center; gap:5px; font-size:11px; color:var(--ok2, #10b981); background:rgba(16,185,129,0.12); padding:2px 8px; border-radius:12px; border:1px solid rgba(16,185,129,0.3); font-weight:600;"><span style="width:6px; height:6px; border-radius:50%; background:var(--ok2, #10b981); box-shadow:0 0 6px var(--ok2, #10b981);"></span> ${s.running_count}/${s.total_count} Running</span>`;
       } else if (isNoneRunning) {
-        statusPill = `<span style="display:inline-flex; align-items:center; gap:5px; font-size:10.5px; color:var(--muted); background:rgba(255,255,255,0.06); padding:2px 8px; border-radius:12px; border:1px solid rgba(255,255,255,0.1);"><span style="width:6px; height:6px; border-radius:50%; background:var(--muted);"></span> Stopped (${s.total_count})</span>`;
+        statusPill = `<span style="display:inline-flex; align-items:center; gap:5px; font-size:11px; color:var(--muted); background:rgba(255,255,255,0.06); padding:2px 8px; border-radius:12px; border:1px solid rgba(255,255,255,0.1);"><span style="width:6px; height:6px; border-radius:50%; background:var(--muted);"></span> Stopped (${s.total_count})</span>`;
       } else {
-        statusPill = `<span style="display:inline-flex; align-items:center; gap:5px; font-size:10.5px; color:var(--warn, #f5a623); background:rgba(245,166,35,0.12); padding:2px 8px; border-radius:12px; border:1px solid rgba(245,166,35,0.3); font-weight:600;"><span style="width:6px; height:6px; border-radius:50%; background:var(--warn, #f5a623); box-shadow:0 0 6px var(--warn, #f5a623);"></span> ${s.running_count}/${s.total_count} Running</span>`;
+        statusPill = `<span style="display:inline-flex; align-items:center; gap:5px; font-size:11px; color:var(--warn, #f5a623); background:rgba(245,166,35,0.12); padding:2px 8px; border-radius:12px; border:1px solid rgba(245,166,35,0.3); font-weight:600;"><span style="width:6px; height:6px; border-radius:50%; background:var(--warn, #f5a623); box-shadow:0 0 6px var(--warn, #f5a623);"></span> ${s.running_count}/${s.total_count} Running</span>`;
       }
 
       const servicesHtml = (s.services || []).slice(0, 6).map((svc) => `
-        <span class="ci-badge" style="font-size:9.5px; padding:2px 6px; border-radius:4px; background:rgba(255,255,255,0.06); color:#cbd5e1; border:1px solid rgba(255,255,255,0.1); font-family:var(--font-mono, monospace);">${escapeHtml(svc)}</span>
+        <span class="ci-badge" style="font-size:11px; padding:2px 6px; border-radius:4px; background:rgba(255,255,255,0.06); color:#cbd5e1; border:1px solid rgba(255,255,255,0.1); font-family:var(--font-mono, monospace);">${escapeHtml(svc)}</span>
       `).join('');
 
-      const moreCount = (s.services || []).length > 6 ? ` <span style="font-size:9.5px; color:var(--muted);">+${s.services.length - 6} more</span>` : '';
+      const moreCount = (s.services || []).length > 6 ? ` <span style="font-size:11px; color:var(--muted);">+${s.services.length - 6} more</span>` : '';
 
       const pathStr = s.working_dir || s.config_files || 'Managed by Docker daemon';
 
@@ -633,7 +633,7 @@ export async function openStackPickerModal(stacksInput = null) {
             <div style="display:flex; align-items:center; gap:8px; min-width:0;">
               <span style="font-size:14px;">📁</span>
               <strong style="font-size:13.5px; color:#fff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(s.name)}</strong>
-              <span class="ci-badge" style="font-size:9px; padding:1px 5px; border-radius:3px; background:rgba(14,165,233,0.12); color:var(--accent-cyan, #38bdf8); border:1px solid rgba(56,189,248,0.25); text-transform:uppercase;">${escapeHtml(s.origin || 'Compose')}</span>
+              <span class="ci-badge" style="font-size:11px; padding:1px 5px; border-radius:3px; background:rgba(14,165,233,0.12); color:var(--accent-cyan, #38bdf8); border:1px solid rgba(56,189,248,0.25); text-transform:uppercase;">${escapeHtml(s.origin || 'Compose')}</span>
             </div>
             ${statusPill}
           </div>
@@ -642,7 +642,7 @@ export async function openStackPickerModal(stacksInput = null) {
           </div>
           ${servicesHtml ? `
             <div style="display:flex; align-items:center; flex-wrap:wrap; gap:4px; margin-top:2px;">
-              <span style="font-size:10px; color:var(--muted); margin-right:2px;">Services:</span>
+              <span style="font-size:11px; color:var(--muted); margin-right:2px;">Services:</span>
               ${servicesHtml}${moreCount}
             </div>
           ` : ''}

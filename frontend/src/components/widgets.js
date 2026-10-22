@@ -2462,7 +2462,7 @@ export function renderTimezoneList() {
         <span style="font-size: 14px;">📍</span>
         <div>
           <div style="font-size: 12px; font-weight: 700; color: #fff;">Local System Timezone (Auto)</div>
-          <div style="font-size: 10.5px; color: var(--muted);">${escapeHtml(localIana)}</div>
+          <div style="font-size: 11px; color: var(--muted);">${escapeHtml(localIana)}</div>
         </div>
       </div>
       <div style="display: flex; align-items: center; gap: 8px;">
@@ -2490,11 +2490,11 @@ export function renderTimezoneList() {
           <span style="font-size: 14px;">🌐</span>
           <div>
             <div style="font-size: 12px; font-weight: 700; color: #fff;">${escapeHtml(tz.name)}</div>
-            <div style="font-size: 10.5px; color: var(--muted);">${escapeHtml(tz.id)} • ${escapeHtml(tz.country)}</div>
+            <div style="font-size: 11px; color: var(--muted);">${escapeHtml(tz.id)} • ${escapeHtml(tz.country)}</div>
           </div>
         </div>
         <div style="display: flex; align-items: center; gap: 10px;">
-          <span style="font-size: 10px; color: #94a3b8; font-family: var(--font-mono, monospace);">${escapeHtml(tzAbbr)}</span>
+          <span style="font-size: 11px; color: #94a3b8; font-family: var(--font-mono, monospace);">${escapeHtml(tzAbbr)}</span>
           <span style="font-size: 12px; font-weight: 700; font-family: var(--font-mono, monospace); color: ${isSelected ? 'var(--brand, #00f0ff)' : '#e2e8f0'};">${escapeHtml(timeStr)}</span>
           <span style="font-size: 12px; color: var(--brand, #00f0ff);">${isSelected ? '✓' : ''}</span>
         </div>
@@ -2894,7 +2894,7 @@ export function renderDayAgenda(dateKey) {
         <span style="font-size: 16px;">🎉</span>
         <div>
           <div style="font-size: 12px; font-weight: 700; color: #f472b6;">Official Holiday: ${escapeHtml(hNames)}</div>
-          <div style="font-size: 10.5px; color: var(--muted);">${escapeHtml(country)} Public Holiday</div>
+          <div style="font-size: 11px; color: var(--muted);">${escapeHtml(country)} Public Holiday</div>
         </div>
       </div>
     `;
@@ -2933,8 +2933,8 @@ export function renderDayAgenda(dateKey) {
             <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
               <span class="cal-agenda-title" style="font-size: 12.5px; font-weight: 700; color: #fff;">${escapeHtml(item.title)}</span>
               <div style="display: flex; align-items: center; gap: 6px;">
-                ${timeStr ? `<span style="font-size: 10px; font-weight: 700; font-family: var(--font-mono, monospace); background: rgba(255,255,255,0.08); padding: 2px 6px; border-radius: 4px; color: var(--brand, #00f0ff);">${escapeHtml(timeStr)}</span>` : ''}
-                ${isSynced ? `<span style="font-size: 9.5px; font-weight: 700; background: rgba(234,179,8,0.15); border: 1px solid rgba(234,179,8,0.3); color: #eab308; padding: 2px 6px; border-radius: 4px;">${escapeHtml(item.feed_name || 'Synced')}</span>` : `<span style="font-size: 9.5px; color: var(--muted); background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 4px;">${escapeHtml(category)}</span>`}
+                ${timeStr ? `<span style="font-size: 11px; font-weight: 700; font-family: var(--font-mono, monospace); background: rgba(255,255,255,0.08); padding: 2px 6px; border-radius: 4px; color: var(--brand, #00f0ff);">${escapeHtml(timeStr)}</span>` : ''}
+                ${isSynced ? `<span style="font-size: 11px; font-weight: 700; background: rgba(234,179,8,0.15); border: 1px solid rgba(234,179,8,0.3); color: #eab308; padding: 2px 6px; border-radius: 4px;">${escapeHtml(item.feed_name || 'Synced')}</span>` : `<span style="font-size: 11px; color: var(--muted); background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 4px;">${escapeHtml(category)}</span>`}
                 ${
                   !isSynced
                     ? `<button type="button" class="btn-cal-delete-note btn-icon" style="background: transparent; border: none; color: #ef4444; opacity: 0.7; cursor: pointer; font-size: 11px; padding: 2px 4px;" title="Delete Note">🗑️</button>`
@@ -2973,7 +2973,7 @@ export function renderFeedsList() {
           <span style="width: 8px; height: 8px; border-radius: 50%; background: ${escapeHtml(feed.color || '#38bdf8')};"></span>
           <div>
             <div style="font-size: 11.5px; font-weight: 700; color: #fff;">${escapeHtml(feed.name)}</div>
-            <div style="font-size: 9.5px; color: var(--muted);">${feed.event_count || 0} events • ${escapeHtml(feed.provider || 'iCal')}</div>
+            <div style="font-size: 11px; color: var(--muted);">${feed.event_count || 0} events • ${escapeHtml(feed.provider || 'iCal')}</div>
           </div>
         </div>
         <button type="button" class="btn-cal-delete-feed btn-icon" style="background: transparent; border: none; color: #ef4444; opacity: 0.7; cursor: pointer; font-size: 11px; padding: 2px;" title="Delete Feed">🗑️</button>

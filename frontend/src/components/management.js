@@ -1603,20 +1603,20 @@ export function renderAppCatalogGrid() {
       : `<span style="font-size:20px; line-height:1;">${icon}</span>`;
 
     const sourceBadge = app.source_name && app.source_name !== 'Built-in'
-      ? `<span class="ci-badge" style="font-size:8.5px; background:rgba(14,165,233,0.15); color:#38bdf8; border:1px solid rgba(14,165,233,0.3); padding:1px 5px; border-radius:3px;">${escapeHtml(app.source_name)}</span>`
-      : `<span class="ci-badge" style="font-size:8.5px; background:rgba(37,194,160,0.15); color:var(--accent, #25c2a0); border:1px solid rgba(37,194,160,0.3); padding:1px 5px; border-radius:3px;">Built-in</span>`;
+      ? `<span class="ci-badge" style="font-size:11px; background:rgba(14,165,233,0.15); color:#38bdf8; border:1px solid rgba(14,165,233,0.3); padding:1px 5px; border-radius:3px;">${escapeHtml(app.source_name)}</span>`
+      : `<span class="ci-badge" style="font-size:11px; background:rgba(37,194,160,0.15); color:var(--accent, #25c2a0); border:1px solid rgba(37,194,160,0.3); padding:1px 5px; border-radius:3px;">Built-in</span>`;
 
     const typeBadge = app.type === 'stack'
-      ? `<span class="ci-badge" style="font-size:8.5px; background:rgba(168,85,247,0.15); color:#c084fc; border:1px solid rgba(168,85,247,0.3); padding:1px 5px; border-radius:3px;">Stack</span>`
+      ? `<span class="ci-badge" style="font-size:11px; background:rgba(168,85,247,0.15); color:#c084fc; border:1px solid rgba(168,85,247,0.3); padding:1px 5px; border-radius:3px;">Stack</span>`
       : '';
 
     let securityBadge = '';
     if (app.security_rating === 'verified') {
-      securityBadge = `<span class="ci-badge" title="Verified Safe Sandbox" style="font-size:8.5px; background:rgba(34,197,94,0.15); color:#4ade80; border:1px solid rgba(34,197,94,0.3); padding:1px 5px; border-radius:3px;">🛡️ Safe</span>`;
+      securityBadge = `<span class="ci-badge" title="Verified Safe Sandbox" style="font-size:11px; background:rgba(34,197,94,0.15); color:#4ade80; border:1px solid rgba(34,197,94,0.3); padding:1px 5px; border-radius:3px;">🛡️ Safe</span>`;
     } else if (app.security_rating === 'review_required') {
-      securityBadge = `<span class="ci-badge" title="${escapeHtml((app.security_flags || []).join('; '))}" style="font-size:8.5px; background:rgba(234,179,8,0.15); color:#facc15; border:1px solid rgba(234,179,8,0.3); padding:1px 5px; border-radius:3px;">⚠️ Review</span>`;
+      securityBadge = `<span class="ci-badge" title="${escapeHtml((app.security_flags || []).join('; '))}" style="font-size:11px; background:rgba(234,179,8,0.15); color:#facc15; border:1px solid rgba(234,179,8,0.3); padding:1px 5px; border-radius:3px;">⚠️ Review</span>`;
     } else if (app.security_rating === 'elevated') {
-      securityBadge = `<span class="ci-badge" title="${escapeHtml((app.security_flags || []).join('; '))}" style="font-size:8.5px; background:rgba(239,68,68,0.15); color:#f87171; border:1px solid rgba(239,68,68,0.3); padding:1px 5px; border-radius:3px;">🚨 Elevated</span>`;
+      securityBadge = `<span class="ci-badge" title="${escapeHtml((app.security_flags || []).join('; '))}" style="font-size:11px; background:rgba(239,68,68,0.15); color:#f87171; border:1px solid rgba(239,68,68,0.3); padding:1px 5px; border-radius:3px;">🚨 Elevated</span>`;
     }
 
     const imageDisplay = app.image || (app.repository ? 'compose-stack' : 'container');
@@ -1629,20 +1629,20 @@ export function renderAppCatalogGrid() {
               ${logoHtml}
               <div style="overflow:hidden;">
                 <div style="font-size:12.5px; font-weight:700; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(app.name)}</div>
-                <code style="font-size:9.5px; color:var(--muted); font-family:var(--font-mono, monospace); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block;">${escapeHtml(imageDisplay)}</code>
+                <code style="font-size:11px; color:var(--muted); font-family:var(--font-mono, monospace); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block;">${escapeHtml(imageDisplay)}</code>
               </div>
             </div>
             <div style="display:flex; gap:4px; align-items:center; flex-shrink:0;">
               ${typeBadge}
               ${sourceBadge}
               ${securityBadge}
-              <span class="ci-badge" style="font-size:9px; text-transform:uppercase; background:rgba(255,255,255,0.06); color:#cbd5e1; padding:2px 6px; border-radius:4px;">${escapeHtml(app.category)}</span>
+              <span class="ci-badge" style="font-size:11px; text-transform:uppercase; background:rgba(255,255,255,0.06); color:#cbd5e1; padding:2px 6px; border-radius:4px;">${escapeHtml(app.category)}</span>
             </div>
           </div>
           <p style="font-size:11px; color:#94a3b8; line-height:1.4; margin:0 0 6px 0; min-height:32px;">${escapeHtml(app.description)}</p>
         </div>
         <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,0.06); padding-top:8px;">
-          <span style="font-size:10.5px; font-family:var(--font-mono, monospace); color:var(--accent-cyan, #00f0ff); background:rgba(0,240,255,0.08); padding:2px 6px; border-radius:4px;">Port :${app.default_port}</span>
+          <span style="font-size:11px; font-family:var(--font-mono, monospace); color:var(--accent-cyan, #00f0ff); background:rgba(0,240,255,0.08); padding:2px 6px; border-radius:4px;">Port :${app.default_port}</span>
           <button class="btn-pill-toggle btn-deploy-app" data-appid="${escapeHtml(app.id)}" style="background:var(--brand, #0ea5e9); color:#fff; border:none; padding:3px 10px; font-weight:700; font-size:11px;">Deploy / Stack</button>
         </div>
       </div>
@@ -1685,7 +1685,7 @@ export async function openAppDeployModal(appId) {
                 <div style="display:flex; align-items:center; gap:6px; color:var(--warn, #f5a623); font-weight:700; font-size:11.5px;">
                   <span>⚠️</span> <span id="adm-existing-title">Pre-existing Container Detected</span>
                 </div>
-                <span id="adm-existing-status-badge" style="font-size:9.5px; padding:2px 7px; border-radius:4px; background:rgba(255,255,255,0.08); font-family:var(--font-mono, monospace); font-weight:700;">Running</span>
+                <span id="adm-existing-status-badge" style="font-size:11px; padding:2px 7px; border-radius:4px; background:rgba(255,255,255,0.08); font-family:var(--font-mono, monospace); font-weight:700;">Running</span>
               </div>
               <div id="adm-existing-desc" style="color:#cbd5e1; font-size:11px; line-height:1.4;">
                 A container with this name or port already exists on your system. Choose an action:
@@ -1702,27 +1702,27 @@ export async function openAppDeployModal(appId) {
 
             <div style="display:grid; grid-template-columns:1.2fr 1fr; gap:10px;">
               <div>
-                <label style="display:block; font-size:10px; font-weight:700; color:var(--muted); margin-bottom:4px;">CONTAINER NAME</label>
+                <label style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:4px;">CONTAINER NAME</label>
                 <input type="text" id="adm-name-input" class="tz-text-input" style="width:100%; box-sizing:border-box; font-size:11.5px; padding:6px 8px; font-family:var(--font-mono, monospace);">
               </div>
               <div>
-                <label style="display:block; font-size:10px; font-weight:700; color:var(--muted); margin-bottom:4px;">HOST PORT MAPPING</label>
+                <label style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:4px;">HOST PORT MAPPING</label>
                 <input type="number" id="adm-port-input" class="tz-text-input" style="width:100%; box-sizing:border-box; font-size:11.5px; padding:6px 8px; font-family:var(--font-mono, monospace);">
               </div>
             </div>
             <div>
-              <label style="display:block; font-size:10px; font-weight:700; color:var(--muted); margin-bottom:4px;">STORAGE ROOT DIRECTORY</label>
+              <label style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:4px;">STORAGE ROOT DIRECTORY</label>
               <input type="text" id="adm-storage-input" value="/mnt/user/appdata" class="tz-text-input" style="width:100%; box-sizing:border-box; font-size:11.5px; padding:6px 8px;">
             </div>
             <div>
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                <span style="font-size:10.5px; font-weight:700; color:var(--muted);">DOCKER COMPOSE DEFINITION</span>
+                <span style="font-size:11px; font-weight:700; color:var(--muted);">DOCKER COMPOSE DEFINITION</span>
                 <div style="display:flex; gap:6px;">
                   <button class="btn-pill-toggle" id="adm-copy-btn">📋 Copy YAML</button>
                   <button class="btn-pill-toggle" id="adm-download-btn">⬇️ Download</button>
                 </div>
               </div>
-              <pre id="adm-compose-pre" style="margin:0; background:#080c14; border:1px solid rgba(255,255,255,0.1); border-radius:6px; padding:10px; max-height:200px; overflow:auto; font-family:var(--font-mono, monospace); font-size:10.5px; color:#e2e8f0; line-height:1.45;"></pre>
+              <pre id="adm-compose-pre" style="margin:0; background:#080c14; border:1px solid rgba(255,255,255,0.1); border-radius:6px; padding:10px; max-height:200px; overflow:auto; font-family:var(--font-mono, monospace); font-size:11px; color:#e2e8f0; line-height:1.45;"></pre>
             </div>
           </div>
 
@@ -1746,8 +1746,8 @@ export async function openAppDeployModal(appId) {
 
             <!-- Real-time Activity Log Terminal -->
             <div style="margin-top:2px;">
-              <div style="font-size:9.5px; font-weight:700; color:var(--muted); margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;">Deployment Console Log</div>
-              <div id="adm-deploy-logs" style="background:#05080f; border:1px solid rgba(255,255,255,0.1); border-radius:6px; height:160px; overflow-y:auto; padding:10px; font-family:var(--font-mono, monospace); font-size:10.5px; line-height:1.5; color:#cbd5e1;">
+              <div style="font-size:11px; font-weight:700; color:var(--muted); margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;">Deployment Console Log</div>
+              <div id="adm-deploy-logs" style="background:#05080f; border:1px solid rgba(255,255,255,0.1); border-radius:6px; height:160px; overflow-y:auto; padding:10px; font-family:var(--font-mono, monospace); font-size:11px; line-height:1.5; color:#cbd5e1;">
                 <div style="color:var(--muted);">Waiting for deployment stream to begin...</div>
               </div>
             </div>
@@ -2549,19 +2549,19 @@ export async function openDockerPruneModal() {
             <!-- Live Disk Usage Breakdown -->
             <div id="dpm-df-summary" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(110px, 1fr)); gap:8px;">
               <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); padding:8px 10px; border-radius:6px; text-align:center;">
-                <div style="font-size:9px; color:var(--muted); text-transform:uppercase; font-weight:700;">Images</div>
+                <div style="font-size:11px; color:var(--muted); text-transform:uppercase; font-weight:700;">Images</div>
                 <div id="dpm-df-images" style="font-size:12.5px; font-weight:700; color:#fff; margin-top:2px;">Loading...</div>
               </div>
               <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); padding:8px 10px; border-radius:6px; text-align:center;">
-                <div style="font-size:9px; color:var(--muted); text-transform:uppercase; font-weight:700;">Containers</div>
+                <div style="font-size:11px; color:var(--muted); text-transform:uppercase; font-weight:700;">Containers</div>
                 <div id="dpm-df-containers" style="font-size:12.5px; font-weight:700; color:#fff; margin-top:2px;">Loading...</div>
               </div>
               <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); padding:8px 10px; border-radius:6px; text-align:center;">
-                <div style="font-size:9px; color:var(--muted); text-transform:uppercase; font-weight:700;">Volumes</div>
+                <div style="font-size:11px; color:var(--muted); text-transform:uppercase; font-weight:700;">Volumes</div>
                 <div id="dpm-df-volumes" style="font-size:12.5px; font-weight:700; color:#fff; margin-top:2px;">Loading...</div>
               </div>
               <div style="background:rgba(0,240,255,0.06); border:1px solid rgba(0,240,255,0.2); padding:8px 10px; border-radius:6px; text-align:center;">
-                <div style="font-size:9px; color:var(--accent-cyan, #00f0ff); text-transform:uppercase; font-weight:700;">Reclaimable</div>
+                <div style="font-size:11px; color:var(--accent-cyan, #00f0ff); text-transform:uppercase; font-weight:700;">Reclaimable</div>
                 <div id="dpm-df-reclaimable" style="font-size:12.5px; font-weight:800; color:var(--ok2, #25c2a0); margin-top:2px;">--</div>
               </div>
             </div>
@@ -2572,35 +2572,35 @@ export async function openDockerPruneModal() {
                 <input type="checkbox" id="dpm-opt-containers" checked style="margin-top:2px; cursor:pointer;">
                 <div>
                   <strong>Prune Stopped Containers</strong>
-                  <div style="font-size:10px; color:var(--muted);">Deletes all exited, stopped, and dead containers.</div>
+                  <div style="font-size:11px; color:var(--muted);">Deletes all exited, stopped, and dead containers.</div>
                 </div>
               </label>
               <label style="display:flex; align-items:flex-start; gap:8px; font-size:11.5px; color:#e2e8f0; cursor:pointer;">
                 <input type="checkbox" id="dpm-opt-images" checked style="margin-top:2px; cursor:pointer;">
                 <div>
                   <strong>Prune Dangling Images</strong>
-                  <div style="font-size:10px; color:var(--muted);">Removes untagged &lt;none&gt; build layers and intermediate images.</div>
+                  <div style="font-size:11px; color:var(--muted);">Removes untagged &lt;none&gt; build layers and intermediate images.</div>
                 </div>
               </label>
               <label style="display:flex; align-items:flex-start; gap:8px; font-size:11.5px; color:#e2e8f0; cursor:pointer;">
                 <input type="checkbox" id="dpm-opt-all-images" style="margin-top:2px; cursor:pointer;">
                 <div>
                   <strong>Prune ALL Unused Images</strong>
-                  <div style="font-size:10px; color:var(--muted);">Removes all images not currently referenced by at least one running container.</div>
+                  <div style="font-size:11px; color:var(--muted);">Removes all images not currently referenced by at least one running container.</div>
                 </div>
               </label>
               <label style="display:flex; align-items:flex-start; gap:8px; font-size:11.5px; color:#e2e8f0; cursor:pointer;">
                 <input type="checkbox" id="dpm-opt-volumes" style="margin-top:2px; cursor:pointer;">
                 <div>
                   <strong>Prune Unused Local Volumes</strong>
-                  <div style="font-size:10px; color:var(--warn, #f5a623);">Caution: Removes local anonymous volumes not mounted by containers.</div>
+                  <div style="font-size:11px; color:var(--warn, #f5a623);">Caution: Removes local anonymous volumes not mounted by containers.</div>
                 </div>
               </label>
               <label style="display:flex; align-items:flex-start; gap:8px; font-size:11.5px; color:#e2e8f0; cursor:pointer;">
                 <input type="checkbox" id="dpm-opt-buildcache" checked style="margin-top:2px; cursor:pointer;">
                 <div>
                   <strong>Prune Build Cache & Unused Networks</strong>
-                  <div style="font-size:10px; color:var(--muted);">Frees temporary Docker build cache layers and disconnected bridge networks.</div>
+                  <div style="font-size:11px; color:var(--muted);">Frees temporary Docker build cache layers and disconnected bridge networks.</div>
                 </div>
               </label>
             </div>
@@ -2748,9 +2748,9 @@ export async function openAppSourcesModal() {
               <div>
                 <div style="font-size:12px; font-weight:700; color:#fff; display:flex; align-items:center; gap:6px;">
                   <span>⭐ Lissy93 Portainer Templates</span>
-                  <span class="ci-badge" style="font-size:9px; background:rgba(37,194,160,0.2); color:var(--accent);">790+ Apps</span>
+                  <span class="ci-badge" style="font-size:11px; background:rgba(37,194,160,0.2); color:var(--accent);">790+ Apps</span>
                 </div>
-                <div style="font-size:10.5px; color:#94a3b8; margin-top:2px;">
+                <div style="font-size:11px; color:#94a3b8; margin-top:2px;">
                   Comprehensive community catalog of self-hosted homelab applications, web tools, and stacks.
                 </div>
               </div>
@@ -2764,11 +2764,11 @@ export async function openAppSourcesModal() {
               <div style="font-size:11px; font-weight:700; color:#fff; text-transform:uppercase; letter-spacing:0.5px;">Add Custom Template Source</div>
               <div style="display:grid; grid-template-columns:1fr 2fr auto; gap:8px; align-items:end;">
                 <div>
-                  <label style="display:block; font-size:9.5px; font-weight:700; color:var(--muted); margin-bottom:3px;">SOURCE NAME</label>
+                  <label style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:3px;">SOURCE NAME</label>
                   <input type="text" id="asm-input-name" placeholder="e.g. Community Apps" class="tz-text-input" style="width:100%; box-sizing:border-box; font-size:11px; padding:5px 8px;">
                 </div>
                 <div>
-                  <label style="display:block; font-size:9.5px; font-weight:700; color:var(--muted); margin-bottom:3px;">TEMPLATE URL (JSON)</label>
+                  <label style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:3px;">TEMPLATE URL (JSON)</label>
                   <input type="url" id="asm-input-url" placeholder="https://example.com/templates.json" class="tz-text-input" style="width:100%; box-sizing:border-box; font-size:11px; padding:5px 8px;">
                 </div>
                 <div>
@@ -2777,7 +2777,7 @@ export async function openAppSourcesModal() {
                   </button>
                 </div>
               </div>
-              <div id="asm-form-status" style="font-size:10.5px; display:none; padding:4px 6px; border-radius:4px;"></div>
+              <div id="asm-form-status" style="font-size:11px; display:none; padding:4px 6px; border-radius:4px;"></div>
             </div>
 
             <!-- Active Sources List -->
@@ -2925,10 +2925,10 @@ async function refreshSourcesUI() {
       const isBuiltin = src.id === 'builtin';
       const isEnabled = src.enabled !== false;
       const statusBadge = src.status === 'ok'
-        ? `<span class="ci-badge" style="font-size:9px; background:rgba(37,194,160,0.15); color:var(--accent);">✓ Synced (${formatRelativeTime(src.last_synced)})</span>`
+        ? `<span class="ci-badge" style="font-size:11px; background:rgba(37,194,160,0.15); color:var(--accent);">✓ Synced (${formatRelativeTime(src.last_synced)})</span>`
         : (src.status === 'error'
-          ? `<span class="ci-badge" style="font-size:9px; background:rgba(239,68,68,0.15); color:#fca5a5;" title="${escapeHtml(src.error || 'Sync failed')}">⚠️ Error</span>`
-          : `<span class="ci-badge" style="font-size:9px; background:rgba(14,165,233,0.15); color:#38bdf8;">🔄 ${escapeHtml(src.status || 'pending')}</span>`);
+          ? `<span class="ci-badge" style="font-size:11px; background:rgba(239,68,68,0.15); color:#fca5a5;" title="${escapeHtml(src.error || 'Sync failed')}">⚠️ Error</span>`
+          : `<span class="ci-badge" style="font-size:11px; background:rgba(14,165,233,0.15); color:#38bdf8;">🔄 ${escapeHtml(src.status || 'pending')}</span>`);
 
       const toggleBtnClass = isEnabled ? 'btn-pill-toggle active' : 'btn-pill-toggle';
       const toggleText = isEnabled ? 'Enabled' : 'Disabled';
@@ -2938,16 +2938,16 @@ async function refreshSourcesUI() {
           <div style="overflow:hidden; flex:1;">
             <div style="display:flex; align-items:center; gap:8px;">
               <strong style="font-size:12px; color:#fff;">${escapeHtml(src.name)}</strong>
-              <span class="ci-badge" style="font-size:9px; background:rgba(255,255,255,0.06); color:#cbd5e1;">${src.item_count || 0} apps</span>
+              <span class="ci-badge" style="font-size:11px; background:rgba(255,255,255,0.06); color:#cbd5e1;">${src.item_count || 0} apps</span>
               ${statusBadge}
             </div>
-            <div style="font-size:10px; color:var(--muted); font-family:var(--font-mono, monospace); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px;">
+            <div style="font-size:11px; color:var(--muted); font-family:var(--font-mono, monospace); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px;">
               ${escapeHtml(src.url)}
             </div>
-            ${src.error ? `<div style="font-size:10px; color:#fca5a5; margin-top:3px;">${escapeHtml(src.error)}</div>` : ''}
+            ${src.error ? `<div style="font-size:11px; color:#fca5a5; margin-top:3px;">${escapeHtml(src.error)}</div>` : ''}
           </div>
           <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
-            <button class="${toggleBtnClass} asm-btn-toggle" data-sourceid="${escapeHtml(src.id)}" data-enabled="${isEnabled ? 'true' : 'false'}" style="font-size:10.5px; padding:3px 8px; cursor:pointer;">
+            <button class="${toggleBtnClass} asm-btn-toggle" data-sourceid="${escapeHtml(src.id)}" data-enabled="${isEnabled ? 'true' : 'false'}" style="font-size:11px; padding:3px 8px; cursor:pointer;">
               ${toggleText}
             </button>
             <button class="btn-pill-toggle asm-btn-sync" data-sourceid="${escapeHtml(src.id)}" title="Sync Now" style="font-size:11px; padding:3px 8px; cursor:pointer;">
@@ -3162,7 +3162,7 @@ function renderSideloadInspection(app, rating, flags, container) {
   container.innerHTML = `
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
       <div style="font-weight:700; font-size:13px; color:#fff;">${escapeHtml(app.name)}</div>
-      <span class="ci-badge" style="font-size:10px; background:${badgeBg}; color:${badgeColor}; border:1px solid ${badgeBorder}; padding:2px 8px; border-radius:4px;">${badgeText}</span>
+      <span class="ci-badge" style="font-size:11px; background:${badgeBg}; color:${badgeColor}; border:1px solid ${badgeBorder}; padding:2px 8px; border-radius:4px;">${badgeText}</span>
     </div>
     <div style="font-size:11px; color:var(--muted); line-height:1.4;">
       <div><strong>Image:</strong> <code>${escapeHtml(app.image || 'compose-stack')}</code></div>
@@ -4003,12 +4003,12 @@ export async function fetchAndRenderCopyHistory() {
       const statusColor = isSuccess ? 'var(--ok2)' : item.status === 'aborted' ? 'var(--warn)' : 'var(--crit)';
       const checksumBadge = item.checksum_verified
         ? '<span class="checksum-badge">✓ SHA-256</span>'
-        : '<span style="color:var(--muted); font-size:9px;">None</span>';
+        : '<span style="color:var(--muted); font-size:11px;">None</span>';
       const destName = item.dest ? item.dest.split('/').filter(Boolean).pop() || item.dest : '/';
 
       return `
         <tr>
-          <td style="font-family:var(--font-mono, monospace); font-size:10px; color:var(--muted);">${timeStr}</td>
+          <td style="font-family:var(--font-mono, monospace); font-size:11px; color:var(--muted);">${timeStr}</td>
           <td><strong>${(item.source || 'sd').toUpperCase()}</strong></td>
           <td title="${escapeHtml(item.dest)}" style="max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(destName)}</td>
           <td>${item.files_count || 0}</td>
@@ -4052,13 +4052,13 @@ export async function fetchAndRenderReplication() {
             <td><strong>${escapeHtml(j.name || j.id)}</strong></td>
             <td><span class="badge" style="font-family:monospace;">${escapeHtml(j.source_pool)}/${escapeHtml(j.source_subvolume || '@')}</span></td>
             <td>${tgtDesc}</td>
-            <td><span class="mgmt-app-pill" style="font-size:10px;">${escapeHtml(j.schedule || 'manual')}</span></td>
+            <td><span class="mgmt-app-pill" style="font-size:11px;">${escapeHtml(j.schedule || 'manual')}</span></td>
             <td>${j.bandwidth_limit_mbps ? `${j.bandwidth_limit_mbps} MB/s` : 'Unlimited'}</td>
             <td>${j.retention_count || 7} snaps</td>
             <td><span class="mgmt-app-pill ${j.enabled ? 'text-emerald' : 'text-muted'}">${j.enabled ? 'Active' : 'Disabled'}</span></td>
             <td style="text-align:right;">
-              <button class="btn-pill-toggle btn-run-repl" data-id="${escapeHtml(j.id)}" style="font-size:10.5px; padding:2px 8px; margin-right:4px;" title="Execute Replication Now">▶ Run</button>
-              <button class="btn-pill-toggle btn-del-repl" data-id="${escapeHtml(j.id)}" style="font-size:10.5px; padding:2px 8px; color:var(--crit);" title="Delete Pipeline">🗑️</button>
+              <button class="btn-pill-toggle btn-run-repl" data-id="${escapeHtml(j.id)}" style="font-size:11px; padding:2px 8px; margin-right:4px;" title="Execute Replication Now">▶ Run</button>
+              <button class="btn-pill-toggle btn-del-repl" data-id="${escapeHtml(j.id)}" style="font-size:11px; padding:2px 8px; color:var(--crit);" title="Delete Pipeline">🗑️</button>
             </td>
           </tr>
         `;
@@ -4175,8 +4175,8 @@ export function renderTailscalePeersTable(peers, filterQuery = '') {
           : '<span style="color:var(--muted);">--</span>';
 
       const statusPill = p.online
-        ? '<span class="mgmt-app-pill" style="color:#3bf58b; background:rgba(59,245,139,0.12); font-size:10px; padding:2px 7px;">Online</span>'
-        : '<span class="mgmt-app-pill" style="color:var(--muted); background:rgba(255,255,255,0.06); font-size:10px; padding:2px 7px;">Offline</span>';
+        ? '<span class="mgmt-app-pill" style="color:#3bf58b; background:rgba(59,245,139,0.12); font-size:11px; padding:2px 7px;">Online</span>'
+        : '<span class="mgmt-app-pill" style="color:var(--muted); background:rgba(255,255,255,0.06); font-size:11px; padding:2px 7px;">Offline</span>';
 
       const safeIpId = (p.ip || 'no_ip').replace(/[^a-zA-Z0-9]/g, '_');
 
@@ -4184,7 +4184,7 @@ export function renderTailscalePeersTable(peers, filterQuery = '') {
       <tr style="border-bottom:1px solid rgba(255,255,255,0.05); font-size:11.5px;">
         <td style="padding:8px 12px;">
           <div style="font-weight:700; color:#fff;">${escapeHtml(p.name || p.hostname || 'Unnamed')}</div>
-          ${p.dns_name ? `<div style="font-size:10px; color:var(--muted);">${escapeHtml(p.dns_name)}</div>` : ''}
+          ${p.dns_name ? `<div style="font-size:11px; color:var(--muted);">${escapeHtml(p.dns_name)}</div>` : ''}
         </td>
         <td style="padding:8px 12px; color:var(--text-sub);">${osLabel}</td>
         <td style="padding:8px 12px;"><code style="color:#38bdf8; font-size:11px;">${escapeHtml(p.ip || '--')}</code></td>
@@ -4192,8 +4192,8 @@ export function renderTailscalePeersTable(peers, filterQuery = '') {
         <td style="padding:8px 12px;">${statusPill}</td>
         <td style="padding:8px 12px; text-align:right;">
           <div style="display:inline-flex; align-items:center; gap:6px;">
-            <span id="latency-${safeIpId}" style="font-size:10.5px; font-weight:700;"></span>
-            <button class="btn-pill-toggle btn-ping-peer" data-peer-ip="${escapeHtml(p.ip || '')}" style="font-size:10px; padding:2px 8px;" ${!p.ip ? 'disabled' : ''}>⚡ Ping</button>
+            <span id="latency-${safeIpId}" style="font-size:11px; font-weight:700;"></span>
+            <button class="btn-pill-toggle btn-ping-peer" data-peer-ip="${escapeHtml(p.ip || '')}" style="font-size:11px; padding:2px 8px;" ${!p.ip ? 'disabled' : ''}>⚡ Ping</button>
           </div>
         </td>
       </tr>
@@ -4461,7 +4461,7 @@ export async function fetchAndRenderWireguard() {
                 f => `
               <div class="taildrop-file-item" data-path="${escapeHtml(f.path || '')}" style="display:flex; justify-content:space-between; align-items:center; padding:6px 8px; border-bottom:1px solid rgba(255,255,255,0.05); font-size:11px; cursor:pointer; border-radius:4px; transition:background 0.2s;" data-hover-bg title="Click to view folder in Files">
                 <span style="font-weight:600; color:#fff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:60%;" title="${escapeHtml(f.name)}">📄 ${escapeHtml(f.name)}</span>
-                <span style="color:var(--muted); font-size:10.5px;">${escapeHtml(f.size_formatted)} · ${escapeHtml(f.modified_at)}</span>
+                <span style="color:var(--muted); font-size:11px;">${escapeHtml(f.size_formatted)} · ${escapeHtml(f.modified_at)}</span>
               </div>
             `
               )
@@ -5343,7 +5343,7 @@ export async function fetchAndRenderNetworkTopology() {
               </div>
               <div class="switch-port-badge-row">
                 <span class="switch-speed-pill ${speedPillClass}">${escapeHtml(nic.speed_human || (isUp ? 'Connected' : 'Disconnected'))}</span>
-                <span style="font-size:10px; color:var(--muted);">${nic.duplex === 'full' ? 'Full Duplex' : nic.duplex}</span>
+                <span style="font-size:11px; color:var(--muted);">${nic.duplex === 'full' ? 'Full Duplex' : nic.duplex}</span>
               </div>
               <div class="switch-port-meta">
                 <div>MAC: ${escapeHtml(nic.mac || 'N/A')}</div>
@@ -5390,7 +5390,7 @@ export async function fetchAndRenderNetworkTopology() {
               </td>
               <td>
                 <span style="font-weight:600; color:${isUp ? '#f8fafc' : 'var(--muted)'};">${escapeHtml(nic.speed_human)}</span>
-                <span style="font-size:10px; color:var(--muted); margin-left:4px;">(${escapeHtml(nic.duplex)})</span>
+                <span style="font-size:11px; color:var(--muted); margin-left:4px;">(${escapeHtml(nic.duplex)})</span>
               </td>
               <td style="font-family:var(--font-mono, monospace); font-size:11px;">${escapeHtml(nic.mac || '--')}</td>
               <td style="font-family:var(--font-mono, monospace);">${escapeHtml(String(nic.mtu || 1500))}</td>
@@ -5398,15 +5398,15 @@ export async function fetchAndRenderNetworkTopology() {
                 ${nic.master ? `<span class="network-member-pill" style="color:var(--accent-cyan); border-color:rgba(56,189,248,0.3);">${escapeHtml(nic.master)}</span>` : '<span style="color:var(--muted);">Standalone</span>'}
               </td>
               <td style="font-family:var(--font-mono, monospace); font-size:11px;">
-                <div>↓ ${rxFmt} <span style="font-size:9.5px; color:var(--muted);">(${formatNumber(nic.rx_packets || 0)} pkts)</span></div>
-                <div>↑ ${txFmt} <span style="font-size:9.5px; color:var(--muted);">(${formatNumber(nic.tx_packets || 0)} pkts)</span></div>
+                <div>↓ ${rxFmt} <span style="font-size:11px; color:var(--muted);">(${formatNumber(nic.rx_packets || 0)} pkts)</span></div>
+                <div>↑ ${txFmt} <span style="font-size:11px; color:var(--muted);">(${formatNumber(nic.tx_packets || 0)} pkts)</span></div>
               </td>
               <td style="font-size:11px; color:var(--muted);">
                 <div>${escapeHtml(nic.driver || 'Generic')}</div>
-                <div style="font-family:var(--font-mono, monospace); font-size:9.5px;">${escapeHtml(nic.pci_slot || '--')}</div>
+                <div style="font-family:var(--font-mono, monospace); font-size:11px;">${escapeHtml(nic.pci_slot || '--')}</div>
               </td>
               <td style="text-align: right;">
-                <button class="btn-pill-toggle btn-config-port" data-iface="${escapeHtml(nic.name)}" style="font-size:10px; padding:2px 8px; color:var(--accent-cyan, #38bdf8); border-color:rgba(56,189,248,0.3);">${t('net.configure_port', 'Configure')}</button>
+                <button class="btn-pill-toggle btn-config-port" data-iface="${escapeHtml(nic.name)}" style="font-size:11px; padding:2px 8px; color:var(--accent-cyan, #38bdf8); border-color:rgba(56,189,248,0.3);">${t('net.configure_port', 'Configure')}</button>
               </td>
             </tr>
           `;
@@ -5432,17 +5432,17 @@ export async function fetchAndRenderNetworkTopology() {
             <div class="network-bridge-header">
               <div style="display:flex; align-items:center; gap:8px;">
                 <span class="network-bridge-name">Bridge: ${escapeHtml(br.name)}</span>
-                <span class="switch-speed-pill ${br.stp ? 'speed-10g' : 'speed-down'}" style="font-size:9.5px; padding:2px 6px;">STP: ${br.stp ? 'ON' : 'OFF'}</span>
-                <span style="font-size:10px; color:var(--muted); font-family:var(--font-mono, monospace);">FD: ${br.forward_delay || 0}s</span>
+                <span class="switch-speed-pill ${br.stp ? 'speed-10g' : 'speed-down'}" style="font-size:11px; padding:2px 6px;">STP: ${br.stp ? 'ON' : 'OFF'}</span>
+                <span style="font-size:11px; color:var(--muted); font-family:var(--font-mono, monospace);">FD: ${br.forward_delay || 0}s</span>
               </div>
               <div style="display:flex; align-items:center; gap:6px;">
                 <span class="network-bridge-ip">${escapeHtml(br.ip_address || 'Unassigned IP')}</span>
-                <button class="btn-pill-toggle btn-config-bridge" data-bridge="${escapeHtml(br.name)}" style="font-size:10px; padding:2px 8px; color:var(--accent-cyan, #38bdf8); border-color:rgba(56,189,248,0.3);">${t('net.configure_bridge', 'Configure')}</button>
+                <button class="btn-pill-toggle btn-config-bridge" data-bridge="${escapeHtml(br.name)}" style="font-size:11px; padding:2px 8px; color:var(--accent-cyan, #38bdf8); border-color:rgba(56,189,248,0.3);">${t('net.configure_bridge', 'Configure')}</button>
               </div>
             </div>
             <div style="font-size:11px; color:var(--muted);">Member Ports:</div>
             <div class="network-bridge-members">
-              ${(br.interfaces || []).map((m) => `<span class="network-member-pill">${escapeHtml(m)}</span>`).join('') || '<span style="color:var(--muted); font-size:10px;">No members</span>'}
+              ${(br.interfaces || []).map((m) => `<span class="network-member-pill">${escapeHtml(m)}</span>`).join('') || '<span style="color:var(--muted); font-size:11px;">No members</span>'}
             </div>
           </div>
         `);
@@ -5456,9 +5456,9 @@ export async function fetchAndRenderNetworkTopology() {
               <div style="display:flex; align-items:center; gap:8px;">
                 <span class="network-bridge-name">Bond: ${escapeHtml(b.name)}</span>
                 <span class="switch-speed-pill speed-10g" title="${escapeHtml(b.mode_title || b.mode_name || b.mode)}">${escapeHtml(b.mode_title || b.mode_name || b.mode || 'Bonding')}</span>
-                <span style="font-size:10px; color:var(--muted); font-family:var(--font-mono, monospace);">${b.miimon || 100}ms</span>
+                <span style="font-size:11px; color:var(--muted); font-family:var(--font-mono, monospace);">${b.miimon || 100}ms</span>
               </div>
-              <button class="btn-pill-toggle btn-config-bond" data-bond="${escapeHtml(b.name)}" style="font-size:10px; padding:2px 8px; color:var(--accent-cyan, #38bdf8); border-color:rgba(56,189,248,0.3);">${t('net.configure_bond', 'Configure')}</button>
+              <button class="btn-pill-toggle btn-config-bond" data-bond="${escapeHtml(b.name)}" style="font-size:11px; padding:2px 8px; color:var(--accent-cyan, #38bdf8); border-color:rgba(56,189,248,0.3);">${t('net.configure_bond', 'Configure')}</button>
             </div>
             <div style="font-size:11px; color:var(--muted);">Active Slave: <strong style="color:var(--ok2, #3bf58b);">${escapeHtml(b.active_slave || 'None')}</strong></div>
             <div class="network-bridge-members">
@@ -5527,7 +5527,7 @@ export async function fetchAndRenderNetworkTopology() {
                 <div>↓ ${rxFmt} / ↑ ${txFmt}</div>
               </td>
               <td style="text-align: right;">
-                <button class="btn-pill-toggle btn-delete-vlan" data-vlan="${escapeHtml(v.name)}" style="font-size:10px; padding:2px 8px; color:#f87171; border-color:rgba(248,113,113,0.3);" title="Delete VLAN">🗑</button>
+                <button class="btn-pill-toggle btn-delete-vlan" data-vlan="${escapeHtml(v.name)}" style="font-size:11px; padding:2px 8px; color:#f87171; border-color:rgba(248,113,113,0.3);" title="Delete VLAN">🗑</button>
               </td>
             </tr>
           `;
@@ -6101,7 +6101,7 @@ export async function openBondConfigModal(bondName) {
               <input type="checkbox" class="net-bond-slave-checkbox" value="${escapeHtml(nic.name)}" ${isChecked ? 'checked' : ''} style="cursor:pointer;" />
               <span style="font-family:var(--font-mono, monospace); font-weight:600; color:#f8fafc;">${escapeHtml(nic.name)}</span>
               ${nic.alias ? `<span class="switch-port-alias-tag">${escapeHtml(nic.alias)}</span>` : ''}
-              <span style="font-size:10px; color:var(--muted); margin-left:auto;">${escapeHtml(nic.speed_human || (nic.is_up ? 'Connected' : 'Disconnected'))}</span>
+              <span style="font-size:11px; color:var(--muted); margin-left:auto;">${escapeHtml(nic.speed_human || (nic.is_up ? 'Connected' : 'Disconnected'))}</span>
             </label>
           `;
           })
@@ -6203,9 +6203,9 @@ export async function openBridgeConfigModal(brName) {
             <label style="display:flex; align-items:center; gap:8px; font-size:11.5px; cursor:pointer; user-select:none;">
               <input type="checkbox" class="net-bridge-member-checkbox" value="${escapeHtml(cand.name)}" ${isChecked ? 'checked' : ''} style="cursor:pointer;" />
               <span style="font-family:var(--font-mono, monospace); font-weight:600; color:#f8fafc;">${escapeHtml(cand.name)}</span>
-              <span class="network-member-pill" style="font-size:9px; padding:1px 5px;">${escapeHtml(cand.type || 'interface')}</span>
+              <span class="network-member-pill" style="font-size:11px; padding:1px 5px;">${escapeHtml(cand.type || 'interface')}</span>
               ${cand.alias ? `<span class="switch-port-alias-tag">${escapeHtml(cand.alias)}</span>` : ''}
-              <span style="font-size:10px; color:var(--muted); margin-left:auto;">${escapeHtml(cand.speed_human || (cand.is_up ? 'Connected' : 'Disconnected'))}</span>
+              <span style="font-size:11px; color:var(--muted); margin-left:auto;">${escapeHtml(cand.speed_human || (cand.is_up ? 'Connected' : 'Disconnected'))}</span>
             </label>
           `;
           })
@@ -6684,7 +6684,7 @@ function buildDiskRowInner(d) {
     <td style="font-weight:700; color:#fff;">/dev/${escapeHtml(devName)}</td>
     <td>
       <div style="font-weight:600; color:#e2e8f0;">${escapeHtml(modelStr)}</div>
-      <div style="font-size:10px; color:var(--muted);">SN: ${escapeHtml(serialStr)}</div>
+      <div style="font-size:11px; color:var(--muted);">SN: ${escapeHtml(serialStr)}</div>
     </td>
     <td>
       <span class="bay-sub-badge" style="background:rgba(255,255,255,0.06); padding:2px 6px; border-radius:4px;">${escapeHtml(transportStr)} • ${escapeHtml(driverStr)}</span>
@@ -6698,8 +6698,8 @@ function buildDiskRowInner(d) {
     </td>
     <td style="text-align:right;">
       <div style="display:inline-flex; gap:6px; align-items:center;">
-        <button class="btn-pill-toggle btn-locate-row" data-dev="${devName}" title="Locate Drive (Blink Bay LED)" style="padding:3px 8px; font-size:10.5px;">⚡ Locate</button>
-        <button class="btn-pill-toggle btn-smart-row" data-dev="${devName}" title="View S.M.A.R.T. Diagnostics" style="padding:3px 8px; font-size:10.5px;">📊 S.M.A.R.T.</button>
+        <button class="btn-pill-toggle btn-locate-row" data-dev="${devName}" title="Locate Drive (Blink Bay LED)" style="padding:3px 8px; font-size:11px;">⚡ Locate</button>
+        <button class="btn-pill-toggle btn-smart-row" data-dev="${devName}" title="View S.M.A.R.T. Diagnostics" style="padding:3px 8px; font-size:11px;">📊 S.M.A.R.T.</button>
         <button type="button" class="btn-pill-toggle btn-disk-more-sheet" data-dev="${devName}" title="More Actions" style="display:none; padding:3px 8px; font-size:12px;">···</button>
       </div>
     </td>
@@ -7053,11 +7053,11 @@ export async function fetchAndRenderSecurityPosture() {
               <span class="sec-advisor-item-icon" style="color:${passColor}; font-weight:800; font-size:13px; line-height:1;">${passIcon}</span>
               <div style="min-width:0;">
                 <div style="font-weight:600; color:#f8fafc; font-size:11.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(c.name)}</div>
-                <div style="font-size:10.5px; color:${c.passed ? '#94a3b8' : '#fca5a5'}; margin-top:2px;">${escapeHtml(c.details || '')}</div>
+                <div style="font-size:11px; color:${c.passed ? '#94a3b8' : '#fca5a5'}; margin-top:2px;">${escapeHtml(c.details || '')}</div>
               </div>
             </div>
             <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
-              <span class="sec-advisor-status-badge" style="font-size:10px; font-weight:700; color:${passColor}; text-transform:uppercase; letter-spacing:0.5px;">${c.passed ? 'PASSED' : 'NEEDS ACTION'}</span>
+              <span class="sec-advisor-status-badge" style="font-size:11px; font-weight:700; color:${passColor}; text-transform:uppercase; letter-spacing:0.5px;">${c.passed ? 'PASSED' : 'NEEDS ACTION'}</span>
               <span class="sec-advisor-action-pill">${actionText}</span>
             </div>
           </div>
@@ -7440,19 +7440,19 @@ export function initManagement() {
 
         strip.innerHTML = `
           <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 10px 14px;">
-            <div style="font-size: 10px; color: var(--muted); font-weight: 700; text-transform: uppercase;">HYPERVISOR ENGINE</div>
+            <div style="font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase;">HYPERVISOR ENGINE</div>
             <div style="font-size: 13px; font-weight: 700; color: ${kvmColor}; margin-top: 4px; display: flex; align-items: center; gap: 6px;">
               <span>⚡</span> <span>${escapeHtml(kvmBadge)}</span>
             </div>
           </div>
           <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 10px 14px;">
-            <div style="font-size: 10px; color: var(--muted); font-weight: 700; text-transform: uppercase;">MEMORY CEILING</div>
+            <div style="font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase;">MEMORY CEILING</div>
             <div style="font-size: 13px; font-weight: 700; color: var(--accent-cyan, #0ea5e9); margin-top: 4px;">
               ${escapeHtml(headroom)}
             </div>
           </div>
           <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 10px 14px;">
-            <div style="font-size: 10px; color: var(--muted); font-weight: 700; text-transform: uppercase;">vCPU OVERCOMMIT</div>
+            <div style="font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase;">vCPU OVERCOMMIT</div>
             <div style="font-size: 13px; font-weight: 700; color: #fff; margin-top: 4px;">
               ${escapeHtml(cpuRatio)}
             </div>
@@ -7483,10 +7483,10 @@ export function initManagement() {
                     <span style="font-size: 18px;">🖥️</span>
                     <div>
                       <div style="font-weight: 700; font-size: 13px; color: #fff;">${escapeHtml(vm.name || vm.id)}</div>
-                      <div style="font-size: 10px; color: var(--muted);">${escapeHtml(osType)} • ${cores} vCPU • ${ramGb} RAM</div>
+                      <div style="font-size: 11px; color: var(--muted);">${escapeHtml(osType)} • ${cores} vCPU • ${ramGb} RAM</div>
                     </div>
                   </div>
-                  <span style="padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; background: ${statusBg}; color: ${statusColor};">
+                  <span style="padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; background: ${statusBg}; color: ${statusColor};">
                     ${escapeHtml(vm.state || 'stopped')}
                   </span>
                 </div>
@@ -7576,15 +7576,15 @@ export function initManagement() {
             </div>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-top: 6px;">
               <div style="background: rgba(0,0,0,0.2); padding: 8px 12px; border-radius: 6px;">
-                <div style="font-size: 10px; color: var(--muted);">CPU Host Threads</div>
+                <div style="font-size: 11px; color: var(--muted);">CPU Host Threads</div>
                 <div style="font-size: 14px; font-weight: 700; color: #fff; margin-top: 2px;">${tel.cpu?.host_threads || 8} Threads</div>
               </div>
               <div style="background: rgba(0,0,0,0.2); padding: 8px 12px; border-radius: 6px;">
-                <div style="font-size: 10px; color: var(--muted);">vhost-net Acceleration</div>
+                <div style="font-size: 11px; color: var(--muted);">vhost-net Acceleration</div>
                 <div style="font-size: 14px; font-weight: 700; color: var(--ok2); margin-top: 2px;">Supported</div>
               </div>
               <div style="background: rgba(0,0,0,0.2); padding: 8px 12px; border-radius: 6px;">
-                <div style="font-size: 10px; color: var(--muted);">Default Network Bridge</div>
+                <div style="font-size: 11px; color: var(--muted);">Default Network Bridge</div>
                 <div style="font-size: 14px; font-weight: 700; color: var(--accent-cyan); margin-top: 2px;">br0 / virbr0</div>
               </div>
             </div>
@@ -9027,7 +9027,7 @@ export function openDiagnosticsPreviewModal(data) {
             .map(
               (a) => `
             <div style="font-size: 11px; color: #f1f5f9; display: flex; align-items: flex-start; gap: 6px;">
-              <span style="font-size: 10px; margin-top: 2px;">${a.level === 'critical' ? '🔴' : '🟡'}</span>
+              <span style="font-size: 11px; margin-top: 2px;">${a.level === 'critical' ? '🔴' : '🟡'}</span>
               <span>${escapeHtml(a.message || '')}</span>
             </div>
           `
@@ -9044,7 +9044,7 @@ export function openDiagnosticsPreviewModal(data) {
             <span style="font-size: 14px;">${icon}</span>
             <span style="font-size: 12px; font-weight: 800; color: ${badgeColor}; letter-spacing: 0.5px;">${escapeHtml(title)}</span>
           </div>
-          <span style="font-size: 10px; color: var(--muted); font-family: monospace;">ZettOS Kernel ${escapeHtml(data.platform || '')}</span>
+          <span style="font-size: 11px; color: var(--muted); font-family: monospace;">ZettOS Kernel ${escapeHtml(data.platform || '')}</span>
         </div>
         <div style="font-size: 11px; color: var(--muted); margin-top: 3px;">${escapeHtml(desc)}</div>
         ${alertItemsHtml}
@@ -9065,29 +9065,29 @@ export function openDiagnosticsPreviewModal(data) {
 
     grid.innerHTML = `
       <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:10px;">
-        <div style="font-size:9.5px; color:var(--muted); text-transform:uppercase; font-weight:700;">Host & OS</div>
+        <div style="font-size:11px; color:var(--muted); text-transform:uppercase; font-weight:700;">Host & OS</div>
         <div style="font-size:12px; font-weight:800; color:#fff; margin-top:2px;">${escapeHtml(data.chassis || 'Appliance')}</div>
-        <div style="font-size:10px; color:var(--muted); margin-top:1px;">Uptime: ${data.uptime_hours || 0}h</div>
+        <div style="font-size:11px; color:var(--muted); margin-top:1px;">Uptime: ${data.uptime_hours || 0}h</div>
       </div>
       <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:10px;">
-        <div style="font-size:9.5px; color:var(--muted); text-transform:uppercase; font-weight:700;">Memory</div>
+        <div style="font-size:11px; color:var(--muted); text-transform:uppercase; font-weight:700;">Memory</div>
         <div style="font-size:12px; font-weight:800; color:#fff; margin-top:2px;">${memPct}% Used</div>
-        <div style="font-size:10px; color:var(--muted); margin-top:1px;">${memUsedGb} / ${memTotalGb} GB RAM</div>
+        <div style="font-size:11px; color:var(--muted); margin-top:1px;">${memUsedGb} / ${memTotalGb} GB RAM</div>
       </div>
       <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:10px;">
-        <div style="font-size:9.5px; color:var(--muted); text-transform:uppercase; font-weight:700;">Storage</div>
+        <div style="font-size:11px; color:var(--muted); text-transform:uppercase; font-weight:700;">Storage</div>
         <div style="font-size:12px; font-weight:800; color:#fff; margin-top:2px;">${storage.pools_count || 0} Pools</div>
-        <div style="font-size:10px; color:${(storage.degraded_disks?.length || 0) > 0 ? 'var(--crit)' : 'var(--muted)'}; margin-top:1px;">${storage.disks_count || 0} Drives (${storage.standby_count || 0} standby)</div>
+        <div style="font-size:11px; color:${(storage.degraded_disks?.length || 0) > 0 ? 'var(--crit)' : 'var(--muted)'}; margin-top:1px;">${storage.disks_count || 0} Drives (${storage.standby_count || 0} standby)</div>
       </div>
       <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:10px;">
-        <div style="font-size:9.5px; color:var(--muted); text-transform:uppercase; font-weight:700;">Docker Fleet</div>
+        <div style="font-size:11px; color:var(--muted); text-transform:uppercase; font-weight:700;">Docker Fleet</div>
         <div style="font-size:12px; font-weight:800; color:#fff; margin-top:2px;">${docker.running || 0} / ${docker.total || 0} Running</div>
-        <div style="font-size:10px; color:${(docker.restarting || 0) > 0 ? 'var(--crit)' : 'var(--muted)'}; margin-top:1px;">${docker.restarting || 0} Restarting, ${docker.dead || 0} Dead</div>
+        <div style="font-size:11px; color:${(docker.restarting || 0) > 0 ? 'var(--crit)' : 'var(--muted)'}; margin-top:1px;">${docker.restarting || 0} Restarting, ${docker.dead || 0} Dead</div>
       </div>
       <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:10px;">
-        <div style="font-size:9.5px; color:var(--muted); text-transform:uppercase; font-weight:700;">Virtual Machines</div>
+        <div style="font-size:11px; color:var(--muted); text-transform:uppercase; font-weight:700;">Virtual Machines</div>
         <div style="font-size:12px; font-weight:800; color:#fff; margin-top:2px;">${vms.active_vm_count || 0} / ${vms.total_vm_count || 0} Active</div>
-        <div style="font-size:10px; color:var(--muted); margin-top:1px;">Headroom: Safe</div>
+        <div style="font-size:11px; color:var(--muted); margin-top:1px;">Headroom: Safe</div>
       </div>
     `;
   }
@@ -9334,7 +9334,7 @@ export function openChannelConfigModal(channel) {
       <div style="margin-bottom:12px;">
         <label style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:4px;">DISCORD WEBHOOK URL</label>
         <input type="url" id="cfg-discord-url" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.25); padding:8px 10px; color:#fff;" placeholder="https://discord.com/api/webhooks/..." value="${escapeHtml(cfg.discord_webhook_url || '')}">
-        <div style="font-size:10px; color:var(--muted); margin-top:4px;">Paste the Webhook URL created in your Discord channel settings -> Integrations.</div>
+        <div style="font-size:11px; color:var(--muted); margin-top:4px;">Paste the Webhook URL created in your Discord channel settings -> Integrations.</div>
       </div>
     `;
   } else if (channel === 'telegram') {
@@ -9347,7 +9347,7 @@ export function openChannelConfigModal(channel) {
       <div style="margin-bottom:12px;">
         <label style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:4px;">TELEGRAM CHAT ID</label>
         <input type="text" id="cfg-telegram-chat" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.25); padding:8px 10px; color:#fff;" placeholder="-100123456789" value="${escapeHtml(cfg.telegram_chat_id || '')}">
-        <div style="font-size:10px; color:var(--muted); margin-top:4px;">Obtained from @userinfobot or your Telegram channel/group chat ID.</div>
+        <div style="font-size:11px; color:var(--muted); margin-top:4px;">Obtained from @userinfobot or your Telegram channel/group chat ID.</div>
       </div>
     `;
   } else if (channel === 'email') {
@@ -9409,7 +9409,7 @@ export function openChannelConfigModal(channel) {
       <div style="margin-bottom:12px;">
         <label style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:4px;">WEBHOOK URL</label>
         <input type="url" id="cfg-webhook-url" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.25); padding:8px 10px; color:#fff;" placeholder="https://..." value="${escapeHtml(cfg.webhook_url || '')}">
-        <div style="font-size:10px; color:var(--muted); margin-top:4px;">Receives POST requests with JSON payload: { event, title, message, level, timestamp }</div>
+        <div style="font-size:11px; color:var(--muted); margin-top:4px;">Receives POST requests with JSON payload: { event, title, message, level, timestamp }</div>
       </div>
     `;
   } else if (channel === 'apprise_raw') {
@@ -9418,7 +9418,7 @@ export function openChannelConfigModal(channel) {
       <div style="margin-bottom:12px;">
         <label style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:4px;">APPRISE TARGET URLS (One per line)</label>
         <textarea id="cfg-apprise-raw" class="tz-select-input" style="width:100%; height:120px; font-family:monospace; font-size:11px; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.25); padding:8px 10px; color:#fff;" placeholder="pover://userkey@token&#10;slack://TokenA/TokenB/TokenC&#10;gotify://gotify.server/token">${escapeHtml(rawVal)}</textarea>
-        <div style="font-size:10px; color:var(--muted); margin-top:4px;">Apprise supports 100+ notification targets. See Apprise documentation for syntax.</div>
+        <div style="font-size:11px; color:var(--muted); margin-top:4px;">Apprise supports 100+ notification targets. See Apprise documentation for syntax.</div>
       </div>
     `;
   }
@@ -9504,10 +9504,10 @@ export async function fetchAndRenderBackupJobs(mountEl) {
     const rowsHtml = jobs.map(job => {
       const isRemote = job.destination_type === 'remote';
       const destBadge = isRemote
-        ? `<span class="badge" style="background: rgba(14,165,233,0.15); color: #38bdf8; border: 1px solid rgba(14,165,233,0.3); font-size: 10px; padding: 2px 6px; border-radius: 4px;">☁️ ${escapeHtml(job.remote_name || 'Cloud')}:${escapeHtml(job.remote_path || '')}</span>`
-        : `<span class="badge" style="background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); font-size: 10px; padding: 2px 6px; border-radius: 4px;">📸 Local Snapshot</span>`;
+        ? `<span class="badge" style="background: rgba(14,165,233,0.15); color: #38bdf8; border: 1px solid rgba(14,165,233,0.3); font-size: 11px; padding: 2px 6px; border-radius: 4px;">☁️ ${escapeHtml(job.remote_name || 'Cloud')}:${escapeHtml(job.remote_path || '')}</span>`
+        : `<span class="badge" style="background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); font-size: 11px; padding: 2px 6px; border-radius: 4px;">📸 Local Snapshot</span>`;
 
-      const schedBadge = `<span class="badge" style="background: rgba(255,255,255,0.06); color: #cbd5e1; font-size: 10px; padding: 2px 6px; border-radius: 4px; text-transform: capitalize;">${escapeHtml(job.schedule || 'daily')}</span>`;
+      const schedBadge = `<span class="badge" style="background: rgba(255,255,255,0.06); color: #cbd5e1; font-size: 11px; padding: 2px 6px; border-radius: 4px; text-transform: capitalize;">${escapeHtml(job.schedule || 'daily')}</span>`;
       
       let statusHtml = '';
       if (job.last_status === 'running') {
@@ -9526,18 +9526,18 @@ export async function fetchAndRenderBackupJobs(mountEl) {
         <tr style="border-bottom: 1px solid rgba(255,255,255,0.06); font-size: 11.5px;">
           <td style="padding: 10px 12px; font-weight: 600; color: #fff;">
             <div>${escapeHtml(job.name)}</div>
-            <div style="font-size: 10px; color: var(--muted); font-weight: normal;">Subvolume: <code>${escapeHtml(job.source_subvolume || '@shares')}</code></div>
+            <div style="font-size: 11px; color: var(--muted); font-weight: normal;">Subvolume: <code>${escapeHtml(job.source_subvolume || '@shares')}</code></div>
           </td>
           <td style="padding: 10px 12px;">${destBadge}</td>
           <td style="padding: 10px 12px;">
             <div style="display: flex; gap: 4px; align-items: center; flex-wrap: wrap;">
               ${schedBadge}
-              <span style="font-size: 10px; color: var(--muted);">Keep ${job.retention_count || 7}</span>
+              <span style="font-size: 11px; color: var(--muted);">Keep ${job.retention_count || 7}</span>
             </div>
           </td>
           <td style="padding: 10px 12px;">
             <div>${statusHtml}</div>
-            <div style="font-size: 10px; color: var(--muted);">${lastRunStr}</div>
+            <div style="font-size: 11px; color: var(--muted);">${lastRunStr}</div>
           </td>
           <td style="padding: 10px 12px; text-align: right;">
             <div style="display: inline-flex; gap: 6px;">
@@ -9557,7 +9557,7 @@ export async function fetchAndRenderBackupJobs(mountEl) {
       <div style="overflow-x: auto; background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
         <table style="width: 100%; border-collapse: collapse; text-align: left;">
           <thead>
-            <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase;">
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase;">
               <th style="padding: 8px 12px;">Task & Target</th>
               <th style="padding: 8px 12px;">Pipeline</th>
               <th style="padding: 8px 12px;">Schedule & Retention</th>
@@ -9663,7 +9663,7 @@ export async function fetchAndRenderSystemSnapshots(mountEl) {
       <div style="overflow-x: auto; background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
         <table style="width: 100%; border-collapse: collapse; text-align: left;">
           <thead>
-            <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase;">
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase;">
               <th style="padding: 8px 12px;">Snapshot Name</th>
               <th style="padding: 8px 12px;">Filesystem Path</th>
               <th style="padding: 8px 12px;">Created</th>
@@ -9757,12 +9757,12 @@ export async function fetchAndRenderAppBackups(mountEl, filterApp = '') {
     const rowsHtml = backups.map(b => {
       const isUninstall = b.reason === 'uninstall';
       const reasonBadge = isUninstall
-        ? `<span class="badge" style="background: rgba(239,68,68,0.15); color: #fca5a5; border: 1px solid rgba(239,68,68,0.3); font-size: 10px; padding: 2px 6px; border-radius: 4px;">⚠️ Auto-Archive (Uninstall)</span>`
-        : `<span class="badge" style="background: rgba(249, 115, 22, 0.15); color: #fb923c; border: 1px solid rgba(249, 115, 22, 0.35); font-size: 10px; padding: 2px 6px; border-radius: 4px;">💾 On-Demand</span>`;
+        ? `<span class="badge" style="background: rgba(239,68,68,0.15); color: #fca5a5; border: 1px solid rgba(239,68,68,0.3); font-size: 11px; padding: 2px 6px; border-radius: 4px;">⚠️ Auto-Archive (Uninstall)</span>`
+        : `<span class="badge" style="background: rgba(249, 115, 22, 0.15); color: #fb923c; border: 1px solid rgba(249, 115, 22, 0.35); font-size: 11px; padding: 2px 6px; border-radius: 4px;">💾 On-Demand</span>`;
 
       const createdDate = formatDateTime(b.created_at_epoch || b.created_at, undefined, 'N/A');
       const sizeStr = b.archive_size_formatted || (b.archive_size_bytes ? `${(b.archive_size_bytes / (1024 * 1024)).toFixed(1)} MB` : '--');
-      const stackHtml = b.stack ? `<span style="font-size:10px; color:var(--muted); margin-left:6px;">(Stack: <code>${escapeHtml(b.stack)}</code>)</span>` : '';
+      const stackHtml = b.stack ? `<span style="font-size:11px; color:var(--muted); margin-left:6px;">(Stack: <code>${escapeHtml(b.stack)}</code>)</span>` : '';
       const mountsCount = b.mounts_count || (b.mounts ? b.mounts.length : 0);
 
       return `
@@ -9773,14 +9773,14 @@ export async function fetchAndRenderAppBackups(mountEl, filterApp = '') {
               <strong>${escapeHtml(b.container_name || b.id)}</strong>
               ${stackHtml}
             </div>
-            <div style="font-size: 10px; color: var(--muted); font-weight: normal; margin-top:2px;">
-              Image: <code style="font-size:9.5px; color:#cbd5e1;">${escapeHtml(b.image || 'N/A')}</code>
+            <div style="font-size: 11px; color: var(--muted); font-weight: normal; margin-top:2px;">
+              Image: <code style="font-size:11px; color:#cbd5e1;">${escapeHtml(b.image || 'N/A')}</code>
             </div>
           </td>
           <td style="padding: 10px 12px;">${reasonBadge}</td>
           <td style="padding: 10px 12px;">
-            <div style="font-family: var(--font-mono, monospace); font-size: 10.5px; color: #e2e8f0;">${escapeHtml(b.archive_file || b.id)}</div>
-            <div style="font-size: 10px; color: var(--muted); margin-top: 2px;">
+            <div style="font-family: var(--font-mono, monospace); font-size: 11px; color: #e2e8f0;">${escapeHtml(b.archive_file || b.id)}</div>
+            <div style="font-size: 11px; color: var(--muted); margin-top: 2px;">
               ${sizeStr} • ${mountsCount} volume${mountsCount === 1 ? '' : 's'}
             </div>
           </td>
@@ -9808,7 +9808,7 @@ export async function fetchAndRenderAppBackups(mountEl, filterApp = '') {
       <div style="overflow-x: auto; background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
         <table style="width: 100%; border-collapse: collapse; text-align: left;">
           <thead>
-            <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase;">
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase;">
               <th style="padding: 8px 12px;">Application</th>
               <th style="padding: 8px 12px;">Trigger</th>
               <th style="padding: 8px 12px;">Archive File & Size</th>
@@ -9931,7 +9931,7 @@ export function renderAiSearchHistory() {
   }
   bar.style.display = 'flex';
   chipsContainer.innerHTML = _aiSearchHistory.map((q) => `
-    <button type="button" class="btn-pill-toggle ai-history-chip" data-query="${escapeHtml(q)}" style="font-size:10.5px; padding:2px 8px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.12); color:#cbd5e1; cursor:pointer;">
+    <button type="button" class="btn-pill-toggle ai-history-chip" data-query="${escapeHtml(q)}" style="font-size:11px; padding:2px 8px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.12); color:#cbd5e1; cursor:pointer;">
       ${escapeHtml(q)}
     </button>
   `).join('');
@@ -10173,43 +10173,43 @@ export function renderAiLlmRecommendations(recData = {}, activeModel = '') {
         <div style="display:flex; flex-direction:column; gap:4px;">
           <div style="font-weight:800; font-size:12.5px; color:#fff; word-break:break-word; line-height:1.35;" title="${escapeHtml(m.name)}">${escapeHtml(m.name)}</div>
           <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; flex-wrap:wrap;">
-            <div style="font-size:10px; color:var(--muted,#94a3b8); display:flex; align-items:center; gap:5px; flex-wrap:wrap;">
+            <div style="font-size:11px; color:var(--muted,#94a3b8); display:flex; align-items:center; gap:5px; flex-wrap:wrap;">
               <span>${escapeHtml(m.family || m.category || 'Hugging Face')} • ${escapeHtml(m.params || '')} • ${escapeHtml(m.quantization || '')}</span>
-              ${hfRepo ? `<a href="${escapeHtml(hfUrl)}" target="_blank" rel="noopener noreferrer" style="color:#fde047; text-decoration:none; font-family:monospace; font-size:9.5px;" title="View on https://huggingface.co">🤗 ${escapeHtml(hfRepo)} ↗</a>` : ''}
+              ${hfRepo ? `<a href="${escapeHtml(hfUrl)}" target="_blank" rel="noopener noreferrer" style="color:#fde047; text-decoration:none; font-family:monospace; font-size:11px;" title="View on https://huggingface.co">🤗 ${escapeHtml(hfRepo)} ↗</a>` : ''}
             </div>
-            <span class="ai-model-fit-badge" style="font-size:9px; font-weight:700; padding:2px 8px; border-radius:999px; background:${badgeBg}; color:${badgeColor}; white-space:nowrap; display:inline-flex; align-items:center; gap:3px;">
+            <span class="ai-model-fit-badge" style="font-size:11px; font-weight:700; padding:2px 8px; border-radius:999px; background:${badgeBg}; color:${badgeColor}; white-space:nowrap; display:inline-flex; align-items:center; gap:3px;">
               ${escapeHtml(m.fit_badge || (hasWarn ? "⚠️ Doesn't Fit Hardware" : (isRec ? '★ Recommended' : '✓ Fits Hardware')))}
             </span>
           </div>
         </div>
-        <div style="display:flex; flex-wrap:wrap; gap:5px; font-size:9.5px;">
+        <div style="display:flex; flex-wrap:wrap; gap:5px; font-size:11px;">
           <span style="padding:1px 6px; border-radius:4px; background:rgba(0,0,0,0.3); color:${hasWarn ? '#fca5a5' : '#6ee7b7'};">⚡ ${escapeHtml(m.target_device || 'NPU / GPU')}</span>
           <span style="padding:1px 6px; border-radius:4px; background:rgba(0,0,0,0.3); color:${hasWarn ? '#fdba74' : '#bae6fd'};">💾 ~${m.vram_or_ram_gb ?? m.est_ram_gb ?? 2.0} GB Model${m.min_ram_gb ? ` (${m.min_ram_gb}GB+ Host)` : ''}</span>
           <span style="padding:1px 6px; border-radius:4px; background:rgba(0,0,0,0.3); color:#f8fafc;" title="Hugging Face Release Date: ${escapeHtml(releaseDateText)}">📅 ${escapeHtml(releaseDateText)}</span>
           <span style="padding:1px 6px; border-radius:4px; background:rgba(0,0,0,0.3); color:#fde68a;">🚀 ${escapeHtml(m.estimated_speed || '')}</span>
         </div>
         ${hasWarn ? `
-          <div class="ai-model-hw-warning-banner" style="padding:6px 8px; border-radius:6px; background:${isCritical ? 'rgba(239,68,68,0.16)' : 'rgba(245,158,11,0.15)'}; border:1px solid ${isCritical ? 'rgba(248,113,113,0.45)' : 'rgba(251,191,36,0.45)'}; color:${isCritical ? '#fecaca' : '#fef08a'}; font-size:10px; line-height:1.35; display:flex; align-items:flex-start; gap:6px;">
+          <div class="ai-model-hw-warning-banner" style="padding:6px 8px; border-radius:6px; background:${isCritical ? 'rgba(239,68,68,0.16)' : 'rgba(245,158,11,0.15)'}; border:1px solid ${isCritical ? 'rgba(248,113,113,0.45)' : 'rgba(251,191,36,0.45)'}; color:${isCritical ? '#fecaca' : '#fef08a'}; font-size:11px; line-height:1.35; display:flex; align-items:flex-start; gap:6px;">
             <span style="font-size:12px; line-height:1; flex-shrink:0;">⚠️</span>
             <span>${escapeHtml(warningText)}</span>
           </div>
         ` : `
-          <div style="font-size:10.5px; color:#cbd5e1; line-height:1.35; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;" title="${escapeHtml(m.why_recommended || m.use_case || '')}">
+          <div style="font-size:11px; color:#cbd5e1; line-height:1.35; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;" title="${escapeHtml(m.why_recommended || m.use_case || '')}">
             ${escapeHtml(m.use_case || '')}${m.why_recommended ? ` — ${escapeHtml(m.why_recommended)}` : ''}
           </div>
         `}
         <div style="margin-top:auto; padding-top:5px; border-top:1px solid rgba(255,255,255,0.06); display:flex; justify-content:space-between; align-items:center; gap:6px;">
-          <span style="font-size:9.5px; color:#94a3b8;">🔋 ${escapeHtml(m.power_profile || 'Low Power')} • 📅 ${escapeHtml(releaseDateText)}</span>
+          <span style="font-size:11px; color:#94a3b8;">🔋 ${escapeHtml(m.power_profile || 'Low Power')} • 📅 ${escapeHtml(releaseDateText)}</span>
           <div style="display:flex; align-items:center; gap:5px;">
             ${isAct
-              ? `<span style="font-size:10px; font-weight:800; color:${hasWarn ? '#fbbf24' : '#34d399'}; padding:2px 8px; border-radius:6px; background:${hasWarn ? 'rgba(245,158,11,0.18)' : 'rgba(16,185,129,0.18)'}; border:1px solid ${hasWarn ? 'rgba(245,158,11,0.45)' : 'rgba(16,185,129,0.4)'};">${hasWarn ? '⚠️ Active (Exceeds HW)' : '✓ Active'}</span>`
+              ? `<span style="font-size:11px; font-weight:800; color:${hasWarn ? '#fbbf24' : '#34d399'}; padding:2px 8px; border-radius:6px; background:${hasWarn ? 'rgba(245,158,11,0.18)' : 'rgba(16,185,129,0.18)'}; border:1px solid ${hasWarn ? 'rgba(245,158,11,0.45)' : 'rgba(16,185,129,0.4)'};">${hasWarn ? '⚠️ Active (Exceeds HW)' : '✓ Active'}</span>`
               : (m.installed === false && m.ollama_tag && m.ollama_tag !== 'builtin-npu')
-                ? `<button type="button" class="btn-pill-toggle btn-ai-install-model" data-model-id="${escapeHtml(m.id)}" data-model-tag="${escapeHtml(m.ollama_tag)}" title="${escapeHtml(t('ai.install_model_title', 'Download this model into Ollama'))}" style="font-size:10px; font-weight:700; padding:2px 9px; background:rgba(250,204,21,0.18); border:1px solid rgba(250,204,21,0.48); color:#fde047; cursor:pointer;">⬇️ ${escapeHtml(t('ai.install_model', 'Install'))}</button>`
+                ? `<button type="button" class="btn-pill-toggle btn-ai-install-model" data-model-id="${escapeHtml(m.id)}" data-model-tag="${escapeHtml(m.ollama_tag)}" title="${escapeHtml(t('ai.install_model_title', 'Download this model into Ollama'))}" style="font-size:11px; font-weight:700; padding:2px 9px; background:rgba(250,204,21,0.18); border:1px solid rgba(250,204,21,0.48); color:#fde047; cursor:pointer;">⬇️ ${escapeHtml(t('ai.install_model', 'Install'))}</button>`
               : isLiveHfResult
-                ? `<button type="button" class="btn-pill-toggle btn-ai-pull-hf-card" data-hf-repo="${escapeHtml(hfRepo)}" style="font-size:10px; font-weight:700; padding:2px 9px; background:${hasWarn ? 'rgba(245,158,11,0.18)' : 'rgba(250,204,21,0.18)'}; border:1px solid ${hasWarn ? 'rgba(245,158,11,0.5)' : 'rgba(250,204,21,0.48)'}; color:${hasWarn ? '#fbbf24' : '#fde047'}; cursor:pointer;">${hasWarn ? '⚠️ Pull Anyway (Unfit)' : '⬇️ Pull from HF'}</button>`
-                : `<button type="button" class="btn-pill-toggle btn-ai-activate-model" data-model-id="${escapeHtml(m.id)}" style="font-size:10px; font-weight:700; padding:2px 9px; background:${hasWarn ? 'rgba(245,158,11,0.16)' : 'rgba(14,165,233,0.18)'}; border:1px solid ${hasWarn ? 'rgba(245,158,11,0.45)' : 'rgba(14,165,233,0.45)'}; color:${hasWarn ? '#fbbf24' : '#38bdf8'}; cursor:pointer;">${hasWarn ? '⚠️ Activate Anyway' : '⚡ Activate'}</button>`
+                ? `<button type="button" class="btn-pill-toggle btn-ai-pull-hf-card" data-hf-repo="${escapeHtml(hfRepo)}" style="font-size:11px; font-weight:700; padding:2px 9px; background:${hasWarn ? 'rgba(245,158,11,0.18)' : 'rgba(250,204,21,0.18)'}; border:1px solid ${hasWarn ? 'rgba(245,158,11,0.5)' : 'rgba(250,204,21,0.48)'}; color:${hasWarn ? '#fbbf24' : '#fde047'}; cursor:pointer;">${hasWarn ? '⚠️ Pull Anyway (Unfit)' : '⬇️ Pull from HF'}</button>`
+                : `<button type="button" class="btn-pill-toggle btn-ai-activate-model" data-model-id="${escapeHtml(m.id)}" style="font-size:11px; font-weight:700; padding:2px 9px; background:${hasWarn ? 'rgba(245,158,11,0.16)' : 'rgba(14,165,233,0.18)'}; border:1px solid ${hasWarn ? 'rgba(245,158,11,0.45)' : 'rgba(14,165,233,0.45)'}; color:${hasWarn ? '#fbbf24' : '#38bdf8'}; cursor:pointer;">${hasWarn ? '⚠️ Activate Anyway' : '⚡ Activate'}</button>`
             }
-            <button type="button" class="btn-pill-toggle btn-ai-remove-model" data-model-id="${escapeHtml(m.id)}" data-model-name="${escapeHtml(m.name)}" title="Remove model from catalog and disk" aria-label="Remove model ${escapeHtml(m.name)}" style="font-size:10px; font-weight:700; padding:2px 7px; background:rgba(239,68,68,0.12); border:1px solid rgba(239,68,68,0.35); color:#fca5a5; cursor:pointer;">🗑️</button>
+            <button type="button" class="btn-pill-toggle btn-ai-remove-model" data-model-id="${escapeHtml(m.id)}" data-model-name="${escapeHtml(m.name)}" title="Remove model from catalog and disk" aria-label="Remove model ${escapeHtml(m.name)}" style="font-size:11px; font-weight:700; padding:2px 7px; background:rgba(239,68,68,0.12); border:1px solid rgba(239,68,68,0.35); color:#fca5a5; cursor:pointer;">🗑️</button>
           </div>
         </div>
       </div>
@@ -10470,7 +10470,7 @@ export function renderAiLearningResultsData(data = {}) {
       listEl.innerHTML = failedFiles.map((f) => `
         <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; padding:6px 8px; border-bottom:1px solid rgba(255,255,255,0.06);">
           <span style="font-family:monospace; color:#fca5a5;">${escapeHtml(f.file_path || f.file_name || '')}</span>
-          <span style="color:#94a3b8; font-size:10px;">${escapeHtml(f.error || 'Failed to parse')}</span>
+          <span style="color:#94a3b8; font-size:11px;">${escapeHtml(f.error || 'Failed to parse')}</span>
         </div>
       `).join('');
     }
@@ -10706,7 +10706,7 @@ export function renderAiWatchedFoldersAndShares(watchedPaths = null, availableFo
         <div class="ai-watched-folder-chip" data-folder-path="${escapeHtml(fp)}" style="display:inline-flex; align-items:center; gap:7px; padding:4px 9px; border-radius:8px; background:rgba(14,165,233,0.14); border:1px solid rgba(14,165,233,0.38); font-size:11px; color:#f8fafc;">
           <span>☑</span>
           <span style="font-family:monospace; font-weight:700;">${escapeHtml(fp)}</span>
-          <span style="font-size:9.5px; padding:1px 6px; border-radius:999px; background:${inStandby ? 'rgba(245,158,11,0.18)' : 'rgba(37,194,160,0.18)'}; color:${inStandby ? '#fbbf24' : '#34d399'};">
+          <span style="font-size:11px; padding:1px 6px; border-radius:999px; background:${inStandby ? 'rgba(245,158,11,0.18)' : 'rgba(37,194,160,0.18)'}; color:${inStandby ? '#fbbf24' : '#34d399'};">
             ${inStandby ? `💤 Standby${dev ? ` (${escapeHtml(dev)})` : ''}` : `🟢 Running${dev ? ` (${escapeHtml(dev)})` : ''}`}
           </span>
           <button type="button" class="btn-ai-sync-single-folder" data-folder-path="${escapeHtml(fp)}" title="Sync this folder now (Standby Safe)" style="background:transparent; border:none; color:#38bdf8; cursor:pointer; font-size:11px; padding:0 2px;">🔄</button>
@@ -10764,10 +10764,10 @@ export function renderAiWatchedFoldersAndShares(watchedPaths = null, availableFo
               <span style="font-family:monospace; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(f.path)}</span>
             </div>
             <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
-              <span style="font-size:10px; padding:1px 7px; border-radius:999px; background:${inStandby ? 'rgba(245,158,11,0.16)' : 'rgba(37,194,160,0.16)'}; color:${inStandby ? '#fbbf24' : '#34d399'};">
+              <span style="font-size:11px; padding:1px 7px; border-radius:999px; background:${inStandby ? 'rgba(245,158,11,0.16)' : 'rgba(37,194,160,0.16)'}; color:${inStandby ? '#fbbf24' : '#34d399'};">
                 ${inStandby ? `💤 ${escapeHtml(dev || 'Standby')}` : `🟢 ${escapeHtml(dev || 'Running')}`}
               </span>
-              <span style="font-size:9.5px; font-weight:700; padding:1px 6px; border-radius:6px; background:${isWatched ? 'rgba(16,185,129,0.22)' : 'rgba(255,255,255,0.06)'}; color:${isWatched ? '#6ee7b7' : '#94a3b8'};">
+              <span style="font-size:11px; font-weight:700; padding:1px 6px; border-radius:6px; background:${isWatched ? 'rgba(16,185,129,0.22)' : 'rgba(255,255,255,0.06)'}; color:${isWatched ? '#6ee7b7' : '#94a3b8'};">
                 ${isWatched ? 'RAG Checked' : 'Click to Add'}
               </span>
             </div>
@@ -11816,7 +11816,7 @@ export async function fetchAndRenderAiStatus() {
         <div>• <strong>Deferred Standby Queue:</strong> ${defCount} path(s) waiting for drive wake${defDetail}</div>
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
           <span>• <strong>NVMe Index Footprint:</strong> ${sizeKb} KB (<code>${escapeHtml(stats.db_path || '/app/data/rag_index.db')}</code>)</span>
-          ${totalFiles > 0 || totalChunks > 0 ? `<button type="button" id="btn-ai-flush-index-link" class="btn-pill-toggle" style="padding:2px 8px; font-size:10.5px; font-weight:700; color:#fca5a5; border:1px solid rgba(239,68,68,0.35); background:rgba(239,68,68,0.12); border-radius:6px; cursor:pointer;" title="Flush existing RAG index, vector embeddings, and search catalog to start fresh"><span>🗑️</span> <span>Flush &amp; Start Fresh</span></button>` : ''}
+          ${totalFiles > 0 || totalChunks > 0 ? `<button type="button" id="btn-ai-flush-index-link" class="btn-pill-toggle" style="padding:2px 8px; font-size:11px; font-weight:700; color:#fca5a5; border:1px solid rgba(239,68,68,0.35); background:rgba(239,68,68,0.12); border-radius:6px; cursor:pointer;" title="Flush existing RAG index, vector embeddings, and search catalog to start fresh"><span>🗑️</span> <span>Flush &amp; Start Fresh</span></button>` : ''}
         </div>
       `;
       const flushLink = dbSummary.querySelector('#btn-ai-flush-index-link');
@@ -11858,15 +11858,15 @@ function renderStructuredCardHtml(card) {
             <span style="font-size: 18px;">🍳</span>
             <span style="font-weight: 800; font-size: 13.5px; color: #fff;">${escapeHtml(card.title || 'Structured Recipe Card')}</span>
           </div>
-          <div style="display: flex; gap: 6px; font-size: 10.5px;">
+          <div style="display: flex; gap: 6px; font-size: 11px;">
             ${card.prep_time ? `<span style="padding: 2px 8px; border-radius: 999px; background: rgba(0,0,0,0.3); color: #6ee7b7;">⏱ Prep: ${escapeHtml(card.prep_time)}</span>` : ''}
             ${card.cook_time ? `<span style="padding: 2px 8px; border-radius: 999px; background: rgba(0,0,0,0.3); color: #fde68a;">🔥 Cook: ${escapeHtml(card.cook_time)}</span>` : ''}
             ${card.servings ? `<span style="padding: 2px 8px; border-radius: 999px; background: rgba(0,0,0,0.3); color: #bae6fd;">🍽 Serves: ${escapeHtml(card.servings)}</span>` : ''}
           </div>
         </div>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; font-size: 11.5px;">
-          ${ings ? `<div><div style="font-weight: 700; color: #6ee7b7; margin-bottom: 4px; text-transform: uppercase; font-size: 10px;">Ingredients</div><ul style="margin: 0; padding-left: 16px; color: #e2e8f0; line-height: 1.5;">${ings}</ul></div>` : ''}
-          ${steps ? `<div><div style="font-weight: 700; color: #93c5fd; margin-bottom: 4px; text-transform: uppercase; font-size: 10px;">Instructions</div><ol style="margin: 0; padding-left: 16px; color: #e2e8f0; line-height: 1.5;">${steps}</ol></div>` : ''}
+          ${ings ? `<div><div style="font-weight: 700; color: #6ee7b7; margin-bottom: 4px; text-transform: uppercase; font-size: 11px;">Ingredients</div><ul style="margin: 0; padding-left: 16px; color: #e2e8f0; line-height: 1.5;">${ings}</ul></div>` : ''}
+          ${steps ? `<div><div style="font-weight: 700; color: #93c5fd; margin-bottom: 4px; text-transform: uppercase; font-size: 11px;">Instructions</div><ol style="margin: 0; padding-left: 16px; color: #e2e8f0; line-height: 1.5;">${steps}</ol></div>` : ''}
         </div>
       </div>
     `;
@@ -11933,9 +11933,9 @@ export async function runAiRagAsk(rawQuestion, options = {}) {
         <div class="ai-citation-card" data-path="${escapeHtml(fPath)}" data-name="${escapeHtml(fName)}" data-file-id="${c.file_id}" data-excerpt="${escapeHtml(cleanExcerpt)}" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.09); border-radius: 8px; padding: 10px 12px; cursor: pointer; transition: border-color 0.2s;">
           <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px;">
             <span style="font-weight: 700; font-size: 11.5px; color: #38bdf8;">[${cIdx}] 📄 ${escapeHtml(fName)}</span>
-            <span style="font-size: 9.5px; padding: 1px 6px; border-radius: 4px; background: rgba(16,185,129,0.12); color: #6ee7b7;">💤 Cached</span>
+            <span style="font-size: 11px; padding: 1px 6px; border-radius: 4px; background: rgba(16,185,129,0.12); color: #6ee7b7;">💤 Cached</span>
           </div>
-          <div style="font-size: 10px; color: var(--muted); font-family: monospace; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(secTitle)}</div>
+          <div style="font-size: 11px; color: var(--muted); font-family: monospace; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(secTitle)}</div>
           <div style="font-size: 11px; color: #cbd5e1; margin-top: 6px; line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
             ${escapeHtml(cleanExcerpt)}
           </div>
@@ -11946,7 +11946,7 @@ export async function runAiRagAsk(rawQuestion, options = {}) {
     const citationsHtml = citations.length > 0
       ? `
         <div style="display: flex; flex-direction: column; gap: 8px;">
-          <div style="font-size: 10.5px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em;">
+          <div style="font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em;">
             Grounded Document Citations (${citations.length})
           </div>
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 8px;">
@@ -11959,7 +11959,7 @@ export async function runAiRagAsk(rawQuestion, options = {}) {
     const photosHtml = (photos.length > 0 && !(options.unifiedMode && hasUnifiedVisualGrid))
       ? `
         <div style="display: flex; flex-direction: column; gap: 8px;">
-          <div style="font-size: 10.5px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em;">
+          <div style="font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em;">
             Matching Visual Assets (${photos.length})
           </div>
           <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(175px, 1fr)); gap: 10px;">
@@ -11989,9 +11989,9 @@ export async function runAiRagAsk(rawQuestion, options = {}) {
           <div style="display: flex; align-items: center; gap: 8px;">
             <span style="font-size: 15px;">🧠</span>
             <span style="font-weight: 800; font-size: 12.5px; color: #fff;">ZettAI Grounded Synthesis</span>
-            <span class="ai-llm-proof-badge" style="font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: rgba(168,85,247,0.16); border: 1px solid rgba(192,132,252,0.45); color: #e9d5ff;" title="${escapeHtml(llmTel.runtime_mode || 'No AI model (built-in tools only)')}">🤖 ${escapeHtml(activeLlmId)}</span>
+            <span class="ai-llm-proof-badge" style="font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: rgba(168,85,247,0.16); border: 1px solid rgba(192,132,252,0.45); color: #e9d5ff;" title="${escapeHtml(llmTel.runtime_mode || 'No AI model (built-in tools only)')}">🤖 ${escapeHtml(activeLlmId)}</span>
           </div>
-          <div style="display: flex; align-items: center; gap: 7px; font-size: 10.5px; color: var(--muted);">
+          <div style="display: flex; align-items: center; gap: 7px; font-size: 11px; color: var(--muted);">
             <span style="color: #3bf58b; font-weight: 700;">⚡ ${escapeHtml(hwTierLabel)}</span>
             <span>•</span>
             ${tokPerSec ? `<span style="color: #fde68a;">🚀 ${tokPerSec} tok/s</span>` : ''}
@@ -11999,7 +11999,7 @@ export async function runAiRagAsk(rawQuestion, options = {}) {
             <span>${res.elapsed_ms || llmTel.elapsed_ms || 0} ms</span>
             <span>•</span>
             <span style="color: #6ee7b7;">💤 Standby Safe</span>
-            <button type="button" class="btn-ai-dismiss-synthesis btn-pill-toggle" style="font-size: 10px; padding: 2px 7px; margin-left: 4px; cursor: pointer;" title="Hide synthesis card">✕</button>
+            <button type="button" class="btn-ai-dismiss-synthesis btn-pill-toggle" style="font-size: 11px; padding: 2px 7px; margin-left: 4px; cursor: pointer;" title="Hide synthesis card">✕</button>
           </div>
         </div>
         <div style="font-size: 12px; color: #f1f5f9; line-height: 1.55; max-height: 150px; overflow-y: auto;">
@@ -12077,18 +12077,18 @@ function buildVisualPhotoCardHtml(item) {
           ? `<img src="${escapeHtml(thumbUrl)}" alt="${escapeHtml(fName)}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover;" data-img-fallback="hide" />`
           : `<div style="display:flex; flex-direction:column; align-items:center; gap:6px; padding:10px; text-align:center;">
                <span style="font-size:30px;">${catIcon}</span>
-               <span style="font-size:10px; color:#94a3b8; max-height:42px; overflow:hidden;">${escapeHtml((item.excerpt || fPath).slice(0, 75))}</span>
+               <span style="font-size:11px; color:#94a3b8; max-height:42px; overflow:hidden;">${escapeHtml((item.excerpt || fPath).slice(0, 75))}</span>
              </div>`
         }
-        <span title="${escapeHtml(matchReason)}" style="position: absolute; top: 6px; left: 6px; max-width: calc(100% - 82px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 9.5px; font-weight: 700; padding: 2px 6px; border-radius: 4px; background: rgba(15,23,42,0.85); color: #38bdf8;">${catIcon} ${escapeHtml(matchReason)}</span>
-        <span style="position: absolute; top: 6px; right: 6px; font-size: 9.5px; font-weight: 700; padding: 2px 6px; border-radius: 4px; background: rgba(0,0,0,0.72); color: #6ee7b7; white-space: nowrap;">${isFav ? '⭐ ' : ''}💤 Cached</span>
+        <span title="${escapeHtml(matchReason)}" style="position: absolute; top: 6px; left: 6px; max-width: calc(100% - 82px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 4px; background: rgba(15,23,42,0.85); color: #38bdf8;">${catIcon} ${escapeHtml(matchReason)}</span>
+        <span style="position: absolute; top: 6px; right: 6px; font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 4px; background: rgba(0,0,0,0.72); color: #6ee7b7; white-space: nowrap;">${isFav ? '⭐ ' : ''}💤 Cached</span>
       </div>
       <div style="padding: 8px 10px; display: flex; flex-direction: column; gap: 4px;">
         <div style="font-weight: 700; font-size: 11.5px; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(fName)}">${escapeHtml(fName)}</div>
-        <div style="font-size: 9.5px; color: var(--muted,#94a3b8); font-family: monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(fPath)}</div>
+        <div style="font-size: 11px; color: var(--muted,#94a3b8); font-family: monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(fPath)}</div>
         <div style="display: flex; flex-wrap: wrap; gap: 4px;">
-          ${colors.map((c) => `<span style="font-size: 9.5px; padding: 1px 5px; border-radius: 4px; background: rgba(56,189,248,0.14); color: #38bdf8; font-weight: 700; text-transform: capitalize;">🎨 ${escapeHtml(c)}</span>`).join('')}
-          ${scenes.map((s) => `<span style="font-size: 9.5px; padding: 1px 5px; border-radius: 4px; background: rgba(255,255,255,0.07); color: #cbd5e1;">#${escapeHtml(s)}</span>`).join('')}
+          ${colors.map((c) => `<span style="font-size: 11px; padding: 1px 5px; border-radius: 4px; background: rgba(56,189,248,0.14); color: #38bdf8; font-weight: 700; text-transform: capitalize;">🎨 ${escapeHtml(c)}</span>`).join('')}
+          ${scenes.map((s) => `<span style="font-size: 11px; padding: 1px 5px; border-radius: 4px; background: rgba(255,255,255,0.07); color: #cbd5e1;">#${escapeHtml(s)}</span>`).join('')}
         </div>
       </div>
     </div>
@@ -12119,7 +12119,7 @@ export function renderAiPreviewInspector(item) {
       <div style="font-weight:800; font-size:12.5px; color:#fff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeHtml(fName)}">
         ${escapeHtml(fName)}
       </div>
-      <button type="button" id="btn-ai-inspector-close" class="btn-pill-toggle" style="font-size:10.5px; padding:2px 7px; cursor:pointer;">✕</button>
+      <button type="button" id="btn-ai-inspector-close" class="btn-pill-toggle" style="font-size:11px; padding:2px 7px; cursor:pointer;">✕</button>
     </div>
     ${isPhoto
       ? `<div style="height:170px; border-radius:8px; background:rgba(0,0,0,0.45); overflow:hidden; margin-bottom:10px; display:flex; align-items:center; justify-content:center;">
@@ -12128,9 +12128,9 @@ export function renderAiPreviewInspector(item) {
       : ''
     }
     <div style="font-size:11px; color:#cbd5e1; margin-bottom:10px; display:flex; flex-direction:column; gap:4px;">
-      <div><strong style="color:#94a3b8;">Location:</strong> <code style="font-size:10.5px; color:#38bdf8; word-break:break-all;">${escapeHtml(fPath)}</code></div>
+      <div><strong style="color:#94a3b8;">Location:</strong> <code style="font-size:11px; color:#38bdf8; word-break:break-all;">${escapeHtml(fPath)}</code></div>
       <div><strong style="color:#94a3b8;">Match Mode:</strong> <span style="color:#6ee7b7;">${escapeHtml(item.match_reason || 'Semantic Vector')}</span></div>
-      ${item.excerpt ? `<div style="margin-top:4px; padding:8px; border-radius:6px; background:rgba(0,0,0,0.3); font-size:10.5px; color:#e2e8f0; max-height:90px; overflow-y:auto;">${escapeHtml(item.excerpt)}</div>` : ''}
+      ${item.excerpt ? `<div style="margin-top:4px; padding:8px; border-radius:6px; background:rgba(0,0,0,0.3); font-size:11px; color:#e2e8f0; max-height:90px; overflow-y:auto;">${escapeHtml(item.excerpt)}</div>` : ''}
     </div>
     <!-- 5 Official ZettAI File Actions (#apps/zettai/search) -->
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
@@ -12288,7 +12288,7 @@ function renderAiCategorySummaryCards(groups = {}) {
     const ft = chip.dataset.filetype;
     const entry = countByType.get(ft);
     if (entry) {
-      chip.innerHTML = `${entry.icon} ${entry.label} <span style="opacity:0.75; font-size:9.5px; margin-left:2px;">(${entry.count})</span>`;
+      chip.innerHTML = `${entry.icon} ${entry.label} <span style="opacity:0.75; font-size:11px; margin-left:2px;">(${entry.count})</span>`;
     }
   });
 
@@ -12506,7 +12506,7 @@ function _buildAiActionProposalsHtml(toolsCalled) {
 function _buildAiExternalNoteHtml(res) {
   const ext = Array.isArray(res?.external_services) ? res.external_services : [];
   if (!ext.length) return '';
-  return `<div class="ai-chat-external-note" style="font-size:10.5px; color:#fbbf24; padding-top:2px;" title="This answer used services outside your NAS">🌐 Data left this device: ${escapeHtml(ext.join(', '))}</div>`;
+  return `<div class="ai-chat-external-note" style="font-size:11px; color:#fbbf24; padding-top:2px;" title="This answer used services outside your NAS">🌐 Data left this device: ${escapeHtml(ext.join(', '))}</div>`;
 }
 
 // Remember the Web toggle per browser (a convenience; the server default is off).
@@ -12559,7 +12559,7 @@ function _buildAiAssistantMessageHtml(res, defaultModel) {
           const border = isCalc ? 'rgba(251,191,36,0.42)' : (isWeather ? 'rgba(56,189,248,0.45)' : (isWeb ? 'rgba(56,189,248,0.42)' : (isRag ? 'rgba(168,85,247,0.42)' : (isNet ? 'rgba(56,189,248,0.42)' : 'rgba(52,211,153,0.42)'))));
           const color = isCalc ? '#fde68a' : (isWeather ? '#38bdf8' : (isWeb ? '#7dd3fc' : (isRag ? '#d8b4fe' : (isNet ? '#7dd3fc' : '#6ee7b7'))));
           const icon = isCalc ? '🧮' : (isWeather ? '⛅' : (isWeb ? '🌐' : (isRag ? '📁' : (isStorage ? '💽' : (isNet ? '🔌' : '🛠️')))));
-          return `<span class="ai-chat-tool-pill" data-tool-name="${escapeHtml(tc.tool)}" style="font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: ${bg}; border: 1px solid ${border}; color: ${color};" title="${escapeHtml(tc.summary || tc.tool)}">${icon} ${escapeHtml(tc.tool)}: ${escapeHtml(tc.summary || 'OK')}</span>`;
+          return `<span class="ai-chat-tool-pill" data-tool-name="${escapeHtml(tc.tool)}" style="font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: ${bg}; border: 1px solid ${border}; color: ${color};" title="${escapeHtml(tc.summary || tc.tool)}">${icon} ${escapeHtml(tc.tool)}: ${escapeHtml(tc.summary || 'OK')}</span>`;
         }).join('')}
       </div>
     `
@@ -12571,12 +12571,12 @@ function _buildAiAssistantMessageHtml(res, defaultModel) {
         <div style="display: flex; align-items: center; gap: 6px; font-size: 11px;">
           <span>📁</span>
           <span style="font-weight: 700; color: #7dd3fc;">Folder Scope:</span>
-          <code style="color: #e0f2fe; font-size: 10.5px; background: rgba(0,0,0,0.25); padding: 1px 5px; border-radius: 4px;">${escapeHtml(folderPath)}</code>
-          ${folderManifest && folderManifest.total_files ? `<span style="font-size: 10px; color: #94a3b8;">(${folderManifest.total_files} files)</span>` : ''}
+          <code style="color: #e0f2fe; font-size: 11px; background: rgba(0,0,0,0.25); padding: 1px 5px; border-radius: 4px;">${escapeHtml(folderPath)}</code>
+          ${folderManifest && folderManifest.total_files ? `<span style="font-size: 11px; color: #94a3b8;">(${folderManifest.total_files} files)</span>` : ''}
         </div>
         ${groundingScore !== null ? `
           <div style="display: flex; align-items: center; gap: 5px;">
-            <span style="font-size: 10px; font-weight: 800; color: ${groundingScore >= 80 ? '#34d399' : (groundingScore >= 50 ? '#fbbf24' : '#f87171')}; background: ${groundingScore >= 80 ? 'rgba(52,211,153,0.14)' : 'rgba(251,191,36,0.14)'}; border: 1px solid ${groundingScore >= 80 ? 'rgba(52,211,153,0.35)' : 'rgba(251,191,36,0.35)'}; padding: 1px 7px; border-radius: 999px;">
+            <span style="font-size: 11px; font-weight: 800; color: ${groundingScore >= 80 ? '#34d399' : (groundingScore >= 50 ? '#fbbf24' : '#f87171')}; background: ${groundingScore >= 80 ? 'rgba(52,211,153,0.14)' : 'rgba(251,191,36,0.14)'}; border: 1px solid ${groundingScore >= 80 ? 'rgba(52,211,153,0.35)' : 'rgba(251,191,36,0.35)'}; padding: 1px 7px; border-radius: 999px;">
               🎯 ${groundingScore}% Grounded (${escapeHtml(cragGrade.toUpperCase() || 'HIGH')})
             </span>
           </div>
@@ -12604,9 +12604,9 @@ function _buildAiAssistantMessageHtml(res, defaultModel) {
                   <button type="button" class="btn-preview-citation" data-action="open-file-preview" data-path="${escPath}" data-name="${escName}" style="background: none; border: none; padding: 0; color: #38bdf8; font-weight: 700; cursor: pointer; text-decoration: underline; text-align: left; font-size: 11.5px;">
                     📄 [${idx + 1}] ${escName}<span style="color: #94a3b8; font-weight: 400; text-decoration: none;">${escapeHtml(bcrumb)}</span> 👁️
                   </button>
-                  <span style="font-size: 9.5px; color: #a7f3d0; background: rgba(16,185,129,0.14); padding: 1px 6px; border-radius: 999px;">${scorePct}% match</span>
+                  <span style="font-size: 11px; color: #a7f3d0; background: rgba(16,185,129,0.14); padding: 1px 6px; border-radius: 999px;">${scorePct}% match</span>
                 </div>
-                ${c.excerpt ? `<div style="color: #cbd5e1; font-size: 10.5px; line-height: 1.45; font-style: italic; background: rgba(0,0,0,0.25); padding: 5px 8px; border-radius: 5px; border-left: 2px solid #38bdf8;">"${escapeHtml(c.excerpt)}"</div>` : ''}
+                ${c.excerpt ? `<div style="color: #cbd5e1; font-size: 11px; line-height: 1.45; font-style: italic; background: rgba(0,0,0,0.25); padding: 5px 8px; border-radius: 5px; border-left: 2px solid #38bdf8;">"${escapeHtml(c.excerpt)}"</div>` : ''}
               </div>
             `;
           }).join('')}
@@ -12625,7 +12625,7 @@ function _buildAiAssistantMessageHtml(res, defaultModel) {
           return `
             <div class="ai-chat-photo-card" data-action="open-file-preview" data-path="${escP}" data-name="${escN}" style="cursor: pointer; width: 85px; border-radius: 6px; overflow: hidden; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); transition: transform 0.15s ease;" title="${escN}">
               ${thumb ? `<img src="${escapeHtml(thumb)}" alt="${escN}" style="width: 100%; height: 60px; object-fit: cover;" />` : `<div style="height: 60px; display: flex; align-items: center; justify-content: center; font-size: 20px;">🖼️</div>`}
-              <div style="font-size: 9px; color: #cbd5e1; padding: 2px 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escN}</div>
+              <div style="font-size: 11px; color: #cbd5e1; padding: 2px 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escN}</div>
             </div>
           `;
         }).join('')}
@@ -12635,12 +12635,12 @@ function _buildAiAssistantMessageHtml(res, defaultModel) {
 
   const webSourcesHtml = webSources.length > 0
     ? `
-      <details class="ai-chat-web-sources" style="margin-top: 2px; font-size: 10px;">
-        <summary style="cursor: pointer; color: #64748b; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 6px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); width: fit-content; user-select: none;">
+      <details class="ai-chat-web-sources" style="margin-top: 2px; font-size: 11px;">
+        <summary style="cursor: pointer; color: #94a3b8; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 6px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); width: fit-content; user-select: none;">
           <span>🌐 Sources (${webSources.length})</span>
         </summary>
         <div style="margin-top: 6px; display: flex; flex-wrap: wrap; gap: 5px; padding-left: 2px;">
-          ${webSources.slice(0, 5).map((ws) => `<a href="${escapeHtml(ws.url)}" target="_blank" rel="noopener noreferrer" style="padding: 2px 8px; border-radius: 6px; background: rgba(56,189,248,0.12); border: 1px solid rgba(56,189,248,0.32); color: #38bdf8; text-decoration: none; font-weight: 600; font-size: 10px;">${escapeHtml(ws.title || ws.source || 'Source')} ↗</a>`).join('')}
+          ${webSources.slice(0, 5).map((ws) => `<a href="${escapeHtml(ws.url)}" target="_blank" rel="noopener noreferrer" style="padding: 2px 8px; border-radius: 6px; background: rgba(56,189,248,0.12); border: 1px solid rgba(56,189,248,0.32); color: #38bdf8; text-decoration: none; font-weight: 600; font-size: 11px;">${escapeHtml(ws.title || ws.source || 'Source')} ↗</a>`).join('')}
         </div>
       </details>
     `
@@ -12649,12 +12649,12 @@ function _buildAiAssistantMessageHtml(res, defaultModel) {
   return `
     <div class="ai-chat-llm-proof-bar" style="display: flex; justify-content: space-between; align-items: center; gap: 6px; flex-wrap: wrap; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 5px;">
       <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-        <span class="ai-chat-model-pill" style="font-size: 10.5px; font-weight: 800; color: #e9d5ff; padding: 1px 8px; border-radius: 999px; background: rgba(168,85,247,0.18); border: 1px solid rgba(192,132,252,0.45);">🤖 ${escapeHtml(usedModel)}</span>
-        <span style="font-size: 10px; font-weight: 700; color: #3bf58b;">⚡ ${escapeHtml(accelLabel)}</span>
-        <span style="font-size: 9.5px; color: #94a3b8;">(${escapeHtml(runtimeMode)})</span>
+        <span class="ai-chat-model-pill" style="font-size: 11px; font-weight: 800; color: #e9d5ff; padding: 1px 8px; border-radius: 999px; background: rgba(168,85,247,0.18); border: 1px solid rgba(192,132,252,0.45);">🤖 ${escapeHtml(usedModel)}</span>
+        <span style="font-size: 11px; font-weight: 700; color: #3bf58b;">⚡ ${escapeHtml(accelLabel)}</span>
+        <span style="font-size: 11px; color: #94a3b8;">(${escapeHtml(runtimeMode)})</span>
       </div>
-      <div style="display: flex; align-items: center; gap: 6px; font-size: 10px; color: #94a3b8;">
-        ${!folderPath && groundingScore !== null ? `<span style="font-size: 10px; font-weight: 700; color: #34d399; padding: 0 5px; border-radius: 999px; background: rgba(52,211,153,0.12); border: 1px solid rgba(52,211,153,0.3);">🎯 ${groundingScore}% Grounded</span><span>•</span>` : ''}
+      <div style="display: flex; align-items: center; gap: 6px; font-size: 11px; color: #94a3b8;">
+        ${!folderPath && groundingScore !== null ? `<span style="font-size: 11px; font-weight: 700; color: #34d399; padding: 0 5px; border-radius: 999px; background: rgba(52,211,153,0.12); border: 1px solid rgba(52,211,153,0.3);">🎯 ${groundingScore}% Grounded</span><span>•</span>` : ''}
         ${tokSec ? `<span style="color: #fde68a;">🚀 ${tokSec} tok/s</span>` : ''}
         <span>•</span>
         <span>${elapsedMs} ms</span>
@@ -12843,7 +12843,7 @@ export async function selectAiConversation(convId) {
         userMsgEl.className = 'ai-chat-msg ai-chat-msg-user';
         userMsgEl.dataset.convId = convId;
         userMsgEl.style.cssText = 'align-self: flex-end; max-width: 85%; padding: 9px 13px; border-radius: 10px; background: rgba(14, 165, 233, 0.22); border: 1px solid rgba(56, 189, 248, 0.45); color: #f8fafc; font-size: 12px; line-height: 1.45;';
-        userMsgEl.innerHTML = `<div style="font-size:10px; font-weight:700; color:#7dd3fc; margin-bottom:3px;">🧑 You</div><div>${escapeHtml(m.content)}</div>`;
+        userMsgEl.innerHTML = `<div style="font-size:11px; font-weight:700; color:#7dd3fc; margin-bottom:3px;">🧑 You</div><div>${escapeHtml(m.content)}</div>`;
         listEl.appendChild(userMsgEl);
       } else if (m.role === 'assistant') {
         const botMsgEl = document.createElement('div');
@@ -13178,7 +13178,7 @@ function _formatChatMarkdown(rawText) {
       <details class="ai-thought-disclosure" style="margin: 4px 0 10px; border-radius: 8px; background: rgba(147, 51, 234, 0.08); border: 1px solid rgba(168, 85, 247, 0.28); padding: 7px 10px; font-size: 11px;">
         <summary style="cursor: pointer; font-weight: 700; color: #c084fc; display: inline-flex; align-items: center; gap: 6px; user-select: none;">
           <span>🧠 Thought Process</span>
-          <span style="font-size: 9.5px; color: #94a3b8; font-weight: 400;">(click to view chain of thought)</span>
+          <span style="font-size: 11px; color: #94a3b8; font-weight: 400;">(click to view chain of thought)</span>
         </summary>
         <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(168, 85, 247, 0.2); color: #cbd5e1; font-size: 11px; line-height: 1.5; font-style: italic;">
           ${thoughtContent.replace(/\n/g, '<br/>')}
@@ -13217,15 +13217,15 @@ function _formatChatMarkdown(rawText) {
       (item.code.includes('services:') && (item.code.includes('image:') || item.code.includes('build:') || item.code.includes('ports:')));
 
     const deployBtnHtml = isComposeYaml
-      ? `<button type="button" class="btn-deploy-stack-code" data-action="deploy-compose-code" style="background: rgba(16, 185, 129, 0.22); border: 1px solid rgba(52, 211, 153, 0.45); border-radius: 4px; color: #6ee7b7; font-size: 9.5px; font-weight: 700; padding: 2px 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; margin-right: 6px;">🚀 Deploy Stack</button>`
+      ? `<button type="button" class="btn-deploy-stack-code" data-action="deploy-compose-code" style="background: rgba(16, 185, 129, 0.22); border: 1px solid rgba(52, 211, 153, 0.45); border-radius: 4px; color: #6ee7b7; font-size: 11px; font-weight: 700; padding: 2px 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; margin-right: 6px;">🚀 Deploy Stack</button>`
       : '';
 
     return `<div class="ai-chat-code-block" style="margin: 8px 0; border-radius: 8px; background: rgba(2, 6, 23, 0.88); border: 1px solid rgba(56, 189, 248, 0.3); overflow: hidden;">
-      <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 10px; background: rgba(15, 23, 42, 0.95); border-bottom: 1px solid rgba(255, 255, 255, 0.08); font-size: 10.5px; color: #94a3b8; font-family: monospace;">
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 10px; background: rgba(15, 23, 42, 0.95); border-bottom: 1px solid rgba(255, 255, 255, 0.08); font-size: 11px; color: #94a3b8; font-family: monospace;">
         <span style="font-weight: 700; color: #7dd3fc;">${escapeHtml(item.lang)}</span>
         <div style="display: flex; align-items: center;">
           ${deployBtnHtml}
-          <button type="button" class="btn-copy-code" data-action="copy-code" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.18); border-radius: 4px; color: #cbd5e1; font-size: 9.5px; padding: 2px 7px; cursor: pointer;">Copy</button>
+          <button type="button" class="btn-copy-code" data-action="copy-code" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.18); border-radius: 4px; color: #cbd5e1; font-size: 11px; padding: 2px 7px; cursor: pointer;">Copy</button>
         </div>
       </div>
       <pre style="margin: 0; padding: 10px 12px; overflow-x: auto; font-family: 'JetBrains Mono', Consolas, monospace; font-size: 11.5px; line-height: 1.5; color: #e2e8f0;"><code>${escapedCode}</code></pre>
@@ -13245,9 +13245,9 @@ function _formatChatMarkdown(rawText) {
       const escP = escapeHtml(path.trim());
       const escN = escapeHtml(path.trim().split('/').pop() || 'File');
       const lineStr = line ? ` (L${line})` : '';
-      return `<button type="button" class="ai-citation-inline-pill" data-action="open-file-preview" data-path="${escP}" data-name="${escN}" style="display:inline-flex; align-items:center; gap:3px; background:rgba(56,189,248,0.15); border:1px solid rgba(56,189,248,0.38); border-radius:999px; padding:1px 7px; color:#7dd3fc; font-size:10px; font-weight:700; cursor:pointer; vertical-align:baseline; margin:0 2px;"><span>📄 [${idx}] ${escN}${lineStr}</span><span style="font-size:9px;">👁️</span></button>`;
+      return `<button type="button" class="ai-citation-inline-pill" data-action="open-file-preview" data-path="${escP}" data-name="${escN}" style="display:inline-flex; align-items:center; gap:3px; background:rgba(56,189,248,0.15); border:1px solid rgba(56,189,248,0.38); border-radius:999px; padding:1px 7px; color:#7dd3fc; font-size:11px; font-weight:700; cursor:pointer; vertical-align:baseline; margin:0 2px;"><span>📄 [${idx}] ${escN}${lineStr}</span><span style="font-size:11px;">👁️</span></button>`;
     })
-    .replace(/\[(\d+)\]/g, '<span style="display:inline-flex; align-items:center; justify-content:center; font-size:9.5px; font-weight:700; color:#38bdf8; background:rgba(56,189,248,0.16); border:1px solid rgba(56,189,248,0.35); border-radius:999px; padding:0 5px; margin:0 2px; vertical-align:baseline; line-height:1.3;">[$1]</span>')
+    .replace(/\[(\d+)\]/g, '<span style="display:inline-flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#38bdf8; background:rgba(56,189,248,0.16); border:1px solid rgba(56,189,248,0.35); border-radius:999px; padding:0 5px; margin:0 2px; vertical-align:baseline; line-height:1.3;">[$1]</span>')
     .replace(/\n\n+/g, '<div style="height:6px;"></div>')
     .replace(/\n/g, '<br/>');
 
@@ -13318,7 +13318,7 @@ export async function sendAiChatMessage(rawMessage = null) {
     const userMsgEl = document.createElement('div');
     userMsgEl.className = 'ai-chat-msg ai-chat-msg-user';
     userMsgEl.style.cssText = 'align-self: flex-end; max-width: 85%; padding: 9px 13px; border-radius: 10px; background: rgba(14, 165, 233, 0.22); border: 1px solid rgba(56, 189, 248, 0.45); color: #f8fafc; font-size: 12px; line-height: 1.45;';
-    userMsgEl.innerHTML = `<div style="font-size:10px; font-weight:700; color:#7dd3fc; margin-bottom:3px;">🧑 You</div><div>${escapeHtml(msg)}</div>`;
+    userMsgEl.innerHTML = `<div style="font-size:11px; font-weight:700; color:#7dd3fc; margin-bottom:3px;">🧑 You</div><div>${escapeHtml(msg)}</div>`;
     listEl.appendChild(userMsgEl);
 
     const pendingEl = document.createElement('div');
@@ -13332,7 +13332,7 @@ export async function sendAiChatMessage(rawMessage = null) {
         <span class="ai-thinking-dots" style="color: #c084fc; font-weight: 800; letter-spacing: 2px;">
           <span class="ai-dot-1">.</span><span class="ai-dot-2">.</span><span class="ai-dot-3">.</span>
         </span>
-        <span style="font-size: 10px; color: #d8b4fe; margin-left: 6px; padding: 1px 7px; border-radius: 999px; background: rgba(168, 85, 247, 0.2); border: 1px solid rgba(192, 132, 252, 0.35);">${escapeHtml(activeModel)}</span>
+        <span style="font-size: 11px; color: #d8b4fe; margin-left: 6px; padding: 1px 7px; border-radius: 999px; background: rgba(168, 85, 247, 0.2); border: 1px solid rgba(192, 132, 252, 0.35);">${escapeHtml(activeModel)}</span>
       `;
     } else {
       pendingEl.style.cssText = 'align-self: flex-start; max-width: 85%; padding: 10px 14px; border-radius: 10px; background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); display: flex; align-items: center; gap: 9px; box-shadow: 0 4px 14px rgba(14, 165, 233, 0.12);';
@@ -13445,8 +13445,8 @@ export async function sendAiChatMessage(rawMessage = null) {
           streamBotMsgEl.innerHTML = `
             <div class="ai-chat-llm-proof-bar" style="display: flex; justify-content: space-between; align-items: center; gap: 6px; flex-wrap: wrap; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 5px;">
               <div style="display: flex; align-items: center; gap: 6px;">
-                <span class="ai-chat-model-pill" style="font-size: 10.5px; font-weight: 800; color: #e9d5ff; padding: 1px 8px; border-radius: 999px; background: rgba(168,85,247,0.18); border: 1px solid rgba(192,132,252,0.45);">🤖 ${escapeHtml(activeModel)}</span>
-                <span style="font-size: 10px; font-weight: 700; color: #38bdf8; display: inline-flex; align-items: center; gap: 4px;">
+                <span class="ai-chat-model-pill" style="font-size: 11px; font-weight: 800; color: #e9d5ff; padding: 1px 8px; border-radius: 999px; background: rgba(168,85,247,0.18); border: 1px solid rgba(192,132,252,0.45);">🤖 ${escapeHtml(activeModel)}</span>
+                <span style="font-size: 11px; font-weight: 700; color: #38bdf8; display: inline-flex; align-items: center; gap: 4px;">
                   <span class="ai-typing-dot" style="width: 5px; height: 5px;"></span> Streaming
                 </span>
               </div>
@@ -13502,7 +13502,7 @@ export async function sendAiChatMessage(rawMessage = null) {
                   const pill = document.createElement('span');
                   pill.className = 'ai-chat-tool-pill ai-chat-tool-running';
                   pill.dataset.toolName = toolName;
-                  pill.style.cssText = 'font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: rgba(56,189,248,0.16); border: 1px solid rgba(56,189,248,0.42); color: #7dd3fc;';
+                  pill.style.cssText = 'font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: rgba(56,189,248,0.16); border: 1px solid rgba(56,189,248,0.42); color: #7dd3fc;';
                   pill.textContent = `⚡ Running ${toolName}...`;
                   toolsTraceEl.appendChild(pill);
                 }
@@ -13533,7 +13533,7 @@ export async function sendAiChatMessage(rawMessage = null) {
                     const newPill = document.createElement('span');
                     newPill.className = 'ai-chat-tool-pill';
                     newPill.dataset.toolName = parsed?.tool || 'tool';
-                    newPill.style.cssText = `font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: ${bg}; border: 1px solid ${border}; color: ${color};`;
+                    newPill.style.cssText = `font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: ${bg}; border: 1px solid ${border}; color: ${color};`;
                     newPill.innerHTML = pillHtml;
                     toolsTraceEl.appendChild(newPill);
                   }
@@ -13550,7 +13550,7 @@ export async function sendAiChatMessage(rawMessage = null) {
                   thoughtDetailsEl.innerHTML = `
                     <summary style="cursor: pointer; font-weight: 700; color: #c084fc; display: inline-flex; align-items: center; gap: 6px; user-select: none;">
                       <span>🧠 Thought Process</span>
-                      <span style="font-size: 9.5px; color: #94a3b8; font-weight: 400;">(reasoning in real time...)</span>
+                      <span style="font-size: 11px; color: #94a3b8; font-weight: 400;">(reasoning in real time...)</span>
                     </summary>
                     <div class="ai-thought-content" style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(168, 85, 247, 0.2); color: #cbd5e1; font-size: 11px; line-height: 1.5; font-style: italic;"></div>
                   `;

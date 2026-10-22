@@ -190,7 +190,7 @@ export function renderChassisTwin(container, disks = [], options = {}) {
             </div>
           </div>
           <div class="bay-footer">
-            <span class="bay-meta" style="font-size:10px; color:var(--muted); letter-spacing:0.04em;">NO DISK</span>
+            <span class="bay-meta" style="font-size:11px; color:var(--muted); letter-spacing:0.04em;">NO DISK</span>
             <span class="bay-health-tag" style="opacity:0.3;">EMPTY</span>
           </div>
         </div>
@@ -396,7 +396,7 @@ export function openChassisConfigModal(currentConfig = {}, onSaved = null) {
       <div class="smart-modal-body" style="padding: 16px; overflow-y: auto; flex: 1; display:flex; flex-direction:column; gap: 14px;">
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
           <div>
-            <label style="display:block; font-size:10.5px; font-weight:700; color:var(--muted); margin-bottom:6px;">ENCLOSURE PROFILE</label>
+            <label style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:6px;">ENCLOSURE PROFILE</label>
             <select id="chassis-profile-select" class="tz-select-input" style="width:100%; padding:8px; border-radius:6px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.12); color:#fff; font-size:12px;">
               <option value="auto" ${profile === 'auto' ? 'selected' : ''}>Auto Dynamic (Auto-Detect)</option>
               <option value="compact_dual" ${profile === 'compact_dual' ? 'selected' : ''}>Compact Dual (1–2 Bays)</option>
@@ -406,14 +406,14 @@ export function openChassisConfigModal(currentConfig = {}, onSaved = null) {
             </select>
           </div>
           <div>
-            <label style="display:block; font-size:10.5px; font-weight:700; color:var(--muted); margin-bottom:6px;">TOTAL PHYSICAL BAYS</label>
+            <label style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:6px;">TOTAL PHYSICAL BAYS</label>
             <input type="number" id="chassis-total-bays-input" min="1" max="48" value="${totalBays}" style="width:100%; padding:8px; border-radius:6px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.12); color:#fff; font-size:12px;">
           </div>
         </div>
 
         <div>
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-            <label style="font-size:10.5px; font-weight:700; color:var(--muted); letter-spacing:0.5px;">PHYSICAL BAY ALLOCATION & LABELS</label>
+            <label style="font-size:11px; font-weight:700; color:var(--muted); letter-spacing:0.5px;">PHYSICAL BAY ALLOCATION & LABELS</label>
             <button id="chassis-auto-assign-btn" class="btn-pill-toggle" style="padding:4px 10px; font-size:11px;">⚡ Auto-Assign Sequentially</button>
           </div>
           <div style="max-height: 320px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; background: rgba(0,0,0,0.2);">
@@ -1014,7 +1014,7 @@ export function buildSftpCardHtml(sftpStatus, usersCount = 0, sampleUser = 'admi
         <span>Line-Rate Port: <strong style="color:#fff;">${port}</strong></span>
         <span>Subsystem: <code style="color:#38bdf8;">internal-sftp</code></span>
         <span>Isolation: <strong style="color:#fff;">Chroot Jail (/home/%u)</strong></span>
-        <span>Host Shell: <strong style="color:var(--ok2, #22c55e); background:rgba(34,197,94,0.12); padding:1px 6px; border-radius:4px; font-size:10.5px;">Prohibited (No PTY)</strong></span>
+        <span>Host Shell: <strong style="color:var(--ok2, #22c55e); background:rgba(34,197,94,0.12); padding:1px 6px; border-radius:4px; font-size:11px;">Prohibited (No PTY)</strong></span>
       </div>
 
       <!-- Quick Connect Grid -->
@@ -1269,7 +1269,7 @@ function buildShareCardInner(s, canManageShares) {
         📂 Open in File Explorer
       </button>
       ${canManageShares ? `
-        <button class="btn-share-delete btn-pill-toggle" data-share-name="${escapeHtml(s.name)}" style="background:rgba(239,68,68,0.15); border-color:rgba(239,68,68,0.3); color:#f87171; padding:3px 8px; font-size:10.5px;" title="Delete network share">
+        <button class="btn-share-delete btn-pill-toggle" data-share-name="${escapeHtml(s.name)}" style="background:rgba(239,68,68,0.15); border-color:rgba(239,68,68,0.3); color:#f87171; padding:3px 8px; font-size:11px;" title="Delete network share">
           🗑️ Delete
         </button>
       ` : ''}
@@ -1419,14 +1419,14 @@ export async function openSftpUsersModal(onSuccess) {
             <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 12px; border-bottom:1px solid rgba(255,255,255,0.05); font-size:11px;">
               <div>
                 <span style="font-weight:700; color:#fff;">${escapeHtml(u.username)}</span>
-                <span class="ci-badge" style="margin-left:6px; font-size:9px; background:rgba(255,255,255,0.06); color:var(--muted); padding:1px 5px; border-radius:3px;">
+                <span class="ci-badge" style="margin-left:6px; font-size:11px; background:rgba(255,255,255,0.06); color:var(--muted); padding:1px 5px; border-radius:3px;">
                   ${u.read_only ? 'Read-Only' : 'Read/Write'}
                 </span>
-                <div style="font-size:10px; color:var(--muted); font-family:monospace; margin-top:2px;">
+                <div style="font-size:11px; color:var(--muted); font-family:monospace; margin-top:2px;">
                   Chroot: ${escapeHtml(u.home_dir || '/home/' + u.username)}
                 </div>
               </div>
-              <button class="btn-pill-toggle btn-delete-sftp-user" data-user="${escapeHtml(u.username)}" style="padding:2px 8px; font-size:10px; background:rgba(239,68,68,0.15); color:#f87171; border:1px solid rgba(239,68,68,0.3);">
+              <button class="btn-pill-toggle btn-delete-sftp-user" data-user="${escapeHtml(u.username)}" style="padding:2px 8px; font-size:11px; background:rgba(239,68,68,0.15); color:#f87171; border:1px solid rgba(239,68,68,0.3);">
                 Delete
               </button>
             </div>
@@ -2161,7 +2161,7 @@ export async function openNewCloudRemoteModal(onSuccess) {
                   <span style="font-size: 18px;">🔑</span>
                   <span style="font-size: 13px; font-weight: 700; color: #fff; letter-spacing: 0.3px;">Connect ${escapeHtml(provTitle)}</span>
                 </div>
-                <span style="font-size: 10px; padding: 2px 8px; background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 12px; font-weight: 600;">
+                <span style="font-size: 11px; padding: 2px 8px; background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 12px; font-weight: 600;">
                   No Terminal Required · In-App OAuth
                 </span>
               </div>
@@ -2195,7 +2195,7 @@ export async function openNewCloudRemoteModal(onSuccess) {
                   </div>
                   <div style="font-size: 11px; font-weight: 600; color: #e2e8f0; margin-top: 8px; display: flex; align-items: center; gap: 6px;">
                     <span>📱 Scan with your phone or tablet camera to sign in</span>
-                    <button type="button" id="btn-oauth-qr" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #38bdf8; font-size: 10px; padding: 2px 7px; border-radius: 4px; cursor: pointer;" title="Refresh QR Code">🔄 Refresh</button>
+                    <button type="button" id="btn-oauth-qr" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #38bdf8; font-size: 11px; padding: 2px 7px; border-radius: 4px; cursor: pointer;" title="Refresh QR Code">🔄 Refresh</button>
                   </div>
                 </div>
               </div>
@@ -2230,7 +2230,7 @@ export async function openNewCloudRemoteModal(onSuccess) {
               const opts = (f.options || []).map((o) => `<option value="${o}" ${o === f.default ? 'selected' : ''}>${o}</option>`).join('');
               return `
                 <div>
-                  <label style="display:block; font-size:10px; font-weight:700; color:#94a3b8; margin-bottom:4px; letter-spacing:0.5px;">${escapeHtml(f.label.toUpperCase())}</label>
+                  <label style="display:block; font-size:11px; font-weight:700; color:#94a3b8; margin-bottom:4px; letter-spacing:0.5px;">${escapeHtml(f.label.toUpperCase())}</label>
                   <select name="${escapeHtml(f.name)}" class="tz-select-input" style="width:100%;">
                     ${opts}
                   </select>
@@ -2240,11 +2240,11 @@ export async function openNewCloudRemoteModal(onSuccess) {
               return `
                 <div>
                   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                    <label style="display:block; font-size:10px; font-weight:700; color:#94a3b8; letter-spacing:0.5px;">
+                    <label style="display:block; font-size:11px; font-weight:700; color:#94a3b8; letter-spacing:0.5px;">
                       ${escapeHtml(f.label.toUpperCase())} ${f.required ? '<span style="color:var(--crit,#ef4444);">*</span>' : ''}
                     </label>
                     ${prov.authorize_cmd ? `
-                      <button type="button" class="remote-copy-cmd-btn" data-cmd="${escapeHtml(prov.authorize_cmd)}" style="background:rgba(14,165,233,0.15); border:1px solid rgba(14,165,233,0.3); color:#38bdf8; font-size:10px; font-weight:600; padding:2px 8px; border-radius:4px; cursor:pointer;">
+                      <button type="button" class="remote-copy-cmd-btn" data-cmd="${escapeHtml(prov.authorize_cmd)}" style="background:rgba(14,165,233,0.15); border:1px solid rgba(14,165,233,0.3); color:#38bdf8; font-size:11px; font-weight:600; padding:2px 8px; border-radius:4px; cursor:pointer;">
                         📋 Copy: ${escapeHtml(prov.authorize_cmd)}
                       </button>
                     ` : ''}
@@ -2262,7 +2262,7 @@ export async function openNewCloudRemoteModal(onSuccess) {
             } else {
               return `
                 <div>
-                  <label style="display:block; font-size:10px; font-weight:700; color:#94a3b8; margin-bottom:4px; letter-spacing:0.5px;">
+                  <label style="display:block; font-size:11px; font-weight:700; color:#94a3b8; margin-bottom:4px; letter-spacing:0.5px;">
                     ${escapeHtml(f.label.toUpperCase())} ${f.required ? '<span style="color:var(--crit,#ef4444);">*</span>' : ''}
                   </label>
                   <input type="${f.type === 'password' ? 'password' : 'text'}"
@@ -2376,7 +2376,7 @@ export async function openNewCloudRemoteModal(onSuccess) {
                 }
                 if (directLink) {
                   directLink.innerHTML = `
-                    <div style="color: #94a3b8; font-size: 10px; margin-bottom: 2px;">Can't scan QR code?</div>
+                    <div style="color: #94a3b8; font-size: 11px; margin-bottom: 2px;">Can't scan QR code?</div>
                     <a href="${escapeHtml(session.auth_url)}" target="_blank" rel="noopener noreferrer" style="color: #38bdf8; text-decoration: underline; font-weight: 600;">
                       🔗 Open Direct Login Page
                     </a>
@@ -3092,16 +3092,16 @@ export function openCreateNetworkShareModal(onSuccess) {
           <div class="user-perm-row" data-username="${uname}" style="display:flex; align-items:center; justify-content:space-between; padding:4px 6px; background:rgba(255,255,255,0.03); border-radius:4px; font-size:11px;">
             <div style="display:flex; align-items:center; gap:6px;">
               <span style="font-weight:600; color:#fff;">👤 ${uname}</span>
-              <span style="font-size:9.5px; padding:1px 5px; border-radius:3px; background:rgba(255,255,255,0.08); color:var(--muted);">${role}</span>
+              <span style="font-size:11px; padding:1px 5px; border-radius:3px; background:rgba(255,255,255,0.08); color:var(--muted);">${role}</span>
             </div>
             <div style="display:flex; align-items:center; gap:8px;">
-              <label style="display:flex; align-items:center; gap:3px; cursor:pointer; font-size:10.5px; color:#3bf58b;">
+              <label style="display:flex; align-items:center; gap:3px; cursor:pointer; font-size:11px; color:#3bf58b;">
                 <input type="radio" name="perm-${uname}" value="rw" checked style="accent-color:#3bf58b; width:12px; height:12px;" /> RW
               </label>
-              <label style="display:flex; align-items:center; gap:3px; cursor:pointer; font-size:10.5px; color:#38bdf8;">
+              <label style="display:flex; align-items:center; gap:3px; cursor:pointer; font-size:11px; color:#38bdf8;">
                 <input type="radio" name="perm-${uname}" value="ro" style="accent-color:#38bdf8; width:12px; height:12px;" /> RO
               </label>
-              <label style="display:flex; align-items:center; gap:3px; cursor:pointer; font-size:10.5px; color:#f87171;">
+              <label style="display:flex; align-items:center; gap:3px; cursor:pointer; font-size:11px; color:#f87171;">
                 <input type="radio" name="perm-${uname}" value="deny" style="accent-color:#f87171; width:12px; height:12px;" /> Deny
               </label>
             </div>
@@ -3273,10 +3273,10 @@ export async function openSnapshotsModal(poolId = 'default_pool') {
             <td style="color:var(--muted); font-size:11px;">${dt}</td>
             <td>
               <div style="display:flex; gap:6px; align-items:center;">
-                <button class="btn-snap-restore btn-pill-toggle" data-snap="${escapeHtml(s.name)}" style="background:rgba(245,158,11,0.15); border-color:rgba(245,158,11,0.3); color:#fbbf24; padding:2px 8px; font-size:10.5px; cursor:pointer;">
+                <button class="btn-snap-restore btn-pill-toggle" data-snap="${escapeHtml(s.name)}" style="background:rgba(245,158,11,0.15); border-color:rgba(245,158,11,0.3); color:#fbbf24; padding:2px 8px; font-size:11px; cursor:pointer;">
                   ⏪ Revert
                 </button>
-                <button class="btn-snap-del btn-pill-toggle" data-snap="${escapeHtml(s.name)}" style="background:rgba(239,68,68,0.15); border-color:rgba(239,68,68,0.3); color:#f87171; padding:2px 8px; font-size:10.5px; cursor:pointer;">
+                <button class="btn-snap-del btn-pill-toggle" data-snap="${escapeHtml(s.name)}" style="background:rgba(239,68,68,0.15); border-color:rgba(239,68,68,0.3); color:#f87171; padding:2px 8px; font-size:11px; cursor:pointer;">
                   🗑️ Delete
                 </button>
               </div>

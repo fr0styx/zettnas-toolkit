@@ -540,20 +540,20 @@ export class FmInspector {
           </div>
 
           ${isGuarded ? `
-            <div class="fm-perm-guarded-banner" style="padding: 8px 10px; border-radius: 6px; background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.3); color: #fca5a5; font-size: 10.5px; margin-bottom: 10px;">
+            <div class="fm-perm-guarded-banner" style="padding: 8px 10px; border-radius: 6px; background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.3); color: #fca5a5; font-size: 11px; margin-bottom: 10px;">
               ⚠️ Protected system path. Permissions cannot be modified directly.
             </div>
           ` : ''}
 
           <div style="margin-bottom: 10px;">
-            <label style="display: block; font-size: 10.5px; color: var(--muted); margin-bottom: 4px;">Octal Mode (e.g. 0755, 0644)</label>
+            <label style="display: block; font-size: 11px; color: var(--muted); margin-bottom: 4px;">Octal Mode (e.g. 0755, 0644)</label>
             <div style="display: flex; gap: 6px;">
               <input type="text" id="fm-insp-octal-input" maxlength="4" placeholder="0755" value="${escapeHtml(item.mode || '0755')}" ${isGuarded ? 'disabled' : ''} style="flex: 1; padding: 5px 8px; font-family: monospace; font-size: 11px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 5px; color: #fff;" />
-              <span id="fm-insp-human-mode" style="padding: 5px 8px; font-family: monospace; font-size: 10.5px; color: #94a3b8; background: rgba(0,0,0,0.2); border-radius: 5px;">-rwxr-xr-x</span>
+              <span id="fm-insp-human-mode" style="padding: 5px 8px; font-family: monospace; font-size: 11px; color: #94a3b8; background: rgba(0,0,0,0.2); border-radius: 5px;">-rwxr-xr-x</span>
             </div>
           </div>
 
-          <div class="fm-perms-grid" style="display: grid; grid-template-columns: 1fr repeat(3, 30px); gap: 4px; align-items: center; margin-bottom: 12px; font-size: 10.5px; text-align: center;">
+          <div class="fm-perms-grid" style="display: grid; grid-template-columns: 1fr repeat(3, 30px); gap: 4px; align-items: center; margin-bottom: 12px; font-size: 11px; text-align: center;">
             <div></div>
             <div style="color: var(--muted); font-weight: 700;">R</div>
             <div style="color: var(--muted); font-weight: 700;">W</div>
@@ -577,11 +577,11 @@ export class FmInspector {
 
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;">
             <div>
-              <label style="display: block; font-size: 10.5px; color: var(--muted); margin-bottom: 4px;">User (Owner)</label>
+              <label style="display: block; font-size: 11px; color: var(--muted); margin-bottom: 4px;">User (Owner)</label>
               <input type="text" id="fm-insp-owner-input" placeholder="e.g. root" value="root" ${isGuarded ? 'disabled' : ''} style="width: 100%; box-sizing: border-box; padding: 5px 8px; font-size: 11px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 5px; color: #fff;" />
             </div>
             <div>
-              <label style="display: block; font-size: 10.5px; color: var(--muted); margin-bottom: 4px;">Group</label>
+              <label style="display: block; font-size: 11px; color: var(--muted); margin-bottom: 4px;">Group</label>
               <input type="text" id="fm-insp-group-input" placeholder="e.g. users" value="users" ${isGuarded ? 'disabled' : ''} style="width: 100%; box-sizing: border-box; padding: 5px 8px; font-size: 11px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 5px; color: #fff;" />
             </div>
           </div>
@@ -737,14 +737,14 @@ export class FmInspector {
         <div class="fm-inspector-row"><span>Modified:</span> <span>${dateModified}</span></div>
         <div class="fm-inspector-row"><span>Mode:</span> <span id="fm-insp-mode">${item.mode || '--'}</span></div>
         <div class="fm-inspector-row"><span>Owner:</span> <span id="fm-insp-owner">Loading...</span></div>
-        <button type="button" id="fm-insp-go-perms-btn" class="btn-pill-toggle" style="width: 100%; font-size: 10.5px; padding: 3px 8px; margin-top: 8px;">🔒 Edit Permissions & Mode</button>
+        <button type="button" id="fm-insp-go-perms-btn" class="btn-pill-toggle" style="width: 100%; font-size: 11px; padding: 3px 8px; margin-top: 8px;">🔒 Edit Permissions & Mode</button>
       </div>
 
       ${!item.is_dir ? `
         <div class="fm-inspector-section" style="margin-top: 10px;">
           <div style="font-size: 11px; font-weight: 600; color: var(--muted); margin-bottom: 6px;">Integrity (SHA-256)</div>
           <button type="button" id="fm-btn-calc-sha" class="btn-pill-toggle" style="width: 100%; font-size: 11px; padding: 4px 8px;">Compute Checksum</button>
-          <div id="fm-insp-sha-result" style="font-family: monospace; font-size: 10px; word-break: break-all; margin-top: 6px; color: var(--accent); display: none;"></div>
+          <div id="fm-insp-sha-result" style="font-family: monospace; font-size: 11px; word-break: break-all; margin-top: 6px; color: var(--accent); display: none;"></div>
         </div>
       ` : `
         <div class="fm-inspector-section" style="margin-top: 10px;">
@@ -842,7 +842,7 @@ export class FmInspector {
             const szEl = content.querySelector('#fm-insp-folder-sz-res');
             if (szEl) {
               if (sData.is_standby) {
-                szEl.innerHTML = `<span style="color: #eab308;">💤 Drive in Standby</span><br><span style="font-size:10px; color:var(--muted);">Calculation deferred (0 wakeups)</span>`;
+                szEl.innerHTML = `<span style="color: #eab308;">💤 Drive in Standby</span><br><span style="font-size:11px; color:var(--muted);">Calculation deferred (0 wakeups)</span>`;
               } else {
                 szEl.textContent = `${formatBytes(sData.size)} (${sData.files_count} files, ${sData.dirs_count} folders)`;
               }
@@ -901,7 +901,7 @@ export class FmTransfersCockpit {
               <span>⇄</span> Transfers & Tasks
             </div>
             <div style="display: flex; align-items: center; gap: 6px;">
-              <button type="button" id="fm-cockpit-clear-btn" style="background: none; border: none; font-size: 10px; color: var(--muted); cursor: pointer;" title="Clear Completed">Clear</button>
+              <button type="button" id="fm-cockpit-clear-btn" style="background: none; border: none; font-size: 11px; color: var(--muted); cursor: pointer;" title="Clear Completed">Clear</button>
               <button type="button" id="fm-cockpit-close-btn" style="background: none; border: none; font-size: 14px; color: var(--muted); cursor: pointer;">✕</button>
             </div>
           </div>
@@ -1016,7 +1016,7 @@ export class FmTransfersCockpit {
           <div class="fm-progress-bar-wrap" style="height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin: 6px 0; overflow: hidden;">
             <div style="height: 100%; width: ${t.percent}%; background: ${statusColor}; transition: width 0.2s;"></div>
           </div>
-          <div style="display: flex; align-items: center; justify-content: space-between; font-size: 10px; color: var(--muted);">
+          <div style="display: flex; align-items: center; justify-content: space-between; font-size: 11px; color: var(--muted);">
             <span>${speedStr} ${etaStr ? '• ' + etaStr : ''}</span>
             <div style="display: flex; gap: 4px;">
               ${isRunning ? `<button class="fm-task-btn" data-act="pause" data-id="${t.id}" style="background:none; border:none; color:var(--fg); cursor:pointer;">⏸</button>` : ''}

@@ -57,13 +57,13 @@ export function renderEventLog(events) {
         <div style="display: flex; flex-direction: column; gap: 4px; flex-grow: 1;">
           <div style="font-size: 11px; color: ${color}; font-weight: 700; letter-spacing: 0.3px;">${escapeHtml(e.title)}</div>
           <div style="font-size: 12px; color: #fff;">${escapeHtml(e.message)}</div>
-          <div style="font-size: 10px; color: var(--muted);">${escapeHtml(timeStr)}</div>
+          <div style="font-size: 11px; color: var(--muted);">${escapeHtml(timeStr)}</div>
         </div>
         <div style="display: flex; gap: 6px; align-items: center; padding-top: 2px;">
-          <button class="event-inspect-btn" type="button" title="View full event details" style="background: rgba(14, 165, 233, 0.15); border: 1px solid rgba(14, 165, 233, 0.35); color: #38bdf8; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 3px;">
+          <button class="event-inspect-btn" type="button" title="View full event details" style="background: rgba(14, 165, 233, 0.15); border: 1px solid rgba(14, 165, 233, 0.35); color: #38bdf8; font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 3px;">
             <span>🔍</span> <span>More Info</span>
           </button>
-          <span style="font-size: 10px; color: var(--muted); cursor: pointer; padding: 2px 4px;">▼ Details</span>
+          <span style="font-size: 11px; color: var(--muted); cursor: pointer; padding: 2px 4px;">▼ Details</span>
         </div>
       </div>
     `;
@@ -71,7 +71,7 @@ export function renderEventLog(events) {
     row.innerHTML = topHtml;
 
     const detailsBox = document.createElement('pre');
-    detailsBox.style.cssText = 'display: none; margin: 0; padding: 10px; background: rgba(0,0,0,0.4); border-radius: 6px; font-size: 10px; color: #a0aec0; border: 1px solid rgba(255,255,255,0.05); white-space: pre-wrap; word-break: break-all;';
+    detailsBox.style.cssText = 'display: none; margin: 0; padding: 10px; background: rgba(0,0,0,0.4); border-radius: 6px; font-size: 11px; color: #a0aec0; border: 1px solid rgba(255,255,255,0.05); white-space: pre-wrap; word-break: break-all;';
     detailsBox.textContent = JSON.stringify(e, null, 2);
     row.appendChild(detailsBox);
 

@@ -33,7 +33,7 @@ describe('Batch 5: Frontend Desktop OS & UX Excellence', () => {
     });
   });
 
-  it('a11y enhanceInteractiveElements populates aria-label using textContent', () => {
+  it('a11y enhanceInteractiveElements uses visible text as the name (no duplicate aria-label)', () => {
     const div = document.createElement('div');
     div.className = 'mgmt-action-btn';
     div.textContent = 'Active Service';
@@ -43,7 +43,7 @@ describe('Batch 5: Frontend Desktop OS & UX Excellence', () => {
 
     expect(div.getAttribute('role')).toBe('button');
     expect(div.getAttribute('tabindex')).toBe('0');
-    expect(div.getAttribute('aria-label')).toBe('Active Service');
+    expect(div.hasAttribute('aria-label')).toBe(false); // FE-10: visible text already names it
   });
 
   it('dock bringToFront treats container-inspector-window as a desktop app with dynamic z-index', () => {

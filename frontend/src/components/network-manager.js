@@ -48,12 +48,12 @@ export function renderListeningPortsTable(ports, filter = '') {
   tbody.innerHTML = filtered.map(p => {
     const isUdp = (p.protocol || '').toLowerCase() === 'udp';
     const protoBadge = isUdp
-      ? `<span class="ci-badge" style="background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); font-size: 10px; font-weight: 700;">UDP</span>`
-      : `<span class="ci-badge" style="background: rgba(37,194,160,0.15); color: var(--ok2); border: 1px solid rgba(37,194,160,0.3); font-size: 10px; font-weight: 700;">TCP</span>`;
+      ? `<span class="ci-badge" style="background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); font-size: 11px; font-weight: 700;">UDP</span>`
+      : `<span class="ci-badge" style="background: rgba(37,194,160,0.15); color: var(--ok2); border: 1px solid rgba(37,194,160,0.3); font-size: 11px; font-weight: 700;">TCP</span>`;
 
     const stateBadge = isUdp
-      ? `<span class="ci-badge" style="background: rgba(59,130,246,0.15); color: #3b82f6; border: 1px solid rgba(59,130,246,0.3); font-size: 10px;">ACTIVE</span>`
-      : `<span class="ci-badge" style="background: rgba(37,194,160,0.15); color: var(--ok2); border: 1px solid rgba(37,194,160,0.3); font-size: 10px;">LISTEN</span>`;
+      ? `<span class="ci-badge" style="background: rgba(59,130,246,0.15); color: #3b82f6; border: 1px solid rgba(59,130,246,0.3); font-size: 11px;">ACTIVE</span>`
+      : `<span class="ci-badge" style="background: rgba(37,194,160,0.15); color: var(--ok2); border: 1px solid rgba(37,194,160,0.3); font-size: 11px;">LISTEN</span>`;
 
     const containerCol = p.container
       ? `<div style="display:flex; align-items:center; gap:6px;">

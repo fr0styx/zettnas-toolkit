@@ -757,7 +757,7 @@ export function initSettings() {
                 <span>${icon}</span>
                 <div style="min-width:0;">
                   <span style="font-weight:600; color:#fff; font-size:11.5px;">${escapeHtml(chk.title)}: </span>
-                  <span style="color:${color}; font-size:10.5px;">${escapeHtml(chk.message)}</span>
+                  <span style="color:${color}; font-size:11px;">${escapeHtml(chk.message)}</span>
                 </div>
               </div>
               <span class="sec-advisor-action-pill">${actionText}</span>
@@ -1181,7 +1181,7 @@ export async function sampleWallpaperPalette() {
   }
 
   try {
-    container.innerHTML = `<span style="font-size:10.5px; color:var(--brand); display:flex; align-items:center; gap:6px;"><span class="spinner-inline" style="width:12px; height:12px; border-width:2px;"></span> Sampling wallpaper pixels...</span>`;
+    container.innerHTML = `<span style="font-size:11px; color:var(--brand); display:flex; align-items:center; gap:6px;"><span class="spinner-inline" style="width:12px; height:12px; border-width:2px;"></span> Sampling wallpaper pixels...</span>`;
 
     const img = new Image();
     img.crossOrigin = 'Anonymous';
@@ -1951,9 +1951,9 @@ async function renderApiTokens() {
       row.innerHTML = `
         <div style="display:flex; flex-direction:column; gap:2px;">
           <div style="font-size:11px; font-weight:700; color:#fff;">${escapeHtml(t.name)}</div>
-          <div style="font-size:10px; color:var(--muted); font-family:monospace;">${escapeHtml(t.masked_token)}</div>
+          <div style="font-size:11px; color:var(--muted); font-family:monospace;">${escapeHtml(t.masked_token)}</div>
         </div>
-        <button class="btn-rect danger" style="padding:4px 8px; font-size:10px;" data-id="${escapeHtml(t.id)}">Revoke</button>
+        <button class="btn-rect danger" style="padding:4px 8px; font-size:11px;" data-id="${escapeHtml(t.id)}">Revoke</button>
       `;
       
       row.querySelector('button').addEventListener('click', async () => {

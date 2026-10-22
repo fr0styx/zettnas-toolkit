@@ -1,7 +1,9 @@
 /**
  * ZettNAS Toolkit Accessibility (A11y) Engine
  * - Attaches keyboard listeners (Enter/Space) to interactive elements
- * - Ensures role="button", tabindex="0", and aria-label are present on interactive non-semantic elements
+ * - Gives interactive non-semantic elements role="button" and tabindex="0"
+ * - Names icon-only ones from their translated title; it never guesses from text and never
+ *   hides an interactive element with aria-hidden (FE-10)
  */
 
 export function enhanceInteractiveElements(root) {
@@ -42,14 +44,19 @@ export function enhanceInteractiveElements(root) {
     if (!el.hasAttribute('tabindex')) {
       el.setAttribute('tabindex', '0');
     }
-    if (!el.hasAttribute('aria-label') && !el.hasAttribute('title')) {
-      const label = el.getAttribute('data-title') ||
-                    (el.textContent && el.textContent.trim()) ||
-                    (el.getAttribute('data-action') ? el.getAttribute('data-action').replace(/[-_]/g, ' ') : '');
-      if (label && label.length > 0) {
-        el.setAttribute('aria-label', label.slice(0, 50));
-      } else if (!el.children.length && !el.textContent?.trim()) {
-        el.setAttribute('aria-hidden', 'true');
+    // Name it only when it has no visible text: from its (translated) title, an image's alt
+    // text or an SVG <title>. Never hide an interactive element from screen readers (FE-10).
+    if (!el.hasAttribute('aria-label') && !el.hasAttribute('aria-labelledby') && !(el.textContent || '').trim()) {
+      const img = el.querySelector && el.querySelector('img[alt], svg title');
+      const label =
+        el.getAttribute('title') ||
+        el.getAttribute('data-title') ||
+        (img && (img.getAttribute('alt') || img.textContent)) ||
+        '';
+      if (label.trim()) {
+        el.setAttribute('aria-label', label.trim().slice(0, 80));
+      } else if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.DEV) {
+        console.warn('[a11y] interactive element without a name:', el);
       }
     }
   });

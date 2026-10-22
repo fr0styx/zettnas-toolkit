@@ -2059,5 +2059,7 @@ export default {
   "docker.bulk_delete_ok": "Eliminar",
   "docker.bulk_stop_title": "Detener {count} contenedores",
   "docker.bulk_stop_confirm": "¿Detener los {count} contenedores seleccionados?",
-  "docker.bulk_stop_ok": "Detener"
+  "docker.bulk_stop_ok": "Detener",
+  "setup.current_password": "Contraseña actual",
+  "fm.path_input_label": "Ruta de la carpeta"
 };

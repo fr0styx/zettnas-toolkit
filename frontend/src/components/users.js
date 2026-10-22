@@ -268,7 +268,7 @@ export async function loadUsersList() {
               ${escapeHtml(letter)}
             </div>
             <div>
-              <div style="font-weight:700; color:#fff; font-size:13px;">${escapeHtml(u.display_name || u.username)} ${isSelf ? '<span style="font-size:10px; background:rgba(14,165,233,0.2); color:#38bdf8; padding:2px 6px; border-radius:4px; margin-left:4px;">YOU</span>' : ''}</div>
+              <div style="font-weight:700; color:#fff; font-size:13px;">${escapeHtml(u.display_name || u.username)} ${isSelf ? '<span style="font-size:11px; background:rgba(14,165,233,0.2); color:#38bdf8; padding:2px 6px; border-radius:4px; margin-left:4px;">YOU</span>' : ''}</div>
               <div style="font-size:11px; color:var(--muted);">@${escapeHtml(u.username)}</div>
             </div>
           </td>
@@ -577,7 +577,7 @@ export async function loadSessionsList() {
         <tr style="border-bottom: 1px solid rgba(255,255,255,0.06);">
           <td style="padding: 12px; font-weight:700; color:#fff;">
             ${isCurrent ? '💻 Current Browser' : '🌐 Remote Device'}
-            ${isCurrent ? '<span style="font-size:10px; background:rgba(37,194,160,0.2); color:var(--ok2); padding:2px 6px; border-radius:4px; margin-left:6px;">THIS DEVICE</span>' : ''}
+            ${isCurrent ? '<span style="font-size:11px; background:rgba(37,194,160,0.2); color:var(--ok2); padding:2px 6px; border-radius:4px; margin-left:6px;">THIS DEVICE</span>' : ''}
             <div style="font-size:11px; font-weight:normal; color:var(--muted); margin-top:2px;">${escapeHtml(s.user_agent || 'Unknown Browser')}</div>
           </td>
           <td style="padding: 12px; font-size:12px; color:#cbd5e1; font-family:monospace;">${escapeHtml(s.ip_address || '127.0.0.1')}</td>

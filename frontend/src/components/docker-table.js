@@ -74,7 +74,7 @@ export function buildContainerRowInner(c, currentHost, updateInfo = null) {
   }
 
   // Column 3: Hardware Badges
-  let hwHtml = '<span style="color:var(--muted); font-size:10px;">—</span>';
+  let hwHtml = '<span style="color:var(--muted); font-size:11px;">—</span>';
   if (c.hardware_badges && c.hardware_badges.length > 0) {
     hwHtml = c.hardware_badges
       .map(
@@ -85,7 +85,7 @@ export function buildContainerRowInner(c, currentHost, updateInfo = null) {
   }
 
   // Column 4: Telemetry (CPU / RAM)
-  let telemHtml = '<span style="color:var(--muted); font-size:10px;">—</span>';
+  let telemHtml = '<span style="color:var(--muted); font-size:11px;">—</span>';
   if (isRunning) {
     const cpuStr = `${(c.cpu_pct || 0).toFixed(1)}%`;
     const memStr = c.mem_used ? `${(c.mem_used / (1024 * 1024)).toFixed(0)} MB` : '--';
@@ -93,7 +93,7 @@ export function buildContainerRowInner(c, currentHost, updateInfo = null) {
   }
 
   // Column 5: Ports & Web UI
-  let portsHtml = '<span style="color:var(--muted); font-size:10px;">—</span>';
+  let portsHtml = '<span style="color:var(--muted); font-size:11px;">—</span>';
   const portParts = [];
   if (c.webui_url && c.primary_port) {
     const resolvedUrl = c.webui_url.replace('[HOST]', currentHost);
@@ -120,8 +120,8 @@ export function buildContainerRowInner(c, currentHost, updateInfo = null) {
   // Column 6: Status & Uptime
   const statusHtml = `
     <div style="display:flex; align-items:center; gap:6px;">
-      <span class="docker-state-badge" style="display:inline-block; padding:2px 6px; border-radius:4px; font-size:9.5px; font-weight:700; background:${badgeBg}; color:${badgeColor}; text-transform:uppercase;">${escapeHtml(c.state)}</span>
-      <span class="docker-status-text" style="font-size:10px; color:#cbd5e1; max-width:110px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeHtml(c.status)}">${escapeHtml(c.status)}</span>
+      <span class="docker-state-badge" style="display:inline-block; padding:2px 6px; border-radius:4px; font-size:11px; font-weight:700; background:${badgeBg}; color:${badgeColor}; text-transform:uppercase;">${escapeHtml(c.state)}</span>
+      <span class="docker-status-text" style="font-size:11px; color:#cbd5e1; max-width:110px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeHtml(c.status)}">${escapeHtml(c.status)}</span>
     </div>
   `;
 
@@ -170,7 +170,7 @@ export function buildContainerRowInner(c, currentHost, updateInfo = null) {
       <div style="display:flex; align-items:center; gap:6px;">
         <input type="checkbox" class="docker-row-select" data-id="${escapeHtml(c.id)}" ${checkedAttr} title="Select ${escapeHtml(c.name)}" style="margin:0; cursor:pointer; accent-color:var(--brand, #0ea5e9); flex-shrink:0;">
         <button class="btn-docker-name-link clickable-container-name" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" style="background:none; border:none; padding:0; color:#fff; font-size:11.5px; font-weight:700; cursor:pointer; text-align:left; font-family:inherit;" title="Inspect ${escapeHtml(c.name)}">${escapeHtml(c.name)}</button>
-        <code style="font-size:9px; color:var(--muted); font-family:var(--font-mono, monospace);">${escapeHtml(idShort)}</code>
+        <code style="font-size:11px; color:var(--muted); font-family:var(--font-mono, monospace);">${escapeHtml(idShort)}</code>
         ${updateBadge}
       </div>
     </td>
@@ -259,7 +259,7 @@ export function updateContainerRow(tr, c, currentHost, updateInfo = null) {
         telemCell.innerHTML = `<span class="docker-telemetry-pill"><span class="telem-cpu">${cpuStr}</span><span style="opacity:0.4;">•</span><span class="telem-mem">${memStr}</span></span>`;
       }
     } else {
-      telemCell.innerHTML = '<span style="color:var(--muted); font-size:10px;">—</span>';
+      telemCell.innerHTML = '<span style="color:var(--muted); font-size:11px;">—</span>';
     }
   }
 

@@ -181,7 +181,7 @@ export class FileManagerWindow {
                 <button type="button" class="fm-tool-btn fm-locations-btn" title="Quick Locations" aria-label="Quick Locations">📍</button>
               </div>
               <div class="fm-path-container" style="flex: 1; position: relative; display: flex; align-items: center; min-width: 0;">
-                <input type="text" id="fm-path-input" class="fm-path-input" spellcheck="false" list="fm-path-list" style="width: 100%; color: transparent;" />
+                <input type="text" id="fm-path-input" class="fm-path-input" aria-label="${escapeHtml(t('fm.path_input_label', 'Folder path'))}" spellcheck="false" list="fm-path-list" style="width: 100%; color: transparent;" />
                 <div id="fm-path-breadcrumbs" class="fm-path-breadcrumbs" style="position: absolute; left: 0; top: 0; bottom: 0; right: 30px; display: flex; align-items: center; padding-left: 8px; cursor: text; overflow: hidden; pointer-events: auto;"></div>
                 <datalist id="fm-path-list">
                   <option value="/mnt/user"></option>
@@ -197,7 +197,7 @@ export class FileManagerWindow {
               <div class="fm-search-wrap" style="position: relative; display: flex; align-items: center; gap: 3px; margin: 0 4px;">
                 <input type="text" class="fm-search-input" placeholder="${t('fm.search_placeholder', 'Search...')}" style="width: 105px; font-size: 11px; padding: 3px 8px 3px 22px; border-radius: 6px; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.12); color: var(--fg); outline: none;" />
                 <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" style="position: absolute; left: 6px; color: var(--muted); pointer-events: none;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                <button type="button" class="fm-tool-btn fm-ai-search-toggle" title="Toggle ZettAI Semantic &amp; Visual RAG Search (Zero Disk Wake)" aria-label="AI Semantic Search" style="font-size: 10px; padding: 2px 5px; border-radius: 5px;">✨ AI</button>
+                <button type="button" class="fm-tool-btn fm-ai-search-toggle" title="Toggle ZettAI Semantic &amp; Visual RAG Search (Zero Disk Wake)" aria-label="AI Semantic Search" style="font-size: 11px; padding: 2px 5px; border-radius: 5px;">✨ AI</button>
               </div>
               <button id="fm-new-folder-btn" class="fm-tool-btn fm-new-folder-btn" title="${t('fm.new_folder', 'New Folder')}" data-i18n-title="fm.new_folder" aria-label="New Folder">
                 <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path><line x1="12" y1="11" x2="12" y2="17"></line><line x1="9" y1="14" x2="15" y2="14"></line></svg>
@@ -222,7 +222,7 @@ export class FileManagerWindow {
               <div class="fm-aux-tool-group" style="display: flex; align-items: center; gap: 3px; margin-left: 4px;">
                 <button type="button" id="fm-btn-transfers" class="fm-tool-btn fm-btn-transfers-toggle" title="${t('fm.transfers', 'Transfers')}" data-i18n-title="fm.transfers" aria-label="Transfers">
                   <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polyline points="8 17 12 21 16 17"></polyline><line x1="12" y1="12" x2="12" y2="21"></line><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"></path></svg>
-                  <span class="fm-transfers-count-badge" style="display: none; background: #0ea5e9; color: #fff; font-size: 9px; font-weight: 700; padding: 1px 4px; border-radius: 6px; margin-left: 2px;">0</span>
+                  <span class="fm-transfers-count-badge" style="display: none; background: #0ea5e9; color: #fff; font-size: 11px; font-weight: 700; padding: 1px 4px; border-radius: 6px; margin-left: 2px;">0</span>
                 </button>
                 <button type="button" id="fm-btn-inspector" class="fm-tool-btn fm-btn-inspector-toggle" title="${t('fm.inspector_toggle', 'Toggle Inspector')}" data-i18n-title="fm.inspector_toggle" aria-label="Toggle Inspector">
                   <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
@@ -303,7 +303,7 @@ export class FileManagerWindow {
               <button type="button" class="fm-tool-btn fm-locations-btn" title="Quick Locations" aria-label="Quick Locations">📍</button>
             </div>
             <div class="fm-path-container" style="flex: 1; position: relative; display: flex; align-items: center; min-width: 0;">
-              <input type="text" class="fm-path-input" spellcheck="false" list="${this.id}-path-list" style="width: 100%; color: transparent;" />
+              <input type="text" class="fm-path-input" aria-label="${escapeHtml(t('fm.path_input_label', 'Folder path'))}" spellcheck="false" list="${this.id}-path-list" style="width: 100%; color: transparent;" />
               <div class="fm-path-breadcrumbs" style="position: absolute; left: 0; top: 0; bottom: 0; right: 30px; display: flex; align-items: center; padding-left: 8px; cursor: text; overflow: hidden; pointer-events: auto;"></div>
               <datalist id="${this.id}-path-list">
                 <option value="/mnt/user"></option>
@@ -319,7 +319,7 @@ export class FileManagerWindow {
             <div class="fm-search-wrap" style="position: relative; display: flex; align-items: center; gap: 3px; margin: 0 4px;">
               <input type="text" class="fm-search-input" placeholder="${t('fm.search_placeholder', 'Search...')}" style="width: 105px; font-size: 11px; padding: 3px 8px 3px 22px; border-radius: 6px; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.12); color: var(--fg); outline: none;" />
               <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" style="position: absolute; left: 6px; color: var(--muted); pointer-events: none;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-              <button type="button" class="fm-tool-btn fm-ai-search-toggle" title="Toggle ZettAI Semantic &amp; Visual RAG Search (Zero Disk Wake)" aria-label="AI Semantic Search" style="font-size: 10px; padding: 2px 5px; border-radius: 5px;">✨ AI</button>
+              <button type="button" class="fm-tool-btn fm-ai-search-toggle" title="Toggle ZettAI Semantic &amp; Visual RAG Search (Zero Disk Wake)" aria-label="AI Semantic Search" style="font-size: 11px; padding: 2px 5px; border-radius: 5px;">✨ AI</button>
             </div>
             <button class="fm-tool-btn fm-new-folder-btn" title="${t('fm.new_folder', 'New Folder')}" data-i18n-title="fm.new_folder" aria-label="New Folder">
               <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path><line x1="12" y1="11" x2="12" y2="17"></line><line x1="9" y1="14" x2="15" y2="14"></line></svg>
@@ -344,7 +344,7 @@ export class FileManagerWindow {
             <div class="fm-aux-tool-group" style="display: flex; align-items: center; gap: 3px; margin-left: 4px;">
               <button type="button" class="fm-tool-btn fm-btn-transfers-toggle" title="${t('fm.transfers', 'Transfers')}" data-i18n-title="fm.transfers" aria-label="Transfers">
                 <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polyline points="8 17 12 21 16 17"></polyline><line x1="12" y1="12" x2="12" y2="21"></line><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"></path></svg>
-                <span class="fm-transfers-count-badge" style="display: none; background: #0ea5e9; color: #fff; font-size: 9px; font-weight: 700; padding: 1px 4px; border-radius: 6px; margin-left: 2px;">0</span>
+                <span class="fm-transfers-count-badge" style="display: none; background: #0ea5e9; color: #fff; font-size: 11px; font-weight: 700; padding: 1px 4px; border-radius: 6px; margin-left: 2px;">0</span>
               </button>
               <button type="button" class="fm-tool-btn fm-btn-inspector-toggle" title="${t('fm.inspector_toggle', 'Toggle Inspector')}" data-i18n-title="fm.inspector_toggle" aria-label="Toggle Inspector">
                 <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
@@ -3423,7 +3423,7 @@ export function showCollisionModal({ sources, destinationDir, action, conflicts,
               <span>${c.is_dir ? '📁' : '📄'}</span>
               <span style="font-weight: 600; color: #fff;">${escapeHtml(c.name)}</span>
             </div>
-            <span style="font-size: 10px; color: var(--muted);">${c.is_dir ? 'Directory' : formatBytes(c.dest_size || 0)}</span>
+            <span style="font-size: 11px; color: var(--muted);">${c.is_dir ? 'Directory' : formatBytes(c.dest_size || 0)}</span>
           </div>
         `
           )
@@ -3587,9 +3587,9 @@ export function openMediaOrganizerModal(initialPath = '') {
                 .map((it) => {
                   const isTv = it.media_type === 'tv';
                   const typeBadge = isTv
-                    ? `<span class="ci-badge" style="font-size:9px; background:rgba(168,85,247,0.15); color:#c084fc; border:1px solid rgba(168,85,247,0.3); padding:1px 5px; border-radius:3px;">TV Show · S${String(it.season || 1).padStart(2, '0')}E${String(it.episode || 1).padStart(2, '0')}</span>`
-                    : `<span class="ci-badge" style="font-size:9px; background:rgba(14,165,233,0.15); color:#38bdf8; border:1px solid rgba(14,165,233,0.3); padding:1px 5px; border-radius:3px;">Movie ${it.year ? `(${it.year})` : ''}</span>`;
-                  const qualBadge = `<span class="ci-badge" style="font-size:9px; background:rgba(255,255,255,0.06); color:#cbd5e1; padding:1px 5px; border-radius:3px;">${escapeHtml(it.resolution || '1080p')} · ${escapeHtml(it.codec || 'x264')}</span>`;
+                    ? `<span class="ci-badge" style="font-size:11px; background:rgba(168,85,247,0.15); color:#c084fc; border:1px solid rgba(168,85,247,0.3); padding:1px 5px; border-radius:3px;">TV Show · S${String(it.season || 1).padStart(2, '0')}E${String(it.episode || 1).padStart(2, '0')}</span>`
+                    : `<span class="ci-badge" style="font-size:11px; background:rgba(14,165,233,0.15); color:#38bdf8; border:1px solid rgba(14,165,233,0.3); padding:1px 5px; border-radius:3px;">Movie ${it.year ? `(${it.year})` : ''}</span>`;
+                  const qualBadge = `<span class="ci-badge" style="font-size:11px; background:rgba(255,255,255,0.06); color:#cbd5e1; padding:1px 5px; border-radius:3px;">${escapeHtml(it.resolution || '1080p')} · ${escapeHtml(it.codec || 'x264')}</span>`;
 
                   return `
                   <div style="padding:8px 12px; border-bottom:1px solid rgba(255,255,255,0.04); display:flex; flex-direction:column; gap:4px; font-size:11px;">
@@ -3597,7 +3597,7 @@ export function openMediaOrganizerModal(initialPath = '') {
                       <div style="font-weight:700; color:#fff; word-break:break-all;">${escapeHtml(it.title || it.original_filename)}</div>
                       <div style="display:flex; gap:6px;">${typeBadge}${qualBadge}</div>
                     </div>
-                    <div style="color:var(--muted); font-size:10px; font-family:monospace; display:flex; align-items:center; gap:6px;">
+                    <div style="color:var(--muted); font-size:11px; font-family:monospace; display:flex; align-items:center; gap:6px;">
                       <span style="color:#f87171; text-decoration:line-through;">${escapeHtml(it.original_filename)}</span>
                       <span>➔</span>
                       <span style="color:#4ade80;">${escapeHtml(it.proposed_relative_path)}</span>

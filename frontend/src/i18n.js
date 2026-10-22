@@ -139,6 +139,14 @@ export function applyTranslations() {
     }
   });
 
+  // Elements with data-i18n-aria-label: replace aria-label (FE-10)
+  document.querySelectorAll('[data-i18n-aria-label]').forEach((el) => {
+    const key = el.getAttribute('data-i18n-aria-label');
+    if (key) {
+      el.setAttribute('aria-label', t(key, el.getAttribute('aria-label') || ''));
+    }
+  });
+
   // Update HTML lang attribute
   if (document.documentElement) {
     document.documentElement.lang = _currentLang;

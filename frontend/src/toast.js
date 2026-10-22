@@ -43,7 +43,7 @@ export function showActionToast(msg, actionText, onAction, durationMs = 10000) {
   toast.innerHTML = `
     <div style="font-size: 20px; line-height: 1; flex-shrink: 0;">↺</div>
     <div style="flex: 1; min-width: 0;">
-      <div style="font-size: 10px; font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 2px; color: #38bdf8;">NOTIFICATION</div>
+      <div style="font-size: 11px; font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 2px; color: #38bdf8;">NOTIFICATION</div>
       <div style="font-size: 12.5px; color: #f1f5f9; line-height: 1.4; word-break: break-word;">${escapeHtml(msg)}</div>
     </div>
     <button class="top-toast-action-btn" style="background: rgba(56, 189, 248, 0.2); border: 1px solid #38bdf8; color: #38bdf8; font-size: 11px; font-weight: 700; cursor: pointer; padding: 4px 10px; border-radius: 4px; margin-right: 6px;">${escapeHtml(actionText)}</button>
@@ -148,7 +148,7 @@ function _showTopNotification(msg, type = "error") {
   toast.innerHTML = `
     <div style="font-size: 20px; line-height: 1; flex-shrink: 0;">${icon}</div>
     <div style="flex: 1; min-width: 0;">
-      <div style="font-size: 10px; font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 2px; color: ${tagColor};">${escapeHtml(tagText)}</div>
+      <div style="font-size: 11px; font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 2px; color: ${tagColor};">${escapeHtml(tagText)}</div>
       <div style="font-size: 12.5px; color: #f1f5f9; line-height: 1.4; word-break: break-word;">${escapeHtml(msg)}</div>
     </div>
     <button class="top-toast-close" style="background: transparent; border: none; color: #94a3b8; font-size: 18px; cursor: pointer; padding: 2px 6px; line-height: 1; border-radius: 4px;" title="Dismiss">&times;</button>

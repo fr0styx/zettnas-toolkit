@@ -418,7 +418,7 @@ async function loadCurrentItem() {
         </div>
         ${thumbHtml}
         ${excerptHtml}
-        <div style="font-size:10.5px; color:var(--muted); font-family:monospace;">${escapeHtml(_currentPath || '')}</div>
+        <div style="font-size:11px; color:var(--muted); font-family:monospace;">${escapeHtml(_currentPath || '')}</div>
       </div>
     `;
     const wakeBtn = bodyEl.querySelector('#btn-quicklook-wake-load');
@@ -835,7 +835,7 @@ function updateInspectorContent(meta) {
       </div>` : ''}
       <div class="quicklook-prop-row" style="flex-direction:column; align-items:flex-start; gap:4px; margin-top:6px;">
         <span class="quicklook-prop-label">Location</span>
-        <div style="font-size:10.5px; color:#94a3b8; font-family:monospace; word-break:break-all; background:rgba(0,0,0,0.3); padding:4px 6px; border-radius:4px; width:100%;">${escapeHtml(meta.path || '')}</div>
+        <div style="font-size:11px; color:#94a3b8; font-family:monospace; word-break:break-all; background:rgba(0,0,0,0.3); padding:4px 6px; border-radius:4px; width:100%;">${escapeHtml(meta.path || '')}</div>
       </div>
       <div style="margin-top:10px;">
         <button type="button" class="btn-pill-toggle" id="ql-copy-path-btn" style="width:100%; padding:6px; font-size:11px; text-align:center;">📋 ${escapeHtml(t('preview.copy_path', 'Copy File Path'))}</button>
