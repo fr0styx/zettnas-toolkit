@@ -227,6 +227,10 @@ def test_e2e_live_desktop_session_and_badge():
         dock = _wait("#os-dock-container")
         assert dock is not None
 
+        # The VM manager loads on first open (FE-02) and its window still appears
+        page.evaluate("() => window.openVmManager()")
+        page.wait_for_selector("#vm-manager-window", state="visible", timeout=8000)
+
         page.wait_for_timeout(1500)
         violations = page.evaluate("() => window.__csp || []")
         assert violations == [], f"CSP violations: {violations}"

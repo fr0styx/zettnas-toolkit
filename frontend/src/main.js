@@ -40,7 +40,7 @@ import { initManagement } from './components/management.js';
 import { initCommandPalette } from './components/command-palette.js';
 import { initWidgets } from './components/widgets.js';
 import { initFileManager } from './components/file-manager.js';
-import { initVmManager, openVmConsole } from './components/vm-manager.js';
+import { lazyWindow } from './lazy-windows.js';
 import { initContainersManager } from './components/containers-manager.js';
 import { initContainerModal } from './components/container-modal.js';
 import { initStackModal } from './components/stack-modal.js';
@@ -229,14 +229,17 @@ document.addEventListener('DOMContentLoaded', () => {
     setWindowRestorationComplete(true);
     initI18n();
     initAuth();
-    initVmManager();
+    const vmModule = import('./components/vm-manager.js');
     initA11y();
     if (auth.hasToken()) {
       const params = new URLSearchParams(window.location.search);
       const vmId = params.get('vm') || '1';
       const vmName = params.get('name') || 'Virtual Machine';
       const consoleMode = params.get('consoleMode') || 'gui';
-      openVmConsole(vmId, vmName, consoleMode);
+      vmModule.then((m) => {
+        m.initVmManager();
+        m.openVmConsole(vmId, vmName, consoleMode);
+      });
     } else {
       const overlay = document.getElementById('login-overlay');
       if (overlay) {
@@ -278,7 +281,15 @@ document.addEventListener('DOMContentLoaded', () => {
   initCommandPalette();
   initWidgets();
   initFileManager();
-  initVmManager();
+  // The VM manager (~220 kB) loads the first time it's opened (FE-02)
+  lazyWindow({
+    id: 'vm',
+    iconId: 'vm-desktop-icon',
+    load: () => import('./components/vm-manager.js'),
+    init: 'initVmManager',
+    globals: ['openVmManager'],
+    openGlobal: 'openVmManager',
+  });
   initContainersManager();
   initContainerModal();
   initStackModal();
