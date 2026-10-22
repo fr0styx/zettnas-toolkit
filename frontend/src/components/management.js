@@ -4,14 +4,15 @@ import { openContainerInspector, openContainerDeleteModal } from './container-mo
 import { openStackModal, openStackPickerModal } from './stack-modal.js';
 import { ZettEventBus } from '../event-bus.js';
 import {
-  createContainerRow,
-  updateContainerRow,
-  getSelectedContainerIds,
-  isContainerSelected,
-  toggleContainerSelected,
   clearSelectedContainers,
-  selectAllContainers,
+  createContainerRow,
+  getSelectedContainerIds,
   initSynchronizedTableScrollbars,
+  isContainerSelected,
+  runBulkContainerAction,
+  selectAllContainers,
+  toggleContainerSelected,
+  updateContainerRow,
 } from './docker-table.js';
 import { fitMiniPreviewScale, syncMiniPreviewTelemetry } from './mini-preview.js';
 import { fetchAndRenderChassisTwin, renderStorageTopologyTree, fetchAndRenderStorageTopology, fetchAndRenderNetworkShares, fetchAndRenderRemoteStorage, openNewCloudRemoteModal, openCreateStoragePoolModal, openCreateNetworkShareModal, openSnapshotsModal, triggerLocateDisk, getThermalLevel } from './chassis-visualizer.js';
@@ -699,65 +700,11 @@ export function updateDockerBulkBar() {
 }
 
 export async function executeBulkContainerAction(action) {
-  const selectedIds = getSelectedContainerIds();
-  if (selectedIds.length === 0) {
-    showToast(t('toast.no_containers_selected', 'No containers selected.'), 'info');
-    return;
-  }
-
-  if (action === 'cancel') {
-    clearSelectedContainers();
-    renderDockerContainersTable();
-    updateDockerBulkBar();
-    return;
-  }
-
-  if (action === 'delete') {
-    showConfirmToast(
-      `Delete ${selectedIds.length} Containers`,
-      `Are you sure you want to permanently delete ${selectedIds.length} selected containers? This action cannot be undone.`,
-      async () => {
-        await _runBulkActionApi(action, selectedIds);
-      },
-      null,
-      { okText: '🗑️ Delete All', cancelText: 'Cancel' }
-    );
-    return;
-  }
-
-  if (action === 'stop') {
-    showConfirmToast(
-      `Stop ${selectedIds.length} Containers`,
-      `Are you sure you want to stop ${selectedIds.length} running containers?`,
-      async () => {
-        await _runBulkActionApi(action, selectedIds);
-      },
-      null,
-      { okText: '⏹ Stop All', cancelText: 'Cancel' }
-    );
-    return;
-  }
-
-  await _runBulkActionApi(action, selectedIds);
-}
-
-async function _runBulkActionApi(action, selectedIds) {
-  try {
-    showToast(t('toast.executing_bulk_on_containers', 'Executing bulk {action} on {count} containers...', { action: action, count: selectedIds.length }), 'info');
-    const res = await api.post('/api/docker/containers/bulk-action', {
-      action,
-      container_ids: selectedIds,
-      force: action === 'delete',
-    });
-    const successful = res.successful || 0;
-    const total = res.total || selectedIds.length;
-    showToast(t('toast.bulk_of_succeeded', 'Bulk {action}: {successful} of {total} succeeded.', { action: action, successful: successful, total: total }), successful === total ? 'success' : 'warn');
-    clearSelectedContainers();
-    await fetchAndRenderDockerContainers();
-    updateDockerBulkBar();
-  } catch (err) {
-    showToast(t('toast.bulk_failed', 'Bulk {action} failed: {error}', { action: action, error: err.message }), 'error');
-  }
+  return runBulkContainerAction(action, {
+    rerender: renderDockerContainersTable,
+    refresh: () => fetchAndRenderDockerContainers(),
+    updateBar: updateDockerBulkBar,
+  });
 }
 
 export function _resetDockerStateForTesting() {
@@ -1489,34 +1436,55 @@ let _dockerAutoRefreshTimer = null;
 let _isDockerAutoRefreshing = false;
 let _dockerAutoRefreshCount = 0;
 
+let _dockerLastSseAt = 0;
+let _dockerSseBound = false;
+const DOCKER_WATCHDOG_MS = 15000;
+const DOCKER_SSE_STALE_MS = 10000;
+
+function _dockerSectionVisible() {
+  if (typeof document === 'undefined' || document.hidden) return false;
+  const mgmtWin = document.getElementById('management-window');
+  if (mgmtWin && (mgmtWin.style.display === 'none' || mgmtWin.classList.contains('minimized') || mgmtWin.classList.contains('window-minimized'))) {
+    return false;
+  }
+  const dockerSec = document.getElementById('mgmt-sec-docker');
+  if (!dockerSec || dockerSec.style.display === 'none') return false;
+  const style = typeof window !== 'undefined' && window.getComputedStyle ? window.getComputedStyle(dockerSec) : null;
+  return !(style && style.display === 'none');
+}
+
+// Mission Control's container table follows the live stats stream, like the Containers
+// window; the timer only fetches when the stream has gone quiet (FE-12).
 export function startDockerAutoRefresh() {
+  if (!_dockerSseBound) {
+    _dockerSseBound = true;
+    ZettEventBus.on('stats:updated', (stats) => {
+      if (!stats || !Array.isArray(stats.docker)) return;
+      _dockerLastSseAt = Date.now();
+      if (!_dockerAutoRefreshTimer || !_dockerSectionVisible()) return;
+      _dockerContainersList = stats.docker;
+      renderDockerContainersTable();
+    });
+  }
   if (_dockerAutoRefreshTimer) return;
   _dockerAutoRefreshTimer = setInterval(async () => {
-    if (typeof document !== 'undefined' && document.hidden) return;
-    const mgmtWin = document.getElementById('management-window');
-    if (mgmtWin && (mgmtWin.style.display === 'none' || mgmtWin.classList.contains('minimized') || mgmtWin.classList.contains('window-minimized'))) {
-      return;
-    }
-    const dockerSec = document.getElementById('mgmt-sec-docker');
-    if (!dockerSec) return;
-    if (dockerSec.style.display === 'none') return;
-    const style = typeof window !== 'undefined' && window.getComputedStyle ? window.getComputedStyle(dockerSec) : null;
-    if (style && style.display === 'none') return;
-
+    if (!_dockerSectionVisible()) return;
     if (_isDockerAutoRefreshing) return;
     _isDockerAutoRefreshing = true;
     try {
       _dockerAutoRefreshCount++;
-      if (_dockerAutoRefreshCount % 6 === 0) {
+      if (_dockerAutoRefreshCount % 4 === 0) {
         refreshDockerUpdatesStatus().catch(() => {});
       }
-      await fetchAndRenderDockerContainers(true);
+      if (Date.now() - _dockerLastSseAt > DOCKER_SSE_STALE_MS) {
+        await fetchAndRenderDockerContainers(true);
+      }
     } catch (e) {
       console.warn('Docker background auto-refresh poll error:', e);
     } finally {
       _isDockerAutoRefreshing = false;
     }
-  }, 5000);
+  }, DOCKER_WATCHDOG_MS);
 }
 
 export function stopDockerAutoRefresh() {

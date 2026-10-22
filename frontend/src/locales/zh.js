@@ -2053,5 +2053,11 @@ export default {
   "toast.failed_update_vector_size": "更新向量维度失败：{error}",
   "toast.benchmark_failed": "基准测试失败：{error}",
   "toast.failed_trigger_reindex": "无法开始重建索引：{error}",
-  "net.offline_banner": "无法连接 ZettNAS，正在重新连接…"
+  "net.offline_banner": "无法连接 ZettNAS，正在重新连接…",
+  "docker.bulk_delete_title": "删除 {count} 个容器",
+  "docker.bulk_delete_confirm": "永久删除所选的 {count} 个容器？此操作无法撤销。",
+  "docker.bulk_delete_ok": "删除",
+  "docker.bulk_stop_title": "停止 {count} 个容器",
+  "docker.bulk_stop_confirm": "停止所选的 {count} 个容器？",
+  "docker.bulk_stop_ok": "停止"
 };

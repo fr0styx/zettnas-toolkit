@@ -22,6 +22,7 @@ import {
   toggleContainerSelected,
   clearSelectedContainers,
   selectAllContainers,
+  runBulkContainerAction,
   initSynchronizedTableScrollbars,
 } from './docker-table.js';
 
@@ -1305,63 +1306,9 @@ export function updateCwBulkBar() {
 }
 
 export async function executeBulkContainerAction(action) {
-  const selectedIds = getSelectedContainerIds();
-  if (selectedIds.length === 0) {
-    showToast(t('toast.no_containers_selected', 'No containers selected.'), 'info');
-    return;
-  }
-
-  if (action === 'cancel') {
-    clearSelectedContainers();
-    renderContainersWindowTable();
-    updateCwBulkBar();
-    return;
-  }
-
-  if (action === 'delete') {
-    showConfirmToast(
-      `Delete ${selectedIds.length} Containers`,
-      `Are you sure you want to permanently delete ${selectedIds.length} selected containers? This action cannot be undone.`,
-      async () => {
-        await _runBulkActionApi(action, selectedIds);
-      },
-      null,
-      { okText: '🗑️ Delete All', cancelText: 'Cancel' }
-    );
-    return;
-  }
-
-  if (action === 'stop') {
-    showConfirmToast(
-      `Stop ${selectedIds.length} Containers`,
-      `Are you sure you want to stop ${selectedIds.length} running containers?`,
-      async () => {
-        await _runBulkActionApi(action, selectedIds);
-      },
-      null,
-      { okText: '⏹ Stop All', cancelText: 'Cancel' }
-    );
-    return;
-  }
-
-  await _runBulkActionApi(action, selectedIds);
-}
-
-async function _runBulkActionApi(action, selectedIds) {
-  try {
-    showToast(t('toast.executing_bulk_on_containers', 'Executing bulk {action} on {count} containers...', { action: action, count: selectedIds.length }), 'info');
-    const res = await api.post('/api/docker/containers/bulk-action', {
-      action,
-      container_ids: selectedIds,
-      force: action === 'delete',
-    });
-    const successful = res.successful || 0;
-    const total = res.total || selectedIds.length;
-    showToast(t('toast.bulk_of_succeeded', 'Bulk {action}: {successful} of {total} succeeded.', { action: action, successful: successful, total: total }), successful === total ? 'success' : 'warn');
-    clearSelectedContainers();
-    await loadContainersData();
-    updateCwBulkBar();
-  } catch (err) {
-    showToast(t('toast.bulk_failed', 'Bulk {action} failed: {error}', { action: action, error: err.message }), 'error');
-  }
+  return runBulkContainerAction(action, {
+    rerender: () => renderContainersWindowTable(),
+    refresh: () => loadContainersData(),
+    updateBar: updateCwBulkBar,
+  });
 }

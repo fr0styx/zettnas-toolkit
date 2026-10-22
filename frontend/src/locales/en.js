@@ -2053,5 +2053,11 @@ export default {
   "toast.failed_update_vector_size": "Failed to update vector size: {error}",
   "toast.benchmark_failed": "Benchmark failed: {error}",
   "toast.failed_trigger_reindex": "Failed to start re-indexing: {error}",
-  "net.offline_banner": "Can't reach ZettNAS. Reconnecting…"
+  "net.offline_banner": "Can't reach ZettNAS. Reconnecting…",
+  "docker.bulk_delete_title": "Delete {count} containers",
+  "docker.bulk_delete_confirm": "Permanently delete the {count} selected containers? This cannot be undone.",
+  "docker.bulk_delete_ok": "Delete",
+  "docker.bulk_stop_title": "Stop {count} containers",
+  "docker.bulk_stop_confirm": "Stop the {count} selected containers?",
+  "docker.bulk_stop_ok": "Stop"
 };

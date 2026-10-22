@@ -7,6 +7,8 @@
 import { escapeHtml } from '../utils.js';
 import { t } from '../i18n.js';
 
+import { api } from '../api.js';
+import { showToast, showConfirmToast } from '../toast.js';
 let _selectedContainerIds = new Set();
 
 export function getSelectedContainerIds() {
@@ -369,4 +371,66 @@ export function initSynchronizedTableScrollbars(tableWrapEl, topScrollEl, sticky
 
   tableWrapEl._syncScrollbarsController = controller;
   return controller;
+}
+
+
+/**
+ * Bulk start/stop/restart/delete for the selected containers, shared by Mission Control
+ * and the Containers window (FE-12). `view` tells it how to redraw that view:
+ * { rerender(), refresh(), updateBar() }.
+ */
+export async function runBulkContainerAction(action, view) {
+  const selectedIds = getSelectedContainerIds();
+  if (selectedIds.length === 0) {
+    showToast(t('toast.no_containers_selected', 'No containers selected.'), 'info');
+    return;
+  }
+  if (action === 'cancel') {
+    clearSelectedContainers();
+    view.rerender();
+    view.updateBar();
+    return;
+  }
+  const run = () => _runBulk(action, selectedIds, view);
+  const count = selectedIds.length;
+  if (action === 'delete') {
+    showConfirmToast(
+      t('docker.bulk_delete_title', 'Delete {count} containers', { count }),
+      t('docker.bulk_delete_confirm', 'Permanently delete the {count} selected containers? This cannot be undone.', { count }),
+      run,
+      null,
+      { okText: t('docker.bulk_delete_ok', 'Delete'), cancelText: t('common.cancel', 'Cancel') }
+    );
+    return;
+  }
+  if (action === 'stop') {
+    showConfirmToast(
+      t('docker.bulk_stop_title', 'Stop {count} containers', { count }),
+      t('docker.bulk_stop_confirm', 'Stop the {count} selected containers?', { count }),
+      run,
+      null,
+      { okText: t('docker.bulk_stop_ok', 'Stop'), cancelText: t('common.cancel', 'Cancel') }
+    );
+    return;
+  }
+  await run();
+}
+
+async function _runBulk(action, selectedIds, view) {
+  try {
+    showToast(t('toast.executing_bulk_on_containers', 'Executing bulk {action} on {count} containers...', { action, count: selectedIds.length }), 'info');
+    const res = await api.post('/api/docker/containers/bulk-action', {
+      action,
+      container_ids: selectedIds,
+      force: action === 'delete',
+    });
+    const successful = res.successful || 0;
+    const total = res.total || selectedIds.length;
+    showToast(t('toast.bulk_of_succeeded', 'Bulk {action}: {successful} of {total} succeeded.', { action, successful, total }), successful === total ? 'success' : 'warn');
+    clearSelectedContainers();
+    await view.refresh();
+    view.updateBar();
+  } catch (err) {
+    showToast(t('toast.bulk_failed', 'Bulk {action} failed: {error}', { action, error: err.message }), 'error');
+  }
 }

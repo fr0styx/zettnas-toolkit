@@ -111,22 +111,26 @@ describe('Stack Picker Modal, Auto-Refresh & Context Menu Polishing', () => {
     `;
 
     const getSpy = vi.spyOn(api, 'get').mockResolvedValue([]);
+    const containerCalls = () => getSpy.mock.calls.filter((c) => c[0] === '/api/docker/containers').length;
 
     startDockerAutoRefresh();
 
-    // Fast-forward 5000ms
-    await vi.advanceTimersByTimeAsync(5000);
-    const containerCalls1 = getSpy.mock.calls.filter((c) => c[0] === '/api/docker/containers');
-    expect(containerCalls1.length).toBe(1);
+    // No live stats yet: the 15 s watchdog fetches (FE-12)
+    await vi.advanceTimersByTimeAsync(15000);
+    expect(containerCalls()).toBe(1);
 
+    // While the stats stream delivers containers, the watchdog doesn't fetch
+    const { ZettEventBus } = await import('../event-bus.js');
+    ZettEventBus.emit('stats:updated', { docker: [{ id: 'abc', name: 'web', state: 'running' }] });
     await vi.advanceTimersByTimeAsync(5000);
-    const containerCalls2 = getSpy.mock.calls.filter((c) => c[0] === '/api/docker/containers');
-    expect(containerCalls2.length).toBe(2);
+    ZettEventBus.emit('stats:updated', { docker: [{ id: 'abc', name: 'web', state: 'running' }] });
+    await vi.advanceTimersByTimeAsync(10000);
+    expect(containerCalls()).toBe(1);
+    expect(document.getElementById('docker-containers-tbody').textContent).toContain('web');
 
     stopDockerAutoRefresh();
-    await vi.advanceTimersByTimeAsync(10000);
-    const containerCalls3 = getSpy.mock.calls.filter((c) => c[0] === '/api/docker/containers');
-    expect(containerCalls3.length).toBe(2); // no further calls
+    await vi.advanceTimersByTimeAsync(60000);
+    expect(containerCalls()).toBe(1); // no further calls
 
     vi.useRealTimers();
   });
