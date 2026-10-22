@@ -2788,6 +2788,9 @@ def _get_unraid_disks_and_shares() -> tuple[dict[str, dict[str, str]], dict[str,
     return (disks, shares)
 
 
+UNKNOWN_BACKING_DEV = "?unknown"  # a local disk we couldn't identify: treated as asleep (AI-08)
+
+
 def resolve_path_backing_dev(path: str) -> str:
     """
     Resolves a filesystem path to its backing physical block device name (e.g. 'sda', 'sdb', 'nvme0n1')
@@ -2852,7 +2855,21 @@ def resolve_path_backing_dev(path: str) -> str:
         if array_devs:
             return array_devs[0]
 
-    return ""
+    # Any other storage (ZFS, Btrfs, mdadm, LVM, plain disks): find the real disks (AI-08).
+    # "sdb,sdc" means every one of them is checked; UNKNOWN_BACKING_DEV fails closed.
+    try:
+        from backend.hardware.blockdev import disks_for_path
+
+        disks = disks_for_path(norm)
+    except Exception:
+        disks = None
+    if disks is None:
+        return UNKNOWN_BACKING_DEV
+    return ",".join(disks)
+
+
+def _disk_reports_standby(dev_name: str) -> bool:
+    return is_backing_disk_in_standby(dev_name, check_smartctl=True)
 
 
 def is_backing_disk_in_standby(dev_name: str, check_smartctl: bool = False) -> bool:
@@ -2866,6 +2883,11 @@ def is_backing_disk_in_standby(dev_name: str, check_smartctl: bool = False) -> b
         dev_name = dev_name[5:]
     elif dev_name.startswith("/"):
         dev_name = resolve_path_backing_dev(dev_name)
+    if dev_name == UNKNOWN_BACKING_DEV:
+        # Couldn't tell which disk holds it: assume it may be asleep unless told otherwise (AI-08)
+        return os.environ.get("ZETTNAS_STANDBY_UNKNOWN", "defer").strip().lower() != "allow"
+    if "," in dev_name:
+        return any(_disk_reports_standby(d) for d in dev_name.split(",") if d)
     if not dev_name or dev_name.startswith(("nvme", "loop", "ram", "zram")):
         return False
 
@@ -2894,7 +2916,10 @@ def is_backing_disk_in_standby(dev_name: str, check_smartctl: bool = False) -> b
             if (time.time() - last_ts) < 60.0:
                 return False
 
-    # 3. Optional live smartctl -n standby probe (cached 10s per device)
+    # 3. Live smartctl -n standby probe (cached 10s per device). Always used for disks we know
+    #    nothing else about, e.g. on ZFS/Btrfs/mdadm systems (AI-08).
+    if not check_smartctl and cached is None and not any(d.get("device") == dev_name for d in unraid_disks.values()):
+        check_smartctl = True
     if check_smartctl:
         now = time.time()
         sc_cached = _SMARTCTL_STANDBY_CACHE.get(dev_name)

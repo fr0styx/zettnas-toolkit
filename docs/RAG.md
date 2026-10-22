@@ -14,7 +14,11 @@ describes what the code does today; the numbers come from `tests/rag_eval`, whic
 - The index lives in `rag_index.db` in the data folder, normally on the SSD cache. Search
   reads only this database, not your array disks.
 - With **Standby-safe learning** on, files on a sleeping disk are queued and indexed when
-  the disk spins up, instead of waking it.
+  the disk spins up, instead of waking it. ZettNAS finds the real disks under a folder on
+  Unraid, ZFS, Btrfs, mdadm, LVM/LUKS and plain partitions, checks each with the
+  non-waking `smartctl -n standby`, and ignores SSDs. Network and cloud mounts are never
+  treated as sleeping. If it can't tell which disk holds a folder, it assumes the disk may
+  be asleep and waits; set `ZETTNAS_STANDBY_UNKNOWN=allow` to index such folders anyway.
 
 ## Vectors
 

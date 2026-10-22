@@ -397,14 +397,14 @@ describe('Sprint 4: Remote & Cloud Storage Subsystem (Frontend)', () => {
 
     // 2. Click QR Code button to trigger OAuth start & SVG generation
     qrBtn.click();
-    await new Promise((r) => setTimeout(r, 20));
+    // the QR library loads on first use (FE-02), so wait for the code to be drawn
+    const qrTarget = document.getElementById('oauth-qr-target');
+    await vi.waitFor(() => expect(qrTarget.innerHTML).toContain('<svg'), { timeout: 3000 });
 
     expect(postSpy).toHaveBeenCalledWith('/api/remotes/oauth/start', { provider_type: 'onedrive' });
 
     const qrBox = document.getElementById('oauth-qr-box');
     expect(qrBox.style.display).toBe('block');
-    const qrTarget = document.getElementById('oauth-qr-target');
-    expect(qrTarget.innerHTML).toContain('<svg');
 
     const step2Box = document.getElementById('oauth-step2-box');
     expect(step2Box.style.display).toBe('block');
