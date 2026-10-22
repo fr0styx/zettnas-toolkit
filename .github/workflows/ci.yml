@@ -109,7 +109,7 @@ jobs:
           DATA_DIR: "${{ github.workspace }}/data"
         run: |
           annotate() {
-            body=$( (echo "$2"; echo '--- server log ---'; tail -n 30 /tmp/zn-server.log) | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')
+            body=$( (echo "$2"; echo '--- server warnings ---'; grep -v 'Auth failed' /tmp/zn-server.log | grep -E 'WARNING|ERROR|CRITICAL|Traceback|Error' | tail -n 25; echo '--- server log ---'; tail -n 15 /tmp/zn-server.log) | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')
             echo "::error title=$1::$body"
           }
           # Start background server

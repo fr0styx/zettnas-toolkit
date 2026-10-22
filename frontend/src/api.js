@@ -11,6 +11,8 @@ import { ZettEventBus } from './event-bus.js';
 const LEGACY_TOKEN_KEY = 'zettnas_token';
 const SESSION_HINT_KEY = 'zettnas_signed_in';
 let _memoryToken = null;
+// Bumped at every sign-in: a 401 for a request sent before it is stale and must not sign the user out.
+let _authEpoch = 0;
 
 function _ls(fn) {
   try {
@@ -30,6 +32,7 @@ _ls((ls) => {
 export const auth = {
   getToken: () => _memoryToken,
   setToken: (token, { memory = false } = {}) => {
+    _authEpoch += 1;
     if (memory) _memoryToken = token;
     _ls((ls) => ls.setItem(SESSION_HINT_KEY, '1'));
   },
@@ -106,6 +109,7 @@ async function request(endpoint, options = {}) {
   delete config._confirmRetry;
   config.headers = { ...options.headers };
 
+  const sentInEpoch = _authEpoch;
   const token = auth.getToken();
   if (token && !config.headers['Authorization']) {
     config.headers['Authorization'] = `Bearer ${token}`;
@@ -123,6 +127,10 @@ async function request(endpoint, options = {}) {
   try {
     const res = await window.fetch(url, config);
 
+    if (res.status === 401 && sentInEpoch !== _authEpoch) {
+      // Sent before the latest sign-in: the new session is fine.
+      throw new ApiError('Unauthorized', { status: 401, error: 'unauthorized' });
+    }
     if (res.status === 401) {
       const isLcd = typeof window !== 'undefined' && (
         window.location.search.includes('mode=lcd') ||
