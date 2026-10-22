@@ -12,7 +12,7 @@ import struct
 import time
 from typing import Any, Optional
 
-from backend.config import logger
+from backend.config import docker_sock, logger
 from backend.hardware.docker_stats import (
     UnixHTTPConnection,
     _classify_stack,
@@ -40,7 +40,7 @@ def mask_secret_value(val: str) -> str:
 
 def fetch_container_raw_inspect(cid_or_name: str) -> dict[str, Any]:
     """Fetches full inspect JSON from local Docker socket."""
-    sock_path = "/var/run/docker.sock"
+    sock_path = docker_sock()
     if not os.path.exists(sock_path):
         return {}
 
@@ -407,7 +407,7 @@ def get_container_logs_chunk(cid_or_name: str, tail: int = 200) -> dict[str, Any
     Reads multiplexed Docker stdout/stderr logs from the Unix socket,
     decoding the 8-byte framing into clean timestamps and messages.
     """
-    sock_path = "/var/run/docker.sock"
+    sock_path = docker_sock()
     if not os.path.exists(sock_path):
         return {"lines": [], "error": "Docker socket not available"}
 
@@ -502,7 +502,7 @@ def execute_in_container(cid_or_name: str, cmd: Any) -> dict[str, Any]:
     Executes a command inside the target container via Docker Engine socket.
     Returns exit code and stdout/stderr output.
     """
-    sock_path = "/var/run/docker.sock"
+    sock_path = docker_sock()
     if not os.path.exists(sock_path):
         return {"success": False, "error": "Docker socket not available"}
 

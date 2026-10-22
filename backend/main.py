@@ -51,6 +51,35 @@ from backend.services.webdav_engine import get_webdav_engine
 from backend.state import Z_STATE, _load_events, add_event
 
 
+def _start_docker_proxy(supervise) -> None:
+    """Runs the Docker API allow-list proxy as its own process and points the app at it (SEC-09)."""
+    import subprocess
+    import sys
+
+    from backend.config import RAW_DOCKER_SOCK
+
+    if os.environ.get("ZETTNAS_DOCKER_PROXY", "on") == "off" or os.environ.get("TESTING") == "1":
+        return
+    if not os.path.exists(RAW_DOCKER_SOCK):
+        return
+    sock = os.environ.get("ZETTNAS_DOCKER_PROXY_SOCK", "/run/zettnas/docker.sock")
+
+    def run() -> None:
+        env = {**os.environ, "ZETTNAS_DOCKER_PROXY_SOCK": sock}
+        env.pop("ZETTNAS_DOCKER_SOCK", None)
+        rc = subprocess.run([sys.executable, "-m", "backend.docker_proxy"], env=env).returncode
+        raise RuntimeError(f"docker proxy exited with code {rc}")
+
+    supervise("DockerProxy", run)
+    for _ in range(50):
+        if os.path.exists(sock):
+            os.environ["ZETTNAS_DOCKER_SOCK"] = sock
+            logger.info(f"[Main] Docker API calls go through the allow-list proxy at {sock}")
+            return
+        time.sleep(0.1)
+    logger.warning("[Main] Docker proxy did not start; using the Docker socket directly")
+
+
 def startup_system():
     """System initialization and background services launch."""
     import gc
@@ -141,6 +170,8 @@ def startup_system():
 
     # Supervised: a daemon that crashes is logged and restarted with back-off (ARC-02)
     from backend.services.supervisor import supervise
+
+    _start_docker_proxy(supervise)
 
     supervise("StatsCollector", stats_collector_daemon)
     supervise("SmartPoller", smart_poller_daemon)

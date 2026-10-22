@@ -13,7 +13,8 @@ from typing import Any, Optional
 
 import httpx
 
-from backend.config import HOST_PROC, HOST_SYS, NETWORK_CONFIG_FILE, logger
+from backend.config import HOST_PROC, HOST_SYS, NETWORK_CONFIG_FILE, docker_sock, logger
+from backend.config import docker_sock as _docker_sock_path
 from backend.fsutil import atomic_write_json, read_json
 from backend.state import Z_STATE
 
@@ -180,7 +181,7 @@ def _get_dns_servers() -> list[str]:
 def _get_docker_topology() -> list[dict[str, Any]]:
     """Query Docker daemon for active bridge networks and attached container IPs."""
     docker_networks: list[dict[str, Any]] = []
-    docker_sock = "/var/run/docker.sock"
+    docker_sock = _docker_sock_path()
     if not os.path.exists(docker_sock):
         return docker_networks
 
@@ -1023,7 +1024,7 @@ def update_port_config(iface_name: str, updates: dict[str, Any]) -> dict[str, An
 
 def create_docker_network(name: str, driver: str = "bridge", subnet: str = "", gateway: str = "") -> dict[str, Any]:
     """Create a new Docker network via Docker engine API."""
-    docker_sock = "/var/run/docker.sock"
+    docker_sock = _docker_sock_path()
     if not os.path.exists(docker_sock):
         return {"status": "error", "message": "Docker socket not accessible"}
 
@@ -1062,7 +1063,7 @@ def create_docker_network(name: str, driver: str = "bridge", subnet: str = "", g
 
 def delete_docker_network(net_id_or_name: str) -> dict[str, Any]:
     """Delete a custom Docker network via Docker engine API."""
-    docker_sock = "/var/run/docker.sock"
+    docker_sock = _docker_sock_path()
     if not os.path.exists(docker_sock):
         return {"status": "error", "message": "Docker socket not accessible"}
 
@@ -2983,7 +2984,7 @@ def deploy_tailscale_container(
     from backend.hardware.docker_stats import UnixHTTPConnection
     from backend.services.container_mutator import _docker_request
 
-    sock_path = "/var/run/docker.sock"
+    sock_path = docker_sock()
     if not os.path.exists(sock_path):
         return {
             "status": "error",

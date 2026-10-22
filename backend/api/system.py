@@ -31,6 +31,7 @@ from backend.config import (
     EVENTS_FILE,
     FAN_STATE_FILE,
     LED_STATE_FILE,
+    docker_sock,
     logger,
 )
 from backend.confirmations import require_confirmation
@@ -1180,7 +1181,7 @@ async def post_apply_system_update(req: ApplySystemUpdateRequest):
         raise HTTPException(status_code=502, detail=f"The downloaded image is not from {_IMAGE_REPO}; not updating.")
 
     # 2. Check if running inside container with docker socket access
-    sock_path = "/var/run/docker.sock"
+    sock_path = docker_sock()
     if os.path.exists(sock_path):
         target_container = "zettnas-toolkit"
         try:

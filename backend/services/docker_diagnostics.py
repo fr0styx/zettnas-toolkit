@@ -11,14 +11,14 @@ import socket
 import time
 from typing import Any, Optional
 
-from backend.config import logger
+from backend.config import docker_sock, logger
 from backend.logging_config import sanitize_dict, sanitize_string
 
 
 class UnixHTTPConnection(http.client.HTTPConnection):
-    def __init__(self, socket_path: str = "/var/run/docker.sock", timeout: float = 2.5):
+    def __init__(self, socket_path: str | None = None, timeout: float = 2.5):
         super().__init__("localhost", timeout=timeout)
-        self.socket_path = socket_path
+        self.socket_path = socket_path or docker_sock()
 
     def connect(self):
         self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
@@ -27,7 +27,7 @@ class UnixHTTPConnection(http.client.HTTPConnection):
 
 
 def _docker_api_get(endpoint: str, timeout: float = 2.5) -> Any | None:
-    sock_path = "/var/run/docker.sock"
+    sock_path = docker_sock()
     if not os.path.exists(sock_path):
         return None
     conn = None
@@ -51,7 +51,7 @@ def _docker_api_get(endpoint: str, timeout: float = 2.5) -> Any | None:
 
 
 def _docker_api_get_logs(container_id: str, tail: int = 50) -> str:
-    sock_path = "/var/run/docker.sock"
+    sock_path = docker_sock()
     if not os.path.exists(sock_path):
         return ""
     conn = None

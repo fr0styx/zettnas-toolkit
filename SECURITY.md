@@ -35,8 +35,41 @@ Out of scope: vulnerabilities in the host OS, Docker itself, or third-party cont
 - Change the initial `admin` password on first login (1.9.2 and later enforce this).
 - Don't publish the web UI (port 8080) or WebDAV (port 8084) to the internet; use a VPN or a reverse proxy with its own authentication.
 - Leave WebDAV off unless you need it. Give WebDAV users their own accounts.
-- Mount the Docker socket only into ZettNAS, and never `chmod 666` it.
+- Mount the Docker socket only into ZettNAS, and never `chmod 666` it. ZettNAS reaches it through its allow-list proxy (see below).
 - Keep the appdata folder private: it holds the session-signing key and password hashes.
+
+## Privileges and root-equivalent roles
+
+ZettNAS runs as root in its container with raw-disk and hardware access, because it
+reads SMART data, drives the fans and LCD, mounts disks and runs VMs. Treat the web UI
+like an SSH login to the host.
+
+**Docker API proxy.** The app doesn't use the Docker socket directly. A separate
+process (`backend/docker_proxy.py`) forwards only the Docker API calls the app needs
+and refuses everything else (swarm, plugins, secrets, image build/load/import,
+commit, export). Creating a container with host-level access (privileged, host PID or
+IPC namespace, dangerous capabilities, raw block devices, or bind mounts of `/`,
+`/etc`, `/boot`, `/dev` or the Docker socket) is allowed only from flows you confirm:
+installing an app after its security review, recreating an existing container, and
+the updater. Each one is logged to `data/docker-proxy-audit.log`. Set
+`ZETTNAS_DOCKER_PROXY=off` to bypass the proxy.
+
+The proxy narrows what a bug in the web app can do through Docker. It is not a
+sandbox: the web process itself still runs as root.
+
+**Root-equivalent permissions.** Anyone holding one of these can gain root on the
+host, so give them only to people you'd give the root password:
+
+| Permission | Built-in role | Why |
+| ---------- | ------------- | --- |
+| `*` | SuperAdmin | Everything below |
+| `containers:*`, `containers:manage`, `containers:exec` | AppOperator | Can run a container with host mounts, or a shell in one |
+| `vms:manage` | (custom) | Can pass disks and PCI/USB devices to a VM |
+| `storage:admin` | StorageAdmin | Raw disk access: format, mount and wipe |
+| `system:config` | (custom) | Network, services and updates |
+
+StorageAdmin can also destroy data without gaining root. BackupOperator, ShareUser
+and Auditor aren't root-equivalent.
 
 ## Past advisories
 

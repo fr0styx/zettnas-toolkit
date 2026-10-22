@@ -12,15 +12,13 @@ from typing import Optional
 
 from fastapi import WebSocket, WebSocketDisconnect
 
-from backend.config import logger
-
-DOCKER_SOCK_PATH = "/var/run/docker.sock"
+from backend.config import docker_sock, logger
 
 
 async def _docker_create_exec(container_id: str, shell: str = "/bin/sh") -> str | None:
     """Creates an interactive exec instance in the target container."""
     try:
-        reader, writer = await asyncio.open_unix_connection(DOCKER_SOCK_PATH)
+        reader, writer = await asyncio.open_unix_connection(docker_sock())
         body = json.dumps(
             {
                 "AttachStdin": True,
@@ -58,7 +56,7 @@ async def _docker_create_exec(container_id: str, shell: str = "/bin/sh") -> str 
 async def _docker_resize_exec(exec_id: str, cols: int, rows: int) -> None:
     """Resizes the active exec PTY window."""
     try:
-        reader, writer = await asyncio.open_unix_connection(DOCKER_SOCK_PATH)
+        reader, writer = await asyncio.open_unix_connection(docker_sock())
         req = (f"POST /exec/{exec_id}/resize?h={rows}&w={cols} HTTP/1.1\r\nHost: docker\r\n\r\n").encode()
         writer.write(req)
         await writer.drain()
@@ -78,7 +76,7 @@ async def stream_container_terminal(
     Bridges an active WebSocket connection to an interactive PTY session inside
     the target Docker container via /var/run/docker.sock.
     """
-    if not os.path.exists(DOCKER_SOCK_PATH):
+    if not os.path.exists(docker_sock()):
         await ws.send_text("\r\n\x1b[31m[Error] Docker socket (/var/run/docker.sock) not accessible.\x1b[0m\r\n")
         await ws.close(code=1011, reason="Docker socket unavailable")
         return
@@ -98,7 +96,7 @@ async def stream_container_terminal(
 
     # 2. Connect and Hijack via HTTP Upgrade
     try:
-        reader, writer = await asyncio.open_unix_connection(DOCKER_SOCK_PATH)
+        reader, writer = await asyncio.open_unix_connection(docker_sock())
         start_body = json.dumps({"Detach": False, "Tty": True}).encode("utf-8")
         start_req = (
             f"POST /exec/{exec_id}/start HTTP/1.1\r\n"

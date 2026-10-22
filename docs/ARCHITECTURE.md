@@ -150,6 +150,19 @@ The application starts four persistent background daemon threads upon startup vi
 
 ---
 
+### 2.13 Supervisor and Docker API proxy
+
+`backend/services/supervisor.py` starts the long-running daemons (StatsCollector,
+SmartPoller, ButtonListener, LcdRenderer, FanWatchdog, DockerProxy). A daemon that
+raises is logged with its traceback and restarted after 1 s, 2 s, 4 s … up to 60 s.
+`/api/health` lists each daemon's state and restart count.
+
+`backend/docker_proxy.py` runs as a child process listening on
+`/run/zettnas/docker.sock`. The app reaches Docker only through it
+(`backend.config.docker_sock()`). It handles one request per connection, checks
+the method and path against an allow-list, and inspects container-create and exec
+bodies for host-level settings. See SECURITY.md for the policy.
+
 ## 3. Data Persistence & State Model
 
 1. **SQLite Database (`data/history.db`)**:

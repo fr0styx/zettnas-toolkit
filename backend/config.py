@@ -119,6 +119,14 @@ LCD_SLEEP_SEC = int(os.environ.get("LCD_SLEEP_SEC", "300"))
 # ---- Security & Auth ----
 from backend.passwords import hash_password, verify_password  # noqa: E402
 
+RAW_DOCKER_SOCK = "/var/run/docker.sock"
+
+
+def docker_sock() -> str:
+    """The Docker API socket: the allow-list proxy when it runs (SEC-09), else the raw socket."""
+    return os.environ.get("ZETTNAS_DOCKER_SOCK") or RAW_DOCKER_SOCK
+
+
 WEB_PASSWORD = os.environ.get("WEB_PASSWORD", "admin")
 STORED_PASSWORD_HASH = hash_password(WEB_PASSWORD)
 ZETTNAS_USERNAME = "admin"
@@ -346,7 +354,7 @@ def get_server_hostname() -> str:
             pass
 
     # 4. Docker daemon via Unix Domain Socket
-    sock_path = "/var/run/docker.sock"
+    sock_path = docker_sock()
     if os.path.exists(sock_path):
         try:
             import httpx

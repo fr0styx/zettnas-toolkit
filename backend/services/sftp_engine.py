@@ -16,7 +16,7 @@ from typing import Any, Optional
 
 from pydantic import BaseModel, Field
 
-from backend.config import DATA_DIR, POOL_PATH, logger
+from backend.config import DATA_DIR, POOL_PATH, docker_sock, logger
 from backend.fsutil import atomic_write_json, read_json
 
 SFTP_DIR = os.path.join(DATA_DIR, "sftp")
@@ -237,7 +237,7 @@ Match Group sftpusers
 
     def _start_sidecar(self, port: int) -> bool:
         """Starts or creates the zettnas-sftp sidecar container with host network mode."""
-        sock_path = "/var/run/docker.sock"
+        sock_path = docker_sock()
         if not os.path.exists(sock_path):
             return False
 
@@ -390,7 +390,7 @@ Match Group sftpusers
         sidecar_detected = False
         sidecar_status = "not_found"
 
-        sock_path = "/var/run/docker.sock"
+        sock_path = docker_sock()
         if os.path.exists(sock_path):
             try:
                 from backend.services.container_mutator import _docker_request
@@ -460,7 +460,7 @@ Match Group sftpusers
 
         # 1. Try Docker sidecar first if Docker socket exists
         started_sidecar = False
-        sock_path = "/var/run/docker.sock"
+        sock_path = docker_sock()
         if os.path.exists(sock_path):
             try:
                 started_sidecar = self._start_sidecar(port)
@@ -487,7 +487,7 @@ Match Group sftpusers
         logger.info("[SFTP] Stopping SFTP service...")
 
         # 1. Stop Docker sidecar if Docker socket exists
-        sock_path = "/var/run/docker.sock"
+        sock_path = docker_sock()
         if os.path.exists(sock_path):
             try:
                 from backend.services.container_mutator import _docker_request

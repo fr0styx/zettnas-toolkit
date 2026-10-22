@@ -6,7 +6,7 @@ import urllib.request
 from collections.abc import Iterator
 from typing import Any, Optional
 
-from backend.config import DATA_DIR, logger
+from backend.config import DATA_DIR, docker_sock, logger
 from backend.fsutil import atomic_write_json, read_json
 from backend.hardware.docker_stats import UnixHTTPConnection
 from backend.services.container_mutator import _docker_request, check_port_available, check_port_available_detailed
@@ -1297,7 +1297,7 @@ def stream_deploy_catalog_app(
         else:
             repo, tag = image_name, "latest"
 
-        sock_path = "/var/run/docker.sock"
+        sock_path = docker_sock()
         if not os.path.exists(sock_path):
             yield {
                 "step": "error",
@@ -1445,7 +1445,9 @@ def stream_deploy_catalog_app(
         },
     }
 
-    st, create_resp = _docker_request("POST", f"/containers/create?name={service_name}", body=create_body)
+    st, create_resp = _docker_request(
+        "POST", f"/containers/create?name={service_name}", body=create_body, headers={"X-ZettNAS-Elevated": "1"}
+    )
     if st != 201:
         yield {
             "step": "error",

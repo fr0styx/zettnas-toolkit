@@ -15,7 +15,8 @@ from typing import Any, Optional
 
 from pydantic import BaseModel, Field
 
-from backend.config import DATA_DIR, POOL_PATH, logger
+from backend.config import DATA_DIR, POOL_PATH, docker_sock, logger
+from backend.config import docker_sock as _docker_sock_path
 
 SAMBA_DIR = os.path.join(DATA_DIR, "samba")
 SAMBA_CONF_FILE = os.path.join(SAMBA_DIR, "smb.conf")
@@ -374,7 +375,7 @@ class SambaEngine:
 
     def check_sidecar(self) -> dict[str, Any]:
         """Inspects Docker for running zettnas-samba sidecar container if docker socket is accessible."""
-        docker_sock = "/var/run/docker.sock"
+        docker_sock = _docker_sock_path()
         if not os.path.exists(docker_sock):
             return {"detected": False, "status": "no_docker_socket"}
 
@@ -412,7 +413,7 @@ class SambaEngine:
             pass
 
         # 2. Try docker restart on sidecar container if available
-        docker_sock = "/var/run/docker.sock"
+        docker_sock = _docker_sock_path()
         if os.path.exists(docker_sock):
             try:
                 import httpx
@@ -439,7 +440,7 @@ class SambaEngine:
             return False
 
         sidecar_info = self.check_sidecar()
-        docker_sock = "/var/run/docker.sock"
+        docker_sock = _docker_sock_path()
 
         # 1. Try local execution if smbpasswd exists on the system
         try:

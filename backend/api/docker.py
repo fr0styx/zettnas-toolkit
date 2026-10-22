@@ -13,7 +13,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
-from backend.config import logger
+from backend.config import docker_sock, logger
 from backend.confirmations import require_confirmation
 from backend.hardware.docker_stats import container_action, read_docker_containers
 from backend.models.schemas import DockerActionRequest
@@ -192,7 +192,7 @@ async def stream_docker_container_logs(
     tail_param = max(1, min(5000, int(tail)))
 
     async def event_generator():
-        sock_path = "/var/run/docker.sock"
+        sock_path = docker_sock()
         if not os.path.exists(sock_path):
             from backend.services.compose_synthesizer import get_container_logs_chunk
 

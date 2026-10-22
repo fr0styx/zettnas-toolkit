@@ -1,5 +1,19 @@
 # ZettNAS Toolkit - Release Changelog
 
+## Unreleased
+
+#### Security
+
+- **Docker access goes through an allow-list proxy.** ZettNAS forwards only the Docker API calls it uses. Containers with host-level access are created only from flows you confirm (app install after review, recreate, update) and are logged to `data/docker-proxy-audit.log`. `ZETTNAS_DOCKER_PROXY=off` turns the proxy off.
+- SECURITY.md lists which permissions are root-equivalent on the host.
+
+#### Reliability
+
+- Background services (stats, SMART, fans, LCD, buttons) restart on their own after a crash, and `/api/health` shows their state.
+- Opening a VM console no longer stalls the rest of the UI while the VM starts.
+- Indexing respects sleeping disks on ZFS, Btrfs, mdadm and LVM, not only Unraid. Folders whose disks can't be identified are treated as asleep.
+- Ask Zetty finds Chinese, Japanese and Korean text (search quality for Chinese went from 3% to 85% in the test set).
+
 ## v1.9.3 (2026-10-22) - Stable
 ### 🛡️ Security hardening, safer updates, and an honest, permission-aware Ask Zetty
 

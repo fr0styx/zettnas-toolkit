@@ -17,11 +17,17 @@ from typing import Any, Optional
 logger = logging.getLogger("zettnas.self_updater")
 
 
+# The updater only creates containers it fully controls (its helper and the app
+# itself), so its creates carry the Docker proxy's elevated header (SEC-09).
+ELEVATED = {"X-ZettNAS-Elevated": "1"}
+
+
 def _docker_request(method: str, path: str, body: dict | None = None, timeout: float = 30.0) -> tuple[int, Any]:
     """Helper for synchronous Docker Unix socket communication."""
     from backend.services.container_mutator import _docker_request as raw_req
 
-    return raw_req(method, path, body=body, timeout=timeout)
+    headers = ELEVATED if path.startswith("/containers/create") else None
+    return raw_req(method, path, body=body, timeout=timeout, headers=headers)
 
 
 HELPER_DATA_DIR = "/zettnas-data"

@@ -17,7 +17,7 @@ from typing import Any, Optional
 
 import yaml
 
-from backend.config import logger
+from backend.config import docker_sock, logger
 from backend.hardware.docker_stats import (
     UnixHTTPConnection,
     _classify_stack,
@@ -29,16 +29,14 @@ from backend.services.compose_synthesizer import (
     synthesize_compose_spec,
 )
 
-DOCKER_SOCK = "/var/run/docker.sock"
-
 
 def _docker_request(method: str, path: str, body: bytes | None = None, timeout: float = 6.0) -> tuple[int, bytes]:
     """Helper to query Docker Unix socket."""
-    if not os.path.exists(DOCKER_SOCK):
+    if not os.path.exists(docker_sock()):
         return 503, b'{"error": "Docker socket unavailable"}'
     conn = None
     try:
-        conn = UnixHTTPConnection(DOCKER_SOCK, timeout=timeout)
+        conn = UnixHTTPConnection(docker_sock(), timeout=timeout)
         headers = {}
         if body:
             headers["Content-Type"] = "application/json"
@@ -85,7 +83,7 @@ def _write_file_to_container(cid: str, dir_path: str, filename: str, content: st
             tar.addfile(tarinfo, io.BytesIO(raw_bytes))
         tar_bytes = tar_stream.getvalue()
 
-        conn = UnixHTTPConnection(DOCKER_SOCK, timeout=10.0)
+        conn = UnixHTTPConnection(docker_sock(), timeout=10.0)
         conn.request(
             "PUT",
             f"/containers/{cid}/archive?path={dir_path}",

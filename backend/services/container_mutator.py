@@ -14,9 +14,13 @@ import time
 import urllib.parse
 from typing import Any, Optional
 
-from backend.config import logger
+from backend.config import docker_sock, logger
 from backend.hardware.docker_stats import UnixHTTPConnection
 from backend.services.compose_synthesizer import fetch_container_raw_inspect
+
+# Sent with container creates the user confirmed; the Docker proxy refuses
+# privileged settings without it (SEC-09).
+ELEVATED = {"X-ZettNAS-Elevated": "1"}
 
 
 def _docker_request(
@@ -27,7 +31,7 @@ def _docker_request(
     headers: dict[str, str] | None = None,
 ) -> tuple[int, Any]:
     """Helper for making synchronous HTTP requests over the Docker Unix socket."""
-    sock_path = "/var/run/docker.sock"
+    sock_path = docker_sock()
     if not os.path.exists(sock_path):
         raise RuntimeError("Docker socket /var/run/docker.sock not found")
 
@@ -217,7 +221,7 @@ def pull_container_image(image: str, timeout: float = 180.0) -> bool:
     POST /images/create?fromImage={repo}&tag={tag}.
     Streams pull progress chunks until complete.
     """
-    sock_path = "/var/run/docker.sock"
+    sock_path = docker_sock()
     if not os.path.exists(sock_path):
         raise RuntimeError("Docker socket /var/run/docker.sock not found")
 
@@ -421,7 +425,7 @@ def recreate_container(
         # Step 8: Create new container with target name and updated configuration
         logger.info(f"[Container Recreate] Creating new container '{target_name}' with updated config...")
         status, create_resp = _docker_request(
-            "POST", f"/containers/create?name={target_name}", body=create_body, timeout=timeout
+            "POST", f"/containers/create?name={target_name}", body=create_body, timeout=timeout, headers=ELEVATED
         )
         if status != 201:
             raise RuntimeError(f"Failed to create new container: {create_resp}")

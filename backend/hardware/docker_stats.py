@@ -14,7 +14,7 @@ import threading
 import time
 from typing import Any, Optional
 
-from backend.config import logger
+from backend.config import docker_sock, logger
 from backend.state import Z_STATE
 
 _CACHED_CONTAINERS: list[dict[str, Any]] = []
@@ -56,9 +56,9 @@ WELL_KNOWN_WEB_PORTS = [
 
 
 class UnixHTTPConnection(http.client.HTTPConnection):
-    def __init__(self, socket_path: str = "/var/run/docker.sock", timeout: float = 3.0):
+    def __init__(self, socket_path: str | None = None, timeout: float = 3.0):
         super().__init__("localhost", timeout=timeout)
-        self.socket_path = socket_path
+        self.socket_path = socket_path or docker_sock()
 
     def connect(self):
         self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
@@ -249,7 +249,7 @@ def _fetch_container_inspect(cid_short: str, conn: UnixHTTPConnection | None = N
         if cached and (now - cached.get("_ts", 0)) < _INSPECT_CACHE_TTL:
             return cached
 
-    sock_path = "/var/run/docker.sock"
+    sock_path = docker_sock()
     if not os.path.exists(sock_path):
         return {}
 
@@ -282,7 +282,7 @@ def _fetch_container_inspect(cid_short: str, conn: UnixHTTPConnection | None = N
 
 
 def _fetch_container_telemetry(cid: str) -> dict[str, Any]:
-    sock_path = "/var/run/docker.sock"
+    sock_path = docker_sock()
     if not os.path.exists(sock_path):
         return {}
 
@@ -339,7 +339,7 @@ def _fetch_container_telemetry(cid: str) -> dict[str, Any]:
 def _docker_telemetry_worker():
     while not Z_STATE.shutting_down:
         try:
-            sock_path = "/var/run/docker.sock"
+            sock_path = docker_sock()
             if not os.path.exists(sock_path):
                 for _ in range(10):
                     if Z_STATE.shutting_down:
@@ -416,7 +416,7 @@ def read_docker_containers(force: bool = False) -> list[dict[str, Any]]:
     if not force and _CACHED_CONTAINERS and (now - _LAST_DOCKER_POLL) < _DOCKER_CACHE_TTL:
         return _CACHED_CONTAINERS
 
-    sock_path = "/var/run/docker.sock"
+    sock_path = docker_sock()
     if not os.path.exists(sock_path):
         return []
 
@@ -536,7 +536,7 @@ def container_action(container_id: str, action: str) -> dict[str, Any]:
     if action not in ("start", "stop", "restart", "pause", "unpause"):
         return {"success": False, "error": f"Unsupported action: {action}"}
 
-    sock_path = "/var/run/docker.sock"
+    sock_path = docker_sock()
     if not os.path.exists(sock_path):
         return {"success": False, "error": "Docker socket not available"}
 
