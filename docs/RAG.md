@@ -29,7 +29,7 @@ Two kinds, and a file never mixes them:
 | Model | `zett_lexical_384d`, a hashed word/character vector computed in ZettNAS | an embedding model you install, e.g. `embeddinggemma` or `nomic-embed-text` |
 | Needs | nothing | Ollama running and the model installed |
 | Good at | exact words, names, numbers | paraphrases and synonyms |
-| Weak at | wording that doesn't appear in the file; Chinese and Japanese (no word splitting yet) | short exact codes |
+| Weak at | wording that doesn't appear in the file | short exact codes |
 
 **EmbeddingGemma** is Google's 300M-parameter text embedding model. It reads at most
 2,048 tokens, so ZettNAS sends at most 6,000 characters per chunk (2,500 for mostly
@@ -49,14 +49,15 @@ Built-in lexical vectors, today:
 | Language | Right file first | Right file in top 5 | MRR@10 |
 |---|---|---|---|
 | English | 0.80 | 0.80 | 0.80 |
-| German | 0.65 | 0.73 | 0.68 |
-| French | 0.60 | 0.85 | 0.71 |
-| Spanish | 0.75 | 0.90 | 0.80 |
-| Chinese | 0.03 | 0.03 | 0.03 |
-| **All** | **0.57** | **0.66** | **0.60** |
+| German | 0.70 | 0.82 | 0.75 |
+| French | 0.68 | 0.85 | 0.75 |
+| Spanish | 0.75 | 0.90 | 0.79 |
+| Chinese | 0.85 | 0.85 | 0.85 |
+| **All** | **0.76** | **0.84** | **0.79** |
 
-Chinese fails because the lexical tokeniser doesn't split Chinese text into words; that
-is planned work. CI fails if any of these numbers drops by more than 0.01. To measure a
+Chinese, Japanese and Korean text is split into overlapping character pairs, so words
+match without spaces between them (Chinese was 0.03 before this).
+CI fails if any of these numbers drops by more than 0.01. To measure a
 neural model on your NAS:
 
 ```bash

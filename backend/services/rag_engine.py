@@ -561,6 +561,29 @@ _STOPWORDS = {
 }
 
 
+# Unicode tokenisation (AI-13). Chinese, Japanese and Korean have no spaces between words,
+# so a run of those characters becomes overlapping character pairs ("红烧肉" -> "红烧", "烧肉").
+# Latin, accented and Cyrillic words are kept whole, as before.
+_CJK_CHARS = "\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uac00-\ud7af"
+_CJK_RUN_RE = re.compile(rf"[{_CJK_CHARS}]")
+_TOKEN_RE = re.compile(rf"[{_CJK_CHARS}]+|[a-z0-9_\u00c0-\u024f\u0400-\u04ff]+")
+
+
+def text_tokens(lowered: str) -> list[str]:
+    """Words of already lower-cased text, with CJK runs split into character bigrams."""
+    out: list[str] = []
+    for tok in _TOKEN_RE.findall(lowered or ""):
+        if _CJK_RUN_RE.match(tok):
+            out.extend([tok[i : i + 2] for i in range(len(tok) - 1)] or [tok])
+        else:
+            out.append(tok)
+    return out
+
+
+def _has_cjk(text: str) -> bool:
+    return bool(_CJK_RUN_RE.search(text or ""))
+
+
 def build_safe_fts5_query(raw_query: str, remove_stopwords: bool = True) -> str:
     """
     Converts arbitrary user input into a 100% syntax-error-free SQLite FTS5 MATCH query.
@@ -613,6 +636,8 @@ def _token_matches_word(tok: str, text: str) -> bool:
     """
     if not tok or not text:
         return False
+    if _has_cjk(tok):
+        return tok in text  # no word boundaries inside a CJK run
     if len(tok) <= 4 and tok.isascii():
         base = tok[:-1] if (len(tok) == 4 and tok.endswith("s")) else tok
         return bool(re.search(rf"\b{re.escape(base)}(?:s|es)?\b", text))
@@ -720,7 +745,7 @@ def compute_384d_embedding(
     """
     vec = [0.0] * EMBEDDING_DIM
     lowered = (text or "").lower()
-    words = re.findall(r"[a-z0-9_\u00c0-\u024f\u4e00-\u9fff]+", lowered)
+    words = text_tokens(lowered)
 
     # 1. Lexical & character n-gram hashing into dims 0..255
     for w in words:
@@ -2219,7 +2244,7 @@ def grade_rag_retrieval(
     avg_top3 = sum(float(it.get("score") or 0.0) for it in items[:3]) / max(1, min(3, len(items)))
 
     q_norm = (query or "").lower()
-    q_words = [w for w in re.findall(r"[a-z0-9]+", q_norm) if len(w) >= 3 and w not in _STOPWORDS]
+    q_words = [w for w in text_tokens(q_norm) if (len(w) >= 3 or _has_cjk(w)) and w not in _STOPWORDS]
 
     has_lexical = False
     if q_words:
@@ -3368,6 +3393,11 @@ class RagSearchEngine:
                         self._vec_table_active = True
                 except Exception as e:
                     logger.debug("sqlite-vec table init skipped: %s", e)
+
+                try:
+                    self._migrate_unicode_tokens(conn)
+                except sqlite3.Error as e:
+                    logger.warning(f"[RAG] Unicode token migration skipped: {e}")
 
                 self._schema_initialized = True
             finally:
@@ -5794,6 +5824,27 @@ class RagSearchEngine:
         finally:
             conn.close()
 
+    def _migrate_unicode_tokens(self, conn: sqlite3.Connection) -> int:
+        """Once per index: marks files with CJK or Cyrillic text to be learned again, because
+        their stored lexical vectors predate Unicode tokenisation (AI-13)."""
+        conn.execute("CREATE TABLE IF NOT EXISTS rag_meta (key TEXT PRIMARY KEY, value TEXT)")
+        if conn.execute("SELECT 1 FROM rag_meta WHERE key = 'unicode_tokens_v1'").fetchone():
+            return 0
+        pattern = re.compile(rf"[{_CJK_CHARS}\u0400-\u04ff]")
+        stale: set[int] = set()
+        for row in conn.execute("SELECT file_id, chunk_text FROM document_chunks"):
+            if row[0] not in stale and pattern.search(row[1] or ""):
+                stale.add(int(row[0]))
+        for fid in stale:
+            conn.execute("UPDATE indexed_files SET index_version = 0 WHERE file_id = ?", (fid,))
+        conn.execute(
+            "INSERT OR REPLACE INTO rag_meta (key, value) VALUES ('unicode_tokens_v1', ?)", (str(time.time()),)
+        )
+        conn.commit()
+        if stale:
+            logger.info(f"[RAG] {len(stale)} file(s) with CJK/Cyrillic text will be learned again (Unicode tokens)")
+        return len(stale)
+
     def _record_deferred_subpath(self, subpath: str, dev: str) -> None:
         """Queues a file or folder on a sleeping disk to be learned when the disk spins up."""
         with self._write_lock:
@@ -6602,7 +6653,7 @@ class RagSearchEngine:
 
             all_candidates = photo_items + doc_items
             q_lower = (query or "").strip().lower()
-            q_terms = [t for t in re.findall(r"[a-z0-9]+", q_lower) if len(t) >= 2]
+            q_terms = [t for t in text_tokens(q_lower) if len(t) >= 2]
 
             video_exts = {".mp4", ".mkv", ".mov", ".avi", ".webm", ".m4v"}
             audio_exts = {".mp3", ".wav", ".flac", ".m4a", ".aac", ".ogg", ".opus"}
@@ -6891,7 +6942,7 @@ class RagSearchEngine:
             # Filter out weak non-matches when a specific query/filter was provided
             if raw_query.strip() and not req_colors and not req_scenes and s_bm25 <= 0.0:
                 photo_haystack = f"{r['file_name']} {r['auto_tags_text']} {r['caption_text']} {r['ocr_text']}".lower()
-                q_words = [w for w in re.findall(r"[a-z0-9]+", q_lower) if w not in _STOPWORDS and len(w) >= 3]
+                q_words = [w for w in text_tokens(q_lower) if w not in _STOPWORDS and (len(w) >= 3 or _has_cjk(w))]
                 if q_words and not any(_token_matches_word(w, photo_haystack) for w in q_words) and s_vec < 0.48:
                     continue
             if (raw_query.strip() or req_colors or req_scenes) and final_score < 0.12:
@@ -7073,7 +7124,7 @@ class RagSearchEngine:
         scored_chunks.sort(key=lambda tup: tup[0], reverse=True)
         vec_rank: dict[int, int] = {int(tup[1]["chunk_id"]): idx for idx, tup in enumerate(scored_chunks, start=1)}
 
-        q_tokens = [t for t in re.findall(r"[a-z0-9]+", (raw_query or "").lower()) if t not in _STOPWORDS]
+        q_tokens = [t for t in text_tokens((raw_query or "").lower()) if t not in _STOPWORDS]
         per_file_best: dict[int, dict[str, Any]] = {}
 
         for s_vec, r, s_bm25 in scored_chunks:
