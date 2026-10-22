@@ -371,7 +371,9 @@ def _snapshot_pools() -> list[dict[str, Any]]:
         from backend.hardware.pal_storage import get_storage_platform
 
         pal = get_storage_platform()
-        if pal.get_capabilities().is_observer_mode:
+        from backend.services import truenas_api
+
+        if pal.get_capabilities().is_observer_mode and not truenas_api.configured():
             return out
         stamp = time.strftime("%Y%m%d-%H%M%S")
         for pool in pal.list_pools():

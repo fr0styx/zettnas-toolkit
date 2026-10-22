@@ -2844,6 +2844,15 @@ class TrueNASStorageAdapter(ObserverStorageAdapter):
     def get_platform_type(self) -> PlatformType:
         return PlatformType.TRUENAS
 
+    def create_snapshot(self, pool_id: str, *args: Any, **kwargs: Any) -> dict[str, Any]:
+        """With TRUENAS_URL and TRUENAS_API_KEY set, snapshots go through the TrueNAS API (D5)."""
+        from backend.services import truenas_api
+
+        if not truenas_api.configured():
+            return super().create_snapshot(pool_id, *args, **kwargs)
+        name = kwargs.get("snapshot_name") or (args[1] if len(args) > 1 else "") or "zettnas"
+        return truenas_api.create_snapshot(pool_id, name, recursive=True)
+
     def get_capabilities(self) -> PlatformCapabilities:
         return PlatformCapabilities(
             platform=PlatformType.TRUENAS,

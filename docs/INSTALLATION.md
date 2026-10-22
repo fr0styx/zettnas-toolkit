@@ -33,6 +33,14 @@ This document provides complete, step-by-step instructions for installing and ru
 - **Virtualization (Optional for VMs)**: Intel VT-x or AMD-V hardware virtualization enabled in host BIOS/UEFI with `/dev/kvm` accessible.
 - **Port Availability**: Port `8082` (Web Desktop & REST API) and optionally Port `8084` (WebDAV Server).
 
+### TrueNAS companion mode
+
+On TrueNAS SCALE, set `TRUENAS_URL` (for example `https://truenas.local`) and
+`TRUENAS_API_KEY` (TrueNAS: user menu → API Keys) in the container environment. ZettNAS
+then reads pools, datasets and shares through the TrueNAS API and can take ZFS snapshots
+(used by the ransomware guard). It never changes pools or shares. Add
+`TRUENAS_VERIFY_TLS=0` if TrueNAS still uses its self-signed certificate.
+
 ### Image variants
 
 | Tag | Size | Includes |
