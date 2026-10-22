@@ -259,3 +259,9 @@ tr.docker-row-selected {
   .dpm-bar-fill { transition: none; }
   .dpm-step.is-running .dpm-step-icon { animation: none; }
 }
+
+/* One horizontal scrollbar: the bar kept at the bottom edge of the window scrolls the table,
+   so the table's own horizontal bar is hidden (it still scrolls with a trackpad or Shift+wheel). */
+.cw-docker-table-wrap { scrollbar-width: none; }
+.cw-docker-table-wrap::-webkit-scrollbar { display: none; }
+.docker-table-container::-webkit-scrollbar:horizontal { height: 0; }
