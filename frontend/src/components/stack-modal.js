@@ -9,9 +9,11 @@ import { showToast, showConfirmToast } from '../toast.js';
 import { escapeHtml } from '../utils.js';
 import { DockManager, bringToFront } from './dock.js';
 import { openContainerModal } from './container-modal.js';
+import { lintCompose, composeRiskSummary } from '../compose-lint.js';
 
 let _activeStackName = null;
 let _activeStackDetails = null;
+let _fromCopilot = false; // compose text came from an AI answer (AI-22)
 
 export function initStackModal() {
   if (document.getElementById('stack-inspector-overlay')) return;
@@ -244,6 +246,7 @@ export async function openStackModal(stackName, initialYaml = null) {
   initStackModal();
 
   _activeStackName = typeof stackName === 'string' ? stackName : (stackName?.name || 'new-stack');
+  _fromCopilot = initialYaml !== null;
   const overlay = document.getElementById('stack-inspector-overlay');
   const win = document.getElementById('stack-inspector-window');
   if (!overlay || !win) return;
@@ -280,7 +283,14 @@ export async function openStackModal(stackName, initialYaml = null) {
     const envEd = document.getElementById('stack-env-editor');
     if (envEd) envEd.value = '';
     const msgEl = document.getElementById('stack-modal-msg');
-    if (msgEl) msgEl.textContent = 'Loaded Copilot Compose template. Click "Save & Redeploy Stack" to deploy.';
+    const risks = lintCompose(initialYaml);
+    if (msgEl) {
+      msgEl.textContent = risks.length
+        ? `Review before deploying. This AI-written stack asks for host access:\n${composeRiskSummary(risks)}`
+        : 'Loaded an AI-written Compose file. Review it, then click "Save & Redeploy Stack".';
+      msgEl.style.whiteSpace = 'pre-line';
+      msgEl.style.color = risks.some((r) => r.level === 'danger') ? '#fca5a5' : '';
+    }
     return;
   }
 
@@ -428,6 +438,23 @@ async function saveStack(redeployAfterSave = false) {
   const composeVal = document.getElementById('stack-compose-editor')?.value || '';
   const envVal = document.getElementById('stack-env-editor')?.value || '';
   const msgEl = document.getElementById('stack-modal-msg');
+
+  // AI-written compose files with host-level access need an explicit OK (AI-22).
+  const risks = lintCompose(composeVal);
+  if (_fromCopilot && risks.length) {
+    const ok = await new Promise((resolve) => {
+      showConfirmToast(
+        'Deploy a stack with host access?',
+        `This Compose file came from an AI answer and asks for:\n${composeRiskSummary(risks)}`,
+        () => resolve(true),
+        () => resolve(false),
+      );
+    });
+    if (!ok) {
+      if (msgEl) msgEl.textContent = 'Not deployed.';
+      return;
+    }
+  }
 
   if (msgEl) msgEl.textContent = 'Saving configuration...';
 
@@ -663,6 +690,7 @@ export async function openStackPickerModal(stacksInput = null) {
 
 export function _resetStackModalForTesting() {
   _activeStackName = null;
+  _fromCopilot = false;
   _activeStackDetails = null;
   const overlay = document.getElementById('stack-inspector-overlay');
   if (overlay) overlay.remove();
