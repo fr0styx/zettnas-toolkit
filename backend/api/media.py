@@ -156,6 +156,9 @@ class RagConfigUpdateRequest(BaseModel):
     conversation_retention_days: int | None = Field(default=None, ge=0, le=3650)
     vision_captions: str | None = Field(default=None, pattern="^(auto|off)$")
     vision_model: str | None = Field(default=None, max_length=128)
+    rerank_endpoint: str | None = Field(default=None, max_length=512)
+    rerank_model: str | None = Field(default=None, max_length=128)
+    rerank_top_n: int | None = Field(default=None, ge=2, le=100)
 
 
 class ModelSelectRequest(BaseModel):
@@ -1268,6 +1271,11 @@ def update_rag_config(req: RagConfigUpdateRequest) -> dict[str, Any]:
         except ValueError:
             if parsed.hostname.lower() in ("metadata.google.internal",):
                 raise HTTPException(status_code=400, detail="Cloud metadata endpoints are forbidden.") from None
+    if req.rerank_endpoint:
+        from backend.services.rag_rerank import endpoint_ok
+
+        if not endpoint_ok(req.rerank_endpoint):
+            raise HTTPException(status_code=400, detail="The reranker must be an http(s) URL.")
     updates = {k: v for k, v in req.model_dump().items() if v is not None}
     return get_rag_engine().update_config(updates)
 

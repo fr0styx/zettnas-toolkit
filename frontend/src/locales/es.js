@@ -2165,5 +2165,9 @@ export default {
   "push.off": "Notificaciones desactivadas en este dispositivo",
   "push.test": "Enviar una prueba",
   "push.test_sent": "Prueba enviada. Debería aparecer en unos segundos.",
-  "push.denied": "Las notificaciones están bloqueadas para este sitio en los ajustes del navegador."
+  "push.denied": "Las notificaciones están bloqueadas para este sitio en los ajustes del navegador.",
+  "ai.rerank_label": "Reordenador (opcional, OVMS / TEI / Infinity)",
+  "ai.rerank_endpoint": "URL del reordenador",
+  "ai.rerank_model": "Modelo de reordenación",
+  "ai.rerank_saved": "Reordenador guardado"
 };

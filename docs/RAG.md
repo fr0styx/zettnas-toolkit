@@ -50,6 +50,16 @@ Chunks are embedded in batches of 32. If the model fails partway through a file,
 whole file falls back to lexical vectors and is labelled that way, and the embedder is
 skipped for 60 seconds. Re-embed from **AI settings** once the model is back.
 
+## Optional reranker
+
+A cross-encoder reranker (for example `bge-reranker-v2-m3`) reads the query together
+with each of the top results and orders them better than vector similarity alone.
+Ollama can't serve one, but OpenVINO Model Server, Infinity and Hugging Face TEI can.
+Set `rerank_endpoint` in the AI config to its rerank URL (OVMS:
+`http://zettnas-ovms:8000/v3/rerank`, TEI/Infinity: `http://host:port/rerank`) and, if
+the server needs it, `rerank_model`. The top `rerank_top_n` results (default 30) are
+re-ordered; if the reranker is down, search keeps its usual order.
+
 ## Measured retrieval quality
 
 `tests/rag_eval` has 40 home-NAS files in English, German, Chinese, French and Spanish

@@ -2165,5 +2165,9 @@ export default {
   "push.off": "已在此设备上关闭通知",
   "push.test": "发送测试",
   "push.test_sent": "测试已发送，几秒内应会出现。",
-  "push.denied": "浏览器设置中已阻止此网站的通知。"
+  "push.denied": "浏览器设置中已阻止此网站的通知。",
+  "ai.rerank_label": "重排序模型（可选，OVMS / TEI / Infinity）",
+  "ai.rerank_endpoint": "重排序地址",
+  "ai.rerank_model": "重排序模型",
+  "ai.rerank_saved": "重排序设置已保存"
 };

@@ -2165,5 +2165,9 @@ export default {
   "push.off": "Notifications désactivées sur cet appareil",
   "push.test": "Envoyer un test",
   "push.test_sent": "Test envoyé. Il devrait apparaître dans quelques secondes.",
-  "push.denied": "Les notifications sont bloquées pour ce site dans les réglages du navigateur."
+  "push.denied": "Les notifications sont bloquées pour ce site dans les réglages du navigateur.",
+  "ai.rerank_label": "Reclasseur (facultatif, OVMS / TEI / Infinity)",
+  "ai.rerank_endpoint": "URL du reclasseur",
+  "ai.rerank_model": "Modèle de reclassement",
+  "ai.rerank_saved": "Reclasseur enregistré"
 };

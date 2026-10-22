@@ -11585,6 +11585,27 @@ export async function fetchAndRenderAiStatus() {
       }
     }
 
+    // Optional reranker (AI-13)
+    const rerankForm = document.getElementById('ai-rerank-form');
+    if (rerankForm) {
+      const ep = document.getElementById('ai-rerank-endpoint');
+      const md = document.getElementById('ai-rerank-model');
+      if (ep) ep.value = cfg.rerank_endpoint || '';
+      if (md) md.value = cfg.rerank_model || '';
+      if (!rerankForm.dataset.bound) {
+        rerankForm.dataset.bound = '1';
+        rerankForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          try {
+            await api.post('/api/ai/config', { rerank_endpoint: ep.value.trim(), rerank_model: md.value.trim() });
+            showToast(t('ai.rerank_saved', 'Reranker saved'), 'success');
+          } catch (err) {
+            showToast(t('sso.save_failed', 'Could not save: {error}', { error: err.message }), 'error');
+          }
+        });
+      }
+    }
+
     // Photo captions (AI-14)
     const visionSel = document.getElementById('ai-vision-captions-select');
     if (visionSel) {

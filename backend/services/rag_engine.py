@@ -1220,6 +1220,9 @@ class RagSearchEngine:
             "removed_models": [],
             "vision_captions": "auto",  # AI-14: "auto" (when a vision model is installed) or "off"
             "vision_model": "",
+            "rerank_endpoint": "",  # AI-13: Cohere/OVMS/TEI-style /rerank URL, empty = off
+            "rerank_model": "",
+            "rerank_top_n": 30,
         }
         saved = read_json(RAG_CONFIG_PATH, {})
         if isinstance(saved, dict):
@@ -1274,6 +1277,9 @@ class RagSearchEngine:
             "conversation_retention_days",
             "vision_captions",
             "vision_model",
+            "rerank_endpoint",
+            "rerank_model",
+            "rerank_top_n",
         ):
             if k in updates and updates[k] is not None:
                 cfg[k] = updates[k]
@@ -4168,6 +4174,11 @@ class RagSearchEngine:
                     query_embedding_model=effective_emb_model,
                     intent_type=intent_type,
                 )
+                # Optional cross-encoder reranking of the top documents (AI-13)
+                if doc_items and query.strip():
+                    from backend.services.rag_rerank import rerank_items
+
+                    doc_items = rerank_items(query, doc_items, self.get_config())
 
             all_candidates = photo_items + doc_items
             q_lower = (query or "").strip().lower()

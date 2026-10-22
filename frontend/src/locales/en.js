@@ -2165,5 +2165,9 @@ export default {
   "push.off": "Notifications turned off on this device",
   "push.test": "Send a test",
   "push.test_sent": "Test sent. It should appear in a few seconds.",
-  "push.denied": "Notifications are blocked for this site in the browser settings."
+  "push.denied": "Notifications are blocked for this site in the browser settings.",
+  "ai.rerank_label": "Reranker (optional, OVMS / TEI / Infinity)",
+  "ai.rerank_endpoint": "Reranker URL",
+  "ai.rerank_model": "Reranker model",
+  "ai.rerank_saved": "Reranker saved"
 };
