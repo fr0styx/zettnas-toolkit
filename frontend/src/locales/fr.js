@@ -2134,5 +2134,11 @@ export default {
   "bench.when": "Mesuré le {when}",
   "bench.use_balanced": "Utiliser l'équilibré : {model}",
   "bench.use_fast": "Utiliser le plus rapide : {model}",
-  "bench.applied": "Ask Zetty utilise maintenant {model}"
+  "bench.applied": "Ask Zetty utilise maintenant {model}",
+  "preview.close": "Fermer (Échap)",
+  "video.resumed": "Reprise à {time}",
+  "video.unplayable": "Cette vidéo ne peut pas être lue dans le navigateur",
+  "video.unplayable_hint": "Son format ou codec ({ext}) n'est pas pris en charge ici. Téléchargez-la ou ouvrez-la dans VLC ou Infuse.",
+  "video.subtitles": "Sous-titres",
+  "fm.folders": "Dossiers"
 };

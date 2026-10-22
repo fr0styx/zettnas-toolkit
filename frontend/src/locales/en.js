@@ -2134,5 +2134,11 @@ export default {
   "bench.when": "Measured {when}",
   "bench.use_balanced": "Use balanced: {model}",
   "bench.use_fast": "Use fastest: {model}",
-  "bench.applied": "Ask Zetty now uses {model}"
+  "bench.applied": "Ask Zetty now uses {model}",
+  "preview.close": "Close (Esc)",
+  "video.resumed": "Continuing at {time}",
+  "video.unplayable": "This video can't play in the browser",
+  "video.unplayable_hint": "Its format or codec ({ext}) isn't supported here. Download it, or open it in VLC or Infuse.",
+  "video.subtitles": "Subtitles",
+  "fm.folders": "Folders"
 };

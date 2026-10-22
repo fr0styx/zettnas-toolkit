@@ -54,6 +54,10 @@ export function getActiveFmInstance() {
  * Supports arbitrary folder paths, multi-selection, 2D virtualized rendering,
  * navigation history stacks, client/server search, and inter-window drag-and-drop.
  */
+export function fsUploadUrl(dir, name) {
+  return `/api/fs/upload?path=${encodeURIComponent(dir)}&filename=${encodeURIComponent(name)}`;
+}
+
 export class FileManagerWindow {
   constructor(id, dockId, initialPath, isPrimary = false) {
     this.id = id;
@@ -401,6 +405,27 @@ export class FileManagerWindow {
         if (navGrp) {
           navGrp.insertAdjacentHTML('beforeend', '<button type="button" class="fm-tool-btn fm-locations-btn" title="Quick Locations" aria-label="Quick Locations">📍</button>');
         }
+      }
+      if (!this.windowEl.querySelector('.fm-sidebar-toggle')) {
+        const navGrp = this.windowEl.querySelector('.fm-nav-btn-group');
+        const label = t('fm.folders', 'Folders');
+        navGrp?.insertAdjacentHTML(
+          'afterbegin',
+          `<button type="button" class="fm-tool-btn fm-sidebar-toggle" title="${escapeHtml(label)}" aria-label="${escapeHtml(label)}" aria-expanded="false"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>`
+        );
+        const toggle = this.windowEl.querySelector('.fm-sidebar-toggle');
+        toggle?.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const open = this.windowEl.classList.toggle('fm-sidebar-open');
+          toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        });
+        // Picking a folder in the drawer closes it
+        this.windowEl.querySelector('.fm-sidebar-tree')?.addEventListener('click', (e) => {
+          if (e.target.closest('.fm-tree-item, [data-path]')) {
+            this.windowEl.classList.remove('fm-sidebar-open');
+            toggle?.setAttribute('aria-expanded', 'false');
+          }
+        });
       }
       const contentEl = this.windowEl.querySelector('.fm-content');
       if (contentEl) {
@@ -1599,6 +1624,7 @@ export class FileManagerWindow {
     const addSpan = (text, p, isLast) => {
       const span = document.createElement('span');
       span.textContent = text;
+      if (isLast) span.classList.add('fm-crumb-last');
       span.style.padding = '2px 4px';
       span.style.borderRadius = '4px';
       span.style.cursor = isLast ? 'text' : 'pointer';
@@ -2097,9 +2123,14 @@ export class FileManagerWindow {
       const fileType = file.is_dir ? (isRemoteDir ? 'Cloud Drive' : (isDiskDir ? 'Disk Drive' : 'Folder')) : (file.name.includes('.') ? file.name.split('.').pop().toUpperCase() : 'File');
       const mtimeStr = formatDateTime(file.mtime, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 
+      const isRowImage = !file.is_dir && /\.(jpe?g|png|webp|heic|heif|gif|bmp|tiff?|avif)$/i.test(file.name);
+      const leading = isRowImage
+        ? `<img class="fm-row-thumb" src="/api/fs/preview/image?path=${encodeURIComponent(file.path)}&thumb=1" alt="" loading="lazy" decoding="async" />`
+        : icon;
+      const subLine = file.name === '..' ? '' : (file.is_dir ? mtimeStr : `${formatBytes(file.size)} · ${mtimeStr}`);
       row.innerHTML = `
         <div class="fm-col fm-col-check">${file.name !== '..' ? `<input type="checkbox" class="fm-checkbox fm-row-checkbox" ${this.selectedPaths.has(file.path) ? 'checked' : ''} data-path="${escPath}" title="Select item" />` : ''}</div>
-        <div class="fm-col fm-col-name">${icon} <span class="fm-name-text">${escName}</span></div>
+        <div class="fm-col fm-col-name">${leading} <span class="fm-name-stack"><span class="fm-name-text">${escName}</span><span class="fm-row-sub">${escapeHtml(subLine)}</span></span></div>
         <div class="fm-col fm-col-type">${file.name === '..' ? '--' : fileType}</div>
         <div class="fm-col fm-col-size">${file.is_dir ? '--' : formatBytes(file.size)}</div>
         <div class="fm-col fm-col-mtime">${file.name === '..' ? '--' : mtimeStr}</div>
@@ -2109,7 +2140,7 @@ export class FileManagerWindow {
           ${file.name !== '..' ? `<button class="fm-act-btn" data-act="share" data-path="${escPath}" title="Share via Link">🔗</button>` : ''}
           ${file.name !== '..' ? `<button class="fm-act-btn" data-act="rename" data-path="${escPath}" title="Rename">✏️</button>` : ''}
           ${file.name !== '..' ? `<button class="fm-act-btn" data-act="delete" data-path="${escPath}" title="Delete">🗑️</button>` : ''}
-          ${file.name !== '..' ? `<button class="fm-act-btn fm-act-more-sheet" data-act="more-sheet" data-path="${escPath}" title="More Actions" style="display:none;">···</button>` : ''}
+          ${file.name !== '..' ? `<button class="fm-act-btn fm-act-more-sheet" data-act="more-sheet" data-path="${escPath}" title="More Actions" aria-label="More Actions">···</button>` : ''}
         </div>
       `;
 
@@ -2134,10 +2165,8 @@ export class FileManagerWindow {
         if (file.size > 16 * 1024 * 1024) {
           await this._uploadFileChunked(file, destDir);
         } else {
-          const formData = new FormData();
-          formData.append('file', file);
-          formData.append('destination_dir', destDir);
-          const res = await api.postRaw('/api/fs/upload', formData);
+          // The upload API takes the folder and name in the query and the file as the body
+          const res = await api.postRaw(fsUploadUrl(destDir, file.name), file);
           if (!res.ok) throw await ApiError.from(res);
         }
         successCount++;
@@ -3015,12 +3044,8 @@ export class FileManagerWindow {
         ? `${baseDir}/${relParts.slice(0, -1).join('/')}`
         : baseDir;
 
-      const formData = new FormData();
-      formData.append('file', item.file);
-      formData.append('destination_dir', destDir);
-
       try {
-        const res = await api.postRaw('/api/fs/upload', formData);
+        const res = await api.postRaw(fsUploadUrl(destDir, item.file.name), item.file);
         if (res.ok) success++;
       } catch (_) {}
     }

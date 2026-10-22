@@ -205,11 +205,12 @@ describe('Revamped Image Previewer & Multi-Image Gallery Suite', () => {
 
     maxBtn.click();
     expect(dialog.classList.contains('maximized')).toBe(true);
-    expect(maxBtn.textContent).toBe('🗗');
+    expect(maxBtn.title).toMatch(/Exit Fullscreen/);
+    expect(maxBtn.querySelector('svg')).not.toBeNull();
 
     maxBtn.click();
     expect(dialog.classList.contains('maximized')).toBe(false);
-    expect(maxBtn.textContent).toBe('⤢');
+    expect(maxBtn.title).toMatch(/Fullscreen/);
   });
 
   it('closes preview on Escape or Space keydown and unbinds listeners', async () => {

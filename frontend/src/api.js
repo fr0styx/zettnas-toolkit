@@ -268,6 +268,10 @@ export const api = {
     if (!res.ok) throw await ApiError.from(res);
     return res.json();
   },
+  /** POST a FormData or Blob body and return the Response as is (uploads). */
+  async postRaw(url, body, options = {}) {
+    return request(url, { method: 'POST', body, ...options });
+  },
   async patch(url, body = {}, options = {}) {
     const res = await request(url, { method: 'PATCH', body, ...options });
     if (!res.ok) throw await ApiError.from(res);

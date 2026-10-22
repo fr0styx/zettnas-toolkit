@@ -2134,5 +2134,11 @@ export default {
   "bench.when": "Gemessen {when}",
   "bench.use_balanced": "Ausgewogen verwenden: {model}",
   "bench.use_fast": "Schnellstes verwenden: {model}",
-  "bench.applied": "Ask Zetty nutzt jetzt {model}"
+  "bench.applied": "Ask Zetty nutzt jetzt {model}",
+  "preview.close": "Schließen (Esc)",
+  "video.resumed": "Weiter bei {time}",
+  "video.unplayable": "Dieses Video kann im Browser nicht abgespielt werden",
+  "video.unplayable_hint": "Format oder Codec ({ext}) wird hier nicht unterstützt. Lade es herunter oder öffne es in VLC oder Infuse.",
+  "video.subtitles": "Untertitel",
+  "fm.folders": "Ordner"
 };

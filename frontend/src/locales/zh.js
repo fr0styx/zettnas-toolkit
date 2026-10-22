@@ -2134,5 +2134,11 @@ export default {
   "bench.when": "测量于 {when}",
   "bench.use_balanced": "使用均衡：{model}",
   "bench.use_fast": "使用最快：{model}",
-  "bench.applied": "Ask Zetty 现在使用 {model}"
+  "bench.applied": "Ask Zetty 现在使用 {model}",
+  "preview.close": "关闭 (Esc)",
+  "video.resumed": "从 {time} 继续",
+  "video.unplayable": "此视频无法在浏览器中播放",
+  "video.unplayable_hint": "此处不支持其格式或编码（{ext}）。请下载，或用 VLC 或 Infuse 打开。",
+  "video.subtitles": "字幕",
+  "fm.folders": "文件夹"
 };

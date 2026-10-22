@@ -23,6 +23,14 @@
 
 - **One-click Immich works**: it installs the server, machine learning, Valkey and Postgres together on a private network with a generated database password. Apps can now ship companion containers. See docs/SSO.md for Immich sign-in with your provider.
 
+#### Files, photos and videos
+
+- **Uploading small files from the File Explorer works again** (button and drag-and-drop).
+- **The File Explorer works on phones and in narrow windows**: folders in a drawer, thumbnails, size and date under each name, and the full path on its own row.
+- **Photo viewer**: clear icons and an always-visible close button, next/previous wherever you open a photo from, swipe and pinch on touch screens, faster loading of large photos, and thumbnails in list view.
+- **Video viewer**: continues where you stopped, shows subtitles saved next to the video, and explains when a format can't play in the browser.
+- Markdown files are shown formatted.
+
 #### Reliability
 
 - Background services (stats, SMART, fans, LCD, buttons) restart on their own after a crash, and `/api/health` shows their state.

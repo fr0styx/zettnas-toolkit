@@ -4,6 +4,21 @@ import { t } from '../i18n.js';
 import { showToast } from '../toast.js';
 
 import { formatBytes } from '../format.js';
+import {
+  ICONS,
+  isImageName,
+  isPreviewableName,
+  displayImageUrl,
+  originalImageUrl,
+  thumbUrl,
+  screenMaxDim,
+  loadFolderGallery,
+  renderMarkdown,
+  srtToVtt,
+  getResume,
+  setResume,
+  attachGestures,
+} from './viewer-kit.js';
 let _activePreviewModal = null;
 let _previewAbortController = null;
 let _previewKeydownListener = null;
@@ -83,6 +98,19 @@ export async function openFilePreviewModal(path, name, aiMeta = null, fileList =
     _gallery = [];
   }
 
+  // Opened from search, AI results or another window: next/previous follow the file's own folder
+  if (_gallery.length <= 1 && !fileList && isPreviewableName(_currentName)) {
+    try {
+      const siblings = await Promise.race([
+        loadFolderGallery(_currentPath, (u) => api.get(u), { imagesOnly: isImageName(_currentName) }),
+        new Promise((resolve) => setTimeout(() => resolve([]), 2500)),
+      ]);
+      if (siblings.length > 1) _gallery = siblings;
+    } catch (_) {
+      // the single file still opens
+    }
+  }
+
   if (_gallery.length === 0) {
     _gallery = [{ path: _currentPath, name: _currentName }];
     _currentIndex = 0;
@@ -101,30 +129,30 @@ export async function openFilePreviewModal(path, name, aiMeta = null, fileList =
     <div class="quicklook-modal" role="dialog" aria-modal="true" aria-label="${escapeHtml(_currentName)}" id="quicklook-modal-dialog">
       <div class="quicklook-header" id="quicklook-header">
         <div class="quicklook-title">
-          <span>👁️</span>
+          <span class="quicklook-title-icon">${ICONS.eye}</span>
           <span class="quicklook-title-text" id="quicklook-title-text">${escapeHtml(_currentName)}</span>
           <span class="quicklook-meta" id="quicklook-meta">Loading preview...</span>
           <span class="quicklook-counter-pill" id="quicklook-counter-pill" style="display:none;"></span>
         </div>
         <div class="quicklook-toolbar" id="quicklook-toolbar">
           <div class="quicklook-btn-group" id="quicklook-image-tools" style="display:none;">
-            <button type="button" class="quicklook-btn" id="ql-zoom-out" title="${t('preview.zoom_out', 'Zoom Out (-)')}">－</button>
+            <button type="button" class="quicklook-btn" id="ql-zoom-out" title="${t('preview.zoom_out', 'Zoom Out (-)')}" aria-label="${t('preview.zoom_out', 'Zoom Out (-)')}">${ICONS.zoomOut}</button>
             <span class="quicklook-zoom-pill" id="quicklook-zoom-pill" title="${t('preview.fit', 'Fit to screen')}">Fit</span>
-            <button type="button" class="quicklook-btn" id="ql-zoom-in" title="${t('preview.zoom_in', 'Zoom In (+)')}">＋</button>
-            <button type="button" class="quicklook-btn" id="ql-actual-size" title="${t('preview.actual_size', '100%')}">1:1</button>
-            <button type="button" class="quicklook-btn" id="ql-rotate-ccw" title="${t('preview.rotate_ccw', 'Rotate 90° Left')}">↶</button>
-            <button type="button" class="quicklook-btn" id="ql-rotate-cw" title="${t('preview.rotate_cw', 'Rotate 90° Right (R)')}">↷</button>
-            <button type="button" class="quicklook-btn" id="ql-flip-h" title="${t('preview.flip', 'Flip Horizontally')}">⇄</button>
+            <button type="button" class="quicklook-btn" id="ql-zoom-in" title="${t('preview.zoom_in', 'Zoom In (+)')}" aria-label="${t('preview.zoom_in', 'Zoom In (+)')}">${ICONS.zoomIn}</button>
+            <button type="button" class="quicklook-btn" id="ql-actual-size" title="${t('preview.actual_size', '100%')}" aria-label="${t('preview.actual_size', '100%')}">1:1</button>
+            <button type="button" class="quicklook-btn" id="ql-rotate-ccw" title="${t('preview.rotate_ccw', 'Rotate 90° Left')}" aria-label="${t('preview.rotate_ccw', 'Rotate 90° Left')}">${ICONS.rotateLeft}</button>
+            <button type="button" class="quicklook-btn" id="ql-rotate-cw" title="${t('preview.rotate_cw', 'Rotate 90° Right (R)')}" aria-label="${t('preview.rotate_cw', 'Rotate 90° Right (R)')}">${ICONS.rotateRight}</button>
+            <button type="button" class="quicklook-btn" id="ql-flip-h" title="${t('preview.flip', 'Flip Horizontally')}" aria-label="${t('preview.flip', 'Flip Horizontally')}">${ICONS.flip}</button>
           </div>
           <div class="quicklook-btn-group">
-            <button type="button" class="quicklook-btn" id="ql-info-toggle" style="display:none;" title="${t('preview.info', 'Photo Details & EXIF (I)')}">ℹ️</button>
-            <button type="button" class="quicklook-btn" id="ql-filmstrip-toggle" style="display:none;" title="${t('preview.filmstrip', 'Toggle Filmstrip')}">🎞️</button>
-            <button type="button" class="quicklook-btn" id="quicklook-copy-btn" title="${t('preview.copy', 'Copy Image / Path')}">📋</button>
-            <button type="button" class="quicklook-btn" id="ql-download-btn" title="${t('preview.download', 'Download')}">⬇</button>
-            <button type="button" class="quicklook-btn" id="ql-maximize-btn" title="${t('preview.maximize', 'Fullscreen (F)')}">⤢</button>
+            <button type="button" class="quicklook-btn" id="ql-info-toggle" style="display:none;" title="${t('preview.info', 'Photo Details & EXIF (I)')}" aria-label="${t('preview.info', 'Photo Details & EXIF (I)')}">${ICONS.info}</button>
+            <button type="button" class="quicklook-btn" id="ql-filmstrip-toggle" style="display:none;" title="${t('preview.filmstrip', 'Toggle Filmstrip')}" aria-label="${t('preview.filmstrip', 'Toggle Filmstrip')}">${ICONS.filmstrip}</button>
+            <button type="button" class="quicklook-btn" id="quicklook-copy-btn" title="${t('preview.copy', 'Copy Image / Path')}" aria-label="${t('preview.copy', 'Copy Image / Path')}">${ICONS.copy}</button>
+            <button type="button" class="quicklook-btn" id="ql-download-btn" title="${t('preview.download', 'Download')}" aria-label="${t('preview.download', 'Download')}">${ICONS.download}</button>
+            <button type="button" class="quicklook-btn" id="ql-maximize-btn" title="${t('preview.maximize', 'Fullscreen (F)')}" aria-label="${t('preview.maximize', 'Fullscreen (F)')}">${ICONS.maximize}</button>
           </div>
-          <button class="quicklook-close-btn" id="quicklook-close-btn" title="Close (Escape)" aria-label="Close">✕</button>
         </div>
+        <button type="button" class="quicklook-close-btn" id="quicklook-close-btn" title="${t('preview.close', 'Close (Esc)')}" aria-label="${t('preview.close', 'Close (Esc)')}">${ICONS.close}</button>
       </div>
       <div class="quicklook-body" id="quicklook-body">
         <div style="display:flex; flex-direction:column; align-items:center; gap:12px; color:var(--muted);">
@@ -135,7 +163,7 @@ export async function openFilePreviewModal(path, name, aiMeta = null, fileList =
       <div class="quicklook-inspector" id="quicklook-inspector">
         <div class="quicklook-inspector-header">
           <span>ℹ️ ${escapeHtml(t('preview.info', 'Photo Details & EXIF'))}</span>
-          <button type="button" class="quicklook-close-btn" id="ql-inspector-close" style="padding:2px 6px;">✕</button>
+          <button type="button" class="quicklook-close-btn" id="ql-inspector-close" style="padding:2px 6px;" aria-label="${t('preview.close', 'Close (Esc)')}">${ICONS.close}</button>
         </div>
         <div class="quicklook-inspector-content" id="quicklook-inspector-content"></div>
       </div>
@@ -203,6 +231,14 @@ function bindModalGlobalEvents(overlay) {
 
     // Video-specific keybindings when video player is active
     if (_activeVideoController) {
+      if (e.key === 'PageDown' || e.key === 'PageUp' || (e.shiftKey && (e.key === 'ArrowRight' || e.key === 'ArrowLeft'))) {
+        if (_gallery.length > 1) {
+          e.preventDefault();
+          e.stopPropagation();
+          navigateGallery(e.key === 'PageDown' || e.key === 'ArrowRight' ? 1 : -1);
+        }
+        return;
+      }
       if (e.code === 'Space' || e.key === 'k' || e.key === 'K') {
         e.preventDefault();
         e.stopPropagation();
@@ -456,9 +492,11 @@ async function loadCurrentItem() {
       if (infoBtn) infoBtn.style.display = 'inline-flex';
       if (filmstripBtn && _gallery.length > 1) filmstripBtn.style.display = 'inline-flex';
 
-      const isHeif = /\.(heic|heif)$/i.test(_currentPath || '');
-      const imgUrl = isHeif ? `/api/fs/preview/image?path=${encodeURIComponent(_currentPath)}` : (res.url || `/api/fs/download?path=${encodeURIComponent(_currentPath)}`);
-      renderImagePreview(bodyEl, imgUrl, res);
+      // A screen-sized copy loads fast on phones; 1:1 and deep zoom switch to the original
+      renderImagePreview(bodyEl, displayImageUrl(_currentPath, screenMaxDim()), res);
+      const shownImg = bodyEl.querySelector('#quicklook-img');
+      if (shownImg) shownImg.dataset.original = originalImageUrl(_currentPath);
+      preloadNeighbours();
       updateInspectorContent(res);
     } else {
       if (imgTools) imgTools.style.display = 'none';
@@ -471,6 +509,7 @@ async function loadCurrentItem() {
         const streamUrl = `/api/fs/stream?path=${encodeURIComponent(_currentPath)}`;
         if (isVideo) {
           renderVideoPlayer(bodyEl, streamUrl, res);
+          addGalleryNav(bodyEl);
         } else {
           bodyEl.innerHTML = `
             <div style="display:flex; flex-direction:column; align-items:center; gap:16px;">
@@ -486,13 +525,18 @@ async function loadCurrentItem() {
       } else if (res.type === 'text') {
         const lines = res.lines_count || 1;
         metaEl.textContent = `${lines} line${lines === 1 ? '' : 's'}${szStr}${res.truncated ? ' (first 64KB)' : ''}`;
-        bodyEl.innerHTML = `<pre class="quicklook-code"><code>${escapeHtml(res.content || '')}</code></pre>`;
+        if (/\.(md|markdown)$/i.test(_currentName || '')) {
+          bodyEl.innerHTML = `<article class="quicklook-markdown">${renderMarkdown(res.content || '')}</article>`;
+        } else {
+          bodyEl.innerHTML = `<pre class="quicklook-code"><code>${escapeHtml(res.content || '')}</code></pre>`;
+        }
       } else if (res.type === 'hex') {
         metaEl.textContent = `Binary Hex Preview (1KB)${szStr}`;
         const dumpText = Array.isArray(res.hex_dump) ? res.hex_dump.join('\n') : '';
         bodyEl.innerHTML = `<pre class="quicklook-hex"><code>${escapeHtml(dumpText)}</code></pre>`;
       } else {
         metaEl.textContent = `Binary File${szStr}`;
+        addGalleryNav(bodyEl);
         bodyEl.innerHTML = `
           <div style="display:flex; flex-direction:column; align-items:center; gap:12px; color:var(--muted);">
             <div style="font-size:36px;">📄</div>
@@ -513,15 +557,56 @@ async function loadCurrentItem() {
   }
 }
 
+function preloadNeighbours() {
+  if (_gallery.length < 2) return;
+  for (const d of [1, -1]) {
+    const item = _gallery[(_currentIndex + d + _gallery.length) % _gallery.length];
+    if (item && isImageName(item.name)) {
+      const pre = new Image();
+      pre.decoding = 'async';
+      pre.src = displayImageUrl(item.path, screenMaxDim());
+    }
+  }
+}
+
+function useOriginalImage(img) {
+  if (img && img.dataset.original && !img.dataset.isOriginal) {
+    img.dataset.isOriginal = '1';
+    img.src = img.dataset.original;
+    return true;
+  }
+  return false;
+}
+
+// Prev/next buttons for views other than images (video, audio, documents)
+function addGalleryNav(bodyEl) {
+  if (_gallery.length <= 1 || bodyEl.querySelector('.quicklook-nav-btn')) return;
+  const mk = (cls, dir, label, icon) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = `quicklook-nav-btn ${cls}`;
+    b.setAttribute('aria-label', label);
+    b.title = label;
+    b.innerHTML = icon;
+    b.addEventListener('click', (e) => {
+      e.stopPropagation();
+      navigateGallery(dir);
+    });
+    return b;
+  };
+  bodyEl.prepend(mk('quicklook-prev-btn', -1, t('preview.prev', 'Previous (Left Arrow)'), ICONS.prev));
+  bodyEl.append(mk('quicklook-next-btn', 1, t('preview.next', 'Next (Right Arrow)'), ICONS.next));
+}
+
 function renderImagePreview(bodyEl, imgUrl, meta) {
   const showNav = _gallery.length > 1;
 
   bodyEl.innerHTML = `
-    ${showNav ? `<button type="button" class="quicklook-nav-btn quicklook-prev-btn" id="ql-nav-prev" title="${t('preview.prev', 'Previous (Left Arrow)')}" aria-label="Previous">‹</button>` : ''}
+    ${showNav ? `<button type="button" class="quicklook-nav-btn quicklook-prev-btn" id="ql-nav-prev" title="${t('preview.prev', 'Previous (Left Arrow)')}" aria-label="${t('preview.prev', 'Previous (Left Arrow)')}">${ICONS.prev}</button>` : ''}
     <div class="quicklook-viewport" id="quicklook-viewport">
       <img src="${imgUrl}" class="quicklook-img" id="quicklook-img" alt="${escapeHtml(_currentName)}" draggable="false" />
     </div>
-    ${showNav ? `<button type="button" class="quicklook-nav-btn quicklook-next-btn" id="ql-nav-next" title="${t('preview.next', 'Next (Right Arrow)')}" aria-label="Next">›</button>` : ''}
+    ${showNav ? `<button type="button" class="quicklook-nav-btn quicklook-next-btn" id="ql-nav-next" title="${t('preview.next', 'Next (Right Arrow)')}" aria-label="${t('preview.next', 'Next (Right Arrow)')}">${ICONS.next}</button>` : ''}
     ${showNav ? `<div class="quicklook-filmstrip ${_isFilmstripOpen ? '' : 'collapsed'}" id="quicklook-filmstrip"></div>` : ''}
   `;
 
@@ -585,10 +670,21 @@ function bindPanZoomHandlers(viewport, img) {
     applyTransform(img, viewport, false);
   }, { passive: false });
 
+  // Touch: swipe for next/previous, pinch to zoom
+  attachGestures(viewport, {
+    get: () => ({ zoom: _zoom }),
+    onSwipe: (dir) => navigateGallery(dir),
+    onPinch: (z) => {
+      _zoom = z;
+      applyTransform(img, viewport, false);
+    },
+  });
+
   // Drag to pan
   viewport.addEventListener('pointerdown', (e) => {
     if (e.button !== 0) return;
     if (e.target.closest('.quicklook-nav-btn') || e.target.closest('.quicklook-filmstrip')) return;
+    if (!e.isPrimary || (e.pointerType !== 'mouse' && _zoom <= 1.05)) return; // a swipe or pinch, not a pan
 
     _isDragging = true;
     _dragStartX = e.clientX - _panX;
@@ -631,6 +727,7 @@ function applyTransform(img, viewport, withTransition = false) {
   if (!img) return;
   img.style.transition = withTransition ? 'transform 0.22s cubic-bezier(0.2, 0, 0, 1)' : 'none';
   img.style.transform = `translate3d(${_panX}px, ${_panY}px, 0px) scale(${_zoom}) rotate(${_rotation}deg) scaleX(${_flipH ? -1 : 1})`;
+  if (_zoom > 1.6) useOriginalImage(img); // full detail when zooming in
 
   const zoomPill = _activePreviewModal?.querySelector('#quicklook-zoom-pill');
   if (zoomPill) {
@@ -676,6 +773,10 @@ function toggleZoomFitActual() {
 function setActualSize() {
   const img = _activePreviewModal?.querySelector('#quicklook-img');
   const viewport = _activePreviewModal?.querySelector('#quicklook-viewport');
+  if (useOriginalImage(img)) {
+    img.addEventListener('load', () => setActualSize(), { once: true });
+    return;
+  }
   if (img && img.naturalWidth && img.clientWidth) {
     _zoom = img.naturalWidth / img.clientWidth;
   } else {
@@ -714,7 +815,7 @@ function toggleMaximize() {
   _isMaximized = !_isMaximized;
   modal.classList.toggle('maximized', _isMaximized);
   if (maxBtn) {
-    maxBtn.innerHTML = _isMaximized ? '🗗' : '⤢';
+    maxBtn.innerHTML = _isMaximized ? ICONS.restore : ICONS.maximize;
     maxBtn.title = _isMaximized ? t('preview.restore', 'Exit Fullscreen') : t('preview.maximize', 'Fullscreen');
   }
 }
@@ -743,13 +844,9 @@ function renderFilmstrip(container) {
   container.innerHTML = _gallery
     .map((item, idx) => {
       const isCur = idx === _currentIndex;
-      const isHeif = /\.(heic|heif)$/i.test(item.path);
-      const thumbUrl = isHeif
-        ? `/api/fs/preview/image?path=${encodeURIComponent(item.path)}&thumb=1`
-        : `/api/fs/download?path=${encodeURIComponent(item.path)}`;
       return `
         <div class="quicklook-thumb-item ${isCur ? 'active' : ''}" data-idx="${idx}" title="${escapeHtml(item.name)}">
-          <img src="${thumbUrl}" alt="${escapeHtml(item.name)}" loading="lazy" />
+          <img src="${thumbUrl(item.path)}" alt="${escapeHtml(item.name)}" loading="lazy" decoding="async" />
         </div>
       `;
     })
@@ -974,7 +1071,7 @@ function renderVideoPlayer(container, streamUrl, meta) {
           <!-- Right Controls -->
           <div class="quicklook-video-ctrl-group">
             <button type="button" class="quicklook-vctrl-pill" id="ql-video-speed-btn" title="${escapeHtml(t('video.speed', 'Playback Speed'))}">1x</button>
-            <button type="button" class="quicklook-vctrl-btn" id="ql-video-loop-btn" title="${escapeHtml(t('video.loop', 'Loop'))} (L)">
+            <button type="button" class="quicklook-vctrl-btn" id="ql-video-loop-btn" title="${escapeHtml(t('video.loop', 'Loop'))}" aria-label="${escapeHtml(t('video.loop', 'Loop'))}">
               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>
             </button>
             ${isPipSupported ? `
@@ -1016,14 +1113,37 @@ function renderVideoPlayer(container, streamUrl, meta) {
   const tooltipEl = container.querySelector('#ql-video-time-tooltip');
 
   let badgeTimer = null;
-  function showBadge(text) {
+  function showBadge(text, ms = 850) {
     if (!badgeEl) return;
     badgeEl.textContent = text;
     badgeEl.classList.add('show');
     clearTimeout(badgeTimer);
     badgeTimer = setTimeout(() => {
       badgeEl?.classList.remove('show');
-    }, 850);
+    }, ms);
+  }
+
+  const videoPath = _currentPath;
+  if (videoEl) {
+    videoEl.addEventListener('loadedmetadata', () => {
+      const at = getResume(videoPath, videoEl.duration);
+      if (at) {
+        videoEl.currentTime = at;
+        const mm = Math.floor(at / 60);
+        const ss = String(Math.floor(at % 60)).padStart(2, '0');
+        showBadge(t('video.resumed', 'Continuing at {time}', { time: `${mm}:${ss}` }), 2500);
+      }
+    }, { once: true });
+    let lastSaved = 0;
+    videoEl.addEventListener('timeupdate', () => {
+      if (Math.abs(videoEl.currentTime - lastSaved) >= 5) {
+        lastSaved = videoEl.currentTime;
+        setResume(videoPath, videoEl.currentTime, videoEl.duration);
+      }
+    });
+    videoEl.addEventListener('ended', () => setResume(videoPath, 0, videoEl.duration));
+    videoEl.addEventListener('error', () => showUnplayableVideo(container, meta));
+    addSubtitles(videoEl, videoPath);
   }
 
   let hudTimer = null;
@@ -1303,6 +1423,51 @@ function renderVideoPlayer(container, streamUrl, meta) {
       const prom = videoEl.play();
       if (prom && typeof prom.catch === 'function') prom.catch(() => {});
     } catch (_) {}
+  }
+}
+
+function showUnplayableVideo(container, meta) {
+  const ext = (meta && meta.ext ? meta.ext : '').replace('.', '').toUpperCase();
+  container.innerHTML = `
+    <div class="quicklook-unplayable" role="alert">
+      <div class="quicklook-unplayable-title">${escapeHtml(t('video.unplayable', "This video can't play in the browser"))}</div>
+      <div class="quicklook-unplayable-text">${escapeHtml(t('video.unplayable_hint', 'Its format or codec ({ext}) isn\'t supported here. Download it, or open it in VLC or Infuse.', { ext: ext || '?' }))}</div>
+      <button type="button" class="btn-pill-toggle" id="ql-unplayable-download">${ICONS.download} ${escapeHtml(t('preview.download', 'Download'))}</button>
+    </div>`;
+  container.querySelector('#ql-unplayable-download')?.addEventListener('click', () => triggerDownload());
+  addGalleryNav(container);
+}
+
+const _folderCache = new Map();
+
+/** Subtitles next to the video: movie.vtt, movie.srt, movie.en.srt … (shown when found). */
+async function addSubtitles(videoEl, path) {
+  const dir = path.slice(0, path.lastIndexOf('/')) || '/';
+  const base = path.slice(path.lastIndexOf('/') + 1).replace(/\.[^.]+$/, '');
+  try {
+    if (!_folderCache.has(dir)) {
+      const res = await api.get(`/api/browse?path=${encodeURIComponent(dir)}&dirs_only=0`);
+      _folderCache.set(dir, (res.dirs || []).filter((f) => !f.is_dir).map((f) => f.name));
+      if (_folderCache.size > 20) _folderCache.delete(_folderCache.keys().next().value);
+    }
+    const names = _folderCache.get(dir) || [];
+    const subs = names.filter((n) => n.startsWith(base + '.') && /\.(vtt|srt)$/i.test(n)).slice(0, 4);
+    for (const name of subs) {
+      const r = await fetch(`/api/fs/download?path=${encodeURIComponent(`${dir}/${name}`)}`, { credentials: 'same-origin' });
+      if (!r.ok) continue;
+      const text = await r.text();
+      const vtt = /\.srt$/i.test(name) ? srtToVtt(text) : text;
+      const track = document.createElement('track');
+      track.kind = 'subtitles';
+      const lang = name.slice(base.length + 1).replace(/\.(vtt|srt)$/i, '');
+      track.label = lang || t('video.subtitles', 'Subtitles');
+      if (/^[a-z]{2,3}$/i.test(lang)) track.srclang = lang.toLowerCase();
+      track.src = URL.createObjectURL(new Blob([vtt], { type: 'text/vtt' }));
+      if (!videoEl.querySelector('track')) track.default = true;
+      videoEl.appendChild(track);
+    }
+  } catch (_) {
+    // no subtitles: the video still plays
   }
 }
 
