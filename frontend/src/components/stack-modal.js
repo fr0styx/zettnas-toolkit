@@ -6,7 +6,7 @@
 
 import { api } from '../api.js';
 import { showToast, showConfirmToast } from '../toast.js';
-import { escapeHtml } from '../utils.js';
+import { escapeHtml, copyText } from '../utils.js';
 import { DockManager, bringToFront } from './dock.js';
 import { openContainerModal } from './container-modal.js';
 import { lintCompose, composeRiskSummary } from '../compose-lint.js';
@@ -204,12 +204,12 @@ export function initStackModal() {
   // Copy buttons
   document.getElementById('stack-compose-copy-btn')?.addEventListener('click', () => {
     const val = document.getElementById('stack-compose-editor')?.value || '';
-    navigator.clipboard.writeText(val).then(() => showToast(t('toast.compose_yaml_copied_to_clipboard', 'Compose YAML copied to clipboard'), 'info'));
+    copyText(val).then(() => showToast(t('toast.compose_yaml_copied_to_clipboard', 'Compose YAML copied to clipboard'), 'info'));
   });
 
   document.getElementById('stack-env-copy-btn')?.addEventListener('click', () => {
     const val = document.getElementById('stack-env-editor')?.value || '';
-    navigator.clipboard.writeText(val).then(() => showToast(t('toast.env_copied_to_clipboard', '.env copied to clipboard'), 'info'));
+    copyText(val).then(() => showToast(t('toast.env_copied_to_clipboard', '.env copied to clipboard'), 'info'));
   });
 
   document.getElementById('stack-compose-reset-btn')?.addEventListener('click', () => {

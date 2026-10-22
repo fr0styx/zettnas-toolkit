@@ -1,5 +1,5 @@
 import { api, auth } from '../api.js';
-import { escapeHtml } from '../utils.js';
+import { escapeHtml, copyText } from '../utils.js';
 import { t } from '../i18n.js';
 import { showToast } from '../toast.js';
 
@@ -991,7 +991,7 @@ function updateInspectorContent(meta) {
 
   contentEl.querySelector('#ql-copy-path-btn')?.addEventListener('click', async () => {
     try {
-      await navigator.clipboard.writeText(meta.path || '');
+      await copyText(meta.path || '');
       showToast(t('common.copied', 'Copied path to clipboard!'), 'success');
     } catch (_) {
       showToast(t('toast.failed_to_copy', 'Failed to copy'), 'error');
@@ -1020,7 +1020,7 @@ async function triggerCopy() {
   if (!_currentPath) return;
   if (_currentMeta && _currentMeta.type === 'text') {
     try {
-      await navigator.clipboard.writeText(_currentMeta.content || '');
+      await copyText(_currentMeta.content || '');
       showToast(t('common.copied', 'Text copied to clipboard!'), 'success');
     } catch (_) {
       showToast(t('toast.failed_to_copy_text', 'Failed to copy text'), 'error');
@@ -1045,10 +1045,10 @@ async function triggerCopy() {
         return;
       } catch (_) {}
     }
-    await navigator.clipboard.writeText(_currentPath);
+    await copyText(_currentPath);
     showToast(t('common.copied', 'File path copied to clipboard!'), 'info');
   } catch (_) {
-    await navigator.clipboard.writeText(_currentPath);
+    await copyText(_currentPath);
     showToast(t('common.copied', 'File path copied to clipboard!'), 'info');
   }
 }

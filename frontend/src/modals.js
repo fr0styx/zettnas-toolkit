@@ -3,7 +3,7 @@ import { state } from "./state.js";
 import { ZettEventBus } from './event-bus.js';
 import { api } from './api.js';
 import { DockManager, bringToFront, makeDraggable } from './components/dock.js';
-import { trapFocus, escapeHtml } from './utils.js';
+import { trapFocus, escapeHtml, copyText } from './utils.js';
 import { t } from './i18n.js';
 import { generateSmartSparklineSvg, triggerLocateDisk } from './components/chassis-visualizer.js';
 import { formatDateTime, formatNumber } from './format.js';
@@ -150,9 +150,7 @@ window.addEventListener('DOMContentLoaded', () => {
       copyRawBtn.addEventListener("click", async () => {
         if (!smartRaw || !smartRaw.textContent) return;
         try {
-          if (navigator.clipboard && navigator.clipboard.writeText) {
-            await navigator.clipboard.writeText(smartRaw.textContent);
-          }
+          await copyText(smartRaw.textContent);
           showToast(t("modal.smart_raw_copied", "Raw SMART attributes copied to clipboard"), "ok");
         } catch {
           showToast(t('toast.failed_to_copy_raw_attributes', "Failed to copy raw attributes"), "error");
@@ -188,16 +186,7 @@ window.addEventListener('DOMContentLoaded', () => {
           textToCopy = _currentEventDetailData.details.report_markdown;
         }
         try {
-          if (navigator.clipboard && navigator.clipboard.writeText) {
-            await navigator.clipboard.writeText(textToCopy);
-          } else {
-            const ta = document.createElement("textarea");
-            ta.value = textToCopy;
-            document.body.appendChild(ta);
-            ta.select();
-            document.execCommand("copy");
-            document.body.removeChild(ta);
-          }
+          await copyText(textToCopy);
           const copyText = document.getElementById("event-detail-copy-text");
           const copyIcon = document.getElementById("event-detail-copy-icon");
           if (copyText) copyText.textContent = t("event_detail.copied", "Copied!");
@@ -597,16 +586,7 @@ export async function copySmartReport() {
   }
   const reportText = generateSmartReportMarkdown(_currentSmartData);
   try {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      await navigator.clipboard.writeText(reportText);
-    } else {
-      const ta = document.createElement("textarea");
-      ta.value = reportText;
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand("copy");
-      document.body.removeChild(ta);
-    }
+    await copyText(reportText);
 
     const btn = document.getElementById("smart-btn-copy-report");
     const icon = document.getElementById("smart-copy-report-icon");

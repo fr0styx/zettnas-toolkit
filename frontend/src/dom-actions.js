@@ -11,6 +11,7 @@
  *   <img data-img-fallback="hide">       hide on error
  *   <img data-img-fallback="hide-show-next[:display]">  hide, show the next sibling
  */
+import { copyText } from './utils.js';
 const ACTIONS = {
   'click-target': (el) => document.getElementById(el.dataset.target)?.click(),
   'hide-target': (el) => {
@@ -26,7 +27,7 @@ const ACTIONS = {
   'copy-code': (el) => {
     const code = el.closest('.ai-chat-code-block')?.querySelector('code')?.innerText || '';
     const label = el.textContent;
-    Promise.resolve(navigator.clipboard?.writeText(code)).then(() => {
+    copyText(code).then(() => {
       el.textContent = '✓';
       setTimeout(() => {
         el.textContent = label;

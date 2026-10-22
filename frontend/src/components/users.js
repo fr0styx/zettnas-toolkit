@@ -5,7 +5,7 @@
 
 import { onManagementDom } from '../management-dom.js';
 import { auth, apiFetch, setSessionUserProvider } from '../api.js';
-import { escapeHtml, trapFocus } from '../utils.js';
+import { escapeHtml, trapFocus, copyText } from '../utils.js';
 import { ZettEventBus } from '../event-bus.js';
 import { t } from '../i18n.js';
 import { showToast, showConfirmToast, showPromptToast } from '../toast.js';
@@ -734,7 +734,7 @@ async function start2FASetup() {
               const copyBtn = document.getElementById('btn-copy-recovery-codes');
               if (copyBtn) {
                 copyBtn.onclick = () => {
-                  navigator.clipboard.writeText(verifyData.recovery_codes.join('\n'));
+                  copyText(verifyData.recovery_codes.join('\n'));
                   copyBtn.textContent = 'COPIED TO CLIPBOARD! ✅';
                   setTimeout(() => { copyBtn.textContent = 'COPY ALL CODES'; }, 2000);
                 };

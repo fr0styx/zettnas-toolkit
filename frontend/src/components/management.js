@@ -27,7 +27,7 @@ import { state } from '../state.js';
 import { api, auth } from '../api.js';
 import { initNetworkPortsInspector, fetchListeningPorts } from './network-manager.js';
 import { showToast, showConfirmToast, showPromptToast, showBottomSheet } from '../toast.js';
-import { trapFocus, escapeHtml, copyTextToClipboard, reconcileKeyedTable } from '../utils.js';
+import { trapFocus, escapeHtml, copyTextToClipboard, reconcileKeyedTable, copyText } from '../utils.js';
 import { t, getLanguage } from '../i18n.js';
 import { collectClientEnvironment, getClientLogs } from '../client-logger.js';
 import { openFilePreviewModal } from './file-preview-modal.js';
@@ -4640,10 +4640,9 @@ export async function fetchAndRenderWireguard() {
             if (tsAuthLink) tsAuthLink.href = ts.auth_url;
             if (tsCopyAuthUrlBtn) {
               tsCopyAuthUrlBtn.onclick = () => {
-                if (navigator.clipboard?.writeText) {
-                  navigator.clipboard.writeText(ts.auth_url);
-                  showToast(t('toast.authorization_link_copied_to_clipboard', 'Authorization link copied to clipboard.'), 'success');
-                }
+                copyText(ts.auth_url)
+                  .then(() => showToast(t('toast.authorization_link_copied_to_clipboard', 'Authorization link copied to clipboard.'), 'success'))
+                  .catch(() => showToast(t('toast.failed_to_copy', 'Failed to copy'), 'error'));
               };
             }
             startTailscaleAuthPolling();
@@ -4717,10 +4716,9 @@ export async function fetchAndRenderWireguard() {
         }
         if (tsCopyAuthUrlBtn) {
           tsCopyAuthUrlBtn.onclick = () => {
-            if (navigator.clipboard?.writeText) {
-              navigator.clipboard.writeText(res.auth_url);
-              showToast(t('toast.authorization_link_copied_to_clipboard', 'Authorization link copied to clipboard.'), 'success');
-            }
+            copyText(res.auth_url)
+              .then(() => showToast(t('toast.authorization_link_copied_to_clipboard', 'Authorization link copied to clipboard.'), 'success'))
+              .catch(() => showToast(t('toast.failed_to_copy', 'Failed to copy'), 'error'));
           };
         }
         showToast(t('toast.tailscale_deployed_opening_authorization_window', 'Tailscale deployed! Opening authorization window...'), 'info');
@@ -4813,10 +4811,9 @@ export async function fetchAndRenderWireguard() {
           tsUpBtn.textContent = '🔗 Log in to Tailscale';
           if (tsCopyAuthUrlBtn) {
             tsCopyAuthUrlBtn.onclick = () => {
-              if (navigator.clipboard?.writeText) {
-                navigator.clipboard.writeText(res.auth_url);
-                showToast(t('toast.authorization_link_copied_to_clipboard', 'Authorization link copied to clipboard.'), 'success');
-              }
+              copyText(res.auth_url)
+                .then(() => showToast(t('toast.authorization_link_copied_to_clipboard', 'Authorization link copied to clipboard.'), 'success'))
+                .catch(() => showToast(t('toast.failed_to_copy', 'Failed to copy'), 'error'));
             };
           }
           showToast(t('toast.tailscale_login_opened_complete_authorization_in', 'Tailscale login opened! Complete authorization in your browser.'), 'info');
@@ -4864,10 +4861,9 @@ export async function fetchAndRenderWireguard() {
     tsCopyIpBtn.addEventListener('click', () => {
       const ip = tsIpEl ? tsIpEl.textContent.trim() : '';
       if (ip && ip !== '--') {
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(ip);
-        }
-        showToast(t('toast.copied_tailscale_ip', 'Copied Tailscale IP: {ip}', { ip: ip }), 'success');
+        copyText(ip)
+          .then(() => showToast(t('toast.copied_tailscale_ip', 'Copied Tailscale IP: {ip}', { ip: ip }), 'success'))
+          .catch(() => showToast(t('toast.failed_to_copy', 'Failed to copy'), 'error'));
       }
     });
   }
@@ -5059,10 +5055,9 @@ export async function fetchAndRenderWireguard() {
       const link = document.getElementById('ts-serve-url-link');
       const url = link ? link.href : '';
       if (url && url !== '#') {
-        if (navigator.clipboard?.writeText) {
-          navigator.clipboard.writeText(url);
-          showToast(t('toast.tailscale_https_url_copied_to_clipboard', 'Tailscale HTTPS URL copied to clipboard.'), 'success');
-        }
+        copyText(url)
+          .then(() => showToast(t('toast.tailscale_https_url_copied_to_clipboard', 'Tailscale HTTPS URL copied to clipboard.'), 'success'))
+          .catch(() => showToast(t('toast.failed_to_copy', 'Failed to copy'), 'error'));
       }
     });
   }
@@ -5831,8 +5826,9 @@ export async function openNetworkPortModal(ifaceName) {
       copyMacBtn.onclick = () => {
         const mac = nic.mac || roMac?.textContent;
         if (mac && mac !== '--') {
-          navigator.clipboard.writeText(mac);
-          showToast(t('toast.mac_address_copied_to_clipboard', 'MAC address {mac} copied to clipboard!', { mac: mac }), 'info');
+          copyText(mac)
+            .then(() => showToast(t('toast.mac_address_copied_to_clipboard', 'MAC address {mac} copied to clipboard!', { mac: mac }), 'info'))
+            .catch(() => showToast(t('toast.failed_to_copy', 'Failed to copy'), 'error'));
         } else {
           showToast(t('toast.no_mac_address_available_to_copy', 'No MAC address available to copy'), 'warn');
         }
@@ -12393,9 +12389,7 @@ export function renderAiPreviewInspector(item) {
     shareBtn.addEventListener('click', async () => {
       const shareUrl = `${window.location.origin}/api/files/download?path=${encodeURIComponent(fPath)}`;
       try {
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          await navigator.clipboard.writeText(shareUrl);
-        }
+        await copyText(shareUrl);
         showToast(t('toast.copied_share_link_for_to_clipboard', 'Copied share link for {fName} to clipboard!', { fName: fName }), 'success');
       } catch (_) {
         showToast(t('toast.share_path', 'Share path: {fPath}', { fPath: fPath }), 'info');
@@ -14030,7 +14024,7 @@ export async function showServeLink(url, funnel = false) {
     t('ts.serve_ready', 'ZettNAS is reachable through Tailscale'),
     `${qr ? `<img src="${qr}" alt="${escapeHtml(t('ts.serve_qr_alt', 'QR code for {url}', { url }))}" width="180" height="180" style="display:block;margin:0 auto 10px;border-radius:8px;background:#fff;">` : ''}<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" style="color:#38bdf8;font-weight:700;word-break:break-all;">${escapeHtml(url)}</a><br><br>${escapeHtml(how)}`,
     () => {
-      if (navigator.clipboard) navigator.clipboard.writeText(url).catch(() => {});
+      copyText(url).catch(() => {});
     },
     null,
     { confirmText: t('ts.serve_copy', 'Copy address'), cancelText: t('common.close', 'Close'), allowHtml: true }

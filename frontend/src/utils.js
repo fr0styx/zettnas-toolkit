@@ -140,6 +140,14 @@ export async function copyTextToClipboard(text) {
   return success;
 }
 
+/**
+ * Copies text, also on plain HTTP where the browser hides navigator.clipboard
+ * (Ark is usually opened as http://<ip>). Throws when nothing was copied.
+ */
+export async function copyText(text) {
+  if (!(await copyTextToClipboard(String(text ?? '')))) throw new Error('Copy failed');
+}
+
 export function formatBytes(bytes, decimals = 1) {
   return formatSize(bytes, { decimals: decimals < 0 ? 0 : decimals });
 }

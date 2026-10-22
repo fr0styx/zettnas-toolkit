@@ -7,7 +7,7 @@
 
 import { api, auth } from '../api.js';
 import { showToast, showConfirmToast } from '../toast.js';
-import { escapeHtml, trapFocus } from '../utils.js';
+import { escapeHtml, trapFocus, copyText } from '../utils.js';
 import { t } from '../i18n.js';
 import { bringToFront, makeDraggable, DockManager } from './dock.js';
 import { ZettEventBus } from '../event-bus.js';
@@ -239,7 +239,7 @@ export function initContainerModal() {
     copyComposeBtn.addEventListener('click', () => {
       const codeEl = document.getElementById('ci-compose-code');
       if (codeEl && codeEl.textContent) {
-        navigator.clipboard.writeText(codeEl.textContent).then(() => {
+        copyText(codeEl.textContent).then(() => {
           showToast(t('toast.docker_compose_yaml_copied_to_clipboard', 'Docker Compose YAML copied to clipboard!'), 'success');
         });
       }
@@ -281,7 +281,7 @@ export function initContainerModal() {
   if (logCopyBtn) {
     logCopyBtn.addEventListener('click', () => {
       const text = _activeLogLines.map((l) => (l.ts ? `${l.ts} ` : '') + l.msg).join('\n');
-      navigator.clipboard.writeText(text).then(() => {
+      copyText(text).then(() => {
         showToast(t('toast.container_logs_copied_to_clipboard', 'Container logs copied to clipboard.'), 'success');
       });
     });
@@ -1191,7 +1191,7 @@ function renderEnvTab(details) {
       const entry = envSecretStore.get(idx);
       const val = entry ? entry.raw : '';
       if (!val) return;
-      navigator.clipboard.writeText(val).then(() => {
+      copyText(val).then(() => {
         showToast(t('toast.value_copied_to_clipboard', 'Value copied to clipboard.'), 'success');
       });
     });

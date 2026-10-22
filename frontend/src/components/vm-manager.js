@@ -5,7 +5,7 @@
  */
 
 import { api } from '../api.js';
-import { escapeHtml, trapFocus, reconcileKeyedTable } from '../utils.js';
+import { escapeHtml, trapFocus, reconcileKeyedTable, copyText } from '../utils.js';
 import { ZettEventBus } from '../event-bus.js';
 import { showToast, showConfirmToast, showPromptToast, showBottomSheet } from '../toast.js';
 import { t } from '../i18n.js';
@@ -3120,7 +3120,7 @@ export async function copyToClipboard(text) {
   // 1. Try modern Async Clipboard API in secure context (HTTPS/localhost)
   if (navigator.clipboard && window.isSecureContext) {
     try {
-      await navigator.clipboard.writeText(text);
+      await copyText(text);
       return true;
     } catch (err) {
       console.warn('Async Clipboard API failed, falling back:', err);

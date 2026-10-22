@@ -334,6 +334,8 @@ describe('S.M.A.R.T. Self-Test Progress & Historical Report Suite', () => {
   describe('copySmartReport', () => {
     it('copies formatted report to clipboard and provides visual checkmark feedback', async () => {
       let clipboardText = '';
+      // The clipboard API exists only on secure pages (HTTPS or localhost)
+      Object.defineProperty(window, 'isSecureContext', { value: true, configurable: true });
       Object.assign(navigator, {
         clipboard: {
           writeText: vi.fn(async (text) => {
