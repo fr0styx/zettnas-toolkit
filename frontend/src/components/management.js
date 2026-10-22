@@ -4885,11 +4885,13 @@ export async function fetchAndRenderWireguard() {
         if (serve && !res.serve_enabled) {
           if (tsServeToggle) tsServeToggle.checked = false;
           showToast(t('toast.tailscale_serve_could_not_be_activated', 'Tailscale Serve could not be activated. Check tailscaled daemon status.'), 'warn');
+        } else if (serve && res.serve_url) {
+          showServeLink(res.serve_url, Boolean(res.funnel_enabled));
         } else {
           showToast(
             serve
-              ? 'Tailscale HTTPS Serve enabled on port 8082.'
-              : 'Tailscale Serve disabled.',
+              ? t('toast.ts_serve_on', 'Tailscale HTTPS Serve enabled on port 8082.')
+              : t('toast.ts_serve_off', 'Tailscale Serve disabled.'),
             'success'
           );
         }
@@ -13856,4 +13858,28 @@ export async function refreshVisionStatus() {
   } catch {
     el.textContent = '';
   }
+}
+
+
+/** After Tailscale Serve is on: the address to open on a phone, with a QR code (M2). */
+export async function showServeLink(url, funnel = false) {
+  let qr = '';
+  try {
+    const { default: QRCode } = await import('qrcode');
+    qr = await QRCode.toDataURL(url, { margin: 1, width: 180 });
+  } catch (e) {
+    console.warn('QR code unavailable', e);
+  }
+  const how = funnel
+    ? t('ts.serve_how_funnel', 'Funnel is on: this address works from any browser on the internet, so keep strong passwords and 2FA.')
+    : t('ts.serve_how', 'On your phone, install the Tailscale app and sign in to the same tailnet. Then open this address, on Wi-Fi or mobile data. Add it to your home screen to use ZettNAS like an app.');
+  showConfirmToast(
+    t('ts.serve_ready', 'ZettNAS is reachable through Tailscale'),
+    `${qr ? `<img src="${qr}" alt="${escapeHtml(t('ts.serve_qr_alt', 'QR code for {url}', { url }))}" width="180" height="180" style="display:block;margin:0 auto 10px;border-radius:8px;background:#fff;">` : ''}<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" style="color:#38bdf8;font-weight:700;word-break:break-all;">${escapeHtml(url)}</a><br><br>${escapeHtml(how)}`,
+    () => {
+      if (navigator.clipboard) navigator.clipboard.writeText(url).catch(() => {});
+    },
+    null,
+    { confirmText: t('ts.serve_copy', 'Copy address'), cancelText: t('common.close', 'Close'), allowHtml: true }
+  );
 }

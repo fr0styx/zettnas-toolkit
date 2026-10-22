@@ -2104,5 +2104,12 @@ export default {
   "sso.public_url": "ZettNAS 的公开地址（可选）",
   "sso.save": "保存",
   "sso.saved": "单点登录设置已保存",
-  "sso.save_failed": "无法保存：{error}"
+  "sso.save_failed": "无法保存：{error}",
+  "toast.ts_serve_on": "已在 8082 端口启用 Tailscale HTTPS Serve。",
+  "toast.ts_serve_off": "已停用 Tailscale Serve。",
+  "ts.serve_ready": "现在可以通过 Tailscale 访问 ZettNAS",
+  "ts.serve_how": "在手机上安装 Tailscale 应用并登录同一个 tailnet，然后在 Wi-Fi 或移动网络下打开这个地址。添加到主屏幕后即可像应用一样使用 ZettNAS。",
+  "ts.serve_how_funnel": "Funnel 已开启：任何互联网浏览器都能打开此地址，请使用强密码并启用双重验证。",
+  "ts.serve_qr_alt": "{url} 的二维码",
+  "ts.serve_copy": "复制地址"
 };

@@ -2531,6 +2531,7 @@ def execute_tailscale_set_ssh(enabled: bool) -> dict[str, Any]:
 
 def execute_tailscale_set_serve(serve: bool, funnel: bool = False, port: int = 8082) -> dict[str, Any]:
     """Configures Tailscale Serve and Funnel proxy for ZettNAS Web Desktop."""
+    import json
     import re
 
     approval_url = ""
@@ -2575,10 +2576,22 @@ def execute_tailscale_set_serve(serve: bool, funnel: bool = False, port: int = 8
         fn_code, fn_out = _run_tailscale_cmd(["funnel", "status", "--json"], timeout=3.0)
         actual_funnel = (fn_code == 0 and "AllowFunnel" in fn_out) or (_code_f == 0 and funnel and serve)
 
+    # The address to open on a phone or laptop in the tailnet (M2)
+    serve_url = ""
+    if actual_serve:
+        st_code, st_out = _run_tailscale_cmd(["status", "--json"], timeout=3.0)
+        if st_code == 0 and st_out.strip().startswith("{"):
+            try:
+                dns = (json.loads(st_out).get("Self") or {}).get("DNSName", "").rstrip(".")
+                serve_url = f"https://{dns}" if dns else ""
+            except ValueError:
+                logger.debug("network.execute_tailscale_set_serve: status not JSON", exc_info=True)
+
     return {
         "status": "needs_approval"
         if approval_url
         else ("ok" if (actual_serve or not serve) else ("error" if error_msg else "pending")),
+        "serve_url": serve_url,
         "serve_enabled": actual_serve,
         "funnel_enabled": actual_funnel,
         "approval_url": approval_url,

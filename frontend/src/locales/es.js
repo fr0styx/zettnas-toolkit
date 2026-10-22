@@ -2104,5 +2104,12 @@ export default {
   "sso.public_url": "URL pública de ZettNAS (opcional)",
   "sso.save": "Guardar",
   "sso.saved": "Ajustes de inicio de sesión único guardados",
-  "sso.save_failed": "No se pudo guardar: {error}"
+  "sso.save_failed": "No se pudo guardar: {error}",
+  "toast.ts_serve_on": "Tailscale HTTPS Serve activado en el puerto 8082.",
+  "toast.ts_serve_off": "Tailscale Serve desactivado.",
+  "ts.serve_ready": "ZettNAS es accesible a través de Tailscale",
+  "ts.serve_how": "En el móvil, instala la app de Tailscale e inicia sesión en la misma tailnet. Luego abre esta dirección, por Wi-Fi o datos móviles. Añádela a la pantalla de inicio para usar ZettNAS como una app.",
+  "ts.serve_how_funnel": "Funnel está activado: la dirección funciona desde cualquier navegador en internet, usa contraseñas fuertes y 2FA.",
+  "ts.serve_qr_alt": "Código QR de {url}",
+  "ts.serve_copy": "Copiar dirección"
 };
