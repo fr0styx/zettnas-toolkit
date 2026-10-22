@@ -141,6 +141,11 @@ def _register_failure(key: str, is_ip: bool = False) -> None:
         if over >= 0:
             entry["locked_until"] = now + min(_MAX_LOCKOUT_SECS, 2**over * 5)
         _save_failures()
+    if over == 0:
+        try:
+            log_security_event("auth.lockout", "warning", details={"key": key, "failures": entry["count"]})
+        except Exception:
+            pass
 
 
 def _clear_failures(key: str) -> None:
@@ -850,6 +855,7 @@ def update_user_endpoint(user_id: str, data: UserUpdateRequest, request: Request
         status_to_set = None
         quota_to_set = None
 
+    before = get_user_by_id(user_id) or {}
     ok = update_user_profile(
         user_id=user_id,
         display_name=data.display_name,
@@ -861,6 +867,24 @@ def update_user_endpoint(user_id: str, data: UserUpdateRequest, request: Request
     )
     if not ok:
         raise HTTPException(status_code=404, detail="User not found.")
+    if role_to_set and role_to_set != before.get("role_id"):
+        log_security_event(
+            "user.role.changed",
+            "success",
+            actor_id=current["id"],
+            actor_username=current["username"],
+            actor_ip=_client_ip(request),
+            details={"username": before.get("username"), "role": before.get("role_id"), "new_role": role_to_set},
+        )
+    if status_to_set and status_to_set != before.get("status"):
+        log_security_event(
+            "user.status.changed",
+            "success",
+            actor_id=current["id"],
+            actor_username=current["username"],
+            actor_ip=_client_ip(request),
+            details={"username": before.get("username"), "status": status_to_set},
+        )
     return {"status": "ok", "user": _sanitize_user_dict(get_user_by_id(user_id))}
 
 

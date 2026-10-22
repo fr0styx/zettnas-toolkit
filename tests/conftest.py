@@ -91,6 +91,13 @@ def _auto_confirm_destructive_actions(request, monkeypatch):
     monkeypatch.setattr(confirmations, "consume", lambda *a, **k: True)
 
 
+@pytest.fixture(autouse=True)
+def _fresh_rate_limits():
+    from backend import rate_limit
+
+    rate_limit.reset()
+
+
 def pytest_sessionfinish(session, exitstatus):
     shutil.rmtree(SANDBOX, ignore_errors=True)
 

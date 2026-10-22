@@ -23,6 +23,7 @@ from fastapi.responses import FileResponse, Response, StreamingResponse
 from pydantic import BaseModel, Field
 
 from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
+from backend.rate_limit import rate_limit
 from backend.confirmations import require_confirmation
 import backend.config as config
 from backend.config import logger
@@ -945,7 +946,10 @@ async def fs_archive_create(
 
 @router.post(
     "/fs/archive/extract",
-    dependencies=[Depends(require_scope("shares:manage", "shares:user_write", "storage:write", "storage:admin"))],
+    dependencies=[
+        Depends(require_scope("shares:manage", "shares:user_write", "storage:write", "storage:admin")),
+        Depends(rate_limit("fs.extract", 10, 60)),
+    ],
 )
 async def fs_archive_extract(
     req: ArchiveExtractRequest,
@@ -2372,10 +2376,17 @@ async def _reset_share_rate_limit(ip: str):
 
 @router.post(
     "/fs/share-links",
-    dependencies=[Depends(require_scope("files:read", "files:write", "storage:read", "storage:admin"))],
+    dependencies=[
+        Depends(require_scope("files:read", "files:write", "storage:read", "storage:admin")),
+        Depends(rate_limit("share.create", 30, 3600)),
+    ],
 )
 @router.post(
-    "/share-links", dependencies=[Depends(require_scope("files:read", "files:write", "storage:read", "storage:admin"))]
+    "/share-links",
+    dependencies=[
+        Depends(require_scope("files:read", "files:write", "storage:read", "storage:admin")),
+        Depends(rate_limit("share.create", 30, 3600)),
+    ],
 )
 async def create_share_link(
     req: CreateShareLinkRequest,
@@ -2520,6 +2531,13 @@ async def access_shared_file(
 
 
 async def _serve_shared_item(token: str, request: Request, info: bool, provided_pwd: str):
+    from backend.rate_limit import hit as _rl_hit
+
+    wait = _rl_hit(f"share.access:{_get_client_ip(request)}", 120, 60)
+    if wait:
+        raise HTTPException(
+            status_code=429, detail=f"Too many requests. Try again in {wait}s.", headers={"Retry-After": str(wait)}
+        )
     links = _load_share_links()
     if token not in links:
         raise HTTPException(status_code=404, detail="Share link not found or revoked")

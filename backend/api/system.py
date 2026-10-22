@@ -546,6 +546,18 @@ def create_token(req: TokenCreateRequest, principal: AuthenticatedPrincipal = De
             expires_in_days=req.expires_in_days,
         )
         add_event("success", "Security", f"Generated new scoped API token: {req.name}")
+        try:
+            from backend.users_db import log_security_event
+
+            log_security_event(
+                "api_token.created",
+                "success",
+                actor_id=getattr(principal, "user_id", None),
+                actor_username=getattr(principal, "username", None),
+                details={"name": req.name, "scopes": meta.get("scopes")},
+            )
+        except Exception:
+            pass
         return {
             "token": raw_token,
             "name": req.name,

@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 from backend.api.system import check_user_path_access
 from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
+from backend.rate_limit import rate_limit
 from backend.config import ALLOWED_BROWSE_ROOTS, POOL_PATH
 from backend.fsutil import resolve_within
 from backend.services.ai_chat_agent import (
@@ -936,11 +937,17 @@ def get_ai_chat_tools() -> Dict[str, Any]:
 
 @router.post(
     "/media/chat",
-    dependencies=[Depends(require_scope("shares:read", "storage:read", "system:read"))],
+    dependencies=[
+        Depends(require_scope("shares:read", "storage:read", "system:read")),
+        Depends(rate_limit("ai.chat", 20, 60)),
+    ],
 )
 @router.post(
     "/ai/chat",
-    dependencies=[Depends(require_scope("shares:read", "storage:read", "system:read"))],
+    dependencies=[
+        Depends(require_scope("shares:read", "storage:read", "system:read")),
+        Depends(rate_limit("ai.chat", 20, 60)),
+    ],
 )
 async def chat_with_zettai_agent(
     req: AiChatRequest,
@@ -1004,11 +1011,17 @@ async def chat_with_zettai_agent(
 
 @router.post(
     "/media/chat/stream",
-    dependencies=[Depends(require_scope("shares:read", "storage:read", "system:read"))],
+    dependencies=[
+        Depends(require_scope("shares:read", "storage:read", "system:read")),
+        Depends(rate_limit("ai.chat", 20, 60)),
+    ],
 )
 @router.post(
     "/ai/chat/stream",
-    dependencies=[Depends(require_scope("shares:read", "storage:read", "system:read"))],
+    dependencies=[
+        Depends(require_scope("shares:read", "storage:read", "system:read")),
+        Depends(rate_limit("ai.chat", 20, 60)),
+    ],
 )
 async def chat_with_zettai_agent_stream(
     req: AiChatRequest,

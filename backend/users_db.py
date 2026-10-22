@@ -1003,6 +1003,12 @@ def log_security_event(
                     now,
                 ),
             )
+        try:
+            from backend.services.security_alerts import maybe_alert
+
+            maybe_alert(event_type, status, actor_username, actor_ip, details)
+        except Exception:
+            pass
     except Exception as e:
         logger.error(f"Failed to record security audit event: {e}")
 
