@@ -2,6 +2,7 @@
  * ZettNAS Toolkit - Main Frontend Entrypoint (v0.8.0)
  * Modular architecture orchestrating telemetry streaming, layout management, and desktop widgets.
  */
+import { ensureManagementDom, onManagementDom } from './management-dom.js';
 import './style.css';
 import './lcd-direct.css';
 import './vm-console-direct.css';
@@ -289,16 +290,16 @@ document.addEventListener('DOMContentLoaded', () => {  if (window.location.searc
   initFanControl();
   initLedControl();
   initWallpapers();
-  initEvents();
+  onManagementDom(initEvents);
   initSettings();
-  initMetricsChart();
+  onManagementDom(initMetricsChart);
   initSetupWizard();
-  // Mission Control's code (the largest module) loads on first use, or a few seconds
-  // after start when the browser is idle (FE-02)
+  // Mission Control's markup (FE-04) and code (FE-02) load on first use, or a few seconds
+  // after start when the browser is idle
   const ensureManagement = lazyWindow({
     id: 'management',
     iconId: 'management-desktop-icon',
-    load: () => import('./components/management.js'),
+    load: () => ensureManagementDom().then(() => import('./components/management.js')),
     init: 'initManagement',
     globals: ['openManagementWindow', 'openManagementSection'],
     openGlobal: 'openManagementWindow',

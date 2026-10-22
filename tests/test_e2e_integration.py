@@ -14,6 +14,7 @@ from playwright.sync_api import sync_playwright
 
 import backend.config as config
 from backend.config import STATIC_DIR
+from tests._index_html import with_management_markup
 
 E2E_REQUIRED = os.environ.get("ZETTNAS_E2E_REQUIRED") == "1"
 
@@ -245,7 +246,7 @@ def test_e2e_html_structure_and_assets():
         _skip_or_fail("static/index.html is missing: run npm run build first")
 
     with open(index_path, encoding="utf-8") as f:
-        html = f.read()
+        html = with_management_markup(f.read())
 
     # Verify critical components in index.html
     assert 'id="screen"' in html
@@ -262,7 +263,7 @@ def test_e2e_batch3_dom_elements():
     if not os.path.isfile(index_path):
         _skip_or_fail("static/index.html is missing: run npm run build first")
     with open(index_path, encoding="utf-8") as f:
-        html = f.read()
+        html = with_management_markup(f.read())
 
     assert 'id="notif-center-panel"' in html
     assert 'id="notif-filter-bar"' in html
@@ -278,7 +279,7 @@ def test_e2e_batch4_dom_elements():
     if not os.path.isfile(index_path):
         _skip_or_fail("static/index.html is missing: run npm run build first")
     with open(index_path, encoding="utf-8") as f:
-        html = f.read()
+        html = with_management_markup(f.read())
 
     assert 'id="fan-presets-bar"' in html
     assert 'id="fan-preset-select"' in html
@@ -293,7 +294,7 @@ def test_e2e_batch5_dom_elements():
     if not os.path.isfile(index_path):
         _skip_or_fail("static/index.html is missing: run npm run build first")
     with open(index_path, encoding="utf-8") as f:
-        html = f.read()
+        html = with_management_markup(f.read())
 
     assert 'id="mgmt-ups-status"' in html
     assert 'id="mgmt-ups-model"' in html

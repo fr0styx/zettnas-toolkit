@@ -1,3 +1,4 @@
+import { readIndexHtml } from './helpers/read-index-html.js';
 import { readStyleCss } from './helpers/read-style-css.js';
 import { describe, it, expect, beforeEach } from 'vitest';
 import fs from 'fs';
@@ -6,7 +7,7 @@ import path from 'path';
 describe('Mission Control Fixated Sticky Sub-Navigation Bar', () => {
   it('verifies that all Mission Control sections in index.html wrap .mgmt-inner-tabs in .mgmt-sticky-subnav', () => {
     const htmlPath = path.resolve(__dirname, '../../index.html');
-    const htmlContent = fs.readFileSync(htmlPath, 'utf8');
+    const htmlContent = readIndexHtml();
 
     const expectedSections = [
       'mgmt-sec-wallpaper',
@@ -121,7 +122,7 @@ describe('Mission Control Fixated Sticky Sub-Navigation Bar', () => {
 
   it('verifies #ai-telemetry-ribbon is positioned inside the Configuration tab (mgmt-pane-ai-index) as informational', () => {
     const htmlPath = path.resolve(__dirname, '../../index.html');
-    const htmlContent = fs.readFileSync(htmlPath, 'utf8');
+    const htmlContent = readIndexHtml();
 
     const configPaneIdx = htmlContent.indexOf('id="mgmt-pane-ai-index"');
     expect(configPaneIdx).toBeGreaterThan(-1);
@@ -147,7 +148,7 @@ describe('Mission Control Fixated Sticky Sub-Navigation Bar', () => {
     expect(cssContent).toMatch(/#mgmt-sec-ai\s+\.mgmt-sticky-subnav[^{]*\{[^}]*flex-shrink:\s*0\s*!important/);
 
     const htmlPath = path.resolve(__dirname, '../../index.html');
-    const htmlContent = fs.readFileSync(htmlPath, 'utf8');
+    const htmlContent = readIndexHtml();
 
     const aiSecIdx = htmlContent.indexOf('id="mgmt-sec-ai"');
     const aiSecSlice = htmlContent.slice(aiSecIdx, aiSecIdx + 1500);
@@ -176,7 +177,7 @@ describe('Mission Control Fixated Sticky Sub-Navigation Bar', () => {
 
   it('verifies views without subnav (HUB, Activity Monitor, UPS) do not have sticky subnav and keep 20px padding', () => {
     const htmlPath = path.resolve(__dirname, '../../index.html');
-    const htmlContent = fs.readFileSync(htmlPath, 'utf8');
+    const htmlContent = readIndexHtml();
 
     // 1. HUB view, Activity section, and UPS section do not contain .mgmt-sticky-subnav
     const activityIdx = htmlContent.indexOf('id="mgmt-sec-activity"');
@@ -246,7 +247,7 @@ describe('Mission Control Fixated Sticky Sub-Navigation Bar', () => {
 
   it('verifies opening Containers page only highlights Containers & Stacks and not App Store Catalog', () => {
     const htmlPath = path.resolve(__dirname, '../../index.html');
-    const htmlContent = fs.readFileSync(htmlPath, 'utf8');
+    const htmlContent = readIndexHtml();
 
     // 1. Verify in index.html that both tabs exist and have distinct data-tab-target values
     const containersMatch = htmlContent.match(/id="docker-inner-tab-containers"[^>]*data-tab-target="([^"]+)"/);

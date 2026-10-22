@@ -4,6 +4,7 @@
  * setting a secure administrator password, host operating role,
  * UPS detection, and notification channels.
  */
+import { onManagementDom } from '../management-dom.js';
 import { api, auth } from '../api.js';
 import { state } from '../state.js';
 import { showToast } from '../toast.js';
@@ -27,7 +28,6 @@ export function initSetupWizard() {
   const btnClose = document.getElementById('setup-wizard-close');
   const btnSkip = document.getElementById('setup-wizard-skip');
   const btnSubmit = document.getElementById('setup-wizard-submit');
-  const manualLaunchBtn = document.getElementById('btn-launch-setup-wizard');
 
   const isPasswordDefault = () => {
     const s = state.stats || state.latestStats;
@@ -47,11 +47,14 @@ export function initSetupWizard() {
 
   if (btnClose) btnClose.addEventListener('click', () => closeWizard(true));
   if (btnSkip) btnSkip.addEventListener('click', () => closeWizard(true));
-  if (manualLaunchBtn) {
-    manualLaunchBtn.addEventListener('click', () => {
-      openSetupWizard(null, true);
-    });
-  }
+  onManagementDom(() => {
+    const manualLaunchBtn = document.getElementById('btn-launch-setup-wizard');
+    if (manualLaunchBtn) {
+      manualLaunchBtn.addEventListener('click', () => {
+        openSetupWizard(null, true);
+      });
+    }
+  });
 
   // Prevent backdrop clicks from bypassing setup when default password is in use
   modal.addEventListener('click', (e) => {

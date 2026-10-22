@@ -2,6 +2,7 @@
  * ZettNAS Toolkit Settings & Preferences Controller
  * Handles settings drawer, tabs, screen backlight, timezone, hardware buttons, card layout locks, and security credentials.
  */
+import { onManagementDom } from '../management-dom.js';
 import { api, auth, ApiError, apiFetch } from '../api.js';
 import { state, ZOOM_PROFILES } from '../state.js';
 import { ZettEventBus } from '../event-bus.js';
@@ -708,6 +709,8 @@ export function initSettings() {
     }
   });
 
+  // Mission Control's security pane: set up once its markup is in the page (FE-04)
+  onManagementDom(() => {
   // --- Security Password Management ---
   async function fetchSecurity() {
     try {
@@ -950,6 +953,7 @@ export function initSettings() {
       window.location.reload();
     });
   }
+  });
 
   // --- Card Minimize / Collapse Toggle ---
   document.addEventListener('click', (e) => {
@@ -1015,7 +1019,7 @@ export function initSettings() {
     syncThemeSettingsUI();
   });
 
-  restoreHardwareTabsToManagement();
+  onManagementDom(restoreHardwareTabsToManagement);
 }
 
 let saveLcdDebounce = null;
@@ -1582,9 +1586,9 @@ export function syncLcdThemeUI() {
     const isThis = chip.dataset.lcdTheme === curTheme;
     chip.classList.toggle('active', isThis);
     if (isThis) {
-      chip.setAttribute('aria-selected', 'true');
+      chip.setAttribute('aria-pressed', 'true');
     } else {
-      chip.removeAttribute('aria-selected');
+      chip.setAttribute('aria-pressed', 'false');
     }
   });
 
@@ -1712,7 +1716,7 @@ export function syncThemeSettingsUI() {
 
 export function initThemeControls() {
   initLcdThemeControls();
-  initDesktopThemeControls();
+  onManagementDom(initDesktopThemeControls); // its controls are in Mission Control (FE-04)
 }
 
 export function gatherClientPreferences() {
@@ -1928,7 +1932,7 @@ export function initSystemTab() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  initSystemTab();
+  onManagementDom(initSystemTab);
 });
 
 
@@ -1973,7 +1977,8 @@ export async function renderApiTokens() {
   }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+// The API token form is in Mission Control, inserted when first needed (FE-04)
+document.addEventListener('DOMContentLoaded', () => onManagementDom(() => {
   const btnGen = document.getElementById('btn-generate-token');
   const inputName = document.getElementById('new-token-name');
   
@@ -1997,4 +2002,4 @@ Copy it now. You won't be able to see it again!`, () => {});
       }
     });
   }
-});
+}));

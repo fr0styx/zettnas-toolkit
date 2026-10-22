@@ -1,3 +1,4 @@
+import { onManagementDom } from '../management-dom.js';
 import { escapeHtml } from '../utils.js';
 import { state } from '../state.js';
 import { t } from '../i18n.js';
@@ -3452,7 +3453,7 @@ export function initDockSystem() {
   if (state.isLcdDirect || (typeof window !== 'undefined' && window.location.search.includes('mode=lcd')) || (document.body && document.body.classList.contains('lcd-direct'))) return;
   initSnapAssistFlyout();
   initTopbarUserPill();
-  initDockSettingsControls();
+  onManagementDom(initDockSettingsControls); // dock settings are in Mission Control (FE-04)
   initWindowKeyboardShortcuts();
   const consoleModal = document.getElementById('console-window');
   const consoleHeader = document.querySelector('#console-window .chassis-panel-header');

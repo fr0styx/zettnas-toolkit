@@ -1,3 +1,4 @@
+import { readIndexHtml } from './helpers/read-index-html.js';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import fs from 'fs';
 import path from 'path';
@@ -8,7 +9,7 @@ describe('Notifications & Multi-Channel Alerting UI Integration', () => {
 
   beforeEach(() => {
     const htmlPath = path.resolve(__dirname, '../../index.html');
-    html = fs.readFileSync(htmlPath, 'utf8');
+    html = readIndexHtml();
   });
 
   it('verifies Notifications & Alerts inner tab exists in System section of index.html', () => {

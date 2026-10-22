@@ -1,3 +1,4 @@
+import { ensureManagementDom, onManagementDom } from '../management-dom.js';
 import { ZettEventBus } from '../event-bus.js';
 import { state } from '../state.js';
 import { showToast } from '../toast.js';
@@ -1859,10 +1860,13 @@ export function setupWidgetSettingsEvents() {
 export function initWidgets() {
   loadWidgetConfig();
   applyWidgetConfig();
-  setupWidgetSettingsEvents();
-  syncWidgetSettingsUI();
-  setupTimezoneModalEvents();
-  setupCalendarModalEvents();
+  // Widget settings and the clock/calendar pop-ups are in Mission Control (FE-04)
+  onManagementDom(() => {
+    setupWidgetSettingsEvents();
+    syncWidgetSettingsUI();
+    setupTimezoneModalEvents();
+    setupCalendarModalEvents();
+  });
 
   // Pre-fetch calendar events for desktop widget dots
   try {
@@ -2269,12 +2273,16 @@ export const TIMEZONES_CATALOG = [
   { id: 'Pacific/Guam', name: 'Guam', region: 'Pacific', country: 'Guam' },
 ];
 
-export function openTimezoneModal() {
+export async function openTimezoneModal() {
   if (typeof window.openManagementWindow === 'function') {
     window.openManagementWindow('mgmt-sec-wallpaper', 'mgmt-pane-language');
   }
-
-  const modal = document.getElementById('modal-clock-timezone');
+  // The pop-up is part of Mission Control's markup, inserted when first needed (FE-04)
+  let modal = document.getElementById('modal-clock-timezone');
+  if (!modal) {
+    await ensureManagementDom();
+    modal = document.getElementById('modal-clock-timezone');
+  }
   if (!modal) return;
 
   setupTimezoneModalEvents();
@@ -2668,12 +2676,16 @@ export async function fetchCalendarFeeds() {
 }
 window.fetchCalendarFeeds = fetchCalendarFeeds;
 
-export function openCalendarModal(initialDateKey) {
+export async function openCalendarModal(initialDateKey) {
   if (typeof window.openManagementWindow === 'function') {
     window.openManagementWindow('mgmt-sec-wallpaper', 'mgmt-pane-calendar');
   }
-
-  const modal = document.getElementById('modal-calendar-notes');
+  // The pop-up is part of Mission Control's markup, inserted when first needed (FE-04)
+  let modal = document.getElementById('modal-calendar-notes');
+  if (!modal) {
+    await ensureManagementDom();
+    modal = document.getElementById('modal-calendar-notes');
+  }
   if (!modal) return;
 
   setupCalendarModalEvents();

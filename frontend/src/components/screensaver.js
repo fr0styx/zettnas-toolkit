@@ -3,6 +3,7 @@
  * Provides animated screensavers (Matrix Digital Rain, Retro Nixie Clock, Hyperspace Starfield),
  * idle inactivity timers, OLED burn-in drift protection, and wake-to-lock capabilities.
  */
+import { onManagementDom } from '../management-dom.js';
 import { showToast } from '../toast.js';
 import { state } from '../state.js';
 
@@ -109,8 +110,8 @@ export function initScreensaverSystem() {
     }
   }, 3000);
 
-  // Initialize UI controls if present
-  initScreensaverSettingsControls();
+  // Its settings controls are in Mission Control, inserted when first needed (FE-04)
+  onManagementDom(initScreensaverSettingsControls);
 }
 
 export function activateScreensaver(isPreview = false) {

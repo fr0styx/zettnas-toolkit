@@ -1,3 +1,4 @@
+import { readIndexHtml } from './helpers/read-index-html.js';
 import { readStyleCss } from './helpers/read-style-css.js';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { api } from '../api.js';
@@ -43,7 +44,7 @@ describe('Docker Stacks & Wallpaper Blur & Dock Labels', () => {
 
     it('verifies index.html does not contain "macOS Parabolic Magnification" or "macOS Standard"', () => {
       const htmlPath = path.resolve(__dirname, '../../../frontend/index.html');
-      const htmlContent = fs.readFileSync(htmlPath, 'utf8');
+      const htmlContent = readIndexHtml();
       expect(htmlContent).not.toContain('macOS Parabolic Magnification');
       expect(htmlContent).not.toContain('macOS Standard');
       expect(htmlContent).toContain('Parabolic Magnification');
@@ -54,7 +55,7 @@ describe('Docker Stacks & Wallpaper Blur & Dock Labels', () => {
   describe('Docker Container Updates, Action Button Styling & Header Layout', () => {
     it('verifies Active Containers button is hidden by default in index.html', () => {
       const htmlPath = path.resolve(__dirname, '../../../frontend/index.html');
-      const htmlContent = fs.readFileSync(htmlPath, 'utf8');
+      const htmlContent = readIndexHtml();
       expect(htmlContent).toContain('id="btn-view-docker-containers" style="display:none;"');
     });
 
@@ -84,7 +85,7 @@ describe('Docker Stacks & Wallpaper Blur & Dock Labels', () => {
 
     it('verifies index.html declares #desktop-wallpaper before dimmer layer', () => {
       const htmlPath = path.resolve(__dirname, '../../../frontend/index.html');
-      const htmlContent = fs.readFileSync(htmlPath, 'utf8');
+      const htmlContent = readIndexHtml();
       expect(htmlContent).toContain('<div id="desktop-wallpaper"');
       expect(htmlContent).toContain('id="desktop-wallpaper-dimmer"');
       const wpIdx = htmlContent.indexOf('id="desktop-wallpaper"');

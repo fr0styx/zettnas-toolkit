@@ -1,3 +1,4 @@
+import { onManagementDom } from '../management-dom.js';
 import { state } from '../state.js';
 /**
  * ZettNAS Toolkit Visual Wallpaper Gallery Engine
@@ -403,6 +404,12 @@ export async function uploadAndApplyWallpaper(file) {
 }
 
 export function initWallpapers() {
+  loadWallpapers(); // applies the active wallpaper right away
+  onManagementDom(initWallpaperPane);
+}
+
+// The wallpaper gallery and sliders live in Mission Control, inserted when first needed (FE-04)
+function initWallpaperPane() {
   const fileInput = document.getElementById('wallpaper-upload');
   const clearBtn = document.getElementById('wallpaper-clear-btn');
   const defaultBtn = document.getElementById('wallpaper-default-btn');

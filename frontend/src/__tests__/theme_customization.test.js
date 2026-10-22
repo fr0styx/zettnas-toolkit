@@ -1,3 +1,4 @@
+import { readIndexHtml } from './helpers/read-index-html.js';
 import { describe, it, expect, beforeEach } from 'vitest';
 import { state } from '../state.js';
 import { applyTheme, applyDesktopTheme, applyLcdTheme } from '../components/dashboard.js';
@@ -18,7 +19,7 @@ describe('Desktop Theme & LCD Screen Themer Isolation Suite', () => {
 
   it('verifies mgmt-pane-theme exists in Mission Control Appearance with 8 presets and custom accent picker', () => {
     const htmlPath = path.resolve(__dirname, '../../index.html');
-    const html = fs.readFileSync(htmlPath, 'utf8');
+    const html = readIndexHtml();
 
     // Subtab button and pane
     expect(html).toContain('data-tab-target="mgmt-pane-theme"');
@@ -41,7 +42,7 @@ describe('Desktop Theme & LCD Screen Themer Isolation Suite', () => {
 
   it('verifies sec-lcd-theme exists in Dashboard Layout drawer with 8 chips, custom color, and text clarity toggle', () => {
     const htmlPath = path.resolve(__dirname, '../../index.html');
-    const html = fs.readFileSync(htmlPath, 'utf8');
+    const html = readIndexHtml();
 
     // Section card
     expect(html).toContain('data-layout-card-id="sec-lcd-theme"');

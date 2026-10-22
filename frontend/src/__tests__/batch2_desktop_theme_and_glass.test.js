@@ -1,3 +1,4 @@
+import { readIndexHtml } from './helpers/read-index-html.js';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import fs from 'fs';
 import path from 'path';
@@ -25,7 +26,7 @@ describe('Batch 2: Glassmorphism, Wallpaper Readability, OLED Theme & Specular G
 
   it('verifies DOM markup in index.html for Wallpaper Readability, Glass pane, and OLED preset', () => {
     const htmlPath = path.resolve(__dirname, '../../index.html');
-    const html = fs.readFileSync(htmlPath, 'utf8');
+    const html = readIndexHtml();
 
     // 1. Wallpaper Readability Dimmer element
     expect(html).toContain('id="desktop-wallpaper-dimmer"');

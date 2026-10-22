@@ -1,3 +1,4 @@
+import { readIndexHtml } from './helpers/read-index-html.js';
 import { readStyleCss } from './helpers/read-style-css.js';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { api } from '../api.js';
@@ -304,7 +305,7 @@ describe('Yak Wallpaper Switch, Card Reordering, and Dynamic Hardware Settings S
     });
 
     it('verifies MCU and FB pills are removed from the top bar in production index.html', () => {
-      const indexHtml = fs.readFileSync(path.resolve(__dirname, '../../index.html'), 'utf-8');
+      const indexHtml = readIndexHtml();
       expect(indexHtml).not.toContain('id="mcu-status-pill"');
       expect(indexHtml).not.toContain('id="fb-status-pill"');
     });

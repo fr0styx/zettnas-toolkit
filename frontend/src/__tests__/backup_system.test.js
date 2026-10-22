@@ -1,3 +1,4 @@
+import { readIndexHtml } from './helpers/read-index-html.js';
 import { describe, it, expect, beforeEach } from 'vitest';
 import { gatherClientPreferences, applyClientPreferences } from '../components/settings.js';
 import fs from 'fs';
@@ -50,7 +51,7 @@ describe('Unified Configuration Backup & Restore System', () => {
 
   it('confirms sec-backup was removed from index.html and only Mission Control backup exists', () => {
     const htmlPath = path.resolve(__dirname, '../../index.html');
-    const html = fs.readFileSync(htmlPath, 'utf8');
+    const html = readIndexHtml();
 
     // Verify duplicate stub card sec-backup was deleted
     expect(html).not.toContain('data-layout-card-id="sec-backup"');
@@ -64,7 +65,7 @@ describe('Unified Configuration Backup & Restore System', () => {
 
   it('confirms sec-language was removed from drawer and placed in Mission Control Appearance', () => {
     const htmlPath = path.resolve(__dirname, '../../index.html');
-    const html = fs.readFileSync(htmlPath, 'utf8');
+    const html = readIndexHtml();
 
     // Drawer card sec-language must not exist
     expect(html).not.toContain('data-layout-card-id="sec-language"');

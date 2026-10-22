@@ -3,6 +3,7 @@
  * Handles User inventory, Role assignment, Session revocation, and TOTP 2FA setup.
  */
 
+import { onManagementDom } from '../management-dom.js';
 import { auth, apiFetch, setSessionUserProvider } from '../api.js';
 import { escapeHtml, trapFocus } from '../utils.js';
 import { ZettEventBus } from '../event-bus.js';
@@ -126,7 +127,12 @@ export function formatRole(roleId) {
 export function initUsersManagement() {
   initTopbarUserPill();
   fetchCurrentProfile();
+  onManagementDom(bindUsersPane);
+  bindUserModals();
+}
 
+// The Users pane lives in Mission Control, which is inserted when first needed (FE-04)
+function bindUsersPane() {
   // Sub-tabs in Users Pane
   const subtabs = document.querySelectorAll('.users-nav-btn');
   subtabs.forEach((btn) => {
@@ -177,6 +183,9 @@ export function initUsersManagement() {
     };
   }
 
+}
+
+function bindUserModals() {
   // Close modals via buttons
   document.querySelectorAll('.modal-close-btn').forEach((btn) => {
     btn.onclick = (e) => {

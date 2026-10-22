@@ -32,6 +32,7 @@ from backend.services.rag_engine import (
     resolve_path_backing_dev,
 )
 from backend.state import Z_STATE
+from tests._index_html import read_index_html
 
 
 def _make_pool_photo(path: str) -> None:
@@ -975,7 +976,7 @@ def test_huggingface_selected_model_telemetry_and_fast_speed():
     # Verify frontend index.html structure
     html_path = pathlib.Path("frontend/index.html")
     if html_path.exists():
-        content = html_path.read_text(encoding="utf-8")
+        content = read_index_html()
         assert 'id="ai-chat-starter-bar"' not in content
         assert "⚡ Try:" not in content
         assert "How Your Selected LLM Is Leveraged" in content
@@ -1000,7 +1001,7 @@ def test_ai_chat_background_defaults_and_toggles_removed():
 
     html_path = Path("frontend/index.html")
     if html_path.exists():
-        content = html_path.read_text(encoding="utf-8")
+        content = read_index_html()
         assert 'id="ai-chat-web-toggle"' in content
         assert 'id="ai-chat-tools-toggle"' not in content
 

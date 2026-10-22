@@ -1,3 +1,4 @@
+import { readIndexHtml } from './helpers/read-index-html.js';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import fs from 'fs';
 import path from 'path';
@@ -46,7 +47,7 @@ describe('Appearance Studio & Desktop Personalization Revamp Suite', () => {
 
   it('validates DOM markup in index.html for Desktop Twin Preview, Category Pills, Contrast Badge, Palette Extractor, and Theme Backup', () => {
     const htmlPath = path.resolve(__dirname, '../../index.html');
-    const html = fs.readFileSync(htmlPath, 'utf8');
+    const html = readIndexHtml();
 
     // 1. Master Desktop Twin Preview
     expect(html).toContain('desktop-twin-preview-wrapper');

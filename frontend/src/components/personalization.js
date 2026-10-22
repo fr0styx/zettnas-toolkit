@@ -4,6 +4,7 @@
  * Screensavers, Desktop Widgets, and Console Display Customization.
  */
 
+import { ensureManagementDom } from '../management-dom.js';
 import { api } from '../api.js';
 import { state } from '../state.js';
 import { ZettEventBus } from '../event-bus.js';
@@ -126,8 +127,8 @@ export function initPersonalization() {
   makeDraggable(personalizationWindow, personalizationWindow.querySelector('.os-window-header'));
   personalizationWindow.addEventListener('mousedown', () => bringToFront(personalizationWindow));
 
-  // Populate pane content from existing DOM sources or fresh templates
-  syncPersonalizationPanes();
+  // Populate pane content from Mission Control's panes (inserted when first needed, FE-04)
+  ensureManagementDom().then(syncPersonalizationPanes);
 }
 
 function syncPersonalizationPanes() {

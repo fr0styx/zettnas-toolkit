@@ -1,3 +1,4 @@
+import { readIndexHtml } from './helpers/read-index-html.js';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
@@ -10,7 +11,7 @@ describe('Batch 1: Accessibility, Form Label Linking & ARIA Radiogroups', () => 
 
   beforeEach(() => {
     const htmlPath = resolve(__dirname, '../../index.html');
-    const htmlContent = readFileSync(htmlPath, 'utf-8');
+    const htmlContent = readIndexHtml();
     const parser = new DOMParser();
     htmlDoc = parser.parseFromString(htmlContent, 'text/html');
   });
