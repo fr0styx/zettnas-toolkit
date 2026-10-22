@@ -21,6 +21,7 @@ import struct
 import subprocess
 import threading
 import time
+import urllib.error
 import urllib.request
 import xml.etree.ElementTree as ET
 import zipfile
@@ -1154,6 +1155,91 @@ def compute_neural_embedding_via_ollama(
             return blob, norm_emb
 
     return None
+
+
+_EMBED_BREAKER = {"until": 0.0}  # after a failure, skip the embedder for a while (AI-15)
+_EMBED_MODEL_SEEN: Dict[str, str] = {}  # configured name -> name the runtime accepted
+EMBED_BATCH_SIZE = 32
+
+
+def _embedding_model_candidates(model: str) -> List[str]:
+    cands = [_EMBED_MODEL_SEEN.get(model) or model]
+    if "embeddinggemma" in model.lower():
+        for alias in (
+            "embeddinggemma",
+            "embeddinggemma:latest",
+            "google/embeddinggemma-2",
+            "hf.co/google/embeddinggemma-2",
+        ):
+            if alias not in cands:
+                cands.append(alias)
+    elif model not in cands:
+        cands.append(model)
+    return cands
+
+
+def _pack_embedding(raw: List[float], target_dim: Optional[int]) -> bytes:
+    norm = math.sqrt(sum(float(x) * float(x) for x in raw))
+    vec = [float(x) / norm for x in raw] if norm > 0.0 else [float(x) for x in raw]
+    if target_dim and 0 < target_dim < len(vec):
+        vec = truncate_and_normalize_mrl(vec, target_dim)
+    return struct.pack(f"<{len(vec)}f", *vec)
+
+
+def compute_neural_embeddings_batch(
+    texts: List[str],
+    model: str,
+    target_dim: Optional[int] = None,
+    host: Optional[str] = None,
+    batch_size: int = EMBED_BATCH_SIZE,
+) -> Optional[List[bytes]]:
+    """Embeds document texts with Ollama's /api/embed in batches (AI-15).
+
+    All or nothing: returns one packed vector per text, or None if any batch failed, so a
+    file is never stored with a mix of neural and lexical vectors. After a failure the
+    embedder is skipped for 60 seconds instead of timing out on every file.
+    """
+    if not texts:
+        return []
+    if time.time() < _EMBED_BREAKER["until"]:
+        return None
+    target_host = _resolve_ollama_host(host)
+    limit = 32000 if "embeddinggemma" in model.lower() else 4000
+    clean = [(t or " ").strip()[:limit] or " " for t in texts]
+    out: List[bytes] = []
+    for start in range(0, len(clean), max(1, batch_size)):
+        batch = clean[start : start + batch_size]
+        embs = None
+        for cand in _embedding_model_candidates(model):
+            try:
+                req = urllib.request.Request(
+                    f"{target_host}/api/embed",
+                    data=json.dumps({"model": cand, "input": batch}).encode("utf-8"),
+                    headers={"Content-Type": "application/json", "User-Agent": "ZettNAS-RAG-Engine/2.0"},
+                    method="POST",
+                )
+                with urllib.request.urlopen(req, timeout=10.0 + 1.5 * len(batch)) as resp:
+                    data = json.loads(resp.read().decode("utf-8"))
+                got = data.get("embeddings")
+                if isinstance(got, list) and len(got) == len(batch) and all(isinstance(e, list) and e for e in got):
+                    embs = got
+                    _EMBED_MODEL_SEEN[model] = cand
+                    break
+            except urllib.error.HTTPError as e:
+                if e.code == 404:  # unknown model name: try the next alias
+                    continue
+                break
+            except Exception:
+                break
+        if embs is None:
+            _EMBED_BREAKER["until"] = time.time() + 60.0
+            logger.warning(
+                f"[RAG] Embedding model '{model}' unavailable at {target_host}; using lexical vectors for now. "
+                "Re-embed the index from AI settings once the model is back."
+            )
+            return None
+        out.extend(_pack_embedding(e, target_dim) for e in embs)
+    return out
 
 
 def compute_multimodal_query_embedding(
@@ -5948,54 +6034,37 @@ class RagSearchEngine:
         target_dim = cfg.get("embedding_dim")
         effective_file_emb_model = "zett_lexical_384d"
 
-        prepared_child_chunks: List[Tuple[Dict[str, Any], bytes]] = []
-        for ch in child_chunks:
-            effective_title = doc_title or file_name
-            ch_body = f"{ch['heading_context']} {ch['chunk_text']}".strip()
-            chunk_full_text = format_embeddinggemma_document(effective_title, ch_body)
-            neural_res = None
-            if configured_emb_model != "zett_lexical_384d":
-                neural_res = compute_neural_embedding_via_ollama(
-                    text=chunk_full_text,
-                    model=configured_emb_model,
-                    target_dim=target_dim,
-                    is_query=False,
-                )
-            if neural_res is not None:
-                emb_blob, _ = neural_res
-                effective_file_emb_model = configured_emb_model
-            else:
-                emb_blob, _ = compute_384d_embedding(
-                    text=chunk_full_text,
-                    scene_tags=["recipe", "food"]
-                    if doc_type == "recipe"
-                    else (["receipt", "document"] if doc_type == "invoice" else ["document"]),
-                )
-            prepared_child_chunks.append((ch, emb_blob))
-
-        prepared_parent_chunks: List[Tuple[Dict[str, Any], bytes]] = []
-        for p in parent_chunks:
-            effective_title = doc_title or file_name
-            p_body = f"{p['heading_context']} {p['chunk_text']}".strip()
-            parent_full_text = format_embeddinggemma_document(effective_title, p_body)
-            neural_res = None
-            if effective_file_emb_model != "zett_lexical_384d":
-                neural_res = compute_neural_embedding_via_ollama(
-                    text=parent_full_text,
-                    model=effective_file_emb_model,
-                    target_dim=target_dim,
-                    is_query=False,
-                )
-            if neural_res is not None:
-                p_emb, _ = neural_res
-            else:
-                p_emb, _ = compute_384d_embedding(
-                    text=parent_full_text,
-                    scene_tags=["recipe", "food"]
-                    if doc_type == "recipe"
-                    else (["receipt", "document"] if doc_type == "invoice" else ["document"]),
-                )
-            prepared_parent_chunks.append((p, p_emb))
+        effective_title = doc_title or file_name
+        lexical_tags = (
+            ["recipe", "food"]
+            if doc_type == "recipe"
+            else (["receipt", "document"] if doc_type == "invoice" else ["document"])
+        )
+        child_texts = [
+            format_embeddinggemma_document(effective_title, f"{ch['heading_context']} {ch['chunk_text']}".strip())
+            for ch in child_chunks
+        ]
+        parent_texts = [
+            format_embeddinggemma_document(effective_title, f"{p['heading_context']} {p['chunk_text']}".strip())
+            for p in parent_chunks
+        ]
+        # One batched call per file; every vector of a file comes from the same model (AI-15).
+        neural_blobs = None
+        if configured_emb_model != "zett_lexical_384d":
+            neural_blobs = compute_neural_embeddings_batch(
+                child_texts + parent_texts, configured_emb_model, target_dim=target_dim
+            )
+        if neural_blobs is not None:
+            effective_file_emb_model = configured_emb_model
+            all_blobs = neural_blobs
+        else:
+            all_blobs = [compute_384d_embedding(text=t, scene_tags=lexical_tags)[0] for t in child_texts + parent_texts]
+        prepared_child_chunks: List[Tuple[Dict[str, Any], bytes]] = list(
+            zip(child_chunks, all_blobs[: len(child_texts)])
+        )
+        prepared_parent_chunks: List[Tuple[Dict[str, Any], bytes]] = list(
+            zip(parent_chunks, all_blobs[len(child_texts) :])
+        )
 
         with self._write_lock:
             conn = self._get_conn(readonly=False)
