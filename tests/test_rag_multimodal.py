@@ -681,7 +681,7 @@ def test_ai_chat_agent_tools_web_browsing_and_llm_telemetry(tmp_path):
         web_sources_count=1,
     )
     assert "active_model" in tel
-    assert tel["zero_disk_wakeups"] is True
+    assert tel["llm_invoked"] is False and tel["tokens_per_sec"] is None  # nothing measured (AI-02)
     assert tel["tools_called"] == ["get_system_telemetry"]
 
     # Test NAS Hardware Telemetry + Disk Standby Query
@@ -696,7 +696,7 @@ def test_ai_chat_agent_tools_web_browsing_and_llm_telemetry(tmp_path):
     assert "get_disks_and_standby_status" in called_hw
     assert "Live NAS System & AI Accelerator Telemetry" in chat_hw["reply"]
     assert "Physical Disks & Standby Guard" in chat_hw["reply"]
-    assert chat_hw["llm_telemetry"]["zero_disk_wakeups"] is True
+    assert chat_hw["llm_telemetry"]["llm_invoked"] is False  # no model in tests; nothing invented (AI-02)
 
     # Test Web Browsing verification with mocked web tool response
     with patch(
@@ -838,7 +838,7 @@ def test_agentic_chat_self_identity_no_internet_search():
         assert "Isaiah" not in reply
         assert "Jacob" not in reply
         assert "Israel" not in reply
-        assert res["llm_telemetry"]["zero_disk_wakeups"] is True
+        assert res["llm_telemetry"]["llm_invoked"] is False
 
 
 def test_huggingface_model_release_dates_and_sorting():
@@ -972,41 +972,17 @@ def test_agentic_chat_local_autonomous_reasoning_and_coding_with_tools_disabled(
     assert "ZettNAS Toolkit 2.0" in res_age["reply"]
     assert "I checked your NAS state and web sources" not in res_age["reply"]
 
-    # 3. Dominican Republic President
-    res_dr = run_agentic_chat(
-        message="Who is the president of the Dominican Republic?",
-        allow_web_search=False,
-        allow_nas_tools=False,
-    )
-    assert res_dr["status"] == "ok"
-    assert "Luis Abinader" in res_dr["reply"]
-    assert "Santo Domingo" in res_dr["reply"]
-    assert "I checked your NAS state and web sources" not in res_dr["reply"]
-
-    # 4. Standby-Safe Disk Temperature Python Script
-    res_code = run_agentic_chat(
-        message="Write a python script to check disk temperatures",
-        allow_web_search=False,
-        allow_nas_tools=False,
-    )
-    assert res_code["status"] == "ok"
-    assert "smartctl" in res_code["reply"]
-    assert "-n standby" in res_code["reply"]
-    assert "exit code 2" in res_code["reply"].lower() or "returncode == 2" in res_code["reply"]
-    assert "```python" in res_code["reply"]
-    assert "I checked your NAS state and web sources" not in res_code["reply"]
-
-    # 5. Storage Architecture (ZFS vs Unraid)
-    res_storage = run_agentic_chat(
-        message="Explain ZFS vs Unraid",
-        allow_web_search=False,
-        allow_nas_tools=False,
-    )
-    assert res_storage["status"] == "ok"
-    assert "ZFS" in res_storage["reply"]
-    assert "Unraid" in res_storage["reply"]
-    assert "Spindown" in res_storage["reply"] or "spindown" in res_storage["reply"].lower()
-    assert "I checked your NAS state and web sources" not in res_storage["reply"]
+    # 3-5. Without a language model, ZettAI says so instead of returning canned "answers" (AI-02)
+    for question in (
+        "Who is the president of the Dominican Republic?",
+        "Write a python script to check disk temperatures",
+        "Explain ZFS vs Unraid",
+    ):
+        res = run_agentic_chat(message=question, allow_web_search=False, allow_nas_tools=False)
+        assert res["status"] == "ok"
+        assert "No AI model answered" in res["reply"]
+        assert "Luis Abinader" not in res["reply"] and "```python" not in res["reply"]
+        assert res["llm_telemetry"]["llm_invoked"] is False
 
 
 def test_conversational_nlg_kim_jong_un_education_no_truncation():
@@ -1041,29 +1017,16 @@ def test_conversational_nlg_kim_jong_un_education_no_truncation():
 
 def test_offline_world_knowledge_kim_jong_un_and_science():
     """
-    Verifies that when tools and web search are both disabled,
-    world knowledge queries (Kim Jong Un, Einstein, Turing) provide articulate answers.
+    With web search off and no language model, world-knowledge questions get an honest
+    "no model answered" reply, never hard-coded facts presented as the model's (AI-02).
     """
     from backend.services.ai_chat_agent import run_agentic_chat
 
-    # Kim Jong Un offline education
-    res_kju = run_agentic_chat(
-        message="Where did Kim Jong Un study?",
-        allow_web_search=False,
-        allow_nas_tools=False,
-    )
-    assert res_kju["status"] == "ok"
-    assert any(w in res_kju["reply"] for w in ("Kim Il Sung", "Pyongyang", "Switzerland", "Berne", "Bern"))
-    assert "I checked your NAS state and web sources" not in res_kju["reply"]
-
-    # Einstein offline query
-    res_einstein = run_agentic_chat(
-        message="Who was Albert Einstein?",
-        allow_web_search=False,
-        allow_nas_tools=False,
-    )
-    assert res_einstein["status"] == "ok"
-    assert "physics" in res_einstein["reply"].lower() or "relativity" in res_einstein["reply"].lower()
+    for question in ("Where did Kim Jong Un study?", "Who was Albert Einstein?"):
+        res = run_agentic_chat(message=question, allow_web_search=False, allow_nas_tools=False)
+        assert res["status"] == "ok"
+        assert "No AI model answered" in res["reply"]
+        assert not any(w in res["reply"] for w in ("Kim Il Sung", "Berne", "relativity"))
 
 
 def test_huggingface_selected_model_telemetry_and_fast_speed():
@@ -1086,6 +1049,7 @@ def test_huggingface_selected_model_telemetry_and_fast_speed():
         eval_tokens=50,
         measured_tok_sec=25.4,
         web_sources_count=5,
+        runtime_name="Ollama",
     )
     assert tel_measured["active_model"] == "hf.co/ConwayResearch/Underdog-Woof-4B-1.1"
     assert tel_measured["tokens_per_sec"] == 25.4
@@ -1099,7 +1063,7 @@ def test_huggingface_selected_model_telemetry_and_fast_speed():
         measured_tok_sec=None,
         web_sources_count=5,
     )
-    assert tel_est["tokens_per_sec"] >= 20.0
+    assert tel_est["tokens_per_sec"] is None  # no estimates presented as measurements (AI-02)
 
     # Verify frontend index.html structure
     html_path = pathlib.Path("frontend/index.html")

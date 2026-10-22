@@ -258,7 +258,7 @@ describe('ZettAI Conversation History & Dual-Pane UI Suite', () => {
       expect(botMsgs.length).toBe(1);
       expect(botMsgs[0].textContent).toContain('I was trained on a large dataset');
       expect(botMsgs[0].textContent).toContain('browse_internet: 5 web source(s) verified');
-      expect(botMsgs[0].textContent).toContain('~12.6 tok/s');
+      expect(botMsgs[0].textContent).toContain("12.6 tok/s");
     } finally {
       delete window.__forceAiStreamingTest;
       window.fetch = origFetch;

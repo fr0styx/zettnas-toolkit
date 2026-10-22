@@ -3450,15 +3450,9 @@ def _try_local_llm_completion(
                             or max(12, len(str(content).split()) + len(str(reasoning).split()))
                         )
                         if is_ovms or ":8000" in url:
-                            ovms_accel = {
-                                "active_tier": 1,
-                                "tier_number": 1,
-                                "name": "Intel AI Boost NPU",
-                                "device_label": "Intel AI Boost NPU",
-                                "has_npu": True,
-                                "has_gpu": False,
-                            }
-                            runtime_label = f"OpenVINO NPU Engine ({data.get('model') or model_to_use})"
+                            # Which device OVMS runs the model on is its own configuration; don't claim NPU.
+                            ovms_accel = None
+                            runtime_label = f"OpenVINO Model Server ({data.get('model') or model_to_use})"
                         else:
                             ovms_accel = None
                             runtime_label = "OpenAI-Compatible Local LLM"
@@ -3600,32 +3594,19 @@ def build_llm_execution_telemetry(
     dev_label = accel.get("device_label") or accel.get("name") or "Intel Arc Graphics"
     compact_dev = re.sub(r"\s*\([^)]*\)", "", str(dev_label)).strip() or dev_label
 
-    est_tokens = eval_tokens if eval_tokens > 0 else max(8, int(len(str(answer_text or "").split()) * 1.3))
-    if measured_tok_sec and measured_tok_sec > 0:
-        tok_per_sec = round(measured_tok_sec, 1)
-    else:
-        tok_per_sec = _estimate_model_tok_per_sec(active_model, model_info, tier_num)
+    # Only measured values (AI-02): no estimated speeds or token counts.
+    llm_invoked = bool(runtime_name)
+    est_tokens = eval_tokens if (llm_invoked and eval_tokens > 0) else None
+    tok_per_sec = round(measured_tok_sec, 1) if (llm_invoked and measured_tok_sec and measured_tok_sec > 0) else None
 
     is_reasoning = any(k in active_model.lower() for k in ("deepseek-r1", "qwq", "-r1"))
-    effective_runtime = (
-        runtime_name
-        or accel.get("runtime_engine")
-        or (
-            "ZettAI NPU Multi-Modal Engine"
-            if active_model == "builtin-npu"
-            else (
-                f"ZettAI ReAct + Reasoning Engine ({active_model})"
-                if is_reasoning
-                else f"ZettAI Built-in ReAct + NPU Engine ({active_model})"
-            )
-        )
-    )
+    effective_runtime = runtime_name or "No AI model (built-in tools only)"
 
     return {
         "active_model": active_model,
         "model_name": model_info.get("name") if model_info else active_model,
         "hf_repo": model_info.get("hf_repo") if model_info else active_model,
-        "quantization": model_info.get("quantization", "INT4 / Q4_K_M") if model_info else "INT4",
+        "quantization": model_info.get("quantization") if model_info else None,
         "fits_hardware": bool(model_info.get("fits_hardware", True)) if model_info else True,
         "hardware_warning": bool(model_info.get("hardware_warning", False)) if model_info else False,
         "warning_message": model_info.get("warning_message") if model_info else None,
@@ -3636,13 +3617,12 @@ def build_llm_execution_telemetry(
         "hardware_device": dev_label,
         "hardware_device_compact": compact_dev,
         "runtime_mode": effective_runtime,
-        "llm_invoked": True,
+        "llm_invoked": llm_invoked,
         "elapsed_ms": round(elapsed_ms, 1),
         "tokens_generated": est_tokens,
         "tokens_per_sec": tok_per_sec,
         "tools_called": list(tools_called or []),
         "web_sources_count": int(web_sources_count or 0),
-        "zero_disk_wakeups": True,
     }
 
 
@@ -4185,18 +4165,7 @@ def _synthesize_web_grounded_answer(
             if sec_sent and sec_sent[:40].lower() not in answer_paragraphs[0].lower():
                 answer_paragraphs.append(f"{sec_sent} [2]")
 
-    # Add Reasoning Trace block when a reasoning LLM (e.g. deepseek-r1:14b, QwQ-32B) is active
-    reasoning_block = ""
-    if is_reasoning_model:
-        fact_note = f"Cross-referenced {len(srcs)} live encyclopedia & web sources for `{search_topic}`."
-        reasoning_block = (
-            f"> 🧠 **`{active_model}` Chain-of-Thought (`<think>`)**:\n"
-            f'> 1. **Intent Classification:** General knowledge / fact verification query (`"{clean_msg}"`).\n'
-            f"> 2. **Tool Selection:** Invoked `browse_internet` (skipped unrelated local NAS PDFs).\n"
-            f"> 3. **Verification:** {fact_note}\n\n"
-        )
-
-    return reasoning_block + "\n\n".join(answer_paragraphs)
+    return "\n\n".join(answer_paragraphs)
 
 
 def _synthesize_rag_grounded_answer(
@@ -4222,21 +4191,6 @@ def _synthesize_rag_grounded_answer(
         return ""
 
     sections: List[str] = []
-
-    # 1. Reasoning trace for reasoning LLMs
-    if is_reasoning_model:
-        scope_desc = (
-            f"Folder '{folder_path}' ({manifest.get('total_files', len(citations))} files)"
-            if folder_path
-            else f"{len(citations)} local document chunks"
-        )
-        sections.append(
-            f"> 🧠 **`{active_model}` Chain-of-Thought (`<think>`)**:\n"
-            f'> 1. **User Query:** "{clean_msg}"\n'
-            f"> 2. **RAG Scope:** {scope_desc} via NVMe SQLite WAL index (0 disk wakeups).\n"
-            f"> 3. **CRAG Evaluation:** Grade {crag_grade} with {grounding_score}% Grounding Confidence.\n"
-            f"> 4. **Synthesis:** Constructing fact-grounded response with verified citations.\n"
-        )
 
     # 2. Context Banner
     if folder_path:
@@ -4636,419 +4590,16 @@ def _generate_local_code_response(clean_msg: str, active_model: str) -> Optional
     )
 
 
-def _lookup_and_reason_world_knowledge(clean_msg: str, active_model: str) -> Optional[str]:
-    """Provides verified global facts, heads of state, and capitals when offline or web tools are off."""
-    msg_low = clean_msg.lower()
-
-    if any(
-        k in msg_low
-        for k in (
-            "why it isnt giving me the answer",
-            "why isn't it giving me the answer",
-            "why no answer",
-            "blank answer",
-            "confirm the country",
-            "confused it should be asking",
-        )
-    ):
-        return (
-            "### 🛠️ Root Cause: Why the Previous Answer Was Blank\n\n"
-            "Here is the exact technical diagnosis and how the system has now been corrected:\n\n"
-            "1. **Embedding Model Selected as Primary Model:**\n"
-            "   An embedding-only model (`google/embeddinggemma-2-270m`) had been activated in configuration. Because embedding models do not perform conversational chat generation, Ollama failed to serve chat requests, triggering an automatic fallback to the local OpenVINO model (`DeepSeek-R1-Distill-Qwen-1.5B`) running on CPU.\n\n"
-            "2. **Confused by Encyclopedia Search & Token Budget Exhaustion:**\n"
-            "   Without a dedicated weather tool, the query was routed to Wikipedia search. Wikipedia returned an article about the *'Santo Domingo Airfield (Chile)'*, confusing the small model with aeronautical radio navigation beacons. The model exhausted its entire token generation budget pondering inside internal `<think>...</think>` tags and emitted **zero tokens outside the tags** before reaching its limit.\n\n"
-            "3. **Empty Message Stripping Bug:**\n"
-            "   Because `<think>` blocks are extracted for the collapsible thought disclosure, stripping the thought tags left an empty string `"
-            "`, rendering as an empty card in the chat interface.\n\n"
-            "### ✅ System Upgrades Implemented:\n"
-            "- **Live Meteorological Tool (`get_weather`):** Queries live meteorological data (`wttr.in`) with zero disk spin-ups.\n"
-            "- **Automatic Country Disambiguation:** For ambiguous locations like **Santo Domingo** (Dominican Republic 🇩🇴 vs. Chile 🇨🇱), the engine retrieves conditions for both and **explicitly asks to confirm your country**.\n"
-            "- **Empty Answer Recovery:** If an SLM ever exhausts its budget inside `<think>`, the system automatically appends a grounded answer from tool results so you **never receive a blank response** again.\n"
-            "- **Model Role Separation:** Vector embedding models can no longer be assigned as the primary conversational chat model."
-        )
-
-    # 0. Kim Jong Un / North Korea
-    if any(w in msg_low for w in ("kim jong un", "kim jong-un", "kim jong il", "north korea", "dprk")):
-        if any(w in msg_low for w in ("study", "studied", "school", "university", "college", "education")):
-            return (
-                "Kim Jong Un completed his early education in **Bern, Switzerland**, before returning to North Korea "
-                "for higher academic and military studies in **Pyongyang**.\n\n"
-                "### 🎓 Educational Background:\n"
-                "- **🇨🇭 Schooling in Switzerland (c. 1993 – 2000):**\n"
-                "  - He attended the English-language **International School of Bern** in Gümligen and later the "
-                "**Liebefeld-Steinhölzli public school** in Köniz near Bern.\n"
-                '  - He studied under the pseudonym **"Pak Un"** (or *"Un Pak"*), officially registered as the child '
-                "of an employee at the North Korean Embassy.\n"
-                "  - Classmates described him as quiet, passionate about basketball (an avid Chicago Bulls & Michael Jordan fan), "
-                "and fond of computer games.\n\n"
-                "- **🇰🇵 Higher Education in North Korea (2000 – 2007):**\n"
-                "  - Upon returning to Pyongyang, he attended **Kim Il Sung University** (concentrating on physics and governance).\n"
-                "  - He subsequently attended **Kim Il Sung Military University**, graduating as an artillery officer to prepare for state leadership."
-            )
-        if any(w in msg_low for w in ("leader", "president", "supreme leader", "who is", "who's", "whos", "ruler")):
-            return (
-                "**Kim Jong Un** is the **Supreme Leader of North Korea** (Democratic People's Republic of Korea), "
-                "having assumed power in December 2011 following the death of his father, Kim Jong Il.\n\n"
-                "### 🇰🇵 Leadership Details:\n"
-                "- **Titles:** General Secretary of the Workers' Party of Korea (WPK), President of the State Affairs Commission, "
-                "and Supreme Commander of the Armed Forces of the DPRK.\n"
-                "- **Predecessor:** Kim Jong Il (father; 1994–2011).\n"
-                "- **Grandfather:** Kim Il Sung (founding president of North Korea; 1948–1994).\n"
-                "- **Capital:** Pyongyang."
-            )
-
-    # 0b. Albert Einstein
-    if "einstein" in msg_low:
-        if any(w in msg_low for w in ("study", "studied", "school", "university", "college", "education")):
-            return (
-                "**Albert Einstein** completed his secondary education at the Argovian cantonal school in Aarau, Switzerland (1895–1896), "
-                "and obtained his teaching diploma in mathematics and physics from the **Federal Polytechnic School in Zurich (ETH Zurich)** in 1900. "
-                "He was subsequently awarded his PhD in physics by the **University of Zurich** in 1905."
-            )
-        if any(w in msg_low for w in ("born", "birthplace", "where was")):
-            return (
-                "**Albert Einstein** was born in **Ulm, Kingdom of Württemberg, German Empire** on **March 14, 1879**."
-            )
-        return (
-            "**Albert Einstein** (1879–1955) was a German-born theoretical physicist widely acknowledged as one of the greatest "
-            "physicists of all time. He is best known for developing the **theory of relativity** ($E = mc^2$) and his foundational "
-            "contributions to quantum mechanics, receiving the **1921 Nobel Prize in Physics** for his discovery of the law of the "
-            "photoelectric effect."
-        )
-
-    # 0c. Alan Turing
-    if "turing" in msg_low:
-        return (
-            "**Alan Turing** (1912–1954) was an English mathematician, computer scientist, and cryptanalyst widely considered the "
-            "**father of modern computer science and artificial intelligence**. During World War II, he played a pivotal role at Bletchley Park "
-            "cracking the German Enigma code, and later conceptualized the universal Turing machine and the Turing test."
-        )
-
-    # 0d. Linus Torvalds
-    if any(w in msg_low for w in ("linus torvalds", "torvalds", "creator of linux")):
-        return (
-            "**Linus Torvalds** is a Finnish-American software engineer best known as the creator and principal developer of the "
-            "**Linux kernel** (first released in 1991) and the distributed version control system **Git** (created in 2005). "
-            "He studied computer science at the **University of Helsinki**."
-        )
-
-    # 1. Dominican Republic
-    if any(w in msg_low for w in ("dominican republic", "dominican", "republica dominicana", "santo domingo")):
-        is_pres = any(
-            w in msg_low for w in ("president", "leader", "who is", "who's", "whos", "head of state", "governs")
-        )
-        if is_pres or "capital" in msg_low or len(msg_low.split()) <= 6:
-            return (
-                "The current **President of the Dominican Republic** is **Luis Abinader** "
-                "(Luis Rodolfo Abinader Corona).\n\n"
-                "### 🇩🇴 Dominican Republic Leadership Details:\n"
-                "- **Incumbent President:** **Luis Abinader**\n"
-                "- **In Office Since:** August 16, 2020\n"
-                "- **Re-election:** Overwhelmingly re-elected in **May 19, 2024** for a second term (**2024–2028**), "
-                "winning over 57% of the general vote.\n"
-                "- **Political Party:** Modern Revolutionary Party (*Partido Revolucionario Moderno*, PRM).\n"
-                "- **Vice President:** Raquel Peña\n"
-                "- **Capital City:** Santo Domingo\n"
-                "- **Administration Priorities:** Institutional transparency, anti-corruption judicial autonomy, "
-                "economic growth, tourism expansion, and bilateral border security."
-            )
-
-    # 2. United States
-    if any(
-        w in msg_low
-        for w in (
-            "united states",
-            "usa",
-            "u.s.",
-            "american president",
-            "president of the united states",
-            "president of the us",
-        )
-    ):
-        if any(w in msg_low for w in ("president", "leader", "who is", "who's", "whos", "head of state")):
-            return (
-                "The **President of the United States** is **Donald J. Trump**, who assumed office as the "
-                "47th President of the United States on **January 20, 2025**.\n\n"
-                "### 🇺🇸 Executive Office Details:\n"
-                "- **President:** Donald J. Trump (47th President)\n"
-                "- **Vice President:** JD Vance\n"
-                "- **Inauguration:** January 20, 2025\n"
-                "- **Capital:** Washington, D.C."
-            )
-
-    # 3. France
-    if "france" in msg_low and any(w in msg_low for w in ("president", "leader", "who is", "capital")):
-        return (
-            "The **President of France** is **Emmanuel Macron** (in office since May 2017). "
-            "The capital of France is **Paris**."
-        )
-
-    # 4. Germany
-    if "germany" in msg_low and any(w in msg_low for w in ("chancellor", "leader", "who is", "capital", "president")):
-        return (
-            "The **Chancellor of Germany** is **Olaf Scholz** (in office since December 2021). "
-            "The federal capital of Germany is **Berlin**."
-        )
-
-    # 5. United Kingdom
-    if any(w in msg_low for w in ("united kingdom", "uk", "britain", "england")) and any(
-        w in msg_low for w in ("prime minister", "leader", "who is", "king")
-    ):
-        return (
-            "The **Prime Minister of the United Kingdom** is **Keir Starmer** (Labour Party, took office in July 2024). "
-            "The reigning monarch is **King Charles III**, and the capital is **London**."
-        )
-
-    # 6. Canada
-    if "canada" in msg_low and any(w in msg_low for w in ("prime minister", "leader", "who is", "capital")):
-        return (
-            "The **Prime Minister of Canada** is **Justin Trudeau** (Liberal Party). "
-            "The capital of Canada is **Ottawa**."
-        )
-
-    # 7. Mexico
-    if "mexico" in msg_low and any(w in msg_low for w in ("president", "leader", "who is", "capital")):
-        return (
-            "The **President of Mexico** is **Claudia Sheinbaum**, who took office on **October 1, 2024** "
-            "as Mexico's first female president. The capital is **Mexico City**."
-        )
-
-    # 8. Brazil
-    if "brazil" in msg_low and any(w in msg_low for w in ("president", "leader", "who is", "capital")):
-        return (
-            "The **President of Brazil** is **Luiz Inácio Lula da Silva** (took office January 1, 2023). "
-            "The capital is **Brasília**."
-        )
-
-    # 9. Japan
-    if "japan" in msg_low and any(w in msg_low for w in ("prime minister", "leader", "who is", "capital", "emperor")):
-        return (
-            "The **Prime Minister of Japan** is **Shigeru Ishiba** (took office October 2024). "
-            "The reigning Emperor is **Naruhito**, and the capital is **Tokyo**."
-        )
-
-    # 10. Capitals lookup
-    capitals = {
-        "australia": "Canberra",
-        "switzerland": "Bern",
-        "netherlands": "Amsterdam",
-        "turkey": "Ankara",
-        "spain": "Madrid",
-        "italy": "Rome",
-        "china": "Beijing",
-        "india": "New Delhi",
-        "argentina": "Buenos Aires",
-        "colombia": "Bogotá",
-        "peru": "Lima",
-        "chile": "Santiago",
-        "south korea": "Seoul",
-        "egypt": "Cairo",
-    }
-    for country, cap in capitals.items():
-        if country in msg_low and "capital" in msg_low:
-            return f"The capital of **{country.title()}** is **{cap}**."
-
-    return None
-
-
-def _lookup_and_reason_storage_and_systems(clean_msg: str, active_model: str) -> Optional[str]:
-    """Provides storage engineering, ZFS/Btrfs/Unraid comparison, and thermal fan reasoning."""
-    msg_low = clean_msg.lower()
-
-    # ZFS ARC vs Linux Page Cache
-    if "arc" in msg_low and ("page cache" in msg_low or "zfs" in msg_low or "memory" in msg_low or "ram" in msg_low):
-        return (
-            "### 🧠 ZFS ARC (Adaptive Replacement Cache) vs. Linux Page Cache\n\n"
-            "1. **Algorithmic Sophistication:**\n"
-            "   - **Linux Page Cache:** Uses an LRU (Least Recently Used) list. If a large sequential backup or media file "
-            "streams through, it flushes active working-set pages from RAM.\n"
-            "   - **ZFS ARC:** Implements Megiddo & Modha's Adaptive Replacement algorithm, splitting memory between "
-            "**MRU (Most Recently Used)** and **MFU (Most Frequently Used)** with ghost lists. Frequent reads remain in RAM "
-            "even when large sequential scans occur.\n\n"
-            "2. **Memory Allocation & Pressure:**\n"
-            "   - By default on Linux, ZFS targets up to 50% of system RAM. Under host memory pressure, the ZFS kernel module "
-            "shrinks the ARC through internal shrinkers (`arc_shrink`).\n\n"
-            "3. **Compression:**\n"
-            "   - ZFS stores compressed blocks (e.g. `lz4` or `zstd`) directly in the ARC, effectively multiplying your effective "
-            "cache capacity by 1.5x–2.5x compared to uncompressed page cache."
-        )
-
-    # ZFS vs Unraid vs Btrfs
-    if any(w in msg_low for w in ("zfs vs unraid", "unraid vs zfs", "btrfs vs zfs", "storage comparison", "raidz")):
-        return (
-            "### 🗄️ Storage Architecture Comparison: ZFS vs. Unraid vs. Btrfs\n\n"
-            "| Feature | ZFS (OpenZFS) | Unraid Storage Array | Btrfs |\n"
-            "| :--- | :--- | :--- | :--- |\n"
-            "| **Parity Architecture** | Striped parity (RAIDZ1/2/3) across all vdev disks | Dedicated 1 or 2 parity disks + individual XFS data disks | Chunk-based block allocation (RAID1/RAID10) |\n"
-            "| **Drive Spindown** | ❌ All disks in a vdev spin up together for every read | ✅ **Independent Spindown** (only the disk with the file spins up) | ❌ All disks in the pool spin up |\n"
-            "| **Bitrot Protection** | ✅ 256-bit Fletcher4/SHA-256 block checksums + self-healing | ⚠️ Parity checks detect discrepancies, but cannot auto-heal bitrot without ZFS plugin | ✅ CRC32c/xxhash checksums on data and metadata |\n"
-            "| **Expansion** | Expandable by vdev or single-disk RAIDZ expansion (ZFS 2.2+) | ✅ Effortless: add any disk of any capacity (up to parity size) | ✅ Flexible: `btrfs device add` & rebalance |\n"
-            "| **Best Use Case** | Virtualization, databases, high-IOPS pools, and absolute data integrity | Media streaming, homelab archives, mixed drive collections, power-conscious homelabs | Linux OS roots, single-drive / mirror backup targets |"
-        )
-
-    # Fan curve & thermals
-    if any(w in msg_low for w in ("fan curve", "zero rpm", "thermal safety", "pwm", "acoustic profile")):
-        return (
-            "### 🌀 ZettNAS Acoustic & Thermal Protection Architecture\n\n"
-            "ZettNAS implements a dual-safety fan orchestration algorithm:\n\n"
-            "1. **Zero-RPM HDD Standby Mode:**\n"
-            "   - Hard drive bay exhaust fans are allowed to enter complete Zero RPM (0 PWM) **only when all hard drives in the zone are spun down** "
-            "in standby and temperatures are below threshold ($<38^\\circ\\text{C}$).\n"
-            "2. **CPU Fan (`pwm3`) Inviolability:**\n"
-            "   - The CPU cooling fan is strictly protected and **never** shut down under any condition.\n"
-            "3. **Emergency Thermal Clamp:**\n"
-            "   - If any component (CPU, NVMe, or HDD) reaches $\\ge 80^\\circ\\text{C}$, the fan curve calculation unconditionally clamps "
-            "all fan channels to maximum hardware PWM (`183` / `255`) to eliminate thermal runaway risks."
-        )
-
-    return None
-
-
-def _solve_technical_math_and_logic(clean_msg: str, active_model: str) -> Optional[str]:
-    """Calculates general arithmetic, usable storage capacity, RAID parity overhead, and network transfer speeds."""
-    if _is_math_or_calculation_query(clean_msg):
-        calc_res = tool_calculate(clean_msg)
-        if calc_res.get("status") == "ok":
-            res_val = calc_res.get("formatted", str(calc_res.get("result", "")))
-            expr_val = calc_res.get("expression", clean_msg)
-            return (
-                f"### 🧮 Calculation\n\n"
-                f"**`{expr_val}`** = **`{res_val}`**\n\n"
-                f"Computed locally via safe ZettAI AST calculation engine."
-            )
-
-    msg_low = clean_msg.lower()
-
-    # Raw to Usable TiB
-    tb_match = re.search(r"(\d+(?:\.\d+)?)\s*(?:tb|terabytes?)\b", msg_low)
-    if tb_match and any(w in msg_low for w in ("usable", "tib", "actual capacity", "how much storage", "in raid")):
-        raw_tb = float(tb_match.group(1))
-        disks_m = re.search(r"(\d+)\s*(?:x|\*|\s*drives|\s*disks)", msg_low)
-        num_disks = int(disks_m.group(1)) if disks_m else 1
-
-        is_raidz2 = "raidz2" in msg_low or "raid 6" in msg_low or "raid6" in msg_low
-        is_raidz1 = "raidz1" in msg_low or "raid 5" in msg_low or "raid5" in msg_low
-        is_mirror = "mirror" in msg_low or "raid 1" in msg_low or "raid1" in msg_low
-
-        data_disks = num_disks
-        parity_type = "single drive"
-        if is_raidz2 and num_disks >= 3:
-            data_disks = num_disks - 2
-            parity_type = f"RAIDZ2 / RAID 6 ({num_disks} drives minus 2 parity)"
-        elif is_raidz1 and num_disks >= 2:
-            data_disks = num_disks - 1
-            parity_type = f"RAIDZ1 / RAID 5 ({num_disks} drives minus 1 parity)"
-        elif is_mirror and num_disks >= 2:
-            data_disks = num_disks / 2.0
-            parity_type = f"Mirror / RAID 10 ({num_disks} drives 50% capacity)"
-
-        total_raw_tb = raw_tb * (data_disks if disks_m else 1)
-        usable_tib = total_raw_tb * (10**12 / 2**40)
-
-        return (
-            f"### 🧮 Storage Capacity Calculation\n\n"
-            f"- **Configuration:** {parity_type} with `{raw_tb:g} TB` drives\n"
-            f"- **Decimal Raw Capacity:** `{total_raw_tb:g} TB` ($10^{{12}}$ bytes/TB)\n"
-            f"- **Binary Usable Capacity:** **`{usable_tib:.2f} TiB`** ($2^{{40}}$ bytes/TiB, factor $\\approx 0.90949$)\n"
-            f"- **Slop / Metadata Reserve:** Under ZFS or Btrfs, expect approximately **`{usable_tib * 0.96:.2f} TiB`** after reserved pool overhead."
-        )
-
-    # Network transfer time calculation
-    if any(w in msg_low for w in ("transfer", "how long to copy", "transfer time")) and any(
-        w in msg_low for w in ("gb", "tb", "10gbe", "2.5gbe", "1gbe")
-    ):
-        return (
-            "### ⏱️ Network Transfer Speed & Time Estimates\n\n"
-            "- **1 GbE LAN (Gigabit):**\n"
-            "  - Max Throughput: $\\approx 115\\text{ MB/s}$ ($920\\text{ Mbps}$ real-world SMB)\n"
-            "  - Time for **1 TB:** $\\approx 2\\text{ hours } 25\\text{ minutes}$\n\n"
-            "- **2.5 GbE Multi-Gig:**\n"
-            "  - Max Throughput: $\\approx 280\\text{ MB/s}$ ($2.25\\text{ Gbps}$ real-world SMB)\n"
-            "  - Time for **1 TB:** $\\approx 1\\text{ hour } 00\\text{ minutes}$\n\n"
-            "- **10 GbE High-Speed:**\n"
-            "  - Max Throughput: $\\approx 1.1\\text{ GB/s}$ ($9.2\\text{ Gbps}$ over NVMe/SSD)\n"
-            "  - Time for **1 TB:** $\\approx 15\\text{ minutes } 10\\text{ seconds}$"
-        )
-
-    return None
-
-
-def _synthesize_general_autonomous_reasoning(
-    clean_msg: str,
-    active_model: str,
-    model_info: Optional[Dict[str, Any]],
-    accel: Dict[str, Any],
-    ram_gb: float,
-) -> str:
-    """Generates structured reasoning traces and conclusions for general queries."""
-    is_reasoning_model = any(k in active_model.lower() for k in ("deepseek-r1", "qwq", "-r1"))
-    tier_label = accel.get("device_label") or "Intel AI Boost NPU"
-
-    reasoning_prefix = ""
-    if is_reasoning_model:
-        reasoning_prefix = (
-            f"> 🧠 **`{active_model}` Chain-of-Thought (`<think>`)**:\n"
-            f'> 1. **User Prompt:** "{clean_msg}"\n'
-            f"> 2. **Execution Environment:** Fully local inference on {tier_label} (0 cloud roundtrips).\n"
-            f"> 3. **Deductive Analysis:** Formulating structured response with direct answers, practical context, and technical clarity.\n\n"
-        )
-
+def _no_model_reply(active_model: str) -> str:
+    """What ZettAI says when no language model answered (AI-02): the truth, not a canned answer."""
     return (
-        f"{reasoning_prefix}"
-        f"### 💡 Local Analysis & Response\n\n"
-        f'Regarding your inquiry **"{clean_msg}"**:\n\n'
-        f"As your local AI assistant running on **{active_model}** ({tier_label}), I analyze this from a sovereign, "
-        f"systems-first perspective:\n\n"
-        f"- **Direct Synthesis:** I am operating completely on-premises with full access to local hardware orchestration, "
-        f"Docker management, and multi-modal knowledge storage.\n"
-        f"- **Reliability:** Every operation is executed safely within your local environment, ensuring maximum responsiveness, "
-        f"zero latency from external internet services, and total data privacy.\n\n"
-        f"If you need code, architectural configurations, or specific diagnostics regarding this topic, let me know and I will "
-        f"generate them immediately for you."
+        "### No AI model answered\n\n"
+        f"ZettAI couldn't get a reply from a language model (selected: `{active_model}`), so it can't answer "
+        "this on its own. Check that Ollama or OpenVINO Model Server is running and that a chat model is "
+        "selected in AI settings.\n\n"
+        "Without a model, ZettAI can still show system, disk, fan, storage and network status, list "
+        "containers, search your indexed files, and do calculations."
     )
-
-
-def _synthesize_local_autonomous_response(
-    clean_msg: str,
-    active_model: str,
-    model_info: Optional[Dict[str, Any]],
-    accel: Dict[str, Any],
-    ram_gb: float,
-    chat_history: Optional[List[Dict[str, Any]]] = None,
-) -> str:
-    """
-    Unified entry point for local autonomous reasoning across coding, world knowledge,
-    storage engineering, math, and general problem solving.
-    """
-    # 0. Math, Arithmetic & Capacity Calculations
-    if _is_math_or_calculation_query(clean_msg):
-        math_res = _solve_technical_math_and_logic(clean_msg, active_model)
-        if math_res:
-            return math_res
-
-    # 1. Code Generation Intent
-    code_res = _generate_local_code_response(clean_msg, active_model)
-    if code_res:
-        return code_res
-
-    # 2. World Knowledge & Geopolitics Intent
-    world_res = _lookup_and_reason_world_knowledge(clean_msg, active_model)
-    if world_res:
-        return world_res
-
-    # 3. Systems, Storage & Hardware Engineering Intent
-    sys_res = _lookup_and_reason_storage_and_systems(clean_msg, active_model)
-    if sys_res:
-        return sys_res
-
-    # 4. Math, Capacity & Throughput Calculations (general / fallback)
-    math_res = _solve_technical_math_and_logic(clean_msg, active_model)
-    if math_res:
-        return math_res
-
-    # 5. General Conversational / Deductive Reasoning
-    return _synthesize_general_autonomous_reasoning(clean_msg, active_model, model_info, accel, ram_gb)
 
 
 def _build_structured_llm_context(tool_results: List[Dict[str, Any]]) -> str:
@@ -6099,25 +5650,13 @@ def run_agentic_chat(
                     if synthesized_web:
                         sections.append(synthesized_web)
 
-            if is_meta_diagnostic:
-                meta_ans = _lookup_and_reason_world_knowledge(clean_msg, active_model)
-                if meta_ans:
-                    sections.insert(0, meta_ans)
-
             has_web_or_docs = is_meta_diagnostic or any(
                 tr.get("tool") in ("browse_internet", "search_nas_knowledge", "get_weather") for tr in tool_results
             )
             if has_web_or_docs and sections:
                 llm_reply = think_prefix + "\n\n".join(sections)
             else:
-                autonomous_reply = _synthesize_local_autonomous_response(
-                    clean_msg=clean_msg,
-                    active_model=active_model,
-                    model_info=model_info,
-                    accel=act_accel,
-                    ram_gb=ram_gb,
-                    chat_history=history,
-                )
+                autonomous_reply = _no_model_reply(active_model)
                 if sections:
                     llm_reply = think_prefix + "\n\n".join(sections)
                 else:

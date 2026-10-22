@@ -629,7 +629,7 @@ describe('ZettAI — Multi-Modal Local RAG & Visual Search Frontend Suite', () =
     await runAiRagAsk('garlic pasta');
     const answerContainer = document.getElementById('ai-rag-answer-container');
     expect(answerContainer.innerHTML).toContain('Qwen/Qwen2.5-7B-Instruct-GGUF');
-    expect(answerContainer.innerHTML).toContain('~32 tok/s');
+    expect(answerContainer.innerHTML).toContain("32 tok/s");
 
     // 2. Verify AI Chatbot & NAS Copilot sends message, renders tool-call trace pills & verified web sources
     const chatPostSpy = vi.spyOn(api, 'post').mockResolvedValueOnce({

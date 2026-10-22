@@ -11929,22 +11929,22 @@ export async function runAiRagAsk(rawQuestion, options = {}) {
       .replace(/\[(\d+)\]/g, '<span style="color:#38bdf8; font-weight:700;">[$1]</span>')
       .replace(/\n/g, '<br/>');
 
-    const hwTierLabel = res.hardware?.tier_code || res.hardware?.tier || res.hardware?.active_tier_name || 'NPU_TIER_1';
+    const hwTierLabel = res.hardware?.tier_code || res.hardware?.tier || res.hardware?.active_tier_name || '—';
     const llmTel = res.llm_telemetry || {};
     const activeLlmId = llmTel.active_model || _aiLastActiveModel || 'qwen2.5:3b';
-    const tokPerSec = llmTel.tokens_per_sec || 35;
+    const tokPerSec = llmTel.tokens_per_sec || null;
     const combinedHtml = `
       <div class="ai-rag-synthesis-box" style="background: rgba(15,23,42,0.65); border: 1px solid rgba(56,189,248,0.28); border-radius: 10px; padding: 12px 15px; display: flex; flex-direction: column; gap: 10px;">
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
           <div style="display: flex; align-items: center; gap: 8px;">
             <span style="font-size: 15px;">🧠</span>
             <span style="font-weight: 800; font-size: 12.5px; color: #fff;">ZettAI Grounded Synthesis</span>
-            <span class="ai-llm-proof-badge" style="font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: rgba(168,85,247,0.16); border: 1px solid rgba(192,132,252,0.45); color: #e9d5ff;" title="${escapeHtml(llmTel.runtime_mode || 'Local NPU/GPU Grounded Synthesis')}">🤖 ${escapeHtml(activeLlmId)}</span>
+            <span class="ai-llm-proof-badge" style="font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: rgba(168,85,247,0.16); border: 1px solid rgba(192,132,252,0.45); color: #e9d5ff;" title="${escapeHtml(llmTel.runtime_mode || 'No AI model (built-in tools only)')}">🤖 ${escapeHtml(activeLlmId)}</span>
           </div>
           <div style="display: flex; align-items: center; gap: 7px; font-size: 10.5px; color: var(--muted);">
             <span style="color: #3bf58b; font-weight: 700;">⚡ ${escapeHtml(hwTierLabel)}</span>
             <span>•</span>
-            <span style="color: #fde68a;">🚀 ~${tokPerSec} tok/s</span>
+            ${tokPerSec ? `<span style="color: #fde68a;">🚀 ${tokPerSec} tok/s</span>` : ''}
             <span>•</span>
             <span>${res.elapsed_ms || llmTel.elapsed_ms || 0} ms</span>
             <span>•</span>
@@ -12490,9 +12490,9 @@ function _buildAiAssistantMessageHtml(res, defaultModel) {
   const groundingScore = res.grounding_confidence_score != null ? res.grounding_confidence_score : null;
   const cragGrade = res.crag_grade || '';
   const usedModel = llmTel.active_model || res.active_model || defaultModel;
-  const accelLabel = llmTel.accelerator_label || 'NPU_TIER_1';
-  const runtimeMode = llmTel.runtime_mode || 'Built-in ReAct + NPU/GPU Grounded Synthesis';
-  const tokSec = llmTel.tokens_per_sec || 35;
+  const accelLabel = llmTel.accelerator_label || '—';
+  const runtimeMode = llmTel.runtime_mode || 'No AI model (built-in tools only)';
+  const tokSec = llmTel.tokens_per_sec || null;
   const elapsedMs = res.elapsed_ms || llmTel.elapsed_ms || 0;
 
   const toolsBadgesHtml = toolsCalled.length > 0
@@ -12605,7 +12605,7 @@ function _buildAiAssistantMessageHtml(res, defaultModel) {
       </div>
       <div style="display: flex; align-items: center; gap: 6px; font-size: 10px; color: #94a3b8;">
         ${!folderPath && groundingScore !== null ? `<span style="font-size: 10px; font-weight: 700; color: #34d399; padding: 0 5px; border-radius: 999px; background: rgba(52,211,153,0.12); border: 1px solid rgba(52,211,153,0.3);">🎯 ${groundingScore}% Grounded</span><span>•</span>` : ''}
-        <span style="color: #fde68a;">🚀 ~${tokSec} tok/s</span>
+        ${tokSec ? `<span style="color: #fde68a;">🚀 ${tokSec} tok/s</span>` : ''}
         <span>•</span>
         <span>${elapsedMs} ms</span>
         <span>•</span>
